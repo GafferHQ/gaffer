@@ -3044,45 +3044,44 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void updateOptions()
 		{
+			// Integrator
+
 			ccl::Integrator *integrator = m_scene->integrator;
-			ccl::Background *background = m_scene->background;
-
 			integrator->set_seed( m_seed.value_or( m_frame ) );
-
-			ccl::Shader *lightShader = nullptr;
-			for( ccl::Light *light : m_scene->lights )
+			if( integrator->is_modified() )
 			{
-				if( light->get_light_type() == ccl::LIGHT_BACKGROUND )
-				{
-					lightShader = light->get_shader();
-					break;
-				}
+				integrator->tag_update( m_scene, ccl::Integrator::UPDATE_ALL );
 			}
 
-			m_session->set_samples( m_sessionParams.samples );
+			// Background
 
+			ccl::Background *background = m_scene->background;
 			if( m_backgroundShader )
 			{
 				background->set_shader( m_backgroundShader->shader() );
 			}
-			else if( lightShader )
-			{
-				background->set_shader( lightShader );
-			}
 			else
 			{
-				background->set_shader( m_scene->default_background );
-			}
-
-			if( integrator->is_modified() )
-			{
-				integrator->tag_update( m_scene, ccl::Integrator::UPDATE_ALL );
+				ccl::Shader *lightShader = nullptr;
+				for( ccl::Light *light : m_scene->lights )
+				{
+					if( light->get_light_type() == ccl::LIGHT_BACKGROUND )
+					{
+						lightShader = light->get_shader();
+						break;
+					}
+				}
+				background->set_shader( lightShader ? lightShader : m_scene->default_background );
 			}
 
 			if( background->is_modified() )
 			{
 				background->tag_update( m_scene );
 			}
+
+			// Session
+
+			m_session->set_samples( m_sessionParams.samples );
 		}
 
 		void updateOutputs()
