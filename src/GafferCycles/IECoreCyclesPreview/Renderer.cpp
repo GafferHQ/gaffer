@@ -3059,8 +3059,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				}
 			}
 
-			ccl::Film *film = m_scene->film;
-
 			m_session->set_samples( m_sessionParams.samples );
 
 			if( m_backgroundShader )
@@ -3084,12 +3082,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			if( background->is_modified() )
 			{
 				background->tag_update( m_scene );
-			}
-
-			if( film->is_modified() )
-			{
-				//film->tag_update( m_scene );
-				integrator->tag_update( m_scene, ccl::Integrator::UPDATE_ALL );
 			}
 		}
 
