@@ -228,6 +228,7 @@ Improvements
   - Render pass grouping can be configured in a startup file by using `GafferSceneUI.RenderPassEditor.registerPathGroupingFunction( f )`, where `f` is a function that receives a render pass name and returns the path that the render pass should be grouped under.
   - Grouped display can be enabled by default in a startup file by using `Gaffer.Metadata.registerValue( GafferSceneUI.RenderPassEditor.Settings, "displayGrouped", "userDefault", IECore.BoolData( True ) )`.
   - Dragging cells selected from the "Name" column now provides a list of the selected render pass names, rather than their paths.
+  - Disabled render pass names are now dimmed to more clearly indicate their state.
 
 API
 ---
