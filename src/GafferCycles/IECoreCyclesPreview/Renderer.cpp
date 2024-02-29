@@ -722,32 +722,6 @@ class ShaderCache : public IECore::RefCounted
 			return m_numDefaultShaders;
 		}
 
-		void flushTextures()
-		{
-			for( ccl::Shader *shader : m_scene->shaders )
-			{
-				for( ccl::ShaderNode *node : shader->graph->nodes )
-				{
-					if( node->special_type == ccl::SHADER_SPECIAL_TYPE_IMAGE_SLOT )
-					{
-						static_cast<ccl::ImageSlotTextureNode*>( node )->handle.clear();
-					}
-					else if( node->type == ccl::SkyTextureNode::get_node_type() )
-					{
-						static_cast<ccl::SkyTextureNode*>( node )->handle.clear();
-					}
-					else if( node->type == ccl::PointDensityTextureNode::get_node_type() )
-					{
-						static_cast<ccl::PointDensityTextureNode*>( node )->handle.clear();
-					}
-					//else if( node->type == ccl::VolumeTextureNode::get_node_type() )
-					//{
-					//	static_cast<ccl::VolumeTextureNode*>( node )->handle.clear();
-					//}
-				}
-			}
-		}
-
 	private :
 
 		void updateShaders( NodesCreated &nodes )
