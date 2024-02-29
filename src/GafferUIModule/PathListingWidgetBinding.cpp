@@ -294,10 +294,27 @@ QVariant dataToVariant( const IECore::Data *value, int role )
 		}
 	}
 
+	if( role == Qt::CheckStateRole )
+	{
+		if( auto d = IECore::runTimeCast<const IECore::BoolData>( value ) )
+		{
+			return d->readable() ? Qt::Checked : Qt::Unchecked;
+		}
+		return QVariant();
+	}
+
 	switch( value->typeId() )
 	{
 		case IECore::StringDataTypeId :
 			return static_cast<const IECore::StringData *>( value )->readable().c_str();
+		case IECore::BoolDataTypeId :
+			if( role == Qt::DisplayRole )
+			{
+				// We'll be displaying this as a checkbox via CheckStateRole - no
+				// need to display the value as text as well.
+				return QVariant();
+			}
+			return static_cast<const IECore::BoolData *>( value )->readable();
 		case IECore::IntDataTypeId :
 			return static_cast<const IECore::IntData *>( value )->readable();
 		case IECore::UIntDataTypeId :
@@ -339,11 +356,15 @@ QVariant dataToVariant( const IECore::Data *value, int role )
 struct CellVariants
 {
 
+	static constexpr Qt::ItemDataRole SortRole = Qt::UserRole;
+
 	CellVariants( const GafferUI::PathColumn::CellData &cellData )
 		:	m_display( dataToVariant( cellData.value.get(), Qt::DisplayRole ) ),
+			m_checkState( dataToVariant( cellData.value.get(), Qt::CheckStateRole ) ),
 			m_decoration( dataToVariant( cellData.icon.get(), Qt::DecorationRole ) ),
 			m_background( dataToVariant( cellData.background.get(), Qt::BackgroundRole ) ),
 			m_toolTip( dataToVariant( cellData.toolTip.get(), Qt::ToolTipRole ) ),
+			m_sort( m_display.isValid() ? m_display : m_checkState ),
 			m_foreground( dataToVariant( cellData.foreground.get(), Qt::ForegroundRole ) )
 	{
 	}
@@ -358,12 +379,16 @@ struct CellVariants
 		{
 			case Qt::DisplayRole :
 				return m_display;
+			case Qt::CheckStateRole :
+				return m_checkState;
 			case Qt::DecorationRole :
 				return m_decoration;
 			case Qt::BackgroundRole :
 				return m_background;
 			case Qt::ToolTipRole :
 				return m_toolTip;
+			case SortRole :
+				return m_sort;
 			case Qt::ForegroundRole :
 				return m_foreground;
 			default :
@@ -375,6 +400,7 @@ struct CellVariants
 	{
 		return
 			m_display == rhs.m_display &&
+			m_checkState == rhs.m_checkState &&
 			m_decoration == rhs.m_decoration &&
 			m_background == rhs.m_background &&
 			m_toolTip == rhs.m_toolTip &&
@@ -385,9 +411,11 @@ struct CellVariants
 	private :
 
 		QVariant m_display;
+		QVariant m_checkState;
 		QVariant m_decoration;
 		QVariant m_background;
 		QVariant m_toolTip;
+		QVariant m_sort;
 		QVariant m_foreground;
 
 };
@@ -1280,7 +1308,7 @@ class PathModel : public QAbstractItemModel
 					{
 						return QVariant();
 					}
-					return data[model->m_sortColumn].variant( Qt::DisplayRole );
+					return data[model->m_sortColumn].variant( CellVariants::SortRole );
 				}
 
 				// Updates data and returns the value that should be used for sorting.
