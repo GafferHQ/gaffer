@@ -78,6 +78,7 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 			self["tabGroup"] = Gaffer.StringPlug( defaultValue = "Cycles" )
 			self["section"] = Gaffer.StringPlug( defaultValue = "Main" )
 			self["editScope"] = Gaffer.Plug()
+			self["displayGrouped"] = Gaffer.BoolPlug()
 
 	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::RenderPassEditor::Settings" )
 
@@ -106,6 +107,13 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 			)
 
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+
+				GafferUI.PlugLayout(
+					self.__settingsNode,
+					orientation = GafferUI.ListContainer.Orientation.Horizontal,
+					rootSection = "Grouping"
+				)
+				GafferUI.Divider( orientation = GafferUI.Divider.Orientation.Vertical )
 
 				_SearchFilterWidget( searchFilter )
 				GafferUI.BasicPathFilterWidget( disabledRenderPassFilter )
@@ -145,6 +153,7 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 			self.__pathListing.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 			self.__pathListing.buttonPressSignal().connectFront( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
 			self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ), scoped = False )
+			self.__pathListing.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
 
 			self.__settingsNode.plugSetSignal().connect( Gaffer.WeakMethod( self.__settingsPlugSet ), scoped = False )
 			self.__settingsNode.plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__settingsPlugInputChanged ), scoped = False )
@@ -189,6 +198,41 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 		section = sections.setdefault( section, collections.OrderedDict() )
 
 		section[columnKey] = inspectorFunction
+
+	__addRenderPassButtonMenuSignal = None
+	## This signal is emitted whenever the add render pass button is clicked.
+	# If the resulting menu definition has been populated with items,
+	# a popup menu will be presented from the button.
+	# If only a single item is present, its command will be called
+	# immediately instead of presenting a menu.
+	# If no items are present, then the default behaviour is to
+	# add a single new render pass with a user specified name.
+
+	@classmethod
+	def addRenderPassButtonMenuSignal( cls ) :
+
+		if cls.__addRenderPassButtonMenuSignal is None :
+			cls.__addRenderPassButtonMenuSignal = _AddButtonMenuSignal()
+
+		return cls.__addRenderPassButtonMenuSignal
+
+	## Registration of the function used to group render passes when
+	# `RenderPassEditor.Settings.displayGrouped` is enabled.
+	# 'f' should be a callable that takes a render pass name and returns
+	# a string or list of strings containing the path names that the
+	# render pass should be grouped under.
+	# For example: If "char_gafferBot_beauty" should be displayed grouped
+	# under `/char/gafferBot`, then `f( "char_gafferBot_beauty" )` should
+	# return `"/char/gafferBot" or `[ "char", "gafferBot" ]`.
+	@staticmethod
+	def registerPathGroupingFunction( f ) :
+
+		_GafferSceneUI._RenderPassEditor.RenderPassPath.registerPathGroupingFunction( f )
+
+	@staticmethod
+	def pathGroupingFunction() :
+
+		return _GafferSceneUI._RenderPassEditor.RenderPassPath.pathGroupingFunction()
 
 	def __repr__( self ) :
 
@@ -257,6 +301,8 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 
 		if plug in ( self.__settingsNode["section"], self.__settingsNode["tabGroup"] ) :
 			self.__updateColumns()
+		elif plug == self.__settingsNode["displayGrouped"] :
+			self.__displayGroupedChanged()
 
 	def __settingsPlugInputChanged( self, plug ) :
 
@@ -280,9 +326,37 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 			# control of updates ourselves in _updateFromContext(), using LazyMethod to defer the calls to this
 			# function until we are visible and playback has stopped.
 			contextCopy = Gaffer.Context( self.getContext() )
-			self.__pathListing.setPath( _GafferSceneUI._RenderPassEditor.RenderPassPath( self.__settingsNode["in"], contextCopy, "/", filter = self.__filter ) )
+			self.__pathListing.setPath( _GafferSceneUI._RenderPassEditor.RenderPassPath( self.__settingsNode["in"], contextCopy, "/", filter = self.__filter, grouped = self.__settingsNode["displayGrouped"].getValue() ) )
 		else :
 			self.__pathListing.setPath( Gaffer.DictPath( {}, "/" ) )
+
+	def __displayGroupedChanged( self ) :
+
+		selection = self.__pathListing.getSelection()
+		renderPassPath = self.__pathListing.getPath().copy()
+		grouped = self.__settingsNode["displayGrouped"].getValue()
+
+		# Remap selection so it is maintained when switching to/from grouped display
+		for i, pathMatcher in enumerate( selection ) :
+			remappedPaths = IECore.PathMatcher()
+			for path in pathMatcher.paths() :
+				renderPassPath.setFromString( path )
+				renderPassName = renderPassPath.property( "renderPassPath:name" )
+				if renderPassName is None :
+					continue
+
+				if grouped :
+					newPath = GafferScene.ScenePlug.stringToPath( self.pathGroupingFunction()( renderPassName ) )
+					newPath.append( renderPassName )
+				else :
+					newPath = renderPassName
+
+				remappedPaths.addPath( newPath )
+
+			selection[i] = remappedPaths
+
+		self.__setPathListingPath()
+		self.__pathListing.setSelection( selection )
 
 	def __buttonDoubleClick( self, pathListing, event ) :
 
@@ -338,6 +412,13 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 					result.add( name )
 
 		return list( result )
+
+	def __dragBegin( self, widget, event ) :
+
+		# Return render pass names rather than the path when dragging the Name column.
+		selection = self.__pathListing.getSelection()[0]
+		if not selection.isEmpty() :
+			return IECore.StringVectorData( self.__selectedRenderPasses() )
 
 	def __setActiveRenderPass( self, pathListing ) :
 
@@ -825,23 +906,6 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 		self.__addButton.setEnabled( editable )
 		self.__addButton.setToolTip( "Click to add render pass." if editable else "To add a render pass, first choose an editable Edit Scope." )
 
-	__addRenderPassButtonMenuSignal = None
-	## This signal is emitted whenever the add render pass button is clicked.
-	# If the resulting menu definition has been populated with items,
-	# a popup menu will be presented from the button.
-	# If only a single item is present, its command will be called
-	# immediately instead of presenting a menu.
-	# If no items are present, then the default behaviour is to
-	# add a single new render pass with a user specified name.
-
-	@classmethod
-	def addRenderPassButtonMenuSignal( cls ) :
-
-		if cls.__addRenderPassButtonMenuSignal is None :
-			cls.__addRenderPassButtonMenuSignal = _AddButtonMenuSignal()
-
-		return cls.__addRenderPassButtonMenuSignal
-
 GafferUI.Editor.registerType( "RenderPassEditor", RenderPassEditor )
 
 ##########################################################################
@@ -883,6 +947,18 @@ Gaffer.Metadata.registerNode(
 		"editScope" : [
 
 			"plugValueWidget:type", "GafferUI.EditScopeUI.EditScopePlugValueWidget",
+
+		],
+
+		"displayGrouped" : [
+
+			"description",
+			"""
+			Click to toggle between list and grouped display of render passes.
+			""",
+
+			"layout:section", "Grouping",
+			"plugValueWidget:type", "GafferSceneUI.RenderPassEditor._ToggleGroupingPlugValueWidget",
 
 		],
 
@@ -965,6 +1041,31 @@ class _Spacer( GafferUI.Spacer ) :
 		GafferUI.Spacer.__init__( self, imath.V2i( 0 ) )
 
 RenderPassEditor._Spacer = _Spacer
+
+## \todo Should this be a new displayMode of BoolPlugValueWidget?
+class _ToggleGroupingPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plugs, **kw ) :
+
+		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+
+		GafferUI.PlugValueWidget.__init__( self, self.__row, plugs )
+
+		self.__groupingModeButton = GafferUI.Button( image = "pathListingList.png", hasFrame=False )
+		self.__groupingModeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__groupingModeButtonClicked ), scoped = False )
+		self.__row.append(
+			self.__groupingModeButton
+		)
+
+	def __groupingModeButtonClicked( self, button ) :
+
+		[ plug.setValue( not plug.getValue() ) for plug in self.getPlugs() ]
+
+	def _updateFromValues( self, values, exception ) :
+
+		self.__groupingModeButton.setImage( "pathListingTree.png" if all( values ) else "pathListingList.png" )
+
+RenderPassEditor._ToggleGroupingPlugValueWidget = _ToggleGroupingPlugValueWidget
 
 ##########################################################################
 # _SearchFilterWidget

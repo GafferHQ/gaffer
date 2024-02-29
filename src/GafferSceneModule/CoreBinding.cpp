@@ -46,6 +46,8 @@
 #include "GafferBindings/ComputeNodeBinding.h"
 #include "GafferBindings/PlugBinding.h"
 
+#include "boost/python/suite/indexing/container_utils.hpp"
+
 using namespace boost::python;
 using namespace IECore;
 using namespace Gaffer;
@@ -126,6 +128,43 @@ struct ScenePathFromString
 		{
 			path->push_back( *it );
 		}
+	}
+
+};
+
+// As a convenience we also accept lists in place of ScenePaths when
+// calling from python.
+struct ScenePathFromList
+{
+
+	ScenePathFromList()
+	{
+		boost::python::converter::registry::push_back(
+			&convertible,
+			&construct,
+			boost::python::type_id<ScenePlug::ScenePath>()
+		);
+	}
+
+	static void *convertible( PyObject *obj )
+	{
+		extract<boost::python::list> e( obj );
+		if( e.check() )
+		{
+			return obj;
+		}
+
+		return nullptr;
+	}
+
+	static void construct( PyObject *obj, boost::python::converter::rvalue_from_python_stage1_data *data )
+	{
+		void *storage = (( converter::rvalue_from_python_storage<ScenePlug::ScenePath>* ) data )->storage.bytes;
+		ScenePlug::ScenePath *path = new( storage ) ScenePlug::ScenePath();
+		data->convertible = storage;
+
+		boost::python::list l = extract<boost::python::list>( obj );
+		boost::python::container_utils::extend_container( *path, l );
 	}
 
 };
@@ -389,6 +428,7 @@ void GafferSceneModule::bindCore()
 
 	ScenePathFromInternedStringVectorData();
 	ScenePathFromString();
+	ScenePathFromList();
 
 	using SceneNodeWrapper = ComputeNodeWrapper<SceneNode>;
 	GafferBindings::DependencyNodeClass<SceneNode, SceneNodeWrapper>();
