@@ -301,20 +301,24 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 		with context:
 			self.assertFalse( reader["fileValid"].getValue() )
+			self.assertRaises( Gaffer.ProcessException, reader["out"].metadata )
 
 		shutil.copyfile( self.fileName, testFile )
 		with context:
 			self.assertFalse( reader["fileValid"].getValue() )
+			self.assertRaises( Gaffer.ProcessException, reader["out"].metadata )
 
 		# changing missingFrameMode doesn't affect the fileValid plug
 		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Black )
 		with context:
 			self.assertFalse( reader["fileValid"].getValue() )
+			self.assertEqual( reader["out"].metadata()["fileValid"], IECore.BoolData( False ) )
 
 		# whereas refreshCount should affect the fileValid plug
 		reader['refreshCount'].setValue( reader['refreshCount'].getValue() + 1 )
 		with context:
 			self.assertTrue( reader["fileValid"].getValue() )
+			self.assertNotIn( "fileValid", reader["out"].metadata() )
 
 	def testFilesValid( self ):
 
@@ -332,36 +336,43 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 		with context :
 			self.assertFalse( reader["fileValid"].getValue() )
+			self.assertRaises( Gaffer.ProcessException, reader["out"].metadata )
 
 		# frame 1 - found
 		context.setFrame( 1 )
 
 		with context:
 			self.assertTrue( reader["fileValid"].getValue() )
+			self.assertNotIn( "fileValid", reader["out"].metadata() )
 
 		# frame 2 - goes missing and then is found
 		context.setFrame( 2 )
 
 		with context:
 			self.assertFalse( reader["fileValid"].getValue() )
+			self.assertRaises( Gaffer.ProcessException, reader["out"].metadata )
 		shutil.copyfile( self.offsetDataWindowFileName, testSequence.fileNameForFrame( 2 ) )
 		with context:
 			self.assertFalse( reader["fileValid"].getValue() )
+			self.assertRaises( Gaffer.ProcessException, reader["out"].metadata )
 		reader['refreshCount'].setValue( reader['refreshCount'].getValue() + 1 )
 		with context:
 			self.assertTrue( reader["fileValid"].getValue() )
+			self.assertNotIn( "fileValid", reader["out"].metadata() )
 
 		# frame 3: found
 		context.setFrame( 3 )
 
 		with context:
 			self.assertTrue( reader["fileValid"].getValue() )
+			self.assertNotIn( "fileValid", reader["out"].metadata() )
 
 		# frame 4: missing
 		context.setFrame( 4 )
 
 		with context:
 			self.assertFalse( reader["fileValid"].getValue() )
+			self.assertRaises( Gaffer.ProcessException, reader["out"].metadata )
 
 	def testMissingFrameMode( self ) :
 
@@ -394,17 +405,18 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 			self.assertRaisesRegex( RuntimeError, ".*incompleteSequence.*.exr.*", reader["out"]["channelNames"].getValue )
 			self.assertRaisesRegex( RuntimeError, ".*incompleteSequence.*.exr.*", reader["out"].channelData, "R", imath.V2i( 0 ) )
 
-		# everything matches frame 1
+		# Everything matches frame 1, but the metadata notifies us that the frame is not valid.
 		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Hold )
 		with context :
-			self.assertImagesEqual( reader["out"], frame1["out"] )
+			self.assertImagesEqual( reader["out"], frame1["out"], metadataBlacklist = [ "fileValid" ] )
+			self.assertEqual( reader["out"].metadata()["fileValid"], IECore.BoolData( False ) )
 
 		# the windows match frame 1, but everything else is default
 		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Black )
 		with context :
 			self.assertEqual( reader["out"]["format"].getValue(), frame1["out"]["format"].getValue() )
 			self.assertEqual( reader["out"]["dataWindow"].getValue(), reader["out"]["dataWindow"].defaultValue() )
-			self.assertEqual( reader["out"]["metadata"].getValue(), reader["out"]["metadata"].defaultValue() )
+			self.assertEqual( reader["out"]["metadata"].getValue(), IECore.CompoundData( { "fileValid" : False } ) )
 			self.assertEqual( reader["out"]["channelNames"].getValue(), reader["out"]["channelNames"].defaultValue() )
 			self.assertEqual( reader["out"].channelData( "R", imath.V2i( 0 ) ), GafferImage.ImagePlug.blackTile() )
 
@@ -418,31 +430,33 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		# everything matches frame 3
 		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Hold )
 		with context :
-			self.assertImagesEqual( reader["out"], frame3["out"] )
+			self.assertImagesEqual( reader["out"], frame3["out"], metadataBlacklist = [ "fileValid" ] )
+			self.assertEqual( reader["out"].metadata()["fileValid"], IECore.BoolData( False ) )
 
 		# the windows match frame 3, but everything else is default
 		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Black )
 		with context :
 			self.assertEqual( reader["out"]["format"].getValue(), frame3["out"]["format"].getValue() )
 			self.assertEqual( reader["out"]["dataWindow"].getValue(), reader["out"]["dataWindow"].defaultValue() )
-			self.assertEqual( reader["out"]["metadata"].getValue(), reader["out"]["metadata"].defaultValue() )
+			self.assertEqual( reader["out"]["metadata"].getValue(), IECore.CompoundData( { "fileValid" : False } ) )
 			self.assertEqual( reader["out"]["channelNames"].getValue(), reader["out"]["channelNames"].defaultValue() )
 			self.assertEqual( reader["out"].channelData( "R", imath.V2i( 0 ) ), GafferImage.ImagePlug.blackTile() )
 
 		# set to a missing frame before the start of the sequence
 		context.setFrame( 0 )
 
-		# everything matches frame 1
+		# Everything matches frame 1, but the metadata notifies us that the frame is not valid.
 		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Hold )
 		with context :
-			self.assertImagesEqual( reader["out"], frame1["out"] )
+			self.assertImagesEqual( reader["out"], frame1["out"], metadataBlacklist = [ "fileValid" ] )
+			self.assertEqual( reader["out"].metadata()["fileValid"], IECore.BoolData( False ) )
 
 		# the windows match frame 1, but everything else is default
 		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Black )
 		with context :
 			self.assertEqual( reader["out"]["format"].getValue(), frame1["out"]["format"].getValue() )
 			self.assertEqual( reader["out"]["dataWindow"].getValue(), reader["out"]["dataWindow"].defaultValue() )
-			self.assertEqual( reader["out"]["metadata"].getValue(), reader["out"]["metadata"].defaultValue() )
+			self.assertEqual( reader["out"]["metadata"].getValue(), IECore.CompoundData( { "fileValid" : False } ) )
 			self.assertEqual( reader["out"]["channelNames"].getValue(), reader["out"]["channelNames"].defaultValue() )
 			self.assertEqual( reader["out"].channelData( "R", imath.V2i( 0 ) ), GafferImage.ImagePlug.blackTile() )
 
@@ -462,7 +476,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 			self.assertRaisesRegex( RuntimeError, ".*incompleteSequence.*.exr.*", GafferImage.ImageAlgo.image, reader["out"] )
 			self.assertRaisesRegex( RuntimeError, ".*incompleteSequence.*.exr.*", reader["out"]["format"].getValue )
 			self.assertEqual( reader["out"]["dataWindow"].getValue(), reader["out"]["dataWindow"].defaultValue() )
-			self.assertEqual( reader["out"]["metadata"].getValue(), reader["out"]["metadata"].defaultValue() )
+			self.assertEqual( reader["out"]["metadata"].getValue(), IECore.CompoundData( { "fileValid" : False } ) )
 			self.assertEqual( reader["out"]["channelNames"].getValue(), reader["out"]["channelNames"].defaultValue() )
 			self.assertEqual( reader["out"].channelData( "R", imath.V2i( 0 ) ), GafferImage.ImagePlug.blackTile() )
 

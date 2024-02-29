@@ -1,6 +1,11 @@
 1.4.x.x (relative to 1.4.0.0b1)
 =======
 
+Improvements
+------------
+
+- ImageReader : Added `fileValid = False` metadata to images from missing frames, when `missingFrameMode` is `Black` or `Hold`.
+
 Fixes
 -----
 
