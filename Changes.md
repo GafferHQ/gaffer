@@ -214,7 +214,10 @@ Build
 1.3.x.x (relative to 1.3.12.0)
 =======
 
+Improvements
+------------
 
+- Viewer : Added <kbd>Ctrl</kbd>+<kbd>PgUp</kbd> shortcut for displaying the RGBA image layer (or the first available layer if RGBA doesn't exist).
 
 1.3.12.0 (relative to 1.3.11.0)
 ========
