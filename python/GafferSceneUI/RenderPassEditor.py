@@ -199,6 +199,41 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 
 		section[columnKey] = inspectorFunction
 
+	__addRenderPassButtonMenuSignal = None
+	## This signal is emitted whenever the add render pass button is clicked.
+	# If the resulting menu definition has been populated with items,
+	# a popup menu will be presented from the button.
+	# If only a single item is present, its command will be called
+	# immediately instead of presenting a menu.
+	# If no items are present, then the default behaviour is to
+	# add a single new render pass with a user specified name.
+
+	@classmethod
+	def addRenderPassButtonMenuSignal( cls ) :
+
+		if cls.__addRenderPassButtonMenuSignal is None :
+			cls.__addRenderPassButtonMenuSignal = _AddButtonMenuSignal()
+
+		return cls.__addRenderPassButtonMenuSignal
+
+	## Registration of the function used to group render passes when
+	# `RenderPassEditor.Settings.displayGrouped` is enabled.
+	# 'f' should be a callable that takes a render pass name and returns
+	# a string or list of strings containing the path names that the
+	# render pass should be grouped under.
+	# For example: If "char_gafferBot_beauty" should be displayed grouped
+	# under `/char/gafferBot`, then `f( "char_gafferBot_beauty" )` should
+	# return `"/char/gafferBot" or `[ "char", "gafferBot" ]`.
+	@staticmethod
+	def registerPathGroupingFunction( f ) :
+
+		_GafferSceneUI._RenderPassEditor.RenderPassPath.registerPathGroupingFunction( f )
+
+	@staticmethod
+	def pathGroupingFunction() :
+
+		return _GafferSceneUI._RenderPassEditor.RenderPassPath.pathGroupingFunction()
+
 	def __repr__( self ) :
 
 		return "GafferSceneUI.RenderPassEditor( scriptNode )"
@@ -870,41 +905,6 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 
 		self.__addButton.setEnabled( editable )
 		self.__addButton.setToolTip( "Click to add render pass." if editable else "To add a render pass, first choose an editable Edit Scope." )
-
-	__addRenderPassButtonMenuSignal = None
-	## This signal is emitted whenever the add render pass button is clicked.
-	# If the resulting menu definition has been populated with items,
-	# a popup menu will be presented from the button.
-	# If only a single item is present, its command will be called
-	# immediately instead of presenting a menu.
-	# If no items are present, then the default behaviour is to
-	# add a single new render pass with a user specified name.
-
-	@classmethod
-	def addRenderPassButtonMenuSignal( cls ) :
-
-		if cls.__addRenderPassButtonMenuSignal is None :
-			cls.__addRenderPassButtonMenuSignal = _AddButtonMenuSignal()
-
-		return cls.__addRenderPassButtonMenuSignal
-
-	## Registration of the function used to group render passes when
-	# `RenderPassEditor.Settings.displayGrouped` is enabled.
-	# 'f' should be a callable that takes a render pass name and returns
-	# a string or list of strings containing the path names that the
-	# render pass should be grouped under.
-	# For example: If "char_gafferBot_beauty" should be displayed grouped
-	# under `/char/gafferBot`, then `f( "char_gafferBot_beauty" )` should
-	# return `"/char/gafferBot" or `[ "char", "gafferBot" ]`.
-	@staticmethod
-	def registerPathGroupingFunction( f ) :
-
-		_GafferSceneUI._RenderPassEditor.RenderPassPath.registerPathGroupingFunction( f )
-
-	@staticmethod
-	def pathGroupingFunction() :
-
-		return _GafferSceneUI._RenderPassEditor.RenderPassPath.pathGroupingFunction()
 
 GafferUI.Editor.registerType( "RenderPassEditor", RenderPassEditor )
 
