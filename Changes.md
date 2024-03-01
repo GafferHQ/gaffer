@@ -13,6 +13,7 @@ Improvements
   - Disabled render pass names are now dimmed to more clearly indicate their state.
 - RenderPassEditor, LightEditor, PathListingWidget : Boolean values are now displayed as checkboxes rather than `0` or `1`.
 - StandardOptions : Added `inclusions`, `exclusions` and `additionalLights` plugs, to control which locations are included in a render based on set expressions entered on these plugs. These, plus the existing `includedPurposes` plug are now grouped under the "Render Set" section of the UI.
+- GafferScene : Registered the "RenderSetAdaptor" adapting the `render:inclusions`, `render:exclusions` and `render:additionalLights` options to prune scene locations before rendering.
 
 API
 ---
