@@ -109,3 +109,39 @@ Gaffer.Metadata.registerValue(
 	in frames, and specified relative to the frame being rendered.
 	"""
 )
+
+Gaffer.Metadata.registerValue( "option:render:inclusions", "label", "Inclusions" )
+Gaffer.Metadata.registerValue( "option:render:inclusions", "defaultValue", IECore.StringData( "/" ) )
+Gaffer.Metadata.registerValue(
+	"option:render:inclusions",
+	"description",
+	"""
+	A set expression that limits the objects included in the render to only those matched
+	and their descendants. Objects not matched by the set expression will be pruned from
+	the scene. Cameras are included by default and do not need to be specified here.
+	"""
+)
+
+Gaffer.Metadata.registerValue( "option:render:exclusions", "label", "Exclusions" )
+Gaffer.Metadata.registerValue( "option:render:exclusions", "defaultValue", IECore.StringData( "" ) )
+Gaffer.Metadata.registerValue(
+	"option:render:exclusions",
+	"description",
+	"""
+	A set expression that excludes the matched objects from the render. Exclusions
+	affect both `inclusions` and `additionalLights` and cause the matching objects and
+	their descendants to be pruned from the scene.
+	"""
+)
+
+Gaffer.Metadata.registerValue( "option:render:additionalLights", "label", "Additional Lights" )
+Gaffer.Metadata.registerValue( "option:render:additionalLights", "defaultValue", IECore.StringData( "" ) )
+Gaffer.Metadata.registerValue(
+	"option:render:additionalLights",
+	"description",
+	"""
+	A set expression that specifies additional lights to be included in the render.
+	This differs from `inclusions` as only lights will be matched by this set
+	expression.
+	"""
+)
