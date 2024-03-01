@@ -1829,7 +1829,7 @@ env.Alias( "build", "buildCore" )
 
 def exportExtensions( target, source, env ) :
 
-	with tempfile.NamedTemporaryFile( "w" ) as exportScript :
+	with tempfile.NamedTemporaryFile( "w", delete = False ) as exportScript :
 
 		exportScript.write( "import Gaffer\nscript = Gaffer.ScriptNode()\n" )
 		for sourceFile, targetFile, targetUIFile in zip( source, target[::2], target[1::2] ) :
@@ -1850,11 +1850,20 @@ def exportExtensions( target, source, env ) :
 
 			exportScript.write( f"\nscript['fileName'].setValue( '{sourceFile}' )\n" )
 			exportScript.write( "script.load()\n" )
-			exportScript.write( f"Gaffer.ExtensionAlgo.exportNode( '{moduleName}', script['{nodeName}'], '{targetFile}' )\n" )
-			exportScript.write( f"Gaffer.ExtensionAlgo.exportNodeUI( '{moduleName}', script['{nodeName}'], '{targetUIFile}' )\n" )
+			exportScript.write( f"Gaffer.ExtensionAlgo.exportNode( '{moduleName}', script['{nodeName}'], r'{targetFile}' )\n" )
+			exportScript.write( f"Gaffer.ExtensionAlgo.exportNodeUI( '{moduleName}', script['{nodeName}'], r'{targetUIFile}' )\n" )
 
-		exportScript.flush()
-		subprocess.check_call( [ "gaffer", "env", "python", exportScript.name ], env = env["ENV"] )
+		exportScript.close()
+
+		subprocess.check_call(
+			[
+				shutil.which( "gaffer.cmd" if sys.platform == "win32" else "gaffer", path = env["ENV"]["PATH"] ),
+				"env", "python", exportScript.name
+			],
+			env = env["ENV"]
+		)
+
+	os.unlink( exportScript.name )
 
 exportedFiles = commandEnv.Command( extensionTargets, extensionSources, exportExtensions )
 env.Depends( exportedFiles, "buildCore" )
