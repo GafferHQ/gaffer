@@ -1939,5 +1939,28 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			['character.Z,', '32-bit'], ['character.ZBack,', '32-bit'], ['character.custom,', '32-bit'], ['character.mask,', '32-bit']
 		] )
 
+	def testOmitFileValidMetadata( self ) :
+
+		testSequence = IECore.FileSequence( str( self.temporaryDirectory() / "incompleteSequence.####.exr" ) )
+		shutil.copyfile( self.__rgbFilePath, testSequence.fileNameForFrame( 1 ) )
+		shutil.copyfile( self.__rgbFilePath, testSequence.fileNameForFrame( 3 ) )
+
+		with Gaffer.Context() as context :
+
+			context.setFrame( 2 )
+
+			imageReader = GafferImage.ImageReader()
+			imageReader["fileName"].setValue( pathlib.Path( testSequence.fileName ) )
+			imageReader["missingFrameMode"].setValue( imageReader.MissingFrameMode.Hold )
+			self.assertEqual( imageReader["out"].metadata()["fileValid"], IECore.BoolData( False ) )
+
+			imageWriter = GafferImage.ImageWriter()
+			imageWriter["in"].setInput( imageReader["out"] )
+			imageWriter["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
+			imageWriter["task"].execute()
+
+		imageReader["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
+		self.assertNotIn( "fileValid", imageReader["out"].metadata() )
+
 if __name__ == "__main__":
 	unittest.main()

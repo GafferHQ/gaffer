@@ -1799,6 +1799,11 @@ void OpenImageIOReader::affects( const Gaffer::Plug *input, AffectedPlugsContain
 			outputs.push_back( it->get() );
 		}
 	}
+
+	if( input == fileValidPlug() )
+	{
+		outputs.push_back( outPlug()->metadataPlug() );
+	}
 }
 
 void OpenImageIOReader::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
@@ -2017,19 +2022,21 @@ void OpenImageIOReader::hashMetadata( const GafferImage::ImagePlug *output, cons
 	hashFileName( context, h );
 	refreshCountPlug()->hash( h );
 	missingFrameModePlug()->hash( h );
+	fileValidPlug()->hash( h );
 	h.append( context->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName ) );
 }
 
 IECore::ConstCompoundDataPtr OpenImageIOReader::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
+	CompoundDataPtr result = new CompoundData;
+
 	FilePtr file = std::static_pointer_cast<File>( retrieveFile( context ) );
 	if( !file )
 	{
-		return parent->metadataPlug()->defaultValue();
+		result->writable()["fileValid"] = new BoolData( false );
+		return result;
 	}
 	const ImageSpec &spec = file->imageSpec( context );
-
-	CompoundDataPtr result = new CompoundData;
 
 	// Add data type
 
@@ -2066,6 +2073,13 @@ IECore::ConstCompoundDataPtr OpenImageIOReader::computeMetadata( const Gaffer::C
 		{
 			result->writable()[attrib.name().string()] = data;
 		}
+	}
+
+	// Add `fileValid` metadata.
+
+	if( !fileValidPlug()->getValue() )
+	{
+		result->writable()["fileValid"] = new BoolData( false );
 	}
 
 	return result;
