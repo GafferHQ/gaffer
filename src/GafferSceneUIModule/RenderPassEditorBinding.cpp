@@ -444,6 +444,7 @@ RenderPassPath::Ptr constructor2( ScenePlug &scene, Context &context, const std:
 ConstStringDataPtr g_disabledRenderPassIcon = new StringData( "disabledRenderPass.png" );
 ConstStringDataPtr g_renderPassIcon = new StringData( "renderPass.png" );
 ConstStringDataPtr g_renderPassFolderIcon = new StringData( "renderPassFolder.png" );
+const Color4fDataPtr g_dimmedForegroundColor = new Color4fData( Imath::Color4f( 152, 152, 152, 255 ) / 255.0f );
 
 class RenderPassNameColumn : public StandardPathColumn
 {
@@ -471,6 +472,7 @@ class RenderPassNameColumn : public StandardPathColumn
 				if( const auto renderPassEnabled = runTimeCast<const IECore::BoolData>( path.property( g_renderPassEnabledPropertyName, canceller ) ) )
 				{
 					result.icon = renderPassEnabled->readable() ? g_renderPassIcon : g_disabledRenderPassIcon;
+					result.foreground = renderPassEnabled->readable() ? nullptr : g_dimmedForegroundColor;
 				}
 				else
 				{
