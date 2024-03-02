@@ -746,6 +746,14 @@ class PlugValueWidget( GafferUI.Widget ) :
 		if view is not None :
 			return view.getContext()
 
+		# Special case for plugs that form the settings for an Editor.
+
+		settings = graphComponent if isinstance( graphComponent, GafferUI.Editor.Settings ) else graphComponent.ancestor( GafferUI.Editor.Settings )
+		if settings is not None :
+			scriptNode = settings["__scriptNode"].source().ancestor( Gaffer.ScriptNode )
+			if scriptNode is not None :
+				return scriptNode.context()
+
 		return cls.__fallbackContext
 
 	def __buttonPress( self, widget, event, buttonMask ) :
