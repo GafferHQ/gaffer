@@ -1361,9 +1361,6 @@ RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer
 		m_lightLinks = std::make_unique<LightLinks>();
 	}
 
-	IECore::CompoundObjectPtr defaultAttributes = new CompoundObject();
-	m_defaultAttributes = m_renderer->attributes( defaultAttributes.get() );
-
 	setScene( scene );
 	setContext( context );
 }
@@ -1685,6 +1682,12 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 		m_dirtyGlobalComponents = NoGlobalComponent;
 
 		// Update scene graphs
+
+		if( !m_defaultAttributes )
+		{
+			IECore::CompoundObjectPtr defaultAttributes = new CompoundObject();
+			m_defaultAttributes = m_renderer->attributes( defaultAttributes.get() );
+		}
 
 		for( int i = SceneGraph::FirstType; i <= SceneGraph::LastType; ++i )
 		{
