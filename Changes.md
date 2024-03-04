@@ -6,11 +6,29 @@ Improvements
 
 - ImageReader : Added `fileValid = False` metadata to images from missing frames, when `missingFrameMode` is `Black` or `Hold`.
 
+Improvements
+------------
+
+- Viewer : Added <kbd>Ctrl</kbd>+<kbd>PgUp</kbd> shortcut for displaying the RGBA image layer (or the first available layer if RGBA doesn't exist) [^1].
+- RenderPassEditor [^1] :
+  - Added the ability to display render passes grouped in a hierarchy generated from the render pass name. The default grouping uses the first token delimited by "_" from the render pass name, such that render passes named "char_gafferBot" and "char_cow" would be displayed under a "/char" group, while "prop_ball" and "prop_box" would be displayed under a "/prop" group.
+  - Render pass grouping can be configured in a startup file by using `GafferSceneUI.RenderPassEditor.registerPathGroupingFunction( f )`, where `f` is a function that receives a render pass name and returns the path that the render pass should be grouped under.
+  - Grouped display can be enabled by default in a startup file by using `Gaffer.Metadata.registerValue( GafferSceneUI.RenderPassEditor.Settings, "displayGrouped", "userDefault", IECore.BoolData( True ) )`.
+  - Dragging cells selected from the "Name" column now provides a list of the selected render pass names, rather than their paths.
+  - Disabled render pass names are now dimmed to more clearly indicate their state.
+- RenderPassEditor, LightEditor, PathListingWidget : Boolean values are now displayed as checkboxes rather than `0` or `1` [^1].
+
 Fixes
 -----
 
 - 3Delight : Fixed startup errors on Windows when the `DELIGHT` environment variable wasn't defined [^1].
 - FlatImageProcessor : Fixed bug that could cause an input to be evaluated with an invalid `image:viewName`.
+
+API
+---
+
+- ScenePath : Added automatic conversion of a list of Python strings to a ScenePath [^1].
+- RenderPassEditor : Added `registerPathGroupingFunction()` and `pathGroupingFunction()` methods [^1].
 
 Breaking Changes
 ----------------
