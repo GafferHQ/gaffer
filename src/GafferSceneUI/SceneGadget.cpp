@@ -177,7 +177,6 @@ namespace
 {
 
 const ConstStringDataPtr g_cameraName = new StringData( "/__sceneGadget:camera" );
-const ConstCompoundObjectPtr g_emptyCompoundObject = new CompoundObject();
 const IECore::StringDataPtr g_sceneColorSpace = new StringData( "scene" );
 const IECore::StringDataPtr g_displayColorSpace = new StringData( "display" );
 
@@ -1001,12 +1000,11 @@ void SceneGadget::updateCamera( GafferUI::ViewportGadget::CameraFlags changes )
 	cancelUpdateAndPauseRenderer();
 
 	const ViewportGadget *viewport = ancestor<ViewportGadget>();
-	IECoreScenePreview::Renderer::AttributesInterfacePtr cameraAttributes = m_renderer->attributes( g_emptyCompoundObject.get() );
 
 	if( !m_camera || static_cast<bool>( changes & ViewportGadget::CameraFlags::Camera ) )
 	{
 		m_camera.reset();
-		m_camera = m_renderer->camera( g_cameraName->readable(), viewport->getCamera().get(), cameraAttributes.get() );
+		m_camera = m_renderer->camera( g_cameraName->readable(), viewport->getCamera().get() );
 		changes |= ViewportGadget::CameraFlags::Transform;
 	}
 

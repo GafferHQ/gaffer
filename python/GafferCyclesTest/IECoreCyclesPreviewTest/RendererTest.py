@@ -420,7 +420,7 @@ class RendererTest( GafferTest.TestCase ) :
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
 		)
 
-		camera = renderer.camera( "test", IECoreScene.Camera(), renderer.attributes( IECore.CompoundObject() ) )
+		camera = renderer.camera( "test", IECoreScene.Camera() )
 
 		# Edit should succeed.
 		self.assertTrue( camera.attributes(
@@ -443,8 +443,7 @@ class RendererTest( GafferTest.TestCase ) :
 					"resolution" : imath.V2i( 2000, 1000 ),
 					"cropWindow" : imath.Box2f( imath.V2f( 0.25 ), imath.V2f( 0.75 ) ),
 				}
-			),
-			renderer.attributes( IECore.CompoundObject() )
+			)
 		)
 
 		renderer.output(
@@ -490,8 +489,7 @@ class RendererTest( GafferTest.TestCase ) :
 					"resolution" : imath.V2i( 2000, 1000 ),
 					"cropWindow" : imath.Box2f( imath.V2f( 0.25 ), imath.V2f( 0.75 ) ),
 				}
-			),
-			renderer.attributes( IECore.CompoundObject() )
+			)
 		)
 
 		fileName = self.temporaryDirectory() / "test.exr"
@@ -713,8 +711,7 @@ class RendererTest( GafferTest.TestCase ) :
 					"projection" : "orthographic",
 					"screenWindow" : imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) )
 				}
-			),
-			renderer.attributes( IECore.CompoundObject() )
+			)
 		)
 		renderer.option( "camera", IECore.StringData( "testCamera" ) )
 
@@ -1259,8 +1256,7 @@ class RendererTest( GafferTest.TestCase ) :
 					"projection" : "orthographic",
 					"screenWindow" : imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) )
 				}
-			),
-			renderer.attributes( IECore.CompoundObject() )
+			)
 		)
 		renderer.option( "camera", IECore.StringData( "testCamera" ) )
 
@@ -1679,8 +1675,7 @@ class RendererTest( GafferTest.TestCase ) :
 					"projection" : "orthographic",
 					"screenWindow" : imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) )
 				}
-			),
-			renderer.attributes( IECore.CompoundObject() )
+			)
 		)
 		renderer.option( "camera", IECore.StringData( "testCamera" ) )
 

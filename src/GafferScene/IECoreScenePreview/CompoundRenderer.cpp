@@ -200,7 +200,7 @@ Renderer::ObjectInterfacePtr CompoundRenderer::camera( const std::string &name, 
 	CompoundObjectInterfacePtr result = new CompoundObjectInterface;
 	for( size_t i = 0; i < m_renderers.size(); ++i )
 	{
-		result->objects[i] = m_renderers[i]->camera( name, camera, compoundAttributes->attributes[i].get() );
+		result->objects[i] = m_renderers[i]->camera( name, camera, compoundAttributes ? compoundAttributes->attributes[i].get() : nullptr );
 	}
 	return result;
 }

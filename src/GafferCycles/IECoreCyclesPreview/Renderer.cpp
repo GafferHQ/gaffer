@@ -2819,7 +2819,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_cameras[name] = camera;
 
 			ObjectInterfacePtr result = new CyclesCamera( ccamera );
-			result->attributes( attributes );
+			if( attributes )
+			{
+				result->attributes( attributes );
+			}
 			return result;
 		}
 

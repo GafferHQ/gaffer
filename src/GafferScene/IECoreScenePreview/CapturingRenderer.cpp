@@ -148,7 +148,7 @@ Renderer::ObjectInterfacePtr CapturingRenderer::object( const std::string &name,
 
 	// To facilitate the testing of code that handles the return from the various object methods of
 	// a renderer, we return null if the `cr:unrenderable` attribute is set to true.
-	if( static_cast<const CapturedAttributes *>( attributes )->unrenderableAttributeValue() )
+	if( CapturedAttributes::unrenderableAttributeValue( static_cast<const CapturedAttributes *>( attributes ) ) )
 	{
 		return nullptr;
 	}
@@ -221,15 +221,15 @@ const IECore::CompoundObject *CapturingRenderer::CapturedAttributes::attributes(
 	return m_attributes.get();
 }
 
-int CapturingRenderer::CapturedAttributes::uneditableAttributeValue() const
+int CapturingRenderer::CapturedAttributes::uneditableAttributeValue( const CapturedAttributes *attributes )
 {
-	auto *data = m_attributes->member<IntData>( "cr:uneditable" );
+	auto *data = attributes ? attributes->m_attributes->member<IntData>( "cr:uneditable" ) : nullptr;
 	return data ? data->readable() : 0;
 }
 
-bool CapturingRenderer::CapturedAttributes::unrenderableAttributeValue() const
+bool CapturingRenderer::CapturedAttributes::unrenderableAttributeValue( const CapturedAttributes *attributes )
 {
-	auto *data = m_attributes->member<BoolData>( "cr:unrenderable" );
+	auto *data = attributes ? attributes->m_attributes->member<BoolData>( "cr:unrenderable" ) : nullptr;
 	return data && data->readable();
 }
 
@@ -344,12 +344,12 @@ bool CapturingRenderer::CapturedObject::attributes( const AttributesInterface *a
 	m_renderer->checkPaused();
 
 	auto capturedAttributes = static_cast<const CapturedAttributes *>( attributes );
-	if( capturedAttributes->unrenderableAttributeValue() )
+	if( CapturedAttributes::unrenderableAttributeValue( capturedAttributes ) )
 	{
 		return false;
 	}
 
-	if( m_capturedAttributes && m_capturedAttributes->uneditableAttributeValue() != capturedAttributes->uneditableAttributeValue() )
+	if( m_numAttributeEdits && CapturedAttributes::uneditableAttributeValue( m_capturedAttributes.get() ) != CapturedAttributes::uneditableAttributeValue( capturedAttributes ) )
 	{
 		return false;
 	}
