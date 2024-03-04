@@ -5,10 +5,6 @@ Improvements
 ------------
 
 - ImageReader : Added `fileValid = False` metadata to images from missing frames, when `missingFrameMode` is `Black` or `Hold`.
-
-Improvements
-------------
-
 - Viewer : Added <kbd>Ctrl</kbd>+<kbd>PgUp</kbd> shortcut for displaying the RGBA image layer (or the first available layer if RGBA doesn't exist) [^1].
 - RenderPassEditor [^1] :
   - Added the ability to display render passes grouped in a hierarchy generated from the render pass name. The default grouping uses the first token delimited by "_" from the render pass name, such that render passes named "char_gafferBot" and "char_cow" would be displayed under a "/char" group, while "prop_ball" and "prop_box" would be displayed under a "/prop" group.
