@@ -66,7 +66,7 @@ def __renderSetAdaptor() :
 		inspect.cleandoc(
 			"""
 			additionalLights = parent["__optionQuery"]["out"]["out1"]["value"]
-			parent["__additionalLightsFilter"]["setExpression"] = "__lights in ({})".format( additionalLights ) if additionalLights else ""
+			parent["__additionalLightsFilter"]["setExpression"] = "(__lights | __lightFilters) in ({})".format( additionalLights ) if additionalLights else ""
 			"""
 		)
 	)

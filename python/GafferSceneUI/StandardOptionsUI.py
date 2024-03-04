@@ -396,8 +396,8 @@ plugsMetadata = {
 		"description",
 		"""
 		A set expression that specifies additional lights to be included in the render.
-		This differs from `inclusions` in that only lights will be matched by this set
-		expression.
+		This differs from `inclusions` in that only lights and light filters will be
+		matched by this set expression.
 		""",
 
 		"layout:section", "Render Set",

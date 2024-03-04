@@ -141,7 +141,7 @@ Gaffer.Metadata.registerValue(
 	"description",
 	"""
 	A set expression that specifies additional lights to be included in the render.
-	This differs from `inclusions` as only lights will be matched by this set
-	expression.
+	This differs from `inclusions` as only lights and light filters will be matched
+	by this set expression.
 	"""
 )

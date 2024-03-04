@@ -54,6 +54,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		#    /groupC
 		#        /cube      (C, CUBE)
 		#        /light     (C)
+		#        /lightFilter    (C)
 
 		cubeA = GafferScene.Cube()
 		cubeA["sets"].setValue( "A CUBE" )
@@ -83,10 +84,14 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		lightC = GafferSceneTest.TestLight()
 		lightC["sets"].setValue( "C" )
 
+		lightFilterC = GafferSceneTest.TestLightFilter()
+		lightFilterC["sets"].setValue( "C" )
+
 		groupC = GafferScene.Group()
 		groupC["name"].setValue( "groupC" )
 		groupC["in"][0].setInput( cubeC["out"] )
 		groupC["in"][1].setInput( lightC["out"] )
+		groupC["in"][2].setInput( lightFilterC["out"] )
 
 		group = GafferScene.Group()
 		group["in"][0].setInput( groupA["out"] )
@@ -120,6 +125,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				"/group/groupB/sphere",
 				"/group/groupC/cube",
 				"/group/groupC/light",
+				"/group/groupC/lightFilter",
 			}
 
 			if paths != {} :
@@ -142,6 +148,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				"/group/groupB/sphere",
 				"/group/groupC/cube",
 				"/group/groupC/light",
+				"/group/groupC/lightFilter",
 			},
 			inclusions = None
 		)
@@ -157,6 +164,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				"/group/groupB/sphere",
 				"/group/groupC/cube",
 				"/group/groupC/light",
+				"/group/groupC/lightFilter",
 			},
 			inclusions = "/"
 		)
@@ -251,6 +259,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 			{
 				"/group/groupC/cube",
 				"/group/groupC/light",
+				"/group/groupC/lightFilter",
 			},
 			inclusions = "C"
 		)
@@ -264,6 +273,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				"/group/groupB/cube",
 				"/group/groupC/cube",
 				"/group/groupC/light",
+				"/group/groupC/lightFilter",
 			},
 			inclusions = "/",
 			exclusions = "SPHERE"
@@ -275,6 +285,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				"/group/groupA/sphere",
 				"/group/groupB/sphere",
 				"/group/groupC/light",
+				"/group/groupC/lightFilter",
 			},
 			inclusions = "/",
 			exclusions = "CUBE"
@@ -284,6 +295,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 			testAdaptors["out"],
 			{
 				"/group/groupC/light",
+				"/group/groupC/lightFilter",
 			},
 			inclusions = "/",
 			exclusions = "SPHERE | CUBE"
@@ -309,6 +321,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				"/group/groupB/sphere",
 				"/group/groupC/cube",
 				"/group/groupC/light",
+				"/group/groupC/lightFilter",
 			},
 			inclusions = "/",
 			exclusions = ""
@@ -323,6 +336,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				"/group/groupA/sphere",
 				"/group/groupB/sphere",
 				"/group/groupC/light",
+				"/group/groupC/lightFilter",
 			},
 			inclusions = "SPHERE",
 			additionalLights = "C"
@@ -334,6 +348,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				"/group/groupA/sphere",
 				"/group/groupB/sphere",
 				"/group/groupC/light",
+				"/group/groupC/lightFilter",
 			},
 			inclusions = "SPHERE",
 			additionalLights = "/"
@@ -343,6 +358,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 			testAdaptors["out"],
 			{
 				"/group/groupC/light",
+				"/group/groupC/lightFilter",
 			},
 			inclusions = "",
 			additionalLights = "C"
@@ -377,6 +393,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 			testAdaptors["out"],
 			{
 				"/group/groupB/sphere",
+				"/group/groupC/lightFilter",
 			},
 			inclusions = "SPHERE",
 			additionalLights = "C",
@@ -390,6 +407,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 			{
 				"/group/groupB/sphere",
 				"/group/groupC/light",
+				"/group/groupC/lightFilter",
 			},
 			inclusions = "SPHERE",
 			additionalLights = "C",
