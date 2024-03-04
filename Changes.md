@@ -229,6 +229,7 @@ Improvements
   - Grouped display can be enabled by default in a startup file by using `Gaffer.Metadata.registerValue( GafferSceneUI.RenderPassEditor.Settings, "displayGrouped", "userDefault", IECore.BoolData( True ) )`.
   - Dragging cells selected from the "Name" column now provides a list of the selected render pass names, rather than their paths.
   - Disabled render pass names are now dimmed to more clearly indicate their state.
+- RenderPassEditor, LightEditor, PathListingWidget : Boolean values are now displayed as checkboxes rather than `0` or `1`.
 
 API
 ---
