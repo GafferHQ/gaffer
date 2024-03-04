@@ -2209,8 +2209,23 @@ class RendererTest( GafferTest.TestCase ) :
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
 		)
 
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testUnknownOptions",
+				}
+			)
+		)
+
 		with IECore.CapturingMessageHandler() as mh :
 			renderer.option( "cycles:invalid", IECore.IntData( 10 ) )
+			renderer.option( "someOtherRenderer:unknown", IECore.IntData( 10 ) )
+			renderer.render()
 
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
@@ -2356,6 +2371,8 @@ class RendererTest( GafferTest.TestCase ) :
 			renderer.pause()
 			renderer.option( "cycles:session:threads", IECore.IntData( 2 ) )
 			renderer.render()
+
+		self.assertEqual( renderer.command( "cycles:querySession", {} )["threads"].value, 1 )
 
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].context, "CyclesRenderer::option" )
