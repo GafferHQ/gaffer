@@ -854,7 +854,7 @@ class _PlugListing( GafferUI.Widget ) :
 		else :
 			# drag has gone above or below all listed items
 			newParent = self.__pathListing.getPath().rootItem()
-			newIndex = 0 if event.line.p0.y < 1 else len( newParent )
+			newIndex = 0 if event.line.p0.y < 1.5 else len( newParent )
 
 		# skip any attempted circular reparenting
 
@@ -1198,7 +1198,7 @@ class _PresetsEditor( GafferUI.Widget ) :
 		if targetPath is not None :
 			targetIndex = list( d.keys() ).index( targetPath[0] )
 		else :
-			targetIndex = 0 if event.line.p0.y < 1 else len( d )
+			targetIndex = 0 if event.line.p0.y < 1.5 else len( d )
 
 		if srcIndex == targetIndex :
 			return True
