@@ -756,7 +756,6 @@ class OpenGLCamera : public OpenGLObject
 	private :
 
 		IECoreGL::CameraPtr m_camera;
-		ConstOpenGLAttributesPtr m_attributes;
 		V2i m_resolution;
 
 };
