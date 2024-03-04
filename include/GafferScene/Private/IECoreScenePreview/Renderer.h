@@ -168,6 +168,14 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 		///
 		/// Currently all ObjectInterfaces _must_ be destroyed prior to destruction
 		/// of the renderer itself.
+		///
+		/// \todo Having methods on ObjectInterface has turned out to make the API harder
+		/// to implement for many renderers, because each ObjectInterface needs to have
+		/// access to some central state that more naturally belongs in the renderer.
+		/// Consider making ObjectInterface into just an opaque handle, and then moving
+		/// the edit methods to Renderer like so :
+		///
+		/// `bool Renderer::editAttributes( ObjectInterface *object, const AttributesInterface *attributes )`
 		class GAFFERSCENE_API ObjectInterface : public IECore::RefCounted
 		{
 
