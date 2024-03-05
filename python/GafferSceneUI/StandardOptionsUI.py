@@ -77,16 +77,20 @@ def __cameraSummary( plug ) :
 
 	return ", ".join( info )
 
-def __purposeSummary( plug ) :
+def __renderSetSummary( plug ) :
 
+	info = []
 	if plug["includedPurposes"]["enabled"].getValue() :
 		purposes = plug["includedPurposes"]["value"].getValue()
-		if purposes :
-			return ", ".join( [ p.capitalize() for p in purposes ] )
-		else :
-			return "None"
+		info.append( "Purposes {}".format( " / ".join( [ p.capitalize() for p in purposes ] ) if purposes else "None" ) )
+	if plug["inclusions"]["enabled"].getValue() :
+		info.append( "Inclusions {}".format( plug["inclusions"]["value"].getValue() ) )
+	if plug["exclusions"]["enabled"].getValue() :
+		info.append( "Exclusions {}".format( plug["exclusions"]["value"].getValue() ) )
+	if plug["additionalLights"]["enabled"].getValue() :
+		info.append( "Lights {}".format( plug["additionalLights"]["value"].getValue() ) )
 
-	return ""
+	return ", ".join( info )
 
 def __motionBlurSummary( plug ) :
 
@@ -119,7 +123,7 @@ plugsMetadata = {
 	"options" : [
 
 		"layout:section:Camera:summary", __cameraSummary,
-		"layout:section:Purpose:summary", __purposeSummary,
+		"layout:section:Render Set:summary", __renderSetSummary,
 		"layout:section:Motion Blur:summary", __motionBlurSummary,
 		"layout:section:Statistics:summary", __statisticsSummary,
 
@@ -349,13 +353,54 @@ plugsMetadata = {
 		> Tip : Use the USDAttributes node to assign the `usd:purpose` attribute.
 		""",
 
-		"layout:section", "Purpose",
+		"layout:section", "Render Set",
 
 	],
 
 	"options.includedPurposes.value" : [
 
 		"plugValueWidget:type", "GafferSceneUI.StandardOptionsUI._IncludedPurposesPlugValueWidget",
+
+	],
+
+	"options.inclusions" : [
+
+		"description",
+		"""
+		A set expression that limits the objects included in the render to only those matched
+		and their descendants. Objects not matched by the set expression will be pruned from
+		the scene.
+
+		> Tip : Cameras are included by default and do not need to be specified here.
+		""",
+
+		"layout:section", "Render Set",
+
+	],
+
+	"options.exclusions" : [
+
+		"description",
+		"""
+		A set expression that excludes the matched objects from the render. Exclusions
+		affect both `inclusions` and `additionalLights` and cause the matching objects and
+		their descendants to be pruned from the scene.
+		""",
+
+		"layout:section", "Render Set",
+
+	],
+
+	"options.additionalLights" : [
+
+		"description",
+		"""
+		A set expression that specifies additional lights to be included in the render.
+		This differs from `inclusions` in that only lights and light filters will be
+		matched by this set expression.
+		""",
+
+		"layout:section", "Render Set",
 
 	],
 
