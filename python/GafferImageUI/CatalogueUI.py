@@ -1076,7 +1076,7 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 			imageToReplace = targetPath.property( "catalogue:image" )
 		else :
 			# Drag has gone above or below all listed items. Use closest image.
-			imageToReplace = images[0] if event.line.p0.y < 1 else images[-1]
+			imageToReplace = images[0] if event.line.p0.y < 1.5 else images[-1]
 
 		if not imageToReplace or imageToReplace in imagesToMove :
 			return

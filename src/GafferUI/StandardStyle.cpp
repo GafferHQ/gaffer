@@ -1381,7 +1381,12 @@ static const std::string &vertexSource()
 	// When isCurve is set, this renders a curve defined by start and end points, and start and end tangents.
 	// See contrib/dd/notes/noodleShapes.svg for explanation.
 	static const std::string g_vertexSource =
-
+		""
+		"#if __VERSION__ <= 120\n"
+		"#define in attribute\n"
+		"#define out varying\n"
+		"#endif\n"
+		""
 		"uniform bool isCurve;"
 		"uniform vec3 v0;"
 		"uniform vec3 v1;"
@@ -1389,6 +1394,8 @@ static const std::string &vertexSource()
 		"uniform vec3 t1;"
 		"uniform float endPointSize;"
 		"uniform float lineWidth;"
+
+		"out vec3 geometryP;"
 
 		"void main()"
 		"{"
@@ -1438,6 +1445,7 @@ static const std::string &vertexSource()
 		"	gl_FrontColor = gl_Color;"
 		"	gl_BackColor = gl_Color;"
 		"	gl_TexCoord[0] = gl_MultiTexCoord0;"
+		"	geometryP = gl_Position.xyz;"
 		"}";
 
 	return g_vertexSource;
@@ -1467,8 +1475,10 @@ static const std::string &fragmentSource()
 		"#if __VERSION__ >= 330\n"
 
 		"uniform uint ieCoreGLNameIn;\n"
+		"in vec3 geometryP;\n"
 		"layout( location=0 ) out vec4 outColor;\n"
 		"layout( location=1 ) out uint ieCoreGLNameOut;\n"
+		"layout( location=2 ) out vec4 ieCoreGLCameraDepth;\n"
 		"#define OUTCOLOR outColor\n"
 
 		"#else\n"
@@ -1526,6 +1536,7 @@ static const std::string &fragmentSource()
 
 		"#if __VERSION__ >= 330\n"
 		"	ieCoreGLNameOut = ieCoreGLNameIn;\n"
+		"	ieCoreGLCameraDepth = vec4( -geometryP.z, -geometryP.z, -geometryP.z, 1 );\n"
 		"#endif\n"
 		"}";
 

@@ -81,7 +81,7 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 	def __shadowSource( self, lightP, shadowPivot, shadowPoint ) :
 		return ( shadowPivot - shadowPoint ).normalize() * ( lightP - shadowPivot ).length() + shadowPivot
 
-	def testPosition( self ) :
+	def testPositionShadow( self ) :
 
 		random.seed( 42 )
 
@@ -131,7 +131,7 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 					places = 4
 				)
 
-	def testPositionWithParentTransform( self ) :
+	def testPositionShadowWithParentTransform( self ) :
 
 		random.seed( 44 )
 
@@ -215,6 +215,63 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 					IECore.radiansToDegrees( imath.V3f( desiredLocalR ) ),
 					places = 4
 				)
+
+	def __highlightSource( self, lightP, highlightP, viewP, normal ) :
+		d = ( lightP - highlightP ).length()
+		reflected = imath.V3f.reflect( viewP - highlightP, normal ).normalized()
+		return highlightP + reflected * d
+
+	def testPositionHighlight( self ) :
+
+		random.seed( 42 )
+
+		script = Gaffer.ScriptNode()
+		script["light"] = GafferSceneTest.TestLight()
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["light"]["out"] )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/light" ] ) )
+
+		tool = GafferSceneUI.LightPositionTool( view )
+		tool["active"].setValue( True )
+
+		for i in range( 0, 5 ) :
+			lightP = imath.V3f( random.random() * 10 - 5, random.random() * 10 - 5, random.random() * 10 - 5 )
+			viewP = imath.V3f( random.random() * 10 - 5, random.random() * 10 - 5, random.random() * 10 - 5 )
+			highlightP = imath.V3f( random.random() * 10 - 5, random.random() * 10 - 5, random.random() * 10 - 5 )
+			normal = imath.V3f( random.random() * 2 - 1, random.random() * 2 - 1, random.random() * 2 - 1 ).normalized()
+
+			script["light"]["transform"]["translate"].setValue( lightP )
+
+			d0 = ( lightP - highlightP ).length()
+			upDir = script["light"]["transform"].matrix().multDirMatrix( imath.V3f( 0, 1, 0 ) )
+
+			with Gaffer.Context() :
+				tool.positionHighlight( highlightP, viewP, normal, d0 )
+
+			p = script["light"]["transform"]["translate"].getValue()
+
+			d1 = ( p - highlightP ).length()
+			self.assertAlmostEqual( d0, d1, places = 4 )
+
+			desiredP = self.__highlightSource( lightP, highlightP, viewP, normal )
+
+			for j in range( 0, 3 ) :
+				self.assertAlmostEqual( p[j], desiredP[j], places = 4 )
+
+			desiredO = imath.M44f()
+			imath.M44f.rotationMatrixWithUpDir( desiredO, imath.V3f( 0, 0, -1 ), highlightP - p, upDir )
+			rotationO = imath.V3f()
+			desiredO.extractEulerXYZ( rotationO )
+
+			o = script["light"]["transform"]["rotate"].getValue()
+
+			with self.subTest( f"Iteration {i}" ) :
+				self.assertAnglesAlmostEqual(
+						o,
+						IECore.radiansToDegrees( imath.V3f( rotationO ) ),
+						places = 3
+					)
 
 if __name__ == "__main__" :
 	unittest.main()

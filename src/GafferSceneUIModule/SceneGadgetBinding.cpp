@@ -167,6 +167,17 @@ size_t objectsAt( SceneGadget &g, const Imath::V3f &corner0InGadgetSpace, const 
 	return g.objectsAt( corner0InGadgetSpace, corner1InGadgetSpace, paths );
 }
 
+object normalAt( SceneGadget &g, const IECore::LineSegment3f &l )
+{
+	std::optional<Imath::V3f> result;
+	{
+		ScopedGILRelease gilRelease;
+		result = g.normalAt( l );
+	}
+
+	return result ? object( result.value() ) : object();
+}
+
 Imath::Box3f selectionBound( SceneGadget &g )
 {
 	ScopedGILRelease gilRelease;
@@ -216,6 +227,7 @@ void GafferSceneUIModule::bindSceneGadget()
 		.def( "objectAt", &objectAt )
 		.def( "objectAndIntersectionAt", &objectAndIntersectionAt )
 		.def( "objectsAt", &objectsAt )
+		.def( "normalAt", &normalAt )
 		.def( "setSelection", &SceneGadget::setSelection )
 		.def( "getSelection", &SceneGadget::getSelection, return_value_policy<copy_const_reference>() )
 		.def( "selectionBound", &selectionBound )

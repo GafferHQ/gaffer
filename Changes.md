@@ -5,6 +5,7 @@ Features
 --------
 
 - GraphEditor : Added <kbd>X</kbd> shortcut for removing connections between nodules. Hold <kbd>X</kbd> then left click to remove all connections under the cursor. Hold <kbd>X</kbd> then left drag to draw a line, all connections that intersect with the line will be removed once the drag is ended (#788).
+- LightPosition Tool : Added a variation on the shadow placement tool to place highlights. Lights are positioned such that they will create a specular highlight at the target point.
 
 Improvements
 ------------

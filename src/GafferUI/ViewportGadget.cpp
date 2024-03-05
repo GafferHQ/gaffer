@@ -1398,7 +1398,7 @@ GLuint ViewportGadget::acquireFramebuffer() const
 
 	// Resize depth buffer and attach to framebuffer
 	glBindRenderbuffer( GL_RENDERBUFFER, m_depthBuffer );
-	glRenderbufferStorageMultisample( GL_RENDERBUFFER, samples, GL_DEPTH_COMPONENT24, size.x, size.y );
+	glRenderbufferStorageMultisample( GL_RENDERBUFFER, samples, GL_DEPTH_COMPONENT32F, size.x, size.y );
 	glFramebufferRenderbuffer( GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthBuffer );
 
 	// Validate framebuffer
@@ -2243,7 +2243,7 @@ void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget
 	m_depthSort = false;
 	camera->render( nullptr );
 
-	m_selector = SelectorPtr( new IECoreGL::Selector( ndcRegion, mode, m_selection ) );
+	m_selector = SelectorPtr( new IECoreGL::Selector( ndcRegion, mode, m_selection, true ) );
 
 	glPushMatrix();
 	glMultMatrixf( transform.getValue() );
