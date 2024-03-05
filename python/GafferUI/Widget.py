@@ -1656,8 +1656,8 @@ class _EventFilter( QtCore.QObject ) :
 		cursorPos -= targetWidget.bound().min()
 
 		return IECore.LineSegment3f(
-			imath.V3f( cursorPos.x, cursorPos.y, 1 ),
-			imath.V3f( cursorPos.x, cursorPos.y, 0 )
+			imath.V3f( cursorPos.x + 0.5, cursorPos.y + 0.5, 1 ),
+			imath.V3f( cursorPos.x + 0.5, cursorPos.y + 0.5, 0 )
 		)
 
 # this single instance is used by all widgets

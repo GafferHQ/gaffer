@@ -604,5 +604,22 @@ class WidgetTest( GafferUITest.TestCase ) :
 		window1.addChildWindow( window3 )
 		self.assertEqual( window3.getChild().displayTransformChanges, [ displayTransform2 ] )
 
+	def testButtonPressSignalLine( self ) :
+
+		w = TestWidget()
+
+		def f( w, event ) :
+
+			self.assertEqual( event.line.p0.x - int( event.line.p0.x ), 0.5 )
+			self.assertEqual( event.line.p0.y - int( event.line.p0.y ), 0.5 )
+			self.assertEqual( event.line.p1.x - int( event.line.p1.x ), 0.5 )
+			self.assertEqual( event.line.p1.y - int( event.line.p1.y ), 0.5 )
+
+		w.buttonPressSignal().connect( f, scoped = False )
+
+		event = QtGui.QMouseEvent( QtCore.QEvent.MouseButtonPress, QtCore.QPoint( 10, 10 ), QtCore.Qt.LeftButton, QtCore.Qt.LeftButton, QtCore.Qt.NoModifier )
+
+		QtWidgets.QApplication.instance().sendEvent( w._qtWidget(), event )
+
 if __name__ == "__main__":
 	unittest.main()

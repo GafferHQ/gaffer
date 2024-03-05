@@ -36,6 +36,7 @@ API
 - ScenePath : Added automatic conversion of a list of Python strings to a ScenePath [^1].
 - RenderPassEditor : Added `registerPathGroupingFunction()` and `pathGroupingFunction()` methods [^1].
 - ExtensionAlgo : Added `exportNode()` and `exportNodeUI()` functions.
+- Widget : Added a 0.5 pixel offset to `ButtonEvent.line` objects passed to mouse event signals such as `buttonPressSignal()` and `dragMoveSignal()`
 
 Breaking Changes
 ----------------
