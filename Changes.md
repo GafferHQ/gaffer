@@ -28,6 +28,11 @@ API
 - ScenePath : Added automatic conversion of a list of Python strings to a ScenePath [^1].
 - RenderPassEditor : Added `registerPathGroupingFunction()` and `pathGroupingFunction()` methods [^1].
 
+API
+---
+
+- ExtensionAlgo : Added `exportNode()` and `exportNodeUI()` functions.
+
 Breaking Changes
 ----------------
 
