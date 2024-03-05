@@ -479,6 +479,126 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.pause()
 		del plane
 
+	def testBackgroundShader( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testBackgroundShader",
+				}
+			)
+		)
+
+		plane = renderer.object(
+			"/plane",
+			IECoreScene.MeshPrimitive.createPlane(
+				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			),
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface" )
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		## \todo Default camera is facing down +ve Z but should be facing
+		# down -ve Z.
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+
+		def backgroundShader( color ) :
+
+			return IECoreScene.ShaderNetwork(
+				shaders = {
+					"output" : IECoreScene.Shader( "checker_texture", "cycles:shader", { "color1" : color, "color2" : color } ),
+				},
+				output = "output",
+			)
+
+		# Render with no background, and check we have a black image.
+
+		renderer.render()
+		time.sleep( 1 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundShader" )
+		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.55 ) ), imath.Color4f( 0, 0, 0, 1 ) )
+
+		# Render with a red background.
+
+		renderer.pause()
+		renderer.option( "cycles:background:shader", backgroundShader( imath.Color3f( 1, 0, 0 ) ) )
+		renderer.render()
+		time.sleep( 1 )
+
+		# Check that we have a pure red image.
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundShader" )
+		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+
+		middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
+		self.assertGreater( middlePixel.r, 0 )
+		self.assertEqual( middlePixel.g, 0 )
+		self.assertEqual( middlePixel.b, 0 )
+
+		# Render with a green background.
+
+		renderer.pause()
+		renderer.option( "cycles:background:shader", backgroundShader( imath.Color3f( 0, 1, 0 ) ) )
+		renderer.render()
+		time.sleep( 1 )
+
+		# Check that we have a pure green image.
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundShader" )
+		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+
+		middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
+		self.assertEqual( middlePixel.r, 0 )
+		self.assertGreater( middlePixel.g, 0 )
+		self.assertEqual( middlePixel.b, 0 )
+
+		# Render with a red background again.
+
+		renderer.pause()
+		renderer.option( "cycles:background:shader", backgroundShader( imath.Color3f( 1, 0, 0 ) ) )
+		renderer.render()
+		time.sleep( 1 )
+
+		# Check that we have gone back to a pure red image.
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundShader" )
+		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+
+		middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
+		self.assertGreater( middlePixel.r, 0 )
+		self.assertEqual( middlePixel.g, 0 )
+		self.assertEqual( middlePixel.b, 0 )
+
+		# Remove background, and check we have a black image.
+
+		renderer.pause()
+		renderer.option( "cycles:background:shader", None )
+		renderer.render()
+		time.sleep( 1 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundShader" )
+		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.55 ) ), imath.Color4f( 0, 0, 0, 1 ) )
+
+		del plane
+
 	def testMultipleOutputs( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(

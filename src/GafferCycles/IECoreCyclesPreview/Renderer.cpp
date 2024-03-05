@@ -2723,8 +2723,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					clearUnused();
 				}
 
-				updateSceneObjects();
 				updateOptions();
+				updateSceneObjects();
 				updateBackground();
 				updateCamera();
 				updateOutputs();
@@ -2978,20 +2978,30 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// with in `updateBackground()`, which is where the final
 			// modification check and `tag_update()` is done.
 
-			m_backgroundShader = nullptr;
-			auto it = m_options.find( g_backgroundShaderOptionName );
-			if( it != m_options.end() && it->second.value )
-			{
-				if( const IECoreScene::ShaderNetwork *d = reportedCast<const IECoreScene::ShaderNetwork>( it->second.value.get(), "option", g_backgroundShaderOptionName ) )
-				{
-					m_backgroundShader = m_shaderCache->get( d );
-				}
-			}
-
 			ccl::Background *background = m_scene->background;
-			if( m_backgroundShader )
+
+			auto it = m_options.find( g_backgroundShaderOptionName );
+			if( it != m_options.end() && it->second.modified )
 			{
-				background->set_shader( m_backgroundShader->shader() );
+				m_backgroundShader = nullptr;
+				if( it->second.value )
+				{
+					if( const IECoreScene::ShaderNetwork *d = reportedCast<const IECoreScene::ShaderNetwork>( it->second.value.get(), "option", g_backgroundShaderOptionName ) )
+					{
+						m_backgroundShader = m_shaderCache->get( d );
+					}
+				}
+
+				if( m_backgroundShader )
+				{
+					background->set_shader( m_backgroundShader->shader() );
+					// Workaround for apparent Cycles bug when applying a shader
+					// which has been used before and which we have just
+					// re-retrieved from the ShaderCache.
+					m_scene->shader_manager->tag_update( m_scene, ccl::ShaderManager::SHADER_MODIFIED );
+				}
+
+				it->second.modified = false;
 			}
 
 			uint32_t backgroundVisibility = ccl::PATH_RAY_ALL_VISIBILITY;
