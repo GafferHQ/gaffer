@@ -369,6 +369,116 @@ class RendererTest( GafferTest.TestCase ) :
 
 		del plane
 
+	def testBackgroundLightEdits( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testBackgroundLightEdits",
+				}
+			)
+		)
+
+		plane = renderer.object(
+			"/plane",
+			IECoreScene.MeshPrimitive.createPlane(
+				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			),
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface" )
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		## \todo Default camera is facing down +ve Z but should be facing
+		# down -ve Z.
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+
+		def lightAttributes( color ) :
+
+			return renderer.attributes( IECore.CompoundObject ( {
+				"cycles:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "background_light", "cycles:light", { "color" : color } ),
+					},
+					output = "output",
+				),
+			} ) )
+
+		# Render with a red light.
+
+		light = renderer.light( "/light", None, lightAttributes( imath.Color3f( 1, 0, 0 ) ) )
+		renderer.render()
+		time.sleep( 1 )
+
+		# Check that we have a pure red image.
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundLightEdits" )
+		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+
+		middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
+		self.assertGreater( middlePixel.r, 0 )
+		self.assertEqual( middlePixel.g, 0 )
+		self.assertEqual( middlePixel.b, 0 )
+
+		# Rerender with a green light.
+
+		renderer.pause()
+		light.attributes( lightAttributes( imath.Color3f( 0, 1, 0 ) ) )
+		renderer.render()
+		time.sleep( 1 )
+
+		# Check that we have a pure green image.
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundLightEdits" )
+		middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
+		self.assertEqual( middlePixel.r, 0 )
+		self.assertGreater( middlePixel.g, 0 )
+		self.assertEqual( middlePixel.b, 0 )
+
+		# Rerender with a blue light.
+
+		renderer.pause()
+		light.attributes( lightAttributes( imath.Color3f( 0, 0, 1 ) ) )
+		renderer.render()
+		time.sleep( 1 )
+
+		# Check that we have a pure blue image.
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundLightEdits" )
+		middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
+		self.assertEqual( middlePixel.r, 0 )
+		self.assertEqual( middlePixel.g, 0 )
+		self.assertGreater( middlePixel.b, 0 )
+
+		# Rerender without the light.
+
+		renderer.pause()
+		del light
+		renderer.render()
+		time.sleep( 1 )
+
+		# Check that we have a pure black image.
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundLightEdits" )
+		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.55 ) ), imath.Color4f( 0, 0, 0, 1 ) )
+
+		renderer.pause()
+		del plane
+
 	def testMultipleOutputs( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(

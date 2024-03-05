@@ -2725,6 +2725,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 				updateSceneObjects();
 				updateOptions();
+				updateBackground();
 				updateCamera();
 				updateOutputs();
 				warnForUnusedOptions();
@@ -2972,7 +2973,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				integrator->tag_update( m_scene, ccl::Integrator::UPDATE_ALL );
 			}
 
-			// Background
+			// Background. Here we just deal with _options_ that affect
+			// the background. Lights that affect the background are dealt
+			// with in `updateBackground()`, which is where the final
+			// modification check and `tag_update()` is done.
 
 			m_backgroundShader = nullptr;
 			auto it = m_options.find( g_backgroundShaderOptionName );
@@ -2989,19 +2993,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				background->set_shader( m_backgroundShader->shader() );
 			}
-			else
-			{
-				ccl::Shader *lightShader = nullptr;
-				for( ccl::Light *light : m_scene->lights )
-				{
-					if( light->get_light_type() == ccl::LIGHT_BACKGROUND )
-					{
-						lightShader = light->get_shader();
-						break;
-					}
-				}
-				background->set_shader( lightShader ? lightShader : m_scene->default_background );
-			}
 
 			uint32_t backgroundVisibility = ccl::PATH_RAY_ALL_VISIBILITY;
 			for( const auto &[name, rayType] : g_rayTypes )
@@ -3012,11 +3003,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				}
 			}
 			background->set_visibility( backgroundVisibility );
-
-			if( background->is_modified() )
-			{
-				background->tag_update( m_scene );
-			}
 
 			// Session and scene
 
@@ -3051,6 +3037,39 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					}
 					option.modified = false;
 				}
+			}
+		}
+
+		void updateBackground()
+		{
+			// Note : `updateOptions()` must be called prior to
+			// `updateBackground()` so that `m_backgroundShader` is up to date.
+			// This function is separate because background lights can be
+			// modified without setting `m_optionsChanged`.
+
+			if( !m_backgroundShader )
+			{
+				/// \todo Figure out how we can avoid repeating this check for
+				/// every render. This might be much easier if attribute edits
+				/// were performed by a renderer method instead of an ObjectInterface
+				/// method. Or can we use `scene->light_manager->need_update()`?
+				ccl::Shader *lightShader = nullptr;
+				for( ccl::Light *light : m_scene->lights )
+				{
+					if( light->get_light_type() == ccl::LIGHT_BACKGROUND )
+					{
+						lightShader = light->get_shader();
+						break;
+					}
+				}
+				m_scene->background->set_shader( lightShader ? lightShader : m_scene->default_background );
+			}
+
+			// Note : this is also responsible for tagging any changes
+			// made in `updateOptions()`.
+			if( m_scene->background->is_modified() )
+			{
+				m_scene->background->tag_update( m_scene );
 			}
 		}
 
