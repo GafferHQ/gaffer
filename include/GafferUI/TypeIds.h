@@ -85,6 +85,7 @@ enum TypeId
 	ToolContainerTypeId = 110291,
 	FPSGadgetTypeId = 110292,
 	ViewDisplayTransformTypeId = 110293,
+	DragEditGadgetTypeId = 110294,
 
 	LastTypeId = 110450
 };
