@@ -7,6 +7,7 @@ Improvements
 - ImageReader : Added `fileValid = False` metadata to images from missing frames, when `missingFrameMode` is `Black` or `Hold`.
 - Viewer : Added <kbd>Ctrl</kbd>+<kbd>PgUp</kbd> shortcut for displaying the RGBA image layer (or the first available layer if RGBA doesn't exist) [^1].
 - RenderPassEditor [^1] :
+  - Added "Inclusions", "Exclusions" and "Additional Lights" columns, to provide control over the locations included in the render for each render pass.
   - Added the ability to display render passes grouped in a hierarchy generated from the render pass name. The default grouping uses the first token delimited by "_" from the render pass name, such that render passes named "char_gafferBot" and "char_cow" would be displayed under a "/char" group, while "prop_ball" and "prop_box" would be displayed under a "/prop" group.
   - Render pass grouping can be configured in a startup file by using `GafferSceneUI.RenderPassEditor.registerPathGroupingFunction( f )`, where `f` is a function that receives a render pass name and returns the path that the render pass should be grouped under.
   - Grouped display can be enabled by default in a startup file by using `Gaffer.Metadata.registerValue( GafferSceneUI.RenderPassEditor.Settings, "displayGrouped", "userDefault", IECore.BoolData( True ) )`.
@@ -14,6 +15,8 @@ Improvements
   - Disabled render pass names are now dimmed to more clearly indicate their state.
 - RenderPassEditor, LightEditor, PathListingWidget : Boolean values are now displayed as checkboxes rather than `0` or `1` [^1].
 - Collect : Added the ability to collect StringVectorData inputs.
+- StandardOptions : Added `inclusions`, `exclusions` and `additionalLights` plugs, to control which locations are included in a render based on set expressions entered on these plugs. These, plus the existing `includedPurposes` plug are now grouped under the "Render Set" section of the UI [^1].
+- GafferScene : Registered the "RenderSetAdaptor" adapting the `render:inclusions`, `render:exclusions` and `render:additionalLights` options to prune scene locations before rendering [^1].
 
 Fixes
 -----
@@ -27,10 +30,6 @@ API
 
 - ScenePath : Added automatic conversion of a list of Python strings to a ScenePath [^1].
 - RenderPassEditor : Added `registerPathGroupingFunction()` and `pathGroupingFunction()` methods [^1].
-
-API
----
-
 - ExtensionAlgo : Added `exportNode()` and `exportNodeUI()` functions.
 
 Breaking Changes
@@ -245,12 +244,15 @@ Improvements
 
 - Viewer : Added <kbd>Ctrl</kbd>+<kbd>PgUp</kbd> shortcut for displaying the RGBA image layer (or the first available layer if RGBA doesn't exist).
 - RenderPassEditor :
+  - Added "Inclusions", "Exclusions" and "Additional Lights" columns, to provide control over the locations included in the render for each render pass.
   - Added the ability to display render passes grouped in a hierarchy generated from the render pass name. The default grouping uses the first token delimited by "_" from the render pass name, such that render passes named "char_gafferBot" and "char_cow" would be displayed under a "/char" group, while "prop_ball" and "prop_box" would be displayed under a "/prop" group.
   - Render pass grouping can be configured in a startup file by using `GafferSceneUI.RenderPassEditor.registerPathGroupingFunction( f )`, where `f` is a function that receives a render pass name and returns the path that the render pass should be grouped under.
   - Grouped display can be enabled by default in a startup file by using `Gaffer.Metadata.registerValue( GafferSceneUI.RenderPassEditor.Settings, "displayGrouped", "userDefault", IECore.BoolData( True ) )`.
   - Dragging cells selected from the "Name" column now provides a list of the selected render pass names, rather than their paths.
   - Disabled render pass names are now dimmed to more clearly indicate their state.
 - RenderPassEditor, LightEditor, PathListingWidget : Boolean values are now displayed as checkboxes rather than `0` or `1`.
+- StandardOptions : Added `inclusions`, `exclusions` and `additionalLights` plugs, to control which locations are included in a render based on set expressions entered on these plugs. These, plus the existing `includedPurposes` plug are now grouped under the "Render Set" section of the UI.
+- GafferScene : Registered the "RenderSetAdaptor" adapting the `render:inclusions`, `render:exclusions` and `render:additionalLights` options to prune scene locations before rendering.
 
 API
 ---
