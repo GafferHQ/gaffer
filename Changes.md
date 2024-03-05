@@ -243,8 +243,13 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.x.x (relative to 1.3.12.0)
+1.3.x.x (relative to 1.3.13.0)
 =======
+
+
+
+1.3.13.0 (relative to 1.3.12.0)
+========
 
 Improvements
 ------------
