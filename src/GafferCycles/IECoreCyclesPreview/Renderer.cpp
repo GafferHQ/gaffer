@@ -795,8 +795,6 @@ class ShaderCache : public IECore::RefCounted
 					shaders.push_back( shader );
 				}
 				m_scene->shader_manager->tag_update( m_scene, ccl::ShaderManager::SHADER_ADDED );
-				// TODO: Optimise
-				m_scene->background->tag_update( m_scene );
 			}
 			nodes.clear();
 		}
