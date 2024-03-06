@@ -42,6 +42,7 @@
 
 #include "Gaffer/Animation.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/Metadata.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Plug.h"
 #include "Gaffer/ScriptNode.h"
@@ -71,6 +72,8 @@ using namespace Imath;
 
 namespace
 {
+
+const IECore::InternedString g_colorMetadata( "animation:color" );
 
 void tieModeToBools( const Animation::TieMode mode, bool& tieSlope, bool& tieScale )
 {
@@ -146,28 +149,6 @@ float snapTimeToFrame( float fps, float time, float threshold=std::numeric_limit
 	float rounded = round( frame );
 
 	return frameToTime( fps, std::abs( frame - rounded ) > threshold ? frame : rounded );
-}
-
-// \todo: Consider making the colorForAxes function in StandardStyle public?
-//        Include names for plugs representing color? (foo.r, foo.g, foo.b)
-Color3f colorFromName( std::string name )
-{
-	if( boost::ends_with( name, ".x" ) )
-	{
-		return Imath::Color3f( 0.73, 0.17, 0.17 );
-	}
-	else if( boost::ends_with( name, ".y" ) )
-	{
-		return Imath::Color3f( 0.2, 0.57, 0.2 );
-	}
-	else if( boost::ends_with( name, ".z" ) )
-	{
-		return Imath::Color3f( 0.2, 0.36, 0.74 );
-	}
-	else
-	{
-		return Color3f( 1 );
-	}
 }
 
 // Compute grid line locations. Note that positions are given in raster space so
@@ -265,7 +246,24 @@ void computeGrid( const ViewportGadget *viewportGadget, float fps, AxisDefinitio
 	}
 }
 
-std::string drivenPlugName( const Animation::CurvePlug *curvePlug )
+const Gaffer::Plug* drivenPlug( const Animation::CurvePlug* const curvePlug )
+{
+	const FloatPlug* const out = curvePlug->outPlug();
+
+	// Assuming that we only drive a single plug with this curve
+	auto outputs = out->outputs();
+	return ( ! outputs.empty() )
+		? outputs.front()
+		: nullptr;
+}
+
+Gaffer::Plug* drivenPlug( Animation::CurvePlug* const curvePlug )
+{
+	return const_cast< Gaffer::Plug* >( drivenPlug(
+		static_cast< const Animation::CurvePlug* >( curvePlug ) ) );
+}
+
+std::string drivenPlugName( const Animation::CurvePlug* const curvePlug )
 {
 	const FloatPlug *out = curvePlug->outPlug();
 
@@ -623,7 +621,7 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 		{
 			Animation::CurvePlug *curvePlug = IECore::runTimeCast<Animation::CurvePlug>( &runtimeTyped );
 
-			const Imath::Color3f color3 = colorFromName( drivenPlugName( curvePlug ) );
+			const Imath::Color3f color3 = getColor( curvePlug );
 			const Imath::Color4f color4( color3.x, color3.y, color3.z, 1.0 );
 
 			Animation::Key* previousKey = nullptr;
@@ -815,9 +813,25 @@ const Gaffer::StandardSet *AnimationGadget::editablePlugs() const
 	return m_editablePlugs.get();
 }
 
-void AnimationGadget::plugDirtied( Gaffer::Plug *plug )
+void AnimationGadget::plugDirtied( Gaffer::Plug* const plug )
 {
 	dirty( DirtyType::Render );
+}
+
+void AnimationGadget::plugMetadataDirtied( Gaffer::Plug* const plug, const IECore::InternedString key )
+{
+	if( key == g_colorMetadata )
+	{
+		Gaffer::ValuePlug* const vplug = IECore::runTimeCast< Gaffer::ValuePlug >( plug );
+		if( vplug && Gaffer::Animation::isAnimated( vplug ) )
+		{
+			const Gaffer::Animation::CurvePlug* const curvePlug = Gaffer::Animation::acquire( vplug );
+			if( curvePlug && m_visiblePlugs->contains( curvePlug ) )
+			{
+				dirty( DirtyType::Render );
+			}
+		}
+	}
 }
 
 std::string AnimationGadget::getToolTip( const IECore::LineSegment3f &line ) const
@@ -861,6 +875,26 @@ std::string AnimationGadget::getToolTip( const IECore::LineSegment3f &line ) con
 	}
 
 	return "";
+}
+
+Imath::Color3f AnimationGadget::getColor( const Gaffer::Plug* plug )
+{
+	if( const Animation::CurvePlug* const curvePlug =
+		IECore::runTimeCast< const Animation::CurvePlug >( plug ) )
+	{
+		plug = drivenPlug( curvePlug );
+	}
+
+	if( plug )
+	{
+		if( const IECore::ConstColor3fDataPtr colorData =
+			Gaffer::Metadata::value< IECore::Color3fData >( plug, g_colorMetadata ) )
+		{
+			return colorData->readable();
+		}
+	}
+
+	return Imath::Color3f( 1.f );
 }
 
 void AnimationGadget::insertKeyframe( Animation::CurvePlug *curvePlug, float time )
@@ -1778,9 +1812,16 @@ void AnimationGadget::visiblePlugAdded( Gaffer::Set *set, IECore::RunTimeTyped *
 	Animation::CurvePlug *curvePlug = IECore::runTimeCast<Animation::CurvePlug>( member );
 
 	// \todo: should only connect if we don't monitor this node yet
-	if( Node *node = curvePlug->node() )
+	if( Node* const node = curvePlug->node() )
 	{
 		node->plugDirtiedSignal().connect( boost::bind( &AnimationGadget::plugDirtied, this, ::_1 ) );
+	}
+
+	// \todo: should only connect if we don't monitor this node yet
+	if( Node* const node = drivenPlug( curvePlug )->node() )
+	{
+		Gaffer::Metadata::plugValueChangedSignal( node ).connect(
+			boost::bind( &AnimationGadget::plugMetadataDirtied, this, ::_1, ::_2 ) );
 	}
 
 	dirty( DirtyType::Render );
@@ -1822,7 +1863,7 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 	V2f previousKeyPosition( 0 );
 
 	const Style::State styleState = ( curvePlug == m_highlightedCurve ) ? Style::HighlightedState : Style::NormalState;
-	const Imath::Color3f color3 = colorFromName( drivenPlugName( curvePlug ) );
+	const Imath::Color3f color3 = getColor( curvePlug );
 
 	// draw extrapolated curve (direction in)
 	// NOTE : generate vertices starting at extrapolation key, so that any pattern applied

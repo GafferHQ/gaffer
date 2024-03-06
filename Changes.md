@@ -1456,7 +1456,11 @@ Features
     - CycleOffset : Curve is repeated indefinitely with each repetition offset in value to preserve continuity.
     - CycleFlop : Curve is repeated indefinitely with each repetition mirrored in time.
     - CycleFlip : Curve is repeated indefinitely with each repetition inverted in value and offset to preserve continuity.
-  - Added new curve tab in Animation Editor with controls for setting the extrapolation modes of a curve.
+  - Added new curve tab in Animation Editor with controls for setting the extrapolation modes and color of a curve.
+- AnimationUI : Registered default colors for driven plugs with relative paths ending in ".r", ".g", ".b" and ".x", ".y", ".z"
+- AnimationEditor :
+  - Added color swatch to display color of selected curves with popup color chooser to set selected curve color.
+  - Added context menu options to set selected curve color to the default color for the driven plugs.
 
 Improvements
 ------------

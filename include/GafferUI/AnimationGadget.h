@@ -77,6 +77,8 @@ class GAFFERUI_API AnimationGadget : public Gadget
 
 		std::string getToolTip( const IECore::LineSegment3f &line ) const override;
 
+		static Imath::Color3f getColor( const Gaffer::Plug* plug );
+
 	protected :
 
 		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override;
@@ -104,6 +106,7 @@ class GAFFERUI_API AnimationGadget : public Gadget
 		void frame();
 
 		void plugDirtied( Gaffer::Plug *plug );
+		void plugMetadataDirtied( Gaffer::Plug *plug, IECore::InternedString key );
 
 		bool buttonPress( GadgetPtr gadget, const ButtonEvent &event );
 		bool buttonRelease( GadgetPtr gadget, const ButtonEvent &event );
