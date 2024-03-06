@@ -41,7 +41,7 @@ from .TractorDispatcher import TractorDispatcher
 # to insert a mock API for testing in GafferTractorTest.
 def tractorAPI() :
 
-	from tractor.api.author import author
+	import tractor.api.author as author
 	return author
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferTractor" )

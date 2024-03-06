@@ -1,7 +1,12 @@
 1.4.x.x (relative to 1.4.0.0b2)
 =======
 
+Fixes
+-----
 
+- Tractor : Fixed failure to import Tractor API [^1].
+
+[^1]: To be omitted from final release notes for 1.4.0.0.
 
 1.4.0.0b2 (relative to 1.4.0.0b1)
 =========
