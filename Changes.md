@@ -15,6 +15,11 @@ Breaking Changes
 
 - CyclesOptions : Changed `hairShape` default value to "ribbon", to match Cycles' and Blender's own defaults.
 
+API
+---
+
+- ImageGadget : Removed `textureLoader()` method.
+
 [^1]: To be omitted from final release notes for 1.4.0.0.
 
 1.4.0.0b2 (relative to 1.4.0.0b1)

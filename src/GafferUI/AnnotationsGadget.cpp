@@ -74,37 +74,15 @@ Box2f nodeFrame( const NodeGadget *nodeGadget )
 }
 
 
-IECoreGL::Texture *bookmarkTexture()
+const IECoreGL::Texture *bookmarkTexture()
 {
-	static IECoreGL::TexturePtr bookmarkTexture;
-
-	if( !bookmarkTexture )
-	{
-		bookmarkTexture = ImageGadget::textureLoader()->load( "bookmarkStar2.png" );
-
-		IECoreGL::Texture::ScopedBinding binding( *bookmarkTexture );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
-	}
+	static IECoreGL::ConstTexturePtr bookmarkTexture = ImageGadget::loadTexture( "bookmarkStar2.png" );
 	return bookmarkTexture.get();
 }
 
-IECoreGL::Texture *numericBookmarkTexture()
+const IECoreGL::Texture *numericBookmarkTexture()
 {
-	static IECoreGL::TexturePtr numericBookmarkTexture;
-
-	if( !numericBookmarkTexture )
-	{
-		numericBookmarkTexture = ImageGadget::textureLoader()->load( "bookmarkStar.png" );
-
-		IECoreGL::Texture::ScopedBinding binding( *numericBookmarkTexture );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
-	}
+	static IECoreGL::ConstTexturePtr numericBookmarkTexture = ImageGadget::loadTexture( "bookmarkStar.png" );
 	return numericBookmarkTexture.get();
 }
 
