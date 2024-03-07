@@ -76,7 +76,7 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "cycles:scene:use_bvh_unaligned_nodes", new IECore::BoolData( true ), false, "useBvhUnalignedNodes" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:scene:num_bvh_time_steps", new IECore::IntData( 0 ), false, "numBvhTimeSteps" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:scene:hair_subdivisions", new IECore::IntData( 3 ), false, "hairSubdivisions" ) );
-	options->addChild( new Gaffer::NameValuePlug( "cycles:scene:hair_shape", new IECore::StringData( "thick" ), false, "hairShape" ) );
+	options->addChild( new Gaffer::NameValuePlug( "cycles:scene:hair_shape", new IECore::StringData( "ribbon" ), false, "hairShape" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:scene:texture_limit", new IECore::IntData( 0 ), false, "textureLimit" ) );
 
 	// Integrator

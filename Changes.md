@@ -10,6 +10,11 @@ Fixes
   - Fixed failure to render background light in batch renders (#5234).
   - Fixed failure to update when reverting a background shader to previous values.
 
+Breaking Changes
+----------------
+
+- CyclesOptions : Changed `hairShape` default value to "ribbon", to match Cycles' and Blender's own defaults.
+
 [^1]: To be omitted from final release notes for 1.4.0.0.
 
 1.4.0.0b2 (relative to 1.4.0.0b1)
