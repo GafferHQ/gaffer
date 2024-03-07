@@ -51,7 +51,7 @@ def __visibilitySummary( plug ) :
 def __renderingSummary( plug ) :
 
 	info = []
-	for childName in ( "useHoldout", "isShadowCatcher", "isCausticsCaster", "isCausticsReceiver", "dupliGenerated", "dupliUV", "lightGroup" ) :
+	for childName in ( "useHoldout", "isShadowCatcher", "isCausticsCaster", "isCausticsReceiver", "lightGroup" ) :
 		if plug[childName]["enabled"].getValue() :
 			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
 
@@ -243,28 +243,6 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Rendering",
 
-		],
-
-		"attributes.dupliGenerated" : [
-
-			"description",
-			"""
-			Set a unique position offset. Accessible from a texture_coordinate
-			via the generated output plug and from_dupli enabled.
-			""",
-
-			"layout:section", "Rendering",
-		],
-
-		"attributes.dupliUV" : [
-
-			"description",
-			"""
-			Set a unique UV offset. Accessible from either a texture_coordinate
-			or uv_map node via the UV output plug and from_dupli enabled.
-			""",
-
-			"layout:section", "Rendering",
 		],
 
 		"attributes.lightGroup" : [

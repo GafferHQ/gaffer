@@ -10,6 +10,7 @@ Breaking Changes
 ----------------
 
 - CyclesOptions : Removed `cycles:integrator:sampling_pattern` option. This is intended only for debugging, but is still available via a CustomOptions node.
+- CyclesAttributes : Removed the `cycles:dupliGenerated` and `cycles:dupliUV` attributes.
 
 1.4.0.0b3 (relative to 1.4.0.0b2)
 =========

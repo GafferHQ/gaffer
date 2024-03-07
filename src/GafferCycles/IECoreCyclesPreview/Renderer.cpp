@@ -840,9 +840,6 @@ IECore::InternedString g_maxLevelAttributeName( "cycles:max_level" );
 IECore::InternedString g_dicingRateAttributeName( "cycles:dicing_rate" );
 // Cycles Light
 IECore::InternedString g_cyclesLightAttributeName( "cycles:light" );
-// Dupli
-IECore::InternedString g_dupliGeneratedAttributeName( "cycles:dupli_generated" );
-IECore::InternedString g_dupliUVAttributeName( "cycles:dupli_uv" );
 // Shader Assignment
 IECore::InternedString g_cyclesSurfaceShaderAttributeName( "cycles:surface" );
 IECore::InternedString g_oslSurfaceShaderAttributeName( "osl:surface" );
@@ -902,8 +899,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				m_maxLevel( 1 ),
 				m_dicingRate( 1.0f ),
 				m_color( Color3f( 1.0f ) ),
-				m_dupliGenerated( V3f( 0.0f ) ),
-				m_dupliUV( V2f( 0.0f) ),
 				m_volume( attributes ),
 				m_shaderAttributes( attributes ),
 				m_assetName( "" ),
@@ -926,8 +921,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_maxLevel = attributeValue<int>( g_maxLevelAttributeName, attributes, m_maxLevel );
 			m_dicingRate = attributeValue<float>( g_dicingRateAttributeName, attributes, m_dicingRate );
 			m_color = attributeValue<Color3f>( g_displayColorAttributeName, attributes, m_color );
-			m_dupliGenerated = attributeValue<V3f>( g_dupliGeneratedAttributeName, attributes, m_dupliGenerated );
-			m_dupliUV = attributeValue<V2f>( g_dupliUVAttributeName, attributes, m_dupliUV );
 			m_lightGroup = attributeValue<std::string>( g_lightGroupAttributeName, attributes, m_lightGroup );
 			m_assetName = attributeValue<std::string>( g_cryptomatteAssetAttributeName, attributes, m_assetName );
 			m_isCausticsCaster = attributeValue<bool>( g_isCausticsCasterAttributeName, attributes, m_isCausticsCaster );
@@ -1070,8 +1063,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			object->set_shadow_terminator_shading_offset( m_shadowTerminatorShadingOffset );
 			object->set_shadow_terminator_geometry_offset( m_shadowTerminatorGeometryOffset );
 			object->set_color( SocketAlgo::setColor( m_color ) );
-			object->set_dupli_generated( SocketAlgo::setVector( m_dupliGenerated ) );
-			object->set_dupli_uv( SocketAlgo::setVector( m_dupliUV ) );
 			object->set_asset_name( ccl::ustring( m_assetName.c_str() ) );
 			object->set_is_caustics_caster( m_isCausticsCaster );
 			object->set_is_caustics_receiver( m_isCausticsReceiver );
@@ -1307,8 +1298,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		int m_maxLevel;
 		float m_dicingRate;
 		Color3f m_color;
-		V3f m_dupliGenerated;
-		V2f m_dupliUV;
 		Volume m_volume;
 		ShaderAttributes m_shaderAttributes;
 		InternedString m_assetName;
