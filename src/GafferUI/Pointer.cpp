@@ -42,6 +42,9 @@
 
 using namespace GafferUI;
 
+namespace
+{
+
 static ConstPointerPtr g_current;
 
 using Registry = std::map<std::string, ConstPointerPtr>;
@@ -76,6 +79,8 @@ static Registry &registry()
 	}
 	return r;
 }
+
+} // namespace
 
 Pointer::Pointer( const IECoreImage::ImagePrimitive *image, const Imath::V2i &hotspot )
 	:	m_image( image->copy() ), m_hotspot( hotspot )
