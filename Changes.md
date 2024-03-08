@@ -14,11 +14,15 @@ Breaking Changes
 ----------------
 
 - CyclesOptions : Changed `hairShape` default value to "ribbon", to match Cycles' and Blender's own defaults.
+- Pointer :
+  - Removed `Pointer( const ImagePrimitive * )` constructor.
+  - Removed `image()` method.
 
 API
 ---
 
 - ImageGadget : Removed `textureLoader()` method.
+- Pointer : Added `fileName()` method.
 
 [^1]: To be omitted from final release notes for 1.4.0.0.
 

@@ -56,13 +56,11 @@ class GAFFERUI_API Pointer : public IECore::RefCounted
 
 		IE_CORE_DECLAREMEMBERPTR( Pointer )
 
-		/// A copy of the image is taken.
-		explicit Pointer( const IECoreImage::ImagePrimitive *image, const Imath::V2i &hotspot = Imath::V2i( -1 ) );
 		/// Images are loaded from the paths specified by the
 		/// GAFFERUI_IMAGE_PATHS environment variable.
 		Pointer( const std::string &fileName, const Imath::V2i &hotspot = Imath::V2i( -1 ) );
 
-		const IECoreImage::ImagePrimitive *image() const;
+		const std::string &fileName() const;
 		const Imath::V2i &hotspot() const;
 
 		/// Sets the current pointer. Passing null resets the
@@ -83,7 +81,7 @@ class GAFFERUI_API Pointer : public IECore::RefCounted
 
 	private :
 
-		IECoreImage::ConstImagePrimitivePtr m_image;
+		std::string m_fileName;
 		Imath::V2i m_hotspot;
 
 };

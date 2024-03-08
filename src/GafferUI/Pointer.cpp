@@ -82,34 +82,14 @@ static Registry &registry()
 
 } // namespace
 
-Pointer::Pointer( const IECoreImage::ImagePrimitive *image, const Imath::V2i &hotspot )
-	:	m_image( image->copy() ), m_hotspot( hotspot )
-{
-}
-
 Pointer::Pointer( const std::string &fileName, const Imath::V2i &hotspot )
-	:	m_image( nullptr ), m_hotspot( hotspot )
+	:	m_fileName( fileName ), m_hotspot( hotspot )
 {
-	static IECore::CachedReaderPtr g_reader;
-	if( !g_reader )
-	{
-		const char *sp = getenv( "GAFFERUI_IMAGE_PATHS" );
-		sp = sp ? sp : "";
-		g_reader = new IECore::CachedReader( IECore::SearchPath( sp ) );
-	}
-
-	m_image = IECore::runTimeCast<const IECoreImage::ImagePrimitive>( g_reader->read( fileName ) );
-	if( !m_image )
-	{
-		throw IECore::Exception(
-			fmt::format( "File \"{}\" does not contain an image.", fileName )
-		);
-	}
 }
 
-const IECoreImage::ImagePrimitive *Pointer::image() const
+const std::string &Pointer::fileName() const
 {
-	return m_image.get();
+	return m_fileName;
 }
 
 const Imath::V2i &Pointer::hotspot() const
@@ -125,7 +105,7 @@ void Pointer::setCurrent( ConstPointerPtr pointer )
 	}
 	if(
 		pointer && g_current &&
-		pointer->image()->isEqualTo( g_current->image() ) &&
+		pointer->fileName() ==  g_current->fileName() &&
 		pointer->hotspot() == g_current->hotspot()
 	)
 	{
