@@ -504,8 +504,7 @@ class RendererTest( GafferTest.TestCase ) :
 					"overscanLeft" : 0.1,
 					"overscanRight" : 0.2,
 				}
-			),
-			r.attributes( IECore.CompoundObject() )
+			)
 		)
 
 		r.option( "camera", IECore.StringData( "testCamera" ) )

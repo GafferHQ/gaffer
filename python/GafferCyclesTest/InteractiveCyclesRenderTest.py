@@ -38,13 +38,64 @@ import unittest
 
 import imath
 
+import IECoreScene
+
 import Gaffer
+import GafferImage
+import GafferScene
 import GafferSceneTest
 import GafferCycles
 
 class InteractiveCyclesRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 	interactiveRenderNodeClass = GafferCycles.InteractiveCyclesRender
+
+	def testSVMRenderWithCPU( self ) :
+
+		# This used to crash due to some unknown problem that looked a lot like
+		# memory corruption, and which I assumed was due to the way we swapped
+		# between `ccl::Sessions` internally. At one point it crashed 100% reliably
+		# but now it doesn't, and I don't know why. Seems like a useful canary to
+		# keep around.
+
+		script = Gaffer.ScriptNode()
+		script["catalogue"] = GafferImage.Catalogue()
+		script["catalogue"]["directory"].setValue( self.temporaryDirectory() )
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( script["catalogue"].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+				}
+			)
+		)
+		script["outputs"]["in"].setInput( script["sphere"]["out"] )
+
+		script["options"] = GafferCycles.CyclesOptions()
+		script["options"]["in"].setInput( script["outputs"]["out"] )
+		script["options"]["options"]["shadingSystem"]["enabled"].setValue( True )
+		script["options"]["options"]["shadingSystem"]["value"].setValue( "SVM" )
+
+		script["renderer"] = self._createInteractiveRender()
+		script["renderer"]["in"].setInput( script["options"]["out"] )
+
+		script["renderer"]["state"].setValue( script["renderer"].State.Running )
+
+		self.uiThreadCallHandler.waitFor( 1.0 )
+
+		script["renderer"]["state"].setValue( script["renderer"].State.Stopped )
+
+		self.uiThreadCallHandler.waitFor( 1.0 )
 
 	@unittest.skip( "Resolution edits not supported yet" )
 	def testEditResolution( self ) :

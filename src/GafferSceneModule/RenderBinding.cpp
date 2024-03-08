@@ -536,8 +536,8 @@ void GafferSceneModule::bindRender()
 
 			.def( "attributes", &Renderer::attributes )
 
-			.def( "camera", &rendererCamera1 )
-			.def( "camera", &rendererCamera2 )
+			.def( "camera", &rendererCamera2, ( arg( "name" ), arg( "samples" ), arg( "times" ), arg( "attributes" ) = object() ) )
+			.def( "camera", &rendererCamera1, ( arg( "name" ), arg( "camera" ), arg( "attributes" ) = object() ) )
 			.def( "light", &Renderer::light )
 			.def( "lightFilter", &Renderer::lightFilter )
 

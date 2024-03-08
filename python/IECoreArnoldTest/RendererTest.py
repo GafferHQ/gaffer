@@ -112,8 +112,7 @@ class RendererTest( GafferTest.TestCase ) :
 					"resolution" : imath.V2i( 2000, 1000 ),
 					"cropWindow" : imath.Box2f( imath.V2f( 0 ), imath.V2f( 1, 0.75 ) ),
 				}
-			),
-			r.attributes( IECore.CompoundObject() )
+			)
 		)
 
 		r.option( "camera", IECore.StringData( "testCamera" ) )
@@ -810,8 +809,7 @@ class RendererTest( GafferTest.TestCase ) :
 					parameters = {
 						"projection" : "orthographic"
 					}
-				),
-				r.attributes( IECore.CompoundObject() )
+				)
 			)
 			c.transform( imath.M44f().translate( imath.V3f( i, 0, 0 ) ) )
 
@@ -877,8 +875,7 @@ class RendererTest( GafferTest.TestCase ) :
 					"projection" : "uv_camera",
 					"mesh" : "testPlane"
 				}
-			),
-			r.attributes( IECore.CompoundObject() )
+			)
 		)
 
 		r.option( "camera", IECore.StringData( "testCamera" ) )
@@ -2861,8 +2858,7 @@ class RendererTest( GafferTest.TestCase ) :
 				parameters = {
 					"projection" : "orthographic"
 				}
-			),
-			r.attributes( IECore.CompoundObject() )
+			)
 		)
 
 		r.output(
@@ -3588,8 +3584,7 @@ class RendererTest( GafferTest.TestCase ) :
 				parameters = {
 					"shutter" : imath.V2f( 10.75, 11.25 )
 				}
-			),
-			r.attributes( IECore.CompoundObject() )
+			)
 		)
 
 		r.object( "test_vdb", IECoreVDB.VDBObject(), r.attributes( attributes ) )
@@ -3752,8 +3747,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.camera(
 			"testCamera",
-			[ c1, c2 ], [ 1, 2 ],
-			r.attributes( IECore.CompoundObject() ),
+			[ c1, c2 ], [ 1, 2 ]
 		)
 
 		r.render()
@@ -4285,9 +4279,8 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 		)
 
-		cameraAttributes = renderer.attributes( IECore.CompoundObject() )
-		camera1 = renderer.camera( "/camera1", IECoreScene.Camera(), cameraAttributes )
-		camera2 = renderer.camera( "/camera2", IECoreScene.Camera(), cameraAttributes )
+		camera1 = renderer.camera( "/camera1", IECoreScene.Camera() )
+		camera2 = renderer.camera( "/camera2", IECoreScene.Camera() )
 
 		# Render a plane with a camera projection referencing the
 		# camera by name.
@@ -4360,7 +4353,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		renderer.pause()
 		del camera1
-		camera1 = renderer.camera( "/camera1", IECoreScene.Camera(), cameraAttributes )
+		camera1 = renderer.camera( "/camera1", IECoreScene.Camera() )
 		renderer.render()
 		assertCameraParameter( renderer, "/camera1" )
 
@@ -4382,7 +4375,7 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.render()
 		assertCameraParameter( renderer, "/camera1" )
 
-		del camera1, cameraAttributes, plane
+		del camera1, plane
 		del renderer
 
 	def testBatchNodeParameters( self ) :
@@ -4395,7 +4388,7 @@ class RendererTest( GafferTest.TestCase ) :
 			str( self.temporaryDirectory() / "test.ass" )
 		)
 
-		renderer.camera( "/camera", IECoreScene.Camera(), renderer.attributes( IECore.CompoundObject() ) )
+		renderer.camera( "/camera", IECoreScene.Camera() )
 
 		shaderNetwork = IECoreScene.ShaderNetwork(
 			shaders = {

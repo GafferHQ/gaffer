@@ -2149,7 +2149,7 @@ class InstanceCache : public IECore::RefCounted
 		{
 			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
 
-			if( !arnoldAttributes->canInstanceGeometry( object ) )
+			if( !arnoldAttributes || !arnoldAttributes->canInstanceGeometry( object ) )
 			{
 				return Instance( convert( object, arnoldAttributes, nodeName ) );
 			}
@@ -2292,7 +2292,10 @@ class InstanceCache : public IECore::RefCounted
 				return SharedAtNodePtr();
 			}
 
-			attributes->applyGeometry( object, node );
+			if( attributes )
+			{
+				attributes->applyGeometry( object, node );
+			}
 
 			return SharedAtNodePtr( node, m_nodeDeleter );
 		}
@@ -2315,7 +2318,10 @@ class InstanceCache : public IECore::RefCounted
 				return SharedAtNodePtr();
 			}
 
-			attributes->applyGeometry( samples.front(), node );
+			if( attributes )
+			{
+				attributes->applyGeometry( samples.front(), node );
+			}
 
 			return SharedAtNodePtr( node, m_nodeDeleter );
 
@@ -4249,7 +4255,10 @@ ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::camera( const std::st
 	Instance instance = m_instanceCache->get( camera, attributes, name );
 
 	ObjectInterfacePtr result = new ArnoldObject( instance );
-	result->attributes( attributes );
+	if( attributes )
+	{
+		result->attributes( attributes );
+	}
 	return result;
 }
 
@@ -4260,7 +4269,10 @@ ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::camera( const std::st
 	Instance instance = m_instanceCache->get( vector<const IECore::Object *>( samples.begin(), samples.end() ), times, attributes, name );
 
 	ObjectInterfacePtr result = new ArnoldObject( instance );
-	result->attributes( attributes );
+	if( attributes )
+	{
+		result->attributes( attributes );
+	}
 	return result;
 }
 

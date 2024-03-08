@@ -168,6 +168,14 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 		///
 		/// Currently all ObjectInterfaces _must_ be destroyed prior to destruction
 		/// of the renderer itself.
+		///
+		/// \todo Having methods on ObjectInterface has turned out to make the API harder
+		/// to implement for many renderers, because each ObjectInterface needs to have
+		/// access to some central state that more naturally belongs in the renderer.
+		/// Consider making ObjectInterface into just an opaque handle, and then moving
+		/// the edit methods to Renderer like so :
+		///
+		/// `bool Renderer::editAttributes( ObjectInterface *object, const AttributesInterface *attributes )`
 		class GAFFERSCENE_API ObjectInterface : public IECore::RefCounted
 		{
 
@@ -259,12 +267,12 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 		/// times passed to motionBegin() to specify motion blur. Defaults to 0,0 if unspecified.
 		///
 		/// May return a nullptr if the camera definition is not supported by the renderer.
-		virtual ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) = 0;
+		virtual ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes = nullptr ) = 0;
 		/// As above, but allowing animated camera parameters to be specified. A default implementation
 		/// that calls `camera( name, samples[0], attributes )` is provided for renderers which don't
 		/// support animated cameras. Renderers that do support animated cameras should implement a suitable
 		/// override.
-		virtual ObjectInterfacePtr camera( const std::string &name, const std::vector<const IECoreScene::Camera *> &samples, const std::vector<float> &times, const AttributesInterface *attributes );
+		virtual ObjectInterfacePtr camera( const std::string &name, const std::vector<const IECoreScene::Camera *> &samples, const std::vector<float> &times, const AttributesInterface *attributes = nullptr );
 
 		/// Adds a named light with the initially supplied set of attributes, which are expected
 		/// to provide at least a light shader. Object may be non-null to specify arbitrary geometry

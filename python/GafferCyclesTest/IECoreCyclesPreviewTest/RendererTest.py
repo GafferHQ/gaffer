@@ -303,6 +303,302 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.render()
 		time.sleep( 2.0 )
 
+	def testBackgroundLightBatchRender( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		fileName = self.temporaryDirectory() / "test.exr"
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				str( fileName ),
+				"exr",
+				"rgba",
+				{}
+			)
+		)
+
+		# Set an option that requires a re-created cycles session before rendering starts
+		renderer.option( "cycles:session:use_auto_tile", IECore.BoolData( False ) )
+
+		plane = renderer.object(
+			"/plane",
+			IECoreScene.MeshPrimitive.createPlane(
+				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			),
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 1, 1, 1 ) } ),
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		## \todo Default camera is facing down +ve Z but should be facing
+		# down -ve Z.
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+
+		light = renderer.light(
+			"/light",
+			None,
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "background_light", "cycles:light", { "color" : imath.Color3f( 1, 0, 0 ) } ),
+					},
+					output = "output",
+				),
+			} ) )
+		)
+		light.transform( imath.M44f().rotate( imath.V3f( 0, math.pi, 0 ) ) )
+
+		renderer.render()
+
+		# Check that we have a pure red image.
+
+		image = IECore.Reader.create( str( fileName ) ).read()
+
+		middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
+		self.assertGreater( middlePixel.r, 0 )
+		self.assertEqual( middlePixel.g, 0 )
+		self.assertEqual( middlePixel.b, 0 )
+
+		del plane
+
+	def testBackgroundLightEdits( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testBackgroundLightEdits",
+				}
+			)
+		)
+
+		plane = renderer.object(
+			"/plane",
+			IECoreScene.MeshPrimitive.createPlane(
+				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			),
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface" )
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		## \todo Default camera is facing down +ve Z but should be facing
+		# down -ve Z.
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+
+		def lightAttributes( color ) :
+
+			return renderer.attributes( IECore.CompoundObject ( {
+				"cycles:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "background_light", "cycles:light", { "color" : color } ),
+					},
+					output = "output",
+				),
+			} ) )
+
+		# Render with a red light.
+
+		light = renderer.light( "/light", None, lightAttributes( imath.Color3f( 1, 0, 0 ) ) )
+		renderer.render()
+		time.sleep( 1 )
+
+		# Check that we have a pure red image.
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundLightEdits" )
+		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+
+		middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
+		self.assertGreater( middlePixel.r, 0 )
+		self.assertEqual( middlePixel.g, 0 )
+		self.assertEqual( middlePixel.b, 0 )
+
+		# Rerender with a green light.
+
+		renderer.pause()
+		light.attributes( lightAttributes( imath.Color3f( 0, 1, 0 ) ) )
+		renderer.render()
+		time.sleep( 1 )
+
+		# Check that we have a pure green image.
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundLightEdits" )
+		middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
+		self.assertEqual( middlePixel.r, 0 )
+		self.assertGreater( middlePixel.g, 0 )
+		self.assertEqual( middlePixel.b, 0 )
+
+		# Rerender with a blue light.
+
+		renderer.pause()
+		light.attributes( lightAttributes( imath.Color3f( 0, 0, 1 ) ) )
+		renderer.render()
+		time.sleep( 1 )
+
+		# Check that we have a pure blue image.
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundLightEdits" )
+		middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
+		self.assertEqual( middlePixel.r, 0 )
+		self.assertEqual( middlePixel.g, 0 )
+		self.assertGreater( middlePixel.b, 0 )
+
+		# Rerender without the light.
+
+		renderer.pause()
+		del light
+		renderer.render()
+		time.sleep( 1 )
+
+		# Check that we have a pure black image.
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundLightEdits" )
+		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.55 ) ), imath.Color4f( 0, 0, 0, 1 ) )
+
+		renderer.pause()
+		del plane
+
+	def testBackgroundShader( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testBackgroundShader",
+				}
+			)
+		)
+
+		plane = renderer.object(
+			"/plane",
+			IECoreScene.MeshPrimitive.createPlane(
+				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			),
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface" )
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		## \todo Default camera is facing down +ve Z but should be facing
+		# down -ve Z.
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+
+		def backgroundShader( color ) :
+
+			return IECoreScene.ShaderNetwork(
+				shaders = {
+					"output" : IECoreScene.Shader( "checker_texture", "cycles:shader", { "color1" : color, "color2" : color } ),
+				},
+				output = "output",
+			)
+
+		# Render with no background, and check we have a black image.
+
+		renderer.render()
+		time.sleep( 1 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundShader" )
+		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.55 ) ), imath.Color4f( 0, 0, 0, 1 ) )
+
+		# Render with a red background.
+
+		renderer.pause()
+		renderer.option( "cycles:background:shader", backgroundShader( imath.Color3f( 1, 0, 0 ) ) )
+		renderer.render()
+		time.sleep( 1 )
+
+		# Check that we have a pure red image.
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundShader" )
+		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+
+		middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
+		self.assertGreater( middlePixel.r, 0 )
+		self.assertEqual( middlePixel.g, 0 )
+		self.assertEqual( middlePixel.b, 0 )
+
+		# Render with a green background.
+
+		renderer.pause()
+		renderer.option( "cycles:background:shader", backgroundShader( imath.Color3f( 0, 1, 0 ) ) )
+		renderer.render()
+		time.sleep( 1 )
+
+		# Check that we have a pure green image.
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundShader" )
+		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+
+		middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
+		self.assertEqual( middlePixel.r, 0 )
+		self.assertGreater( middlePixel.g, 0 )
+		self.assertEqual( middlePixel.b, 0 )
+
+		# Render with a red background again.
+
+		renderer.pause()
+		renderer.option( "cycles:background:shader", backgroundShader( imath.Color3f( 1, 0, 0 ) ) )
+		renderer.render()
+		time.sleep( 1 )
+
+		# Check that we have gone back to a pure red image.
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundShader" )
+		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+
+		middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
+		self.assertGreater( middlePixel.r, 0 )
+		self.assertEqual( middlePixel.g, 0 )
+		self.assertEqual( middlePixel.b, 0 )
+
+		# Remove background, and check we have a black image.
+
+		renderer.pause()
+		renderer.option( "cycles:background:shader", None )
+		renderer.render()
+		time.sleep( 1 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundShader" )
+		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.55 ) ), imath.Color4f( 0, 0, 0, 1 ) )
+
+		del plane
+
 	def testMultipleOutputs( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
@@ -420,7 +716,7 @@ class RendererTest( GafferTest.TestCase ) :
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
 		)
 
-		camera = renderer.camera( "test", IECoreScene.Camera(), renderer.attributes( IECore.CompoundObject() ) )
+		camera = renderer.camera( "test", IECoreScene.Camera() )
 
 		# Edit should succeed.
 		self.assertTrue( camera.attributes(
@@ -443,8 +739,7 @@ class RendererTest( GafferTest.TestCase ) :
 					"resolution" : imath.V2i( 2000, 1000 ),
 					"cropWindow" : imath.Box2f( imath.V2f( 0.25 ), imath.V2f( 0.75 ) ),
 				}
-			),
-			renderer.attributes( IECore.CompoundObject() )
+			)
 		)
 
 		renderer.output(
@@ -490,8 +785,7 @@ class RendererTest( GafferTest.TestCase ) :
 					"resolution" : imath.V2i( 2000, 1000 ),
 					"cropWindow" : imath.Box2f( imath.V2f( 0.25 ), imath.V2f( 0.75 ) ),
 				}
-			),
-			renderer.attributes( IECore.CompoundObject() )
+			)
 		)
 
 		fileName = self.temporaryDirectory() / "test.exr"
@@ -713,8 +1007,7 @@ class RendererTest( GafferTest.TestCase ) :
 					"projection" : "orthographic",
 					"screenWindow" : imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) )
 				}
-			),
-			renderer.attributes( IECore.CompoundObject() )
+			)
 		)
 		renderer.option( "camera", IECore.StringData( "testCamera" ) )
 
@@ -1259,8 +1552,7 @@ class RendererTest( GafferTest.TestCase ) :
 					"projection" : "orthographic",
 					"screenWindow" : imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) )
 				}
-			),
-			renderer.attributes( IECore.CompoundObject() )
+			)
 		)
 		renderer.option( "camera", IECore.StringData( "testCamera" ) )
 
@@ -1679,8 +1971,7 @@ class RendererTest( GafferTest.TestCase ) :
 					"projection" : "orthographic",
 					"screenWindow" : imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) )
 				}
-			),
-			renderer.attributes( IECore.CompoundObject() )
+			)
 		)
 		renderer.option( "camera", IECore.StringData( "testCamera" ) )
 
@@ -2017,22 +2308,28 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 		)
 
+		with IECore.CapturingMessageHandler() as mh :
+			attributes = renderer.attributes( IECore.CompoundObject ( {
+					"cycles:surface" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"output" : IECoreScene.Shader(
+								"Surface/Constant", "osl:shader",
+								{ "Cs" : imath.Color3f( 0, 1, 0 ) }
+							),
+						},
+						output = "output",
+					)
+				} ) )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].message, """Couldn't load OSL shader "Surface/Constant" as the shading system is not set to OSL.""" )
+
 		plane = renderer.object(
 			"/plane",
 			IECoreScene.MeshPrimitive.createPlane(
 				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
 			),
-			renderer.attributes( IECore.CompoundObject ( {
-				"cycles:surface" : IECoreScene.ShaderNetwork(
-					shaders = {
-						"output" : IECoreScene.Shader(
-							"Surface/Constant", "osl:shader",
-							{ "Cs" : imath.Color3f( 0, 1, 0 ) }
-						),
-					},
-					output = "output",
-				)
-			} ) )
+			attributes
 		)
 		## \todo Default camera is facing down +ve Z but should be facing
 		# down -ve Z.
@@ -2142,8 +2439,23 @@ class RendererTest( GafferTest.TestCase ) :
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
 		)
 
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testUnknownOptions",
+				}
+			)
+		)
+
 		with IECore.CapturingMessageHandler() as mh :
 			renderer.option( "cycles:invalid", IECore.IntData( 10 ) )
+			renderer.option( "someOtherRenderer:unknown", IECore.IntData( 10 ) )
+			renderer.render()
 
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
@@ -2166,24 +2478,7 @@ class RendererTest( GafferTest.TestCase ) :
 					GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
 				)
 
-				renderer.output(
-					"testOutput",
-					IECoreScene.Output(
-						"test",
-						"ieDisplay",
-						"rgba",
-						{
-							"driverType" : "ImageDisplayDriver",
-							"handle" : "testThreads",
-						}
-					)
-				)
-
 				renderer.option( "cycles:session:threads", IECore.IntData( threads ) )
-				## \todo We currently need to do a render for the threads value to
-				# be flushed into the session params. But in future we should be able
-				# to remove that.
-				renderer.render()
 				self.assertEqual( renderer.command( "cycles:querySession", {} )["threads"].value, expectedThreads )
 
 	def testDevices( self ) :
@@ -2202,26 +2497,181 @@ class RendererTest( GafferTest.TestCase ) :
 					GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
 				)
 
-				renderer.output(
-					"testOutput",
-					IECoreScene.Output(
-						"test",
-						"ieDisplay",
-						"rgba",
-						{
-							"driverType" : "ImageDisplayDriver",
-							"handle" : "testThreads",
-						}
-					)
-				)
+				# Ideally we want clients to emit all options before doing anything else,
+				# to simplify our internal session management. But certain important clients
+				# (SceneGadget, RenderController, I'm looking at you) like to create a camera
+				# first, and we need to accomodate them while preserving the ability to specify
+				# `cycles:device` afterwards.
+				renderer.camera( "camera", IECoreScene.Camera() )
 
 				renderer.option( "cycles:shadingsystem", IECore.StringData( "SVM" ) )
 				renderer.option( "cycles:device", IECore.StringData( f"{deviceType}:{typeIndex:02d}" ) )
-				## \todo We currently need to do a render for the device to
-				# be flushed into the session params. But in future we should be
-				# able to remove that.
-				renderer.render()
 				self.assertEqual( renderer.command( "cycles:querySession", {} )["device"].value, device["id"] )
+
+	def testExposureEdit( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testExposureEdit",
+				}
+			)
+		)
+
+		plane = renderer.object(
+			"/plane",
+			IECoreScene.MeshPrimitive.createPlane(
+				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			),
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "emission_strength" : 1 } ),
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		## \todo Default camera is facing down +ve Z but should be facing
+		# down -ve Z.
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+
+		renderer.render()
+		time.sleep( 1 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testExposureEdit" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		# Slightly off-centre, to avoid triangle edge artifact in centre of image.
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
+		self.assertEqual( testPixel, imath.Color4f( 1 ) )
+
+		# Edit exposure and re-render. We should get an image twice as bright.
+
+		renderer.pause()
+		renderer.option( "cycles:film:exposure", IECore.FloatData( 2 ) )
+
+		renderer.render()
+		time.sleep( 1 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testExposureEdit" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
+		self.assertEqual( testPixel, imath.Color4f( 2, 2, 2, 1 ) )
+
+		del plane
+
+	def testUnsupportedSessionEdit( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.option( "cycles:session:threads", IECore.IntData( 1 ) )
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testUnsupportedSessionEdit",
+				}
+			)
+		)
+
+		renderer.render()
+		self.assertEqual( renderer.command( "cycles:querySession", {} )["threads"].value, 1 )
+
+		with IECore.CapturingMessageHandler() as mh :
+			renderer.pause()
+			renderer.option( "cycles:session:threads", IECore.IntData( 2 ) )
+			renderer.render()
+
+		self.assertEqual( renderer.command( "cycles:querySession", {} )["threads"].value, 1 )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].context, "CyclesRenderer::option" )
+		self.assertEqual( mh.messages[0].message, "Option edit requires a manual render restart" )
+
+	def testUnsupportedSessionEdit( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.option( "cycles:session:threads", IECore.IntData( 1 ) )
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testUnsupportedSessionEdit",
+				}
+			)
+		)
+
+		renderer.render()
+		self.assertEqual( renderer.command( "cycles:querySession", {} )["threads"].value, 1 )
+
+		with IECore.CapturingMessageHandler() as mh :
+			renderer.pause()
+			renderer.option( "cycles:session:threads", IECore.IntData( 2 ) )
+			renderer.render()
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].context, "CyclesRenderer::option" )
+		self.assertEqual( mh.messages[0].message, "Option edit requires a manual render restart" )
+
+	def testUnsupportedSceneEdit( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testUnsupportedSessionEdit",
+				}
+			)
+		)
+
+		renderer.render()
+
+		with IECore.CapturingMessageHandler() as mh :
+			renderer.pause()
+			renderer.option( "cycles:scene:use_bvh_spatial_split", IECore.BoolData( True ) )
+			renderer.render()
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].context, "CyclesRenderer::option" )
+		self.assertEqual( mh.messages[0].message, "Option edit requires a manual render restart" )
 
 if __name__ == "__main__":
 	unittest.main()
