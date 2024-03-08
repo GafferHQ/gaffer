@@ -9,6 +9,9 @@ Fixes
   - Fixed hangs and crashes when using non-default session modes such as SVM shading.
   - Fixed failure to render background light in batch renders (#5234).
   - Fixed failure to update when reverting a background shader to previous values.
+- GafferUI :
+  - Fixed `Color space 'sRGB' could not be found` errors when running with certain custom OCIO configs (#5695).
+  - Fixed icon colours when running with an ACES OCIO config.
 
 Breaking Changes
 ----------------
