@@ -926,6 +926,7 @@ void LightPositionTool::plugSet( Plug *plug )
 	{
 		auto h = static_cast<DistanceHandle *>( m_distanceHandle.get() );
 		h->setRequiresPivot( modePlug()->getValue() == (int)Mode::Shadow );
+		updateHandles( m_rotateHandle->getRasterScale() );
 	}
 }
 
