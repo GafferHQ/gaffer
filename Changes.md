@@ -1,6 +1,11 @@
 1.4.x.x (relative to 1.4.0.0b4)
 =======
 
+Improvements
+------------
+
+- LightPosition Tool : The tool is now only visible for members of the `__lights` set, instead of all objects.
+
 API
 ---
 

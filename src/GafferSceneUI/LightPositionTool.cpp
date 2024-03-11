@@ -107,6 +107,8 @@ const float g_arrowHandleSelectionSize = g_circleHandleSelectionWidth * 2.f;
 
 const float g_unitConeHeight = 1.5f;
 
+InternedString g_lightsSetName( "__lights" );
+
 const char *constantFragSource()
 {
 	return
@@ -666,8 +668,14 @@ void LightPositionTool::updateHandles( float rasterScale )
 
 	handles()->setTransform( s.orientedTransform( Orientation::Local ) );
 
+	Context::Scope scopedContext( s.context() );
+
 	if( !m_drag )
 	{
+		bool isLight = s.scene()->set( g_lightsSetName )->readable().match( s.path() ) & IECore::PathMatcher::ExactMatch;
+		m_distanceHandle->setVisible( isLight );
+		m_rotateHandle->setVisible( isLight );
+
 		bool singleSelection = selection().size() == 1;
 
 		TranslationRotation trDistanceHandle( s, Orientation::World );
@@ -705,8 +713,6 @@ void LightPositionTool::updateHandles( float rasterScale )
 	// The user can control the distance along the line from target
 	// to pivot, and the rotation around the Z-axis. Any variance from those
 	// contraints invalidates the stored parameters.
-
-	Context::Scope scopedContext( s.context() );
 
 	const M44f transform = s.scene()->fullTransform( s.path() ) * sceneToTransform;
 	const V3f p = transform.translation();
