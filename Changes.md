@@ -1,7 +1,15 @@
 1.3.x.x (relative to 1.3.13.0)
 =======
 
+Fixes
+-----
 
+- DocumentationAlgo : Fixed generation of duplicate entries for aliased nodes in `exportNodeReference()`.
+
+Documentation
+-------------
+
+- Node Reference : Removed duplicate entries for nodes that have been aliased by compatibility configs.
 
 1.3.13.0 (relative to 1.3.12.0)
 ========
