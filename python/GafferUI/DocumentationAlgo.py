@@ -85,6 +85,11 @@ def exportNodeReference( directory, modules = [], modulePath = "" ) :
 				# another module by one of the compatibility config files.
 				continue
 
+			if name != node.typeName().rpartition( ":" )[2] :
+				# Skip nodes that look like they're aliases of other nodes
+				# injected by a compatibility config file.
+				continue
+
 			__makeDirs( directory + "/" + module.__name__ )
 			with open( "%s/%s/%s.md" % ( directory, module.__name__, name ), "w", encoding = "utf-8" ) as f :
 				f.write( __nodeDocumentation( node ) )

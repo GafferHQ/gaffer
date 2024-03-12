@@ -12,6 +12,12 @@ Fixes
 - GafferUI :
   - Fixed `Color space 'sRGB' could not be found` errors when running with certain custom OCIO configs (#5695).
   - Fixed icon colours when running with an ACES OCIO config.
+- DocumentationAlgo : Fixed generation of duplicate entries for aliased nodes in `exportNodeReference()` [^1].
+
+Documentation
+-------------
+
+- Node Reference : Removed duplicate entries for nodes that have been aliased by compatibility configs [^1].
 
 Breaking Changes
 ----------------
@@ -274,10 +280,18 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.x.x (relative to 1.3.13.0)
-=======
+1.3.13.1 (relative to 1.3.13.0)
+========
 
+Fixes
+-----
 
+- DocumentationAlgo : Fixed generation of duplicate entries for aliased nodes in `exportNodeReference()`.
+
+Documentation
+-------------
+
+- Node Reference : Removed duplicate entries for nodes that have been aliased by compatibility configs.
 
 1.3.13.0 (relative to 1.3.12.0)
 ========
