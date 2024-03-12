@@ -114,9 +114,6 @@ def __samplingSummary( plug ) :
 	if plug["samples"]["enabled"].getValue() :
 		info.append( "Samples {}".format( plug["samples"]["value"].getValue() ) )
 
-	if plug["samplingPattern"]["enabled"].getValue() :
-		info.append( "Sampling Pattern {}".format( Gaffer.NodeAlgo.currentPreset( plug["samplingPattern"]["value"] ) ) )
-
 	if plug["lightSamplingThreshold"]["enabled"].getValue() :
 		info.append( "Light Sampling Threshold {}".format( plug["lightSamplingThreshold"]["value"].getValue() ) )
 
@@ -677,27 +674,6 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Sampling",
 			"label", "Samples",
-
-		],
-
-		"options.samplingPattern" : [
-
-			"description",
-			"""
-			Random sampling pattern used by the integrator.
-			""",
-
-			"layout:section", "Sampling",
-
-		],
-
-		"options.samplingPattern.value" : [
-
-			"preset:Sobol", "sobol",
-			"preset:Correlated Multi-Jitter", "cmj",
-			"preset:Progressive Multi-Jitter", "pmj",
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 
