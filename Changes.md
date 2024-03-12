@@ -1,7 +1,10 @@
 1.4.x.x (relative to 1.4.0.0b3)
 =======
 
+Breaking Changes
+----------------
 
+- CyclesOptions : Removed `cycles:integrator:sampling_pattern` option. This is intended only for debugging, but is still available via a CustomOptions node.
 
 1.4.0.0b3 (relative to 1.4.0.0b2)
 =========
