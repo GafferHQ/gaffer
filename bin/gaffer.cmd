@@ -161,7 +161,6 @@ if "%GAFFER_DEBUG%" NEQ "" (
 )
 
 if %ERRORLEVEL% NEQ 0 (
-	echo "Error(s) running Gaffer"
 	exit /B %ERRORLEVEL%
 )
 

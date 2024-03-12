@@ -1,6 +1,11 @@
 1.4.x.x (relative to 1.4.0.0b3)
 =======
 
+Fixes
+-----
+
+- Windows : Removed "Error(s) running Gaffer" shutdown message. It was misleading when errors originated in the renderer rather than Gaffer itself.
+
 Breaking Changes
 ----------------
 
