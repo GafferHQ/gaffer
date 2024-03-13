@@ -118,6 +118,29 @@ void interactiveRenderSetContext( InteractiveRender &r, Context &context )
 	r.setContext( &context );
 }
 
+void registerTypeWrapper( const std::string &name, object creator )
+{
+	// The function we register will be held and destroyed from C++.
+	// Wrap it so that we correctly acquire the GIL before the captured
+	// Python object is destroyed.
+	auto creatorPtr = std::shared_ptr<boost::python::object>(
+		new boost::python::object( creator ),
+		[]( boost::python::object *o ) {
+			IECorePython::ScopedGILLock gilLock;
+			delete o;
+		}
+	);
+
+	Renderer::registerType(
+		name,
+		[creatorPtr] ( Renderer::RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler ) -> Renderer::Ptr {
+			IECorePython::ScopedGILLock gilLock;
+			object o = (*creatorPtr)( renderType, fileName, messageHandler );
+			return extract<Renderer::Ptr>( o );
+		}
+	);
+}
+
 list rendererTypes()
 {
 	std::vector<IECore::InternedString> t = Renderer::types();
@@ -524,6 +547,8 @@ void GafferSceneModule::bindRender()
 
 		renderer
 
+			.def( "registerType", &registerTypeWrapper )
+			.def( "deregisterType", &Renderer::deregisterType )
 			.def( "types", &rendererTypes )
 			.staticmethod( "types" )
 			.def( "create", &Renderer::create, ( arg( "type" ), arg( "renderType" ) = Renderer::Batch, arg( "fileName" ) = "", arg( "messageHandler" ) = IECore::MessageHandlerPtr() ) )

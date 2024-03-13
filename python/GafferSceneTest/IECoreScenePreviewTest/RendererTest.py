@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,11 +34,48 @@
 #
 ##########################################################################
 
-from .CapturingRendererTest import CapturingRendererTest
-from .CompoundRendererTest import CompoundRendererTest
-from .PlaceholderTest import PlaceholderTest
-from .RendererTest import RendererTest
+import unittest
+
+import GafferTest
+import GafferScene
+
+class RendererTest( GafferTest.TestCase ) :
+
+	def testReentrantPythonFactory( self ) :
+
+		# Check that we can register a renderer alias from Python, by forwarding to some
+		# other creator that is registered dynamically by the first one. We can use this
+		# to implement delayed loading of the true renderer modules.
+
+		self.assertNotIn( "Test", GafferScene.Private.IECoreScenePreview.Renderer.types() )
+
+		self.addCleanup(
+			GafferScene.Private.IECoreScenePreview.Renderer.deregisterType, "Test"
+		)
+
+		def creator1( renderType, fileName, messageHandler ) :
+
+			GafferScene.Private.IECoreScenePreview.Renderer.registerType( "Test", creator2 )
+			return GafferScene.Private.IECoreScenePreview.Renderer.create( "Test", renderType, fileName, messageHandler )
+
+		def creator2( renderType, fileName, messageHandler ) :
+
+			return GafferScene.Private.IECoreScenePreview.Renderer.create( "Capturing", renderType, fileName, messageHandler  )
+
+		GafferScene.Private.IECoreScenePreview.Renderer.registerType( "Test", creator1 )
+		self.assertIn( "Test", GafferScene.Private.IECoreScenePreview.Renderer.types() )
+
+		self.assertIsInstance(
+			GafferScene.Private.IECoreScenePreview.Renderer.create( "Test", GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive ),
+			GafferScene.Private.IECoreScenePreview.CapturingRenderer
+		)
+
+		self.assertIn( "Test", GafferScene.Private.IECoreScenePreview.Renderer.types() )
+
+		self.assertIsInstance(
+			GafferScene.Private.IECoreScenePreview.Renderer.create( "Test", GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive ),
+			GafferScene.Private.IECoreScenePreview.CapturingRenderer
+		)
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
