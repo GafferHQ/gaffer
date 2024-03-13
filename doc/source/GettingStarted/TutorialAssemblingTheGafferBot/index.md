@@ -516,4 +516,4 @@ You should now have a solid basis for further learning and exploration.
 ## See also ##
 
 - [Installing Gaffer](../InstallingGaffer/index.md)
-- [Controls and Shorcuts](../../Interface/ControlsAndShortcuts/index.md)
+- [Controls and Shortcuts](../../Interface/ControlsAndShortcuts/index.md)
