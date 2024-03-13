@@ -8,6 +8,11 @@ Features
 - StandardOptions : Added `render:defaultRenderer` option, allowing the scene globals to specify which renderer is used by the Render and InteractiveRender nodes [^1].
 - RenderPassEditor : Added a column for the `render:defaultRenderer` option, allowing each pass to be rendered in a different renderer [^1].
 
+Improvements
+------------
+
+- GraphEditor : Removed all renderer-specific Render and InteractiveRender nodes from the node menu. These nodes still exist for backwards compatibility with old scenes, but the generic Render and InteractiveRender nodes should now be used instead.
+
 Fixes
 -----
 
