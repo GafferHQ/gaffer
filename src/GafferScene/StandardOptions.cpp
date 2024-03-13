@@ -65,6 +65,10 @@ StandardOptions::StandardOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "render:overscanRight", new FloatPlug( "value", Plug::In, 0.1f, 0.0f, 1.0f ), false, "overscanRight" ) );
 	options->addChild( new Gaffer::NameValuePlug( "render:depthOfField", new IECore::BoolData( false ), false, "depthOfField" ) );
 
+	// Renderer
+
+	options->addChild( new Gaffer::NameValuePlug( "render:defaultRenderer", new IECore::StringData(), false, "defaultRenderer" ) );
+
 	// Render set
 
 	options->addChild( new Gaffer::NameValuePlug( "render:includedPurposes", new IECore::StringVectorData( { "default", "render" } ), false, "includedPurposes" ) );

@@ -5,6 +5,7 @@ Features
 --------
 
 - Render, InteractiveRender : Added new nodes capable of rendering to any supported renderer, and using the`render:defaultRenderer` option to determine which to use by default.
+- StandardOptions : Added `render:defaultRenderer` option, allowing the scene globals to specify which renderer is used by the Render and InteractiveRender nodes.
 
 1.3.13.1 (relative to 1.3.13.0)
 ========
