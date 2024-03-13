@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Image Engine Design Inc nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,15 +34,13 @@
 #
 ##########################################################################
 
-from .CyclesLightTest import CyclesLightTest
-from .InteractiveCyclesRenderTest import InteractiveCyclesRenderTest
-from .ModuleTest import ModuleTest
-from .CyclesLightTest import CyclesLightTest
-from .CyclesShaderTest import CyclesShaderTest
-from .CyclesRenderTest import CyclesRenderTest
+import unittest
 
-from .IECoreCyclesPreviewTest import *
+import GafferSceneTest
+
+class CyclesRenderTest( GafferSceneTest.RenderTest ) :
+
+	renderer = "Cycles"
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()

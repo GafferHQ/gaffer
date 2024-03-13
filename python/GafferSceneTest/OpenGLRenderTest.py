@@ -49,9 +49,11 @@ import GafferScene
 import GafferSceneTest
 
 @unittest.skipIf( GafferTest.inCI(), "OpenGL not set up" )
-class OpenGLRenderTest( GafferSceneTest.SceneTestCase ) :
+class OpenGLRenderTest( GafferSceneTest.RenderTest ) :
 
-	def test( self ) :
+	renderer = "OpenGL"
+
+	def testTextureFromImagePlug( self ) :
 
 		self.assertFalse( ( self.temporaryDirectory() / "test.exr" ).exists() )
 
@@ -105,81 +107,6 @@ class OpenGLRenderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertAlmostEqual( imageSampler["color"]["r"].getValue(), 0.666666, delta = 0.001 )
 		self.assertAlmostEqual( imageSampler["color"]["g"].getValue(), 0.666666, delta = 0.001 )
 		self.assertEqual( imageSampler["color"]["b"].getValue(), 0 )
-
-	def testOutputDirectoryCreation( self ) :
-
-		s = Gaffer.ScriptNode()
-		s["variables"].addChild( Gaffer.NameValuePlug( "renderDirectory", ( self.temporaryDirectory() / "openGLRenderTest" ).as_posix() ) )
-
-		s["plane"] = GafferScene.Plane()
-
-		s["outputs"] = GafferScene.Outputs()
-		s["outputs"]["in"].setInput( s["plane"]["out"] )
-		s["outputs"].addOutput(
-			"beauty",
-			IECoreScene.Output(
-				"$renderDirectory/test.####.exr",
-				"exr",
-				"rgba",
-				{}
-			)
-		)
-
-		s["render"] = GafferScene.OpenGLRender()
-		s["render"]["in"].setInput( s["outputs"]["out"] )
-
-		self.assertFalse( ( self.temporaryDirectory() / "openGLRenderTest" ).exists() )
-		self.assertFalse( ( self.temporaryDirectory() / "openGLRenderTest" / "test.0001.exr" ).exists() )
-
-		with s.context() :
-			s["render"]["task"].execute()
-
-		self.assertTrue( ( self.temporaryDirectory() / "openGLRenderTest" ).exists() )
-		self.assertTrue( ( self.temporaryDirectory() / "openGLRenderTest" / "test.0001.exr" ).exists() )
-
-	def testHash( self ) :
-
-		c = Gaffer.Context()
-		c.setFrame( 1 )
-		c2 = Gaffer.Context()
-		c2.setFrame( 2 )
-
-		s = Gaffer.ScriptNode()
-		s["plane"] = GafferScene.Plane()
-		s["outputs"] = GafferScene.Outputs()
-		s["outputs"]["in"].setInput( s["plane"]["out"] )
-		s["outputs"].addOutput( "beauty", IECoreScene.Output( "$renderDirectory/test.####.exr", "exr", "rgba", {} ) )
-		s["render"] = GafferScene.OpenGLRender()
-
-		# no input scene produces no effect
-		self.assertEqual( s["render"].hash( c ), IECore.MurmurHash() )
-
-		# now theres an scene to render, we get some output
-		s["render"]["in"].setInput( s["outputs"]["out"] )
-		self.assertNotEqual( s["render"].hash( c ), IECore.MurmurHash() )
-
-		# output varies by time
-		self.assertNotEqual( s["render"].hash( c ), s["render"].hash( c2 ) )
-
-		# output varies by new Context entries
-		current = s["render"].hash( c )
-		c["renderDirectory"] = ( self.temporaryDirectory() / "openGLRenderTest" ).as_posix()
-		self.assertNotEqual( s["render"].hash( c ), current )
-
-		# output varies by changed Context entries
-		current = s["render"].hash( c )
-		c["renderDirectory"] = ( self.temporaryDirectory() / "openGLRenderTest2" ).as_posix()
-		self.assertNotEqual( s["render"].hash( c ), current )
-
-		# output doesn't vary by ui Context entries
-		current = s["render"].hash( c )
-		c["ui:something"] = "alterTheUI"
-		self.assertEqual( s["render"].hash( c ), current )
-
-		# also varies by input node
-		current = s["render"].hash( c )
-		s["render"]["in"].setInput( s["plane"]["out"] )
-		self.assertNotEqual( s["render"].hash( c ), current )
 
 if __name__ == "__main__":
 	unittest.main()

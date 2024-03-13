@@ -59,7 +59,10 @@ import GafferOSL
 import GafferArnold
 import GafferArnoldTest
 
-class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
+class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
+
+	renderer = "Arnold"
+	sceneDescriptionSuffix = ".ass"
 
 	def setUp( self ) :
 
@@ -72,110 +75,6 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		GafferSceneTest.SceneTestCase.tearDown( self )
 
 		GafferScene.SceneAlgo.deregisterRenderAdaptor( "Test" )
-
-	def testExecute( self ) :
-
-		s = Gaffer.ScriptNode()
-
-		s["plane"] = GafferScene.Plane()
-		s["render"] = GafferArnold.ArnoldRender()
-		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
-		s["render"]["in"].setInput( s["plane"]["out"] )
-
-		s["expression"] = Gaffer.Expression()
-		s["expression"].setExpression( f"""parent['render']['fileName'] = '{( self.temporaryDirectory() / "test.%d.ass" ).as_posix()}' % int( context['frame'] )""" )
-
-		s["fileName"].setValue( self.__scriptFileName )
-		s.save()
-
-		p = subprocess.Popen(
-			f"gaffer execute {self.__scriptFileName} -frames 1-3",
-			shell=True,
-			stderr = subprocess.PIPE,
-		)
-		p.wait()
-		self.assertFalse( p.returncode )
-
-		for i in range( 1, 4 ) :
-			self.assertTrue( ( self.temporaryDirectory() / f"test.{i}.ass" ).exists() )
-
-	def testWaitForImage( self ) :
-
-		s = Gaffer.ScriptNode()
-
-		s["plane"] = GafferScene.Plane()
-
-		s["outputs"] = GafferScene.Outputs()
-		s["outputs"].addOutput(
-			"beauty",
-			IECoreScene.Output(
-				str( self.temporaryDirectory() / "test.tif" ),
-				"tiff",
-				"rgba",
-				{}
-			)
-		)
-		s["outputs"]["in"].setInput( s["plane"]["out"] )
-
-		s["render"] = GafferArnold.ArnoldRender()
-		s["render"]["in"].setInput( s["outputs"]["out"] )
-		s["render"]["task"].execute()
-
-		self.assertTrue( ( self.temporaryDirectory() / "test.tif" ).exists() )
-
-	def testExecuteWithStringSubstitutions( self ) :
-
-		s = Gaffer.ScriptNode()
-
-		s["plane"] = GafferScene.Plane()
-		s["render"] = GafferArnold.ArnoldRender()
-		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
-		s["render"]["in"].setInput( s["plane"]["out"] )
-		s["render"]["fileName"].setValue( self.temporaryDirectory() / "test.####.ass" )
-
-		s["fileName"].setValue( self.__scriptFileName )
-		s.save()
-
-		p = subprocess.Popen(
-			f"gaffer execute {self.__scriptFileName} -frames 1-3",
-			shell=True,
-			stderr = subprocess.PIPE,
-		)
-		p.wait()
-		self.assertFalse( p.returncode )
-
-		for i in range( 1, 4 ) :
-			self.assertTrue( ( self.temporaryDirectory() / f"test.{i:04d}.ass" ).exists() )
-
-	def testImageOutput( self ) :
-
-		s = Gaffer.ScriptNode()
-
-		s["plane"] = GafferScene.Plane()
-
-		s["outputs"] = GafferScene.Outputs()
-		s["outputs"].addOutput(
-			"beauty",
-			IECoreScene.Output(
-				str( self.temporaryDirectory() / "test.####.tif" ),
-				"tiff",
-				"rgba",
-				{}
-			)
-		)
-		s["outputs"]["in"].setInput( s["plane"]["out"] )
-
-		s["render"] = GafferArnold.ArnoldRender()
-		s["render"]["in"].setInput( s["outputs"]["out"] )
-
-		c = Gaffer.Context()
-		for i in range( 1, 4 ) :
-			c.setFrame( i )
-			with c :
-				s["render"]["task"].execute()
-
-		for i in range( 1, 4 ) :
-			self.assertTrue( ( self.temporaryDirectory() / f"test.{i:04d}.tif" ).exists() )
 
 	def testTypeNamePrefixes( self ) :
 
@@ -191,53 +90,6 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertNodesConstructWithDefaultValues( GafferArnold )
 		self.assertNodesConstructWithDefaultValues( GafferArnoldTest )
-
-	def testDirectoryCreation( self ) :
-
-		s = Gaffer.ScriptNode()
-		s["variables"].addChild( Gaffer.NameValuePlug( "renderDirectory", ( self.temporaryDirectory() / "renderTests" ).as_posix() ) )
-		s["variables"].addChild( Gaffer.NameValuePlug( "assDirectory", ( self.temporaryDirectory() / "assTests" ).as_posix() ) )
-
-		s["plane"] = GafferScene.Plane()
-
-		s["outputs"] = GafferScene.Outputs()
-		s["outputs"]["in"].setInput( s["plane"]["out"] )
-		s["outputs"].addOutput(
-			"beauty",
-			IECoreScene.Output(
-				"$renderDirectory/test.####.exr",
-				"exr",
-				"rgba",
-				{}
-			)
-		)
-
-		s["render"] = GafferArnold.ArnoldRender()
-		s["render"]["in"].setInput( s["outputs"]["out"] )
-		s["render"]["fileName"].setValue( "$assDirectory/test.####.ass" )
-		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
-
-		self.assertFalse( ( self.temporaryDirectory() / "renderTests" ).exists() )
-		self.assertFalse( ( self.temporaryDirectory() / "assTests" ).exists() )
-		self.assertFalse( ( self.temporaryDirectory() / "assTests" / "test.0001.ass" ).exists() )
-
-		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
-
-		with s.context() :
-			s["render"]["task"].execute()
-
-		self.assertTrue( ( self.temporaryDirectory() / "renderTests" ).exists() )
-		self.assertTrue( ( self.temporaryDirectory() / "assTests" ).exists())
-		self.assertTrue( ( self.temporaryDirectory() / "assTests"/ "test.0001.ass" ).exists() )
-
-		# check it can cope with everything already existing
-
-		with s.context() :
-			s["render"]["task"].execute()
-
-		self.assertTrue( ( self.temporaryDirectory() / "renderTests" ).exists() )
-		self.assertTrue( ( self.temporaryDirectory() / "assTests" ).exists() )
-		self.assertTrue( ( self.temporaryDirectory() / "assTests" / "test.0001.ass" ).exists() )
 
 	def testWedge( self ) :
 
