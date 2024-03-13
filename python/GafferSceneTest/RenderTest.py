@@ -234,5 +234,53 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		for i in range( 1, 4 ) :
 			self.assertTrue( ( self.temporaryDirectory() / f"test.{i}{self.sceneDescriptionSuffix}" ).exists() )
 
+	def testRendererOption( self ) :
+
+		outputs = GafferScene.Outputs()
+		outputs.addOutput(
+			"beauty",
+			IECoreScene.Output(
+				str( self.temporaryDirectory() / "test.exr" ),
+				"exr",
+				"rgba",
+				{}
+			)
+		)
+
+		customOptions = GafferScene.CustomOptions()
+		customOptions["in"].setInput( outputs["out"] )
+		customOptions["options"].addChild( Gaffer.NameValuePlug( "render:defaultRenderer", self.renderer ) )
+
+		render = GafferScene.Render()
+		render["in"].setInput( customOptions["out"] )
+		render["mode"].setValue( render.Mode.RenderMode )
+		self.assertEqual( render["renderer"].getValue(), "" )
+
+		render["task"].execute()
+		self.assertTrue( ( self.temporaryDirectory() / "test.exr" ).exists() )
+
+	def testNoRenderer( self ) :
+
+		outputs = GafferScene.Outputs()
+		outputs.addOutput(
+			"beauty",
+			IECoreScene.Output(
+				str( self.temporaryDirectory() / "test.exr" ),
+				"exr",
+				"rgba",
+				{}
+			)
+		)
+
+		render = GafferScene.Render()
+		render["in"].setInput( outputs["out"] )
+		render["mode"].setValue( render.Mode.RenderMode )
+		self.assertEqual( render["renderer"].getValue(), "" )
+
+		self.assertEqual( render["task"].hash(), IECore.MurmurHash() )
+
+		render["task"].execute()
+		self.assertFalse( ( self.temporaryDirectory() / "test.exr" ).exists() )
+
 if __name__ == "__main__":
 	unittest.main()
