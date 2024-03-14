@@ -24,7 +24,7 @@ def __dispatchScript( script, tasks, settings ) :
 # Example: Macbeth Chart
 __dispatchScript(
 	script = os.path.abspath( "../../../examples/rendering/macbethChart.gfr" ),
-	tasks = [ "CyclesRender" ],
+	tasks = [ "Render" ],
 	settings = [
 		"-StandardOptions.options.renderResolution.enabled True",
 		"-StandardOptions.options.renderResolution.value.x '270'",

@@ -18,6 +18,11 @@ Fixes
 
 - Windows : Removed "Error(s) running Gaffer" shutdown message. It was misleading when errors originated in the renderer rather than Gaffer itself.
 
+Documentation
+-------------
+
+- Updated with generic Render and InteractiveRender nodes in place of deprecated renderer-specific nodes.
+
 Breaking Changes
 ----------------
 
