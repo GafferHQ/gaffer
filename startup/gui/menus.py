@@ -346,6 +346,7 @@ nodeMenu.append( "/Scene/Passes/Render Passes", GafferScene.RenderPasses, search
 nodeMenu.append( "/Scene/Passes/Delete Render Passes", GafferScene.DeleteRenderPasses, searchText = "DeleteRenderPasses" )
 nodeMenu.append( "/Scene/Passes/Render Pass Wedge", GafferScene.RenderPassWedge, searchText = "RenderPassWedge" )
 nodeMenu.append( "/Scene/Render/Render", GafferScene.Render )
+nodeMenu.append( "/Scene/Render/Interactive Render", GafferScene.InteractiveRender, searchText = "InteractiveRender" )
 
 # Image nodes
 

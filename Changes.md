@@ -4,7 +4,7 @@
 Features
 --------
 
-- Render : Added a new node capable of rendering to any supported renderer, and using the`render:defaultRenderer` option to determine which to use by default.
+- Render, InteractiveRender : Added new nodes capable of rendering to any supported renderer, and using the`render:defaultRenderer` option to determine which to use by default.
 
 1.3.13.1 (relative to 1.3.13.0)
 ========

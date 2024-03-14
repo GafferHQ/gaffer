@@ -53,9 +53,12 @@ import GafferSceneTest
 # rather than GafferScene.InteractiveRender, which we hope to phase out.
 class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
-	# Derived classes should set cls.interactiveRenderNodeClass to
-	# the class of their interactive render node
+	## \todo Phase out InteractiveRender subclasses and just use the `renderer`
+	# field below.
 	interactiveRenderNodeClass = None
+	# Derived classes should set `cls.renderer` to the type of
+	# renderer to be tested.
+	renderer = None
 
 	@classmethod
 	def setUpClass( cls ) :
@@ -2151,6 +2154,51 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertNotIn( "gaffer:isRendering", script["catalogue"]["out"].metadata() )
 
+	def testRendererOption( self ):
+
+		script = Gaffer.ScriptNode()
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testRendererOption",
+				}
+			)
+		)
+
+		script["customOptions"] = GafferScene.CustomOptions()
+		script["customOptions"]["in"].setInput( script["outputs"]["out"] )
+
+		script["renderer"] = self._createInteractiveRender( useNodeClass = False )
+		script["renderer"]["renderer"].setValue( "" )
+		script["renderer"]["in"].setInput( script["customOptions"]["out"] )
+
+		# No renderer specified yet, so if we start the render we don't
+		# get an image.
+
+		script["renderer"]["state"].setValue( script["renderer"].State.Running )
+		time.sleep( 1.0 )
+		self.assertIsNone( IECoreImage.ImageDisplayDriver.storedImage( "testRendererOption" ) )
+		self.ignoreMessage( IECore.Msg.Level.Error, "InteractiveRender", "`render:defaultRenderer` option not set" )
+
+		# Set renderer option and start again. We should now get an image.
+
+		script["renderer"]["state"].setValue( script["renderer"].State.Stopped )
+		script["customOptions"]["options"].addChild(
+			Gaffer.NameValuePlug( "render:defaultRenderer", self.renderer )
+		)
+		script["renderer"]["state"].setValue( script["renderer"].State.Running )
+		time.sleep( 1.0 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testRendererOption" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
 	def tearDown( self ) :
 
 		GafferSceneTest.SceneTestCase.tearDown( self )
@@ -2160,10 +2208,14 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 	## Should be used in test cases to create an InteractiveRender node
 	# suitably configured for error reporting. If failOnError is
 	# True, then the node's error signal will cause the test to fail.
-	def _createInteractiveRender( self, failOnError = True ) :
+	def _createInteractiveRender( self, failOnError = True, useNodeClass = True ) :
 
-		assert( issubclass( self.interactiveRenderNodeClass, GafferScene.InteractiveRender ) )
-		node = self.interactiveRenderNodeClass()
+		if useNodeClass :
+			assert( issubclass( self.interactiveRenderNodeClass, GafferScene.InteractiveRender ) )
+			node = self.interactiveRenderNodeClass()
+		else :
+			node = GafferScene.InteractiveRender()
+			node["renderer"].setValue( self.renderer )
 
 		if failOnError :
 
