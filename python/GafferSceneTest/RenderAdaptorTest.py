@@ -413,3 +413,139 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 			additionalLights = "C",
 			exclusions = "( __lights - C ) | /group/groupA"
 		)
+
+	def testCameraVisibilityAdaptor( self ) :
+
+		#  /groupA
+		#    /cube      (A, CUBE)
+		#    /sphere    (A, SPHERE)
+
+		cubeA = GafferScene.Cube()
+		cubeA["sets"].setValue( "A CUBE" )
+
+		sphereA = GafferScene.Sphere()
+		sphereA["sets"].setValue( "A SPHERE" )
+
+		groupA = GafferScene.Group()
+		groupA["name"].setValue( "groupA" )
+		groupA["in"][0].setInput( cubeA["out"] )
+		groupA["in"][1].setInput( sphereA["out"] )
+
+		customOptions = GafferScene.CustomOptions()
+		customOptions["in"].setInput( groupA["out"] )
+		customOptions["options"].addChild( Gaffer.NameValuePlug( "render:cameraInclusions", "", False, "cameraInclusions" ) )
+		customOptions["options"].addChild( Gaffer.NameValuePlug( "render:cameraExclusions", "", True, "cameraExclusions" ) )
+
+		inclusionAttributesFilter = GafferScene.SetFilter()
+		inclusionAttributes = GafferScene.CustomAttributes()
+		inclusionAttributes["in"].setInput( customOptions["out"] )
+		inclusionAttributes["filter"].setInput( inclusionAttributesFilter["out"] )
+		inclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "ai:visibility:camera", True, True ) )
+		inclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "cycles:visibility:camera", True, True ) )
+		inclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "dl:visibility.camera", True, True ) )
+
+		exclusionAttributesFilter = GafferScene.SetFilter()
+		exclusionAttributes = GafferScene.CustomAttributes()
+		exclusionAttributes["in"].setInput( inclusionAttributes["out"] )
+		exclusionAttributes["filter"].setInput( exclusionAttributesFilter["out"] )
+		exclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "ai:visibility:camera", False, True ) )
+		exclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "cycles:visibility:camera", False, True ) )
+		exclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "dl:visibility.camera", False, True ) )
+
+		# Create adaptors for the CapturingRenderer
+		testAdaptors = GafferScene.SceneAlgo.createRenderAdaptors()
+		testAdaptors["in"].setInput( exclusionAttributes["out"] )
+
+		def assertCameraVisibleObjects( paths, cameraInclusions = None, cameraExclusions = None, inclusionOverrides = "", exclusionOverrides = "" ) :
+
+			if cameraInclusions is not None :
+				customOptions["options"]["cameraInclusions"]["value"].setValue( cameraInclusions )
+			customOptions["options"]["cameraInclusions"]["enabled"].setValue( cameraInclusions is not None )
+
+			if cameraExclusions is not None :
+				customOptions["options"]["cameraExclusions"]["value"].setValue( cameraExclusions )
+			customOptions["options"]["cameraExclusions"]["enabled"].setValue( cameraExclusions is not None )
+
+			inclusionAttributesFilter["setExpression"].setValue( inclusionOverrides )
+			exclusionAttributesFilter["setExpression"].setValue( exclusionOverrides )
+
+			allPaths = {
+				"/groupA/cube",
+				"/groupA/sphere",
+			}
+
+			renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+			)
+			GafferScene.Private.RendererAlgo.outputObjects(
+				testAdaptors["out"], GafferScene.Private.RendererAlgo.RenderOptions( testAdaptors["out"] ), GafferScene.Private.RendererAlgo.RenderSets( testAdaptors["out"] ), GafferScene.Private.RendererAlgo.LightLinks(),
+				renderer
+			)
+
+			if paths != {} :
+				self.assertTrue( paths.issubset( allPaths ) )
+
+			for path in allPaths :
+				capturedObject = renderer.capturedObject( path )
+				for attribute in [ "ai:visibility:camera", "cycles:visibility:camera", "dl:visibility.camera" ] :
+					if path in paths :
+						# path is visible by the absence of the attribute, or its presence with a value of True
+						if attribute in capturedObject.capturedAttributes().attributes() :
+							self.assertTrue( capturedObject.capturedAttributes().attributes()[attribute].value )
+					else :
+						# path is invisible only by the presence of the attribute with a value of False
+						self.assertTrue( attribute in capturedObject.capturedAttributes().attributes() )
+						self.assertFalse( capturedObject.capturedAttributes().attributes()[attribute].value )
+
+		# By default everything should be camera visible
+		assertCameraVisibleObjects( { "/groupA/cube", "/groupA/sphere" } )
+
+		# All should be visible with the root included
+		assertCameraVisibleObjects( { "/groupA/cube", "/groupA/sphere" }, cameraInclusions = "/" )
+
+		# All should be visible with the group included
+		assertCameraVisibleObjects( { "/groupA/cube", "/groupA/sphere" }, cameraInclusions = "/groupA" )
+
+		# Only the included location should be visible
+		assertCameraVisibleObjects( { "/groupA/sphere" }, cameraInclusions = "/groupA/sphere" )
+
+		# Nothing should be visible if nothing is included
+		assertCameraVisibleObjects( {}, cameraInclusions = "" )
+
+		# Test a variety of cameraInclusions set expressions
+		assertCameraVisibleObjects( { "/groupA/cube", "/groupA/sphere" }, cameraInclusions = "A" )
+		assertCameraVisibleObjects( { "/groupA/sphere" }, cameraInclusions = "SPHERE" )
+		assertCameraVisibleObjects( { "/groupA/cube" }, cameraInclusions = "CUBE" )
+		assertCameraVisibleObjects( { "/groupA/cube" }, cameraInclusions = "A - SPHERE" )
+
+		# Test a variety of cameraExclusions set expressions
+		assertCameraVisibleObjects( {}, cameraExclusions = "A" )
+		assertCameraVisibleObjects( { "/groupA/cube" }, cameraExclusions = "SPHERE" )
+		assertCameraVisibleObjects( { "/groupA/sphere" }, cameraExclusions = "CUBE" )
+		assertCameraVisibleObjects( { "/groupA/sphere" }, cameraExclusions = "A - SPHERE" )
+
+		# Camera exclusions overrides camera inclusions at the same location
+		assertCameraVisibleObjects( {}, cameraInclusions = "A", cameraExclusions = "A" )
+
+		# Camera exclusions overrides camera inclusions at a parent location
+		assertCameraVisibleObjects( {}, cameraInclusions = "/", cameraExclusions = "A" )
+
+		# Test a variety of camera inclusions and exclusions combinations
+		assertCameraVisibleObjects( { "/groupA/sphere" }, cameraInclusions = "A", cameraExclusions = "CUBE" )
+		assertCameraVisibleObjects( { "/groupA/sphere" }, cameraInclusions = "/groupA", cameraExclusions = "CUBE" )
+		assertCameraVisibleObjects( { "/groupA/cube" }, cameraInclusions = "A", cameraExclusions = "SPHERE" )
+		assertCameraVisibleObjects( { "/groupA/cube" }, cameraInclusions = "/groupA", cameraExclusions = "SPHERE" )
+
+		# Camera inclusions overrides camera exclusions at lower locations
+		assertCameraVisibleObjects( { "/groupA/sphere" }, cameraInclusions = "/groupA/sphere", cameraExclusions = "/groupA" )
+		assertCameraVisibleObjects( { "/groupA/sphere" }, cameraInclusions = "SPHERE", cameraExclusions = "/groupA" )
+
+		# Excluding nothing should leave everything visible
+		assertCameraVisibleObjects( { "/groupA/cube", "/groupA/sphere" }, cameraExclusions = "" )
+
+		# Test interaction with scene attributes
+		assertCameraVisibleObjects( { "/groupA/sphere" }, cameraInclusions = "A", exclusionOverrides = "/groupA/cube" )
+		assertCameraVisibleObjects( { "/groupA/cube", "/groupA/sphere" }, cameraInclusions = "A", exclusionOverrides = "/groupA" )
+		assertCameraVisibleObjects( { "/groupA/cube", "/groupA/sphere" }, cameraInclusions = "CUBE", inclusionOverrides = "/groupA/sphere" )
+		assertCameraVisibleObjects( { "/groupA/cube", "/groupA/sphere" }, cameraInclusions = "", inclusionOverrides = "A" )
+		assertCameraVisibleObjects( {}, cameraInclusions = "/", exclusionOverrides = "A" )
