@@ -156,3 +156,27 @@ Gaffer.Metadata.registerValue(
 	by this set expression.
 	"""
 )
+
+Gaffer.Metadata.registerValue( "option:render:cameraInclusions", "label", "Camera Inclusions" )
+Gaffer.Metadata.registerValue( "option:render:cameraInclusions", "defaultValue", IECore.StringData( "/" ) )
+Gaffer.Metadata.registerValue(
+	"option:render:cameraInclusions",
+	"description",
+	"""
+	A set expression that limits the objects visible to camera rays to only those matched
+	and their descendants. Camera visibility attributes authored in the scene take
+	precedence over this option.
+	"""
+)
+
+Gaffer.Metadata.registerValue( "option:render:cameraExclusions", "label", "Camera Exclusions" )
+Gaffer.Metadata.registerValue( "option:render:cameraExclusions", "defaultValue", IECore.StringData( "" ) )
+Gaffer.Metadata.registerValue(
+	"option:render:cameraExclusions",
+	"description",
+	"""
+	A set expression that excludes the matched objects and their descendants from camera
+	ray visibility. Camera visibility attributes authored in the scene take precedence
+	over this option.
+	"""
+)
