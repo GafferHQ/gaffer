@@ -115,7 +115,7 @@ class _SelectionWidget( GafferUI.Frame ) :
 
 	def __init__( self, tool, **kw ) :
 
-		GafferUI.Frame.__init__( self, borderWidth = 4, **kw )
+		GafferUI.Frame.__init__( self, borderWidth = 1, **kw )
 
 		self.__tool = tool
 
