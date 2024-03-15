@@ -1,10 +1,15 @@
-1.3.x.x (relative to 1.3.13.1)
+1.3.x.x (relative to 1.3.14.0)
 =======
+
+
+
+1.3.14.0 (relative to 1.3.13.1)
+========
 
 Features
 --------
 
-- Render, InteractiveRender : Added new nodes capable of rendering to any supported renderer, and using the`render:defaultRenderer` option to determine which to use by default.
+- Render, InteractiveRender : Added new nodes capable of rendering to any supported renderer, and using the `render:defaultRenderer` option to determine which to use by default.
 - StandardOptions : Added `render:defaultRenderer` option, allowing the scene globals to specify which renderer is used by the Render and InteractiveRender nodes.
 - RenderPassEditor : Added a column for the `render:defaultRenderer` option, allowing each pass to be rendered in a different renderer.
 
