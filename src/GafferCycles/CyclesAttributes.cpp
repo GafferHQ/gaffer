@@ -76,10 +76,6 @@ CyclesAttributes::CyclesAttributes( const std::string &name )
 	attributes->addChild( new Gaffer::NameValuePlug( "cycles:volume_step_size", new IECore::FloatData( 0.0f ), false, "volumeStepSize" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "cycles:volume_object_space", new IECore::BoolData( true ), false, "volumeObjectSpace" ) );
 
-	// Per-object parameters
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:dupli_generated", new IECore::V3fData( Imath::V3f( 0.0f ) ), false, "dupliGenerated" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:dupli_uv", new IECore::V2fData( Imath::V2f( 0.0f ) ), false, "dupliUV" ) );
-
 	// Asset name for cryptomatte
 	attributes->addChild( new Gaffer::NameValuePlug( "cycles:asset_name", new IECore::StringData( "" ), false, "assetName" ) );
 
