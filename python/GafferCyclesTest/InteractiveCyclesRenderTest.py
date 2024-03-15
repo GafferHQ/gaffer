@@ -45,6 +45,7 @@ import GafferCycles
 class InteractiveCyclesRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 	interactiveRenderNodeClass = GafferCycles.InteractiveCyclesRender
+	renderer = "Cycles"
 
 	@unittest.skip( "Resolution edits not supported yet" )
 	def testEditResolution( self ) :

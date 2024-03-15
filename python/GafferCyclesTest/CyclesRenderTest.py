@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,11 +34,13 @@
 #
 ##########################################################################
 
-from .CapturingRendererTest import CapturingRendererTest
-from .CompoundRendererTest import CompoundRendererTest
-from .PlaceholderTest import PlaceholderTest
-from .RendererTest import RendererTest
+import unittest
+
+import GafferSceneTest
+
+class CyclesRenderTest( GafferSceneTest.RenderTest ) :
+
+	renderer = "Cycles"
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()

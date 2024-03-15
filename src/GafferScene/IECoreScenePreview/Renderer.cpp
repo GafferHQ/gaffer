@@ -48,19 +48,17 @@ using namespace IECoreScenePreview;
 namespace
 {
 
-using Creator = Renderer::Ptr (*)( Renderer::RenderType, const std::string &, const IECore::MessageHandlerPtr & );
-
 vector<IECore::InternedString> &types()
 {
 	static vector<IECore::InternedString> g_types;
 	return g_types;
 }
 
-using CreatorMap = map<IECore::InternedString, Creator>;
+using CreatorMap = map<IECore::InternedString, Renderer::Creator>;
 CreatorMap &creators()
 {
-	static CreatorMap g_creators;
-	return g_creators;
+	static CreatorMap *g_creators = new CreatorMap;
+	return *g_creators;
 }
 
 } // namespace
@@ -112,19 +110,24 @@ Renderer::Ptr Renderer::create( const IECore::InternedString &type, RenderType r
 	{
 		return nullptr;
 	}
-	return it->second( renderType, fileName, messageHandler );
+	// Take copy of creator, since it is allowed to do a switcheroo
+	// by calling `registerType( name, theRealCreator )`.
+	Creator creator = it->second;
+	return creator( renderType, fileName, messageHandler );
 }
 
-
-void Renderer::registerType( const IECore::InternedString &typeName, Ptr (*creator)( RenderType, const std::string &, const IECore::MessageHandlerPtr & ) )
+void Renderer::registerType( const IECore::InternedString &typeName, Creator creator )
 {
-	CreatorMap &c = creators();
-	CreatorMap::iterator it = c.find( typeName );
-	if( it != c.end() )
-	{
-		it->second = creator;
-		return;
-	}
-	c[typeName] = creator;
+	creators()[typeName] = creator;
 	::types().push_back( typeName );
+}
+
+void Renderer::deregisterType( const IECore::InternedString &typeName )
+{
+	creators().erase( typeName );
+	auto &t = ::types();
+	t.erase(
+		std::remove( t.begin(), t.end(), typeName ),
+		t.end()
+	);
 }

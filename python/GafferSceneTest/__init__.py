@@ -67,6 +67,7 @@ from .StandardOptionsTest import StandardOptionsTest
 from .ScenePathTest import ScenePathTest
 from .LightTest import LightTest
 from .OpenGLShaderTest import OpenGLShaderTest
+from .RenderTest import RenderTest
 from .OpenGLRenderTest import OpenGLRenderTest
 from .TransformTest import TransformTest
 from .AimConstraintTest import AimConstraintTest
