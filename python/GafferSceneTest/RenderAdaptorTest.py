@@ -549,3 +549,127 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		assertCameraVisibleObjects( { "/groupA/cube", "/groupA/sphere" }, cameraInclusions = "CUBE", inclusionOverrides = "/groupA/sphere" )
 		assertCameraVisibleObjects( { "/groupA/cube", "/groupA/sphere" }, cameraInclusions = "", inclusionOverrides = "A" )
 		assertCameraVisibleObjects( {}, cameraInclusions = "/", exclusionOverrides = "A" )
+
+	def testMatteAdaptor( self ) :
+
+		#  /groupA
+		#    /cube      (A, CUBE)
+		#    /sphere    (A, SPHERE)
+
+		cubeA = GafferScene.Cube()
+		cubeA["sets"].setValue( "A CUBE" )
+
+		sphereA = GafferScene.Sphere()
+		sphereA["sets"].setValue( "A SPHERE" )
+
+		groupA = GafferScene.Group()
+		groupA["name"].setValue( "groupA" )
+		groupA["in"][0].setInput( cubeA["out"] )
+		groupA["in"][1].setInput( sphereA["out"] )
+
+		customOptions = GafferScene.CustomOptions()
+		customOptions["in"].setInput( groupA["out"] )
+		customOptions["options"].addChild( Gaffer.NameValuePlug( "render:matteInclusions", "", True, "matteInclusions" ) )
+		customOptions["options"].addChild( Gaffer.NameValuePlug( "render:matteExclusions", "", True, "matteExclusions" ) )
+
+		inclusionAttributesFilter = GafferScene.SetFilter()
+		inclusionAttributes = GafferScene.CustomAttributes()
+		inclusionAttributes["in"].setInput( customOptions["out"] )
+		inclusionAttributes["filter"].setInput( inclusionAttributesFilter["out"] )
+		inclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "ai:matte", True, True, "aiMatte" ) )
+		inclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "cycles:use_holdout", True, True, "cyclesUseHoldout" ) )
+		inclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "dl:matte", True, True, "dlMatte" ) )
+
+		exclusionAttributesFilter = GafferScene.SetFilter()
+		exclusionAttributes = GafferScene.CustomAttributes()
+		exclusionAttributes["in"].setInput( inclusionAttributes["out"] )
+		exclusionAttributes["filter"].setInput( exclusionAttributesFilter["out"] )
+		exclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "ai:matte", False, True, "aiMatte" ) )
+		exclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "cycles:use_holdout", False, True, "cyclesUseHoldout" ) )
+		exclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "dl:matte", False, True, "dlMatte" ) )
+
+		# Create adaptors for the CapturingRenderer
+		testAdaptors = GafferScene.SceneAlgo.createRenderAdaptors()
+		testAdaptors["in"].setInput( exclusionAttributes["out"] )
+
+		def assertMatte( paths, matteInclusions = None, matteExclusions = None, inclusionOverrides = "", exclusionOverrides = "" ) :
+
+			if matteInclusions is not None :
+				customOptions["options"]["matteInclusions"]["value"].setValue( matteInclusions )
+			customOptions["options"]["matteInclusions"]["enabled"].setValue( matteInclusions is not None )
+
+			if matteExclusions is not None :
+				customOptions["options"]["matteExclusions"]["value"].setValue( matteExclusions )
+			customOptions["options"]["matteExclusions"]["enabled"].setValue( matteExclusions is not None )
+
+			inclusionAttributesFilter["setExpression"].setValue( inclusionOverrides )
+			exclusionAttributesFilter["setExpression"].setValue( exclusionOverrides )
+
+			allPaths = {
+				"/groupA/cube",
+				"/groupA/sphere",
+			}
+
+			renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+			)
+			GafferScene.Private.RendererAlgo.outputObjects(
+				testAdaptors["out"], GafferScene.Private.RendererAlgo.RenderOptions( testAdaptors["out"] ), GafferScene.Private.RendererAlgo.RenderSets( testAdaptors["out"] ), GafferScene.Private.RendererAlgo.LightLinks(),
+				renderer
+			)
+
+			for path in allPaths :
+				capturedObject = renderer.capturedObject( path )
+				for attribute in [ "ai:matte", "cycles:use_holdout", "dl:matte" ] :
+					if path in paths :
+						# path is matte only by the presence of the attribute with a value of True
+						self.assertTrue( attribute in capturedObject.capturedAttributes().attributes() )
+						self.assertTrue( capturedObject.capturedAttributes().attributes()[attribute].value )
+					else :
+						# path isn't matte by the absence of the attribute, or its presence with a value of False
+						if attribute in capturedObject.capturedAttributes().attributes() :
+							self.assertFalse( capturedObject.capturedAttributes().attributes()[attribute].value )
+
+		# Nothing should be matte when matte inclusions and exclusions are empty or undefined
+		assertMatte( {} )
+		assertMatte( {}, matteInclusions = "" )
+		assertMatte( {}, matteExclusions = "" )
+		assertMatte( {}, matteInclusions = "", matteExclusions = "" )
+
+		# Including the root of the scene should make everything matte
+		assertMatte( { "/groupA/cube", "/groupA/sphere" }, matteInclusions = "/" )
+
+		# Including the group should make its descendants matte
+		assertMatte( { "/groupA/cube", "/groupA/sphere" }, matteInclusions = "/groupA" )
+		# Unless a descendant has been excluded
+		assertMatte( { "/groupA/cube" }, matteInclusions = "/groupA", matteExclusions = "/groupA/sphere" )
+
+		# Including a specific location should not affect its siblings
+		assertMatte( { "/groupA/cube" }, matteInclusions = "/groupA/cube" )
+
+		# Test a variety of set expressions
+		assertMatte( { "/groupA/cube", "/groupA/sphere" }, matteInclusions = "A" )
+		assertMatte( { "/groupA/sphere" }, matteInclusions = "SPHERE" )
+		assertMatte( { "/groupA/cube" }, matteInclusions = "CUBE" )
+		assertMatte( { "/groupA/sphere" }, matteInclusions = "A - CUBE" )
+
+		# Exclusions should override inclusions
+		assertMatte( {}, matteInclusions = "A", matteExclusions = "A" )
+		assertMatte( {}, matteInclusions = "/groupA/sphere", matteExclusions = "/groupA/sphere" )
+		assertMatte( { "/groupA/sphere" }, matteInclusions = "A", matteExclusions = "CUBE" )
+		assertMatte( { "/groupA/cube" }, matteInclusions = "/groupA", matteExclusions = "SPHERE" )
+		assertMatte( { "/groupA/sphere" }, matteInclusions = "A", matteExclusions = "/groupA/cube" )
+
+		# Matte inclusions override matte exclusions at lower locations
+		assertMatte( { "/groupA/sphere" }, matteInclusions = "/groupA/sphere", matteExclusions = "/groupA" )
+
+		# Test interaction with scene attributes
+		assertMatte( { "/groupA/sphere" }, inclusionOverrides = "/groupA/sphere" )
+		assertMatte( { "/groupA/cube", "/groupA/sphere" }, matteInclusions = "/groupA/cube", inclusionOverrides = "/groupA/sphere" )
+		assertMatte( { "/groupA/sphere" }, matteExclusions = "/groupA/sphere", inclusionOverrides = "/groupA/sphere" )
+		assertMatte( { "/groupA/sphere" }, matteExclusions = "/groupA", inclusionOverrides = "/groupA/sphere" )
+		assertMatte( { "/groupA/cube", "/groupA/sphere" }, matteInclusions = "/groupA", matteExclusions = "/groupA/sphere", inclusionOverrides = "/groupA/sphere" )
+
+		assertMatte( {}, matteInclusions = "/groupA/sphere", exclusionOverrides = "/groupA/sphere" )
+		assertMatte( { "/groupA/sphere" }, matteInclusions = "/groupA/sphere", exclusionOverrides = "/groupA" )
+		assertMatte( { "/groupA/sphere" }, matteInclusions = "/groupA", exclusionOverrides = "/groupA/cube" )
