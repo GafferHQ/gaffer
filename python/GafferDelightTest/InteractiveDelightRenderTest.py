@@ -48,6 +48,7 @@ import GafferDelight
 class InteractiveDelightRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 	interactiveRenderNodeClass =  GafferDelight.InteractiveDelightRender
+	renderer = "3Delight"
 
 	# Temporarily disable this test (which is implemented in the
 	# base class) because it fails. The issue is that we're automatically

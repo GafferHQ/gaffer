@@ -1,6 +1,13 @@
 1.4.x.x (relative to 1.4.0.0b3)
 =======
 
+Features
+--------
+
+- Render, InteractiveRender : Added new nodes capable of rendering to any supported renderer, and using the `render:defaultRenderer` option to determine which to use by default [^1].
+- StandardOptions : Added `render:defaultRenderer` option, allowing the scene globals to specify which renderer is used by the Render and InteractiveRender nodes [^1].
+- RenderPassEditor : Added a column for the `render:defaultRenderer` option, allowing each pass to be rendered in a different renderer [^1].
+
 Fixes
 -----
 
@@ -11,6 +18,8 @@ Breaking Changes
 
 - CyclesOptions : Removed `cycles:integrator:sampling_pattern` option. This is intended only for debugging, but is still available via a CustomOptions node.
 - CyclesAttributes : Removed the `cycles:dupliGenerated` and `cycles:dupliUV` attributes.
+
+[^1]: To be omitted from final release notes for 1.4.0.0.
 
 1.4.0.0b3 (relative to 1.4.0.0b2)
 =========
@@ -293,6 +302,21 @@ Build
   - Removed QtPurchasing library.
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
+
+1.3.x.x (relative to 1.3.14.0)
+=======
+
+
+
+1.3.14.0 (relative to 1.3.13.1)
+========
+
+Features
+--------
+
+- Render, InteractiveRender : Added new nodes capable of rendering to any supported renderer, and using the `render:defaultRenderer` option to determine which to use by default.
+- StandardOptions : Added `render:defaultRenderer` option, allowing the scene globals to specify which renderer is used by the Render and InteractiveRender nodes.
+- RenderPassEditor : Added a column for the `render:defaultRenderer` option, allowing each pass to be rendered in a different renderer.
 
 1.3.13.1 (relative to 1.3.13.0)
 ========

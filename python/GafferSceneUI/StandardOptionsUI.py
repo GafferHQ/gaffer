@@ -42,6 +42,7 @@ import IECoreScene
 import Gaffer
 import GafferUI
 import GafferScene
+import GafferSceneUI
 
 from GafferUI.PlugValueWidget import sole
 
@@ -76,6 +77,13 @@ def __cameraSummary( plug ) :
 		info.append( "DOF " + ( "On" if plug["depthOfField"]["value"].getValue() else "Off" ) )
 
 	return ", ".join( info )
+
+def __rendererSummary( plug ) :
+
+	if plug["defaultRenderer"]["enabled"].getValue() :
+		return plug["defaultRenderer"]["value"].getValue()
+
+	return ""
 
 def __renderSetSummary( plug ) :
 
@@ -123,6 +131,7 @@ plugsMetadata = {
 	"options" : [
 
 		"layout:section:Camera:summary", __cameraSummary,
+		"layout:section:Renderer:summary", __rendererSummary,
 		"layout:section:Render Set:summary", __renderSetSummary,
 		"layout:section:Motion Blur:summary", __motionBlurSummary,
 		"layout:section:Statistics:summary", __statisticsSummary,
@@ -340,7 +349,31 @@ plugsMetadata = {
 		"layout:section", "Camera",
 	],
 
-	# Purpose
+	# Renderer
+
+	"options.defaultRenderer" : [
+
+		"description",
+		"""
+		Specifies the default renderer to be used by the Render and
+		InteractiveRender nodes.
+		""",
+
+		"label", "Default Renderer",
+		"layout:section", "Renderer",
+
+	],
+
+	"options.defaultRenderer.value" : [
+
+		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+		"preset:None", "",
+		"presetNames", GafferSceneUI.RenderUI.rendererPresetNames,
+		"presetValues", GafferSceneUI.RenderUI.rendererPresetNames,
+
+	],
+
+	# Render Set
 
 	"options.includedPurposes" : [
 

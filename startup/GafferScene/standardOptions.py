@@ -110,6 +110,17 @@ Gaffer.Metadata.registerValue(
 	"""
 )
 
+Gaffer.Metadata.registerValue( "option:render:defaultRenderer", "label", "Renderer" )
+Gaffer.Metadata.registerValue( "option:render:defaultRenderer", "defaultValue", "" )
+Gaffer.Metadata.registerValue(
+	"option:render:defaultRenderer",
+	"description",
+	"""
+	Specifies the default renderer to be used by the Render and
+	InteractiveRender nodes.
+	"""
+)
+
 Gaffer.Metadata.registerValue( "option:render:inclusions", "label", "Inclusions" )
 Gaffer.Metadata.registerValue( "option:render:inclusions", "defaultValue", IECore.StringData( "/" ) )
 Gaffer.Metadata.registerValue(

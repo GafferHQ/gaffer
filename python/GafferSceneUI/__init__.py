@@ -63,6 +63,7 @@ from . import OutputsUI
 from . import OptionsUI
 from . import OpenGLAttributesUI
 from . import SceneWriterUI
+from . import RenderUI
 from . import StandardOptionsUI
 from . import StandardAttributesUI
 from . import ShaderUI
@@ -125,7 +126,6 @@ from . import CubeUI
 from . import AttributeVisualiserUI
 from . import FilterProcessorUI
 from . import MeshToPointsUI
-from . import RenderUI
 from . import ShaderBallUI
 from . import ShaderTweaksUI
 from . import CameraTweaksUI

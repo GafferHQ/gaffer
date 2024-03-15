@@ -313,6 +313,10 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 		/// Performs an arbitrary renderer-specific action.
 		virtual IECore::DataPtr command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters = IECore::CompoundDataMap() );
 
+		using Creator = std::function<Ptr ( RenderType, const std::string &, const IECore::MessageHandlerPtr & )>;
+		static void registerType( const IECore::InternedString &typeName, Creator creator );
+		static void deregisterType( const IECore::InternedString &typeName );
+
 	protected :
 
 		Renderer();
@@ -338,11 +342,6 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 				}
 
 		};
-
-	private :
-
-		static void registerType( const IECore::InternedString &typeName, Ptr (*creator)( RenderType, const std::string &, const IECore::MessageHandlerPtr & ) );
-
 
 };
 
