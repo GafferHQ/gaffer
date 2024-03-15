@@ -264,9 +264,9 @@ Create the render settings nodes:
     - StandardOptions (_Scene_ > _Globals_ > _StandardOptions_): Determines the camera, resolution, and blur settings of the scene.
     - CyclesOptions (_Cycles_ > _Options_): Determines the settings of the Cycles renderer.
     - Outputs (_Scene_ > _Globals_ > _Outputs_): Determines what kind of output image will be created by the renderer.
-    - InteractiveCyclesRender (_Cycles_ > _InteractiveRender_): An instance of Cycles' progressive renderer.
+    - InteractiveRender (_Scene_ > _Render_ > _InteractiveRender_): Hosts an interactive render session.
 
-3. Finally, create a Catalogue node (_Image_ > _Utility_ > _Catalogue_). This is an image node for listing and displaying a directory of images in the Viewer. By default, it points to the default output directory of your graph's rendered images. Place it next to the InteractiveCyclesRender node.
+3. Finally, create a Catalogue node (_Image_ > _Utility_ > _Catalogue_). This is an image node for listing and displaying a directory of images in the Viewer. By default, it points to the default output directory of your graph's rendered images. Place it next to the InteractiveRender node.
 
     ![](images/graphEditorRenderSettings.png "The render-related nodes")
 
@@ -292,13 +292,15 @@ Next, you need to add an image type to render:
 
 With all the settings complete, start the interactive renderer:
 
-1. Select the InteractiveCyclesRender node in the Graph Editor.
+1. Select the InteractiveRender node in the Graph Editor.
 
-2. In the Node Editor, click ![](images/timelinePlay.png "the play button") to start the renderer.
+2. In the Node Editor, choose "Cycles" from the renderer presets menu.
 
-3. Click the focus icon on the Catalogue node.
+3. In the Node Editor, click ![](images/timelinePlay.png "the play button") to start the renderer.
 
-4. Hover the cursor over the Viewer and hit <kbd>F</kbd> to frame the Catalogue node's live image of the interactive render.
+4. Click the focus icon on the Catalogue node.
+
+5. Hover the cursor over the Viewer and hit <kbd>F</kbd> to frame the Catalogue node's live image of the interactive render.
 
     ![](images/mainRenderGrey.png "The first render")
 

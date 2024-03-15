@@ -171,7 +171,7 @@ __dispatchScript(
 __imageName = "renderDepthOfFieldBlur"
 __dispatchScript(
 	script = "scripts/{}.gfr".format( __imageName ),
-	tasks = [ "CyclesRender" ],
+	tasks = [ "Render" ],
 	settings = [
 		"-Outputs.outputs.output1.fileName '\"{}\"'".format( os.path.abspath( "images/{}.png".format( __imageName ) ) )
 		]
@@ -237,7 +237,7 @@ __nodeEditorWindow.parent().close()
 # Example: Anamorphic Camera Setup
 __dispatchScript(
 	script = os.path.abspath( "../../../examples/rendering/anamorphicCameraSetup.gfr" ),
-	tasks = [ "CyclesRender" ],
+	tasks = [ "Render" ],
 	settings = [
 		"-StandardOptions.options.renderResolution.value.x '240'",
 		"-StandardOptions.options.renderResolution.value.y '270'",
@@ -249,7 +249,7 @@ __dispatchScript(
 # Example: Spherical Camera Setup in Arnold
 # __dispatchScript(
 #	script = "../../../examples/rendering/sphericalCameraSetupArnold.gfr",
-#	tasks = [ "ArnoldRender" ],
+#	tasks = [ "Render" ],
 #	settings = [
 #		"-StandardOptions.options.renderResolution.value.x '480'",
 #		"-StandardOptions.options.renderResolution.value.y '270'",

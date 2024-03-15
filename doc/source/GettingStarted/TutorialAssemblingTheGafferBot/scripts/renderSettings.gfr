@@ -52,12 +52,12 @@ __children["Catalogue"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue =
 __children["CyclesOptions"] = GafferCycles.CyclesOptions( "CyclesOptions" )
 parent.addChild( __children["CyclesOptions"] )
 __children["CyclesOptions"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
-__children["InteractiveCyclesRender"] = GafferCycles.InteractiveCyclesRender( "InteractiveCyclesRender" )
-parent.addChild( __children["InteractiveCyclesRender"] )
-__children["InteractiveCyclesRender"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
 __children["openColorIO"] = GafferImage.OpenColorIOConfigPlug( "openColorIO", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, )
 parent.addChild( __children["openColorIO"] )
-parent["variables"]["imageCataloguePort"]["value"].setValue( 45985 )
+__children["InteractiveRender"] = GafferScene.InteractiveRender( "InteractiveRender" )
+parent.addChild( __children["InteractiveRender"] )
+__children["InteractiveRender"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+parent["variables"]["imageCataloguePort"]["value"].setValue( 34411 )
 Gaffer.Metadata.registerValue( parent["variables"]["projectName"]["name"], 'readOnly', True )
 Gaffer.Metadata.registerValue( parent["variables"]["projectRootDirectory"]["name"], 'readOnly', True )
 Gaffer.Metadata.registerValue( parent["variables"]["imageCataloguePort"], 'readOnly', True )
@@ -86,8 +86,9 @@ __children["Catalogue"]["directory"].setValue( '${project:rootDirectory}/catalog
 __children["Catalogue"]["__uiPosition"].setValue( imath.V2f( 27.5453243, -39.5873871 ) )
 __children["CyclesOptions"]["in"].setInput( __children["StandardOptions"]["out"] )
 __children["CyclesOptions"]["__uiPosition"].setValue( imath.V2f( 8.40292358, -22.2591743 ) )
-__children["InteractiveCyclesRender"]["in"].setInput( __children["Outputs"]["out"] )
-__children["InteractiveCyclesRender"]["__uiPosition"].setValue( imath.V2f( 8.40517616, -39.5873871 ) )
+__children["InteractiveRender"]["in"].setInput( __children["Outputs"]["out"] )
+__children["InteractiveRender"]["renderer"].setValue( 'Cycles' )
+__children["InteractiveRender"]["__uiPosition"].setValue( imath.V2f( 8.40598965, -39.5873871 ) )
 
 
 del __children
