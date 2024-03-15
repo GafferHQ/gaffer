@@ -46,6 +46,8 @@ GafferSceneUI.RenderPassEditor.registerOption( "*", "render:exclusions" )
 GafferSceneUI.RenderPassEditor.registerOption( "*", "render:additionalLights" )
 GafferSceneUI.RenderPassEditor.registerOption( "*", "render:cameraInclusions" )
 GafferSceneUI.RenderPassEditor.registerOption( "*", "render:cameraExclusions" )
+GafferSceneUI.RenderPassEditor.registerOption( "*", "render:matteInclusions" )
+GafferSceneUI.RenderPassEditor.registerOption( "*", "render:matteExclusions" )
 
 GafferSceneUI.RenderPassEditor.registerOption( "*", "render:defaultRenderer", "Render" )
 GafferSceneUI.RenderPassEditor.registerOption( "*", "render:camera", "Render" )

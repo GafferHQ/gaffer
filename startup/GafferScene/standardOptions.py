@@ -180,3 +180,27 @@ Gaffer.Metadata.registerValue(
 	over this option.
 	"""
 )
+
+Gaffer.Metadata.registerValue( "option:render:matteInclusions", "label", "Matte Inclusions" )
+Gaffer.Metadata.registerValue( "option:render:matteInclusions", "defaultValue", IECore.StringData( "" ) )
+Gaffer.Metadata.registerValue(
+	"option:render:matteInclusions",
+	"description",
+	"""
+	A set expression that specifies objects that should be treated as matte (holdout)
+	objects along with their descendants. Matte attributes authored in the scene take
+	precedence over this option.
+	"""
+)
+
+Gaffer.Metadata.registerValue( "option:render:matteExclusions", "label", "Matte Exclusions" )
+Gaffer.Metadata.registerValue( "option:render:matteExclusions", "defaultValue", IECore.StringData( "" ) )
+Gaffer.Metadata.registerValue(
+	"option:render:matteExclusions",
+	"description",
+	"""
+	A set expression that excludes the matched objects and their descendants from being
+	treated as matte (holdout) objects. Matte attributes authored in the scene take
+	precedence over this option.
+	"""
+)
