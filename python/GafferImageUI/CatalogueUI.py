@@ -774,6 +774,8 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 					GafferUI.Label( "Description" )
 					self.__descriptionWidget = GafferUI.MultiLineStringPlugValueWidget( plug = None )
 
+		self.__mergeGroupId = 0
+
 		Gaffer.Metadata.plugValueChangedSignal( plug.node() ).connect( Gaffer.WeakMethod( self.__plugMetadataValueChanged ), scoped = False )
 
 		self.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ), scoped = False )
@@ -1044,6 +1046,7 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 		if isinstance( event.data, IECore.StringVectorData ) :
 			# Allow reordering of images
 			self.__moveToPath = None
+			self.__mergeGroupId += 1
 			return True
 
 		if self.__dropImage( event.data ) is None :
@@ -1108,7 +1111,11 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 			images.insert( newIndex, image )
 			previous = image
 
-		_ImagesPath._reorderImages( [image for image in images if image ] )
+		with Gaffer.UndoScope(
+			self.getPlug().ancestor( Gaffer.ScriptNode ),
+			mergeGroup = "ImageListing{}{}".format( id( self, ), self.__mergeGroupId )
+		) :
+			_ImagesPath._reorderImages( [image for image in images if image ] )
 
 		self.__pathListing.getPath().pathChangedSignal()( self.__pathListing.getPath() )
 
