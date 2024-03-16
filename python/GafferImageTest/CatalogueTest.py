@@ -1053,5 +1053,99 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 			# made.
 			handler.assertDone()
 
+	def testReorder( self ) :
+
+		for newOrder in [
+			[ "blue", "green", "red" ],
+			[ "blue", "red", "green" ],
+			[ "green", "red", "blue" ],
+			[ "green", "blue", "red" ],
+			[ "red", "blue", "green" ],
+		] :
+			with self.subTest( newOrder = newOrder ) :
+
+				# Send 3 images to a Catalogue : red, green, blue
+
+				script = Gaffer.ScriptNode()
+				script["catalogue"] = GafferImage.Catalogue()
+				script["catalogue"]["directory"].setValue( self.temporaryDirectory() / "catalogue" )
+
+				script["red"] = GafferImage.Constant()
+				script["red"]["format"].setValue( GafferImage.Format( 64, 64 ) )
+				script["red"]["color"]["r"].setValue( 1 )
+				self.sendImage( script["red"]["out"], script["catalogue"] )
+				script["catalogue"]["images"][-1].setName( "red" )
+
+				script["green"] = GafferImage.Constant()
+				script["green"]["format"].setValue( GafferImage.Format( 64, 64 ) )
+				script["green"]["color"]["g"].setValue( 1 )
+				self.sendImage( script["green"]["out"], script["catalogue"] )
+				script["catalogue"]["images"][-1].setName( "green" )
+
+				script["blue"] = GafferImage.Constant()
+				script["blue"]["format"].setValue( GafferImage.Format( 64, 64 ) )
+				script["blue"]["color"]["b"].setValue( 1 )
+				self.sendImage( script["blue"]["out"], script["catalogue"] )
+				script["catalogue"]["images"][-1].setName( "blue" )
+
+				# Check it worked
+
+				def assertPreconditions() :
+
+					self.assertEqual( len( script["catalogue"]["images"] ), 3 )
+					self.assertEqual( script["catalogue"]["images"][0].getName(), "red" )
+					self.assertEqual( script["catalogue"]["images"][1].getName(), "green" )
+					self.assertEqual( script["catalogue"]["images"][2].getName(), "blue" )
+
+					script["catalogue"]["imageIndex"].setValue( 0 )
+					self.assertImagesEqual( script["catalogue"]["out"], script["red"]["out"], ignoreMetadata = True )
+					script["catalogue"]["imageIndex"].setValue( 1 )
+					self.assertImagesEqual( script["catalogue"]["out"], script["green"]["out"], ignoreMetadata = True )
+					script["catalogue"]["imageIndex"].setValue( 2 )
+					self.assertImagesEqual( script["catalogue"]["out"], script["blue"]["out"], ignoreMetadata = True )
+
+					with Gaffer.Context( script.context() ) as c :
+						for name in script["catalogue"]["images"].keys() :
+							c["catalogue:imageName"] = name
+							self.assertImagesEqual( script["catalogue"]["out"], script[name]["out"], ignoreMetadata = True )
+
+				assertPreconditions()
+
+				# Reorder the images
+
+				with Gaffer.UndoScope( script ) :
+					script["catalogue"]["images"].reorderChildren( [
+						script["catalogue"]["images"][x] for x in newOrder
+					] )
+
+				# Check it worked
+
+				def assertPostConditions() :
+
+					self.assertEqual( len( script["catalogue"]["images"] ), 3 )
+					self.assertEqual( script["catalogue"]["images"].keys(), newOrder )
+
+					for index, name in enumerate( script["catalogue"]["images"].keys() ) :
+						script["catalogue"]["imageIndex"].setValue( index )
+						self.assertImagesEqual( script["catalogue"]["out"], script[name]["out"], ignoreMetadata = True )
+
+					with Gaffer.Context( script.context() ) as c :
+						for name in script["catalogue"]["images"].keys() :
+							c["catalogue:imageName"] = name
+							self.assertImagesEqual( script["catalogue"]["out"], script[name]["out"], ignoreMetadata = True )
+
+				assertPostConditions()
+
+				# Check that undo and redo work
+
+				script.undo()
+				assertPreconditions()
+
+				script.redo()
+				assertPostConditions()
+
+				script.undo()
+				assertPreconditions()
+
 if __name__ == "__main__":
 	unittest.main()

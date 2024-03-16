@@ -865,6 +865,7 @@ Catalogue::Catalogue( const std::string &name )
 
 	imagesPlug()->childAddedSignal().connect( boost::bind( &Catalogue::imageAdded, this, ::_2 ) );
 	imagesPlug()->childRemovedSignal().connect( boost::bind( &Catalogue::imageRemoved, this, ::_2 ) );
+	imagesPlug()->childrenReorderedSignal().connect( boost::bind( &Catalogue::imagesReordered, this, ::_2 ) );
 
 	Display::driverCreatedSignal().connect( boost::bind( &Catalogue::driverCreated, this, ::_1, ::_2 ) );
 	Display::imageReceivedSignal().connect( boost::bind( &Catalogue::imageReceived, this, ::_1 ) );
@@ -1122,6 +1123,27 @@ void Catalogue::imageRemoved( GraphComponent *graphComponent )
 			{
 				element->setInput( nullptr );
 			}
+		}
+	}
+}
+
+void Catalogue::imagesReordered( const std::vector<size_t> &originalIndices )
+{
+	if( undoingOrRedoing( this ) )
+	{
+		// Just let the undo queue replay our previous actions
+		return;
+	}
+
+	const size_t imageIndex = imageIndexPlug()->getValue();
+	for( size_t i = 0; i < imagesPlug()->children().size(); ++i )
+	{
+		imageSwitch()->inPlugs()->getChild<Plug>( i + 1 )->setInput(
+			imageNode( imagesPlug()->getChild<Image>( i ) )->outPlug()
+		);
+		if( originalIndices[i] == imageIndex )
+		{
+			imageIndexPlug()->source<IntPlug>()->setValue( i );
 		}
 	}
 }

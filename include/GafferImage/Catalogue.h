@@ -159,6 +159,7 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 
 		void imageAdded( GraphComponent *graphComponent );
 		void imageRemoved( GraphComponent *graphComponent );
+		void imagesReordered( const std::vector<size_t> &originalIndices );
 
 		void driverCreated( IECoreImage::DisplayDriver *driver, const IECore::CompoundData *parameters );
 		void imageReceived( Gaffer::Plug *plug );

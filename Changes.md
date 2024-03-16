@@ -17,6 +17,7 @@ Fixes
 
 - PlugAlgo : Updated `canSetValueFromData()`, `setValueFromData()` and `getValueAsData()` with support for missing types.
 - LightPosition Tool : Fixed lingering shadow pivot point after placing a shadow pivot, switching to highlight mode and switching back to shadow mode [^1].
+- Catalogue : Fixed bugs caused by reordering images using `GraphComponent::reorderChildren()`.
 
 Breaking Changes
 ----------------
