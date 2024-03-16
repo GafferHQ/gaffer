@@ -347,6 +347,15 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 
 		self.assertEqual( d1, d2 )
 
+	def testAddV3fMember( self ) :
+
+		p = Gaffer.CompoundDataPlug()
+
+		p.addMembers( IECore.CompoundData( { "v" : imath.V3f( 1, 2, 3 ) } ) )
+		self.assertEqual( len( p ), 1 )
+		self.assertIsInstance( p[0]["value"], Gaffer.V3fPlug )
+		self.assertEqual( p[0]["value"].defaultValue(), imath.V3f( 1, 2, 3 ) )
+
 	def testBoxTypes( self ) :
 
 		p = Gaffer.CompoundDataPlug()

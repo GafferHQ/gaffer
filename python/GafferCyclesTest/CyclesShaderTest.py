@@ -35,6 +35,9 @@
 ##########################################################################
 
 import unittest
+import pathlib
+
+import imath
 
 import Gaffer
 import GafferOSL
@@ -84,6 +87,16 @@ class CyclesShaderTest( GafferSceneTest.SceneTestCase ) :
 		shader = GafferCycles.CyclesShader()
 		shader.loadShader( "emission" )
 		self.assertEqual( shader["type"].getValue(), "cycles:surface" )
+
+	def testShaderCompatibility( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "principledBSDF-3.x.gfr" )
+		script.load()
+
+		self.assertIn( "emission_color", script["principled_bsdf"]["parameters"] )
+		self.assertNotIn( "emission", script["principled_bsdf"]["parameters"] )
+		self.assertEqual( script["principled_bsdf"]["parameters"]["emission_color"].getValue(), imath.Color3f( 0.5, 0.6, 0.7 ) )
 
 if __name__ == "__main__":
 	unittest.main()

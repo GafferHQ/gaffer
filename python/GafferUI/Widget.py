@@ -1650,14 +1650,21 @@ class _EventFilter( QtCore.QObject ) :
 	# space of the target Gaffer widget. This is required as certain widget
 	# configurations (eg: QTableView with a visible header) result in qEvent
 	# coordinate origins differing from the Gaffer Widget's origin.
+
+	# \todo There should be a 0.5 pixel offset added to the Qt pixel position
+	# so the resulting `LineSegment3f` goes through the center of the
+	# pixel, not the corner. This can be especially important when the returned
+	# line segment is used to calculate positions in a 3d perspective view, where
+	# small differences in direction can introduce significant error at
+	# long distances.
 	def __widgetSpaceLine( self, qEvent, targetWidget ) :
 
 		cursorPos = imath.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() )
 		cursorPos -= targetWidget.bound().min()
 
 		return IECore.LineSegment3f(
-			imath.V3f( cursorPos.x, cursorPos.y, 1 ),
-			imath.V3f( cursorPos.x, cursorPos.y, 0 )
+			imath.V3f( cursorPos.x + 0.5, cursorPos.y + 0.5, 1 ),
+			imath.V3f( cursorPos.x + 0.5, cursorPos.y + 0.5, 0 )
 		)
 
 # this single instance is used by all widgets

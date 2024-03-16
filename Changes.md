@@ -1,13 +1,144 @@
-1.x.x.x (relative to 1.3.x.x)
+1.4.x.x (relative to 1.4.0.0b4)
 =======
+
+
+
+1.4.0.0b4 (relative to 1.4.0.0b3)
+=========
+
+Features
+--------
+
+- Render, InteractiveRender : Added new nodes capable of rendering to any supported renderer, and using the `render:defaultRenderer` option to determine which to use by default [^1].
+- StandardOptions : Added `render:defaultRenderer` option, allowing the scene globals to specify which renderer is used by the Render and InteractiveRender nodes [^1].
+- RenderPassEditor : Added a column for the `render:defaultRenderer` option, allowing each pass to be rendered in a different renderer [^1].
+
+Improvements
+------------
+
+- GraphEditor : Removed all renderer-specific Render and InteractiveRender nodes from the node menu. These nodes still exist for backwards compatibility with old scenes, but the generic Render and InteractiveRender nodes should now be used instead.
+
+Fixes
+-----
+
+- Windows : Removed "Error(s) running Gaffer" shutdown message. It was misleading when errors originated in the renderer rather than Gaffer itself.
+
+Documentation
+-------------
+
+- Updated with generic Render and InteractiveRender nodes in place of deprecated renderer-specific nodes.
+
+Breaking Changes
+----------------
+
+- CyclesOptions : Removed `cycles:integrator:sampling_pattern` option. This is intended only for debugging, but is still available via a CustomOptions node.
+- CyclesAttributes : Removed the `cycles:dupliGenerated` and `cycles:dupliUV` attributes.
+
+[^1]: To be omitted from final release notes for 1.4.0.0.
+
+1.4.0.0b3 (relative to 1.4.0.0b2)
+=========
+
+Fixes
+-----
+
+- Tractor : Fixed failure to import Tractor API [^1].
+- Cycles :
+  - Fixed hangs and crashes when using non-default session modes such as SVM shading.
+  - Fixed failure to render background light in batch renders (#5234).
+  - Fixed failure to update when reverting a background shader to previous values.
+- GafferUI :
+  - Fixed `Color space 'sRGB' could not be found` errors when running with certain custom OCIO configs (#5695).
+  - Fixed icon colours when running with an ACES OCIO config.
+- DocumentationAlgo : Fixed generation of duplicate entries for aliased nodes in `exportNodeReference()` [^1].
+
+Documentation
+-------------
+
+- Node Reference : Removed duplicate entries for nodes that have been aliased by compatibility configs [^1].
+
+Breaking Changes
+----------------
+
+- CyclesOptions : Changed `hairShape` default value to "ribbon", to match Cycles' and Blender's own defaults.
+- Pointer :
+  - Removed `Pointer( const ImagePrimitive * )` constructor.
+  - Removed `image()` method.
+
+API
+---
+
+- ImageGadget : Removed `textureLoader()` method.
+- Pointer : Added `fileName()` method.
+
+[^1]: To be omitted from final release notes for 1.4.0.0.
+
+1.4.0.0b2 (relative to 1.4.0.0b1)
+=========
+
+Features
+--------
+
+- GraphEditor : Added <kbd>X</kbd> shortcut for removing connections between nodules. Hold <kbd>X</kbd> then left click to remove all connections under the cursor. Hold <kbd>X</kbd> then left drag to draw a line, all connections that intersect with the line will be removed once the drag is ended (#788).
+- LightPosition Tool : Added a variation on the shadow placement tool to place highlights. Lights are positioned such that they will create a specular highlight at the target point.
+
+Improvements
+------------
+
+- ImageReader : Added `fileValid = False` metadata to images from missing frames, when `missingFrameMode` is `Black` or `Hold`.
+- Viewer : Added <kbd>Ctrl</kbd>+<kbd>PgUp</kbd> shortcut for displaying the RGBA image layer (or the first available layer if RGBA doesn't exist) [^1].
+- RenderPassEditor [^1] :
+  - Added "Inclusions", "Exclusions" and "Additional Lights" columns, to provide control over the locations included in the render for each render pass.
+  - Added the ability to display render passes grouped in a hierarchy generated from the render pass name. The default grouping uses the first token delimited by "_" from the render pass name, such that render passes named "char_gafferBot" and "char_cow" would be displayed under a "/char" group, while "prop_ball" and "prop_box" would be displayed under a "/prop" group.
+  - Render pass grouping can be configured in a startup file by using `GafferSceneUI.RenderPassEditor.registerPathGroupingFunction( f )`, where `f` is a function that receives a render pass name and returns the path that the render pass should be grouped under.
+  - Grouped display can be enabled by default in a startup file by using `Gaffer.Metadata.registerValue( GafferSceneUI.RenderPassEditor.Settings, "displayGrouped", "userDefault", IECore.BoolData( True ) )`.
+  - Dragging cells selected from the "Name" column now provides a list of the selected render pass names, rather than their paths.
+  - Disabled render pass names are now dimmed to more clearly indicate their state.
+- RenderPassEditor, LightEditor, PathListingWidget : Boolean values are now displayed as checkboxes rather than `0` or `1` [^1].
+- Collect : Added the ability to collect StringVectorData inputs.
+- StandardOptions : Added `inclusions`, `exclusions` and `additionalLights` plugs, to control which locations are included in a render based on set expressions entered on these plugs. These, plus the existing `includedPurposes` plug are now grouped under the "Render Set" section of the UI [^1].
+- GafferScene : Registered the "RenderSetAdaptor" adapting the `render:inclusions`, `render:exclusions` and `render:additionalLights` options to prune scene locations before rendering [^1].
+
+Fixes
+-----
+
+- 3Delight : Fixed startup errors on Windows when the `DELIGHT` environment variable wasn't defined [^1].
+- FlatImageProcessor : Fixed bug that could cause an input to be evaluated with an invalid `image:viewName`.
+- Collect : Fixed display of results collected from TypedObjectPlug inputs.
+
+API
+---
+
+- ScenePath : Added automatic conversion of a list of Python strings to a ScenePath [^1].
+- RenderPassEditor : Added `registerPathGroupingFunction()` and `pathGroupingFunction()` methods [^1].
+- ExtensionAlgo : Added `exportNode()` and `exportNodeUI()` functions.
+- Widget : Added a 0.5 pixel offset to `ButtonEvent.line` objects passed to mouse event signals such as `buttonPressSignal()` and `dragMoveSignal()`
+
+Breaking Changes
+----------------
+
+- CyclesOptions :
+  - Removed `useFrameAsSeed` plug. The frame is now automatically used as the seed if `seed` is not set.
+  - Removed all texture cache options. These had never been exposed in the UI because this never became an offical Cycles feature.
+  - Removed `cryptomatteAccurate`. This feature is no longer present in Cycles.
+
+[^1] : To be omitted from final release notes for 1.4.0.0.
+
+1.4.0.0b1 (relative to 1.3.x.x)
+=========
 
 > Note : This release introduces `linux-gcc11` builds which are only compatible with Linux distributions using glibc 2.28 or higher.
 > These specific `linux-gcc11` builds are intended for testing purposes while we upgrade our toolchain and dependencies to better align
 > with VFX Platform 2023, and should be considered "beta" in advance of a stable release in Gaffer 1.5.
 
+> Known bugs : Gaffer may crash when stopping an InteractiveCyclesRender with the CPU device and SVM shading mode. A fix is in progress.
+
 Features
 --------
 
+- Cycles :
+  - Updated to version 4.0.2.
+  - Added support for CUDA and Optix devices (GCC 11 builds only).
 - Dispatcher : Dispatchers are now TaskNodes, allowing them to be nested in a task graph. Possibilities include :
   - Using a LocalDispatcher and a Wedge to launch multiple TractorDispatcher jobs.
   - Using a nested LocalDispatcher to perform a group of tasks on a single blade within a TractorDispatcher job.
@@ -53,10 +184,13 @@ Improvements
   - Added support for reading `dl:` and `user:` attributes from shaders.
   - Added `importanceSampleFilter` plug to DelightOptions, providing denoiser-compatible output.
   - Matched DelightOptions default values for `oversampling` and `shadingSamples` to 3Delight's own default values.
-  - Added support for external procedurals. 
+  - Added support for external procedurals.
 - GraphEditor : Improved logic used to connect a newly created node to the selected nodes.
 - ScenePlug, ImagePlug : Child plugs are now serialisable. Among other things, this enables them to be driven by expressions (#3986).
 - Premultiply : Added `useDeepVisibility` plug, which weights samples according to their visibility based on the opacity of samples in front.
+- CyclesOptions : Improved device selection UI.
+- ImageReader : Improved multithreading of EXR reads. This can result in a performance improvement of around 4X for large images.
+- Added OIIO config that disables OIIO threading by default. This simplifies our threading model, and has no impact on performance for our main use cases. If read performance of Gaffer compositing using non-EXR formats, such as Tiff, is important to you, you may want to add your own config to turn OIIO threading back on.
 
 Fixes
 -----
@@ -76,6 +210,7 @@ Fixes
 - DeepState : Fixed handling of `NaN` values and samples where `ZBack` is less than `Z`.
 - Premultiply : Fixed handling of non-existent alpha channel.
 - PlugAlgo : Fixed promotion of CompoundDataPlugs with non-dynamic children, such as the `Camera.renderSettingOverrides` plug.
+- ColorToVector : Fixed parameter types.
 
 API
 ---
@@ -107,11 +242,13 @@ API
 - ImageTestCase : in `assertImageEqual` function, maxDifference may now be a tuple, to specify an asymmetric range.
 - Editor : Added `Settings` class, which should be used to store settings for subclasses. See LightEditor and ImageInspector for examples.
 - DeepPixelAccessor : Added utility class for accessing deep samples while abstracting away the underlying tile storage.
+- Color3fPlug : Added `setValue( V3f() )` overload.
 
 Breaking Changes
 ----------------
 
 - Arnold : Removed support for Arnold 7.1.
+- Cycles : Updated to version 4.0.2.
 - Render : Changed `render:includedPurposes` default to `"default", "render"`.
 - Backdrop : Changed default drawing order. Use the new `depth` plug to override the order if necessary.
 - ValuePlug : Removed deprecated `getObjectValue()` overload.
@@ -154,28 +291,133 @@ Breaking Changes
 - DelightOptions : Changed default values for `oversampling` and `shadingSamples` plugs.
 - SceneProcessor : Subclasses no longer serialise internal connections to the `out` plug.
 - ImageProcessor : Internal connections to the `out` plug are no longer serialised.
+- USD : Removed Embree Hydra delegate.
 
 Build
 -----
 
+- Cortex : Updated to version 10.5.6.1.
+- Cycles : Updated to version 4.0.2.
+- Embree : Updated to version 4.3.0.
 - Imath : Updated to version 3.1.9.
 - MaterialX : Updated to version 1.38.8.
 - LibWebP : Added version 1.3.2.
-- OpenEXR : Updated to version 3.1.9.
-- OpenImageIO : Updated to version 2.4.17.0.
+- OpenEXR : Updated to version 3.1.12.
+- OpenImageIO : Updated to version 2.5.8.0.
+- OpenPGL : Updated to version 0.5.0.
+- OpenShadingLanguage : Updated to version 1.12.14.0.
 - OpenSubdiv : Updated to version 3.5.1.
 - OpenSSL : Removed.
-- OpenVDB : Updated to version 10.0.1.
+- OpenVDB : Updated to version 10.1.0.
 - PsUtil : Added version 5.9.6.
 - PySide : Updated to version 5.15.12.
+- Python : Updated to version 3.10.13.
 - Qt :
   - Updated to version 5.15.12.
   - Removed QtPurchasing library.
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.x.x (relative to 1.3.10.0)
+1.3.x.x (relative to 1.3.14.0)
 =======
+
+
+
+1.3.14.0 (relative to 1.3.13.1)
+========
+
+Features
+--------
+
+- Render, InteractiveRender : Added new nodes capable of rendering to any supported renderer, and using the `render:defaultRenderer` option to determine which to use by default.
+- StandardOptions : Added `render:defaultRenderer` option, allowing the scene globals to specify which renderer is used by the Render and InteractiveRender nodes.
+- RenderPassEditor : Added a column for the `render:defaultRenderer` option, allowing each pass to be rendered in a different renderer.
+
+1.3.13.1 (relative to 1.3.13.0)
+========
+
+Fixes
+-----
+
+- DocumentationAlgo : Fixed generation of duplicate entries for aliased nodes in `exportNodeReference()`.
+
+Documentation
+-------------
+
+- Node Reference : Removed duplicate entries for nodes that have been aliased by compatibility configs.
+
+1.3.13.0 (relative to 1.3.12.0)
+========
+
+Improvements
+------------
+
+- Viewer : Added <kbd>Ctrl</kbd>+<kbd>PgUp</kbd> shortcut for displaying the RGBA image layer (or the first available layer if RGBA doesn't exist).
+- RenderPassEditor :
+  - Added "Inclusions", "Exclusions" and "Additional Lights" columns, to provide control over the locations included in the render for each render pass.
+  - Added the ability to display render passes grouped in a hierarchy generated from the render pass name. The default grouping uses the first token delimited by "_" from the render pass name, such that render passes named "char_gafferBot" and "char_cow" would be displayed under a "/char" group, while "prop_ball" and "prop_box" would be displayed under a "/prop" group.
+  - Render pass grouping can be configured in a startup file by using `GafferSceneUI.RenderPassEditor.registerPathGroupingFunction( f )`, where `f` is a function that receives a render pass name and returns the path that the render pass should be grouped under.
+  - Grouped display can be enabled by default in a startup file by using `Gaffer.Metadata.registerValue( GafferSceneUI.RenderPassEditor.Settings, "displayGrouped", "userDefault", IECore.BoolData( True ) )`.
+  - Dragging cells selected from the "Name" column now provides a list of the selected render pass names, rather than their paths.
+  - Disabled render pass names are now dimmed to more clearly indicate their state.
+- RenderPassEditor, LightEditor, PathListingWidget : Boolean values are now displayed as checkboxes rather than `0` or `1`.
+- StandardOptions : Added `inclusions`, `exclusions` and `additionalLights` plugs, to control which locations are included in a render based on set expressions entered on these plugs. These, plus the existing `includedPurposes` plug are now grouped under the "Render Set" section of the UI.
+- GafferScene : Registered the "RenderSetAdaptor" adapting the `render:inclusions`, `render:exclusions` and `render:additionalLights` options to prune scene locations before rendering.
+
+API
+---
+
+- ScenePath : Added automatic conversion of a list of Python strings to a ScenePath.
+- RenderPassEditor : Added `registerPathGroupingFunction()` and `pathGroupingFunction()` methods.
+
+1.3.12.0 (relative to 1.3.11.0)
+========
+
+Improvements
+------------
+
+- SceneReader : Added basic loding of UsdGeomNurbsCurves, converting them to CurvesPrimitives (basis curves).
+- Console output : Every line is now prefixed with the message level.
+- RenderPasses : Added validation of render pass names entered in the `names` plug.
+- RenderPassEditor :
+  - Added support for adding a new render pass to an EditScope by clicking the plus button at the bottom of the editor.
+  - Added support for deleting selected render passes by clicking the minus button at the bottom of the editor, or by right-clicking one of the names and selecting 'Delete Selected Render Passes'.
+
+Fixes
+-----
+
+- Viewer : Fixed context handling bug in the shader view (#5654).
+- PythonCommand : Fixed misleading results for `repr( variables )` and `str( variables )`, which would suggest the dictionary was empty when it was not.
+- CompoundObject : Fixed crashes in Python bindings caused by passing `None` as a key.
+- Windows : Fixed "{path} was unexpected at this time." startup error when environment variables such as `PATH` contain `"` characters.
+- PathListingWidget : Fixed bug which caused the pointer to be stuck displaying the "values" icon after dragging cells with no value.
+- SceneAlgo : Fixed computation of history through Expression nodes.
+- LightTool : Fixed crash when deleting the node being viewed.
+- USD : Fixed loading of Arnold lights previously exported from Gaffer to USD.
+- Catalogue : Fixed connection delays on Windows.
+- Context : Fixed potential crash when setting a variable with ownership.
+
+Documentation
+-------------
+
+- Added Render Pass Editor shortcuts to the "Controls and Shortcuts" section.
+- Added Render Pass Editor (Arnold) example demonstrating use of the Render Pass Editor, as well as the RenderPasses and RenderPassWedge nodes.
+
+API
+---
+
+- EditScopeAlgo : Added support for creating render passes.
+- RenderPasses : Added `registerRenderPassNameWidget()` and `createRenderPassNameWidget()` methods for registration and creation of the widget used for editing render pass names.
+- RenderPassEditor : Added `addRenderPassButtonMenuSignal()` to allow customisation of the add render pass button behaviour.
+- ConfirmationDialogue : The cancel button may now be omitted by passing `cancelLabel = None` to the constructor.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.6.2.
+
+1.3.11.0 (relative to 1.3.10.0)
+========
 
 Features
 --------
@@ -862,8 +1104,18 @@ Build
 - USD : Updated to version 23.05.
 - ZLib : Added version 1.2.13.
 
-1.2.10.x (relative to 1.2.10.5)
+1.2.10.x (relative to 1.2.10.6)
 ========
+
+
+
+1.2.10.6 (relative to 1.2.10.5)
+========
+
+Fixes
+-----
+
+- Context : Fixed potential crash when setting a variable with ownership.
 
 1.2.10.5 (relative to 1.2.10.4)
 ========

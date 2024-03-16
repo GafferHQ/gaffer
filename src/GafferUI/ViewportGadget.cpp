@@ -64,6 +64,8 @@
 #include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+#include "fmt/format.h"
+
 #include <chrono>
 #include <cmath>
 #include <regex>
@@ -1116,10 +1118,21 @@ std::vector< Gadget* > ViewportGadget::gadgetsAtInternal( const Imath::Box2f &ra
 	std::vector< Gadget* > gadgets;
 	for( const HitRecord &it : selection )
 	{
-		// We can assume that renderInternal has populated m_renderItem, so we can just index into it
-		// using the index passed to loadName ( reversing the increment-by-one used to avoid the reserved
-		// name "0" )
-		gadgets.push_back( const_cast<Gadget*>( m_renderItems[ it.name - 1 ].gadget ) );
+		// We assume that `renderLayerInternal()` has populated `m_renderItem`, so we can just index into it
+		// using the index passed to `loadName()` (reversing the increment-by-one used to avoid the reserved
+		// name `0`). But we'd crash if we received out-of-range indices for any reason, so check.
+		const size_t index = it.name - 1;
+		if( index < m_renderItems.size() )
+		{
+			gadgets.push_back( const_cast<Gadget*>( m_renderItems[index].gadget ) );
+		}
+		else
+		{
+			IECore::msg(
+				IECore::Msg::Warning, "ViewportGadget::gadgetsAtInternal",
+				fmt::format( "Got out of bounds Gadget index {}", index )
+			);
+		}
 	}
 
 	if( !gadgets.size() )
@@ -1385,7 +1398,7 @@ GLuint ViewportGadget::acquireFramebuffer() const
 
 	// Resize depth buffer and attach to framebuffer
 	glBindRenderbuffer( GL_RENDERBUFFER, m_depthBuffer );
-	glRenderbufferStorageMultisample( GL_RENDERBUFFER, samples, GL_DEPTH_COMPONENT24, size.x, size.y );
+	glRenderbufferStorageMultisample( GL_RENDERBUFFER, samples, GL_DEPTH_COMPONENT32F, size.x, size.y );
 	glFramebufferRenderbuffer( GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthBuffer );
 
 	// Validate framebuffer
@@ -2230,7 +2243,7 @@ void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget
 	m_depthSort = false;
 	camera->render( nullptr );
 
-	m_selector = SelectorPtr( new IECoreGL::Selector( ndcRegion, mode, m_selection ) );
+	m_selector = SelectorPtr( new IECoreGL::Selector( ndcRegion, mode, m_selection, true ) );
 
 	glPushMatrix();
 	glMultMatrixf( transform.getValue() );

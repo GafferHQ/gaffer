@@ -160,6 +160,8 @@ GAFFERSCENE_API Gaffer::TweakPlug *acquireRenderPassOptionEdit( Gaffer::EditScop
 GAFFERSCENE_API void removeRenderPassOptionEdit( Gaffer::EditScope *scope, const std::string &renderPass, const std::string &option );
 GAFFERSCENE_API const Gaffer::GraphComponent *renderPassOptionEditReadOnlyReason( const Gaffer::EditScope *scope, const std::string &renderPass, const std::string &option );
 
+GAFFERSCENE_API const Gaffer::GraphComponent *renderPassesReadOnlyReason( const Gaffer::EditScope *scope );
+
 } // namespace EditScopeAlgo
 
 } // namespace GafferScene

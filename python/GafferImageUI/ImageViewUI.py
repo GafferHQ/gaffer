@@ -910,12 +910,27 @@ class _ChannelsPlugValueWidget( GafferImageUI.RGBAChannelsPlugValueWidget ) :
 			}
 		)
 
+		firstValue = next( iter( self._rgbaChannels().values() ), None )
+		result.append(
+			"/First",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = firstValue ),
+				"shortCut" : "Ctrl+PgUp",
+				"active" : firstValue is not None and firstValue != currentValue,
+			}
+		)
+
 		return result
 
 	def __keyPress( self, gadget, event ) :
 
 		if event.key in ( "PageUp", "PageDown" ) :
-			value = self.__incrementedValue( -1 if event.key == "PageUp" else 1 )
+			if event.key == "PageDown" :
+				value = self.__incrementedValue( 1 )
+			elif event.modifiers == event.Modifiers.Control :
+				value = next( iter( self._rgbaChannels().values() ), None )
+			else :
+				value = self.__incrementedValue( -1 )
 			if value is not None :
 				self.__setValue( value )
 			return True

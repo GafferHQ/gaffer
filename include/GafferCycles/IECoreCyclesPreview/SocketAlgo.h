@@ -81,6 +81,9 @@ IECORECYCLES_API void setRampSocket( ccl::Node *node, const ccl::SocketType *soc
 // ParamValue
 IECORECYCLES_API ccl::ParamValue setParamValue( const IECore::InternedString &name, const IECore::Data *value );
 
+IECORECYCLES_API IECore::DataPtr getSocket( const ccl::Node *node, const ccl::SocketType *socket );
+IECORECYCLES_API IECore::CompoundDataPtr getSockets( const ccl::Node *node );
+
 } // namespace SocketAlgo
 
 } // namespace IECoreCycles

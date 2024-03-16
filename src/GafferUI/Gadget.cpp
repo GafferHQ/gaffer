@@ -485,8 +485,9 @@ Gadget::IdleSignal &Gadget::idleSignal()
 
 Gadget::IdleSignal &Gadget::idleSignalAccessedSignal()
 {
-	static IdleSignal g_idleSignalAccessedSignal;
-	return g_idleSignalAccessedSignal;
+	// See above.
+	static IdleSignal *g_idleSignalAccessedSignal = new IdleSignal;
+	return *g_idleSignalAccessedSignal;
 }
 
 void Gadget::styleChanged()

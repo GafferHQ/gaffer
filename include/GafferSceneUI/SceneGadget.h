@@ -182,6 +182,11 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 			IECore::PathMatcher &paths
 		) const;
 
+		/// Returns the approximate gadget space normal of the frontmost object intersecting
+		/// the specified line through gadget space, if an intersection exists. Returns `std::nullopt`
+		/// if there is no such object intersection.
+		std::optional<Imath::V3f> normalAt( const IECore::LineSegment3f &lineInGadgetSpace ) const;
+
 		/// Returns the bounding box of all the selected objects.
 		/// Deprecated, prefer using `bound( true )` below
 		Imath::Box3f selectionBound() const;

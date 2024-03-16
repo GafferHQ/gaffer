@@ -83,6 +83,8 @@ PendingUpdates &pendingUpdates()
 	return *p;
 }
 
+const InternedString g_rendererOptionName( "option:render:defaultRenderer" );
+
 } // anon namespace
 
 // A thread-safe message handler for render messaging
@@ -314,8 +316,30 @@ void InteractiveRender::update()
 	{
 		m_messageHandler->clear();
 
+		std::string rendererType = rendererPlug()->getValue();
+		if( rendererType.empty() )
+		{
+			/// \todo It'd be great if we could deal with live edits to the `render:defaultRenderer`
+			/// option, to switch renderer on the fly. The best way of doing this is probably
+			/// to move the renderer creation to the RenderController. That approach would also
+			/// allow the RenderController to recreate the renderer when unsupported option edits
+			/// are made - for instance, changing `cycles:device`.
+			ConstCompoundObjectPtr globals = adaptedInPlug()->globals();
+			if( auto rendererData = globals->member<const StringData>( g_rendererOptionName ) )
+			{
+				rendererType = rendererData->readable();
+			}
+			if( rendererType.empty() )
+			{
+				m_messageHandler->handle(
+					IECore::Msg::Error, "InteractiveRender", "`render:defaultRenderer` option not set"
+				);
+				return;
+			}
+		}
+
 		m_renderer = IECoreScenePreview::Renderer::create(
-			rendererPlug()->getValue(),
+			rendererType,
 			IECoreScenePreview::Renderer::Interactive,
 			"",
 			m_messageHandler.get()

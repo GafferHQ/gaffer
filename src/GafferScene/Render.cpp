@@ -62,6 +62,7 @@ namespace
 {
 
 const InternedString g_performanceMonitorOptionName( "option:render:performanceMonitor" );
+const InternedString g_rendererOptionName( "option:render:defaultRenderer" );
 const InternedString g_sceneTranslationOnlyContextName( "scene:render:sceneTranslationOnly" );
 
 struct RenderScope : public Context::EditableScope
@@ -206,10 +207,18 @@ IECore::MurmurHash Render::hash( const Gaffer::Context *context ) const
 
 	RenderScope renderScope( context );
 
-	const std::string rendererType = rendererPlug()->getValue();
+	std::string rendererType = rendererPlug()->getValue();
 	if( rendererType.empty() )
 	{
-		return IECore::MurmurHash();
+		ConstCompoundObjectPtr globals = adaptedInPlug()->globals();
+		if( auto rendererData = globals->member<const StringData>( g_rendererOptionName ) )
+		{
+			rendererType = rendererData->readable();
+		}
+		if( rendererType.empty() )
+		{
+			return IECore::MurmurHash();
+		}
 	}
 
 	const Mode mode = static_cast<Mode>( modePlug()->getValue() );
@@ -218,6 +227,12 @@ IECore::MurmurHash Render::hash( const Gaffer::Context *context ) const
 	{
 		return IECore::MurmurHash();
 	}
+
+	/// \todo Since we're computing the globals now (see above),
+	/// maybe our hash should be the hash of the output definitions?
+	/// Then we'd know which parts of the context we were sensitive to
+	/// and wouldn't have such a pessimistic hash that includes all
+	/// context variables.
 
 	IECore::MurmurHash h = TaskNode::hash( context );
 	h.append( (uint64_t)inPlug()->source<Plug>() );
@@ -260,10 +275,22 @@ void Render::executeInternal( bool flushCaches ) const
 
 	RenderScope renderScope( Context::current() );
 
-	const std::string rendererType = rendererPlug()->getValue();
+	std::string rendererType = rendererPlug()->getValue();
 	if( rendererType.empty() )
 	{
-		return;
+		/// \todo We're evaluating the globals twice, once here and once in
+		/// `RenderOptions` below. When we remove the `scene:renderer` context
+		/// variable, we'll be able to move the RenderOptions here and only do
+		/// one evaluation.
+		ConstCompoundObjectPtr globals = adaptedInPlug()->globals();
+		if( auto rendererData = globals->member<const StringData>( g_rendererOptionName ) )
+		{
+			rendererType = rendererData->readable();
+		}
+		if( rendererType.empty() )
+		{
+			return;
+		}
 	}
 
 	renderScope.set( g_rendererContextName, &rendererType );

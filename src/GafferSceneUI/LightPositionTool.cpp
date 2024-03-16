@@ -61,9 +61,11 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 #if OPENEXR_VERSION_MAJOR < 3
 #include "OpenEXR/ImathEuler.h"
 #include "OpenEXR/ImathMatrixAlgo.h"
+#include "OpenEXR/ImathVecAlgo.h"
 #else
 #include "Imath/ImathEuler.h"
 #include "Imath/ImathMatrixAlgo.h"
+#include "Imath/ImathVecAlgo.h"
 #endif
 IECORE_POP_DEFAULT_VISIBILITY
 
@@ -294,13 +296,13 @@ IECoreGL::MeshPrimitivePtr unitCone()
 	return result;
 }
 
-V3f shadowSourcePosition( const V3f &shadowPivot, const V3f &shadowTarget, const float pivotDistance )
+V3f shadowSourcePosition( const V3f &Pivot, const V3f &Target, const float pivotDistance )
 {
-	return (shadowPivot - shadowTarget ).normalized() * pivotDistance + shadowPivot;
+	return (Pivot - Target ).normalized() * pivotDistance + Pivot;
 }
 
 // Must be called with the current context scoped.
-M44f shadowSourceOrientation( const TransformTool::Selection &s, const V3f &shadowPivot, const V3f &shadowTarget )
+M44f sourceOrientation( const TransformTool::Selection &s, const V3f &origin, const V3f &target )
 {
 	ScenePlug::ScenePath parentPath( s.path() );
 	parentPath.pop_back();
@@ -312,9 +314,9 @@ M44f shadowSourceOrientation( const TransformTool::Selection &s, const V3f &shad
 	V3f currentYAxis;
 	localTransform.multDirMatrix( V3f( 0.f, 1.f, 0.f ), currentYAxis );
 
-	// Point in the pivot-shadowTarget direction, in local space
+	// Point in the pivot-target direction, in local space
 	V3f targetZAxis;
-	worldParentTransformInverse.multDirMatrix( ( shadowTarget - shadowPivot ), targetZAxis );
+	worldParentTransformInverse.multDirMatrix( ( target - origin ), targetZAxis );
 
 	return rotationMatrixWithUpDir( V3f( 0.f, 0.f, -1.f ), targetZAxis, currentYAxis );
 
@@ -334,7 +336,7 @@ class DistanceHandle : public Handle
 
 	public :
 
-		DistanceHandle()
+		DistanceHandle( const bool requiresPivot ) : m_requiresPivot( requiresPivot )
 		{
 
 		}
@@ -344,28 +346,28 @@ class DistanceHandle : public Handle
 
 		}
 
-		// Set the position of the shadow pivot from the given world-space coordinate.
+		// Set the position of the pivot from the given world-space coordinate.
 		void setPivot( const std::optional<V3f> &p )
 		{
-			m_shadowPivot = p;
+			m_pivot = p;
 			dirty( DirtyType::Render );
 		}
 
 		const std::optional<V3f> &getPivot() const
 		{
-			return m_shadowPivot;
+			return m_pivot;
 		}
 
-		// Set the position of the shadow target from the given world-space coordinate.
+		// Set the position of the target from the given world-space coordinate.
 		void setTarget( const std::optional<V3f> &p )
 		{
-			m_shadowTarget = p;
+			m_target = p;
 			dirty( DirtyType::Render );
 		}
 
 		const std::optional<V3f> &getTarget() const
 		{
-			return m_shadowTarget;
+			return m_target;
 		}
 
 		void setPivotDistance( const std::optional<float> d )
@@ -388,11 +390,16 @@ class DistanceHandle : public Handle
 			m_transformToSceneSpace = t;
 		}
 
+		void setRequiresPivot( const bool requiresPivot )
+		{
+			m_requiresPivot = requiresPivot;
+		}
+
 	protected :
 
 		void renderHandle( const Style *style, Style::State state ) const override
 		{
-			if( !m_shadowPivot && !m_shadowTarget )
+			if( !m_pivot && !m_target )
 			{
 				return;
 			}
@@ -445,7 +452,7 @@ class DistanceHandle : public Handle
 
 			const M44f fullTransformInverse = fullTransform().inverse();
 
-			if( m_shadowPivot )
+			if( m_pivot && m_requiresPivot )
 			{
 				IECoreGL::GroupPtr pivotGroup = new IECoreGL::Group;
 				pivotGroup->getState()->add(
@@ -460,7 +467,7 @@ class DistanceHandle : public Handle
 				);
 				pivotGroup->addChild( circle() );
 
-				const V3f localPivot = m_shadowPivot.value() * m_transformToSceneSpace * fullTransformInverse;
+				const V3f localPivot = m_pivot.value() * m_transformToSceneSpace * fullTransformInverse;
 
 				pivotGroup->setTransform(
 					M44f().scale( V3f( circleSize ) * ::rasterScaleFactor( this, localPivot ) ) *
@@ -473,12 +480,12 @@ class DistanceHandle : public Handle
 			V3f localTarget;
 			V3f coneHeightOffset;
 
-			if( m_shadowTarget )
+			if( m_target )
 			{
 				IECoreGL::GroupPtr coneGroup = new IECoreGL::Group;
 				coneGroup->addChild( unitCone() );
 
-				localTarget = m_shadowTarget.value() * m_transformToSceneSpace * fullTransformInverse;
+				localTarget = m_target.value() * m_transformToSceneSpace * fullTransformInverse;
 				const V3f coneScale = V3f( coneSize ) * ::rasterScaleFactor( this, localTarget );
 				coneHeightOffset = V3f( 0, 0, g_unitConeHeight * coneScale.z );
 
@@ -488,20 +495,20 @@ class DistanceHandle : public Handle
 				);
 
 				group->addChild( coneGroup );
-			}
 
-			if( m_shadowTarget && m_shadowPivot )
-			{
-				IECoreGL::GroupPtr lineGroup = new IECoreGL::Group;
-				lineGroup->addChild(
-					cone(
-						localTarget.length() - coneHeightOffset.z,
-						lineRadius * ::rasterScaleFactor( this, V3f( 0 ) ),
-						lineRadius * ::rasterScaleFactor( this, localTarget )
-					)
-				);
+				if( !m_requiresPivot || m_pivot )
+				{
+					IECoreGL::GroupPtr lineGroup = new IECoreGL::Group;
+					lineGroup->addChild(
+						cone(
+							localTarget.length() - coneHeightOffset.z,
+							lineRadius * ::rasterScaleFactor( this, V3f( 0 ) ),
+							lineRadius * ::rasterScaleFactor( this, localTarget )
+						)
+					);
 
-				group->addChild( lineGroup );
+					group->addChild( lineGroup );
+				}
 			}
 
 			group->render( glState );
@@ -518,10 +525,10 @@ class DistanceHandle : public Handle
 
 	private :
 
-		// As with `LightPositionTool::m_shadowPivotMap` and `LightPositionTool::m_shadowTargetMap`,
+		// As with `LightPositionTool::m_pivotMap` and `LightPositionTool::m_targetMap`,
 		// we store the pivot and target position in transform space.
-		std::optional<V3f> m_shadowPivot;
-		std::optional<V3f> m_shadowTarget;
+		std::optional<V3f> m_pivot;
+		std::optional<V3f> m_target;
 
 		std::optional<float> m_pivotDistance;
 
@@ -530,6 +537,8 @@ class DistanceHandle : public Handle
 
 		LinearDrag m_drag;
 		float m_startDistance;
+
+		bool m_requiresPivot;
 
 };
 
@@ -545,7 +554,7 @@ LightPositionTool::LightPositionTool( SceneView *view, const std::string &name )
 	m_targetMode( TargetMode::None ),
 	m_draggingTarget( false )
 {
-	m_distanceHandle = new DistanceHandle();
+	m_distanceHandle = new DistanceHandle( true );
 	m_distanceHandle->setRasterScale( 0 );
 	handles()->setChild( "distanceHandle", m_distanceHandle );
 	m_distanceHandle->dragBeginSignal().connectFront( boost::bind( &LightPositionTool::handleDragBegin, this, ::_1 ) );
@@ -578,13 +587,25 @@ LightPositionTool::LightPositionTool( SceneView *view, const std::string &name )
 	plugSetSignal().connect( boost::bind( &LightPositionTool::plugSet, this, ::_1 ) );
 
 	storeIndexOfNextChild( g_firstPlugIndex );
+
+	addChild( new IntPlug( "mode", Plug::In, (int)Mode::Shadow, (int)Mode::First, (int)Mode::Last ) );
+}
+
+IntPlug *LightPositionTool::modePlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex );
+}
+
+const IntPlug *LightPositionTool::modePlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
 LightPositionTool::~LightPositionTool()
 {
 }
 
-void LightPositionTool::positionShadow( const V3f &shadowPivot, const V3f &shadowTarget, const float pivotDistance )
+void LightPositionTool::positionShadow( const V3f &pivot, const V3f &target, const float pivotDistance )
 {
 	if( !m_distanceHandle->enabled() || selection().empty() )
 	{
@@ -592,33 +613,41 @@ void LightPositionTool::positionShadow( const V3f &shadowPivot, const V3f &shado
 	}
 	const Selection &s = selection().back();
 
-	const V3f newP = shadowSourcePosition( shadowPivot, shadowTarget, pivotDistance );
+	const V3f newP = shadowSourcePosition( pivot, target, pivotDistance );
 
 	// See `RotateTool::buttonPress()` for a description of why we use this relatively
 	// elaborate orientation calculation.
 
 	Context::Scope scopedContext( s.context() );
 
+	const M44f orientationMatrix = sourceOrientation( s, pivot, target );
+
 	const M44f localTransform = s.scene()->transform( s.path() );
+	translateAndOrient( s, localTransform, newP, orientationMatrix );
+}
 
-	const M44f orientationMatrix = shadowSourceOrientation( s, shadowPivot, shadowTarget );
+void LightPositionTool::positionHighlight(
+	const V3f &highlightTarget,
+	const V3f &viewpoint,
+	const V3f &normal,
+	const float targetDistance
+)
+{
+	if( !m_distanceHandle->enabled() || selection().empty() )
+	{
+		return;
+	}
+	const Selection &s = selection().back();
 
-	V3f originalRotation;
-	extractEulerXYZ( localTransform, originalRotation );
-	const M44f originalRotationMatrix = M44f().rotate( originalRotation );
+	const V3f reflectionRay = reflect( ( viewpoint - highlightTarget ), normal ).normalize();
+	const V3f newP = highlightTarget + reflectionRay * targetDistance;
 
-	const M44f relativeMatrix = originalRotationMatrix.inverse() * orientationMatrix;
+	Context::Scope scopedContext( s.context() );
 
-	V3f relativeRotation;
-	extractEulerXYZ( relativeMatrix, relativeRotation );
+	const M44f orientationMatrix = sourceOrientation( s, newP, highlightTarget );
 
-	const V3f p = V3f( 0 ) * s.orientedTransform( Orientation::World );
-	const V3f offset = newP - p;
-
-	TranslationRotation trTranslate( s, Orientation::World );
-	trTranslate.applyTranslation( offset );
-	TranslationRotation trRotate( s, Orientation::Parent );
-	trRotate.applyRotation( relativeRotation );
+	const M44f localTransform = s.scene()->transform( s.path() );
+	translateAndOrient( s, localTransform, newP, orientationMatrix );
 }
 
 bool LightPositionTool::affectsHandles( const Gaffer::Plug *input ) const
@@ -657,29 +686,48 @@ void LightPositionTool::updateHandles( float rasterScale )
 
 	auto distanceHandle = static_cast<DistanceHandle *>( m_distanceHandle.get() );
 
-	std::optional<V3f> shadowPivot = getPivot();
-	std::optional<V3f> shadowTarget = getTarget();
+	std::optional<V3f> pivot = getPivot();
+	std::optional<V3f> target = getTarget();
 
 	const M44f sceneToTransform = s.sceneToTransformSpace();
 	const M44f sceneToTransformInverse = sceneToTransform.inverse();
-	distanceHandle->setPivot( shadowPivot );
-	distanceHandle->setTarget( shadowTarget );
+	distanceHandle->setPivot( pivot );
+	distanceHandle->setTarget( target );
 	distanceHandle->setTransformToSceneSpace( sceneToTransformInverse );
 
-	if( !shadowPivot || !shadowTarget )
+	const Mode mode = (Mode)modePlug()->getValue();
+
+	if( !target || ( mode == Mode::Shadow && !pivot ) )
 	{
 		return;
 	}
 
-	// The user can control the distance along the line from shadow target
+	// The user can control the distance along the line from target
 	// to pivot, and the rotation around the Z-axis. Any variance from those
-	// contraints invalidates the stored shadow parameters.
+	// contraints invalidates the stored parameters.
 
 	Context::Scope scopedContext( s.context() );
 
 	const M44f transform = s.scene()->fullTransform( s.path() ) * sceneToTransform;
 	const V3f p = transform.translation();
-	const Line3f handleLine( shadowTarget.value(), shadowPivot.value() );
+
+	Line3f handleLine;
+	V3f handleDir;
+	float handleLength = 0;
+
+	if( mode == Mode::Shadow )
+	{
+		handleLine = Line3f( target.value(), pivot.value() );
+		handleDir = V3f( ( target.value() - pivot.value() ).normalized() );
+		handleLength = ( p - pivot.value() ).length();
+	}
+	else
+	{
+		handleLine = Line3f( target.value(), p );
+		const V3f handleDelta = target.value() - p;
+		handleDir = handleDelta.normalized();
+		handleLength = handleDelta.length();
+	}
 
 	V3f direction;
 	transform.multDirMatrix( V3f( 0, 0, -1.f ), direction );
@@ -687,7 +735,7 @@ void LightPositionTool::updateHandles( float rasterScale )
 	if(
 		!m_drag &&
 		(
-			!direction.equalWithAbsError( ( shadowTarget.value() - shadowPivot.value() ).normalized(), 1e-4 ) ||
+			!direction.equalWithAbsError( handleDir, 1e-4 ) ||
 			handleLine.distanceTo( p ) > distanceHandle->getPivotDistance().value() * 1e-4
 		)
 	)
@@ -703,7 +751,7 @@ void LightPositionTool::updateHandles( float rasterScale )
 	}
 	else
 	{
-		setPivotDistance( ( p - shadowPivot.value() ).length() );
+		setPivotDistance( handleLength );
 	}
 }
 
@@ -756,6 +804,11 @@ RunTimeTypedPtr LightPositionTool::sceneGadgetDragBegin( Gadget *gadget, const D
 	{
 		return nullptr;
 	}
+	if( getTargetMode() == TargetMode::Pivot && modePlug()->getValue() == (int)Mode::Highlight )
+	{
+		return nullptr;
+	}
+
 	m_draggingTarget = true;
 
 	TransformTool::dragBegin();
@@ -824,7 +877,10 @@ bool LightPositionTool::keyRelease( const KeyEvent &event )
 			setTargetMode( TargetMode::None );
 			return true;
 		}
-		if( event.key == "Shift" && getTargetMode() == TargetMode::Pivot )
+		if(
+			event.key == "Shift" &&
+			( getTargetMode() == TargetMode::Pivot )
+		)
 		{
 			setTargetMode( TargetMode::Target );
 			return true;
@@ -860,6 +916,11 @@ void LightPositionTool::plugSet( Plug *plug )
 	{
 		setTargetMode( TargetMode::None );
 	}
+	else if( plug == modePlug() )
+	{
+		auto h = static_cast<DistanceHandle *>( m_distanceHandle.get() );
+		h->setRequiresPivot( modePlug()->getValue() == (int)Mode::Shadow );
+	}
 }
 
 bool LightPositionTool::buttonPress( const ButtonEvent &event )
@@ -872,6 +933,11 @@ bool LightPositionTool::buttonPress( const ButtonEvent &event )
 	// We always return true to prevent the SelectTool defaults.
 
 	if( !selectionEditable() || !m_distanceHandle->enabled() )
+	{
+		return true;
+	}
+
+	if( getTargetMode() == TargetMode::Pivot && modePlug()->getValue() == (int)Mode::Highlight )
 	{
 		return true;
 	}
@@ -927,21 +993,75 @@ bool LightPositionTool::placeTarget( const LineSegment3f &eventLine )
 	}
 	else if( getTargetMode() == TargetMode::Target )
 	{
+		if( modePlug()->getValue() == (int)Mode::Highlight && !distanceHandle->getTarget() )
+		{
+			setPivotDistance(
+				(
+					( V3f( 0 ) * ( s.orientedTransform( Orientation::World ) * sceneToTransformSpace ) ) -
+					gadgetTargetPos * sceneGadget->fullTransform().inverse()
+				).length()
+			);
+		}
 		setTarget( gadgetTargetPos * sceneGadget->fullTransform() * sceneToTransformSpace, scriptNode );
 	}
 
-	if( !distanceHandle->getPivot() || !distanceHandle->getTarget() )
+	if( modePlug()->getValue() == (int)Mode::Shadow )
 	{
-		return false;
+		if( !distanceHandle->getPivot() || !distanceHandle->getTarget() )
+		{
+			return false;
+		}
+
+		positionShadow(
+			distanceHandle->getPivot().value() * sceneToTransformSpaceInverse,
+			distanceHandle->getTarget().value() * sceneToTransformSpaceInverse,
+			distanceHandle->getPivotDistance().value()
+		);
+	}
+	else if( modePlug()->getValue() == (int)Mode::Highlight )
+	{
+		if( !distanceHandle->getTarget() )
+		{
+			return false;
+		}
+
+		const M44f cameraTransform = view()->viewportGadget()->getCameraTransform();
+		std::optional<V3f> sceneGadgetNormal = sceneGadget->normalAt( eventLine );
+		if( sceneGadgetNormal )
+		{
+			V3f worldNormal;
+			sceneGadget->fullTransform().inverse().transpose().multDirMatrix( sceneGadgetNormal.value(), worldNormal );
+
+			positionHighlight(
+				distanceHandle->getTarget().value() * sceneToTransformSpaceInverse,
+				cameraTransform.translation(),
+				worldNormal,
+				distanceHandle->getPivotDistance().value()
+			);
+		}
 	}
 
-	positionShadow(
-		distanceHandle->getPivot().value() * sceneToTransformSpaceInverse,
-		distanceHandle->getTarget().value() * sceneToTransformSpaceInverse,
-		distanceHandle->getPivotDistance().value()
-	);
-
 	return true;
+}
+
+void LightPositionTool::translateAndOrient( const Selection &s, const M44f &localTransform, const V3f &newPosition, const M44f &newOrientation ) const
+{
+	V3f originalRotation;
+	extractEulerXYZ( localTransform, originalRotation );
+	const M44f originalRotationMatrix = M44f().rotate( originalRotation );
+
+	const M44f relativeMatrix = originalRotationMatrix.inverse() * newOrientation;
+
+	V3f relativeRotation;
+	extractEulerXYZ( relativeMatrix, relativeRotation );
+
+	const V3f p = V3f( 0 ) * s.orientedTransform( TransformTool::Orientation::World );
+	const V3f offset = newPosition - p;
+
+	TranslationRotation trTranslate( s, Orientation::World );
+	trTranslate.applyTranslation( offset );
+	TranslationRotation trRotate( s, Orientation::Parent );
+	trRotate.applyRotation( relativeRotation );
 }
 
 void LightPositionTool::setTargetMode( TargetMode targeted )
@@ -956,7 +1076,11 @@ void LightPositionTool::setTargetMode( TargetMode targeted )
 	switch( m_targetMode )
 	{
 		case TargetMode::None : GafferUI::Pointer::setCurrent( "" ); break;
-		case TargetMode::Pivot : GafferUI::Pointer::setCurrent( "pivot" ); break;
+		case TargetMode::Pivot :
+			GafferUI::Pointer::setCurrent(
+				modePlug()->getValue() == (int)Mode::Shadow ? "pivot" : ""
+			);
+			break;
 		case TargetMode::Target : GafferUI::Pointer::setCurrent( "target" ); break;
 	}
 }

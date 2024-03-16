@@ -1455,7 +1455,10 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 				cameraHandle,
 				ownership()
 			);
-			result->attributes( attributes );
+			if( attributes )
+			{
+				result->attributes( attributes );
+			}
 			return result;
 		}
 

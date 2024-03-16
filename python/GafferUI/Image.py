@@ -171,6 +171,10 @@ class Image( GafferUI.Widget ) :
 		icon.addPixmap( self._qtPixmapDisabled(), QtGui.QIcon.Disabled )
 		return icon
 
+	## \todo Deprecate and remove - we want to phase out ImagePrimitive.
+	# Although we don't use this function or the `Image( ImagePrimitive )`
+	# constructor in Gaffer itself, we can't do this immediately because some
+	# external code currently depends on it.
 	@staticmethod
 	def _qtPixmapFromImagePrimitive( image ) :
 
@@ -238,14 +242,7 @@ class Image( GafferUI.Widget ) :
 		if not resolvedFileName :
 			raise Exception( "Unable to find file \"%s\"" % fileName )
 
-		reader = IECore.Reader.create( resolvedFileName )
-
-		image = reader.read()
-		if not isinstance( image, IECoreImage.ImagePrimitive ) :
-			raise Exception( "File \"%s\" is not an image file" % resolvedFileName )
-
-		result = cls._qtPixmapFromImagePrimitive( image )
-
+		result = QtGui.QPixmap( resolvedFileName )
 		cost = result.width() * result.height() * ( 4 if result.hasAlpha() else 3 )
 
 		return ( result, cost )

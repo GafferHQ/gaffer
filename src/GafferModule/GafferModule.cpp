@@ -256,10 +256,4 @@ BOOST_PYTHON_MODULE( _Gaffer )
 
 	def( "_nameProcess", &nameProcess );
 
-	// Various parts of gaffer create new threads from C++, and those
-	// threads may call back into Python via wrapped classes at any time.
-	// We must prepare Python for this by calling PyEval_InitThreads().
-
-	PyEval_InitThreads();
-
 }

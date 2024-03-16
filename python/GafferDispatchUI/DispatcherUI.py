@@ -152,6 +152,47 @@ Gaffer.Metadata.registerNode(
 )
 
 ##################################################################################
+# Dispatch
+##################################################################################
+
+def appendMenuDefinitions( menuDefinition, prefix = "" ) :
+
+	menuDefinition.append(
+		prefix + "/Repeat Previous",
+		{
+			"command" : __repeatLastDispatch,
+			"shortCut" : "Ctrl+R",
+			"active" : lambda menu : __getLastDispatcher( menu.ancestor( GafferUI.ScriptWindow ).scriptNode() ) is not None
+		}
+	)
+
+def _dispatch( dispatcher, parentWindow  ) :
+
+	with dispatcher.scriptNode().context() :
+		with GafferUI.ErrorDialogue.ErrorHandler(
+			title = "Errors Occurred During Dispatch",
+			parentWindow = parentWindow
+		) :
+			dispatcher["task"].execute()
+			__setLastDispatcher( dispatcher.scriptNode(), dispatcher )
+
+def __setLastDispatcher( script, dispatcher ) :
+
+	GafferUI.ScriptWindow.acquire( script ).__lastDispatcher = weakref.ref( dispatcher )
+
+def __getLastDispatcher( script ) :
+
+	try :
+		return GafferUI.ScriptWindow.acquire( script ).__lastDispatcher()
+	except AttributeError :
+		return None
+
+def __repeatLastDispatch( menu ) :
+
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	_dispatch( __getLastDispatcher( scriptWindow.scriptNode() ), scriptWindow )
+
+##################################################################################
 # DispatchButton
 ##################################################################################
 
@@ -166,12 +207,7 @@ class _DispatchButton( GafferUI.Button ) :
 
 	def __clicked( self, button ) :
 
-		with self.__node.scriptNode().context() :
-			with GafferUI.ErrorDialogue.ErrorHandler(
-				title = "Errors Occurred During Dispatch",
-				parentWindow = self.ancestor( GafferUI.Window )
-			) :
-				self.__node["task"].execute()
+		_dispatch( self.__node, self.ancestor( GafferUI.Window ) )
 
 ##########################################################################
 # Additional Metadata for TaskNode

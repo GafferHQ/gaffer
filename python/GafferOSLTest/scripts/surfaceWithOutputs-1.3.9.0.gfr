@@ -47,4 +47,3 @@ __children["PathFilter"]["__uiPosition"].setValue( imath.V2f( 22.8434563, 5.4329
 
 
 del __children
-

@@ -44,6 +44,7 @@ import locale
 import platform
 import shutil
 import subprocess
+import tempfile
 import distutils.dir_util
 import codecs
 
@@ -64,7 +65,7 @@ gafferMilestoneVersion = 1 # for announcing major milestones - may contain all o
 gafferMajorVersion = 4 # backwards-incompatible changes
 gafferMinorVersion = 0 # new backwards-compatible features
 gafferPatchVersion = 0 # bug fixes
-gafferVersionSuffix = "" # used for alpha/beta releases : "a1", "b2", etc.
+gafferVersionSuffix = "b4" # used for alpha/beta releases : "a1", "b2", etc.
 
 # All of the following must be considered when determining
 # whether or not a change is backwards-compatible
@@ -400,7 +401,6 @@ env = Environment(
 
 )
 
-
 # include 3rd party headers with -isystem rather than -I.
 # this should turn off warnings from those headers, allowing us to
 # build with -Werror. there are so many warnings from boost
@@ -585,6 +585,9 @@ else:
 				"/wd4275",
 				"/wd4324",  # suppress warning "structure was padded due to alignment specifier". Needed by cycles\kernel\types.h
 				"/wd4458",  # suppress warning "declaration of 'variable' hides class member". Needed by cycles\scene\shader_nodes.h and cycles\util\ssef.h
+				"/wd4003",  # suppress warning "not enough arguments for function-like macro invocation 'BOOST_PP_SEQ_DETAIL_IS_NOT_EMPTY'". Needed for USD.
+				"/wd4702",  # suppress warning "unreachable code". Need for OpenVDB.
+				"/wd4180",  # suppress warning "qualifier applied to function type has no meaning; ignored". Needed for OpenVDB
 			],
 		)
 
@@ -845,11 +848,11 @@ if not exrVersionHeader :
 	Exit( 1 )
 
 for line in open( str( exrVersionHeader ) ) :
-	m = re.match( r'^#define OPENEXR_VERSION_STRING "(\d)\.(\d)\.(\d)"$', line )
+	m = re.match( r'^#define OPENEXR_VERSION_STRING "(\d+)\.(\d+)\.(\d+)"$', line )
 	if m :
 		baseLibEnv["IMATH_MAJOR_VERSION"] = int( m.group( 1 ) )
 
-if baseLibEnv["IMATH_MAJOR_VERSION"] is None :
+if baseLibEnv.get( "IMATH_MAJOR_VERSION", None ) is None :
 	sys.stderr.write( "ERROR : unable to determine version from \"{}\".\n".format( exrVersionHeader ) )
 	Exit( 1 )
 
@@ -1000,6 +1003,39 @@ if env["ARNOLD_ROOT"] :
 # Definitions for the libraries we wish to build
 ###############################################################################################
 
+# When Cycles is built, it uses several preprocessor variables that enable and
+# disable various features, and sometimes those defines are used to omit or
+# include members in public classes : *they affect ABI*. Traditionally a library
+# would provide a header which reproduced such definitions for client code, but
+# not Cycles : we must do that ourselves, to the point where we're even telling
+# it what namespace it was built in.
+#
+# When encountering mysterious GafferCycles memory corruptions, your first port of
+# call should be to ensure that these defines line up with Cycles' build-time
+# settings, lest the ABIs be misaligned.
+cyclesDefines = [
+	( "CCL_NAMESPACE_BEGIN", "namespace ccl {" ),
+	( "CCL_NAMESPACE_END", "}" ),
+	( "EMBREE_MAJOR_VERSION", "4" ),
+	( "PATH_GUIDING_LEVEL", "5" ),
+	( "WITH_ALEMBIC" ),
+	( "WITH_EMBREE" ),
+	( "WITH_OCIO" ),
+	( "WITH_OPENSUBDIV" ),
+	( "WITH_OPENVDB" ),
+	( "WITH_NANOVDB" ),
+	( "WITH_OSL" ),
+	( "WITH_PATH_GUIDING" ),
+	( "WITH_SYSTEM_PUGIXML" ),
+	# Technically these are not actually right for all builds - we
+	# currently only build GPU support for GCC 11 builds. But they
+	# don't currently affect ABI, and it won't be long till they
+	# apply everywhere.
+	( "WITH_CUDA" ),
+	( "WITH_CUDA_DYNLOAD" ),
+	( "WITH_OPTIX" ),
+]
+
 libraries = {
 
 	"Gaffer" : {
@@ -1022,7 +1058,7 @@ libraries = {
 	"GafferUI" : {
 		"envAppends" : {
 			## \todo Stop linking against `Iex`. It is only necessary on Windows Imath 2 builds.
-			"LIBS" : [ "Gaffer", "Iex$IMATH_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX" ],
+			"LIBS" : [ "Gaffer", "Iex$IMATH_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "GafferUI", "GafferBindings" ],
@@ -1311,17 +1347,12 @@ libraries = {
 				"IECoreScene$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreVDB$CORTEX_LIB_SUFFIX",
 				"Gaffer", "GafferScene", "GafferDispatch", "GafferOSL",
 				"cycles_session", "cycles_scene", "cycles_graph", "cycles_bvh", "cycles_device", "cycles_kernel", "cycles_kernel_osl",
-				"cycles_integrator", "cycles_util", "cycles_subd", "extern_sky",
+				"cycles_integrator", "cycles_util", "cycles_subd", "extern_sky", "extern_cuew",
 				"OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslexec$OSL_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX",
-				"openvdb$VDB_LIB_SUFFIX", "Alembic", "osdCPU", "OpenColorIO$OCIO_LIB_SUFFIX", "embree3", "Iex", "openpgl",
+				"openvdb$VDB_LIB_SUFFIX", "Alembic", "osdCPU", "OpenColorIO$OCIO_LIB_SUFFIX", "embree4", "Iex", "openpgl",
 			],
 			"CXXFLAGS" : [ systemIncludeArgument, "$CYCLES_ROOT/include" ],
-			"CPPDEFINES" : [
-				( "CCL_NAMESPACE_BEGIN", "namespace ccl {" ),
-				( "CCL_NAMESPACE_END", "}" ),
-				( "WITH_OSL", "1" ),
-				( "WITH_CYCLES_PATH_GUIDING", "1" ),
-			],
+			"CPPDEFINES" : cyclesDefines,
 			"FRAMEWORKS" : [ "Foundation", "Metal", "IOKit" ],
 		},
 		"pythonEnvAppends" : {
@@ -1331,19 +1362,18 @@ libraries = {
 				"cycles_session", "cycles_scene", "cycles_graph", "cycles_bvh", "cycles_device", "cycles_kernel", "cycles_kernel_osl",
 				"cycles_integrator", "cycles_util", "cycles_subd", "extern_sky",
 				"OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslexec$OSL_LIB_SUFFIX", "openvdb$VDB_LIB_SUFFIX",
-				"oslquery$OSL_LIB_SUFFIX", "Alembic", "osdCPU", "OpenColorIO$OCIO_LIB_SUFFIX", "embree3", "Iex", "openpgl",
+				"oslquery$OSL_LIB_SUFFIX", "Alembic", "osdCPU", "OpenColorIO$OCIO_LIB_SUFFIX", "embree4", "Iex", "openpgl",
 			],
 			"CXXFLAGS" : [ systemIncludeArgument, "$CYCLES_ROOT/include" ],
-			"CPPDEFINES" : [
-				( "CCL_NAMESPACE_BEGIN", "namespace ccl {" ),
-				( "CCL_NAMESPACE_END", "}" ),
-				( "WITH_CYCLES_PATH_GUIDING", "1" ),
-			],
+			"CPPDEFINES" : cyclesDefines,
 		},
 		"requiredOptions" : [ "CYCLES_ROOT" ],
 	},
 
-	"GafferCyclesTest" : { "requiredOptions" : [ "CYCLES_ROOT" ], },
+	"GafferCyclesTest" : {
+		"requiredOptions" : [ "CYCLES_ROOT" ],
+		"additionalFiles" : glob.glob( "python/GafferCyclesTest/*/*" )
+	},
 
 	"GafferCyclesUI" : { "requiredOptions" : [ "CYCLES_ROOT" ], },
 
@@ -1469,7 +1499,7 @@ for library in ( "GafferUI", ) :
 	addQtLibrary( library, "Test" )
 	addQtLibrary( library, "Widgets" )
 
-# Add required libraries for Windows
+# Add required platform-specific libraries
 
 if env["PLATFORM"] == "win32" :
 
@@ -1477,6 +1507,10 @@ if env["PLATFORM"] == "win32" :
 
 		libraries[library].setdefault( "envAppends", {} )
 		libraries[library]["envAppends"].setdefault( "LIBS", [] ).extend( [ "Advapi32" ] )
+
+else :
+
+	libraries["GafferCycles"]["envAppends"]["LIBS"].extend( [ "dl" ] )
 
 # Optionally add vTune requirements
 
@@ -1556,6 +1590,8 @@ if env["PLATFORM"] == "win32" :
 # The stuff that actually builds the libraries and python modules
 ###############################################################################################
 
+extensionSources = []
+extensionTargets = []
 for libraryName, libraryDef in libraries.items() :
 
 	# skip this library if we don't have the config we need
@@ -1593,7 +1629,7 @@ for libraryName, libraryDef in libraries.items() :
 			os.path.join( installRoot, os.path.dirname( libraryInstallName ) ),
 			library
 		)
-		libEnv.Alias( "build", libraryInstall )
+		libEnv.Alias( "buildCore", libraryInstall )
 
 	# header install
 
@@ -1646,7 +1682,7 @@ for libraryName, libraryDef in libraries.items() :
 		bindingsEnv.Default( bindingsLibrary )
 
 		bindingsLibraryInstall = bindingsEnv.Install( os.path.join( installRoot, "lib" ), bindingsLibrary )
-		env.Alias( "build", bindingsLibraryInstall )
+		env.Alias( "buildCore", bindingsLibraryInstall )
 
 	# bindings header install
 
@@ -1681,7 +1717,7 @@ for libraryName, libraryDef in libraries.items() :
 		pythonModuleEnv.Default( pythonModule )
 
 		moduleInstall = pythonModuleEnv.Install( os.path.join( installRoot, "python", libraryName ), pythonModule )
-		pythonModuleEnv.Alias( "build", moduleInstall )
+		pythonModuleEnv.Alias( "buildCore", moduleInstall )
 
 	# Moc preprocessing, for QObject derived classes. SCons does include a "qt" tool that
 	# can scan files automatically for the Q_OBJECT macro, but it hasn't been updated for Qt 5.
@@ -1703,20 +1739,30 @@ for libraryName, libraryDef in libraries.items() :
 			pythonFile,
 			SUBST_DICT = fileSubstitutions
 		)
-		env.Alias( "build", pythonFileInstall )
+		env.Alias( "buildCore", pythonFileInstall )
+
+	# Nodes implemented using ExtensionAlgo.
+
+	for extensionSource in glob.glob( "python/" + libraryName + "/*.gfr" ) :
+		extensionSources.append( extensionSource )
+		extensionNode = os.path.splitext( os.path.basename( extensionSource ) )[0]
+		extensionTargets.extend( [
+			os.path.join( installRoot, "python", libraryName, extensionNode + ".py" ),
+			os.path.join( installRoot, "python", libraryName + "UI", extensionNode + "UI.py" ),
+		] )
 
 	# apps
 
 	for app in libraryDef.get( "apps", [] ) :
 		appInstall = env.InstallAs( os.path.join( installRoot, "apps", app, "{app}-1.py".format( app=app ) ), "apps/{app}/{app}-1.py".format( app=app ) )
-		env.Alias( "build", appInstall )
+		env.Alias( "buildCore", appInstall )
 
 	# startup files
 
 	for startupDir in libraryDef.get( "apps", [] ) + [ libraryName ] :
 		for startupFile in glob.glob( "startup/{startupDir}/*.py".format( startupDir=startupDir ) ) + glob.glob( "startup/{startupDir}/*.gfr".format( startupDir=startupDir ) ) :
 			startupFileInstall = env.InstallAs( os.path.join( installRoot, startupFile ), startupFile )
-			env.Alias( "build", startupFileInstall )
+			env.Alias( "buildCore", startupFileInstall )
 
 	# additional files
 
@@ -1724,14 +1770,14 @@ for libraryName, libraryDef in libraries.items() :
 		if additionalFile in pythonFiles :
 			continue
 		additionalFileInstall = env.InstallAs( os.path.join( installRoot, additionalFile ), additionalFile )
-		env.Alias( "build", additionalFileInstall )
+		env.Alias( "buildCore", additionalFileInstall )
 
 	# osl headers
 
 	for oslHeader in libraryDef.get( "oslHeaders", [] ) :
 		oslHeaderInstall = env.InstallAs( os.path.join( installRoot, oslHeader ), oslHeader )
 		env.Alias( "oslHeaders", oslHeaderInstall )
-		env.Alias( "build", oslHeaderInstall )
+		env.Alias( "buildCore", oslHeaderInstall )
 
 	# osl shaders
 
@@ -1747,10 +1793,10 @@ for libraryName, libraryDef in libraries.items() :
 		)
 
 	for oslShader in libraryDef.get( "oslShaders", [] ) :
-		env.Alias( "build", oslShader )
+		env.Alias( "buildCore", oslShader )
 		compiledFile = commandEnv.Command( os.path.join( installRoot, os.path.splitext( oslShader )[0] + ".oso" ), oslShader, buildOSL )
 		env.Depends( compiledFile, "oslHeaders" )
-		env.Alias( "build", compiledFile )
+		env.Alias( "buildCore", compiledFile )
 
 	# class stubs
 
@@ -1773,7 +1819,56 @@ for libraryName, libraryDef in libraries.items() :
 			GAFFER_STUB_CLASS = classStub[0],
 		)
 		stub = stubEnv.Command( stubFileName, "", buildClassStub )
-		stubEnv.Alias( "build", stub )
+		stubEnv.Alias( "buildCore", stub )
+
+env.Alias( "build", "buildCore" )
+
+#########################################################################################################
+# Python nodes authored as Boxes and exported by ExtensionAlgo
+#########################################################################################################
+
+def exportExtensions( target, source, env ) :
+
+	with tempfile.NamedTemporaryFile( "w", delete = False ) as exportScript :
+
+		exportScript.write( "import Gaffer\nscript = Gaffer.ScriptNode()\n" )
+		for sourceFile, targetFile, targetUIFile in zip( source, target[::2], target[1::2] ) :
+
+			sourceFile = str( sourceFile )
+			targetFile = str( targetFile )
+			targetUIFile = str( targetUIFile )
+			moduleName = os.path.basename( os.path.dirname( sourceFile ) )
+			nodeName = os.path.splitext( os.path.basename( sourceFile ) )[0]
+
+			# We have a chicken and egg situation. We need to import the Gaffer modules
+			# to be able to do the export, but their `__init__.py` files will be wanting
+			# to import the extensions that we haven't created yet. Write stub files
+			# to allow the imports to go ahead.
+			if not os.path.exists( targetFile ) :
+				with open( targetFile, "w" ) as stub :
+					stub.write( f"class {nodeName} : pass\n" )
+
+			exportScript.write( f"\nscript['fileName'].setValue( '{sourceFile}' )\n" )
+			exportScript.write( "script.load()\n" )
+			exportScript.write( f"Gaffer.ExtensionAlgo.exportNode( '{moduleName}', script['{nodeName}'], r'{targetFile}' )\n" )
+			exportScript.write( f"Gaffer.ExtensionAlgo.exportNodeUI( '{moduleName}', script['{nodeName}'], r'{targetUIFile}' )\n" )
+
+		exportScript.close()
+
+		subprocess.check_call(
+			[
+				shutil.which( "gaffer.cmd" if sys.platform == "win32" else "gaffer", path = env["ENV"]["PATH"] ),
+				"env", "python", exportScript.name
+			],
+			env = env["ENV"]
+		)
+
+	os.unlink( exportScript.name )
+
+exportedFiles = commandEnv.Command( extensionTargets, extensionSources, exportExtensions )
+env.Depends( exportedFiles, "buildCore" )
+env.Alias( "buildExtensions", exportedFiles )
+env.Alias( "build", "buildExtensions" )
 
 #########################################################################################################
 # Graphics

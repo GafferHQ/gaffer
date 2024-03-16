@@ -277,6 +277,10 @@ Gaffer.Metadata.registerNode(
 			value calculated per frame if an image sequence. Behaviour changes
 			if a frame mask of ClampToFrame or Black is selected, if outside
 			the frame mask fileValid will be set to True if the nearest frame is valid.
+
+			> Note : When the file is not valid, the image will also contain a `fileValid`
+			> metadata value of `False`. This can be easier to access from downstream
+			> nodes than the `fileValid` plug itself.
 			""",
 
 			"layout:section", "Frames",

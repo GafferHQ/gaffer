@@ -756,7 +756,6 @@ class OpenGLCamera : public OpenGLObject
 	private :
 
 		IECoreGL::CameraPtr m_camera;
-		ConstOpenGLAttributesPtr m_attributes;
 		V2i m_resolution;
 
 };
@@ -923,7 +922,14 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 		{
 			IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-			OpenGLCameraPtr result = new OpenGLCamera( name, camera, static_cast<const OpenGLAttributes *>( attributes ), m_editQueue );
+			ConstOpenGLAttributesPtr openGLAttributes = static_cast<const OpenGLAttributes *>( attributes );
+			if( !openGLAttributes )
+			{
+				ConstCompoundObjectPtr emptyAttributes = new CompoundObject;
+				openGLAttributes = new OpenGLAttributes( emptyAttributes.get() );
+			}
+
+			OpenGLCameraPtr result = new OpenGLCamera( name, camera, openGLAttributes, m_editQueue );
 			m_editQueue.push( [this, result, name]() {
 				m_objects.push_back( result );
 				m_cameras[name] = result;

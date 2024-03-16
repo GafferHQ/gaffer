@@ -5,6 +5,7 @@ substitutions :
   middleClick : "![Middle click](images/mouseMiddleClick.png)"
   mouseWheel : "![Mouse wheel](images/mouseWheelUpDown.png)"
   editorFocusMenu : "![Editor focus menu](images/editorFocusMenuNodeSelection.png)"
+  activeRenderPass : "![Active render pass](images/activeRenderPass.png)"
 ---
 
 # Controls and Shortcuts #
@@ -151,6 +152,8 @@ Disconnect plug                      | {{leftClick}} and drag connection to back
 Insert node onto connection          | {{leftClick}} and drag node onto connection
 Auto-arrange selected nodes          | {kbd}`Ctrl` + {kbd}`L`
 Duplicate outgoing connection        | {kbd}`Shift` + {{leftClick}} and drag connection just before in plug
+Disconnect connections under cursor  | {kbd}`X` + {{leftClick}}
+Disconnect connections under line    | {kbd}`X` + {{leftClick}} and drag to draw a line, then release {{leftClick}}
 
 ### Focus Node ###
 
@@ -297,6 +300,7 @@ Isolate alpha channel                | {kbd}`A`
 View luminance of RGB                | {kbd}`L`
 Previous layer                       | {kbd}`PgUp`
 Next layer                           | {kbd}`PgDn`
+First layer (RGBA)                   | {kbd}`Ctrl` + {kbd}`PgUp`
 Previous view                        | {kbd}`[`
 Next view                            | {kbd}`]`
 Center image at 1:1 scale            | {kbd}`Home`
@@ -422,3 +426,14 @@ Action                              | Control or shortcut
 ------------------------------------|-------------------
 Copy names of selected sets         | {kbd}`Ctrl` + {kbd}`C`
 Copy members of selected sets       | {kbd}`Ctrl` + {kbd}`Shift` + {kbd}`C`
+
+## Render Pass Editor ##
+
+Action                                               | Control or shortcut
+-----------------------------------------------------|---------------------
+Move cell selection                                  | {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
+Extend cell selection                                | {kbd}`Shift` + {{leftClick}}<br>or<br>{kbd}`Shift` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
+Toggle cell selection                                | {kbd}`Ctrl` + {{leftClick}}<br>or<br>{kbd}`Ctrl` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
+Edit selected cells                                  | {kbd}`Return`<br>or<br>{kbd}`Enter`
+Disable edit                                         | {kbd}`D`
+Set a render pass as active                          | {kbd}`Return` or {{leftClick}} {{leftClick}} a cell within the {{activeRenderPass}} column

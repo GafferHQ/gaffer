@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import pathlib
 import unittest
 import imath
 
@@ -64,16 +65,19 @@ class ImageGadgetTest( GafferUITest.TestCase ) :
 
 		self.assertRaises( Exception, GafferUI.ImageGadget, "iDonNotExist" )
 
-	def testTextureLoader( self ) :
+	def testAllImages( self ) :
 
-		# must access an attribute from IECoreGL to force import
-		# before calling textureLoader(), because it is imported
-		# lazily by GafferUI.
-		import IECoreGL
-		IECoreGL.TextureLoader
+		with GafferUI.Window() as window :
+			gadgetWidget = GafferUI.GadgetWidget()
 
-		l = GafferUI.ImageGadget.textureLoader()
-		self.assertTrue( isinstance( l, IECoreGL.TextureLoader ) )
+		window.setVisible( True )
+
+		for path in IECore.SearchPath( os.environ["GAFFERUI_IMAGE_PATHS"] ).paths :
+			for image in pathlib.Path( path ).glob( "*.png" ) :
+				imageGadget = GafferUI.ImageGadget( str( image ) )
+				gadgetWidget.getViewportGadget().setPrimaryChild( imageGadget )
+				gadgetWidget.getViewportGadget().frame( imageGadget.bound() )
+				self.waitForIdle( 100 )
 
 if __name__ == "__main__":
 	unittest.main()

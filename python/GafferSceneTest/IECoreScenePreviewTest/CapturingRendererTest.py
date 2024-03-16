@@ -210,7 +210,12 @@ class CapturingRendererTest( GafferTest.TestCase ) :
 		for objectName in capturingRenderer.capturedObjectNames():
 			co = capturingRenderer.capturedObject( objectName )
 			linkDict = { str(t) : [ i.capturedName() for i in co.capturedLinks( t ) or [] ] for t in co.capturedLinkTypes() }
-			capturedObject = CapturingRendererTest.__ExpandedCapture( co.capturedSamples(), co.capturedSampleTimes(), co.capturedTransforms(), co.capturedTransformTimes(), co.capturedAttributes().attributes(), linkDict )
+			capturedObject = CapturingRendererTest.__ExpandedCapture(
+				co.capturedSamples(), co.capturedSampleTimes(),
+				co.capturedTransforms(), co.capturedTransformTimes(),
+				co.capturedAttributes().attributes() if co.capturedAttributes() else None,
+				linkDict
+			)
 
 
 			isProcedural = isinstance( capturedObject.capturedSamples[0], GafferScene.Private.IECoreScenePreview.Procedural )

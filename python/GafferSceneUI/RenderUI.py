@@ -34,8 +34,23 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
+import GafferUI
 import GafferScene
+
+from GafferUI.PlugValueWidget import sole
+
+def rendererPresetNames( plug ) :
+
+	blacklist = { "Capturing" }
+	return IECore.StringVectorData(
+		sorted(
+			t for t in GafferScene.Private.IECoreScenePreview.Renderer.types()
+			if t not in blacklist
+		)
+	)
 
 Gaffer.Metadata.registerNode(
 
@@ -68,8 +83,16 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The renderer to use.
+			The renderer to use. Default mode uses the `render:defaultRenderer` option from
+			the input scene globals to choose the renderer. This can be authored using
+			the StandardOptions node.
 			""",
+
+			"plugValueWidget:type", "GafferSceneUI.RenderUI.RendererPlugValueWidget",
+
+			"preset:Default", "",
+			"presetNames", rendererPresetNames,
+			"presetValues", rendererPresetNames,
 
 		],
 
@@ -112,3 +135,53 @@ Gaffer.Metadata.registerNode(
 
 	}
 )
+
+# Augments PresetsPlugValueWidget label with the renderer name
+# when preset is "Default". Since this involves computing the
+# scene globals, we do the work in the background via an auxiliary
+# plug passed to `_valuesForUpdate()`.
+class RendererPlugValueWidget( GafferUI.PresetsPlugValueWidget ) :
+
+	def __init__( self, plugs, **kw ) :
+
+		GafferUI.PresetsPlugValueWidget.__init__( self, plugs, **kw )
+
+	@staticmethod
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
+
+		presets = GafferUI.PresetsPlugValueWidget._valuesForUpdate( plugs, [ [] for p in plugs ] )
+
+		result = []
+		for preset, globalsPlugs in zip( presets, auxiliaryPlugs ) :
+
+			defaultRenderer = ""
+			if len( globalsPlugs ) and preset == "Default" :
+				with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
+					defaultRenderer = globalsPlugs[0].getValue().get( "option:render:defaultRenderer" )
+					defaultRenderer = defaultRenderer.value if defaultRenderer is not None else ""
+
+			result.append( {
+				"preset" : preset,
+				"defaultRenderer" : defaultRenderer
+			} )
+
+		return result
+
+	def _updateFromValues( self, values, exception ) :
+
+		GafferUI.PresetsPlugValueWidget._updateFromValues( self, [ v["preset"] for v in values ], exception )
+
+		if self.menuButton().getText() == "Default" :
+			defaultRenderer = sole( v["defaultRenderer"] for v in values )
+			self.menuButton().setText(
+				"Default ({})".format(
+					defaultRenderer if defaultRenderer else
+					( "None" if defaultRenderer == "" else "---" )
+				)
+			)
+
+	def _auxiliaryPlugs( self, plug ) :
+
+		node = plug.node()
+		if isinstance( node, ( GafferScene.Render, GafferScene.InteractiveRender ) ) :
+			return [ node["in"]["globals"] ]

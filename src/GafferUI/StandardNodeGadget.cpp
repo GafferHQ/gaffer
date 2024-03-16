@@ -86,26 +86,16 @@ namespace {
 const float g_borderWidth = 0.5f;
 const float g_maxFocusWidth = 2.0f;
 
-IECoreGL::Texture *focusIconTexture( bool focus, bool hover )
+const IECoreGL::Texture *focusIconTexture( bool focus, bool hover )
 {
-	static IECoreGL::TexturePtr focusIconTextures[4] = {};
+	static IECoreGL::ConstTexturePtr focusIconTextures[4] = {};
 
 	if( !focusIconTextures[0] )
 	{
-		focusIconTextures[0] = ImageGadget::textureLoader()->load( "focusOff.png" );
-		focusIconTextures[1] = ImageGadget::textureLoader()->load( "focusOn.png" );
-		focusIconTextures[2] = ImageGadget::textureLoader()->load( "focusOffHover.png" );
-		focusIconTextures[3] = ImageGadget::textureLoader()->load( "focusOnHover.png" );
-
-		for( int i = 0; i < 4; i++ )
-		{
-			IECoreGL::Texture::ScopedBinding binding( *focusIconTextures[i] );
-			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -1.0 );
-			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
-			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
-		}
+		focusIconTextures[0] = ImageGadget::loadTexture( "focusOff.png" );
+		focusIconTextures[1] = ImageGadget::loadTexture( "focusOn.png" );
+		focusIconTextures[2] = ImageGadget::loadTexture( "focusOffHover.png" );
+		focusIconTextures[3] = ImageGadget::loadTexture( "focusOnHover.png" );
 	}
 	return focusIconTextures[focus + 2 * hover].get();
 }
@@ -320,7 +310,7 @@ class FocusGadget : public Gadget
 
 		unsigned layerMask() const override
 		{
-			return (int)GraphLayer::Overlay;
+			return (int)GraphLayer::Highlighting;
 		}
 
 		Imath::Box3f renderBound() const override
@@ -726,7 +716,7 @@ void StandardNodeGadget::renderLayer( Layer layer, const Style *style, RenderRea
 
 			break;
 		}
-		case GraphLayer::Overlay :
+		case GraphLayer::Highlighting :
 		{
 			const Box3f b = bound();
 
@@ -804,7 +794,7 @@ void StandardNodeGadget::updateTextDimming()
 
 unsigned StandardNodeGadget::layerMask() const
 {
-	return GraphLayer::Nodes | GraphLayer::Overlay | GraphLayer::OverBackdrops;
+	return GraphLayer::Nodes | GraphLayer::Highlighting | GraphLayer::OverBackdrops;
 }
 
 Imath::Box3f StandardNodeGadget::renderBound() const

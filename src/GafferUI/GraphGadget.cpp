@@ -48,6 +48,7 @@
 #include "GafferUI/StandardGraphLayout.h"
 #include "GafferUI/Style.h"
 #include "GafferUI/ViewportGadget.h"
+#include "DragEditGadget.h"
 
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/Context.h"
@@ -120,6 +121,7 @@ const InternedString g_outputConnectionsMinimisedPlugName( "__uiOutputConnection
 const InternedString g_nodeGadgetTypeName( "nodeGadget:type" );
 const InternedString g_auxiliaryConnectionsGadgetName( "__auxiliaryConnections" );
 const InternedString g_annotationsGadgetName( "__annotations" );
+const InternedString g_dragEditGadgetName( "__dragEdit" );
 
 struct CompareV2fX{
 	bool operator()(const Imath::V2f &a, const Imath::V2f &b) const
@@ -495,6 +497,7 @@ GraphGadget::GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 
 	setChild( g_auxiliaryConnectionsGadgetName, new AuxiliaryConnectionsGadget() );
 	setChild( g_annotationsGadgetName, new AnnotationsGadget() );
+	setChild( g_dragEditGadgetName, new DragEditGadget() );
 
 	setRoot( root, filter );
 }

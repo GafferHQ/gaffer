@@ -178,8 +178,11 @@ EditScopePtr editScope( const TransformTool::Selection &s )
 
 object acquireTransformEdit( const TransformTool::Selection &s, bool createIfNecessary )
 {
-	IECorePython::ScopedGILRelease gilRelease;
-	auto p = s.acquireTransformEdit( createIfNecessary );
+	std::optional<EditScopeAlgo::TransformEdit> p;
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		p = s.acquireTransformEdit( createIfNecessary );
+	}
 	return p ? object( *p ) : object();
 }
 
@@ -269,9 +272,17 @@ void GafferSceneUIModule::bindTools()
 		GafferBindings::SignalClass<LightTool::SelectionChangedSignal, GafferBindings::DefaultSignalCaller<LightTool::SelectionChangedSignal>, SelectionChangedSlotCaller<LightTool>>( "SelectionChangedSignal" );
 	}
 
-	GafferBindings::NodeClass<LightPositionTool>( nullptr, no_init )
-		.def( init<SceneView *>() )
-		.def( "positionShadow", &LightPositionTool::positionShadow )
-	;
+	{
+		scope s = GafferBindings::NodeClass<LightPositionTool>( nullptr, no_init )
+			.def( init<SceneView *>() )
+			.def( "positionShadow", &LightPositionTool::positionShadow )
+			.def( "positionHighlight", &LightPositionTool::positionHighlight )
+		;
+
+		enum_<LightPositionTool::Mode>( "Mode" )
+			.value( "Shadow", LightPositionTool::Mode::Shadow )
+			.value( "Highlight", LightPositionTool::Mode::Highlight )
+		;
+	}
 
 }

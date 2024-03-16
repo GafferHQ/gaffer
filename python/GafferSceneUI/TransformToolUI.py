@@ -115,11 +115,20 @@ class _TargetTipWidget( GafferUI.Frame ) :
 
 		GafferUI.Frame.__init__( self, borderWidth = 4, **kw )
 
-		label = Gaffer.Metadata.value( tool, "ui:transformTool:toolTip" ) or ""
+		self.__tool = tool
+
+		tool.plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ), scoped = False )
 
 		with self :
 			with GafferUI.Frame( borderWidth = 0 ) as self.__innerFrame :
-				GafferUI.Label( label )
+				self.__tipLabel = GafferUI.Label( "" )
+
+		self.__plugSet()
+
+	def __plugSet( self, *unused ) :
+
+		label = Gaffer.Metadata.value( self.__tool, "ui:transformTool:toolTip" ) or ""
+		self.__tipLabel.setText( label )
 
 		if not label :
 			self.__innerFrame.setVisible( False )

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2022, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2024, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,19 +34,19 @@
 #
 ##########################################################################
 
-import Gaffer
-import GafferImage
+import OpenImageIO
 
-Gaffer.Metadata.registerNode(
+# This cleans up the process by getting rid of OIIO threads that we don't use much.
+# Our main use case is reading EXRs using ExrCore, where we can efficiently use
+# Gaffer threads instead of OIIO's internal threading, so turning off OIIO threads
+# has no negative impact ( it actually may have a tiny positive effect ).
+# This results in a moderate slowdown of reading Tiffs, and a more severe slowdown
+# of reading EXRs if you disable "openexr:core" so we can't do the threading ourselves.
 
-	GafferImage.Anaglyph,
+# If you disable "openexr:core" then you also need to set "exr_threads" to 0
+# to enable the default behaviour, and if Tiff performance is really important to you,
+# you may want to override this completely back to the default behaviour by setting both
+# to zero.
 
-	"description",
-	"""
-	Converts a multi-view image with "left" and "right" views
-	into a single view image with the two views combined in
-	different colors, suitable for viewing through red-blue
-	anaglyph glasses.
-	""",
-
-)
+OpenImageIO.attribute( "threads", 1 )
+OpenImageIO.attribute( "exr_threads", -1 )

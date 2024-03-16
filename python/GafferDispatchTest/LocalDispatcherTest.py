@@ -1200,7 +1200,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		# has finished.
 
 		output = subprocess.check_output(
-			[ str( Gaffer.executablePath() ), "env", "python", "-c", "import GafferDispatchTest; GafferDispatchTest.LocalDispatcherTest._shutdownDuringBackgroundDispatch()" ],
+			[ str( Gaffer.executablePath() ), "env", "python", "-c", "import Gaffer; import GafferDispatchTest; GafferDispatchTest.LocalDispatcherTest._shutdownDuringBackgroundDispatch()" ],
 			stderr = subprocess.STDOUT, text = True
 		)
 

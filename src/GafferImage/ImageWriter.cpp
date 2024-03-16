@@ -1088,6 +1088,14 @@ void metadataToImageSpecAttributes( const CompoundData *metadata, ImageSpec &spe
 			continue;
 		}
 
+		if( it->first == "fileValid" )
+		{
+			// Don't want to write `fileValid = False` into files! Dealt
+			// with separately from blacklist above because we don't need to
+			// emit a warning for it.
+			continue;
+		}
+
 		const IECoreImage::OpenImageIOAlgo::DataView dataView( it->second.get() );
 		if( dataView.data )
 		{

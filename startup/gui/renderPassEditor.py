@@ -41,7 +41,11 @@ import Gaffer
 import GafferSceneUI
 
 GafferSceneUI.RenderPassEditor.registerOption( "*", "renderPass:enabled" )
+GafferSceneUI.RenderPassEditor.registerOption( "*", "render:inclusions" )
+GafferSceneUI.RenderPassEditor.registerOption( "*", "render:exclusions" )
+GafferSceneUI.RenderPassEditor.registerOption( "*", "render:additionalLights" )
 
+GafferSceneUI.RenderPassEditor.registerOption( "*", "render:defaultRenderer", "Render" )
 GafferSceneUI.RenderPassEditor.registerOption( "*", "render:camera", "Render" )
 GafferSceneUI.RenderPassEditor.registerOption( "*", "render:resolution", "Render" )
 GafferSceneUI.RenderPassEditor.registerOption( "*", "render:resolutionMultiplier", "Render" )
@@ -113,3 +117,11 @@ with IECore.IgnoredExceptions( ImportError ) :
 	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:GI_transmission_depth", "Ray Depth", "Transmission" )
 	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:GI_volume_depth", "Ray Depth", "Volume" )
 	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:auto_transparency_depth", "Ray Depth", "Transparency" )
+
+# Register the default grouping function used to display render passes in a hierarchy.
+# This groups render passes based on the first token in their name delimited by "_".
+def __defaultPathGroupingFunction( renderPassName ) :
+
+	return renderPassName.split( "_" )[0] if "_" in renderPassName else ""
+
+GafferSceneUI.RenderPassEditor.registerPathGroupingFunction( __defaultPathGroupingFunction )

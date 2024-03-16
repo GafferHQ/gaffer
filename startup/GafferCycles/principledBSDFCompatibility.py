@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2022, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,43 +34,46 @@
 #
 ##########################################################################
 
-import IECore
-
 import Gaffer
-import GafferImage
+import GafferCycles
 
-class Anaglyph( GafferImage.ImageProcessor ) :
+class __ParametersPlugProxy( object ) :
 
-	def __init__(self, name = 'Anaglyph' ) :
-		GafferImage.ImageProcessor.__init__( self, name )
+	__renames = {
+		"principled_bsdf" : {
+			"emission" : "emission_color",
+			"specular" : "specular_ior_level",
+			"subsurface" : "subsurface_weight",
+			"transmission" : "transmission_weight",
+			"clearcoat" : "coat_weight",
+			"sheen" : "sheen_weight",
+		}
+	}
 
-		self["__SelectLeft"] = GafferImage.SelectView()
-		self["__SelectLeft"]["in"].setInput( self["in"] )
+	def __init__( self, parametersPlug ) :
 
-		self["__DeleteChannelsLeft"] = GafferImage.DeleteChannels()
-		self["__DeleteChannelsLeft"]["in"].setInput( self["__SelectLeft"]["out"] )
-		self["__DeleteChannelsLeft"]["channels"].setValue( '[GB] *.[GB]' )
+		self.__parametersPlug = parametersPlug
 
-		self["__SelectRight"] = GafferImage.SelectView()
-		self["__SelectRight"]["in"].setInput( self["in"] )
-		self["__SelectRight"]["view"].setValue( 'right' )
+	def __getitem__( self, key ) :
 
-		self["__DeleteChannelsRight"] = GafferImage.DeleteChannels()
-		self["__DeleteChannelsRight"]["in"].setInput( self["__SelectRight"]["out"] )
-		self["__DeleteChannelsRight"]["channels"].setValue( '[R] *.[R]' )
+		renames = self.__renames.get(
+			self.__parametersPlug.parent()["name"].getValue()
+		)
+		key = renames.get( key, key ) if renames is not None else key
+		return self.__parametersPlug[key]
 
-		self["__Merge"] = GafferImage.Merge()
-		self["__Merge"]["in"][0].setInput( self["__DeleteChannelsLeft"]["out"] )
-		self["__Merge"]["in"][1].setInput( self["__DeleteChannelsRight"]["out"] )
-		self["__Merge"]["operation"].setValue( GafferImage.Merge.Operation.Max )
+def __cyclesShaderGetItem( originalGetItem ) :
 
-		self["__disableSwitch"] = Gaffer.Switch()
-		self["__disableSwitch"].setup( self["in"] )
-		self["__disableSwitch"]["in"][0].setInput( self["in"] )
-		self["__disableSwitch"]["in"][1].setInput( self["__Merge"]["out"] )
-		self["__disableSwitch"]["index"].setInput( self["enabled"] )
+	def getItem( self, key ) :
 
-		self['out'].setFlags(Gaffer.Plug.Flags.Serialisable, False)
-		self["out"].setInput( self["__disableSwitch"]["out"] )
+		result = originalGetItem( self, key )
+		if key == "parameters" :
+			scriptNode = self.ancestor( Gaffer.ScriptNode )
+			if scriptNode is not None and scriptNode.isExecuting() :
+				return __ParametersPlugProxy( result )
 
-IECore.registerRunTimeTyped( Anaglyph, typeName = "GafferImage::Anaglyph" )
+		return result
+
+	return getItem
+
+GafferCycles.CyclesShader.__getitem__ = __cyclesShaderGetItem( GafferCycles.CyclesShader.__getitem__ )

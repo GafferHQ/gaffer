@@ -294,7 +294,13 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		with context :
 			for i in range( 1000, 1006 ) :
 				context.setFrame( i )
-				self.assertEqual( reader["fileValid"].getValue(), i in ( 1001, 1002, 1004 ) )
+				fileValid = i in ( 1001, 1002, 1004 )
+				self.assertEqual( reader["fileValid"].getValue(), fileValid )
+				if fileValid :
+					self.assertNotIn( "fileValid", reader["out"].metadata() )
+				else :
+					with self.assertRaises( Gaffer.ProcessException ) :
+						reader["out"].metadata()
 
 		# test with frame mask set to hold with range 1001-1005
 		reader["start"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.ClampToFrame )
@@ -302,7 +308,13 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		with context :
 			for i in range( 1000, 1006 ) :
 				context.setFrame( i )
-				self.assertEqual( reader["fileValid"].getValue(), i in ( 1000, 1001, 1002, 1004 ) )
+				fileValid = i in ( 1000, 1001, 1002, 1004 )
+				self.assertEqual( reader["fileValid"].getValue(), fileValid )
+				if fileValid :
+					self.assertNotIn( "fileValid", reader["out"].metadata() )
+				else :
+					with self.assertRaises( Gaffer.ProcessException ) :
+						reader["out"].metadata()
 
 		# test with frame mask set to black with range 1001-1005
 		reader["start"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.BlackOutside )
@@ -310,7 +322,29 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		with context :
 			for i in range( 1000, 1006 ) :
 				context.setFrame( i )
-				self.assertEqual( reader["fileValid"].getValue(), i in (1000, 1001, 1002, 1004) )
+				fileValid = i in ( 1000, 1001, 1002, 1004 )
+				self.assertEqual( reader["fileValid"].getValue(), fileValid )
+				if fileValid :
+					self.assertNotIn( "fileValid", reader["out"].metadata() )
+				else :
+					with self.assertRaises( Gaffer.ProcessException ) :
+						reader["out"].metadata()
+
+		# Test with `missingFrameMode == Hold` and `missingFrameMode == Black`
+
+		for mode in ( reader.MissingFrameMode.Hold, reader.MissingFrameMode.Black ) :
+
+			reader["missingFrameMode"].setValue( mode )
+			with context :
+				for i in range( 1000, 1006 ) :
+					context.setFrame( i )
+					fileValid = i in ( 1000, 1001, 1002, 1004 )
+					self.assertEqual( reader["fileValid"].getValue(), fileValid )
+					if fileValid :
+						self.assertNotIn( "fileValid", reader["out"].metadata() )
+					else :
+						self.assertIn( "fileValid", reader["out"].metadata() )
+						self.assertEqual( reader["out"].metadata()["fileValid"], IECore.BoolData( False ) )
 
 	def testFrameRangeMask( self ) :
 

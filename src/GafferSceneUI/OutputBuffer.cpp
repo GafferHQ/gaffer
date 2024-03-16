@@ -201,7 +201,7 @@ OutputBuffer::OutputBuffer( IECoreScenePreview::Renderer *renderer )
 	for(
 		auto &[name, data, filter] : {
 			OutputDefinition( "beauty", "rgba", "box" ),
-			OutputDefinition( "depth", "float Z", "closest" ),
+			OutputDefinition( "depth", "float Z", "box" ),
 			OutputDefinition( "id", "uint id", "closest" ),
 		}
 	)

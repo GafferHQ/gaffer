@@ -46,6 +46,8 @@ import subprocess
 import imath
 import inspect
 
+import OpenImageIO
+
 import IECore
 import IECoreImage
 
@@ -73,6 +75,9 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		GafferImageTest.ImageTestCase.tearDown( self )
 		GafferImage.ImageWriter.setDefaultColorSpaceFunction( self.__defaultColorSpaceFunction )
+
+		# Restore ExrCore back to default
+		OpenImageIO.attribute( "openexr:core", 1 )
 
 	# Test that we can select which channels to write.
 	def testChannelMask( self ) :
@@ -329,6 +334,9 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.__representativeDeepPath )
 
+		flatten = GafferImage.DeepToFlat()
+		flatten["in"].setInput( r["out"] )
+
 		c = GafferImage.Crop()
 		c["in"].setInput( r["out"] )
 		c["area"].setValue( imath.Box2i( imath.V2i( 0 ), imath.V2i( 64 ) ) )
@@ -340,6 +348,8 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		w = GafferImage.ImageWriter()
 		w['fileName'].setValue( testFile )
+		w["openexr"]["dataType"].setValue( 'float' )
+
 		w['in'].setInput( o['out'] )
 
 		reRead = GafferImage.ImageReader()
@@ -357,48 +367,64 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		trimToDataWindowStage2["in"].setInput( trimToDataWindowStage1["out"] )
 		trimToDataWindowStage2["offset"].setValue( imath.V2i( -1, 0 ) )
 
-		for mode in [ GafferImage.ImageWriter.Mode.Scanline, GafferImage.ImageWriter.Mode.Tile]:
+		for exrCore in [ 1, 0 ]:
 
-			w["openexr"]["mode"].setValue( mode )
+			Gaffer.ValuePlug.clearCache()
+			Gaffer.ValuePlug.clearHashCache()
+			r["refreshCount"].setValue( r["refreshCount"].getValue() + 1 )
+			OpenImageIO.attribute( "openexr:core", exrCore )
 
-			for area, affectDisplayWindow in [
-					( imath.Box2i( imath.V2i( 0 ), imath.V2i( 64 ) ), True ),
-					( imath.Box2i( imath.V2i( 0 ), imath.V2i( 63 ) ), True ),
-					( imath.Box2i( imath.V2i( 0 ), imath.V2i( 65 ) ), True ),
-					( imath.Box2i( imath.V2i( 0 ), imath.V2i( 150, 100 ) ), True ),
-					( imath.Box2i( imath.V2i( 37, 21 ), imath.V2i( 96, 43 ) ), False ),
-					( imath.Box2i( imath.V2i( 0 ), imath.V2i( 0 ) ), False )
-				]:
-				c["area"].setValue( area )
-				c["affectDisplayWindow"].setValue( affectDisplayWindow )
+			for deep in [ True, False ]:
+				c["in"].setInput( r["out"] if deep else flatten["out"] )
 
-				for offset in [
-						imath.V2i( 0, 0 ),
-						imath.V2i( 13, 17 ),
-						imath.V2i( -13, -17 ),
-						imath.V2i( -233, 431 ),
-						imath.V2i( -GafferImage.ImagePlug.tileSize(), 2 * GafferImage.ImagePlug.tileSize() ),
-						imath.V2i( 106, 28 )
-					]:
+				for mode in [ GafferImage.ImageWriter.Mode.Scanline, GafferImage.ImageWriter.Mode.Tile]:
 
-					o["offset"].setValue( offset )
+					with self.subTest( exrCore = exrCore, deep = deep, mode = mode ):
+						w["openexr"]["mode"].setValue( mode )
 
-					w["task"].execute()
+						for area, affectDisplayWindow in [
+								( imath.Box2i( imath.V2i( 0 ), imath.V2i( 64 ) ), True ),
+								( imath.Box2i( imath.V2i( 0 ), imath.V2i( 63 ) ), True ),
+								( imath.Box2i( imath.V2i( 0 ), imath.V2i( 65 ) ), True ),
+								( imath.Box2i( imath.V2i( 0 ), imath.V2i( 150, 100 ) ), True ),
+								( imath.Box2i( imath.V2i( 37, 21 ), imath.V2i( 96, 43 ) ), False ),
+								( imath.Box2i( imath.V2i( 0 ), imath.V2i( 0 ) ), False )
+							]:
+							c["area"].setValue( area )
+							c["affectDisplayWindow"].setValue( affectDisplayWindow )
 
-					reRead["refreshCount"].setValue( reRead["refreshCount"].getValue() + 1 )
-					if area.size() != imath.V2i( 0 ):
-						self.assertImagesEqual( reRead["out"], trimToDataWindowStage2["out"], ignoreMetadata = True )
-					else:
-						# We have to write one pixel to file, since OpenEXR doesn't permit empty dataWindow
-						onePixelDataWindow = imath.Box2i( imath.V2i( 0, 99 ), imath.V2i( 1, 100 ) )
-						self.assertEqual( reRead["out"].dataWindow(), onePixelDataWindow )
+							for offset in [
+									imath.V2i( 0, 0 ),
+									imath.V2i( 13, 17 ),
+									imath.V2i( -13, -17 ),
+									imath.V2i( -233, 431 ),
+									imath.V2i( -GafferImage.ImagePlug.tileSize(), 2 * GafferImage.ImagePlug.tileSize() ),
+									imath.V2i( 106, 28 )
+								]:
 
-						emptyPixelData = IECore.CompoundObject()
-						emptyPixelData["tileOrigins"] = IECore.V2iVectorData( [ GafferImage.ImagePlug.tileOrigin( imath.V2i( 0, 99 ) ) ] )
-						emptyPixelData["sampleOffsets"] = IECore.ObjectVector( [ GafferImage.ImagePlug.emptyTileSampleOffsets() ] )
-						for channel in [ "R", "G","B", "A", "Z", "ZBack" ]:
-							emptyPixelData[channel] = IECore.ObjectVector( [ IECore.FloatVectorData() ] )
-						self.assertEqual( GafferImage.ImageAlgo.tiles( reRead["out"] ), emptyPixelData )
+								o["offset"].setValue( offset )
+
+								w["task"].execute()
+
+								reRead["refreshCount"].setValue( reRead["refreshCount"].getValue() + 1 )
+								if area.size() != imath.V2i( 0 ):
+									self.assertImagesEqual( reRead["out"], trimToDataWindowStage2["out"], ignoreMetadata = True )
+								else:
+									# We have to write one pixel to file, since OpenEXR doesn't permit empty dataWindow
+									onePixelDataWindow = imath.Box2i( imath.V2i( 0, 99 ), imath.V2i( 1, 100 ) )
+									self.assertEqual( reRead["out"].dataWindow(), onePixelDataWindow )
+
+									emptyPixelData = IECore.CompoundObject()
+									emptyPixelData["tileOrigins"] = IECore.V2iVectorData( [ GafferImage.ImagePlug.tileOrigin( imath.V2i( 0, 99 ) ) ] )
+
+									refData = IECore.FloatVectorData() if deep else GafferImage.ImagePlug.blackTile()
+									if deep:
+										emptyPixelData["sampleOffsets"] = IECore.ObjectVector( [ GafferImage.ImagePlug.emptyTileSampleOffsets() ] )
+									for channel in [ "R", "G","B", "A", "Z", "ZBack" ]:
+										if channel == "ZBack" and not deep:
+											continue
+										emptyPixelData[channel] = IECore.ObjectVector( [ refData ] )
+									self.assertEqual( GafferImage.ImageAlgo.tiles( reRead["out"] ), emptyPixelData )
 
 	# Write an RGBA image that has a data window to various supported formats and in both scanline and tile modes.
 	def __testExtension( self, ext, formatName, options = {}, metadataToIgnore = [] ) :
@@ -1912,6 +1938,29 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			['character.A,', '32-bit'], ['character.B,', '32-bit'], ['character.G,', '32-bit'], ['character.R,', '32-bit'],
 			['character.Z,', '32-bit'], ['character.ZBack,', '32-bit'], ['character.custom,', '32-bit'], ['character.mask,', '32-bit']
 		] )
+
+	def testOmitFileValidMetadata( self ) :
+
+		testSequence = IECore.FileSequence( str( self.temporaryDirectory() / "incompleteSequence.####.exr" ) )
+		shutil.copyfile( self.__rgbFilePath, testSequence.fileNameForFrame( 1 ) )
+		shutil.copyfile( self.__rgbFilePath, testSequence.fileNameForFrame( 3 ) )
+
+		with Gaffer.Context() as context :
+
+			context.setFrame( 2 )
+
+			imageReader = GafferImage.ImageReader()
+			imageReader["fileName"].setValue( pathlib.Path( testSequence.fileName ) )
+			imageReader["missingFrameMode"].setValue( imageReader.MissingFrameMode.Hold )
+			self.assertEqual( imageReader["out"].metadata()["fileValid"], IECore.BoolData( False ) )
+
+			imageWriter = GafferImage.ImageWriter()
+			imageWriter["in"].setInput( imageReader["out"] )
+			imageWriter["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
+			imageWriter["task"].execute()
+
+		imageReader["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
+		self.assertNotIn( "fileValid", imageReader["out"].metadata() )
 
 if __name__ == "__main__":
 	unittest.main()

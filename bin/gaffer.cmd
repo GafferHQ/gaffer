@@ -9,6 +9,8 @@ set "HOME=%USERPROFILE:\=/%"
 
 set GAFFER_JEMALLOC=0
 
+set OIIO_LOAD_DLLS_FROM_PATH=0
+
 call :prependToPath "%GAFFER_ROOT%\glsl" IECOREGL_SHADER_PATHS
 call :prependToPath "%GAFFER_ROOT%\glsl" IECOREGL_SHADER_INCLUDE_PATHS
 
@@ -159,7 +161,6 @@ if "%GAFFER_DEBUG%" NEQ "" (
 )
 
 if %ERRORLEVEL% NEQ 0 (
-	echo "Error(s) running Gaffer"
 	exit /B %ERRORLEVEL%
 )
 
@@ -169,7 +170,7 @@ exit /B 0
 :prependToPath
 	set NewValue=%~1
 	set ExistingValue=!%~2!
-    if "%ExistingValue%" NEQ "" (
+    if "!ExistingValue!" NEQ "" (
         set ReplacedValue=!ExistingValue:%NewValue%=!
         if /I "!ExistingValue!" == "!ReplacedValue!" (
             set "%~2=!NewValue!;!ExistingValue!"
@@ -182,7 +183,7 @@ exit /B 0
 :appendToPath
     set NewValue=%~1
 	set ExistingValue=!%~2!
-    if "%ExistingValue%" NEQ "" (
+    if "!ExistingValue!" NEQ "" (
         set ReplacedValue=!ExistingValue:%NewValue%=!
         if /I "!ExistingValue!" == "!ReplacedValue!" (
             set "%~2=!ExistingValue!;!NewValue!"

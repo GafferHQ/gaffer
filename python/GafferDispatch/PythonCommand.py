@@ -158,6 +158,16 @@ class _VariablesDict( dict ) :
 		self.__update()
 		return dict.__getitem__( self, key )
 
+	def __repr__( self ) :
+
+		self.__update()
+		return dict.__repr__( self )
+
+	def __str__( self ) :
+
+		self.__update()
+		return dict.__str__( self )
+
 	def __update( self ) :
 		frame = self.__context.get( "frame", "NO FRAME" )
 
@@ -197,10 +207,10 @@ class _Parser( ast.NodeVisitor ) :
 		if node.value.id != "context" :
 			return
 
-		if not isinstance( node.slice, ast.Index ) or not isinstance( node.slice.value, ast.Str ) :
+		if not isinstance( node.slice, ast.Constant ) or not isinstance( node.slice.value, str ) :
 			return
 
-		self.contextReads.add( node.slice.value.s )
+		self.contextReads.add( node.slice.value )
 
 	def visit_Call( self, node ) :
 

@@ -82,8 +82,11 @@ bool hasTransformEditWrapper( const Gaffer::EditScope &scope, const ScenePlug::S
 
 object acquireTransformEditWrapper( Gaffer::EditScope &scope, const ScenePlug::ScenePath &path, bool createIfNecessary )
 {
-	IECorePython::ScopedGILRelease gilRelease;
-	auto p = EditScopeAlgo::acquireTransformEdit( &scope, path, createIfNecessary );
+	std::optional<EditScopeAlgo::TransformEdit> p;
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		p = EditScopeAlgo::acquireTransformEdit( &scope, path, createIfNecessary );
+	}
 	return p ? object( *p ) : object();
 }
 
@@ -252,6 +255,13 @@ GraphComponentPtr renderPassOptionEditReadOnlyReasonWrapper( Gaffer::EditScope &
 	return const_cast<GraphComponent *>( EditScopeAlgo::renderPassOptionEditReadOnlyReason( &scope, renderPass, option ) );
 }
 
+// Render Passes
+// =============
+
+GraphComponentPtr renderPassesReadOnlyReasonWrapper( Gaffer::EditScope &scope )
+{
+	return const_cast<GraphComponent *>( EditScopeAlgo::renderPassesReadOnlyReason( &scope ) );
+}
 
 } // namespace
 
@@ -314,6 +324,8 @@ void bindEditScopeAlgo()
 	def( "hasRenderPassOptionEdit", &hasRenderPassOptionEditWrapper, ( arg( "scope" ), arg( "renderPass" ), arg( "option" ) ) );
 	def( "removeRenderPassOptionEdit", &removeRenderPassOptionEditWrapper, ( arg( "scope" ), arg( "renderPass" ), arg( "option" ) ) );
 	def( "renderPassOptionEditReadOnlyReason", &renderPassOptionEditReadOnlyReasonWrapper, ( arg( "scope" ), arg( "renderPass" ), arg( "option" ) ) );
+
+	def( "renderPassesReadOnlyReason", &renderPassesReadOnlyReasonWrapper );
 
 }
 

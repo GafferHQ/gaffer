@@ -76,6 +76,8 @@ Gaffer.Metadata.registerNode(
 			"preset:Parent", GafferSceneUI.TransformTool.Orientation.Parent,
 			"preset:World", GafferSceneUI.TransformTool.Orientation.World,
 
+			"viewer:cyclePresetShortcut", "O",
+
 		],
 
 	}

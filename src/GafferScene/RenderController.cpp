@@ -1361,9 +1361,6 @@ RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer
 		m_lightLinks = std::make_unique<LightLinks>();
 	}
 
-	IECore::CompoundObjectPtr defaultAttributes = new CompoundObject();
-	m_defaultAttributes = m_renderer->attributes( defaultAttributes.get() );
-
 	setScene( scene );
 	setContext( context );
 }
@@ -1686,6 +1683,12 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 
 		// Update scene graphs
 
+		if( !m_defaultAttributes )
+		{
+			IECore::CompoundObjectPtr defaultAttributes = new CompoundObject();
+			m_defaultAttributes = m_renderer->attributes( defaultAttributes.get() );
+		}
+
 		for( int i = SceneGraph::FirstType; i <= SceneGraph::LastType; ++i )
 		{
 			SceneGraph *sceneGraph = m_sceneGraphs[i].get();
@@ -1783,9 +1786,8 @@ void RenderController::updateDefaultCamera()
 
 	CameraPtr defaultCamera = new IECoreScene::Camera;
 	SceneAlgo::applyCameraGlobals( defaultCamera.get(), m_renderOptions.globals.get(), m_scene.get() );
-	IECoreScenePreview::Renderer::AttributesInterfacePtr defaultAttributes = m_renderer->attributes( m_scene->attributesPlug()->defaultValue() );
 	ConstStringDataPtr name = new StringData( "gaffer:defaultCamera" );
-	m_defaultCamera = m_renderer->camera( name->readable(), defaultCamera.get(), defaultAttributes.get() );
+	m_defaultCamera = m_renderer->camera( name->readable(), defaultCamera.get() );
 	m_renderer->option( "camera", name.get() );
 }
 

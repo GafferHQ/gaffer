@@ -42,6 +42,9 @@
 
 using namespace GafferUI;
 
+namespace
+{
+
 static ConstPointerPtr g_current;
 
 using Registry = std::map<std::string, ConstPointerPtr>;
@@ -71,38 +74,22 @@ static Registry &registry()
 		r["remove"] = new Pointer( "pointerRemove.png", Imath::V2i( 18, 11 ) );
 		r["rotate"] = new Pointer( "pointerRotate.png", Imath::V2i( 10 ) );
 		r["pivot"] = new Pointer( "pointerPivot.png", Imath::V2i( 13, 0 ) );
+		r["cut"] = new Pointer( "pointerCut.png", Imath::V2i( 11, 7 ) );
+		r["notEditable"] = new Pointer( "pointerNotEditable.png", Imath::V2i( 10 ) );
 	}
 	return r;
 }
 
-Pointer::Pointer( const IECoreImage::ImagePrimitive *image, const Imath::V2i &hotspot )
-	:	m_image( image->copy() ), m_hotspot( hotspot )
-{
-}
+} // namespace
 
 Pointer::Pointer( const std::string &fileName, const Imath::V2i &hotspot )
-	:	m_image( nullptr ), m_hotspot( hotspot )
+	:	m_fileName( fileName ), m_hotspot( hotspot )
 {
-	static IECore::CachedReaderPtr g_reader;
-	if( !g_reader )
-	{
-		const char *sp = getenv( "GAFFERUI_IMAGE_PATHS" );
-		sp = sp ? sp : "";
-		g_reader = new IECore::CachedReader( IECore::SearchPath( sp ) );
-	}
-
-	m_image = IECore::runTimeCast<const IECoreImage::ImagePrimitive>( g_reader->read( fileName ) );
-	if( !m_image )
-	{
-		throw IECore::Exception(
-			fmt::format( "File \"{}\" does not contain an image.", fileName )
-		);
-	}
 }
 
-const IECoreImage::ImagePrimitive *Pointer::image() const
+const std::string &Pointer::fileName() const
 {
-	return m_image.get();
+	return m_fileName;
 }
 
 const Imath::V2i &Pointer::hotspot() const
@@ -118,7 +105,7 @@ void Pointer::setCurrent( ConstPointerPtr pointer )
 	}
 	if(
 		pointer && g_current &&
-		pointer->image()->isEqualTo( g_current->image() ) &&
+		pointer->fileName() ==  g_current->fileName() &&
 		pointer->hotspot() == g_current->hotspot()
 	)
 	{

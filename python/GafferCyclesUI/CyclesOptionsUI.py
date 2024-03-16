@@ -45,7 +45,14 @@ def __sessionSummary( plug ) :
 	info = []
 
 	if plug["device"]["enabled"].getValue() :
-		info.append( "Device(s) {}".format( plug["device"]["value"].getValue() ) )
+		# We don't have enough space to display the full device string, but the
+		# `:00` device indices are kindof confusing. Just strip off the
+		# indices so we're showing a list of device types.
+		devices = set(
+			d.partition( ":" )[0]
+			for d in plug["device"]["value"].getValue().split()
+		)
+		info.append( " + ".join( devices ) )
 
 	if plug["shadingSystem"]["enabled"].getValue() :
 		info.append( "Shading System {}".format( plug["shadingSystem"]["value"].getValue() ) )
@@ -107,9 +114,6 @@ def __samplingSummary( plug ) :
 	if plug["samples"]["enabled"].getValue() :
 		info.append( "Samples {}".format( plug["samples"]["value"].getValue() ) )
 
-	if plug["samplingPattern"]["enabled"].getValue() :
-		info.append( "Sampling Pattern {}".format( Gaffer.NodeAlgo.currentPreset( plug["samplingPattern"]["value"] ) ) )
-
 	if plug["lightSamplingThreshold"]["enabled"].getValue() :
 		info.append( "Light Sampling Threshold {}".format( plug["lightSamplingThreshold"]["value"].getValue() ) )
 
@@ -121,9 +125,6 @@ def __samplingSummary( plug ) :
 
 	if plug["filterGlossy"]["enabled"].getValue() :
 		info.append( "Filter Glossy {}".format( plug["filterGlossy"]["value"].getValue() ) )
-
-	if plug["useFrameAsSeed"]["enabled"].getValue() :
-		info.append( "Use Frame As Seed {}".format( plug["useFrameAsSeed"]["value"].getValue() ) )
 
 	if plug["seed"]["enabled"].getValue() :
 		info.append( "Seed Value {}".format( plug["seed"]["value"].getValue() ) )
@@ -251,9 +252,6 @@ def __filmSummary( plug ) :
 	if plug["mistFalloff"]["enabled"].getValue() :
 		info.append( "Mist Falloff {}".format( plug["mistFalloff"]["value"].getValue() ) )
 
-	if plug["cryptomatteAccurate"]["enabled"].getValue() :
-		info.append( "Cryptomatte Accurate {}".format( plug["cryptomatteAccurate"]["value"].getValue() ) )
-
 	if plug["cryptomatteDepth"]["enabled"].getValue() :
 		info.append( "Cryptomatte Depth {}".format( plug["cryptomatteDepth"]["value"].getValue() ) )
 
@@ -308,48 +306,6 @@ def __backgroundSummary( plug ) :
 
 	return ", ".join( info )
 
-def __textureCacheSummary( plug ) :
-
-	info = []
-
-	if plug["useTextureCache"]["enabled"].getValue() :
-		info.append( "Use Texture Cache {}".format( plug["useTextureCache"]["value"].getValue() ) )
-
-	if plug["textureCacheSize"]["enabled"].getValue() :
-		info.append( "Texture Cache Size {}".format( plug["textureCacheSize"]["value"].getValue() ) )
-
-	if plug["textureAutoConvert"]["enabled"].getValue() :
-		info.append( "Texture Auto-Convert {}".format( plug["textureAutoConvert"]["value"].getValue() ) )
-
-	if plug["textureAcceptUnmipped"]["enabled"].getValue() :
-		info.append( "Texture Accept Unmipped {}".format( plug["textureAcceptUnmipped"]["value"].getValue() ) )
-
-	if plug["textureAcceptUntiled"]["enabled"].getValue() :
-		info.append( "Texture Accept Untiled {}".format( plug["textureAcceptUntiled"]["value"].getValue() ) )
-
-	if plug["textureAutoTile"]["enabled"].getValue() :
-		info.append( "Texture Auto-Tile {}".format( plug["textureAutoTile"]["value"].getValue() ) )
-
-	if plug["textureAutoMip"]["enabled"].getValue() :
-		info.append( "Texture Auto-Mip {}".format( plug["textureAutoMip"]["value"].getValue() ) )
-
-	if plug["textureTileSize"]["enabled"].getValue() :
-		info.append( "Texture Tile Size {}".format( plug["textureTileSize"]["value"].getValue() ) )
-
-	if plug["textureBlurDiffuse"]["enabled"].getValue() :
-		info.append( "Texture Blur Diffuse {}".format( plug["textureBlurDiffuse"]["value"].getValue() ) )
-
-	if plug["textureBlurGlossy"]["enabled"].getValue() :
-		info.append( "Texture Blur Glossy {}".format( plug["textureBlurGlossy"]["value"].getValue() ) )
-
-	if plug["useCustomCachePath"]["enabled"].getValue() :
-		info.append( "Use Custom Cache Path {}".format( plug["useCustomCachePath"]["value"].getValue() ) )
-
-	if plug["customCachePath"]["enabled"].getValue() :
-		info.append( "Custom Cache Path {}".format( plug["customCachePath"]["value"].getValue() ) )
-
-	return ", ".join( info )
-
 def __logSummary( plug ) :
 
 	info = []
@@ -359,57 +315,51 @@ def __logSummary( plug ) :
 
 	return ", ".join( info )
 
-def __devicesPreset() :
+def __registerDevicePresets() :
 
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU", "CPU" )
 
-	cudaIndex = 0
-	hipIndex = 0
-	optixIndex = 0
-	metalIndex = 0
-
+	typeIndices = {}
 	for device in GafferCycles.devices :
 
-		index = 0
-		if device["type"] == "MULTI" or device["type"] == "CPU" :
+		if device["type"] == "CPU" :
 			continue
-		elif device["type"] == "CUDA" :
-			index = cudaIndex
-			cudaIndex += 1
-		elif device["type"] == "HIP" :
-			index = hipIndex
-			hipIndex += 1
-		elif device["type"] == "OPTIX" :
-			index = optixIndex
-			optixIndex += 1
-		elif device["type"] == "METAL" :
-			index = metalIndex
-			metalIndex += 1
-		Gaffer.Metadata.registerValue(
-			GafferCycles.CyclesOptions,
-			"options.device.value",
-			"preset:%s:%02i - %s" % ( device["type"], index, device["description"] ),
-			"%s:%02i" % ( device["type"], index )
-			)
-		Gaffer.Metadata.registerValue(
-			GafferCycles.CyclesOptions,
-			"options.device.value",
-			"preset:CPU and %s:%02i - %s" % ( device["type"], index, device["description"] ),
-			"CPU %s:%02i" % ( device["type"], index )
-			)
 
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:All CUDA", "CUDA:*" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:All OptiX", "OPTIX:*" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:All HIP", "HIP:*" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:All Metal", "METAL:*" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and all CUDA", "CPU CUDA:*" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and all OptiX", "CPU OPTIX:*" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and all HIP", "CPU HIP:*" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and all Metal", "CPU METAL:*" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and first CUDA found", "CPU CUDA:00" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and first OptiX found", "CPU OPTIX:00" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and first HIP found", "CPU HIP:00" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and first Metal found", "CPU METAL:00" )
+		typeIndex = typeIndices.setdefault( device["type"], 0 )
+		typeIndices[device["type"]] += 1
+
+		Gaffer.Metadata.registerValue(
+			GafferCycles.CyclesOptions,
+			"options.device.value",
+			"preset:{}/{}".format( device["type"], device["description"] ),
+			"{}:{:02}".format( device["type"], typeIndex )
+		)
+
+		Gaffer.Metadata.registerValue(
+			GafferCycles.CyclesOptions,
+			"options.device.value",
+			"preset:{}/{} + CPU".format( device["type"], device["description"] ),
+			"CPU {}:{:02}".format( device["type"], typeIndex )
+		)
+
+	for deviceType, count in typeIndices.items() :
+
+		if count <= 1 :
+			continue
+
+		Gaffer.Metadata.registerValue(
+			GafferCycles.CyclesOptions,
+			"options.device.value",
+			"preset:{}/All".format( deviceType ),
+			"{}:*".format( deviceType )
+		)
+
+		Gaffer.Metadata.registerValue(
+			GafferCycles.CyclesOptions,
+			"options.device.value",
+			"preset:{}/All + CPU".format( deviceType ),
+			"CPU {}:*".format( deviceType )
+		)
 
 Gaffer.Metadata.registerNode(
 
@@ -439,7 +389,6 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Film:summary", __filmSummary,
 			"layout:section:Denoising:summary", __denoisingSummary,
 			"layout:section:Background:summary", __backgroundSummary,
-			"layout:section:Texture Cache:summary", __textureCacheSummary,
 			"layout:section:Log:summary", __logSummary,
 
 		],
@@ -472,6 +421,14 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Session",
 			"label", "Device(s)",
+
+		],
+
+		"options.device.value" : [
+
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"presetsPlugValueWidget:allowCustom", True
 
 		],
 
@@ -720,27 +677,6 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.samplingPattern" : [
-
-			"description",
-			"""
-			Random sampling pattern used by the integrator.
-			""",
-
-			"layout:section", "Sampling",
-
-		],
-
-		"options.samplingPattern.value" : [
-
-			"preset:Sobol", "sobol",
-			"preset:Correlated Multi-Jitter", "cmj",
-			"preset:Progressive Multi-Jitter", "pmj",
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
 		"options.lightSamplingThreshold" : [
 
 			"description",
@@ -791,22 +727,11 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.useFrameAsSeed" : [
-
-			"description",
-			"""
-			Use current frame as the seed value for the sampling pattern.
-			""",
-
-			"layout:section", "Sampling",
-
-		],
-
 		"options.seed" : [
 
 			"description",
 			"""
-			Seed value for the sampling pattern. Disabled if \"Use Frame As Seed\" is on.
+			Seed value for the sampling pattern. If not specified, the frame number is used instead.
 			""",
 
 			"layout:section", "Sampling",
@@ -1398,17 +1323,6 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.cryptomatteAccurate" : [
-
-			"description",
-			"""
-			Generate a more accurate Cryptomatte pass. CPU only, may render slower and use more memory.
-			""",
-
-			"layout:section", "Film",
-
-		],
-
 		"options.cryptomatteDepth" : [
 
 			"description",
@@ -1530,135 +1444,6 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		# Texture Cache
-
-		"options.useTextureCache" : [
-
-			"description",
-			"""
-			Enables out-of-core texturing to conserve RAM.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
-		"options.textureCacheSize" : [
-
-			"description",
-			"""
-			The size of the OpenImageIO texture cache in MB.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
-		"options.textureAutoConvert" : [
-
-			"description",
-			"""
-			Automatically convert textures to .tx files for optimal texture
-			cache performance.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
-		"options.textureAcceptUnmipped" : [
-
-			"description",
-			"""
-			Texture cached rendering without mip mapping is very expensive.
-			Uncheck to prevent Cycles from using textures that are not mip
-			mapped.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
-		"options.textureAcceptUntiled" : [
-
-			"description",
-			"""
-			Texture cached rendering without tiled textures is very expensive.
-			Uncheck to prevent Cycles from using textures that are not tiled.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
-		"options.textureAutoTile" : [
-
-			"description",
-			"""
-			On the fly creation of tiled versions of textures that are not
-			tiled. This can increase render time but helps reduce memory usage.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
-		"options.textureAutoMip" : [
-
-			"description",
-			"""
-			On the fly creation of mip maps of textures that are not mip
-			mapped. This can increase render time but helps reduce memory
-			usage.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
-		"options.textureTileSize" : [
-
-			"description",
-			"""
-			The size of tiles that Cycles uses for auto tiling.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
-		"options.textureBlurDiffuse" : [
-
-			"description",
-			"""
-			The amount of texture blur applied to diffuse bounces.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
-		"options.textureBlurGlossy" : [
-
-			"description",
-			"""
-			The amount of texture blur applied to glossy bounces.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
-		"options.useCustomCachePath" : [
-
-			"description",
-			"""
-			Use Custom Cache Path.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
-		"options.customCachePath" : [
-
-			"description",
-			"""
-			Custom path for the texture cache.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
 		# Log
 
 		"options.logLevel" : [
@@ -1684,22 +1469,7 @@ Gaffer.Metadata.registerNode(
 	}
 )
 
-__devicesPreset()
-
-if not GafferCycles.withTextureCache :
-
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.useTextureCache", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureCacheSize", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureAutoConvert", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureAcceptUnmipped", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureAcceptUntiled", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureAutoTile", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureAutoMip", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureTileSize", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureBlurDiffuse", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureBlurGlossy", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.useCustomCachePath", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.customCachePath", "plugValueWidget:type", "" )
+__registerDevicePresets()
 
 if GafferCycles.hasOptixDenoise :
 
