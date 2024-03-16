@@ -19,6 +19,11 @@ Fixes
 - LightPosition Tool : Fixed lingering shadow pivot point after placing a shadow pivot, switching to highlight mode and switching back to shadow mode [^1].
 - Catalogue : Fixed bugs caused by reordering images using `GraphComponent::reorderChildren()`.
 
+API
+---
+
+- Catalogue : Deprecated `image:index` metadata.
+
 Breaking Changes
 ----------------
 
