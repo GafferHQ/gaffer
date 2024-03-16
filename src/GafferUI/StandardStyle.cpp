@@ -581,8 +581,6 @@ void StandardStyle::bind( const Style *currentStyle ) const
 		return;
 	}
 
-	glEnable( GL_BLEND );
-	glBlendFuncSeparate( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
 	glUseProgram( shader()->program() );
 
 	if( IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector() )
@@ -591,6 +589,13 @@ void StandardStyle::bind( const Style *currentStyle ) const
 		{
 			selector->pushIDShader( shader() );
 		}
+	}
+	else
+	{
+		// Enable blending only for non-selection renders as it can
+		// corrupt the selection buffer on some graphics hardware.
+		glEnable( GL_BLEND );
+		glBlendFuncSeparate( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
 	}
 }
 
@@ -1129,8 +1134,6 @@ void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Textur
 {
 	glPushAttrib( GL_COLOR_BUFFER_BIT );
 
-	// As the image is already pre-multiplied we need to change our blend mode.
-	glEnable( GL_BLEND );
 	if( !IECoreGL::Selector::currentSelector() )
 	{
 		// Some users have reported crashes that were traced back to this call
@@ -1139,6 +1142,9 @@ void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Textur
 		// didn't correspond to actual gadgets.
 		// Don't change it when rendering the selection pass since
 		// blending should not be applied to an integer buffer anyways.
+
+		// As the image is already pre-multiplied we need to change our blend mode.
+		glEnable( GL_BLEND );
 		glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
 	}
 
