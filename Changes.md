@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - LightPosition Tool : The tool is now only visible for members of the `__lights` set, instead of all objects.
+- Catalogue : Added `imageNames` output plug, containing the names of all images in the Catalogue. Among other things this can be used to drive a Wedge or ContactSheet node and a CatalogueSelect.
 
 API
 ---

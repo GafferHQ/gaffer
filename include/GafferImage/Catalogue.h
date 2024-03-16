@@ -125,6 +125,9 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 		Gaffer::StringPlug *directoryPlug();
 		const Gaffer::StringPlug *directoryPlug() const;
 
+		Gaffer::StringVectorDataPlug *imageNamesPlug();
+		const Gaffer::StringVectorDataPlug *imageNamesPlug() const;
+
 		/// All Catalogues share a single DisplayDriverServer instance
 		/// to receive rendered images. To send an image to the catalogues,
 		/// use an IECoreImage::ClientDisplayDriver with the "displayPort" parameter

@@ -822,6 +822,7 @@ Catalogue::Catalogue( const std::string &name )
 	addChild( new IntPlug( "imageIndex" ) );
 	addChild( new StringPlug( "name" ) );
 	addChild( new StringPlug( "directory" ) );
+	addChild( new StringVectorDataPlug( "imageNames", Plug::Out ) );
 	addChild( new IntPlug( "__imageIndex", Plug::Out ) );
 	addChild( new ObjectPlug( "__imageIndexMap", Plug::Out, IECore::NullObject::defaultNullObject() ) );
 	addChild( new StringPlug( "__invalidImageText", Plug::Out ) );
@@ -917,44 +918,54 @@ const Gaffer::StringPlug *Catalogue::directoryPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 3 );
 }
 
+Gaffer::StringVectorDataPlug *Catalogue::imageNamesPlug()
+{
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::StringVectorDataPlug *Catalogue::imageNamesPlug() const
+{
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 4 );
+}
+
 Gaffer::IntPlug *Catalogue::internalImageIndexPlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 4 );
+	return getChild<IntPlug>( g_firstPlugIndex + 5 );
 }
 
 const Gaffer::IntPlug *Catalogue::internalImageIndexPlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 4 );
+	return getChild<IntPlug>( g_firstPlugIndex + 5 );
 }
 
 Gaffer::ObjectPlug *Catalogue::imageIndexMapPlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 5 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 6 );
 }
 
 const Gaffer::ObjectPlug *Catalogue::imageIndexMapPlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 5 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 6 );
 }
 
 Gaffer::StringPlug *Catalogue::invalidImageTextPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 6 );
+	return getChild<StringPlug>( g_firstPlugIndex + 7 );
 }
 
 const Gaffer::StringPlug *Catalogue::invalidImageTextPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 6 );
+	return getChild<StringPlug>( g_firstPlugIndex + 7 );
 }
 
 Switch *Catalogue::imageSwitch()
 {
-	return getChild<Switch>( g_firstPlugIndex + 7 );
+	return getChild<Switch>( g_firstPlugIndex + 8 );
 }
 
 const Switch *Catalogue::imageSwitch() const
 {
-	return getChild<Switch>( g_firstPlugIndex + 7 );
+	return getChild<Switch>( g_firstPlugIndex + 8 );
 }
 
 Catalogue::InternalImage *Catalogue::imageNode( Image *image )
@@ -1254,11 +1265,16 @@ void Catalogue::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 	ImageNode::affects( input, outputs );
 
 	auto image = input->parent<Image>();
-	if( image && image->parent() == imagesPlug() &&
-		( input == image->namePlug() || input == image->outputIndexPlug() )
-	)
+	if( image && image->parent() == imagesPlug() )
 	{
-		outputs.push_back( imageIndexMapPlug() );
+		if( input == image->namePlug() || input == image->outputIndexPlug() )
+		{
+			outputs.push_back( imageIndexMapPlug() );
+		}
+		if( input== image->namePlug() )
+		{
+			outputs.push_back( imageNamesPlug() );
+		}
 	}
 
 	if( input == imageIndexPlug() || input == imageIndexMapPlug() )
@@ -1296,6 +1312,13 @@ void Catalogue::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 			Context::EditableScope mapScope( context );
 			mapScope.remove( g_imageNameContextName );
 			imageIndexMapPlug()->hash( h );
+		}
+	}
+	else if( output == imageNamesPlug() )
+	{
+		for( const auto &image : Image::Range( *imagesPlug() ) )
+		{
+			image->namePlug()->hash( h );
 		}
 	}
 }
@@ -1353,32 +1376,40 @@ void Catalogue::compute( ValuePlug *output, const Context *context ) const
 
 		static_cast<ObjectPlug *>( output )->setValue( result );
 	}
-
-	if( output != internalImageIndexPlug() )
+	else if( output == internalImageIndexPlug() )
 	{
-		ImageNode::compute( output, context );
-		return;
+		int index = -1;
+		const std::string &imageName = context->get<std::string>( g_imageNameContextName, g_emptyString );
+		if( imageName.empty() )
+		{
+			index = imageIndexPlug()->getValue();
+		}
+		else
+		{
+			Context::EditableScope mapScope( context );
+			mapScope.remove( g_imageNameContextName );
+			ConstImageIndexMapDataPtr imageIndexMap = boost::static_pointer_cast<const ImageIndexMapData>( imageIndexMapPlug()->getValue() );
+			auto it = imageIndexMap->map.find( imageName );
+			if( it != imageIndexMap->map.end() )
+			{
+				index = it->second;
+			}
+		}
+		static_cast<IntPlug *>( output )->setValue( index + 1 );
 	}
-
-	int index = -1;
-	const std::string &imageName = context->get<std::string>( g_imageNameContextName, g_emptyString );
-	if( imageName.empty() )
+	else if( output == imageNamesPlug() )
 	{
-		index = imageIndexPlug()->getValue();
+		StringVectorDataPtr result = new StringVectorData;
+		for( const auto &image : Image::Range( *imagesPlug() ) )
+		{
+			result->writable().push_back( image->getName().string() );
+		}
+		static_cast<StringVectorDataPlug *>( output )->setValue( result );
 	}
 	else
 	{
-		Context::EditableScope mapScope( context );
-		mapScope.remove( g_imageNameContextName );
-		ConstImageIndexMapDataPtr imageIndexMap = boost::static_pointer_cast<const ImageIndexMapData>( imageIndexMapPlug()->getValue() );
-		auto it = imageIndexMap->map.find( imageName );
-		if( it != imageIndexMap->map.end() )
-		{
-			index = it->second;
-		}
+		ImageNode::compute( output, context );
 	}
-
-	static_cast<IntPlug *>( output )->setValue( index + 1 );
 
 }
 

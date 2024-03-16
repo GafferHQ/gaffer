@@ -1147,5 +1147,37 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 				script.undo()
 				assertPreconditions()
 
+	def testImageNames( self ) :
+
+		def assertImageNames( catalogue ) :
+
+			self.assertEqual(
+				catalogue["imageNames"].getValue(),
+				IECore.StringVectorData( catalogue["images"].keys() )
+			)
+
+		catalogue = GafferImage.Catalogue()
+		plugDirtiedSlot = GafferTest.CapturingSlot( catalogue.plugDirtiedSignal() )
+		assertImageNames( catalogue )
+
+		catalogue["images"].addChild( catalogue.Image.load( self.imagesPath() / "blurRange.exr" ) )
+		self.assertIn( catalogue["imageNames"], { x[0] for x in plugDirtiedSlot } )
+		assertImageNames( catalogue )
+
+		del plugDirtiedSlot[:]
+		catalogue["images"].addChild( catalogue.Image.load( self.imagesPath() / "blurRange.exr" ) )
+		self.assertIn( catalogue["imageNames"], { x[0] for x in plugDirtiedSlot } )
+		assertImageNames( catalogue )
+
+		del plugDirtiedSlot[:]
+		catalogue["images"][0].setName( "newName" )
+		self.assertIn( catalogue["imageNames"], { x[0] for x in plugDirtiedSlot } )
+		assertImageNames( catalogue )
+
+		del plugDirtiedSlot[:]
+		catalogue["images"].reorderChildren( reversed( catalogue["images"].children() ) )
+		self.assertIn( catalogue["imageNames"], { x[0] for x in plugDirtiedSlot } )
+		assertImageNames( catalogue )
+
 if __name__ == "__main__":
 	unittest.main()

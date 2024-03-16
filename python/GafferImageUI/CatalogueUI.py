@@ -462,6 +462,21 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"imageNames" : [
+
+			"description",
+			"""
+			Output containing all the names of the images in the Catalogue.
+			Possible uses include :
+
+			- Looping over all images using a Wedge and a CatalogueSelect.
+			- Making a ContactSheet using the Collect mode and a CatalogueSelect.
+			""",
+
+			"layout:section", "Advanced"
+
+		],
+
 	},
 
 )
