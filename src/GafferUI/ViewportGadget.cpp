@@ -1288,7 +1288,9 @@ void ViewportGadget::renderInternal( RenderReason reason, Gadget::Layer filterLa
 		if( reason != RenderReason::Draw )
 		{
 			// We're doing selection so post-processing doesn't matter. Just
-			// render direct to output buffer.
+			// render direct to output buffer without blending as that can
+			// corrupt the selection buffer on some graphics hardware.
+			glDisable( GL_BLEND );
 			renderLayerInternal( reason, layer, viewTransform, bound, selector );
 			continue;
 		}
