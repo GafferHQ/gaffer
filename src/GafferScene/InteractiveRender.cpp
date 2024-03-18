@@ -298,6 +298,9 @@ void InteractiveRender::plugSet( const Gaffer::Plug *plug )
 
 void InteractiveRender::update()
 {
+	ConstContextPtr context = effectiveContext();
+	Context::Scope scope( context.get() );
+
 	const State requiredState = (State)statePlug()->getValue();
 
 	// Stop the current render if we've been asked to, or if

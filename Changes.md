@@ -1,7 +1,10 @@
 1.3.x.x (relative to 1.3.14.0)
 =======
 
+Fixes
+-----
 
+- InteractiveRender : Fixed context used to evaluate scene globals when renderer is set to "Default".
 
 1.3.14.0 (relative to 1.3.13.1)
 ========
