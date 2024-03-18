@@ -1,7 +1,10 @@
 1.4.x.x (relative to 1.4.0.0b4)
 =======
 
+API
+---
 
+- TypedObjectPlug : Added Python bindings for the default values of the `defaultValue` constructor argument.
 
 1.4.0.0b4 (relative to 1.4.0.0b3)
 =========

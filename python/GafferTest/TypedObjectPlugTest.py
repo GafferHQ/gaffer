@@ -364,5 +364,16 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 
 			self.assertEqual( node["user"]["stringVector"].getValue(), IECore.StringVectorData( output ) )
 
+	def testDefaultDefaultValue( self ) :
+
+		p = Gaffer.StringVectorDataPlug()
+		self.assertEqual( p.defaultValue(), IECore.StringVectorData() )
+
+		p = Gaffer.M44fVectorDataPlug()
+		self.assertEqual( p.defaultValue(), IECore.M44fVectorData() )
+
+		with self.assertRaisesRegex( ValueError, "Default value must not be None" ) :
+			Gaffer.ObjectPlug()
+
 if __name__ == "__main__":
 	unittest.main()
