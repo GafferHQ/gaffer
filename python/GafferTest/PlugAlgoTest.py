@@ -927,6 +927,40 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 					Gaffer.PlugAlgo.setValueFromData( plug, data )
 				)
 
+	def testDataConversionsForAllTypes( self ) :
+
+		import GafferScene
+		import GafferImage
+
+		for plugType in Gaffer.ValuePlug.__subclasses__() :
+
+			valueType = getattr( plugType, "ValueType", None )
+			if valueType is None :
+				continue
+
+			if issubclass( valueType, IECore.Data ) :
+				dataType = valueType
+			elif valueType is float :
+				dataType = IECore.FloatData
+			else :
+				try :
+					dataType = IECore.DataTraits.dataTypeFromElementType( valueType )
+				except TypeError :
+					continue
+
+			with self.subTest( plugType = plugType ) :
+
+				plug = plugType()
+				data = dataType()
+				self.assertTrue( Gaffer.PlugAlgo.canSetValueFromData( plug, None ) )
+				self.assertTrue( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+				self.assertTrue( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+				if issubclass( valueType, IECore.Data ) :
+					self.assertEqual( plug.getValue(), data )
+				else :
+					self.assertEqual( plug.getValue(), data.value )
+				self.assertEqual( Gaffer.PlugAlgo.getValueAsData( plug ), data )
+
 	def testDependsOnCompute( self ) :
 
 		add = GafferTest.AddNode()

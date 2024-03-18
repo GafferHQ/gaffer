@@ -6,6 +6,11 @@ API
 
 - TypedObjectPlug : Added Python bindings for the default values of the `defaultValue` constructor argument.
 
+Fixes
+-----
+
+- PlugAlgo : Updated `canSetValueFromData()`, `setValueFromData()` and `getValueAsData()` with support for missing types.
+
 1.4.0.0b4 (relative to 1.4.0.0b3)
 =========
 
