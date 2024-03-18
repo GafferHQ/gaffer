@@ -83,6 +83,9 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::ComputeNode
 		GafferScene::ScenePlug *outPlug();
 		const GafferScene::ScenePlug *outPlug() const;
 
+		Gaffer::StringPlug *resolvedRendererPlug();
+		const Gaffer::StringPlug *resolvedRendererPlug() const;
+
 		Gaffer::ObjectPlug *messagesPlug();
 		const Gaffer::ObjectPlug *messagesPlug() const;
 

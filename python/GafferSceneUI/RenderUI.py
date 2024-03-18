@@ -133,6 +133,18 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"resolvedRenderer" : [
+
+			"description",
+			"""
+			The renderer that will be used, accounting for the value of the
+			`render:defaultRenderer` option if `renderer` is set to "Default".
+			""",
+
+			"layout:section", "Advanced",
+
+		],
+
 	}
 )
 
@@ -152,17 +164,16 @@ class RendererPlugValueWidget( GafferUI.PresetsPlugValueWidget ) :
 		presets = GafferUI.PresetsPlugValueWidget._valuesForUpdate( plugs, [ [] for p in plugs ] )
 
 		result = []
-		for preset, globalsPlugs in zip( presets, auxiliaryPlugs ) :
+		for preset, resolvedRendererPlugs in zip( presets, auxiliaryPlugs ) :
 
-			defaultRenderer = ""
-			if len( globalsPlugs ) and preset == "Default" :
+			resolvedRenderer = ""
+			if len( resolvedRendererPlugs ) :
 				with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
-					defaultRenderer = globalsPlugs[0].getValue().get( "option:render:defaultRenderer" )
-					defaultRenderer = defaultRenderer.value if defaultRenderer is not None else ""
+					resolvedRenderer = resolvedRendererPlugs[0].getValue()
 
 			result.append( {
 				"preset" : preset,
-				"defaultRenderer" : defaultRenderer
+				"resolvedRenderer" : resolvedRenderer
 			} )
 
 		return result
@@ -172,11 +183,11 @@ class RendererPlugValueWidget( GafferUI.PresetsPlugValueWidget ) :
 		GafferUI.PresetsPlugValueWidget._updateFromValues( self, [ v["preset"] for v in values ], exception )
 
 		if self.menuButton().getText() == "Default" :
-			defaultRenderer = sole( v["defaultRenderer"] for v in values )
+			resolvedRenderer = sole( v["resolvedRenderer"] for v in values )
 			self.menuButton().setText(
 				"Default ({})".format(
-					defaultRenderer if defaultRenderer else
-					( "None" if defaultRenderer == "" else "---" )
+					resolvedRenderer if resolvedRenderer else
+					( "None" if resolvedRenderer == "" else "---" )
 				)
 			)
 
@@ -184,4 +195,4 @@ class RendererPlugValueWidget( GafferUI.PresetsPlugValueWidget ) :
 
 		node = plug.node()
 		if isinstance( node, ( GafferScene.Render, GafferScene.InteractiveRender ) ) :
-			return [ node["in"]["globals"] ]
+			return [ node["resolvedRenderer"] ]

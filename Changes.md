@@ -1,6 +1,11 @@
 1.3.x.x (relative to 1.3.14.0)
 =======
 
+Improvements
+------------
+
+- Render, InteractiveRender : Added `resolvedRenderer` plug, which outputs the name of the renderer that will be used, taking into account the influence of the `render:defaultRenderer` option.
+
 Fixes
 -----
 
