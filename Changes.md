@@ -7,6 +7,7 @@ Improvements
 - LightPositionTool : The tool is now only visible for members of the `__lights` set, instead of all objects.
 - Catalogue : Added `imageNames` output plug, containing the names of all images in the Catalogue. Among other things this can be used to drive a Wedge or ContactSheet node and a CatalogueSelect.
 - Render, InteractiveRender : Added `resolvedRenderer` plug, which outputs the name of the renderer that will be used, taking into account the influence of the `render:defaultRenderer` option [^1].
+- EditScope : Added a summary of edits in the NodeEditor, with the ability to select the affected objects and quickly navigate to the processor nodes.
 
 Fixes
 -----
