@@ -45,6 +45,9 @@ import IECore
 import Gaffer
 import GafferUI
 
+from GafferUI._StyleSheet import _styleColors
+from Qt import QtGui
+
 Gaffer.Metadata.registerNode(
 
 	Gaffer.EditScope,
@@ -74,6 +77,11 @@ Gaffer.Metadata.registerNode(
 	"noduleLayout:customGadget:addButtonBottom:visible", lambda node : "in" in node,
 	"noduleLayout:customGadget:addButtonLeft:visible", lambda node : "in" in node,
 	"noduleLayout:customGadget:addButtonRight:visible", lambda node : "in" in node,
+
+	# Add a custom widget for showing a summary of the processors within.
+
+	"layout:customWidget:processors:widgetType", "GafferUI.EditScopeUI.__ProcessorsWidget",
+	"layout:customWidget:processors:section", "Edits",
 
 	plugs = {
 
@@ -346,3 +354,226 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		nodes = Gaffer.Metadata.nodesWithMetadata( editScope, "editScope:includeInNavigationMenu" )
 		return [ n for n in nodes if n.ancestor( Gaffer.EditScope ).isSame( editScope ) ]
+
+# ProcessorWidget
+# ===============
+
+class ProcessorWidget( GafferUI.Widget ) :
+
+	def __init__( self, topLevelWidget, processor, **kw ) :
+
+		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
+
+		self.__processor = processor
+
+	def processor( self ) :
+
+		return self.__processor
+
+	__widgetTypes = {}
+	@staticmethod
+	def registerProcessorWidget( processorType, widgetCreator ) :
+
+		ProcessorWidget.__widgetTypes[processorType] = widgetCreator
+
+	@staticmethod
+	def create( processor ) :
+
+		processorType = Gaffer.Metadata.value( processor, "editScope:processorType" )
+		creator = ProcessorWidget.__widgetTypes.get( processorType )
+		if creator is None :
+			for name, candidate in ProcessorWidget.__widgetTypes.items() :
+				if IECore.StringAlgo.matchMultiple( processorType, name ) :
+					creator = candidate
+					break
+
+		if creator is not None :
+			return creator( processor )
+
+		return None
+
+# SimpleProcessorWidget
+# =====================
+
+## Base class for creating simple summaries of Processors, including links
+class SimpleProcessorWidget( ProcessorWidget ) :
+
+	def __init__( self, processor, **kw ) :
+
+		self.__column = GafferUI.ListContainer( spacing = 4 )
+		ProcessorWidget.__init__( self, self.__column, processor, **kw )
+
+		with self.__column :
+			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+				label = GafferUI.NameLabel( processor )
+				label.setFormatter( lambda g : "<h4>{}</h4".format( GafferUI.NameLabel.defaultFormatter( g ) ) )
+				GafferUI.Spacer( size = imath.V2i( 1 ) )
+				GafferUI.LabelPlugValueWidget( processor["enabled"] )
+				GafferUI.BoolPlugValueWidget( processor["enabled"] )
+			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+				_acquireSummaryWidgetClass( self._summary )( processor["out"] )
+				textColor = QtGui.QColor( *_styleColors["foregroundInfo"] ).name()
+				showLabel = GafferUI.Label( f"<a href=gaffer://show><font color={textColor}>Show</font></a>" )
+				showLabel.linkActivatedSignal().connect( Gaffer.WeakMethod( self.__show ), scoped = False )
+			GafferUI.Divider()
+
+	## Called to retrieve the text for the summary label, so must be overridden
+	# by derived classes. Use `linkCreator( text, data )` to create an HTML link
+	# to include in the summary. When the link is clicked, `_linkActivated( data )`
+	# will be called.
+	#
+	# > Note : This is called on a background thread to avoid locking
+	# > the UI, so it is static to avoid the possibility of unsafe
+	# > access to UI elements.
+	@staticmethod
+	def _summary( processor, linkCreator ) :
+
+		raise NotImplementedError
+
+	## Called when a link within the summary is clicked.
+	def _linkActivated( self, linkData ) :
+
+		raise NotImplementedError
+
+	def __show( self, *unused ) :
+
+		GafferUI.NodeEditor.acquire( self.processor() )
+
+## Helper class for associating arbitrary data with HTML links.
+class _LinkCreator :
+
+	def __init__( self ) :
+
+		self.__linkData = []
+
+	def __call__( self, text, data ) :
+
+		index = len( self.__linkData )
+		self.__linkData.append( data )
+		textColor = QtGui.QColor( *_styleColors["foregroundInfo"] ).name()
+
+		return f"<a href=gaffer://{index}><font color={textColor}>{text}</font></a>"
+
+	def linkData( self, link ) :
+
+		index = int( link.rpartition( "/" )[2] )
+		return self.__linkData[index]
+
+# Factory for PlugValueWidget subclasses for showing the summary. We want to use PlugValueWidget
+# for this because it handles all the details of background updates for us. But we need to make
+# a unique subclass for each `summaryFunction` because `PlugValueWidget._valuesForUpdate()` is
+# static.
+__summaryWidgetClasses = {}
+def _acquireSummaryWidgetClass( summaryFunction ) :
+
+	global __summaryWidgetClasses
+	if summaryFunction in __summaryWidgetClasses :
+		return __summaryWidgetClasses[summaryFunction]
+
+	class _SummaryPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+		def __init__( self, plug, **kw ) :
+
+			row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+			GafferUI.PlugValueWidget.__init__( self, row, { plug }, **kw )
+
+			with row :
+				self.__errorImage = GafferUI.Image( "errorSmall.png" )
+				self.__label = GafferUI.Label()
+				self.__label.linkActivatedSignal().connect( Gaffer.WeakMethod( self.__linkActivated ), scoped = False )
+				GafferUI.Spacer( size = imath.V2i( 1, 20 ) )
+				self.__busyWidget = GafferUI.BusyWidget( size = 20 )
+
+		@staticmethod
+		def _valuesForUpdate( plugs, auxiliaryPlugs ) :
+
+			assert( len( plugs ) == 1 )
+
+			links = _LinkCreator()
+			summary = summaryFunction( next( iter( plugs ) ).node(), links )
+
+			return [ { "summary" : summary, "links" : links } ]
+
+		def _updateFromValues( self, values, exception ) :
+
+			self.__busyWidget.setVisible( not values and exception is None )
+
+			self.__errorImage.setVisible( exception is not None )
+			self.__errorImage.setToolTip( str( exception ) if exception is not None else "" )
+
+			if values :
+				self.__label.setText(
+					"<font color={textColor}>{summary}</font>".format(
+						textColor = QtGui.QColor( *_styleColors["foreground"] ).name(),
+						summary = values[0]["summary"] if len( values ) else ""
+					)
+				)
+				self.__links = values[0]["links"]
+
+		def __linkActivated( self, label, link ) :
+
+			self.ancestor( SimpleProcessorWidget )._linkActivated( self.__links.linkData( link ) )
+
+	__summaryWidgetClasses[summaryFunction] = _SummaryPlugValueWidget
+	return _SummaryPlugValueWidget
+
+# __ProcessorsWidget
+# ==================
+
+class __ProcessorsWidget( GafferUI.Widget ) :
+
+	def __init__( self, editScope, **kw ) :
+
+		self.__column = GafferUI.ListContainer( spacing = 4 )
+		GafferUI.Widget.__init__( self, self.__column, **kw )
+
+		self.__editScope = editScope
+		self.__processorWidgets = {}
+
+		editScope.childAddedSignal().connect( Gaffer.WeakMethod( self.__editScopeChildAdded ), scoped = False )
+		editScope.childRemovedSignal().connect( Gaffer.WeakMethod( self.__editScopeChildRemoved ), scoped = False )
+
+		self.__update()
+
+	def __editScopeChildAdded( self, editScope, child ) :
+
+		if Gaffer.Metadata.value( child, "editScope:processorType" ) :
+			self.__update()
+
+	def __editScopeChildRemoved( self, editScope, child ) :
+
+		if Gaffer.Metadata.value( child, "editScope:processorType" ) :
+			self.__update()
+
+	@GafferUI.LazyMethod()
+	def __update( self ) :
+
+		# Get rid of any widgets we don't need
+
+		processors = set( self.__editScope.processors() )
+		self.__processorWidgets = {
+			p : w for p, w in self.__processorWidgets.items()
+			if p in processors
+		}
+
+		# Make sure we have a widget for all processors
+
+		for processor in processors :
+			if processor in self.__processorWidgets :
+				continue
+			widget = ProcessorWidget.create( processor )
+			self.__processorWidgets[processor] = widget
+
+		# Update the layout
+
+		widgets = [ w for w in self.__processorWidgets.values() if w is not None ]
+		widgets = sorted( widgets, key = lambda w : w.processor().getName() )
+
+		if not widgets :
+			textColor = QtGui.QColor( *_styleColors["foregroundFaded"] ).name()
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) as row :
+				GafferUI.Image( "infoSmall.png" )
+				GafferUI.Label( f"<font color={textColor}>No edits created yet</font>" )
+			widgets.append( row )
+
+		self.__column[:] = widgets

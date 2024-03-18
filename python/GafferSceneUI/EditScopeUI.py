@@ -41,6 +41,9 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
+# Pruning/Visibility hotkeys
+# ==========================
+
 def addPruningActions( editor ) :
 
 	if isinstance( editor, GafferUI.Viewer ) :
@@ -154,3 +157,149 @@ def __visibilityKeyPress( viewer, event ) :
 				tweakPlug["value"].setValue( False )
 
 	return True
+
+
+# Processor Widgets
+# =================
+
+class _SceneProcessorWidget( GafferUI.EditScopeUI.SimpleProcessorWidget ) :
+
+	def _linkActivated( self, linkData ) :
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths(
+			self.processor().ancestor( Gaffer.ScriptNode ).context(), linkData
+		)
+
+class __LocationEditsWidget( _SceneProcessorWidget ) :
+
+	@staticmethod
+	def _summary( processor, linkCreator ) :
+
+		# Get the locations being edited from the spreadsheet.
+
+		canceller = Gaffer.Context.current().canceller()
+		activePathMatcher = IECore.PathMatcher()
+		disabledPathMatcher = IECore.PathMatcher()
+		for row in processor["edits"] :
+			IECore.Canceller.check( canceller )
+			path = row["name"].getValue()
+			if not path :
+				continue
+			if row["enabled"].getValue() :
+				activePathMatcher.addPath( path )
+			else :
+				disabledPathMatcher.addPath( path )
+
+		# Match those against the scene.
+
+		activePaths = IECore.PathMatcher()
+		disabledPaths = IECore.PathMatcher()
+		GafferScene.SceneAlgo.matchingPaths( activePathMatcher, processor["in"], activePaths )
+		GafferScene.SceneAlgo.matchingPaths( disabledPathMatcher, processor["in"], disabledPaths )
+
+		# Build a summary describing what we found.
+
+		summaries = []
+		if activePaths.size() :
+			activeLink = linkCreator(
+				"{} location{}".format( activePaths.size(), "s" if activePaths.size() > 1 else "" ),
+				activePaths
+			)
+			summaries.append( f"edits on {activeLink}" )
+		if disabledPaths.size() :
+			disabledLink = linkCreator(
+				"{} location{}".format( disabledPaths.size(), "s" if disabledPaths.size() > 1 else "" ),
+				disabledPaths
+			)
+			summaries.append( f"disabled edits on {disabledLink}" )
+
+		if not summaries :
+			return "None"
+
+		summaries[0] = summaries[0][0].upper() + summaries[0][1:]
+		return " and ".join( summaries )
+
+GafferUI.EditScopeUI.ProcessorWidget.registerProcessorWidget( "AttributeEdits TransformEdits *LightEdits *SurfaceEdits", __LocationEditsWidget )
+
+class __PruningEditsWidget( _SceneProcessorWidget ) :
+
+	@staticmethod
+	def _summary( processor, linkCreator ) :
+
+		paths = IECore.PathMatcher()
+		GafferScene.SceneAlgo.matchingPaths( processor["PathFilter"], processor["in"], paths )
+
+		if paths.isEmpty() :
+			return "None"
+		else :
+			link = linkCreator(
+				"{} location{}".format( paths.size(), "s" if paths.size() > 1 else "" ),
+				paths
+			)
+			return f"{link} pruned"
+
+GafferUI.EditScopeUI.ProcessorWidget.registerProcessorWidget( "PruningEdits", __PruningEditsWidget )
+
+class __RenderPassesWidget( GafferUI.EditScopeUI.SimpleProcessorWidget ) :
+
+	@staticmethod
+	def _summary( processor, linkCreator ) :
+
+		names = processor["names"].getValue()
+		return "{} render pass{} created".format(
+			len( names ) if names else "No",
+			"es" if len( names ) > 1 else "",
+		)
+
+GafferUI.EditScopeUI.ProcessorWidget.registerProcessorWidget( "RenderPasses", __RenderPassesWidget )
+
+class __RenderPassOptionEditsWidget( GafferUI.EditScopeUI.SimpleProcessorWidget ) :
+
+	@staticmethod
+	def _summary( processor, linkCreator ) :
+
+		enabledOptions = set()
+		enabledPasses = set()
+		disabledPasses = set()
+		for row in processor["edits"].children()[1:] :
+			renderPass = row["name"].getValue()
+			if not renderPass :
+				continue
+			if not row["enabled"].getValue() :
+				disabledPasses.add( renderPass )
+				continue
+
+			passEnabledOptions = {
+				cell["value"]["name"].getValue()
+				for cell in row["cells"]
+				if cell["value"]["enabled"].getValue()
+			}
+
+			if passEnabledOptions :
+				enabledPasses.add( renderPass )
+				enabledOptions = enabledOptions | passEnabledOptions
+
+		summaries = []
+		if enabledOptions :
+			summaries.append(
+				"edits to {} option{} in {} render pass{}".format(
+					len( enabledOptions ), "s" if len( enabledOptions ) > 1 else "",
+					len( enabledPasses ), "es" if len( enabledPasses ) > 1 else "",
+				)
+			)
+
+		if disabledPasses :
+			summaries.append(
+				"disabled edits for {} render pass{}".format(
+					len( disabledPasses ), "es" if len( disabledPasses ) > 1 else ""
+				)
+			)
+
+		if not summaries :
+			return "None"
+
+		summaries[0] = summaries[0][0].upper() + summaries[0][1:]
+		return " and ".join( summaries )
+
+
+GafferUI.EditScopeUI.ProcessorWidget.registerProcessorWidget( "RenderPassOptionEdits", __RenderPassOptionEditsWidget )
