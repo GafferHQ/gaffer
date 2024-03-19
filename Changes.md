@@ -5,6 +5,9 @@ Fixes
 -----
 
 - Expression : `setExpression()` now respects configs that provide backwards compatibility for old plug names.
+- Shuffle : Fixed default name for plugs constructed via the legacy `ChannelPlug( out, in )` constructor [^1].
+
+[^1]: To be omitted from final release notes for 1.4.0.0.
 
 1.4.0.0b4 (relative to 1.4.0.0b3)
 =========
