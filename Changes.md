@@ -1,6 +1,11 @@
 1.4.x.x (relative to 1.4.0.0b6)
 =======
 
+Features
+--------
+
+- Cycles : Added support for CUDA and Optix devices on Windows [^1].
+
 Improvements
 ------------
 
