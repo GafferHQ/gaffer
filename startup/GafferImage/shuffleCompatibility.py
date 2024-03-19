@@ -46,6 +46,7 @@ class __ChannelPlug( Gaffer.ShufflePlug ) :
 			and isinstance( args[0], str ) and isinstance( args[1], str )
 		) :
 			Gaffer.ShufflePlug.__init__( self, args[1], args[0] )
+			self.setName( "channel" )
 		else :
 			Gaffer.ShufflePlug.__init__( self, *args, **kw )
 
