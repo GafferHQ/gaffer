@@ -21,6 +21,7 @@ Fixes
 - ImageGadget :
   - Fixed loading of 2 channel images [^1].
   - Fixed error message to include filename [^1].
+- Expression : `setExpression()` now respects configs that provide backwards compatibility for old plug names.
 
 API
 ---
