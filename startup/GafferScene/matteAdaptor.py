@@ -36,6 +36,8 @@
 
 import inspect
 
+import IECore
+
 import Gaffer
 import GafferScene
 
@@ -94,11 +96,23 @@ def __matteAdaptor() :
 	processor["__matteExclusionsFilter"] = GafferScene.SetFilter()
 	processor["__matteExclusionsFilter"]["setExpression"].setInput( processor["__optionQuery"]["out"][1]["value"] )
 
+	processor["__exclusionDescendants"] = GafferScene.PathFilter()
+	processor["__exclusionDescendants"]["paths"].setValue( IECore.StringVectorData( [ "..." ] ) )
+	processor["__exclusionDescendants"]["roots"].setInput( processor["__matteExclusionsFilter"]["out"] )
+
+	processor["__deleteMatte"] = GafferScene.DeleteAttributes()
+	processor["__deleteMatte"]["in"].setInput( processor["__matteInclusions"]["out"] )
+	processor["__deleteMatte"]["names"].setValue( "ai:matte cycles:use_holdout dl:matte" )
+	processor["__deleteMatte"]["filter"].setInput( processor["__exclusionDescendants"]["out"] )
+
+	# __deleteMatte is only required when `render:cameraExclusions` exists
+	processor["__deleteMatte"]["enabled"].setInput( processor["__optionQuery"]["out"][1]["exists"] )
+
 	processor["__matteExclusions"] = GafferScene.AttributeTweaks()
-	processor["__matteExclusions"]["in"].setInput( processor["__matteInclusions"]["out"] )
-	processor["__matteExclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "ai:matte", Gaffer.BoolPlug(), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
-	processor["__matteExclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "cycles:use_holdout", Gaffer.BoolPlug(), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
-	processor["__matteExclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "dl:matte", Gaffer.BoolPlug(), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
+	processor["__matteExclusions"]["in"].setInput( processor["__deleteMatte"]["out"] )
+	processor["__matteExclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "ai:matte", Gaffer.BoolPlug(), mode = Gaffer.TweakPlug.Mode.Create ) )
+	processor["__matteExclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "cycles:use_holdout", Gaffer.BoolPlug(), mode = Gaffer.TweakPlug.Mode.Create ) )
+	processor["__matteExclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "dl:matte", Gaffer.BoolPlug(), mode = Gaffer.TweakPlug.Mode.Create ) )
 
 	processor["__matteExclusions"]["filter"].setInput( processor["__matteExclusionsFilter"]["out"] )
 	# __matteExclusions is only required when `render:matteExclusions` exists

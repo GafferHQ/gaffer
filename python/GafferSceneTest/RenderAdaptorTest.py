@@ -536,9 +536,10 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		assertCameraVisibleObjects( { "/groupA/cube" }, cameraInclusions = "A", cameraExclusions = "SPHERE" )
 		assertCameraVisibleObjects( { "/groupA/cube" }, cameraInclusions = "/groupA", cameraExclusions = "SPHERE" )
 
-		# Camera inclusions overrides camera exclusions at lower locations
-		assertCameraVisibleObjects( { "/groupA/sphere" }, cameraInclusions = "/groupA/sphere", cameraExclusions = "/groupA" )
-		assertCameraVisibleObjects( { "/groupA/sphere" }, cameraInclusions = "SPHERE", cameraExclusions = "/groupA" )
+		# Camera exclusions override camera inclusions at lower locations
+		assertCameraVisibleObjects( {}, cameraInclusions = "/groupA/sphere", cameraExclusions = "/groupA" )
+		assertCameraVisibleObjects( {}, cameraInclusions = "/groupA/sphere", cameraExclusions = "/" )
+		assertCameraVisibleObjects( {}, cameraInclusions = "SPHERE", cameraExclusions = "/groupA" )
 
 		# Excluding nothing should leave everything visible
 		assertCameraVisibleObjects( { "/groupA/cube", "/groupA/sphere" }, cameraExclusions = "" )
@@ -549,6 +550,11 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		assertCameraVisibleObjects( { "/groupA/cube", "/groupA/sphere" }, cameraInclusions = "CUBE", inclusionOverrides = "/groupA/sphere" )
 		assertCameraVisibleObjects( { "/groupA/cube", "/groupA/sphere" }, cameraInclusions = "", inclusionOverrides = "A" )
 		assertCameraVisibleObjects( {}, cameraInclusions = "/", exclusionOverrides = "A" )
+
+		# Camera exclusions override inclusion scene attributes
+		assertCameraVisibleObjects( {}, cameraExclusions = "/groupA", inclusionOverrides = "A" )
+		assertCameraVisibleObjects( { "/groupA/cube" }, cameraExclusions = "/groupA/sphere", inclusionOverrides = "A" )
+		assertCameraVisibleObjects( { "/groupA/sphere" }, cameraExclusions = "CUBE", inclusionOverrides = "A" )
 
 	def testMatteAdaptor( self ) :
 
@@ -660,16 +666,24 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		assertMatte( { "/groupA/cube" }, matteInclusions = "/groupA", matteExclusions = "SPHERE" )
 		assertMatte( { "/groupA/sphere" }, matteInclusions = "A", matteExclusions = "/groupA/cube" )
 
-		# Matte inclusions override matte exclusions at lower locations
-		assertMatte( { "/groupA/sphere" }, matteInclusions = "/groupA/sphere", matteExclusions = "/groupA" )
+		# Matte exclusions override matte inclusions at lower locations
+		assertMatte( {}, matteInclusions = "/groupA/sphere", matteExclusions = "/groupA" )
+		assertMatte( {}, matteInclusions = "/groupA/sphere", matteExclusions = "/" )
 
 		# Test interaction with scene attributes
 		assertMatte( { "/groupA/sphere" }, inclusionOverrides = "/groupA/sphere" )
 		assertMatte( { "/groupA/cube", "/groupA/sphere" }, matteInclusions = "/groupA/cube", inclusionOverrides = "/groupA/sphere" )
-		assertMatte( { "/groupA/sphere" }, matteExclusions = "/groupA/sphere", inclusionOverrides = "/groupA/sphere" )
-		assertMatte( { "/groupA/sphere" }, matteExclusions = "/groupA", inclusionOverrides = "/groupA/sphere" )
-		assertMatte( { "/groupA/cube", "/groupA/sphere" }, matteInclusions = "/groupA", matteExclusions = "/groupA/sphere", inclusionOverrides = "/groupA/sphere" )
 
+		# Matte exclusions override scene attributes
+		assertMatte( {}, matteExclusions = "/groupA/sphere", inclusionOverrides = "/groupA/sphere" )
+		assertMatte( {}, matteExclusions = "/groupA", inclusionOverrides = "/groupA/sphere" )
+
+		# And override both inclusions and attributes
+		assertMatte( { "/groupA/cube" }, matteInclusions = "/groupA", matteExclusions = "/groupA/sphere", inclusionOverrides = "/groupA/sphere" )
+
+		# A `matte` 0 attribute authored at or below the included location will override
 		assertMatte( {}, matteInclusions = "/groupA/sphere", exclusionOverrides = "/groupA/sphere" )
-		assertMatte( { "/groupA/sphere" }, matteInclusions = "/groupA/sphere", exclusionOverrides = "/groupA" )
 		assertMatte( { "/groupA/sphere" }, matteInclusions = "/groupA", exclusionOverrides = "/groupA/cube" )
+
+		# But a `matte` 0 attribute authored at an ancestor of our inclusion will not
+		assertMatte( { "/groupA/sphere" }, matteInclusions = "/groupA/sphere", exclusionOverrides = "/groupA" )

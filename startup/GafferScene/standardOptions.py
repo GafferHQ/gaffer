@@ -176,8 +176,8 @@ Gaffer.Metadata.registerValue(
 	"description",
 	"""
 	A set expression that excludes the matched objects and their descendants from camera
-	ray visibility. Camera visibility attributes authored in the scene take precedence
-	over this option.
+	ray visibility. Exclusions affect `cameraInclusions` and cause the matching objects and
+	their descendants to become invisible to camera rays.
 	"""
 )
 
@@ -200,7 +200,7 @@ Gaffer.Metadata.registerValue(
 	"description",
 	"""
 	A set expression that excludes the matched objects and their descendants from being
-	treated as matte (holdout) objects. Matte attributes authored in the scene take
-	precedence over this option.
+	treated as matte (holdout) objects. Exclusions affect `matteInclusions` and cause the
+	matching objects and their descendants to not be treated as matte objects.
 	"""
 )
