@@ -160,12 +160,8 @@ if "%GAFFER_DEBUG%" NEQ "" (
 	"%GAFFER_ROOT%"\bin\python.exe "%GAFFER_ROOT%"/bin/__gaffer.py %*
 )
 
-if %ERRORLEVEL% NEQ 0 (
-	exit /B %ERRORLEVEL%
-)
-
 ENDLOCAL
-exit /B 0
+exit /B %ERRORLEVEL%
 
 :prependToPath
 	set NewValue=%~1
