@@ -1,7 +1,16 @@
 1.4.x.x (relative to 1.4.0.0b4)
 =======
 
+API
+---
 
+- TypedObjectPlug : Added Python bindings for the default values of the `defaultValue` constructor argument.
+- Box2fVectorDataPlug : Added new plug type for storing arrays of Box2f.
+
+Fixes
+-----
+
+- PlugAlgo : Updated `canSetValueFromData()`, `setValueFromData()` and `getValueAsData()` with support for missing types.
 
 1.4.0.0b4 (relative to 1.4.0.0b3)
 =========

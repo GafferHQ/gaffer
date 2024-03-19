@@ -152,6 +152,7 @@ enum TypeId
 	Color4fVectorDataPlugTypeId = 110106,
 	OptionalValuePlugTypeId = 110107,
 	CollectTypeId = 110108,
+	Box2fVectorDataPlugTypeId = 110109,
 
 	LastTypeId = 110159,
 

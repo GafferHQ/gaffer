@@ -410,6 +410,10 @@ ValuePlugPtr createPlugFromData( const std::string &name, Plug::Direction direct
 		{
 			return typedObjectValuePlug( name, direction, flags, static_cast<const M33fVectorData *>( value ) );
 		}
+		case Box2fVectorDataTypeId :
+		{
+			return typedObjectValuePlug( name, direction, flags, static_cast<const Box2fVectorData *>( value ) );
+		}
 		case PathMatcherDataTypeId :
 		{
 			PathMatcherDataPlugPtr valuePlug = new PathMatcherDataPlug(
@@ -505,6 +509,8 @@ IECore::DataPtr getValueAsData( const ValuePlug *plug )
 			return static_cast<const M44fVectorDataPlug *>( plug )->getValue()->copy();
 		case M33fVectorDataPlugTypeId :
 			return static_cast<const M33fVectorDataPlug *>( plug )->getValue()->copy();
+		case Box2fVectorDataPlugTypeId :
+			return static_cast<const Box2fVectorDataPlug *>( plug )->getValue()->copy();
 		case SplineffPlugTypeId :
 			return new SplineffData( static_cast<const SplineffPlug *>( plug )->getValue().spline() );
 		case SplinefColor3fPlugTypeId :
@@ -515,6 +521,14 @@ IECore::DataPtr getValueAsData( const ValuePlug *plug )
 			return new M44fData( static_cast<const M44fPlug *>( plug )->getValue() );
 		case M33fPlugTypeId :
 			return new M33fData( static_cast<const M33fPlug *>( plug )->getValue() );
+		case AtomicBox2fPlugTypeId :
+			return new Box2fData( static_cast<const AtomicBox2fPlug *>( plug )->getValue() );
+		case AtomicBox3fPlugTypeId :
+			return new Box3fData( static_cast<const AtomicBox3fPlug *>( plug )->getValue() );
+		case AtomicBox2iPlugTypeId :
+			return new Box2iData( static_cast<const AtomicBox2iPlug *>( plug )->getValue() );
+		case AtomicCompoundDataPlugTypeId :
+			return static_cast<const AtomicCompoundDataPlug *>( plug )->getValue()->copy();
 		case NameValuePlugTypeId :
 		case OptionalValuePlugTypeId : {
 			CompoundDataPtr result = new CompoundData;
@@ -595,6 +609,18 @@ bool setNumericPlugValue( PlugType *plug, const Data *value )
 		default :
 			return false;
 	}
+}
+
+template<typename PlugType>
+bool setTypedPlugValue( PlugType *plug, const Data *value )
+{
+	using DataType = IECore::TypedData<typename PlugType::ValueType>;
+	if( auto typedValue = runTimeCast<const DataType>( value ) )
+	{
+		plug->setValue( typedValue->readable() );
+		return true;
+	}
+	return false;
 }
 
 template<typename PlugType>
@@ -754,6 +780,18 @@ bool canSetNumericPlugValue( const Data *value )
 }
 
 template<typename PlugType>
+bool canSetTypedPlugValue( const Data *value )
+{
+	if( !value )
+	{
+		return true;  // Data type not specified, so it could be a match
+	}
+
+	using DataType = IECore::TypedData<typename PlugType::ValueType>;
+	return runTimeCast<const DataType>( value );
+}
+
+template<typename PlugType>
 bool canSetTypedDataPlugValue( const Data *value )
 {
 	if( !value )
@@ -869,11 +907,31 @@ bool canSetValueFromData( const ValuePlug *plug, const IECore::Data *value )
 			return canSetTypedDataPlugValue<V2fVectorDataPlug>( value );
 		case Gaffer::V2iVectorDataPlugTypeId:
 			return canSetTypedDataPlugValue<V2iVectorDataPlug>( value );
+		case Gaffer::M33fVectorDataPlugTypeId:
+			return canSetTypedDataPlugValue<M33fVectorDataPlug>( value );
+		case Gaffer::M44fVectorDataPlugTypeId:
+			return canSetTypedDataPlugValue<M44fVectorDataPlug>( value );
+		case Gaffer::Box2fVectorDataPlugTypeId:
+			return canSetTypedDataPlugValue<Box2fVectorDataPlug>( value );
+		case Gaffer::AtomicCompoundDataPlugTypeId:
+			return canSetTypedDataPlugValue<AtomicCompoundDataPlug>( value );
+		case Gaffer::PathMatcherDataPlugTypeId:
+			return canSetTypedDataPlugValue<PathMatcherDataPlug>( value );
 		case Gaffer::Box3fPlugTypeId:
 		case Gaffer::Box3iPlugTypeId:
 		case Gaffer::Box2fPlugTypeId:
 		case Gaffer::Box2iPlugTypeId:
 			return canSetBoxPlugValue( value );
+		case Gaffer::M33fPlugTypeId:
+			return canSetTypedPlugValue<M33fPlug>( value );
+		case Gaffer::M44fPlugTypeId:
+			return canSetTypedPlugValue<M44fPlug>( value );
+		case Gaffer::AtomicBox2fPlugTypeId:
+			return canSetTypedPlugValue<AtomicBox2fPlug>( value );
+		case Gaffer::AtomicBox3fPlugTypeId:
+			return canSetTypedPlugValue<AtomicBox3fPlug>( value );
+		case Gaffer::AtomicBox2iPlugTypeId:
+			return canSetTypedPlugValue<AtomicBox2iPlug>( value );
 		default:
 			return false;
 	}
@@ -938,6 +996,16 @@ bool setValueFromData( ValuePlug *plug, const IECore::Data *value )
 			return setTypedDataPlugValue( static_cast<Color3fVectorDataPlug *>( plug ), value );
 		case Gaffer::Color4fVectorDataPlugTypeId:
 			return setTypedDataPlugValue( static_cast<Color4fVectorDataPlug *>( plug ), value );
+		case Gaffer::M33fVectorDataPlugTypeId:
+			return setTypedDataPlugValue( static_cast<M33fVectorDataPlug *>( plug ), value );
+		case Gaffer::M44fVectorDataPlugTypeId:
+			return setTypedDataPlugValue( static_cast<M44fVectorDataPlug *>( plug ), value );
+		case Gaffer::Box2fVectorDataPlugTypeId:
+			return setTypedDataPlugValue( static_cast<Box2fVectorDataPlug *>( plug ), value );
+		case Gaffer::AtomicCompoundDataPlugTypeId:
+			return setTypedDataPlugValue( static_cast<AtomicCompoundDataPlug *>( plug ), value );
+		case Gaffer::PathMatcherDataPlugTypeId:
+			return setTypedDataPlugValue( static_cast<PathMatcherDataPlug *>( plug ), value );
 		case Gaffer::Box3fPlugTypeId:
 			return setBoxPlugValue( static_cast<Box3fPlug *>( plug ), value );
 		case Gaffer::Box3iPlugTypeId:
@@ -946,6 +1014,16 @@ bool setValueFromData( ValuePlug *plug, const IECore::Data *value )
 			return setBoxPlugValue( static_cast<Box2fPlug *>( plug ), value );
 		case Gaffer::Box2iPlugTypeId:
 			return setBoxPlugValue( static_cast<Box2iPlug *>( plug ), value );
+		case Gaffer::M33fPlugTypeId:
+			return setTypedPlugValue( static_cast<M33fPlug *>( plug ), value );
+		case Gaffer::M44fPlugTypeId:
+			return setTypedPlugValue( static_cast<M44fPlug *>( plug ), value );
+		case Gaffer::AtomicBox2fPlugTypeId:
+			return setTypedPlugValue( static_cast<AtomicBox2fPlug *>( plug ), value );
+		case Gaffer::AtomicBox3fPlugTypeId:
+			return setTypedPlugValue( static_cast<AtomicBox3fPlug *>( plug ), value );
+		case Gaffer::AtomicBox2iPlugTypeId:
+			return setTypedPlugValue( static_cast<AtomicBox2iPlug *>( plug ), value );
 		default:
 			return false;
 	}
