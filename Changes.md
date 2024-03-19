@@ -1,7 +1,10 @@
 1.4.x.x (relative to 1.4.0.0b4)
 =======
 
+Fixes
+-----
 
+- Expression : `setExpression()` now respects configs that provide backwards compatibility for old plug names.
 
 1.4.0.0b4 (relative to 1.4.0.0b3)
 =========
