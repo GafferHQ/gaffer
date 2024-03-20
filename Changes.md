@@ -1,7 +1,15 @@
 1.3.x.x (relative to 1.3.14.0)
 =======
 
+Improvements
+------------
 
+- Render, InteractiveRender : Added `resolvedRenderer` plug, which outputs the name of the renderer that will be used, taking into account the influence of the `render:defaultRenderer` option.
+
+Fixes
+-----
+
+- InteractiveRender : Fixed context used to evaluate scene globals when renderer is set to "Default".
 
 1.3.14.0 (relative to 1.3.13.1)
 ========
