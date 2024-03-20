@@ -1394,7 +1394,7 @@ libraries = {
 
 	"GafferUSD" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "GafferImage", "IECoreScene$CORTEX_LIB_SUFFIX" ] + [ "${USD_LIB_PREFIX}" + x for x in ( [ "sdf", "arch", "tf", "vt", "ndr", "sdr" ] if not env["USD_MONOLITHIC"] else [ "usd_ms" ] ) ],
+			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "GafferImage", "IECoreScene$CORTEX_LIB_SUFFIX" ] + [ "${USD_LIB_PREFIX}" + x for x in ( [ "sdf", "arch", "tf", "vt", "ndr", "sdr", "usd", "usdLux" ] if not env["USD_MONOLITHIC"] else [ "usd_ms" ] ) ],
 			# USD includes "at least one deprecated or antiquated header", so we
 			# have to drop our usual strict warning levels.
 			"CXXFLAGS" : [ "-Wno-deprecated" if env["PLATFORM"] != "win32" else "/wd4996" ],

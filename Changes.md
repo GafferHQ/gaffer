@@ -34,6 +34,7 @@ API
 - BoxPlug : Added Python bindings for `ValueType`, `PointType` and `ChildType` type aliases.
 - RenderPassEditor : Added `deregisterColumn()` method.
 - DocumentationAlgo : Added table and strikethrough support to `markdownToHTML()`.
+- USDShader : Added support for loading from the UsdSchemaRegistry as well as from the SdrRegistry. This is now used when loading UsdLuxLights.
 
 Build
 -----
