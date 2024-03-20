@@ -445,6 +445,18 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"resolvedRenderer" : [
+
+			"description",
+			"""
+			The renderer that will be used, accounting for the value of the
+			`render:defaultRenderer` option if `renderer` is set to "Default".
+			""",
+
+			"layout:section", "Advanced",
+
+		],
+
 		"messages" : [
 
 			"description",

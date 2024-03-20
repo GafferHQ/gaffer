@@ -6,6 +6,7 @@ Improvements
 
 - LightPosition Tool : The tool is now only visible for members of the `__lights` set, instead of all objects.
 - Catalogue : Added `imageNames` output plug, containing the names of all images in the Catalogue. Among other things this can be used to drive a Wedge or ContactSheet node and a CatalogueSelect.
+- Render, InteractiveRender : Added `resolvedRenderer` plug, which outputs the name of the renderer that will be used, taking into account the influence of the `render:defaultRenderer` option [^1].
 
 API
 ---
@@ -21,6 +22,7 @@ Fixes
 - Catalogue :
   - Fixed undo for image reordering via drag & drop.
   - Fixed bugs caused by reordering images using `GraphComponent::reorderChildren()`.
+- InteractiveRender : Fixed context used to evaluate scene globals when renderer is set to "Default" [^1].
 
 API
 ---
@@ -31,6 +33,8 @@ Breaking Changes
 ----------------
 
 - StandardLightVisualiser : Added `attributeName` argument to `surfaceTexture()` virtual method.
+
+[^1]: To be omitted from final release notes for 1.4.0.0.
 
 1.4.0.0b4 (relative to 1.4.0.0b3)
 =========
@@ -350,7 +354,15 @@ Build
 1.3.x.x (relative to 1.3.14.0)
 =======
 
+Improvements
+------------
 
+- Render, InteractiveRender : Added `resolvedRenderer` plug, which outputs the name of the renderer that will be used, taking into account the influence of the `render:defaultRenderer` option.
+
+Fixes
+-----
+
+- InteractiveRender : Fixed context used to evaluate scene globals when renderer is set to "Default".
 
 1.3.14.0 (relative to 1.3.13.1)
 ========
