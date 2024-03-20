@@ -1,6 +1,11 @@
 1.4.x.x (relative to 1.4.0.0b4)
 =======
 
+Improvements
+------------
+
+- LightPosition Tool : The tool is now only visible for members of the `__lights` set, instead of all objects.
+
 API
 ---
 
@@ -11,6 +16,7 @@ Fixes
 -----
 
 - PlugAlgo : Updated `canSetValueFromData()`, `setValueFromData()` and `getValueAsData()` with support for missing types.
+- LightPosition Tool : Fixed lingering shadow pivot point after placing a shadow pivot, switching to highlight mode and switching back to shadow mode [^1].
 
 1.4.0.0b4 (relative to 1.4.0.0b3)
 =========
