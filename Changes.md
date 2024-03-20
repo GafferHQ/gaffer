@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - LightPosition Tool : The tool is now only visible for members of the `__lights` set, instead of all objects.
+- Catalogue : Added `imageNames` output plug, containing the names of all images in the Catalogue. Among other things this can be used to drive a Wedge or ContactSheet node and a CatalogueSelect.
 
 API
 ---
@@ -17,6 +18,14 @@ Fixes
 
 - PlugAlgo : Updated `canSetValueFromData()`, `setValueFromData()` and `getValueAsData()` with support for missing types.
 - LightPosition Tool : Fixed lingering shadow pivot point after placing a shadow pivot, switching to highlight mode and switching back to shadow mode [^1].
+- Catalogue :
+  - Fixed undo for image reordering via drag & drop.
+  - Fixed bugs caused by reordering images using `GraphComponent::reorderChildren()`.
+
+API
+---
+
+- Catalogue : Deprecated `image:index` metadata.
 
 Breaking Changes
 ----------------
