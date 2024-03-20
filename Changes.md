@@ -4,21 +4,15 @@
 Improvements
 ------------
 
-- LightPosition Tool : The tool is now only visible for members of the `__lights` set, instead of all objects.
+- LightPositionTool : The tool is now only visible for members of the `__lights` set, instead of all objects.
 - Catalogue : Added `imageNames` output plug, containing the names of all images in the Catalogue. Among other things this can be used to drive a Wedge or ContactSheet node and a CatalogueSelect.
 - Render, InteractiveRender : Added `resolvedRenderer` plug, which outputs the name of the renderer that will be used, taking into account the influence of the `render:defaultRenderer` option [^1].
-
-API
----
-
-- TypedObjectPlug : Added Python bindings for the default values of the `defaultValue` constructor argument.
-- Box2fVectorDataPlug : Added new plug type for storing arrays of Box2f.
 
 Fixes
 -----
 
 - PlugAlgo : Updated `canSetValueFromData()`, `setValueFromData()` and `getValueAsData()` with support for missing types.
-- LightPosition Tool : Fixed lingering shadow pivot point after placing a shadow pivot, switching to highlight mode and switching back to shadow mode [^1].
+- LightPositionTool : Fixed lingering shadow pivot point after placing a shadow pivot, switching to highlight mode and switching back to shadow mode [^1].
 - Catalogue :
   - Fixed undo for image reordering via drag & drop.
   - Fixed bugs caused by reordering images using `GraphComponent::reorderChildren()`.
@@ -28,6 +22,8 @@ Fixes
 API
 ---
 
+- TypedObjectPlug : Added Python bindings for the default values of the `defaultValue` constructor argument.
+- Box2fVectorDataPlug : Added new plug type for storing arrays of Box2f.
 - Catalogue : Deprecated `image:index` metadata.
 
 Breaking Changes
