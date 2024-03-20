@@ -18,6 +18,11 @@ Fixes
 - PlugAlgo : Updated `canSetValueFromData()`, `setValueFromData()` and `getValueAsData()` with support for missing types.
 - LightPosition Tool : Fixed lingering shadow pivot point after placing a shadow pivot, switching to highlight mode and switching back to shadow mode [^1].
 
+Breaking Changes
+----------------
+
+- StandardLightVisualiser : Added `attributeName` argument to `surfaceTexture()` virtual method.
+
 1.4.0.0b4 (relative to 1.4.0.0b3)
 =========
 
