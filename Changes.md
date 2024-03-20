@@ -23,6 +23,7 @@ Fixes
   - Fixed undo for image reordering via drag & drop.
   - Fixed bugs caused by reordering images using `GraphComponent::reorderChildren()`.
 - InteractiveRender : Fixed context used to evaluate scene globals when renderer is set to "Default" [^1].
+- Instancer : Fixed handling of unindexed primvars in RootPerVertex mode [^1].
 
 API
 ---
@@ -363,6 +364,7 @@ Fixes
 -----
 
 - InteractiveRender : Fixed context used to evaluate scene globals when renderer is set to "Default".
+- Instancer : Fixed handling of unindexed primvars in RootPerVertex mode.
 
 1.3.14.0 (relative to 1.3.13.1)
 ========
