@@ -816,6 +816,7 @@ class Instancer::EngineData : public Data
 		void initPrototypes( PrototypeMode mode, const std::string &prototypeIndex, const std::string &rootsVariable, const StringVectorData *rootsList, const ScenePlug *prototypes )
 		{
 			const std::vector<std::string> *rootStrings = nullptr;
+			std::vector<std::string> rootStringsAlloc;
 
 			switch( mode )
 			{
@@ -879,6 +880,28 @@ class Instancer::EngineData : public Data
 
 					m_prototypeIndices = view->indices();
 					rootStrings = &view->data();
+
+					if( !m_prototypeIndices )
+					{
+						std::unordered_map<std::string, int> duplicateRootMap;
+
+						m_prototypeIndicesAlloc.reserve( rootStrings->size() );
+						for( const std::string &i : *rootStrings )
+						{
+							auto insertResult = duplicateRootMap.try_emplace( i, rootStringsAlloc.size() );
+							if( insertResult.second )
+							{
+								m_prototypeIndicesAlloc.push_back( rootStringsAlloc.size() );
+								rootStringsAlloc.push_back( i );
+							}
+							else
+							{
+								m_prototypeIndicesAlloc.push_back( insertResult.first->second );
+							}
+						}
+						rootStrings = &rootStringsAlloc;
+						m_prototypeIndices = &m_prototypeIndicesAlloc;
+					}
 					break;
 				}
 			}
@@ -933,6 +956,7 @@ class Instancer::EngineData : public Data
 		Private::ChildNamesMapPtr m_names;
 		std::vector<ConstInternedStringVectorDataPtr> m_roots;
 		std::vector<int> m_prototypeIndexRemap;
+		std::vector<int> m_prototypeIndicesAlloc;
 		const std::vector<int> *m_prototypeIndices;
 		const std::vector<int> *m_ids;
 		const std::vector<Imath::V3f> *m_positions;

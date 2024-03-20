@@ -1325,6 +1325,11 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		self.assertRootsMatchPrototypeSceneChildren( script )
 		self.assertEncapsulatedRendersSame( script["instancer"] )
 
+		# We should be able to get the same result with an un-indexed primvar
+		updateRoots( IECore.StringVectorData( [ "/foo", "/bar", "/bar", "/foo" ] ), None )
+		self.assertRootsMatchPrototypeSceneChildren( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
+
 		updateRoots( IECore.StringVectorData( [ "/foo/bar", "/bar" ] ), IECore.IntVectorData( [ 0, 1, 1, 0 ] ) )
 		self.assertConflictingRootNames( script )
 		self.assertEncapsulatedRendersSame( script["instancer"] )
@@ -2200,18 +2205,10 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		self.assertEncapsulatedRendersSame( instancer )
 
 		instancer["prototypeRoots"].setValue( "unindexedRoots" )
-		"""
-		# How things should work
 		self.assertEqual( uniqueCounts(), { "" : 3 } )
 		self.assertEqual( childNameStrings( "points/instances/cube" ), [ str(i) for i in range( 0, 34 ) ] )
 		self.assertEqual( childNameStrings( "points/instances/plane" ), [ str(i) for i in range( 34, 68 ) ] )
 		self.assertEqual( childNameStrings( "points/instances/sphere" ), [ str(i) for i in range( 68, 100 ) ] )
-		"""
-		# How things currently work
-		self.assertEqual( uniqueCounts(), { "" : 1 } )
-		self.assertEqual( childNameStrings( "points/instances/cube" ), [ str(i) for i in range( 100 ) ] )
-		self.assertEqual( childNameStrings( "points/instances/plane" ), [] )
-		self.assertEqual( childNameStrings( "points/instances/sphere" ), [] )
 
 		self.assertEncapsulatedRendersSame( instancer )
 

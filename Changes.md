@@ -10,6 +10,7 @@ Fixes
 -----
 
 - InteractiveRender : Fixed context used to evaluate scene globals when renderer is set to "Default".
+- Instancer : Fixed handling of unindexed primvars in RootPerVertex mode.
 
 1.3.14.0 (relative to 1.3.13.1)
 ========
