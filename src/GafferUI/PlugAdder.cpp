@@ -203,14 +203,14 @@ void PlugAdder::updateDragEndPoint( const Imath::V3f position, const Imath::V3f 
 
 PlugAdder::PlugMenuSignal &PlugAdder::plugMenuSignal()
 {
-	static PlugMenuSignal s;
-	return s;
+	static PlugMenuSignal *s = new PlugMenuSignal;
+	return *s;
 }
 
 PlugAdder::MenuSignal &PlugAdder::menuSignal()
 {
-	static MenuSignal s;
-	return s;
+	static MenuSignal *s = new MenuSignal;
+	return *s;
 }
 
 void PlugAdder::renderLayer( Layer layer, const Style *style, RenderReason reason ) const
