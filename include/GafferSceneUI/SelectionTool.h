@@ -83,6 +83,8 @@ class GAFFERSCENEUI_API SelectionTool : public GafferUI::Tool
 
 		static ToolDescription<SelectionTool, SceneView> g_toolDescription;
 
+		void plugSet( Gaffer::Plug *plug );
+
 		SceneGadget *sceneGadget();
 
 		class DragOverlay;

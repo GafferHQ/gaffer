@@ -232,6 +232,8 @@ SelectionTool::SelectionTool( SceneView *view, const std::string &name )
 	sg->dragMoveSignal().connect( boost::bind( &SelectionTool::dragMove, this, ::_2 ) );
 	sg->dragEndSignal().connect( boost::bind( &SelectionTool::dragEnd, this, ::_2 ) );
 
+	plugSetSignal().connect( boost::bind( &SelectionTool::plugSet, this, ::_1 ) );
+
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new StringPlug( "selectMode", Plug::Direction::In, g_standardSelectModeName ) );
@@ -281,6 +283,18 @@ std::vector<std::string> SelectionTool::registeredSelectModes()
 void SelectionTool::deregisterSelectMode( const std::string &mode )
 {
 	selectModes().erase( mode );
+}
+
+void SelectionTool::plugSet( Plug *plug )
+{
+	if( plug == selectModePlug() )
+	{
+		const std::string value = selectModePlug()->getValue();
+		for( auto &tool : SelectionTool::Range( *parent() ) )
+		{
+			tool->selectModePlug()->setValue( value );
+		}
+	}
 }
 
 SelectionTool::DragOverlay *SelectionTool::dragOverlay()

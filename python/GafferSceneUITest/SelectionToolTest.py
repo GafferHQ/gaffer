@@ -36,6 +36,8 @@
 
 import unittest
 
+import Gaffer
+import GafferScene
 import GafferUITest
 import GafferSceneUI
 
@@ -54,6 +56,29 @@ class SelectionToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( modifiers ), 3 )
 
 		self.assertEqual( modifiers, [ "/Standard", "testModifier", "testModifier2" ] )
+
+	def testSyncSelectMode( self ) :
+
+		GafferSceneUI.SelectionTool.registerSelectMode( "testModifier", self.modifierFunction )
+
+		script = Gaffer.ScriptNode()
+		script["cube"] = GafferScene.Cube()
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["cube"]["out"] )
+
+		tool1 = GafferSceneUI.TranslateTool( view )
+		tool2 = GafferSceneUI.RotateTool( view )
+
+		self.assertEqual( len( [ i for i in view["tools"].children() if isinstance( i, GafferSceneUI.SelectionTool ) ] ), 2 )
+
+		tool1["selectMode"].setValue( "testModifier" )
+		self.assertEqual( tool1["selectMode"].getValue(), "testModifier" )
+		self.assertEqual( tool2["selectMode"].getValue(), "testModifier" )
+
+		tool2["selectMode"].setValue( "/Standard" )
+		self.assertEqual( tool1["selectMode"].getValue(), "/Standard" )
+		self.assertEqual( tool2["selectMode"].getValue(), "/Standard" )
 
 	def tearDown( self ) :
 
