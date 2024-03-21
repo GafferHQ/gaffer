@@ -139,7 +139,8 @@ using TextureCache = IECorePreview::LRUCache<TextureCacheKey, ConstTexturePtr>;
 IECoreGL::ConstTexturePtr textureGetter( const TextureCacheKey &key, size_t &cost, const IECore::Canceller *canceller )
 {
 	const OIIO::ImageSpec config( OIIO::TypeDesc::UCHAR );
-	OIIO::ImageBuf imageBuf( resolvedFileName( key.fileName ), /* subimage = */ 0, /* miplevel = */ 0, /* imagecache = */ nullptr, &config );
+	const std::string fileName = resolvedFileName( key.fileName );
+	OIIO::ImageBuf imageBuf( fileName, /* subimage = */ 0, /* miplevel = */ 0, /* imagecache = */ nullptr, &config );
 	imageBuf = OIIO::ImageBufAlgo::flip( imageBuf );
 	if( imageBuf.has_error() )
 	{
@@ -159,6 +160,9 @@ IECoreGL::ConstTexturePtr textureGetter( const TextureCacheKey &key, size_t &cos
 		case 1 :
 			pixelFormat = GL_RED;
 			break;
+		case 2 :
+			pixelFormat = GL_LUMINANCE_ALPHA;
+			break;
 		case 3 :
 			pixelFormat = GL_RGB;
 			break;
@@ -166,7 +170,7 @@ IECoreGL::ConstTexturePtr textureGetter( const TextureCacheKey &key, size_t &cos
 			pixelFormat = GL_RGBA;
 			break;
 		default :
-			throw IECore::Exception( fmt::format( "Unsupported number of channels ({}) in \"{}\"", imageBuf.nchannels(), imageBuf.name() ) );
+			throw IECore::Exception( fmt::format( "Unsupported number of channels ({}) in \"{}\"", imageBuf.nchannels(), fileName ) );
 	}
 
 	GLuint id;
