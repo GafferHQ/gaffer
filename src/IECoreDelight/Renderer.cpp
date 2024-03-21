@@ -265,8 +265,6 @@ class DelightOutput : public IECore::RefCounted
 			driverParams.add( { "drivername", &typePtr, NSITypeString, 0, 1, 0 } );
 			driverParams.add( { "imagefilename", &namePtr, NSITypeString, 0, 1, 0 } );
 
-			m_driverHandle = DelightHandle( context, "outputDriver:" + name, ownership, "outputdriver", driverParams );
-
 			// Layer
 
 			string variableName;
@@ -327,7 +325,7 @@ class DelightOutput : public IECore::RefCounted
 				layerName = IECore::CamelCase::join( layerTokens.begin(), layerTokens.end(), IECore::CamelCase::AllExceptFirst);
 			}
 
-			ParameterList layerParams;
+			ParameterList layerParams( output->parameters() );
 
 			layerParams.add( "variablename", variableName );
 			layerParams.add( "variablesource", variableSource );
@@ -335,10 +333,37 @@ class DelightOutput : public IECore::RefCounted
 			layerParams.add( "layername", layerName );
 			layerParams.add( { "withalpha", &withAlpha, NSITypeInteger, 0, 1, 0 } );
 
-			const string scalarFormat = this->scalarFormat( output );
-			const string colorProfile = scalarFormat == "float" ? "linear" : "sRGB";
-			layerParams.add( "scalarformat", scalarFormat );
-			layerParams.add( "colorprofile", colorProfile );
+			const double filterSize = parameter<float>( output->parameters(), "filtersize", 3.0 );
+			if( filterSize != 3.0 )
+			{
+				layerParams.add( { "filterwidth", &filterSize, NSITypeDouble, 0, 1, 0 } );
+			}
+
+			const string scalarFormatQuant = this->scalarFormat( output );
+			const string colorProfileQuant = scalarFormatQuant == "float" ? "linear" : "sRGB";
+			const string scalarFormat = parameter<string>( output->parameters(), "scalarformat", "" );
+			if( scalarFormat == "" )
+			{
+				layerParams.add( "scalarformat", scalarFormatQuant );
+				layerParams.add( "colorprofile", colorProfileQuant );
+			}
+
+			const string lightGroup = parameter<string>( output->parameters(), "lightgroup", "" );
+			vector<string> lightGroupTokens;
+			if( lightGroup != "" )
+			{
+				IECore::StringAlgo::tokenize( lightGroup, ' ', lightGroupTokens );
+			}
+
+			const string customDriverName = parameter<string>( output->parameters(), "customdrivername", "" );
+			if( customDriverName == "" )
+			{
+				m_driverHandle = DelightHandle( context, "outputDriver:" + name, ownership, "outputdriver", driverParams );
+			}
+			else
+			{
+				m_driverHandle = DelightHandle( context, "outputDriver:" + customDriverName, ownership, "outputdriver", driverParams );
+			}
 
 			m_layerHandle = DelightHandle( context, "outputLayer:" + name, ownership, "outputlayer", layerParams );
 
@@ -348,6 +373,19 @@ class DelightOutput : public IECore::RefCounted
 				m_layerHandle.name(), "outputdrivers",
 				0, nullptr
 			);
+
+			if( lightGroup != "" )
+			{
+				for( string lightGroupToken : lightGroupTokens )
+				{
+					NSIConnect(
+						m_context,
+						lightGroupToken.c_str(), "",
+						m_layerHandle.name(), "lightset",
+						0, nullptr
+					);
+				}
+			}
 		}
 
 		const DelightHandle &layerHandle() const
@@ -368,7 +406,7 @@ class DelightOutput : public IECore::RefCounted
 			{
 				return "uint8";
 			}
-			else if( quantize == vector<int>( { 0, 65536, 0, 65536 } ) )
+			else if( quantize == vector<int>( { 0, 65535, 0, 65535 } ) )
 			{
 				return "uint16";
 			}
