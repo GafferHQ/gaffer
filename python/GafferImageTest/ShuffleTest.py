@@ -412,5 +412,25 @@ class ShuffleTest( GafferImageTest.ImageTestCase ) :
 		shuffle["missingSourceMode"].setValue( shuffle.MissingSourceMode.Ignore )
 		self.assertEqual( shuffle["out"].channelNames(), IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
 
+	def testLegacyChannelPlugConstructor( self ) :
+
+		p = GafferImage.Shuffle.ChannelPlug( "R", "R" )
+		self.assertEqual( p.getName(), "channel" )
+
+	def testCreateExpressionWithLegacyNames( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["shuffle"] = GafferImage.Shuffle()
+		script["shuffle"]["shuffles"].addChild( GafferImage.Shuffle.ChannelPlug( "R", "R" ) )
+		script["shuffle"]["shuffles"].addChild( GafferImage.Shuffle.ChannelPlug( "G", "G" ) )
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression(
+			'parent["shuffle"]["channels"]["channel"]["in"] = "X"; parent["shuffle"]["channels"]["channel1"]["in"] = "Y"'
+		)
+
+		self.assertEqual( script["shuffle"]["shuffles"][0]["source"].getValue(), "X" )
+		self.assertEqual( script["shuffle"]["shuffles"][1]["source"].getValue(), "Y" )
+
 if __name__ == "__main__":
 	unittest.main()
