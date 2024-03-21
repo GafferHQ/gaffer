@@ -18,6 +18,9 @@ Fixes
   - Fixed bugs caused by reordering images using `GraphComponent::reorderChildren()`.
 - InteractiveRender : Fixed context used to evaluate scene globals when renderer is set to "Default" [^1].
 - Instancer : Fixed handling of unindexed primvars in RootPerVertex mode [^1].
+- ImageGadget :
+  - Fixed loading of 2 channel images [^1].
+  - Fixed error message to include filename [^1].
 
 API
 ---
