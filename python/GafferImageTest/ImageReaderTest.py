@@ -959,5 +959,26 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		script2.execute( serialisation )
 		self.assertIsInstance( script2["reader"], GafferImage.ImageReader )
 
+	def testDWACompression( self ) :
+
+		reader = GafferImage.ImageReader()
+
+		stats = GafferImage.ImageStats()
+		stats["in"].setInput( reader["out"] )
+		stats["areaSource"].setValue( stats.AreaSource.DataWindow )
+
+		for file in [
+			"dwaHalfWithLayerPrefix.exr",
+			"dwaFloat.exr"
+		] :
+			with self.subTest( file = file ) :
+
+				reader["fileName"].setValue( self.imagesPath() / file )
+				stats["channels"].setValue( reader["out"].channelNames() )
+
+				for stat in ( "min", "max", "average" ) :
+					for c, expected in zip( stats[stat].getValue(), imath.Color4f( 0.3, 0.6, 0.9, 0 ) ) :
+						self.assertAlmostEqual( c, expected, delta = 0.0001 )
+
 if __name__ == "__main__":
 	unittest.main()
