@@ -146,6 +146,6 @@ void Pointer::registerPointer( const std::string &name, ConstPointerPtr pointer 
 
 Pointer::ChangedSignal &Pointer::changedSignal()
 {
-	static ChangedSignal s;
-	return s;
+	static ChangedSignal *s = new ChangedSignal;
+	return *s;
 }
