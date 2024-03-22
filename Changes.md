@@ -23,6 +23,9 @@ Fixes
   - Fixed error message to include filename [^1].
 - Expression : `setExpression()` now respects configs that provide backwards compatibility for old plug names.
 - Shuffle : Fixed default name for plugs constructed via the legacy `ChannelPlug( out, in )` constructor [^1].
+- ImageReader :
+  - Fixed loading of OpenEXR images with 32 bit float data and DWA compression [^1].
+  - Fixed loading of secondary layers in OpenEXR images with DWA compression [^1].
 
 API
 ---
@@ -35,6 +38,13 @@ Breaking Changes
 ----------------
 
 - StandardLightVisualiser : Added `attributeName` argument to `surfaceTexture()` virtual method.
+
+Build
+-----
+
+- OpenEXR : Applied patches from the following pull requests :
+  - https://github.com/AcademySoftwareFoundation/openexr/pull/1591
+  - https://github.com/AcademySoftwareFoundation/openexr/pull/1684
 
 [^1]: To be omitted from final release notes for 1.4.0.0.
 
