@@ -60,6 +60,6 @@ IECORECYCLES_API int patchVersion();
 /// Returns a string of the form "major.minor.patch"
 IECORECYCLES_API const std::string &versionString();
 /// Returns a vector of ccl::devices
-IECORECYCLES_API const std::vector<ccl::DeviceInfo> &devices();
+IECORECYCLES_API std::vector<ccl::DeviceInfo> &devices();
 
 }

@@ -551,6 +551,11 @@ Improvements
 - LightTool : Added support for editing animated plugs.
 - Median, Erode, Dilate : Improved performance significantly for wide filters. Measured improvements of 100x faster for Erode/Dilate, and 10x faster for Median.
 
+Improvements
+------------
+
+- Cycles : Improved GPU support when Cycles is compiled with GPU devices.
+
 Fixes
 -----
 

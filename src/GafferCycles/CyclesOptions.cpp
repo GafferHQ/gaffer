@@ -57,6 +57,10 @@ CyclesOptions::CyclesOptions( const std::string &name )
 
 	// Device
 	options->addChild( new Gaffer::NameValuePlug( "cycles:device", new IECore::StringData( "CPU" ), false, "device" ) );
+	options->addChild( new Gaffer::NameValuePlug( "cycles:device:use_fallback", new IECore::BoolData( false ), false, "useDeviceFallback" ) );
+	options->addChild( new Gaffer::NameValuePlug( "cycles:device:peer_memory", new IECore::BoolData( false ), false, "peerMemory" ) );
+	options->addChild( new Gaffer::NameValuePlug( "cycles:device:use_hardwarert", new IECore::BoolData( false ), false, "useHardwareRT" ) );
+	options->addChild( new Gaffer::NameValuePlug( "cycles:device:kernel_optimization_level", new IECore::StringData( "FULL" ), false, "kernelOptimizationLevel" ) );
 
 	// Session and scene
 	options->addChild( new Gaffer::NameValuePlug( "cycles:shadingsystem", new IECore::StringData( "OSL" ), false, "shadingSystem" ) );
