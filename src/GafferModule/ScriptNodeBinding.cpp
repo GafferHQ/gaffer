@@ -65,6 +65,7 @@
 #include "fmt/format.h"
 
 #include <memory>
+#include <regex>
 
 using namespace boost;
 using namespace Gaffer;
@@ -85,12 +86,15 @@ const std::string formattedErrorContext( int lineNumber, const std::string &cont
 	);
 }
 
+const std::regex g_blockStartRegex( R"(^if[ \t(])" );
+const std::regex g_blockContinuationRegex( R"(^[ \t]+)" );
+
 // Execute the script one line at a time, reporting errors that occur,
 // but otherwise continuing with execution.
 bool tolerantExec( const std::string &pythonScript, boost::python::object globals, boost::python::object locals, const std::string &context )
 {
 	bool result = false;
-	int lineNumber = 1;
+	int lineNumber = 0;
 
 	const IECore::Canceller *canceller = Context::current()->canceller();
 
@@ -99,10 +103,49 @@ bool tolerantExec( const std::string &pythonScript, boost::python::object global
 	{
 		IECore::Canceller::check( canceller );
 
-		const std::string line( it->begin(), it->end() );
+		std::string toExecute( it->begin(), it->end() );
+		++it; ++lineNumber;
+
+		// Our serialisations have always been in a form that can be executed
+		// line-by-line. But certain third parties have used custom serialisers
+		// that output multi-line `if` statements that must be executed in a
+		// single call. Here we detect them and group them together.
+		//
+		// Notes :
+		//
+		// - Historically, we used a Python C AST API to support _any_ compound
+		//   statements here. But that is [no longer available](9d15bd21c4049d89118faf3ac27d01c5799b8264),
+		//   and using the `ast` module instead would be a significant performance
+		//   regression.
+		// - While using Python as our serialisation format is great from an
+		//   educational and reuse perspective, it has never been good from a
+		//   performance perspective. A likely future direction is to constrain
+		//   the serialisation syntax further such that it is still valid
+		//   Python, but we can parse and execute the majority of it directly in C++
+		//   for improvement performance.
+		// - We are therefore deliberately supporting only the absolute minimum of syntax
+		//   needed for the legacy third-party serialisations here, to give us
+		//   more flexibility in optimising the parsing in future.
+		if( std::regex_search( toExecute, g_blockStartRegex )  )
+		{
+			while( it != split_iterator<std::string::const_iterator>() )
+			{
+				const std::string line( it->begin(), it->end() );
+				if( std::regex_search( line, g_blockContinuationRegex ) )
+				{
+					toExecute += "\n" + line;
+					++it; ++lineNumber;
+				}
+				else
+				{
+					break;
+				}
+			}
+		}
+
 		try
 		{
-			exec( line.c_str(), globals, locals );
+			exec( toExecute.c_str(), globals, locals );
 		}
 		catch( const boost::python::error_already_set & )
 		{
@@ -110,7 +153,6 @@ bool tolerantExec( const std::string &pythonScript, boost::python::object global
 			IECore::msg( IECore::Msg::Error, formattedErrorContext( lineNumber, context ), message );
 			result = true;
 		}
-		++it; ++lineNumber;
 	}
 
 	return result;

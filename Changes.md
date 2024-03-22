@@ -27,6 +27,7 @@ Fixes
   - Fixed loading of OpenEXR images with 32 bit float data and DWA compression [^1].
   - Fixed loading of secondary layers in OpenEXR images with DWA compression [^1].
 - GUI : Fixed potential crashes during shutdown [^1].
+- ScriptNode : Fixed execution of multi-line `if :` statements in `.gfr` files [^1].
 
 API
 ---
