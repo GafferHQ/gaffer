@@ -1,5 +1,10 @@
-1.4.x.x (relative to 1.4.0.0b4)
+1.4.x.x (relative to 1.4.0.0b5)
 =======
+
+
+
+1.4.0.0b5 (relative to 1.4.0.0b4)
+=========
 
 Improvements
 ------------
