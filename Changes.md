@@ -28,6 +28,7 @@ Fixes
   - Fixed loading of secondary layers in OpenEXR images with DWA compression [^1].
 - GUI : Fixed potential crashes during shutdown [^1].
 - ScriptNode : Fixed execution of multi-line `if :` statements in `.gfr` files [^1].
+- ArnoldShader : Fixed startup errors caused by unknown values in `widget` metadata [^1].
 
 API
 ---
@@ -365,8 +366,13 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.x.x (relative to 1.3.14.0)
-=======
+1.3.x.x (relative to 1.3.15.0)
+========
+
+
+
+1.3.15.0 (relative to 1.3.14.0)
+========
 
 Improvements
 ------------
