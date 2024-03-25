@@ -2008,11 +2008,10 @@ class RendererTest( GafferTest.TestCase ) :
 				"output" : IECoreScene.Shader( "switch_rgba", "ai:surface" ),
 			},
 			connections = [
-				( ( "splineHandle", "" ), ( "output", "input1" ) ),
-				( ( "noiseHandle", "" ), ( "output", "input2" ) ),
-				( ( "floatSplineHandle", "" ), ( "output", "input3" ) ),
-				( ( "splineWithInputsHandle", "" ), ( "output", "input4" ) ),
-
+				( ( "splineHandle", "c" ), ( "output", "input1" ) ),
+				( ( "noiseHandle", "n" ), ( "output", "input2" ) ),
+				( ( "floatSplineHandle", "c" ), ( "output", "input3" ) ),
+				( ( "splineWithInputsHandle", "c" ), ( "output", "input4" ) ),
 				( ( "globalsHandle", "globalP" ), ( "splineWithInputsHandle", "spline[0].y" ) ),
 				( ( "globalsHandle", "globalV" ), ( "splineWithInputsHandle", "spline[3].y.g" ) ),
 			],
