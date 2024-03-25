@@ -239,7 +239,7 @@ _styleSheet = string.Template(
 		color: #b0d8fb;
 	}
 
-	QLabel#gafferPlugLabel {
+	QLabel#gafferPlugLabel[gafferValueChanged] {
 		/*
 		Ensure that there is enough space reserved for the `valueChanged`
 		icon whether it is visible or not.

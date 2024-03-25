@@ -160,16 +160,20 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 	# Sets whether or not the label be rendered in a ValueChanged state.
 	def __setValueChanged( self, valueChanged ) :
 
+		if any( p.direction() == Gaffer.Plug.Direction.Out for p in self.getPlugs() ) :
+			return
+
 		if valueChanged == self.__getValueChanged() :
 			return
 
 		self.__label._qtWidget().setProperty( "gafferValueChanged", GafferUI._Variant.toVariant( valueChanged ) )
 		self.__label._repolish()
+		self.__label._setStyleSheet()
 
 	def __getValueChanged( self ) :
 
 		if "gafferValueChanged" not in self.__label._qtWidget().dynamicPropertyNames() :
-			return False
+			return None
 
 		return GafferUI._Variant.fromVariant( self.__label._qtWidget().property( "gafferValueChanged" ) )
 
