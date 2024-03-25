@@ -1,7 +1,12 @@
 1.3.x.x (relative to 1.3.15.0)
 ========
 
+Features
+--------
 
+- RenderPassEditor :
+  - Added "Camera Inclusions" and "Camera Exclusions" columns, providing control over the camera visibility of scene locations in each render pass.
+  - Added "Matte Inclusions" and "Matte Exclusions" columns, providing control over the scene locations used as holdout mattes in each render pass.
 
 1.3.15.0 (relative to 1.3.14.0)
 ========
