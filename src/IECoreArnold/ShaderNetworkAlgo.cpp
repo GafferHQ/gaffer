@@ -68,35 +68,7 @@ const AtString g_shaderNameArnoldString( "shadername" );
 const AtString g_oslArnoldString( "osl" );
 const AtString g_nameArnoldString( "name" );
 
-using ShaderMap = boost::unordered_map<ShaderNetwork::Parameter, AtNode *>;
-
-// Equivalent to Python's `s.partition( c )[0]`.
-InternedString partitionStart( const InternedString &s, char c )
-{
-	const size_t index = s.string().find_first_of( '.' );
-	if( index == string::npos )
-	{
-		return s;
-	}
-	else
-	{
-		return InternedString( s.c_str(), index );
-	}
-}
-
-// Equivalent to Python's `s.partition( c )[2]`.
-InternedString partitionEnd( const InternedString &s, char c )
-{
-	const size_t index = s.string().find_first_of( '.' );
-	if( index == string::npos )
-	{
-		return InternedString();
-	}
-	else
-	{
-		return InternedString( s.c_str() + index + 1 );
-	}
-}
+using ShaderMap = std::unordered_map<IECore::InternedString, AtNode *>;
 
 template<typename NodeCreator>
 AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &name, const NodeCreator &nodeCreator, vector<AtNode *> &nodes, ShaderMap &converted, std::vector<IECoreArnold::ShaderNetworkAlgo::NodeParameter> &nodeParameters )
@@ -108,10 +80,7 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 	// output that is used.
 
 	const IECoreScene::Shader *shader = shaderNetwork->getShader( outputParameter.shader );
-	const bool isOSLShader = boost::starts_with( shader->getType(), "osl:" );
-	const InternedString oslOutput = isOSLShader ? partitionStart( outputParameter.name, '.' ) : InternedString();
-
-	auto inserted = converted.insert( { { outputParameter.shader, oslOutput }, nullptr } );
+	auto inserted = converted.insert( { outputParameter.shader, nullptr } );
 	AtNode *&node = inserted.first->second;
 	if( !inserted.second )
 	{
@@ -125,19 +94,11 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 	{
 		nodeName += ":" + outputParameter.shader.string();
 	}
-	if( oslOutput.string().size() )
-	{
-		nodeName += ":" + oslOutput.string();
-	}
 
+	const bool isOSLShader = boost::starts_with( shader->getType(), "osl:" );
 	if( isOSLShader )
 	{
 		node = nodeCreator( g_oslArnoldString, AtString( nodeName.c_str() ) );
-		if( oslOutput.string().size() )
-		{
-			AiNodeDeclare( node, g_outputArnoldString, "constant STRING" );
-			AiNodeSetStr( node, g_outputArnoldString, AtString( oslOutput.c_str() ) );
-		}
 		AiNodeSetStr( node, g_shaderNameArnoldString, AtString( shader->getName().c_str() ) );
 	}
 	else
@@ -206,13 +167,6 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 			parameterName = connection.destination.name.string();
 		}
 
-		InternedString sourceName = connection.source.name;
-		const IECoreScene::Shader *sourceShader = shaderNetwork->getShader( connection.source.shader );
-		if( boost::starts_with( sourceShader->getType(), "osl:" ) )
-		{
-			sourceName = partitionEnd( sourceName, '.' );
-		}
-
 		if( parameterName == "color" && ( shader->getName() == "quad_light" || shader->getName() == "skydome_light" || shader->getName() == "mesh_light" ) )
 		{
 			// In general, Arnold should be able to form a connection onto a parameter even if the
@@ -236,12 +190,18 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 		}
 		else
 		{
-			const char *output = sourceName.c_str();
-			if( sourceName.string() == "out" && AiNodeEntryGetNumOutputs( AiNodeGetNodeEntry( sourceNode ) ) == 0 )
+			string output = connection.source.name;
+			const IECoreScene::Shader *sourceShader = shaderNetwork->getShader( connection.source.shader );
+			if( boost::starts_with( sourceShader->getType(), "osl:" ) )
+			{
+				output = "param_" + output;
+			}
+
+			if( output == "out" && AiNodeEntryGetNumOutputs( AiNodeGetNodeEntry( sourceNode ) ) == 0 )
 			{
 				output = "";
 			}
-			AiNodeLinkOutput( sourceNode, output, node, parameterName.c_str() );
+			AiNodeLinkOutput( sourceNode, output.c_str(), node, parameterName.c_str() );
 		}
 	}
 

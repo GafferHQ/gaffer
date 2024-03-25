@@ -8,6 +8,11 @@ Features
   - USD Kind : When selecting, the first ancestor location with a `usd:kind` attribute matching the chosen list of USD Kind will ultimately be selected. USD's Kind Registry includes `Assembly`, `Component`, `Group`, `Model` and `SubComponent` by default and can be extended via USD startup scripts.
   - Shader Assignment : When selecting, the first ancestor location with a renderable and direct (not inherited) shader attribute will ultimately be selected. This can be used to select either surface or displacement shaders.
 
+Improvements
+------------
+
+- Arnold : OSL shaders with connections from multiple outputs are no longer duplicated on export to Arnold.
+
 Fixes
 -----
 
