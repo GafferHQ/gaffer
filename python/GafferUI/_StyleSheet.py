@@ -239,7 +239,7 @@ _styleSheet = string.Template(
 		color: #b0d8fb;
 	}
 
-	QLabel#gafferPlugLabel {
+	QLabel#gafferPlugLabel[gafferShowValueChangedIndicator="true"] {
 		/*
 		Ensure that there is enough space reserved for the `valueChanged`
 		icon whether it is visible or not.
@@ -247,7 +247,7 @@ _styleSheet = string.Template(
 		padding-left: 10px;
 	}
 
-	QLabel#gafferPlugLabel[gafferValueChanged="true"] {
+	QLabel#gafferPlugLabel[gafferShowValueChangedIndicator="true"][gafferValueChanged="true"] {
 		background-image: url(:/valueChanged.png);
 		background-repeat: no-repeat;
 		background-position: left;
