@@ -2098,10 +2098,8 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeGetRGB( splineWithInputsAdapter, "param_in2" ), arnold.AtRGB( 0.5, 0.5, 0.5 ) )
 
 			globalPInput = arnold.AiNodeGetLink( splineWithInputsAdapter, "param_in0" )
-			print( arnold.AiNodeGetLink( splineWithInputsAdapter, "param_in3" ) )
 			self.assertEqual( arnold.AiNodeGetStr( globalPInput, "shadername" ), "Utility/Globals" )
 			self.assertEqual( arnold.AiNodeGetStr( globalPInput, "output" ), "globalP" )
-
 
 			componentAdapterInput = arnold.AiNodeGetLink( splineWithInputsAdapter, "param_in3" )
 			self.assertEqual( arnold.AiNodeGetStr( componentAdapterInput, "shadername" ), "MaterialX/mx_pack_color" )
