@@ -2098,13 +2098,11 @@ class RendererTest( GafferTest.TestCase ) :
 
 			globalPInput = arnold.AiNodeGetLink( splineWithInputsAdapter, "param_in0" )
 			self.assertEqual( arnold.AiNodeGetStr( globalPInput, "shadername" ), "Utility/Globals" )
-			self.assertEqual( arnold.AiNodeGetStr( globalPInput, "output" ), "globalP" )
 
 			componentAdapterInput = arnold.AiNodeGetLink( splineWithInputsAdapter, "param_in3" )
 			self.assertEqual( arnold.AiNodeGetStr( componentAdapterInput, "shadername" ), "MaterialX/mx_pack_color" )
 			globalVInput = arnold.AiNodeGetLink( componentAdapterInput, "param_in2" )
 			self.assertEqual( arnold.AiNodeGetStr( globalVInput, "shadername" ), "Utility/Globals" )
-			self.assertEqual( arnold.AiNodeGetStr( globalVInput, "output" ), "globalV" )
 
 	def testPureOSLShaders( self ) :
 
@@ -2183,23 +2181,27 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( floatToColor ) ), "osl" )
 			self.assertEqual( arnold.AiNodeGetStr( floatToColor, "shadername" ), "Conversion/FloatToColor" )
 
-			colorToFloatR = arnold.AiNodeGetLink( floatToColor, "param_r" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( colorToFloatR ) ), "osl" )
-			self.assertEqual( arnold.AiNodeGetStr( colorToFloatR, "output" ), "r" )
+			outputIndex = ctypes.c_int()
+			outputComponent = ctypes.c_int()
+			colorToFloatR = arnold.AiNodeGetLinkOutput( floatToColor, "param_r", ctypes.byref( outputIndex ), ctypes.byref( outputComponent ) )
+
+			colorToFloatNodeEntry = arnold.AiNodeGetNodeEntry( colorToFloatR )
+			self.assertEqual( arnold.AiNodeEntryGetName( colorToFloatNodeEntry ), "osl" )
 			self.assertEqual( arnold.AiNodeGetStr( colorToFloatR, "shadername" ), "Conversion/ColorToFloat" )
-			self.assertEqual( arnold.AiNodeGetRGB( colorToFloatR, "param_c" ),  arnold.AtRGB( 0.1, 0.2, 0.3 ))
+			self.assertEqual( arnold.AiNodeGetRGB( colorToFloatR, "param_c" ), arnold.AtRGB( 0.1, 0.2, 0.3 ) )
 
-			colorToFloatG = arnold.AiNodeGetLink( floatToColor, "param_g" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( colorToFloatG ) ), "osl" )
-			self.assertEqual( arnold.AiNodeGetStr( colorToFloatG, "output" ), "g" )
-			self.assertEqual( arnold.AiNodeGetStr( colorToFloatG, "shadername" ), "Conversion/ColorToFloat" )
-			self.assertEqual( arnold.AiNodeGetRGB( colorToFloatG, "param_c" ),  arnold.AtRGB( 0.1, 0.2, 0.3 ))
+			self.assertEqual( arnold.AiParamGetName( arnold.AiNodeEntryGetOutput( colorToFloatNodeEntry, outputIndex.value ) ), "param_r" )
+			self.assertEqual( outputComponent.value, -1 )
 
-			colorToFloatB = arnold.AiNodeGetLink( floatToColor, "param_b" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( colorToFloatB ) ), "osl" )
-			self.assertEqual( arnold.AiNodeGetStr( colorToFloatB, "output" ), "b" )
-			self.assertEqual( arnold.AiNodeGetStr( colorToFloatB, "shadername" ), "Conversion/ColorToFloat" )
-			self.assertEqual( arnold.AiNodeGetRGB( colorToFloatB, "param_c" ),  arnold.AtRGB( 0.1, 0.2, 0.3 ))
+			colorToFloatG = arnold.AiNodeGetLinkOutput( floatToColor, "param_g", ctypes.byref( outputIndex ), ctypes.byref( outputComponent ) )
+			self.assertReferSameNode( colorToFloatG, colorToFloatR )
+			self.assertEqual( arnold.AiParamGetName( arnold.AiNodeEntryGetOutput( colorToFloatNodeEntry, outputIndex.value ) ), "param_g" )
+			self.assertEqual( outputComponent.value, -1 )
+
+			colorToFloatB = arnold.AiNodeGetLinkOutput( floatToColor, "param_b", ctypes.byref( outputIndex ), ctypes.byref( outputComponent ) )
+			self.assertReferSameNode( colorToFloatB, colorToFloatR )
+			self.assertEqual( arnold.AiParamGetName( arnold.AiNodeEntryGetOutput( colorToFloatNodeEntry, outputIndex.value ) ), "param_b" )
+			self.assertEqual( outputComponent.value, -1 )
 
 	def testTraceSets( self ) :
 
