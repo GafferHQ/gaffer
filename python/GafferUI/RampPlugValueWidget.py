@@ -78,35 +78,43 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__lastPositionChangedReason = None
 			self.__positionsMergeGroupId = 0
 
+			labelWidth = 50
+
 			with GafferUI.ListContainer(
 				orientation = GafferUI.ListContainer.Orientation.Horizontal if isinstance( plug.pointYPlug( 0 ), Gaffer.FloatPlug ) else GafferUI.ListContainer.Orientation.Vertical,
 				spacing = 4
 			) :
 
-				self.__positionLabel = GafferUI.LabelPlugValueWidget(
-					plug.pointXPlug( 0 ),
-					parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top }
-				)
-				self.__positionField = GafferUI.NumericPlugValueWidget(
-					plug.pointXPlug( 0 ),
-					parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top }
-				)
+				with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+					self.__positionLabel = GafferUI.LabelPlugValueWidget(
+						plug.pointXPlug( 0 ),
+						horizontalAlignment = GafferUI.HorizontalAlignment.Right,
+						parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top }
+					)
+					self.__positionLabel.label()._qtWidget().setFixedWidth( labelWidth )
+					self.__positionField = GafferUI.NumericPlugValueWidget(
+						plug.pointXPlug( 0 ),
+						parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top }
+					)
 
-				self.__valueLabel = GafferUI.LabelPlugValueWidget(
-					plug.pointYPlug( 0 ),
-					parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top }
-				)
-				if isinstance( plug.pointYPlug( 0 ), Gaffer.FloatPlug ):
-					self.__valueField = GafferUI.NumericPlugValueWidget(
+				with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+					self.__valueLabel = GafferUI.LabelPlugValueWidget(
 						plug.pointYPlug( 0 ),
+						horizontalAlignment = GafferUI.HorizontalAlignment.Right,
 						parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top }
 					)
-				else:
-					self.__valueField = GafferUI.ColorPlugValueWidget(
-						plug.pointYPlug( 0 ),
-						parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top }
-					)
-					self.__valueField.setColorChooserVisible( True )
+					self.__valueLabel.label()._qtWidget().setFixedWidth( labelWidth )
+					if isinstance( plug.pointYPlug( 0 ), Gaffer.FloatPlug ):
+						self.__valueField = GafferUI.NumericPlugValueWidget(
+							plug.pointYPlug( 0 ),
+							parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top }
+						)
+					else:
+						self.__valueField = GafferUI.ColorPlugValueWidget(
+							plug.pointYPlug( 0 ),
+							parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top }
+						)
+						self.__valueField.setColorChooserVisible( True )
 
 		self.setPlug( plug )
 
