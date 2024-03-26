@@ -198,8 +198,8 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		s["ShaderAssignment"]["in"].setInput( s["s"]["out"] )
 		s["ShaderAssignment"]["filter"].setInput( s["PathFilter"]["out"] )
 
-		s["lambert"], _ = self._createMatteShader()
-		s["ShaderAssignment"]["shader"].setInput( s["lambert"]["out"] )
+		s["lambert"], _, lambertOut = self._createMatteShader()
+		s["ShaderAssignment"]["shader"].setInput( lambertOut )
 
 		s["StandardAttributes"] = GafferScene.StandardAttributes( "StandardAttributes" )
 		s["StandardAttributes"]["attributes"]["linkedLights"]["enabled"].setValue( True )
@@ -287,8 +287,8 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		s["ShaderAssignment"]["in"].setInput( s["s"]["out"] )
 		s["ShaderAssignment"]["filter"].setInput( s["PathFilter"]["out"] )
 
-		s["lambert"], _ = self._createMatteShader()
-		s["ShaderAssignment"]["shader"].setInput( s["lambert"]["out"] )
+		s["lambert"], _, lambertOut = self._createMatteShader()
+		s["ShaderAssignment"]["shader"].setInput( lambertOut )
 
 		s["Tex"] = GafferArnold.ArnoldShader( "image" )
 		s["Tex"].loadShader( "image" )
@@ -385,9 +385,9 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		s["Tex"]["parameters"]["filename"].setValue( tmpTextureFile )
 
 		# Create a constant shader
-		s["constant"], shaderColor = self._createConstantShader()
+		s["constant"], shaderColor, constantOut = self._createConstantShader()
 		shaderColor.setInput( s["Tex"]["out"] )
-		s["ShaderAssignment"]["shader"].setInput( s["constant"]["out"] )
+		s["ShaderAssignment"]["shader"].setInput( constantOut )
 
 		s["c"] = GafferScene.Camera()
 		s["c"]["transform"]["translate"]["z"].setValue( 2 )
@@ -919,14 +919,14 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		shader = GafferArnold.ArnoldShader()
 		shader.loadShader( "flat" )
-		return shader, shader["parameters"]["color"]
+		return shader, shader["parameters"]["color"], shader["out"]
 
 	def _createMatteShader( self ) :
 
 		shader = GafferArnold.ArnoldShader()
 		shader.loadShader( "lambert" )
 		shader["parameters"]["Kd"].setValue( 1 )
-		return shader, shader["parameters"]["Kd_color"]
+		return shader, shader["parameters"]["Kd_color"], shader["out"]
 
 	def _createTraceSetShader( self ) :
 		# It's currently pretty ugly how we need to disable the trace set when it is left empty,
@@ -965,7 +965,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		Gaffer.PlugAlgo.promote( switchShader["out"] )
 
-		return shaderBox, traceSetShader["parameters"]["trace_set"]
+		return shaderBox, traceSetShader["parameters"]["trace_set"], shaderBox["out"]
 
 	def _cameraVisibilityAttribute( self ) :
 

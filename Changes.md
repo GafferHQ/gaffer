@@ -34,6 +34,11 @@ API
   - ProcessorWidget provides a base class for custom widgets, and a factory mechanism for registering them against processors.
   - SimpleProcessorWidget provides a base class for widgets with a simple summary label and optional action links.
 
+Breaking Changes
+----------------
+
+- InteractiveRenderTest : Subclasses must now return the shader output plug from creation methods such as `_createConstantShader()`.
+
 1.4.0.0b5 (relative to 1.4.0.0b4)
 =========
 
