@@ -1331,11 +1331,11 @@ using RenderAdaptors = boost::container::flat_map<string, SceneAlgo::RenderAdapt
 
 RenderAdaptors &renderAdaptors()
 {
-	static RenderAdaptors a;
-	return a;
+	static RenderAdaptors *a = new RenderAdaptors;
+	return *a;
 }
 
-}
+} // namespace
 
 void GafferScene::SceneAlgo::registerRenderAdaptor( const std::string &name, SceneAlgo::RenderAdaptor adaptor )
 {
