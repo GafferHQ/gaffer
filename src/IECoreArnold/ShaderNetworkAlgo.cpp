@@ -62,6 +62,7 @@ using namespace IECoreArnold;
 namespace
 {
 
+const AtString g_codeArnoldString( "code" );
 const AtString g_emptyArnoldString( "" );
 const AtString g_outputArnoldString( "output" );
 const AtString g_shaderNameArnoldString( "shadername" );
@@ -109,6 +110,19 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 			AtString( shader->getName().c_str() ),
 			AtString( nodeName.c_str() )
 		);
+		if( node && AiNodeEntryGetNameAtString( AiNodeGetNodeEntry( node ) ) == g_oslArnoldString )
+		{
+			// Need to set the `code` parameter on `osl` shaders _before_ we try to set
+			// the other parameters, because otherwise they don't exist yet.
+			// Note : This code path is different to the `isOSLShader` one. This code path
+			// deals with shaders authored explicitly to use Arnold's `osl` shader node (which
+			// therefore wouldn't work in other renderers). The `isOSLShader` code path deals
+			// with generically-authored OSL shaders that we are translating to Arnold.
+			if( auto *code = shader->parametersData()->member<StringData>( "code" ) )
+			{
+				AiNodeSetStr( node, g_codeArnoldString, AtString( code->readable().c_str() ) );
+			}
+		}
 	}
 
 	if( !node )

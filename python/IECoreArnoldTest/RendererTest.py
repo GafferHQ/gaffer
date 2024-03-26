@@ -4254,6 +4254,60 @@ class RendererTest( GafferTest.TestCase ) :
 			input = arnold.AiNodeGetLink( surfaceShader, "base_color" )
 			self.assertIn( "colorSwitch", arnold.AiNodeGetName( input ) )
 
+	def testArnoldOSLWithCode( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+		)
+
+		# This test exercises a problem that would occur if we tried to set
+		# Arnold's `param_*` attributes before setting the `code` attribute.
+		# Due to InternedString ordering rules, the likelihood of visiting the
+		# parameters in that order is increased by constructing the `param_colorIn`
+		# string first.
+		IECore.InternedString( "param_colorIn" )
+
+		renderer.object(
+			"testPlane",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			renderer.attributes( IECore.CompoundObject( {
+				"ai:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"osl" : IECoreScene.Shader(
+							"osl", "ai:shader",
+							{
+								"code" : """
+									shader myConstant(
+										color colorIn = 0,
+										output color colorOut = 0
+									)
+									{
+										colorOut = colorIn;
+									}
+								""",
+								"param_colorIn" : imath.Color3f( 0, 1, 0 ),
+							}
+						),
+					},
+					output = "osl"
+				)
+			} ) ),
+		)
+
+		universe = ctypes.cast( renderer.command( "ai:queryUniverse", {} ), ctypes.POINTER( arnold.AtUniverse ) )
+
+		shader = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( universe, "testPlane" ), "shader" )
+		self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry(  shader ) ), "osl" )
+
+		# If we have set things in the right order, then `param_colorIn` will exist and have the right value.
+		self.assertEqual( arnold.AiNodeGetRGB( shader, "param_colorIn" ), arnold.AtRGB( 0, 1, 0 ) )
+		# And it won't have been declared as a user parameter, because setting `code` declares it as a built-in
+		# parameter instead.
+		self.assertIsNone( arnold.AiNodeLookUpUserParameter( shader, "param_colorIn" ) )
+
+		del renderer
+
 	def testInternedStringAttributes( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
