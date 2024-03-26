@@ -78,7 +78,7 @@ class ArnoldLightFilterTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual(
 			network.inputConnections( network.getOutput().shader ),
 			[
-				network.Connection( ( "Checkerboard", "" ), ( network.getOutput().shader, "shader" ) ),
+				network.Connection( ( "Checkerboard", "out" ), ( network.getOutput().shader, "shader" ) ),
 			]
 		)
 

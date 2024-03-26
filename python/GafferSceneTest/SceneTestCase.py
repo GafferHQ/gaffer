@@ -423,3 +423,31 @@ class SceneTestCase( GafferImageTest.ImageTestCase ) :
 		controllerB.update()
 
 		GafferSceneTest.IECoreScenePreviewTest.CapturingRendererTest.assertRendersMatch( rendererA, rendererB, expandProcedurals = expandProcedurals, ignoreLinks = ignoreLinks )
+
+	## More useful than `assertEqual( networkA, networkB )`, because it provides
+	# information about what doesn't match specifically.
+	def assertShaderNetworksEqual( self, networkA, networkB, ignoreBlindData = False ) :
+
+		if not ignoreBlindData :
+			self.assertEqual( networkA.blindData(), networkB.blindData() )
+
+		self.assertEqual( networkA.shaders().keys(), networkB.shaders().keys() )
+		for handle in networkA.shaders().keys() :
+
+			shaderA = networkA.getShader( handle )
+			shaderB = networkB.getShader( handle )
+
+			self.assertEqual( shaderA.name, shaderB.name, handle )
+			self.assertEqual( shaderA.type, shaderB.type, handle )
+
+			if not ignoreBlindData :
+				self.assertEqual( shaderA.blindData(), shaderB.blindData(), handle )
+
+			self.assertEqual( shaderA.parameters.keys(), shaderB.parameters.keys(), handle )
+			for parameter in shaderA.parameters.keys() :
+				self.assertEqual( shaderA.parameters[parameter], shaderB.parameters[parameter], f"{handle}.{parameter}" )
+
+			self.assertEqual( networkA.inputConnections( handle ), networkB.inputConnections( handle ), handle )
+			self.assertEqual( networkA.outputConnections( handle ), networkB.outputConnections( handle ), handle )
+
+		self.assertEqual( networkA.getOutput(), networkB.getOutput() )

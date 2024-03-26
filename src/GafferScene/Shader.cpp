@@ -274,15 +274,23 @@ class Shader::NetworkBuilder
 			assert( isOutputParameter( parameter ) );
 
 			const Shader *shader = static_cast<const Shader *>( parameter->node() );
+			const Plug *outPlug = shader->outPlug();
+
 			IECore::InternedString outputName;
-			// Set up an output name if we are a descendant of the output plug.
-			// The alternative is a special case ( which should perhaps be removed
-			// in the future ), which is that for nodes with one output, parameter
-			// is the outPlug instead of being a descendant ( and then we use an
-			// empty name ).
-			if( shader->outPlug()->isAncestorOf( parameter ) )
+			if( outPlug->typeId() == Plug::staticTypeId() && parameter != outPlug )
 			{
-				outputName = parameter->relativeName( shader->outPlug() );
+				// Standard case where `out` is just a container, and individual
+				// outputs are parented under it.
+				outputName = parameter->relativeName( outPlug );
+			}
+			else
+			{
+				// Legacy case for subclasses which use `outPlug()` as the sole
+				// output.
+				/// \todo Enforce that `outPlug()` is always a container, and
+				/// all outputs are represented as `out.name` children, even if
+				/// there is only one output.
+				outputName = parameter->relativeName( shader );
 			}
 
 			return { this->handle( shader ), outputName };
