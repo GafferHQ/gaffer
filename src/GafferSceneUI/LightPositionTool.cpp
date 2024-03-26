@@ -664,6 +664,15 @@ bool LightPositionTool::affectsHandles( const Gaffer::Plug *input ) const
 
 void LightPositionTool::updateHandles( float rasterScale )
 {
+	if( selection().empty() )
+	{
+		m_distanceHandle->setVisible( false );
+		m_distanceHandle->setEnabled( false );
+		m_rotateHandle->setVisible( false );
+		m_rotateHandle->setEnabled( false );
+		return;
+	}
+
 	Selection s = selection().back();
 
 	handles()->setTransform( s.orientedTransform( Orientation::Local ) );

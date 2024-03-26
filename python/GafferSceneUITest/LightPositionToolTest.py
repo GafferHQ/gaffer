@@ -273,5 +273,20 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 						places = 3
 					)
 
+	def testEmptySelectionModeChange( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["light"] = GafferSceneTest.TestLight()
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["light"]["out"] )
+
+		tool = GafferSceneUI.LightPositionTool( view )
+		tool["active"].setValue( True )
+
+		# Should not raise an exception
+		tool["mode"].setValue( GafferSceneUI.LightPositionTool.Mode.Highlight )
+		self.assertEqual( tool["mode"].getValue(), GafferSceneUI.LightPositionTool.Mode.Highlight )
+
 if __name__ == "__main__" :
 	unittest.main()

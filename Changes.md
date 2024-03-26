@@ -1,7 +1,9 @@
 1.4.x.x (relative to 1.4.0.0b5)
 =======
 
-
+Fixes
+-----
+- LightPositionTool : Fixed crash when changing the tool mode with nothing selected [^1].
 
 1.4.0.0b5 (relative to 1.4.0.0b4)
 =========
