@@ -20,6 +20,7 @@ Fixes
 - Arnold :
   - Fixed rendering of shaders imported from HtoA via USD.
   - Fixed USD export of shaders to use `outputs:out` instead of `outputs:DEFAULT_OUTPUT`.
+  - Fixed rendering of `osl` shaders using the `code` parameter.
 - GafferTest, GafferImageTest : Fixed import of these modules if the `Gaffer` module had not been imported previously.
 - SceneAlgo : Fixed potential shutdown crashes caused by the adaptor registry [^1].
 - Dispatcher : Fixed shutdown crashes caused by Python slots connected to the dispatch signals [^1].
