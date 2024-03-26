@@ -335,9 +335,12 @@ class RendererTest( GafferTest.TestCase ) :
 				"output" : IECoreScene.Shader( "flat" ),
 			},
 			connections = [
+				# Our legacy convention.
 				( ( "source", "r" ), ( "output", "color.g" ) ),
-				( ( "source", "g" ), ( "output", "color.b" ) ),
-				( ( "source", "b" ), ( "output", "color.r" ) ),
+				# The standard convention.
+				( ( "source", "out.g" ), ( "output", "color.b" ) ),
+				# The HtoA convention, which will hopefully be phased out.
+				( ( "source", "rgba.b" ), ( "output", "color.r" ) ),
 			],
 			output = "output"
 		)
@@ -4151,6 +4154,67 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertIn( "standardShader1", arnold.AiNodeGetName( input1 ) )
 			input2= arnold.AiNodeGetLink( layerShader, "input2" )
 			self.assertIn( "standardShader2", arnold.AiNodeGetName( input2 ) )
+
+	def testHtoAOutputParameterConvention( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.ass" )
+		)
+
+		r.object(
+			"testPlane",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			r.attributes( IECore.CompoundObject( {
+				"ai:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"mix" : IECoreScene.Shader( "mix_rgba" ),
+						"range" : IECoreScene.Shader( "range" ),
+						"stateFloat" : IECoreScene.Shader( "state_float" ),
+						"standardSurface" : IECoreScene.Shader( "standard_surface" )
+					},
+					connections = [
+						# HtoA's convention for referring to the default output
+						# is to name it after the output type (since the default
+						# output doesn't have a name). This is different to
+						# Autodesk's general convention (`out`), and word is
+						# that it should be changed to be aligned with that in
+						# the future.
+						( ( "mix", "rgba" ), ( "range", "input" ) ),
+						( ( "range", "rgb" ), ( "standardSurface", "base_color" ) ),
+						# HtoA also supports Arnold's multiple shader outputs,
+						# which are named according to the name of the output.
+						( ( "stateFloat", "sx" ), ( "standardSurface", "base" ) ),
+					],
+					output = "standardSurface"
+				)
+			} ) ),
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
+
+			standardSurface = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( universe, "testPlane" ), "shader" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( standardSurface ) ), "standard_surface" )
+
+			range = arnold.AiNodeGetLink( standardSurface, "base_color" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( range ) ), "range" )
+
+			mix = arnold.AiNodeGetLink( range, "input" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( mix ) ), "mix_rgba" )
+
+			outputIndex = ctypes.c_int()
+			outputComponent = ctypes.c_int()
+			stateFloat = arnold.AiNodeGetLinkOutput( standardSurface, "base", ctypes.byref( outputIndex ), ctypes.byref( outputComponent ) )
+			stateFloatNodeEntry = arnold.AiNodeGetNodeEntry( stateFloat )
+			self.assertEqual( arnold.AiNodeEntryGetName( stateFloatNodeEntry ), "state_float" )
+			self.assertEqual( arnold.AiParamGetName( arnold.AiNodeEntryGetOutput( stateFloatNodeEntry, outputIndex.value ) ), "sx" )
+			self.assertEqual( outputComponent.value, -1 )
 
 	def testOSLOutParameter( self ) :
 

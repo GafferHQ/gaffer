@@ -68,6 +68,8 @@ const AtString g_shaderNameArnoldString( "shadername" );
 const AtString g_oslArnoldString( "osl" );
 const AtString g_nameArnoldString( "name" );
 
+const std::string g_componentNames( "rgbaxyz" );
+
 using ShaderMap = std::unordered_map<IECore::InternedString, AtNode *>;
 
 template<typename NodeCreator>
@@ -194,12 +196,31 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 			const IECoreScene::Shader *sourceShader = shaderNetwork->getShader( connection.source.shader );
 			if( boost::starts_with( sourceShader->getType(), "osl:" ) )
 			{
+				// OSL shaders always use named outputs, and the name is prefixed
+				// with `param_` to avoid collisions with Arnold's native attributes.
 				output = "param_" + output;
 			}
-
-			if( output == "out" && AiNodeEntryGetNumOutputs( AiNodeGetNodeEntry( sourceNode ) ) == 0 )
+			else if( output == "" || ( output.size() == 1 && g_componentNames.find( output[0] ) != string::npos ) )
 			{
-				output = "";
+				// Our legacy convention for referring to Arnold's default output
+				// or one of its components. The only good thing about this is that
+				// it maps directly to Arnold's API.
+			}
+			else
+			{
+				// We expect either `name` or `name.component`. But `name` could
+				// either refer to a named "multi" output, or to the default
+				// (unnamed) output. For the latter, the expected name is
+				// `out`, but HtoA instead uses the type : `rgb`, `vector` etc.
+				// Check if `name` matches a valid named output, and if it doesn't
+				// then assume it is intended to refer to the default output and
+				// strip it.
+				const size_t i = output.find( '.' );
+				const string name = output.substr( 0, i );
+				if( !AiNodeEntryLookUpOutput( AiNodeGetNodeEntry( sourceNode ), AtString( name.c_str() ) ) )
+				{
+					output.erase( 0, i != string::npos ? i + 1 : string::npos );
+				}
 			}
 			AiNodeLinkOutput( sourceNode, output.c_str(), node, parameterName.c_str() );
 		}

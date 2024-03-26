@@ -17,6 +17,7 @@ Improvements
 Fixes
 -----
 
+- Arnold : Fixed rendering of shaders imported from HtoA via USD.
 - GafferTest, GafferImageTest : Fixed import of these modules if the `Gaffer` module had not been imported previously.
 - SceneAlgo : Fixed potential shutdown crashes caused by the adaptor registry [^1].
 - Dispatcher : Fixed shutdown crashes caused by Python slots connected to the dispatch signals [^1].
