@@ -29,6 +29,11 @@ API
 
 - SelectionTool : Added static `registerSelectMode()` method for registering a Python or C++ function that will modify a selected scene path location. Users can choose which mode is active when selecting.
 
+Breaking Changes
+----------------
+
+- InteractiveRenderTest : Subclasses must now return the shader output plug from creation methods such as `_createConstantShader()`.
+
 1.4.0.0b5 (relative to 1.4.0.0b4)
 =========
 
