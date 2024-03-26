@@ -15,6 +15,7 @@ Fixes
 - SceneAlgo : Fixed potential shutdown crashes caused by the adaptor registry [^1].
 - Dispatcher : Fixed shutdown crashes caused by Python slots connected to the dispatch signals [^1].
 - Display : Fixed shutdown crashes caused by Python slots connected to `driverCreatedSignal()` and `imageReceivedSignal()` [^1].
+- LightPositionTool : Fixed crash when changing the tool mode with nothing selected [^1].
 
 API
 ---
