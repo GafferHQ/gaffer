@@ -51,6 +51,7 @@
 #include "GafferScene/Private/IECoreScenePreview/Placeholder.h"
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+#include "GafferScene/Private/IECoreScenePreview/MeshAlgo.h"
 
 using namespace IECoreScenePreview;
 using namespace boost::python;
@@ -473,6 +474,28 @@ void GafferSceneModule::bindIECoreScenePreview()
 			.def( "getBound", &Placeholder::getBound, return_value_policy<copy_const_reference>() )
 		;
 
+	}
+
+	{
+		object meshAlgoModule( borrowed( PyImport_AddModule( "GafferScene.Private.IECoreScenePreview.MeshAlgo" ) ) );
+		scope().attr( "MeshAlgo" ) = meshAlgoModule;
+
+		scope meshAlgoScope( meshAlgoModule );
+
+		enum_<MeshAlgo::SubdivisionScheme>( "SubdivisionScheme" )
+			.value( "FromMesh", MeshAlgo::SubdivisionScheme::FromMesh )
+			.value( "Bilinear", MeshAlgo::SubdivisionScheme::Bilinear )
+			.value( "CatmullClark", MeshAlgo::SubdivisionScheme::CatmullClark )
+			.value( "Loop", MeshAlgo::SubdivisionScheme::Loop )
+		;
+
+		def( "tessellateMesh", MeshAlgo::tessellateMesh,
+			(
+				arg( "mesh" ), arg( "divisions" ),
+				arg( "calculateNormals" ) = false, arg( "scheme" ) = MeshAlgo::SubdivisionScheme::FromMesh,
+				arg( "canceller" ) = object()
+			)
+		);
 	}
 
 	scope capturingRendererScope = IECorePython::RefCountedClass<CapturingRenderer, Renderer>( "CapturingRenderer" )

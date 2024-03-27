@@ -38,6 +38,7 @@ from .CapturingRendererTest import CapturingRendererTest
 from .CompoundRendererTest import CompoundRendererTest
 from .PlaceholderTest import PlaceholderTest
 from .RendererTest import RendererTest
+from .MeshAlgoTessellateTest import MeshAlgoTessellateTest
 
 if __name__ == "__main__":
 	import unittest
