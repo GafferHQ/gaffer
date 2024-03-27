@@ -1,7 +1,10 @@
 1.4.x.x (relative to 1.4.0.0b5)
 =======
 
+Fixes
+-----
 
+- GafferTest, GafferImageTest : Fixed import of these modules if the `Gaffer` module had not been imported previously.
 
 1.4.0.0b5 (relative to 1.4.0.0b4)
 =========

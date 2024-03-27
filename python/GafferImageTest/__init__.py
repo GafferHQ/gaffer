@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+__import__( "Gaffer" )
+
 from ._GafferImageTest import *
 
 from .ImageTestCase import ImageTestCase
