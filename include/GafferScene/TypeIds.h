@@ -180,6 +180,7 @@ enum TypeId
 	InstancerCapsuleTypeId = 110636,
 	PassesTypeId = 110637,
 	DeletePassesTypeId = 110638,
+	MeshTessellateTypeId = 110639,
 
 	PreviewPlaceholderTypeId = 110647,
 	PreviewGeometryTypeId = 110648,
