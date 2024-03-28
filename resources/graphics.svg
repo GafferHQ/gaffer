@@ -3309,6 +3309,14 @@
          style="display:inline;opacity:0.1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.597614;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
          inkscape:label="activeRenderPassFadedHighlightedIcon" />
     </g>
+    <rect
+       style="display:inline;fill:none;fill-opacity:1;stroke:none;stroke-opacity:1"
+       id="valueChanged"
+       width="9"
+       height="8"
+       x="392"
+       y="14"
+       inkscape:label="valueChanged" />
   </g>
   <g
      inkscape:label="Artwork"
@@ -7937,20 +7945,12 @@
        y="115.57742"
        inkscape:label="rect2708" />
     <circle
-       id="path6430"
+       id="valueChangedPath"
        cx="397"
        cy="70.362183"
        style="fill:#63ba86;fill-opacity:0.99215686;stroke:#3c3c3c;stroke-opacity:1"
-       inkscape:label="#path6430"
+       inkscape:label="valueChangedPath"
        r="3" />
-    <rect
-       style="fill:none;fill-opacity:0.99215686;stroke:none;stroke-opacity:1"
-       id="valueChanged"
-       width="10"
-       height="8"
-       x="391"
-       y="66.362183"
-       inkscape:label="#rect9457" />
     <g
        id="g2047"
        inkscape:label="tabScrollMenu"

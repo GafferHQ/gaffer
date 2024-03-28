@@ -15,6 +15,7 @@ Fixes
 - SceneAlgo : Fixed potential shutdown crashes caused by the adaptor registry [^1].
 - Dispatcher : Fixed shutdown crashes caused by Python slots connected to the dispatch signals [^1].
 - Display : Fixed shutdown crashes caused by Python slots connected to `driverCreatedSignal()` and `imageReceivedSignal()` [^1].
+- Fixed a bug on transform tool orientation plugs where the green icon indicating a plug is not set to its default overlapped with the label.
 
 API
 ---
