@@ -47,6 +47,7 @@ from .RGBAChannelsPlugValueWidget import RGBAChannelsPlugValueWidget
 from .ChannelPlugValueWidget import ChannelPlugValueWidget
 from .ViewPlugValueWidget import ViewPlugValueWidget
 from .ImageInspector import ImageInspector
+from .DeepPixelInfo import DeepPixelInfo
 
 from . import ImageReaderPathPreview
 
