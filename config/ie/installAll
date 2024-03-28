@@ -145,40 +145,34 @@ for app, minimumVersion in appInfos :
 # Loop over all builds
 ##########################################################################
 
-if platform in ( "cent7.x86_64" ) :
+for cortexCompatibilityVersion, cortexReg in cortexInfo.items() :
 
-	for cortexCompatibilityVersion, cortexReg in cortexInfo.items() :
+	# standalone builds
+	compilerVersion = cortexReg.get( "compilerVersion", defaultCompilerVersion )
+	appleseedVersion = appleseedCompilerMap[compilerVersion].get( cortexCompatibilityVersion, "UNDEFINED" )
+	baseArgs = [
+		"COMPILER_VERSION={}".format( compilerVersion ),
+		"CORTEX_VERSION={}".format( cortexCompatibilityVersion ),
+		"APPLESEED_VERSION={}".format( appleseedVersion ),
+		"DL_VERSION={}".format( dlVersion ),
+	]
+	for variant, variantInfo in variantReg.items() :
+		for arnoldVersion in arnoldVersions :
+			variantArgs = [ "GAFFER_BUILD_VARIANT={}".format( variant ) ] + [ "=".join( x ) for x in variantInfo.items() ]
+			arnoldArgs = [ "ARNOLD_VERSION={}".format( arnoldVersion ) ]
+			build( baseArgs + variantArgs + arnoldArgs )
 
-		# standalone builds
-		compilerVersion = cortexReg.get( "compilerVersion", defaultCompilerVersion )
-		appleseedVersion = appleseedCompilerMap[compilerVersion].get( cortexCompatibilityVersion, "UNDEFINED" )
-		baseArgs = [
-			"COMPILER_VERSION={}".format( compilerVersion ),
-			"CORTEX_VERSION={}".format( cortexCompatibilityVersion ),
-			"APPLESEED_VERSION={}".format( appleseedVersion ),
-			"DL_VERSION={}".format( dlVersion ),
-		]
-		for variant, variantInfo in variantReg.items() :
+	# app specific builds
+	for app, appVersions in appVersionsDict.items() :
+		for appVersion in appVersions :
+			compilerVersion = IEEnv.registry["apps"][app][appVersion][platform]["compilerVersion"]
+			appleseedVersion = appleseedCompilerMap[compilerVersion].get( cortexCompatibilityVersion, "UNDEFINED" )
 			for arnoldVersion in arnoldVersions :
-				variantArgs = [ "GAFFER_BUILD_VARIANT={}".format( variant ) ] + [ "=".join( x ) for x in variantInfo.items() ]
-				arnoldArgs = [ "ARNOLD_VERSION={}".format( arnoldVersion ) ]
-				build( baseArgs + variantArgs + arnoldArgs )
-
-		# app specific builds
-		for app, appVersions in appVersionsDict.items() :
-			for appVersion in appVersions :
-				compilerVersion = IEEnv.registry["apps"][app][appVersion][platform]["compilerVersion"]
-				appleseedVersion = appleseedCompilerMap[compilerVersion].get( cortexCompatibilityVersion, "UNDEFINED" )
-				for arnoldVersion in arnoldVersions :
-					build( [
-						"APP={}".format( app ),
-						"APP_VERSION={}".format( appVersion ),
-						"CORTEX_VERSION={}".format( cortexCompatibilityVersion ),
-						"APPLESEED_VERSION={}".format( appleseedVersion ),
-						"ARNOLD_VERSION={}".format( arnoldVersion ),
-						"DL_VERSION={}".format( dlVersion ),
-					] )
-
-else :
-
-	raise RuntimeError( "Unknown platform" )
+				build( [
+					"APP={}".format( app ),
+					"APP_VERSION={}".format( appVersion ),
+					"CORTEX_VERSION={}".format( cortexCompatibilityVersion ),
+					"APPLESEED_VERSION={}".format( appleseedVersion ),
+					"ARNOLD_VERSION={}".format( arnoldVersion ),
+					"DL_VERSION={}".format( dlVersion ),
+				] )

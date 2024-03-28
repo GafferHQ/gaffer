@@ -722,8 +722,9 @@ if not haveInkscape and env["INKSCAPE"] != "disableGraphics" :
 	sys.stderr.write( "ERROR : Inkscape not found. Check INKSCAPE build variable.\n" )
 	Exit( 1 )
 
-inkscapeHelp = subprocess.check_output( [ env["INKSCAPE"], "--help" ], universal_newlines=True )
-env["INKSCAPE_USE_EXPORT_FILENAME"] = True if "--export-filename" in inkscapeHelp else False
+if haveInkscape:
+	inkscapeHelp = subprocess.check_output( [ env["INKSCAPE"], "--help" ], universal_newlines=True )
+	env["INKSCAPE_USE_EXPORT_FILENAME"] = True if "--export-filename" in inkscapeHelp else False
 
 haveSphinx = conf.checkSphinx()
 
