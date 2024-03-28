@@ -73,7 +73,7 @@ class ParameterAlgoTest( unittest.TestCase ) :
 				IECore.FloatData( arnold.AiNodeGetFlt( n, "base" ) )
 			)
 
-			IECore.FloatData( arnold.AiNodeSetStr( n, "name", "testString" ) )
+			arnold.AiNodeSetStr( n, "name", "testString" )
 			self.assertEqual(
 				IECoreArnold.ParameterAlgo.getParameter( n, "name" ),
 				IECore.StringData( "testString" ),
