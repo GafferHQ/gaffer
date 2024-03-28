@@ -275,6 +275,7 @@ nodeMenu.append( "/Scene/Object/Reverse Winding", GafferScene.ReverseWinding, se
 nodeMenu.append( "/Scene/Object/Mesh Distortion", GafferScene.MeshDistortion, searchText = "MeshDistortion" )
 nodeMenu.append( "/Scene/Object/Mesh Segments", GafferScene.MeshSegments, searchText = "MeshSegments" )
 nodeMenu.append( "/Scene/Object/Mesh Split", GafferScene.MeshSplit, searchText = "MeshSplit" )
+nodeMenu.append( "/Scene/Object/Mesh Subdivide", GafferScene.MeshTessellate, searchText = "MeshTessellate" )
 nodeMenu.append( "/Scene/Object/Camera Tweaks", GafferScene.CameraTweaks, searchText = "CameraTweaks" )
 nodeMenu.append( "/Scene/Object/Curve Sampler", GafferScene.CurveSampler, searchText = "CurveSampler" )
 nodeMenu.append( "/Scene/Object/Closest Point Sampler", GafferScene.ClosestPointSampler, searchText = "ClosestPointSampler" )
