@@ -36,6 +36,8 @@
 
 import unittest
 
+import arnold
+
 import IECore
 import IECoreScene
 
@@ -47,6 +49,21 @@ import GafferSceneTest
 import GafferArnold
 
 class ArnoldColorManagerTest( GafferSceneTest.SceneTestCase ) :
+
+	def __expectedOCIOParameters( self, **kw ) :
+
+		result = {
+			"color_space_linear" : "",
+			"color_space_narrow" : "",
+			"config" : "",
+		}
+
+		if [ int( x ) for x in arnold.AiGetVersion()[:2] ] >= [ 7, 3 ] :
+			result |= {
+				"ignore_environment_variable" : False,
+			}
+
+		return IECore.CompoundData( result | kw )
 
 	def test( self ) :
 
@@ -95,11 +112,7 @@ class ArnoldColorManagerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( cm.outputShader().type, "ai:color_manager" )
 		self.assertEqual(
 			cm.outputShader().parameters,
-			IECore.CompoundData( {
-				"color_space_linear" : "linear",
-				"color_space_narrow" : "",
-				"config" : "",
-			} )
+			self.__expectedOCIOParameters( color_space_linear = "linear" )
 		)
 
 		colorManager["enabled"].setValue( False )
@@ -148,11 +161,7 @@ class ArnoldColorManagerTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( shader.type, "ai:color_manager" )
 			self.assertEqual(
 				shader.parameters,
-				IECore.CompoundData( {
-					"config" : config,
-					"color_space_linear" : linear,
-					"color_space_narrow" : narrow,
-				} )
+				self.__expectedOCIOParameters( config = config, color_space_linear = linear, color_space_narrow = narrow )
 			)
 
 		with Gaffer.Context() as context :

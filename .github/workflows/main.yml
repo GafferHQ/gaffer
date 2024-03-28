@@ -86,6 +86,7 @@ jobs:
 
     env:
       ARNOLD_LICENSE_ORDER: none # Don't waste time looking for a license that doesn't exist
+      ARNOLD_FORCE_ABORT_ON_LICENSE_FAIL: 0 # And don't abort because the license isn't found
       GAFFER_BUILD_DIR: "./build"
       GAFFER_CACHE_DIR: "./sconsCache"
 
@@ -189,7 +190,7 @@ jobs:
         import sys
         import os
 
-        for arnoldVersion in [ "7.2.1.0" ] :
+        for arnoldVersion in [ "7.2.1.0", "7.3.1.0" ] :
           arnoldRoot = os.path.join( os.environ["GITHUB_WORKSPACE"], "arnoldRoot", arnoldVersion )
           os.environ["ARNOLD_ROOT"] = arnoldRoot
 
