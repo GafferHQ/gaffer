@@ -34,9 +34,9 @@
 #
 ##########################################################################
 
-__import__( "IECoreImage" )
-__import__( "Gaffer" )
 __import__( "GafferDispatch" )
+__import__( "Gaffer" )
+__import__( "IECoreImage" )
 
 from ._GafferImage import *
 from .CatalogueSelect import CatalogueSelect
