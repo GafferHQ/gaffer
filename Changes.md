@@ -4,6 +4,7 @@
 Features
 --------
 
+- Arnold : Added support for Arnold 7.3. Note that a minimum of 7.3.1.0 is required, meaning that 7.3.0.0 is _not_ supported.
 - SelectionTool : Added select mode plug. When set to anything except `Standard` using the SelectionTool causes the actual scene location selected to potentially be modified from the originally selected location. Selection modifiers work identically for deselection. Currently, two selectors are implemented :
   - USD Kind : When selecting, the first ancestor location with a `usd:kind` attribute matching the chosen list of USD Kind will ultimately be selected. USD's Kind Registry includes `Assembly`, `Component`, `Group`, `Model` and `SubComponent` by default and can be extended via USD startup scripts.
   - Shader Assignment : When selecting, the first ancestor location with a renderable and direct (not inherited) shader attribute will ultimately be selected. This can be used to select either surface or displacement shaders.
