@@ -1,6 +1,13 @@
 1.4.x.x (relative to 1.4.0.0b5)
 =======
 
+Features
+--------
+
+- SelectionTool : Added select mode plug. When set to anything except `Standard` using the SelectionTool causes the actual scene location selected to potentially be modified from the originally selected location. Selection modifiers work identically for deselection. Currently, two selectors are implemented :
+  - USD Kind : When selecting, the first ancestor location with a `usd:kind` attribute matching the chosen list of USD Kind will ultimately be selected. USD's Kind Registry includes `Assembly`, `Component`, `Group`, `Model` and `SubComponent` by default and can be extended via USD startup scripts.
+  - Shader Assignment : When selecting, the first ancestor location with a renderable and direct (not inherited) shader attribute will ultimately be selected. This can be used to select either surface or displacement shaders.
+
 Fixes
 -----
 
@@ -9,14 +16,13 @@ Fixes
 - Dispatcher : Fixed shutdown crashes caused by Python slots connected to the dispatch signals [^1].
 - Display : Fixed shutdown crashes caused by Python slots connected to `driverCreatedSignal()` and `imageReceivedSignal()` [^1].
 
+API
+---
+
+- SelectionTool : Added static `registerSelectMode()` method for registering a Python or C++ function that will modify a selected scene path location. Users can choose which mode is active when selecting.
+
 1.4.0.0b5 (relative to 1.4.0.0b4)
 =========
-
-Features
---------
-- SelectionTool : Added select mode plug. When set to anything except `Standard` using the SelectionTool causes the actual scene location selected to potentially be modified from the originally selected location. Selection modifiers work identically for deselection. Currently, two selectors are implemented :
-  - USD Kind : When selecting, the first ancestor location with a `usd:kind` attribute matching the chosen list of USD Kind will ultimately be selected. USD's Kind Registry includes `Assembly`, `Component`, `Group`, `Model` and `SubComponent` by default and can be extended via USD startup scripts.
-  - Shader Assignment : When selecting, the first ancestor location with a renderable and direct (not inherited) shader attribute will ultimately be selected. This can be used to select either surface or displacement shaders.
 
 Improvements
 ------------
@@ -402,11 +408,6 @@ Fixes
 - InteractiveRender : Fixed context used to evaluate scene globals when renderer is set to "Default".
 - Instancer : Fixed handling of unindexed primvars in RootPerVertex mode.
 - ArnoldShader : Fixed startup errors caused by unknown values in `widget` metadata.
-
-API
----
-
-- SelectionTool : Added static `registerSelectMode()` method for registering a Python or C++ function that will modify a selected scene path location. Users can choose which mode is active when selecting.
 
 1.3.14.0 (relative to 1.3.13.1)
 ========
