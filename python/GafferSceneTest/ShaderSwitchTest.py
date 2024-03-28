@@ -175,7 +175,7 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 				)
 				self.assertEqual(
 					network.inputConnections( "n3" ),
-					[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "" ), network.Parameter( "n3", "c" ) ) ]
+					[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "out" ), network.Parameter( "n3", "c" ) ) ]
 				)
 
 if __name__ == "__main__":

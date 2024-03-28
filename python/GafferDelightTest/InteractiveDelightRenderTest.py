@@ -96,11 +96,11 @@ class InteractiveDelightRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		shader = GafferOSL.OSLShader()
 		shader.loadShader( "Surface/Constant" )
-		return shader, shader["parameters"]["Cs"]
+		return shader, shader["parameters"]["Cs"], shader["out"]["out"]
 
 	def _createTraceSetShader( self ) :
 
-		return None, None
+		return None, None, None
 
 	def _cameraVisibilityAttribute( self ) :
 
@@ -110,7 +110,7 @@ class InteractiveDelightRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		shader = GafferOSL.OSLShader()
 		shader.loadShader( "lambert" )
-		return shader, shader["parameters"]["i_color"]
+		return shader, shader["parameters"]["i_color"], shader["out"]["outColor"]
 
 	def _createPointLight( self ) :
 

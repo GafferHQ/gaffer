@@ -56,7 +56,7 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 				"flatHandle" : IECoreScene.Shader( "flat" ),
 			},
 			connections = [
-				( ( "noiseHandle", "" ), ( "flatHandle", "color" ) ),
+				( ( "noiseHandle", "out" ), ( "flatHandle", "color" ) ),
 			],
 			output = "flatHandle"
 		)
@@ -77,6 +77,45 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 				ctypes.addressof( nodes[0].contents )
 			)
 
+	def testLegacyOutputConnections( self ) :
+
+		# We used to use "" to denote the default output, put now we use
+		# "out". Here we're testing the legacy version.
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"noiseHandle" : IECoreScene.Shader( "noise" ),
+				"flatHandle" : IECoreScene.Shader( "flat" ),
+				"flakesHandle" : IECoreScene.Shader( "flakes" ),
+			},
+			connections = [
+				( ( "noiseHandle", "" ), ( "flatHandle", "color" ) ),
+				( ( "flakesHandle", "r" ), ( "noiseHandle", "distortion" ) ),
+			],
+			output = "flatHandle"
+		)
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			nodes = IECoreArnold.ShaderNetworkAlgo.convert( network, universe, "test" )
+
+			self.assertEqual( len( nodes ), 3 )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( nodes[2] ) ), "flat" )
+
+			self.assertEqual( arnold.AiNodeGetName( nodes[2] ), "test" )
+
+			noiseNode = arnold.AiNodeGetLink( nodes[2], "color" )
+			self.assertEqual( arnold.AiNodeGetName( noiseNode ), "test:noiseHandle" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noiseNode ) ), "noise" )
+
+			outputIndex = ctypes.c_int()
+			outputComponent = ctypes.c_int()
+			flakesNode = arnold.AiNodeGetLinkOutput( noiseNode, "distortion", ctypes.byref( outputIndex ), ctypes.byref( outputComponent ) )
+			self.assertEqual( arnold.AiNodeGetName( flakesNode ), "test:flakesHandle" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( flakesNode ) ), "flakes" )
+			self.assertEqual( outputIndex.value, -1 )
+			self.assertEqual( outputComponent.value, 0 )
+
 	def testUpdate( self ) :
 
 		network = IECoreScene.ShaderNetwork(
@@ -85,7 +124,7 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 				"flatHandle" : IECoreScene.Shader( "flat" ),
 			},
 			connections = [
-				( ( "noiseHandle", "" ), ( "flatHandle", "color" ) ),
+				( ( "noiseHandle", "out" ), ( "flatHandle", "color" ) ),
 			],
 			output = "flatHandle"
 		)
@@ -141,7 +180,7 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 			network.removeShader( "noiseHandle" )
 			network.setShader( "imageHandle", IECoreScene.Shader( "image" ) )
-			network.addConnection( ( ( "imageHandle", "" ), ( "flatHandle", "color" ) ) )
+			network.addConnection( ( ( "imageHandle", "out" ), ( "flatHandle", "color" ) ) )
 
 			originalNodes = nodes[:]
 			self.assertTrue( IECoreArnold.ShaderNetworkAlgo.update( nodes, network ) )
@@ -165,8 +204,8 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 			network.removeShader( "flatHandle" )
 			network.setShader( "lambertHandle", IECoreScene.Shader( "lambert" ) )
-			network.addConnection( ( ( "imageHandle", "" ), ( "lambertHandle", "Kd_color" ) ) )
-			network.setOutput( ( "lambertHandle", "" ) )
+			network.addConnection( ( ( "imageHandle", "out" ), ( "lambertHandle", "Kd_color" ) ) )
+			network.setOutput( ( "lambertHandle", "out" ) )
 
 			originalNodes = nodes[:]
 			self.assertFalse( IECoreArnold.ShaderNetworkAlgo.update( nodes, network ) )
@@ -227,7 +266,7 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 				"flatHandle" : flat,
 			},
 			connections = [
-				( ( "noiseHandle", "" ), ( "flatHandle", "color" ) ),
+				( ( "noiseHandle", "out" ), ( "flatHandle", "color" ) ),
 			],
 			output = "flatHandle"
 		)
