@@ -5,6 +5,7 @@ Fixes
 -----
 
 - GafferTest, GafferImageTest : Fixed import of these modules if the `Gaffer` module had not been imported previously.
+- SceneAlgo : Fixed potential shutdown crashes caused by the adaptor registry.
 
 1.4.0.0b5 (relative to 1.4.0.0b4)
 =========
