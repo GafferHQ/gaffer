@@ -1,6 +1,11 @@
 1.4.x.x (relative to 1.4.0.0b5)
 =======
 
+Features
+--------
+
+- Arnold : Added support for Arnold 7.3. Note that a minimum of 7.3.1.0 is required, meaning that 7.3.0.0 is _not_ supported.
+
 Improvements
 ------------
 
