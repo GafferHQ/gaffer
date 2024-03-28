@@ -1,6 +1,11 @@
 1.4.x.x (relative to 1.4.0.0b5)
 =======
 
+Improvements
+------------
+
+- ArnoldShader : Added parameter tooltips based on `help` metadata provided by Arnold.
+
 Fixes
 -----
 
