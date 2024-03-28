@@ -13,6 +13,7 @@ Improvements
 
 - EditScope : Added a summary of edits in the NodeEditor, with the ability to select the affected objects and quickly navigate to the processor nodes.
 - Arnold : OSL shaders with connections from multiple outputs are no longer duplicated on export to Arnold.
+- ArnoldShader : Added parameter tooltips based on `help` metadata provided by Arnold.
 
 Fixes
 -----
