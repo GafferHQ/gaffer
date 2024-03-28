@@ -5,7 +5,9 @@ Fixes
 -----
 
 - GafferTest, GafferImageTest : Fixed import of these modules if the `Gaffer` module had not been imported previously.
-- SceneAlgo : Fixed potential shutdown crashes caused by the adaptor registry.
+- SceneAlgo : Fixed potential shutdown crashes caused by the adaptor registry [^1].
+- Dispatcher : Fixed shutdown crashes caused by Python slots connected to the dispatch signals [^1].
+- Display : Fixed shutdown crashes caused by Python slots connected to `driverCreatedSignal()` and `imageReceivedSignal()` [^1].
 
 1.4.0.0b5 (relative to 1.4.0.0b4)
 =========

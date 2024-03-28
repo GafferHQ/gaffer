@@ -36,6 +36,7 @@
 
 import os
 import stat
+import subprocess
 import unittest
 import functools
 import itertools
@@ -2294,6 +2295,23 @@ class DispatcherTest( GafferTest.TestCase ) :
 			script["dispatcher"]["task"].execute()
 		self.assertEqual( len( postDispatchSlot ), 4 )
 		self.assertEqual( postDispatchSlot[3], ( script["dispatcher"], False ) )
+
+	def testDispatchSignalShutdownCrash( self ) :
+
+		subprocess.check_call( [
+			Gaffer.executablePath(), "env", "python", "-c",
+			"""import GafferDispatch; GafferDispatch.Dispatcher.preDispatchSignal().connect( lambda d : True, scoped = False )"""
+		] )
+
+		subprocess.check_call( [
+			Gaffer.executablePath(), "env", "python", "-c",
+			"""import GafferDispatch; GafferDispatch.Dispatcher.dispatchSignal().connect( lambda d : None, scoped = False )"""
+		] )
+
+		subprocess.check_call( [
+			Gaffer.executablePath(), "env", "python", "-c",
+			"""import GafferDispatch; GafferDispatch.Dispatcher.postDispatchSignal().connect( lambda d, s : None, scoped = False )"""
+		] )
 
 if __name__ == "__main__":
 	unittest.main()

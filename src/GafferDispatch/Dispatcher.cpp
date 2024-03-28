@@ -167,9 +167,6 @@ const InternedString g_frameRangeEnd( "frameRange:end" );
 } // namespace
 
 size_t Dispatcher::g_firstPlugIndex = 0;
-Dispatcher::PreDispatchSignal Dispatcher::g_preDispatchSignal;
-Dispatcher::DispatchSignal Dispatcher::g_dispatchSignal;
-Dispatcher::PostDispatchSignal Dispatcher::g_postDispatchSignal;
 std::string Dispatcher::g_defaultDispatcherType = "";
 
 GAFFER_NODE_DEFINE_TYPE( Dispatcher )
@@ -325,17 +322,20 @@ void Dispatcher::createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::C
 
 Dispatcher::PreDispatchSignal &Dispatcher::preDispatchSignal()
 {
-	return g_preDispatchSignal;
+	static PreDispatchSignal *g_preDispatchSignal = new PreDispatchSignal;
+	return *g_preDispatchSignal;
 }
 
 Dispatcher::DispatchSignal &Dispatcher::dispatchSignal()
 {
-	return g_dispatchSignal;
+	static DispatchSignal *g_dispatchSignal = new DispatchSignal;
+	return *g_dispatchSignal;
 }
 
 Dispatcher::PostDispatchSignal &Dispatcher::postDispatchSignal()
 {
-	return g_postDispatchSignal;
+	static PostDispatchSignal *g_postDispatchSignal = new PostDispatchSignal;
+	return *g_postDispatchSignal;
 }
 
 void Dispatcher::setupPlugs( Plug *parentPlug )
