@@ -319,6 +319,18 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 			driver.close()
 			self.assertTrue( display.driverClosed() )
 
+	def testSignalShutdownCrash( self ) :
+
+		subprocess.check_call( [
+			Gaffer.executablePath(), "env", "python", "-c",
+			"""import GafferImage; GafferImage.Display.driverCreatedSignal().connect( lambda d, p : None, scoped = False )"""
+		] )
+
+		subprocess.check_call( [
+			Gaffer.executablePath(), "env", "python", "-c",
+			"""import GafferImage; GafferImage.Display.imageReceivedSignal().connect( lambda p : None, scoped = False )"""
+		] )
+
 	def __testTransferImage( self, fileName ) :
 
 		imageReader = GafferImage.ImageReader()
