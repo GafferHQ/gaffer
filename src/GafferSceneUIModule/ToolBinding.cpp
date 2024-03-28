@@ -186,12 +186,52 @@ object acquireTransformEdit( const TransformTool::Selection &s, bool createIfNec
 	return p ? object( *p ) : object();
 }
 
+void registerSelectMode( const std::string &modifierName, object modifier )
+{
+	auto selectModePtr = std::shared_ptr<boost::python::object>(
+		new boost::python::object( modifier ),
+		[]( boost::python::object *o ) {
+			IECorePython::ScopedGILLock gilLock;
+			delete o;
+		}
+	);
+
+	SelectionTool::registerSelectMode(
+		modifierName,
+		[selectModePtr](
+			const GafferScene::ScenePlug *scene,
+			const GafferScene::ScenePlug::ScenePath &path
+		) -> GafferScene::ScenePlug::ScenePath
+		{
+			IECorePython::ScopedGILLock gilLock;
+			try
+			{
+				const std::string pathString = GafferScene::ScenePlug::pathToString( path );
+				return extract<GafferScene::ScenePlug::ScenePath>(
+					(*selectModePtr)( GafferScene::ScenePlugPtr( const_cast<GafferScene::ScenePlug *>( scene ) ), pathString )
+				);
+			}
+			catch( const boost::python::error_already_set & )
+			{
+				ExceptionAlgo::translatePythonException();
+			}
+		}
+	);
+}
+
 } // namespace
 
 void GafferSceneUIModule::bindTools()
 {
 
-	GafferBindings::NodeClass<SelectionTool>( nullptr, no_init );
+	GafferBindings::NodeClass<SelectionTool>( nullptr, no_init )
+		.def( "registerSelectMode", &registerSelectMode, ( boost::python::arg( "modifierName" ), boost::python::arg( "modifier" ) ) )
+		.staticmethod( "registerSelectMode" )
+		.def( "registeredSelectModes", &SelectionTool::registeredSelectModes )
+		.staticmethod( "registeredSelectModes" )
+		.def( "deregisterSelectMode", &SelectionTool::deregisterSelectMode )
+		.staticmethod( "deregisterSelectMode" )
+	;
 
 	{
 		GafferBindings::NodeClass<CropWindowTool>( nullptr, no_init )
