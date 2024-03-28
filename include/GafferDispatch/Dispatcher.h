@@ -296,9 +296,6 @@ class GAFFERDISPATCH_API Dispatcher : public TaskNode
 		class Batcher;
 
 		static size_t g_firstPlugIndex;
-		static PreDispatchSignal g_preDispatchSignal;
-		static DispatchSignal g_dispatchSignal;
-		static PostDispatchSignal g_postDispatchSignal;
 		static std::string g_defaultDispatcherType;
 
 };
