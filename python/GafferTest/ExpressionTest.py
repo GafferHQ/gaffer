@@ -1673,6 +1673,18 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		self.assertEqual( script["node"]["in"].getValue(), pathlib.Path.cwd().as_posix() )
 
+	def testCreateExpressionWithLegacyPlugName( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["random"] = Gaffer.Random()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression(
+			'parent["random"]["contextEntry"] = "x"'
+		)
+
+		self.assertEqual( script["random"]["seedVariable"].getValue(), "x" )
+
 	@GafferTest.TestRunner.CategorisedTestMethod( { "taskCollaboration:hashAliasing" } )
 	def testHashAliasing( self ) :
 

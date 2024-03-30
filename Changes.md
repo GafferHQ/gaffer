@@ -1,7 +1,78 @@
-1.4.x.x (relative to 1.4.0.0b4)
+1.4.x.x (relative to 1.4.0.0b5)
 =======
 
+Features
+--------
 
+- SelectionTool : Added select mode plug. When set to anything except `Standard` using the SelectionTool causes the actual scene location selected to potentially be modified from the originally selected location. Selection modifiers work identically for deselection. Currently, two selectors are implemented :
+  - USD Kind : When selecting, the first ancestor location with a `usd:kind` attribute matching the chosen list of USD Kind will ultimately be selected. USD's Kind Registry includes `Assembly`, `Component`, `Group`, `Model` and `SubComponent` by default and can be extended via USD startup scripts.
+  - Shader Assignment : When selecting, the first ancestor location with a renderable and direct (not inherited) shader attribute will ultimately be selected. This can be used to select either surface or displacement shaders.
+
+Fixes
+-----
+
+- GafferTest, GafferImageTest : Fixed import of these modules if the `Gaffer` module had not been imported previously.
+- SceneAlgo : Fixed potential shutdown crashes caused by the adaptor registry [^1].
+- Dispatcher : Fixed shutdown crashes caused by Python slots connected to the dispatch signals [^1].
+- Display : Fixed shutdown crashes caused by Python slots connected to `driverCreatedSignal()` and `imageReceivedSignal()` [^1].
+
+API
+---
+
+- SelectionTool : Added static `registerSelectMode()` method for registering a Python or C++ function that will modify a selected scene path location. Users can choose which mode is active when selecting.
+
+1.4.0.0b5 (relative to 1.4.0.0b4)
+=========
+
+Improvements
+------------
+
+- LightPositionTool : The tool is now only visible for members of the `__lights` set, instead of all objects.
+- Catalogue : Added `imageNames` output plug, containing the names of all images in the Catalogue. Among other things this can be used to drive a Wedge or ContactSheet node and a CatalogueSelect.
+- Render, InteractiveRender : Added `resolvedRenderer` plug, which outputs the name of the renderer that will be used, taking into account the influence of the `render:defaultRenderer` option [^1].
+
+Fixes
+-----
+
+- PlugAlgo : Updated `canSetValueFromData()`, `setValueFromData()` and `getValueAsData()` with support for missing types.
+- LightPositionTool : Fixed lingering shadow pivot point after placing a shadow pivot, switching to highlight mode and switching back to shadow mode [^1].
+- Catalogue :
+  - Fixed undo for image reordering via drag & drop.
+  - Fixed bugs caused by reordering images using `GraphComponent::reorderChildren()`.
+- InteractiveRender : Fixed context used to evaluate scene globals when renderer is set to "Default" [^1].
+- Instancer : Fixed handling of unindexed primvars in RootPerVertex mode [^1].
+- ImageGadget :
+  - Fixed loading of 2 channel images [^1].
+  - Fixed error message to include filename [^1].
+- Expression : `setExpression()` now respects configs that provide backwards compatibility for old plug names.
+- Shuffle : Fixed default name for plugs constructed via the legacy `ChannelPlug( out, in )` constructor [^1].
+- ImageReader :
+  - Fixed loading of OpenEXR images with 32 bit float data and DWA compression [^1].
+  - Fixed loading of secondary layers in OpenEXR images with DWA compression [^1].
+- GUI : Fixed potential crashes during shutdown [^1].
+- ScriptNode : Fixed execution of multi-line `if :` statements in `.gfr` files [^1].
+- ArnoldShader : Fixed startup errors caused by unknown values in `widget` metadata [^1].
+
+API
+---
+
+- TypedObjectPlug : Added Python bindings for the default values of the `defaultValue` constructor argument.
+- Box2fVectorDataPlug : Added new plug type for storing arrays of Box2f.
+- Catalogue : Deprecated `image:index` metadata.
+
+Breaking Changes
+----------------
+
+- StandardLightVisualiser : Added `attributeName` argument to `surfaceTexture()` virtual method.
+
+Build
+-----
+
+- OpenEXR : Applied patches from the following pull requests :
+  - https://github.com/AcademySoftwareFoundation/openexr/pull/1591
+  - https://github.com/AcademySoftwareFoundation/openexr/pull/1684
+
+[^1]: To be omitted from final release notes for 1.4.0.0.
 
 1.4.0.0b4 (relative to 1.4.0.0b3)
 =========
@@ -318,10 +389,25 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.x.x (relative to 1.3.14.0)
-=======
+1.3.x.x (relative to 1.3.15.0)
+========
 
 
+
+1.3.15.0 (relative to 1.3.14.0)
+========
+
+Improvements
+------------
+
+- Render, InteractiveRender : Added `resolvedRenderer` plug, which outputs the name of the renderer that will be used, taking into account the influence of the `render:defaultRenderer` option.
+
+Fixes
+-----
+
+- InteractiveRender : Fixed context used to evaluate scene globals when renderer is set to "Default".
+- Instancer : Fixed handling of unindexed primvars in RootPerVertex mode.
+- ArnoldShader : Fixed startup errors caused by unknown values in `widget` metadata.
 
 1.3.14.0 (relative to 1.3.13.1)
 ========

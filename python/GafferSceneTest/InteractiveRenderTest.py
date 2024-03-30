@@ -2199,6 +2199,59 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testRendererOption" )
 		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
 
+	def testRendererOptionContext( self ):
+
+		script = Gaffer.ScriptNode()
+		script["variables"].addChild( Gaffer.NameValuePlug( "defaultRendererVariable", self.renderer ) )
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testRendererOptionContext",
+				}
+			)
+		)
+
+		script["standardOptions"] = GafferScene.StandardOptions()
+		script["standardOptions"]["in"].setInput( script["outputs"]["out"] )
+		script["standardOptions"]["options"]["defaultRenderer"]["enabled"].setValue( True )
+		script["standardOptions"]["options"]["defaultRenderer"]["value"].setValue( "${defaultRendererVariable}" )
+
+		script["renderer"] = self._createInteractiveRender( useNodeClass = False )
+		script["renderer"]["renderer"].setValue( "" )
+		script["renderer"]["in"].setInput( script["standardOptions"]["out"] )
+
+		# Check that the globals are evaluated in the right context to provide
+		# the `defaultRendererVariable` and enable the render.
+
+		script["renderer"]["state"].setValue( script["renderer"].State.Running )
+		time.sleep( 1.0 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testRendererOptionContext" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+	def testResolvedRenderer( self ) :
+
+		standardOptions = GafferScene.StandardOptions()
+
+		render = GafferScene.InteractiveRender()
+		render["in"].setInput( standardOptions["out"] )
+		self.assertEqual( render["renderer"].getValue(), "" )
+		self.assertEqual( render["resolvedRenderer"].getValue(), "" )
+
+		standardOptions["options"]["defaultRenderer"]["enabled"].setValue( True )
+		standardOptions["options"]["defaultRenderer"]["value"].setValue( self.renderer )
+		self.assertEqual( render["resolvedRenderer"].getValue(), self.renderer )
+
+		render["renderer"].setValue( "Other" )
+		self.assertEqual( render["resolvedRenderer"].getValue(), "Other" )
+
 	def tearDown( self ) :
 
 		GafferSceneTest.SceneTestCase.tearDown( self )

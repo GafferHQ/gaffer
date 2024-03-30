@@ -90,7 +90,7 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 		// The default implementation looks for a string parameter registered
 		// as the "textureNameParameter" for the supplied shader network's
 		// output shader.
-		virtual IECore::DataPtr surfaceTexture( const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, int maxTextureResolution ) const;
+		virtual IECore::DataPtr surfaceTexture( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, int maxTextureResolution ) const;
 
 	private :
 

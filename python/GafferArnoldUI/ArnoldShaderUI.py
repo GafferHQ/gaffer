@@ -292,7 +292,7 @@ def __translateNodeMetadata( nodeEntry ) :
 				"camera" : "GafferSceneUI.ScenePathPlugValueWidget",
 				"colorSpace" : "GafferUI.PresetsPlugValueWidget",
 				"null" : "",
-			}[widget]
+			}.get( widget )
 
 			if widget == "camera" :
 				__metadata[paramPath]["scenePathPlugValueWidget:setNames"] = IECore.StringVectorData( [ "__cameras" ] )

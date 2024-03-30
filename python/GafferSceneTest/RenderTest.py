@@ -282,5 +282,21 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		render["task"].execute()
 		self.assertFalse( ( self.temporaryDirectory() / "test.exr" ).exists() )
 
+	def testResolvedRenderer( self ) :
+
+		standardOptions = GafferScene.StandardOptions()
+
+		render = GafferScene.Render()
+		render["in"].setInput( standardOptions["out"] )
+		self.assertEqual( render["renderer"].getValue(), "" )
+		self.assertEqual( render["resolvedRenderer"].getValue(), "" )
+
+		standardOptions["options"]["defaultRenderer"]["enabled"].setValue( True )
+		standardOptions["options"]["defaultRenderer"]["value"].setValue( self.renderer )
+		self.assertEqual( render["resolvedRenderer"].getValue(), self.renderer )
+
+		render["renderer"].setValue( "Other" )
+		self.assertEqual( render["resolvedRenderer"].getValue(), "Other" )
+
 if __name__ == "__main__":
 	unittest.main()

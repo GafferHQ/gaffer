@@ -39,8 +39,12 @@
 #include "GafferSceneUI/Export.h"
 #include "GafferSceneUI/TypeIds.h"
 
+#include "GafferScene/ScenePlug.h"
+
 #include "GafferUI/DragDropEvent.h"
 #include "GafferUI/Tool.h"
+
+#include "Gaffer/StringPlug.h"
 
 namespace GafferSceneUI
 {
@@ -59,9 +63,27 @@ class GAFFERSCENEUI_API SelectionTool : public GafferUI::Tool
 
 		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::SelectionTool, SelectionToolTypeId, GafferUI::Tool );
 
+		Gaffer::StringPlug *selectModePlug();
+		const Gaffer::StringPlug *selectModePlug() const;
+
+		using SelectFunction = std::function<GafferScene::ScenePlug::ScenePath(
+			const GafferScene::ScenePlug *,
+			const GafferScene::ScenePlug::ScenePath &
+		)>;
+		// Registers a select mode identified by `name`. `function` must accept
+		// the scene from which a selection will be made and the `ScenePath` the user
+		// initially selected. It returns the `ScenePath` to use as the actual selection.
+		static void registerSelectMode( const std::string &name, SelectFunction function );
+		// Returns the names of registered modes, in the order they were registered.
+		// The "/Standard" mode will always be first.
+		static std::vector<std::string> registeredSelectModes();
+		static void deregisterSelectMode( const std::string &mode );
+
 	private :
 
 		static ToolDescription<SelectionTool, SceneView> g_toolDescription;
+
+		void plugSet( Gaffer::Plug *plug );
 
 		SceneGadget *sceneGadget();
 
@@ -77,6 +99,8 @@ class GAFFERSCENEUI_API SelectionTool : public GafferUI::Tool
 
 		bool m_acceptedButtonPress = false;
 		bool m_initiatedDrag = false;
+
+		static size_t g_firstPlugIndex;
 };
 
 } // namespace GafferSceneUI

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2023, John Haddon. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,48 +34,59 @@
 #
 ##########################################################################
 
+import unittest
+
 import Gaffer
-import GafferImage
+import GafferScene
+import GafferUITest
+import GafferSceneUI
 
-class __ChannelPlug( Gaffer.ShufflePlug ) :
+class SelectionToolTest( GafferUITest.TestCase ) :
 
-	def __init__( self, *args, **kw ) :
+	def modifierFunction( scene, path ) :
 
-		if (
-			len( kw ) == 0 and len( args ) == 2
-			and isinstance( args[0], str ) and isinstance( args[1], str )
-		) :
-			Gaffer.ShufflePlug.__init__( self, args[1], args[0] )
-			self.setName( "channel" )
-		else :
-			Gaffer.ShufflePlug.__init__( self, *args, **kw )
+		return path
 
-GafferImage.Shuffle.ChannelPlug = __ChannelPlug
+	def testRegisterSelectMode( self ) :
 
-def __shufflePlugGetItem( originalGetItem ) :
+		GafferSceneUI.SelectionTool.registerSelectMode( "testModifier", self.modifierFunction )
+		GafferSceneUI.SelectionTool.registerSelectMode( "testModifier2", self.modifierFunction )
 
-	def getItem( self, key ) :
+		modifiers = GafferSceneUI.SelectionTool.registeredSelectModes()
+		self.assertEqual( len( modifiers ), 3 )
 
-		if key == "in" :
-			key = "source"
-		elif key == "out" :
-			key = "destination"
+		self.assertEqual( modifiers, [ "/Standard", "testModifier", "testModifier2" ] )
 
-		return originalGetItem( self, key )
+	def testSyncSelectMode( self ) :
 
-	return getItem
+		GafferSceneUI.SelectionTool.registerSelectMode( "testModifier", self.modifierFunction )
 
-Gaffer.ShufflePlug.__getitem__ = __shufflePlugGetItem( Gaffer.ShufflePlug.__getitem__ )
+		script = Gaffer.ScriptNode()
+		script["cube"] = GafferScene.Cube()
 
-def __shuffleGetItem( originalGetItem ) :
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["cube"]["out"] )
 
-	def getItem( self, key ) :
+		tool1 = GafferSceneUI.TranslateTool( view )
+		tool2 = GafferSceneUI.RotateTool( view )
 
-		if key == "channels" :
-			key = "shuffles"
+		self.assertEqual( len( [ i for i in view["tools"].children() if isinstance( i, GafferSceneUI.SelectionTool ) ] ), 2 )
 
-		return originalGetItem( self, key )
+		tool1["selectMode"].setValue( "testModifier" )
+		self.assertEqual( tool1["selectMode"].getValue(), "testModifier" )
+		self.assertEqual( tool2["selectMode"].getValue(), "testModifier" )
 
-	return getItem
+		tool2["selectMode"].setValue( "/Standard" )
+		self.assertEqual( tool1["selectMode"].getValue(), "/Standard" )
+		self.assertEqual( tool2["selectMode"].getValue(), "/Standard" )
 
-GafferImage.Shuffle.__getitem__ = __shuffleGetItem( GafferImage.Shuffle.__getitem__ )
+	def tearDown( self ) :
+
+		GafferUITest.TestCase.tearDown( self )
+
+		GafferSceneUI.SelectionTool.deregisterSelectMode( "testModifier" )
+		GafferSceneUI.SelectionTool.deregisterSelectMode( "testModifier2" )
+
+
+if __name__ == "__main__" :
+	unittest.main()
