@@ -8,6 +8,11 @@ Features
   - USD Kind : When selecting, the first ancestor location with a `usd:kind` attribute matching the chosen list of USD Kind will ultimately be selected. USD's Kind Registry includes `Assembly`, `Component`, `Group`, `Model` and `SubComponent` by default and can be extended via USD startup scripts.
   - Shader Assignment : When selecting, the first ancestor location with a renderable and direct (not inherited) shader attribute will ultimately be selected. This can be used to select either surface or displacement shaders.
 
+Improvements
+------------
+
+- EditScope : Added a summary of edits in the NodeEditor, with the ability to select the affected objects and quickly navigate to the processor nodes.
+
 Fixes
 -----
 
@@ -21,6 +26,9 @@ API
 ---
 
 - SelectionTool : Added static `registerSelectMode()` method for registering a Python or C++ function that will modify a selected scene path location. Users can choose which mode is active when selecting.
+- EditScopeUI : Added an API for customising the EditScope's NodeEditor with summaries for each processor :
+  - ProcessorWidget provides a base class for custom widgets, and a factory mechanism for registering them against processors.
+  - SimpleProcessorWidget provides a base class for widgets with a simple summary label and optional action links.
 
 1.4.0.0b5 (relative to 1.4.0.0b4)
 =========
