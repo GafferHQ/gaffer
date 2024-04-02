@@ -98,6 +98,8 @@ for plugType in ( Gaffer.SplineffPlug, Gaffer.SplinefColor3fPlug, Gaffer.Splinef
 	Gaffer.Metadata.registerValue( plugType, "interpolation", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
 	for name, value in sorted( Gaffer.SplineDefinitionInterpolation.names.items() ):
 		Gaffer.Metadata.registerValue( plugType, "interpolation", "preset:" + name, value )
+	Gaffer.Metadata.registerValue( plugType, "p[0-9]*.x", "showValueChangedIndicator", False )
+	Gaffer.Metadata.registerValue( plugType, "p[0-9]*.y", "showValueChangedIndicator", False )
 
 ## \todo See comments for `ColorSwatchPlugValueWidget._ColorPlugValueDialogue`.
 # I think the best approach is probably to move the `acquire()` mechanism to the
