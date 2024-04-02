@@ -659,7 +659,7 @@ bool LightPositionTool::affectsHandles( const Gaffer::Plug *input ) const
 		return true;
 	}
 
-	return input == scenePlug()->transformPlug();
+	return input == scenePlug()->transformPlug() || input == modePlug();
 }
 
 void LightPositionTool::updateHandles( float rasterScale )
@@ -704,6 +704,7 @@ void LightPositionTool::updateHandles( float rasterScale )
 	distanceHandle->setTransformToSceneSpace( sceneToTransformInverse );
 
 	const Mode mode = (Mode)modePlug()->getValue();
+	distanceHandle->setRequiresPivot( mode == Mode::Shadow );
 
 	if( !target || ( mode == Mode::Shadow && !pivot ) )
 	{
@@ -921,12 +922,6 @@ void LightPositionTool::plugSet( Plug *plug )
 	if( plug == activePlug() && !activePlug()->getValue() && getTargetMode() != TargetMode::None )
 	{
 		setTargetMode( TargetMode::None );
-	}
-	else if( plug == modePlug() )
-	{
-		auto h = static_cast<DistanceHandle *>( m_distanceHandle.get() );
-		h->setRequiresPivot( modePlug()->getValue() == (int)Mode::Shadow );
-		updateHandles( m_rotateHandle->getRasterScale() );
 	}
 }
 
