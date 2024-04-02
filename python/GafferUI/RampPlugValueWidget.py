@@ -83,6 +83,7 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 				spacing = 4
 			) :
 
+				Gaffer.Metadata.registerValue( plug.pointXPlug( 0 ), "showValueChangedIndicator", False )
 				self.__positionLabel = GafferUI.LabelPlugValueWidget(
 					plug.pointXPlug( 0 ),
 					parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top }
@@ -92,6 +93,7 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 					parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top }
 				)
 
+				Gaffer.Metadata.registerValue( plug.pointYPlug( 0 ), "showValueChangedIndicator", False )
 				self.__valueLabel = GafferUI.LabelPlugValueWidget(
 					plug.pointYPlug( 0 ),
 					parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top }
