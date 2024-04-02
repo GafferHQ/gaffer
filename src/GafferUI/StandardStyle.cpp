@@ -581,7 +581,6 @@ void StandardStyle::bind( const Style *currentStyle ) const
 		return;
 	}
 
-	glEnable( GL_BLEND );
 	glBlendFuncSeparate( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
 	glUseProgram( shader()->program() );
 
@@ -1130,7 +1129,6 @@ void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Textur
 	glPushAttrib( GL_COLOR_BUFFER_BIT );
 
 	// As the image is already pre-multiplied we need to change our blend mode.
-	glEnable( GL_BLEND );
 	if( !IECoreGL::Selector::currentSelector() )
 	{
 		// Some users have reported crashes that were traced back to this call
