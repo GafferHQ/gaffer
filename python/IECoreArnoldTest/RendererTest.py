@@ -739,6 +739,9 @@ class RendererTest( GafferTest.TestCase ) :
 
 			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 			filters = self.__allNodes( universe, type = arnold.AI_NODE_FILTER )
+			# Ignore node created automatically by Arnold itself.
+			filters = [ f for f in filters if arnold.AiNodeGetName( f ) != "_forced_box_filter" ]
+
 			self.assertEqual( len( filters ), 1 )
 			f = filters[0]
 
