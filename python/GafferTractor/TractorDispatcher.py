@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import os
+import dataclasses
 
 import IECore
 
@@ -51,19 +51,35 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 		self["service"] = Gaffer.StringPlug( defaultValue = '"*"' )
 		self["envKey"] = Gaffer.StringPlug()
 
-	## Emitted prior to spooling the Tractor job, to allow
-	# custom modifications to be applied.
+	## Decribes the Gaffer task associated with a particular Tractor task.
+	@dataclasses.dataclass
+	class TaskData :
+
+		# The `GafferDispatch.TaskPlug` being executed. The associated node
+		# can be accessed via `plug.node()`.
+		plug : Gaffer.Plug
+		# The Gaffer context in which the task is executed. Does not
+		# contain the frame number, which is provided via `frames`.
+		context : Gaffer.Context
+		# The list of frames being executed.
+		frames : list
+
+	## Emitted prior to spooling the Tractor job, to allow custom modifications to
+	# be applied. Slots should have the signature `slot( dispatcher, job, taskData )` :
 	#
-	# Slots should have the signature `slot( dispatcher, job )`,
-	# where dispatcher is the TractorDispatcher and job will
-	# be the instance of tractor.api.author.Job that is about
-	# to be spooled.
+	# - `dispatcher` : The TractorDispatcher that is about to spool the job.
+	# - `job` : The `tractor.api.author.Job` that is about to be spooled.
+	#   This may be modified in place.
+	# - `taskData` : A dictionary mapping from `tractor.api.author.Task` to
+	#   TaskData, specifying the Gaffer tasks that will be executed by each
+	#   Tractor task. For example, the Gaffer node for the first Tractor task
+	#   can be accessed as `taskData[job.subtasks[0]].plug.node()`.
 	@classmethod
 	def preSpoolSignal( cls ) :
 
 		return cls.__preSpoolSignal
 
-	__preSpoolSignal = Gaffer.Signals.Signal2()
+	__preSpoolSignal = Gaffer.Signals.Signal3()
 
 	def _doDispatch( self, rootBatch ) :
 
@@ -84,6 +100,7 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 		dispatchData["scriptNode"] = rootBatch.preTasks()[0].node().scriptNode()
 		dispatchData["scriptFile"] = Gaffer.Context.current()["dispatcher:scriptFileName"]
 		dispatchData["batchesToTasks"] = {}
+		dispatchData["taskData"] = {}
 
 		# Create a Tractor job and set its basic properties.
 
@@ -105,7 +122,7 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 		# Signal anyone who might want to make just-in-time
 		# modifications to the job.
 
-		self.preSpoolSignal()( self, job )
+		self.preSpoolSignal()( self, job, dispatchData["taskData"] )
 
 		# Save a copy of our job script to the job directory.
 		# This isn't strictly necessary because we'll spool via
@@ -197,6 +214,9 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 		# Remember the task for next time, and return it.
 
 		dispatchData["batchesToTasks"][batch] = task
+		dispatchData["taskData"][task] = self.TaskData(
+			batch.plug(), batch.context(), batch.frames()
+		)
 		return task
 
 	@staticmethod

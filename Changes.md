@@ -37,6 +37,7 @@ API
 - EditScopeUI : Added an API for customising the EditScope's NodeEditor with summaries for each processor :
   - ProcessorWidget provides a base class for custom widgets, and a factory mechanism for registering them against processors.
   - SimpleProcessorWidget provides a base class for widgets with a simple summary label and optional action links.
+- TractorDispatcher : The `preSpoolSignal()` now provides an additional `taskData` argument to slots, which maps from Tractor tasks to information about the Gaffer tasks they will execute.
 
 Breaking Changes
 ----------------
