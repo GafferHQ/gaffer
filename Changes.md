@@ -28,6 +28,7 @@ Fixes
 - Dispatcher : Fixed shutdown crashes caused by Python slots connected to the dispatch signals [^1].
 - Display : Fixed shutdown crashes caused by Python slots connected to `driverCreatedSignal()` and `imageReceivedSignal()` [^1].
 - LightPositionTool : Fixed crash when changing the tool mode with nothing selected [^1].
+- ViewportGadget : Fixed selection issues with Intel GPUs (#901, #2788).
 
 API
 ---
