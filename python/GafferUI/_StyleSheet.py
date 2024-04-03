@@ -239,21 +239,18 @@ _styleSheet = string.Template(
 		color: #b0d8fb;
 	}
 
-	QLabel#gafferPlugLabel {
+	QLabel#gafferPlugLabel[gafferShowValueChangedIndicator="true"] {
 		/*
-		QLabel's text layout seems to lurch from one approach
-		to another in the presence of non-zero padding. So we
-		need some padding here so that we get a layout that
-		matches the `gafferValueChanged="true"` styling below.
+		Ensure that there is enough space reserved for the `valueChanged`
+		icon whether it is visible or not.
 		*/
-		padding-left: 1px;
+		padding-left: 10px;
 	}
 
-	QLabel#gafferPlugLabel[gafferValueChanged="true"] {
+	QLabel#gafferPlugLabel[gafferShowValueChangedIndicator="true"][gafferValueChanged="true"] {
 		background-image: url(:/valueChanged.png);
 		background-repeat: no-repeat;
 		background-position: left;
-		padding-left: 16px;
 	}
 
 	QLabel#gafferDefaultRowLabel {
