@@ -12,10 +12,15 @@ Improvements
 ------------
 
 - EditScope : Added a summary of edits in the NodeEditor, with the ability to select the affected objects and quickly navigate to the processor nodes.
+- Arnold : OSL shaders with connections from multiple outputs are no longer duplicated on export to Arnold.
 
 Fixes
 -----
 
+- Arnold :
+  - Fixed rendering of shaders imported from HtoA via USD.
+  - Fixed USD export of shaders to use `outputs:out` instead of `outputs:DEFAULT_OUTPUT`.
+  - Fixed rendering of `osl` shaders using the `code` parameter.
 - GafferTest, GafferImageTest : Fixed import of these modules if the `Gaffer` module had not been imported previously.
 - SceneAlgo : Fixed potential shutdown crashes caused by the adaptor registry [^1].
 - Dispatcher : Fixed shutdown crashes caused by Python slots connected to the dispatch signals [^1].
@@ -29,6 +34,11 @@ API
 - EditScopeUI : Added an API for customising the EditScope's NodeEditor with summaries for each processor :
   - ProcessorWidget provides a base class for custom widgets, and a factory mechanism for registering them against processors.
   - SimpleProcessorWidget provides a base class for widgets with a simple summary label and optional action links.
+
+Breaking Changes
+----------------
+
+- InteractiveRenderTest : Subclasses must now return the shader output plug from creation methods such as `_createConstantShader()`.
 
 1.4.0.0b5 (relative to 1.4.0.0b4)
 =========

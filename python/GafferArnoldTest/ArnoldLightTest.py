@@ -103,8 +103,8 @@ class ArnoldLightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual(
 			network.inputConnections( network.getOutput().shader ),
 			[
-				network.Connection( ( "sky", "" ), ( network.getOutput().shader, "color" ) ),
-				network.Connection( ( "matte", "" ), ( network.getOutput().shader, "shader" ) ),
+				network.Connection( ( "sky", "out" ), ( network.getOutput().shader, "color" ) ),
+				network.Connection( ( "matte", "out" ), ( network.getOutput().shader, "shader" ) ),
 			]
 		)
 
@@ -126,7 +126,7 @@ class ArnoldLightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual(
 			network.inputConnections( network.getOutput().shader ),
 			[
-				network.Connection( ( "mockOSL", "" ), ( network.getOutput().shader, "color" ) )
+				network.Connection( ( "mockOSL", "out" ), ( network.getOutput().shader, "color" ) )
 			]
 		)
 

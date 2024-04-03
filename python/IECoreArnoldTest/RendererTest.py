@@ -144,7 +144,7 @@ class RendererTest( GafferTest.TestCase ) :
 		for i in range( 0, 10 ) :
 
 			a = IECore.CompoundObject( {
-				"ai:surface" : IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "flat" ) }, output = "output" ),
+				"ai:surface" : IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "flat" ) }, output = ( "output", "out" ) ),
 			} )
 
 			r.object(
@@ -190,7 +190,7 @@ class RendererTest( GafferTest.TestCase ) :
 		# Replace the shader a few times.
 		for shader in ( "utility", "flat", "standard_surface" ) :
 			a = IECore.CompoundObject( {
-				"ai:surface" : IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( shader ) }, output = "output" ),
+				"ai:surface" : IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( shader ) }, output = ( "output", "out" ) ),
 			} )
 			o.attributes( r.attributes( a ) )
 			del a
@@ -216,9 +216,9 @@ class RendererTest( GafferTest.TestCase ) :
 				"flat" : IECoreScene.Shader( "flat" ),
 			},
 			connections = [
-				( ( "myHandle", "" ), ( "flat", "color" ) ),
+				( ( "myHandle", "out" ), ( "flat", "color" ) ),
 			],
-			output = "flat"
+			output = ( "flat", "out" )
 		)
 
 		r.object(
@@ -237,9 +237,9 @@ class RendererTest( GafferTest.TestCase ) :
 				"standard_surface" : IECoreScene.Shader( "standard_surface" ),
 			},
 			connections = [
-				( ( "myHandle", "" ), ( "standard_surface", "base_color" ) ),
+				( ( "myHandle", "out" ), ( "standard_surface", "base_color" ) ),
 			],
-			output = "standard_surface"
+			output = ( "standard_surface", "out" )
 		)
 
 		r.object(
@@ -279,9 +279,9 @@ class RendererTest( GafferTest.TestCase ) :
 				"scalarColorTarget" : IECoreScene.Shader( "lambert" ),
 			},
 			connections = [
-				( ( "scalarColorSource", "" ), ( "scalarColorTarget", "Kd_color" ) )
+				( ( "scalarColorSource", "out" ), ( "scalarColorTarget", "Kd_color" ) )
 			],
-			output = "scalarColorTarget"
+			output = ( "scalarColorTarget", "out" )
 		)
 
 		arrayColorShader = IECoreScene.ShaderNetwork(
@@ -290,9 +290,9 @@ class RendererTest( GafferTest.TestCase ) :
 				"arrayColorTarget" : IECoreScene.Shader( "ramp_rgb" ),
 			},
 			connections = [
-				( ( "arrayColorSource", "" ), ( "arrayColorTarget", "color[0]" ) )
+				( ( "arrayColorSource", "out" ), ( "arrayColorTarget", "color[0]" ) )
 			],
-			output = "arrayColorTarget"
+			output = ( "arrayColorTarget", "" )
 		)
 
 		for name,s in [ ( "scalarColor", scalarColorShader ), ( "arrayColor", arrayColorShader ) ] :
@@ -335,11 +335,14 @@ class RendererTest( GafferTest.TestCase ) :
 				"output" : IECoreScene.Shader( "flat" ),
 			},
 			connections = [
+				# Our legacy convention.
 				( ( "source", "r" ), ( "output", "color.g" ) ),
-				( ( "source", "g" ), ( "output", "color.b" ) ),
-				( ( "source", "b" ), ( "output", "color.r" ) ),
+				# The standard convention.
+				( ( "source", "out.g" ), ( "output", "color.b" ) ),
+				# The HtoA convention, which will hopefully be phased out.
+				( ( "source", "rgba.b" ), ( "output", "color.r" ) ),
 			],
-			output = "output"
+			output = ( "output", "out" )
 		)
 
 		r.object(
@@ -395,7 +398,7 @@ class RendererTest( GafferTest.TestCase ) :
 				( ( "source", "out.g" ), ( "output", "a.b" ) ),
 				( ( "source", "out.b" ), ( "output", "a.r" ) ),
 			],
-			output = "output"
+			output = ( "output", "out" )
 		)
 
 		r.object(
@@ -453,7 +456,7 @@ class RendererTest( GafferTest.TestCase ) :
 			str( self.temporaryDirectory() / "test.ass" )
 		)
 
-		lightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "point_light", "ai:light" ), }, output = "light" )
+		lightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "point_light", "ai:light" ), }, output = ( "light", "out" ) )
 		r.light(
 			"testLight",
 			None,
@@ -485,7 +488,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		lightAttributes = r.attributes(
 			IECore.CompoundObject( {
-				"ai:light" : IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "point_light", "ai:light" ), }, output = "light" )
+				"ai:light" : IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "point_light", "ai:light" ), }, output = ( "light", "out" ) )
 			} )
 		)
 
@@ -536,7 +539,7 @@ class RendererTest( GafferTest.TestCase ) :
 			str( self.temporaryDirectory() / "test.ass" )
 		)
 
-		lightShader = IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "point_light", "ai:light" ) }, output = "output" )
+		lightShader = IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "point_light", "ai:light" ) }, output = ( "output", "out" ) )
 		lightAttributes = r.attributes(
 			IECore.CompoundObject( {
 				"ai:light" : lightShader
@@ -1629,7 +1632,7 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		plane = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
-		noise = IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "noise", "ai:displacement", {} ) }, output = "output" )
+		noise = IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "noise", "ai:displacement", {} ) }, output = ( "output", "out" ) )
 
 		sharedAttributes = r.attributes(
 			IECore.CompoundObject( {
@@ -1847,7 +1850,7 @@ class RendererTest( GafferTest.TestCase ) :
 			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
 			r.attributes(
 				IECore.CompoundObject( {
-					"ai:light" : IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "mesh_light", "ai:light" ) }, output = "light" )
+					"ai:light" : IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "mesh_light", "ai:light" ) }, output = ( "light", "out" ) )
 				} )
 			)
 		)
@@ -1888,9 +1891,9 @@ class RendererTest( GafferTest.TestCase ) :
 				"light" : IECoreScene.Shader( "mesh_light", "ai:light" ),
 			},
 			connections = [
-				( ( "colorHandle", "" ), ( "light", "color" ) )
+				( ( "colorHandle", "out" ), ( "light", "color" ) )
 			],
-			output = "light"
+			output = ( "light", "out" ),
 		)
 
 		l1 = r.light(
@@ -2008,15 +2011,14 @@ class RendererTest( GafferTest.TestCase ) :
 				"output" : IECoreScene.Shader( "switch_rgba", "ai:surface" ),
 			},
 			connections = [
-				( ( "splineHandle", "" ), ( "output", "input1" ) ),
-				( ( "noiseHandle", "" ), ( "output", "input2" ) ),
-				( ( "floatSplineHandle", "" ), ( "output", "input3" ) ),
-				( ( "splineWithInputsHandle", "" ), ( "output", "input4" ) ),
-
+				( ( "splineHandle", "c" ), ( "output", "input1" ) ),
+				( ( "noiseHandle", "n" ), ( "output", "input2" ) ),
+				( ( "floatSplineHandle", "c" ), ( "output", "input3" ) ),
+				( ( "splineWithInputsHandle", "c" ), ( "output", "input4" ) ),
 				( ( "globalsHandle", "globalP" ), ( "splineWithInputsHandle", "spline[0].y" ) ),
 				( ( "globalsHandle", "globalV" ), ( "splineWithInputsHandle", "spline[3].y.g" ) ),
 			],
-			output = "output"
+			output = ( "output", "out" ),
 		)
 
 		o = r.object(
@@ -2098,16 +2100,12 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeGetRGB( splineWithInputsAdapter, "param_in2" ), arnold.AtRGB( 0.5, 0.5, 0.5 ) )
 
 			globalPInput = arnold.AiNodeGetLink( splineWithInputsAdapter, "param_in0" )
-			print( arnold.AiNodeGetLink( splineWithInputsAdapter, "param_in3" ) )
 			self.assertEqual( arnold.AiNodeGetStr( globalPInput, "shadername" ), "Utility/Globals" )
-			self.assertEqual( arnold.AiNodeGetStr( globalPInput, "output" ), "globalP" )
-
 
 			componentAdapterInput = arnold.AiNodeGetLink( splineWithInputsAdapter, "param_in3" )
 			self.assertEqual( arnold.AiNodeGetStr( componentAdapterInput, "shadername" ), "MaterialX/mx_pack_color" )
 			globalVInput = arnold.AiNodeGetLink( componentAdapterInput, "param_in2" )
 			self.assertEqual( arnold.AiNodeGetStr( globalVInput, "shadername" ), "Utility/Globals" )
-			self.assertEqual( arnold.AiNodeGetStr( globalVInput, "output" ), "globalV" )
 
 	def testPureOSLShaders( self ) :
 
@@ -2117,7 +2115,7 @@ class RendererTest( GafferTest.TestCase ) :
 			str( self.temporaryDirectory() / "test.ass" )
 		)
 
-		network = IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "Pattern/Noise", "osl:shader" ) }, output = "output" )
+		network = IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "Pattern/Noise", "osl:shader" ) }, output = ( "output", "out" ) )
 
 		o = r.object(
 			"testPlane",
@@ -2165,7 +2163,7 @@ class RendererTest( GafferTest.TestCase ) :
 				( ( "colorToFloatHandle", "g" ), ( "output", "g" ) ),
 				( ( "colorToFloatHandle", "b" ), ( "output", "b" ) ),
 			],
-			output = "output"
+			output = ( "output", "out" ),
 		)
 
 		r.object(
@@ -2186,23 +2184,27 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( floatToColor ) ), "osl" )
 			self.assertEqual( arnold.AiNodeGetStr( floatToColor, "shadername" ), "Conversion/FloatToColor" )
 
-			colorToFloatR = arnold.AiNodeGetLink( floatToColor, "param_r" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( colorToFloatR ) ), "osl" )
-			self.assertEqual( arnold.AiNodeGetStr( colorToFloatR, "output" ), "r" )
+			outputIndex = ctypes.c_int()
+			outputComponent = ctypes.c_int()
+			colorToFloatR = arnold.AiNodeGetLinkOutput( floatToColor, "param_r", ctypes.byref( outputIndex ), ctypes.byref( outputComponent ) )
+
+			colorToFloatNodeEntry = arnold.AiNodeGetNodeEntry( colorToFloatR )
+			self.assertEqual( arnold.AiNodeEntryGetName( colorToFloatNodeEntry ), "osl" )
 			self.assertEqual( arnold.AiNodeGetStr( colorToFloatR, "shadername" ), "Conversion/ColorToFloat" )
-			self.assertEqual( arnold.AiNodeGetRGB( colorToFloatR, "param_c" ),  arnold.AtRGB( 0.1, 0.2, 0.3 ))
+			self.assertEqual( arnold.AiNodeGetRGB( colorToFloatR, "param_c" ), arnold.AtRGB( 0.1, 0.2, 0.3 ) )
 
-			colorToFloatG = arnold.AiNodeGetLink( floatToColor, "param_g" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( colorToFloatG ) ), "osl" )
-			self.assertEqual( arnold.AiNodeGetStr( colorToFloatG, "output" ), "g" )
-			self.assertEqual( arnold.AiNodeGetStr( colorToFloatG, "shadername" ), "Conversion/ColorToFloat" )
-			self.assertEqual( arnold.AiNodeGetRGB( colorToFloatG, "param_c" ),  arnold.AtRGB( 0.1, 0.2, 0.3 ))
+			self.assertEqual( arnold.AiParamGetName( arnold.AiNodeEntryGetOutput( colorToFloatNodeEntry, outputIndex.value ) ), "param_r" )
+			self.assertEqual( outputComponent.value, -1 )
 
-			colorToFloatB = arnold.AiNodeGetLink( floatToColor, "param_b" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( colorToFloatB ) ), "osl" )
-			self.assertEqual( arnold.AiNodeGetStr( colorToFloatB, "output" ), "b" )
-			self.assertEqual( arnold.AiNodeGetStr( colorToFloatB, "shadername" ), "Conversion/ColorToFloat" )
-			self.assertEqual( arnold.AiNodeGetRGB( colorToFloatB, "param_c" ),  arnold.AtRGB( 0.1, 0.2, 0.3 ))
+			colorToFloatG = arnold.AiNodeGetLinkOutput( floatToColor, "param_g", ctypes.byref( outputIndex ), ctypes.byref( outputComponent ) )
+			self.assertReferSameNode( colorToFloatG, colorToFloatR )
+			self.assertEqual( arnold.AiParamGetName( arnold.AiNodeEntryGetOutput( colorToFloatNodeEntry, outputIndex.value ) ), "param_g" )
+			self.assertEqual( outputComponent.value, -1 )
+
+			colorToFloatB = arnold.AiNodeGetLinkOutput( floatToColor, "param_b", ctypes.byref( outputIndex ), ctypes.byref( outputComponent ) )
+			self.assertReferSameNode( colorToFloatB, colorToFloatR )
+			self.assertEqual( arnold.AiParamGetName( arnold.AiNodeEntryGetOutput( colorToFloatNodeEntry, outputIndex.value ) ), "param_b" )
+			self.assertEqual( outputComponent.value, -1 )
 
 	def testTraceSets( self ) :
 
@@ -3052,7 +3054,7 @@ class RendererTest( GafferTest.TestCase ) :
 					{
 						"output" : IECoreScene.Shader( "flat", "ai:surface",  { "color" : color } ),
 					},
-					output = "output"
+					output = ( "output", "out" )
 				)
 
 			return renderer.attributes( attributes )
@@ -3388,9 +3390,9 @@ class RendererTest( GafferTest.TestCase ) :
 				"output" : IECoreScene.Shader( "aov_write_rgb", "ai:shader" ),
 			},
 			connections = [
-				( ( "rgbSource", "" ), ( "output", "aov_input" ) ),
+				( ( "rgbSource", "out" ), ( "output", "aov_input" ) ),
 			],
-			output = "output"
+			output = ( "output", "out" )
 		) )
 
 		universe = ctypes.cast( r.command( "ai:queryUniverse", {} ), ctypes.POINTER( arnold.AtUniverse ) )
@@ -3400,11 +3402,11 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( source ) ), "float_to_rgb" )
 
 		# Add another
-		r.option( "ai:aov_shader:test2", IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "aov_write_float", "ai:shader" ) }, output = "output" ) )
+		r.option( "ai:aov_shader:test2", IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "aov_write_float", "ai:shader" ) }, output = ( "output", "out" ) ) )
 		self.assertEqual( set( self.__aovShaders( universe ).keys() ), set( [ "aov_write_rgb", "aov_write_float" ] ) )
 
 		# Add overwrite
-		r.option( "ai:aov_shader:test", IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "aov_write_int", "ai:shader" ) }, output = "output" ) )
+		r.option( "ai:aov_shader:test", IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "aov_write_int", "ai:shader" ) },output = ( "output", "out" ) ) )
 		self.assertEqual( set( self.__aovShaders( universe ).keys() ), set( [ "aov_write_int", "aov_write_float" ] ) )
 
 		r.option( "ai:aov_shader:test", None )
@@ -3428,7 +3430,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.option(
 			"ai:atmosphere",
-			IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "atmosphere_volume", "ai:shader" ) }, output = "output" )
+			IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "atmosphere_volume", "ai:shader" ) }, output = ( "output", "out" ) )
 		)
 
 		shader = arnold.AiNodeGetPtr( options, "atmosphere" )
@@ -3453,7 +3455,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.option(
 			"ai:background",
-			IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "flat", "ai:shader" ) }, output = "output" )
+			IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "flat", "ai:shader" ) }, output = ( "output", "out" ) )
 		)
 
 		shader = arnold.AiNodeGetPtr( options, "background" )
@@ -3489,7 +3491,7 @@ class RendererTest( GafferTest.TestCase ) :
 						}
 					)
 				},
-				output = "output"
+				output = ( "output", "out" )
 			)
 		)
 
@@ -3521,7 +3523,7 @@ class RendererTest( GafferTest.TestCase ) :
 					shaders = {
 						"filter" : IECoreScene.Shader( "light_blocker", "ai:lightFilter" ),
 					},
-					output = "filter"
+					output = ( "filter", "out" ),
 				)
 			} ) )
 		)
@@ -3645,11 +3647,11 @@ class RendererTest( GafferTest.TestCase ) :
 				IECore.CompoundObject( {
 					"ai:filtermap" : IECoreScene.ShaderNetwork(
 						shaders = { "out" : IECoreScene.Shader( "noise" ) },
-						output = "out"
+						output = ( "out", "out" )
 					),
 					"ai:uv_remap" : IECoreScene.ShaderNetwork(
 						shaders = { "out" : IECoreScene.Shader( "flat" ) },
-						output = "out"
+						output = ( "out", "out" )
 					)
 				} )
 			),
@@ -3684,7 +3686,7 @@ class RendererTest( GafferTest.TestCase ) :
 		texParameters = { "multiply" : IECore.Color3fData( imath.Color3f(1,0,0) ) }
 		texParametersChanged = { "multiply" : IECore.Color3fData( imath.Color3f(0,1,0) ) }
 
-		skydomeLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "skydome_light", "ai:light", lightParameters ), }, output = "light" )
+		skydomeLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "skydome_light", "ai:light", lightParameters ), }, output = ( "light", "out" ) )
 		skydomeLight = r.light(
 			"skydomeLight",
 			None,
@@ -3695,7 +3697,7 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 		)
 
-		quadLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "quad_light", "ai:light", lightParameters ), }, output = "light" )
+		quadLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "quad_light", "ai:light", lightParameters ), }, output = ( "light", "out" ) )
 		quadLight = r.light(
 			"quadLight",
 			None,
@@ -3707,25 +3709,25 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		# All edits of the skydome light should succeed ( The bug we're hacking around only affects quad_light )
-		skydomeLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "skydome_light", "ai:light", lightParametersChanged), }, output = "light" )
+		skydomeLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "skydome_light", "ai:light", lightParametersChanged), }, output = ( "light", "out" ) )
 		self.assertTrue( skydomeLight.attributes( r.attributes( IECore.CompoundObject( { "ai:light" : skydomeLightShader } ) ) ) )
-		skydomeLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "skydome_light", "ai:light", lightParameters), "tex" : IECoreScene.Shader( "image", "ai:shader", texParameters) }, [(("tex", ""), ("light", "color"))], output = "light" )
+		skydomeLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "skydome_light", "ai:light", lightParameters), "tex" : IECoreScene.Shader( "image", "ai:shader", texParameters) }, [(("tex", "out"), ("light", "color"))], output = ( "light", "out" ) )
 		self.assertTrue( skydomeLight.attributes( r.attributes( IECore.CompoundObject( { "ai:light" : skydomeLightShader } ) ) ) )
-		skydomeLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "skydome_light", "ai:light", lightParametersChanged), "tex" : IECoreScene.Shader( "image", "ai:shader", texParameters) }, [(("tex", ""), ("light", "color"))], output = "light" )
+		skydomeLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "skydome_light", "ai:light", lightParametersChanged), "tex" : IECoreScene.Shader( "image", "ai:shader", texParameters) }, [(("tex", "out"), ("light", "color"))], output = ( "light", "out" ) )
 		self.assertTrue( skydomeLight.attributes( r.attributes( IECore.CompoundObject( { "ai:light" : skydomeLightShader } ) ) ) )
-		skydomeLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "skydome_light", "ai:light", lightParametersChanged), "tex" : IECoreScene.Shader( "image", "ai:shader", texParametersChanged) }, [(("tex", ""), ("light", "color"))], output = "light" )
+		skydomeLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "skydome_light", "ai:light", lightParametersChanged), "tex" : IECoreScene.Shader( "image", "ai:shader", texParametersChanged) }, [(("tex", "out"), ("light", "color"))], output = ( "light", "out" ) )
 		self.assertTrue( skydomeLight.attributes( r.attributes( IECore.CompoundObject( { "ai:light" : skydomeLightShader } ) ) ) )
 
 		# Most edits of the quad lights should succeed
-		quadLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "quad_light", "ai:light", lightParametersChanged), }, output = "light" )
+		quadLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "quad_light", "ai:light", lightParametersChanged), }, output = ( "light", "out" ) )
 		self.assertTrue( quadLight.attributes( r.attributes( IECore.CompoundObject( { "ai:light" : quadLightShader } ) ) ) )
-		quadLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "quad_light", "ai:light", lightParameters), "tex" : IECoreScene.Shader( "image", "ai:shader", texParameters) }, [(("tex", ""), ("light", "color"))], output = "light" )
+		quadLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "quad_light", "ai:light", lightParameters), "tex" : IECoreScene.Shader( "image", "ai:shader", texParameters) }, [(("tex", "out"), ("light", "color"))], output = ( "light", "out" ) )
 		self.assertTrue( quadLight.attributes( r.attributes( IECore.CompoundObject( { "ai:light" : quadLightShader } ) ) ) )
-		quadLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "quad_light", "ai:light", lightParametersChanged), "tex" : IECoreScene.Shader( "image", "ai:shader", texParameters) }, [(("tex", ""), ("light", "color"))], output = "light" )
+		quadLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "quad_light", "ai:light", lightParametersChanged), "tex" : IECoreScene.Shader( "image", "ai:shader", texParameters) }, [(("tex", "out"), ("light", "color"))], output = ( "light", "out" ) )
 		self.assertTrue( quadLight.attributes( r.attributes( IECore.CompoundObject( { "ai:light" : quadLightShader } ) ) ) )
 
 		# The one exception is changing a parameter of a shader upstream of the color parameter
-		quadLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "quad_light", "ai:light", lightParametersChanged), "tex" : IECoreScene.Shader( "image", "ai:shader", texParametersChanged) }, [(("tex", ""), ("light", "color"))], output = "light" )
+		quadLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "quad_light", "ai:light", lightParametersChanged), "tex" : IECoreScene.Shader( "image", "ai:shader", texParametersChanged) }, [(("tex", "out"), ("light", "color"))], output = ( "light", "out" ) )
 		self.assertFalse( quadLight.attributes( r.attributes( IECore.CompoundObject( { "ai:light" : quadLightShader } ) ) ) )
 
 		# Must delete objects before the renderer.
@@ -3805,7 +3807,7 @@ class RendererTest( GafferTest.TestCase ) :
 				connections = [
 					( "exposure", ( "lensEffects", "input" ) )
 				],
-				output = "lensEffects",
+				output = ( "lensEffects", "out" ),
 			)
 		)
 
@@ -3857,7 +3859,7 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		# Make a light with a shader that doesn't exist.
-		badLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "NonexistentShader", "ai:light", {} ), }, output = "light" )
+		badLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "NonexistentShader", "ai:light", {} ), }, output = ( "light", "out" ) )
 		with IECore.CapturingMessageHandler() as mh :
 			light = r.light(
 				"test",
@@ -3876,7 +3878,7 @@ class RendererTest( GafferTest.TestCase ) :
 		# should fail, because lights must be updated in place
 		# and that's not possible if there was no light node in
 		# the first place.
-		quadLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "quad_light", "ai:light", {} ), }, output = "light" )
+		quadLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "quad_light", "ai:light", {} ), }, output = ( "light", "out" ) )
 		self.assertFalse(
 			light.attributes(
 				r.attributes(
@@ -4021,7 +4023,7 @@ class RendererTest( GafferTest.TestCase ) :
 						{ "aov" : group }
 					),
 				},
-				output = "light"
+				output = ( "light", "out" )
 			)
 
 			r.light(
@@ -4080,7 +4082,7 @@ class RendererTest( GafferTest.TestCase ) :
 						{ "aov" : group }
 					),
 				},
-				output = "light"
+				output = ( "light", "out" )
 			)
 
 			r.light(
@@ -4133,7 +4135,7 @@ class RendererTest( GafferTest.TestCase ) :
 						( ( "standardShader1", "out" ), ( "layerShader", "input1" ) ),
 						( ( "standardShader2", "out" ), ( "layerShader", "input2" ) ),
 					],
-					output = "layerShader"
+					output = ( "layerShader", "out" ),
 				)
 			} ) ),
 		)
@@ -4152,6 +4154,67 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertIn( "standardShader1", arnold.AiNodeGetName( input1 ) )
 			input2= arnold.AiNodeGetLink( layerShader, "input2" )
 			self.assertIn( "standardShader2", arnold.AiNodeGetName( input2 ) )
+
+	def testHtoAOutputParameterConvention( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.ass" )
+		)
+
+		r.object(
+			"testPlane",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			r.attributes( IECore.CompoundObject( {
+				"ai:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"mix" : IECoreScene.Shader( "mix_rgba" ),
+						"range" : IECoreScene.Shader( "range" ),
+						"stateFloat" : IECoreScene.Shader( "state_float" ),
+						"standardSurface" : IECoreScene.Shader( "standard_surface" )
+					},
+					connections = [
+						# HtoA's convention for referring to the default output
+						# is to name it after the output type (since the default
+						# output doesn't have a name). This is different to
+						# Autodesk's general convention (`out`), and word is
+						# that it should be changed to be aligned with that in
+						# the future.
+						( ( "mix", "rgba" ), ( "range", "input" ) ),
+						( ( "range", "rgb" ), ( "standardSurface", "base_color" ) ),
+						# HtoA also supports Arnold's multiple shader outputs,
+						# which are named according to the name of the output.
+						( ( "stateFloat", "sx" ), ( "standardSurface", "base" ) ),
+					],
+					output = ( "standardSurface", "out" )
+				)
+			} ) ),
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
+
+			standardSurface = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( universe, "testPlane" ), "shader" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( standardSurface ) ), "standard_surface" )
+
+			range = arnold.AiNodeGetLink( standardSurface, "base_color" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( range ) ), "range" )
+
+			mix = arnold.AiNodeGetLink( range, "input" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( mix ) ), "mix_rgba" )
+
+			outputIndex = ctypes.c_int()
+			outputComponent = ctypes.c_int()
+			stateFloat = arnold.AiNodeGetLinkOutput( standardSurface, "base", ctypes.byref( outputIndex ), ctypes.byref( outputComponent ) )
+			stateFloatNodeEntry = arnold.AiNodeGetNodeEntry( stateFloat )
+			self.assertEqual( arnold.AiNodeEntryGetName( stateFloatNodeEntry ), "state_float" )
+			self.assertEqual( arnold.AiParamGetName( arnold.AiNodeEntryGetOutput( stateFloatNodeEntry, outputIndex.value ) ), "sx" )
+			self.assertEqual( outputComponent.value, -1 )
 
 	def testOSLOutParameter( self ) :
 
@@ -4173,7 +4236,7 @@ class RendererTest( GafferTest.TestCase ) :
 					connections = [
 						( ( "colorSwitch", "out" ), ( "standardSurface", "base_color" ) ),
 					],
-					output = "standardSurface"
+					output = ( "standardSurface", "out" )
 				)
 			} ) ),
 		)
@@ -4190,6 +4253,60 @@ class RendererTest( GafferTest.TestCase ) :
 
 			input = arnold.AiNodeGetLink( surfaceShader, "base_color" )
 			self.assertIn( "colorSwitch", arnold.AiNodeGetName( input ) )
+
+	def testArnoldOSLWithCode( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+		)
+
+		# This test exercises a problem that would occur if we tried to set
+		# Arnold's `param_*` attributes before setting the `code` attribute.
+		# Due to InternedString ordering rules, the likelihood of visiting the
+		# parameters in that order is increased by constructing the `param_colorIn`
+		# string first.
+		IECore.InternedString( "param_colorIn" )
+
+		renderer.object(
+			"testPlane",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			renderer.attributes( IECore.CompoundObject( {
+				"ai:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"osl" : IECoreScene.Shader(
+							"osl", "ai:shader",
+							{
+								"code" : """
+									shader myConstant(
+										color colorIn = 0,
+										output color colorOut = 0
+									)
+									{
+										colorOut = colorIn;
+									}
+								""",
+								"param_colorIn" : imath.Color3f( 0, 1, 0 ),
+							}
+						),
+					},
+					output = ( "osl", "colorOut" )
+				)
+			} ) ),
+		)
+
+		universe = ctypes.cast( renderer.command( "ai:queryUniverse", {} ), ctypes.POINTER( arnold.AtUniverse ) )
+
+		shader = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( universe, "testPlane" ), "shader" )
+		self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry(  shader ) ), "osl" )
+
+		# If we have set things in the right order, then `param_colorIn` will exist and have the right value.
+		self.assertEqual( arnold.AiNodeGetRGB( shader, "param_colorIn" ), arnold.AtRGB( 0, 1, 0 ) )
+		# And it won't have been declared as a user parameter, because setting `code` declares it as a built-in
+		# parameter instead.
+		self.assertIsNone( arnold.AiNodeLookUpUserParameter( shader, "param_colorIn" ) )
+
+		del renderer
 
 	def testInternedStringAttributes( self ) :
 
@@ -4294,7 +4411,7 @@ class RendererTest( GafferTest.TestCase ) :
 						{ "camera" : IECore.StringData( camera ) }
 					)
 				},
-				output = ( "output", "" )
+				output = ( "output", "out" )
 			)
 
 			return renderer.attributes( IECore.CompoundObject( { "ai:surface" : shaderNetwork } ) )
@@ -4397,7 +4514,7 @@ class RendererTest( GafferTest.TestCase ) :
 					{ "camera" : IECore.StringData( "/camera" ) }
 				)
 			},
-			output = ( "output", "" )
+			output = ( "output", "out" )
 		)
 
 		renderer.object(

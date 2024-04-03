@@ -128,7 +128,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		network = typesNode.attributes()["osl:surface"]
 		self.assertEqual( len( network ), 2 )
-		self.assertEqual( network.getOutput(), ( "types", "" ) )
+		self.assertEqual( network.getOutput(), ( "types", "out" ) )
 
 		types = network.getShader( "types" )
 		outputTypes = network.getShader( "outputTypes" )
@@ -1181,7 +1181,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		network3 = shaderPlug.attributes()["osl:shader"]
 		hash3 = shaderPlug.attributesHash()
 
-		self.assertEqual( network1.getOutput(), IECoreScene.ShaderNetwork.Parameter( "globals" ) )
+		self.assertEqual( network1.getOutput(), IECoreScene.ShaderNetwork.Parameter( "globals", "out" ) )
 		self.assertEqual( network2.getOutput(), IECoreScene.ShaderNetwork.Parameter( "globals", "globalP" ) )
 		self.assertEqual( network3.getOutput(), IECoreScene.ShaderNetwork.Parameter( "globals", "globalN" ) )
 
