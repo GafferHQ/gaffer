@@ -230,8 +230,8 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 				// then assume it is intended to refer to the default output and
 				// strip it.
 				const size_t i = output.find( '.' );
-				const string name = output.substr( 0, i );
-				if( !AiNodeEntryLookUpOutput( AiNodeGetNodeEntry( sourceNode ), AtString( name.c_str() ) ) )
+				const string outputName = output.substr( 0, i );
+				if( !AiNodeEntryLookUpOutput( AiNodeGetNodeEntry( sourceNode ), AtString( outputName.c_str() ) ) )
 				{
 					output.erase( 0, i != string::npos ? i + 1 : string::npos );
 				}
