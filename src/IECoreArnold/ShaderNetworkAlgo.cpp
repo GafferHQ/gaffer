@@ -53,6 +53,8 @@
 #include "boost/lexical_cast.hpp"
 #include "boost/unordered_map.hpp"
 
+#include <unordered_map>
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
