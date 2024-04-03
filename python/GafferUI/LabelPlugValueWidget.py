@@ -45,8 +45,6 @@ from Qt import QtWidgets
 # Supported plug metadata :
 #
 #  - "renameable"
-#  - "labelPlugValueWidget:showValueChangedIndicator" : If `False`, the indicator that the
-#  plug value has changed will not be shown. Defaults to `True` if not set.
 class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	## \todo Remove alignment arguments. Vertically the only alignment that looks good is `Center`, and
@@ -77,10 +75,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__label._qtWidget().setProperty(
 			"gafferShowValueChangedIndicator",
 			all(
-				(
-					p.direction() == Gaffer.Plug.Direction.In and
-					Gaffer.Metadata.value( p, "labelPlugValueWidget:showValueChangedIndicator" ) != False
-				)
+				p.direction() == Gaffer.Plug.Direction.In
 				for p in self.getPlugs()
 			)
 		)

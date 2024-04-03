@@ -83,8 +83,9 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 				spacing = 4
 			) :
 
-				self.__positionLabel = GafferUI.LabelPlugValueWidget(
+				self.__positionLabel = GafferUI.NameLabel(
 					plug.pointXPlug( 0 ),
+					formatter = lambda _ : "Position",
 					parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top }
 				)
 				self.__positionField = GafferUI.NumericPlugValueWidget(
@@ -92,8 +93,9 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 					parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top }
 				)
 
-				self.__valueLabel = GafferUI.LabelPlugValueWidget(
+				self.__valueLabel = GafferUI.NameLabel(
 					plug.pointYPlug( 0 ),
+					formatter = lambda _ : "Value",
 					parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top }
 				)
 				if isinstance( plug.pointYPlug( 0 ), Gaffer.FloatPlug ):
@@ -211,19 +213,16 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 		index = slider.getSelectedIndex()
 		if self.getPlug() is not None and index is not None :
 			pointPlug = self.getPlug().pointPlug( index )
-			self.__positionLabel.setPlug( pointPlug["x"] )
+			self.__positionLabel.setGraphComponent( pointPlug["x"] )
 			self.__positionField.setPlug( pointPlug["x"] )
-			self.__valueLabel.setPlug( pointPlug["y"] )
+			self.__valueLabel.setGraphComponent( pointPlug["y"] )
 			self.__valueField.setPlug( pointPlug["y"] )
 
 		else :
-			self.__positionLabel.setPlug( None )
+			self.__positionLabel.setGraphComponent( None )
 			self.__positionField.setPlug( None )
-			self.__valueLabel.setPlug( None )
+			self.__valueLabel.setGraphComponent( None )
 			self.__valueField.setPlug( None )
-
-		self.__positionLabel.label().setText( "Position" )
-		self.__valueLabel.label().setText( "Value" )
 
 # we don't register this automatically for any plugs, as it takes up a lot of room
 # in the node editor. this means the SplinePlugValueWidget will be used instead, and
