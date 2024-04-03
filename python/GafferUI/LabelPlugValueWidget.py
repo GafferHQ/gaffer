@@ -74,13 +74,15 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__label._qtWidget().setFixedHeight( 20 )
 		layout.addWidget( self.__label._qtWidget() )
 
-		showIndicator = False
-		if all( p.direction() == Gaffer.Plug.Direction.In for p in self.getPlugs() ) :
-			showIndicator = Gaffer.Metadata.value( self.getPlug(), "showValueChangedIndicator" )
-			showIndicator = showIndicator if showIndicator is not None else True
 		self.__label._qtWidget().setProperty(
 			"gafferShowValueChangedIndicator",
-			GafferUI._Variant.toVariant( showIndicator )
+			all(
+				(
+					p.direction() == Gaffer.Plug.Direction.In and
+					Gaffer.Metadata.value( p, "showValueChangedIndicator" ) != False
+				)
+				for p in self.getPlugs()
+			)
 		)
 
 		self.__editableLabel = None # we'll make this lazily as needed
