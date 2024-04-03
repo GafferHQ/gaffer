@@ -4,6 +4,7 @@
 Features
 --------
 
+- Arnold : Added support for Arnold 7.3. Note that a minimum of 7.3.1.0 is required, meaning that 7.3.0.0 is _not_ supported.
 - SelectionTool : Added select mode plug. When set to anything except `Standard` using the SelectionTool causes the actual scene location selected to potentially be modified from the originally selected location. Selection modifiers work identically for deselection. Currently, two selectors are implemented :
   - USD Kind : When selecting, the first ancestor location with a `usd:kind` attribute matching the chosen list of USD Kind will ultimately be selected. USD's Kind Registry includes `Assembly`, `Component`, `Group`, `Model` and `SubComponent` by default and can be extended via USD startup scripts.
   - Shader Assignment : When selecting, the first ancestor location with a renderable and direct (not inherited) shader attribute will ultimately be selected. This can be used to select either surface or displacement shaders.
@@ -13,6 +14,7 @@ Improvements
 
 - EditScope : Added a summary of edits in the NodeEditor, with the ability to select the affected objects and quickly navigate to the processor nodes.
 - Arnold : OSL shaders with connections from multiple outputs are no longer duplicated on export to Arnold.
+- ArnoldShader : Added parameter tooltips based on `help` metadata provided by Arnold.
 
 Fixes
 -----

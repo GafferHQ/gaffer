@@ -137,12 +137,14 @@ if moduleSearchPath.find( "arnold" ) :
 
 		GafferArnoldUI.CacheMenu.appendDefinitions( scriptWindowMenu, "/Tools/Arnold" )
 
-		scriptWindowMenu.append(
-			"/Tools/Arnold/Populate GPU Cache",
-			{
-				"command" : GafferArnoldUI.GPUCache.populateGPUCache,
-			}
-		)
+		if [ int( x ) for x in arnold.AiGetVersion()[:2] ] < [ 7, 3 ] :
+			# `AiGPUCachePopulate` was removed in Arnold 7.3.0.0.
+			scriptWindowMenu.append(
+				"/Tools/Arnold/Populate GPU Cache",
+				{
+					"command" : GafferArnoldUI.GPUCache.populateGPUCache,
+				}
+			)
 
 	except Exception as m :
 

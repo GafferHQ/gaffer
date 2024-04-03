@@ -205,6 +205,8 @@ def __translateNodeMetadata( nodeEntry ) :
 
 	# Shader description. We support Arnold-style "desc" and
 	# OSL style "help".
+	## \todo It seems that Arnold's standard is now "help", so
+	# we may be able to remove "desc".
 
 	description = __aiMetadataGetStr( nodeEntry, None, "desc",
 		defaultValue = __aiMetadataGetStr( nodeEntry, None, "help" )
@@ -245,7 +247,10 @@ def __translateNodeMetadata( nodeEntry ) :
 
 		# Parameter description
 
-		description = __aiMetadataGetStr( nodeEntry, paramName, "desc" )
+		description = __aiMetadataGetStr(
+			nodeEntry, paramName, "desc",
+			defaultValue = __aiMetadataGetStr( nodeEntry, paramName, "help" )
+		)
 		if description is not None :
 			__metadata[paramPath]["description"] = description
 
