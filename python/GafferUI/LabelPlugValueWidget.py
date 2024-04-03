@@ -45,7 +45,7 @@ from Qt import QtWidgets
 # Supported plug metadata :
 #
 #  - "renameable"
-#  - "showValueChangedIndicator" : If `False`, the indicator that the
+#  - "labelPlugValueWidget:showValueChangedIndicator" : If `False`, the indicator that the
 #  plug value has changed will not be shown. Defaults to `True` if not set.
 class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
@@ -79,7 +79,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 			all(
 				(
 					p.direction() == Gaffer.Plug.Direction.In and
-					Gaffer.Metadata.value( p, "showValueChangedIndicator" ) != False
+					Gaffer.Metadata.value( p, "labelPlugValueWidget:showValueChangedIndicator" ) != False
 				)
 				for p in self.getPlugs()
 			)

@@ -40,7 +40,7 @@ API
   - ProcessorWidget provides a base class for custom widgets, and a factory mechanism for registering them against processors.
   - SimpleProcessorWidget provides a base class for widgets with a simple summary label and optional action links.
 - TractorDispatcher : The `preSpoolSignal()` now provides an additional `taskData` argument to slots, which maps from Tractor tasks to information about the Gaffer tasks they will execute.
-- LabelPlugValueWidget : Added optional `showValueChangedIndicator` metadata entry. If a plug has this entry set to `False`, the icon next to the label that indicates the value has changed will not be shown. Defaults to `True` if the value is not set.
+- LabelPlugValueWidget : Added optional `labelPlugValueWidget:showValueChangedIndicator` metadata entry. If a plug has this entry set to `False`, the icon next to the label that indicates the value has changed will not be shown. Defaults to `True` if the value is not set.
 
 Breaking Changes
 ----------------
