@@ -56,23 +56,28 @@ std::string cyclesVersion = CYCLES_VERSION_STRING;
 namespace IECoreCycles
 {
 
-bool init()
+const char *cyclesRoot()
 {
 	const char *cyclesRoot = getenv( "CYCLES_ROOT" );
 	if( !cyclesRoot )
 	{
 		IECore::msg( IECore::Msg::Error, "IECoreCycles::init", "CYCLES_ROOT environment variable not set" );
-		return false;
+		return "";
 	}
+	return cyclesRoot;
+}
 
-	auto kernelFile = std::filesystem::path( cyclesRoot ) / "source" / "kernel" / "types.h";
+bool init()
+{
+	const char *cyclesRootValue = cyclesRoot();
+	auto kernelFile = std::filesystem::path( cyclesRootValue ) / "source" / "kernel" / "types.h";
 	if( !std::filesystem::is_regular_file( kernelFile ) )
 	{
 		IECore::msg( IECore::Msg::Error, "IECoreCycles::init", fmt::format( "File \"{}\" not found", kernelFile ) );
 		return false;
 	}
 
-	ccl::path_init( cyclesRoot );
+	ccl::path_init( cyclesRootValue );
 
 	// This is a global thing for logging
 	const char* argv[] = { "-", "v", "1" };
