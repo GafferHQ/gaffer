@@ -1,7 +1,10 @@
 1.4.x.x (relative to 1.4.0.0b6)
 =======
 
+Fixes
+-----
 
+- 3Delight : Fixed failure to change sampling pattern per frame.
 
 1.4.0.0b6 (relative to 1.4.0.0b5)
 =========

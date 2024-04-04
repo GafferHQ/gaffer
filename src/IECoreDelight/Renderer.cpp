@@ -1291,6 +1291,10 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 						m_frame = d->readable();
 					}
 				}
+				const double doubleFrame = m_frame;
+				ParameterList params;
+				params.add( { name.c_str(), &doubleFrame, NSITypeDouble, 0, 1, 0 } );
+				NSISetAttribute( m_context, NSI_SCENE_GLOBAL, params.size(), params.data() );
 			}
 			else if( name == g_cameraOptionName )
 			{
@@ -1506,6 +1510,8 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			const char *start = "start";
 			vector<NSIParam_t> params = {
 				{ "action", &start, NSITypeString, 0, 1, 0 },
+				/// \todo Is this argument needed? It was removed from `nsi.pdf` somewhere
+				/// between 3Delight 2.9.17 and 2.9.39.
 				{ "frame", &m_frame, NSITypeInteger, 0, 1, 0 }
 			};
 
