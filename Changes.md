@@ -19,6 +19,7 @@ Improvements
   - Added support for a `{source}` token which is substituted with the original value when tweaking a string in `Replace` mode.
   - Added tooltips documenting the tweak modes.
 - 3Delight : Added automatic render-time translation of UsdPreviewSurface shaders to 3Delight.
+- USDLight : Added parameter tooltips.
 
 Fixes
 -----

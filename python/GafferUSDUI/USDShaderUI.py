@@ -37,6 +37,7 @@
 import functools
 
 from pxr import Sdr
+from pxr import Usd
 
 import IECore
 
@@ -52,6 +53,25 @@ def __shaderName( plug ) :
 		return plug.node()["__shader"]["name"].getValue()
 	else :
 		return plug.node()["name"].getValue()
+
+def __primProperty( plug ) :
+
+	if isinstance( plug.parent(), Gaffer.OptionalValuePlug ) :
+		plug = plug.parent()
+
+	plugName = plug.getName()
+
+	if plugName.startswith( "shaping:" ) :
+		primDefinition = Usd.SchemaRegistry().FindAppliedAPIPrimDefinition( "ShapingAPI" )
+	elif plugName.startswith( "shadow:" ) :
+		primDefinition = Usd.SchemaRegistry().FindAppliedAPIPrimDefinition( "ShadowAPI" )
+	else :
+		primDefinition = Usd.SchemaRegistry().FindConcretePrimDefinition( __shaderName( plug ) )
+
+	if primDefinition :
+		return primDefinition.GetPropertyDefinition( "inputs:" + plug.getName() )
+	else :
+		return None
 
 def __sdrProperty( plug ) :
 
@@ -82,22 +102,66 @@ def __layoutIndex( plug ) :
 
 	return order.get( plug.getName() )
 
+def __layoutSection( plug ) :
+
+	property = __primProperty( plug )
+	if property :
+		return property.GetMetadata( "displayGroup" )
+
+	return __sdrProperty( plug ).GetPage()
+
+def __label( plug ) :
+
+	property = __primProperty( plug )
+	if property :
+		return property.GetMetadata( "displayName" )
+
+	return __sdrProperty( plug ).GetLabel() or None
+
+def __description( plug ) :
+
+	property = __primProperty( plug )
+	if property :
+		return property.GetMetadata( "documentation" )
+
+	## \todo Get USD to actually provide help metadata. It's defined in a `doc`
+	# attribute in `shaderDefs.usda`, but not actually converted to Sdr by
+	# UsdShadeShaderDefUtils.
+	return __sdrMetadata( plug, "help" )
+
 def __widgetType( plug ) :
 
-	property = __sdrProperty( plug )
-	if property.GetWidget() not in ( "", "default" ) :
-		# The UsdPreviewSurface shaders don't provide any useful widget
-		# metadata, but we'd love to use it if they did, so alert
-		# ourselves if it appears in future.
-		IECore.msg(
-			IECore.Msg.Level.Warning, "USDShaderUI",
-			'Ignoring widget metadata "{}" on "{}"'.format(
-				property.GetWidget(), plug.fullName()
-			)
-		)
+	if isinstance( plug, Gaffer.OptionalValuePlug ) :
+		# We want the default widget.
+		return None
 
-	if property.GetOptions() :
-		return "GafferUI.PresetsPlugValueWidget"
+	property = __primProperty( plug )
+	if property :
+
+		# As far as I can tell, there isn't yet a convention for
+		# specifying widgets on `UsdPrimDefinition.Property`, but
+		# we can at least use `allowedTokens` to detect enum-like
+		# properties.
+		if property.GetMetadata( "allowedTokens" ) is not None :
+			return "GafferUI.PresetsPlugValueWidget"
+
+	else :
+
+		property = __sdrProperty( plug )
+
+		if property.GetWidget() not in ( "", "default" ) :
+			# The UsdPreviewSurface shaders don't provide any useful widget
+			# metadata, but we'd love to use it if they did, so alert
+			# ourselves if it appears in future.
+			IECore.msg(
+				IECore.Msg.Level.Warning, "USDShaderUI",
+				'Ignoring widget metadata "{}" on "{}"'.format(
+					property.GetWidget(), plug.fullName()
+				)
+			)
+
+		if property.GetOptions() :
+			return "GafferUI.PresetsPlugValueWidget"
 
 	# Fall back to metadata we provide ourselves.
 	return __widgetTypes.get(
@@ -106,12 +170,22 @@ def __widgetType( plug ) :
 
 def __presetNames( plug ) :
 
+	property = __primProperty( plug )
+	if property :
+		allowedTokens = property.GetMetadata( "allowedTokens" )
+		return IECore.StringVectorData( allowedTokens ) if allowedTokens else None
+
 	property = __sdrProperty( plug )
 	options = property.GetOptions()
 	if options :
 		return IECore.StringVectorData( [ o[0] for o in options ] )
 
 def __presetValues( plug ) :
+
+	property = __primProperty( plug )
+	if property :
+		allowedTokens = property.GetMetadata( "allowedTokens" )
+		return IECore.StringVectorData( allowedTokens ) if allowedTokens else None
 
 	property = __sdrProperty( plug )
 	options = property.GetOptions()
@@ -126,6 +200,13 @@ def __presetValues( plug ) :
 			return IECore.StringVectorData( [ o[1] for o in options ] )
 
 def __noduleType( plug ) :
+
+	property = __primProperty( plug )
+	if property :
+		## \todo Figure out if there's a way of querying connectability from
+		# `UsdPrimDefinition.Property` - at the time of writing, I can't find
+		# one.
+		return None
 
 	property = __sdrProperty( plug )
 	# `None` means "no opinion", so a nodule will be created based
@@ -158,7 +239,7 @@ Gaffer.Metadata.registerNode(
 
 		"out.*" : [
 
-			"description", functools.partial( __sdrMetadata, name = "help" ),
+			"description", __description,
 			"layout:index", __layoutIndex,
 			"noduleLayout:index", __layoutIndex,
 
@@ -177,12 +258,20 @@ for nodeType in ( GafferUSD.USDShader, GafferUSD.USDLight ) :
 
 			"parameters.*" : [
 
-				## \todo Get USD to actually provide help metadata. It's defined in a `doc`
-				# attribute in `shaderDefs.usda`, but not actually converted to Sdr by
-				# UsdShadeShaderDefUtils.
-				"description", functools.partial( __sdrMetadata, name = "help" ),
+				"label", __label,
+				"description", __description,
 				"layout:index", __layoutIndex,
+				"layout:section", __layoutSection,
 				"noduleLayout:index", __layoutIndex,
+				"plugValueWidget:type", __widgetType,
+				"presetNames", __presetNames,
+				"presetValues", __presetValues,
+
+			],
+
+			# Again, but for the `value` plug on OptionalValuePlugs.
+			"parameters.*.value" : [
+
 				"plugValueWidget:type", __widgetType,
 				"presetNames", __presetNames,
 				"presetValues", __presetValues,
