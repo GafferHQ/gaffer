@@ -176,34 +176,29 @@ def __dropHandler( s ) :
 	handler = __fileHandlers.get( path.suffix[1:].lower() )
 	return functools.partial( handler, path ) if handler is not None else None
 
-def __canDropFiles( graphEditor, event ) :
+def __canDropFiles( graphGadget, event ) :
 
 	return (
 		isinstance( event.data, IECore.StringVectorData ) and
 		all( __dropHandler( s ) is not None for s in event.data ) and
-		not Gaffer.MetadataAlgo.readOnly( graphEditor.graphGadget().getRoot() ) and
-		not Gaffer.MetadataAlgo.getChildNodesAreReadOnly( graphEditor.graphGadget().getRoot() )
+		not Gaffer.MetadataAlgo.readOnly( graphGadget.getRoot() ) and
+		not Gaffer.MetadataAlgo.getChildNodesAreReadOnly( graphGadget.getRoot() )
 	)
 
-def __dragEnter( graphEditor, event ) :
+def __dragEnter( graphGadget, event ) :
 
-	return __canDropFiles( graphEditor, event )
+	return __canDropFiles( graphGadget, event )
 
-def __drop( graphEditor, event ) :
+def __drop( graphGadget, event ) :
 
-	if not __canDropFiles( graphEditor, event ) :
+	if not __canDropFiles( graphGadget, event ) :
 		return False
 
-	graphGadget = graphEditor.graphGadget()
+	position = imath.V2f( event.line.p0.x, event.line.p0.y  )
 
-	position = graphEditor.graphGadgetWidget().getViewportGadget().rasterToGadgetSpace(
-		imath.V2f( event.line.p0.x, event.line.p0.y ),
-		gadget = graphEditor.graphGadget()
-	).p0
-	position = imath.V2f( position.x, position.y )
-
+	scriptNode = graphGadget.getRoot().scriptNode()
 	nodes = Gaffer.StandardSet()
-	with Gaffer.UndoScope( graphEditor.scriptNode() ) :
+	with Gaffer.UndoScope( scriptNode ) :
 
 		for s in event.data :
 
@@ -233,14 +228,14 @@ def __drop( graphEditor, event ) :
 
 			nodes.add( node )
 
-	graphEditor.scriptNode().selection().clear()
-	graphEditor.scriptNode().selection().add( nodes )
+	scriptNode.selection().clear()
+	scriptNode.selection().add( nodes )
 
 	return True
 
 def __graphEditorCreated( graphEditor ) :
 
-	graphEditor.dragEnterSignal().connect( __dragEnter, scoped = False )
-	graphEditor.dropSignal().connect( __drop, scoped = False )
+	graphEditor.graphGadget().dragEnterSignal().connect( __dragEnter, scoped = False )
+	graphEditor.graphGadget().dropSignal().connect( __drop, scoped = False )
 
 GafferUI.GraphEditor.instanceCreatedSignal().connect( __graphEditorCreated, scoped = False )
