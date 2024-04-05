@@ -80,6 +80,34 @@ void setDestinationGadget( DragDropEvent &d, GadgetPtr s )
 	d.destinationGadget = s;
 }
 
+object getSourceWidget( const DragDropEvent &d )
+{
+	if( d.sourceWidget.has_value() )
+	{
+		return std::any_cast<object>( d.sourceWidget );
+	}
+	return object();
+}
+
+void setSourceWidget( DragDropEvent &d, object w )
+{
+	d.sourceWidget = w;
+}
+
+object getDestinationWidget( const DragDropEvent &d )
+{
+	if( d.destinationWidget.has_value() )
+	{
+		return std::any_cast<object>( d.destinationWidget );
+	}
+	return object();
+}
+
+void setDestinationWidget( DragDropEvent &d, object w )
+{
+	d.destinationWidget = w;
+}
+
 } // namespace
 
 void GafferUIModule::bindEvent()
@@ -147,6 +175,8 @@ void GafferUIModule::bindEvent()
 		.add_property( "sourceGadget", &getSourceGadget, &setSourceGadget )
 		.add_property( "data", &getData, &setData )
 		.add_property( "destinationGadget", &getDestinationGadget, &setDestinationGadget )
+		.add_property( "sourceWidget", &getSourceWidget, &setSourceWidget )
+		.add_property( "destinationWidget", &getDestinationWidget, &setDestinationWidget )
 		.def_readwrite( "dropResult", &DragDropEvent::dropResult )
 	;
 

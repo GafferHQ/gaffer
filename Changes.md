@@ -26,6 +26,7 @@ Fixes
 - Widget :
   - Fixed bug that prevented Gadgets from receiving drops from another application.
   - Fixed errors when dragging from another application onto widgets that didn't expect it.
+- Gadget : Fixed access to `DragDropEvent.sourceWidget` and `DragDropEvent.destinationWidget` from Python slots connected to a Gadget's DragDropSignals.
 
 1.4.0.0b6 (relative to 1.4.0.0b5)
 =========

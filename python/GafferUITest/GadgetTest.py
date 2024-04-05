@@ -373,5 +373,23 @@ class GadgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( g3.enabled( relativeTo = g2 ), True )
 		self.assertEqual( g3.enabled( relativeTo = g1 ), True )
 
+	def testAccessWidgetsFromGadgetDragSignals( self ) :
+
+		button1 = GafferUI.Button()
+		button2 = GafferUI.Button()
+
+		gadget = GafferUI.Gadget()
+
+		event = GafferUI.DragDropEvent()
+		event.sourceWidget = button1
+		event.destinationWidget = button2
+
+		cs = GafferTest.CapturingSlot( gadget.dragMoveSignal() )
+		gadget.dragMoveSignal()( gadget, event )
+
+		self.assertEqual( len( cs ), 1 )
+		self.assertIs( cs[0][1].sourceWidget, button1 )
+		self.assertIs( cs[0][1].destinationWidget, button2 )
+
 if __name__ == "__main__":
 	unittest.main()
