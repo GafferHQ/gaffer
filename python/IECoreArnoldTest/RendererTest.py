@@ -1006,7 +1006,9 @@ class RendererTest( GafferTest.TestCase ) :
 
 		# Check that we can read the metadata using OpenImageIO.
 
-		imageSpec = OpenImageIO.ImageInput.open( str( self.temporaryDirectory() / "beauty.exr" ) ).spec()
+		imageFile = OpenImageIO.ImageInput.open( str( self.temporaryDirectory() / "beauty.exr" ) )
+		imageSpec = imageFile.spec()
+		imageFile.close()
 		# We can preserve some types.
 		self.assertEqual( imageSpec.getattribute( "foo" ), "bar" )
 		self.assertEqual( imageSpec.get_string_attribute( "emptyString" ), "" )
