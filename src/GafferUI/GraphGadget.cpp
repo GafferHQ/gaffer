@@ -1736,16 +1736,14 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		dirty( DirtyType::Render );
 		return true;
 	}
-	else
+	else if( m_dragMode == Selecting )
 	{
-		// we're drag selecting
 		m_lastDragPosition = V2f( i.x, i.y );
 		updateDragSelection( false, event.modifiers );
 		dirty( DirtyType::Render );
 		return true;
 	}
 
-	assert( 0 ); // shouldn't get here
 	return false;
 }
 
