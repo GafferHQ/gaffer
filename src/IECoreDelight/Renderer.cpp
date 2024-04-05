@@ -1226,7 +1226,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 	public :
 
 		DelightRenderer( RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
-			:	m_renderType( renderType ), m_frame( 1 ), m_messageHandler( messageHandler )
+			:	m_renderType( renderType ), m_messageHandler( messageHandler )
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
@@ -1283,14 +1283,17 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 			if( name == g_frameOptionName )
 			{
-				m_frame = 1;
+				double frame = 1;
 				if( value )
 				{
 					if( const IntData *d = reportedCast<const IntData>( value, "option", name ) )
 					{
-						m_frame = d->readable();
+						frame = d->readable();
 					}
 				}
+				ParameterList params;
+				params.add( { name.c_str(), &frame, NSITypeDouble, 0, 1, 0 } );
+				NSISetAttribute( m_context, NSI_SCENE_GLOBAL, params.size(), params.data() );
 			}
 			else if( name == g_cameraOptionName )
 			{
@@ -1506,7 +1509,6 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			const char *start = "start";
 			vector<NSIParam_t> params = {
 				{ "action", &start, NSITypeString, 0, 1, 0 },
-				{ "frame", &m_frame, NSITypeInteger, 0, 1, 0 }
 			};
 
 			if( m_renderType == Interactive )
@@ -1732,7 +1734,6 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 		NSIContext_t m_context;
 		RenderType m_renderType;
 
-		int m_frame;
 		string m_camera;
 
 		bool m_rendering = false;
