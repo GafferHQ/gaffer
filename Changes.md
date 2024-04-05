@@ -23,6 +23,9 @@ Fixes
   - Fixed Resolution Multiplier support.
   - Fixed UI visibility of `angle` parameter for distant lights, which was previously hidden.
   - Fixed export of `Varying` primitive variables on meshes (#5781).
+- Widget :
+  - Fixed bug that prevented Gadgets from receiving drops from another application.
+  - Fixed errors when dragging from another application onto widgets that didn't expect it.
 
 1.4.0.0b6 (relative to 1.4.0.0b5)
 =========
