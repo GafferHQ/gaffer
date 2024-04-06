@@ -1173,6 +1173,7 @@ IECore::InternedString g_maxLengthVolumeOptionName( "dl:maximumraylength.volume"
 IECore::InternedString g_clampIndirectOptionName( "dl:clampindirect" );
 IECore::InternedString g_showMultipleScatteringOptionName( "dl:show.multiplescattering" );
 IECore::InternedString g_importancesamplefilterOptionName( "dl:importancesamplefilter" );
+IECore::InternedString g_staticsamplingpatternOptionName( "dl:staticsamplingpattern" );
 
 const char *g_screenHandle = "ieCoreDelight:defaultScreen";
 
@@ -1322,6 +1323,10 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 				setNSIScreenOption( m_context, name, value );
 			}
 			else if( name == g_importancesamplefilterOptionName )
+			{
+				setNSIScreenOption( m_context, name, value );
+			}
+			else if( name == g_staticsamplingpatternOptionName )
 			{
 				setNSIScreenOption( m_context, name, value );
 			}
@@ -1647,7 +1652,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 			ParameterList screeenParameters;
 
-			const V2i &resolution = camera->getResolution();
+			const V2i &resolution = camera->renderResolution();
 			screeenParameters.add( { "resolution", resolution.getValue(), NSITypeInteger, 2, 1, NSIParamIsArray } );
 
 			const bool &overscanOn = camera->getOverscan();
