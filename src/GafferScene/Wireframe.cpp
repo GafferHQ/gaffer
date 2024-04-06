@@ -110,9 +110,11 @@ struct MakeWireframe
 					);
 			}
 
-			IECore::V3fVectorDataPtr pData = new V3fVectorData;
-			pData->setInterpretation( GeometricData::Point );
-			vector<V3f> &p = pData->writable();
+
+			using Edge = std::pair<int, int>;
+
+			std::vector<Edge> edges;
+
 			// We don't know upfront how many edges we will generate.
 			// `mesh->variableSize( PrimitiveVariable::FaceVarying )` gives us
 			// an upper bound, but edges can be shared by faces in which case
@@ -120,14 +122,7 @@ struct MakeWireframe
 			// edges, we will only generate half of the edges from this upper bound.
 			// (For non-manifold meshes we could generate even fewer, but we assume
 			// we will not be given those).
-			const size_t minExpectedEdges = mesh->variableSize( PrimitiveVariable::FaceVarying ) / 2;
-			// Each edge we add will add 2 points to `p`.
-			p.reserve( minExpectedEdges * 2 );
-
-			using Edge = std::pair<int, int>;
-			using EdgeSet = unordered_set<Edge, boost::hash<Edge>>;
-			EdgeSet edgesVisited;
-			edgesVisited.reserve( mesh->variableSize( PrimitiveVariable::FaceVarying ) );
+			edges.reserve( mesh->variableSize( PrimitiveVariable::FaceVarying ) );
 
 			int vertexIdsIndex = 0;
 			for( int numVertices : mesh->verticesPerFace()->readable() )
@@ -142,14 +137,32 @@ struct MakeWireframe
 						index1 = (*vertexIds)[index1];
 					}
 
-					Edge edge( min( index0, index1 ), max( index0, index1 ) );
-					if( edgesVisited.insert( edge ).second )
+					if( index0 < index1 )
 					{
-						p.push_back( v3f( dataView[index0] ) );
-						p.push_back( v3f( dataView[index1] ) );
+						edges.emplace_back( index0, index1 );
+					}
+					else
+					{
+						edges.emplace_back( index1, index0 );
 					}
 				}
 				vertexIdsIndex += numVertices;
+			}
+
+			// We only want to output each edge once, so sort and discard duplicates
+			std::sort( edges.begin(), edges.end() );
+			edges.erase( std::unique( edges.begin(), edges.end() ), edges.end() );
+
+			IECore::V3fVectorDataPtr pData = new V3fVectorData;
+			pData->setInterpretation( GeometricData::Point );
+			vector<V3f> &p = pData->writable();
+			// Each edge we add will add 2 points to `p`.
+			p.reserve( edges.size() * 2 );
+
+			for( const Edge &e : edges )
+			{
+				p.push_back( v3f( dataView[e.first] ) );
+				p.push_back( v3f( dataView[e.second] ) );
 			}
 
 			IECore::IntVectorDataPtr vertsPerCurveData = new IntVectorData;
