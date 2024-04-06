@@ -162,5 +162,5 @@ IECore::ConstObjectPtr MeshTessellate::computeProcessedObject( const ScenePath &
 
 Gaffer::ValuePlug::CachePolicy MeshTessellate::processedObjectComputeCachePolicy() const
 {
-	return ValuePlug::CachePolicy::Default;
+	return ValuePlug::CachePolicy::TaskCollaboration;
 }
