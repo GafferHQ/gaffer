@@ -66,17 +66,17 @@ namespace
 struct MakeWireframe
 {
 
-	CurvesPrimitivePtr operator() ( const V2fVectorData *data, const MeshPrimitive *mesh, const string &name, const PrimitiveVariable &primitiveVariable )
+	CurvesPrimitivePtr operator() ( const V2fVectorData *data, const MeshPrimitive *mesh, const string &name, const PrimitiveVariable &primitiveVariable, const IECore::Canceller *canceller )
 	{
-		return makeWireframe<V2fVectorData>( data, mesh, name, primitiveVariable );
+		return makeWireframe<V2fVectorData>( data, mesh, name, primitiveVariable, canceller );
 	}
 
-	CurvesPrimitivePtr operator() ( const V3fVectorData *data, const MeshPrimitive *mesh, const string &name, const PrimitiveVariable &primitiveVariable )
+	CurvesPrimitivePtr operator() ( const V3fVectorData *data, const MeshPrimitive *mesh, const string &name, const PrimitiveVariable &primitiveVariable, const IECore::Canceller *canceller )
 	{
-		return makeWireframe<V3fVectorData>( data, mesh, name, primitiveVariable );
+		return makeWireframe<V3fVectorData>( data, mesh, name, primitiveVariable, canceller );
 	}
 
-	CurvesPrimitivePtr operator() ( const Data *data, const MeshPrimitive *mesh, const string &name, const PrimitiveVariable &primitiveVariable )
+	CurvesPrimitivePtr operator() ( const Data *data, const MeshPrimitive *mesh, const string &name, const PrimitiveVariable &primitiveVariable, const IECore::Canceller *canceller )
 	{
 		throw IECore::Exception(
 			fmt::format( "PrimitiveVariable \"{}\" has unsupported type \"{}\"", name, data->typeName() )
@@ -86,7 +86,7 @@ struct MakeWireframe
 	private :
 
 		template<typename T>
-		CurvesPrimitivePtr makeWireframe( const T *data, const MeshPrimitive *mesh, const string &name, const PrimitiveVariable &primitiveVariable )
+		CurvesPrimitivePtr makeWireframe( const T *data, const MeshPrimitive *mesh, const string &name, const PrimitiveVariable &primitiveVariable, const IECore::Canceller *canceller )
 		{
 			using Vec = typename T::ValueType::value_type;
 			using DataView = PrimitiveVariable::IndexedView<Vec>;
@@ -110,9 +110,11 @@ struct MakeWireframe
 					);
 			}
 
-			IECore::V3fVectorDataPtr pData = new V3fVectorData;
-			pData->setInterpretation( GeometricData::Point );
-			vector<V3f> &p = pData->writable();
+
+			using Edge = std::pair<int, int>;
+
+			std::vector<Edge> edges;
+
 			// We don't know upfront how many edges we will generate.
 			// `mesh->variableSize( PrimitiveVariable::FaceVarying )` gives us
 			// an upper bound, but edges can be shared by faces in which case
@@ -120,14 +122,7 @@ struct MakeWireframe
 			// edges, we will only generate half of the edges from this upper bound.
 			// (For non-manifold meshes we could generate even fewer, but we assume
 			// we will not be given those).
-			const size_t minExpectedEdges = mesh->variableSize( PrimitiveVariable::FaceVarying ) / 2;
-			// Each edge we add will add 2 points to `p`.
-			p.reserve( minExpectedEdges * 2 );
-
-			using Edge = std::pair<int, int>;
-			using EdgeSet = unordered_set<Edge, boost::hash<Edge>>;
-			EdgeSet edgesVisited;
-			edgesVisited.reserve( mesh->variableSize( PrimitiveVariable::FaceVarying ) );
+			edges.reserve( mesh->variableSize( PrimitiveVariable::FaceVarying ) );
 
 			int vertexIdsIndex = 0;
 			for( int numVertices : mesh->verticesPerFace()->readable() )
@@ -142,14 +137,35 @@ struct MakeWireframe
 						index1 = (*vertexIds)[index1];
 					}
 
-					Edge edge( min( index0, index1 ), max( index0, index1 ) );
-					if( edgesVisited.insert( edge ).second )
+					if( index0 < index1 )
 					{
-						p.push_back( v3f( dataView[index0] ) );
-						p.push_back( v3f( dataView[index1] ) );
+						edges.emplace_back( index0, index1 );
+					}
+					else
+					{
+						edges.emplace_back( index1, index0 );
 					}
 				}
+				Canceller::check( canceller );
 				vertexIdsIndex += numVertices;
+			}
+
+			// We only want to output each edge once, so sort and discard duplicates
+			std::sort( edges.begin(), edges.end() );
+			Canceller::check( canceller );
+			edges.erase( std::unique( edges.begin(), edges.end() ), edges.end() );
+
+			IECore::V3fVectorDataPtr pData = new V3fVectorData;
+			pData->setInterpretation( GeometricData::Point );
+			vector<V3f> &p = pData->writable();
+			// Each edge we add will add 2 points to `p`.
+			p.reserve( edges.size() * 2 );
+
+			for( const Edge &e : edges )
+			{
+				p.push_back( v3f( dataView[e.first] ) );
+				p.push_back( v3f( dataView[e.second] ) );
+				Canceller::check( canceller );
 			}
 
 			IECore::IntVectorDataPtr vertsPerCurveData = new IntVectorData;
@@ -173,7 +189,7 @@ struct MakeWireframe
 };
 
 /// \todo Perhaps this could go in IECoreScene::MeshAlgo
-CurvesPrimitivePtr wireframe( const MeshPrimitive *mesh, const std::string &position )
+CurvesPrimitivePtr wireframe( const MeshPrimitive *mesh, const std::string &position, const IECore::Canceller *canceller )
 {
 	auto it = mesh->variables.find( position );
 	if( it == mesh->variables.end() )
@@ -181,7 +197,7 @@ CurvesPrimitivePtr wireframe( const MeshPrimitive *mesh, const std::string &posi
 		throw IECore::Exception( fmt::format( "MeshPrimitive has no primitive variable named \"{}\"", position ) );
 	}
 
-	CurvesPrimitivePtr result = dispatch( it->second.data.get(), MakeWireframe(), mesh, it->first, it->second );
+	CurvesPrimitivePtr result = dispatch( it->second.data.get(), MakeWireframe(), mesh, it->first, it->second, canceller );
 	return result;
 }
 
@@ -250,7 +266,7 @@ IECore::ConstObjectPtr Wireframe::computeProcessedObject( const ScenePath &path,
 		return inputObject;
 	}
 
-	CurvesPrimitivePtr result = wireframe( mesh, positionPlug()->getValue() );
+	CurvesPrimitivePtr result = wireframe( mesh, positionPlug()->getValue(), context->canceller() );
 	for( const auto &pv : mesh->variables )
 	{
 		if( pv.second.interpolation == PrimitiveVariable::Constant )

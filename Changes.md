@@ -1,25 +1,70 @@
-1.4.x.x (relative to 1.4.0.0b5)
+1.4.x.x (relative to 1.4.0.0b6)
 =======
 
-Features
---------
+Improvements
+------------
 
-- SelectionTool : Added select mode plug. When set to anything except `Standard` using the SelectionTool causes the actual scene location selected to potentially be modified from the originally selected location. Selection modifiers work identically for deselection. Currently, two selectors are implemented :
-  - USD Kind : When selecting, the first ancestor location with a `usd:kind` attribute matching the chosen list of USD Kind will ultimately be selected. USD's Kind Registry includes `Assembly`, `Component`, `Group`, `Model` and `SubComponent` by default and can be extended via USD startup scripts.
-  - Shader Assignment : When selecting, the first ancestor location with a renderable and direct (not inherited) shader attribute will ultimately be selected. This can be used to select either surface or displacement shaders.
+- Wireframe :
+  - Improved performance ~3x.
+  - Improved cancellation responsiveness.
+- 3Delight : Added NSI screen static sampling pattern option (`dl:staticsamplingpattern`).
 
 Fixes
 -----
 
+- MeshTesselate : Fixed potential deadlock [^1].
+- 3Delight :
+  - Fixed failure to change sampling pattern per frame.
+  - Fixed Resolution Multiplier support.
+
+1.4.0.0b6 (relative to 1.4.0.0b5)
+=========
+
+Features
+--------
+
+- Arnold : Added support for Arnold 7.3. Note that a minimum of 7.3.1.0 is required, meaning that 7.3.0.0 is _not_ supported.
+- SelectionTool : Added select mode plug. When set to anything except `Standard` using the SelectionTool causes the actual scene location selected to potentially be modified from the originally selected location. Selection modifiers work identically for deselection. Currently, two selectors are implemented :
+  - USD Kind : When selecting, the first ancestor location with a `usd:kind` attribute matching the chosen list of USD Kind will ultimately be selected. USD's Kind Registry includes `Assembly`, `Component`, `Group`, `Model` and `SubComponent` by default and can be extended via USD startup scripts.
+  - Shader Assignment : When selecting, the first ancestor location with a renderable and direct (not inherited) shader attribute will ultimately be selected. This can be used to select either surface or displacement shaders.
+- Added MeshTessellate node, for increasing the polycount of subdivision meshes.
+
+Improvements
+------------
+
+- EditScope : Added a summary of edits in the NodeEditor, with the ability to select the affected objects and quickly navigate to the processor nodes.
+- Arnold : OSL shaders with connections from multiple outputs are no longer duplicated on export to Arnold.
+- ArnoldShader : Added parameter tooltips based on `help` metadata provided by Arnold.
+
+Fixes
+-----
+
+- Arnold :
+  - Fixed rendering of shaders imported from HtoA via USD.
+  - Fixed USD export of shaders to use `outputs:out` instead of `outputs:DEFAULT_OUTPUT`.
+  - Fixed rendering of `osl` shaders using the `code` parameter.
 - GafferTest, GafferImageTest : Fixed import of these modules if the `Gaffer` module had not been imported previously.
 - SceneAlgo : Fixed potential shutdown crashes caused by the adaptor registry [^1].
 - Dispatcher : Fixed shutdown crashes caused by Python slots connected to the dispatch signals [^1].
 - Display : Fixed shutdown crashes caused by Python slots connected to `driverCreatedSignal()` and `imageReceivedSignal()` [^1].
+- LightPositionTool : Fixed crash when changing the tool mode with nothing selected [^1].
+- ViewportGadget : Fixed selection issues with Intel GPUs (#901, #2788).
+- TransformTool : Fixed alignment of green "value changed" icon for `orientation` plugs.
 
 API
 ---
 
 - SelectionTool : Added static `registerSelectMode()` method for registering a Python or C++ function that will modify a selected scene path location. Users can choose which mode is active when selecting.
+- EditScopeUI : Added an API for customising the EditScope's NodeEditor with summaries for each processor :
+  - ProcessorWidget provides a base class for custom widgets, and a factory mechanism for registering them against processors.
+  - SimpleProcessorWidget provides a base class for widgets with a simple summary label and optional action links.
+- TractorDispatcher : The `preSpoolSignal()` now provides an additional `taskData` argument to slots, which maps from Tractor tasks to information about the Gaffer tasks they will execute.
+- LabelPlugValueWidget : Added optional `labelPlugValueWidget:showValueChangedIndicator` metadata entry. If a plug has this entry set to `False`, the icon next to the label that indicates the value has changed will not be shown. Defaults to `True` if the value is not set.
+
+Breaking Changes
+----------------
+
+- InteractiveRenderTest : Subclasses must now return the shader output plug from creation methods such as `_createConstantShader()`.
 
 1.4.0.0b5 (relative to 1.4.0.0b4)
 =========

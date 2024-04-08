@@ -123,13 +123,13 @@ class InteractiveCyclesRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		shader = GafferCycles.CyclesShader()
 		shader.loadShader( "emission" )
 		shader["parameters"]["strength"].setValue( 1 )
-		return shader, shader["parameters"]["color"]
+		return shader, shader["parameters"]["color"], shader["out"]["emission"]
 
 	def _createMatteShader( self ) :
 
 		shader = GafferCycles.CyclesShader()
 		shader.loadShader( "diffuse_bsdf" )
-		return shader, shader["parameters"]["color"]
+		return shader, shader["parameters"]["color"], shader["out"]["BSDF"]
 
 	def _createTraceSetShader( self ) :
 

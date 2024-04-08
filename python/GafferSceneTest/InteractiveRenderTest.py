@@ -561,12 +561,12 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["catalogue"] = GafferImage.Catalogue()
 		s["s"] = GafferScene.Sphere()
 
-		s["shader"], colorPlug = self._createConstantShader()
+		s["shader"], colorPlug, shaderOut = self._createConstantShader()
 		colorPlug.setValue( imath.Color3f( 1, 0, 0 ) )
 
 		s["a"] = GafferScene.ShaderAssignment()
 		s["a"]["in"].setInput( s["s"]["out"] )
-		s["a"]["shader"].setInput( s["shader"]["out"] )
+		s["a"]["shader"].setInput( shaderOut )
 
 		s["o"] = GafferScene.Outputs()
 		s["o"].addOutput(
@@ -942,10 +942,10 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["g"]["in"][1].setInput( s["p"]["out"] )
 		s["g"]["in"][2].setInput( s["c"]["out"] )
 
-		s["s"], unused = self._createMatteShader()
+		s["s"], unused, shaderOut = self._createMatteShader()
 		s["a"] = GafferScene.ShaderAssignment()
 		s["a"]["in"].setInput( s["g"]["out"] )
-		s["a"]["shader"].setInput( s["s"]["out"] )
+		s["a"]["shader"].setInput( shaderOut )
 
 		s["d"] = GafferScene.Outputs()
 		s["d"].addOutput(
@@ -1039,10 +1039,10 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["g"]["in"][1].setInput( s["p"]["out"] )
 		s["g"]["in"][2].setInput( s["c"]["out"] )
 
-		s["s"], unused = self._createMatteShader()
+		s["s"], unused, shaderOut = self._createMatteShader()
 		s["a"] = GafferScene.ShaderAssignment()
 		s["a"]["in"].setInput( s["g"]["out"] )
-		s["a"]["shader"].setInput( s["s"]["out"] )
+		s["a"]["shader"].setInput( shaderOut )
 
 		s["d"] = GafferScene.Outputs()
 		s["d"].addOutput(
@@ -1119,10 +1119,10 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["g"]["in"][1].setInput( s["p"]["out"] )
 		s["g"]["in"][2].setInput( s["c"]["out"] )
 
-		s["s"], unused = self._createMatteShader()
+		s["s"], unused, shaderOut = self._createMatteShader()
 		s["a"] = GafferScene.ShaderAssignment()
 		s["a"]["in"].setInput( s["g"]["out"] )
-		s["a"]["shader"].setInput( s["s"]["out"] )
+		s["a"]["shader"].setInput( shaderOut )
 
 		s["d"] = GafferScene.Outputs()
 		s["d"].addOutput(
@@ -1199,10 +1199,10 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["g"]["in"][1].setInput( s["p"]["out"] )
 		s["g"]["in"][2].setInput( s["c"]["out"] )
 
-		s["s"], unused = self._createMatteShader()
+		s["s"], unused, shaderOut = self._createMatteShader()
 		s["a"] = GafferScene.ShaderAssignment()
 		s["a"]["in"].setInput( s["g"]["out"] )
-		s["a"]["shader"].setInput( s["s"]["out"] )
+		s["a"]["shader"].setInput( shaderOut )
 
 		s["d"] = GafferScene.Outputs()
 		s["d"].addOutput(
@@ -1473,12 +1473,12 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["group"]["in"][0].setInput( s["reflector"]["out"] )
 		s["group"]["in"][1].setInput( s["reflected"]["out"] )
 
-		s["constant"], constantParameter = self._createConstantShader()
+		s["constant"], constantParameter, constantOut = self._createConstantShader()
 		s["constantAssignment"] = GafferScene.ShaderAssignment()
 		s["constantAssignment"]["in"].setInput( s["group"]["out"] )
-		s["constantAssignment"]["shader"].setInput( s["constant"]["out"] )
+		s["constantAssignment"]["shader"].setInput( constantOut )
 
-		traceShader, traceSetParameter = self._createTraceSetShader()
+		traceShader, traceSetParameter, traceShaderOut = self._createTraceSetShader()
 		if traceShader is None :
 			self.skipTest( "Trace set shader not available" )
 
@@ -1489,7 +1489,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["traceAssignment"] = GafferScene.ShaderAssignment()
 		s["traceAssignment"]["in"].setInput( s["constantAssignment"]["out"] )
-		s["traceAssignment"]["shader"].setInput( s["traceShader"]["out"] )
+		s["traceAssignment"]["shader"].setInput( traceShaderOut )
 		s["traceAssignment"]["filter"].setInput( s["traceAssignmentFilter"]["out"] )
 
 		s["set"] = GafferScene.Set()
@@ -1644,10 +1644,10 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["group"]["in"][2].setInput( script["cam"]["out"] )
 		script["group"]["in"][3].setInput( script["attributes"]["out"] )
 
-		script["shader"], unused = self._createMatteShader()
+		script["shader"], unused, shaderOut = self._createMatteShader()
 		script["assignment"] = GafferScene.ShaderAssignment()
 		script["assignment"]["in"].setInput( script["group"]["out"] )
-		script["assignment"]["shader"].setInput( script["shader"]["out"] )
+		script["assignment"]["shader"].setInput( shaderOut )
 
 		script["outputs"] = GafferScene.Outputs()
 		script["outputs"].addOutput(
@@ -1791,10 +1791,10 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		script["plane"] = GafferScene.Plane()
 
-		script["shader"], unused = self._createMatteShader()
+		script["shader"], unused, shaderOut = self._createMatteShader()
 		script["assignment"] = GafferScene.ShaderAssignment()
 		script["assignment"]["in"].setInput( script["plane"]["out"] )
-		script["assignment"]["shader"].setInput( script["shader"]["out"] )
+		script["assignment"]["shader"].setInput( shaderOut )
 
 		script["camera"] = GafferScene.Camera()
 		script["camera"]["transform"]["translate"]["z"].setValue( 1 )
@@ -1875,12 +1875,12 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 			result = GafferScene.SceneProcessor()
 
-			result["__shader"], colorPlug = self._createConstantShader()
+			result["__shader"], colorPlug, shaderOut = self._createConstantShader()
 			colorPlug.setValue( imath.Color3f( 1, 0, 0 ) )
 
 			result["__assignment"] = GafferScene.ShaderAssignment()
 			result["__assignment"]["in"].setInput( result["in"] )
-			result["__assignment"]["shader"].setInput( result["__shader"]["out"] )
+			result["__assignment"]["shader"].setInput( shaderOut )
 
 			result["out"].setInput( result["__assignment"]["out"] )
 
@@ -1936,10 +1936,10 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["g"]["in"][1].setInput( s["p"]["out"] )
 		s["g"]["in"][2].setInput( s["c"]["out"] )
 
-		s["s"], unused = self._createMatteShader()
+		s["s"], unused, shaderOut = self._createMatteShader()
 		s["a"] = GafferScene.ShaderAssignment()
 		s["a"]["in"].setInput( s["g"]["out"] )
-		s["a"]["shader"].setInput( s["s"]["out"] )
+		s["a"]["shader"].setInput( shaderOut )
 
 		s["d"] = GafferScene.Outputs()
 		s["d"].addOutput(
@@ -2023,10 +2023,10 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["group"]["in"][2].setInput( s["plane"]["out"] )
 		s["group"]["in"][3].setInput( s["camera"]["out"] )
 
-		s["shader"], unused = self._createMatteShader()
+		s["shader"], unused, shaderOut = self._createMatteShader()
 		s["shaderAssignment"] = GafferScene.ShaderAssignment()
 		s["shaderAssignment"]["in"].setInput( s["group"]["out"] )
-		s["shaderAssignment"]["shader"].setInput( s["shader"]["out"] )
+		s["shaderAssignment"]["shader"].setInput( shaderOut )
 
 		s["outputs"] = GafferScene.Outputs()
 		s["outputs"].addOutput(
@@ -2286,14 +2286,16 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 	## Should be implemented by derived classes to return an
 	# appropriate Shader node with a constant shader loaded,
-	# along with the plug for the colour parameter.
+	# along with the plug for the colour parameter and the output
+	# plug to be connected to a ShaderAssignment.
 	def _createConstantShader( self ) :
 
 		raise NotImplementedError
 
 	## Should be implemented by derived classes to return
 	# an appropriate Shader node with a matte shader loaded,
-	# along with the plug for the colour parameter.
+	# along with the plug for the colour parameter and the output
+	# plug to be connected to a ShaderAssignment.
 	def _createMatteShader( self ) :
 
 		raise NotImplementedError

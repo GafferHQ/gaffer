@@ -37,7 +37,7 @@
 import unittest
 import unittest.mock
 import inspect
-import sys
+import warnings
 
 import imath
 
@@ -63,7 +63,7 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 	def __job( self, nodes, dispatcher = None ) :
 
 		jobs = []
-		def f( dispatcher, job ) :
+		def f( dispatcher, job, taskData ) :
 
 			jobs.append( job )
 
@@ -79,7 +79,51 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 
 		return jobs[0]
 
-	def testPreSpoolSignal( self ) :
+	def testPreSpoolSignalTaskData( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["variables"].addChild( Gaffer.NameValuePlug( "myVariable", "test" ) )
+
+		script["node"] = GafferDispatchTest.LoggingTaskNode()
+		script["node"]["frame"] = Gaffer.StringPlug( defaultValue = "${frame}", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["node"]["dispatcher"]["batchSize"].setValue( 4 )
+
+		script["dispatcher"] = self.__dispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["node"]["task"] )
+		script["dispatcher"]["framesMode"].setValue( script["dispatcher"].FramesMode.CustomRange )
+		script["dispatcher"]["frameRange"].setValue( "1-10" )
+
+		taskDataChecked = False
+		def checkTaskData( dispatcher, job, taskData ) :
+
+			self.assertEqual( len( job.subtasks ), 3 )
+			self.assertEqual( len( taskData ), 3 )
+			for subtask in job.subtasks :
+
+				self.assertIn( subtask, taskData )
+				self.assertTrue( taskData[subtask].plug.isSame( script["node"]["task"] ) )
+
+				self.assertIsInstance( taskData[subtask].context, Gaffer.Context )
+				self.assertNotIn( "frame", taskData[subtask].context )
+				self.assertEqual( taskData[subtask].context["myVariable"], "test" )
+				self.assertIn( "dispatcher:jobDirectory", taskData[subtask].context )
+				self.assertIn( "dispatcher:scriptFileName", taskData[subtask].context )
+
+			self.assertEqual(
+				[ taskData[subtask].frames for subtask in job.subtasks ],
+				[ [ 1, 2, 3, 4 ], [ 5, 6, 7, 8 ], [ 9, 10 ] ]
+			)
+
+			nonlocal taskDataChecked
+			taskDataChecked = True
+
+		connection = GafferTractor.TractorDispatcher.preSpoolSignal().connect( checkTaskData, scoped = True )
+		with script.context() :
+			script["dispatcher"]["task"].execute()
+
+		self.assertTrue( taskDataChecked )
+
+	def testPreSpoolSignalCompatibility( self ) :
 
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferDispatchTest.LoggingTaskNode()
@@ -89,7 +133,10 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 
 			spooled.append( ( dispatcher, job ) )
 
-		c = GafferTractor.TractorDispatcher.preSpoolSignal().connect( f, scoped = True )
+		# Connecting a function which doesn't have the additional `taskData` argument.
+		with warnings.catch_warnings() :
+			warnings.simplefilter( "ignore", DeprecationWarning )
+			c = GafferTractor.TractorDispatcher.preSpoolSignal().connect( f, scoped = True )
 
 		dispatcher = self.__dispatcher()
 		dispatcher["tasks"][0].setInput( s["n"]["task"] )

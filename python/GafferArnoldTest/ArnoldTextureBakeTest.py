@@ -370,7 +370,7 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 		pickCode = GafferOSL.OSLCode()
 		pickCode["parameters"].addChild( Gaffer.IntPlug( "targetId" ) )
 		pickCode["out"].addChild( Gaffer.IntPlug( "cull", direction = Gaffer.Plug.Direction.Out ) )
-		pickCode["code"].setValue( 'int randomId; getattribute( "randomId", randomId ); cull = randomId != targetId;' )
+		pickCode["code"].setValue( 'int randomId; getattribute( "randomId", randomId ); cull = randomId != targetId ? 1 : 0;' )
 
 		expression = Gaffer.Expression()
 		pickCode.addChild( expression )

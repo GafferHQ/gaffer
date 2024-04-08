@@ -706,6 +706,7 @@ class RendererTest( GafferTest.TestCase ) :
 		options = [
 			( "dl:oversampling", IECore.IntData( 16 ), "int" ),
 			( "dl:importancesamplefilter", IECore.BoolData( True ), "int" ),
+			( "dl:staticsamplingpattern", IECore.BoolData( True ), "int" ),
 		]
 
 		for name, value, type in options :
@@ -1154,6 +1155,23 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( mesh["subdivision.creasesharpness"], [ 6, 6 ] )
 		self.assertEqual( mesh["subdivision.cornervertices"], 3 )
 		self.assertEqual( mesh["subdivision.cornersharpness"], 5 )
+
+	def testFrameOption( self ) :
+
+		for frame in range( 0, 5 ) :
+
+			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				"3Delight",
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+				str( self.temporaryDirectory() / "test.nsia" ),
+			)
+
+			renderer.option( "frame", IECore.IntData( frame ) )
+			renderer.render()
+
+			nsi = self.__parseDict( str( self.temporaryDirectory() / "test.nsia" ) )
+			self.assertEqual( nsi[".global"]["frame"], frame )
+			self.assertIsInstance( nsi[".global"]["frame"], float )
 
 	# `lightSettings` is a list of tuples of the form :
 	# ( USD light type, position, rotation (V3f, degrees), 3Delight geometry type,

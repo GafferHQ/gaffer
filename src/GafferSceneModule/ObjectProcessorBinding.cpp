@@ -51,6 +51,7 @@
 #include "GafferScene/MeshTangents.h"
 #include "GafferScene/MeshToPoints.h"
 #include "GafferScene/MeshType.h"
+#include "GafferScene/MeshTessellate.h"
 #include "GafferScene/ObjectProcessor.h"
 #include "GafferScene/Orientation.h"
 #include "GafferScene/Parameters.h"
@@ -87,6 +88,7 @@ void GafferSceneModule::bindObjectProcessor()
 	GafferBindings::DependencyNodeClass<Wireframe>();
 	GafferBindings::DependencyNodeClass<CopyPrimitiveVariables>();
 	GafferBindings::DependencyNodeClass<MeshNormals>();
+	GafferBindings::DependencyNodeClass<MeshTessellate>();
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<GafferScene::MeshTangents>();

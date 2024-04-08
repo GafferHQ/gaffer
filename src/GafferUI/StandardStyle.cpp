@@ -581,7 +581,6 @@ void StandardStyle::bind( const Style *currentStyle ) const
 		return;
 	}
 
-	glEnable( GL_BLEND );
 	glBlendFuncSeparate( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
 	glUseProgram( shader()->program() );
 
@@ -1130,17 +1129,7 @@ void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Textur
 	glPushAttrib( GL_COLOR_BUFFER_BIT );
 
 	// As the image is already pre-multiplied we need to change our blend mode.
-	glEnable( GL_BLEND );
-	if( !IECoreGL::Selector::currentSelector() )
-	{
-		// Some users have reported crashes that were traced back to this call
-		// when used on the GL_R32UI data type the `IDRender` selection mode
-		// uses. The `IDRender` buffer would get corrupted with values that
-		// didn't correspond to actual gadgets.
-		// Don't change it when rendering the selection pass since
-		// blending should not be applied to an integer buffer anyways.
-		glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
-	}
+	glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
 
 	glEnable( GL_TEXTURE_2D );
 	glActiveTexture( GL_TEXTURE0 );

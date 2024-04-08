@@ -176,8 +176,8 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( network ), 3 )
 		self.assertEqual(
 			network.inputConnections( "n3" ), [
-				network.Connection( network.Parameter( "n2", "", ), network.Parameter( "n3", "c" ) ),
-				network.Connection( network.Parameter( "n1", "r", ), network.Parameter( "n3", "i" ) )
+				network.Connection( network.Parameter( "n2", "out", ), network.Parameter( "n3", "c" ) ),
+				network.Connection( network.Parameter( "n1", "out.r", ), network.Parameter( "n3", "i" ) )
 			]
 		)
 
@@ -235,7 +235,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( len( network ), 2 )
 			self.assertEqual(
 				network.inputConnections( "n3" ),
-				[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "", ), network.Parameter( "n3", "c" ) ) ]
+				[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "out", ), network.Parameter( "n3", "c" ) ) ]
 			)
 
 	def testSwitchWithContextSensitiveIndex( self ) :
@@ -259,7 +259,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( network ), 2 )
 		self.assertEqual(
 			network.inputConnections( "n3" ),
-			[ network.Connection( network.Parameter( "n1", "", ), network.Parameter( "n3", "c" ) ) ]
+			[ network.Connection( network.Parameter( "n1", "out", ), network.Parameter( "n3", "c" ) ) ]
 		)
 
 		s["expression"] = Gaffer.Expression()
@@ -276,7 +276,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 				self.assertEqual( len( network ), 2 )
 				self.assertEqual(
 					network.inputConnections( "n3" ),
-					[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "", ), network.Parameter( "n3", "c" ) ) ]
+					[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "out", ), network.Parameter( "n3", "c" ) ) ]
 				)
 
 	def testSwitchWithComponentConnections( self ) :
@@ -310,7 +310,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 				self.assertEqual( len( network ), 2 )
 				self.assertEqual(
 					network.inputConnections( "n3" ),
-					[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "r", ), network.Parameter( "n3", "c.r" ) ) ]
+					[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "out.r", ), network.Parameter( "n3", "c.r" ) ) ]
 				)
 
 	def testComponentToComponentConnections( self ) :
@@ -327,9 +327,9 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual(
 			network.inputConnections( "n2" ),
 			[
-				( ( "n1", "r" ), ( "n2", "c.b" ) ),
-				( ( "n1", "b" ), ( "n2", "c.g" ) ),
-				( ( "n1", "g" ), ( "n2", "c.r" ) ),
+				( ( "n1", "out.r" ), ( "n2", "c.b" ) ),
+				( ( "n1", "out.b" ), ( "n2", "c.g" ) ),
+				( ( "n1", "out.g" ), ( "n2", "c.r" ) ),
 			]
 		)
 
@@ -358,7 +358,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( len( network ), 2 )
 			self.assertEqual(
 				network.inputConnections( "n3" ),
-				[ network.Connection( network.Parameter( n, "", ), network.Parameter( "n3", "c" ) ) ]
+				[ network.Connection( network.Parameter( n, "out", ), network.Parameter( "n3", "c" ) ) ]
 			)
 
 	def testSpline( self ) :
@@ -400,10 +400,10 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( network ), 2 )
 		self.assertEqual(
 			network.inputConnections( "n1" ), [
-				network.Connection( network.Parameter( "inN1", "", ), network.Parameter( "n1", "spline[0].y" ) ),
-				network.Connection( network.Parameter( "inN1", "", ), network.Parameter( "n1", "spline[1].y" ) ),
-				network.Connection( network.Parameter( "inN1", "g", ), network.Parameter( "n1", "spline[3].y.b" ) ),
-				network.Connection( network.Parameter( "inN1", "g", ), network.Parameter( "n1", "spline[4].y.b" ) )
+				network.Connection( network.Parameter( "inN1", "out", ), network.Parameter( "n1", "spline[0].y" ) ),
+				network.Connection( network.Parameter( "inN1", "out", ), network.Parameter( "n1", "spline[1].y" ) ),
+				network.Connection( network.Parameter( "inN1", "out.g", ), network.Parameter( "n1", "spline[3].y.b" ) ),
+				network.Connection( network.Parameter( "inN1", "out.g", ), network.Parameter( "n1", "spline[4].y.b" ) )
 			]
 		)
 
@@ -419,8 +419,8 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		network = n1.attributes()["test:surface"]
 		self.assertEqual(
 			network.inputConnections( "n1" ), [
-				network.Connection( network.Parameter( "inN1", "", ), network.Parameter( "n1", "spline[0].y" ) ),
-				network.Connection( network.Parameter( "inN1", "g", ), network.Parameter( "n1", "spline[2].y.b" ) )
+				network.Connection( network.Parameter( "inN1", "out", ), network.Parameter( "n1", "spline[0].y" ) ),
+				network.Connection( network.Parameter( "inN1", "out.g", ), network.Parameter( "n1", "spline[2].y.b" ) )
 			]
 		)
 

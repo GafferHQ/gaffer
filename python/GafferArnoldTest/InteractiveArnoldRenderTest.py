@@ -198,8 +198,8 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		s["ShaderAssignment"]["in"].setInput( s["s"]["out"] )
 		s["ShaderAssignment"]["filter"].setInput( s["PathFilter"]["out"] )
 
-		s["lambert"], _ = self._createMatteShader()
-		s["ShaderAssignment"]["shader"].setInput( s["lambert"]["out"] )
+		s["lambert"], _, lambertOut = self._createMatteShader()
+		s["ShaderAssignment"]["shader"].setInput( lambertOut )
 
 		s["StandardAttributes"] = GafferScene.StandardAttributes( "StandardAttributes" )
 		s["StandardAttributes"]["attributes"]["linkedLights"]["enabled"].setValue( True )
@@ -287,8 +287,8 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		s["ShaderAssignment"]["in"].setInput( s["s"]["out"] )
 		s["ShaderAssignment"]["filter"].setInput( s["PathFilter"]["out"] )
 
-		s["lambert"], _ = self._createMatteShader()
-		s["ShaderAssignment"]["shader"].setInput( s["lambert"]["out"] )
+		s["lambert"], _, lambertOut = self._createMatteShader()
+		s["ShaderAssignment"]["shader"].setInput( lambertOut )
 
 		s["Tex"] = GafferArnold.ArnoldShader( "image" )
 		s["Tex"].loadShader( "image" )
@@ -299,7 +299,8 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		s["Light"].loadShader( "quad_light" )
 		s["Light"]["transform"]["translate"]["z"].setValue( 2 )
 		s["Light"]["parameters"]["color"].setInput( s["Tex"]["out"] )
-		s["Light"]["parameters"]["exposure"].setValue( 4 )
+		s["Light"]["parameters"]["exposure"].setValue( 6 )
+		s["Light"]["parameters"]["samples"].setValue( 6 )
 
 		s["c"] = GafferScene.Camera()
 		s["c"]["transform"]["translate"]["z"].setValue( 2 )
@@ -341,7 +342,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		self.uiThreadCallHandler.waitFor( 1.0 )
 
 		initialColor = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertAlmostEqual( initialColor.r, 0.09, delta = 0.013 )
+		self.assertAlmostEqual( initialColor.r, 0.58, delta = 0.02 )
 		self.assertAlmostEqual( initialColor.g, 0, delta = 0.01 )
 
 		# Edit texture network and make sure the changes take effect
@@ -352,7 +353,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		updateColor = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
 		self.assertAlmostEqual( updateColor.r, 0, delta = 0.01 )
-		self.assertAlmostEqual( updateColor.g, 0.06, delta = 0.022 )
+		self.assertAlmostEqual( updateColor.g, 0.3, delta = 0.02 )
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
@@ -385,9 +386,9 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		s["Tex"]["parameters"]["filename"].setValue( tmpTextureFile )
 
 		# Create a constant shader
-		s["constant"], shaderColor = self._createConstantShader()
+		s["constant"], shaderColor, constantOut = self._createConstantShader()
 		shaderColor.setInput( s["Tex"]["out"] )
-		s["ShaderAssignment"]["shader"].setInput( s["constant"]["out"] )
+		s["ShaderAssignment"]["shader"].setInput( constantOut )
 
 		s["c"] = GafferScene.Camera()
 		s["c"]["transform"]["translate"]["z"].setValue( 2 )
@@ -919,14 +920,14 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		shader = GafferArnold.ArnoldShader()
 		shader.loadShader( "flat" )
-		return shader, shader["parameters"]["color"]
+		return shader, shader["parameters"]["color"], shader["out"]
 
 	def _createMatteShader( self ) :
 
 		shader = GafferArnold.ArnoldShader()
 		shader.loadShader( "lambert" )
 		shader["parameters"]["Kd"].setValue( 1 )
-		return shader, shader["parameters"]["Kd_color"]
+		return shader, shader["parameters"]["Kd_color"], shader["out"]
 
 	def _createTraceSetShader( self ) :
 		# It's currently pretty ugly how we need to disable the trace set when it is left empty,
@@ -965,7 +966,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		Gaffer.PlugAlgo.promote( switchShader["out"] )
 
-		return shaderBox, traceSetShader["parameters"]["trace_set"]
+		return shaderBox, traceSetShader["parameters"]["trace_set"], shaderBox["out"]
 
 	def _cameraVisibilityAttribute( self ) :
 

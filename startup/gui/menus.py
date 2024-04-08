@@ -137,12 +137,14 @@ if moduleSearchPath.find( "arnold" ) :
 
 		GafferArnoldUI.CacheMenu.appendDefinitions( scriptWindowMenu, "/Tools/Arnold" )
 
-		scriptWindowMenu.append(
-			"/Tools/Arnold/Populate GPU Cache",
-			{
-				"command" : GafferArnoldUI.GPUCache.populateGPUCache,
-			}
-		)
+		if [ int( x ) for x in arnold.AiGetVersion()[:2] ] < [ 7, 3 ] :
+			# `AiGPUCachePopulate` was removed in Arnold 7.3.0.0.
+			scriptWindowMenu.append(
+				"/Tools/Arnold/Populate GPU Cache",
+				{
+					"command" : GafferArnoldUI.GPUCache.populateGPUCache,
+				}
+			)
 
 	except Exception as m :
 
@@ -275,6 +277,7 @@ nodeMenu.append( "/Scene/Object/Reverse Winding", GafferScene.ReverseWinding, se
 nodeMenu.append( "/Scene/Object/Mesh Distortion", GafferScene.MeshDistortion, searchText = "MeshDistortion" )
 nodeMenu.append( "/Scene/Object/Mesh Segments", GafferScene.MeshSegments, searchText = "MeshSegments" )
 nodeMenu.append( "/Scene/Object/Mesh Split", GafferScene.MeshSplit, searchText = "MeshSplit" )
+nodeMenu.append( "/Scene/Object/Mesh Subdivide", GafferScene.MeshTessellate, searchText = "MeshTessellate" )
 nodeMenu.append( "/Scene/Object/Camera Tweaks", GafferScene.CameraTweaks, searchText = "CameraTweaks" )
 nodeMenu.append( "/Scene/Object/Curve Sampler", GafferScene.CurveSampler, searchText = "CurveSampler" )
 nodeMenu.append( "/Scene/Object/Closest Point Sampler", GafferScene.ClosestPointSampler, searchText = "ClosestPointSampler" )

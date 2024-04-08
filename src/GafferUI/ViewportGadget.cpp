@@ -1193,7 +1193,6 @@ void ViewportGadget::render() const
 	glClearColor( 0.26f, 0.26f, 0.26f, 0.0f );
 	glClearDepth( 1.0f );
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-	glEnable( GL_BLEND );
 
 	// Set up the camera to world matrix in gl_TextureMatrix[0] so that we can
 	// reference world space positions in shaders
@@ -1288,13 +1287,16 @@ void ViewportGadget::renderInternal( RenderReason reason, Gadget::Layer filterLa
 		if( reason != RenderReason::Draw )
 		{
 			// We're doing selection so post-processing doesn't matter. Just
-			// render direct to output buffer.
+			// render direct to output buffer without blending as that can
+			// corrupt the selection buffer on some graphics hardware.
+			glDisable( GL_BLEND );
 			renderLayerInternal( reason, layer, viewTransform, bound, selector );
 			continue;
 		}
 
-		// Render to intemediate framebuffer.
+		// Render to intermediate framebuffer.
 
+		glEnable( GL_BLEND );
 		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, acquireFramebuffer() );
 		glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
 		glClear( GL_COLOR_BUFFER_BIT );

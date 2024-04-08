@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,12 +34,45 @@
 #
 ##########################################################################
 
-from .CapturingRendererTest import CapturingRendererTest
-from .CompoundRendererTest import CompoundRendererTest
-from .PlaceholderTest import PlaceholderTest
-from .RendererTest import RendererTest
-from .MeshAlgoTessellateTest import MeshAlgoTessellateTest
+import inspect
+import warnings
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+import GafferTractor
+
+# Backwards compatibility for slots written when `preSpoolSignal()` didn't
+# have the `taskData` argument.
+
+def __slotWrapper( slot ) :
+
+	signature = inspect.signature( slot )
+	try :
+		# Throws if not callable with three arguments
+		signature.bind( None, None, None )
+		# No need for a wrapper
+		return slot
+	except TypeError :
+		pass
+
+	# We'll need a wrapper
+
+	warnings.warn(
+		'Slot connected to `TractorDispatcher.preSpoolSignal() should have an additional `taskData` argument',
+		DeprecationWarning
+	)
+
+	def call( dispatcher, *args ) :
+
+		slot( dispatcher, *args[:-1] )
+
+	return call
+
+def __connectWrapper( originalConnect ) :
+
+	def connect( slot, scoped = None ) :
+
+		return originalConnect( __slotWrapper( slot ), scoped )
+
+	return connect
+
+GafferTractor.TractorDispatcher._TractorDispatcher__preSpoolSignal.connect = __connectWrapper( GafferTractor.TractorDispatcher._TractorDispatcher__preSpoolSignal.connect )
+GafferTractor.TractorDispatcher._TractorDispatcher__preSpoolSignal.connectFront = __connectWrapper( GafferTractor.TractorDispatcher._TractorDispatcher__preSpoolSignal.connectFront )
