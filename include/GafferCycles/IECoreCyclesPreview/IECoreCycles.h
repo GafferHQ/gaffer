@@ -47,6 +47,10 @@ IECORE_POP_DEFAULT_VISIBILITY
 namespace IECoreCycles
 {
 
+/// Returns the value of the `CYCLES_ROOT` environment variable, or
+/// and empty string if the variable is not defined.
+IECORECYCLES_API const char *cyclesRoot();
+
 /// Initialises the library using the CYCLES_ROOT environment
 /// variable, which should point to the root of a Cycles installation.
 IECORECYCLES_API bool init();

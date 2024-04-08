@@ -58,6 +58,7 @@
 #include "device/device.h"
 #include "graph/node.h"
 #include "util/openimagedenoise.h"
+#include "util/path.h"
 
 namespace py = boost::python;
 using namespace boost::python;
@@ -452,6 +453,10 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 {
 
 	IECoreCycles::init();
+
+	// Must be initialized to ensure the statically linked Cycles module
+	// we are linked to can find the binaries for GPU rendering.
+	ccl::path_init( IECoreCycles::cyclesRoot() );
 
 	py::scope().attr( "devices" ) = getDevices();
 	py::scope().attr( "nodes" ) = getNodes();
