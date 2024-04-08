@@ -66,17 +66,17 @@ namespace
 struct MakeWireframe
 {
 
-	CurvesPrimitivePtr operator() ( const V2fVectorData *data, const MeshPrimitive *mesh, const string &name, const PrimitiveVariable &primitiveVariable )
+	CurvesPrimitivePtr operator() ( const V2fVectorData *data, const MeshPrimitive *mesh, const string &name, const PrimitiveVariable &primitiveVariable, const IECore::Canceller *canceller )
 	{
-		return makeWireframe<V2fVectorData>( data, mesh, name, primitiveVariable );
+		return makeWireframe<V2fVectorData>( data, mesh, name, primitiveVariable, canceller );
 	}
 
-	CurvesPrimitivePtr operator() ( const V3fVectorData *data, const MeshPrimitive *mesh, const string &name, const PrimitiveVariable &primitiveVariable )
+	CurvesPrimitivePtr operator() ( const V3fVectorData *data, const MeshPrimitive *mesh, const string &name, const PrimitiveVariable &primitiveVariable, const IECore::Canceller *canceller )
 	{
-		return makeWireframe<V3fVectorData>( data, mesh, name, primitiveVariable );
+		return makeWireframe<V3fVectorData>( data, mesh, name, primitiveVariable, canceller );
 	}
 
-	CurvesPrimitivePtr operator() ( const Data *data, const MeshPrimitive *mesh, const string &name, const PrimitiveVariable &primitiveVariable )
+	CurvesPrimitivePtr operator() ( const Data *data, const MeshPrimitive *mesh, const string &name, const PrimitiveVariable &primitiveVariable, const IECore::Canceller *canceller )
 	{
 		throw IECore::Exception(
 			fmt::format( "PrimitiveVariable \"{}\" has unsupported type \"{}\"", name, data->typeName() )
@@ -86,7 +86,7 @@ struct MakeWireframe
 	private :
 
 		template<typename T>
-		CurvesPrimitivePtr makeWireframe( const T *data, const MeshPrimitive *mesh, const string &name, const PrimitiveVariable &primitiveVariable )
+		CurvesPrimitivePtr makeWireframe( const T *data, const MeshPrimitive *mesh, const string &name, const PrimitiveVariable &primitiveVariable, const IECore::Canceller *canceller )
 		{
 			using Vec = typename T::ValueType::value_type;
 			using DataView = PrimitiveVariable::IndexedView<Vec>;
@@ -146,11 +146,13 @@ struct MakeWireframe
 						edges.emplace_back( index1, index0 );
 					}
 				}
+				Canceller::check( canceller );
 				vertexIdsIndex += numVertices;
 			}
 
 			// We only want to output each edge once, so sort and discard duplicates
 			std::sort( edges.begin(), edges.end() );
+			Canceller::check( canceller );
 			edges.erase( std::unique( edges.begin(), edges.end() ), edges.end() );
 
 			IECore::V3fVectorDataPtr pData = new V3fVectorData;
@@ -163,6 +165,7 @@ struct MakeWireframe
 			{
 				p.push_back( v3f( dataView[e.first] ) );
 				p.push_back( v3f( dataView[e.second] ) );
+				Canceller::check( canceller );
 			}
 
 			IECore::IntVectorDataPtr vertsPerCurveData = new IntVectorData;
@@ -186,7 +189,7 @@ struct MakeWireframe
 };
 
 /// \todo Perhaps this could go in IECoreScene::MeshAlgo
-CurvesPrimitivePtr wireframe( const MeshPrimitive *mesh, const std::string &position )
+CurvesPrimitivePtr wireframe( const MeshPrimitive *mesh, const std::string &position, const IECore::Canceller *canceller )
 {
 	auto it = mesh->variables.find( position );
 	if( it == mesh->variables.end() )
@@ -194,7 +197,7 @@ CurvesPrimitivePtr wireframe( const MeshPrimitive *mesh, const std::string &posi
 		throw IECore::Exception( fmt::format( "MeshPrimitive has no primitive variable named \"{}\"", position ) );
 	}
 
-	CurvesPrimitivePtr result = dispatch( it->second.data.get(), MakeWireframe(), mesh, it->first, it->second );
+	CurvesPrimitivePtr result = dispatch( it->second.data.get(), MakeWireframe(), mesh, it->first, it->second, canceller );
 	return result;
 }
 
@@ -263,7 +266,7 @@ IECore::ConstObjectPtr Wireframe::computeProcessedObject( const ScenePath &path,
 		return inputObject;
 	}
 
-	CurvesPrimitivePtr result = wireframe( mesh, positionPlug()->getValue() );
+	CurvesPrimitivePtr result = wireframe( mesh, positionPlug()->getValue(), context->canceller() );
 	for( const auto &pv : mesh->variables )
 	{
 		if( pv.second.interpolation == PrimitiveVariable::Constant )
