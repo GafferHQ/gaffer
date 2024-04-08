@@ -1,7 +1,10 @@
 1.3.x.x (relative to 1.3.15.0)
 ========
 
+Improvements
+------------
 
+- Shuffle : Added the ability to load Shuffles from Gaffer 1.4.
 
 1.3.15.0 (relative to 1.3.14.0)
 ========
