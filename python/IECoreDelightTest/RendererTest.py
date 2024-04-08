@@ -706,6 +706,7 @@ class RendererTest( GafferTest.TestCase ) :
 		options = [
 			( "dl:oversampling", IECore.IntData( 16 ), "int" ),
 			( "dl:importancesamplefilter", IECore.BoolData( True ), "int" ),
+			( "dl:staticsamplingpattern", IECore.BoolData( True ), "int" ),
 		]
 
 		for name, value, type in options :
