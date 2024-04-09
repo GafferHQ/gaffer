@@ -235,6 +235,12 @@ void OutputBuffer::renderInternal( bool renderSelection ) const
 		return;
 	}
 
+	if( renderSelection && m_selectionBuffer.size() == 1 && m_selectionBuffer[0] == 0 )
+	{
+		// Selection is empty, so no need to render.
+		return;
+	}
+
 	if( !m_rgbaTexture )
 	{
 		GLuint textures[3];
@@ -329,6 +335,12 @@ void OutputBuffer::setSelection( const std::vector<uint32_t> &ids )
 	m_selectionBuffer = ids;
 	if( !m_selectionBuffer.size() )
 	{
+		/// \todo OpenGL documentation suggests we should be able to
+		/// make an empty buffer, so I'm not sure why we do this. Either
+		/// because some drivers don't like an empty buffer, or because
+		/// `contains()` requires a non-empty array? If the latter, we
+		/// could remove this because `renderInternal()` now has an early
+		/// return for the no-selection case.
 		m_selectionBuffer.push_back( 0 );
 	}
 

@@ -33,6 +33,7 @@ Fixes
   - Fixed errors when dragging from another application onto widgets that didn't expect it.
 - Gadget : Fixed access to `DragDropEvent.sourceWidget` and `DragDropEvent.destinationWidget` from Python slots connected to a Gadget's DragDropSignals.
 - GraphGadget : Fixed unwanted highlighting of nodes when custom drag & drop handlers were active.
+- Viewer : Fixed selection overlay glitches with an Arnold `skydome_light` and an empty selection.
 
 Breaking Changes
 ----------------
