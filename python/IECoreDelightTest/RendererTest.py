@@ -261,6 +261,57 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 		self.assertEqual( mesh["nvertices"], 4 )
 
+	def testMeshWithVaryingPrimitiveVariable( self ) :
+
+		mesh = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ), imath.V2i( 2, 1 ) )
+		mesh["varyingP"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Varying,
+			mesh["P"].data
+		)
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsia" ),
+		)
+		renderer.object( "testPlane", mesh, renderer.attributes( IECore.CompoundObject() ) )
+		renderer.render()
+		del renderer
+
+		print( self.temporaryDirectory() / "test.nsia" )
+
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
+
+		meshes = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "mesh" }
+		self.assertEqual( len( meshes ), 1 )
+
+		mesh = meshes[next( iter( meshes ) )]
+
+		self.assertEqual( mesh["P.indices"], [ 0, 1, 4, 3, 1, 2, 5, 4 ] )
+		self.assertEqual(
+			mesh["P"],
+			[
+				imath.V3f( -1, -1, 0 ),
+				imath.V3f( 0, -1, 0 ),
+				imath.V3f( 1, -1, 0 ),
+				imath.V3f( -1, 1, 0 ),
+				imath.V3f( 0, 1, 0 ),
+				imath.V3f( 1, 1, 0 ),
+			]
+		)
+		self.assertEqual( mesh["varyingP.indices"], [ 0, 1, 4, 3, 1, 2, 5, 4 ] )
+		self.assertEqual(
+			mesh["varyingP"],
+			[
+				imath.V3f( -1, -1, 0 ),
+				imath.V3f( 0, -1, 0 ),
+				imath.V3f( 1, -1, 0 ),
+				imath.V3f( -1, 1, 0 ),
+				imath.V3f( 0, 1, 0 ),
+				imath.V3f( 1, 1, 0 ),
+			]
+		)
+
 	def testPoints( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
