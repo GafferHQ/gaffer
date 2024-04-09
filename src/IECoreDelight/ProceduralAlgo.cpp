@@ -70,7 +70,7 @@ bool convert( const IECoreScene::ExternalProcedural *object, NSIContext_t contex
 	{
 		type = "lua";
 	}
-	else if ( boost::ends_with( filename, "nsi" ) or boost::ends_with( filename, "nsia" ) )
+	else if ( boost::ends_with( filename, "nsi" ) or boost::ends_with( filename, "nsia" ) or boost::ends_with( filename, "nsi.gz" ) or boost::ends_with( filename, "nsia.gz" ) )
 	{
 		type = "apistream";
 	}
