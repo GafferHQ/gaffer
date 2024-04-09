@@ -121,11 +121,11 @@ void addPrimitiveVariableParameters( const char *name, const IECoreScene::Primit
 
 	const IntVectorData *indices = nullptr;
 
-	if( value.interpolation == PrimitiveVariable::Vertex && vertexIndices )
+	if( vertexIndices && ( value.interpolation == PrimitiveVariable::Vertex || value.interpolation == PrimitiveVariable::Varying ) )
 	{
 		if( value.indices )
 		{
-			IECore::msg( IECore::Msg::Warning, "IECoreDelight", "Primitive variable indices not supported for Vertex interpolation" );
+			IECore::msg( IECore::Msg::Warning, "IECoreDelight", "Primitive variable indices not supported for Vertex or Varying interpolation" );
 			return;
 		}
 		indices = vertexIndices;
