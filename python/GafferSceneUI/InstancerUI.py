@@ -268,10 +268,18 @@ Gaffer.Metadata.registerNode(
 	"description",
 	"""
 	Copies from an input scene onto the vertices of a target
-	object, making one copy per vertex. Additional primitive
+	object, making one copy per vertex. Additional vertex primitive
 	variables on the target object can be used to choose between
-	multiple instances, and to specify their orientation and
-	scale. Note the target object will be removed from the scene.
+	multiple prototypes, to specify their orientation, scale
+	and attributes, and to modify the context in which the
+	prototypes are evaluated.
+
+	> Note : The target object will be removed from the scene.
+
+	> Tip : Primitive variables with `Varying` interpolation are
+	> supported wherever a variable with `Vertex` interpolation
+	> is expected, provided that the primitive variable has the
+	> same size as the equivalent `Vertex` variable.
 	""",
 
 	"layout:section:Settings.General:collapsed", False,
