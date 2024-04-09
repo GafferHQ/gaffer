@@ -21,6 +21,7 @@ Fixes
 - 3Delight :
   - Fixed failure to change sampling pattern per frame.
   - Fixed Resolution Multiplier support.
+  - Fixed UI visibility of `angle` parameter for distant lights, which was previously hidden.
 
 1.4.0.0b6 (relative to 1.4.0.0b5)
 =========

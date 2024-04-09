@@ -175,10 +175,13 @@ if moduleSearchPath.find( "nsi.py" ) and moduleSearchPath.find( "GafferDelight" 
 				node["geometryType"].setValue( "dl:environment" )
 				Gaffer.Metadata.registerValue( node["geometryType"], "plugValueWidget:type", "" )
 				Gaffer.Metadata.registerValue( node["geometryBound"], "plugValueWidget:type", "" )
-				Gaffer.Metadata.registerValue( node["geometryParameters"], "plugValueWidget:type", "" )
 
 				if shape == "distant" :
-					node["geometryParameters"].addChild( Gaffer.NameValuePlug( "angle", 0.0, name = "angle", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+					anglePlug = Gaffer.NameValuePlug( "angle", 0.0, name = "angle", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+					node["geometryParameters"].addChild( anglePlug )
+					Gaffer.Metadata.registerValue( anglePlug, "nameValuePlugPlugValueWidget:ignoreNamePlug", True )
+				else :
+					Gaffer.Metadata.registerValue( node["geometryParameters"], "plugValueWidget:type", "" )
 
 			Gaffer.Metadata.registerValue( node["shape"], "plugValueWidget:type", "" )
 
