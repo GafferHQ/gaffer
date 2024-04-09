@@ -1499,11 +1499,7 @@ class RendererTest( GafferTest.TestCase ) :
 				currentNode = None
 			else :
 				# List of attributes
-				pType = tokens.popleft()
-				if pType == "v normal" or pType == "v point" or pType == "normal" or pType == "point" :
-					pType = "v"
-				elif pType == "v float" :
-					pType = "float"
+				pType = tokens.popleft().rpartition( " " )[-1]
 				pSize = int( tokens.popleft() )
 				pLength = 1
 
@@ -1519,7 +1515,15 @@ class RendererTest( GafferTest.TestCase ) :
 					tokens.popleft()  # Closing	`]`
 					continue  # And we're done
 
-				numComponents = { "v": 3, "color": 3, "doublematrix": 16, "float[2]": 2 }.get( pType, 1 )
+				numComponents = {
+					"point" : 3,
+					"vector" : 3,
+					"normal" : 3,
+					"color" : 3,
+					"doublematrix" : 16,
+					"float[2]": 2
+				}.get( pType, 1 )
+
 				numElements = pLength * numComponents * pSize
 				if numElements > 1 :
 					tokens.popleft()  # First `[` of an array
@@ -1533,7 +1537,7 @@ class RendererTest( GafferTest.TestCase ) :
 						value.append( tokens.popleft() )
 					elif pType == "color" :
 						value.append( imath.Color3f( float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ) ) )
-					elif pType == "v" :
+					elif pType in ( "point", "vector", "normal" ) :
 						value.append( imath.V3f( float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ) ) )
 					elif pType == "doublematrix" :
 						value.append(
