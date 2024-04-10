@@ -40,6 +40,8 @@
 
 #include "IECore/RunTimeTyped.h"
 
+#include <any>
+
 namespace GafferUI
 {
 
@@ -58,14 +60,21 @@ struct GAFFERUI_API DragDropEvent : public ButtonEvent
 	{
 	};
 
+	/// The Widget where the drag originated. Stored as `any` to avoid
+	/// dependency on Python in `libGafferUI`, and therefore only truly
+	/// useful when accessed from the Python bindings.
+	std::any sourceWidget;
 	/// The Gadget where the drag originated.
 	GafferUI::GadgetPtr sourceGadget;
 	/// An object representing the data being dragged.
 	IECore::RunTimeTypedPtr data;
+	/// The Widget where the drag ends. See notes for `sourceWidget`.
+	std::any destinationWidget;
 	/// The Gadget where the drag ends.
 	GafferUI::GadgetPtr destinationGadget;
 	/// The result returned from the drop signal handler on the destination.
 	bool dropResult;
+
 };
 
 } // namespace GafferUI
