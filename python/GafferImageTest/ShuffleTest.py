@@ -35,7 +35,7 @@
 ##########################################################################
 
 import unittest
-import os
+import pathlib
 import imath
 
 import IECore
@@ -238,8 +238,26 @@ class ShuffleTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertImagesEqual( postFlatten["out"], flatPremult["out"], maxDifference = 0.000001 )
 
+	def testLoadFrom1_4( self ) :
 
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue(
+			pathlib.Path( __file__ ).parent / "scripts" / "shuffle-1.4.0.0.gfr"
+		)
+		script.load()
 
+		for index, ( source, destination ) in enumerate( [
+			( "R", "G" ),
+			( "G", "B" ),
+			( "B", "R" ),
+			( "__white", "A" ),
+		] ) :
+			self.assertEqual( script["Shuffle"]["channels"][index]["source"].getValue(), source )
+			self.assertEqual( script["Shuffle"]["channels"][index]["destination"].getValue(), destination )
+
+		expected = GafferImage.Constant()
+		expected["color"].setValue( imath.Color4f( 1, 3, 2, 1 ) )
+		self.assertImagesEqual( script["Shuffle"]["out"], expected["out"] )
 
 if __name__ == "__main__":
 	unittest.main()
