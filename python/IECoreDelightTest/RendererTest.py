@@ -261,6 +261,57 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 		self.assertEqual( mesh["nvertices"], 4 )
 
+	def testMeshWithVaryingPrimitiveVariable( self ) :
+
+		mesh = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ), imath.V2i( 2, 1 ) )
+		mesh["varyingP"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Varying,
+			mesh["P"].data
+		)
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsia" ),
+		)
+		renderer.object( "testPlane", mesh, renderer.attributes( IECore.CompoundObject() ) )
+		renderer.render()
+		del renderer
+
+		print( self.temporaryDirectory() / "test.nsia" )
+
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
+
+		meshes = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "mesh" }
+		self.assertEqual( len( meshes ), 1 )
+
+		mesh = meshes[next( iter( meshes ) )]
+
+		self.assertEqual( mesh["P.indices"], [ 0, 1, 4, 3, 1, 2, 5, 4 ] )
+		self.assertEqual(
+			mesh["P"],
+			[
+				imath.V3f( -1, -1, 0 ),
+				imath.V3f( 0, -1, 0 ),
+				imath.V3f( 1, -1, 0 ),
+				imath.V3f( -1, 1, 0 ),
+				imath.V3f( 0, 1, 0 ),
+				imath.V3f( 1, 1, 0 ),
+			]
+		)
+		self.assertEqual( mesh["varyingP.indices"], [ 0, 1, 4, 3, 1, 2, 5, 4 ] )
+		self.assertEqual(
+			mesh["varyingP"],
+			[
+				imath.V3f( -1, -1, 0 ),
+				imath.V3f( 0, -1, 0 ),
+				imath.V3f( 1, -1, 0 ),
+				imath.V3f( -1, 1, 0 ),
+				imath.V3f( 0, 1, 0 ),
+				imath.V3f( 1, 1, 0 ),
+			]
+		)
+
 	def testPoints( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
@@ -1499,11 +1550,7 @@ class RendererTest( GafferTest.TestCase ) :
 				currentNode = None
 			else :
 				# List of attributes
-				pType = tokens.popleft()
-				if pType == "v normal" or pType == "v point" or pType == "normal" or pType == "point" :
-					pType = "v"
-				elif pType == "v float" :
-					pType = "float"
+				pType = tokens.popleft().rpartition( " " )[-1]
 				pSize = int( tokens.popleft() )
 				pLength = 1
 
@@ -1519,7 +1566,15 @@ class RendererTest( GafferTest.TestCase ) :
 					tokens.popleft()  # Closing	`]`
 					continue  # And we're done
 
-				numComponents = { "v": 3, "color": 3, "doublematrix": 16, "float[2]": 2 }.get( pType, 1 )
+				numComponents = {
+					"point" : 3,
+					"vector" : 3,
+					"normal" : 3,
+					"color" : 3,
+					"doublematrix" : 16,
+					"float[2]": 2
+				}.get( pType, 1 )
+
 				numElements = pLength * numComponents * pSize
 				if numElements > 1 :
 					tokens.popleft()  # First `[` of an array
@@ -1533,7 +1588,7 @@ class RendererTest( GafferTest.TestCase ) :
 						value.append( tokens.popleft() )
 					elif pType == "color" :
 						value.append( imath.Color3f( float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ) ) )
-					elif pType == "v" :
+					elif pType in ( "point", "vector", "normal" ) :
 						value.append( imath.V3f( float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ) ) )
 					elif pType == "doublematrix" :
 						value.append(

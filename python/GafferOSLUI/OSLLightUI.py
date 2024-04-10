@@ -137,6 +137,7 @@ Gaffer.Metadata.registerNode(
 			shape type.
 			""",
 
+			"layout:section", "Settings.Geometry",
 			"layout:visibilityActivator", "shapeIsGeometry",
 
 		],
