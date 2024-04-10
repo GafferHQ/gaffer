@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - Shuffle : Added the ability to load Shuffles from Gaffer 1.4.
+- Instancer : Added support for `Varying` primitive variables whenever they are equivalent to (have the same size as) a `Vertex` primitive variable.
 
 1.3.15.0 (relative to 1.3.14.0)
 ========

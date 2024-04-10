@@ -2886,6 +2886,79 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 					{ x[0] for x in dirtiedPlugs }
 				)
 
+	def testVaryingPrimvars( self ) :
+		plane = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
+		plane["varyingFloat"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Varying, IECore.FloatVectorData( [ 16.25, 16.5, 16.75, 17.0 ] ) )
+		plane["varyingString"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Varying, IECore.StringVectorData( [ "a", "b", "d", "c" ] ) )
+
+		objectToScene = GafferScene.ObjectToScene()
+		objectToScene["object"].setValue( plane )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/object" ] ) )
+
+		sphere = GafferScene.Sphere()
+		sphere["name"].setValue( '${collect:rootName}' )
+
+		prototypeFilter = GafferScene.PathFilter()
+		prototypeFilter["paths"].setValue( IECore.StringVectorData( [ '/*' ] ) )
+
+		contextQuery = Gaffer.ContextQuery()
+		contextQuery.addQuery( Gaffer.FloatPlug( "value", defaultValue = 42.0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+		contextQuery["out"][0].addChild( Gaffer.FloatPlug( "value", direction = Gaffer.Plug.Direction.Out, defaultValue = 0.0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+		contextQuery["queries"][0]["name"].setValue( 'varyingFloat' )
+
+		prototypeAttributes = GafferScene.CustomAttributes()
+		prototypeAttributes["attributes"].addChild( Gaffer.NameValuePlug( "", Gaffer.FloatPlug( "value", defaultValue = 0.0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), True, "member1", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		prototypeAttributes["in"].setInput( sphere["out"] )
+		prototypeAttributes["filter"].setInput( prototypeFilter["out"] )
+		prototypeAttributes["attributes"]["member1"]["name"].setValue( 'testAttribute' )
+		prototypeAttributes["attributes"]["member1"]["value"].setInput( contextQuery["out"][0]["value"] )
+
+
+		prototypeCollect = GafferScene.CollectScenes()
+		prototypeCollect["in"].setInput( prototypeAttributes["out"] )
+		prototypeCollect["rootNames"].setValue( IECore.StringVectorData( [ 'a', 'b', 'c', 'd' ] ) )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( objectToScene["out"] )
+		instancer["prototypes"].setInput( prototypeCollect["out"] )
+		instancer["filter"].setInput( filter["out"] )
+
+		self.assertEqual( instancer["out"].childNames( "/object/instances" ), IECore.InternedStringVectorData( ["a", "b", "c", "d" ] ) )
+		instancer["prototypeMode"].setValue( GafferScene.Instancer.PrototypeMode.RootPerVertex )
+		instancer["prototypeRoots"].setValue( "varyingString" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances" ), IECore.InternedStringVectorData( ["a", "b", "d", "c" ] ) )
+
+		self.assertEqual( [ instancer["out"].attributes( "/object/instances/%s/%i/%s" % ("abdc"[i],i,"abdc"[i]) )["testAttribute"].value for i in range(4) ], [ 42.0 ] * 4 )
+		instancer["contextVariables"].addChild( GafferScene.Instancer.ContextVariablePlug( "context", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+		instancer["contextVariables"]["context"]["name"].setValue( 'varyingFloat' )
+		instancer["contextVariables"]["context"]["quantize"].setValue( 0 )
+		self.assertEqual( [ instancer["out"].attributes( "/object/instances/%s/%i/%s" % ("abdc"[i],i,"abdc"[i]) )["testAttribute"].value for i in range(4) ], [ 16.25, 16.5, 16.75, 17.0 ] )
+
+		self.assertEqual( [ instancer["out"].attributes( "/object/instances/%s/%i" % ("abdc"[i],i) ).get("user:varyingFloat") for i in range(4) ], [ None ] * 4 )
+		instancer["attributes"].setValue( "varyingFloat" )
+		instancer["attributePrefix"].setValue( 'user:' )
+		self.assertEqual( [ instancer["out"].attributes( "/object/instances/%s/%i" % ("abdc"[i],i) ).get("user:varyingFloat").value for i in range(4) ], [ 16.25, 16.5, 16.75, 17.0 ] )
+
+
+		# Test that we ignore invalid varying primvars from a curve where Vertex and Varying counts don't match
+
+		curves = IECoreScene.CurvesPrimitive( IECore.IntVectorData( [4] ), IECore.CubicBasisf.bSpline() )
+		curves["P"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.V3fVectorData( [ imath.V3f( i ) for i in range( 4 ) ] ) )
+		curves["varyingString"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Varying, IECore.StringVectorData( [ "c", "c" ] ) )
+		curves["varyingFloat"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Varying, IECore.FloatVectorData( [ 3, 7 ] ) )
+		curves["vertexString"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.StringVectorData( [ "a", "b", "d", "c" ] ) )
+		self.assertTrue( curves.arePrimitiveVariablesValid() )
+
+		objectToScene["object"].setValue( curves )
+		with self.assertRaisesRegex( RuntimeError, 'prototypeRoots primitive variable "varyingString" must be Vertex StringVectorData when using RootPerVertex mode' ):
+			instancer["out"].childNames( "/object/instances" )
+		instancer["prototypeRoots"].setValue( "vertexString" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances" ), IECore.InternedStringVectorData( ["a", "b", "d", "c" ] ) )
+		self.assertEqual( [ instancer["out"].attributes( "/object/instances/%s/%i/%s" % ("abdc"[i],i,"abdc"[i]) )["testAttribute"].value for i in range(4) ], [ 42.0 ] * 4 )
+		self.assertEqual( [ instancer["out"].attributes( "/object/instances/%s/%i" % ("abdc"[i],i) ).get("user:varyingFloat") for i in range(4) ], [ None ] * 4 )
+
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 10 )
 	def testBoundPerformance( self ) :
 
