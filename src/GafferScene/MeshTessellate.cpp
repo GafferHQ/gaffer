@@ -58,7 +58,7 @@ MeshTessellate::MeshTessellate( const std::string &name )
 
 	addChild( new IntPlug( "divisions", Gaffer::Plug::In, 1, 1 ) );
 	addChild( new BoolPlug( "calculateNormals", Gaffer::Plug::In, false ) );
-	addChild( new IntPlug( "scheme", Gaffer::Plug::In, (int)MeshAlgo::SubdivisionScheme::FromMesh, (int)MeshAlgo::SubdivisionScheme::First, (int)MeshAlgo::SubdivisionScheme::Last ) );
+	addChild( new StringPlug( "scheme", Gaffer::Plug::In, "" ) );
 	addChild( new BoolPlug( "tessellatePolygons", Gaffer::Plug::In, false ) );
 
 }
@@ -87,14 +87,14 @@ const Gaffer::BoolPlug *MeshTessellate::calculateNormalsPlug() const
 	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 1 );
 }
 
-Gaffer::IntPlug *MeshTessellate::schemePlug()
+Gaffer::StringPlug *MeshTessellate::schemePlug()
 {
-	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 2 );
 }
 
-const Gaffer::IntPlug *MeshTessellate::schemePlug() const
+const Gaffer::StringPlug *MeshTessellate::schemePlug() const
 {
-	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 2 );
 }
 
 Gaffer::BoolPlug *MeshTessellate::tessellatePolygonsPlug()
@@ -138,13 +138,12 @@ IECore::ConstObjectPtr MeshTessellate::computeProcessedObject( const ScenePath &
 		return inputObject;
 	}
 
-	IECoreScenePreview::MeshAlgo::SubdivisionScheme schemeValue =
-		(IECoreScenePreview::MeshAlgo::SubdivisionScheme)schemePlug()->getValue();
+	IECore::InternedString schemeValue = schemePlug()->getValue();
 
 	if(
 		inputMesh->interpolation() == "linear" &&
 		!tessellatePolygonsPlug()->getValue() &&
-		schemeValue == IECoreScenePreview::MeshAlgo::SubdivisionScheme::FromMesh
+		!schemeValue.string().size()
 	)
 	{
 		return inputObject;

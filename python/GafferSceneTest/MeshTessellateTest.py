@@ -58,14 +58,14 @@ class MeshTessellateTest( GafferSceneTest.SceneTestCase ) :
 		if (
 			not node["tessellatePolygons"].getValue() and
 			source.interpolation == "linear" and
-			node["scheme"].getValue() == MeshAlgo.SubdivisionScheme.FromMesh
+			node["scheme"].getValue() == ""
 		):
 			reference = source
 		else:
 			reference = MeshAlgo.tessellateMesh(
 				source, node["divisions"].getValue(),
 				calculateNormals = node["calculateNormals"].getValue(),
-				scheme = MeshAlgo.SubdivisionScheme( node["scheme"].getValue() )
+				scheme = node["scheme"].getValue()
 			)
 
 		self.assertEqual( node["out"].object( path ), reference )
@@ -94,10 +94,10 @@ class MeshTessellateTest( GafferSceneTest.SceneTestCase ) :
 		tessellate["calculateNormals"].setValue( True )
 		self.assertNodeCorrect( tessellate, "object" )
 
-		tessellate["scheme"].setValue( MeshAlgo.SubdivisionScheme.Bilinear )
+		tessellate["scheme"].setValue( "bilinear" )
 		self.assertNodeCorrect( tessellate, "object" )
 
-		tessellate["scheme"].setValue( MeshAlgo.SubdivisionScheme.FromMesh )
+		tessellate["scheme"].setValue( "" )
 		sphere = GafferScene.Sphere()
 
 		tessellate["in"].setInput( sphere["out"] )
@@ -107,7 +107,7 @@ class MeshTessellateTest( GafferSceneTest.SceneTestCase ) :
 		self.assertNodeCorrect( tessellate, "sphere" )
 
 		tessellate["tessellatePolygons"].setValue( False )
-		tessellate["scheme"].setValue( MeshAlgo.SubdivisionScheme.CatmullClark )
+		tessellate["scheme"].setValue( "catmullClark" )
 		self.assertNodeCorrect( tessellate, "sphere" )
 
 if __name__ == "__main__":

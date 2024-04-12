@@ -482,17 +482,10 @@ void GafferSceneModule::bindIECoreScenePreview()
 
 		scope meshAlgoScope( meshAlgoModule );
 
-		enum_<MeshAlgo::SubdivisionScheme>( "SubdivisionScheme" )
-			.value( "FromMesh", MeshAlgo::SubdivisionScheme::FromMesh )
-			.value( "Bilinear", MeshAlgo::SubdivisionScheme::Bilinear )
-			.value( "CatmullClark", MeshAlgo::SubdivisionScheme::CatmullClark )
-			.value( "Loop", MeshAlgo::SubdivisionScheme::Loop )
-		;
-
 		def( "tessellateMesh", MeshAlgo::tessellateMesh,
 			(
 				arg( "mesh" ), arg( "divisions" ),
-				arg( "calculateNormals" ) = false, arg( "scheme" ) = MeshAlgo::SubdivisionScheme::FromMesh,
+				arg( "calculateNormals" ) = false, arg( "scheme" ) = "",
 				arg( "canceller" ) = object()
 			)
 		);

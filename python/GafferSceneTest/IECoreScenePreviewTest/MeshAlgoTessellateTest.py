@@ -314,10 +314,10 @@ class MeshAlgoTessellateTest( GafferTest.TestCase ) :
 		# Basic tests for Loop subdivision
 
 		with self.assertRaisesRegex( RuntimeError, "Loop subdivision can only be applied to triangle meshes" ):
-			MeshAlgo.tessellateMesh( self.createTestData( 2, "linear" ), 1, scheme = MeshAlgo.SubdivisionScheme.Loop ),
+			MeshAlgo.tessellateMesh( self.createTestData( 2, "linear" ), 1, scheme = "loop" ),
 
 		self.assertMeshesPracticallyEqual(
-			MeshAlgo.tessellateMesh( self.createTestData( 2, "catmullClark", triangular = True ), 1, scheme = MeshAlgo.SubdivisionScheme.Loop ),
+			MeshAlgo.tessellateMesh( self.createTestData( 2, "catmullClark", triangular = True ), 1, scheme = "loop" ),
 			self.createTestData( 4, "linear", triangular = True ),
 			0.000002
 		)
@@ -370,12 +370,12 @@ class MeshAlgoTessellateTest( GafferTest.TestCase ) :
 		# odd tessellation rates introduce triangles that don't end up in exactly the same place during
 		# subsequent retessellations )
 
-		linearRate6 = MeshAlgo.tessellateMesh( source, 5, scheme = MeshAlgo.SubdivisionScheme.Bilinear, calculateNormals = True )
+		linearRate6 = MeshAlgo.tessellateMesh( source, 5, scheme = "bilinear", calculateNormals = True )
 
 		self.assertNotEqual( linearRate6, catmarkRate6 )
 
-		linearRate2 = MeshAlgo.tessellateMesh( source, 1, scheme = MeshAlgo.SubdivisionScheme.Bilinear, calculateNormals = True )
-		linearRate2x3 = MeshAlgo.tessellateMesh( linearRate2, 2, scheme = MeshAlgo.SubdivisionScheme.Bilinear, calculateNormals = True )
+		linearRate2 = MeshAlgo.tessellateMesh( source, 1, scheme = "bilinear", calculateNormals = True )
+		linearRate2x3 = MeshAlgo.tessellateMesh( linearRate2, 2, scheme = "bilinear", calculateNormals = True )
 
 		self.assertMeshesPracticallyEqual( linearRate6, linearRate2x3, 0.00001 )
 
@@ -385,7 +385,7 @@ class MeshAlgoTessellateTest( GafferTest.TestCase ) :
 		self.assertEqual( MeshAlgo.tessellateMesh( source, 5, calculateNormals = True ), linearRate6 )
 
 		# And test that we can override the scheme to CatmullClark
-		self.assertEqual( MeshAlgo.tessellateMesh( source, 5, scheme = MeshAlgo.SubdivisionScheme.CatmullClark, calculateNormals = True ), catmarkRate6 )
+		self.assertEqual( MeshAlgo.tessellateMesh( source, 5, scheme = "catmullClark", calculateNormals = True ), catmarkRate6 )
 
 	# Turn a mesh into a doubled up mesh, with copies of all vertices and faces shifted in P
 	def duplicateMesh( self, m ) :
