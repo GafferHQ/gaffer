@@ -61,8 +61,8 @@ class GAFFERSCENE_API MeshTessellate : public ObjectProcessor
 		Gaffer::BoolPlug *tessellatePolygonsPlug();
 		const Gaffer::BoolPlug *tessellatePolygonsPlug() const;
 
-		Gaffer::IntPlug *schemePlug();
-		const Gaffer::IntPlug *schemePlug() const;
+		Gaffer::StringPlug *schemePlug();
+		const Gaffer::StringPlug *schemePlug() const;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::MeshTessellate, MeshTessellateTypeId, ObjectProcessor );
 

@@ -61,7 +61,7 @@ Gaffer.Metadata.registerNode(
 
 	""",
 
-	"layout:activator:schemeNotOverridden", lambda node : node["scheme"].getValue() == MeshAlgo.SubdivisionScheme.FromMesh,
+	"layout:activator:schemeNotOverridden", lambda node : node["scheme"].getValue() == "",
 
 	plugs = {
 		"divisions" : [
@@ -90,10 +90,10 @@ Gaffer.Metadata.registerNode(
 			to be smooth, you can set scheme to CatmullClark ).
 			""",
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:FromMesh", MeshAlgo.SubdivisionScheme.FromMesh,
-			"preset:Bilinear", MeshAlgo.SubdivisionScheme.Bilinear,
-			"preset:Catmull-Clark", MeshAlgo.SubdivisionScheme.CatmullClark,
-			"preset:Loop", MeshAlgo.SubdivisionScheme.Loop
+			"preset:From Mesh", "",
+			"preset:Bilinear", "bilinear",
+			"preset:Catmull-Clark", "catmullClark",
+			"preset:Loop", "loop",
 		],
 		"tessellatePolygons" : [
 			"description",

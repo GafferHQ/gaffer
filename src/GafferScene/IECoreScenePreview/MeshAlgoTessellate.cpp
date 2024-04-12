@@ -1155,7 +1155,7 @@ int numDegenerateQuadsInTessellation( int tessFacetSize, int nVerts, int tessUni
 
 MeshPrimitivePtr MeshAlgo::tessellateMesh(
 	const MeshPrimitive &inputMesh, int divisions,
-	bool calculateNormals, SubdivisionScheme scheme,
+	bool calculateNormals, IECore::InternedString scheme,
 	const IECore::Canceller *canceller
 )
 {
@@ -1166,36 +1166,32 @@ MeshPrimitivePtr MeshAlgo::tessellateMesh(
 
 	const int tessUniformRate = divisions + 1;
 
-	OpenSubdiv::Sdc::SchemeType osScheme = OpenSubdiv::Sdc::SCHEME_CATMARK;
-	switch( scheme )
+	if( !scheme.string().size() )
 	{
-		case SubdivisionScheme::Bilinear:
-			osScheme = OpenSubdiv::Sdc::SCHEME_BILINEAR;
-			break;
-		case SubdivisionScheme::CatmullClark:
-			osScheme = OpenSubdiv::Sdc::SCHEME_CATMARK;
-			break;
-		case SubdivisionScheme::Loop:
-			osScheme = OpenSubdiv::Sdc::SCHEME_LOOP;
-			break;
-		default:
-			if( inputMesh.interpolation() == "linear" )
-			{
-				osScheme = OpenSubdiv::Sdc::SCHEME_BILINEAR;
-			}
-			else if( inputMesh.interpolation() == "catmullClark" )
-			{
-				osScheme = OpenSubdiv::Sdc::SCHEME_CATMARK;
-			}
-			else if( inputMesh.interpolation() == "loop" )
-			{
-				osScheme = OpenSubdiv::Sdc::SCHEME_LOOP;
-			}
-			else
-			{
-				throw Exception( "Unknown subdivision scheme on mesh: " + inputMesh.interpolation() );
-			}
-			break;
+		scheme = inputMesh.interpolation();
+	}
+
+	OpenSubdiv::Sdc::SchemeType osScheme = OpenSubdiv::Sdc::SCHEME_CATMARK;
+	// \todo - use scheme name definitions from IECoreScene::MeshPrimitive once we update Cortex
+	//
+	// We use bilinear if the scheme is set to bilinear, or if there is no scheme specified ( which
+	// is how USD represent simple polygons. Note that for historical reasons, having no scheme is
+	// stored as "linear" instead of "none".
+	if( scheme == "bilinear" || scheme == "linear" )
+	{
+		osScheme = OpenSubdiv::Sdc::SCHEME_BILINEAR;
+	}
+	else if( scheme == "catmullClark" )
+	{
+		osScheme = OpenSubdiv::Sdc::SCHEME_CATMARK;
+	}
+	else if( scheme == "loop" )
+	{
+		osScheme = OpenSubdiv::Sdc::SCHEME_LOOP;
+	}
+	else
+	{
+		throw Exception( "Unknown subdivision scheme: " + scheme.string() );
 	}
 
 	if( osScheme == OpenSubdiv::Sdc::SCHEME_LOOP && inputMesh.maxVerticesPerFace() > 3 )

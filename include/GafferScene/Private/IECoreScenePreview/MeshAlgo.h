@@ -45,20 +45,9 @@ namespace IECoreScenePreview
 namespace MeshAlgo
 {
 
-enum class SubdivisionScheme
-{
-	FromMesh,
-	Bilinear,
-	CatmullClark,
-	Loop,
-
-	First = FromMesh,
-	Last = Loop
-};
-
 GAFFERSCENE_API IECoreScene::MeshPrimitivePtr tessellateMesh(
 	const IECoreScene::MeshPrimitive &mesh, int divisions,
-	bool calculateNormals = false, SubdivisionScheme scheme = SubdivisionScheme::FromMesh,
+	bool calculateNormals = false, IECore::InternedString scheme = "",
 	const IECore::Canceller *canceller = nullptr
 );
 
