@@ -635,18 +635,27 @@ void LightPositionTool::positionHighlight(
 	const float targetDistance
 )
 {
+	const V3f reflectionRay = reflect( ( viewpoint - highlightTarget ), normal ).normalize();
+	positionAlongNormal( highlightTarget, reflectionRay, targetDistance );
+}
+
+void LightPositionTool::positionAlongNormal(
+	const V3f &target,
+	const V3f &normal,
+	const float distance
+)
+{
 	if( !m_distanceHandle->enabled() || selection().empty() )
 	{
 		return;
 	}
 	const Selection &s = selection().back();
 
-	const V3f reflectionRay = reflect( ( viewpoint - highlightTarget ), normal ).normalize();
-	const V3f newP = highlightTarget + reflectionRay * targetDistance;
+	const V3f newP = target + normal * distance;
 
 	Context::Scope scopedContext( s.context() );
 
-	const M44f orientationMatrix = sourceOrientation( s, newP, highlightTarget );
+	const M44f orientationMatrix = sourceOrientation ( s, newP, target );
 
 	const M44f localTransform = s.scene()->transform( s.path() );
 	translateAndOrient( s, localTransform, newP, orientationMatrix );
@@ -811,7 +820,13 @@ RunTimeTypedPtr LightPositionTool::sceneGadgetDragBegin( Gadget *gadget, const D
 	{
 		return nullptr;
 	}
-	if( getTargetMode() == TargetMode::Pivot && modePlug()->getValue() == (int)Mode::Highlight )
+	if(
+		getTargetMode() == TargetMode::Pivot &&
+		(
+			modePlug()->getValue() == (int)Mode::Highlight ||
+			modePlug()->getValue() == (int)Mode::Diffuse
+		)
+	)
 	{
 		return nullptr;
 	}
@@ -939,7 +954,13 @@ bool LightPositionTool::buttonPress( const ButtonEvent &event )
 		return true;
 	}
 
-	if( getTargetMode() == TargetMode::Pivot && modePlug()->getValue() == (int)Mode::Highlight )
+	if(
+		getTargetMode() == TargetMode::Pivot &&
+		(
+			modePlug()->getValue() == (int)Mode::Highlight ||
+			modePlug()->getValue() == (int)Mode::Diffuse
+		)
+	)
 	{
 		return true;
 	}
@@ -995,7 +1016,13 @@ bool LightPositionTool::placeTarget( const LineSegment3f &eventLine )
 	}
 	else if( getTargetMode() == TargetMode::Target )
 	{
-		if( modePlug()->getValue() == (int)Mode::Highlight && !distanceHandle->getTarget() )
+		if(
+			(
+				modePlug()->getValue() == (int)Mode::Highlight ||
+				modePlug()->getValue() == (int)Mode::Diffuse
+			) &&
+			!distanceHandle->getTarget()
+		)
 		{
 			setPivotDistance(
 				(
@@ -1037,6 +1064,26 @@ bool LightPositionTool::placeTarget( const LineSegment3f &eventLine )
 			positionHighlight(
 				distanceHandle->getTarget().value() * sceneToTransformSpaceInverse,
 				cameraTransform.translation(),
+				worldNormal,
+				distanceHandle->getPivotDistance().value()
+			);
+		}
+	}
+	else
+	{
+		if( !distanceHandle->getTarget() )
+		{
+			return false;
+		}
+
+		std::optional<V3f> sceneGadgetNormal = sceneGadget->normalAt( eventLine );
+		if( sceneGadgetNormal )
+		{
+			V3f worldNormal;
+			sceneGadget->fullTransform().inverse().transpose().multDirMatrix( sceneGadgetNormal.value(), worldNormal );
+
+			positionAlongNormal(
+				distanceHandle->getTarget().value() * sceneToTransformSpaceInverse,
 				worldNormal,
 				distanceHandle->getPivotDistance().value()
 			);
