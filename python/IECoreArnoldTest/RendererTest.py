@@ -2092,7 +2092,7 @@ class RendererTest( GafferTest.TestCase ) :
 			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			options = arnold.AiUniverseGetOptions( universe )
-			self.assertTrue( str( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "shaders" ) in arnold.AiNodeGetStr( options, "plugin_searchpath" ) )
+			self.assertTrue( ( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "shaders" ).as_posix() in arnold.AiNodeGetStr( options, "plugin_searchpath" ) )
 
 			n = arnold.AiNodeLookUpByName( universe, "testPlane" )
 
