@@ -51,37 +51,37 @@ class "GafferArnoldLightAPI" (
 	)
 
 	int inputs:arnold:samples = 1 (
-		displayGroup = "Arnold"
+		displayGroup = "Arnold.Sampling"
 		displayName = "Samples"
 	)
 
 	int inputs:arnold:volume_samples = 2 (
-		displayGroup = "Arnold"
+		displayGroup = "Arnold.Sampling"
 		displayName = "Volume Samples"
 	)
 
 	float inputs:arnold:sss = 1.0 (
-		displayGroup = "Arnold"
+		displayGroup = "Arnold.Refine"
 		displayName = "SSS Multiplier"
 	)
 
 	float inputs:arnold:indirect = 1.0(
-		displayGroup = "Arnold"
+		displayGroup = "Arnold.Refine"
 		displayName = "Indirect Multiplier"
 	)
 
 	float inputs:arnold:volume = 1.0 (
-		displayGroup = "Arnold"
+		displayGroup = "Arnold.Refine"
 		displayName = "Volume Multiplier"
 	)
 
 	bool inputs:arnold:cast_volumetric_shadows = true (
-		displayGroup = "Arnold"
+		displayGroup = "Arnold.Shadows"
 		displayName = "Cast Volumetric Shadows"
 	)
 
 	int inputs:arnold:max_bounces = 999 (
-		displayGroup = "Arnold"
+		displayGroup = "Arnold.Refine"
 		displayName = "Max Bounces"
 	)
 
@@ -98,12 +98,12 @@ class "GafferArnoldCylinderLightAPI" (
 {
 
 	float inputs:arnold:camera = 0.0 (
-		displayGroup = "Arnold"
+		displayGroup = "Arnold.Refine"
 		displayName = "Camera Multiplier"
 	)
 
 	float inputs:arnold:transmission = 0.0 (
-		displayGroup = "Arnold"
+		displayGroup = "Arnold.Refine"
 		displayName = "Transmission Multiplier"
 	)
 
@@ -120,17 +120,17 @@ class "GafferArnoldDiskLightAPI" (
 {
 
 	float inputs:arnold:spread = 1.0 (
-		displayGroup = "Arnold"
+		displayGroup = "Arnold.Geometry"
 		displayName = "Spread"
 	)
 
 	float inputs:arnold:camera = 0.0 (
-		displayGroup = "Arnold"
+		displayGroup = "Arnold.Refine"
 		displayName = "Camera Multiplier"
 	)
 
 	float inputs:arnold:transmission = 0.0 (
-		displayGroup = "Arnold"
+		displayGroup = "Arnold.Refine"
 		displayName = "Transmission Multiplier"
 	)
 
@@ -147,12 +147,12 @@ class "GafferArnoldPointLightAPI" (
 {
 
 	float inputs:arnold:camera = 0.0 (
-		displayGroup = "Arnold"
+		displayGroup = "Arnold.Refine"
 		displayName = "Camera Multiplier"
 	)
 
 	float inputs:arnold:transmission = 0.0 (
-		displayGroup = "Arnold"
+		displayGroup = "Arnold.Refine"
 		displayName = "Transmission Multiplier"
 	)
 
@@ -169,32 +169,32 @@ class "GafferArnoldQuadLightAPI" (
 {
 
 	float inputs:arnold:roundness = 0.0 (
-		displayGroup = "Arnold"
+		displayGroup = "Arnold.Geometry"
 		displayName = "Roundness"
 	)
 
 	float inputs:arnold:soft_edge = 0.0 (
-		displayGroup = "Arnold"
+		displayGroup = "Arnold.Geometry"
 		displayName = "Soft Edge"
 	)
 
 	float inputs:arnold:spread = 1.0 (
-		displayGroup = "Arnold"
+		displayGroup = "Arnold.Geometry"
 		displayName = "Spread"
 	)
 
 	int inputs:arnold:resolution = 512 (
-		displayGroup = "Arnold"
+		displayGroup = "Arnold.Sampling"
 		displayName = "Resolution"
 	)
 
 	float inputs:arnold:camera = 0.0 (
-		displayGroup = "Arnold"
+		displayGroup = "Arnold.Refine"
 		displayName = "Camera Multiplier"
 	)
 
 	float inputs:arnold:transmission = 0.0 (
-		displayGroup = "Arnold"
+		displayGroup = "Arnold.Refine"
 		displayName = "Transmission Multiplier"
 	)
 
@@ -222,17 +222,17 @@ class "GafferArnoldSkydomeLightAPI" (
 	)
 
 	int inputs:arnold:resolution = 1000 (
-		displayGroup = "Arnold"
+		displayGroup = "Arnold.Sampling"
 		displayName = "Resolution"
 	)
 
 	float inputs:arnold:camera = 1.0 (
-		displayGroup = "Arnold"
+		displayGroup = "Arnold.Refine"
 		displayName = "Camera Multiplier"
 	)
 
 	float inputs:arnold:transmission = 1.0 (
-		displayGroup = "Arnold"
+		displayGroup = "Arnold.Refine"
 		displayName = "Transmission Multiplier"
 	)
 

@@ -45,3 +45,13 @@ Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters.shaping:cone:angl
 # `texture:format == automatic` isn't well supported at present, so default
 # user-created lights to `latlong`.
 Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters.texture:format", "userDefault", "latlong" )
+
+# Put Arnold section last. We can't do that using the schemas in GafferArnold.usda
+# because they provide no control over property ordering.
+Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters.arnold:*", "layout:index", -1 )
+# Open the sub-sections of Arnold light parameters by default, so everything is
+# visible as soon as you pop open the main Arnold section.
+Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters", "layout:section:Arnold.Refine:collapsed", False )
+Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters", "layout:section:Arnold.Geometry:collapsed", False )
+Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters", "layout:section:Arnold.Sampling:collapsed", False )
+Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters", "layout:section:Arnold.Shadows:collapsed", False )
