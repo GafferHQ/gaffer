@@ -116,11 +116,16 @@ class TestCase( unittest.TestCase ) :
 
 		if self.__temporaryDirectory is not None :
 			if os.name == "nt" :
-				subprocess.check_call(
-					[ "icacls", self.__temporaryDirectory, "/grant", "Users:(OI)(CI)(W)" ],
-					stdout = subprocess.DEVNULL,
-					stderr = subprocess.STDOUT
-				)
+				def makeWritable( p ) :
+					subprocess.check_call(
+						[ "icacls", p, "/grant", "Users:(OI)(CI)(W)" ],
+						stdout = subprocess.DEVNULL,
+						stderr = subprocess.STDOUT
+					)
+				makeWritable( self.__temporaryDirectory )
+				for root, dirs, files in os.walk( self.__temporaryDirectory ) :
+					for fileName in files + dirs :
+						makeWritable( pathlib.Path( root ) / fileName )
 
 			for root, dirs, files in os.walk( self.__temporaryDirectory ) :
 				for fileName in [ p for p in files + dirs if not ( pathlib.Path( root ) / p ).is_symlink() ] :

@@ -38,6 +38,7 @@ import ctypes
 import json
 import os
 import pathlib
+import subprocess
 import sys
 import time
 import unittest
@@ -2889,7 +2890,14 @@ class RendererTest( GafferTest.TestCase ) :
 		# error message.
 
 		( self.temporaryDirectory() / "readOnly" ).mkdir()
-		( self.temporaryDirectory() / "readOnly" ).chmod( 444 )
+		if os.name != "nt" :
+			( self.temporaryDirectory() / "readOnly" ).chmod( 444 )
+		else :
+			subprocess.check_call(
+				[ "icacls", self.temporaryDirectory() / "readOnly", "/deny", "Users:(OI)(CI)(W)" ],
+				stdout = subprocess.DEVNULL,
+				stderr = subprocess.STDOUT
+			)
 
 		with IECore.CapturingMessageHandler() as mh :
 			r.option( "ai:log:filename", IECore.StringData( ( self.temporaryDirectory() / "readOnly" / "nested" / "log.txt" ).as_posix() ) )
@@ -2897,7 +2905,10 @@ class RendererTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
-		self.assertTrue( "Permission denied" in mh.messages[0].message )
+		self.assertIn(
+			"Permission denied" if os.name != "nt" else "Access is denied",
+			mh.messages[0].message
+		)
 
 	def testStatsAndLog( self ) :
 
