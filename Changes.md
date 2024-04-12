@@ -22,6 +22,7 @@ Improvements
 - USDLight :
   - Added Arnold-specific extension parameters.
   - Added parameter tooltips.
+- LightEditor : Added columns for Arnold-specific parameters on USD lights.
 
 Fixes
 -----
