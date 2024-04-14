@@ -1206,8 +1206,7 @@ class DelightProceduralRenderer final : public IECoreScenePreview::Renderer
 			const char *streamcompression = "gzip";
 			std::string filename = handle;
 			boost::replace_all( filename, ":", "_" );
-			std::string temppath = std::filesystem::temp_directory_path();
-			filename = temppath + "/gaffer/" + filename + ".nsi.gz";
+			filename = std::filesystem::temp_directory_path().string() + "/gaffer/" + filename + ".nsi.gz";
 			const char *fileNamePtr = filename.c_str();
 
 			params = {
@@ -1364,8 +1363,7 @@ bool convertProcedural( IECoreScenePreview::ConstProceduralPtr procedural, NSICo
 	std::string type = "apistream";
 	std::string filename = handle;
 	boost::replace_all( filename, ":", "_" );
-	std::string temppath = std::filesystem::temp_directory_path();
-	filename = temppath + "/gaffer/" + filename + ".nsi.gz";
+	filename = std::filesystem::temp_directory_path().string() + "/gaffer/" + filename + ".nsi.gz";
 
 	procParameters.add( "type", type );
 	procParameters.add( "filename", filename );
