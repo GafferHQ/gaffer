@@ -117,9 +117,10 @@ def __presets( plug ) :
 	# from a connected plug.
 
 	if plug.direction() == plug.Direction.In :
-		plug = next( iter( plug.outputs() ), None )
-		if plug is not None :
-			return __presets( plug )
+		for outputPlug in plug.outputs():
+			outputPresets = __presets( outputPlug )
+			if outputPresets:
+				return outputPresets
 
 	return result
 

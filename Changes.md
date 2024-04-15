@@ -1,6 +1,10 @@
 1.3.16.x (relative to 1.3.16.0)
 ========
 
+Fixes
+-----
+
+- NodeAlgo:  Fixed presets inheritance for promoted plugs with multiple outputs.
 
 
 1.3.16.0 (relative to 1.3.15.0)
