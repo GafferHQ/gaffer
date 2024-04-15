@@ -1,7 +1,10 @@
 1.4.x.x (relative to 1.4.0.0)
 =======
 
+Improvements
+------------
 
+- USD : Added automatic render-time translation of UsdPreviewSurface shaders to Cycles.
 
 1.4.0.0 (relative to 1.3.16.0)
 =======
