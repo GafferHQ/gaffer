@@ -221,6 +221,11 @@ class DelightHandle
 			release();
 		}
 
+		operator bool () const
+		{
+			return m_context != NSI_BAD_CONTEXT;
+		}
+
 	private :
 
 		void release()
@@ -261,7 +266,18 @@ class DelightOutput : public IECore::RefCounted
 			const char *typePtr = output->getType().c_str();
 			const char *namePtr = output->getName().c_str();
 
-			ParameterList driverParams( output->parameters() );
+			ParameterList driverParams;
+			for( const auto &[parameterName, parameterValue] : output->parameters() )
+			{
+				// We can't pass `filter` to the driver, because although it's not
+				// documented as an attribute (and it _is_ documented that additional
+				// arbitrary attributes are allowed), 3Delight complains.
+				if( parameterName != "filter" )
+				{
+					driverParams.add( parameterName.c_str(), parameterValue.get() );
+				}
+			}
+
 			driverParams.add( { "drivername", &typePtr, NSITypeString, 0, 1, 0 } );
 			driverParams.add( { "imagefilename", &namePtr, NSITypeString, 0, 1, 0 } );
 
@@ -272,6 +288,7 @@ class DelightOutput : public IECore::RefCounted
 			string variableName;
 			string variableSource;
 			string layerType;
+			string scalarFormat;
 			string layerName;
 			int withAlpha = 0;
 
@@ -299,6 +316,11 @@ class DelightOutput : public IECore::RefCounted
 				{
 					layerType = "scalar";
 				}
+				else if( tokens[0] == "uint" )
+				{
+					layerType = "scalar";
+					scalarFormat = "uint32";
+				}
 				else if( tokens[0] == "point" )
 				{
 					layerType = "vector";
@@ -321,11 +343,35 @@ class DelightOutput : public IECore::RefCounted
 					variableSource = nameTokens[0];
 				}
 
-				// Remove the `.` character and use camel case
-				vector<string> layerTokens;
-				IECore::StringAlgo::tokenize( variableName, '.', layerTokens );
-				layerName = IECore::CamelCase::join( layerTokens.begin(), layerTokens.end(), IECore::CamelCase::AllExceptFirst);
+				layerName = variableName;
+				// Shader outputs like `diffuse` and `diffuse.direct` create incompatible layer names
+				// by using `diffuse` both as a container for channels and a container for sublayers.
+				// Replace `.` with `_` to avoid the problem.
+				boost::replace_all( layerName, ".", "_" );
 			}
+
+			// Special cases to match the "standard" expected by OutputBuffer,
+			// which is necessary for Gaffer viewport rendering.
+
+			if( variableName == "Z" )
+			{
+				variableName = "z";
+				variableSource = "builtin";
+			}
+
+			if( variableName == "id" )
+			{
+				variableName = "cortexId";
+				variableSource = "attribute";
+				/// \todo We really want to use something like "uint32" here (as
+				/// provided by the code above), but that maps the `0.0 - 1.0`
+				/// range into the integer range, whereas we want a direct
+				/// mapping. So we render as float and deal with it in
+				/// Display.cpp.
+				scalarFormat = "float";
+			}
+
+			layerName = parameter<string>( output->parameters(), "layerName", layerName );
 
 			ParameterList layerParams;
 
@@ -335,10 +381,21 @@ class DelightOutput : public IECore::RefCounted
 			layerParams.add( "layername", layerName );
 			layerParams.add( { "withalpha", &withAlpha, NSITypeInteger, 0, 1, 0 } );
 
-			const string scalarFormat = this->scalarFormat( output );
-			const string colorProfile = scalarFormat == "float" ? "linear" : "sRGB";
+			string colorProfile = "linear";
+			if( scalarFormat.empty() )
+			{
+				scalarFormat = this->scalarFormat( output );
+				colorProfile = scalarFormat == "float" ? "linear" : "sRGB";
+			}
 			layerParams.add( "scalarformat", scalarFormat );
 			layerParams.add( "colorprofile", colorProfile );
+
+			string filter = parameter<string>( output->parameters(), "filter", "blackman-harris" );
+			if( filter == "closest" )
+			{
+				filter = "zmin";
+			}
+			layerParams.add( "filter", filter );
 
 			m_layerHandle = DelightHandle( context, "outputLayer:" + name, ownership, "outputlayer", layerParams );
 
@@ -1047,7 +1104,26 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 
 		void assignID( uint32_t id ) override
 		{
-			/// \todo Implement
+			if( !m_idAttributesHandle )
+			{
+				m_idAttributesHandle = DelightHandle(
+					m_transformHandle.context(), string( m_transformHandle.name() ) + ":__idAttributes", m_transformHandle.ownership(), "attributes"
+				);
+				NSIConnect(
+					m_transformHandle.context(),
+					m_idAttributesHandle.name(), "",
+					m_transformHandle.name(), "shaderattributes",
+					0, nullptr
+				);
+			}
+			NSIParam_t param = {
+				"cortexId",
+				&id,
+				NSITypeInteger,
+				0, 1, // array length, count
+				0 // flags
+			};
+			NSISetAttribute( m_idAttributesHandle.context(), m_idAttributesHandle.name(), 1, &param );
 		}
 
 	protected :
@@ -1060,6 +1136,7 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 	private :
 
 		DelightHandleSharedPtr m_instance;
+		DelightHandle m_idAttributesHandle;
 
 		bool m_haveTransform;
 
@@ -1552,6 +1629,16 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			// here, but despite documenting it, 3delight does not
 			// support it. Instead we let 3delight waste cpu time
 			// while we make our edits.
+		}
+
+		IECore::DataPtr command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters ) override
+		{
+			if( boost::starts_with( name.string(), "dl:" ) || name.string().find( ":" ) == string::npos )
+			{
+				IECore::msg( IECore::Msg::Warning, "IECoreDelight::Renderer::command", boost::format( "Unknown command \"%s\"." ) % name.c_str() );
+			}
+
+			return nullptr;
 		}
 
 	private :

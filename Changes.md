@@ -14,6 +14,10 @@ Improvements
   - Improved cancellation responsiveness.
 - 3Delight : Added NSI screen static sampling pattern option (`dl:staticsamplingpattern`).
 - GraphEditor : The source node for any location can be located by dragging the location into the GraphEditor from the Viewer or HierarchyView.
+- GraphComponent : Node and Plug names may now start with a numeric digit.
+- 3Delight :
+  - Added support for `layerName` parameter in output definitions.
+  - Added support for `filter` parameter in output definitions.
 
 Fixes
 -----
@@ -29,6 +33,12 @@ Fixes
   - Fixed errors when dragging from another application onto widgets that didn't expect it.
 - Gadget : Fixed access to `DragDropEvent.sourceWidget` and `DragDropEvent.destinationWidget` from Python slots connected to a Gadget's DragDropSignals.
 - GraphGadget : Fixed unwanted highlighting of nodes when custom drag & drop handlers were active.
+- Viewer : Fixed selection overlay glitches with an Arnold `skydome_light` and an empty selection.
+
+Breaking Changes
+----------------
+
+- 3Delight : Changed default layer names for outputs.
 
 1.4.0.0b6 (relative to 1.4.0.0b5)
 =========
