@@ -5,7 +5,6 @@ Features
 --------
 
 - Cycles : Added support for CUDA and Optix devices on Windows [^1].
-- LightPositionTool : Added `Diffuse` mode for placing lights along the normal of the target position.
 
 Improvements
 ------------
