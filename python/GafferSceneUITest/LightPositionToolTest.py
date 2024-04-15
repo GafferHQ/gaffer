@@ -273,61 +273,6 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 						places = 3
 					)
 
-	def __diffuseSource( self, lightP, diffuseP, normal ) :
-		d = ( lightP - diffuseP ).length()
-		return diffuseP + normal * d
-
-	def testPositionDiffuse( self ) :
-
-		random.seed( 42 )
-
-		script = Gaffer.ScriptNode()
-		script["light"] = GafferSceneTest.TestLight()
-
-		view = GafferSceneUI.SceneView()
-		view["in"].setInput( script["light"]["out"] )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/light"] ) )
-
-		tool = GafferSceneUI.LightPositionTool( view )
-		tool["active"].setValue( True )
-
-		for i in range( 0, 5 ) :
-			lightP = imath.V3f( random.random() * 10 - 5, random.random() * 10 - 5, random.random() * 10 - 5 )
-			diffuseP = imath.V3f( random.random() * 10 - 5, random.random() * 10 - 5, random.random() * 10 - 5 )
-			normal = imath.V3f( random.random() * 2 - 1, random.random() * 2 - 1, random.random() * 2 - 1 ).normalized()
-
-			script["light"]["transform"]["translate"].setValue( lightP )
-
-			d0 = ( lightP - diffuseP ).length()
-			upDir = script["light"]["transform"].matrix().multDirMatrix( imath.V3f( 0, 1, 0 ) )
-
-			with Gaffer.Context() :
-				tool.positionAlongNormal( diffuseP, normal, d0 )
-
-			p = script["light"]["transform"]["translate"].getValue()
-
-			d1 = ( p - diffuseP ).length()
-			self.assertAlmostEqual( d0, d1, places = 4 )
-
-			desiredP = self.__diffuseSource( lightP, diffuseP, normal )
-
-			for j in range( 0, 3 ) :
-				self.assertAlmostEqual( p[j], desiredP[j], places = 4 )
-
-			desiredO = imath.M44f()
-			imath.M44f.rotationMatrixWithUpDir( desiredO, imath.V3f( 0, 0, -1 ), diffuseP - p, upDir )
-			rotationO = imath.V3f()
-			desiredO.extractEulerXYZ( rotationO )
-
-			o = script["light"]["transform"]["rotate"].getValue()
-
-			with self.subTest( f"Iteration {i}" ) :
-				self.assertAnglesAlmostEqual(
-					o,
-					IECore.radiansToDegrees( imath.V3f( rotationO ) ),
-					places = 3
-				)
-
 	def testEmptySelectionModeChange( self ) :
 
 		script = Gaffer.ScriptNode()

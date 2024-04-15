@@ -317,13 +317,11 @@ void GafferSceneUIModule::bindTools()
 			.def( init<SceneView *>() )
 			.def( "positionShadow", &LightPositionTool::positionShadow )
 			.def( "positionHighlight", &LightPositionTool::positionHighlight )
-			.def( "positionAlongNormal", &LightPositionTool::positionAlongNormal )
 		;
 
 		enum_<LightPositionTool::Mode>( "Mode" )
 			.value( "Shadow", LightPositionTool::Mode::Shadow )
 			.value( "Highlight", LightPositionTool::Mode::Highlight )
-			.value( "Diffuse", LightPositionTool::Mode::Diffuse )
 		;
 	}
 
