@@ -18,6 +18,7 @@ Improvements
 - 3Delight :
   - Added support for `layerName` parameter in output definitions.
   - Added support for `filter` parameter in output definitions.
+- Instancer : Added support for `Varying` primitive variables whenever they are equivalent to (have the same size as) a `Vertex` primitive variable.
 
 Fixes
 -----
@@ -34,6 +35,8 @@ Fixes
 - Gadget : Fixed access to `DragDropEvent.sourceWidget` and `DragDropEvent.destinationWidget` from Python slots connected to a Gadget's DragDropSignals.
 - GraphGadget : Fixed unwanted highlighting of nodes when custom drag & drop handlers were active.
 - Viewer : Fixed selection overlay glitches with an Arnold `skydome_light` and an empty selection.
+- Encapsulate : Fixed bug which could cause unwanted cancellation when rendering or unencapsulating.
+- Unencapsulate : Fixed bug which prevented cancellation of long-running computes.
 
 Breaking Changes
 ----------------
@@ -457,10 +460,24 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.x.x (relative to 1.3.15.0)
+1.3.16.x (relative to 1.3.16.0)
 ========
 
 
+1.3.16.0 (relative to 1.3.15.0)
+========
+
+Improvements
+------------
+
+- Shuffle : Added the ability to load Shuffles from Gaffer 1.4.
+- Instancer : Added support for `Varying` primitive variables whenever they are equivalent to (have the same size as) a `Vertex` primitive variable.
+
+Fixes
+-----
+
+- Encapsulate : Fixed bug which could cause unwanted cancellation when rendering or unencapsulating.
+- Unencapsulate : Fixed bug which prevented cancellation of long-running computes.
 
 1.3.15.0 (relative to 1.3.14.0)
 ========
