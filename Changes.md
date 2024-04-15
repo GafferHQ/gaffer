@@ -1,4 +1,9 @@
-1.4.x.x (relative to 1.3.16.0)
+1.4.x.x (relative to 1.4.0.0)
+=======
+
+
+
+1.4.0.0 (relative to 1.3.16.0)
 =======
 
 > Note : This release introduces `linux-gcc11` builds which are only compatible with Linux distributions using glibc 2.28 or higher.
