@@ -39,6 +39,7 @@ import inspect
 import unittest
 import os
 import subprocess
+import threading
 
 import IECore
 
@@ -243,6 +244,108 @@ class UnencapsulateTest( GafferSceneTest.SceneTestCase ) :
 
 		# Test unencapsulating the object at the root of the capsule
 		self.assertScenesEqual( sphere["out"], unencapsulate["out"] )
+
+	def testNoUnwantedCancellation( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		encapsulate = GafferScene.Encapsulate()
+		encapsulate["in"].setInput( sphere["out"] )
+		encapsulate["filter"].setInput( sphereFilter["out"] )
+
+		unencapsulate = GafferScene.Unencapsulate()
+		unencapsulate["in"].setInput( encapsulate["out"] )
+		unencapsulate["filter"].setInput( sphereFilter["out"] )
+
+		# Generate (and cache) the capsule in a context where
+		# a canceller is present.
+
+		context = Gaffer.Context()
+		canceller = IECore.Canceller()
+
+		with Gaffer.Context( context, canceller ) :
+			capsule = encapsulate["out"].object( "/sphere" )
+
+		# That cached capsule must be usable by a new client,
+		# completely independent of the previous canceller.
+
+		canceller.cancel()
+
+		with context :
+			self.assertScenesEqual( sphere["out"], unencapsulate["out"] )
+
+	def testCancelUnencapsulation( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["standardAttributes"] = GafferScene.StandardAttributes()
+		script["standardAttributes"]["in"].setInput( script["sphere"]["out"] )
+
+		UnencapsulateTest.expressionStartedCondition = threading.Condition()
+
+		script["displayColorExpression"] = Gaffer.Expression()
+		script["displayColorExpression"].setExpression( inspect.cleandoc(
+			"""
+			# Let the test know the expression has started running.
+			import GafferSceneTest
+			with GafferSceneTest.UnencapsulateTest.expressionStartedCondition :
+				GafferSceneTest.UnencapsulateTest.expressionStartedCondition.notify()
+
+			# And loop forever unless the compute has been cancelled.
+			while True :
+				IECore.Canceller.check( context.canceller() )
+
+			parent["standardAttributes"]["attributes"]["displayColor"] = imath.Color3f( 1, 2, 3)
+			"""
+		) )
+
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["standardAttributes"]["out"] )
+
+		script["groupFilter"] = GafferScene.PathFilter()
+		script["groupFilter"]["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+
+		script["encapsulate"] = GafferScene.Encapsulate()
+		script["encapsulate"]["in"].setInput( script["group"]["out"] )
+		script["encapsulate"]["filter"].setInput( script["groupFilter"]["out"] )
+
+		script["unencapsulate"] = GafferScene.Unencapsulate()
+		script["unencapsulate"]["in"].setInput( script["encapsulate"]["out"] )
+		script["unencapsulate"]["filter"].setInput( script["groupFilter"]["out"] )
+
+
+		# Generate (and cache) the capsule in a context where
+		# a canceller isn't present.
+
+		context = Gaffer.Context()
+		with context :
+			self.assertIsInstance(
+				script["encapsulate"]["out"].object( "/group" ),
+				GafferScene.Capsule
+			)
+
+		# A new client must be able to cancel the unencapsulation
+		# process using a new canceller.
+
+		with context :
+
+			# Launch compute in background and wait for the expression
+			# from the capsule to start executing.
+			backgroundTask = Gaffer.ParallelAlgo.callOnBackgroundThread(
+				script["encapsulate"]["out"],
+				lambda : script["unencapsulate"]["out"].attributes( "/group/sphere" )
+			)
+			with UnencapsulateTest.expressionStartedCondition :
+				UnencapsulateTest.expressionStartedCondition.wait()
+
+			# Check that we can cancel the compute.
+			backgroundTask.cancelAndWait()
+			self.assertEqual( backgroundTask.status(), backgroundTask.Status.Cancelled )
 
 if __name__ == "__main__":
 	unittest.main()
