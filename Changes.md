@@ -1,6 +1,11 @@
 1.4.x.x (relative to 1.4.0.0)
 =======
 
+Features
+--------
+
+- MeshTessellate/MeshType : Added support for special-purpose subdiv options: interpolateBoundary, faceVaryingLinearInterpolation, triangleSubdivisionRule.
+
 Improvements
 ------------
 

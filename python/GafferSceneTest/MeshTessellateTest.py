@@ -65,7 +65,10 @@ class MeshTessellateTest( GafferSceneTest.SceneTestCase ) :
 			reference = MeshAlgo.tessellateMesh(
 				source, node["divisions"].getValue(),
 				calculateNormals = node["calculateNormals"].getValue(),
-				scheme = node["scheme"].getValue()
+				scheme = node["scheme"].getValue(),
+				interpolateBoundary = node["interpolateBoundary"].getValue(),
+				faceVaryingLinearInterpolation = node["faceVaryingLinearInterpolation"].getValue(),
+				triangleSubdivisionRule = node["triangleSubdivisionRule"].getValue(),
 			)
 
 		self.assertEqual( node["out"].object( path ), reference )
@@ -94,21 +97,77 @@ class MeshTessellateTest( GafferSceneTest.SceneTestCase ) :
 		tessellate["calculateNormals"].setValue( True )
 		self.assertNodeCorrect( tessellate, "object" )
 
+
+		# For the parameters shared with MeshType, we should get the same result if we use a MeshType to set
+		# the parameter, vs setting it on the MeshTessellate node
+		meshType = GafferScene.MeshType()
+		meshType["in"].setInput( tessellate["in"] )
+		meshType["filter"].setInput( filter["out"] )
+		meshType["meshType"].setInput( tessellate["scheme"] )
+		meshType["interpolateBoundary"].setInput( tessellate["interpolateBoundary"] )
+		meshType["faceVaryingLinearInterpolation"].setInput( tessellate["faceVaryingLinearInterpolation"] )
+		meshType["triangleSubdivisionRule"].setInput( tessellate["triangleSubdivisionRule"] )
+
+		defaultTessellate = GafferScene.MeshTessellate()
+		defaultTessellate["in"].setInput( meshType["out"] )
+		defaultTessellate["filter"].setInput( filter["out"] )
+		defaultTessellate["divisions"].setValue( 2 )
+		defaultTessellate["calculateNormals"].setValue( True )
+
+
 		tessellate["scheme"].setValue( "bilinear" )
 		self.assertNodeCorrect( tessellate, "object" )
+		self.assertEqual( tessellate["out"].object("/object"), defaultTessellate["out"].object("/object") )
 
 		tessellate["scheme"].setValue( "" )
 		sphere = GafferScene.Sphere()
 
 		tessellate["in"].setInput( sphere["out"] )
 		self.assertNodeCorrect( tessellate, "sphere" )
+		self.assertEqual( tessellate["out"].object("/sphere"), defaultTessellate["out"].object("/sphere") )
 
 		tessellate["tessellatePolygons"].setValue( True )
+		defaultTessellate["tessellatePolygons"].setValue( True )
 		self.assertNodeCorrect( tessellate, "sphere" )
+		self.assertEqual( tessellate["out"].object("/sphere"), defaultTessellate["out"].object("/sphere") )
 
 		tessellate["tessellatePolygons"].setValue( False )
+		defaultTessellate["tessellatePolygons"].setValue( False )
 		tessellate["scheme"].setValue( "catmullClark" )
 		self.assertNodeCorrect( tessellate, "sphere" )
+		self.assertEqual( tessellate["out"].object("/sphere"), defaultTessellate["out"].object("/sphere") )
+
+		tessellate["in"].setInput( testReader["out"] )
+
+		for ib in [
+			IECoreScene.MeshPrimitive.interpolateBoundaryNone,
+			IECoreScene.MeshPrimitive.interpolateBoundaryEdgeOnly,
+			IECoreScene.MeshPrimitive.interpolateBoundaryEdgeAndCorner
+		]:
+			tessellate["interpolateBoundary"].setValue( ib )
+			self.assertNodeCorrect( tessellate, "object" )
+			self.assertEqual( tessellate["out"].object("/object"), defaultTessellate["out"].object("/object") )
+
+		for fvli in [
+			IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationNone,
+			IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationCornersOnly,
+			IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationCornersPlus1,
+			IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationCornersPlus2,
+			IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationBoundaries,
+			IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationAll
+		]:
+			tessellate["faceVaryingLinearInterpolation"].setValue( fvli )
+			self.assertNodeCorrect( tessellate, "object" )
+			self.assertEqual( tessellate["out"].object("/object"), defaultTessellate["out"].object("/object") )
+
+		for tsr in [
+			IECoreScene.MeshPrimitive.triangleSubdivisionRuleCatmullClark,
+			IECoreScene.MeshPrimitive.triangleSubdivisionRuleSmooth,
+		]:
+			tessellate["triangleSubdivisionRule"].setValue( tsr )
+			self.assertNodeCorrect( tessellate, "object" )
+			self.assertEqual( tessellate["out"].object("/object"), defaultTessellate["out"].object("/object") )
+
 
 if __name__ == "__main__":
 	unittest.main()
