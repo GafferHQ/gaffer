@@ -480,6 +480,101 @@ class MeshAlgoTessellateTest( GafferTest.TestCase ) :
 		MeshAlgo.tessellateMesh( nonManifold, 3, calculateNormals = True )
 		MeshAlgo.tessellateMesh( nonManifold, 4 )
 
+	def testSubdivOptions( self ) :
+
+		file = IECoreScene.SceneInterface.create(
+			str( self.usdFileDir / "generalTestMesh.usd" ), IECore.IndexedIO.OpenMode.Read
+		)
+		generalMesh = file.child( "object" ).readObject( 0.0 )
+
+		IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ), imath.V2i( 1 ) )
+
+		# Default, boundary is fully interpolated
+		self.assertPrimvarsPracticallyEqual(
+			MeshAlgo.tessellateMesh(
+				IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ), imath.V2i( 1 ) ),
+				1,
+				scheme = "catmullClark"
+			)["P"],
+			IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.V3fVectorData(
+				[
+					imath.V3f( -1, -1, 0 ), imath.V3f( 0, -1, 0 ),
+					imath.V3f( 1, -1, 0 ), imath.V3f( 1, 0, 0 ),
+					imath.V3f( 1, 1, 0 ), imath.V3f( 0, 1, 0 ),
+					imath.V3f( -1, 1, 0 ), imath.V3f( -1, 0, 0 ),
+					imath.V3f( 0 )
+				]
+			) ),
+			"P",
+			2e-7
+		)
+
+		# EdgeOnly, corners get substantially shrunk
+		self.assertPrimvarsPracticallyEqual(
+			MeshAlgo.tessellateMesh(
+				IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ), imath.V2i( 1 ) ),
+				1,
+				scheme = "catmullClark",
+				interpolateBoundary = "edgeOnly"
+			)["P"],
+			IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.V3fVectorData(
+				[
+					imath.V3f( -1, -1, 0 ) * 2/3, imath.V3f( 0, -1, 0 ) * 2.75 / 3,
+					imath.V3f( 1, -1, 0 ) * 2/3, imath.V3f( 1, 0, 0 ) * 2.75 / 3,
+					imath.V3f( 1, 1, 0 ) * 2/3, imath.V3f( 0, 1, 0 ) * 2.75 / 3,
+					imath.V3f( -1, 1, 0 ) * 2/3, imath.V3f( -1, 0, 0 ) * 2.75 / 3,
+					imath.V3f( 0 )
+				]
+			) ),
+			"P",
+			2e-7
+		)
+
+		# With no boundary interpolation, one input quad isn't enough to define any output
+		self.assertEqual(
+			MeshAlgo.tessellateMesh(
+				IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ), imath.V2i( 1 ) ),
+				1,
+				scheme = "catmullClark",
+				interpolateBoundary = "none"
+			)["P"],
+			IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.V3fVectorData( [], IECore.GeometricData.Interpretation.Point ) )
+		)
+
+		# With no boundary interpolation, and 9 input quads, we discard all boundary quads, and only
+		# tesselate the middle
+		self.assertEqual(
+			MeshAlgo.tessellateMesh(
+				IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ), imath.V2i( 3 ) ),
+				1,
+				scheme = "catmullClark",
+				interpolateBoundary = "none"
+			).verticesPerFace,
+			IECore.IntVectorData( [4, 4, 4, 4] )
+		)
+
+		# For faceVaryingLinearInterpolation, we just pass the parameter to OpenSubdiv, and don't need to do
+		# anything special. Just test that all 6 possible values produce different results.
+		fvliResults = []
+		for fvli in [
+			IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationNone,
+			IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationCornersOnly,
+			IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationCornersPlus1,
+			IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationCornersPlus2,
+			IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationBoundaries,
+			IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationAll
+		]:
+			tessUv = MeshAlgo.tessellateMesh( generalMesh, 1, faceVaryingLinearInterpolation = fvli )["uv"]
+			self.assertNotIn( tessUv, fvliResults )
+			fvliResults.append( tessUv )
+
+		# Similiarly for the `triangleSubdivisionRule`, just confirm that it does something.
+		self.assertNotEqual(
+			MeshAlgo.tessellateMesh( generalMesh, 1 ),
+			MeshAlgo.tessellateMesh( generalMesh, 1, triangleSubdivisionRule = "smooth" )
+		)
+
+
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testSmallSourcePerf( self ):
 
