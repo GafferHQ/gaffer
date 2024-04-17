@@ -44,8 +44,8 @@
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/fusion/include/adapt_struct.hpp"
+#include "boost/phoenix/operator.hpp"
 #include "boost/spirit/include/classic_core.hpp"
-#include "boost/spirit/include/phoenix_operator.hpp"
 #include "boost/spirit/include/qi.hpp"
 #include "boost/spirit/repository/include/qi_distinct.hpp"
 #include "boost/variant/apply_visitor.hpp"
