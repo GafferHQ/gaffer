@@ -4,8 +4,7 @@
 Fixes
 -----
 
-- NodeAlgo:  Fixed presets inheritance for promoted plugs with multiple outputs.
-
+- NodeAlgo : Fixed presets inheritance for promoted plugs with multiple outputs.
 
 1.3.16.0 (relative to 1.3.15.0)
 ========
