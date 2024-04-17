@@ -197,6 +197,13 @@ NSIParam_t ParameterList::parameter( const char *name, const IECore::Data *value
 			result.data = static_cast<const Color3fData *>( value )->baseReadable();
 			result.count = 1;
 			break;
+		case Color4fDataTypeId :
+			result.type = NSITypeFloat;
+			result.arraylength = 4;
+			result.flags |= NSIParamIsArray;
+			result.data = static_cast<const Color4fData *>( value )->baseReadable();
+			result.count = 1;
+			break;
 		case StringDataTypeId :
 		{
 			result.type = NSITypeString;
@@ -206,6 +213,11 @@ NSIParam_t ParameterList::parameter( const char *name, const IECore::Data *value
 			result.count = 1;
 			break;
 		}
+		case M44fDataTypeId :
+			result.type = NSITypeMatrix;
+			result.data = static_cast<const M44fData *>( value )->baseReadable();
+			result.count = 1;
+			break;
 		// Vector
 		case IntVectorDataTypeId :
 		{

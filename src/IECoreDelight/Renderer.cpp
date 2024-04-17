@@ -650,6 +650,7 @@ std::array<std::string, 4> g_surfaceShaderAttributeNames = { "osl:light", "light
 std::array<std::string, 2> g_volumeShaderAttributeNames = { "osl:volume", "volume" };
 std::array<std::string, 2> g_displacementShaderAttributeNames = { "osl:displacement", "displacement" };
 const InternedString g_USDLightAttributeName = "light";
+const InternedString g_USDSurfaceAttributeName = "surface";
 
 IECore::InternedString g_setsAttributeName( "sets" );
 
@@ -727,10 +728,10 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 						params.add( m.first.c_str(), d, true );
 					}
 				}
-				else if( boost::contains( m.first.string(), ":" ) || m.first == g_USDLightAttributeName )
+				else if( boost::contains( m.first.string(), ":" ) || m.first == g_USDLightAttributeName || m.first == g_USDSurfaceAttributeName )
 				{
 					// Attribute for another renderer - ignore
-					// Or a USDLight, which we've handled above - ignore
+					// Or a USD light/surface, which we've handled above - ignore
 				}
 				else
 				{
