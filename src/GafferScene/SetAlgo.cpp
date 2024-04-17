@@ -68,17 +68,17 @@ struct Nil {};
 
 // Determine which Ops are supported in SetExpressions
 // and provide a way to print them for debugging.
-enum Op { And, Or, AndNot, In, Containing };
+enum Op { Intersection, Union, Difference, In, Containing };
 
 std::ostream & operator<<( std::ostream &out, const Op &op )
 {
 	switch( op )
 	{
-		case Or :
+		case Union :
 			out << "|"; break;
-		case And :
+		case Intersection :
 			out << "&"; break;
-		case AndNot :
+		case Difference :
 			out << "-"; break;
 		case In :
 			out << "in"; break;
@@ -140,8 +140,8 @@ boost::phoenix::function<CreateBinaryOpImplementation> createBinaryOp;
 
 // Visiting the AST
 // ----------------
-// For a simple AST with only one operation (AND) on two sets (A and B)
-// the output will look like this: op:&(A, B)
+// For a simple AST with only one operation (Intersection) on two sets (A and B)
+// the output will look like this: op:&(A, B).
 // If one of the operands is an operation itself: op:&(A, op:|(B, C))
 struct AstPrinter
 {
@@ -265,17 +265,17 @@ struct AstEvaluator
 
 		switch( expr.op )
 		{
-			case Or :
+			case Union :
 			{
 				PathMatcher result = PathMatcher( left );
 				result.addPaths( right );
 				return result;
 			}
-			case And :
+			case Intersection :
 			{
 				return left.intersection( right );
 			}
-			case AndNot :
+			case Difference :
 			{
 				PathMatcher result = PathMatcher( left );
 				result.removePaths( right );
@@ -398,14 +398,15 @@ struct ExpressionGrammar : qi::grammar<Iterator, ExpressionAst(), ascii::space_t
 
 		/* Grammar Specification
 
-			 expression ->   andExpr  ( '|' andExpr | andExpr  )
-			 andExpr    ->   andNotExpr '&' andNotExpr
-			 andNotExpr ->   element    '-' element
-			 element    ->   identifier | '(' expression ')'
+			expression    ->   intersection ( '|' intersection | intersection )
+			intersection  ->   difference '&' difference
+			difference    ->   element '-' element
+			element       ->   identifier | '(' expression ')'
 
-			 This gives us implicit operator precedence in this order: -, &, |
-			 It also supports space separated lists (implicit OR).
-			 Note that sets can not have a name that starts with '/'.
+			This gives us implicit operator precedence in this order: -, &, |
+			It also supports space separated lists (implicit union).
+			Note that sets can not have a name that starts with '/'.
+
 		 */
 
 		// grammar                                                     bindings
@@ -419,24 +420,24 @@ struct ExpressionGrammar : qi::grammar<Iterator, ExpressionAst(), ascii::space_t
 			    );
 
 		containingExpression =
-			orExpression                                               [_val  = _1]
-			>> *(     ( containingKeyword >> orExpression              [createBinaryOp( _val, Containing, _1 )] )
+			unionExpression                                            [_val  = _1]
+			>> *(     ( containingKeyword >> unionExpression           [createBinaryOp( _val, Containing, _1 )] )
 			    );
 
-		orExpression =
-			andExpression                                              [_val  = _1]
-			>> *(     ( '|' >> andExpression                           [createBinaryOp( _val, Or, _1 )] )
-			    |     ( andExpression                                  [createBinaryOp( _val, Or, _1 )] )
+		unionExpression =
+			intersectionExpression                                     [_val  = _1]
+			>> *(     ( '|' >> intersectionExpression                  [createBinaryOp( _val, Union, _1 )] )
+			    |     ( intersectionExpression                         [createBinaryOp( _val, Union, _1 )] )
 			    );
 
-		andExpression =
-			andNotExpression                                           [_val  = _1]
-			>> *(     ( '&' >> andNotExpression                        [createBinaryOp( _val, And, _1 )] )
+		intersectionExpression =
+			differenceExpression                                       [_val  = _1]
+			>> *(     ( '&' >> differenceExpression                    [createBinaryOp( _val, Intersection, _1 )] )
 			    );
 
-		andNotExpression =
+		differenceExpression =
 			element                                                    [_val  = _1]
-			>> *(     ( '-' >> element                                 [createBinaryOp( _val, AndNot, _1 )] )
+			>> *(     ( '-' >> element                                 [createBinaryOp( _val, Difference, _1 )] )
 			    );
 
 		element =
@@ -454,15 +455,15 @@ struct ExpressionGrammar : qi::grammar<Iterator, ExpressionAst(), ascii::space_t
 		BOOST_SPIRIT_DEBUG_NODE(expression);
 		BOOST_SPIRIT_DEBUG_NODE(inExpression);
 		BOOST_SPIRIT_DEBUG_NODE(containingExpression);
-		BOOST_SPIRIT_DEBUG_NODE(andNotExpression);
-		BOOST_SPIRIT_DEBUG_NODE(andExpression);
-		BOOST_SPIRIT_DEBUG_NODE(orExpression);
+		BOOST_SPIRIT_DEBUG_NODE(differenceExpression);
+		BOOST_SPIRIT_DEBUG_NODE(intersectionExpression);
+		BOOST_SPIRIT_DEBUG_NODE(unionExpression);
 		BOOST_SPIRIT_DEBUG_NODE(identifier);
 	}
 
 	qi::rule<Iterator> inKeyword, containingKeyword, reservedWords;
 	qi::rule<Iterator, std::string()> identifier;
-	qi::rule<Iterator, ExpressionAst(), ascii::space_type> expression, inExpression, containingExpression, andNotExpression, andExpression, orExpression, element;
+	qi::rule<Iterator, ExpressionAst(), ascii::space_type> expression, inExpression, containingExpression, differenceExpression, intersectionExpression, unionExpression, element;
 };
 
 void expressionToAST( const std::string &setExpression, ExpressionAst &ast)
