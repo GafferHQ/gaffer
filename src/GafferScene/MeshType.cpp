@@ -57,6 +57,9 @@ MeshType::MeshType( const std::string &name )
 	addChild( new StringPlug( "meshType", Plug::In, "" ) );
 	addChild( new BoolPlug( "calculatePolygonNormals" ) );
 	addChild( new BoolPlug( "overwriteExistingNormals" ) );
+	addChild( new StringPlug( "interpolateBoundary", Plug::In, "" ) );
+	addChild( new StringPlug( "faceVaryingLinearInterpolation", Plug::In, "" ) );
+	addChild( new StringPlug( "triangleSubdivisionRule", Plug::In, "" ) );
 }
 
 MeshType::~MeshType()
@@ -93,13 +96,46 @@ const Gaffer::BoolPlug *MeshType::overwriteExistingNormalsPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
 }
 
+Gaffer::StringPlug *MeshType::interpolateBoundaryPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::StringPlug *MeshType::interpolateBoundaryPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+Gaffer::StringPlug *MeshType::faceVaryingLinearInterpolationPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::StringPlug *MeshType::faceVaryingLinearInterpolationPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+}
+
+Gaffer::StringPlug *MeshType::triangleSubdivisionRulePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 5 );
+}
+
+const Gaffer::StringPlug *MeshType::triangleSubdivisionRulePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 5 );
+}
+
 bool MeshType::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
 	return
 		ObjectProcessor::affectsProcessedObject( input ) ||
 		input == meshTypePlug() ||
 		input == calculatePolygonNormalsPlug() ||
-		input == overwriteExistingNormalsPlug()
+		input == overwriteExistingNormalsPlug() ||
+		input == interpolateBoundaryPlug() ||
+		input == faceVaryingLinearInterpolationPlug() ||
+		input == triangleSubdivisionRulePlug()
 	;
 }
 
@@ -109,6 +145,9 @@ void MeshType::hashProcessedObject( const ScenePath &path, const Gaffer::Context
 	meshTypePlug()->hash( h );
 	calculatePolygonNormalsPlug()->hash( h );
 	overwriteExistingNormalsPlug()->hash( h );
+	interpolateBoundaryPlug()->hash( h );
+	faceVaryingLinearInterpolationPlug()->hash( h );
+	triangleSubdivisionRulePlug()->hash( h );
 }
 
 IECore::ConstObjectPtr MeshType::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const
@@ -119,12 +158,12 @@ IECore::ConstObjectPtr MeshType::computeProcessedObject( const ScenePath &path, 
 		return inputObject;
 	}
 
+	IECore::InternedString empty( "" );
+
 	std::string meshType = meshTypePlug()->getValue();
-	if( meshType == "" )
-	{
-		// unchanged
-		return inputObject;
-	}
+	IECore::InternedString interpolateBoundary = interpolateBoundaryPlug()->getValue();
+	IECore::InternedString faceVaryingLinearInterpolation = faceVaryingLinearInterpolationPlug()->getValue();
+	IECore::InternedString triangleSubdivisionRule = triangleSubdivisionRulePlug()->getValue();
 
 	// Check if we need to recompute normals
 	bool doNormals = false;
@@ -135,25 +174,51 @@ IECore::ConstObjectPtr MeshType::computeProcessedObject( const ScenePath &path, 
 	}
 
 	// If we don't need to change anything, don't bother duplicating the input
-	if( inputGeometry->interpolation() == meshType && !doNormals )
+	if(
+		( meshType == "" || meshType == inputGeometry->interpolation() ) &&
+		( interpolateBoundary == empty || interpolateBoundary == inputGeometry->getInterpolateBoundary() ) &&
+		( faceVaryingLinearInterpolation == empty || faceVaryingLinearInterpolation == inputGeometry->getFaceVaryingLinearInterpolation() ) &&
+		( triangleSubdivisionRule == empty || triangleSubdivisionRule == inputGeometry->getTriangleSubdivisionRule() ) &&
+		!doNormals
+	)
 	{
 		return inputObject;
 	}
 
 	IECoreScene::MeshPrimitivePtr result = inputGeometry->copy();
-	result->setInterpolation( meshType );
-	if( meshType != "linear" )
+
+	if( meshType != "" )
 	{
-		IECoreScene::PrimitiveVariableMap::iterator varN = result->variables.find( "N" );
-		if( varN != result->variables.end() )
+		result->setInterpolation( meshType );
+
+		if( meshType != "linear" )
 		{
-			result->variables.erase( varN );
+			IECoreScene::PrimitiveVariableMap::iterator varN = result->variables.find( "N" );
+			if( varN != result->variables.end() )
+			{
+				result->variables.erase( varN );
+			}
+		}
+
+		if( doNormals )
+		{
+			result->variables[ "N" ] = MeshAlgo::calculateNormals( result.get(), PrimitiveVariable::Interpolation::Vertex, "P", context->canceller() );
 		}
 	}
 
-	if( doNormals )
+	if( interpolateBoundary != empty )
 	{
-		result->variables[ "N" ] = MeshAlgo::calculateNormals( result.get(), PrimitiveVariable::Interpolation::Vertex, "P", context->canceller() );
+		result->setInterpolateBoundary( interpolateBoundary );
+	}
+
+	if( faceVaryingLinearInterpolation != empty )
+	{
+		result->setFaceVaryingLinearInterpolation( faceVaryingLinearInterpolation );
+	}
+
+	if( triangleSubdivisionRule != empty )
+	{
+		result->setTriangleSubdivisionRule( triangleSubdivisionRule );
 	}
 
 	return result;

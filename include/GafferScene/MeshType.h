@@ -68,6 +68,15 @@ class GAFFERSCENE_API MeshType : public ObjectProcessor
 		Gaffer::BoolPlug *overwriteExistingNormalsPlug();
 		const Gaffer::BoolPlug *overwriteExistingNormalsPlug() const;
 
+		Gaffer::StringPlug *interpolateBoundaryPlug();
+		const Gaffer::StringPlug *interpolateBoundaryPlug() const;
+
+		Gaffer::StringPlug *faceVaryingLinearInterpolationPlug();
+		const Gaffer::StringPlug *faceVaryingLinearInterpolationPlug() const;
+
+		Gaffer::StringPlug *triangleSubdivisionRulePlug();
+		const Gaffer::StringPlug *triangleSubdivisionRulePlug() const;
+
 	protected :
 
 		bool affectsProcessedObject( const Gaffer::Plug *input ) const override;

@@ -38,6 +38,8 @@ import Gaffer
 import GafferUI
 import GafferScene
 
+import IECoreScene
+
 ##########################################################################
 # Metadata
 ##########################################################################
@@ -96,6 +98,75 @@ Gaffer.Metadata.registerNode(
 			this on will force new normals to be calculated even for
 			meshes which had them already.
 			""",
+
+		],
+
+		"interpolateBoundary" : [
+
+			"description",
+			"""
+			Specifies which parts of mesh boundaries are forced to exactly meet the boundary.
+			Without this forcing, a subdivision surface will naturally shrink back from the boundary as it
+			smooths out.
+
+			Usually, you want to force both edges and corners to exactly meet the boundary. The main reasons to
+			change this are to use `Edge Only` if you want to produce curved edges from polygonal boundaries,
+			or to use `None` if you're doing something tricky with seamlessly splitting subdiv meshes by
+			providing the split meshes with a border of shared polygons in order to get continuous tangents.
+			""",
+
+			"preset:Unchanged", "",
+			"preset:None", IECoreScene.MeshPrimitive.interpolateBoundaryNone,
+			"preset:Edge Only", IECoreScene.MeshPrimitive.interpolateBoundaryEdgeOnly,
+			"preset:Edge And Corner", IECoreScene.MeshPrimitive.interpolateBoundaryEdgeAndCorner,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"faceVaryingLinearInterpolation" : [
+
+			# This name is so long it's getting cropped ... better to lose the end than the start.
+			"label", "Face Varying Linear Interp..",
+
+			"description",
+			"""
+			Specifies where face varying primitive variables should use a simple linear interpolation instead
+			of being smoothed.
+
+			In order for UVs to correspond to approximately the same texture areas as the original polygons,
+			usually you want to, at minimum, pin the outside corners. But pinning the entire boundary causes
+			some pretty weird discontinuities, so finding the right compromise is tricky.
+
+			See the OpenSubdiv docs for explanation of the details of options like `Corners Plus 1`:
+			https://graphics.pixar.com/opensubdiv/docs/subdivision_surfaces.html#schemes-and-options
+			""",
+
+			"preset:Unchanged", "",
+			"preset:None", IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationNone,
+			"preset:Corners Only", IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationCornersOnly,
+			"preset:Corners Plus 1", IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationCornersPlus1,
+			"preset:Corners Plus 2", IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationCornersPlus2,
+			"preset:Boundaries", IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationBoundaries,
+			"preset:All", IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationAll,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"triangleSubdivisionRule" : [
+
+			"description",
+			"""
+			Option to use a non-standard `Smooth` subdivision rule that provides slightly better results
+			at triangular faces in Catmull-Clark meshes than the standard Catmull-Clark algorithm.
+			""",
+
+			"preset:Unchanged", "",
+			"preset:CatmullClark", IECoreScene.MeshPrimitive.triangleSubdivisionRuleCatmullClark,
+			"preset:Smooth", IECoreScene.MeshPrimitive.triangleSubdivisionRuleSmooth,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 
