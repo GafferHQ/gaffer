@@ -46,43 +46,43 @@ class "GafferArnoldLightAPI" (
 {
 
 	string inputs:arnold:aov = "default" (
-		displayGroup = "Arnold"
-		displayName = "AOV"
+		displayGroup = "Basic"
+		displayName = "AOV (Arnold)"
 	)
 
 	int inputs:arnold:samples = 1 (
-		displayGroup = "Arnold.Sampling"
-		displayName = "Samples"
+		displayGroup = "Sampling"
+		displayName = "Samples (Arnold)"
 	)
 
 	int inputs:arnold:volume_samples = 2 (
-		displayGroup = "Arnold.Sampling"
-		displayName = "Volume Samples"
+		displayGroup = "Sampling"
+		displayName = "Volume Samples (Arnold)"
 	)
 
 	float inputs:arnold:sss = 1.0 (
-		displayGroup = "Arnold.Refine"
-		displayName = "SSS Multiplier"
+		displayGroup = "Refine"
+		displayName = "SSS (Arnold)"
 	)
 
 	float inputs:arnold:indirect = 1.0(
-		displayGroup = "Arnold.Refine"
-		displayName = "Indirect Multiplier"
+		displayGroup = "Refine"
+		displayName = "Indirect (Arnold)"
 	)
 
 	float inputs:arnold:volume = 1.0 (
-		displayGroup = "Arnold.Refine"
-		displayName = "Volume Multiplier"
+		displayGroup = "Refine"
+		displayName = "Volume (Arnold)"
 	)
 
 	bool inputs:arnold:cast_volumetric_shadows = true (
-		displayGroup = "Arnold.Shadows"
-		displayName = "Cast Volumetric Shadows"
+		displayGroup = "Shadows"
+		displayName = "Cast Volumetric (Arnold)"
 	)
 
 	int inputs:arnold:max_bounces = 999 (
-		displayGroup = "Arnold.Refine"
-		displayName = "Max Bounces"
+		displayGroup = "Refine"
+		displayName = "Max Bounces (Arnold)"
 	)
 
 }
@@ -98,13 +98,13 @@ class "GafferArnoldCylinderLightAPI" (
 {
 
 	float inputs:arnold:camera = 0.0 (
-		displayGroup = "Arnold.Refine"
-		displayName = "Camera Multiplier"
+		displayGroup = "Refine"
+		displayName = "Camera (Arnold)"
 	)
 
 	float inputs:arnold:transmission = 0.0 (
-		displayGroup = "Arnold.Refine"
-		displayName = "Transmission Multiplier"
+		displayGroup = "Refine"
+		displayName = "Transmission (Arnold)"
 	)
 
 }
@@ -120,18 +120,18 @@ class "GafferArnoldDiskLightAPI" (
 {
 
 	float inputs:arnold:spread = 1.0 (
-		displayGroup = "Arnold.Geometry"
+		displayGroup = "Geometry"
 		displayName = "Spread"
 	)
 
 	float inputs:arnold:camera = 0.0 (
-		displayGroup = "Arnold.Refine"
-		displayName = "Camera Multiplier"
+		displayGroup = "Refine"
+		displayName = "Camera (Arnold)"
 	)
 
 	float inputs:arnold:transmission = 0.0 (
-		displayGroup = "Arnold.Refine"
-		displayName = "Transmission Multiplier"
+		displayGroup = "Refine"
+		displayName = "Transmission (Arnold)"
 	)
 
 }
@@ -147,13 +147,13 @@ class "GafferArnoldPointLightAPI" (
 {
 
 	float inputs:arnold:camera = 0.0 (
-		displayGroup = "Arnold.Refine"
-		displayName = "Camera Multiplier"
+		displayGroup = "Refine"
+		displayName = "Camera (Arnold)"
 	)
 
 	float inputs:arnold:transmission = 0.0 (
-		displayGroup = "Arnold.Refine"
-		displayName = "Transmission Multiplier"
+		displayGroup = "Refine"
+		displayName = "Transmission (Arnold)"
 	)
 
 }
@@ -169,33 +169,33 @@ class "GafferArnoldQuadLightAPI" (
 {
 
 	float inputs:arnold:roundness = 0.0 (
-		displayGroup = "Arnold.Geometry"
-		displayName = "Roundness"
+		displayGroup = "Geometry"
+		displayName = "Roundness (Arnold)"
 	)
 
 	float inputs:arnold:soft_edge = 0.0 (
-		displayGroup = "Arnold.Geometry"
-		displayName = "Soft Edge"
+		displayGroup = "Geometry"
+		displayName = "Soft Edge (Arnold)"
 	)
 
 	float inputs:arnold:spread = 1.0 (
-		displayGroup = "Arnold.Geometry"
-		displayName = "Spread"
+		displayGroup = "Geometry"
+		displayName = "Spread (Arnold)"
 	)
 
 	int inputs:arnold:resolution = 512 (
-		displayGroup = "Arnold.Sampling"
-		displayName = "Resolution"
+		displayGroup = "Sampling"
+		displayName = "Resolution (Arnold)"
 	)
 
 	float inputs:arnold:camera = 0.0 (
-		displayGroup = "Arnold.Refine"
-		displayName = "Camera Multiplier"
+		displayGroup = "Refine"
+		displayName = "Camera (Arnold)"
 	)
 
 	float inputs:arnold:transmission = 0.0 (
-		displayGroup = "Arnold.Refine"
-		displayName = "Transmission Multiplier"
+		displayGroup = "Refine"
+		displayName = "Transmission (Arnold)"
 	)
 
 }
@@ -212,28 +212,28 @@ class "GafferArnoldSkydomeLightAPI" (
 
 	token inputs:arnold:portal_mode = "interior_only" (
 		allowedTokens = [ "off", "interior_only", "interior_exterior" ]
-		displayGroup = "Arnold"
-		displayName = "Portal Mode"
+		displayGroup = "Basic"
+		displayName = "Portal Mode (Arnold)"
 	)
 
 	bool inputs:arnold:aov_indirect = false (
-		displayGroup = "Arnold"
-		displayName = "AOV Indirect"
+		displayGroup = "Basic"
+		displayName = "AOV Indirect (Arnold)"
 	)
 
 	int inputs:arnold:resolution = 1000 (
-		displayGroup = "Arnold.Sampling"
-		displayName = "Resolution"
+		displayGroup = "Sampling"
+		displayName = "Resolution (Arnold)"
 	)
 
 	float inputs:arnold:camera = 1.0 (
-		displayGroup = "Arnold.Refine"
-		displayName = "Camera Multiplier"
+		displayGroup = "Refine"
+		displayName = "Camera (Arnold)"
 	)
 
 	float inputs:arnold:transmission = 1.0 (
-		displayGroup = "Arnold.Refine"
-		displayName = "Transmission Multiplier"
+		displayGroup = "Refine"
+		displayName = "Transmission (Arnold)"
 	)
 
 }
