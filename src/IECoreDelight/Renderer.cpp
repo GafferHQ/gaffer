@@ -965,7 +965,7 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 
 	public :
 
-		DelightObject( NSIContext_t context, const std::string &name, DelightHandleSharedPtr instance, DelightHandle::Ownership ownership )
+		DelightObject( NSIContext_t context, const std::string &name, DelightHandleSharedPtr instance, DelightHandle::Ownership ownership, std::string root = NSI_SCENE_ROOT )
 			:	m_transformHandle( context, name, ownership, "transform", {} ), m_instance( instance ), m_haveTransform( false )
 		{
 			if( m_instance )
@@ -981,7 +981,7 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 			NSIConnect(
 				m_transformHandle.context(),
 				m_transformHandle.name(), "",
-				NSI_SCENE_ROOT, "objects",
+				root.c_str(), "objects",
 				0, nullptr
 			);
 		}
@@ -1107,8 +1107,8 @@ class DelightLight : public DelightObject
 
 	public :
 
-		DelightLight( NSIContext_t context, const std::string &name, DelightHandleSharedPtr instance, DelightHandle::Ownership ownership )
-			: DelightObject( context, name, instance, ownership ), m_lightGeometryType( nullptr )
+		DelightLight( NSIContext_t context, const std::string &name, DelightHandleSharedPtr instance, DelightHandle::Ownership ownership, std::string root = NSI_SCENE_ROOT  )
+			: DelightObject( context, name, instance, ownership, root ), m_lightGeometryType( nullptr )
 		{
 		}
 
@@ -1195,28 +1195,11 @@ class DelightProceduralRenderer final : public IECoreScenePreview::Renderer
 	public :
 
 		DelightProceduralRenderer( NSIContext_t context, DelightHandle::Ownership ownership, const char *handle )
-			:	m_context( context ), m_ownership( ownership ), m_frame( 1 )
+			:	m_context( context ), m_ownership( ownership ), m_frame( 1 ), m_root( handle )
 		{
 			vector<NSIParam_t> params;
 
 			m_ownership = DelightHandle::Unowned;
-
-			const char *apistream = "apistream";
-			const char *streamformat = "binarynsi";
-			const char *streamcompression = "gzip";
-			std::string filename = handle;
-			boost::replace_all( filename, ":", "_" );
-			filename = std::filesystem::temp_directory_path().string() + "/gaffer/" + filename + ".nsi.gz";
-			const char *fileNamePtr = filename.c_str();
-
-			params = {
-				{ "type", &apistream, NSITypeString, 0, 1, 0 },
-				{ "streamformat", &streamformat, NSITypeString, 0, 1, 0 },
-				{ "streamfilename", &fileNamePtr, NSITypeString , 0, 1, 0 },
-				{ "streamcompression", &streamcompression, NSITypeString , 0, 1, 0 }
-			};
-
-			m_context = NSIBegin( params.size(), params.data() );
 			m_instanceCache = new InstanceCache( m_context, m_ownership );
 			m_attributesCache = new AttributesCache( m_context, m_ownership );
 		}
@@ -1225,7 +1208,6 @@ class DelightProceduralRenderer final : public IECoreScenePreview::Renderer
 		{
 			m_attributesCache.reset();
 			m_instanceCache.reset();
-			NSIEnd( m_context );
 		}
 
 		IECore::InternedString name() const override
@@ -1268,7 +1250,7 @@ class DelightProceduralRenderer final : public IECoreScenePreview::Renderer
 				instance = m_instanceCache->get( object );
 			}
 
-			ObjectInterfacePtr result = new DelightLight( m_context, name, instance, m_ownership );
+			ObjectInterfacePtr result = new DelightLight( m_context, name, instance, m_ownership, m_root );
 			result->attributes( attributes );
 
 			return result;
@@ -1292,7 +1274,7 @@ class DelightProceduralRenderer final : public IECoreScenePreview::Renderer
 				return nullptr;
 			}
 
-			ObjectInterfacePtr result = new DelightObject( m_context, name, instance, m_ownership );
+			ObjectInterfacePtr result = new DelightObject( m_context, name, instance, m_ownership, m_root );
 			result->attributes( attributes );
 			return result;
 		}
@@ -1306,7 +1288,7 @@ class DelightProceduralRenderer final : public IECoreScenePreview::Renderer
 				return nullptr;
 			}
 
-			ObjectInterfacePtr result = new DelightObject( m_context, name, instance, m_ownership );
+			ObjectInterfacePtr result = new DelightObject( m_context, name, instance, m_ownership, m_root );
 			result->attributes( attributes );
 			return result;
 		}
@@ -1342,6 +1324,7 @@ class DelightProceduralRenderer final : public IECoreScenePreview::Renderer
 		DelightHandle::Ownership m_ownership;
 
 		int m_frame;
+		std::string m_root;
 
 		InstanceCachePtr m_instanceCache;
 		AttributesCachePtr m_attributesCache;
@@ -1356,19 +1339,7 @@ IE_CORE_DECLAREPTR( DelightProceduralRenderer )
 
 bool convertProcedural( IECoreScenePreview::ConstProceduralPtr procedural, NSIContext_t context, DelightHandle::Ownership ownership, const char *handle )
 {
-	NSICreate( context, handle, "procedural", 0, nullptr );
-
-	ParameterList procParameters;
-
-	std::string type = "apistream";
-	std::string filename = handle;
-	boost::replace_all( filename, ":", "_" );
-	filename = std::filesystem::temp_directory_path().string() + "/gaffer/" + filename + ".nsi.gz";
-
-	procParameters.add( "type", type );
-	procParameters.add( "filename", filename );
-
-	NSISetAttribute( context, handle, procParameters.size(), procParameters.data() );
+	NSICreate( context, handle, "transform", 0, nullptr );
 
 	DelightProceduralRendererPtr renderer = new DelightProceduralRenderer( context, ownership, handle );
 
