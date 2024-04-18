@@ -4,6 +4,7 @@
 Improvements
 ------------
 
+- Group : Added `sets` plug, to control what sets the group belongs to.
 - USD : Added automatic render-time translation of UsdPreviewSurface shaders to Cycles.
 
 1.4.0.0 (relative to 1.3.16.0)
