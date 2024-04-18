@@ -799,6 +799,46 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 				with self.assertRaises( Gaffer.ProcessException ) :
 					group["out"].set( "A" )
 
+	def testGroupSets( self ) :
+
+		plane = GafferScene.Plane()
+		plane["sets"].setValue( "A" )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane["out"] )
+
+		self.assertEqual(
+			group["out"].setNames(), plane["out"].setNames()
+		)
+
+		group["sets"].setValue( "B" )
+		self.assertEqual(
+			group["out"].setNames(), IECore.InternedStringVectorData( [ "A", "B" ] )
+		)
+
+		self.assertEqual( group["out"].set( "A" ).value, IECore.PathMatcher( [ "/group/plane" ] ) )
+		self.assertEqual( group["out"].set( "B" ).value, IECore.PathMatcher( [ "/group" ] ) )
+
+		group["name"].setValue( "world" )
+		self.assertEqual( group["out"].set( "A" ).value, IECore.PathMatcher( [ "/world/plane" ] ) )
+		self.assertEqual( group["out"].set( "B" ).value, IECore.PathMatcher( [ "/world" ] ) )
+
+		group["sets"].setValue( "A" )
+		self.assertEqual(
+			group["out"].setNames(), IECore.InternedStringVectorData( [ "A" ] )
+		)
+		self.assertEqual( group["out"].set( "A" ).value, IECore.PathMatcher( [ "/world/plane", "/world" ] ) )
+		self.assertEqual( group["out"].set( "B" ).value, IECore.PathMatcher() )
+
+		group["sets"].setValue( "B C" )
+		self.assertEqual(
+			group["out"].setNames(), IECore.InternedStringVectorData( [ "A", "B", "C" ] )
+		)
+		self.assertEqual( group["out"].set( "A" ).value, IECore.PathMatcher( [ "/world/plane" ] ) )
+		self.assertEqual( group["out"].set( "B" ).value, IECore.PathMatcher( [ "/world" ] ) )
+		self.assertEqual( group["out"].set( "C" ).value, IECore.PathMatcher( [ "/world" ] ) )
+		self.assertEqual( group["out"].set( "D" ).value, IECore.PathMatcher() )
+
 	def setUp( self ) :
 
 		GafferSceneTest.SceneTestCase.setUp( self )

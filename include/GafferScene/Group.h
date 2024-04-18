@@ -67,6 +67,9 @@ class GAFFERSCENE_API Group : public SceneProcessor
 		Gaffer::StringPlug *namePlug();
 		const Gaffer::StringPlug *namePlug() const;
 
+		Gaffer::StringPlug *setsPlug();
+		const Gaffer::StringPlug *setsPlug() const;
+
 		Gaffer::TransformPlug *transformPlug();
 		const Gaffer::TransformPlug *transformPlug() const;
 
