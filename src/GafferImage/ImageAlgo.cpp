@@ -38,12 +38,7 @@
 
 #include "IECore/CompoundData.h"
 
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathBox.h"
-#else
 #include "Imath/ImathBox.h"
-#endif
 
 #include "fmt/format.h"
 

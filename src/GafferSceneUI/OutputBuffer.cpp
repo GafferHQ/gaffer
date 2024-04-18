@@ -39,12 +39,7 @@
 #include "IECoreImage/DisplayDriver.h"
 #include "IECoreImage/OpenImageIOAlgo.h"
 
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathBoxAlgo.h"
-#else
 #include "Imath/ImathBoxAlgo.h"
-#endif
 
 #include "OpenImageIO/imageio.h"
 

@@ -41,12 +41,7 @@
 #include "GafferUI/Style.h"
 
 IECORE_PUSH_DEFAULT_VISIBILITY
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathEuler.h"
-#else
 #include "Imath/ImathEuler.h"
-#endif
 IECORE_POP_DEFAULT_VISIBILITY
 
 namespace GafferSceneUI

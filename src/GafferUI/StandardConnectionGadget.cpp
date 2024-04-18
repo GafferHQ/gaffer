@@ -49,14 +49,8 @@
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/UndoScope.h"
 
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathBoxAlgo.h"
-#include "OpenEXR/ImathFun.h"
-#else
 #include "Imath/ImathBoxAlgo.h"
 #include "Imath/ImathFun.h"
-#endif
 
 #include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"

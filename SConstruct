@@ -830,38 +830,6 @@ if ( int( baseLibEnv["BOOST_MAJOR_VERSION"] ), int( baseLibEnv["BOOST_MINOR_VERS
 	# the reams of warnings triggered by that.
 	baseLibEnv.Append( CPPDEFINES = [ "BOOST_BIND_GLOBAL_PLACEHOLDERS" ] )
 
-# Determine Imath version. The transition between 2 and 3 is a bit of a mess.
-# Imath 3 provides `Imath/ImathConfig.h` for determining version, but that isn't
-# provided by Imath 2, which comes with `OpenEXR/IlmBaseConfig.h` instead. The
-# one thing we can rely on existing all the time is the conceptually unrelated
-# `OpenEXR/OpenEXRConfig.h`, so we use that, even though we don't directly
-# depend on OpenEXR ourselves.
-
-exrVersionHeader = baseLibEnv.FindFile(
-	"OpenEXR/OpenEXRConfig.h",
-	[ "$BUILD_DIR/include" ] +
-	baseLibEnv["LOCATE_DEPENDENCY_SYSTEMPATH"] +
-	baseLibEnv["LOCATE_DEPENDENCY_CPPPATH"]
-)
-
-if not exrVersionHeader :
-	sys.stderr.write( "ERROR : unable to find \"OpenEXR/OpenEXRConfig.h\".\n" )
-	Exit( 1 )
-
-for line in open( str( exrVersionHeader ) ) :
-	m = re.match( r'^#define OPENEXR_VERSION_STRING "(\d+)\.(\d+)\.(\d+)"$', line )
-	if m :
-		baseLibEnv["IMATH_MAJOR_VERSION"] = int( m.group( 1 ) )
-
-if baseLibEnv.get( "IMATH_MAJOR_VERSION", None ) is None :
-	sys.stderr.write( "ERROR : unable to determine version from \"{}\".\n".format( exrVersionHeader ) )
-	Exit( 1 )
-
-# Imath 2 came with a separate `Half` library but in Imath 3 everything is in
-# the `Imath` library.
-
-baseLibEnv["HALF_LIBRARY"] = "Half" if baseLibEnv["IMATH_MAJOR_VERSION"] < 3 else ""
-
 ###############################################################################################
 # The basic environment for building python modules
 ###############################################################################################
@@ -1039,11 +1007,7 @@ cyclesDefines = [
 
 libraries = {
 
-	"Gaffer" : {
-		"envAppends" : {
-			"LIBS" : [ "$HALF_LIBRARY" ],
-		},
-	},
+	"Gaffer" : {},
 
 	"GafferTest" : {
 		"envAppends" : {
@@ -1124,7 +1088,7 @@ libraries = {
 
 	"GafferScene" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "Iex$IMATH_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX",  "IECoreScene$CORTEX_LIB_SUFFIX", "GafferImage", "GafferDispatch", "$HALF_LIBRARY", "osdCPU" ],
+			"LIBS" : [ "Gaffer", "Iex$IMATH_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX",  "IECoreScene$CORTEX_LIB_SUFFIX", "GafferImage", "GafferDispatch", "osdCPU" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferScene", "GafferDispatch", "GafferImage", "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX" ],
