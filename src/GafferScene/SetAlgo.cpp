@@ -93,7 +93,6 @@ struct ExpressionAst
 	using type = boost::variant<
 		Nil,
 		std::string, // identifier
-		boost::recursive_wrapper<ExpressionAst>,
 		boost::recursive_wrapper<BinaryOp>
 	>;
 
