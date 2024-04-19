@@ -998,7 +998,7 @@ void IECoreArnold::ShaderNetworkAlgo::convertUSDShaders( ShaderNetwork *shaderNe
 		else if( shader->getName() == "UsdTransform2d" )
 		{
 			newShader = new Shader( "matrix_multiply_vector" );
-			transferUSDParameter( shaderNetwork, handle, shader.get(), g_inParameter, newShader.get(), g_inputParameter, string() );
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_inParameter, newShader.get(), g_inputParameter, Color3f( 0 ) );
 			const V2f t = parameterValue( shader.get(), g_translationParameter, V2f( 0 ) );
 			const float r = parameterValue( shader.get(), g_rotationParameter, 0.0f );
 			const V2f s = parameterValue( shader.get(), g_scaleParameter, V2f( 1 ) );

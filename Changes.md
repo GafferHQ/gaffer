@@ -25,6 +25,7 @@ Fixes
 
 - Viewer : Fixed Cycles shader balls.
 - TweakPlug : Fixed incorrect results and potential crashes in list modes.
+- USD : Fixed `Unsupported value type "StringData" for parameter "input"` warning when converting `UsdTransform2d` shaders with no `in` connections to Arnold.
 
 API
 ---
