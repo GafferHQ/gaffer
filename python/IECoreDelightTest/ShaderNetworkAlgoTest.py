@@ -343,6 +343,7 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 			self.assertEqual( texture.parameters["file"].value, "test.png" )
 			self.assertEqual( texture.parameters["wrapS"].value, "useMetadata" )
 			self.assertEqual( texture.parameters["wrapT"].value, "repeat" )
+			self.assertEqual( texture.parameters["file_meta_colorspace"].value, "auto" )
 
 	def testConvertSimpleUSDNormalTexture( self ) :
 
@@ -391,6 +392,7 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 			self.assertEqual( texture.parameters["file"].value, "test.png" )
 			self.assertEqual( texture.parameters["wrapS"].value, "useMetadata" )
 			self.assertEqual( texture.parameters["wrapT"].value, "repeat" )
+			self.assertEqual( texture.parameters["file_meta_colorspace"].value, "raw" )
 
 	def testConvertTransformedUSDUVTexture( self ) :
 
@@ -440,6 +442,7 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 		self.assertEqual( texture.parameters["file"].value, "test.png" )
 		self.assertEqual( texture.parameters["wrapS"].value, "repeat" )
 		self.assertEqual( texture.parameters["wrapT"].value, "repeat" )
+		self.assertEqual( texture.parameters["file_meta_colorspace"].value, "auto" )
 
 		uvReader = convertedNetwork.getShader( "uvReader" )
 		self.assertEqual( uvReader.name, "dlPrimitiveAttribute" )

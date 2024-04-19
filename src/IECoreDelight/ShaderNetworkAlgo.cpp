@@ -426,6 +426,7 @@ const InternedString g_exposureParameter( "exposure" );
 const InternedString g_fallbackParameter( "fallback" );
 const InternedString g_fallbackValueParameter( "fallback_value" );
 const InternedString g_fileParameter( "file" );
+const InternedString g_fileMetaColorSpaceParameter( "file_meta_colorspace" );
 const InternedString g_gParameter( "g" );
 const InternedString g_heightParameter( "height" );
 const InternedString g_inParameter( "in" );
@@ -462,6 +463,7 @@ const InternedString g_roughnessParameter( "roughness" );
 const InternedString g_scaleParameter( "scale" );
 const InternedString g_shapingConeAngleParameter( "shaping:cone:angle" );
 const InternedString g_shapingConeSoftnessParameter( "shaping:cone:softness" );
+const InternedString g_sourceColorSpaceParameter( "sourceColorSpace" );
 const InternedString g_specularParameter( "specular" );
 const InternedString g_specularColorParameter( "specularColor" );
 const InternedString g_specularColorDelightParameter( "specular_color" );
@@ -750,6 +752,7 @@ void convertUSDUVTextures( ShaderNetwork *network )
 
 		ShaderPtr imageShader = new Shader( "__usd/__usdUVTexture", "osl:shader" );
 		transferUSDParameter( network, handle, shader.get(), g_fileParameter, imageShader.get(), g_fileParameter, std::string() );
+		transferUSDParameter( network, handle, shader.get(), g_sourceColorSpaceParameter, imageShader.get(), g_fileMetaColorSpaceParameter, std::string( "auto" ) );
 
 		transferUSDParameter( network, handle, shader.get(), g_fallbackParameter, imageShader.get(), g_fallbackParameter, Color4f( 0, 0, 0, 1 ) );
 		transferUSDParameter( network, handle, shader.get(), g_scaleParameter, imageShader.get(), g_scaleParameter, Color4f( 1 ) );

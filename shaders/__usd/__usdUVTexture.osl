@@ -51,6 +51,7 @@ string convertWrap( string wrap )
 shader __usdUVTexture
 (
 	string file = "",
+	string file_meta_colorspace = "",
 	float uvCoord[2] = {0, 0},
 	string wrapS = "default",
 	string wrapT = "default",
