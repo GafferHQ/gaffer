@@ -222,6 +222,14 @@ class MeshAlgoTessellateTest( GafferTest.TestCase ) :
 			[ round( uv[0] * 1000 + uv[1] * 1000000 ) for uv in m["uv"].data ]
 		) )
 
+		m["constant"] = IECoreScene.PrimitiveVariable( Interp.Constant, IECore.StringData( "testString" ) )
+		m["constantVector"] = IECoreScene.PrimitiveVariable( Interp.Constant, IECore.IntVectorData( [ 4, 5, 6 ] ) )
+		m["constantIndexed"] = IECoreScene.PrimitiveVariable(
+			Interp.Constant,
+			IECore.Color3fVectorData( [ imath.Color3f( 0.3 ), imath.Color3f( 0.7 ) ] ),
+			IECore.IntVectorData( [ 0, 1, 1, 1, 0, 1, 1, 0, 0, 0 ] )
+		)
+
 		if triangular:
 
 			uniformSource = IECoreScene.PrimitiveVariable( m["uv"] )

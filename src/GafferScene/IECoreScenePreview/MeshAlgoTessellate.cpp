@@ -1490,7 +1490,7 @@ MeshPrimitivePtr MeshAlgo::tessellateMesh(
 	{
 		if( it.second.interpolation == PrimitiveVariable::Constant )
 		{
-			result->variables[it.first] = PrimitiveVariable( PrimitiveVariable::Constant, const_cast<Data*>( it.second.data.get() ) );
+			result->variables[it.first] = PrimitiveVariable( PrimitiveVariable::Constant, it.second.data, it.second.indices );
 		}
 	}
 
