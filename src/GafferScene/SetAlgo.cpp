@@ -476,8 +476,7 @@ void expressionToAST( const std::string &setExpression, ExpressionAst &ast)
 		std::cout << "-------------------------\n";
 		std::cout << "Parsing of '" << setExpression <<"' succeeded.\n";
 		std::cout << "Resulting AST:\n";
-		AstPrinter printer;
-		printer(ast);
+		std::cout << ast;
 		std::cout << "\n-------------------------\n";
 		#endif
 	}
