@@ -7,6 +7,7 @@ Improvements
 - Group : Added `sets` plug, to control what sets the group belongs to.
 - USD : Added automatic render-time translation of UsdPreviewSurface shaders to Cycles.
 - SetEditor : Added support for dragging a set name onto a node in the Graph Editor to create or modify a connected `SetFilter` node. Holding <kbd>Shift</kbd> while dragging will add to the set expression. Holding <kbd>Control</kbd> will remove from the set expression. Only set expressions with a simple list of sets are supported. Expressions with boolean or hierarchy operators are not supported.
+- GraphEditor : Improved pointer used to indicate when dropping a location would find the source node.
 
 1.4.0.0 (relative to 1.3.16.0)
 =======
