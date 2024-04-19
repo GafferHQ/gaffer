@@ -145,11 +145,6 @@ struct AstPrinter
 		stream << n;
 	}
 
-	void operator()( const ExpressionAst &ast ) const
-	{
-		boost::apply_visitor( *this, ast );
-	}
-
 	void operator()( const Nil &nil ) const
 	{
 	}
@@ -170,8 +165,7 @@ struct AstPrinter
 // support for printing ExpressionsAst's for debugging through BOOST_SPIRIT_DEBUG
 std::ostream& operator<<( std::ostream& stream, const ExpressionAst& expr )
 {
-	AstPrinter printer( stream );
-	printer( expr );
+	boost::apply_visitor( AstPrinter( stream ), expr );
 	return stream;
 }
 #endif
@@ -232,11 +226,6 @@ struct AstEvaluator
 			}
 			return result;
 		}
-	}
-
-	result_type operator()( const ExpressionAst &ast ) const
-	{
-		return boost::apply_visitor( *this, ast );
 	}
 
 	result_type operator()( const Nil &nil ) const
@@ -349,11 +338,6 @@ struct AstHasher
 				m_hash.append( m_scene->setPlug()->hash() );
 			}
 		}
-	}
-
-	void operator()( const ExpressionAst &ast )
-	{
-		boost::apply_visitor( *this, ast );
 	}
 
 	void operator()( const BinaryOp &expr )
@@ -510,9 +494,7 @@ PathMatcher evaluateSetExpression( const std::string &setExpression, const Scene
 {
 	ExpressionAst ast;
 	expressionToAST( setExpression, ast );
-
-	AstEvaluator eval( scene );
-	return eval( ast );
+	return boost::apply_visitor( AstEvaluator( scene ), ast );
 }
 
 void setExpressionHash( const std::string &setExpression, const ScenePlug* scene, IECore::MurmurHash &h )
@@ -521,7 +503,7 @@ void setExpressionHash( const std::string &setExpression, const ScenePlug* scene
 	expressionToAST( setExpression, ast );
 
 	AstHasher hasher = AstHasher( scene, h );
-	hasher(ast);
+	boost::apply_visitor( hasher, ast );
 }
 
 IECore::MurmurHash setExpressionHash( const std::string &setExpression, const ScenePlug* scene)
