@@ -88,23 +88,11 @@ std::ostream & operator<<( std::ostream &out, const Op &op )
 	return out;
 }
 
-struct ExpressionAst
-{
-	using type = boost::variant<
-		Nil,
-		std::string, // identifier
-		boost::recursive_wrapper<BinaryOp>
-	>;
-
-	ExpressionAst()
-		: expr( Nil() ) {}
-
-	template <typename Expr>
-	ExpressionAst( const Expr &expr )
-		: expr( expr ) {}
-
-	type expr;
-};
+using ExpressionAst = boost::variant<
+	Nil,
+	std::string, // identifier
+	boost::recursive_wrapper<BinaryOp>
+>;
 
 struct BinaryOp
 {
@@ -127,7 +115,7 @@ struct CreateBinaryOpImplementation
 
 	ExpressionAst & operator()( ExpressionAst &lhs, Op op, ExpressionAst &rhs ) const
 	{
-		lhs.expr = BinaryOp( lhs.expr, op, rhs );
+		lhs = BinaryOp( lhs, op, rhs );
 		return lhs;
 	}
 
@@ -159,7 +147,7 @@ struct AstPrinter
 
 	void operator()( const ExpressionAst &ast ) const
 	{
-		boost::apply_visitor( *this, ast.expr );
+		boost::apply_visitor( *this, ast );
 	}
 
 	void operator()( const Nil &nil ) const
@@ -169,9 +157,9 @@ struct AstPrinter
 	void operator()( const BinaryOp &expr ) const
 	{
 		stream << "op:" << expr.op << "(";
-		boost::apply_visitor( *this, expr.left.expr );
+		boost::apply_visitor( *this, expr.left );
 		stream << ", ";
-		boost::apply_visitor( *this, expr.right.expr );
+		boost::apply_visitor( *this, expr.right );
 		stream << ')';
 	}
 
@@ -248,7 +236,7 @@ struct AstEvaluator
 
 	result_type operator()( const ExpressionAst &ast ) const
 	{
-		return boost::apply_visitor( *this, ast.expr );
+		return boost::apply_visitor( *this, ast );
 	}
 
 	result_type operator()( const Nil &nil ) const
@@ -259,8 +247,8 @@ struct AstEvaluator
 
 	result_type operator()( const BinaryOp &expr ) const
 	{
-		PathMatcher left = boost::apply_visitor( *this, expr.left.expr );
-		PathMatcher right = boost::apply_visitor( *this, expr.right.expr );
+		PathMatcher left = boost::apply_visitor( *this, expr.left );
+		PathMatcher right = boost::apply_visitor( *this, expr.right );
 
 		switch( expr.op )
 		{
@@ -365,14 +353,14 @@ struct AstHasher
 
 	void operator()( const ExpressionAst &ast )
 	{
-		boost::apply_visitor( *this, ast.expr );
+		boost::apply_visitor( *this, ast );
 	}
 
 	void operator()( const BinaryOp &expr )
 	{
 		m_hash.append( expr.op );
-		boost::apply_visitor( *this, expr.left.expr );
-		boost::apply_visitor( *this, expr.right.expr );
+		boost::apply_visitor( *this, expr.left );
+		boost::apply_visitor( *this, expr.right );
 	}
 
 	void operator()( const Nil &nil )
