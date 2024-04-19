@@ -8,6 +8,13 @@ Improvements
 - USD : Added automatic render-time translation of UsdPreviewSurface shaders to Cycles.
 - SetEditor : Added support for dragging a set name onto a node in the Graph Editor to create or modify a connected `SetFilter` node. Holding <kbd>Shift</kbd> while dragging will add to the set expression. Holding <kbd>Control</kbd> will remove from the set expression. Only set expressions with a simple list of sets are supported. Expressions with boolean or hierarchy operators are not supported.
 
+Build
+-----
+
+- Cortex : Updated to version 10.5.7.0.
+- OpenEXR : Updated to version 3.1.13.
+- USD : Added `sdrOsl`, for inclusion of OSL shaders in the Sdr Registry.
+
 1.4.0.0 (relative to 1.3.16.0)
 =======
 
