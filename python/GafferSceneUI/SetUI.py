@@ -329,6 +329,7 @@ def __nodeGadget( node ) :
 
 	nodeGadget = GafferUI.StandardNodeGadget( node )
 	GafferSceneUI.PathFilterUI.addObjectDropTarget( nodeGadget )
+	GafferSceneUI.SetFilterUI.addSetDropTarget( nodeGadget )
 
 	return nodeGadget
 
