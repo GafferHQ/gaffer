@@ -5,6 +5,7 @@ Fixes
 -----
 
 - NodeAlgo : Fixed presets inheritance for promoted plugs with multiple outputs.
+- TaskNode / GafferCortex : Fixed missing GIL releases that caused hang at ImageEngine
 
 1.3.16.0 (relative to 1.3.15.0)
 ========

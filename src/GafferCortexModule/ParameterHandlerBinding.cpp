@@ -148,6 +148,15 @@ void registerParameterHandler( IECore::TypeId parameterType, object creator )
 	ParameterHandler::registerParameterHandler( parameterType, ParameterHandlerCreator( creator ) );
 }
 
+void parameterHandlerSetParameterValue( ParameterHandler &ph )
+{
+	// Setting a parameter value involves evaluating the plug - we don't want to hold the GIL while evaluating
+	// the Gaffer graph.
+	IECorePython::ScopedGILRelease gilRelease;
+	return ph.setParameterValue();
+}
+
+
 } // namespace
 
 void GafferCortexModule::bindParameterHandler()
@@ -172,7 +181,7 @@ void GafferCortexModule::bindParameterHandler()
 			(Gaffer::Plug *(ParameterHandler::*)())&ParameterHandler::plug,
 			return_value_policy<IECorePython::CastToIntrusivePtr>()
 		)
-		.def( "setParameterValue", &ParameterHandler::setParameterValue )
+		.def( "setParameterValue", &parameterHandlerSetParameterValue )
 		.def( "setPlugValue", &ParameterHandler::setPlugValue )
 		.def( "hash", &ParameterHandler::hash )
 		.def( "create", &ParameterHandler::create ).staticmethod( "create" )
