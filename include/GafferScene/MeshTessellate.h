@@ -58,11 +58,20 @@ class GAFFERSCENE_API MeshTessellate : public ObjectProcessor
 		Gaffer::BoolPlug *calculateNormalsPlug();
 		const Gaffer::BoolPlug *calculateNormalsPlug() const;
 
+		Gaffer::StringPlug *schemePlug();
+		const Gaffer::StringPlug *schemePlug() const;
+
 		Gaffer::BoolPlug *tessellatePolygonsPlug();
 		const Gaffer::BoolPlug *tessellatePolygonsPlug() const;
 
-		Gaffer::StringPlug *schemePlug();
-		const Gaffer::StringPlug *schemePlug() const;
+		Gaffer::StringPlug *interpolateBoundaryPlug();
+		const Gaffer::StringPlug *interpolateBoundaryPlug() const;
+
+		Gaffer::StringPlug *faceVaryingLinearInterpolationPlug();
+		const Gaffer::StringPlug *faceVaryingLinearInterpolationPlug() const;
+
+		Gaffer::StringPlug *triangleSubdivisionRulePlug();
+		const Gaffer::StringPlug *triangleSubdivisionRulePlug() const;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::MeshTessellate, MeshTessellateTypeId, ObjectProcessor );
 
