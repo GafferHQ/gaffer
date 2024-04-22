@@ -21,6 +21,8 @@ Fixes
 -----
 
 - NameSwitch : Fixed NodeEditor tab order, so that the Settings tab precedes the Advanced tab.
+- NodeAlgo : Fixed presets inheritance for promoted plugs with multiple outputs.
+- TaskNode / GafferCortex : Fixed missing GIL releases that caused hang at ImageEngine.
 
 Build
 -----
@@ -313,9 +315,19 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.16.x (relative to 1.3.16.0)
+1.3.16.x (relative to 1.3.16.1)
 ========
 
+
+
+1.3.16.1 (relative to 1.3.16.0)
+========
+
+Fixes
+-----
+
+- NodeAlgo : Fixed presets inheritance for promoted plugs with multiple outputs.
+- TaskNode / GafferCortex : Fixed missing GIL releases that caused hang at ImageEngine
 
 1.3.16.0 (relative to 1.3.15.0)
 ========
