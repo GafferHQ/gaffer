@@ -518,5 +518,42 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 			self.assertEqual( reader.parameters["attribute_name" if convertedShaderType == "dlPrimitiveAttribute" else "name"].value, "test" )
 			self.assertEqual( reader.parameters["fallback_value" if convertedShaderType == "dlPrimitiveAttribute" else "defaultValue"].value, convertedDefault )
 
+	def testConvertUSDUVTextureUDIM( self ) :
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"previewSurface" : IECoreScene.Shader( "UsdPreviewSurface" ),
+				"texture" : IECoreScene.Shader(
+					"UsdUVTexture", "shader",
+					{
+						"file" : "test.<UDIM>.png",
+						"wrapS" : "useMetadata",
+						"wrapT" : "repeat",
+						"sourceColorSpace" : "sRGB",
+					}
+				),
+				"uvReader" : IECoreScene.Shader(
+					"UsdPrimvarReader_float2", "shader",
+					{
+						"varname" : "st",
+					}
+				),
+			},
+			connections = [
+				( ( "uvReader", "result" ), ( "texture", "st" ) ),
+				( ( "texture", "rgb" ), ( "previewSurface", "diffuseColor" ) ),
+			],
+			output = "previewSurface",
+		)
+
+		IECoreDelight.ShaderNetworkAlgo.convertUSDShaders( network )
+
+		self.assertEqual( network.input( ( "previewSurface", "base_color" ) ), ( "texture", "rgb" ) )
+
+		texture = network.getShader( "texture" )
+		self.assertEqual( texture.name, "__usd/__usdUVTexture" )
+		self.assertEqual( texture.parameters["file"].value, "test.UDIM.png" )
+		self.assertEqual( texture.parameters["file_meta_colorspace"].value, "sRGB" )
+
 if __name__ == "__main__":
 	unittest.main()

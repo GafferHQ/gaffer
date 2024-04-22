@@ -55,6 +55,7 @@
 #endif
 
 #include "boost/algorithm/string/predicate.hpp"
+#include "boost/algorithm/string/replace.hpp"
 
 using namespace Imath;
 using namespace IECore;
@@ -751,7 +752,10 @@ void convertUSDUVTextures( ShaderNetwork *network )
 		}
 
 		ShaderPtr imageShader = new Shader( "__usd/__usdUVTexture", "osl:shader" );
-		transferUSDParameter( network, handle, shader.get(), g_fileParameter, imageShader.get(), g_fileParameter, std::string() );
+		// Replace `<UDIM>` with 3Delight's `UDIM` convention.
+		std::string path = parameterValue( shader.get(), g_fileParameter, std::string() );
+		boost::replace_last( path, "<UDIM>", "UDIM" );
+		imageShader->parameters()[g_fileParameter] = new StringData( path );
 		transferUSDParameter( network, handle, shader.get(), g_sourceColorSpaceParameter, imageShader.get(), g_fileMetaColorSpaceParameter, std::string( "auto" ) );
 
 		transferUSDParameter( network, handle, shader.get(), g_fallbackParameter, imageShader.get(), g_fallbackParameter, Color4f( 0, 0, 0, 1 ) );
