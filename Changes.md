@@ -14,6 +14,13 @@ Fixes
 
 - NameSwitch : Fixed NodeEditor tab order, so that the Settings tab precedes the Advanced tab.
 
+Build
+-----
+
+- Cortex : Updated to version 10.5.7.0.
+- OpenEXR : Updated to version 3.1.13.
+- USD : Added `sdrOsl`, for inclusion of OSL shaders in the Sdr Registry.
+
 1.4.0.0 (relative to 1.3.16.0)
 =======
 
