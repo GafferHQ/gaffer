@@ -122,11 +122,7 @@ struct ParticleList
 	private :
 
 		template<typename T>
-#if CORTEX_COMPATIBILITY_VERSION >= 10005
 		using OptionalIndexedView = std::optional<PrimitiveVariable::IndexedView<T>>;
-#else
-		using OptionalIndexedView = boost::optional<PrimitiveVariable::IndexedView<T>>;
-#endif
 
 		PrimitiveVariable::IndexedView<V3f> m_positionView;
 		OptionalIndexedView<float> m_widthView;
