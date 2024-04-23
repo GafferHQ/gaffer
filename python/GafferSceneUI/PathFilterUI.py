@@ -316,6 +316,9 @@ def __dragLeave( nodeGadget, event ) :
 
 	global __originalDragPointer
 
+	if __originalDragPointer is None :
+		return False
+
 	GafferUI.Pointer.setCurrent( __originalDragPointer )
 	__originalDragPointer = None
 

@@ -486,6 +486,9 @@ void GafferSceneModule::bindIECoreScenePreview()
 			(
 				arg( "mesh" ), arg( "divisions" ),
 				arg( "calculateNormals" ) = false, arg( "scheme" ) = "",
+				arg( "interpolateBoundary" ) = "",
+				arg( "faceVaryingLinearInterpolation" ) = "",
+				arg( "triangleSubdivisionRule" ) = "",
 				arg( "canceller" ) = object()
 			)
 		);

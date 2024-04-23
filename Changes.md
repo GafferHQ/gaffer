@@ -3,10 +3,43 @@
 
 
 
-1.4.x.x (relative to 1.4.0.0)
+1.4.x.x (relative to 1.4.1.0)
 =======
 
 
+
+1.4.1.0 (relative to 1.4.0.0)
+=======
+
+Features
+--------
+
+- MeshTessellate/MeshType : Added support for special-purpose subdiv options: interpolateBoundary, faceVaryingLinearInterpolation, triangleSubdivisionRule.
+
+Improvements
+------------
+
+- Group : Added `sets` plug, to control what sets the group belongs to.
+- USD : Added automatic render-time translation of UsdPreviewSurface shaders to Cycles.
+- SetEditor : Added support for dragging a set name onto a node in the Graph Editor to create or modify a connected `SetFilter` node. Holding <kbd>Shift</kbd> while dragging will add to the set expression. Holding <kbd>Control</kbd> will remove from the set expression. Only set expressions with a simple list of sets are supported. Expressions with boolean or hierarchy operators are not supported.
+- GraphEditor : Improved pointer used to indicate when dropping a location would find the source node.
+- RenderPassEditor :
+  - Added "Camera Inclusions" and "Camera Exclusions" columns, providing control over the camera visibility of scene locations in each render pass.
+  - Added "Matte Inclusions" and "Matte Exclusions" columns, providing control over the scene locations used as holdout mattes in each render pass.
+
+Fixes
+-----
+
+- NameSwitch : Fixed NodeEditor tab order, so that the Settings tab precedes the Advanced tab.
+- NodeAlgo : Fixed presets inheritance for promoted plugs with multiple outputs.
+- TaskNode / GafferCortex : Fixed missing GIL releases that caused hang at ImageEngine.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.7.0.
+- OpenEXR : Updated to version 3.1.13.
+- USD : Added `sdrOsl`, for inclusion of OSL shaders in the Sdr Registry.
 
 1.4.0.0 (relative to 1.3.16.0)
 =======
@@ -292,9 +325,19 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.16.x (relative to 1.3.16.0)
+1.3.16.x (relative to 1.3.16.1)
 ========
 
+
+
+1.3.16.1 (relative to 1.3.16.0)
+========
+
+Fixes
+-----
+
+- NodeAlgo : Fixed presets inheritance for promoted plugs with multiple outputs.
+- TaskNode / GafferCortex : Fixed missing GIL releases that caused hang at ImageEngine
 
 1.3.16.0 (relative to 1.3.15.0)
 ========
