@@ -340,13 +340,13 @@ void TweakPlug::applyListTweak(
 
 			if constexpr( TypeTraits::IsVectorTypedData<DataType>::value )
 			{
-				const DataType *sourceDataCast = runTimeCast<const DataType>( sourceData );
-				const DataType *tweakDataCast = runTimeCast<const DataType>( tweakData );
+				// Despite being separate function arguments, `tweakData` and `destData`
+				// point to the _same object_! Take a copy of the tweak data so it isn't
+				// clobbered when we write to the destination data.
+				/// \todo Use a single in-out function argument so that this is obvious.
+				const auto newElements = static_cast<const DataType *>( tweakData )->readable();
 
-				const auto &currentElements = sourceDataCast->readable();
-				const auto &newElements = tweakDataCast->readable();
-
-				data->writable() = typename DataType::ValueType( currentElements );
+				data->writable() = static_cast<const DataType *>( sourceData )->readable();
 				data->writable().erase(
 					std::remove_if(
 						data->writable().begin(),

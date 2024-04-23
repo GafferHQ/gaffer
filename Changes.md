@@ -1,7 +1,10 @@
 1.4.x.x (relative to 1.4.1.0)
 =======
 
+Fixes
+-----
 
+- TweakPlug : Fixed incorrect results and potential crashes in list modes.
 
 1.4.1.0 (relative to 1.4.0.0)
 =======

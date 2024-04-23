@@ -391,6 +391,45 @@ class TweakPlugTest( GafferTest.TestCase ) :
 			sorted( [ "/test/path2", "/new/path", "/test/path3", "/new/path3" ] )
 		)
 
+	def testUncachedTweakData( self ) :
+
+		# Node that outputs an uncached value, so that `TweakPlug::applyTweak()`
+		# ends up being the sole owner of the tweak data. In the real world the
+		# same thing could happen even with a cached output, if it is evicted on
+		# another thread at an inconvenient time.
+
+		class UncachedOutNode( Gaffer.ComputeNode ) :
+
+			def __init__( self, name="UncachedOutNode" ) :
+
+				Gaffer.ComputeNode.__init__( self, name )
+				self.addChild( Gaffer.StringVectorDataPlug( "out", Gaffer.Plug.Direction.Out ) )
+
+			def computeCachePolicy( self, plug ) :
+
+				if plug.isSame( self["out"] ) :
+					return plug.CachePolicy.Uncached
+
+				return Gaffer.CompouteNode.computeCachePolicy( self, plug )
+
+			def compute( self, plug, context ) :
+
+				if plug.isSame( self["out"] ) :
+					plug.setValue( IECore.StringVectorData( [ "a", "b", "c", "d", "e" ] ) )
+
+		IECore.registerRunTimeTyped( UncachedOutNode, typeName = "GafferTest::UncachedOutNode" )
+
+		# This exposed a bug whereby TweakPlug could clobber the incoming tweak
+		# data before applying it.
+
+		node = UncachedOutNode()
+
+		plug = Gaffer.TweakPlug( "v", IECore.StringVectorData(), Gaffer.TweakPlug.Mode.ListPrepend )
+		plug["value"].setInput( node["out"] )
+
+		data = IECore.CompoundData( { "v" : IECore.StringVectorData( [ "x", "y", "z" ] ) } )
+		self.assertTrue( plug.applyTweak( data ) )
+		self.assertEqual( data["v"], IECore.StringVectorData( [ "a", "b", "c", "d", "e", "x", "y", "z" ] ) )
 
 if __name__ == "__main__":
 	unittest.main()
