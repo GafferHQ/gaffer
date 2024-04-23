@@ -1,6 +1,11 @@
 1.4.x.x (relative to 1.4.1.0)
 =======
 
+Improvements
+------------
+
+- TweakPlug : `ListAppend`, `ListPrepend` and `ListRemove` modes are now supported for string values. In this case, the string is treated as a space-separated list.
+
 Fixes
 -----
 

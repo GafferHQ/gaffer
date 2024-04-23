@@ -45,6 +45,8 @@
 #include "IECore/StringAlgo.h"
 #include "IECore/TypeTraits.h"
 
+#include "boost/algorithm/string/join.hpp"
+
 #include "fmt/format.h"
 
 #include <unordered_map>
@@ -102,6 +104,39 @@ T vectorAwareMax( const T &v1, const T &v2 )
 	{
 		return std::max( v1, v2 );
 	}
+}
+
+template<typename T>
+vector<T> tweakedList( const std::vector<T> &source, const std::vector<T> &tweak, TweakPlug::Mode mode )
+{
+	vector<T> result = source;
+
+	result.erase(
+		std::remove_if(
+			result.begin(),
+			result.end(),
+			[&tweak]( const auto &elem )
+			{
+				return std::find(
+					tweak.begin(),
+					tweak.end(),
+					elem
+				) != tweak.end();
+			}
+		),
+		result.end()
+	);
+
+	if( mode == TweakPlug::ListAppend )
+	{
+		result.insert( result.end(), tweak.begin(), tweak.end() );
+	}
+	else if( mode == TweakPlug::ListPrepend )
+	{
+		result.insert( result.begin(), tweak.begin(), tweak.end() );
+	}
+
+	return result;
 }
 
 } // namespace
@@ -330,6 +365,11 @@ void TweakPlug::applyListTweak(
 ) const
 {
 
+	// Despite being separate function arguments, `tweakData` and `destData`
+	// point to the _same object_, so we must be careful not to assign to
+	// `destData` until after we're done reading from `tweakData`.
+	/// \todo Use a single in-out function argument so that this is obvious.
+
 	dispatch(
 
 		destData,
@@ -340,37 +380,11 @@ void TweakPlug::applyListTweak(
 
 			if constexpr( TypeTraits::IsVectorTypedData<DataType>::value )
 			{
-				// Despite being separate function arguments, `tweakData` and `destData`
-				// point to the _same object_! Take a copy of the tweak data so it isn't
-				// clobbered when we write to the destination data.
-				/// \todo Use a single in-out function argument so that this is obvious.
-				const auto newElements = static_cast<const DataType *>( tweakData )->readable();
-
-				data->writable() = static_cast<const DataType *>( sourceData )->readable();
-				data->writable().erase(
-					std::remove_if(
-						data->writable().begin(),
-						data->writable().end(),
-						[&newElements]( const auto &elem )
-						{
-							return std::find(
-								newElements.begin(),
-								newElements.end(),
-								elem
-							) != newElements.end();
-						}
-					),
-					data->writable().end()
+				data->writable() = tweakedList(
+					static_cast<const DataType *>( sourceData )->readable(),
+					static_cast<const DataType *>( tweakData )->readable(),
+					mode
 				);
-
-				if( mode == TweakPlug::ListAppend )
-				{
-					data->writable().insert( data->writable().end(), newElements.begin(), newElements.end() );
-				}
-				else if( mode == TweakPlug::ListPrepend )
-				{
-					data->writable().insert( data->writable().begin(), newElements.begin(), newElements.end() );
-				}
 			}
 			else if constexpr( std::is_same_v<DataType, PathMatcherData> )
 			{
@@ -384,6 +398,14 @@ void TweakPlug::applyListTweak(
 				{
 					data->writable().addPaths( newPaths );
 				}
+			}
+			else if constexpr( std::is_same_v<DataType, StringData> )
+			{
+				vector<string> sourceVector;
+				IECore::StringAlgo::tokenize( static_cast<const DataType *>( sourceData )->readable(), ' ', sourceVector );
+				vector<string> tweakVector;
+				IECore::StringAlgo::tokenize( static_cast<const DataType *>( tweakData )->readable(), ' ', tweakVector );
+				data->writable() = boost::algorithm::join( tweakedList( sourceVector, tweakVector, mode ), " " );
 			}
 		}
 

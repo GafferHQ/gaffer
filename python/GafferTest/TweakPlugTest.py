@@ -431,5 +431,25 @@ class TweakPlugTest( GafferTest.TestCase ) :
 		self.assertTrue( plug.applyTweak( data ) )
 		self.assertEqual( data["v"], IECore.StringVectorData( [ "a", "b", "c", "d", "e", "x", "y", "z" ] ) )
 
+	def testStringListOperations( self ) :
+
+		for source, tweakMode, tweakValue, result in [
+			( "a b c", Gaffer.TweakPlug.Mode.ListAppend, "b d e", "a c b d e" ),
+			( "a b c", Gaffer.TweakPlug.Mode.ListRemove, "b d", "a c" ),
+			( "a b", Gaffer.TweakPlug.Mode.ListPrepend, "b x", "b x a" ),
+			( "", Gaffer.TweakPlug.Mode.ListPrepend, "y x", "y x" ),
+			( "", Gaffer.TweakPlug.Mode.ListRemove, "x", "" ),
+			( "a", Gaffer.TweakPlug.Mode.ListPrepend, "", "a" ),
+			( "a", Gaffer.TweakPlug.Mode.ListRemove, "", "a" ),
+			( "a  b", Gaffer.TweakPlug.Mode.ListRemove, "b", "a" ),
+			( "a  b", Gaffer.TweakPlug.Mode.ListPrepend, "c", "c a b" ),
+			( "a  b", Gaffer.TweakPlug.Mode.ListAppend, "c", "a b c" ),
+		] :
+
+			plug = Gaffer.TweakPlug( "v", tweakValue, tweakMode )
+			data = IECore.CompoundData( { "v" : source } )
+			self.assertTrue( plug.applyTweak( data ) )
+			self.assertEqual( data["v"], IECore.StringData( result ) )
+
 if __name__ == "__main__":
 	unittest.main()
