@@ -48,11 +48,11 @@
 #include "boost/multi_index/member.hpp"
 #include "boost/multi_index/hashed_index.hpp"
 #include "boost/multi_index_container.hpp"
-#include "boost/variant.hpp"
 
 #include "fmt/format.h"
 
 #include <unordered_map>
+#include <variant>
 
 using namespace std;
 using namespace boost;
@@ -91,7 +91,7 @@ class RowsMap : public IECore::Data
 
 	public :
 
-		using Selector = boost::variant<const vector<InternedString> *, string>;
+		using Selector = std::variant<const vector<InternedString> *, string>;
 
 		RowsMap( const Spreadsheet::RowsPlug *rows )
 			:	m_enabledRowNames( new StringVectorData )
@@ -149,11 +149,11 @@ class RowsMap : public IECore::Data
 		// Hashes the contents of the selector.
 		static void hash( const Selector &selector, IECore::MurmurHash &h )
 		{
-			if( auto s = get<string>( &selector ) )
+			if( auto s = get_if<string>( &selector ) )
 			{
 				h.append( *s );
 			}
-			else if( auto p = get<const vector<InternedString> *>( &selector ) )
+			else if( auto p = get_if<const vector<InternedString> *>( &selector ) )
 			{
 				h.append( (*p)->data(), (*p)->size() );
 			}
@@ -162,7 +162,7 @@ class RowsMap : public IECore::Data
 		size_t rowIndex( const Selector &selector ) const
 		{
 			size_t result = 0;
-			if( auto s = get<string>( &selector ) )
+			if( auto s = get_if<string>( &selector ) )
 			{
 				auto it = m_plainRows.find( *s );
 				if( it != m_plainRows.end() )

@@ -469,7 +469,7 @@ class CapturingMonitor : public Monitor
 				ProcessMap::const_iterator it = m_processMap.find( process->parent() );
 				if( it != m_processMap.end() )
 				{
-					CapturedProcess * const * parent = boost::get< CapturedProcess* >( &it->second );
+					CapturedProcess * const * parent = std::get_if<CapturedProcess *>( &it->second );
 					if( parent && *parent )
 					{
 						(*parent)->children.push_back( std::move( capturedProcess ) );
@@ -520,7 +520,7 @@ class CapturingMonitor : public Monitor
 
 		Mutex m_mutex;
 
-		using ProcessOrScope = boost::variant<CapturedProcess *, std::unique_ptr< Monitor::Scope>>;
+		using ProcessOrScope = std::variant<CapturedProcess *, std::unique_ptr<Monitor::Scope>>;
 		using ProcessMap = boost::unordered_map<const Process *, ProcessOrScope>;
 
 		ProcessMap m_processMap;
