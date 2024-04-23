@@ -1,6 +1,11 @@
 1.4.x.x (relative to 1.4.4.0)
 =======
 
+Features
+--------
+
+- ShaderTweaks : Added support for creating ShaderTweakProxy nodes that allow making input connections to the original network.
+
 Improvements
 ------------
 

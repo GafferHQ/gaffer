@@ -364,7 +364,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		inputShader = GafferSceneTest.TestShader()
 		badTweak["value"].setInput( inputShader["out"]["r"] )
 
-		with self.assertRaisesRegex( RuntimeError, "Cannot apply tweak \"badParameter\" because shader \"light\" does not have parameter \"badParameter\"" ) :
+		with self.assertRaisesRegex( RuntimeError, "Cannot apply tweak \"badParameter\" because shader \"__shader\" does not have parameter \"badParameter\"" ) :
 			t["out"].attributes( "/light" )
 
 		badTweak["value"].setInput( None )

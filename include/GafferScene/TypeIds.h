@@ -182,6 +182,7 @@ enum TypeId
 	DeletePassesTypeId = 110638,
 	MeshTessellateTypeId = 110639,
 	RenderPassShaderTypeId = 110640,
+	ShaderTweakProxyTypeId = 110641,
 
 	PreviewPlaceholderTypeId = 110647,
 	PreviewGeometryTypeId = 110648,
