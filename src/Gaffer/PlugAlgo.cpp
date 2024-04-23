@@ -49,6 +49,7 @@
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/ValuePlug.h"
 
+#include "IECore/DataAlgo.h"
 #include "IECore/SplineData.h"
 
 #include "boost/algorithm/string/predicate.hpp"
@@ -565,6 +566,17 @@ IECore::DataPtr extractDataFromPlug( const ValuePlug *plug )
 namespace
 {
 
+template<typename PlugType, typename DataType>
+bool setNumericPlugValueFromVectorData( PlugType *plug, const DataType *value )
+{
+	if( value->readable().size() == 1 )
+	{
+		plug->setValue( value->readable()[0] );
+		return true;
+	}
+	return false;
+}
+
 template<typename PlugType>
 bool setNumericPlugValue( PlugType *plug, const Data *value )
 {
@@ -606,6 +618,30 @@ bool setNumericPlugValue( PlugType *plug, const Data *value )
 		case BoolDataTypeId :
 			plug->setValue( static_cast<const BoolData *>( value )->readable() );
 			return true;
+		case HalfVectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const HalfVectorData *>( value ) );
+		case FloatVectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const FloatVectorData *>( value ) );
+		case DoubleVectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const DoubleVectorData *>( value ) );
+		case CharVectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const CharVectorData *>( value ) );
+		case UCharVectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const UCharVectorData *>( value ) );
+		case ShortVectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const ShortVectorData *>( value ) );
+		case UShortVectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const UShortVectorData *>( value ) );
+		case IntVectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const IntVectorData *>( value ) );
+		case UIntVectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const UIntVectorData *>( value ) );
+		case Int64VectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const Int64VectorData *>( value ) );
+		case UInt64VectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const UInt64VectorData *>( value ) );
+		case BoolVectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const BoolVectorData *>( value ) );
 		default :
 			return false;
 	}
@@ -774,6 +810,19 @@ bool canSetNumericPlugValue( const Data *value )
 		case UInt64DataTypeId :
 		case BoolDataTypeId :
 			return true;
+		case HalfVectorDataTypeId :
+		case FloatVectorDataTypeId :
+		case DoubleVectorDataTypeId :
+		case CharVectorDataTypeId :
+		case UCharVectorDataTypeId :
+		case ShortVectorDataTypeId :
+		case UShortVectorDataTypeId :
+		case IntVectorDataTypeId :
+		case UIntVectorDataTypeId :
+		case Int64VectorDataTypeId :
+		case UInt64VectorDataTypeId :
+		case BoolVectorDataTypeId :
+			return IECore::size( value ) == 1;
 		default :
 			return false;
 	}

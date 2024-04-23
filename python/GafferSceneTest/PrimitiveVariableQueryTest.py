@@ -689,5 +689,36 @@ class PrimitiveVariableQueryTest( GafferSceneTest.SceneTestCase ):
 			self.assertEqual( output["type"].getValue(), dataType.staticTypeName() )
 			self.assertEqual( output["value"].getValue(), value )
 
+	def testArrayScalarConversion( self ) :
+
+		cube = GafferScene.Cube()
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter["paths"].setValue( IECore.StringVectorData( [ "/cube" ] ) )
+
+		primitiveVariables = GafferScene.PrimitiveVariables()
+		primitiveVariables["in"].setInput( cube["out"] )
+		primitiveVariables["filter"].setInput( cubeFilter["out"] )
+
+		primitiveVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "testLengthZero", IECore.IntVectorData() ) )
+		primitiveVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "testLengthOne", IECore.IntVectorData( [ 2 ] ) ) )
+		primitiveVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "testLengthTwo", IECore.IntVectorData( [ 3, 3 ] ) ) )
+
+		query = GafferScene.PrimitiveVariableQuery()
+		query["scene"].setInput( primitiveVariables["out"] )
+		query["location"].setValue( "/cube" )
+		query.addQuery( Gaffer.IntPlug( defaultValue = -1 ), "testLengthZero" )
+
+		self.assertEqual( query["out"][0]["exists"].getValue(), True )
+		self.assertTrue( query["out"][0]["value"].getValue(), -1 )
+
+		query["queries"][0]["name"].setValue( "testLengthOne" )
+		self.assertEqual( query["out"][0]["exists"].getValue(), True )
+		self.assertTrue( query["out"][0]["value"].getValue(), 2 )
+
+		query["queries"][0]["name"].setValue( "testLengthTwo" )
+		self.assertEqual( query["out"][0]["exists"].getValue(), True )
+		self.assertTrue( query["out"][0]["value"].getValue(), -1 )
+
 if __name__ == "__main__":
 	unittest.main()
