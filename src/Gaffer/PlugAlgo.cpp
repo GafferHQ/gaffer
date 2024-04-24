@@ -692,6 +692,16 @@ bool setCompoundNumericChildPlugValue( const PlugType *plug, typename PlugType::
 	return false;
 }
 
+template<typename PlugType, typename DataType>
+bool setCompoundNumericChildPlugValueFromVectorData( const PlugType *plug, typename PlugType::ChildType *child, const DataType *data )
+{
+	if( data->readable().size() != 1 )
+	{
+		return false;
+	}
+	return setCompoundNumericChildPlugValue( plug, child, data->readable()[0] );
+}
+
 template<typename PlugType>
 bool setCompoundNumericPlugValue( const PlugType *plug, Gaffer::ValuePlug *leafPlug, const Data *value )
 {
@@ -722,6 +732,37 @@ bool setCompoundNumericPlugValue( const PlugType *plug, Gaffer::ValuePlug *leafP
 			{
 				typedChild->setValue( 1 );
 				return true;
+			}
+		case Color4fVectorDataTypeId :
+			return setCompoundNumericChildPlugValueFromVectorData( plug, typedChild, static_cast<const Color4fVectorData *>( value ) );
+		case Color3fVectorDataTypeId :
+			return setCompoundNumericChildPlugValueFromVectorData( plug, typedChild, static_cast<const Color3fVectorData *>( value ) );
+		case V3fVectorDataTypeId :
+			return setCompoundNumericChildPlugValueFromVectorData( plug, typedChild, static_cast<const V3fVectorData *>( value ) );
+		case V2fVectorDataTypeId :
+			return setCompoundNumericChildPlugValueFromVectorData( plug, typedChild, static_cast<const V2fVectorData *>( value ) );
+		case V3iVectorDataTypeId :
+			return setCompoundNumericChildPlugValueFromVectorData( plug, typedChild, static_cast<const V3iVectorData *>( value ) );
+		case V2iVectorDataTypeId :
+			return setCompoundNumericChildPlugValueFromVectorData( plug, typedChild, static_cast<const V2iVectorData *>( value ) );
+		case FloatVectorDataTypeId :
+		case IntVectorDataTypeId :
+		case BoolVectorDataTypeId :
+			if( plug->children().size() < 4 || leafPlug != plug->getChild( 3 ) )
+			{
+				return setNumericPlugValue( typedChild, value );
+			}
+			else
+			{
+				if( IECore::size( value ) == 1 )
+				{
+					typedChild->setValue( 1 );
+					return true;
+				}
+				else
+				{
+					return false;
+				}
 			}
 		default :
 			return false;
@@ -874,6 +915,16 @@ bool canSetCompoundNumericPlugValue( const Data *value )
 		case IntDataTypeId :
 		case BoolDataTypeId :
 			return true;
+		case Color4fVectorDataTypeId :
+		case Color3fVectorDataTypeId :
+		case V3fVectorDataTypeId :
+		case V2fVectorDataTypeId :
+		case V3iVectorDataTypeId :
+		case V2iVectorDataTypeId :
+		case FloatVectorDataTypeId :
+		case IntVectorDataTypeId :
+		case BoolVectorDataTypeId :
+			return IECore::size( value ) == 1;
 		default :
 			return false;
 	}

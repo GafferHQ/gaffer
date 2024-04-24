@@ -995,6 +995,90 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 						self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
 						self.assertTrue( plug.isSetToDefault() )
 
+	def testSetCompoundNumericValueFromVectorData( self ) :
+
+		for plugType in [
+			Gaffer.Color3fPlug, Gaffer.Color4fPlug,
+			Gaffer.V3fPlug, Gaffer.V3iPlug,
+			Gaffer.V2fPlug, Gaffer.V2iPlug
+		] :
+
+			plug = plugType()
+			for dataType in [
+				IECore.Color3fVectorData,
+				IECore.Color4fVectorData,
+				IECore.V3fVectorData,
+				IECore.V3iVectorData,
+				IECore.V2fVectorData,
+				IECore.V2iVectorData,
+				IECore.FloatVectorData,
+				IECore.IntVectorData,
+				IECore.BoolVectorData,
+			] :
+				with self.subTest( plugType = plugType, dataType = dataType ) :
+
+					data = dataType()
+
+					# Array length 0, can't set.
+
+					self.assertFalse( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+					plug.setToDefault()
+					self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+					self.assertTrue( plug.isSetToDefault() )
+					for childPlug in Gaffer.Plug.Range( plug ) :
+						self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, childPlug, data ) )
+					self.assertTrue( plug.isSetToDefault() )
+
+					# Array length 1, can set.
+
+					data.resize( 1 )
+					value = data[0]
+					if hasattr( value, "dimensions" ) :
+						# e.g. `V3f( 1, 2, 3 )`
+						for i in range( 0, value.dimensions() ) :
+							value[i] = i + 1
+					else :
+						# e.g `2`, `2.0`, or `True`
+						value = type( value )( 2 )
+					data[0] = value
+
+					self.assertTrue( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+					self.assertTrue( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+					for i, childPlug in enumerate( plug ) :
+						if hasattr( value, "dimensions" ) :
+							if i < value.dimensions() :
+								self.assertEqual( childPlug.getValue(), value[i] )
+							else :
+								self.assertEqual( childPlug.getValue(), 1 if i == 3 else 0 )
+						else :
+							self.assertEqual( childPlug.getValue(), 1 if i == 3 else value )
+
+					# And can also set a component at a time.
+
+					plug.setToDefault()
+					for i, childPlug in enumerate( plug ) :
+						Gaffer.PlugAlgo.setValueFromData( plug, childPlug, data )
+						if hasattr( value, "dimensions" ) :
+							if i < value.dimensions() :
+								self.assertEqual( childPlug.getValue(), value[i] )
+							else :
+								self.assertEqual( childPlug.getValue(), 1 if i == 3 else 0 )
+						else :
+							self.assertEqual( childPlug.getValue(), 1 if i == 3 else value )
+
+					# Array length > 1, can't set.
+
+					data.append( data[0] )
+
+					self.assertFalse( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+					plug.setToDefault()
+					self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+					self.assertTrue( plug.isSetToDefault() )
+					for childPlug in plug :
+						self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, childPlug, data ) )
+						self.assertTrue( childPlug.isSetToDefault() )
+					self.assertTrue( plug.isSetToDefault() )
+
 	def testDependsOnCompute( self ) :
 
 		add = GafferTest.AddNode()
