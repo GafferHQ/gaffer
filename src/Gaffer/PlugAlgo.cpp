@@ -656,6 +656,17 @@ bool setTypedPlugValue( PlugType *plug, const Data *value )
 		plug->setValue( typedValue->readable() );
 		return true;
 	}
+
+	using VectorDataType = IECore::TypedData<vector<typename PlugType::ValueType>>;
+	if( auto typedValue = runTimeCast<const VectorDataType>( value ) )
+	{
+		if( typedValue->readable().size() == 1 )
+		{
+			plug->setValue( typedValue->readable()[0] );
+			return true;
+		}
+	}
+
 	return false;
 }
 
@@ -668,6 +679,39 @@ bool setTypedDataPlugValue( PlugType *plug, const Data *value )
 		return true;
 	}
 	return false;
+}
+
+bool setStringPlugValue( StringPlug *plug, const Data *value )
+{
+	switch( value->typeId() )
+	{
+		case IECore::StringDataTypeId:
+			plug->setValue( static_cast<const StringData *>( value )->readable() );
+			return true;
+		case IECore::InternedStringDataTypeId:
+			plug->setValue( static_cast<const InternedStringData *>( value )->readable().value() );
+			return true;
+		case IECore::StringVectorDataTypeId : {
+			const auto *data = static_cast<const StringVectorData *>( value );
+			if( data->readable().size() == 1 )
+			{
+				plug->setValue( data->readable()[0] );
+				return true;
+			}
+			return false;
+		}
+		case IECore::InternedStringVectorDataTypeId : {
+			const auto *data = static_cast<const InternedStringVectorData *>( value );
+			if( data->readable().size() == 1 )
+			{
+				plug->setValue( data->readable()[0].value() );
+				return true;
+			}
+			return false;
+		}
+		default:
+			return false;
+	}
 }
 
 template<typename PlugType, typename ValueType>
@@ -878,7 +922,18 @@ bool canSetTypedPlugValue( const Data *value )
 	}
 
 	using DataType = IECore::TypedData<typename PlugType::ValueType>;
-	return runTimeCast<const DataType>( value );
+	if( runTimeCast<const DataType>( value ) )
+	{
+		return true;
+	}
+
+	using VectorDataType = IECore::TypedData<vector<typename PlugType::ValueType>>;
+	if( auto d = runTimeCast<const VectorDataType>( value ) )
+	{
+		return d->readable().size() == 1;
+	}
+
+	return false;
 }
 
 template<typename PlugType>
@@ -894,6 +949,25 @@ bool canSetTypedDataPlugValue( const Data *value )
 		return true;
 	}
 	return false;
+}
+
+bool canSetStringPlugValue( const Data *value )
+{
+	if( !value )
+	{
+		return true;  // Data type not specified, so it could be a match
+	}
+	switch( value->typeId() )
+	{
+		case IECore::StringDataTypeId:
+		case IECore::InternedStringDataTypeId:
+			return true;
+		case IECore::StringVectorDataTypeId:
+		case IECore::InternedStringVectorDataTypeId:
+			return IECore::size( value ) == 1;
+		default:
+			return false;
+	}
 }
 
 bool canSetCompoundNumericPlugValue( const Data *value )
@@ -972,18 +1046,7 @@ bool canSetValueFromData( const ValuePlug *plug, const IECore::Data *value )
 		case Gaffer::IntVectorDataPlugTypeId:
 			return canSetTypedDataPlugValue<IntVectorDataPlug>( value );
 		case Gaffer::StringPlugTypeId:
-			if( !value )
-			{
-				return true;  // Data type not specified, so it could be a match
-			}
-			switch( value->typeId() )
-			{
-				case IECore::StringDataTypeId:
-				case IECore::InternedStringDataTypeId:
-					return true;
-				default:
-					return false;
-			}
+			return canSetStringPlugValue( value );
 		case Gaffer::StringVectorDataPlugTypeId:
 			return canSetTypedDataPlugValue<StringVectorDataPlug>( value );
 		case Gaffer::InternedStringVectorDataPlugTypeId:
@@ -1057,17 +1120,7 @@ bool setValueFromData( ValuePlug *plug, const IECore::Data *value )
 		case Gaffer::IntVectorDataPlugTypeId:
 			return setTypedDataPlugValue( static_cast<IntVectorDataPlug *>( plug ), value );
 		case Gaffer::StringPlugTypeId:
-			switch( value->typeId() )
-			{
-				case IECore::StringDataTypeId:
-					static_cast<StringPlug *>( plug )->setValue( static_cast<const StringData *>( value )->readable() );
-					return true;
-				case IECore::InternedStringDataTypeId:
-					static_cast< StringPlug *>( plug )->setValue( static_cast<const InternedStringData *>( value )->readable().value() );
-					return true;
-				default:
-					return false;
-			}
+			return setStringPlugValue( static_cast<StringPlug *>( plug ), value );
 		case Gaffer::StringVectorDataPlugTypeId:
 			return setTypedDataPlugValue( static_cast<StringVectorDataPlug *>( plug ), value );
 		case Gaffer::InternedStringVectorDataPlugTypeId:
