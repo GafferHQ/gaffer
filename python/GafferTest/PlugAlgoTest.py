@@ -929,9 +929,6 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 
 	def testDataConversionsForAllTypes( self ) :
 
-		import GafferScene
-		import GafferImage
-
 		for plugType in Gaffer.ValuePlug.__subclasses__() :
 
 			valueType = getattr( plugType, "ValueType", None )
