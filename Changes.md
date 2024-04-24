@@ -18,6 +18,7 @@ API
 ---
 
 - PlugAlgo : `setValueFromData()` and `canSetValueFromData()` now support conversion of arrays of length 1 to their equivalent scalar types.
+- BoxPlug : Added Python bindings for `ValueType`, `PointType` and `ChildType` type aliases.
 
 1.4.1.0 (relative to 1.4.0.0)
 =======
