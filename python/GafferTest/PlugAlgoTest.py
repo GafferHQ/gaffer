@@ -1120,6 +1120,63 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 				self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
 				self.assertTrue( plug.isSetToDefault() )
 
+	def testSetBoxValueFromVectorData( self ) :
+
+		for plugType in [
+			Gaffer.Box2fPlug, Gaffer.Box3fPlug,
+			Gaffer.Box2iPlug, Gaffer.Box3iPlug,
+		] :
+
+			with self.subTest( plugType = plugType ) :
+
+				plug = plugType()
+
+				minValue = plugType.PointType()
+				maxValue = plugType.PointType()
+				for i in range( 0, minValue.dimensions() ) :
+					minValue[i] = i
+					maxValue[i] = i + 1
+				value = plugType.ValueType( minValue, maxValue )
+				data = IECore.DataTraits.dataFromElement( [ value ] )
+
+				# Array length 1, can set
+
+				self.assertTrue( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+				self.assertTrue( plug.isSetToDefault() )
+				self.assertTrue( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+				self.assertEqual( plug.getValue(), value )
+				self.assertFalse( plug.isSetToDefault() )
+
+				# And can set individual children
+
+				plug.setToDefault()
+				for childPlug in plug :
+					for componentPlug in childPlug :
+						self.assertTrue( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+				self.assertEqual( plug.getValue(), value )
+				self.assertFalse( plug.isSetToDefault() )
+
+				# Array length 2, can't set
+
+				data.append( data[0] )
+				plug.setToDefault()
+				self.assertFalse( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+				self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+				for childPlug in plug :
+					for componentPlug in childPlug :
+						self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+				self.assertTrue( plug.isSetToDefault() )
+
+				# Array length 0, can't set
+
+				data.resize( 0 )
+				self.assertFalse( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+				self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+				for childPlug in plug :
+					for componentPlug in childPlug :
+						self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+				self.assertTrue( plug.isSetToDefault() )
+
 	def testDependsOnCompute( self ) :
 
 		add = GafferTest.AddNode()

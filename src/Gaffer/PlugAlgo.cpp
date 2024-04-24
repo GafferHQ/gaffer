@@ -838,6 +838,16 @@ bool setBoxChildPlugValue( const PlugType *plug, typename PlugType::ChildType::C
 	}
 }
 
+template<typename PlugType, typename DataType>
+bool setBoxChildPlugValueFromVectorData( const PlugType *plug, typename PlugType::ChildType::ChildType *child, const DataType *data )
+{
+	if( data->readable().size() != 1 )
+	{
+		return false;
+	}
+	return setBoxChildPlugValue( plug, child, data->readable()[0] );
+}
+
 template<typename PlugType>
 bool setBoxPlugValue( const PlugType *plug, Gaffer::ValuePlug *leafPlug, const Data *value )
 {
@@ -852,6 +862,14 @@ bool setBoxPlugValue( const PlugType *plug, Gaffer::ValuePlug *leafPlug, const D
 			return setBoxChildPlugValue( plug, typedPlug, static_cast<const Box3iData *>( value )->readable() );
 		case Box2iDataTypeId :
 			return setBoxChildPlugValue( plug, typedPlug, static_cast<const Box2iData *>( value )->readable() );
+		case Box3fVectorDataTypeId :
+			return setBoxChildPlugValueFromVectorData( plug, typedPlug, static_cast<const Box3fVectorData *>( value ) );
+		case Box2fVectorDataTypeId :
+			return setBoxChildPlugValueFromVectorData( plug, typedPlug, static_cast<const Box2fVectorData *>( value ) );
+		case Box3iVectorDataTypeId :
+			return setBoxChildPlugValueFromVectorData( plug, typedPlug, static_cast<const Box3iVectorData *>( value ) );
+		case Box2iVectorDataTypeId :
+			return setBoxChildPlugValueFromVectorData( plug, typedPlug, static_cast<const Box2iVectorData *>( value ) );
 		default :
 			return false;
 	}
@@ -1018,6 +1036,14 @@ bool canSetBoxPlugValue( const Data *value )
 		case Box3iDataTypeId :
 		case Box2iDataTypeId :
 			return true;
+		case Box3fVectorDataTypeId :
+			return static_cast<const Box3fVectorData *>( value )->readable().size() == 1;
+		case Box2fVectorDataTypeId :
+			return static_cast<const Box2fVectorData *>( value )->readable().size() == 1;
+		case Box3iVectorDataTypeId :
+			return static_cast<const Box3iVectorData *>( value )->readable().size() == 1;
+		case Box2iVectorDataTypeId :
+			return static_cast<const Box2iVectorData *>( value )->readable().size() == 1;
 		default :
 			return false;
 	}
