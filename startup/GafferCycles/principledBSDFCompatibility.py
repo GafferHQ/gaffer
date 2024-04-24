@@ -77,3 +77,7 @@ def __cyclesShaderGetItem( originalGetItem ) :
 	return getItem
 
 GafferCycles.CyclesShader.__getitem__ = __cyclesShaderGetItem( GafferCycles.CyclesShader.__getitem__ )
+
+# The parameter defaults advertised by Cycles do not always match the actual defaults used by Blender.
+# Register user defaults with Blender's values where it makes sense.
+Gaffer.Metadata.registerValue( "cycles:surface:principled_bsdf:specular_ior_level", "userDefault", 0.5 )

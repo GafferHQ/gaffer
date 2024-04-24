@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - TweakPlug : `ListAppend`, `ListPrepend` and `ListRemove` modes are now supported for string values. In this case, the string is treated as a space-separated list.
+- Cycles : Changed default value for `principled_bsdf.specular_ior_level` to `0.5`, matching Blender.
 
 Fixes
 -----
