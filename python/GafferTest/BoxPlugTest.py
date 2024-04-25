@@ -171,5 +171,11 @@ class BoxPlugTest( GafferTest.TestCase ) :
 		s["n"]["user"]["b2"].setInput( s["n"]["user"]["b1"] )
 		assertExpectedInputs( 1 )
 
+	def testTypes( self ) :
+
+		self.assertIs( Gaffer.Box3fPlug.ValueType, imath.Box3f )
+		self.assertIs( Gaffer.Box3fPlug.PointType, imath.V3f )
+		self.assertIs( Gaffer.Box3fPlug.ChildType, Gaffer.V3fPlug )
+
 if __name__ == "__main__":
 	unittest.main()

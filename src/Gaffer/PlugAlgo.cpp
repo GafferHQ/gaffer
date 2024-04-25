@@ -49,6 +49,7 @@
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/ValuePlug.h"
 
+#include "IECore/DataAlgo.h"
 #include "IECore/SplineData.h"
 
 #include "boost/algorithm/string/predicate.hpp"
@@ -565,6 +566,17 @@ IECore::DataPtr extractDataFromPlug( const ValuePlug *plug )
 namespace
 {
 
+template<typename PlugType, typename DataType>
+bool setNumericPlugValueFromVectorData( PlugType *plug, const DataType *value )
+{
+	if( value->readable().size() == 1 )
+	{
+		plug->setValue( value->readable()[0] );
+		return true;
+	}
+	return false;
+}
+
 template<typename PlugType>
 bool setNumericPlugValue( PlugType *plug, const Data *value )
 {
@@ -606,6 +618,30 @@ bool setNumericPlugValue( PlugType *plug, const Data *value )
 		case BoolDataTypeId :
 			plug->setValue( static_cast<const BoolData *>( value )->readable() );
 			return true;
+		case HalfVectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const HalfVectorData *>( value ) );
+		case FloatVectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const FloatVectorData *>( value ) );
+		case DoubleVectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const DoubleVectorData *>( value ) );
+		case CharVectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const CharVectorData *>( value ) );
+		case UCharVectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const UCharVectorData *>( value ) );
+		case ShortVectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const ShortVectorData *>( value ) );
+		case UShortVectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const UShortVectorData *>( value ) );
+		case IntVectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const IntVectorData *>( value ) );
+		case UIntVectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const UIntVectorData *>( value ) );
+		case Int64VectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const Int64VectorData *>( value ) );
+		case UInt64VectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const UInt64VectorData *>( value ) );
+		case BoolVectorDataTypeId :
+			return setNumericPlugValueFromVectorData( plug, static_cast<const BoolVectorData *>( value ) );
 		default :
 			return false;
 	}
@@ -620,6 +656,17 @@ bool setTypedPlugValue( PlugType *plug, const Data *value )
 		plug->setValue( typedValue->readable() );
 		return true;
 	}
+
+	using VectorDataType = IECore::TypedData<vector<typename PlugType::ValueType>>;
+	if( auto typedValue = runTimeCast<const VectorDataType>( value ) )
+	{
+		if( typedValue->readable().size() == 1 )
+		{
+			plug->setValue( typedValue->readable()[0] );
+			return true;
+		}
+	}
+
 	return false;
 }
 
@@ -632,6 +679,39 @@ bool setTypedDataPlugValue( PlugType *plug, const Data *value )
 		return true;
 	}
 	return false;
+}
+
+bool setStringPlugValue( StringPlug *plug, const Data *value )
+{
+	switch( value->typeId() )
+	{
+		case IECore::StringDataTypeId:
+			plug->setValue( static_cast<const StringData *>( value )->readable() );
+			return true;
+		case IECore::InternedStringDataTypeId:
+			plug->setValue( static_cast<const InternedStringData *>( value )->readable().value() );
+			return true;
+		case IECore::StringVectorDataTypeId : {
+			const auto *data = static_cast<const StringVectorData *>( value );
+			if( data->readable().size() == 1 )
+			{
+				plug->setValue( data->readable()[0] );
+				return true;
+			}
+			return false;
+		}
+		case IECore::InternedStringVectorDataTypeId : {
+			const auto *data = static_cast<const InternedStringVectorData *>( value );
+			if( data->readable().size() == 1 )
+			{
+				plug->setValue( data->readable()[0].value() );
+				return true;
+			}
+			return false;
+		}
+		default:
+			return false;
+	}
 }
 
 template<typename PlugType, typename ValueType>
@@ -654,6 +734,16 @@ bool setCompoundNumericChildPlugValue( const PlugType *plug, typename PlugType::
 		}
 	}
 	return false;
+}
+
+template<typename PlugType, typename DataType>
+bool setCompoundNumericChildPlugValueFromVectorData( const PlugType *plug, typename PlugType::ChildType *child, const DataType *data )
+{
+	if( data->readable().size() != 1 )
+	{
+		return false;
+	}
+	return setCompoundNumericChildPlugValue( plug, child, data->readable()[0] );
 }
 
 template<typename PlugType>
@@ -687,6 +777,37 @@ bool setCompoundNumericPlugValue( const PlugType *plug, Gaffer::ValuePlug *leafP
 				typedChild->setValue( 1 );
 				return true;
 			}
+		case Color4fVectorDataTypeId :
+			return setCompoundNumericChildPlugValueFromVectorData( plug, typedChild, static_cast<const Color4fVectorData *>( value ) );
+		case Color3fVectorDataTypeId :
+			return setCompoundNumericChildPlugValueFromVectorData( plug, typedChild, static_cast<const Color3fVectorData *>( value ) );
+		case V3fVectorDataTypeId :
+			return setCompoundNumericChildPlugValueFromVectorData( plug, typedChild, static_cast<const V3fVectorData *>( value ) );
+		case V2fVectorDataTypeId :
+			return setCompoundNumericChildPlugValueFromVectorData( plug, typedChild, static_cast<const V2fVectorData *>( value ) );
+		case V3iVectorDataTypeId :
+			return setCompoundNumericChildPlugValueFromVectorData( plug, typedChild, static_cast<const V3iVectorData *>( value ) );
+		case V2iVectorDataTypeId :
+			return setCompoundNumericChildPlugValueFromVectorData( plug, typedChild, static_cast<const V2iVectorData *>( value ) );
+		case FloatVectorDataTypeId :
+		case IntVectorDataTypeId :
+		case BoolVectorDataTypeId :
+			if( plug->children().size() < 4 || leafPlug != plug->getChild( 3 ) )
+			{
+				return setNumericPlugValue( typedChild, value );
+			}
+			else
+			{
+				if( IECore::size( value ) == 1 )
+				{
+					typedChild->setValue( 1 );
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
 		default :
 			return false;
 	}
@@ -717,6 +838,16 @@ bool setBoxChildPlugValue( const PlugType *plug, typename PlugType::ChildType::C
 	}
 }
 
+template<typename PlugType, typename DataType>
+bool setBoxChildPlugValueFromVectorData( const PlugType *plug, typename PlugType::ChildType::ChildType *child, const DataType *data )
+{
+	if( data->readable().size() != 1 )
+	{
+		return false;
+	}
+	return setBoxChildPlugValue( plug, child, data->readable()[0] );
+}
+
 template<typename PlugType>
 bool setBoxPlugValue( const PlugType *plug, Gaffer::ValuePlug *leafPlug, const Data *value )
 {
@@ -731,6 +862,14 @@ bool setBoxPlugValue( const PlugType *plug, Gaffer::ValuePlug *leafPlug, const D
 			return setBoxChildPlugValue( plug, typedPlug, static_cast<const Box3iData *>( value )->readable() );
 		case Box2iDataTypeId :
 			return setBoxChildPlugValue( plug, typedPlug, static_cast<const Box2iData *>( value )->readable() );
+		case Box3fVectorDataTypeId :
+			return setBoxChildPlugValueFromVectorData( plug, typedPlug, static_cast<const Box3fVectorData *>( value ) );
+		case Box2fVectorDataTypeId :
+			return setBoxChildPlugValueFromVectorData( plug, typedPlug, static_cast<const Box2fVectorData *>( value ) );
+		case Box3iVectorDataTypeId :
+			return setBoxChildPlugValueFromVectorData( plug, typedPlug, static_cast<const Box3iVectorData *>( value ) );
+		case Box2iVectorDataTypeId :
+			return setBoxChildPlugValueFromVectorData( plug, typedPlug, static_cast<const Box2iVectorData *>( value ) );
 		default :
 			return false;
 	}
@@ -774,6 +913,19 @@ bool canSetNumericPlugValue( const Data *value )
 		case UInt64DataTypeId :
 		case BoolDataTypeId :
 			return true;
+		case HalfVectorDataTypeId :
+		case FloatVectorDataTypeId :
+		case DoubleVectorDataTypeId :
+		case CharVectorDataTypeId :
+		case UCharVectorDataTypeId :
+		case ShortVectorDataTypeId :
+		case UShortVectorDataTypeId :
+		case IntVectorDataTypeId :
+		case UIntVectorDataTypeId :
+		case Int64VectorDataTypeId :
+		case UInt64VectorDataTypeId :
+		case BoolVectorDataTypeId :
+			return IECore::size( value ) == 1;
 		default :
 			return false;
 	}
@@ -788,7 +940,18 @@ bool canSetTypedPlugValue( const Data *value )
 	}
 
 	using DataType = IECore::TypedData<typename PlugType::ValueType>;
-	return runTimeCast<const DataType>( value );
+	if( runTimeCast<const DataType>( value ) )
+	{
+		return true;
+	}
+
+	using VectorDataType = IECore::TypedData<vector<typename PlugType::ValueType>>;
+	if( auto d = runTimeCast<const VectorDataType>( value ) )
+	{
+		return d->readable().size() == 1;
+	}
+
+	return false;
 }
 
 template<typename PlugType>
@@ -804,6 +967,25 @@ bool canSetTypedDataPlugValue( const Data *value )
 		return true;
 	}
 	return false;
+}
+
+bool canSetStringPlugValue( const Data *value )
+{
+	if( !value )
+	{
+		return true;  // Data type not specified, so it could be a match
+	}
+	switch( value->typeId() )
+	{
+		case IECore::StringDataTypeId:
+		case IECore::InternedStringDataTypeId:
+			return true;
+		case IECore::StringVectorDataTypeId:
+		case IECore::InternedStringVectorDataTypeId:
+			return IECore::size( value ) == 1;
+		default:
+			return false;
+	}
 }
 
 bool canSetCompoundNumericPlugValue( const Data *value )
@@ -825,6 +1007,16 @@ bool canSetCompoundNumericPlugValue( const Data *value )
 		case IntDataTypeId :
 		case BoolDataTypeId :
 			return true;
+		case Color4fVectorDataTypeId :
+		case Color3fVectorDataTypeId :
+		case V3fVectorDataTypeId :
+		case V2fVectorDataTypeId :
+		case V3iVectorDataTypeId :
+		case V2iVectorDataTypeId :
+		case FloatVectorDataTypeId :
+		case IntVectorDataTypeId :
+		case BoolVectorDataTypeId :
+			return IECore::size( value ) == 1;
 		default :
 			return false;
 	}
@@ -844,6 +1036,14 @@ bool canSetBoxPlugValue( const Data *value )
 		case Box3iDataTypeId :
 		case Box2iDataTypeId :
 			return true;
+		case Box3fVectorDataTypeId :
+			return static_cast<const Box3fVectorData *>( value )->readable().size() == 1;
+		case Box2fVectorDataTypeId :
+			return static_cast<const Box2fVectorData *>( value )->readable().size() == 1;
+		case Box3iVectorDataTypeId :
+			return static_cast<const Box3iVectorData *>( value )->readable().size() == 1;
+		case Box2iVectorDataTypeId :
+			return static_cast<const Box2iVectorData *>( value )->readable().size() == 1;
 		default :
 			return false;
 	}
@@ -872,18 +1072,7 @@ bool canSetValueFromData( const ValuePlug *plug, const IECore::Data *value )
 		case Gaffer::IntVectorDataPlugTypeId:
 			return canSetTypedDataPlugValue<IntVectorDataPlug>( value );
 		case Gaffer::StringPlugTypeId:
-			if( !value )
-			{
-				return true;  // Data type not specified, so it could be a match
-			}
-			switch( value->typeId() )
-			{
-				case IECore::StringDataTypeId:
-				case IECore::InternedStringDataTypeId:
-					return true;
-				default:
-					return false;
-			}
+			return canSetStringPlugValue( value );
 		case Gaffer::StringVectorDataPlugTypeId:
 			return canSetTypedDataPlugValue<StringVectorDataPlug>( value );
 		case Gaffer::InternedStringVectorDataPlugTypeId:
@@ -957,17 +1146,7 @@ bool setValueFromData( ValuePlug *plug, const IECore::Data *value )
 		case Gaffer::IntVectorDataPlugTypeId:
 			return setTypedDataPlugValue( static_cast<IntVectorDataPlug *>( plug ), value );
 		case Gaffer::StringPlugTypeId:
-			switch( value->typeId() )
-			{
-				case IECore::StringDataTypeId:
-					static_cast<StringPlug *>( plug )->setValue( static_cast<const StringData *>( value )->readable() );
-					return true;
-				case IECore::InternedStringDataTypeId:
-					static_cast< StringPlug *>( plug )->setValue( static_cast<const InternedStringData *>( value )->readable().value() );
-					return true;
-				default:
-					return false;
-			}
+			return setStringPlugValue( static_cast<StringPlug *>( plug ), value );
 		case Gaffer::StringVectorDataPlugTypeId:
 			return setTypedDataPlugValue( static_cast<StringVectorDataPlug *>( plug ), value );
 		case Gaffer::InternedStringVectorDataPlugTypeId:
