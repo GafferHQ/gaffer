@@ -929,9 +929,6 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 
 	def testDataConversionsForAllTypes( self ) :
 
-		import GafferScene
-		import GafferImage
-
 		for plugType in Gaffer.ValuePlug.__subclasses__() :
 
 			valueType = getattr( plugType, "ValueType", None )
@@ -960,6 +957,225 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 				else :
 					self.assertEqual( plug.getValue(), data.value )
 				self.assertEqual( Gaffer.PlugAlgo.getValueAsData( plug ), data )
+
+	def testSetNumericValueFromVectorData( self ) :
+
+		for plugType in Gaffer.FloatPlug, Gaffer.IntPlug, Gaffer.BoolPlug :
+			plug = plugType()
+			for dataType in [
+				IECore.HalfVectorData,
+				IECore.FloatVectorData,
+				IECore.DoubleVectorData,
+				IECore.UCharVectorData,
+				IECore.ShortVectorData,
+				IECore.UShortVectorData,
+				IECore.IntVectorData,
+				IECore.UIntVectorData,
+				IECore.Int64VectorData,
+				IECore.UInt64VectorData,
+				IECore.BoolVectorData,
+			] :
+				with self.subTest( plugType = plugType, dataType = dataType ) :
+					for value in ( 0, 1 ) :
+						data = dataType()
+						# Array length 0, can't set.
+						self.assertFalse( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+						plug.setToDefault()
+						self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+						self.assertTrue( plug.isSetToDefault() )
+						# Array length 1, can set.
+						data.append( value )
+						self.assertTrue( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+						self.assertTrue( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+						self.assertEqual( plug.getValue(), value )
+						# Array length > 1, can't set.
+						data.append( value )
+						self.assertFalse( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+						plug.setToDefault()
+						self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+						self.assertTrue( plug.isSetToDefault() )
+
+	def testSetCompoundNumericValueFromVectorData( self ) :
+
+		for plugType in [
+			Gaffer.Color3fPlug, Gaffer.Color4fPlug,
+			Gaffer.V3fPlug, Gaffer.V3iPlug,
+			Gaffer.V2fPlug, Gaffer.V2iPlug
+		] :
+
+			plug = plugType()
+			for dataType in [
+				IECore.Color3fVectorData,
+				IECore.Color4fVectorData,
+				IECore.V3fVectorData,
+				IECore.V3iVectorData,
+				IECore.V2fVectorData,
+				IECore.V2iVectorData,
+				IECore.FloatVectorData,
+				IECore.IntVectorData,
+				IECore.BoolVectorData,
+			] :
+				with self.subTest( plugType = plugType, dataType = dataType ) :
+
+					data = dataType()
+
+					# Array length 0, can't set.
+
+					self.assertFalse( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+					plug.setToDefault()
+					self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+					self.assertTrue( plug.isSetToDefault() )
+					for childPlug in Gaffer.Plug.Range( plug ) :
+						self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, childPlug, data ) )
+					self.assertTrue( plug.isSetToDefault() )
+
+					# Array length 1, can set.
+
+					data.resize( 1 )
+					value = data[0]
+					if hasattr( value, "dimensions" ) :
+						# e.g. `V3f( 1, 2, 3 )`
+						for i in range( 0, value.dimensions() ) :
+							value[i] = i + 1
+					else :
+						# e.g `2`, `2.0`, or `True`
+						value = type( value )( 2 )
+					data[0] = value
+
+					self.assertTrue( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+					self.assertTrue( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+					for i, childPlug in enumerate( plug ) :
+						if hasattr( value, "dimensions" ) :
+							if i < value.dimensions() :
+								self.assertEqual( childPlug.getValue(), value[i] )
+							else :
+								self.assertEqual( childPlug.getValue(), 1 if i == 3 else 0 )
+						else :
+							self.assertEqual( childPlug.getValue(), 1 if i == 3 else value )
+
+					# And can also set a component at a time.
+
+					plug.setToDefault()
+					for i, childPlug in enumerate( plug ) :
+						Gaffer.PlugAlgo.setValueFromData( plug, childPlug, data )
+						if hasattr( value, "dimensions" ) :
+							if i < value.dimensions() :
+								self.assertEqual( childPlug.getValue(), value[i] )
+							else :
+								self.assertEqual( childPlug.getValue(), 1 if i == 3 else 0 )
+						else :
+							self.assertEqual( childPlug.getValue(), 1 if i == 3 else value )
+
+					# Array length > 1, can't set.
+
+					data.append( data[0] )
+
+					self.assertFalse( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+					plug.setToDefault()
+					self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+					self.assertTrue( plug.isSetToDefault() )
+					for childPlug in plug :
+						self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, childPlug, data ) )
+						self.assertTrue( childPlug.isSetToDefault() )
+					self.assertTrue( plug.isSetToDefault() )
+
+	def testSetTypedValueFromVectorData( self ) :
+
+		for plugType, value in [
+			( Gaffer.StringPlug, "test" ),
+			( Gaffer.StringPlug, IECore.InternedString( "test" ) ),
+			( Gaffer.M33fPlug, imath.M33f( 1 ) ),
+			( Gaffer.M44fPlug, imath.M44f( 1 ) ),
+			( Gaffer.AtomicBox2fPlug, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ) ),
+			( Gaffer.AtomicBox3fPlug, imath.Box3f( imath.V3f( 0 ), imath.V3f( 1 ) ) ),
+			( Gaffer.AtomicBox2iPlug, imath.Box2i( imath.V2i( 0 ), imath.V2i( 1 ) ) ),
+		] :
+
+			with self.subTest( plugType = plugType, value = value ) :
+
+				plug = plugType()
+				data = IECore.DataTraits.dataFromElement( [ value ] )
+				self.assertEqual( len( data ), 1 )
+
+				# Array length 1, can set
+
+				self.assertTrue( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+				self.assertTrue( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+				self.assertEqual( plug.getValue(), value )
+				self.assertFalse( plug.isSetToDefault() )
+
+				# Array length 2, can't set
+
+				data.append( data[0] )
+				plug.setToDefault()
+				self.assertFalse( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+				self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+				self.assertTrue( plug.isSetToDefault() )
+
+				# Array length 0, can't set
+
+				data.resize( 0 )
+				plug.setToDefault()
+				self.assertFalse( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+				self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+				self.assertTrue( plug.isSetToDefault() )
+
+	def testSetBoxValueFromVectorData( self ) :
+
+		for plugType in [
+			Gaffer.Box2fPlug, Gaffer.Box3fPlug,
+			Gaffer.Box2iPlug, Gaffer.Box3iPlug,
+		] :
+
+			with self.subTest( plugType = plugType ) :
+
+				plug = plugType()
+
+				minValue = plugType.PointType()
+				maxValue = plugType.PointType()
+				for i in range( 0, minValue.dimensions() ) :
+					minValue[i] = i
+					maxValue[i] = i + 1
+				value = plugType.ValueType( minValue, maxValue )
+				data = IECore.DataTraits.dataFromElement( [ value ] )
+
+				# Array length 1, can set
+
+				self.assertTrue( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+				self.assertTrue( plug.isSetToDefault() )
+				self.assertTrue( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+				self.assertEqual( plug.getValue(), value )
+				self.assertFalse( plug.isSetToDefault() )
+
+				# And can set individual children
+
+				plug.setToDefault()
+				for childPlug in plug :
+					for componentPlug in childPlug :
+						self.assertTrue( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+				self.assertEqual( plug.getValue(), value )
+				self.assertFalse( plug.isSetToDefault() )
+
+				# Array length 2, can't set
+
+				data.append( data[0] )
+				plug.setToDefault()
+				self.assertFalse( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+				self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+				for childPlug in plug :
+					for componentPlug in childPlug :
+						self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+				self.assertTrue( plug.isSetToDefault() )
+
+				# Array length 0, can't set
+
+				data.resize( 0 )
+				self.assertFalse( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+				self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+				for childPlug in plug :
+					for componentPlug in childPlug :
+						self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+				self.assertTrue( plug.isSetToDefault() )
 
 	def testDependsOnCompute( self ) :
 

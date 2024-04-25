@@ -6,7 +6,26 @@
 1.4.x.x (relative to 1.4.1.0)
 =======
 
+Improvements
+------------
 
+- TweakPlug : `ListAppend`, `ListPrepend` and `ListRemove` modes are now supported for string values. In this case, the string is treated as a space-separated list.
+- Cycles :
+  - Changed default value for `principled_bsdf.specular_ior_level` to `0.5`, matching Blender.
+  - Added support for `uv.tangent` and `uv.tangent_sign` primitive variables to assist in rendering with normal maps (#5269).
+- AttributeQuery, PrimitiveVariableQuery, ContextQuery, OptionQuery, ShaderQuery : Added support for querying arrays of length 1 as their equivalent scalar types.
+
+Fixes
+-----
+
+- Viewer : Fixed Cycles shader balls.
+- TweakPlug : Fixed incorrect results and potential crashes in list modes.
+
+API
+---
+
+- PlugAlgo : `setValueFromData()` and `canSetValueFromData()` now support conversion of arrays of length 1 to their equivalent scalar types.
+- BoxPlug : Added Python bindings for `ValueType`, `PointType` and `ChildType` type aliases.
 
 1.4.1.0 (relative to 1.4.0.0)
 =======

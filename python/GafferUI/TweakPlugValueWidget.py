@@ -190,6 +190,7 @@ def __validModes( plug ) :
 		Gaffer.M44fVectorDataPlug,
 		Gaffer.M33fVectorDataPlug,
 		Gaffer.PathMatcherDataPlug,
+		Gaffer.StringPlug,
 	] :
 		result += [
 			Gaffer.TweakPlug.Mode.ListAppend,

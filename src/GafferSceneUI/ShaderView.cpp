@@ -123,6 +123,12 @@ IECoreImage::DisplayDriverServer *displayDriverServer()
 
 GAFFER_NODE_DEFINE_TYPE( ShaderView );
 
+/// \todo Registering against `out` is not ideal. Most Shader subclasses represent outputs as children of `out`, and
+/// connecting directly from `Shader.out` to `View.in` results in a non-standard ShaderNetwork in which the name of
+/// the output parameter is not specified. Instead we want to register against `out.*`, so that the children are
+/// connected into `View.in`. We can't do that yet though, because ArnoldShader uses `out` directly - see #5542.
+/// Alternatively, we could omit this registration entirely in favour of specific registrations for each subclass,
+/// but that would be a breaking change (albeit a small one).
 ShaderView::ViewDescription<ShaderView> ShaderView::g_viewDescription( GafferScene::Shader::staticTypeId(), "out" );
 
 ShaderView::ShaderView( const std::string &name )
