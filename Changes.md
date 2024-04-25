@@ -5,7 +5,9 @@ Improvements
 ------------
 
 - TweakPlug : `ListAppend`, `ListPrepend` and `ListRemove` modes are now supported for string values. In this case, the string is treated as a space-separated list.
-- Cycles : Changed default value for `principled_bsdf.specular_ior_level` to `0.5`, matching Blender.
+- Cycles :
+  - Changed default value for `principled_bsdf.specular_ior_level` to `0.5`, matching Blender.
+  - Added support for `uv.tangent` and `uv.tangent_sign` primitive variables to assist in rendering with normal maps (#5269).
 - AttributeQuery, PrimitiveVariableQuery, ContextQuery, OptionQuery, ShaderQuery : Added support for querying arrays of length 1 as their equivalent scalar types.
 
 Fixes

@@ -367,6 +367,14 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 	{
 		attr->std = ccl::ATTR_STD_UV;
 	}
+	else if( name == "uv.tangent_sign" && attr->element == ccl::ATTR_ELEMENT_CORNER && attr->type == ccl::TypeDesc::TypeFloat )
+	{
+		attr->std = ccl::ATTR_STD_UV_TANGENT_SIGN;
+	}
+	else if( name == "uv.tangent" && attr->element == ccl::ATTR_ELEMENT_CORNER && attr->type == ccl::TypeDesc::TypeVector )
+	{
+		attr->std = ccl::ATTR_STD_UV_TANGENT;
+	}
 }
 
 } // namespace GeometryAlgo
