@@ -100,59 +100,67 @@ IECore::ConstObjectPtr CameraTweaks::computeProcessedObject( const ScenePath &pa
 		return inputObject;
 	}
 
-	const Plug *tweaksPlug = this->tweaksPlug();
+	const TweaksPlug *tweaksPlug = this->tweaksPlug();
 	if( tweaksPlug->children().empty() )
 	{
 		return inputObject;
 	}
 
 	IECoreScene::CameraPtr result = inputCamera->copy();
+	DataPtr virtualParameter;
 
-	for( TweakPlug::Iterator tIt( tweaksPlug ); !tIt.done(); ++tIt )
-	{
-		if( !(*tIt)->enabledPlug()->getValue() )
-		{
-			continue;
-		}
-		const std::string name = (*tIt)->namePlug()->getValue();
-		if( name.empty() )
-		{
-			continue;
-		}
+	tweaksPlug->applyTweaks(
 
-		if( name == "fieldOfView" )
-		{
-			InternedString internedName(name);
-			CompoundDataPtr dummyParameters = new CompoundData();
-			dummyParameters->writable()[internedName] = new FloatData( result->calculateFieldOfView()[0] );
-			(*tIt)->applyTweak( dummyParameters.get(), TweakPlug::MissingMode::IgnoreOrReplace );
-			FloatData *tweakedData = dummyParameters->member<FloatData>( internedName );
-			if( tweakedData )
+		// Getter
+		[&] ( const std::string &name ) {
+			if( name == "fieldOfView" )
 			{
-				float fieldOfView = std::max( 0.0f, std::min( 179.99f, tweakedData->readable() ) );
-				result->setFocalLengthFromFieldOfView( fieldOfView );
+				virtualParameter = new FloatData( result->calculateFieldOfView()[0] );
+				return virtualParameter.get();
 			}
-		}
-		else if( name == "apertureAspectRatio" )
-		{
-			InternedString internedName(name);
-			Imath::V2f aperture = result->getAperture();
-			CompoundDataPtr dummyParameters = new CompoundData();
-			dummyParameters->writable()[internedName] = new FloatData( aperture[0] / aperture[1] );
-			(*tIt)->applyTweak( dummyParameters.get(), TweakPlug::MissingMode::IgnoreOrReplace );
-			FloatData *tweakedData = dummyParameters->member<FloatData>( internedName );
-			if( tweakedData )
+			else if( name == "apertureAspectRatio" )
 			{
-				aperture[1] = aperture[0] / max( 0.0000001f, tweakedData->readable() );
-				result->setAperture( aperture );
+				const Imath::V2f aperture = result->getAperture();
+				virtualParameter = new FloatData( aperture[0] / aperture[1] );
+				return virtualParameter.get();
 			}
-		}
-		else
-		{
-			(*tIt)->applyTweak( result->parametersData(), TweakPlug::MissingMode::IgnoreOrReplace );
-		}
-	}
+			return result->parametersData()->member( name );
+		},
 
+		// Setter
+		[&] ( const std::string &name, IECore::DataPtr value ) {
+			if( name == "fieldOfView" )
+			{
+				if( auto fieldOfView = runTimeCast<const FloatData>( value.get() ) )
+				{
+					result->setFocalLengthFromFieldOfView( std::max( 0.0f, std::min( 179.99f, fieldOfView->readable() ) ) );
+					return true;
+				}
+				return false;
+			}
+			else if( name == "apertureAspectRatio" )
+			{
+				if( auto aspectRatio = runTimeCast<const FloatData>( value.get() ) )
+				{
+					Imath::V2f aperture = result->getAperture();
+					aperture[1] = aperture[0] / max( 0.0000001f, aspectRatio->readable() );
+					result->setAperture( aperture );
+				}
+				return false;
+			}
+
+			if( !value )
+			{
+				return result->parameters().erase( name ) > 0;
+			}
+
+			result->parameters()[name] = value;
+			return true;
+		},
+
+		TweakPlug::MissingMode::IgnoreOrReplace
+
+	);
 
 	return result;
 }
