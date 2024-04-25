@@ -1635,7 +1635,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 		{
 			if( boost::starts_with( name.string(), "dl:" ) || name.string().find( ":" ) == string::npos )
 			{
-				IECore::msg( IECore::Msg::Warning, "IECoreDelight::Renderer::command", boost::format( "Unknown command \"%s\"." ) % name.c_str() );
+				IECore::msg( IECore::Msg::Warning, "IECoreDelight::Renderer::command", fmt::format( "Unknown command \"{}\".", name.c_str() ) );
 			}
 
 			return nullptr;
