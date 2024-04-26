@@ -24,6 +24,9 @@ API
 
 - ShaderPlug : Added `parameterSource()` method returning the `ValuePlug` responsible for generating a parameter in a shader network.
 - ParameterInspector : Added the ability to inspect parameters on any shader in a light or shader's shader network.
+- RenderPassTypeAdaptor :
+  - Added registration methods for defining render pass types and processors.
+  - Added `registerAutoTypeFunction()` method to define a function used to automatically derive the render pass type from the render pass name when the `renderPass:type` option value is "auto".
 
 1.4.3.0 (relative to 1.4.2.0)
 =======
