@@ -199,6 +199,13 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 
 		section[columnKey] = inspectorFunction
 
+	@classmethod
+	def deregisterColumn( cls, groupKey, columnKey, section = "Main" ) :
+
+		sections = cls.__columnRegistry.get( groupKey )
+		if sections is not None and section in sections.keys() and columnKey in sections[section].keys() :
+			del sections[section][columnKey]
+
 	__addRenderPassButtonMenuSignal = None
 	## This signal is emitted whenever the add render pass button is clicked.
 	# If the resulting menu definition has been populated with items,
