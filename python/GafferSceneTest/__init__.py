@@ -179,6 +179,7 @@ from .DeleteRenderPassesTest import DeleteRenderPassesTest
 from .RenderPassWedgeTest import RenderPassWedgeTest
 from .RenderAdaptorTest import RenderAdaptorTest
 from .MeshTessellateTest import MeshTessellateTest
+from .RenderPassTypeAdaptorTest import RenderPassTypeAdaptorTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *

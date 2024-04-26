@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012-2014, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,15 +34,40 @@
 #
 ##########################################################################
 
-__import__( "IECoreScene" )
-__import__( "Gaffer" )
-__import__( "GafferDispatch" )
-__import__( "GafferImage" )
+import Gaffer
+import GafferScene
 
-from ._GafferScene import *
+Gaffer.Metadata.registerNode(
 
-from .ShaderBall import ShaderBall
-from .RenderPassWedge import RenderPassWedge
-from .RenderPassTypeAdaptor import RenderPassTypeAdaptor
+	GafferScene.RenderPassTypeAdaptor,
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferScene" )
+	"description",
+	"""
+	Adapts render pass types to a client and renderer. The behaviour of
+	how each render pass type is adapted is defined by one or more type
+	processors registered to this node.
+	""",
+
+	plugs = {
+
+		"client" : [
+
+			"description",
+			"""
+			The client to adapt render pass types to.
+			""",
+
+		],
+
+		"renderer" : [
+
+			"description",
+			"""
+			The renderer to adapt render pass types to.
+			""",
+
+		],
+
+	}
+
+)
