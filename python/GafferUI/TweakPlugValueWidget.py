@@ -221,6 +221,9 @@ __modeDescriptions = {
 	"""
 	Replaces an existing {property}. Errors if the {property} doesn't exist,
 	unless `ignoreMissing` is set, in which case the tweak is skipped.
+
+	When replacing a string {property}, the new value may contain a `{{source}}`
+	token, which will be substituted with the original value.
 	""",
 	Gaffer.TweakPlug.Mode.Add :
 	"""

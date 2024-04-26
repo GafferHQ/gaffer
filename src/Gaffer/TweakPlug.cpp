@@ -46,6 +46,7 @@
 #include "IECore/TypeTraits.h"
 
 #include "boost/algorithm/string/join.hpp"
+#include "boost/algorithm/string/replace.hpp"
 
 #include "fmt/format.h"
 
@@ -410,6 +411,21 @@ void TweakPlug::applyListTweak(
 		}
 
 	);
+}
+
+void TweakPlug::applyReplaceTweak( const IECore::Data *sourceData, IECore::Data *tweakData ) const
+{
+	if( auto stringData = IECore::runTimeCast<IECore::StringData>( tweakData ) )
+	{
+		boost::replace_all( stringData->writable(), "{source}", static_cast<const IECore::StringData *>( sourceData )->readable() );
+	}
+	else if( auto internedStringData = IECore::runTimeCast<IECore::InternedStringData>( tweakData ) )
+	{
+		internedStringData->writable() = boost::replace_all_copy(
+			internedStringData->readable().string(),
+			"{source}", static_cast<const IECore::InternedStringData *>( sourceData )->readable().string()
+		);
+	}
 }
 
 const char *TweakPlug::modeToString( Gaffer::TweakPlug::Mode mode )

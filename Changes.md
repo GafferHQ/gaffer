@@ -10,7 +10,9 @@ Improvements
   - Added support for `uv.tangent` and `uv.tangent_sign` primitive variables to assist in rendering with normal maps (#5269).
 - AttributeQuery, PrimitiveVariableQuery, ContextQuery, OptionQuery, ShaderQuery : Added support for querying arrays of length 1 as their equivalent scalar types.
 - CodeWidget : Added <kbd>Ctrl</kbd>+<kbd>L</kbd> shortcut for selecting all text on the current line.
-- AttributeTweaks, CameraTweaks, ShaderTweaks, OptionTweaks, PrimitiveVariableTweaks : Added tooltips documenting the tweak modes.
+- AttributeTweaks, CameraTweaks, ShaderTweaks, OptionTweaks, PrimitiveVariableTweaks :
+  - Added support for a `{source}` token which is substituted with the original value when tweaking a string in `Replace` mode.
+  - Added tooltips documenting the tweak modes.
 
 Fixes
 -----
