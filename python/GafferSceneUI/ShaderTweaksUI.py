@@ -128,6 +128,7 @@ Gaffer.Metadata.registerNode(
 			"noduleLayout:visible", False, # Can be shown individually using PlugAdder above
 			"tweakPlugValueWidget:allowCreate", True,
 			"tweakPlugValueWidget:allowRemove", True,
+			"tweakPlugValueWidget:propertyType", "parameter",
 
 		],
 

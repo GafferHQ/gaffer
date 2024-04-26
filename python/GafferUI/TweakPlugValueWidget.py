@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import inspect
 import functools
 import re
 
@@ -150,10 +151,12 @@ GafferUI.PlugValueWidget.registerType( Gaffer.TweakPlug, TweakPlugValueWidget )
 
 Gaffer.Metadata.registerValue( Gaffer.TweakPlug, "deletable", lambda plug : plug.getFlags( Gaffer.Plug.Flags.Dynamic ) )
 
-Gaffer.Metadata.registerValue(
-	Gaffer.TweakPlug, "name",
-	"description", "The name of the parameter to apply the tweak to."
-)
+def __nameDescription( plug ) :
+
+	property = Gaffer.Metadata.value( plug.parent(), "tweakPlugValueWidget:propertyType" ) or "property"
+	return f"The name of the {property} to apply the tweak to."
+
+Gaffer.Metadata.registerValue( Gaffer.TweakPlug, "name", "description", __nameDescription )
 
 Gaffer.Metadata.registerValue(
 	Gaffer.TweakPlug, "mode",
@@ -211,6 +214,94 @@ Gaffer.Metadata.registerValue(
 Gaffer.Metadata.registerValue(
 	Gaffer.TweakPlug, "mode",
 	"presetValues", lambda plug : IECore.IntVectorData( [ int( x ) for x in __validModes( plug ) ] )
+)
+
+__modeDescriptions = {
+	Gaffer.TweakPlug.Mode.Replace :
+	"""
+	Replaces an existing {property}. Errors if the {property} doesn't exist,
+	unless `ignoreMissing` is set, in which case the tweak is skipped.
+	""",
+	Gaffer.TweakPlug.Mode.Add :
+	"""
+	Adds to an existing numeric {property}. Errors if the {property} doesn't exist,
+	unless `ignoreMissing` is set, in which case the tweak is skipped.
+	""",
+	Gaffer.TweakPlug.Mode.Subtract :
+	"""
+	Subtracts from an existing numeric {property}. Errors if the {property} doesn't exist,
+	unless `ignoreMissing` is set, in which case the tweak is skipped.
+	""",
+	Gaffer.TweakPlug.Mode.Multiply :
+	"""
+	Multiplies an existing numeric {property}. Errors if the {property} doesn't exist,
+	unless `ignoreMissing` is set, in which case the tweak is skipped.
+	""",
+	Gaffer.TweakPlug.Mode.Remove :
+	"""
+	Removes an existing {property}. Does not error if the property doesn't exist.
+	""",
+	Gaffer.TweakPlug.Mode.Create :
+	"""
+	Sets the value of {a} {property}, creating it if it doesn't exist yet.
+	""",
+	Gaffer.TweakPlug.Mode.Min :
+	"""
+	Sets an existing numeric {property} to the minimum of its current value and
+	the tweak value. Errors if the {property} doesn't exist, unless
+	`ignoreMissing` is set, in which case the tweak is skipped.
+	""",
+	Gaffer.TweakPlug.Mode.Max :
+	"""
+	Sets an existing numeric {property} to the maximum of its current value and
+	the tweak value. Errors if the {property} doesn't exist, unless
+	`ignoreMissing` is set, in which case the tweak is skipped.
+	""",
+	Gaffer.TweakPlug.Mode.ListAppend :
+	"""
+	Appends new values on the end of a list of values. Any values already
+	in the list are moved to the end, so that duplicates are not created.
+	If the {property} doesn't exist yet, it is created.
+	""",
+	Gaffer.TweakPlug.Mode.ListPrepend :
+	"""
+	Appends new values at the front of a list of values. Any values already
+	in the list are moved to the front, so that duplicates are not created.
+	If the {property} doesn't exist yet, it is created.
+	""",
+	Gaffer.TweakPlug.Mode.ListRemove :
+	"""
+	Removes values from an existing list. Does not error if the property doesn't exist.
+	""",
+	Gaffer.TweakPlug.Mode.CreateIfMissing :
+	"""
+	Like `Create`, but does nothing if the {property} already exists.
+	"""
+
+}
+
+def __modeDescription( plug ) :
+
+	property = Gaffer.Metadata.value( plug.parent(), "tweakPlugValueWidget:propertyType" ) or "property"
+
+	result =  "| Mode | Description |\n"
+	result += "| :--- | :---------- |\n"
+
+	for mode in __validModes( plug ) :
+		description = inspect.cleandoc( __modeDescriptions[mode] ).format(
+			property = property,
+			a = "an" if property[0] in "aeiou" else "a"
+		)
+		result += "| {} | {} |\n".format(
+			IECore.CamelCase.toSpaced( str( mode ) ),
+			description.replace( "\n", " " )
+		)
+
+	return result
+
+Gaffer.Metadata.registerValue(
+	Gaffer.TweakPlug, "mode",
+	"description", __modeDescription
 )
 
 def __noduleLabel( plug ) :
