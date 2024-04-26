@@ -1,6 +1,11 @@
 1.4.x.x (relative to 1.4.3.0)
 =======
 
+Features
+--------
+
+- RenderPassShader : Added new node for overriding a shader used by a render pass type.
+
 Improvements
 ------------
 
