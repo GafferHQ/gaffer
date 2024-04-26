@@ -125,6 +125,12 @@ class RenderPassTypeAdaptor( GafferScene.SceneProcessor ) :
 		return __renderPassTypeProcessors[type].keys()
 
 	@staticmethod
+	def createTypeProcessor( type, name ) :
+
+		global __renderPassTypeProcessors
+		return __renderPassTypeProcessors[type][name]()
+
+	@staticmethod
 	def deregisterTypeProcessor( type, name ) :
 
 		global __renderPassTypeProcessors
