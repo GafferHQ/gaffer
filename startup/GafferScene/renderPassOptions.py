@@ -40,3 +40,7 @@ import Gaffer
 Gaffer.Metadata.registerValue( "option:renderPass:enabled", "label", "Enabled" )
 Gaffer.Metadata.registerValue( "option:renderPass:enabled", "description", "Whether the render pass is enabled for rendering." )
 Gaffer.Metadata.registerValue( "option:renderPass:enabled", "defaultValue", IECore.BoolData( True ) )
+
+Gaffer.Metadata.registerValue( "option:renderPass:type", "label", "Type" )
+Gaffer.Metadata.registerValue( "option:renderPass:type", "description", "The type of the render pass." )
+Gaffer.Metadata.registerValue( "option:renderPass:type", "defaultValue", IECore.StringData( "" ) )
