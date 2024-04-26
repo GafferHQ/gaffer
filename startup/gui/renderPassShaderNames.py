@@ -35,71 +35,10 @@
 ##########################################################################
 
 import Gaffer
-import GafferUI
 import GafferScene
-import GafferSceneUI
 
-import IECore
+Gaffer.Metadata.registerValue( GafferScene.RenderPassShader, "usage", "preset:Shadow Catcher", "shadowCatcher" )
+Gaffer.Metadata.registerValue( GafferScene.RenderPassShader, "usage", "preset:Reflection Catcher", "reflectionCatcher" )
+Gaffer.Metadata.registerValue( GafferScene.RenderPassShader, "usage", "preset:Reflection Caster", "reflectionCaster" )
 
-def __rendererNames( plug ) :
-
-	return [
-		x for x in GafferSceneUI.RenderUI.rendererPresetNames( plug )
-		if x not in ( "OpenGL", "3Delight Cloud" )
-	]
-
-def __rendererPresetNames( plug ) :
-
-	return IECore.StringVectorData( [ "All" ] + __rendererNames( plug ) )
-
-def __rendererPresetValues( plug ) :
-
-	return IECore.StringVectorData( [ "*" ] + __rendererNames( plug ) )
-
-Gaffer.Metadata.registerNode(
-
-	GafferScene.RenderPassShader,
-
-	"description",
-	"""
-	Sets up a global shader in the options to replace a shader used by a render pass type.
-	""",
-
-	plugs = {
-
-		"renderer" : [
-
-			"description",
-			"""
-			The renderer the shader should affect. Shaders assigned to a specific
-			renderer will take precedence over shaders assigned to "All" when
-			rendering with that renderer.
-			""",
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-			"presetNames", __rendererPresetNames,
-			"presetValues", __rendererPresetValues,
-
-		],
-
-		"usage" : [
-
-			"description",
-			"""
-			How the shader is to be used.
-			""",
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
-		"shader" : [
-
-			"layout:index", -1,
-
-		],
-
-	}
-
-)
+Gaffer.Metadata.registerValue( GafferScene.RenderPassShader, "usage", "userDefault", "shadowCatcher" )
