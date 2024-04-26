@@ -174,7 +174,8 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 		toolTip = "<h3>{}</h3>".format( optionLabel or columnName )
 		optionDescription = Gaffer.Metadata.value( "option:" + optionName, "description" )
 		if optionDescription :
-			toolTip += "\n\n" + optionDescription
+			## \todo PathListingWidget's PathModel should be handling this instead.
+			toolTip += GafferUI.DocumentationAlgo.markdownToHTML( optionDescription )
 
 		GafferSceneUI.RenderPassEditor.registerColumn(
 			groupKey,
