@@ -23,6 +23,7 @@ API
 - PlugAlgo : `setValueFromData()` and `canSetValueFromData()` now support conversion of arrays of length 1 to their equivalent scalar types.
 - BoxPlug : Added Python bindings for `ValueType`, `PointType` and `ChildType` type aliases.
 - RenderPassEditor : Added `deregisterColumn()` method.
+- DocumentationAlgo : Added table and strikethrough support to `markdownToHTML()`.
 
 Build
 -----
