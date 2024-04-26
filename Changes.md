@@ -4,6 +4,7 @@
 Features
 --------
 
+- RenderPassEditor : Added `type` column for configuring specific passes to render with a predefined type.
 - RenderPassShader : Added new node for overriding a shader used by a render pass type.
 
 Improvements

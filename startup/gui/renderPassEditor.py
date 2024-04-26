@@ -41,6 +41,7 @@ import Gaffer
 import GafferSceneUI
 
 GafferSceneUI.RenderPassEditor.registerOption( "*", "renderPass:enabled" )
+GafferSceneUI.RenderPassEditor.registerOption( "*", "renderPass:type" )
 GafferSceneUI.RenderPassEditor.registerOption( "*", "render:inclusions" )
 GafferSceneUI.RenderPassEditor.registerOption( "*", "render:exclusions" )
 GafferSceneUI.RenderPassEditor.registerOption( "*", "render:additionalLights" )
