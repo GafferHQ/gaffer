@@ -9,6 +9,7 @@ Improvements
   - Changed default value for `principled_bsdf.specular_ior_level` to `0.5`, matching Blender.
   - Added support for `uv.tangent` and `uv.tangent_sign` primitive variables to assist in rendering with normal maps (#5269).
 - AttributeQuery, PrimitiveVariableQuery, ContextQuery, OptionQuery, ShaderQuery : Added support for querying arrays of length 1 as their equivalent scalar types.
+- CodeWidget : Added <kbd>Ctrl</kbd>+<kbd>L</kbd> shortcut for selecting all text on the current line.
 
 Fixes
 -----

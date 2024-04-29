@@ -111,6 +111,8 @@ class CodeWidget( GafferUI.MultiLineTextWidget ) :
 			return self.__commentPress()
 		elif event.key == "Return" and event.modifiers == event.Modifiers.None_ :
 			return self.__returnPress()
+		elif event.modifiers == event.Modifiers.Control and event.key == "L" :
+			return self.__extendSelectionPress()
 
 		return False
 
@@ -238,6 +240,33 @@ class CodeWidget( GafferUI.MultiLineTextWidget ) :
 			self._qtWidget().ensureCursorVisible()
 		finally :
 			cursor.endEditBlock()
+
+		return True
+
+	def __extendSelectionPress( self ) :
+
+		cursor = self._qtWidget().textCursor()
+
+		if cursor.hasSelection() :
+			# Extend an existing selection to contain the beginning of the
+			# first selected line through to the end of the last selected line.
+			selectionEnd = cursor.selectionEnd()
+			cursor.setPosition( cursor.selectionStart(), cursor.MoveAnchor )
+			cursor.movePosition( cursor.StartOfLine, cursor.MoveAnchor )
+			cursor.setPosition( selectionEnd, cursor.KeepAnchor )
+			cursor.movePosition( cursor.EndOfLine, cursor.KeepAnchor )
+		else :
+			# Select the entire line where the cursor is currently positioned.
+			cursor.movePosition( cursor.StartOfLine, cursor.MoveAnchor )
+			cursor.movePosition( cursor.EndOfLine, cursor.KeepAnchor )
+
+		if not cursor.atEnd() :
+			# Move the cursor to the start of the next line to allow
+			# repeated presses to extend the selection to subsequent lines.
+			cursor.movePosition( cursor.Down, cursor.KeepAnchor )
+			cursor.movePosition( cursor.StartOfLine, cursor.KeepAnchor )
+
+		self._qtWidget().setTextCursor( cursor )
 
 		return True
 
