@@ -79,13 +79,17 @@ class GAFFERSCENEUI_API LightPositionTool : public GafferSceneUI::TransformTool
 			const float targetDistance
 		);
 
+		// Positions the current selection to be `distance` away from `target`, along `normal`.
+		void positionAlongNormal( const Imath::V3f &target, const Imath::V3f &normal, const float targetDistance );
+
 		enum class Mode
 		{
 			Shadow,
 			Highlight,
+			Diffuse,
 
 			First = Shadow,
-			Last = Highlight
+			Last = Diffuse
 		};
 
 	protected :

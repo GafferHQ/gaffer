@@ -1,6 +1,11 @@
 1.4.x.x (relative to 1.4.1.0)
 =======
 
+Features
+--------
+
+- LightPositionTool : Added `Diffuse` mode for placing lights along the normal of the target position.
+
 Improvements
 ------------
 

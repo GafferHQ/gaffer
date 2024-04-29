@@ -48,8 +48,10 @@ def __toolTip( tool ) :
 	result = None
 	if mode == GafferSceneUI.LightPositionTool.Mode.Shadow :
 		result = "Hold 'Shift' + 'V' to place shadow pivot\nHold 'V' to place shadow target"
-	else :
+	elif mode == GafferSceneUI.LightPositionTool.Mode.Highlight :
 		result = "Hold 'V' to place highlight target"
+	else :
+		result = "Hold 'V' to place diffuse target"
 
 	return result
 
@@ -89,6 +91,7 @@ Gaffer.Metadata.registerNode(
 
 			"preset:Shadow", GafferSceneUI.LightPositionTool.Mode.Shadow,
 			"preset:Highlight", GafferSceneUI.LightPositionTool.Mode.Highlight,
+			"preset:Diffuse", GafferSceneUI.LightPositionTool.Mode.Diffuse,
 
 			"viewer:cyclePresetShortcut", "O",
 
