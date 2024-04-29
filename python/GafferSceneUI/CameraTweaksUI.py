@@ -70,6 +70,16 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+		"ignoreMissing" : [
+
+			"description",
+			"""
+			Ignores tweaks that would normally cause an error if the input
+			parameter was missing.
+			""",
+
+		],
+
 		"tweaks" : [
 
 			"description",

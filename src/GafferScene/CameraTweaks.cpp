@@ -54,6 +54,7 @@ CameraTweaks::CameraTweaks( const std::string &name )
 	:	ObjectProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new BoolPlug( "ignoreMissing", Plug::In, false ) );
 	addChild( new TweaksPlug( "tweaks" ) );
 }
 
@@ -61,20 +62,31 @@ CameraTweaks::~CameraTweaks()
 {
 }
 
+Gaffer::BoolPlug *CameraTweaks::ignoreMissingPlug()
+{
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::BoolPlug *CameraTweaks::ignoreMissingPlug() const
+{
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex );
+}
+
 Gaffer::TweaksPlug *CameraTweaks::tweaksPlug()
 {
-	return getChild<Gaffer::TweaksPlug>( g_firstPlugIndex );
+	return getChild<Gaffer::TweaksPlug>( g_firstPlugIndex + 1 );
 }
 
 const Gaffer::TweaksPlug *CameraTweaks::tweaksPlug() const
 {
-	return getChild<Gaffer::TweaksPlug>( g_firstPlugIndex );
+	return getChild<Gaffer::TweaksPlug>( g_firstPlugIndex + 1 );
 }
 
 bool CameraTweaks::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
 	return
 		ObjectProcessor::affectsProcessedObject( input ) ||
+		input == ignoreMissingPlug() ||
 		tweaksPlug()->isAncestorOf( input )
 	;
 }
@@ -88,6 +100,7 @@ void CameraTweaks::hashProcessedObject( const ScenePath &path, const Gaffer::Con
 	else
 	{
 		ObjectProcessor::hashProcessedObject( path, context, h );
+		ignoreMissingPlug()->hash( h );
 		tweaksPlug()->hash( h );
 	}
 }
@@ -158,7 +171,7 @@ IECore::ConstObjectPtr CameraTweaks::computeProcessedObject( const ScenePath &pa
 			return true;
 		},
 
-		TweakPlug::MissingMode::IgnoreOrReplace
+		ignoreMissingPlug()->getValue() ? TweakPlug::MissingMode::Ignore : TweakPlug::MissingMode::Error
 
 	);
 

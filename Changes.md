@@ -1,7 +1,15 @@
 1.x.x.x (relative to 1.4.x.x)
 =======
 
+Improvements
+------------
 
+- CameraTweaks : Added `ignoreMissing` plug to align behaviour with the other Tweaks nodes.
+
+Breaking Changes
+----------------
+
+- CameraTweaks : `Replace` mode now errors if the input parameter does not exist. Use `Create` mode or the new `ignoreMissing` plug instead.
 
 1.4.x.x (relative to 1.4.2.0)
 =======
