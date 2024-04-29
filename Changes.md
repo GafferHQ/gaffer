@@ -6,6 +6,11 @@
 1.4.x.x (relative to 1.4.1.0)
 =======
 
+Features
+--------
+
+- LightPositionTool : Added `Diffuse` mode for placing lights along the normal of the target position.
+
 Improvements
 ------------
 
@@ -14,6 +19,10 @@ Improvements
   - Changed default value for `principled_bsdf.specular_ior_level` to `0.5`, matching Blender.
   - Added support for `uv.tangent` and `uv.tangent_sign` primitive variables to assist in rendering with normal maps (#5269).
 - AttributeQuery, PrimitiveVariableQuery, ContextQuery, OptionQuery, ShaderQuery : Added support for querying arrays of length 1 as their equivalent scalar types.
+- CodeWidget : Added <kbd>Ctrl</kbd>+<kbd>L</kbd> shortcut for selecting all text on the current line.
+- AttributeTweaks, CameraTweaks, ShaderTweaks, OptionTweaks, PrimitiveVariableTweaks :
+  - Added support for a `{source}` token which is substituted with the original value when tweaking a string in `Replace` mode.
+  - Added tooltips documenting the tweak modes.
 
 Fixes
 -----
@@ -26,6 +35,13 @@ API
 
 - PlugAlgo : `setValueFromData()` and `canSetValueFromData()` now support conversion of arrays of length 1 to their equivalent scalar types.
 - BoxPlug : Added Python bindings for `ValueType`, `PointType` and `ChildType` type aliases.
+- RenderPassEditor : Added `deregisterColumn()` method.
+- DocumentationAlgo : Added table and strikethrough support to `markdownToHTML()`.
+
+Build
+-----
+
+- MacOS : Fixed issue where `Python.framework` may not be found when building with a prebuilt dependencies package.
 
 1.4.1.0 (relative to 1.4.0.0)
 =======

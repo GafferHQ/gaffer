@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import inspect
+
 import GafferUI
 import GafferUITest
 
@@ -44,6 +46,22 @@ class DocumentationAlgoTest( GafferUITest.TestCase ) :
 		self.assertEqual(
 			GafferUI.DocumentationAlgo.markdownToHTML( "# Heading" ),
 			"<h1>Heading</h1>\n"
+		)
+
+		self.assertIn(
+			"<table>",
+			GafferUI.DocumentationAlgo.markdownToHTML( inspect.cleandoc(
+				"""
+				Heading1 | Heading2
+				-------- | --------
+				Cell1    | Cell2
+				"""
+			) )
+		)
+
+		self.assertEqual(
+			GafferUI.DocumentationAlgo.markdownToHTML( "~text~" ),
+			"<p><del>text</del></p>\n",
 		)
 
 if __name__ == "__main__":

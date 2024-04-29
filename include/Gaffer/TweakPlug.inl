@@ -149,6 +149,10 @@ bool TweakPlug::applyTweak(
 	{
 		applyListTweak( currentValue, newData.get(), newData.get(), mode, name );
 	}
+	else if( mode == TweakPlug::Replace )
+	{
+		applyReplaceTweak( currentValue, newData.get() );
+	}
 
 	if( mode != Gaffer::TweakPlug::CreateIfMissing )
 	{

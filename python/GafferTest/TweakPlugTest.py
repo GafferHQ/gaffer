@@ -451,5 +451,35 @@ class TweakPlugTest( GafferTest.TestCase ) :
 			self.assertTrue( plug.applyTweak( data ) )
 			self.assertEqual( data["v"], IECore.StringData( result ) )
 
+	def testStringSubstitutions( self ) :
+
+		for source, tweakMode, tweakValue, result in [
+			# Create modes don't support substitutions.
+			( None, Gaffer.TweakPlug.Mode.Create, "{source}", "{source}" ),
+			( None, Gaffer.TweakPlug.Mode.CreateIfMissing, "{source}", "{source}" ),
+			( IECore.StringData( "a" ), Gaffer.TweakPlug.Mode.Create, "{source}", "{source}" ),
+			( IECore.StringData( "a" ), Gaffer.TweakPlug.Mode.CreateIfMissing, "{source}", "a" ),
+			# Neither do list modes.
+			( IECore.StringData( "a" ), Gaffer.TweakPlug.Mode.ListAppend, "{source}", "a {source}" ),
+			( IECore.StringData( "a" ), Gaffer.TweakPlug.Mode.ListPrepend, "{source}", "{source} a" ),
+			# Replace mode does support substitutions.
+			( IECore.StringData( "a" ), Gaffer.TweakPlug.Mode.Replace, "{source}", "a" ),
+			( IECore.StringData( "a" ), Gaffer.TweakPlug.Mode.Replace, "prefix{source}", "prefixa" ),
+			( IECore.StringData( "a" ), Gaffer.TweakPlug.Mode.Replace, "{source}suffix", "asuffix" ),
+			( IECore.StringData( "a" ), Gaffer.TweakPlug.Mode.Replace, "{source} {source}", "a a" ),
+			# And works with InternedStringData too.
+			( IECore.InternedStringData( "a" ), Gaffer.TweakPlug.Mode.Replace, "{source}", "a" ),
+			( IECore.InternedStringData( "a" ), Gaffer.TweakPlug.Mode.Replace, "prefix{source}", "prefixa" ),
+			( IECore.InternedStringData( "a" ), Gaffer.TweakPlug.Mode.Replace, "{source}suffix", "asuffix" ),
+			( IECore.InternedStringData( "a" ), Gaffer.TweakPlug.Mode.Replace, "{source} {source}", "a a" ),
+		] :
+			with self.subTest( source = source, tweakMode = tweakMode, tweakValue = tweakValue ) :
+				plug = Gaffer.TweakPlug( "v", tweakValue, tweakMode )
+				data = IECore.CompoundData( { "v" : source } )
+				self.assertTrue( plug.applyTweak( data ) )
+				if source is not None :
+					self.assertIs( type( data["v"] ), type( source ) )
+				self.assertEqual( data["v"].value, result )
+
 if __name__ == "__main__":
 	unittest.main()
