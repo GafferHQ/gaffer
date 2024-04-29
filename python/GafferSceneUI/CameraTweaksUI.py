@@ -55,8 +55,6 @@ Gaffer.Metadata.registerNode(
 	of tweaks, and custom camera parameters. Tweaks to camera
 	parameters apply to every camera specified by the filter.
 
-	Tweaks apply to every camera specified by the filter.
-
 	Can add new camera parameters or render options.
 
 	Any existing parameters/options can be replaced or removed.
