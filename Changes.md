@@ -23,6 +23,11 @@ API
 - BoxPlug : Added Python bindings for `ValueType`, `PointType` and `ChildType` type aliases.
 - RenderPassEditor : Added `deregisterColumn()` method.
 
+Build
+-----
+
+- MacOS : Fixed issue where `Python.framework` may not be found when building with a prebuilt dependencies package.
+
 1.4.1.0 (relative to 1.4.0.0)
 =======
 
