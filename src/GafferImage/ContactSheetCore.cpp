@@ -129,6 +129,7 @@ ContactSheetCore::ContactSheetCore( const std::string &name )
 	addChild( new FormatPlug( "format" ) );
 	addChild( new Box2fVectorDataPlug( "tiles" ) );
 	addChild( new StringPlug( "tileVariable", Plug::In, "contactSheet:tileIndex" ) );
+	addChild( new StringPlug( "filter" ) );
 	addChild( new ObjectPlug( "__coverage", Plug::Out, NullObject::defaultNullObject() ) );
 	addChild( new M33fPlug( "__resampleMatrix", Plug::Out ) );
 	addChild( new ImagePlug( "__resampledIn" ) );
@@ -139,6 +140,7 @@ ContactSheetCore::ContactSheetCore( const std::string &name )
 	crop()->inPlug()->setInput( inPlug() );
 	resample()->inPlug()->setInput( crop()->outPlug() );
 	resample()->matrixPlug()->setInput( resampleMatrixPlug() );
+	resample()->filterPlug()->setInput( filterPlug() );
 	resampledInPlug()->setInput( resample()->outPlug() );
 }
 
@@ -176,54 +178,64 @@ const Gaffer::StringPlug *ContactSheetCore::tileVariablePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
+Gaffer::StringPlug *ContactSheetCore::filterPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::StringPlug *ContactSheetCore::filterPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
 Gaffer::ObjectPlug *ContactSheetCore::coveragePlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 3 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 4 );
 }
 
 const Gaffer::ObjectPlug *ContactSheetCore::coveragePlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 3 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 4 );
 }
 
 Gaffer::M33fPlug *ContactSheetCore::resampleMatrixPlug()
 {
-	return getChild<M33fPlug>( g_firstPlugIndex + 4 );
+	return getChild<M33fPlug>( g_firstPlugIndex + 5 );
 }
 
 const Gaffer::M33fPlug *ContactSheetCore::resampleMatrixPlug() const
 {
-	return getChild<M33fPlug>( g_firstPlugIndex + 4 );
+	return getChild<M33fPlug>( g_firstPlugIndex + 5 );
 }
 
 ImagePlug *ContactSheetCore::resampledInPlug()
 {
-	return getChild<ImagePlug>( g_firstPlugIndex + 5 );
+	return getChild<ImagePlug>( g_firstPlugIndex + 6 );
 }
 
 const ImagePlug *ContactSheetCore::resampledInPlug() const
 {
-	return getChild<ImagePlug>( g_firstPlugIndex + 5 );
+	return getChild<ImagePlug>( g_firstPlugIndex + 6 );
 }
 
 Crop *ContactSheetCore::crop()
 {
-	return getChild<Crop>( g_firstPlugIndex + 6 );
+	return getChild<Crop>( g_firstPlugIndex + 7 );
 }
 
 const Crop *ContactSheetCore::crop() const
 {
-	return getChild<Crop>( g_firstPlugIndex + 6 );
+	return getChild<Crop>( g_firstPlugIndex + 7 );
 }
 
 Resample *ContactSheetCore::resample()
 {
-	return getChild<Resample>( g_firstPlugIndex + 7 );
+	return getChild<Resample>( g_firstPlugIndex + 8 );
 }
 
 const Resample *ContactSheetCore::resample() const
 {
-	return getChild<Resample>( g_firstPlugIndex + 7 );
+	return getChild<Resample>( g_firstPlugIndex + 8 );
 }
 
 void ContactSheetCore::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const

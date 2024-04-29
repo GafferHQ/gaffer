@@ -66,6 +66,9 @@ class GAFFERIMAGE_API ContactSheetCore : public FlatImageProcessor
 		Gaffer::StringPlug *tileVariablePlug();
 		const Gaffer::StringPlug *tileVariablePlug() const;
 
+		Gaffer::StringPlug *filterPlug();
+		const Gaffer::StringPlug *filterPlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const final;
 
 	private :

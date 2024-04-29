@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import itertools
+
 import Gaffer
 import GafferImage
 
@@ -79,7 +81,27 @@ Gaffer.Metadata.registerNode(
 			node network. This should be used to provide a different input image per tile.
 			""",
 
-		]
+		],
+
+		"filter" : [
+
+			"description",
+			"""
+			The pixel filter used when resizing the input images. Each
+			filter provides different tradeoffs between sharpness and
+			the danger of aliasing or ringing.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+			"preset:Default", "",
+			"preset:Nearest", "nearest",
+
+		] + list( itertools.chain(
+
+			*[ ( "preset:" + x.title(), x ) for x in GafferImage.FilterAlgo.filterNames() ]
+
+		) ),
 
 	}
 
