@@ -148,6 +148,8 @@ class GAFFER_API TweakPlug : public Gaffer::ValuePlug
 			const std::string &tweakName
 		) const;
 
+		void applyReplaceTweak( const IECore::Data *sourceData, IECore::Data *tweakData ) const;
+
 		static const char *modeToString( Gaffer::TweakPlug::Mode mode );
 
 };

@@ -15,6 +15,9 @@ Improvements
   - Added support for `uv.tangent` and `uv.tangent_sign` primitive variables to assist in rendering with normal maps (#5269).
 - AttributeQuery, PrimitiveVariableQuery, ContextQuery, OptionQuery, ShaderQuery : Added support for querying arrays of length 1 as their equivalent scalar types.
 - CodeWidget : Added <kbd>Ctrl</kbd>+<kbd>L</kbd> shortcut for selecting all text on the current line.
+- AttributeTweaks, CameraTweaks, ShaderTweaks, OptionTweaks, PrimitiveVariableTweaks :
+  - Added support for a `{source}` token which is substituted with the original value when tweaking a string in `Replace` mode.
+  - Added tooltips documenting the tweak modes.
 
 Fixes
 -----
@@ -28,6 +31,7 @@ API
 - PlugAlgo : `setValueFromData()` and `canSetValueFromData()` now support conversion of arrays of length 1 to their equivalent scalar types.
 - BoxPlug : Added Python bindings for `ValueType`, `PointType` and `ChildType` type aliases.
 - RenderPassEditor : Added `deregisterColumn()` method.
+- DocumentationAlgo : Added table and strikethrough support to `markdownToHTML()`.
 
 Build
 -----
