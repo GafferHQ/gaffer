@@ -10,6 +10,7 @@ Breaking Changes
 ----------------
 
 - CameraTweaks : `Replace` mode now errors if the input parameter does not exist. Use `Create` mode or the new `ignoreMissing` plug instead.
+- TweakPlug : Remove deprecated `MissingMode::IgnoreOrReplace`.
 
 1.4.x.x (relative to 1.4.2.0)
 =======

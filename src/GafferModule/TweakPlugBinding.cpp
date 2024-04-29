@@ -123,7 +123,6 @@ void GafferModule::bindTweakPlugs()
 		enum_<TweakPlug::MissingMode>( "MissingMode" )
 			.value( "Ignore", TweakPlug::MissingMode::Ignore )
 			.value( "Error", TweakPlug::MissingMode::Error )
-			.value( "IgnoreOrReplace", TweakPlug::MissingMode::IgnoreOrReplace )
 		;
 	}
 
