@@ -821,7 +821,11 @@ bool LightPositionTool::handleDragEnd()
 
 RunTimeTypedPtr LightPositionTool::sceneGadgetDragBegin( Gadget *gadget, const DragDropEvent &event )
 {
-	if( !activePlug()->getValue() || getTargetMode() == TargetMode::None )
+	if(
+		!activePlug()->getValue() ||
+		getTargetMode() == TargetMode::None ||
+		!m_distanceHandle->visible()
+	)
 	{
 		return nullptr;
 	}
@@ -949,7 +953,7 @@ bool LightPositionTool::buttonPress( const ButtonEvent &event )
 
 	// We always return true to prevent the SelectTool defaults.
 
-	if( !selectionEditable() || !m_distanceHandle->enabled() )
+	if( !selectionEditable() || !m_distanceHandle->enabled() || !m_distanceHandle->visible() )
 	{
 		return true;
 	}
@@ -1111,15 +1115,23 @@ void LightPositionTool::setTargetMode( TargetMode targeted )
 
 	m_targetMode = targeted;
 
-	switch( m_targetMode )
+	if( m_targetMode == TargetMode::None )
 	{
-		case TargetMode::None : GafferUI::Pointer::setCurrent( "" ); break;
-		case TargetMode::Pivot :
-			GafferUI::Pointer::setCurrent(
-				modePlug()->getValue() == (int)Mode::Shadow ? "pivot" : ""
-			);
-			break;
-		case TargetMode::Target : GafferUI::Pointer::setCurrent( "target" ); break;
+		GafferUI::Pointer::setCurrent( "" );
+	}
+	else if( !m_distanceHandle->enabled() || !m_distanceHandle->visible() )
+	{
+		GafferUI::Pointer::setCurrent( "notEditable" );
+	}
+	else if( m_targetMode == TargetMode::Pivot )
+	{
+		GafferUI::Pointer::setCurrent(
+			modePlug()->getValue() == (int)Mode::Shadow ? "pivot" : "notEditable"
+		);
+	}
+	else if( m_targetMode == TargetMode::Target )
+	{
+		GafferUI::Pointer::setCurrent( "target" );
 	}
 }
 

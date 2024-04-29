@@ -8,6 +8,7 @@ Improvements
   - Added support for multipart EXR renders by using the same file name parameter on multiple outputs.
   - Added support for scalarformat, colorprofile, filterwidth and arbitrary custom NSI outputlayer and outputdriver attributes.
   - Updated the default output presets to include scalarformat, colorprofile, filter and filterwidth output parameters.
+- LightPositionTool : Changed the pointer to `notEditable` when using keyboard combinations that do not apply to the current tool mode.
 
 Fixes
 -----
@@ -15,6 +16,7 @@ Fixes
 - SceneReader, SceneWriter : Fixed handling of Arnold-specific parameters on UsdLux lights.
 - SceneWriter : Fixed import of `treatAsPoint` and `treatAsLine` parameters on UsdLux lights.
 - Linux : Fixed crashes at startup on platforms - including RHEL 9.4 - with a more recent `glibc` (#5856).
+- LightPositionTool : Fixed bug that allowed a non-light object to be moved by clicking or dragging the target or pivot.
 
 1.4.3.0 (relative to 1.4.2.0)
 =======
