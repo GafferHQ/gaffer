@@ -49,16 +49,9 @@
 #include "IECore/AngleConversion.h"
 #include "IECore/MatrixAlgo.h"
 
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathEuler.h"
-#include "OpenEXR/ImathMatrixAlgo.h"
-#include "OpenEXR/ImathRandom.h"
-#else
 #include "Imath/ImathEuler.h"
 #include "Imath/ImathMatrixAlgo.h"
 #include "Imath/ImathRandom.h"
-#endif
 
 #include "fmt/format.h"
 
