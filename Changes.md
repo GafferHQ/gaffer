@@ -18,12 +18,14 @@ Improvements
 - AttributeTweaks, CameraTweaks, ShaderTweaks, OptionTweaks, PrimitiveVariableTweaks :
   - Added support for a `{source}` token which is substituted with the original value when tweaking a string in `Replace` mode.
   - Added tooltips documenting the tweak modes.
+- 3Delight : Added automatic render-time translation of UsdPreviewSurface shaders to 3Delight.
 
 Fixes
 -----
 
 - Viewer : Fixed Cycles shader balls.
 - TweakPlug : Fixed incorrect results and potential crashes in list modes.
+- USD : Fixed `Unsupported value type "StringData" for parameter "input"` warning when converting `UsdTransform2d` shaders with no `in` connections to Arnold.
 
 API
 ---

@@ -1315,6 +1315,7 @@ libraries = {
 			],
 		},
 		"pythonEnvAppends" : {
+			"CPPPATH" : [ "$DELIGHT_ROOT/include" ],
 			"LIBS" : [ "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreDelight" ],
 		},
 		"requiredOptions" : [ "DELIGHT_ROOT" ],
