@@ -21,6 +21,11 @@ API
 
 - SceneAlgo : Added mechanism for scoping render adaptors to specific clients and/or renderers.
 
+Build
+-----
+
+- Fixed issue where `gaffer` wrapper may not exist when calling `usdGenSchema` from a clean build.
+
 1.4.2.0 (relative to 1.4.1.0)
 =======
 
