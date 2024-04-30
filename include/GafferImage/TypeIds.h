@@ -73,7 +73,7 @@ enum TypeId
 	DeleteViewsTypeId = 110778,
 	CopyViewsTypeId = 110779,
 	OpenColorIOConfigPlugTypeId = 110780,
-	SincFilterTypeId = 110781, // Obsolete - available for reuse
+	ContactSheetCoreTypeId = 110781,
 	LanczosFilterTypeId = 110782, // Obsolete - available for reuse
 	ImageStatsTypeId = 110783,
 	ImageTransformImplementationTypeId = 110784, // Obsolete - available for reuse
