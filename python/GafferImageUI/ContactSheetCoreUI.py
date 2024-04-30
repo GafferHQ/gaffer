@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,15 +34,75 @@
 #
 ##########################################################################
 
-__import__( "GafferDispatch" )
-__import__( "Gaffer" )
-__import__( "IECoreImage" )
+import itertools
 
-from ._GafferImage import *
-from .CatalogueSelect import CatalogueSelect
-from .BleedFill import BleedFill
-from .DeepTidy import DeepTidy
-from .Anaglyph import Anaglyph
-from .ContactSheet import ContactSheet
+import Gaffer
+import GafferImage
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImage" )
+Gaffer.Metadata.registerNode(
+
+	GafferImage.ContactSheetCore,
+
+	"description",
+	"""
+	Collects multiple input images, transforming them into tiles within
+	the output image. Provides the core functionality of the ContactSheet
+	node, and may be reused for making similar nodes.
+	""",
+
+	plugs = {
+
+		"format" : [
+
+			"description",
+			"""
+			The resolution and aspect ratio of the output image.
+			""",
+
+		],
+
+		"tiles" : [
+
+			"description",
+			"""
+			The bounding boxes of each tile.
+
+			> Note : Each input image will be scaled to fit entirely within its tile
+			> while preserving aspect ratio.
+			""",
+
+		],
+
+		"tileVariable" : [
+
+			"description",
+			"""
+			Context variable used to pass the index of the current tile to the upstream
+			node network. This should be used to provide a different input image per tile.
+			""",
+
+		],
+
+		"filter" : [
+
+			"description",
+			"""
+			The pixel filter used when resizing the input images. Each
+			filter provides different tradeoffs between sharpness and
+			the danger of aliasing or ringing.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+			"preset:Default", "",
+			"preset:Nearest", "nearest",
+
+		] + list( itertools.chain(
+
+			*[ ( "preset:" + x.title(), x ) for x in GafferImage.FilterAlgo.filterNames() ]
+
+		) ),
+
+	}
+
+)

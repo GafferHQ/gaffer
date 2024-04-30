@@ -39,6 +39,8 @@ import pathlib
 import subprocess
 import unittest
 
+import IECore
+
 import Gaffer
 import GafferTest
 
@@ -71,6 +73,55 @@ class HiddenFilePathFilterTest( GafferTest.TestCase ) :
 		h.setInverted( True )
 
 		self.assertEqual( p.children(), [ visibleFile ] )
+
+	def testSequence( self ) :
+
+		hiddenSequence = IECore.FileSequence( ( self.temporaryDirectory() / ".hidden.#.txt 1-3" ).as_posix() )
+		visibleSequence = IECore.FileSequence( ( self.temporaryDirectory() / "visible.#.txt 1-3" ).as_posix() )
+
+		for frame in range( 3 ) :
+			hiddenFile = Gaffer.FileSystemPath( hiddenSequence.fileNameForFrame( frame ) )
+			with open( hiddenFile.nativeString(), "w", encoding = "utf-8" ) as f :
+				f.write( "Hidden sequence")
+			if os.name == "nt" :
+				subprocess.check_call( [ "attrib", "+H", hiddenFile.nativeString() ] )
+
+			visibleFile = Gaffer.FileSystemPath( visibleSequence.fileNameForFrame( frame ) )
+			with open( visibleFile.nativeString(), "w", encoding = "utf-8" ) as f :
+				f.write( "Visible sequence" )
+
+		p = Gaffer.FileSystemPath( pathlib.Path( hiddenSequence.fileName ).parent, None, True )
+
+		self.assertEqual(
+			sorted( [ str( i ) for i in p.children() ] ),
+			sorted(
+				[ hiddenSequence.fileNameForFrame( i ) for i in range( 3 ) ] +
+				[ visibleSequence.fileNameForFrame( i ) for i in range( 3 ) ] +
+				[ hiddenSequence.fileName, visibleSequence.fileName ]
+			)
+		)
+
+		h = Gaffer.HiddenFilePathFilter()
+		p.setFilter( h )
+
+		self.assertEqual(
+			sorted( [ str( i ) for i in p.children() ] ),
+			sorted(
+				[ hiddenSequence.fileNameForFrame( i ) for i in range( 3 ) ] +
+				[ hiddenSequence.fileName ]
+			)
+		)
+
+		h.setInverted( True )
+
+		self.assertEqual(
+			sorted( [ str( i ) for i in p.children() ] ),
+			sorted(
+				[ visibleSequence.fileNameForFrame( i ) for i in range( 3 ) ] +
+				[ visibleSequence.fileName ]
+			)
+		)
+
 
 
 if __name__ == "__main__":

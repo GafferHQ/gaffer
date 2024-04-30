@@ -3,12 +3,18 @@
 
 
 
-1.4.x.x (relative to 1.4.1.0)
+1.4.x.x (relative to 1.4.2.0)
+=======
+
+
+
+1.4.2.0 (relative to 1.4.1.0)
 =======
 
 Features
 --------
 
+- ContactSheet : Added new node for creating contact sheets from multiple input images.
 - LightPositionTool : Added `Diffuse` mode for placing lights along the normal of the target position.
 
 Improvements
@@ -28,6 +34,7 @@ Improvements
   - Added Arnold-specific extension parameters.
   - Added parameter tooltips.
 - LightEditor : Added columns for Arnold-specific parameters on USD lights.
+- Switch : Added `deleteContextVariables` plug.
 
 Fixes
 -----
@@ -35,6 +42,7 @@ Fixes
 - Viewer : Fixed Cycles shader balls.
 - TweakPlug : Fixed incorrect results and potential crashes in list modes.
 - USD : Fixed `Unsupported value type "StringData" for parameter "input"` warning when converting `UsdTransform2d` shaders with no `in` connections to Arnold.
+- File Browser : Windows only : Fixed bug in `HiddenFilePathFilter` that caused sequences to be treated as though they are hidden files (#5810).
 
 API
 ---
@@ -45,6 +53,8 @@ API
 - DocumentationAlgo : Added table and strikethrough support to `markdownToHTML()`.
 - LightEditor : Added `columnName` parameter to `registerParameter()` method, matching the behaviour of `RenderPassEditor.registerOption()`.
 - USDShader : Added support for loading from the UsdSchemaRegistry as well as from the SdrRegistry. This is now used when loading UsdLuxLights.
+- PlugLayout : Added support for activators in Boxes and extension nodes by allowing `layout:activator:activatorName` metadata to contain a Python string to be executed. Execution is performed in an environment where a `parent` variable refers to node or plug represented by the layout, and from which plug values can be obtained.
+- ContactSheetCore : Added a new node to do provide the basis for networks that create contact sheets from multiple input images.
 
 Build
 -----
@@ -368,10 +378,18 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.16.x (relative to 1.3.16.1)
+1.3.16.x (relative to 1.3.16.2)
 ========
 
 
+
+1.3.16.2 (relative to 1.3.16.1)
+========
+
+Fixes
+-----
+
+- File Browser : Windows only : Fixed bug in `HiddenFilePathFilter` that caused sequences to be treated as though they are hidden files (#5810).
 
 1.3.16.1 (relative to 1.3.16.0)
 ========

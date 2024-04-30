@@ -348,6 +348,17 @@ nodeMenu.append( "/Scene/Render/Interactive Render", GafferScene.InteractiveRend
 import GafferImage
 import GafferImageUI
 
+def __contactSheetCreateCommand( menu ) :
+
+	result = GafferImage.ContactSheet()
+	result["spacing"].gang()
+	result["marginTop"].setInput( result["spacing"]["y"] )
+	result["marginBottom"].setInput( result["spacing"]["y"] )
+	result["marginLeft"].setInput( result["spacing"]["x"] )
+	result["marginRight"].setInput( result["spacing"]["x"] )
+
+	return result
+
 nodeMenu.append( "/Image/File/Reader", GafferImage.ImageReader, searchText = "ImageReader" )
 nodeMenu.append( "/Image/File/Writer", GafferImage.ImageWriter, searchText = "ImageWriter" )
 nodeMenu.append( "/Image/Shape/Rectangle", GafferImage.Rectangle, postCreator = GafferImageUI.RectangleUI.postCreate )
@@ -371,6 +382,7 @@ nodeMenu.append( "/Image/Filter/Erode", GafferImageUI.ErodeUI.nodeMenuCreateComm
 nodeMenu.append( "/Image/Filter/Dilate", GafferImageUI.DilateUI.nodeMenuCreateCommand )
 nodeMenu.append( "/Image/Filter/BleedFill", GafferImage.BleedFill )
 nodeMenu.append( "/Image/Matte/Cryptomatte", GafferScene.Cryptomatte, searchText = "Cryptomatte" )
+nodeMenu.append( "/Image/Merge/Contact Sheet", __contactSheetCreateCommand, searchText = "ContactSheet" )
 nodeMenu.append( "/Image/Merge/Merge", GafferImage.Merge )
 nodeMenu.append( "/Image/Merge/Mix", GafferImage.Mix )
 nodeMenu.append( "/Image/Transform/Resize", GafferImage.Resize )

@@ -602,6 +602,54 @@ class SwitchTest( GafferTest.TestCase ) :
 		box["in"][0].setInput( None )
 		self.assertEqual( box["switch"]["connectedInputs"].getValue(), IECore.IntVectorData( [ 1 ] ) )
 
+	def testDeleteContextVariables( self ) :
+
+		add = GafferTest.AddNode()
+		add["op1"].setValue( 10 )
+		add["op2"].setValue( 3 )
+
+		switch = self.intSwitch()
+		switch["in"][0].setInput( add["sum"] )
+		switch["deleteContextVariables"].setValue( "unwanted* pleaseDeleteMe" )
+
+		with Gaffer.Context() as context :
+			context["unwanted1"] = 10
+			context["unwanted2"] = 20
+			context["pleaseDeleteMe"] = 20
+			context["keepMe"] = 3
+			with Gaffer.ContextMonitor( add["sum"] ) as monitor :
+				self.assertEqual( switch["out"].getValue(), 13 )
+
+		self.assertEqual(
+			set( monitor.combinedStatistics().variableNames() ),
+			{ "frame", "framesPerSecond", "keepMe" }
+		)
+
+	def testDeleteContextVariableUsedByIndex( self ) :
+
+		add0 = GafferTest.AddNode()
+		add1 = GafferTest.AddNode()
+		add1["op1"].setValue( 1 )
+
+		indexQuery = Gaffer.ContextQuery()
+		indexQuery.addQuery( Gaffer.IntPlug(), "index" )
+
+		switch = self.intSwitch()
+		switch["in"][0].setInput( add0["sum"] )
+		switch["in"][1].setInput( add1["sum"] )
+		switch["index"].setInput( indexQuery["out"][0]["value"] )
+		switch["deleteContextVariables"].setValue( "index" )
+
+		with Gaffer.Context() as context :
+			context["index"] = 1
+			with Gaffer.ContextMonitor( add1["sum"] ) as monitor :
+				self.assertEqual( switch["out"].getValue(), 1 )
+
+		self.assertEqual(
+			set( monitor.combinedStatistics().variableNames() ),
+			{ "frame", "framesPerSecond" }
+		)
+
 	def setUp( self ) :
 
 		GafferTest.TestCase.setUp( self )

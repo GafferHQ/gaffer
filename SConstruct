@@ -1862,7 +1862,9 @@ for libraryName, libraryDef in libraries.items() :
 		subprocess.check_call(
 			[
 				shutil.which( "gaffer.cmd" if sys.platform == "win32" else "gaffer", path = env["ENV"]["PATH"] ),
-				"env", "usdGenSchema", str( source[0] ), targetDir
+				"env",
+				"usdGenSchema.cmd" if sys.platform == "win32" else "usdGenSchema",
+				str( source[0] ), targetDir
 			],
 			env = env["ENV"]
 		)
