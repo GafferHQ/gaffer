@@ -141,7 +141,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 	# that will be matched against `self.__settingsNode["attribute"]` to determine if
 	# the column should be shown.
 	@classmethod
-	def registerParameter( cls, rendererKey, parameter, section = None ) :
+	def registerParameter( cls, rendererKey, parameter, section = None, columnName = None ) :
 
 		# We use `tuple` to store `ShaderNetwork.Parameter`, because
 		# the latter isn't hashable and we need to use it as a dict key.
@@ -155,7 +155,8 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 			rendererKey,
 			parameter,
 			lambda scene, editScope : _GafferSceneUI._LightEditorInspectorColumn(
-				GafferSceneUI.Private.ParameterInspector( scene, editScope, rendererKey, parameter )
+				GafferSceneUI.Private.ParameterInspector( scene, editScope, rendererKey, parameter ),
+				columnName if columnName is not None else ""
 			),
 			section
 		)

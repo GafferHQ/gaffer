@@ -53,6 +53,18 @@ class USDLightTest( GafferSceneTest.SceneTestCase ) :
 		light = GafferUSD.USDLight()
 		for name in ( "DistantLight", "DiskLight", "DomeLight", "RectLight", "SphereLight", "CylinderLight" ) :
 			light.loadShader( name )
+			for name, defaultValue in {
+				"intensity" : 1.0 if name != "DistantLight" else 50000.0,
+				"exposure" : 0.0,
+				"normalize" : False,
+				"specular" : 1.0,
+				"diffuse" : 1.0,
+				"enableColorTemperature" : False,
+				"colorTemperature" : 6500.0,
+			}.items() :
+				with self.subTest( name = name ) :
+					self.assertIn( name, light["parameters"] )
+					self.assertEqual( light["parameters"][name].defaultValue(), defaultValue )
 
 	def testShaderNetwork( self ) :
 
@@ -193,6 +205,14 @@ class USDLightTest( GafferSceneTest.SceneTestCase ) :
 			set( lc["out"].set( "__cameras" ).value.paths() ),
 			set( [ "/group/camera", "/group/sphere1", "/group/distant1", "/group/env1" ] )
 		)
+
+	def testLoadTokenParameter( self ) :
+
+		light = GafferUSD.USDLight()
+		light.loadShader( "DomeLight" )
+		self.assertIsInstance( light["parameters"]["texture:format"], Gaffer.StringPlug )
+		self.assertEqual( light["parameters"]["texture:format"].defaultValue(), "automatic" )
+		self.assertTrue( light["parameters"]["texture:format"].isSetToDefault() )
 
 if __name__ == "__main__":
 	unittest.main()

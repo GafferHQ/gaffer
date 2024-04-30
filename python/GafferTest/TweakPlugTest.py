@@ -481,5 +481,20 @@ class TweakPlugTest( GafferTest.TestCase ) :
 					self.assertIs( type( data["v"] ), type( source ) )
 				self.assertEqual( data["v"].value, result )
 
+	def testStringSubstitutionsAndMissingMode( self ) :
+
+		plug = Gaffer.TweakPlug( "v", "{source}suffix" )
+		data = IECore.CompoundData()
+
+		with self.assertRaisesRegex( Exception, "This parameter does not exist" ) :
+			plug.applyTweak( data, Gaffer.TweakPlug.MissingMode.Error )
+		self.assertEqual( data, IECore.CompoundData() )
+
+		self.assertFalse( plug.applyTweak( data, Gaffer.TweakPlug.MissingMode.Ignore ) )
+		self.assertEqual( data, IECore.CompoundData() )
+
+		self.assertTrue( plug.applyTweak( data, Gaffer.TweakPlug.MissingMode.IgnoreOrReplace ) )
+		self.assertEqual( data["v"], IECore.StringData( "suffix" ) )
+
 if __name__ == "__main__":
 	unittest.main()

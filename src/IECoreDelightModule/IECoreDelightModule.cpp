@@ -36,9 +36,18 @@
 
 #include "boost/python.hpp"
 
+#include "IECoreDelight/ShaderNetworkAlgo.h"
+
+using namespace boost::python;
+using namespace IECoreDelight;
+
 BOOST_PYTHON_MODULE( _IECoreDelight )
 {
-	// We don't actually bind anything at present, but the module
-	// is still useful as a means of loading `libIECoreDelight` in
-	// Python, which makes the Delight renderer interface available.
+
+	object shaderNetworkAlgoModule( borrowed( PyImport_AddModule( "IECoreDelight.ShaderNetworkAlgo" ) ) );
+	scope().attr( "ShaderNetworkAlgo" ) = shaderNetworkAlgoModule;
+	scope shaderNetworkAlgoScope( shaderNetworkAlgoModule );
+
+	def( "convertUSDShaders", &ShaderNetworkAlgo::convertUSDShaders );
+
 }

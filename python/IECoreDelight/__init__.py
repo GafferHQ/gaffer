@@ -42,18 +42,3 @@ if hasattr( os, "add_dll_directory" ) and "DELIGHT" in os.environ :
 del os, pathlib # Don't pollute the namespace
 
 from ._IECoreDelight import *
-
-# The IECoreDelight module does not need any symbols from IECoreDelight, so MSVC tries
-# to be helpful and not load IECoreDelight.dll. Skipping that means that
-# 3Delight is never registered as a renderer, so we import / register it manually.
-
-import os
-
-if os.name == "nt" :
-
-	import ctypes
-
-	try :
-		ctypes.CDLL( "IECoreDelight.dll" )
-	except :
-		raise ImportError

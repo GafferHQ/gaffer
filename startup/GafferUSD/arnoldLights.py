@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,32 +34,20 @@
 #
 ##########################################################################
 
-import IECore
+import pathlib
 
-import Gaffer
-import GafferUSD
+from pxr import Plug
 
-Gaffer.Metadata.registerNode(
+# Register a USD plugin that adds Arnold-specific auto-apply schemas for
+# UsdLux lights. We deliberately don't add this to the `PXR_PLUGINPATH_NAME`
+# search path because we don't want it to be loaded in any third-party
+# applications that Gaffer might launch as subprocessses. So instead we
+# register it manually with `RegisterPlugins`. See `GafferArnold.usda`
+# for more details.
 
-	GafferUSD.USDLight,
-
-	plugs = {
-
-		"parameters" : [
-
-			"layout:section:Basic:collapsed", False,
-
-		],
-
-		"parameters.colorTemperature" : [ "layout:activator", lambda plug : plug.parent()["enableColorTemperature"].getValue() ],
-
-		"parameters.shaping:ies:file.value" : [
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:bookmarks", "iesProfile",
-			"path:leaf", True,
-			"path:value", True,
-			"fileSystemPath:extensions", "ies",
-		],
-
-	}
-)
+try :
+	import GafferArnold
+	Plug.Registry().RegisterPlugins( str( pathlib.Path( GafferArnold.__file__ ).parents[2] / "plugin" / "GafferArnold" / "plugInfo.json" ) )
+except ImportError :
+	# GafferArnold not available
+	pass

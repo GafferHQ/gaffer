@@ -90,15 +90,6 @@ with IECore.IgnoredExceptions( ImportError ) :
 	# If 3Delight is available, then assume it will be used in preference to Cycles.
 	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "userDefault", "osl:light" )
 
-with IECore.IgnoredExceptions( ImportError ) :
-
-	import GafferArnold
-	# Register Light Editor sections for Arnold before the generic "Visualisation" section
-	import GafferArnoldUI
-
-	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "preset:Arnold", "ai:light" )
-	# If Arnold is available, then assume it is the renderer of choice.
-	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "userDefault", "ai:light" )
 
 # UsdLux lights
 
@@ -137,6 +128,29 @@ GafferSceneUI.LightEditor.registerParameter( "light", "shadow:color", "Shadow" )
 GafferSceneUI.LightEditor.registerParameter( "light", "shadow:distance", "Shadow" )
 GafferSceneUI.LightEditor.registerParameter( "light", "shadow:falloff", "Shadow" )
 GafferSceneUI.LightEditor.registerParameter( "light", "shadow:falloffGamma", "Shadow" )
+
+# Arnold lights
+
+with IECore.IgnoredExceptions( ImportError ) :
+
+	import GafferArnold
+	# Register Light Editor sections for Arnold before the generic "Visualisation" section
+	import GafferArnoldUI
+
+	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "preset:Arnold", "ai:light" )
+	# If Arnold is available, then assume it is the renderer of choice.
+	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "userDefault", "ai:light" )
+
+	# Register Arnold-specific parameters for USD lights.
+	for parameter in [
+		"aov", "samples", "volume_samples", "sss", "indirect", "volume", "cast_volumetric_shadows",
+		"max_bounces", "camera", "transmission", "spread", "roundness", "soft_edge", "resolution",
+		"portal_mode", "aov_indirect"
+	] :
+		GafferSceneUI.LightEditor.registerParameter(
+			"light", f"arnold:{parameter}", "Arnold",
+			columnName = parameter.replace( "arnold:", "" )
+		)
 
 # Register generic light attributes
 for attributeName in [

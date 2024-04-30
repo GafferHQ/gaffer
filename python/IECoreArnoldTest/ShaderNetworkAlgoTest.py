@@ -913,6 +913,8 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 						"specular" : 0.75,
 						"radius" : 0.5,
 						"normalize" : True,
+						"arnold:aov" : "test",
+						"arnold:samples" : 3,
 					}
 				),
 
@@ -926,6 +928,8 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 						"specular" : 0.75,
 						"radius" : 0.5,
 						"normalize" : True,
+						"aov" : "test",
+						"samples" : 3,
 					} )
 				),
 
