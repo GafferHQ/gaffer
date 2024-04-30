@@ -30,6 +30,7 @@ Fixes
 - Viewer : Fixed Cycles shader balls.
 - TweakPlug : Fixed incorrect results and potential crashes in list modes.
 - USD : Fixed `Unsupported value type "StringData" for parameter "input"` warning when converting `UsdTransform2d` shaders with no `in` connections to Arnold.
+- File Browser : Windows only : Fixed bug in `HiddenFilePathFilter` that caused sequences to be treated as though they are hidden files (#5810).
 
 API
 ---
@@ -370,7 +371,6 @@ Fixes
 -----
 
 - File Browser : Windows only : Fixed bug in `HiddenFilePathFilter` that caused sequences to be treated as though they are hidden files (#5810).
-
 
 1.3.16.1 (relative to 1.3.16.0)
 ========
