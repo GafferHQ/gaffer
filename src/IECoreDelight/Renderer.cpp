@@ -1323,10 +1323,10 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 				};
 			}
 
+			void *handler = reinterpret_cast<void *>( &DelightRenderer::nsiErrorHandler );
+			void *data = this;
 			if( messageHandler )
 			{
-				void *handler = reinterpret_cast<void *>( &DelightRenderer::nsiErrorHandler );
-				void *data = this;
 				params.push_back( { "errorhandler",	&handler, NSITypePointer, 0, 1, 0 } );
 				params.push_back( { "errorhandlerdata",	&data, NSITypePointer, 0, 1, 0 } );
 			}
