@@ -1,0 +1,239 @@
+#usda 1.0
+(
+	subLayers = [
+		@usdLux/schema.usda@,
+		@usd/schema.usda@
+	]
+)
+
+over "GLOBAL" (
+	customData = {
+		string libraryName = "GafferArnold"
+		bool skipCodeGeneration = 1
+		bool useLiteralIdentifier = 1
+	}
+)
+{
+}
+
+# Here we define a bunch of codeless auto-apply API schemas for extending the
+# standard UsdLux lights with inputs specific to Arnold. This approach is
+# modelled on the one used by UsdRiPxr to add RenderMan-specific inputs, and
+# we believe is the one Pixar intends everyone to use.
+#
+# Ideally such schemas would be provided by the `arnold-usd` project, but while
+# it does have Arnold-specific light APIs they don't suit our purposes for
+# multiple reasons :
+#
+# - They use the `primvars:arnold:` namespace rather than `inputs:arnold:`.
+# - They are not auto-apply schemas.
+# - They include parameters like `motion_start` and `motion_end` which are not
+#   suitable to be exposed to users.
+#
+# Since applied API schemas are not allowed to inherit from one another we
+# apply a "base" GafferArnoldLightAPI schema to all light types, and then
+# apply a type-specific schema such as GafferArnoldDiskLightAPI to individual
+# types on top of that.
+
+class "GafferArnoldLightAPI" (
+	customData = {
+		token[] apiSchemaAutoApplyTo = [ "CylinderLight", "DistantLight", "DiskLight", "DomeLight", "RectLight", "SphereLight" ]
+		string apiSchemaType = "singleApply"
+		string className = "GafferArnoldLightAPI"
+	}
+	inherits = </APISchemaBase>
+)
+{
+
+	string inputs:arnold:aov = "default" (
+		displayGroup = "Basic"
+		displayName = "AOV (Arnold)"
+	)
+
+	int inputs:arnold:samples = 1 (
+		displayGroup = "Sampling"
+		displayName = "Samples (Arnold)"
+	)
+
+	int inputs:arnold:volume_samples = 2 (
+		displayGroup = "Sampling"
+		displayName = "Volume Samples (Arnold)"
+	)
+
+	float inputs:arnold:sss = 1.0 (
+		displayGroup = "Refine"
+		displayName = "SSS (Arnold)"
+	)
+
+	float inputs:arnold:indirect = 1.0(
+		displayGroup = "Refine"
+		displayName = "Indirect (Arnold)"
+	)
+
+	float inputs:arnold:volume = 1.0 (
+		displayGroup = "Refine"
+		displayName = "Volume (Arnold)"
+	)
+
+	bool inputs:arnold:cast_volumetric_shadows = true (
+		displayGroup = "Shadows"
+		displayName = "Cast Volumetric (Arnold)"
+	)
+
+	int inputs:arnold:max_bounces = 999 (
+		displayGroup = "Refine"
+		displayName = "Max Bounces (Arnold)"
+	)
+
+}
+
+class "GafferArnoldCylinderLightAPI" (
+	customData = {
+		token[] apiSchemaAutoApplyTo = ["CylinderLight"]
+		string apiSchemaType = "singleApply"
+		string className = "GafferArnoldCylinderLightAPI"
+	}
+	inherits = </APISchemaBase>
+)
+{
+
+	float inputs:arnold:camera = 0.0 (
+		displayGroup = "Refine"
+		displayName = "Camera (Arnold)"
+	)
+
+	float inputs:arnold:transmission = 0.0 (
+		displayGroup = "Refine"
+		displayName = "Transmission (Arnold)"
+	)
+
+}
+
+class "GafferArnoldDiskLightAPI" (
+	customData = {
+		token[] apiSchemaAutoApplyTo = ["DiskLight"]
+		string apiSchemaType = "singleApply"
+		string className = "GafferArnoldDiskLightAPI"
+	}
+	inherits = </APISchemaBase>
+)
+{
+
+	float inputs:arnold:spread = 1.0 (
+		displayGroup = "Geometry"
+		displayName = "Spread"
+	)
+
+	float inputs:arnold:camera = 0.0 (
+		displayGroup = "Refine"
+		displayName = "Camera (Arnold)"
+	)
+
+	float inputs:arnold:transmission = 0.0 (
+		displayGroup = "Refine"
+		displayName = "Transmission (Arnold)"
+	)
+
+}
+
+class "GafferArnoldPointLightAPI" (
+	customData = {
+		token[] apiSchemaAutoApplyTo = ["SphereLight"]
+		string apiSchemaType = "singleApply"
+		string className = "GafferArnoldPointLightAPI"
+	}
+	inherits = </APISchemaBase>
+)
+{
+
+	float inputs:arnold:camera = 0.0 (
+		displayGroup = "Refine"
+		displayName = "Camera (Arnold)"
+	)
+
+	float inputs:arnold:transmission = 0.0 (
+		displayGroup = "Refine"
+		displayName = "Transmission (Arnold)"
+	)
+
+}
+
+class "GafferArnoldQuadLightAPI" (
+	customData = {
+		token[] apiSchemaAutoApplyTo = ["RectLight"]
+		string apiSchemaType = "singleApply"
+		string className = "GafferArnoldQuadLightAPI"
+	}
+	inherits = </APISchemaBase>
+)
+{
+
+	float inputs:arnold:roundness = 0.0 (
+		displayGroup = "Geometry"
+		displayName = "Roundness (Arnold)"
+	)
+
+	float inputs:arnold:soft_edge = 0.0 (
+		displayGroup = "Geometry"
+		displayName = "Soft Edge (Arnold)"
+	)
+
+	float inputs:arnold:spread = 1.0 (
+		displayGroup = "Geometry"
+		displayName = "Spread (Arnold)"
+	)
+
+	int inputs:arnold:resolution = 512 (
+		displayGroup = "Sampling"
+		displayName = "Resolution (Arnold)"
+	)
+
+	float inputs:arnold:camera = 0.0 (
+		displayGroup = "Refine"
+		displayName = "Camera (Arnold)"
+	)
+
+	float inputs:arnold:transmission = 0.0 (
+		displayGroup = "Refine"
+		displayName = "Transmission (Arnold)"
+	)
+
+}
+
+class "GafferArnoldSkydomeLightAPI" (
+	customData = {
+		token[] apiSchemaAutoApplyTo = ["DomeLight"]
+		string apiSchemaType = "singleApply"
+		string className = "GafferArnoldSkydomeLightAPI"
+	}
+	inherits = </APISchemaBase>
+)
+{
+
+	token inputs:arnold:portal_mode = "interior_only" (
+		allowedTokens = [ "off", "interior_only", "interior_exterior" ]
+		displayGroup = "Basic"
+		displayName = "Portal Mode (Arnold)"
+	)
+
+	bool inputs:arnold:aov_indirect = false (
+		displayGroup = "Basic"
+		displayName = "AOV Indirect (Arnold)"
+	)
+
+	int inputs:arnold:resolution = 1000 (
+		displayGroup = "Sampling"
+		displayName = "Resolution (Arnold)"
+	)
+
+	float inputs:arnold:camera = 1.0 (
+		displayGroup = "Refine"
+		displayName = "Camera (Arnold)"
+	)
+
+	float inputs:arnold:transmission = 1.0 (
+		displayGroup = "Refine"
+		displayName = "Transmission (Arnold)"
+	)
+
+}

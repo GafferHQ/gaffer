@@ -40,8 +40,8 @@ import os
 import re
 import sys
 import glob
+import inspect
 import locale
-import platform
 import shutil
 import subprocess
 import tempfile
@@ -1394,7 +1394,7 @@ libraries = {
 
 	"GafferUSD" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "GafferImage", "IECoreScene$CORTEX_LIB_SUFFIX" ] + [ "${USD_LIB_PREFIX}" + x for x in ( [ "sdf", "arch", "tf", "vt", "ndr", "sdr" ] if not env["USD_MONOLITHIC"] else [ "usd_ms" ] ) ],
+			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "GafferImage", "IECoreScene$CORTEX_LIB_SUFFIX" ] + [ "${USD_LIB_PREFIX}" + x for x in ( [ "sdf", "arch", "tf", "vt", "ndr", "sdr", "usd", "usdLux" ] if not env["USD_MONOLITHIC"] else [ "usd_ms" ] ) ],
 			# USD includes "at least one deprecated or antiquated header", so we
 			# have to drop our usual strict warning levels.
 			"CXXFLAGS" : [ "-Wno-deprecated" if env["PLATFORM"] != "win32" else "/wd4996" ],
@@ -1830,6 +1830,54 @@ for libraryName, libraryDef in libraries.items() :
 		)
 		stub = stubEnv.Command( stubFileName, "", buildClassStub )
 		stubEnv.Alias( "buildCore", stub )
+
+	# USD Schemas
+
+	def buildSchema( target, source, env ) :
+
+		# Write a basic `plugInfo.json` file.
+
+		targetDir = os.path.dirname( str( target[0] ) )
+		libraryName = os.path.basename( targetDir )
+		with open( os.path.join( targetDir, "plugInfo.json" ), "w" ) as plugInfo :
+			plugInfo.write( inspect.cleandoc(
+				"""
+				{{
+					"Plugins" : [
+						{{
+							"Name" : "{libraryName}",
+							"Type" : "resource",
+							"Root" : ".",
+							"ResourcePath" : ".",
+							"Info" : {{ }}
+						}}
+					]
+				}}
+				""".format( libraryName = libraryName )
+			) )
+
+		# Then call `usdGenSchema` to write `generatedSchema.usda` and
+		# update `plugInfo.json` in place.
+
+		subprocess.check_call(
+			[
+				shutil.which( "gaffer.cmd" if sys.platform == "win32" else "gaffer", path = env["ENV"]["PATH"] ),
+				"env", "usdGenSchema", str( source[0] ), targetDir
+			],
+			env = env["ENV"]
+		)
+
+	schemaSource = os.path.join( "usdSchemas", libraryName + ".usda" )
+	if os.path.isfile( schemaSource ) :
+		generatedSchema = commandEnv.Command(
+			[
+				os.path.join( installRoot, "plugin", libraryName, "generatedSchema.usda" ),
+				os.path.join( installRoot, "plugin", libraryName, "plugInfo.json" )
+			],
+			schemaSource,
+			buildSchema
+		)
+		commandEnv.Alias( "buildCore", generatedSchema )
 
 env.Alias( "build", "buildCore" )
 

@@ -717,6 +717,8 @@ const InternedString g_widthParameter( "width" );
 const InternedString g_wrapSParameter( "wrapS" );
 const InternedString g_wrapTParameter( "wrapT" );
 
+const string g_arnoldNamespace( "arnold:" );
+
 void transferUSDLightParameters( ShaderNetwork *network, InternedString shaderHandle, const Shader *usdShader, Shader *shader )
 {
 	Color3f color = parameterValue( usdShader, g_colorParameter, Color3f( 1 ) );
@@ -734,6 +736,14 @@ void transferUSDLightParameters( ShaderNetwork *network, InternedString shaderHa
 
 	transferUSDParameter( network, shaderHandle, usdShader, g_shadowEnableParameter, shader, g_castShadowsParameter, true );
 	transferUSDParameter( network, shaderHandle, usdShader, g_shadowColorParameter, shader, g_shadowColorArnoldParameter, Color3f( 0 ) );
+
+	for( const auto &[name, value] : usdShader->parameters() )
+	{
+		if( boost::starts_with( name.string(), g_arnoldNamespace ) )
+		{
+			shader->parameters()[name.string().substr(g_arnoldNamespace.size())] = value;
+		}
+	}
 }
 
 void transferUSDShapingParameters( ShaderNetwork *network, InternedString shaderHandle, const Shader *usdShader, Shader *shader )
