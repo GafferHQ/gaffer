@@ -1304,7 +1304,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 	public :
 
-		DelightRenderer( RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
+		DelightRenderer( RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler, bool cloud = false )
 			:	m_renderType( renderType ), m_messageHandler( messageHandler )
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
@@ -1329,6 +1329,19 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			{
 				params.push_back( { "errorhandler",	&handler, NSITypePointer, 0, 1, 0 } );
 				params.push_back( { "errorhandlerdata",	&data, NSITypePointer, 0, 1, 0 } );
+			}
+
+			const int one = 1;
+			if( cloud )
+			{
+				if( renderType == Renderer::RenderType::Batch )
+				{
+					params.push_back( { "cloud", &one, NSITypeInteger, 0, 1, 0 } );
+				}
+				else
+				{
+					IECore::msg( IECore::Msg::Level::Warning, "DelightRenderer", "Cloud rendering is only available for batch renders. Rendering locally instead." );
+				}
 			}
 
 			m_context = NSIBegin( params.size(), params.data() );
@@ -1869,5 +1882,20 @@ const std::vector<IECore::MessageHandler::Level> DelightRenderer::g_ieMsgLevels 
 };
 
 IECoreScenePreview::Renderer::TypeDescription<DelightRenderer> DelightRenderer::g_typeDescription( "3Delight" );
+
+struct CloudTypeDescription
+{
+	CloudTypeDescription()
+	{
+		IECoreScenePreview::Renderer::registerType(
+			"3Delight Cloud",
+			[] ( IECoreScenePreview::Renderer::RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler ) {
+				return new DelightRenderer( renderType, fileName, messageHandler, /* cloud = */ true );
+			}
+		);
+	}
+};
+
+CloudTypeDescription g_cloudTypeDescription;
 
 } // namespace
