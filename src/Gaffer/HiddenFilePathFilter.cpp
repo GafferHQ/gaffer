@@ -39,6 +39,8 @@
 
 #include "Gaffer/Path.h"
 
+#include "IECore/FileSequenceFunctions.h"
+
 #ifdef _MSC_VER
 
 #include <windows.h>
@@ -46,6 +48,7 @@
 #endif
 
 using namespace Gaffer;
+using namespace IECore;
 
 IE_CORE_DEFINERUNTIMETYPED( HiddenFilePathFilter );
 
@@ -105,10 +108,24 @@ bool HiddenFilePathFilter::remove( PathPtr path ) const
 	}
 	return invert( true );
 #else
-	DWORD fileAttributes = GetFileAttributes( path->string().c_str() );
-	if( fileAttributes & FILE_ATTRIBUTE_HIDDEN )
+	if( const auto filePath = runTimeCast<FileSystemPath>( path.get() ) )
 	{
-		return invert( false );
+		std::string file;
+		if( const auto sequence = filePath->fileSequence() )
+		{
+			std::vector<FrameList::Frame> frames;
+			sequence->getFrameList()->asList( frames );
+			file = sequence->fileNameForFrame( frames[0] );
+		}
+		else
+		{
+			file = path->string();
+		}
+		DWORD fileAttributes = GetFileAttributes( file.c_str() );
+		if( fileAttributes & FILE_ATTRIBUTE_HIDDEN )
+		{
+			return invert( false );
+		}
 	}
 	return invert( true );
 #endif

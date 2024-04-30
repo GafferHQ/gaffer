@@ -1,6 +1,10 @@
 1.3.16.x (relative to 1.3.16.1)
 ========
 
+Fixes
+-----
+
+- File Browser : Windows only : Fixed bug in `HiddenFilePathFilter` that caused sequences to be treated as though they are hidden files (#5810).
 
 
 1.3.16.1 (relative to 1.3.16.0)
