@@ -6,7 +6,10 @@
 1.4.x.x (relative to 1.4.2.0)
 =======
 
+Features
+--------
 
+- 3Delight : Added "3Delight Cloud" renderer, for rendering using the 3Delight cloud.
 
 1.4.2.0 (relative to 1.4.1.0)
 =======
