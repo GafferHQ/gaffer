@@ -172,6 +172,8 @@ InteractiveRender::InteractiveRender( const IECore::InternedString &rendererType
 	SceneProcessorPtr adaptors = SceneAlgo::createRenderAdaptors();
 	setChild( "__adaptors", adaptors );
 	adaptors->inPlug()->setInput( inPlug() );
+	adaptors->getChild<StringPlug>( "client" )->setValue( "InteractiveRender" );
+	adaptors->getChild<StringPlug>( "renderer" )->setInput( resolvedRendererPlug() );
 	adaptedInPlug()->setInput( adaptors->outPlug() );
 
 	outPlug()->setInput( inPlug() );

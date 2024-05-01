@@ -2015,6 +2015,7 @@ SceneView::SceneView( const std::string &name )
 
 	SceneProcessorPtr adaptors = SceneAlgo::createRenderAdaptors();
 	preprocessor->addChild( adaptors );
+	adaptors->getChild<StringPlug>( "client" )->setValue( "SceneView" );
 	adaptors->inPlug()->setInput( deleteObject->outPlug() );
 
 	// add in the node from the ShadingMode
@@ -2031,6 +2032,7 @@ SceneView::SceneView( const std::string &name )
 
 	preprocessor->addChild( m_renderer->preprocessor() );
 	m_renderer->preprocessor()->inPlug()->setInput( m_drawingMode->preprocessor()->outPlug() );
+	adaptors->getChild<StringPlug>( "renderer" )->setInput( getChild<Plug>( "renderer" )->getChild<StringPlug>( "name" ) );
 
 	// remove motion blur, because the opengl renderer doesn't support it.
 
