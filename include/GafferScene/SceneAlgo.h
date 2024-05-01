@@ -308,16 +308,39 @@ GAFFERSCENE_API void validateName( IECore::InternedString name );
 
 /// Render Adaptors
 /// ===============
+///
+/// Adaptors are nodes that are implicitly appended to the node graph
+/// before rendering, allowing them to make final modifications
+/// to the scene. They can be used to do "delayed resolution" of custom
+/// features, enforce pipeline policies or customise output for specific
+/// renderers or clients.
+///
+/// Adaptors are created by clients such as the Render and InteractiveRender
+/// nodes and the SceneView which implements Gaffer's 3D Viewer.
+///
+/// Adaptors are implemented as SceneProcessors with optional `client`
+/// and `renderer` input StringPlugs to inform them of the scope in
+/// which they are operating. Custom adaptors can be registered for
+/// any purpose by calling `registerRenderAdaptor()`. Examples include
+/// `startup/GafferScene/renderSetAdaptor.py` which implements features
+/// for the RenderPassEditor, and `startup/GafferArnold/ocio.py` which
+/// configures a default colour manager for Arnold.
 
 /// Function to return a SceneProcessor used to adapt the
 /// scene for rendering.
 using RenderAdaptor = std::function<SceneProcessorPtr ()>;
-/// Registers an adaptor.
+/// Registers an adaptor to be applied when `client` renders using `renderer`. Standard
+/// wildcards may be used to match multiple clients and/or renderers.
+GAFFERSCENE_API void registerRenderAdaptor( const std::string &name, RenderAdaptor adaptor, const std::string &client, const std::string &renderer );
+/// Equivalent to `registerRenderAdaptor( name, adaptor, "*", "*" )`.
+/// \todo Remove
 GAFFERSCENE_API void registerRenderAdaptor( const std::string &name, RenderAdaptor adaptor );
 /// Removes a previously registered adaptor.
 GAFFERSCENE_API void deregisterRenderAdaptor( const std::string &name );
 /// Returns a SceneProcessor that will apply all the currently
-/// registered adaptors.
+/// registered adaptors. It is the client's responsibility to set
+/// the adaptor's `client` and `renderer` string plugs to appropriate
+/// values before use.
 GAFFERSCENE_API SceneProcessorPtr createRenderAdaptors();
 
 /// Apply Camera Globals
