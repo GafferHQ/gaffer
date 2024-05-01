@@ -922,6 +922,7 @@ namespace
 bool isConvertedProcedural( const AtNode *node );
 
 IECore::InternedString g_surfaceShaderAttributeName( "surface" );
+IECore::InternedString g_volumeShaderAttributeName( "volume" );
 IECore::InternedString g_lightShaderAttributeName( "light" );
 IECore::InternedString g_doubleSidedAttributeName( "doubleSided" );
 IECore::InternedString g_setsAttributeName( "sets" );
@@ -951,6 +952,7 @@ IECore::InternedString g_volumeVisibilityAutoBumpAttributeName( "ai:autobump_vis
 IECore::InternedString g_subsurfaceVisibilityAutoBumpAttributeName( "ai:autobump_visibility:subsurface" );
 
 IECore::InternedString g_arnoldSurfaceShaderAttributeName( "ai:surface" );
+IECore::InternedString g_arnoldVolumeShaderAttributeName( "ai:volume" );
 IECore::InternedString g_arnoldLightShaderAttributeName( "ai:light" );
 IECore::InternedString g_arnoldFilterMapAttributeName( "ai:filtermap" );
 IECore::InternedString g_arnoldUVRemapAttributeName( "ai:uv_remap" );
@@ -1057,6 +1059,13 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			if( surfaceShaderAttribute )
 			{
 				m_surfaceShader = shaderCache->get( surfaceShaderAttribute, attributes );
+			}
+
+			const IECoreScene::ShaderNetwork *volumeShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_arnoldVolumeShaderAttributeName, attributes );
+			volumeShaderAttribute = volumeShaderAttribute ? volumeShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_volumeShaderAttributeName, attributes );
+			if( volumeShaderAttribute )
+			{
+				m_volumeShader = shaderCache->get( volumeShaderAttribute, attributes );
 			}
 
 			if( auto filterMapAttribute = attribute<IECoreScene::ShaderNetwork>( g_arnoldFilterMapAttributeName, attributes ) )
@@ -1375,9 +1384,9 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 				AiNodeSetBool( node, g_matteArnoldString, m_shadingFlags & ArnoldAttributes::Matte );
 
-				if( m_surfaceShader && m_surfaceShader->root() )
+				if( AtNode *shader = preferredShader( geometry ) )
 				{
-					AiNodeSetPtr( node, g_shaderArnoldString, m_surfaceShader->root() );
+					AiNodeSetPtr( node, g_shaderArnoldString, shader );
 				}
 				else
 				{
@@ -1995,6 +2004,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			h.append( m_sidedness );
 			h.append( m_shadingFlags );
 			hashOptional( m_surfaceShader.get(), h );
+			hashOptional( m_volumeShader.get(), h );
 			hashOptional( m_filterMap.get(), h );
 			hashOptional( m_uvRemap.get(), h );
 			hashOptional( m_lightShader.get(), h );
@@ -2018,10 +2028,33 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			h.append( m_sssSetName.c_str() ? m_sssSetName.c_str() : "" );
 		}
 
+		AtNode *preferredShader( const AtNode *geometry ) const
+		{
+			if( m_volumeShader )
+			{
+				// Prefer the volume shader if we have one, and the geometry is either
+				// a volume or a shape being rendered as a volume (non-zero step size).
+				bool preferVolume = AiNodeIs( geometry, g_volumeArnoldString );
+				if( !preferVolume && AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( geometry ), g_stepSizeArnoldString ) )
+				{
+					preferVolume = AiNodeGetFlt( geometry, g_stepSizeArnoldString ) > 0.0f;
+				}
+				if( preferVolume )
+				{
+					return m_volumeShader->root();
+				}
+			}
+
+			// Otherwise use the surface shader. We use this even for volume geometry,
+			// because Gaffer has always assigned volume shaders as `ai:surface`.
+			return m_surfaceShader ? m_surfaceShader->root() : nullptr;
+		}
+
 		unsigned char m_visibility;
 		unsigned char m_sidedness;
 		unsigned char m_shadingFlags;
 		ArnoldShaderPtr m_surfaceShader;
+		ArnoldShaderPtr m_volumeShader;
 		ArnoldShaderPtr m_filterMap;
 		ArnoldShaderPtr m_uvRemap;
 		IECoreScene::ConstShaderNetworkPtr m_lightShader;
