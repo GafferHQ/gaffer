@@ -67,8 +67,11 @@ using namespace GafferArnold;
 namespace
 {
 
+const InternedString g_inputParameterName( "input" );
+
 const AtString g_emptyArnoldString( "" );
 const AtString g_nameArnoldString( "name" );
+const AtString g_inputsArnoldString( "inputs" );
 const AtString g_gafferPlugTypeArnoldString( "gaffer.plugType" );
 const AtString g_gafferDefaultArnoldString( "gaffer.default" );
 
@@ -622,7 +625,16 @@ void ParameterHandler::setupPlugs( const AtNodeEntry *nodeEntry, Gaffer::GraphCo
 				continue;
 			}
 		}
-		validPlugs.insert( setupPlug( nodeEntry, param, plugsParent, direction ) );
+		if( AiNodeEntryGetType( nodeEntry ) == AI_NODE_OPERATOR && name == g_inputsArnoldString )
+		{
+			// Deliberately make a singular input as we daisy-chain these and add them all
+			// to the global target operator's `inputs` plug using `AiOpLink` in `ShaderNetworkAlgo`
+			validPlugs.insert( ::setupPlug( g_inputParameterName, plugsParent, direction ) );
+		}
+		else
+		{
+			validPlugs.insert( setupPlug( nodeEntry, param, plugsParent, direction ) );
+		}
 	}
 	AiParamIteratorDestroy( it );
 

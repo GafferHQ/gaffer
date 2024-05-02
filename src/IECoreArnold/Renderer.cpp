@@ -69,6 +69,7 @@
 
 #include "ai_array.h"
 #include "ai_msg.h"
+#include "ai_operator.h"
 #include "ai_procedural.h"
 #include "ai_ray.h"
 #include "ai_render.h"
@@ -3208,6 +3209,7 @@ const IECore::InternedString g_idAOVShaderOptionName( "ai:aov_shader:__cortexID"
 const IECore::InternedString g_imagerOptionName( "ai:imager" );
 const IECore::InternedString g_logFileNameOptionName( "ai:log:filename" );
 const IECore::InternedString g_logMaxWarningsOptionName( "ai:log:max_warnings" );
+const IECore::InternedString g_operatorOptionName( "ai:operator" );
 const IECore::InternedString g_pluginSearchPathOptionName( "ai:plugin_searchpath" );
 const IECore::InternedString g_profileFileNameOptionName( "ai:profileFileName" );
 const IECore::InternedString g_progressiveMinAASamplesOptionName( "ai:progressive_min_AA_samples" );
@@ -3323,6 +3325,7 @@ class ArnoldGlobals
 			m_atmosphere.reset();
 			m_background.reset();
 			m_imager.reset();
+			m_operator.reset();
 			m_defaultCamera.reset();
 			// Destroy the universe while our message callback is
 			// still active, so we catch any Arnold shutdown messages.
@@ -3605,6 +3608,19 @@ class ArnoldGlobals
 				{
 					output.second->updateImager( m_imager ? m_imager->root() : nullptr );
 				}
+				return;
+			}
+			else if( name == g_operatorOptionName )
+			{
+				m_operator = nullptr;
+				if( value )
+				{
+					if( const IECoreScene::ShaderNetwork *d = reportedCast<const IECoreScene::ShaderNetwork>( value, "option", name ) )
+					{
+						m_operator = m_shaderCache->get( d, nullptr );
+					}
+				}
+				AiOpSetTarget( universe(), m_operator ? m_operator->root() : nullptr );
 				return;
 			}
 			else if( boost::starts_with( name.c_str(), "ai:aov_shader:" ) )
@@ -4216,6 +4232,7 @@ class ArnoldGlobals
 		ArnoldShaderPtr m_atmosphere;
 		ArnoldShaderPtr m_background;
 		ArnoldShaderPtr m_imager;
+		ArnoldShaderPtr m_operator;
 
 		std::string m_cameraName;
 		using CameraMap = tbb::concurrent_unordered_map<std::string, IECoreScene::ConstCameraPtr>;

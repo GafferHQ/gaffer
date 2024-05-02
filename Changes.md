@@ -5,6 +5,7 @@ Features
 --------
 
 - 3Delight : Added "3Delight Cloud" renderer, for rendering using the 3Delight cloud.
+- Arnold : Added Arnold Operators support.
 
 Improvements
 -----------

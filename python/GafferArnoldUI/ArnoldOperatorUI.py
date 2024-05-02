@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,31 +34,59 @@
 #
 ##########################################################################
 
-__import__( "GafferSceneUI" )
+import Gaffer
+import GafferArnold
 
-from ._GafferArnoldUI import *
+Gaffer.Metadata.registerNode(
 
-from . import ArnoldShaderUI
-from . import ArnoldRenderUI
-from . import ShaderMenu
-from . import ArnoldOptionsUI
-from . import ArnoldAttributesUI
-from . import ArnoldLightUI
-from . import ArnoldVDBUI
-from . import InteractiveArnoldRenderUI
-from . import ArnoldDisplacementUI
-from . import ArnoldMeshLightUI
-from . import ArnoldShaderBallUI
-from . import ArnoldAOVShaderUI
-from . import ArnoldAtmosphereUI
-from . import ArnoldBackgroundUI
-from . import ArnoldTextureBakeUI
-from . import ArnoldCameraShadersUI
-from . import ArnoldLightFilterUI
-from . import ArnoldColorManagerUI
-from . import ArnoldImagerUI
-from . import ArnoldOperatorUI
-from . import CacheMenu
-from . import GPUCache
+	GafferArnold.ArnoldOperator,
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferArnoldUI" )
+	"description",
+	"""
+	Assigns an operator. This is stored as an `ai:operator` option in Gaffer's
+	globals.
+	""",
+
+	plugs = {
+
+		"operator" : [
+
+			"description",
+			"""
+			The operator to be assigned. The output of an ArnoldShader node
+			holding an operator should be connected here. Multiple operators may be
+			assigned at once by chaining them together via their `input`
+			parameters, and then assigning the final operator via the ArnoldOperator
+			node.
+			""",
+
+			"noduleLayout:section", "left",
+			"nodule:type", "GafferUI::StandardNodule",
+
+		],
+
+		"mode" : [
+
+			"description",
+			"""
+			The mode used to combine the `operator` input with any operators that
+			already exist in the globals.
+
+			- Replace : Removes all pre-existing operators, and replaces them with
+			the new ones.
+			- InsertFirst : Inserts the new operators so that they will be run before
+			any pre-existing operators.
+			- InsertLast : Inserts the new operators so that they will be run after
+			any pre-existing operators.
+			""",
+
+			"preset:Replace", GafferArnold.ArnoldOperator.Mode.Replace,
+			"preset:InsertFirst", GafferArnold.ArnoldOperator.Mode.InsertFirst,
+			"preset:InsertLast", GafferArnold.ArnoldOperator.Mode.InsertLast,
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+	}
+
+)

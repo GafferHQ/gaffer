@@ -160,6 +160,9 @@ void ArnoldShader::loadShader( const std::string &shaderName, bool keepExistingV
 		case AI_NODE_IMAGER :
 			type = "ai:imager";
 			break;
+		case AI_NODE_OPERATOR :
+			type = "ai:operator";
+			break;
 		default :
 			type = "ai:surface";
 			break;
@@ -229,6 +232,16 @@ bool ArnoldShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 			sourceShader != this &&
 			plug == parametersPlug()->getChild( g_inputParameterName ) &&
 			sourceShader->typePlug()->getValue() == "ai:imager"
+		;
+	}
+	else if ( typePlug()->getValue() == "ai:operator" )
+	{
+		// Operator connections are limited to chaining via the `input`
+		// parameter. Everything else is disallowed.
+		return
+			sourceShader != this &&
+			plug == parametersPlug()->getChild( g_inputParameterName ) &&
+			sourceShader->typePlug()->getValue() == "ai:operator"
 		;
 	}
 	else

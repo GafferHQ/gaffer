@@ -3377,3 +3377,69 @@
 	[attr custom]
 		gaffer.layout.index INT 6
 		gaffer.layout.activator STRING "modeIsCustom"
+
+# Standard Arnold Operators
+##########################################################################
+
+[node collection]
+
+	primaryInput STRING "input"
+
+[node disable]
+
+	primaryInput STRING "input"
+
+[node include_graph]
+
+	primaryInput STRING "input"
+
+[node materialx]
+
+	primaryInput STRING "input"
+
+	gaffer.graphEditorLayout.defaultVisibility BOOL false
+
+	[attr input]
+		gaffer.layout.index INT 0
+		gaffer.graphEditorLayout.visible BOOL true
+
+	[attr enable]
+		gaffer.layout.index INT 1
+
+	[attr selection]
+		gaffer.layout.index INT 2
+
+	[attr filename]
+		widget STRING "filename"
+		gaffer.layout.index INT 3
+		gaffer.path.valid BOOL true
+		gaffer.path.leaf BOOL true
+		gaffer.path.bookmarks STRING "material"
+		gaffer.fileSystemPath.extensions STRING "mtlx"
+
+[node merge]
+
+	primaryInput STRING "input"
+
+[node set_parameter]
+
+	primaryInput STRING "input"
+
+	# Hide, because we don't support array parameters.
+	gaffer.nodeMenu.category STRING ""
+
+[node set_transform]
+
+	primaryInput STRING "input"
+	gaffer.graphEditorLayout.defaultVisibility BOOL false
+
+	[attr input]
+		gaffer.graphEditorLayout.visible BOOL true
+
+[node string_replace]
+
+	primaryInput STRING "input"
+
+[node switch_operator]
+
+	primaryInput STRING "input"

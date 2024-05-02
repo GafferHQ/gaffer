@@ -128,6 +128,7 @@ if moduleSearchPath.find( "arnold" ) :
 		nodeMenu.append( "/Arnold/Globals/Background", GafferArnold.ArnoldBackground, searchText = "ArnoldBackground" )
 		nodeMenu.append( "/Arnold/Globals/AOVShader", GafferArnold.ArnoldAOVShader, searchText = "ArnoldAOVShader" )
 		nodeMenu.append( "/Arnold/Globals/Imager", GafferArnold.ArnoldImager, searchText = "ArnoldImager" )
+		nodeMenu.append( "/Arnold/Globals/Operator", GafferArnold.ArnoldOperator, searchText = "ArnoldOperator" )
 		nodeMenu.append( "/Arnold/Displacement", GafferArnold.ArnoldDisplacement, searchText = "ArnoldDisplacement"  )
 		nodeMenu.append( "/Arnold/CameraShaders", GafferArnold.ArnoldCameraShaders, searchText = "ArnoldCameraShaders"  )
 		nodeMenu.append( "/Arnold/VDB", GafferArnold.ArnoldVDB, searchText = "ArnoldVDB"  )

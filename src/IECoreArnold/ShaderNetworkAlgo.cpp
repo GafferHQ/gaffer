@@ -53,6 +53,8 @@
 #include "boost/lexical_cast.hpp"
 #include "boost/unordered_map.hpp"
 
+#include "ai_operator.h"
+
 #include <unordered_map>
 
 using namespace std;
@@ -63,6 +65,9 @@ using namespace IECoreArnold;
 
 namespace
 {
+
+const InternedString g_operatorAttributeName( "ai:operator" );
+const InternedString g_inputAttributeName( "input" );
 
 const AtString g_codeArnoldString( "code" );
 const AtString g_emptyArnoldString( "" );
@@ -165,14 +170,29 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 		ParameterAlgo::setParameter( node, arnoldParameterName, namedParameter.second.get() );
 	}
 
+	const bool isOperator = shader->getType() == g_operatorAttributeName.string() ? true : false;
+
 	// Recurse through input connections
 
 	for( const auto &connection : shaderNetwork->inputConnections( outputParameter.shader ) )
 	{
+		if( isOperator && connection.destination.name != g_inputAttributeName )
+		{
+			// For operators, we can only connect other operator inputs
+			continue;
+		}
+
 		AtNode *sourceNode = convertWalk( connection.source, shaderNetwork, name, nodeCreator, nodes, converted, nodeParameters );
 		if( !sourceNode )
 		{
 			continue;
+		}
+
+		if( isOperator )
+		{
+			// All inputs need to be added to the target operator, this is appended in `AiOpLink` later
+			nodes.push_back( node );
+			return node;
 		}
 
 		string parameterName;
@@ -454,6 +474,13 @@ std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, 
 			return AiNode( universe, nodeType, nodeName, parentNode );
 		};
 		convertWalk( network->getOutput(), network.get(), name, nodeCreator, result, converted, nodeParameters );
+		if( network->outputShader()->getType() == g_operatorAttributeName.string() )
+		{
+			for( std::vector<AtNode *>::reverse_iterator riter = result.rbegin() + 1; riter != result.rend(); ++riter )
+			{
+				AiOpLink( *riter, result.back() );
+			}
+		}
 		for( const auto &kv : network->outputShader()->blindData()->readable() )
 		{
 			ParameterAlgo::setParameter( result.back(), AtString( kv.first.c_str() ), kv.second.get() );
