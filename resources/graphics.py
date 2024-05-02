@@ -556,6 +556,8 @@
 		'focusOn',
 		'focusOff',
 		'focusOnHover',
-		'focusOffHover'
+		'focusOffHover',
+		'shaderTweakProxy',
+		'shaderTweakProxyIcon'
 	]
 }
