@@ -16,6 +16,11 @@ Fixes
 
 - Arnold : Fixed rendering of `ai:volume` shaders loaded from USD (#5830).
 
+API
+---
+
+- SceneAlgo : Added mechanism for scoping render adaptors to specific clients and/or renderers.
+
 1.4.2.0 (relative to 1.4.1.0)
 =======
 
