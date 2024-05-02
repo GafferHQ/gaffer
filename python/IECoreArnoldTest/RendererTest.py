@@ -4314,6 +4314,58 @@ class RendererTest( GafferTest.TestCase ) :
 
 		del renderer
 
+	def testVolumeShaderAttribute( self ) :
+
+		import IECoreVDB
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+			str( self.temporaryDirectory() / "test.ass" )
+		)
+		universe = ctypes.cast( renderer.command( "ai:queryUniverse", {} ), ctypes.POINTER( arnold.AtUniverse ) )
+
+		for withVolume in ( True, False ) :
+			for withSurface in ( True, False ) :
+				for step in ( 0.0, 0.1 ) :
+					with self.subTest( withVolume = withVolume, withSurface = withSurface, step = step ) :
+
+						attributes = IECore.CompoundObject( { "ai:shape:step_size" : IECore.FloatData( step ) } )
+
+						if withVolume :
+							attributes["ai:volume"] = IECoreScene.ShaderNetwork(
+								shaders = { "shader" : IECoreScene.Shader( "standard_volume" ) },
+								output = ( "shader", "out" ),
+							)
+
+						if withSurface :
+							attributes["ai:surface"] = IECoreScene.ShaderNetwork(
+								shaders = { "shader" : IECoreScene.Shader( "standard_surface" ) },
+								output = ( "shader", "out" ),
+							)
+
+						attributes = renderer.attributes( attributes )
+
+						meshName = f"mesh{withVolume}{withSurface}{step}"
+						renderer.object( meshName, IECoreScene.MeshPrimitive.createSphere( 1 ), attributes )
+
+						vdbName = f"vdb{withVolume}{withSurface}{step}"
+						renderer.object( vdbName, IECoreVDB.VDBObject(), attributes )
+
+						meshShader = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( universe, meshName ), "shader" )
+						self.assertEqual(
+							arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( meshShader ) ),
+							"standard_volume" if ( withVolume and step ) else "standard_surface" if withSurface else "utility"
+						)
+
+						vdbShader = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( universe, vdbName ), "shader" )
+						self.assertEqual(
+							arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( vdbShader ) ),
+							"standard_volume" if withVolume else "standard_surface" if withSurface else "utility"
+						)
+
+		del renderer
+
 	def testInternedStringAttributes( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
