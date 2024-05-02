@@ -14,7 +14,9 @@ Improvements
 Fixes
 -----
 
-- Arnold : Fixed rendering of `ai:volume` shaders loaded from USD (#5830).
+- Arnold :
+  - Fixed rendering of `ai:volume` shaders loaded from USD (#5830).
+  - Renamed Arnold/Globals/Imager menu option to Arnold/Globals/Imagers so that the actual ArnoldImager node menu option wasn't overwritten.
 
 1.4.2.0 (relative to 1.4.1.0)
 =======
