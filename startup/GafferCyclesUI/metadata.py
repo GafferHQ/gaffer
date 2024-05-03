@@ -1,512 +1,858 @@
 import Gaffer
 import GafferCycles
+import imath
+import functools
 
-sections = {
+parameterMetadata = {
     "principled_bsdf" : {
-        "subsurface_method" : "Subsurface",
-        "subsurface_weight" : "Subsurface",
-        "subsurface_radius" : "Subsurface",
-        "subsurface_scale" : "Subsurface",
-        "subsurface_anisotropy" : "Subsurface",
-        "subsurface_ior" : "Subsurface",
-        "distribution" : "Specular",
-        "specular_ior_level" : "Specular",
-        "specular_tint" : "Specular",
-        "anisotropic" : "Specular",
-        "anisotropic_rotation" : "Specular",
-        "tangent" : "Specular",
-        "transmission_weight" : "Transmission",
-        "coat_weight" : "Coat",
-        "coat_roughness" : "Coat",
-        "coat_ior" : "Coat",
-        "coat_tint" : "Coat",
-        "coat_normal" : "Coat",
-        "sheen_weight" : "Sheen",
-        "sheen_roughness" : "Sheen",
-        "sheen_tint" : "Sheen",
-        "emission_color" : "Emission",
-        "emission_strength" : "Emission",
+        "base_color" : {
+            "label" : "Base Color",
+            "layout:index" : 1,
+        },
+        "metallic" : {
+            "layout:index" : 2,
+        },
+        "roughness" : {
+            "layout:index" : 3,
+        },
+        "ior" : {
+            "label" : "IOR",
+            "layout:index" : 4,
+        },
+        "alpha" : {
+            "layout:index" : 5,
+        },
+        "normal" : {
+            "layout:index" : 6,
+        },
+        "subsurface_method" : {
+            "layout:section" : "Subsurface",
+            "label" : "Method",
+            "layout:index" : 7,
+        },
+        "subsurface_weight" : {
+            "layout:section" : "Subsurface",
+            "label" : "Weight",
+            "layout:index" : 8,
+        },
+        "subsurface_radius" : {
+            "layout:section" : "Subsurface",
+            "label" : "Radius",
+            "layout:index" : 9,
+            "userDefault" : imath.Color3f( 1, .2, .1 ),
+        },
+        "subsurface_scale" : {
+            "layout:section" : "Subsurface",
+            "label" : "Scale",
+            "layout:index" : 10,
+        },
+        "subsurface_anisotropy" : {
+            "layout:section" : "Subsurface",
+            "label" : "Anisotropy",
+            "layout:index" : 11,
+        },
+        "subsurface_ior" : {
+            "layout:section" : "Subsurface",
+            "label" : "IOR",
+            "layout:index" : 12,
+        },
+        "distribution" : {
+            "layout:section" : "Specular",
+            "label" : "Distribution",
+            "layout:index" : 13,
+        },
+        "specular_ior_level" : {
+            "layout:section" : "Specular",
+            "label" : "IOR Level",
+            "layout:index" : 14,
+            "userDefault" : 0.5,
+        },
+        "specular_tint" : {
+            "layout:section" : "Specular",
+            "label" : "Tint",
+            "layout:index" : 15,
+        },
+        "anisotropic" : {
+            "layout:section" : "Specular",
+            "label" : "Anisotropic",
+            "layout:index" : 16,
+        },
+        "anisotropic_rotation" : {
+            "layout:section" : "Specular",
+            "label" : "Anisotropic Rotation",
+            "layout:index" : 17,
+        },
+        "tangent" : {
+            "layout:section" : "Specular",
+            "label" : "Tangent",
+            "layout:index" : 18,
+        },
+        "transmission_weight" : {
+            "layout:section" : "Transmission",
+            "label" : "Weight",
+            "layout:index" : 19,
+        },
+        "coat_weight" : {
+            "layout:section" : "Coat",
+            "label" : "Weight",
+            "layout:index" : 20,
+        },
+        "coat_roughness" : {
+            "layout:section" : "Coat",
+            "label" : "Roughness",
+            "layout:index" : 21,
+        },
+        "coat_ior" : {
+            "layout:section" : "Coat",
+            "label" : "IOR",
+            "layout:index" : 22,
+        },
+        "coat_tint" : {
+            "layout:section" : "Coat",
+            "label" : "Tint",
+            "layout:index" : 23,
+        },
+        "coat_normal" : {
+            "layout:section" : "Coat",
+            "label" : "Normal",
+            "layout:index" : 24,
+        },
+        "sheen_weight" : {
+            "layout:section" : "Sheen",
+            "label" : "Weight",
+            "layout:index" : 25,
+        },
+        "sheen_roughness" : {
+            "layout:section" : "Sheen",
+            "label" : "Roughness",
+            "layout:index" : 26,
+        },
+        "sheen_tint" : {
+            "layout:section" : "Sheen",
+            "label" : "Tint",
+            "layout:index" : 27,
+        },
+        "emission_color" : {
+            "layout:section" : "Emission",
+            "label" : "Color",
+            "layout:index" : 28,
+        },
+        "emission_strength" : {
+            "layout:section" : "Emission",
+            "label" : "Strength",
+            "layout:index" : 29,
+        },
     },
     "principled_hair_bsdf" : {
-        "color" : "Direct Coloring",
-        "absorption_coefficient" : "Absorption Coefficient",
-        "melanin" : "Melanin Concentration",
-        "melanin_redness" : "Melanin Concentration",
-        "tint" : "Melanin Concentration",
-        "roughness" : "General", 
-        "radial_roughness" : "General", 
-        "coat" : "General",
-        "ior" : "General",
-        "offset" : "General",
-        "random_color" : "General",
-        "random_roughness" : "General",
-        "random" : "General",
-        "aspect_ratio" : "General",
-        "R" : "General",
-        "TT" : "General",
-        "TRT" : "General",
-    },
-}
-
-names = {
-    "principled_bsdf" : {
-        "base_color" : "Base Color",
-        "ior" : "IOR",
-        "subsurface_method" : "Method",
-        "subsurface_weight" : "Weight",
-        "subsurface_radius" : "Radius",
-        "subsurface_scale" : "Scale",
-        "subsurface_ior" : "IOR",
-        "subsurface_anisotropy" : "Anisotropy",
-        "specular_ior_level" : "IOR Level",
-        "specular_tint" : "Tint",
-        "specular_tint" : "Tint",
-        "anisotropic_rotation" : "Anisotropic Rotation",
-        "transmission_weight" : "Weight",
-        "coat_weight" : "Weight",
-        "coat_roughness" : "Roughness",
-        "coat_ior" : "IOR",
-        "coat_tint" : "Tint",
-        "coat_normal" : "Normal",
-        "sheen_weight" : "Weight",
-        "sheen_roughness" : "Roughness",
-        "sheen_tint" : "Tint",
-        "emission_color" : "Color",
-        "emission_strength" : "Strength",
-    },
-    "principled_hair_bsdf" : {
-        "absorption_coefficient" : "Absorption Coefficient",
-        "melanin_redness" : "Melanin Redness",
-        "radial_roughness" : "Radial Roughness",
-        "ior" : "IOR",
-        "random_roughness" : "Random Roughness",
-        "random_color" : "Random Color",
-        "aspect_ratio" : "Aspect Ratio",
+        "model" : {
+            "userDefault" : "Chiang",
+        },
+        "color" : {
+            "layout:index" : 1,
+        },
+        "absorption_coefficient" : {
+            "label" : "Absorption Coefficient",
+            "layout:index" : 2,
+        },
+        "melanin" : {
+            "layout:index" : 3,
+        },
+        "melanin_redness" : {
+            "label" : "Melanin Redness",
+            "layout:index" : 4,
+        },
+        "tint" : {
+            "layout:index" : 5,
+        },
+        "roughness" : {
+            "layout:index" : 6,
+        },
+        "radial_roughness" : {
+            "label" : "Radial Roughness",
+            "layout:index" : 7,
+        },
+        "coat" : {
+            "layout:index" : 8,
+        },
+        "ior" : {
+            "label" : "IOR",
+            "layout:index" : 9,
+        },
+        "offset" : {
+            "layout:index" : 10,
+        },
+        "random_color" : {
+            "label" : "Random Color",
+            "layout:index" : 11,
+        },
+        "random_roughness" : {
+            "label" : "Random Roughness",
+            "layout:index" : 12,
+        },
+        "random" : {
+            "layout:index" : 13,
+        },
+        "R" : {
+            "layout:index" : 14,
+        },
+        "TT" : {
+            "layout:index" : 15,
+        },
+        "TRT" : {
+            "layout:index" : 16,
+        },
+        "aspect_ratio" : {
+            "label" : "Aspect Ratio",
+            "layout:index" : 17,
+        },
     },
     "principled_volume" : {
-        "color_attribute" : "Color Attribute",
-        "density_attribute" : "Density Attribute",
-        "temperature_attribute" : "Temperature Attribute",
-        "absorption_color" : "Absorption Color",
-        "blackbody_intensity" : "Blackbody Intensity",
-        "blackbody_tint" : "Blackbody Tint",
-        "emission_color" : "Emission Color",
-        "emission_strength" : "Emission Strength",
+         "color" : {
+            "layout:index" : 1,
+        },
+        "color_attribute" : {
+            "label" : "Color Attribute",
+            "layout:index" : 2,
+        },
+        "density" : {
+            "layout:index" : 3,
+        },
+        "density_attribute" : {
+            "label" : "Density Attribute",
+            "layout:index" : 4,
+            "userDefault" : "density",
+        },
+        "anisotropy" : {
+            "layout:index" : 5,
+        },
+        "absorption_color" : {
+            "label" : "Absorption Color",
+            "layout:index" : 6,
+        },
+        "emission_strength" : {
+            "label" : "Emission Strength",
+            "layout:index" : 7,
+        },
+        "emission_color" : {
+            "label" : "Emission Color",
+            "layout:index" : 8,
+        },
+        "blackbody_intensity" : {
+            "label" : "Blackbody Intensity",
+            "layout:index" : 9,
+        },
+        "blackbody_tint" : {
+            "label" : "Blackbody Tint",
+            "layout:index" : 10,
+        },
+        "temperature" : {
+            "layout:index" : 11,
+        },
+        "temperature_attribute" : {
+            "label" : "Temperature Attribute",
+            "layout:index" : 12,
+            "userDefault" : "temperature",
+        },
     },
     "vector_map_range" : {
-        "range_type" : "Interpolation Type",
-        "from_min" : "From Min",
-        "from_max" : "From Max",
-        "to_min" : "To Min",
-        "to_max" : "To Max",
-        "steps" : "Steps",
-        "use_clamp" : "Clamp",
+        "range_type" : {
+            "label" : "Interpolation Type",
+        },
+        "from_min" : {
+            "label" : "From Min",
+        },
+        "from_max" : {
+            "label" : "From Max",
+        },
+        "to_min" : {
+            "label" : "To Min",
+        },
+        "to_max" : {
+            "label" : "To Max",
+        },
+        "steps" : {
+            "label" : "Steps",
+        },
+        "use_clamp" : {
+            "label" : "Clamp",
+        },
     },
     "map_range" : {
-        "range_type" : "Interpolation Type",
-        "from_min" : "From Min",
-        "from_max" : "From Max",
-        "to_min" : "To Min",
-        "to_max" : "To Max",
-        "steps" : "Steps",
-        "use_clamp" : "Clamp",
+        "range_type" : {
+            "label" : "Interpolation Type",
+        },
+        "from_min" : {
+            "label" : "From Min",
+        },
+        "from_max" : {
+            "label" : "From Max",
+        },
+        "to_min" : {
+            "label" : "To Min",
+        },
+        "to_max" : {
+            "label" : "To Max",
+        },
+        "steps" : {
+            "label" : "Steps",
+        },
+        "use_clamp" : {
+            "label" : "Clamp",
+        },
     },
     "mix" : {
-        "mix_type" : "Blending Mode",
-        "use_clamp" : "Clamp",
-        "color1" : "A",
-        "color2" : "B",
+        "mix_type" : {
+            "label" : "Blending Mode",
+            "layout:index" : 1,
+        },
+        "factor" : {
+            "layout:index" : 2,
+        },
+        "color1" : {
+            "label" : "A",
+            "layout:index" : 3,
+        },
+        "color2" : {
+            "label" : "B",
+            "layout:index" : 4,
+        },
+        "use_clamp" : {
+            "label" : "Clamp",
+            "layout:index" : 5,
+        },
     },
     "mix_color" : {
-        "blend_type" : "Blending Mode",
-        "use_clamp_result" : "Clamp Result",
-        "use_clamp" : "Clamp Factor",
+        "blend_type" : {
+            "label" : "Blending Mode",
+        },
+        "use_clamp_result" : {
+            "label" : "Clamp Result",
+        },
+        "use_clamp" : {
+            "label" : "Clamp Factor",
+        },
     },
     "float_curve" : {
-        "min_x" : "Min X",
-        "max_x" : "Max X",
+        "min_x" : {
+            "label" : "Min X",
+        },
+        "max_x" : {
+            "label" : "Max X",
+        },
     },
     "rgb_curves" : {
-        "min_x" : "Min X",
-        "max_x" : "Max X",
+        "min_x" : {
+            "label" : "Min X",
+        },
+        "max_x" : {
+            "label" : "Max X",
+        },
     },
     "vector_curves" : {
-        "min_x" : "Min X",
-        "max_x" : "Max X",
+        "min_x" : {
+            "label" : "Min X",
+        },
+        "max_x" : {
+            "label" : "Max X",
+        },
     },
     "vector_transform" : {
-        "transform_type" : "Type",
-        "convert_from" : "Convert From",
-        "convert_to" : "Convert To",
+        "transform_type" : {
+            "label" : "Type",
+        },
+        "convert_from" : {
+            "label" : "Convert From",
+        },
+        "convert_to" : {
+            "label" : "MConvert To",
+        },
     },
     "mapping" : {
-        "mapping_type" : "Type",
+        "mapping_type" : {
+            "label" : "Type",
+        },
     },
     "vector_rotate" : {
-        "rotate_type" : "Type",
+        "rotate_type" : {
+            "label" : "Type",
+        },
+        "rotation" : {
+            "layout:index" : 5,
+        },
     },
     "clamp" : {
-        "clamp_type" : "Clamp Type",
+        "clamp_type" : {
+            "label" : "Clamp Type",
+        },
     },
     "mix_float" : {
-        "use_clamp" : "Clamp",
+        "use_clamp" : {
+            "label" : "Clamp",
+        },
     },
     "mix_vector" : {
-        "use_clamp" : "Clamp",
+        "use_clamp" : {
+            "label" : "Clamp",
+        },
     },
     "mix_vector_non_uniform" : {
-        "use_clamp" : "Clamp",
+        "use_clamp" : {
+            "label" : "Clamp",
+        },
     },
     "brightness_contrast" : {
-        "bright" : "Brightness",
+        "bright" : {
+            "label" : "Brightness",
+        },
     },
     "normal" : {
-        "direction" : "Direction",
+        "direction" : {
+            "label" : "Direction",
+        },
     },
     "bump" : {
-        "use_object_space" : "Use Object Space",
-        "sample_center" : "Sample Center",
-        "sample_x" : "Sample X",
-        "sample_y" : "Sample Y",
+        "strength" : {
+            "layout:index" : 1,
+        },
+        "distance" : {
+            "layout:index" : 2,
+        },
+        "height" : {
+            "layout:index" : 3,
+        },
+        "normal" : {
+            "layout:index" : 4,
+        },
+        "sample_center" : {
+            "label" : "Sample Center",
+            "layout:index" : 5,
+        },
+        "sample_x" : {
+            "label" : "Sample X",
+            "layout:index" : 6,
+        },
+        "sample_y" : {
+            "label" : "Sample Y",
+            "layout:index" : 7,
+        },
+        "invert" : {
+            "layout:index" : 8,
+        },
+        "use_object_space" : {
+            "label" : "Use Object Space",
+            "layout:index" : 9,
+        },
     },
     "vertex_color" : {
-        "layer_name" : "Layer Name",
+        "layer_name" : {
+            "label" : "Layer Name",
+        },
     },
     "vector_math" : {
-        "math_type" : "Operation",
+        "math_type" : {
+            "label" : "Operation",
+        },
     },
     "texture_coordinate" : {
-        "from_dupli" : "From Dupli",
-        "use_transform" : "Use Transform",
-        "ob_tfm" : "Object Transform",
+        "from_dupli" : {
+            "label" : "From Dupli",
+        },
+        "use_transform" : {
+            "label" : "Use Transform",
+        },
+        "ob_tfm" : {
+            "label" : "Object Transform",
+        },
     },
     "ambient_occlusion" : {
-        "only_local" : "Only Local",
+        "samples" : {
+            "layout:index" : 1,
+        },
+        "inside" : {
+            "layout:index" : 2,
+        },
+        "only_local" : {
+            "label" : "Only Local",
+            "layout:index" : 3,
+        },
+        "color" : {
+            "layout:index" : 4,
+        },
+        "distance" : {
+            "layout:index" : 5,
+        },
+        "normal" : {
+            "layout:index" : 6,
+        },
     },
     "uvmap" : {
-        "from_dupli" : "From Dupli",
+        "from_dupli" : {
+            "label" : "From Dupli",
+        },
     },
     "wireframe" : {
-        "use_pixel_size" : "Use Pixel Size",
+        "use_pixel_size" : {
+            "label" : "Use Pixel Size",
+        },
     },
     "tangent" : {
-        "direction_type" : "Direction",
+        "direction_type" : {
+            "label" : "Direction",
+        },
     },
     "point_density_texture" : {
-        "tfm" : "Transform",
+        "tfm" : {
+            "label" : "Transform",
+        },
     },
     "image_texture" : {
-        "alpha_type" : "Alpha Type",
-        "projection_blend" : "Projection Blend",
+        "alpha_type" : {
+            "label" : "Alpha Type",
+        },
+        "projection_blend" : {
+            "label" : "Projection Blend",
+        },
     },
     "environment_texture" : {
-        "alpha_type" : "Alpha Type",
+        "alpha_type" : {
+            "label" : "Alpha Type",
+        },
     },
     "sky_texture" : {
-        "sky_type" : "Type",
-        "sun_direction" : "Sun Direction",
-        "sun_disc" : "Sun Disc",
-        "sun_size" : "Sun Size",
-        "sun_intensity" : "Sun Intensity",
-        "sun_elevation" : "Sun Elevation",
-        "sun_rotation" : "Sun Rotation",
-        "ground_albedo" : "Ground Albedo",
-        "air_density" : "Air",
-        "dust_density" : "Dust",
-        "ozone_density" : "Ozone",
+        "sky_type" : {
+            "label" : "Type",
+        },
+        "sun_direction" : {
+            "label" : "Sun Direction",
+        },
+        "sun_disc" : {
+            "label" : "Sun Disc",
+        },
+        "sun_size" : {
+            "label" : "Sun Size",
+        },
+        "sun_intensity" : {
+            "label" : "Sun Intensity",
+        },
+        "sun_elevation" : {
+            "label" : "Sun Elevation",
+        },
+        "sun_rotation" : {
+            "label" : "Sun Rotation",
+        },
+        "ground_albedo" : {
+            "label" : "Ground Albedo",
+        },
+        "air_density" : {
+            "label" : "Air",
+        },
+        "dust_density" : {
+            "label" : "Dust",
+        },
+        "ozone_density" : {
+            "label" : "Ozone",
+        },
     },
     "noise_texture" : {
-        "use_normalize" : "Normalize",
+        "use_normalize" : {
+            "label" : "Normalize",
+        },
     },
     "gradient_texture" : {
-        "gradient_type" : "Gradient Type",
+        "gradient_type" : {
+            "label" : "Gradient Type",
+        },
     },
     "voronoi_texture" : {
-        "use_normalize" : "Normalize",
+        "use_normalize" : {
+            "label" : "Normalize",
+        },
     },
     "ies_light" : {
-        "ies" : "IES",
+        "ies" : {
+            "label" : "IES",
+        },
     },
     "musgrave_texture" : {
-        "musgrave_type" : "Musgrave Type",
+        "musgrave_type" : {
+            "label" : "Musgrave Type",
+        },
     },
     "wave_texture" : {
-        "wave_type" : "Wave Type",
-        "bands_direction" : "Bands Direction",
-        "rings_direction" : "Rings Direction",
-        "detail_scale" : "Detail Scale",
-        "detail_roughness" : "Detail Roughness",
+        "wave_type" : {
+            "label" : "Wave Type",
+        },
+        "bands_direction" : {
+            "label" : "Bands Direction",
+        },
+        "rings_direction" : {
+            "label" : "Rings Direction",
+        },
+        "detail_scale" : {
+            "label" : "Detail Scale",
+        },
+        "detail_roughness" : {
+            "label" : "Detail Roughness",
+        },
     },
     "brick_texture" : {
-        "offset_frequency" : "Offset Frequency",
-        "squash_frequency" : "Squash Frequency",
-        "mortar_size" : "Mortar Size",
-        "mortar_smooth" : "Mortar Smooth",
-        "brick_width" : "Brick Width",
-        "row_height" : "Row Height",
+        "offset_frequency" : {
+            "label" : "Offset Frequency",
+        },
+        "squash_frequency" : {
+            "label" : "Squash Frequency",
+        },
+        "mortar_size" : {
+            "label" : "Mortar Size",
+        },
+        "mortar_smooth" : {
+            "label" : "Mortar Smooth",
+        },
+        "brick_width" : {
+            "label" : "Brick Width",
+        },
+        "brick_height" : {
+            "label" : "Row Width",
+        },
     },
     "hair_bsdf" : {
-        "roughness_u" : "Roughness U",
-        "roughness_v" : "Roughness V",
+        "component" : {
+            "layout:index" : 1,
+        },
+        "color" : {
+            "layout:index" : 2,
+        },
+        "roughness_u" : {
+            "label" : "Roughness U",
+            "layout:index" : 3,
+        },
+        "roughness_v" : {
+            "label" : "Roughness V",
+            "layout:index" : 4,
+        },
+        "offset" : {
+            "layout:index" : 5,
+        },
+        "tangent" : {
+            "layout:index" : 6,
+        },
     },
     "subsurface_scattering" : {
-        "subsurface_ior" : "IOR",
-        "subsurface_anisotropy" : "Anisotropy",
+        "method" : {
+            "layout:index" : 1,
+        },
+        "color" : {
+            "layout:index" : 2,
+        },
+        "radius" : {
+            "layout:index" : 3,
+        },
+        "scale" : {
+            "layout:index" : 4,
+        },
+        "subsurface_ior" : {
+            "label" : "IOR",
+            "layout:index" : 5,
+        },
+        "subsurface_anisotropy" : {
+            "label" : "Anisotropy",
+            "layout:index" : 6,
+        },
+        "normal" : {
+            "layout:index" : 7,
+        },
     },
     "math" : {
-        "use_clamp" : "Clamp",
-        "math_type" : "Operation",
+        "math_type" : {
+            "label" : "Operation",
+            "layout:index" : 1,
+        },
+        "value1" : {
+            "layout:index" : 2,
+        },
+        "value2" : {
+            "layout:index" : 3,
+        },
+        "value3" : {
+            "layout:index" : 4,
+        },
+        "use_clamp" : {
+            "label" : "Clamp",
+            "layout:index" : 5,
+        },
     },
     "rgb_ramp" : {
-        "ramp_alpha" : "Ramp Alpha",
-    },
-}
-
-indexes = {
-    "principled_bsdf" : {
-        "base_color" : 1, 
-        "metallic" : 2, 
-        "roughness" : 3,
-        "ior" : 4, 
-        "alpha" : 5, 
-        "normal" : 6, 
-        "subsurface_method" : 7, 
-        "subsurface_weight" : 8, 
-        "subsurface_radius" : 9, 
-        "subsurface_scale" : 10, 
-        "subsurface_anisotropy" : 11, 
-        "distribution" : 12, 
-        "specular_ior_level" : 13, 
-        "specular_tint" : 14, 
-        "anisotropic" : 15, 
-        "anisotropic_rotation" : 16, 
-        "tangent" : 17, 
-        "transmission_weight" : 18, 
-        "coat_weight" : 19, 
-        "coat_roughness" : 20, 
-        "coat_ior" : 21, 
-        "coat_tint" : 22, 
-        "coat_normal" : 23, 
-        "sheen_weight" : 24, 
-        "sheen_roughness" : 25, 
-        "sheen_tint" : 26, 
-        "emission_color" : 27,
-        "emission_strength" : 28,
-        
-    },
-    "principled_volume" : {
-        "color" : 1,
-        "color_attribute" : 2,
-        "density" : 3,
-        "density_attribute" : 4,
-        "anisotropy" : 5,
-        "absorption_color" : 6,
-        "emission_strength" : 7,
-        "emission_color" : 8,
-        "blackbody_intensity" : 9,
-        "blackbody_tint" : 10,
-        "temperature" : 11,
-        "temperature_attribute" : 12,
-    },
-    "principled_hair_bsdf" : {
-        "color" : 1,
-        "absorption_coefficient" : 2,
-        "melanin" : 3,
-        "melanin_redness" : 4,
-        "tint" : 5,
-        "roughness" : 6,
-        "radial_roughness" : 7,
-        "coat" : 8,
-        "ior" : 9,
-        "offset" : 10,
-        "random_roughness" : 11,
-        "random_color" : 12,
-        "random" : 13,
-        "R" : 14,
-        "TT" : 15,
-        "TRT" : 16,
-        "aspect_ratio" : 17,
-    },
-    "bump" : {
-        "invert" : 9,
-        "strength" : 1,
-        "distance" : 2,
-        "height" : 3,
-        "normal" : 4,
-        "sample_center" : 5,
-        "sample_x" : 6,
-        "sample_y" : 7,
-        "use_object_space" : 9,
-    },
-    "ambient_occlusion" : {
-        "samples" : 1,
-        "inside" : 2,
-        "only_local" : 3,
-        "color" : 4,
-        "distance" : 5,
-        "normal" : 6,
+        "ramp_alpha" : {
+            "label" : "Ramp Alpha",
+        },
     },
     "glass_bsdf" : {
-        "distribution" : 1,
-        "color" : 2,
-        "roughness" : 3,
-        "ior" : 4,
-        "normal" : 5,
-    },
-    "hair_bsdf" : {
-        "component" : 1,
-        "color" : 2,
-        "roughness_u" : 3,
-        "roughness_v" : 4,
-        "offset" : 5,
-        "tangent" : 6,
+        "distribution" : {
+            "layout:index" : 1,
+        },
+        "color" : {
+            "layout:index" : 2,
+        },
+        "roughness" : {
+            "layout:index" : 3,
+        },
+        "ior" : {
+            "layout:index" : 4,
+        },
+        "normal" : {
+            "layout:index" : 5,
+        },
     },
     "toon_bsdf" : {
-        "component" : 1,
-        "color" : 2,
-        "size" : 3,
-        "smooth" : 4,
-        "normal" : 5,
+        "component" : {
+            "layout:index" : 1,
+        },
+        "color" : {
+            "layout:index" : 2,
+        },
+        "size" : {
+            "layout:index" : 3,
+        },
+        "smooth" : {
+            "layout:index" : 4,
+        },
+        "normal" : {
+            "layout:index" : 5,
+        },
     },
     "glossy_bsdf" : {
-        "distribution" : 1,
-        "color" : 2,
-        "roughness" : 3,
-        "anisotropy" : 4,
-        "rotation" : 5,
-        "tangent" : 6,
-        "normal" : 7,
+        "distribution" : {
+            "layout:index" : 1,
+        },
+        "color" : {
+            "layout:index" : 2,
+        },
+        "roughness" : {
+            "layout:index" : 3,
+        },
+        "anisotropy" : {
+            "layout:index" : 4,
+        },
+        "rotation" : {
+            "layout:index" : 5,
+        },
+        "tangent" : {
+            "layout:index" : 6,
+        },
+        "normal" : {
+            "layout:index" : 7,
+        },
     },
     "refraction_bsdf" : {
-        "distribution" : 1,
-        "color" : 2,
-        "roughness" : 3,
-        "ior" : 4,
-        "normal" : 5,
+        "distribution" : {
+            "layout:index" : 1,
+        },
+        "color" : {
+            "layout:index" : 2,
+        },
+        "roughness" : {
+            "layout:index" : 3,
+        },
+        "ior" : {
+            "layout:index" : 4,
+        },
+        "normal" : {
+            "layout:index" : 5,
+        },
     },
     "sheen_bsdf" : {
-        "distribution" : 1,
-        "color" : 2,
-        "roughness" : 3,
-        "normal" : 4,
+        "distribution" : {
+            "layout:index" : 1,
+        },
+        "color" : {
+            "layout:index" : 2,
+        },
+        "roughness" : {
+            "layout:index" : 3,
+        },
+        "normal" : {
+            "layout:index" : 4,
+        },
     },
     "diffuse_bsdf" : {
-        "color" : 1,
-        "roughness" : 2,
-        "normal" : 3,
-    },
-    "mix" : {
-        "mix_type" : 1,
-        "factor" : 2,
-        "color1" : 3,
-        "color2" : 4,
-        "use_clamp" : 5,
-    },
-    "subsurface_scattering" : {
-        "method" : 1,
-        "color" : 2,
-        "radius" : 3,
-        "scale" : 4,
-        "subsurface_ior" : 5,
-        "subsurface_anisotropy" : 6,
-        "normal" : 7,
-    },
-    "math" : {
-        "math_type" : 1,
-        "value1" : 2,
-        "value2" : 3,
-        "value3" : 4,
-        "use_clamp" : 5,
-    },
-
-}
-
-defaults = {
-    "principled_bsdf" : {
-        #"subsurface_radius.x" : 1, why doesn't this work?
-        #"subsurface_radius.y" : .2,
-        #"subsurface_radius.z" : .1,
-        "subsurface_scale" : .05,
-        "specular_ior_level" : .5,
-    },
-    "principled_volume" : {
-        "density_attribute" : "density",
-        "temperature_attribute" : "temperature",
-    },
-    "principled_hair_bsdf" : {
-        "model" : "Chiang"
+        "color" : {
+            "layout:index" : 1,
+        },
+        "roughness" : {
+            "layout:index" : 2,
+        },
+        "normal" : {
+            "layout:index" : 3,
+        },
     },
 }
 
-def section( plug ) :
+def visibility( plug, value, param ) :  
 
-    global sections
+    node = { "principled_hair_bsdf", "vector_rotate", "environment_texture", "image_texture",
+             "voronoi_texture", "sky_texture", "noise_texture",
+             "ies_light", "checker_texture", "gradient_texture",
+             "musgrave_texture", "magic_texture", "wave_texture",
+             "brick_texture" }
     
+    for x in node :
+        if plug.node()["name"].getValue() == x :
+            return plug.node()["parameters"][param].getValue() == value 
+
+def metadata( plug, name ) :
+
+    global parameterMetadata
+
     shaderName = plug.node()["name"].getValue()
-    shaderDict = sections.get( shaderName )
+    shaderDict = parameterMetadata.get( shaderName )
     if shaderDict is None :
         return None
-        
-    return shaderDict.get( plug.getName() )
 
-def name( plug ) :
-
-    global names
-    
-    shaderName = plug.node()["name"].getValue()
-    shaderDict = names.get( shaderName )
-    if shaderDict is None :
+    parameterDict = shaderDict.get( plug.getName() )
+    if parameterDict is None :
         return None
-        
-    return shaderDict.get( plug.getName() )
-
-def index( plug ) :
-
-    global indexes
-    
-    shaderName = plug.node()["name"].getValue()
-    shaderDict = indexes.get( shaderName )
-    if shaderDict is None :
-        return None
-        
-    return shaderDict.get( plug.getName() )
-
-def default( plug ) :
-
-    global defaults
-    
-    shaderName = plug.node()["name"].getValue()
-    shaderDict = defaults.get( shaderName )
-    if shaderDict is None :
-        return None
-        
-    return shaderDict.get( plug.getName() )
+    return parameterDict.get( name )
 
 ### CyclesShader ###
 
-### sections ###
-        
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.*", "layout:section", section )
+### main metadata assignments ###
 
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__translation", "layout:section", "Texture Mapping" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__rotation", "layout:section", "Texture Mapping" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__scale", "layout:section", "Texture Mapping" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__min", "layout:section", "Texture Mapping" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__max", "layout:section", "Texture Mapping" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__use_minmax", "layout:section", "Texture Mapping" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__x_mapping", "layout:section", "Texture Mapping" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__y_mapping", "layout:section", "Texture Mapping" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__z_mapping", "layout:section", "Texture Mapping" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__type", "layout:section", "Texture Mapping" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__projection", "layout:section", "Texture Mapping" )
+for name in ( "label", "layout:section", "layout:index", "userDefault" ) :
+    Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.*", name, functools.partial( metadata, name = name ) )
 
-### indexes ###
+### parameter visibility in principled_hair_bsdf and vector_rotate ### 
 
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.*", "layout:index", index )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.absorption_coefficient", "layout:visibilityActivator", functools.partial( visibility, value = "Absorption coefficient", param = "parametrization" ) )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.melanin", "layout:visibilityActivator", functools.partial( visibility, value = "Melanin concentration", param = "parametrization" ) )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.melanin_redness", "layout:visibilityActivator", functools.partial( visibility, value = "Melanin concentration", param = "parametrization" ) )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tint", "layout:visibilityActivator", functools.partial( visibility, value = "Melanin concentration", param = "parametrization" ) )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.random_color", "layout:visibilityActivator", functools.partial( visibility, value = "Melanin concentration", param = "parametrization" ) )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.color", "layout:visibilityActivator", functools.partial( visibility, value = "Direct coloring", param = "parametrization" ) )
 
-### labels ###
+Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.rotation", "layout:visibilityActivator", functools.partial( visibility, value = "euler_xyz", param = "rotate_type" ) )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.axis", "layout:visibilityActivator", functools.partial( visibility, value = "axis", param = "rotate_type" ) )
 
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.*", "label", name )
+mapping = [ "parameters.tex_mapping__translation", "parameters.tex_mapping__rotation", "parameters.tex_mapping__scale", "parameters.tex_mapping__use_minmax", 
+           "parameters.tex_mapping__min", "parameters.tex_mapping__max", "parameters.tex_mapping__x_mapping", "parameters.tex_mapping__y_mapping", 
+           "parameters.tex_mapping__z_mapping", "parameters.tex_mapping__type", "parameters.tex_mapping__projection" ]
+mapping_labels = [ "Translation", "Rotation", "Scale", "Use Min Max", "Min", "Use Max", "X Mapping", "Y Mapping", "Z Mapping", "Type", "Projection" ]
+mapping_index = 89
+
+### tex_mapping section, indexes and labels ###
+
+for x, y in zip( mapping, mapping_labels ) :
+    Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, x, "layout:section", "Texture Mapping" )
+    Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, x, "layout:index", mapping_index )
+    Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, x, "label", y )
+
+    mapping_index += 1
+
+### parameter visibility for tex_mapping min/max ###
+
+Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__min", "layout:visibilityActivator", functools.partial( visibility, value = True, param = "tex_mapping__use_minmax" ) )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__max", "layout:visibilityActivator", functools.partial( visibility, value = True, param = "tex_mapping__use_minmax" ) )
+
+### universal labels ###
 
 Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.fac", "label", "Factor" )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.color_type", "label", "Color Type" )
@@ -519,33 +865,13 @@ Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.value_vect
 Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.value_point", "label", "Point Value" )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.value_string", "label", "String Value" )
 
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__translation", "label", "Translation" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__rotation", "label", "Rotation" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__scale", "label", "Scale" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__min", "label", "Min" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__max", "label", "Max" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__use_minmax", "label", "Use Min Max" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__x_mapping", "label", "X Mapping" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__y_mapping", "label", "Y Mapping" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__z_mapping", "label", "Z Mapping" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__type", "label", "Type" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.tex_mapping__projection", "label", "Projection" )
-
-### defaults ###
-
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.*", "userDefault", default )
-
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.subsurface_radius.x", "userDefault", 1 )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.subsurface_radius.y", "userDefault", .2 )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.subsurface_radius.z", "userDefault", .1 )
-
 ### hide dupli ###
 
 Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.from_dupli", "plugValueWidget:type", "" )
 
 ### CyclesLight ###
 
-### indexes ###
+### universal indexes ###
 
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "name", "layout:index", 1 )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "sets", "layout:index", 2 )
@@ -556,14 +882,13 @@ Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.exposure", 
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.normalize", "layout:index", 6 )
 
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.size", "layout:index", 7 )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.map_resolution", "layout:index", 7 )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.spot_angle", "layout:index", 8 )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.spot_smooth", "layout:index", 9 )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.angle", "layout:index", 8 )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.width", "layout:index", 8 )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.spot_smooth", "layout:index", 9 )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.height", "layout:index", 9 )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.spread", "layout:index", 10 )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.map_resolution", "layout:index", 7 )
-
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.lightgroup", "layout:index", 11 )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.max_bounces", "layout:index", 12 )
 
@@ -576,7 +901,7 @@ Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_transmi
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_scatter", "layout:index", 19 )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_caustics", "layout:index", 20 )
 
-### sections ###
+### universal sections ###
 
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.cast_shadow", "layout:section", "Contribution" )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_mis", "layout:section", "Contribution" )
@@ -587,6 +912,12 @@ Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_transmi
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_scatter", "layout:section", "Contribution" )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_caustics", "layout:section", "Contribution" )
 
-### labels ###
+### universal labels ###
 
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_mis", "label", "Use MIS" )
+
+### defaults ###
+
+Gaffer.Metadata.registerValue( "cycles:surface:environment_texture:tex_mapping__scale.x", "userDefault", -1.0 )
+Gaffer.Metadata.registerValue( "cycles:surface:environment_texture:tex_mapping__y_mapping", "userDefault", "z" )
+Gaffer.Metadata.registerValue( "cycles:surface:environment_texture:tex_mapping__z_mapping", "userDefault", "y" )
