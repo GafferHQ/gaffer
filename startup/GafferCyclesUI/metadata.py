@@ -835,7 +835,7 @@ Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.axis", "la
 mapping = [ "parameters.tex_mapping__translation", "parameters.tex_mapping__rotation", "parameters.tex_mapping__scale", "parameters.tex_mapping__use_minmax", 
            "parameters.tex_mapping__min", "parameters.tex_mapping__max", "parameters.tex_mapping__x_mapping", "parameters.tex_mapping__y_mapping", 
            "parameters.tex_mapping__z_mapping", "parameters.tex_mapping__type", "parameters.tex_mapping__projection" ]
-mapping_labels = [ "Translation", "Rotation", "Scale", "Use Min Max", "Min", "Use Max", "X Mapping", "Y Mapping", "Z Mapping", "Type", "Projection" ]
+mapping_labels = [ "Translation", "Rotation", "Scale", "Use Min Max", "Min", "Max", "X Mapping", "Y Mapping", "Z Mapping", "Type", "Projection" ]
 mapping_index = 89
 
 ### tex_mapping section, indexes and labels ###
