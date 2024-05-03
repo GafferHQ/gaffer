@@ -157,7 +157,7 @@ Gaffer.Metadata.registerValue(
 	"""
 )
 
-Gaffer.Metadata.registerValue( "option:render:cameraInclusions", "label", "Camera Inclusions" )
+Gaffer.Metadata.registerValue( "option:render:cameraInclusions", "label", "Camera Inclusions / Catchers" )
 Gaffer.Metadata.registerValue( "option:render:cameraInclusions", "defaultValue", IECore.StringData( "/" ) )
 Gaffer.Metadata.registerValue(
 	"option:render:cameraInclusions",
@@ -166,10 +166,13 @@ Gaffer.Metadata.registerValue(
 	A set expression that limits the objects visible to camera rays to only those matched
 	and their descendants. Camera visibility attributes authored in the scene take
 	precedence over this option.
+
+	For shadow, reflection and reflectionAlpha pass types, this specifies objects that
+	catch shadows or reflections.
 	"""
 )
 
-Gaffer.Metadata.registerValue( "option:render:cameraExclusions", "label", "Camera Exclusions" )
+Gaffer.Metadata.registerValue( "option:render:cameraExclusions", "label", "Camera Exclusions / Casters" )
 Gaffer.Metadata.registerValue( "option:render:cameraExclusions", "defaultValue", IECore.StringData( "" ) )
 Gaffer.Metadata.registerValue(
 	"option:render:cameraExclusions",
@@ -178,6 +181,10 @@ Gaffer.Metadata.registerValue(
 	A set expression that excludes the matched objects and their descendants from camera
 	ray visibility. Camera visibility attributes authored in the scene take precedence
 	over this option.
+
+	For shadow, reflection and reflectionAlpha pass types, this specifies objects that
+	cast shadows or reflections. Shadow or reflection visibility attributes authored
+	in the scene take precedence over this option.
 	"""
 )
 
