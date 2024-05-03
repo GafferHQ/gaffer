@@ -123,8 +123,8 @@ class CodeWidget( GafferUI.MultiLineTextWidget ) :
 
 		text = self.getText()
 		cursor = self.getCursorPosition()
-		lineStart = max( text.rfind( "\n", 0, cursor ), 0 )
-		line = text[lineStart:cursor]
+		previousNewline = text.rfind( "\n", 0, cursor )
+		line = text[previousNewline+1:cursor]
 
 		return self.__completer.completions( line ), line
 

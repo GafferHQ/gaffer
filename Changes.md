@@ -1,7 +1,10 @@
 1.4.x.x (relative to 1.4.4.0)
 =======
 
+Fixes
+-----
 
+- CodeWidget : Removed unwanted `\n` prefix in lines passed to `Completers`.
 
 1.4.4.0 (relative to 1.4.3.0)
 =======
