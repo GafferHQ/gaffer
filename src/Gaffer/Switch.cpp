@@ -52,6 +52,26 @@ using namespace Gaffer;
 namespace
 {
 
+struct InputScope
+{
+
+	InputScope( const Context *context, const std::string &deleteContextVariables )
+	{
+		if( deleteContextVariables.empty() )
+		{
+			return;
+		}
+
+		m_scope.emplace( context );
+		m_scope->removeMatching( deleteContextVariables );
+	}
+
+	private :
+
+		std::optional<Context::EditableScope> m_scope;
+
+};
+
 bool connectedIndividually( const ArrayPlug *array, size_t childIndex )
 {
 	const Plug *child = array->getChild<Plug>( childIndex );
@@ -100,6 +120,7 @@ Switch::Switch( const std::string &name)
 
 	addChild( new IntPlug( "index", Gaffer::Plug::In, 0, 0 ) );
 	addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );
+	addChild( new StringPlug( "deleteContextVariables" ) );
 	addChild( new IntVectorDataPlug( "connectedInputs", Plug::Out ) );
 
 	childAddedSignal().connect( boost::bind( &Switch::childAdded, this, ::_2 ) );
@@ -200,14 +221,24 @@ const BoolPlug *Switch::enabledPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
 }
 
+StringPlug *Switch::deleteContextVariablesPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
+const StringPlug *Switch::deleteContextVariablesPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
 IntVectorDataPlug *Switch::connectedInputsPlug()
 {
-	return getChild<IntVectorDataPlug>( g_firstPlugIndex + 2 );
+	return getChild<IntVectorDataPlug>( g_firstPlugIndex + 3 );
 }
 
 const IntVectorDataPlug *Switch::connectedInputsPlug() const
 {
-	return getChild<IntVectorDataPlug>( g_firstPlugIndex + 2 );
+	return getChild<IntVectorDataPlug>( g_firstPlugIndex + 3 );
 }
 
 void Switch::affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
@@ -216,7 +247,8 @@ void Switch::affects( const Plug *input, DependencyNode::AffectedPlugsContainer 
 
 	if(
 		input == enabledPlug() ||
-		input == indexPlug()
+		input == indexPlug() ||
+		input == deleteContextVariablesPlug()
 	)
 	{
 		if( const Plug *out = outPlug() )
@@ -314,6 +346,7 @@ void Switch::hash( const ValuePlug *output, const Context *context, IECore::Murm
 {
 	if( const ValuePlug *input = IECore::runTimeCast<const ValuePlug>( oppositePlug( output, context ) ) )
 	{
+		InputScope scope( context, deleteContextVariablesPlug()->getValue() );
 		h = input->hash();
 		return;
 	}
@@ -340,6 +373,7 @@ void Switch::compute( ValuePlug *output, const Context *context ) const
 {
 	if( const ValuePlug *input = IECore::runTimeCast<const ValuePlug>( oppositePlug( output, context ) ) )
 	{
+		InputScope scope( context, deleteContextVariablesPlug()->getValue() );
 		output->setFrom( input );
 		return;
 	}
@@ -366,7 +400,7 @@ void Switch::compute( ValuePlug *output, const Context *context ) const
 
 void Switch::plugSet( Plug *plug )
 {
-	if( plug == indexPlug() || plug == enabledPlug() )
+	if( plug == indexPlug() || plug == enabledPlug() || plug == deleteContextVariablesPlug() )
 	{
 		updateInternalConnection();
 	}
@@ -374,7 +408,7 @@ void Switch::plugSet( Plug *plug )
 
 void Switch::plugInputChanged( Plug *plug )
 {
-	if( plug == indexPlug() || plug == enabledPlug() )
+	if( plug == indexPlug() || plug == enabledPlug() || plug == deleteContextVariablesPlug()  )
 	{
 		updateInternalConnection();
 	}
@@ -490,11 +524,16 @@ void Switch::updateInternalConnection()
 		return;
 	}
 
-	if( PlugAlgo::dependsOnCompute( enabledPlug() ) || PlugAlgo::dependsOnCompute( indexPlug() ) )
-	{
+	if(
 		// We can't use an internal connection to implement the switch,
 		// because the index might vary from context to context. We must
 		// therefore implement switching via hash()/compute().
+		PlugAlgo::dependsOnCompute( enabledPlug() ) || PlugAlgo::dependsOnCompute( indexPlug() ) ||
+		// We can't use an internal connection to implement the switch
+		// because we are on the hook for deleting context variables.
+		!deleteContextVariablesPlug()->isSetToDefault()
+	)
+	{
 		out->setInput( nullptr );
 		return;
 	}

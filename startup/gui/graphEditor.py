@@ -129,6 +129,8 @@ GafferUI.GraphEditor.connectionContextMenuSignal().connect( __connectionContextM
 # File drop handler
 ##########################################################################
 
+GafferUI.Pointer.registerPointer( "targetObjects", GafferUI.Pointer( "targetObjects.png", imath.V2i( 53, 14 ) ) )
+
 def __sceneFileHandler( fileName ) :
 
 	result = GafferScene.SceneReader()
@@ -269,7 +271,7 @@ def __locationDragEnter( graphGadget, event ) :
 	if __dropLocationData( event ) is None :
 		return False
 
-	GafferUI.Pointer.setCurrent( "target" )
+	GafferUI.Pointer.setCurrent( "targetObjects" )
 	return True
 
 def __locationDragLeave( graphGadget, event ) :

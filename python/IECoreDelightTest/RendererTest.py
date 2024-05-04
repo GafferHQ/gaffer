@@ -1478,6 +1478,38 @@ class RendererTest( GafferTest.TestCase ) :
 
 		return { "P": p, "P.indices": pIndices, "N": n, "N.indices": nIndices }
 
+	def testOutputLayerNames( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsia" )
+		)
+
+		renderer.output(
+			"diffuse",
+			IECoreScene.Output( "diffuse.exr", "exr", "color shader:diffuse", {} )
+		)
+
+		renderer.output(
+			"directDiffuse",
+			IECoreScene.Output( "directDiffuse.exr", "exr", "color shader:diffuse.direct", {} )
+		)
+
+		renderer.output(
+			"customLayerName",
+			IECoreScene.Output( "customLayerName.exr", "exr", "color shader:diffuse.direct", { "layerName" : "myLayerName" } )
+		)
+
+		renderer.render()
+		del renderer
+
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
+
+		self.assertEqual( nsi["outputLayer:diffuse"]["layername"], "diffuse" )
+		self.assertEqual( nsi["outputLayer:directDiffuse"]["layername"], "diffuse_direct" )
+		self.assertEqual( nsi["outputLayer:customLayerName"]["layername"], "myLayerName" )
+
 	# Helper methods used to check that NSI files we write contain what we
 	# expect. The 3delight API only allows values to be set, not queried,
 	# so we build a simple dictionary-based node graph for now.

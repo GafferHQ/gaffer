@@ -47,12 +47,7 @@
 
 #include "IECore/NullObject.h"
 
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathBoxAlgo.h"
-#else
 #include "Imath/ImathBoxAlgo.h"
-#endif
 
 using namespace std;
 using namespace Imath;
@@ -77,6 +72,7 @@ Group::Group( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new StringPlug( "name", Plug::In, "group" ) );
+	addChild( new StringPlug( "sets" ) );
 	addChild( new TransformPlug( "transform" ) );
 
 	addChild( new Gaffer::ObjectPlug( "__mapping", Gaffer::Plug::Out, NullObject::defaultNullObject() ) );
@@ -108,24 +104,34 @@ const Gaffer::StringPlug *Group::namePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
+Gaffer::StringPlug *Group::setsPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::StringPlug *Group::setsPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
 Gaffer::TransformPlug *Group::transformPlug()
 {
-	return getChild<TransformPlug>( g_firstPlugIndex + 1 );
+	return getChild<TransformPlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::TransformPlug *Group::transformPlug() const
 {
-	return getChild<TransformPlug>( g_firstPlugIndex + 1 );
+	return getChild<TransformPlug>( g_firstPlugIndex + 2 );
 }
 
 Gaffer::ObjectPlug *Group::mappingPlug()
 {
-	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::ObjectPlug *Group::mappingPlug() const
 {
-	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 3 );
 }
 
 void Group::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
@@ -164,6 +170,11 @@ void Group::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 		{
 			outputs.push_back( it->get() );
 		}
+	}
+	else if( input == setsPlug() )
+	{
+		outputs.push_back( outPlug()->setNamesPlug() );
+		outputs.push_back( outPlug()->setPlug() );
 	}
 
 }
@@ -403,6 +414,7 @@ void Group::hashSetNames( const Gaffer::Context *context, const ScenePlug *paren
 	{
 		(*it)->setNamesPlug()->hash( h );
 	}
+	setsPlug()->hash( h );
 }
 
 IECore::ConstInternedStringVectorDataPtr Group::computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -425,6 +437,16 @@ IECore::ConstInternedStringVectorDataPtr Group::computeSetNames( const Gaffer::C
 		}
 	}
 
+	vector<InternedString> setNames;
+	IECore::StringAlgo::tokenize( setsPlug()->getValue(), ' ', setNames );
+	for( const auto &s : setNames )
+	{
+		if( std::find( result.begin(), result.end(), s ) == result.end() )
+		{
+			result.push_back( s );
+		}
+	}
+
 	return resultData;
 }
 
@@ -439,6 +461,8 @@ void Group::hashSet( const IECore::InternedString &setName, const Gaffer::Contex
 	ScenePlug::GlobalScope s( context );
 	mappingPlug()->hash( h );
 	namePlug()->hash( h );
+	setsPlug()->hash( h );
+	h.append( setName );
 }
 
 IECore::ConstPathMatcherDataPtr Group::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -456,6 +480,13 @@ IECore::ConstPathMatcherDataPtr Group::computeSet( const IECore::InternedString 
 
 	PathMatcherDataPtr resultData = new PathMatcherData;
 	resultData->writable().addPaths( mapping->set( inputSets ), { name } );
+
+	vector<InternedString> setNames;
+	IECore::StringAlgo::tokenize( setsPlug()->getValue(), ' ', setNames );
+	if( std::find( setNames.begin(), setNames.end(), setName ) != setNames.end() )
+	{
+		resultData->writable().addPath( ScenePath( { name } ) );
+	}
 
 	return resultData;
 }

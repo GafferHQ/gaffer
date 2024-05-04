@@ -382,12 +382,13 @@ class GraphComponentTest( GafferTest.TestCase ) :
 
 		n = Gaffer.GraphComponent()
 
-		for name in ( "0", "0a", "@A", "a.A", ".", "A!", "a|", "a(" ) :
+		for name in ( "/", "/a", "@A", "a.A", ".", "A!", "a|", "a(" ) :
 			self.assertRaises( Exception, n.setName, name )
 			self.assertRaises( Exception, Gaffer.GraphComponent, name )
 
-		for name in ( "hello", "_1", "brdf_0_degree_refl" ) :
+		for name in ( "hello", "_1", "brdf_0_degree_refl", "3delight" ) :
 			n.setName( name )
+			self.assertEqual( n.getName(), name )
 
 	def testContains( self ) :
 

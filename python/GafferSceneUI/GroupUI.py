@@ -66,6 +66,18 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"sets" : [
+
+			"description",
+			"""
+			A list of sets to include the group in. The
+			names should be separated by spaces.
+			""",
+
+			"layout:divider", True,
+
+		],
+
 		"transform" : [
 
 			"description",

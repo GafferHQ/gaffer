@@ -347,6 +347,7 @@ Drop scene location path(s) into Python Editor   | {{leftClick}} and drag select
 Indent selection                                 | {kbd}`Ctrl` + {kbd}`]`
 Unindent selection                               | {kbd}`Ctrl` + {kbd}`[`
 Comment/uncomment selection                      | {kbd}`Ctrl` + {kbd}`/`
+Select current line                              | {kbd}`Ctrl` + {kbd}`L`
 
 
 ### Execution ###

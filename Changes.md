@@ -1,291 +1,174 @@
-1.4.x.x (relative to 1.4.0.0b6)
+1.x.x.x (relative to 1.4.x.x)
+=======
+
+
+
+1.4.x.x (relative to 1.4.2.0)
 =======
 
 Features
 --------
 
-- Cycles : Added support for CUDA and Optix devices on Windows [^1].
+- 3Delight : Added "3Delight Cloud" renderer, for rendering using the 3Delight cloud.
 
 Improvements
-------------
+-----------
 
-- Wireframe :
-  - Improved performance ~3x.
-  - Improved cancellation responsiveness.
-- 3Delight : Added NSI screen static sampling pattern option (`dl:staticsamplingpattern`).
-- GraphEditor : The source node for any location can be located by dragging the location into the GraphEditor from the Viewer or HierarchyView.
+- Arnold : If it exists, an `ai:volume` attribute is preferred over an `ai:surface` attribute when resolving shaders for volumes.
 
 Fixes
 -----
 
-- MeshTesselate : Fixed potential deadlock [^1].
-- 3Delight :
-  - Fixed failure to change sampling pattern per frame.
-  - Fixed Resolution Multiplier support.
-  - Fixed UI visibility of `angle` parameter for distant lights, which was previously hidden.
-  - Fixed export of `Varying` primitive variables on meshes (#5781).
-- Widget :
-  - Fixed bug that prevented Gadgets from receiving drops from another application.
-  - Fixed errors when dragging from another application onto widgets that didn't expect it.
-- Gadget : Fixed access to `DragDropEvent.sourceWidget` and `DragDropEvent.destinationWidget` from Python slots connected to a Gadget's DragDropSignals.
-- GraphGadget : Fixed unwanted highlighting of nodes when custom drag & drop handlers were active.
+- Arnold : Fixed rendering of `ai:volume` shaders loaded from USD (#5830).
 
-1.4.0.0b6 (relative to 1.4.0.0b5)
-=========
+1.4.2.0 (relative to 1.4.1.0)
+=======
 
 Features
 --------
 
-- Arnold : Added support for Arnold 7.3. Note that a minimum of 7.3.1.0 is required, meaning that 7.3.0.0 is _not_ supported.
-- SelectionTool : Added select mode plug. When set to anything except `Standard` using the SelectionTool causes the actual scene location selected to potentially be modified from the originally selected location. Selection modifiers work identically for deselection. Currently, two selectors are implemented :
-  - USD Kind : When selecting, the first ancestor location with a `usd:kind` attribute matching the chosen list of USD Kind will ultimately be selected. USD's Kind Registry includes `Assembly`, `Component`, `Group`, `Model` and `SubComponent` by default and can be extended via USD startup scripts.
-  - Shader Assignment : When selecting, the first ancestor location with a renderable and direct (not inherited) shader attribute will ultimately be selected. This can be used to select either surface or displacement shaders.
-- Added MeshTessellate node, for increasing the polycount of subdivision meshes.
+- ContactSheet : Added new node for creating contact sheets from multiple input images.
+- LightPositionTool : Added `Diffuse` mode for placing lights along the normal of the target position.
 
 Improvements
 ------------
 
-- EditScope : Added a summary of edits in the NodeEditor, with the ability to select the affected objects and quickly navigate to the processor nodes.
-- Arnold : OSL shaders with connections from multiple outputs are no longer duplicated on export to Arnold.
-- ArnoldShader : Added parameter tooltips based on `help` metadata provided by Arnold.
+- TweakPlug : `ListAppend`, `ListPrepend` and `ListRemove` modes are now supported for string values. In this case, the string is treated as a space-separated list.
+- Cycles :
+  - Changed default value for `principled_bsdf.specular_ior_level` to `0.5`, matching Blender.
+  - Added support for `uv.tangent` and `uv.tangent_sign` primitive variables to assist in rendering with normal maps (#5269).
+- AttributeQuery, PrimitiveVariableQuery, ContextQuery, OptionQuery, ShaderQuery : Added support for querying arrays of length 1 as their equivalent scalar types.
+- CodeWidget : Added <kbd>Ctrl</kbd>+<kbd>L</kbd> shortcut for selecting all text on the current line.
+- AttributeTweaks, CameraTweaks, ShaderTweaks, OptionTweaks, PrimitiveVariableTweaks :
+  - Added support for a `{source}` token which is substituted with the original value when tweaking a string in `Replace` mode.
+  - Added tooltips documenting the tweak modes.
+- 3Delight : Added automatic render-time translation of UsdPreviewSurface shaders to 3Delight.
+- USDLight :
+  - Added Arnold-specific extension parameters.
+  - Added parameter tooltips.
+- LightEditor : Added columns for Arnold-specific parameters on USD lights.
+- Switch : Added `deleteContextVariables` plug.
 
 Fixes
 -----
 
-- Arnold :
-  - Fixed rendering of shaders imported from HtoA via USD.
-  - Fixed USD export of shaders to use `outputs:out` instead of `outputs:DEFAULT_OUTPUT`.
-  - Fixed rendering of `osl` shaders using the `code` parameter.
-- GafferTest, GafferImageTest : Fixed import of these modules if the `Gaffer` module had not been imported previously.
-- SceneAlgo : Fixed potential shutdown crashes caused by the adaptor registry [^1].
-- Dispatcher : Fixed shutdown crashes caused by Python slots connected to the dispatch signals [^1].
-- Display : Fixed shutdown crashes caused by Python slots connected to `driverCreatedSignal()` and `imageReceivedSignal()` [^1].
-- LightPositionTool : Fixed crash when changing the tool mode with nothing selected [^1].
-- ViewportGadget : Fixed selection issues with Intel GPUs (#901, #2788).
-- TransformTool : Fixed alignment of green "value changed" icon for `orientation` plugs.
+- Viewer : Fixed Cycles shader balls.
+- TweakPlug : Fixed incorrect results and potential crashes in list modes.
+- USD : Fixed `Unsupported value type "StringData" for parameter "input"` warning when converting `UsdTransform2d` shaders with no `in` connections to Arnold.
+- File Browser : Windows only : Fixed bug in `HiddenFilePathFilter` that caused sequences to be treated as though they are hidden files (#5810).
 
 API
 ---
 
-- SelectionTool : Added static `registerSelectMode()` method for registering a Python or C++ function that will modify a selected scene path location. Users can choose which mode is active when selecting.
-- EditScopeUI : Added an API for customising the EditScope's NodeEditor with summaries for each processor :
-  - ProcessorWidget provides a base class for custom widgets, and a factory mechanism for registering them against processors.
-  - SimpleProcessorWidget provides a base class for widgets with a simple summary label and optional action links.
-- TractorDispatcher : The `preSpoolSignal()` now provides an additional `taskData` argument to slots, which maps from Tractor tasks to information about the Gaffer tasks they will execute.
-- LabelPlugValueWidget : Added optional `labelPlugValueWidget:showValueChangedIndicator` metadata entry. If a plug has this entry set to `False`, the icon next to the label that indicates the value has changed will not be shown. Defaults to `True` if the value is not set.
-
-Breaking Changes
-----------------
-
-- InteractiveRenderTest : Subclasses must now return the shader output plug from creation methods such as `_createConstantShader()`.
-
-1.4.0.0b5 (relative to 1.4.0.0b4)
-=========
-
-Improvements
-------------
-
-- LightPositionTool : The tool is now only visible for members of the `__lights` set, instead of all objects.
-- Catalogue : Added `imageNames` output plug, containing the names of all images in the Catalogue. Among other things this can be used to drive a Wedge or ContactSheet node and a CatalogueSelect.
-- Render, InteractiveRender : Added `resolvedRenderer` plug, which outputs the name of the renderer that will be used, taking into account the influence of the `render:defaultRenderer` option [^1].
-
-Fixes
------
-
-- PlugAlgo : Updated `canSetValueFromData()`, `setValueFromData()` and `getValueAsData()` with support for missing types.
-- LightPositionTool : Fixed lingering shadow pivot point after placing a shadow pivot, switching to highlight mode and switching back to shadow mode [^1].
-- Catalogue :
-  - Fixed undo for image reordering via drag & drop.
-  - Fixed bugs caused by reordering images using `GraphComponent::reorderChildren()`.
-- InteractiveRender : Fixed context used to evaluate scene globals when renderer is set to "Default" [^1].
-- Instancer : Fixed handling of unindexed primvars in RootPerVertex mode [^1].
-- ImageGadget :
-  - Fixed loading of 2 channel images [^1].
-  - Fixed error message to include filename [^1].
-- Expression : `setExpression()` now respects configs that provide backwards compatibility for old plug names.
-- Shuffle : Fixed default name for plugs constructed via the legacy `ChannelPlug( out, in )` constructor [^1].
-- ImageReader :
-  - Fixed loading of OpenEXR images with 32 bit float data and DWA compression [^1].
-  - Fixed loading of secondary layers in OpenEXR images with DWA compression [^1].
-- GUI : Fixed potential crashes during shutdown [^1].
-- ScriptNode : Fixed execution of multi-line `if :` statements in `.gfr` files [^1].
-- ArnoldShader : Fixed startup errors caused by unknown values in `widget` metadata [^1].
-
-API
----
-
-- TypedObjectPlug : Added Python bindings for the default values of the `defaultValue` constructor argument.
-- Box2fVectorDataPlug : Added new plug type for storing arrays of Box2f.
-- Catalogue : Deprecated `image:index` metadata.
-
-Breaking Changes
-----------------
-
-- StandardLightVisualiser : Added `attributeName` argument to `surfaceTexture()` virtual method.
+- PlugAlgo : `setValueFromData()` and `canSetValueFromData()` now support conversion of arrays of length 1 to their equivalent scalar types.
+- BoxPlug : Added Python bindings for `ValueType`, `PointType` and `ChildType` type aliases.
+- RenderPassEditor : Added `deregisterColumn()` method.
+- DocumentationAlgo : Added table and strikethrough support to `markdownToHTML()`.
+- LightEditor : Added `columnName` parameter to `registerParameter()` method, matching the behaviour of `RenderPassEditor.registerOption()`.
+- USDShader : Added support for loading from the UsdSchemaRegistry as well as from the SdrRegistry. This is now used when loading UsdLuxLights.
+- PlugLayout : Added support for activators in Boxes and extension nodes by allowing `layout:activator:activatorName` metadata to contain a Python string to be executed. Execution is performed in an environment where a `parent` variable refers to node or plug represented by the layout, and from which plug values can be obtained.
+- ContactSheetCore : Added a new node to do provide the basis for networks that create contact sheets from multiple input images.
 
 Build
 -----
 
-- OpenEXR : Applied patches from the following pull requests :
-  - https://github.com/AcademySoftwareFoundation/openexr/pull/1591
-  - https://github.com/AcademySoftwareFoundation/openexr/pull/1684
+- MacOS : Fixed issue where `Python.framework` may not be found when building with a prebuilt dependencies package.
 
-[^1]: To be omitted from final release notes for 1.4.0.0.
-
-1.4.0.0b4 (relative to 1.4.0.0b3)
-=========
+1.4.1.0 (relative to 1.4.0.0)
+=======
 
 Features
 --------
 
-- Render, InteractiveRender : Added new nodes capable of rendering to any supported renderer, and using the `render:defaultRenderer` option to determine which to use by default [^1].
-- StandardOptions : Added `render:defaultRenderer` option, allowing the scene globals to specify which renderer is used by the Render and InteractiveRender nodes [^1].
-- RenderPassEditor : Added a column for the `render:defaultRenderer` option, allowing each pass to be rendered in a different renderer [^1].
+- MeshTessellate/MeshType : Added support for special-purpose subdiv options: interpolateBoundary, faceVaryingLinearInterpolation, triangleSubdivisionRule.
 
 Improvements
 ------------
 
-- GraphEditor : Removed all renderer-specific Render and InteractiveRender nodes from the node menu. These nodes still exist for backwards compatibility with old scenes, but the generic Render and InteractiveRender nodes should now be used instead.
+- Group : Added `sets` plug, to control what sets the group belongs to.
+- USD : Added automatic render-time translation of UsdPreviewSurface shaders to Cycles.
+- SetEditor : Added support for dragging a set name onto a node in the Graph Editor to create or modify a connected `SetFilter` node. Holding <kbd>Shift</kbd> while dragging will add to the set expression. Holding <kbd>Control</kbd> will remove from the set expression. Only set expressions with a simple list of sets are supported. Expressions with boolean or hierarchy operators are not supported.
+- GraphEditor : Improved pointer used to indicate when dropping a location would find the source node.
+- RenderPassEditor :
+  - Added "Camera Inclusions" and "Camera Exclusions" columns, providing control over the camera visibility of scene locations in each render pass.
+  - Added "Matte Inclusions" and "Matte Exclusions" columns, providing control over the scene locations used as holdout mattes in each render pass.
 
 Fixes
 -----
 
-- Windows : Removed "Error(s) running Gaffer" shutdown message. It was misleading when errors originated in the renderer rather than Gaffer itself.
+- NameSwitch : Fixed NodeEditor tab order, so that the Settings tab precedes the Advanced tab.
+- NodeAlgo : Fixed presets inheritance for promoted plugs with multiple outputs.
+- TaskNode / GafferCortex : Fixed missing GIL releases that caused hang at ImageEngine.
 
-Documentation
--------------
-
-- Updated with generic Render and InteractiveRender nodes in place of deprecated renderer-specific nodes.
-
-Breaking Changes
-----------------
-
-- CyclesOptions : Removed `cycles:integrator:sampling_pattern` option. This is intended only for debugging, but is still available via a CustomOptions node.
-- CyclesAttributes : Removed the `cycles:dupliGenerated` and `cycles:dupliUV` attributes.
-
-[^1]: To be omitted from final release notes for 1.4.0.0.
-
-1.4.0.0b3 (relative to 1.4.0.0b2)
-=========
-
-Fixes
+Build
 -----
 
-- Tractor : Fixed failure to import Tractor API [^1].
-- Cycles :
-  - Fixed hangs and crashes when using non-default session modes such as SVM shading.
-  - Fixed failure to render background light in batch renders (#5234).
-  - Fixed failure to update when reverting a background shader to previous values.
-- GafferUI :
-  - Fixed `Color space 'sRGB' could not be found` errors when running with certain custom OCIO configs (#5695).
-  - Fixed icon colours when running with an ACES OCIO config.
-- DocumentationAlgo : Fixed generation of duplicate entries for aliased nodes in `exportNodeReference()` [^1].
+- Cortex : Updated to version 10.5.7.0.
+- OpenEXR : Updated to version 3.1.13.
+- USD : Added `sdrOsl`, for inclusion of OSL shaders in the Sdr Registry.
 
-Documentation
--------------
-
-- Node Reference : Removed duplicate entries for nodes that have been aliased by compatibility configs [^1].
-
-Breaking Changes
-----------------
-
-- CyclesOptions : Changed `hairShape` default value to "ribbon", to match Cycles' and Blender's own defaults.
-- Pointer :
-  - Removed `Pointer( const ImagePrimitive * )` constructor.
-  - Removed `image()` method.
-
-API
----
-
-- ImageGadget : Removed `textureLoader()` method.
-- Pointer : Added `fileName()` method.
-
-[^1]: To be omitted from final release notes for 1.4.0.0.
-
-1.4.0.0b2 (relative to 1.4.0.0b1)
-=========
-
-Features
---------
-
-- GraphEditor : Added <kbd>X</kbd> shortcut for removing connections between nodules. Hold <kbd>X</kbd> then left click to remove all connections under the cursor. Hold <kbd>X</kbd> then left drag to draw a line, all connections that intersect with the line will be removed once the drag is ended (#788).
-- LightPosition Tool : Added a variation on the shadow placement tool to place highlights. Lights are positioned such that they will create a specular highlight at the target point.
-
-Improvements
-------------
-
-- ImageReader : Added `fileValid = False` metadata to images from missing frames, when `missingFrameMode` is `Black` or `Hold`.
-- Viewer : Added <kbd>Ctrl</kbd>+<kbd>PgUp</kbd> shortcut for displaying the RGBA image layer (or the first available layer if RGBA doesn't exist) [^1].
-- RenderPassEditor [^1] :
-  - Added "Inclusions", "Exclusions" and "Additional Lights" columns, to provide control over the locations included in the render for each render pass.
-  - Added the ability to display render passes grouped in a hierarchy generated from the render pass name. The default grouping uses the first token delimited by "_" from the render pass name, such that render passes named "char_gafferBot" and "char_cow" would be displayed under a "/char" group, while "prop_ball" and "prop_box" would be displayed under a "/prop" group.
-  - Render pass grouping can be configured in a startup file by using `GafferSceneUI.RenderPassEditor.registerPathGroupingFunction( f )`, where `f` is a function that receives a render pass name and returns the path that the render pass should be grouped under.
-  - Grouped display can be enabled by default in a startup file by using `Gaffer.Metadata.registerValue( GafferSceneUI.RenderPassEditor.Settings, "displayGrouped", "userDefault", IECore.BoolData( True ) )`.
-  - Dragging cells selected from the "Name" column now provides a list of the selected render pass names, rather than their paths.
-  - Disabled render pass names are now dimmed to more clearly indicate their state.
-- RenderPassEditor, LightEditor, PathListingWidget : Boolean values are now displayed as checkboxes rather than `0` or `1` [^1].
-- Collect : Added the ability to collect StringVectorData inputs.
-- StandardOptions : Added `inclusions`, `exclusions` and `additionalLights` plugs, to control which locations are included in a render based on set expressions entered on these plugs. These, plus the existing `includedPurposes` plug are now grouped under the "Render Set" section of the UI [^1].
-- GafferScene : Registered the "RenderSetAdaptor" adapting the `render:inclusions`, `render:exclusions` and `render:additionalLights` options to prune scene locations before rendering [^1].
-
-Fixes
------
-
-- 3Delight : Fixed startup errors on Windows when the `DELIGHT` environment variable wasn't defined [^1].
-- FlatImageProcessor : Fixed bug that could cause an input to be evaluated with an invalid `image:viewName`.
-- Collect : Fixed display of results collected from TypedObjectPlug inputs.
-
-API
----
-
-- ScenePath : Added automatic conversion of a list of Python strings to a ScenePath [^1].
-- RenderPassEditor : Added `registerPathGroupingFunction()` and `pathGroupingFunction()` methods [^1].
-- ExtensionAlgo : Added `exportNode()` and `exportNodeUI()` functions.
-- Widget : Added a 0.5 pixel offset to `ButtonEvent.line` objects passed to mouse event signals such as `buttonPressSignal()` and `dragMoveSignal()`
-
-Breaking Changes
-----------------
-
-- CyclesOptions :
-  - Removed `useFrameAsSeed` plug. The frame is now automatically used as the seed if `seed` is not set.
-  - Removed all texture cache options. These had never been exposed in the UI because this never became an offical Cycles feature.
-  - Removed `cryptomatteAccurate`. This feature is no longer present in Cycles.
-
-[^1] : To be omitted from final release notes for 1.4.0.0.
-
-1.4.0.0b1 (relative to 1.3.x.x)
-=========
+1.4.0.0 (relative to 1.3.16.0)
+=======
 
 > Note : This release introduces `linux-gcc11` builds which are only compatible with Linux distributions using glibc 2.28 or higher.
 > These specific `linux-gcc11` builds are intended for testing purposes while we upgrade our toolchain and dependencies to better align
 > with VFX Platform 2023, and should be considered "beta" in advance of a stable release in Gaffer 1.5.
 
-> Known bugs : Gaffer may crash when stopping an InteractiveCyclesRender with the CPU device and SVM shading mode. A fix is in progress.
-
 Features
 --------
 
+- Arnold : Added support for Arnold 7.3. Note that a minimum of 7.3.1.0 is required, meaning that 7.3.0.0 is _not_ supported.
 - Cycles :
   - Updated to version 4.0.2.
-  - Added support for CUDA and Optix devices (GCC 11 builds only).
+  - Added support for CUDA and Optix devices (GCC 11 and Windows builds only).
 - Dispatcher : Dispatchers are now TaskNodes, allowing them to be nested in a task graph. Possibilities include :
   - Using a LocalDispatcher and a Wedge to launch multiple TractorDispatcher jobs.
   - Using a nested LocalDispatcher to perform a group of tasks on a single blade within a TractorDispatcher job.
+- SelectionTool : Added select mode plug. When set to anything except `Standard` using the SelectionTool causes the actual scene location selected to potentially be modified from the originally selected location. Selection modifiers work identically for deselection. Currently, two selectors are implemented :
+  - USD Kind : When selecting, the first ancestor location with a `usd:kind` attribute matching the chosen list of USD Kind will ultimately be selected. USD's Kind Registry includes `Assembly`, `Component`, `Group`, `Model` and `SubComponent` by default and can be extended via USD startup scripts.
+  - Shader Assignment : When selecting, the first ancestor location with a renderable and direct (not inherited) shader attribute will ultimately be selected. This can be used to select either surface or displacement shaders.
+- GraphEditor : Added <kbd>X</kbd> shortcut for removing connections between nodules. Hold <kbd>X</kbd> then left click to remove all connections under the cursor. Hold <kbd>X</kbd> then left drag to draw a line, all connections that intersect with the line will be removed once the drag is ended (#788).
+- LightPosition Tool : Added a variation on the shadow placement tool to place highlights. Lights are positioned such that they will create a specular highlight at the target point.
 - DeepSlice : Added a new node for clipping out part of an image based on depth.
+- MeshTessellate : Added a new node for increasing the polycount of subdivision meshes.
 - ImageInspector : Added a new panel for inspecting image format, metadata and channel statistics.
 
 Improvements
 ------------
 
-- Arnold : Gaffer's native OpenColorIO config is now automatically translated to Arnold. Use an ArnoldColorManager node to override this behaviour.
-- Toolbars : Changed hotkey behavior to toogle any tool on and off. Exclusive tools such as the Translate and Crop Window tools activate the first tool (currently Selection Tool) when they are toggled off.
-- CropWindowTool : Added <kbd>`Alt` + <kbd>`C` for toggling both the crop window tool and the relevant crop window `enabled` plug.
-- TaskList, FrameMask : Reimplemented in C++ for improved performance.
+- Arnold :
+  - OSL shaders with connections from multiple outputs are no longer duplicated on export to Arnold.
+  - Gaffer's native OpenColorIO config is now automatically translated to Arnold. Use an ArnoldColorManager node to override this behaviour.
+- ArnoldShader : Added parameter tooltips based on `help` metadata provided by Arnold.
+- CyclesOptions : Improved device selection UI.
+- 3Delight :
+  - Added NSI screen static sampling pattern option (`dl:staticsamplingpattern`).
+  - Added support for `layerName` parameter in output definitions.
+  - Added support for `filter` parameter in output definitions.
+  - Added camera overscan support.
+  - Added support for reading `dl:` and `user:` attributes from shaders.
+  - Added `importanceSampleFilter` plug to DelightOptions, providing denoiser-compatible output.
+  - Added support for external procedurals.
+  - Matched DelightOptions default values for `oversampling` and `shadingSamples` to 3Delight's own default values.
+  - NSI scene description export format is now based on file extension - `.nsi` for binary and `.nsia` for ASCII.
+- EditScope : Added a summary of edits in the NodeEditor, with the ability to select the affected objects and quickly navigate to the processor nodes.
+- GraphEditor :
+  - The source node for any location can be located by dragging the location into the GraphEditor from the Viewer or HierarchyView.
+  - Removed all renderer-specific Render and InteractiveRender nodes from the node menu. These nodes still exist for backwards compatibility with old scenes, but the generic Render and InteractiveRender nodes should now be used instead.
+  - Improved logic used to connect a newly created node to the selected nodes.
+- GraphComponent : Node and Plug names may now start with a numeric digit.
 - LocalDispatcher :
   - Added a new dockable LocalJobs editor, to replace the floating window previously accessible via the "Execute/Local Jobs" menu item.
   - Task output is now shown in the UI.
   - Jobs are no longer removed from the UI as soon as they complete.
   - Incomplete jobs are now killed automatically when the application is closed, after prompting to confirm that shutdown should go ahead.
+- LightPositionTool : The tool is now only visible for members of the `__lights` set, instead of all objects.
+- Catalogue : Added `imageNames` output plug, containing the names of all images in the Catalogue. Among other things this can be used to drive a Wedge or ContactSheet node and a CatalogueSelect.
+- ImageReader : Added `fileValid = False` metadata to images from missing frames, when `missingFrameMode` is `Black` or `Hold`.
+- Collect : Added the ability to collect StringVectorData inputs.
+- Toolbars : Changed hotkey behavior to toggle any tool on and off. Exclusive tools such as the Translate and Crop Window tools activate the first tool (currently Selection Tool) when they are toggled off.
+- CropWindowTool : Added <kbd>`Alt` + <kbd>`C` for toggling both the crop window tool and the relevant crop window `enabled` plug.
+- TaskList, FrameMask : Reimplemented in C++ for improved performance.
 - Cache : Increased default computation cache size to 8Gb. Call `Gaffer.ValuePlug.setCacheMemoryLimit()` from a startup file to override this.
 - Dispatcher : Reduced internal overhead of `dispatch()` call, with one benchmark showing around a 3x speedup.
 - ScriptWindow : Added "Save" option to dialogue shown when closing a window containing unsaved changes.
@@ -307,23 +190,49 @@ Improvements
   - Larger backdrops are automatically drawn behind smaller ones, so that nested backdrops will always appear on top.
   - Added a `depth` plug to assign a manual drawing depth for the rare cases where the automatic depth is unwanted.
 - ImageStats : Added `areaSource` plug, allowing area to be driven by the input display window or data window.
-- 3Delight :
-  - Added camera overscan support.
-  - NSI scene description export format is now based on file extension - `.nsi` for binary and `.nsia` for ASCII.
-  - Added support for reading `dl:` and `user:` attributes from shaders.
-  - Added `importanceSampleFilter` plug to DelightOptions, providing denoiser-compatible output.
-  - Matched DelightOptions default values for `oversampling` and `shadingSamples` to 3Delight's own default values.
-  - Added support for external procedurals.
-- GraphEditor : Improved logic used to connect a newly created node to the selected nodes.
 - ScenePlug, ImagePlug : Child plugs are now serialisable. Among other things, this enables them to be driven by expressions (#3986).
 - Premultiply : Added `useDeepVisibility` plug, which weights samples according to their visibility based on the opacity of samples in front.
-- CyclesOptions : Improved device selection UI.
 - ImageReader : Improved multithreading of EXR reads. This can result in a performance improvement of around 4X for large images.
 - Added OIIO config that disables OIIO threading by default. This simplifies our threading model, and has no impact on performance for our main use cases. If read performance of Gaffer compositing using non-EXR formats, such as Tiff, is important to you, you may want to add your own config to turn OIIO threading back on.
+- Wireframe :
+  - Improved performance ~3x.
+  - Improved cancellation responsiveness.
 
 Fixes
 -----
 
+- Arnold :
+  - Fixed rendering of shaders imported from HtoA via USD.
+  - Fixed USD export of shaders to use `outputs:out` instead of `outputs:DEFAULT_OUTPUT`.
+  - Fixed rendering of `osl` shaders using the `code` parameter.
+- Cycles :
+  - Fixed hangs and crashes when using non-default session modes such as SVM shading.
+  - Fixed failure to render background light in batch renders (#5234).
+  - Fixed failure to update when reverting a background shader to previous values.
+- 3Delight :
+  - Fixed failure to change sampling pattern per frame.
+  - Fixed Resolution Multiplier support.
+  - Fixed UI visibility of `angle` parameter for distant lights, which was previously hidden.
+  - Fixed export of `Varying` primitive variables on meshes (#5781).
+  - Fixed loading of surface shaders such as `dlStandard` so that they can be connected to the inputs of shaders such as `dlLayeredMaterial`.
+- Widget :
+  - Fixed bug that prevented Gadgets from receiving drops from another application.
+  - Fixed errors when dragging from another application onto widgets that didn't expect it.
+- Gadget : Fixed access to `DragDropEvent.sourceWidget` and `DragDropEvent.destinationWidget` from Python slots connected to a Gadget's DragDropSignals.
+- GraphGadget : Fixed unwanted highlighting of nodes when custom drag & drop handlers were active.
+- Viewer : Fixed selection overlay glitches with an Arnold `skydome_light` and an empty selection.
+- GafferTest, GafferImageTest : Fixed import of these modules if the `Gaffer` module had not been imported previously.
+- ViewportGadget : Fixed selection issues with Intel GPUs (#901, #2788).
+- TransformTool : Fixed alignment of green "value changed" icon for `orientation` plugs.
+- PlugAlgo :
+  - Updated `canSetValueFromData()`, `setValueFromData()` and `getValueAsData()` with support for missing types.
+  - Fixed promotion of CompoundDataPlugs with non-dynamic children, such as the `Camera.renderSettingOverrides` plug.
+- Catalogue :
+  - Fixed undo for image reordering via drag & drop.
+  - Fixed bugs caused by reordering images using `GraphComponent::reorderChildren()`.
+- Expression : `setExpression()` now respects configs that provide backwards compatibility for old plug names.
+- FlatImageProcessor : Fixed bug that could cause an input to be evaluated with an invalid `image:viewName`.
+- Collect : Fixed display of results collected from TypedObjectPlug inputs.
 - BackgroundTask : Fixed potential deadlock caused by destroying a BackgroundTask from Python while it was still running.
 - Dispatcher : The job directory is no longer created when dispatch is cancelled by a slot connected to `preDispatchSignal()`.
 - LocalDispatcher :
@@ -335,15 +244,27 @@ Fixes
   - Fixed output of infinite values, which were previously being clamped.
   - Results for min/max now correctly reflect zero values outside the data window.
 - NodeMenu, NodeEditor : `userDefault` metadata is now evaluated in the script context, so it can depend on script variables.
-- 3Delight : Fixed loading of surface shaders such as `dlStandard` so that they can be connected to the inputs of shaders such as `dlLayeredMaterial`.
 - DeepState : Fixed handling of `NaN` values and samples where `ZBack` is less than `Z`.
 - Premultiply : Fixed handling of non-existent alpha channel.
-- PlugAlgo : Fixed promotion of CompoundDataPlugs with non-dynamic children, such as the `Camera.renderSettingOverrides` plug.
 - ColorToVector : Fixed parameter types.
+- Windows : Removed "Error(s) running Gaffer" shutdown message. It was misleading when errors originated in the renderer rather than Gaffer itself.
 
 API
 ---
 
+- SelectionTool : Added static `registerSelectMode()` method for registering a Python or C++ function that will modify a selected scene path location. Users can choose which mode is active when selecting.
+- EditScopeUI : Added an API for customising the EditScope's NodeEditor with summaries for each processor :
+  - ProcessorWidget provides a base class for custom widgets, and a factory mechanism for registering them against processors.
+  - SimpleProcessorWidget provides a base class for widgets with a simple summary label and optional action links.
+- TractorDispatcher : The `preSpoolSignal()` now provides an additional `taskData` argument to slots, which maps from Tractor tasks to information about the Gaffer tasks they will execute.
+- LabelPlugValueWidget : Added optional `labelPlugValueWidget:showValueChangedIndicator` metadata entry. If a plug has this entry set to `False`, the icon next to the label that indicates the value has changed will not be shown. Defaults to `True` if the value is not set.
+- TypedObjectPlug : Added Python bindings for the default values of the `defaultValue` constructor argument.
+- Box2fVectorDataPlug : Added new plug type for storing arrays of Box2f.
+- Catalogue : Deprecated `image:index` metadata.
+- ImageGadget : Removed `textureLoader()` method.
+- Pointer : Added `fileName()` method.
+- ExtensionAlgo : Added `exportNode()` and `exportNodeUI()` functions.
+- Widget : Added a 0.5 pixel offset to `ButtonEvent.line` objects passed to mouse event signals such as `buttonPressSignal()` and `dragMoveSignal()`
 - PathColumn :
   - Added `CellData::sortValue` member, to provide additional control over sorting in the PathListingWidget.
   - Added missing Python binding for `headerData()` method.
@@ -373,11 +294,31 @@ API
 - DeepPixelAccessor : Added utility class for accessing deep samples while abstracting away the underlying tile storage.
 - Color3fPlug : Added `setValue( V3f() )` overload.
 
+Documentation
+-------------
+
+- Updated with generic Render and InteractiveRender nodes in place of deprecated renderer-specific nodes.
+
 Breaking Changes
 ----------------
 
 - Arnold : Removed support for Arnold 7.1.
 - Cycles : Updated to version 4.0.2.
+- 3Delight :
+  - Changed default layer names for outputs.
+  - Changed NSI scene description export with `.nsi` file extension from ASCII to binary (`.nsia` is used for ASCII now).
+- InteractiveRenderTest : Subclasses must now return the shader output plug from creation methods such as `_createConstantShader()`.
+- StandardLightVisualiser : Added `attributeName` argument to `surfaceTexture()` virtual method.
+- CyclesAttributes : Removed the `cycles:dupliGenerated` and `cycles:dupliUV` attributes.
+- CyclesOptions :
+  - Changed `hairShape` default value to "ribbon", to match Cycles' and Blender's own defaults.
+  - Removed `useFrameAsSeed` plug. The frame is now automatically used as the seed if `seed` is not set.
+  - Removed all texture cache options. These had never been exposed in the UI because this never became an official Cycles feature.
+  - Removed `cryptomatteAccurate`. This feature is no longer present in Cycles.
+  - Removed `cycles:integrator:sampling_pattern` option. This is intended only for debugging, but is still available via a CustomOptions node.
+- Pointer :
+  - Removed `Pointer( const ImagePrimitive * )` constructor.
+  - Removed `image()` method.
 - Render : Changed `render:includedPurposes` default to `"default", "render"`.
 - Backdrop : Changed default drawing order. Use the new `depth` plug to override the order if necessary.
 - ValuePlug : Removed deprecated `getObjectValue()` overload.
@@ -415,7 +356,6 @@ Breaking Changes
   - Renamed `channels` plug to `shuffles` plug, matching nodes such as ShuffleAttributes and ShufflePrimitiveVariables.
 - ShuffleUI : Removed `nodeMenuCreateCommand()`.
 - ImageStatsUI : Removed `postCreate()`.
-- 3Delight : Changed NSI scene description export with `.nsi` file extension from ASCII to binary (`.nsia` is used for ASCII now).
 - OSLShader : Output parameters are now loaded onto the `out` plug for all types (`surface`, `displacement` etc), not just `shader`.
 - DelightOptions : Changed default values for `oversampling` and `shadingSamples` plugs.
 - SceneProcessor : Subclasses no longer serialise internal connections to the `out` plug.
@@ -425,13 +365,17 @@ Breaking Changes
 Build
 -----
 
-- Cortex : Updated to version 10.5.6.1.
+- Cortex : Updated to version 10.5.6.2.
 - Cycles : Updated to version 4.0.2.
 - Embree : Updated to version 4.3.0.
 - Imath : Updated to version 3.1.9.
 - MaterialX : Updated to version 1.38.8.
 - LibWebP : Added version 1.3.2.
-- OpenEXR : Updated to version 3.1.12.
+- OpenEXR :
+  - Updated to version 3.1.12.
+  - Applied patches from the following pull requests :
+    - https://github.com/AcademySoftwareFoundation/openexr/pull/1591
+    - https://github.com/AcademySoftwareFoundation/openexr/pull/1684
 - OpenImageIO : Updated to version 2.5.8.0.
 - OpenPGL : Updated to version 0.5.0.
 - OpenShadingLanguage : Updated to version 1.12.14.0.
@@ -447,10 +391,42 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.x.x (relative to 1.3.15.0)
+1.3.16.x (relative to 1.3.16.2)
 ========
 
 
+
+1.3.16.2 (relative to 1.3.16.1)
+========
+
+Fixes
+-----
+
+- File Browser : Windows only : Fixed bug in `HiddenFilePathFilter` that caused sequences to be treated as though they are hidden files (#5810).
+
+1.3.16.1 (relative to 1.3.16.0)
+========
+
+Fixes
+-----
+
+- NodeAlgo : Fixed presets inheritance for promoted plugs with multiple outputs.
+- TaskNode / GafferCortex : Fixed missing GIL releases that caused hang at ImageEngine
+
+1.3.16.0 (relative to 1.3.15.0)
+========
+
+Improvements
+------------
+
+- Shuffle : Added the ability to load Shuffles from Gaffer 1.4.
+- Instancer : Added support for `Varying` primitive variables whenever they are equivalent to (have the same size as) a `Vertex` primitive variable.
+
+Fixes
+-----
+
+- Encapsulate : Fixed bug which could cause unwanted cancellation when rendering or unencapsulating.
+- Unencapsulate : Fixed bug which prevented cancellation of long-running computes.
 
 1.3.15.0 (relative to 1.3.14.0)
 ========

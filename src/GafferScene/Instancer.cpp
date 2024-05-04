@@ -85,11 +85,24 @@ namespace
 const PrimitiveVariable *findVertexVariable( const IECoreScene::Primitive* primitive, const InternedString &name )
 {
 	PrimitiveVariableMap::const_iterator it = primitive->variables.find( name );
-	if( it == primitive->variables.end() || it->second.interpolation != IECoreScene::PrimitiveVariable::Vertex )
+	if( it == primitive->variables.end() )
 	{
 		return nullptr;
 	}
-	return &it->second;
+
+	if(
+		it->second.interpolation == IECoreScene::PrimitiveVariable::Vertex ||
+		(
+			it->second.interpolation == IECoreScene::PrimitiveVariable::Varying &&
+			primitive->variableSize( PrimitiveVariable::Vertex ) == primitive->variableSize( PrimitiveVariable::Varying )
+		)
+	)
+	{
+		return &it->second;
+	}
+
+	return nullptr;
+
 }
 
 // We need to able to quantize all our basic numeric values, so we have a set of templates for this, with
@@ -797,7 +810,13 @@ class Instancer::EngineData : public Data
 
 			for( auto &primVar : m_primitive->variables )
 			{
-				if( primVar.second.interpolation != PrimitiveVariable::Vertex )
+				if( !(
+					primVar.second.interpolation == PrimitiveVariable::Vertex ||
+					(
+						primVar.second.interpolation == PrimitiveVariable::Varying &&
+						m_primitive->variableSize( PrimitiveVariable::Vertex ) == m_primitive->variableSize( PrimitiveVariable::Varying )
+					)
+				) )
 				{
 					continue;
 				}
@@ -867,7 +886,12 @@ class Instancer::EngineData : public Data
 				}
 				case PrototypeMode::RootPerVertex :
 				{
-					const auto view = m_primitive->variableIndexedView<StringVectorData>( rootsVariable, PrimitiveVariable::Vertex );
+					auto view = m_primitive->variableIndexedView<StringVectorData>( rootsVariable, PrimitiveVariable::Vertex );
+					if( !view && m_primitive->variableSize( PrimitiveVariable::Vertex ) == m_primitive->variableSize( PrimitiveVariable::Varying ))
+					{
+						view = m_primitive->variableIndexedView<StringVectorData>( rootsVariable, PrimitiveVariable::Varying );
+					}
+
 					if( !view )
 					{
 						std::string message = fmt::format( "prototypeRoots primitive variable \"{}\" must be Vertex StringVectorData when using RootPerVertex mode", rootsVariable );

@@ -333,6 +333,9 @@ class PlugLayout( GafferUI.Widget ) :
 					with self.getContext() :
 						metadataName = self.__layoutName + ":activator:" + activatorName
 						result = self.__metadataValue( self.__parent, metadataName )
+						if isinstance( result, str ) :
+							localsAndGlobals = { "parent" : self.__parent }
+							result = eval( result, localsAndGlobals, localsAndGlobals )
 						if result is None and metadataName not in Gaffer.Metadata.registeredValues( self.__parent ) :
 							IECore.msg(
 								IECore.Msg.Level.Warning, "PlugLayout",

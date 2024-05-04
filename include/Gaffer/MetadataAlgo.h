@@ -43,12 +43,7 @@
 #include "IECore/StringAlgo.h"
 #include "IECore/TypeIds.h"
 
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathColor.h"
-#else
 #include "Imath/ImathColor.h"
-#endif
 
 #include <vector>
 

@@ -82,6 +82,7 @@ class CapsuleScope : boost::noncopyable
 			if( m_capsule )
 			{
 				m_scope.emplace( m_capsule->context() );
+				m_scope->setCanceller( context->canceller() );
 				m_capsulePath = concatScenePath( m_capsule->root(), branchPath );
 				m_scope->set( ScenePlug::scenePathContextName, &m_capsulePath );
 			}
@@ -95,6 +96,7 @@ class CapsuleScope : boost::noncopyable
 			if( m_capsule )
 			{
 				m_scope.emplace( m_capsule->context() );
+				m_scope->setCanceller( context->canceller() );
 				m_scope->set( ScenePlug::setNameContextName, setName );
 			}
 		}

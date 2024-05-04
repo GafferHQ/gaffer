@@ -73,12 +73,7 @@
 #include "IECore/NullObject.h"
 
 IECORE_PUSH_DEFAULT_VISIBILITY
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathPlane.h"
-#else
 #include "Imath/ImathPlane.h"
-#endif
 IECORE_POP_DEFAULT_VISIBILITY
 
 #include "boost/bind/bind.hpp"

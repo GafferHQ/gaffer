@@ -75,7 +75,7 @@ void bind()
 	using P = typename T::PointType;
 	using B = typename P::BaseType;
 
-	PlugClass<T>()
+	scope s = PlugClass<T>()
 		.def( init<const std::string &, Plug::Direction, const V&, unsigned>(
 				(
 					boost::python::arg_( "name" )=GraphComponent::defaultName<T>(),
@@ -104,6 +104,16 @@ void bind()
 		.def( "setValue", &setValue<T> )
 		.def( "getValue", &getValue<T> )
 	;
+
+	const PyTypeObject *valueType = boost::python::to_python_value<const V &>().get_pytype();
+	s.attr( "ValueType" ) = boost::python::object( boost::python::handle<>( boost::python::borrowed( const_cast<PyTypeObject *>( valueType ) ) ) );
+
+	const PyTypeObject *pointType = boost::python::to_python_value<const P &>().get_pytype();
+	s.attr( "PointType" ) = boost::python::object( boost::python::handle<>( boost::python::borrowed( const_cast<PyTypeObject *>( pointType ) ) ) );
+
+	const PyTypeObject *childType = boost::python::to_python_value<const typename T::ChildType &>().get_pytype();
+	s.attr( "ChildType" ) = boost::python::object( boost::python::handle<>( boost::python::borrowed( const_cast<PyTypeObject *>( childType ) ) ) );
+
 }
 
 } // namespace

@@ -40,8 +40,8 @@ import os
 import re
 import sys
 import glob
+import inspect
 import locale
-import platform
 import shutil
 import subprocess
 import tempfile
@@ -62,10 +62,10 @@ if codecs.lookup( locale.getpreferredencoding() ).name != "utf-8" :
 ###############################################################################################
 
 gafferMilestoneVersion = 1 # for announcing major milestones - may contain all of the below
-gafferMajorVersion = 4 # backwards-incompatible changes
+gafferMajorVersion = 5 # backwards-incompatible changes
 gafferMinorVersion = 0 # new backwards-compatible features
 gafferPatchVersion = 0 # bug fixes
-gafferVersionSuffix = "b6" # used for alpha/beta releases : "a1", "b2", etc.
+gafferVersionSuffix = "" # used for alpha/beta releases : "a1", "b2", etc.
 
 # All of the following must be considered when determining
 # whether or not a change is backwards-compatible
@@ -725,8 +725,9 @@ if not haveInkscape and env["INKSCAPE"] != "disableGraphics" :
 	sys.stderr.write( "ERROR : Inkscape not found. Check INKSCAPE build variable.\n" )
 	Exit( 1 )
 
-inkscapeHelp = subprocess.check_output( [ env["INKSCAPE"], "--help" ], universal_newlines=True )
-env["INKSCAPE_USE_EXPORT_FILENAME"] = True if "--export-filename" in inkscapeHelp else False
+if haveInkscape:
+	inkscapeHelp = subprocess.check_output( [ env["INKSCAPE"], "--help" ], universal_newlines=True )
+	env["INKSCAPE_USE_EXPORT_FILENAME"] = True if "--export-filename" in inkscapeHelp else False
 
 haveSphinx = conf.checkSphinx()
 
@@ -750,10 +751,13 @@ commandEnv["ENV"]["PATH"] = commandEnv.subst( "$BUILD_DIR/bin" + os.path.pathsep
 if env["PLATFORM"] == "win32" :
 	commandEnv["ENV"]["PATH"] = commandEnv.subst( "$BUILD_DIR/lib" + os.path.pathsep ) + commandEnv["ENV"]["PATH"]
 
-if commandEnv["PLATFORM"]=="darwin" :
+if commandEnv["PLATFORM"] == "darwin" :
 	commandEnv["ENV"]["DYLD_LIBRARY_PATH"] = commandEnv.subst( ":".join(
 		[ "/System/Library/Frameworks/ImageIO.framework/Resources", "$BUILD_DIR/lib" ] +
 		split( commandEnv["LOCATE_DEPENDENCY_LIBPATH"] )
+	) )
+	commandEnv["ENV"]["DYLD_FRAMEWORK_PATH"] = commandEnv.subst( ":".join(
+		[ "$BUILD_DIR/lib" ] + split( commandEnv["LOCATE_DEPENDENCY_LIBPATH"] )
 	) )
 elif commandEnv["PLATFORM"] == "win32" :
 	commandEnv["ENV"]["PATH"] = commandEnv.subst( ";".join( [ "$BUILD_DIR/lib" ] + split( commandEnv[ "LOCATE_DEPENDENCY_LIBPATH" ] ) + [ commandEnv["ENV"]["PATH"] ] ) )
@@ -828,38 +832,6 @@ if ( int( baseLibEnv["BOOST_MAJOR_VERSION"] ), int( baseLibEnv["BOOST_MINOR_VERS
 	# deprecated header, so we define BOOST_BIND_GLOBAL_PLACEHOLDERS to silence
 	# the reams of warnings triggered by that.
 	baseLibEnv.Append( CPPDEFINES = [ "BOOST_BIND_GLOBAL_PLACEHOLDERS" ] )
-
-# Determine Imath version. The transition between 2 and 3 is a bit of a mess.
-# Imath 3 provides `Imath/ImathConfig.h` for determining version, but that isn't
-# provided by Imath 2, which comes with `OpenEXR/IlmBaseConfig.h` instead. The
-# one thing we can rely on existing all the time is the conceptually unrelated
-# `OpenEXR/OpenEXRConfig.h`, so we use that, even though we don't directly
-# depend on OpenEXR ourselves.
-
-exrVersionHeader = baseLibEnv.FindFile(
-	"OpenEXR/OpenEXRConfig.h",
-	[ "$BUILD_DIR/include" ] +
-	baseLibEnv["LOCATE_DEPENDENCY_SYSTEMPATH"] +
-	baseLibEnv["LOCATE_DEPENDENCY_CPPPATH"]
-)
-
-if not exrVersionHeader :
-	sys.stderr.write( "ERROR : unable to find \"OpenEXR/OpenEXRConfig.h\".\n" )
-	Exit( 1 )
-
-for line in open( str( exrVersionHeader ) ) :
-	m = re.match( r'^#define OPENEXR_VERSION_STRING "(\d+)\.(\d+)\.(\d+)"$', line )
-	if m :
-		baseLibEnv["IMATH_MAJOR_VERSION"] = int( m.group( 1 ) )
-
-if baseLibEnv.get( "IMATH_MAJOR_VERSION", None ) is None :
-	sys.stderr.write( "ERROR : unable to determine version from \"{}\".\n".format( exrVersionHeader ) )
-	Exit( 1 )
-
-# Imath 2 came with a separate `Half` library but in Imath 3 everything is in
-# the `Imath` library.
-
-baseLibEnv["HALF_LIBRARY"] = "Half" if baseLibEnv["IMATH_MAJOR_VERSION"] < 3 else ""
 
 ###############################################################################################
 # The basic environment for building python modules
@@ -1038,11 +1010,7 @@ cyclesDefines = [
 
 libraries = {
 
-	"Gaffer" : {
-		"envAppends" : {
-			"LIBS" : [ "$HALF_LIBRARY" ],
-		},
-	},
+	"Gaffer" : {},
 
 	"GafferTest" : {
 		"envAppends" : {
@@ -1123,7 +1091,7 @@ libraries = {
 
 	"GafferScene" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "Iex$IMATH_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX",  "IECoreScene$CORTEX_LIB_SUFFIX", "GafferImage", "GafferDispatch", "$HALF_LIBRARY", "osdCPU" ],
+			"LIBS" : [ "Gaffer", "Iex$IMATH_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX",  "IECoreScene$CORTEX_LIB_SUFFIX", "GafferImage", "GafferDispatch", "osdCPU" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferScene", "GafferDispatch", "GafferImage", "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX" ],
@@ -1311,6 +1279,7 @@ libraries = {
 			],
 		},
 		"pythonEnvAppends" : {
+			"CPPPATH" : [ "$DELIGHT_ROOT/include" ],
 			"LIBS" : [ "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreDelight" ],
 		},
 		"requiredOptions" : [ "DELIGHT_ROOT" ],
@@ -1389,7 +1358,7 @@ libraries = {
 
 	"GafferUSD" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "GafferImage", "IECoreScene$CORTEX_LIB_SUFFIX" ] + [ "${USD_LIB_PREFIX}" + x for x in ( [ "sdf", "arch", "tf", "vt", "ndr", "sdr" ] if not env["USD_MONOLITHIC"] else [ "usd_ms" ] ) ],
+			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "GafferImage", "IECoreScene$CORTEX_LIB_SUFFIX" ] + [ "${USD_LIB_PREFIX}" + x for x in ( [ "sdf", "arch", "tf", "vt", "ndr", "sdr", "usd", "usdLux" ] if not env["USD_MONOLITHIC"] else [ "usd_ms" ] ) ],
 			# USD includes "at least one deprecated or antiquated header", so we
 			# have to drop our usual strict warning levels.
 			"CXXFLAGS" : [ "-Wno-deprecated" if env["PLATFORM"] != "win32" else "/wd4996" ],
@@ -1825,6 +1794,56 @@ for libraryName, libraryDef in libraries.items() :
 		)
 		stub = stubEnv.Command( stubFileName, "", buildClassStub )
 		stubEnv.Alias( "buildCore", stub )
+
+	# USD Schemas
+
+	def buildSchema( target, source, env ) :
+
+		# Write a basic `plugInfo.json` file.
+
+		targetDir = os.path.dirname( str( target[0] ) )
+		libraryName = os.path.basename( targetDir )
+		with open( os.path.join( targetDir, "plugInfo.json" ), "w" ) as plugInfo :
+			plugInfo.write( inspect.cleandoc(
+				"""
+				{{
+					"Plugins" : [
+						{{
+							"Name" : "{libraryName}",
+							"Type" : "resource",
+							"Root" : ".",
+							"ResourcePath" : ".",
+							"Info" : {{ }}
+						}}
+					]
+				}}
+				""".format( libraryName = libraryName )
+			) )
+
+		# Then call `usdGenSchema` to write `generatedSchema.usda` and
+		# update `plugInfo.json` in place.
+
+		subprocess.check_call(
+			[
+				shutil.which( "gaffer.cmd" if sys.platform == "win32" else "gaffer", path = env["ENV"]["PATH"] ),
+				"env",
+				"usdGenSchema.cmd" if sys.platform == "win32" else "usdGenSchema",
+				str( source[0] ), targetDir
+			],
+			env = env["ENV"]
+		)
+
+	schemaSource = os.path.join( "usdSchemas", libraryName + ".usda" )
+	if os.path.isfile( schemaSource ) :
+		generatedSchema = commandEnv.Command(
+			[
+				os.path.join( installRoot, "plugin", libraryName, "generatedSchema.usda" ),
+				os.path.join( installRoot, "plugin", libraryName, "plugInfo.json" )
+			],
+			schemaSource,
+			buildSchema
+		)
+		commandEnv.Alias( "buildCore", generatedSchema )
 
 env.Alias( "build", "buildCore" )
 

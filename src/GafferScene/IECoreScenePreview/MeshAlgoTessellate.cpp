@@ -428,7 +428,7 @@ struct PrimvarSetup
 		}
 	}
 
-	void allocateOutputs( int outputSize, int outputIndexSize )
+	void allocateOutputs( int outputSize, int outputIndexSize = -1 )
 	{
 		// NOTE : This would logically be an excellent place for using a vector type that doesn't force
 		// initialization for outData and outIndicesData - we need to allocate all the memory so that
@@ -458,7 +458,7 @@ struct PrimvarSetup
 			IECore::setGeometricInterpretation( m_outData.get(), IECore::getGeometricInterpretation( m_var.data.get() ) );
 		}
 
-		if( outputIndexSize > 0 )
+		if( outputIndexSize != -1 )
 		{
 			m_outIndicesData = new IntVectorData();
 			m_outIndicesData->writable().resize( outputIndexSize );
@@ -626,7 +626,10 @@ struct PrimvarTopology
 				// index.
 				for( OSDF::Index f : m_mesh.GetVertexFaces( vertIndex ) )
 				{
-					isVertexOwner &= f >= faceIndex;
+					if( !m_mesh.IsFaceHole( f ) )
+					{
+						isVertexOwner &= f >= faceIndex;
+					}
 				}
 			}
 			else
@@ -640,7 +643,10 @@ struct PrimvarTopology
 				{
 					if( fvarValues[i] == m_mesh.GetFaceFVarValues( adjFaces[j], m_faceVaryingChannel )[ adjFaceLocalIndices[j] ] )
 					{
-						isVertexOwner &= adjFaces[j] >= faceIndex;
+						if( !m_mesh.IsFaceHole( adjFaces[j] ) )
+						{
+							isVertexOwner &= adjFaces[j] >= faceIndex;
+						}
 					}
 				}
 			}
@@ -680,7 +686,10 @@ struct PrimvarTopology
 				{
 					for( OSDF::Index f : m_mesh.GetEdgeFaces( edgeIndex ) )
 					{
-						isEdgeOwner &= f >= faceIndex;
+						if( !m_mesh.IsFaceHole( f ) )
+						{
+							isEdgeOwner &= f >= faceIndex;
+						}
 					}
 				}
 
@@ -696,6 +705,12 @@ struct PrimvarTopology
 
 		const int unownedBoundaryPoints = tessPattern.GetNumBoundaryCoords() - ownedBoundaryPoints;
 		m_facePointOffsets[ faceIndex ] = tessPattern.GetNumCoords() - unownedBoundaryPoints;
+	}
+
+	// Record a face that doesn't correspond to any output facets
+	inline void addHole( int faceIndex )
+	{
+		m_facePointOffsets[ faceIndex ] = 0;
 	}
 
 	// Must be called after all faces have had their points counted during the first parallel loop,
@@ -1151,11 +1166,81 @@ int numDegenerateQuadsInTessellation( int tessFacetSize, int nVerts, int tessUni
 	}
 }
 
+OpenSubdiv::Sdc::Options::VtxBoundaryInterpolation vtxBoundaryInterpolationFromString( const InternedString &s )
+{
+	if( s == MeshPrimitive::interpolateBoundaryNone )
+	{
+		return OpenSubdiv::Sdc::Options::VTX_BOUNDARY_NONE;
+	}
+	else if( s == MeshPrimitive::interpolateBoundaryEdgeOnly )
+	{
+		return OpenSubdiv::Sdc::Options::VTX_BOUNDARY_EDGE_ONLY;
+	}
+	else if( s == MeshPrimitive::interpolateBoundaryEdgeAndCorner )
+	{
+		return OpenSubdiv::Sdc::Options::VTX_BOUNDARY_EDGE_AND_CORNER;
+	}
+	else
+	{
+		throw Exception( "Unknown boundary interpolation on mesh: " + s.string() );
+	}
+}
+
+OpenSubdiv::Sdc::Options::FVarLinearInterpolation fvarLinearInterpolationFromString( const InternedString &s )
+{
+	if( s == MeshPrimitive::faceVaryingLinearInterpolationNone )
+	{
+		return OpenSubdiv::Sdc::Options::FVAR_LINEAR_NONE;
+	}
+	else if( s == MeshPrimitive::faceVaryingLinearInterpolationCornersOnly )
+	{
+		return OpenSubdiv::Sdc::Options::FVAR_LINEAR_CORNERS_ONLY;
+	}
+	else if( s == MeshPrimitive::faceVaryingLinearInterpolationCornersPlus1 )
+	{
+		return OpenSubdiv::Sdc::Options::FVAR_LINEAR_CORNERS_PLUS1;
+	}
+	else if( s == MeshPrimitive::faceVaryingLinearInterpolationCornersPlus2 )
+	{
+		return OpenSubdiv::Sdc::Options::FVAR_LINEAR_CORNERS_PLUS2;
+	}
+	else if( s == MeshPrimitive::faceVaryingLinearInterpolationBoundaries )
+	{
+		return OpenSubdiv::Sdc::Options::FVAR_LINEAR_BOUNDARIES;
+	}
+	else if( s == MeshPrimitive::faceVaryingLinearInterpolationAll )
+	{
+		return OpenSubdiv::Sdc::Options::FVAR_LINEAR_ALL;
+	}
+	else
+	{
+		throw Exception( "Unknown faceVarying linear interpolation mode on mesh: " + s.string() );
+	}
+}
+
+OpenSubdiv::Sdc::Options::TriangleSubdivision triangleSubdivisionFromString( const InternedString &s )
+{
+	if( s == MeshPrimitive::triangleSubdivisionRuleCatmullClark )
+	{
+		return OpenSubdiv::Sdc::Options::TRI_SUB_CATMARK;
+	}
+	else if( s == MeshPrimitive::triangleSubdivisionRuleSmooth )
+	{
+		return OpenSubdiv::Sdc::Options::TRI_SUB_SMOOTH;
+	}
+	else
+	{
+		throw Exception( "Unknown triangle subdivision rule on mesh: " + s.string() );
+	}
+}
+
 } // namespace
 
 MeshPrimitivePtr MeshAlgo::tessellateMesh(
 	const MeshPrimitive &inputMesh, int divisions,
 	bool calculateNormals, IECore::InternedString scheme,
+	IECore::InternedString interpolateBoundary, IECore::InternedString faceVaryingLinearInterpolation,
+	IECore::InternedString triangleSubdivisionRule,
 	const IECore::Canceller *canceller
 )
 {
@@ -1219,20 +1304,24 @@ MeshPrimitivePtr MeshAlgo::tessellateMesh(
 		posPrimvarSetup, vertexPrimvarSetups, uniformPrimvarSetups, faceVaryingPrimvarSetups, canceller
 	);
 
+	if( interpolateBoundary == "" )
+	{
+		interpolateBoundary = inputMesh.getInterpolateBoundary();
+	}
+	if( faceVaryingLinearInterpolation == "" )
+	{
+		faceVaryingLinearInterpolation = inputMesh.getFaceVaryingLinearInterpolation();
+	}
+	if( triangleSubdivisionRule == "" )
+	{
+		triangleSubdivisionRule = inputMesh.getTriangleSubdivisionRule();
+	}
 
 	// These subdiv options hold all the tricky boundary settings
 	OpenSubdiv::Sdc::Options options;
-	options.SetVtxBoundaryInterpolation(OpenSubdiv::Sdc::Options::VTX_BOUNDARY_EDGE_AND_CORNER);
-
-	// Choosing a reasonable default here is actually tricky - the options are pretty confusing, and
-	// don't match between different packages ( and it seems like often artists may not actually be
-	// getting exactly what they expect ).
-	// FVAR_LINEAR_BOUNDARIES, which forces all boundaries to be linear, would seem to make sense, but
-	// is actually a terrible option - it turns some concave corners inside-out, and is 30% slower.
-	// FVAR_LINEAR_CORNERS_ONLY could be a good option - it would match Arnold's default.
-	// But we've chosen FVAR_LINEAR_CORNERS_PLUS1 to match USD ( Which unfortunately isn't supported
-	// by Arnold, but is hopefully close enough to what artists expect ).
-	options.SetFVarLinearInterpolation( OpenSubdiv::Sdc::Options::FVAR_LINEAR_CORNERS_PLUS1 );
+	options.SetVtxBoundaryInterpolation( vtxBoundaryInterpolationFromString( interpolateBoundary ) );
+	options.SetFVarLinearInterpolation( fvarLinearInterpolationFromString( faceVaryingLinearInterpolation ) );
+	options.SetTriangleSubdivision( triangleSubdivisionFromString( triangleSubdivisionRule ) );
 
 	// The TopologyDescriptor is how we pass all our mesh topology to OpenSubdiv
 
@@ -1337,6 +1426,13 @@ MeshPrimitivePtr MeshAlgo::tessellateMesh(
 				// holes and boundary faces in some rare cases):
 				if( !meshSurfaceFactory.InitVertexSurface( faceIndex, &faceSurface ) )
 				{
+					faceFacetOffsets[ faceIndex ] = 0;
+					faceFacetVertexOffsets[ faceIndex ] = 0;
+					vertexTopology.addHole( faceIndex );
+					for( PrimvarTopology &t : faceVaryingTopologies )
+					{
+						t.addHole( faceIndex );
+					}
 					continue;
 				}
 
@@ -1378,7 +1474,7 @@ MeshPrimitivePtr MeshAlgo::tessellateMesh(
 	for( PrimvarSetup &setup : vertexPrimvarSetups )
 	{
 		Canceller::check( canceller );
-		setup.allocateOutputs( numOutPoints, 0 );
+		setup.allocateOutputs( numOutPoints );
 	}
 
 	for( PrimvarSetup &setup : uniformPrimvarSetups )
@@ -1490,7 +1586,7 @@ MeshPrimitivePtr MeshAlgo::tessellateMesh(
 	{
 		if( it.second.interpolation == PrimitiveVariable::Constant )
 		{
-			result->variables[it.first] = PrimitiveVariable( PrimitiveVariable::Constant, const_cast<Data*>( it.second.data.get() ) );
+			result->variables[it.first] = PrimitiveVariable( PrimitiveVariable::Constant, it.second.data, it.second.indices );
 		}
 	}
 

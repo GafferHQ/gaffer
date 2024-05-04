@@ -54,6 +54,7 @@ from .ArnoldCameraShadersTest import ArnoldCameraShadersTest
 from .ArnoldLightFilterTest import ArnoldLightFilterTest
 from .ArnoldColorManagerTest import ArnoldColorManagerTest
 from .ArnoldImagerTest import ArnoldImagerTest
+from .USDLightTest import USDLightTest
 
 if __name__ == "__main__":
 	import unittest

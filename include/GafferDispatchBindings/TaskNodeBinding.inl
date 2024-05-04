@@ -59,7 +59,12 @@ template<typename T>
 static boost::python::list preTasks( T &n, Gaffer::Context *context )
 {
 	GafferDispatch::TaskNode::Tasks tasks;
-	n.T::preTasks( context, tasks );
+
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		n.T::preTasks( context, tasks );
+	}
+
 	boost::python::list result;
 	for( GafferDispatch::TaskNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
 	{
@@ -72,7 +77,12 @@ template<typename T>
 static boost::python::list postTasks( T &n, Gaffer::Context *context )
 {
 	GafferDispatch::TaskNode::Tasks tasks;
-	n.T::postTasks( context, tasks );
+
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		n.T::postTasks( context, tasks );
+	}
+
 	boost::python::list result;
 	for( GafferDispatch::TaskNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
 	{
@@ -84,6 +94,7 @@ static boost::python::list postTasks( T &n, Gaffer::Context *context )
 template<typename T>
 static IECore::MurmurHash hash( T &n, const Gaffer::Context *context )
 {
+	IECorePython::ScopedGILRelease gilRelease;
 	return n.T::hash( context );
 }
 

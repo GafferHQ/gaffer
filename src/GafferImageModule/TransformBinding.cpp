@@ -36,6 +36,7 @@
 
 #include "TransformBinding.h"
 
+#include "GafferImage/ContactSheetCore.h"
 #include "GafferImage/Crop.h"
 #include "GafferImage/ImageTransform.h"
 #include "GafferImage/Mirror.h"
@@ -52,6 +53,7 @@ using namespace GafferBindings;
 void GafferImageModule::bindTransforms()
 {
 
+	GafferBindings::DependencyNodeClass<ContactSheetCore>();
 	GafferBindings::DependencyNodeClass<ImageTransform>();
 	GafferBindings::DependencyNodeClass<Mirror>();
 	GafferBindings::DependencyNodeClass<Offset>();

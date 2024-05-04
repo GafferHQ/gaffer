@@ -45,3 +45,12 @@ Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters.shaping:cone:angl
 # `texture:format == automatic` isn't well supported at present, so default
 # user-created lights to `latlong`.
 Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters.texture:format", "userDefault", "latlong" )
+
+# Put Arnold parameters last. We can't do that using the schemas in GafferArnold.usda
+# because they provide no control over property ordering.
+for i, parameter in enumerate( [
+	"aov", "aov_indirect", "portal_mode", "spread", "roundness", "soft_edge", "camera",
+	"transmission", "sss", "indirect", "volume", "max_bounces", "cast_volumetric_shadows",
+	"samples", "volume_samples", "resolution"
+] ) :
+	Gaffer.Metadata.registerValue( GafferUSD.USDLight, f"parameters.arnold:{parameter}", "layout:index", 1000 + i )

@@ -51,7 +51,12 @@
 				"objects", # \todo prefix with 'pointer'
 				"addObjects", # \todo prefix with 'pointer'
 				"removeObjects", # \todo prefix with 'pointer'
-				"replaceObjects" # \todo prefix with 'pointer'
+				"replaceObjects", # \todo prefix with 'pointer'
+				"targetObjects", # \todo prefix with 'pointer'
+				"pointerSets",
+				"pointerReplaceSets",
+				"pointerAddSets",
+				"pointerRemoveSets",
 			]
 		},
 

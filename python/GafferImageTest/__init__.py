@@ -116,7 +116,8 @@ from .OpenColorIOAlgoTest import OpenColorIOAlgoTest
 from .OpenColorIOContextTest import OpenColorIOContextTest
 from .OpenColorIOConfigPlugTest import OpenColorIOConfigPlugTest
 from .DeepSliceTest import DeepSliceTest
-
+from .ContactSheetCoreTest import ContactSheetCoreTest
+from .ContactSheetTest import ContactSheetTest
 
 if __name__ == "__main__":
 	import unittest

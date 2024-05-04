@@ -55,12 +55,7 @@
 
 #include "IECore/AngleConversion.h"
 
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathMatrixAlgo.h"
-#else
 #include "Imath/ImathMatrixAlgo.h"
-#endif
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind/bind.hpp"

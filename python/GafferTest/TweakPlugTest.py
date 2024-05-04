@@ -391,6 +391,110 @@ class TweakPlugTest( GafferTest.TestCase ) :
 			sorted( [ "/test/path2", "/new/path", "/test/path3", "/new/path3" ] )
 		)
 
+	def testUncachedTweakData( self ) :
+
+		# Node that outputs an uncached value, so that `TweakPlug::applyTweak()`
+		# ends up being the sole owner of the tweak data. In the real world the
+		# same thing could happen even with a cached output, if it is evicted on
+		# another thread at an inconvenient time.
+
+		class UncachedOutNode( Gaffer.ComputeNode ) :
+
+			def __init__( self, name="UncachedOutNode" ) :
+
+				Gaffer.ComputeNode.__init__( self, name )
+				self.addChild( Gaffer.StringVectorDataPlug( "out", Gaffer.Plug.Direction.Out ) )
+
+			def computeCachePolicy( self, plug ) :
+
+				if plug.isSame( self["out"] ) :
+					return plug.CachePolicy.Uncached
+
+				return Gaffer.CompouteNode.computeCachePolicy( self, plug )
+
+			def compute( self, plug, context ) :
+
+				if plug.isSame( self["out"] ) :
+					plug.setValue( IECore.StringVectorData( [ "a", "b", "c", "d", "e" ] ) )
+
+		IECore.registerRunTimeTyped( UncachedOutNode, typeName = "GafferTest::UncachedOutNode" )
+
+		# This exposed a bug whereby TweakPlug could clobber the incoming tweak
+		# data before applying it.
+
+		node = UncachedOutNode()
+
+		plug = Gaffer.TweakPlug( "v", IECore.StringVectorData(), Gaffer.TweakPlug.Mode.ListPrepend )
+		plug["value"].setInput( node["out"] )
+
+		data = IECore.CompoundData( { "v" : IECore.StringVectorData( [ "x", "y", "z" ] ) } )
+		self.assertTrue( plug.applyTweak( data ) )
+		self.assertEqual( data["v"], IECore.StringVectorData( [ "a", "b", "c", "d", "e", "x", "y", "z" ] ) )
+
+	def testStringListOperations( self ) :
+
+		for source, tweakMode, tweakValue, result in [
+			( "a b c", Gaffer.TweakPlug.Mode.ListAppend, "b d e", "a c b d e" ),
+			( "a b c", Gaffer.TweakPlug.Mode.ListRemove, "b d", "a c" ),
+			( "a b", Gaffer.TweakPlug.Mode.ListPrepend, "b x", "b x a" ),
+			( "", Gaffer.TweakPlug.Mode.ListPrepend, "y x", "y x" ),
+			( "", Gaffer.TweakPlug.Mode.ListRemove, "x", "" ),
+			( "a", Gaffer.TweakPlug.Mode.ListPrepend, "", "a" ),
+			( "a", Gaffer.TweakPlug.Mode.ListRemove, "", "a" ),
+			( "a  b", Gaffer.TweakPlug.Mode.ListRemove, "b", "a" ),
+			( "a  b", Gaffer.TweakPlug.Mode.ListPrepend, "c", "c a b" ),
+			( "a  b", Gaffer.TweakPlug.Mode.ListAppend, "c", "a b c" ),
+		] :
+
+			plug = Gaffer.TweakPlug( "v", tweakValue, tweakMode )
+			data = IECore.CompoundData( { "v" : source } )
+			self.assertTrue( plug.applyTweak( data ) )
+			self.assertEqual( data["v"], IECore.StringData( result ) )
+
+	def testStringSubstitutions( self ) :
+
+		for source, tweakMode, tweakValue, result in [
+			# Create modes don't support substitutions.
+			( None, Gaffer.TweakPlug.Mode.Create, "{source}", "{source}" ),
+			( None, Gaffer.TweakPlug.Mode.CreateIfMissing, "{source}", "{source}" ),
+			( IECore.StringData( "a" ), Gaffer.TweakPlug.Mode.Create, "{source}", "{source}" ),
+			( IECore.StringData( "a" ), Gaffer.TweakPlug.Mode.CreateIfMissing, "{source}", "a" ),
+			# Neither do list modes.
+			( IECore.StringData( "a" ), Gaffer.TweakPlug.Mode.ListAppend, "{source}", "a {source}" ),
+			( IECore.StringData( "a" ), Gaffer.TweakPlug.Mode.ListPrepend, "{source}", "{source} a" ),
+			# Replace mode does support substitutions.
+			( IECore.StringData( "a" ), Gaffer.TweakPlug.Mode.Replace, "{source}", "a" ),
+			( IECore.StringData( "a" ), Gaffer.TweakPlug.Mode.Replace, "prefix{source}", "prefixa" ),
+			( IECore.StringData( "a" ), Gaffer.TweakPlug.Mode.Replace, "{source}suffix", "asuffix" ),
+			( IECore.StringData( "a" ), Gaffer.TweakPlug.Mode.Replace, "{source} {source}", "a a" ),
+			# And works with InternedStringData too.
+			( IECore.InternedStringData( "a" ), Gaffer.TweakPlug.Mode.Replace, "{source}", "a" ),
+			( IECore.InternedStringData( "a" ), Gaffer.TweakPlug.Mode.Replace, "prefix{source}", "prefixa" ),
+			( IECore.InternedStringData( "a" ), Gaffer.TweakPlug.Mode.Replace, "{source}suffix", "asuffix" ),
+			( IECore.InternedStringData( "a" ), Gaffer.TweakPlug.Mode.Replace, "{source} {source}", "a a" ),
+		] :
+			with self.subTest( source = source, tweakMode = tweakMode, tweakValue = tweakValue ) :
+				plug = Gaffer.TweakPlug( "v", tweakValue, tweakMode )
+				data = IECore.CompoundData( { "v" : source } )
+				self.assertTrue( plug.applyTweak( data ) )
+				if source is not None :
+					self.assertIs( type( data["v"] ), type( source ) )
+				self.assertEqual( data["v"].value, result )
+
+	def testStringSubstitutionsAndMissingMode( self ) :
+
+		plug = Gaffer.TweakPlug( "v", "{source}suffix" )
+		data = IECore.CompoundData()
+
+		with self.assertRaisesRegex( Exception, "This parameter does not exist" ) :
+			plug.applyTweak( data, Gaffer.TweakPlug.MissingMode.Error )
+		self.assertEqual( data, IECore.CompoundData() )
+
+		self.assertFalse( plug.applyTweak( data, Gaffer.TweakPlug.MissingMode.Ignore ) )
+		self.assertEqual( data, IECore.CompoundData() )
+
+		self.assertTrue( plug.applyTweak( data, Gaffer.TweakPlug.MissingMode.IgnoreOrReplace ) )
+		self.assertEqual( data["v"], IECore.StringData( "suffix" ) )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -42,9 +42,8 @@
 
 #include "IECore/StringAlgo.h"
 
-#include "boost/variant.hpp"
-
 #include <functional>
+#include <variant>
 
 namespace Gaffer
 {
@@ -112,7 +111,7 @@ class GAFFERUI_API NoduleLayout : public Gadget
 			GadgetPtr gadget;
 		};
 		// Either a plug or the name of a custom widget
-		using GadgetKey = boost::variant<const Gaffer::Plug *, IECore::InternedString>;
+		using GadgetKey = std::variant<const Gaffer::Plug *, IECore::InternedString>;
 		// Map from plugs and custom gadget names to the gadgets
 		// that represent them.
 		using GadgetMap = std::map<GadgetKey, TypeAndGadget>;

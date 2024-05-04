@@ -704,7 +704,7 @@ std::optional<V3f> SceneGadget::normalAt( const IECore::LineSegment3f &lineInGad
 		if( sampleCount > 0 )
 		{
 			gadgetNormal /= sampleCount;
-			return gadgetNormal;
+			return gadgetNormal.normalized();
 		}
 	}
 

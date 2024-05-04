@@ -60,6 +60,9 @@ MeshTessellate::MeshTessellate( const std::string &name )
 	addChild( new BoolPlug( "calculateNormals", Gaffer::Plug::In, false ) );
 	addChild( new StringPlug( "scheme", Gaffer::Plug::In, "" ) );
 	addChild( new BoolPlug( "tessellatePolygons", Gaffer::Plug::In, false ) );
+	addChild( new StringPlug( "interpolateBoundary", Plug::In, "" ) );
+	addChild( new StringPlug( "faceVaryingLinearInterpolation", Plug::In, "" ) );
+	addChild( new StringPlug( "triangleSubdivisionRule", Plug::In, "" ) );
 
 }
 
@@ -107,6 +110,36 @@ const Gaffer::BoolPlug *MeshTessellate::tessellatePolygonsPlug() const
 	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 3 );
 }
 
+Gaffer::StringPlug *MeshTessellate::interpolateBoundaryPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::StringPlug *MeshTessellate::interpolateBoundaryPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+}
+
+Gaffer::StringPlug *MeshTessellate::faceVaryingLinearInterpolationPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 5 );
+}
+
+const Gaffer::StringPlug *MeshTessellate::faceVaryingLinearInterpolationPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 5 );
+}
+
+Gaffer::StringPlug *MeshTessellate::triangleSubdivisionRulePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 6 );
+}
+
+const Gaffer::StringPlug *MeshTessellate::triangleSubdivisionRulePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 6 );
+}
+
 bool MeshTessellate::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
 	return
@@ -114,7 +147,10 @@ bool MeshTessellate::affectsProcessedObject( const Gaffer::Plug *input ) const
 		input == divisionsPlug() ||
 		input == calculateNormalsPlug() ||
 		input == schemePlug() ||
-		input == tessellatePolygonsPlug();
+		input == tessellatePolygonsPlug() ||
+		input == interpolateBoundaryPlug() ||
+		input == faceVaryingLinearInterpolationPlug() ||
+		input == triangleSubdivisionRulePlug();
 }
 
 
@@ -127,6 +163,9 @@ void MeshTessellate::hashProcessedObject( const ScenePath &path, const Gaffer::C
 	calculateNormalsPlug()->hash( h );
 	schemePlug()->hash( h );
 	tessellatePolygonsPlug()->hash( h );
+	interpolateBoundaryPlug()->hash( h );
+	faceVaryingLinearInterpolationPlug()->hash( h );
+	triangleSubdivisionRulePlug()->hash( h );
 }
 
 
@@ -155,6 +194,9 @@ IECore::ConstObjectPtr MeshTessellate::computeProcessedObject( const ScenePath &
 		divisionsPlug()->getValue(),
 		calculateNormalsPlug()->getValue(),
 		schemeValue,
+		interpolateBoundaryPlug()->getValue(),
+		faceVaryingLinearInterpolationPlug()->getValue(),
+		triangleSubdivisionRulePlug()->getValue(),
 		context->canceller()
 	);
 }

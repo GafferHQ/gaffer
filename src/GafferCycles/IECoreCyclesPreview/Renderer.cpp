@@ -62,17 +62,11 @@
 #include "IECore/StringAlgo.h"
 #include "IECore/VectorTypedData.h"
 
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathMatrixAlgo.h"
-#else
 #include "Imath/ImathMatrixAlgo.h"
-#endif
 
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/container/flat_map.hpp"
-#include "boost/optional.hpp"
 
 #include "tbb/concurrent_unordered_map.h"
 #include "tbb/concurrent_hash_map.h"
@@ -222,11 +216,11 @@ T attributeValue( const IECore::InternedString &name, const IECore::CompoundObje
 }
 
 template<typename T>
-boost::optional<T> optionalAttribute( const IECore::InternedString &name, const IECore::CompoundObject *attributes )
+std::optional<T> optionalAttribute( const IECore::InternedString &name, const IECore::CompoundObject *attributes )
 {
 	using DataType = IECore::TypedData<T>;
 	const DataType *data = attribute<DataType>( name, attributes );
-	return data ? data->readable() : boost::optional<T>();
+	return data ? data->readable() : std::optional<T>();
 }
 
 template<typename T>
@@ -845,6 +839,7 @@ IECore::InternedString g_cyclesSurfaceShaderAttributeName( "cycles:surface" );
 IECore::InternedString g_oslSurfaceShaderAttributeName( "osl:surface" );
 IECore::InternedString g_oslShaderAttributeName( "osl:shader" );
 IECore::InternedString g_cyclesVolumeShaderAttributeName( "cycles:volume" );
+IECore::InternedString g_surfaceShaderAttributeName( "surface" );
 // Ray visibility
 IECore::InternedString g_cameraVisibilityAttributeName( "cycles:visibility:camera" );
 IECore::InternedString g_diffuseVisibilityAttributeName( "cycles:visibility:diffuse" );
@@ -930,6 +925,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			const IECoreScene::ShaderNetwork *surfaceShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesSurfaceShaderAttributeName, attributes );
 			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_oslSurfaceShaderAttributeName, attributes );
 			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_oslShaderAttributeName, attributes );
+			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_surfaceShaderAttributeName, attributes );
 			const IECoreScene::ShaderNetwork *displacementShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesDisplacementShaderAttributeName, attributes );
 			const IECoreScene::ShaderNetwork *volumeShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesVolumeShaderAttributeName, attributes );
 			if( surfaceShaderAttribute || volumeShaderAttribute )
@@ -1210,9 +1206,9 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				objectSpace = optionalAttribute<bool>( g_volumeObjectSpaceAttributeName, attributes );
 			}
 
-			boost::optional<float> clipping;
-			boost::optional<float> stepSize;
-			boost::optional<bool> objectSpace;
+			std::optional<float> clipping;
+			std::optional<float> stepSize;
+			std::optional<bool> objectSpace;
 
 			bool apply( ccl::Object *object ) const
 			{
@@ -1220,11 +1216,11 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				{
 					ccl::Volume *volume = (ccl::Volume*)object->get_geometry();
 					if( clipping )
-						volume->set_clipping( clipping.get() );
+						volume->set_clipping( clipping.value() );
 					if( stepSize )
-						volume->set_step_size( stepSize.get() );
+						volume->set_step_size( stepSize.value() );
 					if( objectSpace )
-						volume->set_object_space( objectSpace.get() );
+						volume->set_object_space( objectSpace.value() );
 				}
 				return true;
 			}
@@ -1250,11 +1246,11 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			}
 
 			ConstDataPtr emissionSamplingMethod;
-			boost::optional<bool> useTransparentShadow;
-			boost::optional<bool> heterogeneousVolume;
+			std::optional<bool> useTransparentShadow;
+			std::optional<bool> heterogeneousVolume;
 			ConstDataPtr volumeSamplingMethod;
 			ConstDataPtr volumeInterpolationMethod;
-			boost::optional<float> volumeStepRate;
+			std::optional<float> volumeStepRate;
 
 			void hash( IECore::MurmurHash &h, const IECore::CompoundObject *attributes ) const
 			{
@@ -1264,23 +1260,23 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				auto it = attributes->members().find( g_cyclesVolumeShaderAttributeName );
 				if( it != attributes->members().end() )
 				{
-					if( heterogeneousVolume && !heterogeneousVolume.get() )
+					if( heterogeneousVolume && !heterogeneousVolume.value() )
 						h.append( "homogeneous_volume" );
 					volumeSamplingMethod->hash( h );
 					volumeInterpolationMethod->hash( h );
-					if( volumeStepRate && volumeStepRate.get() != 1.0f )
-						h.append( volumeStepRate.get() );
+					if( volumeStepRate && volumeStepRate.value() != 1.0f )
+						h.append( volumeStepRate.value() );
 				}
 			}
 
 			bool apply( ccl::Shader *shader ) const
 			{
 				SocketAlgo::setSocket( shader, shader->get_emission_sampling_method_socket(), emissionSamplingMethod.get() );
-				shader->set_use_transparent_shadow(useTransparentShadow ? useTransparentShadow.get() : true );
-				shader->set_heterogeneous_volume( heterogeneousVolume ? heterogeneousVolume.get() : true );
+				shader->set_use_transparent_shadow( useTransparentShadow ? useTransparentShadow.value() : true );
+				shader->set_heterogeneous_volume( heterogeneousVolume ? heterogeneousVolume.value() : true );
 				SocketAlgo::setSocket( shader, shader->get_volume_sampling_method_socket(), volumeSamplingMethod.get() );
 				SocketAlgo::setSocket( shader, shader->get_volume_interpolation_method_socket(), volumeInterpolationMethod.get() );
-				shader->set_volume_step_rate( volumeStepRate ? volumeStepRate.get() : 1.0f );
+				shader->set_volume_step_rate( volumeStepRate ? volumeStepRate.value() : 1.0f );
 
 				return true;
 			}

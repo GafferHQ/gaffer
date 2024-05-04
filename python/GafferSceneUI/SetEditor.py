@@ -189,8 +189,12 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 			# prevent the path itself from being dragged
 			return IECore.StringVectorData()
 
-		GafferUI.Pointer.setCurrent( "paths" )
 		column = self.__pathListing.columnAt( imath.V2f( event.line.p0.x, event.line.p0.y ) )
+		if isinstance( column, _GafferSceneUI._SetEditor.SetNameColumn ) :
+			GafferUI.Pointer.setCurrent( "sets" )
+		else :
+			GafferUI.Pointer.setCurrent( "paths" )
+
 		if column == self.__setMembersColumn :
 			return IECore.StringVectorData( self.__getSetMembers( setNames ).paths() )
 		elif column == self.__selectedSetMembersColumn :

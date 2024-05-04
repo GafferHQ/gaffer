@@ -36,14 +36,8 @@
 
 #include "GafferScene/TransformQuery.h"
 
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathMatrixAlgo.h"
-#include "OpenEXR/ImathEuler.h"
-#else
 #include "Imath/ImathMatrixAlgo.h"
 #include "Imath/ImathEuler.h"
-#endif
 
 #include <cassert>
 #include <cmath>
