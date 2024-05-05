@@ -91,7 +91,7 @@ class RendererTest( GafferTest.TestCase ) :
 				"rgba",
 				{
 					"filter" : "gaussian",
-					"filterwidth" : imath.V2f( 3.5 ),
+					"filterwidth" : 3.5,
 				}
 			)
 		)
@@ -156,7 +156,7 @@ class RendererTest( GafferTest.TestCase ) :
 					data,
 					{
 						"filter" : "gaussian",
-						"filterwidth" : imath.V2f( 3.5 ),
+						"filterwidth" : 3.5,
 					}
 				)
 			)
@@ -1498,7 +1498,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		renderer.output(
 			"customLayerName",
-			IECoreScene.Output( "customLayerName.exr", "exr", "color shader:diffuse.direct", { "layerName" : "myLayerName" } )
+			IECoreScene.Output( "customLayerName.exr", "exr", "color shader:diffuse.direct", { "layername" : "myLayerName" } )
 		)
 
 		renderer.render()
@@ -1509,6 +1509,56 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( nsi["outputLayer:diffuse"]["layername"], "diffuse" )
 		self.assertEqual( nsi["outputLayer:directDiffuse"]["layername"], "diffuse_direct" )
 		self.assertEqual( nsi["outputLayer:customLayerName"]["layername"], "myLayerName" )
+
+	def testOutputLayerAttributes( self ) :
+
+		for data, expected in {
+			"rgba" : {
+				"variablename": "Ci",
+				"variablesource": "shader",
+				"layertype": "color",
+				"withalpha": 1,
+				"filter": "gaussian",
+				"filterwidth": 3.5,
+				"scalarformat": "half",
+				"colorprofile": "sRGB",
+				"layername": "Test",
+				"dithering": 1
+			},
+		}.items() :
+
+			r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				"3Delight",
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+				str( self.temporaryDirectory() / "test.nsia" )
+			)
+
+			r.output(
+				"test",
+				IECoreScene.Output(
+					"beauty.exr",
+					"exr",
+					data,
+					{
+						"filter": "gaussian",
+						"filterwidth": 3.5,
+						"scalarformat": "half",
+						"colorprofile": "sRGB",
+						"layername": "Test",
+						"dithering": 1
+					}
+				)
+			)
+
+			r.render()
+			del r
+
+			nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
+			self.assertIn( "outputLayer:test", nsi )
+			self.assertEqual( nsi["outputLayer:test"]["nodeType"], "outputlayer")
+			for k, v in expected.items() :
+				self.assertIn( k, nsi["outputLayer:test"] )
+				self.assertEqual( nsi["outputLayer:test"][k], v )
 
 	# Helper methods used to check that NSI files we write contain what we
 	# expect. The 3delight API only allows values to be set, not queried,
