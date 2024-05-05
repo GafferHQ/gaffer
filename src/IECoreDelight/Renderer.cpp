@@ -281,7 +281,7 @@ class DelightOutput : public IECore::RefCounted
 			driverParams.add( { "drivername", &typePtr, NSITypeString, 0, 1, 0 } );
 			driverParams.add( { "imagefilename", &namePtr, NSITypeString, 0, 1, 0 } );
 
-			m_driverHandle = DelightHandle( context, "outputDriver:" + name, ownership, "outputdriver", driverParams );
+			m_driverHandle = DelightHandle( context, "outputDriver:" + output->getName(), ownership, "outputdriver", driverParams );
 
 			// Layer
 
