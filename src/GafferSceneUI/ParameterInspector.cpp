@@ -155,10 +155,15 @@ Gaffer::ValuePlugPtr ParameterInspector::source( const GafferScene::SceneAlgo::H
 			return nullptr;
 		}
 
+		const std::string tweakName = (
+			m_parameter.shader.string() +
+			( m_parameter.shader.string().empty() ? "" : "." ) +
+			m_parameter.name.string()
+		);
+
 		for( const auto &tweak : TweakPlug::Range( *shaderTweaks->tweaksPlug() ) )
 		{
-			/// \todo Consider shader as well as name
-			if( tweak->namePlug()->getValue() == m_parameter.name.string() && tweak->enabledPlug()->getValue() )
+			if( tweak->namePlug()->getValue() == tweakName && tweak->enabledPlug()->getValue() )
 			{
 				return tweak;
 			}

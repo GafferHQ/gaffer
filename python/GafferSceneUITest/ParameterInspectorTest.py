@@ -61,10 +61,13 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 	@staticmethod
 	def __inspect( scene, path, parameter, editScope=None, attribute="light" ) :
 
+		if isinstance( parameter, str ) :
+			parameter = ( "", parameter )
+
 		editScopePlug = Gaffer.Plug()
 		editScopePlug.setInput( editScope["enabled"] if editScope is not None else None )
 		inspector = GafferSceneUI.Private.ParameterInspector(
-			scene, editScopePlug, attribute, ( "", parameter )
+			scene, editScopePlug, attribute, parameter
 		)
 		with Gaffer.Context() as context :
 			context["scene:path"] = IECore.InternedStringVectorData( path.split( "/" )[1:] )
@@ -847,6 +850,35 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 			sourceType = SourceType.EditScope,
 			editable = True,
 			edit = edit
+		)
+
+	def testNetworkTweak( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["add"] = GafferScene.Shader()
+		s["add"]["parameters"]["a"] = Gaffer.Color3fPlug()
+		s["add"]["out"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out )
+
+		s["light"] = GafferSceneTest.TestLight()
+		s["light"]["parameters"]["intensity"].setInput( s["add"]["out"] )
+
+		s["filter"] = GafferScene.PathFilter()
+		s["filter"]["paths"].setValue( IECore.StringVectorData( ["/light"] ) )
+
+		s["tweaks"] = GafferScene.ShaderTweaks()
+		s["tweaks"]["in"].setInput( s["light"]["out"] )
+
+		s["tweaks"]["filter"].setInput( s["filter"]["out"] )
+		addATweak = Gaffer.TweakPlug( "add.a", imath.Color3f( 0.0, 0.5, 1.0 ) )
+		s["tweaks"]["tweaks"].addChild( addATweak )
+
+		self.__assertExpectedResult(
+			self.__inspect( s["tweaks"]["out"], "/light", ( "add", "a" ) ),
+			source = addATweak,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = True,
+			edit = addATweak
 		)
 
 
