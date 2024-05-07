@@ -15,6 +15,7 @@ Fixes
 -----
 
 - Arnold : Fixed rendering of `ai:volume` shaders loaded from USD (#5830).
+- CodeWidget : Fixed errors handling highlights which spanned more than one line, such as triple-quoted strings in the PythonEditor.
 
 API
 ---
