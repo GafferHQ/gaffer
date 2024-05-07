@@ -1,6 +1,11 @@
 1.4.x.x (relative to 1.4.4.0)
 =======
 
+Improvements
+------------
+
+- CodeWidget : Added highlighting of braces and operators.
+
 Fixes
 -----
 
