@@ -16,6 +16,7 @@ API
 
 - TextWidget : Added `selectedText()` convenience method.
 - MultiLineTextWidget : Added `setSelection()` and `getSelection()` methods.
+- SetExpressionPlugValueWidget : Added new editor for set expressions, with syntax highlighting and auto-complete.
 
 1.4.4.0 (relative to 1.4.3.0)
 =======

@@ -47,6 +47,7 @@ from .PrimitiveInspector import PrimitiveInspector
 from .UVInspector import UVInspector
 from .FilterPlugValueWidget import FilterPlugValueWidget
 from .ScenePathPlugValueWidget import ScenePathPlugValueWidget
+from .SetExpressionPlugValueWidget import SetExpressionPlugValueWidget
 from .LightEditor import LightEditor
 from .SetEditor import SetEditor
 from .RenderPassEditor import RenderPassEditor
