@@ -417,18 +417,13 @@ void TweakPlug::applyReplaceTweak( const IECore::Data *sourceData, IECore::Data 
 {
 	if( auto stringData = IECore::runTimeCast<IECore::StringData>( tweakData ) )
 	{
-		/// \todo The `sourceData` null check is only necessary because of the deprecated `MissingMode::IgnoreOrReplace`.
-		/// Remove that mode and remove the checks.
-		boost::replace_all(
-			stringData->writable(), "{source}",
-			sourceData ? static_cast<const IECore::StringData *>( sourceData )->readable() : ""
-		);
+		boost::replace_all( stringData->writable(), "{source}", static_cast<const IECore::StringData *>( sourceData )->readable() );
 	}
 	else if( auto internedStringData = IECore::runTimeCast<IECore::InternedStringData>( tweakData ) )
 	{
 		internedStringData->writable() = boost::replace_all_copy(
-			internedStringData->readable().string(), "{source}",
-			sourceData ? static_cast<const IECore::InternedStringData *>( sourceData )->readable().string() : ""
+			internedStringData->readable().string(),
+			"{source}", static_cast<const IECore::InternedStringData *>( sourceData )->readable().string()
 		);
 	}
 }

@@ -202,6 +202,30 @@ class AttributeTweaksTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( tweaks["out"].attributes( "/plane" )["test:attribute"], IECore.IntData( 2 ) )
 
+	def testLinkedLightsSourceSubstitution( self ) :
+
+		plane = GafferScene.Plane()
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		standardAttributes = GafferScene.StandardAttributes()
+		standardAttributes["in"].setInput( plane["out"] )
+		standardAttributes["filter"].setInput( planeFilter["out"] )
+
+		self.assertNotIn( "linkedLights", standardAttributes["out"].attributes( "/plane" ) )
+
+		tweaks = GafferScene.AttributeTweaks()
+		tweaks["in"].setInput( standardAttributes["out"] )
+		tweaks["filter"].setInput( planeFilter["out"] )
+
+		testTweak = Gaffer.TweakPlug( "linkedLights", "({source}) - unwantedLights" )
+		tweaks["tweaks"].addChild( testTweak )
+		self.assertEqual( tweaks["out"].attributes( "/plane" )["linkedLights"], IECore.StringData( "(defaultLights) - unwantedLights" ) )
+
+		standardAttributes["attributes"]["linkedLights"]["enabled"].setValue( True )
+		standardAttributes["attributes"]["linkedLights"]["value"].setValue( "someLights" )
+		self.assertEqual( tweaks["out"].attributes( "/plane" )["linkedLights"], IECore.StringData( "(someLights) - unwantedLights" ) )
 
 if __name__ == "__main__" :
 	unittest.main()
