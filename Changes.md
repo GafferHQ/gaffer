@@ -4,6 +4,7 @@
 Improvements
 ------------
 
+- SetFilter, StandardAttributes, StandardOptions : Added syntax highlighting and auto-complete for set expressions.
 - CodeWidget : Added highlighting of braces and operators.
 
 Fixes
