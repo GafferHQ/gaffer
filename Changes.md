@@ -14,6 +14,7 @@ Fixes
 API
 ---
 
+- TextWidget : Added `selectedText()` convenience method.
 - MultiLineTextWidget : Added `setSelection()` and `getSelection()` methods.
 
 1.4.4.0 (relative to 1.4.3.0)
