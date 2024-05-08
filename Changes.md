@@ -23,6 +23,7 @@ Fixes
 - SceneWriter : Fixed import of `treatAsPoint` and `treatAsLine` parameters on UsdLux lights.
 - Linux : Fixed crashes at startup on platforms - including RHEL 9.4 - with a more recent `glibc` (#5856).
 - LightPositionTool : Fixed bug that allowed a non-light object to be moved by clicking or dragging the target or pivot.
+- OptionQuery : Fixed bug which allowed the `scene:path` context variable to leak into the context used to evaluate the globals.
 
 API
 ---
