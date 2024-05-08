@@ -191,6 +191,37 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 		return b
 
+	## Start and end are indexes into the text, and support the same
+	# indexing as a standard python string (negative indices index relative
+	# to the end etc).
+	def setSelection( self, start, end ) :
+
+		if start is None :
+			start = 0
+		elif start < 0 :
+			start += len( self.getText() )
+
+		if end is None :
+			end = len( self.getText() )
+		elif end < 0 :
+			end += len( self.getText() )
+
+		cursor = self._qtWidget().textCursor()
+		cursor.setPosition( start ) # Moves anchor too
+		cursor.setPosition( end, cursor.KeepAnchor )
+		self._qtWidget().setTextCursor( cursor )
+
+	## Returns a `( start, end )` tuple.
+	def getSelection( self ) :
+
+		cursor = self._qtWidget().textCursor()
+		if not cursor.hasSelection() :
+			return 0, 0
+
+		position = cursor.position()
+		anchor = cursor.anchor()
+		return ( min( anchor, position ), max( anchor, position ) )
+
 	def selectedText( self ) :
 
 		cursor = self._qtWidget().textCursor()

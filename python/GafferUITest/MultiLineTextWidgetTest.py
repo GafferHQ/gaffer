@@ -154,5 +154,23 @@ class MultiLineTextWidgetTest( GafferUITest.TestCase ) :
 		w = GafferUI.MultiLineTextWidget( role = w.Role.Code)
 		self.assertEqual( w.getRole(), w.Role.Code )
 
+	def testSelection(self ) :
+
+		w = GafferUI.MultiLineTextWidget()
+		self.assertEqual( w.getSelection(), ( 0, 0 ) )
+		self.assertEqual( w.selectedText(), "" )
+
+		w.setText( "abc\ndef\nghi" )
+		self.assertEqual( w.getSelection(), ( 0, 0 ) )
+		self.assertEqual( w.selectedText(), "" )
+
+		w.setSelection( 1, 5 )
+		self.assertEqual( w.getSelection(), ( 1, 5 ) )
+		self.assertEqual( w.selectedText(), "bc\nd" )
+
+		w.setSelection( -1, None )
+		self.assertEqual( w.getSelection(), ( 10, 11 ) )
+		self.assertEqual( w.selectedText(), "i" )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -11,6 +11,11 @@ Fixes
 
 - CodeWidget : Removed unwanted `\n` prefix in lines passed to `Completers`.
 
+API
+---
+
+- MultiLineTextWidget : Added `setSelection()` and `getSelection()` methods.
+
 1.4.4.0 (relative to 1.4.3.0)
 =======
 
