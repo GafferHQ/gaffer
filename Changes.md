@@ -14,6 +14,11 @@ Improvements
   - Added support for scalarformat, colorprofile, filterwidth and arbitrary custom NSI outputlayer and outputdriver attributes.
   - Updated the default output presets to include scalarformat, colorprofile, filter and filterwidth output parameters.
 
+Fixes
+-----
+
+- OptionQuery : Fixed bug which allowed the `scene:path` context variable to leak into the context used to evaluate the globals.
+
 API
 ---
 
