@@ -50,10 +50,14 @@ def appendShaders( menuDefinition, prefix="/Cycles" ) :
 	# Build a list of menu items we want to create.
 
 	menuItems = []
+	original = ["Hsv", "Rgb", "Xyz", "Bw", " To ", "Aov", "Uvmap", "Ies", "Bsdf", "Non Uniform"]
+	replacement = ["HSV", "RGB", "XYZ", "BW", " to ", "AOV", "UV Map", "IES", "BSDF", "Nonuniform"]
 
 	for shader in GafferCycles.shaders :
 		shaderName = str( shader )
 		displayName = " ".join( [ IECore.CamelCase.toSpaced( x ) for x in shaderName.split( "_" ) ] )
+		for x, y in zip( original, replacement ) :
+			displayName = displayName.replace( x, y )
 		category = GafferCycles.shaders[shader]["category"]
 		menuPath = "Shader"
 
@@ -72,7 +76,7 @@ def appendShaders( menuDefinition, prefix="/Cycles" ) :
 		nodeCreator = functools.partial( __lightCreator, lightName, GafferCycles.CyclesLight )
 		menuItems.append( MenuItem( "%s/%s" % ( menuPath, displayName ), nodeCreator ) )
 
-	menuItems.append( MenuItem( "%s/%s" % ( "Light", "MeshLight" ), GafferCycles.CyclesMeshLight ) )
+	menuItems.append( MenuItem( "%s/%s" % ( "Light", "Mesh Light" ), GafferCycles.CyclesMeshLight ) )
 
 	# Create the actual menu items.
 
