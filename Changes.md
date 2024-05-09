@@ -10,6 +10,11 @@ Improvements
 -----------
 
 - Arnold : If it exists, an `ai:volume` attribute is preferred over an `ai:surface` attribute when resolving shaders for volumes.
+- Cycles :
+  - Updated the UI of Cycles shaders and lights for ease of use and to match Blender conventions.
+  - Hide certain parameters based on UI selections.
+  - Renamed and reordered parameters and created sections to match Blender.
+  - Changed all the Cycles items in the Gaffer tab menu to title case.
 
 Fixes
 -----
