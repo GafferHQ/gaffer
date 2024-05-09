@@ -50,8 +50,8 @@ def appendShaders( menuDefinition, prefix="/Cycles" ) :
 	# Build a list of menu items we want to create.
 
 	menuItems = []
-	original = ["Hsv", "Rgb", "Xyz", "Bw", " To ", "Aov", "Uvmap", "Ies", "Bsdf", "Non Uniform"]
-	replacement = ["HSV", "RGB", "XYZ", "BW", " to ", "AOV", "UV Map", "IES", "BSDF", "Nonuniform"]
+	original = [ "Hsv", "Rgb", "Xyz", "Bw", " To ", "Aov", "Uvmap", "Ies", "Bsdf", "Non Uniform" ]
+	replacement = [ "HSV", "RGB", "XYZ", "BW", " to ", "AOV", "UV Map", "IES", "BSDF", "Nonuniform" ]
 
 	for shader in GafferCycles.shaders :
 		shaderName = str( shader )
