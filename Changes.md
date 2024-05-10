@@ -15,6 +15,7 @@ Improvements
   - Hide certain parameters based on UI selections.
   - Renamed and reordered parameters and created sections to match Blender.
   - Changed all the Cycles items in the Gaffer tab menu to title case.
+- PythonCommand : Added standard popup menu to `command` widget in NodeEditor.
 
 Fixes
 -----
@@ -23,6 +24,7 @@ Fixes
   - Fixed rendering of `ai:volume` shaders loaded from USD (#5830).
   - Renamed Arnold/Globals/Imager menu option to Arnold/Globals/Imagers so that the actual ArnoldImager node menu option wasn't overwritten.
 - CodeWidget : Fixed errors handling highlights which spanned more than one line, such as triple-quoted strings in the PythonEditor.
+- NodeEditor : Fixed broken layouts caused by computation errors in plugs used by section summaries.
 
 API
 ---
