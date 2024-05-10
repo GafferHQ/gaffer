@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Image Engine Design Inc nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,16 +34,55 @@
 #
 ##########################################################################
 
-from .CyclesLightTest import CyclesLightTest
-from .InteractiveCyclesRenderTest import InteractiveCyclesRenderTest
-from .ModuleTest import ModuleTest
-from .CyclesLightTest import CyclesLightTest
-from .CyclesShaderTest import CyclesShaderTest
-from .CyclesRenderTest import CyclesRenderTest
-from .RenderPassAdaptorTest import RenderPassAdaptorTest
+import unittest
 
-from .IECoreCyclesPreviewTest import *
+import imath
+
+import GafferSceneTest
+import GafferCycles
+
+class RenderPassAdaptorTest( GafferSceneTest.RenderPassAdaptorTest ) :
+
+	renderer = "Cycles"
+
+	## \todo Default camera is facing down +ve Z but should be facing
+	# down -ve Z.
+	reverseCamera = True
+
+	# Cycles outputs black shadows on a white background.
+	shadowColor = imath.Color4f( 0 )
+	litColor = imath.Color4f( 1, 1, 1, 0 )
+
+	@unittest.skip( "Light linking not supported" )
+	def testReflectionCasterLightLinks( self ) :
+
+		pass
+
+	def _createDistantLight( self ) :
+
+		light = GafferCycles.CyclesLight()
+		light.loadShader( "distant_light" )
+		return light, light["parameters"]["color"]
+
+	def _createStandardShader( self ) :
+
+		shader = GafferCycles.CyclesShader()
+		shader.loadShader( "principled_bsdf" )
+		return shader, shader["parameters"]["base_color"]
+
+	def _createFlatShader( self ) :
+
+		shader = GafferCycles.CyclesShader()
+		shader.loadShader( "emission" )
+		shader["parameters"]["strength"].setValue( 1 )
+		return shader, shader["parameters"]["color"]
+
+	def _createOptions( self ) :
+
+		options = GafferCycles.CyclesOptions()
+		options["options"]["samples"]["enabled"].setValue( True )
+		options["options"]["samples"]["value"].setValue( 16 )
+		return options
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Image Engine Design Inc nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,16 +34,47 @@
 #
 ##########################################################################
 
-from .CyclesLightTest import CyclesLightTest
-from .InteractiveCyclesRenderTest import InteractiveCyclesRenderTest
-from .ModuleTest import ModuleTest
-from .CyclesLightTest import CyclesLightTest
-from .CyclesShaderTest import CyclesShaderTest
-from .CyclesRenderTest import CyclesRenderTest
-from .RenderPassAdaptorTest import RenderPassAdaptorTest
+import unittest
 
-from .IECoreCyclesPreviewTest import *
+import IECore
+
+import GafferTest
+import GafferSceneTest
+import GafferOSL
+import GafferUSD
+
+class RenderPassAdaptorTest( GafferSceneTest.RenderPassAdaptorTest ) :
+
+	renderer = "3Delight"
+
+	def setUp( self ) :
+
+		GafferTest.TestCase.setUp( self )
+
+		self.ignoreMessage( IECore.Msg.Level.Warning, "DelightRenderer", "Attribute \"linkedLights\" not supported" )
+
+	@unittest.skip( "Light linking not supported" )
+	def testReflectionCasterLightLinks( self ) :
+
+		pass
+
+	def _createDistantLight( self ) :
+
+		light = GafferUSD.USDLight()
+		light.loadShader( "DistantLight" )
+		return light, light["parameters"]["color"]
+
+	def _createStandardShader( self ) :
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( "dlPrincipled" )
+		return shader, shader["parameters"]["i_color"]
+
+	def _createFlatShader( self ) :
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( "Surface/Constant" )
+		return shader, shader["parameters"]["Cs"]
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
