@@ -91,6 +91,17 @@ class CodeWidget( GafferUI.MultiLineTextWidget ) :
 
 		return self.__commentPrefix
 
+	def _emitEditingFinished( self ) :
+
+		# MultiLineTextWidget considers editing to have finished as soon as
+		# we lose focus. That doesn't make sense when we lost focus due to
+		# popping up the completion menu, because we did that to assist the user
+		# in editing. So we only emit the signal if the menu isn't visible.
+		# We get back focus as soon as the menu closes, so will get another
+		# opportunity to emit the signal before the user navigates elsewhere.
+		if self.__completionMenu is None or not self.__completionMenu.visible() :
+			GafferUI.MultiLineTextWidget._emitEditingFinished( self )
+
 	def __keyPress( self, widget, event ) :
 
 		if event.key == "Tab" :

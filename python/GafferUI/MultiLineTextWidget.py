@@ -84,6 +84,8 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 		self._qtWidget().setTabStopWidth( 20 ) # pixels
 
+		self.__editingFinishedSignal = GafferUI.WidgetSignal()
+
 	def getText( self ) :
 
 		return self._qtWidget().toPlainText()
@@ -285,12 +287,6 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 	## A signal emitted when the widget loses focus.
 	def editingFinishedSignal( self ) :
 
-		try :
-			return self.__editingFinishedSignal
-		except :
-			self.__editingFinishedSignal = GafferUI.WidgetSignal()
-			self._qtWidget().installEventFilter( _focusOutEventFilter )
-
 		return self.__editingFinishedSignal
 
 	## A signal emitted when enter (or Ctrl-Return) is pressed.
@@ -329,6 +325,10 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 			self.__dropTextSignal = Gaffer.Signals.Signal2()
 
 		return self.__dropTextSignal
+
+	def _emitEditingFinished( self ) :
+
+		self.editingFinishedSignal()( self )
 
 	def __textChanged( self ) :
 
@@ -470,20 +470,10 @@ class _PlainTextEdit( QtWidgets.QPlainTextEdit ) :
 
 		return QtWidgets.QPlainTextEdit.event( self, event )
 
-class _FocusOutEventFilter( QtCore.QObject ) :
+	def focusOutEvent( self, event ) :
 
-	def __init__( self ) :
+		widget = GafferUI.Widget._owner( self )
+		if widget is not None :
+			widget._emitEditingFinished()
 
-		QtCore.QObject.__init__( self )
-
-	def eventFilter( self, qObject, qEvent ) :
-
-		if qEvent.type()==QtCore.QEvent.FocusOut :
-			widget = GafferUI.Widget._owner( qObject )
-			if widget is not None :
-				widget.editingFinishedSignal()( widget )
-
-		return False
-
-# this single instance is used by all MultiLineTextWidgets
-_focusOutEventFilter = _FocusOutEventFilter()
+		QtWidgets.QPlainTextEdit.focusOutEvent( self, event )

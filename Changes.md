@@ -10,7 +10,9 @@ Improvements
 Fixes
 -----
 
-- CodeWidget : Removed unwanted `\n` prefix in lines passed to `Completers`.
+- CodeWidget :
+  - Removed unwanted `\n` prefix in lines passed to `Completers`.
+  - Prevented spurious emission of `editingFinishedSignal()` when showing the completions menu.
 
 API
 ---
