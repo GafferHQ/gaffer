@@ -107,7 +107,7 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"].addOutput(
 			"beauty",
 			IECoreScene.Output(
-				str( self.temporaryDirectory() / "shadow.exr" ),
+				( self.temporaryDirectory() / "shadow.exr" ).as_posix(),
 				"exr",
 				"rgba",
 				{
@@ -209,7 +209,7 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"].addOutput(
 			"beauty",
 			IECoreScene.Output(
-				str( self.temporaryDirectory() / "reflection.exr" ),
+				( self.temporaryDirectory() / "reflection.exr" ).as_posix(),
 				"exr",
 				"rgba",
 				{
@@ -306,7 +306,7 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"].addOutput(
 			"beauty",
 			IECoreScene.Output(
-				str( self.temporaryDirectory() / "reflectionAlpha.exr" ),
+				( self.temporaryDirectory() / "reflectionAlpha.exr" ).as_posix(),
 				"exr",
 				"rgba",
 				{
@@ -416,7 +416,7 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"].addOutput(
 			"beauty",
 			IECoreScene.Output(
-				str( self.temporaryDirectory() / "lightLinking.exr" ),
+				( self.temporaryDirectory() / "lightLinking.exr" ).as_posix(),
 				"exr",
 				"rgba",
 				{
