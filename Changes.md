@@ -7,7 +7,7 @@ Features
 - 3Delight : Added "3Delight Cloud" renderer, for rendering using the 3Delight cloud.
 
 Improvements
------------
+------------
 
 - Arnold : If it exists, an `ai:volume` attribute is preferred over an `ai:surface` attribute when resolving shaders for volumes.
 - Cycles :
@@ -25,6 +25,7 @@ Fixes
   - Renamed Arnold/Globals/Imager menu option to Arnold/Globals/Imagers so that the actual ArnoldImager node menu option wasn't overwritten.
 - CodeWidget : Fixed errors handling highlights which spanned more than one line, such as triple-quoted strings in the PythonEditor.
 - NodeEditor : Fixed broken layouts caused by computation errors in plugs used by section summaries.
+- ColorChooserPlugValueWidget : Fixed bug that allowed the editing of locked plugs and nodes.
 
 API
 ---
@@ -406,10 +407,18 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.16.x (relative to 1.3.16.2)
+1.3.16.x (relative to 1.3.16.3)
 ========
 
 
+
+1.3.16.3 (relative to 1.3.16.2)
+========
+
+Fixes
+-----
+
+- ColorChooserPlugValueWidget : Fixed bug that allowed the editing of locked plugs and nodes.
 
 1.3.16.2 (relative to 1.3.16.1)
 ========
