@@ -55,6 +55,7 @@ from .ArnoldLightFilterTest import ArnoldLightFilterTest
 from .ArnoldColorManagerTest import ArnoldColorManagerTest
 from .ArnoldImagerTest import ArnoldImagerTest
 from .USDLightTest import USDLightTest
+from .RenderPassTypeAdaptorTest import RenderPassTypeAdaptorTest
 
 if __name__ == "__main__":
 	import unittest

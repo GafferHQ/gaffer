@@ -40,6 +40,7 @@ from .ModuleTest import ModuleTest
 from .CyclesLightTest import CyclesLightTest
 from .CyclesShaderTest import CyclesShaderTest
 from .CyclesRenderTest import CyclesRenderTest
+from .RenderPassTypeAdaptorTest import RenderPassTypeAdaptorTest
 
 from .IECoreCyclesPreviewTest import *
 
