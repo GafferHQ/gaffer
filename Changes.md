@@ -15,6 +15,7 @@ Improvements
   - Hide certain parameters based on UI selections.
   - Renamed and reordered parameters and created sections to match Blender.
   - Changed all the Cycles items in the Gaffer tab menu to title case.
+- PythonCommand : Added standard popup menu to `command` widget in NodeEditor.
 
 Fixes
 -----
