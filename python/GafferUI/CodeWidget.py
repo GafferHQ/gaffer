@@ -314,7 +314,7 @@ class CodeWidget( GafferUI.MultiLineTextWidget ) :
 
 class Highlighter( object ) :
 
-	Type = enum.Enum(
+	Type = enum.IntEnum(
 		"Type",
 		[
 			"SingleQuotedString", "DoubleQuotedString", "Number",
