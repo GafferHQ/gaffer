@@ -144,7 +144,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			# to get into the buffers.
 			timeout = time.time() + 1
 			while time.time() < timeout :
-				self.waitForIdle()
+				self.waitForIdle( 10 )
 
 	def testObjectVisibility( self ) :
 
