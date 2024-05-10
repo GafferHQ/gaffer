@@ -213,6 +213,18 @@ class Shader::NetworkBuilder
 			return m_network;
 		}
 
+		const ValuePlug *parameterSource( const IECoreScene::ShaderNetwork::Parameter &parameter )
+		{
+			for( auto &[shader, handleAndHash] : m_shaders )
+			{
+				if( handleAndHash.handle == parameter.shader )
+				{
+					return shader->parametersPlug()->descendant<ValuePlug>( parameter.name );
+				}
+			}
+			return nullptr;
+		}
+
 	private :
 
 		// Returns the effective shader parameter that should be used taking into account
@@ -1083,4 +1095,15 @@ void Shader::nodeMetadataChanged( IECore::InternedString key )
 		IECore::ConstColor3fDataPtr d = Metadata::value<const IECore::Color3fData>( this, g_nodeColorMetadataName );
 		nodeColorPlug()->setValue( d ? d->readable() : Color3f( 0.0f ) );
 	}
+}
+
+const ValuePlug *Shader::parameterSource( const Plug *output, const IECoreScene::ShaderNetwork::Parameter &parameter ) const
+{
+	NetworkBuilder networkBuilder( output );
+	if( networkBuilder.network()->size() )
+	{
+		return networkBuilder.parameterSource( parameter );
+	}
+
+	return nullptr;
 }

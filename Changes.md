@@ -18,6 +18,11 @@ Fixes
 - Linux : Fixed crashes at startup on platforms - including RHEL 9.4 - with a more recent `glibc` (#5856).
 - LightPositionTool : Fixed bug that allowed a non-light object to be moved by clicking or dragging the target or pivot.
 
+API
+---
+
+- ShaderPlug : Added `parameterSource()` method returning the `ValuePlug` responsible for generating a parameter in a shader network.
+
 1.4.3.0 (relative to 1.4.2.0)
 =======
 
