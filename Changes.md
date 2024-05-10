@@ -1,7 +1,10 @@
 1.3.16.x (relative to 1.3.16.2)
 ========
 
+Fixes
+-----
 
+- ColorChooserPlugValueWidget : Fixed bug that allowed the editing of locked plugs and nodes.
 
 1.3.16.2 (relative to 1.3.16.1)
 ========

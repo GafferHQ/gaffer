@@ -70,7 +70,7 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__colorChooser.setColor( color )
 			self.__colorChooser.setErrored( exception is not None )
 
-	def _updateFromEnabled( self ) :
+	def _updateFromEditable( self ) :
 
 		self.__colorChooser.setEnabled( self.__allComponentsEditable() )
 
