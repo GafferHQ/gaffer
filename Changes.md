@@ -1,7 +1,10 @@
 1.4.x.x (relative to 1.4.3.0)
 =======
 
+Improvements
+------------
 
+- 3Delight : Added support for multipart EXR renders by using the same file name parameter on multiple outputs. 
 
 1.4.3.0 (relative to 1.4.2.0)
 =======
