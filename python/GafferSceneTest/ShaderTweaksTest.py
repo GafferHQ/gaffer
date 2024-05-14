@@ -361,7 +361,23 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		with self.assertRaisesRegex( RuntimeError, "Cannot apply tweak with mode Replace to \"badParameter\" : This parameter does not exist" ) :
 			t["out"].attributes( "/light" )
 
+		inputShader = GafferSceneTest.TestShader()
+		badTweak["value"].setInput( inputShader["out"]["r"] )
+
+		with self.assertRaisesRegex( RuntimeError, "Cannot apply tweak \"badParameter\" because shader \"light\" does not have parameter \"badParameter\"" ) :
+			t["out"].attributes( "/light" )
+
+		badTweak["value"].setInput( None )
+
 		t["ignoreMissing"].setValue( True )
+		self.assertEqual( t["out"].attributes( "/light" ), t["in"].attributes( "/light" ) )
+
+		badTweak["name"].setValue( "badShader.p" )
+		self.assertEqual( t["out"].attributes( "/light" ), t["in"].attributes( "/light" ) )
+
+		badTweak["value"].setInput( inputShader["out"]["r"] )
+		badTweak["name"].setValue( "badParameter" )
+		self.assertEqual( t["out"].attributes( "/light" ), t["in"].attributes( "/light" ) )
 		self.assertEqual( t["out"].attributes( "/light" ), t["in"].attributes( "/light" ) )
 
 		badTweak["name"].setValue( "badShader.p" )

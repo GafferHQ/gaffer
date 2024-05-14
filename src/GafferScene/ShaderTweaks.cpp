@@ -299,6 +299,21 @@ bool ShaderTweaks::applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork, Tweak
 		const auto shaderOutput = ::shaderOutput( tweakPlug.get() );
 		if( shaderOutput.first )
 		{
+			if( !shader->parametersData()->member<Data>( parameter.name ) )
+			{
+				if( missingMode != TweakPlug::MissingMode::Ignore )
+				{
+					throw IECore::Exception( fmt::format(
+						"Cannot apply tweak \"{}\" because shader \"{}\" does not have parameter \"{}\"",
+						name, parameter.shader.string(), parameter.name.string()
+					) );
+				}
+				else
+				{
+					continue;
+				}
+			}
+
 			// New connection
 			ConstCompoundObjectPtr shaderAttributes = shaderOutput.first->attributes( shaderOutput.second );
 			const ShaderNetwork *inputNetwork = nullptr;
