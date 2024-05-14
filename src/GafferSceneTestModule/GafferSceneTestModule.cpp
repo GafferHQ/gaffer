@@ -67,7 +67,9 @@ BOOST_PYTHON_MODULE( _GafferSceneTest )
 
 	GafferBindings::DependencyNodeClass<CompoundObjectSource>();
 	GafferBindings::NodeClass<TestShader>();
-	GafferBindings::NodeClass<TestLight>();
+	GafferBindings::NodeClass<TestLight>()
+		.def( "loadShader", &TestLight::loadShader )
+	;
 	GafferBindings::NodeClass<TestLightFilter>();
 
 	def( "traverseScene", &traverseSceneWrapper );
