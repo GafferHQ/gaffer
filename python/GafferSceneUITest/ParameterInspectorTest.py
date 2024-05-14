@@ -881,6 +881,97 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 			edit = addATweak
 		)
 
+	def testShaderNetwork( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["add"] = GafferScene.Shader()
+		s["add"]["parameters"]["a"] = Gaffer.Color3fPlug()
+		s["add"]["out"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out )
+
+		s["add1"] = GafferScene.Shader()
+		s["add1"]["parameters"]["a"] = Gaffer.Color3fPlug()
+		s["add1"]["parameters"]["a"].setInput( s["add"]["out"] )
+		s["add1"]["parameters"]["b"] = Gaffer.Color3fPlug()
+		s["add1"]["out"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out )
+
+		s["multiOut"] = GafferScene.Shader()
+		s["multiOut"]["parameters"]["a"] = Gaffer.Color3fPlug()
+		s["multiOut"]["parameters"]["b"] = Gaffer.Color3fPlug()
+		s["multiOut"]["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
+		s["multiOut"]["out"]["a"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out )
+		s["multiOut"]["out"]["b"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out )
+
+		s["box"] = Gaffer.Box()
+
+		s["box"]["add"] = GafferScene.Shader()
+		s["box"]["add"]["parameters"]["a"] = Gaffer.Color3fPlug()
+		s["box"]["add"]["out"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out )
+
+		s["box"]["outColor"] = Gaffer.BoxOut()
+		s["box"]["outColor"].setup( s["box"]["add"]["out"] )
+		s["box"]["outColor"]["in"].setInput( s["box"]["add"]["out"] )
+
+		s["srf"] = GafferScene.Shader()
+		s["srf"]["type"].setValue( "test:surface" )
+
+		s["srf"]["parameters"]["a"] = Gaffer.Color3fPlug()
+		s["srf"]["parameters"]["a"].setInput( s["add1"]["out"] )
+
+		s["srf"]["parameters"]["b"] = Gaffer.Color3fPlug()
+		s["srf"]["parameters"]["b"].setInput( s["multiOut"]["out"]["a"] )
+		s["srf"]["parameters"]["c"] = Gaffer.Color3fPlug()
+		s["srf"]["parameters"]["c"].setInput( s["multiOut"]["out"]["b"] )
+
+		s["srf"]["parameters"]["d"] = Gaffer.Color3fPlug()
+		s["srf"]["parameters"]["d"].setInput( s["box"]["out"] )
+
+		s["srf"]["parameters"]["e"] = Gaffer.Color3fPlug()
+
+		s["srf"]["out"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out )
+
+		s["cube"] = GafferScene.Cube()
+
+		s["assign"] = GafferScene.ShaderAssignment()
+		s["assign"]["in"].setInput( s["cube"]["out"] )
+		s["assign"]["shader"].setInput( s["srf"]["out"] )
+
+		self.__assertExpectedResult(
+			self.__inspect( s["assign"]["out"], "/cube", ( "add", "a" ), attribute = "test:surface" ),
+			source = s["add"]["parameters"]["a"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = True,
+			edit = s["add"]["parameters"]["a"],
+			editWarning = "Edits to add may affect other locations in the scene."
+		)
+
+		self.__assertExpectedResult(
+			self.__inspect( s["assign"]["out"], "/cube", ( "add1", "b" ), attribute = "test:surface" ),
+			source = s["add1"]["parameters"]["b"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = True,
+			edit = s["add1"]["parameters"]["b"],
+			editWarning = "Edits to add1 may affect other locations in the scene."
+		)
+
+		self.__assertExpectedResult(
+			self.__inspect( s["assign"]["out"], "/cube", ( "multiOut", "a" ), attribute = "test:surface" ),
+			source = s["multiOut"]["parameters"]["a"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = True,
+			edit = s["multiOut"]["parameters"]["a"],
+			editWarning = "Edits to multiOut may affect other locations in the scene."
+		)
+
+		self.__assertExpectedResult(
+			self.__inspect( s["assign"]["out"], "/cube", ( "add2", "a" ), attribute = "test:surface" ),
+			source = s["box"]["add"]["parameters"]["a"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = True,
+			edit = s["box"]["add"]["parameters"]["a"],
+			editWarning = "Edits to box.add may affect other locations in the scene."
+		)
+
 
 if __name__ == "__main__":
 	unittest.main()

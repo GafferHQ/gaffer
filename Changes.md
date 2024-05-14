@@ -22,6 +22,7 @@ API
 ---
 
 - ShaderPlug : Added `parameterSource()` method returning the `ValuePlug` responsible for generating a parameter in a shader network.
+- ParameterInspector : Added the ability to inspect parameters on any shader in a light or shader's shader network.
 
 1.4.3.0 (relative to 1.4.2.0)
 =======
