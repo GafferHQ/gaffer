@@ -4,7 +4,10 @@
 Improvements
 ------------
 
-- 3Delight : Added support for multipart EXR renders by using the same file name parameter on multiple outputs. 
+- 3Delight :
+  - Added support for multipart EXR renders by using the same file name parameter on multiple outputs.
+  - Added support for scalarformat, colorprofile, filterwidth and arbitrary custom NSI outputlayer and outputdriver attributes.
+  - Updated the default output presets to include scalarformat, colorprofile, filter and filterwidth output parameters.
 
 1.4.3.0 (relative to 1.4.2.0)
 =======

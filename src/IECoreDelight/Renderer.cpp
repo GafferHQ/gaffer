@@ -269,10 +269,7 @@ class DelightOutput : public IECore::RefCounted
 			ParameterList driverParams;
 			for( const auto &[parameterName, parameterValue] : output->parameters() )
 			{
-				// We can't pass `filter` to the driver, because although it's not
-				// documented as an attribute (and it _is_ documented that additional
-				// arbitrary attributes are allowed), 3Delight complains.
-				if( parameterName != "filter" )
+				if( parameterName != "filter" && parameterName != "filterwidth" && parameterName != "scalarformat" && parameterName != "colorprofile" && parameterName != "layername" && parameterName != "layerName" && parameterName != "withalpha" )
 				{
 					driverParams.add( parameterName.c_str(), parameterValue.get() );
 				}
@@ -384,7 +381,8 @@ class DelightOutput : public IECore::RefCounted
 			layerParams.add( "layername", layerName );
 			layerParams.add( { "withalpha", &withAlpha, NSITypeInteger, 0, 1, 0 } );
 
-			string colorProfile = "linear";
+			scalarFormat = parameter<string>( output->parameters(), "scalarformat", scalarFormat );
+			string colorProfile = parameter<string>( output->parameters(), "colorprofile", "linear" );
 			if( scalarFormat.empty() )
 			{
 				scalarFormat = this->scalarFormat( output );
@@ -399,6 +397,20 @@ class DelightOutput : public IECore::RefCounted
 				filter = "zmin";
 			}
 			layerParams.add( "filter", filter );
+
+			const double filterWidth = parameter<float>( output->parameters(), "filterwidth", 3.0 );
+			if( filterWidth != 3.0 )
+			{
+				layerParams.add( { "filterwidth", &filterWidth, NSITypeDouble, 0, 1, 0 } );
+			}
+
+			for( const auto &[parameterName, parameterValue] : output->parameters() )
+			{
+				if( parameterName != "filter" && parameterName != "filterwidth" && parameterName != "scalarformat" && parameterName != "colorprofile" && parameterName != "layerName" )
+				{
+					layerParams.add( parameterName.c_str(), parameterValue.get() );
+				}
+			}
 
 			m_layerHandle = DelightHandle( context, "outputLayer:" + name, ownership, "outputlayer", layerParams );
 
@@ -428,7 +440,7 @@ class DelightOutput : public IECore::RefCounted
 			{
 				return "uint8";
 			}
-			else if( quantize == vector<int>( { 0, 65536, 0, 65536 } ) )
+			else if( quantize == vector<int>( { 0, 65535, 0, 65535 } ) )
 			{
 				return "uint16";
 			}
