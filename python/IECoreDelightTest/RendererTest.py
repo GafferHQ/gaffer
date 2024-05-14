@@ -46,6 +46,8 @@ import math
 
 import imath
 
+import OpenImageIO
+
 import IECore
 import IECoreScene
 import IECoreDelight
@@ -100,6 +102,42 @@ class RendererTest( GafferTest.TestCase ) :
 		del r
 
 		self.assertTrue( ( self.temporaryDirectory() / "beauty.exr" ).exists() )
+
+	def testOutputMultipart( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+		)
+
+		r.output(
+			"layer_a",
+			IECoreScene.Output(
+				str( self.temporaryDirectory() / "multipart.exr" ),
+				"exr",
+				"rgba"
+			)
+		)
+
+		r.output(
+			"layer_b",
+			IECoreScene.Output(
+				str( self.temporaryDirectory() / "multipart.exr" ),
+				"exr",
+				"color shader:diffuse"
+			)
+		)
+
+		r.render()
+		del r
+
+		self.assertTrue( ( self.temporaryDirectory() / "multipart.exr" ).exists() )
+
+		i = OpenImageIO.ImageInput.open( os.path.join( self.temporaryDirectory(), "multipart.exr" ) )
+		subimages = i.spec().getattribute("oiio:subimages")
+		del i
+
+		self.assertEqual( subimages, 2 )
 
 	def testAOVs( self ) :
 

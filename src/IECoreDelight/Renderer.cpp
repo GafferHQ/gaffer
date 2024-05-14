@@ -281,7 +281,10 @@ class DelightOutput : public IECore::RefCounted
 			driverParams.add( { "drivername", &typePtr, NSITypeString, 0, 1, 0 } );
 			driverParams.add( { "imagefilename", &namePtr, NSITypeString, 0, 1, 0 } );
 
-			m_driverHandle = DelightHandle( context, "outputDriver:" + name, ownership, "outputdriver", driverParams );
+			// Since NSICreate will return an existing node if the handle already exists, we can
+			// render multipart EXRs by constructing the NSI outputdriver node handle from the
+			// output file name parameter and then use the same file name on multiple outputs.
+			m_driverHandle = DelightHandle( context, "outputDriver:" + output->getName(), ownership, "outputdriver", driverParams );
 
 			// Layer
 
