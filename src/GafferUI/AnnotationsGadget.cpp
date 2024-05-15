@@ -116,7 +116,8 @@ string wrap( const std::string &text, size_t maxLineLength )
 
 	return result;
 }
-float g_offset = 0.5;
+
+const float g_offset = 0.5;
 
 } // namespace
 
