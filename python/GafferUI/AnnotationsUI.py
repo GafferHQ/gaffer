@@ -91,6 +91,9 @@ class __AnnotationsDialogue( GafferUI.Dialogue ) :
 			self.__textWidget.textChangedSignal().connect(
 				Gaffer.WeakMethod( self.__updateButtonStatus ), scoped = False
 			)
+			self.__textWidget.activatedSignal().connect(
+				Gaffer.WeakMethod( self.__textActivated ), scoped = False
+			)
 
 			if not template :
 				self.__colorChooser = GafferUI.ColorChooser(
@@ -147,3 +150,8 @@ class __AnnotationsDialogue( GafferUI.Dialogue ) :
 			)
 		else :
 			return Gaffer.MetadataAlgo.Annotation( self.__textWidget.getText() )
+
+	def __textActivated( self, *unused ) :
+
+		if self.__annotateButton.getEnabled() :
+			self.__annotateButton.clickedSignal()( self.__annotateButton )
