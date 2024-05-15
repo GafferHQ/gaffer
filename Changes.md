@@ -9,6 +9,13 @@ Improvements
   - Added support for scalarformat, colorprofile, filterwidth and arbitrary custom NSI outputlayer and outputdriver attributes.
   - Updated the default output presets to include scalarformat, colorprofile, filter and filterwidth output parameters.
 
+Fixes
+-----
+
+- SceneReader, SceneWriter : Fixed handling of Arnold-specific parameters on UsdLux lights.
+- SceneWriter : Fixed import of `treatAsPoint` and `treatAsLine` parameters on UsdLux lights.
+- Linux : Fixed crashes at startup on platforms - including RHEL 9.4 - with a more recent `glibc` (#5856).
+
 1.4.3.0 (relative to 1.4.2.0)
 =======
 
