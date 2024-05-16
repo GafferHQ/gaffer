@@ -226,6 +226,12 @@ def __selectAffected( context, nodes, setExpression ) :
 
 	GafferSceneUI.ContextAlgo.setSelectedPaths( context, result )
 
+## \todo The `acceptsSetExpression` menu should probably be implemented as part
+# of SetExpressionPlugValueWidget. And it would also make sense to have custom
+# widgets (or a mode in SetExpressionPlugValueWidget) with auto-complete and
+# highlighting for the `acceptsSetName[s]` cases as well. So perhaps all this
+# menu code should be implemented in the widgets, with no need for separate
+# metadata.
 def __popupMenu( menuDefinition, plugValueWidget ) :
 
 	# See if plug wants a set, a list of sets, or a set expression.
