@@ -65,7 +65,7 @@ class CodeWidget( GafferUI.MultiLineTextWidget ) :
 		self.__commentPrefix = None
 
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
-		self.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ), scoped = False )
+		self.__textChangedConnection = self.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ), scoped = False )
 
 	def setCompleter( self, completer ) :
 
@@ -77,7 +77,11 @@ class CodeWidget( GafferUI.MultiLineTextWidget ) :
 
 	def setHighlighter( self, highlighter ) :
 
-		self.__highlighter.setHighlighter( highlighter )
+		# Changing the highlighting counts as changing the text as far as Qt is
+		# concerned, so `textChangedSignal()` will be emitted. Block the connection
+		# so that we don't pop up the completion menu inappropriately.
+		with Gaffer.Signals.BlockedConnection( self.__textChangedConnection ) :
+			self.__highlighter.setHighlighter( highlighter )
 
 	def getHighlighter( self ) :
 
