@@ -111,17 +111,9 @@ class TweakPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( d, IECore.CompoundData() )
 
 		d = IECore.CompoundData()
-		self.assertTrue( p.applyTweaks( d, missingMode = Gaffer.TweakPlug.MissingMode.IgnoreOrReplace ) )
-		self.assertEqual( d, IECore.CompoundData( { "test" : 0.5 } ) )
-
-		d = IECore.CompoundData()
 		p["t"]["mode"].setValue( Gaffer.TweakPlug.Mode.Add )
 		with self.assertRaisesRegex( RuntimeError, "Cannot apply tweak with mode Add to \"test\" : This parameter does not exist" ) :
 			p.applyTweaks( d, missingMode = Gaffer.TweakPlug.MissingMode.Error )
-		self.assertEqual( d, IECore.CompoundData() )
-
-		with self.assertRaisesRegex( RuntimeError, "Cannot apply tweak with mode Add to \"test\" : This parameter does not exist" ) :
-			p.applyTweaks( d, missingMode = Gaffer.TweakPlug.MissingMode.IgnoreOrReplace )
 		self.assertEqual( d, IECore.CompoundData() )
 
 		self.assertFalse( p.applyTweaks( d, missingMode = Gaffer.TweakPlug.MissingMode.Ignore ) )
@@ -492,9 +484,6 @@ class TweakPlugTest( GafferTest.TestCase ) :
 
 		self.assertFalse( plug.applyTweak( data, Gaffer.TweakPlug.MissingMode.Ignore ) )
 		self.assertEqual( data, IECore.CompoundData() )
-
-		self.assertTrue( plug.applyTweak( data, Gaffer.TweakPlug.MissingMode.IgnoreOrReplace ) )
-		self.assertEqual( data["v"], IECore.StringData( "suffix" ) )
 
 if __name__ == "__main__":
 	unittest.main()

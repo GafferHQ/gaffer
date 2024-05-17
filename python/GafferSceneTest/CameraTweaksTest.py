@@ -178,5 +178,27 @@ class CameraTweaksTest( GafferSceneTest.SceneTestCase ) :
 					else:
 						self.assertAlmostEqual( modified, ref, places = 4 )
 
+	def testIgnoreMissing( self ) :
+
+		camera = GafferScene.Camera()
+		cameraFilter = GafferScene.PathFilter()
+		cameraFilter["paths"].setValue( IECore.StringVectorData( [ "/camera" ] ) )
+
+		tweaks = GafferScene.CameraTweaks()
+		tweaks["in"].setInput( camera["out"] )
+		tweaks["filter"].setInput( cameraFilter["out"] )
+
+		tweaks["tweaks"].addChild( Gaffer.TweakPlug( "test", 10 ) )
+		self.assertEqual( tweaks["tweaks"][0]["mode"].getValue(), Gaffer.TweakPlug.Mode.Replace )
+		with self.assertRaisesRegex( Gaffer.ProcessException, ".*This parameter does not exist" ) :
+			tweaks["out"].object( "/camera" ).parameters()
+
+		tweaks["ignoreMissing"].setValue( True )
+		self.assertNotIn( "test", tweaks["out"].object( "/camera" ).parameters() )
+
+		tweaks["tweaks"][0]["mode"].setValue( Gaffer.TweakPlug.Mode.Create )
+		self.assertIn( "test", tweaks["out"].object( "/camera" ).parameters() )
+		self.assertEqual( tweaks["out"].object( "/camera" ).parameters()["test"], IECore.IntData( 10 ) )
+
 if __name__ == "__main__":
 	unittest.main()

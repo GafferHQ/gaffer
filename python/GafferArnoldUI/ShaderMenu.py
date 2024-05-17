@@ -99,7 +99,7 @@ def appendShaders( menuDefinition, prefix="/Arnold" ) :
 					# using metadata.
 					if __aiMetadataGetStr( nodeEntry, "", "subtype" ) != "imager" :
 						continue
-				menuPath = "Globals/Imager"
+				menuPath = "Globals/Imagers"
 				nodeCreator = functools.partial( __shaderCreator, shaderName, GafferArnold.ArnoldShader, nodeName )
 				displayName = displayName.replace( "Imager ", "" )
 

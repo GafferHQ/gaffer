@@ -2189,6 +2189,76 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertScenesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
 		self.assertSceneHashesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
 
+	def testRenderAdaptorScope( self ) :
+
+		def adaptor() :
+
+			result = GafferScene.CustomOptions()
+			result["options"].addChild( Gaffer.NameValuePlug( "adapted", True ) )
+			return result
+
+		for clientPattern, rendererPattern, client, renderer, expectAdapted in (
+			( "*", "*", None, None, True ),
+			( "*", "*", "Render", "Arnold", True ),
+			( "*", "Arnold", "Render", "Arnold", True ),
+			( "*", "Arnold", "Render", "Cycles", False ),
+			( "Render", "*", "Render", "Arnold", True ),
+			( "Render", "*", "InteractiveRender", "Arnold", False ),
+			( "Render InteractiveRender", "*", "Render", "Arnold", True ),
+			( "Render InteractiveRender", "*", "InteractiveRender", "Arnold", True ),
+			( "Render InteractiveRender", "*", "SceneView", "Arnold", False ),
+			( "Render", "Arnold", "SceneView", "Arnold", False ),
+			( "Render", "Arnold", "Render", "Arnold", True ),
+		) :
+			with self.subTest( clientPattern = clientPattern, rendererPattern = rendererPattern, client = client, renderer = renderer ) :
+
+				GafferScene.SceneAlgo.registerRenderAdaptor( "Test", adaptor, clientPattern, rendererPattern )
+				self.addCleanup( GafferScene.SceneAlgo.deregisterRenderAdaptor, "Test" )
+
+				adaptors = GafferScene.SceneAlgo.createRenderAdaptors()
+				if client is not None :
+					adaptors["client"].setValue( client )
+				if renderer is not None :
+					adaptors["renderer"].setValue( renderer )
+
+				if expectAdapted :
+					self.assertIn( "option:adapted", adaptors["out"].globals() )
+				else :
+					self.assertNotIn( "option:adapted", adaptors["out"].globals() )
+
+	def testRenderAdaptorScopePlugs( self ) :
+
+		def adaptor() :
+
+			result = GafferScene.CustomOptions()
+			result["client"] = Gaffer.StringPlug()
+			result["renderer"] = Gaffer.StringPlug()
+
+			result["options"].addChild( Gaffer.NameValuePlug( "theClient", "" ) )
+			result["options"].addChild( Gaffer.NameValuePlug( "theRenderer", "" ) )
+
+			result["options"][0]["value"].setInput( result["client"] )
+			result["options"][1]["value"].setInput( result["renderer"] )
+
+			return result
+
+		for client, renderer in [
+			( "*", "*" ),
+			( "SceneView", "Arnold" ),
+		] :
+
+			with self.subTest( client = client, renderer = renderer ) :
+
+				GafferScene.SceneAlgo.registerRenderAdaptor( "Test", adaptor, client, renderer )
+				self.addCleanup( GafferScene.SceneAlgo.deregisterRenderAdaptor, "Test" )
+
+				adaptors = GafferScene.SceneAlgo.createRenderAdaptors()
+				adaptors["client"].setValue( "SceneView" )
+				adaptors["renderer"].setValue( "Arnold" )
+
+				self.assertEqual( adaptors["out"].globals()["option:theClient"].value, "SceneView" )
+				self.assertEqual( adaptors["out"].globals()["option:theRenderer"].value, "Arnold" )
+
 	def testNullAdaptor( self ) :
 
 		def a() :

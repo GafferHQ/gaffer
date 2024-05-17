@@ -231,7 +231,7 @@ class FramingConstraintTest( GafferSceneTest.SceneTestCase ) :
 		cameraTweaks = GafferScene.CameraTweaks()
 		cameraTweaks["in"].setInput( group["out"] )
 		cameraTweaks["filter"].setInput( filter["out"] )
-		cameraTweaks["tweaks"]["resolution"] = Gaffer.TweakPlug( "resolution", Gaffer.V2iPlug( "value" ) )
+		cameraTweaks["tweaks"]["resolution"] = Gaffer.TweakPlug( "resolution", Gaffer.V2iPlug( "value" ), Gaffer.TweakPlug.Mode.Create )
 		cameraTweaks["tweaks"]["apertureOffset"] = Gaffer.TweakPlug( "apertureOffset", Gaffer.V2fPlug( "value" ) )
 
 		framing = GafferScene.FramingConstraint()

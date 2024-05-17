@@ -1,7 +1,18 @@
 1.x.x.x (relative to 1.4.x.x)
 =======
 
+Improvements
+------------
 
+- CameraTweaks : Added `ignoreMissing` plug to align behaviour with the other Tweaks nodes.
+- AttributeTweaks : The `{source}` substitution for `linkedLights` now expands to `defaultLights` if the attribute doesn't exist yet. This makes tweaks such as `({source}) - unwantedLights` reliable even if no light links have been authored yet.
+
+Breaking Changes
+----------------
+
+- CameraTweaks : `Replace` mode now errors if the input parameter does not exist. Use `Create` mode or the new `ignoreMissing` plug instead.
+- TweakPlug : Remove deprecated `MissingMode::IgnoreOrReplace`.
+- AttributeTweaks : `Replace` mode no longer errors if the `linkedLights` attribute doesn't exist.
 
 1.4.x.x (relative to 1.4.2.0)
 =======
@@ -15,11 +26,29 @@ Improvements
 -----------
 
 - Arnold : If it exists, an `ai:volume` attribute is preferred over an `ai:surface` attribute when resolving shaders for volumes.
+- Cycles :
+  - Updated the UI of Cycles shaders and lights for ease of use and to match Blender conventions.
+  - Hide certain parameters based on UI selections.
+  - Renamed and reordered parameters and created sections to match Blender.
+  - Changed all the Cycles items in the Gaffer tab menu to title case.
 
 Fixes
 -----
 
-- Arnold : Fixed rendering of `ai:volume` shaders loaded from USD (#5830).
+- Arnold :
+  - Fixed rendering of `ai:volume` shaders loaded from USD (#5830).
+  - Renamed Arnold/Globals/Imager menu option to Arnold/Globals/Imagers so that the actual ArnoldImager node menu option wasn't overwritten.
+- CodeWidget : Fixed errors handling highlights which spanned more than one line, such as triple-quoted strings in the PythonEditor.
+
+API
+---
+
+- SceneAlgo : Added mechanism for scoping render adaptors to specific clients and/or renderers.
+
+Build
+-----
+
+- Fixed issue where `gaffer` wrapper may not exist when calling `usdGenSchema` from a clean build.
 
 1.4.2.0 (relative to 1.4.1.0)
 =======

@@ -54,6 +54,9 @@ class GAFFERSCENE_API CameraTweaks : public ObjectProcessor
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::CameraTweaks, CameraTweaksTypeId, ObjectProcessor );
 
+		Gaffer::BoolPlug *ignoreMissingPlug();
+		const Gaffer::BoolPlug *ignoreMissingPlug() const;
+
 		Gaffer::TweaksPlug *tweaksPlug();
 		const Gaffer::TweaksPlug *tweaksPlug() const;
 

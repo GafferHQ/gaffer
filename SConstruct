@@ -764,7 +764,7 @@ elif commandEnv["PLATFORM"] == "win32" :
 else:
 	commandEnv["ENV"]["LD_LIBRARY_PATH"] = commandEnv.subst( ":".join( [ "$BUILD_DIR/lib" ] + split( commandEnv["LOCATE_DEPENDENCY_LIBPATH"] ) ) )
 
-commandEnv["ENV"]["PYTHONPATH"] = commandEnv.subst( os.path.pathsep.join( split( commandEnv["LOCATE_DEPENDENCY_PYTHONPATH"] ) ) )
+commandEnv["ENV"]["PYTHONPATH"] = commandEnv.subst( os.path.pathsep.join( [ "$BUILD_DIR/python" ] + split( commandEnv["LOCATE_DEPENDENCY_PYTHONPATH"] ) ) )
 
 # SIP on MacOS prevents DYLD_LIBRARY_PATH being passed down so we make sure
 # we also pass through to gaffer the other base vars it uses to populate paths
@@ -1825,12 +1825,10 @@ for libraryName, libraryDef in libraries.items() :
 
 		subprocess.check_call(
 			[
-				shutil.which( "gaffer.cmd" if sys.platform == "win32" else "gaffer", path = env["ENV"]["PATH"] ),
-				"env",
-				"usdGenSchema.cmd" if sys.platform == "win32" else "usdGenSchema",
+				shutil.which( "usdGenSchema.cmd" if sys.platform == "win32" else "usdGenSchema", path = commandEnv["ENV"]["PATH"] ),
 				str( source[0] ), targetDir
 			],
-			env = env["ENV"]
+			env = commandEnv["ENV"]
 		)
 
 	schemaSource = os.path.join( "usdSchemas", libraryName + ".usda" )

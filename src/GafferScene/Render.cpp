@@ -119,6 +119,8 @@ Render::Render( const IECore::InternedString &rendererType, const std::string &n
 	SceneProcessorPtr adaptors = GafferScene::SceneAlgo::createRenderAdaptors();
 	setChild( "__adaptors", adaptors );
 	adaptors->inPlug()->setInput( inPlug() );
+	adaptors->getChild<StringPlug>( "client" )->setValue( "Render" );
+	adaptors->getChild<StringPlug>( "renderer" )->setInput( resolvedRendererPlug() );
 	adaptedInPlug()->setInput( adaptors->outPlug() );
 
 	outPlug()->setInput( inPlug() );

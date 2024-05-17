@@ -125,10 +125,7 @@ bool TweakPlug::applyTweak(
 		{
 			return false;
 		}
-		else if( !( mode == Gaffer::TweakPlug::Replace && missingMode == Gaffer::TweakPlug::MissingMode::IgnoreOrReplace) )
-		{
-			throw IECore::Exception( fmt::format( "Cannot apply tweak with mode {} to \"{}\" : This parameter does not exist", modeToString( mode ), name ) );
-		}
+		throw IECore::Exception( fmt::format( "Cannot apply tweak with mode {} to \"{}\" : This parameter does not exist", modeToString( mode ), name ) );
 	}
 
 	if(

@@ -102,12 +102,7 @@ class GAFFER_API TweakPlug : public Gaffer::ValuePlug
 		enum class MissingMode
 		{
 			Ignore,
-			Error,
-			/// Legacy mode used by CameraTweaks. Same as
-			/// Ignore mode except when `Mode == Replace`, in
-			/// which case a new parameter is created.
-			/// \deprecated Do not use in new code.
-			IgnoreOrReplace,
+			Error
 		};
 
 		/// \deprecated. Use `TweaksPlug::applyTweaks()` instead.
