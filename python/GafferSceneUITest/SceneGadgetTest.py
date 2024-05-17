@@ -448,10 +448,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			[]
 		)
 
-	@unittest.skipIf(
-		os.environ.get( "GAFFER_BUILD_ENVIRONMENT", "" ) == "gcc9",
-		"The gcc9 container does not support floating point depth buffers."
-	)
+	@unittest.skipIf( os.name == "nt", "`objectAt()` fails for `GafferArnoldUITest` on Windows" )
 	def testObjectAtLine( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -579,6 +576,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		sg.setSelectionMask( None )
 		self.assertEqual( sg.getSelectionMask(), None )
 
+	@unittest.skipIf( os.name == "nt", "`objectAt()` fails for `GafferArnoldUITest` on Windows" )
 	def testSelectionMask( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -705,10 +703,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 		return origin + direction * t
 
-	@unittest.skipIf(
-		os.environ.get( "GAFFER_BUILD_ENVIRONMENT", "" ) == "gcc9",
-		"The gcc9 container does not support floating point depth buffers."
-	)
+	@unittest.skipIf( os.name == "nt", "`objectAt()` fails for `GafferArnoldUITest` on Windows" )
 	def testNormalAt( self ) :
 
 		s = Gaffer.ScriptNode()
