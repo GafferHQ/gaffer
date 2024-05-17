@@ -188,7 +188,14 @@ class DelightHandle
 
 		~DelightHandle()
 		{
-			reset();
+			if( boost::starts_with( m_name, "capsule_instance:" ) )
+			{
+				resetRecursive();
+			}
+			else
+			{
+				reset();
+			}
 		}
 
 		DelightHandle &operator=( DelightHandle &&h )
@@ -220,6 +227,17 @@ class DelightHandle
 			if( m_ownership == Owned && m_context != NSI_BAD_CONTEXT )
 			{
 				NSIDelete( m_context, m_name.c_str(), 0, nullptr );
+			}
+			release();
+		}
+
+		void resetRecursive()
+		{
+			const int one = 1;
+			NSIParam_t param = { "recursive", &one, NSITypeInteger, 0, 1, 0 };
+			if( m_ownership == Owned && m_context != NSI_BAD_CONTEXT )
+			{
+				NSIDelete( m_context, m_name.c_str(), 1, &param );
 			}
 			release();
 		}
@@ -876,6 +894,8 @@ class AttributesCache : public IECore::RefCounted
 
 IE_CORE_DECLAREPTR( AttributesCache )
 
+AttributesCachePtr globalAttributesCachePtr;
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -913,7 +933,7 @@ class InstanceCache : public IECore::RefCounted
 				{
 					if( convertProcedural( procedural, m_context, m_ownership, name.c_str() ) )
 					{
-						a->second = make_shared<DelightHandle>( m_context, name, m_ownership );
+						a->second = make_shared<DelightHandle>( m_context, "capsule_" + name, m_ownership );
 					}
 					else
 					{
@@ -957,7 +977,7 @@ class InstanceCache : public IECore::RefCounted
 				{
 					if( convertProcedural( procedural, m_context, m_ownership, name.c_str() ) )
 					{
-						a->second = make_shared<DelightHandle>( m_context, name, m_ownership );
+						a->second = make_shared<DelightHandle>( m_context, "capsule_" + name, m_ownership );
 					}
 					else
 					{
@@ -1008,6 +1028,8 @@ class InstanceCache : public IECore::RefCounted
 };
 
 IE_CORE_DECLAREPTR( InstanceCache )
+
+InstanceCachePtr globalInstanceCachePtr;
 
 } // namespace
 
@@ -1277,15 +1299,25 @@ class DelightProceduralRenderer final : public IECoreScenePreview::Renderer
 		{
 			vector<NSIParam_t> params;
 
-			m_ownership = DelightHandle::Unowned;
-			m_instanceCache = new InstanceCache( m_context, m_ownership );
-			m_attributesCache = new AttributesCache( m_context, m_ownership );
+			if ( m_ownership == DelightHandle::Owned )
+			{
+				m_instanceCache = new InstanceCache( m_context, DelightHandle::Unowned );
+				m_attributesCache = new AttributesCache( m_context, DelightHandle::Unowned );
+			}
+			else
+			{
+				m_instanceCache = globalInstanceCachePtr;
+				m_attributesCache = globalAttributesCachePtr;
+			}
 		}
 
 		~DelightProceduralRenderer() override
 		{
-			m_attributesCache.reset();
-			m_instanceCache.reset();
+			if ( m_ownership == DelightHandle::Owned )
+			{
+				m_attributesCache.reset();
+				m_instanceCache.reset();
+			}
 		}
 
 		IECore::InternedString name() const override
@@ -1328,7 +1360,7 @@ class DelightProceduralRenderer final : public IECoreScenePreview::Renderer
 				instance = m_instanceCache->get( object );
 			}
 
-			ObjectInterfacePtr result = new DelightLight( m_context, name, instance, m_ownership, m_root );
+			ObjectInterfacePtr result = new DelightLight( m_context, name, instance, DelightHandle::Unowned, m_root );
 			result->attributes( attributes );
 
 			return result;
@@ -1352,7 +1384,7 @@ class DelightProceduralRenderer final : public IECoreScenePreview::Renderer
 				return nullptr;
 			}
 
-			ObjectInterfacePtr result = new DelightObject( m_context, name, instance, m_ownership, m_root );
+			ObjectInterfacePtr result = new DelightObject( m_context, name, instance, DelightHandle::Unowned, m_root );
 			result->attributes( attributes );
 			return result;
 		}
@@ -1366,7 +1398,7 @@ class DelightProceduralRenderer final : public IECoreScenePreview::Renderer
 				return nullptr;
 			}
 
-			ObjectInterfacePtr result = new DelightObject( m_context, name, instance, m_ownership, m_root );
+			ObjectInterfacePtr result = new DelightObject( m_context, name, instance, DelightHandle::Unowned, m_root );
 			result->attributes( attributes );
 			return result;
 		}
@@ -1417,9 +1449,12 @@ IE_CORE_DECLAREPTR( DelightProceduralRenderer )
 
 bool convertProcedural( IECoreScenePreview::ConstProceduralPtr procedural, NSIContext_t context, DelightHandle::Ownership ownership, const char *handle )
 {
-	NSICreate( context, handle, "transform", 0, nullptr );
+	std::string caphandle = handle;
+	caphandle = "capsule_" + caphandle;
 
-	DelightProceduralRendererPtr renderer = new DelightProceduralRenderer( context, ownership, handle );
+	NSICreate( context, caphandle.c_str(), "transform", 0, nullptr );
+
+	DelightProceduralRendererPtr renderer = new DelightProceduralRenderer( context, ownership, caphandle.c_str() );
 
 	tbb::this_task_arena::isolate(
 		// Isolate in case procedural spawns TBB tasks, because
@@ -1551,7 +1586,9 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 			m_context = NSIBegin( params.size(), params.data() );
 			m_instanceCache = new InstanceCache( m_context, ownership() );
+			globalInstanceCachePtr = m_instanceCache;
 			m_attributesCache = new AttributesCache( m_context, ownership() );
+			globalAttributesCachePtr = m_attributesCache;
 
 			NSICreate( m_context, g_screenHandle, "screen", 0, nullptr );
 		}
