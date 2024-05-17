@@ -410,7 +410,6 @@ class _PlainTextEdit( QtWidgets.QPlainTextEdit ) :
 	def __init__( self, parent = None ) :
 		QtWidgets.QPlainTextEdit.__init__( self, parent )
 		self.__fixedLineHeight = None
-		self.__widgetFullyBuilt = False
 
 	def setFixedLineHeight( self, fixedLineHeight ) :
 
