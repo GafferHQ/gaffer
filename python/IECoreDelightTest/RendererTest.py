@@ -443,7 +443,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.__assertInNSI( '"width" "v float" 1 4', nsi )
 		self.__assertNotInNSI( '"N"', nsi )
 
-	def testProcedural( self ) :
+	def testExternalProcedural( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
@@ -479,6 +479,37 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( procedural["filename"], str( self.temporaryDirectory() / "testProc.nsi" ) )
 		self.assertEqual( procedural["type"], "apistream" )
 		self.assertEqual( procedural["customParamFloat"], 1.0 )
+
+	def testRenderProcedural( self ) :
+
+		class SphereProcedural( GafferScene.Private.IECoreScenePreview.Procedural ) :
+
+			def render( self, renderer ) :
+
+				for i in range( 0, 5 ) :
+					o = renderer.object(
+						"/sphere{0}".format( i ),
+						IECoreScene.SpherePrimitive(),
+						renderer.attributes( IECore.CompoundObject() ),
+					)
+					o.transform( imath.M44f().translate( imath.V3f( i, 0, 0 ) ) )
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsia" ),
+		)
+
+		r.object( "/sphere", IECoreScene.SpherePrimitive(), r.attributes( IECore.CompoundObject() ) )
+		r.object( "/procedural", SphereProcedural(), r.attributes( IECore.CompoundObject() ) )
+
+		r.render()
+
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
+		particles = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "particles" }
+		self.assertEqual( len( particles ), 1 )
+		transforms = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "transform" }
+		self.assertEqual( len( transforms ), 8 )
 
 	def testEnvironment( self ) :
 

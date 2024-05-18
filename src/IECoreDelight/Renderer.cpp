@@ -1360,7 +1360,7 @@ class DelightProceduralRenderer final : public IECoreScenePreview::Renderer
 				instance = m_instanceCache->get( object );
 			}
 
-			ObjectInterfacePtr result = new DelightLight( m_context, name, instance, DelightHandle::Unowned, m_root );
+			ObjectInterfacePtr result = new DelightLight( m_context, "/" + m_root + name, instance, DelightHandle::Unowned, m_root );
 			result->attributes( attributes );
 
 			return result;
@@ -1384,7 +1384,7 @@ class DelightProceduralRenderer final : public IECoreScenePreview::Renderer
 				return nullptr;
 			}
 
-			ObjectInterfacePtr result = new DelightObject( m_context, name, instance, DelightHandle::Unowned, m_root );
+			ObjectInterfacePtr result = new DelightObject( m_context, "/" + m_root + name, instance, DelightHandle::Unowned, m_root );
 			result->attributes( attributes );
 			return result;
 		}
@@ -1398,7 +1398,7 @@ class DelightProceduralRenderer final : public IECoreScenePreview::Renderer
 				return nullptr;
 			}
 
-			ObjectInterfacePtr result = new DelightObject( m_context, name, instance, DelightHandle::Unowned, m_root );
+			ObjectInterfacePtr result = new DelightObject( m_context, "/" + m_root + name, instance, DelightHandle::Unowned, m_root );
 			result->attributes( attributes );
 			return result;
 		}
