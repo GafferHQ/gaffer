@@ -36,6 +36,8 @@
 
 import re
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferScene
@@ -205,10 +207,17 @@ class _Highlighter( GafferUI.CodeWidget.Highlighter ) :
 					highlightType = GafferUI.CodeWidget.Highlighter.Type.SingleQuotedString if self.__sourceSubstitutionAvailable else GafferUI.CodeWidget.Highlighter.Type.ReservedWord
 				elif (
 					len( token ) and not token.isspace() and
-					token[0] != "/" and token in self.__availableSets
+					token[0] != "/"
 				) :
-					# It's a set, and it exists
-					highlightType = GafferUI.CodeWidget.Highlighter.Type.Keyword
+					# Set name. Highlight if it matches an available set, taking into
+					# account wildcards.
+					if token in self.__availableSets or any( IECore.StringAlgo.match( s, token ) for s in self.__availableSets ) :
+						highlightType = GafferUI.CodeWidget.Highlighter.Type.Keyword
+				elif len( token ) and token[0] == "/" :
+					# Path. These aren't allowed to contain wildcards, so highlight
+					# as a reserved word if it does.
+					if IECore.StringAlgo.hasWildcards( token ) :
+						highlightType = GafferUI.CodeWidget.Highlighter.Type.ReservedWord
 
 			if highlightType is not None :
 				result.append(
