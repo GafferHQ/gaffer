@@ -218,9 +218,6 @@ with IECore.IgnoredExceptions( ImportError ) :
 		( "Pref", "Reference Position", "attribute", "point" ),
 		( "shadow_mask", "Shadow Mask", "shader", "color" ),
 		( "st", "UV", "attribute", "point" ),
-		( "id.geometry", "Geometry Cryptomatte", "builtin", "float" ),
-		( "id.scenepath", "Scene Path Cryptomatte", "builtin", "float" ),
-		( "id.surfaceshader", "Surface Shader Cryptomatte", "builtin", "float" ),
 		( "relighting_multiplier", "Relighting Multiplier", "shader", "color" ),
 		( "relighting_reference", "Relighting Reference", "shader", "color" ),
 		( "motionvector", "Motion Vector", "builtin", "point" ),
@@ -265,6 +262,49 @@ with IECore.IgnoredExceptions( ImportError ) :
 					"colorprofile" : "linear",
 					"filter" : "blackman-harris",
 					"filterwidth" : 3.0,
+				}
+			)
+		)
+
+	for name, displayName, source, dataType, sortKey, filter in [
+		( "id.geometry", "Geometry Cryptomatte Header", "builtin", "color", 1, "cryptomatteheader" ),
+		( "id.geometry", "Geometry Cryptomatte Layer0", "builtin", "quad", 2, "cryptomattelayer0" ),
+		( "id.geometry", "Geometry Cryptomatte Layer2", "builtin", "quad", 3, "cryptomattelayer2" ),
+		( "id.surfaceshader", "Surface Shader Cryptomatte Header", "builtin", "color", 1, "cryptomatteheader" ),
+		( "id.surfaceshader", "Surface Shader Cryptomatte Layer0", "builtin", "quad", 2, "cryptomattelayer0" ),
+		( "id.surfaceshader", "Surface Shader Cryptomatte Layer2", "builtin", "quad", 3, "cryptomattelayer2" ),
+		( "id.scenepath", "Scene Path Cryptomatte Header", "builtin", "color", 1, "cryptomatteheader" ),
+		( "id.scenepath", "Scene Path Cryptomatte Layer0", "builtin", "quad", 2, "cryptomattelayer0" ),
+		( "id.scenepath", "Scene Path Cryptomatte Layer2", "builtin", "quad", 3, "cryptomattelayer2" ),
+	] :
+		GafferScene.Outputs.registerOutput(
+			"Interactive/3Delight/Cryptomatte/{}".format( displayName ),
+			IECoreScene.Output(
+				name,
+				"ieDisplay",
+				"{} {}:{}".format( dataType, source, name ),
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : "${image:catalogue:port}",
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"scalarformat" : "float",
+					"sortkey": sortKey,
+					"filter" : filter,
+				}
+			)
+		)
+
+		GafferScene.Outputs.registerOutput(
+			"Batch/3Delight/Cryptomatte/{}".format( displayName ),
+			IECoreScene.Output(
+				"${project:rootDirectory}/renders/${script:name}/${renderPass}/%s/%s.####.exr" % ( name, name ),
+				"exr",
+				"{} {}:{}".format( dataType, source, name ),
+				{
+					"scalarformat" : "float",
+					"sortkey": sortKey,
+					"filter" : filter,
 				}
 			)
 		)
