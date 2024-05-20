@@ -9,6 +9,7 @@ Improvements
   - Added support for scalarformat, colorprofile, filterwidth and arbitrary custom NSI outputlayer and outputdriver attributes.
   - Updated the default output presets to include scalarformat, colorprofile, filter and filterwidth output parameters.
 - LightPositionTool : Changed the pointer to `notEditable` when using keyboard combinations that do not apply to the current tool mode.
+- LightEditor : Added the ability to register columns for editing any parameter in a light's shader network. The parameter to edit is registered in the form `shaderName.parameterName` when calling `GafferSceneUI.LightEditor.registerParameter`.
 
 Fixes
 -----
@@ -17,6 +18,12 @@ Fixes
 - SceneWriter : Fixed import of `treatAsPoint` and `treatAsLine` parameters on UsdLux lights.
 - Linux : Fixed crashes at startup on platforms - including RHEL 9.4 - with a more recent `glibc` (#5856).
 - LightPositionTool : Fixed bug that allowed a non-light object to be moved by clicking or dragging the target or pivot.
+
+API
+---
+
+- ShaderPlug : Added `parameterSource()` method returning the `ValuePlug` responsible for generating a parameter in a shader network.
+- ParameterInspector : Added the ability to inspect parameters on any shader in a light or shader's shader network.
 
 1.4.3.0 (relative to 1.4.2.0)
 =======

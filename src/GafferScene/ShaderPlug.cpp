@@ -248,6 +248,27 @@ IECore::ConstCompoundObjectPtr ShaderPlug::attributes() const
 	return new CompoundObject;
 }
 
+const Gaffer::ValuePlug *ShaderPlug::parameterSource( const IECoreScene::ShaderNetwork::Parameter &parameter) const
+{
+	if( const Gaffer::Plug *p = shaderOutPlug() )
+	{
+		if( auto s = runTimeCast<const GafferScene::Shader>( p->node() ) )
+		{
+			if( parameter.shader.string().empty() )
+			{
+				return s->parametersPlug()->descendant<ValuePlug>( parameter.name );
+			}
+			return s->parameterSource( p, parameter );
+		}
+	}
+	return nullptr;
+}
+
+Gaffer::ValuePlug *ShaderPlug::parameterSource( const IECoreScene::ShaderNetwork::Parameter &parameter)
+{
+	return const_cast<ValuePlug *>( const_cast<const ShaderPlug *>( this )->parameterSource( parameter ) );
+}
+
 const Gaffer::Plug *ShaderPlug::shaderOutPlug() const
 {
 	const Plug *source = this->source<Gaffer::Plug>();

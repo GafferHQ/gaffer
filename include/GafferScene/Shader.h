@@ -47,6 +47,7 @@
 #include "Gaffer/TypedObjectPlug.h"
 
 #include "IECoreScene/Shader.h"
+#include "IECoreScene/ShaderNetwork.h"
 
 #include "IECore/CompoundObject.h"
 #include "IECore/ObjectVector.h"
@@ -181,6 +182,11 @@ class GAFFERSCENE_API Shader : public Gaffer::ComputeNode
 		/// Output plug where the shader network will be generated.
 		Gaffer::CompoundObjectPlug *outAttributesPlug();
 		const Gaffer::CompoundObjectPlug *outAttributesPlug() const;
+
+		const Gaffer::ValuePlug *parameterSource(
+			const Gaffer::Plug *output,
+			const IECoreScene::ShaderNetwork::Parameter &parameter
+		) const;
 
 		static const IECore::InternedString g_outputParameterContextName;
 
