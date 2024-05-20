@@ -69,6 +69,12 @@ _styleColors = {
 	#
 	# The 'alt' suffixed colors are for use in UI elements such as table views
 	# that require subtle variation of the base background color.
+	#
+	## \todo This is getting a bit out of hand. We now have almost 30 variables
+	# for shades of grey alone, and they are not being used consistently. It
+	# would be great if we could reduce their number and name them according to
+	# purpose rather than appearance - e.g. `valueEditorBackgroundReadOnly` rather than
+	# `tintLighterSubtle`.
 
 	"backgroundDarkest" : (0, 0, 0),
 
@@ -88,6 +94,8 @@ _styleColors = {
 	"backgroundRaised" : (72, 72, 72),
 	"backgroundRaisedAlt" : (66, 66, 66),
 	"backgroundRaisedHighlight" : (82, 82, 82),
+
+	"valueEditorBackgroundReadOnly" : (79, 79, 79),
 
 	"backgroundLightLowlight" : (82, 82, 82),
 	"backgroundLight" : (96, 96, 96),
@@ -119,6 +127,12 @@ _styleColors = {
 	# variation. This should be in preference to using $background* colors
 	# unless there are compositing issues or other overriding reasons as the
 	# control will not be portable across different backgrounds.
+	#
+	## \todo There are enough compositing issues that this isn't a viable
+	# approach, and key widgets (QLineEdit, QPlainTextEdit for two) have never
+	# used the tint colours. It's also not clear that it would be a good thing
+	# if they did - we use subtle tonal variations to communicate editability
+	# and we don't want that to be confused with the nesting level.
 
 	"tintLighterSubtle" :   ( 255, 255, 255, 10 ),
 	"tintLighter" :         ( 255, 255, 255, 20 ),
@@ -377,7 +391,7 @@ _styleSheet = string.Template(
 
 	QLineEdit[readOnly="true"], QPlainTextEdit[readOnly="true"] {
 		padding: 0px;
-		background-color: $tintLighterSubtle;
+		background-color: $valueEditorBackgroundReadOnly;
 		border-color: transparent;
 	}
 

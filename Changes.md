@@ -14,6 +14,7 @@ Fixes
   - Removed unwanted `\n` prefix in lines passed to `Completers`.
   - Prevented spurious emission of `editingFinishedSignal()` when showing the completions menu.
   - Prevented the completion menu from popping up inappropriately when the highlighter was changed.
+- MultiLineTextWidget : Fixed rendering of disabled widgets, which now show faded text.
 
 API
 ---

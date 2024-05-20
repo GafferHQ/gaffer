@@ -476,3 +476,20 @@ class _PlainTextEdit( QtWidgets.QPlainTextEdit ) :
 			widget._emitEditingFinished()
 
 		QtWidgets.QPlainTextEdit.focusOutEvent( self, event )
+
+	def paintEvent( self, event ) :
+
+		QtWidgets.QPlainTextEdit.paintEvent( self, event )
+
+		if self.isEnabled() :
+			return
+
+		# Disabled. We want the text to use faded colours but we can't
+		# do that with a stylesheet because we may have embedded HTML
+		# colours and/or a highlighter. So instead we draw a semi-transparent
+		# overlay the same colour as our background.
+
+		painter = QtGui.QPainter( self.viewport() )
+		color = self.palette().base().color()
+		color.setAlpha( 128 )
+		painter.fillRect( 0, 0, self.width(), self.height(), color )
