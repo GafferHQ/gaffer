@@ -411,6 +411,14 @@ _styleSheet = string.Template(
 		background-color: $backgroundDark;
 	}
 
+	QPlainTextEdit[gafferRole="Code"][readOnly="true"] {
+		background-color: $valueEditorBackgroundReadOnly;
+	}
+
+	#gafferPythonEditorOutputWidget {
+		background-color: $backgroundDarker;
+	}
+
 	QLineEdit:focus, QPlainTextEdit[readOnly="false"]:focus, QLineEdit[gafferHighlighted="true"] {
 		border: 1px solid $brightColor;
 		padding: 0px;
