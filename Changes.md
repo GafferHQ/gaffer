@@ -8,6 +8,7 @@ Improvements
   - Added support for multipart EXR renders by using the same file name parameter on multiple outputs.
   - Added support for scalarformat, colorprofile, filterwidth and arbitrary custom NSI outputlayer and outputdriver attributes.
   - Updated the default output presets to include scalarformat, colorprofile, filter and filterwidth output parameters.
+  - Added full multilayer cryptomatte presets to the outputs presets list.
 - LightPositionTool : Changed the pointer to `notEditable` when using keyboard combinations that do not apply to the current tool mode.
 - LightEditor : Added the ability to register columns for editing any parameter in a light's shader network. The parameter to edit is registered in the form `shaderName.parameterName` when calling `GafferSceneUI.LightEditor.registerParameter`.
 
