@@ -166,6 +166,13 @@ class RenderPassTypeAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				self.assertIn( expected, typeAdaptor["out"].globals() )
 				self.assertNotIn( notExpected, typeAdaptor["out"].globals() )
 
+		GafferScene.RenderPassTypeAdaptor.registerAutoTypeFunction( None )
+
+		renderPassTypeOption["options"][0]["value"].setValue( renderPassType )
+		with Gaffer.Context() as context :
+			context["renderPass"] = "test_reflectionAlpha"
+			self.assertRaisesRegex( RuntimeError, "RenderPassTypeAdaptor : \"auto\" type requires a registered auto type function", typeAdaptor["out"].globals )
+
 	def testDeleteOutputsProcessor( self ) :
 
 		for type in ( "shadow", "reflection", "reflectionAlpha" ) :

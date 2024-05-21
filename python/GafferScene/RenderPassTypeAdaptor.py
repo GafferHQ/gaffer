@@ -139,8 +139,11 @@ class RenderPassTypeAdaptor( GafferScene.SceneProcessor ) :
 	@classmethod
 	def resolvedType( cls, type, name ) :
 
-		if type == "auto" and callable( cls.__autoTypeFunction ) :
-			return cls.__autoTypeFunction( name )
+		if type == "auto" :
+			if callable( cls.__autoTypeFunction ) :
+				return cls.__autoTypeFunction( name )
+			else :
+				raise ValueError( "RenderPassTypeAdaptor : \"auto\" type requires a registered auto type function" )
 
 		return type
 
