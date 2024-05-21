@@ -206,6 +206,7 @@ jobs:
           subprocess.check_call( "scons -j 2 build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions", shell = True )
 
           # Test Arnold extension
+          os.environ["COMSPEC"] = "powershell"
           print( "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json" )
           subprocess.check_call( "${{ matrix.testRunner }} \"" + os.path.join( os.environ["GAFFER_BUILD_DIR"], "bin", "gaffer" ) + " test IECoreArnoldTest GafferArnoldTest GafferArnoldUITest\"", shell = True )
           print( "::remove-matcher owner=unittest::" )
