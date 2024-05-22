@@ -259,8 +259,3 @@ A very simple Box with in and out plugs, promoted plugs, and custom UI.
 ### Attribute history focus ###
 
 If you use the attribute history to find a node, and the node is inside a Box, the Graph Editor will focus on the whole node graph, rather than the Box.
-
-
-### Dragging scene locations ###
-
-When a Box has a promoted filter plug, you cannot drag a scene location from the Hierarchy View onto the Box to automatically add and connect a Path Filter node.

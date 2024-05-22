@@ -44,5 +44,6 @@ from ._GafferScene import *
 
 from .ShaderBall import ShaderBall
 from .RenderPassWedge import RenderPassWedge
+from .RenderPassTypeAdaptor import RenderPassTypeAdaptor
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferScene" )

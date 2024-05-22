@@ -144,6 +144,8 @@ class _CommandPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__codeWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ), scoped = False )
 		self.__codeWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ), scoped = False )
 
+		self._addPopupMenu( self.__codeWidget )
+
 		node = self.__pythonCommandNode()
 		if node is not None :
 			node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__pythonCommandPlugDirtied ), scoped = False )

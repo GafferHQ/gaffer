@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,23 +34,11 @@
 #
 ##########################################################################
 
-import IECore
 import Gaffer
+import GafferScene
 
-Gaffer.Metadata.registerValue( "option:renderPass:enabled", "label", "Enabled" )
-Gaffer.Metadata.registerValue( "option:renderPass:enabled", "description", "Whether the render pass is enabled for rendering." )
-Gaffer.Metadata.registerValue( "option:renderPass:enabled", "defaultValue", IECore.BoolData( True ) )
+Gaffer.Metadata.registerValue( GafferScene.RenderPassShader, "usage", "preset:Shadow Catcher", "shadowCatcher" )
+Gaffer.Metadata.registerValue( GafferScene.RenderPassShader, "usage", "preset:Reflection Catcher", "reflectionCatcher" )
+Gaffer.Metadata.registerValue( GafferScene.RenderPassShader, "usage", "preset:Reflection Caster", "reflectionCaster" )
 
-Gaffer.Metadata.registerValue( "option:renderPass:type", "label", "Type" )
-Gaffer.Metadata.registerValue(
-	"option:renderPass:type",
-	"description",
-	"""
-	The type of the render pass. This provides simple setup for renders such as reflection and shadow passes,
-	typically by assigning custom shaders to the objects specified by `Casters` and `Catchers`. Use a RenderPassShaders
-	node to customise the shaders used for this purpose.
-
-	> Hint : Render pass types and their behaviours can be customised using the RenderPassTypeAdaptor API.
-	"""
-)
-Gaffer.Metadata.registerValue( "option:renderPass:type", "defaultValue", IECore.StringData( "" ) )
+Gaffer.Metadata.registerValue( GafferScene.RenderPassShader, "usage", "userDefault", "shadowCatcher" )

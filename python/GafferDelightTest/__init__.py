@@ -37,6 +37,7 @@
 from .DelightRenderTest import DelightRenderTest
 from .InteractiveDelightRenderTest import InteractiveDelightRenderTest
 from .ModuleTest import ModuleTest
+from .RenderPassAdaptorTest import RenderPassAdaptorTest
 
 if __name__ == "__main__":
 	import unittest

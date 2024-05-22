@@ -125,6 +125,8 @@ class GAFFERSCENEUI_API LightPositionTool : public GafferSceneUI::TransformTool
 		IECore::RunTimeTypedPtr handleDragBegin( GafferUI::Gadget *gadget );
 		bool handleDragMove( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
 		bool handleDragEnd();
+		bool handleEnter( const GafferUI::ButtonEvent &event );
+		void handleLeave();
 
 		IECore::RunTimeTypedPtr sceneGadgetDragBegin( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
 		bool sceneGadgetDragEnter( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
@@ -159,6 +161,7 @@ class GAFFERSCENEUI_API LightPositionTool : public GafferSceneUI::TransformTool
 
 		void setTargetMode( TargetMode mode );
 		TargetMode getTargetMode() const { return m_targetMode; }
+		void updatePointer() const;
 
 		void setPivot( const Imath::V3f &p, Gaffer::ScriptNodePtr scriptNode );
 		std::optional<Imath::V3f> getPivot() const;

@@ -248,12 +248,24 @@ def __pathsPlug( node ) :
 
 	return None
 
+def __filterPlug( node ) :
+
+	filterPlugs = list( GafferScene.FilterPlug.Range( node ) )
+	if len( filterPlugs ) == 1 :
+		return filterPlugs[0]
+	return None
+
 def __dropMode( nodeGadget, event ) :
 
 	if __pathsPlug( nodeGadget.node() ) is None :
 		filter = None
-		if nodeGadget.node()["filter"].getInput() is not None :
-			filter = nodeGadget.node()["filter"].source().node()
+
+		filterPlug = __filterPlug( nodeGadget.node() )
+		if filterPlug is None :
+			return __DropMode.None_
+
+		if filterPlug.getInput() is not None :
+			filter = filterPlug.source().node()
 		if filter is None :
 			return __DropMode.Replace
 		elif not isinstance( filter, GafferScene.PathFilter ) :
@@ -342,7 +354,7 @@ def __drop( nodeGadget, event ) :
 
 	pathsPlug = __pathsPlug( nodeGadget.node() )
 	if pathsPlug is None :
-		pathsPlug = __pathsPlug( nodeGadget.node()["filter"].source().node() )
+		pathsPlug = __pathsPlug( __filterPlug( nodeGadget.node() ).source().node() )
 
 	dropPaths = __dropPaths( event.data, pathsPlug )
 
@@ -364,7 +376,7 @@ def __drop( nodeGadget, event ) :
 
 			pathFilter = GafferScene.PathFilter()
 			nodeGadget.node().parent().addChild( pathFilter )
-			nodeGadget.node()["filter"].setInput( pathFilter["out"] )
+			__filterPlug( nodeGadget.node() ).setInput( pathFilter["out"] )
 
 			pathsPlug = pathFilter["paths"]
 
@@ -390,3 +402,4 @@ def __nodeGadget( pathFilter ) :
 	return nodeGadget
 
 GafferUI.NodeGadget.registerNodeGadget( GafferScene.PathFilter, __nodeGadget )
+GafferUI.NodeGadget.registerNodeGadget( Gaffer.SubGraph, __nodeGadget )
