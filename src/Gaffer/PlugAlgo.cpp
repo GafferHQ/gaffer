@@ -584,9 +584,59 @@ IECore::DataPtr getArrayAsVectorData( const ArrayPlug *plug )
 			}
 			return data;
 		}
+		case StringPlugTypeId :
+		{
+			StringVectorDataPtr data = new StringVectorData();
+			data->writable().resize( size );
+			for( Plug::InputIterator it( plug ); !it.done(); ++it, ++i )
+			{
+				data->writable()[i] = static_cast<const StringPlug *>( it->get() )->getValue();
+			}
+			return data;
+		}
+		case BoolPlugTypeId :
+		{
+			BoolVectorDataPtr data = new BoolVectorData();
+			data->writable().resize( size );
+			for( Plug::InputIterator it( plug ); !it.done(); ++it, ++i )
+			{
+				data->writable()[i] = static_cast<const BoolPlug *>( it->get() )->getValue();
+			}
+			return data;
+		}
+		case V2fPlugTypeId :
+		{
+			V2fVectorDataPtr data = new V2fVectorData();
+			data->writable().resize( size );
+			for( Plug::InputIterator it( plug ); !it.done(); ++it, ++i )
+			{
+				data->writable()[i] = static_cast<const V2fPlug *>( it->get() )->getValue();
+			}
+			return data;
+		}
+		case V3fPlugTypeId :
+		{
+			V3fVectorDataPtr data = new V3fVectorData();
+			data->writable().resize( size );
+			for( Plug::InputIterator it( plug ); !it.done(); ++it, ++i )
+			{
+				data->writable()[i] = static_cast<const V3fPlug *>( it->get() )->getValue();
+			}
+			return data;
+		}
+		case M44fPlugTypeId :
+		{
+			M44fVectorDataPtr data = new M44fVectorData();
+			data->writable().resize( size );
+			for( Plug::InputIterator it( plug ); !it.done(); ++it, ++i )
+			{
+				data->writable()[i] = static_cast<const M44fPlug *>( it->get() )->getValue();
+			}
+			return data;
+		}
 		default :
 			throw IECore::Exception(
-				fmt::format( "Plug \"{}\" has unsupported type \"{}\"", childPlug->getName().string(), childPlug->typeName() )
+				fmt::format( "ArrayPlug \"{}\" has unsupported child type \"{}\"", plug->getName().string(), childPlug->typeName() )
 			);
 	}
 
