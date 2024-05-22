@@ -10,6 +10,7 @@ Improvements
   - Updated the default output presets to include scalarformat, colorprofile, filter and filterwidth output parameters.
 - LightPositionTool : Changed the pointer to `notEditable` when using keyboard combinations that do not apply to the current tool mode.
 - LightEditor : Added the ability to register columns for editing any parameter in a light's shader network. The parameter to edit is registered in the form `shaderName.parameterName` when calling `GafferSceneUI.LightEditor.registerParameter`.
+- PathFilterUI : Added the ability to drag and drop scene paths onto Box and Reference nodes. Doing so will create a new PathFilter with the selected paths if none is connected, or update an existing connected PathFilter.
 
 Fixes
 -----
