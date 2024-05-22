@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - SetFilter, StandardAttributes, StandardOptions : Added syntax highlighting and auto-complete for set expressions.
+- NodeEditor, UIEditor, PythonEditor : Added popup hint for the <kbd>Ctrl</kbd>+<kbd>Return</kbd> shortcut.
 - CodeWidget : Added highlighting of braces and operators.
 
 Fixes

@@ -327,6 +327,8 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 	def _emitEditingFinished( self ) :
 
 		self.editingFinishedSignal()( self )
+		# Hide our activation hint
+		self._qtWidget().document().setModified( False )
 
 	def __textChanged( self ) :
 
@@ -407,8 +409,11 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 class _PlainTextEdit( QtWidgets.QPlainTextEdit ) :
 
 	def __init__( self, parent = None ) :
+
 		QtWidgets.QPlainTextEdit.__init__( self, parent )
 		self.__fixedLineHeight = None
+
+		self.document().modificationChanged.connect( self.update )
 
 	def setFixedLineHeight( self, fixedLineHeight ) :
 
@@ -480,7 +485,10 @@ class _PlainTextEdit( QtWidgets.QPlainTextEdit ) :
 
 		QtWidgets.QPlainTextEdit.paintEvent( self, event )
 
+		painter = QtGui.QPainter( self.viewport() )
+
 		if self.isEnabled() :
+			self.__paintActivationHint( painter )
 			return
 
 		# Disabled. We want the text to use faded colours but we can't
@@ -488,7 +496,20 @@ class _PlainTextEdit( QtWidgets.QPlainTextEdit ) :
 		# colours and/or a highlighter. So instead we draw a semi-transparent
 		# overlay the same colour as our background.
 
-		painter = QtGui.QPainter( self.viewport() )
 		color = self.palette().base().color()
 		color.setAlpha( 128 )
 		painter.fillRect( 0, 0, self.width(), self.height(), color )
+
+	def __paintActivationHint( self, painter ) :
+
+		if self.isReadOnly() or not self.document().isModified() :
+			return
+
+		widget = GafferUI.Widget._owner( self )
+		if widget is None or ( widget.activatedSignal().numSlots() + widget.editingFinishedSignal().numSlots() ) == 0 :
+			return
+
+		viewport = self.viewport()
+		pixmap = GafferUI.Image._qtPixmapFromFile( "ctrlEnter.png" )
+		painter.setOpacity( 0.75 )
+		painter.drawPixmap( viewport.width() - ( pixmap.width() + 4 ), viewport.height() - ( pixmap.height() + 4 ), pixmap )
