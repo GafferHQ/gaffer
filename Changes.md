@@ -1,6 +1,17 @@
 1.4.x.x (relative to 1.4.3.0)
 =======
 
+Features
+--------
+
+- RenderPassEditor :
+  - Added `type` column for configuring specific passes to render with a predefined type. We provide default configurations of a number of render pass types, these can be modified to suit specific workflows via the RenderPassShader node or by registering new types and processors via the RenderPassTypeAdaptor in a startup file.
+  - The default render pass type configurations include :
+    - A "shadow" type for catching shadows cast by `caster` locations on `catcher` locations.
+    - A "reflection" type for catching reflections cast by `caster` locations on `catcher` locations. The roughness of the reflective material can be configured per catcher location by creating a `user:renderPass:reflectionCatcher:roughness` float attribute.
+    - A "reflectionAlpha" type for catching reflection mattes cast by `caster` locations on `catcher` locations. The colour of the matte can be configured per caster location by creating a `user:renderPass:reflectionCaster:color` Color3f attribute.
+- RenderPassShader : Added new node for overriding a shader used by a render pass type.
+
 Improvements
 ------------
 
@@ -19,12 +30,16 @@ Fixes
 - SceneWriter : Fixed import of `treatAsPoint` and `treatAsLine` parameters on UsdLux lights.
 - Linux : Fixed crashes at startup on platforms - including RHEL 9.4 - with a more recent `glibc` (#5856).
 - LightPositionTool : Fixed bug that allowed a non-light object to be moved by clicking or dragging the target or pivot.
+- OptionQuery : Fixed bug which allowed the `scene:path` context variable to leak into the context used to evaluate the globals.
 
 API
 ---
 
 - ShaderPlug : Added `parameterSource()` method returning the `ValuePlug` responsible for generating a parameter in a shader network.
 - ParameterInspector : Added the ability to inspect parameters on any shader in a light or shader's shader network.
+- RenderPassTypeAdaptor :
+  - Added registration methods for defining render pass types and processors.
+  - Added `registerAutoTypeFunction()` method to define a function used to automatically derive the render pass type from the render pass name when the `renderPass:type` option value is "auto".
 
 1.4.3.0 (relative to 1.4.2.0)
 =======

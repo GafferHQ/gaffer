@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,23 +34,47 @@
 #
 ##########################################################################
 
+import unittest
+
 import IECore
-import Gaffer
 
-Gaffer.Metadata.registerValue( "option:renderPass:enabled", "label", "Enabled" )
-Gaffer.Metadata.registerValue( "option:renderPass:enabled", "description", "Whether the render pass is enabled for rendering." )
-Gaffer.Metadata.registerValue( "option:renderPass:enabled", "defaultValue", IECore.BoolData( True ) )
+import GafferTest
+import GafferSceneTest
+import GafferOSL
+import GafferUSD
 
-Gaffer.Metadata.registerValue( "option:renderPass:type", "label", "Type" )
-Gaffer.Metadata.registerValue(
-	"option:renderPass:type",
-	"description",
-	"""
-	The type of the render pass. This provides simple setup for renders such as reflection and shadow passes,
-	typically by assigning custom shaders to the objects specified by `Casters` and `Catchers`. Use a RenderPassShaders
-	node to customise the shaders used for this purpose.
+class RenderPassAdaptorTest( GafferSceneTest.RenderPassAdaptorTest ) :
 
-	> Hint : Render pass types and their behaviours can be customised using the RenderPassTypeAdaptor API.
-	"""
-)
-Gaffer.Metadata.registerValue( "option:renderPass:type", "defaultValue", IECore.StringData( "" ) )
+	renderer = "3Delight"
+
+	def setUp( self ) :
+
+		GafferTest.TestCase.setUp( self )
+
+		self.ignoreMessage( IECore.Msg.Level.Warning, "DelightRenderer", "Attribute \"linkedLights\" not supported" )
+
+	@unittest.skip( "Light linking not supported" )
+	def testReflectionCasterLightLinks( self ) :
+
+		pass
+
+	def _createDistantLight( self ) :
+
+		light = GafferUSD.USDLight()
+		light.loadShader( "DistantLight" )
+		return light, light["parameters"]["color"]
+
+	def _createStandardShader( self ) :
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( "dlPrincipled" )
+		return shader, shader["parameters"]["i_color"]
+
+	def _createFlatShader( self ) :
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( "Surface/Constant" )
+		return shader, shader["parameters"]["Cs"]
+
+if __name__ == "__main__":
+	unittest.main()

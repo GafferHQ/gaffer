@@ -256,6 +256,7 @@ void OptionQuery::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *
 
 	if( outPlug()->isAncestorOf( output ) )
 	{
+		ScenePlug::GlobalScope globalScope( context );
 		const ValuePlug *oPlug = outPlug( output );
 
 		if( output == oPlug->getChild( g_existsPlugIndex ) )
@@ -287,6 +288,7 @@ void OptionQuery::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
 {
 	if( outPlug()->isAncestorOf( output ) )
 	{
+		ScenePlug::GlobalScope globalScope( context );
 		const ValuePlug *oPlug = outPlug( output );
 
 		if( output == oPlug->getChild( g_existsPlugIndex ) )
