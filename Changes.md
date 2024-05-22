@@ -14,7 +14,11 @@ Fixes
   - Removed unwanted `\n` prefix in lines passed to `Completers`.
   - Prevented spurious emission of `editingFinishedSignal()` when showing the completions menu.
   - Prevented the completion menu from popping up inappropriately when the highlighter was changed.
-- MultiLineTextWidget : Fixed rendering of disabled widgets, which now show faded text.
+- MultiLineTextWidget :
+  - Fixed rendering of disabled widgets, which now show faded text.
+  - Fixed behaviour of `editingFinishedSignal()` to match TextWidget : it is now also emitted when the text is activated (see `activatedSignal()`).
+- MultiLineStringMetadataWidget : The <kbd>Ctrl</kbd>+<kbd>Return</kbd> shortcut now updates the metadata value immediately.
+- UIEditor : The <kbd>Ctrl</kbd>+<kbd>Return</kbd> shortcut now updates the button code immediately.
 
 API
 ---

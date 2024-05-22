@@ -54,7 +54,6 @@ class SetExpressionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self._addPopupMenu( self.__codeWidget )
 
-		self.__codeWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__setPlugValues ), scoped = False )
 		self.__codeWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValues ), scoped = False )
 
 		self.__availableSets = {}

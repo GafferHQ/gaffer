@@ -268,7 +268,6 @@ class _CodePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self._addPopupMenu( self.__codeWidget )
 
-		self.__codeWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ), scoped = False )
 		self.__codeWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ), scoped = False )
 		self.__codeWidget.dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ), scoped = False )
 

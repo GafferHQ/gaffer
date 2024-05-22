@@ -55,7 +55,6 @@ class MultiLineStringPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self._addPopupMenu( self.__textWidget )
 
 		self.__textWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
-		self.__textWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ), scoped = False )
 		self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ), scoped = False )
 		self.__textChangedConnection = self.__textWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ), scoped = False )
 

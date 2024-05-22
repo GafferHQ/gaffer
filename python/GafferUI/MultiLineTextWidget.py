@@ -81,10 +81,12 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ), scoped = False )
 		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
 		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ), scoped = False )
+		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
 		self._qtWidget().setTabStopWidth( 20 ) # pixels
 
 		self.__editingFinishedSignal = GafferUI.WidgetSignal()
+		self.__activatedSignal = GafferUI.WidgetSignal()
 
 	def getText( self ) :
 
@@ -284,19 +286,15 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 		return getattr( self.Role, role )
 
-	## A signal emitted when the widget loses focus.
+	## A signal emitted whenever the user has finished editing the text either
+	# by activating it via `Enter` or `Ctrl + Return`, or by moving focus to
+	# another Widget.
 	def editingFinishedSignal( self ) :
 
 		return self.__editingFinishedSignal
 
-	## A signal emitted when enter (or Ctrl-Return) is pressed.
+	## A signal emitted when `Enter` or `Ctrl + Return` is pressed.
 	def activatedSignal( self ) :
-
-		try :
-			return self.__activatedSignal
-		except :
-			self.__activatedSignal = GafferUI.WidgetSignal()
-			self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
 		return self.__activatedSignal
 
@@ -340,6 +338,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 		if event.key=="Enter" or ( event.key=="Return" and event.modifiers==event.Modifiers.Control ) :
 			self.__activatedSignal( self )
+			self._emitEditingFinished()
 			return True
 
 		return False
