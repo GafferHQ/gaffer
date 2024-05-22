@@ -14,7 +14,55 @@ Breaking Changes
 - TweakPlug : Remove deprecated `MissingMode::IgnoreOrReplace`.
 - AttributeTweaks : `Replace` mode no longer errors if the `linkedLights` attribute doesn't exist.
 
-1.4.x.x (relative to 1.4.2.0)
+1.4.x.x (relative to 1.4.4.0)
+=======
+
+
+
+1.4.4.0 (relative to 1.4.3.0)
+=======
+
+Features
+--------
+
+- RenderPassEditor :
+  - Added `type` column for configuring specific passes to render with a predefined type. We provide default configurations of a number of render pass types, these can be modified to suit specific workflows via the RenderPassShader node or by registering new types and processors via the RenderPassTypeAdaptor in a startup file.
+  - The default render pass type configurations include :
+    - A "shadow" type for catching shadows cast by `caster` locations on `catcher` locations.
+    - A "reflection" type for catching reflections cast by `caster` locations on `catcher` locations. The roughness of the reflective material can be configured per catcher location by creating a `user:renderPass:reflectionCatcher:roughness` float attribute.
+    - A "reflectionAlpha" type for catching reflection mattes cast by `caster` locations on `catcher` locations. The colour of the matte can be configured per caster location by creating a `user:renderPass:reflectionCaster:color` Color3f attribute.
+- RenderPassShader : Added new node for overriding a shader used by a render pass type.
+
+Improvements
+------------
+
+- 3Delight :
+  - Added support for multipart EXR renders by using the same file name parameter on multiple outputs.
+  - Added support for scalarformat, colorprofile, filterwidth and arbitrary custom NSI outputlayer and outputdriver attributes.
+  - Updated the default output presets to include scalarformat, colorprofile, filter and filterwidth output parameters.
+- LightPositionTool : Changed the pointer to `notEditable` when using keyboard combinations that do not apply to the current tool mode.
+- LightEditor : Added the ability to register columns for editing any parameter in a light's shader network. The parameter to edit is registered in the form `shaderName.parameterName` when calling `GafferSceneUI.LightEditor.registerParameter`.
+- PathFilterUI : Added the ability to drag and drop scene paths onto Box and Reference nodes. Doing so will create a new PathFilter with the selected paths if none is connected, or update an existing connected PathFilter.
+
+Fixes
+-----
+
+- SceneReader, SceneWriter : Fixed handling of Arnold-specific parameters on UsdLux lights.
+- SceneWriter : Fixed import of `treatAsPoint` and `treatAsLine` parameters on UsdLux lights.
+- Linux : Fixed crashes at startup on platforms - including RHEL 9.4 - with a more recent `glibc` (#5856).
+- LightPositionTool : Fixed bug that allowed a non-light object to be moved by clicking or dragging the target or pivot.
+- OptionQuery : Fixed bug which allowed the `scene:path` context variable to leak into the context used to evaluate the globals.
+
+API
+---
+
+- ShaderPlug : Added `parameterSource()` method returning the `ValuePlug` responsible for generating a parameter in a shader network.
+- ParameterInspector : Added the ability to inspect parameters on any shader in a light or shader's shader network.
+- RenderPassTypeAdaptor :
+  - Added registration methods for defining render pass types and processors.
+  - Added `registerAutoTypeFunction()` method to define a function used to automatically derive the render pass type from the render pass name when the `renderPass:type` option value is "auto".
+
+1.4.3.0 (relative to 1.4.2.0)
 =======
 
 Features
@@ -23,7 +71,7 @@ Features
 - 3Delight : Added "3Delight Cloud" renderer, for rendering using the 3Delight cloud.
 
 Improvements
------------
+------------
 
 - Arnold : If it exists, an `ai:volume` attribute is preferred over an `ai:surface` attribute when resolving shaders for volumes.
 - Cycles :
@@ -31,6 +79,7 @@ Improvements
   - Hide certain parameters based on UI selections.
   - Renamed and reordered parameters and created sections to match Blender.
   - Changed all the Cycles items in the Gaffer tab menu to title case.
+- PythonCommand : Added standard popup menu to `command` widget in NodeEditor.
 
 Fixes
 -----
@@ -39,6 +88,8 @@ Fixes
   - Fixed rendering of `ai:volume` shaders loaded from USD (#5830).
   - Renamed Arnold/Globals/Imager menu option to Arnold/Globals/Imagers so that the actual ArnoldImager node menu option wasn't overwritten.
 - CodeWidget : Fixed errors handling highlights which spanned more than one line, such as triple-quoted strings in the PythonEditor.
+- NodeEditor : Fixed broken layouts caused by computation errors in plugs used by section summaries.
+- ColorChooserPlugValueWidget : Fixed bug that allowed the editing of locked plugs and nodes.
 
 API
 ---
@@ -420,10 +471,18 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.16.x (relative to 1.3.16.2)
+1.3.16.x (relative to 1.3.16.3)
 ========
 
 
+
+1.3.16.3 (relative to 1.3.16.2)
+========
+
+Fixes
+-----
+
+- ColorChooserPlugValueWidget : Fixed bug that allowed the editing of locked plugs and nodes.
 
 1.3.16.2 (relative to 1.3.16.1)
 ========

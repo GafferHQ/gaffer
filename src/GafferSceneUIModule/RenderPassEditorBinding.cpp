@@ -575,7 +575,7 @@ class OptionInspectorColumn : public PathColumn
 		IE_CORE_DECLAREMEMBERPTR( OptionInspectorColumn )
 
 		OptionInspectorColumn( GafferSceneUI::Private::OptionInspectorPtr inspector, const std::string &columnName, const std::string &columnToolTip )
-			:	m_inspector( inspector ), m_headerValue( headerValue( columnName != "" ? columnName : inspector->name() ) ), m_headerToolTip( new IECore::StringData( columnToolTip ) )
+			:	m_inspector( inspector ), m_headerValue( columnName != "" ? new StringData( columnName ) : headerValue( inspector->name() ) ), m_headerToolTip( new IECore::StringData( columnToolTip ) )
 		{
 			m_inspector->dirtiedSignal().connect( boost::bind( &OptionInspectorColumn::inspectorDirtied, this ) );
 		}

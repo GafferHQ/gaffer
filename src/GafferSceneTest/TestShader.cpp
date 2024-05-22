@@ -38,31 +38,106 @@
 
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/OptionalValuePlug.h"
+#include "Gaffer/PlugAlgo.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/SplinePlug.h"
+
+#include "IECore/Spline.h"
 
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferSceneTest;
+
+namespace
+{
+
+template<typename PlugType>
+Plug *setupTypedPlug(
+	const InternedString &parameterName,
+	GraphComponent *plugParent,
+	const typename PlugType::ValueType &defaultValue
+)
+{
+	PlugType *existingPlug = plugParent->getChild<PlugType>( parameterName );
+	if( existingPlug && existingPlug->defaultValue() == defaultValue )
+	{
+		return existingPlug;
+	}
+
+	typename PlugType::Ptr plug = new PlugType( parameterName, Plug::Direction::In, defaultValue );
+	PlugAlgo::replacePlug( plugParent, plug );
+
+	return plug.get();
+}
+
+template<typename ValuePlugType>
+Plug *setupOptionalValuePlug(
+	const InternedString &parameterName,
+	GraphComponent *plugParent,
+	const ValuePlugPtr &valuePlug
+)
+{
+	OptionalValuePlug *existingPlug = plugParent->getChild<OptionalValuePlug>( parameterName );
+
+	if( existingPlug && valuePlug->typeId() == ValuePlugType::staticTypeId() )
+	{
+		auto existingValuePlug = runTimeCast<ValuePlugType>( existingPlug->valuePlug() );
+		auto typedPlug = runTimeCast<ValuePlugType>( valuePlug );
+		if( existingValuePlug->defaultValue() == typedPlug->defaultValue() )
+		{
+			return existingPlug;
+		}
+	}
+
+	OptionalValuePlugPtr plug = new OptionalValuePlug( parameterName, valuePlug );
+	PlugAlgo::replacePlug( plugParent, plug );
+
+	return plug.get();
+}
+
+}  // namespace
 
 GAFFER_NODE_DEFINE_TYPE( TestShader )
 
 TestShader::TestShader( const std::string &name )
 	:	Shader( name )
 {
-	// The base class expects us to serialise a `loadShader()`
-	// call to set the values for these, but we just represent
-	// a fixed shader. Turn serialisation back on.
-	namePlug()->setFlags( Plug::Serialisable, true );
+	// The base class expects `loadShader()` to set `type`, but
+	// we don't want to make assumptions for the purposes of testing.
+	// Turn serialisation back on to preserve the user-specified type.
 	typePlug()->setFlags( Plug::Serialisable, true );
 
 	addChild( new Color3fPlug( "out", Plug::Out ) );
-	parametersPlug()->addChild( new IntPlug( "i" ) );
-	parametersPlug()->addChild( new Color3fPlug( "c" ) );
-	parametersPlug()->addChild( new SplinefColor3fPlug( "spline" ) );
-	parametersPlug()->addChild( new OptionalValuePlug( "optionalString", new Gaffer::StringPlug() ) );
+
+	loadShader( "simpleShader" );
 }
 
 TestShader::~TestShader()
 {
+}
+
+void TestShader::loadShader( const std::string &shaderName, bool keepExistingValues )
+{
+	Plug *parametersPlug = this->parametersPlug()->source<Plug>();
+
+	if( !keepExistingValues )
+	{
+		parametersPlug->clearChildren();
+	}
+
+	namePlug()->source<StringPlug>()->setValue( shaderName );
+
+	if( shaderName == "simpleLight" )
+	{
+		setupTypedPlug<Color3fPlug>( "intensity", parametersPlug, Imath::Color3f( 0.f ) );
+		setupTypedPlug<FloatPlug>( "exposure", parametersPlug, 0.f );
+		setupTypedPlug<BoolPlug>( "__areaLight", parametersPlug, false );
+	}
+	else if( shaderName == "simpleShader" )
+	{
+		setupTypedPlug<IntPlug>( "i", parametersPlug, 0 );
+		setupTypedPlug<Color3fPlug>( "c", parametersPlug, Imath::Color3f( 0.f ) );
+		setupTypedPlug<SplinefColor3fPlug>( "spline", parametersPlug, SplineDefinitionfColor3f() );
+		setupOptionalValuePlug<StringPlug>( "optionalString", parametersPlug, new StringPlug() );
+	}
 }

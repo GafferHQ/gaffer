@@ -108,11 +108,23 @@ Gaffer::ValuePlugPtr ParameterInspector::source( const GafferScene::SceneAlgo::H
 
 	if( auto light = runTimeCast<Light>( sceneNode ) )
 	{
-		if( auto optionalPlug = light->parametersPlug()->getChild<OptionalValuePlug>( m_parameter.name ) )
+		if( m_parameter.shader.string().empty() )
 		{
-			return optionalPlug->enabledPlug()->getValue() ? optionalPlug : nullptr;
+			if( auto optionalPlug = light->parametersPlug()->getChild<OptionalValuePlug>( m_parameter.name ) )
+			{
+				return optionalPlug->enabledPlug()->getValue() ? optionalPlug : nullptr;
+			}
+			return light->parametersPlug()->descendant<ValuePlug>( m_parameter.name );
 		}
-		return light->parametersPlug()->getChild<ValuePlug>( m_parameter.name );
+		/// \todo Remove the need to search for a `ShaderPlug` by adding such a plug to
+		/// `GafferScene::Light` itself.
+		for( const auto &plug : Plug::Range( *light ) )
+		{
+			if( const auto shaderPlug = runTimeCast<ShaderPlug>( plug ) )
+			{
+				return shaderPlug->parameterSource( m_parameter );
+			}
+		}
 	}
 	else if( auto lightFilter = runTimeCast<LightFilter>( sceneNode ) )
 	{
@@ -125,27 +137,17 @@ Gaffer::ValuePlugPtr ParameterInspector::source( const GafferScene::SceneAlgo::H
 			return nullptr;
 		}
 
-		/// \todo This would be another use case for a `computedSource()` utility
-		/// function or similar.
-		Gaffer::Node *node = shaderAssignment->shaderPlug()->source()->node();
-		if( auto switchNode = runTimeCast<Switch>( node ) )
+		if( auto parameterPlug = shaderAssignment->shaderPlug()->parameterSource( m_parameter ) )
 		{
-			node = switchNode->activeInPlug()->source()->node();
-		}
-
-		if( auto shader = runTimeCast<GafferScene::Shader>( node ) )
-		{
-			if( auto parameterPlug = shader->parametersPlug()->getChild<ValuePlug>( m_parameter.name ) )
-			{
-				/// \todo This is overly conservative. We should test to see if there is more than
-				/// one filter match (but make sure to early-out once two are found, rather than test
-				/// the rest of the scene).
-				editWarning = fmt::format(
-					"Edits to {} may affect other locations in the scene.",
-					shader->relativeName( shader->scriptNode() )
-				);
-				return parameterPlug;
-			}
+			/// \todo This is overly conservative. We should test to see if there is more than
+			/// one filter match (but make sure to early-out once two are found, rather than test
+			/// the rest of the scene).
+			const Node *shaderNode = parameterPlug->node();
+			editWarning = fmt::format(
+				"Edits to {} may affect other locations in the scene.",
+				shaderNode->relativeName( shaderNode->scriptNode() )
+			);
+			return parameterPlug;
 		}
 	}
 	else if( auto shaderTweaks = runTimeCast<ShaderTweaks>( sceneNode ) )
@@ -155,10 +157,15 @@ Gaffer::ValuePlugPtr ParameterInspector::source( const GafferScene::SceneAlgo::H
 			return nullptr;
 		}
 
+		const std::string tweakName = (
+			m_parameter.shader.string() +
+			( m_parameter.shader.string().empty() ? "" : "." ) +
+			m_parameter.name.string()
+		);
+
 		for( const auto &tweak : TweakPlug::Range( *shaderTweaks->tweaksPlug() ) )
 		{
-			/// \todo Consider shader as well as name
-			if( tweak->namePlug()->getValue() == m_parameter.name.string() && tweak->enabledPlug()->getValue() )
+			if( tweak->namePlug()->getValue() == tweakName && tweak->enabledPlug()->getValue() )
 			{
 				return tweak;
 			}

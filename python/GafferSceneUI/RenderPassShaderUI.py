@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,23 +34,72 @@
 #
 ##########################################################################
 
-import IECore
 import Gaffer
+import GafferUI
+import GafferScene
+import GafferSceneUI
 
-Gaffer.Metadata.registerValue( "option:renderPass:enabled", "label", "Enabled" )
-Gaffer.Metadata.registerValue( "option:renderPass:enabled", "description", "Whether the render pass is enabled for rendering." )
-Gaffer.Metadata.registerValue( "option:renderPass:enabled", "defaultValue", IECore.BoolData( True ) )
+import IECore
 
-Gaffer.Metadata.registerValue( "option:renderPass:type", "label", "Type" )
-Gaffer.Metadata.registerValue(
-	"option:renderPass:type",
+def __rendererNames( plug ) :
+
+	return [
+		x for x in GafferSceneUI.RenderUI.rendererPresetNames( plug )
+		if x not in ( "OpenGL", "3Delight Cloud" )
+	]
+
+def __rendererPresetNames( plug ) :
+
+	return IECore.StringVectorData( [ "All" ] + __rendererNames( plug ) )
+
+def __rendererPresetValues( plug ) :
+
+	return IECore.StringVectorData( [ "*" ] + __rendererNames( plug ) )
+
+Gaffer.Metadata.registerNode(
+
+	GafferScene.RenderPassShader,
+
 	"description",
 	"""
-	The type of the render pass. This provides simple setup for renders such as reflection and shadow passes,
-	typically by assigning custom shaders to the objects specified by `Casters` and `Catchers`. Use a RenderPassShaders
-	node to customise the shaders used for this purpose.
+	Sets up a global shader in the options to replace a shader used by a render pass type.
+	""",
 
-	> Hint : Render pass types and their behaviours can be customised using the RenderPassTypeAdaptor API.
-	"""
+	plugs = {
+
+		"renderer" : [
+
+			"description",
+			"""
+			The renderer the shader should affect. Shaders assigned to a specific
+			renderer will take precedence over shaders assigned to "All" when
+			rendering with that renderer.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+			"presetNames", __rendererPresetNames,
+			"presetValues", __rendererPresetValues,
+
+		],
+
+		"usage" : [
+
+			"description",
+			"""
+			How the shader is to be used.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"shader" : [
+
+			"layout:index", -1,
+
+		],
+
+	}
+
 )
-Gaffer.Metadata.registerValue( "option:renderPass:type", "defaultValue", IECore.StringData( "" ) )

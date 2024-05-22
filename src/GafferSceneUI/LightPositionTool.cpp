@@ -560,12 +560,16 @@ LightPositionTool::LightPositionTool( SceneView *view, const std::string &name )
 	m_distanceHandle->dragBeginSignal().connectFront( boost::bind( &LightPositionTool::handleDragBegin, this, ::_1 ) );
 	m_distanceHandle->dragMoveSignal().connect( boost::bind( &LightPositionTool::handleDragMove, this, ::_1, ::_2 ) );
 	m_distanceHandle->dragEndSignal().connect( boost::bind( &LightPositionTool::handleDragEnd, this ) );
+	m_distanceHandle->enterSignal().connect( boost::bind( &LightPositionTool::handleEnter, this, ::_2 ) );
+	m_distanceHandle->leaveSignal().connect( boost::bind( &LightPositionTool::handleLeave, this ) );
 
 	m_rotateHandle = new RotateHandle( GafferUI::Style::Axes::Z );
 	handles()->setChild( "rotateHandle", m_rotateHandle );
 	m_rotateHandle->dragBeginSignal().connectFront( boost::bind( &LightPositionTool::handleDragBegin, this, ::_1 ) );
 	m_rotateHandle->dragMoveSignal().connect( boost::bind( &LightPositionTool::handleDragMove, this, ::_1, ::_2 ) );
 	m_rotateHandle->dragEndSignal().connect( boost::bind( &LightPositionTool::handleDragEnd, this ) );
+	m_rotateHandle->enterSignal().connect( boost::bind( &LightPositionTool::handleEnter, this, ::_2 ) );
+	m_rotateHandle->leaveSignal().connect( boost::bind( &LightPositionTool::handleLeave, this ) );
 
 	SceneGadget *sg = runTimeCast<SceneGadget>( this->view()->viewportGadget()->getPrimaryChild() );
 	sg->keyPressSignal().connect( boost::bind( &LightPositionTool::keyPress, this, ::_2 ) );
@@ -812,9 +816,25 @@ bool LightPositionTool::handleDragEnd()
 	return false;
 }
 
+bool LightPositionTool::handleEnter( const GafferUI::ButtonEvent &event )
+{
+	// Always use the default pointer, the handle appearance indicates editability
+	GafferUI::Pointer::setCurrent( "" );
+	return true;
+}
+
+void LightPositionTool::handleLeave()
+{
+	updatePointer();
+}
+
 RunTimeTypedPtr LightPositionTool::sceneGadgetDragBegin( Gadget *gadget, const DragDropEvent &event )
 {
-	if( !activePlug()->getValue() || getTargetMode() == TargetMode::None )
+	if(
+		!activePlug()->getValue() ||
+		getTargetMode() == TargetMode::None ||
+		!m_distanceHandle->visible()
+	)
 	{
 		return nullptr;
 	}
@@ -942,7 +962,7 @@ bool LightPositionTool::buttonPress( const ButtonEvent &event )
 
 	// We always return true to prevent the SelectTool defaults.
 
-	if( !selectionEditable() || !m_distanceHandle->enabled() )
+	if( !selectionEditable() || !m_distanceHandle->enabled() || !m_distanceHandle->visible() )
 	{
 		return true;
 	}
@@ -1104,15 +1124,29 @@ void LightPositionTool::setTargetMode( TargetMode targeted )
 
 	m_targetMode = targeted;
 
-	switch( m_targetMode )
+	updatePointer();
+}
+
+void LightPositionTool::updatePointer() const
+{
+	if( m_targetMode == TargetMode::None )
 	{
-		case TargetMode::None : GafferUI::Pointer::setCurrent( "" ); break;
-		case TargetMode::Pivot :
-			GafferUI::Pointer::setCurrent(
-				modePlug()->getValue() == (int)Mode::Shadow ? "pivot" : ""
-			);
-			break;
-		case TargetMode::Target : GafferUI::Pointer::setCurrent( "target" ); break;
+		GafferUI::Pointer::setCurrent( "" );
+	}
+	else if( !m_distanceHandle->enabled() || !m_distanceHandle->visible() )
+	{
+		GafferUI::Pointer::setCurrent( "notEditable" );
+	}
+	else if( m_targetMode == TargetMode::Pivot )
+	{
+		auto distanceHandle = static_cast<DistanceHandle *>( m_distanceHandle.get() );
+		GafferUI::Pointer::setCurrent(
+			distanceHandle->getRequiresPivot() ? "pivot" : "notEditable"
+		);
+	}
+	else if( m_targetMode == TargetMode::Target )
+	{
+		GafferUI::Pointer::setCurrent( "target" );
 	}
 }
 

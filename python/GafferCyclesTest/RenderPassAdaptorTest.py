@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,23 +34,55 @@
 #
 ##########################################################################
 
-import IECore
-import Gaffer
+import unittest
 
-Gaffer.Metadata.registerValue( "option:renderPass:enabled", "label", "Enabled" )
-Gaffer.Metadata.registerValue( "option:renderPass:enabled", "description", "Whether the render pass is enabled for rendering." )
-Gaffer.Metadata.registerValue( "option:renderPass:enabled", "defaultValue", IECore.BoolData( True ) )
+import imath
 
-Gaffer.Metadata.registerValue( "option:renderPass:type", "label", "Type" )
-Gaffer.Metadata.registerValue(
-	"option:renderPass:type",
-	"description",
-	"""
-	The type of the render pass. This provides simple setup for renders such as reflection and shadow passes,
-	typically by assigning custom shaders to the objects specified by `Casters` and `Catchers`. Use a RenderPassShaders
-	node to customise the shaders used for this purpose.
+import GafferSceneTest
+import GafferCycles
 
-	> Hint : Render pass types and their behaviours can be customised using the RenderPassTypeAdaptor API.
-	"""
-)
-Gaffer.Metadata.registerValue( "option:renderPass:type", "defaultValue", IECore.StringData( "" ) )
+class RenderPassAdaptorTest( GafferSceneTest.RenderPassAdaptorTest ) :
+
+	renderer = "Cycles"
+
+	## \todo Default camera is facing down +ve Z but should be facing
+	# down -ve Z.
+	reverseCamera = True
+
+	# Cycles outputs black shadows on a white background.
+	shadowColor = imath.Color4f( 0 )
+	litColor = imath.Color4f( 1, 1, 1, 0 )
+
+	@unittest.skip( "Light linking not supported" )
+	def testReflectionCasterLightLinks( self ) :
+
+		pass
+
+	def _createDistantLight( self ) :
+
+		light = GafferCycles.CyclesLight()
+		light.loadShader( "distant_light" )
+		return light, light["parameters"]["color"]
+
+	def _createStandardShader( self ) :
+
+		shader = GafferCycles.CyclesShader()
+		shader.loadShader( "principled_bsdf" )
+		return shader, shader["parameters"]["base_color"]
+
+	def _createFlatShader( self ) :
+
+		shader = GafferCycles.CyclesShader()
+		shader.loadShader( "emission" )
+		shader["parameters"]["strength"].setValue( 1 )
+		return shader, shader["parameters"]["color"]
+
+	def _createOptions( self ) :
+
+		options = GafferCycles.CyclesOptions()
+		options["options"]["samples"]["enabled"].setValue( True )
+		options["options"]["samples"]["value"].setValue( 16 )
+		return options
+
+if __name__ == "__main__":
+	unittest.main()

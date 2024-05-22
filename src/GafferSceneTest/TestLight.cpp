@@ -42,54 +42,83 @@
 #include "IECoreScene/Shader.h"
 
 using namespace Gaffer;
+using namespace GafferScene;
 using namespace GafferSceneTest;
 
 GAFFER_NODE_DEFINE_TYPE( TestLight )
 
+size_t TestLight::g_firstPlugIndex = 0;
+
 TestLight::TestLight( const std::string &name )
 	:	Light( name )
 {
-	addChild( new StringPlug( "lightShaderName", Plug::In, "testLight" ) );
-	parametersPlug()->addChild( new Color3fPlug( "intensity" ) );
-	parametersPlug()->addChild( new FloatPlug( "exposure" ) );
-	parametersPlug()->addChild( new BoolPlug( "__areaLight" ) );
+	storeIndexOfNextChild( g_firstPlugIndex );
+
+	addChild( new TestShader( "__shader" ) );
+	addChild( new ShaderPlug( "__shaderIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
+
+	/// \todo Remove this when merging to `main` after changing `TestShader` to not load a
+	/// default shader. We need it for now to remove the child plugs resulting from loading
+	/// `simpleShader` in the `TestShader` constructor.
+	shaderNode()->parametersPlug()->clearChildren();
+
+	shaderNode()->typePlug()->setValue( "light" );
+	shaderNode()->parametersPlug()->setFlags( Plug::AcceptsInputs, true );
+	shaderNode()->parametersPlug()->setInput( parametersPlug() );
+
+	shaderInPlug()->setInput( shaderNode()->outPlug() );
+
+	shaderNode()->loadShader( "simpleLight" );
 }
 
 TestLight::~TestLight()
 {
 }
 
+TestShader *TestLight::shaderNode()
+{
+	return getChild<TestShader>( g_firstPlugIndex );
+}
+
+const TestShader *TestLight::shaderNode() const
+{
+	return getChild<TestShader>( g_firstPlugIndex );
+}
+
+ShaderPlug *TestLight::shaderInPlug()
+{
+	return getChild<ShaderPlug>( g_firstPlugIndex + 1 );
+}
+
+const ShaderPlug *TestLight::shaderInPlug() const
+{
+	return getChild<ShaderPlug>( g_firstPlugIndex + 1 );
+}
+
+void TestLight::loadShader( const std::string &shaderName )
+{
+	shaderNode()->loadShader( shaderName );
+	shaderNode()->typePlug()->setValue( "light" );
+	shaderInPlug()->setInput( shaderNode()->outPlug() );
+}
+
+void TestLight::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
+{
+	Light::affects( input, outputs );
+
+	if( input == shaderInPlug() )
+	{
+		outputs.push_back( outPlug()->attributesPlug() );
+	}
+}
+
 void TestLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	for( ValuePlug::Iterator it( parametersPlug() ); !it.done(); ++it )
-	{
-		(*it)->hash( h );
-	}
+	h.append( shaderInPlug()->attributesHash() );
 }
 
 IECoreScene::ConstShaderNetworkPtr TestLight::computeLight( const Gaffer::Context *context ) const
 {
-	IECoreScene::ShaderPtr shader = new IECoreScene::Shader( getChild<StringPlug>( "lightShaderName" )->getValue(), "light" );
-
-	for( const auto &c : ValuePlug::Range( *parametersPlug() ) )
-	{
-		IECore::DataPtr data = PlugAlgo::getValueAsData( c.get() );
-		if( auto compoundData = IECore::runTimeCast<IECore::CompoundData>( data.get() ) )
-		{
-			auto enabledData = compoundData->member<IECore::BoolData>( "enabled" );
-			if( enabledData && enabledData->readable() )
-			{
-				shader->parameters()[ c->getName() ] = compoundData->member( "value" );
-			}
-		}
-		else
-		{
-			shader->parameters()[ c->getName() ] = data;
-		}
-	}
-
-	IECoreScene::ShaderNetworkPtr network = new IECoreScene::ShaderNetwork();
-	network->addShader( "light", std::move( shader ) );
-	network->setOutput( { "light" } );
-	return network;
+	IECore::ConstCompoundObjectPtr shaderAttributes = shaderInPlug()->attributes();
+	return shaderAttributes->member<const IECoreScene::ShaderNetwork>( "light" );
 }
