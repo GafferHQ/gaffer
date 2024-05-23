@@ -34,59 +34,13 @@
 #
 ##########################################################################
 
-import IECore
-
 import Gaffer
-import GafferScene
+import GafferSceneUI
 
-def __renderPassTypes() :
-
-	types = sorted( list( GafferScene.RenderPassTypeAdaptor.registeredTypeNames() ) )
-
-	if callable( GafferScene.RenderPassTypeAdaptor.autoTypeFunction() ) :
-		types.insert( 0, "auto" )
-
-	return types
-
-def renderPassTypePresetNames() :
-
-	return IECore.StringVectorData( [ IECore.CamelCase.toSpaced( p ) for p in __renderPassTypes() ] )
-
-def renderPassTypePresetValues() :
-
-	return IECore.StringVectorData( __renderPassTypes() )
-
-Gaffer.Metadata.registerNode(
-
-	GafferScene.RenderPassTypeAdaptor,
-
-	"description",
-	"""
-	Adapts render pass types to a client and renderer. The behaviour of
-	how each render pass type is adapted is defined by one or more type
-	processors registered to this node.
-	""",
-
-	plugs = {
-
-		"client" : [
-
-			"description",
-			"""
-			The client to adapt render pass types to.
-			""",
-
-		],
-
-		"renderer" : [
-
-			"description",
-			"""
-			The renderer to adapt render pass types to.
-			""",
-
-		],
-
-	}
-
-)
+Gaffer.Metadata.registerValue( "option:renderPass:type", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
+Gaffer.Metadata.registerValue( "option:renderPass:type", "preset:Standard", "" )
+## \todo As part of the future great metadata reckoning, it would make more sense for renderPassTypePresetNames to be defined as
+# part of this global metadata rather than by GafferSceneUI.RenderPassTypeAdaptorUI and then called here. This would also allow
+# the registrations in this file to be combined with those in `startup/GafferScene/renderPassOptions.py`.
+Gaffer.Metadata.registerValue( "option:renderPass:type", "presetNames", GafferSceneUI.RenderPassTypeAdaptorUI.renderPassTypePresetNames )
+Gaffer.Metadata.registerValue( "option:renderPass:type", "presetValues", GafferSceneUI.RenderPassTypeAdaptorUI.renderPassTypePresetValues )
