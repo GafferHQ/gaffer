@@ -121,7 +121,7 @@ IECore::ConstCompoundObjectPtr OptionTweaks::computeProcessedGlobals(
 	result->members() = inputGlobals->members();
 
 	tweaksPlug->applyTweaks(
-		[&result]( const std::string &valueName )
+		[&result]( const std::string &valueName, const bool withFallback )
 		{
 			return result->member<Data>( g_namePrefix + valueName );
 		},

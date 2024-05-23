@@ -154,10 +154,10 @@ IECore::ConstCompoundObjectPtr AttributeTweaks::computeProcessedAttributes( cons
 	}
 
 	tweaksPlug->applyTweaks(
-		[&source]( const std::string &valueName ) -> const IECore::Data *
+		[&source]( const std::string &valueName, const bool withFallback ) -> const IECore::Data *
 		{
 			const Data *result = source->member<Data>( valueName );
-			if( !result && valueName == "linkedLights" )
+			if( withFallback && !result && valueName == "linkedLights" )
 			{
 				/// \todo Use a registry to provide default values for
 				/// all attributes.

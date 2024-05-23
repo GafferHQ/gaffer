@@ -332,7 +332,7 @@ bool ShaderTweaks::applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork, Tweak
 
 			if(
 				tweakPlug->applyTweak(
-					[&parameter, &modifiedShader]( const std::string &valueName )
+					[&parameter, &modifiedShader]( const std::string &valueName, const bool withFallback )
 					{
 						return modifiedShader.first->second->parametersData()->member( parameter.name );
 					},

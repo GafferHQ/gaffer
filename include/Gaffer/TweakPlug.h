@@ -112,7 +112,8 @@ class GAFFER_API TweakPlug : public Gaffer::ValuePlug
 		/// \returns true if any tweaks were applied
 		template<class GetDataFunctor, class SetDataFunctor>
 		bool applyTweak(
-			/// Signature : const IECore::Data *functor( const std::string &valueName ).
+			/// Signature : const IECore::Data *functor( const std::string &valueName, const bool withFallback ).
+			/// Passing `withFallback=False` specifies that no fallback value should be returned in place of missing data.
 			/// \returns `nullptr` if `valueName` is invalid.
 			GetDataFunctor &&getDataFunctor,
 			/// Signature : bool functor( const std::string &valueName, IECore::DataPtr newData).
