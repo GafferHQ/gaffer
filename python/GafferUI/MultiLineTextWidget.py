@@ -506,7 +506,7 @@ class _PlainTextEdit( QtWidgets.QPlainTextEdit ) :
 			return
 
 		widget = GafferUI.Widget._owner( self )
-		if widget is None or ( widget.activatedSignal().numSlots() + widget.editingFinishedSignal().numSlots() ) == 0 :
+		if widget is None or ( widget.activatedSignal().empty() and widget.editingFinishedSignal().empty() ) :
 			return
 
 		viewport = self.viewport()
