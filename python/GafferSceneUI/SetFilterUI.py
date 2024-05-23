@@ -93,6 +93,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"ui:scene:acceptsSetExpression", True,
+			"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
 			"nodule:type", "",
 
 		],

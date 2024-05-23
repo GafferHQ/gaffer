@@ -334,6 +334,7 @@
 			"ids" : [
 				"colorPlugValueWidgetSlidersOff",
 				"colorPlugValueWidgetSlidersOn",
+				"ctrlEnter",
 			]
 
 		},

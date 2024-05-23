@@ -150,7 +150,6 @@ class ExpressionWidget( GafferUI.Widget ) :
 			self.__textWidget = GafferUI.CodeWidget()
 			self.__textWidget.setEditable( not Gaffer.MetadataAlgo.readOnly( node ) )
 
-			self.__textWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ), scoped = False )
 			self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ), scoped = False )
 			self.__textWidget.dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ), scoped = False )
 			self.__textWidget.contextMenuSignal().connect( Gaffer.WeakMethod( self.__expressionContextMenu ), scoped = False )
@@ -329,10 +328,6 @@ class ExpressionWidget( GafferUI.Widget ) :
 	def __expressionChanged( self, node ) :
 
 		self.__update()
-
-	def __activated( self, widget ) :
-
-		self.__setExpression()
 
 	def __editingFinished( self, widget ) :
 

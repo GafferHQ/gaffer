@@ -140,6 +140,10 @@ class TextWidget( GafferUI.Widget ) :
 		selectionStart = self._qtWidget().selectionStart()
 		return ( selectionStart, selectionStart + len( self._qtWidget().selectedText() ) )
 
+	def selectedText( self ) :
+
+		return self._qtWidget().selectedText()
+
 	## Sets the preferred width for the widget in terms of the
 	# number of characters which can be displayed. The widget can still
 	# contract and expand, but will request to be this width if possible.
