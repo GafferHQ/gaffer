@@ -14,6 +14,7 @@ Improvements
 - NodeEditor, UIEditor, PythonEditor : Added popup hint for the <kbd>Ctrl</kbd>+<kbd>Return</kbd> shortcut.
 - CodeWidget : Added highlighting of braces and operators.
 - RenderPassEditor : Added preset menu for choosing a render pass type from the list of available registered types. An "auto" type is included in the list when an auto type function has been registered.
+- OptionTweaks : Tweak `value` plugs can now access metadata registered globally to `option:{tweakName}`, where `{tweakName}` is the value of the tweak's `name` plug.
 
 Fixes
 -----
