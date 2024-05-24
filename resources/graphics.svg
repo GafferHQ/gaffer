@@ -276,20 +276,6 @@
          id="stop2644-7" />
     </linearGradient>
     <linearGradient
-       gradientTransform="matrix(1.1875,0,0,1.1874924,4.125,-468.47908)"
-       gradientUnits="userSpaceOnUse"
-       y2="2776"
-       x2="26"
-       y1="2776"
-       x1="10"
-       id="boundsTemplate-9-2"
-       inkscape:swatch="solid">
-      <stop
-         style="stop-color:#ff0101;stop-opacity:0.0787037;"
-         offset="0"
-         id="stop2644-7-7" />
-    </linearGradient>
-    <linearGradient
        gradientTransform="translate(0.275696,-0.72264739)"
        gradientUnits="userSpaceOnUse"
        y2="1838.3621"
@@ -320,22 +306,7 @@
      inkscape:bbox-nodes="true"
      inkscape:showpageshadow="2"
      inkscape:pagecheckerboard="0"
-     inkscape:deskcolor="#4c4c4c"
-     showgrid="false"
-     inkscape:zoom="1"
-     inkscape:cx="95"
-     inkscape:cy="2502.5"
-     inkscape:window-width="2797"
-     inkscape:window-height="1368"
-     inkscape:window-x="1609"
-     inkscape:window-y="32"
-     inkscape:window-maximized="0"
-     inkscape:current-layer="layer1"
-     inkscape:snap-bbox="true"
-     inkscape:snap-to-guides="false"
-     inkscape:snap-grids="true"
-     inkscape:snap-global="true"
-     inkscape:snap-others="false">
+     inkscape:deskcolor="#4c4c4c">
     <inkscape:grid
        type="xygrid"
        id="grid3598"
