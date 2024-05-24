@@ -200,7 +200,12 @@ OutputBuffer::OutputBuffer( IECoreScenePreview::Renderer *renderer )
 	using OutputDefinition = std::tuple<const char *, const char *, const char *>;
 	for(
 		auto &[name, data, filter] : {
-			OutputDefinition( "beauty", "rgba", "box" ),
+			/// \todo Define standard filter names that can be supported across
+			/// all renderer backends, and settle on one for the beauty.
+			OutputDefinition( "beauty", "rgba", nullptr ),
+			// Using `box` rather than `closest` for Z because it gives a better
+			// approximation of depth at the centre of the pixel, which is important
+			// for accuracy in `SceneGadget::objectAt()`.
 			OutputDefinition( "depth", "float Z", "box" ),
 			OutputDefinition( "id", "uint id", "closest" ),
 		}
@@ -209,7 +214,10 @@ OutputBuffer::OutputBuffer( IECoreScenePreview::Renderer *renderer )
 		IECoreScene::OutputPtr output = outputTemplate->copy();
 		output->setName( name );
 		output->setData( data );
-		output->parameters()["filter"] = new IECore::StringData( filter );
+		if( filter )
+		{
+			output->parameters()["filter"] = new IECore::StringData( filter );
+		}
 		renderer->output( string( "__outputBuffer:" ) + name, output.get() );
 	}
 }
