@@ -66,6 +66,7 @@ class PythonEditor( GafferUI.Editor ) :
 			wrapMode = GafferUI.MultiLineTextWidget.WrapMode.None_,
 			role = GafferUI.MultiLineTextWidget.Role.Code,
 		)
+		self.__outputWidget._qtWidget().setObjectName( "gafferPythonEditorOutputWidget" )
 		self.__outputWidget.contextMenuSignal().connect(
 			Gaffer.WeakMethod( self.__contextMenu ), scoped = False
 		)

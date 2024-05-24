@@ -141,7 +141,6 @@ class _CommandPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__codeWidget.setHighlighter( GafferUI.CodeWidget.PythonHighlighter() )
 		self.__codeWidget.setCommentPrefix( "#" )
 
-		self.__codeWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ), scoped = False )
 		self.__codeWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ), scoped = False )
 
 		self._addPopupMenu( self.__codeWidget )

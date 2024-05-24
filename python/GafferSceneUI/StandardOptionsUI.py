@@ -411,6 +411,13 @@ plugsMetadata = {
 
 	],
 
+	"options.inclusions.value" : [
+
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
+
+	],
+
 	"options.exclusions" : [
 
 		"description",
@@ -424,6 +431,13 @@ plugsMetadata = {
 
 	],
 
+	"options.exclusions.value" : [
+
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
+
+	],
+
 	"options.additionalLights" : [
 
 		"description",
@@ -434,6 +448,13 @@ plugsMetadata = {
 		""",
 
 		"layout:section", "Render Set",
+
+	],
+
+	"options.additionalLights.value" : [
+
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
 
 	],
 

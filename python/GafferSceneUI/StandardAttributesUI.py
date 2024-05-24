@@ -235,6 +235,7 @@ Gaffer.Metadata.registerNode(
 		"attributes.linkedLights.value" : [
 
 			"ui:scene:acceptsSetExpression", True,
+			"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
 
 		],
 
@@ -256,6 +257,7 @@ Gaffer.Metadata.registerNode(
 		"attributes.filteredLights.value" : [
 
 			"ui:scene:acceptsSetExpression", True,
+			"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
 
 		],
 

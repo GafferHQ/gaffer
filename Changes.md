@@ -17,7 +17,32 @@ Breaking Changes
 1.4.x.x (relative to 1.4.4.0)
 =======
 
+Improvements
+------------
 
+- SetFilter, StandardAttributes, StandardOptions : Added syntax highlighting and auto-complete for set expressions.
+- NodeEditor, UIEditor, PythonEditor : Added popup hint for the <kbd>Ctrl</kbd>+<kbd>Return</kbd> shortcut.
+- CodeWidget : Added highlighting of braces and operators.
+
+Fixes
+-----
+
+- CodeWidget :
+  - Removed unwanted `\n` prefix in lines passed to `Completers`.
+  - Prevented spurious emission of `editingFinishedSignal()` when showing the completions menu.
+  - Prevented the completion menu from popping up inappropriately when the highlighter was changed.
+- MultiLineTextWidget :
+  - Fixed rendering of disabled widgets, which now show faded text.
+  - Fixed behaviour of `editingFinishedSignal()` to match TextWidget : it is now also emitted when the text is activated (see `activatedSignal()`).
+- MultiLineStringMetadataWidget : The <kbd>Ctrl</kbd>+<kbd>Return</kbd> shortcut now updates the metadata value immediately.
+- UIEditor : The <kbd>Ctrl</kbd>+<kbd>Return</kbd> shortcut now updates the button code immediately.
+
+API
+---
+
+- TextWidget : Added `selectedText()` convenience method.
+- MultiLineTextWidget : Added `setSelection()` and `getSelection()` methods.
+- SetExpressionPlugValueWidget : Added new editor for set expressions, with syntax highlighting and auto-complete.
 
 1.4.4.0 (relative to 1.4.3.0)
 =======
