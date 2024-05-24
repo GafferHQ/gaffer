@@ -222,6 +222,36 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( s["color"].getValue(), imath.Color4f(-7.18267809e-20, 0.448745549, 0.928857431, 1) )
 
+	def testPreviewChannelsWithoutRGBAInput( self ) :
+
+		# As for `testPreviewChannels` but with some additional
+		# protection against bad accesses to non-existent RGBA
+		# input channels.
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( self.testImage )
+
+		# ImageReader doesn't check for the existence of channels
+		# in `hash()`, but Shuffle does. So we insert a shuffle
+		# as additional protection against bugs in Cryptomatte.
+
+		shuffle = GafferImage.Shuffle()
+		shuffle["in"].setInput( reader["out"] )
+
+		cryptomatte = GafferScene.Cryptomatte()
+		cryptomatte["in"].setInput( shuffle["out"] )
+		cryptomatte["layer"].setValue( "crypto_object" )
+
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( cryptomatte["out"] )
+		sampler["pixel"].setValue( imath.V2f( 32, 108 ) )
+
+		self.assertEqual( sampler["color"].getValue(), imath.Color4f(-7.18267809e-20, 0.198745549, 0.178857431, 0) )
+
+		cryptomatte["matteNames"].setValue( IECore.StringVectorData( [ "/cow1" ] ) )
+
+		self.assertEqual( sampler["color"].getValue(), imath.Color4f(-7.18267809e-20, 0.448745549, 0.928857431, 1) )
+
 	def testWildcardMatch( self ) :
 
 		r = GafferImage.ImageReader()

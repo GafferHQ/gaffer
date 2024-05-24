@@ -563,25 +563,38 @@ void Cryptomatte::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *
 	}
 	else if( output == matteChannelDataPlug() )
 	{
-		inPlug()->channelDataPlug()->hash( h );
-
 		std::string cryptomatteLayer;
 		ConstStringVectorDataPtr channelNamesData;
 		{
 			GafferImage::ImagePlug::GlobalScope globalScope( context );
-			cryptomatteLayer = layerPlug()->getValue();
 			channelNamesData = inPlug()->channelNamesPlug()->getValue();
-
+			cryptomatteLayer = layerPlug()->getValue();
 			matteValuesPlug()->hash( h );
 		}
 
+		const std::vector<std::string> &channelNames = channelNamesData->readable();
+
 		boost::regex channelNameRegex( fmt::format( g_cryptomatteChannelPattern, cryptomatteLayer ) );
 		GafferImage::ImagePlug::ChannelDataScope channelDataScope( context );
-		for( const auto &c : channelNamesData->readable() )
+		for( const auto &c : channelNames )
 		{
 			if( boost::regex_match( c, channelNameRegex ) )
 			{
+				ChannelMap::const_iterator cIt = g_channelMap.find( GafferImage::ImageAlgo::baseName( c ) );
+				if( cIt == g_channelMap.end() )
+				{
+					continue;
+				}
+
+				const std::string &alphaChannel = GafferImage::ImageAlgo::channelName( GafferImage::ImageAlgo::layerName( c ), cIt->second );
+				if( !GafferImage::ImageAlgo::channelExists( channelNames, alphaChannel ) )
+				{
+					continue;
+				}
+
 				channelDataScope.setChannelName( &c );
+				inPlug()->channelDataPlug()->hash( h );
+				channelDataScope.setChannelName( &alphaChannel );
 				inPlug()->channelDataPlug()->hash( h );
 			}
 		}
