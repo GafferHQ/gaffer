@@ -980,5 +980,29 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 					for c, expected in zip( stats[stat].getValue(), imath.Color4f( 0.3, 0.6, 0.9, 0 ) ) :
 						self.assertAlmostEqual( c, expected, delta = 0.0001 )
 
+	def testConformLowerCaseRGBA( self ) :
+
+		constant = GafferImage.Constant()
+		constant["color"].setValue( imath.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
+
+		shuffle = GafferImage.Shuffle()
+		shuffle["in"].setInput( constant["out"] )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "R", "r", deleteSource = True ) )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "G", "g", deleteSource = True ) )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "B", "b", deleteSource = True ) )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "A", "a", deleteSource = True ) )
+		self.assertEqual( set( shuffle["out"].channelNames( ) ), { "r", "g", "b", "a" } )
+
+		writer = GafferImage.ImageWriter()
+		writer["in"].setInput( shuffle["out"] )
+		writer["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
+		writer["openexr"]["dataType"].setValue( "float" )
+		writer["task"].execute()
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setInput( writer["fileName"] )
+
+		self.assertImagesEqual( reader["out"], constant["out"], ignoreMetadata = True )
+
 if __name__ == "__main__":
 	unittest.main()
