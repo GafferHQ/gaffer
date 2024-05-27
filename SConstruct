@@ -1040,6 +1040,24 @@ cyclesDefines = [
 	( "WITH_OPTIX" ),
 ]
 
+cyclesLibraries = [
+	"cycles_session", "cycles_scene", "cycles_graph", "cycles_bvh", "cycles_device", "cycles_kernel", "cycles_kernel_osl",
+	"cycles_integrator", "cycles_util", "cycles_subd", "extern_sky", "extern_cuew"
+]
+
+# It's very weird to link the Cycles static libraries twice, to both
+# lib/libGafferCycles.so and python/GafferCycles/_GafferCycles.so, resulting in 2 copies of everything.
+# This has caused issues on Ubuntu where the init stuff cycles_session runs twice, terminating Gaffer with an
+# exception when the node buffer_pass is registered twice. It seems to work fine on Linux if we don't double
+# link it - the symbols from the static library can be included just in libGafferCycles, and the dynamic linker
+# will find them OK.
+# But on Windows, it seems the symbols from the static libraries aren't made available in libGafferCycles, so
+# it wouldn't work to just link them once. It is currently unknown why Windows doesn't have problems with
+# running the initialization in cycles_session twice.
+# Hopefully this hackery works for now - we're hoping in the long run, Cycles might ship as a dynamic lib, which
+# would simplify all this.
+includeCyclesLibrariesInPythonModule = env["PLATFORM"] == "win32"
+
 libraries = {
 
 	"Gaffer" : {
@@ -1350,9 +1368,8 @@ libraries = {
 			"LIBPATH" : [ "$CYCLES_ROOT/lib" ],
 			"LIBS" : [
 				"IECoreScene$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreVDB$CORTEX_LIB_SUFFIX",
-				"Gaffer", "GafferScene", "GafferDispatch", "GafferOSL",
-				"cycles_session", "cycles_scene", "cycles_graph", "cycles_bvh", "cycles_device", "cycles_kernel", "cycles_kernel_osl",
-				"cycles_integrator", "cycles_util", "cycles_subd", "extern_sky", "extern_cuew",
+				"Gaffer", "GafferScene", "GafferDispatch", "GafferOSL"
+			] + cyclesLibraries + [
 				"OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslexec$OSL_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX",
 				"openvdb$VDB_LIB_SUFFIX", "Alembic", "osdCPU", "OpenColorIO$OCIO_LIB_SUFFIX", "embree4", "Iex", "openpgl",
 			],
@@ -1364,8 +1381,7 @@ libraries = {
 			"LIBPATH" : [ "$CYCLES_ROOT/lib" ],
 			"LIBS" : [
 				"Gaffer", "GafferScene", "GafferDispatch", "GafferBindings", "GafferCycles", "IECoreScene",
-				"cycles_session", "cycles_scene", "cycles_graph", "cycles_bvh", "cycles_device", "cycles_kernel", "cycles_kernel_osl",
-				"cycles_integrator", "cycles_util", "cycles_subd", "extern_sky", "extern_cuew",
+			] + ( cyclesLibraries if includeCyclesLibrariesInPythonModule else [] ) + [
 				"OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslexec$OSL_LIB_SUFFIX", "openvdb$VDB_LIB_SUFFIX",
 				"oslquery$OSL_LIB_SUFFIX", "Alembic", "osdCPU", "OpenColorIO$OCIO_LIB_SUFFIX", "embree4", "Iex", "openpgl",
 			],
