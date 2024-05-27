@@ -632,6 +632,54 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( nsi.count( '"transform"' ), 2 )
 		self.assertEqual( nsi.count( '"mesh"' ), 1 )
 
+	def testRenderSets( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsia" ),
+		)
+
+		m = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
+		a = IECore.CompoundObject()
+		a["sets"] = IECore.InternedStringVectorData( [ "testSet" ] ) 
+
+		r.object( "testPlane1", m, r.attributes( a ) )
+		r.object( "testPlane2", m, r.attributes( a ) )
+
+		r.render()
+		del r
+
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
+		self.assertIn( "render:testSet", nsi )
+		self.assertEqual( nsi["render:testSet"]["members"], ['<testPlane1>', '<testPlane2>'] )
+
+	def testLightgroups( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsia" )
+		)
+
+		r.output(
+			"test",
+			IECoreScene.Output(
+				"beauty.exr",
+				"exr",
+				"rgba",
+				{
+					"lightgroup" : "render:testSet",
+				}
+			)
+		)
+
+		r.render()
+		del r
+
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
+		self.assertEqual( nsi["outputLayer:test"]["lightset"], ["<render:testSet>"] )
+
 	def testTransform( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(

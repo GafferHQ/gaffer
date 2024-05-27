@@ -51,6 +51,8 @@
 
 #include "IECore/ObjectPool.h"
 
+#include "boost/algorithm/string.hpp"
+
 #include <filesystem>
 #include <memory>
 
@@ -348,7 +350,10 @@ void Render::executeInternal( bool flushCaches ) const
 	Monitor::Scope performanceMonitorScope( performanceMonitor );
 
 	GafferScene::Private::RendererAlgo::outputOptions( renderOptions.globals.get(), renderer.get() );
-	GafferScene::Private::RendererAlgo::outputOutputs( inPlug(), renderOptions.globals.get(), renderer.get() );
+	if( !( boost::starts_with( rendererType, "3Delight" ) ) )
+	{
+		GafferScene::Private::RendererAlgo::outputOutputs( inPlug(), renderOptions.globals.get(), renderer.get() );
+	}
 
 	{
 		// Using nested scope so that we free the memory used by `renderSets`
@@ -361,6 +366,11 @@ void Render::executeInternal( bool flushCaches ) const
 		GafferScene::Private::RendererAlgo::outputLightFilters( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
 		lightLinks.outputLightFilterLinks( adaptedInPlug() );
 		GafferScene::Private::RendererAlgo::outputObjects( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
+	}
+
+	if( boost::starts_with( rendererType, "3Delight" ) )
+	{
+		GafferScene::Private::RendererAlgo::outputOutputs( inPlug(), renderOptions.globals.get(), renderer.get() );
 	}
 
 	if( renderScope.sceneTranslationOnly() )

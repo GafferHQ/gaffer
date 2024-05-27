@@ -250,6 +250,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 					"colorprofile" : "linear",
 					"filter" : "blackman-harris",
 					"filterwidth" : 3.0,
+					"lightgroup" : "",
 				}
 			)
 		)
@@ -265,6 +266,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 					"colorprofile" : "linear",
 					"filter" : "blackman-harris",
 					"filterwidth" : 3.0,
+					"lightgroup" : "",
 				}
 			)
 		)

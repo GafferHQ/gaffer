@@ -269,7 +269,14 @@ class DelightOutput : public IECore::RefCounted
 			ParameterList driverParams;
 			for( const auto &[parameterName, parameterValue] : output->parameters() )
 			{
-				if( parameterName != "filter" && parameterName != "filterwidth" && parameterName != "scalarformat" && parameterName != "colorprofile" && parameterName != "layername" && parameterName != "layerName" && parameterName != "withalpha" )
+				if( parameterName != "filter" 
+					&& parameterName != "filterwidth" 
+					&& parameterName != "scalarformat" 
+					&& parameterName != "colorprofile" 
+					&& parameterName != "lightgroup" 
+					&& parameterName != "layername" 
+					&& parameterName != "layerName" 
+					&& parameterName != "withalpha" )
 				{
 					driverParams.add( parameterName.c_str(), parameterValue.get() );
 				}
@@ -404,9 +411,21 @@ class DelightOutput : public IECore::RefCounted
 				layerParams.add( { "filterwidth", &filterWidth, NSITypeDouble, 0, 1, 0 } );
 			}
 
+			const string lightGroup = parameter<string>( output->parameters(), "lightgroup", "" );
+			vector<string> lightGroupTokens;
+			if( lightGroup != "" )
+			{
+				IECore::StringAlgo::tokenize( lightGroup, ' ', lightGroupTokens );
+			}
+
 			for( const auto &[parameterName, parameterValue] : output->parameters() )
 			{
-				if( parameterName != "filter" && parameterName != "filterwidth" && parameterName != "scalarformat" && parameterName != "colorprofile" && parameterName != "layerName" )
+				if( parameterName != "filter" 
+					&& parameterName != "filterwidth" 
+					&& parameterName != "scalarformat" 
+					&& parameterName != "colorprofile" 
+					&& parameterName != "lightgroup" 
+					&& parameterName != "layerName" )
 				{
 					layerParams.add( parameterName.c_str(), parameterValue.get() );
 				}
@@ -420,6 +439,20 @@ class DelightOutput : public IECore::RefCounted
 				m_layerHandle.name(), "outputdrivers",
 				0, nullptr
 			);
+
+			if( lightGroup != "" )
+			{
+				for( string lightGroupToken : lightGroupTokens )
+				{
+					NSIConnect(
+						m_context,
+						lightGroupToken.c_str(), "",
+						m_layerHandle.name(), "lightset",
+						0, nullptr
+					);
+				}
+			}
+
 		}
 
 		const DelightHandle &layerHandle() const
@@ -721,7 +754,10 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 					{
 						if( d->readable().size() )
 						{
-							msg( Msg::Warning, "DelightRenderer", "Attribute \"sets\" not supported" );
+							for( auto &setName : d->readable() )
+							{
+								m_sets.push_back(setName);
+							}
 						}
 					}
 				}
@@ -798,6 +834,11 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 			return m_handle;
 		}
 
+		const vector<string> &sets() const
+		{
+			return m_sets;
+		}
+
 	private :
 
 		static ConstDelightShaderPtr shader( const IECore::InternedString &name, const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
@@ -818,6 +859,7 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 		ConstDelightShaderPtr m_displacementShader;
 
 		ConstShaderNetworkPtr m_usdLightShader;
+		vector<string> m_sets;
 
 };
 
@@ -1093,6 +1135,15 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 					m_attributes->handle().name(), "",
 					m_transformHandle.name(), "shaderattributes"
 				);
+				for ( auto setName : m_attributes->sets() )
+				{
+					setName = "render:" + setName;
+					NSIDisconnect(
+						m_transformHandle.context(),
+						m_transformHandle.name(), "",
+						setName.c_str(), "members"
+					);
+				}
 			}
 
 			m_attributes = static_cast<const DelightAttributes *>( attributes );
@@ -1111,6 +1162,17 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 
 			);
 
+			for ( auto setName : m_attributes->sets() )
+			{
+				setName = "render:" + setName;
+				NSICreate( m_transformHandle.context(), setName.c_str(), "set", 0, nullptr );
+				NSIConnect(
+					m_transformHandle.context(),
+					m_transformHandle.name(), "",
+					setName.c_str(), "members",
+					0, nullptr
+				);
+			}
 			return true;
 		}
 
