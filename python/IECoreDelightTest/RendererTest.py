@@ -642,7 +642,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		m = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
 		a = IECore.CompoundObject()
-		a["sets"] = IECore.InternedStringVectorData( [ "testSet" ] ) 
+		a["sets"] = IECore.InternedStringVectorData( [ "testSet" ] )
 
 		r.object( "testPlane1", m, r.attributes( a ) )
 		r.object( "testPlane2", m, r.attributes( a ) )

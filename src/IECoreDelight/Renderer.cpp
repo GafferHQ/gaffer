@@ -269,13 +269,13 @@ class DelightOutput : public IECore::RefCounted
 			ParameterList driverParams;
 			for( const auto &[parameterName, parameterValue] : output->parameters() )
 			{
-				if( parameterName != "filter" 
-					&& parameterName != "filterwidth" 
-					&& parameterName != "scalarformat" 
-					&& parameterName != "colorprofile" 
-					&& parameterName != "lightgroup" 
-					&& parameterName != "layername" 
-					&& parameterName != "layerName" 
+				if( parameterName != "filter"
+					&& parameterName != "filterwidth"
+					&& parameterName != "scalarformat"
+					&& parameterName != "colorprofile"
+					&& parameterName != "lightgroup"
+					&& parameterName != "layername"
+					&& parameterName != "layerName"
 					&& parameterName != "withalpha" )
 				{
 					driverParams.add( parameterName.c_str(), parameterValue.get() );
@@ -420,11 +420,11 @@ class DelightOutput : public IECore::RefCounted
 
 			for( const auto &[parameterName, parameterValue] : output->parameters() )
 			{
-				if( parameterName != "filter" 
-					&& parameterName != "filterwidth" 
-					&& parameterName != "scalarformat" 
-					&& parameterName != "colorprofile" 
-					&& parameterName != "lightgroup" 
+				if( parameterName != "filter"
+					&& parameterName != "filterwidth"
+					&& parameterName != "scalarformat"
+					&& parameterName != "colorprofile"
+					&& parameterName != "lightgroup"
 					&& parameterName != "layerName" )
 				{
 					layerParams.add( parameterName.c_str(), parameterValue.get() );
