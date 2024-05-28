@@ -1620,12 +1620,20 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 {
 	try
 	{
+		RenderOptions dl_renderOptions;
 		// Update globals
 		if( m_dirtyGlobalComponents & GlobalsGlobalComponent )
 		{
 			RenderOptions renderOptions( m_scene.get() );
 			Private::RendererAlgo::outputOptions( renderOptions.globals.get(), m_renderOptions.globals.get(), m_renderer.get() );
-			Private::RendererAlgo::outputOutputs( m_scene.get(), renderOptions.globals.get(), m_renderOptions.globals.get(), m_renderer.get() );
+			if( !( boost::starts_with( m_renderer->name().string(), "3Delight" ) ) )
+			{
+				Private::RendererAlgo::outputOutputs( m_scene.get(), renderOptions.globals.get(), m_renderOptions.globals.get(), m_renderer.get() );
+			}
+			else
+			{
+				dl_renderOptions = m_renderOptions;
+			}
 			if( *renderOptions.globals != *m_renderOptions.globals )
 			{
 				m_changedGlobalComponents |= GlobalsGlobalComponent;
@@ -1715,6 +1723,11 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 		if( m_changedGlobalComponents & CameraOptionsGlobalComponent )
 		{
 			updateDefaultCamera();
+		}
+
+		if( m_changedGlobalComponents && boost::starts_with( m_renderer->name().string(), "3Delight" ) )
+		{
+			Private::RendererAlgo::outputOutputs( m_scene.get(), m_renderOptions.globals.get(), dl_renderOptions.globals.get(), m_renderer.get() );
 		}
 
 		if( !pathsToUpdate )

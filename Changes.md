@@ -6,6 +6,10 @@ Improvements
 
 - CameraTweaks : Added `ignoreMissing` plug to align behaviour with the other Tweaks nodes.
 - AttributeTweaks : The `{source}` substitution for `linkedLights` now expands to `defaultLights` if the attribute doesn't exist yet. This makes tweaks such as `({source}) - unwantedLights` reliable even if no light links have been authored yet.
+- 3Delight :
+  - Added translation of Gaffer render:* sets to NSI sets.
+  - Added NSI lightset connections driven by Gaffer lightgroup output parameter supporting space separated light objects and render sets.
+  - Updated 3Delight output presets to include a lightgroup parameter (empty by default).
 
 Breaking Changes
 ----------------
@@ -13,6 +17,7 @@ Breaking Changes
 - CameraTweaks : `Replace` mode now errors if the input parameter does not exist. Use `Create` mode or the new `ignoreMissing` plug instead.
 - TweakPlug : Remove deprecated `MissingMode::IgnoreOrReplace`.
 - AttributeTweaks : `Replace` mode no longer errors if the `linkedLights` attribute doesn't exist.
+- 3Delight : Switched NSI outputs creation from after global options to after scene objects both for batch and interactive rendering.
 
 1.4.x.x (relative to 1.4.4.0)
 =======
