@@ -516,7 +516,7 @@ void InteractiveRender::compute( Gaffer::ValuePlug *output, const Gaffer::Contex
 		std::string renderer = rendererPlug()->getValue();
 		if( renderer.empty() )
 		{
-			ConstCompoundObjectPtr globals = adaptedInPlug()->globals();
+			ConstCompoundObjectPtr globals = inPlug()->globals();
 			if( auto rendererData = globals->member<const StringData>( g_rendererOptionName ) )
 			{
 				renderer = rendererData->readable();

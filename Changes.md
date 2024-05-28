@@ -30,6 +30,9 @@ Fixes
   - Fixed errors when the input image didn't contain the main `RGBA` channels.
   - Fixed inaccurate hash.
 - SceneAlgo : Fixed exception handling for Python render adaptors. Previously an exception during adaptor construction caused a `SystemError`.
+- InteractiveRender :
+  - Fixed crash triggered by a render adaptor depending on its `renderer` input to adapt the scene globals.
+  - Removed unintentional ability for render adaptors to change the renderer being used.
 
 API
 ---
