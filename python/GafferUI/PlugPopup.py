@@ -116,6 +116,7 @@ class PlugPopup( GafferUI.PopupWindow ) :
 			colorPlugValueWidget.setColorChooserVisible( True )
 
 		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
+		self.focusChangedSignal().connect( Gaffer.WeakMethod( self.__focusChanged ), scoped = False )
 
 	def popup( self, center = None ) :
 
@@ -154,6 +155,19 @@ class PlugPopup( GafferUI.PopupWindow ) :
 			if gafferWidget is not None and self.isAncestorOf( gafferWidget ) :
 				gafferWidget._qtWidget().clearFocus()
 
+	def __focusChanged( self, oldWidget, newWidget ) :
+
+		if self.__plugValueWidget.isAncestorOf( newWidget ) and hasattr( newWidget, "activatedSignal" ) :
+			self.__widgetActivatedConnection = newWidget.activatedSignal().connect(
+				Gaffer.WeakMethod( self.__activated ), scoped = True
+			)
+		else :
+			self.__widgetActivatedConnection = None
+
+	def __activated( self, unused ) :
+
+		self.close()
+
 	@classmethod
 	def __firstTextWidget( cls, plugValueWidget ) :
 
@@ -165,13 +179,11 @@ class PlugPopup( GafferUI.PopupWindow ) :
 
 		widget = None
 
-		if isinstance( plugValueWidget, GafferUI.StringPlugValueWidget ) :
-			widget = plugValueWidget.textWidget()
-		elif isinstance( plugValueWidget, GafferUI.NumericPlugValueWidget ) :
+		if isinstance( plugValueWidget, GafferUI.NumericPlugValueWidget ) :
 			widget = plugValueWidget.numericWidget()
 		elif isinstance( plugValueWidget, GafferUI.PathPlugValueWidget ) :
 			widget = plugValueWidget.pathWidget()
-		elif isinstance( plugValueWidget, GafferUI.MultiLineStringPlugValueWidget ) :
+		elif hasattr( plugValueWidget, "textWidget" ) :
 			widget = plugValueWidget.textWidget()
 
 		if widget is not None and widgetUsable( widget ) :
