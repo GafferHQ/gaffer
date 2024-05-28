@@ -14,3 +14,15 @@ GafferUI.Examples.registerExample(
 		GafferScene.Transform
 	]
 )
+
+GafferUI.Examples.registerExample(
+	"Scene Processing/ShaderTweaks",
+	"$GAFFER_ROOT/resources/examples/sceneProcessing/shaderTweaks.gfr",
+	description = """
+	Demonstrates using ShaderTweaks for modifying shader networks.
+	""",
+	notableNodes = [
+		GafferScene.ShaderTweaks,
+		GafferScene.ShaderTweakProxy
+	]
+)

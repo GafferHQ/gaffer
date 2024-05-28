@@ -129,6 +129,7 @@ from . import FilterProcessorUI
 from . import MeshToPointsUI
 from . import ShaderBallUI
 from . import ShaderTweaksUI
+from . import ShaderTweakProxyUI
 from . import CameraTweaksUI
 from . import LightToCameraUI
 from . import FilterResultsUI

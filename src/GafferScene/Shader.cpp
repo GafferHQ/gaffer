@@ -37,6 +37,8 @@
 
 #include "GafferScene/Shader.h"
 
+#include "GafferScene/ShaderTweakProxy.h"
+
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/NumericPlug.h"
@@ -178,7 +180,7 @@ class Shader::NetworkBuilder
 	public :
 
 		NetworkBuilder( const Gaffer::Plug *output )
-			:	m_output( output )
+			:	m_output( output ), m_hasProxyNodes( false )
 		{
 		}
 
@@ -199,6 +201,8 @@ class Shader::NetworkBuilder
 
 		IECoreScene::ConstShaderNetworkPtr network()
 		{
+			static IECore::InternedString hasProxyNodesIdentifier( "__hasProxyNodes" );
+
 			if( !m_network )
 			{
 				m_network = new IECoreScene::ShaderNetwork;
@@ -210,6 +214,12 @@ class Shader::NetworkBuilder
 					}
 				}
 			}
+
+			if( m_hasProxyNodes )
+			{
+				m_network->blindData()->writable()[hasProxyNodesIdentifier] = new IECore::BoolData( true );
+			}
+
 			return m_network;
 		}
 
@@ -365,25 +375,29 @@ class Shader::NetworkBuilder
 				return handleAndHash.handle;
 			}
 
-			std::string type = shaderNode->typePlug()->getValue();
-			if( shaderNode != m_output->node() && !boost::ends_with( type, "shader" ) )
+			IECoreScene::ShaderPtr shader = new IECoreScene::Shader(
+				shaderNode->namePlug()->getValue(), shaderNode->typePlug()->getValue()
+			);
+			if(
+				!ShaderTweakProxy::isProxy( shader.get() ) &&
+				shaderNode != m_output->node() && !boost::ends_with( shader->getType(), "shader" )
+			)
 			{
 				// Some renderers (Arnold for one) allow surface shaders to be connected
 				// as inputs to other shaders, so we may need to change the shader type to
 				// convert it into a standard shader. We must take care to preserve any
 				// renderer specific prefix when doing this.
-				size_t i = type.find_first_of( ":" );
+				size_t i = shader->getType().find_first_of( ":" );
 				if( i != std::string::npos )
 				{
-					type = type.substr( 0, i + 1 ) + "shader";
+					shader->setType( shader->getType().substr( 0, i + 1 ) + "shader" );
 				}
 				else
 				{
-					type = "shader";
+					shader->setType( "shader" );
 				}
 			}
-
-			IECoreScene::ShaderPtr shader = new IECoreScene::Shader( shaderNode->namePlug()->getValue(), type );
+			m_hasProxyNodes |= ShaderTweakProxy::isProxy( shader.get() );
 
 			const std::string nodeName = shaderNode->nodeNamePlug()->getValue();
 			shader->blindData()->writable()["label"] = new IECore::StringData( nodeName );
@@ -758,6 +772,8 @@ class Shader::NetworkBuilder
 		ShaderMap m_shaders;
 
 		ShaderSet m_downstreamShaders; // Used for detecting cycles
+
+		bool m_hasProxyNodes;
 
 };
 

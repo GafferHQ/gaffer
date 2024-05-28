@@ -112,6 +112,7 @@ from .InteractiveRenderTest import InteractiveRenderTest
 from .FilteredSceneProcessorTest import FilteredSceneProcessorTest
 from .ShaderBallTest import ShaderBallTest
 from .ShaderTweaksTest import ShaderTweaksTest
+from .ShaderTweakProxyTest import ShaderTweakProxyTest
 from .FilterResultsTest import FilterResultsTest
 from .RendererAlgoTest import RendererAlgoTest
 from .SetAlgoTest import SetAlgoTest
