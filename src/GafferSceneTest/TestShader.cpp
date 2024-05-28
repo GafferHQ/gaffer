@@ -36,6 +36,8 @@
 
 #include "GafferSceneTest/TestShader.h"
 
+#include "GafferScene/ShaderTweakProxy.h"
+
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/OptionalValuePlug.h"
 #include "Gaffer/PlugAlgo.h"
@@ -95,7 +97,8 @@ Plug *setupOptionalValuePlug(
 	return plug.get();
 }
 
-}  // namespace
+GafferScene::ShaderTweakProxy::ShaderLoaderDescription<TestShader> g_testShaderTweakProxyLoaderRegistration( "test" );
+} // namespace
 
 GAFFER_NODE_DEFINE_TYPE( TestShader )
 

@@ -41,6 +41,8 @@
 
 #include "GafferOSL/OSLShader.h"
 
+#include "GafferScene/ShaderTweakProxy.h"
+
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
@@ -74,6 +76,9 @@ namespace
 // This is to allow Arnold Shaders to be connected to OSL Shaders
 const bool g_oslRegistration = OSLShader::registerCompatibleShader( "ai:surface" );
 const InternedString g_inputParameterName( "input" );
+
+ShaderTweakProxy::ShaderLoaderDescription<ArnoldShader> g_arnoldShaderTweakProxyLoaderRegistration( "ai" );
+
 
 } // namespace
 

@@ -39,6 +39,8 @@
 
 #include "GafferCycles/SocketHandler.h"
 
+#include "GafferScene/ShaderTweakProxy.h"
+
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/NumericPlug.h"
@@ -72,6 +74,9 @@ namespace
 bool g_oslRegistrationSurface = OSLShader::registerCompatibleShader( "cycles:surface" );
 bool g_oslRegistrationVolume = OSLShader::registerCompatibleShader( "cycles:volume" );
 bool g_oslRegistrationDisplacement = OSLShader::registerCompatibleShader( "cycles:displacement" );
+
+ShaderTweakProxy::ShaderLoaderDescription<CyclesShader> g_cyclesShaderTweakProxyLoaderRegistration( "cycles" );
+
 
 } // namespace
 

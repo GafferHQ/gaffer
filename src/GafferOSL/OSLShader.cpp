@@ -39,6 +39,8 @@
 #include "GafferOSL/ClosurePlug.h"
 #include "GafferOSL/ShadingEngine.h"
 
+#include "GafferScene/ShaderTweakProxy.h"
+
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/NumericPlug.h"
@@ -163,6 +165,13 @@ ShaderTypeSet &compatibleShaders()
 	return g_compatibleShaders;
 }
 
+// Auto-proxies are always allowed to connect, because we don't know what type they will be until we evaluate
+// the graph.
+const bool g_oslShaderTweakAutoProxyRegistration = OSLShader::registerCompatibleShader( "autoProxy" );
+
+ShaderTweakProxy::ShaderLoaderDescription<OSLShader> g_oslShaderTweakProxyLoaderRegistration( "osl" );
+
+
 } // namespace
 
 /////////////////////////////////////////////////////////////////////////
@@ -266,7 +275,16 @@ bool OSLShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 				return true;
 			}
 
-			const IECore::InternedString sourceShaderType = sourceShader->typePlug()->getValue();
+			std::string sourceShaderType;
+			if( const ShaderTweakProxy *shaderTweakProxy = IECore::runTimeCast< const ShaderTweakProxy >( sourceShader ) )
+			{
+				std::string unusedSourceShaderName;
+				shaderTweakProxy->typePrefixAndSourceShaderName( sourceShaderType, unusedSourceShaderName );
+			}
+			else
+			{
+				sourceShaderType = sourceShader->typePlug()->getValue();
+			}
 			const ShaderTypeSet &cs = compatibleShaders();
 			if( cs.find( sourceShaderType ) != cs.end() )
 			{

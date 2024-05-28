@@ -129,6 +129,7 @@ Gaffer.Metadata.registerNode(
 			"tweakPlugValueWidget:allowCreate", True,
 			"tweakPlugValueWidget:allowRemove", True,
 			"tweakPlugValueWidget:propertyType", "parameter",
+			"plugValueWidget:type", "GafferSceneUI.ShaderTweaksUI._ShaderTweakPlugValueWidget",
 
 		],
 
@@ -326,6 +327,26 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().addChild( plug )
+
+class _ShaderTweakPlugValueWidget( GafferUI.TweakPlugValueWidget ) :
+
+	def __init__( self, plugs ):
+		GafferUI.TweakPlugValueWidget.__init__( self, plugs )
+		self._TweakPlugValueWidget__row.append(
+			GafferUI.MenuButton(
+				image="shaderTweakProxyIcon.png",
+				hasFrame=False,
+				menu=GafferUI.Menu( Gaffer.WeakMethod( self.__createProxyMenuDefinition ), title = "Create Proxy" ),
+				toolTip = "Proxies allow making connections from the outputs of nodes in the input network."
+			)
+		)
+
+	def __createProxyMenuDefinition( self ) :
+		return GafferSceneUI.ShaderTweakProxyUI._plugContextMenu( self.getPlug()["value"], self.getPlug().node() )
+
+	def __updateReadOnly( self ) :
+
+		self.setEnabled( not Gaffer.MetadataAlgo.readOnly( self.__plugParent.node().parent() ) )
 
 ##########################################################################
 # PlugValueWidget context menu
