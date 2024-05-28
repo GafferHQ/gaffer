@@ -97,7 +97,7 @@ void ContextVariableTweaks::processContext( Context::EditableScope &context, IEC
 	IECore::ObjectVectorPtr storageVector = new ObjectVector();
 
 	tweaksPlug->applyTweaks(
-		[&context, &sourceData]( const std::string &valueName )
+		[&context, &sourceData]( const std::string &valueName, const bool withFallback )
 		{
 			DataPtr value = context.context()->getAsData( valueName, nullptr );
 			sourceData = value;

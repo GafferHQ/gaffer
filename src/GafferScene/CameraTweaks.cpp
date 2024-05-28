@@ -125,7 +125,7 @@ IECore::ConstObjectPtr CameraTweaks::computeProcessedObject( const ScenePath &pa
 	tweaksPlug->applyTweaks(
 
 		// Getter
-		[&] ( const std::string &name ) {
+		[&] ( const std::string &name, const bool withFallback ) {
 			if( name == "fieldOfView" )
 			{
 				virtualParameter = new FloatData( result->calculateFieldOfView()[0] );

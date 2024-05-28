@@ -279,7 +279,7 @@ Gaffer::PlugPtr TweakPlug::createCounterpart( const std::string &name, Direction
 bool TweakPlug::applyTweak( IECore::CompoundData *parameters, MissingMode missingMode ) const
 {
 	return applyTweak(
-		[&parameters]( const std::string &valueName ) { return parameters->member( valueName ); },
+		[&parameters]( const std::string &valueName, const bool withFallback ) { return parameters->member( valueName ); },
 		[&parameters]( const std::string &valueName, DataPtr newData )
 		{
 			if( newData == nullptr )

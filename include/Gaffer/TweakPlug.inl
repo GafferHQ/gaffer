@@ -93,7 +93,7 @@ bool TweakPlug::applyTweak(
 		return setDataFunctor( name, newData );
 	}
 
-	const IECore::Data *currentValue = getDataFunctor( name );
+	const IECore::Data *currentValue = getDataFunctor( name, /* withFallback = */ mode != Gaffer::TweakPlug::CreateIfMissing );
 
 	if( IECore::runTimeCast<const IECore::InternedStringData>( currentValue ) )
 	{
