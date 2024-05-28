@@ -47,6 +47,7 @@
 
 #include "IECoreScene/Camera.h"
 
+#include "IECorePython/ExceptionAlgo.h"
 #include "IECorePython/RefCountedBinding.h"
 #include "IECorePython/ScopedGILLock.h"
 #include "IECorePython/ScopedGILRelease.h"
@@ -330,8 +331,15 @@ struct RenderAdaptorWrapper
 	SceneProcessorPtr operator()()
 	{
 		IECorePython::ScopedGILLock gilLock;
-		SceneProcessorPtr result = extract<SceneProcessorPtr>( m_pythonAdaptor() );
-		return result;
+		try
+		{
+			SceneProcessorPtr result = extract<SceneProcessorPtr>( m_pythonAdaptor() );
+			return result;
+		}
+		catch( const boost::python::error_already_set & )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
 	}
 
 	private :
