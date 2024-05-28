@@ -115,3 +115,18 @@ IECoreScene::ConstShaderNetworkPtr ArnoldLight::computeLight( const Gaffer::Cont
 	IECore::ConstCompoundObjectPtr shaderAttributes = shaderInPlug()->attributes();
 	return shaderAttributes->member<const IECoreScene::ShaderNetwork>( "ai:light" );
 }
+
+void ArnoldLight::hashStandardSetNames( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	h.append( namePlug()->getValue() );
+}
+
+IECore::ConstInternedStringVectorDataPtr ArnoldLight::computeStandardSetNames() const
+{
+	IECore::ConstInternedStringVectorDataPtr baseSets = Light::computeStandardSetNames();
+	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData();
+	result->writable().insert(result->writable().end(), baseSets->readable().begin(), baseSets->readable().end());
+	result->writable().push_back( namePlug()->getValue() + "s" );
+	return result;
+}
+

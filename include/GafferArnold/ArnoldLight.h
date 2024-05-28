@@ -66,8 +66,10 @@ class GAFFERARNOLD_API ArnoldLight : public GafferScene::Light
 		void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		IECoreScene::ConstShaderNetworkPtr computeLight( const Gaffer::Context *context ) const override;
 
-	private :
+		void hashStandardSetNames( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstInternedStringVectorDataPtr computeStandardSetNames() const override;
 
+	private :
 		ArnoldShader *shaderNode();
 		const ArnoldShader *shaderNode() const;
 
