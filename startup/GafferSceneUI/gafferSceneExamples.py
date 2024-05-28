@@ -16,7 +16,7 @@ GafferUI.Examples.registerExample(
 )
 
 GafferUI.Examples.registerExample(
-	"Scene Processing/ShaderTweaks",
+	"Scene Processing/Shader Tweaks",
 	"$GAFFER_ROOT/resources/examples/sceneProcessing/shaderTweaks.gfr",
 	description = """
 	Demonstrates using ShaderTweaks for modifying shader networks.
