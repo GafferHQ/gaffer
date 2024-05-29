@@ -84,20 +84,28 @@ void mergeSetNames( const InternedStringVectorData *toAdd, vector<InternedString
 	}
 }
 
-ScenePlug::ScenePath closestExistingPath( const ScenePlug *scene, const ScenePlug::ScenePath &path )
+// Returns the length prefix of the path which exists in the given scene
+size_t existingPathLength( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 {
-	ScenePlug::ScenePath result = path;
 	ScenePlug::PathScope scope( Context::current() );
-	while( result.size() )
+	scope.setPath( &path );
+	if( scene->existsPlug()->getValue() )
 	{
-		scope.setPath( &result );
+		return path.size();
+	}
+
+	ScenePlug::ScenePath prefix = path;
+	prefix.pop_back();
+	while( prefix.size() )
+	{
+		scope.setPath( &prefix );
 		if( scene->existsPlug()->getValue() )
 		{
-			return result;
+			return prefix.size();
 		}
-		result.pop_back();
+		prefix.pop_back();
 	}
-	return result;
+	return 0;
 }
 
 // InternedString compares by pointer address by default, which will give differing
@@ -330,16 +338,14 @@ class BranchCreator::BranchesData : public IECore::Data
 			h.append( destination.data(), destination.size() );
 			h.append( (uint64_t)destination.size() );
 
-			const ScenePlug::ScenePath existing = closestExistingPath( branchCreator->inPlug(), destination );
-			h.append( existing.data(), existing.size() );
-			h.append( (uint64_t)existing.size() );
+			h.append( existingPathLength( branchCreator->inPlug(), destination ) );
 		}
 
 		void addBranch( const BranchCreator *branchCreator, const ScenePlug::ScenePath &path )
 		{
 			const ScenePlug::ScenePath destination = ScenePlug::stringToPath( branchCreator->destinationPlug()->getValue() );
 			validateDestination( destination );
-			const ScenePlug::ScenePath existing = closestExistingPath( branchCreator->inPlug(), destination );
+			const size_t existingPathLen = existingPathLength( branchCreator->inPlug(), destination );
 
 			tbb::spin_mutex::scoped_lock lock( m_mutex );
 
@@ -359,7 +365,7 @@ class BranchCreator::BranchesData : public IECore::Data
 				const auto inserted = location->children.insert( Location::ChildMap::value_type( name, Location::Ptr() ) );
 				if( inserted.second )
 				{
-					const bool exists = location->depth < existing.size();
+					const bool exists = location->depth < existingPathLen;
 					inserted.first->second = std::make_unique<Location>( location->depth + 1, exists );
 					if( !exists )
 					{
