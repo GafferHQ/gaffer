@@ -7,6 +7,11 @@ Fixes
 - LightPositionTool : Fixed bug that caused the target/pivot positions to be lost when placing a light with Z scale not equal to 1.0.
 - SceneWriter : Fixed writing of locations with names that are not valid USD identifiers.
 
+API
+---
+
+- Menu : Menu items with "checkBox" enabled now draw their checked indicator in place of their "icon" when both are defined.
+
 1.4.5.0 (relative to 1.4.4.0)
 =======
 

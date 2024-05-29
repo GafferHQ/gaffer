@@ -1198,7 +1198,7 @@ class _CompareModePlugValueWidget( GafferUI.PlugValueWidget ) :
 				"/" + name,
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value ),
-					"icon" : self.__iconDict[value] if value != compareMode else None,
+					"icon" : self.__iconDict[value],
 					"checkBox" : value == compareMode,
 					"shortCut" : "Q" if value == hotkeyTarget else None,
 				}
