@@ -264,14 +264,6 @@ def _plugContextMenu( plug, shaderTweaks ) :
 
 	menuDefinition = IECore.MenuDefinition()
 
-	# Find the actual node if we're looking at something like a box input
-	# NOTE : This could fail if a shader output is connected to 2 things, and the first thing is not a shader,
-	# but that seems like a pretty weird case, and we want to get to the early out without doing too much traversal
-	destPlug = Gaffer.PlugAlgo.findDestination( plug, lambda plug : plug if not plug.outputs() else None )
-
-	if not ( isinstance( destPlug.node(), GafferScene.Shader ) or isinstance( destPlug.node(), GafferScene.ShaderTweaks ) ):
-		return
-
 	menuDefinition.append(
 		"Auto ( Original Input )",
 		{
@@ -298,6 +290,25 @@ def _plugContextMenu( plug, shaderTweaks ) :
 	return menuDefinition
 
 def __plugContextMenuSignal( graphEditor, plug, menuDefinition ) :
+
+	if plug.direction() != Gaffer.Plug.Direction.In:
+		return
+
+	def isParameterOrTweak( plug ) :
+
+		node = plug.node()
+		if isinstance( node, GafferScene.Shader ) and plug.parent() == node["parameters"] :
+			return True
+		elif isinstance( node, GafferScene.ShaderTweaks ) and plug.getName() == "value" and plug.parent().parent() == node["tweaks"] :
+			return True
+
+		return False
+
+	if not Gaffer.PlugAlgo.findDestination( plug, isParameterOrTweak ) :
+		# Plug is not a shader parameter or tweak, and doesn't have
+		# any connected as outputs either.
+		return
+
 	menuDefinition.append( "/Create ShaderTweakProxy",
 		{ "subMenu" : functools.partial( _plugContextMenu, plug, None ) }
 	)
