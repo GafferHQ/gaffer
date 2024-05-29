@@ -331,22 +331,40 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 class _ShaderTweakPlugValueWidget( GafferUI.TweakPlugValueWidget ) :
 
 	def __init__( self, plugs ):
+
 		GafferUI.TweakPlugValueWidget.__init__( self, plugs )
-		self._TweakPlugValueWidget__row.append(
-			GafferUI.MenuButton(
+
+		with self._TweakPlugValueWidget__row :
+
+			self.__proxyButton = GafferUI.MenuButton(
 				image="shaderTweakProxyIcon.png",
 				hasFrame=False,
 				menu=GafferUI.Menu( Gaffer.WeakMethod( self.__createProxyMenuDefinition ), title = "Create Proxy" ),
 				toolTip = "Proxies allow making connections from the outputs of nodes in the input network."
 			)
+
+		self.__updateButtonVisibility()
+
+	def setPlugs( self, plugs ) :
+
+		GafferUI.TweakPlugValueWidget.setPlugs( self, plugs )
+		self.__updateButtonVisibility()
+
+	def _updateFromEditable( self ) :
+
+		self.__proxyButton.setEnabled(
+			not any( Gaffer.MetadataAlgo.readOnly( p["value"] ) for p in self.getPlugs() )
 		)
 
 	def __createProxyMenuDefinition( self ) :
+
 		return GafferSceneUI.ShaderTweakProxyUI._plugContextMenu( self.getPlug()["value"], self.getPlug().node() )
 
-	def __updateReadOnly( self ) :
+	def __updateButtonVisibility( self ) :
 
-		self.setEnabled( not Gaffer.MetadataAlgo.readOnly( self.__plugParent.node().parent() ) )
+		self.__proxyButton.setVisible(
+			len( self.getPlugs() ) == 1 and isinstance( self.getPlug().node(), GafferScene.ShaderTweaks )
+		)
 
 ##########################################################################
 # PlugValueWidget context menu
