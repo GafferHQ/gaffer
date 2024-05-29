@@ -13,6 +13,9 @@ Improvements
 - SetFilter, StandardAttributes, StandardOptions : Added syntax highlighting and auto-complete for set expressions.
 - NodeEditor, UIEditor, PythonEditor : Added popup hint for the <kbd>Ctrl</kbd>+<kbd>Return</kbd> shortcut.
 - CodeWidget : Added highlighting of braces and operators.
+- RenderPassEditor : Added preset menu for choosing a render pass type from the list of available registered types. An "auto" type is included in the list when an auto type function has been registered.
+- OptionTweaks : Tweak `value` plugs can now access metadata registered globally to `option:{tweakName}`, where `{tweakName}` is the value of the tweak's `name` plug.
+- Spreadsheet : Added support for metadata to be automatically forwarded from plugs downstream of a column's `out` plug to the column's default row.
 
 Fixes
 -----
@@ -40,6 +43,7 @@ API
 - TextWidget : Added `selectedText()` convenience method.
 - MultiLineTextWidget : Added `setSelection()` and `getSelection()` methods.
 - SetExpressionPlugValueWidget : Added new editor for set expressions, with syntax highlighting and auto-complete.
+- RenderPassTypeAdaptor : Added `autoTypeFunction()` method.
 
 1.4.4.0 (relative to 1.4.3.0)
 =======

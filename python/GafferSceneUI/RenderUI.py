@@ -42,7 +42,7 @@ import GafferScene
 
 from GafferUI.PlugValueWidget import sole
 
-def rendererPresetNames( plug ) :
+def rendererPresetNames( plug = None ) :
 
 	blacklist = { "Capturing" }
 	return IECore.StringVectorData(

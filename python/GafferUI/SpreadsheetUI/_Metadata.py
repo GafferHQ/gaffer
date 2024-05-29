@@ -249,9 +249,29 @@ def __correspondingDefaultPlug( plug ) :
 	rowsPlug = rowPlug.parent()
 	return rowsPlug.defaultRow().descendant( plug.relativeName( rowPlug ) )
 
+def __correspondingOutPlug( plug ) :
+
+	return Gaffer.PlugAlgo.findDestination(
+		plug,
+		lambda p : p if isinstance( p.node(), Gaffer.Spreadsheet ) and p.node()["out"].isAncestorOf( p ) else None
+	)
+
 def __defaultCellMetadata( plug, key ) :
 
 	return Gaffer.Metadata.value( __correspondingDefaultPlug( plug ), key )
+
+def __forwardedMetadata( plug, key ) :
+
+	# We begin this search from the corresponding out plug as `findDestination`
+	# evaluates our metadata check from the provided plug onwards. Starting this
+	# search from a plug where `__forwardedMetadata` has been registered would
+	# result in infinite recursion, so we begin our search downstream.
+	source = Gaffer.PlugAlgo.findDestination(
+		__correspondingOutPlug( plug ),
+		lambda p : p if Gaffer.Metadata.value( p, key ) else None
+	)
+
+	return Gaffer.Metadata.value( source, key ) if source else None
 
 for key in [
 	"description",
@@ -263,6 +283,10 @@ for key in [
 	"tweakPlugValueWidget:allowCreate",
 ] :
 
+	Gaffer.Metadata.registerValue(
+		Gaffer.Spreadsheet.RowsPlug, "default.cells.*...", key,
+		functools.partial( __forwardedMetadata, key = key ),
+	)
 	Gaffer.Metadata.registerValue(
 		Gaffer.Spreadsheet.RowsPlug, "row*.*...", key,
 		functools.partial( __defaultCellMetadata, key = key ),
@@ -286,36 +310,68 @@ __plugPresetTypes = {
 
 }
 
+def __presetSourcePlug( plug ) :
+
+	def predicate( p ) :
+
+		if (
+			( Gaffer.Metadata.value( p, "presetNames" ) and Gaffer.Metadata.value( p, "presetValues" ) )
+			or any( v.startswith( "preset:" ) for v in Gaffer.Metadata.registeredValues( p ) )
+		) :
+			return p
+
+	return Gaffer.PlugAlgo.findDestination(
+		__correspondingOutPlug( plug ),
+		lambda p : predicate( p )
+	)
+
 def __presetNamesMetadata( plug ) :
 
-	if plug.__class__ not in __plugPresetTypes :
+	if not plug or plug.__class__ not in __plugPresetTypes :
 		return None
 
-	source = __correspondingDefaultPlug( plug )
-
 	result = IECore.StringVectorData()
-	for n in Gaffer.Metadata.registeredValues( source ) :
+	for n in Gaffer.Metadata.registeredValues( plug ) :
 		if n.startswith( "preset:" ) :
 			result.append( n[7:] )
 
-	result.extend( Gaffer.Metadata.value( source, "presetNames" ) or [] )
+	result.extend( Gaffer.Metadata.value( plug, "presetNames" ) or [] )
 	return result
 
 def __presetValuesMetadata( plug ) :
+
+	if not plug :
+		return None
 
 	dataType = __plugPresetTypes.get( plug.__class__ )
 	if dataType is None :
 		return None
 
-	source = __correspondingDefaultPlug( plug )
-
 	result = dataType()
-	for n in Gaffer.Metadata.registeredValues( source ) :
+	for n in Gaffer.Metadata.registeredValues( plug ) :
 		if n.startswith( "preset:" ) :
-			result.append( Gaffer.Metadata.value( source, n ) )
+			result.append( Gaffer.Metadata.value( plug, n ) )
 
-	result.extend( Gaffer.Metadata.value( source, "presetValues" ) or [] )
+	result.extend( Gaffer.Metadata.value( plug, "presetValues" ) or [] )
 	return result
 
-Gaffer.Metadata.registerValue( Gaffer.Spreadsheet.RowsPlug, "row*.*...", "presetNames", __presetNamesMetadata )
-Gaffer.Metadata.registerValue( Gaffer.Spreadsheet.RowsPlug, "row*.*...", "presetValues", __presetValuesMetadata )
+def __defaultPlugPresetNamesMetadata( plug ) :
+
+	return __presetNamesMetadata( __correspondingDefaultPlug( plug ) )
+
+def __defaultPlugPresetValuesMetadata( plug ) :
+
+	return __presetValuesMetadata( __correspondingDefaultPlug( plug ) )
+
+def __forwardedPresetNamesMetadata( plug ) :
+
+	return __presetNamesMetadata( __presetSourcePlug( plug ) )
+
+def __forwardedPresetValuesMetadata( plug ) :
+
+	return __presetValuesMetadata( __presetSourcePlug( plug ) )
+
+Gaffer.Metadata.registerValue( Gaffer.Spreadsheet.RowsPlug, "default.*...", "presetNames", __forwardedPresetNamesMetadata )
+Gaffer.Metadata.registerValue( Gaffer.Spreadsheet.RowsPlug, "default.*...", "presetValues", __forwardedPresetValuesMetadata )
+Gaffer.Metadata.registerValue( Gaffer.Spreadsheet.RowsPlug, "row*.*...", "presetNames", __defaultPlugPresetNamesMetadata )
+Gaffer.Metadata.registerValue( Gaffer.Spreadsheet.RowsPlug, "row*.*...", "presetValues", __defaultPlugPresetValuesMetadata )

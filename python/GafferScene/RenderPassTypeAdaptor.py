@@ -137,6 +137,11 @@ class RenderPassTypeAdaptor( GafferScene.SceneProcessor ) :
 		cls.__autoTypeFunction = f
 
 	@classmethod
+	def autoTypeFunction( cls ) :
+
+		return cls.__autoTypeFunction
+
+	@classmethod
 	def resolvedType( cls, type, name ) :
 
 		if type == "auto" :
