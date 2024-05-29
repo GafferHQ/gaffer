@@ -227,20 +227,25 @@ std::string channelNameFromEXR( std::string view, std::string part, std::string 
 		}
 	), layerTokens.end() );
 
-	// Handle Nuke's horrible channel names
-	if( baseName == "red" )
+	// Nuke uses non-standard "red", "green", "blue" and "alpha", and other
+	// packages use lower case "r", "g", "b", "a". In some cases I suspect the
+	// latter is a workaround to thwart unwanted DWAA compression, which only
+	// applies to the uppercased names. And perhaps that is also the reason why
+	// the Cryptomatte specification uses lowercase names? Fix everything up so
+	// that Gaffer will recognise them as standard RGBA channels.
+	if( baseName == "red" || baseName == "r" )
 	{
 		baseName = "R";
 	}
-	else if( baseName == "green" )
+	else if( baseName == "green" || baseName == "g" )
 	{
 		baseName = "G";
 	}
-	else if( baseName == "blue" )
+	else if( baseName == "blue" || baseName == "b" )
 	{
 		baseName = "B";
 	}
-	else if( baseName == "alpha" )
+	else if( baseName == "alpha" || baseName == "a" )
 	{
 		baseName = "A";
 	}
