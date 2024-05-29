@@ -1,6 +1,11 @@
 1.4.x.x (relative to 1.4.5.0)
 =======
 
+Improvements
+------------
+
+- EditScopePlugValueWidget : Added icon representing the Edit Scope node colour.
+
 Fixes
 -----
 
