@@ -25,6 +25,9 @@ Fixes
   - Fixed behaviour of `editingFinishedSignal()` to match TextWidget : it is now also emitted when the text is activated (see `activatedSignal()`).
 - MultiLineStringMetadataWidget : The <kbd>Ctrl</kbd>+<kbd>Return</kbd> shortcut now updates the metadata value immediately.
 - UIEditor : The <kbd>Ctrl</kbd>+<kbd>Return</kbd> shortcut now updates the button code immediately.
+- Cryptomatte :
+  - Fixed errors when the input image didn't contain the main `RGBA` channels.
+  - Fixed inaccurate hash.
 
 API
 ---
