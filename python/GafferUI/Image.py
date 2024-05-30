@@ -47,8 +47,7 @@ from Qt import QtGui
 from Qt import QtWidgets
 
 ## The Image widget displays an image. This can be specified
-# as either a filename, in which case the image is loaded using
-# the IECore.Reader mechanism, or an IECore.ImagePrimitive.
+# as either a filename or an IECore.ImagePrimitive.
 class Image( GafferUI.Widget ) :
 
 	def __init__( self, imagePrimitiveOrFileName, **kw ) :
