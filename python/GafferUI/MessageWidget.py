@@ -421,7 +421,7 @@ class _MessageTableSearchWidget( GafferUI.Widget ) :
 			# Activated allows <enter> to repeatedly jump to the next search result
 			self.__searchField.activatedSignal().connect( Gaffer.WeakMethod( self.__textActivated ), scoped = False )
 			self.__searchField._qtWidget().setObjectName( "gafferSearchField" )
-			self.__searchField._qtWidget().setPlaceholderText( "Search" )
+			self.__searchField.setPlaceholderText( "Search" )
 			self.__searchField._qtWidget().setMaximumWidth( 250 )
 
 		self.__prevButton.setToolTip( "Show previous match [P]" )

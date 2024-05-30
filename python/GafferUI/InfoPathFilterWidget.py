@@ -57,7 +57,7 @@ class InfoPathFilterWidget( GafferUI.PathFilterWidget ) :
 			filterButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
 
 			self.__filterText = GafferUI.TextWidget()
-			self.__filterText._qtWidget().setPlaceholderText( "Filter..." )
+			self.__filterText.setPlaceholderText( "Filter..." )
 
 			self.__filterText.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__filterEditingFinished ), scoped = False )
 			self.__filterText.textChangedSignal().connect( Gaffer.WeakMethod( self.__filterTextChanged ), scoped = False )

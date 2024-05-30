@@ -655,7 +655,7 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		else :
 			with Gaffer.Signals.BlockedConnection( self.__frameConnection ) :
 				self.__frameEditor.setText( "" )
-				self.__frameEditor._qtWidget().setPlaceholderText( "---" )
+				self.__frameEditor.setPlaceholderText( "---" )
 
 		# set enabled when all selected keys have different parent curves
 		enabled = bool( selectedKeys )
@@ -678,7 +678,7 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		else :
 			with Gaffer.Signals.BlockedConnection( self.__valueConnection ) :
 				self.__valueEditor.setText( "" )
-				self.__valueEditor._qtWidget().setPlaceholderText( "---" )
+				self.__valueEditor.setPlaceholderText( "---" )
 
 		# set disabled when no selected keys
 		self.__valueEditor.setEnabled( bool( selectedKeys ) )
@@ -716,7 +716,7 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		else :
 			with Gaffer.Signals.BlockedConnection( self.__slopeConnection[ direction ] ) :
 				self.__slopeEditor[ direction ].setText( "" )
-				self.__slopeEditor[ direction ]._qtWidget().setPlaceholderText( "---" )
+				self.__slopeEditor[ direction ].setPlaceholderText( "---" )
 
 		# set disabled when no selected keys or slope is constrained by interpolation mode
 		enabled = bool( selectedKeys )
@@ -737,7 +737,7 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		else :
 			with Gaffer.Signals.BlockedConnection( self.__scaleConnection[ direction ] ) :
 				self.__scaleEditor[ direction ].setText( "" )
-				self.__scaleEditor[ direction ]._qtWidget().setPlaceholderText( "---" )
+				self.__scaleEditor[ direction ].setPlaceholderText( "---" )
 
 		# set disabled when no selected keys or scale is constrained by interpolation mode
 		enabled = bool( selectedKeys )

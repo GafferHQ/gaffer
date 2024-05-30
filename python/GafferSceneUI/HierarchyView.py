@@ -370,7 +370,7 @@ class _SearchFilterWidget( GafferUI.PathFilterWidget ) :
 		self.__patternWidget = GafferUI.TextWidget()
 		GafferUI.PathFilterWidget.__init__( self, self.__patternWidget, pathFilter )
 
-		self.__patternWidget._qtWidget().setPlaceholderText( "Filter..." )
+		self.__patternWidget.setPlaceholderText( "Filter..." )
 		self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ), scoped = False )
 
 		self._updateFromPathFilter()

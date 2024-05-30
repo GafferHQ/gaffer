@@ -9,7 +9,7 @@ Improvements
 API
 ---
 
-- MultilineTextWidget :
+- TextWidget, MultilineTextWidget :
   - Added `setPlaceholderText()` and `getPlaceholderText()` methods.
   - Added `placeholderText` constructor argument.
 
