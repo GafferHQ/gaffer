@@ -119,10 +119,10 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		frame = GafferUI.Frame( borderWidth = 0 )
-		GafferUI.PlugValueWidget.__init__( self, frame, plug, **kw )
+		self.__frame = GafferUI.Frame( borderWidth = 0 )
+		GafferUI.PlugValueWidget.__init__( self, self.__frame, plug, **kw )
 
-		with frame :
+		with self.__frame :
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 				GafferUI.Spacer( imath.V2i( 4, 1 ), imath.V2i( 4, 1 ) )
 				GafferUI.Label( "Edit Scope" )
@@ -138,6 +138,12 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__navigationMenuDefinition ) )
 				)
 				GafferUI.Spacer( imath.V2i( 4, 1 ), imath.V2i( 4, 1 ) )
+
+		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
+		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
+		# We connect to the front, and unconditionally return True to ensure that we never
+		# run the default dropSignal handler from PlugValueWidget.
+		self.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ), scoped = False )
 
 	def hasLabel( self ) :
 
@@ -199,6 +205,27 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.getPlug().setInput( editScope["out"] )
 
+	def __inputNode( self ) :
+
+		node = self.getPlug().node()
+		# We assume that our plug is on a node dedicated to holding settings for the
+		# UI, and that it has an `in` plug that is connected to the node in the graph
+		# that is being viewed. We start our node graph traversal at the viewed node
+		# (we can't start at _this_ node, as then we will visit our own input connection
+		# which may no longer be upstream of the viewed node).
+		if node["in"].getInput() is None :
+			return None
+
+		inputNode = node["in"].getInput().node()
+		if not isinstance( inputNode, Gaffer.EditScope ) and isinstance( inputNode, Gaffer.SubGraph ) :
+			# If we're starting from a SubGraph then attempt to begin the search from the
+			# first input of the node's output so we can find any Edit Scopes within.
+			output = node["in"].getInput().getInput()
+			if output is not None and inputNode.isAncestorOf( output ) :
+				return output.node()
+
+		return inputNode
+
 	def __buildMenu( self, result, path, currentEditScope ) :
 
 		result = IECore.MenuDefinition()
@@ -254,28 +281,11 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		result = IECore.MenuDefinition()
 
-		node = self.getPlug().node()
-		# We assume that our plug is on a node dedicated to holding settings for the
-		# UI, and that it has an `in` plug that is connected to the node in the graph
-		# that is being viewed. We start our node graph traversal at the viewed node
-		# (we can't start at _this_ node, as then we will visit our own input connection
-		# which may no longer be upstream of the viewed node).
-		if node["in"].getInput() is not None :
-			inputNode = node["in"].getInput().node()
-			if not isinstance( inputNode, Gaffer.EditScope ) and isinstance( inputNode, Gaffer.SubGraph ) :
-				# If we're starting from a SubGraph then attempt to begin the search from the
-				# first input of the node's output so we can find any Edit Scopes within.
-				output = node["in"].getInput().getInput()
-				node = output.node() if output and inputNode.isAncestorOf( output ) else inputNode
-			else :
-				node = inputNode
-		else :
-			node = None
-
 		currentEditScope = None
 		if self.getPlug().getInput() is not None :
 			currentEditScope = self.getPlug().getInput().parent()
 
+		node = self.__inputNode()
 		if node is not None :
 			upstream = Gaffer.NodeAlgo.findAllUpstream( node, self.__editScopePredicate )
 			if self.__editScopePredicate( node ) :
@@ -379,6 +389,58 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		nodes = Gaffer.Metadata.nodesWithMetadata( editScope, "editScope:includeInNavigationMenu" )
 		return [ n for n in nodes if n.ancestor( Gaffer.EditScope ).isSame( editScope ) ]
+
+	def __dropNode( self,  event ) :
+
+		node = self.__inputNode()
+		if node is None :
+			return None
+
+		if isinstance( event.data, Gaffer.EditScope ) :
+			return event.data
+		elif (
+			isinstance( event.data, Gaffer.Set ) and event.data.size() == 1 and
+			isinstance( event.data[0], Gaffer.EditScope )
+		) :
+			return event.data[0]
+		else:
+			return None
+
+	def __dragEnter( self, widget, event ) :
+
+		if self.__dropNode( event ) :
+			self.__frame.setHighlighted( True )
+
+		return True
+
+	def __dragLeave( self, widget, event ) :
+
+		self.__frame.setHighlighted( False )
+
+		return True
+
+	def __drop( self, widget, event ) :
+
+		dropNode = self.__dropNode( event )
+
+		if dropNode :
+			inputNode = self.__inputNode()
+			upstream = Gaffer.NodeAlgo.findAllUpstream( inputNode, self.__editScopePredicate )
+			if self.__editScopePredicate( inputNode ) :
+				upstream.insert( 0, inputNode )
+
+			if dropNode in upstream :
+				self.__connectEditScope( dropNode )
+			else :
+				with GafferUI.PopupWindow() as self.__popup :
+					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+						GafferUI.Image( "warningSmall.png" )
+						GafferUI.Label( "<h4>{} cannot be used as it is not upstream of {}</h4>".format( dropNode.getName(), inputNode.getName() ) )
+				self.__popup.popup()
+
+		self.__frame.setHighlighted( False )
+
+		return True
 
 # ProcessorWidget
 # ===============
