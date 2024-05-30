@@ -53,7 +53,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 	WrapMode = enum.Enum( "WrapNode", [ "None_", "Word", "Character", "WordOrCharacter" ] )
 	Role = enum.Enum( "Role", [ "Text", "Code" ] )
 
-	def __init__( self, text="", editable=True, wrapMode=WrapMode.WordOrCharacter, fixedLineHeight=None, role=Role.Text, **kw ) :
+	def __init__( self, text="", editable=True, wrapMode=WrapMode.WordOrCharacter, fixedLineHeight=None, role=Role.Text, placeholderText = "", **kw ) :
 
 		GafferUI.Widget.__init__( self, _PlainTextEdit(), **kw )
 
@@ -76,6 +76,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 		self.setWrapMode( wrapMode )
 		self.setFixedLineHeight( fixedLineHeight )
 		self.setRole( role )
+		self.setPlaceholderText( placeholderText )
 
 		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
 		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ), scoped = False )
@@ -285,6 +286,15 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 			return self.Role.Text
 
 		return getattr( self.Role, role )
+
+	## Sets what text is displayed when the main text is empty.
+	def setPlaceholderText( self, text ) :
+
+		self._qtWidget().setPlaceholderText( text )
+
+	def getPlaceholderText( self ) :
+
+		return self._qtWidget().placeholderText()
 
 	## A signal emitted whenever the user has finished editing the text either
 	# by activating it via `Enter` or `Ctrl + Return`, or by moving focus to

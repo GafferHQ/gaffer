@@ -1740,11 +1740,20 @@ class _ButtonCodeMetadataWidget( GafferUI.MetadataWidget.MetadataWidget ) :
 		self.__codeWidget = GafferUI.CodeWidget()
 		GafferUI.MetadataWidget.MetadataWidget.__init__( self, self.__codeWidget, "buttonPlugValueWidget:clicked", target, defaultValue = "", **kw )
 
-		## \todo Qt 5.6 can't deal with multiline placeholder text. In Qt 5.12
-		# we should be able to provide a little more detail here.
-		self.__codeWidget._qtWidget().setPlaceholderText(
-			"# Access the node graph via `plug`, and the UI via `button`"
-		)
+		self.__codeWidget.setPlaceholderText( inspect.cleandoc(
+			"""
+			# Predefined variables :
+			#
+			# - `plug` : The plug the button represents.
+			# - `button` : The button widget.
+			#
+			# Examples :
+			#
+			# - `plug.node()` : Gets the node the plug belongs to.
+			# - `plug.node()["otherPlugName"]` : Gets another plug on the same node.
+			# - `button.ancestor( GafferUI.Window )` : Gets the window the button is in.
+			"""
+		) )
 
 		self.__codeWidget.setHighlighter( GafferUI.CodeWidget.PythonHighlighter() )
 
