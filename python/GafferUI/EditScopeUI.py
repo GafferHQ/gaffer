@@ -139,6 +139,9 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 				)
 				GafferUI.Spacer( imath.V2i( 4, 1 ), imath.V2i( 4, 1 ) )
 
+		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
+		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
+		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
 		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
 		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
 		# We connect to the front, and unconditionally return True to ensure that we never
@@ -406,7 +409,32 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 		else:
 			return None
 
+	def __buttonPress( self, widget, event ) :
+
+		return event.buttons == event.Buttons.Middle and self.__editScope() is not None
+
+	def __dragBegin( self, widget, event ) :
+
+		if event.buttons != event.Buttons.Middle :
+			return None
+
+		data = self.__editScope()
+		if data is None :
+			return None
+
+		GafferUI.Pointer.setCurrent( "nodes" )
+		return data
+
+	def __dragEnd( self, widget, event ) :
+
+		GafferUI.Pointer.setCurrent( "" )
+
+		return True
+
 	def __dragEnter( self, widget, event ) :
+
+		if event.sourceWidget is self :
+			return False
 
 		if self.__dropNode( event ) :
 			self.__frame.setHighlighted( True )
