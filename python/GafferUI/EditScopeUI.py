@@ -261,7 +261,14 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 		# (we can't start at _this_ node, as then we will visit our own input connection
 		# which may no longer be upstream of the viewed node).
 		if node["in"].getInput() is not None :
-			node = node["in"].getInput().node()
+			inputNode = node["in"].getInput().node()
+			if not isinstance( inputNode, Gaffer.EditScope ) and isinstance( inputNode, Gaffer.SubGraph ) :
+				# If we're starting from a SubGraph then attempt to begin the search from the
+				# first input of the node's output so we can find any Edit Scopes within.
+				output = node["in"].getInput().getInput()
+				node = output.node() if output and inputNode.isAncestorOf( output ) else inputNode
+			else :
+				node = inputNode
 		else :
 			node = None
 
