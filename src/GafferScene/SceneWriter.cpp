@@ -60,7 +60,7 @@ namespace
 struct LocationWriter
 {
 
-	LocationWriter( SceneInterfacePtr output, ConstCompoundDataPtr sets, float time, tbb::mutex &mutex )
+	LocationWriter( SceneInterfacePtr output, const CompoundData *sets, float time, tbb::mutex &mutex )
 		: m_output( output ), m_sets( sets ), m_time( time ), m_mutex( mutex )
 	{
 	}
@@ -171,7 +171,7 @@ struct LocationWriter
 	private :
 
 		SceneInterfacePtr m_output;
-		ConstCompoundDataPtr m_sets;
+		const CompoundData *m_sets;
 		float m_time;
 		tbb::mutex &m_mutex;
 
@@ -278,7 +278,7 @@ void SceneWriter::executeSequence( const std::vector<float> &frames ) const
 			useSetsAPI = SceneReader::useSetsAPI( output.get() );
 		}
 
-		LocationWriter locationWriter( output, !useSetsAPI ? sets : nullptr, context->getTime(), mutex );
+		LocationWriter locationWriter( output, !useSetsAPI ? sets.get() : nullptr, context->getTime(), mutex );
 		SceneAlgo::parallelProcessLocations( scene, locationWriter );
 
 		if( useSetsAPI && sets )
