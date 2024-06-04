@@ -59,23 +59,25 @@ namespace
 
 struct LocationWriter
 {
-	LocationWriter(SceneInterfacePtr output, ConstCompoundDataPtr sets, float time, tbb::mutex& mutex) : m_output( output ), m_sets(sets), m_time( time ), m_mutex( mutex )
+
+	LocationWriter( SceneInterfacePtr output, ConstCompoundDataPtr sets, float time, tbb::mutex &mutex )
+		: m_output( output ), m_sets( sets ), m_time( time ), m_mutex( mutex )
 	{
 	}
 
 	~LocationWriter()
 	{
-		// Some implementations of SceneInterface may perform writing when we release the SceneInterface,
-		// so we need to hold the lock while freeing it
+		// Some implementations of SceneInterface may perform writing when we release
+		// the SceneInterface, so we need to hold the lock while freeing it.
 		tbb::mutex::scoped_lock scopedLock( m_mutex );
 		m_output.reset();
 	}
 
-	/// first half of this function can be lock free reading data from ScenePlug
-	/// once all the data has been read then we take a global lock and write
-	/// into the SceneInterface
 	bool operator()( const ScenePlug *scene, const ScenePlug::ScenePath &scenePath )
 	{
+		// First read all the scene data for this location. We don't need the lock
+		// for this so we can read multiple locations in parallel.
+
 		ConstCompoundObjectPtr attributes = scene->attributesPlug()->getValue();
 
 		ConstCompoundObjectPtr globals;
@@ -117,6 +119,9 @@ struct LocationWriter
 		}
 
 		ConstInternedStringVectorDataPtr childNames = scene->childNamesPlug()->getValue();
+
+		// Now write the scene data to the output SceneInterface. We require
+		// a lock for this as SceneInterface writing is not thread-safe.
 
 		tbb::mutex::scoped_lock scopedLock( m_mutex );
 
@@ -163,10 +168,13 @@ struct LocationWriter
 		return true;
 	}
 
-	SceneInterfacePtr m_output;
-	ConstCompoundDataPtr m_sets;
-	float m_time;
-	tbb::mutex &m_mutex;
+	private :
+
+		SceneInterfacePtr m_output;
+		ConstCompoundDataPtr m_sets;
+		float m_time;
+		tbb::mutex &m_mutex;
+
 };
 
 }
