@@ -60,17 +60,23 @@ namespace
 struct LocationWriter
 {
 
-	LocationWriter( SceneInterfacePtr output, const CompoundData *sets, float time, tbb::mutex &mutex )
-		: m_output( output ), m_sets( sets ), m_time( time ), m_mutex( mutex )
+	LocationWriter( SceneInterface *rootOutput, const CompoundData *sets, float time, tbb::mutex &mutex )
+		: m_parent( nullptr ), m_rootOutput( rootOutput ), m_sets( sets ), m_time( time ), m_mutex( mutex )
+	{
+	}
+
+	// Called by `parallelProcessLocations()` to create child functors for each location.
+	LocationWriter( const LocationWriter &parent )
+		: m_parent( &parent ), m_rootOutput( parent.m_rootOutput ), m_sets( parent.m_sets ), m_time( parent.m_time ), m_mutex( parent.m_mutex )
 	{
 	}
 
 	~LocationWriter()
 	{
 		// Some implementations of SceneInterface may perform writing when we release
-		// the SceneInterface, so we need to hold the lock while freeing it.
+		// the SceneInterfaces, so we need to hold the lock while freeing them.
 		tbb::mutex::scoped_lock scopedLock( m_mutex );
-		m_output.reset();
+		m_childOutputs.clear();
 	}
 
 	bool operator()( const ScenePlug *scene, const ScenePlug::ScenePath &scenePath )
@@ -125,36 +131,33 @@ struct LocationWriter
 
 		tbb::mutex::scoped_lock scopedLock( m_mutex );
 
-		if( !scenePath.empty() )
-		{
-			m_output = m_output->child( scenePath.back() );
-		}
+		SceneInterface *output = m_parent ? m_parent->m_childOutputs.at( scenePath.back() ).get() : m_rootOutput;
 
 		if( object->typeId() != IECore::NullObjectTypeId && scenePath.size() > 0 )
 		{
-			m_output->writeObject( object.get(), m_time );
+			output->writeObject( object.get(), m_time );
 		}
 
-		m_output->writeBound( Imath::Box3d( Imath::V3f( bound.min ), Imath::V3f( bound.max ) ), m_time );
+		output->writeBound( Imath::Box3d( Imath::V3f( bound.min ), Imath::V3f( bound.max ) ), m_time );
 
 		if( transformData )
 		{
-			m_output->writeTransform( transformData.get(), m_time );
+			output->writeTransform( transformData.get(), m_time );
 		}
 
 		for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
 		{
-			m_output->writeAttribute( it->first, it->second.get(), m_time );
+			output->writeAttribute( it->first, it->second.get(), m_time );
 		}
 
 		if( globals && !globals->members().empty() )
 		{
-			m_output->writeAttribute( "gaffer:globals", globals.get(), m_time );
+			output->writeAttribute( "gaffer:globals", globals.get(), m_time );
 		}
 
 		if( !locationSets.empty() )
 		{
-			m_output->writeTags( locationSets );
+			output->writeTags( locationSets );
 		}
 
 		for( const auto &childName : childNames->readable() )
@@ -162,7 +165,7 @@ struct LocationWriter
 			// `SceneAlgo::parallelProcessLocations()` may visit children in any
 			// order. Pre-create SceneInterface children here so that they are
 			// created in the correct order.
-			m_output->child( childName, SceneInterface::CreateIfMissing );
+			m_childOutputs[childName] = output->child( childName, SceneInterface::CreateIfMissing );
 		}
 
 		return true;
@@ -170,7 +173,9 @@ struct LocationWriter
 
 	private :
 
-		SceneInterfacePtr m_output;
+		const LocationWriter *m_parent;
+		SceneInterface *m_rootOutput;
+		unordered_map<IECore::InternedString, SceneInterfacePtr> m_childOutputs;
 		const CompoundData *m_sets;
 		float m_time;
 		tbb::mutex &m_mutex;
@@ -278,7 +283,7 @@ void SceneWriter::executeSequence( const std::vector<float> &frames ) const
 			useSetsAPI = SceneReader::useSetsAPI( output.get() );
 		}
 
-		LocationWriter locationWriter( output, !useSetsAPI ? sets.get() : nullptr, context->getTime(), mutex );
+		LocationWriter locationWriter( output.get(), !useSetsAPI ? sets.get() : nullptr, context->getTime(), mutex );
 		SceneAlgo::parallelProcessLocations( scene, locationWriter );
 
 		if( useSetsAPI && sets )
