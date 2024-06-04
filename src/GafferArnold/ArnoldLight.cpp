@@ -125,8 +125,7 @@ IECore::ConstInternedStringVectorDataPtr ArnoldLight::computeStandardSetNames() 
 {
 	IECore::ConstInternedStringVectorDataPtr baseSets = Light::computeStandardSetNames();
 	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData();
-	result->writable().insert(result->writable().end(), baseSets->readable().begin(), baseSets->readable().end());
+	result->writable().insert( result->writable().end(), baseSets->readable().begin(), baseSets->readable().end() );
 	result->writable().push_back( namePlug()->getValue() + "s" );
 	return result;
 }
-
