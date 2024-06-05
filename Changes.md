@@ -5,7 +5,16 @@ Fixes
 -----
 
 - LightPositionTool : Fixed bug that caused the target/pivot positions to be lost when placing a light with Z scale not equal to 1.0.
-- SceneWriter : Fixed writing of locations with names that are not valid USD identifiers.
+- SceneWriter :
+  - Fixed writing of locations with names that are not valid USD identifiers.
+  - Fixed handling of shader parameters not supported in USD, such as texture inputs to OpenGLShader.
+- SceneReader : Fixed duplicate loading of `arnold:*` attributes on lights. These are now omitted, since they are converted to parameters on the light shader itself.
+- ShaderTweaks : Fixed potential crash if a ShaderTweakProxy was used to accidentally create a cyclic connection.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.8.0.
 
 1.4.5.0 (relative to 1.4.4.0)
 =======
