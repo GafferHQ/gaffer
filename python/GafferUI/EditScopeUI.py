@@ -128,9 +128,10 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 				GafferUI.Label( "Edit Scope" )
 				self.__menuButton = GafferUI.MenuButton(
 					"",
-					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
+					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ),
+					highlightOnOver = False
 				)
-				self.__menuButton._qtWidget().setFixedWidth( 100 )
+				self.__menuButton._qtWidget().setFixedWidth( 120 )
 				self.__navigationMenuButton = GafferUI.MenuButton(
 					image = "navigationArrow.png",
 					hasFrame = False,
@@ -154,8 +155,12 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__editScopeNameChangedConnection = editScope.nameChangedSignal().connect(
 				Gaffer.WeakMethod( self.__editScopeNameChanged ), scoped = True
 			)
+			self.__editScopeMetadataChangedConnection = Gaffer.Metadata.nodeValueChangedSignal( editScope ).connect(
+				Gaffer.WeakMethod( self.__editScopeMetadataChanged ), scoped = True
+			)
 		else :
 			self.__editScopeNameChangedConnection = None
+			self.__editScopeMetadataChangedConnection = None
 
 		if self._qtWidget().property( "editScopeActive" ) != editScopeActive :
 			self._qtWidget().setProperty( "editScopeActive", GafferUI._Variant.toVariant( editScopeActive ) )
@@ -164,10 +169,16 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __updateMenuButton( self, editScope ) :
 
 		self.__menuButton.setText( editScope.getName() if editScope is not None else "None" )
+		self.__menuButton.setImage( self.__editScopeSwatch( editScope ) if editScope is not None else None )
 
 	def __editScopeNameChanged( self, editScope, oldName ) :
 
 		self.__updateMenuButton( editScope )
+
+	def __editScopeMetadataChanged( self, editScope, key, reason ) :
+
+		if key == "nodeGadget:color" :
+			self.__updateMenuButton( editScope )
 
 	def __editScope( self ) :
 
@@ -225,6 +236,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 						"active" : path[0] != "Downstream",
 						"label" : itemName,
 						"checkBox" : editScope == currentEditScope,
+						"icon" : self.__editScopeSwatch( editScope ),
 					}
 				)
 			else :
@@ -348,6 +360,12 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 			)
 
 		return result
+
+	def __editScopeSwatch( self, editScope ) :
+
+		return GafferUI.Image.createSwatch(
+			Gaffer.Metadata.value( editScope, "nodeGadget:color" ) or imath.Color3f( 1 )
+		)
 
 	@staticmethod
 	def __userNodes( editScope ) :

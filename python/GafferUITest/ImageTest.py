@@ -37,6 +37,8 @@
 import os
 import unittest
 
+import imath
+
 import GafferUI
 import GafferUITest
 
@@ -63,6 +65,13 @@ class ImageTest( GafferUITest.TestCase ) :
 	def testUnicode( self ) :
 
 		i = GafferUI.Image( u"info.png" )
+
+	def testCreateSwatch( self ) :
+
+		s = GafferUI.Image.createSwatch( imath.Color3f( 1, 0, 0 ) )
+
+		self.assertEqual( s._qtPixmap().width(), 10 )
+		self.assertEqual( s._qtPixmap().height(), 10 )
 
 if __name__ == "__main__":
 	unittest.main()

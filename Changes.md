@@ -1,6 +1,11 @@
 1.4.x.x (relative to 1.4.5.0)
 =======
 
+Improvements
+------------
+
+- EditScopePlugValueWidget : Added icon representing the Edit Scope node colour.
+
 Fixes
 -----
 
@@ -16,6 +21,12 @@ Build
 -----
 
 - Cortex : Updated to version 10.5.8.0.
+
+API
+---
+
+- Menu : Menu items with "checkBox" enabled now draw their checked indicator in place of their "icon" when both are defined.
+- Image : Added `createSwatch()` static method.
 
 1.4.5.0 (relative to 1.4.4.0)
 =======

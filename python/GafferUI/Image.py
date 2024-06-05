@@ -47,8 +47,7 @@ from Qt import QtGui
 from Qt import QtWidgets
 
 ## The Image widget displays an image. This can be specified
-# as either a filename, in which case the image is loaded using
-# the IECore.Reader mechanism, or an IECore.ImagePrimitive.
+# as either a filename or an IECore.ImagePrimitive.
 class Image( GafferUI.Widget ) :
 
 	def __init__( self, imagePrimitiveOrFileName, **kw ) :
@@ -61,14 +60,36 @@ class Image( GafferUI.Widget ) :
 
 		if isinstance( imagePrimitiveOrFileName, str ) :
 			pixmap = self._qtPixmapFromFile( str( imagePrimitiveOrFileName ) )
-		else :
+		elif isinstance( imagePrimitiveOrFileName, IECoreImage.ImagePrimitive ) :
 			pixmap = self._qtPixmapFromImagePrimitive( imagePrimitiveOrFileName )
+		else :
+			pixmap = None
 
 		if pixmap is not None :
 			self._qtWidget().setPixmap( pixmap )
 
 		self.__pixmapHighlighted = None
 		self.__pixmapDisabled = None
+
+	## Creates an Image containing a color swatch useful for
+	# button and menu icons.
+	@staticmethod
+	def createSwatch( color ) :
+
+		pixmap = QtGui.QPixmap( 10, 10 )
+		pixmap.fill( QtGui.QColor( 0, 0, 0, 0 ) )
+
+		painter = QtGui.QPainter( pixmap )
+		painter.setRenderHint( QtGui.QPainter.Antialiasing )
+		painter.setPen( GafferUI._StyleSheet.styleColor( "backgroundDarkHighlight" ) )
+		painter.setBrush( QtGui.QColor.fromRgbF( color[0], color[1], color[2] ) )
+		painter.drawRoundedRect( QtCore.QRectF( 0.5, 0.5, 9, 9 ), 2, 2 )
+		del painter
+
+		swatch = GafferUI.Image( None )
+		swatch._qtWidget().setPixmap( pixmap )
+
+		return swatch
 
 	def _qtPixmap( self ) :
 
