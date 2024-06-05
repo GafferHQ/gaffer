@@ -118,6 +118,7 @@ IECoreScene::ConstShaderNetworkPtr ArnoldLight::computeLight( const Gaffer::Cont
 
 void ArnoldLight::hashStandardSetNames( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	Light::hashStandardSetNames( context, h );
 	h.append( namePlug()->getValue() );
 }
 
