@@ -6,6 +6,7 @@ Improvements
 
 - ShaderTweaks, ShaderQuery : Improved performance of parameter selection dialogue. For some particularly large shader networks, speedups are greater than 100x.
 - UIEditor : Added code examples to button code placeholder text.
+- Arnold `light_decay` : The triangle indicators for the decay ranges are now scaled by the light's `gl:visualiser:scale` attribute.
 
 API
 ---
