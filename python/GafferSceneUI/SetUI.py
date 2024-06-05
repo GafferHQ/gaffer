@@ -35,7 +35,6 @@
 ##########################################################################
 
 import functools
-from collections import deque
 
 import IECore
 
