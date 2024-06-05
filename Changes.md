@@ -527,13 +527,19 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.16.x (relative to 1.3.16.3)
+1.3.16.x (relative to 1.3.16.4)
+========
+
+
+
+1.3.16.4 (relative to 1.3.16.3)
 ========
 
 Fixes
 -----
 
 - SceneWriter : Fixed writing of locations with names that are not valid USD identifiers.
+- LightPositionTool : Fixed bug that caused the target / pivot positions to be removed when placing a light with Z scale not equal to 1.0.
 
 1.3.16.3 (relative to 1.3.16.2)
 ========
