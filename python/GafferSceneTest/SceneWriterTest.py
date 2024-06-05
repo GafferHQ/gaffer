@@ -460,5 +460,41 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 					self.assertNotIn( "A", sequenceReader["out"].setNames() )
 					self.assertIn( "B", sequenceReader["out"].setNames() )
 
+	def testWriteInvalidUSDChildName( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["name"].setValue( "1" )
+
+		writer = GafferScene.SceneWriter()
+		writer["in"].setInput( sphere["out"] )
+		writer["fileName"].setValue( self.temporaryDirectory() / "test.usda" )
+		writer["task"].execute()
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setInput( writer["fileName"] )
+		self.assertPathsEqual( reader["out"], "/_1", sphere["out"], "/1" )
+
+	def testWriteAnimationWithInvalidUSDChildName( self ) :
+
+		contextQuery = Gaffer.ContextQuery()
+		contextQuery.addQuery( Gaffer.FloatPlug(), "frame" )
+
+		sphere = GafferScene.Sphere()
+		sphere["name"].setValue( "1" )
+		sphere["transform"]["translate"]["x"].setInput( contextQuery["out"][0]["value"] )
+
+		writer = GafferScene.SceneWriter()
+		writer["in"].setInput( sphere["out"] )
+		writer["fileName"].setValue( self.temporaryDirectory() / "test.usda" )
+		writer["task"].executeSequence( [ 1, 2, 3 ] )
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setInput( writer["fileName"] )
+
+		with Gaffer.Context() as context :
+			for frame in [ 1, 2, 3 ] :
+				context.setFrame( frame )
+				self.assertPathsEqual( reader["out"], "/_1", sphere["out"], "/1" )
+
 if __name__ == "__main__":
 	unittest.main()

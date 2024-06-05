@@ -9,6 +9,7 @@
 Fixes
 -----
 
+- SceneWriter : Fixed writing of locations with names that are not valid USD identifiers.
 - ColorChooserPlugValueWidget : Fixed bug that allowed the editing of locked plugs and nodes.
 
 1.3.16.2 (relative to 1.3.16.1)
