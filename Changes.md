@@ -16,13 +16,46 @@ Breaking Changes
 - AttributeTweaks : `Replace` mode no longer errors if the `linkedLights` attribute doesn't exist.
 - ImageReader : Changed handling of lower-cased "r", "g", "b" and "a" channels.
 
-1.4.x.x (relative to 1.4.4.0)
+1.4.x.x (relative to 1.4.6.0)
+=======
+
+
+
+1.4.6.0 (relative to 1.4.5.0)
+=======
+
+- EditScopePlugValueWidget : Added icon representing the Edit Scope node colour.
+
+Fixes
+-----
+
+- LightPositionTool : Fixed bug that caused the target/pivot positions to be lost when placing a light with Z scale not equal to 1.0.
+- SceneWriter :
+  - Fixed writing of locations with names that are not valid USD identifiers.
+  - Fixed handling of shader parameters not supported in USD, such as texture inputs to OpenGLShader.
+- SceneReader : Fixed duplicate loading of `arnold:*` attributes on lights. These are now omitted, since they are converted to parameters on the light shader itself.
+- ShaderTweaks : Fixed potential crash if a ShaderTweakProxy was used to accidentally create a cyclic connection.
+- Spreadsheet : Fixed "Sets", "Operators" and "Select Affected Objects" popup menu items, which were broken in 1.4.5.0.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.8.0.
+
+API
+---
+
+- Menu : Menu items with "checkBox" enabled now draw their checked indicator in place of their "icon" when both are defined.
+- Image : Added `createSwatch()` static method.
+
+1.4.5.0 (relative to 1.4.4.0)
 =======
 
 Features
 --------
 
 - ShaderTweaks : Added support for creating ShaderTweakProxy nodes that allow making input connections to the original network.
+- 3Delight : Added interactive Viewer renderer.
 
 Improvements
 ------------
@@ -30,6 +63,9 @@ Improvements
 - SetFilter, StandardAttributes, StandardOptions : Added syntax highlighting and auto-complete for set expressions.
 - NodeEditor, UIEditor, PythonEditor : Added popup hint for the <kbd>Ctrl</kbd>+<kbd>Return</kbd> shortcut.
 - CodeWidget : Added highlighting of braces and operators.
+- RenderPassEditor : Added preset menu for choosing a render pass type from the list of available registered types. An "auto" type is included in the list when an auto type function has been registered.
+- OptionTweaks : Tweak `value` plugs can now access metadata registered globally to `option:{tweakName}`, where `{tweakName}` is the value of the tweak's `name` plug.
+- Spreadsheet : Added support for metadata to be automatically forwarded from plugs downstream of a column's `out` plug to the column's default row.
 
 Fixes
 -----
@@ -43,6 +79,13 @@ Fixes
   - Fixed behaviour of `editingFinishedSignal()` to match TextWidget : it is now also emitted when the text is activated (see `activatedSignal()`).
 - MultiLineStringMetadataWidget : The <kbd>Ctrl</kbd>+<kbd>Return</kbd> shortcut now updates the metadata value immediately.
 - UIEditor : The <kbd>Ctrl</kbd>+<kbd>Return</kbd> shortcut now updates the button code immediately.
+- Cryptomatte :
+  - Fixed errors when the input image didn't contain the main `RGBA` channels.
+  - Fixed inaccurate hash.
+- SceneAlgo : Fixed exception handling for Python render adaptors. Previously an exception during adaptor construction caused a `SystemError`.
+- InteractiveRender :
+  - Fixed crash triggered by a render adaptor depending on its `renderer` input to adapt the scene globals.
+  - Removed unintentional ability for render adaptors to change the renderer being used.
 
 API
 ---
@@ -50,6 +93,7 @@ API
 - TextWidget : Added `selectedText()` convenience method.
 - MultiLineTextWidget : Added `setSelection()` and `getSelection()` methods.
 - SetExpressionPlugValueWidget : Added new editor for set expressions, with syntax highlighting and auto-complete.
+- RenderPassTypeAdaptor : Added `autoTypeFunction()` method.
 
 1.4.4.0 (relative to 1.4.3.0)
 =======
@@ -503,10 +547,19 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.16.x (relative to 1.3.16.3)
+1.3.16.x (relative to 1.3.16.4)
 ========
 
 
+
+1.3.16.4 (relative to 1.3.16.3)
+========
+
+Fixes
+-----
+
+- SceneWriter : Fixed writing of locations with names that are not valid USD identifiers.
+- LightPositionTool : Fixed bug that caused the target / pivot positions to be removed when placing a light with Z scale not equal to 1.0.
 
 1.3.16.3 (relative to 1.3.16.2)
 ========

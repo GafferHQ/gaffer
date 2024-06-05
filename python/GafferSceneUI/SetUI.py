@@ -35,7 +35,6 @@
 ##########################################################################
 
 import functools
-from collections import deque
 
 import IECore
 
@@ -183,24 +182,47 @@ def __setValue( plug, value, *unused ) :
 
 def __setText( textWidget, text, *unused ) :
 
-	textWidget.setText( text )
+	if textWidget.visible() :
+		textWidget.setText( text )
+	else :
+		# Invisible dummy widget created by SpreadsheetUI. Edit plug value
+		# directly because the user can't commit the text via the widget. We
+		# must use `ancestor()` to obtain the PlugValueWidget rather than pass
+		# it as a parameter, as the latter would cause a cyclic reference.
+		__setValue( textWidget.ancestor( GafferUI.PlugValueWidget ).getPlug(), text )
 
 def __insertText( textWidget, text ) :
 
-	if textWidget.getSelection() != ( 0, 0 ) :
-		prefix = textWidget.getText()[:textWidget.getSelection()[0]]
-		suffix = textWidget.getText()[textWidget.getSelection()[1]:]
+	if textWidget.visible() :
+
+		if textWidget.getSelection() != ( 0, 0 ) :
+			prefix = textWidget.getText()[:textWidget.getSelection()[0]]
+			suffix = textWidget.getText()[textWidget.getSelection()[1]:]
+		else :
+			## \todo This would be unnecessary if an empty selection used the cursor position.
+			prefix = textWidget.getText()[:textWidget.getCursorPosition()]
+			suffix = textWidget.getText()[textWidget.getCursorPosition():]
+
+		if prefix and prefix[-1] not in " \n" :
+			text = " " + text
+		if not suffix or suffix[0] != " " :
+			text = text + " "
+
+		textWidget.insertText( text )
+
 	else :
-		## \todo This would be unnecessary if an empty selection used the cursor position.
-		prefix = textWidget.getText()[:textWidget.getCursorPosition()]
-		suffix = textWidget.getText()[textWidget.getCursorPosition():]
 
-	if prefix and prefix[-1] not in " \n" :
-		text = " " + text
-	if not suffix or suffix[0] != " " :
-		text = text + " "
+		# Invisible dummy widget created by SpreadsheetUI. See `__setText`.
+		plugValueWidget = textWidget.ancestor( GafferUI.PlugValueWidget )
+		with plugValueWidget.getContext() :
+			value = plugValueWidget.getPlug().getValue()
 
-	textWidget.insertText( text )
+		__setValue(
+			plugValueWidget.getPlug(),
+			"{}{}{}".format(
+				value, " " if not value.endswith( " " ) else "", text
+			)
+		)
 
 def __scenePlugs( node ) :
 
@@ -283,9 +305,17 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 
 	menuDefinition.prepend( "/SetsDivider", { "divider" : True } )
 
+	if textWidget.visible() :
+		currentText = textWidget.getText()
+	else :
+		# The SpreadsheetUI makes an invisible widget in order to show the popup
+		# menu for a cell directly. The text in this may not be up to date.
+		with plugValueWidget.getContext() :
+			currentText = plugValueWidget.getPlug().getValue()
+
 	# `Select Affected` command
 
-	selectionSetExpression = textWidget.selectedText() or textWidget.getText()
+	selectionSetExpression = textWidget.selectedText() or currentText
 	menuDefinition.prepend(
 		"Select Affected Objects",
 		{
@@ -314,8 +344,6 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 	# `Sets` menu
 
 	pathFn = getMenuPathFunction()
-
-	currentText = textWidget.getText()
 	currentNames = set( currentText.split() )
 
 	if not setNames :

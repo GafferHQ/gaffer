@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,44 +34,13 @@
 #
 ##########################################################################
 
-import os
-import unittest
+import Gaffer
+import GafferSceneUI
 
-import imath
-
-import GafferUI
-import GafferUITest
-
-class ImageTest( GafferUITest.TestCase ) :
-
-	def testPNGLoad( self ) :
-
-		i = GafferUI.Image._qtPixmapFromFile( "arrowRight10.png" )
-
-		self.assertEqual( i.width(), 10 )
-		self.assertEqual( i.height(), 10 )
-
-		i2 = GafferUI.Image._qtPixmapFromFile( "arrowRight10.png" )
-
-		self.assertEqual( i2.width(), 10 )
-		self.assertEqual( i2.height(), 10 )
-
-		self.assertTrue( i is i2 )
-
-	def testLoadMissing( self ) :
-
-		self.assertRaises( Exception, GafferUI.Image, "iAmNotAFile" )
-
-	def testUnicode( self ) :
-
-		i = GafferUI.Image( u"info.png" )
-
-	def testCreateSwatch( self ) :
-
-		s = GafferUI.Image.createSwatch( imath.Color3f( 1, 0, 0 ) )
-
-		self.assertEqual( s._qtPixmap().width(), 10 )
-		self.assertEqual( s._qtPixmap().height(), 10 )
-
-if __name__ == "__main__":
-	unittest.main()
+Gaffer.Metadata.registerValue( "option:renderPass:type", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
+Gaffer.Metadata.registerValue( "option:renderPass:type", "preset:Standard", "" )
+## \todo As part of the future great metadata reckoning, it would make more sense for renderPassTypePresetNames to be defined as
+# part of this global metadata rather than by GafferSceneUI.RenderPassTypeAdaptorUI and then called here. This would also allow
+# the registrations in this file to be combined with those in `startup/GafferScene/renderPassOptions.py`.
+Gaffer.Metadata.registerValue( "option:renderPass:type", "presetNames", GafferSceneUI.RenderPassTypeAdaptorUI.renderPassTypePresetNames )
+Gaffer.Metadata.registerValue( "option:renderPass:type", "presetValues", GafferSceneUI.RenderPassTypeAdaptorUI.renderPassTypePresetValues )

@@ -34,8 +34,27 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferScene
+
+def __renderPassTypes() :
+
+	types = sorted( list( GafferScene.RenderPassTypeAdaptor.registeredTypeNames() ) )
+
+	if callable( GafferScene.RenderPassTypeAdaptor.autoTypeFunction() ) :
+		types.insert( 0, "auto" )
+
+	return types
+
+def renderPassTypePresetNames() :
+
+	return IECore.StringVectorData( [ IECore.CamelCase.toSpaced( p ) for p in __renderPassTypes() ] )
+
+def renderPassTypePresetValues() :
+
+	return IECore.StringVectorData( __renderPassTypes() )
 
 Gaffer.Metadata.registerNode(
 

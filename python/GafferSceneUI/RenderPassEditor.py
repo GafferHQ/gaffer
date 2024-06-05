@@ -1143,11 +1143,10 @@ class _RenderPassCreationDialogue( GafferUI.Dialogue ) :
 			if editScope :
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 					GafferUI.Label( "Add render pass to" )
-					GafferUI.Label( "<h4>{}</h4>".format( editScope.relativeName( editScope.ancestor( Gaffer.ScriptNode ) ) ) )
 					editScopeColor = Gaffer.Metadata.value( editScope, "nodeGadget:color" )
 					if editScopeColor :
-						swatch = GafferUI.ColorSwatch( color = editScopeColor, displayTransform = GafferUI.Widget.identityDisplayTransform )
-						swatch._qtWidget().setFixedWidth( 13 )
+						GafferUI.Image.createSwatch( editScopeColor )
+					GafferUI.Label( "<h4>{}</h4>".format( editScope.relativeName( editScope.ancestor( Gaffer.ScriptNode ) ) ) )
 
 			self.__renderPassNameWidget = GafferSceneUI.RenderPassesUI.createRenderPassNameWidget()
 

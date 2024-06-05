@@ -914,5 +914,114 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 			[]
 		)
 
+	def testMetadataForwarding( self ) :
+
+		s = Gaffer.Spreadsheet()
+		s["rows"].addColumn( Gaffer.StringPlug( "a" ) )
+		s["rows"].addColumn( Gaffer.StringPlug( "b" ) )
+		s["rows"].addRows( 1 )
+
+		n = Gaffer.Node()
+		n.addChild( Gaffer.StringPlug( "a" ) )
+
+		n["a"].setInput( s["out"]["a"] )
+
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["a"]["value"], "plugValueWidget:type" ), None )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["b"]["value"], "plugValueWidget:type" ), None )
+
+		Gaffer.Metadata.registerValue( n["a"], "plugValueWidget:type", "Test" )
+
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["a"]["value"], "plugValueWidget:type" ), "Test" )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["b"]["value"], "plugValueWidget:type" ), None )
+
+		Gaffer.Metadata.registerValue( s["rows"].defaultRow()["cells"]["b"]["value"], "plugValueWidget:type", "Test2" )
+
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["a"]["value"], "plugValueWidget:type" ), "Test" )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["b"]["value"], "plugValueWidget:type" ), "Test2" )
+
+		Gaffer.Metadata.registerValue( s["rows"].defaultRow()["cells"]["a"]["value"], "plugValueWidget:type", "Test2" )
+
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["a"]["value"], "plugValueWidget:type" ), "Test2" )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["b"]["value"], "plugValueWidget:type" ), "Test2" )
+
+	def testPresetForwarding( self ) :
+
+		s = Gaffer.Spreadsheet()
+		s["rows"].addColumn( Gaffer.StringPlug( "a" ) )
+		s["rows"].addColumn( Gaffer.StringPlug( "b" ) )
+		s["rows"].addRows( 1 )
+
+		n = Gaffer.Node()
+		n.addChild( Gaffer.StringPlug( "a" ) )
+		n.addChild( Gaffer.StringPlug( "b" ) )
+
+		n["a"].setInput( s["out"]["a"] )
+		n["b"].setInput( s["out"]["b"] )
+
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["a"]["value"], "presetNames" ), IECore.StringVectorData( [] ) )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["a"]["value"], "presetValues" ), IECore.StringVectorData( [] ) )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["b"]["value"], "presetNames" ), IECore.StringVectorData( [] ) )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["b"]["value"], "presetValues" ), IECore.StringVectorData( [] ) )
+
+		self.assertEqual( Gaffer.Metadata.value( s["rows"].defaultRow()["cells"]["a"]["value"], "presetNames" ), None )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"].defaultRow()["cells"]["a"]["value"], "presetValues" ), None )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"].defaultRow()["cells"]["b"]["value"], "presetNames" ), None )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"].defaultRow()["cells"]["b"]["value"], "presetValues" ), None )
+
+		# Registering only "presetNames" on the destination plug doesn't forward to the cell.
+		Gaffer.Metadata.registerValue( n["a"], "presetNames", IECore.StringVectorData( [ "Test", "Test2" ] ) )
+
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["a"]["value"], "presetNames" ), IECore.StringVectorData( [] ) )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["a"]["value"], "presetValues" ), IECore.StringVectorData( [] ) )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["b"]["value"], "presetNames" ), IECore.StringVectorData( [] ) )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["b"]["value"], "presetValues" ), IECore.StringVectorData( [] ) )
+
+		self.assertEqual( Gaffer.Metadata.value( s["rows"].defaultRow()["cells"]["a"]["value"], "presetNames" ), None )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"].defaultRow()["cells"]["a"]["value"], "presetValues" ), None )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"].defaultRow()["cells"]["b"]["value"], "presetNames" ), None )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"].defaultRow()["cells"]["b"]["value"], "presetValues" ), None )
+
+		# Registering "presetValues" alongside "presetNames" will forward.
+		Gaffer.Metadata.registerValue( n["a"], "presetValues", IECore.StringVectorData( [ "test", "test2" ] ) )
+
+		self.assertEqual( Gaffer.Metadata.value( s["rows"].defaultRow()["cells"]["a"]["value"], "presetNames" ), IECore.StringVectorData( [ "Test", "Test2" ] ) )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"].defaultRow()["cells"]["a"]["value"], "presetValues" ), IECore.StringVectorData( [ "test", "test2" ] ) )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"].defaultRow()["cells"]["b"]["value"], "presetNames" ), None )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"].defaultRow()["cells"]["b"]["value"], "presetValues" ), None )
+
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["a"]["value"], "presetNames" ), IECore.StringVectorData( [ "Test", "Test2" ] ) )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["a"]["value"], "presetValues" ), IECore.StringVectorData( [ "test", "test2" ] ) )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["b"]["value"], "presetNames" ), IECore.StringVectorData( [] ) )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["b"]["value"], "presetValues" ), IECore.StringVectorData( [] ) )
+
+		# Registering "preset:" metadata also forwards, and combines with "presetNames" & "presetValues"
+		Gaffer.Metadata.registerValue( n["a"], "preset:Test3", "test3" )
+		Gaffer.Metadata.registerValue( n["b"], "preset:Test", "test" )
+
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["a"]["value"], "presetNames" ), IECore.StringVectorData( [ "Test3", "Test", "Test2" ] ) )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["a"]["value"], "presetValues" ), IECore.StringVectorData( [ "test3", "test", "test2" ] ) )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["b"]["value"], "presetNames" ), IECore.StringVectorData( [ "Test" ] ) )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["b"]["value"], "presetValues" ), IECore.StringVectorData( [ "test" ] ) )
+
+		self.assertEqual( Gaffer.Metadata.value( s["rows"].defaultRow()["cells"]["a"]["value"], "presetNames" ), IECore.StringVectorData( [ "Test3", "Test", "Test2" ] ) )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"].defaultRow()["cells"]["a"]["value"], "presetValues" ), IECore.StringVectorData( [ "test3", "test", "test2" ] ) )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"].defaultRow()["cells"]["b"]["value"], "presetNames" ), IECore.StringVectorData( [ "Test" ] ) )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"].defaultRow()["cells"]["b"]["value"], "presetValues" ), IECore.StringVectorData( [ "test" ] ) )
+
+		# Registering either metadata on the default row will override the metadata from the destination.
+		Gaffer.Metadata.registerValue( s["rows"].defaultRow()["cells"]["b"]["value"], "preset:TestDefault", "testDefault" )
+		Gaffer.Metadata.registerValue( s["rows"].defaultRow()["cells"]["b"]["value"], "presetNames", IECore.StringVectorData( [ "TestDefault2", "TestDefault3" ] ) )
+		Gaffer.Metadata.registerValue( s["rows"].defaultRow()["cells"]["b"]["value"], "presetValues", IECore.StringVectorData( [ "testDefault2", "testDefault3" ] ) )
+
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["b"]["value"], "presetNames" ), IECore.StringVectorData( [ "TestDefault", "TestDefault2", "TestDefault3" ] ) )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["b"]["value"], "presetValues" ), IECore.StringVectorData( [ "testDefault", "testDefault2", "testDefault3" ] ) )
+
+		# Registering "presetNames" and "presetValues" on the default row will override the destination presets.
+		Gaffer.Metadata.registerValue( s["rows"].defaultRow()["cells"]["a"]["value"], "presetNames", IECore.StringVectorData( [ "TestDefault2", "TestDefault3" ] ) )
+		Gaffer.Metadata.registerValue( s["rows"].defaultRow()["cells"]["a"]["value"], "presetValues", IECore.StringVectorData( [ "testDefault2", "testDefault3" ] ) )
+
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["a"]["value"], "presetNames" ), IECore.StringVectorData( [ "TestDefault2", "TestDefault3" ] ) )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["a"]["value"], "presetValues" ), IECore.StringVectorData( [ "testDefault2", "testDefault3" ] ) )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -2252,6 +2252,52 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		render["renderer"].setValue( "Other" )
 		self.assertEqual( render["resolvedRenderer"].getValue(), "Other" )
 
+	def testAdaptorsCantChangeRenderer( self ) :
+
+		def adaptor() :
+
+			result = GafferScene.StandardOptions()
+			result["options"]["defaultRenderer"]["enabled"].setValue( True )
+			result["options"]["defaultRenderer"]["value"].setValue( "IAmNotAllowed" )
+			return result
+
+		GafferScene.SceneAlgo.registerRenderAdaptor( "Test", adaptor )
+
+		standardOptions = GafferScene.StandardOptions()
+		standardOptions["options"]["defaultRenderer"]["enabled"].setValue( True )
+		standardOptions["options"]["defaultRenderer"]["value"].setValue( self.renderer )
+
+		interactiveRender = GafferScene.InteractiveRender()
+		interactiveRender["in"].setInput( standardOptions["out"] )
+
+		self.assertEqual( interactiveRender["resolvedRenderer"].getValue(), self.renderer )
+
+	def testAdaptorGlobalsDependingOnRenderer( self ) :
+
+		def adaptor() :
+
+			result = GafferScene.SceneProcessor()
+			result["renderer"] = Gaffer.StringPlug()
+
+			result["__customOptions"] = GafferScene.CustomOptions()
+			result["__customOptions"]["options"].addChild( Gaffer.NameValuePlug( "test", Gaffer.StringPlug() ) )
+			result["__customOptions"]["options"][0]["value"].setInput( result["renderer"] )
+
+			result["out"].setInput( result["__customOptions"]["out"] )
+			return result
+
+		GafferScene.SceneAlgo.registerRenderAdaptor( "Test", adaptor )
+
+		standardOptions = GafferScene.StandardOptions()
+		standardOptions["options"]["defaultRenderer"]["enabled"].setValue( True )
+		standardOptions["options"]["defaultRenderer"]["value"].setValue( self.renderer )
+
+		interactiveRender = GafferScene.InteractiveRender()
+		interactiveRender["in"].setInput( standardOptions["out"] )
+
+		self.assertEqual( interactiveRender["resolvedRenderer"].getValue(), self.renderer )
+		self.assertEqual( interactiveRender["__adaptedIn"].globals()["option:test"], IECore.StringData( self.renderer ) )
+
 	def tearDown( self ) :
 
 		GafferSceneTest.SceneTestCase.tearDown( self )

@@ -2275,6 +2275,17 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( mh.messages[0].context, "SceneAlgo::createRenderAdaptors" )
 		self.assertEqual( mh.messages[0].message, "Adaptor \"Test\" returned null" )
 
+	def testAdaptorCreationException( self ) :
+
+		def a() :
+
+			raise RuntimeError( "Oops" )
+
+		GafferScene.SceneAlgo.registerRenderAdaptor( "Test", a )
+
+		with self.assertRaisesRegex( RuntimeError, "Oops" ) :
+			GafferScene.SceneAlgo.createRenderAdaptors()
+
 	def testValidateName( self ) :
 
 		for goodName in [ "obi", "lewis", "ludo" ] :

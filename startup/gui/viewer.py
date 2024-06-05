@@ -196,6 +196,11 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 	] )
 
+	GafferSceneUI.SceneView.registerRenderer(
+		"3Delight",
+		functools.partial( __loadRendererSettings, os.path.join( os.path.dirname( __file__ ), "3delightViewerSettings.gfr" ) )
+	)
+
 if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "" ) != "1" :
 
 	with IECore.IgnoredExceptions( ImportError ) :
