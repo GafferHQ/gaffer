@@ -10,6 +10,7 @@ Fixes
   - Fixed handling of shader parameters not supported in USD, such as texture inputs to OpenGLShader.
 - SceneReader : Fixed duplicate loading of `arnold:*` attributes on lights. These are now omitted, since they are converted to parameters on the light shader itself.
 - ShaderTweaks : Fixed potential crash if a ShaderTweakProxy was used to accidentally create a cyclic connection.
+- Spreadsheet : Fixed "Sets", "Operators" and "Select Affected Objects" popup menu items, which were broken in 1.4.5.0.
 
 Build
 -----
