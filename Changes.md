@@ -1,7 +1,10 @@
 1.4.x.x (relative to 1.4.5.0)
 =======
 
+Fixes
+-----
 
+- SceneWriter : Fixed writing of locations with names that are not valid USD identifiers.
 
 1.4.5.0 (relative to 1.4.4.0)
 =======
@@ -505,7 +508,10 @@ Build
 1.3.16.x (relative to 1.3.16.3)
 ========
 
+Fixes
+-----
 
+- SceneWriter : Fixed writing of locations with names that are not valid USD identifiers.
 
 1.3.16.3 (relative to 1.3.16.2)
 ========
