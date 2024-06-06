@@ -165,8 +165,8 @@ void addKnot( IECoreGL::GroupPtr group, const Knot &knot, const float visualiser
 	V3fVectorDataPtr p = new V3fVectorData;
 	std::vector<V3f> &pVec = p->writable();
 	pVec.push_back( V3f(  0, 0,  0  ) );
-	pVec.push_back( V3f(  0, visualiserScale, -visualiserScale  ) );
-	pVec.push_back( V3f(  0, visualiserScale, visualiserScale  ) );
+	pVec.push_back( V3f(  0, visualiserScale * 2.f, -visualiserScale * 2.f  ) );
+	pVec.push_back( V3f(  0, visualiserScale * 2.f, visualiserScale * 2.f  ) );
 
 	IECoreScene::MeshPrimitivePtr mesh = new IECoreScene::MeshPrimitive( vertsPerPoly, vertIds, "linear", p );
 	ToGLMeshConverterPtr meshConverter = new ToGLMeshConverter( mesh );
