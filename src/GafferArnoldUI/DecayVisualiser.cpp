@@ -249,7 +249,14 @@ Visualisations DecayVisualiser::visualise( const IECore::InternedString &attribu
 	// render (this may need to be configurable later). The decay visualiser
 	// shouldn't scale with visualisation scale either. We scale the triangle
 	// indicators individually by the visualisation scale in `addKnot()`.
-	return { Visualisation( result, Visualisation::Scale::None ) };
+	return {
+		Visualisation(
+			result,
+			Visualisation::Scale::None,
+			Visualisation::Category::Generic,
+			/* affectsFramingBound = */ false
+		)
+	};
 }
 
 } // namespace
