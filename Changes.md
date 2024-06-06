@@ -1,7 +1,17 @@
 1.4.x.x (relative to 1.4.6.0)
 =======
 
+Improvements
+------------
 
+- UIEditor : Added code examples to button code placeholder text.
+
+API
+---
+
+- TextWidget, MultilineTextWidget :
+  - Added `setPlaceholderText()` and `getPlaceholderText()` methods.
+  - Added `placeholderText` constructor argument.
 
 1.4.6.0 (relative to 1.4.5.0)
 =======

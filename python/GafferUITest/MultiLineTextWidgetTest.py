@@ -154,7 +154,7 @@ class MultiLineTextWidgetTest( GafferUITest.TestCase ) :
 		w = GafferUI.MultiLineTextWidget( role = w.Role.Code)
 		self.assertEqual( w.getRole(), w.Role.Code )
 
-	def testSelection(self ) :
+	def testSelection( self ) :
 
 		w = GafferUI.MultiLineTextWidget()
 		self.assertEqual( w.getSelection(), ( 0, 0 ) )
@@ -171,6 +171,17 @@ class MultiLineTextWidgetTest( GafferUITest.TestCase ) :
 		w.setSelection( -1, None )
 		self.assertEqual( w.getSelection(), ( 10, 11 ) )
 		self.assertEqual( w.selectedText(), "i" )
+
+	def testPlaceholderTest( self ) :
+
+		w = GafferUI.MultiLineTextWidget()
+		self.assertEqual( w.getPlaceholderText(), "" )
+
+		w.setPlaceholderText( "test" )
+		self.assertEqual( w.getPlaceholderText(), "test" )
+
+		w = GafferUI.MultiLineTextWidget( placeholderText = "test" )
+		self.assertEqual( w.getPlaceholderText(), "test" )
 
 if __name__ == "__main__":
 	unittest.main()

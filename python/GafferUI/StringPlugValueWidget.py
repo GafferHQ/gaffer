@@ -97,7 +97,7 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 		else :
 			placeHolder = self.__placeholderText()
 			self.__editRequiresInteraction = False
-		self.textWidget()._qtWidget().setPlaceholderText( placeHolder )
+		self.textWidget().setPlaceholderText( placeHolder )
 
 	def _updateFromMetadata( self ) :
 
@@ -127,7 +127,7 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 			return
 
 		self.__editRequiresInteraction = False
-		self.textWidget()._qtWidget().setPlaceholderText( self.__placeholderText() )
+		self.textWidget().setPlaceholderText( self.__placeholderText() )
 
 	def __placeholderText( self ) :
 

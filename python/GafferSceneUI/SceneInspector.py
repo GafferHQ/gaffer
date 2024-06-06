@@ -1039,7 +1039,7 @@ class DiffColumn( GafferUI.Widget ) :
 					self.__filterWidget = None
 					if filterable :
 						self.__filterWidget = GafferUI.TextWidget()
-						self.__filterWidget._qtWidget().setPlaceholderText( "Filter..." )
+						self.__filterWidget.setPlaceholderText( "Filter..." )
 						self.__filterWidget.textChangedSignal().connect(
 							Gaffer.WeakMethod( self.__filterTextChanged ), scoped = False
 						)
