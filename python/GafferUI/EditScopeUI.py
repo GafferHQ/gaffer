@@ -395,10 +395,6 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __dropNode( self,  event ) :
 
-		node = self.__inputNode()
-		if node is None :
-			return None
-
 		if isinstance( event.data, Gaffer.EditScope ) :
 			return event.data
 		elif (
@@ -449,10 +445,15 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __drop( self, widget, event ) :
 
+		inputNode = self.__inputNode()
 		dropNode = self.__dropNode( event )
-
-		if dropNode :
-			inputNode = self.__inputNode()
+		if inputNode is None :
+			with GafferUI.PopupWindow() as self.__popup :
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+					GafferUI.Image( "warningSmall.png" )
+					GafferUI.Label( "<h4>The Edit Scope cannot be set while nothing is viewed</h4>" )
+			self.__popup.popup()
+		elif dropNode :
 			upstream = Gaffer.NodeAlgo.findAllUpstream( inputNode, self.__editScopePredicate )
 			if self.__editScopePredicate( inputNode ) :
 				upstream.insert( 0, inputNode )
