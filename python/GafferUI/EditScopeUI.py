@@ -407,11 +407,11 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __buttonPress( self, widget, event ) :
 
-		return event.buttons == event.Buttons.Middle and self.__editScope() is not None
+		return event.buttons & ( event.Buttons.Left | event.Buttons.Middle ) and self.__editScope() is not None
 
 	def __dragBegin( self, widget, event ) :
 
-		if event.buttons != event.Buttons.Middle :
+		if not event.buttons & ( event.Buttons.Left | event.Buttons.Middle ) :
 			return None
 
 		data = self.__editScope()
