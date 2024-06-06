@@ -40,7 +40,6 @@ import imath
 import IECore
 
 import Gaffer
-import GafferTest
 import GafferScene
 import GafferSceneTest
 
