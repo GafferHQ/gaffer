@@ -2282,10 +2282,7 @@ class __SetMembershipSection( LocationSection ) :
 
 		def name( self ) :
 
-			if self.__setName.startswith( "__" ) :
-				return IECore.CamelCase.toSpaced( self.__setName[2:] )
-			else :
-				return self.__setName or ""
+			return self.__setName or ""
 
 		def supportsInheritance( self ) :
 
@@ -2590,10 +2587,7 @@ class _SetsSection( Section ) :
 
 		def name( self ) :
 
-			if self.__setName.startswith( "__" ) :
-				return IECore.CamelCase.toSpaced( self.__setName[2:] )
-			else :
-				return self.__setName or ""
+			return self.__setName or ""
 
 		def __call__( self, target ) :
 
