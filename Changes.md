@@ -36,6 +36,7 @@ API
 - TextWidget, MultilineTextWidget :
   - Added `setPlaceholderText()` and `getPlaceholderText()` methods.
   - Added `placeholderText` constructor argument.
+- BackgroundTask : Added mitigation against tasks attempting to wait for themselves.
 
 1.4.6.0 (relative to 1.4.5.0)
 =======
