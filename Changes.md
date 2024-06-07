@@ -25,6 +25,11 @@ Fixes
 
 - Viewer : Fixed handling of Gaffer `${contextVariable}` references in OpenColorIO variable values. The Viewer now updates the Display Transform appropriately when the value of the context variable changes.
 
+Fixes
+-----
+
+- UI : Fixed hangs caused by garbage collection of removed Editors. One common example involved viewing a Catalogue in the NodeEditor after removing the ImageInspector (#5877).
+
 API
 ---
 

@@ -96,6 +96,17 @@ class Editor( GafferUI.Widget ) :
 
 		self.__setContextInternal( scriptNode.context(), callUpdate=False )
 
+	def __del__( self ) :
+
+		for attr in self.__dict__.values() :
+			if isinstance( attr, GafferUI.Editor.Settings ) :
+				# Remove connection to ScriptNode now, on the UI thread.
+				# Otherwise we risk deadlock if the Settings node gets garbage
+				# collected in a BackgroundTask, which would attempt
+				# cancellation of all tasks for the ScriptNode, including the
+				# task itself.
+				attr["__scriptNode"].setInput( None )
+
 	def scriptNode( self ) :
 
 		return self.__scriptNode
