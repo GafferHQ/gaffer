@@ -443,7 +443,6 @@ void FramingConstraint::compute( Gaffer::ValuePlug *output, const Gaffer::Contex
 	M44f worldCameraTransform = cameraTransform * parentTransform;
 
 	ConstObjectPtr object = inPlug()->objectPlug()->getValue();
-	IECoreScene::ConstCameraPtr camera = IECore::runTimeCast< const IECoreScene::Camera >( object.get() )->copy();
 
 	M44f targetTransform;
 	Box3f targetBound;
@@ -457,7 +456,7 @@ void FramingConstraint::compute( Gaffer::ValuePlug *output, const Gaffer::Contex
 		}
 
 		auto targetOpt = target();
-		if( !targetOpt || !camera )
+		if( !targetOpt || !IECore::runTimeCast<const IECoreScene::Camera>( object.get() ) )
 		{
 			setTransformAndObject( output, cameraTransform, object.get() );
 			return;
@@ -467,6 +466,8 @@ void FramingConstraint::compute( Gaffer::ValuePlug *output, const Gaffer::Contex
 		targetBound = targetOpt->scene->bound( targetOpt->path );
 	}
 
+	// Cast is safe because we already returned early if object is not a camera.
+	IECoreScene::CameraPtr camera = boost::static_pointer_cast<IECoreScene::Camera>( object->copy() );
 
 	M44f worldCameraTransformInverse = worldCameraTransform.inverse();
 
@@ -566,9 +567,7 @@ void FramingConstraint::compute( Gaffer::ValuePlug *output, const Gaffer::Contex
 			// If extending the far clip, we use the value from the one frustum plane we haven't used yet
 			if( camera->getClippingPlanes().y < -frustumDistances[4] + resultZ )
 			{
-				IECoreScene::CameraPtr newCamera = camera->copy();
-				newCamera->setClippingPlanes( V2f( camera->getClippingPlanes().x, -frustumDistances[4] + resultZ ) );
-				camera = newCamera;
+				camera->setClippingPlanes( V2f( camera->getClippingPlanes().x, -frustumDistances[4] + resultZ ) );
 			}
 		}
 	}
@@ -617,21 +616,17 @@ void FramingConstraint::compute( Gaffer::ValuePlug *output, const Gaffer::Contex
 			( distancesMax[1] - distancesMin[1] ) / frustum.size().y
 		);
 
-		// Create a camera with the scaled aperture
-		IECoreScene::CameraPtr newCamera = camera->copy();
-		newCamera->setAperture( camera->getAperture() * scale );
-		newCamera->setApertureOffset( V2f( 0.0 ) );
+		camera->setAperture( camera->getAperture() * scale );
+		camera->setApertureOffset( V2f( 0.0 ) );
 
 		if( extendFarClip )
 		{
 			V2f origClip = camera->getClippingPlanes();
 			if( origClip.y - origClip.x < distancesMax[2] - distancesMin[2] )
 			{
-				newCamera->setClippingPlanes( V2f( origClip.x, origClip.x + distancesMax[2] - distancesMin[2] ) );
+				camera->setClippingPlanes( V2f( origClip.x, origClip.x + distancesMax[2] - distancesMin[2] ) );
 			}
 		}
-
-		camera = newCamera;
 	}
 	else
 	{

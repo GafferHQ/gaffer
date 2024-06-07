@@ -1,7 +1,10 @@
 1.3.16.x (relative to 1.3.16.4)
 ========
 
+Fixes
+-----
 
+- FramingConstraint : Fixed crash caused by attempts to constrain objects that were not cameras.
 
 1.3.16.4 (relative to 1.3.16.3)
 ========
