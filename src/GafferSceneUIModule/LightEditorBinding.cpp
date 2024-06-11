@@ -79,6 +79,15 @@ namespace
 {
 
 ConstStringDataPtr g_emptyLocation = new StringData( "emptyLocation.png" );
+const InternedString g_lightSetName( "__lights" );
+
+bool isLight( const ScenePath *scenePath, const Canceller *canceller )
+{
+	ScenePlug::SetScope scope( scenePath->getContext(), &g_lightSetName );
+	scope.setCanceller( canceller );
+	ConstPathMatcherDataPtr lightsData = scenePath->getScene()->setPlug()->getValue();
+	return lightsData->readable().match( scenePath->names() ) & PathMatcher::ExactMatch;
+}
 
 class LocationNameColumn : public StandardPathColumn
 {
@@ -289,6 +298,11 @@ class MuteColumn : public InspectorColumn
 				return result;
 			}
 
+			if( !isLight( scenePath, canceller ) )
+			{
+				return CellData();
+			}
+
 			if( auto value = runTimeCast<const BoolData>( result.value ) )
 			{
 				result.icon = value->readable() ? m_muteIconData : m_unMuteIconData;
@@ -407,6 +421,11 @@ class SetMembershipColumn : public InspectorColumn
 			if( !scenePath )
 			{
 				return result;
+			}
+
+			if( !isLight( scenePath, canceller ) )
+			{
+				return CellData();
 			}
 
 			std::string toolTip;

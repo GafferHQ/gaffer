@@ -649,6 +649,9 @@ class LightEditorTest( GafferUITest.TestCase ) :
 			editor = GafferSceneUI.LightEditor( script )
 			editor._LightEditor__settingsNode["editScope"].setInput( script["editScope"]["out"] )
 
+			editor._LightEditor__updateColumns()
+			GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
+
 			widget = editor._LightEditor__pathListing
 			self.setLightEditorMuteSelection( widget, togglePaths )
 
@@ -696,6 +699,9 @@ class LightEditorTest( GafferUITest.TestCase ) :
 		self.assertEqual( attr["gl:visualiser:scale"].value, 5.0 )
 
 		editor = GafferSceneUI.LightEditor( script )
+		editor._LightEditor__updateColumns()
+		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
+
 		widget = editor._LightEditor__pathListing
 		editor.setNodeSet( Gaffer.StandardSet( [ script["custAttr"] ] ) )
 		self.setLightEditorMuteSelection( widget, ["/group/light"] )
@@ -731,12 +737,11 @@ class LightEditorTest( GafferUITest.TestCase ) :
 		self.assertEqual( attributes["light"].shaders()["add"].parameters["a"].value, imath.Color3f( 0.0 ) )
 		self.assertEqual( attributes["light"].shaders()["__shader"].parameters["exposure"].value, 0.0 )
 
-		with GafferUI.Window() as window :
-			editor = GafferSceneUI.LightEditor( script )
+		editor = GafferSceneUI.LightEditor( script )
 		editor._LightEditor__settingsNode["editScope"].setInput( script["editScope"]["out"] )
-		window.setVisible( True )
 
-		self.waitForIdle( 1000 )
+		editor._LightEditor__updateColumns()
+		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
 
 		editor.setNodeSet( Gaffer.StandardSet( [ script["editScope"] ] ) )
 
@@ -862,6 +867,33 @@ class LightEditorTest( GafferUITest.TestCase ) :
 		self.assertNotIn( "A", columnNames )
 		self.assertNotIn( "Y", columnNames )
 		self.assertNotIn( "Z", columnNames )
+
+	def testLightBlockerSoloDisabled( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["blocker"] = GafferScene.Cube()
+		script["blocker"]["sets"].setValue( "__lightFilters" )
+
+		editor = GafferSceneUI.LightEditor( script )
+		editor._LightEditor__updateColumns()
+		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
+
+		editor.setNodeSet( Gaffer.StandardSet( [ script["blocker"] ] ) )
+
+		widget = editor._LightEditor__pathListing
+
+		columns = widget.getColumns()
+		for i, c in zip( range( 0, len( columns ) ), columns ) :
+			if isinstance( c, _GafferSceneUI._LightEditorSetMembershipColumn ) :
+				selection = [ IECore.PathMatcher() for i in range( 0, len( columns ) ) ]
+				selection[i].addPath( "/cube" )
+				widget.setSelection( selection )
+
+				editor._LightEditor__editSelectedCells( widget )
+
+				self.assertTrue( script["blocker"]["out"].set( "soloLights" ).value.isEmpty() )
+
 
 if __name__ == "__main__" :
 	unittest.main()
