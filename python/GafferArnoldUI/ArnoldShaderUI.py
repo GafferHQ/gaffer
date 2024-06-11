@@ -345,6 +345,14 @@ def __translateNodeMetadata( nodeEntry ) :
 				"ai:light", paramName, page
 			)
 
+		if (
+			nodeName == "light_blocker" and
+			__aiMetadataGetStr( nodeEntry, paramName, "gaffer.plugType" ) != ""
+		) :
+			GafferSceneUI.LightEditor.registerShaderParameter(
+				"ai:light", paramName, "ai:lightFilter:filter", "Blocker"
+			)
+
 		# Label from OSL "label"
 		label = __aiMetadataGetStr( nodeEntry, paramName, "label" )
 		if label is None :
