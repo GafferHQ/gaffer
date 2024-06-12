@@ -736,5 +736,27 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( row["name"].getValue(), "/parent/child" )
 
+	def testChainedEditScopes( self ) :
+
+		light = GafferSceneTest.TestLight()
+
+		editScope1 = Gaffer.EditScope()
+		editScope1.setup( light["out"] )
+		editScope1["in"].setInput( light["out"] )
+
+		editScope2 = Gaffer.EditScope()
+		editScope2.setup( editScope1["out"] )
+		editScope2["in"].setInput( editScope1["out"] )
+
+		inspection2 = self.__inspect( editScope2["out"], "/light", "gl:visualiser:scale", editScope2 )
+
+		self.assertTrue( inspection2.editable() )
+		edit2 = inspection2.acquireEdit()
+		edit2["enabled"].setValue( True )
+
+		inspection1 = self.__inspect( editScope2["out"], "/light", "gl:visualiser:scale", editScope1 )
+
+		self.assertTrue( inspection1.editable() )
+
 if __name__ == "__main__" :
 	unittest.main()
