@@ -60,6 +60,8 @@ namespace
 using Knot = std::pair<float, V3f>;
 using KnotVector = std::vector<Knot>;
 
+const InternedString g_glVisualiserScaleString( "gl:visualiser:scale" );
+
 const char *faceCameraVertexSource()
 {
 	return
@@ -146,7 +148,7 @@ void getKnotsToVisualize( const IECoreScene::ShaderNetwork *shaderNetwork, KnotV
 	}
 }
 
-void addKnot( IECoreGL::GroupPtr group, const Knot &knot )
+void addKnot( IECoreGL::GroupPtr group, const Knot &knot, const float visualiserScale )
 {
 	IECoreGL::GroupPtr markerGroup = new IECoreGL::Group();
 
@@ -163,8 +165,8 @@ void addKnot( IECoreGL::GroupPtr group, const Knot &knot )
 	V3fVectorDataPtr p = new V3fVectorData;
 	std::vector<V3f> &pVec = p->writable();
 	pVec.push_back( V3f(  0, 0,  0  ) );
-	pVec.push_back( V3f(  0, 1, -1  ) );
-	pVec.push_back( V3f(  0, 1,  1  ) );
+	pVec.push_back( V3f(  0, visualiserScale * 2.f, -visualiserScale * 2.f  ) );
+	pVec.push_back( V3f(  0, visualiserScale * 2.f, visualiserScale * 2.f  ) );
 
 	IECoreScene::MeshPrimitivePtr mesh = new IECoreScene::MeshPrimitive( vertsPerPoly, vertIds, "linear", p );
 	ToGLMeshConverterPtr meshConverter = new ToGLMeshConverter( mesh );
@@ -233,17 +235,28 @@ Visualisations DecayVisualiser::visualise( const IECore::InternedString &attribu
 		return {};
 	}
 
+	const FloatData *visualiserScaleData = attributes->member<FloatData>( g_glVisualiserScaleString );
+	const float visualiserScale = visualiserScaleData ? visualiserScaleData->readable() : 1.f;
+
 	IECoreGL::GroupPtr result = new IECoreGL::Group();
 
 	for( KnotVector::size_type i = 0; i < knots.size(); ++i )
 	{
-		addKnot( result, knots[i] );
+		addKnot( result, knots[i], visualiserScale );
 	}
 
 	// On the whole in Gaffer we assume that light scale doesn't affect the
-	// render (this may need to be configurable later). Decay shouldn't scale
-	// with visualisation scale either though.
-	return { Visualisation( result, Visualisation::Scale::None ) };
+	// render (this may need to be configurable later). The decay visualiser
+	// shouldn't scale with visualisation scale either. We scale the triangle
+	// indicators individually by the visualisation scale in `addKnot()`.
+	return {
+		Visualisation(
+			result,
+			Visualisation::Scale::None,
+			Visualisation::Category::Generic,
+			/* affectsFramingBound = */ false
+		)
+	};
 }
 
 } // namespace
