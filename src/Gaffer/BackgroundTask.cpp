@@ -255,8 +255,7 @@ void BackgroundTask::wait()
 	std::unique_lock<std::mutex> lock( m_taskData->mutex );
 	if( m_taskData->threadId == std::this_thread::get_id() )
 	{
-		IECore::msg( IECore::Msg::Error, "BackgroundTask::wait", "Task attempted to wait for itself" );
-		return;
+		IECore::msg( IECore::Msg::Error, "BackgroundTask::wait", "Deadlock detected : Task is attempting to wait for itself. Please provide stack trace in bug report." );
 	}
 
 	m_taskData->conditionVariable.wait(

@@ -19,6 +19,7 @@ Improvements
 - SceneInspector :
   - Added support for dragging inspector labels, such as those containing the names of attributes, options, output parameters, parameters, primitive variables, and sets.
   - Set names beginning with "__" such as "__lights" or "__cameras" are now displayed as-is, rather than being transformed to "Lights" or "Cameras".
+- BackgroundTask : Added reporting of tasks attempting to wait for themselves.
 
 Fixes
 -----
@@ -36,7 +37,6 @@ API
 - TextWidget, MultilineTextWidget :
   - Added `setPlaceholderText()` and `getPlaceholderText()` methods.
   - Added `placeholderText` constructor argument.
-- BackgroundTask : Added mitigation against tasks attempting to wait for themselves.
 
 1.4.6.0 (relative to 1.4.5.0)
 =======

@@ -255,24 +255,5 @@ class BackgroundTaskTest( GafferTest.TestCase ) :
 		# check for cancellation, and we'll deadlock.
 		del task
 
-	def testSelfWait( self ) :
-
-		def f( canceller ) :
-			# It makes zero sense for a task to wait for itself. Rather than
-			# allow it to deadlock, we want to emit a diagnostic message and
-			# continue.
-			task.wait()
-
-		mh = IECore.CapturingMessageHandler()
-		IECore.MessageHandler.setDefaultHandler( mh )
-
-		task = Gaffer.BackgroundTask( None, f )
-		task.wait()
-
-		self.assertEqual( len( mh.messages ), 1 )
-		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
-		self.assertEqual( mh.messages[0].context, "BackgroundTask::wait" )
-		self.assertEqual( mh.messages[0].message, "Task attempted to wait for itself" )
-
 if __name__ == "__main__":
 	unittest.main()
