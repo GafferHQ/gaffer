@@ -14,6 +14,7 @@ Improvements
   - When viewing the output of a Box, the menu now displays the Edit Scopes contained within.
   - Added support for dropping an Edit Scope node onto the widget to set it as the current Edit Scope.
   - Added support for middle-dragging from the widget to access the current Edit Scope node.
+- ArnoldAttributes : Added syntax highlighting and auto-complete for set expressions on the `shadowGroup` plug.
 
 API
 ---
