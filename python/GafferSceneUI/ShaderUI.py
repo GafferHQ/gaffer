@@ -503,7 +503,7 @@ class _ShaderPath( Gaffer.Path ) :
 
 				connections = {
 					c.source.shader for n in self.__shaderNetworks if (
-						self[0] in n.shaders()
+						n.getShader( self[0] ) is not None
 					) for c in n.inputConnections( self[0] ) if (
 						c.destination.name.split( '.' )[0] == self[1]
 					)
@@ -598,7 +598,7 @@ class _ShaderPath( Gaffer.Path ) :
 		if self.__connectedParametersOnly :
 			connectedParams = set()
 			for n in self.__shaderNetworks :
-				if self[0] in n.shaders() :
+				if n.getShader( self[0] ) is not None :
 					for c in n.inputConnections( self[0] ) :
 						connectedParams.add( c.destination.name )
 			return list( connectedParams )
@@ -609,7 +609,13 @@ class _ShaderPath( Gaffer.Path ) :
 	def __shaders( self ) :
 
 		if len( self ) > 0 :
-			uniqueShaders = { n.shaders()[ self[0] ].hash() : n.shaders()[ self[0] ] for n in self.__shaderNetworks if self[0] in n.shaders() }
+
+			uniqueShaders = {}
+			for network in self.__shaderNetworks :
+				shader = network.getShader( self[0] )
+				if shader is not None :
+					uniqueShaders[shader.hash()] = shader
+
 			return list( uniqueShaders.values() )
 
 		return None

@@ -4,6 +4,7 @@
 Improvements
 ------------
 
+- ShaderTweaks, ShaderQuery : Improved performance of parameter selection dialogue. For some particularly large shader networks, speedups are greater than 100x.
 - UIEditor : Added code examples to button code placeholder text.
 
 API
