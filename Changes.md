@@ -19,7 +19,17 @@ Breaking Changes
 1.4.x.x (relative to 1.4.6.0)
 =======
 
+Features
+--------
 
+- Cycles : Added support for light-linking.
+
+Improvements
+------------
+
+- Cycles :
+  - CyclesMeshLight now has emission sampling method strategies on the node itself.
+  - Remove hiding visibility flags on the meshlight created by CyclesMeshLight, this was for Arnold and not correct for Cycles.
 
 1.4.6.0 (relative to 1.4.5.0)
 =======

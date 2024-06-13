@@ -50,8 +50,7 @@ Gaffer.Metadata.registerNode(
 	"description",
 	"""
 	Turns mesh primitives into Cycles mesh lights by assigning
-	an emission shader, turning off all visibility except for camera rays,
-	and adding the meshes to the default lights set.
+	an emission shader and adding the meshes to the default lights set.
 	""",
 
 	plugs = {
@@ -64,6 +63,8 @@ Gaffer.Metadata.registerNode(
 			rays.
 			""",
 
+			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+
 		],
 
 		"lightGroup" : [
@@ -72,6 +73,31 @@ Gaffer.Metadata.registerNode(
 			"""
 			The light group that the mesh light will contribute to.
 			""",
+
+			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+
+		],
+
+		"emissionSamplingMethod" : [
+
+			"description",
+			"""
+			Sampling strategy for emissive surfaces.
+			""",
+
+			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+
+		],
+
+		"emissionSamplingMethod.value" : [
+
+			"preset:None", "none",
+			"preset:Auto", "auto",
+			"preset:Front", "front",
+			"preset:Back", "back",
+			"preset:Front-Back", "front_back",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 
