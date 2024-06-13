@@ -32,6 +32,7 @@
 #
 ##########################################################################
 
+import os
 import pathlib
 import time
 import unittest
@@ -41,6 +42,7 @@ import IECoreImage
 
 class OutputDriverTest( unittest.TestCase ) :
 
+	@unittest.skipIf( os.name == "nt", "Kick not currently working on Windows.")
 	def testMergedDisplays( self ) :
 
 		server = IECoreImage.DisplayDriverServer( 1559 )
@@ -48,7 +50,7 @@ class OutputDriverTest( unittest.TestCase ) :
 
 		subprocess.check_call( [
 			"kick", "-v", "0", "-dw", "-dp",
-			pathlib.Path( __file__ ).parent / "assFiles" / "mergedDisplays.ass"
+			str( pathlib.Path( __file__ ).parent / "assFiles" / "mergedDisplays.ass" )
 		] )
 
 		image = IECoreImage.ImageDisplayDriver.removeStoredImage( "mergedImage" )
@@ -63,6 +65,7 @@ class OutputDriverTest( unittest.TestCase ) :
 		self.assertTrue( "direct_diffuse.G" in channelNames )
 		self.assertTrue( "direct_diffuse.B" in channelNames )
 
+	@unittest.skipIf( os.name == "nt", "Kick not currently working on Windows.")
 	def testVectorAndPointDisplays( self ) :
 
 		server = IECoreImage.DisplayDriverServer( 1559 )
@@ -70,7 +73,7 @@ class OutputDriverTest( unittest.TestCase ) :
 
 		subprocess.check_call( [
 			"kick", "-v", "0", "-dw", "-dp",
-			pathlib.Path( __file__ ).parent / "assFiles" / "vectorAndPointDisplays.ass"
+			str( pathlib.Path( __file__ ).parent / "assFiles" / "vectorAndPointDisplays.ass" )
 		] )
 
 		image = IECoreImage.ImageDisplayDriver.removeStoredImage( "vectorAndPointImage" )
@@ -88,6 +91,7 @@ class OutputDriverTest( unittest.TestCase ) :
 		self.assertTrue( "N.G" in channelNames )
 		self.assertTrue( "N.B" in channelNames )
 
+	@unittest.skipIf( os.name == "nt", "Kick not currently working on Windows.")
 	def testLayerName( self ) :
 
 		server = IECoreImage.DisplayDriverServer( 1559 )
@@ -95,7 +99,7 @@ class OutputDriverTest( unittest.TestCase ) :
 
 		subprocess.check_call( [
 			"kick", "-v", "0", "-dw", "-dp",
-			pathlib.Path( __file__ ).parent / "assFiles" / "outputWithLayerName.ass"
+			str( pathlib.Path( __file__ ).parent / "assFiles" / "outputWithLayerName.ass" )
 		] )
 
 		image = IECoreImage.ImageDisplayDriver.removeStoredImage( "layerNameImage" )
