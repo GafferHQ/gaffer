@@ -247,7 +247,7 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 
 		with Gaffer.Context() as c :
 
-			GafferImage.OpenColorIOAlgo.setConfig( c, str( self.openColorIOPath() / "context.ocio" ) )
+			GafferImage.OpenColorIOAlgo.setConfig( c, ( self.openColorIOPath() / "context.ocio" ).as_posix() )
 			GafferImage.OpenColorIOAlgo.addVariable( c, "LUT", "srgb.spi1d" )
 			GafferImage.OpenColorIOAlgo.addVariable( c, "CDL", "cineon.spi1d" )
 

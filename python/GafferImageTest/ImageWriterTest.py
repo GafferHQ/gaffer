@@ -1241,7 +1241,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			( "exr", "openexr", "half", "" ),
 			( "dpx", "dpx", "uint12", "" ),
 			( "TIFF", "tiff", "float", "" ),
-			( "tif", "tiff", "uint32", str( self.openColorIOPath() / "context.ocio" ) ),
+			( "tif", "tiff", "uint32", ( self.openColorIOPath() / "context.ocio" ).as_posix() ),
 		] :
 
 			w["fileName"].setValue( self.temporaryDirectory() / "{0}.{1}".format( dataType, ext ) )
