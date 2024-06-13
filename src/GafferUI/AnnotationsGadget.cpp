@@ -118,6 +118,7 @@ string wrap( const std::string &text, size_t maxLineLength )
 }
 
 const float g_offset = 0.5;
+const string g_emptyString;
 
 } // namespace
 
@@ -160,6 +161,33 @@ void AnnotationsGadget::setVisibleAnnotations( const IECore::StringAlgo::MatchPa
 const IECore::StringAlgo::MatchPattern &AnnotationsGadget::getVisibleAnnotations() const
 {
 	return m_visibleAnnotations;
+}
+
+const std::string &AnnotationsGadget::annotationText( const Gaffer::Node *node, IECore::InternedString annotation ) const
+{
+	const_cast<AnnotationsGadget *>( this )->update();
+
+	const NodeGadget *nodeGadget = graphGadget()->nodeGadget( node );
+	if( !nodeGadget )
+	{
+		return g_emptyString;
+	}
+
+	auto it = m_annotations.find( nodeGadget );
+	if( it == m_annotations.end() )
+	{
+		return g_emptyString;
+	}
+
+	for( const auto &a : it->second.standardAnnotations )
+	{
+		if( a.name == annotation )
+		{
+			return a.text();
+		}
+	}
+
+	return g_emptyString;
 }
 
 bool AnnotationsGadget::acceptsParent( const GraphComponent *potentialParent ) const
@@ -365,7 +393,7 @@ void AnnotationsGadget::update() const
 			}
 
 			annotations.standardAnnotations.push_back(
-				MetadataAlgo::getAnnotation( node, name, /* inheritTemplate = */ true )
+				StandardAnnotation( MetadataAlgo::getAnnotation( node, name, /* inheritTemplate = */ true ), name )
 			);
 			// Word wrap. It might be preferable to do this during
 			// rendering, but we have no way of querying the extent of

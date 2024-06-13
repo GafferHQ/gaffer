@@ -298,6 +298,7 @@ void GafferUIModule::bindGraphGadget()
 		.def_readonly( "untemplatedAnnotations", &AnnotationsGadget::untemplatedAnnotations )
 		.def( "setVisibleAnnotations", &AnnotationsGadget::setVisibleAnnotations )
 		.def( "getVisibleAnnotations", &AnnotationsGadget::getVisibleAnnotations, return_value_policy<copy_const_reference>() )
+		.def( "annotationText", &AnnotationsGadget::annotationText, return_value_policy<copy_const_reference>(), ( arg( "node" ), arg( "annotation" ) = "user" ) )
 	;
 
 	IECorePython::RunTimeTypedClass<GraphLayout>()

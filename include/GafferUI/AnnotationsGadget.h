@@ -74,6 +74,10 @@ class GAFFERUI_API AnnotationsGadget : public Gadget
 		void setVisibleAnnotations( const IECore::StringAlgo::MatchPattern &patterns );
 		const IECore::StringAlgo::MatchPattern &getVisibleAnnotations() const;
 
+		/// Returns the text currently being rendered for the specified
+		/// annotation. Only really intended for use in the unit tests.
+		const std::string &annotationText( const Gaffer::Node *node, IECore::InternedString annotation = "user" ) const;
+
 		bool acceptsParent( const GraphComponent *potentialParent ) const override;
 
 	protected :
@@ -98,10 +102,16 @@ class GAFFERUI_API AnnotationsGadget : public Gadget
 		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, Gaffer::Node *node );
 		void update() const;
 
+		struct StandardAnnotation : public Gaffer::MetadataAlgo::Annotation
+		{
+			StandardAnnotation( const Gaffer::MetadataAlgo::Annotation &a, IECore::InternedString name ) : Annotation( a ), name( name ) {}
+			IECore::InternedString name;
+		};
+
 		struct Annotations
 		{
 			bool dirty = true;
-			std::vector<Gaffer::MetadataAlgo::Annotation> standardAnnotations;
+			std::vector<StandardAnnotation> standardAnnotations;
 			bool bookmarked = false;
 			IECore::InternedString numericBookmark;
 			bool renderable = false;

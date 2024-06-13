@@ -14,6 +14,11 @@ Fixes
 - Cycles : Fixed rendering to the Catalogue using the batch Render node (#5905). Note that rendering a mixture of Catalogue and file outputs is still not supported, and in this case any file outputs will be ignored.
 - CodeWidget : Fixed bug that could prevent changes from being committed while the completion menu was visible.
 
+API
+---
+
+- AnnotationsGadget : Added `annotationText()` method.
+
 1.4.7.0 (relative to 1.4.6.0)
 =======
 
