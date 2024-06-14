@@ -1,0 +1,11 @@
+#usda 1.0
+
+def Volume "volume"
+{
+    custom rel field:density = </volume/density>
+
+    def OpenVDBAsset "density"
+    {
+    }
+}
+

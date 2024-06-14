@@ -25,6 +25,8 @@ Fixes
 -----
 
 - Viewer : Fixed handling of Gaffer `${contextVariable}` references in OpenColorIO variable values. The Viewer now updates the Display Transform appropriately when the value of the context variable changes.
+- FramingConstraint : Fixed crash caused by attempts to constrain objects that were not cameras.
+- SceneReader : Fixed error loading USD Volumes with empty fields. These will now issue a warning and load as empty locations.
 
 Fixes
 -----
@@ -567,10 +569,19 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.16.x (relative to 1.3.16.4)
+1.3.16.x (relative to 1.3.16.5)
 ========
 
 
+
+1.3.16.5 (relative to 1.3.16.4)
+========
+
+Fixes
+-----
+
+- FramingConstraint : Fixed crash caused by attempts to constrain objects that were not cameras.
+- SceneReader : Fixed error loading USD Volumes with empty fields. These will now issue a warning and load as empty locations.
 
 1.3.16.4 (relative to 1.3.16.3)
 ========
