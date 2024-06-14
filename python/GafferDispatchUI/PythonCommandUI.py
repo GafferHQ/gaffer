@@ -127,7 +127,7 @@ class _CommandPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.PlugValueWidget.__init__( self, self.__codeWidget, plug, **kw )
 
-		self.__codeWidget._qtWidget().setPlaceholderText(
+		self.__codeWidget.setPlaceholderText(
 			inspect.cleandoc(
 				"""
 				# Global variables :

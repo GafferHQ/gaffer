@@ -161,18 +161,21 @@ std::vector<std::string> GafferImage::OpenColorIOAlgo::variables( const Gaffer::
 OCIO_NAMESPACE::ConstConfigRcPtr GafferImage::OpenColorIOAlgo::currentConfig()
 {
 	const Gaffer::Context *context = Gaffer::Context::current();
-	return g_configCache.get( getConfig( context ) );
+	return g_configCache.get( context->substitute( getConfig( context ) ) );
 }
 
 IECore::MurmurHash GafferImage::OpenColorIOAlgo::currentConfigHash()
 {
-	return Gaffer::Context::current()->variableHash( g_ocioConfigContextName );
+	const Gaffer::Context *context = Gaffer::Context::current();
+	IECore::MurmurHash result;
+	result.append( context->substitute( getConfig( context ) ) );
+	return result;
 }
 
 GafferImage::OpenColorIOAlgo::ConfigAndContext GafferImage::OpenColorIOAlgo::currentConfigAndContext()
 {
 	const Gaffer::Context *gafferContext = Gaffer::Context::current();
-	OCIO_NAMESPACE::ConstConfigRcPtr config = g_configCache.get( getConfig( gafferContext ) );
+	OCIO_NAMESPACE::ConstConfigRcPtr config = g_configCache.get( gafferContext->substitute( getConfig( gafferContext ) ) );
 
 	OCIO_NAMESPACE::ConstContextRcPtr context = config->getCurrentContext();
 	OCIO_NAMESPACE::ContextRcPtr mutableContext;
@@ -198,9 +201,10 @@ GafferImage::OpenColorIOAlgo::ConfigAndContext GafferImage::OpenColorIOAlgo::cur
 			context = mutableContext;
 		}
 
+		const string value = gafferContext->substitute( gafferContext->get<string>( n ) );
 		mutableContext->setStringVar(
 			n.c_str() + g_ocioStringVarPrefix.size(),
-			gafferContext->get<string>( n ).c_str()
+			value.c_str()
 		);
 	}
 
@@ -219,7 +223,7 @@ IECore::MurmurHash GafferImage::OpenColorIOAlgo::currentConfigAndContextHash()
 	{
 		if( n == g_ocioConfigContextName || boost::starts_with( n.string(), g_ocioStringVarPrefix ) )
 		{
-			result.append( context->variableHash( n ) );
+			result.append( context->substitute( context->get<string>( n ) ) );
 		}
 	}
 	return result;

@@ -16,10 +16,48 @@ Breaking Changes
 - AttributeTweaks : `Replace` mode no longer errors if the `linkedLights` attribute doesn't exist.
 - ImageReader : Changed handling of lower-cased "r", "g", "b" and "a" channels.
 
-1.4.x.x (relative to 1.4.6.0)
+1.4.x.x (relative to 1.4.7.0)
 =======
 
 
+
+1.4.7.0 (relative to 1.4.6.0)
+=======
+
+Improvements
+------------
+
+- ShaderTweaks, ShaderQuery : Improved performance of parameter selection dialogue. For some particularly large shader networks, speedups are greater than 100x.
+- UIEditor : Added code examples to button code placeholder text.
+- Arnold `light_decay` :
+  - Increased the size of the triangle indicators for the decay ranges.
+  - The decay range indicators are now scaled by the light's `gl:visualiser:scale` attribute.
+  - The decay range is now ignored when framing a light in the Viewer.
+- EditScopePlugValueWidget :
+  - When viewing the output of a Box, the menu now displays the Edit Scopes contained within.
+  - Added support for dropping an Edit Scope node onto the widget to set it as the current Edit Scope.
+  - Added support for middle-dragging from the widget to access the current Edit Scope node.
+- ArnoldAttributes : Added syntax highlighting and auto-complete for set expressions on the `shadowGroup` plug.
+- OpenColorIO : When a script-level OpenColorIO variable contains a Gaffer `${contextVariable}` reference, its evaluation is now deferred to the point of use. This allows it to pick up overrides introduced by nodes such as ContextVariables and Wedge.
+- SceneInspector :
+  - Added support for dragging inspector labels, such as those containing the names of attributes, options, output parameters, parameters, primitive variables, and sets.
+  - Set names beginning with "__" such as "__lights" or "__cameras" are now displayed as-is, rather than being transformed to "Lights" or "Cameras".
+- BackgroundTask : Added reporting of tasks attempting to wait for themselves.
+
+Fixes
+-----
+
+- Viewer : Fixed handling of Gaffer `${contextVariable}` references in OpenColorIO variable values. The Viewer now updates the Display Transform appropriately when the value of the context variable changes.
+- FramingConstraint : Fixed crash caused by attempts to constrain objects that were not cameras.
+- SceneReader : Fixed error loading USD Volumes with empty fields. These will now issue a warning and load as empty locations.
+- UI : Fixed hangs caused by garbage collection of removed Editors. One common example involved viewing a Catalogue in the NodeEditor after removing the ImageInspector (#5877).
+
+API
+---
+
+- TextWidget, MultilineTextWidget :
+  - Added `setPlaceholderText()` and `getPlaceholderText()` methods.
+  - Added `placeholderText` constructor argument.
 
 1.4.6.0 (relative to 1.4.5.0)
 =======
@@ -547,10 +585,19 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.16.x (relative to 1.3.16.4)
+1.3.16.x (relative to 1.3.16.5)
 ========
 
 
+
+1.3.16.5 (relative to 1.3.16.4)
+========
+
+Fixes
+-----
+
+- FramingConstraint : Fixed crash caused by attempts to constrain objects that were not cameras.
+- SceneReader : Fixed error loading USD Volumes with empty fields. These will now issue a warning and load as empty locations.
 
 1.3.16.4 (relative to 1.3.16.3)
 ========

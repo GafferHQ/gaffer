@@ -109,9 +109,9 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# display so we don't show anything misleading.
 			if exception is not None or value is None :
 				self.__numericWidget.setText( "" )
-				self.__numericWidget._qtWidget().setPlaceholderText( "---" )
+				self.__numericWidget.setPlaceholderText( "---" )
 			else :
-				self.__numericWidget._qtWidget().setPlaceholderText( "" )
+				self.__numericWidget.setPlaceholderText( "" )
 
 		self.__numericWidget.setErrored( exception is not None )
 

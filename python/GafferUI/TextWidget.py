@@ -49,7 +49,7 @@ class TextWidget( GafferUI.Widget ) :
 
 	DisplayMode = enum.Enum( "DisplayMode", [ "Normal", "Password" ] )
 
-	def __init__( self, text="", editable=True, displayMode=DisplayMode.Normal, characterWidth=None, **kw ) :
+	def __init__( self, text="", editable=True, displayMode=DisplayMode.Normal, characterWidth=None, placeholderText="", **kw ) :
 
 		GafferUI.Widget.__init__( self, _LineEdit(), **kw )
 
@@ -57,6 +57,7 @@ class TextWidget( GafferUI.Widget ) :
 		self.setEditable( editable )
 		self.setDisplayMode( displayMode )
 		self.setFixedCharacterWidth( characterWidth )
+		self.setPlaceholderText( placeholderText )
 
 	def setText( self, text ) :
 
@@ -170,6 +171,15 @@ class TextWidget( GafferUI.Widget ) :
 	def getFixedCharacterWidth ( self ) :
 
 		return self._qtWidget().getFixedCharacterWidth()
+
+	## Sets what text is displayed when the main text is empty.
+	def setPlaceholderText( self, text ) :
+
+		self._qtWidget().setPlaceholderText( text )
+
+	def getPlaceholderText( self ) :
+
+		return self._qtWidget().placeholderText()
 
 	## \deprecated Use setFixedCharacterWidth() instead.
 	def setCharacterWidth( self, numCharacters ) :

@@ -68,7 +68,7 @@ class OpenColorIOAlgoTest( GafferImageTest.ImageTestCase ) :
 
 		with Gaffer.Context() as c :
 
-			GafferImage.OpenColorIOAlgo.setConfig( c, str( self.openColorIOPath() / "context.ocio" ) )
+			GafferImage.OpenColorIOAlgo.setConfig( c, ( self.openColorIOPath() / "context.ocio" ).as_posix() )
 			customConfig = GafferImage.OpenColorIOAlgo.currentConfig()
 			self.assertIsInstance( customConfig, PyOpenColorIO.Config )
 			self.assertEqual( customConfig.getCacheID(), PyOpenColorIO.Config.CreateFromFile( c["ocio:config"] ).getCacheID() )
@@ -89,7 +89,7 @@ class OpenColorIOAlgoTest( GafferImageTest.ImageTestCase ) :
 
 		with Gaffer.Context() as c :
 
-			GafferImage.OpenColorIOAlgo.setConfig( c, str( self.openColorIOPath() / "context.ocio" ) )
+			GafferImage.OpenColorIOAlgo.setConfig( c, ( self.openColorIOPath() / "context.ocio" ).as_posix() )
 			GafferImage.OpenColorIOAlgo.addVariable( c, "LUT", "srgb.spi1d" )
 
 			customConfig, customContext = GafferImage.OpenColorIOAlgo.currentConfigAndContext()

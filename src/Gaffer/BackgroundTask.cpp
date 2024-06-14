@@ -50,6 +50,8 @@
 
 #include "fmt/format.h"
 
+#include <thread>
+
 using namespace IECore;
 using namespace Gaffer;
 
@@ -155,9 +157,10 @@ struct BackgroundTask::TaskData : public boost::noncopyable
 
 	Function *function;
 	IECore::Canceller canceller;
-	std::mutex mutex; // Protects `conditionVariable` and `status`
+	std::mutex mutex; // Protects `conditionVariable`, `status` and `threadID`
 	std::condition_variable conditionVariable;
 	Status status;
+	std::thread::id threadId; // Thread that is executing `function`, if any
 };
 
 BackgroundTask::BackgroundTask( const Plug *subject, const Function &function )
@@ -186,6 +189,7 @@ BackgroundTask::BackgroundTask( const Plug *subject, const Function &function )
 			// Otherwise do the work.
 
 			taskData->status = Running;
+			taskData->threadId = std::this_thread::get_id();
 			lock.unlock();
 
 			// Reset thread state rather then inherit the random
@@ -225,6 +229,7 @@ BackgroundTask::BackgroundTask( const Plug *subject, const Function &function )
 
 			lock.lock();
 			taskData->status = status;
+			taskData->threadId = std::thread::id();
 			taskData->conditionVariable.notify_one();
 		}
 	);
@@ -248,6 +253,11 @@ void BackgroundTask::cancel()
 void BackgroundTask::wait()
 {
 	std::unique_lock<std::mutex> lock( m_taskData->mutex );
+	if( m_taskData->threadId == std::this_thread::get_id() )
+	{
+		IECore::msg( IECore::Msg::Error, "BackgroundTask::wait", "Deadlock detected : Task is attempting to wait for itself. Please provide stack trace in bug report." );
+	}
+
 	m_taskData->conditionVariable.wait(
 		lock,
 		[this]{

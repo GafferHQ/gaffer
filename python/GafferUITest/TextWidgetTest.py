@@ -165,5 +165,16 @@ class TextWidgetTest( GafferUITest.TestCase ) :
 		# checking if the geometry has been updated for the new character width
 		self.assertEqual( newWidth == oldWidth, False )
 
+	def testPlaceholderTest( self ) :
+
+		w = GafferUI.TextWidget()
+		self.assertEqual( w.getPlaceholderText(), "" )
+
+		w.setPlaceholderText( "test" )
+		self.assertEqual( w.getPlaceholderText(), "test" )
+
+		w = GafferUI.TextWidget( placeholderText = "test" )
+		self.assertEqual( w.getPlaceholderText(), "test" )
+
 if __name__ == "__main__":
 	unittest.main()

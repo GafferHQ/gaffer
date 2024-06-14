@@ -130,7 +130,7 @@ class SetExpressionPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__codeWidget.setErrored( exception is not None )
 		value = sole( v["value"] for v in values )
 		self.__codeWidget.setText( value or "" )
-		self.__codeWidget._qtWidget().setPlaceholderText( "---" if value is None else "" )
+		self.__codeWidget.setPlaceholderText( "---" if value is None else "" )
 
 		updateHighlightAndCompleter = False
 
