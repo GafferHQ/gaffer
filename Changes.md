@@ -32,10 +32,6 @@ Fixes
 - Viewer : Fixed handling of Gaffer `${contextVariable}` references in OpenColorIO variable values. The Viewer now updates the Display Transform appropriately when the value of the context variable changes.
 - FramingConstraint : Fixed crash caused by attempts to constrain objects that were not cameras.
 - SceneReader : Fixed error loading USD Volumes with empty fields. These will now issue a warning and load as empty locations.
-
-Fixes
------
-
 - UI : Fixed hangs caused by garbage collection of removed Editors. One common example involved viewing a Catalogue in the NodeEditor after removing the ImageInspector (#5877).
 
 API
