@@ -5,6 +5,7 @@ Fixes
 -----
 
 - FramingConstraint : Fixed crash caused by attempts to constrain objects that were not cameras.
+- SceneReader : Fixed error loading USD Volumes with empty fields. These will now issue a warning and load as empty locations.
 
 1.3.16.4 (relative to 1.3.16.3)
 ========
