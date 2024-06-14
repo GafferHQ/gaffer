@@ -16,6 +16,9 @@ Improvements
   - Added support for middle-dragging from the widget to access the current Edit Scope node.
 - ArnoldAttributes : Added syntax highlighting and auto-complete for set expressions on the `shadowGroup` plug.
 - OpenColorIO : When a script-level OpenColorIO variable contains a Gaffer `${contextVariable}` reference, its evaluation is now deferred to the point of use. This allows it to pick up overrides introduced by nodes such as ContextVariables and Wedge.
+- SceneInspector :
+  - Added support for dragging inspector labels, such as those containing the names of attributes, options, output parameters, parameters, primitive variables, and sets.
+  - Set names beginning with "__" such as "__lights" or "__cameras" are now displayed as-is, rather than being transformed to "Lights" or "Cameras".
 
 Fixes
 -----

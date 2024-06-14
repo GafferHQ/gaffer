@@ -793,6 +793,10 @@ class DiffRow( Row ) :
 				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
 			)
 
+			label.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
+			label.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
+			label.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
+
 		self.__inspector = inspector
 		self.__diffCreator = diffCreator
 
@@ -1007,6 +1011,22 @@ class DiffRow( Row ) :
 
 		self.ancestor( GafferUI.Window ).addChildWindow( w, removeOnClose = True )
 		w.setVisible( True )
+
+	def __buttonPress( self, widget, event ) :
+
+		return event.buttons == event.Buttons.Left
+
+	def __dragBegin( self, widget, event ) :
+
+		if event.buttons != event.Buttons.Left :
+			return None
+
+		GafferUI.Pointer.setCurrent( "values" )
+		return self.__inspector.name() if self.__inspector else ""
+
+	def __dragEnd( self, widget, event ) :
+
+		GafferUI.Pointer.setCurrent( None )
 
 ##########################################################################
 # DiffColumn
@@ -2262,10 +2282,7 @@ class __SetMembershipSection( LocationSection ) :
 
 		def name( self ) :
 
-			if self.__setName.startswith( "__" ) :
-				return IECore.CamelCase.toSpaced( self.__setName[2:] )
-			else :
-				return self.__setName or ""
+			return self.__setName or ""
 
 		def supportsInheritance( self ) :
 
@@ -2570,10 +2587,7 @@ class _SetsSection( Section ) :
 
 		def name( self ) :
 
-			if self.__setName.startswith( "__" ) :
-				return IECore.CamelCase.toSpaced( self.__setName[2:] )
-			else :
-				return self.__setName or ""
+			return self.__setName or ""
 
 		def __call__( self, target ) :
 
