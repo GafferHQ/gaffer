@@ -44,11 +44,16 @@
 
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/PlugAlgo.h"
+#include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/StringPlug.h"
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
+
+#include <regex>
 
 using namespace GafferUI;
 using namespace Gaffer;
@@ -119,6 +124,139 @@ string wrap( const std::string &text, size_t maxLineLength )
 
 const float g_offset = 0.5;
 const string g_emptyString;
+const int g_maxLineLength = 60;
+
+template<typename PlugType>
+string formatVectorDataPlugValue( const PlugType *plug )
+{
+	auto value = plug->getValue();
+
+	string result;
+	for( const auto &v : value->readable() )
+	{
+		if( !result.empty() )
+		{
+			result += ", ";
+		}
+		result += fmt::format( "{}", v );
+	}
+
+	return result;
+}
+
+/// \todo Should this be made public in PlugAlgo, and how does it relate
+/// to `SpreadsheetUI.formatValue()`? It would be really nice if this could
+/// support preset names too, but those are only available in Python at
+/// present.
+std::string formatPlugValue( const ValuePlug *plug )
+{
+	switch( (int)plug->typeId() )
+	{
+		case BoolPlugTypeId :
+			return static_cast<const BoolPlug *>( plug )->getValue() ? "On" : "Off";
+		case IntPlugTypeId :
+			return std::to_string( static_cast<const IntPlug *>( plug )->getValue() );
+		case FloatPlugTypeId :
+			return fmt::format( "{}", static_cast<const FloatPlug *>( plug )->getValue() );
+		case StringPlugTypeId :
+			return static_cast<const StringPlug *>( plug )->getValue();
+		case IntVectorDataPlugTypeId :
+			return formatVectorDataPlugValue( static_cast<const IntVectorDataPlug *>( plug ) );
+		case FloatVectorDataPlugTypeId :
+			return formatVectorDataPlugValue( static_cast<const FloatVectorDataPlug *>( plug ) );
+		case StringVectorDataPlugTypeId :
+			return formatVectorDataPlugValue( static_cast<const StringVectorDataPlug *>( plug ) );
+		default : {
+			string result;
+			for( const auto &child : ValuePlug::Range( *plug ) )
+			{
+				if( !result.empty() )
+				{
+					result += ", ";
+				}
+				result += formatPlugValue( child.get() );
+			}
+			return result;
+		}
+	}
+}
+
+const std::regex g_plugValueSubstitutionRegex( R"(\{([^}]*)\})" );
+
+bool hasPlugValueSubstitutions( const string &text )
+{
+	return std::regex_search( text, g_plugValueSubstitutionRegex );
+}
+
+bool affectsPlugValueSubstitutions( const Plug *plug, const string &text )
+{
+	const string name = plug->relativeName( plug->node() );
+	sregex_iterator matchIt( text.begin(), text.end(), g_plugValueSubstitutionRegex );
+	sregex_iterator matchEnd;
+	for( ; matchIt != matchEnd; ++matchIt )
+	{
+		if( matchIt->str( 1 ) == name )
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+const Plug *plugValueSubstitutionsBackgroundTaskSubject( const std::string &text, const Node *node )
+{
+	sregex_iterator matchIt( text.begin(), text.end(), g_plugValueSubstitutionRegex );
+	sregex_iterator matchEnd;
+	for( ; matchIt != matchEnd; ++matchIt )
+	{
+		const string plugPath = matchIt->str( 1 );
+		if( auto plug = node->descendant<ValuePlug>( plugPath ) )
+		{
+			if( PlugAlgo::dependsOnCompute( plug ) )
+			{
+				return plug;
+			}
+		}
+	}
+	return nullptr;
+}
+
+string substitutePlugValues( const string &text, const Node *node )
+{
+	sregex_iterator matchIt( text.begin(), text.end(), g_plugValueSubstitutionRegex );
+	sregex_iterator matchEnd;
+
+	if( matchIt == matchEnd )
+	{
+		// No matches
+		return text;
+	}
+
+	string result;
+	ssub_match suffix;
+	for( ; matchIt != matchEnd; ++matchIt )
+	{
+		// Add any unmatched text from before this match.
+		result.insert( result.end(), matchIt->prefix().first, matchIt->prefix().second );
+
+		const string plugPath = matchIt->str( 1 );
+		if( !node )
+		{
+			result += "---";
+		}
+		else if( auto plug = node->descendant<ValuePlug>( plugPath ) )
+		{
+			result += formatPlugValue( plug );
+		}
+
+		suffix = matchIt->suffix();
+	}
+	// The suffix for one match is the same as the prefix for the next
+	// match. So we only need to add the suffix from the last match.
+	result.insert( result.end(), suffix.first, suffix.second );
+	return result;
+}
 
 } // namespace
 
@@ -135,6 +273,9 @@ AnnotationsGadget::AnnotationsGadget()
 {
 	Metadata::nodeValueChangedSignal().connect(
 		boost::bind( &AnnotationsGadget::nodeMetadataChanged, this, ::_1, ::_2, ::_3 )
+	);
+	visibilityChangedSignal().connect(
+		boost::bind( &AnnotationsGadget::visibilityChanged, this )
 	);
 }
 
@@ -172,7 +313,7 @@ const std::string &AnnotationsGadget::annotationText( const Gaffer::Node *node, 
 		{
 			if( a.name == annotation )
 			{
-				return a.text();
+				return a.renderText;
 			}
 		}
 	}
@@ -208,11 +349,11 @@ void AnnotationsGadget::renderLayer( Layer layer, const Style *style, RenderReas
 		return;
 	}
 
-	update();
+	const_cast<AnnotationsGadget *>( this )->update();
 
-	for( auto &ga : m_annotations )
+	for( const auto &ga : m_annotations )
 	{
-		Annotations &annotations = ga.second;
+		const Annotations &annotations = ga.second;
 		assert( !annotations.dirty );
 		if( !annotations.renderable )
 		{
@@ -257,7 +398,7 @@ void AnnotationsGadget::renderLayer( Layer layer, const Style *style, RenderReas
 
 		for( const auto &a : annotations.standardAnnotations )
 		{
-			annotationOrigin = style->renderAnnotation( annotationOrigin, a.text(), Style::NormalState, a.colorData ? &a.color() : nullptr );
+			annotationOrigin = style->renderAnnotation( annotationOrigin, a.renderText, Style::NormalState, a.colorData ? &a.color() : nullptr );
 		}
 	}
 }
@@ -347,17 +488,22 @@ void AnnotationsGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::
 	}
 }
 
-void AnnotationsGadget::update() const
+void AnnotationsGadget::update()
 {
-	if( !m_dirty )
+	if( !m_dirty || !parent() )
 	{
 		return;
 	}
+
+	Context *context = parent<GraphGadget>()->getRoot()->scriptNode()->context();
+	Context::Scope scopedContext( context );
 
 	vector<string> templates;
 	MetadataAlgo::annotationTemplates( templates );
 	std::sort( templates.begin(), templates.end() );
 	const bool untemplatedVisible = StringAlgo::matchMultiple( untemplatedAnnotations, m_visibleAnnotations );
+
+	bool dependsOnContext = false;
 
 	vector<string> names;
 	for( auto &ga : m_annotations )
@@ -384,7 +530,10 @@ void AnnotationsGadget::update() const
 			annotations.numericBookmark = InternedString();
 		}
 
+		annotations.substitutionsTask.reset(); // Stop task before clearing the data it accesses.
+		annotations.hasPlugValueSubstitutions = false;
 		annotations.standardAnnotations.clear();
+
 		names.clear();
 		MetadataAlgo::annotations( node, names );
 		for( const auto &name : names )
@@ -398,20 +547,217 @@ void AnnotationsGadget::update() const
 				}
 			}
 
-			annotations.standardAnnotations.push_back(
-				StandardAnnotation( MetadataAlgo::getAnnotation( node, name, /* inheritTemplate = */ true ), name )
-			);
-			// Word wrap. It might be preferable to do this during
-			// rendering, but we have no way of querying the extent of
-			// `Style::renderWrappedText()`.
-			annotations.standardAnnotations.back().textData = new StringData(
-				wrap( annotations.standardAnnotations.back().text(), 60 )
-			);
+			StandardAnnotation a( MetadataAlgo::getAnnotation( node, name, /* inheritTemplate = */ true ), name );
+			if( !hasPlugValueSubstitutions( a.text() ) )
+			{
+				a.renderText = wrap( a.text(), g_maxLineLength );
+			}
+			else
+			{
+				// We'll update `renderText` later in `schedulePlugValueSubstitutions()`.
+				annotations.hasPlugValueSubstitutions = true;
+				if( plugValueSubstitutionsBackgroundTaskSubject( a.text(), node ) )
+				{
+					annotations.hasContextSensitiveSubstitutions = true;
+					dependsOnContext = true;
+				}
+			}
+			annotations.standardAnnotations.push_back( a );
 		}
 		annotations.renderable |= (bool)annotations.standardAnnotations.size();
+
+		if( annotations.hasPlugValueSubstitutions )
+		{
+			annotations.plugDirtiedConnection = const_cast<Node *>( node )->plugDirtiedSignal().connect(
+				boost::bind( &AnnotationsGadget::plugDirtied, this, ::_1, &annotations )
+			);
+			schedulePlugValueSubstitutions( node, &annotations );
+		}
+		else
+		{
+			annotations.plugDirtiedConnection.disconnect();
+		}
 
 		annotations.dirty = false;
 	}
 
+	if( dependsOnContext )
+	{
+		m_scriptContextChangedConnection = context->changedSignal().connect(
+			boost::bind( &AnnotationsGadget::scriptContextChanged, this )
+		);
+	}
+	else
+	{
+		m_scriptContextChangedConnection.disconnect();
+	}
+
 	m_dirty = false;
+}
+
+void AnnotationsGadget::plugDirtied( const Gaffer::Plug *plug, Annotations *annotations )
+{
+	assert( annotations->hasPlugValueSubstitutions );
+	for( const auto &annotation : annotations->standardAnnotations )
+	{
+		if( affectsPlugValueSubstitutions( plug, annotation.text() ) )
+		{
+			annotations->dirty = true;
+			m_dirty = true;
+			dirty( DirtyType::Render );
+			break;
+		}
+	}
+}
+
+void AnnotationsGadget::scriptContextChanged()
+{
+	bool dirtied = false;
+	for( auto &[nodeGadget, annotation] : m_annotations )
+	{
+		if( annotation.hasContextSensitiveSubstitutions )
+		{
+			annotation.dirty = true;
+			dirtied = true;
+		}
+	}
+
+	if( dirtied )
+	{
+		m_dirty = true;
+		dirty( DirtyType::Render );
+	}
+}
+
+void AnnotationsGadget::schedulePlugValueSubstitutions( const Gaffer::Node *node, Annotations *annotations )
+{
+	const Plug *backgroundTaskSubject = nullptr;
+	for( const auto &annotation : annotations->standardAnnotations )
+	{
+		backgroundTaskSubject = plugValueSubstitutionsBackgroundTaskSubject( annotation.text(), node );
+		if( backgroundTaskSubject )
+		{
+			break;
+		}
+	}
+
+	if( !backgroundTaskSubject )
+	{
+		applySubstitutedRenderText( substitutedRenderText( node, *annotations ), *annotations );
+		return;
+	}
+
+	// At least one annotation depends on a computed plug value. Evaluate all
+	// substitutions in a background task, so that we don't lock up the UI if
+	// the computation is slow. Before we launch background task, substitute
+	// in `---` placeholders to give folks a hint as to what is happening.
+
+	applySubstitutedRenderText( substitutedRenderText( /* node = */ nullptr, *annotations ), *annotations );
+
+	annotations->substitutionsTask = ParallelAlgo::callOnBackgroundThread(
+
+		// `this`, `node` and `annotations` are safe to capture because they are
+		// guaranteed to outlive the BackgroundTask, due to `annotations` owning
+		// the task, and waiting for it in its destructor.
+		backgroundTaskSubject, [this, node, annotations] () {
+
+			// Get new render text for each annotation. Note : We can not access
+			// the Metatada API from a BackgroundTask, as it doesn't participate
+			// in cancellation.
+
+			bool cancelled = false;
+			std::unordered_map<IECore::InternedString, std::string> renderText;
+			try
+			{
+				renderText = substitutedRenderText( node, *annotations );
+			}
+			catch( const IECore::Cancelled & )
+			{
+				cancelled = true;
+			}
+
+			if( !cancelled && renderText.empty() )
+			{
+				return;
+			}
+
+			// Schedule an update on the UI thread.
+			//
+			// Note : As soon as the background task returns,  we have lost the
+			// guarantee on the lifetime of `this`, `node` and `annotations` -
+			// any could be destroyed before we get on to the UI thread. So
+			// maintain ownership and look up `annotations` again.
+
+			ParallelAlgo::callOnUIThread(
+				[gadget = Ptr( this ), node = ConstNodePtr( node ), renderText = std::move( renderText ), cancelled] {
+
+					Annotations *annotations = gadget->annotations( node.get() );
+					if( !annotations )
+					{
+						return;
+					}
+
+					gadget->applySubstitutedRenderText( renderText, *annotations );
+					if( cancelled )
+					{
+						// Dirty, so that we relaunch background task on next redraw.
+						annotations->dirty = true;
+						gadget->m_dirty = true;
+					}
+					gadget->dirty( DirtyType::Render );
+				}
+			);
+
+		}
+	);
+}
+
+std::unordered_map<IECore::InternedString, std::string> AnnotationsGadget::substitutedRenderText( const Gaffer::Node *node, const Annotations &annotations )
+{
+	std::unordered_map<InternedString, string> result;
+
+	for( auto &annotation : annotations.standardAnnotations )
+	{
+		try
+		{
+			const string newRenderText = wrap( substitutePlugValues( annotation.text(), node ), g_maxLineLength );
+			if( newRenderText != annotation.renderText )
+			{
+				result[annotation.name] = newRenderText;
+			}
+		}
+		catch( const ProcessException & )
+		{
+			// Computation error. Ignore, so we keep original `---` placeholder
+			// text.
+		}
+	}
+
+	return result;
+}
+
+void AnnotationsGadget::applySubstitutedRenderText( const std::unordered_map<IECore::InternedString, std::string> &renderText, Annotations &annotations )
+{
+	for( auto &annotation : annotations.standardAnnotations )
+	{
+		auto it = renderText.find( annotation.name );
+		if( it != renderText.end() )
+		{
+			annotation.renderText = it->second;
+		}
+	}
+}
+
+void AnnotationsGadget::visibilityChanged()
+{
+	if( !visible() )
+	{
+		for( auto &[nodeGadget, annotation] : m_annotations )
+		{
+			// Cancel background task. If not yet complete, it will catch this
+			// cancellation and dirty the annotation so that a new update starts
+			// when we are next visible.
+			annotation.substitutionsTask.reset();
+		}
+	}
 }

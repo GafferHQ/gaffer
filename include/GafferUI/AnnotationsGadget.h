@@ -37,6 +37,7 @@
 #pragma once
 
 #include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/ParallelAlgo.h"
 
 #include "GafferUI/Gadget.h"
 
@@ -96,17 +97,61 @@ class GAFFERUI_API AnnotationsGadget : public Gadget
 
 		struct Annotations;
 
+		// Update process
+		// ==============
+		//
+		// We query annotation metadata and store it ready for rendering in our
+		// `m_annotations` data structure. This occurs in synchronous, lazy and
+		// asynchronous phases as performance requirements dictate.
+		//
+		// In the first phase, these two methods ensure that `m_annotations`
+		// always has an entry for each NodeGadget being drawn by the
+		// GraphGadget. This is done synchronously with the addition and removal
+		// of children.
 		void graphGadgetChildAdded( GraphComponent *child );
 		void graphGadgetChildRemoved( const GraphComponent *child );
+		// These accessors can then be used to find the annotations (if any)
+		// for a node.
 		Annotations *annotations( const Gaffer::Node *node );
 		const Annotations *annotations( const Gaffer::Node *node ) const;
+		// We then use `nodeMetadataChanged()` to dirty individual annotations
+		// when the metadata has changed. We don't query the metadata at this
+		// point, as it's fairly typical to receive many metadata edits at once
+		// and we want to batch the updates. We might not even be visible when
+		// the edits are made.
 		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, Gaffer::Node *node );
-		void update() const;
+		// We lazily call `update()` from `renderLayer()` to query all dirty
+		// metadata just in time for rendering. Such update are fairly
+		// infrequent because annotations are edited infrequently.
+		void update();
+		// Some annotations use `{}` syntax to substitute in the values of
+		// plugs. For these we use `plugDirtied()` to check if the substitutions
+		// are affected and dirty them when necessary. Plugs are dirtied
+		// frequently and many don't affect the substitutions at all, so this is
+		// performed at a finer level of granularity than `update()`.
+		void plugDirtied( const Gaffer::Plug *plug, Annotations *annotations );
+		// If the substitutions are from computed plugs, then we also need to
+		// update when the context changes.
+		void scriptContextChanged();
+		// Some plug substitutions may depend on computes, in which case we must
+		// perform the substitutions in a BackgroundTask to avoid blocking the
+		// UI. This function schedules such a task, or if the values are not
+		// computes, does the substitutions directly on the UI thread. This is
+		// done on a per-node basis, so that slow updates for one node do not
+		// prevent other nodes updating rapidly.
+		void schedulePlugValueSubstitutions( const Gaffer::Node *node, Annotations *annotations );
+		// These two functions do the actual work of calculating and applying
+		// substitutions.
+		std::unordered_map<IECore::InternedString, std::string> substitutedRenderText( const Gaffer::Node *node, const Annotations &annotations );
+		void applySubstitutedRenderText( const std::unordered_map<IECore::InternedString, std::string> &renderText, Annotations &annotations );
+		// When we are hidden, we want to cancel all background tasks.
+		void visibilityChanged();
 
 		struct StandardAnnotation : public Gaffer::MetadataAlgo::Annotation
 		{
 			StandardAnnotation( const Gaffer::MetadataAlgo::Annotation &a, IECore::InternedString name ) : Annotation( a ), name( name ) {}
 			IECore::InternedString name;
+			std::string renderText;
 		};
 
 		struct Annotations
@@ -116,14 +161,19 @@ class GAFFERUI_API AnnotationsGadget : public Gadget
 			bool bookmarked = false;
 			IECore::InternedString numericBookmark;
 			bool renderable = false;
+			bool hasPlugValueSubstitutions = false;
+			bool hasContextSensitiveSubstitutions = false;
+			Gaffer::Signals::ScopedConnection plugDirtiedConnection;
+			std::unique_ptr<Gaffer::BackgroundTask> substitutionsTask;
 		};
 
 		Gaffer::Signals::ScopedConnection m_graphGadgetChildAddedConnection;
 		Gaffer::Signals::ScopedConnection m_graphGadgetChildRemovedConnection;
+		Gaffer::Signals::ScopedConnection m_scriptContextChangedConnection;
 
 		using AnnotationsContainer = std::unordered_map<const NodeGadget *, Annotations>;
-		mutable AnnotationsContainer m_annotations;
-		mutable bool m_dirty;
+		AnnotationsContainer m_annotations;
+		bool m_dirty;
 
 		IECore::StringAlgo::MatchPattern m_visibleAnnotations;
 

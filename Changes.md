@@ -6,7 +6,9 @@ Improvements
 
 - ColorChooser : Added channel names to identify sliders.
 - RenderPassEditor : Added "Select Affected Objects" popup menu item.
-- Annotations : Added <kbd>Ctrl</kbd> + <kbd>Enter</kbd> keyboard shortcut to annotation dialogue. This applies the annotation and closes the dialogue.
+- Annotations :
+  - Added support for `{plug}` value substitutions in node annotations.
+  - Added <kbd>Ctrl</kbd> + <kbd>Enter</kbd> keyboard shortcut to annotation dialogue. This applies the annotation and closes the dialogue.
 
 Fixes
 -----
