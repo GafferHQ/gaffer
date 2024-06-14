@@ -94,11 +94,12 @@ class GAFFERUI_API AnnotationsGadget : public Gadget
 
 	private :
 
-		GraphGadget *graphGadget();
-		const GraphGadget *graphGadget() const;
+		struct Annotations;
 
 		void graphGadgetChildAdded( GraphComponent *child );
 		void graphGadgetChildRemoved( const GraphComponent *child );
+		Annotations *annotations( const Gaffer::Node *node );
+		const Annotations *annotations( const Gaffer::Node *node ) const;
 		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, Gaffer::Node *node );
 		void update() const;
 

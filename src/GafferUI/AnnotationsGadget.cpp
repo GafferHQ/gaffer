@@ -166,24 +166,14 @@ const IECore::StringAlgo::MatchPattern &AnnotationsGadget::getVisibleAnnotations
 const std::string &AnnotationsGadget::annotationText( const Gaffer::Node *node, IECore::InternedString annotation ) const
 {
 	const_cast<AnnotationsGadget *>( this )->update();
-
-	const NodeGadget *nodeGadget = graphGadget()->nodeGadget( node );
-	if( !nodeGadget )
+	if( const Annotations *nodeAnnotations = annotations( node ) )
 	{
-		return g_emptyString;
-	}
-
-	auto it = m_annotations.find( nodeGadget );
-	if( it == m_annotations.end() )
-	{
-		return g_emptyString;
-	}
-
-	for( const auto &a : it->second.standardAnnotations )
-	{
-		if( a.name == annotation )
+		for( const auto &a : nodeAnnotations->standardAnnotations )
 		{
-			return a.text();
+			if( a.name == annotation )
+			{
+				return a.text();
+			}
 		}
 	}
 
@@ -285,16 +275,6 @@ Imath::Box3f AnnotationsGadget::renderBound() const
 	return b;
 }
 
-GraphGadget *AnnotationsGadget::graphGadget()
-{
-	return parent<GraphGadget>();
-}
-
-const GraphGadget *AnnotationsGadget::graphGadget() const
-{
-	return parent<GraphGadget>();
-}
-
 void AnnotationsGadget::graphGadgetChildAdded( GraphComponent *child )
 {
 	if( NodeGadget *nodeGadget = runTimeCast<NodeGadget>( child ) )
@@ -311,6 +291,34 @@ void AnnotationsGadget::graphGadgetChildRemoved( const GraphComponent *child )
 		m_annotations.erase( nodeGadget );
 		m_dirty = true;
 	}
+}
+
+AnnotationsGadget::Annotations *AnnotationsGadget::annotations( const Gaffer::Node *node )
+{
+	return const_cast<Annotations *>( const_cast<const AnnotationsGadget *>( this )->annotations( node ) );
+}
+
+const AnnotationsGadget::Annotations *AnnotationsGadget::annotations( const Gaffer::Node *node ) const
+{
+	const GraphGadget *graphGadget = parent<GraphGadget>();
+	if( !graphGadget )
+	{
+		return nullptr;
+	}
+
+	const NodeGadget *nodeGadget = graphGadget->nodeGadget( node );
+	if( !nodeGadget )
+	{
+		return nullptr;
+	}
+
+	auto it = m_annotations.find( nodeGadget );
+	if( it == m_annotations.end() )
+	{
+		return nullptr;
+	}
+
+	return &it->second;
 }
 
 void AnnotationsGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, Gaffer::Node *node )
@@ -331,11 +339,9 @@ void AnnotationsGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::
 		return;
 	}
 
-	if( auto gadget = graphGadget()->nodeGadget( node ) )
+	if( Annotations *a = annotations( node ) )
 	{
-		auto it = m_annotations.find( gadget );
-		assert( it != m_annotations.end() );
-		it->second.dirty = true;
+		a->dirty = true;
 		m_dirty = true;
 		dirty( DirtyType::Render );
 	}

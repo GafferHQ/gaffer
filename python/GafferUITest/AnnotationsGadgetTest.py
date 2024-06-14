@@ -60,5 +60,17 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 		Gaffer.MetadataAlgo.removeAnnotation( script["node"], "user" )
 		self.assertEqual( gadget.annotationText( script["node"] ), "" )
 
+	def testExtendLifetimePastGraphGadget( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["node"] = Gaffer.Node()
+
+		graphGadget = GafferUI.GraphGadget( script )
+		gadget = graphGadget["__annotations"]
+		del graphGadget
+
+		Gaffer.MetadataAlgo.addAnnotation( script["node"], "user", Gaffer.MetadataAlgo.Annotation( "test" ) )
+		self.assertEqual( gadget.annotationText( script["node"] ), "" )
+
 if __name__ == "__main__":
 	unittest.main()
