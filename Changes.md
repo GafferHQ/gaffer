@@ -15,6 +15,12 @@ Improvements
   - Added support for dropping an Edit Scope node onto the widget to set it as the current Edit Scope.
   - Added support for middle-dragging from the widget to access the current Edit Scope node.
 - ArnoldAttributes : Added syntax highlighting and auto-complete for set expressions on the `shadowGroup` plug.
+- OpenColorIO : When a script-level OpenColorIO variable contains a Gaffer `${contextVariable}` reference, its evaluation is now deferred to the point of use. This allows it to pick up overrides introduced by nodes such as ContextVariables and Wedge.
+
+Fixes
+-----
+
+- Viewer : Fixed handling of Gaffer `${contextVariable}` references in OpenColorIO variable values. The Viewer now updates the Display Transform appropriately when the value of the context variable changes.
 
 API
 ---

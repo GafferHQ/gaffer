@@ -256,7 +256,7 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 		explicitDisplayTransform["view"].setValue( config.getDefaultView( config.getDefaultDisplay() ) )
 
 		with Gaffer.Context() as context :
-			GafferImage.OpenColorIOAlgo.setConfig( context, str( configPath ) )
+			GafferImage.OpenColorIOAlgo.setConfig( context, configPath.as_posix() )
 			self.assertImagesEqual( defaultDisplayTransform["out"], explicitDisplayTransform["out"] )
 
 if __name__ == "__main__":
