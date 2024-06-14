@@ -1,6 +1,11 @@
 1.4.x.x (relative to 1.4.7.0)
 =======
 
+Improvements
+------------
+
+- ColorChooser : Added channel names to identify sliders.
+
 Fixes
 -----
 
