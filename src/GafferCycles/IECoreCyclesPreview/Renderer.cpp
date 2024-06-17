@@ -289,7 +289,6 @@ class CyclesOutput : public IECore::RefCounted
 			CompoundDataMap &p = m_parameters->writable();
 
 			p["path"] = new StringData( output->getName() );
-			p["driver"] = new StringData( output->getType() );
 
 			if( output->getType() == "ieDisplay" )
 				m_interactive = true;
