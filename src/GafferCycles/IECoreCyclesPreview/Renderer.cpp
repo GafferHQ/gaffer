@@ -3116,10 +3116,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			ccl::set<ccl::Pass *> clearPasses( m_scene->passes.begin(), m_scene->passes.end() );
 			m_scene->delete_nodes( clearPasses );
 
-			CompoundDataPtr paramData = new CompoundData();
-
-			paramData->writable()["default"] = new StringData( "rgba" );
-
 			ccl::CryptomatteType crypto = ccl::CRYPT_NONE;
 
 			CompoundDataPtr layersData = new CompoundData();
@@ -3267,8 +3263,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				layersData->writable()[name] = layer;
 			}
 
-			paramData->writable()["layers"] = layersData;
-
 			// When we reset the session, it cancels the internal PathTrace and
 			// waits for it to finish. We need to do this _before_ calling
 			// `set_output_driver()`, because otherwise the rendering threads
@@ -3282,10 +3276,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			film->set_cryptomatte_passes( crypto );
 			film->set_use_approximate_shadow_catcher( !hasShadowCatcher );
 			m_scene->integrator->set_use_denoise( hasDenoise );
+
 			if( m_renderType == Interactive )
-				m_session->set_output_driver( ccl::make_unique<IEDisplayOutputDriver>( displayWindow, dataWindow, paramData ) );
+				m_session->set_output_driver( ccl::make_unique<IEDisplayOutputDriver>( displayWindow, dataWindow, layersData->readable() ) );
 			else
-				m_session->set_output_driver( ccl::make_unique<OIIOOutputDriver>( displayWindow, dataWindow, paramData ) );
+				m_session->set_output_driver( ccl::make_unique<OIIOOutputDriver>( displayWindow, dataWindow, layersData->readable() ) );
 
 			m_outputsChanged = false;
 		}
