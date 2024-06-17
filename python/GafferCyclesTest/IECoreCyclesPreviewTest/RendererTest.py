@@ -53,10 +53,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testObjectColor( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.output(
 			"testOutput",
@@ -95,7 +92,6 @@ class RendererTest( GafferTest.TestCase ) :
 		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
 
 		renderer.render()
-		time.sleep( 2 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testObjectColor" )
 		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
@@ -110,10 +106,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testQuadLightColorTexture( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.output(
 			"testOutput",
@@ -168,7 +161,6 @@ class RendererTest( GafferTest.TestCase ) :
 		light.transform( imath.M44f().rotate( imath.V3f( 0, math.pi, 0 ) ) )
 
 		renderer.render()
-		time.sleep( 2.0 )
 
 		# Check that we have a pure red image.
 
@@ -208,10 +200,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testBackgroundLightWithoutTexture( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.output(
 			"testOutput",
@@ -263,7 +252,6 @@ class RendererTest( GafferTest.TestCase ) :
 		light.transform( imath.M44f().rotate( imath.V3f( 0, math.pi, 0 ) ) )
 
 		renderer.render()
-		time.sleep( 2.0 )
 
 		# Check that we have a pure red image.
 
@@ -279,10 +267,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testCrashWhenNoBackgroundLight( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.option( "cycles:shadingsystem", IECore.StringData( "SVM" ) )
 
@@ -601,10 +586,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testMultipleOutputs( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.output(
 			"testOutput:beauty",
@@ -727,10 +709,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testDisplayDriverCropWindow( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.camera(
 			"testCamera",
@@ -759,11 +738,6 @@ class RendererTest( GafferTest.TestCase ) :
 
 		renderer.option( "camera", IECore.StringData( "testCamera" ) )
 		renderer.render()
-		## \todo We could just be running this test with a Batch mode render,
-		# in which case `render()` would block until the image was complete.
-		# But CyclesRenderer is currently hardcoded to only use IEDisplayOutputDriver
-		# for interactive renders.
-		time.sleep( 2.0 )
 		del renderer
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testCropWindow" )
@@ -808,10 +782,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testPointsWithNormals( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.output(
 			"pointsWithNormals",
@@ -861,7 +832,6 @@ class RendererTest( GafferTest.TestCase ) :
 		pointsObject.transform( imath.M44f().translate( imath.V3f( 0, 0, 2 ) ) )
 
 		renderer.render()
-		time.sleep( 2 )
 
 		del pointsObject
 		del renderer
@@ -878,10 +848,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def __testMeshSmoothing( self, cube, smoothingExpected ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.output(
 			"meshSmoothing",
@@ -903,7 +870,6 @@ class RendererTest( GafferTest.TestCase ) :
 		cubeObject.transform( imath.M44f().translate( imath.V3f( 0, 0, 2 ) ).rotate( imath.V3f( 0, math.pi / 4.0, 0 ) ) )
 
 		renderer.render()
-		time.sleep( 2 )
 
 		del cubeObject
 		del renderer
@@ -1623,10 +1589,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testCustomAttributePrecedence( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.output(
 			"testOutput",
@@ -1665,7 +1628,6 @@ class RendererTest( GafferTest.TestCase ) :
 		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
 
 		renderer.render()
-		time.sleep( 2 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testCustomAttributePrecedence" )
 		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
@@ -1742,10 +1704,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testOSLComponentConnections( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.output(
 			"testOutput",
@@ -1784,7 +1743,6 @@ class RendererTest( GafferTest.TestCase ) :
 		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
 
 		renderer.render()
-		time.sleep( 2 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testOSLComponentConnections" )
 		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
@@ -1794,10 +1752,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testSurfaceAttributeWithGenericShaderType( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.output(
 			"testOutput",
@@ -1834,7 +1789,6 @@ class RendererTest( GafferTest.TestCase ) :
 		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
 
 		renderer.render()
-		time.sleep( 2 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testSurfaceAttributeWithGenericShaderType" )
 		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
@@ -1859,10 +1813,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testCustomAOV( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		# Custom AOVs are currently not supported in OSL mode.
 		# See https://developer.blender.org/T73266 for further updates
@@ -1934,7 +1885,6 @@ class RendererTest( GafferTest.TestCase ) :
 		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
 
 		renderer.render()
-		time.sleep( 2 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testCustomValueAOV" )
 		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
@@ -2216,10 +2166,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testUSDLightColorTemperature( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.output(
 			"testOutput",
@@ -2270,7 +2217,6 @@ class RendererTest( GafferTest.TestCase ) :
 		light.transform( imath.M44f().rotate( imath.V3f( 0, math.pi, 0 ) ) )
 
 		renderer.render()
-		time.sleep( 2.0 )
 
 		# Check that the color temperature has tinted the image red.
 
@@ -2288,10 +2234,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testOSLInSVMShadingSystem( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.option( "cycles:shadingsystem", IECore.StringData( "SVM" ) )
 
@@ -2336,7 +2279,6 @@ class RendererTest( GafferTest.TestCase ) :
 		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
 
 		renderer.render()
-		time.sleep( 2 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testOSLInSVMShadingSystem" )
 		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
@@ -2352,10 +2294,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testFilmOptions( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		# Get default values
 
@@ -2393,10 +2332,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testIntegratorOptions( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		# Get default values
 
@@ -2434,10 +2370,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testUnknownOptions( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.output(
 			"testOutput",

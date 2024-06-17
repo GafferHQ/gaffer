@@ -283,15 +283,12 @@ class CyclesOutput : public IECore::RefCounted
 	public :
 
 		CyclesOutput( const IECore::InternedString &name, const IECoreScene::Output *output )
-			: m_passType( ccl::PASS_NONE ), m_denoise( false ), m_interactive( false ), m_lightgroup( false )
+			: m_passType( ccl::PASS_NONE ), m_denoise( false ), m_useIEDisplay( output->getType() == "ieDisplay" ), m_lightgroup( false )
 		{
 			m_parameters = output->parametersData()->copy();
 			CompoundDataMap &p = m_parameters->writable();
 
 			p["path"] = new StringData( output->getName() );
-
-			if( output->getType() == "ieDisplay" )
-				m_interactive = true;
 
 			m_denoise = parameter<bool>( output->parameters(), "denoise", false );
 
@@ -373,7 +370,7 @@ class CyclesOutput : public IECore::RefCounted
 		ccl::PassType m_passType;
 		std::string m_data;
 		bool m_denoise;
-		bool m_interactive;
+		bool m_useIEDisplay;
 		bool m_lightgroup;
 };
 
@@ -3123,11 +3120,24 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			InternedString cryptoMaterial;
 			bool hasShadowCatcher = false;
 			bool hasDenoise = false;
+			const bool useIEDisplay = std::any_of(
+				m_outputs.begin(), m_outputs.end(),
+				[] ( const auto &output ) { return output.second->m_useIEDisplay; }
+			);
 			for( auto &coutput : m_outputs )
 			{
-				if( ( m_renderType != Interactive && coutput.second->m_interactive ) ||
-					( m_renderType == Interactive && !coutput.second->m_interactive ) )
+				if( coutput.second->m_useIEDisplay != useIEDisplay )
 				{
+					/// \todo Support a mix of IEDisplay and file outputs. To do
+					/// this we'd make a single `ccl::OutputDriver` subclass
+					/// that could cope with both types.
+					IECore::msg(
+						IECore::Msg::Warning, "CyclesRenderer",
+						fmt::format(
+							"Ignoring output \"{}\" because it is not compatible with ieDisplay-based outputs",
+							coutput.first.string()
+						)
+					);
 					continue;
 				}
 
@@ -3238,9 +3248,15 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// Add lightgroups on the end
 			for( auto &coutput : m_outputs )
 			{
-				if( ( m_renderType != Interactive && coutput.second->m_interactive ) ||
-					( m_renderType == Interactive && !coutput.second->m_interactive ) )
+				if( coutput.second->m_useIEDisplay != useIEDisplay )
 				{
+					IECore::msg(
+						IECore::Msg::Warning, "CyclesRenderer",
+						fmt::format(
+							"Ignoring output \"{}\" because it is not compatible with ieDisplay-based outputs",
+							coutput.first.string()
+						)
+					);
 					continue;
 				}
 
@@ -3276,10 +3292,14 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			film->set_use_approximate_shadow_catcher( !hasShadowCatcher );
 			m_scene->integrator->set_use_denoise( hasDenoise );
 
-			if( m_renderType == Interactive )
+			if( useIEDisplay )
+			{
 				m_session->set_output_driver( ccl::make_unique<IEDisplayOutputDriver>( displayWindow, dataWindow, layersData->readable() ) );
+			}
 			else
+			{
 				m_session->set_output_driver( ccl::make_unique<OIIOOutputDriver>( displayWindow, dataWindow, layersData->readable() ) );
+			}
 
 			m_outputsChanged = false;
 		}
