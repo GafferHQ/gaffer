@@ -398,8 +398,23 @@ const boost::container::flat_map<string, string> g_rendererAttributePrefixes = {
 	{ "cycles", "Cycles" }
 };
 
+/// \todo Create a registration method for populating overrides.
+using ProcessorOverrideMap = std::unordered_map<std::string, std::string>;
+const ProcessorOverrideMap g_processorNameOverrides = {
+	{ "ai:lightFilter:filter", "ArnoldLightBlockerEdits" },
+	{ "ai:lightFilter:barndoor", "ArnoldBarndoorEdits" },
+	{ "ai:lightFilter:light_decay", "ArnoldLightDecayEdits" },
+	{ "ai:lightFilter:gobo", "ArnoldGoboEdits" }
+};
+
 string parameterProcessorName( const std::string &attribute )
 {
+	ProcessorOverrideMap::const_iterator override = g_processorNameOverrides.find( attribute );
+	if( override != g_processorNameOverrides.end() )
+	{
+		return override->second;
+	}
+
 	string rendererPrefix;
 	vector<string> parts;
 
