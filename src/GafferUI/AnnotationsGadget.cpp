@@ -688,8 +688,12 @@ void AnnotationsGadget::schedulePlugValueSubstitutions( const Gaffer::Node *node
 			// any could be destroyed before we get on to the UI thread. So
 			// maintain ownership and look up `annotations` again.
 
+			// Alias for `this` to work around MSVC bug that prevents capturing
+			// `this` again in a nested lambda.
+			AnnotationsGadget *that = this;
+
 			ParallelAlgo::callOnUIThread(
-				[gadget = Ptr( this ), node = ConstNodePtr( node ), renderText = std::move( renderText ), cancelled] {
+				[gadget = Ptr( that ), node = ConstNodePtr( node ), renderText = std::move( renderText ), cancelled] {
 
 					Annotations *annotations = gadget->annotations( node.get() );
 					if( !annotations )
