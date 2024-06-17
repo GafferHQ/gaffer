@@ -177,10 +177,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testLightWithoutAttribute( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		# Light destined for another renderer - we want to ignore this, and not crash.
 
@@ -286,14 +283,10 @@ class RendererTest( GafferTest.TestCase ) :
 
 		# This used to crash. If it doesn't crash now, then we are happy.
 		renderer.render()
-		time.sleep( 2.0 )
 
 	def testBackgroundLightBatchRender( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		fileName = self.temporaryDirectory() / "test.exr"
 		renderer.output(
@@ -747,10 +740,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testOutputFileCropWindow( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.camera(
 			"testCamera",
@@ -924,10 +914,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testUnsupportedPrimitiveVariables( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 		attributes = renderer.attributes( IECore.CompoundObject() )
 
 		primitive = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( 0 ) ] ) )
@@ -958,10 +945,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		attributeName = primitiveVariable if attributeName is None else attributeName
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		# Frame the primitive so it fills the entire image.
 
@@ -1423,10 +1407,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testShaderSubstitutions( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		fileName = self.temporaryDirectory() / "test.exr"
 		renderer.output(
@@ -1503,10 +1484,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def __testCustomAttributeType( self, primitive, prefix, customAttribute, outputPlug, data, expectedResult, maxDifference = 0.0 ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		# Frame the primitive so it fills the entire image.
 
@@ -1680,10 +1658,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testMissingShaderParameter( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		with IECore.CapturingMessageHandler() as mh :
 			dodgyNetwork = IECoreScene.ShaderNetwork(
@@ -1906,10 +1881,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def __testShaderResults( self, shader, expectedResults, maxDifference = 0.0 ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		# Frame so our plane fills the entire image.
 
@@ -2069,10 +2041,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testInvalidShaderParameterValues( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		for name, value in {
 			"sheen_weight" : IECore.StringData( "iShouldBeAFloat" ),
@@ -2106,10 +2075,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testInvalidShaderEnumValue( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		with IECore.CapturingMessageHandler() as mh :
 
@@ -2134,10 +2100,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testUnsupportedShaderParameters( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		with IECore.CapturingMessageHandler() as mh :
 
