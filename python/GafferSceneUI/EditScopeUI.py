@@ -219,7 +219,7 @@ class __LocationEditsWidget( _SceneProcessorWidget ) :
 		summaries[0] = summaries[0][0].upper() + summaries[0][1:]
 		return " and ".join( summaries )
 
-GafferUI.EditScopeUI.ProcessorWidget.registerProcessorWidget( "AttributeEdits TransformEdits *LightEdits *SurfaceEdits", __LocationEditsWidget )
+GafferUI.EditScopeUI.ProcessorWidget.registerProcessorWidget( "AttributeEdits TransformEdits *LightEdits *SurfaceEdits *FilterEdits", __LocationEditsWidget )
 
 class __PruningEditsWidget( _SceneProcessorWidget ) :
 
