@@ -307,5 +307,20 @@ class LoopTest( GafferTest.TestCase ) :
 		# if not handled appropriately.
 		script["loop"]["out"].getValue()
 
+	def testEmptyLoopVariable( self ) :
+
+		loop = self.intLoop()
+
+		loopBody = GafferTest.AddNode()
+		loopBody["op1"].setInput( loop["previous"] )
+		loopBody["op2"].setValue( 2 )
+		loop["next"].setInput( loopBody["sum"] )
+		loop["iterations"].setValue( 4 )
+
+		self.assertEqual( loop["out"].getValue(), 8 )
+
+		loop["indexVariable"].setValue( "" )
+		self.assertEqual( loop["out"].getValue(), 0 )
+
 if __name__ == "__main__":
 	unittest.main()

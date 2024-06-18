@@ -354,7 +354,7 @@ const ValuePlug *Loop::sourcePlug( const ValuePlug *output, const Context *conte
 	if( ancestor == previousPlug() )
 	{
 		const int index = context->get<int>( indexVariable, 0 );
-		if( index >= 1 && enabledPlug()->getValue() )
+		if( index >= 1 && !indexVariable.string().empty() && enabledPlug()->getValue() )
 		{
 			sourceLoopIndex = index - 1;
 			return descendantPlug( nextPlug(), relativeName );
@@ -367,7 +367,7 @@ const ValuePlug *Loop::sourcePlug( const ValuePlug *output, const Context *conte
 	else if( ancestor == outPlug() )
 	{
 		const int iterations = iterationsPlug()->getValue();
-		if( iterations > 0 && enabledPlug()->getValue() )
+		if( iterations > 0 && !indexVariable.string().empty() && enabledPlug()->getValue() )
 		{
 			sourceLoopIndex = iterations - 1;
 			return descendantPlug( nextPlug(), relativeName );
