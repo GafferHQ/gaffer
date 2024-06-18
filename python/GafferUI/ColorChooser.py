@@ -60,6 +60,8 @@ class _ComponentSlider( GafferUI.Slider ) :
 		self.color = color
 		self.component = component
 
+	# Sets the slider color in RGB space for RGBA channels and
+	# HSV space for HSV channels.
 	def setColor( self, color ) :
 
 		self.color = color
@@ -82,9 +84,6 @@ class _ComponentSlider( GafferUI.Slider ) :
 		else :
 			c1 = imath.Color3f( self.color[0], self.color[1], self.color[2] )
 			c2 = imath.Color3f( self.color[0], self.color[1], self.color[2] )
-			if self.component in "hsv" :
-				c1 = c1.rgb2hsv()
-				c2 = c2.rgb2hsv()
 			a = { "r" : 0, "g" : 1, "b" : 2, "h" : 0, "s" : 1, "v": 2 }[self.component]
 			c1[a] = 0
 			c2[a] = 1
@@ -118,6 +117,7 @@ class ColorChooser( GafferUI.Widget ) :
 		GafferUI.Widget.__init__( self, self.__column, **kw )
 
 		self.__color = color
+		self.__colorHSV = self.__color.rgb2hsv()
 		self.__defaultColor = color
 
 		self.__sliders = {}
@@ -233,19 +233,22 @@ class ColorChooser( GafferUI.Widget ) :
 		if componentWidget.component in ( "a", "h", "s" ) :
 			componentValue = min( componentValue, 1 )
 
-		newColor = self.__color.__class__( self.__color )
 		if componentWidget.component in ( "r", "g", "b", "a" ) :
+			newColor = self.__color.__class__( self.__color )
+
 			a = { "r" : 0, "g" : 1, "b" : 2, "a" : 3 }[componentWidget.component]
 			newColor[a] = componentValue
+
+			self.__setColorInternal( newColor, reason )
 		else :
-			newColor = newColor.rgb2hsv()
+			newColor = self.__colorHSV.__class__( self.__colorHSV )
+
 			a = { "h" : 0, "s" : 1, "v" : 2 }[componentWidget.component]
 			newColor[a] = componentValue
-			newColor = newColor.hsv2rgb()
 
-		self.__setColorInternal( newColor, reason )
+			self.__setColorInternal( newColor, reason, True )
 
-	def __setColorInternal( self, color, reason ) :
+	def __setColorInternal( self, color, reason, hsv = False ) :
 
 		dragBeginOrEnd = reason in (
 			GafferUI.Slider.ValueChangedReason.DragBegin,
@@ -253,12 +256,23 @@ class ColorChooser( GafferUI.Widget ) :
 			GafferUI.NumericWidget.ValueChangedReason.DragBegin,
 			GafferUI.NumericWidget.ValueChangedReason.DragEnd,
 		)
-		if color != self.__color or dragBeginOrEnd :
+
+		previousColor = self.__colorHSV if hsv else self.__color
+
+		if color != previousColor or dragBeginOrEnd :
 			# we never optimise away drag begin or end, because it's important
 			# that they emit in pairs.
-			self.__color = color
-			self.__colorSwatch.setColor( color )
+			colorRGB = color.hsv2rgb() if hsv else color
+			self.__color = colorRGB
+			self.__colorSwatch.setColor( colorRGB )
 			self.__colorChangedSignal( self, reason )
+
+			hsv = color if hsv else color.rgb2hsv()
+
+			hsv[0] = hsv[0] if hsv[1] > 1e-7 and hsv[2] > 1e-7 else self.__colorHSV[0]
+			hsv[1] = hsv[1] if hsv[2] > 1e-7 else self.__colorHSV[1]
+
+			self.__colorHSV = hsv
 
 		## \todo This is outside the conditional because the clamping we do
 		# in __componentValueChanged means the color value may not correspond
@@ -273,7 +287,7 @@ class ColorChooser( GafferUI.Widget ) :
 
 			c = self.getColor()
 
-			for slider in self.__sliders.values() :
+			for slider in [ v for k, v in self.__sliders.items() if k in "rgba" ] :
 				slider.setColor( c )
 
 			for component, index in ( ( "r", 0 ), ( "g", 1 ), ( "b", 2 ) ) :
@@ -287,7 +301,9 @@ class ColorChooser( GafferUI.Widget ) :
 			else :
 				self.__sliders["a"].parent().setVisible( False )
 
-			c = c.rgb2hsv()
+			for slider in [ v for k, v in self.__sliders.items() if k in "hsv" ] :
+				slider.setColor( self.__colorHSV )
+
 			for component, index in ( ( "h", 0 ), ( "s", 1 ), ( "v", 2 ) ) :
-				self.__sliders[component].setValue( c[index] )
-				self.__numericWidgets[component].setValue( c[index] )
+				self.__sliders[component].setValue( self.__colorHSV[index] )
+				self.__numericWidgets[component].setValue( self.__colorHSV[index] )

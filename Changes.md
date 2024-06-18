@@ -4,7 +4,9 @@
 Improvements
 ------------
 
-- ColorChooser : Added channel names to identify sliders.
+- ColorChooser :
+  - Added channel names to identify sliders.
+  - Setting the saturation to zero no longer resets the hue and setting the value to zero no longer resets the hue and saturation.
 - RenderPassEditor : Added "Select Affected Objects" popup menu item.
 - Annotations :
   - Added support for `{plug}` value substitutions in node annotations.
