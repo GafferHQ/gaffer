@@ -14,6 +14,11 @@ Fixes
 - CodeWidget : Fixed bug that could prevent changes from being committed while the completion menu was visible.
 - Loop : Fixed handling of empty `indexVariable`. This now disables the Loop instead of creating an unnamed context variable.
 
+API
+---
+
+- Loop : Added `nextIterationContext()` method.
+
 1.4.7.0 (relative to 1.4.6.0)
 =======
 

@@ -322,5 +322,38 @@ class LoopTest( GafferTest.TestCase ) :
 		loop["indexVariable"].setValue( "" )
 		self.assertEqual( loop["out"].getValue(), 0 )
 
+	def testNextLoopIteration( self ) :
+
+		loop = Gaffer.Loop()
+		self.assertIsNone( loop.nextIterationContext() )
+
+		loop = self.intLoop()
+		loop["next"].setInput( loop["previous"] )
+		loop["iterations"].setValue( 10 )
+
+		index = 0
+		context = Gaffer.Context()
+		while context is not None :
+			with context :
+				context = loop.nextIterationContext()
+				if context is not None :
+					self.assertEqual( context["loop:index"], index )
+					index += 1
+
+		self.assertEqual( index, loop["iterations"].getValue() )
+
+		loop["iterations"].setValue( 0 )
+		self.assertIsNone( loop.nextIterationContext() )
+
+		loop["iterations"].setValue( 2 )
+		self.assertIsNotNone( loop.nextIterationContext() )
+		loop["enabled"].setValue( False )
+		self.assertIsNone( loop.nextIterationContext() )
+
+		loop["enabled"].setValue( True )
+		self.assertIsNotNone( loop.nextIterationContext() )
+		loop["indexVariable"].setValue( "" )
+		self.assertIsNone( loop.nextIterationContext() )
+
 if __name__ == "__main__":
 	unittest.main()
