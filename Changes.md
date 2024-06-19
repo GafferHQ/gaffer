@@ -7,6 +7,7 @@ Improvements
 - CameraTweaks : Added `ignoreMissing` plug to align behaviour with the other Tweaks nodes.
 - AttributeTweaks : The `{source}` substitution for `linkedLights` now expands to `defaultLights` if the attribute doesn't exist yet. This makes tweaks such as `({source}) - unwantedLights` reliable even if no light links have been authored yet.
 - ImageReader : Non-standard "r", "g", "b" and "a" channel names are now automatically renamed to "R", "G", "B" and "A" on loading. As with other heuristics, this can be disabled by setting `channelInterpretation` to "EXR Specification".
+- Metadata : Metadata registered to a node or plug targeting a descendant plug will now override metadata registered locally to the target.
 
 Breaking Changes
 ----------------
@@ -15,6 +16,7 @@ Breaking Changes
 - TweakPlug : Remove deprecated `MissingMode::IgnoreOrReplace`.
 - AttributeTweaks : `Replace` mode no longer errors if the `linkedLights` attribute doesn't exist.
 - ImageReader : Changed handling of lower-cased "r", "g", "b" and "a" channels.
+- Metadata : Path based registrations to a Node or Plug now override equivalent registrations on its descendants.
 
 1.4.x.x (relative to 1.4.7.0)
 =======
