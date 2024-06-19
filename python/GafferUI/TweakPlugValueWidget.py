@@ -149,11 +149,20 @@ GafferUI.PlugValueWidget.registerType( Gaffer.TweakPlug, TweakPlugValueWidget )
 # Metadata
 
 Gaffer.Metadata.registerValue( Gaffer.TweakPlug, "deletable", lambda plug : plug.getFlags( Gaffer.Plug.Flags.Dynamic ) )
+Gaffer.Metadata.registerValue( Gaffer.TweakPlug, "tweakPlugValueWidget:propertyType:promotable", False )
+
+def __propertyType( plug ) :
+
+	source = Gaffer.PlugAlgo.findDestination(
+		plug,
+		lambda p : p if Gaffer.Metadata.value( p.parent(), "tweakPlugValueWidget:propertyType" ) else None
+	) or plug
+
+	return Gaffer.Metadata.value( source.parent(), "tweakPlugValueWidget:propertyType" ) or "property"
 
 def __nameDescription( plug ) :
 
-	property = Gaffer.Metadata.value( plug.parent(), "tweakPlugValueWidget:propertyType" ) or "property"
-	return f"The name of the {property} to apply the tweak to."
+	return f"The name of the {__propertyType( plug )} to apply the tweak to."
 
 Gaffer.Metadata.registerValue( Gaffer.TweakPlug, "name", "description", __nameDescription )
 
@@ -283,7 +292,7 @@ __modeDescriptions = {
 
 def __modeDescription( plug ) :
 
-	property = Gaffer.Metadata.value( plug.parent(), "tweakPlugValueWidget:propertyType" ) or "property"
+	property = __propertyType( plug )
 
 	result =  "| Mode | Description |\n"
 	result += "| :--- | :---------- |\n"
