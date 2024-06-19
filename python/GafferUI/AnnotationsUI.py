@@ -164,7 +164,9 @@ class __AnnotationsDialogue( GafferUI.Dialogue ) :
 			self.__textWidget.activatedSignal().connect(
 				Gaffer.WeakMethod( self.__textActivated ), scoped = False
 			)
-
+			self.__textWidget.contextMenuSignal().connect(
+				Gaffer.WeakMethod( self.__textWidgetContextMenu ), scoped = False
+			)
 			if not template :
 				self.__colorChooser = GafferUI.ColorChooser(
 					annotation.color() if annotation else imath.Color3f( 0.15, 0.26, 0.26 ),
@@ -225,3 +227,40 @@ class __AnnotationsDialogue( GafferUI.Dialogue ) :
 
 		if self.__annotateButton.getEnabled() :
 			self.__annotateButton.clickedSignal()( self.__annotateButton )
+
+	def __textWidgetContextMenu( self, *unused ) :
+
+		menuDefinition = IECore.MenuDefinition()
+
+		def menuLabel( name ) :
+
+			if "_" in name :
+				name = IECore.CamelCase.fromSpaced( name.replace( "_", " " ) )
+			return IECore.CamelCase.toSpaced( name )
+
+		def walkPlugs( graphComponent ) :
+
+			if graphComponent.getName().startswith( "__" ) :
+				return
+
+			if isinstance( graphComponent, Gaffer.ValuePlug ) and hasattr( graphComponent, "getValue" ) :
+				relativeName = graphComponent.relativeName( self.__node )
+				menuDefinition.append(
+					"/Insert Plug Value/{}".format( "/".join( menuLabel( n ) for n in relativeName.split( "." ) ) ),
+					{
+						"command" : functools.partial( Gaffer.WeakMethod( self.__textWidget.insertText ), f"{{{relativeName}}}" ),
+					}
+				)
+			else :
+				for plug in Gaffer.Plug.InputRange( graphComponent ) :
+					walkPlugs( plug )
+
+		walkPlugs( self.__node )
+
+		if not menuDefinition.size() :
+			menuDefinition.append( "/Insert Plug Value/No plugs available", { "active" : False } )
+
+		self.__popupMenu = GafferUI.Menu( menuDefinition )
+		self.__popupMenu.popup( parent = self )
+
+		return True
