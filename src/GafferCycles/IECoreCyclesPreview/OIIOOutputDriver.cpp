@@ -96,11 +96,9 @@ std::array<IECore::InternedString, 4> g_channels = { { "R", "G", "B", "A" } };
 namespace IECoreCycles
 {
 
-OIIOOutputDriver::OIIOOutputDriver( const Imath::Box2i &displayWindow, const Imath::Box2i &dataWindow, IECore::ConstCompoundDataPtr parameters )
+OIIOOutputDriver::OIIOOutputDriver( const Imath::Box2i &displayWindow, const Imath::Box2i &dataWindow, const IECore::CompoundDataMap &layers )
 	: m_displayWindow( displayWindow ), m_dataWindow( dataWindow )
 {
-	const IECore::CompoundData *layersData = parameters->member<IECore::CompoundData>( "layers", true );
-	const IECore::CompoundDataMap &layers = layersData->readable();
 	const ccl::NodeEnum &typeEnum = *ccl::Pass::get_type_enum();
 	std::vector<std::string> channelNames;
 	IECore::CompoundDataPtr params;
