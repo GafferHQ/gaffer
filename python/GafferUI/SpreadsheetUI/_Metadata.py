@@ -279,7 +279,6 @@ for key in [
 	"spreadsheet:columnWidth",
 	"plugValueWidget:type",
 	"presetsPlugValueWidget:allowCustom",
-	"tweakPlugValueWidget:allowRemove",
 ] :
 
 	Gaffer.Metadata.registerValue(

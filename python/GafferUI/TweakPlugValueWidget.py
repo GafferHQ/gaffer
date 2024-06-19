@@ -48,10 +48,9 @@ from Qt import QtWidgets
 # Widget for TweakPlug, which is used to build tweak nodes such as ShaderTweaks
 # and CameraTweaks.  Shows a value plug that you can use to specify a tweak value, along with
 # a target parameter name, an enabled plug, and a mode.
-# The mode can be "Create", "CreateIfMissing", "Replace",
+# The mode can be "Create", "CreateIfMissing", "Replace", "Remove",
 # or "Add"/"Subtract"/"Multiply"/"Min"/"Max" if the plug is numeric,
-# or "ListAppend"/"ListPrepend"/"ListRemove" if the plug is a list or `PathMatcherPlug`,
-# or "Remove" if the metadata "tweakPlugValueWidget:allowRemove" is set.
+# or "ListAppend"/"ListPrepend"/"ListRemove" if the plug is a list or `PathMatcherPlug`.
 class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plugs ) :
@@ -165,7 +164,12 @@ Gaffer.Metadata.registerValue(
 
 def __validModes( plug ) :
 
-	result = [ Gaffer.TweakPlug.Mode.Create, Gaffer.TweakPlug.Mode.CreateIfMissing, Gaffer.TweakPlug.Mode.Replace ]
+	result = [
+		Gaffer.TweakPlug.Mode.Create,
+		Gaffer.TweakPlug.Mode.CreateIfMissing,
+		Gaffer.TweakPlug.Mode.Replace,
+		Gaffer.TweakPlug.Mode.Remove,
+	]
 
 	if hasattr( plug.parent()["value"], "hasMinValue" ) :
 		result += [
@@ -197,9 +201,6 @@ def __validModes( plug ) :
 			Gaffer.TweakPlug.Mode.ListPrepend,
 			Gaffer.TweakPlug.Mode.ListRemove
 		]
-
-	if Gaffer.Metadata.value( plug.parent(), "tweakPlugValueWidget:allowRemove" ) :
-		result += [ Gaffer.TweakPlug.Mode.Remove ]
 
 	return result
 

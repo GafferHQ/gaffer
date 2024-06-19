@@ -126,7 +126,6 @@ Gaffer.Metadata.registerNode(
 		"tweaks.*" : [
 
 			"noduleLayout:visible", False, # Can be shown individually using PlugAdder above
-			"tweakPlugValueWidget:allowRemove", True,
 			"tweakPlugValueWidget:propertyType", "parameter",
 			"plugValueWidget:type", "GafferSceneUI.ShaderTweaksUI._ShaderTweakPlugValueWidget",
 
