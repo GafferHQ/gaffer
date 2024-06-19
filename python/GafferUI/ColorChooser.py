@@ -130,7 +130,10 @@ class ColorChooser( GafferUI.Widget ) :
 			for component in "rgbahsv" :
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
-					numericWidget = GafferUI.NumericWidget( 0.0 )
+					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 8 ) :
+						GafferUI.Label( component.capitalize() )
+						numericWidget = GafferUI.NumericWidget( 0.0 )
+
 					numericWidget.setFixedCharacterWidth( 6 )
 					numericWidget.component = component
 					self.__numericWidgets[component] = numericWidget
