@@ -49,7 +49,7 @@ class IEDisplayOutputDriver : public ccl::OutputDriver
 {
 	public:
 
-		IEDisplayOutputDriver( const Imath::Box2i &displayWindow, const Imath::Box2i &dataWindow, IECore::ConstCompoundDataPtr parameters );
+		IEDisplayOutputDriver( const Imath::Box2i &displayWindow, const Imath::Box2i &dataWindow, const IECore::CompoundDataMap &layers );
 		~IEDisplayOutputDriver() override;
 
 		void write_render_tile( const Tile &tile ) override;
