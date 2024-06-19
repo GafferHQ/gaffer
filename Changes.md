@@ -17,6 +17,7 @@ Breaking Changes
 - AttributeTweaks : `Replace` mode no longer errors if the `linkedLights` attribute doesn't exist.
 - ImageReader : Changed handling of lower-cased "r", "g", "b" and "a" channels.
 - Metadata : Path based registrations to a Node or Plug now override equivalent registrations on its descendants.
+- TweakPlugValueWidget : Removed support for `tweakPlugValueWidget:allowCreate` metadata.
 
 1.4.x.x (relative to 1.4.7.0)
 =======

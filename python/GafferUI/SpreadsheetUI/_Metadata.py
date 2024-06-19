@@ -280,7 +280,6 @@ for key in [
 	"plugValueWidget:type",
 	"presetsPlugValueWidget:allowCustom",
 	"tweakPlugValueWidget:allowRemove",
-	"tweakPlugValueWidget:allowCreate",
 ] :
 
 	Gaffer.Metadata.registerValue(

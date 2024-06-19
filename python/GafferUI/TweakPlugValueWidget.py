@@ -47,11 +47,11 @@ from Qt import QtWidgets
 
 # Widget for TweakPlug, which is used to build tweak nodes such as ShaderTweaks
 # and CameraTweaks.  Shows a value plug that you can use to specify a tweak value, along with
-# a target parameter name, an enabled plug, and a mode.  The mode can be "Replace",
+# a target parameter name, an enabled plug, and a mode.
+# The mode can be "Create", "CreateIfMissing", "Replace",
 # or "Add"/"Subtract"/"Multiply"/"Min"/"Max" if the plug is numeric,
 # or "ListAppend"/"ListPrepend"/"ListRemove" if the plug is a list or `PathMatcherPlug`,
-# or "Remove" if the metadata "tweakPlugValueWidget:allowRemove" is set,
-# or "Create" and "CreateIfMissing" if the metadata "tweakPlugValueWidget:allowCreate" is set.
+# or "Remove" if the metadata "tweakPlugValueWidget:allowRemove" is set.
 class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plugs ) :
@@ -165,11 +165,8 @@ Gaffer.Metadata.registerValue(
 
 def __validModes( plug ) :
 
-	result = []
-	if Gaffer.Metadata.value( plug.parent(), "tweakPlugValueWidget:allowCreate" ) :
-		result += [ Gaffer.TweakPlug.Mode.Create, Gaffer.TweakPlug.Mode.CreateIfMissing ]
+	result = [ Gaffer.TweakPlug.Mode.Create, Gaffer.TweakPlug.Mode.CreateIfMissing, Gaffer.TweakPlug.Mode.Replace ]
 
-	result += [ Gaffer.TweakPlug.Mode.Replace ]
 	if hasattr( plug.parent()["value"], "hasMinValue" ) :
 		result += [
 			Gaffer.TweakPlug.Mode.Add,
