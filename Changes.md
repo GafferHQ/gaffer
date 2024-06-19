@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - ColorChooser : Added channel names to identify sliders.
+- RenderPassEditor : Added "Select Affected Objects" popup menu item.
 
 Fixes
 -----
