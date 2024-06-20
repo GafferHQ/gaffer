@@ -12,6 +12,7 @@ Improvements
 - Premultiply, Unpremultiply :
   - Added `ignoreMissingAlpha` plug.
   - Optimised the pass-through of the alpha channel.
+- EditScope : Filtered the EditScope menu to show only nodes that are active in the relevant context.
 
 Fixes
 -----
