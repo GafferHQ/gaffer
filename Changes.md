@@ -6,12 +6,21 @@ Improvements
 
 - ColorChooser : Added channel names to identify sliders.
 - RenderPassEditor : Added "Select Affected Objects" popup menu item.
+- Annotations :
+  - Added support for `{plug}` value substitutions in node annotations.
+  - Added <kbd>Ctrl</kbd> + <kbd>Enter</kbd> keyboard shortcut to annotation dialogue. This applies the annotation and closes the dialogue.
 
 Fixes
 -----
 
 - Cycles : Fixed rendering to the Catalogue using the batch Render node (#5905). Note that rendering a mixture of Catalogue and file outputs is still not supported, and in this case any file outputs will be ignored.
 - CodeWidget : Fixed bug that could prevent changes from being committed while the completion menu was visible.
+
+API
+---
+
+- AnnotationsGadget : Added `annotationText()` method.
+- ParallelAlgoTest : Added `UIThreadCallHandler.receive()` method.
 
 1.4.7.0 (relative to 1.4.6.0)
 =======
