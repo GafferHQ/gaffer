@@ -15,6 +15,7 @@ Fixes
 API
 ---
 
+- ContextTracker : Added a new class that determines what contexts nodes are evaluated in relative to the focus node. This allows UI components to provide improved context-sensitive feedback to the user.
 - Loop : Added `previousIteration()` method.
 
 1.4.9.0 (relative to 1.4.8.0)

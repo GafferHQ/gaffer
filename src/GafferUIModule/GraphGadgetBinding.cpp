@@ -48,9 +48,11 @@
 #include "GafferUI/GraphLayout.h"
 #include "GafferUI/NodeGadget.h"
 #include "GafferUI/StandardGraphLayout.h"
+#include "GafferUI/ContextTracker.h"
 
 #include "GafferBindings/SignalBinding.h"
 
+#include "Gaffer/Context.h"
 #include "Gaffer/Node.h"
 
 using namespace boost::python;
@@ -220,6 +222,28 @@ void layoutNodes( const GraphLayout &layout, GraphGadget &graph, Gaffer::Set *no
 	layout.layoutNodes( &graph, nodes );
 }
 
+NodePtr targetNodeWrapper( const ContextTracker &contextTracker )
+{
+	return const_cast<Node *>( contextTracker.targetNode() );
+}
+
+ContextPtr targetContextWrapper( const ContextTracker &contextTracker )
+{
+	return const_cast<Context *>( contextTracker.targetContext() );
+}
+
+ContextPtr contextWrapper1( const ContextTracker &contextTracker, const Node &node, bool copy = false )
+{
+	ConstContextPtr c = contextTracker.context( &node );
+	return copy ? new Context( *c ) : boost::const_pointer_cast<Context>( c );
+}
+
+ContextPtr contextWrapper2( const ContextTracker &contextTracker, const Plug &plug, bool copy = false )
+{
+	ConstContextPtr c = contextTracker.context( &plug );
+	return copy ? new Context( *c ) : boost::const_pointer_cast<Context>( c );
+}
+
 } // namespace
 
 namespace GafferUIModule
@@ -321,6 +345,16 @@ void GafferUIModule::bindGraphGadget()
 		.def( "getConnectionScale", &StandardGraphLayout::getConnectionScale )
 		.def( "setNodeSeparationScale", &StandardGraphLayout::setNodeSeparationScale )
 		.def( "getNodeSeparationScale", &StandardGraphLayout::getNodeSeparationScale )
+	;
+
+	IECorePython::RefCountedClass<ContextTracker, IECore::RefCounted>( "ContextTracker" )
+		.def( init<const NodePtr &, const ContextPtr &>() )
+		.def( "targetNode", &targetNodeWrapper )
+		.def( "targetContext", &targetContextWrapper )
+		.def( "isTracked", (bool (ContextTracker::*)( const Plug *plug ) const)&ContextTracker::isTracked )
+		.def( "isTracked", (bool (ContextTracker::*)( const Node *node ) const)&ContextTracker::isTracked )
+		.def( "context", &contextWrapper1, ( arg( "node" ), arg( "_copy" ) = true ) )
+		.def( "context", &contextWrapper2, ( arg( "plug" ), arg( "_copy" ) = true ) )
 	;
 
 }
