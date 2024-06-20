@@ -6,6 +6,7 @@ Improvements
 
 - LightEditor : Values of inherited attributes are now displayed in the Light Editor. These are presented as dimmed "fallback" values.
 - LightEditor, RenderPassEditor : Fallback values shown in the history window are displayed with the same dimmed text colour used for fallback values in editor columns.
+- EditScope : Filtered the EditScope menu to show only nodes that are active in the relevant context.
 
 Fixes
 -----
