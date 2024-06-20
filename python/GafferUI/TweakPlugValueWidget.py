@@ -48,9 +48,6 @@ from Qt import QtWidgets
 # Widget for TweakPlug, which is used to build tweak nodes such as ShaderTweaks
 # and CameraTweaks.  Shows a value plug that you can use to specify a tweak value, along with
 # a target parameter name, an enabled plug, and a mode.
-# The mode can be "Create", "CreateIfMissing", "Replace", "Remove",
-# or "Add"/"Subtract"/"Multiply"/"Min"/"Max" if the plug is numeric,
-# or "ListAppend"/"ListPrepend"/"ListRemove" if the plug is a list or `PathMatcherPlug`.
 class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plugs ) :
