@@ -25,6 +25,7 @@ Fixes
 API
 ---
 
+- ContextTracker : Added a new class that determines what contexts nodes are evaluated in relative to the focus node. This allows UI components to provide improved context-sensitive feedback to the user.
 - Editor :
   - Added `settings()` method, which returns a node hosting plugs specifying settings for the editor.
   - Added `_updateFromSettings()` method, which is called when a subclass should update to reflect changes to the settings.
