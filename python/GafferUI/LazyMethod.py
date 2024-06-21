@@ -157,7 +157,7 @@ class LazyMethod( object ) :
 	def __idle( cls, widgetWeakref, method ) :
 
 		widget = widgetWeakref()
-		if widget is None :
+		if widget is None or not GafferUI._qtObjectIsValid( widget._qtWidget() ):
 			return
 
 		cls.__doPendingCalls( widget, method )

@@ -1,6 +1,9 @@
 1.3.16.x (relative to 1.3.16.5)
 ========
+Fixes
+-----
 
+- LazyMethod : Fixed error caused by running idle callbacks without a valid Qt Widget 
 
 
 1.3.16.5 (relative to 1.3.16.4)
