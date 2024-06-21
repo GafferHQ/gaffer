@@ -604,6 +604,50 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 				tweak["enabled"].setValue( True )
 				tweak["mode"].setValue( Gaffer.TweakPlug.Mode.Remove )
 
+	def __selectedSetExpressions( self, pathListing ) :
+
+		# A dictionary of the form :
+		# { light1 : set( setExpression1, setExpression2 ), light2 : set( setExpression1 ), ... }
+		result = {}
+
+		lightPath = pathListing.getPath().copy()
+		for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
+			if (
+				not columnSelection.isEmpty() and (
+					not isinstance( column, _GafferSceneUI._LightEditorInspectorColumn ) or
+					not (
+						Gaffer.Metadata.value( "attribute:" + column.inspector().name(), "ui:scene:acceptsSetName" ) or
+						Gaffer.Metadata.value( "attribute:" + column.inspector().name(), "ui:scene:acceptsSetNames" ) or
+						Gaffer.Metadata.value( "attribute:" + column.inspector().name(), "ui:scene:acceptsSetExpression" )
+					)
+				)
+			) :
+				# We only return set expressions if all selected paths are in
+				# columns that accept set names or set expressions.
+				return {}
+
+			for path in columnSelection.paths() :
+				lightPath.setFromString( path )
+				cellValue = column.cellData( lightPath ).value
+				if cellValue is not None :
+					result.setdefault( path, set() ).add( cellValue )
+				else :
+					# We only return set expressions if all selected paths are render passes.
+					return {}
+
+		return result
+
+	def __selectAffected( self, pathListing ) :
+
+		result = IECore.PathMatcher()
+
+		with Gaffer.Context( self.getContext() ) as context :
+			for light, setExpressions in self.__selectedSetExpressions( pathListing ).items() :
+				for setExpression in setExpressions :
+					result.addPaths( GafferScene.SetAlgo.evaluateSetExpression( setExpression, self.__settingsNode["in"] ) )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( self.getContext(), result )
+
 	def __buttonPress( self, pathListing, event ) :
 
 		if event.button != event.Buttons.Right or event.modifiers != event.Modifiers.None_ :
@@ -709,6 +753,16 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 					"shortCut" : "Backspace, Delete",
 				}
 			)
+			if len( self.__selectedSetExpressions( pathListing ) ) > 0 :
+				menuDefinition.append(
+					"SelectAffectedObjectsDivider", { "divider" : True }
+				)
+				menuDefinition.append(
+					"Select Affected Objects",
+					{
+						"command" : functools.partial( self.__selectAffected, pathListing ),
+					}
+				)
 
 		self.__contextMenu = GafferUI.Menu( menuDefinition )
 		self.__contextMenu.popup( pathListing )
