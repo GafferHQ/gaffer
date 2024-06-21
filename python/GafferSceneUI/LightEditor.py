@@ -83,7 +83,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 		Gaffer.NodeAlgo.applyUserDefaults( self.__settingsNode )
 
 		self.__setFilter = _GafferSceneUI._HierarchyViewSetFilter()
-		self.__setFilter.setSetNames( [ "__lights" ] )
+		self.__setFilter.setSetNames( [ "__lights", "__lightFilters" ] )
 
 		with column :
 
@@ -137,26 +137,54 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 		return self.__plug
 
-	# Registers a parameter to be available for editing. `rendererKey` is a pattern
-	# that will be matched against `self.__settingsNode["attribute"]` to determine if
-	# the column should be shown.
 	@classmethod
-	def registerParameter( cls, rendererKey, parameter, section = None, columnName = None ) :
+	def __parseParameter( cls, parameter ) :
 
 		if isinstance( parameter, str ) :
 			shader = ""
 			param = parameter
 			if "." in parameter :
 				shader, dot, param = parameter.partition( "." )
-			parameter = IECoreScene.ShaderNetwork.Parameter( shader, param )
+			return IECoreScene.ShaderNetwork.Parameter( shader, param )
 		else :
 			assert( isinstance( parameter, IECoreScene.ShaderNetwork.Parameter ) )
+			return parameter
+
+	# Registers a parameter to be available for editing. `rendererKey` is a pattern
+	# that will be matched against `self.__settingsNode["attribute"]` to determine if
+	# the column should be shown.
+	# \todo Deprecate in favor of method below.
+	@classmethod
+	def registerParameter( cls, rendererKey, parameter, section = None, columnName = None ) :
+
+		parameter = cls.__parseParameter( parameter )
 
 		GafferSceneUI.LightEditor.registerColumn(
 			rendererKey,
 			".".join( x for x in [ parameter.shader, parameter.name ] if x ),
 			lambda scene, editScope : _GafferSceneUI._LightEditorInspectorColumn(
 				GafferSceneUI.Private.ParameterInspector( scene, editScope, rendererKey, parameter ),
+				columnName if columnName is not None else ""
+			),
+			section
+		)
+
+	# Registers a parameter to be available for editing. `rendererKey` is a pattern
+	# that will be matched against `self.__settingsNode["attribute"]` to determine if
+	# the column should be shown. `attribute` is the attribute holding the shader that
+	# will be edited. If it is `None`, the attribute will be the same as `rendererKey`.
+	@classmethod
+	def registerShaderParameter( cls, rendererKey, parameter, shaderAttribute = None, section = None, columnName = None ) :
+
+		parameter = cls.__parseParameter( parameter )
+
+		shaderAttribute = shaderAttribute if shaderAttribute is not None else rendererKey
+
+		GafferSceneUI.LightEditor.registerColumn(
+			rendererKey,
+			".".join( x for x in [ parameter.shader, parameter.name ] if x ),
+			lambda scene, editScope : _GafferSceneUI._LightEditorInspectorColumn(
+				GafferSceneUI.Private.ParameterInspector( scene, editScope, shaderAttribute, parameter ),
 				columnName if columnName is not None else ""
 			),
 			section

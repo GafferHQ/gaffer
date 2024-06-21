@@ -30,6 +30,7 @@ API
 - Loop : Added `nextIterationContext()` method.
 - AnnotationsGadget : Added `annotationText()` method.
 - ParallelAlgoTest : Added `UIThreadCallHandler.receive()` method.
+- LightEditor : Added `registerShaderParameter()` method for registering parameters for shader attributes that are not the same as the `rendererKey`.
 
 Build
 -----

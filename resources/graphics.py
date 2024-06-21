@@ -371,6 +371,10 @@
 				"setMemberHighlighted",
 				"setMemberFaded",
 				"setMemberFadedHighlighted",
+				"boxBlocker",
+				"sphereBlocker",
+				"planeBlocker",
+				"cylinderBlocker",
 			]
 		},
 

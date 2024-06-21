@@ -708,8 +708,8 @@ class LightEditorTest( GafferUITest.TestCase ) :
 
 	def testShaderParameterEditScope( self ) :
 
-		GafferSceneUI.LightEditor.registerParameter( "light", "add.a" )
-		GafferSceneUI.LightEditor.registerParameter( "light", "exposure" )
+		GafferSceneUI.LightEditor.registerShaderParameter( "light", "add.a" )
+		GafferSceneUI.LightEditor.registerShaderParameter( "light", "exposure" )
 
 		script = Gaffer.ScriptNode()
 

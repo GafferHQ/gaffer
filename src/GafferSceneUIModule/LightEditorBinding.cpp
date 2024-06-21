@@ -119,7 +119,14 @@ class LocationNameColumn : public StandardPathColumn
 
 			for( const auto &attribute : attributes->members() )
 			{
-				if( attribute.first != "light" && !boost::ends_with( attribute.first.c_str(), ":light" ) )
+				std::vector<InternedString> tokens;
+				StringAlgo::tokenize( attribute.first, ':', tokens );
+				if(
+					attribute.first != "light" &&
+					tokens.back() != "light" &&
+					attribute.first != "lightFilter" &&
+					( tokens.size() < 2 || tokens[1] != "lightFilter" )
+				)
 				{
 					continue;
 				}
@@ -129,15 +136,28 @@ class LocationNameColumn : public StandardPathColumn
 					continue;
 				}
 
-				const IECoreScene::Shader *lightShader = shaderNetwork->outputShader();
-				const string metadataTarget = attribute.first.string() + ":" + lightShader->getName();
-				ConstStringDataPtr lightType = Metadata::value<StringData>( metadataTarget, "type" );
-				if( !lightType )
+				const IECoreScene::Shader *shader = shaderNetwork->outputShader();
+				const string metadataTarget = attribute.first.string() + ":" + shader->getName();
+				ConstStringDataPtr type = Metadata::value<StringData>( metadataTarget, "type" );
+				if( !type )
 				{
 					continue;
 				}
 
-				result.icon = new StringData( lightType->readable() + "Light.png" );
+				if( type->readable() == "lightBlocker" )
+				{
+					if( ConstStringDataPtr blockerTypeParameter = Metadata::value<StringData>( metadataTarget, "typeParameter" ) )
+					{
+						if( ConstStringDataPtr blockerType = shader->parametersData()->member<StringData>( blockerTypeParameter->readable() ) )
+						{
+							result.icon = new StringData( blockerType->readable() + "Blocker.png" );
+						}
+					}
+				}
+				else
+				{
+					result.icon = new StringData( type->readable() + "Light.png" );
+				}
 			}
 
 			/// \todo Add support for icons based on object type. We don't want to have

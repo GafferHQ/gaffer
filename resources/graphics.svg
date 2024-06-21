@@ -69,7 +69,7 @@
     </linearGradient>
     <linearGradient
        id="boundsTemplate"
-       gradientTransform="matrix(1.4488738,0,0,1.25,538.88253,5058.9564)"
+       gradientTransform="matrix(1.4488738,0,0,1.25,1103.8825,5058.9564)"
        inkscape:swatch="solid">
       <stop
          style="stop-color:#ff0101;stop-opacity:0.0787037;"
@@ -3050,6 +3050,38 @@
     <g
        id="LightEditor"
        inkscape:label="LightEditor">
+      <rect
+         id="cylinderBlocker"
+         y="2544"
+         x="575"
+         height="16"
+         width="16"
+         style="display:inline;font-variation-settings:normal;opacity:1;vector-effect:none;fill:none;fill-opacity:0.40000001;stroke:none;stroke-width:0.747018;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;-inkscape-stroke:none;paint-order:markers stroke fill;stop-color:#000000;stop-opacity:1"
+         inkscape:label="cylinderBlocker" />
+      <rect
+         id="planeBlocker"
+         y="2544"
+         x="555"
+         height="16"
+         width="16"
+         style="display:inline;font-variation-settings:normal;opacity:1;vector-effect:none;fill:none;fill-opacity:1;stroke:none;stroke-width:0.747018;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;-inkscape-stroke:none;paint-order:markers stroke fill;stop-color:#000000;stop-opacity:1"
+         inkscape:label="planeBlocker" />
+      <rect
+         id="sphereBlocker"
+         y="2544"
+         x="535"
+         height="16"
+         width="16"
+         style="display:inline;font-variation-settings:normal;opacity:1;vector-effect:none;fill:none;fill-opacity:1;stroke:none;stroke-width:0.747018;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;-inkscape-stroke:none;paint-order:markers stroke fill;stop-color:#000000;stop-opacity:1"
+         inkscape:label="sphereBlocker" />
+      <rect
+         id="boxBlocker"
+         y="2544"
+         x="515"
+         height="16"
+         width="16"
+         style="display:inline;font-variation-settings:normal;opacity:1;vector-effect:none;fill:none;fill-opacity:1;stroke:none;stroke-width:0.747018;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;-inkscape-stroke:none;paint-order:markers stroke fill;stop-color:#000000;stop-opacity:1"
+         inkscape:label="boxBlocker" />
       <rect
          inkscape:label="diskLight"
          style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.597614;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
@@ -9142,6 +9174,68 @@
    cx="503.00079"
    id="circle6253"
    style="opacity:1;vector-effect:none;fill:#54ad5e;fill-opacity:0.4;fill-rule:nonzero;stroke:#779cbd;stroke-width:1.00157;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal" />
+<g
+   id="g61679"
+   inkscape:label="blockerBox">
+  <path
+     id="path128507"
+     style="fill:#1e1e1e;fill-opacity:1;stroke:#ffab0f;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     d="m 520.5,2597.8623 h 9 v 9 l -4,4 h -9 v -9 z"
+     sodipodi:nodetypes="ccccccc" />
+  <path
+     id="path69541"
+     style="fill:none;fill-opacity:1;stroke:#ffab0f;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     d="m 525.5,2601.8623 v 9 m -9,-9 h 9 l 4,-4" />
+</g>
+<g
+   id="g94075"
+   inkscape:label="blockerSphere"
+   style="display:inline"
+   transform="matrix(1,0,0,-1,0,5208.7248)">
+  <circle
+     style="font-variation-settings:normal;display:inline;opacity:1;fill:#1e1e1e;fill-opacity:1;stroke:#ffab0f;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:normal;stop-color:#000000;stop-opacity:1"
+     id="path78045"
+     cx="543"
+     cy="2604.3623"
+     r="6.5" />
+  <path
+     style="display:inline;opacity:1;fill:none;stroke:#ffab0f;stroke-width:0.737296;stroke-dashoffset:1.10173;stop-color:#000000;stop-opacity:1"
+     d="m 543,2610.9937 c -1.17712,0 -2.13136,-2.969 -2.13135,-6.6314 10e-6,-3.6624 0.95424,-6.6313 2.13135,-6.6313"
+     id="path130705" />
+  <path
+     style="display:inline;opacity:1;fill:none;stroke:#ffab0f;stroke-width:0.737;stroke-dashoffset:1.10173;stop-color:#000000;stop-opacity:1;stroke-dasharray:none"
+     d="m 549.63135,2604.2967 c 0,1.1771 -2.969,2.1313 -6.6314,2.1313 -3.6624,0 -6.6313,-0.9542 -6.6313,-2.1313"
+     id="path134760" />
+</g>
+<g
+   id="g94070"
+   inkscape:label="blockerPlane"
+   style="display:inline"
+   transform="translate(0,1.216875e-4)">
+  <path
+     style="fill:#1e1e1e;fill-opacity:1;stroke:#ffab0f;stroke-width:0.823789px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     d="m 559.91197,2598.0248 v 12.6748 l 6.1762,-2.925 v -6.8248 z"
+     id="path92073"
+     sodipodi:nodetypes="ccccc" />
+</g>
+<g
+   id="g97002"
+   inkscape:label="blockerCylinder"
+   transform="rotate(90,582.91836,2604.4439)">
+  <path
+     sodipodi:nodetypes="cccccc"
+     inkscape:connector-curvature="0"
+     id="path106455"
+     d="m 578.50087,2600.3525 c 0.003,2.768 -0.006,5.6147 0.004,8.3438 -5.3e-4,1.1964 1.9393,2.1663 4.33204,2.166 2.39196,-3e-4 4.33061,-0.97 4.33007,-2.166 0.005,-2.8522 0.007,-5.8455 0.006,-8.3438 z"
+     style="display:inline;fill:#1e1e1e;fill-opacity:1;stroke:#ffab0f;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+  <ellipse
+     ry="2.1655145"
+     rx="4.3310289"
+     cy="2600.0276"
+     cx="582.83105"
+     id="ellipse106457"
+     style="display:inline;fill:#1e1e1e;fill-opacity:1;stroke:#ffab0f;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+</g>
 </g>
     <path
        style="fill:none;stroke:url(#foreground);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
