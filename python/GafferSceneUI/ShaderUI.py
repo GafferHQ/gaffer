@@ -56,6 +56,12 @@ from GafferUI.PlugValueWidget import sole
 # Metadata
 ##########################################################################
 
+def __shaderMetadata( node, key ) :
+
+	return Gaffer.Metadata.value(
+		node["type"].getValue() + ":" + node["name"].getValue(), key
+	)
+
 def __parameterUserDefault( plug ) :
 
 	shader = plug.node()
@@ -75,6 +81,7 @@ Gaffer.Metadata.registerNode(
 	""",
 
 	"nodeGadget:minWidth", 0.0,
+	"nodeGadget:color", functools.partial( __shaderMetadata, key = "nodeGadget:color" ),
 
 	plugs = {
 

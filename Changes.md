@@ -23,6 +23,8 @@ API
 ---
 
 - LightEditor : Added `deregisterColumn()` method for removing columns.
+- ShaderUI : Added support for `nodeGadget:color` metadata registered against `{shaderType}:{shaderName}`, to specify per-shader colouring of nodes in the GraphEditor.
+- ArnoldShaderUI : Added support for `gaffer.nodeGadget.color` RGB metadata in `.mtd` files, to specify per-shader colouring of nodes in the GraphEditor.
 - Loop : Added `nextIterationContext()` method.
 - AnnotationsGadget : Added `annotationText()` method.
 - ParallelAlgoTest : Added `UIThreadCallHandler.receive()` method.
