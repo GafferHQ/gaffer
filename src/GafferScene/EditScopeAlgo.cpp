@@ -94,7 +94,8 @@ CreatableRegistry g_attributeRegistry {
 	{ "gl:visualiser:frustum", new IECore::StringData( "whenSelected" ) },
 	{ "gl:light:frustumScale", new IECore::FloatData( 1.0f ) },
 	{ "gl:light:drawingMode", new IECore::StringData( "texture" ) },
-	{ "light:mute", new IECore::BoolData( false ) }
+	{ "light:mute", new IECore::BoolData( false ) },
+	{ "filteredLights", new StringData( "" ) }
 };
 
 /// Entry keys for `g_optionRegistry` should not include the "option:" prefix.
