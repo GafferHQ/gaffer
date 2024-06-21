@@ -49,6 +49,7 @@ namespace Gaffer
 {
 
 class Plug;
+class ScriptNode;
 IE_CORE_FORWARDDECLARE( Node );
 IE_CORE_FORWARDDECLARE( Context )
 
@@ -74,6 +75,24 @@ class GAFFERUI_API ContextTracker final : public IECore::RefCounted, public Gaff
 
 		IE_CORE_DECLAREMEMBERPTR( ContextTracker );
 
+		/// Shared instances
+		/// ================
+		///
+		/// Tracking the upstream contexts can involve significant computation,
+		/// so it is recommended that ContextTracker instances are shared
+		/// between UI components. The `aquire()` methods maintain a pool of
+		/// instances for this purpose. Acquisition and destruction of shared
+		/// instances is not threadsafe, and must always be done on the UI
+		/// thread.
+
+		/// Returns a shared instance for the target `node`. The node must
+		/// belong to a ScriptNode, so that `ScriptNode::context()` can be used
+		/// to provide the target context.
+		static Ptr acquire( const Gaffer::NodePtr &node );
+		/// Returns an shared instance that will automatically track the focus
+		/// node in the specified `script`.
+		static Ptr acquireForFocus( Gaffer::ScriptNode *script );
+
 		/// Target
 		/// ======
 
@@ -96,6 +115,7 @@ class GAFFERUI_API ContextTracker final : public IECore::RefCounted, public Gaff
 
 	private :
 
+		void updateNode( const Gaffer::NodePtr &node );
 		void plugDirtied( const Gaffer::Plug *plug );
 		void contextChanged( IECore::InternedString variable );
 		void update();
@@ -103,6 +123,7 @@ class GAFFERUI_API ContextTracker final : public IECore::RefCounted, public Gaff
 
 		Gaffer::ConstNodePtr m_node;
 		Gaffer::ConstContextPtr m_context;
+		Gaffer::Signals::ScopedConnection m_plugDirtiedConnection;
 
 		struct NodeData
 		{

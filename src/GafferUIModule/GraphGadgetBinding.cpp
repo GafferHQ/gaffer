@@ -54,6 +54,7 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/Node.h"
+#include "Gaffer/ScriptNode.h"
 
 using namespace boost::python;
 using namespace IECorePython;
@@ -349,6 +350,8 @@ void GafferUIModule::bindGraphGadget()
 
 	IECorePython::RefCountedClass<ContextTracker, IECore::RefCounted>( "ContextTracker" )
 		.def( init<const NodePtr &, const ContextPtr &>() )
+		.def( "acquire", &ContextTracker::acquire ).staticmethod( "acquire" )
+		.def( "acquireForFocus", &ContextTracker::acquireForFocus ).staticmethod( "acquireForFocus" )
 		.def( "targetNode", &targetNodeWrapper )
 		.def( "targetContext", &targetContextWrapper )
 		.def( "isTracked", (bool (ContextTracker::*)( const Plug *plug ) const)&ContextTracker::isTracked )

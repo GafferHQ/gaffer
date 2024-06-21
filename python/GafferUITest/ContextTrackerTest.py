@@ -609,5 +609,102 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		self.assertTrue( tracker.isTracked( script["addA"] ) )
 		self.assertFalse( tracker.isTracked( script["addB"] ) )
 
+	def testAcquire( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["add1"] = GafferTest.AddNode()
+		script["add2"] = GafferTest.AddNode()
+
+		tracker1 = GafferUI.ContextTracker.acquire( script["add1"] )
+		self.assertTrue( tracker1.isSame( GafferUI.ContextTracker.acquire( script["add1"] ) ) )
+		self.assertTrue( tracker1.isTracked( script["add1"] ) )
+		self.assertFalse( tracker1.isTracked( script["add2"] ) )
+
+		tracker2 = GafferUI.ContextTracker.acquire( script["add2"] )
+		self.assertTrue( tracker2.isSame( GafferUI.ContextTracker.acquire( script["add2"] ) ) )
+		self.assertTrue( tracker2.isTracked( script["add2"] ) )
+		self.assertFalse( tracker2.isTracked( script["add1"] ) )
+
+	def testAcquireLifetime( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["node"] = GafferTest.MultiplyNode()
+		nodeSlots = script["node"].plugDirtiedSignal().numSlots()
+		nodeRefCount = script["node"].refCount()
+
+		tracker = GafferUI.ContextTracker.acquire( script["node"] )
+		del tracker
+
+		# Indicates that `tracker` was truly destroyed.
+		self.assertEqual( script["node"].plugDirtiedSignal().numSlots(), nodeSlots )
+		self.assertEqual( script["node"].refCount(), nodeRefCount )
+
+		# Should be a whole new instance.
+		tracker = GafferUI.ContextTracker.acquire( script["node"] )
+		self.assertTrue( tracker.isTracked( script["node"] ) )
+
+	def testAcquireForFocus( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["add1"] = GafferTest.AddNode()
+		script["add2"] = GafferTest.AddNode()
+
+		tracker = GafferUI.ContextTracker.acquireForFocus( script )
+		self.assertTrue( tracker.isSame( GafferUI.ContextTracker.acquireForFocus( script ) ) )
+
+		self.assertFalse( tracker.isTracked( script["add1" ] ) )
+		self.assertFalse( tracker.isTracked( script["add2" ] ) )
+
+		script.setFocus( script["add1"] )
+		self.assertTrue( tracker.isTracked( script["add1" ] ) )
+		self.assertFalse( tracker.isTracked( script["add2" ] ) )
+
+		script.setFocus( script["add2"] )
+		self.assertFalse( tracker.isTracked( script["add1" ] ) )
+		self.assertTrue( tracker.isTracked( script["add2" ] ) )
+
+		script.setFocus( None )
+		self.assertFalse( tracker.isTracked( script["add1" ] ) )
+		self.assertFalse( tracker.isTracked( script["add2" ] ) )
+
+	def testAcquireForFocusLifetime( self ) :
+
+		script = Gaffer.ScriptNode()
+		contextSlots = script.context().changedSignal().numSlots()
+		contextRefCount = script.context().refCount()
+
+		tracker = GafferUI.ContextTracker.acquireForFocus( script )
+		del tracker
+
+		# Indicates that `tracker` was truly destroyed.
+		self.assertEqual( script.context().changedSignal().numSlots(), contextSlots )
+		self.assertEqual( script.context().refCount(), contextRefCount )
+
+		# Should be a whole new instance.
+		script["node"] = GafferTest.MultiplyNode()
+		script.setFocus( script["node"] )
+		tracker = GafferUI.ContextTracker.acquireForFocus( script )
+		self.assertTrue( tracker.isTracked( script["node"] ) )
+
+	def testAcquireNone( self ) :
+
+		tracker1 = GafferUI.ContextTracker.acquire( None )
+		self.assertTrue( tracker1.isSame( GafferUI.ContextTracker.acquire( None ) ) )
+
+		tracker2 = GafferUI.ContextTracker.acquireForFocus( None )
+		self.assertTrue( tracker2.isSame( GafferUI.ContextTracker.acquireForFocus( None ) ) )
+
+		self.assertTrue( tracker1.isSame( tracker2 ) )
+		self.assertEqual( tracker1.targetContext(), Gaffer.Context() )
+
+		node = GafferTest.AddNode()
+		self.assertFalse( tracker1.isTracked( node ) )
+		self.assertFalse( tracker1.isTracked( node["sum"] ) )
+		self.assertEqual( tracker1.context( node ), tracker1.targetContext() )
+		self.assertEqual( tracker1.context( node["sum"] ), tracker1.targetContext() )
+
 if __name__ == "__main__":
 	unittest.main()
