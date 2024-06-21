@@ -478,6 +478,9 @@ __metadata["quad_light.parameters.height"]["layout:index"] = 1
 GafferSceneUI.LightEditor.registerParameter( "ai:light", "width", "Shape" )
 GafferSceneUI.LightEditor.registerParameter( "ai:light", "height", "Shape" )
 
+# Manually add the `filteredLights` parameter for `light_blocker`
+GafferSceneUI.LightEditor.registerAttribute( "ai:light", "filteredLights", "Blocker" )
+
 ##########################################################################
 # Gaffer Metadata queries. These are implemented using the preconstructed
 # registry above.
