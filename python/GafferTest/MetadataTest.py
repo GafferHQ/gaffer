@@ -108,6 +108,80 @@ class MetadataTest( GafferTest.TestCase ) :
 		Gaffer.Metadata.registerValue( self.DerivedAddNode, "op1", "iKey", "Derived class plug value" )
 		self.assertEqual( Gaffer.Metadata.value( derivedAdd["op1"], "iKey" ), "Derived class plug value" )
 
+	def testNodeMetadataHasPriorityOverRowsPlugMetadata( self ) :
+
+		Gaffer.Metadata.registerValue( Gaffer.Spreadsheet.RowsPlug, "default.*...", "test", "plug" )
+
+		class MetadataTestNodeF( Gaffer.Node ) :
+
+			def __init__( self, name = "MetadataTestNodeF" ) :
+
+				Gaffer.Node.__init__( self, name )
+
+				self["a"] = Gaffer.Spreadsheet.RowsPlug()
+				self["a"].addColumn( Gaffer.StringPlug( "testColumn" ) )
+				self["b"] = Gaffer.Spreadsheet.RowsPlug()
+				self["b"].addColumn( Gaffer.StringPlug( "testColumn" ) )
+
+		IECore.registerRunTimeTyped( MetadataTestNodeF )
+
+		Gaffer.Metadata.registerNode(
+
+			MetadataTestNodeF,
+
+			plugs = {
+				"a.default.cells.testColumn.value" : [
+					"test", "node",
+				]
+			}
+
+		)
+
+		n = MetadataTestNodeF()
+		self.assertEqual( Gaffer.Metadata.value( n["a"]["default"]["cells"]["testColumn"]["value"], "test" ), "node" )
+		self.assertEqual( Gaffer.Metadata.value( n["b"]["default"]["cells"]["testColumn"]["value"], "test" ), "plug" )
+
+	def testAncestorMetadataPriority( self ) :
+
+		Gaffer.Metadata.registerValue( Gaffer.Color3fPlug, "[rgb]", "test", "color3fPlug" )
+		Gaffer.Metadata.registerValue( Gaffer.TweakPlug, "value.[rg]", "test", "tweakPlug" )
+
+		class MetadataTestNodeG( Gaffer.Node ) :
+
+			def __init__( self, name = "MetadataTestNodeG" ) :
+
+				Gaffer.Node.__init__( self, name )
+
+				self["a"] = Gaffer.TweakPlug( "a", imath.Color3f( 0 ) )
+				self["b"] = Gaffer.TweakPlug( "b", imath.Color3f( 0 ) )
+
+		IECore.registerRunTimeTyped( MetadataTestNodeG )
+
+		Gaffer.Metadata.registerNode(
+
+			MetadataTestNodeG,
+
+			plugs = {
+				"a.value.r" : [
+					"test", "node",
+				],
+
+				"b.value.[gb]" : [
+					"test", "node",
+				],
+			}
+
+		)
+
+		n = MetadataTestNodeG()
+		self.assertEqual( Gaffer.Metadata.value( n["a"]["value"]["r"], "test" ), "node" )
+		self.assertEqual( Gaffer.Metadata.value( n["a"]["value"]["g"], "test" ), "tweakPlug" )
+		self.assertEqual( Gaffer.Metadata.value( n["a"]["value"]["b"], "test" ), "color3fPlug" )
+
+		self.assertEqual( Gaffer.Metadata.value( n["b"]["value"]["r"], "test" ), "tweakPlug" )
+		self.assertEqual( Gaffer.Metadata.value( n["b"]["value"]["g"], "test" ), "node" )
+		self.assertEqual( Gaffer.Metadata.value( n["b"]["value"]["b"], "test" ), "node" )
+
 	def testNodeSignals( self ) :
 
 		add = GafferTest.AddNode()
@@ -1302,6 +1376,10 @@ class MetadataTest( GafferTest.TestCase ) :
 		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "plugData3" )
 		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "rp" )
 		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op*", "aKey" )
+
+		Gaffer.Metadata.deregisterValue( Gaffer.Spreadsheet.RowsPlug, "default.*...", "test" )
+		Gaffer.Metadata.deregisterValue( Gaffer.Color3fPlug, "[rgb]", "test" )
+		Gaffer.Metadata.deregisterValue( Gaffer.TweakPlug, "value.[rg]", "test" )
 
 if __name__ == "__main__":
 	unittest.main()

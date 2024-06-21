@@ -805,6 +805,11 @@ IECore::ConstDataPtr Metadata::valueInternal( const GraphComponent *target, IECo
 
 	// If the target is a plug, then look for a path-based
 	// value. These are more specific than type-based values.
+	// We allow metadata registered to higher-level components
+	// such as Nodes to take precedence over registrations to
+	// lower-level components such as Plugs, as a node may have
+	// specific needs for the presentation or behaviour of its
+	// plugs and thus have good reason to override their metadata.
 
 	if( registrationTypes & RegistrationTypes::TypeIdDescendant )
 	{
@@ -812,6 +817,7 @@ IECore::ConstDataPtr Metadata::valueInternal( const GraphComponent *target, IECo
 		{
 			const GraphComponent *ancestor = plug->parent();
 			vector<InternedString> plugPath( { plug->getName() } );
+			Metadata::PlugValueFunction valueFn;
 			while( ancestor )
 			{
 				IECore::TypeId typeId = ancestor->typeId();
@@ -828,9 +834,11 @@ IECore::ConstDataPtr Metadata::valueInternal( const GraphComponent *target, IECo
 							auto vIt = it->second.find( key );
 							if( vIt != it->second.end() )
 							{
-								return vIt->second( plug );
+								valueFn = vIt->second;
+								break;
 							}
 						}
+
 						// And only if the direct lookup fails, do a full search using
 						// wildcard matches.
 						for( it = nIt->second.plugPathsToValues.begin(); it != eIt; ++it )
@@ -840,9 +848,15 @@ IECore::ConstDataPtr Metadata::valueInternal( const GraphComponent *target, IECo
 								auto vIt = it->second.find( key );
 								if( vIt != it->second.end() )
 								{
-									return vIt->second( plug );
+									valueFn = vIt->second;
+									break;
 								}
 							}
+						}
+
+						if( valueFn != nullptr )
+						{
+							break;
 						}
 					}
 					typeId = RunTimeTyped::baseTypeId( typeId );
@@ -850,6 +864,11 @@ IECore::ConstDataPtr Metadata::valueInternal( const GraphComponent *target, IECo
 
 				plugPath.insert( plugPath.begin(), ancestor->getName() );
 				ancestor = ancestor->parent();
+			}
+
+			if( valueFn != nullptr )
+			{
+				return valueFn( plug );
 			}
 		}
 	}
