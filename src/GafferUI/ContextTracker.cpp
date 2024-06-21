@@ -40,12 +40,16 @@
 #include "Gaffer/ContextVariables.h"
 #include "Gaffer/Loop.h"
 #include "Gaffer/NameSwitch.h"
+#include "Gaffer/ScriptNode.h"
 #include "Gaffer/Switch.h"
 
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
+#include "boost/multi_index/member.hpp"
+#include "boost/multi_index/hashed_index.hpp"
+#include "boost/multi_index_container.hpp"
 
 #include <unordered_set>
 
@@ -55,17 +59,127 @@ using namespace IECore;
 using namespace boost::placeholders;
 using namespace std;
 
-ContextTracker::ContextTracker( const Gaffer::NodePtr &node, const Gaffer::ContextPtr &context )
-	:	m_node( node ), m_context( context )
+//////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
 {
-	node->plugDirtiedSignal().connect( boost::bind( &ContextTracker::plugDirtied, this, ::_1 ) );
+
+using SharedInstance = std::pair<const Node *, ContextTracker *>;
+using SharedInstances = boost::multi_index::multi_index_container<
+	SharedInstance,
+	boost::multi_index::indexed_by<
+		boost::multi_index::hashed_unique<
+			boost::multi_index::member<SharedInstance, const Node *, &SharedInstance::first>
+		>,
+		boost::multi_index::hashed_non_unique<
+			boost::multi_index::member<SharedInstance, ContextTracker *, &SharedInstance::second>
+		>
+	>
+>;
+
+SharedInstances &sharedInstances()
+{
+	static SharedInstances g_sharedInstances;
+	return g_sharedInstances;
+}
+
+using SharedFocusInstance = std::pair<const ScriptNode *, ContextTracker *>;
+using SharedFocusInstances = boost::multi_index::multi_index_container<
+	SharedFocusInstance,
+	boost::multi_index::indexed_by<
+		boost::multi_index::hashed_unique<
+			boost::multi_index::member<SharedFocusInstance, const ScriptNode *, &SharedFocusInstance::first>
+		>,
+		boost::multi_index::hashed_non_unique<
+			boost::multi_index::member<SharedFocusInstance, ContextTracker *, &SharedFocusInstance::second>
+		>
+	>
+>;
+
+SharedFocusInstances &sharedFocusInstances()
+{
+	static SharedFocusInstances g_sharedInstances;
+	return g_sharedInstances;
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// ContextTracker
+//////////////////////////////////////////////////////////////////////////
+
+ContextTracker::ContextTracker( const Gaffer::NodePtr &node, const Gaffer::ContextPtr &context )
+	:	m_context( context )
+{
 	context->changedSignal().connect( boost::bind( &ContextTracker::contextChanged, this, ::_2 ) );
-	update();
+	updateNode( node );
 }
 
 ContextTracker::~ContextTracker()
 {
+	sharedInstances().get<1>().erase( this );
+	sharedFocusInstances().get<1>().erase( this );
 	disconnectTrackedConnections();
+}
+
+ContextTrackerPtr ContextTracker::acquire( const Gaffer::NodePtr &node )
+{
+	auto &instances = sharedInstances();
+	auto it = instances.find( node.get() );
+	if( it != instances.end() )
+	{
+		return it->second;
+	}
+
+	auto scriptNode = node ? node->scriptNode() : nullptr;
+	Ptr instance = new ContextTracker( node, scriptNode ? scriptNode->context() : new Context() );
+	instances.insert( { node.get(), instance.get() } );
+	return instance;
+}
+
+ContextTrackerPtr ContextTracker::acquireForFocus( Gaffer::ScriptNode *script )
+{
+	if( !script )
+	{
+		return acquire( script );
+	}
+
+	auto &instances = sharedFocusInstances();
+	auto it = instances.find( script );
+	if( it != instances.end() )
+	{
+		if( it->second->m_context == script->context() )
+		{
+			return it->second;
+		}
+		else
+		{
+			// Contexts don't match. Only explanation is that the original
+			// ScriptNode has been destroyed and a new one created with the same
+			// address. Ditch the old instance and fall through to create a new
+			// one.
+			instances.erase( it );
+		}
+	}
+
+	Ptr instance = new ContextTracker( script->getFocus(), script->context() );
+	script->focusChangedSignal().connect( boost::bind( &ContextTracker::updateNode, instance.get(), ::_2 ) );
+	instances.insert( { script, instance.get() } );
+	return instance;
+}
+
+void ContextTracker::updateNode( const Gaffer::NodePtr &node )
+{
+	m_plugDirtiedConnection.disconnect();
+	m_node = node;
+	if( m_node )
+	{
+		m_plugDirtiedConnection = node->plugDirtiedSignal().connect( boost::bind( &ContextTracker::plugDirtied, this, ::_1 ) );
+	}
+
+	update();
 }
 
 const Gaffer::Node *ContextTracker::targetNode() const
@@ -129,6 +243,11 @@ void ContextTracker::update()
 {
 	m_nodeContexts.clear();
 	m_plugContexts.clear();
+
+	if( !m_node )
+	{
+		return;
+	}
 
 	std::deque<std::pair<const Plug *, ConstContextPtr>> toVisit;
 
