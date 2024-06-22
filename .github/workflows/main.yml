@@ -65,7 +65,7 @@ jobs:
             containerImage:
             testRunner: Invoke-Expression
             testArguments: -excludedCategories performance GafferTest GafferVDBTest GafferUSDTest GafferSceneTest GafferDispatchTest GafferOSLTest GafferImageTest GafferUITest GafferImageUITest GafferSceneUITest GafferDispatchUITest GafferOSLUITest GafferUSDUITest GafferVDBUITest GafferDelightUITest
-            sconsCacheMegabytes: 400
+            sconsCacheMegabytes: 800
 
     runs-on: ${{ matrix.os }}
 
