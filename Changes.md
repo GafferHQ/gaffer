@@ -23,10 +23,6 @@ API
 ---
 
 - Loop : Added `nextIterationContext()` method.
-
-API
----
-
 - AnnotationsGadget : Added `annotationText()` method.
 - ParallelAlgoTest : Added `UIThreadCallHandler.receive()` method.
 
