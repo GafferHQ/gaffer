@@ -59,6 +59,7 @@
 using namespace boost::python;
 using namespace IECorePython;
 using namespace Gaffer;
+using namespace GafferBindings;
 using namespace GafferUI;
 using namespace GafferUIBindings;
 
@@ -233,6 +234,21 @@ ContextPtr targetContextWrapper( const ContextTracker &contextTracker )
 	return const_cast<Context *>( contextTracker.targetContext() );
 }
 
+struct ContextTrackerSlotCaller
+{
+	void operator()( boost::python::object slot, ContextTracker &contextTracker )
+	{
+		try
+		{
+			slot( ContextTrackerPtr( &contextTracker ) );
+		}
+		catch( const boost::python::error_already_set & )
+		{
+			ExceptionAlgo::translatePythonException();
+		}
+	}
+};
+
 ContextPtr contextWrapper1( const ContextTracker &contextTracker, const Node &node, bool copy = false )
 {
 	ConstContextPtr c = contextTracker.context( &node );
@@ -348,16 +364,23 @@ void GafferUIModule::bindGraphGadget()
 		.def( "getNodeSeparationScale", &StandardGraphLayout::getNodeSeparationScale )
 	;
 
-	IECorePython::RefCountedClass<ContextTracker, IECore::RefCounted>( "ContextTracker" )
-		.def( init<const NodePtr &, const ContextPtr &>() )
-		.def( "acquire", &ContextTracker::acquire ).staticmethod( "acquire" )
-		.def( "acquireForFocus", &ContextTracker::acquireForFocus ).staticmethod( "acquireForFocus" )
-		.def( "targetNode", &targetNodeWrapper )
-		.def( "targetContext", &targetContextWrapper )
-		.def( "isActive", (bool (ContextTracker::*)( const Plug *plug ) const)&ContextTracker::isActive )
-		.def( "isActive", (bool (ContextTracker::*)( const Node *node ) const)&ContextTracker::isActive )
-		.def( "context", &contextWrapper1, ( arg( "node" ), arg( "_copy" ) = true ) )
-		.def( "context", &contextWrapper2, ( arg( "plug" ), arg( "_copy" ) = true ) )
-	;
+	{
+		scope s = IECorePython::RefCountedClass<ContextTracker, IECore::RefCounted>( "ContextTracker" )
+			.def( init<const NodePtr &, const ContextPtr &>() )
+			.def( "acquire", &ContextTracker::acquire ).staticmethod( "acquire" )
+			.def( "acquireForFocus", &ContextTracker::acquireForFocus ).staticmethod( "acquireForFocus" )
+			.def( "targetNode", &targetNodeWrapper )
+			.def( "targetContext", &targetContextWrapper )
+			.def( "isActive", (bool (ContextTracker::*)( const Plug *plug ) const)&ContextTracker::isActive )
+			.def( "isActive", (bool (ContextTracker::*)( const Node *node ) const)&ContextTracker::isActive )
+			.def( "context", &contextWrapper1, ( arg( "node" ), arg( "_copy" ) = true ) )
+			.def( "context", &contextWrapper2, ( arg( "plug" ), arg( "_copy" ) = true ) )
+			.def( "updatePending", &ContextTracker::updatePending )
+			.def( "changedSignal", &ContextTracker::changedSignal, return_internal_reference<1>() )
+		;
+
+		SignalClass<ContextTracker::Signal, DefaultSignalCaller<ContextTracker::Signal>, ContextTrackerSlotCaller>( "Signal" );
+
+	}
 
 }

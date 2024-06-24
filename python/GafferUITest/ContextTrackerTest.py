@@ -34,7 +34,11 @@
 #
 ##########################################################################
 
+import inspect
+import threading
 import unittest
+
+import IECore
 
 import Gaffer
 import GafferTest
@@ -42,6 +46,15 @@ import GafferUI
 import GafferUITest
 
 class ContextTrackerTest( GafferUITest.TestCase ) :
+
+	class UpdateHandler( GafferTest.ParallelAlgoTest.UIThreadCallHandler ) :
+
+		def __exit__( self, type, value, traceBack ) :
+
+			GafferUITest.TestCase().waitForIdle()
+			self.assertCalled()
+
+			GafferTest.ParallelAlgoTest.UIThreadCallHandler.__exit__( self, type, value, traceBack )
 
 	def testSimpleNodes( self ) :
 
@@ -58,7 +71,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		script["add4"]["op1"].setInput( script["add3"]["sum"] )
 
 		context = Gaffer.Context()
-		tracker = GafferUI.ContextTracker( script["add4"], context )
+		with self.UpdateHandler()  :
+			tracker = GafferUI.ContextTracker( script["add4"], context )
 
 		def assertExpectedContexts() :
 
@@ -79,7 +93,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		for graphComponent in [ script["unconnected"], script["unconnected"]["op1"], script["unconnected"]["op2"], script["unconnected"]["sum"], script["unconnected"]["enabled"] ] :
 			self.assertFalse( tracker.isActive( graphComponent ) )
 
-		script["add3"]["enabled"].setValue( False )
+		with self.UpdateHandler()  :
+			script["add3"]["enabled"].setValue( False )
 
 		assertExpectedContexts( )
 
@@ -105,7 +120,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		script["switch"]["in"][1].setInput( script["add2"]["sum"] )
 
 		context = Gaffer.Context()
-		tracker = GafferUI.ContextTracker( script["switch"], context )
+		with self.UpdateHandler()  :
+			tracker = GafferUI.ContextTracker( script["switch"], context )
 
 		def assertExpectedContexts() :
 
@@ -128,7 +144,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		self.assertTrue( tracker.isActive( script["add1"] ) )
 		self.assertFalse( tracker.isActive( script["add2"] ) )
 
-		script["switch"]["index"].setValue( 1 )
+		with self.UpdateHandler()  :
+			script["switch"]["index"].setValue( 1 )
 
 		assertExpectedContexts()
 
@@ -141,7 +158,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		self.assertFalse( tracker.isActive( script["add1"] ) )
 		self.assertTrue( tracker.isActive( script["add2"] ) )
 
-		script["switch"]["enabled"].setValue( False )
+		with self.UpdateHandler()  :
+			script["switch"]["enabled"].setValue( False )
 
 		assertExpectedContexts()
 
@@ -156,9 +174,10 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 
 		# Dynamic case - switch will compute input on the fly.
 
-		script["add3"] = GafferTest.AddNode()
-		script["switch"]["index"].setInput( script["add3"]["sum"] )
-		script["switch"]["enabled"].setValue( True )
+		with self.UpdateHandler()  :
+			script["add3"] = GafferTest.AddNode()
+			script["switch"]["index"].setInput( script["add3"]["sum"] )
+			script["switch"]["enabled"].setValue( True )
 
 		assertExpectedContexts()
 
@@ -173,7 +192,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		self.assertTrue( tracker.isActive( script["add3"] ) )
 		self.assertEqual( tracker.context( script["add3"] ), context )
 
-		script["add3"]["op1"].setValue( 1 )
+		with self.UpdateHandler()  :
+			script["add3"]["op1"].setValue( 1 )
 
 		assertExpectedContexts()
 
@@ -204,7 +224,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		script["switch"]["in"][1]["name"].setValue( "add2" )
 
 		context = Gaffer.Context()
-		tracker = GafferUI.ContextTracker( script["switch"], context )
+		with self.UpdateHandler()  :
+			tracker = GafferUI.ContextTracker( script["switch"], context )
 
 		def assertExpectedContexts() :
 
@@ -226,7 +247,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		self.assertTrue( tracker.isActive( script["add1"] ) )
 		self.assertFalse( tracker.isActive( script["add2"] ) )
 
-		script["switch"]["selector"].setValue( "add2" )
+		with self.UpdateHandler()  :
+			script["switch"]["selector"].setValue( "add2" )
 
 		assertExpectedContexts()
 
@@ -238,7 +260,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		self.assertFalse( tracker.isActive( script["add1"] ) )
 		self.assertTrue( tracker.isActive( script["add2"] ) )
 
-		script["switch"]["enabled"].setValue( False )
+		with self.UpdateHandler()  :
+			script["switch"]["enabled"].setValue( False )
 
 		assertExpectedContexts()
 
@@ -252,9 +275,10 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 
 		# Dynamic case - switch will compute input on the fly.
 
-		stringNode = GafferTest.StringInOutNode()
-		script["switch"]["selector"].setInput( stringNode["out"] )
-		script["switch"]["enabled"].setValue( True )
+		with self.UpdateHandler()  :
+			stringNode = GafferTest.StringInOutNode()
+			script["switch"]["selector"].setInput( stringNode["out"] )
+			script["switch"]["enabled"].setValue( True )
 
 		assertExpectedContexts()
 
@@ -268,7 +292,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		self.assertTrue( tracker.isActive( stringNode ) )
 		self.assertEqual( tracker.context( stringNode ), context )
 
-		stringNode["in"].setValue( "add2" )
+		with self.UpdateHandler()  :
+			stringNode["in"].setValue( "add2" )
 
 		assertExpectedContexts()
 
@@ -306,7 +331,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		script["add3"]["op2"].setInput( script["contextVariables"]["out"] )
 
 		context = Gaffer.Context()
-		tracker = GafferUI.ContextTracker( script["add3"], context )
+		with self.UpdateHandler()  :
+			tracker = GafferUI.ContextTracker( script["add3"], context )
 
 		self.assertEqual( tracker.context( script["add3"] ), context )
 		self.assertEqual( tracker.context( script["switch"] ), context )
@@ -345,7 +371,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		script["add6"]["op1"].setInput( script["switch"]["out"]["value"] )
 
 		context = Gaffer.Context()
-		tracker = GafferUI.ContextTracker( script["add6"], context )
+		with self.UpdateHandler()  :
+			tracker = GafferUI.ContextTracker( script["add6"], context )
 
 		# Default input `name` and `enabled` are never evaluated and `value`
 		# isn't currently active.
@@ -370,7 +397,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		self.assertFalse( tracker.isActive( script["switch"]["in"][4]["name"] ) )
 		self.assertFalse( tracker.isActive( script["switch"]["in"][4]["value"] ) )
 
-		script["switch"]["enabled"].setValue( False )
+		with self.UpdateHandler()  :
+			script["switch"]["enabled"].setValue( False )
 
 		for plug in list( Gaffer.NameValuePlug.Range( script["switch"]["in"] ) ) :
 			self.assertFalse( tracker.isActive( plug["name"] ), plug["name"].fullName() )
@@ -392,7 +420,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		script["contextVariables"]["in"].setInput( script["add"]["sum"] )
 
 		context = Gaffer.Context()
-		tracker = GafferUI.ContextTracker( script["contextVariables"], context )
+		with self.UpdateHandler()  :
+			tracker = GafferUI.ContextTracker( script["contextVariables"], context )
 
 		self.assertTrue( tracker.isActive( script["contextVariables"] ) )
 		self.assertTrue( tracker.isActive( script["contextVariables"]["enabled"] ) )
@@ -401,7 +430,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		self.assertTrue( tracker.isActive( script["add"] ) )
 		self.assertEqual( tracker.context( script["add"] ), context )
 
-		script["contextVariables"]["variables"].addChild( Gaffer.NameValuePlug( "test", 2 ) )
+		with self.UpdateHandler()  :
+			script["contextVariables"]["variables"].addChild( Gaffer.NameValuePlug( "test", 2 ) )
 
 		self.assertTrue( tracker.isActive( script["contextVariables"] ) )
 		self.assertTrue( tracker.isActive( script["contextVariables"]["enabled"] ) )
@@ -413,7 +443,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		self.assertTrue( tracker.isActive( script["add"] ) )
 		self.assertEqual( tracker.context( script["add"] ), script["contextVariables"].inPlugContext() )
 
-		script["contextVariables"]["enabled"].setValue( False )
+		with self.UpdateHandler()  :
+			script["contextVariables"]["enabled"].setValue( False )
 
 		self.assertTrue( tracker.isActive( script["contextVariables"] ) )
 		self.assertTrue( tracker.isActive( script["contextVariables"]["enabled"] ) )
@@ -438,7 +469,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		script["contextVariables"]["variables"].addChild( Gaffer.NameValuePlug( "test", 2 ) )
 
 		context = Gaffer.Context()
-		tracker = GafferUI.ContextTracker( script["contextVariables"], context )
+		with self.UpdateHandler()  :
+			tracker = GafferUI.ContextTracker( script["contextVariables"], context )
 
 		# Even though `op2` is inactive, it still makes most sense to evaluate it
 		# in the modified context, because that is the context it will be active in
@@ -455,7 +487,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		script["node"]["op1"].setInput( plug )
 
 		context = Gaffer.Context()
-		tracker = GafferUI.ContextTracker( script["node"], context )
+		with self.UpdateHandler()  :
+			tracker = GafferUI.ContextTracker( script["node"], context )
 
 		self.assertTrue( tracker.isActive( script["node"] ) )
 		self.assertEqual( tracker.context( script["node"] ), context )
@@ -483,7 +516,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		self.assertEqual( script["loop"]["out"].getValue(), 20 )
 
 		context = Gaffer.Context()
-		tracker = GafferUI.ContextTracker( script["loop"], context )
+		with self.UpdateHandler()  :
+			tracker = GafferUI.ContextTracker( script["loop"], context )
 
 		self.assertTrue( tracker.isActive( script["loop"] ) )
 		self.assertEqual( tracker.context( script["loop"] ), context )
@@ -514,11 +548,13 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 			self.assertFalse( tracker.isActive( script["loopBody"] ) )
 			self.assertEqual( tracker.context( script["loopBody"] ), context )
 
-		script["loop"]["enabled"].setValue( False )
+		with self.UpdateHandler()  :
+			script["loop"]["enabled"].setValue( False )
 		assertDisabledLoop()
 
-		script["loop"]["enabled"].setValue( True )
-		script["loop"]["iterations"].setValue( 0 )
+		with self.UpdateHandler()  :
+			script["loop"]["enabled"].setValue( True )
+			script["loop"]["iterations"].setValue( 0 )
 		assertDisabledLoop()
 
 	def testLoopEvaluatesAllIterations( self ) :
@@ -556,8 +592,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		self.assertEqual( script["loop"]["out"].getValue(), sum( range( 0, iterations ) ) )
 
 		context = Gaffer.Context()
-		tracker = GafferUI.ContextTracker( script["loop"], context )
-		self.__connectUpdater( tracker )
+		with self.UpdateHandler()  :
+			tracker = GafferUI.ContextTracker( script["loop"], context )
 
 		for i in range( 0, iterations ) :
 			switchInput = script["loopSwitch"]["in"][i]
@@ -596,7 +632,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		script["resultB"]["op1"].setInput( script["box"]["sumB"] )
 
 		context = Gaffer.Context()
-		tracker = GafferUI.ContextTracker( script["resultA"], context )
+		with self.UpdateHandler()  :
+			tracker = GafferUI.ContextTracker( script["resultA"], context )
 
 		self.assertTrue( tracker.isActive( script["resultA"] ) )
 		self.assertFalse( tracker.isActive( script["resultB"] ) )
@@ -617,12 +654,14 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		script["add1"] = GafferTest.AddNode()
 		script["add2"] = GafferTest.AddNode()
 
-		tracker1 = GafferUI.ContextTracker.acquire( script["add1"] )
+		with self.UpdateHandler()  :
+			tracker1 = GafferUI.ContextTracker.acquire( script["add1"] )
 		self.assertTrue( tracker1.isSame( GafferUI.ContextTracker.acquire( script["add1"] ) ) )
 		self.assertTrue( tracker1.isActive( script["add1"] ) )
 		self.assertFalse( tracker1.isActive( script["add2"] ) )
 
-		tracker2 = GafferUI.ContextTracker.acquire( script["add2"] )
+		with self.UpdateHandler()  :
+			tracker2 = GafferUI.ContextTracker.acquire( script["add2"] )
 		self.assertTrue( tracker2.isSame( GafferUI.ContextTracker.acquire( script["add2"] ) ) )
 		self.assertTrue( tracker2.isActive( script["add2"] ) )
 		self.assertFalse( tracker2.isActive( script["add1"] ) )
@@ -635,7 +674,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		nodeSlots = script["node"].plugDirtiedSignal().numSlots()
 		nodeRefCount = script["node"].refCount()
 
-		tracker = GafferUI.ContextTracker.acquire( script["node"] )
+		with self.UpdateHandler()  :
+			tracker = GafferUI.ContextTracker.acquire( script["node"] )
 		del tracker
 
 		# Indicates that `tracker` was truly destroyed.
@@ -643,7 +683,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		self.assertEqual( script["node"].refCount(), nodeRefCount )
 
 		# Should be a whole new instance.
-		tracker = GafferUI.ContextTracker.acquire( script["node"] )
+		with self.UpdateHandler()  :
+			tracker = GafferUI.ContextTracker.acquire( script["node"] )
 		self.assertTrue( tracker.isActive( script["node"] ) )
 
 	def testAcquireForFocus( self ) :
@@ -659,11 +700,13 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		self.assertFalse( tracker.isActive( script["add1" ] ) )
 		self.assertFalse( tracker.isActive( script["add2" ] ) )
 
-		script.setFocus( script["add1"] )
+		with self.UpdateHandler()  :
+			script.setFocus( script["add1"] )
 		self.assertTrue( tracker.isActive( script["add1" ] ) )
 		self.assertFalse( tracker.isActive( script["add2" ] ) )
 
-		script.setFocus( script["add2"] )
+		with self.UpdateHandler()  :
+			script.setFocus( script["add2"] )
 		self.assertFalse( tracker.isActive( script["add1" ] ) )
 		self.assertTrue( tracker.isActive( script["add2" ] ) )
 
@@ -687,7 +730,8 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		# Should be a whole new instance.
 		script["node"] = GafferTest.MultiplyNode()
 		script.setFocus( script["node"] )
-		tracker = GafferUI.ContextTracker.acquireForFocus( script )
+		with self.UpdateHandler()  :
+			tracker = GafferUI.ContextTracker.acquireForFocus( script )
 		self.assertTrue( tracker.isActive( script["node"] ) )
 
 	def testAcquireNone( self ) :
@@ -706,6 +750,156 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		self.assertFalse( tracker1.isActive( node["sum"] ) )
 		self.assertEqual( tracker1.context( node ), tracker1.targetContext() )
 		self.assertEqual( tracker1.context( node["sum"] ), tracker1.targetContext() )
+
+	def testCancellation( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["node"] = GafferTest.AddNode()
+
+		ContextTrackerTest.expressionStartedCondition = threading.Condition()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			import IECore
+			import GafferUITest
+
+			if context.get( "waitForCancellation", True ) :
+
+				# Let the test know the expression has started running.
+				with GafferUITest.ContextTrackerTest.expressionStartedCondition :
+					GafferUITest.ContextTrackerTest.expressionStartedCondition.notify()
+
+				# Loop forever unless we're cancelled
+				while True :
+					IECore.Canceller.check( context.canceller() )
+
+			parent["node"]["enabled"] = True
+			"""
+		) )
+
+		# Start an update, and wait for the expression to start on the
+		# background thread.
+
+		context = Gaffer.Context()
+		with ContextTrackerTest.expressionStartedCondition :
+			tracker = GafferUI.ContextTracker( script["node"], context )
+			self.waitForIdle()
+			ContextTrackerTest.expressionStartedCondition.wait()
+
+		# The update won't have completed because the expression is stuck.
+		self.assertFalse( tracker.isActive( script["node"] ) )
+
+		# Make a graph edit that will cancel the expression and restart
+		# the background task.
+
+		with ContextTrackerTest.expressionStartedCondition :
+			with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as handler :
+				script["node"]["op1"].setValue( 1 )
+				handler.assertCalled() # Handle UI thread call made when background task detects cancellation.
+				self.waitForIdle() # Handle idle event used to restart update.
+				ContextTrackerTest.expressionStartedCondition.wait()
+
+		# Again, the update won't have completed because the expression is stuck.
+		self.assertFalse( tracker.isActive( script["node"] ) )
+
+		# Make a context edit that will cancel the expression and restart the
+		# background task.
+
+		with self.UpdateHandler() as handler :
+			context["waitForCancellation"] = False
+			# Handles UI thread call made when background task is cancelled.
+			handler.assertCalled()
+			# `handler.__exit__()` then handles the events needed to restart
+			# and successfully complete the update.
+
+		# This time we expect the update to have finished successfully.
+
+		self.assertTrue( tracker.isActive( script["node"] ) )
+
+	def testNoCancellersInCapturedContexts( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["add"] = GafferTest.AddNode()
+		script["contextVariables"] = Gaffer.ContextVariables()
+		script["contextVariables"].setup( script["add"]["sum"] )
+		script["contextVariables"]["in"].setInput( script["add"]["sum"] )
+		script["contextVariables"].addChild( Gaffer.NameValuePlug( "test", "test" ) )
+
+		context = Gaffer.Context()
+		with self.UpdateHandler() :
+			tracker = GafferUI.ContextTracker( script["contextVariables"], context )
+
+		for g in Gaffer.GraphComponent.Range( script ) :
+			self.assertIsNone( tracker.context( g ).canceller(), g.fullName() )
+
+	def testBadChangedSlot( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["add"] = GafferTest.AddNode()
+
+		context = Gaffer.Context()
+		with self.UpdateHandler() :
+			tracker = GafferUI.ContextTracker( script["add"], context )
+
+		callsMade = 0
+		def slot( tracker ) :
+
+			nonlocal callsMade
+			callsMade += 1
+			if callsMade == 2 :
+				raise RuntimeError( "Bad callback" )
+
+		for i in range( 0, 10 ) :
+			tracker.changedSignal().connect( slot, scoped = False )
+
+		with IECore.CapturingMessageHandler() as mh :
+			with self.UpdateHandler() :
+				script["add"]["op1"].setValue( 1 )
+
+		# One bad slot in the middle shouldn't prevent other slots being
+		# invoked. Instead, the error should just be reported as a message.
+
+		self.assertEqual( callsMade, 10 )
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertIn( "RuntimeError: Bad callback", mh.messages[0].message )
+
+	def testDeleteDuringUpdate( self ) :
+
+		for i in range( 0, 10 ) :
+
+			script = Gaffer.ScriptNode()
+			script["add"] = GafferTest.AddNode()
+
+			ContextTrackerTest.expressionStartedCondition = threading.Condition()
+
+			script["expression"] = Gaffer.Expression()
+			script["expression"].setExpression(
+				inspect.cleandoc(
+					"""
+					import GafferUITest
+					with GafferUITest.ContextTrackerTest.expressionStartedCondition :
+						GafferUITest.ContextTrackerTest.expressionStartedCondition.notify()
+
+					# Loop forever unless we're cancelled
+					while True :
+						IECore.Canceller.check( context.canceller() )
+
+					parent["add"]["enabled"] = True
+					"""
+				)
+			)
+
+			context = Gaffer.Context()
+
+			with ContextTrackerTest.expressionStartedCondition :
+				tracker = GafferUI.ContextTracker( script["add"], context )
+				# Wait for the background update to start.
+				GafferUITest.TestCase().waitForIdle()
+				ContextTrackerTest.expressionStartedCondition.wait()
+
+			# Blow everything away while the background update is still going on.
+			del tracker
 
 if __name__ == "__main__":
 	unittest.main()

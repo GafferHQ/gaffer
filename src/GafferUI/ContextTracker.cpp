@@ -36,10 +36,15 @@
 
 #include "GafferUI/ContextTracker.h"
 
+#include "GafferUI/Gadget.h"
+
+#include "Gaffer/BackgroundTask.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/ContextVariables.h"
 #include "Gaffer/Loop.h"
 #include "Gaffer/NameSwitch.h"
+#include "Gaffer/ParallelAlgo.h"
+#include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Switch.h"
 
@@ -122,6 +127,7 @@ ContextTracker::~ContextTracker()
 	sharedInstances().get<1>().erase( this );
 	sharedFocusInstances().get<1>().erase( this );
 	disconnectTrackedConnections();
+	m_updateTask.reset();
 }
 
 ContextTrackerPtr ContextTracker::acquire( const Gaffer::NodePtr &node )
@@ -172,6 +178,11 @@ ContextTrackerPtr ContextTracker::acquireForFocus( Gaffer::ScriptNode *script )
 
 void ContextTracker::updateNode( const Gaffer::NodePtr &node )
 {
+	if( node == m_node )
+	{
+		return;
+	}
+
 	m_plugDirtiedConnection.disconnect();
 	m_node = node;
 	if( m_node )
@@ -179,7 +190,7 @@ void ContextTracker::updateNode( const Gaffer::NodePtr &node )
 		m_plugDirtiedConnection = node->plugDirtiedSignal().connect( boost::bind( &ContextTracker::plugDirtied, this, ::_1 ) );
 	}
 
-	update();
+	scheduleUpdate();
 }
 
 const Gaffer::Node *ContextTracker::targetNode() const
@@ -190,6 +201,133 @@ const Gaffer::Node *ContextTracker::targetNode() const
 const Gaffer::Context *ContextTracker::targetContext() const
 {
 	return m_context.get();
+}
+
+void ContextTracker::scheduleUpdate()
+{
+	if( m_idleConnection.connected() )
+	{
+		// Update already scheduled.
+		return;
+	}
+
+	// Cancel old update.
+	m_updateTask.reset();
+
+	if( !m_node || !m_node->scriptNode() )
+	{
+		// Don't need or can't use a BackgroundTask (the latter case being when
+		// a ScriptNode is being destroyed). Just do the update directly on the
+		// UI thread.
+		m_nodeContexts.clear();
+		m_plugContexts.clear();
+		changedSignal()( *this );
+		return;
+	}
+
+	// Arrange to do the update on the next idle event. This allows us to avoid
+	// redundant restarts when `plugDirtied()` or `contextChanged()` is called
+	// multiple times in quick succession.
+
+	m_idleConnection = Gadget::idleSignal().connect(
+		[thisRef = Ptr( this )] () {
+			thisRef->updateInBackground();
+		}
+	);
+}
+
+void ContextTracker::updateInBackground()
+{
+	m_idleConnection.disconnect();
+
+	// Seed the list of plugs to visit with all the outputs of our node.
+	// We must take a copy of the context for this, because it will be used
+	// on the background thread and the original context may be modified on
+	// the main thread.
+	ConstContextPtr contextCopy = new Context( *m_context );
+	std::deque<std::pair<const Plug *, ConstContextPtr>> toVisit;
+	if( m_node )
+	{
+		for( Plug::RecursiveOutputIterator it( m_node.get() ); !it.done(); ++it )
+		{
+			toVisit.push_back( { it->get(), contextCopy } );
+			it.prune();
+		}
+	}
+
+	Context::Scope scopedContext( contextCopy.get() );
+	m_updateTask = ParallelAlgo::callOnBackgroundThread(
+
+		/* subject = */ toVisit.empty() ? nullptr : toVisit.back().first,
+
+		// OK to capture `this` without incrementing reference count, because
+		// ~UpstreamContext cancels background task and waits for it to
+		// complete. Therefore `this` will always outlive the task.
+		[toVisit, this] () mutable {
+
+			PlugContexts plugContexts;
+			NodeContexts nodeContexts;
+
+			try
+			{
+				ContextTracker::visit( toVisit, nodeContexts, plugContexts, Context::current()->canceller() );
+			}
+			catch( const IECore::Cancelled & )
+			{
+				// Cancellation could be for several reasons :
+				//
+				// 1. A graph edit is being made.
+				// 2. The context has changed or `updateNode()` has been called
+				//    and we're scheduling a new update.
+				// 3. Our reference count has dropped to 0 and we're being
+				//    deleted, and are cancelling the task from our destructor.
+				//
+				// In the first two cases we need to schedule a new update, but
+				// in the last case we mustn't do anything.
+				if( refCount() )
+				{
+					ParallelAlgo::callOnUIThread(
+						// Need to own a reference via `thisRef`, because otherwise we could be deleted
+						// before `callOnUIThread()` gets to us.
+						[thisRef = Ptr( this )] () {
+							thisRef->m_updateTask.reset();
+							thisRef->scheduleUpdate();
+						}
+					);
+				}
+				throw;
+			}
+			catch( const Gaffer::ProcessException &e )
+			{
+				IECore::msg( IECore::Msg::Error, "ContextTracker::updateInBackground", e.what() );
+			}
+
+			if( refCount() )
+			{
+				ParallelAlgo::callOnUIThread(
+					// Need to own a reference via `thisRef`, because otherwise we could be deleted
+					// before `callOnUIThread()` gets to us.
+					[thisRef = Ptr( this ), plugContexts = std::move( plugContexts ), nodeContexts = std::move( nodeContexts )] () mutable {
+						thisRef->m_nodeContexts.swap( nodeContexts );
+						thisRef->m_plugContexts.swap( plugContexts );
+						thisRef->m_updateTask.reset();
+						thisRef->changedSignal()( *thisRef );
+					}
+				);
+			}
+		}
+
+	);
+}
+
+bool ContextTracker::updatePending() const
+{
+	return m_idleConnection.connected() || m_updateTask;
+}
+
+ContextTracker::Signal &ContextTracker::changedSignal()
+{
+	return m_changedSignal;
 }
 
 bool ContextTracker::isActive( const Gaffer::Plug *plug ) const
@@ -231,38 +369,30 @@ Gaffer::ConstContextPtr ContextTracker::context( const Gaffer::Node *node ) cons
 
 void ContextTracker::plugDirtied( const Gaffer::Plug *plug )
 {
-	update();
+	if( plug->direction() == Plug::Out )
+	{
+		scheduleUpdate();
+	}
 }
 
 void ContextTracker::contextChanged( IECore::InternedString variable )
 {
-	update();
+	if( !boost::starts_with( variable.string(), "ui:" ) )
+	{
+		scheduleUpdate();
+	}
 }
 
-void ContextTracker::update()
+void ContextTracker::visit( std::deque<std::pair<const Plug *, ConstContextPtr>> &toVisit, NodeContexts &nodeContexts, PlugContexts &plugContexts, const IECore::Canceller *canceller )
 {
-	m_nodeContexts.clear();
-	m_plugContexts.clear();
-
-	if( !m_node )
-	{
-		return;
-	}
-
-	std::deque<std::pair<const Plug *, ConstContextPtr>> toVisit;
-
-	for( Plug::RecursiveOutputIterator it( m_node.get() ); !it.done(); ++it )
-	{
-		toVisit.push_back( { it->get(), m_context } );
-		it.prune();
-	}
-
 	std::unordered_set<MurmurHash> visited;
 
 	while( !toVisit.empty() )
 	{
 		// Get next plug to visit, and early out if we've already visited it in
-		// this context.
+		// this context or if we have been cancelled.
+
+		IECore::Canceller::check( canceller );
 
 		auto [plug, context] = toVisit.front();
 		toVisit.pop_front();
@@ -277,8 +407,10 @@ void ContextTracker::update()
 		// If this is the first time we have visited the node and/or plug, then
 		// record the context.
 
+		assert( !context->canceller() );
+
 		const Node *node = plug->node();
-		NodeData &nodeData = m_nodeContexts[node];
+		NodeData &nodeData = nodeContexts[node];
 		if( !nodeData.context )
 		{
 			nodeData.context = context;
@@ -286,7 +418,7 @@ void ContextTracker::update()
 
 		if( !node || plug->direction() == Plug::Out || !nodeData.allInputsActive || *context != *nodeData.context  )
 		{
-			m_plugContexts.insert( { plug, context } );
+			plugContexts.insert( { plug, context } );
 		}
 
 		// Arrange to visit any inputs to this plug, including
@@ -316,7 +448,8 @@ void ContextTracker::update()
 			continue;
 		}
 
-		Context::Scope scopedContext( context.get() );
+		Context::EditableScope scopedContext( context.get() );
+		scopedContext.setCanceller( canceller );
 
 		if( plug->getInput() )
 		{
@@ -412,7 +545,7 @@ void ContextTracker::update()
 				nodeData.allInputsActive = true;
 				// Visit main input in processed context.
 				ConstContextPtr inContext = contextProcessor->inPlugContext();
-				toVisit.push_back( { contextProcessor->inPlug(), inContext } );
+				toVisit.push_back( { contextProcessor->inPlug(), new Context( *inContext, /* omitCanceller = */ true ) } );
 			}
 			continue;
 		}
@@ -429,7 +562,7 @@ void ContextTracker::update()
 					{
 						toVisit.push_back( { loop->iterationsPlug(), context } );
 					}
-					toVisit.push_back( { previousPlug, previousContext } );
+					toVisit.push_back( { previousPlug, new Context( *previousContext, /* omitCanceller = */ true ) } );
 				}
 			}
 			continue;

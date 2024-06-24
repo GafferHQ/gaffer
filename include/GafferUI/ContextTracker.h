@@ -38,16 +38,20 @@
 
 #include "GafferUI/Export.h"
 
+#include "Gaffer/Context.h"
 #include "Gaffer/Set.h"
 #include "Gaffer/Signals.h"
 
+#include "IECore/Canceller.h"
 #include "IECore/RefCounted.h"
 
 #include <unordered_map>
+#include <unordered_set>
 
 namespace Gaffer
 {
 
+class BackgroundTask;
 class Plug;
 class ScriptNode;
 IE_CORE_FORWARDDECLARE( Node );
@@ -99,8 +103,25 @@ class GAFFERUI_API ContextTracker final : public IECore::RefCounted, public Gaff
 		const Gaffer::Node *targetNode() const;
 		const Gaffer::Context *targetContext() const;
 
+		/// Update and signalling
+		/// =====================
+		///
+		/// Updates are performed asynchronously in background tasks so that
+		/// the UI is never blocked. Clients should connect to `changedSignal()`
+		/// to be notified when updates are complete.
+
+		/// Returns true if an update is in-progress, in which case queries will
+		/// return stale values.
+		bool updatePending() const;
+		using Signal = Gaffer::Signals::Signal<void ( ContextTracker & ), Gaffer::Signals::CatchingCombiner<void>>;
+		/// Signal emitted when the results of any queries have changed.
+		Signal &changedSignal();
+
 		/// Queries
 		/// =======
+		///
+		/// Queries return immediately so will not block the UI waiting for computation.
+		/// But while `updatePending()` is `true` they will return stale values.
 
 		/// Returns true if the specified plug or node is active with respect to
 		/// the target node and context.
@@ -118,12 +139,17 @@ class GAFFERUI_API ContextTracker final : public IECore::RefCounted, public Gaff
 		void updateNode( const Gaffer::NodePtr &node );
 		void plugDirtied( const Gaffer::Plug *plug );
 		void contextChanged( IECore::InternedString variable );
-		void update();
+		void scheduleUpdate();
+		void updateInBackground();
 		const Gaffer::Context *findPlugContext( const Gaffer::Plug *plug ) const;
 
 		Gaffer::ConstNodePtr m_node;
 		Gaffer::ConstContextPtr m_context;
 		Gaffer::Signals::ScopedConnection m_plugDirtiedConnection;
+
+		Gaffer::Signals::ScopedConnection m_idleConnection;
+		std::unique_ptr<Gaffer::BackgroundTask> m_updateTask;
+		Signal m_changedSignal;
 
 		struct NodeData
 		{
@@ -139,6 +165,11 @@ class GAFFERUI_API ContextTracker final : public IECore::RefCounted, public Gaff
 		using PlugContexts = std::unordered_map<Gaffer::ConstPlugPtr, Gaffer::ConstContextPtr>;
 		// Stores plug-specific contexts, which take precedence over `m_nodeContexts`.
 		PlugContexts m_plugContexts;
+
+		static void visit(
+			std::deque<std::pair<const Gaffer::Plug *, Gaffer::ConstContextPtr>> &toVisit,
+			NodeContexts &nodeContexts, PlugContexts &plugContexts, const IECore::Canceller *canceller
+		);
 
 };
 
