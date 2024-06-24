@@ -257,15 +257,12 @@ class ColorChooser( GafferUI.Widget ) :
 			GafferUI.NumericWidget.ValueChangedReason.DragEnd,
 		)
 
-		previousColor = self.__colorHSV if hsv else self.__color
+		colorChanged = color != ( self.__colorHSV if hsv else self.__color )
 
-		if color != previousColor or dragBeginOrEnd :
-			# we never optimise away drag begin or end, because it's important
-			# that they emit in pairs.
+		if colorChanged :
 			colorRGB = color.hsv2rgb() if hsv else color
 			self.__color = colorRGB
 			self.__colorSwatch.setColor( colorRGB )
-			self.__colorChangedSignal( self, reason )
 
 			hsv = color if hsv else color.rgb2hsv()
 
@@ -280,6 +277,11 @@ class ColorChooser( GafferUI.Widget ) :
 		# back inside the conditional when we get the clamping performed internally
 		# in NumericWidget.
 		self.__updateUIFromColor()
+
+		if colorChanged or dragBeginOrEnd :
+			# We never optimise away drag begin or end, because it's important
+			# that they emit in pairs.
+			self.__colorChangedSignal( self, reason )
 
 	def __updateUIFromColor( self ) :
 
