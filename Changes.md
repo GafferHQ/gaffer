@@ -21,6 +21,7 @@ Fixes
 - CodeWidget : Fixed bug that could prevent changes from being committed while the completion menu was visible.
 - Loop : Fixed handling of empty `indexVariable`. This now disables the Loop instead of creating an unnamed context variable.
 - ColorChooser : Fixed emission of `colorChangedSignal()` while the widget was in an inconsistent internal state.
+- LazyMethod : Fixed errors caused by running idle callbacks without a valid Qt Widget.
 
 API
 ---
@@ -605,10 +606,18 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.16.x (relative to 1.3.16.5)
+1.3.16.x (relative to 1.3.16.6)
 ========
 
 
+
+1.3.16.6 (relative to 1.3.16.5)
+========
+
+Fixes
+-----
+
+- LazyMethod : Fixed errors caused by running idle callbacks without a valid Qt Widget.
 
 1.3.16.5 (relative to 1.3.16.4)
 ========
