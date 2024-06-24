@@ -12,6 +12,7 @@ Improvements
 - Annotations :
   - Added support for `{plug}` value substitutions in node annotations.
   - Added <kbd>Ctrl</kbd> + <kbd>Enter</kbd> keyboard shortcut to annotation dialogue. This applies the annotation and closes the dialogue.
+- LightEditor : Added support for Arnold light blockers and barndoor, gobo and decay light filters.
 
 Fixes
 -----
@@ -30,6 +31,7 @@ API
 - Loop : Added `nextIterationContext()` method.
 - AnnotationsGadget : Added `annotationText()` method.
 - ParallelAlgoTest : Added `UIThreadCallHandler.receive()` method.
+- LightEditor : Added `registerShaderParameter()` method for registering parameters for shader attributes that are not the same as the `rendererKey`.
 
 Build
 -----

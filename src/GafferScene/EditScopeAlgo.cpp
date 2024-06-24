@@ -94,7 +94,8 @@ CreatableRegistry g_attributeRegistry {
 	{ "gl:visualiser:frustum", new IECore::StringData( "whenSelected" ) },
 	{ "gl:light:frustumScale", new IECore::FloatData( 1.0f ) },
 	{ "gl:light:drawingMode", new IECore::StringData( "texture" ) },
-	{ "light:mute", new IECore::BoolData( false ) }
+	{ "light:mute", new IECore::BoolData( false ) },
+	{ "filteredLights", new StringData( "" ) }
 };
 
 /// Entry keys for `g_optionRegistry` should not include the "option:" prefix.
@@ -398,8 +399,23 @@ const boost::container::flat_map<string, string> g_rendererAttributePrefixes = {
 	{ "cycles", "Cycles" }
 };
 
+/// \todo Create a registration method for populating overrides.
+using ProcessorOverrideMap = std::unordered_map<std::string, std::string>;
+const ProcessorOverrideMap g_processorNameOverrides = {
+	{ "ai:lightFilter:filter", "ArnoldLightBlockerFilterEdits" },
+	{ "ai:lightFilter:barndoor", "ArnoldBarndoorFilterEdits" },
+	{ "ai:lightFilter:light_decay", "ArnoldLightDecayFilterEdits" },
+	{ "ai:lightFilter:gobo", "ArnoldGoboFilterEdits" }
+};
+
 string parameterProcessorName( const std::string &attribute )
 {
+	ProcessorOverrideMap::const_iterator override = g_processorNameOverrides.find( attribute );
+	if( override != g_processorNameOverrides.end() )
+	{
+		return override->second;
+	}
+
 	string rendererPrefix;
 	vector<string> parts;
 

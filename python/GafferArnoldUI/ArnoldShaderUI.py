@@ -51,6 +51,15 @@ import GafferImageUI
 import GafferSceneUI
 import GafferArnold
 
+# Arnold shaders to add to the light editor.
+lightEditorShaders = {
+	# "shaderName" : ( "shaderAttributeName", "lightEditorSection" )
+	"light_blocker" : ( "ai:lightFilter:filter", "Blocker" ),
+	"barndoor" : ( "ai:lightFilter:barndoor", "Barndoor" ),
+	"gobo" : ( "ai:lightFilter:gobo", "Gobo" ),
+	"light_decay" : ( "ai:lightFilter:light_decay", "Decay" ),
+}
+
 ##########################################################################
 # Utilities to make it easier to work with the Arnold API, which has a
 # fairly bare wrapping using ctypes.
@@ -337,14 +346,6 @@ def __translateNodeMetadata( nodeEntry ) :
 				parent = paramPath.rsplit( '.', 1 )[0]
 				__metadata[parent]["layout:section:%s:collapsed" % page] = collapsed
 
-		if (
-			arnold.AiNodeEntryGetType( nodeEntry ) == arnold.AI_NODE_LIGHT and
-			__aiMetadataGetStr( nodeEntry, paramName, "gaffer.plugType" ) != ""
-		) :
-			GafferSceneUI.LightEditor.registerParameter(
-				"ai:light", paramName, page
-			)
-
 		# Label from OSL "label"
 		label = __aiMetadataGetStr( nodeEntry, paramName, "label" )
 		if label is None :
@@ -355,6 +356,27 @@ def __translateNodeMetadata( nodeEntry ) :
 
 		__metadata[paramPath]["label"] = label
 		__metadata[paramPath]["noduleLayout:label"] = label
+
+		if (
+			arnold.AiNodeEntryGetType( nodeEntry ) == arnold.AI_NODE_LIGHT and
+			__aiMetadataGetStr( nodeEntry, paramName, "gaffer.plugType" ) != ""
+		) :
+			GafferSceneUI.LightEditor.registerParameter(
+				"ai:light", paramName, page
+			)
+
+		if (
+			nodeName in lightEditorShaders and
+			__aiMetadataGetStr( nodeEntry, paramName, "gaffer.plugType" ) != ""
+		) :
+			attributeName, sectionName = lightEditorShaders[nodeName]
+			GafferSceneUI.LightEditor.registerShaderParameter(
+				"ai:light",
+				paramName,
+				attributeName,
+				sectionName,
+				f"{page} {label}" if page is not None and label is not None else paramName
+			)
 
 		childComponents = {
 			arnold.AI_TYPE_VECTOR2 : "xy",
@@ -455,6 +477,9 @@ __metadata["quad_light.parameters.width"]["layout:index"] = 0
 __metadata["quad_light.parameters.height"]["layout:index"] = 1
 GafferSceneUI.LightEditor.registerParameter( "ai:light", "width", "Shape" )
 GafferSceneUI.LightEditor.registerParameter( "ai:light", "height", "Shape" )
+
+# Manually add the `filteredLights` parameter for `light_blocker`
+GafferSceneUI.LightEditor.registerAttribute( "ai:light", "filteredLights", "Blocker" )
 
 ##########################################################################
 # Gaffer Metadata queries. These are implemented using the preconstructed
