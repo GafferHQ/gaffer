@@ -79,6 +79,15 @@ namespace
 {
 
 ConstStringDataPtr g_emptyLocation = new StringData( "emptyLocation.png" );
+const InternedString g_lightSetName( "__lights" );
+
+bool isLight( const ScenePath *scenePath, const Canceller *canceller )
+{
+	ScenePlug::SetScope scope( scenePath->getContext(), &g_lightSetName );
+	scope.setCanceller( canceller );
+	ConstPathMatcherDataPtr lightsData = scenePath->getScene()->setPlug()->getValue();
+	return lightsData->readable().match( scenePath->names() ) & PathMatcher::ExactMatch;
+}
 
 class LocationNameColumn : public StandardPathColumn
 {
@@ -119,7 +128,14 @@ class LocationNameColumn : public StandardPathColumn
 
 			for( const auto &attribute : attributes->members() )
 			{
-				if( attribute.first != "light" && !boost::ends_with( attribute.first.c_str(), ":light" ) )
+				std::vector<InternedString> tokens;
+				StringAlgo::tokenize( attribute.first, ':', tokens );
+				if(
+					attribute.first != "light" &&
+					tokens.back() != "light" &&
+					attribute.first != "lightFilter" &&
+					( tokens.size() < 2 || tokens[1] != "lightFilter" )
+				)
 				{
 					continue;
 				}
@@ -129,15 +145,28 @@ class LocationNameColumn : public StandardPathColumn
 					continue;
 				}
 
-				const IECoreScene::Shader *lightShader = shaderNetwork->outputShader();
-				const string metadataTarget = attribute.first.string() + ":" + lightShader->getName();
-				ConstStringDataPtr lightType = Metadata::value<StringData>( metadataTarget, "type" );
-				if( !lightType )
+				const IECoreScene::Shader *shader = shaderNetwork->outputShader();
+				const string metadataTarget = attribute.first.string() + ":" + shader->getName();
+				ConstStringDataPtr type = Metadata::value<StringData>( metadataTarget, "type" );
+				if( !type )
 				{
 					continue;
 				}
 
-				result.icon = new StringData( lightType->readable() + "Light.png" );
+				if( type->readable() == "lightBlocker" )
+				{
+					if( ConstStringDataPtr blockerTypeParameter = Metadata::value<StringData>( metadataTarget, "typeParameter" ) )
+					{
+						if( ConstStringDataPtr blockerType = shader->parametersData()->member<StringData>( blockerTypeParameter->readable() ) )
+						{
+							result.icon = new StringData( blockerType->readable() + "Blocker.png" );
+						}
+					}
+				}
+				else
+				{
+					result.icon = new StringData( type->readable() + "Light.png" );
+				}
 			}
 
 			/// \todo Add support for icons based on object type. We don't want to have
@@ -269,6 +298,11 @@ class MuteColumn : public InspectorColumn
 				return result;
 			}
 
+			if( !isLight( scenePath, canceller ) )
+			{
+				return CellData();
+			}
+
 			if( auto value = runTimeCast<const BoolData>( result.value ) )
 			{
 				result.icon = value->readable() ? m_muteIconData : m_unMuteIconData;
@@ -387,6 +421,11 @@ class SetMembershipColumn : public InspectorColumn
 			if( !scenePath )
 			{
 				return result;
+			}
+
+			if( !isLight( scenePath, canceller ) )
+			{
+				return CellData();
 			}
 
 			std::string toolTip;

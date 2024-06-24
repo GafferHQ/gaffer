@@ -81,6 +81,10 @@ class GAFFER_API Loop : public ComputeNode
 		Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) override;
 		const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const override;
 
+		/// Returns the context that will be used to evaluate `nextPlug()` in
+		/// the next iteration of the loop (relative to the current context).
+		ContextPtr nextIterationContext() const;
+
 		void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const override;
 
 	protected :

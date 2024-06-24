@@ -70,6 +70,12 @@ void setupLoop( Loop &n, const ValuePlug &plug )
 	n.setup( &plug );
 }
 
+ContextPtr nextIterationContextWrapper( Loop &loop )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return loop.nextIterationContext();
+}
+
 ContextPtr inPlugContext( const ContextProcessor &n )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -189,6 +195,7 @@ void GafferModule::bindContextProcessor()
 
 	DependencyNodeClass<Loop>()
 		.def( "setup", &setupLoop )
+		.def( "nextIterationContext", &nextIterationContextWrapper )
 	;
 
 	DependencyNodeClass<ContextProcessor>()

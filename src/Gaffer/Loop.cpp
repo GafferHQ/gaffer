@@ -160,6 +160,39 @@ const Gaffer::Plug *Loop::correspondingInput( const Gaffer::Plug *output ) const
 	return output == outPlug() ? inPlug() : nullptr;
 }
 
+ContextPtr Loop::nextIterationContext() const
+{
+	const Plug *in = inPlug();
+	if( !in )
+	{
+		return nullptr;
+	}
+
+	const Context *context = Context::current();
+	ContextAlgo::GlobalScope globalScope( context, in );
+
+	if( !enabledPlug()->getValue() )
+	{
+		return nullptr;
+	}
+
+	const IECore::InternedString indexVariable = indexVariablePlug()->getValue();
+	if( indexVariable.string().empty() )
+	{
+		return nullptr;
+	}
+
+	const int index = context->get<int>( indexVariable, -1 );
+	if( index + 1 < iterationsPlug()->getValue() )
+	{
+		ContextPtr result = new Context( *context );
+		result->set( indexVariable, index + 1 );
+		return result;
+	}
+
+	return nullptr;
+}
+
 void Loop::affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
 {
 	ComputeNode::affects( input, outputs );
@@ -354,7 +387,7 @@ const ValuePlug *Loop::sourcePlug( const ValuePlug *output, const Context *conte
 	if( ancestor == previousPlug() )
 	{
 		const int index = context->get<int>( indexVariable, 0 );
-		if( index >= 1 && enabledPlug()->getValue() )
+		if( index >= 1 && !indexVariable.string().empty() && enabledPlug()->getValue() )
 		{
 			sourceLoopIndex = index - 1;
 			return descendantPlug( nextPlug(), relativeName );
@@ -367,7 +400,7 @@ const ValuePlug *Loop::sourcePlug( const ValuePlug *output, const Context *conte
 	else if( ancestor == outPlug() )
 	{
 		const int iterations = iterationsPlug()->getValue();
-		if( iterations > 0 && enabledPlug()->getValue() )
+		if( iterations > 0 && !indexVariable.string().empty() && enabledPlug()->getValue() )
 		{
 			sourceLoopIndex = iterations - 1;
 			return descendantPlug( nextPlug(), relativeName );

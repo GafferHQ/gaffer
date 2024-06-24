@@ -736,5 +736,34 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( row["name"].getValue(), "/parent/child" )
 
+	def testLightFilter( self ) :
+
+		lightFilter = GafferSceneTest.TestLightFilter()
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( lightFilter["out"] )
+		editScope["in"].setInput( lightFilter["out"] )
+
+		self.__assertExpectedResult(
+			self.__inspect( editScope["out"], "/lightFilter", "filteredLights" ),
+			source = lightFilter["filteredLights"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = True,
+			edit = lightFilter["filteredLights"]
+		)
+
+		inspection = self.__inspect( editScope["out"], "/lightFilter", "filteredLights", editScope )
+		edit = inspection.acquireEdit()
+		edit["enabled"].setValue( True )
+
+		self.__assertExpectedResult(
+			self.__inspect( editScope["out"], "/lightFilter", "filteredLights", editScope ),
+			source = edit,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.EditScope,
+			editable = True,
+			edit = edit
+		)
+
+
 if __name__ == "__main__" :
 	unittest.main()

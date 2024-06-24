@@ -83,7 +83,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 		Gaffer.NodeAlgo.applyUserDefaults( self.__settingsNode )
 
 		self.__setFilter = _GafferSceneUI._HierarchyViewSetFilter()
-		self.__setFilter.setSetNames( [ "__lights" ] )
+		self.__setFilter.setSetNames( [ "__lights", "__lightFilters" ] )
 
 		with column :
 
@@ -137,29 +137,54 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 		return self.__plug
 
-	# Registers a parameter to be available for editing. `rendererKey` is a pattern
-	# that will be matched against `self.__settingsNode["attribute"]` to determine if
-	# the column should be shown.
 	@classmethod
-	def registerParameter( cls, rendererKey, parameter, section = None, columnName = None ) :
+	def __parseParameter( cls, parameter ) :
 
-		# We use `tuple` to store `ShaderNetwork.Parameter`, because
-		# the latter isn't hashable and we need to use it as a dict key.
 		if isinstance( parameter, str ) :
 			shader = ""
 			param = parameter
 			if "." in parameter :
 				shader, dot, param = parameter.partition( "." )
-			parameter = ( shader, param )
+			return IECoreScene.ShaderNetwork.Parameter( shader, param )
 		else :
 			assert( isinstance( parameter, IECoreScene.ShaderNetwork.Parameter ) )
-			parameter = ( parameter.shader, parameter.name )
+			return parameter
+
+	# Registers a parameter to be available for editing. `rendererKey` is a pattern
+	# that will be matched against `self.__settingsNode["attribute"]` to determine if
+	# the column should be shown.
+	# \todo Deprecate in favor of method below.
+	@classmethod
+	def registerParameter( cls, rendererKey, parameter, section = None, columnName = None ) :
+
+		parameter = cls.__parseParameter( parameter )
 
 		GafferSceneUI.LightEditor.registerColumn(
 			rendererKey,
-			parameter,
+			".".join( x for x in [ parameter.shader, parameter.name ] if x ),
 			lambda scene, editScope : _GafferSceneUI._LightEditorInspectorColumn(
 				GafferSceneUI.Private.ParameterInspector( scene, editScope, rendererKey, parameter ),
+				columnName if columnName is not None else ""
+			),
+			section
+		)
+
+	# Registers a parameter to be available for editing. `rendererKey` is a pattern
+	# that will be matched against `self.__settingsNode["attribute"]` to determine if
+	# the column should be shown. `attribute` is the attribute holding the shader that
+	# will be edited. If it is `None`, the attribute will be the same as `rendererKey`.
+	@classmethod
+	def registerShaderParameter( cls, rendererKey, parameter, shaderAttribute = None, section = None, columnName = None ) :
+
+		parameter = cls.__parseParameter( parameter )
+
+		shaderAttribute = shaderAttribute if shaderAttribute is not None else rendererKey
+
+		GafferSceneUI.LightEditor.registerColumn(
+			rendererKey,
+			".".join( x for x in [ parameter.shader, parameter.name ] if x ),
+			lambda scene, editScope : _GafferSceneUI._LightEditorInspectorColumn(
+				GafferSceneUI.Private.ParameterInspector( scene, editScope, shaderAttribute, parameter ),
 				columnName if columnName is not None else ""
 			),
 			section
@@ -186,10 +211,27 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 	@classmethod
 	def registerColumn( cls, rendererKey, columnKey, inspectorFunction, section = None ) :
 
+		assert( isinstance( columnKey, str ) )
+
 		sections = cls.__columnRegistry.setdefault( rendererKey, collections.OrderedDict() )
 		section = sections.setdefault( section, collections.OrderedDict() )
 
 		section[columnKey] = inspectorFunction
+
+	# Removes a column from the Light Editor.
+	# `rendererKey` should match the value the parameter or attribute was registered with.
+	# `columnKey` is the string value of the parameter or attribute name.
+	@classmethod
+	def deregisterColumn( cls, rendererKey, columnKey, section = None ) :
+
+		assert( isinstance( columnKey, str ) )
+
+		sections = cls.__columnRegistry.get( rendererKey, None )
+		if sections is not None and section in sections.keys() and columnKey in sections[section].keys() :
+			del sections[section][columnKey]
+
+			if len( sections[section] ) == 0 :
+				del sections[section]
 
 	def __repr__( self ) :
 
@@ -250,9 +292,9 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 				sectionColumns += [ c( self.__settingsNode["in"], self.__settingsNode["editScope"] ) for c in section.values() ]
 
 		nameColumn = self.__pathListing.getColumns()[0]
-		muteColumn = self.__pathListing.getColumns()[1]
-		soloColumn = self.__pathListing.getColumns()[2]
-		self.__pathListing.setColumns( [ nameColumn, muteColumn, soloColumn ] + sectionColumns )
+		self.__muteColumn = self.__pathListing.getColumns()[1]
+		self.__soloColumn = self.__pathListing.getColumns()[2]
+		self.__pathListing.setColumns( [ nameColumn, self.__muteColumn, self.__soloColumn ] + sectionColumns )
 
 	def __settingsPlugSet( self, plug ) :
 
@@ -340,11 +382,27 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 		inspections = []
 
 		with Gaffer.Context( self.getContext() ) as context :
+			lightSetMembers = self.__settingsNode["in"].set( "__lights" ).value
+
 			for selection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
 				if not isinstance( column, _GafferSceneUI._LightEditorInspectorColumn ) :
 					continue
 				for pathString in selection.paths() :
 					path = GafferScene.ScenePlug.stringToPath( pathString )
+
+					if (
+						( column == self.__muteColumn or column == self.__soloColumn ) and
+						not ( lightSetMembers.match( path ) & (
+							IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch
+						) )
+					) :
+						with GafferUI.PopupWindow() as self.__popup :
+							with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+								GafferUI.Image( "warningSmall.png" )
+								GafferUI.Label( "<h4>The " + column.headerData().value + " column can only be toggled for lights." )
+						self.__popup.popup()
+						return
+
 					context["scene:path"] = path
 					inspection = column.inspector().inspect()
 
@@ -546,6 +604,50 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 				tweak["enabled"].setValue( True )
 				tweak["mode"].setValue( Gaffer.TweakPlug.Mode.Remove )
 
+	def __selectedSetExpressions( self, pathListing ) :
+
+		# A dictionary of the form :
+		# { light1 : set( setExpression1, setExpression2 ), light2 : set( setExpression1 ), ... }
+		result = {}
+
+		lightPath = pathListing.getPath().copy()
+		for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
+			if (
+				not columnSelection.isEmpty() and (
+					not isinstance( column, _GafferSceneUI._LightEditorInspectorColumn ) or
+					not (
+						Gaffer.Metadata.value( "attribute:" + column.inspector().name(), "ui:scene:acceptsSetName" ) or
+						Gaffer.Metadata.value( "attribute:" + column.inspector().name(), "ui:scene:acceptsSetNames" ) or
+						Gaffer.Metadata.value( "attribute:" + column.inspector().name(), "ui:scene:acceptsSetExpression" )
+					)
+				)
+			) :
+				# We only return set expressions if all selected paths are in
+				# columns that accept set names or set expressions.
+				return {}
+
+			for path in columnSelection.paths() :
+				lightPath.setFromString( path )
+				cellValue = column.cellData( lightPath ).value
+				if cellValue is not None :
+					result.setdefault( path, set() ).add( cellValue )
+				else :
+					# We only return set expressions if all selected paths are render passes.
+					return {}
+
+		return result
+
+	def __selectAffected( self, pathListing ) :
+
+		result = IECore.PathMatcher()
+
+		with Gaffer.Context( self.getContext() ) as context :
+			for light, setExpressions in self.__selectedSetExpressions( pathListing ).items() :
+				for setExpression in setExpressions :
+					result.addPaths( GafferScene.SetAlgo.evaluateSetExpression( setExpression, self.__settingsNode["in"] ) )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( self.getContext(), result )
+
 	def __buttonPress( self, pathListing, event ) :
 
 		if event.button != event.Buttons.Right or event.modifiers != event.Modifiers.None_ :
@@ -651,6 +753,16 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 					"shortCut" : "Backspace, Delete",
 				}
 			)
+			if len( self.__selectedSetExpressions( pathListing ) ) > 0 :
+				menuDefinition.append(
+					"SelectAffectedObjectsDivider", { "divider" : True }
+				)
+				menuDefinition.append(
+					"Select Affected Objects",
+					{
+						"command" : functools.partial( self.__selectAffected, pathListing ),
+					}
+				)
 
 		self.__contextMenu = GafferUI.Menu( menuDefinition )
 		self.__contextMenu.popup( pathListing )

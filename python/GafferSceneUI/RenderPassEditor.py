@@ -612,6 +612,53 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 					if isinstance( source, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) :
 						source["enabled"].setValue( False )
 
+	def __selectedSetExpressions( self, pathListing ) :
+
+		# A dictionary of the form :
+		# { renderPass1 : set( setExpression1, setExpression2 ), renderPass2 : set( setExpression1 ), ... }
+		result = {}
+
+		renderPassPath = pathListing.getPath().copy()
+		for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
+			if (
+				not columnSelection.isEmpty() and (
+					not isinstance( column, _GafferSceneUI._RenderPassEditor.OptionInspectorColumn ) or
+					not (
+						Gaffer.Metadata.value( "option:" + column.inspector().name(), "ui:scene:acceptsSetName" ) or
+						Gaffer.Metadata.value( "option:" + column.inspector().name(), "ui:scene:acceptsSetNames" ) or
+						Gaffer.Metadata.value( "option:" + column.inspector().name(), "ui:scene:acceptsSetExpression" )
+					)
+				)
+			) :
+				# We only return set expressions if all selected paths are in
+				# columns that accept set names or set expressions.
+				return {}
+
+			for path in columnSelection.paths() :
+				renderPassPath.setFromString( path )
+				cellValue = column.cellData( renderPassPath ).value
+				if cellValue is not None :
+					result.setdefault( renderPassPath.property( "renderPassPath:name" ), set() ).add( cellValue )
+				else :
+					# We only return set expressions if all selected paths are render passes.
+					return {}
+
+		return result
+
+	def __selectAffected( self, pathListing ) :
+
+		result = IECore.PathMatcher()
+
+		with Gaffer.Context( self.getContext() ) as context :
+			for renderPass, setExpressions in self.__selectedSetExpressions( pathListing ).items() :
+				# Evaluate set expressions within their render pass in the context
+				# as set membership could vary based on the render pass.
+				context["renderPass"] = renderPass
+				for setExpression in setExpressions :
+					result.addPaths( GafferScene.SetAlgo.evaluateSetExpression( setExpression, self.__settingsNode["in"] ) )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( self.getContext(), result )
+
 	def __buttonPress( self, pathListing, event ) :
 
 		if event.button != event.Buttons.Right or event.modifiers != event.Modifiers.None_ :
@@ -673,6 +720,16 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 					"shortCut" : "D",
 				}
 			)
+			if len( self.__selectedSetExpressions( pathListing ) ) > 0 :
+				menuDefinition.append(
+					"SelectAffectedObjectsDivider", { "divider" : True }
+				)
+				menuDefinition.append(
+					"Select Affected Objects",
+					{
+						"command" : functools.partial( self.__selectAffected, pathListing ),
+					}
+				)
 
 		self.__contextMenu = GafferUI.Menu( menuDefinition )
 		self.__contextMenu.popup( pathListing )

@@ -41,6 +41,7 @@
 #include "GafferScene/Camera.h"
 #include "GafferScene/EditScopeAlgo.h"
 #include "GafferScene/Light.h"
+#include "GafferScene/LightFilter.h"
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/SceneNode.h"
 
@@ -258,6 +259,11 @@ Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::H
 			return light->mutePlug();
 		}
 		return attributePlug( light->visualiserAttributesPlug(), m_attribute );
+	}
+
+	else if( auto lightFilter = runTimeCast<LightFilter>( sceneNode ) )
+	{
+		return lightFilter->filteredLightsPlug();
 	}
 
 	else if( auto camera = runTimeCast<GafferScene::Camera>( sceneNode ) )
