@@ -12,6 +12,7 @@ Improvements
 - Premultiply, Unpremultiply :
   - Added `ignoreMissingAlpha` plug.
   - Optimised the pass-through of the alpha channel.
+- GraphGadget : Improved highlighting of active nodes, with more accurate tracking of Loop node iterations.
 
 Fixes
 -----
