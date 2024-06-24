@@ -231,6 +231,15 @@ def __translateNodeMetadata( nodeEntry ) :
 	if iconScale is not None :
 		__metadata[nodeName]["iconScale"] = iconScale
 
+	# Node color.
+
+	color = __aiMetadataGetRGB( nodeEntry, None, "gaffer.nodeGadget.color" )
+	if color is not None :
+		Gaffer.Metadata.registerValue( "ai:surface:{}".format( nodeName ), "nodeGadget:color", color )
+
+	# Parameters
+	# ----------
+
 	paramIt = arnold.AiNodeEntryGetParamIterator( nodeEntry )
 	while not arnold.AiParamIteratorFinished( paramIt ) :
 
