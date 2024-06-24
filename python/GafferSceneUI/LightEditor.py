@@ -143,21 +143,18 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 	@classmethod
 	def registerParameter( cls, rendererKey, parameter, section = None, columnName = None ) :
 
-		# We use `tuple` to store `ShaderNetwork.Parameter`, because
-		# the latter isn't hashable and we need to use it as a dict key.
 		if isinstance( parameter, str ) :
 			shader = ""
 			param = parameter
 			if "." in parameter :
 				shader, dot, param = parameter.partition( "." )
-			parameter = ( shader, param )
+			parameter = IECoreScene.ShaderNetwork.Parameter( shader, param )
 		else :
 			assert( isinstance( parameter, IECoreScene.ShaderNetwork.Parameter ) )
-			parameter = ( parameter.shader, parameter.name )
 
 		GafferSceneUI.LightEditor.registerColumn(
 			rendererKey,
-			parameter,
+			".".join( x for x in [ parameter.shader, parameter.name ] if x ),
 			lambda scene, editScope : _GafferSceneUI._LightEditorInspectorColumn(
 				GafferSceneUI.Private.ParameterInspector( scene, editScope, rendererKey, parameter ),
 				columnName if columnName is not None else ""
@@ -186,10 +183,27 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 	@classmethod
 	def registerColumn( cls, rendererKey, columnKey, inspectorFunction, section = None ) :
 
+		assert( isinstance( columnKey, str ) )
+
 		sections = cls.__columnRegistry.setdefault( rendererKey, collections.OrderedDict() )
 		section = sections.setdefault( section, collections.OrderedDict() )
 
 		section[columnKey] = inspectorFunction
+
+	# Removes a column from the Light Editor.
+	# `rendererKey` should match the value the parameter or attribute was registered with.
+	# `columnKey` is the string value of the parameter or attribute name.
+	@classmethod
+	def deregisterColumn( cls, rendererKey, columnKey, section = None ) :
+
+		assert( isinstance( columnKey, str ) )
+
+		sections = cls.__columnRegistry.get( rendererKey, None )
+		if sections is not None and section in sections.keys() and columnKey in sections[section].keys() :
+			del sections[section][columnKey]
+
+			if len( sections[section] ) == 0 :
+				del sections[section]
 
 	def __repr__( self ) :
 

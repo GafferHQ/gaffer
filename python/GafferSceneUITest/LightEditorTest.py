@@ -38,6 +38,7 @@ import unittest
 import imath
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferUI
@@ -778,6 +779,89 @@ class LightEditorTest( GafferUITest.TestCase ) :
 		self.assertEqual( attributes["light"].shaders()["add"].parameters["a"].value, imath.Color3f( 1.0, 0.5, 0.0 ) )
 		self.assertEqual( attributes["light"].shaders()["__shader"].parameters["exposure"].value, 2.0 )
 
+	def testDeregisterColumn( self ) :
+
+		GafferSceneUI.LightEditor.registerParameter( "light", "P" )
+		GafferSceneUI.LightEditor.registerParameter( "light", "P.X" )
+		GafferSceneUI.LightEditor.registerAttribute( "light", "A" )
+		GafferSceneUI.LightEditor.registerParameter( "light", IECoreScene.ShaderNetwork.Parameter( "P", "Y" ) )
+		GafferSceneUI.LightEditor.registerParameter( "light", IECoreScene.ShaderNetwork.Parameter( "", "Z" ) )
+		for columnName in [ "P", "P.X", "A", "P.Y" "Z" ] :
+			self.addCleanup( GafferSceneUI.LightEditor.deregisterColumn, "light", columnName )
+
+		script = Gaffer.ScriptNode()
+
+		editor = GafferSceneUI.LightEditor( script )
+		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
+
+		widget = editor._LightEditor__pathListing
+
+		columnNames = [ c.headerData().value for c in widget.getColumns() ]
+		self.assertIn( "P", columnNames )
+		self.assertIn( "X", columnNames )
+		self.assertIn( "A", columnNames )
+		self.assertIn( "Y", columnNames )
+		self.assertIn( "Z", columnNames )
+
+		GafferSceneUI.LightEditor.deregisterColumn( "light", "P" )
+
+		editor._LightEditor__updateColumns()
+		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
+
+		columnNames = [ c.headerData().value for c in widget.getColumns() ]
+		self.assertNotIn( "P", columnNames )
+		self.assertIn( "X", columnNames )
+		self.assertIn( "A", columnNames )
+		self.assertIn( "Y", columnNames )
+		self.assertIn( "Z", columnNames )
+
+		GafferSceneUI.LightEditor.deregisterColumn( "light", "P.X" )
+
+		editor._LightEditor__updateColumns()
+		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
+
+		columnNames = [ c.headerData().value for c in widget.getColumns() ]
+		self.assertNotIn( "P", columnNames )
+		self.assertNotIn( "X", columnNames )
+		self.assertIn( "A", columnNames )
+		self.assertIn( "Y", columnNames )
+		self.assertIn( "Z", columnNames )
+
+		GafferSceneUI.LightEditor.deregisterColumn( "light", "A" )
+
+		editor._LightEditor__updateColumns()
+		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
+
+		columnNames = [ c.headerData().value for c in widget.getColumns() ]
+		self.assertNotIn( "P", columnNames )
+		self.assertNotIn( "P.X", columnNames )
+		self.assertNotIn( "A", columnNames )
+		self.assertIn( "Y", columnNames )
+		self.assertIn( "Z", columnNames )
+
+		GafferSceneUI.LightEditor.deregisterColumn( "light", "P.Y" )
+
+		editor._LightEditor__updateColumns()
+		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
+
+		columnNames = [ c.headerData().value for c in widget.getColumns() ]
+		self.assertNotIn( "P", columnNames )
+		self.assertNotIn( "P.X", columnNames )
+		self.assertNotIn( "A", columnNames )
+		self.assertNotIn( "Y", columnNames )
+		self.assertIn( "Z", columnNames )
+
+		GafferSceneUI.LightEditor.deregisterColumn( "light", "Z" )
+
+		editor._LightEditor__updateColumns()
+		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
+
+		columnNames = [ c.headerData().value for c in widget.getColumns() ]
+		self.assertNotIn( "P", columnNames )
+		self.assertNotIn( "P.X", columnNames )
+		self.assertNotIn( "A", columnNames )
+		self.assertNotIn( "Y", columnNames )
+		self.assertNotIn( "Z", columnNames )
 
 if __name__ == "__main__" :
 	unittest.main()
