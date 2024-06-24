@@ -834,7 +834,7 @@ class LightEditorTest( GafferUITest.TestCase ) :
 
 		columnNames = [ c.headerData().value for c in widget.getColumns() ]
 		self.assertNotIn( "P", columnNames )
-		self.assertNotIn( "P.X", columnNames )
+		self.assertNotIn( "X", columnNames )
 		self.assertNotIn( "A", columnNames )
 		self.assertIn( "Y", columnNames )
 		self.assertIn( "Z", columnNames )
@@ -846,7 +846,7 @@ class LightEditorTest( GafferUITest.TestCase ) :
 
 		columnNames = [ c.headerData().value for c in widget.getColumns() ]
 		self.assertNotIn( "P", columnNames )
-		self.assertNotIn( "P.X", columnNames )
+		self.assertNotIn( "X", columnNames )
 		self.assertNotIn( "A", columnNames )
 		self.assertNotIn( "Y", columnNames )
 		self.assertIn( "Z", columnNames )
@@ -858,7 +858,7 @@ class LightEditorTest( GafferUITest.TestCase ) :
 
 		columnNames = [ c.headerData().value for c in widget.getColumns() ]
 		self.assertNotIn( "P", columnNames )
-		self.assertNotIn( "P.X", columnNames )
+		self.assertNotIn( "X", columnNames )
 		self.assertNotIn( "A", columnNames )
 		self.assertNotIn( "Y", columnNames )
 		self.assertNotIn( "Z", columnNames )
