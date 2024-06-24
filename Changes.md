@@ -16,6 +16,7 @@ Improvements
   - The following parameters can now be made visible in the GraphEditor :
     - The `flake_layers` parameter of the `car_paint` shader.
     - The `data_seed`, `proc_seed`, `obj_seed`, and `face_seed` parameters of the `color_jitter` shader.
+- EditScope : Added summaries of set membership edits in the NodeEditor.
 
 Fixes
 -----

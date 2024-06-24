@@ -303,3 +303,31 @@ class __RenderPassOptionEditsWidget( GafferUI.EditScopeUI.SimpleProcessorWidget 
 
 
 GafferUI.EditScopeUI.ProcessorWidget.registerProcessorWidget( "RenderPassOptionEdits", __RenderPassOptionEditsWidget )
+
+class __SetMembershipEditsWidget( GafferUI.EditScopeUI.SimpleProcessorWidget ) :
+
+	@staticmethod
+	def _summary( processor, linkCreator ) :
+
+		enabledSetCount = 0
+		disabledSetCount = 0
+		for r in processor["edits"] :
+			if r.getName() == "default" :
+				continue
+			if r["enabled"].getValue() :
+				enabledSetCount += 1
+			else :
+				disabledSetCount += 1
+
+		summaries = []
+		if enabledSetCount > 0 :
+			summaries.append( "edits to {} set{}".format( enabledSetCount, "s" if enabledSetCount > 1 else "" ) )
+		if disabledSetCount > 0 :
+			summaries.append( "disabled edits to {} set{}".format( disabledSetCount, "s" if disabledSetCount > 1 else "" ) )
+
+		if not summaries :
+			return None
+		summaries[0] = summaries[0][0].upper() + summaries[0][1:]
+		return " and ".join( summaries )
+
+GafferUI.EditScopeUI.ProcessorWidget.registerProcessorWidget( "SetMembershipEdits", __SetMembershipEditsWidget )
