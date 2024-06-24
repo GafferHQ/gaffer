@@ -4,6 +4,7 @@
 Improvements
 ------------
 
+- SceneReader : ModelAPI `extentsHints` are now considered when loading the bounding box for a location in Gaffer. This can significantly reduce the time taken to load bounds for large USD assemblies. If necessary, this behaviour can be disabled by setting the `IECOREUSD_USE_MODELAPI_BOUNDS` environment variable with a value of `0`.
 - ColorChooser :
   - Added channel names to identify sliders.
   - Setting the saturation to zero no longer resets the hue and setting the value to zero no longer resets the hue and saturation.
@@ -26,6 +27,11 @@ API
 - Loop : Added `nextIterationContext()` method.
 - AnnotationsGadget : Added `annotationText()` method.
 - ParallelAlgoTest : Added `UIThreadCallHandler.receive()` method.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.9.0.
 
 1.4.7.0 (relative to 1.4.6.0)
 =======
