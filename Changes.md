@@ -1,7 +1,10 @@
 1.4.x.x (relative to 1.4.8.0)
 =======
 
+Fixes
+-----
 
+- IECoreArnold::VDBAlgo : Fixed failure to render when metadata not present.
 
 1.4.8.0 (relative to 1.4.7.0)
 =======
