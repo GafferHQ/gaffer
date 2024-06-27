@@ -282,6 +282,15 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"manifestScene" : [
+
+			"description",
+			"""
+			A scene containing locations representing the contents of the Cryptomatte manifest.
+			""",
+
+		],
+
 	}
 
 )
@@ -410,7 +419,7 @@ def __selectAffected( node, context ) :
 	if not isinstance( node, GafferScene.Cryptomatte ) :
 		return
 
-	scene = node["__manifestScene"]
+	scene = node["manifestScene"]
 
 	with context :
 		pathMatcher = IECore.PathMatcher()

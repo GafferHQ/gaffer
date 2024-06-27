@@ -1,6 +1,11 @@
 1.4.x.x (relative to 1.4.8.0)
 =======
 
+Improvements
+------------
+
+- Cryptomatte : Renamed `__manifestScene` plug to `manifestScene` so it is no longer considered to be private.
+
 Fixes
 -----
 
