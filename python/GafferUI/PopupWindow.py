@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import weakref
+
 import imath
 
 import Gaffer
@@ -48,13 +50,22 @@ class PopupWindow( GafferUI.Window ) :
 
 		GafferUI.Window.__init__( self, title, borderWidth, child = child, sizeMode = GafferUI.Window.SizeMode.Automatic, **kw )
 
+		self.__popupParent = None
+
 		self._qtWidget().setWindowFlags( QtCore.Qt.Popup )
 		self._qtWidget().setAttribute( QtCore.Qt.WA_TranslucentBackground )
 		self._qtWidget().paintEvent = Gaffer.WeakMethod( self.__paintEvent )
 
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
-	def popup( self, center = None ) :
+	## Note : A valid `parent` widget must be supplied if widgets in the PopupWindow
+	# are to inherit a display transform from the main UI.
+	def popup( self, center = None, parent = None ) :
+
+		if parent is not None :
+			self.__popupParent = weakref.ref( parent )
+		else :
+			self.__popupParent = None
 
 		if center is None :
 			center = GafferUI.Widget.mousePosition()
@@ -62,6 +73,16 @@ class PopupWindow( GafferUI.Window ) :
 		self.setVisible( True )
 		size = self._qtWidget().sizeHint()
 		self.setPosition( center - imath.V2i( size.width() / 2, size.height() / 2 ) )
+
+	## Reimplemented from Widget to report the parent passed to `popup()`.
+	def parent( self ) :
+
+		if self.__popupParent is not None :
+			p = self.__popupParent()
+			if p is not None :
+				return p
+
+		return GafferUI.Widget.parent( self )
 
 	def __paintEvent( self, event ) :
 
