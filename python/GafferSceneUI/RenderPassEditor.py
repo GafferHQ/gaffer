@@ -442,7 +442,7 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 					GafferUI.Image( "warningSmall.png" )
 					GafferUI.Label( "<h4>The script is read-only.</h4>" )
 
-			self.__popup.popup()
+			self.__popup.popup( parent = self )
 			return
 
 		if "renderPass" not in script["variables"] :
@@ -488,7 +488,7 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 					GafferUI.Image( "warningSmall.png" )
 					GafferUI.Label( "<h4>The selected cells cannot be edited in the current Edit Scope</h4>" )
 
-			self.__popup.popup()
+			self.__popup.popup( parent = self )
 
 			return
 
@@ -508,7 +508,7 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 
 					## \todo : Adjust popup width based on the inspector column width(s) to improve
 					# editing of long paths, similar to how we handle this in the Spreadsheet.
-					self.__popup.popup()
+					self.__popup.popup( parent = self )
 
 		else :
 
@@ -517,7 +517,7 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 					GafferUI.Image( "warningSmall.png" )
 					GafferUI.Label( "<h4>{}</h4>".format( nonEditable[0].nonEditableReason() ) )
 
-			self.__popup.popup()
+			self.__popup.popup( parent = self )
 
 	def __toggleBoolean( self, inspectors, inspections ) :
 

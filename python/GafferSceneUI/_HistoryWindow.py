@@ -231,7 +231,7 @@ class _HistoryWindow( GafferUI.Window ) :
 			if isinstance( self.__popup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
 				self.__popup.plugValueWidget().setNameVisible( False )
 
-			self.__popup.popup()
+			self.__popup.popup( parent = self )
 
 	def __dragBegin( self, pathListing, event ) :
 
