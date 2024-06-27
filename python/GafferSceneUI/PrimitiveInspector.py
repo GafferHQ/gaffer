@@ -326,7 +326,7 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 		if self.__scenePlug:
 			targetPath = GafferSceneUI.ContextAlgo.getLastSelectedPath( self.getContext() )
 			if targetPath:
-				if backgroundResult:
+				if backgroundResult is not None :
 					self.__locationLabel.setText( targetPath )
 				else:
 					self.__locationFrame._qtWidget().setProperty( "gafferDiff", "Other" )

@@ -5,6 +5,7 @@ Fixes
 -----
 
 - HierarchyView, LightEditor, PrimitiveInspector, SceneInspector : Fixed bug which allowed scenes from private plugs to be displayed.
+- PrimitiveInspector : Fixed bug which claimed "Location does not exist" for objects without any primitive variables.
 
 1.4.8.0 (relative to 1.4.7.0)
 =======
