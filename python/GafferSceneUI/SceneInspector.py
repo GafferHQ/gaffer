@@ -228,7 +228,10 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		self.__plugDirtiedConnections = []
 		self.__parentChangedConnections = []
 		for node in self.getNodeSet()[-2:] :
-			outputScenePlug = next( GafferScene.ScenePlug.RecursiveOutputRange( node ), None )
+			outputScenePlug = next(
+				( p for p in GafferScene.ScenePlug.RecursiveOutputRange( node ) if not p.getName().startswith( "__" ) ),
+				None
+			)
 			if outputScenePlug :
 				self.__scenePlugs.append( outputScenePlug )
 				self.__plugDirtiedConnections.append( node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ), scoped = True ) )
