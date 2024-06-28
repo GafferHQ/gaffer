@@ -10,6 +10,13 @@ Improvements
 - Metadata : Metadata registered to a node or plug targeting a descendant plug will now override metadata registered locally to the target.
 - OptionTweaks, ContextVariableTweaks : Added `Remove` mode.
 
+API
+---
+
+- Editor :
+  - Added `settings()` method, which returns a node hosting plugs specifying settings for the editor.
+  - Added `_updateFromSettings()` method, which is called when a subclass should update to reflect changes to the settings.
+
 Breaking Changes
 ----------------
 
@@ -19,6 +26,7 @@ Breaking Changes
 - ImageReader : Changed handling of lower-cased "r", "g", "b" and "a" channels.
 - Metadata : Path based registrations to a Node or Plug now override equivalent registrations on its descendants.
 - TweakPlugValueWidget : Removed support for `tweakPlugValueWidget:allowCreate` and `tweakPlugValueWidget:allowRemove` metadata.
+- Editor : Removed arguments from `Settings` constructor.
 
 1.4.x.x (relative to 1.4.8.0)
 =======

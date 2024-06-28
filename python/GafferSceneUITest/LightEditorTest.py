@@ -647,7 +647,7 @@ class LightEditorTest( GafferUITest.TestCase ) :
 
 			resetEditScope()
 			editor = GafferSceneUI.LightEditor( script )
-			editor._LightEditor__settingsNode["editScope"].setInput( script["editScope"]["out"] )
+			editor.settings()["editScope"].setInput( script["editScope"]["out"] )
 
 			editor._LightEditor__updateColumns()
 			GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
@@ -738,7 +738,7 @@ class LightEditorTest( GafferUITest.TestCase ) :
 		self.assertEqual( attributes["light"].shaders()["__shader"].parameters["exposure"].value, 0.0 )
 
 		editor = GafferSceneUI.LightEditor( script )
-		editor._LightEditor__settingsNode["editScope"].setInput( script["editScope"]["out"] )
+		editor.settings()["editScope"].setInput( script["editScope"]["out"] )
 
 		editor._LightEditor__updateColumns()
 		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
