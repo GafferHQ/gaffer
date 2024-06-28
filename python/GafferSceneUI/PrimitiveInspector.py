@@ -126,7 +126,7 @@ def conditionPrimvar( primvar ) :
 	return primvar.expandedData()
 
 
-class PrimitiveInspector( GafferUI.NodeSetEditor ) :
+class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 
 	def __init__( self, scriptNode, **kw ) :
 
@@ -209,33 +209,13 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 		self.__tabbedContainer.append( self.__tabbedChildWidgets[IECoreScene.PrimitiveVariable.Interpolation.Varying], "Varying" )
 		self.__tabbedContainer.append( self.__tabbedChildWidgets[IECoreScene.PrimitiveVariable.Interpolation.FaceVarying], "FaceVarying" )
 
-		GafferUI.NodeSetEditor.__init__( self, column, scriptNode, nodeSet = scriptNode.focusSet(), **kw )
+		GafferSceneUI.SceneEditor.__init__( self, column, scriptNode, **kw )
 
 		self._updateFromSet()
 
 	def __repr__( self ) :
 
 		return "GafferSceneUI.PrimitiveInspector( scriptNode )"
-
-	def _updateFromSet( self ) :
-		GafferUI.NodeSetEditor._updateFromSet( self )
-
-		self.__scenePlug = None
-		self.__plugDirtiedConnections = []
-		self.__parentChangedConnections = []
-
-		node = self._lastAddedNode()
-
-		if node :
-			self.__scenePlug = next(
-				( p for p in GafferScene.ScenePlug.RecursiveOutputRange( node ) if not p.getName().startswith( "__" ) ),
-				None
-			)
-			if self.__scenePlug :
-				self.__plugDirtiedConnections.append( node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ), scoped = True ) )
-				self.__parentChangedConnections.append( self.__scenePlug.parentChangedSignal().connect( Gaffer.WeakMethod( self.__plugParentChanged ), scoped = True ) )
-
-		self.__updateLazily()
 
 	def _updateFromContext( self, modifiedItems ) :
 
@@ -244,18 +224,10 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 				self.__updateLazily()
 				break
 
-	def __plugDirtied( self, plug ) :
+	def _updateFromSettings( self, plug ) :
 
-		if self.__scenePlug is not None and isinstance( plug, Gaffer.ObjectPlug ) and plug == self.__scenePlug["object"]:
+		if plug.isSame( self.settings()["in"]["object"] ) :
 			self.__updateLazily()
-
-	def __plugParentChanged( self, plug, oldParent ) :
-
-		# if a plug has been removed or moved to another node, then
-		# we need to stop viewing it - _updateFromSet() will find the
-		# next suitable plug from the current node set.
-		self._updateFromSet()
-
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __updateLazily( self ) :
@@ -266,25 +238,20 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 
 		with self.getContext() :
 
-			if not self.__scenePlug :
-				return None
-
 			targetPath = GafferSceneUI.ContextAlgo.getLastSelectedPath( self.getContext() )
 
 			if not targetPath :
 				return None
 
-			if not self.__scenePlug.exists( targetPath ) :
+			if not self.settings()["in"].exists( targetPath ) :
 				return None
 
-			return self.__scenePlug.object( targetPath )
+			return self.settings()["in"].object( targetPath )
 
 	@__backgroundUpdate.plug
 	def __backgroundUpdatePlug( self ) :
-		if self.__scenePlug:
-			return self.__scenePlug["object"]
-		else:
-			return None
+
+		return self.settings()["in"]
 
 	@__backgroundUpdate.preCall
 	def __backgroundUpdatePreCall( self ) :
@@ -293,16 +260,16 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 		for (k,widget) in self.__dataWidgets.items():
 			widget.setEnabled( False )
 
-		if self.__scenePlug :
+		if self.settings()["in"].getInput() is not None :
 			self.__nodeLabel.setFormatter( _nodeLabelFormatter )
-			self.__nodeLabel.setGraphComponent( self.__scenePlug.node() )
+			self.__nodeLabel.setGraphComponent( self.settings()["in"].getInput().node() )
 			self.__nodeFrame._qtWidget().setProperty( "gafferDiff", "AB" )
 		else:
 			self.__nodeLabel.setFormatter( lambda x : "Select a node to inspect" )
 			self.__nodeFrame._qtWidget().setProperty( "gafferDiff", "Other" )
 		self.__nodeFrame._repolish()
 
-		if not self.__scenePlug:
+		if self.settings()["in"].getInput() is None :
 			self.__locationLabel.setText( "" )
 			self.__locationFrame._qtWidget().setProperty( "gafferDiff", "Other" )
 		else:
@@ -323,7 +290,7 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 
 		self.__busyWidget.setBusy( False )
 
-		if self.__scenePlug:
+		if self.settings()["in"].getInput() is not None :
 			targetPath = GafferSceneUI.ContextAlgo.getLastSelectedPath( self.getContext() )
 			if targetPath:
 				if backgroundResult is not None :
