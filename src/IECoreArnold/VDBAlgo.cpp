@@ -87,32 +87,18 @@ struct UCharVectorDataSink
 
 UCharVectorDataPtr createMemoryBuffer(const IECoreVDB::VDBObject* vdbObject)
 {
-	// estimate the size of the memory required to hand the VDB to arnold.
-	// This is required so we can reserve the right amount of space in the output
-	// buffer.
-	int64_t totalSizeBytes = 0;
-	openvdb::GridCPtrVec gridsToWrite;
-	std::vector<std::string> gridNames = vdbObject->gridNames();
-	try
-	{
-		for( const std::string& gridName : gridNames )
-		{
-			openvdb::GridBase::ConstPtr grid = vdbObject->findGrid( gridName );
-			totalSizeBytes += grid->metaValue<int64_t>( "file_mem_bytes" );
-			gridsToWrite.push_back( grid );
-		}
-	}
-	catch( const std::exception & )
-	{
-		IECore::msg( IECore::MessageHandler::Warning, "VDBObject::memoryBuffer", "Unable to estimate vdb size." );
-	}
-
 	IECore::UCharVectorDataPtr buffer = new IECore::UCharVectorData();
-	buffer->writable().reserve( totalSizeBytes );
 	UCharVectorDataSink sink( buffer.get() );
 	boost::iostreams::stream<UCharVectorDataSink> memoryStream( sink );
 
 	openvdb::io::Stream vdbStream( memoryStream );
+
+	openvdb::GridCPtrVec gridsToWrite;
+	std::vector<std::string> gridNames = vdbObject->gridNames();
+	for( const std::string& gridName : gridNames )
+	{
+		gridsToWrite.push_back( vdbObject->findGrid( gridName ) );
+	}
 	vdbStream.write( gridsToWrite );
 
 	return buffer;
