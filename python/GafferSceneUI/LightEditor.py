@@ -55,9 +55,6 @@ from . import _GafferSceneUI
 
 from Qt import QtWidgets
 
-## \todo There's some scope for reducing code duplication here, by
-# introducing something like a SceneListingWidget that could be shared
-# with HierarchyView.
 class LightEditor( GafferUI.NodeSetEditor ) :
 
 	class Settings( GafferUI.Editor.Settings ) :
