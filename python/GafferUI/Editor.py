@@ -111,7 +111,9 @@ class Editor( GafferUI.Widget ) :
 		# Otherwise we risk deadlock if the Settings node gets garbage
 		# collected in a BackgroundTask, which would attempt
 		# cancellation of all tasks for the ScriptNode, including the
-		# task itself.
+		# task itself. We also need to prevent emission of `plugDirtiedSignal()`
+		# while we do that, to prevent half-destructed UIs from erroring.
+		self.__settings.plugDirtiedSignal().disconnectAllSlots()
 		self.__settings["__scriptNode"].setInput( None )
 
 	def scriptNode( self ) :

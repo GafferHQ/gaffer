@@ -10,6 +10,11 @@ Improvements
 - Metadata : Metadata registered to a node or plug targeting a descendant plug will now override metadata registered locally to the target.
 - OptionTweaks, ContextVariableTweaks : Added `Remove` mode.
 
+Fixes
+-----
+
+- Editor : Fixed `Internal C++ object already deleted` errors when some editors were destroyed.
+
 API
 ---
 
