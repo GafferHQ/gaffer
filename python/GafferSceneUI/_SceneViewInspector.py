@@ -414,7 +414,7 @@ class _InspectorWidget( GafferUI.Widget ) :
 			)
 			if isinstance( self.__popup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
 				self.__popup.plugValueWidget().setNameVisible( False )
-			self.__popup.popup()
+			self.__popup.popup( parent = self )
 
 		else :
 
@@ -425,7 +425,7 @@ class _InspectorWidget( GafferUI.Widget ) :
 						self.__formatWarnings( [ r.nonEditableReason() for r in self.__inspectorResults ] )
 					) )
 
-			self.__popup.popup()
+			self.__popup.popup( parent = self )
 
 		return True
 

@@ -403,7 +403,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 							with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 								GafferUI.Image( "warningSmall.png" )
 								GafferUI.Label( "<h4>The " + column.headerData().value + " column can only be toggled for lights." )
-						self.__popup.popup()
+						self.__popup.popup( parent = self )
 						return
 
 					context["scene:path"] = path
@@ -419,7 +419,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 					GafferUI.Image( "warningSmall.png" )
 					GafferUI.Label( "<h4>The selected cells cannot be edited in the current Edit Scope</h4>" )
 
-			self.__popup.popup()
+			self.__popup.popup( parent = self )
 
 			return
 
@@ -437,7 +437,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 					if isinstance( self.__popup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
 						self.__popup.plugValueWidget().setNameVisible( False )
 
-					self.__popup.popup()
+					self.__popup.popup( parent = self )
 
 		else :
 
@@ -446,7 +446,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 					GafferUI.Image( "warningSmall.png" )
 					GafferUI.Label( "<h4>{}</h4>".format( nonEditable[0].nonEditableReason() ) )
 
-			self.__popup.popup()
+			self.__popup.popup( parent = self )
 
 	def __toggleBoolean( self, inspectors, inspections ) :
 

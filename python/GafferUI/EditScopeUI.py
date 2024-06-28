@@ -452,7 +452,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 					GafferUI.Image( "warningSmall.png" )
 					GafferUI.Label( "<h4>The Edit Scope cannot be set while nothing is viewed</h4>" )
-			self.__popup.popup()
+			self.__popup.popup( parent = self )
 		elif dropNode :
 			upstream = Gaffer.NodeAlgo.findAllUpstream( inputNode, self.__editScopePredicate )
 			if self.__editScopePredicate( inputNode ) :
@@ -465,7 +465,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 						GafferUI.Image( "warningSmall.png" )
 						GafferUI.Label( "<h4>{} cannot be used as it is not upstream of {}</h4>".format( dropNode.getName(), inputNode.getName() ) )
-				self.__popup.popup()
+				self.__popup.popup( parent = self )
 
 		self.__frame.setHighlighted( False )
 

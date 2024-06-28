@@ -1484,7 +1484,7 @@ class _ColorDelegate( _Delegate ) :
 			self.__colorChooser = GafferUI.ColorChooser( value )
 			self.__popup = GafferUI.PopupWindow( "", child = self.__colorChooser )
 
-			self.__popup.popup()
+			self.__popup.popup( parent = self )
 
 			return self.__popup
 
