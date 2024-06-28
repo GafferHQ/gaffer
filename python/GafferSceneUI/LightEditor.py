@@ -55,15 +55,14 @@ from . import _GafferSceneUI
 
 from Qt import QtWidgets
 
-class LightEditor( GafferUI.NodeSetEditor ) :
+class LightEditor( GafferSceneUI.SceneEditor ) :
 
-	class Settings( GafferUI.Editor.Settings ) :
+	class Settings( GafferSceneUI.SceneEditor.Settings ) :
 
 		def __init__( self ) :
 
-			GafferUI.Editor.Settings.__init__( self )
+			GafferSceneUI.SceneEditor.Settings.__init__( self )
 
-			self["in"] = GafferScene.ScenePlug()
 			self["attribute"] = Gaffer.StringPlug( defaultValue = "light" )
 			self["section"] = Gaffer.StringPlug( defaultValue = "" )
 			self["editScope"] = Gaffer.Plug()
@@ -74,9 +73,10 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4, spacing = 4 )
 
-		GafferUI.NodeSetEditor.__init__( self, column, scriptNode, nodeSet = scriptNode.focusSet(), **kw )
+		GafferSceneUI.SceneEditor.__init__( self, column, scriptNode, **kw )
 
 		self.__setFilter = _GafferSceneUI._HierarchyViewSetFilter()
+		self.__setFilter.setScene( self.settings()["in"] )
 		self.__setFilter.setSetNames( [ "__lights", "__lightFilters" ] )
 
 		with column :
@@ -118,8 +118,8 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 			self.__pathListing.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 			self.__pathListing.buttonPressSignal().connectFront( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
 
-		self.__plug = None
 		self._updateFromSet()
+		self.__setPathListingPath()
 		self.__transferSelectionFromContext()
 		self.__updateColumns()
 
@@ -127,7 +127,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 	def scene( self ) :
 
-		return self.__plug
+		return self.settings()["in"].getInput()
 
 	@classmethod
 	def __parseParameter( cls, parameter ) :
@@ -229,29 +229,6 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 		return "GafferSceneUI.LightEditor( scriptNode )"
 
-	def _updateFromSet( self ) :
-
-		# Decide what plug we're viewing.
-		self.__plug = None
-		self.__plugParentChangedConnection = None
-		node = self._lastAddedNode()
-		if node is not None :
-			self.__plug = next(
-				( p for p in GafferScene.ScenePlug.RecursiveOutputRange( node ) if not p.getName().startswith( "__" ) ),
-				None
-			)
-			if self.__plug is not None :
-				self.__plugParentChangedConnection = self.__plug.parentChangedSignal().connect( Gaffer.WeakMethod( self.__plugParentChanged ), scoped = True )
-
-		self.settings()["in"].setInput( self.__plug )
-
-		# Call base class update - this will trigger a call to _titleFormat(),
-		# hence the need for already figuring out the plug.
-		GafferUI.NodeSetEditor._updateFromSet( self )
-
-		# Update our view of the hierarchy.
-		self.__setPathListingPath()
-
 	def _updateFromContext( self, modifiedItems ) :
 
 		if any( ContextAlgo.affectsSelectedPaths( x ) for x in modifiedItems ) :
@@ -268,15 +245,6 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 		if plug in ( self.settings()["section"], self.settings()["attribute"] ) :
 			self.__updateColumns()
-
-	def _titleFormat( self ) :
-
-		return GafferUI.NodeSetEditor._titleFormat(
-			self,
-			_maxNodes = 1 if self.__plug is not None else 0,
-			_reverseNodes = True,
-			_ellipsis = False
-		)
 
 	@GafferUI.LazyMethod()
 	def __updateColumns( self ) :
@@ -296,27 +264,16 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 		self.__soloColumn = self.__pathListing.getColumns()[2]
 		self.__pathListing.setColumns( [ nameColumn, self.__muteColumn, self.__soloColumn ] + sectionColumns )
 
-	def __plugParentChanged( self, plug, oldParent ) :
-
-		# The plug we were viewing has been deleted or moved - find
-		# another one to view.
-		self._updateFromSet()
-
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __setPathListingPath( self ) :
 
-		self.__setFilter.setScene( self.__plug )
-
-		if self.__plug is not None :
-			# We take a static copy of our current context for use in the ScenePath - this prevents the
-			# PathListing from updating automatically when the original context changes, and allows us to take
-			# control of updates ourselves in _updateFromContext(), using LazyMethod to defer the calls to this
-			# function until we are visible and playback has stopped.
-			contextCopy = Gaffer.Context( self.getContext() )
-			self.__setFilter.setContext( contextCopy )
-			self.__pathListing.setPath( GafferScene.ScenePath( self.settings()["in"], contextCopy, "/", filter = self.__setFilter ) )
-		else :
-			self.__pathListing.setPath( Gaffer.DictPath( {}, "/" ) )
+		# We take a static copy of our current context for use in the ScenePath - this prevents the
+		# PathListing from updating automatically when the original context changes, and allows us to take
+		# control of updates ourselves in _updateFromContext(), using LazyMethod to defer the calls to this
+		# function until we are visible and playback has stopped.
+		contextCopy = Gaffer.Context( self.getContext() )
+		self.__setFilter.setContext( contextCopy )
+		self.__pathListing.setPath( GafferScene.ScenePath( self.settings()["in"], contextCopy, "/", filter = self.__setFilter ) )
 
 	def __selectionChanged( self, pathListing ) :
 
