@@ -161,7 +161,6 @@ IECore::ConstObjectPtr SphereLevelSet::computeSource( const Context *context ) c
 
 	Canceller::check( context->canceller() );
 
-	grid->addStatsMetadata();
 	grid->setName( gridPlug()->getValue() );
 
 	VDBObjectPtr newVDBObject = new VDBObject();
