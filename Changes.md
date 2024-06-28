@@ -21,6 +21,7 @@ API
 - Editor :
   - Added `settings()` method, which returns a node hosting plugs specifying settings for the editor.
   - Added `_updateFromSettings()` method, which is called when a subclass should update to reflect changes to the settings.
+- SceneEditor : Added new base class to simplify the creation of scene-specific editors.
 
 Breaking Changes
 ----------------
