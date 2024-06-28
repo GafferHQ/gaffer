@@ -36,13 +36,10 @@
 
 import imath
 
-import IECore
-
 import Gaffer
 import GafferImage
 import GafferScene
 import GafferUI
-import GafferImageUI
 import GafferSceneUI
 
 class UVInspector( GafferUI.NodeSetEditor ) :
@@ -60,7 +57,7 @@ class UVInspector( GafferUI.NodeSetEditor ) :
 		with column :
 
 			with GafferUI.Frame( borderWidth = 4, borderStyle = GafferUI.Frame.BorderStyle.None_ ) :
-				toolbar = GafferUI.NodeToolbar.create( self.__uvView )
+				GafferUI.NodeToolbar.create( self.__uvView )
 
 			self.__gadgetWidget = GafferUI.GadgetWidget()
 
