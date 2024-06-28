@@ -111,7 +111,10 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 		self.__plugParentChangedConnection = None
 		node = self._lastAddedNode()
 		if node is not None :
-			self.__plug = next( GafferScene.ScenePlug.RecursiveOutputRange( node ), None )
+			self.__plug = next(
+				( p for p in GafferScene.ScenePlug.RecursiveOutputRange( node ) if not p.getName().startswith( "__" ) ),
+				None
+			)
 			if self.__plug is not None :
 				self.__plugParentChangedConnection = self.__plug.parentChangedSignal().connect(
 					Gaffer.WeakMethod( self.__plugParentChanged ), scoped = True
