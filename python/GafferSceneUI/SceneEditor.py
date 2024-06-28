@@ -63,11 +63,13 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 
 		GafferUI.NodeSetEditor.__init__( self, topLevelWidget, scriptNode, nodeSet = scriptNode.focusSet(), **kw )
 
+		self.__parentingConnections = {}
+
 	def _updateFromSet( self ) :
 
 		# Find ScenePlugs and connect them to `settings()["in"]`.
 
-		self.__scenePlugParentingConnections = []
+		updatedParentingConnections = {}
 		inputsToFill = [ self.settings()["in"] ] if isinstance( self.settings()["in"], GafferScene.ScenePlug ) else list( self.settings()["in"].children() )
 
 		with Gaffer.DirtyPropagationScope() :
@@ -80,14 +82,29 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 				)
 				if outputScenePlug is not None :
 					inputsToFill.pop( 0 ).setInput( outputScenePlug )
-					self.__scenePlugParentingConnections.append(
-						outputScenePlug.parentChangedSignal().connect(
+					plugConnection = self.__parentingConnections.get( outputScenePlug )
+					if plugConnection is None :
+						plugConnection = outputScenePlug.parentChangedSignal().connect(
 							Gaffer.WeakMethod( self.__scenePlugParentChanged ), scoped = True
 						)
-					)
+					updatedParentingConnections[outputScenePlug] = plugConnection
+
+				nodeConnections = self.__parentingConnections.get( node )
+				if nodeConnections is None :
+					nodeConnections = [
+						node.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ), scoped = True ),
+						node.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ), scoped = True ),
+					]
+				updatedParentingConnections[node] = nodeConnections
 
 			for unfilledInput in inputsToFill :
 				unfilledInput.setInput( None )
+
+		# Note : We reuse existing connections where we can to avoid getting
+		# into infinite loops. We are called from the very signals we are
+		# connecting to, so if we made _new_ connections then we would be called
+		# _again_ for the same invocation of the signal.
+		self.__parentingConnections = updatedParentingConnections
 
 		# Called last, because it will call `_titleFormat()`, which depends on
 		# the inputs we just created.
@@ -110,3 +127,8 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 	def __scenePlugParentChanged( self, plug, newParent ) :
 
 		self._updateFromSet()
+
+	def __childAddedOrRemoved( self, node, child ) :
+
+		if isinstance( child, GafferScene.ScenePlug ) :
+			self._updateFromSet()
