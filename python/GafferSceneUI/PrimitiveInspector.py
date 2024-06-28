@@ -227,7 +227,10 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 		node = self._lastAddedNode()
 
 		if node :
-			self.__scenePlug = next( GafferScene.ScenePlug.RecursiveOutputRange( node ), None )
+			self.__scenePlug = next(
+				( p for p in GafferScene.ScenePlug.RecursiveOutputRange( node ) if not p.getName().startswith( "__" ) ),
+				None
+			)
 			if self.__scenePlug :
 				self.__plugDirtiedConnections.append( node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ), scoped = True ) )
 				self.__parentChangedConnections.append( self.__scenePlug.parentChangedSignal().connect( Gaffer.WeakMethod( self.__plugParentChanged ), scoped = True ) )
@@ -323,7 +326,7 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 		if self.__scenePlug:
 			targetPath = GafferSceneUI.ContextAlgo.getLastSelectedPath( self.getContext() )
 			if targetPath:
-				if backgroundResult:
+				if backgroundResult is not None :
 					self.__locationLabel.setText( targetPath )
 				else:
 					self.__locationFrame._qtWidget().setProperty( "gafferDiff", "Other" )
