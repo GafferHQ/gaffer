@@ -16,6 +16,7 @@ Fixes
 - Editor : Fixed `Internal C++ object already deleted` errors when some editors were destroyed.
 - UVInspector : Fixed `Unable to find ScriptNode for UVView` warnings.
 - Scene Editors : Fixed update when ScenePlugs are added to or removed from the node being viewed.
+- PrimitiveInspector : Fixed failure to update when the location being viewed ceases to exist, or is recreated.
 
 API
 ---

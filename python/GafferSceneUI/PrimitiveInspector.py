@@ -226,7 +226,7 @@ class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 
 	def _updateFromSettings( self, plug ) :
 
-		if plug.isSame( self.settings()["in"]["object"] ) :
+		if plug.isSame( self.settings()["in"]["object"] ) or plug.isSame( self.settings()["in"]["exists"] ) :
 			self.__updateLazily()
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
