@@ -47,6 +47,7 @@ import GafferUI
 
 from GafferUI._StyleSheet import _styleColors
 from Qt import QtGui
+from Qt import QtWidgets
 
 Gaffer.Metadata.registerNode(
 
@@ -131,7 +132,8 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ),
 					highlightOnOver = False
 				)
-				self.__menuButton._qtWidget().setFixedWidth( 120 )
+				# Ignore the width in X so MenuButton width is limited by the overall width of the widget
+				self.__menuButton._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
 				self.__navigationMenuButton = GafferUI.MenuButton(
 					image = "navigationArrow.png",
 					hasFrame = False,
