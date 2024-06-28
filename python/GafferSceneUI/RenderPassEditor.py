@@ -53,17 +53,14 @@ from GafferSceneUI._HistoryWindow import _HistoryWindow
 
 from Qt import QtWidgets
 
-## \todo Make a SceneEditor base class to encapsulate the logic about what
-# scene to view, and to track the reparenting of the plug.
-class RenderPassEditor( GafferUI.NodeSetEditor ) :
+class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
-	class Settings( GafferUI.Editor.Settings ) :
+	class Settings( GafferSceneUI.SceneEditor.Settings ) :
 
 		def __init__( self ) :
 
-			GafferUI.Editor.Settings.__init__( self )
+			GafferSceneUI.SceneEditor.Settings.__init__( self )
 
-			self["in"] = GafferScene.ScenePlug()
 			self["tabGroup"] = Gaffer.StringPlug( defaultValue = "Cycles" )
 			self["section"] = Gaffer.StringPlug( defaultValue = "Main" )
 			self["editScope"] = Gaffer.Plug()
@@ -75,7 +72,7 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 
 		mainColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4, spacing = 4 )
 
-		GafferUI.NodeSetEditor.__init__( self, mainColumn, scriptNode, nodeSet = scriptNode.focusSet(), **kw )
+		GafferSceneUI.SceneEditor.__init__( self, mainColumn, scriptNode, **kw )
 
 		searchFilter = _GafferSceneUI._RenderPassEditor.SearchFilter()
 		disabledRenderPassFilter = _GafferSceneUI._RenderPassEditor.DisabledRenderPassFilter()
@@ -230,32 +227,6 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 
 		return "GafferSceneUI.RenderPassEditor( scriptNode )"
 
-	def __firstValidScenePlug( self, node ):
-
-		for plug in GafferScene.ScenePlug.RecursiveOutputRange( node ) :
-			if not plug.getName().startswith( "__" ):
-				return plug
-		return None
-
-	def _updateFromSet( self ) :
-
-		# Decide what plug we're viewing.
-		plug = None
-		self.__plugParentChangedConnection = None
-		node = self._lastAddedNode()
-		if node is not None :
-			plug = self.__firstValidScenePlug( node )
-			if plug is not None :
-				self.__plugParentChangedConnection = plug.parentChangedSignal().connect(
-					Gaffer.WeakMethod( self.__plugParentChanged ), scoped = True
-				)
-
-		self.settings()["in"].setInput( plug )
-
-		# call base class update - this will trigger a call to _titleFormat(),
-		# hence the need for already figuring out the plug.
-		GafferUI.NodeSetEditor._updateFromSet( self )
-
 	def _updateFromContext( self, modifiedItems ) :
 
 		if any( not i.startswith( "ui:" ) for i in modifiedItems ) :
@@ -269,15 +240,6 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 			self.__displayGroupedChanged()
 		elif plug in ( self.settings()["in"], self.settings()["editScope"] ) :
 			self.__updateButtonStatus()
-
-	def _titleFormat( self ) :
-
-		return GafferUI.NodeSetEditor._titleFormat(
-			self,
-			_maxNodes = 1 if self.settings()["in"].getInput() is not None else 0,
-			_reverseNodes = True,
-			_ellipsis = False
-		)
 
 	@GafferUI.LazyMethod()
 	def __updateColumns( self ) :
@@ -293,13 +255,6 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 				sectionColumns += [ c( self.settings()["in"], self.settings()["editScope"] ) for c in section.values() ]
 
 		self.__pathListing.setColumns( [ self.__renderPassNameColumn, self.__renderPassActiveColumn ] + sectionColumns )
-
-	def __plugParentChanged( self, plug, oldParent ) :
-
-		# if a plug has been removed or moved to another node, then
-		# we need to stop viewing it - _updateFromSet() will find the
-		# next suitable plug from the current node set.
-		self._updateFromSet()
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __setPathListingPath( self ) :
