@@ -38,19 +38,19 @@ import imath
 
 import Gaffer
 import GafferImage
-import GafferScene
 import GafferUI
 import GafferSceneUI
 
-class UVInspector( GafferUI.NodeSetEditor ) :
+class UVInspector( GafferSceneUI.SceneEditor ) :
 
 	def __init__( self, scriptNode, **kw ) :
 
 		column = GafferUI.ListContainer()
 
-		GafferUI.NodeSetEditor.__init__( self, column, scriptNode, nodeSet = scriptNode.focusSet(), **kw )
+		GafferSceneUI.SceneEditor.__init__( self, column, scriptNode, **kw )
 
 		self.__uvView = GafferSceneUI.UVView()
+		self.__uvView["in"].setInput( self.settings()["in"] )
 		Gaffer.NodeAlgo.applyUserDefaults( self.__uvView )
 		self.__uvView.setContext( self.getContext() )
 
@@ -80,16 +80,6 @@ class UVInspector( GafferUI.NodeSetEditor ) :
 	def __repr__( self ) :
 
 		return "GafferSceneUI.UVInspector( scriptNode )"
-
-	def _updateFromSet( self ) :
-
-		GafferUI.NodeSetEditor._updateFromSet( self )
-
-		scene = None
-		if len( self.getNodeSet() ) :
-			scene = next( GafferScene.ScenePlug.RecursiveOutputRange( self.getNodeSet()[-1] ), None )
-
-		self.__uvView["in"].setInput( scene )
 
 	def __keyPress( self, widget, event ) :
 
