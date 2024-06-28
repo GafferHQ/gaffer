@@ -142,6 +142,7 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 			self.__pathListing.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
 
 		self._updateFromSet()
+		self.__setPathListingPath()
 		self.__updateColumns()
 		self.__updateButtonStatus()
 
@@ -255,10 +256,6 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 		# hence the need for already figuring out the plug.
 		GafferUI.NodeSetEditor._updateFromSet( self )
 
-		## \todo Remove in Gaffer 1.4 when we can drive `RenderPassEditor.Settings` from
-		# `GafferUI.Editor.Settings` to follow the changes introduced with ImageInspector.
-		self.__setPathListingPath()
-
 	def _updateFromContext( self, modifiedItems ) :
 
 		if any( not i.startswith( "ui:" ) for i in modifiedItems ) :
@@ -307,16 +304,12 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __setPathListingPath( self ) :
 
-		## \todo Simplify in Gaffer 1.4, we shouldn't require the fallback to DictPath when we have no input.
-		if self.settings()["in"].getInput() is not None :
-			# We take a static copy of our current context for use in the RenderPassPath - this prevents the
-			# PathListing from updating automatically when the original context changes, and allows us to take
-			# control of updates ourselves in _updateFromContext(), using LazyMethod to defer the calls to this
-			# function until we are visible and playback has stopped.
-			contextCopy = Gaffer.Context( self.getContext() )
-			self.__pathListing.setPath( _GafferSceneUI._RenderPassEditor.RenderPassPath( self.settings()["in"], contextCopy, "/", filter = self.__filter, grouped = self.settings()["displayGrouped"].getValue() ) )
-		else :
-			self.__pathListing.setPath( Gaffer.DictPath( {}, "/" ) )
+		# We take a static copy of our current context for use in the RenderPassPath - this prevents the
+		# PathListing from updating automatically when the original context changes, and allows us to take
+		# control of updates ourselves in _updateFromContext(), using LazyMethod to defer the calls to this
+		# function until we are visible and playback has stopped.
+		contextCopy = Gaffer.Context( self.getContext() )
+		self.__pathListing.setPath( _GafferSceneUI._RenderPassEditor.RenderPassPath( self.settings()["in"], contextCopy, "/", filter = self.__filter, grouped = self.settings()["displayGrouped"].getValue() ) )
 
 	def __displayGroupedChanged( self ) :
 
