@@ -752,6 +752,8 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			edit = lightFilter["filteredLights"]
 		)
 
+		self.assertIsNone( self.__inspect( editScope["out"], "/lightFilter", "bogusAttribute" ) )
+
 		inspection = self.__inspect( editScope["out"], "/lightFilter", "filteredLights", editScope )
 		edit = inspection.acquireEdit()
 		edit["enabled"].setValue( True )

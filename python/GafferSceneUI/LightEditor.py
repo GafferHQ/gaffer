@@ -295,9 +295,9 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 				sectionColumns += [ c( self.__settingsNode["in"], self.__settingsNode["editScope"] ) for c in section.values() ]
 
 		nameColumn = self.__pathListing.getColumns()[0]
-		self.__muteColumn = self.__pathListing.getColumns()[1]
-		self.__soloColumn = self.__pathListing.getColumns()[2]
-		self.__pathListing.setColumns( [ nameColumn, self.__muteColumn, self.__soloColumn ] + sectionColumns )
+		muteColumn = self.__pathListing.getColumns()[1]
+		soloColumn = self.__pathListing.getColumns()[2]
+		self.__pathListing.setColumns( [ nameColumn, muteColumn, soloColumn ] + sectionColumns )
 
 	def __settingsPlugSet( self, plug ) :
 
@@ -385,26 +385,12 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 		inspections = []
 
 		with Gaffer.Context( self.getContext() ) as context :
-			lightSetMembers = self.__settingsNode["in"].set( "__lights" ).value
 
 			for selection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
 				if not isinstance( column, _GafferSceneUI._LightEditorInspectorColumn ) :
 					continue
 				for pathString in selection.paths() :
 					path = GafferScene.ScenePlug.stringToPath( pathString )
-
-					if (
-						( column == self.__muteColumn or column == self.__soloColumn ) and
-						not ( lightSetMembers.match( path ) & (
-							IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch
-						) )
-					) :
-						with GafferUI.PopupWindow() as self.__popup :
-							with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-								GafferUI.Image( "warningSmall.png" )
-								GafferUI.Label( "<h4>The " + column.headerData().value + " column can only be toggled for lights." )
-						self.__popup.popup( parent = self )
-						return
 
 					context["scene:path"] = path
 					inspection = column.inspector().inspect()

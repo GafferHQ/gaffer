@@ -204,6 +204,7 @@ Gaffer::ValuePlugPtr attributePlug( const Gaffer::CompoundDataPlug *parentPlug, 
 //////////////////////////////////////////////////////////////////////////
 
 static InternedString g_lightMuteAttributeName( "light:mute" );
+static InternedString g_filteredLightsAttributeName( "filteredLights");
 
 AttributeInspector::AttributeInspector(
 	const GafferScene::ScenePlugPtr &scene,
@@ -263,7 +264,11 @@ Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::H
 
 	else if( auto lightFilter = runTimeCast<LightFilter>( sceneNode ) )
 	{
-		return lightFilter->filteredLightsPlug();
+		if( m_attribute == g_filteredLightsAttributeName )
+		{
+			return lightFilter->filteredLightsPlug();
+		}
+		return nullptr;
 	}
 
 	else if( auto camera = runTimeCast<GafferScene::Camera>( sceneNode ) )
