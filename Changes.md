@@ -34,6 +34,7 @@ Improvements
   - Added support for `{plug}` value substitutions in node annotations.
   - Added <kbd>Ctrl</kbd> + <kbd>Enter</kbd> keyboard shortcut to annotation dialogue. This applies the annotation and closes the dialogue.
 - LightEditor : Added support for Arnold light blockers and barndoor, gobo and decay light filters.
+- EditScope : Added summary of `SetMembershipEdits` processors.
 
 Fixes
 -----
