@@ -1127,7 +1127,7 @@ class _PlugTableView( GafferUI.Widget ) :
 						return
 
 		self.__editorWidget = GafferUI.PlugPopup( plugs, title = "" )
-		self.__editorWidget.popup( plugBound.center() )
+		self.__editorWidget.popup( plugBound.center(), parent = self )
 
 		widget = self.__editorWidget.plugValueWidget()
 		if isinstance( widget, GafferUI.StringPlugValueWidget ) :

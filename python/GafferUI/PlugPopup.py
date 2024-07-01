@@ -118,9 +118,9 @@ class PlugPopup( GafferUI.PopupWindow ) :
 		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
 		self.focusChangedSignal().connect( Gaffer.WeakMethod( self.__focusChanged ), scoped = False )
 
-	def popup( self, center = None ) :
+	def popup( self, center = None, parent = None ) :
 
-		GafferUI.PopupWindow.popup( self, center )
+		GafferUI.PopupWindow.popup( self, center, parent )
 
 		# Attempt to focus the first text widget. This is done after making
 		# the window visible, as we check child widget visibility to avoid

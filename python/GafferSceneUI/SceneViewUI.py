@@ -103,8 +103,9 @@ Gaffer.Metadata.registerNode(
 
 		"editScope" : [
 
-			"toolbarLayout:index", -1,
 			"plugValueWidget:type", "GafferUI.EditScopeUI.EditScopePlugValueWidget",
+			"toolbarLayout:index", -1,
+			"toolbarLayout:width", 225,
 
 		],
 
@@ -343,7 +344,8 @@ class _RendererSettingsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			center = imath.V2i(
 				bound.center().x,
 				bound.max().y + self.__window.bound().size().y / 2 + 8,
-			)
+			),
+			parent = self
 		)
 
 ##########################################################################

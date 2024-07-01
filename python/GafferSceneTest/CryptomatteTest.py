@@ -438,7 +438,7 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		c["in"].setInput( r["out"] )
 
 		c["layer"].setValue( "crypto_object" )
-		self.assertSceneValid( c["__manifestScene"] )
+		self.assertSceneValid( c["manifestScene"] )
 
 	def testChildNames( self ) :
 
@@ -450,10 +450,10 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 
 		cs = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
 		c["layer"].setValue( "crypto_object" )
-		self.assertTrue( c["__manifestScene"]["childNames"] in [ x[0] for x in cs ] )
+		self.assertTrue( c["manifestScene"]["childNames"] in [ x[0] for x in cs ] )
 
 		self.assertEqual(
-			c["__manifestScene"].childNames( "/GAFFERBOT/C_torso_GRP" ),
+			c["manifestScene"].childNames( "/GAFFERBOT/C_torso_GRP" ),
 			IECore.InternedStringVectorData( [ "C_head_GRP", "C_key_GRP", "C_torso_CPT", "L_armUpper_GRP", "L_legUpper_GRP", "R_armUpper_GRP", "R_legUpper_GRP" ] )
 		)
 

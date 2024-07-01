@@ -339,7 +339,7 @@ class GraphEditor( GafferUI.Editor ) :
 						GafferUI.Image( "warningSmall.png" )
 						GafferUI.Label( "Node Graph Not Editable" )
 
-			self.__readOnlyPopup.popup( center = self.bound().center() )
+			self.__readOnlyPopup.popup( center = self.bound().center(), parent = self )
 
 	def __nodeMenuVisibilityChanged( self, widget ) :
 

@@ -47,6 +47,7 @@ import GafferUI
 
 from GafferUI._StyleSheet import _styleColors
 from Qt import QtGui
+from Qt import QtWidgets
 
 Gaffer.Metadata.registerNode(
 
@@ -131,7 +132,8 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ),
 					highlightOnOver = False
 				)
-				self.__menuButton._qtWidget().setFixedWidth( 120 )
+				# Ignore the width in X so MenuButton width is limited by the overall width of the widget
+				self.__menuButton._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
 				self.__navigationMenuButton = GafferUI.MenuButton(
 					image = "navigationArrow.png",
 					hasFrame = False,
@@ -452,7 +454,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 					GafferUI.Image( "warningSmall.png" )
 					GafferUI.Label( "<h4>The Edit Scope cannot be set while nothing is viewed</h4>" )
-			self.__popup.popup()
+			self.__popup.popup( parent = self )
 		elif dropNode :
 			upstream = Gaffer.NodeAlgo.findAllUpstream( inputNode, self.__editScopePredicate )
 			if self.__editScopePredicate( inputNode ) :
@@ -465,7 +467,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 						GafferUI.Image( "warningSmall.png" )
 						GafferUI.Label( "<h4>{} cannot be used as it is not upstream of {}</h4>".format( dropNode.getName(), inputNode.getName() ) )
-				self.__popup.popup()
+				self.__popup.popup( parent = self )
 
 		self.__frame.setHighlighted( False )
 
