@@ -385,7 +385,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 		inspections = []
 
 		with Gaffer.Context( self.getContext() ) as context :
-			lightSetMembers = self.__settingsNode["in"].set( "__lights" ).value
+			lightFilterSetMembers = self.__settingsNode["in"].set( "__lightFilters" ).value
 
 			for selection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
 				if not isinstance( column, _GafferSceneUI._LightEditorInspectorColumn ) :
@@ -395,14 +395,12 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 					if (
 						( column == self.__muteColumn or column == self.__soloColumn ) and
-						not ( lightSetMembers.match( path ) & (
-							IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch
-						) )
+						lightFilterSetMembers.match( path ) & IECore.PathMatcher.Result.ExactMatch
 					) :
 						with GafferUI.PopupWindow() as self.__popup :
 							with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 								GafferUI.Image( "warningSmall.png" )
-								GafferUI.Label( "<h4>The " + column.headerData().value + " column can only be toggled for lights." )
+								GafferUI.Label( "<h4>The " + column.headerData().value + " column cannot toggle light filters." )
 						self.__popup.popup( parent = self )
 						return
 

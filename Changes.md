@@ -6,6 +6,7 @@ Improvements
 
 - Cryptomatte : Renamed `__manifestScene` plug to `manifestScene` so it is no longer considered to be private.
 - EditScopePlugValueWidget : Width can now be configured via `<layoutName>:width` metadata. This enables customisation of the Edit Scope menu width by registering metadata in a startup file, such as `Gaffer.Metadata.registerValue( GafferSceneUI.RenderPassEditor.Settings, "editScope", "layout:width", 450 )` to double the standard width of the Edit Scope menu in the Render Pass Editor.
+- LightEditor : Simplified mute and solo behavior for groups. Previously only groups with at least one child light could be muted or soloed. Now any group can be muted or soloed.
 
 Fixes
 -----
@@ -13,6 +14,7 @@ Fixes
 - HierarchyView, LightEditor, PrimitiveInspector, SceneInspector : Fixed bug which allowed scenes from private plugs to be displayed.
 - PrimitiveInspector : Fixed bug which claimed "Location does not exist" for objects without any primitive variables.
 - OpenColorIO : Fixed the display transform used to show colours in popups.
+- LightEditor : Fixed regression (introduced in 1.4.8.0) causing the mute and solo icons to not show up for groups.
 
 API
 ---

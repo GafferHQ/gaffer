@@ -79,14 +79,14 @@ namespace
 {
 
 ConstStringDataPtr g_emptyLocation = new StringData( "emptyLocation.png" );
-const InternedString g_lightSetName( "__lights" );
+const InternedString g_lightFilterSetName( "__lightFilters" );
 
-bool isLight( const ScenePath *scenePath, const Canceller *canceller )
+bool isLightFilter( const ScenePath *scenePath, const Canceller *canceller )
 {
-	ScenePlug::SetScope scope( scenePath->getContext(), &g_lightSetName );
+	ScenePlug::SetScope scope( scenePath->getContext(), &g_lightFilterSetName );
 	scope.setCanceller( canceller );
-	ConstPathMatcherDataPtr lightsData = scenePath->getScene()->setPlug()->getValue();
-	return lightsData->readable().match( scenePath->names() ) & PathMatcher::ExactMatch;
+	ConstPathMatcherDataPtr lightFilterssData = scenePath->getScene()->setPlug()->getValue();
+	return lightFilterssData->readable().match( scenePath->names() ) & PathMatcher::ExactMatch;
 }
 
 class LocationNameColumn : public StandardPathColumn
@@ -298,7 +298,7 @@ class MuteColumn : public InspectorColumn
 				return result;
 			}
 
-			if( !isLight( scenePath, canceller ) )
+			if( isLightFilter( scenePath, canceller ) )
 			{
 				return CellData();
 			}
@@ -423,7 +423,7 @@ class SetMembershipColumn : public InspectorColumn
 				return result;
 			}
 
-			if( !isLight( scenePath, canceller ) )
+			if( isLightFilter( scenePath, canceller ) )
 			{
 				return CellData();
 			}
