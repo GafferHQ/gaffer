@@ -42,6 +42,7 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferScene
+import GafferSceneUI
 from . import _GafferSceneUI
 
 from . import ContextAlgo
@@ -51,16 +52,18 @@ from . import SetUI
 # HierarchyView
 ##########################################################################
 
-class HierarchyView( GafferUI.NodeSetEditor ) :
+class HierarchyView( GafferSceneUI.SceneEditor ) :
 
 	def __init__( self, scriptNode, **kw ) :
 
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4, spacing = 4 )
 
-		GafferUI.NodeSetEditor.__init__( self, column, scriptNode, nodeSet = scriptNode.focusSet(), **kw )
+		GafferSceneUI.SceneEditor.__init__( self, column, scriptNode, **kw )
 
 		searchFilter = _GafferSceneUI._HierarchyViewSearchFilter()
+		searchFilter.setScene( self.settings()["in"] )
 		setFilter = _GafferSceneUI._HierarchyViewSetFilter()
+		setFilter.setScene( self.settings()["in"] )
 		setFilter.setEnabled( False )
 
 		self.__filter = Gaffer.CompoundPathFilter( [ searchFilter, setFilter ] )
@@ -91,41 +94,18 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 			self.__pathListing.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenuSignal ), scoped = False )
 			self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPressSignal ), scoped = False )
 
-		self.__plug = None
 		self._updateFromSet()
+		self.__setPathListingPath()
 		self.__transferExpansionFromContext()
 		self.__transferSelectionFromContext()
 
 	def scene( self ) :
 
-		return self.__plug
+		return self.settings()["in"].getInput()
 
 	def __repr__( self ) :
 
 		return "GafferSceneUI.HierarchyView( scriptNode )"
-
-	def _updateFromSet( self ) :
-
-		# first of all decide what plug we're viewing.
-		self.__plug = None
-		self.__plugParentChangedConnection = None
-		node = self._lastAddedNode()
-		if node is not None :
-			self.__plug = next(
-				( p for p in GafferScene.ScenePlug.RecursiveOutputRange( node ) if not p.getName().startswith( "__" ) ),
-				None
-			)
-			if self.__plug is not None :
-				self.__plugParentChangedConnection = self.__plug.parentChangedSignal().connect(
-					Gaffer.WeakMethod( self.__plugParentChanged ), scoped = True
-				)
-
-		# call base class update - this will trigger a call to _titleFormat(),
-		# hence the need for already figuring out the plug.
-		GafferUI.NodeSetEditor._updateFromSet( self )
-
-		# update our view of the hierarchy
-		self.__setPathListingPath()
 
 	def _updateFromContext( self, modifiedItems ) :
 
@@ -141,45 +121,23 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 				self.__setPathListingPath()
 				break
 
-	def _titleFormat( self ) :
-
-		return GafferUI.NodeSetEditor._titleFormat(
-			self,
-			_maxNodes = 1 if self.__plug is not None else 0,
-			_reverseNodes = True,
-			_ellipsis = False
-		)
-
-	def __plugParentChanged( self, plug, oldParent ) :
-
-		# the plug we were viewing has been deleted or moved - find
-		# another one to view.
-		self._updateFromSet()
-
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __setPathListingPath( self ) :
 
+		# We take a static copy of our current context for use in the ScenePath for two reasons :
+		#
+		# 1. To prevent the PathListing from updating automatically when the original context
+		#    changes, which allows us to take control of updates ourselves in `_updateFromContext()`,
+		#    using LazyMethod to defer the calls to this function until we are visible and
+		#    playback has stopped.
+		# 2. Because the PathListingWidget uses a BackgroundTask to evaluate the Path, and it
+		#    would not be thread-safe to directly reference a context that could be modified by
+		#    the UI thread at any time.
+		contextCopy = Gaffer.Context( self.getContext() )
 		for f in self.__filter.getFilters() :
-			f.setScene( self.__plug )
-
-		if self.__plug is not None :
-			# We take a static copy of our current context for use in the ScenePath for two reasons :
-			#
-			# 1. To prevent the PathListing from updating automatically when the original context
-			#    changes, which allows us to take control of updates ourselves in `_updateFromContext()`,
-			#    using LazyMethod to defer the calls to this function until we are visible and
-			#    playback has stopped.
-			# 2. Because the PathListingWidget uses a BackgroundTask to evaluate the Path, and it
-			#    would not be thread-safe to directly reference a context that could be modified by
-			#    the UI thread at any time.
-			contextCopy = Gaffer.Context( self.getContext() )
-			for f in self.__filter.getFilters() :
-				f.setContext( contextCopy )
-			with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
-				self.__pathListing.setPath( GafferScene.ScenePath( self.__plug, contextCopy, "/", filter = self.__filter ) )
-		else :
-			with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
-				self.__pathListing.setPath( Gaffer.DictPath( {}, "/" ) )
+			f.setContext( contextCopy )
+		with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
+			self.__pathListing.setPath( GafferScene.ScenePath( self.settings()["in"], contextCopy, "/", filter = self.__filter ) )
 
 	def __expansionChanged( self, pathListing ) :
 
@@ -238,13 +196,13 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 
 	def __copySelectedPaths( self, *unused ) :
 
-		if self.__plug is None :
+		if self.scene() is None :
 			return
 
 		selection = self.__pathListing.getSelection()
 		if not selection.isEmpty() :
 			data = IECore.StringVectorData( selection.paths() )
-			self.__plug.ancestor( Gaffer.ApplicationRoot ).setClipboardContents( data )
+			self.scriptNode().ancestor( Gaffer.ApplicationRoot ).setClipboardContents( data )
 
 	def __frameSelectedPaths( self ) :
 

@@ -54,7 +54,7 @@ import GafferScene
 import GafferUI
 import GafferSceneUI
 
-class SceneInspector( GafferUI.NodeSetEditor ) :
+class SceneInspector( GafferSceneUI.SceneEditor ) :
 
 	## Simple class to specify the target of an inspection,
 	# and provide cached queries for that target.
@@ -147,13 +147,21 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 
 			return self.__sets[setName]
 
+	class Settings( GafferSceneUI.SceneEditor.Settings ) :
+
+		def __init__( self ) :
+
+			GafferSceneUI.SceneEditor.Settings.__init__( self, numInputs = 2 )
+
+	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::SceneInspector::Settings" )
+
 	## A list of Section instances may be passed to create a custom inspector,
 	# otherwise all registered Sections will be used.
 	def __init__( self, scriptNode, sections = None, **kw ) :
 
 		mainColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 8 )
 
-		GafferUI.NodeSetEditor.__init__( self, mainColumn, scriptNode, nodeSet = scriptNode.focusSet(), **kw )
+		GafferSceneUI.SceneEditor.__init__( self, mainColumn, scriptNode, **kw )
 
 		self.__sections = []
 
@@ -220,24 +228,10 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 
 		return "GafferSceneUI.SceneInspector( scriptNode )"
 
-	def _updateFromSet( self ) :
+	def _updateFromSettings( self, plug ) :
 
-		GafferUI.NodeSetEditor._updateFromSet( self )
-
-		self.__scenePlugs = []
-		self.__plugDirtiedConnections = []
-		self.__parentChangedConnections = []
-		for node in self.getNodeSet()[-2:] :
-			outputScenePlug = next(
-				( p for p in GafferScene.ScenePlug.RecursiveOutputRange( node ) if not p.getName().startswith( "__" ) ),
-				None
-			)
-			if outputScenePlug :
-				self.__scenePlugs.append( outputScenePlug )
-				self.__plugDirtiedConnections.append( node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ), scoped = True ) )
-				self.__parentChangedConnections.append( outputScenePlug.parentChangedSignal().connect( Gaffer.WeakMethod( self.__plugParentChanged ), scoped = True ) )
-
-		self.__updateLazily()
+		if plug.isSame( self.settings()["in"] ) :
+			self.__updateLazily()
 
 	def _updateFromContext( self, modifiedItems ) :
 
@@ -245,22 +239,6 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 			if not item.startswith( "ui:" ) or ( GafferSceneUI.ContextAlgo.affectsSelectedPaths( item ) and self.__targetPaths is None ) :
 				self.__updateLazily()
 				break
-
-	def _titleFormat( self ) :
-
-		return GafferUI.NodeSetEditor._titleFormat( self, _maxNodes = 2, _reverseNodes = True, _ellipsis = False )
-
-	def __plugDirtied( self, plug ) :
-
-		if isinstance( plug, GafferScene.ScenePlug ) and plug.direction() == Gaffer.Plug.Direction.Out :
-			self.__updateLazily()
-
-	def __plugParentChanged( self, plug, oldParent ) :
-
-		# if a plug has been removed or moved to another node, then
-		# we need to stop viewing it - _updateFromSet() will find the
-		# next suitable plug from the current node set.
-		self._updateFromSet()
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __updateLazily( self ) :
@@ -273,7 +251,8 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		# if nodes in the graph are expecting special context variables, so we make sure it is:
 		with self.getContext():
 
-			assert( len( self.__scenePlugs ) <= 2 )
+			scenes = [ s.getInput() for s in self.settings()["in"] if s.getInput() is not None ]
+			assert( len( scenes ) <= 2 )
 
 			paths = [ None ]
 			if self.__targetPaths is not None :
@@ -286,11 +265,11 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 					if len( selectedPaths ) > 1 :
 						paths.insert( 0, next( p for p in selectedPaths if p != lastSelectedPath ) )
 
-			if len( self.__scenePlugs ) > 1 :
+			if len( scenes ) > 1 :
 				paths = [ paths[-1] ]
 
 			targets = []
-			for scene in self.__scenePlugs :
+			for scene in scenes :
 				for path in paths :
 					if path is not None and not scene.exists( path ) :
 						# selection may not be valid for both scenes,

@@ -41,6 +41,7 @@ __import__( "GafferScene" )
 
 from ._GafferSceneUI import *
 
+from .SceneEditor import SceneEditor
 from .HierarchyView import HierarchyView
 from .SceneInspector import SceneInspector
 from .PrimitiveInspector import PrimitiveInspector

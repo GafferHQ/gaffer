@@ -62,18 +62,21 @@ class Editor( GafferUI.Widget ) :
 	#   defaults.
 	# - The PlugLayout we use to display the settings allows users to add their
 	#   own widgets to the UI.
+	#
+	# Editor subclasses should subclass Settings as `EditorSubclass.Settings`,
+	# and the settings node will then be created automatically upon
+	# construction.
 	class Settings( Gaffer.Node ) :
 
-		def __init__( self, name, script ) :
+		def __init__( self ) :
 
-			Gaffer.Node.__init__( self, name )
+			Gaffer.Node.__init__( self )
 
 			# Hack to allow BackgroundTask to recover ScriptNode for
 			# cancellation support - see `BackgroundTask.cpp`.
 			## \todo Perhaps we can make this more natural at the point we derive
 			# Editor from Node?
 			self["__scriptNode"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.Serialisable )
-			self["__scriptNode"].setInput( script["fileName"] )
 
 	IECore.registerRunTimeTyped( Settings, typeName = "GafferUI::Editor::Settings" )
 
@@ -88,6 +91,12 @@ class Editor( GafferUI.Widget ) :
 		self.__scriptNode = scriptNode
 		self.__context = None
 
+		self.__settings = self.Settings()
+		self.__settings.setName( self.__class__.__name__ + "Settings" )
+		self.__settings["__scriptNode"].setInput( scriptNode["fileName"] )
+		Gaffer.NodeAlgo.applyUserDefaults( self.__settings )
+		self.settings().plugDirtiedSignal().connect( Gaffer.WeakMethod( self._updateFromSettings ), scoped = False )
+
 		self.__title = ""
 		self.__titleChangedSignal = GafferUI.WidgetSignal()
 
@@ -98,18 +107,22 @@ class Editor( GafferUI.Widget ) :
 
 	def __del__( self ) :
 
-		for attr in self.__dict__.values() :
-			if isinstance( attr, GafferUI.Editor.Settings ) :
-				# Remove connection to ScriptNode now, on the UI thread.
-				# Otherwise we risk deadlock if the Settings node gets garbage
-				# collected in a BackgroundTask, which would attempt
-				# cancellation of all tasks for the ScriptNode, including the
-				# task itself.
-				attr["__scriptNode"].setInput( None )
+		# Remove connection to ScriptNode now, on the UI thread.
+		# Otherwise we risk deadlock if the Settings node gets garbage
+		# collected in a BackgroundTask, which would attempt
+		# cancellation of all tasks for the ScriptNode, including the
+		# task itself. We also need to prevent emission of `plugDirtiedSignal()`
+		# while we do that, to prevent half-destructed UIs from erroring.
+		self.__settings.plugDirtiedSignal().disconnectAllSlots()
+		self.__settings["__scriptNode"].setInput( None )
 
 	def scriptNode( self ) :
 
 		return self.__scriptNode
+
+	def settings( self ) :
+
+		return self.__settings
 
 	## May be called to explicitly set the title for this editor. The
 	# editor itself is not responsible for displaying the title - this
@@ -191,6 +204,12 @@ class Editor( GafferUI.Widget ) :
 	def _contextChangedConnection( self ) :
 
 		return self.__contextChangedConnection
+
+	## May be implemented by derived classes to update based on changes to the
+	# settings plugs.
+	def _updateFromSettings( self, plug ) :
+
+		pass
 
 	## This must be implemented by all derived classes as it is used for serialisation of layouts.
 	# It is not expected that the script being edited is also serialised as part of this operation -

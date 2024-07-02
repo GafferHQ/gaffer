@@ -126,9 +126,8 @@ class EditorTest( GafferUITest.TestCase ) :
 
 				GafferUI.Editor.__init__( self, GafferUI.Label( "MyEditor" ), scriptNode )
 
-				self.__settingsNode = self.Settings( "MyEditor", scriptNode )
-
 		editor = TestEditor( script )
+		self.assertIsInstance( editor.settings(), TestEditor.Settings )
 
 		# Then we dispose of that editor.
 
