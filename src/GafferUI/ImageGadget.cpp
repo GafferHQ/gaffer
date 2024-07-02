@@ -138,7 +138,7 @@ using TextureCache = IECorePreview::LRUCache<TextureCacheKey, ConstTexturePtr>;
 
 IECoreGL::ConstTexturePtr textureGetter( const TextureCacheKey &key, size_t &cost, const IECore::Canceller *canceller )
 {
-	const OIIO::ImageSpec config( OIIO::TypeDesc::UCHAR );
+	const OIIO::ImageSpec config( OIIO::TypeDesc::UINT8 );
 	const std::string fileName = resolvedFileName( key.fileName );
 	OIIO::ImageBuf imageBuf( fileName, /* subimage = */ 0, /* miplevel = */ 0, /* imagecache = */ nullptr, &config );
 	imageBuf = OIIO::ImageBufAlgo::flip( imageBuf );
@@ -153,6 +153,10 @@ IECoreGL::ConstTexturePtr textureGetter( const TextureCacheKey &key, size_t &cos
 	);
 
 	imageBuf = OIIO::ImageBufAlgo::colorconvert( imageBuf, colorProcessor.get(), true );
+	if( imageBuf.spec().format != OIIO::TypeDesc::UINT8 )
+	{
+		imageBuf = imageBuf.copy( OIIO::TypeDesc::UINT8 );
+	}
 
 	GLint pixelFormat;
 	switch( imageBuf.nchannels() )
