@@ -6,6 +6,7 @@ Improvements
 
 - Cryptomatte : Renamed `__manifestScene` plug to `manifestScene` so it is no longer considered to be private.
 - EditScopePlugValueWidget : Width can now be configured via `<layoutName>:width` metadata. This enables customisation of the Edit Scope menu width by registering metadata in a startup file, such as `Gaffer.Metadata.registerValue( GafferSceneUI.RenderPassEditor.Settings, "editScope", "layout:width", 450 )` to double the standard width of the Edit Scope menu in the Render Pass Editor.
+- ArnoldShader : The `data_input` parameter of the `color_jitter` shader is now visible in the GraphEditor.
 
 Fixes
 -----
