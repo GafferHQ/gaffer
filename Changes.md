@@ -20,6 +20,7 @@ Improvements
 - LightEditor : Mute and solo columns now accurately reflect the presence of the `light:mute` attribute (for the Mute column) and membership in the `soloLights` set (for the Solo column) for all scene locations, not just for lights.
 - RenderPassEditor : The currently active render pass can now be unset by double clicking on its green dot in the "Active" column.
 - HierarchyView, LightEditor, RenderPassEditor, SetEditor : Reduced potential UI stalls when first showing a scene.
+- ShaderTweaks : Added support for wildcards in the shader name, in order to tweak multiple shaders at once.
 
 Fixes
 -----
