@@ -1241,6 +1241,8 @@
 
 	[attr data_input]
 		page STRING "User Data"
+		linkable BOOL true
+		gaffer.graphEditorLayout.visible BOOL true
 	[attr data_gain_min]
 		page STRING "User Data"
 	[attr data_gain_max]
