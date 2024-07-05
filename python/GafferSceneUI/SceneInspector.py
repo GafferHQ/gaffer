@@ -1259,7 +1259,7 @@ class _Rail( GafferUI.ListContainer ) :
 			else :
 				GafferUI.Spacer( imath.V2i( 1 ) )
 
-			GafferUI.Image( "rail" + str( type ) + ".png" )
+			GafferUI.Image( "rail" + type.name + ".png" )
 
 			if type != self.Type.Bottom and type != self.Type.Single :
 				image = GafferUI.Image( "railLine.png" )
