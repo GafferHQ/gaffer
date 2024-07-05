@@ -54,6 +54,7 @@ Premultiply::Premultiply( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "alphaChannel", Gaffer::Plug::In, "A" ) );
+	addChild( new BoolPlug( "ignoreMissingAlpha", Gaffer::Plug::In, false ) );
 	addChild( new BoolPlug( "useDeepVisibility", Gaffer::Plug::In, false ) );
 }
 
@@ -71,14 +72,24 @@ const Gaffer::StringPlug *Premultiply::alphaChannelPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-Gaffer::BoolPlug *Premultiply::useDeepVisibilityPlug()
+Gaffer::BoolPlug *Premultiply::ignoreMissingAlphaPlug()
 {
 	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::BoolPlug *Premultiply::useDeepVisibilityPlug() const
+const Gaffer::BoolPlug *Premultiply::ignoreMissingAlphaPlug() const
 {
 	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+Gaffer::BoolPlug *Premultiply::useDeepVisibilityPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::BoolPlug *Premultiply::useDeepVisibilityPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
 }
 
 void Premultiply::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -91,6 +102,7 @@ void Premultiply::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 		input == inPlug()->deepPlug() ||
 		input == inPlug()->sampleOffsetsPlug() ||
 		input == alphaChannelPlug() ||
+		input == ignoreMissingAlphaPlug() ||
 		input == useDeepVisibilityPlug()
 	)
 	{
@@ -100,29 +112,44 @@ void Premultiply::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 
 void Premultiply::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-
-	ChannelDataProcessor::hashChannelData( output, context, h );
-
 	std::string alphaChannel;
 	ConstStringVectorDataPtr inChannelNamesPtr;
+	bool ignoreMissingAlpha;
 	bool useDeepVisibility;
+	bool deep;
 	{
 		ImagePlug::GlobalScope c( context );
 		alphaChannel = alphaChannelPlug()->getValue();
 		inChannelNamesPtr = inPlug()->channelNamesPlug()->getValue();
+		ignoreMissingAlpha = ignoreMissingAlphaPlug()->getValue();
 		useDeepVisibility = useDeepVisibilityPlug()->getValue();
-		inPlug()->deepPlug()->hash( h );
+		deep = inPlug()->deepPlug()->getValue();
 	}
 
-	h.append( alphaChannel == context->get<std::string>( ImagePlug::channelNameContextName ) );
+	if(
+		(!useDeepVisibility && alphaChannel == context->get<std::string>( ImagePlug::channelNameContextName ) ) ||
+		( useDeepVisibility && !deep )
+	)
+	{
+		h = inPlug()->channelDataPlug()->hash();
+		return;
+	}
 
 	const std::vector<std::string> &inChannelNames = inChannelNamesPtr->readable();
 	if ( std::find( inChannelNames.begin(), inChannelNames.end(), alphaChannel ) == inChannelNames.end() )
 	{
-		throw IECore::Exception( fmt::format( "Channel '{}' does not exist", alphaChannel ) );
+		if( ignoreMissingAlpha )
+		{
+			h = inPlug()->channelDataPlug()->hash();
+			return;
+		}
+		else
+		{
+			throw IECore::Exception( fmt::format( "Channel '{}' does not exist", alphaChannel ) );
+		}
 	}
 
-	inPlug()->channelDataPlug()->hash( h );
+	ChannelDataProcessor::hashChannelData( output, context, h );
 
 	ImagePlug::ChannelDataScope channelDataScope( context );
 	channelDataScope.setChannelName( &alphaChannel );
@@ -142,16 +169,24 @@ void Premultiply::processChannelData( const Gaffer::Context *context, const Imag
 	std::string alphaChannel;
 	ConstStringVectorDataPtr inChannelNamesPtr;
 	bool useDeepVisibility;
+	bool ignoreMissingAlpha;
 	bool deep;
 	{
 		ImagePlug::GlobalScope c( context );
 		alphaChannel = alphaChannelPlug()->getValue();
 		inChannelNamesPtr = inPlug()->channelNamesPlug()->getValue();
 		useDeepVisibility = useDeepVisibilityPlug()->getValue();
+		ignoreMissingAlpha = ignoreMissingAlphaPlug()->getValue();
 		deep = inPlug()->deepPlug()->getValue();
 	}
 
-	if( !useDeepVisibility && channel == alphaChannel )
+	if(
+		// Unless we're doing useDeepVisibility, we don't process the alpha channel
+		( !useDeepVisibility && channel == alphaChannel ) ||
+		// If it's a flat image, useDeepVisibility means don't do anything
+		// ( There is never a sample in front, so the visibility is always 100% )
+		( useDeepVisibility && !deep )
+	)
 	{
 		return;
 	}
@@ -159,7 +194,14 @@ void Premultiply::processChannelData( const Gaffer::Context *context, const Imag
 	const std::vector<std::string> &inChannelNames = inChannelNamesPtr->readable();
 	if ( std::find( inChannelNames.begin(), inChannelNames.end(), alphaChannel ) == inChannelNames.end() )
 	{
-		throw IECore::Exception( fmt::format( "Channel '{}' does not exist", alphaChannel ) );
+		if( ignoreMissingAlpha )
+		{
+			return;
+		}
+		else
+		{
+			throw IECore::Exception( fmt::format( "Channel '{}' does not exist", alphaChannel ) );
+		}
 	}
 
 	ImagePlug::ChannelDataScope channelDataScope( context );
@@ -176,13 +218,6 @@ void Premultiply::processChannelData( const Gaffer::Context *context, const Imag
 		{
 			*outIt *= *aIt;
 		}
-		return;
-	}
-
-	if( !deep )
-	{
-		// If it's a flat image, useDeepVisibility means don't do anything
-		// ( There is never a sample in front, so the visibility is always 100%
 		return;
 	}
 
