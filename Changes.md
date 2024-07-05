@@ -10,6 +10,22 @@ Improvements
 - Metadata : Metadata registered to a node or plug targeting a descendant plug will now override metadata registered locally to the target.
 - OptionTweaks, ContextVariableTweaks : Added `Remove` mode.
 
+Fixes
+-----
+
+- Editor : Fixed `Internal C++ object already deleted` errors when some editors were destroyed.
+- UVInspector : Fixed `Unable to find ScriptNode for UVView` warnings.
+- Scene Editors : Fixed update when ScenePlugs are added to or removed from the node being viewed.
+- PrimitiveInspector : Fixed failure to update when the location being viewed ceases to exist, or is recreated.
+
+API
+---
+
+- Editor :
+  - Added `settings()` method, which returns a node hosting plugs specifying settings for the editor.
+  - Added `_updateFromSettings()` method, which is called when a subclass should update to reflect changes to the settings.
+- SceneEditor : Added new base class to simplify the creation of scene-specific editors.
+
 Breaking Changes
 ----------------
 
@@ -19,6 +35,7 @@ Breaking Changes
 - ImageReader : Changed handling of lower-cased "r", "g", "b" and "a" channels.
 - Metadata : Path based registrations to a Node or Plug now override equivalent registrations on its descendants.
 - TweakPlugValueWidget : Removed support for `tweakPlugValueWidget:allowCreate` and `tweakPlugValueWidget:allowRemove` metadata.
+- Editor : Removed arguments from `Settings` constructor.
 
 1.4.x.x (relative to 1.4.8.0)
 =======

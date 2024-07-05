@@ -53,28 +53,14 @@ from GafferSceneUI._HistoryWindow import _HistoryWindow
 
 from Qt import QtWidgets
 
-## \todo Make a SceneEditor base class to encapsulate the logic about what
-# scene to view, and to track the reparenting of the plug.
-class RenderPassEditor( GafferUI.NodeSetEditor ) :
+class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
-	# We store our settings as plugs on a node for a few reasons :
-	#
-	# - We want to use an EditScopePlugValueWidget, and that requires it.
-	# - We get a bunch of useful widgets and signals for free.
-	# - Longer term we want to refactor all Editors to derive from Node,
-	#   in the same way that View does already. This will let us serialise
-	#   _all_ layout state in the same format we serialise node graphs in.
-	# - The `userDefault` metadata provides a convenient way of configuring
-	#   defaults.
-	# - The PlugLayout we use to display the settings allows users to add
-	#   their own widgets to the UI.
-	class Settings( Gaffer.Node ) :
+	class Settings( GafferSceneUI.SceneEditor.Settings ) :
 
 		def __init__( self ) :
 
-			Gaffer.Node.__init__( self, "Settings" )
+			GafferSceneUI.SceneEditor.Settings.__init__( self )
 
-			self["in"] = GafferScene.ScenePlug()
 			self["tabGroup"] = Gaffer.StringPlug( defaultValue = "Cycles" )
 			self["section"] = Gaffer.StringPlug( defaultValue = "Main" )
 			self["editScope"] = Gaffer.Plug()
@@ -86,10 +72,7 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 
 		mainColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4, spacing = 4 )
 
-		GafferUI.NodeSetEditor.__init__( self, mainColumn, scriptNode, nodeSet = scriptNode.focusSet(), **kw )
-
-		self.__settingsNode = self.Settings()
-		Gaffer.NodeAlgo.applyUserDefaults( self.__settingsNode )
+		GafferSceneUI.SceneEditor.__init__( self, mainColumn, scriptNode, **kw )
 
 		searchFilter = _GafferSceneUI._RenderPassEditor.SearchFilter()
 		disabledRenderPassFilter = _GafferSceneUI._RenderPassEditor.DisabledRenderPassFilter()
@@ -101,7 +84,7 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 		with mainColumn :
 
 			GafferUI.PlugLayout(
-				self.__settingsNode,
+				self.settings(),
 				orientation = GafferUI.ListContainer.Orientation.Horizontal,
 				rootSection = "Settings"
 			)
@@ -109,7 +92,7 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
 				GafferUI.PlugLayout(
-					self.__settingsNode,
+					self.settings(),
 					orientation = GafferUI.ListContainer.Orientation.Horizontal,
 					rootSection = "Grouping"
 				)
@@ -155,10 +138,8 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 			self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ), scoped = False )
 			self.__pathListing.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
 
-			self.__settingsNode.plugSetSignal().connect( Gaffer.WeakMethod( self.__settingsPlugSet ), scoped = False )
-			self.__settingsNode.plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__settingsPlugInputChanged ), scoped = False )
-
 		self._updateFromSet()
+		self.__setPathListingPath()
 		self.__updateColumns()
 		self.__updateButtonStatus()
 
@@ -246,103 +227,50 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 
 		return "GafferSceneUI.RenderPassEditor( scriptNode )"
 
-	def __firstValidScenePlug( self, node ):
-
-		for plug in GafferScene.ScenePlug.RecursiveOutputRange( node ) :
-			if not plug.getName().startswith( "__" ):
-				return plug
-		return None
-
-	def _updateFromSet( self ) :
-
-		# Decide what plug we're viewing.
-		plug = None
-		self.__plugParentChangedConnection = None
-		node = self._lastAddedNode()
-		if node is not None :
-			plug = self.__firstValidScenePlug( node )
-			if plug is not None :
-				self.__plugParentChangedConnection = plug.parentChangedSignal().connect(
-					Gaffer.WeakMethod( self.__plugParentChanged ), scoped = True
-				)
-
-		self.__settingsNode["in"].setInput( plug )
-
-		# call base class update - this will trigger a call to _titleFormat(),
-		# hence the need for already figuring out the plug.
-		GafferUI.NodeSetEditor._updateFromSet( self )
-
-		## \todo Remove in Gaffer 1.4 when we can drive `RenderPassEditor.Settings` from
-		# `GafferUI.Editor.Settings` to follow the changes introduced with ImageInspector.
-		self.__setPathListingPath()
-
 	def _updateFromContext( self, modifiedItems ) :
 
 		if any( not i.startswith( "ui:" ) for i in modifiedItems ) :
 			self.__setPathListingPath()
 
-	def _titleFormat( self ) :
+	def _updateFromSettings( self, plug ) :
 
-		return GafferUI.NodeSetEditor._titleFormat(
-			self,
-			_maxNodes = 1 if self.__settingsNode["in"].getInput() is not None else 0,
-			_reverseNodes = True,
-			_ellipsis = False
-		)
+		if plug in ( self.settings()["section"], self.settings()["tabGroup"] ) :
+			self.__updateColumns()
+		elif plug == self.settings()["displayGrouped"] :
+			self.__displayGroupedChanged()
+		elif plug in ( self.settings()["in"], self.settings()["editScope"] ) :
+			self.__updateButtonStatus()
 
 	@GafferUI.LazyMethod()
 	def __updateColumns( self ) :
 
-		tabGroup = self.__settingsNode["tabGroup"].getValue()
-		currentSection = self.__settingsNode["section"].getValue()
+		tabGroup = self.settings()["tabGroup"].getValue()
+		currentSection = self.settings()["section"].getValue()
 
 		sectionColumns = []
 
 		for groupKey, sections in self.__columnRegistry.items() :
 			if IECore.StringAlgo.match( tabGroup, groupKey ) :
 				section = sections.get( currentSection or None, {} )
-				sectionColumns += [ c( self.__settingsNode["in"], self.__settingsNode["editScope"] ) for c in section.values() ]
+				sectionColumns += [ c( self.settings()["in"], self.settings()["editScope"] ) for c in section.values() ]
 
 		self.__pathListing.setColumns( [ self.__renderPassNameColumn, self.__renderPassActiveColumn ] + sectionColumns )
-
-	def __settingsPlugSet( self, plug ) :
-
-		if plug in ( self.__settingsNode["section"], self.__settingsNode["tabGroup"] ) :
-			self.__updateColumns()
-		elif plug == self.__settingsNode["displayGrouped"] :
-			self.__displayGroupedChanged()
-
-	def __settingsPlugInputChanged( self, plug ) :
-
-		if plug in ( self.__settingsNode["in"], self.__settingsNode["editScope"] ) :
-			self.__updateButtonStatus()
-
-	def __plugParentChanged( self, plug, oldParent ) :
-
-		# if a plug has been removed or moved to another node, then
-		# we need to stop viewing it - _updateFromSet() will find the
-		# next suitable plug from the current node set.
-		self._updateFromSet()
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __setPathListingPath( self ) :
 
-		## \todo Simplify in Gaffer 1.4, we shouldn't require the fallback to DictPath when we have no input.
-		if self.__settingsNode["in"].getInput() is not None :
-			# We take a static copy of our current context for use in the RenderPassPath - this prevents the
-			# PathListing from updating automatically when the original context changes, and allows us to take
-			# control of updates ourselves in _updateFromContext(), using LazyMethod to defer the calls to this
-			# function until we are visible and playback has stopped.
-			contextCopy = Gaffer.Context( self.getContext() )
-			self.__pathListing.setPath( _GafferSceneUI._RenderPassEditor.RenderPassPath( self.__settingsNode["in"], contextCopy, "/", filter = self.__filter, grouped = self.__settingsNode["displayGrouped"].getValue() ) )
-		else :
-			self.__pathListing.setPath( Gaffer.DictPath( {}, "/" ) )
+		# We take a static copy of our current context for use in the RenderPassPath - this prevents the
+		# PathListing from updating automatically when the original context changes, and allows us to take
+		# control of updates ourselves in _updateFromContext(), using LazyMethod to defer the calls to this
+		# function until we are visible and playback has stopped.
+		contextCopy = Gaffer.Context( self.getContext() )
+		self.__pathListing.setPath( _GafferSceneUI._RenderPassEditor.RenderPassPath( self.settings()["in"], contextCopy, "/", filter = self.__filter, grouped = self.settings()["displayGrouped"].getValue() ) )
 
 	def __displayGroupedChanged( self ) :
 
 		selection = self.__pathListing.getSelection()
 		renderPassPath = self.__pathListing.getPath().copy()
-		grouped = self.__settingsNode["displayGrouped"].getValue()
+		grouped = self.settings()["displayGrouped"].getValue()
 
 		# Remap selection so it is maintained when switching to/from grouped display
 		for i, pathMatcher in enumerate( selection ) :
@@ -580,7 +508,7 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 					inspection = column.inspector().inspect()
 					if inspection is not None and inspection.editable() :
 						source = inspection.source()
-						editScope = self.__settingsNode["editScope"].getInput()
+						editScope = self.settings()["editScope"].getInput()
 						if (
 							(
 								isinstance( source, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) and
@@ -655,7 +583,7 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 				# as set membership could vary based on the render pass.
 				context["renderPass"] = renderPass
 				for setExpression in setExpressions :
-					result.addPaths( GafferScene.SetAlgo.evaluateSetExpression( setExpression, self.__settingsNode["in"] ) )
+					result.addPaths( GafferScene.SetAlgo.evaluateSetExpression( setExpression, self.settings()["in"] ) )
 
 		GafferSceneUI.ContextAlgo.setSelectedPaths( self.getContext(), result )
 
@@ -767,7 +695,7 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 
 	def __canEditRenderPasses( self, editScope = None ) :
 
-		input = self.__settingsNode["in"].getInput()
+		input = self.settings()["in"].getInput()
 		if input is None :
 			# No input scene
 			return False
@@ -776,7 +704,7 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 
 		if editScope is None :
 			# No edit scope provided so use the current selected
-			editScopeInput = self.__settingsNode["editScope"].getInput()
+			editScopeInput = self.settings()["editScope"].getInput()
 			if editScopeInput is None :
 				# No edit scope selected
 				return False
@@ -830,7 +758,7 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 		if len( selectedRenderPasses ) == 0 :
 			return
 
-		editScopeInput = self.__settingsNode["editScope"].getInput()
+		editScopeInput = self.settings()["editScope"].getInput()
 		if editScopeInput is None :
 			return
 
@@ -902,11 +830,11 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 
 	def __renderPassCreationDialogue( self ) :
 
-		editScopeInput = self.__settingsNode["editScope"].getInput()
+		editScopeInput = self.settings()["editScope"].getInput()
 		assert( editScopeInput is not None )
 
 		editScope = editScopeInput.node()
-		dialogue = _RenderPassCreationDialogue( self.__renderPassNames( self.__settingsNode["in"] ), editScope )
+		dialogue = _RenderPassCreationDialogue( self.__renderPassNames( self.settings()["in"] ), editScope )
 		renderPassName = dialogue.waitForRenderPassName( parentWindow = self.ancestor( GafferUI.Window ) )
 		if renderPassName :
 			self.__addRenderPass( renderPassName, editScope )
@@ -938,7 +866,7 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 
 	def __metadataChanged( self, nodeTypeId, key, node ) :
 
-		editScopeInput = self.__settingsNode["editScope"].getInput()
+		editScopeInput = self.settings()["editScope"].getInput()
 		if editScopeInput is None :
 			return
 
