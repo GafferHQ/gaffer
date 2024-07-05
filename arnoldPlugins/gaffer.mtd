@@ -919,6 +919,8 @@
 
 	gaffer.nodeMenu.category STRING "AOV"
 
+	[attr aov_input]
+		linkable BOOL true
 
 [node aov_write_rgb]
 
@@ -1095,6 +1097,7 @@
 		page STRING "Flake"
 	[attr flake_layers]
 		page STRING "Flake"
+		linkable BOOL true
 	[attr flake_normal_randomize]
 		page STRING "Flake"
 	[attr flake_coord_space]
@@ -1257,6 +1260,7 @@
 		page STRING "User Data"
 	[attr data_seed]
 		page STRING "User Data"
+		linkable BOOL true
 
 	[attr proc_gain_min]
 		page STRING "Procedural"
@@ -1272,6 +1276,7 @@
 		page STRING "Procedural"
 	[attr proc_seed]
 		page STRING "Procedural"
+		linkable BOOL true
 
 	[attr obj_gain_min]
 		page STRING "Object"
@@ -1287,6 +1292,7 @@
 		page STRING "Object"
 	[attr obj_seed]
 		page STRING "Object"
+		linkable BOOL true
 
 	[attr face_gain_min]
 		page STRING "Face"
@@ -1302,6 +1308,7 @@
 		page STRING "Face"
 	[attr face_seed]
 		page STRING "Face"
+		linkable BOOL true
 	[attr face_mode]
 		page STRING "Face"
 
@@ -2230,10 +2237,13 @@
 
 	[attr input_int]
 		gaffer.layout.activator STRING "isInt"
+		linkable BOOL true
 	[attr input_float]
 		gaffer.layout.activator STRING "isFloat"
 	[attr input_color]
 		gaffer.layout.activator STRING "isColor"
+	[attr seed]
+		linkable BOOL true
 
 [node range]
 
@@ -2766,12 +2776,16 @@
 	primaryInput STRING "input0"
 	gaffer.nodeMenu.category STRING "Utility"
 
+	[attr index]
+		linkable BOOL true
 
 [node switch_shader]
 
 	primaryInput STRING "input0"
 	gaffer.nodeMenu.category STRING "Surface"
 
+	[attr index]
+		linkable BOOL true
 
 [node toon]
 
@@ -2983,6 +2997,8 @@
 
 	gaffer.nodeMenu.category STRING "Utility"
 
+	[attr default]
+		linkable BOOL true
 
 [node user_data_rgb]
 

@@ -6,7 +6,16 @@ Improvements
 
 - Cryptomatte : Renamed `__manifestScene` plug to `manifestScene` so it is no longer considered to be private.
 - EditScopePlugValueWidget : Width can now be configured via `<layoutName>:width` metadata. This enables customisation of the Edit Scope menu width by registering metadata in a startup file, such as `Gaffer.Metadata.registerValue( GafferSceneUI.RenderPassEditor.Settings, "editScope", "layout:width", 450 )` to double the standard width of the Edit Scope menu in the Render Pass Editor.
-- ArnoldShader : The `data_input` parameter of the `color_jitter` shader is now visible in the GraphEditor.
+- ArnoldShader :
+  - The following parameters are now visible in the GraphEditor :
+    - The `aov_input` parameter of the `aov_write_int` shader.
+    - The `data_input` parameter of the `color_jitter` shader.
+    - The `input_int` and `seed` parameters of the `random` shader.
+    - The `index` parameters of the `switch_rgba` and `switch_shader` shaders.
+    - The `default` parameter of the `user_data_int` shader.
+  - The following parameters can now be made visible in the GraphEditor :
+    - The `flake_layers` parameter of the `car_paint` shader.
+    - The `data_seed`, `proc_seed`, `obj_seed`, and `face_seed` parameters of the `color_jitter` shader.
 
 Fixes
 -----
