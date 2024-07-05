@@ -17,6 +17,7 @@ Fixes
 - UVInspector : Fixed `Unable to find ScriptNode for UVView` warnings.
 - Scene Editors : Fixed update when ScenePlugs are added to or removed from the node being viewed.
 - PrimitiveInspector : Fixed failure to update when the location being viewed ceases to exist, or is recreated.
+- Shuffle : Fixed some special cases where shuffling a channel to itself would fail to have the expected effect.
 
 API
 ---
