@@ -75,6 +75,10 @@ jobs:
       ARNOLD_LICENSE_ORDER: none # Don't waste time looking for a license that doesn't exist
       GAFFER_BUILD_DIR: "./build"
       GAFFER_CACHE_DIR: "./sconsCache"
+      # GitHub have moved to running actions on Node20, which prevents them from
+      # running on CentOS 7. The below allows actions to continue running on Node16
+      # until October.
+      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
     steps:
 
