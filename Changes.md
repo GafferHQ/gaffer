@@ -28,6 +28,7 @@ Fixes
 - SceneInspector : Fixed "Show History" menu items.
 - ImageGadget : Fixed loading of non-8-bit images. Among other things, this fixes the display of 16 bit node icons in the GraphEditor.
 - Arnold : Fixed rendering of VDB volumes without `file_mem_bytes` metadata.
+- Cycles : Fixed bug preventing a background light from being added to a light group.
 - LightEditor : Fixed regression (introduced in 1.4.8.0) causing the mute and solo icons to not show up for groups.
 
 API

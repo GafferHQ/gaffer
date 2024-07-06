@@ -3048,16 +3048,17 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				/// every render. This might be much easier if attribute edits
 				/// were performed by a renderer method instead of an ObjectInterface
 				/// method. Or can we use `scene->light_manager->need_update()`?
-				ccl::Shader *lightShader = nullptr;
+				ccl::Light *backgroundLight = nullptr;
 				for( ccl::Light *light : m_scene->lights )
 				{
 					if( light->get_light_type() == ccl::LIGHT_BACKGROUND )
 					{
-						lightShader = light->get_shader();
+						backgroundLight = light;
 						break;
 					}
 				}
-				m_scene->background->set_shader( lightShader ? lightShader : m_scene->default_background );
+				m_scene->background->set_shader( backgroundLight ? backgroundLight->get_shader() : m_scene->default_background );
+				m_scene->background->set_lightgroup( backgroundLight ? backgroundLight->get_lightgroup() : ccl::ustring( "" ) );
 			}
 
 			// Note : this is also responsible for tagging any changes

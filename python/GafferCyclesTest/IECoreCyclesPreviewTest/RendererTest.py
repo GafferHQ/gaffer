@@ -1480,7 +1480,7 @@ class RendererTest( GafferTest.TestCase ) :
 		if c != "":
 			c = "%s." % channelName
 
-		return imath.Color4f( image[c+"R"][i], image[c+"G"][i], image[c+"B"][i], image[c+"A"][i] )
+		return imath.Color4f( image[c+"R"][i], image[c+"G"][i], image[c+"B"][i], image[c+"A"][i] if c+"A" in image.keys() else 0.0 )
 
 	def __testCustomAttributeType( self, primitive, prefix, customAttribute, outputPlug, data, expectedResult, maxDifference = 0.0 ) :
 
@@ -2568,6 +2568,179 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].context, "CyclesRenderer::option" )
 		self.assertEqual( mh.messages[0].message, "Option edit requires a manual render restart" )
+
+	def testBackgroundLightgroup( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testOutput",
+				}
+			)
+		)
+
+		renderer.output(
+			"testEnvOutput",
+			IECoreScene.Output(
+				"env",
+				"ieDisplay",
+				"lg env",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testEnvOutput",
+				}
+			)
+		)
+
+		renderer.output(
+			"testOtherOutput",
+			IECoreScene.Output(
+				"env",
+				"ieDisplay",
+				"lg other",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testOtherOutput",
+				}
+			)
+		)
+
+		plane = renderer.object(
+			"/plane",
+			IECoreScene.MeshPrimitive.createPlane(
+				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			),
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"principled_bsdf", "cycles:shader",
+							{ "base_color" : imath.Color3f( 1, 1, 1 ) }
+						),
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		## \todo Default camera is facing down +ve Z but should be facing
+		# down -ve Z.
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+
+		def lightAttributes( lightgroup ) :
+
+			return renderer.attributes( IECore.CompoundObject ( {
+				"cycles:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "background_light", "cycles:light", { "color" : imath.Color3f( 0, 1, 0 ), "lightgroup" : lightgroup } ),
+					},
+					output = "output",
+				),
+			} ) )
+
+		# Render with a background light in the "env" lightgroup.
+		light = renderer.light( "/light", None, lightAttributes( "env" ) )
+
+		renderer.render()
+		time.sleep( 1 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testOutput" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		# Slightly off-centre, to avoid triangle edge artifact in centre of image.
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
+		self.assertEqual( testPixel.r, 0 )
+		self.assertGreater( testPixel.g, 0.99 )
+		self.assertEqual( testPixel.b, 0 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testEnvOutput" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ), "env" )
+		self.assertEqual( testPixel.r, 0 )
+		self.assertGreater( testPixel.g, 0.99 )
+		self.assertEqual( testPixel.b, 0 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testOtherOutput" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ), "other" )
+		self.assertEqual( testPixel.r, 0 )
+		self.assertEqual( testPixel.g, 0 )
+		self.assertEqual( testPixel.b, 0 )
+
+		# Edit the lightgroup and re-render, we should see the light's contribution
+		# change to the other lightgroup output.
+		renderer.pause()
+		light.attributes( lightAttributes( "other" ) )
+		renderer.render()
+		time.sleep( 1 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testOutput" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
+		self.assertEqual( testPixel.r, 0 )
+		self.assertGreater( testPixel.g, 0.99 )
+		self.assertEqual( testPixel.b, 0 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testEnvOutput" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ), "env" )
+		self.assertEqual( testPixel.r, 0 )
+		self.assertEqual( testPixel.g, 0 )
+		self.assertEqual( testPixel.b, 0 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testOtherOutput" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ), "other" )
+		self.assertEqual( testPixel.r, 0 )
+		self.assertGreater( testPixel.g, 0.99 )
+		self.assertEqual( testPixel.b, 0 )
+
+		# Clear the lightgroup and re-render, we shouldn't see the light's contribution
+		# in either lightgroup output.
+		renderer.pause()
+		light.attributes( lightAttributes( "" ) )
+		renderer.render()
+		time.sleep( 1 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testOutput" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
+		self.assertEqual( testPixel.r, 0 )
+		self.assertGreater( testPixel.g, 0.99 )
+		self.assertEqual( testPixel.b, 0 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testEnvOutput" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ), "env" )
+		self.assertEqual( testPixel.r, 0 )
+		self.assertEqual( testPixel.g, 0 )
+		self.assertEqual( testPixel.b, 0 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testOtherOutput" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ), "other" )
+		self.assertEqual( testPixel.r, 0 )
+		self.assertEqual( testPixel.g, 0 )
+		self.assertEqual( testPixel.b, 0 )
+
+		del light, plane
 
 if __name__ == "__main__":
 	unittest.main()
