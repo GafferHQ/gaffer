@@ -116,20 +116,18 @@ class Timeline( GafferUI.Editor ) :
 		playBackwards = QtWidgets.QShortcut( QtGui.QKeySequence( "Ctrl+Left" ), self._qtWidget() )
 		playBackwards.activated.connect( functools.partial( Gaffer.WeakMethod( self.__playPausePressed ), False ) )
 
-		self.__playback = None
-		self._updateFromContext( set() )
+		self.__playback = GafferUI.Playback.acquire( self.context() )
+		self.__playback.setFrameRange( self.__sliderRangeStart.getValue(), self.__sliderRangeEnd.getValue() )
+		self.__playback.stateChangedSignal().connect(
+			Gaffer.WeakMethod( self.__playbackStateChanged ), scoped = False
+		)
+		self.__playback.frameRangeChangedSignal().connect(
+			Gaffer.WeakMethod( self.__playbackFrameRangeChanged ), scoped = False
+		)
+
+		self._updateFromContext( { "frame" } )
 
 	def _updateFromContext( self, modifiedItems ) :
-
-		if self.__playback is None or not self.__playback.context().isSame( self.context() ) :
-			self.__playback = GafferUI.Playback.acquire( self.context() )
-			self.__playback.setFrameRange( self.__sliderRangeStart.getValue(), self.__sliderRangeEnd.getValue() )
-			self.__playbackStateChangedConnection = self.__playback.stateChangedSignal().connect(
-				Gaffer.WeakMethod( self.__playbackStateChanged ), scoped = True
-			)
-			self.__playbackFrameRangeChangedConnection = self.__playback.frameRangeChangedSignal().connect(
-				Gaffer.WeakMethod( self.__playbackFrameRangeChanged ), scoped = True
-			)
 
 		if "frame" not in modifiedItems :
 			return
