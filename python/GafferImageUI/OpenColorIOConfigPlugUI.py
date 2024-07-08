@@ -181,7 +181,7 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 		result = IECore.MenuDefinition()
 
 		activeViews = Gaffer.Metadata.value( self.getPlug(), "openColorIO:activeViews" ) or "*"
-		with self.getContext() :
+		with self.context() :
 
 			try :
 				config = GafferImage.OpenColorIOAlgo.currentConfig()
@@ -239,7 +239,7 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __ensureValidValue( self ) :
 
-		with self.getContext() :
+		with self.context() :
 			try :
 				config = GafferImage.OpenColorIOAlgo.currentConfig()
 			except :

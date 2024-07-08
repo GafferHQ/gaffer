@@ -130,7 +130,7 @@ class PythonEditor( GafferUI.Editor ) :
 		with self.__outputRedirection() :
 			with _MessageHandler( self.__outputWidget ) :
 				with Gaffer.UndoScope( self.scriptNode() ) :
-					with self.getContext() :
+					with self.context() :
 						try :
 							if len( parsed.body ) == 1 and isinstance( parsed.body[0], ast.Expr ) :
 								result = eval( toExecute, self.__executionDict, self.__executionDict )

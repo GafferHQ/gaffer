@@ -117,7 +117,7 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 		# 2. Because the PathListingWidget uses a BackgroundTask to evaluate the Path, and it
 		#    would not be thread-safe to directly reference a context that could be modified by
 		#    the UI thread at any time.
-		contextCopy = Gaffer.Context( self.getContext() )
+		contextCopy = Gaffer.Context( self.context() )
 		self.__searchFilterWidget.setScene( self.settings()["in"] )
 		self.__searchFilterWidget.setContext( contextCopy )
 		self.__pathListing.setPath( _GafferSceneUI._SetEditor.SetPath( self.settings()["in"], contextCopy, "/", filter = self.__filter ) )
@@ -226,7 +226,7 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 	def __getSetMembers( self, setNames, *unused ) :
 
 		result = IECore.PathMatcher()
-		with Gaffer.Context( self.getContext() ) :
+		with Gaffer.Context( self.context() ) :
 			for setName in setNames :
 				result.addPaths( self.settings()["in"].set( setName ).value )
 
@@ -236,21 +236,21 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 
 		setMembers = self.__getSetMembers( setNames )
 		return IECore.PathMatcher( [
-			p for p in ContextAlgo.getSelectedPaths( self.getContext() ).paths()
+			p for p in ContextAlgo.getSelectedPaths( self.context() ).paths()
 			if setMembers.match( p ) & ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch )
 		] )
 
 	def __getIncludedSetMembers( self, setNames, *unused ) :
 
-		return self.__getSetMembers( setNames ).intersection( ContextAlgo.getVisibleSet( self.getContext() ).inclusions )
+		return self.__getSetMembers( setNames ).intersection( ContextAlgo.getVisibleSet( self.context() ).inclusions )
 
 	def __getExcludedSetMembers( self, setNames, *unused ) :
 
-		return self.__getSetMembers( setNames ).intersection( ContextAlgo.getVisibleSet( self.getContext() ).exclusions )
+		return self.__getSetMembers( setNames ).intersection( ContextAlgo.getVisibleSet( self.context() ).exclusions )
 
 	def __selectSetMembers( self, *unused ) :
 
-		ContextAlgo.setSelectedPaths( self.getContext(), self.__getSetMembers( self.__selectedSetNames() ) )
+		ContextAlgo.setSelectedPaths( self.context(), self.__getSetMembers( self.__selectedSetNames() ) )
 
 	def __copySetMembers( self, *unused ) :
 

@@ -1181,7 +1181,7 @@ class _CompareModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __menuDefinition( self ) :
 
-		with self.getContext() :
+		with self.context() :
 			compareMode = self.getPlug().getValue()
 
 		hotkeyTarget = self.__hotkeyTarget()

@@ -143,7 +143,7 @@ def __tagsPopupMenu( menuDefinition, plugValueWidget ) :
 	if plug != node["tags"] :
 		return
 
-	fileName = plugValueWidget.getContext().substitute( node["fileName"].getValue() )
+	fileName = plugValueWidget.context().substitute( node["fileName"].getValue() )
 	try :
 		scene = IECoreScene.SharedSceneInterfaces.get( fileName )
 	except :
@@ -154,7 +154,7 @@ def __tagsPopupMenu( menuDefinition, plugValueWidget ) :
 		return
 	sceneTags = sorted( [ str( tag ) for tag in sceneTags ] )
 
-	with plugValueWidget.getContext() :
+	with plugValueWidget.context() :
 		currentTags = plug.getValue().split()
 
 	menuDefinition.prepend( "/TagsDivider", { "divider" : True } )

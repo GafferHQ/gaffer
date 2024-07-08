@@ -768,7 +768,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __copyValue( self ) :
 
-		with self.getContext() :
+		with self.context() :
 			value = self.getPlug().getValue()
 
 		if not isinstance( value, IECore.Object ) :
@@ -824,7 +824,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __presetsSubMenu( self ) :
 
-		with self.getContext() :
+		with self.context() :
 
 			currentPreset = sole( ( Gaffer.NodeAlgo.currentPreset( p ) or "" for p in self.getPlugs() ) )
 

@@ -396,7 +396,7 @@ def __exportOSLShader( nodeEditor, node ) :
 
 	with GafferUI.ErrorDialogue.ErrorHandler( title = "Error Exporting Shader", parentWindow = nodeEditor.ancestor( GafferUI.Window ) ) :
 		with open( path, "w", encoding = "utf-8" ) as f :
-			with nodeEditor.getContext() :
+			with nodeEditor.context() :
 				f.write( node.source( os.path.splitext( os.path.basename( path ) )[0] ) )
 
 GafferUI.NodeEditor.toolMenuSignal().connect( __toolMenu, scoped = False )

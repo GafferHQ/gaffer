@@ -215,7 +215,7 @@ class ImageInspector( GafferUI.NodeSetEditor ) :
 		# lets us defer updates until playback stops, and also provides important
 		# thread-safety, because the PathListingWidget will access the context
 		# on a background thread.
-		context = Gaffer.Context( self.getContext() )
+		context = Gaffer.Context( self.context() )
 		self.__imagePathListing.setPath(
 			_ImagePath( self.scriptNode(), self.settings()["__sampleStats"]["in"], context, "/" ),
 		)

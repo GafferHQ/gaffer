@@ -158,7 +158,7 @@ def _pathsFromAffected( plugValueWidget ) :
 		return []
 
 	pathMatcher = IECore.PathMatcher()
-	with plugValueWidget.getContext() :
+	with plugValueWidget.context() :
 		GafferScene.SceneAlgo.matchingPaths( node["filter"], node["in"], pathMatcher )
 
 	return pathMatcher.paths()
@@ -169,10 +169,10 @@ def _pathsFromSelection( plugValueWidget ) :
 	if node is None :
 		return []
 
-	paths = GafferSceneUI.ContextAlgo.getSelectedPaths( plugValueWidget.getContext() )
+	paths = GafferSceneUI.ContextAlgo.getSelectedPaths( plugValueWidget.context() )
 	paths = paths.paths() if paths else []
 
-	with plugValueWidget.getContext() :
+	with plugValueWidget.context() :
 		paths = [ p for p in paths if node["in"].exists( p ) ]
 
 	return paths
@@ -184,7 +184,7 @@ def _shaderAttributes( plugValueWidget, paths, affectedOnly ) :
 	if node is None :
 		return result
 
-	with plugValueWidget.getContext() :
+	with plugValueWidget.context() :
 		useFullAttr = node["localise"].getValue()
 		attributeNamePatterns = node["shader"].getValue() if affectedOnly else "*"
 		for path in paths :

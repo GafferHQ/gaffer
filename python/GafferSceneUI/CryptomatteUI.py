@@ -77,7 +77,7 @@ class _CryptomatteNamesPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 
 		cryptomatteNode = _findCryptomatteNode( self.getPlug() )
 		if cryptomatteNode :
-			with self.getContext() :
+			with self.context() :
 				with IECore.IgnoredExceptions( Exception ) :
 					return cryptomatteNode["__manifest"].getValue()
 
@@ -438,7 +438,7 @@ def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 		return
 
 	menuDefinition.append( "/CryptomatteDivider", { "divider" : True } )
-	menuDefinition.append( "/Select Affected Objects", { "command" : functools.partial( __selectAffected, node, graphEditor.getContext() ) } )
+	menuDefinition.append( "/Select Affected Objects", { "command" : functools.partial( __selectAffected, node, graphEditor.context() ) } )
 
 ##########################################################################
 # NodeEditor tool menu
@@ -450,4 +450,4 @@ def appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition ) :
 		return
 
 	menuDefinition.append( "/CryptomatteDivider", { "divider" : True } )
-	menuDefinition.append( "/Select Affected Objects", { "command" : functools.partial( __selectAffected, node, nodeEditor.getContext() ) } )
+	menuDefinition.append( "/Select Affected Objects", { "command" : functools.partial( __selectAffected, node, nodeEditor.context() ) } )

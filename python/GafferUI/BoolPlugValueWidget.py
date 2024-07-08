@@ -122,7 +122,7 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 					curve = Gaffer.Animation.acquire( plug )
 					curve.addKey(
 						Gaffer.Animation.Key(
-							time = self.getContext().getTime(),
+							time = self.context().getTime(),
 							value = value,
 							interpolation = Gaffer.Animation.Interpolation.Constant
 						)

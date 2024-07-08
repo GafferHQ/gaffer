@@ -94,7 +94,7 @@ def __pruningKeyPress( viewer, event ) :
 
 	# \todo This needs encapsulating in EditScopeAlgo some how so we don't need
 	# to interact with processors directly.
-	with viewer.getContext() :
+	with viewer.context() :
 		if not editScope["enabled"].getValue() :
 			# Spare folks from deleting something when it won't be
 			# apparent what they've done until they reenable the
@@ -136,7 +136,7 @@ def __visibilityKeyPress( viewer, event ) :
 		"scene:visible"
 	)
 
-	with viewer.getContext() as context :
+	with viewer.context() as context :
 		attributeEdits = editScope.acquireProcessor( "AttributeEdits", createIfNecessary = False )
 		if not editScope["enabled"].getValue() or ( attributeEdits is not None and not attributeEdits["enabled"].getValue() ) :
 			# Spare folks from hiding something when it won't be

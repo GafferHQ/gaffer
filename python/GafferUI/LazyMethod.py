@@ -126,10 +126,10 @@ class LazyMethod( object ) :
 
 		context = None
 		with IECore.IgnoredExceptions( AttributeError ) :
-			context = widget.getContext()
+			context = widget.context()
 		if context is None :
 			with IECore.IgnoredExceptions( AttributeError ) :
-				context = widget.context()
+				context = widget.getContext()
 
 		return GafferUI.Playback.acquire( context )
 

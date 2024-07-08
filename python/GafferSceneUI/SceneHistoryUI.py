@@ -197,14 +197,14 @@ def __viewerKeyPress( viewer, event ) :
 def __hierarchyViewKeyPress( hierarchyView, event ) :
 
 	if event == __editSourceKeyPress :
-		selectedPath = __contextSelectedPath( hierarchyView.getContext() )
+		selectedPath = __contextSelectedPath( hierarchyView.context() )
 		if selectedPath is not None :
-			__editSourceNode( hierarchyView.getContext(), hierarchyView.scene(), selectedPath )
+			__editSourceNode( hierarchyView.context(), hierarchyView.scene(), selectedPath )
 		return True
 	elif event == __editTweaksKeyPress :
-		selectedPath = __contextSelectedPath( hierarchyView.getContext() )
+		selectedPath = __contextSelectedPath( hierarchyView.context() )
 		if selectedPath is not None :
-			__editTweaksNode( hierarchyView.getContext(), hierarchyView.scene(), selectedPath )
+			__editTweaksNode( hierarchyView.context(), hierarchyView.scene(), selectedPath )
 		return True
 
 def __nodeEditorKeyPress( nodeEditor, event ) :

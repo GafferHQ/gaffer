@@ -184,7 +184,7 @@ class _CommandPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		node = self.__pythonCommandNode()
 		if node is not None :
-			with self.getContext() :
+			with self.context() :
 				self.__codeWidget.setCompleter(
 					GafferUI.CodeWidget.PythonCompleter( node._executionDict() )
 				)

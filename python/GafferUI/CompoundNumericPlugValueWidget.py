@@ -101,7 +101,7 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if isinstance( value, IECore.Data ) and hasattr( value, "value" ) :
 			value = value.value
 			if hasattr( value, "dimensions" ) and isinstance( value.dimensions(), int ) :
-				with self.getContext() :
+				with self.context() :
 					result = sole( p.getValue() for p in self.getPlugs() )
 				if result is None :
 					return None

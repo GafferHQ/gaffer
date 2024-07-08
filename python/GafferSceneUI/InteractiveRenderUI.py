@@ -228,7 +228,7 @@ class _StatePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __startPauseClicked( self, button ) :
 
-		with self.getContext() :
+		with self.context() :
 			state = self.getPlug().getValue()
 
 		# When setting the plug value here, we deliberately don't use an UndoScope.

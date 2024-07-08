@@ -133,7 +133,7 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 		# 2. Because the PathListingWidget uses a BackgroundTask to evaluate the Path, and it
 		#    would not be thread-safe to directly reference a context that could be modified by
 		#    the UI thread at any time.
-		contextCopy = Gaffer.Context( self.getContext() )
+		contextCopy = Gaffer.Context( self.context() )
 		for f in self.__filter.getFilters() :
 			f.setContext( contextCopy )
 		with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
@@ -144,16 +144,16 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 		assert( pathListing is self.__pathListing )
 
 		with Gaffer.Signals.BlockedConnection( self._contextChangedConnection() ) :
-			visibleSet = ContextAlgo.getVisibleSet( self.getContext() )
+			visibleSet = ContextAlgo.getVisibleSet( self.context() )
 			visibleSet.expansions = pathListing.getExpansion()
-			ContextAlgo.setVisibleSet( self.getContext(), visibleSet )
+			ContextAlgo.setVisibleSet( self.context(), visibleSet )
 
 	def __selectionChanged( self, pathListing ) :
 
 		assert( pathListing is self.__pathListing )
 
 		with Gaffer.Signals.BlockedConnection( self._contextChangedConnection() ) :
-			ContextAlgo.setSelectedPaths( self.getContext(), pathListing.getSelection() )
+			ContextAlgo.setSelectedPaths( self.context(), pathListing.getSelection() )
 
 	def __keyPressSignal( self, widget, event ) :
 
@@ -214,14 +214,14 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __transferExpansionFromContext( self ) :
 
-		visibleSet = ContextAlgo.getVisibleSet( self.getContext() )
+		visibleSet = ContextAlgo.getVisibleSet( self.context() )
 		with Gaffer.Signals.BlockedConnection( self.__expansionChangedConnection ) :
 			self.__pathListing.setExpansion( visibleSet.expansions )
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __transferSelectionFromContext( self ) :
 
-		selection = ContextAlgo.getSelectedPaths( self.getContext() )
+		selection = ContextAlgo.getSelectedPaths( self.context() )
 		with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
 			self.__pathListing.setSelection( selection, scrollToFirst=False )
 
