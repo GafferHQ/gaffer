@@ -12,6 +12,11 @@ Fixes
 
 - LightEditor, RenderPassEditor : Added missing icon representing use of the `CreateIfMissing` tweak mode in the history window.
 
+API
+---
+
+- Loop : Added `previousIteration()` method.
+
 1.4.9.0 (relative to 1.4.8.0)
 =======
 
