@@ -136,28 +136,18 @@ class PlugLayout( GafferUI.Widget ) :
 		self.__widgets = {}
 		self.__rootSection = _Section( self.__parent )
 
-		# set up an appropriate default context in which to view the plugs.
-		self.setContext( GafferUI.PlugValueWidget._PlugValueWidget__defaultContext( self.__parent ) )
-
-		# Build the layout
-		self.__update()
-
-	def getContext( self ) :
-
-		return self.__context
-
-	## \todo To our knowledge, this has never been useful, and synchronising contexts
-	# between Editor/PlugLayout/PlugValueWidget has only been a pain. Consider
-	# removing it.
-	def setContext( self, context ) :
-
-		self.__context = context
+		# Set up an appropriate context in which to view the plugs.
+		self.__context = GafferUI.PlugValueWidget._PlugValueWidget__defaultContext( self.__parent )
 		self.__contextChangedConnection = self.__context.changedSignal().connect(
 			Gaffer.WeakMethod( self.__contextChanged ), scoped = True
 		)
 
-		for widget in self.__widgets.values() :
-			self.__applyContext( widget, context )
+		# Build the layout
+		self.__update()
+
+	def context( self ) :
+
+		return self.__context
 
 	## Returns a PlugValueWidget representing the specified child plug.
 	def plugValueWidget( self, childPlug ) :
@@ -312,7 +302,7 @@ class PlugLayout( GafferUI.Widget ) :
 
 	def __updateActivations( self ) :
 
-		with self.getContext() :
+		with self.context() :
 			# Must scope the context when getting activators, because they are typically
 			# computed from the plug values, and may therefore trigger a compute.
 			activators = self.__metadataValue( self.__parent, self.__layoutName + ":activators" ) or {}
@@ -330,7 +320,7 @@ class PlugLayout( GafferUI.Widget ) :
 				activatorName = activatorMetadata
 				result = activators.get( activatorName )
 				if result is None :
-					with self.getContext() :
+					with self.context() :
 						metadataName = self.__layoutName + ":activator:" + activatorName
 						result = self.__metadataValue( self.__parent, metadataName )
 						if isinstance( result, str ) :
@@ -353,7 +343,7 @@ class PlugLayout( GafferUI.Widget ) :
 
 	def __updateSummariesWalk( self, section ) :
 
-		with self.getContext() :
+		with self.context() :
 			# Must scope the context because summaries are typically
 			# generated from plug values, and may therefore trigger
 			# a compute.
@@ -427,8 +417,6 @@ class PlugLayout( GafferUI.Widget ) :
 				QWIDGETSIZE_MAX = 16777215 # qt #define not exposed by PyQt or PySide
 				result.labelPlugValueWidget().label()._qtWidget().setFixedWidth( QWIDGETSIZE_MAX )
 
-		self.__applyContext( result, self.getContext() )
-
 		# Store the metadata value that controlled the type created, so we can compare to it
 		# in the future to determine if we can reuse the widget.
 		result.__plugValueWidgetType = Gaffer.Metadata.value( plug, "plugValueWidget:type" )
@@ -441,7 +429,6 @@ class PlugLayout( GafferUI.Widget ) :
 		widgetClass = self.__import( widgetType )
 
 		result = widgetClass( self.__parent )
-		self.__applyContext( result, self.getContext() )
 
 		return result
 
@@ -497,16 +484,6 @@ class PlugLayout( GafferUI.Widget ) :
 		# upheaval is over.
 		self.__layoutDirty = True
 		self.__updateLazily()
-
-	def __applyContext( self, widget, context ) :
-
-		if hasattr( widget, "setContext" ) :
-			widget.setContext( context )
-		elif isinstance(  widget, GafferUI.PlugWidget ) :
-			widget.labelPlugValueWidget().setContext( context )
-			widget.plugValueWidget().setContext( context )
-		elif hasattr( widget, "plugValueWidget" ) :
-			widget.plugValueWidget().setContext( context )
 
 	def __plugMetadataChanged( self, plug, key, reason ) :
 

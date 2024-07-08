@@ -187,16 +187,8 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		s["n"]["p"] = Gaffer.IntPlug()
 
 		l = GafferUI.PlugLayout( s["n"] )
-		self.assertTrue( l.getContext().isSame( s.context() ) )
-		self.assertTrue( l.plugValueWidget( s["n"]["p"] ).getContext().isSame( s.context() ) )
-
-		c = Gaffer.Context()
-		l.setContext( c )
-		self.assertTrue( l.getContext().isSame( c ) )
-		self.assertTrue( l.plugValueWidget( s["n"]["p"] ).getContext().isSame( c ) )
-
-		l = GafferUI.PlugLayout( s )
-		self.assertTrue( l.getContext().isSame( s.context() ) )
+		self.assertTrue( l.context().isSame( s.context() ) )
+		self.assertTrue( l.plugValueWidget( s["n"]["p"] ).context().isSame( s.context() ) )
 
 	def testContextWithoutScriptNode( self ) :
 
@@ -204,10 +196,10 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		n["p"] = Gaffer.Plug()
 
 		l = GafferUI.PlugLayout( n )
-		self.assertTrue( isinstance( l.getContext(), Gaffer.Context ) )
+		self.assertTrue( isinstance( l.context(), Gaffer.Context ) )
 
 		l = GafferUI.PlugLayout( n["p"] )
-		self.assertTrue( isinstance( l.getContext(), Gaffer.Context ) )
+		self.assertTrue( isinstance( l.context(), Gaffer.Context ) )
 
 	def testContextSensitiveSummariesAndActivators( self ) :
 

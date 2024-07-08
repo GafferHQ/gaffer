@@ -156,13 +156,7 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__menuButton = GafferUI.MenuButton( "", menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
 		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plugs, **kw )
 
-		self.__updateContextConnection()
-		self.__ensureValidValue()
-
-	def setContext( self, context ) :
-
-		GafferUI.PlugValueWidget.setContext( self, context )
-		self.__updateContextConnection()
+		self.context().changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = True )
 		self.__ensureValidValue()
 
 	def _updateFromValues( self, values, exception ) :
@@ -235,12 +229,6 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().setValue( f"{display}/{view}" )
-
-	def __updateContextConnection( self ) :
-
-		self.__contextChangedConnection = self.getContext().changedSignal().connect(
-			Gaffer.WeakMethod( self.__contextChanged ), scoped = True
-		)
 
 	def __contextChanged( self, context, key ) :
 

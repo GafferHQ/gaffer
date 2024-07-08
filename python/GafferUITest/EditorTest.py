@@ -67,16 +67,10 @@ class EditorTest( GafferUITest.TestCase ) :
 	def testContext( self ) :
 
 		s = Gaffer.ScriptNode()
-		c = Gaffer.Context()
-
 		editor = GafferUI.Viewer( s )
 
 		self.assertTrue( editor.scriptNode().isSame( s ) )
-		self.assertTrue( editor.getContext().isSame( s.context() ) )
-
-		editor.setContext( c )
-		self.assertTrue( editor.scriptNode().isSame( s ) )
-		self.assertTrue( editor.getContext().isSame( c ) )
+		self.assertTrue( editor.context().isSame( s.context() ) )
 
 	def testSerialisation( self ) :
 
