@@ -868,32 +868,6 @@ class LightEditorTest( GafferUITest.TestCase ) :
 		self.assertNotIn( "Y", columnNames )
 		self.assertNotIn( "Z", columnNames )
 
-	def testLightBlockerSoloDisabled( self ) :
-
-		script = Gaffer.ScriptNode()
-
-		script["blocker"] = GafferScene.Cube()
-		script["blocker"]["sets"].setValue( "__lightFilters" )
-
-		editor = GafferSceneUI.LightEditor( script )
-		editor._LightEditor__updateColumns()
-		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
-
-		editor.setNodeSet( Gaffer.StandardSet( [ script["blocker"] ] ) )
-
-		widget = editor._LightEditor__pathListing
-
-		columns = widget.getColumns()
-		for i, c in zip( range( 0, len( columns ) ), columns ) :
-			if isinstance( c, _GafferSceneUI._LightEditorSetMembershipColumn ) :
-				selection = [ IECore.PathMatcher() for i in range( 0, len( columns ) ) ]
-				selection[i].addPath( "/cube" )
-				widget.setSelection( selection )
-
-				editor._LightEditor__editSelectedCells( widget )
-
-				self.assertTrue( script["blocker"]["out"].set( "soloLights" ).value.isEmpty() )
-
 
 if __name__ == "__main__" :
 	unittest.main()

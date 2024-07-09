@@ -380,7 +380,10 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		else :
 			renderPassPlug = script["variables"]["renderPass"]
 
-		renderPassPlug["value"].setValue( selectedPassNames[0] )
+		with Gaffer.Context( self.getContext() ) :
+			currentRenderPass = renderPassPlug["value"].getValue()
+
+		renderPassPlug["value"].setValue( selectedPassNames[0] if selectedPassNames[0] != currentRenderPass else "" )
 
 	## \todo Consider consolidating this with `LightEditor.__editSelectedCells()`.
 	# The main difference being the name of the context variable that is set before inspection,

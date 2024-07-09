@@ -55,6 +55,9 @@ Improvements
   - The following parameters can now be made visible in the GraphEditor :
     - The `flake_layers` parameter of the `car_paint` shader.
     - The `data_seed`, `proc_seed`, `obj_seed`, and `face_seed` parameters of the `color_jitter` shader.
+- EditScope : Added summaries of set membership edits in the NodeEditor.
+- LightEditor : Mute and solo columns now accurately reflect the presence of the `light:mute` attribute (for the Mute column) and membership in the `soloLights` set (for the Solo column) for all scene locations, not just for lights.
+- RenderPassEditor : The currently active render pass can now be unset by double clicking on its green dot in the "Active" column.
 
 Fixes
 -----
@@ -64,6 +67,9 @@ Fixes
 - OpenColorIO : Fixed the display transform used to show colours in popups.
 - SceneInspector : Fixed "Show History" menu items.
 - ImageGadget : Fixed loading of non-8-bit images. Among other things, this fixes the display of 16 bit node icons in the GraphEditor.
+- Arnold : Fixed rendering of VDB volumes without `file_mem_bytes` metadata.
+- Cycles : Fixed bug preventing a background light from being added to a light group.
+- LightEditor : Fixed regression (introduced in 1.4.8.0) causing the mute and solo icons to not show up for groups.
 
 API
 ---
