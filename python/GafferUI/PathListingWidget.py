@@ -477,6 +477,9 @@ class PathListingWidget( GafferUI.Widget ) :
 	def __dirPath( self ) :
 
 		p = self.__path.copy()
+		if not len( p ) :
+			return p
+
 		if p.isLeaf() :
 			# if it's a leaf then take the parent
 			del p[-1]
@@ -486,11 +489,10 @@ class PathListingWidget( GafferUI.Widget ) :
 				# it's not valid. if we can make it
 				# valid by trimming the last element
 				# then do that
-				if len( p ) :
-					pp = p.copy()
-					del pp[-1]
-					if pp.isValid() :
-						p = pp
+				pp = p.copy()
+				del pp[-1]
+				if pp.isValid() :
+					p = pp
 			else :
 				# it's valid and not a leaf, and
 				# that's what we want.
