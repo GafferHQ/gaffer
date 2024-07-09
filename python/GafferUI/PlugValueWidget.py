@@ -365,8 +365,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 	## \deprecated
 	def _plugConnections( self ) :
 
-		## \todo Emit DeprecationWarning once we can reasonably expect
-		# Gaffer `1.1.x.x` to be history.
+		warnings.warn( "`PlugValueWidget._plugConnections()` is deprecated. Use `_blockedUpdateFromValues()` instead", DeprecationWarning, 2 )
 
 		return (
 			self.__plugDirtiedConnections +
@@ -517,16 +516,12 @@ class PlugValueWidget( GafferUI.Widget ) :
 		# `_updateFromMetadata()`, `_updateFromValues()` etc. But we still
 		# support calling them if they exist.
 
-		updateMethod = getattr( self, "_updateFromPlugs", None )
-		if updateMethod is None :
-			updateMethod = getattr( self, "_updateFromPlug", None )
-
-		if updateMethod is not None :
-			## \todo Emit DeprecationWarning. It doesn't make sense to do
-			# this until we can reasonably expect Gaffer `1.1.x.x` to be
-			# out of use, as maintaining a subclass to use both the old
-			# and the new API would be incredibly painful.
-			updateMethod()
+		for methodName in ( "_updateFromPlugs", "_updateFromPlug" ) :
+			updateMethod = getattr( self, methodName, None )
+			if updateMethod is not None :
+				warnings.warn( f"`PlugValueWidget.{methodName}()` is deprecated. Implement `_updateFromValues()`, `_updateFromMetadata()` and `_updateFromEditable()` instead", DeprecationWarning, 2 )
+				updateMethod()
+				return
 
 	@GafferUI.LazyMethod()
 	def __callUpdateFromValues( self ) :
