@@ -527,7 +527,7 @@ class RenderPassActiveColumn : public PathColumn
 					iconData->writable()["state:normal"] = g_activeRenderPassIcon;
 					/// \todo This is only to allow sorting, replace with `CellData::sortValue` in Gaffer 1.4
 					result.value = new StringData( " " );
-					result.toolTip = new StringData( fmt::format( "{} is the currently active render pass.", renderPassName->readable() ) );
+					result.toolTip = new StringData( fmt::format( "{} is the currently active render pass.\n\nDouble-click to unset.", renderPassName->readable() ) );
 
 					return result;
 				}

@@ -437,4 +437,4 @@ Extend cell selection                                | {kbd}`Shift` + {{leftClic
 Toggle cell selection                                | {kbd}`Ctrl` + {{leftClick}}<br>or<br>{kbd}`Ctrl` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
 Edit selected cells                                  | {kbd}`Return`<br>or<br>{kbd}`Enter`
 Disable edit                                         | {kbd}`D`
-Set a render pass as active                          | {kbd}`Return` or {{leftClick}} {{leftClick}} a cell within the {{activeRenderPass}} column
+Toggle a render pass as active                       | {kbd}`Return` or {{leftClick}} {{leftClick}} a cell within the {{activeRenderPass}} column
