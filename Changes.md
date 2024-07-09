@@ -25,6 +25,7 @@ Fixes
 - OpenColorIO : Fixed the display transform used to show colours in popups.
 - SceneInspector : Fixed "Show History" menu items.
 - ImageGadget : Fixed loading of non-8-bit images. Among other things, this fixes the display of 16 bit node icons in the GraphEditor.
+- Arnold : Fixed rendering of VDB volumes without `file_mem_bytes` metadata.
 
 API
 ---
