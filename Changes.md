@@ -9,7 +9,9 @@ Improvements
 - ImageReader : Non-standard "r", "g", "b" and "a" channel names are now automatically renamed to "R", "G", "B" and "A" on loading. As with other heuristics, this can be disabled by setting `channelInterpretation` to "EXR Specification".
 - Metadata : Metadata registered to a node or plug targeting a descendant plug will now override metadata registered locally to the target.
 - OptionTweaks, ContextVariableTweaks : Added `Remove` mode.
-- Premultiply / Unpremultiply : Added ignoreMissingAlpha plug.
+- Premultiply, Unpremultiply :
+  - Added `ignoreMissingAlpha` plug.
+  - Optimised the pass-through of the alpha channel.
 
 Fixes
 -----
@@ -18,7 +20,6 @@ Fixes
 - UVInspector : Fixed `Unable to find ScriptNode for UVView` warnings.
 - Scene Editors : Fixed update when ScenePlugs are added to or removed from the node being viewed.
 - PrimitiveInspector : Fixed failure to update when the location being viewed ceases to exist, or is recreated.
-- Unpremultiply : Don't evaluate alphaChannel separately for each channel.
 
 API
 ---
@@ -38,6 +39,7 @@ Breaking Changes
 - Metadata : Path based registrations to a Node or Plug now override equivalent registrations on its descendants.
 - TweakPlugValueWidget : Removed support for `tweakPlugValueWidget:allowCreate` and `tweakPlugValueWidget:allowRemove` metadata.
 - Editor : Removed arguments from `Settings` constructor.
+- Unpremultiply : Removed `image:channelName` from the context used to evaluate the `alphaChannel` plug.
 
 1.4.x.x (relative to 1.4.8.0)
 =======
