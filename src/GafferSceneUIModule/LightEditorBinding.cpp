@@ -191,7 +191,7 @@ class InspectorColumn : public PathColumn
 			m_inspector->dirtiedSignal().connect( boost::bind( &InspectorColumn::inspectorDirtied, this ) );
 		}
 
-		GafferSceneUI::Private::Inspector *inspector()
+		GafferSceneUI::Private::Inspector *inspector() const
 		{
 			return m_inspector.get();
 		}
@@ -292,37 +292,44 @@ class MuteColumn : public InspectorColumn
 
 			if( auto value = runTimeCast<const BoolData>( result.value ) )
 			{
-				result.icon = value->readable() ? m_muteIconData : m_unMuteIconData;
-			}
-			else
-			{
-				ScenePlug::PathScope pathScope( scenePath->getContext() );
-				ScenePlug::ScenePath currentPath( scenePath->names() );
-				while( !currentPath.empty() )
+				ScenePlug::PathScope pathScope( scenePath->getContext(), &scenePath->names() );
+				pathScope.setCanceller( canceller );
+
+				Inspector::ConstResultPtr inspectorResult = inspector()->inspect();
+				if( inspectorResult->sourceType() != Inspector::Result::SourceType::Fallback )
 				{
-					pathScope.setPath( &currentPath );
-					auto a = scenePath->getScene()->attributesPlug()->getValue();
-					if( auto fullValue = a->member<BoolData>( "light:mute" ) )
-					{
-						result.icon = fullValue->readable() ? m_muteFadedIconData : m_unMuteFadedIconData;
-						result.toolTip = new StringData( "Inherited from : " + ScenePlug::pathToString( currentPath ) );
-						break;
-					}
-					currentPath.pop_back();
+					result.icon = value->readable() ? m_muteIconData : m_unMuteIconData;
 				}
-				if( !result.icon )
+				else
 				{
-					// Use a transparent icon to reserve space in the UI. Without this,
-					// the top row will resize when setting the mute value, causing a full
-					// table resize.
-					if( path.isEmpty() )
+					result.icon = value->readable() ? m_muteFadedIconData : m_unMuteFadedIconData;
+
+					ScenePlug::ScenePath currentPath( scenePath->names() );
+					while( !currentPath.empty() )
 					{
-						result.icon = m_muteBlankIconName;
+						pathScope.setPath( &currentPath );
+						auto a = scenePath->getScene()->attributesPlug()->getValue();
+						if( a->member<BoolData>( "light:mute" ) )
+						{
+							result.toolTip = new StringData( "Inherited from : " + ScenePlug::pathToString( currentPath ) );
+							break;
+						}
+						currentPath.pop_back();
 					}
-					else
-					{
-						result.icon = m_muteUndefinedIconData;
-					}
+				}
+			}
+			if( !result.icon )
+			{
+				// Use a transparent icon to reserve space in the UI. Without this,
+				// the top row will resize when setting the mute value, causing a full
+				// table resize.
+				if( path.isEmpty() )
+				{
+					result.icon = m_muteBlankIconName;
+				}
+				else
+				{
+					result.icon = m_muteUndefinedIconData;
 				}
 			}
 
