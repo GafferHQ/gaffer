@@ -417,44 +417,44 @@ class SetMembershipColumn : public InspectorColumn
 				return result;
 			}
 
-			std::string toolTip;
-			if( auto toolTipData = runTimeCast<const StringData>( result.toolTip ) )
+			if( auto value = runTimeCast<const BoolData>( result.value ) )
 			{
-				toolTip = toolTipData->readable();
-			}
-
-			if( auto value = runTimeCast<const IntData>( result.value ) )
-			{
-				if( value->readable() & PathMatcher::Result::ExactMatch )
+				if( value->readable() )
 				{
-					result.icon = m_setMemberIconData;
-				}
-				else if( value->readable() & PathMatcher::Result::AncestorMatch )
-				{
-					ConstPathMatcherDataPtr setMembersData = scenePath->getScene()->set( m_setName );
-					const PathMatcher &setMembers = setMembersData->readable();
+					ScenePlug::PathScope pathScope( scenePath->getContext(), &scenePath->names() );
+					pathScope.setCanceller( canceller );
 
-					ScenePlug::ScenePath currentPath( scenePath->names() );
-					while( !currentPath.empty() )
+					Inspector::ConstResultPtr inspectorResult = inspector()->inspect();
+					if( inspectorResult->sourceType() != Inspector::Result::SourceType::Fallback )
 					{
-						if( setMembers.match( currentPath ) & PathMatcher::Result::ExactMatch )
+						result.icon = m_setMemberIconData;
+					}
+					else
+					{
+						result.icon = m_setMemberIconFadedData;
+
+						ConstPathMatcherDataPtr setMembersData = scenePath->getScene()->set( m_setName );
+						const PathMatcher &setMembers = setMembersData->readable();
+
+						ScenePlug::ScenePath currentPath( scenePath->names() );
+						while( !currentPath.empty() )
 						{
-							result.icon = m_setMemberIconFadedData;
-							toolTip = "Inherited from : " + ScenePlug::pathToString( currentPath );
-							break;
+							if( setMembers.match( currentPath ) & PathMatcher::Result::ExactMatch )
+							{
+								result.toolTip = new StringData( "Inherited from : " + ScenePlug::pathToString( currentPath ) + "\n\nDouble-click to toggle" );
+								break;
+							}
+							currentPath.pop_back();
 						}
-						currentPath.pop_back();
 					}
 				}
 			}
-
 			if( !result.icon )
 			{
 				result.icon = m_setMemberUndefinedIconData;
 			}
 
 			result.value = nullptr;
-			result.toolTip = new StringData( toolTip + ( toolTip.size() ? "\n\n" : "" ) + "Double-click to toggle" );
 
 			return result;
 		}
