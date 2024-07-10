@@ -14,6 +14,7 @@ Improvements
   - Optimised the pass-through of the alpha channel.
 - EditScope : Filtered the EditScope menu to show only nodes that are active in the relevant context.
 - GraphGadget : Improved highlighting of active nodes, with more accurate tracking of Loop node iterations.
+- Spreadsheet : Added yellow underlining to the currently active row.
 
 Fixes
 -----
