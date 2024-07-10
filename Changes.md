@@ -20,7 +20,7 @@ Fixes
 - UVInspector : Fixed `Unable to find ScriptNode for UVView` warnings.
 - Scene Editors : Fixed update when ScenePlugs are added to or removed from the node being viewed.
 - PrimitiveInspector : Fixed failure to update when the location being viewed ceases to exist, or is recreated.
-- Shuffle : Fixed some special cases where shuffling a channel to itself would fail to have the expected effect.
+- Shuffle, ShuffleAttributes, ShufflePrimitiveVariables : Fixed some special cases where shuffling a source to itself would fail to have the expected effect.
 
 API
 ---
@@ -41,6 +41,7 @@ Breaking Changes
 - TweakPlugValueWidget : Removed support for `tweakPlugValueWidget:allowCreate` and `tweakPlugValueWidget:allowRemove` metadata.
 - Editor : Removed arguments from `Settings` constructor.
 - Unpremultiply : Removed `image:channelName` from the context used to evaluate the `alphaChannel` plug.
+- Shuffle, ShuffleAttributes, ShufflePrimitiveVariables : Changed behaviour when shuffling a source to itself.
 
 1.4.x.x (relative to 1.4.8.0)
 =======

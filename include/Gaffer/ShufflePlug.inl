@@ -80,11 +80,11 @@ T ShufflesPlug::shuffleInternal( const T &sourceContainer, const T *extraSources
 	//        multiple source names and write to multiple destination names, therefore each
 	//        shuffle specifies a set of data "moves". As each shuffle's set of moves is
 	//        unordered, moves with the same destination name eg. {a->c, b->c} are invalid.
-	//        Identity moves eg. {a->a, b->b} are ignored. Cyclic moves eg. {a->b, b->a} and
-	//        chained moves eg. {a->b, b->c} are valid as data is always copied from the source
-	//        container. If the delete source flag is specified for a shuffle the source names
-	//        are deleted after all shuffles have completed. If the replace destination flag is
-	//        false for a shuffle each move will not replace data with the same name as its destination.
+	//        Cyclic moves eg. {a->b, b->a} and chained moves eg. {a->b, b->c} are valid as
+	//        data is always copied from the source container. If the delete source flag is
+	//        specified for a shuffle the source names are deleted after all shuffles have
+	//        completed. If the replace destination flag is false for a shuffle each move will
+	//        not replace data with the same name as its destination.
 
 	T destinationContainer( sourceContainer ); // NOTE : initial copy of all source data to destination.
 
