@@ -61,6 +61,9 @@ class GAFFERIMAGE_API Premultiply : public ChannelDataProcessor
 		Gaffer::StringPlug *alphaChannelPlug();
 		const Gaffer::StringPlug *alphaChannelPlug() const;
 
+		Gaffer::BoolPlug *ignoreMissingAlphaPlug();
+		const Gaffer::BoolPlug *ignoreMissingAlphaPlug() const;
+
 		Gaffer::BoolPlug *useDeepVisibilityPlug();
 		const Gaffer::BoolPlug *useDeepVisibilityPlug() const;
 		//@}

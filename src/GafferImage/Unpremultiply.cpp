@@ -54,6 +54,7 @@ Unpremultiply::Unpremultiply( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "alphaChannel", Gaffer::Plug::In, "A" ) );
+	addChild( new BoolPlug( "ignoreMissingAlpha", Gaffer::Plug::In, false ) );
 }
 
 Unpremultiply::~Unpremultiply()
@@ -70,13 +71,24 @@ const Gaffer::StringPlug *Unpremultiply::alphaChannelPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
+Gaffer::BoolPlug *Unpremultiply::ignoreMissingAlphaPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::BoolPlug *Unpremultiply::ignoreMissingAlphaPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
 void Unpremultiply::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ChannelDataProcessor::affects( input, outputs );
 
 	if(
 		input == inPlug()->channelDataPlug() ||
-		input == alphaChannelPlug()
+		input == alphaChannelPlug() ||
+		input == ignoreMissingAlphaPlug()
 	)
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
@@ -85,11 +97,38 @@ void Unpremultiply::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 
 void Unpremultiply::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	std::string alphaChannel = alphaChannelPlug()->getValue();
+	std::string alphaChannel;
+	ConstStringVectorDataPtr inChannelNamesPtr;
+	bool ignoreMissingAlpha;
+
+	{
+		ImagePlug::GlobalScope c( context );
+		alphaChannel = alphaChannelPlug()->getValue();
+		inChannelNamesPtr = inPlug()->channelNamesPlug()->getValue();
+		ignoreMissingAlpha = ignoreMissingAlphaPlug()->getValue();
+	}
+
+	if( alphaChannel == context->get<std::string>( ImagePlug::channelNameContextName ) )
+	{
+		h = inPlug()->channelDataPlug()->hash();
+		return;
+	}
+
+	const std::vector<std::string> &inChannelNames = inChannelNamesPtr->readable();
+	if ( std::find( inChannelNames.begin(), inChannelNames.end(), alphaChannel ) == inChannelNames.end() )
+	{
+		if( ignoreMissingAlpha )
+		{
+			h = inPlug()->channelDataPlug()->hash();
+			return;
+		}
+		else
+		{
+			throw IECore::Exception( fmt::format( "Channel '{}' does not exist", alphaChannel ) );
+		}
+	}
 
 	ChannelDataProcessor::hashChannelData( output, context, h );
-
-	inPlug()->channelDataPlug()->hash( h );
 
 	ImagePlug::ChannelDataScope channelDataScope( context );
 	channelDataScope.setChannelName( &alphaChannel );
@@ -99,25 +138,33 @@ void Unpremultiply::hashChannelData( const GafferImage::ImagePlug *output, const
 
 void Unpremultiply::processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channel, FloatVectorDataPtr outData ) const
 {
-	std::string alphaChannel = alphaChannelPlug()->getValue();
+	std::string alphaChannel;
+	ConstStringVectorDataPtr inChannelNamesPtr;
+	bool ignoreMissingAlpha;
+
+	{
+		ImagePlug::GlobalScope c( context );
+		alphaChannel = alphaChannelPlug()->getValue();
+		inChannelNamesPtr = inPlug()->channelNamesPlug()->getValue();
+		ignoreMissingAlpha = ignoreMissingAlphaPlug()->getValue();
+	}
 
 	if ( channel == alphaChannel )
 	{
 		return;
 	}
 
-	ConstStringVectorDataPtr inChannelNamesPtr;
-	{
-		ImagePlug::GlobalScope c( context );
-		inChannelNamesPtr = inPlug()->channelNamesPlug()->getValue();
-	}
-
 	const std::vector<std::string> &inChannelNames = inChannelNamesPtr->readable();
 	if ( std::find( inChannelNames.begin(), inChannelNames.end(), alphaChannel ) == inChannelNames.end() )
 	{
-		std::ostringstream channelError;
-		channelError << "Channel '" << alphaChannel << "' does not exist";
-		throw( IECore::Exception( channelError.str() ) );
+		if( ignoreMissingAlpha )
+		{
+			return;
+		}
+		else
+		{
+			throw IECore::Exception( fmt::format( "Channel '{}' does not exist", alphaChannel ) );
+		}
 	}
 
 	ImagePlug::ChannelDataScope channelDataScope( context );
