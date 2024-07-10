@@ -42,6 +42,7 @@ import Gaffer
 import GafferUI
 
 from Qt import QtCore
+from Qt import QtGui
 
 from . import _Formatting
 
@@ -51,13 +52,13 @@ from . import _Formatting
 class _PlugTableModel( QtCore.QAbstractTableModel ) :
 
 	CellPlugEnabledRole = QtCore.Qt.UserRole
+	ActiveRole = CellPlugEnabledRole + 1
 
-	def __init__( self, rowsPlug, context, parent = None ) :
+	def __init__( self, rowsPlug, parent = None ) :
 
 		QtCore.QAbstractTableModel.__init__( self, parent )
 
 		self.__rowsPlug = rowsPlug
-		self.__context = context
 
 		self.__plugDirtiedConnection = rowsPlug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ), scoped = True )
 		self.__rowAddedConnection = rowsPlug.childAddedSignal().connect( Gaffer.WeakMethod( self.__rowAdded ), scoped = True )
@@ -66,7 +67,15 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 		self.__columnAddedConnection = rowsPlug.defaultRow()["cells"].childAddedSignal().connect( Gaffer.WeakMethod( self.__columnAdded ), scoped = True )
 		self.__columnRemovedConnection = rowsPlug.defaultRow()["cells"].childRemovedSignal().connect( Gaffer.WeakMethod( self.__columnRemoved ), scoped = True )
 		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( rowsPlug.node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = True )
-		self.__contextChangedConnection = self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = True )
+
+		self.__contextTracker = GafferUI.ContextTracker.acquireForFocus( rowsPlug.node().scriptNode() )
+		self.__contextTrackerChangedConnection = self.__contextTracker.changedSignal().connect( Gaffer.WeakMethod( self.__contextTrackerChanged ), scoped = True )
+		self.__context = None
+		self.__contextTrackerChanged( self.__contextTracker )
+
+		self.__spreadsheet = Gaffer.PlugAlgo.findDestination(
+			self.__rowsPlug, lambda plug : plug.node() if isinstance( plug.node(), Gaffer.Spreadsheet ) else None
+		)
 
 	# Methods of our own
 	# ------------------
@@ -270,6 +279,29 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 						return None
 			return enabled
 
+		elif role == self.ActiveRole :
+
+			if self.__spreadsheet is not None :
+				with self.__context :
+					if index.row() == 0 :
+						# We don't show active state for the default row because
+						# our context isn't watertight, and doesn't track things
+						# like `scene:path`, so the default being active may
+						# commonly be a false positive. In this case we think
+						# the best compromise is to show an ambiguous state.
+						return False
+					elif index.column() < 2 :
+						return index.row() == self.__spreadsheet["activeRowIndex"].getValue()
+					elif index.row() > 0 :
+						activeInPlug = self.__spreadsheet.activeInPlug(
+							self.__spreadsheet["out"][index.column() - 2]
+						)
+						valuePlug = self.valuePlugForIndex( index )
+						return Gaffer.PlugAlgo.findSource(
+							activeInPlug,
+							lambda plug : plug == valuePlug
+						)
+
 		return None
 
 	def setData( self, index, value, role ) :
@@ -361,12 +393,12 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 			# when they change. Emitting `dataChanged` is enough to kick a redraw off.
 			self.dataChanged.emit( index, index )
 
-	def __contextChanged( self, context, key ) :
+	def __contextTrackerChanged( self, contextTracker ) :
 
-		if key.startswith( "ui:" ) :
-			return
-
-		self.__emitModelReset()
+		context = self.__contextTracker.context( self.rowsPlug() )
+		if self.__context is None or self.__context.hash() != context.hash() :
+			self.__context = context
+			self.__emitModelReset()
 
 	def __emitModelReset( self ) :
 

@@ -19,6 +19,7 @@ Improvements
 - LightEditor :
   - Improved formatting of column headers containing whitespace.
   - The "Double-click to toggle" tooltip is no longer displayed while hovering over non-editable cells, and a "Double-click to edit" tooltip is now displayed while hovering over other non-toggleable but editable cells.
+- Spreadsheet : Added yellow underlining to the currently active row.
 
 Fixes
 -----

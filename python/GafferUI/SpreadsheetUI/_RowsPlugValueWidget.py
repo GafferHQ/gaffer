@@ -66,7 +66,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.PlugValueWidget.__init__( self, self.__grid, plug )
 
-		model = _PlugTableModel( plug, self.context(), self._qtWidget() )
+		model = _PlugTableModel( plug, self._qtWidget() )
 		selectionModel = QtCore.QItemSelectionModel( model, self._qtWidget() )
 
 		with self.__grid :
