@@ -179,7 +179,7 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Si
 
 		/// Can be implemented by derived classes to provide a fallback value for the inspection,
 		/// used when no value is returned from `value()`.
-		virtual IECore::ConstObjectPtr fallbackValue() const;
+		virtual IECore::ConstObjectPtr fallbackValue( const GafferScene::SceneAlgo::History *history ) const;
 
 	protected :
 

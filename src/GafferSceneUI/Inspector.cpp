@@ -193,7 +193,7 @@ Inspector::ResultPtr Inspector::inspect() const
 	bool fallbackValue = false;
 	if( !value )
 	{
-		value = this->fallbackValue();
+		value = this->fallbackValue( history.get() );
 		fallbackValue = (bool)value;
 	}
 
@@ -365,7 +365,7 @@ Inspector::EditFunctionOrFailure Inspector::editFunction( Gaffer::EditScope *edi
 	return "Editing not supported";
 }
 
-IECore::ConstObjectPtr Inspector::fallbackValue() const
+IECore::ConstObjectPtr Inspector::fallbackValue( const GafferScene::SceneAlgo::History *history ) const
 {
 	return nullptr;
 }

@@ -116,6 +116,38 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			IECore.FloatData( 2.0 )
 		)
 
+	def testFallbackValue( self ) :
+
+		light = GafferSceneTest.TestLight()
+		group = GafferScene.Group()
+		group["in"][0].setInput( light["out"] )
+
+		groupFilter = GafferScene.PathFilter()
+		groupFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+
+		glAttributes = GafferScene.OpenGLAttributes()
+		glAttributes["in"].setInput( group["out"] )
+		glAttributes["filter"].setInput( groupFilter["out"] )
+		glAttributes["attributes"]["visualiserScale"]["enabled"].setValue( True )
+		glAttributes["attributes"]["visualiserScale"]["value"].setValue( 2.0 )
+
+		# With no "gl:visualiser:scale" attribute at /group/light, the inspection returns
+		# the inherited attribute value with `sourceType` identifying it as a fallback.
+
+		inspection = self.__inspect( glAttributes["out"], "/group/light", "gl:visualiser:scale" )
+		self.assertEqual( inspection.value(), IECore.FloatData( 2.0 ) )
+		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Fallback )
+
+		# With a "gl:visualiser:scale" attribute created at the inspected location, it is
+		# returned instead of the inherited fallback.
+
+		light["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+		light["visualiserAttributes"]["scale"]["value"].setValue( 4.0 )
+
+		inspection = self.__inspect( glAttributes["out"], "/group/light", "gl:visualiser:scale" )
+		self.assertEqual( inspection.value(), IECore.FloatData( 4.0 ) )
+		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Other )
+
 	def testSourceAndEdits( self ) :
 
 		s = Gaffer.ScriptNode()
