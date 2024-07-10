@@ -117,6 +117,7 @@ T ShufflesPlug::shuffleInternal( const T &sourceContainer, const T *extraSources
 			const std::string &srcName = srcPattern;
 			const typename T::mapped_type *srcValue = nullptr;
 			typename T::const_iterator sIt = sourceContainer.find( srcName );
+
 			if( sIt != sourceContainer.end() )
 			{
 				srcValue = &sIt->second;
@@ -142,21 +143,19 @@ T ShufflesPlug::shuffleInternal( const T &sourceContainer, const T *extraSources
 				if( ! dstPattern.empty() )
 				{
 					const std::string dstName = scope.context()->substitute( dstPattern );
-					if( srcName != dstName )
+					if( dstReplace || ( destinationContainer.find( dstName ) == destinationContainer.end() ) )
 					{
-						if( dstReplace || ( destinationContainer.find( dstName ) == destinationContainer.end() ) )
-						{
-							destinationContainer[ dstName ] = *srcValue;
-							names.insert( dstName );
-						}
+						destinationContainer[ dstName ] = *srcValue;
+						names.insert( dstName );
+					}
 
-						if( srcDelete && ( names.find( srcName ) == names.end() ) )
-						{
-							destinationContainer.erase( srcName );
-						}
+					if( srcDelete && ( names.find( srcName ) == names.end() ) )
+					{
+						destinationContainer.erase( srcName );
 					}
 				}
-			} else if( !ignoreMissingSource )
+			}
+			else if( !ignoreMissingSource )
 			{
 				throw IECore::Exception( fmt::format( "Source \"{}\" does not exist", srcName ) );
 			}
@@ -184,34 +183,31 @@ T ShufflesPlug::shuffleInternal( const T &sourceContainer, const T *extraSources
 					if( ! dstPattern.empty() )
 					{
 						const std::string dstName = scope.context()->substitute( dstPattern );
-						if( srcName != dstName )
+						// NOTE : Check for clashing move destination names within this shuffle.
+						//        Do check regardless of whether shuffle's replace destination
+						//        flag means destination is not actually written.
+
+						if( ! moveNames.insert( dstName ).second )
 						{
-							// NOTE : Check for clashing move destination names within this shuffle.
-							//        Do check regardless of whether shuffle's replace destination
-							//        flag means destination is not actually written.
+							throw IECore::Exception(
+								fmt::format(
+									"ShufflesPlug::shuffle : Destination plug \"{}\" shuffles from \"{}\" to \"{}\", " \
+									"cannot write from multiple sources to destination \"{}\"",
+									plug->destinationPlug()->relativeName( plug->node() ? plug->node()->parent() : nullptr ),
+									srcPattern, dstPattern, dstName
+								)
+							);
+						}
 
-							if( ! moveNames.insert( dstName ).second )
-							{
-								throw IECore::Exception(
-									fmt::format(
-										"ShufflesPlug::shuffle : Destination plug \"{}\" shuffles from \"{}\" to \"{}\", " \
-										"cannot write from multiple sources to destination \"{}\"",
-										plug->destinationPlug()->relativeName( plug->node() ? plug->node()->parent() : nullptr ),
-										srcPattern, dstPattern, dstName
-									)
-								);
-							}
+						if( dstReplace || ( destinationContainer.find( dstName ) == destinationContainer.end() ) )
+						{
+							destinationContainer[ dstName ] = sIt->second;
+							names.insert( dstName );
+						}
 
-							if( dstReplace || ( destinationContainer.find( dstName ) == destinationContainer.end() ) )
-							{
-								destinationContainer[ dstName ] = sIt->second;
-								names.insert( dstName );
-							}
-
-							if( srcDelete && ( names.find( srcName ) == names.end() ) )
-							{
-								destinationContainer.erase( srcName );
-							}
+						if( srcDelete && ( names.find( srcName ) == names.end() ) )
+						{
+							destinationContainer.erase( srcName );
 						}
 					}
 				}

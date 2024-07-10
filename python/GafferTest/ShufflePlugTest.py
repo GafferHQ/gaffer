@@ -205,32 +205,15 @@ class ShufflePlugTest( GafferTest.TestCase ) :
 			} )
 		)
 
-	def testIgnoreIdentity( self ) :
+	def testIdentityWorksAsUsual( self ) :
 
+		# Unlike in an earlier version, shuffling from "bar" to "bar" works as normal ( in this case,
+		# creating a collision because two sources write to the same destination ).
 		p = Gaffer.ShufflesPlug()
 		p.addChild( Gaffer.ShufflePlug( source = "*", destination = "bar" ) )
 
 		source = IECore.CompoundObject( { "foo" : IECore.FloatData( 0.5 ), "bar" : IECore.FloatData( 1.0 ) } )
-		dest = p.shuffle( source )
-		self.assertEqual(
-			dest,
-			IECore.CompoundObject( {
-				"foo" : IECore.FloatData( 0.5 ),
-				"bar" : IECore.FloatData( 0.5 ),
-			} )
-		)
-
-		# replace destination false
-		p[0]["replaceDestination"].setValue( False )
-		source = IECore.CompoundObject( { "foo" : IECore.FloatData( 0.5 ), "bar" : IECore.FloatData( 1.0 ) } )
-		dest = p.shuffle( source )
-		self.assertEqual(
-			dest,
-			IECore.CompoundObject( {
-				"foo" : IECore.FloatData( 0.5 ),
-				"bar" : IECore.FloatData( 1.0 ),
-			} )
-		)
+		self.assertRaisesRegex( RuntimeError, 'cannot write from multiple sources to destination "bar"', p.shuffle, source )
 
 	def testNoReShuffle( self ) :
 
@@ -525,6 +508,11 @@ class ShufflePlugTest( GafferTest.TestCase ) :
 		extraSources["*"] = 20
 		self.assertEqual( plug.shuffleWithExtraSources( source, extraSources ), IECore.CompoundData( { "bar" : 20 } ) )
 		self.assertEqual( plug.shuffleWithExtraSources( source, extraSources, ignoreMissingSource = False ), IECore.CompoundData( { "bar" : 20 } ) )
+
+		# When using an extra source of `*`, we should be able to create a new value with a fallback by shuffling
+		# from "toto" to "toto"
+		plug[0]["destination"].setValue( "toto" )
+		self.assertEqual( plug.shuffleWithExtraSources( source, extraSources ), IECore.CompoundData( { "toto" : 20 } ) )
 
 if __name__ == "__main__":
 	unittest.main()
