@@ -184,6 +184,12 @@ tuple connectionAt( AuxiliaryConnectionsGadget &g, IECore::LineSegment3f positio
 	return make_tuple( nodeGadgets.first, nodeGadgets.second );
 }
 
+const std::string &annotationTextWrapper( const AnnotationsGadget &gadget, const Gaffer::Node &node, IECore::InternedString annotation )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return gadget.annotationText( &node, annotation );
+}
+
 bool connectNode( const GraphLayout &layout, GraphGadget &graph, Gaffer::Node &node, Gaffer::Set &potentialInputs )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -298,7 +304,7 @@ void GafferUIModule::bindGraphGadget()
 		.def_readonly( "untemplatedAnnotations", &AnnotationsGadget::untemplatedAnnotations )
 		.def( "setVisibleAnnotations", &AnnotationsGadget::setVisibleAnnotations )
 		.def( "getVisibleAnnotations", &AnnotationsGadget::getVisibleAnnotations, return_value_policy<copy_const_reference>() )
-		.def( "annotationText", &AnnotationsGadget::annotationText, return_value_policy<copy_const_reference>(), ( arg( "node" ), arg( "annotation" ) = "user" ) )
+		.def( "annotationText", &annotationTextWrapper, return_value_policy<copy_const_reference>(), ( arg( "node" ), arg( "annotation" ) = "user" ) )
 	;
 
 	IECorePython::RunTimeTypedClass<GraphLayout>()

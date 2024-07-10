@@ -33,6 +33,7 @@ Fixes
 - Cycles : Fixed bug preventing a background light from being added to a light group.
 - LightEditor : Fixed regression (introduced in 1.4.8.0) causing the mute and solo icons to not show up for groups.
 - Windows : Fixed conflicts with other software installations on `PATH`. The `PXR_USD_WINDOWS_DLL_PATH` environment variable is now set to an empty string if it is not already set, preventing USD from adding all entries from `PATH` to Python's DLL search paths.
+- AnnotationsGadget : Fixed potential hang in `annotationText()` Python binding.
 
 API
 ---
