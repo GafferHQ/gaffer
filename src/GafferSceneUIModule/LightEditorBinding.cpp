@@ -177,6 +177,7 @@ const boost::container::flat_map<int, ConstColor4fDataPtr> g_sourceTypeColors = 
 	{ (int)Inspector::Result::SourceType::Other, nullptr },
 	{ (int)Inspector::Result::SourceType::Fallback, nullptr },
 };
+const Color4fDataPtr g_fallbackValueForegroundColor = new Color4fData( Imath::Color4f( 163, 163, 163, 255 ) / 255.0f );
 
 class InspectorColumn : public PathColumn
 {
@@ -221,7 +222,12 @@ class InspectorColumn : public PathColumn
 			result.icon = runTimeCast<const Color3fData>( inspectorResult->value() );
 			result.background = g_sourceTypeColors.at( (int)inspectorResult->sourceType() );
 			std::string toolTip;
-			if( auto source = inspectorResult->source() )
+			if( inspectorResult->sourceType() == Inspector::Result::SourceType::Fallback )
+			{
+				toolTip = "Source : Fallback value";
+				result.foreground = g_fallbackValueForegroundColor;
+			}
+			else if( auto source = inspectorResult->source() )
 			{
 				toolTip = "Source : " + source->relativeName( source->ancestor<ScriptNode>() );
 			}
