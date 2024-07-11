@@ -267,6 +267,7 @@ IECore::ConstObjectPtr FreezeTransform::computeObject( const ScenePath &path, co
 
 		const M44f transform = transformPlug()->getValue();
 
+		// TODO - should probably address this as well in IECoreScenePreview::MeshAlgo::transform
 		TransformOpPtr transformOp = new TransformOp;
 		transformOp->inputParameter()->setValue( outputPrimitive );
 		transformOp->copyParameter()->setTypedValue( false );
