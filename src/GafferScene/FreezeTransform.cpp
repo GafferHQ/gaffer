@@ -39,7 +39,7 @@
 #include "Gaffer/Context.h"
 
 #include "IECoreScene/Primitive.h"
-#include "IECoreScene/TransformOp.h"
+#include "GafferScene/Private/IECoreScenePreview/PrimitiveAlgo.h"
 
 #include "IECore/DataAlgo.h"
 #include "IECore/TypeTraits.h"
@@ -252,27 +252,9 @@ IECore::ConstObjectPtr FreezeTransform::computeObject( const ScenePath &path, co
 
 		PrimitivePtr outputPrimitive = inputPrimitive->copy();
 
-		/// \todo This is a pain - we need functionality in Cortex to just automatically apply
-		/// the transform to all appropriate primitive variables, without having to manually
-		/// list them. At the same time, we could add a PrimitiveAlgo.h file to Cortex, allowing
-		/// us to apply a transform without having to create an Op to do it.
-		vector<string> primVarNames;
-		for( PrimitiveVariableMap::const_iterator it = inputPrimitive->variables.begin(), eIt = inputPrimitive->variables.end(); it != eIt; ++it )
-		{
-			if( trait<TypeTraits::IsFloatVec3VectorTypedData>( it->second.data.get() ) )
-			{
-				primVarNames.push_back( it->first );
-			}
-		}
-
 		const M44f transform = transformPlug()->getValue();
 
-		TransformOpPtr transformOp = new TransformOp;
-		transformOp->inputParameter()->setValue( outputPrimitive );
-		transformOp->copyParameter()->setTypedValue( false );
-		transformOp->matrixParameter()->setValue( new M44fData( transform ) );
-		transformOp->primVarsParameter()->setTypedValue( primVarNames );
-		transformOp->operate();
+		IECoreScenePreview::PrimitiveAlgo::transformPrimitive( *outputPrimitive, transform, context->canceller() );
 
 		return outputPrimitive;
 	}

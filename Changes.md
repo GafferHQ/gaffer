@@ -50,6 +50,7 @@ Fixes
   - Fixed bug which prevented cancellation of long-running computes, making the UI unresponsive until they completed.
   - Fixed thread-safety bug.
 - HierarchyView, SetEditor : Fixed thread-safety bugs.
+- FreezeTransform : Constant primitive variables with point/vector interpretations are now also transformed.
 
 API
 ---
@@ -103,6 +104,7 @@ Breaking Changes
 - ArnoldRender, CyclesRender, DelightRender, OpenGLRender : Removed. Use the generic Render node instead.
 - Render : Removed protected constructor for creating renderer-specific derived classes.
 - Signal : The `connect()` and `connectFront()` methods now default to `scoped = False`. If a scoped connection is required, pass `scoped = True`.
+- FreezeTransform : Constant primitive variables with point/vector interpretations are now also transformed ( this is more correct, but it is a change in behaviour ).
 
 Build
 -----
