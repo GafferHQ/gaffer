@@ -58,6 +58,7 @@ namespace GafferUI
 
 class GraphGadget;
 class NodeGadget;
+IE_CORE_FORWARDDECLARE( ContextTracker );
 
 class GAFFERUI_API AnnotationsGadget : public Gadget
 {
@@ -132,7 +133,7 @@ class GAFFERUI_API AnnotationsGadget : public Gadget
 		void plugDirtied( const Gaffer::Plug *plug, Annotations *annotations );
 		// If the substitutions are from computed plugs, then we also need to
 		// update when the context changes.
-		void scriptContextChanged();
+		void contextTrackerChanged();
 		// Some plug substitutions may depend on computes, in which case we must
 		// perform the substitutions in a BackgroundTask to avoid blocking the
 		// UI. This function schedules such a task, or if the values are not
@@ -169,7 +170,8 @@ class GAFFERUI_API AnnotationsGadget : public Gadget
 
 		Gaffer::Signals::ScopedConnection m_graphGadgetChildAddedConnection;
 		Gaffer::Signals::ScopedConnection m_graphGadgetChildRemovedConnection;
-		Gaffer::Signals::ScopedConnection m_scriptContextChangedConnection;
+		ContextTrackerPtr m_contextTracker;
+		Gaffer::Signals::ScopedConnection m_contextTrackerChangedConnection;
 
 		using AnnotationsContainer = std::unordered_map<const NodeGadget *, Annotations>;
 		AnnotationsContainer m_annotations;
