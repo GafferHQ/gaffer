@@ -10,6 +10,7 @@ Improvements
 - Instancer :
   - Improved Arnold raytracing performance for encapsulated instancers with many prototypes. All instances are now output in a single top-level procedural rather than a top-level procedural per prototype, resulting in more optimal BVH traversals in Arnold.
   - Reduced scene generation time for encapsulated instancers by around 20%.
+- NodeEditor : Added <kbd>Alt</kbd> + middle-click action for showing context variable substitutions in strings.
 
 Fixes
 -----

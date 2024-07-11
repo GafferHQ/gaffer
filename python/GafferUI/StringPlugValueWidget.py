@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import functools
+
 import IECore
 
 import Gaffer
@@ -59,6 +61,7 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self._addPopupMenu( self.__textWidget )
 
 		self.__textWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		addSubstitutionsPopup( self.__textWidget )
 		self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ) )
 		self.__textChangedConnection = self.__textWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
 
@@ -70,6 +73,15 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
 		self.textWidget().setHighlighted( highlighted )
+
+	def getToolTip( self ) :
+
+		result = GafferUI.PlugValueWidget.getToolTip( self )
+
+		result += "\n## Actions\n"
+		result += " - <kbd>Alt</kbd> + middle-click to show context variable substitutions\n"
+
+		return result
 
 	def _updateFromValues( self, values, exception ) :
 
@@ -186,3 +198,61 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__textWidget.clearUndo()
 
 GafferUI.PlugValueWidget.registerType( Gaffer.StringPlug, StringPlugValueWidget )
+
+# Substitutions Popup
+# ===================
+
+def addSubstitutionsPopup( widget ) :
+
+	widget.buttonPressSignal().connect( __substitutionsButtonPress )
+	widget.buttonReleaseSignal().connect( __substitutionsButtonRelease )
+
+def __substitutionsCopyClicked( widget, text ) :
+
+	application = widget.ancestor( GafferUI.PlugValueWidget ).scriptNode().ancestor( Gaffer.ApplicationRoot )
+	application.setClipboardContents( IECore.StringData( text ) )
+	widget.ancestor( GafferUI.Window ).close()
+	return True
+
+def __substitutionsDragBegin( widget, event, text ) :
+
+	GafferUI.Pointer.setCurrent( "values" )
+	return text
+
+def __substitutionsDragEnd( widget, event ) :
+
+	GafferUI.Pointer.setCurrent( None )
+	return True
+
+def __substitutionsButtonPress( widget, event ) :
+
+	if event.buttons != event.Buttons.Middle or event.modifiers != event.Modifiers.Alt :
+		return False
+
+	# Alt + Middle click
+
+	plugValueWidget = widget.ancestor( GafferUI.PlugValueWidget )
+	substitutions = sole( p.substitutions() for p in plugValueWidget.getPlugs() )
+	if substitutions is None :
+		return True
+
+	text = plugValueWidget.context().substitute( widget.getText(), substitutions )
+	if text == widget.getText() :
+		return True
+
+	with GafferUI.PopupWindow() as widget.__substitutionsPopupWindow :
+		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, 4 ) :
+			label = GafferUI.Label( f"<b>{text}</b>" )
+			label.buttonPressSignal().connect( lambda widget, event : True )
+			label.dragBeginSignal().connect( functools.partial( __substitutionsDragBegin, text = text ) )
+			label.dragEndSignal().connect( __substitutionsDragEnd )
+			button = GafferUI.Button( image = "duplicate.png", hasFrame = False, toolTip = "Copy Text" )
+			button.clickedSignal().connect( functools.partial( __substitutionsCopyClicked, text = text ) )
+
+	widget.__substitutionsPopupWindow.popup( parent = widget )
+	return True
+
+def __substitutionsButtonRelease( widget, event ) :
+
+	# Take event to stop Alt+Middle from pasting on Linux.
+	return event.button == event.Buttons.Middle and event.modifiers == event.Modifiers.Alt

@@ -41,6 +41,7 @@ import Gaffer
 import GafferUI
 
 from .PlugValueWidget import sole
+from .StringPlugValueWidget import addSubstitutionsPopup
 
 import os
 
@@ -67,13 +68,14 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__pathChooserDialogueKeywords = pathChooserDialogueKeywords
 
-		pathWidget = GafferUI.PathWidget( self.__path )
-		self._addPopupMenu( pathWidget )
-		self.__row.append( pathWidget )
+		with self.__row :
 
-		button = GafferUI.Button( image = "pathChooser.png", hasFrame=False )
-		button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
-		self.__row.append( button )
+			pathWidget = GafferUI.PathWidget( self.__path )
+			self._addPopupMenu( pathWidget )
+			addSubstitutionsPopup( pathWidget )
+
+			button = GafferUI.Button( image = "pathChooser.png", hasFrame=False )
+			button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 
 		pathWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ) )
 
@@ -102,6 +104,7 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 		result += "- <kbd>Tab</kbd> to autocomplete path component\n"
 		result += "- Select path component (or hit <kbd>&darr;</kbd>) to show path-level contents menu\n"
 		result += "- Select all to show path hierarchy menu\n"
+		result += "- <kbd>Alt</kbd> + middle-click to show context variable substitutions\n"
 
 		return result
 
