@@ -495,8 +495,7 @@ void AnnotationsGadget::update()
 		return;
 	}
 
-	Context *context = parent<GraphGadget>()->getRoot()->scriptNode()->context();
-	Context::Scope scopedContext( context );
+	m_contextTracker = ContextTracker::acquireForFocus( parent<GraphGadget>()->getRoot()->scriptNode() );
 
 	vector<string> templates;
 	MetadataAlgo::annotationTemplates( templates );
@@ -583,13 +582,13 @@ void AnnotationsGadget::update()
 
 	if( dependsOnContext )
 	{
-		m_scriptContextChangedConnection = context->changedSignal().connect(
-			boost::bind( &AnnotationsGadget::scriptContextChanged, this )
+		m_contextTrackerChangedConnection = m_contextTracker->changedSignal().connect(
+			boost::bind( &AnnotationsGadget::contextTrackerChanged, this )
 		);
 	}
 	else
 	{
-		m_scriptContextChangedConnection.disconnect();
+		m_contextTrackerChangedConnection.disconnect();
 	}
 
 	m_dirty = false;
@@ -610,7 +609,7 @@ void AnnotationsGadget::plugDirtied( const Gaffer::Plug *plug, Annotations *anno
 	}
 }
 
-void AnnotationsGadget::scriptContextChanged()
+void AnnotationsGadget::contextTrackerChanged()
 {
 	bool dirtied = false;
 	for( auto &[nodeGadget, annotation] : m_annotations )
@@ -653,6 +652,8 @@ void AnnotationsGadget::schedulePlugValueSubstitutions( const Gaffer::Node *node
 	// in `---` placeholders to give folks a hint as to what is happening.
 
 	applySubstitutedRenderText( substitutedRenderText( /* node = */ nullptr, *annotations ), *annotations );
+
+	Context::Scope scopedContext( m_contextTracker->context( node ).get() );
 
 	annotations->substitutionsTask = ParallelAlgo::callOnBackgroundThread(
 

@@ -13,7 +13,9 @@ Improvements
   - Added `ignoreMissingAlpha` plug.
   - Optimised the pass-through of the alpha channel.
 - EditScope : Filtered the EditScope menu to show only nodes that are active in the relevant context.
-- GraphGadget : Improved highlighting of active nodes, with more accurate tracking of Loop node iterations.
+- GraphGadget :
+  - Improved highlighting of active nodes, with more accurate tracking of Loop node iterations.
+  - Annotation `{plug}` substitutions are now evaluated in a context determined relative to the focus node.
 - Spreadsheet : Added yellow underlining to the currently active row.
 
 Fixes
