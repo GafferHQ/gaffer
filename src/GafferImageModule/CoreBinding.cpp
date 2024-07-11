@@ -287,6 +287,12 @@ Format getValue( const FormatPlug *plug )
 	return plug->getValue();
 }
 
+FormatPlugPtr acquireDefaultFormatPlugWrapper( Gaffer::ScriptNode &scriptNode )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return FormatPlug::acquireDefaultFormatPlug( &scriptNode );
+}
+
 class FormatPlugSerialiser : public GafferBindings::ValuePlugSerialiser
 {
 
@@ -431,7 +437,7 @@ void GafferImageModule::bindCore()
 		.staticmethod( "setDefaultFormat" )
 		.def( "getDefaultFormat", &FormatPlug::getDefaultFormat )
 		.staticmethod( "getDefaultFormat" )
-		.def( "acquireDefaultFormatPlug", &FormatPlug::acquireDefaultFormatPlug, return_value_policy<IECorePython::CastToIntrusivePtr>() )
+		.def( "acquireDefaultFormatPlug", &acquireDefaultFormatPlugWrapper )
 		.staticmethod( "acquireDefaultFormatPlug" )
 	;
 
