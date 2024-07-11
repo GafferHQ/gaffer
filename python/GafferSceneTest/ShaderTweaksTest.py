@@ -466,5 +466,88 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		)
 		self.assertNotIn( "intensity", tweaks["out"].attributes( "/light" )["light"].outputShader().parameters )
 
+	def testWildcards( self ) :
+
+		shaderA_A = GafferSceneTest.TestShader( "A_A" )
+		shaderA_B = GafferSceneTest.TestShader( "A_B" )
+		shaderA_B["parameters"]["c"].setInput( shaderA_A["out"] )
+		shaderB_A = GafferSceneTest.TestShader( "B_A" )
+		shaderB_A["parameters"]["c"].setInput( shaderA_B["out"] )
+
+		light = GafferSceneTest.TestLight()
+		light["parameters"]["intensity"].setInput( shaderB_A["out"] )
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+
+		tweaks = GafferScene.ShaderTweaks()
+		tweaks["in"].setInput( light["out"] )
+		tweaks["shader"].setValue( "light" )
+		tweaks["filter"].setInput( pathFilter["out"] )
+
+		originalNetwork = tweaks["out"].attributes( "/light" )["light"]
+
+		self.assertEqual( len( originalNetwork ), 4 )
+
+		tweaks["tweaks"].addChild(
+			Gaffer.TweakPlug( "*.i", 42, mode = Gaffer.TweakPlug.Mode.Add )
+		)
+
+		tweaked = tweaks["out"].attributes( "/light" )["light"]
+		self.assertEqual( tweaked.shaders()["A_A"].parameters["i"].value, 42 )
+		self.assertEqual( tweaked.shaders()["A_B"].parameters["i"].value, 42 )
+		self.assertEqual( tweaked.shaders()["B_A"].parameters["i"].value, 42 )
+
+		tweaks["tweaks"][0]["name"].setValue( "A_A.*" )
+
+		# Wildcards are currently supported only in shader names, not in parameter names ( since we can't think of
+		# a legitimate use case for doing it for parameters. Do we need a more specific error though? Currently, a
+		# confusing case is trying *.*, which silently does nothing ( it looks at all shaders, and finds that none of
+		# them have a parameter with the literal name `*` ).
+		with self.assertRaisesRegex( RuntimeError, 'Cannot apply tweak with mode Add to "A_A.*" : This parameter does not exist' ) :
+			tweaks["out"].attributes( "/light" )
+
+		tweaks["tweaks"][0]["name"].setValue( "*_A.i" )
+
+		tweaked = tweaks["out"].attributes( "/light" )["light"]
+		self.assertEqual( tweaked.shaders()["A_A"].parameters["i"].value, 42 )
+		self.assertEqual( tweaked.shaders()["A_B"].parameters["i"].value, 0 )
+		self.assertEqual( tweaked.shaders()["B_A"].parameters["i"].value, 42 )
+
+		extraShader = GafferSceneTest.TestShader( "extra" )
+		tweaks["tweaks"][0]["value"].setInput( extraShader["out"]["r"] )
+
+		with self.assertRaisesRegex( RuntimeError, r'Cannot apply tweak "\*_A.i" to "A_A.i" : Mode must be "Replace" when inserting a connection' ) :
+			tweaks["out"].attributes( "/light" )
+
+		tweaks["tweaks"][0]["mode"].setValue( Gaffer.TweakPlug.Mode.Replace )
+		tweaked = tweaks["out"].attributes( "/light" )["light"]
+
+		# It would perhaps be better behaviour if we inserted the new shader once, and linked it in each place it
+		# is used, but it is easier to just treat this the same as is you made two tweaks to "A_A.i" and "B_A.i":
+		# create two copies of the input network. Maybe in an ideal world, two separate tweaks using the same
+		# input network would also be shared?
+		self.assertEqual( len( tweaked ), 6 )
+		self.assertEqual( tweaked.inputConnections("A_A")[-1].source, IECoreScene.ShaderNetwork.Parameter( "extra", "out.r" ) )
+		self.assertEqual( tweaked.inputConnections("B_A")[-1].source, IECoreScene.ShaderNetwork.Parameter( "extra1", "out.r" ) )
+
+
+		del tweaks["tweaks"][0]
+
+		tweaks["tweaks"].addChild(
+			Gaffer.TweakPlug( "*.c", imath.Color3f( 1, 2, 3), mode = Gaffer.TweakPlug.Mode.Add )
+		)
+
+		with self.assertRaisesRegex( RuntimeError, r'ShaderTweaks.out.attributes : Cannot apply tweak "\*.c" to "A_B.c" : Mode must be "Replace" when a previous connection exists' ) :
+			tweaks["out"].attributes( "/light" )
+
+		tweaks["tweaks"][0]["name"].setValue( "*.intensity" )
+		tweaks["tweaks"][0]["mode"].setValue( Gaffer.TweakPlug.Mode.Replace )
+
+		# The shader with an intensity parameter is the last one in the chain, so this removes all upstream shaders
+		tweaked = tweaks["out"].attributes( "/light" )["light"]
+		self.assertEqual( len( tweaked ), 1 )
+		self.assertEqual( tweaked.shaders()["__shader"].parameters["intensity"].value, imath.Color3f( 1, 2, 3 ) )
+
 if __name__ == "__main__":
 	unittest.main()

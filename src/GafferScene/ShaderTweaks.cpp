@@ -178,6 +178,183 @@ void checkForCycle( const ShaderNetwork &network, const IECore::InternedString &
 	}
 }
 
+bool applyTweakInternal( ShaderNetwork *shaderNetwork, unordered_map<InternedString, IECoreScene::ShaderPtr> &modifiedShaders, const TweakPlug *tweakPlug, const ShaderNetwork *inputNetwork, const std::string &tweakLabel, const ShaderNetwork::Parameter &parameter, const IECoreScene::Shader *shader, TweakPlug::MissingMode missingMode, bool &removedConnections )
+{
+	if( !shader )
+	{
+		shader = shaderNetwork->getShader( parameter.shader );
+	}
+
+	if( !shader )
+	{
+		if( missingMode != TweakPlug::MissingMode::Ignore )
+		{
+			throw IECore::Exception( fmt::format(
+				"Cannot apply tweak \"{}\" because shader \"{}\" does not exist",
+				tweakLabel, parameter.shader.string()
+			) );
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	const TweakPlug::Mode mode = static_cast<TweakPlug::Mode>( tweakPlug->modePlug()->getValue() );
+
+	ShaderNetwork::Parameter originalInput = shaderNetwork->input( parameter );
+	if( originalInput )
+	{
+		if( mode != TweakPlug::Mode::Replace )
+		{
+			throw IECore::Exception( fmt::format( "Cannot apply tweak \"{}\" to \"{}.{}\" : Mode must be \"Replace\" when a previous connection exists", tweakLabel, parameter.shader.string(), parameter.name.string() ) );
+		}
+		shaderNetwork->removeConnection( { originalInput, parameter } );
+		removedConnections = true;
+	}
+
+	if( inputNetwork )
+	{
+		if( !inputNetwork->getOutput() )
+		{
+			// Nothing to connect
+			return false;
+		}
+
+		if( !shader->parametersData()->member<Data>( parameter.name ) )
+		{
+			if( missingMode != TweakPlug::MissingMode::Ignore )
+			{
+				throw IECore::Exception( fmt::format(
+					"Cannot apply tweak \"{}\" because shader \"{}\" does not have parameter \"{}\"",
+					tweakLabel, parameter.shader.string(), parameter.name.string()
+				) );
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		if( mode != TweakPlug::Mode::Replace )
+		{
+			throw IECore::Exception( fmt::format( "Cannot apply tweak \"{}\" to \"{}.{}\" : Mode must be \"Replace\" when inserting a connection", tweakLabel, parameter.shader.string(), parameter.name.string() ) );
+		}
+
+		const auto inputParameter = ShaderNetworkAlgo::addShaders( shaderNetwork, inputNetwork );
+		shaderNetwork->addConnection( { inputParameter, parameter } );
+
+		static IECore::InternedString hasProxyNodesIdentifier( "__hasProxyNodes" );
+
+		const BoolData* hasProxyNodes = inputNetwork->blindData()->member<BoolData>( hasProxyNodesIdentifier );
+		if( hasProxyNodes && hasProxyNodes->readable() )
+		{
+			// It would be more efficient to search for and process tweak sources just in
+			// `inputNetwork` before merging it to `shaderNetwork` ... but this would require
+			// dealing with weird connections where the input node handle is relative to `shaderNetwork`,
+			// but the output handle is relative to `inputNetwork`. This can't currenty be done if there
+			// are nodes in the two networks with the same name, which get uniquified during addShaders.
+			// This could be solved with an optional output unordered_map<oldHandle, newHandle>
+			// from addShaders(). For the moment, however, Doing this after merging simplifies all that.
+
+			// If we need to check for cycles, we will need to populate a set of dependent shaders.
+			// We cache it in case there are multiple proxies connected to the same tweak.
+			std::unordered_set<IECore::InternedString> dependentShadersCache;
+
+			for( const auto &i : shaderNetwork->shaders() )
+			{
+				if( !ShaderTweakProxy::isProxy( i.second.get() ) )
+				{
+					continue;
+				}
+
+				const StringData* targetShaderData =
+					i.second->parametersData()->member<StringData>( "targetShader" );
+				if( !targetShaderData )
+				{
+					throw IECore::Exception( "Cannot find target shader parameter on ShaderTweakProxy" );
+				}
+				const std::string &sourceShader = targetShaderData->readable();
+
+				ShaderNetwork::ConnectionRange range = shaderNetwork->outputConnections( i.first );
+				const std::vector<ShaderNetwork::Connection> outputConnections( range.begin(), range.end() );
+
+
+				for( const auto &c : outputConnections )
+				{
+
+					shaderNetwork->removeConnection( c );
+					removedConnections = true;
+
+					if( sourceShader == "" )
+					{
+						if( originalInput )
+						{
+							shaderNetwork->addConnection( { originalInput, c.destination } );
+						}
+						else
+						{
+							const IECoreScene::Shader *proxyConnectedShader = shaderNetwork->getShader( c.destination.shader );
+							if( !proxyConnectedShader )
+							{
+								throw IECore::Exception( fmt::format( "ShaderTweakProxy connected to non-existent shader \"{}\"", c.destination.shader.string() ) );
+							}
+
+							// Regular tweak
+							auto modifiedShader = modifiedShaders.insert( { c.destination.shader, nullptr } );
+							if( modifiedShader.second )
+							{
+								modifiedShader.first->second = proxyConnectedShader->copy();
+							}
+
+							const IECore::Data *origDestParameter = modifiedShader.first->second->parametersData()->member(c.destination.name, /* throwExceptions = */ true );
+							modifiedShader.first->second->parameters()[c.destination.name] = castDataToType( shader->parametersData()->member( parameter.name, /* throwExceptions = */ true ), origDestParameter );
+						}
+					}
+					else
+					{
+						checkForCycle( *shaderNetwork, parameter.shader, dependentShadersCache, sourceShader );
+						shaderNetwork->addConnection( { { sourceShader, c.source.name }, c.destination } );
+					}
+				}
+			}
+		}
+
+		return true;
+	}
+	else
+	{
+		// Regular tweak
+		auto modifiedShader = modifiedShaders.insert( { parameter.shader, nullptr } );
+		if( modifiedShader.second )
+		{
+			modifiedShader.first->second = shader->copy();
+		}
+
+		return tweakPlug->applyTweak(
+			[&parameter, &modifiedShader]( const std::string &valueName, const bool withFallback )
+			{
+				return modifiedShader.first->second->parametersData()->member( parameter.name );
+			},
+			[&parameter, &modifiedShader]( const std::string &valueName, DataPtr newData )
+			{
+				if( newData )
+				{
+					modifiedShader.first->second->parameters()[parameter.name] = newData;
+					return true;
+				}
+				else
+				{
+					return static_cast<bool>(
+						modifiedShader.first->second->parameters().erase( parameter.name )
+					);
+				}
+			},
+			missingMode
+		);
+	}
+}
+
 }  // namespace
 
 GAFFER_NODE_DEFINE_TYPE( ShaderTweaks );
@@ -356,8 +533,36 @@ bool ShaderTweaks::applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork, Tweak
 			continue;
 		}
 
+		const auto shaderOutput = ::shaderOutput( tweakPlug.get() );
+		ConstCompoundObjectPtr shaderAttributes;
+		const ShaderNetwork *inputNetwork = nullptr;
+		if( shaderOutput.first )
+		{
+			// New connection
+			shaderAttributes = shaderOutput.first->attributes( shaderOutput.second );
+			for( const auto &a : shaderAttributes->members() )
+			{
+				inputNetwork = runTimeCast<const ShaderNetwork>( a.second.get() );
+				if( inputNetwork )
+				{
+					break;
+				}
+			}
+
+			if( !inputNetwork )
+			{
+				// Handle a weird corner case ... if none of the attributes output by Shader::attributes actually
+				// contain a shader, then the consistent behaviour is to not assign anything ( same as we would
+				// for empty shader networks ). I'm not sure if there's any situation where this branch would actually
+				// trigger.
+				static ConstShaderNetworkPtr emptyShaderNetwork = new ShaderNetwork();
+				inputNetwork = emptyShaderNetwork.get();
+			}
+
+		}
+
 		ShaderNetwork::Parameter parameter;
-		size_t dotPos = name.find_last_of( '.' );
+		const size_t dotPos = name.find_last_of( '.' );
 		if( dotPos == string::npos )
 		{
 			parameter.shader = shaderNetwork->getOutput().shader;
@@ -369,187 +574,26 @@ bool ShaderTweaks::applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork, Tweak
 			parameter.name = InternedString( name.c_str() + dotPos + 1 );
 		}
 
-		const IECoreScene::Shader *shader = shaderNetwork->getShader( parameter.shader );
-		if( !shader )
+		if( !IECore::StringAlgo::hasWildcards( parameter.shader.string() ) )
 		{
-			if( missingMode != TweakPlug::MissingMode::Ignore )
-			{
-				throw IECore::Exception( fmt::format(
-					"Cannot apply tweak \"{}\" because shader \"{}\" does not exist",
-					name, parameter.shader.string()
-				) );
-			}
-			else
-			{
-				continue;
-			}
-		}
-
-		const TweakPlug::Mode mode = static_cast<TweakPlug::Mode>( tweakPlug->modePlug()->getValue() );
-
-		ShaderNetwork::Parameter originalInput = shaderNetwork->input( parameter );
-		if( originalInput )
-		{
-			if( mode != TweakPlug::Mode::Replace )
-			{
-				throw IECore::Exception( fmt::format( "Cannot apply tweak to \"{}\" : Mode must be \"Replace\" when a previous connection exists", name ) );
-			}
-			shaderNetwork->removeConnection( { originalInput, parameter } );
-			removedConnections = true;
-		}
-
-		const auto shaderOutput = ::shaderOutput( tweakPlug.get() );
-		if( shaderOutput.first )
-		{
-			if( !shader->parametersData()->member<Data>( parameter.name ) )
-			{
-				if( missingMode != TweakPlug::MissingMode::Ignore )
-				{
-					throw IECore::Exception( fmt::format(
-						"Cannot apply tweak \"{}\" because shader \"{}\" does not have parameter \"{}\"",
-						name, parameter.shader.string(), parameter.name.string()
-					) );
-				}
-				else
-				{
-					continue;
-				}
-			}
-
-			// New connection
-			ConstCompoundObjectPtr shaderAttributes = shaderOutput.first->attributes( shaderOutput.second );
-			const ShaderNetwork *inputNetwork = nullptr;
-			for( const auto &a : shaderAttributes->members() )
-			{
-				if( ( inputNetwork = runTimeCast<const ShaderNetwork>( a.second.get() ) ) )
-				{
-					break;
-				}
-			}
-
-			if( inputNetwork && inputNetwork->getOutput() )
-			{
-				if( mode != TweakPlug::Mode::Replace )
-				{
-					throw IECore::Exception( fmt::format( "Cannot apply tweak to \"{}\" : Mode must be \"Replace\" when inserting a connection", name ) );
-				}
-
-				const auto inputParameter = ShaderNetworkAlgo::addShaders( shaderNetwork, inputNetwork );
-				shaderNetwork->addConnection( { inputParameter, parameter } );
-
-				static IECore::InternedString hasProxyNodesIdentifier( "__hasProxyNodes" );
-
-				const BoolData* hasProxyNodes = inputNetwork->blindData()->member<BoolData>( hasProxyNodesIdentifier );
-				if( hasProxyNodes && hasProxyNodes->readable() )
-				{
-					// It would be more efficient to search for and process tweak sources just in
-					// `inputNetwork` before merging it to `shaderNetwork` ... but this would require
-					// dealing with weird connections where the input node handle is relative to `shaderNetwork`,
-					// but the output handle is relative to `inputNetwork`. This can't currenty be done if there
-					// are nodes in the two networks with the same name, which get uniquified during addShaders.
-					// This could be solved with an optional output unordered_map<oldHandle, newHandle>
-					// from addShaders(). For the moment, however, Doing this after merging simplifies all that.
-
-					// If we need to check for cycles, we will need to populate a set of dependent shaders.
-					// We cache it in case there are multiple proxies connected to the same tweak.
-					std::unordered_set<IECore::InternedString> dependentShadersCache;
-
-					for( const auto &i : shaderNetwork->shaders() )
-					{
-						if( !ShaderTweakProxy::isProxy( i.second.get() ) )
-						{
-							continue;
-						}
-
-						const StringData* targetShaderData =
-							i.second->parametersData()->member<StringData>( "targetShader" );
-						if( !targetShaderData )
-						{
-							throw IECore::Exception( "Cannot find target shader parameter on ShaderTweakProxy" );
-						}
-						const std::string &sourceShader = targetShaderData->readable();
-
-						ShaderNetwork::ConnectionRange range = shaderNetwork->outputConnections( i.first );
-						const std::vector<ShaderNetwork::Connection> outputConnections( range.begin(), range.end() );
-
-
-						for( const auto &c : outputConnections )
-						{
-
-							shaderNetwork->removeConnection( c );
-							removedConnections = true;
-
-							if( sourceShader == "" )
-							{
-								if( originalInput )
-								{
-									shaderNetwork->addConnection( { originalInput, c.destination } );
-								}
-								else
-								{
-									const IECoreScene::Shader *proxyConnectedShader = shaderNetwork->getShader( c.destination.shader );
-									if( !proxyConnectedShader )
-									{
-										throw IECore::Exception( fmt::format( "ShaderTweakProxy connected to non-existent shader \"{}\"", c.destination.shader.string() ) );
-									}
-
-									// Regular tweak
-									auto modifiedShader = modifiedShaders.insert( { c.destination.shader, nullptr } );
-									if( modifiedShader.second )
-									{
-										modifiedShader.first->second = proxyConnectedShader->copy();
-									}
-
-									const IECore::Data *origDestParameter = modifiedShader.first->second->parametersData()->member(c.destination.name, /* throwExceptions = */ true );
-									modifiedShader.first->second->parameters()[c.destination.name] = castDataToType( shader->parametersData()->member( parameter.name, /* throwExceptions = */ true ), origDestParameter );
-								}
-							}
-							else
-							{
-								checkForCycle( *shaderNetwork, parameter.shader, dependentShadersCache, sourceShader );
-								shaderNetwork->addConnection( { { sourceShader, c.source.name }, c.destination } );
-							}
-						}
-					}
-				}
-
-				appliedTweaks = true;
-			}
+			appliedTweaks |= applyTweakInternal(
+				shaderNetwork, modifiedShaders, tweakPlug.get(), inputNetwork,
+				name, parameter, nullptr,
+				missingMode, removedConnections
+			);
 		}
 		else
 		{
-			// Regular tweak
-			auto modifiedShader = modifiedShaders.insert( { parameter.shader, nullptr } );
-			if( modifiedShader.second )
+			for( const auto s : shaderNetwork->shaders() )
 			{
-				modifiedShader.first->second = shader->copy();
-			}
-
-			if(
-				tweakPlug->applyTweak(
-					[&parameter, &modifiedShader]( const std::string &valueName, const bool withFallback )
-					{
-						return modifiedShader.first->second->parametersData()->member( parameter.name );
-					},
-					[&parameter, &modifiedShader]( const std::string &valueName, DataPtr newData )
-					{
-						if( newData )
-						{
-							modifiedShader.first->second->parameters()[parameter.name] = newData;
-							return true;
-						}
-						else
-						{
-							return static_cast<bool>(
-								modifiedShader.first->second->parameters().erase( parameter.name )
-							);
-						}
-					},
-					missingMode
-				)
-			)
-			{
-				appliedTweaks = true;
+				if( StringAlgo::match( s.first, parameter.shader ) )
+				{
+					appliedTweaks |= applyTweakInternal(
+						shaderNetwork, modifiedShaders, tweakPlug.get(), inputNetwork,
+						name, { s.first, parameter.name }, s.second.get(),
+						TweakPlug::MissingMode::Ignore, removedConnections
+					);
+				}
 			}
 		}
 	}
