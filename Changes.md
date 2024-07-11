@@ -36,11 +36,17 @@ Fixes
 - Windows : Fixed conflicts with other software installations on `PATH`. The `PXR_USD_WINDOWS_DLL_PATH` environment variable is now set to an empty string if it is not already set, preventing USD from adding all entries from `PATH` to Python's DLL search paths.
 - AnnotationsGadget : Fixed potential hang in `annotationText()` Python binding.
 - FormatPlug : Fixed potential hang in `acquireDefaultFormatPlug()` Python binding.
+- ImageReader : Fixed array metadata loading bugs, including the loading of `ICCProfile` metadata.
 
 API
 ---
 
 - PopupWindow : Added `parent` argument to `popup()` method. This allows popup windows to inherit the display transform from the main UI.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.9.1.
 
 1.4.8.0 (relative to 1.4.7.0)
 =======
