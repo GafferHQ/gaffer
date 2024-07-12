@@ -305,7 +305,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return result
 
-	def __buildMenu( self, result, path, currentEditScope ) :
+	def __buildMenu( self, path, currentEditScope ) :
 
 		result = IECore.MenuDefinition()
 
@@ -328,8 +328,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 							singlesStack.extend( [ children[0] ] )
 
 			if currentEditScope is not None :
-				# Ignore the first entry, which is the menu category
-				node = currentEditScope.scriptNode().descendant( ".".join( childPath[1:] ) )
+				node = currentEditScope.scriptNode().descendant( ".".join( childPath[:] ) )
 				icon = "menuBreadCrumb.png" if node.isAncestorOf( currentEditScope ) else None
 			else :
 				icon = None
@@ -339,7 +338,6 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 					itemName,
 					{
 						"command" : functools.partial( Gaffer.WeakMethod( self.__connectEditScope ), editScope ),
-						"active" : path[0] != "Downstream",
 						"label" : itemName,
 						"checkBox" : editScope == currentEditScope,
 						"icon" : self.__editScopeSwatch( editScope ),
@@ -351,7 +349,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 				result.append(
 					itemName,
 					{
-						"subMenu" : functools.partial( Gaffer.WeakMethod( self.__buildMenu ), result, childPath, currentEditScope ),
+						"subMenu" : functools.partial( Gaffer.WeakMethod( self.__buildMenu ), childPath, currentEditScope ),
 						"icon" : icon
 					}
 				)
@@ -360,24 +358,18 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __menuDefinition( self ) :
 
-		result = IECore.MenuDefinition()
-
 		currentEditScope = None
 		if self.getPlug().getInput() is not None :
 			currentEditScope = self.getPlug().getInput().parent()
 
 		activeEditScopes = self.__activeEditScopes()
 
-		node = self.__inputNode()
-		downstream = Gaffer.NodeAlgo.findAllDownstream( node, self.__editScopePredicate ) if node is not None else []
-
-		# Each child of the root will get its own section in the menu
-		# if it has children. The section will be preceded by a divider
-		# with its name in the divider label.
+		# Build a menu hierarchy to match the node hierarchy.
+		# This will be simplified where possible in `__buildMenu()`.
 
 		menuHierarchy = OrderedDict()
+		for editScope in reversed( activeEditScopes ) :
 
-		def addToMenuHierarchy( editScope, root ) :
 			ancestorNodes = []
 			currentNode = editScope
 			while currentNode.parent() != editScope.scriptNode() :
@@ -386,31 +378,12 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			ancestorNodes.reverse()
 
-			currentNode = menuHierarchy.setdefault( root, {} )
+			currentMenu = menuHierarchy
 			for n in ancestorNodes :
-				currentNode = currentNode.setdefault( n.getName(), {} )
-			currentNode[editScope.getName()] = editScope
+				currentMenu = currentMenu.setdefault( n.getName(), {} )
+			currentMenu[editScope.getName()] = editScope
 
-		for editScope in reversed( activeEditScopes ) :
-			addToMenuHierarchy( editScope, "Upstream" )
-
-		for editScope in sorted( downstream, key = lambda e : e.relativeName( e.scriptNode() ) ) :
-			addToMenuHierarchy( editScope, "Downstream" )
-
-		menuPath = Gaffer.DictPath( menuHierarchy, "/" )
-
-		for category in menuPath.children() :
-
-			if len( category.children() ) == 0 :
-				continue
-
-			result.append(
-				"/__{}Divider__".format( category[-1] ),
-				{ "divider" : True, "label" : category[-1] }
-			)
-
-			result.update( self.__buildMenu( result, category, currentEditScope ) )
-
+		result = self.__buildMenu( Gaffer.DictPath( menuHierarchy, "/" ), currentEditScope )
 
 		if self.__contextTracker.updatePending() :
 			result.append( "/__RefreshDivider__", { "divider" : True } )
