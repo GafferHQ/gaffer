@@ -158,23 +158,23 @@ class ColorChooser( GafferUI.Widget ) :
 
 		self.__sliders = {}
 		self.__numericWidgets = {}
+		self.__channelLabels = {}
 		self.__componentValueChangedConnections = []
 
 		with self.__column :
 
-			# sliders and numeric widgets
-			for component in "rgbahsv" :
-				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+			with GafferUI.GridContainer( spacing = 4 ) :
 
-					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 8 ) :
-						GafferUI.Label( component.capitalize() )
-						numericWidget = GafferUI.NumericWidget( 0.0 )
+				# sliders and numeric widgets
+				for row, component in enumerate( "rgbahsv" ) :
+					self.__channelLabels[component] = GafferUI.Label( component.capitalize(), parenting = { "index" : ( 0, row ), "alignment" : ( GafferUI.HorizontalAlignment.Center, GafferUI.VerticalAlignment.Center ) } )
+					numericWidget = GafferUI.NumericWidget( 0.0, parenting = { "index" : ( 1, row ) } )
 
 					numericWidget.setFixedCharacterWidth( 6 )
 					numericWidget.component = component
 					self.__numericWidgets[component] = numericWidget
 
-					slider = _ComponentSlider( color, component )
+					slider = _ComponentSlider( color, component, parenting = { "index" : ( 2, row ) } )
 					self.__sliders[component] = slider
 
 					self.__componentValueChangedConnections.append(
@@ -360,9 +360,14 @@ class ColorChooser( GafferUI.Widget ) :
 			if c.dimensions() == 4 :
 				self.__sliders["a"].setValue( c[3] )
 				self.__numericWidgets["a"].setValue( c[3] )
-				self.__sliders["a"].parent().setVisible( True )
+
+				self.__sliders["a"].setVisible( True )
+				self.__numericWidgets["a"].setVisible( True )
+				self.__channelLabels["a"].setVisible( True )
 			else :
-				self.__sliders["a"].parent().setVisible( False )
+				self.__sliders["a"].setVisible( False )
+				self.__numericWidgets["a"].setVisible( False )
+				self.__channelLabels["a"].setVisible( False )
 
 			for slider in [ v for k, v in self.__sliders.items() if k in "hsv" ] :
 				slider.setColor( self.__colorHSV )
