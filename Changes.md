@@ -46,7 +46,12 @@ Breaking Changes
   - Removed `setContext()` methods.
   - Deprecated `getContext()` methods. Use `context()` instead.
 
-1.4.x.x (relative to 1.4.8.0)
+1.4.x.x (relative to 1.4.9.0)
+=======
+
+
+
+1.4.9.0 (relative to 1.4.8.0)
 =======
 
 Improvements
@@ -83,6 +88,7 @@ Fixes
 - LightEditor : Fixed regression (introduced in 1.4.8.0) causing the mute and solo icons to not show up for groups.
 - Windows : Fixed conflicts with other software installations on `PATH`. The `PXR_USD_WINDOWS_DLL_PATH` environment variable is now set to an empty string if it is not already set, preventing USD from adding all entries from `PATH` to Python's DLL search paths.
 - AnnotationsGadget : Fixed potential hang in `annotationText()` Python binding.
+- FormatPlug : Fixed potential hang in `acquireDefaultFormatPlug()` Python binding.
 - ImageReader : Fixed array metadata loading bugs, including the loading of `ICCProfile` metadata.
 
 API
