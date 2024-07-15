@@ -42,6 +42,9 @@ Breaking Changes
 - Editor : Removed arguments from `Settings` constructor.
 - Unpremultiply : Removed `image:channelName` from the context used to evaluate the `alphaChannel` plug.
 - Shuffle, ShuffleAttributes, ShufflePrimitiveVariables : Changed behaviour when shuffling a source to itself.
+- Editor, NodeToolbar, PlugLayout, PlugValueWidget :
+  - Removed `setContext()` methods.
+  - Deprecated `getContext()` methods. Use `context()` instead.
 
 1.4.x.x (relative to 1.4.8.0)
 =======

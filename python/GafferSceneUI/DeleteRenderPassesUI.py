@@ -106,7 +106,7 @@ def __passPopupMenu( menuDefinition, plugValueWidget ) :
 	if not Gaffer.Metadata.value( plug, "ui:scene:acceptsRenderPassNames" ) :
 		return
 
-	with plugValueWidget.getContext() :
+	with plugValueWidget.context() :
 		globals = plug.node()["in"]["globals"].getValue()
 		currentNames = set( plug.getValue().split() )
 

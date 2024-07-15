@@ -201,7 +201,7 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __menuDefinition( self ) :
 
-		with self.getContext() :
+		with self.context() :
 			soloChannel = self.getPlug().getValue()
 
 		useShortCuts = Gaffer.Metadata.value( self.getPlug(), "view:displayTransform:useShortcuts" )
@@ -298,7 +298,7 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __clicked( self, button ) :
 
-		with self.getContext() :
+		with self.context() :
 			value = self.getPlug().getValue()
 
 		if value == self.getPlug().defaultValue() and self.__toggleValue is not None :

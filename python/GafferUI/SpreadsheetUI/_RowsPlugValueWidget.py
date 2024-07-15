@@ -66,7 +66,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.PlugValueWidget.__init__( self, self.__grid, plug )
 
-		model = _PlugTableModel( plug, self.getContext(), self._qtWidget() )
+		model = _PlugTableModel( plug, self.context(), self._qtWidget() )
 		selectionModel = QtCore.QItemSelectionModel( model, self._qtWidget() )
 
 		with self.__grid :
@@ -409,7 +409,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			if rowPlug == rowPlug.parent().defaultRow() :
 				rowName = "Default"
 			else :
-				with self.getContext() :
+				with self.context() :
 					rowName = rowPlug["name"].getValue() or "unnamed"
 
 			columnPlug = self.getPlug().defaultRow()["cells"][plug.getName()]

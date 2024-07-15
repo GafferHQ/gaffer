@@ -69,7 +69,7 @@ class Timeline( GafferUI.Editor ) :
 			self.__sliderRangeStartChangedConnection = self.__sliderRangeStart.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__sliderRangeChanged ), scoped = False )
 
 			self.__slider = _TimelineSlider(
-				value = self.getContext().getFrame(),
+				value = self.context().getFrame(),
 				min = float( scriptNode["frameRange"]["start"].getValue() ),
 				max = float( scriptNode["frameRange"]["end"].getValue() ),
 				parenting = { "expand" : True },
@@ -88,7 +88,7 @@ class Timeline( GafferUI.Editor ) :
 			self.__endButton = GafferUI.Button( image = "timelineEnd.png", hasFrame=False )
 			self.__endButton.clickedSignal().connect( Gaffer.WeakMethod( self.__startOrEndButtonClicked ), scoped = False )
 
-			self.__frame = GafferUI.NumericWidget( self.getContext().getFrame() )
+			self.__frame = GafferUI.NumericWidget( self.context().getFrame() )
 			self.__frame.setFixedCharacterWidth( 5 )
 			self.__frame.setToolTip( "Current frame" )
 			self.__frameChangedConnection = self.__frame.valueChangedSignal().connect( Gaffer.WeakMethod( self.__valueChanged ), scoped = False )
@@ -116,28 +116,26 @@ class Timeline( GafferUI.Editor ) :
 		playBackwards = QtWidgets.QShortcut( QtGui.QKeySequence( "Ctrl+Left" ), self._qtWidget() )
 		playBackwards.activated.connect( functools.partial( Gaffer.WeakMethod( self.__playPausePressed ), False ) )
 
-		self.__playback = None
-		self._updateFromContext( set() )
+		self.__playback = GafferUI.Playback.acquire( self.context() )
+		self.__playback.setFrameRange( self.__sliderRangeStart.getValue(), self.__sliderRangeEnd.getValue() )
+		self.__playback.stateChangedSignal().connect(
+			Gaffer.WeakMethod( self.__playbackStateChanged ), scoped = False
+		)
+		self.__playback.frameRangeChangedSignal().connect(
+			Gaffer.WeakMethod( self.__playbackFrameRangeChanged ), scoped = False
+		)
+
+		self._updateFromContext( { "frame" } )
 
 	def _updateFromContext( self, modifiedItems ) :
-
-		if self.__playback is None or not self.__playback.context().isSame( self.getContext() ) :
-			self.__playback = GafferUI.Playback.acquire( self.getContext() )
-			self.__playback.setFrameRange( self.__sliderRangeStart.getValue(), self.__sliderRangeEnd.getValue() )
-			self.__playbackStateChangedConnection = self.__playback.stateChangedSignal().connect(
-				Gaffer.WeakMethod( self.__playbackStateChanged ), scoped = True
-			)
-			self.__playbackFrameRangeChangedConnection = self.__playback.frameRangeChangedSignal().connect(
-				Gaffer.WeakMethod( self.__playbackFrameRangeChanged ), scoped = True
-			)
 
 		if "frame" not in modifiedItems :
 			return
 
 		# update the frame counter and slider position
 		with Gaffer.Signals.BlockedConnection( [ self.__frameChangedConnection, self.__sliderValueChangedConnection ] ) :
-			self.__frame.setValue( self.getContext().getFrame() )
-			self.__slider.setValue( self.getContext().getFrame() )
+			self.__frame.setValue( self.context().getFrame() )
+			self.__slider.setValue( self.context().getFrame() )
 
 	def __sliderRangeChanged( self, widget ) :
 
@@ -177,7 +175,7 @@ class Timeline( GafferUI.Editor ) :
 			# may not change, so we need to update the value in the frame field manually
 			self.__frame.setValue( frame )
 
-		self.getContext().setFrame( frame )
+		self.context().setFrame( frame )
 
 	def __scriptNodePlugSet( self, plug ) :
 
@@ -233,9 +231,9 @@ class Timeline( GafferUI.Editor ) :
 		self.__playback.setState( self.__playback.State.Stopped )
 
 		if button is self.__startButton :
-			self.getContext().setFrame( self.__sliderRangeStart.getValue() )
+			self.context().setFrame( self.__sliderRangeStart.getValue() )
 		else :
-			self.getContext().setFrame( self.__sliderRangeEnd.getValue() )
+			self.context().setFrame( self.__sliderRangeEnd.getValue() )
 
 	def __playbackStateChanged( self, playback ) :
 

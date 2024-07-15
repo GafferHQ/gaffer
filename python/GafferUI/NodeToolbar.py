@@ -59,13 +59,10 @@ class NodeToolbar( GafferUI.Widget ) :
 
 		return self.__node
 
-	def getContext( self ) :
+	## Returns the context in which the toolbar shows its plugs.
+	def context( self ) :
 
 		return self.__context
-
-	def setContext( self, context ) :
-
-		self.__context = context
 
 	## Creates a NodeToolbar instance for the specified node and edge.
 	# Note that not all nodes have toolbars, so None may be returned.

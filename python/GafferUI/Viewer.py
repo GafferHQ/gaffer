@@ -82,7 +82,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 			) :
 
 				for toolbarContainer in [ self.__viewToolbars, self.__nodeToolbars, self.__toolToolbars ] :
-					toolbarContainer.append( _Toolbar( GafferUI.Edge.Top, self.getContext() ) )
+					toolbarContainer.append( _Toolbar( GafferUI.Edge.Top ) )
 
 			# Bottom toolbars
 
@@ -95,7 +95,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 			) :
 
 				for toolbarContainer in [ self.__toolToolbars, self.__nodeToolbars, self.__viewToolbars ] :
-					toolbarContainer.append( _Toolbar( GafferUI.Edge.Bottom, self.getContext() ) )
+					toolbarContainer.append( _Toolbar( GafferUI.Edge.Bottom ) )
 
 		with GafferUI.ListContainer( borderWidth = 2, spacing = 0, orientation = GafferUI.ListContainer.Orientation.Horizontal ) as verticalToolbars :
 
@@ -115,7 +115,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 				)
 
 				for toolbarContainer in [ self.__viewToolbars, self.__nodeToolbars, self.__toolToolbars ] :
-					toolbarContainer.append( _Toolbar( GafferUI.Edge.Left, self.getContext() ) )
+					toolbarContainer.append( _Toolbar( GafferUI.Edge.Left ) )
 
 			# Right toolbars
 
@@ -128,7 +128,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 			) :
 
 				for toolbarContainer in [ self.__toolToolbars, self.__nodeToolbars, self.__viewToolbars ] :
-					toolbarContainer.append( _Toolbar( GafferUI.Edge.Right, self.getContext() ) )
+					toolbarContainer.append( _Toolbar( GafferUI.Edge.Right ) )
 
 		self.__gadgetWidget.addOverlay( horizontalToolbars )
 		self.__gadgetWidget.addOverlay( verticalToolbars )
@@ -187,7 +187,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 						self.__currentView = GafferUI.View.create( plug )
 						if self.__currentView is not None:
 							Gaffer.NodeAlgo.applyUserDefaults( self.__currentView )
-							self.__currentView.setContext( self.getContext() )
+							self.__currentView.setContext( self.context() )
 							self.__views.append( self.__currentView )
 					# if we succeeded in getting a suitable view, then
 					# don't bother checking the other plugs
@@ -304,7 +304,7 @@ GafferUI.Editor.registerType( "Viewer", Viewer )
 # Internal widget to simplify the management of node toolbars.
 class _Toolbar( GafferUI.Frame ) :
 
-	def __init__( self, edge, context, **kw ) :
+	def __init__( self, edge, **kw ) :
 
 		GafferUI.Frame.__init__( self, borderWidth = 0, borderStyle = GafferUI.Frame.BorderStyle.None_, **kw )
 
@@ -319,7 +319,6 @@ class _Toolbar( GafferUI.Frame ) :
 		self._qtWidget().layout().setSizeConstraint( self._qtWidget().layout().SetDefaultConstraint )
 
 		self.__edge = edge
-		self.__context = context
 		self.__node = []
 
 	def setNode( self, node ) :

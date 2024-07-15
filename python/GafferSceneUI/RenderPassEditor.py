@@ -263,7 +263,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		# PathListing from updating automatically when the original context changes, and allows us to take
 		# control of updates ourselves in _updateFromContext(), using LazyMethod to defer the calls to this
 		# function until we are visible and playback has stopped.
-		contextCopy = Gaffer.Context( self.getContext() )
+		contextCopy = Gaffer.Context( self.context() )
 		self.__pathListing.setPath( _GafferSceneUI._RenderPassEditor.RenderPassPath( self.settings()["in"], contextCopy, "/", filter = self.__filter, grouped = self.settings()["displayGrouped"].getValue() ) )
 
 	def __displayGroupedChanged( self ) :
@@ -395,7 +395,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		inspectors = {}
 		inspections = []
 
-		with Gaffer.Context( self.getContext() ) as context :
+		with Gaffer.Context( self.context() ) as context :
 			renderPassPath = self.__pathListing.getPath().copy()
 			for selection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
 				if not isinstance( column, _GafferSceneUI._RenderPassEditor.OptionInspectorColumn ) :
@@ -426,7 +426,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		nonEditable = [ i for i in inspections if not i.editable() ]
 
 		if len( nonEditable ) == 0 :
-			with Gaffer.Context( self.getContext() ) as context :
+			with Gaffer.Context( self.context() ) as context :
 				if not quickBoolean or not self.__toggleBoolean( inspectors, inspections ) :
 					edits = [ i.acquireEdit() for i in inspections ]
 					warnings = "\n".join( [ i.editWarning() for i in inspections if i.editWarning() != "" ] )
@@ -496,7 +496,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		tweaks = []
 
-		with Gaffer.Context( self.getContext() ) as context :
+		with Gaffer.Context( self.context() ) as context :
 			renderPassPath = self.__pathListing.getPath().copy()
 			for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
 				if not isinstance( column, _GafferSceneUI._RenderPassEditor.OptionInspectorColumn ) :
@@ -531,7 +531,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		edits = self.__disablableInspectionTweaks( pathListing )
 
-		with Gaffer.UndoScope( self.scriptNode() ), Gaffer.Context( self.getContext() ) as context :
+		with Gaffer.UndoScope( self.scriptNode() ), Gaffer.Context( self.context() ) as context :
 			renderPassPath = self.__pathListing.getPath().copy()
 			for path, inspector in edits :
 				renderPassPath.setFromString( path )
@@ -580,7 +580,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		result = IECore.PathMatcher()
 
-		with Gaffer.Context( self.getContext() ) as context :
+		with Gaffer.Context( self.context() ) as context :
 			for renderPass, setExpressions in self.__selectedSetExpressions( pathListing ).items() :
 				# Evaluate set expressions within their render pass in the context
 				# as set membership could vary based on the render pass.
@@ -588,7 +588,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 				for setExpression in setExpressions :
 					result.addPaths( GafferScene.SetAlgo.evaluateSetExpression( setExpression, self.settings()["in"] ) )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( self.getContext(), result )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( self.context(), result )
 
 	def __buttonPress( self, pathListing, event ) :
 
@@ -684,7 +684,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 				if renderPassName is None :
 					continue
 
-				historyContext = Gaffer.Context( self.getContext() )
+				historyContext = Gaffer.Context( self.context() )
 				historyContext["renderPass"] = renderPassName
 				window = _HistoryWindow(
 					column.inspector(),
@@ -721,7 +721,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			# RenderPasses node or the edit scope is read only
 			return False
 		else :
-			with self.getContext() :
+			with self.context() :
 				if not editScope["enabled"].getValue() :
 					# Edit scope is disabled
 					return False
@@ -828,7 +828,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 	def __renderPassNames( self, plug ) :
 
-		with self.getContext() :
+		with self.context() :
 			return plug["globals"].getValue().get( "option:renderPass:names", IECore.StringVectorData() )
 
 	def __renderPassCreationDialogue( self ) :

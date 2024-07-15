@@ -181,8 +181,8 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 					if Gaffer.Animation.isAnimated( plug ) :
 						curve = Gaffer.Animation.acquire( plug )
-						if self.__numericWidget.getText() != self.__numericWidget.valueToString( curve.evaluate( self.getContext().getTime() ) ) :
-							curve.insertKey( self.getContext().getTime(), self.__numericWidget.getValue() )
+						if self.__numericWidget.getText() != self.__numericWidget.valueToString( curve.evaluate( self.context().getTime() ) ) :
+							curve.insertKey( self.context().getTime(), self.__numericWidget.getValue() )
 					else :
 						try :
 							plug.setValue( self.__numericWidget.getValue() )

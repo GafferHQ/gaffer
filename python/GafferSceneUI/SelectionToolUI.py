@@ -145,7 +145,7 @@ class SelectModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		# so we know where to insert the next item for the category.
 		modifiedCategories = {}
 
-		with self.getContext() :
+		with self.context() :
 			currentValue = self.getPlug().getValue()
 
 		for mode in modes :

@@ -128,7 +128,7 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			return result
 
 		# Required for context-sensitive dynamic presets
-		with self.getContext():
+		with self.context():
 
 			# Find the union of the presets across all plugs,
 			# and count how many times they occur.
@@ -179,7 +179,7 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __applyPreset( self, unused, preset ) :
 
 		# Required for context-sensitive dynamic presets
-		with self.getContext() :
+		with self.context() :
 			with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
 				for plug in self.getPlugs() :
 					Gaffer.Metadata.deregisterValue( plug, "presetsPlugValueWidget:isCustom" )

@@ -76,7 +76,7 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# sensitive to context changes and omits calls to `_updateFromValues()`. But the default
 		# format mechanism uses the context, so we must arrange to do updates ourselves when
 		# necessary.
-		self.getContext().changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = False )
+		self.context().changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = False )
 
 		self._addPopupMenu( self.__menuButton )
 
@@ -107,7 +107,7 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__menuButton.setText(
 			"Custom" if custom
 			else
-			( _formatLabel( self.__currentFormat, self.getContext() ) if self.__currentFormat is not None else "---" )
+			( _formatLabel( self.__currentFormat, self.context() ) if self.__currentFormat is not None else "---" )
 		)
 
 		nonZeroOrigin = any( v.getDisplayWindow().min() != imath.V2i( 0 ) for v in values )
@@ -150,7 +150,7 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 		modeIsCustom = any( Gaffer.Metadata.value( p, "formatPlugValueWidget:mode" ) == "custom" for p in self.getPlugs() )
 		for fmt in formats :
 			result.append(
-				"/" + _formatLabel( fmt, self.getContext() ),
+				"/" + _formatLabel( fmt, self.context() ),
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__applyFormat ), fmt = fmt ),
 					"checkBox" : fmt == self.__currentFormat and not modeIsCustom,
@@ -186,7 +186,7 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 				# format and set it explicitly as a starting point for
 				# editing.
 				for p in self.getPlugs() :
-					p.setValue( GafferImage.FormatPlug.getDefaultFormat( self.getContext() ) )
+					p.setValue( GafferImage.FormatPlug.getDefaultFormat( self.context() ) )
 
 			# When we first switch to custom mode, the current value will
 			# actually be one of the registered formats. So we use this

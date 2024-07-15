@@ -127,7 +127,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 	if not isinstance( plug, Gaffer.ValuePlug ) or not Gaffer.Animation.canAnimate( plug ) :
 		return
 
-	context = plugValueWidget.getContext()
+	context = plugValueWidget.context()
 
 	menuDefinition.prepend( "/AnimationDivider", { "divider" : True } )
 

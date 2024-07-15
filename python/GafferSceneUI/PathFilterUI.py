@@ -204,7 +204,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 	if isinstance( node, Gaffer.Spreadsheet ) :
 		rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
 
-		with plugValueWidget.getContext() :
+		with plugValueWidget.context() :
 			if __targetFilterPlug( plug ) is not None :
 				cellPlug = plug.ancestor( Gaffer.Spreadsheet.CellPlug )
 				if cellPlug is None :

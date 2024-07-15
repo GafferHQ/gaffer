@@ -366,7 +366,7 @@ class _OptionQueryFooter( GafferUI.PlugValueWidget ) :
 		node = self.getPlug().node()
 		assert( isinstance( node, GafferScene.OptionQuery ) )
 
-		with self.getContext() :
+		with self.context() :
 			options = node["scene"]["globals"].getValue()
 			existingQueries = { query["name"].getValue() for query in node["queries"] }
 

@@ -224,7 +224,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 
 	def _updateFromContext( self, modifiedItems ) :
 
-		self.__animationGadget.setContext( self.getContext() )
+		self.__animationGadget.setContext( self.context() )
 
 	def __updateGadgetSets( self, unused = None ) :
 

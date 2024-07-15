@@ -115,7 +115,7 @@ class _StatusWidget( GafferUI.Frame ) :
 
 	def context( self ) :
 
-		return self.ancestor( GafferUI.NodeToolbar ).getContext()
+		return self.ancestor( GafferUI.NodeToolbar ).context()
 
 	def getToolTip( self ) :
 

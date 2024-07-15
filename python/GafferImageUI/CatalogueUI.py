@@ -1141,7 +1141,7 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 			if image is None :
 				return False
 
-			with self.getContext() :
+			with self.context() :
 				fileName = self.__catalogue().generateFileName( image )
 				imageWriter = GafferImage.ImageWriter()
 				imageWriter["in"].setInput( image )

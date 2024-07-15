@@ -89,7 +89,6 @@ class Editor( GafferUI.Widget ) :
 		assert( isinstance( scriptNode, Gaffer.ScriptNode ) )
 
 		self.__scriptNode = scriptNode
-		self.__context = None
 
 		self.__settings = self.Settings()
 		self.__settings.setName( self.__class__.__name__ + "Settings" )
@@ -103,7 +102,9 @@ class Editor( GafferUI.Widget ) :
 		self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ), scoped = False )
 		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ), scoped = False )
 
-		self.__setContextInternal( scriptNode.context(), callUpdate=False )
+		self.__contextChangedConnection = scriptNode.context().changedSignal().connect(
+			Gaffer.WeakMethod( self.__contextChanged ), scoped = True
+		)
 
 	def __del__( self ) :
 
@@ -160,40 +161,10 @@ class Editor( GafferUI.Widget ) :
 
 		return self.__titleChangedSignal
 
-	## By default Editors operate in the main context held by the script node. This function
-	# allows an alternative context to be provided, making it possible for an editor to
-	# display itself at a custom frame (or with any other context modification).
-	## \todo To our knowledge, this has never been useful, and synchronising contexts
-	# between Editor/PlugLayout/PlugValueWidget has only been a pain. Consider
-	# removing it.
-	def setContext( self, context ) :
+	## Convenience function to return `scriptNode().context()`
+	def context( self ) :
 
-		self.__setContextInternal( context, callUpdate=True )
-
-	def getContext( self ) :
-
-		return self.__context
-
-	def __setContextInternal( self, context, callUpdate ) :
-
-		assert( isinstance( context, ( Gaffer.Context, type( None ) ) ) )
-
-		previousContext = self.__context
-		self.__context = context
-		if self.__context is not None :
-			self.__contextChangedConnection = self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = True )
-		else :
-			## \todo I'm not sure why this code allows a None context - surely we
-			# should always have a valid one?
-			self.__contextChangedConnection = None
-
-		if callUpdate :
-			modifiedItems = set()
-			if previousContext is not None :
-				modifiedItems |= set( previousContext.names() )
-			if self.__context is not None :
-				modifiedItems |= set( self.__context.names() )
-			self._updateFromContext( modifiedItems )
+		return self.__scriptNode.context()
 
 	## May be implemented by derived classes to update state based on a change of context.
 	# To temporarily suspend calls to this function, use Gaffer.Signals.BlockedConnection( self._contextChangedConnection() ).
@@ -221,7 +192,7 @@ class Editor( GafferUI.Widget ) :
 
 	def __contextChanged( self, context, key ) :
 
-		assert( context.isSame( self.getContext() ) )
+		assert( context.isSame( self.context() ) )
 
 		self._updateFromContext( set( [ key ] ) )
 

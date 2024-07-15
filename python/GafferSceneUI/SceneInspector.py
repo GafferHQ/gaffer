@@ -249,7 +249,7 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 
 		# The SceneInspector's internal context is not necessarily bound at this point, which can lead to errors
 		# if nodes in the graph are expecting special context variables, so we make sure it is:
-		with self.getContext():
+		with self.context():
 
 			scenes = [ s.getInput() for s in self.settings()["in"] if s.getInput() is not None ]
 			assert( len( scenes ) <= 2 )
@@ -258,10 +258,10 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 			if self.__targetPaths is not None :
 				paths = self.__targetPaths
 			else :
-				lastSelectedPath = GafferSceneUI.ContextAlgo.getLastSelectedPath( self.getContext() )
+				lastSelectedPath = GafferSceneUI.ContextAlgo.getLastSelectedPath( self.context() )
 				if lastSelectedPath :
 					paths = [ lastSelectedPath ]
-					selectedPaths = GafferSceneUI.ContextAlgo.getSelectedPaths( self.getContext() ).paths()
+					selectedPaths = GafferSceneUI.ContextAlgo.getSelectedPaths( self.context() ).paths()
 					if len( selectedPaths ) > 1 :
 						paths.insert( 0, next( p for p in selectedPaths if p != lastSelectedPath ) )
 
@@ -1054,7 +1054,7 @@ class DiffColumn( GafferUI.Widget ) :
 		# this doesn't always get called by SceneInspector.__update(), so we grab the
 		# context from the ancestor NodeSetEditor if it exists, and make it current:
 		nodeSetEditor = self.ancestor( GafferUI.NodeSetEditor )
-		context = nodeSetEditor.getContext() if nodeSetEditor else Gaffer.Context.current()
+		context = nodeSetEditor.context() if nodeSetEditor else Gaffer.Context.current()
 
 		with context:
 
@@ -2529,7 +2529,7 @@ class _SetDiff( Diff ) :
 
 		editor = self.ancestor( SceneInspector )
 
-		context = editor.getContext()
+		context = editor.context()
 		GafferSceneUI.ContextAlgo.setSelectedPaths( context, widget.paths )
 
 		return True

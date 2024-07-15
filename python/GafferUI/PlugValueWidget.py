@@ -135,25 +135,8 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		return next( iter( self.__plugs ), None )
 
-	## By default, PlugValueWidgets operate in the main context held by the script node
-	# for the script the plug belongs to. This function allows an alternative context
-	# to be provided, making it possible to view a plug at a custom frame (or with any
-	# other context modification).
-	## \todo To our knowledge, this has never been useful, and synchronising contexts
-	# between Editor/PlugLayout/PlugValueWidget has only been a pain. Consider
-	# removing it.
-	def setContext( self, context ) :
-
-		assert( isinstance( context, Gaffer.Context ) )
-		if context.isSame( self.__context ) :
-			return
-
-		self.__context = context
-		self.__updateContextConnection()
-		self.__callLegacyUpdateMethods()
-		self.__callUpdateFromValues()
-
-	def getContext( self ) :
+	## Returns the context in which the widget evaluates the plugs.
+	def context( self ) :
 
 		return self.__context
 
@@ -499,7 +482,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 				}
 			)
 
-		with self.getContext() :
+		with self.context() :
 			if any( Gaffer.NodeAlgo.presets( p ) for p in self.getPlugs() ) :
 				menuDefinition.append(
 					"/Preset", {
@@ -554,7 +537,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			# `_updateFromPlug()` method instead.
 			return
 
-		with self.getContext() :
+		with self.context() :
 			if any(
 				isinstance( p, Gaffer.ValuePlug ) and Gaffer.PlugAlgo.dependsOnCompute( p )
 				for p in itertools.chain( self.getPlugs(), *self.__auxiliaryPlugs )
@@ -785,7 +768,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __copyValue( self ) :
 
-		with self.getContext() :
+		with self.context() :
 			value = self.getPlug().getValue()
 
 		if not isinstance( value, IECore.Object ) :
@@ -841,7 +824,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __presetsSubMenu( self ) :
 
-		with self.getContext() :
+		with self.context() :
 
 			currentPreset = sole( ( Gaffer.NodeAlgo.currentPreset( p ) or "" for p in self.getPlugs() ) )
 
@@ -872,7 +855,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __applyPreset( self, presetName, *unused ) :
 
-		with self.getContext() :
+		with self.context() :
 			with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
 				for p in self.getPlugs() :
 					Gaffer.NodeAlgo.applyPreset( p, presetName )

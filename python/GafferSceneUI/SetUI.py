@@ -214,7 +214,7 @@ def __insertText( textWidget, text ) :
 
 		# Invisible dummy widget created by SpreadsheetUI. See `__setText`.
 		plugValueWidget = textWidget.ancestor( GafferUI.PlugValueWidget )
-		with plugValueWidget.getContext() :
+		with plugValueWidget.context() :
 			value = plugValueWidget.getPlug().getValue()
 
 		__setValue(
@@ -296,7 +296,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 		nodes = { node }
 
 	setNames = set()
-	with plugValueWidget.getContext() :
+	with plugValueWidget.context() :
 		for node in nodes :
 			for scenePlug in __scenePlugs( node ) :
 				setNames.update( [ str( n ) for n in scenePlug["setNames"].getValue() if not str( n ).startswith( "__" ) ] )
@@ -310,7 +310,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 	else :
 		# The SpreadsheetUI makes an invisible widget in order to show the popup
 		# menu for a cell directly. The text in this may not be up to date.
-		with plugValueWidget.getContext() :
+		with plugValueWidget.context() :
 			currentText = plugValueWidget.getPlug().getValue()
 
 	# `Select Affected` command
@@ -321,7 +321,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 		{
 			"command" : functools.partial(
 				__selectAffected,
-				plugValueWidget.getContext(),
+				plugValueWidget.context(),
 				nodes,
 				selectionSetExpression
 			),

@@ -198,7 +198,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if ( shift and left ) or middle :
 			if len( self.getPlugs() ) == 1 and hasattr( self.getPlug(), "getValue" ) :
 				GafferUI.Pointer.setCurrent( "values" )
-				with self.getContext() :
+				with self.context() :
 					return self.getPlug().getValue()
 			else :
 				return None

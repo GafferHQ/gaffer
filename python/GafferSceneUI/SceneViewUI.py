@@ -927,7 +927,7 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 		m = IECore.MenuDefinition()
 
 		try :
-			with self.getContext() :
+			with self.context() :
 				set = self.getPlug().node()["in"].set( setName )
 		except :
 			return m

@@ -271,7 +271,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		# PathListing from updating automatically when the original context changes, and allows us to take
 		# control of updates ourselves in _updateFromContext(), using LazyMethod to defer the calls to this
 		# function until we are visible and playback has stopped.
-		contextCopy = Gaffer.Context( self.getContext() )
+		contextCopy = Gaffer.Context( self.context() )
 		self.__setFilter.setContext( contextCopy )
 		self.__pathListing.setPath( GafferScene.ScenePath( self.settings()["in"], contextCopy, "/", filter = self.__setFilter ) )
 
@@ -280,12 +280,12 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		assert( pathListing is self.__pathListing )
 
 		with Gaffer.Signals.BlockedConnection( self._contextChangedConnection() ) :
-			ContextAlgo.setSelectedPaths( self.getContext(), pathListing.getSelection()[0] )
+			ContextAlgo.setSelectedPaths( self.context(), pathListing.getSelection()[0] )
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __transferSelectionFromContext( self ) :
 
-		selectedPaths = ContextAlgo.getSelectedPaths( self.getContext() )
+		selectedPaths = ContextAlgo.getSelectedPaths( self.context() )
 		with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
 			selection = [selectedPaths] + ( [IECore.PathMatcher()] * ( len( self.__pathListing.getColumns() ) - 1 ) )
 			self.__pathListing.setSelection( selection, scrollToFirst=True )
@@ -333,7 +333,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		inspectors = {}
 		inspections = []
 
-		with Gaffer.Context( self.getContext() ) as context :
+		with Gaffer.Context( self.context() ) as context :
 
 			for selection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
 				if not isinstance( column, _GafferSceneUI._LightEditorInspectorColumn ) :
@@ -361,7 +361,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		nonEditable = [ i for i in inspections if not i.editable() ]
 
 		if len( nonEditable ) == 0 :
-			with Gaffer.Context( self.getContext() ) as context :
+			with Gaffer.Context( self.context() ) as context :
 				if not quickBoolean or not self.__toggleBoolean( inspectors, inspections ) :
 					edits = [ i.acquireEdit() for i in inspections ]
 					warnings = "\n".join( [ i.editWarning() for i in inspections if i.editWarning() != "" ] )
@@ -458,7 +458,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 		tweaks = []
 
-		with Gaffer.Context( self.getContext() ) as context :
+		with Gaffer.Context( self.context() ) as context :
 			for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
 				if not isinstance( column, _GafferSceneUI._LightEditorInspectorColumn ) :
 					continue
@@ -490,7 +490,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 		edits = self.__disablableInspectionTweaks( pathListing )
 
-		with Gaffer.UndoScope( self.scriptNode() ), Gaffer.Context( self.getContext() ) as context :
+		with Gaffer.UndoScope( self.scriptNode() ), Gaffer.Context( self.context() ) as context :
 			for path, inspector in edits :
 				context["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
 
@@ -507,7 +507,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 		inspections = []
 
-		with Gaffer.Context( self.getContext() ) as context :
+		with Gaffer.Context( self.context() ) as context :
 			for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
 				if not isinstance( column, _GafferSceneUI._LightEditorInspectorColumn ) :
 					continue
@@ -579,12 +579,12 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 		result = IECore.PathMatcher()
 
-		with Gaffer.Context( self.getContext() ) as context :
+		with Gaffer.Context( self.context() ) as context :
 			for light, setExpressions in self.__selectedSetExpressions( pathListing ).items() :
 				for setExpression in setExpressions :
 					result.addPaths( GafferScene.SetAlgo.evaluateSetExpression( setExpression, self.settings()["in"] ) )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( self.getContext(), result )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( self.context(), result )
 
 	def __buttonPress( self, pathListing, event ) :
 
@@ -638,7 +638,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 					# Pruning or the edit scope is read only
 					deleteEnabled = False
 				else :
-					with self.getContext() :
+					with self.context() :
 						if not editScopeNode["enabled"].getValue() :
 							# Edit scope is disabled
 							deleteEnabled = False
@@ -709,7 +709,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 	def __selectLinked (self, *unused ) :
 
-		context = self.getContext()
+		context = self.context()
 
 		dialogue = GafferUI.BackgroundTaskDialogue( "Selecting Linked Objects" )
 
@@ -752,7 +752,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 				window = _HistoryWindow(
 					column.inspector(),
 					path,
-					self.getContext(),
+					self.context(),
 					self.ancestor( GafferUI.ScriptWindow ).scriptNode(),
 					"History : {} : {}".format( path, column.headerData().value )
 				)

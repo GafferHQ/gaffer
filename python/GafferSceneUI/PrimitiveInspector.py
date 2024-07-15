@@ -236,9 +236,9 @@ class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 	@GafferUI.BackgroundMethod()
 	def __backgroundUpdate( self ) :
 
-		with self.getContext() :
+		with self.context() :
 
-			targetPath = GafferSceneUI.ContextAlgo.getLastSelectedPath( self.getContext() )
+			targetPath = GafferSceneUI.ContextAlgo.getLastSelectedPath( self.context() )
 
 			if not targetPath :
 				return None
@@ -273,7 +273,7 @@ class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 			self.__locationLabel.setText( "" )
 			self.__locationFrame._qtWidget().setProperty( "gafferDiff", "Other" )
 		else:
-			targetPath = GafferSceneUI.ContextAlgo.getLastSelectedPath( self.getContext() )
+			targetPath = GafferSceneUI.ContextAlgo.getLastSelectedPath( self.context() )
 			if targetPath :
 				self.__locationLabel.setText( targetPath )
 				self.__locationFrame._qtWidget().setProperty( "gafferDiff", "AB" )
@@ -291,7 +291,7 @@ class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 		self.__busyWidget.setBusy( False )
 
 		if self.settings()["in"].getInput() is not None :
-			targetPath = GafferSceneUI.ContextAlgo.getLastSelectedPath( self.getContext() )
+			targetPath = GafferSceneUI.ContextAlgo.getLastSelectedPath( self.context() )
 			if targetPath:
 				if backgroundResult is not None :
 					self.__locationLabel.setText( targetPath )

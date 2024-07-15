@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -36,35 +36,14 @@
 
 import GafferUI
 
-class StandardNodeToolbar( GafferUI.NodeToolbar ) :
+def getContext( self ) :
 
-	def __init__( self, node, edge = GafferUI.Edge.Top, **kw ) :
+	## \todo Emit DeprecationWarning here once 1.6 is released,
+	# and we can expect most client code to have access to the
+	# `context()` method introduced in 1.5.
+	return self.context()
 
-		self.__layout = GafferUI.PlugLayout(
-			node,
-			orientation = GafferUI.ListContainer.Orientation.Horizontal if edge in ( GafferUI.Edge.Top, GafferUI.Edge.Bottom ) else GafferUI.ListContainer.Orientation.Vertical,
-			layoutName = "toolbarLayout",
-			rootSection = edge.name
-		)
-
-		GafferUI.NodeToolbar.__init__( self, node, self.__layout, **kw )
-
-	@staticmethod
-	def top( node ) :
-
-		return StandardNodeToolbar( node, edge = GafferUI.Edge.Top )
-
-	@staticmethod
-	def bottom( node ) :
-
-		return StandardNodeToolbar( node, edge = GafferUI.Edge.Bottom )
-
-	@staticmethod
-	def left( node ) :
-
-		return StandardNodeToolbar( node, edge = GafferUI.Edge.Left )
-
-	@staticmethod
-	def right( node ) :
-
-		return StandardNodeToolbar( node, edge = GafferUI.Edge.Right )
+GafferUI.PlugValueWidget.getContext = getContext
+GafferUI.PlugLayout.getContext = getContext
+GafferUI.Editor.getContext = getContext
+GafferUI.NodeToolbar.getContext = getContext
