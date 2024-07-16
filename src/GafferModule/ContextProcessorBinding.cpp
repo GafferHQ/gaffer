@@ -70,12 +70,6 @@ void setupLoop( Loop &n, const ValuePlug &plug )
 	n.setup( &plug );
 }
 
-ContextPtr nextIterationContextWrapper( Loop &loop )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	return loop.nextIterationContext();
-}
-
 object previousIterationWrapper( Loop &loop, const Gaffer::ValuePlug &output )
 {
 	std::pair<const ValuePlug *, ContextPtr> result;
@@ -206,7 +200,6 @@ void GafferModule::bindContextProcessor()
 
 	DependencyNodeClass<Loop>()
 		.def( "setup", &setupLoop )
-		.def( "nextIterationContext", &nextIterationContextWrapper )
 		.def( "previousIteration", &previousIterationWrapper )
 	;
 

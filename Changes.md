@@ -48,6 +48,7 @@ Breaking Changes
 - Editor, NodeToolbar, PlugLayout, PlugValueWidget :
   - Removed `setContext()` methods.
   - Deprecated `getContext()` methods. Use `context()` instead.
+- Loop : Removed `nextIterationContext()` method.
 
 1.4.x.x (relative to 1.4.9.0)
 =======
