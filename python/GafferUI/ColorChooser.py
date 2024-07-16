@@ -44,15 +44,46 @@ import GafferUI
 
 from Qt import QtGui
 
+__tmiToRGBMatrix = imath.M33f(
+	-1.0 / 2.0, 0.0, 1.0 / 2.0,
+	1.0 / 3.0, -2.0 / 3.0, 1.0 / 3.0,
+	1.0, 1.0, 1.0
+)
+__rgb2tmiMatrix = __tmiToRGBMatrix.inverse()
+
+def _tmiToRGB( c ) :
+	rgb = imath.V3f( c.r, c.g, c.b ) * __tmiToRGBMatrix
+
+	result = c.__class__( c )
+	result.r = rgb.x
+	result.g = rgb.y
+	result.b = rgb.z
+
+	return result
+
+def _rgbToTMI( c ) :
+	tmi = imath.V3f( c.r, c.g, c.b ) * __rgb2tmiMatrix
+
+	result = c.__class__( c )
+	result.r = tmi.x
+	result.g = tmi.y
+	result.b = tmi.z
+
+	return result
+
 # A custom slider for drawing the backgrounds.
 class _ComponentSlider( GafferUI.Slider ) :
 
 	def __init__( self, color, component, **kw ) :
 
-		min = hardMin = 0
-		max = hardMax = 1
+		if component in "tm" :
+			min = hardMin = -1
+			max = hardMax = 1
+		else :
+			min = hardMin = 0
+			max = hardMax = 1
 
-		if component in ( "r", "g", "b", "v" ) :
+		if component in ( "r", "g", "b", "v", "i" ) :
 			hardMax = sys.float_info.max
 
 		GafferUI.Slider.__init__( self, 0.0, min, max, hardMin, hardMax, **kw )
@@ -60,8 +91,8 @@ class _ComponentSlider( GafferUI.Slider ) :
 		self.color = color
 		self.component = component
 
-	# Sets the slider color in RGB space for RGBA channels and
-	# HSV space for HSV channels.
+	# Sets the slider color in RGB space for RGBA channels,
+	# HSV space for HSV channels and TMI space for TMI channels.
 	def setColor( self, color ) :
 
 		self.color = color
@@ -84,8 +115,8 @@ class _ComponentSlider( GafferUI.Slider ) :
 		else :
 			c1 = imath.Color3f( self.color[0], self.color[1], self.color[2] )
 			c2 = imath.Color3f( self.color[0], self.color[1], self.color[2] )
-			a = { "r" : 0, "g" : 1, "b" : 2, "h" : 0, "s" : 1, "v": 2 }[self.component]
-			c1[a] = 0
+			a = { "r" : 0, "g" : 1, "b" : 2, "h" : 0, "s" : 1, "v": 2, "t" : 0, "m" : 1, "i" : 2 }[self.component]
+			c1[a] = -1 if self.component in "tm" else 0
 			c2[a] = 1
 
 		numStops = max( 2, size.x // 2 )
@@ -95,6 +126,8 @@ class _ComponentSlider( GafferUI.Slider ) :
 			c = c1 + (c2-c1) * t
 			if self.component in "hsv" :
 				c = c.hsv2rgb()
+			elif self.component in "tmi" :
+				c = _tmiToRGB( c )
 
 			grad.setColorAt( t, self._qtColor( displayTransform( c ) ) )
 
@@ -110,6 +143,8 @@ class ColorChooser( GafferUI.Widget ) :
 
 	ColorChangedReason = enum.Enum( "ColorChangedReason", [ "Invalid", "SetColor", "Reset" ] )
 
+	__ColorSpace = enum.Enum( "__ColorSpace", [ "RGB", "HSV", "TMI" ] )
+
 	def __init__( self, color=imath.Color3f( 1 ), **kw ) :
 
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
@@ -118,6 +153,7 @@ class ColorChooser( GafferUI.Widget ) :
 
 		self.__color = color
 		self.__colorHSV = self.__color.rgb2hsv()
+		self.__colorTMI = _rgbToTMI( self.__color )
 		self.__defaultColor = color
 
 		self.__sliders = {}
@@ -229,8 +265,11 @@ class ColorChooser( GafferUI.Widget ) :
 		# doesn't provide the capability itself. Add the functionality
 		# into the NumericWidget and remove this code.
 		componentValue = componentWidget.getValue()
-		componentValue = max( componentValue, 0 )
-		if componentWidget.component in ( "a", "h", "s" ) :
+		if componentWidget.component in "tm" :
+			componentValue = max( componentValue, -1 )
+		else :
+			componentValue = max( componentValue, 0 )
+		if componentWidget.component in ( "a", "h", "s", "t", "m" ) :
 			componentValue = min( componentValue, 1 )
 
 		if componentWidget.component in ( "r", "g", "b", "a" ) :
@@ -240,15 +279,22 @@ class ColorChooser( GafferUI.Widget ) :
 			newColor[a] = componentValue
 
 			self.__setColorInternal( newColor, reason )
-		else :
+		elif componentWidget.component in ( "h", "s", "v" ) :
 			newColor = self.__colorHSV.__class__( self.__colorHSV )
 
 			a = { "h" : 0, "s" : 1, "v" : 2 }[componentWidget.component]
 			newColor[a] = componentValue
 
-			self.__setColorInternal( newColor, reason, True )
+			self.__setColorInternal( newColor, reason, self.__ColorSpace.HSV )
+		elif componentWidget.component in ( "t", "m", "i" ) :
+			newColor = self.__colorTMI.__class__( self.__colorTMI )
 
-	def __setColorInternal( self, color, reason, hsv = False ) :
+			a = { "t" : 0, "m" : 1, "i" : 2 }[componentWidget.component]
+			newColor[a] = componentValue
+
+			self.__setColorInternal( newColor, reason, self.__ColorSpace.TMI )
+
+	def __setColorInternal( self, color, reason, colorSpace = __ColorSpace.RGB ) :
 
 		dragBeginOrEnd = reason in (
 			GafferUI.Slider.ValueChangedReason.DragBegin,
@@ -257,19 +303,34 @@ class ColorChooser( GafferUI.Widget ) :
 			GafferUI.NumericWidget.ValueChangedReason.DragEnd,
 		)
 
-		colorChanged = color != ( self.__colorHSV if hsv else self.__color )
+		colorChanged = color != {
+			self.__ColorSpace.RGB : self.__color,
+			self.__ColorSpace.HSV : self.__colorHSV,
+			self.__ColorSpace.TMI : self.__colorTMI
+		}[colorSpace]
 
 		if colorChanged :
-			colorRGB = color.hsv2rgb() if hsv else color
+			if colorSpace == self.__ColorSpace.RGB :
+				colorRGB = color
+				colorHSV = color.rgb2hsv()
+				colorTMI = _rgbToTMI( colorRGB )
+			elif colorSpace == self.__ColorSpace.HSV :
+				colorRGB = color.hsv2rgb()
+				colorHSV = color
+				colorTMI = _rgbToTMI( colorRGB )
+			elif colorSpace == self.__ColorSpace.TMI :
+				colorRGB = _tmiToRGB( color )
+				colorHSV = colorRGB.rgb2hsv()
+				colorTMI = color
+
+			colorHSV[0] = colorHSV[0] if colorHSV[1] > 1e-7 and colorHSV[2] > 1e-7 else self.__colorHSV[0]
+			colorHSV[1] = colorHSV[1] if colorHSV[2] > 1e-7 else self.__colorHSV[1]
+
 			self.__color = colorRGB
+			self.__colorHSV = colorHSV
+			self.__colorTMI = colorTMI
+
 			self.__colorSwatch.setColor( colorRGB )
-
-			hsv = color if hsv else color.rgb2hsv()
-
-			hsv[0] = hsv[0] if hsv[1] > 1e-7 and hsv[2] > 1e-7 else self.__colorHSV[0]
-			hsv[1] = hsv[1] if hsv[2] > 1e-7 else self.__colorHSV[1]
-
-			self.__colorHSV = hsv
 
 		## \todo This is outside the conditional because the clamping we do
 		# in __componentValueChanged means the color value may not correspond
