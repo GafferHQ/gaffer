@@ -160,39 +160,6 @@ const Gaffer::Plug *Loop::correspondingInput( const Gaffer::Plug *output ) const
 	return output == outPlug() ? inPlug() : nullptr;
 }
 
-ContextPtr Loop::nextIterationContext() const
-{
-	const Plug *in = inPlug();
-	if( !in )
-	{
-		return nullptr;
-	}
-
-	const Context *context = Context::current();
-	ContextAlgo::GlobalScope globalScope( context, in );
-
-	if( !enabledPlug()->getValue() )
-	{
-		return nullptr;
-	}
-
-	const IECore::InternedString indexVariable = indexVariablePlug()->getValue();
-	if( indexVariable.string().empty() )
-	{
-		return nullptr;
-	}
-
-	const int index = context->get<int>( indexVariable, -1 );
-	if( index + 1 < iterationsPlug()->getValue() )
-	{
-		ContextPtr result = new Context( *context );
-		result->set( indexVariable, index + 1 );
-		return result;
-	}
-
-	return nullptr;
-}
-
 std::pair<const ValuePlug *, ContextPtr> Loop::previousIteration( const ValuePlug *output ) const
 {
 	int index = -1;
