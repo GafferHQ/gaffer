@@ -127,6 +127,8 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 				GafferUI.Spacer( imath.V2i( 4, 1 ), imath.V2i( 4, 1 ) )
 				GafferUI.Label( "Edit Scope" )
+				self.__busyWidget = GafferUI.BusyWidget( size = 18 )
+				self.__busyWidget.setVisible( False )
 				self.__menuButton = GafferUI.MenuButton(
 					"",
 					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ),
@@ -247,6 +249,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __contextTrackerChanged( self, contextTracker ) :
 
 		self.__updateMenuButton()
+		self.__busyWidget.setVisible( False )
 
 	def __editScope( self ) :
 
@@ -409,12 +412,23 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 			result.update( self.__buildMenu( result, category, currentEditScope ) )
 
 
+		if self.__contextTracker.updatePending() :
+			result.append( "/__RefreshDivider__", { "divider" : True } )
+			result.append( "/Refresh", { "command" : Gaffer.WeakMethod( self.__refreshMenu ) } )
+
 		result.append( "/__NoneDivider__", { "divider" : True } )
 		result.append(
 			"/None", { "command" : functools.partial( self.getPlug().setInput, None ) },
 		)
 
 		return result
+
+	def __refreshMenu( self ) :
+
+		if self.__contextTracker.updatePending() :
+			# An update will already be in progress so we just show our busy
+			# widget until it is done.
+			self.__busyWidget.setVisible( True )
 
 	def __navigationMenuDefinition( self ) :
 
