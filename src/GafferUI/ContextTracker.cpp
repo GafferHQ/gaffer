@@ -205,23 +205,31 @@ const Gaffer::Context *ContextTracker::targetContext() const
 
 void ContextTracker::scheduleUpdate()
 {
-	if( m_idleConnection.connected() )
-	{
-		// Update already scheduled.
-		return;
-	}
-
 	// Cancel old update.
 	m_updateTask.reset();
 
-	if( !m_node || !m_node->scriptNode() )
+	if( !m_node )
 	{
-		// Don't need or can't use a BackgroundTask (the latter case being when
-		// a ScriptNode is being destroyed). Just do the update directly on the
-		// UI thread.
+		// Don't need a BackgroundTask, so just do the update directly on the UI
+		// thread.
 		m_nodeContexts.clear();
 		m_plugContexts.clear();
+		m_idleConnection.disconnect();
 		changedSignal()( *this );
+		return;
+	}
+
+	if( !m_node->scriptNode() )
+	{
+		// ScriptNode is dying. Can't use a BackgroundTask and no need for
+		// update anyway.
+		m_idleConnection.disconnect();
+		return;
+	}
+
+	if( m_idleConnection.connected() )
+	{
+		// Update already scheduled.
 		return;
 	}
 
