@@ -380,6 +380,7 @@
 				"multiplySmall",
 				"replaceSmall",
 				"createSmall",
+				"createIfMissingSmall",
 				"lessThanSmall",
 				"greaterThanSmall",
 				"listAppendSmall",
