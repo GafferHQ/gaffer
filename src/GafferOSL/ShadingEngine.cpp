@@ -58,6 +58,9 @@
 #include "OSL/oslversion.h"
 #include "OSL/rendererservices.h"
 
+#undef OSL_USE_BATCHED
+#define OSL_USE_BATCHED 0
+
 #if OSL_USE_BATCHED
 #include "OSL/batched_shaderglobals.h"
 #include "OSL/batched_rendererservices.h"
@@ -1762,7 +1765,7 @@ struct ExecuteShadeParameters
 };
 
 
-IECore::CompoundDataPtr executeShade( const ExecuteShadeParameters &params, const RenderState &renderState, ShaderGroup &shaderGroup, ShadingSystem *shadingSystem )
+IECore::CompoundDataPtr executeShade( ExecuteShadeParameters &params, const RenderState &renderState, ShaderGroup &shaderGroup, ShadingSystem *shadingSystem, const boost::container::flat_map< OIIO::ustring, int> &gafferTextureIndices )
 {
 	// Allocate data for the result
 	ShadingResults results( params.numPoints );
@@ -1771,8 +1774,8 @@ IECore::CompoundDataPtr executeShade( const ExecuteShadeParameters &params, cons
 		// Do a quick init of the shading system while setting the global map of texture indices
 		// to map the correct textures for this ShadingEngine
 		tbb::spin_mutex::scoped_lock lock( g_gafferTextureIndicesMutex );
-		g_gafferTextureIndices = &m_gafferTextureIndices;
-		shadingSystem->execute_init( *params.threadInfoCache.local().shadingContext, shaderGroup, shaderGlobals, false );
+		g_gafferTextureIndices = &gafferTextureIndices;
+		shadingSystem->execute_init( *params.threadInfoCache.local().shadingContext, shaderGroup, params.shaderGlobals, false );
 		g_gafferTextureIndices = nullptr;
 	}
 
@@ -2027,20 +2030,20 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 #if OSL_USE_BATCHED
 	if( batchSize == 1 )
 	{
-		return executeShade( shadeParameters, renderState, shaderGroup, shadingSystem );
+		return executeShade( shadeParameters, renderState, shaderGroup, shadingSystem, m_gafferTextureIndices );
 	}
 	else if( batchSize == 8 )
 	{
 		ShadingSystem::BatchedExecutor<8> executor( *shadingSystem );
-		return executeShadeBatched<8>( shadeParameters, renderState, shaderGroup, executor );
+		return executeShadeBatched<8>( shadeParameters, renderState, shaderGroup, executor, m_gafferTextureIndices );
 	}
 	else
 	{
 		ShadingSystem::BatchedExecutor<16> executor( *shadingSystem );
-		return executeShadeBatched<16>( shadeParameters, renderState, shaderGroup, executor );
+		return executeShadeBatched<16>( shadeParameters, renderState, shaderGroup, executor, m_gafferTextureIndices );
 	}
 #else
-	return executeShade( shadeParameters, renderState, shaderGroup, shadingSystem );
+	return executeShade( shadeParameters, renderState, shaderGroup, shadingSystem, m_gafferTextureIndices );
 #endif
 
 }
