@@ -276,6 +276,10 @@ void ContextTracker::updateInBackground()
 			PlugContexts plugContexts;
 			NodeContexts nodeContexts;
 
+			// Alias for `this` to work around MSVC bug that prevents capturing
+			// `this` again in a nested lambda.
+			ContextTracker *that = this;
+
 			try
 			{
 				ContextTracker::visit( toVisit, nodeContexts, plugContexts, Context::current()->canceller() );
@@ -297,7 +301,7 @@ void ContextTracker::updateInBackground()
 					ParallelAlgo::callOnUIThread(
 						// Need to own a reference via `thisRef`, because otherwise we could be deleted
 						// before `callOnUIThread()` gets to us.
-						[thisRef = Ptr( this )] () {
+						[thisRef = Ptr( that )] () {
 							thisRef->m_updateTask.reset();
 							thisRef->scheduleUpdate();
 						}
@@ -315,7 +319,7 @@ void ContextTracker::updateInBackground()
 				ParallelAlgo::callOnUIThread(
 					// Need to own a reference via `thisRef`, because otherwise we could be deleted
 					// before `callOnUIThread()` gets to us.
-					[thisRef = Ptr( this ), plugContexts = std::move( plugContexts ), nodeContexts = std::move( nodeContexts )] () mutable {
+					[thisRef = Ptr( that ), plugContexts = std::move( plugContexts ), nodeContexts = std::move( nodeContexts )] () mutable {
 						thisRef->m_nodeContexts.swap( nodeContexts );
 						thisRef->m_plugContexts.swap( plugContexts );
 						thisRef->m_updateTask.reset();
