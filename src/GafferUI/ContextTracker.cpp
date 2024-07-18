@@ -460,6 +460,10 @@ void ContextTracker::visit( std::deque<std::pair<const Plug *, ConstContextPtr>>
 			continue;
 		}
 
+		// Scope the context we're visiting before evaluating any plug
+		// values. We store contexts without a canceller (ready to return
+		// from `ContextTracker::context()`), so must also scope the canceller
+		// to allow any computes we trigger to be cancelled.
 		Context::EditableScope scopedContext( context.get() );
 		scopedContext.setCanceller( canceller );
 
