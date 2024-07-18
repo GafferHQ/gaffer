@@ -63,6 +63,7 @@ class _OperationIconColumn( GafferUI.PathColumn ) :
 			Gaffer.TweakPlug.Mode.Multiply : "multiplySmall.png",
 			Gaffer.TweakPlug.Mode.Remove : "removeSmall.png",
 			Gaffer.TweakPlug.Mode.Create : "createSmall.png",
+			Gaffer.TweakPlug.Mode.CreateIfMissing : "createIfMissingSmall.png",
 			Gaffer.TweakPlug.Mode.Min : "lessThanSmall.png",
 			Gaffer.TweakPlug.Mode.Max : "greaterThanSmall.png",
 			Gaffer.TweakPlug.Mode.ListAppend : "listAppendSmall.png",
