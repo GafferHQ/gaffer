@@ -274,6 +274,8 @@ class InspectorColumn : public PathColumn
 
 };
 
+/// \todo `MuteColumn` and `SetMembershipColumn` should not exist and we intend
+/// to continue refactoring until it is possible to remove them entirely.
 class MuteColumn : public InspectorColumn
 {
 
@@ -340,6 +342,8 @@ class MuteColumn : public InspectorColumn
 			}
 
 			result.value = nullptr;
+			/// \todo Remove this once AttributeInspector can provide a default value when
+			/// no attribute exists, then InspectorColumn would always provide the toggle tooltip.
 			if( auto toolTipData = runTimeCast<const StringData>( result.toolTip ) )
 			{
 				std::string toolTip = toolTipData->readable();
