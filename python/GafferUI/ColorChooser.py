@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import collections
 import enum
 import sys
 import imath
@@ -71,22 +72,39 @@ def _rgbToTMI( c ) :
 
 	return result
 
+__Range = collections.namedtuple( "__Range", [ "min", "max", "hardMin", "hardMax" ] )
+
+_ranges = {
+	# We don't _really_ want to allow negative values for RGB, but
+	# they can arise from TMI values in the allowed TMI range. It's
+	# better to allow these to be displayed (as an "out of range"
+	# triangle in the sliders) than to show inconsistent values between
+	# components.
+	"r" : __Range( 0, 1, -sys.float_info.max, sys.float_info.max ),
+	"g" : __Range( 0, 1, -sys.float_info.max, sys.float_info.max ),
+	"b" : __Range( 0, 1, -sys.float_info.max, sys.float_info.max ),
+	"a" : __Range( 0, 1, 0, 1 ),
+	"h" : __Range( 0, 1, 0, 1 ),
+	"s" : __Range( 0, 1, 0, 1 ),
+	# As above, we're allowing out-of-regular-range values here too,
+	# because they can arise when authoring in-range values via RGB.
+	"v" : __Range( 0, 1, -sys.float_info.max, sys.float_info.max ),
+	"t" : __Range( -1, 1, -sys.float_info.max, sys.float_info.max ),
+	"m" : __Range( -1, 1, -sys.float_info.max, sys.float_info.max ),
+	"i" : __Range( 0, 1, -sys.float_info.max, sys.float_info.max ),
+}
+
 # A custom slider for drawing the backgrounds.
 class _ComponentSlider( GafferUI.Slider ) :
 
 	def __init__( self, color, component, **kw ) :
 
-		if component in "tm" :
-			min = hardMin = -1
-			max = hardMax = 1
-		else :
-			min = hardMin = 0
-			max = hardMax = 1
-
-		if component in ( "r", "g", "b", "v", "i" ) :
-			hardMax = sys.float_info.max
-
-		GafferUI.Slider.__init__( self, 0.0, min, max, hardMin, hardMax, **kw )
+		GafferUI.Slider.__init__(
+			self, 0.0,
+			min = _ranges[component].min, max = _ranges[component].max,
+			hardMin = _ranges[component].hardMin, hardMax = _ranges[component].hardMax,
+			**kw
+		)
 
 		self.color = color
 		self.component = component
@@ -265,12 +283,8 @@ class ColorChooser( GafferUI.Widget ) :
 		# doesn't provide the capability itself. Add the functionality
 		# into the NumericWidget and remove this code.
 		componentValue = componentWidget.getValue()
-		if componentWidget.component in "tm" :
-			componentValue = max( componentValue, -1 )
-		else :
-			componentValue = max( componentValue, 0 )
-		if componentWidget.component in ( "a", "h", "s", "t", "m" ) :
-			componentValue = min( componentValue, 1 )
+		componentValue = max( componentValue, _ranges[componentWidget.component].hardMin )
+		componentValue = min( componentValue, _ranges[componentWidget.component].hardMax )
 
 		if componentWidget.component in ( "r", "g", "b", "a" ) :
 			newColor = self.__color.__class__( self.__color )
