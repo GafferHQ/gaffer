@@ -7,6 +7,11 @@ Improvements
 - LightEditor : Values of inherited attributes are now displayed in the Light Editor. These are presented as dimmed "fallback" values.
 - LightEditor, RenderPassEditor : Fallback values shown in the history window are displayed with the same dimmed text colour used for fallback values in editor columns.
 
+Fixes
+-----
+
+- LightEditor, RenderPassEditor : Added missing icon representing use of the `CreateIfMissing` tweak mode in the history window.
+
 1.4.9.0 (relative to 1.4.8.0)
 =======
 
@@ -668,7 +673,10 @@ Build
 1.3.16.x (relative to 1.3.16.6)
 ========
 
+Fixes
+-----
 
+- LightEditor, RenderPassEditor : Added missing icon representing use of the `CreateIfMissing` tweak mode in the history window.
 
 1.3.16.6 (relative to 1.3.16.5)
 ========
