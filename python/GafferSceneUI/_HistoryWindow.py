@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import IECore
+import imath
 
 import Gaffer
 import GafferUI
@@ -98,28 +98,34 @@ class _NodeNameColumn( GafferUI.PathColumn ) :
 
 		return self.CellData( self.__title )
 
-# \todo This duplicates logic from (in this case) `_GafferSceneUI._LightEditorSetMembershipColumn`.
+# \todo This duplicates logic from (in this case) `_GafferSceneUI._LightEditorInspectorColumn`.
 # Refactor to allow calling `_GafferSceneUI.InspectorColumn.cellData()` from `_HistoryWindow` to
 # remove this duplication for columns that customize their value presentation.
-class _SetMembershipColumn( GafferUI.PathColumn ) :
+class _ValueColumn( GafferUI.PathColumn ) :
 
-	def __init__( self, title, property ) :
+	def __init__( self, title, property, fallbackProperty ) :
 
 		GafferUI.PathColumn.__init__( self )
 
 		self.__title = title
 		self.__property = property
+		self.__fallbackProperty = fallbackProperty
 
 	def cellData( self, path, canceller = None ) :
 
 		cellValue = path.property( self.__property )
+		fallbackValue = path.property( self.__fallbackProperty )
 
 		data = self.CellData()
 
-		if cellValue & IECore.PathMatcher.Result.ExactMatch :
-			data.icon = "setMember.png"
-		elif cellValue & IECore.PathMatcher.Result.AncestorMatch :
-			data.icon = "setMemberFaded.png"
+		if cellValue is not None :
+			data.value = cellValue
+		elif fallbackValue is not None :
+			data.value = fallbackValue
+			data.foreground = imath.Color4f( 0.64, 0.64, 0.64, 1.0 )
+
+		if isinstance( data.value, ( imath.Color3f, imath.Color4f ) ) :
+			data.icon = data.value
 
 		return data
 
@@ -147,9 +153,7 @@ class _HistoryWindow( GafferUI.Window ) :
 				Gaffer.DictPath( {}, "/" ),
 				columns = (
 					_NodeNameColumn( "Node", "history:node", self.__scriptNode ),
-					_SetMembershipColumn( "Value", "history:value" ) if (
-						isinstance( inspector, GafferSceneUI.Private.SetMembershipInspector )
-					) else GafferUI.PathListingWidget.StandardColumn( "Value", "history:value" ),
+					_ValueColumn( "Value", "history:value", "history:fallbackValue" ),
 					_OperationIconColumn( "Operation", "history:operation" ),
 				),
 				sortable = False,

@@ -177,6 +177,7 @@ const boost::container::flat_map<int, ConstColor4fDataPtr> g_sourceTypeColors = 
 	{ (int)Inspector::Result::SourceType::Other, nullptr },
 	{ (int)Inspector::Result::SourceType::Fallback, nullptr },
 };
+const Color4fDataPtr g_fallbackValueForegroundColor = new Color4fData( Imath::Color4f( 163, 163, 163, 255 ) / 255.0f );
 
 class InspectorColumn : public PathColumn
 {
@@ -191,7 +192,7 @@ class InspectorColumn : public PathColumn
 			m_inspector->dirtiedSignal().connect( boost::bind( &InspectorColumn::inspectorDirtied, this ) );
 		}
 
-		GafferSceneUI::Private::Inspector *inspector()
+		GafferSceneUI::Private::Inspector *inspector() const
 		{
 			return m_inspector.get();
 		}
@@ -221,7 +222,12 @@ class InspectorColumn : public PathColumn
 			result.icon = runTimeCast<const Color3fData>( inspectorResult->value() );
 			result.background = g_sourceTypeColors.at( (int)inspectorResult->sourceType() );
 			std::string toolTip;
-			if( auto source = inspectorResult->source() )
+			if( inspectorResult->sourceType() == Inspector::Result::SourceType::Fallback )
+			{
+				toolTip = "Source : Fallback value";
+				result.foreground = g_fallbackValueForegroundColor;
+			}
+			else if( auto source = inspectorResult->source() )
 			{
 				toolTip = "Source : " + source->relativeName( source->ancestor<ScriptNode>() );
 			}
@@ -268,6 +274,8 @@ class InspectorColumn : public PathColumn
 
 };
 
+/// \todo `MuteColumn` and `SetMembershipColumn` should not exist and we intend
+/// to continue refactoring until it is possible to remove them entirely.
 class MuteColumn : public InspectorColumn
 {
 
@@ -292,41 +300,50 @@ class MuteColumn : public InspectorColumn
 
 			if( auto value = runTimeCast<const BoolData>( result.value ) )
 			{
-				result.icon = value->readable() ? m_muteIconData : m_unMuteIconData;
-			}
-			else
-			{
-				ScenePlug::PathScope pathScope( scenePath->getContext() );
-				ScenePlug::ScenePath currentPath( scenePath->names() );
-				while( !currentPath.empty() )
+				ScenePlug::PathScope pathScope( scenePath->getContext(), &scenePath->names() );
+				pathScope.setCanceller( canceller );
+
+				Inspector::ConstResultPtr inspectorResult = inspector()->inspect();
+				if( inspectorResult->sourceType() != Inspector::Result::SourceType::Fallback )
 				{
-					pathScope.setPath( &currentPath );
-					auto a = scenePath->getScene()->attributesPlug()->getValue();
-					if( auto fullValue = a->member<BoolData>( "light:mute" ) )
-					{
-						result.icon = fullValue->readable() ? m_muteFadedIconData : m_unMuteFadedIconData;
-						result.toolTip = new StringData( "Inherited from : " + ScenePlug::pathToString( currentPath ) );
-						break;
-					}
-					currentPath.pop_back();
+					result.icon = value->readable() ? m_muteIconData : m_unMuteIconData;
 				}
-				if( !result.icon )
+				else
 				{
-					// Use a transparent icon to reserve space in the UI. Without this,
-					// the top row will resize when setting the mute value, causing a full
-					// table resize.
-					if( path.isEmpty() )
+					result.icon = value->readable() ? m_muteFadedIconData : m_unMuteFadedIconData;
+
+					ScenePlug::ScenePath currentPath( scenePath->names() );
+					while( !currentPath.empty() )
 					{
-						result.icon = m_muteBlankIconName;
+						pathScope.setPath( &currentPath );
+						auto a = scenePath->getScene()->attributesPlug()->getValue();
+						if( a->member<BoolData>( "light:mute" ) )
+						{
+							result.toolTip = new StringData( "Inherited from : " + ScenePlug::pathToString( currentPath ) );
+							break;
+						}
+						currentPath.pop_back();
 					}
-					else
-					{
-						result.icon = m_muteUndefinedIconData;
-					}
+				}
+			}
+			if( !result.icon )
+			{
+				// Use a transparent icon to reserve space in the UI. Without this,
+				// the top row will resize when setting the mute value, causing a full
+				// table resize.
+				if( path.isEmpty() )
+				{
+					result.icon = m_muteBlankIconName;
+				}
+				else
+				{
+					result.icon = m_muteUndefinedIconData;
 				}
 			}
 
 			result.value = nullptr;
+			/// \todo Remove this once AttributeInspector can provide a default value when
+			/// no attribute exists, then InspectorColumn would always provide the toggle tooltip.
 			if( auto toolTipData = runTimeCast<const StringData>( result.toolTip ) )
 			{
 				std::string toolTip = toolTipData->readable();
@@ -410,44 +427,44 @@ class SetMembershipColumn : public InspectorColumn
 				return result;
 			}
 
-			std::string toolTip;
-			if( auto toolTipData = runTimeCast<const StringData>( result.toolTip ) )
+			if( auto value = runTimeCast<const BoolData>( result.value ) )
 			{
-				toolTip = toolTipData->readable();
-			}
-
-			if( auto value = runTimeCast<const IntData>( result.value ) )
-			{
-				if( value->readable() & PathMatcher::Result::ExactMatch )
+				if( value->readable() )
 				{
-					result.icon = m_setMemberIconData;
-				}
-				else if( value->readable() & PathMatcher::Result::AncestorMatch )
-				{
-					ConstPathMatcherDataPtr setMembersData = scenePath->getScene()->set( m_setName );
-					const PathMatcher &setMembers = setMembersData->readable();
+					ScenePlug::PathScope pathScope( scenePath->getContext(), &scenePath->names() );
+					pathScope.setCanceller( canceller );
 
-					ScenePlug::ScenePath currentPath( scenePath->names() );
-					while( !currentPath.empty() )
+					Inspector::ConstResultPtr inspectorResult = inspector()->inspect();
+					if( inspectorResult->sourceType() != Inspector::Result::SourceType::Fallback )
 					{
-						if( setMembers.match( currentPath ) & PathMatcher::Result::ExactMatch )
+						result.icon = m_setMemberIconData;
+					}
+					else
+					{
+						result.icon = m_setMemberIconFadedData;
+
+						ConstPathMatcherDataPtr setMembersData = scenePath->getScene()->set( m_setName );
+						const PathMatcher &setMembers = setMembersData->readable();
+
+						ScenePlug::ScenePath currentPath( scenePath->names() );
+						while( !currentPath.empty() )
 						{
-							result.icon = m_setMemberIconFadedData;
-							toolTip = "Inherited from : " + ScenePlug::pathToString( currentPath );
-							break;
+							if( setMembers.match( currentPath ) & PathMatcher::Result::ExactMatch )
+							{
+								result.toolTip = new StringData( "Inherited from : " + ScenePlug::pathToString( currentPath ) + "\n\nDouble-click to toggle" );
+								break;
+							}
+							currentPath.pop_back();
 						}
-						currentPath.pop_back();
 					}
 				}
 			}
-
 			if( !result.icon )
 			{
 				result.icon = m_setMemberUndefinedIconData;
 			}
 
 			result.value = nullptr;
-			result.toolTip = new StringData( toolTip + ( toolTip.size() ? "\n\n" : "" ) + "Double-click to toggle" );
 
 			return result;
 		}

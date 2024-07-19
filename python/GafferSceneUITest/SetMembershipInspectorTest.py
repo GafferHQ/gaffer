@@ -110,7 +110,21 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 
 		self.assertEqual(
 			self.__inspect( plane["out"], "/plane", "planeSet" ).value().value,
-			IECore.PathMatcher.Result.ExactMatch
+			True
+		)
+
+	def testFallbackValue( self ) :
+
+		plane = GafferScene.Plane()
+		group = GafferScene.Group()
+		group["sets"].setValue( "planeSet" )
+		group["in"][0].setInput( plane["out"] )
+
+		inspection = self.__inspect( group["out"], "/group/plane", "planeSet" )
+		self.assertEqual( inspection.value().value, True )
+		self.assertEqual(
+			inspection.sourceType(),
+			GafferSceneUI.Private.Inspector.Result.SourceType.Fallback
 		)
 
 	def testSourceAndEdits( self ) :
@@ -346,7 +360,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( plane["out"], "/plane", "planeSet" ),
 			source = plane["sets"],
-			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Fallback,
 			editable = True
 		)
 
