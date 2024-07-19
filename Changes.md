@@ -15,6 +15,7 @@ Improvements
 - GraphGadget :
   - Improved highlighting of active nodes, with more accurate tracking of Loop node iterations.
   - Annotation `{plug}` substitutions are now evaluated in a context determined relative to the focus node.
+  - The strike-through for disabled nodes is now evaluated in a context determined relative to the focus node.
 
 Fixes
 -----
@@ -35,6 +36,7 @@ API
 - PlugValueWidget :
   - A `DeprecationWarning` is now emitted for any subclasses still implementing the legacy `_updateFromPlug()` or `_updateFromPlugs()` methods. Implement `_updateFromValues()`, `_updateFromMetadata()` and `_updateFromEditable()` instead.
   - A `DeprecationWarning` is now emitted by `_plugConnections()`. Use `_blockedUpdateFromValues()` instead.
+- NodeGadget, ConnectionGadget : Added `updateFromContextTracker()` virtual methods.
 
 Breaking Changes
 ----------------
@@ -52,6 +54,7 @@ Breaking Changes
   - Removed `setContext()` methods.
   - Deprecated `getContext()` methods. Use `context()` instead.
 - Loop : Removed `nextIterationContext()` method.
+- NodeGadget, ConnectionGadget : Removed `activeForFocusNode()` virtual methods. Override `updateFromContextTracker()` instead.
 
 1.4.x.x (relative to 1.4.9.0)
 =======

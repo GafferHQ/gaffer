@@ -202,8 +202,9 @@ ConnectionGadget::NamedCreatorMap &ConnectionGadget::namedCreators()
 	return *m;
 }
 
-void ConnectionGadget::activeForFocusNode( bool active )
+void ConnectionGadget::updateFromContextTracker( const ContextTracker *contextTracker )
 {
+	const bool active = contextTracker->targetNode() ? contextTracker->isTracked( m_dstNodule->plug() ) : true;
 	if( m_active != active )
 	{
 		m_active = active;

@@ -1690,7 +1690,7 @@ NodeGadget *GraphGadget::addNodeGadget( Gaffer::Node *node )
 		{
 			nodeGadget->setHighlighted( true );
 		}
-		nodeGadget->activeForFocusNode( m_scriptNode->getFocus() ? m_contextTracker->isActive( node ) : true );
+		nodeGadget->updateFromContextTracker( m_contextTracker.get() );
 	}
 
 	updateNodeGadgetTransform( nodeGadget.get() );
@@ -1797,7 +1797,7 @@ void GraphGadget::addConnectionGadget( Nodule *dstNodule )
 
 	if( m_scriptNode )
 	{
-		connection->activeForFocusNode( m_scriptNode->getFocus() ? m_contextTracker->isActive( dstPlug ) : true );
+		connection->updateFromContextTracker( m_contextTracker.get() );
 	}
 
 	m_connectionGadgets[dstNodule] = connection.get();
@@ -1877,16 +1877,15 @@ void GraphGadget::updateConnectionGadgetMinimisation( ConnectionGadget *gadget )
 
 void GraphGadget::applyFocusContexts()
 {
-	const bool haveFocus = m_scriptNode->getFocus();
 	for( auto &g : children() )
 	{
 		if( ConnectionGadget *c = runTimeCast<ConnectionGadget>( g.get() ) )
 		{
-			c->activeForFocusNode( haveFocus ? m_contextTracker->isActive( c->dstNodule()->plug() ) : true );
+			c->updateFromContextTracker( m_contextTracker.get() );
 		}
 		else if( NodeGadget *n = runTimeCast<NodeGadget>( g.get() ) )
 		{
-			n->activeForFocusNode( haveFocus ? m_contextTracker->isActive( n->node() ) : true );
+			n->updateFromContextTracker( m_contextTracker.get() );
 		}
 	}
 	/// \todo This should not be necessary. It emulates an old behaviour where we always
