@@ -122,6 +122,14 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		group = GafferScene.Group()
 		group["in"][0].setInput( light["out"] )
 
+		# With no "gl:visualiser:scale" attribute at /group/light, the inspection returns
+		# the registered default value with `sourceType` identifying it as a fallback.
+
+		inspection = self.__inspect( group["out"], "/group/light", "gl:visualiser:scale" )
+		self.assertEqual( inspection.value().value, Gaffer.Metadata.value( "attribute:gl:visualiser:scale", "defaultValue" ) )
+		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Fallback )
+		self.assertEqual( inspection.fallbackDescription(), "Default value" )
+
 		globalGlAttributes = GafferScene.OpenGLAttributes()
 		globalGlAttributes["in"].setInput( group["out"] )
 		globalGlAttributes["global"].setValue( True )
@@ -699,7 +707,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( light["out"], "/light", "gl:visualiser:scale", None ),
 			source = light["visualiserAttributes"]["scale"],
-			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Fallback,
 			editable = True,
 			edit = light["visualiserAttributes"]["scale"]
 		)
@@ -708,7 +716,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( group["out"], "/group/light", "gl:visualiser:scale", None ),
 			source = light["visualiserAttributes"]["scale"],
-			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Fallback,
 			editable = True,
 			edit = light["visualiserAttributes"]["scale"]
 		)
@@ -724,7 +732,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( editScope["out"], "/light", "gl:visualiser:scale", None ),
 			source = light["visualiserAttributes"]["scale"],
-			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Fallback,
 			editable = True,
 			edit = light["visualiserAttributes"]["scale"]
 		)

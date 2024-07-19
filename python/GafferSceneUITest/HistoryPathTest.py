@@ -416,7 +416,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( c[0].property( "name" ), str( c[0][-1] ) )
 		self.assertEqual( c[0].property( "history:node" ), s["testLight"] )
 		self.assertEqual( c[0].property( "history:value" ), None )
-		self.assertEqual( c[0].property( "history:fallbackValue" ), None )
+		self.assertEqual( c[0].property( "history:fallbackValue" ), 512 )
 		self.assertEqual( c[0].property( "history:operation" ), Gaffer.TweakPlug.Mode.Create )
 		self.assertEqual( c[0].property( "history:source" ), s["testLight"]["visualiserAttributes"]["maxTextureResolution"] )
 		self.assertEqual( c[0].property( "history:editWarning" ), "" )
