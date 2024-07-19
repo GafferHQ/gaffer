@@ -44,6 +44,7 @@
 #include "Gaffer/Loop.h"
 #include "Gaffer/NameSwitch.h"
 #include "Gaffer/ParallelAlgo.h"
+#include "Gaffer/PlugAlgo.h"
 #include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Switch.h"
@@ -379,6 +380,16 @@ Gaffer::ConstContextPtr ContextTracker::context( const Gaffer::Node *node ) cons
 	return it != m_nodeContexts.end() ? it->second.context : m_context;
 }
 
+bool ContextTracker::isEnabled( const Gaffer::DependencyNode *node ) const
+{
+	auto it = m_nodeContexts.find( node );
+	if( it != m_nodeContexts.end() )
+	{
+		return it->second.dependencyNodeEnabled;
+	}
+	return false;
+}
+
 void ContextTracker::plugDirtied( const Gaffer::Plug *plug )
 {
 	if( plug->direction() == Plug::Out )
@@ -416,6 +427,14 @@ void ContextTracker::visit( std::deque<std::pair<const Plug *, ConstContextPtr>>
 			continue;
 		}
 
+		// Scope the context we're visiting before evaluating any plug
+		// values. We store contexts without a canceller (ready to return
+		// from `ContextTracker::context()`), so must also scope the canceller
+		// to allow any computes we trigger to be cancelled.
+
+		Context::EditableScope scopedContext( context.get() );
+		scopedContext.setCanceller( canceller );
+
 		// If this is the first time we have visited the node and/or plug, then
 		// record the context.
 
@@ -426,6 +445,11 @@ void ContextTracker::visit( std::deque<std::pair<const Plug *, ConstContextPtr>>
 		if( !nodeData.context )
 		{
 			nodeData.context = context;
+			if( auto dependencyNode = runTimeCast<const DependencyNode>( node ) )
+			{
+				auto enabledPlug = dependencyNode->enabledPlug();
+				nodeData.dependencyNodeEnabled = enabledPlug ? enabledPlug->getValue() : true;
+			}
 		}
 
 		if( !node || plug->direction() == Plug::Out || !nodeData.allInputsActive || *context != *nodeData.context  )
@@ -459,13 +483,6 @@ void ContextTracker::visit( std::deque<std::pair<const Plug *, ConstContextPtr>>
 		{
 			continue;
 		}
-
-		// Scope the context we're visiting before evaluating any plug
-		// values. We store contexts without a canceller (ready to return
-		// from `ContextTracker::context()`), so must also scope the canceller
-		// to allow any computes we trigger to be cancelled.
-		Context::EditableScope scopedContext( context.get() );
-		scopedContext.setCanceller( canceller );
 
 		if( plug->getInput() )
 		{

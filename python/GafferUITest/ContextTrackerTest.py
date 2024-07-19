@@ -901,5 +901,95 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 			# Blow everything away while the background update is still going on.
 			del tracker
 
+	def testIsEnabled( self ) :
+
+		#
+		#     contextQuery -> add1
+		#                     /  \
+		#                    |    |
+		#     contextVariables1  contextVariables2
+		#                    |    |
+		#                     \  /
+		#                     add2
+		#
+
+		script = Gaffer.ScriptNode()
+
+		script["contextQuery"] = Gaffer.ContextQuery()
+		queryPlug = script["contextQuery"].addQuery( Gaffer.BoolPlug() )
+		queryPlug["name"].setValue( "enabler" )
+		queryPlug["value"].setValue( True )
+
+		script["add1"] = GafferTest.AddNode()
+		script["add1"]["enabled"].setInput( script["contextQuery"].outPlugFromQueryPlug( queryPlug )["value"] )
+
+		script["contextVariables1"] = Gaffer.ContextVariables()
+		script["contextVariables1"].setup( script["add1"]["sum" ] )
+		script["contextVariables1"]["in"].setInput( script["add1"]["sum"] )
+
+		script["contextVariables2"] = Gaffer.ContextVariables()
+		script["contextVariables2"].setup( script["add1"]["sum" ] )
+		script["contextVariables2"]["in"].setInput( script["add1"]["sum"] )
+
+		script["add2"] = GafferTest.AddNode()
+		script["add2"]["op1"].setInput( script["contextVariables1"]["out"] )
+		script["add2"]["op2"].setInput( script["contextVariables2"]["out"] )
+
+		context = Gaffer.Context()
+		with self.UpdateHandler() :
+			tracker = GafferUI.ContextTracker( script["add2"], context )
+
+		# Everything is enabled.
+
+		self.assertTrue( tracker.isEnabled( script["add1"] ) )
+		self.assertTrue( tracker.isEnabled( script["contextVariables1"] ) )
+		self.assertTrue( tracker.isEnabled( script["contextVariables2"] ) )
+		self.assertTrue( tracker.isEnabled( script["add2"] ) )
+
+		# `add1` is disabled for both branches.
+
+		with self.UpdateHandler() :
+			context["enabler"] = False
+
+		self.assertFalse( tracker.isEnabled( script["add1"] ) )
+		self.assertTrue( tracker.isEnabled( script["contextVariables1"] ) )
+		self.assertTrue( tracker.isEnabled( script["contextVariables2"] ) )
+		self.assertTrue( tracker.isEnabled( script["add2"] ) )
+
+		# Re-enable `add1` but only on the second branch. This is
+		# the second context visited, so `add1` is still reported
+		# as disabled.
+
+		with self.UpdateHandler() :
+			script["contextVariables2"]["variables"].addChild( Gaffer.NameValuePlug( "enabler", True ) )
+
+		self.assertFalse( tracker.isEnabled( script["add1"] ) )
+		self.assertTrue( tracker.isEnabled( script["contextVariables1"] ) )
+		self.assertTrue( tracker.isEnabled( script["contextVariables2"] ) )
+		self.assertTrue( tracker.isEnabled( script["add2"] ) )
+
+		# Re-enabled on the first branch too. Now `add1` is reported as enabled.
+
+		with self.UpdateHandler() :
+			script["contextVariables1"]["variables"].addChild( Gaffer.NameValuePlug( "enabler", True ) )
+
+		self.assertTrue( tracker.isEnabled( script["add1"] ) )
+		self.assertTrue( tracker.isEnabled( script["contextVariables1"] ) )
+		self.assertTrue( tracker.isEnabled( script["contextVariables2"] ) )
+		self.assertTrue( tracker.isEnabled( script["add2"] ) )
+
+	def testIsEnabledWithUntrackedNodes( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["tracked"] = GafferTest.AddNode()
+		script["untracked"] = GafferTest.AddNode()
+
+		with self.UpdateHandler() :
+			tracker = GafferUI.ContextTracker( script["tracked"], script.context() )
+
+		self.assertTrue( tracker.isEnabled( script["tracked" ] ) )
+		self.assertFalse( tracker.isEnabled( script["untracked" ] ) )
+
 if __name__ == "__main__":
 	unittest.main()

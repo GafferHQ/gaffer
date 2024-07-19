@@ -52,6 +52,7 @@ namespace Gaffer
 {
 
 class BackgroundTask;
+class DependencyNode;
 class Plug;
 class ScriptNode;
 IE_CORE_FORWARDDECLARE( Node );
@@ -134,6 +135,10 @@ class GAFFERUI_API ContextTracker final : public IECore::RefCounted, public Gaff
 		Gaffer::ConstContextPtr context( const Gaffer::Plug *plug ) const;
 		Gaffer::ConstContextPtr context( const Gaffer::Node *node ) const;
 
+		/// If the node is tracked, returns the value of `node->enabledPlug()`
+		/// in `context( node )`. If the node is not tracked, returns `false`.
+		bool isEnabled( const Gaffer::DependencyNode *node ) const;
+
 	private :
 
 		void updateNode( const Gaffer::NodePtr &node );
@@ -154,6 +159,7 @@ class GAFFERUI_API ContextTracker final : public IECore::RefCounted, public Gaff
 		struct NodeData
 		{
 			Gaffer::ConstContextPtr context = nullptr;
+			bool dependencyNodeEnabled = false;
 			// If `true`, then all input plugs on the node are assumed to be
 			// active in the Node's context. This is just an optimisation that
 			// allows us to keep the size of `m_plugContexts` to a minimum.

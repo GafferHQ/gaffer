@@ -53,6 +53,7 @@
 #include "GafferBindings/SignalBinding.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/DependencyNode.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/ScriptNode.h"
 
@@ -375,6 +376,7 @@ void GafferUIModule::bindGraphGadget()
 			.def( "isTracked", (bool (ContextTracker::*)( const Node *node ) const)&ContextTracker::isTracked )
 			.def( "context", &contextWrapper1, ( arg( "node" ), arg( "_copy" ) = true ) )
 			.def( "context", &contextWrapper2, ( arg( "plug" ), arg( "_copy" ) = true ) )
+			.def( "isEnabled", &ContextTracker::isEnabled )
 			.def( "updatePending", &ContextTracker::updatePending )
 			.def( "changedSignal", &ContextTracker::changedSignal, return_internal_reference<1>() )
 		;
