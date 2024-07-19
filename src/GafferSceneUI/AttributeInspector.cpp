@@ -245,6 +245,11 @@ IECore::ConstObjectPtr AttributeInspector::value( const GafferScene::SceneAlgo::
 	return nullptr;
 }
 
+IECore::ConstObjectPtr AttributeInspector::fallbackValue( const GafferScene::SceneAlgo::History *history ) const
+{
+	return history->scene->fullAttributes( history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) )->member( m_attribute );
+}
+
 Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const
 {
 	auto sceneNode = runTimeCast<SceneNode>( history->scene->node() );

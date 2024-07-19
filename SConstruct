@@ -1057,7 +1057,7 @@ libraries = {
 
 	"GafferUITest" : {
 
-		"additionalFiles" : glob.glob( "python/GafferUITest/scripts/*.gfr" ),
+		"additionalFiles" : glob.glob( "python/GafferUITest/scripts/*.gfr" ) + glob.glob( "python/GafferUITest/images/*" ),
 
 	},
 

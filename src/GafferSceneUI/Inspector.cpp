@@ -56,6 +56,7 @@ using namespace GafferSceneUI::Private;
 using ConstPredecessors = std::vector<const SceneAlgo::History *>;
 
 static InternedString g_valuePropertyName( "history:value" );
+static InternedString g_fallbackValuePropertyName( "history:fallbackValue" );
 static InternedString g_operationPropertyName( "history:operation" );
 static InternedString g_sourcePropertyName( "history:source" );
 static InternedString g_editWarningPropertyName( "history:editWarning" );
@@ -193,7 +194,7 @@ Inspector::ResultPtr Inspector::inspect() const
 	bool fallbackValue = false;
 	if( !value )
 	{
-		value = this->fallbackValue();
+		value = this->fallbackValue( history.get() );
 		fallbackValue = (bool)value;
 	}
 
@@ -365,7 +366,7 @@ Inspector::EditFunctionOrFailure Inspector::editFunction( Gaffer::EditScope *edi
 	return "Editing not supported";
 }
 
-IECore::ConstObjectPtr Inspector::fallbackValue() const
+IECore::ConstObjectPtr Inspector::fallbackValue( const GafferScene::SceneAlgo::History *history ) const
 {
 	return nullptr;
 }
@@ -441,6 +442,7 @@ void Inspector::HistoryPath::propertyNames( std::vector<InternedString> &names, 
 	if( isLeaf() )
 	{
 		names.push_back( g_valuePropertyName );
+		names.push_back( g_fallbackValuePropertyName );
 		names.push_back( g_operationPropertyName);
 		names.push_back( g_sourcePropertyName );
 		names.push_back( g_editWarningPropertyName );
@@ -466,6 +468,7 @@ ConstRunTimeTypedPtr Inspector::HistoryPath::property( const InternedString &nam
 	if(
 		isLeaf() && (
 			name == g_valuePropertyName ||
+			name == g_fallbackValuePropertyName ||
 			name == g_operationPropertyName ||
 			name == g_sourcePropertyName ||
 			name == g_editWarningPropertyName
@@ -485,6 +488,10 @@ ConstRunTimeTypedPtr Inspector::HistoryPath::property( const InternedString &nam
 			if( name == g_valuePropertyName )
 			{
 				return runTimeCast<const IECore::Data>( m_inspector->value( it->history.get() ) );
+			}
+			else if( name == g_fallbackValuePropertyName )
+			{
+				return runTimeCast<const IECore::Data>( m_inspector->fallbackValue( it->history.get() ) );
 			}
 			else if( name == g_operationPropertyName )
 			{

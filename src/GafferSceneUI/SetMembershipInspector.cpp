@@ -211,7 +211,19 @@ IECore::ConstObjectPtr SetMembershipInspector::value( const GafferScene::SceneAl
 
 	auto matchResult = (PathMatcher::Result)setMembers->readable().match( path );
 
-	return new IntData( matchResult );
+	// Return nullptr for non-exact match so `fallbackValue()` has the opportunity to provide
+	// an AncestorMatch.
+	return matchResult & IECore::PathMatcher::Result::ExactMatch ? new BoolData( true ) : nullptr;
+}
+
+IECore::ConstObjectPtr SetMembershipInspector::fallbackValue( const GafferScene::SceneAlgo::History *history ) const
+{
+	const auto &path = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+	ConstPathMatcherDataPtr setMembers = history->scene->set( m_setName );
+
+	auto matchResult = (PathMatcher::Result)setMembers->readable().match( path );
+
+	return new BoolData( matchResult & IECore::PathMatcher::Result::AncestorMatch );
 }
 
 Gaffer::ValuePlugPtr SetMembershipInspector::source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const

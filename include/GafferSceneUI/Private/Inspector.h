@@ -126,8 +126,8 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Si
 
 		/// Returns a `Path` representing the history for the inspected property
 		/// in the current context. The path has a child for each predecessor in
-		/// the history, and properties `history:value`, `history:operation`,
-		/// `history:source`, `history:editWarning` and `history:node`.
+		/// the history, and properties `history:value`, `history:fallbackValue`,
+		/// `history:operation`, `history:source`, `history:editWarning` and `history:node`.
 		Gaffer::PathPtr historyPath();
 
 	protected :
@@ -179,7 +179,7 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Si
 
 		/// Can be implemented by derived classes to provide a fallback value for the inspection,
 		/// used when no value is returned from `value()`.
-		virtual IECore::ConstObjectPtr fallbackValue() const;
+		virtual IECore::ConstObjectPtr fallbackValue( const GafferScene::SceneAlgo::History *history ) const;
 
 	protected :
 

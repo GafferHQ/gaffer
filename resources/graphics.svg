@@ -3376,6 +3376,14 @@
          width="14"
          style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.522913;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
          inkscape:label="removeSmall" />
+      <rect
+         id="createIfMissingSmall"
+         y="2612"
+         x="241"
+         height="14"
+         width="14"
+         style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.522913;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
+         inkscape:label="createIfMissingSmall" />
     </g>
     <g
        id="menus"
@@ -8913,6 +8921,12 @@
          inkscape:connector-curvature="0"
          sodipodi:nodetypes="ccccccc"
          inkscape:label="lessThanSmall" />
+      <path
+         id="path1"
+         style="display:inline;font-size:16px;line-height:1.25;font-family:'Source Code Pro';-inkscape-font-specification:'Source Code Pro';fill:url(#foreground);stroke:url(#linearGradient10);stroke-width:0.245669"
+         d="M 250.11914 2613.4473 C 248.88714 2613.4473 247.89578 2613.9921 247.17578 2614.7441 L 247.95898 2615.4648 C 248.53498 2614.8888 249.22306 2614.5352 250.03906 2614.5352 C 251.20706 2614.5352 251.79883 2615.2079 251.79883 2616.0879 C 251.79883 2617.7199 248.91873 2618.3604 249.30273 2620.6484 L 250.4707 2620.6484 C 250.1827 2618.5684 253.0957 2618.1194 253.0957 2615.9434 C 253.0957 2614.4234 251.89514 2613.4473 250.11914 2613.4473 z M 243 2616 L 243 2618 L 247 2618 L 247 2616 L 243 2616 z M 243 2620 L 243 2622 L 247 2622 L 247 2620 L 243 2620 z M 250.00781 2622.0879 C 249.36781 2622.0879 248.83984 2622.5527 248.83984 2623.3047 C 248.83984 2624.0727 249.36781 2624.5527 250.00781 2624.5527 C 250.64781 2624.5527 251.17578 2624.0727 251.17578 2623.3047 C 251.17578 2622.5527 250.64781 2622.0879 250.00781 2622.0879 z "
+         transform="translate(0,52.3622)"
+         inkscape:label="createIfMissingSmall" />
     </g>
     <g
        style="opacity:1;paint-order:markers stroke fill"

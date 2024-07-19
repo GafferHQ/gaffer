@@ -407,26 +407,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		# First we need to find out what the new value would be for each plug in isolation.
 		for inspector, pathInspections in inspectors.items() :
 			for path, inspection in pathInspections.items() :
-				currentValue = inspection.value().value if inspection.value() is not None else None
-
-				if isinstance( inspector, GafferSceneUI.Private.AttributeInspector ) :
-					fullAttributes = self.settings()["in"].fullAttributes( path[:-1] )
-					parentValueData = fullAttributes.get( inspector.name(), None )
-					parentValue = parentValueData.value if parentValueData is not None else False
-
-					currentValues.append( currentValue if currentValue is not None else parentValue )
-				elif isinstance( inspector, GafferSceneUI.Private.SetMembershipInspector ) :
-					if currentValue is not None :
-						currentValues.append(
-							True if currentValue & (
-								IECore.PathMatcher.Result.ExactMatch |
-								IECore.PathMatcher.Result.AncestorMatch
-							) else False
-						)
-					else :
-						currentValues.append( False )
-				else :
-					currentValues.append( currentValue )
+				currentValues.append( inspection.value().value if inspection.value() is not None else False )
 
 		# Now set the value for all plugs, defaulting to `True` if they are not
 		# currently all the same.
