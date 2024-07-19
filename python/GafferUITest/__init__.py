@@ -133,6 +133,7 @@ from .PythonEditorTest import PythonEditorTest
 from .BoxIOUITest import BoxIOUITest
 from .AnnotationsGadgetTest import AnnotationsGadgetTest
 from .PopupWindowTest import PopupWindowTest
+from .ColorChooserTest import ColorChooserTest
 
 if __name__ == "__main__":
 	unittest.main()
