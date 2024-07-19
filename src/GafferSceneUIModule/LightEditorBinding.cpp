@@ -329,22 +329,6 @@ class MuteColumn : public InspectorColumn
 			}
 
 			result.value = nullptr;
-			/// \todo Remove this once AttributeInspector can provide a default value when
-			/// no attribute exists, then InspectorColumn would always provide the toggle tooltip.
-			if( auto toolTipData = runTimeCast<const StringData>( result.toolTip ) )
-			{
-				std::string toolTip = toolTipData->readable();
-				size_t size = toolTip.size();
-				if( size < 6 || toolTip.substr( size - 6 ) != "toggle" )
-				{
-					toolTip += "\n\nDouble-click to toggle";
-					result.toolTip = new StringData( toolTip );
-				}
-			}
-			else
-			{
-				result.toolTip = new StringData( "Double-click to toggle" );
-			}
 
 			return result;
 		}
