@@ -802,7 +802,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( editScope["out"], "/lightFilter", "filteredLights" ),
 			source = lightFilter["filteredLights"],
-			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Fallback,
 			editable = True,
 			edit = lightFilter["filteredLights"]
 		)
