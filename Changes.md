@@ -7,6 +7,7 @@ Improvements
 - LightEditor :
   - Values of inherited attributes are now displayed in the Light Editor. These are presented as dimmed "fallback" values. Values are inherited from an ancestor of the inspected location or from attributes created in the scene globals.
   - Default values are now displayed as dimmed "fallback" values for attributes that don't exist in the scene.
+  - When a fallback value is displayed, the cell's tooltip includes a description of the source of the value.
 - LightEditor, RenderPassEditor : Fallback values shown in the history window are displayed with the same dimmed text colour used for fallback values in editor columns.
 - EditScope : Filtered the EditScope menu to show only nodes that are active in the relevant context.
 
