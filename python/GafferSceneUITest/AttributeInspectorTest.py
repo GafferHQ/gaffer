@@ -142,6 +142,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		inspection = self.__inspect( globalGlAttributes["out"], "/group/light", "gl:visualiser:scale" )
 		self.assertEqual( inspection.value(), IECore.FloatData( 4.0 ) )
 		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Fallback )
+		self.assertEqual( inspection.fallbackDescription(), "Global attribute" )
 
 		groupFilter = GafferScene.PathFilter()
 		groupFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
@@ -158,6 +159,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		inspection = self.__inspect( glAttributes["out"], "/group/light", "gl:visualiser:scale" )
 		self.assertEqual( inspection.value(), IECore.FloatData( 2.0 ) )
 		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Fallback )
+		self.assertEqual( inspection.fallbackDescription(), "Inherited from /group" )
 
 		# With a "gl:visualiser:scale" attribute created at the inspected location, it is
 		# returned instead of the inherited fallback.

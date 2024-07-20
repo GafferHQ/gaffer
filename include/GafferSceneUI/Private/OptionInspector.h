@@ -65,7 +65,7 @@ class GAFFERSCENEUI_API OptionInspector : public Inspector
 		IECore::ConstObjectPtr value( const GafferScene::SceneAlgo::History *history ) const override;
 		Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const override;
 		EditFunctionOrFailure editFunction( Gaffer::EditScope *scope, const GafferScene::SceneAlgo::History *history ) const override;
-		IECore::ConstObjectPtr fallbackValue( const GafferScene::SceneAlgo::History *history ) const override;
+		IECore::ConstObjectPtr fallbackValue( const GafferScene::SceneAlgo::History *history, std::string &description ) const override;
 
 	private :
 

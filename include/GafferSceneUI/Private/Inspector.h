@@ -178,8 +178,10 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Si
 		virtual EditFunctionOrFailure editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const;
 
 		/// Can be implemented by derived classes to provide a fallback value for the inspection,
-		/// used when no value is returned from `value()`.
-		virtual IECore::ConstObjectPtr fallbackValue( const GafferScene::SceneAlgo::History *history ) const;
+		/// used when no value is returned from `value()`. Optionally, `description` may be
+		/// assigned a description to be shown to the user. Typically, this description would
+		/// be used to disambiguate the source of the fallback value.
+		virtual IECore::ConstObjectPtr fallbackValue( const GafferScene::SceneAlgo::History *history, std::string &description ) const;
 
 	protected :
 
@@ -319,6 +321,9 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 
 		/// The relationship between `source()` and `editScope()`.
 		SourceType sourceType() const;
+		/// Returns a user-facing description of the source of the
+		/// fallback value when `SourceType` is `Fallback`.
+		const std::string &fallbackDescription() const;
 
 		/// Editing
 		/// =======
@@ -347,6 +352,7 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 		const IECore::ConstObjectPtr m_value;
 		Gaffer::ValuePlugPtr m_source;
 		SourceType m_sourceType;
+		std::string m_fallbackDescription;
 		Gaffer::EditScopePtr m_editScope;
 		bool m_editScopeInHistory;
 

@@ -844,6 +844,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		inspection = self.__inspect( editScope["out"], "test:enabled", editScope )
 		self.assertEqual( inspection.value(), IECore.BoolData( 1 ) )
 		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Fallback )
+		self.assertEqual( inspection.fallbackDescription(), "Default value" )
 
 		# If the option does exist, then its value is returned as normal
 
@@ -852,6 +853,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		inspection = self.__inspect( editScope["out"], "test:enabled", editScope )
 		self.assertEqual( inspection.value(), IECore.BoolData( 0 ) )
 		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Upstream )
+		self.assertEqual( inspection.fallbackDescription(), "" )
 
 		# Disabling the option should revert to the fallback
 
@@ -859,6 +861,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		inspection = self.__inspect( editScope["out"], "test:enabled", editScope )
 		self.assertEqual( inspection.value(), IECore.BoolData( 1 ) )
 		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Fallback )
+		self.assertEqual( inspection.fallbackDescription(), "Default value" )
 
 		# Updates to "defaultValue" are reflected in new inspections
 
