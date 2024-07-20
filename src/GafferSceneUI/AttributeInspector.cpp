@@ -69,6 +69,9 @@ using namespace GafferSceneUI::Private;
 namespace
 {
 
+const std::string g_attributePrefix( "attribute:" );
+const InternedString g_defaultValue( "defaultValue" );
+
 // This uses the same strategy that ValuePlug uses for the hash cache,
 // using `plug->dirtyCount()` to invalidate previous cache entries when
 // a plug is dirtied.
@@ -247,7 +250,20 @@ IECore::ConstObjectPtr AttributeInspector::value( const GafferScene::SceneAlgo::
 
 IECore::ConstObjectPtr AttributeInspector::fallbackValue( const GafferScene::SceneAlgo::History *history ) const
 {
-	return history->scene->fullAttributes( history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) )->member( m_attribute );
+	if( const auto inheritedAttribute = history->scene->fullAttributes( history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) )->member( m_attribute ) )
+	{
+		return inheritedAttribute;
+	}
+	else if( const auto globalAttribute = history->scene->globals()->member<Object>( g_attributePrefix + m_attribute.string() ) )
+	{
+		return globalAttribute;
+	}
+	else if( const auto defaultValue = Gaffer::Metadata::value( g_attributePrefix + m_attribute.string(), g_defaultValue ) )
+	{
+		return defaultValue;
+	}
+
+	return nullptr;
 }
 
 Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const
@@ -369,7 +385,7 @@ Inspector::EditFunctionOrFailure AttributeInspector::editFunction( Gaffer::EditS
 
 void AttributeInspector::plugDirtied( Gaffer::Plug *plug )
 {
-	if( plug == m_scene->attributesPlug() )
+	if( plug == m_scene->attributesPlug() || plug == m_scene->globalsPlug() )
 	{
 		dirtiedSignal()( this );
 	}

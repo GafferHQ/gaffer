@@ -122,17 +122,30 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		group = GafferScene.Group()
 		group["in"][0].setInput( light["out"] )
 
+		globalGlAttributes = GafferScene.OpenGLAttributes()
+		globalGlAttributes["in"].setInput( group["out"] )
+		globalGlAttributes["global"].setValue( True )
+		globalGlAttributes["attributes"]["visualiserScale"]["enabled"].setValue( True )
+		globalGlAttributes["attributes"]["visualiserScale"]["value"].setValue( 4.0 )
+
+		# With no "gl:visualiser:scale" attribute at /group/light, the inspection returns
+		# the inherited global attribute value with `sourceType` identifying it as a fallback.
+
+		inspection = self.__inspect( globalGlAttributes["out"], "/group/light", "gl:visualiser:scale" )
+		self.assertEqual( inspection.value(), IECore.FloatData( 4.0 ) )
+		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Fallback )
+
 		groupFilter = GafferScene.PathFilter()
 		groupFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
 
 		glAttributes = GafferScene.OpenGLAttributes()
-		glAttributes["in"].setInput( group["out"] )
+		glAttributes["in"].setInput( globalGlAttributes["out"] )
 		glAttributes["filter"].setInput( groupFilter["out"] )
 		glAttributes["attributes"]["visualiserScale"]["enabled"].setValue( True )
 		glAttributes["attributes"]["visualiserScale"]["value"].setValue( 2.0 )
 
 		# With no "gl:visualiser:scale" attribute at /group/light, the inspection returns
-		# the inherited attribute value with `sourceType` identifying it as a fallback.
+		# the inherited attribute value from /group with `sourceType` identifying it as a fallback.
 
 		inspection = self.__inspect( glAttributes["out"], "/group/light", "gl:visualiser:scale" )
 		self.assertEqual( inspection.value(), IECore.FloatData( 2.0 ) )
