@@ -481,8 +481,6 @@ class ColorChooser( GafferUI.Widget ) :
 
 				self.__colorField = _ColorField( color, "h" )
 				self.__colorValueChangedConnection = self.__colorField.valueChangedSignal().connect( Gaffer.WeakMethod( self.__colorValueChanged ), scoped = False )
-				# \todo Don't hide color field when we're ready to expose the UI
-				self.__colorField.setVisible( False )
 
 				with GafferUI.GridContainer( spacing = 4 ) :
 
@@ -490,6 +488,7 @@ class ColorChooser( GafferUI.Widget ) :
 					c, staticComponent = self.__colorField.getColor()
 					for row, component in enumerate( "rgbahsvtmi" ) :
 						self.__channelLabels[component] = GafferUI.Label( component.capitalize(), parenting = { "index" : ( 0, row ), "alignment" : ( GafferUI.HorizontalAlignment.Center, GafferUI.VerticalAlignment.Center ) } )
+						self.__channelLabels[component]._qtWidget().setObjectName( "gafferColorComponentLabel" )
 
 						if component != "a" :
 							if component == staticComponent :
@@ -544,12 +543,6 @@ class ColorChooser( GafferUI.Widget ) :
 				self.__colorSwatch._qtWidget().setFixedHeight( 40 )
 
 		self.__colorChangedSignal = Gaffer.Signals.Signal2()
-
-		# \todo Don't hide TMI sliders when we're ready to expose the new UI
-		for c in "tmi" :
-			self.__channelLabels[c].setVisible( False )
-			self.__numericWidgets[c].setVisible( False )
-			self.__sliders[c].setVisible( False )
 
 		self.__updateUIFromColor()
 
