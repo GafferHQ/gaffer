@@ -155,6 +155,12 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Si
 		/// base class?
 		virtual IECore::ConstObjectPtr value( const GafferScene::SceneAlgo::History *history ) const = 0;
 
+		/// Can be implemented by derived classes to provide a fallback value for the inspection,
+		/// used when no value is returned from `value()`. Called with `history->context` as the current
+		/// context. Optionally, `description` may be assigned a description to be shown to the user.
+		/// Typically, this description would be used to disambiguate the source of the fallback value.
+		virtual IECore::ConstObjectPtr fallbackValue( const GafferScene::SceneAlgo::History *history, std::string &description ) const;
+
 		/// Should be implemented by derived classes to return the source for
 		/// the value authored at this point in the history. Optionally,
 		/// `editWarning` may be assigned a warning that will be shown to the
@@ -176,12 +182,6 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Si
 		/// > that this will be dealt with in `source()`, returning a result
 		/// > that edits the processor itself.
 		virtual EditFunctionOrFailure editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const;
-
-		/// Can be implemented by derived classes to provide a fallback value for the inspection,
-		/// used when no value is returned from `value()`. Optionally, `description` may be
-		/// assigned a description to be shown to the user. Typically, this description would
-		/// be used to disambiguate the source of the fallback value.
-		virtual IECore::ConstObjectPtr fallbackValue( const GafferScene::SceneAlgo::History *history, std::string &description ) const;
 
 	protected :
 
