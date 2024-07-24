@@ -48,7 +48,7 @@ class CyclesLightTest( GafferSceneTest.SceneTestCase ) :
 
 	def testLoadAllLightsWithoutWarnings( self ) :
 
-		for light in GafferCycles.lights :
+		for light in GafferCycles.lights.keys() :
 			with IECore.CapturingMessageHandler() as mh :
 				node = GafferCycles.CyclesLight()
 				node.loadShader( light )
