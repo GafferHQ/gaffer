@@ -6,6 +6,7 @@ Improvements
 
 - Light Editor : Added `is_sphere` column for Cycles lights.
 - Windows : Gaffer now uses the TBB memory allocator for significantly better performance.
+- ColorChooser : Changed the color field widget to a color wheel when hue is one of the varying components. [^1]
 
 Breaking Changes
 ----------------
