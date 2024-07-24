@@ -1452,7 +1452,7 @@ if env["PLATFORM"] == "win32" :
 
 else :
 
-	libraries["GafferCycles"]["envAppends"]["LIBS"].extend( [ "dl" ] )
+	libraries["GafferCycles"]["envAppends"]["LIBS"].extend( [ "dl", "zstd" ] )
 
 # Optionally add vTune requirements
 
