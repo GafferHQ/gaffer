@@ -1172,6 +1172,13 @@ Imath::M44f Constraint::computeConstrainedTransform( const Gaffer::Context *cont
 		return inputTransform;
 	}
 
+	// \todo - It's not obvious how we can use something like the hypothetical SceneAlgo::relativeTransform
+	// here - unlike MergeObjects and BranchCreator, where the handling of relative transforms is entirely
+	// internal, and the correct solution is pretty clear, here the use of world space is part of the API of
+	// computeConstraint. However, it is still true that it would in many cases be desirable for this to output
+	// fully accurate results even if the whole scene is placed under a large fixed transform ( whereas currently
+	// this can introduce a lot of imprecision since we're working in world space ).
+
 	const ScenePath &path = context->get<ScenePath>( ScenePlug::scenePathContextName );
 	const ScenePath parentPath( path.begin(), path.end() - 1 );
 
