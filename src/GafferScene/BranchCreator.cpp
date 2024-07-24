@@ -692,6 +692,9 @@ Imath::M44f BranchCreator::computeTransform( const ScenePath &path, const Gaffer
 				{
 					// Account for the difference between source and destination transforms so that
 					// branches are positioned as if they were parented below the source.
+					// \todo - Using the fullTransform when the sourcePath and destPath may share a prefix path
+					// is both highly inefficient and highly inaccurate. We should probably turn the
+					// relativeTransform in MergeObjects into a public function in SceneAlgo, and then use it here.
 					M44f relativeTransform = inPlug()->fullTransform( sourcePath ) * outPlug()->fullTransform( destinationPath ).inverse();
 					result *= relativeTransform;
 				}
