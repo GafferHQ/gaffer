@@ -797,10 +797,9 @@ void StandardNodeGadget::updateFromContextTracker( const ContextTracker *context
 
 void StandardNodeGadget::updateTextDimming()
 {
-	NameGadget *name = IECore::runTimeCast<NameGadget>( getContents() );
-	if( name )
+	if( auto text = IECore::runTimeCast<TextGadget>( getContents() ) )
 	{
-		name->setDimmed( !( m_active || getHighlighted() ) );
+		text->setDimmed( !( m_active || getHighlighted() ) );
 	}
 }
 
