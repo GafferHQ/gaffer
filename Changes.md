@@ -6,11 +6,18 @@ Improvements
 
 - LightEditor : Values of inherited attributes are now displayed in the Light Editor. These are presented as dimmed "fallback" values.
 - LightEditor, RenderPassEditor : Fallback values shown in the history window are displayed with the same dimmed text colour used for fallback values in editor columns.
+- EditScope : Filtered the EditScope menu to show only nodes that are active in the relevant context.
 
 Fixes
 -----
 
 - LightEditor, RenderPassEditor : Added missing icon representing use of the `CreateIfMissing` tweak mode in the history window.
+
+API
+---
+
+- ContextTracker : Added a new class that determines what contexts nodes are evaluated in relative to the focus node. This allows UI components to provide improved context-sensitive feedback to the user.
+- Loop : Added `previousIteration()` method.
 
 1.4.9.0 (relative to 1.4.8.0)
 =======

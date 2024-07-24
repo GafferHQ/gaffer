@@ -193,6 +193,29 @@ ContextPtr Loop::nextIterationContext() const
 	return nullptr;
 }
 
+std::pair<const ValuePlug *, ContextPtr> Loop::previousIteration( const ValuePlug *output ) const
+{
+	int index = -1;
+	IECore::InternedString indexVariable;
+	if( const ValuePlug *plug = sourcePlug( output, Context::current(), index, indexVariable ) )
+	{
+		ContextPtr context = new Context( *Context::current() );
+
+		if( index >= 0 )
+		{
+			context->set( indexVariable, index );
+		}
+		else
+		{
+			context->remove( indexVariable );
+		}
+
+		return { plug, context };
+	}
+
+	return { nullptr, nullptr };
+}
+
 void Loop::affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
 {
 	ComputeNode::affects( input, outputs );

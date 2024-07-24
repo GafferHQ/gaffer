@@ -127,6 +127,8 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 				GafferUI.Spacer( imath.V2i( 4, 1 ), imath.V2i( 4, 1 ) )
 				GafferUI.Label( "Edit Scope" )
+				self.__busyWidget = GafferUI.BusyWidget( size = 18 )
+				self.__busyWidget.setVisible( False )
 				self.__menuButton = GafferUI.MenuButton(
 					"",
 					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ),
@@ -150,9 +152,30 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 		# run the default dropSignal handler from PlugValueWidget.
 		self.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ), scoped = False )
 
+		self.__updatePlugInputChangedConnection()
+		self.__acquireContextTracker()
+
 	def hasLabel( self ) :
 
 		return True
+
+	def setPlugs( self, plugs ) :
+
+		GafferUI.PlugValueWidget.setPlugs( self, plugs )
+		self.__updatePlugInputChangedConnection()
+		self.__acquireContextTracker()
+
+	def getToolTip( self ) :
+
+		editScope = self.__editScope()
+		if editScope is None :
+			return "Edits will be made using the last relevant node, including nodes not in any EditScope."
+
+		unusableReason = self.__unusableReason( editScope )
+		if unusableReason :
+			return unusableReason
+		else :
+			return "Edits will be made in {}.".format( editScope.getName() )
 
 	# We don't actually display values, but this is also called whenever the
 	# input changes, which is when we need to update.
@@ -160,7 +183,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		editScope = self.__editScope()
 		editScopeActive = editScope is not None
-		self.__updateMenuButton( editScope )
+		self.__updateMenuButton()
 		self.__navigationMenuButton.setEnabled( editScopeActive )
 		if editScopeActive :
 			self.__editScopeNameChangedConnection = editScope.nameChangedSignal().connect(
@@ -177,19 +200,56 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 			self._qtWidget().setProperty( "editScopeActive", GafferUI._Variant.toVariant( editScopeActive ) )
 			self._repolish()
 
-	def __updateMenuButton( self, editScope ) :
+	def __updatePlugInputChangedConnection( self ) :
 
+		self.__plugInputChangedConnection = self.getPlug().node().plugInputChangedSignal().connect(
+			Gaffer.WeakMethod( self.__plugInputChanged ), scoped = True
+		)
+
+	def __plugInputChanged( self, plug ) :
+
+		if plug.getName() == "in" and plug.parent() == self.getPlug().node() :
+			# The result of `__inputNode()` will have changed.
+			self.__acquireContextTracker()
+
+	def __acquireContextTracker( self ) :
+
+		self.__contextTracker = GafferUI.ContextTracker.acquire( self.__inputNode() )
+		self.__contextTrackerChangedConnection = self.__contextTracker.changedSignal().connect(
+			Gaffer.WeakMethod( self.__contextTrackerChanged ), scoped = True
+		)
+
+		if not self.__contextTracker.updatePending() :
+			self.__updateMenuButton()
+		else :
+			# We'll update later in `__contextTrackerChanged()`.
+			pass
+
+	def __updateMenuButton( self ) :
+
+		editScope = self.__editScope()
 		self.__menuButton.setText( editScope.getName() if editScope is not None else "None" )
-		self.__menuButton.setImage( self.__editScopeSwatch( editScope ) if editScope is not None else None )
+
+		if editScope is not None :
+			self.__menuButton.setImage(
+				self.__editScopeSwatch( editScope ) if not self.__unusableReason( editScope ) else "warningSmall.png"
+			)
+		else :
+			self.__menuButton.setImage( None )
 
 	def __editScopeNameChanged( self, editScope, oldName ) :
 
-		self.__updateMenuButton( editScope )
+		self.__updateMenuButton()
 
 	def __editScopeMetadataChanged( self, editScope, key, reason ) :
 
 		if key == "nodeGadget:color" :
-			self.__updateMenuButton( editScope )
+			self.__updateMenuButton()
+
+	def __contextTrackerChanged( self, contextTracker ) :
+
+		self.__updateMenuButton()
+		self.__busyWidget.setVisible( False )
 
 	def __editScope( self ) :
 
@@ -231,7 +291,21 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return inputNode
 
-	def __buildMenu( self, result, path, currentEditScope ) :
+	def __activeEditScopes( self ) :
+
+		node = self.__inputNode()
+		if node is None :
+			return []
+
+		result = Gaffer.NodeAlgo.findAllUpstream( node, self.__editScopePredicate )
+		if self.__editScopePredicate( node ) :
+			result.insert( 0, node )
+
+		result = [ n for n in result if self.__contextTracker.isTracked( n ) ]
+
+		return result
+
+	def __buildMenu( self, path, currentEditScope ) :
 
 		result = IECore.MenuDefinition()
 
@@ -254,8 +328,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 							singlesStack.extend( [ children[0] ] )
 
 			if currentEditScope is not None :
-				# Ignore the first entry, which is the menu category
-				node = currentEditScope.scriptNode().descendant( ".".join( childPath[1:] ) )
+				node = currentEditScope.scriptNode().descendant( ".".join( childPath[:] ) )
 				icon = "menuBreadCrumb.png" if node.isAncestorOf( currentEditScope ) else None
 			else :
 				icon = None
@@ -265,17 +338,18 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 					itemName,
 					{
 						"command" : functools.partial( Gaffer.WeakMethod( self.__connectEditScope ), editScope ),
-						"active" : path[0] != "Downstream",
 						"label" : itemName,
 						"checkBox" : editScope == currentEditScope,
 						"icon" : self.__editScopeSwatch( editScope ),
+						"active" : not self.__unusableReason( editScope ),
+						"description" : self.__unusableReason( editScope ),
 					}
 				)
 			else :
 				result.append(
 					itemName,
 					{
-						"subMenu" : functools.partial( Gaffer.WeakMethod( self.__buildMenu ), result, childPath, currentEditScope ),
+						"subMenu" : functools.partial( Gaffer.WeakMethod( self.__buildMenu ), childPath, currentEditScope ),
 						"icon" : icon
 					}
 				)
@@ -284,30 +358,18 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __menuDefinition( self ) :
 
-		result = IECore.MenuDefinition()
-
 		currentEditScope = None
 		if self.getPlug().getInput() is not None :
 			currentEditScope = self.getPlug().getInput().parent()
 
-		node = self.__inputNode()
-		if node is not None :
-			upstream = Gaffer.NodeAlgo.findAllUpstream( node, self.__editScopePredicate )
-			if self.__editScopePredicate( node ) :
-				upstream.insert( 0, node )
+		activeEditScopes = self.__activeEditScopes()
 
-			downstream = Gaffer.NodeAlgo.findAllDownstream( node, self.__editScopePredicate )
-		else :
-			upstream = []
-			downstream = []
-
-		# Each child of the root will get its own section in the menu
-		# if it has children. The section will be preceded by a divider
-		# with its name in the divider label.
+		# Build a menu hierarchy to match the node hierarchy.
+		# This will be simplified where possible in `__buildMenu()`.
 
 		menuHierarchy = OrderedDict()
+		for editScope in reversed( activeEditScopes ) :
 
-		def addToMenuHierarchy( editScope, root ) :
 			ancestorNodes = []
 			currentNode = editScope
 			while currentNode.parent() != editScope.scriptNode() :
@@ -316,33 +378,16 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			ancestorNodes.reverse()
 
-			currentNode = menuHierarchy.setdefault( root, {} )
+			currentMenu = menuHierarchy
 			for n in ancestorNodes :
-				currentNode = currentNode.setdefault( n.getName(), {} )
-			currentNode[editScope.getName()] = editScope
+				currentMenu = currentMenu.setdefault( n.getName(), {} )
+			currentMenu[editScope.getName()] = editScope
 
-		if upstream :
-			for editScope in sorted( upstream, key = lambda e : e.relativeName( e.scriptNode() ) ) :
-				addToMenuHierarchy( editScope, "Upstream" )
+		result = self.__buildMenu( Gaffer.DictPath( menuHierarchy, "/" ), currentEditScope )
 
-		if downstream :
-			for editScope in sorted( downstream, key = lambda e : e.relativeName( e.scriptNode() ) ) :
-				addToMenuHierarchy( editScope, "Downstream" )
-
-		menuPath = Gaffer.DictPath( menuHierarchy, "/" )
-
-		for category in menuPath.children() :
-
-			if len( category.children() ) == 0 :
-				continue
-
-			result.append(
-				"/__{}Divider__".format( category[-1] ),
-				{ "divider" : True, "label" : category[-1] }
-			)
-
-			result.update( self.__buildMenu( result, category, currentEditScope ) )
-
+		if self.__contextTracker.updatePending() :
+			result.append( "/__RefreshDivider__", { "divider" : True } )
+			result.append( "/Refresh", { "command" : Gaffer.WeakMethod( self.__refreshMenu ) } )
 
 		result.append( "/__NoneDivider__", { "divider" : True } )
 		result.append(
@@ -350,6 +395,13 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 		)
 
 		return result
+
+	def __refreshMenu( self ) :
+
+		if self.__contextTracker.updatePending() :
+			# An update will already be in progress so we just show our busy
+			# widget until it is done.
+			self.__busyWidget.setVisible( True )
 
 	def __navigationMenuDefinition( self ) :
 
@@ -447,31 +499,36 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __drop( self, widget, event ) :
 
-		inputNode = self.__inputNode()
 		dropNode = self.__dropNode( event )
-		if inputNode is None :
-			with GafferUI.PopupWindow() as self.__popup :
-				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-					GafferUI.Image( "warningSmall.png" )
-					GafferUI.Label( "<h4>The Edit Scope cannot be set while nothing is viewed</h4>" )
-			self.__popup.popup( parent = self )
-		elif dropNode :
-			upstream = Gaffer.NodeAlgo.findAllUpstream( inputNode, self.__editScopePredicate )
-			if self.__editScopePredicate( inputNode ) :
-				upstream.insert( 0, inputNode )
+		if dropNode is not None :
 
-			if dropNode in upstream :
+			reason = self.__unusableReason( dropNode )
+			if reason is None :
 				self.__connectEditScope( dropNode )
 			else :
 				with GafferUI.PopupWindow() as self.__popup :
 					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 						GafferUI.Image( "warningSmall.png" )
-						GafferUI.Label( "<h4>{} cannot be used as it is not upstream of {}</h4>".format( dropNode.getName(), inputNode.getName() ) )
+						GafferUI.Label( f"<h4>{reason}</h4>" )
 				self.__popup.popup( parent = self )
 
 		self.__frame.setHighlighted( False )
 
 		return True
+
+	def __unusableReason( self, editScope ) :
+
+		name = editScope.relativeName( editScope.scriptNode() )
+		inputNode = self.__inputNode()
+		if inputNode is None :
+			return f"{name} cannot be used while nothing is viewed."
+		elif not self.__contextTracker.isTracked( editScope ) :
+			inputNodeName = inputNode.relativeName( inputNode.scriptNode() )
+			return f"{name} cannot be used as it is not upstream of {inputNodeName}."
+		elif not self.__contextTracker.isEnabled( editScope ) :
+			return f"{name} cannot be used as it is disabled."
+		else :
+			return None
 
 # ProcessorWidget
 # ===============
