@@ -11,6 +11,7 @@ Improvements
 Fixes
 -----
 
+- ImageReader : Fixed crash caused by invalid OpenEXR `multiView` attributes.
 - LightEditor, RenderPassEditor : Added missing icon representing use of the `CreateIfMissing` tweak mode in the history window.
 
 API
@@ -683,6 +684,7 @@ Build
 Fixes
 -----
 
+- ImageReader : Fixed crash caused by invalid OpenEXR `multiView` attributes.
 - LightEditor, RenderPassEditor : Added missing icon representing use of the `CreateIfMissing` tweak mode in the history window.
 
 1.3.16.6 (relative to 1.3.16.5)
