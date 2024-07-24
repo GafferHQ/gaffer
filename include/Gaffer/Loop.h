@@ -85,6 +85,11 @@ class GAFFER_API Loop : public ComputeNode
 		/// the next iteration of the loop (relative to the current context).
 		ContextPtr nextIterationContext() const;
 
+		/// Returns the input plug and context that form the previous iteration of the loop
+		/// with respect to the `output` plug and the current context. Returns `{ nullptr, nullptr }`
+		/// if there is no such iteration.
+		std::pair<const ValuePlug *, ContextPtr> previousIteration( const ValuePlug *output ) const;
+
 		void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const override;
 
 	protected :

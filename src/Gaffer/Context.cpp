@@ -443,7 +443,7 @@ IECore::MurmurHash Context::hash() const
 
 bool Context::operator == ( const Context &other ) const
 {
-	return m_map == other.m_map;
+	return this == &other || m_map == other.m_map;
 }
 
 bool Context::operator != ( const Context &other ) const

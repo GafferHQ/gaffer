@@ -355,5 +355,25 @@ class LoopTest( GafferTest.TestCase ) :
 		loop["indexVariable"].setValue( "" )
 		self.assertIsNone( loop.nextIterationContext() )
 
+	def testPreviousIteration( self ) :
+
+		loop = self.intLoop()
+		loop["next"].setInput( loop["previous"] )
+		loop["iterations"].setValue( 10 )
+
+		iteration = loop.previousIteration( loop["out"] )
+		self.assertTrue( iteration[0].isSame( loop["next"] ) )
+		self.assertEqual( iteration[1]["loop:index"], 9 )
+
+		for i in range( 0, 9 ) :
+			with iteration[1] :
+				iteration = loop.previousIteration( loop["previous"] )
+				self.assertTrue( iteration[0].isSame( loop["next"] ) )
+				self.assertEqual( iteration[1]["loop:index"], 8 - i )
+
+		iteration = loop.previousIteration( loop["previous"] )
+		self.assertTrue( iteration[0].isSame( loop["in"] ) )
+		self.assertNotIn( "loop:index", iteration[1] )
+
 if __name__ == "__main__":
 	unittest.main()
