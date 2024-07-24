@@ -79,7 +79,7 @@ class CyclesShaderTest( GafferSceneTest.SceneTestCase ) :
 	def testLoadAllShaders( self ) :
 
 		shader = GafferCycles.CyclesShader()
-		for s in GafferCycles.shaders :
+		for s in GafferCycles.shaders.keys() :
 			shader.loadShader( s )
 
 	def testLoadEmission( self ) :

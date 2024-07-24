@@ -97,7 +97,7 @@ def __translateParamMetadata( nodeTypeName, socketName, value ) :
 	__metadata[paramPath]["label"] = label
 	__metadata[paramPath]["noduleLayout:label"] = label
 	# Linkable
-	linkable = bool( flags & ( 1 << 0 ) )
+	linkable = bool( flags.value & ( 1 << 0 ) )
 	__metadata[paramPath]["nodule:type"] = "GafferUI::StandardNodule" if linkable else ""
 
 	if "category" in value :
