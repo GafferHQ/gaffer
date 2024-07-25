@@ -14,7 +14,9 @@ Improvements
 Fixes
 -----
 
+- ImageReader : Fixed crash caused by invalid OpenEXR `multiView` attributes.
 - LightEditor, RenderPassEditor : Added missing icon representing use of the `CreateIfMissing` tweak mode in the history window.
+- Slider : Fixed bug where two undo steps were needed to get back to the original value when dragging.
 
 API
 ---
@@ -680,13 +682,20 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.16.x (relative to 1.3.16.6)
+1.3.16.x (relative to 1.3.16.7)
+========
+
+
+
+1.3.16.7 (relative to 1.3.16.6)
 ========
 
 Fixes
 -----
 
+- ImageReader : Fixed crash caused by invalid OpenEXR `multiView` attributes.
 - LightEditor, RenderPassEditor : Added missing icon representing use of the `CreateIfMissing` tweak mode in the history window.
+- Slider : Fixed bug where two undo steps were needed to get back to the original value when dragging.
 
 1.3.16.6 (relative to 1.3.16.5)
 ========
