@@ -429,6 +429,11 @@ class Slider( GafferUI.Widget ) :
 	def __dragBegin( self, widget, event ) :
 
 		if event.buttons == GafferUI.ButtonEvent.Buttons.Left and self.getSelectedIndex() is not None :
+			self.__setValueInternal(
+				self.getSelectedIndex(),
+				self.__eventValue( event ),
+				self.ValueChangedReason.DragBegin
+			)
 			return IECore.NullObject.defaultNullObject()
 
 		return None
@@ -450,7 +455,11 @@ class Slider( GafferUI.Widget ) :
 
 	def __dragEnd( self, widget, event ) :
 
-		self.__dragMove( widget, event )
+		self.__setValueInternal(
+			self.getSelectedIndex(),
+			self.__eventValue( event ),
+			self.ValueChangedReason.DragEnd
+		)
 
 	def __keyPress( self, widget, event ) :
 
