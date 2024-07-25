@@ -110,6 +110,11 @@ PathColumn::ButtonSignal &PathColumn::buttonDoubleClickSignal()
 	return m_buttonDoubleClickSignal;
 }
 
+PathColumn::ContextMenuSignal &PathColumn::contextMenuSignal()
+{
+	return m_contextMenuSignal;
+}
+
 //////////////////////////////////////////////////////////////////////////
 // StandardPathColumn
 //////////////////////////////////////////////////////////////////////////

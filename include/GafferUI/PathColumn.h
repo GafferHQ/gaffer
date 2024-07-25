@@ -50,6 +50,7 @@
 namespace GafferUI
 {
 
+class MenuDefinition;
 class PathListingWidget;
 
 /// Abstract class for extracting properties from a Path in a form
@@ -162,6 +163,9 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 		ButtonSignal &buttonReleaseSignal();
 		ButtonSignal &buttonDoubleClickSignal();
 
+		using ContextMenuSignal = Gaffer::Signals::Signal<void ( PathColumn &column, PathListingWidget &widget, MenuDefinition &menuDefinition ), Gaffer::Signals::CatchingCombiner<void>>;
+		ContextMenuSignal &contextMenuSignal();
+
 	private :
 
 		PathColumnSignal m_changedSignal;
@@ -169,6 +173,7 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 		ButtonSignal m_buttonPressSignal;
 		ButtonSignal m_buttonReleaseSignal;
 		ButtonSignal m_buttonDoubleClickSignal;
+		ContextMenuSignal m_contextMenuSignal;
 
 		SizeMode m_sizeMode;
 
@@ -271,6 +276,29 @@ class PathListingWidget
 		using Selection = std::variant<IECore::PathMatcher, std::vector<IECore::PathMatcher>>;
 		virtual void setSelection( const Selection &selection ) = 0;
 		virtual Selection getSelection() const = 0;
+
+};
+
+/// C++ interface for the `IECore.MenuDefinition` Python class. Provided for use
+/// in `PathColumn::contextMenuSignal()`, so that event handling may be
+/// implemented from C++ if desired.
+class MenuDefinition
+{
+
+	public :
+
+		struct MenuItem
+		{
+			using Command = std::function<void ()>;
+			Command command;
+			std::string description;
+			std::string icon;
+			std::string shortCut;
+			bool divider = false;
+			bool active = true;
+		};
+
+		virtual void append( const std::string &path, const MenuItem &item ) = 0;
 
 };
 

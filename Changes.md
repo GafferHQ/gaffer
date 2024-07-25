@@ -48,6 +48,7 @@ API
   - A `DeprecationWarning` is now emitted by `_plugConnections()`. Use `_blockedUpdateFromValues()` instead.
 - NodeGadget, ConnectionGadget : Added `updateFromContextTracker()` virtual methods.
 - Path : Added `inspectionContext()` virtual method.
+- PathColumn : Added `contextMenuSignal()`, allowing the creation of custom context menus.
 
 Breaking Changes
 ----------------

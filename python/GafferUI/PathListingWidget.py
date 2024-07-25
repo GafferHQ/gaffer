@@ -766,16 +766,15 @@ class PathListingWidget( GafferUI.Widget ) :
 
 	def __contextMenu( self, widget ) :
 
-		if not self.columnContextMenuSignal().numSlots() :
+		mousePosition = GafferUI.Widget.mousePosition( relativeTo = self )
+		column = self.columnAt( mousePosition )
+		if not column.contextMenuSignal().numSlots() and not self.columnContextMenuSignal().numSlots() :
 			# Allow legacy clients connected to `Widget.contextMenuSignal()` to
 			# do their own thing instead.
 			return False
 
 		# Select the path under the mouse, if it's not already selected.
 		# The user will expect to be operating on the thing under the mouse.
-
-		mousePosition = GafferUI.Widget.mousePosition( relativeTo = self )
-		column = self.columnAt( mousePosition )
 
 		path = self.pathAt( mousePosition )
 		if path is not None :
@@ -797,6 +796,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		# Use signals to build menu and display it.
 
 		menuDefinition = IECore.MenuDefinition()
+		column.contextMenuSignal()( column, self, menuDefinition )
 		self.columnContextMenuSignal()( column, self, menuDefinition )
 
 		if menuDefinition.size() :

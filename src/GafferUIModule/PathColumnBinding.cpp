@@ -47,6 +47,7 @@
 #include "IECorePython/RefCountedBinding.h"
 #include "IECorePython/ScopedGILLock.h"
 
+#include "boost/mpl/vector.hpp"
 #include "boost/python/suite/indexing/container_utils.hpp"
 
 using namespace boost::python;
@@ -142,6 +143,83 @@ class PathListingWidgetAccessor : public GafferUI::PathListingWidget
 
 		// The Python PathListingWidget object.
 		object m_widget;
+
+};
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// MenuDefinitionAccessor class
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+struct GILReleaseMenuCommand
+{
+
+	GILReleaseMenuCommand( MenuDefinition::MenuItem::Command command )
+		:	m_command( command )
+	{
+	}
+
+	void operator()()
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		m_command();
+	}
+
+	private :
+
+		MenuDefinition::MenuItem::Command m_command;
+
+};
+
+// Provides a C++ interface to the functionality implemented in the Python
+// MenuDefinition class.
+class MenuDefinitionAccessor : public GafferUI::MenuDefinition
+{
+
+	public :
+
+		MenuDefinitionAccessor( object menuDefinition )
+			:	m_menuDefinition( menuDefinition )
+		{
+		}
+
+		object menuDefinition()
+		{
+			return m_menuDefinition;
+		}
+
+		void append( const std::string &path, const MenuItem &item ) override
+		{
+			IECorePython::ScopedGILLock gilLock;
+
+			dict pythonItem;
+
+			if( item.command != nullptr )
+			{
+				pythonItem["command"] = make_function(
+					GILReleaseMenuCommand( item.command ),
+					boost::python::default_call_policies(),
+					boost::mpl::vector<void>()
+				);
+			}
+
+			pythonItem["description"] = item.description;
+			pythonItem["icon"] = item.icon;
+			pythonItem["shortCut"] = item.shortCut;
+			pythonItem["divider"] = item.divider;
+			pythonItem["active"] = item.active;
+
+			m_menuDefinition.attr( "append" )( path, pythonItem );
+		}
+
+	private :
+
+		// The Python MenuDefinition object.
+		object m_menuDefinition;
 
 };
 
@@ -330,6 +408,37 @@ struct ButtonSignalSlotCaller
 	}
 };
 
+struct ContextMenuSignalCaller
+{
+	static void call( PathColumn::ContextMenuSignal &s, PathColumn &column, object pathListingWidget, object menuDefinition )
+	{
+		PathListingWidgetAccessor pathListingWidgetAccessor( pathListingWidget );
+		MenuDefinitionAccessor menuDefinitionAccessor( menuDefinition );
+		IECorePython::ScopedGILRelease gilRelease;
+		s( column, pathListingWidgetAccessor, menuDefinitionAccessor );
+	}
+};
+
+struct ContextMenuSignalSlotCaller
+{
+	void operator()( boost::python::object slot, PathColumn &column, PathListingWidget &pathListingWidget, MenuDefinition &menuDefinition )
+	{
+		try
+		{
+			slot(
+				PathColumnPtr( &column ),
+				static_cast<PathListingWidgetAccessor &>( pathListingWidget ).widget(),
+				static_cast<MenuDefinitionAccessor &>( menuDefinition ).menuDefinition()
+
+			);
+		}
+		catch( const error_already_set & )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
+	}
+};
+
 template<typename T>
 const char *pathColumnProperty( const T &column )
 {
@@ -384,6 +493,7 @@ void GafferUIModule::bindPathColumn()
 
 		SignalClass<PathColumn::PathColumnSignal, DefaultSignalCaller<PathColumn::PathColumnSignal>, ChangedSignalSlotCaller>( "PathColumnSignal" );
 		SignalClass<PathColumn::ButtonSignal, ButtonSignalCaller, ButtonSignalSlotCaller>( "ButtonSignal" );
+		SignalClass<PathColumn::ContextMenuSignal, ContextMenuSignalCaller, ContextMenuSignalSlotCaller>( "ContextMenuSignal" );
 	}
 
 	pathColumnClass.def( init<PathColumn::SizeMode>( arg( "sizeMode" ) = PathColumn::SizeMode::Default ) )
@@ -393,6 +503,7 @@ void GafferUIModule::bindPathColumn()
 		.def( "buttonPressSignal", &PathColumn::buttonPressSignal, return_internal_reference<1>() )
 		.def( "buttonReleaseSignal", &PathColumn::buttonReleaseSignal, return_internal_reference<1>() )
 		.def( "buttonDoubleClickSignal", &PathColumn::buttonDoubleClickSignal, return_internal_reference<1>() )
+		.def( "contextMenuSignal", &PathColumn::contextMenuSignal, return_internal_reference<1>() )
 		.def( "getSizeMode", (PathColumn::SizeMode (PathColumn::*)() const )&PathColumn::getSizeMode )
 		.def( "setSizeMode", &PathColumn::setSizeMode, ( arg( "sizeMode" ) ) )
 	;
