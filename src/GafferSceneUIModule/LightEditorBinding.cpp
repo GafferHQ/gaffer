@@ -224,7 +224,7 @@ class InspectorColumn : public PathColumn
 			std::string toolTip;
 			if( inspectorResult->sourceType() == Inspector::Result::SourceType::Fallback )
 			{
-				toolTip = "Source : Fallback value";
+				toolTip = "Source : " + inspectorResult->fallbackDescription();
 				result.foreground = g_fallbackValueForegroundColor;
 			}
 			else if( auto source = inspectorResult->source() )
@@ -311,19 +311,6 @@ class MuteColumn : public InspectorColumn
 				else
 				{
 					result.icon = value->readable() ? m_muteFadedIconData : m_unMuteFadedIconData;
-
-					ScenePlug::ScenePath currentPath( scenePath->names() );
-					while( !currentPath.empty() )
-					{
-						pathScope.setPath( &currentPath );
-						auto a = scenePath->getScene()->attributesPlug()->getValue();
-						if( a->member<BoolData>( "light:mute" ) )
-						{
-							result.toolTip = new StringData( "Inherited from : " + ScenePlug::pathToString( currentPath ) );
-							break;
-						}
-						currentPath.pop_back();
-					}
 				}
 			}
 			if( !result.icon )
@@ -342,22 +329,6 @@ class MuteColumn : public InspectorColumn
 			}
 
 			result.value = nullptr;
-			/// \todo Remove this once AttributeInspector can provide a default value when
-			/// no attribute exists, then InspectorColumn would always provide the toggle tooltip.
-			if( auto toolTipData = runTimeCast<const StringData>( result.toolTip ) )
-			{
-				std::string toolTip = toolTipData->readable();
-				size_t size = toolTip.size();
-				if( size < 6 || toolTip.substr( size - 6 ) != "toggle" )
-				{
-					toolTip += "\n\nDouble-click to toggle";
-					result.toolTip = new StringData( toolTip );
-				}
-			}
-			else
-			{
-				result.toolTip = new StringData( "Double-click to toggle" );
-			}
 
 			return result;
 		}
@@ -442,20 +413,6 @@ class SetMembershipColumn : public InspectorColumn
 					else
 					{
 						result.icon = m_setMemberIconFadedData;
-
-						ConstPathMatcherDataPtr setMembersData = scenePath->getScene()->set( m_setName );
-						const PathMatcher &setMembers = setMembersData->readable();
-
-						ScenePlug::ScenePath currentPath( scenePath->names() );
-						while( !currentPath.empty() )
-						{
-							if( setMembers.match( currentPath ) & PathMatcher::Result::ExactMatch )
-							{
-								result.toolTip = new StringData( "Inherited from : " + ScenePlug::pathToString( currentPath ) + "\n\nDouble-click to toggle" );
-								break;
-							}
-							currentPath.pop_back();
-						}
 					}
 				}
 			}

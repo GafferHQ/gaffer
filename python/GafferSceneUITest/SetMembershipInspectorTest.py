@@ -117,15 +117,33 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 
 		plane = GafferScene.Plane()
 		group = GafferScene.Group()
-		group["sets"].setValue( "planeSet" )
 		group["in"][0].setInput( plane["out"] )
 
-		inspection = self.__inspect( group["out"], "/group/plane", "planeSet" )
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/" ] ) )
+
+		setNode = GafferScene.Set()
+		setNode["in"].setInput( group["out"] )
+		setNode["name"].setValue( "planeSet" )
+		setNode["filter"].setInput( pathFilter["out"] )
+
+		inspection = self.__inspect( setNode["out"], "/group/plane", "planeSet" )
 		self.assertEqual( inspection.value().value, True )
 		self.assertEqual(
 			inspection.sourceType(),
 			GafferSceneUI.Private.Inspector.Result.SourceType.Fallback
 		)
+		self.assertEqual( inspection.fallbackDescription(), "Inherited from /" )
+
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/", "/group" ] ) )
+
+		inspection = self.__inspect( setNode["out"], "/group/plane", "planeSet" )
+		self.assertEqual( inspection.value().value, True )
+		self.assertEqual(
+			inspection.sourceType(),
+			GafferSceneUI.Private.Inspector.Result.SourceType.Fallback
+		)
+		self.assertEqual( inspection.fallbackDescription(), "Inherited from /group" )
 
 	def testSourceAndEdits( self ) :
 

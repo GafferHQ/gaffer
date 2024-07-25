@@ -69,6 +69,9 @@ using namespace GafferSceneUI::Private;
 namespace
 {
 
+const std::string g_attributePrefix( "attribute:" );
+const InternedString g_defaultValue( "defaultValue" );
+
 // This uses the same strategy that ValuePlug uses for the hash cache,
 // using `plug->dirtyCount()` to invalidate previous cache entries when
 // a plug is dirtied.
@@ -245,9 +248,44 @@ IECore::ConstObjectPtr AttributeInspector::value( const GafferScene::SceneAlgo::
 	return nullptr;
 }
 
-IECore::ConstObjectPtr AttributeInspector::fallbackValue( const GafferScene::SceneAlgo::History *history ) const
+IECore::ConstObjectPtr AttributeInspector::fallbackValue( const GafferScene::SceneAlgo::History *history, std::string &description ) const
 {
-	return history->scene->fullAttributes( history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) )->member( m_attribute );
+	ScenePlug::PathScope pathScope( Context::current() );
+	ScenePlug::ScenePath currentPath( history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) );
+
+	// No need to check inheritance for immediate children of `/` as we
+	// don't allow attributes to be created at the root of the scene.
+	if( currentPath.size() > 1 )
+	{
+		// We start the inheritance search from the parent in order to return the value that
+		// would be inherited if the inspected attribute did not exist at the original location.
+		currentPath.pop_back();
+
+		while( !currentPath.empty() )
+		{
+			pathScope.setPath( &currentPath );
+			auto a = history->scene->attributesPlug()->getValue();
+			if( const auto attribute = a->member( m_attribute ) )
+			{
+				description = "Inherited from " + ScenePlug::pathToString( currentPath );
+				return attribute;
+			}
+			currentPath.pop_back();
+		}
+	}
+
+	if( const auto globalAttribute = history->scene->globals()->member<Object>( g_attributePrefix + m_attribute.string() ) )
+	{
+		description = "Global attribute";
+		return globalAttribute;
+	}
+	else if( const auto defaultValue = Gaffer::Metadata::value( g_attributePrefix + m_attribute.string(), g_defaultValue ) )
+	{
+		description = "Default value";
+		return defaultValue;
+	}
+
+	return nullptr;
 }
 
 Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const
@@ -369,7 +407,7 @@ Inspector::EditFunctionOrFailure AttributeInspector::editFunction( Gaffer::EditS
 
 void AttributeInspector::plugDirtied( Gaffer::Plug *plug )
 {
-	if( plug == m_scene->attributesPlug() )
+	if( plug == m_scene->attributesPlug() || plug == m_scene->globalsPlug() )
 	{
 		dirtiedSignal()( this );
 	}

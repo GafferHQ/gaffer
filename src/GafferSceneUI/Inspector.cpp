@@ -192,9 +192,10 @@ Inspector::ResultPtr Inspector::inspect() const
 
 	ConstObjectPtr value = this->value( history.get() );
 	bool fallbackValue = false;
+	std::string fallbackDescription;
 	if( !value )
 	{
-		value = this->fallbackValue( history.get() );
+		value = this->fallbackValue( history.get(), fallbackDescription );
 		fallbackValue = (bool)value;
 	}
 
@@ -227,6 +228,7 @@ Inspector::ResultPtr Inspector::inspect() const
 	if( fallbackValue )
 	{
 		result->m_sourceType = Result::SourceType::Fallback;
+		result->m_fallbackDescription = fallbackDescription.empty() ? "Fallback value" : fallbackDescription;
 	}
 
 	return result;
@@ -366,7 +368,7 @@ Inspector::EditFunctionOrFailure Inspector::editFunction( Gaffer::EditScope *edi
 	return "Editing not supported";
 }
 
-IECore::ConstObjectPtr Inspector::fallbackValue( const GafferScene::SceneAlgo::History *history ) const
+IECore::ConstObjectPtr Inspector::fallbackValue( const GafferScene::SceneAlgo::History *history, std::string &description ) const
 {
 	return nullptr;
 }
@@ -478,6 +480,7 @@ ConstRunTimeTypedPtr Inspector::HistoryPath::property( const InternedString &nam
 		PlugMap::iterator it = m_plugMap.find( names()[0].string() );
 
 		std::string editWarning;
+		std::string fallbackDescription;
 
 		Context::Scope currentScope( it->history->context.get() );
 
@@ -491,7 +494,7 @@ ConstRunTimeTypedPtr Inspector::HistoryPath::property( const InternedString &nam
 			}
 			else if( name == g_fallbackValuePropertyName )
 			{
-				return runTimeCast<const IECore::Data>( m_inspector->fallbackValue( it->history.get() ) );
+				return runTimeCast<const IECore::Data>( m_inspector->fallbackValue( it->history.get(), fallbackDescription ) );
 			}
 			else if( name == g_operationPropertyName )
 			{
@@ -641,6 +644,11 @@ Gaffer::EditScope *Inspector::Result::editScope() const
 Inspector::Result::SourceType Inspector::Result::sourceType() const
 {
 	return m_sourceType;
+}
+
+const std::string &Inspector::Result::fallbackDescription() const
+{
+	return m_fallbackDescription;
 }
 
 bool Inspector::Result::editable() const

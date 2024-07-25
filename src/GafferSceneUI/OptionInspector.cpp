@@ -215,10 +215,11 @@ IECore::ConstObjectPtr OptionInspector::value( const GafferScene::SceneAlgo::His
 	return nullptr;
 }
 
-IECore::ConstObjectPtr OptionInspector::fallbackValue( const GafferScene::SceneAlgo::History *history ) const
+IECore::ConstObjectPtr OptionInspector::fallbackValue( const GafferScene::SceneAlgo::History *history, std::string &description ) const
 {
 	if( const auto defaultValue = Gaffer::Metadata::value( g_optionPrefix + m_option.string(), g_defaultValue ) )
 	{
+		description = "Default value";
 		return defaultValue;
 	}
 

@@ -63,7 +63,10 @@ Breaking Changes
 Improvements
 ------------
 
-- LightEditor : Values of inherited attributes are now displayed in the Light Editor. These are presented as dimmed "fallback" values.
+- LightEditor :
+  - Values of inherited attributes are now displayed in the Light Editor. These are presented as dimmed "fallback" values. Values are inherited from an ancestor of the inspected location or from attributes created in the scene globals.
+  - Default values are now displayed as dimmed "fallback" values for attributes that don't exist in the scene.
+  - When a fallback value is displayed, the cell's tooltip includes a description of the source of the value.
 - LightEditor, RenderPassEditor : Fallback values shown in the history window are displayed with the same dimmed text colour used for fallback values in editor columns.
 - EditScope : Filtered the EditScope menu to show only nodes that are active in the relevant context.
 
@@ -72,6 +75,7 @@ Fixes
 
 - ImageReader : Fixed crash caused by invalid OpenEXR `multiView` attributes.
 - LightEditor, RenderPassEditor : Added missing icon representing use of the `CreateIfMissing` tweak mode in the history window.
+- Slider : Fixed bug where two undo steps were needed to get back to the original value when dragging.
 
 API
 ---
@@ -734,7 +738,12 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.16.x (relative to 1.3.16.6)
+1.3.16.x (relative to 1.3.16.7)
+========
+
+
+
+1.3.16.7 (relative to 1.3.16.6)
 ========
 
 Fixes
@@ -742,6 +751,7 @@ Fixes
 
 - ImageReader : Fixed crash caused by invalid OpenEXR `multiView` attributes.
 - LightEditor, RenderPassEditor : Added missing icon representing use of the `CreateIfMissing` tweak mode in the history window.
+- Slider : Fixed bug where two undo steps were needed to get back to the original value when dragging.
 
 1.3.16.6 (relative to 1.3.16.5)
 ========

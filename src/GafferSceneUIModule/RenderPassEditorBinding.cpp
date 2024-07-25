@@ -619,7 +619,7 @@ class OptionInspectorColumn : public PathColumn
 			std::string toolTip;
 			if( inspectorResult->sourceType() == Inspector::Result::SourceType::Fallback )
 			{
-				toolTip = "Source : Default value";
+				toolTip = "Source : " + inspectorResult->fallbackDescription();
 				result.foreground = g_fallbackValueForegroundColor;
 			}
 			else if( const auto source = inspectorResult->source() )
