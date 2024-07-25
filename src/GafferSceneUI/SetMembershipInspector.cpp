@@ -216,14 +216,35 @@ IECore::ConstObjectPtr SetMembershipInspector::value( const GafferScene::SceneAl
 	return matchResult & IECore::PathMatcher::Result::ExactMatch ? new BoolData( true ) : nullptr;
 }
 
-IECore::ConstObjectPtr SetMembershipInspector::fallbackValue( const GafferScene::SceneAlgo::History *history ) const
+IECore::ConstObjectPtr SetMembershipInspector::fallbackValue( const GafferScene::SceneAlgo::History *history, std::string &description ) const
 {
 	const auto &path = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
 	ConstPathMatcherDataPtr setMembers = history->scene->set( m_setName );
 
 	auto matchResult = (PathMatcher::Result)setMembers->readable().match( path );
 
-	return new BoolData( matchResult & IECore::PathMatcher::Result::AncestorMatch );
+	const bool ancestorMatch = matchResult & IECore::PathMatcher::Result::AncestorMatch;
+	if( ancestorMatch && path.size() )
+	{
+		ScenePlug::ScenePath currentPath = path;
+		do
+		{
+			// We start the inheritance search from the parent in order to return the value that
+			// would be inherited if the original location wasn't a member of the inspected set.
+			currentPath.pop_back();
+			if( setMembers->readable().match( currentPath ) & PathMatcher::Result::ExactMatch )
+			{
+				description = "Inherited from " + ScenePlug::pathToString( currentPath );
+				break;
+			}
+		} while( !currentPath.empty() );
+	}
+	else
+	{
+		description = "Default value";
+	}
+
+	return new BoolData( ancestorMatch );
 }
 
 Gaffer::ValuePlugPtr SetMembershipInspector::source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const

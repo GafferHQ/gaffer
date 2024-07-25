@@ -81,7 +81,7 @@ class GAFFERSCENEUI_API SetMembershipInspector : public Inspector
 		/// those are found.
 		Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const override;
 		EditFunctionOrFailure editFunction( Gaffer::EditScope *scope, const GafferScene::SceneAlgo::History *history ) const override;
-		IECore::ConstObjectPtr fallbackValue( const GafferScene::SceneAlgo::History *history ) const override;
+		IECore::ConstObjectPtr fallbackValue( const GafferScene::SceneAlgo::History *history, std::string &description ) const override;
 
 	private :
 
