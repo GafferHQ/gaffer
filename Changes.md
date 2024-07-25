@@ -12,6 +12,10 @@ Improvements
 - Premultiply, Unpremultiply :
   - Added `ignoreMissingAlpha` plug.
   - Optimised the pass-through of the alpha channel.
+- GraphGadget :
+  - Improved highlighting of active nodes, with more accurate tracking of Loop node iterations.
+  - Annotation `{plug}` substitutions are now evaluated in a context determined relative to the focus node.
+  - The strike-through for disabled nodes is now evaluated in a context determined relative to the focus node.
 
 Fixes
 -----
@@ -21,6 +25,7 @@ Fixes
 - Scene Editors : Fixed update when ScenePlugs are added to or removed from the node being viewed.
 - PrimitiveInspector : Fixed failure to update when the location being viewed ceases to exist, or is recreated.
 - Shuffle, ShuffleAttributes, ShufflePrimitiveVariables : Fixed some special cases where shuffling a source to itself would fail to have the expected effect.
+- GraphEditor : Fixed dimming of labels for BoxIn and BoxOut nodes.
 
 API
 ---
@@ -32,6 +37,7 @@ API
 - PlugValueWidget :
   - A `DeprecationWarning` is now emitted for any subclasses still implementing the legacy `_updateFromPlug()` or `_updateFromPlugs()` methods. Implement `_updateFromValues()`, `_updateFromMetadata()` and `_updateFromEditable()` instead.
   - A `DeprecationWarning` is now emitted by `_plugConnections()`. Use `_blockedUpdateFromValues()` instead.
+- NodeGadget, ConnectionGadget : Added `updateFromContextTracker()` virtual methods.
 
 Breaking Changes
 ----------------
@@ -48,6 +54,8 @@ Breaking Changes
 - Editor, NodeToolbar, PlugLayout, PlugValueWidget :
   - Removed `setContext()` methods.
   - Deprecated `getContext()` methods. Use `context()` instead.
+- Loop : Removed `nextIterationContext()` method.
+- NodeGadget, ConnectionGadget : Removed `activeForFocusNode()` virtual methods. Override `updateFromContextTracker()` instead.
 
 1.4.x.x (relative to 1.4.9.0)
 =======

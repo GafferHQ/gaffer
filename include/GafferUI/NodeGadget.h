@@ -46,6 +46,7 @@
 namespace GafferUI
 {
 
+IE_CORE_FORWARDDECLARE( ContextTracker )
 IE_CORE_FORWARDDECLARE( Nodule )
 IE_CORE_FORWARDDECLARE( NodeGadget )
 IE_CORE_FORWARDDECLARE( ConnectionCreator )
@@ -113,8 +114,11 @@ class GAFFERUI_API NodeGadget : public Gadget
 			static NodeGadgetPtr creator( Gaffer::NodePtr node ) { return new T( node ); };
 		};
 
-		virtual void activeForFocusNode( bool active );
-
+		/// May be overridden to update the UI state to reflect changes in the ContextTracker.
+		/// Calls to this are made by the parent GraphGadget, to avoid every individual
+		/// NodeGadget needing to connect to the ContextTracker signals itself.
+		virtual void updateFromContextTracker( const ContextTracker *contextTracker );
+		/// Friendship to allow calling `updateFromContextTracker()`.
 		friend class GraphGadget;
 
 		bool m_active;

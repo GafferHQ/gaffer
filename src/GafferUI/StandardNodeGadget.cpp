@@ -55,6 +55,7 @@
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/ParallelAlgo.h"
+#include "Gaffer/PlugAlgo.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/TypedObjectPlug.h"
@@ -522,7 +523,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 // can optionally use it without needing to inherit from StandardNodeGadget
 StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, bool auxiliary  )
 	:	NodeGadget( node ),
-		m_nodeEnabled( true ),
+		m_strikeThroughVisible( false ),
 		m_labelsVisibleOnHover( true ),
 		m_dragDestination( nullptr ),
 		m_userColor( 0 ),
@@ -659,7 +660,6 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, bool auxiliary  )
 	updateUserColor();
 	updateMinWidth();
 	updatePadding();
-	updateNodeEnabled();
 	updateIcon();
 	updateShape();
 	updateFocusGadgetVisibility();
@@ -715,7 +715,7 @@ void StandardNodeGadget::renderLayer( Layer layer, const Style *style, RenderRea
 		{
 			const Box3f b = bound();
 
-			if( !m_nodeEnabled && !isSelectionRender( reason ) )
+			if( m_strikeThroughVisible && !isSelectionRender( reason ) )
 			{
 				/// \todo Replace renderLine() with a specific method (renderNodeStrikeThrough?) on the Style class
 				/// so that styles can do customised drawing based on knowledge of what is being drawn.
@@ -772,18 +772,34 @@ void StandardNodeGadget::setHighlighted( bool highlighted )
 	updateTextDimming();
 }
 
-void StandardNodeGadget::activeForFocusNode( bool active )
+void StandardNodeGadget::updateFromContextTracker( const ContextTracker *contextTracker )
 {
-	NodeGadget::activeForFocusNode( active );
+	NodeGadget::updateFromContextTracker( contextTracker );
 	updateTextDimming();
+	if( contextTracker->isTracked( node() ) )
+	{
+		if( auto dependencyNode = IECore::runTimeCast<DependencyNode>( node() ) )
+		{
+			m_nodeEnabledInContextTracker = contextTracker->isEnabled( dependencyNode );
+		}
+		else
+		{
+			m_nodeEnabledInContextTracker = true;
+		}
+		/// \todo Should we clear ErrorGadget when the context changes?
+	}
+	else
+	{
+		m_nodeEnabledInContextTracker = std::nullopt;
+	}
+	updateStrikeThroughVisibility();
 }
 
 void StandardNodeGadget::updateTextDimming()
 {
-	NameGadget *name = IECore::runTimeCast<NameGadget>( getContents() );
-	if( name )
+	if( auto text = IECore::runTimeCast<TextGadget>( getContents() ) )
 	{
-		name->setDimmed( !( m_active || getHighlighted() ) );
+		text->setDimmed( !( m_active || getHighlighted() ) );
 	}
 }
 
@@ -1035,7 +1051,7 @@ bool StandardNodeGadget::getLabelsVisibleOnHover() const
 
 void StandardNodeGadget::plugDirtied( const Gaffer::Plug *plug )
 {
-	updateNodeEnabled( plug );
+	updateStrikeThroughVisibility( plug );
 	if( ErrorGadget *e = errorGadget( /* createIfMissing = */ false ) )
 	{
 		e->removeError( plug );
@@ -1260,44 +1276,40 @@ void StandardNodeGadget::updatePadding()
 	paddingRow()->setPadding( Box3f( V3f( -padding ), V3f( padding ) ) );
 }
 
-void StandardNodeGadget::updateNodeEnabled( const Gaffer::Plug *dirtiedPlug )
+void StandardNodeGadget::updateStrikeThroughVisibility( const Gaffer::Plug *dirtiedPlug )
 {
-	DependencyNode *dependencyNode = IECore::runTimeCast<DependencyNode>( node() );
-	if( !dependencyNode )
+	bool strikeThroughVisible = false;
+	if( m_nodeEnabledInContextTracker )
 	{
-		return;
+		strikeThroughVisible = !*m_nodeEnabledInContextTracker;
+	}
+	else
+	{
+		if( auto dependencyNode = IECore::runTimeCast<DependencyNode>( node() ) )
+		{
+			strikeThroughVisible = false;
+			if( auto enabledPlug = dependencyNode->enabledPlug() )
+			{
+				if( dirtiedPlug && dirtiedPlug != enabledPlug )
+				{
+					return;
+				}
+				// Only evaluate `enabledPlug` if it won't trigger a compute.
+				// We don't want to hang the UI waiting, and we don't really
+				// know what context to perform the compute in anyway.
+				if( !PlugAlgo::dependsOnCompute( enabledPlug ) )
+				{
+					strikeThroughVisible = !enabledPlug->getValue();
+				}
+			}
+		}
 	}
 
-	const Gaffer::BoolPlug *enabledPlug = dependencyNode->enabledPlug();
-	if( !enabledPlug )
+	if( strikeThroughVisible != m_strikeThroughVisible )
 	{
-		return;
+		m_strikeThroughVisible = strikeThroughVisible;
+		dirty( DirtyType::Render );
 	}
-
-	if( dirtiedPlug && dirtiedPlug != enabledPlug )
-	{
-		return;
-	}
-
-	const ValuePlug *source = enabledPlug->source<ValuePlug>();
-	bool enabled = true;
-	if( source->direction() != Plug::Out || !IECore::runTimeCast<const ComputeNode>( source->node() ) )
-	{
-		// Only evaluate `enabledPlug` if it won't trigger a compute.
-		// We don't want to hang the UI waiting, and we don't really
-		// know what context to perform the compute in anyway.
-		/// \todo We could consider doing this in the background, using
-		/// an upstream traversal from the focus node to determine context.
-		enabled = enabledPlug->getValue();
-	}
-
-	if( enabled == m_nodeEnabled )
-	{
-		return;
-	}
-
-	m_nodeEnabled = enabled;
-	dirty( DirtyType::Render );
 }
 
 void StandardNodeGadget::updateIcon()

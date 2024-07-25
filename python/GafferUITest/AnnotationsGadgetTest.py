@@ -305,6 +305,44 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 
 			callHandler.assertDone()
 
+	def testContextTracking( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["node"] = GafferTest.FrameNode()
+		Gaffer.MetadataAlgo.addAnnotation( script["node"], "user", Gaffer.MetadataAlgo.Annotation( "{output}" ) )
+
+		script["timeWarp"] = Gaffer.TimeWarp()
+		script["timeWarp"].setup( script["node"]["output"] )
+		script["timeWarp"]["in"].setInput( script["node"]["output"] )
+
+		script.setFocus( script["timeWarp"] )
+
+		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as callHandler :
+
+			graphGadget = GafferUI.GraphGadget( script )
+			gadget = graphGadget["__annotations"]
+
+			# Value must be computed in background, so initially we expect a placeholder
+			self.assertEqual( gadget.annotationText( script["node"] ), "---" )
+
+			# But if we wait for the background update we should get some updated text.
+			callHandler.assertCalled()
+			self.assertEqual( gadget.annotationText( script["node"] ), "1" )
+
+			# Same applies when the TimeWarp is changed. First we wait for the
+			# ContextTracker to update, and then we get the placeholder text
+			# when the annotation update starts.
+			script["timeWarp"]["offset"].setValue( 10 )
+			self.waitForIdle()
+			callHandler.assertCalled()
+			self.assertEqual( gadget.annotationText( script["node"] ), "---" )
+
+			# Then we get the real value when the computation is done.
+			callHandler.assertCalled()
+			self.assertEqual( gadget.annotationText( script["node"] ), "11" )
+
+			callHandler.assertDone()
+
 	def testSubstitutedTextRenderRequests( self ) :
 
 		script = Gaffer.ScriptNode()
