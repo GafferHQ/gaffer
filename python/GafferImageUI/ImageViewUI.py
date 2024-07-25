@@ -596,11 +596,11 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 			#
 			# - This widget being hidden.
 			# - A graph edit that will affect the image and will have
-			#   triggered a call to _updateFromPlug().
-			# - A graph edit that won't trigger a call to _updateFromPlug().
+			#   triggered a call to `__plugDirtied()`.
+			# - A graph edit that won't trigger a call to `__plugDirtied()`.
 			#
 			# LazyMethod takes care of all this for us. If we're hidden,
-			# it waits till we're visible. If `updateFromPlug()` has already
+			# it waits till we're visible. If `__plugDirtied()` has already
 			# called `__updateLazily()`, our call will just replace the
 			# pending call.
 			self.__updateLazily()

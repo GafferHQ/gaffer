@@ -36,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import warnings
 import weakref
 
 import IECore
@@ -331,36 +332,40 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		script = Gaffer.ScriptNode()
 		script["add"] = GafferTest.AddNode()
 
-		# Should do one update during construction.
-		widget = self.LegacyUpdateCountPlugValueWidget( script["add"]["op1"] )
-		self.assertEqual( widget.updateCount, 1 )
-		self.assertTrue( widget.updateContexts[0].isSame( script.context() ) )
+		with warnings.catch_warnings() :
 
-		# And shouldn't update when the context changes
-		# because the value is static.
-		script.context().setFrame( 2 )
-		self.assertEqual( widget.updateCount, 1 )
+			warnings.simplefilter( "ignore", DeprecationWarning )
 
-		# Changing the plug should cause an update.
-		widget.setPlug( script["add"]["op2"] )
-		self.assertEqual( widget.updateCount, 2 )
-		self.assertTrue( widget.updateContexts[1].isSame( script.context() ) )
+			# Should do one update during construction.
+			widget = self.LegacyUpdateCountPlugValueWidget( script["add"]["op1"] )
+			self.assertEqual( widget.updateCount, 1 )
+			self.assertTrue( widget.updateContexts[0].isSame( script.context() ) )
 
-		# But the value is still static, so changing the
-		# context should have no effect.
-		script.context().setFrame( 3 )
-		self.assertEqual( widget.updateCount, 2 )
+			# And shouldn't update when the context changes
+			# because the value is static.
+			script.context().setFrame( 2 )
+			self.assertEqual( widget.updateCount, 1 )
 
-		# Changing the plug again should cause an update again.
-		widget.setPlug( script["add"]["sum"] )
-		self.assertEqual( widget.updateCount, 3 )
-		self.assertTrue( widget.updateContexts[2].isSame( script.context() ) )
+			# Changing the plug should cause an update.
+			widget.setPlug( script["add"]["op2"] )
+			self.assertEqual( widget.updateCount, 2 )
+			self.assertTrue( widget.updateContexts[1].isSame( script.context() ) )
 
-		# And now changing the context does cause an update, because
-		# the plug's value is computed.
-		script.context().setFrame( 4 )
-		self.assertEqual( widget.updateCount, 4 )
-		self.assertTrue( widget.updateContexts[3].isSame( script.context() ) )
+			# But the value is still static, so changing the
+			# context should have no effect.
+			script.context().setFrame( 3 )
+			self.assertEqual( widget.updateCount, 2 )
+
+			# Changing the plug again should cause an update again.
+			widget.setPlug( script["add"]["sum"] )
+			self.assertEqual( widget.updateCount, 3 )
+			self.assertTrue( widget.updateContexts[2].isSame( script.context() ) )
+
+			# And now changing the context does cause an update, because
+			# the plug's value is computed.
+			script.context().setFrame( 4 )
+			self.assertEqual( widget.updateCount, 4 )
+			self.assertTrue( widget.updateContexts[3].isSame( script.context() ) )
 
 	def tearDown( self ) :
 
