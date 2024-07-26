@@ -38,6 +38,7 @@ API
   - A `DeprecationWarning` is now emitted for any subclasses still implementing the legacy `_updateFromPlug()` or `_updateFromPlugs()` methods. Implement `_updateFromValues()`, `_updateFromMetadata()` and `_updateFromEditable()` instead.
   - A `DeprecationWarning` is now emitted by `_plugConnections()`. Use `_blockedUpdateFromValues()` instead.
 - NodeGadget, ConnectionGadget : Added `updateFromContextTracker()` virtual methods.
+- Path : Added `inspectionContext()` virtual method.
 
 Breaking Changes
 ----------------
