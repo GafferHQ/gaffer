@@ -346,6 +346,24 @@ class RenderPassPath : public Gaffer::Path
 			return m_scene.get();
 		}
 
+		Gaffer::ContextPtr inspectionContext( const IECore::Canceller *canceller ) const override
+		{
+			const auto renderPassName = runTimeCast<const IECore::StringData>( property( g_renderPassNamePropertyName, canceller ) );
+			if( !renderPassName )
+			{
+				return nullptr;
+			}
+
+			Context::EditableScope scope( getContext() );
+			scope.set( g_renderPassContextName, &( renderPassName->readable() ) );
+			if( canceller )
+			{
+				scope.setCanceller( canceller );
+			}
+
+			return new Context( *scope.context() );
+		}
+
 	protected :
 
 		void doChildren( std::vector<PathPtr> &children, const IECore::Canceller *canceller ) const override
