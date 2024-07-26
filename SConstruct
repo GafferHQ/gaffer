@@ -972,7 +972,7 @@ if env["ARNOLD_ROOT"] :
 			shell = True
 		)
 
-		nodeDefRegex = re.compile( r"\s*([a-zA-Z0-9_]+)\s+(driver|color_manager|driver|filter|light|operator|options|override|shader|shape)" )
+		nodeDefRegex = re.compile( r"\s*([a-zA-Z0-9_]+)\s+(driver|color_manager|driver|filter|imager|light|operator|options|override|shader|shape)" )
 		nodes = set()
 		for line in kickOutput.split( "\n" ) :
 			m = nodeDefRegex.match( line )

@@ -6,6 +6,11 @@ Improvements
 
 - SetExpressions : Set Expressions containing only whitespace characters are now treated as empty rather than producing an error.
 
+Fixes
+-----
+
+- Arnold : Fixed bug preventing UI metadata for Imagers from being loaded for Arnold 7.3.
+
 1.4.10.0 (relative to 1.4.9.0)
 ========
 
