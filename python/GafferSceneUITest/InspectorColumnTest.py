@@ -58,7 +58,7 @@ class InspectorColumnTest( GafferUITest.TestCase ) :
 		c = GafferSceneUI.Private.InspectorColumn( inspector, "Fancy ( Label )", "" )
 		self.assertEqual( c.inspector(), inspector )
 		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Default )
-		self.assertEqual( c.headerData().value, "Fancy (  Label )" )
+		self.assertEqual( c.headerData().value, "Fancy ( Label )" )
 		self.assertEqual( c.headerData().toolTip, "" )
 
 		c = GafferSceneUI.Private.InspectorColumn( inspector )

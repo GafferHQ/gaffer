@@ -151,6 +151,13 @@ void InspectorColumn::inspectorDirtied()
 
 IECore::ConstStringDataPtr InspectorColumn::headerValue( const std::string &columnName )
 {
+	if( columnName.find( ' ' ) != std::string::npos )
+	{
+		// Names already containing spaces are considered
+		// to be already formatted and are left as-is.
+		return new StringData( columnName );
+	}
+
 	std::string name = columnName;
 	// Convert from snake case and/or camel case to UI case.
 	if( name.find( '_' ) != std::string::npos )
