@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
+//  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,37 +34,53 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#pragma once
 
-#include "ContextAlgoBinding.h"
-#include "HierarchyViewBinding.h"
-#include "InspectorBinding.h"
-#include "SceneGadgetBinding.h"
-#include "LightEditorBinding.h"
-#include "ToolBinding.h"
-#include "ViewBinding.h"
-#include "VisualiserBinding.h"
-#include "QueryBinding.h"
-#include "SetEditorBinding.h"
-#include "RenderPassEditorBinding.h"
-#include "InspectorColumnBinding.h"
+#include "GafferSceneUI/Export.h"
+#include "GafferSceneUI/Private/Inspector.h"
 
-using namespace GafferSceneUIModule;
+#include "GafferUI/PathColumn.h"
 
-BOOST_PYTHON_MODULE( _GafferSceneUI )
+#include "Gaffer/Path.h"
+
+using namespace IECore;
+
+namespace GafferSceneUI
 {
 
-	bindViews();
-	bindTools();
-	bindVisualisers();
-	bindHierarchyView();
-	bindSceneGadget();
-	bindContextAlgo();
-	bindQueries();
-	bindInspector();
-	bindInspectorColumn();
-	bindLightEditor();
-	bindSetEditor();
-	bindRenderPassEditor();
+namespace Private
+{
 
-}
+/// Column type which makes use of an Inspector.
+class GAFFERSCENEUI_API InspectorColumn : public GafferUI::PathColumn
+{
+
+	public :
+
+		IE_CORE_DECLAREMEMBERPTR( InspectorColumn )
+
+		InspectorColumn( GafferSceneUI::Private::InspectorPtr inspector, const std::string &label, const std::string &toolTip = "", PathColumn::SizeMode sizeMode = Default );
+		InspectorColumn( GafferSceneUI::Private::InspectorPtr inspector, const CellData &headerData, PathColumn::SizeMode sizeMode = Default );
+
+		/// Returns the inspector used by this column.
+		GafferSceneUI::Private::Inspector *inspector() const;
+
+		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override;
+		CellData headerData( const IECore::Canceller *canceller ) const override;
+
+	private :
+
+		void inspectorDirtied();
+
+		static IECore::ConstStringDataPtr headerValue( const std::string &columnName );
+
+		const Private::InspectorPtr m_inspector;
+		const CellData m_headerData;
+
+};
+
+IE_CORE_DECLAREPTR( InspectorColumn )
+
+} // namespace Private
+
+} // namespace GafferSceneUI
