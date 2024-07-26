@@ -83,6 +83,8 @@ class GAFFERSCENE_API ScenePath : public Gaffer::Path
 
 		const Gaffer::Plug *cancellationSubject() const override;
 
+		Gaffer::ContextPtr inspectionContext( const IECore::Canceller *canceller = nullptr ) const override;
+
 		static Gaffer::PathFilterPtr createStandardFilter( const std::vector<std::string> &setNames = std::vector<std::string>(), const std::string &setsLabel = "" );
 
 	protected :
