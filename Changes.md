@@ -16,6 +16,9 @@ Improvements
   - Improved highlighting of active nodes, with more accurate tracking of Loop node iterations.
   - Annotation `{plug}` substitutions are now evaluated in a context determined relative to the focus node.
   - The strike-through for disabled nodes is now evaluated in a context determined relative to the focus node.
+- LightEditor :
+  - Improved formatting of column headers containing whitespace.
+  - The "Double-click to toggle" tooltip is no longer displayed while hovering over non-editable cells, and a "Double-click to edit" tooltip is now displayed while hovering over other non-toggleable but editable cells.
 
 Fixes
 -----

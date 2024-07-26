@@ -154,7 +154,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		GafferSceneUI.LightEditor.registerColumn(
 			rendererKey,
 			".".join( x for x in [ parameter.shader, parameter.name ] if x ),
-			lambda scene, editScope : _GafferSceneUI._LightEditorInspectorColumn(
+			lambda scene, editScope : GafferSceneUI.Private.InspectorColumn(
 				GafferSceneUI.Private.ParameterInspector( scene, editScope, rendererKey, parameter ),
 				columnName if columnName is not None else ""
 			),
@@ -175,7 +175,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		GafferSceneUI.LightEditor.registerColumn(
 			rendererKey,
 			".".join( x for x in [ parameter.shader, parameter.name ] if x ),
-			lambda scene, editScope : _GafferSceneUI._LightEditorInspectorColumn(
+			lambda scene, editScope : GafferSceneUI.Private.InspectorColumn(
 				GafferSceneUI.Private.ParameterInspector( scene, editScope, shaderAttribute, parameter ),
 				columnName if columnName is not None else ""
 			),
@@ -189,7 +189,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		GafferSceneUI.LightEditor.registerColumn(
 			rendererKey,
 			attributeName,
-			lambda scene, editScope : _GafferSceneUI._LightEditorInspectorColumn(
+			lambda scene, editScope : GafferSceneUI.Private.InspectorColumn(
 				GafferSceneUI.Private.AttributeInspector( scene, editScope, attributeName ),
 				displayName
 			),
@@ -199,7 +199,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 	# Registers a column in the Light Editor.
 	# `inspectorFunction` is a callable object of the form
 	# `inspectorFunction( scene, editScope )` returning a
-	# `GafferSceneUI._LightEditorInspectorColumn` object.
+	# `GafferSceneUI.Private.InspectorColumn` object.
 	@classmethod
 	def registerColumn( cls, rendererKey, columnKey, inspectorFunction, section = None ) :
 
@@ -336,7 +336,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		with Gaffer.Context( self.context() ) as context :
 
 			for selection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
-				if not isinstance( column, _GafferSceneUI._LightEditorInspectorColumn ) :
+				if not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
 					continue
 				for pathString in selection.paths() :
 					path = GafferScene.ScenePlug.stringToPath( pathString )
@@ -441,7 +441,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 		with Gaffer.Context( self.context() ) as context :
 			for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
-				if not isinstance( column, _GafferSceneUI._LightEditorInspectorColumn ) :
+				if not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
 					continue
 				for path in columnSelection.paths() :
 					context["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
@@ -490,7 +490,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 		with Gaffer.Context( self.context() ) as context :
 			for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
-				if not isinstance( column, _GafferSceneUI._LightEditorInspectorColumn ) :
+				if not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
 					continue
 				elif not columnSelection.isEmpty() and type( column.inspector() ) != GafferSceneUI.Private.AttributeInspector :
 					return []
@@ -533,7 +533,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
 			if (
 				not columnSelection.isEmpty() and (
-					not isinstance( column, _GafferSceneUI._LightEditorInspectorColumn ) or
+					not isinstance( column, GafferSceneUI.Private.InspectorColumn ) or
 					not (
 						Gaffer.Metadata.value( "attribute:" + column.inspector().name(), "ui:scene:acceptsSetName" ) or
 						Gaffer.Metadata.value( "attribute:" + column.inspector().name(), "ui:scene:acceptsSetNames" ) or
@@ -726,7 +726,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 		for i in range( 0, len( columns ) ) :
 			column = columns[ i ]
-			if not isinstance( column, _GafferSceneUI._LightEditorInspectorColumn ) :
+			if not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
 				continue
 
 			for path in selection[i].paths() :

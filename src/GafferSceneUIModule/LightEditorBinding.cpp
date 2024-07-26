@@ -40,6 +40,7 @@
 
 #include "GafferSceneUI/Private/AttributeInspector.h"
 #include "GafferSceneUI/Private/Inspector.h"
+#include "GafferSceneUI/Private/InspectorColumn.h"
 #include "GafferSceneUI/Private/SetMembershipInspector.h"
 
 #include "GafferScene/ScenePath.h"
@@ -170,112 +171,6 @@ class LocationNameColumn : public StandardPathColumn
 
 };
 
-const boost::container::flat_map<int, ConstColor4fDataPtr> g_sourceTypeColors = {
-	{ (int)Inspector::Result::SourceType::Upstream, nullptr },
-	{ (int)Inspector::Result::SourceType::EditScope, new Color4fData( Imath::Color4f( 48, 100, 153, 150 ) / 255.0f ) },
-	{ (int)Inspector::Result::SourceType::Downstream, new Color4fData( Imath::Color4f( 239, 198, 24, 104 ) / 255.0f ) },
-	{ (int)Inspector::Result::SourceType::Other, nullptr },
-	{ (int)Inspector::Result::SourceType::Fallback, nullptr },
-};
-const Color4fDataPtr g_fallbackValueForegroundColor = new Color4fData( Imath::Color4f( 163, 163, 163, 255 ) / 255.0f );
-
-class InspectorColumn : public PathColumn
-{
-
-	public :
-
-		IE_CORE_DECLAREMEMBERPTR( InspectorColumn )
-
-		InspectorColumn( GafferSceneUI::Private::InspectorPtr inspector, const std::string &columnName )
-			:	m_inspector( inspector ), m_headerValue( headerValue( columnName != "" ? columnName : inspector->name() ) )
-		{
-			m_inspector->dirtiedSignal().connect( boost::bind( &InspectorColumn::inspectorDirtied, this ) );
-		}
-
-		GafferSceneUI::Private::Inspector *inspector() const
-		{
-			return m_inspector.get();
-		}
-
-		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override
-		{
-			CellData result;
-
-			auto scenePath = runTimeCast<const ScenePath>( &path );
-			if( !scenePath )
-			{
-				return result;
-			}
-
-			ScenePlug::PathScope scope( scenePath->getContext(), &scenePath->names() );
-			scope.setCanceller( canceller );
-
-			Inspector::ConstResultPtr inspectorResult = m_inspector->inspect();
-			if( !inspectorResult )
-			{
-				return result;
-			}
-
-			result.value = runTimeCast<const IECore::Data>( inspectorResult->value() );
-			/// \todo Should PathModel create a decoration automatically when we
-			/// return a colour for `Role::Value`?
-			result.icon = runTimeCast<const Color3fData>( inspectorResult->value() );
-			result.background = g_sourceTypeColors.at( (int)inspectorResult->sourceType() );
-			std::string toolTip;
-			if( inspectorResult->sourceType() == Inspector::Result::SourceType::Fallback )
-			{
-				toolTip = "Source : " + inspectorResult->fallbackDescription();
-				result.foreground = g_fallbackValueForegroundColor;
-			}
-			else if( auto source = inspectorResult->source() )
-			{
-				toolTip = "Source : " + source->relativeName( source->ancestor<ScriptNode>() );
-			}
-
-			if( runTimeCast<const IECore::BoolData>( result.value ) )
-			{
-				toolTip += !toolTip.empty() ? "\n\nDouble-click to toggle" : "Double-click to toggle";
-			}
-
-			if( !toolTip.empty() )
-			{
-				result.toolTip = new StringData( toolTip );
-			}
-
-			return result;
-		}
-
-		CellData headerData( const IECore::Canceller *canceller ) const override
-		{
-			return CellData( m_headerValue );
-		}
-
-	private :
-
-		void inspectorDirtied()
-		{
-			changedSignal()( this );
-		}
-
-		static IECore::ConstStringDataPtr headerValue( const std::string &inspectorName )
-		{
-			std::string name = inspectorName;
-			// Convert from snake case and/or camel case to UI case.
-			if( name.find( '_' ) != std::string::npos )
-			{
-				std::replace( name.begin(), name.end(), '_', ' ' );
-				name = CamelCase::fromSpaced( name );
-			}
-			return new StringData( CamelCase::toSpaced( name ) );
-		}
-
-		const InspectorPtr m_inspector;
-		const ConstStringDataPtr m_headerValue;
-
-};
-
-/// \todo `MuteColumn` and `SetMembershipColumn` should not exist and we intend
-/// to continue refactoring until it is possible to remove them entirely.
 class MuteColumn : public InspectorColumn
 {
 
@@ -479,12 +374,6 @@ CompoundDataPtr SetMembershipColumn::m_setMemberUndefinedIconData = new Compound
 StringDataPtr SetMembershipColumn::m_setHasMembers = new StringData( "setMember.png" );
 StringDataPtr SetMembershipColumn::m_setEmpty = new StringData( "muteLightUndefined.png" );
 
-PathColumn::CellData headerDataWrapper( PathColumn &pathColumn, const Canceller *canceller )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	return pathColumn.headerData( canceller );
-}
-
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -498,29 +387,16 @@ void GafferSceneUIModule::bindLightEditor()
 		.def( init<>() )
 	;
 
-	IECorePython::RefCountedClass<InspectorColumn, GafferUI::PathColumn>( "_LightEditorInspectorColumn" )
-		.def( init<GafferSceneUI::Private::InspectorPtr, const std::string &>(
-			(
-				arg_( "inspector" ),
-				arg_( "columName" ) = ""
-			)
-		) )
-		.def( "inspector", &InspectorColumn::inspector, return_value_policy<IECorePython::CastToIntrusivePtr>() )
-		.def( "headerData", &headerDataWrapper, ( arg_( "canceller" ) = object() ) )
-	;
-
-	IECorePython::RefCountedClass<MuteColumn, InspectorColumn>( "_LightEditorMuteColumn" )
+	IECorePython::RefCountedClass<MuteColumn, GafferSceneUI::Private::InspectorColumn>( "_LightEditorMuteColumn" )
 		.def( init<const GafferScene::ScenePlugPtr &, const Gaffer::PlugPtr &>(
 			(
 				arg_( "scene" ),
 				arg_( "editScope" )
 			)
 		) )
-		.def( "inspector", &MuteColumn::inspector, return_value_policy<IECorePython::CastToIntrusivePtr>() )
-		.def( "headerData", &headerDataWrapper, ( arg_( "canceller" ) = object() ) )
 	;
 
-	IECorePython::RefCountedClass<SetMembershipColumn, InspectorColumn>( "_LightEditorSetMembershipColumn" )
+	IECorePython::RefCountedClass<SetMembershipColumn, GafferSceneUI::Private::InspectorColumn>( "_LightEditorSetMembershipColumn" )
 		.def( init<const GafferScene::ScenePlugPtr &, const Gaffer::PlugPtr &, const IECore::InternedString &, const std::string &>(
 			(
 				arg_( "scene" ),
@@ -529,8 +405,6 @@ void GafferSceneUIModule::bindLightEditor()
 				arg_( "columnName" )
 			)
 		) )
-		.def( "inspector", &SetMembershipColumn::inspector, return_value_policy<IECorePython::CastToIntrusivePtr>() )
-		.def( "headerData", &headerDataWrapper, ( arg_( "canceller" ) = object() ) )
 	;
 
 }
