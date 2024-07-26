@@ -652,6 +652,10 @@ class LightEditorTest( GafferUITest.TestCase ) :
 			editor._LightEditor__updateColumns()
 			GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
 
+			editor.setNodeSet( Gaffer.StandardSet( [ script["editScope"] ] ) )
+			editor._LightEditor__setPathListingPath()
+			GafferSceneUI.LightEditor._LightEditor__setPathListingPath.flush( editor )
+
 			widget = editor._LightEditor__pathListing
 			self.setLightEditorMuteSelection( widget, togglePaths )
 
@@ -704,6 +708,9 @@ class LightEditorTest( GafferUITest.TestCase ) :
 
 		widget = editor._LightEditor__pathListing
 		editor.setNodeSet( Gaffer.StandardSet( [ script["custAttr"] ] ) )
+		editor._LightEditor__setPathListingPath()
+		GafferSceneUI.LightEditor._LightEditor__setPathListingPath.flush( editor )
+
 		self.setLightEditorMuteSelection( widget, ["/group/light"] )
 
 		# This will raise an exception if the context is not scoped correctly.
@@ -711,6 +718,8 @@ class LightEditorTest( GafferUITest.TestCase ) :
 			widget,
 			True  # quickBoolean
 		)
+
+		del widget, editor
 
 	def testShaderParameterEditScope( self ) :
 

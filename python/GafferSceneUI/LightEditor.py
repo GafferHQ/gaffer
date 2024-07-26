@@ -333,19 +333,17 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		inspectors = {}
 		inspections = []
 
-		with Gaffer.Context( self.context() ) as context :
-
-			for selection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
-				if not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
-					continue
-				for pathString in selection.paths() :
-					path = GafferScene.ScenePlug.stringToPath( pathString )
-
-					context["scene:path"] = path
+		path = pathListing.getPath().copy()
+		for selection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
+			if not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+				continue
+			for pathString in selection.paths() :
+				path.setFromString( pathString )
+				with path.inspectionContext() :
 					inspection = column.inspector().inspect()
 
 					if inspection is not None :
-						inspectors.setdefault( column.inspector(), {} )[path] = inspection
+						inspectors.setdefault( column.inspector(), {} )[pathString] = inspection
 						inspections.append( inspection )
 
 		if len( inspectors ) == 0 :
@@ -439,12 +437,13 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 		tweaks = []
 
-		with Gaffer.Context( self.context() ) as context :
-			for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
-				if not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
-					continue
-				for path in columnSelection.paths() :
-					context["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
+		path = pathListing.getPath().copy()
+		for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
+			if not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+				continue
+			for pathString in columnSelection.paths() :
+				path.setFromString( pathString )
+				with path.inspectionContext() :
 					inspection = column.inspector().inspect()
 					if inspection is not None and inspection.editable() :
 						source = inspection.source()
@@ -459,7 +458,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 							) and
 							( editScope is None or editScope.node().isAncestorOf( source ) )
 						) :
-							tweaks.append( ( path, column.inspector() ) )
+							tweaks.append( ( pathString, column.inspector() ) )
 						else :
 							return []
 					else :
@@ -471,31 +470,33 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 		edits = self.__disablableInspectionTweaks( pathListing )
 
-		with Gaffer.UndoScope( self.scriptNode() ), Gaffer.Context( self.context() ) as context :
-			for path, inspector in edits :
-				context["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
+		path = pathListing.getPath().copy()
+		with Gaffer.UndoScope( self.scriptNode() ) :
+			for pathString, inspector in edits :
+				path.setFromString( pathString )
+				with path.inspectionContext() :
+					inspection = inspector.inspect()
+					if inspection is not None and inspection.editable() :
+						source = inspection.source()
 
-				inspection = inspector.inspect()
-				if inspection is not None and inspection.editable() :
-					source = inspection.source()
-
-					if isinstance( source, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) :
-						source["enabled"].setValue( False )
-					elif isinstance( inspector, GafferSceneUI.Private.SetMembershipInspector ) :
-						inspector.editSetMembership( inspection, path, GafferScene.EditScopeAlgo.SetMembership.Unchanged )
+						if isinstance( source, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) :
+							source["enabled"].setValue( False )
+						elif isinstance( inspector, GafferSceneUI.Private.SetMembershipInspector ) :
+							inspector.editSetMembership( inspection, pathString, GafferScene.EditScopeAlgo.SetMembership.Unchanged )
 
 	def __removableAttributeInspections( self, pathListing ) :
 
 		inspections = []
 
-		with Gaffer.Context( self.context() ) as context :
-			for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
-				if not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
-					continue
-				elif not columnSelection.isEmpty() and type( column.inspector() ) != GafferSceneUI.Private.AttributeInspector :
-					return []
-				for path in columnSelection.paths() :
-					context["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
+		path = pathListing.getPath().copy()
+		for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
+			if not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+				continue
+			elif not columnSelection.isEmpty() and type( column.inspector() ) != GafferSceneUI.Private.AttributeInspector :
+				return []
+			for pathString in columnSelection.paths() :
+				path.setFromString( pathString )
+				with path.inspectionContext() :
 					inspection = column.inspector().inspect()
 					if inspection is not None and inspection.editable() :
 						source = inspection.source()
