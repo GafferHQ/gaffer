@@ -38,9 +38,6 @@
 
 #include "RenderPassEditorBinding.h"
 
-#include "GafferSceneUI/Private/Inspector.h"
-#include "GafferSceneUI/Private/OptionInspector.h"
-
 #include "GafferSceneUI/ContextAlgo.h"
 #include "GafferSceneUI/TypeIds.h"
 
@@ -54,12 +51,10 @@
 #include "Gaffer/Node.h"
 #include "Gaffer/Path.h"
 #include "Gaffer/PathFilter.h"
-#include "Gaffer/ScriptNode.h"
 #include "Gaffer/Private/IECorePreview/LRUCache.h"
 
 #include "IECorePython/RefCountedBinding.h"
 
-#include "IECore/CamelCase.h"
 #include "IECore/StringAlgo.h"
 
 #include "boost/algorithm/string/predicate.hpp"
@@ -75,7 +70,6 @@ using namespace GafferBindings;
 using namespace GafferUI;
 using namespace GafferScene;
 using namespace GafferSceneUI;
-using namespace GafferSceneUI::Private;
 
 namespace
 {
@@ -571,141 +565,6 @@ StringDataPtr RenderPassActiveColumn::g_activeRenderPassIcon = new StringData( "
 StringDataPtr RenderPassActiveColumn::g_activeRenderPassFadedHighlightedIcon = new StringData( "activeRenderPassFadedHighlighted.png" );
 
 //////////////////////////////////////////////////////////////////////////
-// OptionInspectorColumn
-//////////////////////////////////////////////////////////////////////////
-
-/// \todo This map of SourceType colours is a duplicate of the one in LightEditorBinding.cpp.
-/// We should consolidate these in the future.
-const boost::container::flat_map<int, ConstColor4fDataPtr> g_sourceTypeColors = {
-	{ (int)Inspector::Result::SourceType::Upstream, nullptr },
-	{ (int)Inspector::Result::SourceType::EditScope, new Color4fData( Imath::Color4f( 48, 100, 153, 150 ) / 255.0f ) },
-	{ (int)Inspector::Result::SourceType::Downstream, new Color4fData( Imath::Color4f( 239, 198, 24, 104 ) / 255.0f ) },
-	{ (int)Inspector::Result::SourceType::Other, nullptr },
-	{ (int)Inspector::Result::SourceType::Fallback, nullptr },
-};
-const Color4fDataPtr g_fallbackValueForegroundColor = new Color4fData( Imath::Color4f( 163, 163, 163, 255 ) / 255.0f );
-
-class OptionInspectorColumn : public PathColumn
-{
-
-	public :
-
-		IE_CORE_DECLAREMEMBERPTR( OptionInspectorColumn )
-
-		OptionInspectorColumn( GafferSceneUI::Private::OptionInspectorPtr inspector, const std::string &columnName, const std::string &columnToolTip )
-			:	m_inspector( inspector ), m_headerValue( columnName != "" ? new StringData( columnName ) : headerValue( inspector->name() ) ), m_headerToolTip( new IECore::StringData( columnToolTip ) )
-		{
-			m_inspector->dirtiedSignal().connect( boost::bind( &OptionInspectorColumn::inspectorDirtied, this ) );
-		}
-
-		GafferSceneUI::Private::Inspector *inspector()
-		{
-			return m_inspector.get();
-		}
-
-		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override
-		{
-			CellData result;
-
-			auto renderPassPath = runTimeCast<const RenderPassPath>( &path );
-			if( !renderPassPath )
-			{
-				return result;
-			}
-
-			const auto renderPassName = runTimeCast<const IECore::StringData>( path.property( g_renderPassNamePropertyName, canceller ) );
-			if( !renderPassName )
-			{
-				return result;
-			}
-
-			Context::EditableScope scope( renderPassPath->getContext() );
-			scope.setCanceller( canceller );
-			scope.set( g_renderPassContextName, &( renderPassName->readable() ) );
-
-			Inspector::ConstResultPtr inspectorResult = m_inspector->inspect();
-			if( !inspectorResult )
-			{
-				return result;
-			}
-
-			result.value = runTimeCast<const IECore::Data>( inspectorResult->value() );
-			/// \todo Should PathModel create a decoration automatically when we
-			/// return a colour for `Role::Value`?
-			result.icon = runTimeCast<const Color3fData>( inspectorResult->value() );
-			result.background = g_sourceTypeColors.at( (int)inspectorResult->sourceType() );
-			std::string toolTip;
-			if( inspectorResult->sourceType() == Inspector::Result::SourceType::Fallback )
-			{
-				toolTip = "Source : " + inspectorResult->fallbackDescription();
-				result.foreground = g_fallbackValueForegroundColor;
-			}
-			else if( const auto source = inspectorResult->source() )
-			{
-				toolTip = "Source : " + source->relativeName( source->ancestor<ScriptNode>() );
-			}
-
-			if( inspectorResult->editable() )
-			{
-				toolTip += !toolTip.empty() ? "\n\n" : "";
-				if( runTimeCast<const IECore::BoolData>( result.value ) )
-				{
-					toolTip += "Double-click to toggle";
-				}
-				else
-				{
-					toolTip += "Double-click to edit";
-				}
-			}
-
-			if( !toolTip.empty() )
-			{
-				result.toolTip = new StringData( toolTip );
-			}
-
-			return result;
-		}
-
-		CellData headerData( const IECore::Canceller *canceller ) const override
-		{
-			return CellData( m_headerValue, /* icon = */ nullptr, /* background = */ nullptr, m_headerToolTip );
-		}
-
-	private :
-
-		void inspectorDirtied()
-		{
-			changedSignal()( this );
-		}
-
-		static IECore::ConstStringDataPtr headerValue( const std::string &inspectorName )
-		{
-			std::string name = inspectorName;
-			// Convert from snake case and/or camel case to UI case.
-			if( name.find( '_' ) != std::string::npos )
-			{
-				std::replace( name.begin(), name.end(), '_', ' ' );
-			}
-			if( name.find( ' ' ) != std::string::npos )
-			{
-				name = CamelCase::fromSpaced( name );
-			}
-			return new StringData( CamelCase::toSpaced( name ) );
-		}
-
-		const OptionInspectorPtr m_inspector;
-		const ConstStringDataPtr m_headerValue;
-		const ConstStringDataPtr m_headerToolTip;
-
-};
-
-PathColumn::CellData headerDataWrapper( PathColumn &pathColumn, const Canceller *canceller )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	return pathColumn.headerData( canceller );
-}
-
-//////////////////////////////////////////////////////////////////////////
 // RenderPassEditorSearchFilter - filters based on a match pattern. This
 // removes non-leaf paths if all their children have also been
 // removed by the filter.
@@ -910,18 +769,6 @@ void GafferSceneUIModule::bindRenderPassEditor()
 
 	RefCountedClass<RenderPassActiveColumn, GafferUI::PathColumn>( "RenderPassActiveColumn" )
 		.def( init<>() )
-	;
-
-	RefCountedClass<OptionInspectorColumn, GafferUI::PathColumn>( "OptionInspectorColumn" )
-		.def( init<GafferSceneUI::Private::OptionInspectorPtr, const std::string &, const std::string &>(
-			(
-				arg_( "inspector" ),
-				arg_( "columName" ) = "",
-				arg_( "columnToolTip" ) = ""
-			)
-		) )
-		.def( "inspector", &OptionInspectorColumn::inspector, return_value_policy<IECorePython::CastToIntrusivePtr>() )
-		.def( "headerData", &headerDataWrapper, ( arg_( "canceller" ) = object() ) )
 	;
 
 	RefCountedClass<RenderPassEditorSearchFilter, PathFilter>( "SearchFilter" )
