@@ -243,8 +243,8 @@ __dispatchScript(
 	script = pathlib.Path( "../../../examples/rendering/anamorphicCameraSetup.gfr" ).absolute().as_posix(),
 	tasks = [ "Render" ],
 	settings = [
-		"-StandardOptions.options.renderResolution.value.x '240'",
-		"-StandardOptions.options.renderResolution.value.y '270'",
+		"-StandardOptions.options.renderResolution.value.x 240",
+		"-StandardOptions.options.renderResolution.value.y 270",
 		"-Outputs.outputs.output1.fileName '\"{}\"'".format( __outputImagePath( "exampleAnamorphicCameraSetup" ) ),
 		"-Outputs.outputs.output1.type '\"png\"'"
 	]

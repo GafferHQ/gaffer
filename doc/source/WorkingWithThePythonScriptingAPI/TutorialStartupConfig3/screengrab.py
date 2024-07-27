@@ -28,9 +28,9 @@ __dispatchScript(
 	tasks = [ "Render" ],
 	settings = [
 		"-StandardOptions.options.renderResolution.enabled True",
-		"-StandardOptions.options.renderResolution.value.x '270'",
-		"-StandardOptions.options.renderResolution.value.y '240'",
-		"-background_light.parameters.exposure '1'",
+		"-StandardOptions.options.renderResolution.value.x 270",
+		"-StandardOptions.options.renderResolution.value.y 240",
+		"-background_light.parameters.exposure 1",
 		"-Outputs.outputs.output2.fileName '\"{}\"'".format( pathlib.Path( "images/exampleMacbethChart.png" ).absolute().as_posix() ),
 		"-Outputs.outputs.output2.type '\"png\"'",
 		"-Outputs.outputs.output1.active False"
