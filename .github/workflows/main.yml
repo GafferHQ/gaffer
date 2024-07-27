@@ -166,6 +166,7 @@ jobs:
         & "C:\Program Files\7-Zip\7z.exe" x mesa.7z -omesa
         ./mesa/systemwidedeploy.cmd 1
         echo "GALLIUM_DRIVER=llvmpipe" >> $env:GITHUB_ENV
+        Set-DisplayResolution -Width 1280 -Height 1024 -Force
       shell: pwsh
       if: runner.os == 'Windows'
 
