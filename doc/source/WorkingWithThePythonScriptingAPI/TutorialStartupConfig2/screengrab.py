@@ -9,6 +9,7 @@
 import os
 import pathlib
 import subprocess
+import sys
 import tempfile
 import time
 
@@ -69,10 +70,11 @@ __dispatchScript(
 )
 __fileBrowser.setVisible( False )
 
+exampleBookmarkPath = "C:/" if sys.platform == "win32" else "/"
 # Tutorial: default bookmark in file browser
 __imageName = "tutorialDefaultBookmark"
 __tempImagePath = __getTempFilePath( "{}.png".format( __imageName ) )
-__bookmarks.add( "Resources", "/" )
+__bookmarks.add( "Resources", exampleBookmarkPath )
 __fileBrowser = GafferUI.PathChooserDialogue( __rootPath, bookmarks = __bookmarks )
 __fileBrowser.setVisible( True )
 __delay( 0.1 )
@@ -94,7 +96,7 @@ __fileBrowser.setVisible( False )
 __imageName = "tutorialDefaultImageNodeBookmark"
 __tempImagePath = __getTempFilePath( "{}.png".format( __imageName ) )
 __bookmarks = GafferUI.Bookmarks.acquire( application, Gaffer.FileSystemPath, "image" )
-__bookmarks.add( "Pictures", "/" )
+__bookmarks.add( "Pictures", exampleBookmarkPath )
 __fileBrowser = GafferUI.PathChooserDialogue( __rootPath, bookmarks = __bookmarks )
 __fileBrowser.setVisible( True )
 __delay( 0.1 )
