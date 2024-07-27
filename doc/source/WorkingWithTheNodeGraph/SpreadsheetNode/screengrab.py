@@ -43,7 +43,7 @@
 
 import sys
 import os
-import sys
+import pathlib
 import subprocess
 import tempfile
 import time
@@ -65,20 +65,23 @@ def __delay( delay ) :
 		GafferUI.EventLoop.waitForIdle( 1 )
 
 # Create a random directory in `/tmp` for the dispatcher's `jobsDirectory`, so we don't clutter the user's `~gaffer` directory
-temporaryDirectory = tempfile.mkdtemp( prefix = "gafferDocs" )
+__temporaryDirectory = pathlib.Path( tempfile.mkdtemp( prefix = "gafferDocs" ) )
 
-def __getTempFilePath( fileName, directory = temporaryDirectory ) :
-	filePath = "/".join( ( directory, fileName ) )
+def __getTempFilePath( fileName, directory = __temporaryDirectory ) :
 
-	return filePath
+	return ( directory / fileName ).as_posix()
+
+def __outputImagePath( fileName ) :
+
+	return pathlib.Path( "images/{}.png".format( fileName ) ).absolute().as_posix()
 
 def __dispatchScript( script, tasks, settings ) :
 	command = "gaffer dispatch -script {} -tasks {} -dispatcher Local -settings {} -dispatcher.jobsDirectory '\"{}/dispatcher/local\"'".format(
 		script,
 		" ".join( tasks ),
 		" ".join( settings ),
-		temporaryDirectory
-		)
+		__temporaryDirectory.as_posix()
+	)
 	subprocess.check_call( command, shell = True )
 
 # Create a plug context menu from a Node Editor
@@ -160,7 +163,6 @@ pythonEditor = mainWindow.getLayout().editors( GafferUI.PythonEditor )[0]
 
 # Interface: A Spreadsheet node in the Graph Editor
 imageName = "interfaceSpreadsheetNode"
-imagePath = os.path.abspath( "images/{imageName}.png".format( imageName = imageName ) )
 script["Spreadsheet"] = Gaffer.Spreadsheet()
 with GafferUI.Window() as window :
 	graphEditorWindow = GafferUI.GraphEditor( script )
@@ -169,13 +171,12 @@ graphEditorWindow.parent()._qtWidget().resize( 400, 100 )
 __delay( 0.1 )
 graphEditorWindow.frame( Gaffer.StandardSet( [ script["Spreadsheet"] ] ) )
 __delay( 0.1 )
-GafferUI.WidgetAlgo.grab( widget = graphEditorWindow, imagePath = imagePath )
+GafferUI.WidgetAlgo.grab( widget = graphEditorWindow, imagePath = __outputImagePath( imageName ) )
 graphEditorWindow.parent().close()
 del graphEditorWindow
 
 # Interface: Spreadsheet node with full name in Graph Editor
 imageName = "interfaceSpreadsheetNodeFullName"
-imagePath = os.path.abspath( "images/{imageName}.png".format( imageName = imageName ) )
 Gaffer.Metadata.registerValue( script["Spreadsheet"], 'nodeGadget:type', 'GafferUI::StandardNodeGadget' )
 with GafferUI.Window() as window :
 	graphEditorWindow = GafferUI.GraphEditor( script )
@@ -184,13 +185,13 @@ graphEditorWindow.parent()._qtWidget().resize( 300, 100 )
 __delay( 0.1 )
 graphEditorWindow.frame( Gaffer.StandardSet( [ script["Spreadsheet"] ] ) )
 __delay( 0.1 )
-GafferUI.WidgetAlgo.grab( widget = graphEditorWindow, imagePath = imagePath )
+GafferUI.WidgetAlgo.grab( widget = graphEditorWindow, imagePath = __outputImagePath( imageName ) )
 graphEditorWindow.parent().close()
 del graphEditorWindow
 
 # Interface: The Spreadsheet node's interface in a Node Editor
 imageName = "interfaceSpreadsheetNodeInterface"
-imagePathInterface = os.path.abspath( "images/{imageName}.png".format( imageName = imageName ) )
+imagePathInterface = __outputImagePath( imageName )
 script["fileName"].setValue( os.path.abspath( "scripts/{scriptName}.gfr".format( scriptName = imageName ) ) )
 script.load()
 __delay( 0.1 )
@@ -204,7 +205,6 @@ del nodeEditorWindow
 imageName = "interfaceSpreadsheetNodeRenderNetwork"
 tempImagePath1 = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Before" ) )
 tempImagePath2 = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "After" ) )
-imagePath = os.path.abspath( "images/{imageName}.png".format( imageName = imageName ) )
 script["fileName"].setValue( os.path.abspath( "scripts/{scriptName}.gfr".format( scriptName = imageName ) ) )
 script.load()
 __delay( 0.1 )
@@ -226,26 +226,24 @@ __dispatchScript(
 	settings = [
 		"-ImageReader_Before.fileName '\"{tempPath}\"'".format( tempPath = tempImagePath1 ),
 		"-ImageReader_After.fileName '\"{tempPath}\"'".format( tempPath = tempImagePath2 ),
-		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = imagePath )
-		]
-	)
+		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = __outputImagePath( imageName ) )
+	]
+)
 
 # Interface: Breakdown of the Spreadsheet node's interface in a Node Editor
 imageName = "interfaceSpreadsheetNodeBreakdown"
 tempImagePath = imagePathInterface
-imagePath = os.path.abspath( "images/{imageName}.png".format( imageName = imageName ) )
 __dispatchScript(
 	script = "scripts/{scriptName}_edit.gfr".format( scriptName = imageName ),
 	tasks = [ "ImageWriter" ],
 	settings = [
 		"-ImageReader.fileName '\"{imagePath}\"'".format( imagePath = tempImagePath ),
-		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = imagePath )
-		]
-	)
+		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = __outputImagePath( imageName ) )
+	]
+)
 
 # Interface: Spreadsheet node's auxiliary connections
 imageName = "interfaceSpreadsheetNodeAuxiliaryConnections"
-imagePath = os.path.abspath( "images/{imageName}.png".format( imageName = imageName ) )
 script["fileName"].setValue( os.path.abspath( "scripts/{scriptName}.gfr".format( scriptName = imageName ) ) )
 script.load()
 __delay( 0.1 )
@@ -257,7 +255,7 @@ __delay( 0.1 )
 graphEditorWindow.frame( Gaffer.StandardSet( [ script["Dot"] ] ) )
 script.removeChild( script["Dot"] )
 __delay( 0.1 )
-GafferUI.WidgetAlgo.grab( widget = graphEditorWindow, imagePath = imagePath )
+GafferUI.WidgetAlgo.grab( widget = graphEditorWindow, imagePath = __outputImagePath( imageName ) )
 graphEditorWindow.parent().close()
 del graphEditorWindow
 
@@ -266,7 +264,6 @@ imageName = "taskSpreadsheetNodeAddPlugBasic"
 tempImagePathEditor = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Editor" ) )
 tempImagePathMenu = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Menu" ) )
 tempImagePathSubmenu = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Submenu" ) )
-imagePath = os.path.abspath( "images/{imageName}.png".format( imageName = imageName ) )
 script["Sphere"] = GafferScene.Sphere()
 script["Spreadsheet"] = Gaffer.Spreadsheet()
 # Screengrab the Node Editor
@@ -303,16 +300,15 @@ __dispatchScript(
 		"-ImageReader_Editor.fileName '\"{imagePath}\"'".format( imagePath = tempImagePathEditor ),
 		"-ImageReader_Menu.fileName '\"{imagePath}\"'".format( imagePath = tempImagePathMenu ),
 		"-ImageReader_Submenu.fileName '\"{imagePath}\"'".format( imagePath = tempImagePathSubmenu ),
-		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = imagePath )
-		]
-	)
+		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = __outputImagePath( imageName ) )
+	]
+)
 
 # Task: Add a vector plug (whole)
 imageName = "taskSpreadsheetNodeAddPlugVectorWhole"
 tempImagePathEditor = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Editor" ) )
 tempImagePathMenu = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Menu" ) )
 tempImagePathSubmenu = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Submenu" ) )
-imagePath = os.path.abspath( "images/{imageName}.png".format( imageName = imageName ) )
 # Screengrab the Node Editor
 nodeEditorWindow = GafferUI.NodeEditor.acquire( script["Sphere"], floating = True )
 nodeEditorWindow._qtWidget().setFocus()
@@ -347,16 +343,15 @@ __dispatchScript(
 		"-ImageReader_Editor.fileName '\"{imagePath}\"'".format( imagePath = tempImagePathEditor ),
 		"-ImageReader_Menu.fileName '\"{imagePath}\"'".format( imagePath = tempImagePathMenu ),
 		"-ImageReader_Submenu.fileName '\"{imagePath}\"'".format( imagePath = tempImagePathSubmenu ),
-		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = imagePath )
-		]
-	)
+		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = __outputImagePath( imageName ) )
+	]
+)
 
 # Task: Add a vector plug (single element)
 imageName = "taskSpreadsheetNodeAddPlugVectorSingle"
 tempImagePathEditor = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Editor" ) )
 tempImagePathMenu = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Menu" ) )
 tempImagePathSubmenu = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Submenu" ) )
-imagePath = os.path.abspath( "images/{imageName}.png".format( imageName = imageName ) )
 # Screengrab the Node Editor
 nodeEditorWindow = GafferUI.NodeEditor.acquire( script["Sphere"], floating = True )
 nodeEditorWindow._qtWidget().setFocus()
@@ -391,16 +386,15 @@ __dispatchScript(
 		"-ImageReader_Editor.fileName '\"{imagePath}\"'".format( imagePath = tempImagePathEditor ),
 		"-ImageReader_Menu.fileName '\"{imagePath}\"'".format( imagePath = tempImagePathMenu ),
 		"-ImageReader_Submenu.fileName '\"{imagePath}\"'".format( imagePath = tempImagePathSubmenu ),
-		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = imagePath )
-		]
-	)
+		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = __outputImagePath( imageName ) )
+	]
+)
 
 # Task: Add a compound plug
 imageName = "taskSpreadsheetNodeAddPlugCompound"
 tempImagePathEditor = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Editor" ) )
 tempImagePathMenu = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Menu" ) )
 tempImagePathSubmenu = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Submenu" ) )
-imagePath = os.path.abspath( "images/{imageName}.png".format( imageName = imageName ) )
 # Screengrab the Node Editor
 nodeEditorWindow = GafferUI.NodeEditor.acquire( script["Sphere"], floating = True )
 nodeEditorWindow._qtWidget().setFocus()
@@ -436,15 +430,14 @@ __dispatchScript(
 		"-ImageReader_Editor.fileName '\"{imagePath}\"'".format( imagePath = tempImagePathEditor ),
 		"-ImageReader_Menu.fileName '\"{imagePath}\"'".format( imagePath = tempImagePathMenu ),
 		"-ImageReader_Submenu.fileName '\"{imagePath}\"'".format( imagePath = tempImagePathSubmenu ),
-		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = imagePath )
-		]
-	)
+		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = __outputImagePath( imageName ) )
+	]
+)
 
 # Interface: Compound plug with enabled switch
 imageName = "interfaceSpreadsheetNodeCompoundEnabledSwitch"
 tempImagePathSpreadsheet = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Spreadsheet" ) )
 tempImagePathOptions = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Options" ) )
-imagePath = os.path.abspath( "images/{imageName}.png".format( imageName = imageName ) )
 script["fileName"].setValue( os.path.abspath( "scripts/{scriptName}.gfr".format( scriptName = imageName ) ) )
 script.load()
 # Screengrab the Node Editor (Spreadsheet node)
@@ -468,29 +461,27 @@ __dispatchScript(
 	settings = [
 		"-ImageReader_Spreadsheet.fileName '\"{imagePath}\"'".format( imagePath = tempImagePathSpreadsheet ),
 		"-ImageReader_Options.fileName '\"{imagePath}\"'".format( imagePath = tempImagePathOptions ),
-		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = imagePath )
-		]
-	)
+		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = __outputImagePath( imageName ) )
+	]
+)
 
 # Interface: Disabled cell
 imageName = "interfaceSpreadsheetNodeDisabledCell"
 tempImagePathEditor = tempImagePathSpreadsheet
-imagePath = os.path.abspath( "images/{imageName}.png".format( imageName = imageName ) )
 __dispatchScript(
 	script = "scripts/{scriptName}_edit.gfr".format( scriptName = imageName ),
 	tasks = [ "ImageWriter" ],
 	settings = [
 		"-ImageReader_Editor.fileName '\"{imagePath}\"'".format( imagePath = tempImagePathSpreadsheet ),
-		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = imagePath )
-		]
-	)
+		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = __outputImagePath( imageName ) )
+	]
+)
 
 # Task: Add a tweak plug
 imageName = "taskSpreadsheetNodeAddPlugTweak"
 tempImagePathEditor = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Editor" ) )
 tempImagePathMenu = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Menu" ) )
 tempImagePathSubmenu = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Submenu" ) )
-imagePath = os.path.abspath( "images/{imageName}.png".format( imageName = imageName ) )
 script["CameraTweaks"] = GafferScene.CameraTweaks()
 script["CameraTweaks"]["tweaks"].addChild( Gaffer.TweakPlug( Gaffer.V2iPlug( "value", defaultValue = imath.V2i( 1920, 1050 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), "resolution", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
 script["CameraTweaks"]["tweaks"]["resolution"]["name"].setValue( 'resolution' )
@@ -529,14 +520,13 @@ __dispatchScript(
 		"-ImageReader_Editor.fileName '\"{imagePath}\"'".format( imagePath = tempImagePathEditor ),
 		"-ImageReader_Menu.fileName '\"{imagePath}\"'".format( imagePath = tempImagePathMenu ),
 		"-ImageReader_Submenu.fileName '\"{imagePath}\"'".format( imagePath = tempImagePathSubmenu ),
-		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = imagePath )
-		]
-	)
+		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = __outputImagePath( imageName ) )
+	]
+)
 
 # Interface: Column sections in the Node Editor
 imageName = "interfaceSpreadsheetNodeColumnSections"
 tempImagePathColumns = __getTempFilePath( "{imageName}.png".format( imageName = imageName ) )
-imagePath = os.path.abspath( "images/{imageName}.png".format( imageName = imageName ) )
 script["fileName"].setValue( os.path.abspath( "scripts/{scriptName}.gfr".format( scriptName = imageName ) ) )
 script.load()
 __delay( 0.1 )
@@ -552,68 +542,63 @@ __dispatchScript(
 	tasks = [ "ImageWriter" ],
 	settings = [
 		"-ImageReader_Editor.fileName '\"{imagePath}\"'".format( imagePath = tempImagePathColumns ),
-		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = imagePath )
-		]
-	)
+		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = __outputImagePath( imageName ) )
+	]
+)
 
 # Task: Reordering a section
 imageName = "taskSpreadsheetNodeReorderSection"
 tempImagePath = tempImagePathColumns
-imagePath = os.path.abspath( "images/{imageName}.png".format( imageName = imageName ) )
 __dispatchScript(
 	script = "scripts/{scriptName}_edit.gfr".format( scriptName = imageName ),
 	tasks = [ "ImageWriter" ],
 	settings = [
 		"-ImageReader_Editor.fileName '\"{imagePath}\"'".format( imagePath = tempImagePath ),
-		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = imagePath )
-		]
-	)
+		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = __outputImagePath( imageName ) )
+	]
+)
 
 # Task: Reordering a column
 imageName = "taskSpreadsheetNodeReorderColumn"
 tempImagePath = tempImagePathColumns
-imagePath = os.path.abspath( "images/{imageName}.png".format( imageName = imageName ) )
 __dispatchScript(
 	script = "scripts/{scriptName}_edit.gfr".format( scriptName = imageName ),
 	tasks = [ "ImageWriter" ],
 	settings = [
 		"-ImageReader_Editor.fileName '\"{imagePath}\"'".format( imagePath = tempImagePath ),
-		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = imagePath )
-		]
-	)
+		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = __outputImagePath( imageName ) )
+	]
+)
 
 # Task: Automatically resizing a column
 imageName = "taskSpreadsheetNodeResizeColumnAutomatic"
 tempImagePath = tempImagePathColumns
-imagePath = os.path.abspath( "images/{imageName}.png".format( imageName = imageName ) )
 __dispatchScript(
 	script = "scripts/{scriptName}_edit.gfr".format( scriptName = imageName ),
 	tasks = [ "ImageWriter" ],
 	settings = [
 		"-ImageReader_Editor.fileName '\"{imagePath}\"'".format( imagePath = tempImagePath ),
-		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = imagePath )
-		]
-	)
+		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = __outputImagePath( imageName ) )
+	]
+)
 
 # Task: Manually resizing a column
 imageName = "taskSpreadsheetNodeResizeColumnManual"
 tempImagePath = tempImagePathColumns
-imagePath = os.path.abspath( "images/{imageName}.png".format( imageName = imageName ) )
 __dispatchScript(
 	script = "scripts/{scriptName}_edit.gfr".format( scriptName = imageName ),
 	tasks = [ "ImageWriter" ],
 	settings = [
 		"-ImageReader_Editor.fileName '\"{imagePath}\"'".format( imagePath = tempImagePath ),
-		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = imagePath )
-		]
-	)
+		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = __outputImagePath( imageName ) )
+	]
+)
 
 # Interface: Pattern widths
 imageName = "interfaceSpreadsheetNodePatternWidths"
 tempImagePathHalf = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Half" ) )
 tempImagePathSingle = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Single" ) )
 tempImagePathDouble = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Double" ) )
-imagePath = os.path.abspath( "images/{imageName}.png".format( imageName = imageName ) )
 nodeEditorWindow = GafferUI.NodeEditor.acquire( script["Spreadsheet"], floating = True )
 nodeEditorWindow._qtWidget().setFocus()
 __delay( 0.1 )
@@ -631,9 +616,9 @@ __dispatchScript(
 		"-ImageReader_Half.fileName '\"{imagePath}\"'".format( imagePath = tempImagePathHalf ),
 		"-ImageReader_Single.fileName '\"{imagePath}\"'".format( imagePath = tempImagePathSingle ),
 		"-ImageReader_Double.fileName '\"{imagePath}\"'".format( imagePath = tempImagePathDouble ),
-		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = imagePath )
-		]
-	)
+		"-ImageWriter.fileName '\"{imagePath}\"'".format( imagePath = __outputImagePath( imageName ) )
+	]
+)
 
 # Example: Per-location Transform Spreadsheet
 exampleName = "PerLocationTransformSpreadsheet"
