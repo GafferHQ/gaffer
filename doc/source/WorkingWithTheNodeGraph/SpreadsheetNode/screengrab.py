@@ -115,18 +115,28 @@ def __selectPlugContextMenuAction( contextMenuWidget, targetActionName ) :
 
 # Screengrab a plug context menu and submenu
 def __grabPlugContextSubmenu( plugWidget, contextMenuWidget, submenuWidget, menuPath, submenuPath ) :
+
+	if not GafferUI.EventLoop.mainEventLoop().running() :
+		# This is a hack to try to give Qt time to
+		# finish processing any events needed to get
+		# the widget ready for capture. Really we need
+		# a rock solid way that _guarantees_ this, and which
+		# we can also use when the event loop is running.
+		GafferUI.EventLoop.waitForIdle()
+
 	screen = QtWidgets.QApplication.primaryScreen()
 	windowHandle = plugWidget._qtWidget().windowHandle()
 	if windowHandle :
 		screen = windowHandle.screen()
 
-	qtVersion = [ int( x ) for x in Qt.__qt_version__.split( "." ) ]
-	pixmapMain = screen.grabWindow( mainWindow._qtWidget().winId() )
+	# Windows requires grabbing the entire screen and cropping to
+	# reliably capture context menus and submenus.
+	pixmapMain = screen.grabWindow( 0 if sys.platform == "win32" else mainWindow._qtWidget().winId() )
 
 	## Screengrab the context menu. The frame dimensions are too big by
 	# one pixel on each axis.
 	menuScreenPos = QtCore.QPoint( 0, 0 )
-	if sys.platform == "darwin" :
+	if sys.platform in ( "darwin", "win32" ) :
 		menuScreenPos = QtCore.QPoint(
 			mainWindow._qtWidget().geometry().x(),
 			mainWindow._qtWidget().geometry().y()
@@ -134,19 +144,19 @@ def __grabPlugContextSubmenu( plugWidget, contextMenuWidget, submenuWidget, menu
 	menuSize = QtCore.QSize(
 		contextMenuWidget.frameGeometry().width() - 1,
 		contextMenuWidget.frameGeometry().height() - 1
-		)
+	)
 	menuRect = QtCore.QRect( menuScreenPos, menuSize )
 	pixmap = pixmapMain.copy( menuRect )
 	pixmap.save( menuPath )
 
 	## Screengrab the sub-menu
 	submenuScreenPos = submenuWidget.pos()
-	if sys.platform != "darwin" :
+	if sys.platform not in ( "darwin", "win32" ) :
 		submenuScreenPos = submenuScreenPos - contextMenuWidget.pos()
 	submenuSize = QtCore.QSize(
 		submenuWidget.frameGeometry().width() - 1,
 		submenuWidget.frameGeometry().height() - 1
-		)
+	)
 	submenuRect = QtCore.QRect( submenuScreenPos, submenuSize )
 
 	pixmap = pixmapMain.copy( submenuRect )
