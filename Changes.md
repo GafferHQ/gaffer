@@ -11,6 +11,7 @@ Fixes
 
 - Arnold : Fixed bug preventing UI metadata for Imagers from being loaded for Arnold 7.3.
 - WidgetAlgo : Fixed issue preventing `grab()` from capturing popup menus on Windows.
+- ShowURL : Fixed opening of "file://" URLs on Windows (#5861).
 
 Documentation
 -------------
