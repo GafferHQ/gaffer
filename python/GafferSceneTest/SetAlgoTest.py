@@ -134,6 +134,16 @@ class SetAlgoTest( GafferSceneTest.SceneTestCase ) :
 		expressionCheck( '(setA - ((setC /group/group/sphere2) & setB))', [ '/group/group/sphere1' ] )
 		expressionCheck( 'setA - (/group/group/sphere1 /group/group/sphere2) | (setA setB setC) & setC', [ '/group/sphere3' ] )
 
+		# Test expressions containing only whitespace are treated as empty
+		expressionCheck( '', [] )
+		expressionCheck( ' ', [] )
+		expressionCheck( '\n', [] )
+		expressionCheck( ' \n ', [] )
+		expressionCheck( '\t', [] )
+		expressionCheck( ' \t ', [] )
+		expressionCheck( '\n \t', [] )
+		expressionCheck( '\t\n\t \n  \t\n', [] )
+
 		# Test if proper exception is thrown for invalid expression
 		with self.assertRaises( RuntimeError ) as e :
 			# note the missing )

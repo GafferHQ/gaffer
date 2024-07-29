@@ -1,7 +1,10 @@
 1.4.x.x (relative to 1.4.10.0)
 =======
 
+Improvements
+------------
 
+- SetExpressions : Set Expressions containing only whitespace characters are now treated as empty rather than producing an error.
 
 1.4.10.0 (relative to 1.4.9.0)
 ========
