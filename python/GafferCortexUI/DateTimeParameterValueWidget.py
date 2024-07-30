@@ -35,11 +35,15 @@
 #
 ##########################################################################
 
+import datetime
+
 import IECore
 
 import Gaffer
 import GafferUI
 import GafferCortexUI
+
+from GafferUI.PlugValueWidget import sole
 
 from Qt import QtCore
 from Qt import QtGui
@@ -75,13 +79,11 @@ class _DateTimePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self._addPopupMenu()
 
-		self._updateFromPlug()
-
-	def _updateFromPlug( self ) :
+	def _updateFromValues( self, values, exception ) :
 
 		# convert from the undelimited form boost likes (and the DateTimeParameterHandler uses)
 		# to the delimited form qt likes
-		undelimited = self.getPlug().getValue()
+		undelimited = sole( values ) or datetime.datetime.utcfromtimestamp( 0 ).strftime( "%Y%m%dT%H%M%S.%fZ" )
 		delimited = "%s-%s-%sT%s:%s:%s" % (
 			undelimited[0:4],
 			undelimited[4:6],

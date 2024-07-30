@@ -26,6 +26,7 @@ Fixes
 - PrimitiveInspector : Fixed failure to update when the location being viewed ceases to exist, or is recreated.
 - Shuffle, ShuffleAttributes, ShufflePrimitiveVariables : Fixed some special cases where shuffling a source to itself would fail to have the expected effect.
 - GraphEditor : Fixed dimming of labels for BoxIn and BoxOut nodes.
+- GafferCortexUI : Removed usage of legacy PlugValueWidget API.
 
 API
 ---
