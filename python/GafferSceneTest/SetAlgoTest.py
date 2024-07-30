@@ -134,6 +134,16 @@ class SetAlgoTest( GafferSceneTest.SceneTestCase ) :
 		expressionCheck( '(setA - ((setC /group/group/sphere2) & setB))', [ '/group/group/sphere1' ] )
 		expressionCheck( 'setA - (/group/group/sphere1 /group/group/sphere2) | (setA setB setC) & setC', [ '/group/sphere3' ] )
 
+		# Test a selection of the above expressions with tab and newline whitespace characters inserted
+		expressionCheck( 'setA\nsetC', [ '/group/group/sphere1', '/group/group/sphere2', '/group/sphere3' ] )
+		expressionCheck( '\n\nsetA\tsetC\n\n\t', [ '/group/group/sphere1', '/group/group/sphere2', '/group/sphere3' ] )
+		expressionCheck( 'setA\t-\tsetB\n|\nsetC', [ '/group/group/sphere1', '/group/sphere3' ] )
+		expressionCheck( 'setA\n| setB\n& setC', [ '/group/group/sphere1', '/group/group/sphere2' ] )
+		expressionCheck( '/group/light1\n/group/light2', [ '/group/light1', '/group/light2' ] )
+		expressionCheck( '/group/light1\t/group/light2\n', [ '/group/light1', '/group/light2' ] )
+		expressionCheck( '(\n\t/group/light1\n\t/group/light2\n)\n|\nsetA', [ '/group/light1', '/group/light2', '/group/group/sphere1', '/group/group/sphere2' ] )
+		expressionCheck( '(\nsetA - \n(\n\t(\n\t\tsetC /group/group/sphere2\n\t)\n & setB)\n)\n', [ '/group/group/sphere1' ] )
+
 		# Test expressions containing only whitespace are treated as empty
 		expressionCheck( '', [] )
 		expressionCheck( ' ', [] )
