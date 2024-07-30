@@ -137,6 +137,13 @@ Imath::Box3f Prune::computeBound( const ScenePath &path, const Gaffer::Context *
 		{
 			if( inPlug()->childNamesPlug()->getValue()->readable().size() )
 			{
+				// \todo - Note that this may be completely inaccurate if there is an object at this location.
+				// Having objects at locations with children is not common in Gaffer, but it is allowed.
+				// The only real way to solve this would be having separate plugs for storing the bound
+				// of an object at this location, and the bound of the children ( currently, this would be
+				// confusing with childBoundsPlug, which isn't for storing the child bounds in an efficient
+				// way, it's a helper for dynamically computing the child bounds when we can't use the
+				// bound value from upstream ).
 				return outPlug()->childBoundsPlug()->getValue();
 			}
 			else
