@@ -372,6 +372,7 @@ void bindSceneAlgo()
 
 	def( "exists", &existsWrapper );
 	def( "visible", visibleWrapper );
+	def( "bound", SceneAlgo::bound );
 	def( "validateName", &SceneAlgo::validateName );
 
 	def( "filteredNodes", &filteredNodesWrapper );
