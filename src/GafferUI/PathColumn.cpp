@@ -115,6 +115,12 @@ PathColumn::ContextMenuSignal &PathColumn::contextMenuSignal()
 	return m_contextMenuSignal;
 }
 
+PathColumn::PathColumnSignal &PathColumn::instanceCreatedSignal()
+{
+	static PathColumnSignal g_instanceCreatedSignal;
+	return g_instanceCreatedSignal;
+}
+
 //////////////////////////////////////////////////////////////////////////
 // StandardPathColumn
 //////////////////////////////////////////////////////////////////////////

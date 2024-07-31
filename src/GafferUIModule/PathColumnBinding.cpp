@@ -504,6 +504,8 @@ void GafferUIModule::bindPathColumn()
 		.def( "buttonReleaseSignal", &PathColumn::buttonReleaseSignal, return_internal_reference<1>() )
 		.def( "buttonDoubleClickSignal", &PathColumn::buttonDoubleClickSignal, return_internal_reference<1>() )
 		.def( "contextMenuSignal", &PathColumn::contextMenuSignal, return_internal_reference<1>() )
+		.def( "instanceCreatedSignal", &PathColumn::instanceCreatedSignal, return_value_policy<reference_existing_object>() )
+		.staticmethod( "instanceCreatedSignal" )
 		.def( "getSizeMode", (PathColumn::SizeMode (PathColumn::*)() const )&PathColumn::getSizeMode )
 		.def( "setSizeMode", &PathColumn::setSizeMode, ( arg( "sizeMode" ) ) )
 	;

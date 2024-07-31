@@ -166,6 +166,14 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 		using ContextMenuSignal = Gaffer::Signals::Signal<void ( PathColumn &column, PathListingWidget &widget, MenuDefinition &menuDefinition ), Gaffer::Signals::CatchingCombiner<void>>;
 		ContextMenuSignal &contextMenuSignal();
 
+		/// Creation
+		/// ========
+
+		/// Signal emitted whenever a new PathColumn is created. This provides
+		/// an opportunity for the customisation of columns anywhere, no matter how
+		/// they are created or where they are hosted.
+		static PathColumnSignal &instanceCreatedSignal();
+
 	private :
 
 		PathColumnSignal m_changedSignal;
@@ -301,5 +309,22 @@ class MenuDefinition
 		virtual void append( const std::string &path, const MenuItem &item ) = 0;
 
 };
+
+/// Overload for the standard `intrusive_ptr_add_ref` defined in RefCounted.h.
+/// This allows us to emit `instanceCreatedSignal()` once the object is fully
+/// constructed and it is safe for slots (especially Python slots) to add
+/// additional references.
+///
+/// > Caution : This won't be called if you assign a new PathColumn to
+/// > RefCountedPtr rather than PathColumnPtr. Don't do that!
+inline void intrusive_ptr_add_ref( PathColumn *column )
+{
+	bool firstRef = column->refCount() == 0;
+	column->addRef();
+	if( firstRef )
+	{
+		PathColumn::instanceCreatedSignal()( column );
+	}
+}
 
 } // namespace GafferUI
