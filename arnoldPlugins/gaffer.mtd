@@ -2684,26 +2684,59 @@
 	[attr density]
 		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Density"
+		gaffer.layout.index INT 0
 	[attr density_channel]
 		page STRING "Density"
+		gaffer.layout.index INT 1
 
 	[attr scatter]
 		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Scatter"
+		gaffer.layout.index INT 2
 	[attr scatter_color]
 		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Scatter"
+		gaffer.layout.index INT 3
 	[attr scatter_color_channel]
 		page STRING "Scatter"
+		gaffer.layout.index INT 4
 	[attr scatter_anisotropy]
 		page STRING "Scatter"
+		gaffer.layout.index INT 5
 	[attr scatter_secondary_anisotropy]
 		page STRING "Scatter"
 		label STRING "Secondary Anisotropy"
 		gaffer.layout.activator STRING "secondaryAnisotropyEnabled"
+		gaffer.layout.index INT 6
 	[attr scatter_secondary_anisotropy_mix]
 		page STRING "Scatter"
 		label STRING "Secondary Anisotropy Mix"
+		gaffer.layout.index INT 7
+
+	[attr scatter_diffusion]
+		page STRING "Scatter Diffusion"
+		label STRING "Diffusion"
+		gaffer.layout.index INT 8
+	[attr scatter_diffusion_bias]
+		page STRING "Scatter Diffusion"
+		label STRING "Diffusion Bias"
+		gaffer.layout.index INT 9
+	[attr scatter_diffusion_gain]
+		page STRING "Scatter Diffusion"
+		label STRING "Diffusion Gain"
+		gaffer.layout.index INT 10
+	[attr scatter_diffusion_roughness]
+		page STRING "Scatter Diffusion"
+		label STRING "Diffusion Roughness"
+		gaffer.layout.index INT 11
+	[attr scatter_diffusion_roughness_bias]
+		page STRING "Scatter Diffusion"
+		label STRING "Diffusion Roughness Bias"
+		gaffer.layout.index INT 12
+	[attr scatter_diffusion_roughness_gain]
+		page STRING "Scatter Diffusion"
+		label STRING "Diffusion Roughness Gain"
+		gaffer.layout.index INT 13
 
 	[attr transparent]
 		page STRING "Transparent"
