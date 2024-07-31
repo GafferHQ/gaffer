@@ -61,4 +61,5 @@ if sys.platform == "win32" :
 	LOCATE_DEPENDENCY_PYTHONPATH=os.path.join(os.environ["GAFFER_BUILD_DIR"], "python")
 	GLEW_LIB_SUFFIX = "32"
 	INKSCAPE = "C:\\Program Files\\Inkscape\\bin\\inkscape.exe"
-	SPHINX = "noSphinxYet"
+	SPHINX = "sphinx-build.exe"
+	ENV_VARS_TO_IMPORT += " GALLIUM_DRIVER"

@@ -1,6 +1,7 @@
 # BuildTarget: index.md
 # UndeclaredBuildTargets
 
+import Gaffer
 import GafferUI
 
 # GafferArnold isn't installed under the standard module path

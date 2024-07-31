@@ -72,6 +72,7 @@ GafferUI.WidgetAlgo.grab( widget = mainWindow, imagePath = "images/conceptContex
 # Concept: Context Variables in expressions (Node Editor)
 nodeEditorWindow = GafferUI.NodeEditor.acquire( script["Expression"], floating = True )
 nodeEditorWindow._qtWidget().setFocus()
+nodeEditorWindow.parent()._qtWidget().resize( 408, 400 )
 GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = "images/conceptContextsContextVariablesInExpressionsNodeEditor.png" )
 nodeEditorWindow.parent().close()
 del nodeEditorWindow
@@ -152,6 +153,7 @@ script["fileName"].setValue( os.path.abspath( "scripts/conceptContextsInParallel
 script.load()
 nodeEditorWindow = GafferUI.NodeEditor.acquire( script["Expression"], floating = True )
 nodeEditorWindow._qtWidget().setFocus()
+nodeEditorWindow.parent()._qtWidget().resize( 408, 400 )
 GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = "images/conceptContextsInParallelBranchesNodeEditor.png" )
 nodeEditorWindow.parent().close()
 del nodeEditorWindow
@@ -199,6 +201,7 @@ script["fileName"].setValue( os.path.abspath( "scripts/conceptContextsInParallel
 script.load()
 nodeEditorWindow = GafferUI.NodeEditor.acquire( script["Expression"], floating = True )
 nodeEditorWindow._qtWidget().setFocus()
+nodeEditorWindow.parent()._qtWidget().resize( 408, 400 )
 GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = "images/conceptContextsInParallelBranchesDownstreamNodeEditor.png" )
 nodeEditorWindow.parent().close()
 del nodeEditorWindow
