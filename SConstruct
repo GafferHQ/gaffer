@@ -940,7 +940,7 @@ if env["ARNOLD_ROOT"] :
 			shell = True
 		)
 
-		nodeDefRegex = re.compile( r"\s*([a-zA-Z0-9_]+)\s+(driver|color_manager|driver|filter|light|operator|options|override|shader|shape)" )
+		nodeDefRegex = re.compile( r"\s*([a-zA-Z0-9_]+)\s+(driver|color_manager|driver|filter|imager|light|operator|options|override|shader|shape)" )
 		nodes = set()
 		for line in kickOutput.split( "\n" ) :
 			m = nodeDefRegex.match( line )
@@ -2162,13 +2162,17 @@ def generateDocs( target, source, env ) :
 	localFile = os.path.basename( str(source[0]) )
 
 	ext = os.path.splitext( localFile )[1]
+	gafferCmd = shutil.which( "gaffer.cmd" if sys.platform == "win32" else "gaffer", path = env["ENV"]["PATH"] )
 	command = []
 	if localFile == "screengrab.py" :
-		command = [ "gaffer", "screengrab", "-commandFile", localFile ]
+		command = [ gafferCmd, "screengrab", "-commandFile", localFile ]
 	elif ext == ".py" :
-		command = [ "gaffer", "env", "python", localFile ]
+		command = [ gafferCmd, "env", "python", localFile ]
 	elif ext == ".sh" :
-		command = [ "gaffer", "env", "./" + localFile ]
+		if sys.platform == "win32" :
+			command = [ gafferCmd, "env", "sh", "./" + localFile ]
+		else :
+			command = [ gafferCmd, "env", "./" + localFile ]
 	if command :
 		sys.stdout.write( "Running {0}\n".format( os.path.join( root, localFile ) ) )
 		subprocess.check_call( command, cwd = root, env = env["ENV"] )
@@ -2237,7 +2241,7 @@ if haveSphinx and haveInkscape :
 	# use host python to avoid needing a matrix of sphinx versions to match Gaffer's
 	# bundled python version.
 	docEnv = env.Clone()
-	docEnv["ENV"]["PYTHONPATH"] = ":".join( sys.path )
+	docEnv["ENV"]["PYTHONPATH"] = os.path.pathsep.join( sys.path )
 
 	# Since we don't copy the docs reference scripts, the screengrab
 	# scripts must read them from the source, so we use the reference
@@ -2253,9 +2257,9 @@ if haveSphinx and haveInkscape :
 	libraryPathEnvVar = "DYLD_LIBRARY_PATH" if docEnv["PLATFORM"]=="darwin" else "LD_LIBRARY_PATH"
 
 	if docCommandEnv.subst( "$ARNOLD_ROOT" ) :
-		docCommandEnv["ENV"]["PATH"] += ":" + docCommandEnv.subst( "$ARNOLD_ROOT/bin" )
-		docCommandEnv["ENV"]["PYTHONPATH"] += ":" + docCommandEnv.subst( "$ARNOLD_ROOT/python" )
-		docCommandEnv["ENV"][libraryPathEnvVar] = docCommandEnv["ENV"].get( libraryPathEnvVar, "" ) + ":" + docCommandEnv.subst( "$ARNOLD_ROOT/bin" )
+		docCommandEnv["ENV"]["PATH"] += os.path.pathsep + docCommandEnv.subst( "$ARNOLD_ROOT/bin" )
+		docCommandEnv["ENV"]["PYTHONPATH"] += os.path.pathsep + docCommandEnv.subst( "$ARNOLD_ROOT/python" )
+		docCommandEnv["ENV"][libraryPathEnvVar] = docCommandEnv["ENV"].get( libraryPathEnvVar, "" ) + os.path.pathsep + docCommandEnv.subst( "$ARNOLD_ROOT/bin" )
 
 	#  Docs graphics generation
 	docGraphicsCommands = graphicsCommands( docEnv, "resources/docGraphics.svg", "$BUILD_DIR/doc/gaffer/graphics" )

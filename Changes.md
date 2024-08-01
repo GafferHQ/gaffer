@@ -58,8 +58,35 @@ Breaking Changes
 - Loop : Removed `nextIterationContext()` method.
 - NodeGadget, ConnectionGadget : Removed `activeForFocusNode()` virtual methods. Override `updateFromContextTracker()` instead.
 
-1.4.x.x (relative to 1.4.9.0)
+1.4.x.x (relative to 1.4.10.0)
 =======
+
+Improvements
+------------
+
+- SetExpressions : Set Expressions containing only whitespace characters are now treated as empty rather than producing an error.
+- ArnoldShader : Moved Arnold 7.3.3.0's new `standard_volume.scatter_diffusion` parameters to a "Scatter Diffusion" section of the UI.
+
+Fixes
+-----
+
+- Arnold : Fixed bug preventing UI metadata for Imagers from being loaded for Arnold 7.3.
+- WidgetAlgo : Fixed issue preventing `grab()` from capturing popup menus on Windows.
+- ShowURL : Fixed opening of "file://" URLs on Windows (#5861).
+
+API
+---
+
+- PathListingWidget : Added `columnContextMenuSignal()`, allowing multiple clients to collaborate on the creation of a column-specific context menu.
+- HierarchyView : Added `sceneListing()` method, to allow the context menu to be customised.
+
+Documentation
+-------------
+
+- Windows : Documentation is now included in Windows release packages.
+
+1.4.10.0 (relative to 1.4.9.0)
+========
 
 Improvements
 ------------

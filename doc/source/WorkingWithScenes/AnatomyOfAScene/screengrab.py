@@ -83,5 +83,6 @@ for imageName, sectionClass in [
 
 	window.resizeToFitChild()
 	window.setVisible( True )
+	__delay( 0.5 )
 
 	GafferUI.WidgetAlgo.grab( widget = sceneInspector, imagePath = "images/sceneInspector" + imageName )

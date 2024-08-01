@@ -4,7 +4,7 @@
 # BuildTarget: images/tutorialVariableSubstitutionTest.png
 # BuildDependency: scripts/tutorialVariableSubstitutionInStringPlug_edit.gfr
 
-import os
+import pathlib
 import subprocess
 import tempfile
 import time
@@ -27,20 +27,23 @@ def __delay( delay ) :
 		GafferUI.EventLoop.waitForIdle( 1 )
 
 # Create a random directory in `/tmp` for the dispatcher's `jobsDirectory`, so we don't clutter the user's `~gaffer` directory
-__temporaryDirectory = tempfile.mkdtemp( prefix = "gafferDocs" )
+__temporaryDirectory = pathlib.Path( tempfile.mkdtemp( prefix = "gafferDocs" ) )
 
 def __getTempFilePath( fileName, directory = __temporaryDirectory ) :
-	filePath = "/".join( ( directory, fileName ) )
 
-	return filePath
+	return ( directory / fileName ).as_posix()
+
+def __outputImagePath( fileName ) :
+
+	return pathlib.Path( "images/{}.png".format( fileName ) ).absolute().as_posix()
 
 def __dispatchScript( script, tasks, settings ) :
 	command = "gaffer dispatch -script {} -tasks {} -dispatcher Local -settings {} -dispatcher.jobsDirectory '\"{}/dispatcher/local\"'".format(
 		script,
 		" ".join( tasks ),
 		" ".join( settings ),
-		__temporaryDirectory
-		)
+		__temporaryDirectory.as_posix()
+	)
 	subprocess.check_call( command, shell=True )
 
 # Illustration: a `tree` command run on a custom startup config
@@ -85,9 +88,9 @@ __dispatchScript(
 	tasks = [ "ImageWriter" ],
 	settings = [
 		"-ImageReader.fileName '\"{}\"'".format( __tempImagePath ),
-		"-ImageWriter.fileName '\"{}\"'".format( os.path.abspath( "images/{}.png".format( __imageName ) ) )
-		]
-	)
+		"-ImageWriter.fileName '\"{}\"'".format( __outputImagePath( __imageName ) )
+	]
+)
 script.selection().clear()
 __nodeEditorWindow.setVisible( False )
 

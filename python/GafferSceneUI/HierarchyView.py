@@ -91,7 +91,7 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 			self.__selectionChangedConnection = self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ), scoped = False )
 			self.__expansionChangedConnection = self.__pathListing.expansionChangedSignal().connect( Gaffer.WeakMethod( self.__expansionChanged ), scoped = False )
 
-			self.__pathListing.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenuSignal ), scoped = False )
+			self.__pathListing.columnContextMenuSignal().connect( Gaffer.WeakMethod( self.__columnContextMenuSignal ), scoped = False )
 			self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPressSignal ), scoped = False )
 
 		self._updateFromSet()
@@ -102,6 +102,17 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 	def scene( self ) :
 
 		return self.settings()["in"].getInput()
+
+	## Returns the widget used for showing the main scene listing, with the
+	# intention that clients can add custom context menu items via
+	# `sceneListing.columnContextMenuSignal()`.
+	#
+	# > Caution : This currently returns a PathListingWidget, but in future
+	# > will probably return a more specialised widget with fewer privileges.
+	# > Please limit usage to `columnContextMenuSignal()`.
+	def sceneListing( self ) :
+
+		return self.__pathListing
 
 	def __repr__( self ) :
 
@@ -167,11 +178,9 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 
 		return False
 
-	def __contextMenuSignal( self, widget ) :
+	def __columnContextMenuSignal( self, column, pathListing, menuDefinition ) :
 
-		menuDefinition = IECore.MenuDefinition()
-
-		selection = self.__pathListing.getSelection()
+		selection = pathListing.getSelection()
 		menuDefinition.append(
 			"Copy Path%s" % ( "" if selection.size() == 1 else "s" ),
 			{
@@ -188,11 +197,6 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 				"shortCut" : "F"
 			}
 		)
-
-		self.__contextMenu = GafferUI.Menu( menuDefinition )
-		self.__contextMenu.popup( widget )
-
-		return True
 
 	def __copySelectedPaths( self, *unused ) :
 

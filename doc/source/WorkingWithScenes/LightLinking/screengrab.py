@@ -75,6 +75,9 @@ for imageName, sectionClass in [
 
 	GafferUI.WidgetAlgo.grab( widget = sceneInspector, imagePath = "images/interface" + imageName )
 
+	window.close()
+	del window
+
 # Interface: a StandardAttributes node downstream of an object node
 script.selection().clear()
 graphEditor.frame( script.children( Gaffer.Node ) )

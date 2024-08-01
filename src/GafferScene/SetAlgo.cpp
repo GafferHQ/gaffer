@@ -439,7 +439,7 @@ struct ExpressionGrammar : qi::grammar<Iterator, ExpressionAst(), ascii::space_t
 
 void expressionToAST( const std::string &setExpression, ExpressionAst &ast)
 {
-	if( setExpression == "" )
+	if( std::all_of( setExpression.begin(), setExpression.end(), isspace ) )
 	{
 		return;
 	}
