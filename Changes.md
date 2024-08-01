@@ -14,6 +14,12 @@ Fixes
 - WidgetAlgo : Fixed issue preventing `grab()` from capturing popup menus on Windows.
 - ShowURL : Fixed opening of "file://" URLs on Windows (#5861).
 
+API
+---
+
+- PathListingWidget : Added `columnContextMenuSignal()`, allowing multiple clients to collaborate on the creation of a column-specific context menu.
+- HierarchyView : Added `sceneListing()` method, to allow the context menu to be customised.
+
 Documentation
 -------------
 
