@@ -163,16 +163,32 @@ class _ComponentSlider( GafferUI.Slider ) :
 		GafferUI.Slider._displayTransformChanged( self )
 		self._qtWidget().update()
 
+class _ColorFieldWidget( QtWidgets.QWidget ) :
+
+	def __init__( self, parent = None ) :
+
+		QtWidgets.QWidget.__init__( self, parent )
+
+		self.__size = 216
+
+	def resizeEvent( self, event ) :
+
+		w = event.size().width()
+		h = event.size().height()
+
+		if w != h :
+			self.__size = h
+			self.setMinimumWidth( h )
+
+	def sizeHint( self ) :
+
+		return QtCore.QSize( self.__size, self.__size )
+
 class _ColorField( GafferUI.Widget ) :
 
 	def __init__( self, color = imath.Color3f( 1.0 ), staticComponent = "h", **kw ) :
 
-		GafferUI.Widget.__init__( self, QtWidgets.QWidget(), **kw )
-
-		# \todo Allow the widget to grow if the containing window is resized. It should also
-		# be constrained to be square.
-		self._qtWidget().setMinimumSize( 216, 216 )
-		self._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed )
+		GafferUI.Widget.__init__( self, _ColorFieldWidget(), **kw )
 
 		self._qtWidget().paintEvent = Gaffer.WeakMethod( self.__paintEvent )
 
