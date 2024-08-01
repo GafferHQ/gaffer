@@ -137,7 +137,7 @@ def __createXRayShader() :
 
 	return xray
 
-GafferSceneUI.SceneView.registerShadingMode( "X-Ray", functools.partial( __createXRayShader ) )
+GafferSceneUI.SceneView.registerShadingMode( "X-Ray", __createXRayShader )
 
 def __loadRendererSettings( fileName ) :
 
