@@ -5,7 +5,9 @@ Improvements
 ------------
 
 - SetExpressions : Set Expressions containing only whitespace characters are now treated as empty rather than producing an error.
-- ArnoldShader : Moved Arnold 7.3.3.0's new `standard_volume.scatter_diffusion` parameters to a "Scatter Diffusion" section of the UI.
+- ArnoldShader :
+  - Added a UI layout for the new `openpbr_surface` shader.
+  - Moved Arnold 7.3.3.0's new `standard_volume.scatter_diffusion` parameters to a "Scatter Diffusion" section of the UI.
 
 Fixes
 -----
