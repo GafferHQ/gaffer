@@ -183,6 +183,7 @@ enum TypeId
 	MeshTessellateTypeId = 110639,
 	RenderPassShaderTypeId = 110640,
 	ShaderTweakProxyTypeId = 110641,
+	MergeObjectsTypeId = 110642,
 
 	PreviewPlaceholderTypeId = 110647,
 	PreviewGeometryTypeId = 110648,
