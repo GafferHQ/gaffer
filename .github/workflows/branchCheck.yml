@@ -1,0 +1,25 @@
+name: Branch check
+on: [ push ]
+jobs:
+  check:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: Check branch
+      run: |
+        import re
+
+        def version() :
+          versions = {}
+          versionRe = re.compile( r"^(gaffer.*Version.*) = (\S+)" )
+          with open( "SConstruct" ) as sconstruct :
+            for line in sconstruct.readlines() :
+            versionMatch = versionRe.match( line )
+            if versionMatch :
+              versions[versionMatch.group( 1 )] = versionMatch.group( 2 ).strip( "'\"" )
+              version = [ int( gafferMilestoneVersion ), int( gafferMajorVersion ) ]
+
+        currentVersion = version()
+        print( currentVersion )
+
+      shell: python
