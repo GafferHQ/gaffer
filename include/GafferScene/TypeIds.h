@@ -184,6 +184,7 @@ enum TypeId
 	RenderPassShaderTypeId = 110640,
 	ShaderTweakProxyTypeId = 110641,
 	MergeObjectsTypeId = 110642,
+	MergeMeshesTypeId = 110643,
 
 	PreviewPlaceholderTypeId = 110647,
 	PreviewGeometryTypeId = 110648,

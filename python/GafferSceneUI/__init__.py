@@ -199,6 +199,7 @@ from . import MeshTessellateUI
 from . import RenderPassTypeAdaptorUI
 from . import RenderPassShaderUI
 from . import MergeObjectsUI
+from . import MergeMeshesUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

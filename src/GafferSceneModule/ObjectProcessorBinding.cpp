@@ -46,6 +46,7 @@
 #include "GafferScene/DeletePoints.h"
 #include "GafferScene/LightToCamera.h"
 #include "GafferScene/MergeObjects.h"
+#include "GafferScene/MergeMeshes.h"
 #include "GafferScene/MeshDistortion.h"
 #include "GafferScene/MeshNormals.h"
 #include "GafferScene/MeshSegments.h"
@@ -91,6 +92,7 @@ void GafferSceneModule::bindObjectProcessor()
 	GafferBindings::DependencyNodeClass<MeshNormals>();
 	GafferBindings::DependencyNodeClass<MeshTessellate>();
 	GafferBindings::DependencyNodeClass<MergeObjects>();
+	GafferBindings::DependencyNodeClass<MergeMeshes>();
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<GafferScene::MeshTangents>();

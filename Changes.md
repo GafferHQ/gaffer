@@ -1,6 +1,11 @@
 1.x.x.x (relative to 1.4.x.x)
 =======
 
+Features
+--------
+
+- MergeMeshes : Added node for merging meshes.
+
 Improvements
 ------------
 
