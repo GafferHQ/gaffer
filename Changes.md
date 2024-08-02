@@ -27,6 +27,7 @@ Fixes
 - Shuffle, ShuffleAttributes, ShufflePrimitiveVariables : Fixed some special cases where shuffling a source to itself would fail to have the expected effect.
 - GraphEditor : Fixed dimming of labels for BoxIn and BoxOut nodes.
 - GafferCortexUI : Removed usage of legacy PlugValueWidget API.
+- Dispatcher : Fixed crashes caused by a dispatcher's `SetupPlugsFn` attempting to access the TaskNode it was being called for. Dispatchers may now introspect the TaskNode and add different plugs based on type (#915).
 
 API
 ---

@@ -201,8 +201,6 @@ class GAFFERDISPATCH_API Dispatcher : public TaskNode
 
 	protected :
 
-		friend class TaskNode;
-
 		IE_CORE_FORWARDDECLARE( TaskBatch )
 
 		using TaskBatches = std::vector<TaskBatchPtr>;
@@ -270,15 +268,11 @@ class GAFFERDISPATCH_API Dispatcher : public TaskNode
 		/// batches have been dispatched in order to prevent duplicate work.
 		virtual void doDispatch( const TaskBatch *batch ) const = 0;
 
-		//! @name TaskNode Customization
-		/// Dispatchers are able to create custom plugs on TaskNodes when they are constructed.
-		/////////////////////////////////////////////////////////////////////////////////////////////
-		//@{
-		/// Adds the custom plugs from all registered Dispatchers to the given parent Plug.
-		static void setupPlugs( Gaffer::Plug *parentPlug );
-		//@}
-
 	private :
+
+		// Friendship to allow `setupPlugs()` to be called.
+		friend void intrusive_ptr_add_ref( TaskNode *node );
+		static void setupPlugs( Gaffer::Plug *parentPlug );
 
 		void preTasks( const Gaffer::Context *context, Tasks &tasks ) const final;
 		void postTasks( const Gaffer::Context *context, Tasks &tasks ) const final;
