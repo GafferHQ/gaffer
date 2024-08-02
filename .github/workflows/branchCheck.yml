@@ -4,7 +4,7 @@ jobs:
   check:
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Check branch
       run: |
         import re
@@ -23,5 +23,7 @@ jobs:
 
         currentVersion = version()
         print( currentVersion )
+
+        print( os.environ )
 
       shell: python
