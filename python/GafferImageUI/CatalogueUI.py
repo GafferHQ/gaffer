@@ -753,6 +753,9 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 				self.__pathListing.dropSignal().connect(
 					Gaffer.WeakMethod( self.__pathListingDrop ), scoped = False
 				)
+				self.__pathListing.getPath().pathChangedSignal().connect(
+					Gaffer.WeakMethod( self.__pathChanged ), scoped = False
+				)
 				self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) as self.__buttonRow :
@@ -837,6 +840,12 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 		# No need to manage editability of `self.__nameWidget` and
 		# `self.__descriptionWidget` because they deal with that
 		# internally.
+
+	def __pathChanged( self, path ) :
+
+		# `_updateFromValues()` is sensitive to the contents of the image path so
+		# we need to do an update when it changes.
+		self._requestUpdateFromValues()
 
 	def __plugMetadataValueChanged( self, plug, key, reason ) :
 
