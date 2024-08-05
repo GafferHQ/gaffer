@@ -271,7 +271,7 @@ class GAFFERDISPATCH_API Dispatcher : public TaskNode
 	private :
 
 		// Friendship to allow `setupPlugs()` to be called.
-		friend void intrusive_ptr_add_ref( TaskNode *node );
+		friend GAFFERDISPATCH_API void intrusive_ptr_add_ref( TaskNode *node );
 		static void setupPlugs( Gaffer::Plug *parentPlug );
 
 		void preTasks( const Gaffer::Context *context, Tasks &tasks ) const final;
