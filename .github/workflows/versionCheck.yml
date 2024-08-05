@@ -1,0 +1,73 @@
+name: Version check
+on: [ pull_request ]
+jobs:
+
+  check:
+
+    name: Version check
+    runs-on: ubuntu-20.04
+
+    steps:
+
+    # Checkout both the merge commit for the PR and the
+    # source branch for the PR.
+
+    - uses: actions/checkout@v4
+      with:
+        path: merge
+
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+        path: source
+
+    # Do the check.
+
+    - name: Check version
+      run: |
+
+        import os
+        import re
+        import sys
+
+        # Parses version number from the SConstruct file.
+        def version( filename ) :
+
+          versions = {}
+          versionRe = re.compile( r"^(gaffer.*Version.*) = (\S+)" )
+          with open( filename ) as sconstruct :
+            for line in sconstruct.readlines() :
+              versionMatch = versionRe.match( line )
+              if versionMatch :
+                versions[versionMatch.group( 1 )] = versionMatch.group( 2 ).strip( "'\"" )
+
+          return versions["gafferMilestoneVersion"] + "." + versions["gafferMajorVersion"]
+
+        # Check that versions match between source and target branches, to avoid
+        # common mistake of targeting a PR to `main` rather than a maintenance branch.
+        #
+        # > Note : We compare the source version to the merged version rather than the
+        # > version from the target branch itself, to allow a PR to change version number
+        # > if necessary. That will just be subject to the usual human review process.
+
+        mergeVersion = version( "merge/SConstruct" )
+        sourceVersion = version( "source/SConstruct" )
+
+        if sourceVersion != mergeVersion :
+
+          message = "Source version {} does not match target version {}. Did you choose the wrong target branch?\n".format(
+            sourceVersion, mergeVersion
+          )
+
+          sys.stderr.write( f"FAIL : {message}" )
+          with open( os.environ["GITHUB_STEP_SUMMARY"], "a" ) as summary :
+            summary.write( f"> [!CAUTION]\n> {message}" )
+
+          sys.exit( 1 )
+
+        else :
+
+           with open( os.environ["GITHUB_STEP_SUMMARY"], "a" ) as summary :
+            summary.write( f"> [!NOTE]\n> Targeting version {mergeVersion}" )
+
+      shell: python
