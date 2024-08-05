@@ -1,7 +1,5 @@
 name: Branch check
-on: pull_request:
-    branches:
-      - '*'
+on: [ pull_request ]
 jobs:
   check:
     runs-on: ubuntu-20.04
