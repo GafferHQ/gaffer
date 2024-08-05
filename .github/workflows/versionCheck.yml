@@ -1,5 +1,9 @@
 name: Version check
-on: [ pull_request ]
+on:
+  pull_request:
+    # Add `edited` to the default types, so that the check runs again
+    # when the target branch changes.
+    types: [opened, synchronize, reopened, edited]
 jobs:
 
   check:
