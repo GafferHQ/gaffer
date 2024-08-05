@@ -13,6 +13,7 @@ Improvements
   - Green : Render
   - Blue : Proxy
   - Red : Guide
+- Catalogue : Added a handle for controlling the relative sizes of the listing and image property widgets.
 
 Fixes
 -----
