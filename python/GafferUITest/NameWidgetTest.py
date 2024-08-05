@@ -70,5 +70,46 @@ class NameWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( w.getText(), "" )
 		self.assertTrue( w.getGraphComponent() is None )
 
+	def testEditability( self ) :
+
+		node = Gaffer.Node()
+		node["user"]["p1"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		node["user"]["p2"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		nodeNameWidget = GafferUI.NameWidget( node )
+		plugNameWidget = GafferUI.NameWidget( node["user"]["p1"] )
+
+		self.assertTrue( nodeNameWidget.getEditable() )
+		self.assertTrue( plugNameWidget.getEditable() )
+
+		Gaffer.Metadata.registerValue( node, "readOnly", True )
+
+		self.assertFalse( nodeNameWidget.getEditable() )
+		self.assertFalse( plugNameWidget.getEditable() )
+
+		Gaffer.Metadata.registerValue( node, "readOnly", False )
+
+		self.assertTrue( nodeNameWidget.getEditable() )
+		self.assertTrue( plugNameWidget.getEditable() )
+
+		Gaffer.Metadata.registerValue( node["user"]["p2"], "readOnly", True )
+
+		self.assertTrue( nodeNameWidget.getEditable() )
+		self.assertTrue( plugNameWidget.getEditable() )
+
+		Gaffer.Metadata.registerValue( node["user"]["p1"], "readOnly", True )
+
+		self.assertTrue( nodeNameWidget.getEditable() )
+		self.assertFalse( plugNameWidget.getEditable() )
+
+		nodeNameWidget.setGraphComponent( None )
+		self.assertFalse( nodeNameWidget.getEditable() )
+
+		plugNameWidget.setGraphComponent( None )
+		self.assertFalse( plugNameWidget.getEditable() )
+
+		noneWidget = GafferUI.NameWidget( graphComponent = None )
+		self.assertFalse( noneWidget.getEditable() )
+
 if __name__ == "__main__":
 	unittest.main()

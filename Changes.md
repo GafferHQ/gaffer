@@ -22,6 +22,7 @@ Fixes
 - ShowURL : Fixed opening of "file://" URLs on Windows (#5861).
 - Shader : Fixed "Revert to Defaults" menu item in NodeEditor (#1862).
 - Catalogue : Fixed bug which allowed locked Catalogues to be edited.
+- NameWidget : Fixed bug which allowed plugs on locked nodes to be renamed.
 
 API
 ---
