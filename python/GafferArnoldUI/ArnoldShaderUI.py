@@ -347,15 +347,15 @@ def __translateNodeMetadata( nodeEntry ) :
 				__metadata[parent]["layout:section:%s:collapsed" % page] = collapsed
 
 		# Label from OSL "label"
+		defaultLabel = " ".join( [ i.capitalize() for i in paramName.split( "_" ) ] )
 		label = __aiMetadataGetStr( nodeEntry, paramName, "label" )
 		if label is None :
-			# Label from Arnold naming convention
-			# Arnold uses snake_case rather than camelCase for naming, so translate this into
-			# nice looking names
-			label = " ".join( [ i.capitalize() for i in paramName.split( "_" ) ] )
+			label = defaultLabel
 
 		__metadata[paramPath]["label"] = label
-		__metadata[paramPath]["noduleLayout:label"] = label
+		# Custom labels typically only make sense in the context of `page`, so we
+		# use the default label for the GraphEditor.
+		__metadata[paramPath]["noduleLayout:label"] = defaultLabel
 
 		if (
 			arnold.AiNodeEntryGetType( nodeEntry ) == arnold.AI_NODE_LIGHT and

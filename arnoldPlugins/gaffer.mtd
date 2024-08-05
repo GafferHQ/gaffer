@@ -2146,6 +2146,203 @@
 	gaffer.nodeMenu.category STRING "Maths"
 
 
+[node openpbr_surface]
+
+	gaffer.nodeMenu.category STRING "Surface"
+
+	gaffer.graphEditorLayout.defaultVisibility BOOL false
+
+	[attr base_weight]
+		page STRING "Base"
+		label STRING "Weight"
+	[attr base_color]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Base"
+		label STRING "Color"
+	[attr base_metalness]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Base"
+		label STRING "Metalness"
+	[attr base_diffuse_roughness]
+		page STRING "Base"
+		label STRING "Diffuse Roughness"
+
+	[attr specular_weight]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Specular"
+		label STRING "Weight"
+	[attr specular_color]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Specular"
+		label STRING "Color"
+	[attr specular_roughness]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Specular"
+		label STRING "Roughness"
+	[attr specular_roughness_anisotropy]
+		page STRING "Specular"
+		label STRING "Roughness Anisotropy"
+	[attr specular_ior]
+		page STRING "Specular"
+		label STRING "IOR"
+
+	[attr transmission_weight]
+		page STRING "Transmission"
+		label STRING "Weight"
+	[attr transmission_color]
+		page STRING "Transmission"
+		label STRING "Color"
+	[attr transmission_depth]
+		page STRING "Transmission"
+		label STRING "Depth"
+	[attr transmission_scatter]
+		page STRING "Transmission"
+		label STRING "Scatter"
+	[attr transmission_scatter_anisotropy]
+		page STRING "Transmission"
+		label STRING "Scatter Anisotropy"
+	[attr transmission_dispersion_abbe_number]
+		page STRING "Transmission"
+		label STRING "Dispersion Abbe Number"
+	[attr transmission_dispersion_scale]
+		page STRING "Transmission"
+		label STRING "Dispersion Scale"
+	[attr transmission_transmit_aovs]
+		page STRING "Transmission"
+		label STRING "Transmit AOVs"
+	[attr dielectric_priority]
+		page STRING "Transmission"
+
+	[attr subsurface_weight]
+		page STRING "Subsurface"
+		label STRING "Weight"
+	[attr subsurface_color]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Subsurface"
+		label STRING "Color"
+	[attr subsurface_radius]
+		page STRING "Subsurface"
+		label STRING "Radius"
+	[attr subsurface_radius_scale]
+		page STRING "Subsurface"
+		label STRING "Radius Scale"
+	[attr subsurface_scatter_anisotropy]
+		page STRING "Subsurface"
+		label STRING "Scatter Anisotropy"
+
+	[attr coat_weight]
+		page STRING "Coat"
+		label STRING "Weight"
+	[attr coat_color]
+		page STRING "Coat"
+		label STRING "Color"
+	[attr coat_roughness]
+		page STRING "Coat"
+		label STRING "Roughness"
+	[attr coat_roughness_anisotropy]
+		page STRING "Coat"
+		label STRING "Roughness Anisotropy"
+	[attr coat_ior]
+		page STRING "Coat"
+		label STRING "IOR"
+	[attr coat_darkening]
+		page STRING "Coat"
+		label STRING "Darkening"
+
+	[attr fuzz_weight]
+		page STRING "Fuzz"
+		label STRING "Weight"
+	[attr fuzz_color]
+		page STRING "Fuzz"
+		label STRING "Color"
+	[attr fuzz_roughness]
+		page STRING "Fuzz"
+		label STRING "Roughness"
+
+	[attr emission_luminance]
+		page STRING "Emission"
+		label STRING "Luminance"
+	[attr emission_color]
+		page STRING "Emission"
+		label STRING "Color"
+
+	[attr thin_film_weight]
+		page STRING "Thin Film"
+		label STRING "Weight"
+	[attr thin_film_thickness]
+		page STRING "Thin Film"
+		label STRING "Thickness"
+	[attr thin_film_ior]
+		page STRING "Thin Film"
+		label STRING "IOR"
+
+	[attr geometry_thin_walled]
+		page STRING "Geometry"
+		label STRING "Thin Walled"
+	[attr geometry_opacity]
+		page STRING "Geometry"
+		label STRING "Opacity"
+	[attr geometry_normal]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Geometry"
+		label STRING "Normal"
+	[attr geometry_tangent]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Geometry"
+		label STRING "Tangent"
+	[attr geometry_coat_normal]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Geometry"
+		label STRING "Coat Normal"
+	[attr geometry_coat_tangent]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Geometry"
+		label STRING "Coat Tangent"
+
+	[attr caustics]
+		page STRING "Advanced"
+	[attr internal_reflections]
+		page STRING "Advanced"
+	[attr exit_to_background]
+		page STRING "Advanced"
+	[attr indirect_diffuse]
+		page STRING "Advanced"
+	[attr indirect_specular]
+		page STRING "Advanced"
+
+	[attr aov_id1]
+		page STRING "AOV"
+	[attr aov_id2]
+		page STRING "AOV"
+	[attr aov_id3]
+		page STRING "AOV"
+	[attr aov_id4]
+		page STRING "AOV"
+	[attr aov_id5]
+		page STRING "AOV"
+	[attr aov_id6]
+		page STRING "AOV"
+	[attr aov_id7]
+		page STRING "AOV"
+	[attr aov_id8]
+		page STRING "AOV"
+	[attr id1]
+		page STRING "AOV"
+	[attr id2]
+		page STRING "AOV"
+	[attr id3]
+		page STRING "AOV"
+	[attr id4]
+		page STRING "AOV"
+	[attr id5]
+		page STRING "AOV"
+	[attr id6]
+		page STRING "AOV"
+	[attr id7]
+		page STRING "AOV"
+	[attr id8]
+		page STRING "AOV"
+
 [node osl]
 
 	# In Gaffer, you should load OSL shaders in Gaffer, or use OSLCode, which will be

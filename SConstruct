@@ -922,55 +922,6 @@ if env["ARNOLD_ROOT"] :
 
 	arnoldInstallRoot = "${{BUILD_DIR}}/arnold/{ARCH}.{MAJOR}".format( **arnoldVersions )
 
-	# Metadata. Our `arnoldPlugins/gaffer.mtd` contains metadata for all the Arnold
-	# nodes we know about, in all Arnold versions. We need to filter this down
-	# to only the nodes in _this_ Arnold version during installation. Arnold emits
-	# warnings if we attempt to register metadata for nodes that don't exist.
-
-	def filterMetadata( target, source, env ) :
-
-		# Get set of built-in nodes
-
-		kickEnv = env["ENV"].copy()
-		kickEnv["PATH"] = os.pathsep.join( [ os.path.join( env["ARNOLD_ROOT"], "bin" ), kickEnv["PATH"] ] )
-		kickOutput = subprocess.check_output(
-			"kick -nodes",
-			env = kickEnv,
-			universal_newlines = True,
-			shell = True
-		)
-
-		nodeDefRegex = re.compile( r"\s*([a-zA-Z0-9_]+)\s+(driver|color_manager|driver|filter|imager|light|operator|options|override|shader|shape)" )
-		nodes = set()
-		for line in kickOutput.split( "\n" ) :
-			m = nodeDefRegex.match( line )
-			if m :
-				nodes.add( m.group( 1 ) )
-
-		# Filter the input metadata file so that we only include metadata
-		# for nodes that exist.
-
-		newNodeRegex = re.compile( r"^\[node ([a-zA-Z_0-9]+)\]" )
-		with open( str( source[0] ) ) as inFile :
-			with open( str( target[0] ), "w" ) as outFile :
-				omit = False
-				for line in inFile.readlines() :
-					m = newNodeRegex.match( line )
-					if m :
-						nodeName = m.group( 1 )
-						omit = nodeName not in nodes
-						if omit :
-							sys.stderr.write( "Omitting non-existent node {}\n".format( nodeName ) )
-					if not omit :
-						outFile.write( line )
-
-	metadataInstall = env.Command(
-		os.path.join( arnoldInstallRoot, "arnoldPlugins/gaffer.mtd" ),
-		"arnoldPlugins/gaffer.mtd",
-		filterMetadata
-	)
-	env.Alias( "build", metadataInstall )
-
 ###############################################################################################
 # Definitions for the libraries we wish to build
 ###############################################################################################
@@ -1191,6 +1142,7 @@ libraries = {
 		},
 		"requiredOptions" : [ "ARNOLD_ROOT" ],
 		"installRoot" : arnoldInstallRoot,
+		"additionalFiles" : [ "arnoldPlugins/gaffer.mtd" ],
 	},
 
 	"IECoreArnoldTest" : {
