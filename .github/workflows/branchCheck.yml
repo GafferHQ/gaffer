@@ -1,5 +1,7 @@
 name: Branch check
-on: [ push ]
+on: pull_request:
+    branches:
+      - '*'
 jobs:
   check:
     runs-on: ubuntu-20.04
@@ -9,6 +11,7 @@ jobs:
       run: |
         import os
         import re
+        import subprocess
 
         def version() :
 
@@ -24,6 +27,18 @@ jobs:
 
         currentVersion = version()
         print( currentVersion )
+
+        targetBranch = os.environ["GITHUB_BASE_REF"]
+        subprocess.check_call( [ "git", "checkout", targetBranch ] )
+        targetVersion = version()
+
+        if targetVersion != currentVersion :
+          sys.stderr.write(
+            "Current version {} does not match target branch version {}\n".format(
+              currentVersion, targetVersion
+            )
+          )
+          sys.exit( 1 )
 
         print( os.environ )
 
