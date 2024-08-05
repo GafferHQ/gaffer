@@ -824,6 +824,8 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 			self.__descriptionWidget.setPlug( None )
 			self.__nameWidget.setGraphComponent( None )
 
+	def _updateFromEditable( self ) :
+
 		self.__column.setEnabled( self._editable() )
 
 	def __plugMetadataValueChanged( self, plug, key, reason ) :
