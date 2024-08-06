@@ -16,6 +16,7 @@ Improvements
   - Improved highlighting of active nodes, with more accurate tracking of Loop node iterations.
   - Annotation `{plug}` substitutions are now evaluated in a context determined relative to the focus node.
   - The strike-through for disabled nodes is now evaluated in a context determined relative to the focus node.
+  - Custom dot labels are now evaluated in a context determined relative to the focus node.
 - LightEditor :
   - Improved formatting of column headers containing whitespace.
   - The "Double-click to toggle" tooltip is no longer displayed while hovering over non-editable cells, and a "Double-click to edit" tooltip is now displayed while hovering over other non-toggleable but editable cells.
@@ -29,7 +30,9 @@ Fixes
 - Scene Editors : Fixed update when ScenePlugs are added to or removed from the node being viewed.
 - PrimitiveInspector : Fixed failure to update when the location being viewed ceases to exist, or is recreated.
 - Shuffle, ShuffleAttributes, ShufflePrimitiveVariables : Fixed some special cases where shuffling a source to itself would fail to have the expected effect.
-- GraphEditor : Fixed dimming of labels for BoxIn and BoxOut nodes.
+- GraphEditor :
+  - Fixed dimming of labels for BoxIn and BoxOut nodes.
+  - Fixed update of custom context-sensitive labels on Dot nodes.
 - GafferCortexUI : Removed usage of legacy PlugValueWidget API.
 - Dispatcher : Fixed crashes caused by a dispatcher's `SetupPlugsFn` attempting to access the TaskNode it was being called for. Dispatchers may now introspect the TaskNode and add different plugs based on type (#915).
 
