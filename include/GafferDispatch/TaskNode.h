@@ -235,4 +235,6 @@ class GAFFERDISPATCH_API TaskNode : public Gaffer::DependencyNode
 
 };
 
+GAFFERDISPATCH_API void intrusive_ptr_add_ref( TaskNode *node );
+
 } // namespace GafferDispatch
