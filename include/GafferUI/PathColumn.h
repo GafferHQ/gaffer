@@ -164,6 +164,7 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 		ButtonSignal &buttonDoubleClickSignal();
 
 		using ContextMenuSignal = Gaffer::Signals::Signal<void ( PathColumn &column, PathListingWidget &widget, MenuDefinition &menuDefinition ), Gaffer::Signals::CatchingCombiner<void>>;
+		/// To retain `widget` for use in MenuItem commands, use `PathListingWidgetPtr( &widget )`.
 		ContextMenuSignal &contextMenuSignal();
 
 		/// Creation
@@ -272,10 +273,12 @@ IE_CORE_DECLAREPTR( FileIconPathColumn )
 /// C++ interface for the `GafferUI.PathListingWidget` Python class. Provided for
 /// use in PathColumn event signals, so that event handling may be implemented
 /// from C++ if desired.
-class PathListingWidget
+class PathListingWidget : public IECore::RefCounted
 {
 
 	public :
+
+		IE_CORE_DECLAREMEMBERPTR( PathListingWidget )
 
 		using Columns = std::vector<PathColumnPtr>;
 		virtual void setColumns( const Columns &columns ) = 0;
@@ -286,6 +289,8 @@ class PathListingWidget
 		virtual Selection getSelection() const = 0;
 
 };
+
+IE_CORE_DECLAREPTR( PathListingWidget )
 
 /// C++ interface for the `IECore.MenuDefinition` Python class. Provided for use
 /// in `PathColumn::contextMenuSignal()`, so that event handling may be

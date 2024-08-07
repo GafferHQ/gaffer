@@ -71,13 +71,15 @@ class PathListingWidgetAccessor : public GafferUI::PathListingWidget
 	public :
 
 		PathListingWidgetAccessor( object widget )
-			:	m_widget( widget )
+			:	m_widget(
+					boost::python::handle<>( PyWeakref_NewRef( widget.ptr(), nullptr ) )
+				)
 		{
 		}
 
-		object widget()
+		object widget() const
 		{
-			return m_widget;
+			return m_widget();
 		}
 
 		void setColumns( const Columns &columns ) override
@@ -88,13 +90,13 @@ class PathListingWidgetAccessor : public GafferUI::PathListingWidget
 			{
 				pythonColumns.append( c );
 			}
-			m_widget.attr( "setColumns" )( pythonColumns );
+			widget().attr( "setColumns" )( pythonColumns );
 		}
 
 		Columns getColumns() const override
 		{
 			IECorePython::ScopedGILLock gilLock;
-			object pythonColumns = m_widget.attr( "getColumns" )();
+			object pythonColumns = widget().attr( "getColumns" )();
 			Columns columns;
 			boost::python::container_utils::extend_container( columns, pythonColumns );
 			return columns;
@@ -119,13 +121,13 @@ class PathListingWidgetAccessor : public GafferUI::PathListingWidget
 				pythonSelection = pythonList;
 			}
 
-			m_widget.attr( "setSelection" )( pythonSelection );
+			widget().attr( "setSelection" )( pythonSelection );
 		}
 
 		Selection getSelection() const override
 		{
 			IECorePython::ScopedGILLock gilLock;
-			object pythonSelection = m_widget.attr( "getSelection" )();
+			object pythonSelection = widget().attr( "getSelection" )();
 			extract<IECore::PathMatcher> e( pythonSelection );
 			if( e.check() )
 			{
@@ -141,7 +143,9 @@ class PathListingWidgetAccessor : public GafferUI::PathListingWidget
 
 	private :
 
-		// The Python PathListingWidget object.
+		// A `weakref` for the Python PathListingWidget object. We use a
+		// weak reference to avoid `PathListingWidget->Menu->MenuDefinition->PathListingWidget`
+		// reference cycles when a C++ MenuItem stores a PathListingWidgetPtr.
 		object m_widget;
 
 };
@@ -385,9 +389,9 @@ struct ButtonSignalCaller
 	{
 		// C++-based slots are passed a PathListingWidgetAccessor which gives them limited
 		// access to the functionality of the Python PathListingWidget.
-		PathListingWidgetAccessor accessor( widget );
+		PathListingWidget::Ptr accessor = new PathListingWidgetAccessor( widget );
 		IECorePython::ScopedGILRelease gilRelease;
-		return s( path, accessor, event );
+		return s( path, *accessor, event );
 	}
 };
 
@@ -412,10 +416,10 @@ struct ContextMenuSignalCaller
 {
 	static void call( PathColumn::ContextMenuSignal &s, PathColumn &column, object pathListingWidget, object menuDefinition )
 	{
-		PathListingWidgetAccessor pathListingWidgetAccessor( pathListingWidget );
+		PathListingWidget::Ptr pathListingWidgetAccessor = new PathListingWidgetAccessor( pathListingWidget );
 		MenuDefinitionAccessor menuDefinitionAccessor( menuDefinition );
 		IECorePython::ScopedGILRelease gilRelease;
-		s( column, pathListingWidgetAccessor, menuDefinitionAccessor );
+		s( column, *pathListingWidgetAccessor, menuDefinitionAccessor );
 	}
 };
 
