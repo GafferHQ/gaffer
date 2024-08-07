@@ -271,6 +271,22 @@ _styleSheet = string.Template(
 		margin-bottom: 6px;
 	}
 
+	QLabel#gafferColorComponentLabel {
+		padding-left: 12px;
+	}
+
+	QLabel#gafferColorComponentLabel[gafferColorStaticComponent="true"] {
+		background-image: url(:/colorChooserStaticChannelIcon.png);
+		background-repeat: no-repeat;
+		background-position: left;
+	}
+
+	QLabel#gafferColorComponentLabel[gafferColorStaticComponentHover="true"] {
+		background-image: url(:/colorChooserStaticChannelHighlightedIcon.png);
+		background-repeat: no-repeat;
+		background-position: left;
+	}
+
 	QMenuBar {
 		background-color: $backgroundDarkest;
 		font-weight: bold;

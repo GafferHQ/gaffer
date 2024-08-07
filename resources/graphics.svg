@@ -1674,6 +1674,29 @@
            id="rect7" /></flowRegion><flowPara
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16px;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';fill:#f4f4f4;fill-opacity:1;stroke-width:1"
          id="flowPara7">RenderPassEditor</flowPara></flowRoot>
+    <path
+       style="display:inline;opacity:1;fill:none;stroke:#ffffff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M -5.1666646,2938.0104 H 744.83333"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc"
+       inkscape:label="hr1"
+       id="path1927" />
+    <flowRoot
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:24px;line-height:1.25;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#f4f4f4;fill-opacity:1;stroke:none;stroke-width:1"
+       transform="matrix(1,0,0,1.0000138,288.9349,1925.09)"
+       inkscape:label="docTitle"
+       id="flowRoot1935"><flowRegion
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:24px;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';fill:#f4f4f4;fill-opacity:1;stroke-width:1"
+         id="flowRegion1931"><rect
+           width="343.75"
+           height="54.25"
+           x="-295"
+           y="983"
+           style="font-size:24px;fill:#f4f4f4;fill-opacity:1;stroke-width:1.00000381;-inkscape-font-specification:'Liberation Sans';font-family:'Liberation Sans';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal"
+           id="rect1929" /></flowRegion><flowPara
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16px;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';fill:#f4f4f4;fill-opacity:1;stroke-width:1"
+         id="flowPara1933">Color Chooser</flowPara></flowRoot>
   </g>
   <g
      id="layer4"
@@ -3490,6 +3513,36 @@
        x="392"
        y="14"
        inkscape:label="valueChanged" />
+    <g
+       id="g1940"
+       inkscape:label="ColorChooser"
+       transform="translate(0,0.17285156)"
+       style="display:inline;opacity:1">
+      <rect
+         y="2943.8271"
+         x="38"
+         height="10"
+         width="10"
+         id="colorChooserStaticChannelHighlightedIcon"
+         style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.598;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
+         inkscape:label="colorChooserStaticChannelHighlightedIcon" />
+      <rect
+         y="2943.8271"
+         x="24"
+         height="10"
+         width="10"
+         id="colorChooserStaticChannelIcon"
+         style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.598;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
+         inkscape:label="colorChooserStaticChannelIcon" />
+      <rect
+         y="2943.8271"
+         x="10"
+         height="10"
+         width="10"
+         id="rect1937"
+         style="display:inline;opacity:1;fill:url(#boundsTemplate);fill-opacity:1;stroke:none;stroke-width:0.597615;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
+         inkscape:label="sizeGuide" />
+    </g>
   </g>
   <g
      inkscape:label="Artwork"
@@ -10408,6 +10461,26 @@
          id="path6641-0"
          inkscape:connector-curvature="0"
          sodipodi:nodetypes="cc" />
+    </g>
+    <g
+       id="g6273"
+       transform="matrix(0.83291134,0,0,0.8249516,4.0960803,570.67717)"
+       inkscape:label="ColorChooser"
+       style="stroke-width:1.20639;stroke-dasharray:none">
+      <ellipse
+         cy="2946.4578"
+         cx="46.708355"
+         id="circle6267"
+         style="display:inline;fill:#54ad5e;fill-opacity:1;fill-rule:nonzero;stroke:#779cbd;stroke-width:1.21064;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+         rx="5.3977213"
+         ry="5.4556413" />
+      <ellipse
+         cy="2946.4578"
+         cx="29.899847"
+         id="circle6271"
+         style="display:inline;fill:#54ad5e;fill-opacity:1;fill-rule:nonzero;stroke:#3c3c3c;stroke-width:1.1923;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+         rx="5.4068904"
+         ry="5.4648132" />
     </g>
   </g>
 </svg>

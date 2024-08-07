@@ -90,7 +90,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The name of the shader being represented. This should
-			be considered read-only. Use the Shader.loadShader()
+			be considered read-only. Use the `Shader.loadShader()`
 			method to load a shader.
 			""",
 
@@ -107,10 +107,11 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The type of the shader being represented. This should
-			be considered read-only. Use the Shader.loadShader()
+			be considered read-only. Use the `Shader.loadShader()`
 			method to load a shader.
 			""",
 
+			"readOnly", True,
 			"layout:section", "",
 			"nodule:type", "",
 			"plugValueWidget:type", "",

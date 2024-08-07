@@ -73,6 +73,12 @@ Improvements
 - ArnoldShader :
   - Added a UI layout for the new `openpbr_surface` shader.
   - Moved Arnold 7.3.3.0's new `standard_volume.scatter_diffusion` parameters to a "Scatter Diffusion" section of the UI.
+- Viewer : Added diagnostic shading mode for visualising the values of the `usd:purpose` attribute as colours :
+  - White : Default
+  - Green : Render
+  - Blue : Proxy
+  - Red : Guide
+- Catalogue : Added a handle for controlling the relative sizes of the listing and image property widgets.
 
 Fixes
 -----
@@ -80,6 +86,11 @@ Fixes
 - Arnold : Fixed bug preventing UI metadata for Imagers from being loaded for Arnold 7.3.
 - WidgetAlgo : Fixed issue preventing `grab()` from capturing popup menus on Windows.
 - ShowURL : Fixed opening of "file://" URLs on Windows (#5861).
+- Shader : Fixed "Revert to Defaults" menu item in NodeEditor (#1862).
+- Catalogue :
+  - Fixed bug which allowed locked Catalogues to be edited.
+  - Fixed NodeEditor update when the first image is added or the last image is removed.
+- NameWidget : Fixed bug which allowed plugs on locked nodes to be renamed.
 
 API
 ---

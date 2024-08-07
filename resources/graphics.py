@@ -471,6 +471,20 @@
 				"activeRenderPass",
 				"activeRenderPassFadedHighlighted",
 			]
+		},
+
+		"colorChooser" : {
+
+			"options" : {
+				"requiredWidth" : 10,
+				"requiredHeight" : 10,
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				"colorChooserStaticChannelIcon",
+				"colorChooserStaticChannelHighlightedIcon",
+			]
 		}
 
 	},
