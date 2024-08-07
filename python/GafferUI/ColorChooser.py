@@ -37,13 +37,19 @@
 
 import collections
 import enum
+import functools
+import math
 import sys
 import imath
+
+import IECore
 
 import Gaffer
 import GafferUI
 
+from Qt import QtCore
 from Qt import QtGui
+from Qt import QtWidgets
 
 __tmiToRGBMatrix = imath.M33f(
 	-1.0 / 2.0, 0.0, 1.0 / 2.0,
@@ -157,6 +163,297 @@ class _ComponentSlider( GafferUI.Slider ) :
 		GafferUI.Slider._displayTransformChanged( self )
 		self._qtWidget().update()
 
+class _ColorField( GafferUI.Widget ) :
+
+	def __init__( self, color = imath.Color3f( 1.0 ), staticComponent = "h", **kw ) :
+
+		GafferUI.Widget.__init__( self, QtWidgets.QWidget(), **kw )
+
+		# \todo Allow the widget to grow if the containing window is resized. It should also
+		# be constrained to be square.
+		self._qtWidget().setMinimumSize( 216, 216 )
+		self._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed )
+
+		self._qtWidget().paintEvent = Gaffer.WeakMethod( self.__paintEvent )
+
+		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
+		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
+		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
+		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ), scoped = False )
+		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
+
+		self.__valueChangedSignal = Gaffer.Signals.Signal2()
+
+		self.__color = color
+		self.__staticComponent = staticComponent
+		self.__colorFieldToDraw = None
+		self.setColor( color, staticComponent )
+
+	# Sets the color and the static component. `color` is in
+	# RGB space for RGB static components, HSV space for
+	# HSV static components and TMI space for TMI components.
+	def setColor( self, color, staticComponent ) :
+
+		self.__setColorInternal( color, staticComponent, GafferUI.Slider.ValueChangedReason.SetValues )
+
+	# Returns a tuple of the color and static component.
+	def getColor( self ) :
+
+		return self.__color, self.__staticComponent
+
+	## A signal emitted whenever a value has been changed. Slots should
+	# have the signature slot( _ColorField, GafferUI.Slider.ValueChangedReason )
+	def valueChangedSignal( self ) :
+
+		return self.__valueChangedSignal
+
+	def __setColorInternal( self, color, staticComponent, reason ) :
+
+		dragBeginOrEnd = reason in ( GafferUI.Slider.ValueChangedReason.DragBegin, GafferUI.Slider.ValueChangedReason.DragEnd )
+		if self.__color == color and self.__staticComponent == staticComponent and not dragBeginOrEnd :
+			return
+
+		zIndex = self.__zIndex()
+		if color[zIndex] != self.__color[zIndex] or staticComponent != self.__staticComponent :
+			self.__colorFieldToDraw = None
+
+		self.__color = color
+		self.__staticComponent = staticComponent
+
+		self._qtWidget().update()
+
+		self.valueChangedSignal()( self, reason )
+
+	def __xyIndices( self ) :
+
+		xIndex = { "r": 1, "g": 0, "b": 0, "h": 1, "s": 0, "v": 0, "t": 1, "m": 0, "i": 0 }[self.__staticComponent]
+		yIndex = { "r": 2, "g": 2, "b": 1, "h": 2, "s": 2, "v": 1, "t": 2, "m": 2, "i": 1 }[self.__staticComponent]
+
+		return xIndex, yIndex
+
+	def __zIndex( self ) :
+		zIndex = { "r": 0, "g": 1, "b": 2, "h": 0, "s": 1, "v": 2, "t": 0, "m": 1, "i": 2 }[self.__staticComponent]
+
+		return zIndex
+
+	def __xyAxes( self ) :
+		xAxis = { "r": "g", "g": "r", "b": "r", "h": "s", "s": "h", "v": "h", "t": "m", "m": "t", "i": "t" }[self.__staticComponent]
+		yAxis = { "r": "b", "g": "b", "b": "g", "h": "v", "s": "v", "v": "s", "t": "i", "m": "i", "i": "m" }[self.__staticComponent]
+
+		return xAxis, yAxis
+
+	def __colorToPosition( self, color ) :
+
+		xIndex, yIndex = self.__xyIndices()
+		color = imath.V2f( color[xIndex], color[yIndex] )
+
+		xComponent, yComponent = self.__xyAxes()
+		minC = imath.V2f( _ranges[xComponent].min, _ranges[yComponent].min )
+		maxC = imath.V2f( _ranges[xComponent].max, _ranges[yComponent].max )
+
+		p = ( ( color - minC ) / ( maxC - minC ) ) * self.bound().size()
+		p.y = self.bound().size().y - p.y
+
+		return p
+
+	def __positionToColor( self, position ) :
+
+		xIndex, yIndex = self.__xyIndices()
+
+		c, staticComponent = self.getColor()
+		c = c.__class__( c )
+
+		size = self.bound().size()
+
+		xComponent, yComponent = self.__xyAxes()
+
+		c[xIndex] = ( position.x / float( size.x ) ) * ( _ranges[xComponent].max - _ranges[xComponent].min ) + _ranges[xComponent].min
+		c[yIndex] = ( 1.0 - ( position.y / float( size.y ) ) ) * ( _ranges[yComponent].max - _ranges[yComponent].min ) + _ranges[yComponent].min
+
+		return c
+
+	def __buttonPress( self, widget, event ) :
+
+		if event.buttons != GafferUI.ButtonEvent.Buttons.Left :
+			return False
+
+		c, staticComponent = self.getColor()
+		self.__setColorInternal( self.__positionToColor( event.line.p0 ), staticComponent, GafferUI.Slider.ValueChangedReason.Click )
+
+		return True
+
+	def __clampPosition( self, position ) :
+
+		size = self.bound().size()
+		return imath.V2f( min( size.x, max( 0.0, position.x ) ), min( size.y, max( 0.0, position.y ) ) )
+
+	def __dragBegin( self, widget, event ) :
+
+		if event.buttons == GafferUI.ButtonEvent.Buttons.Left :
+			c, staticComponent = self.getColor()
+			self.__setColorInternal(
+				self.__positionToColor( self.__clampPosition( event.line.p0 ) ),
+				staticComponent,
+				GafferUI.Slider.ValueChangedReason.DragBegin
+			)
+			return IECore.NullObject.defaultNullObject()
+
+		return None
+
+	def __dragEnter( self, widget, event ) :
+
+		if event.sourceWidget is self :
+			return True
+
+		return False
+
+	def __dragMove( self, widget, event ) :
+
+		c, staticComponent = self.getColor()
+		self.__setColorInternal(
+			self.__positionToColor( self.__clampPosition( event.line.p0 ) ),
+			staticComponent,
+			GafferUI.Slider.ValueChangedReason.DragMove
+		)
+		return True
+
+	def __dragEnd( self, widget, event ) :
+
+		c, staticComponent = self.getColor()
+		self.__setColorInternal(
+			self.__positionToColor( self.__clampPosition( event.line.p0 ) ),
+			staticComponent,
+			GafferUI.Slider.ValueChangedReason.DragEnd
+		)
+		return True
+
+	def __drawBackground( self, painter ) :
+
+		numStops = 50
+		if self.__colorFieldToDraw is None :
+			self.__colorFieldToDraw = QtGui.QImage( QtCore.QSize( numStops, numStops ), QtGui.QImage.Format.Format_RGB32 )
+
+			displayTransform = self.displayTransform()
+
+			xIndex, yIndex = self.__xyIndices()
+			zIndex = self.__zIndex()
+
+			staticValue = self.__color[zIndex]
+
+			c = imath.Color3f()
+			c[zIndex] = staticValue
+
+			ColorSpace = enum.Enum( "ColorSpace", [ "RGB", "HSV", "TMI" ] )
+			if self.__staticComponent in "rgb" :
+				colorSpace = ColorSpace.RGB
+			elif self.__staticComponent in "hsv" :
+				colorSpace = ColorSpace.HSV
+			else :
+				colorSpace = ColorSpace.TMI
+
+			xComponent, yComponent = self.__xyAxes()
+
+			for x in range( 0, numStops ) :
+				tx = float( x ) / ( numStops - 1 )
+				c[xIndex] = _ranges[xComponent].min + ( _ranges[xComponent].max - _ranges[xComponent].min ) * tx
+
+				for y in range( 0, numStops ) :
+					ty = float( y ) / ( numStops - 1 )
+
+					c[yIndex] = _ranges[yComponent].min + ( _ranges[yComponent].max - _ranges[yComponent].min ) * ty
+
+					if colorSpace == ColorSpace.RGB :
+						cRGB = c
+					elif colorSpace == ColorSpace.HSV :
+						cRGB = c.hsv2rgb()
+					else :
+						cRGB = _tmiToRGB( c )
+
+					cRGB = displayTransform( cRGB )
+					self.__colorFieldToDraw.setPixel( x, numStops - 1 - y, self._qtColor( cRGB ).rgb() )
+
+		painter.drawImage( self._qtWidget().contentsRect(), self.__colorFieldToDraw )
+
+	def __drawValue( self, painter ) :
+
+		position = self.__colorToPosition( self.__color )
+
+		pen = QtGui.QPen( QtGui.QColor( 0, 0, 0, 255 ) )
+		pen.setWidth( 1 )
+		painter.setPen( pen )
+
+		color = QtGui.QColor( 119, 156, 255, 255 )
+
+		painter.setBrush( QtGui.QBrush( color ) )
+
+		size = self.size()
+
+		# Use a dot when both axes are a valid value.
+		if position.x >= 0 and position.y >= 0 and position.x <= size.x and position.y <= size.y :
+			painter.drawEllipse( QtCore.QPoint( position.x, position.y ), 4.5, 4.5 )
+			return
+
+		triangleWidth = 5.0
+		triangleSpacing = 2.0
+		positionClamped = imath.V2f(
+			min( max( 0.0, position.x ), size.x ),
+			min( max( 0.0, position.y ), size.y )
+		)
+		offset = imath.V2f( 0 )
+		# Use a corner triangle if both axes are invalid values.
+		if position.x > size.x and position.y < 0 :
+			rotation = -45.0  # Triangle pointing to the top-right
+			offset = imath.V2f( -triangleSpacing, triangleSpacing )
+		elif position.x < 0 and position.y < 0 :
+			rotation = -135.0  # Top-left
+			offset = imath.V2f( triangleSpacing, triangleSpacing )
+		elif position.x < 0 and position.y > size.y :
+			rotation = -225.0  # Bottom-left
+			offset = imath.V2f( triangleSpacing, -triangleSpacing )
+		elif position.x > size.x and position.y > size.y :
+			rotation = -315.0  # Bottom-right
+			offset = imath.V2f( -triangleSpacing, -triangleSpacing )
+
+		# Finally, use a top / left / bottom / right triangle if one axis is an invalid value.
+		elif position.y < 0 :
+			rotation = -90.0  # Top
+			offset = imath.V2f( 0, triangleSpacing )
+			# Clamp it in more to account for the triangle size
+			positionClamped.x = min( max( triangleWidth + triangleSpacing, positionClamped.x ), size.x - triangleWidth - triangleSpacing )
+		elif position.x < 0 :
+			rotation = -180.0  # Left
+			offset = imath.V2f( triangleSpacing, 0 )
+			positionClamped.y = min( max( triangleWidth + triangleSpacing, positionClamped.y ), size.y - triangleWidth - triangleSpacing )
+		elif position.y > size.y :
+			rotation = -270.0  # Bottom
+			offset = imath.V2f( 0, -triangleSpacing )
+			positionClamped.x = min( max( triangleWidth + triangleSpacing, positionClamped.x ), size.x - triangleWidth - triangleSpacing )
+		else :
+			rotation = 0.0  # Right
+			offset = imath.V2f( -triangleSpacing, 0 )
+			positionClamped.y = min( max( triangleWidth + triangleSpacing, positionClamped.y ), size.y - triangleWidth - triangleSpacing )
+
+		rightPoints = [ imath.V2f( 0, 0 ), imath.V2f( -6, triangleWidth ), imath.V2f( -6, -triangleWidth ) ]
+		xform = imath.M33f().rotate( math.radians( rotation ) ) * imath.M33f().translate(
+			positionClamped + offset
+		)
+		points = [ p * xform for p in rightPoints ]
+		# Transforming the points introduces slight precision errors which can be noticeable
+		# when drawing polygons. Round the values to compensate.
+		points = [ QtCore.QPoint( round( p.x ), round( p.y ) ) for p in points ]
+
+		painter.drawConvexPolygon( points )
+
+	def __paintEvent( self, event ) :
+
+		painter = QtGui.QPainter( self._qtWidget() )
+		painter.setRenderHint( QtGui.QPainter.Antialiasing )
+		painter.setRenderHint( QtGui.QPainter.SmoothPixmapTransform)
+
+		self.__drawBackground( painter )
+
+		self.__drawValue( painter )
+
 class ColorChooser( GafferUI.Widget ) :
 
 	ColorChangedReason = enum.Enum( "ColorChangedReason", [ "Invalid", "SetColor", "Reset" ] )
@@ -180,28 +477,61 @@ class ColorChooser( GafferUI.Widget ) :
 		self.__componentValueChangedConnections = []
 
 		with self.__column :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
-			with GafferUI.GridContainer( spacing = 4 ) :
+				self.__colorField = _ColorField( color, "h" )
+				self.__colorValueChangedConnection = self.__colorField.valueChangedSignal().connect( Gaffer.WeakMethod( self.__colorValueChanged ), scoped = False )
+				# \todo Don't hide color field when we're ready to expose the UI
+				self.__colorField.setVisible( False )
 
-				# sliders and numeric widgets
-				for row, component in enumerate( "rgbahsv" ) :
-					self.__channelLabels[component] = GafferUI.Label( component.capitalize(), parenting = { "index" : ( 0, row ), "alignment" : ( GafferUI.HorizontalAlignment.Center, GafferUI.VerticalAlignment.Center ) } )
-					numericWidget = GafferUI.NumericWidget( 0.0, parenting = { "index" : ( 1, row ) } )
+				with GafferUI.GridContainer( spacing = 4 ) :
 
-					numericWidget.setFixedCharacterWidth( 6 )
-					numericWidget.component = component
-					self.__numericWidgets[component] = numericWidget
+					# sliders and numeric widgets
+					c, staticComponent = self.__colorField.getColor()
+					for row, component in enumerate( "rgbahsvtmi" ) :
+						self.__channelLabels[component] = GafferUI.Label( component.capitalize(), parenting = { "index" : ( 0, row ), "alignment" : ( GafferUI.HorizontalAlignment.Center, GafferUI.VerticalAlignment.Center ) } )
 
-					slider = _ComponentSlider( color, component, parenting = { "index" : ( 2, row ) } )
-					self.__sliders[component] = slider
+						if component != "a" :
+							if component == staticComponent :
+								self.__channelLabels[component]._qtWidget().setProperty( "gafferColorStaticComponent", True)
+							self.__channelLabels[component].buttonPressSignal().connect(
+								functools.partial(
+									Gaffer.WeakMethod( self.__setStaticComponent ),
+									component = component
+								),
+								scoped = False
+							)
+							self.__channelLabels[component].enterSignal().connect(
+								functools.partial(
+									Gaffer.WeakMethod( self.__labelEnter ),
+									component = component
+								),
+								scoped = False
+							)
+							self.__channelLabels[component].leaveSignal().connect(
+								functools.partial(
+									Gaffer.WeakMethod( self.__labelLeave ),
+									component = component
+								),
+								scoped = False
+							)
 
-					self.__componentValueChangedConnections.append(
-						numericWidget.valueChangedSignal().connect( Gaffer.WeakMethod( self.__componentValueChanged ), scoped = False )
-					)
+						numericWidget = GafferUI.NumericWidget( 0.0, parenting = { "index" : ( 1, row ) } )
 
-					self.__componentValueChangedConnections.append(
-						slider.valueChangedSignal().connect( Gaffer.WeakMethod( self.__componentValueChanged ), scoped = False )
-					)
+						numericWidget.setFixedCharacterWidth( 6 )
+						numericWidget.component = component
+						self.__numericWidgets[component] = numericWidget
+
+						slider = _ComponentSlider( color, component, parenting = { "index" : ( 2, row ) } )
+						self.__sliders[component] = slider
+
+						self.__componentValueChangedConnections.append(
+							numericWidget.valueChangedSignal().connect( Gaffer.WeakMethod( self.__componentValueChanged ), scoped = False )
+						)
+
+						self.__componentValueChangedConnections.append(
+							slider.valueChangedSignal().connect( Gaffer.WeakMethod( self.__componentValueChanged ), scoped = False )
+						)
 
 			# initial and current colour swatches
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) as self.__swatchRow :
@@ -214,6 +544,12 @@ class ColorChooser( GafferUI.Widget ) :
 				self.__colorSwatch._qtWidget().setFixedHeight( 40 )
 
 		self.__colorChangedSignal = Gaffer.Signals.Signal2()
+
+		# \todo Don't hide TMI sliders when we're ready to expose the new UI
+		for c in "tmi" :
+			self.__channelLabels[c].setVisible( False )
+			self.__numericWidgets[c].setVisible( False )
+			self.__sliders[c].setVisible( False )
 
 		self.__updateUIFromColor()
 
@@ -308,6 +644,18 @@ class ColorChooser( GafferUI.Widget ) :
 
 			self.__setColorInternal( newColor, reason, self.__ColorSpace.TMI )
 
+	def __colorValueChanged( self, colorWidget, reason ) :
+
+		c, staticComponent = colorWidget.getColor()
+		if staticComponent in "rgb" :
+			colorSpace = self.__ColorSpace.RGB
+		elif staticComponent in "hsv" :
+			colorSpace = self.__ColorSpace.HSV
+		else :
+			colorSpace = self.__ColorSpace.TMI
+
+		self.__setColorInternal( c, reason, colorSpace )
+
 	def __setColorInternal( self, color, reason, colorSpace = __ColorSpace.RGB ) :
 
 		dragBeginOrEnd = reason in (
@@ -337,8 +685,9 @@ class ColorChooser( GafferUI.Widget ) :
 				colorHSV = colorRGB.rgb2hsv()
 				colorTMI = color
 
-			colorHSV[0] = colorHSV[0] if colorHSV[1] > 1e-7 and colorHSV[2] > 1e-7 else self.__colorHSV[0]
-			colorHSV[1] = colorHSV[1] if colorHSV[2] > 1e-7 else self.__colorHSV[1]
+			if colorSpace != self.__ColorSpace.HSV :
+				colorHSV[0] = colorHSV[0] if colorHSV[1] > 1e-7 and colorHSV[2] > 1e-7 else self.__colorHSV[0]
+				colorHSV[1] = colorHSV[1] if colorHSV[2] > 1e-7 else self.__colorHSV[1]
 
 			self.__color = colorRGB
 			self.__colorHSV = colorHSV
@@ -360,7 +709,9 @@ class ColorChooser( GafferUI.Widget ) :
 
 	def __updateUIFromColor( self ) :
 
-		with Gaffer.Signals.BlockedConnection( self.__componentValueChangedConnections ) :
+		with Gaffer.Signals.BlockedConnection(
+			self.__componentValueChangedConnections + [ self.__colorValueChangedConnection ]
+		) :
 
 			c = self.getColor()
 
@@ -389,3 +740,51 @@ class ColorChooser( GafferUI.Widget ) :
 			for component, index in ( ( "h", 0 ), ( "s", 1 ), ( "v", 2 ) ) :
 				self.__sliders[component].setValue( self.__colorHSV[index] )
 				self.__numericWidgets[component].setValue( self.__colorHSV[index] )
+
+			for slider in [ v for k, v in self.__sliders.items() if k in "tmi" ] :
+				slider.setColor( self.__colorTMI )
+
+			for component, index in ( ( "t", 0 ), ( "m", 1 ), ( "i", 2 ) ) :
+				self.__sliders[component].setValue( self.__colorTMI[index] )
+				self.__numericWidgets[component].setValue( self.__colorTMI[index] )
+
+			c, staticComponent = self.__colorField.getColor()
+			assert( staticComponent in "rgbhsvtmi" )
+			if staticComponent in "rgb" :
+				self.__colorField.setColor( self.__color, staticComponent )
+			elif staticComponent in "hsv" :
+				self.__colorField.setColor( self.__colorHSV, staticComponent )
+			else :
+				self.__colorField.setColor( self.__colorTMI, staticComponent )
+
+	def __setStaticComponent( self, widget, event, component ) :
+
+		if event.buttons != GafferUI.ButtonEvent.Buttons.Left :
+			return False
+
+		c, staticComponent = self.__colorField.getColor()
+		self.__channelLabels[staticComponent]._qtWidget().setProperty( "gafferColorStaticComponent", False )
+		self.__channelLabels[staticComponent]._repolish()
+
+		assert( component in "rgbhsvtmi" )
+		if component in "rgb" :
+			self.__colorField.setColor( self.__color, component )
+		elif component in "hsv" :
+			self.__colorField.setColor( self.__colorHSV, component )
+		else :
+			self.__colorField.setColor( self.__colorTMI, component )
+
+		self.__channelLabels[component]._qtWidget().setProperty( "gafferColorStaticComponent", True )
+		self.__channelLabels[component]._repolish()
+
+		return True
+
+	def __labelEnter( self, widget, component ) :
+
+		self.__channelLabels[component]._qtWidget().setProperty( "gafferColorStaticComponentHover", True )
+		self.__channelLabels[component]._repolish()
+
+	def __labelLeave( self, widget, component ) :
+
+		self.__channelLabels[component]._qtWidget().setProperty( "gafferColorStaticComponentHover", False)
+		self.__channelLabels[component]._repolish()
