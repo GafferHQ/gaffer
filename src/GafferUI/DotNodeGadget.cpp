@@ -82,7 +82,9 @@ DotNodeGadget::DotNodeGadget( Gaffer::NodePtr node )
 	dropSignal().connect( boost::bind( &DotNodeGadget::drop, this, ::_2 ) );
 
 	updateUpstreamNameChangedConnection();
-	updateLabel();
+	// Don't need to call `updateLabel()` explicitly, because GraphGadget will
+	// call `updateFromContextTracker()` immediately after construction, and we'll
+	// update there.
 }
 
 DotNodeGadget::~DotNodeGadget()
@@ -114,6 +116,13 @@ void DotNodeGadget::renderLayer( Layer layer, const Style *style, RenderReason r
 			glPopMatrix();
 		}
 	}
+}
+
+void DotNodeGadget::updateFromContextTracker( const ContextTracker *contextTracker )
+{
+	StandardNodeGadget::updateFromContextTracker( contextTracker );
+	m_labelContext = contextTracker->context( node() );
+	updateLabel();
 }
 
 Gaffer::Dot *DotNodeGadget::dotNode()
@@ -186,13 +195,11 @@ void DotNodeGadget::updateLabel()
 		}
 		else
 		{
-			const auto script = dot->scriptNode();
-			const Context *context = script ? script->context() : nullptr;
-			Context::Scope scope( context );
+			Context::Scope scope( m_labelContext.get() );
 			m_label = dot->labelPlug()->getValue();
-			if( context )
+			if( m_labelContext )
 			{
-				m_label = context->substitute( m_label );
+				m_label = m_labelContext->substitute( m_label );
 			}
 		}
 	}
