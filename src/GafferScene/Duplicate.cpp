@@ -73,6 +73,11 @@ class Duplicate::DuplicatesData : public IECore::Data
 				const int nameSuffix = StringAlgo::numericSuffix( name, &stem );
 				suffix = copies == 1 ? nameSuffix : max( nameSuffix, 1 );
 			}
+			else if( !source.size() )
+			{
+				stem = "root";
+				suffix = 1;
+			}
 			else
 			{
 				// No explicit name provided. Derive stem and suffix from source.
@@ -121,7 +126,14 @@ class Duplicate::DuplicatesData : public IECore::Data
 			node->copiesPlug()->hash( h );
 			node->namePlug()->hash( h );
 			const ScenePath &source = context->get<ScenePath>( ScenePlug::scenePathContextName );
-			h.append( source.back() );
+			if( !source.size() )
+			{
+				h.append( false );
+			}
+			else
+			{
+				h.append( source.back() );
+			}
 			node->transformPlug()->hash( h );
 		}
 

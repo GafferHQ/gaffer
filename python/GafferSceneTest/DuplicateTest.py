@@ -250,7 +250,6 @@ class DuplicateTest( GafferSceneTest.SceneTestCase ) :
 			GafferSceneTest.traverseScene( duplicate["out"] )
 
 	def testFilter( self ) :
-
 		cube = GafferScene.Cube()
 		cube["sets"].setValue( "boxes" )
 		sphere = GafferScene.Sphere()
@@ -284,6 +283,23 @@ class DuplicateTest( GafferSceneTest.SceneTestCase ) :
 			duplicate["out"].set( "boxes" ).value,
 			IECore.PathMatcher( [ "/group/cube", "/group/cube1" ] )
 		)
+
+		filter["paths"].setValue( IECore.StringVectorData( [ "/" ] ) )
+
+		filterNew = GafferScene.PathFilter()
+		filterNew["paths"].setValue( IECore.StringVectorData( [ "/root1" ] ) )
+
+		prune = GafferScene.Prune()
+		prune["in"].setInput( duplicate["out"] )
+		prune["filter"].setInput( filterNew["out"] )
+
+		self.assertScenesEqual( prune["out"], duplicate["in"] )
+
+		subTree = GafferScene.SubTree()
+		subTree["in"].setInput( duplicate["out"] )
+		subTree["root"].setValue( "/root1" )
+
+		self.assertScenesEqual( subTree["out"], duplicate["in"] )
 
 	def testExistingTransform( self ) :
 

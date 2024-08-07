@@ -344,20 +344,23 @@ void Isolate::hashSet( const IECore::InternedString &setName, const Gaffer::Cont
 		h.append( inPlug()->setHash( g_camerasSetName ) );
 	}
 
-	// The sets themselves do not depend on the "scene:path"
-	// context entry - the whole point is that they're global.
-	// However, the PathFilter is dependent on scene:path, so
-	// we must remove the path before hashing in the filter in
-	// case we're computed from multiple contexts with different
-	// paths (from a SetFilter for instance). If we didn't do this,
-	// our different hashes would lead to huge numbers of redundant
-	// calls to computeSet() and a huge overhead in recomputing
-	// the same sets repeatedly.
-	//
-	// See further comments in acceptsInput()
 	FilterPlug::SceneScope sceneScope( context, inPlug() );
-	sceneScope.remove( ScenePlug::scenePathContextName );
+
+	// The filter does not depend on which set we're evaluating, remove it
+	// so we don't make separate cache entries.
 	sceneScope.remove( ScenePlug::setNameContextName );
+
+	// We need to get a hash representing the affects of the filter over
+	// the whole scene, which we currently get by hashing the filterPlug
+	// with no path in the context. It actually shouldn't be necessary to
+	// remove it here, because the path should never be in the context when
+	// evalauting a set - but we remove it to ensure that we're getting
+	// the correct hash. Since this could probably only happen if someone
+	// implements a custom C++ node incorrectly, in the future, it might be
+	// reasonable to just throw an exception if the path is in the context
+	// ( perhaps this could be caught in SceneNode::hash ).
+	sceneScope.remove( ScenePlug::scenePathContextName );
+
 	filterPlug()->hash( h );
 }
 
