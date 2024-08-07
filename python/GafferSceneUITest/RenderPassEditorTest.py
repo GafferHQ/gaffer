@@ -134,6 +134,39 @@ class RenderPassEditorTest( GafferUITest.TestCase ) :
 		with self.assertRaises( IECore.Cancelled ) :
 			path.property( "renderPassPath:enabled", canceller )
 
+	def testRenderPassPathInspectionContext( self ) :
+
+		def testFn( name ) :
+			return "/".join( name.split( "_" )[:-1] )
+
+		GafferSceneUI.RenderPassEditor.registerPathGroupingFunction( testFn )
+
+		renderPasses = GafferScene.RenderPasses()
+		renderPasses["names"].setValue( IECore.StringVectorData( ["A", "A_A", "B"] ) )
+
+		for path, renderPass, grouped in (
+			( "/A_A", "A_A", False ),
+			( "/A_A", None, True ),
+			( "/A", "A", False ),
+			( "/A", "A", True ),
+			( "/A/A_A", None, False ),
+			( "/A/A_A", "A_A", True ),
+			( "/B", "B", False ),
+			( "/B", "B", True ),
+			( "/BOGUS", None, False ),
+			( "/BOGUS", None, True ),
+			( "/B/OGUS", None, False ),
+			( "/B/OGUS", None, True ),
+		) :
+
+			path = _GafferSceneUI._RenderPassEditor.RenderPassPath( renderPasses["out"], Gaffer.Context(), path, grouped = grouped )
+			inspectionContext = path.inspectionContext()
+			if renderPass is not None :
+				self.assertIn( "renderPass", inspectionContext )
+				self.assertEqual( inspectionContext["renderPass"], renderPass )
+			else :
+				self.assertIsNone( inspectionContext )
+
 	def testSearchFilter( self ) :
 
 		renderPasses = GafferScene.RenderPasses()

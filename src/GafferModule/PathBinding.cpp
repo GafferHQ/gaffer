@@ -269,6 +269,27 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 			return WrappedType::cancellationSubject();
 		}
 
+		ContextPtr inspectionContext( const IECore::Canceller *canceller = nullptr ) const override
+		{
+			if( this->isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				try
+				{
+					boost::python::object f = this->methodOverride( "inspectionContext" );
+					if( f )
+					{
+						return extract<ContextPtr>( f( boost::python::ptr( canceller ) ) );
+					}
+				}
+				catch( const error_already_set & )
+				{
+					ExceptionAlgo::translatePythonException();
+				}
+			}
+			return WrappedType::inspectionContext();
+		}
+
 		void doChildren( std::vector<PathPtr> &children, const IECore::Canceller *canceller = nullptr ) const override
 		{
 			if( this->isSubclassed() )
@@ -554,6 +575,7 @@ void GafferModule::bindPath()
 			.def( "setFromString", &Path::setFromString, return_self<>() )
 			.def( "append", &Path::append, return_self<>() )
 			.def( "truncateUntilValid", &Path::truncateUntilValid, return_self<>() )
+			.def( "inspectionContext", &Path::inspectionContext, ( arg_( "path" ), arg_( "canceller" ) = object() ) )
 			.def( "__str__", &Path::string )
 			.def( "__repr__", &pathRepr )
 			.def( "__len__", &pathLength )

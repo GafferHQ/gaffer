@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Limited. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,36 +34,48 @@
 #
 ##########################################################################
 
-from .SceneViewTest import SceneViewTest
-from .ShaderAssignmentUITest import ShaderAssignmentUITest
-from .StandardGraphLayoutTest import StandardGraphLayoutTest
-from .SceneGadgetTest import SceneGadgetTest
-from .SceneInspectorTest import SceneInspectorTest
-from .HierarchyViewTest import HierarchyViewTest
-from .DocumentationTest import DocumentationTest
-from .ShaderViewTest import ShaderViewTest
-from .ShaderUITest import ShaderUITest
-from .TranslateToolTest import TranslateToolTest
-from .ScaleToolTest import ScaleToolTest
-from .RotateToolTest import RotateToolTest
-from .ContextAlgoTest import ContextAlgoTest
-from .CameraToolTest import CameraToolTest
-from .VisualiserTest import VisualiserTest
-from .TransformToolTest import TransformToolTest
-from .CropWindowToolTest import CropWindowToolTest
-from .NodeUITest import NodeUITest
-from .ParameterInspectorTest import ParameterInspectorTest
-from .AttributeInspectorTest import AttributeInspectorTest
-from .HistoryPathTest import HistoryPathTest
-from .LightEditorTest import LightEditorTest
-from .SetMembershipInspectorTest import SetMembershipInspectorTest
-from .SetEditorTest import SetEditorTest
-from .LightToolTest import LightToolTest
-from .OptionInspectorTest import OptionInspectorTest
-from .LightPositionToolTest import LightPositionToolTest
-from .RenderPassEditorTest import RenderPassEditorTest
-from .SelectionToolTest import SelectionToolTest
-from .InspectorColumnTest import InspectorColumnTest
+import unittest
+
+import GafferUI
+import GafferUITest
+import GafferSceneTest
+import GafferSceneUI
+
+class InspectorColumnTest( GafferUITest.TestCase ) :
+
+	def testInspectorColumnConstructors( self ) :
+
+		light = GafferSceneTest.TestLight()
+
+		inspector = GafferSceneUI.Private.AttributeInspector( light["out"], None, "gl:visualiser:scale" )
+
+		c = GafferSceneUI.Private.InspectorColumn( inspector, "label", "help!" )
+		self.assertEqual( c.inspector(), inspector )
+		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Default )
+		self.assertEqual( c.headerData().value, "Label" )
+		self.assertEqual( c.headerData().toolTip, "help!" )
+
+		c = GafferSceneUI.Private.InspectorColumn( inspector, "Fancy ( Label )", "" )
+		self.assertEqual( c.inspector(), inspector )
+		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Default )
+		self.assertEqual( c.headerData().value, "Fancy ( Label )" )
+		self.assertEqual( c.headerData().toolTip, "" )
+
+		c = GafferSceneUI.Private.InspectorColumn( inspector )
+		self.assertEqual( c.inspector(), inspector )
+		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Default )
+		self.assertEqual( c.headerData().value, "Gl:visualiser:scale" )
+		self.assertEqual( c.headerData().toolTip, "" )
+
+		c = GafferSceneUI.Private.InspectorColumn(
+			inspector,
+			GafferUI.PathColumn.CellData( value = "Fancy ( Label )", toolTip = "help!" ),
+			GafferUI.PathColumn.SizeMode.Stretch
+		)
+		self.assertEqual( c.inspector(), inspector )
+		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Stretch )
+		self.assertEqual( c.headerData().value, "Fancy ( Label )" )
+		self.assertEqual( c.headerData().toolTip, "help!" )
 
 if __name__ == "__main__":
 	unittest.main()
