@@ -137,7 +137,56 @@ def __createXRayShader() :
 
 	return xray
 
-GafferSceneUI.SceneView.registerShadingMode( "X-Ray", functools.partial( __createXRayShader ) )
+GafferSceneUI.SceneView.registerShadingMode( "X-Ray", __createXRayShader )
+
+def __createPurposeShadingMode() :
+
+	result = GafferScene.SceneProcessor( "PurposeVisualiser" )
+
+	result["attributeQuery"] = GafferScene.AttributeQuery()
+	result["attributeQuery"].setup( Gaffer.StringPlug() )
+	result["attributeQuery"]["scene"].setInput( result["in"] )
+	result["attributeQuery"]["location"].setValue( "${scene:path}" )
+	result["attributeQuery"]["attribute"].setValue( "usd:purpose" )
+	result["attributeQuery"]["default"].setValue( "default" )
+	result["attributeQuery"]["inherit"].setValue( True )
+
+	result["customAttributes"] = GafferScene.CustomAttributes()
+	result["customAttributes"]["in"].setInput( result["in"] )
+
+	result["spreadsheet"] = Gaffer.Spreadsheet()
+	result["spreadsheet"]["selector"].setInput( result["attributeQuery"]["value"] )
+	result["spreadsheet"]["rows"].addColumn( result["customAttributes"]["extraAttributes"] )
+
+	result["customAttributes"]["extraAttributes"].setInput( result["spreadsheet"]["out"]["extraAttributes"] )
+
+	for purpose, color in {
+		"render" : imath.Color3f( 0, 1, 0 ),
+		"proxy" : imath.Color3f( 0, 0, 1 ),
+		"guide" : imath.Color3f( 1, 0, 0 ),
+		"default" : imath.Color3f( 1, 1, 1 )
+	}.items() :
+		row = result["spreadsheet"]["rows"].addRow()
+		row["name"].setValue( purpose )
+		row["cells"]["extraAttributes"]["value"].setValue(
+			IECore.CompoundObject( {
+				"gl:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"surface" : IECoreScene.Shader(
+							"FacingRatio", "gl:surface",
+							{ "facingColor" : color },
+						)
+					},
+					output = "surface",
+				)
+			} )
+		)
+
+	result["out"].setInput( result["customAttributes"]["out"] )
+
+	return result
+
+GafferSceneUI.SceneView.registerShadingMode( "Diagnostic/USD/Purpose", __createPurposeShadingMode )
 
 def __loadRendererSettings( fileName ) :
 

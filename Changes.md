@@ -8,6 +8,11 @@ Improvements
 - ArnoldShader :
   - Added a UI layout for the new `openpbr_surface` shader.
   - Moved Arnold 7.3.3.0's new `standard_volume.scatter_diffusion` parameters to a "Scatter Diffusion" section of the UI.
+- Viewer : Added diagnostic shading mode for visualising the values of the `usd:purpose` attribute as colours :
+  - White : Default
+  - Green : Render
+  - Blue : Proxy
+  - Red : Guide
 
 Fixes
 -----
