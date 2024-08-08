@@ -74,12 +74,7 @@ class GraphEditor( GafferUI.Editor ) :
 		self.__gadgetWidget.getViewportGadget().preRenderSignal().connect( Gaffer.WeakMethod( self.__preRender ) )
 
 		with GafferUI.ListContainer( borderWidth = 8, spacing = 0 ) as overlay :
-			with GafferUI.ListContainer(
-				GafferUI.ListContainer.Orientation.Horizontal,
-				parenting = {
-					"verticalAlignment" : GafferUI.VerticalAlignment.Top,
-				}
-			) :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal ) :
 				GafferUI.Spacer( imath.V2i( 1 ) )
 				GafferUI.MenuButton(
 					image = "annotations.png", hasFrame = False,
@@ -88,6 +83,7 @@ class GraphEditor( GafferUI.Editor ) :
 						title = "Annotations"
 					)
 				)
+			GafferUI.Spacer( imath.V2i( 1 ) )
 
 		self.__gadgetWidget.addOverlay( overlay )
 
