@@ -26,6 +26,7 @@ Fixes
   - Fixed bug which allowed locked Catalogues to be edited.
   - Fixed NodeEditor update when the first image is added or the last image is removed.
 - NameWidget : Fixed bug which allowed plugs on locked nodes to be renamed.
+- ValuePlug : Fixed the plug passed to `Monitor::forceMonitoring()`. Previously `Process::destinationPlug()` was being passed instead of `Process::plug()`.
 
 API
 ---
