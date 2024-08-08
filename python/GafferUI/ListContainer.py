@@ -45,6 +45,28 @@ import GafferUI
 from Qt import QtWidgets
 from Qt import QtCore
 
+class _WidgetItem( QtWidgets.QWidgetItem ) :
+	# A customized `QWidgetItem` to return a `maximumSize()` without taking
+	# into account its `alignment`. Qt's `QBoxLayout` returns `QLAYOUTSIZE_MAX`
+	# whenever there's an alignment set, resulting in unnecessarily greedy
+	# aligned layouts. We override `QWidgetItem` instead of `QBoxLayout`
+	# because in `QBoxLayout.insertWidget()`, the widget is wrapped in a
+	# `QWidgetItem` object that does its own calculation of `maximumSize()`
+	# rather than defer to the contained widget or its layout.
+
+	def __init__( self, widget ) :
+
+		QtWidgets.QWidgetItem.__init__( self, widget )
+
+	def maximumSize( self ) :
+
+		a = self.alignment()
+		self.setAlignment( QtCore.Qt.Alignment() )
+		s = QtWidgets.QWidgetItem.maximumSize( self )
+		self.setAlignment( a )
+
+		return s
+
 ## The ListContainer holds a series of Widgets either in a column or a row.
 # It attempts to provide a list like interface for manipulation of the widgets.
 class ListContainer( GafferUI.ContainerWidget ) :
@@ -86,7 +108,12 @@ class ListContainer( GafferUI.ContainerWidget ) :
 		self.__widgets.append( child )
 
 		stretch = 1 if expand else 0
-		self.__qtLayout.addWidget( child._qtWidget(), stretch, self.__convertToQtAlignment( horizontalAlignment, verticalAlignment ) )
+
+		if horizontalAlignment is not None or verticalAlignment is not None :
+			self.__qtLayout.addItem( self.__widgetItem( child._qtWidget(), horizontalAlignment, verticalAlignment ) )
+		else :
+			self.__qtLayout.addWidget( child._qtWidget(), stretch, self.__convertToQtAlignment( horizontalAlignment, verticalAlignment ) )
+
 		child._applyVisibility()
 
 	def remove( self, child ) :
@@ -106,7 +133,11 @@ class ListContainer( GafferUI.ContainerWidget ) :
 		self.__widgets.insert( index, child )
 
 		stretch = 1 if expand else 0
-		self.__qtLayout.insertWidget( index, child._qtWidget(), stretch, self.__convertToQtAlignment( horizontalAlignment, verticalAlignment ) )
+
+		if horizontalAlignment is not None or verticalAlignment is not None :
+			self.__qtLayout.insertItem( index, self.__widgetItem( child._qtWidget(), horizontalAlignment, verticalAlignment ) )
+		else :
+			self.__qtLayout.insertWidget( index, child._qtWidget(), stretch, self.__convertToQtAlignment( horizontalAlignment, verticalAlignment ) )
 		child._applyVisibility()
 
 	def index( self, child ) :
@@ -177,6 +208,16 @@ class ListContainer( GafferUI.ContainerWidget ) :
 	def __len__( self ) :
 
 		return len( self.__widgets )
+
+	def __widgetItem( self, qtWidget, horizontalAlignment, verticalAlignment ) :
+
+		# Duplicate the logic in `QBoxLayout.insertWidget()` but with our
+		# customized `QWidgetItem`.
+		self._qtWidget().layout().addChildWidget( qtWidget )
+		widgetItem = _WidgetItem( qtWidget )
+		widgetItem.setAlignment( self.__convertToQtAlignment( horizontalAlignment, verticalAlignment ) )
+
+		return widgetItem
 
 	def __convertToQtAlignment( self, horizontalAlignment, verticalAlignment):
 
