@@ -1,6 +1,11 @@
 1.x.x.x (relative to 1.4.x.x)
 =======
 
+Features
+--------
+
+- IECoreScenePreview/PrimitiveAlgo.h : Added functions transformPrimitive and mergePrimitives.
+
 Improvements
 ------------
 
