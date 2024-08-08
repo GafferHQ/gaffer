@@ -21,6 +21,7 @@ Improvements
   - Added the ability to edit the scale of node icons.
   - Improved layout of Box node plug creator visibility toggles.
 - ArnoldShader : Moved the `toon` shader's `*_tonemap_hue_saturation` parameters to appropriate sections in the UI.
+- ListContainer : Adding a child widget with non-default alignment no longer causes the container to take up all available space.
 
 API
 ---
