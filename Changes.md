@@ -14,6 +14,7 @@ Improvements
   - Blue : Proxy
   - Red : Guide
 - Catalogue : Added a handle for controlling the relative sizes of the listing and image property widgets.
+- RenderPassEditor, LightEditor : Improved update performance for certain graph configurations, by optimising `SceneAlgo::history()` (#5199).
 
 Fixes
 -----

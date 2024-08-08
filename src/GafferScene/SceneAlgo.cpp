@@ -479,6 +479,13 @@ class CapturingMonitor : public Monitor
 				// before we were made active via `Monitor::Scope`.
 				m_rootProcesses.push_back( std::move( capturedProcess ) );
 			}
+
+			// Remember that we've monitored this process so that we dont force
+			// its monitoring again.
+
+			IECore::MurmurHash h = process->context()->hash();
+			h.append( reinterpret_cast<intptr_t>( p ) );
+			m_monitoredSet.insert( h );
 		}
 
 		void processFinished( const Process *process ) override
@@ -494,7 +501,22 @@ class CapturingMonitor : public Monitor
 
 		bool forceMonitoring( const Plug *plug, const IECore::InternedString &processType ) override
 		{
-			return processType == g_hashProcessType && shouldCapture( plug );
+			if( processType != g_hashProcessType || !shouldCapture( plug ) )
+			{
+				return false;
+			}
+
+			// Don't force the monitoring of a process we've monitored already. This does
+			// mean we throw away diamond dependencies in the process graph, but it is essential
+			// for performance in some cases - see `testHistoryDiamondPerformance()` for example.
+			/// \todo Potentially we could use the hash to find the previously captured process,
+			/// and instance that into our process graph. This would require clients of `History`
+			/// to be updated to handle such topologies efficiently by tracking previously visited
+			/// items. It may also be of fairly low value, since typically our goal is to find the
+			/// first relevant path through the graph to present to the user.
+			IECore::MurmurHash h = Context::current()->hash();
+			h.append( reinterpret_cast<intptr_t>( plug ) );
+			return !m_monitoredSet.count( h );
 		}
 
 	private :
@@ -509,15 +531,18 @@ class CapturingMonitor : public Monitor
 		}
 
 		using Mutex = tbb::spin_mutex;
-
-		Mutex m_mutex;
-
 		using ProcessOrScope = boost::variant<CapturedProcess *, std::unique_ptr< Monitor::Scope>>;
 		using ProcessMap = boost::unordered_map<const Process *, ProcessOrScope>;
 
+		const IECore::InternedString m_scenePlugChildName;
+
+		// Protects `m_processMap` and `m_rootProcesses`.
+		/// \todo Perhaps they should be concurrent containers instead?
+		Mutex m_mutex;
 		ProcessMap m_processMap;
 		CapturedProcess::PtrVector m_rootProcesses;
-		IECore::InternedString m_scenePlugChildName;
+
+		tbb::concurrent_unordered_set<IECore::MurmurHash> m_monitoredSet;
 
 };
 
