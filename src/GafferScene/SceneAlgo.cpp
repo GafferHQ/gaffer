@@ -437,8 +437,6 @@ class CapturingMonitor : public Monitor
 		{
 			const Plug *p = process->plug();
 
-			CapturedProcess::Ptr capturedProcess;
-			ProcessOrScope entry;
 			if( !shouldCapture( p ) )
 			{
 				// Parents may spawn other processes in support of the requested plug. This is one
@@ -450,38 +448,36 @@ class CapturingMonitor : public Monitor
 				// order of the stack is preserved - if this happens out of order, the stack will be
 				// corrupted, and weird crashes will happen.  But as long as it is created in
 				// processStarted, and released in processFinished, everything should line up.
-				entry = std::make_unique<Monitor::Scope>( this, false );
+				Mutex::scoped_lock lock( m_mutex );
+				m_processMap[process] = std::make_unique<Monitor::Scope>( this, false );
+				return;
+			}
+
+			// Capture this process.
+
+			CapturedProcess::Ptr capturedProcess = std::make_unique<CapturedProcess>();
+			capturedProcess->type = process->type();
+			capturedProcess->plug = p;
+			capturedProcess->destinationPlug = process->destinationPlug();
+			capturedProcess->context = new Context( *process->context(), /* omitCanceller = */ true );
+
+			Mutex::scoped_lock lock( m_mutex );
+			m_processMap[process] = capturedProcess.get();
+
+			ProcessMap::const_iterator it = m_processMap.find( process->parent() );
+			if( it != m_processMap.end() )
+			{
+				CapturedProcess * const * parent = boost::get< CapturedProcess* >( &it->second );
+				if( parent && *parent )
+				{
+					(*parent)->children.push_back( std::move( capturedProcess ) );
+				}
 			}
 			else
 			{
-				capturedProcess = std::make_unique<CapturedProcess>();
-				capturedProcess->type = process->type();
-				capturedProcess->plug = p;
-				capturedProcess->destinationPlug = process->destinationPlug();
-				capturedProcess->context = new Context( *process->context(), /* omitCanceller = */ true );
-				entry = capturedProcess.get();
-			}
-
-			Mutex::scoped_lock lock( m_mutex );
-			m_processMap[process] = std::move( entry );
-
-			if( capturedProcess )
-			{
-				ProcessMap::const_iterator it = m_processMap.find( process->parent() );
-				if( it != m_processMap.end() )
-				{
-					CapturedProcess * const * parent = boost::get< CapturedProcess* >( &it->second );
-					if( parent && *parent )
-					{
-						(*parent)->children.push_back( std::move( capturedProcess ) );
-					}
-				}
-				else
-				{
-					// Either `process->parent()` was null, or was started
-					// before we were made active via `Monitor::Scope`.
-					m_rootProcesses.push_back( std::move( capturedProcess ) );
-				}
+				// Either `process->parent()` was null, or was started
+				// before we were made active via `Monitor::Scope`.
+				m_rootProcesses.push_back( std::move( capturedProcess ) );
 			}
 		}
 
@@ -498,12 +494,7 @@ class CapturingMonitor : public Monitor
 
 		bool forceMonitoring( const Plug *plug, const IECore::InternedString &processType ) override
 		{
-			if( processType == g_hashProcessType && shouldCapture( plug ) )
-			{
-				return true;
-			}
-
-			return false;
+			return processType == g_hashProcessType && shouldCapture( plug );
 		}
 
 	private :
