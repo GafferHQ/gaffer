@@ -370,5 +370,19 @@ class ListContainerTest( GafferUITest.TestCase ) :
 		self.assertEqual( c[0].s, "a" )
 		self.assertEqual( c[1].s, "b" )
 
+	def testAlignmentSize( self ) :
+
+		with GafferUI.Window( "Test" ) as w :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical ) as v :
+				l1 = GafferUI.Label( "test", parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top } )
+				l2 = GafferUI.Label( "test" )
+
+		w._qtWidget().resize( 200, 200 )
+		w.setVisible( True )
+		self.waitForIdle()
+
+		self.assertEqual( v.size().y, l1.size().y + l2.size().y )
+		self.assertEqual( l2._qtWidget().pos().y(), l1.size().y )
+
 if __name__ == "__main__":
 	unittest.main()

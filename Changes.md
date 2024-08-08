@@ -14,6 +14,7 @@ Improvements
   - Blue : Proxy
   - Red : Guide
 - Catalogue : Added a handle for controlling the relative sizes of the listing and image property widgets.
+- ListContainer : Adding a child widget with non-default alignment no longer causes the container to take up all available space.
 
 Fixes
 -----
