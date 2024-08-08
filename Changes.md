@@ -14,6 +14,7 @@ Improvements
 - LightEditor, RenderPassEditor : History windows now use a context determined relative to the current focus node.
 - NumericWidget : Added the ability to use <kbd>Ctrl</kbd> + scroll wheel to adjust values in the same manner as <kbd>Up</kbd> and <kbd>Down</kbd> (#6009). [^1]
 - NodeEditor : Improved performance when showing a node with many colour plugs. Showing the Arnold `standard_surface` shader is now almost 2x faster. [^1]
+- ListContainer : Adding a child widget with non-default alignment no longer causes the container to take up all available space.
 
 Fixes
 -----
