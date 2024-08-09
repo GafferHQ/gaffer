@@ -111,6 +111,12 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 						MetadataWidget.FileSystemPathMetadataWidget( key = "icon" )
 					)
 
+					GafferUI.Label( "Scale" )
+
+					scaleWidget = MetadataWidget.NumericMetadataWidget( key = "iconScale", defaultValue = 1.5 )
+					scaleWidget.numericWidget()._qtWidget().setMaximumWidth( 60 )
+					self.__nodeMetadataWidgets.append( scaleWidget )
+
 				with _Row() as self.__plugAddButtons :
 
 					_Label( "Plug Creators" )

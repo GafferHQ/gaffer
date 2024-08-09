@@ -1,7 +1,15 @@
 1.4.x.x (relative to 1.4.11.0)
 =======
 
+Improvements
+------------
 
+- UI Editor : Added the ability to edit the scale of node icons.
+
+API
+---
+
+- MetadataWidget : Added `NumericMetadataWidget` class.
 
 1.4.11.0 (relative to 1.4.10.0)
 ========
