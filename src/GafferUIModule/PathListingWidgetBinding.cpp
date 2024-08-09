@@ -220,6 +220,36 @@ QString vectorToString( const T &v )
 	return result;
 }
 
+template<typename T>
+QString boxToString( const T &v )
+{
+	if( v.isEmpty() )
+	{
+		return "Empty";
+	}
+	return "[ " + vectorToString( v.min ) + " ], [ " + vectorToString( v.max ) + " ]";
+}
+
+template<typename T>
+QString matrixToString( const T &v )
+{
+	QString result;
+	for( size_t i = 0; i < T::dimensions(); ++i )
+	{
+		if( result.size() )
+		{
+			result += ", ";
+		}
+		result += "[";
+		for( size_t j = 0; j < T::dimensions(); ++j )
+		{
+			result += " " + doubleToString( v[i][j] );
+		}
+		result += " ]";
+	}
+	return result;
+}
+
 QVariant dataToVariant( const IECore::Data *value, int role )
 {
 	if( !value )
@@ -337,6 +367,14 @@ QVariant dataToVariant( const IECore::Data *value, int role )
 			return vectorToString( static_cast<const IECore::Color3fData *>( value )->readable() );
 		case IECore::Color4fDataTypeId :
 			return vectorToString( static_cast<const IECore::Color4fData *>( value )->readable() );
+		case IECore::Box2fDataTypeId :
+			return boxToString( static_cast<const IECore::Box2fData *>( value )->readable() );
+		case IECore::Box3fDataTypeId :
+			return boxToString( static_cast<const IECore::Box3fData *>( value )->readable() );
+		case IECore::M33fDataTypeId :
+			return matrixToString( static_cast<const IECore::M33fData *>( value )->readable() );
+		case IECore::M44fDataTypeId :
+			return matrixToString( static_cast<const IECore::M44fData *>( value )->readable() );
 		case IECore::DateTimeDataTypeId :
 		{
 			const IECore::DateTimeData *d = static_cast<const IECore::DateTimeData *>( value );
