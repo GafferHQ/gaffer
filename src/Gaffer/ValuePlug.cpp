@@ -241,7 +241,7 @@ class ValuePlug::HashProcess : public Process
 			// Then get our hash. We do this using this `acquireHash()` functor so that
 			// we can repeat the process for `Checked` mode.
 
-			const bool forceMonitoring = Process::forceMonitoring( threadState, plug, staticType );
+			const bool forceMonitoring = Process::forceMonitoring( threadState, p, staticType );
 
 			auto acquireHash = [&]( const HashCacheKey &cacheKey ) {
 
