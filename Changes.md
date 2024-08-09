@@ -50,6 +50,9 @@ Improvements
   - When a fallback value is displayed, the cell's tooltip includes a description of the source of the value.
 - LightEditor, RenderPassEditor : Fallback values shown in the history window are displayed with the same dimmed text colour used for fallback values in editor columns.
 - EditScope : Filtered the EditScope menu to show only nodes that are active in the relevant context.
+- GafferCycles :
+  - Refactored the python module so that the data needed for binding is all located in IECoreCycles and not dependent on linking with Cycles itself for that data.
+  - Added `majorVersion` `minorVersion` `patchVersion` and `version` to the python module to easily query the running Cycles version
 
 Fixes
 -----
