@@ -173,6 +173,8 @@ class PythonEditor( GafferUI.Editor ) :
 			return repr( dragData )
 		elif isinstance( dragData, IECore.Data ) and hasattr( dragData, "value" ) :
 			return repr( dragData.value )
+		elif isinstance( dragData, GafferUI.WidgetPath ) :
+			return repr( dragData )
 
 		return None
 
