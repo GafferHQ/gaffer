@@ -437,8 +437,6 @@ class CapturingMonitor : public Monitor
 		{
 			const Plug *p = process->plug();
 
-			CapturedProcess::Ptr capturedProcess;
-			ProcessOrScope entry;
 			if( !shouldCapture( p ) )
 			{
 				// Parents may spawn other processes in support of the requested plug. This is one
@@ -450,39 +448,44 @@ class CapturingMonitor : public Monitor
 				// order of the stack is preserved - if this happens out of order, the stack will be
 				// corrupted, and weird crashes will happen.  But as long as it is created in
 				// processStarted, and released in processFinished, everything should line up.
-				entry = std::make_unique<Monitor::Scope>( this, false );
+				Mutex::scoped_lock lock( m_mutex );
+				m_processMap[process] = std::make_unique<Monitor::Scope>( this, false );
+				return;
+			}
+
+			// Capture this process.
+
+			CapturedProcess::Ptr capturedProcess = std::make_unique<CapturedProcess>();
+			capturedProcess->type = process->type();
+			capturedProcess->plug = p;
+			capturedProcess->destinationPlug = process->destinationPlug();
+			capturedProcess->context = new Context( *process->context(), /* omitCanceller = */ true );
+
+			Mutex::scoped_lock lock( m_mutex );
+			m_processMap[process] = capturedProcess.get();
+
+			ProcessMap::const_iterator it = m_processMap.find( process->parent() );
+			if( it != m_processMap.end() )
+			{
+				CapturedProcess * const * parent = boost::get< CapturedProcess* >( &it->second );
+				if( parent && *parent )
+				{
+					(*parent)->children.push_back( std::move( capturedProcess ) );
+				}
 			}
 			else
 			{
-				capturedProcess = std::make_unique<CapturedProcess>();
-				capturedProcess->type = process->type();
-				capturedProcess->plug = p;
-				capturedProcess->destinationPlug = process->destinationPlug();
-				capturedProcess->context = new Context( *process->context(), /* omitCanceller = */ true );
-				entry = capturedProcess.get();
+				// Either `process->parent()` was null, or was started
+				// before we were made active via `Monitor::Scope`.
+				m_rootProcesses.push_back( std::move( capturedProcess ) );
 			}
 
-			Mutex::scoped_lock lock( m_mutex );
-			m_processMap[process] = std::move( entry );
+			// Remember that we've monitored this process so that we dont force
+			// its monitoring again.
 
-			if( capturedProcess )
-			{
-				ProcessMap::const_iterator it = m_processMap.find( process->parent() );
-				if( it != m_processMap.end() )
-				{
-					CapturedProcess * const * parent = boost::get< CapturedProcess* >( &it->second );
-					if( parent && *parent )
-					{
-						(*parent)->children.push_back( std::move( capturedProcess ) );
-					}
-				}
-				else
-				{
-					// Either `process->parent()` was null, or was started
-					// before we were made active via `Monitor::Scope`.
-					m_rootProcesses.push_back( std::move( capturedProcess ) );
-				}
-			}
+			IECore::MurmurHash h = process->context()->hash();
+			h.append( reinterpret_cast<intptr_t>( p ) );
+			m_monitoredSet.insert( h );
 		}
 
 		void processFinished( const Process *process ) override
@@ -498,12 +501,22 @@ class CapturingMonitor : public Monitor
 
 		bool forceMonitoring( const Plug *plug, const IECore::InternedString &processType ) override
 		{
-			if( processType == g_hashProcessType && shouldCapture( plug ) )
+			if( processType != g_hashProcessType || !shouldCapture( plug ) )
 			{
-				return true;
+				return false;
 			}
 
-			return false;
+			// Don't force the monitoring of a process we've monitored already. This does
+			// mean we throw away diamond dependencies in the process graph, but it is essential
+			// for performance in some cases - see `testHistoryDiamondPerformance()` for example.
+			/// \todo Potentially we could use the hash to find the previously captured process,
+			/// and instance that into our process graph. This would require clients of `History`
+			/// to be updated to handle such topologies efficiently by tracking previously visited
+			/// items. It may also be of fairly low value, since typically our goal is to find the
+			/// first relevant path through the graph to present to the user.
+			IECore::MurmurHash h = Context::current()->hash();
+			h.append( reinterpret_cast<intptr_t>( plug ) );
+			return !m_monitoredSet.count( h );
 		}
 
 	private :
@@ -518,15 +531,18 @@ class CapturingMonitor : public Monitor
 		}
 
 		using Mutex = tbb::spin_mutex;
-
-		Mutex m_mutex;
-
 		using ProcessOrScope = boost::variant<CapturedProcess *, std::unique_ptr< Monitor::Scope>>;
 		using ProcessMap = boost::unordered_map<const Process *, ProcessOrScope>;
 
+		const IECore::InternedString m_scenePlugChildName;
+
+		// Protects `m_processMap` and `m_rootProcesses`.
+		/// \todo Perhaps they should be concurrent containers instead?
+		Mutex m_mutex;
 		ProcessMap m_processMap;
 		CapturedProcess::PtrVector m_rootProcesses;
-		IECore::InternedString m_scenePlugChildName;
+
+		tbb::concurrent_unordered_set<IECore::MurmurHash> m_monitoredSet;
 
 };
 
