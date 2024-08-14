@@ -8,6 +8,7 @@ Features
 - ColorChooser :
   - Added sliders for TMI (temperature, magenta, intensity) color space.
   - Added color field, a widget giving control of two channels of "RGB", "HSV" or "TMI" triplets. The third channel is held constant.
+  - The color field, HSV slider group and TMI slider group can now be toggled on or off.
 
 Improvements
 ------------

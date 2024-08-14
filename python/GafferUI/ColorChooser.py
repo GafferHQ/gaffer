@@ -548,6 +548,16 @@ class ColorChooser( GafferUI.Widget ) :
 							slider.valueChangedSignal().connect( Gaffer.WeakMethod( self.__componentValueChanged ), scoped = False )
 						)
 
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4, parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top } ) :
+
+					# Options Button
+					menuDefinition = self.__optionsMenuDefinition()
+					self.__settingsMenu = GafferUI.MenuButton(
+						image = "gear.png",
+						menu = GafferUI.Menu( menuDefinition ),
+						hasFrame = False
+					)
+
 			# initial and current colour swatches
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) as self.__swatchRow :
 
@@ -617,6 +627,36 @@ class ColorChooser( GafferUI.Widget ) :
 			return GafferUI.NumericWidget.changesShouldBeMerged( firstReason, secondReason )
 
 		return False
+
+	def __optionsMenuDefinition( self ) :
+
+		result = IECore.MenuDefinition()
+
+		for channels in [ "hsv", "tmi" ] :
+			result.append(
+				"/{} Sliders".format( channels.upper() ),
+				{
+					"command": functools.partial( Gaffer.WeakMethod( self.__toggleComponentTriplet ), channels ),
+					"checkBox": lambda w = self.__channelLabels[channels[0]] : w.getVisible()
+				}
+			)
+
+		result.append(
+			"/Color Field",
+			{
+				"command": lambda checked, w = self.__colorField : w.setVisible( not w.getVisible() ),
+				"checkBox": lambda w = self.__colorField : w.getVisible()
+			}
+		)
+
+		return result
+
+	def __toggleComponentTriplet( self, channels, *unused ) :
+
+		for c in channels :
+			self.__channelLabels[c].setVisible( not self.__channelLabels[c].getVisible() )
+			self.__numericWidgets[c].setVisible( not self.__numericWidgets[c].getVisible() )
+			self.__sliders[c].setVisible( not self.__sliders[c].getVisible() )
 
 	def __initialColorPress( self, button, event ) :
 
