@@ -514,7 +514,7 @@ class ColorChooser( GafferUI.Widget ) :
 								self.__channelLabels[component]._qtWidget().setProperty( "gafferColorStaticComponent", True)
 							self.__channelLabels[component].buttonPressSignal().connect(
 								functools.partial(
-									Gaffer.WeakMethod( self.__setStaticComponent ),
+									Gaffer.WeakMethod( self.__channelLabelPressed ),
 									component = component
 								),
 								scoped = False
@@ -572,6 +572,9 @@ class ColorChooser( GafferUI.Widget ) :
 				self.__colorSwatch._qtWidget().setFixedHeight( 40 )
 
 		self.__colorChangedSignal = Gaffer.Signals.Signal2()
+		self.__visibleComponentsChangedSignal = Gaffer.Signals.Signal2()
+		self.__staticComponentChangedSignal = Gaffer.Signals.Signal2()
+		self.__colorFieldVisibleChangedSignal = Gaffer.Signals.Signal2()
 
 		self.__updateUIFromColor()
 		self.__activateComponentIcons()
@@ -611,6 +614,31 @@ class ColorChooser( GafferUI.Widget ) :
 	def getErrored( self ) :
 		return any( w.getErrored() for w in self.__numericWidgets.values() )
 
+	def setVisibleComponents( self, components ) :
+
+		self.__setVisibleComponentsInternal( components )
+
+	def getVisibleComponents( self ) :
+
+		return "".join( [ k for k, v in self.__sliders.items() if v.getVisible() ] )
+
+	def setStaticComponent( self, component ) :
+
+		self.__setStaticComponentInternal( component )
+
+	def getStaticComponent( self ) :
+
+		c, staticComponent = self.__colorField.getColor()
+		return staticComponent
+
+	def setColorFieldVisible( self, visible ) :
+
+		self.__setColorFieldVisibleInternal( visible )
+
+	def getColorFieldVisible( self ) :
+
+		return self.__colorField.getVisible()
+
 	## A signal emitted whenever the color is changed. Slots should
 	# have the signature slot( ColorChooser, reason ). The reason
 	# argument may be passed either a ColorChooser.ColorChangedReason,
@@ -619,6 +647,29 @@ class ColorChooser( GafferUI.Widget ) :
 	def colorChangedSignal( self ) :
 
 		return self.__colorChangedSignal
+
+	## A signal emitted whenver the visible components are changed. Slots
+	# should have the signature slot( ColorChooser, visibleComponents ).
+	# `visibleComponents` is a string representing the components currently
+	# visible.
+	def visibleComponentsChangedSignal( self ) :
+
+		return self.__visibleComponentsChangedSignal
+
+	## A signal emitted whenver the static component is changed. Slots
+	# should have the signature slot( ColorChooser, staticComponent ).
+	# `staticComponent` is a single character string representing the
+	# current static component.
+	def staticComponentChangedSignal( self ) :
+
+		return self.__staticComponentChangedSignal
+
+	## A signal emitted whenever the visibility of the color field changes.
+	# Slots should have the signature slot( ColorChooser, visible ).
+	# `visible` is a boolean representing the current visibility.
+	def colorFieldVisibleChangedSignal( self ) :
+
+		return self.__colorFieldVisibleChangedSignal
 
 	## Returns True if a user would expect the specified sequence
 	# of changes to be merged into a single undoable event.
@@ -681,22 +732,29 @@ class ColorChooser( GafferUI.Widget ) :
 
 		return result
 
+	def __channelLabelPressed( self, widget, event, component ) :
+
+		if event.buttons != GafferUI.ButtonEvent.Buttons.Left :
+			return False
+
+		self.__setStaticComponentInternal( component )
+
+		return True
+
 	def __toggleComponentTriplet( self, channels, *unused ) :
 
+		visibleComponents = set( self.getVisibleComponents() )
 		for c in channels :
-			self.__channelLabels[c].setVisible( not self.__channelLabels[c].getVisible() )
-			self.__numericWidgets[c].setVisible( not self.__numericWidgets[c].getVisible() )
-			self.__sliders[c].setVisible( not self.__sliders[c].getVisible() )
+			if c in visibleComponents :
+				visibleComponents.remove( c )
+			else :
+				visibleComponents.add( c )
+
+		self.__setVisibleComponentsInternal( "".join( visibleComponents ) )
 
 	def __toggleColorField( self, *unused ) :
 
-		visible = not self.__colorField.getVisible()
-		self.__colorField.setVisible( visible )
-
-		if visible :
-			self.__activateComponentIcons()
-		else :
-			self.__clearComponentIcons()
+		self.__setColorFieldVisibleInternal( not self.__colorField.getVisible() )
 
 	def __initialColorPress( self, button, event ) :
 
@@ -940,3 +998,33 @@ class ColorChooser( GafferUI.Widget ) :
 
 		if self.__colorField.getVisible() :
 			self.__activateComponentIcons()
+
+		self.__staticComponentChangedSignal( self, component )
+
+	def __setVisibleComponentsInternal( self, components ) :
+
+		componentsSet = set( components )
+		if componentsSet == set( self.getVisibleComponents() ) :
+			return
+
+		for c in self.__sliders.keys() :
+			visible = c in componentsSet
+			self.__channelLabels[c].setVisible( visible )
+			self.__numericWidgets[c].setVisible( visible )
+			self.__sliders[c].setVisible( visible )
+
+		self.__visibleComponentsChangedSignal( self, components )
+
+	def __setColorFieldVisibleInternal( self, visible ) :
+
+		if visible == self.__colorField.getVisible() :
+			return
+
+		self.__colorField.setVisible( visible )
+
+		if visible :
+			self.__activateComponentIcons()
+		else :
+			self.__clearComponentIcons()
+
+		self.__colorFieldVisibleChangedSignal( self, visible )

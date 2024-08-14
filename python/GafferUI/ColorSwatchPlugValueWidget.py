@@ -37,9 +37,13 @@
 
 import weakref
 import imath
+import functools
+
+import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.PlugValueWidget import sole
 
 class ColorSwatchPlugValueWidget( GafferUI.PlugValueWidget ) :
 
@@ -132,6 +136,29 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 		self.__mergeGroupId = 0
 
 		self.__colorChangedConnection = self.colorChooser().colorChangedSignal().connect( Gaffer.WeakMethod( self.__colorChanged ), scoped = False )
+
+		self.colorChooser().visibleComponentsChangedSignal().connect(
+			functools.partial(
+				Gaffer.WeakMethod( self.__colorChooserOptionChanged ),
+				key = "visibleComponents"
+			),
+			scoped = False
+		)
+		self.colorChooser().staticComponentChangedSignal().connect(
+			functools.partial(
+				Gaffer.WeakMethod( self.__colorChooserOptionChanged ),
+				key = "staticComponent"
+			),
+			scoped = False
+		)
+		self.colorChooser().colorFieldVisibleChangedSignal().connect(
+			functools.partial(
+				Gaffer.WeakMethod( self.__colorChooserOptionChanged ),
+				key = "colorFieldVisible"
+			),
+			scoped = False
+		)
+
 		self.confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
 		self.cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
 
@@ -150,6 +177,17 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 			self.setTitle( "{} plugs".format( len( self.__plugs ) ) )
 
 		self.__plugSet( plug )
+
+		options = self.__colorChooserOptions()
+
+		if "visibleComponents" in options :
+			self.colorChooser().setVisibleComponents( options["visibleComponents"].value )
+
+		if "staticComponent" in options :
+			self.colorChooser().setStaticComponent( options["staticComponent"].value )
+
+		if "colorFieldVisible" in options :
+			self.colorChooser().setColorFieldVisible( options["colorFieldVisible"].value )
 
 		parentWindow.addChildWindow( self, removeOnClose = True )
 
@@ -214,3 +252,34 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 	def __destroy( self, *unused ) :
 
 		self.parent().removeChild( self )
+
+	# \todo Extract these two methods to share with `ColorChooserPlugValueWidget` which has
+	# an almost identical implementation.
+
+	def __colorChooserOptionChanged( self, colorChooser, value, key ) :
+
+		if Gaffer.Metadata.value( "colorChooser:dialogueOptions", "userDefault" ) is None :
+			sessionOptions = Gaffer.Metadata.value( "colorChooser:dialogueOptions", "sessionDefault" )
+			if sessionOptions is None :
+				sessionOptions = IECore.CompoundData()
+				Gaffer.Metadata.registerValue( "colorChooser:dialogueOptions", "sessionDefault", sessionOptions )
+
+			sessionOptions.update( { key: value } )
+
+		for p in self.__plugs :
+			plugOptions = Gaffer.Metadata.value( p, "colorChooser:dialogueOptions" )
+			if plugOptions is None :
+				plugOptions = IECore.CompoundData()
+				Gaffer.Metadata.registerValue( p, "colorChooser:dialogueOptions", plugOptions, persistent = False )
+
+			plugOptions.update( { key: value } )
+
+	def __colorChooserOptions( self ) :
+
+		v = sole( Gaffer.Metadata.value( p, "colorChooser:dialogueOptions" ) for p in self.__plugs )
+		if v is None :
+			v  = Gaffer.Metadata.value( "colorChooser:dialogueOptions", "userDefault" )
+			if v is None :
+				v = Gaffer.Metadata.value( "colorChooser:dialogueOptions", "sessionDefault" ) or IECore.CompoundData()
+
+		return v

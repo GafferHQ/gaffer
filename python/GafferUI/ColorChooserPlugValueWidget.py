@@ -34,10 +34,14 @@
 #
 ##########################################################################
 
+import functools
 import imath
+
+import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.PlugValueWidget import sole
 
 class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 
@@ -49,8 +53,41 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__colorChooser.setSwatchesVisible( False )
 
+		options = self.__colorChooserOptions()
+
+		if "visibleComponents" in options :
+			self.__colorChooser.setVisibleComponents( options["visibleComponents"].value )
+
+		if "staticComponent" in options :
+			self.__colorChooser.setStaticComponent( options["staticComponent"].value )
+
+		if "colorFieldVisible" in options :
+			self.__colorChooser.setColorFieldVisible( options["colorFieldVisible"].value )
+
 		self.__colorChangedConnection = self.__colorChooser.colorChangedSignal().connect(
 			Gaffer.WeakMethod( self.__colorChanged ), scoped = False
+		)
+
+		self.__colorChooser.visibleComponentsChangedSignal().connect(
+			functools.partial(
+				Gaffer.WeakMethod( self.__colorChooserOptionChanged ),
+				key = "visibleComponents"
+			),
+			scoped = False
+		)
+		self.__colorChooser.staticComponentChangedSignal().connect(
+			functools.partial(
+				Gaffer.WeakMethod( self.__colorChooserOptionChanged ),
+				key = "staticComponent"
+			),
+			scoped = False
+		)
+		self.__colorChooser.colorFieldVisibleChangedSignal().connect(
+			functools.partial(
+				Gaffer.WeakMethod( self.__colorChooserOptionChanged ),
+				key = "colorFieldVisible"
+			),
+			scoped = False
 		)
 
 		self.__lastChangedReason = None
@@ -88,6 +125,34 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 			with self._blockedUpdateFromValues() :
 				for plug in self.getPlugs() :
 					plug.setValue( self.__colorChooser.getColor() )
+
+	def __colorChooserOptionChanged( self, colorChooser, value, key ) :
+
+		if Gaffer.Metadata.value( "colorChooser:inlineOptions", "userDefault" ) is None :
+			sessionOptions = Gaffer.Metadata.value( "colorChooser:inlineOptions", "sessionDefault" )
+			if sessionOptions is None :
+				sessionOptions = IECore.CompoundData()
+				Gaffer.Metadata.registerValue( "colorChooser:inlineOptions", "sessionDefault", sessionOptions )
+
+			sessionOptions.update( { key: value } )
+
+		for p in self.getPlugs() :
+			plugOptions = Gaffer.Metadata.value( p, "colorChooser:inlineOptions" )
+			if plugOptions is None :
+				plugOptions = IECore.CompoundData()
+				Gaffer.Metadata.registerValue( p, "colorChooser:inlineOptions", plugOptions, persistent = False )
+
+			plugOptions.update( { key: value } )
+
+	def __colorChooserOptions( self ) :
+
+		v = sole( Gaffer.Metadata.value( p, "colorChooser:inlineOptions" ) for p in self.getPlugs() )
+		if v is None :
+			v  = Gaffer.Metadata.value( "colorChooser:inlineOptions", "userDefault" )
+			if v is None :
+				v = Gaffer.Metadata.value( "colorChooser:inlineOptions", "sessionDefault" ) or IECore.CompoundData()
+
+		return v
 
 	def __allComponentsEditable( self ) :
 

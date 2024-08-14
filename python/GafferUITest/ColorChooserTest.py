@@ -40,6 +40,10 @@ import unittest
 import imath
 import OpenImageIO
 
+import IECore
+
+import Gaffer
+import GafferUI
 from GafferUI.ColorChooser import _tmiToRGB
 from GafferUI.ColorChooser import _rgbToTMI
 import GafferUITest
@@ -83,6 +87,220 @@ class ColorChooserTest( GafferUITest.TestCase ) :
 
 		rgbConverted = _tmiToRGB( tmi )
 		self.assertEqual( rgbConverted.a, rgb.a )
+
+	def __colorChooserFromWidget( self, widget ) :
+
+		return widget._ColorPlugValueWidget__colorChooser._ColorChooserPlugValueWidget__colorChooser
+
+	def __sliderFromWidget( self, widget, component ) :
+
+		c = self.__colorChooserFromWidget( widget )
+		return c._ColorChooser__sliders[component]
+
+	def __setVisibleComponents( self, widget, channels ) :
+
+		c = self.__colorChooserFromWidget( widget )
+		c.setVisibleComponents( channels )
+
+	def __setStaticComponent( self, widget, component ) :
+
+		c = self.__colorChooserFromWidget( widget )
+		c.setStaticComponent( component )
+
+	def __getStaticComponent( self, widget ) :
+
+		c = self.__colorChooserFromWidget( widget )
+		return c.getStaticComponent()
+
+	def __setColorFieldVisibility( self, widget, visible ) :
+
+		c = self.__colorChooserFromWidget( widget )
+		c.setColorFieldVisible( visible )
+
+	def __getColorFieldVisibility( self, widget ) :
+
+		c = self.__colorChooserFromWidget( widget )
+		return c.getColorFieldVisible()
+
+	def testMetadata( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["node"] = Gaffer.Node()
+		script["node"]["rgbPlug1"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["node"]["rgbPlug2"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		widget1 = GafferUI.ColorPlugValueWidget( script["node"]["rgbPlug1"] )
+
+		# Default state
+
+		for c in "rgbhsvtmi" :
+			self.assertTrue( self.__sliderFromWidget( widget1, c ).getVisible() )
+		self.assertIsNone( Gaffer.Metadata.value( "colorChooser:inlineOptions", "sessionDefault" ) )
+		for p in [ "rgbPlug1", "rgbPlug2" ] :
+			self.assertIsNone( Gaffer.Metadata.value( script["node"][p], "colorChooser:inlineOptions" ) )
+		self.assertEqual( self.__getStaticComponent( widget1 ), "h" )
+		self.assertTrue( self.__getColorFieldVisibility( widget1 ) )
+
+		# Modify widget1
+
+		self.__setVisibleComponents( widget1, "rgbtmi" )
+		self.__setStaticComponent( widget1, "t" )
+		self.__setColorFieldVisibility( widget1, False )
+
+		for c in "rgbtmi" :
+			self.assertTrue( self.__sliderFromWidget( widget1, c ).getVisible() )
+		for c in "hsv" :
+			self.assertFalse( self.__sliderFromWidget( widget1, c ).getVisible() )
+		self.assertEqual( self.__getStaticComponent( widget1 ), "t" )
+		self.assertFalse( self.__getColorFieldVisibility( widget1 ) )
+
+		sessionOptions = Gaffer.Metadata.value( "colorChooser:inlineOptions", "sessionDefault" )
+		plug1Options = Gaffer.Metadata.value( script["node"]["rgbPlug1"], "colorChooser:inlineOptions" )
+		self.assertEqual( set( sessionOptions["visibleComponents"].value ), set( "rgbtmi" ) )
+		self.assertEqual( set( plug1Options["visibleComponents"].value ), set( "rgbtmi" ) )
+		self.assertEqual( sessionOptions["staticComponent"].value, "t" )
+		self.assertEqual( plug1Options["staticComponent"].value, "t" )
+		self.assertFalse( sessionOptions["colorFieldVisible"].value )
+		self.assertFalse( plug1Options["colorFieldVisible"].value )
+
+		# Recreate widget1 and should have the same state
+		del widget1
+		widget1 = GafferUI.ColorPlugValueWidget( script["node"]["rgbPlug1"] )
+
+		for c in "rgbtmi" :
+			self.assertTrue( self.__sliderFromWidget( widget1, c ).getVisible() )
+		for c in "hsv" :
+			self.assertFalse( self.__sliderFromWidget( widget1, c ).getVisible() )
+		self.assertEqual( self.__getStaticComponent( widget1 ), "t" )
+		self.assertFalse( self.__getColorFieldVisibility( widget1 ) )
+
+		# A widget for a second plug should adopt the same state as widget1
+
+		widget2 = GafferUI.ColorPlugValueWidget( script["node"]["rgbPlug2"] )
+
+		for c in "rgbtmi" :
+			self.assertTrue( self.__sliderFromWidget( widget2, c ).getVisible() )
+		for c in "hsv" :
+			self.assertFalse( self.__sliderFromWidget( widget2, c ).getVisible() )
+		self.assertEqual( self.__getStaticComponent( widget2 ), "t" )
+		self.assertFalse( self.__getColorFieldVisibility( widget2 ) )
+
+		# Changing widget2 should not affect widget1, but should change `sessionDefault`
+		self.__setVisibleComponents( widget2, "rgb" )
+		self.__setStaticComponent( widget2, "r" )
+		self.__setColorFieldVisibility( widget2, True )
+
+		for c in "rgbtmi" :
+			self.assertTrue( self.__sliderFromWidget( widget1, c ).getVisible() )
+		for c in "hsv" :
+			self.assertFalse( self.__sliderFromWidget( widget1, c ).getVisible() )
+		self.assertEqual( self.__getStaticComponent( widget1 ), "t" )
+		self.assertFalse( self.__getColorFieldVisibility( widget1 ) )
+
+		for c in "rgb" :
+			self.assertTrue( self.__sliderFromWidget( widget2, c ).getVisible() )
+		for c in "hsvtmi" :
+			self.assertFalse( self.__sliderFromWidget( widget2, c ).getVisible() )
+		self.assertEqual( self.__getStaticComponent( widget2 ), "r" )
+		self.assertTrue( self.__getColorFieldVisibility( widget2 ) )
+
+		sessionOptions = Gaffer.Metadata.value( "colorChooser:inlineOptions", "sessionDefault" )
+		plug1Options = Gaffer.Metadata.value( script["node"]["rgbPlug1"], "colorChooser:inlineOptions" )
+		plug2Options = Gaffer.Metadata.value( script["node"]["rgbPlug2"], "colorChooser:inlineOptions" )
+
+		self.assertEqual( set( plug1Options["visibleComponents"].value ), set( "rgbtmi" ) )
+		self.assertEqual( set( plug2Options["visibleComponents"].value ), set( "rgb" ) )
+		self.assertEqual( set( sessionOptions["visibleComponents"].value ), set( "rgb" ) )
+		self.assertEqual( plug1Options["staticComponent"].value, "t" )
+		self.assertEqual( plug2Options["staticComponent"].value, "r" )
+		self.assertEqual( sessionOptions["staticComponent"].value, "r" )
+		self.assertFalse( plug1Options["colorFieldVisible"].value )
+		self.assertTrue( plug2Options["colorFieldVisible"].value )
+		self.assertTrue( sessionOptions["colorFieldVisible"].value )
+
+		# Don't serialize state
+		del widget1
+		del widget2
+		Gaffer.Metadata.deregisterValue( "colorChooser:inlineOptions", "sessionDefault" )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+
+		widget1 = GafferUI.ColorPlugValueWidget( script2["node"]["rgbPlug1"] )
+		widget2 = GafferUI.ColorPlugValueWidget( script2["node"]["rgbPlug2"] )
+
+		for c in "rgbhsvtmi" :
+			self.assertTrue( self.__sliderFromWidget( widget1, c ).getVisible() )
+			self.assertTrue( self.__sliderFromWidget( widget2, c ).getVisible() )
+		self.assertEqual( self.__getStaticComponent( widget1 ), "h" )
+		self.assertEqual( self.__getStaticComponent( widget2 ), "h" )
+		self.assertIsNone( Gaffer.Metadata.value( "colorChooser:inlineOptions", "sessionDefault" ) )
+		for p in [ "rgbPlug1", "rgbPlug2" ] :
+			self.assertIsNone( Gaffer.Metadata.value( script2["node"][p], "colorChooser:inlineOptions" ) )
+
+	def testUserDefaultMetadata( self ) :
+
+		# Set `userDefault`
+		Gaffer.Metadata.registerValue(
+			"colorChooser:inlineOptions",
+			"userDefault",
+			{
+				"visibleComponents": "rgb",
+				"staticComponent": "r",
+				"colorFieldVisible": False
+			}
+		)
+
+		script = Gaffer.ScriptNode()
+
+		script["node"] = Gaffer.Node()
+		script["node"]["rgbPlug1"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["node"]["rgbPlug2"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		widget1 = GafferUI.ColorPlugValueWidget( script["node"]["rgbPlug1"] )
+
+		# Should get `userDefault` values
+		for c in "rgb" :
+			self.assertTrue( self.__sliderFromWidget( widget1, c ).getVisible() )
+		for c in "hsvtmi" :
+			self.assertFalse( self.__sliderFromWidget( widget1, c ).getVisible() )
+		self.assertEqual( self.__getStaticComponent( widget1 ), "r" )
+		self.assertFalse( self.__getColorFieldVisibility( widget1 ) )
+
+		self.assertIsNone( Gaffer.Metadata.value( "colorChooser:inlineOptions", "sessionDefault" ) )
+		for p in [ "rgbPlug1", "rgbPlug2" ] :
+			self.assertIsNone( Gaffer.Metadata.value( script["node"][p], "colorChooser:inlineOptions" ) )
+
+		# Change widget1 and recreate it
+		self.__setVisibleComponents( widget1, "rgbhsv" )
+		self.__setStaticComponent( widget1, "g" )
+		self.__setColorFieldVisibility( widget1, True )
+
+		del widget1
+
+		widget1 = GafferUI.ColorPlugValueWidget( script["node"]["rgbPlug1"] )
+
+		# Should have HSV, static component G, visible color field
+		for c in "rgbhsv" :
+			self.assertTrue( self.__sliderFromWidget( widget1, c ).getVisible() )
+		for c in "tmi" :
+			self.assertFalse( self.__sliderFromWidget( widget1, c ).getVisible() )
+		self.assertEqual( self.__getStaticComponent( widget1 ), "g" )
+		self.assertTrue( self.__getColorFieldVisibility( widget1 ) )
+
+		# A new widget, without any per-plug metadata should get `userDefault`
+
+		widget2 = GafferUI.ColorPlugValueWidget( script["node"]["rgbPlug2"] )
+
+		for c in "rgb" :
+			self.assertTrue( self.__sliderFromWidget( widget2, c ).getVisible() )
+		for c in "hsvtmi" :
+			self.assertFalse( self.__sliderFromWidget( widget2, c ).getVisible() )
+		self.assertEqual( self.__getStaticComponent( widget2 ), "r" )
+		self.assertFalse( self.__getColorFieldVisibility( widget2 ) )
+
+		self.assertIsNone( Gaffer.Metadata.value( "colorChooser:inlineOptions", "sessionDefault" ) )
 
 
 if __name__ == "__main__" :
