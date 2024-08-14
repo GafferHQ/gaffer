@@ -1,6 +1,13 @@
 1.x.x.x (relative to 1.5.0.0a2)
 =======
 
+Features
+--------
+
+- ColorChooser :
+  - Added sliders for TMI (temperature, magenta, intensity) color space.
+  - Added color field, a widget giving control of two channels of "RGB", "HSV" or "TMI" triplets. The third channel is held constant.
+  - The color field, HSV slider group and TMI slider group can now be toggled on or off.
 
 
 1.5.0.0a2 (relative to 1.5.0.0a1)
@@ -269,9 +276,6 @@ Features
 --------
 
 - Viewer : Added support for Cycles GPU rendering via a new Device option in the Cycles viewer settings.
-- ColorChooser :
-  - Added sliders for TMI (temperature, magenta, intensity) color space.
-  - Added color field, a widget giving control of two channels of "RGB", "HSV" or "TMI" triplets. The third channel is held constant.
 
 Improvements
 ------------

@@ -529,6 +529,14 @@ class ColorChooser( GafferUI.Widget ) :
 							slider.valueChangedSignal().connect( Gaffer.WeakMethod( self.__componentValueChanged ) )
 						)
 
+				# Options Button
+				GafferUI.MenuButton(
+					image = "gear.png",
+					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__optionsMenuDefinition ) ),
+					hasFrame = False,
+					parenting = { "verticalAlignment": GafferUI.VerticalAlignment.Top }
+				)
+
 			# initial and current colour swatches
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) as self.__swatchRow :
 
@@ -578,6 +586,14 @@ class ColorChooser( GafferUI.Widget ) :
 	def getErrored( self ) :
 		return any( w.getErrored() for w in self.__numericWidgets.values() )
 
+	def setVisibleComponents( self, components ) :
+
+		self.__setVisibleComponentsInternal( components )
+
+	def getVisibleComponents( self ) :
+
+		return "".join( [ k for k, v in self.__sliders.items() if v.getVisible() ] )
+
 	## A signal emitted whenever the color is changed. Slots should
 	# have the signature slot( ColorChooser, reason ). The reason
 	# argument may be passed either a ColorChooser.ColorChangedReason,
@@ -598,6 +614,46 @@ class ColorChooser( GafferUI.Widget ) :
 			return GafferUI.NumericWidget.changesShouldBeMerged( firstReason, secondReason )
 
 		return False
+
+	def __optionsMenuDefinition( self ) :
+
+		result = IECore.MenuDefinition()
+
+		result.append( "/__widgetsDivider__", { "divider": True, "label": "Visible Controls" } )
+
+		for channels in [ "rgb", "hsv", "tmi" ] :
+			result.append(
+				"/{} Sliders".format( channels.upper() ),
+				{
+					"command": functools.partial( Gaffer.WeakMethod( self.__toggleComponentTriplet ), channels ),
+					"checkBox": self.__channelLabels[channels[0]].getVisible()
+				}
+			)
+
+		result.append(
+			"/Color Field",
+			{
+				"command": functools.partial( Gaffer.WeakMethod( self.__toggleColorField ) ),
+				"checkBox": self.__colorField.getVisible()
+			}
+		)
+
+		return result
+
+	def __toggleComponentTriplet( self, channels, *unused ) :
+
+		visibleComponents = set( self.getVisibleComponents() )
+		for c in channels :
+			if c in visibleComponents :
+				visibleComponents.remove( c )
+			elif c != "a" or self.getColor().dimensions() == 4 :
+				visibleComponents.add( c )
+
+		self.__setVisibleComponentsInternal( "".join( visibleComponents ) )
+
+	def __toggleColorField( self, *unused ) :
+
+		self.__setColorFieldVisibleInternal( not self.__colorField.getVisible() )
 
 	def __initialColorPress( self, button, event ) :
 
@@ -716,13 +772,9 @@ class ColorChooser( GafferUI.Widget ) :
 				self.__sliders["a"].setValue( c[3] )
 				self.__numericWidgets["a"].setValue( c[3] )
 
-				self.__sliders["a"].setVisible( True )
-				self.__numericWidgets["a"].setVisible( True )
-				self.__channelLabels["a"].setVisible( True )
+				self.__setComponentVisible( "a", True )
 			else :
-				self.__sliders["a"].setVisible( False )
-				self.__numericWidgets["a"].setVisible( False )
-				self.__channelLabels["a"].setVisible( False )
+				self.__setComponentVisible( "a", False )
 
 			for slider in [ v for k, v in self.__sliders.items() if k in "hsv" ] :
 				slider.setColor( self.__colorHSV )
@@ -778,3 +830,31 @@ class ColorChooser( GafferUI.Widget ) :
 
 		self.__channelLabels[component]._qtWidget().setProperty( "gafferColorStaticComponentHover", False)
 		self.__channelLabels[component]._repolish()
+
+	def __setComponentVisible( self, component, visible ) :
+
+		self.__channelLabels[component].setVisible( visible )
+		self.__numericWidgets[component].setVisible( visible )
+		self.__sliders[component].setVisible( visible )
+
+	def __setVisibleComponentsInternal( self, components ) :
+
+		componentsSet = set( components )
+
+		if self.getColor().dimensions() == 4 :
+			componentsSet.add( "a" )
+		elif "a" in componentsSet :
+			componentsSet.remove( "a" )
+
+		if componentsSet == set( self.getVisibleComponents() ) :
+			return
+
+		for c in self.__sliders.keys() :
+			self.__setComponentVisible( c, c in componentsSet )
+
+	def __setColorFieldVisibleInternal( self, visible ) :
+
+		if visible == self.__colorField.getVisible() :
+			return
+
+		self.__colorField.setVisible( visible )
