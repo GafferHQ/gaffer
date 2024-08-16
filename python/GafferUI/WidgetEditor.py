@@ -41,6 +41,37 @@ import IECore
 import Gaffer
 import GafferUI
 
+from Qt import QtCore
+from Qt import QtWidgets
+
+# A `QtCore.Object` for capturing all mouse clicks before any UI elements
+# get the click event so we can identify the widget clicked on.
+class _ButtonPressFilter( QtCore.QObject ) :
+
+	def __init__( self ) :
+
+		QtCore.QObject.__init__( self )
+
+		self.__widgetPickedSignal = Gaffer.Signals.Signal1()
+
+	def eventFilter( self, obj, event ) :
+
+		if event.type() == QtCore.QEvent.MouseButtonPress :
+			widget = GafferUI.Widget.widgetAt( GafferUI.Widget.mousePosition() )
+
+			if widget is not None :
+				self.__widgetPickedSignal( widget )
+
+			return True
+
+		return False
+
+	# A signal emitted whenver a widget is picked. Slots should have the
+	# signature slot( widget ).
+	def widgetPickedSignal( self ) :
+
+		return self.__widgetPickedSignal
+
 
 class WidgetPath( Gaffer.Path ) :
 	# A `Gaffer.Path` to a `GafferUI.Widget` rooted at `rootWidget`. Path
@@ -170,6 +201,18 @@ class WidgetEditor( GafferUI.Editor ) :
 
 		with column :
 
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+
+				self.__pickButton = GafferUI.Button( "Pick Widget" )
+				self.__pickButton.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__pickButtonReleased ) )
+				self.__pickButton._qtWidget().setMaximumWidth( 150 )
+
+				self.__delayedPickButton = GafferUI.Button( "Pick Widget (3 sec delay)" )
+				self.__delayedPickButton.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__delayedPickButtonReleased ) )
+				self.__delayedPickButton._qtWidget().setMaximumWidth( 150 )
+
+				self.__timerWidget = GafferUI.BusyWidget( size = 25, busy = False )
+
 			self.__widgetNameColumn = GafferUI.PathListingWidget.StandardColumn( "Name", "widgetEditor:name", sizeMode = GafferUI.PathColumn.SizeMode.Stretch )
 
 			self.__widgetListingWidget = GafferUI.PathListingWidget(
@@ -185,6 +228,9 @@ class WidgetEditor( GafferUI.Editor ) :
 
 		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
 
+		self.__buttonPressFilter = _ButtonPressFilter()
+		self.__buttonPressFilter.widgetPickedSignal().connect( Gaffer.WeakMethod( self.__widgetPicked ) )
+
 	def __repr__( self ) :
 
 		return "GafferUI.WidgetEditor( scriptNode )"
@@ -199,9 +245,41 @@ class WidgetEditor( GafferUI.Editor ) :
 			GafferUI.Pointer.setCurrent( "nodes" )
 			return path
 
+	def __installEventFilter( self ) :
+
+		self.__timerWidget.setBusy( False )
+		QtWidgets.QApplication.instance().installEventFilter( self.__buttonPressFilter )
+
+	def __pickButtonReleased( self, *unused ) :
+
+		self.__installEventFilter()
+
+	def __delayedPickButtonReleased( self, *unused ) :
+
+		self.__timerWidget.setBusy( True )
+		QtCore.QTimer.singleShot( 3000, self.__installEventFilter )
+
 	def __visibilityChanged( self, widget ) :
 
 		if widget.visible() and self.__widgetListingWidget.getPath().scriptNode() is None :
 			self.__widgetListingWidget.setPath( WidgetPath( self.__scriptNode ) )
+
+	def __widgetPathWalk( self, path, targetWidget ) :
+
+		for c in path.children() :
+			widget = c.property( "widgetEditor:widget" )
+			if widget == targetWidget :
+				return c
+			elif widget.isAncestorOf( targetWidget ) :
+				return self.__widgetPathWalk( c, targetWidget )
+
+	def __widgetPicked( self, widget ) :
+
+		path = self.__widgetPathWalk( self.__widgetListingWidget.getPath(), widget )
+		pm = IECore.PathMatcher()
+		pm.addPath( str( path ) )
+		self.__widgetListingWidget.setSelection( pm, True )
+		QtWidgets.QApplication.instance().removeEventFilter( self.__buttonPressFilter )
+
 
 GafferUI.Editor.registerType( "WidgetEditor", WidgetEditor )
