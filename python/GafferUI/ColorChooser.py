@@ -223,6 +223,14 @@ class _ColorField( GafferUI.Widget ) :
 
 		return self.__valueChangedSignal
 
+	# Returns a tuple consisting of the components that will be used for the X and Y
+	# axes for the color field.
+	def xyAxes( self ) :
+		xAxis = { "r": "g", "g": "r", "b": "r", "h": "s", "s": "h", "v": "h", "t": "m", "m": "t", "i": "t" }[self.__staticComponent]
+		yAxis = { "r": "b", "g": "b", "b": "g", "h": "v", "s": "v", "v": "s", "t": "i", "m": "i", "i": "m" }[self.__staticComponent]
+
+		return xAxis, yAxis
+
 	def __setColorInternal( self, color, staticComponent, reason ) :
 
 		dragBeginOrEnd = reason in ( GafferUI.Slider.ValueChangedReason.DragBegin, GafferUI.Slider.ValueChangedReason.DragEnd )
@@ -252,18 +260,12 @@ class _ColorField( GafferUI.Widget ) :
 
 		return zIndex
 
-	def __xyAxes( self ) :
-		xAxis = { "r": "g", "g": "r", "b": "r", "h": "s", "s": "h", "v": "h", "t": "m", "m": "t", "i": "t" }[self.__staticComponent]
-		yAxis = { "r": "b", "g": "b", "b": "g", "h": "v", "s": "v", "v": "s", "t": "i", "m": "i", "i": "m" }[self.__staticComponent]
-
-		return xAxis, yAxis
-
 	def __colorToPosition( self, color ) :
 
 		xIndex, yIndex = self.__xyIndices()
 		color = imath.V2f( color[xIndex], color[yIndex] )
 
-		xComponent, yComponent = self.__xyAxes()
+		xComponent, yComponent = self.xyAxes()
 		minC = imath.V2f( _ranges[xComponent].min, _ranges[yComponent].min )
 		maxC = imath.V2f( _ranges[xComponent].max, _ranges[yComponent].max )
 
@@ -281,7 +283,7 @@ class _ColorField( GafferUI.Widget ) :
 
 		size = self.bound().size()
 
-		xComponent, yComponent = self.__xyAxes()
+		xComponent, yComponent = self.xyAxes()
 
 		c[xIndex] = ( position.x / float( size.x ) ) * ( _ranges[xComponent].max - _ranges[xComponent].min ) + _ranges[xComponent].min
 		c[yIndex] = ( 1.0 - ( position.y / float( size.y ) ) ) * ( _ranges[yComponent].max - _ranges[yComponent].min ) + _ranges[yComponent].min
@@ -367,7 +369,7 @@ class _ColorField( GafferUI.Widget ) :
 			else :
 				colorSpace = ColorSpace.TMI
 
-			xComponent, yComponent = self.__xyAxes()
+			xComponent, yComponent = self.xyAxes()
 
 			for x in range( 0, numStops ) :
 				tx = float( x ) / ( numStops - 1 )
@@ -493,18 +495,19 @@ class ColorChooser( GafferUI.Widget ) :
 		self.__componentValueChangedConnections = []
 
 		with self.__column :
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 0 ) :
 
 				self.__colorField = _ColorField( color, "h" )
 				self.__colorValueChangedConnection = self.__colorField.valueChangedSignal().connect( Gaffer.WeakMethod( self.__colorValueChanged ), scoped = False )
 
-				with GafferUI.GridContainer( spacing = 4 ) :
+				with GafferUI.GridContainer( spacing = 0 ) :
 
 					# sliders and numeric widgets
 					c, staticComponent = self.__colorField.getColor()
 					for row, component in enumerate( "rgbahsvtmi" ) :
 						self.__channelLabels[component] = GafferUI.Label( component.capitalize(), parenting = { "index" : ( 0, row ), "alignment" : ( GafferUI.HorizontalAlignment.Center, GafferUI.VerticalAlignment.Center ) } )
 						self.__channelLabels[component]._qtWidget().setObjectName( "gafferColorComponentLabel" )
+						self.__channelLabels[component]._qtWidget().setFixedSize( 27, 22 )
 
 						if component != "a" :
 							if component == staticComponent :
@@ -571,6 +574,7 @@ class ColorChooser( GafferUI.Widget ) :
 		self.__colorChangedSignal = Gaffer.Signals.Signal2()
 
 		self.__updateUIFromColor()
+		self.__activateComponentIcons()
 
 	## The default color starts as the value passed when creating the widget.
 	# It is represented with a swatch which when clicked will revert the current
@@ -632,6 +636,8 @@ class ColorChooser( GafferUI.Widget ) :
 
 		result = IECore.MenuDefinition()
 
+		result.append( "/__widgetsDivider__", { "divider": True, "label": "Visible Controls" } )
+
 		for channels in [ "hsv", "tmi" ] :
 			result.append(
 				"/{} Sliders".format( channels.upper() ),
@@ -644,10 +650,34 @@ class ColorChooser( GafferUI.Widget ) :
 		result.append(
 			"/Color Field",
 			{
-				"command": lambda checked, w = self.__colorField : w.setVisible( not w.getVisible() ),
+				"command": functools.partial( Gaffer.WeakMethod( self.__toggleColorField ) ),
 				"checkBox": lambda w = self.__colorField : w.getVisible()
 			}
 		)
+
+		result.append( "/__fieldComponents__", { "divider": True, "label": "Color Field Components" } )
+
+		for label, component in [
+			( "Green × Blue", "r" ),
+			( "Red × Blue", "g" ),
+			( "Red × Green", "b" ),
+			( "Saturation × Value", "h" ),
+			( "Hue × Value", "s" ),
+			( "Hue × Saturation", "v" ),
+			( "Magenta × Intensity", "t" ),
+			( "Temperature × Intensity", "m" ),
+			( "Temperature × Magenta", "i" ),
+		] :
+			weakSet = Gaffer.WeakMethod( self.__setStaticComponentInternal )
+			weakGet = Gaffer.WeakMethod( self.getStaticComponent )
+			result.append(
+				label,
+				{
+					"command": lambda checked, c = component, weakSet = weakSet : weakSet( c ),
+					"checkBox": lambda c = component, weakGet = weakGet : weakGet() == c
+				}
+			)
+
 
 		return result
 
@@ -657,6 +687,16 @@ class ColorChooser( GafferUI.Widget ) :
 			self.__channelLabels[c].setVisible( not self.__channelLabels[c].getVisible() )
 			self.__numericWidgets[c].setVisible( not self.__numericWidgets[c].getVisible() )
 			self.__sliders[c].setVisible( not self.__sliders[c].getVisible() )
+
+	def __toggleColorField( self, *unused ) :
+
+		visible = not self.__colorField.getVisible()
+		self.__colorField.setVisible( visible )
+
+		if visible :
+			self.__activateComponentIcons()
+		else :
+			self.__clearComponentIcons()
 
 	def __initialColorPress( self, button, event ) :
 
@@ -806,14 +846,89 @@ class ColorChooser( GafferUI.Widget ) :
 			else :
 				self.__colorField.setColor( self.__colorTMI, staticComponent )
 
-	def __setStaticComponent( self, widget, event, component ) :
+	def __componentIcon( self, component ) :
 
-		if event.buttons != GafferUI.ButtonEvent.Buttons.Left :
-			return False
+		assert( component in "rgbhsvtmi" )
 
 		c, staticComponent = self.__colorField.getColor()
-		self.__channelLabels[staticComponent]._qtWidget().setProperty( "gafferColorStaticComponent", False )
+
+		icons = {
+			"r" : { "r" : "gafferColorChooserStaticTop", "g" : "gafferColorChooserAxisCenter", "b" : "gafferColorChooserAxisBottom" },
+			"g" : { "r" : "gafferColorChooserAxisTop", "g" : "gafferColorChooserStaticCenter", "b" : "gafferColorChooserAxisBottom" },
+			"b" : { "r" : "gafferColorChooserAxisTop", "g" : "gafferColorChooserAxisCenter", "b" : "gafferColorChooserStaticBottom" },
+			"h" : { "h" : "gafferColorChooserStaticTop", "s" : "gafferColorChooserAxisCenter", "v" : "gafferColorChooserAxisBottom" },
+			"s" : { "h" : "gafferColorChooserAxisTop", "s" : "gafferColorChooserStaticCenter", "v" : "gafferColorChooserAxisBottom" },
+			"v" : { "h" : "gafferColorChooserAxisTop", "s" : "gafferColorChooserAxisCenter", "v" : "gafferColorChooserStaticBottom" },
+			"t" : { "t" : "gafferColorChooserStaticTop", "m" : "gafferColorChooserAxisCenter", "i" : "gafferColorChooserAxisBottom" },
+			"m" : { "t" : "gafferColorChooserAxisTop", "m" : "gafferColorChooserStaticCenter", "i" : "gafferColorChooserAxisBottom" },
+			"i" : { "t" : "gafferColorChooserAxisTop", "m" : "gafferColorChooserAxisCenter", "i" : "gafferColorChooserStaticBottom" },
+		}[staticComponent]
+
+		return icons.get( component, None )
+
+	def __clearComponentIcons( self ) :
+
+		c, staticComponent = self.__colorField.getColor()
+		staticIcon = self.__componentIcon( staticComponent )
+		self.__channelLabels[staticComponent]._qtWidget().setProperty( staticIcon, False )
 		self.__channelLabels[staticComponent]._repolish()
+
+		xAxis, yAxis = self.__colorField.xyAxes()
+		xIcon = self.__componentIcon( xAxis )
+		yIcon = self.__componentIcon( yAxis )
+		self.__channelLabels[xAxis]._qtWidget().setProperty( xIcon, False )
+		self.__channelLabels[xAxis]._repolish()
+		self.__channelLabels[yAxis]._qtWidget().setProperty( yIcon, False )
+		self.__channelLabels[yAxis]._repolish()
+
+	def __activateComponentIcons( self ) :
+
+		c, staticComponent = self.__colorField.getColor()
+
+		staticIcon = self.__componentIcon( staticComponent )
+		self.__channelLabels[staticComponent]._qtWidget().setProperty( staticIcon, True )
+		self.__channelLabels[staticComponent]._repolish()
+
+		xAxis, yAxis = self.__colorField.xyAxes()
+		xIcon = self.__componentIcon( xAxis )
+		yIcon = self.__componentIcon( yAxis )
+		self.__channelLabels[xAxis]._qtWidget().setProperty( xIcon, True )
+		self.__channelLabels[xAxis]._repolish()
+		self.__channelLabels[yAxis]._qtWidget().setProperty( yIcon, True )
+		self.__channelLabels[yAxis]._repolish()
+
+	def __labelEnter( self, widget, component ) :
+
+		if not self.__colorField.getVisible() :
+			return
+
+		icon = self.__componentIcon( component )
+		self.__channelLabels[component]._qtWidget().setProperty( icon, False )
+
+		self.__channelLabels[component]._qtWidget().setProperty( "gafferColorChooserStaticHover", True )
+
+		self.__channelLabels[component]._repolish()
+
+	def __labelLeave( self, widget, component ) :
+
+		if not self.__colorField.getVisible() :
+			return
+
+		self.__channelLabels[component]._qtWidget().setProperty( "gafferColorChooserStaticHover", False)
+
+		icon = self.__componentIcon( component )
+		if icon is not None :
+			self.__channelLabels[component]._qtWidget().setProperty( icon, True )
+
+		self.__channelLabels[component]._repolish()
+
+	def __setStaticComponentInternal( self, component ) :
+
+		c, previousComponent = self.__colorField.getColor()
+		if component == previousComponent :
+			return
+
+		self.__clearComponentIcons()
 
 		assert( component in "rgbhsvtmi" )
 		if component in "rgb" :
@@ -823,17 +938,5 @@ class ColorChooser( GafferUI.Widget ) :
 		else :
 			self.__colorField.setColor( self.__colorTMI, component )
 
-		self.__channelLabels[component]._qtWidget().setProperty( "gafferColorStaticComponent", True )
-		self.__channelLabels[component]._repolish()
-
-		return True
-
-	def __labelEnter( self, widget, component ) :
-
-		self.__channelLabels[component]._qtWidget().setProperty( "gafferColorStaticComponentHover", True )
-		self.__channelLabels[component]._repolish()
-
-	def __labelLeave( self, widget, component ) :
-
-		self.__channelLabels[component]._qtWidget().setProperty( "gafferColorStaticComponentHover", False)
-		self.__channelLabels[component]._repolish()
+		if self.__colorField.getVisible() :
+			self.__activateComponentIcons()

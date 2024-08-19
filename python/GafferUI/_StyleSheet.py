@@ -272,17 +272,48 @@ _styleSheet = string.Template(
 	}
 
 	QLabel#gafferColorComponentLabel {
-		padding-left: 12px;
+		padding-left: 14px;
+		width: 27px;
 	}
 
-	QLabel#gafferColorComponentLabel[gafferColorStaticComponent="true"] {
-		background-image: url(:/colorChooserStaticChannelIcon.png);
+	QLabel#gafferColorComponentLabel[gafferColorChooserStaticHover="true"] {
+		background-image: url(:/colorChooserStaticHighlightedIcon.png);
 		background-repeat: no-repeat;
 		background-position: left;
 	}
 
-	QLabel#gafferColorComponentLabel[gafferColorStaticComponentHover="true"] {
-		background-image: url(:/colorChooserStaticChannelHighlightedIcon.png);
+	QLabel#gafferColorComponentLabel[gafferColorChooserStaticCenter="true"] {
+		background-image: url(:/colorChooserStaticCenterIcon.png);
+		background-repeat: no-repeat;
+		background-position: left;
+	}
+
+	QLabel#gafferColorComponentLabel[gafferColorChooserStaticTop="true"] {
+		background-image: url(:/colorChooserStaticTopIcon.png);
+		background-repeat: no-repeat;
+		background-position: left;
+	}
+
+	QLabel#gafferColorComponentLabel[gafferColorChooserStaticBottom="true"] {
+		background-image: url(:/colorChooserStaticBottomIcon.png);
+		background-repeat: no-repeat;
+		background-position: left;
+	}
+
+	QLabel#gafferColorComponentLabel[gafferColorChooserAxisCenter="true"] {
+		background-image: url(:/colorChooserAxisCenterIcon.png);
+		background-repeat: no-repeat;
+		background-position: left;
+	}
+
+	QLabel#gafferColorComponentLabel[gafferColorChooserAxisTop="true"] {
+		background-image: url(:/colorChooserAxisTopIcon.png);
+		background-repeat: no-repeat;
+		background-position: left;
+	}
+
+	QLabel#gafferColorComponentLabel[gafferColorChooserAxisBottom="true"] {
+		background-image: url(:/colorChooserAxisBottomIcon.png);
 		background-repeat: no-repeat;
 		background-position: left;
 	}

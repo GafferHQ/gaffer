@@ -476,14 +476,17 @@
 		"colorChooser" : {
 
 			"options" : {
-				"requiredWidth" : 10,
-				"requiredHeight" : 10,
 				"validatePixelAlignment" : True
 			},
 
 			"ids" : [
-				"colorChooserStaticChannelIcon",
-				"colorChooserStaticChannelHighlightedIcon",
+				"colorChooserStaticHighlightedIcon",
+				"colorChooserStaticCenterIcon",
+                "colorChooserStaticTopIcon",
+                "colorChooserStaticBottomIcon",
+                "colorChooserAxisCenterIcon",
+                "colorChooserAxisTopIcon",
+                "colorChooserAxisBottomIcon",
 			]
 		}
 
