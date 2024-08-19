@@ -4,7 +4,9 @@
 Improvements
 ------------
 
-- UI Editor : Added the ability to edit the scale of node icons.
+- UI Editor :
+  - Added the ability to edit the scale of node icons.
+  - Improved layout of Box node plug creator visibility toggles.
 
 API
 ---

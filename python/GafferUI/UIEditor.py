@@ -122,7 +122,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 					_Label( "Plug Creators" )
 
 					for side in ( "Top", "Bottom", "Left", "Right" ) :
-						_Label( side )._qtWidget().setFixedWidth( 40 )
+						GafferUI.Label( side )
 						self.__nodeMetadataWidgets.append( MetadataWidget.BoolMetadataWidget(
 							key = "noduleLayout:customGadget:addButton%s:visible" % side,
 							defaultValue = True
@@ -406,7 +406,7 @@ class _Row( GafferUI.ListContainer ) :
 
 	def __init__( self, *args, **kw ) :
 
-		GafferUI.ListContainer.__init__( self, GafferUI.ListContainer.Orientation.Horizontal, spacing = 4, *args, **kw )
+		GafferUI.ListContainer.__init__( self, GafferUI.ListContainer.Orientation.Horizontal, spacing = 8, *args, **kw )
 
 ##########################################################################
 # Hierarchical representation of a plug layout, suitable for manipulating
