@@ -72,7 +72,7 @@ class StandardNodeToolbarTest( GafferUITest.TestCase ) :
 			widget = toolbar._StandardNodeToolbar__layout.plugValueWidget( plug )
 			GafferUITest.PlugValueWidgetTest.waitForUpdate( widget )
 			self.assertEqual( widget.updateCount, 1 )
-			self.assertTrue( widget.updateContexts[0].isSame( script.context() ) )
+			self.assertEqual( widget.updateContexts[0], script.context() )
 
 if __name__ == "__main__":
 	unittest.main()
