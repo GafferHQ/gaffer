@@ -37,6 +37,7 @@
 #include "GafferUI/ContextTracker.h"
 
 #include "GafferUI/Gadget.h"
+#include "GafferUI/View.h"
 
 #include "Gaffer/BackgroundTask.h"
 #include "Gaffer/Context.h"
@@ -109,6 +110,30 @@ SharedFocusInstances &sharedFocusInstances()
 	static SharedFocusInstances g_sharedInstances;
 	return g_sharedInstances;
 }
+
+
+const Gaffer::Node *editor( const Gaffer::GraphComponent *graphComponent )
+{
+	while( graphComponent )
+	{
+		if( auto view = runTimeCast<const View>( graphComponent ) )
+		{
+			return view;
+		}
+		else if( auto node = runTimeCast<const Node>( graphComponent ) )
+		{
+			if( node->isInstanceOf( "GafferUI::Editor::Settings" ) )
+			{
+				return node;
+			}
+		}
+		graphComponent = graphComponent->parent();
+	}
+
+	return nullptr;
+}
+
+const InternedString g_inPlugName( "in" );
 
 } // namespace
 
@@ -216,7 +241,7 @@ void ContextTracker::scheduleUpdate()
 		m_nodeContexts.clear();
 		m_plugContexts.clear();
 		m_idleConnection.disconnect();
-		changedSignal()( *this );
+		emitChanged();
 		return;
 	}
 
@@ -324,13 +349,42 @@ void ContextTracker::updateInBackground()
 						thisRef->m_nodeContexts.swap( nodeContexts );
 						thisRef->m_plugContexts.swap( plugContexts );
 						thisRef->m_updateTask.reset();
-						thisRef->changedSignal()( *thisRef );
+						thisRef->emitChanged();
 					}
 				);
 			}
 		}
 
 	);
+}
+
+void ContextTracker::editorInputChanged( const Gaffer::Plug *plug )
+{
+	const Node *editor = plug->node();
+	auto editorInPlug = editor->getChild<Plug>( g_inPlugName );
+	if( !editorInPlug )
+	{
+		return;
+	}
+
+	if( plug == editorInPlug || ( runTimeCast<const ArrayPlug>( editorInPlug ) && plug->parent() == editorInPlug ) )
+	{
+		auto it = m_trackedEditors.find( editor );
+		assert( it != m_trackedEditors.end() );
+		// Although the tracking itself hasn't changed, `context()`
+		// is sensitive to the editor input, so we emit the changed
+		// signal for this specific editor.
+		it->second.changedSignal( *this );
+	}
+}
+
+void ContextTracker::emitChanged()
+{
+	changedSignal()( *this );
+	for( const auto &[node, trackedEditor] : m_trackedEditors )
+	{
+		trackedEditor.changedSignal( *this );
+	}
 }
 
 bool ContextTracker::updatePending() const
@@ -341,6 +395,27 @@ bool ContextTracker::updatePending() const
 ContextTracker::Signal &ContextTracker::changedSignal()
 {
 	return m_changedSignal;
+}
+
+ContextTracker::Signal &ContextTracker::changedSignal( Gaffer::GraphComponent *graphComponent )
+{
+	const Node *editor = ::editor( graphComponent );
+	if( !editor )
+	{
+		return m_changedSignal;
+	}
+
+	TrackedEditor &tracked = m_trackedEditors[editor];
+	if( !tracked.plugInputChangedConnection.connected() )
+	{
+		// Either first time we've been called for this address, or an old node
+		// at the address was destroyed and our connection was removed.
+		tracked.plugInputChangedConnection = const_cast<Node *>( editor )->plugInputChangedSignal().connect(
+			boost::bind( &ContextTracker::editorInputChanged, this, ::_1 )
+		);
+	}
+
+	return tracked.changedSignal;
 }
 
 bool ContextTracker::isTracked( const Gaffer::Plug *plug ) const
@@ -377,7 +452,36 @@ Gaffer::ConstContextPtr ContextTracker::context( const Gaffer::Plug *plug ) cons
 Gaffer::ConstContextPtr ContextTracker::context( const Gaffer::Node *node ) const
 {
 	auto it = m_nodeContexts.find( node );
-	return it != m_nodeContexts.end() ? it->second.context : m_context;
+	if( it != m_nodeContexts.end() )
+	{
+		return it->second.context;
+	}
+
+	const Node *editor = ::editor( node );
+	if( !editor )
+	{
+		return m_context;
+	}
+
+	auto *inPlug = editor->getChild<Plug>( g_inPlugName );
+	if( !inPlug )
+	{
+		return m_context;
+	}
+
+	auto *inputPlug = inPlug->getInput();
+	if( !inputPlug )
+	{
+		for( auto &p : Plug::RecursiveRange( *inPlug ) )
+		{
+			if( ( inputPlug = p->getInput() ) )
+			{
+				break;
+			}
+		}
+	}
+
+	return inputPlug ? context( inputPlug->source()->node() ) : m_context;
 }
 
 bool ContextTracker::isEnabled( const Gaffer::DependencyNode *node ) const

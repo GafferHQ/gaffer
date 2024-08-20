@@ -72,6 +72,7 @@ API
 - VisibleSet : Added Python constructor with keyword arguments for `expansions`, `inclusions` and `exclusions`.
 - ScriptNodeAlgo : Added new namespace with functions for managing shared UI state for GafferSceneUI.
 - ContextAlgo : Deprecated. Use ScriptNodeAlgo instead.
+- ContextTracker : Added support for plugs in Views and `Editor.Settings` nodes, which should use the tracked context for the node being viewed.
 
 Breaking Changes
 ----------------

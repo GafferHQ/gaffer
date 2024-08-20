@@ -341,7 +341,8 @@ void GafferUIModule::bindGraphGadget()
 			.def( "context", &contextWrapper2, ( arg( "plug" ), arg( "_copy" ) = true ) )
 			.def( "isEnabled", &ContextTracker::isEnabled )
 			.def( "updatePending", &ContextTracker::updatePending )
-			.def( "changedSignal", &ContextTracker::changedSignal, return_internal_reference<1>() )
+			.def( "changedSignal", (ContextTracker::Signal &(ContextTracker::*)())&ContextTracker::changedSignal, return_internal_reference<1>() )
+			.def( "changedSignal", (ContextTracker::Signal &(ContextTracker::*)( GraphComponent * ))&ContextTracker::changedSignal, return_internal_reference<1>() )
 		;
 
 		SignalClass<ContextTracker::Signal, DefaultSignalCaller<ContextTracker::Signal>, ContextTrackerSlotCaller>( "Signal" );

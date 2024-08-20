@@ -117,6 +117,10 @@ class GAFFERUI_API ContextTracker final : public IECore::RefCounted, public Gaff
 		using Signal = Gaffer::Signals::Signal<void ( ContextTracker & ), Gaffer::Signals::CatchingCombiner<void>>;
 		/// Signal emitted when the results of any queries have changed.
 		Signal &changedSignal();
+		/// As above, but if `graphComponent` is a part of a View or Editor, returns
+		/// a signal that is also emitted when the viewed node changes. This accounts
+		/// for rule 2 documented in `context()`.
+		Signal &changedSignal( Gaffer::GraphComponent *graphComponent );
 
 		/// Queries
 		/// =======
@@ -132,6 +136,14 @@ class GAFFERUI_API ContextTracker final : public IECore::RefCounted, public Gaff
 		/// Returns the most suitable context for the UI to evaluate a plug or
 		/// node in. This will always return a valid context, even if the plug
 		/// or node has not been tracked.
+		///
+		/// Contexts are chosen as follows :
+		///
+		/// 1. If the node or plug is tracked, then the first context
+		///    it was tracked in is chosen.
+		/// 2. If the node or plug is part of a `View` or `Editor`, then
+		///    the context for the node being viewed is chosen.
+		/// 3. Otherwise, `targetContext()` is chosen.
 		Gaffer::ConstContextPtr context( const Gaffer::Plug *plug ) const;
 		Gaffer::ConstContextPtr context( const Gaffer::Node *node ) const;
 
@@ -146,6 +158,8 @@ class GAFFERUI_API ContextTracker final : public IECore::RefCounted, public Gaff
 		void contextChanged( IECore::InternedString variable );
 		void scheduleUpdate();
 		void updateInBackground();
+		void editorInputChanged( const Gaffer::Plug *plug );
+		void emitChanged();
 		const Gaffer::Context *findPlugContext( const Gaffer::Plug *plug ) const;
 
 		Gaffer::ConstNodePtr m_node;
@@ -155,6 +169,14 @@ class GAFFERUI_API ContextTracker final : public IECore::RefCounted, public Gaff
 		Gaffer::Signals::ScopedConnection m_idleConnection;
 		std::unique_ptr<Gaffer::BackgroundTask> m_updateTask;
 		Signal m_changedSignal;
+
+		struct TrackedEditor
+		{
+			Signal changedSignal;
+			Gaffer::Signals::ScopedConnection plugInputChangedConnection;
+		};
+		using TrackedEditors = std::unordered_map<const Gaffer::Node *, TrackedEditor>;
+		TrackedEditors m_trackedEditors;
 
 		struct NodeData
 		{
