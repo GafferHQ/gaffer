@@ -137,17 +137,15 @@ class PlugLayout( GafferUI.Widget ) :
 		self.__rootSection = _Section( self.__parent )
 
 		# Set up an appropriate context in which to view the plugs.
-		self.__context = GafferUI.PlugValueWidget._PlugValueWidget__defaultContext( self.__parent )
-		self.__contextChangedConnection = self.__context.changedSignal().connect(
-			Gaffer.WeakMethod( self.__contextChanged ), scoped = True
-		)
+		self.__contextTracker = GafferUI.ContextTracker.acquireForFocus( parent )
+		self.__contextTracker.changedSignal( parent ).connect( Gaffer.WeakMethod( self.__contextChanged ) )
 
 		# Build the layout
 		self.__update()
 
 	def context( self ) :
 
-		return self.__context
+		return self.__contextTracker.context( self.__parent )
 
 	## Returns a PlugValueWidget representing the specified child plug.
 	def plugValueWidget( self, childPlug ) :
@@ -526,7 +524,7 @@ class PlugLayout( GafferUI.Widget ) :
 		self.__summariesDirty = True
 		self.__updateLazily()
 
-	def __contextChanged( self, context, name ) :
+	def __contextChanged( self, contextTracker ) :
 
 		self.__activationsDirty = True
 		self.__summariesDirty = True
