@@ -663,7 +663,7 @@ class ColorChooser( GafferUI.Widget ) :
 
 		return self.__colorChangedSignal
 
-	## A signal emitted whenver the visible components are changed. Slots
+	## A signal emitted whenever the visible components are changed. Slots
 	# should have the signature slot( ColorChooser, visibleComponents ).
 	# `visibleComponents` is a string representing the components currently
 	# visible.
