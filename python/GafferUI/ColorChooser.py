@@ -552,10 +552,9 @@ class ColorChooser( GafferUI.Widget ) :
 						)
 
 				# Options Button
-				menuDefinition = self.__optionsMenuDefinition()
 				GafferUI.MenuButton(
 					image = "gear.png",
-					menu = GafferUI.Menu( menuDefinition ),
+					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__optionsMenuDefinition ) ),
 					hasFrame = False,
 					parenting = { "verticalAlignment": GafferUI.VerticalAlignment.Top }
 				)
@@ -693,7 +692,7 @@ class ColorChooser( GafferUI.Widget ) :
 				"/{} Sliders".format( channels.upper() ),
 				{
 					"command": functools.partial( Gaffer.WeakMethod( self.__toggleComponentTriplet ), channels ),
-					"checkBox": lambda w = self.__channelLabels[channels[0]] : w.getVisible()
+					"checkBox": self.__channelLabels[channels[0]].getVisible()
 				}
 			)
 
@@ -701,7 +700,7 @@ class ColorChooser( GafferUI.Widget ) :
 			"/Color Field",
 			{
 				"command": functools.partial( Gaffer.WeakMethod( self.__toggleColorField ) ),
-				"checkBox": lambda w = self.__colorField : w.getVisible()
+				"checkBox": self.__colorField.getVisible()
 			}
 		)
 
