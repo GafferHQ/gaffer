@@ -105,12 +105,12 @@ class ColorChooserTest( GafferUITest.TestCase ) :
 	def __setStaticComponent( self, widget, component ) :
 
 		c = self.__colorChooserFromWidget( widget )
-		c.setStaticComponent( component )
+		c.setColorFieldStaticComponent( component )
 
 	def __getStaticComponent( self, widget ) :
 
 		c = self.__colorChooserFromWidget( widget )
-		return c.getStaticComponent()
+		return c.getColorFieldStaticComponent()
 
 	def __setColorFieldVisibility( self, widget, visible ) :
 

@@ -620,7 +620,7 @@ class ColorChooser( GafferUI.Widget ) :
 
 		return "".join( [ k for k, v in self.__sliders.items() if v.getVisible() ] )
 
-	def setStaticComponent( self, component ) :
+	def setColorFieldStaticComponent( self, component ) :
 
 		c, previousComponent = self.__colorField.getColor()
 		if component == previousComponent :
@@ -641,7 +641,7 @@ class ColorChooser( GafferUI.Widget ) :
 
 		self.__staticComponentChangedSignal( self, component )
 
-	def getStaticComponent( self ) :
+	def getColorFieldStaticComponent( self ) :
 
 		c, staticComponent = self.__colorField.getColor()
 		return staticComponent
@@ -734,12 +734,12 @@ class ColorChooser( GafferUI.Widget ) :
 			( "/Other/Temperature × Intensity", "m" ),
 			( "/Other/Temperature × Magenta", "i" ),
 		] :
-			weakSet = Gaffer.WeakMethod( self.setStaticComponent )
+			weakSet = Gaffer.WeakMethod( self.setColorFieldStaticComponent )
 			result.append(
 				label,
 				{
 					"command": lambda checked, c = component, weakSet = weakSet : weakSet( c ),
-					"checkBox": self.getStaticComponent() == component
+					"checkBox": self.getColorFieldStaticComponent() == component
 				}
 			)
 
@@ -751,7 +751,7 @@ class ColorChooser( GafferUI.Widget ) :
 		if event.buttons != GafferUI.ButtonEvent.Buttons.Left :
 			return False
 
-		self.setStaticComponent( component )
+		self.setColorFieldStaticComponent( component )
 
 		return True
 

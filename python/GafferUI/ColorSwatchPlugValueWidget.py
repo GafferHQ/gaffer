@@ -184,7 +184,7 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 			self.colorChooser().setVisibleComponents( options["visibleComponents"].value )
 
 		if "staticComponent" in options :
-			self.colorChooser().setStaticComponent( options["staticComponent"].value )
+			self.colorChooser().setColorFieldStaticComponent( options["staticComponent"].value )
 
 		if "colorFieldVisible" in options :
 			self.colorChooser().setColorFieldVisible( options["colorFieldVisible"].value )
