@@ -611,8 +611,10 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __plugInputChanged( self, plug ) :
 
-		if plug in self.__plugs :
+		if plug in self.__plugs or any( plug in plugs for plugs in self.__auxiliaryPlugs ) :
 			self.__updateContextConnection()
+
+		if plug in self.__plugs :
 			self._updateFromEditable()
 
 	def __plugMetadataChanged( self, plug, key, reason ) :
@@ -696,6 +698,10 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		self.__auxiliaryPlugDirtiedConnections = [
 			node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__auxiliaryPlugDirtied ), scoped = True )
+			for node in auxiliaryNodes
+		]
+		self.__auxiliaryPlugInputChangedConnections = [
+			node.plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ), scoped = True )
 			for node in auxiliaryNodes
 		]
 
