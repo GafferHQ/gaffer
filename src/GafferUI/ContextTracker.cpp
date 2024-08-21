@@ -133,6 +133,49 @@ const Gaffer::Node *editor( const Gaffer::GraphComponent *graphComponent )
 	return nullptr;
 }
 
+Gaffer::Node *editor( Gaffer::GraphComponent *graphComponent )
+{
+	// Preferring cheeky cast to maintaining an identical copy of `editor( const ... )`.
+	return const_cast<Node *>( editor( const_cast<const GraphComponent *>( graphComponent ) ) );
+}
+
+Gaffer::ScriptNode *scriptNode( Gaffer::GraphComponent *graphComponent )
+{
+	if( !graphComponent )
+	{
+		return nullptr;
+	}
+
+	if( auto s = runTimeCast<ScriptNode>( graphComponent ) )
+	{
+		return s;
+	}
+
+	if( auto s = graphComponent->ancestor<ScriptNode>() )
+	{
+		return s;
+	}
+
+	Node *e = editor( graphComponent );
+	if( !e )
+	{
+		return nullptr;
+
+	}
+
+	if( auto view = runTimeCast<View>( e ) )
+	{
+		return view->scriptNode();
+	}
+	else if( auto p = e->getChild<Plug>( "__scriptNode" ) )
+	{
+		// We're looking at an `Editor.Settings` node.
+		return scriptNode( p->getInput() );
+	}
+
+	return nullptr;
+}
+
 const InternedString g_inPlugName( "in" );
 
 } // namespace
@@ -171,8 +214,9 @@ ContextTrackerPtr ContextTracker::acquire( const Gaffer::NodePtr &node )
 	return instance;
 }
 
-ContextTrackerPtr ContextTracker::acquireForFocus( Gaffer::ScriptNode *script )
+ContextTrackerPtr ContextTracker::acquireForFocus( Gaffer::GraphComponent *graphComponent )
 {
+	auto script = scriptNode( graphComponent );
 	if( !script )
 	{
 		return acquire( script );

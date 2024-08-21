@@ -94,9 +94,9 @@ class GAFFERUI_API ContextTracker final : public IECore::RefCounted, public Gaff
 		/// belong to a ScriptNode, so that `ScriptNode::context()` can be used
 		/// to provide the target context.
 		static Ptr acquire( const Gaffer::NodePtr &node );
-		/// Returns an shared instance that will automatically track the focus
-		/// node in the specified `script`.
-		static Ptr acquireForFocus( Gaffer::ScriptNode *script );
+		/// Returns a shared instance that will automatically track the focus
+		/// node in the ScriptNode associated with `graphComponent`.
+		static Ptr acquireForFocus( Gaffer::GraphComponent *graphComponent );
 
 		/// Target
 		/// ======

@@ -734,6 +734,30 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 			tracker = GafferUI.ContextTracker.acquireForFocus( script )
 		self.assertTrue( tracker.isTracked( script["node"] ) )
 
+	def testAcquireForFocusFromViewAndEditor( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["add"] = GafferTest.AddNode()
+		contextTracker = GafferUI.ContextTracker.acquireForFocus( script )
+
+		editor = GafferUI.Editor( GafferUI.Label( "TestEditor" ), script )
+		editor.settings()["testPlug"] = Gaffer.StringPlug()
+		self.assertTrue(
+			GafferUI.ContextTracker.acquireForFocus( editor.settings() ).isSame( contextTracker )
+		)
+		self.assertTrue(
+			GafferUI.ContextTracker.acquireForFocus( editor.settings()["testPlug"] ).isSame( contextTracker )
+		)
+
+		view = GafferUITest.ViewTest.MyView( script )
+		view["testPlug"] = Gaffer.StringPlug()
+		self.assertTrue(
+			GafferUI.ContextTracker.acquireForFocus( view ).isSame( contextTracker )
+		)
+		self.assertTrue(
+			GafferUI.ContextTracker.acquireForFocus( view["testPlug"] ).isSame( contextTracker )
+		)
+
 	def testAcquireNone( self ) :
 
 		tracker1 = GafferUI.ContextTracker.acquire( None )
