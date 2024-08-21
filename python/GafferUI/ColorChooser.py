@@ -704,7 +704,7 @@ class ColorChooser( GafferUI.Widget ) :
 			}
 		)
 
-		result.append( "/__fieldComponents__", { "divider": True, "label": "Color Field Components" } )
+		result.append( "/__colorField__", { "divider": True, "label": "Color Field" } )
 
 		for label, component in [
 			( "/Hue × Value", "s" ),
