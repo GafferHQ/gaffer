@@ -551,15 +551,14 @@ class ColorChooser( GafferUI.Widget ) :
 							slider.valueChangedSignal().connect( Gaffer.WeakMethod( self.__componentValueChanged ), scoped = False )
 						)
 
-				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4, parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top } ) :
-
-					# Options Button
-					menuDefinition = self.__optionsMenuDefinition()
-					self.__settingsMenu = GafferUI.MenuButton(
-						image = "gear.png",
-						menu = GafferUI.Menu( menuDefinition ),
-						hasFrame = False
-					)
+				# Options Button
+				menuDefinition = self.__optionsMenuDefinition()
+				GafferUI.MenuButton(
+					image = "gear.png",
+					menu = GafferUI.Menu( menuDefinition ),
+					hasFrame = False,
+					parenting = { "verticalAlignment": GafferUI.VerticalAlignment.Top }
+				)
 
 			# initial and current colour swatches
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) as self.__swatchRow :
