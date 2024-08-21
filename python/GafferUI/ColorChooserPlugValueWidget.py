@@ -69,24 +69,15 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 		)
 
 		self.__colorChooser.visibleComponentsChangedSignal().connect(
-			functools.partial(
-				Gaffer.WeakMethod( self.__colorChooserOptionChanged ),
-				key = "visibleComponents"
-			),
+			functools.partial( Gaffer.WeakMethod( self.__colorChooserVisibleComponentsChanged ) ),
 			scoped = False
 		)
 		self.__colorChooser.staticComponentChangedSignal().connect(
-			functools.partial(
-				Gaffer.WeakMethod( self.__colorChooserOptionChanged ),
-				key = "staticComponent"
-			),
+			functools.partial( Gaffer.WeakMethod( self.__colorChooserStaticComponentChanged ) ),
 			scoped = False
 		)
 		self.__colorChooser.colorFieldVisibleChangedSignal().connect(
-			functools.partial(
-				Gaffer.WeakMethod( self.__colorChooserOptionChanged ),
-				key = "colorFieldVisible"
-			),
+			functools.partial( Gaffer.WeakMethod( self.__colorChooserColorFieldVisibleChanged ) ),
 			scoped = False
 		)
 
@@ -126,7 +117,7 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 				for plug in self.getPlugs() :
 					plug.setValue( self.__colorChooser.getColor() )
 
-	def __colorChooserOptionChanged( self, colorChooser, value, key ) :
+	def __colorChooserOptionChanged( self, value, key ) :
 
 		if Gaffer.Metadata.value( "colorChooser:inlineOptions", "userDefault" ) is None :
 			sessionOptions = Gaffer.Metadata.value( "colorChooser:inlineOptions", "sessionDefault" )
@@ -143,6 +134,18 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 				Gaffer.Metadata.registerValue( p, "colorChooser:inlineOptions", plugOptions, persistent = False )
 
 			plugOptions.update( { key: value } )
+
+	def __colorChooserVisibleComponentsChanged( self, colorChooser ) :
+
+		self.__colorChooserOptionChanged( colorChooser.getVisibleComponents(), "visibleComponents" )
+
+	def __colorChooserStaticComponentChanged( self, colorChooser ) :
+
+		self.__colorChooserOptionChanged( colorChooser.getColorFieldStaticComponent(), "staticComponent" )
+
+	def __colorChooserColorFieldVisibleChanged( self, colorChooser ) :
+
+		self.__colorChooserOptionChanged( colorChooser.getColorFieldVisible(), "colorFieldVisible" )
 
 	def __colorChooserOptions( self ) :
 

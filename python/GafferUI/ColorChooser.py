@@ -570,9 +570,9 @@ class ColorChooser( GafferUI.Widget ) :
 				self.__colorSwatch._qtWidget().setFixedHeight( 40 )
 
 		self.__colorChangedSignal = Gaffer.Signals.Signal2()
-		self.__visibleComponentsChangedSignal = Gaffer.Signals.Signal2()
-		self.__staticComponentChangedSignal = Gaffer.Signals.Signal2()
-		self.__colorFieldVisibleChangedSignal = Gaffer.Signals.Signal2()
+		self.__visibleComponentsChangedSignal = Gaffer.Signals.Signal1()
+		self.__staticComponentChangedSignal = Gaffer.Signals.Signal1()
+		self.__colorFieldVisibleChangedSignal = Gaffer.Signals.Signal1()
 
 		self.__updateUIFromColor()
 		self.__activateComponentIcons()
@@ -639,7 +639,7 @@ class ColorChooser( GafferUI.Widget ) :
 		if self.__colorField.getVisible() :
 			self.__activateComponentIcons()
 
-		self.__staticComponentChangedSignal( self, component )
+		self.__staticComponentChangedSignal( self )
 
 	def getColorFieldStaticComponent( self ) :
 
@@ -664,7 +664,7 @@ class ColorChooser( GafferUI.Widget ) :
 		return self.__colorChangedSignal
 
 	## A signal emitted whenever the visible components are changed. Slots
-	# should have the signature slot( ColorChooser, visibleComponents ).
+	# should have the signature slot( ColorChooser ).
 	# `visibleComponents` is a string representing the components currently
 	# visible.
 	def visibleComponentsChangedSignal( self ) :
@@ -672,7 +672,7 @@ class ColorChooser( GafferUI.Widget ) :
 		return self.__visibleComponentsChangedSignal
 
 	## A signal emitted whenver the static component is changed. Slots
-	# should have the signature slot( ColorChooser, staticComponent ).
+	# should have the signature slot( ColorChooser ).
 	# `staticComponent` is a single character string representing the
 	# current static component.
 	def staticComponentChangedSignal( self ) :
@@ -680,7 +680,7 @@ class ColorChooser( GafferUI.Widget ) :
 		return self.__staticComponentChangedSignal
 
 	## A signal emitted whenever the visibility of the color field changes.
-	# Slots should have the signature slot( ColorChooser, visible ).
+	# Slots should have the signature slot( ColorChooser ).
 	# `visible` is a boolean representing the current visibility.
 	def colorFieldVisibleChangedSignal( self ) :
 
@@ -1006,7 +1006,7 @@ class ColorChooser( GafferUI.Widget ) :
 			self.__numericWidgets[c].setVisible( visible )
 			self.__sliders[c].setVisible( visible )
 
-		self.__visibleComponentsChangedSignal( self, components )
+		self.__visibleComponentsChangedSignal( self )
 
 	def __setColorFieldVisibleInternal( self, visible ) :
 
@@ -1020,4 +1020,4 @@ class ColorChooser( GafferUI.Widget ) :
 		else :
 			self.__clearComponentIcons()
 
-		self.__colorFieldVisibleChangedSignal( self, visible )
+		self.__colorFieldVisibleChangedSignal( self )
