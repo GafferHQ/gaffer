@@ -186,7 +186,7 @@ class _ColorFieldWidget( QtWidgets.QWidget ) :
 
 class _ColorField( GafferUI.Widget ) :
 
-	def __init__( self, color = imath.Color3f( 1.0 ), staticComponent = "h", **kw ) :
+	def __init__( self, color = imath.Color3f( 1.0 ), staticComponent = "s", **kw ) :
 
 		GafferUI.Widget.__init__( self, _ColorFieldWidget(), **kw )
 
@@ -497,7 +497,7 @@ class ColorChooser( GafferUI.Widget ) :
 		with self.__column :
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 0 ) :
 
-				self.__colorField = _ColorField( color, "h" )
+				self.__colorField = _ColorField( color )
 				self.__colorValueChangedConnection = self.__colorField.valueChangedSignal().connect( Gaffer.WeakMethod( self.__colorValueChanged ), scoped = False )
 
 				with GafferUI.GridContainer( spacing = 0 ) :
@@ -707,15 +707,15 @@ class ColorChooser( GafferUI.Widget ) :
 		result.append( "/__fieldComponents__", { "divider": True, "label": "Color Field Components" } )
 
 		for label, component in [
-			( "Green × Blue", "r" ),
-			( "Red × Blue", "g" ),
-			( "Red × Green", "b" ),
-			( "Saturation × Value", "h" ),
-			( "Hue × Value", "s" ),
-			( "Hue × Saturation", "v" ),
-			( "Magenta × Intensity", "t" ),
-			( "Temperature × Intensity", "m" ),
-			( "Temperature × Magenta", "i" ),
+			( "/Hue × Value", "s" ),
+			( "/Hue × Saturation", "v" ),
+			( "/Other/Green × Blue", "r" ),
+			( "/Other/Red × Blue", "g" ),
+			( "/Other/Red × Green", "b" ),
+			( "/Other/Saturation × Value", "h" ),
+			( "/Other/Magenta × Intensity", "t" ),
+			( "/Other/Temperature × Intensity", "m" ),
+			( "/Other/Temperature × Magenta", "i" ),
 		] :
 			weakSet = Gaffer.WeakMethod( self.__setStaticComponentInternal )
 			result.append(

@@ -139,7 +139,7 @@ class ColorChooserTest( GafferUITest.TestCase ) :
 		self.assertIsNone( Gaffer.Metadata.value( "colorChooser:inlineOptions", "sessionDefault" ) )
 		for p in [ "rgbPlug1", "rgbPlug2" ] :
 			self.assertIsNone( Gaffer.Metadata.value( script["node"][p], "colorChooser:inlineOptions" ) )
-		self.assertEqual( self.__getStaticComponent( widget1 ), "h" )
+		self.assertEqual( self.__getStaticComponent( widget1 ), "s" )
 		self.assertTrue( self.__getColorFieldVisibility( widget1 ) )
 
 		# Modify widget1
@@ -233,8 +233,8 @@ class ColorChooserTest( GafferUITest.TestCase ) :
 		for c in "rgbhsvtmi" :
 			self.assertTrue( self.__sliderFromWidget( widget1, c ).getVisible() )
 			self.assertTrue( self.__sliderFromWidget( widget2, c ).getVisible() )
-		self.assertEqual( self.__getStaticComponent( widget1 ), "h" )
-		self.assertEqual( self.__getStaticComponent( widget2 ), "h" )
+		self.assertEqual( self.__getStaticComponent( widget1 ), "s" )
+		self.assertEqual( self.__getStaticComponent( widget2 ), "s" )
 		self.assertIsNone( Gaffer.Metadata.value( "colorChooser:inlineOptions", "sessionDefault" ) )
 		for p in [ "rgbPlug1", "rgbPlug2" ] :
 			self.assertIsNone( Gaffer.Metadata.value( script2["node"][p], "colorChooser:inlineOptions" ) )
