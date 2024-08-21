@@ -482,11 +482,11 @@
 			"ids" : [
 				"colorChooserStaticHighlightedIcon",
 				"colorChooserStaticCenterIcon",
-                "colorChooserStaticTopIcon",
-                "colorChooserStaticBottomIcon",
-                "colorChooserAxisCenterIcon",
-                "colorChooserAxisTopIcon",
-                "colorChooserAxisBottomIcon",
+				"colorChooserStaticTopIcon",
+				"colorChooserStaticBottomIcon",
+				"colorChooserAxisCenterIcon",
+				"colorChooserAxisTopIcon",
+				"colorChooserAxisBottomIcon",
 			]
 		}
 
