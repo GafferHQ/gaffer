@@ -718,12 +718,11 @@ class ColorChooser( GafferUI.Widget ) :
 			( "Temperature × Magenta", "i" ),
 		] :
 			weakSet = Gaffer.WeakMethod( self.__setStaticComponentInternal )
-			weakGet = Gaffer.WeakMethod( self.getStaticComponent )
 			result.append(
 				label,
 				{
 					"command": lambda checked, c = component, weakSet = weakSet : weakSet( c ),
-					"checkBox": lambda c = component, weakGet = weakGet : weakGet() == c
+					"checkBox": self.getStaticComponent() == component
 				}
 			)
 
