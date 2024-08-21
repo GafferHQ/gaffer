@@ -622,7 +622,24 @@ class ColorChooser( GafferUI.Widget ) :
 
 	def setStaticComponent( self, component ) :
 
-		self.__setStaticComponentInternal( component )
+		c, previousComponent = self.__colorField.getColor()
+		if component == previousComponent :
+			return
+
+		self.__clearComponentIcons()
+
+		assert( component in "rgbhsvtmi" )
+		if component in "rgb" :
+			self.__colorField.setColor( self.__color, component )
+		elif component in "hsv" :
+			self.__colorField.setColor( self.__colorHSV, component )
+		else :
+			self.__colorField.setColor( self.__colorTMI, component )
+
+		if self.__colorField.getVisible() :
+			self.__activateComponentIcons()
+
+		self.__staticComponentChangedSignal( self, component )
 
 	def getStaticComponent( self ) :
 
@@ -717,7 +734,7 @@ class ColorChooser( GafferUI.Widget ) :
 			( "/Other/Temperature × Intensity", "m" ),
 			( "/Other/Temperature × Magenta", "i" ),
 		] :
-			weakSet = Gaffer.WeakMethod( self.__setStaticComponentInternal )
+			weakSet = Gaffer.WeakMethod( self.setStaticComponent )
 			result.append(
 				label,
 				{
@@ -734,7 +751,7 @@ class ColorChooser( GafferUI.Widget ) :
 		if event.buttons != GafferUI.ButtonEvent.Buttons.Left :
 			return False
 
-		self.__setStaticComponentInternal( component )
+		self.setStaticComponent( component )
 
 		return True
 
@@ -976,27 +993,6 @@ class ColorChooser( GafferUI.Widget ) :
 			self.__channelLabels[component]._qtWidget().setProperty( icon, True )
 
 		self.__channelLabels[component]._repolish()
-
-	def __setStaticComponentInternal( self, component ) :
-
-		c, previousComponent = self.__colorField.getColor()
-		if component == previousComponent :
-			return
-
-		self.__clearComponentIcons()
-
-		assert( component in "rgbhsvtmi" )
-		if component in "rgb" :
-			self.__colorField.setColor( self.__color, component )
-		elif component in "hsv" :
-			self.__colorField.setColor( self.__colorHSV, component )
-		else :
-			self.__colorField.setColor( self.__colorTMI, component )
-
-		if self.__colorField.getVisible() :
-			self.__activateComponentIcons()
-
-		self.__staticComponentChangedSignal( self, component )
 
 	def __setVisibleComponentsInternal( self, components ) :
 
