@@ -44,6 +44,7 @@ import IECore
 import Gaffer
 import GafferUI
 from GafferUI.PlugValueWidget import sole
+from GafferUI.ColorChooserPlugValueWidget import saveDefaultOptions
 
 class ColorSwatchPlugValueWidget( GafferUI.PlugValueWidget ) :
 
@@ -149,6 +150,10 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 			functools.partial( Gaffer.WeakMethod( self.__colorChooserColorFieldVisibleChanged ) ),
 			scoped = False
 		)
+		self.colorChooser().optionsMenuSignal().connect(
+			functools.partial( Gaffer.WeakMethod( self.__colorChooserOptionsMenu ) ),
+			scoped = False
+		)
 
 		self.confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
 		self.cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
@@ -169,16 +174,17 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 
 		self.__plugSet( plug )
 
-		options = self.__colorChooserOptions()
+		visibleComponents = self.__colorChooserOption( "visibleComponents" )
+		if visibleComponents is not None :
+			self.colorChooser().setVisibleComponents( visibleComponents )
 
-		if "visibleComponents" in options :
-			self.colorChooser().setVisibleComponents( options["visibleComponents"].value )
+		staticComponent = self.__colorChooserOption( "staticComponent" )
+		if staticComponent is not None :
+			self.colorChooser().setColorFieldStaticComponent( staticComponent )
 
-		if "staticComponent" in options :
-			self.colorChooser().setColorFieldStaticComponent( options["staticComponent"].value )
-
-		if "colorFieldVisible" in options :
-			self.colorChooser().setColorFieldVisible( options["colorFieldVisible"].value )
+		colorFieldVisible = self.__colorChooserOption( "colorFieldVisible" )
+		if colorFieldVisible is not None :
+			self.colorChooser().setColorFieldVisible( colorFieldVisible )
 
 		parentWindow.addChildWindow( self, removeOnClose = True )
 
@@ -240,6 +246,22 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 		assert( not self.visible() )
 		GafferUI.WidgetAlgo.keepUntilIdle( self )
 
+	def __colorChooserOptionsMenu( self, colorChooser, menuDefinition ) :
+
+		menuDefinition.append( "/__saveDefaultOptions__", { "divider": True, "label": "Defaults" } )
+
+		menuDefinition.append(
+			"/Save Dialogue Defaults",
+			{
+				"command": functools.partial(
+					saveDefaultOptions,
+					colorChooser,
+					"colorChooser:dialogue:",
+					self.ancestor( GafferUI.ScriptWindow ).scriptNode().applicationRoot().preferencesLocation() / "__colorChooser.py"
+				)
+			}
+		)
+
 	def __destroy( self, *unused ) :
 
 		self.parent().removeChild( self )
@@ -247,42 +269,24 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 	# \todo Extract these two methods to share with `ColorChooserPlugValueWidget` which has
 	# an almost identical implementation.
 
-	def __colorChooserOptionChanged( self, value, key ) :
-
-		if Gaffer.Metadata.value( "colorChooser:dialogueOptions", "userDefault" ) is None :
-			sessionOptions = Gaffer.Metadata.value( "colorChooser:dialogueOptions", "sessionDefault" )
-			if sessionOptions is None :
-				sessionOptions = IECore.CompoundData()
-				Gaffer.Metadata.registerValue( "colorChooser:dialogueOptions", "sessionDefault", sessionOptions )
-
-			sessionOptions.update( { key: value } )
+	def __colorChooserOptionChanged( self, keySuffix, value ) :
 
 		for p in self.__plugs :
-			plugOptions = Gaffer.Metadata.value( p, "colorChooser:dialogueOptions" )
-			if plugOptions is None :
-				plugOptions = IECore.CompoundData()
-				Gaffer.Metadata.registerValue( p, "colorChooser:dialogueOptions", plugOptions, persistent = False )
+			Gaffer.Metadata.deregisterValue( p, "colorChooser:dialogue:" + keySuffix )
+			Gaffer.Metadata.registerValue( p, "colorChooser:dialogue:" + keySuffix, value, persistent = False )
 
-			plugOptions.update( { key: value } )
+	def __colorChooserOption( self, keySuffix ) :
+
+		return sole( Gaffer.Metadata.value( p, "colorChooser:dialogue:" + keySuffix ) for p in self.__plugs )
 
 	def __colorChooserVisibleComponentsChanged( self, colorChooser ) :
 
-		self.__colorChooserOptionChanged( colorChooser.getVisibleComponents(), "visibleComponents" )
+		self.__colorChooserOptionChanged( "visibleComponents", colorChooser.getVisibleComponents() )
 
 	def __colorChooserStaticComponentChanged( self, colorChooser ) :
 
-		self.__colorChooserOptionChanged( colorChooser.getColorFieldStaticComponent(), "staticComponent" )
+		self.__colorChooserOptionChanged( "staticComponent", colorChooser.getColorFieldStaticComponent() )
 
 	def __colorChooserColorFieldVisibleChanged( self, colorChooser ) :
 
-		self.__colorChooserOptionChanged( colorChooser.getColorFieldVisible(), "colorFieldVisible" )
-
-	def __colorChooserOptions( self ) :
-
-		v = sole( Gaffer.Metadata.value( p, "colorChooser:dialogueOptions" ) for p in self.__plugs )
-		if v is None :
-			v  = Gaffer.Metadata.value( "colorChooser:dialogueOptions", "userDefault" )
-			if v is None :
-				v = Gaffer.Metadata.value( "colorChooser:dialogueOptions", "sessionDefault" ) or IECore.CompoundData()
-
-		return v
+		self.__colorChooserOptionChanged( "colorFieldVisible", colorChooser.getColorFieldVisible() )

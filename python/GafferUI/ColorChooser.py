@@ -573,6 +573,7 @@ class ColorChooser( GafferUI.Widget ) :
 		self.__visibleComponentsChangedSignal = Gaffer.Signals.Signal1()
 		self.__staticComponentChangedSignal = Gaffer.Signals.Signal1()
 		self.__colorFieldVisibleChangedSignal = Gaffer.Signals.Signal1()
+		self.__optionsMenuSignal = Gaffer.Signals.Signal2()
 
 		self.__updateUIFromColor()
 		self.__activateComponentIcons()
@@ -686,6 +687,13 @@ class ColorChooser( GafferUI.Widget ) :
 
 		return self.__colorFieldVisibleChangedSignal
 
+	## A signal emitted whenever the options menu is opened.
+	# Slots should have the signature slot( ColorChooser, menuDefinition )
+	# and add menu items to `menuDefinition`.
+	def optionsMenuSignal( self ) :
+
+		return self.__optionsMenuSignal
+
 	## Returns True if a user would expect the specified sequence
 	# of changes to be merged into a single undoable event.
 	@classmethod
@@ -743,6 +751,7 @@ class ColorChooser( GafferUI.Widget ) :
 				}
 			)
 
+		self.__optionsMenuSignal( self, result )
 
 		return result
 

@@ -53,16 +53,17 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__colorChooser.setSwatchesVisible( False )
 
-		options = self.__colorChooserOptions()
+		visibleComponents = self.__colorChooserOption( "visibleComponents" )
+		if visibleComponents is not None :
+			self.__colorChooser.setVisibleComponents( visibleComponents )
 
-		if "visibleComponents" in options :
-			self.__colorChooser.setVisibleComponents( options["visibleComponents"].value )
+		staticComponent = self.__colorChooserOption( "staticComponent" )
+		if staticComponent is not None :
+			self.__colorChooser.setColorFieldStaticComponent( staticComponent )
 
-		if "staticComponent" in options :
-			self.__colorChooser.setColorFieldStaticComponent( options["staticComponent"].value )
-
-		if "colorFieldVisible" in options :
-			self.__colorChooser.setColorFieldVisible( options["colorFieldVisible"].value )
+		colorFieldVisible = self.__colorChooserOption( "colorFieldVisible" )
+		if colorFieldVisible is not None :
+			self.__colorChooser.setColorFieldVisible( colorFieldVisible )
 
 		self.__colorChangedConnection = self.__colorChooser.colorChangedSignal().connect(
 			Gaffer.WeakMethod( self.__colorChanged ), scoped = False
@@ -78,6 +79,10 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 		)
 		self.__colorChooser.colorFieldVisibleChangedSignal().connect(
 			functools.partial( Gaffer.WeakMethod( self.__colorChooserColorFieldVisibleChanged ) ),
+			scoped = False
+		)
+		self.__colorChooser.optionsMenuSignal().connect(
+			functools.partial( Gaffer.WeakMethod( self.__colorChooserOptionsMenu ) ),
 			scoped = False
 		)
 
@@ -117,45 +122,43 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 				for plug in self.getPlugs() :
 					plug.setValue( self.__colorChooser.getColor() )
 
-	def __colorChooserOptionChanged( self, value, key ) :
-
-		if Gaffer.Metadata.value( "colorChooser:inlineOptions", "userDefault" ) is None :
-			sessionOptions = Gaffer.Metadata.value( "colorChooser:inlineOptions", "sessionDefault" )
-			if sessionOptions is None :
-				sessionOptions = IECore.CompoundData()
-				Gaffer.Metadata.registerValue( "colorChooser:inlineOptions", "sessionDefault", sessionOptions )
-
-			sessionOptions.update( { key: value } )
+	def __colorChooserOptionChanged( self, keySuffix, value ) :
 
 		for p in self.getPlugs() :
-			plugOptions = Gaffer.Metadata.value( p, "colorChooser:inlineOptions" )
-			if plugOptions is None :
-				plugOptions = IECore.CompoundData()
-				Gaffer.Metadata.registerValue( p, "colorChooser:inlineOptions", plugOptions, persistent = False )
+			Gaffer.Metadata.deregisterValue( p, "colorChooser:inline:" + keySuffix )
+			Gaffer.Metadata.registerValue( p, "colorChooser:inline:" + keySuffix, value, persistent = False )
 
-			plugOptions.update( { key: value } )
+	def __colorChooserOption( self, keySuffix ) :
+
+		return sole( Gaffer.Metadata.value( p, "colorChooser:inline:" + keySuffix ) for p in self.getPlugs() )
 
 	def __colorChooserVisibleComponentsChanged( self, colorChooser ) :
 
-		self.__colorChooserOptionChanged( colorChooser.getVisibleComponents(), "visibleComponents" )
+		self.__colorChooserOptionChanged( "visibleComponents", colorChooser.getVisibleComponents() )
 
 	def __colorChooserStaticComponentChanged( self, colorChooser ) :
 
-		self.__colorChooserOptionChanged( colorChooser.getColorFieldStaticComponent(), "staticComponent" )
+		self.__colorChooserOptionChanged( "staticComponent", colorChooser.getColorFieldStaticComponent() )
 
 	def __colorChooserColorFieldVisibleChanged( self, colorChooser ) :
 
-		self.__colorChooserOptionChanged( colorChooser.getColorFieldVisible(), "colorFieldVisible" )
+		self.__colorChooserOptionChanged( "colorFieldVisible", colorChooser.getColorFieldVisible() )
 
-	def __colorChooserOptions( self ) :
+	def __colorChooserOptionsMenu( self, colorChooser, menuDefinition ) :
 
-		v = sole( Gaffer.Metadata.value( p, "colorChooser:inlineOptions" ) for p in self.getPlugs() )
-		if v is None :
-			v  = Gaffer.Metadata.value( "colorChooser:inlineOptions", "userDefault" )
-			if v is None :
-				v = Gaffer.Metadata.value( "colorChooser:inlineOptions", "sessionDefault" ) or IECore.CompoundData()
+		menuDefinition.append( "/__saveDefaultOptions__", { "divider": True, "label": "Defaults" } )
 
-		return v
+		menuDefinition.append(
+			"/Save Inline Defaults",
+			{
+				"command": functools.partial(
+					saveDefaultOptions,
+					colorChooser,
+					"colorChooser:inline:",
+					self.ancestor( GafferUI.ScriptWindow ).scriptNode().applicationRoot().preferencesLocation() / "__colorChooser.py"
+				),
+			}
+		)
 
 	def __allComponentsEditable( self ) :
 
@@ -171,3 +174,49 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 					return False
 
 		return True
+
+def saveDefaultOptions( colorChooser, keyPrefix, scriptPath = None ) :
+
+	for k in [ "visibleComponents", "staticComponent", "colorFieldVisible" ] :
+		Gaffer.Metadata.deregisterValue( Gaffer.Color3fPlug, keyPrefix + k )
+		Gaffer.Metadata.deregisterValue( Gaffer.Color4fPlug, keyPrefix + k )
+
+	visibleComponents = colorChooser.getVisibleComponents()
+	Gaffer.Metadata.registerValue( Gaffer.Color3fPlug, keyPrefix + "visibleComponents", visibleComponents )
+	Gaffer.Metadata.registerValue( Gaffer.Color4fPlug, keyPrefix + "visibleComponents", visibleComponents )
+
+	staticComponent = colorChooser.getColorFieldStaticComponent()
+	Gaffer.Metadata.registerValue( Gaffer.Color3fPlug, keyPrefix + "staticComponent", staticComponent )
+	Gaffer.Metadata.registerValue( Gaffer.Color4fPlug, keyPrefix + "staticComponent", staticComponent )
+
+	colorFieldVisible = colorChooser.getColorFieldVisible()
+	Gaffer.Metadata.registerValue( Gaffer.Color3fPlug, keyPrefix + "colorFieldVisible", colorFieldVisible )
+	Gaffer.Metadata.registerValue( Gaffer.Color4fPlug, keyPrefix + "colorFieldVisible", colorFieldVisible )
+
+	if scriptPath is None :
+		return
+
+	if scriptPath.is_dir() :
+		raise RuntimeError( f"Cannot write Color Chooser default options script \"{scriptPath}\", a directory at that path exists.")
+
+	if scriptPath.exists() :
+		with open( scriptPath, "r" ) as inFile :
+			script = inFile.readlines()
+	else :
+		script = [
+			"# This file was automatically generated by Gaffer.\n",
+			"# Do not edit this file - it will be overwritten.\n",
+			"\n",
+			"import Gaffer\n",
+			"\n"
+		]
+
+	newScript = [l for l in script if keyPrefix not in l]
+
+	for c in [ "3", "4" ] :
+		newScript.append( f"Gaffer.Metadata.registerValue( Gaffer.Color{c}fPlug, \"{keyPrefix}visibleComponents\", \"{visibleComponents}\" )\n" )
+		newScript.append( f"Gaffer.Metadata.registerValue( Gaffer.Color{c}fPlug, \"{keyPrefix}staticComponent\", \"{staticComponent}\" )\n" )
+		newScript.append( f"Gaffer.Metadata.registerValue( Gaffer.Color{c}fPlug, \"{keyPrefix}colorFieldVisible\", {colorFieldVisible} )\n" )
+
+	with open( scriptPath, "w" ) as outFile :
+		outFile.writelines( newScript )
