@@ -102,7 +102,9 @@ class Editor( GafferUI.Widget ) :
 		self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) )
 		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) )
 
-		self.__contextChangedConnection = scriptNode.context().changedSignal().connect(
+		self.__contextTracker = GafferUI.ContextTracker.acquireForFocus( self.__settings )
+		self.__context = self.__contextTracker.context( self.__settings )
+		self.__contextChangedConnection = self.__contextTracker.changedSignal( self.__settings ).connect(
 			Gaffer.WeakMethod( self.__contextChanged ), scoped = True
 		)
 
@@ -161,10 +163,10 @@ class Editor( GafferUI.Widget ) :
 
 		return self.__titleChangedSignal
 
-	## Convenience function to return `scriptNode().context()`
+	## Returns the context in which the Editor evaluates the node graph.
 	def context( self ) :
 
-		return self.__scriptNode.context()
+		return self.__context
 
 	## May be implemented by derived classes to update state based on a change of context.
 	# To temporarily suspend calls to this function, use Gaffer.Signals.BlockedConnection( self._contextChangedConnection() ).
@@ -190,11 +192,19 @@ class Editor( GafferUI.Widget ) :
 
 		raise NotImplementedError
 
-	def __contextChanged( self, context, key ) :
+	def __contextChanged( self, contextTracker ) :
 
-		assert( context.isSame( self.context() ) )
+		context = contextTracker.context( self.__settings )
 
-		self._updateFromContext( set( [ key ] ) )
+		modifiedItems = {
+			k for k in context.keys()
+			if k not in self.__context or context[k] != self.__context[k]
+		}
+		modifiedItems.update( set( self.__context.keys() ) - set( context.keys() ) )
+
+		self.__context = context
+		if modifiedItems :
+			self._updateFromContext( modifiedItems )
 
 	@classmethod
 	def types( cls ) :

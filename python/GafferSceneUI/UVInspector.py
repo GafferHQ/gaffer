@@ -52,7 +52,6 @@ class UVInspector( GafferSceneUI.SceneEditor ) :
 		self.__uvView = GafferSceneUI.UVView( scriptNode )
 		self.__uvView["in"].setInput( self.settings()["in"] )
 		Gaffer.NodeAlgo.applyUserDefaults( self.__uvView )
-		self.__uvView.setContext( self.context() )
 
 		with column :
 
@@ -76,6 +75,11 @@ class UVInspector( GafferSceneUI.SceneEditor ) :
 		)
 
 		self._updateFromSet()
+
+	def _updateFromContext( self, modifiedItems ) :
+
+		if any( not k.startswith( "ui:" ) for k in modifiedItems ) :
+			self.__uvView.setContext( self.context() )
 
 	def __repr__( self ) :
 
