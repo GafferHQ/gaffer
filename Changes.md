@@ -7,6 +7,7 @@ Improvements
 - UI Editor :
   - Added the ability to edit the scale of node icons.
   - Improved layout of Box node plug creator visibility toggles.
+- ArnoldShader : Moved the `toon` shader's `*_tonemap_hue_saturation` parameters to appropriate sections in the UI.
 
 API
 ---
