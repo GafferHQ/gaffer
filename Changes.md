@@ -13,7 +13,9 @@ Improvements
   - Added the ability to edit the scale of node icons.
   - Improved layout of Box node plug creator visibility toggles.
 - ArnoldShader : Moved the `toon` shader's `*_tonemap_hue_saturation` parameters to appropriate sections in the UI.
-- Arnold : Added `deep_alpha` and `deep_beauty` output presets demonstrating outputs that produce deep images.
+- Arnold :
+  - Added `deep_alpha` and `deep_beauty` output presets demonstrating outputs that produce deep images.
+  - Added `lpe` output preset demonstrating an output using a light path expression.
 
 API
 ---

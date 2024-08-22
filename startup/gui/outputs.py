@@ -120,6 +120,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 		"depth",
 		"deep_alpha",
 		"deep_beauty",
+		"lpe",
 	] :
 
 		label = aov.replace( "_", " " ).title().replace( " ", "_" )
@@ -129,6 +130,8 @@ with IECore.IgnoredExceptions( ImportError ) :
 			data = "float Z"
 		elif aov == "normal":
 			data = "color N"
+		elif aov == "lpe" :
+			data = "lpe C.*"
 		else:
 			data = "color " + aov
 
@@ -142,7 +145,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 		if aov == "depth":
 			parameters["layerName"] = "Z"
 
-		if aov not in { "motionvector", "emission", "background", "deep_alpha" } :
+		if aov not in { "motionvector", "emission", "background", "deep_alpha", "lpe" } :
 			parameters["layerPerLightGroup"] = False
 
 		if aov.startswith( "deep_" ) :
@@ -163,6 +166,9 @@ with IECore.IgnoredExceptions( ImportError ) :
 				"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
 			}
 		)
+
+		if aov == "lpe" :
+			interactiveParameters["layerName"] = "lpe"
 
 		GafferScene.Outputs.registerOutput(
 			"Interactive/Arnold/" + label,
