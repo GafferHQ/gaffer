@@ -725,34 +725,6 @@ class PlugValueWidget( GafferUI.Widget ) :
 		else :
 			self.__contextChangedConnection = None
 
-	__fallbackContext = Gaffer.Context()
-
-	# Note : Despite being private (because we don't want to include it in the official API),
-	# This method is accessed by NodeToolbar and PlugLayout (because we do want to share the
-	# logic internally).
-	@classmethod
-	def __defaultContext( cls, graphComponent ) :
-
-		scriptNode = graphComponent if isinstance( graphComponent, Gaffer.ScriptNode ) else graphComponent.ancestor( Gaffer.ScriptNode )
-		if scriptNode is not None :
-			return scriptNode.context()
-
-		# Special case for plugs that form the settings for a view.
-
-		view = graphComponent if isinstance( graphComponent, GafferUI.View ) else graphComponent.ancestor( GafferUI.View )
-		if view is not None :
-			return view.getContext()
-
-		# Special case for plugs that form the settings for an Editor.
-
-		settings = graphComponent if isinstance( graphComponent, GafferUI.Editor.Settings ) else graphComponent.ancestor( GafferUI.Editor.Settings )
-		if settings is not None :
-			scriptNode = settings["__scriptNode"].source().ancestor( Gaffer.ScriptNode )
-			if scriptNode is not None :
-				return scriptNode.context()
-
-		return cls.__fallbackContext
-
 	def __buttonPress( self, widget, event, buttonMask ) :
 
 		if event.buttons & buttonMask :
