@@ -128,11 +128,11 @@ with IECore.IgnoredExceptions( ImportError ) :
 			data = "rgba"
 		elif aov in ( "depth", "deep_alpha" ) :
 			data = "float Z"
-		elif aov == "normal":
+		elif aov == "normal" :
 			data = "color N"
 		elif aov == "lpe" :
 			data = "lpe C.*"
-		else:
+		else :
 			data = "color " + aov
 
 		if aov == "motionvector" :
@@ -142,7 +142,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 		else :
 			parameters = {}
 
-		if aov == "depth":
+		if aov == "depth" :
 			parameters["layerName"] = "Z"
 
 		if aov not in { "motionvector", "emission", "background", "deep_alpha", "lpe" } :
@@ -365,7 +365,7 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 					"halfFloat" : halfFloat
 				}
 
-				if data == "lightgroup":
+				if data == "lightgroup" :
 					data = "lg lightgroup"
 					label = "Light_Group"
 
@@ -389,7 +389,7 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 				)
 
 				GafferScene.Outputs.registerOutput(
-									"Batch/Cycles/" + label,
+					"Batch/Cycles/" + label,
 					IECoreScene.Output(
 						"${project:rootDirectory}/renders/${script:name}/${renderPass}/%s/%s.####.exr" % ( aov, aov ),
 						"exr",
@@ -398,7 +398,7 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 					)
 				)
 
-				if denoise:
+				if denoise :
 					interactiveOutput["denoise"] = True
 					batchOutput["denoise"] = True
 
