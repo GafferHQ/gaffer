@@ -118,12 +118,14 @@ with IECore.IgnoredExceptions( ImportError ) :
 		"motionvector",
 		"normal",
 		"depth",
+		"deep_alpha",
+		"deep_beauty",
 	] :
 
 		label = aov.replace( "_", " " ).title().replace( " ", "_" )
-		if aov == "beauty":
+		if aov in ( "beauty", "deep_beauty" ) :
 			data = "rgba"
-		elif aov == "depth":
+		elif aov in ( "depth", "deep_alpha" ) :
 			data = "float Z"
 		elif aov == "normal":
 			data = "color N"
@@ -140,8 +142,17 @@ with IECore.IgnoredExceptions( ImportError ) :
 		if aov == "depth":
 			parameters["layerName"] = "Z"
 
-		if aov not in { "motionvector", "emission", "background" } :
+		if aov not in { "motionvector", "emission", "background", "deep_alpha" } :
 			parameters["layerPerLightGroup"] = False
+
+		if aov.startswith( "deep_" ) :
+			driver = "deepexr"
+			parameters["alpha_tolerance"] = 0.01
+			parameters["depth_tolerance"] = 0.01
+			parameters["alpha_half_precision"] = False
+			parameters["depth_half_precision"] = False
+		else :
+			driver = "exr"
 
 		interactiveParameters = parameters.copy()
 		interactiveParameters.update(
@@ -167,7 +178,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 			"Batch/Arnold/" + label,
 			IECoreScene.Output(
 				"${project:rootDirectory}/renders/${script:name}/${renderPass}/%s/%s.####.exr" % ( aov, aov ),
-				"exr",
+				driver,
 				data,
 				parameters,
 			)
