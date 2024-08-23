@@ -69,27 +69,19 @@ bool hasInput( const Plug *p )
 
 GAFFER_PLUG_DEFINE_TYPE( ArrayPlug )
 
-ArrayPlug::ArrayPlug( const std::string &name, Direction direction, PlugPtr element, size_t minSize, size_t maxSize, unsigned flags, bool resizeWhenInputsChange )
-	:	Plug( name, direction, flags ), m_minSize( std::max( minSize, size_t( 1 ) ) ), m_maxSize( std::max( maxSize, m_minSize ) ), m_resizeWhenInputsChange( resizeWhenInputsChange )
+ArrayPlug::ArrayPlug( const std::string &name, Direction direction, ConstPlugPtr elementPrototype, size_t minSize, size_t maxSize, unsigned flags, bool resizeWhenInputsChange )
+	:	Plug( name, direction, flags ), m_elementPrototype( elementPrototype ), m_minSize( minSize ), m_maxSize( std::max( maxSize, m_minSize ) ), m_resizeWhenInputsChange( resizeWhenInputsChange )
 {
-	if( element )
+	if( !m_elementPrototype )
 	{
-		// If we're dynamic ourselves, then serialisations will include a constructor
-		// for us, but it will have element==None. In this case we make sure the first
-		// element is dynamic, so that it too will have a constructor written out. But
-		// if we're not dynamic, we expect to be passed the element again upon reconstruction,
-		// so we don't need a constructor to be serialised for the element, and therefore
-		// we must set it to be non-dynamic.
-		element->setFlags( Gaffer::Plug::Dynamic, getFlags( Gaffer::Plug::Dynamic ) );
-		addChild( element );
-
-		for( size_t i = 1; i < m_minSize; ++i )
-		{
-			PlugPtr p = element->createCounterpart( element->getName(), Plug::In );
-			addChild( p );
-			MetadataAlgo::copyColors( element.get() , p.get() , /* overwrite = */ false  );
-		}
+		// We're being constructed during execution of a legacy serialisation
+		// (nobody else is allowed to pass a null `elementPrototype`). Arrange
+		// to recover our protoype when the first element is added.
+		childAddedSignal().connect( boost::bind( &ArrayPlug::childAdded, this ) );
+		return;
 	}
+
+	resize( m_minSize );
 }
 
 ArrayPlug::~ArrayPlug()
@@ -103,7 +95,16 @@ bool ArrayPlug::acceptsChild( const GraphComponent *potentialChild ) const
 		return false;
 	}
 
-	return children().size() == 0 || potentialChild->typeId() == children()[0]->typeId();
+	if( !m_elementPrototype )
+	{
+		// Special case to support loading of legacy serialisations. We accept
+		// the first child we are given and then in `childAdded()` we initialise
+		// `m_elementPrototype` from it.
+		assert( children().size() == 0 );
+		return true;
+	}
+
+	return potentialChild->typeId() == m_elementPrototype->typeId();
 }
 
 bool ArrayPlug::acceptsInput( const Plug *input ) const
@@ -126,12 +127,17 @@ void ArrayPlug::setInput( PlugPtr input )
 
 PlugPtr ArrayPlug::createCounterpart( const std::string &name, Direction direction ) const
 {
-	ArrayPlugPtr result = new ArrayPlug( name, direction, nullptr, m_minSize, m_maxSize, getFlags(), resizeWhenInputsChange() );
-	for( Plug::Iterator it( this ); !it.done(); ++it )
+	ArrayPlugPtr result = new ArrayPlug( name, direction, m_elementPrototype, m_minSize, m_maxSize, getFlags(), resizeWhenInputsChange() );
+	if( m_elementPrototype )
 	{
-		result->addChild( (*it)->createCounterpart( (*it)->getName(), direction ) );
+		result->resize( children().size() );
 	}
 	return result;
+}
+
+const Plug *ArrayPlug::elementPrototype() const
+{
+	return m_elementPrototype.get();
 }
 
 size_t ArrayPlug::minSize() const
@@ -156,12 +162,21 @@ void ArrayPlug::resize( size_t size )
 		);
 	}
 
+	if( !m_elementPrototype )
+	{
+		throw IECore::Exception(
+			fmt::format(
+				"ArrayPlug `{}` was constructed without the required `elementPrototype`",
+				fullName()
+			)
+		);
+	}
+
 	while( size > children().size() )
 	{
-		PlugPtr p = getChild<Plug>( 0 )->createCounterpart( getChild<Plug>( 0 )->getName(), direction() );
-		p->setFlags( Gaffer::Plug::Dynamic, true );
+		PlugPtr p = m_elementPrototype->createCounterpart( m_elementPrototype->getName(), direction() );
 		addChild( p );
-		MetadataAlgo::copyColors( getChild<Plug>( 0 ) , p.get() , /* overwrite = */ false );
+		MetadataAlgo::copyColors( m_elementPrototype.get(), p.get() , /* overwrite = */ false );
 	}
 
 	Gaffer::Signals::BlockedConnection blockedInputChange( m_inputChangedConnection );
@@ -178,10 +193,13 @@ bool ArrayPlug::resizeWhenInputsChange() const
 
 Gaffer::Plug *ArrayPlug::next()
 {
-	Plug *last = static_cast<Plug *>( children().back().get() );
-	if( !hasInput( last ) )
+	if( children().size() )
 	{
-		return last;
+		Plug *last = static_cast<Plug *>( children().back().get() );
+		if( !hasInput( last ) )
+		{
+			return last;
+		}
 	}
 
 	if( children().size() >= m_maxSize )
@@ -189,11 +207,8 @@ Gaffer::Plug *ArrayPlug::next()
 		return nullptr;
 	}
 
-	PlugPtr p = getChild<Plug>( 0 )->createCounterpart( getChild<Plug>( 0 )->getName(), Plug::In );
-	p->setFlags( Gaffer::Plug::Dynamic, true );
-	addChild( p );
-	MetadataAlgo::copyColors( getChild<Plug>( 0 ) , p.get() , /* overwrite = */ false );
-	return p.get();
+	resize( children().size() + 1 );
+	return static_cast<Plug *>( children().back().get() );
 }
 
 void ArrayPlug::parentChanged( GraphComponent *oldParent )
@@ -263,5 +278,15 @@ void ArrayPlug::inputChanged( Gaffer::Plug *plug )
 				break;
 			}
 		}
+	}
+}
+
+void ArrayPlug::childAdded()
+{
+	if( !m_elementPrototype )
+	{
+		// First child being added from a legacy serialisation. Initialise prototype.
+		const Plug *firstElement = getChild<Plug>( 0 );
+		m_elementPrototype = firstElement->createCounterpart( firstElement->getName(), firstElement->direction() );
 	}
 }

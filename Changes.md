@@ -55,6 +55,9 @@ API
 - PathColumn :
   - Added `contextMenuSignal()`, allowing the creation of custom context menus.
   - Added `instanceCreatedSignal()`, providing an opportunity to connect to the signals on _any_ column, no matter how it is created.
+- ArrayPlug :
+  - It is now legal to construct an ArrayPlug with a minimum size of 0. Previously the minimum size was 1.
+  - Added `elementPrototype()` method.
 
 Breaking Changes
 ----------------
@@ -73,6 +76,9 @@ Breaking Changes
   - Deprecated `getContext()` methods. Use `context()` instead.
 - Loop : Removed `nextIterationContext()` method.
 - NodeGadget, ConnectionGadget : Removed `activeForFocusNode()` virtual methods. Override `updateFromContextTracker()` instead.
+- ArrayPlug :
+  - Renamed `element` constructor argument to `elementPrototype`.
+  - Deprecated the passing of `element = nullptr` to the constructor.
 
 1.4.x.x (relative to 1.4.11.0)
 =======

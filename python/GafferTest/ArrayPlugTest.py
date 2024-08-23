@@ -35,7 +35,7 @@
 ##########################################################################
 
 import unittest
-import gc
+import pathlib
 import imath
 
 import IECore
@@ -475,6 +475,14 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 
 		self.assertEqual( n["a2"].next(), None )
 
+	def testNextWithZeroLengthArray( self ) :
+
+		plug = Gaffer.ArrayPlug( elementPrototype = Gaffer.IntPlug(), minSize = 0 )
+		element = plug.next()
+		self.assertIsInstance( element, Gaffer.IntPlug )
+		self.assertEqual( len( plug ), 1 )
+		self.assertTrue( element.parent().isSame( plug ) )
+
 	def testResize( self ) :
 
 		p = Gaffer.ArrayPlug( element = Gaffer.IntPlug(), minSize = 1, maxSize = 3, resizeWhenInputsChange = False )
@@ -530,6 +538,89 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 
 		self.assertEqual( s2["n"]["in"][0].getInput(), s2["a"]["sum"] )
 		self.assertEqual( s2["n"]["in"][1].getInput(), s2["a"]["sum"] )
+
+	def testCreateCounterpart( self ) :
+
+		p1 = Gaffer.ArrayPlug( "p1", elementPrototype = Gaffer.IntPlug(), minSize = 2, maxSize = 4, resizeWhenInputsChange = False )
+		p1.resize( 3 )
+
+		p2 = p1.createCounterpart( "p2", Gaffer.Plug.Direction.In )
+		self.assertEqual( len( p2 ), len( p1 ) )
+		self.assertTrue( p1.elementPrototype( _copy = False ).isSame( p2.elementPrototype( _copy = False ) ) )
+
+	def testZeroLength( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["p"] = Gaffer.ArrayPlug(
+			elementPrototype = Gaffer.IntPlug( "e0" ), minSize = 0,
+			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
+		)
+
+		self.assertEqual( len( s["n"]["user"]["p"] ), 0 )
+
+		s["n"]["user"]["p"].resize( 2 )
+		self.assertEqual( len( s["n"]["user"]["p"] ), 2 )
+		for element in s["n"]["user"]["p"] :
+			self.assertIsInstance( element, Gaffer.IntPlug )
+
+		s["n"]["user"]["p"].resize( 0 )
+		self.assertEqual( len( s["n"]["user"]["p"] ), 0 )
+
+		s["n"]["user"]["p"].resize( 10 )
+		self.assertEqual( len( s["n"]["user"]["p"] ), 10 )
+		for element in s["n"]["user"]["p"] :
+			self.assertIsInstance( element, Gaffer.IntPlug )
+
+	def testZeroLengthSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["p"] = Gaffer.ArrayPlug(
+			elementPrototype = Gaffer.IntPlug( "e0" ), minSize = 0,
+			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
+		)
+
+		self.assertEqual( len( s["n"]["user"]["p"] ), 0 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( len( s2["n"]["user"]["p"] ), 0 )
+
+		s2["n"]["user"]["p"].resize( 2 )
+		self.assertEqual( len( s2["n"]["user"]["p"] ), 2 )
+		for element in s2["n"]["user"]["p"] :
+			self.assertIsInstance( element, Gaffer.IntPlug )
+
+	def testLoadFromVersion1_4( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue(
+			pathlib.Path( __file__ ).parent / "scripts" / "arrayPlug-1.4.10.0.gfr"
+		)
+		s.load()
+
+		self.assertEqual( len( s["n"]["user"]["p"] ), 4 )
+		for element in s["n"]["user"]["p"] :
+			self.assertIsInstance( element, Gaffer.IntPlug )
+
+		self.assertEqual( s["n"]["user"]["p"][0].getValue(), 0 )
+		self.assertEqual( s["n"]["user"]["p"][1].getValue(), 1 )
+		self.assertTrue( s["n"]["user"]["p"][2].getInput().isSame( s["a"]["sum"] ) )
+		self.assertEqual( s["n"]["user"]["p"][3].getValue(), 3 )
+		self.assertIsInstance( s["n"]["user"]["p"].elementPrototype(), Gaffer.IntPlug )
+
+		s["n"]["user"]["p"].resize( 1 )
+		self.assertEqual( len( s["n"]["user"]["p"] ), 1 )
+		self.assertIsInstance( s["n"]["user"]["p"][0], Gaffer.IntPlug )
+
+		s["n"]["user"]["p"].resize( 2 )
+		self.assertEqual( len( s["n"]["user"]["p"] ), 2 )
+		for element in s["n"]["user"]["p"] :
+			self.assertIsInstance( element, Gaffer.IntPlug )
 
 if __name__ == "__main__":
 	unittest.main()

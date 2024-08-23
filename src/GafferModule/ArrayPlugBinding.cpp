@@ -54,13 +54,19 @@ using namespace Gaffer;
 namespace
 {
 
-std::string repr( const ArrayPlug *plug )
+std::string constructor( const ArrayPlug *plug, Serialisation *serialisation = nullptr )
 {
 	std::string result = Serialisation::classPath( plug ) + "( \"" + plug->getName().string() + "\", ";
 
 	if( plug->direction()!=Plug::In )
 	{
 		result += "direction = " + PlugSerialiser::directionRepr( plug->direction() ) + ", ";
+	}
+
+	if( serialisation && plug->elementPrototype() )
+	{
+		const Serialisation::Serialiser *plugSerialiser = Serialisation::acquireSerialiser( plug->elementPrototype() );
+		result += fmt::format( "elementPrototype = {}, ", plugSerialiser->constructor( plug->elementPrototype(), *serialisation ) );
 	}
 
 	if( plug->minSize() != 1 )
@@ -90,6 +96,11 @@ std::string repr( const ArrayPlug *plug )
 
 }
 
+std::string repr( const ArrayPlug &plug )
+{
+	return constructor( &plug );
+}
+
 class ArrayPlugSerialiser : public PlugSerialiser
 {
 
@@ -97,28 +108,47 @@ class ArrayPlugSerialiser : public PlugSerialiser
 
 		bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
 		{
-			auto arrayPlug = static_cast<const ArrayPlug *>( child->parent() );
-			if( arrayPlug->direction() == Plug::Out && arrayPlug->parent<BoxIO>() )
-			{
-				// BoxIO serialisation is different than most nodes, in that
-				// the internal connection is made _before_ children are added
-				// to the input ArrayPlug. The existence of the connection means
-				// that when a child is added to the input plug, an equivalent
-				// child is added to the output plug automatically. Hence we don't
-				// need to serialise an explicit constructor for this child.
-				/// \todo Figure out how we can do this cleanly, without the
-				/// ArrayPlugSerialiser needing knowledge of BoxIO.
-				return false;
-			}
-			return PlugSerialiser::childNeedsConstruction( child, serialisation );
+			// We'll call `resize()` in our `postConstructor()` to create all
+			// the child elements.
+			return false;
 		}
 
 		std::string constructor( const Gaffer::GraphComponent *graphComponent, Serialisation &serialisation ) const override
 		{
-			return ::repr( static_cast<const ArrayPlug *>( graphComponent ) );
+			return ::constructor( static_cast<const ArrayPlug *>( graphComponent ), &serialisation );
+		}
+
+		std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const override
+		{
+			std::string result = PlugSerialiser::postConstructor( graphComponent, identifier, serialisation );
+
+			auto arrayPlug = static_cast<const ArrayPlug *>( graphComponent );
+			if( arrayPlug->children().size() != arrayPlug->minSize() )
+			{
+				if( result.size() )
+				{
+					result += "\n";
+				}
+
+				result += fmt::format( "{}.resize( {} )\n", identifier, arrayPlug->children().size() );
+			}
+
+			return result;
 		}
 
 };
+
+PlugPtr elementPrototype( ArrayPlug &p, bool copy )
+{
+	// By default we copy, because allowing an unsuspecting Python
+	// user to modify the prototype would lead to arrays with inconsistent
+	// elements. We're protected by `const` in C++ but not so in Python.
+	if( !copy || !p.elementPrototype() )
+	{
+		return const_cast<Plug *>( p.elementPrototype() );
+	}
+	return p.elementPrototype()->createCounterpart( p.elementPrototype()->getName(), p.elementPrototype()->direction() );
+}
 
 void resize( ArrayPlug &p, size_t size )
 {
@@ -142,7 +172,7 @@ void GafferModule::bindArrayPlug()
 					(
 						arg( "name" ) = GraphComponent::defaultName<ArrayPlug>(),
 						arg( "direction" ) = Plug::In,
-						arg( "element" ) = PlugPtr(),
+						arg( "elementPrototype" ) = PlugPtr(),
 						arg( "minSize" ) = 1,
 						arg( "maxSize" ) = std::numeric_limits<size_t>::max(),
 						arg( "flags" ) = Plug::Default,
@@ -150,6 +180,7 @@ void GafferModule::bindArrayPlug()
 					)
 				)
 		)
+		.def( "elementPrototype", &elementPrototype, ( arg( "_copy" ) = true ) )
 		.def( "minSize", &ArrayPlug::minSize )
 		.def( "maxSize", &ArrayPlug::maxSize )
 		.def( "resize", &resize )
