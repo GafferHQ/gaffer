@@ -494,6 +494,22 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 		with self.assertRaises( RuntimeError ) :
 			p.resize( p.maxSize() + 1 )
 
+	def testRemoveInputDuringResize( self ) :
+
+		node = Gaffer.Node()
+		node["user"]["p"] = Gaffer.IntPlug()
+		node["user"]["array"] = Gaffer.ArrayPlug( element = Gaffer.IntPlug(), resizeWhenInputsChange = True )
+		node["user"]["array"].resize( 4 )
+		node["user"]["array"][2].setInput( node["user"]["p"] )
+
+		node["user"]["array"].resize( 1 )
+		self.assertEqual( len( node["user"]["array"] ), 1 )
+
+	def testResizeOutputPlug( self ) :
+
+		array = Gaffer.ArrayPlug( element = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out ), direction = Gaffer.Plug.Direction.Out )
+		array.resize( 2 )
+
 	def testSerialisationUsesIndices( self ) :
 
 		s = Gaffer.ScriptNode()

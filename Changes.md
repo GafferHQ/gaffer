@@ -35,6 +35,9 @@ Fixes
   - Fixed update of custom context-sensitive labels on Dot nodes.
 - GafferCortexUI : Removed usage of legacy PlugValueWidget API.
 - Dispatcher : Fixed crashes caused by a dispatcher's `SetupPlugsFn` attempting to access the TaskNode it was being called for. Dispatchers may now introspect the TaskNode and add different plugs based on type (#915).
+- ArrayPlug :
+  - Fixed error when `resize()` removed plugs with input connections.
+  - Fixed error when `resize()` was used on an output plug.
 
 API
 ---
