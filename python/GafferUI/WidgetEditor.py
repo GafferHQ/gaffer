@@ -101,7 +101,8 @@ class WidgetPath( Gaffer.Path ) :
 
 		return Gaffer.Path.propertyNames() + [
 			"widgetEditor:name",
-			"widgetEditor:widget"
+			"widgetEditor:widget",
+			"widgetEditor:widgetType",
 		]
 
 	def property( self, name, canceller = None ) :
@@ -119,6 +120,8 @@ class WidgetPath( Gaffer.Path ) :
 			return self[-1]
 		elif name == "widgetEditor:widget" :
 			return widget
+		elif name == "widgetEditor:widgetType" :
+			return type( widget ).__name__
 
 	def widget( self ) :
 		# Returns the `GafferUI.Widget` for this path.
@@ -213,12 +216,13 @@ class WidgetEditor( GafferUI.Editor ) :
 
 				self.__timerWidget = GafferUI.BusyWidget( size = 25, busy = False )
 
-			self.__widgetNameColumn = GafferUI.PathListingWidget.StandardColumn( "Name", "widgetEditor:name", sizeMode = GafferUI.PathColumn.SizeMode.Stretch )
+			self.__widgetNameColumn = GafferUI.PathListingWidget.StandardColumn( "Name", "widgetEditor:name" )
 
 			self.__widgetListingWidget = GafferUI.PathListingWidget(
 				WidgetPath( None ),  # temp until we make a WidgetPath
 				columns = (
 					self.__widgetNameColumn,
+					GafferUI.PathListingWidget.StandardColumn( "Type", "widgetEditor:widgetType" ),
 				),
 				selectionMode = GafferUI.PathListingWidget.SelectionMode.Row,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
