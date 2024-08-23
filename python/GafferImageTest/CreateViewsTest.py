@@ -37,12 +37,10 @@
 import unittest
 import imath
 import inspect
-import os
 
 import IECore
 
 import Gaffer
-import GafferTest
 import GafferImage
 import GafferImageTest
 
@@ -223,6 +221,12 @@ class CreateViewsTest( GafferImageTest.ImageTestCase ) :
 			# Although the `enabled` plug itself does see the new context, so the node is disabled
 			# for this particular view.
 			self.assertFalse( script["constant"]["enabled"].getValue() )
+
+	def testNoRedundantSerialisation( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["createViews"] = GafferImage.CreateViews()
+		self.assertNotIn( "setInput", script.serialise() )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -38,6 +38,7 @@ Fixes
 - ArrayPlug :
   - Fixed error when `resize()` removed plugs with input connections.
   - Fixed error when `resize()` was used on an output plug.
+- CreateViews : Fixed redundant serialisation of internal connections.
 
 API
 ---

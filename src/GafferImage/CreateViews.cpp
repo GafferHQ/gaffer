@@ -86,6 +86,7 @@ CreateViews::CreateViews( const std::string &name )
 	s->indexPlug()->setInput( indexPlug() );
 
 	ImagePlug *switchOut = runTimeCast< ImagePlug >( s->outPlug() );
+	outPlug()->setFlags( Plug::Serialisable, false );
 	outPlug()->formatPlug()->setInput( switchOut->formatPlug() );
 	outPlug()->dataWindowPlug()->setInput( switchOut->dataWindowPlug() );
 	outPlug()->metadataPlug()->setInput( switchOut->metadataPlug() );
