@@ -124,8 +124,9 @@ class ContactSheetCoreTest( GafferImageTest.ImageTestCase ) :
 
 		checker = GafferImage.Checkerboard()
 		createViews = GafferImage.CreateViews()
-		createViews["views"].addChild( Gaffer.NameValuePlug( "left", GafferImage.ImagePlug(), True, "left", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		createViews["views"].resize( 1 )
 		createViews["views"][0]["value"].setInput( checker["out"] )
+		createViews["views"][0]["name"].setValue( "left" )
 		self.assertEqual( createViews["out"].viewNames(), IECore.StringVectorData( [ "left" ] ) )
 
 		contactSheet = GafferImage.ContactSheetCore()

@@ -859,14 +859,16 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		c4["format"]["displayWindow"].setValue( imath.Box2i( imath.V2i( 0 ), imath.V2i( 64 ) ) )
 
 		createViews1 = GafferImage.CreateViews()
-		createViews1["views"].addChild( Gaffer.NameValuePlug( "left", GafferImage.ImagePlug(), True, "view0", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
-		createViews1["views"].addChild( Gaffer.NameValuePlug( "right", GafferImage.ImagePlug(), True, "view1", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		createViews1["views"].resize( 2 )
+		createViews1["views"][0]["name"].setValue( "left" )
+		createViews1["views"][1]["name"].setValue( "right" )
 		createViews1["views"][0]["value"].setInput( c1["out"] )
 		createViews1["views"][1]["value"].setInput( c2["out"] )
 
 		createViews2 = GafferImage.CreateViews()
-		createViews2["views"].addChild( Gaffer.NameValuePlug( "left", GafferImage.ImagePlug(), True, "view0", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
-		createViews2["views"].addChild( Gaffer.NameValuePlug( "right", GafferImage.ImagePlug(), True, "view1", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		createViews2["views"].resize( 2 )
+		createViews2["views"][0]["name"].setValue( "left" )
+		createViews2["views"][1]["name"].setValue( "right" )
 		createViews2["views"][0]["value"].setInput( c3["out"] )
 		createViews2["views"][1]["value"].setInput( c4["out"] )
 

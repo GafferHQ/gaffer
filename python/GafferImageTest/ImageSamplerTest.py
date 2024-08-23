@@ -132,8 +132,9 @@ class ImageSamplerTest( GafferImageTest.ImageTestCase ) :
 		reader["fileName"].setValue( self.imagesPath() / "blueWithDataWindow.100x100.exr" )
 
 		views = GafferImage.CreateViews()
-		views["views"].addChild( Gaffer.NameValuePlug( "left", GafferImage.ImagePlug(), True ) )
-		views["views"].addChild( Gaffer.NameValuePlug( "right", GafferImage.ImagePlug(), True ) )
+		views["views"].resize( 2 )
+		views["views"][0]["name"].setValue( "left" )
+		views["views"][1]["name"].setValue( "right" )
 		views["views"][0]["value"].setInput( constantSource["out"] )
 		views["views"][1]["value"].setInput( reader["out"] )
 

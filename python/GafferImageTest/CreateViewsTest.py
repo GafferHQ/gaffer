@@ -37,6 +37,7 @@
 import unittest
 import imath
 import inspect
+import pathlib
 
 import IECore
 
@@ -56,8 +57,9 @@ class CreateViewsTest( GafferImageTest.ImageTestCase ) :
 		script.addChild( createViews )
 
 		# Default views added by the UI
-		createViews["views"].addChild( Gaffer.NameValuePlug( "left", GafferImage.ImagePlug(), True, "view0", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
-		createViews["views"].addChild( Gaffer.NameValuePlug( "right", GafferImage.ImagePlug(), True, "view1", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		createViews["views"].resize( 2 )
+		createViews["views"][0]["name"].setValue( "left" )
+		createViews["views"][1]["name"].setValue( "right" )
 
 		reader = GafferImage.ImageReader()
 		script.addChild( reader )
@@ -91,9 +93,9 @@ class CreateViewsTest( GafferImageTest.ImageTestCase ) :
 		self.assertImagesEqual( createViews["out"], deserialise["CreateViews"]["out"] )
 
 
-		createViews["views"].addChild( Gaffer.NameValuePlug( "custom", GafferImage.ImagePlug(), True, "view1", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
-		createViews["views"]["view2"]["name"].setValue( "blah" )
-		createViews["views"]["view2"]["value"].setInput( constant2["out"] )
+		createViews["views"].resize( 3 )
+		createViews["views"][2]["name"].setValue( "blah" )
+		createViews["views"][2]["value"].setInput( constant2["out"] )
 
 		self.assertEqual( createViews["out"].viewNames(), IECore.StringVectorData( [ "left", "right", "blah" ] ) )
 		self.assertEqual(
@@ -192,8 +194,9 @@ class CreateViewsTest( GafferImageTest.ImageTestCase ) :
 
 		# `default` view with RGBA channels, and `notDefault` view with no channels
 		script["createViews"] = GafferImage.CreateViews()
-		script["createViews"]["views"].addChild( Gaffer.NameValuePlug( "default", GafferImage.ImagePlug(), True, "view0", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
-		script["createViews"]["views"].addChild( Gaffer.NameValuePlug( "notDefault", GafferImage.ImagePlug(), True, "view1", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		script["createViews"]["views"].resize( 2 )
+		script["createViews"]["views"][0]["name"].setValue( "default" )
+		script["createViews"]["views"][1]["name"].setValue( "notDefault" )
 		script["createViews"]["views"][0]["value"].setInput( script["checkerboard"]["out"] )
 		self.assertEqual( script["createViews"]["out"].channelNames( "default" ), IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
 		self.assertEqual( script["createViews"]["out"].channelNames( "notDefault" ), IECore.StringVectorData() )
@@ -227,6 +230,27 @@ class CreateViewsTest( GafferImageTest.ImageTestCase ) :
 		script = Gaffer.ScriptNode()
 		script["createViews"] = GafferImage.CreateViews()
 		self.assertNotIn( "setInput", script.serialise() )
+
+	def testLoadFromVersion1_4( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "createViews-1.4.10.0.gfr" )
+		script.load()
+
+		def assertLoadedOK( script ) :
+
+			self.assertEqual( len( script["CreateViews"]["views"] ), 2 )
+			self.assertEqual( script["CreateViews"]["views"][0]["name"].getValue(), "left" )
+			self.assertEqual( script["CreateViews"]["views"][1]["name"].getValue(), "right" )
+			self.assertEqual( script["CreateViews"]["views"][0]["value"].getInput(), script["CheckerboardLeft"]["out"] )
+			self.assertEqual( script["CreateViews"]["views"][1]["value"].getInput(), script["CheckerboardRight"]["out"] )
+
+		assertLoadedOK( script )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+
+		assertLoadedOK( script2 )
 
 if __name__ == "__main__":
 	unittest.main()
