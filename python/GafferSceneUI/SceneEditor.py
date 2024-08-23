@@ -55,7 +55,7 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 			if numInputs == 1 :
 				self["in"] = GafferScene.ScenePlug()
 			else :
-				self["in"] = Gaffer.ArrayPlug( element = GafferScene.ScenePlug(), minSize = numInputs, maxSize = numInputs )
+				self["in"] = Gaffer.ArrayPlug( elementPrototype = GafferScene.ScenePlug(), minSize = numInputs, maxSize = numInputs )
 
 	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::SceneEditor::Settings" )
 

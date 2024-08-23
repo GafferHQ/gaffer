@@ -111,7 +111,7 @@ class DebugDispatcher( GafferDispatch.Dispatcher ) :
 		node = Gaffer.Node()
 		node.setName( name.replace( ".", "_" ) )
 
-		node["preTasks"] = Gaffer.ArrayPlug( element = Gaffer.Plug( "preTask0" ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		node["preTasks"] = Gaffer.ArrayPlug( elementPrototype = Gaffer.Plug( "preTask0" ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		node["task"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		node["node"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		node["frames"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )

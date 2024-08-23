@@ -187,7 +187,7 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 
 		a = GafferTest.AddNode()
 		n = Gaffer.Node()
-		n["in"] = Gaffer.ArrayPlug( "in", element = Gaffer.IntPlug( "e1" ), minSize=3 )
+		n["in"] = Gaffer.ArrayPlug( "in", elementPrototype = Gaffer.IntPlug( "e1" ), minSize=3 )
 
 		self.assertEqual( len( n["in"] ), 3 )
 
@@ -291,7 +291,7 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 
 		s["a"] = GafferTest.AddNode()
 		s["n"] = Gaffer.Node()
-		s["n"]["a"] = Gaffer.ArrayPlug( "a", element = Gaffer.IntPlug(), minSize = 4, maxSize = 4, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["a"] = Gaffer.ArrayPlug( "a", elementPrototype = Gaffer.IntPlug(), minSize = 4, maxSize = 4, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["n"]["a"][1].setInput( s["a"]["sum"] )
 		s["n"]["a"][2].setInput( s["a"]["sum"] )
 
@@ -327,7 +327,7 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 				return PythonElement( name, direction, self.getFlags() )
 
 		n = Gaffer.Node()
-		n["a"] = Gaffer.ArrayPlug( element = PythonElement() )
+		n["a"] = Gaffer.ArrayPlug( elementPrototype = PythonElement() )
 
 		self.assertEqual( len( n["a"] ), 1 )
 		self.assertTrue( isinstance( n["a"][0], PythonElement ) )
@@ -342,8 +342,8 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 
 		n = Gaffer.Node()
 
-		n["a"] = Gaffer.ArrayPlug( element = Gaffer.IntPlug() )
-		n["b"] = Gaffer.ArrayPlug( element = Gaffer.IntPlug() )
+		n["a"] = Gaffer.ArrayPlug( elementPrototype = Gaffer.IntPlug() )
+		n["b"] = Gaffer.ArrayPlug( elementPrototype = Gaffer.IntPlug() )
 		n["b"].setInput( n["a"] )
 
 		def assertInput( plug, input ) :
@@ -383,7 +383,7 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 		Gaffer.Metadata.registerValue( element, "connectionGadget:color", connectionColor )
 		Gaffer.Metadata.registerValue( element, "nodule:color", noodleColor )
 
-		n["a"] = Gaffer.ArrayPlug( element = element )
+		n["a"] = Gaffer.ArrayPlug( elementPrototype = element )
 		n["a"][0].setInput(n2["test"])
 
 		self.assertEqual( Gaffer.Metadata.value( n["a"][1], "connectionGadget:color" ), connectionColor )
@@ -391,20 +391,20 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 
 	def testOnlyOneChildType( self ) :
 
-		p = Gaffer.ArrayPlug( element = Gaffer.IntPlug() )
+		p = Gaffer.ArrayPlug( elementPrototype = Gaffer.IntPlug() )
 		self.assertTrue( p.acceptsChild( Gaffer.IntPlug() ) )
 		self.assertFalse( p.acceptsChild( Gaffer.FloatPlug() ) )
 
 	def testDenyInputFromNonArrayPlugs( self ) :
 
-		a = Gaffer.ArrayPlug( element = Gaffer.IntPlug() )
+		a = Gaffer.ArrayPlug( elementPrototype = Gaffer.IntPlug() )
 		p = Gaffer.V2iPlug()
 		self.assertFalse( a.acceptsInput( p ) )
 
 	def testPartialConnections( self ) :
 
 		n = Gaffer.Node()
-		n["p"] = Gaffer.ArrayPlug( element = Gaffer.V3fPlug( "e" ) )
+		n["p"] = Gaffer.ArrayPlug( elementPrototype = Gaffer.V3fPlug( "e" ) )
 		self.assertEqual( len( n["p"] ), 1 )
 
 		p = Gaffer.FloatPlug()
@@ -432,7 +432,7 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 
 		s["a"] = GafferTest.AddNode()
 		s["n"] = Gaffer.Node()
-		s["n"]["user"]["p"] = Gaffer.ArrayPlug( element = Gaffer.IntPlug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, resizeWhenInputsChange = False )
+		s["n"]["user"]["p"] = Gaffer.ArrayPlug( elementPrototype = Gaffer.IntPlug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, resizeWhenInputsChange = False )
 		self.assertEqual( s["n"]["user"]["p"].resizeWhenInputsChange(), False )
 
 		self.assertEqual( len( s["n"]["user"]["p"] ), 1 )
@@ -449,8 +449,8 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 		a = GafferTest.AddNode()
 
 		n = Gaffer.Node()
-		n["a1"] = Gaffer.ArrayPlug( element = Gaffer.IntPlug() )
-		n["a2"] = Gaffer.ArrayPlug( element = Gaffer.IntPlug(), maxSize = 3, resizeWhenInputsChange = False )
+		n["a1"] = Gaffer.ArrayPlug( elementPrototype = Gaffer.IntPlug() )
+		n["a2"] = Gaffer.ArrayPlug( elementPrototype = Gaffer.IntPlug(), maxSize = 3, resizeWhenInputsChange = False )
 
 		self.assertEqual( len( n["a1"] ), 1 )
 		self.assertEqual( len( n["a2"] ), 1 )
@@ -485,7 +485,7 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 
 	def testResize( self ) :
 
-		p = Gaffer.ArrayPlug( element = Gaffer.IntPlug(), minSize = 1, maxSize = 3, resizeWhenInputsChange = False )
+		p = Gaffer.ArrayPlug( elementPrototype = Gaffer.IntPlug(), minSize = 1, maxSize = 3, resizeWhenInputsChange = False )
 		self.assertEqual( len( p ), p.minSize() )
 
 		p.resize( 2 )
@@ -506,7 +506,7 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 
 		node = Gaffer.Node()
 		node["user"]["p"] = Gaffer.IntPlug()
-		node["user"]["array"] = Gaffer.ArrayPlug( element = Gaffer.IntPlug(), resizeWhenInputsChange = True )
+		node["user"]["array"] = Gaffer.ArrayPlug( elementPrototype = Gaffer.IntPlug(), resizeWhenInputsChange = True )
 		node["user"]["array"].resize( 4 )
 		node["user"]["array"][2].setInput( node["user"]["p"] )
 

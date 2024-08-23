@@ -971,7 +971,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["b"] = Gaffer.Box()
-		s["b"]["array"] = Gaffer.ArrayPlug( element = Gaffer.IntPlug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"]["array"] = Gaffer.ArrayPlug( elementPrototype = Gaffer.IntPlug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["b"]["color"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["b"].exportForReference( self.temporaryDirectory() / "test.grf" )
 
