@@ -747,7 +747,8 @@ class ColorChooser( GafferUI.Widget ) :
 				label,
 				{
 					"command": lambda checked, c = component, weakSet = weakSet : weakSet( c ),
-					"checkBox": self.getColorFieldStaticComponent() == component
+					"checkBox": self.getColorFieldStaticComponent() == component,
+					"active": self.__colorField.getVisible(),
 				}
 			)
 
