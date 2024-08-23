@@ -148,7 +148,12 @@ void ArrayPlug::resize( size_t size )
 {
 	if( size > m_maxSize || size < m_minSize )
 	{
-		throw IECore::Exception( "Invalid size" );
+		throw IECore::Exception(
+			fmt::format(
+				"Invalid size {} requested for `{}` (minSize={}, maxSize={})",
+				size, fullName(), m_minSize, m_maxSize
+			)
+		);
 	}
 
 	while( size > children().size() )
