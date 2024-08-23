@@ -153,12 +153,13 @@ void ArrayPlug::resize( size_t size )
 
 	while( size > children().size() )
 	{
-		PlugPtr p = getChild<Plug>( 0 )->createCounterpart( getChild<Plug>( 0 )->getName(), Plug::In );
+		PlugPtr p = getChild<Plug>( 0 )->createCounterpart( getChild<Plug>( 0 )->getName(), direction() );
 		p->setFlags( Gaffer::Plug::Dynamic, true );
 		addChild( p );
 		MetadataAlgo::copyColors( getChild<Plug>( 0 ) , p.get() , /* overwrite = */ false );
 	}
 
+	Gaffer::Signals::BlockedConnection blockedInputChange( m_inputChangedConnection );
 	while( children().size() > size )
 	{
 		removeChild( children().back() );
