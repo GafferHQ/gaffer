@@ -150,7 +150,7 @@ void Switch::setup( const Plug *plug )
 		g_inPlugsName,
 		Plug::In,
 		inElement,
-		0,
+		1,
 		std::numeric_limits<size_t>::max()
 	);
 	addChild( in );
