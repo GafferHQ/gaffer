@@ -1946,6 +1946,46 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		assertNoCanceller( history )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testHistoryDiamondPerformance( self ) :
+
+		# A series of diamonds where every iteration reads the output of the
+		# previous iteration twice and then feeds into the next iteration.
+		#
+		#      o
+		#     / \
+		#    o   o
+		#     \ /
+		#      o
+		#     / \
+		#    o   o
+		#     \ /
+		#      o
+		#     / \
+		#     ...
+		#     \ /
+		#      o
+		#
+		# Without caching, this leads to an explosion of paths through the
+		# graph, and can lead to poor performance in `history()`.
+
+		plane = GafferScene.Plane()
+
+		loop = Gaffer.Loop()
+		loop.setup( plane["out"] )
+		loop["in"].setInput( plane["out"] )
+
+		copyOptions = GafferScene.CopyOptions()
+		copyOptions["in"].setInput( loop["previous"] )
+		copyOptions["source"].setInput( loop["previous"] )
+		copyOptions["options"].setValue( "*" )
+
+		loop["next"].setInput( copyOptions["out"] )
+		loop["iterations"].setValue( 20 )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferScene.SceneAlgo.history( loop["out"]["globals"] )
+
 	def testLinkingQueries( self ) :
 
 		# Everything linked to `defaultLights` via the default value for the attribute.

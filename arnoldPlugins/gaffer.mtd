@@ -3035,6 +3035,10 @@
 			gaffer.graphEditorLayout.visible BOOL true
 			page STRING "Edge"
 			gaffer.layout.activator STRING "edgeEnabled"
+		[attr edge_tonemap_hue_saturation]
+			page STRING "Edge"
+			label STRING "Tonemap Hue Saturation"
+			gaffer.layout.activator STRING "edgeEnabled"
 		[attr edge_opacity]
 			page STRING "Edge"
 			gaffer.layout.activator STRING "edgeEnabled"
@@ -3083,6 +3087,10 @@
 			gaffer.graphEditorLayout.visible BOOL true
 			page STRING "Silhouette"
 			gaffer.layout.activator STRING "silhouetteEnabled"
+		[attr silhouette_tonemap_hue_saturation]
+			page STRING "Silhouette"
+			label STRING "Tonemap Hue Saturation"
+			gaffer.layout.activator STRING "silhouetteEnabled"
 		[attr silhouette_opacity]
 			page STRING "Silhouette"
 			gaffer.layout.activator STRING "silhouetteEnabled"
@@ -3099,6 +3107,9 @@
 		[attr base_tonemap]
 			gaffer.graphEditorLayout.visible BOOL true
 			page STRING "Base"
+		[attr base_tonemap_hue_saturation]
+			page STRING "Base"
+			label STRING "Tonemap Hue Saturation"
 
 		[attr specular]
 			page STRING "Specular"
@@ -3112,6 +3123,9 @@
 			page STRING "Specular"
 		[attr specular_tonemap]
 			page STRING "Specular"
+		[attr specular_tonemap_hue_saturation]
+			page STRING "Specular"
+			label STRING "Tonemap Hue Saturation"
 
 		[attr lights]
 			page STRING "Stylized Highlight"

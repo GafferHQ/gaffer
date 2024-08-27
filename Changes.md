@@ -70,8 +70,24 @@ Breaking Changes
 - Loop : Removed `nextIterationContext()` method.
 - NodeGadget, ConnectionGadget : Removed `activeForFocusNode()` virtual methods. Override `updateFromContextTracker()` instead.
 
-1.4.x.x (relative to 1.4.10.0)
+1.4.x.x (relative to 1.4.11.0)
 =======
+
+Improvements
+------------
+
+- UI Editor :
+  - Added the ability to edit the scale of node icons.
+  - Improved layout of Box node plug creator visibility toggles.
+- ArnoldShader : Moved the `toon` shader's `*_tonemap_hue_saturation` parameters to appropriate sections in the UI.
+
+API
+---
+
+- MetadataWidget : Added `NumericMetadataWidget` class.
+
+1.4.11.0 (relative to 1.4.10.0)
+========
 
 Improvements
 ------------
@@ -86,6 +102,7 @@ Improvements
   - Blue : Proxy
   - Red : Guide
 - Catalogue : Added a handle for controlling the relative sizes of the listing and image property widgets.
+- RenderPassEditor, LightEditor : Improved update performance for certain graph configurations, by optimising `SceneAlgo::history()` (#5199).
 
 Fixes
 -----
@@ -98,6 +115,7 @@ Fixes
   - Fixed bug which allowed locked Catalogues to be edited.
   - Fixed NodeEditor update when the first image is added or the last image is removed.
 - NameWidget : Fixed bug which allowed plugs on locked nodes to be renamed.
+- ValuePlug : Fixed the plug passed to `Monitor::forceMonitoring()`. Previously `Process::destinationPlug()` was being passed instead of `Process::plug()`.
 
 API
 ---

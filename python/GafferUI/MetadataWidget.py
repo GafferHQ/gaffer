@@ -109,12 +109,12 @@ class MetadataWidget( GafferUI.Widget ) :
 
 	## Must be called by derived classes to update
 	# the Metadata value when the widget value changes.
-	def _updateFromWidget( self, value ) :
+	def _updateFromWidget( self, value, mergeGroup = "" ) :
 
 		if self.__target is None :
 			return
 
-		with Gaffer.UndoScope( self.__target.ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.__target.ancestor( Gaffer.ScriptNode ), mergeGroup = mergeGroup ) :
 			Gaffer.Metadata.registerValue( self.__target, self.__key, value )
 
 	## May be called by derived classes to deregister the
@@ -347,3 +347,43 @@ class FileSystemPathMetadataWidget( MetadataWidget ) :
 		if chosenPath is not None :
 			self.__path.setFromString( str( chosenPath ) )
 			self.__editingFinished()
+
+class NumericMetadataWidget( MetadataWidget ) :
+
+	def __init__( self, key, target = None, defaultValue = 0, **kw ) :
+
+		self.__numericWidget = GafferUI.NumericWidget( value = defaultValue )
+
+		self.__defaultValue = defaultValue
+		# we use these to decide which actions to merge into a single undo
+		self.__lastChangedReason = None
+		self.__mergeGroupId = 0
+
+		MetadataWidget.__init__( self, self.__numericWidget, key, target, defaultValue = defaultValue, **kw )
+
+		self.__numericWidget.valueChangedSignal().connect(
+			Gaffer.WeakMethod( self.__valueChanged ), scoped = False
+		)
+
+	def numericWidget( self ) :
+
+		return self.__numericWidget
+
+	def _updateFromValue( self, value ) :
+
+		self.__numericWidget.setValue( type( self.__defaultValue )( value ) )
+
+	def __valueChanged( self, widget, reason ) :
+
+		if reason == GafferUI.NumericWidget.ValueChangedReason.InvalidEdit :
+			self._updateFromValue( self.defaultValue() )
+			return
+
+		if not widget.changesShouldBeMerged( self.__lastChangedReason, reason ) :
+			self.__mergeGroupId += 1
+		self.__lastChangedReason = reason
+
+		self._updateFromWidget(
+			self.__numericWidget.getValue(),
+			mergeGroup = "NumericMetadataWidget{}{}".format( id( self, ), self.__mergeGroupId )
+		)
