@@ -178,6 +178,16 @@ parameterMetadata = {
 			"label" : "Strength",
 			"layout:index" : 29,
 		},
+		"thin_film_thickness" : {
+			"layout:section" : "Thin Film",
+			"label" : "Thickness",
+			"layout:index" : 30,
+		},
+		"thin_film_ior" : {
+			"layout:section" : "Thin Film",
+			"label" : "IOR",
+			"layout:index" : 31,
+		},
 	},
 	"principled_hair_bsdf" : {
 		"model" : {
@@ -800,12 +810,16 @@ parameterMetadata = {
 			"label" : "IOR",
 			"layout:index" : 5,
 		},
-		"subsurface_anisotropy" : {
-			"label" : "Anisotropy",
+		"subsurface_roughness" : {
+			"label" : "Roughness",
 			"layout:index" : 6,
 		},
-		"normal" : {
+		"subsurface_anisotropy" : {
+			"label" : "Anisotropy",
 			"layout:index" : 7,
+		},
+		"normal" : {
+			"layout:index" : 8,
 		},
 	},
 	"math" : {
