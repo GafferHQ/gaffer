@@ -141,8 +141,16 @@ ShaderQuery::ShaderQuery( const std::string &name ) : Gaffer::ComputeNode( name 
 	addChild( new StringPlug( "location" ) );
 	addChild( new StringPlug( "shader" ) );
 	addChild( new BoolPlug( "inherit", Plug::In, false ) );
+	/// \todo This is violating the ArrayPlug requirements by not providing an `elementPrototype`
+	/// at construction. And we later violate it further by creating non-homogeneous elements in
+	/// `addQuery()`. We're only using an ArrayPlug because we want the serialisation to use numeric
+	/// indexing for the children of `queries` and `out` - since the serialisation uses `addQuery()`
+	/// to recreate the children, and that doesn't maintain names. So perhaps we can just use a
+	/// ValuePlug instead of an ArrayPlug, and add a separate mechanism for requesting that children use
+	/// numeric indices separately (see `keyedByIndex()` in `Serialisation.cpp`).
+	///
+	/// The same applies to OptionQuery, PrimitiveVariableQuery and ContextQuery.
 	addChild( new ArrayPlug( "queries", Plug::Direction::In, nullptr, 1, std::numeric_limits<size_t>::max(), Plug::Flags::Default, false ) );
-
 	addChild( new ArrayPlug( "out", Plug::Direction::Out, nullptr, 1, std::numeric_limits<size_t>::max(), Plug::Flags::Default, false ) );
 
 	AttributeQueryPtr attributeQuery = new AttributeQuery( "__attributeQuery" );

@@ -104,6 +104,10 @@ bool ArrayPlug::acceptsChild( const GraphComponent *potentialChild ) const
 		return true;
 	}
 
+	/// \todo We could beef up these checks to check any descendants of
+	/// `potentialChild` and to check the default value etc. We can't do that
+	/// until we fix a few violators of our constraint that all children are
+	/// identical - see `ShaderQuery::ShaderQuery`.
 	return potentialChild->typeId() == m_elementPrototype->typeId();
 }
 

@@ -134,6 +134,7 @@ PrimitiveVariableQuery::PrimitiveVariableQuery( const std::string& name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "scene" ) );
 	addChild( new Gaffer::StringPlug( "location" ) );
+	/// \todo See notes in `ShaderQuery::ShaderQuery`.
 	addChild( new Gaffer::ArrayPlug( "queries", Gaffer::Plug::Direction::In,
 		nullptr, 1, std::numeric_limits< size_t >::max(), Gaffer::Plug::Flags::Default, false ) );
 	addChild( new Gaffer::ArrayPlug( "out", Gaffer::Plug::Direction::Out,

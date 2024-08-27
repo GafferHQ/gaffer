@@ -82,7 +82,7 @@ namespace
 // and more readable, and opens the possibility of omitting the
 // overhead of the names entirely one day.
 /// \todo Consider an official way for GraphComponents to opt in
-/// to this behaviour.
+/// to this behaviour. Perhaps this could just be driven by metadata?
 bool keyedByIndex( const GraphComponent *parent )
 {
 	return
