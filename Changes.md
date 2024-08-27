@@ -80,6 +80,23 @@ Breaking Changes
   - Renamed `element` constructor argument to `elementPrototype`.
   - Deprecated the passing of `element = nullptr` to the constructor.
 
+Build
+-----
+
+- Cycles :
+  - Updated to version 4.2.0.
+  - Disabled CUDA binary generation for Kepler and Maxwell architecture GPUs.
+- Embree : Updated to version 4.3.2.
+- Imath : Updated to version 3.1.11.
+- LibJPEG-Turbo : Updated to version 3.0.3.
+- MaterialX : Updated to version 1.38.10.
+- OpenImageIO : Updated to version 2.5.10.1.
+- OpenPGL : Updated to version 0.6.0.
+- PySide : Updated to version 5.15.14.
+- Qt : Updated to version 5.15.14.
+- USD : Updated to version 24.08.
+- Zstandard : Added version 1.5.0.
+
 1.4.x.x (relative to 1.4.11.0)
 =======
 
