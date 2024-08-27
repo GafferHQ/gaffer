@@ -245,6 +245,9 @@ jobs:
       with:
         name: ${{ env.GAFFER_BUILD_NAME }}
         path: ${{ env.GAFFER_BUILD_NAME }}.${{ env.PACKAGE_EXTENSION }}
+        # Using compression-level 0 avoids compressing our already compressed
+        # package and results in a significantly faster upload.
+        compression-level: 0
       if: matrix.publish
 
     - name: Publish Release
