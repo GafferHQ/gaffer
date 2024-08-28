@@ -578,20 +578,21 @@ class PathListingWidget( GafferUI.Widget ) :
 
 	def __keyPress( self, widget, event ) :
 
+		# Use `__lastSelectedIndex` if available so that shift + keypress
+		# accumulates selection.
+		index = self.__lastSelectedIndex
+		assert( isinstance( index, ( type( None ), QtCore.QPersistentModelIndex ) ) )
+		if index is not None and index.isValid() :
+			# Convert from persistent index
+			index = QtCore.QModelIndex( index )
+		else :
+			index = self._qtWidget().currentIndex()
+
 		if (
 			event.key in ( "Up", "Down" ) or (
 				event.key in ( "Left", "Right" ) and self.__cellSelectionMode()
 			)
 		):
-			# Use `__lastSelectedIndex` if available so that shift + keypress
-			# accumulates selection.
-			index = self.__lastSelectedIndex
-			assert( isinstance( index, ( type( None ), QtCore.QPersistentModelIndex ) ) )
-			if index is not None and index.isValid() :
-				# Convert from persistent index
-				index = QtCore.QModelIndex( index )
-			else :
-				index = self._qtWidget().currentIndex()
 
 			if not index.isValid() :
 				return True
@@ -635,6 +636,13 @@ class PathListingWidget( GafferUI.Widget ) :
 				selection = [IECore.PathMatcher()] * len( self.getColumns() )
 
 			self.__setSelectionInternal( selection, scrollToFirst=False )
+			return True
+
+		# Delegate the keyPress to the PathColumn, if it wants it.
+
+		elif index.isValid() and self.getColumns()[index.column()].keyPressSignal()(
+			self.getColumns()[index.column()], self, event
+		) :
 			return True
 
 		return False
