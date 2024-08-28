@@ -197,7 +197,7 @@ PlugPtr acquirePlug( InternedString name, Plug::Direction direction, Plug *candi
 	return new Plug( name, direction );
 }
 
-Plug *loadParameter( InternedString name, const NdrSdfTypeIndicator &type, Plug::Direction direction, const VtValue &defaultValue, Plug *parent, bool optional = false )
+Plug *loadParameter( InternedString name, const SdfValueTypeName &type, Plug::Direction direction, const VtValue &defaultValue, Plug *parent, bool optional = false )
 {
 	Plug *candidatePlug = parent->getChild<Plug>( name );
 	if( candidatePlug && optional )
@@ -214,67 +214,61 @@ Plug *loadParameter( InternedString name, const NdrSdfTypeIndicator &type, Plug:
 
 	PlugPtr acquiredPlug;
 
-	if( !type.second.IsEmpty() )
+	if( type == SdfValueTypeNames->Bool )
 	{
-		// An Sdr type such as `terminal` or `vstruct` that doesn't map cleanly
-		// to an Sdf type. We represent these just as bare plugs, since as I understand
-		// it, they are not expected to carry values.
+		acquiredPlug = acquireTypedPlug<BoolPlug>( name, direction, defaultValue, candidatePlug );
+	}
+	else if( type == SdfValueTypeNames->Int )
+	{
+		acquiredPlug = acquireTypedPlug<IntPlug>( name, direction, defaultValue, candidatePlug );
+	}
+	else if( type == SdfValueTypeNames->Float )
+	{
+		acquiredPlug = acquireTypedPlug<FloatPlug>( name, direction, defaultValue, candidatePlug );
+	}
+	else if( type == SdfValueTypeNames->Float2 )
+	{
+		acquiredPlug = acquireCompoundNumericPlug<V2fPlug>( name, type, direction, defaultValue, candidatePlug );
+	}
+	else if(
+		type == SdfValueTypeNames->Point3f ||
+		type == SdfValueTypeNames->Vector3f ||
+		type == SdfValueTypeNames->Normal3f ||
+		type == SdfValueTypeNames->Float3
+	)
+	{
+		acquiredPlug = acquireCompoundNumericPlug<V3fPlug>( name, type, direction, defaultValue, candidatePlug );
+	}
+	else if( type == SdfValueTypeNames->Color3f )
+	{
+		acquiredPlug = acquireCompoundNumericPlug<Color3fPlug>( name, type, direction, defaultValue, candidatePlug );
+	}
+	else if( type == SdfValueTypeNames->Float4 )
+	{
+		acquiredPlug = acquireCompoundNumericPlug<Color4fPlug>( name, type, direction, defaultValue, candidatePlug );
+	}
+	else if( type == SdfValueTypeNames->String || type == SdfValueTypeNames->Token )
+	{
+		acquiredPlug = acquireTypedPlug<StringPlug>( name, direction, defaultValue, candidatePlug );
+	}
+	else if( type == SdfValueTypeNames->Asset )
+	{
+		acquiredPlug = acquireAssetPlug( name, direction, defaultValue, candidatePlug );
+	}
+	else if( type == SdfValueTypeNames->Opaque )
+	{
 		acquiredPlug = acquirePlug( name, direction, candidatePlug );
 	}
 	else
 	{
-		if( type.first == SdfValueTypeNames->Bool )
-		{
-			acquiredPlug = acquireTypedPlug<BoolPlug>( name, direction, defaultValue, candidatePlug );
-		}
-		else if( type.first == SdfValueTypeNames->Int )
-		{
-			acquiredPlug = acquireTypedPlug<IntPlug>( name, direction, defaultValue, candidatePlug );
-		}
-		else if( type.first == SdfValueTypeNames->Float )
-		{
-			acquiredPlug = acquireTypedPlug<FloatPlug>( name, direction, defaultValue, candidatePlug );
-		}
-		else if( type.first == SdfValueTypeNames->Float2 )
-		{
-			acquiredPlug = acquireCompoundNumericPlug<V2fPlug>( name, type.first, direction, defaultValue, candidatePlug );
-		}
-		else if(
-			type.first == SdfValueTypeNames->Point3f ||
-			type.first == SdfValueTypeNames->Vector3f ||
-			type.first == SdfValueTypeNames->Normal3f ||
-			type.first == SdfValueTypeNames->Float3
-		)
-		{
-			acquiredPlug = acquireCompoundNumericPlug<V3fPlug>( name, type.first, direction, defaultValue, candidatePlug );
-		}
-		else if( type.first == SdfValueTypeNames->Color3f )
-		{
-			acquiredPlug = acquireCompoundNumericPlug<Color3fPlug>( name, type.first, direction, defaultValue, candidatePlug );
-		}
-		else if( type.first == SdfValueTypeNames->Float4 )
-		{
-			acquiredPlug = acquireCompoundNumericPlug<Color4fPlug>( name, type.first, direction, defaultValue, candidatePlug );
-		}
-		else if( type.first == SdfValueTypeNames->String || type.first == SdfValueTypeNames->Token )
-		{
-			acquiredPlug = acquireTypedPlug<StringPlug>( name, direction, defaultValue, candidatePlug );
-		}
-		else if( type.first == SdfValueTypeNames->Asset )
-		{
-			acquiredPlug = acquireAssetPlug( name, direction, defaultValue, candidatePlug );
-		}
-		else
-		{
-			IECore::msg(
-				IECore::Msg::Warning, "USDShader",
-				fmt::format(
-					"Unable to load parameter \"{}\" of type \"{}\"",
-					name.string(), type.first.GetAsToken().GetString()
-				)
-			);
-			return nullptr;
-		}
+		IECore::msg(
+			IECore::Msg::Warning, "USDShader",
+			fmt::format(
+				"Unable to load parameter \"{}\" of type \"{}\"",
+				name.string(), type.GetAsToken().GetString()
+			)
+		);
+		return nullptr;
 	}
 
 	assert( acquiredPlug );
@@ -307,14 +301,26 @@ Plug *loadParameter( InternedString name, const NdrSdfTypeIndicator &type, Plug:
 
 Plug *loadShaderProperty( const SdrShaderProperty &property, Plug *parent )
 {
-	return loadParameter( property.GetName().GetString(), property.GetTypeAsSdfType(), ::direction( property ), property.GetDefaultValue(), parent );
+	SdfValueTypeName sdfType = property.GetTypeAsSdfType().first;
+	if(
+		property.GetType() == SdrPropertyTypes->Terminal ||
+		property.GetType() == SdrPropertyTypes->Vstruct
+	)
+	{
+		// The Sdf type will be Token, but that doesn't really communicate the
+		// fact that these properties don't actually carry data. We use Opaque
+		// for the purposes of communicating that to `loadParameter()`.
+		sdfType = SdfValueTypeNames->Opaque;
+	}
+
+	return loadParameter( property.GetName().GetString(), sdfType, ::direction( property ), property.GetDefaultValue(), parent );
 }
 
 Plug *loadPrimDefinitionAttribute( const UsdPrimDefinition::Attribute &attribute, InternedString name, Plug *parent, bool optional )
 {
 	VtValue defaultValue;
 	attribute.GetFallbackValue( &defaultValue );
-	return loadParameter( name, { attribute.GetTypeName(), pxr::TfToken() }, Plug::Direction::In, defaultValue, parent, optional );
+	return loadParameter( name, attribute.GetTypeName(), Plug::Direction::In, defaultValue, parent, optional );
 }
 
 const IECore::InternedString g_surface( "surface" );
