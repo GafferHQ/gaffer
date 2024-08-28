@@ -56,6 +56,7 @@ API
 - PathColumn :
   - Added `contextMenuSignal()`, allowing the creation of custom context menus.
   - Added `instanceCreatedSignal()`, providing an opportunity to connect to the signals on _any_ column, no matter how it is created.
+  - Added `keyPressSignal()` and `keyReleaseSignal()`, allowing a PathColumn to handle key events.
 - ArrayPlug :
   - It is now legal to construct an ArrayPlug with a minimum size of 0. Previously the minimum size was 1.
   - Added `elementPrototype()` method.
