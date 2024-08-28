@@ -180,14 +180,14 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		# Required for context-sensitive dynamic presets
 		with self.context() :
-			with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+			with Gaffer.UndoScope( self.scriptNode() ) :
 				for plug in self.getPlugs() :
 					Gaffer.Metadata.deregisterValue( plug, "presetsPlugValueWidget:isCustom" )
 					Gaffer.NodeAlgo.applyPreset( plug, preset )
 
 	def __applyCustomPreset( self, unused ) :
 
-		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.scriptNode() ) :
 			for plug in self.getPlugs() :
 				# When we first switch to custom mode, the current value will
 				# actually be one of the registered presets. So we use this

@@ -140,6 +140,15 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		return self.__context
 
+	## Returns the ScriptNode ancestor for the plugs, or `None` if
+	# no such ancestor exists.
+	def scriptNode( self ) :
+
+		if not len( self.__plugs ) :
+			return None
+		else :
+			return next( iter( self.__plugs ) ).ancestor( Gaffer.ScriptNode )
+
 	## Should be reimplemented to return True if this widget includes
 	# some sort of labelling for the plug. This is used to prevent
 	# extra labels being created in the NodeUI when they're not necessary.
@@ -779,7 +788,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 		if not isinstance( values, list ) :
 			values = itertools.repeat( values, len( self.getPlugs() ) )
 
-		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.scriptNode() ) :
 			for plug, value in zip( self.getPlugs(), values ) :
 				plug.setValue( value )
 
@@ -807,13 +816,13 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __removeInputs( self ) :
 
-		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.scriptNode() ) :
 			for p in self.getPlugs() :
 				p.setInput( None )
 
 	def __applyUserDefaults( self ) :
 
-		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.scriptNode() ) :
 			for p in self.getPlugs() :
 				Gaffer.NodeAlgo.applyUserDefault( p )
 
@@ -851,13 +860,13 @@ class PlugValueWidget( GafferUI.Widget ) :
 	def __applyPreset( self, presetName, *unused ) :
 
 		with self.context() :
-			with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+			with Gaffer.UndoScope( self.scriptNode() ) :
 				for p in self.getPlugs() :
 					Gaffer.NodeAlgo.applyPreset( p, presetName )
 
 	def __applyReadOnly( self, readOnly ) :
 
-		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.scriptNode() ) :
 			for p in self.getPlugs() :
 				Gaffer.MetadataAlgo.setReadOnly( p, readOnly )
 
@@ -897,7 +906,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		self.setHighlighted( False )
 
-		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).node().scriptNode() ) :
+		with Gaffer.UndoScope( self.scriptNode() ) :
 			if isinstance( event.data, Gaffer.Plug ) :
 				for p in self.getPlugs() :
 					p.setInput( event.data )

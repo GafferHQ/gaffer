@@ -149,7 +149,7 @@ class NameValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 		# child plugs _except_ `name`.
 
 		widget.setHighlighted( False )
-		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).node().scriptNode() ) :
+		with Gaffer.UndoScope( self.scriptNode() ) :
 			for p in self.getPlugs() :
 				for c in p.children() :
 					if c.getName() != "name" :

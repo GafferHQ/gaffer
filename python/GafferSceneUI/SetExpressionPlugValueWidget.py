@@ -157,7 +157,7 @@ class SetExpressionPlugValueWidget( GafferUI.PlugValueWidget ) :
 			return
 
 		text = self.__codeWidget.getText()
-		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.scriptNode() ) :
 			for plug in self.getPlugs() :
 				plug.setValue( text )
 

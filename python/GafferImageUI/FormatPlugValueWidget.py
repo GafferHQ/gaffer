@@ -171,14 +171,14 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __applyFormat( self, unused, fmt ) :
 
-		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.scriptNode() ) :
 			for plug in self.getPlugs() :
 				Gaffer.Metadata.registerValue( plug, "formatPlugValueWidget:mode", "standard" )
 				plug.setValue( fmt )
 
 	def __applyCustomFormat( self, unused ) :
 
-		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.scriptNode() ) :
 
 			if self.__currentFormat == GafferImage.Format() :
 				# Format is empty. It's kindof confusing to display that

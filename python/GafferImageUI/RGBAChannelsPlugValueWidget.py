@@ -178,6 +178,6 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __setValue( self, unused, value ) :
 
-		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.scriptNode() ) :
 			for plug in self.getPlugs() :
 				plug.setValue( value )
