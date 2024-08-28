@@ -54,6 +54,7 @@ from .SetEditor import SetEditor
 from .RenderPassEditor import RenderPassEditor
 from . import SceneHistoryUI
 from . import EditScopeUI
+from . import _InspectorColumn
 
 from . import SceneNodeUI
 from . import SceneReaderUI

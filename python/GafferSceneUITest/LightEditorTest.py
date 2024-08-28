@@ -48,6 +48,7 @@ import GafferSceneUI
 import GafferSceneTest
 import GafferUITest
 
+from GafferSceneUI._InspectorColumn import __editSelectedCells as editSelectedCells
 
 class LightEditorTest( GafferUITest.TestCase ) :
 
@@ -659,10 +660,10 @@ class LightEditorTest( GafferUITest.TestCase ) :
 			widget = editor._LightEditor__pathListing
 			self.setLightEditorMuteSelection( widget, togglePaths )
 
-			editor._LightEditor__editSelectedCells( widget )
+			editSelectedCells( widget )
 			testLightMuteAttribute( 1, togglePaths, firstNewStates )
 
-			editor._LightEditor__editSelectedCells( widget )
+			editSelectedCells( widget )
 			testLightMuteAttribute( 2, togglePaths, secondNewStates )
 
 			del widget, editor
@@ -714,7 +715,7 @@ class LightEditorTest( GafferUITest.TestCase ) :
 		self.setLightEditorMuteSelection( widget, ["/group/light"] )
 
 		# This will raise an exception if the context is not scoped correctly.
-		editor._LightEditor__editSelectedCells(
+		editSelectedCells(
 			widget,
 			True  # quickBoolean
 		)
