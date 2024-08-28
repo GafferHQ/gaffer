@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,22 +34,29 @@
 #
 ##########################################################################
 
-import IECore
+import GafferImage
 
-import Gaffer
+def __viewsChildAdded( parent, child ) :
 
-class ArrayPlugNode( Gaffer.Node ) :
+	if child["name"].defaultValue() :
+		# Legacy code and files create children with non-empty default values
+		# in the `name`` plug. This violates the uniformity of the array, and
+		# can no longer be serialised. Reset the default value while preserving
+		# the current value.
+		value = child["name"].getValue()
+		child["name"].setValue( "" )
+		child["name"].resetDefault()
+		child["name"].setValue( value )
 
-	def __init__( self, name = "ArrayPlugNode" ) :
+def __initWrapper( originalInit ) :
 
-		Gaffer.Node.__init__( self, name )
+	def init( self, *args, **kw ) :
 
-		self.addChild(
-			Gaffer.ArrayPlug(
-				"in",
-				elementPrototype = Gaffer.IntPlug( "e1", minValue=0, maxValue=10 ),
-				maxSize = 6
-			)
+		originalInit( self, *args, **kw )
+		self["views"].childAddedSignal().connect(
+			__viewsChildAdded, scoped = False
 		)
 
-IECore.registerRunTimeTyped( ArrayPlugNode, typeName="GafferTest::ArrayPlugNode" )
+	return init
+
+GafferImage.CreateViews.__init__ = __initWrapper( GafferImage.CreateViews.__init__ )

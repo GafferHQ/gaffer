@@ -68,7 +68,12 @@ CreateViews::CreateViews( const std::string &name )
 	ArrayPlugPtr views = new ArrayPlug(
 		"views",
 		Plug::In,
-		nullptr,
+		new NameValuePlug(
+			/* nameDefault = */ "",
+			/* valuePlug = */ new ImagePlug(),
+			/* defaultEnabled = */ true,
+			/* name = */ "view0"
+		),
 		0,
 		std::numeric_limits<size_t>::max(),
 		Plug::Default,
@@ -86,6 +91,7 @@ CreateViews::CreateViews( const std::string &name )
 	s->indexPlug()->setInput( indexPlug() );
 
 	ImagePlug *switchOut = runTimeCast< ImagePlug >( s->outPlug() );
+	outPlug()->setFlags( Plug::Serialisable, false );
 	outPlug()->formatPlug()->setInput( switchOut->formatPlug() );
 	outPlug()->dataWindowPlug()->setInput( switchOut->dataWindowPlug() );
 	outPlug()->metadataPlug()->setInput( switchOut->metadataPlug() );

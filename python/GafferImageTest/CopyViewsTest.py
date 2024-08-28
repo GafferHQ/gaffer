@@ -66,8 +66,9 @@ class CopyViewsTest( GafferImageTest.ImageTestCase ) :
 					name = "source%iview%i" % ( i, j )
 
 				createViews[i].addChild( constant )
-				createViews[i]["views"].addChild( Gaffer.NameValuePlug( name, GafferImage.ImagePlug(), True, "view0", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
-				createViews[i]["views"][-1]["value"].setInput( constant["out"] )
+				view = createViews[i]["views"].next()
+				view["name"].setValue( name )
+				view["value"].setInput( constant["out"] )
 
 		copyViews = GafferImage.CopyViews()
 		copyViews["in"][0].setInput( createViews[0]["out"] )

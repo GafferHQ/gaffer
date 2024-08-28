@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,22 +34,20 @@
 #
 ##########################################################################
 
-import IECore
-
 import Gaffer
 
-class ArrayPlugNode( Gaffer.Node ) :
+def __initWrapper( originalInit ) :
 
-	def __init__( self, name = "ArrayPlugNode" ) :
+	def init( self, *args, **kw ) :
 
-		Gaffer.Node.__init__( self, name )
+		if "element" in kw :
 
-		self.addChild(
-			Gaffer.ArrayPlug(
-				"in",
-				elementPrototype = Gaffer.IntPlug( "e1", minValue=0, maxValue=10 ),
-				maxSize = 6
-			)
-		)
+			# We renamed `element` to `elementPrototype` in Gaffer 1.5.
+			kw["elementPrototype"] = kw["element"]
+			del kw["element"]
 
-IECore.registerRunTimeTyped( ArrayPlugNode, typeName="GafferTest::ArrayPlugNode" )
+		originalInit( self, *args, **kw )
+
+	return init
+
+Gaffer.ArrayPlug.__init__ = __initWrapper( Gaffer.ArrayPlug.__init__ )

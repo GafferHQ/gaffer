@@ -262,7 +262,7 @@ class SwitchTest( GafferTest.TestCase ) :
 	def testPassThroughWhenIndexConstant( self ) :
 
 		n = Gaffer.Switch()
-		n["in"] = Gaffer.ArrayPlug( element = Gaffer.Plug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["in"] = Gaffer.ArrayPlug( elementPrototype = Gaffer.Plug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		n["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic  )
 
 		self.assertTrue( n["out"].source().isSame( n["in"][0] ) )
@@ -309,7 +309,7 @@ class SwitchTest( GafferTest.TestCase ) :
 	def testConnectedIndex( self ) :
 
 		n = Gaffer.Switch()
-		n["in"] = Gaffer.ArrayPlug( element = Gaffer.Plug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["in"] = Gaffer.ArrayPlug( elementPrototype = Gaffer.Plug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		n["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic  )
 
 		input0 = Gaffer.Plug()
@@ -344,7 +344,7 @@ class SwitchTest( GafferTest.TestCase ) :
 	def testIndirectInputsToIndex( self ) :
 
 		n = Gaffer.Switch()
-		n["in"] = Gaffer.ArrayPlug( element = Gaffer.Plug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["in"] = Gaffer.ArrayPlug( elementPrototype = Gaffer.Plug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		n["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic  )
 
 		input0 = Gaffer.Plug()

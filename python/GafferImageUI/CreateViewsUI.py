@@ -43,9 +43,9 @@ import imath
 # sets up the default "left" and "right" views
 def postCreate( node, menu ) :
 
-	node["views"].addChild( Gaffer.NameValuePlug( "left", GafferImage.ImagePlug(), True, "view0", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
-	node["views"].addChild( Gaffer.NameValuePlug( "right", GafferImage.ImagePlug(), True, "view1", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
-
+	node["views"].resize( 2 )
+	node["views"][0]["name"].setValue( "left" )
+	node["views"][1]["name"].setValue( "right" )
 
 Gaffer.Metadata.registerNode(
 

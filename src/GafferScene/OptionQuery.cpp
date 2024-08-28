@@ -135,6 +135,7 @@ OptionQuery::OptionQuery( const std::string &name ) : Gaffer::ComputeNode( name 
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new ScenePlug( "scene" ) );
+	/// \todo See notes in `ShaderQuery::ShaderQuery`.
 	addChild( new ArrayPlug( "queries", Plug::Direction::In, nullptr, 1, std::numeric_limits<size_t>::max(), Plug::Flags::Default, false ) );
 
 	addChild( new ArrayPlug( "out", Plug::Direction::Out, nullptr, 1, std::numeric_limits<size_t>::max(), Plug::Flags::Default, false ) );

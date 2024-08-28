@@ -35,6 +35,10 @@ Fixes
   - Fixed update of custom context-sensitive labels on Dot nodes.
 - GafferCortexUI : Removed usage of legacy PlugValueWidget API.
 - Dispatcher : Fixed crashes caused by a dispatcher's `SetupPlugsFn` attempting to access the TaskNode it was being called for. Dispatchers may now introspect the TaskNode and add different plugs based on type (#915).
+- ArrayPlug :
+  - Fixed error when `resize()` removed plugs with input connections.
+  - Fixed error when `resize()` was used on an output plug.
+- CreateViews : Fixed redundant serialisation of internal connections.
 
 API
 ---
@@ -51,6 +55,9 @@ API
 - PathColumn :
   - Added `contextMenuSignal()`, allowing the creation of custom context menus.
   - Added `instanceCreatedSignal()`, providing an opportunity to connect to the signals on _any_ column, no matter how it is created.
+- ArrayPlug :
+  - It is now legal to construct an ArrayPlug with a minimum size of 0. Previously the minimum size was 1.
+  - Added `elementPrototype()` method.
 
 Breaking Changes
 ----------------
@@ -69,6 +76,9 @@ Breaking Changes
   - Deprecated `getContext()` methods. Use `context()` instead.
 - Loop : Removed `nextIterationContext()` method.
 - NodeGadget, ConnectionGadget : Removed `activeForFocusNode()` virtual methods. Override `updateFromContextTracker()` instead.
+- ArrayPlug :
+  - Renamed `element` constructor argument to `elementPrototype`.
+  - Deprecated the passing of `element = nullptr` to the constructor.
 
 1.4.x.x (relative to 1.4.11.0)
 =======
