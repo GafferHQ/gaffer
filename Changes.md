@@ -64,6 +64,8 @@ API
   - Added `elementPrototype()` method.
 - View : Added `scriptNode()` method.
 - VisibleSet : Added Python constructor with keyword arguments for `expansions`, `inclusions` and `exclusions`.
+- ScriptNodeAlgo : Added new namespace with functions for managing shared UI state for GafferSceneUI.
+- ContextAlgo : Deprecated. Use ScriptNodeAlgo instead.
 
 Breaking Changes
 ----------------
