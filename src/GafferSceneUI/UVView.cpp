@@ -56,6 +56,7 @@
 #include "GafferUI/Style.h"
 #include "GafferUI/ViewportGadget.h"
 
+#include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECore/Math.h"
@@ -574,8 +575,8 @@ static InternedString g_gridGadgetName( "gridGadget" );
 
 GAFFER_NODE_DEFINE_TYPE( UVView )
 
-UVView::UVView( const std::string &name )
-	:	View( name, new ScenePlug ), m_textureGadgetsDirty( true ), m_framed( false )
+UVView::UVView( Gaffer::ScriptNodePtr scriptNode )
+	:	View( defaultName<UVView>(), scriptNode, new ScenePlug ), m_textureGadgetsDirty( true ), m_framed( false )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 

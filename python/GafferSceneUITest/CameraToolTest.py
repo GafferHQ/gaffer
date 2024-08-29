@@ -63,7 +63,7 @@ class CameraToolTest( GafferUITest.TestCase ) :
 		script = Gaffer.ScriptNode()
 		script["camera"] = GafferScene.Camera()
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["camera"]["out"] )
 
 		self.assertCameraEditable( view, True )
@@ -100,7 +100,7 @@ class CameraToolTest( GafferUITest.TestCase ) :
 		script = Gaffer.ScriptNode()
 		script["camera"] = GafferScene.Camera()
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["camera"]["out"] )
 
 		view["camera"]["lookThroughEnabled"].setValue( True )
@@ -141,7 +141,7 @@ class CameraToolTest( GafferUITest.TestCase ) :
 		script["group"]["in"][0].setInput( script["camera"]["out"] )
 		script["group"]["transform"]["rotate"]["y"].setValue( 90 )
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["group"]["out"] )
 
 		view["camera"]["lookThroughEnabled"].setValue( True )
@@ -166,7 +166,7 @@ class CameraToolTest( GafferUITest.TestCase ) :
 		script["camera"] = GafferScene.Camera()
 		script["camera"]["fieldOfView"].setValue( 15 )
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["camera"]["out"] )
 
 		# Force update, since everything is done lazily in the SceneView
@@ -211,7 +211,7 @@ class CameraToolTest( GafferUITest.TestCase ) :
 		script = Gaffer.ScriptNode()
 		script["camera"] = GafferScene.Camera()
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["camera"]["out"] )
 		view["camera"]["lookThroughCamera"].setValue( "/camera" )
 		view["camera"]["lookThroughEnabled"].setValue( True )
@@ -267,7 +267,7 @@ class CameraToolTest( GafferUITest.TestCase ) :
 		script["transform"]["in"].setInput( script["camera"]["out"] )
 		script["transform"]["filter"].setInput( script["filter"]["out"] )
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["transform"]["out"] )
 
 		view["camera"]["lookThroughEnabled"].setValue( True )
@@ -300,7 +300,7 @@ class CameraToolTest( GafferUITest.TestCase ) :
 		script["editScope"].setup( script["camera"]["out"] )
 		script["editScope"]["in"].setInput( script["camera"]["out"] )
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["editScope"]["out"] )
 
 		view["camera"]["lookThroughEnabled"].setValue( True )
@@ -346,7 +346,7 @@ class CameraToolTest( GafferUITest.TestCase ) :
 		script = Gaffer.ScriptNode()
 		script["camera"] = GafferScene.Camera()
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["camera"]["out"] )
 
 		view["camera"]["lookThroughEnabled"].setValue( True )
@@ -389,7 +389,7 @@ class CameraToolTest( GafferUITest.TestCase ) :
 		script["group"] = GafferScene.Group()
 		script["group"]["in"][0].setInput( script["camera"]["out"] )
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["group"]["out"] )
 		view["camera"]["lookThroughEnabled"].setValue( True )
 		view["camera"]["lookThroughCamera"].setValue( "/group/camera" )

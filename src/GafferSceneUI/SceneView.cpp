@@ -58,6 +58,7 @@
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/NameSwitch.h"
 #include "Gaffer/PlugAlgo.h"
+#include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECoreGL/Camera.h"
@@ -1935,8 +1936,8 @@ GAFFER_NODE_DEFINE_TYPE( SceneView );
 size_t SceneView::g_firstPlugIndex = 0;
 SceneView::ViewDescription<SceneView> SceneView::g_viewDescription( GafferScene::ScenePlug::staticTypeId() );
 
-SceneView::SceneView( const std::string &name )
-	:	View( name, new GafferScene::ScenePlug() ),
+SceneView::SceneView( ScriptNodePtr scriptNode )
+	:	View( defaultName<SceneView>(), scriptNode, new GafferScene::ScenePlug() ),
 		m_sceneGadget( new SceneGadget )
 {
 

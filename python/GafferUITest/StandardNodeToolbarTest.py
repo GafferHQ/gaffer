@@ -54,7 +54,8 @@ class StandardNodeToolbarTest( GafferUITest.TestCase ) :
 		)
 		Gaffer.Metadata.registerValue( script["node"]["op1"], "toolbarLayout:section", "Top" )
 
-		view = GafferUITest.ViewTest.MyView( script["node"]["op1"] )
+		view = GafferUITest.ViewTest.MyView( script )
+		view["in"].setInput( script["node"]["op1"] )
 		view.setContext( script.context() )
 		view["testPlug"] = Gaffer.IntPlug()
 		Gaffer.Metadata.registerValue(

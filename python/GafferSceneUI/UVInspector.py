@@ -49,7 +49,7 @@ class UVInspector( GafferSceneUI.SceneEditor ) :
 
 		GafferSceneUI.SceneEditor.__init__( self, column, scriptNode, **kw )
 
-		self.__uvView = GafferSceneUI.UVView()
+		self.__uvView = GafferSceneUI.UVView( scriptNode )
 		self.__uvView["in"].setInput( self.settings()["in"] )
 		Gaffer.NodeAlgo.applyUserDefaults( self.__uvView )
 		self.__uvView.setContext( self.context() )

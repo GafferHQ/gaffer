@@ -49,6 +49,7 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/Reference.h"
+#include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECoreImage/DisplayDriverServer.h"
@@ -131,8 +132,8 @@ GAFFER_NODE_DEFINE_TYPE( ShaderView );
 /// but that would be a breaking change (albeit a small one).
 ShaderView::ViewDescription<ShaderView> ShaderView::g_viewDescription( GafferScene::Shader::staticTypeId(), "out" );
 
-ShaderView::ShaderView( const std::string &name )
-	:	ImageView( name ), m_framed( false )
+ShaderView::ShaderView( Gaffer::ScriptNodePtr scriptNode )
+	:	ImageView( scriptNode ), m_framed( false )
 {
 	// Create a converter to generate an image
 	// from the input shader.

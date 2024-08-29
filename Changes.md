@@ -59,6 +59,7 @@ API
 - ArrayPlug :
   - It is now legal to construct an ArrayPlug with a minimum size of 0. Previously the minimum size was 1.
   - Added `elementPrototype()` method.
+- View : Added `scriptNode()` method.
 
 Breaking Changes
 ----------------
@@ -80,6 +81,9 @@ Breaking Changes
 - ArrayPlug :
   - Renamed `element` constructor argument to `elementPrototype`.
   - Deprecated the passing of `element = nullptr` to the constructor.
+- View :
+  - Changed constructor arguments for View and all subclasses. A ScriptNode must now be passed.
+  - Changed `ViewCreator` signature.
 
 Build
 -----

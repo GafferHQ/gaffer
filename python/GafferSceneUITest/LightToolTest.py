@@ -69,7 +69,7 @@ class LightToolTest( GafferUITest.TestCase ) :
 		script["group"]["in"][0].setInput( script["light1"]["out"] )
 		script["group"]["in"][1].setInput( script["light2"]["out"] )
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["group"]["out"] )
 
 		tool = GafferSceneUI.LightTool( view )
@@ -105,7 +105,7 @@ class LightToolTest( GafferUITest.TestCase ) :
 		script["group"]["in"][1].setInput( script["spotLight2"]["out"] )
 		script["group"]["in"][2].setInput( script["light1"]["out"] )
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["group"]["out"] )
 
 		tool = GafferSceneUI.LightTool( view )
@@ -131,7 +131,7 @@ class LightToolTest( GafferUITest.TestCase ) :
 		script = Gaffer.ScriptNode()
 		script["light"] = GafferSceneTest.TestLight()
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["light"]["out"] )
 
 		tool = GafferSceneUI.LightTool( view )
@@ -155,7 +155,7 @@ class LightToolTest( GafferUITest.TestCase ) :
 		script["shaderAssignment"] = GafferScene.ShaderAssignment()
 		script["shaderAssignment"]["in"].setInput( script["spotLight"]["out"] )
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["shaderAssignment"]["out"] )
 
 		tool = GafferSceneUI.LightTool( view )

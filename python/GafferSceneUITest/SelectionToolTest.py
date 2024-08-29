@@ -64,7 +64,7 @@ class SelectionToolTest( GafferUITest.TestCase ) :
 		script = Gaffer.ScriptNode()
 		script["cube"] = GafferScene.Cube()
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["cube"]["out"] )
 
 		tool1 = GafferSceneUI.TranslateTool( view )

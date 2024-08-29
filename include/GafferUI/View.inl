@@ -85,21 +85,13 @@ T *View::preprocessedInPlug()
 template<typename T>
 View::ViewDescription<T>::ViewDescription( IECore::TypeId plugType )
 {
-	View::registerView( plugType, &creator );
+	View::registerView( plugType, []( Gaffer::ScriptNodePtr script ) { return new T( script ); } );
 }
 
 template<typename T>
 View::ViewDescription<T>::ViewDescription( const IECore::TypeId nodeType, const std::string &plugPathRegex )
 {
-	View::registerView( nodeType, plugPathRegex, &creator );
+	View::registerView( nodeType, plugPathRegex, []( Gaffer::ScriptNodePtr script ) { return new T( script ); } );
 }
-
-template<typename T>
-ViewPtr View::ViewDescription<T>::creator( Gaffer::PlugPtr input )
-{
-	ViewPtr result = new T();
-	result->inPlug<Gaffer::Plug>()->setInput( input );
-	return result;
-};
 
 } // namespace GafferUI

@@ -61,45 +61,46 @@ class ViewTest( GafferUITest.TestCase ) :
 
 	class MyView( GafferUI.View ) :
 
-		def __init__( self, viewedPlug = None ) :
+		def __init__( self, scriptNode ) :
 
-			GafferUI.View.__init__( self, "MyView", Gaffer.IntPlug( "in" ) )
-
-			self["in"].setInput( viewedPlug )
+			GafferUI.View.__init__( self, "MyView", scriptNode, Gaffer.IntPlug( "in" ) )
 
 	IECore.registerRunTimeTyped( MyView, typeName = "GafferUITest::MyView" )
 
 	def testFactory( self ) :
 
-		node = GafferTest.AddNode()
-		self.assertTrue( GafferUI.View.create( node["sum"] ) is None )
+		script = Gaffer.ScriptNode()
+		script["node"] = GafferTest.AddNode()
+		self.assertTrue( GafferUI.View.create( script["node"]["sum"] ) is None )
 
 		# check that we can make our own view and register it for the node
 
 		GafferUI.View.registerView( GafferTest.AddNode, "sum", self.MyView )
 
-		view = GafferUI.View.create( node["sum"] )
+		view = GafferUI.View.create( script["node"]["sum"] )
 		self.assertTrue( isinstance( view, self.MyView ) )
-		self.assertTrue( view["in"].getInput().isSame( node["sum"] ) )
+		self.assertTrue( view["in"].getInput().isSame( script["node"]["sum"] ) )
+		self.assertTrue( view.scriptNode().isSame( script ) )
 
 		# and check that that registration leaves other nodes alone
 
-		n = Gaffer.Node()
-		n["sum"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+		script["node2"] = Gaffer.Node()
+		script["node2"]["sum"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
 
-		self.assertTrue( GafferUI.View.create( n["sum"] ) is None )
+		self.assertTrue( GafferUI.View.create( script["node2"]["sum"] ) is None )
 
 	def testEditScope( self ) :
 
-		view = self.MyView()
+		script = Gaffer.ScriptNode()
+		script["addNode"] = GafferTest.AddNode()
+		script["editScope"] = Gaffer.EditScope()
+		script["editScope"].setup( script["addNode"]["sum"] )
 
-		addNode = GafferTest.AddNode()
-		editScope = Gaffer.EditScope()
-		editScope.setup( view["in"] )
+		view = self.MyView( script )
 
 		self.assertEqual( view.editScope(), None )
-		view["editScope"].setInput( editScope["out"] )
-		self.assertEqual( view.editScope(), editScope )
+		view["editScope"].setInput( script["editScope"]["out"] )
+		self.assertEqual( view.editScope(), script["editScope"] )
 
 	def testDisplayTransformRegistrations( self ) :
 
@@ -140,6 +141,19 @@ class ViewTest( GafferUITest.TestCase ) :
 		)
 
 		# No need to clean up - `tearDown()` will do that for us.
+
+	def testScriptNode( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["node"] = GafferTest.AddNode()
+
+		view = self.MyView( script )
+		self.assertTrue( view.scriptNode().isSame( script ) )
+		view["in"].setInput( script["node"]["sum"] )
+
+		script2 = Gaffer.ScriptNode()
+		script2["node"] = GafferTest.AddNode()
+		self.assertFalse( view["in"].acceptsInput( script2["node"]["sum"] ) )
 
 if __name__ == "__main__":
 	unittest.main()

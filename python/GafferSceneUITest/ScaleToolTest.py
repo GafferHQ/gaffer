@@ -51,7 +51,7 @@ class ScaleToolTest( GafferUITest.TestCase ) :
 
 		script["plane"] = GafferScene.Plane()
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["plane"]["out"] )
 
 		tool = GafferSceneUI.ScaleTool( view )
@@ -80,7 +80,7 @@ class ScaleToolTest( GafferUITest.TestCase ) :
 		script = Gaffer.ScriptNode()
 		script["plane"] = GafferScene.Plane()
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["plane"]["out"] )
 
 		tool = GafferSceneUI.ScaleTool( view )
@@ -120,7 +120,7 @@ class ScaleToolTest( GafferUITest.TestCase ) :
 		script["editScope"].setup( script["sphere"]["out"] )
 		script["editScope"]["in"].setInput( script["sphere"]["out"] )
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["editScope"]["out"] )
 		view["editScope"].setInput( script["editScope"]["out"] )
 
@@ -165,7 +165,7 @@ class ScaleToolTest( GafferUITest.TestCase ) :
 		script["constraint"]["filter"].setInput( script["sphereFilter"]["out"] )
 		script["constraint"]["target"].setValue( "/cube" )
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["constraint"]["out"] )
 
 		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere" ] ) )
@@ -183,7 +183,7 @@ class ScaleToolTest( GafferUITest.TestCase ) :
 		script["box"]["sphere"] = GafferScene.Sphere()
 		promoted = Gaffer.PlugAlgo.promote( script["box"]["sphere"]["transform"]["scale"]["y"] )
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["box"]["sphere"]["out"] )
 
 		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere" ] ) )
@@ -202,7 +202,7 @@ class ScaleToolTest( GafferUITest.TestCase ) :
 		script["sphere"] = GafferScene.Sphere()
 		script["sphere"]["transform"]["scale"].gang()
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["sphere"]["out"] )
 
 		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere" ] ) )

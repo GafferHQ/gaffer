@@ -60,6 +60,7 @@
 #include "Gaffer/BoxPlug.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/NameSwitch.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "IECoreGL/IECoreGL.h"
 #include "IECoreGL/Shader.h"
@@ -1439,8 +1440,8 @@ GAFFER_NODE_DEFINE_TYPE( ImageView );
 
 GAFFERIMAGEUI_API ImageView::ViewDescription<ImageView> ImageView::g_viewDescription( GafferImage::ImagePlug::staticTypeId() );
 
-ImageView::ImageView( const std::string &name )
-	:	View( name, new GafferImage::ImagePlug() ),
+ImageView::ImageView( Gaffer::ScriptNodePtr scriptNode )
+	:	View( defaultName<ImageView>(), scriptNode, new GafferImage::ImagePlug() ),
 		m_imageGadgets{ new ImageGadget(), new ImageGadget() },
 		m_framed( false )
 {
