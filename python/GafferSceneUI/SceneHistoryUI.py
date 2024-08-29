@@ -209,27 +209,19 @@ def __hierarchyViewKeyPress( hierarchyView, event ) :
 
 def __nodeEditorKeyPress( nodeEditor, event ) :
 
-	layout = nodeEditor.ancestor( GafferUI.CompoundEditor )
-	if layout is None :
+	focusNode = nodeEditor.scriptNode().getFocus()
+	if focusNode is None :
 		return False
 
-	## \todo In Gaffer 0.61, we should get the scene directly from the focus node.
-	scene = None
-	for hierarchyView in layout.editors( GafferSceneUI.HierarchyView ) :
-		if hierarchyView.scene() is not None :
-			scene = hierarchyView.scene()
-			break
-
-	if scene is None :
-		for viewer in layout.editors( GafferUI.Viewer ) :
-			if isinstance( viewer.view(), GafferSceneUI.SceneView ) :
-				scene = viewer.view()["in"]
-				break
+	scene = next(
+		( p for p in GafferScene.ScenePlug.RecursiveOutputRange( focusNode ) if not p.getName().startswith( "__" ) ),
+		None
+	)
 
 	if scene is None :
 		return False
 
-	context = layout.scriptNode().context()
+	context = nodeEditor.scriptNode().context()
 
 	if event == __editSourceKeyPress :
 		selectedPath = __contextSelectedPath( context )
