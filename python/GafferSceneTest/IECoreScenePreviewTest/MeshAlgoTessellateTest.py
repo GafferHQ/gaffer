@@ -74,6 +74,8 @@ class MeshAlgoTessellateTest( GafferTest.TestCase ) :
 			reverseSort[ sortIndices[i] ] = i
 
 		result = IECoreScene.MeshPrimitive( m.verticesPerFace, IECore.IntVectorData( [ reverseSort[i] for i in m.vertexIds ] ), m.interpolation )
+		result.setCorners( IECore.IntVectorData( [ reverseSort[i] for i in m.cornerIds() ] ), m.cornerSharpnesses() )
+		result.setCreases( m.creaseLengths(), IECore.IntVectorData( [ reverseSort[i] for i in m.creaseIds() ] ), m.creaseSharpnesses() )
 
 		for k in m.keys():
 			if m[k].interpolation == IECoreScene.PrimitiveVariable.Interpolation.Vertex:
@@ -97,6 +99,9 @@ class MeshAlgoTessellateTest( GafferTest.TestCase ) :
 		faceVertexReorder = sum( [ vertices[i] for i in faceReorder ], [] )
 
 		result = IECoreScene.MeshPrimitive( IECore.IntVectorData( m.verticesPerFace[i] for i in faceReorder ), IECore.IntVectorData( [ m.vertexIds[i] for i in faceVertexReorder ] ), m.interpolation )
+
+		result.setCorners( m.cornerIds(), m.cornerSharpnesses() )
+		result.setCreases( m.creaseLengths(), m.creaseIds(), m.creaseSharpnesses() )
 
 		for k in m.keys():
 			if m[k].interpolation == IECoreScene.PrimitiveVariable.Interpolation.FaceVarying:
@@ -137,7 +142,7 @@ class MeshAlgoTessellateTest( GafferTest.TestCase ) :
 			raise AssertionError( ( msg + " : " if msg else "" ) + "%s != %s" % ( repr( a ), repr( b ) ) )
 
 	def assertPrimvarsPracticallyEqual( self, a, b, name, tolerance = 0 ):
-		self.assertEqual( a.interpolation, b.interpolation )
+		self.assertEqual( a.interpolation, b.interpolation, "Primvar %s" % name )
 		expandedVarA = a.expandedData()
 		expandedVarB = b.expandedData()
 
@@ -161,6 +166,19 @@ class MeshAlgoTessellateTest( GafferTest.TestCase ) :
 		self.assertEqual( compareA.verticesPerFace, compareB.verticesPerFace )
 		self.assertEqual( compareA.vertexIds, compareB.vertexIds )
 		self.assertEqual( compareA.interpolation, compareB.interpolation )
+		self.assertEqual( compareA.getInterpolateBoundary(), compareB.getInterpolateBoundary() )
+		self.assertEqual( compareA.getFaceVaryingLinearInterpolation(), compareB.getFaceVaryingLinearInterpolation() )
+		self.assertEqual( compareA.getTriangleSubdivisionRule(), compareB.getTriangleSubdivisionRule() )
+
+		# \todo These crease/corner tests are stricter than necessary - two meshes are effectively
+		# equal even if their corners are specified in a different order. But we're only really putting
+		# this function together as needed, and none of my use cases yet have required support for
+		# corners / creases in differing orders.
+		self.assertEqual( compareA.cornerIds(), compareB.cornerIds() )
+		self.assertEqual( compareA.cornerSharpnesses(), compareB.cornerSharpnesses() )
+		self.assertEqual( compareA.creaseLengths(), compareB.creaseLengths() )
+		self.assertEqual( compareA.creaseIds(), compareB.creaseIds() )
+		self.assertEqual( compareA.creaseSharpnesses(), compareB.creaseSharpnesses() )
 
 		self.assertEqual( compareA.keys(), compareB.keys() )
 
