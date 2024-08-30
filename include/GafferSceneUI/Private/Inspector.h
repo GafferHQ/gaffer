@@ -183,6 +183,14 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Si
 		/// > that edits the processor itself.
 		virtual EditFunctionOrFailure editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const;
 
+		using DisableEditFunction = std::function<void ()>;
+		using DisableEditFunctionOrFailure = boost::variant<DisableEditFunction, std::string>;
+		/// Can be implemented to return a function that will disable an edit
+		/// at the specified plug. If this is not possible, should return an
+		/// error explaining why (this is typically due to `readOnly` metadata).
+		/// Called with `history->context` as the current context.
+		virtual DisableEditFunctionOrFailure disableEditFunction( Gaffer::ValuePlug *plug, const GafferScene::SceneAlgo::History *history ) const;
+
 	protected :
 
 		Gaffer::EditScope *targetEditScope() const;
@@ -343,6 +351,16 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 		/// by `acquireEdit()`. This should be displayed to the user.
 		std::string editWarning() const;
 
+		/// Returns `true` if `disableEdit()` will disable the edit
+		/// at `source()`, and `false` otherwise.
+		bool canDisableEdit() const;
+		/// If `canDisableEdit()` returns false, returns the reason why.
+		/// This should be displayed to the user.
+		std::string nonDisableableReason() const;
+		/// Disables the edit at `source()`. Throws if
+		/// `!canDisableEdit()`
+		void disableEdit() const;
+
 	private :
 
 		Result( const IECore::ConstObjectPtr &value, const Gaffer::EditScopePtr &editScope );
@@ -358,6 +376,8 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 
 		EditFunctionOrFailure m_editFunction;
 		std::string m_editWarning;
+
+		DisableEditFunctionOrFailure m_disableEditFunction;
 
 };
 

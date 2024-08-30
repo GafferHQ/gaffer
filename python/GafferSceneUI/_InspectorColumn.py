@@ -176,22 +176,8 @@ def __disablableInspectionTweaks( pathListing ) :
 
 			with inspectionContext :
 				inspection = column.inspector().inspect()
-				if inspection is not None and inspection.editable() :
-					source = inspection.source()
-					editScope = inspection.editScope()
-					if (
-						(
-							(
-								isinstance( source, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) and
-								source["enabled"].getValue()
-							) or
-							isinstance( column.inspector(), GafferSceneUI.Private.SetMembershipInspector )
-						) and
-						( editScope is None or editScope.isAncestorOf( source ) )
-					) :
-						tweaks.append( ( pathString, column.inspector() ) )
-					else :
-						return []
+				if inspection is not None and inspection.canDisableEdit() :
+					tweaks.append( inspection )
 				else :
 					return []
 
@@ -199,20 +185,9 @@ def __disablableInspectionTweaks( pathListing ) :
 
 def __disableEdits( pathListing ) :
 
-	edits = __disablableInspectionTweaks( pathListing )
-	path = pathListing.getPath().copy()
 	with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
-		for pathString, inspector in edits :
-			path.setFromString( pathString )
-			with path.inspectionContext() :
-				inspection = inspector.inspect()
-				if inspection is not None and inspection.editable() :
-					source = inspection.source()
-
-					if isinstance( source, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) :
-						source["enabled"].setValue( False )
-					elif isinstance( inspector, GafferSceneUI.Private.SetMembershipInspector ) :
-						inspector.editSetMembership( inspection, pathString, GafferScene.EditScopeAlgo.SetMembership.Unchanged )
+		for inspection in __disablableInspectionTweaks( pathListing ) :
+			inspection.disableEdit()
 
 def __removableAttributeInspections( pathListing ) :
 

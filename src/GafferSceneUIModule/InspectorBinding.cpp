@@ -72,10 +72,16 @@ IECore::ObjectPtr valueWrapper( const GafferSceneUI::Private::Inspector::Result 
 	return result.value() ? result.value()->copy() : nullptr;
 }
 
-Gaffer::ValuePlugPtr acquireEditWrapper( GafferSceneUI::Private::Inspector::Result &result, bool createIfNecessary = true )
+Gaffer::ValuePlugPtr acquireEditWrapper( GafferSceneUI::Private::Inspector::Result &result, bool createIfNecessary )
 {
 	ScopedGILRelease gilRelease;
 	return result.acquireEdit( createIfNecessary );
+}
+
+void disableEditWrapper( GafferSceneUI::Private::Inspector::Result &result )
+{
+	ScopedGILRelease gilRelease;
+	return result.disableEdit();
 }
 
 bool editSetMembershipWrapper(
@@ -135,6 +141,9 @@ void GafferSceneUIModule::bindInspector()
 			.def( "nonEditableReason", &Inspector::Result::nonEditableReason )
 			.def( "acquireEdit", &acquireEditWrapper, ( arg( "createIfNecessary" ) = true ) )
 			.def( "editWarning", &Inspector::Result::editWarning )
+			.def( "canDisableEdit", &Inspector::Result::canDisableEdit )
+			.def( "nonDisableableReason", &Inspector::Result::nonDisableableReason )
+			.def( "disableEdit", &disableEditWrapper )
 		;
 
 		enum_<Inspector::Result::SourceType>( "SourceType" )

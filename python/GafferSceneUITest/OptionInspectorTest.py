@@ -918,5 +918,74 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		self.assertIsNotNone( edit )
 		self.assertEqual( inspection.acquireEdit( createIfNecessary = False ), edit )
 
+	def testDisableEdit( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["standardOptions"] = GafferScene.StandardOptions()
+		s["standardOptions"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["standardOptions"]["options"]["renderCamera"]["value"].setValue( "/defaultCamera" )
+
+		s["group"] = GafferScene.Group()
+		s["editScope1"] = Gaffer.EditScope()
+		s["editScope2"] = Gaffer.EditScope()
+
+		s["group"]["in"][0].setInput( s["standardOptions"]["out"] )
+
+		s["editScope1"].setup( s["group"]["out"] )
+		s["editScope1"]["in"].setInput( s["group"]["out"] )
+
+		s["editScope2"].setup( s["editScope1"]["out"] )
+		s["editScope2"]["in"].setInput( s["editScope1"]["out"] )
+
+		inspection = self.__inspect( s["editScope2"]["out"], "render:camera", s["editScope2"] )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "Edit is not in the current edit scope. Change scope to None to disable." )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["standardOptions"]["options"], True )
+		inspection = self.__inspect( s["group"]["out"], "render:camera", None )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "standardOptions.options is locked." )
+		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : standardOptions.options is locked.", inspection.disableEdit )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["standardOptions"]["options"], False )
+		inspection = self.__inspect( s["group"]["out"], "render:camera", None )
+		self.assertTrue( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "" )
+		inspection.disableEdit()
+		self.assertFalse( s["standardOptions"]["options"]["renderCamera"]["enabled"].getValue() )
+
+		inspection = self.__inspect( s["editScope2"]["out"], "render:camera", None )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "No editable source found in history." )
+
+		cameraEdit = GafferScene.EditScopeAlgo.acquireOptionEdit(
+			s["editScope1"], "render:camera", createIfNecessary = True
+		)
+		cameraEdit["enabled"].setValue( True )
+		cameraEdit["value"].setValue( "/bar" )
+
+		inspection = self.__inspect( s["editScope1"]["out"], "render:camera", s["editScope2"] )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "The target EditScope (editScope2) is not in the scene history." )
+
+		inspection = self.__inspect( s["editScope2"]["out"], "render:camera", s["editScope2"] )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "Edit is not in the current edit scope. Change scope to editScope1 to disable." )
+		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : Edit is not in the current edit scope. Change scope to editScope1 to disable.", inspection.disableEdit )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["editScope1"], True )
+		inspection = self.__inspect( s["editScope1"]["out"], "render:camera", s["editScope1"] )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "editScope1 is locked." )
+		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : editScope1 is locked.", inspection.disableEdit )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["editScope1"], False )
+		inspection = self.__inspect( s["editScope1"]["out"], "render:camera", s["editScope1"] )
+		self.assertTrue( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "" )
+		inspection.disableEdit()
+		self.assertFalse( cameraEdit["enabled"].getValue() )
+
 if __name__ == "__main__" :
 	unittest.main()
