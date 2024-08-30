@@ -37,8 +37,6 @@
 #include "GafferSceneUI/LightPositionTool.h"
 #include "GafferSceneUI/SceneView.h"
 
-#include "GafferSceneUI/ContextAlgo.h"
-
 #include "GafferUI/Handle.h"
 #include "GafferUI/Pointer.h"
 #include "GafferUI/StandardStyle.h"
