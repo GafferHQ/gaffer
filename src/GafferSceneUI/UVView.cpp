@@ -36,8 +36,8 @@
 
 #include "GafferSceneUI/UVView.h"
 
-#include "GafferSceneUI/ContextAlgo.h"
 #include "GafferSceneUI/SceneGadget.h"
+#include "GafferSceneUI/ScriptNodeAlgo.h"
 
 #include "GafferScene/Isolate.h"
 #include "GafferScene/PathFilter.h"
@@ -613,6 +613,7 @@ UVView::UVView( Gaffer::ScriptNodePtr scriptNode )
 	plugDirtiedSignal().connect( boost::bind( &UVView::plugDirtied, this, ::_1 ) );
 	viewportGadget()->preRenderSignal().connect( boost::bind( &UVView::preRender, this ) );
 	viewportGadget()->visibilityChangedSignal().connect( boost::bind( &UVView::visibilityChanged, this ) );
+	ScriptNodeAlgo::selectedPathsChangedSignal( scriptNode.get() ).connect( boost::bind( &UVView::selectedPathsChanged, this ) );
 }
 
 UVView::~UVView()
@@ -629,17 +630,6 @@ void UVView::setContext( Gaffer::ContextPtr context )
 	for( TextureGadgetIterator it( textureGadgets() ); !it.done(); ++it )
 	{
 		(*it)->imageGadget()->setContext( context );
-	}
-}
-
-void UVView::contextChanged( const IECore::InternedString &name )
-{
-	if( ContextAlgo::affectsSelectedPaths( name ) )
-	{
-		const PathMatcher paths = ContextAlgo::getSelectedPaths( getContext() );
-		StringVectorDataPtr data = new StringVectorData;
-		paths.paths( data->writable() );
-		uvScene()->visiblePathsPlug()->setValue( data );
 	}
 }
 
@@ -805,6 +795,14 @@ void UVView::visibilityChanged()
 	{
 		m_texturesTask->cancelAndWait();
 	}
+}
+
+void UVView::selectedPathsChanged()
+{
+	const PathMatcher paths = ScriptNodeAlgo::getSelectedPaths( scriptNode() );
+	StringVectorDataPtr data = new StringVectorData;
+	paths.paths( data->writable() );
+	uvScene()->visiblePathsPlug()->setValue( data );
 }
 
 void UVView::updateTextureGadgets( const IECore::ConstCompoundObjectPtr &textures )

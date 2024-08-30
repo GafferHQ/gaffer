@@ -37,7 +37,7 @@
 
 #include "GafferSceneUI/SceneView.h"
 
-#include "GafferSceneUI/ContextAlgo.h"
+#include "GafferSceneUI/ScriptNodeAlgo.h"
 
 #include "GafferScene/AttributeQuery.h"
 #include "GafferScene/CustomAttributes.h"
@@ -2053,6 +2053,11 @@ SceneView::SceneView( ScriptNodePtr scriptNode )
 
 	m_sceneGadget->setScene( preprocessedInPlug<ScenePlug>() );
 
+	// Connect to ScriptNodeAlgo for selection and visible set updates.
+
+	ScriptNodeAlgo::selectedPathsChangedSignal( scriptNode.get() ).connect( boost::bind( &SceneView::selectedPathsChanged, this ) );
+	ScriptNodeAlgo::visibleSetChangedSignal( scriptNode.get() ).connect( boost::bind( &SceneView::visibleSetChanged, this ) );
+
 }
 
 SceneView::~SceneView()
@@ -2130,25 +2135,6 @@ std::vector<std::string> SceneView::registeredRenderers()
 	return Renderer::registeredRenderers();
 }
 
-void SceneView::contextChanged( const IECore::InternedString &name )
-{
-	if( ContextAlgo::affectsSelectedPaths( name ) )
-	{
-		m_sceneGadget->setSelection( ContextAlgo::getSelectedPaths( getContext() ) );
-		return;
-	}
-	else if( ContextAlgo::affectsVisibleSet( name ) )
-	{
-		m_sceneGadget->setVisibleSet( ContextAlgo::getVisibleSet( getContext() ) );
-		return;
-	}
-	else if( boost::starts_with( name.value(), "ui:" ) )
-	{
-		// ui context entries shouldn't affect computation.
-		return;
-	}
-}
-
 Imath::Box3f SceneView::framingBound() const
 {
 	PathMatcher omitted;
@@ -2176,6 +2162,16 @@ Imath::Box3f SceneView::framingBound() const
 	}
 
 	return b;
+}
+
+void SceneView::selectedPathsChanged()
+{
+	m_sceneGadget->setSelection( ScriptNodeAlgo::getSelectedPaths( scriptNode() ) );
+}
+
+void SceneView::visibleSetChanged()
+{
+	m_sceneGadget->setVisibleSet( ScriptNodeAlgo::getVisibleSet( scriptNode() ) );
 }
 
 bool SceneView::keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &event )
@@ -2240,13 +2236,9 @@ void SceneView::frame( const PathMatcher &filter, const Imath::V3f &direction )
 
 void SceneView::expandSelection( size_t depth )
 {
-	// Note that we are scoping this context when expandDescendants computes a new value for the expanded paths.
-	// This could result in unnecessary cache misses due to changing the context entry, but it's OK because the
-	// selected paths is a "ui:" prefixed context variable, and Context is hardcoded to ignore variables with
-	// this prefix during hashing
 	Context::Scope scope( getContext() );
-	PathMatcher selection = ContextAlgo::expandDescendants( getContext(), m_sceneGadget->getSelection(), preprocessedInPlug<ScenePlug>(), depth - 1 );
-	ContextAlgo::setSelectedPaths( getContext(), selection );
+	PathMatcher selection = ScriptNodeAlgo::expandDescendantsInVisibleSet( scriptNode(), m_sceneGadget->getSelection(), preprocessedInPlug<ScenePlug>(), depth - 1 );
+	ScriptNodeAlgo::setSelectedPaths( scriptNode(), selection );
 }
 
 void SceneView::collapseSelection()
@@ -2257,11 +2249,11 @@ void SceneView::collapseSelection()
 		return;
 	}
 
-	PathMatcher expanded = ContextAlgo::getExpandedPaths( getContext() );
+	VisibleSet visibleSet = ScriptNodeAlgo::getVisibleSet( scriptNode() );
 
 	for( PathMatcher::Iterator it = selection.begin(), eIt = selection.end(); it != eIt; ++it )
 	{
-		if( !expanded.removePath( *it ) )
+		if( !visibleSet.expansions.removePath( *it ) )
 		{
 			if( it->size() <= 1 )
 			{
@@ -2269,13 +2261,13 @@ void SceneView::collapseSelection()
 			}
 			selection.removePath( *it );
 			ScenePlug::ScenePath parentPath( it->begin(), it->end() - 1 );
-			expanded.removePath( parentPath );
+			visibleSet.expansions.removePath( parentPath );
 			selection.addPath( parentPath );
 		}
 	}
 
-	ContextAlgo::setExpandedPaths( getContext(), expanded );
-	ContextAlgo::setSelectedPaths( getContext(), selection );
+	ScriptNodeAlgo::setVisibleSet( scriptNode(), visibleSet );
+	ScriptNodeAlgo::setSelectedPaths( scriptNode(), selection );
 }
 
 void SceneView::plugSet( Gaffer::Plug *plug )
