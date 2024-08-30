@@ -99,7 +99,6 @@ class GAFFERSCENEUI_API LightTool : public GafferSceneUI::SelectionTool
 		SelectionChangedSignal m_selectionChangedSignal;
 
 		bool m_dragging;
-		Gaffer::ScriptNodePtr m_scriptNode;
 
 		Gaffer::Signals::ScopedConnection m_contextChangedConnection;
 		Gaffer::Signals::ScopedConnection m_preRenderConnection;

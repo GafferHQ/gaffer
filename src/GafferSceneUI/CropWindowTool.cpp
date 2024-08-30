@@ -739,7 +739,7 @@ void CropWindowTool::overlayRectangleChanged( unsigned reason )
 		flipNDCOrigin( b );
 	}
 
-	UndoScope undoScope( m_cropWindowPlug->ancestor<ScriptNode>() );
+	UndoScope undoScope( view()->scriptNode() );
 
 	if( m_cropWindowEnabledPlug && !m_cropWindowEnabledPlug->getValue() )
 	{
@@ -1032,7 +1032,7 @@ bool CropWindowTool::keyPress( const KeyEvent &event )
 			activePlug()->setValue( newState );
 			if( m_cropWindowEnabledPlug )
 			{
-				UndoScope undoScope( m_cropWindowPlug->ancestor<ScriptNode>() );
+				UndoScope undoScope( view()->scriptNode() );
 				m_cropWindowEnabledPlug->setValue( newState );
 			}
 		}

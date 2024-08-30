@@ -2965,7 +2965,6 @@ LightTool::LightTool( SceneView *view, const std::string &name ) :
 	m_handleTransformsDirty( true ),
 	m_priorityPathsDirty( true ),
 	m_dragging( false ),
-	m_scriptNode( nullptr ),
 	m_mergeGroupId( 0 )
 {
 	view->viewportGadget()->addChild( m_handles );
@@ -3323,8 +3322,6 @@ void LightTool::dirtyHandleTransforms()
 RunTimeTypedPtr LightTool::dragBegin( Gadget *gadget )
 {
 	m_dragging = true;
-	m_scriptNode = view()->inPlug()->source()->ancestor<ScriptNode>();
-
 	return nullptr;
 }
 
@@ -3333,7 +3330,7 @@ bool LightTool::dragMove( Gadget *gadget, const DragDropEvent &event )
 	auto handle = runTimeCast<LightToolHandle>( gadget );
 	assert( handle );
 
-	UndoScope undoScope( m_scriptNode.get(), UndoScope::Enabled, undoMergeGroup() );
+	UndoScope undoScope( view()->scriptNode(), UndoScope::Enabled, undoMergeGroup() );
 
 	handle->handleDragMove( event );
 

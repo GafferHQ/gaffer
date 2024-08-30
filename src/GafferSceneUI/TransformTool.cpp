@@ -1253,7 +1253,7 @@ bool TransformTool::keyPress( const GafferUI::KeyEvent &event )
 			return false;
 		}
 
-		UndoScope undoScope( selection().back().editTarget()->ancestor<ScriptNode>() );
+		UndoScope undoScope( view()->scriptNode() );
 		for( const auto &s : selection() )
 		{
 			Context::Scope contextScope( s.context() );

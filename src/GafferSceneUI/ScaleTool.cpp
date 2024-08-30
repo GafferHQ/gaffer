@@ -140,7 +140,7 @@ IECore::RunTimeTypedPtr ScaleTool::dragBegin( GafferUI::Style::Axes axes )
 
 bool ScaleTool::dragMove( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
-	UndoScope undoScope( selection().back().editTarget()->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
+	UndoScope undoScope( view()->scriptNode(), UndoScope::Enabled, undoMergeGroup() );
 	ScaleHandle *scaleHandle = static_cast<ScaleHandle *>( gadget );
 	const V3f &scaling = scaleHandle->scaling( event );
 	for( auto &s : m_drag )

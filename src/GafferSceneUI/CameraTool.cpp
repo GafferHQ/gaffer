@@ -391,7 +391,7 @@ void CameraTool::viewportCameraChanged()
 	// Now apply this offset to the current value on the transform plug.
 
 	Gaffer::Private::ScopedAssignment<bool> editingScope( g_editingTransform, true );
-	UndoScope undoScope( selection.editTarget()->ancestor<ScriptNode>(), UndoScope::Enabled, m_undoGroup );
+	UndoScope undoScope( view()->scriptNode(), UndoScope::Enabled, m_undoGroup );
 	auto edit = selection.acquireTransformEdit();
 
 	M44f plugTransform;
