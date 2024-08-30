@@ -3037,16 +3037,6 @@ LightTool::~LightTool()
 
 }
 
-const PathMatcher LightTool::selection() const
-{
-	return ContextAlgo::getSelectedPaths( view()->getContext() );
-}
-
-LightTool::SelectionChangedSignal &LightTool::selectionChangedSignal()
-{
-	return m_selectionChangedSignal;
-}
-
 ScenePlug *LightTool::scenePlug()
 {
 	return getChild<ScenePlug>( g_firstPlugIndex );
@@ -3075,7 +3065,6 @@ void LightTool::contextChanged( const InternedString &name )
 		m_handleInspectionsDirty = true;
 		m_handleTransformsDirty = true;
 		m_priorityPathsDirty = true;
-		selectionChangedSignal()( *this );
 	}
 }
 
@@ -3102,7 +3091,7 @@ void LightTool::updateHandleInspections()
 
 	m_inspectorsDirtiedConnection.clear();
 
-	const PathMatcher selection = this->selection();
+	const PathMatcher selection = ContextAlgo::getSelectedPaths( view()->getContext() );
 	if( selection.isEmpty() )
 	{
 		for( auto &c : m_handles->children() )
@@ -3176,7 +3165,7 @@ void LightTool::updateHandleTransforms( float rasterScale )
 		return;
 	}
 
-	const PathMatcher selection = this->selection();
+	const PathMatcher selection = ContextAlgo::getSelectedPaths( view()->getContext() );
 	if( selection.isEmpty() )
 	{
 		return;
@@ -3225,10 +3214,6 @@ void LightTool::plugDirtied( const Plug *plug )
 		( plug->ancestor<View>() && plug == view()->editScopePlug() )
 	)
 	{
-		if( !m_dragging )
-		{
-			selectionChangedSignal()( *this );
-		}
 		m_handleInspectionsDirty = true;
 		m_priorityPathsDirty = true;
 	}
@@ -3280,14 +3265,7 @@ void LightTool::preRender()
 		{
 			m_priorityPathsDirty = false;
 			auto sceneGadget = static_cast<SceneGadget *>( view()->viewportGadget()->getPrimaryChild() );
-			if( !selection().isEmpty() )
-			{
-				sceneGadget->setPriorityPaths( ContextAlgo::getSelectedPaths( view()->getContext() ) );
-			}
-			else
-			{
-				sceneGadget->setPriorityPaths( IECore::PathMatcher() );
-			}
+			sceneGadget->setPriorityPaths( ContextAlgo::getSelectedPaths( view()->getContext() ) );
 		}
 	}
 
@@ -3341,8 +3319,6 @@ bool LightTool::dragEnd( Gadget *gadget )
 {
 	m_dragging = false;
 	m_mergeGroupId++;
-	selectionChangedSignal()( *this );
-
 	auto handle = runTimeCast<LightToolHandle>( gadget );
 	handle->handleDragEnd();
 

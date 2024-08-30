@@ -84,6 +84,7 @@ Breaking Changes
 - View :
   - Changed constructor arguments for View and all subclasses. A ScriptNode must now be passed.
   - Changed `ViewCreator` signature.
+- LightTool : Removed `selection()` and `selectionChangedSignal()`.
 
 Build
 -----
