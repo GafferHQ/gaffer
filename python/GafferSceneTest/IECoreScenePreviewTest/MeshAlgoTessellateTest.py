@@ -130,6 +130,16 @@ class MeshAlgoTessellateTest( GafferTest.TestCase ) :
 			self.betterAssertAlmostEqual( a.b, b.b, tolerance, msg )
 			self.betterAssertAlmostEqual( a.a, b.a, tolerance, msg )
 			return
+		elif type( a ) == IECoreScene.PrimitiveVariable:
+			self.assertEqual( a.interpolation, b.interpolation )
+			self.assertEqual( a.indices, b.indices )
+			self.betterAssertAlmostEqual( a.data, b.data, tolerance, msg )
+			return
+		elif type( a ) == list or ( isinstance( a, IECore.Data ) and a.typeName().endswith( "VectorData" ) ):
+			self.assertEqual( len( a ), len( b ) )
+			for i in range( len( a ) ):
+				self.betterAssertAlmostEqual( a[i], b[i], tolerance, msg )
+			return
 
 		if type( a ) == str:
 			match = a == b
