@@ -86,6 +86,7 @@ Breaking Changes
   - Changed `ViewCreator` signature.
 - LightTool : Removed `selection()` and `selectionChangedSignal()`.
 - ArnoldRender, CyclesRender, DelightRender, OpenGLRender : Removed. Use the generic Render node instead.
+- Render : Removed protected constructor for creating renderer-specific derived classes.
 
 Build
 -----

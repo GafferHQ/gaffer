@@ -85,12 +85,6 @@ class GAFFERSCENE_API Render : public GafferDispatch::TaskNode
 
 	protected :
 
-		// Constructor for derived classes which wish to hardcode the renderer type. Perhaps
-		// at some point we won't even have derived classes, but instead will always use the
-		// base class? At the moment the main purpose of the derived classes is to force the
-		// loading of the module which registers the required renderer type.
-		Render( const IECore::InternedString &rendererType, const std::string &name );
-
 		void preTasks( const Gaffer::Context *context, Tasks &tasks ) const override;
 		void postTasks( const Gaffer::Context *context, Tasks &tasks ) const override;
 		IECore::MurmurHash hash( const Gaffer::Context *context ) const override;
