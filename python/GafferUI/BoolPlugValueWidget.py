@@ -115,7 +115,7 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 		value = self.__boolWidget.getState()
 		assert( value != self.__boolWidget.State.Indeterminate ) # Should be set by us, not by user action
 
-		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.scriptNode() ) :
 			for plug in self.getPlugs() :
 
 				if Gaffer.Animation.isAnimated( plug ) :

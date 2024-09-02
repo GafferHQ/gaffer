@@ -96,6 +96,10 @@ class GAFFERUI_API View : public Gaffer::Node
 		template<typename T=Gaffer::Plug>
 		const T *inPlug() const;
 
+		/// Returns the ScriptNode this view was created for.
+		Gaffer::ScriptNode *scriptNode();
+		const Gaffer::ScriptNode *scriptNode() const;
+
 		/// The current EditScope for the view is specified by connecting
 		/// an `EditScope::outPlug()` into this plug.
 		Gaffer::Plug *editScopePlug();
@@ -131,7 +135,7 @@ class GAFFERUI_API View : public Gaffer::Node
 		//@{
 		/// Creates a View for the specified plug.
 		static ViewPtr create( Gaffer::PlugPtr input );
-		using ViewCreator = std::function<ViewPtr ( Gaffer::PlugPtr )>;
+		using ViewCreator = std::function<ViewPtr ( Gaffer::ScriptNodePtr )>;
 		/// Registers a function which will return a View instance for a
 		/// plug of a specific type.
 		static void registerView( IECore::TypeId plugType, ViewCreator creator );
@@ -147,7 +151,7 @@ class GAFFERUI_API View : public Gaffer::Node
 		/// class should construct a plug of a suitable type and pass it
 		/// to the View constructor. For instance, the SceneView will pass
 		/// a ScenePlug so that only scenes may be viewed.
-		View( const std::string &name, Gaffer::PlugPtr input );
+		View( const std::string &name, Gaffer::ScriptNodePtr scriptNode, Gaffer::PlugPtr input );
 
 		/// The View may want to perform preprocessing of the input before
 		/// displaying it, for instance by applying a LUT to an image. This
@@ -185,13 +189,16 @@ class GAFFERUI_API View : public Gaffer::Node
 		{
 			ViewDescription( IECore::TypeId plugType );
 			ViewDescription( IECore::TypeId nodeType, const std::string &plugPathRegex );
-			static ViewPtr creator( Gaffer::PlugPtr input );
 		};
+
+		bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const override;
 
 	private :
 
 		void toolsChildAdded( Gaffer::GraphComponent *child );
 		void toolPlugSet( Gaffer::Plug *plug );
+
+		const Gaffer::ScriptNodePtr m_scriptNode;
 
 		using ToolPlugSetMap = std::unordered_map<Tool *, Gaffer::Signals::ScopedConnection>;
 		ToolPlugSetMap m_toolPlugSetConnections;

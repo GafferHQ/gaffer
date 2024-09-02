@@ -176,7 +176,7 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		if self._editable() :
 			text = self.__textWidget.getText()
-			with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+			with Gaffer.UndoScope( self.scriptNode() ) :
 				for plug in self.getPlugs() :
 					plug.setValue( text )
 

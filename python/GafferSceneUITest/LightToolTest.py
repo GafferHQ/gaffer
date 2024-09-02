@@ -58,35 +58,6 @@ class LightToolTest( GafferUITest.TestCase ) :
 		Gaffer.Metadata.registerValue( "light:testLight", "coneAngleParameter", "coneAngle" )
 		Gaffer.Metadata.registerValue( "light:testLight", "penumbraAngleParameter", "penumbraAngle" )
 
-	def testSelection( self ) :
-
-		script = Gaffer.ScriptNode()
-
-		script["light1"] = GafferSceneTest.TestLight()
-		script["light2"] = GafferSceneTest.TestLight()
-
-		script["group"] = GafferScene.Group()
-		script["group"]["in"][0].setInput( script["light1"]["out"] )
-		script["group"]["in"][1].setInput( script["light2"]["out"] )
-
-		view = GafferSceneUI.SceneView()
-		view["in"].setInput( script["group"]["out"] )
-
-		tool = GafferSceneUI.LightTool( view )
-		tool["active"].setValue( True )
-
-		self.assertTrue( tool.selection().isEmpty() )
-
-		for selection in [ [ "/group/light" ], ["/group/light", "/group/light1" ], [ "/group/light"] ] :
-			with self.subTest( selection, selection = selection ) :
-				GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( selection ) )
-				s = tool.selection()
-				self.assertEqual( len( s.paths() ), len( selection ) )
-
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [] ) )
-		s = tool.selection()
-		self.assertTrue( s.isEmpty() )
-
 	def testSpotLightHandleVisibility( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -105,7 +76,7 @@ class LightToolTest( GafferUITest.TestCase ) :
 		script["group"]["in"][1].setInput( script["spotLight2"]["out"] )
 		script["group"]["in"][2].setInput( script["light1"]["out"] )
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["group"]["out"] )
 
 		tool = GafferSceneUI.LightTool( view )
@@ -126,22 +97,6 @@ class LightToolTest( GafferUITest.TestCase ) :
 		# and not visible with a non-spotlight selection. Currently handles come in as
 		# `GraphComponent` which prevents testing that.
 
-	def testSelectionChangedSignal( self ) :
-
-		script = Gaffer.ScriptNode()
-		script["light"] = GafferSceneTest.TestLight()
-
-		view = GafferSceneUI.SceneView()
-		view["in"].setInput( script["light"]["out"] )
-
-		tool = GafferSceneUI.LightTool( view )
-		tool["active"].setValue( True )
-
-		cs = GafferTest.CapturingSlot( tool.selectionChangedSignal() )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/light" ]  ) )
-		self.assertTrue( len( cs ) )
-		self.assertEqual( cs[0][0], tool )
-
 	def testDeleteNodeCrash( self ) :
 
 		# Make a spotlight and get the LightTool to edit it.
@@ -155,7 +110,7 @@ class LightToolTest( GafferUITest.TestCase ) :
 		script["shaderAssignment"] = GafferScene.ShaderAssignment()
 		script["shaderAssignment"]["in"].setInput( script["spotLight"]["out"] )
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["shaderAssignment"]["out"] )
 
 		tool = GafferSceneUI.LightTool( view )

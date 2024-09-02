@@ -46,6 +46,8 @@
 #include "GafferBindings/NodeBinding.h"
 #include "GafferBindings/PlugBinding.h"
 
+#include "Gaffer/ScriptNode.h"
+
 using namespace std;
 using namespace boost::python;
 using namespace Gaffer;
@@ -61,8 +63,8 @@ class ImageViewWrapper : public NodeWrapper<ImageView>
 
 	public :
 
-		ImageViewWrapper( PyObject *self, const std::string &name )
-			:	NodeWrapper<ImageView>( self, name )
+		ImageViewWrapper( PyObject *self, ScriptNodePtr scriptNode )
+			:	NodeWrapper<ImageView>( self, scriptNode )
 		{
 		}
 
@@ -77,8 +79,8 @@ class ImageViewWrapper : public NodeWrapper<ImageView>
 
 void GafferImageUIModule::bindImageView()
 {
-	scope s = GafferBindings::NodeClass<ImageView, ImageViewWrapper>()
-		.def( init<const std::string &>() )
+	scope s = GafferBindings::NodeClass<ImageView, ImageViewWrapper>( nullptr, no_init )
+		.def( init<ScriptNodePtr>() )
 		.def( "imageGadget", (ImageGadget *(ImageView::*)())&ImageView::imageGadget, return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "_insertConverter", &ImageViewWrapper::insertConverter )
 	;

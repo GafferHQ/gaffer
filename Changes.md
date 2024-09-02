@@ -50,6 +50,7 @@ API
 - PlugValueWidget :
   - A `DeprecationWarning` is now emitted for any subclasses still implementing the legacy `_updateFromPlug()` or `_updateFromPlugs()` methods. Implement `_updateFromValues()`, `_updateFromMetadata()` and `_updateFromEditable()` instead.
   - A `DeprecationWarning` is now emitted by `_plugConnections()`. Use `_blockedUpdateFromValues()` instead.
+  - Added `scriptNode()` convenience method.
 - NodeGadget, ConnectionGadget : Added `updateFromContextTracker()` virtual methods.
 - Path : Added `inspectionContext()` virtual method.
 - PathColumn :
@@ -58,6 +59,7 @@ API
 - ArrayPlug :
   - It is now legal to construct an ArrayPlug with a minimum size of 0. Previously the minimum size was 1.
   - Added `elementPrototype()` method.
+- View : Added `scriptNode()` method.
 
 Breaking Changes
 ----------------
@@ -79,6 +81,10 @@ Breaking Changes
 - ArrayPlug :
   - Renamed `element` constructor argument to `elementPrototype`.
   - Deprecated the passing of `element = nullptr` to the constructor.
+- View :
+  - Changed constructor arguments for View and all subclasses. A ScriptNode must now be passed.
+  - Changed `ViewCreator` signature.
+- LightTool : Removed `selection()` and `selectionChangedSignal()`.
 
 Build
 -----

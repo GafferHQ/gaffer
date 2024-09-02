@@ -56,7 +56,7 @@ class GAFFERSCENEUI_API ShaderView : public GafferImageUI::ImageView
 
 	public :
 
-		explicit ShaderView( const std::string &name = defaultName<ShaderView>() );
+		explicit ShaderView( Gaffer::ScriptNodePtr scriptNode );
 		~ShaderView() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::ShaderView, ShaderViewTypeId, GafferImageUI::ImageView );

@@ -42,6 +42,7 @@
 #include "Gaffer/Metadata.h"
 #include "Gaffer/Plug.h"
 #include "Gaffer/PlugAlgo.h"
+#include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 
 #include "boost/algorithm/string/predicate.hpp"
@@ -84,9 +85,9 @@ GAFFER_NODE_DEFINE_TYPE( View );
 
 size_t View::g_firstPlugIndex = 0;
 
-View::View( const std::string &name, Gaffer::PlugPtr inPlug )
+View::View( const std::string &name, Gaffer::ScriptNodePtr scriptNode, Gaffer::PlugPtr inPlug )
 	:	Node( name ),
-		m_viewportGadget( new ViewportGadget )
+		m_scriptNode( scriptNode ), m_viewportGadget( new ViewportGadget )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	setChild( "in", inPlug );
@@ -104,6 +105,16 @@ View::~View()
 	// avoids exceptions that would otherwise be caused by Tools responding to
 	// `plugDirtiedSignal()` _after_ they've been removed from the View.
 	tools()->clearChildren();
+}
+
+Gaffer::ScriptNode *View::scriptNode()
+{
+	return m_scriptNode.get();
+}
+
+const Gaffer::ScriptNode *View::scriptNode() const
+{
+	return m_scriptNode.get();
 }
 
 Gaffer::Plug *View::editScopePlug()
@@ -206,6 +217,17 @@ View::NamedCreatorMap &View::namedCreators()
 
 ViewPtr View::create( Gaffer::PlugPtr plug )
 {
+	Gaffer::ScriptNodePtr scriptNode;
+	if( auto node = plug->source()->node() )
+	{
+		scriptNode = node->scriptNode();
+	}
+
+	if( !scriptNode )
+	{
+		throw IECore::Exception( fmt::format( "Unable to find ScriptNode for `{}`", plug->fullName() ) );
+	}
+
 	const Gaffer::Node *node = plug->node();
 	if( node )
 	{
@@ -221,7 +243,9 @@ ViewPtr View::create( Gaffer::PlugPtr plug )
 				{
 					if( boost::regex_match( plugPath, nIt->first ) )
 					{
-						return nIt->second( plug );
+						ViewPtr view = nIt->second( scriptNode );
+						view->inPlug()->setInput( plug );
+						return view;
 					}
 				}
 			}
@@ -236,7 +260,9 @@ ViewPtr View::create( Gaffer::PlugPtr plug )
 		CreatorMap::const_iterator it = m.find( t );
 		if( it!=m.end() )
 		{
-			return it->second( plug );
+			ViewPtr view = it->second( scriptNode );
+			view->inPlug()->setInput( plug );
+			return view;
 		}
 		t = IECore::RunTimeTyped::baseTypeId( t );
 	}
@@ -252,6 +278,26 @@ void View::registerView( IECore::TypeId plugType, ViewCreator creator )
 void View::registerView( const IECore::TypeId nodeType, const std::string &plugPath, ViewCreator creator )
 {
 	namedCreators()[nodeType].push_back( RegexAndCreator( boost::regex( plugPath ), creator ) );
+}
+
+bool View::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
+{
+	if( !Node::acceptsInput( plug, inputPlug ) )
+	{
+		return false;
+	}
+
+	if( plug != inPlug() || !inputPlug )
+	{
+		return true;
+	}
+
+	// Refuse to view anything which isn't owned by the ScriptNode we
+	// were constructed for. All our state (context etc) is derived from
+	// that ScriptNode, and it doesn't make sense to use it with nodes
+	// from another script.
+	const ScriptNode *script = inputPlug->source()->ancestor<ScriptNode>();
+	return !script || script == scriptNode();
 }
 
 void View::toolsChildAdded( Gaffer::GraphComponent *child )

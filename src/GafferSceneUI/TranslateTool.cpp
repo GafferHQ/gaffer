@@ -246,7 +246,7 @@ IECore::RunTimeTypedPtr TranslateTool::handleDragBegin()
 
 bool TranslateTool::handleDragMove( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
-	UndoScope undoScope( selection().back().editTarget()->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
+	UndoScope undoScope( view()->scriptNode(), UndoScope::Enabled, undoMergeGroup() );
 	const V3f translation = static_cast<TranslateHandle *>( gadget )->translation( event );
 	for( auto &t : m_drag )
 	{
@@ -301,7 +301,7 @@ bool TranslateTool::buttonPress( const GafferUI::ButtonEvent &event )
 		selectionCentroids.extendBy( s.scene()->bound( s.path() ).center() * worldTransform );
 	}
 
-	UndoScope undoScope( selection().back().editTarget()->ancestor<ScriptNode>() );
+	UndoScope undoScope( view()->scriptNode() );
 
 	const V3f offset = targetPos - selectionCentroids.center();
 	for( const auto &s : selection() )

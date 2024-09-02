@@ -109,12 +109,6 @@ boost::python::list selection( const TransformTool &tool )
 	return result;
 }
 
-IECore::PathMatcher lightToolSelection( const LightTool &tool )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	return tool.selection();
-}
-
 bool selectionEditable( const TransformTool &tool )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -302,15 +296,9 @@ void GafferSceneUIModule::bindTools()
 		.def( init<SceneView *>() )
 	;
 
-	{
-		scope s = GafferBindings::NodeClass<LightTool>( nullptr, no_init )
-			.def( init<SceneView *>() )
-			.def( "selection", &lightToolSelection )
-			.def( "selectionChangedSignal", &LightTool::selectionChangedSignal, return_internal_reference<1>() )
-		;
-
-		GafferBindings::SignalClass<LightTool::SelectionChangedSignal, GafferBindings::DefaultSignalCaller<LightTool::SelectionChangedSignal>, SelectionChangedSlotCaller<LightTool>>( "SelectionChangedSignal" );
-	}
+	GafferBindings::NodeClass<LightTool>( nullptr, no_init )
+		.def( init<SceneView *>() )
+	;
 
 	{
 		scope s = GafferBindings::NodeClass<LightPositionTool>( nullptr, no_init )

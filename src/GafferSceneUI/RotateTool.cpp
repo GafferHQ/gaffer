@@ -247,7 +247,7 @@ IECore::RunTimeTypedPtr RotateTool::handleDragBegin()
 
 bool RotateTool::handleDragMove( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
-	UndoScope undoScope( selection().back().editTarget()->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
+	UndoScope undoScope( view()->scriptNode(), UndoScope::Enabled, undoMergeGroup() );
 	const V3f rotation = static_cast<RotateHandle *>( gadget )->rotation( event );
 	for( auto &r : m_drag )
 	{
@@ -289,7 +289,7 @@ bool RotateTool::buttonPress( const GafferUI::ButtonEvent &event )
 		return true;
 	}
 
-	UndoScope undoScope( selection().back().editTarget()->ancestor<ScriptNode>() );
+	UndoScope undoScope( view()->scriptNode() );
 
 	for( const auto &s : selection() )
 	{

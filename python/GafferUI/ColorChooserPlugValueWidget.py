@@ -81,7 +81,7 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__lastChangedReason = reason
 
 		with Gaffer.UndoScope(
-			next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ),
+			self.scriptNode(),
 			mergeGroup = "ColorPlugValueWidget%d%d" % ( id( self, ), self.__mergeGroupId )
 		) :
 

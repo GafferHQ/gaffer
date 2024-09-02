@@ -84,7 +84,7 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 
 	public :
 
-		explicit ImageView( const std::string &name = defaultName<ImageView>() );
+		explicit ImageView( Gaffer::ScriptNodePtr scriptNode );
 		~ImageView() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImageUI::ImageView, ImageViewTypeId, GafferUI::View );

@@ -59,10 +59,9 @@ Gaffer.Metadata.registerValue( preferences["viewer"], "layout:section", "Viewer"
 
 # register a customised view for viewing scenes
 
-def __sceneView( plug ) :
+def __sceneView( scriptNode ) :
 
-	view = GafferSceneUI.SceneView()
-	view["in"].setInput( plug )
+	view = GafferSceneUI.SceneView( scriptNode )
 	view["grid"]["dimensions"].setInput( preferences["viewer"]["gridDimensions"] )
 
 	return view
