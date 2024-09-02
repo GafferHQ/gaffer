@@ -237,7 +237,7 @@ def __scenePlugs( node ) :
 
 	return result
 
-def __selectAffected( context, nodes, setExpression ) :
+def __selectAffected( scriptNode, context, nodes, setExpression ) :
 
 	result = IECore.PathMatcher()
 
@@ -246,7 +246,7 @@ def __selectAffected( context, nodes, setExpression ) :
 			for scenePlug in __scenePlugs( node ) :
 				result.addPaths( GafferScene.SetAlgo.evaluateSetExpression( setExpression, scenePlug ) )
 
-	GafferSceneUI.ContextAlgo.setSelectedPaths( context, result )
+	GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( scriptNode, result )
 
 ## \todo The `acceptsSetExpression` menu should probably be implemented as part
 # of SetExpressionPlugValueWidget. And it would also make sense to have custom
@@ -321,6 +321,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 		{
 			"command" : functools.partial(
 				__selectAffected,
+				plugValueWidget.scriptNode(),
 				plugValueWidget.context(),
 				nodes,
 				selectionSetExpression

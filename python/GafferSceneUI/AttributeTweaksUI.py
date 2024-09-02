@@ -198,8 +198,8 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 	def __addFromSelectedMenuDefinition( self ) :
 
 		return self.__addFromPathsMenuDefinition(
-			GafferSceneUI.ContextAlgo.getSelectedPaths( self.context() ).paths()
-	)
+			GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( self.scriptNode() ).paths()
+		)
 
 	def __addFromPathsMenuDefinition( self, paths ) :
 

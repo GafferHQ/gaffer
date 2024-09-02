@@ -114,7 +114,7 @@ def __selectAffected( node, context ) :
 		for scene in scenes :
 			GafferScene.SceneAlgo.matchingPaths( filter, scene, pathMatcher )
 
-	GafferSceneUI.ContextAlgo.setSelectedPaths( context, pathMatcher )
+	GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( node.scriptNode(), pathMatcher )
 
 def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 

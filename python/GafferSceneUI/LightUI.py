@@ -296,4 +296,4 @@ def __selectLinked( menu, context, title, linkingQuery ) :
 		)
 
 	if not isinstance( result, Exception ) :
-		GafferSceneUI.ContextAlgo.setSelectedPaths( context, result )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( menu.ancestor( GafferUI.Editor ).scriptNode(), result )
