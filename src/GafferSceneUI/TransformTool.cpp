@@ -37,7 +37,7 @@
 #include "GafferSceneUI/TransformTool.h"
 
 #include "GafferSceneUI/SceneView.h"
-#include "GafferSceneUI/ContextAlgo.h"
+#include "GafferSceneUI/ScriptNodeAlgo.h"
 
 #include "GafferScene/AimConstraint.h"
 #include "GafferScene/EditScopeAlgo.h"
@@ -858,6 +858,8 @@ TransformTool::TransformTool( SceneView *view, const std::string &name )
 	connectToViewContext();
 	view->contextChangedSignal().connect( boost::bind( &TransformTool::connectToViewContext, this ) );
 
+	ScriptNodeAlgo::selectedPathsChangedSignal( view->scriptNode() ).connect( boost::bind( &TransformTool::selectedPathsChanged, this ) );
+
 	Metadata::plugValueChangedSignal().connect( boost::bind( &TransformTool::metadataChanged, this, ::_3 ) );
 	Metadata::nodeValueChangedSignal().connect( boost::bind( &TransformTool::metadataChanged, this, ::_2 ) );
 }
@@ -953,17 +955,20 @@ void TransformTool::connectToViewContext()
 
 void TransformTool::contextChanged( const IECore::InternedString &name )
 {
-	if(
-		ContextAlgo::affectsSelectedPaths( name ) ||
-		ContextAlgo::affectsLastSelectedPath( name ) ||
-		!boost::starts_with( name.string(), "ui:" )
-	)
+	if( !boost::starts_with( name.string(), "ui:" ) )
 	{
-		m_selectionDirty = true;
-		selectionChangedSignal()( *this );
-		m_handlesDirty = true;
-		m_priorityPathsDirty = true;
+		// Context changes may change the scene hierarchy or transform,
+		// which impacts on the selection and handles.
+		selectedPathsChanged();
 	}
+}
+
+void TransformTool::selectedPathsChanged()
+{
+	m_selectionDirty = true;
+	selectionChangedSignal()( *this );
+	m_handlesDirty = true;
+	m_priorityPathsDirty = true;
 }
 
 void TransformTool::plugDirtied( const Gaffer::Plug *plug )
@@ -1097,13 +1102,13 @@ void TransformTool::updateSelection() const
 	// Otherwise we need to populate our selection from
 	// the scene selection.
 
-	const PathMatcher selectedPaths = ContextAlgo::getSelectedPaths( view()->getContext() );
+	const PathMatcher selectedPaths = ScriptNodeAlgo::getSelectedPaths( view()->scriptNode() );
 	if( selectedPaths.isEmpty() )
 	{
 		return;
 	}
 
-	ScenePlug::ScenePath lastSelectedPath = ContextAlgo::getLastSelectedPath( view()->getContext() );
+	ScenePlug::ScenePath lastSelectedPath = ScriptNodeAlgo::getLastSelectedPath( view()->scriptNode() );
 	assert( selectedPaths.match( lastSelectedPath ) & IECore::PathMatcher::ExactMatch );
 
 	for( PathMatcher::Iterator it = selectedPaths.begin(), eIt = selectedPaths.end(); it != eIt; ++it )
@@ -1178,10 +1183,10 @@ void TransformTool::updateSelection() const
 	}
 	else
 	{
-		// We shouldn't get here, because ContextAlgo guarantees that lastSelectedPath is
+		// We shouldn't get here, because ScriptNodeAlgo guarantees that lastSelectedPath is
 		// contained in selectedPaths, and we've preserved lastSelectedPath through our
 		// uniquefication process. But we could conceivably get here if an extension has
-		// edited "ui:scene:selectedPaths" directly instead of using ContextAlgo,
+		// edited "ui:scene:selectedPaths" directly instead of using ScriptNodeAlgo,
 		// in which case we emit a warning instead of crashing.
 		IECore::msg( IECore::Msg::Warning, "TransformTool::updateSelection", "Last selected path not included in selection" );
 	}
@@ -1198,7 +1203,7 @@ void TransformTool::preRender()
 			SceneGadget *sceneGadget = static_cast<SceneGadget *>( view()->viewportGadget()->getPrimaryChild() );
 			if( selection().size() )
 			{
-				sceneGadget->setPriorityPaths( ContextAlgo::getSelectedPaths( view()->getContext() ) );
+				sceneGadget->setPriorityPaths( ScriptNodeAlgo::getSelectedPaths( view()->scriptNode() ) );
 			}
 			else
 			{

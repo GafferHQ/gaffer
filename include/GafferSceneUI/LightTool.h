@@ -72,6 +72,7 @@ class GAFFERSCENEUI_API LightTool : public GafferSceneUI::SelectionTool
 
 		void connectToViewContext();
 		void contextChanged( const IECore::InternedString &name );
+		void selectedPathsChanged();
 		void metadataChanged( IECore::InternedString key );
 		void updateHandleInspections();
 		void updateHandleTransforms( float rasterScale );

@@ -36,8 +36,8 @@
 
 #include "GafferSceneUI/SelectionTool.h"
 
-#include "GafferSceneUI/ContextAlgo.h"
 #include "GafferSceneUI/SceneView.h"
+#include "GafferSceneUI/ScriptNodeAlgo.h"
 
 #include "GafferScene/ScenePlug.h"
 
@@ -349,7 +349,7 @@ bool SelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 		// which case we might be starting a drag to add more or remove some.
 		if( !shiftHeld && !controlHeld )
 		{
-			ContextAlgo::setSelectedPaths( view()->getContext(), IECore::PathMatcher() );
+			ScriptNodeAlgo::setSelectedPaths( view()->scriptNode(), IECore::PathMatcher() );
 		}
 	}
 	else
@@ -361,16 +361,16 @@ bool SelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 			if( controlHeld )
 			{
 				selection.removePath( objectUnderMouse );
-				ContextAlgo::setSelectedPaths( view()->getContext(), selection );
+				ScriptNodeAlgo::setSelectedPaths( view()->scriptNode(), selection );
 			}
 		}
 		else
 		{
 			if( !controlHeld && !shiftHeld )
 			{
-				ContextAlgo::setSelectedPaths( view()->getContext(), IECore::PathMatcher() );
+				ScriptNodeAlgo::setSelectedPaths( view()->scriptNode(), IECore::PathMatcher() );
 			}
-			ContextAlgo::setLastSelectedPath( view()->getContext(), objectUnderMouse );
+			ScriptNodeAlgo::setLastSelectedPath( view()->scriptNode(), objectUnderMouse );
 		}
 	}
 
@@ -492,7 +492,7 @@ bool SelectionTool::dragEnd( const GafferUI::DragDropEvent &event )
 			selection.addPaths( inDragRegionTransformed );
 		}
 
-		ContextAlgo::setSelectedPaths( view()->getContext(), selection );
+		ScriptNodeAlgo::setSelectedPaths( view()->scriptNode(), selection );
 	}
 
 	return true;
