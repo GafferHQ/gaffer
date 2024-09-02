@@ -43,7 +43,7 @@ enum TypeId
 {
 	CyclesAttributesTypeId = 400000,
 	CyclesOptionsTypeId = 400001,
-	CyclesRenderTypeId = 400002,
+	CyclesRenderTypeId = 400002, // Available for reuse
 	InteractiveCyclesRenderTypeId = 400003,
 	CyclesShaderTypeId = 400004,
 	CyclesLightTypeId = 400005,

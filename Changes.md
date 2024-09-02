@@ -85,7 +85,7 @@ Breaking Changes
   - Changed constructor arguments for View and all subclasses. A ScriptNode must now be passed.
   - Changed `ViewCreator` signature.
 - LightTool : Removed `selection()` and `selectionChangedSignal()`.
-- ArnoldRender, DelightRender : Removed. Use the generic Render node instead.
+- ArnoldRender, CyclesRender, DelightRender : Removed. Use the generic Render node instead.
 
 Build
 -----
