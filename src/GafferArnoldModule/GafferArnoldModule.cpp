@@ -47,7 +47,6 @@
 #include "GafferArnold/ArnoldLight.h"
 #include "GafferArnold/ArnoldMeshLight.h"
 #include "GafferArnold/ArnoldOptions.h"
-#include "GafferArnold/ArnoldRender.h"
 #include "GafferArnold/ArnoldShader.h"
 #include "GafferArnold/ArnoldVDB.h"
 #include "GafferArnold/ArnoldLightFilter.h"
@@ -126,7 +125,6 @@ BOOST_PYTHON_MODULE( _GafferArnold )
 		.def( "flushCaches", &flushCaches )
 		.staticmethod( "flushCaches" )
 	;
-	GafferDispatchBindings::TaskNodeClass<ArnoldRender>();
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<ArnoldImager>();

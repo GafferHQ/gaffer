@@ -120,7 +120,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		)
 		s["outputs"]["in"].setInput( s["attributes"]["out"] )
 
-		s["render"] = GafferArnold.ArnoldRender()
+		s["render"] = GafferScene.Render()
+		s["render"]["renderer"].setValue( "Arnold")
 		s["render"]["fileName"].setValue( self.temporaryDirectory() / "test.####.ass" )
 		s["render"]["in"].setInput( s["outputs"]["out"] )
 
@@ -197,8 +198,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		s["options"]["options"]["shutter"]["enabled"].setValue( True )
 		s["options"]["options"]["transformBlur"]["enabled"].setValue( True )
 
-		s["render"] = GafferArnold.ArnoldRender()
+		s["render"] = GafferScene.Render()
 		s["render"]["in"].setInput( s["options"]["out"] )
+		s["render"]["renderer"].setValue( "Arnold" )
 		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
 		s["render"]["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
@@ -353,8 +355,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		s["options"]["options"]["resolutionMultiplier"]["enabled"].setValue( True )
 		s["options"]["options"]["resolutionMultiplier"]["value"].setValue( 2 )
 
-		s["render"] = GafferArnold.ArnoldRender()
+		s["render"] = GafferScene.Render()
 		s["render"]["in"].setInput( s["options"]["out"] )
+		s["render"]["renderer"].setValue( "Arnold" )
 		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
 		s["render"]["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
@@ -393,8 +396,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		s["options"]["options"]["renderCamera"]["enabled"].setValue( True )
 		s["options"]["options"]["renderCamera"]["value"].setValue( "/camera" )
 
-		s["render"] = GafferArnold.ArnoldRender()
+		s["render"] = GafferScene.Render()
 		s["render"]["in"].setInput( s["options"]["out"] )
+		s["render"]["renderer"].setValue( "Arnold" )
 		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
 		s["render"]["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
@@ -481,8 +485,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		s["options"]["options"]["renderCamera"]["enabled"].setValue( True )
 		s["options"]["options"]["renderCamera"]["value"].setValue( "/i/dont/exist" )
 
-		s["render"] = GafferArnold.ArnoldRender()
+		s["render"] = GafferScene.Render()
 		s["render"]["in"].setInput( s["options"]["out"] )
+		s["render"]["renderer"].setValue( "Arnold" )
 		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
 		s["render"]["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
@@ -506,7 +511,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		duplicate["target"].setValue( "/camera" )
 		duplicate["copies"].setValue( 1000 )
 
-		render = GafferArnold.ArnoldRender()
+		render = GafferScene.Render()
+		render["renderer"].setValue( "Arnold" )
 		render["in"].setInput( duplicate["out"] )
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
 		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
@@ -522,8 +528,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		duplicate["target"].setValue( "/sphere" )
 		duplicate["copies"].setValue( 10000 )
 
-		render = GafferArnold.ArnoldRender()
+		render = GafferScene.Render()
 		render["in"].setInput( duplicate["out"] )
+		render["renderer"].setValue( "Arnold" )
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
 		render["fileName"].setValue( self.temporaryDirectory() / "test.####.ass" )
 
@@ -578,8 +585,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		set4["paths"].setValue( IECore.StringVectorData( [ "/group/sphere", "/group/sphere1" ] ) )
 		set4["in"].setInput( set3["out"] )
 
-		render = GafferArnold.ArnoldRender()
+		render = GafferScene.Render()
 		render["in"].setInput( set4["out"] )
+		render["renderer"].setValue( "Arnold" )
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
 		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
@@ -607,8 +615,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 			"""parent["light"]["name"] = context["lightName"]"""
 		)
 
-		script["render"] = GafferArnold.ArnoldRender()
+		script["render"] = GafferScene.Render()
 		script["render"]["in"].setInput( script["light"]["out"] )
+		script["render"]["renderer"].setValue( "Arnold" )
 		script["render"]["mode"].setValue( script["render"].Mode.SceneDescriptionMode )
 		script["render"]["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
@@ -622,8 +631,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		options = GafferArnold.ArnoldOptions()
 
-		render = GafferArnold.ArnoldRender()
+		render = GafferScene.Render()
 		render["in"].setInput( options["out"] )
+		render["renderer"].setValue( "Arnold" )
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
 		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
@@ -652,8 +662,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		sphere = GafferScene.Sphere()
 		sphere["name"].setValue( "sphere${scene:renderer}" )
 
-		render = GafferArnold.ArnoldRender()
+		render = GafferScene.Render()
 		render["in"].setInput( sphere["out"] )
+		render["renderer"].setValue( "Arnold" )
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
 		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
@@ -680,8 +691,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		sphere = GafferScene.Sphere()
 
-		render = GafferArnold.ArnoldRender()
+		render = GafferScene.Render()
 		render["in"].setInput( sphere["out"] )
+		render["renderer"].setValue( "Arnold" )
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
 		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
@@ -710,7 +722,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		group = GafferScene.Group()
 
-		render = GafferArnold.ArnoldRender()
+		render = GafferScene.Render()
+		render["renderer"].setValue( "Arnold" )
 
 		attributes["in"].setInput( sphere1["out"] )
 		arnoldAttributes["in"].setInput( attributes["out"] )
@@ -801,9 +814,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		group["in"][1].setInput( light1["out"] )
 		group["in"][2].setInput( light2["out"] )
 
-		render = GafferArnold.ArnoldRender()
+		render = GafferScene.Render()
 		render["in"].setInput( group["out"] )
-
+		render["renderer"].setValue( "Arnold" )
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
 		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 		render["task"].execute()
@@ -845,8 +858,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		s["group"]["in"][0].setInput( s["attributes"]["out"] )
 		s["group"]["in"][1].setInput( s["assignment"]["out"] )
 
-		s["render"] = GafferArnold.ArnoldRender()
+		s["render"] = GafferScene.Render()
 		s["render"]["in"].setInput( s["group"]["out"] )
+		s["render"]["renderer"].setValue( "Arnold" )
 		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
 		s["render"]["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
@@ -904,8 +918,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		s["group"]["in"][0].setInput( s["instancerFilters"]["out"] )
 		s["group"]["in"][1].setInput( s["instancerLights"]["out"] )
 
-		s["render"] = GafferArnold.ArnoldRender()
+		s["render"] = GafferScene.Render()
 		s["render"]["in"].setInput( s["group"]["out"] )
+		s["render"]["renderer"].setValue( "Arnold" )
 
 		with Gaffer.Context() as c :
 			c["scene:render:sceneTranslationOnly"] = IECore.BoolData( True )
@@ -943,8 +958,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		)
 		s["outputs"]["in"].setInput( s["shaderAssignment"]["out"] )
 
-		s["render"] = GafferArnold.ArnoldRender()
+		s["render"] = GafferScene.Render()
 		s["render"]["in"].setInput( s["outputs"]["out"] )
+		s["render"]["renderer"].setValue( "Arnold" )
 
 		self.assertRaisesRegex( RuntimeError, "Render aborted", s["render"]["task"].execute )
 
@@ -988,8 +1004,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		)
 		outputs["in"].setInput( ball["out"] )
 
-		render = GafferArnold.ArnoldRender()
+		render = GafferScene.Render()
 		render["in"].setInput( outputs["out"] )
+		render["renderer"].setValue( "Arnold" )
 
 		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as handler :
 			render["task"].execute()
@@ -1018,9 +1035,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		group["in"][0].setInput( light["out"] )
 		group["in"][1].setInput( sphereSet["out"] )
 
-		render = GafferArnold.ArnoldRender()
+		render = GafferScene.Render()
 		render["in"].setInput( group["out"] )
-
+		render["renderer"].setValue( "Arnold" )
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
 		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 		render["task"].execute()
@@ -1078,8 +1095,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 			"/group/lightGroup/sphere1 /group/lightGroup/group /group/lightGroup/group1"
 		)
 
-		render = GafferArnold.ArnoldRender()
+		render = GafferScene.Render()
 		render["in"].setInput( attributes["out"] )
+		render["renderer"].setValue( "Arnold" )
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
 		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
@@ -1124,8 +1142,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		options["options"]["performanceMonitor"]["value"].setValue( True )
 		options["options"]["performanceMonitor"]["enabled"].setValue( True )
 
-		render = GafferArnold.ArnoldRender()
+		render = GafferScene.Render()
 		render["in"].setInput( options["out"] )
+		render["renderer"].setValue( "Arnold" )
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
 		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
@@ -1202,8 +1221,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		s["globalAttrs"]["attributes"].addChild( Gaffer.NameValuePlug( "B", Gaffer.StringPlug( "value", defaultValue = 'default2' ) ) )
 		s["globalAttrs"]["attributes"].addChild( Gaffer.NameValuePlug( "geometryType", Gaffer.StringPlug( "value", defaultValue = 'cylinder' ) ) )
 
-		s["render"] = GafferArnold.ArnoldRender()
+		s["render"] = GafferScene.Render()
 		s["render"]["in"].setInput( s["globalAttrs"]["out"] )
+		s["render"]["renderer"].setValue( "Arnold" )
 		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
 		s["render"]["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
@@ -1288,8 +1308,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		s["arnoldOptions"]["options"]["aaSamples"]["enabled"].setValue( True )
 		s["arnoldOptions"]["options"]["aaSamples"]["value"].setValue( 6 )
 
-		s["render"] = GafferArnold.ArnoldRender()
+		s["render"] = GafferScene.Render()
 		s["render"]["in"].setInput( s["arnoldOptions"]["out"] )
+		s["render"]["renderer"].setValue( "Arnold" )
 		s["render"]["task"].execute()
 
 		# Do another render at frame 1, but with deformation blur on.
@@ -1317,8 +1338,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 	def testCoordinateSystem( self ) :
 
 		coordinateSystem = GafferScene.CoordinateSystem()
-		render = GafferArnold.ArnoldRender()
+		render = GafferScene.Render()
 		render["in"].setInput( coordinateSystem["out"] )
+		render["renderer"].setValue( "Arnold" )
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
 		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 		render["task"].execute()
@@ -1349,8 +1371,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		s["instancer"]["filter"].setInput( s["pathFilter"]["out"] )
 		s["instancer"]["prototypes"].setInput( s["sphere"]["out"] )
 
-		s["render"] = GafferArnold.ArnoldRender()
+		s["render"] = GafferScene.Render()
 		s["render"]["in"].setInput( s["instancer"]["out"] )
+		s["render"]["renderer"].setValue( "Arnold" )
 
 		with Gaffer.Context() as c :
 			c["scene:render:sceneTranslationOnly"] = IECore.BoolData( True )
@@ -1377,8 +1400,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		s["instancer"]["encapsulateInstanceGroups"].setValue( True )
 
-		s["render"] = GafferArnold.ArnoldRender()
+		s["render"] = GafferScene.Render()
 		s["render"]["in"].setInput( s["instancer"]["out"] )
+		s["render"]["renderer"].setValue( "Arnold" )
 
 		with Gaffer.Context() as c :
 			c["scene:render:sceneTranslationOnly"] = IECore.BoolData( True )
@@ -1410,7 +1434,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		s["instancer"]["contextVariables"][0]["name"].setValue( "P" )
 		s["instancer"]["contextVariables"][0]["quantize"].setValue( 0 )
 
-		s["render"] = GafferArnold.ArnoldRender()
+		s["render"] = GafferScene.Render()
+		s["render"]["renderer"].setValue( "Arnold")
 		s["render"]["in"].setInput( s["instancer"]["out"] )
 
 		with Gaffer.Context() as c :
@@ -1444,7 +1469,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		s["instancer"]["encapsulateInstanceGroups"].setValue( True )
 
-		s["render"] = GafferArnold.ArnoldRender()
+		s["render"] = GafferScene.Render()
+		s["render"]["renderer"].setValue( "Arnold")
 		s["render"]["in"].setInput( s["instancer"]["out"] )
 
 		with Gaffer.Context() as c :
@@ -1479,7 +1505,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		s["instancer"]["contextVariables"][0]["name"].setValue( "P" )
 		s["instancer"]["contextVariables"][0]["quantize"].setValue( 100000 )
 
-		s["render"] = GafferArnold.ArnoldRender()
+		s["render"] = GafferScene.Render()
+		s["render"]["renderer"].setValue( "Arnold")
 		s["render"]["in"].setInput( s["instancer"]["out"] )
 
 		with Gaffer.Context() as c :
@@ -1511,7 +1538,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		s["instancer"]["encapsulateInstanceGroups"].setValue( True )
 
-		s["render"] = GafferArnold.ArnoldRender()
+		s["render"] = GafferScene.Render()
+		s["render"]["renderer"].setValue( "Arnold")
 		s["render"]["in"].setInput( s["instancer"]["out"] )
 
 		with Gaffer.Context() as c :
@@ -1549,7 +1577,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		s["instancer"]["prototypes"].setInput( s["sphereAttrs"]["out"] )
 		s["instancer"]["attributes"].setValue( "P N uv A B C D E F G H" )
 
-		s["render"] = GafferArnold.ArnoldRender()
+		s["render"] = GafferScene.Render()
+		s["render"]["renderer"].setValue( "Arnold")
 		s["render"]["in"].setInput( s["instancer"]["out"] )
 
 		with Gaffer.Context() as c :
@@ -1589,7 +1618,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		s["instancer"]["encapsulateInstanceGroups"].setValue( True )
 
-		s["render"] = GafferArnold.ArnoldRender()
+		s["render"] = GafferScene.Render()
+		s["render"]["renderer"].setValue( "Arnold")
 		s["render"]["in"].setInput( s["instancer"]["out"] )
 
 		with Gaffer.Context() as c :

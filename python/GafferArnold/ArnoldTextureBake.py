@@ -415,7 +415,8 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 			"""
 		) )
 
-		self["__arnoldRender"] = GafferArnold.ArnoldRender()
+		self["__arnoldRender"] = GafferScene.Render()
+		self["__arnoldRender"]["renderer"].setValue( "Arnold" )
 		self["__arnoldRender"]["preTasks"][0].setInput( self["__outputIndexCommand"]["task"] )
 		self["__arnoldRender"]["dispatcher"]["immediate"].setValue( True )
 		self["__arnoldRender"]["in"].setInput( self["__CameraSetup"]["out"] )
