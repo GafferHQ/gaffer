@@ -90,7 +90,7 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 
 		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["light"]["out"] )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/light" ] ) )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/light" ] ) )
 
 		tool = GafferSceneUI.LightPositionTool( view )
 		tool["active"].setValue( True )
@@ -144,7 +144,7 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 
 		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["group"]["out"] )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group/light"] ) )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/group/light"] ) )
 
 		tool = GafferSceneUI.LightPositionTool( view )
 		tool["active"].setValue( True )
@@ -230,7 +230,7 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 
 		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["light"]["out"] )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/light" ] ) )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/light" ] ) )
 
 		tool = GafferSceneUI.LightPositionTool( view )
 		tool["active"].setValue( True )
@@ -286,7 +286,7 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 
 		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["light"]["out"] )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/light"] ) )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/light"] ) )
 
 		tool = GafferSceneUI.LightPositionTool( view )
 		tool["active"].setValue( True )

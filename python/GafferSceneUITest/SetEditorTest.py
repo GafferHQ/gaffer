@@ -185,20 +185,21 @@ class SetEditorTest( GafferUITest.TestCase ) :
 
 	def testSetPathSelectedMemberCount( self ) :
 
-		plane = GafferScene.Plane()
-		plane["sets"].setValue( "A A:B A:C D E:F:G" )
+		script = Gaffer.ScriptNode()
 
-		planeB = GafferScene.Plane()
-		planeB["name"].setValue( "planeB" )
-		planeB["sets"].setValue( "A A:C D F" )
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["sets"].setValue( "A A:B A:C D E:F:G" )
+
+		script["planeB"] = GafferScene.Plane()
+		script["planeB"]["name"].setValue( "planeB" )
+		script["planeB"]["sets"].setValue( "A A:C D F" )
 
 		p = GafferScene.Parent()
 		p["parent"].setValue( "/" )
-		p["in"].setInput( plane["out"] )
-		p["children"]["child0"].setInput( planeB["out"] )
+		p["in"].setInput( script["plane"]["out"] )
+		p["children"]["child0"].setInput( script["planeB"]["out"] )
 
-		context = Gaffer.Context()
-		path = _GafferSceneUI._SetEditor.SetPath( p["out"], context, "/" )
+		path = _GafferSceneUI._SetEditor.SetPath( p["out"], script.context(), "/" )
 		self.assertTrue( path.isValid() )
 		self.assertFalse( path.isLeaf() )
 
@@ -230,39 +231,40 @@ class SetEditorTest( GafferUITest.TestCase ) :
 		] :
 
 			path.setFromString( parent )
-			GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( selection ) )
+			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( selection ) )
 			self.assertEqual( path.property( "setPath:selectedMemberCount" ), count )
 
 	def testSetPathSelectedMemberCountWithInheritance( self ) :
 
-		plane = GafferScene.Plane()
-		plane["sets"].setValue( "A" )
+		script = Gaffer.ScriptNode()
 
-		sphere = GafferScene.Sphere()
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["sets"].setValue( "A" )
 
-		p = GafferScene.Parent()
-		p["parent"].setValue( "/plane" )
-		p["in"].setInput( plane["out"] )
-		p["children"]["child0"].setInput( sphere["out"] )
+		script["sphere"] = GafferScene.Sphere()
 
-		planeB = GafferScene.Plane()
-		planeB["name"].setValue( "planeB" )
-		planeB["sets"].setValue( "B" )
+		script["p"] = GafferScene.Parent()
+		script["p"]["parent"].setValue( "/plane" )
+		script["p"]["in"].setInput( script["plane"]["out"] )
+		script["p"]["children"]["child0"].setInput( script["sphere"]["out"] )
 
-		g = GafferScene.Group()
-		g["in"]["in0"].setInput( p["out"] )
-		g["in"]["in1"].setInput( planeB["out"] )
+		script["planeB"] = GafferScene.Plane()
+		script["planeB"]["name"].setValue( "planeB" )
+		script["planeB"]["sets"].setValue( "B" )
 
-		f = GafferScene.PathFilter()
-		f["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+		script["g"] = GafferScene.Group()
+		script["g"]["in"]["in0"].setInput( script["p"]["out"] )
+		script["g"]["in"]["in1"].setInput( script["planeB"]["out"] )
 
-		s = GafferScene.Set()
-		s["name"].setValue( "AB" )
-		s["in"].setInput( g["out"] )
-		s["filter"].setInput( f["out"] )
+		script["f"] = GafferScene.PathFilter()
+		script["f"]["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
 
-		context = Gaffer.Context()
-		path = _GafferSceneUI._SetEditor.SetPath( s["out"], context, "/" )
+		script["s"] = GafferScene.Set()
+		script["s"]["name"].setValue( "AB" )
+		script["s"]["in"].setInput( script["g"]["out"] )
+		script["s"]["filter"].setInput( script["f"]["out"] )
+
+		path = _GafferSceneUI._SetEditor.SetPath( script["s"]["out"], script.context(), "/" )
 		self.assertTrue( path.isValid() )
 		self.assertFalse( path.isLeaf() )
 
@@ -287,7 +289,7 @@ class SetEditorTest( GafferUITest.TestCase ) :
 		] :
 
 			path.setFromString( parent )
-			GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( selection ) )
+			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( selection ) )
 			self.assertEqual( path.property( "setPath:selectedMemberCount" ), count )
 
 	def testSetPathCancellation( self ) :
@@ -378,40 +380,41 @@ class SetEditorTest( GafferUITest.TestCase ) :
 
 	def testEmptySetFilterWithSelectedMemberCount( self ) :
 
-		plane = GafferScene.Plane()
-		plane["sets"].setValue( "A A:E B C D" )
+		script = Gaffer.ScriptNode()
 
-		planeB = GafferScene.Plane()
-		planeB["name"].setValue( "planeB" )
-		planeB["sets"].setValue( "A A:C D F" )
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["sets"].setValue( "A A:E B C D" )
+
+		script["planeB"] = GafferScene.Plane()
+		script["planeB"]["name"].setValue( "planeB" )
+		script["planeB"]["sets"].setValue( "A A:C D F" )
 
 		p = GafferScene.Parent()
 		p["parent"].setValue( "/" )
-		p["in"].setInput( plane["out"] )
-		p["children"]["child0"].setInput( planeB["out"] )
+		p["in"].setInput( script["plane"]["out"] )
+		p["children"]["child0"].setInput( script["planeB"]["out"] )
 
-		emptySet = GafferScene.Set()
-		emptySet["name"].setValue( "EMPTY A:EMPTY" )
-		emptySet["in"].setInput( p["out"] )
+		script["emptySet"] = GafferScene.Set()
+		script["emptySet"]["name"].setValue( "EMPTY A:EMPTY" )
+		script["emptySet"]["in"].setInput( p["out"] )
 
-		context = Gaffer.Context()
-		path = _GafferSceneUI._SetEditor.SetPath( emptySet["out"], context, "/" )
+		path = _GafferSceneUI._SetEditor.SetPath( script["emptySet"]["out"], script.context(), "/" )
 
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B", "/C", "/D", "/EMPTY", "/F" ] )
 
 		emptySetFilter = _GafferSceneUI._SetEditor.EmptySetFilter( propertyName = "setPath:selectedMemberCount" )
 		path.setFilter( emptySetFilter )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( [ "/plane" ] ) )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/plane" ] ) )
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B", "/C", "/D" ] )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( [ "/planeB" ] ) )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/planeB" ] ) )
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/D", "/F" ] )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( [ "/plane", "/planeB" ] ) )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/plane", "/planeB" ] ) )
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B", "/C", "/D", "/F" ] )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( [] ) )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [] ) )
 		self.assertEqual( [ str( c ) for c in path.children() ], [] )
 
 		emptySetFilter.setEnabled( False )
@@ -421,11 +424,11 @@ class SetEditorTest( GafferUITest.TestCase ) :
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A/A:C", "/A/A:E", "/A/A:EMPTY" ] )
 
 		emptySetFilter.setEnabled( True )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( [ "/plane" ] ) )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/plane" ] ) )
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A/A:E" ] )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( [ "/planeB" ] ) )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/planeB" ] ) )
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A/A:C" ] )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( [] ) )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [] ) )
 		self.assertEqual( [ str( c ) for c in path.children() ], [] )
