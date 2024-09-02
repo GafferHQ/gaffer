@@ -45,6 +45,7 @@
 #include "GafferScene/BoundQuery.h"
 #include "GafferScene/ExistenceQuery.h"
 #include "GafferScene/FilterQuery.h"
+#include "GafferScene/GlobalsMonitor.h"
 #include "GafferScene/OptionQuery.h"
 #include "GafferScene/PrimitiveVariableQuery.h"
 #include "GafferScene/SetQuery.h"
@@ -52,6 +53,8 @@
 #include "GafferScene/TransformQuery.h"
 
 #include "IECorePython/ScopedGILRelease.h"
+
+#include "fmt/chrono.h"
 
 using namespace boost::python;
 using namespace Gaffer;
@@ -193,6 +196,36 @@ const StringPlugPtr typePlugFromQuery( const GafferScene::PrimitiveVariableQuery
 	return const_cast<StringPlug *>( q.typePlugFromQuery( &p ) );
 }
 
+void checkGlobals( GafferScene::ScenePlug &scene )
+{
+	Gaffer::ValuePlug::clearCache();
+	Gaffer::ValuePlug::clearHashCache();
+
+	GafferScene::GlobalsMonitorPtr monitor = new GafferScene::GlobalsMonitor;
+	{
+		Monitor::Scope scope( monitor );
+		scene.globals();
+	}
+
+	for( const auto &d : monitor->dependencies() )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "GlobalsMonitor",
+			fmt::format(
+				"Dependency costing {} detected between {} and {}",
+				std::chrono::duration<double>( d.timeCost ), d.globalsPlug()->fullName(), d.dependency()->fullName()
+			)
+		);
+
+		for( size_t i = 0; i < d.plugs.size(); i++ )
+		{
+			IECore::msg( IECore::Msg::Warning, "             ", d.plugs[i]->fullName() );
+			IECore::msg( IECore::Msg::Warning, "             ", " | " );
+			IECore::msg( IECore::Msg::Warning, "             ", " V " );
+		}
+	}
+}
+
 } // namespace
 
 void GafferSceneModule::bindQueries()
@@ -236,4 +269,10 @@ void GafferSceneModule::bindQueries()
 	}
 
 	GafferBindings::DependencyNodeClass<GafferScene::SetQuery>();
+
+	IECorePython::RefCountedClass<GafferScene::GlobalsMonitor, Monitor>( "GlobalsMonitor" )
+		.def( init<>() )
+	;
+
+	def( "checkGlobals", &checkGlobals );
 }
