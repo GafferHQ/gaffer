@@ -106,6 +106,11 @@ Build
 1.4.x.x (relative to 1.4.11.0)
 =======
 
+Features
+--------
+
+- Viewer : Added support for Cycles GPU renderering via a new Device option in the Cycles viewer settings.
+
 Improvements
 ------------
 
