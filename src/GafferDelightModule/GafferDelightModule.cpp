@@ -38,7 +38,6 @@
 
 #include "GafferDelight/DelightAttributes.h"
 #include "GafferDelight/DelightOptions.h"
-#include "GafferDelight/DelightRender.h"
 #include "GafferDelight/InteractiveDelightRender.h"
 
 #include "GafferDispatchBindings/TaskNodeBinding.h"
@@ -55,7 +54,6 @@ BOOST_PYTHON_MODULE( _GafferDelight )
 
 	DependencyNodeClass<DelightAttributes>();
 	DependencyNodeClass<DelightOptions>();
-	TaskNodeClass<DelightRender>();
 	NodeClass<InteractiveDelightRender>();
 
 }
