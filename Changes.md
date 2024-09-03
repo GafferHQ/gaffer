@@ -14,10 +14,22 @@ Improvements
   - Improved layout of Box node plug creator visibility toggles.
 - ArnoldShader : Moved the `toon` shader's `*_tonemap_hue_saturation` parameters to appropriate sections in the UI.
 
+Fixes
+-----
+
+- SceneWriter : Fixed handling of ':' characters in set names when writing to USD. These were previously converted to '_' but are now preserved.
+- SceneReader : Fixed loading of animated ModelAPI extents from USD.
+- ResamplePrimitiveVariables : Fixed handling of periodic curves.
+
 API
 ---
 
 - MetadataWidget : Added `NumericMetadataWidget` class.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.9.2.
 
 1.4.11.0 (relative to 1.4.10.0)
 ========
