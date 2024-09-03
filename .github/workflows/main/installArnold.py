@@ -38,6 +38,7 @@ import argparse
 import os
 import pathlib
 import shutil
+import ssl
 import subprocess
 import urllib.request
 import zipfile
@@ -68,6 +69,11 @@ archiveFile = installDir /  archive
 
 print( "Downloading Arnold \"{}\"".format( url ) )
 
+context = ssl.create_default_context()
+context.check_hostname = False
+context.verify_mode = ssl.CERT_NONE
+httpsHandler = urllib.request.HTTPSHandler( context = context )
+
 passwordManager = urllib.request.HTTPPasswordMgrWithDefaultRealm()
 passwordManager.add_password(
     realm = None,
@@ -77,7 +83,7 @@ passwordManager.add_password(
 )
 
 authHandler = urllib.request.HTTPBasicAuthHandler( passwordManager )
-opener = urllib.request.build_opener( authHandler )
+opener = urllib.request.build_opener( httpsHandler, authHandler )
 
 with opener.open( url ) as inFile :
     with open( archiveFile, "wb" ) as outFile :
