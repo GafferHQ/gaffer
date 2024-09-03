@@ -43,11 +43,11 @@ __path = "/GAFFERBOT/C_torso_GRP/R_armUpper_GRP/R_armLower_GRP/R_clawBottom_GRP/
 
 # The Scene Inspector
 __paths = IECore.PathMatcher( [ __path ] )
-GafferSceneUI.ContextAlgo.expand( script.context(), __paths )
-GafferSceneUI.ContextAlgo.expandDescendants( script.context(), __paths, script["SceneReader"]["out"] )
-GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), __paths )
+GafferSceneUI.ScriptNodeAlgo.expandInVisibleSet( script, __paths )
+GafferSceneUI.ScriptNodeAlgo.expandDescendantsInVisibleSet( script, __paths, script["SceneReader"]["out"] )
+GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, __paths )
 scriptWindow = GafferUI.ScriptWindow.acquire( script )
-GafferSceneUI.ContextAlgo.setExpandedPaths( script.context(), IECore.PathMatcher( [ __path ] ) )
+GafferSceneUI.ScriptNodeAlgo.setVisibleSet( script, GafferScene.VisibleSet( expansions = IECore.PathMatcher( [ __path ] ) ) )
 hierarchyView = scriptWindow.getLayout().editors( GafferSceneUI.HierarchyView )[0]
 __delay( 1.0 )
 GafferUI.WidgetAlgo.grab( widget = hierarchyView, imagePath = "images/hierarchyView.png" )

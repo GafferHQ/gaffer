@@ -328,19 +328,19 @@ class screengrab( Gaffer.Application ) :
 
 		# Set up the scene expansion and selection.
 
-		GafferSceneUI.ContextAlgo.clearExpansion( script.context() )
+		GafferSceneUI.ScriptNodeAlgo.setVisibleSet( script, GafferScene.VisibleSet() )
 
 		pathsToExpand = IECore.PathMatcher( list( args["scene"]["fullyExpandedPaths"] ) + list( args["scene"]["expandedPaths"] ) )
-		GafferSceneUI.ContextAlgo.expand( script.context(), pathsToExpand )
+		GafferSceneUI.ScriptNodeAlgo.expandInVisibleSet( script, pathsToExpand )
 
 		pathsToFullyExpand = IECore.PathMatcher( list( args["scene"]["fullyExpandedPaths"] ) )
 
 		with script.context() :
 			for node in script.selection() :
 				for scenePlug in [ p for p in node.children( GafferScene.ScenePlug ) if p.direction() == Gaffer.Plug.Direction.Out ] :
-					GafferSceneUI.ContextAlgo.expandDescendants( script.context(), pathsToFullyExpand, scenePlug )
+					GafferSceneUI.ScriptNodeAlgo.expandDescendantsInVisibleSet( script, pathsToFullyExpand, scenePlug )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), IECore.PathMatcher( args["scene"]["selectedPaths"] ) )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( args["scene"]["selectedPaths"] ) )
 
 		# Add a delay.
 

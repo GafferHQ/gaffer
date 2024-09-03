@@ -29,8 +29,7 @@ script["Camera"]["renderSettingOverrides"]["overscanBottom"]["enabled"].setValue
 
 script.selection().add( script["Camera"] )
 __path = "/camera"
-__paths = IECore.PathMatcher( [ __path ] )
-GafferSceneUI.ContextAlgo.expand( script.context(), __paths )
+GafferSceneUI.ScriptNodeAlgo.expandInVisibleSet( script, IECore.PathMatcher( [ __path ] ) )
 
 from GafferSceneUI.SceneInspector import __TransformSection, __BoundSection, __ObjectSection, __AttributesSection, __SetMembershipSection
 
