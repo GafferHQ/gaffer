@@ -63,6 +63,7 @@ API
   - It is now legal to construct an ArrayPlug with a minimum size of 0. Previously the minimum size was 1.
   - Added `elementPrototype()` method.
 - View : Added `scriptNode()` method.
+- VisibleSet : Added Python constructor with keyword arguments for `expansions`, `inclusions` and `exclusions`.
 
 Breaking Changes
 ----------------
