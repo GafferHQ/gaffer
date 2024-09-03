@@ -111,7 +111,6 @@ from . import ScatterUI
 from . import UnionFilterUI
 from . import PathFilterUI
 from . import GroupUI
-from . import OpenGLRenderUI
 from . import PrimitiveVariableProcessorUI
 from . import DeletePrimitiveVariablesUI
 from . import MeshTypeUI

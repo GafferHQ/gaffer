@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,22 +34,12 @@
 #
 ##########################################################################
 
-import Gaffer
 import GafferScene
 
-##########################################################################
-# Metadata
-##########################################################################
+def __openGLRender( name ) :
 
-Gaffer.Metadata.registerNode(
+	node = GafferScene.Render( name )
+	node["renderer"].setValue( "OpenGL" )
+	return node
 
-	GafferScene.OpenGLRender,
-
-	"description",
-	"""
-	Renders scenes using the same OpenGL engine as is used in the viewer.
-	Use the OpenGLShader and OpenGLAttributes nodes to specify the appearance
-	of objects within the render.
-	""",
-
-)
+GafferScene.OpenGLRender = __openGLRender
