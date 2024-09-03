@@ -594,6 +594,29 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 
 		self.assertFalse( inspector.editSetMembership( inspection, "/plane", GafferScene.EditScopeAlgo.SetMembership.Removed ) )
 
+	def testAcquireEditCreateIfNecessary( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+		s["plane"]["sets"].setValue( "planeSetA planeSetB" )
+
+		s["group"] = GafferScene.Group()
+		s["editScope"] = Gaffer.EditScope()
+
+		s["group"]["in"][0].setInput( s["plane"]["out"] )
+		s["editScope"].setup( s["group"]["out"] )
+		s["editScope"]["in"].setInput( s["group"]["out"] )
+
+		inspection = self.__inspect( s["group"]["out"], "/group/plane", "planeSetA", None )
+		self.assertEqual( inspection.acquireEdit( createIfNecessary = False ), s["plane"]["sets"] )
+
+		inspection = self.__inspect( s["editScope"]["out"], "/group/plane", "planeSetA", s["editScope"] )
+		self.assertIsNone( inspection.acquireEdit( createIfNecessary = False ) )
+
+		edit = inspection.acquireEdit( createIfNecessary = True )
+		self.assertIsNotNone( edit )
+		self.assertEqual( inspection.acquireEdit( createIfNecessary = False ), edit )
 
 if __name__ == "__main__" :
 	unittest.main()

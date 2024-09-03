@@ -170,7 +170,7 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Si
 		/// history class?
 		virtual Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const;
 
-		using EditFunction = std::function<Gaffer::ValuePlugPtr ()>;
+		using EditFunction = std::function<Gaffer::ValuePlugPtr ( bool createIfNecessary )>;
 		using EditFunctionOrFailure = boost::variant<EditFunction, std::string>;
 		/// Should be implemented to return a function that will acquire
 		/// an edit from the EditScope at the specified point in the history.
@@ -338,7 +338,7 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 		/// Returns a plug that can be used to edit the property
 		/// represented by this inspector, creating it if necessary.
 		/// Throws if `!editable()`.
-		Gaffer::ValuePlugPtr acquireEdit() const;
+		Gaffer::ValuePlugPtr acquireEdit( bool createIfNecessary = true ) const;
 		/// Returns a warning associated with the plug returned
 		/// by `acquireEdit()`. This should be displayed to the user.
 		std::string editWarning() const;

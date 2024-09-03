@@ -312,9 +312,9 @@ Inspector::EditFunctionOrFailure SetMembershipInspector::editFunction( Gaffer::E
 			editScope = editScope,
 			setName,
 			context = history->context
-		] () {
+		] ( bool createIfNecessary ) {
 			Context::Scope scope( context.get() );
-			return EditScopeAlgo::acquireSetEdits( editScope, setName );
+			return EditScopeAlgo::acquireSetEdits( editScope, setName, createIfNecessary );
 		};
 	}
 }

@@ -892,5 +892,31 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 			edit = edit
 		)
 
+	def testAcquireEditCreateIfNecessary( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["standardOptions"] = GafferScene.StandardOptions()
+		s["standardOptions"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["standardOptions"]["options"]["renderCamera"]["value"].setValue( "/defaultCamera" )
+
+		s["group"] = GafferScene.Group()
+		s["editScope"] = Gaffer.EditScope()
+
+		s["group"]["in"][0].setInput( s["standardOptions"]["out"] )
+
+		s["editScope"].setup( s["group"]["out"] )
+		s["editScope"]["in"].setInput( s["group"]["out"] )
+
+		inspection = self.__inspect( s["group"]["out"], "render:camera", None )
+		self.assertEqual( inspection.acquireEdit( createIfNecessary = False ), s["standardOptions"]["options"]["renderCamera"] )
+
+		inspection = self.__inspect( s["editScope"]["out"], "render:camera", s["editScope"] )
+		self.assertIsNone( inspection.acquireEdit( createIfNecessary = False ) )
+
+		edit = inspection.acquireEdit( createIfNecessary = True )
+		self.assertIsNotNone( edit )
+		self.assertEqual( inspection.acquireEdit( createIfNecessary = False ), edit )
+
 if __name__ == "__main__" :
 	unittest.main()

@@ -394,12 +394,13 @@ Inspector::EditFunctionOrFailure AttributeInspector::editFunction( Gaffer::EditS
 			editScope = EditScopePtr( editScope ),
 			attributeName,
 			context = history->context
-		] () {
+		] ( bool createIfNecessary ) {
 			Context::Scope scope( context.get() );
 			return EditScopeAlgo::acquireAttributeEdit(
 				editScope.get(),
 				context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ),
-				attributeName
+				attributeName,
+				createIfNecessary
 			);
 		};
 	}

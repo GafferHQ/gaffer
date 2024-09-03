@@ -289,7 +289,7 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 
 						if( nonEditableReason.empty() )
 						{
-							result->m_editFunction = [source = result->m_source] () { return source; };
+							result->m_editFunction = [source = result->m_source] ( bool unused ) { return source; };
 							result->m_editWarning = editWarning;
 						}
 						else
@@ -666,11 +666,11 @@ std::string Inspector::Result::nonEditableReason() const
 	return "";
 }
 
-Gaffer::ValuePlugPtr Inspector::Result::acquireEdit() const
+Gaffer::ValuePlugPtr Inspector::Result::acquireEdit( bool createIfNecessary ) const
 {
 	if( m_editFunction.which() == 0 )
 	{
-		return boost::get<EditFunction>( m_editFunction )();
+		return boost::get<EditFunction>( m_editFunction )( createIfNecessary );
 	}
 
 	throw IECore::Exception( "Not editable : " + boost::get<std::string>( m_editFunction ) );

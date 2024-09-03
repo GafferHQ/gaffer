@@ -821,6 +821,30 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			edit = edit
 		)
 
+	def testAcquireEditCreateIfNecessary( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["light"] = GafferSceneTest.TestLight()
+		s["light"]["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+
+		s["group"] = GafferScene.Group()
+		s["editScope"] = Gaffer.EditScope()
+
+		s["group"]["in"][0].setInput( s["light"]["out"] )
+
+		s["editScope"].setup( s["group"]["out"] )
+		s["editScope"]["in"].setInput( s["group"]["out"] )
+
+		inspection = self.__inspect( s["group"]["out"], "/group/light", "gl:visualiser:scale", None )
+		self.assertEqual( inspection.acquireEdit( createIfNecessary = False ), s["light"]["visualiserAttributes"]["scale"] )
+
+		inspection = self.__inspect( s["editScope"]["out"], "/group/light", "gl:visualiser:scale", s["editScope"] )
+		self.assertIsNone( inspection.acquireEdit( createIfNecessary = False ) )
+
+		edit = inspection.acquireEdit( createIfNecessary = True )
+		self.assertIsNotNone( edit )
+		self.assertEqual( inspection.acquireEdit( createIfNecessary = False ), edit )
 
 if __name__ == "__main__" :
 	unittest.main()

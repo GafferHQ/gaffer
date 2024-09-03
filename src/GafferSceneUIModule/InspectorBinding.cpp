@@ -72,10 +72,10 @@ IECore::ObjectPtr valueWrapper( const GafferSceneUI::Private::Inspector::Result 
 	return result.value() ? result.value()->copy() : nullptr;
 }
 
-Gaffer::ValuePlugPtr acquireEditWrapper( GafferSceneUI::Private::Inspector::Result &result )
+Gaffer::ValuePlugPtr acquireEditWrapper( GafferSceneUI::Private::Inspector::Result &result, bool createIfNecessary = true )
 {
 	ScopedGILRelease gilRelease;
-	return result.acquireEdit();
+	return result.acquireEdit( createIfNecessary );
 }
 
 bool editSetMembershipWrapper(
@@ -133,7 +133,7 @@ void GafferSceneUIModule::bindInspector()
 			.def( "fallbackDescription", &Inspector::Result::fallbackDescription, return_value_policy<copy_const_reference>() )
 			.def( "editable", &Inspector::Result::editable )
 			.def( "nonEditableReason", &Inspector::Result::nonEditableReason )
-			.def( "acquireEdit", &acquireEditWrapper )
+			.def( "acquireEdit", &acquireEditWrapper, ( arg( "createIfNecessary" ) = true ) )
 			.def( "editWarning", &Inspector::Result::editWarning )
 		;
 
