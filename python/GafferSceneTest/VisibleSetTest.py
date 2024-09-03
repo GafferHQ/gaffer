@@ -41,6 +41,32 @@ import GafferScene
 
 class VisibleSetTest( GafferSceneTest.SceneTestCase ) :
 
+	def testConstructor( self ) :
+
+		vs = GafferScene.VisibleSet()
+		self.assertEqual( vs.expansions, IECore.PathMatcher() )
+		self.assertEqual( vs.inclusions, IECore.PathMatcher() )
+		self.assertEqual( vs.exclusions, IECore.PathMatcher() )
+
+		vs = GafferScene.VisibleSet( expansions = IECore.PathMatcher( [ "/e" ] ) )
+		self.assertEqual( vs.expansions, IECore.PathMatcher( [ "/e" ] ) )
+		self.assertEqual( vs.inclusions, IECore.PathMatcher() )
+		self.assertEqual( vs.exclusions, IECore.PathMatcher() )
+
+		vs = GafferScene.VisibleSet( inclusions = IECore.PathMatcher( [ "/i" ] ) )
+		self.assertEqual( vs.expansions, IECore.PathMatcher() )
+		self.assertEqual( vs.inclusions, IECore.PathMatcher( [ "/i" ] ) )
+		self.assertEqual( vs.exclusions, IECore.PathMatcher() )
+
+		vs = GafferScene.VisibleSet(
+			expansions = IECore.PathMatcher( [ "/e" ] ),
+			inclusions = IECore.PathMatcher( [ "/i" ] ),
+			exclusions = IECore.PathMatcher( [ "/x" ] ),
+		)
+		self.assertEqual( vs.expansions, IECore.PathMatcher( [ "/e" ] ) )
+		self.assertEqual( vs.inclusions, IECore.PathMatcher( [ "/i" ] ) )
+		self.assertEqual( vs.exclusions, IECore.PathMatcher( [ "/x" ] ) )
+
 	def testExpansions( self ) :
 
 		e = GafferScene.VisibleSet()
