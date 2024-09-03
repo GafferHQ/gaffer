@@ -198,6 +198,8 @@ const StringPlugPtr typePlugFromQuery( const GafferScene::PrimitiveVariableQuery
 
 void checkGlobals( GafferScene::ScenePlug &scene )
 {
+	IECorePython::ScopedGILRelease gilRelease;
+
 	Gaffer::ValuePlug::clearCache();
 	Gaffer::ValuePlug::clearHashCache();
 
