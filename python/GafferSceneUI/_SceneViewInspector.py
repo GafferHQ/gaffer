@@ -139,13 +139,22 @@ class _SceneViewInspector( GafferUI.Widget ) :
 		# this frame which holds all our contents.
 		self.__frame.setVisible( False )
 
-		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ))
+		GafferSceneUI.ScriptNodeAlgo.selectedPathsChangedSignal( sceneView.scriptNode() ).connect(
+			Gaffer.WeakMethod( self.__selectedPathsChanged )
+		)
+		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
 	def _scheduleUpdate( self, inspectorWidget ) :
 
 		if inspectorWidget not in self.__pendingUpdates :
 			self.__pendingUpdates.add( inspectorWidget )
 			self.__updateLazily()
+
+	def __selectedPathsChanged( self, scriptNode ) :
+
+		for section in self.__sections :
+			self.__pendingUpdates.update( section.inspectorWidgets() )
+		self.__updateLazily()
 
 	def __attachToView( self, sceneView ) :
 
@@ -189,23 +198,28 @@ class _SceneViewInspector( GafferUI.Widget ) :
 		widgets = self.__pendingUpdates
 		self.__pendingUpdates = set()
 
-		# We copy the contexts so they can be safely used in
-		# the background thread without fear of them being
-		# modified on the foreground thread.
-		self.__backgroundUpdate( {
-			w : Gaffer.Context( w.context() )
-			for w in widgets
-		} )
+		# We copy the contexts and the selected paths so they can be safely used
+		# in the background thread without fear of them being modified on the
+		# foreground thread.
+		self.__backgroundUpdate(
+			{
+				w : Gaffer.Context( w.context() )
+				for w in widgets
+			},
+			GafferSceneUI.ScriptNodeAlgo.getSelectedPaths(
+				self.__sceneView.scriptNode()
+			).paths()
+		)
 
 	@GafferUI.BackgroundMethod()
-	def __backgroundUpdate( self, pendingUpdates ) :
+	def __backgroundUpdate( self, pendingUpdates, selectedPaths ) :
 
 		canceller = Gaffer.Context.current().canceller()
 		result = {}
 		for widget, context in pendingUpdates.items() :
 			try :
 				with Gaffer.Context( context, canceller ) :
-					widgetResult = widget._backgroundUpdate()
+					widgetResult = widget._backgroundUpdate( selectedPaths )
 			except Exception as e :
 				widgetResult = sys.exc_info()[1]
 				# Avoid circular references that would prevent this
@@ -261,6 +275,10 @@ class _InspectorSection( GafferUI.ListContainer ) :
 				for inspector in inspectors
 			]
 
+	def inspectorWidgets( self ) :
+
+		return self.__inspectorWidgets
+
 	# Called by _SceneViewInspector to update our label and
 	# visibility after the _InspectorWidgets are updated.
 	def update( self ) :
@@ -312,12 +330,12 @@ class _InspectorWidget( GafferUI.Widget ) :
 
 		return self.__valueWidget
 
-	def _backgroundUpdate( self ) :
+	def _backgroundUpdate( self, selectedPaths ) :
 
 		inspectorResults = []
 
 		with Gaffer.Context( Gaffer.Context.current() ) as context :
-			for path in GafferSceneUI.ContextAlgo.getSelectedPaths( context ).paths() :
+			for path in selectedPaths :
 				context.set( "scene:path", IECore.InternedStringVectorData( path[1:].split( "/" ) ) )
 				inspectorResult = self.__inspector.inspect()
 				if inspectorResult is not None :
@@ -357,10 +375,8 @@ class _InspectorWidget( GafferUI.Widget ) :
 
 	def __contextChanged( self, context, variableName ) :
 
-		if variableName.startswith( "ui:" ) and not GafferSceneUI.ContextAlgo.affectsSelectedPaths( variableName ) :
-			return
-
-		self.__scheduleUpdate()
+		if not variableName.startswith( "ui:" ) :
+			self.__scheduleUpdate()
 
 	def __inspectorDirtied( self, inspector ) :
 
