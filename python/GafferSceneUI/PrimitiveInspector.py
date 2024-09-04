@@ -240,20 +240,19 @@ class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __updateLazily( self ) :
 
-		self.__backgroundUpdate( GafferSceneUI.ScriptNodeAlgo.getLastSelectedPath( self.scriptNode() ) )
+		with self.context() :
+			self.__backgroundUpdate( GafferSceneUI.ScriptNodeAlgo.getLastSelectedPath( self.scriptNode() ) )
 
 	@GafferUI.BackgroundMethod()
 	def __backgroundUpdate( self, targetPath ) :
 
-		with self.context() :
+		if not targetPath :
+			return None
 
-			if not targetPath :
-				return None
+		if not self.settings()["in"].exists( targetPath ) :
+			return None
 
-			if not self.settings()["in"].exists( targetPath ) :
-				return None
-
-			return self.settings()["in"].object( targetPath )
+		return self.settings()["in"].object( targetPath )
 
 	@__backgroundUpdate.plug
 	def __backgroundUpdatePlug( self ) :

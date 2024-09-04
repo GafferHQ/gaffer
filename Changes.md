@@ -41,6 +41,9 @@ Fixes
 - CreateViews : Fixed redundant serialisation of internal connections.
 - LightEditor, RenderPassEditor : Removed ambiguous `The selected cells cannot be edited in the current Edit Scope` message when attempting to edit non-editable columns, such as the `Name` column.
 - SetEditor : Fixed right-click to ensure the item under the cursor is selected before the menu is shown.
+- PrimitiveInspector :
+  - Fixed bug which prevented cancellation of long-running computes, making the UI unresponsive until they completed.
+  - Fixed thread-safety bug.
 
 API
 ---
