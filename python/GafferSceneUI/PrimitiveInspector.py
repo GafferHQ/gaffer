@@ -211,6 +211,10 @@ class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 
 		GafferSceneUI.SceneEditor.__init__( self, column, scriptNode, **kw )
 
+		GafferSceneUI.ScriptNodeAlgo.selectedPathsChangedSignal( scriptNode ).connect(
+			Gaffer.WeakMethod( self.__selectedPathsChanged )
+		)
+
 		self._updateFromSet()
 
 	def __repr__( self ) :
@@ -220,7 +224,7 @@ class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 	def _updateFromContext( self, modifiedItems ) :
 
 		for item in modifiedItems :
-			if not item.startswith( "ui:" ) or GafferSceneUI.ContextAlgo.affectsSelectedPaths( item ) :
+			if not item.startswith( "ui:" ) :
 				self.__updateLazily()
 				break
 
@@ -229,16 +233,19 @@ class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 		if plug.isSame( self.settings()["in"]["object"] ) or plug.isSame( self.settings()["in"]["exists"] ) :
 			self.__updateLazily()
 
+	def __selectedPathsChanged( self, scriptNode ) :
+
+		self.__updateLazily()
+
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __updateLazily( self ) :
-		self.__backgroundUpdate()
+
+		self.__backgroundUpdate( GafferSceneUI.ScriptNodeAlgo.getLastSelectedPath( self.scriptNode() ) )
 
 	@GafferUI.BackgroundMethod()
-	def __backgroundUpdate( self ) :
+	def __backgroundUpdate( self, targetPath ) :
 
 		with self.context() :
-
-			targetPath = GafferSceneUI.ContextAlgo.getLastSelectedPath( self.context() )
 
 			if not targetPath :
 				return None
@@ -273,7 +280,7 @@ class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 			self.__locationLabel.setText( "" )
 			self.__locationFrame._qtWidget().setProperty( "gafferDiff", "Other" )
 		else:
-			targetPath = GafferSceneUI.ContextAlgo.getLastSelectedPath( self.context() )
+			targetPath = GafferSceneUI.ScriptNodeAlgo.getLastSelectedPath( self.scriptNode() )
 			if targetPath :
 				self.__locationLabel.setText( targetPath )
 				self.__locationFrame._qtWidget().setProperty( "gafferDiff", "AB" )
@@ -291,7 +298,7 @@ class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 		self.__busyWidget.setBusy( False )
 
 		if self.settings()["in"].getInput() is not None :
-			targetPath = GafferSceneUI.ContextAlgo.getLastSelectedPath( self.context() )
+			targetPath = GafferSceneUI.ScriptNodeAlgo.getLastSelectedPath( self.scriptNode() )
 			if targetPath:
 				if backgroundResult is not None :
 					self.__locationLabel.setText( targetPath )
