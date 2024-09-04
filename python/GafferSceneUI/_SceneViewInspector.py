@@ -34,20 +34,17 @@
 #
 ##########################################################################
 
-import functools
 import sys
 import traceback
 
 import imath
 
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict
 
 import IECore
-import IECoreScene
 
 import Gaffer
 import GafferUI
-import GafferScene
 import GafferSceneUI
 
 from Qt import QtWidgets
@@ -289,7 +286,6 @@ class _InspectorWidget( GafferUI.Widget ) :
 
 		self.__inspector = inspector
 		self.__context = context
-		self.__locations = []
 
 		with column :
 
