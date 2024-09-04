@@ -67,9 +67,9 @@ class GAFFERSCENEUI_API ParameterInspector : public AttributeInspector
 	private :
 
 		IECore::ConstObjectPtr value( const GafferScene::SceneAlgo::History *history ) const override;
+		IECore::ConstObjectPtr fallbackValue( const GafferScene::SceneAlgo::History *history, std::string &description ) const override;
 		Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const override;
 		EditFunctionOrFailure editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const override;
-		IECore::ConstObjectPtr fallbackValue( const GafferScene::SceneAlgo::History *history, std::string &description ) const override;
 
 		const IECoreScene::ShaderNetwork::Parameter m_parameter;
 

@@ -75,13 +75,13 @@ class GAFFERSCENEUI_API SetMembershipInspector : public Inspector
 
 		GafferScene::SceneAlgo::History::ConstPtr history() const override;
 		IECore::ConstObjectPtr value( const GafferScene::SceneAlgo::History *history) const override;
+		IECore::ConstObjectPtr fallbackValue( const GafferScene::SceneAlgo::History *history, std::string &description ) const override;
 		/// For the given `history`, returns either the "sets" `StringPlug` of an `ObjectSource`
 		/// node, the "name" `StringPlug` of a `Set` node, the `Spreadsheet::RowPlug` for the
 		/// appropriate row of a set membership processor spreadsheet or `nullptr` if none of
 		/// those are found.
 		Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const override;
 		EditFunctionOrFailure editFunction( Gaffer::EditScope *scope, const GafferScene::SceneAlgo::History *history ) const override;
-		IECore::ConstObjectPtr fallbackValue( const GafferScene::SceneAlgo::History *history, std::string &description ) const override;
 
 	private :
 
