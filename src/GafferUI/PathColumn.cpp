@@ -115,6 +115,16 @@ PathColumn::ContextMenuSignal &PathColumn::contextMenuSignal()
 	return m_contextMenuSignal;
 }
 
+PathColumn::KeySignal &PathColumn::keyPressSignal()
+{
+	return m_keyPressSignal;
+}
+
+PathColumn::KeySignal &PathColumn::keyReleaseSignal()
+{
+	return m_keyReleaseSignal;
+}
+
 PathColumn::PathColumnSignal &PathColumn::instanceCreatedSignal()
 {
 	static PathColumnSignal g_instanceCreatedSignal;

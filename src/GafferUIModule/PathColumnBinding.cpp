@@ -443,6 +443,31 @@ struct ContextMenuSignalSlotCaller
 	}
 };
 
+struct KeySignalCaller
+{
+	static bool call( PathColumn::KeySignal &s, PathColumn &column, object widget, const KeyEvent &event )
+	{
+		PathListingWidgetAccessor accessor( widget );
+		IECorePython::ScopedGILRelease gilRelease;
+		return s( column, accessor, event );
+	}
+};
+
+struct KeySignalSlotCaller
+{
+	bool operator()( boost::python::object slot, PathColumn &column, PathListingWidget &widget, const KeyEvent &event )
+	{
+		try
+		{
+			return slot( PathColumnPtr( &column ), static_cast<PathListingWidgetAccessor&>( widget ).widget(), event );
+		}
+		catch( const boost::python::error_already_set & )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
+	}
+};
+
 template<typename T>
 const char *pathColumnProperty( const T &column )
 {
@@ -498,6 +523,7 @@ void GafferUIModule::bindPathColumn()
 		SignalClass<PathColumn::PathColumnSignal, DefaultSignalCaller<PathColumn::PathColumnSignal>, ChangedSignalSlotCaller>( "PathColumnSignal" );
 		SignalClass<PathColumn::ButtonSignal, ButtonSignalCaller, ButtonSignalSlotCaller>( "ButtonSignal" );
 		SignalClass<PathColumn::ContextMenuSignal, ContextMenuSignalCaller, ContextMenuSignalSlotCaller>( "ContextMenuSignal" );
+		SignalClass<PathColumn::KeySignal, KeySignalCaller, KeySignalSlotCaller>( "KeySignal" );
 	}
 
 	pathColumnClass.def( init<PathColumn::SizeMode>( arg( "sizeMode" ) = PathColumn::SizeMode::Default ) )
@@ -508,6 +534,8 @@ void GafferUIModule::bindPathColumn()
 		.def( "buttonReleaseSignal", &PathColumn::buttonReleaseSignal, return_internal_reference<1>() )
 		.def( "buttonDoubleClickSignal", &PathColumn::buttonDoubleClickSignal, return_internal_reference<1>() )
 		.def( "contextMenuSignal", &PathColumn::contextMenuSignal, return_internal_reference<1>() )
+		.def( "keyPressSignal", &PathColumn::keyPressSignal, return_internal_reference<1>() )
+		.def( "keyReleaseSignal", &PathColumn::keyReleaseSignal, return_internal_reference<1>() )
 		.def( "instanceCreatedSignal", &PathColumn::instanceCreatedSignal, return_value_policy<reference_existing_object>() )
 		.staticmethod( "instanceCreatedSignal" )
 		.def( "getSizeMode", (PathColumn::SizeMode (PathColumn::*)() const )&PathColumn::getSizeMode )

@@ -39,6 +39,7 @@
 #include "GafferUI/ButtonEvent.h"
 #include "GafferUI/EventSignalCombiner.h"
 #include "GafferUI/Export.h"
+#include "GafferUI/KeyEvent.h"
 
 #include "Gaffer/Path.h"
 
@@ -167,6 +168,10 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 		/// To retain `widget` for use in MenuItem commands, use `PathListingWidgetPtr( &widget )`.
 		ContextMenuSignal &contextMenuSignal();
 
+		using KeySignal = Gaffer::Signals::Signal<bool ( PathColumn &column, PathListingWidget &widget, const KeyEvent &key ), EventSignalCombiner<bool>>;
+		KeySignal &keyPressSignal();
+		KeySignal &keyReleaseSignal();
+
 		/// Creation
 		/// ========
 
@@ -183,6 +188,8 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 		ButtonSignal m_buttonReleaseSignal;
 		ButtonSignal m_buttonDoubleClickSignal;
 		ContextMenuSignal m_contextMenuSignal;
+		KeySignal m_keyPressSignal;
+		KeySignal m_keyReleaseSignal;
 
 		SizeMode m_sizeMode;
 

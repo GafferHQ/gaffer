@@ -115,9 +115,7 @@ PathColumn::CellData InspectorColumn::cellData( const Gaffer::Path &path, const 
 		toolTip = "Source : " + source->relativeName( source->ancestor<ScriptNode>() );
 	}
 
-	/// \todo Adding these "Double-click" prompts really only makes sense
-	/// once the column itself handles editing. Should we have the ability
-	/// to create read-only columns?
+	/// \todo Should we have the ability to create read-only columns?
 	if( inspectorResult->editable() )
 	{
 		toolTip += !toolTip.empty() ? "\n\n" : "";

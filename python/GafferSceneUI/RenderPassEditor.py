@@ -35,7 +35,6 @@
 ##########################################################################
 
 import collections
-import functools
 import imath
 import traceback
 
@@ -47,9 +46,6 @@ import GafferScene
 import GafferSceneUI
 
 from . import _GafferSceneUI
-
-from GafferUI.PlugValueWidget import sole
-from GafferSceneUI._HistoryWindow import _HistoryWindow
 
 from Qt import QtWidgets
 
@@ -134,7 +130,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 			self.__pathListing.buttonDoubleClickSignal().connectFront( Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
 			self.__pathListing.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
-			self.__pathListing.buttonPressSignal().connectFront( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
+			self.__pathListing.columnContextMenuSignal().connect( Gaffer.WeakMethod( self.__columnContextMenuSignal ), scoped = False )
 			self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ), scoped = False )
 			self.__pathListing.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
 
@@ -306,10 +302,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			column = pathListing.columnAt( event.line.p0 )
 			if column == self.__renderPassActiveColumn :
 				self.__setActiveRenderPass( pathListing )
-			else :
-				self.__editSelectedCells( pathListing )
-
-			return True
+				return True
 
 		return False
 
@@ -321,13 +314,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 				selection = pathListing.getSelection()
 				if len( selection[1].paths() ) :
 					self.__setActiveRenderPass( pathListing )
-				else :
-					self.__editSelectedCells( pathListing )
-				return True
-
-			if event.key == "D" and len( self.__disablableInspectionTweaks( pathListing ) ) > 0 :
-				self.__disableEdits( pathListing )
-				return True
+					return True
 
 	def __selectedRenderPasses( self, columns = [ 0 ] ) :
 
@@ -385,234 +372,13 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		renderPassPlug["value"].setValue( selectedPassNames[0] if selectedPassNames[0] != currentRenderPass else "" )
 
-	## \todo Replace this and `LightEditor.__editSelectedCells()` with common editing
-	# functionality to be provided by InspectorColumn in the future.
-	def __editSelectedCells( self, pathListing, quickBoolean = True ) :
-
-		# A dictionary of the form :
-		# { inspector : { path1 : inspection, path2 : inspection, ... }, ... }
-		inspectors = {}
-		inspections = []
-
-		path = pathListing.getPath().copy()
-		for selection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
-			if not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
-				continue
-			for pathString in selection.paths() :
-				path.setFromString( pathString )
-				inspectionContext = path.inspectionContext()
-				if inspectionContext is None :
-					continue
-
-				with inspectionContext :
-					inspection = column.inspector().inspect()
-
-					if inspection is not None :
-						inspectors.setdefault( column.inspector(), {} )[pathString] = inspection
-						inspections.append( inspection )
-
-		if len( inspectors ) == 0 :
-			with GafferUI.PopupWindow() as self.__popup :
-				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-					GafferUI.Image( "warningSmall.png" )
-					GafferUI.Label( "<h4>The selected cells cannot be edited in the current Edit Scope</h4>" )
-
-			self.__popup.popup( parent = self )
-
-			return
-
-		nonEditable = [ i for i in inspections if not i.editable() ]
-
-		if len( nonEditable ) == 0 :
-			with Gaffer.Context( self.context() ) as context :
-				if not quickBoolean or not self.__toggleBoolean( inspectors, inspections ) :
-					edits = [ i.acquireEdit() for i in inspections ]
-					warnings = "\n".join( [ i.editWarning() for i in inspections if i.editWarning() != "" ] )
-					# The plugs are either not boolean, boolean with mixed values,
-					# or attributes that don't exist and are not boolean. Show the popup.
-					self.__popup = GafferUI.PlugPopup( edits, warning = warnings )
-
-					if isinstance( self.__popup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
-						self.__popup.plugValueWidget().setNameVisible( False )
-
-					## \todo : Adjust popup width based on the inspector column width(s) to improve
-					# editing of long paths, similar to how we handle this in the Spreadsheet.
-					self.__popup.popup( parent = self )
-
-		else :
-
-			with GafferUI.PopupWindow() as self.__popup :
-				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-					GafferUI.Image( "warningSmall.png" )
-					GafferUI.Label( "<h4>{}</h4>".format( nonEditable[0].nonEditableReason() ) )
-
-			self.__popup.popup( parent = self )
-
-	def __toggleBoolean( self, inspectors, inspections ) :
-
-		plugs = [ i.acquireEdit() for i in inspections ]
-		# Make sure all the plugs either contain, or are themselves a BoolPlug
-		if not all (
-			(
-				isinstance( plug, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) and
-				isinstance( plug["value"], Gaffer.BoolPlug )
-			) or (
-				isinstance( plug, ( Gaffer.BoolPlug ) )
-			)
-			for plug, inspector in zip( plugs, inspectors )
-		) :
-			return False
-
-		currentValues = []
-
-		# Use a single new value for all plugs.
-		# First we need to find out what the new value would be for each plug in isolation.
-		for inspector, pathInspections in inspectors.items() :
-			for path, inspection in pathInspections.items() :
-				currentValue = inspection.value().value if inspection.value() is not None else None
-				currentValues.append( currentValue )
-
-		# Now set the value for all plugs, defaulting to `True` if they are not
-		# currently all the same.
-		newValue = not sole( currentValues )
-
-		with Gaffer.UndoScope( self.scriptNode() ) :
-			for inspector, pathInspections in inspectors.items() :
-				for path, inspection in pathInspections.items() :
-					plug = inspection.acquireEdit()
-					if isinstance( plug, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) :
-						plug["value"].setValue( newValue )
-						plug["enabled"].setValue( True )
-						if isinstance( plug, Gaffer.TweakPlug ) :
-							plug["mode"].setValue( Gaffer.TweakPlug.Mode.Create )
-					else :
-						plug.setValue( newValue )
-
-		return True
-
-	def __disablableInspectionTweaks( self, pathListing ) :
-
-		tweaks = []
-
-		path = pathListing.getPath().copy()
-		for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
-			if not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
-				continue
-			for pathString in columnSelection.paths() :
-				path.setFromString( pathString )
-				inspectionContext = path.inspectionContext()
-				if inspectionContext is None :
-					continue
-
-				with inspectionContext :
-					inspection = column.inspector().inspect()
-					if inspection is not None and inspection.editable() :
-						source = inspection.source()
-						editScope = self.settings()["editScope"].getInput()
-						if (
-							(
-								isinstance( source, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) and
-								source["enabled"].getValue()
-							) and
-							( editScope is None or editScope.node().isAncestorOf( source ) )
-						) :
-							tweaks.append( ( pathString, column.inspector() ) )
-						else :
-							return []
-					else :
-						return []
-
-		return tweaks
-
-	def __disableEdits( self, pathListing ) :
-
-		edits = self.__disablableInspectionTweaks( pathListing )
-
-		path = pathListing.getPath().copy()
-		with Gaffer.UndoScope( self.scriptNode() ) :
-			for pathString, inspector in edits :
-				path.setFromString( pathString )
-				with path.inspectionContext() :
-					inspection = inspector.inspect()
-					if inspection is not None and inspection.editable() :
-						source = inspection.source()
-
-						if isinstance( source, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) :
-							source["enabled"].setValue( False )
-
-	def __selectedSetExpressions( self, pathListing ) :
-
-		# A dictionary of the form :
-		# { path1 : set( setExpression1, setExpression2 ), path2 : set( setExpression1 ), ... }
-		result = {}
-
-		renderPassPath = pathListing.getPath().copy()
-		for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
-			if (
-				not columnSelection.isEmpty() and (
-					not isinstance( column, GafferSceneUI.Private.InspectorColumn ) or
-					not (
-						Gaffer.Metadata.value( "option:" + column.inspector().name(), "ui:scene:acceptsSetName" ) or
-						Gaffer.Metadata.value( "option:" + column.inspector().name(), "ui:scene:acceptsSetNames" ) or
-						Gaffer.Metadata.value( "option:" + column.inspector().name(), "ui:scene:acceptsSetExpression" )
-					)
-				)
-			) :
-				# We only return set expressions if all selected paths are in
-				# columns that accept set names or set expressions.
-				return {}
-
-			for path in columnSelection.paths() :
-				renderPassPath.setFromString( path )
-				cellValue = column.cellData( renderPassPath ).value
-				if cellValue is not None :
-					result.setdefault( path, set() ).add( cellValue )
-				else :
-					# We only return set expressions if all selected paths are render passes.
-					return {}
-
-		return result
-
-	def __selectAffected( self, pathListing ) :
-
-		result = IECore.PathMatcher()
-
-		renderPassPath = pathListing.getPath().copy()
-		for path, setExpressions in self.__selectedSetExpressions( pathListing ).items() :
-			# Evaluate set expressions within their render pass in the context
-			# as set membership could vary based on the render pass.
-			renderPassPath.setFromString( path )
-			with renderPassPath.inspectionContext() :
-				for setExpression in setExpressions :
-					result.addPaths( GafferScene.SetAlgo.evaluateSetExpression( setExpression, self.settings()["in"] ) )
-
-		GafferSceneUI.ContextAlgo.setSelectedPaths( self.context(), result )
-
-	def __buttonPress( self, pathListing, event ) :
-
-		if event.button != event.Buttons.Right or event.modifiers != event.Modifiers.None_ :
-			return False
-
-		selection = pathListing.getSelection()
+	def __columnContextMenuSignal( self, column, pathListing, menuDefinition ) :
 
 		columns = pathListing.getColumns()
-		cellColumn = pathListing.columnAt( event.line.p0 )
 		columnIndex = -1
 		for i in range( 0, len( columns ) ) :
-			if cellColumn == columns[i] :
+			if column == columns[i] :
 				columnIndex = i
-
-		cellPath = pathListing.pathAt( event.line.p0 )
-		if cellPath is None :
-			return False
-
-		if not selection[columnIndex].match( str( cellPath ) ) & IECore.PathMatcher.Result.ExactMatch :
-			for p in selection :
-				p.clear()
-			selection[columnIndex].addPath( str( cellPath ) )
-			pathListing.setSelection( selection, scrollToFirst = False )
-
-		menuDefinition = IECore.MenuDefinition()
 
 		if columnIndex == 0 :
 			# Render pass operations
@@ -624,73 +390,6 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 					"active" : self.__canEditRenderPasses()
 				}
 			)
-
-		elif columnIndex > 1 :
-			# Option cells
-
-			menuDefinition.append(
-				"Show History...",
-				{
-					"command" : Gaffer.WeakMethod( self.__showEditHistory )
-				}
-			)
-			menuDefinition.append(
-				"Edit...",
-				{
-					"command" : functools.partial( self.__editSelectedCells, pathListing, False ),
-					"active" : pathListing.getSelection()[0].isEmpty(),
-				}
-			)
-			menuDefinition.append(
-				"Disable Edit",
-				{
-					"command" : functools.partial( self.__disableEdits, pathListing ),
-					"active" : len( self.__disablableInspectionTweaks( pathListing ) ) > 0,
-					"shortCut" : "D",
-				}
-			)
-			if len( self.__selectedSetExpressions( pathListing ) ) > 0 :
-				menuDefinition.append(
-					"SelectAffectedObjectsDivider", { "divider" : True }
-				)
-				menuDefinition.append(
-					"Select Affected Objects",
-					{
-						"command" : functools.partial( self.__selectAffected, pathListing ),
-					}
-				)
-
-		self.__contextMenu = GafferUI.Menu( menuDefinition )
-		self.__contextMenu.popup( pathListing )
-
-		return True
-
-	def __showEditHistory( self, *unused ) :
-
-		selection = self.__pathListing.getSelection()
-		columns = self.__pathListing.getColumns()
-		renderPassPath = self.__pathListing.getPath().copy()
-
-		for i in range( 0, len( columns ) ) :
-			column = columns[ i ]
-			if not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
-				continue
-
-			for path in selection[i].paths() :
-				renderPassPath.setFromString( path )
-				inspectionContext = renderPassPath.inspectionContext()
-				if inspectionContext is None :
-					continue
-
-				window = _HistoryWindow(
-					column.inspector(),
-					"/",
-					inspectionContext,
-					self.ancestor( GafferUI.ScriptWindow ).scriptNode(),
-					"History : {} : {}".format( inspectionContext["renderPass"], column.headerData().value )
-				)
-				self.ancestor( GafferUI.Window ).addChildWindow( window, removeOnClose = True )
-				window.setVisible( True )
 
 	def __canEditRenderPasses( self, editScope = None ) :
 
