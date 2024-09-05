@@ -162,9 +162,11 @@ def __editSelectedCells( pathListing, quickBoolean = True ) :
 
 		__inspectorColumnPopup.popup( parent = pathListing )
 
-def __disablableInspectionTweaks( pathListing ) :
+def __toggleableInspections( pathListing ) :
 
-	tweaks = []
+	inspections = []
+	nonEditableReason = ""
+	toggleShouldDisable = True
 
 	path = pathListing.getPath().copy()
 	for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
@@ -176,18 +178,55 @@ def __disablableInspectionTweaks( pathListing ) :
 
 			with inspectionContext :
 				inspection = column.inspector().inspect()
-				if inspection is not None and inspection.canDisableEdit() :
-					tweaks.append( inspection )
-				else :
-					return []
+				if inspection is None :
+					continue
 
-	return tweaks
+				canReenableEdit = False
+				if not inspection.canDisableEdit() and inspection.editable() :
+					edit = inspection.acquireEdit( createIfNecessary = False )
+					canReenableEdit = isinstance( edit, ( Gaffer.NameValuePlug, Gaffer.OptionalValuePlug, Gaffer.TweakPlug ) ) and Gaffer.Metadata.value( edit, "inspector:disabledEdit" )
+					if canReenableEdit :
+						toggleShouldDisable = False
 
-def __disableEdits( pathListing ) :
+				if canReenableEdit or inspection.canDisableEdit() :
+					inspections.append( inspection )
+				elif nonEditableReason == "" :
+					# Prefix reason with the column header to disambiguate when more than one column has selection
+					nonEditableReason = "{} : ".format( column.headerData().value ) if len( [ x for x in pathListing.getSelection() if not x.isEmpty() ] ) > 1 else ""
+					nonEditableReason += inspection.nonDisableableReason() if toggleShouldDisable else inspection.nonEditableReason()
+
+	return inspections, nonEditableReason, toggleShouldDisable
+
+def __toggleEditEnabled( pathListing ) :
+
+	global __inspectorColumnPopup
+
+	inspections, nonEditableReason, shouldDisable = __toggleableInspections( pathListing )
+
+	if nonEditableReason != "" :
+		with GafferUI.PopupWindow() as __inspectorColumnPopup :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+				GafferUI.Image( "warningSmall.png" )
+				GafferUI.Label( "<h4>{}</h4>".format( nonEditableReason ) )
+
+			__inspectorColumnPopup.popup( parent = pathListing )
+
+		return
 
 	with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
-		for inspection in __disablableInspectionTweaks( pathListing ) :
-			inspection.disableEdit()
+		for inspection in inspections :
+			if shouldDisable :
+				inspection.disableEdit()
+				# We register non-persistent metadata on disabled edits to later determine
+				# whether the disabled edit is a suitable candidate for enabling. This allows
+				# investigative toggling of edits in the current session while avoiding enabling
+				# edits the user may not expect to exist, such as previously unedited spreadsheet
+				# cells in EditScope processors.
+				Gaffer.Metadata.registerValue( inspection.source(), "inspector:disabledEdit", True, persistent = False )
+			else :
+				edit = inspection.acquireEdit( createIfNecessary = False )
+				edit["enabled"].setValue( True )
+				Gaffer.Metadata.deregisterValue( edit, "inspector:disabledEdit" )
 
 def __removableAttributeInspections( pathListing ) :
 
@@ -360,12 +399,14 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 			"command" : functools.partial( __editSelectedCells, pathListing, toggleOnly ),
 		}
 	)
+	inspections, nonEditableReason, disable = __toggleableInspections( pathListing )
 	menuDefinition.append(
-		"Disable Edit",
+		"{} Edit{}".format( "Disable" if disable else "Reenable", "s" if len( inspections ) > 1 else "" ),
 		{
-			"command" : functools.partial( __disableEdits, pathListing ),
-			"active" : len( __disablableInspectionTweaks( pathListing ) ) > 0,
+			"command" : functools.partial( __toggleEditEnabled, pathListing ),
+			"active" : len( inspections ) > 0 and nonEditableReason == "",
 			"shortCut" : "D",
+			"description" : nonEditableReason,
 		}
 	)
 
@@ -402,8 +443,11 @@ def __keyPress( column, pathListing, event ) :
 			return True
 
 		if event.key == "D" :
-			if len( __disablableInspectionTweaks( pathListing ) ) > 0 :
-				__disableEdits( pathListing )
+			inspections, nonEditableReason, _ = __toggleableInspections( pathListing )
+			# We allow toggling when there is a nonEditableReason to let __toggleEditEnabled
+			# present the reason to the user via a popup.
+			if len( inspections ) > 0 or nonEditableReason != "" :
+				__toggleEditEnabled( pathListing )
 			return True
 
 		if event.key in ( "Backspace", "Delete" ) :
