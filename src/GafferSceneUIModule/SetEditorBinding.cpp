@@ -38,7 +38,6 @@
 
 #include "SetEditorBinding.h"
 
-#include "GafferSceneUI/ContextAlgo.h"
 #include "GafferSceneUI/ScriptNodeAlgo.h"
 #include "GafferSceneUI/TypeIds.h"
 
@@ -58,6 +57,7 @@
 
 #include "IECorePython/RefCountedBinding.h"
 
+#include "IECore/PathMatcherData.h"
 #include "IECore/StringAlgo.h"
 
 #include "boost/algorithm/string/predicate.hpp"
@@ -102,6 +102,19 @@ Path::Names parent( InternedString setName )
 		result.pop_back();
 		return result;
 	}
+}
+
+int numSelected( const PathMatcher &set, const PathMatcher &selectedPaths )
+{
+	int result = 0;
+	// Consider inheritance in selected member count so descendants
+	// of set members are included in the count
+	for( PathMatcher::Iterator it = set.begin(), eIt = set.end(); it != eIt; ++it )
+	{
+		result += selectedPaths.subTree( *it ).size();
+		it.prune();
+	}
+	return result;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -152,7 +165,7 @@ PathMatcherCache g_pathMatcherCache( pathMatcherCacheGetter, 25 );
 
 const InternedString g_setNamePropertyName( "setPath:setName" );
 const InternedString g_memberCountPropertyName( "setPath:memberCount" );
-const InternedString g_selectedMemberCountPropertyName( "setPath:selectedMemberCount" );
+const InternedString g_setPropertyName( "setPath:set" );
 
 //////////////////////////////////////////////////////////////////////////
 // SetPath
@@ -257,7 +270,7 @@ class SetPath : public Gaffer::Path
 			Path::propertyNames( names, canceller );
 			names.push_back( g_setNamePropertyName );
 			names.push_back( g_memberCountPropertyName );
-			names.push_back( g_selectedMemberCountPropertyName );
+			names.push_back( g_setPropertyName );
 		}
 
 		IECore::ConstRunTimeTypedPtr property( const IECore::InternedString &name, const IECore::Canceller *canceller = nullptr ) const override
@@ -270,43 +283,27 @@ class SetPath : public Gaffer::Path
 					return new StringData( names().back().string() );
 				}
 			}
+			else if( name == g_setPropertyName )
+			{
+				const PathMatcher p = pathMatcher( canceller );
+				if( p.match( names() ) & PathMatcher::ExactMatch )
+				{
+					Context::EditableScope scopedContext( getContext() );
+					if( canceller )
+					{
+						scopedContext.setCanceller( canceller );
+					}
+					return getScene()->set( names().back().string() );
+				}
+			}
 			else if( name == g_memberCountPropertyName )
 			{
-				const PathMatcher p = pathMatcher( canceller );
-				if( p.match( names() ) & PathMatcher::ExactMatch )
+				if( auto set = runTimeCast<const PathMatcherData>( property( g_setPropertyName, canceller ) ) )
 				{
-					Context::EditableScope scopedContext( getContext() );
-					if( canceller )
-					{
-						scopedContext.setCanceller( canceller );
-					}
-					const auto setMembers = getScene()->set( names().back().string() );
-					return new IntData( setMembers->readable().size() );
+					return new IntData( set->readable().size() );
 				}
 			}
-			else if( name == g_selectedMemberCountPropertyName )
-			{
-				const PathMatcher p = pathMatcher( canceller );
-				if( p.match( names() ) & PathMatcher::ExactMatch )
-				{
-					Context::EditableScope scopedContext( getContext() );
-					if( canceller )
-					{
-						scopedContext.setCanceller( canceller );
-					}
-					const auto setMembers = getScene()->set( names().back().string() );
-					const auto selectedPaths = ContextAlgo::getSelectedPaths( Context::current() );
-					int memberCount = 0;
-					// Consider inheritance in selected member count so descendants
-					// of set members are included in the count
-					for( PathMatcher::Iterator it = setMembers->readable().begin(), eIt = setMembers->readable().end(); it != eIt; ++it )
-					{
-						memberCount += selectedPaths.subTree( *it ).size();
-						it.prune();
-					}
-					return new IntData( memberCount );
-				}
-			}
+
 			return Path::property( name, canceller );
 		}
 
@@ -483,28 +480,31 @@ class SetMembersColumn : public StandardPathColumn
 // SetSelectionColumn
 //////////////////////////////////////////////////////////////////////////
 
-class SetSelectionColumn : public StandardPathColumn
+class SetSelectionColumn : public PathColumn
 {
 
 	public :
 
 		IE_CORE_DECLAREMEMBERPTR( SetSelectionColumn )
 
-		SetSelectionColumn()
-			:	StandardPathColumn( "Selection", g_selectedMemberCountPropertyName )
+		SetSelectionColumn( ScriptNodePtr script )
+			:	PathColumn(), m_script( script ), m_selectedPaths( ScriptNodeAlgo::getSelectedPaths( script.get() ) )
 		{
+			ScriptNodeAlgo::selectedPathsChangedSignal( script.get() ).connect(
+				boost::bind( &SetSelectionColumn::selectedPathsChanged, this )
+			);
 		}
 
 		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override
 		{
-			CellData result = StandardPathColumn::cellData( path, canceller );
-			if( const auto setName = runTimeCast<const IECore::StringData>( path.property( g_setNamePropertyName, canceller ) ) )
+			CellData result;
+			if( const auto set = runTimeCast<const PathMatcherData>( path.property( g_setPropertyName, canceller ) ) )
 			{
-				const auto selectedMemberCount = runTimeCast<const IECore::IntData>( path.property( g_selectedMemberCountPropertyName, canceller ) );
-				const auto count = selectedMemberCount ? selectedMemberCount->readable() : 0;
+				int count = numSelected( set->readable(), m_selectedPaths );
+				result.value = new IntData( count );
 				result.toolTip = new IECore::StringData(
 					fmt::format( "{} selected scene location{} of {}",
-						count, count == 1 ? " is a member or descendant" : "s are members and/or descendants", setName->readable()
+						count, count == 1 ? " is a member or descendant" : "s are members and/or descendants", path.names().back().string()
 					)
 				);
 			}
@@ -514,17 +514,29 @@ class SetSelectionColumn : public StandardPathColumn
 
 		CellData headerData( const IECore::Canceller *canceller ) const override
 		{
-			CellData result = StandardPathColumn::headerData( canceller );
+			CellData result;
+			result.value = g_headerValue;
 			result.toolTip = g_headerToolTip;
 			return result;
 		}
 
 	private :
 
+		void selectedPathsChanged()
+		{
+			m_selectedPaths = ScriptNodeAlgo::getSelectedPaths( m_script.get() );
+			changedSignal()( this );
+		}
+
+		ScriptNodePtr m_script;
+		PathMatcher m_selectedPaths;
+
+		static const ConstStringDataPtr g_headerValue;
 		static const ConstStringDataPtr g_headerToolTip;
 
 };
 
+const ConstStringDataPtr SetSelectionColumn::g_headerValue = new StringData( "Selected" );
 const ConstStringDataPtr SetSelectionColumn::g_headerToolTip = new StringData( "The number of selected scene locations that are set members, or their descendants" );
 
 //////////////////////////////////////////////////////////////////////////
@@ -1047,9 +1059,16 @@ class SetEditorEmptySetFilter : public Gaffer::PathFilter
 
 		IE_CORE_DECLAREMEMBERPTR( SetEditorEmptySetFilter )
 
-		SetEditorEmptySetFilter( IECore::CompoundDataPtr userData = nullptr, const std::string &propertyName = g_memberCountPropertyName )
-			:	PathFilter( userData ), m_propertyName( propertyName )
+		SetEditorEmptySetFilter( ScriptNodePtr scriptNode, bool useSelection = false, IECore::CompoundDataPtr userData = nullptr )
+			:	PathFilter( userData ), m_scriptNode( scriptNode )
 		{
+			if( useSelection )
+			{
+				m_selectedPathsChangedConnection = ScriptNodeAlgo::selectedPathsChangedSignal( m_scriptNode.get() ).connect(
+					boost::bind( &SetEditorEmptySetFilter::selectedPathsChanged, this )
+				);
+				m_selectedPaths = ScriptNodeAlgo::getSelectedPaths( scriptNode.get() );
+			}
 		}
 
 		void doFilter( std::vector<PathPtr> &paths, const IECore::Canceller *canceller ) const override
@@ -1081,9 +1100,16 @@ class SetEditorEmptySetFilter : public Gaffer::PathFilter
 			}
 
 			bool members = false;
-			if( const auto memberCountData = IECore::runTimeCast<const IECore::IntData>( path->property( m_propertyName, canceller ) ) )
+			if( auto set = runTimeCast<const PathMatcherData>( path->property( g_setPropertyName ) ) )
 			{
-				members = memberCountData->readable() > 0;
+				if( m_selectedPathsChangedConnection.connected() )
+				{
+					members = numSelected( set->readable(), m_selectedPaths );
+				}
+				else
+				{
+					members = set->readable().size() > 0 ;
+				}
 			}
 
 			return leaf && !members;
@@ -1091,7 +1117,16 @@ class SetEditorEmptySetFilter : public Gaffer::PathFilter
 
 	private :
 
-		const InternedString m_propertyName;
+		void selectedPathsChanged()
+		{
+			m_selectedPaths = ScriptNodeAlgo::getSelectedPaths( m_scriptNode.get() );
+			changedSignal()( this );
+		}
+
+		ScriptNodePtr m_scriptNode;
+		// Only connected if using selection.
+		Gaffer::Signals::ScopedConnection m_selectedPathsChangedConnection;
+		PathMatcher m_selectedPaths;
 
 };
 
@@ -1148,7 +1183,7 @@ void GafferSceneUIModule::bindSetEditor()
 	;
 
 	RefCountedClass<SetEditorEmptySetFilter, PathFilter>( "EmptySetFilter" )
-		.def( init<IECore::CompoundDataPtr, const std::string &>( ( boost::python::arg( "userData" ) = object(), boost::python::arg( "propertyName" ) = g_memberCountPropertyName ) ) )
+		.def( init<ScriptNodePtr, bool, CompoundDataPtr>( ( boost::python::arg( "scriptNode" ), boost::python::arg( "useSelection" ) = false, boost::python::arg( "userData" ) = object() ) ) )
 	;
 
 	RefCountedClass<SetNameColumn, GafferUI::PathColumn>( "SetNameColumn" )
@@ -1160,7 +1195,7 @@ void GafferSceneUIModule::bindSetEditor()
 	;
 
 	RefCountedClass<SetSelectionColumn, GafferUI::PathColumn>( "SetSelectionColumn" )
-		.def( init<>() )
+		.def( init<ScriptNodePtr>() )
 	;
 
 	RefCountedClass<VisibleSetInclusionsColumn, GafferUI::PathColumn>( "VisibleSetInclusionsColumn" )

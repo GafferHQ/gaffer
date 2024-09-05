@@ -183,7 +183,7 @@ class SetEditorTest( GafferUITest.TestCase ) :
 			path.setFromString( parent )
 			self.assertEqual( path.property( "setPath:memberCount" ), count )
 
-	def testSetPathSelectedMemberCount( self ) :
+	def testSetSelectionColumn( self ) :
 
 		script = Gaffer.ScriptNode()
 
@@ -202,6 +202,8 @@ class SetEditorTest( GafferUITest.TestCase ) :
 		path = _GafferSceneUI._SetEditor.SetPath( p["out"], script.context(), "/" )
 		self.assertTrue( path.isValid() )
 		self.assertFalse( path.isLeaf() )
+
+		column = _GafferSceneUI._SetEditor.SetSelectionColumn( script )
 
 		for parent, selection, count in [
 			( "/", [], None ),
@@ -232,9 +234,9 @@ class SetEditorTest( GafferUITest.TestCase ) :
 
 			path.setFromString( parent )
 			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( selection ) )
-			self.assertEqual( path.property( "setPath:selectedMemberCount" ), count )
+			self.assertEqual( column.cellData( path ).value, count )
 
-	def testSetPathSelectedMemberCountWithInheritance( self ) :
+	def testSetSelectionColumnWithInheritance( self ) :
 
 		script = Gaffer.ScriptNode()
 
@@ -268,6 +270,8 @@ class SetEditorTest( GafferUITest.TestCase ) :
 		self.assertTrue( path.isValid() )
 		self.assertFalse( path.isLeaf() )
 
+		column = _GafferSceneUI._SetEditor.SetSelectionColumn( script )
+
 		for parent, selection, count in [
 			( "/", [], None ),
 			( "/", [ "/group" ], None ),
@@ -290,7 +294,7 @@ class SetEditorTest( GafferUITest.TestCase ) :
 
 			path.setFromString( parent )
 			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( selection ) )
-			self.assertEqual( path.property( "setPath:selectedMemberCount" ), count )
+			self.assertEqual( column.cellData( path ).value, count )
 
 	def testSetPathCancellation( self ) :
 
@@ -351,19 +355,20 @@ class SetEditorTest( GafferUITest.TestCase ) :
 
 	def testEmptySetFilter( self ) :
 
-		plane = GafferScene.Plane()
-		plane["sets"].setValue( "A A:E B C D" )
+		script = Gaffer.ScriptNode()
 
-		emptySet = GafferScene.Set()
-		emptySet["name"].setValue( "EMPTY A:EMPTY" )
-		emptySet["in"].setInput( plane["out"] )
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["sets"].setValue( "A A:E B C D" )
 
-		context = Gaffer.Context()
-		path = _GafferSceneUI._SetEditor.SetPath( emptySet["out"], context, "/" )
+		script["emptySet"] = GafferScene.Set()
+		script["emptySet"]["name"].setValue( "EMPTY A:EMPTY" )
+		script["emptySet"]["in"].setInput( script["plane"]["out"] )
+
+		path = _GafferSceneUI._SetEditor.SetPath( script["emptySet"]["out"], script.context(), "/" )
 
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B", "/C", "/D", "/EMPTY" ] )
 
-		emptySetFilter = _GafferSceneUI._SetEditor.EmptySetFilter()
+		emptySetFilter = _GafferSceneUI._SetEditor.EmptySetFilter( script )
 		path.setFilter( emptySetFilter )
 
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B", "/C", "/D" ] )
@@ -378,7 +383,7 @@ class SetEditorTest( GafferUITest.TestCase ) :
 		emptySetFilter.setEnabled( True )
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A/A:E" ] )
 
-	def testEmptySetFilterWithSelectedMemberCount( self ) :
+	def testEmptySetFilterUsingSelection( self ) :
 
 		script = Gaffer.ScriptNode()
 
@@ -402,7 +407,7 @@ class SetEditorTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B", "/C", "/D", "/EMPTY", "/F" ] )
 
-		emptySetFilter = _GafferSceneUI._SetEditor.EmptySetFilter( propertyName = "setPath:selectedMemberCount" )
+		emptySetFilter = _GafferSceneUI._SetEditor.EmptySetFilter( script, useSelection = True )
 		path.setFilter( emptySetFilter )
 
 		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/plane" ] ) )

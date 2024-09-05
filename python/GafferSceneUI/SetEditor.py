@@ -44,7 +44,6 @@ import GafferScene
 import GafferUI
 import GafferSceneUI
 
-from . import ContextAlgo
 from . import _GafferSceneUI
 
 class SetEditor( GafferSceneUI.SceneEditor ) :
@@ -56,11 +55,11 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 		GafferSceneUI.SceneEditor.__init__( self, mainColumn, scriptNode, **kw )
 
 		searchFilter = _GafferSceneUI._SetEditor.SearchFilter()
-		emptySetFilter = _GafferSceneUI._SetEditor.EmptySetFilter()
+		emptySetFilter = _GafferSceneUI._SetEditor.EmptySetFilter( scriptNode )
 		emptySetFilter.userData()["UI"] = { "label" : "Hide Empty Members", "toolTip" : "Hide sets with no members" }
 		emptySetFilter.setEnabled( False )
 
-		emptySelectionFilter = _GafferSceneUI._SetEditor.EmptySetFilter( propertyName = "setPath:selectedMemberCount" )
+		emptySelectionFilter = _GafferSceneUI._SetEditor.EmptySetFilter( scriptNode, useSelection = True )
 		emptySelectionFilter.userData()["UI"] = { "label" : "Hide Empty Selection", "toolTip" : "Hide sets with no selected members or descendants" }
 		emptySelectionFilter.setEnabled( False )
 
@@ -75,7 +74,7 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 				GafferUI.BasicPathFilterWidget( emptySelectionFilter )
 
 			self.__setMembersColumn = _GafferSceneUI._SetEditor.SetMembersColumn()
-			self.__selectedSetMembersColumn = _GafferSceneUI._SetEditor.SetSelectionColumn()
+			self.__selectedSetMembersColumn = _GafferSceneUI._SetEditor.SetSelectionColumn( scriptNode )
 			self.__includedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetInclusionsColumn( scriptNode )
 			self.__excludedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetExclusionsColumn( scriptNode )
 			self.__pathListing = GafferUI.PathListingWidget(
@@ -104,7 +103,7 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 
 	def _updateFromContext( self, modifiedItems ) :
 
-		if any( not i.startswith( "ui:" ) for i in modifiedItems ) or any( ContextAlgo.affectsSelectedPaths( i ) for i in modifiedItems ) :
+		if any( not i.startswith( "ui:" ) for i in modifiedItems ) :
 			self.__updatePathListingPath()
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
