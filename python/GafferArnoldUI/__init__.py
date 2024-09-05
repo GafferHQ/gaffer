@@ -44,7 +44,6 @@ from . import ArnoldOptionsUI
 from . import ArnoldAttributesUI
 from . import ArnoldLightUI
 from . import ArnoldVDBUI
-from . import InteractiveArnoldRenderUI
 from . import ArnoldDisplacementUI
 from . import ArnoldMeshLightUI
 from . import ArnoldShaderBallUI
