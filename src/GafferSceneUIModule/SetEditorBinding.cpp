@@ -513,12 +513,17 @@ class SetSelectionColumn : public StandardPathColumn
 		CellData headerData( const IECore::Canceller *canceller ) const override
 		{
 			CellData result = StandardPathColumn::headerData( canceller );
-			result.toolTip = new IECore::StringData( "The number of selected scene locations that are set members, or their descendants" );
-
+			result.toolTip = g_headerToolTip;
 			return result;
 		}
 
+	private :
+
+		static const ConstStringDataPtr g_headerToolTip;
+
 };
+
+const ConstStringDataPtr SetSelectionColumn::g_headerToolTip = new StringData( "The number of selected scene locations that are set members, or their descendants" );
 
 //////////////////////////////////////////////////////////////////////////
 // VisibleSetInclusionsColumn - displays and modifies inclusions membership
