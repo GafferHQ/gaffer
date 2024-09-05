@@ -39,7 +39,6 @@ __import__( "GafferSceneUI" )
 from ._GafferArnoldUI import *
 
 from . import ArnoldShaderUI
-from . import ArnoldRenderUI
 from . import ShaderMenu
 from . import ArnoldOptionsUI
 from . import ArnoldAttributesUI

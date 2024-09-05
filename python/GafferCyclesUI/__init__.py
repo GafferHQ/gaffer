@@ -40,7 +40,6 @@ from . import CyclesAttributesUI
 from . import CyclesLightUI
 from . import CyclesMeshLightUI
 from . import CyclesOptionsUI
-from . import CyclesRenderUI
 from . import CyclesShaderBallUI
 from . import CyclesShaderUI
 from . import InteractiveCyclesRenderUI

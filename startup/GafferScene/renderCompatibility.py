@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2017, John Haddon. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,37 +34,12 @@
 #
 ##########################################################################
 
-import Gaffer
-import GafferDelight
+import GafferScene
 
-Gaffer.Metadata.registerNode(
+def __openGLRender( name ) :
 
-	GafferDelight.DelightRender,
+	node = GafferScene.Render( name )
+	node["renderer"].setValue( "OpenGL" )
+	return node
 
-	"description",
-	"""
-	Performs offline batch rendering using the
-	3Delight renderer, or optionally generates
-	.nsi files for later rendering using a SystemCommand
-	node.
-	""",
-
-	plugs = {
-
-		"fileName" : [
-
-			"description",
-			"""
-			The name of the .nsi file to be generated when in
-			scene description mode.
-			""",
-
-			"nodule:type", "",
-			"path:bookmarks", "nsi",
-			"fileSystemPath:extensions", "nsi",
-
-		],
-
-	}
-
-)
+GafferScene.OpenGLRender = __openGLRender

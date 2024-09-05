@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, Alex Fuller. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,37 +34,13 @@
 #
 ##########################################################################
 
-import Gaffer
+import GafferScene
 import GafferCycles
 
-Gaffer.Metadata.registerNode(
+def __cyclesRender( name ) :
 
-	GafferCycles.CyclesRender,
+	node = GafferScene.Render( name )
+	node["renderer"].setValue( "Cycles" )
+	return node
 
-	"description",
-	"""
-	Performs offline batch rendering using the
-	Cycles renderer, or optionally generates
-	.xml files for later rendering using a SystemCommand
-	node.
-	""",
-
-	plugs = {
-
-		"fileName" : [
-
-			"description",
-			"""
-			The name of the .xml file to be generated when in
-			scene description mode.
-			""",
-
-			"nodule:type", "",
-			"path:bookmarks", "xml",
-			"fileSystemPath:extensions", "xml",
-
-		],
-
-	}
-
-)
+GafferCycles.CyclesRender = __cyclesRender

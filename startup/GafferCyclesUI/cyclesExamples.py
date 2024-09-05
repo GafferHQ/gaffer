@@ -18,7 +18,7 @@ GafferUI.Examples.registerExample(
 		Gaffer.ContextVariables,
 		Gaffer.ContextQuery,
 		Gaffer.Expression,
-		GafferCycles.CyclesRender
+		GafferScene.Render,
 	]
 )
 
@@ -41,7 +41,7 @@ GafferUI.Examples.registerExample(
 		GafferOSL.OSLShader,
 		GafferScene.ShaderAssignment,
 		Gaffer.Reference,
-		GafferCycles.CyclesRender
+		GafferScene.Render
 	]
 )
 

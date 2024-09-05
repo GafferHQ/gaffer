@@ -100,16 +100,11 @@ static IECore::InternedString g_rendererContextName( "scene:renderer" );
 GAFFER_NODE_DEFINE_TYPE( Render );
 
 Render::Render( const std::string &name )
-	:	Render( /* rendererType = */ InternedString(), name )
-{
-}
-
-Render::Render( const IECore::InternedString &rendererType, const std::string &name )
 	:	TaskNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "in" ) );
-	addChild( new StringPlug( rendererType.string().empty() ? "renderer" : "__renderer", Plug::In, rendererType.string() ) );
+	addChild( new StringPlug( "renderer" ) );
 	addChild( new IntPlug( "mode", Plug::In, RenderMode, RenderMode, SceneDescriptionMode ) );
 	addChild( new StringPlug( "fileName" ) );
 	addChild( new ScenePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
