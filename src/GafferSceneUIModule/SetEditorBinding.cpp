@@ -39,6 +39,7 @@
 #include "SetEditorBinding.h"
 
 #include "GafferSceneUI/ContextAlgo.h"
+#include "GafferSceneUI/ScriptNodeAlgo.h"
 #include "GafferSceneUI/TypeIds.h"
 
 #include "GafferScene/SceneAlgo.h"
@@ -53,6 +54,7 @@
 #include "Gaffer/Path.h"
 #include "Gaffer/PathFilter.h"
 #include "Gaffer/Private/IECorePreview/LRUCache.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "IECorePython/RefCountedBinding.h"
 
@@ -537,12 +539,12 @@ class VisibleSetInclusionsColumn : public PathColumn
 
 		IE_CORE_DECLAREMEMBERPTR( VisibleSetInclusionsColumn )
 
-		VisibleSetInclusionsColumn( ContextPtr context )
-			:	PathColumn(), m_context( context )
+		VisibleSetInclusionsColumn( ScriptNodePtr script )
+			:	PathColumn(), m_script( script ), m_visibleSet( ScriptNodeAlgo::getVisibleSet( script.get() ) )
 		{
 			buttonPressSignal().connect( boost::bind( &VisibleSetInclusionsColumn::buttonPress, this, ::_3 ) );
 			buttonReleaseSignal().connect( boost::bind( &VisibleSetInclusionsColumn::buttonRelease, this, ::_1, ::_2, ::_3 ) );
-			m_context->changedSignal().connect( boost::bind( &VisibleSetInclusionsColumn::contextChanged, this, ::_2 ) );
+			ScriptNodeAlgo::visibleSetChangedSignal( script.get() ).connect( boost::bind( &VisibleSetInclusionsColumn::visibleSetChanged, this ) );
 		}
 
 		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override
@@ -567,16 +569,15 @@ class VisibleSetInclusionsColumn : public PathColumn
 			result.icon = iconData;
 			result.toolTip = g_inclusionToolTip;
 
-			const auto visibleSet = ContextAlgo::getVisibleSet( m_context.get() );
-			if( visibleSet.inclusions.isEmpty() )
+			if( m_visibleSet.inclusions.isEmpty() )
 			{
 				result.value = new IntData( 0 );
 				return result;
 			}
 
-			Context::Scope scopedContext( m_context.get() );
+			Context::Scope scopedContext( setPath->getContext() );
 			const auto setMembers = setPath->getScene()->set( setName->readable() );
-			const auto includedSetMembers = setMembers->readable().intersection( visibleSet.inclusions );
+			const auto includedSetMembers = setMembers->readable().intersection( m_visibleSet.inclusions );
 			result.value = new IntData( includedSetMembers.size() );
 			if( includedSetMembers.isEmpty() )
 			{
@@ -584,11 +585,11 @@ class VisibleSetInclusionsColumn : public PathColumn
 			}
 
 			size_t excludedSetMemberCount = 0;
-			if( !visibleSet.exclusions.isEmpty() )
+			if( !m_visibleSet.exclusions.isEmpty() )
 			{
 				for( IECore::PathMatcher::Iterator it = includedSetMembers.begin(), eIt = includedSetMembers.end(); it != eIt; ++it )
 				{
-					const auto visibility = visibleSet.visibility( *it );
+					const auto visibility = m_visibleSet.visibility( *it );
 					if( visibility.drawMode != GafferScene::VisibleSet::Visibility::Visible )
 					{
 						excludedSetMemberCount++;
@@ -619,18 +620,18 @@ class VisibleSetInclusionsColumn : public PathColumn
 
 		CellData headerData( const IECore::Canceller *canceller ) const override
 		{
-			const auto visibleSet = ContextAlgo::getVisibleSet( m_context.get() );
-			return CellData( /* value = */ nullptr, /* icon = */ visibleSet.inclusions.isEmpty() ? g_inclusionsEmptyIconName : g_setIncludedIconName, /* background = */ nullptr, /* tooltip = */ new StringData( "Visible Set Inclusions" ) );
+			return CellData( /* value = */ nullptr, /* icon = */ m_visibleSet.inclusions.isEmpty() ? g_inclusionsEmptyIconName : g_setIncludedIconName, /* background = */ nullptr, /* tooltip = */ new StringData( "Visible Set Inclusions" ) );
 		}
 
 	private :
 
-		void contextChanged( const IECore::InternedString &name )
+		void visibleSetChanged()
 		{
-			if( ContextAlgo::affectsVisibleSet( name ) )
-			{
-				changedSignal()( this );
-			}
+			// We take a copy, because `cellData()` is called from background threads,
+			// and it's not safe to call `getVisibleSet()` concurrently with modifications
+			// on the foreground thread.
+			m_visibleSet = ScriptNodeAlgo::getVisibleSet( m_script.get() );
+			changedSignal()( this );
 		}
 
 		bool buttonPress( const ButtonEvent &event )
@@ -658,7 +659,7 @@ class VisibleSetInclusionsColumn : public PathColumn
 				return false;
 			}
 
-			Context::Scope scopedContext( m_context.get() );
+			Context::Scope scopedContext( setPath->getContext() );
 			const auto setMembers = setPath->getScene()->set( setName->readable() );
 			auto pathsToInclude = IECore::PathMatcher( setMembers->readable() );
 			const auto selection = widget.getSelection();
@@ -682,7 +683,7 @@ class VisibleSetInclusionsColumn : public PathColumn
 			}
 
 			bool update = false;
-			auto visibleSet = ContextAlgo::getVisibleSet( m_context.get() );
+			auto visibleSet = m_visibleSet;
 			if( event.button == ButtonEvent::Left && !event.modifiers )
 			{
 				const auto includedSetMembers = setMembers->readable().intersection( visibleSet.inclusions );
@@ -702,13 +703,14 @@ class VisibleSetInclusionsColumn : public PathColumn
 
 			if( update )
 			{
-				ContextAlgo::setVisibleSet( m_context.get(), visibleSet );
+				ScriptNodeAlgo::setVisibleSet( m_script.get(), visibleSet );
 			}
 
 			return true;
 		}
 
-		ContextPtr m_context;
+		ScriptNodePtr m_script;
+		VisibleSet m_visibleSet;
 
 		static IECore::StringDataPtr g_setIncludedIconName;
 		static IECore::StringDataPtr g_setIncludedDisabledIconName;
@@ -777,12 +779,12 @@ class VisibleSetExclusionsColumn : public PathColumn
 
 		IE_CORE_DECLAREMEMBERPTR( VisibleSetExclusionsColumn )
 
-		VisibleSetExclusionsColumn( ContextPtr context )
-			:	PathColumn(), m_context( context )
+		VisibleSetExclusionsColumn( ScriptNodePtr script )
+			:	PathColumn(), m_script( script ), m_visibleSet( ScriptNodeAlgo::getVisibleSet( script.get() ) )
 		{
 			buttonPressSignal().connect( boost::bind( &VisibleSetExclusionsColumn::buttonPress, this, ::_3 ) );
 			buttonReleaseSignal().connect( boost::bind( &VisibleSetExclusionsColumn::buttonRelease, this, ::_1, ::_2, ::_3 ) );
-			m_context->changedSignal().connect( boost::bind( &VisibleSetExclusionsColumn::contextChanged, this, ::_2 ) );
+			ScriptNodeAlgo::visibleSetChangedSignal( script.get() ).connect( boost::bind( &VisibleSetExclusionsColumn::visibleSetChanged, this ) );
 		}
 
 		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override
@@ -807,16 +809,15 @@ class VisibleSetExclusionsColumn : public PathColumn
 			result.icon = iconData;
 			result.toolTip = g_exclusionToolTip;
 
-			const auto visibleSet = ContextAlgo::getVisibleSet( m_context.get() );
-			if( visibleSet.exclusions.isEmpty() )
+			if( m_visibleSet.exclusions.isEmpty() )
 			{
 				result.value = new IntData( 0 );
 				return result;
 			}
 
-			Context::Scope scopedContext( m_context.get() );
+			Context::Scope scopedContext( setPath->getContext() );
 			const auto setMembers = setPath->getScene()->set( setName->readable() );
-			const auto excludedSetMembers = setMembers->readable().intersection( visibleSet.exclusions );
+			const auto excludedSetMembers = setMembers->readable().intersection( m_visibleSet.exclusions );
 			result.value = new IntData( excludedSetMembers.size() );
 			if( excludedSetMembers.isEmpty() )
 			{
@@ -833,18 +834,18 @@ class VisibleSetExclusionsColumn : public PathColumn
 
 		CellData headerData( const IECore::Canceller *canceller ) const override
 		{
-			const auto visibleSet = ContextAlgo::getVisibleSet( m_context.get() );
-			return CellData( /* value = */ nullptr, /* icon = */ visibleSet.exclusions.isEmpty() ? g_exclusionsEmptyIconName : g_setExcludedIconName, /* background = */ nullptr, /* tooltip = */ new StringData( "Visible Set Exclusions" ) );
+			return CellData( /* value = */ nullptr, /* icon = */ m_visibleSet.exclusions.isEmpty() ? g_exclusionsEmptyIconName : g_setExcludedIconName, /* background = */ nullptr, /* tooltip = */ new StringData( "Visible Set Exclusions" ) );
 		}
 
 	private :
 
-		void contextChanged( const IECore::InternedString &name )
+		void visibleSetChanged()
 		{
-			if( ContextAlgo::affectsVisibleSet( name ) )
-			{
-				changedSignal()( this );
-			}
+			// We take a copy, because `cellData()` is called from background threads,
+			// and it's not safe to call `getVisibleSet()` concurrently with modifications
+			// on the foreground thread.
+			m_visibleSet = ScriptNodeAlgo::getVisibleSet( m_script.get() );
+			changedSignal()( this );
 		}
 
 		bool buttonPress( const ButtonEvent &event )
@@ -872,7 +873,7 @@ class VisibleSetExclusionsColumn : public PathColumn
 				return false;
 			}
 
-			Context::Scope scopedContext( m_context.get() );
+			Context::Scope scopedContext( setPath->getContext() );
 			const auto setMembers = setPath->getScene()->set( setName->readable() );
 			auto pathsToExclude = IECore::PathMatcher( setMembers->readable() );
 			const auto selection = widget.getSelection();
@@ -896,7 +897,7 @@ class VisibleSetExclusionsColumn : public PathColumn
 			}
 
 			bool update = false;
-			auto visibleSet = ContextAlgo::getVisibleSet( m_context.get() );
+			auto visibleSet = m_visibleSet;
 			if( event.button == ButtonEvent::Left && !event.modifiers )
 			{
 				const auto excludedSetMembers = setMembers->readable().intersection( visibleSet.exclusions );
@@ -916,13 +917,14 @@ class VisibleSetExclusionsColumn : public PathColumn
 
 			if( update )
 			{
-				ContextAlgo::setVisibleSet( m_context.get(), visibleSet );
+				ScriptNodeAlgo::setVisibleSet( m_script.get(), visibleSet );
 			}
 
 			return true;
 		}
 
-		ContextPtr m_context;
+		ScriptNodePtr m_script;
+		VisibleSet m_visibleSet;
 
 		static IECore::StringDataPtr g_setExcludedIconName;
 		static IECore::StringDataPtr g_setPartiallyExcludedIconName;
@@ -1162,11 +1164,11 @@ void GafferSceneUIModule::bindSetEditor()
 	;
 
 	RefCountedClass<VisibleSetInclusionsColumn, GafferUI::PathColumn>( "VisibleSetInclusionsColumn" )
-		.def( init< ContextPtr >() )
+		.def( init<ScriptNodePtr>() )
 	;
 
 	RefCountedClass<VisibleSetExclusionsColumn, GafferUI::PathColumn>( "VisibleSetExclusionsColumn" )
-		.def( init< ContextPtr >() )
+		.def( init<ScriptNodePtr>() )
 	;
 
 }

@@ -76,8 +76,8 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 
 			self.__setMembersColumn = _GafferSceneUI._SetEditor.SetMembersColumn()
 			self.__selectedSetMembersColumn = _GafferSceneUI._SetEditor.SetSelectionColumn()
-			self.__includedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetInclusionsColumn( scriptNode.context() )
-			self.__excludedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetExclusionsColumn( scriptNode.context() )
+			self.__includedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetInclusionsColumn( scriptNode )
+			self.__excludedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetExclusionsColumn( scriptNode )
 			self.__pathListing = GafferUI.PathListingWidget(
 				Gaffer.DictPath( {}, "/" ), # temp till we make a SetPath
 				columns = [
@@ -229,21 +229,21 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 
 		setMembers = self.__getSetMembers( setNames )
 		return IECore.PathMatcher( [
-			p for p in ContextAlgo.getSelectedPaths( self.context() ).paths()
+			p for p in GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( self.scriptNode() ).paths()
 			if setMembers.match( p ) & ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch )
 		] )
 
 	def __getIncludedSetMembers( self, setNames, *unused ) :
 
-		return self.__getSetMembers( setNames ).intersection( ContextAlgo.getVisibleSet( self.context() ).inclusions )
+		return self.__getSetMembers( setNames ).intersection( GafferSceneUI.ScriptNodeAlgo.getVisibleSet( self.scriptNode() ).inclusions )
 
 	def __getExcludedSetMembers( self, setNames, *unused ) :
 
-		return self.__getSetMembers( setNames ).intersection( ContextAlgo.getVisibleSet( self.context() ).exclusions )
+		return self.__getSetMembers( setNames ).intersection( GafferSceneUI.ScriptNodeAlgo.getVisibleSet( self.scriptNode() ).exclusions )
 
 	def __selectSetMembers( self, *unused ) :
 
-		ContextAlgo.setSelectedPaths( self.context(), self.__getSetMembers( self.__selectedSetNames() ) )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( self.scriptNode(), self.__getSetMembers( self.__selectedSetNames() ) )
 
 	def __copySetMembers( self, *unused ) :
 

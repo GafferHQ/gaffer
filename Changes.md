@@ -44,7 +44,7 @@ Fixes
 - PrimitiveInspector :
   - Fixed bug which prevented cancellation of long-running computes, making the UI unresponsive until they completed.
   - Fixed thread-safety bug.
-- HierarchyView : Fixed thread-safety bug.
+- HierarchyView, SetEditor : Fixed thread-safety bugs.
 
 API
 ---
