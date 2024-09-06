@@ -26,6 +26,7 @@ API
 ---
 
 - MetadataWidget : Added `NumericMetadataWidget` class.
+- RenderPassWedge : Render adaptors may now be used to delete and/or disable render passes, by passing `client = "RenderPassWedge"` to `SceneAlgo.registerRenderAdaptor()`.
 
 Build
 -----

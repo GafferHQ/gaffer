@@ -61,6 +61,18 @@ Gaffer.Metadata.registerNode(
 	Specific passes can be disabled from wedging by setting the
 	`renderPass:enabled` option to `False` in contexts where that render
 	pass name is the value of the `renderPass` context variable.
+
+	Customisation
+	-------------
+
+	The behaviour of the RenderPassWedge node can be customised by registering
+	an adaptor that conditionally deletes, renames or disables passes. A common
+	use case is to conditionally enable passes on a per-shot basis according to
+	the presence or absence of particular assets within the scene.
+
+	Adaptors should be registered using a client value of "RenderPassWedge" - for example :
+
+	`GafferScene.SceneAlgo.registerRenderAdaptor( "MyConditionalPassAdaptor", adaptorCreationFunction, client = "RenderPassWedge" )`
 	""",
 
 	plugs = {
