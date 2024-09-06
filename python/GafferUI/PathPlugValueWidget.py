@@ -72,10 +72,10 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__row.append( pathWidget )
 
 		button = GafferUI.Button( image = "pathChooser.png", hasFrame=False )
-		button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
+		button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 		self.__row.append( button )
 
-		pathWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ), scoped = False )
+		pathWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ) )
 
 	def path( self ) :
 

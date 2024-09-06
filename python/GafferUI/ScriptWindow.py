@@ -70,7 +70,7 @@ class ScriptWindow( GafferUI.Window ) :
 		else :
 			self.setLayout( GafferUI.CompoundEditor( script ) )
 
-		self.closedSignal().connect( Gaffer.WeakMethod( self.__closed ), scoped = False )
+		self.closedSignal().connect( Gaffer.WeakMethod( self.__closed ) )
 
 		ScriptWindow.__instances.append( weakref.ref( self ) )
 
@@ -182,8 +182,8 @@ class ScriptWindow( GafferUI.Window ) :
 	@classmethod
 	def connect( cls, applicationRoot ) :
 
-		applicationRoot["scripts"].childAddedSignal().connectFront( ScriptWindow.__scriptAdded, scoped = False )
-		applicationRoot["scripts"].childRemovedSignal().connect( ScriptWindow.__staticScriptRemoved, scoped = False )
+		applicationRoot["scripts"].childAddedSignal().connectFront( ScriptWindow.__scriptAdded )
+		applicationRoot["scripts"].childRemovedSignal().connect( ScriptWindow.__staticScriptRemoved )
 
 	__automaticallyCreatedInstances = [] # strong references to instances made by __scriptAdded()
 	@staticmethod

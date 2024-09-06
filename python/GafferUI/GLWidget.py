@@ -102,7 +102,7 @@ class GLWidget( GafferUI.Widget ) :
 		GafferUI.Widget.__init__( self, graphicsView, **kw )
 
 		self.__overlays = set()
-		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
+		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
 
 	## Adds a widget to be overlaid on top of the GL rendering,
 	# stretched to fill the frame.

@@ -64,9 +64,9 @@ class CodeWidget( GafferUI.MultiLineTextWidget ) :
 		self.__highlighter = _QtHighlighter( self._qtWidget().document() )
 		self.__commentPrefix = None
 
-		self.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ), scoped = False )
-		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
-		self.__textChangedConnection = self.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ), scoped = False )
+		self.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ) )
+		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.__textChangedConnection = self.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
 
 	def setCompleter( self, completer ) :
 

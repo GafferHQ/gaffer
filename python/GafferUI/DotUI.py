@@ -175,7 +175,7 @@ def __connectionContextMenu( graphEditor, destinationPlug, menuDefinition ) :
 		}
 	)
 
-GafferUI.GraphEditor.connectionContextMenuSignal().connect( __connectionContextMenu, scoped = False )
+GafferUI.GraphEditor.connectionContextMenuSignal().connect( __connectionContextMenu )
 
 def __setPlugMetadata( plug, key, value ) :
 
@@ -202,4 +202,4 @@ def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 				}
 			)
 
-GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu, scoped = False )
+GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu )

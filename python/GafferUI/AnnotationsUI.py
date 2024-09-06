@@ -159,13 +159,13 @@ class __AnnotationsDialogue( GafferUI.Dialogue ) :
 			self.__textWidget.setHighlighter( _AnnotationsHighlighter( node ) )
 			self.__textWidget.setCompleter( _AnnotationsCompleter( node ) )
 			self.__textWidget.textChangedSignal().connect(
-				Gaffer.WeakMethod( self.__updateButtonStatus ), scoped = False
+				Gaffer.WeakMethod( self.__updateButtonStatus )
 			)
 			self.__textWidget.activatedSignal().connect(
-				Gaffer.WeakMethod( self.__textActivated ), scoped = False
+				Gaffer.WeakMethod( self.__textActivated )
 			)
 			self.__textWidget.contextMenuSignal().connect(
-				Gaffer.WeakMethod( self.__textWidgetContextMenu ), scoped = False
+				Gaffer.WeakMethod( self.__textWidgetContextMenu )
 			)
 			if not template :
 				self.__colorChooser = GafferUI.ColorChooser(
@@ -173,7 +173,7 @@ class __AnnotationsDialogue( GafferUI.Dialogue ) :
 					displayTransform = GafferUI.Widget.identityDisplayTransform
 				)
 				self.__colorChooser.colorChangedSignal().connect(
-					Gaffer.WeakMethod( self.__updateButtonStatus ), scoped = False
+					Gaffer.WeakMethod( self.__updateButtonStatus )
 				)
 			else :
 				self.__colorChooser = None

@@ -222,14 +222,14 @@ class LocalJobs( GafferUI.Editor ) :
 					selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
 				)
 				self.__jobListingWidget._qtWidget().header().setSortIndicator( 1, QtCore.Qt.AscendingOrder )
-				self.__jobListingWidget.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__jobSelectionChanged ), scoped = False )
+				self.__jobListingWidget.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__jobSelectionChanged ) )
 
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=5 ) :
 					GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
 					self.__killButton = GafferUI.Button( "Kill Selected Jobs" )
-					self.__killButton.clickedSignal().connect( Gaffer.WeakMethod( self.__killClicked ), scoped = False )
+					self.__killButton.clickedSignal().connect( Gaffer.WeakMethod( self.__killClicked ) )
 					self.__removeButton = GafferUI.Button( "Remove Selected Jobs" )
-					self.__removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeClicked ), scoped = False )
+					self.__removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeClicked ) )
 
 			with GafferUI.TabbedContainer() :
 
@@ -255,14 +255,14 @@ class LocalJobs( GafferUI.Editor ) :
 
 		# Connecting to the JobPool and Job signals allows us to update our PathListingWidget
 		# immediately when jobs are added and removed or their status changes.
-		jobPool.jobAddedSignal().connect( Gaffer.WeakMethod( self.__jobAdded ), scoped = False )
-		jobPool.jobRemovedSignal().connect( Gaffer.WeakMethod( self.__jobRemoved ), scoped = False )
+		jobPool.jobAddedSignal().connect( Gaffer.WeakMethod( self.__jobAdded ) )
+		jobPool.jobRemovedSignal().connect( Gaffer.WeakMethod( self.__jobRemoved ) )
 
 		# But we also want to perform periodic updates to sample CPU/memory statistics, which
 		# we do using this timer.
 		self.__statisticsTimer = QtCore.QTimer()
 		self.__statisticsTimer.timeout.connect( Gaffer.WeakMethod( self.__statisticsTimeout ) )
-		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
+		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
 
 		self.__updateButtons()
 
@@ -280,7 +280,7 @@ class LocalJobs( GafferUI.Editor ) :
 	def __jobAdded( self, job ) :
 
 		assert( threading.current_thread() is threading.main_thread() )
-		job.statusChangedSignal().connect( Gaffer.WeakMethod( self.__jobStatusChanged ), scoped = False )
+		job.statusChangedSignal().connect( Gaffer.WeakMethod( self.__jobStatusChanged ) )
 		self.__jobListingWidget.getPath()._emitPathChanged()
 
 	def __jobRemoved( self, job ) :

@@ -396,7 +396,7 @@ class NodeTest( GafferTest.TestCase ) :
 
 			raise RuntimeError( "Bad slot" )
 
-		node.errorSignal().connect( badSlot, scoped = False )
+		node.errorSignal().connect( badSlot )
 		cs = GafferTest.CapturingSlot( node.errorSignal() )
 
 		with IECore.CapturingMessageHandler() as mh :

@@ -143,14 +143,14 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 				)
 				GafferUI.Spacer( imath.V2i( 4, 1 ), imath.V2i( 4, 1 ) )
 
-		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
-		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
-		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
-		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
+		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
+		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
+		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
 		# We connect to the front, and unconditionally return True to ensure that we never
 		# run the default dropSignal handler from PlugValueWidget.
-		self.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ), scoped = False )
+		self.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ) )
 
 		self.__updatePlugInputChangedConnection()
 		self.__acquireContextTracker()
@@ -589,7 +589,7 @@ class SimpleProcessorWidget( ProcessorWidget ) :
 				_acquireSummaryWidgetClass( self._summary )( processor["out"] )
 				textColor = QtGui.QColor( *_styleColors["foregroundInfo"] ).name()
 				showLabel = GafferUI.Label( f"<a href=gaffer://show><font color={textColor}>Show</font></a>" )
-				showLabel.linkActivatedSignal().connect( Gaffer.WeakMethod( self.__show ), scoped = False )
+				showLabel.linkActivatedSignal().connect( Gaffer.WeakMethod( self.__show ) )
 			GafferUI.Divider()
 
 	## Called to retrieve the text for the summary label, so must be overridden
@@ -655,7 +655,7 @@ def _acquireSummaryWidgetClass( summaryFunction ) :
 			with row :
 				self.__errorImage = GafferUI.Image( "errorSmall.png" )
 				self.__label = GafferUI.Label()
-				self.__label.linkActivatedSignal().connect( Gaffer.WeakMethod( self.__linkActivated ), scoped = False )
+				self.__label.linkActivatedSignal().connect( Gaffer.WeakMethod( self.__linkActivated ) )
 				GafferUI.Spacer( size = imath.V2i( 1, 20 ) )
 				self.__busyWidget = GafferUI.BusyWidget( size = 20 )
 
@@ -705,8 +705,8 @@ class __ProcessorsWidget( GafferUI.Widget ) :
 		self.__editScope = editScope
 		self.__processorWidgets = {}
 
-		editScope.childAddedSignal().connect( Gaffer.WeakMethod( self.__editScopeChildAdded ), scoped = False )
-		editScope.childRemovedSignal().connect( Gaffer.WeakMethod( self.__editScopeChildRemoved ), scoped = False )
+		editScope.childAddedSignal().connect( Gaffer.WeakMethod( self.__editScopeChildAdded ) )
+		editScope.childRemovedSignal().connect( Gaffer.WeakMethod( self.__editScopeChildRemoved ) )
 
 		self.__update()
 

@@ -240,7 +240,7 @@ class _ChildParameterUI( CompoundPlugValueWidget ) :
 		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal ) as result :
 
 			collapseButton = GafferUI.Button( image = "collapsibleArrowRight.png", hasFrame=False )
-			collapseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__collapseButtonClicked ), scoped = False )
+			collapseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__collapseButtonClicked ) )
 
 			GafferUI.Spacer( imath.V2i( 2 ) )
 
@@ -293,8 +293,8 @@ class _ChildParameterUI( CompoundPlugValueWidget ) :
 						self.__parameterHandler.childParameterHandler( self.__parameterHandler.parameter()["label"] ),
 					),
 				)
-				self.__label.buttonPressSignal().connect( Gaffer.WeakMethod( self.__labelButtonPress ), scoped = False )
-				self.getPlug().node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ), scoped = False )
+				self.__label.buttonPressSignal().connect( Gaffer.WeakMethod( self.__labelButtonPress ) )
+				self.getPlug().node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
 
 			# parameters after the label
 			for parameter in headerParameters :

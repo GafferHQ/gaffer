@@ -82,6 +82,6 @@ def __scriptAdded( container, script ) :
 	if window is None :
 		return
 
-	window.preCloseSignal().connect( __scriptWindowPreClose, scoped = False )
+	window.preCloseSignal().connect( __scriptWindowPreClose )
 
-application.root()["scripts"].childAddedSignal().connect( __scriptAdded, scoped = False )
+application.root()["scripts"].childAddedSignal().connect( __scriptAdded )

@@ -62,7 +62,7 @@ class ScenePathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
 		GafferUI.PathPlugValueWidget.__init__( self, plug, path, **kw )
 
-		plug.ancestor( Gaffer.ScriptNode ).focusChangedSignal().connect( Gaffer.WeakMethod( self.__focusChanged ), scoped = False )
+		plug.ancestor( Gaffer.ScriptNode ).focusChangedSignal().connect( Gaffer.WeakMethod( self.__focusChanged ) )
 
 	def _pathChooserDialogue( self ) :
 

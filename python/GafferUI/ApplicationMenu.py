@@ -99,9 +99,9 @@ def preferences( menu ) :
 	else :
 		window = GafferUI.Dialogue( "Preferences" )
 		closeButton = window._addButton( "Close" )
-		closeButton.clickedSignal().connect( __closePreferences, scoped = False )
+		closeButton.clickedSignal().connect( __closePreferences )
 		saveButton = window._addButton( "Save" )
-		saveButton.clickedSignal().connect( __savePreferences, scoped = False )
+		saveButton.clickedSignal().connect( __savePreferences )
 		window._setWidget( GafferUI.NodeUI.create( application["preferences"] ) )
 		__preferencesWindows[application] = weakref.ref( window )
 		scriptWindow.addChildWindow( window )

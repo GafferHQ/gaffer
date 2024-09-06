@@ -102,7 +102,7 @@ class PlugTest( GafferTest.TestCase ) :
 		p2 = Gaffer.Plug( direction=Gaffer.Plug.Direction.In )
 		n2.addChild( p2 )
 
-		n2.plugInputChangedSignal().connect( f, scoped = False )
+		n2.plugInputChangedSignal().connect( f )
 		p2.setInput( p1 )
 		self.assertTrue( PlugTest.__connection[0].isSame( p2 ) )
 		self.assertTrue( PlugTest.__connection[1].isSame( p1 ) )
@@ -1059,8 +1059,8 @@ class PlugTest( GafferTest.TestCase ) :
 			self.assertEqual( node1["user"]["p"].keys(), [ "c2", "c1" ] )
 			self.assertEqual( node2["user"]["p"].keys(), [ "c2", "c1" ] )
 
-		node1.plugDirtiedSignal().connect( plugDirtied, scoped = False )
-		node2.plugDirtiedSignal().connect( plugDirtied, scoped = False )
+		node1.plugDirtiedSignal().connect( plugDirtied )
+		node2.plugDirtiedSignal().connect( plugDirtied )
 
 		node1["user"]["p"].reorderChildren(
 			reversed( node1["user"]["p"] )
@@ -1107,7 +1107,7 @@ class PlugTest( GafferTest.TestCase ) :
 
 			dirtiedPlugs.add( plug )
 
-		s["n1"].plugDirtiedSignal().connect( plugDirtied, scoped = False )
+		s["n1"].plugDirtiedSignal().connect( plugDirtied )
 
 		s["n1"]["p1"].setValue( 1 )
 

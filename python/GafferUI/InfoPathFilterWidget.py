@@ -54,13 +54,13 @@ class InfoPathFilterWidget( GafferUI.PathFilterWidget ) :
 		with self.__row :
 
 			filterButton = GafferUI.Button( image="collapsibleArrowDown.png", hasFrame=False )
-			filterButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
+			filterButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 
 			self.__filterText = GafferUI.TextWidget()
 			self.__filterText.setPlaceholderText( "Filter..." )
 
-			self.__filterText.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__filterEditingFinished ), scoped = False )
-			self.__filterText.textChangedSignal().connect( Gaffer.WeakMethod( self.__filterTextChanged ), scoped = False )
+			self.__filterText.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__filterEditingFinished ) )
+			self.__filterText.textChangedSignal().connect( Gaffer.WeakMethod( self.__filterTextChanged ) )
 
 	def _updateFromPathFilter( self ) :
 

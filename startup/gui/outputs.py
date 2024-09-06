@@ -455,7 +455,7 @@ def __scriptAdded( parent, script ) :
 
 	portNumberPlug["value"].setValue( GafferImage.Catalogue.displayDriverServer().portNumber() )
 
-application.root()["scripts"].childAddedSignal().connect( __scriptAdded, scoped = False )
+application.root()["scripts"].childAddedSignal().connect( __scriptAdded )
 
 Gaffer.Metadata.registerValue( Gaffer.ScriptNode, "variables.imageCataloguePort", "plugValueWidget:type", "" )
 

@@ -270,7 +270,7 @@ def connect( script ) :
 	if not hadPlug :
 		Gaffer.NodeAlgo.applyUserDefaults( plug )
 
-	script.plugDirtiedSignal().connect( __scriptPlugDirtied, scoped = False )
+	script.plugDirtiedSignal().connect( __scriptPlugDirtied )
 	__scriptPlugDirtied( plug )
 
 def __displayTransformProcessor( config, context, workingSpace, display, view ) :

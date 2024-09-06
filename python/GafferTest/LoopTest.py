@@ -260,8 +260,8 @@ class LoopTest( GafferTest.TestCase ) :
 
 			valuesWhenDirtied[plug] = plugValue( plug )
 
-		loop.plugDirtiedSignal().connect( plugDirtied, scoped = False )
-		add.plugDirtiedSignal().connect( plugDirtied, scoped = False )
+		loop.plugDirtiedSignal().connect( plugDirtied )
+		add.plugDirtiedSignal().connect( plugDirtied )
 		loop["in"].setValue( 1 )
 
 		# Check that we saw the values we expected.

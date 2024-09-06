@@ -48,12 +48,12 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=2, borderWidth=0 )
 
 		GafferUI.PathFilterWidget.__init__( self, self.__row, pathFilter, **kw )
-		pathFilter.changedSignal().connect( Gaffer.WeakMethod( self.__updatePlaceholderText ), scoped = False )
+		pathFilter.changedSignal().connect( Gaffer.WeakMethod( self.__updatePlaceholderText ) )
 
 		with self.__row :
 
 			self.__enabledWidget = GafferUI.BoolWidget()
-			self.__enabledWidget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__enabledStateChanged ), scoped = False )
+			self.__enabledWidget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__enabledStateChanged ) )
 
 			self.__propertyButton = GafferUI.MenuButton(
 				image = "collapsibleArrowDown.png",
@@ -63,8 +63,8 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 
 			self.__patternWidget = GafferUI.TextWidget()
 
-			self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ), scoped = False )
-			self.__patternWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__patternTextChanged ), scoped = False )
+			self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ) )
+			self.__patternWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__patternTextChanged ) )
 
 		self.__updatePlaceholderText( pathFilter )
 		self._updateFromPathFilter()

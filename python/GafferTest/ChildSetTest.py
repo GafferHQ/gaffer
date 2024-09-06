@@ -74,8 +74,8 @@ class ChildSetTest( GafferTest.TestCase ) :
 		p = Gaffer.GraphComponent()
 		s = Gaffer.ChildSet( p )
 
-		addedConnection = s.memberAddedSignal().connect( added, scoped = False )
-		removedConnection = s.memberRemovedSignal().connect( removed, scoped = False )
+		addedConnection = s.memberAddedSignal().connect( added )
+		removedConnection = s.memberRemovedSignal().connect( removed )
 
 		p["one"] = Gaffer.GraphComponent()
 

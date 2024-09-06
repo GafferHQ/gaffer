@@ -57,7 +57,7 @@ class Timeline( GafferUI.Editor ) :
 		with self.__row :
 
 			self.__visibilityButton = GafferUI.Button( image="timeline3.png", hasFrame=False )
-			self.__visibilityButton.clickedSignal().connect( Gaffer.WeakMethod( self.__visibilityButtonClicked ), scoped = False )
+			self.__visibilityButton.clickedSignal().connect( Gaffer.WeakMethod( self.__visibilityButtonClicked ) )
 
 			self.__scriptRangeStart = GafferUI.NumericPlugValueWidget( scriptNode["frameRange"]["start"] )
 			self.__scriptRangeStart.numericWidget().setFixedCharacterWidth( 4 )
@@ -66,7 +66,7 @@ class Timeline( GafferUI.Editor ) :
 			self.__sliderRangeStart = GafferUI.NumericWidget( scriptNode["frameRange"]["start"].getValue() )
 			self.__sliderRangeStart.setFixedCharacterWidth( 4 )
 			self.__sliderRangeStart.setToolTip( "Slider minimum" )
-			self.__sliderRangeStartChangedConnection = self.__sliderRangeStart.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__sliderRangeChanged ), scoped = False )
+			self.__sliderRangeStartChangedConnection = self.__sliderRangeStart.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__sliderRangeChanged ) )
 
 			self.__slider = _TimelineSlider(
 				value = self.context().getFrame(),
@@ -77,32 +77,32 @@ class Timeline( GafferUI.Editor ) :
 			self.__slider.setIncrement( 0 ) # disable so the slider doesn't mask our global frame increment shortcut
 			self.__slider.setSnapIncrement( 1 )
 			self.__slider.setHoverPositionVisible( True )
-			self.__sliderValueChangedConnection = self.__slider.valueChangedSignal().connect( Gaffer.WeakMethod( self.__valueChanged ), scoped = False )
+			self.__sliderValueChangedConnection = self.__slider.valueChangedSignal().connect( Gaffer.WeakMethod( self.__valueChanged ) )
 
 			self.__startButton = GafferUI.Button( image = "timelineStart.png", hasFrame=False )
-			self.__startButton.clickedSignal().connect( Gaffer.WeakMethod( self.__startOrEndButtonClicked ), scoped = False )
+			self.__startButton.clickedSignal().connect( Gaffer.WeakMethod( self.__startOrEndButtonClicked ) )
 
 			self.__playPauseButton = GafferUI.Button( image = "timelinePlay.png", hasFrame=False )
-			self.__playPauseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__playPauseClicked ), scoped = False )
+			self.__playPauseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__playPauseClicked ) )
 
 			self.__endButton = GafferUI.Button( image = "timelineEnd.png", hasFrame=False )
-			self.__endButton.clickedSignal().connect( Gaffer.WeakMethod( self.__startOrEndButtonClicked ), scoped = False )
+			self.__endButton.clickedSignal().connect( Gaffer.WeakMethod( self.__startOrEndButtonClicked ) )
 
 			self.__frame = GafferUI.NumericWidget( self.context().getFrame() )
 			self.__frame.setFixedCharacterWidth( 5 )
 			self.__frame.setToolTip( "Current frame" )
-			self.__frameChangedConnection = self.__frame.valueChangedSignal().connect( Gaffer.WeakMethod( self.__valueChanged ), scoped = False )
+			self.__frameChangedConnection = self.__frame.valueChangedSignal().connect( Gaffer.WeakMethod( self.__valueChanged ) )
 
 			self.__sliderRangeEnd = GafferUI.NumericWidget( scriptNode["frameRange"]["end"].getValue() )
 			self.__sliderRangeEnd.setFixedCharacterWidth( 4 )
 			self.__sliderRangeEnd.setToolTip( "Slider maximum" )
-			self.__sliderRangeEndChangedConnection = self.__sliderRangeEnd.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__sliderRangeChanged ), scoped = False )
+			self.__sliderRangeEndChangedConnection = self.__sliderRangeEnd.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__sliderRangeChanged ) )
 
 			self.__scriptRangeEnd = GafferUI.NumericPlugValueWidget( scriptNode["frameRange"]["end"] )
 			self.__scriptRangeEnd.numericWidget().setFixedCharacterWidth( 4 )
 			self.__scriptRangeEnd.setToolTip( self.__scriptRangeEnd.getPlug().fullName() )
 
-		scriptNode.plugSetSignal().connect( Gaffer.WeakMethod( self.__scriptNodePlugSet ), scoped = False )
+		scriptNode.plugSetSignal().connect( Gaffer.WeakMethod( self.__scriptNodePlugSet ) )
 
 		frameIncrementShortcut = QtWidgets.QShortcut( QtGui.QKeySequence( "Right" ), self._qtWidget() )
 		frameIncrementShortcut.activated.connect( Gaffer.WeakMethod( self.__incrementFrame ) )
@@ -119,10 +119,10 @@ class Timeline( GafferUI.Editor ) :
 		self.__playback = GafferUI.Playback.acquire( self.context() )
 		self.__playback.setFrameRange( self.__sliderRangeStart.getValue(), self.__sliderRangeEnd.getValue() )
 		self.__playback.stateChangedSignal().connect(
-			Gaffer.WeakMethod( self.__playbackStateChanged ), scoped = False
+			Gaffer.WeakMethod( self.__playbackStateChanged )
 		)
 		self.__playback.frameRangeChangedSignal().connect(
-			Gaffer.WeakMethod( self.__playbackFrameRangeChanged ), scoped = False
+			Gaffer.WeakMethod( self.__playbackFrameRangeChanged )
 		)
 
 		self._updateFromContext( { "frame" } )

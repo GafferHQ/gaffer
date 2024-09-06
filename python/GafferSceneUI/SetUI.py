@@ -393,7 +393,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 				}
 			)
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu, scoped = False )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu )
 
 ##########################################################################
 # Gadgets

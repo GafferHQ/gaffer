@@ -79,8 +79,8 @@ class Button( GafferUI.Widget ) :
 		self._qtWidget().setPalette( Button.__palette )
 
 		if highlightOnOver :
-			self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ), scoped = False )
-			self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ), scoped = False )
+			self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) )
+			self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) )
 
 	def setHighlighted( self, highlighted ) :
 

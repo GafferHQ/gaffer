@@ -94,13 +94,13 @@ class Editor( GafferUI.Widget ) :
 		self.__settings.setName( self.__class__.__name__ + "Settings" )
 		self.__settings["__scriptNode"].setInput( scriptNode["fileName"] )
 		Gaffer.NodeAlgo.applyUserDefaults( self.__settings )
-		self.settings().plugDirtiedSignal().connect( Gaffer.WeakMethod( self._updateFromSettings ), scoped = False )
+		self.settings().plugDirtiedSignal().connect( Gaffer.WeakMethod( self._updateFromSettings ) )
 
 		self.__title = ""
 		self.__titleChangedSignal = GafferUI.WidgetSignal()
 
-		self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ), scoped = False )
-		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ), scoped = False )
+		self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) )
+		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) )
 
 		self.__contextChangedConnection = scriptNode.context().changedSignal().connect(
 			Gaffer.WeakMethod( self.__contextChanged ), scoped = True

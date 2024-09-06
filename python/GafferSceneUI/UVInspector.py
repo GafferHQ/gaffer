@@ -64,15 +64,15 @@ class UVInspector( GafferSceneUI.SceneEditor ) :
 			self.__gadgetWidget.setViewportGadget( self.__uvView.viewportGadget() )
 			self.__gadgetWidget.getViewportGadget().frame( imath.Box3f( imath.V3f( 0, 0, 0 ), imath.V3f( 1, 1, 0 ) ) )
 
-		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
+		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 		self.__gadgetWidget.getViewportGadget().buttonPressSignal().connect(
-			Gaffer.WeakMethod( self.__buttonPress ), scoped = False
+			Gaffer.WeakMethod( self.__buttonPress )
 		)
 		self.__gadgetWidget.getViewportGadget().dragBeginSignal().connect(
-			Gaffer.WeakMethod( self.__dragBegin ), scoped = False
+			Gaffer.WeakMethod( self.__dragBegin )
 		)
 		self.__gadgetWidget.getViewportGadget().dragEndSignal().connect(
-			Gaffer.WeakMethod( self.__dragEnd ), scoped = False
+			Gaffer.WeakMethod( self.__dragEnd )
 		)
 
 		self._updateFromSet()
@@ -153,11 +153,11 @@ class _StateWidget( GafferUI.Widget ) :
 		self.__uvView = uvView
 
 		self.__button.clickedSignal().connect(
-			Gaffer.WeakMethod( self.__buttonClick ), scoped = False
+			Gaffer.WeakMethod( self.__buttonClick )
 		)
 
 		self.__uvView.stateChangedSignal().connect(
-			Gaffer.WeakMethod( self.__stateChanged ), scoped = False
+			Gaffer.WeakMethod( self.__stateChanged )
 		)
 
 		self.__update()

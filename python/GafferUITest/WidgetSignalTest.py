@@ -59,7 +59,7 @@ class WidgetSignalTest( GafferUITest.TestCase ) :
 			self.__widget = ww
 			return True
 
-		s.connect( f, scoped = False )
+		s.connect( f )
 		self.assertEqual( s( w ), True )
 		self.assertTrue( self.__widget is w )
 

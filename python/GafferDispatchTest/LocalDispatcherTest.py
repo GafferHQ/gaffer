@@ -1069,9 +1069,9 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		def jobAdded( job ) :
 
-			job.statusChangedSignal().connect( statusChanged, scoped = False )
+			job.statusChangedSignal().connect( statusChanged )
 
-		script["dispatcher"].jobPool().jobAddedSignal().connect( jobAdded, scoped = False )
+		script["dispatcher"].jobPool().jobAddedSignal().connect( jobAdded )
 
 		# Test foreground dispatch
 

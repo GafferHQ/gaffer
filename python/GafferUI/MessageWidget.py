@@ -82,7 +82,7 @@ class MessageWidget( GafferUI.Widget ) :
 
 					GafferUI.Label( "Show" )
 					self.__levelWidget = _MessageLevelWidget()
-					self.__levelWidget.messageLevelChangedSignal().connect( Gaffer.WeakMethod( self.__messageLevelChanged ), scoped = False )
+					self.__levelWidget.messageLevelChangedSignal().connect( Gaffer.WeakMethod( self.__messageLevelChanged ) )
 
 					GafferUI.Spacer( imath.V2i( 6 ), preferredSize = imath.V2i( 100, 0 ) )
 
@@ -96,13 +96,13 @@ class MessageWidget( GafferUI.Widget ) :
 					toolTips = { l : "Click to jump to next {} message [{}]".format( l, shortcuts[l] ) for l in _messageLevels }
 
 					self.__summaryWidget = MessageSummaryWidget( displayLevel = IECore.MessageHandler.Level.Debug, hideUnusedLevels = False, buttonToolTip = toolTips )
-					self.__summaryWidget.levelButtonClickedSignal().connect( Gaffer.WeakMethod( self.__levelButtonClicked ), scoped = False )
+					self.__summaryWidget.levelButtonClickedSignal().connect( Gaffer.WeakMethod( self.__levelButtonClicked ) )
 
 					GafferUI.Spacer( imath.V2i( 0 ) )
 
 					self.__toEndButton = GafferUI.Button( image = "scrollToBottom.png", hasFrame = False )
 					self.__toEndButton.setToolTip( "Scroll to bottom and follow new messages [B]" )
-					self.__toEndButton.buttonPressSignal().connect( Gaffer.WeakMethod( self.__table.scrollToLatest ), scoped = False )
+					self.__toEndButton.buttonPressSignal().connect( Gaffer.WeakMethod( self.__table.scrollToLatest ) )
 
 					GafferUI.Spacer( imath.V2i( 3 ), imath.V2i( 3 ) )
 
@@ -110,15 +110,15 @@ class MessageWidget( GafferUI.Widget ) :
 
 			upperToolbar.addChild( self.__table.searchWidget() )
 
-			self.__table.messageLevelChangedSignal().connect( Gaffer.WeakMethod( self.__messageLevelChanged ), scoped = False )
-			self.__table.messagesChangedSignal().connect( Gaffer.WeakMethod( self.__messagesChanged ), scoped = False )
+			self.__table.messageLevelChangedSignal().connect( Gaffer.WeakMethod( self.__messageLevelChanged ) )
+			self.__table.messagesChangedSignal().connect( Gaffer.WeakMethod( self.__messagesChanged ) )
 
 			if follow :
 
 				# When following, we manage the enabled state of the toEndButton based on the auto-scroll
 				# state of the table view. If we're not, then it should remain active the whole time.
 				self.__isFollowingMessagesChanged( self.__table )
-				self.__table.isFollowingMessagesChangedSignal().connect( Gaffer.WeakMethod( self.__isFollowingMessagesChanged ), scoped = False )
+				self.__table.isFollowingMessagesChangedSignal().connect( Gaffer.WeakMethod( self.__isFollowingMessagesChanged ) )
 
 		self.__messageHandler = _MessageHandler( self )
 
@@ -305,7 +305,7 @@ class MessageSummaryWidget( GafferUI.Widget ) :
 					break
 
 				button = GafferUI.Button( image = str(level).lower() + "Small.png", hasFrame = False )
-				button.clickedSignal().connect( functools.partial( lambda l, _ : buttonSignal( l ), level ), scoped = False )
+				button.clickedSignal().connect( functools.partial( lambda l, _ : buttonSignal( l ), level ) )
 
 				if isinstance( buttonToolTip, dict ) :
 					button.setToolTip( buttonToolTip[ level ] )
@@ -407,19 +407,19 @@ class _MessageTableSearchWidget( GafferUI.Widget ) :
 				self.__resultCount = GafferUI.Label()
 
 				self.__prevButton = GafferUI.Button( image = "arrowLeft10.png", hasFrame = False )
-				self.__prevButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
+				self.__prevButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 
 				self.__nextButton = GafferUI.Button( image = "arrowRight10.png", hasFrame = False )
-				self.__nextButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
+				self.__nextButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 
 				self.__focusButton = GafferUI.Button( image = "searchFocusOff.png", hasFrame = False )
-				self.__focusButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
+				self.__focusButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 
 			self.__searchField = GafferUI.TextWidget()
 			# Edited catches focus-out and makes sure we update the search text
-			self.__searchField.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__textEdited ), scoped = False )
+			self.__searchField.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__textEdited ) )
 			# Activated allows <enter> to repeatedly jump to the next search result
-			self.__searchField.activatedSignal().connect( Gaffer.WeakMethod( self.__textActivated ), scoped = False )
+			self.__searchField.activatedSignal().connect( Gaffer.WeakMethod( self.__textActivated ) )
 			self.__searchField._qtWidget().setObjectName( "gafferSearchField" )
 			self.__searchField.setPlaceholderText( "Search" )
 			self.__searchField._qtWidget().setMaximumWidth( 250 )
@@ -435,9 +435,9 @@ class _MessageTableSearchWidget( GafferUI.Widget ) :
 		self.__searchField._qtWidget().addAction( self.__clearAction, QtWidgets.QLineEdit.TrailingPosition )
 
 		self.__table = weakref.ref( tableView )
-		tableView.searchTextChangedSignal().connect( Gaffer.WeakMethod( self.__searchTextChanged ), scoped = False )
-		tableView.focusSearchResultsChangedSignal().connect( Gaffer.WeakMethod( self.__focusSearchResultsChanged ), scoped = False )
-		tableView.searchResultsChangedSignal().connect( Gaffer.WeakMethod( self.__searchResultsChanged ), scoped = False )
+		tableView.searchTextChangedSignal().connect( Gaffer.WeakMethod( self.__searchTextChanged ) )
+		tableView.focusSearchResultsChangedSignal().connect( Gaffer.WeakMethod( self.__focusSearchResultsChanged ) )
+		tableView.searchResultsChangedSignal().connect( Gaffer.WeakMethod( self.__searchResultsChanged ) )
 
 		self.__searchTextChanged( tableView )
 		self.__focusSearchResultsChanged( tableView )
@@ -539,7 +539,7 @@ class _MessageTableView( GafferUI.Widget ) :
 		self.__userSetScrollPosition( False )
 		self.__setFollowMessages( follow )
 
-		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
+		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
 		self.setMessageLevel( IECore.MessageHandler.Level.Info )
 

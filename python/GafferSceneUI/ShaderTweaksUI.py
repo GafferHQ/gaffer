@@ -414,7 +414,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 		menuDefinition.prepend( "/From Selection/", { "subMenu" : __setShaderFromSelectionMenuDefinition } )
 		menuDefinition.prepend( "/From Affected/", { "subMenu" : __setShaderFromAffectedMenuDefinition } )
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
 
 ##########################################################################
 # Nodule context menu
@@ -450,4 +450,4 @@ def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 
 	)
 
-GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu, scoped = False )
+GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu )

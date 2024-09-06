@@ -330,7 +330,7 @@ class _RendererSettingsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__window = None
 
-		button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ), scoped = False )
+		button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
 
 	def __clicked( self, button ) :
 
@@ -737,8 +737,8 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__settingsWindow = None
 
 		# Must connect at front so we get called before PlugValueWidget's default handlers
-		self.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-		self.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ), scoped = False )
+		self.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ) )
 
 	def setHighlighted( self, highlighted ) :
 
@@ -1200,7 +1200,7 @@ def __viewContextMenu( viewer, view, menuDefinition ) :
 	)
 
 
-GafferUI.Viewer.viewContextMenuSignal().connect( __viewContextMenu, scoped = False )
+GafferUI.Viewer.viewContextMenuSignal().connect( __viewContextMenu )
 
 def __plugValueWidgetContextMenu( menuDefinition, plugValueWidget ) :
 
@@ -1215,7 +1215,7 @@ def __plugValueWidgetContextMenu( menuDefinition, plugValueWidget ) :
 
 	__appendClippingPlaneMenuItems( menuDefinition, "", node, plugValueWidget )
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugValueWidgetContextMenu, scoped = False )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugValueWidgetContextMenu )
 
 ##########################################################################
 # _Spacers
@@ -1278,8 +1278,8 @@ class _StateWidget( GafferUI.Widget ) :
 
 		self.__sceneGadget = sceneView.viewportGadget().getPrimaryChild()
 
-		self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClick ), scoped = False )
-		self.__sceneGadget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ), scoped = False )
+		self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClick ) )
+		self.__sceneGadget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ) )
 
 		self.__update()
 

@@ -47,12 +47,12 @@ import GafferSceneUI
 def addPruningActions( editor ) :
 
 	if isinstance( editor, GafferUI.Viewer ) :
-		editor.keyPressSignal().connect( __pruningKeyPress, scoped = False )
+		editor.keyPressSignal().connect( __pruningKeyPress )
 
 def addVisibilityActions( editor ) :
 
 	if isinstance( editor, GafferUI.Viewer ) :
-		editor.keyPressSignal().connect( __visibilityKeyPress, scoped = False )
+		editor.keyPressSignal().connect( __visibilityKeyPress )
 
 def __pruningKeyPress( viewer, event ) :
 

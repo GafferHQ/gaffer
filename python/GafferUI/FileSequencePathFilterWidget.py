@@ -45,7 +45,7 @@ class FileSequencePathFilterWidget( GafferUI.PathFilterWidget ) :
 
 		GafferUI.PathFilterWidget.__init__( self, self.__checkBox, pathFilter, **kw )
 
-		self.__checkBox.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ), scoped = False )
+		self.__checkBox.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ) )
 
 		self._updateFromPathFilter()
 

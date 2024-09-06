@@ -99,7 +99,7 @@ class SelectionMenuTest( GafferUITest.TestCase ) :
 			def f( w ) :
 				self.emissions += 1
 
-			s.currentIndexChangedSignal().connect( f, scoped = False )
+			s.currentIndexChangedSignal().connect( f )
 
 			s.addItem("Test1")
 			s.addItem("Test2")

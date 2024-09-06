@@ -153,7 +153,7 @@ class _RenderPassVectorDataPlugValueWidget( GafferUI.VectorDataPlugValueWidget )
 
 		GafferUI.VectorDataPlugValueWidget.__init__( self, plug, **kw )
 
-		self.vectorDataWidget().editSignal().connect( Gaffer.WeakMethod( self.__edit ), scoped = False )
+		self.vectorDataWidget().editSignal().connect( Gaffer.WeakMethod( self.__edit ) )
 
 	def __edit( self, vectorDataWidget, column, row ) :
 
@@ -169,7 +169,7 @@ class _Editor( GafferUI.ListContainer ) :
 
 		self._qtWidget().setFocusProxy( self.__nameWidget._qtWidget() )
 
-		GafferUI.Widget.focusChangedSignal().connect( Gaffer.WeakMethod( self.__focusChanged ), scoped = False )
+		GafferUI.Widget.focusChangedSignal().connect( Gaffer.WeakMethod( self.__focusChanged ) )
 
 	def setValue( self, value ) :
 

@@ -115,8 +115,8 @@ class PlugPopup( GafferUI.PopupWindow ) :
 		if colorPlugValueWidget is not None :
 			colorPlugValueWidget.setColorChooserVisible( True )
 
-		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
-		self.focusChangedSignal().connect( Gaffer.WeakMethod( self.__focusChanged ), scoped = False )
+		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
+		self.focusChangedSignal().connect( Gaffer.WeakMethod( self.__focusChanged ) )
 
 	def popup( self, center = None, parent = None ) :
 

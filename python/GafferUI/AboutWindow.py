@@ -160,7 +160,7 @@ class AboutWindow( GafferUI.Window ) :
 		text = header + text + footer
 
 		label = GafferUI.Label( text, **kw )
-		label.linkActivatedSignal().connect( Gaffer.WeakMethod( self.__linkActivated ), scoped = False )
+		label.linkActivatedSignal().connect( Gaffer.WeakMethod( self.__linkActivated ) )
 		return label
 
 	def __linkActivated( self, label, url ) :

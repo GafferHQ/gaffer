@@ -56,7 +56,7 @@ class PopupWindow( GafferUI.Window ) :
 		self._qtWidget().setAttribute( QtCore.Qt.WA_TranslucentBackground )
 		self._qtWidget().paintEvent = Gaffer.WeakMethod( self.__paintEvent )
 
-		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
+		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
 	## Note : A valid `parent` widget must be supplied if widgets in the PopupWindow
 	# are to inherit a display transform from the main UI.

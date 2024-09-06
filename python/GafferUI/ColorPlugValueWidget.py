@@ -59,10 +59,10 @@ class ColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 				self.__compoundNumericWidget = GafferUI.CompoundNumericPlugValueWidget( plugs )
 
 				self.__swatch = GafferUI.ColorSwatchPlugValueWidget( plugs, parenting = { "expand" : True } )
-				self.__swatch.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__swatchButtonRelease ), scoped = False )
+				self.__swatch.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__swatchButtonRelease ) )
 
 				self.__chooserButton = GafferUI.Button( image = "colorPlugValueWidgetSlidersOff.png", hasFrame = False )
-				self.__chooserButton.clickedSignal().connect( Gaffer.WeakMethod( self.__chooserButtonClicked ), scoped = False )
+				self.__chooserButton.clickedSignal().connect( Gaffer.WeakMethod( self.__chooserButtonClicked ) )
 
 			self.__colorChooser = GafferUI.ColorChooserPlugValueWidget( plugs )
 

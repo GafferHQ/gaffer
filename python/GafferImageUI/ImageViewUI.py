@@ -275,9 +275,9 @@ class _ColorValueWidget( GafferUI.Widget ) :
 
 			GafferUI.Spacer( size = imath.V2i( 0 ) )
 
-		self.__swatch.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
-		self.__swatch.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
-		self.__swatch.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
+		self.__swatch.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.__swatch.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
+		self.__swatch.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
 
 		self.setColor( imath.Color4f( 0, 0, 0, 1 ) )
 
@@ -367,7 +367,7 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 				button = GafferUI.MenuButton( "", "plus.png", hasFrame=False, menu = GafferUI.Menu( m, title = "Add Color Inspector" ) )
 			else:
 				button = GafferUI.Button( "", "delete.png", hasFrame=False )
-				button.clickedSignal().connect( Gaffer.WeakMethod( self.__deleteClick ), scoped = False )
+				button.clickedSignal().connect( Gaffer.WeakMethod( self.__deleteClick ) )
 
 
 		self.__pixel = imath.V2f( 0 )
@@ -376,19 +376,19 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if plug.getName() == "ColorInspectorPlug":
 			viewportGadget = plug.node().viewportGadget()
 
-			viewportGadget.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ), scoped = False )
-			viewportGadget.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
-			viewportGadget.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
-			viewportGadget.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
-			viewportGadget.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-			viewportGadget.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ), scoped = False )
-			viewportGadget.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
+			viewportGadget.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ) )
+			viewportGadget.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+			viewportGadget.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
+			viewportGadget.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
+			viewportGadget.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+			viewportGadget.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
+			viewportGadget.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
 
-		plug.node()["colorInspector"]["evaluator"]["pixelColor"].getInput().node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__updateFromImageNode ), scoped = False )
+		plug.node()["colorInspector"]["evaluator"]["pixelColor"].getInput().node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__updateFromImageNode ) )
 
-		plug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ), scoped = False )
-		plug.node()["in"].getInput().node().scriptNode().context().changedSignal().connect( Gaffer.WeakMethod( self.__updateFromContext ), scoped = False )
-		Gaffer.Metadata.plugValueChangedSignal( self.getPlug().node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False )
+		plug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
+		plug.node()["in"].getInput().node().scriptNode().context().changedSignal().connect( Gaffer.WeakMethod( self.__updateFromContext ) )
+		Gaffer.Metadata.plugValueChangedSignal( self.getPlug().node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 
 		self.__updateLabels( [ imath.V2i( 0 ) ] * 2 , [ imath.Color4f( 0, 0, 0, 1 ) ] * 2 )
 
@@ -784,8 +784,7 @@ class _ImageView_ViewPlugValueWidget( GafferImageUI.ViewPlugValueWidget ) :
 		GafferImageUI.ViewPlugValueWidget.__init__( self, plug, **kw )
 
 		plug.node().viewportGadget().keyPressSignal().connect(
-			Gaffer.WeakMethod( self.__keyPress ),
-			scoped = False
+			Gaffer.WeakMethod( self.__keyPress )
 		)
 
 		self.__ctrlModifier = Gaffer.Metadata.value( plug, "imageViewViewPlugWidget:ctrlModifier" ) or False
@@ -870,8 +869,7 @@ class _ChannelsPlugValueWidget( GafferImageUI.RGBAChannelsPlugValueWidget ) :
 		GafferImageUI.RGBAChannelsPlugValueWidget.__init__( self, plug, **kw )
 
 		plug.node().viewportGadget().keyPressSignal().connect(
-			Gaffer.WeakMethod( self.__keyPress ),
-			scoped = False
+			Gaffer.WeakMethod( self.__keyPress )
 		)
 
 	def _image( self ):
@@ -1014,10 +1012,10 @@ class _StateWidget( GafferUI.Widget ) :
 		# Put the primary ImageGadget first in the list
 		self.__imageGadgets.sort( key = lambda i :  i != imageView.viewportGadget().getPrimaryChild() )
 
-		self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClick ), scoped = False )
+		self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClick ) )
 
 		# We use the paused state of the primary ImageGadget to drive our UI
-		self.__imageGadgets[0].stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ), scoped = False )
+		self.__imageGadgets[0].stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ) )
 
 		self.__update()
 
@@ -1071,9 +1069,9 @@ class _CompareParentPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		# We connect to the front, and unconditionally return True from all these methods, to
 		# ensure that we never run any of the default signal handlers from PlugValueWidget
-		self.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-		self.dragLeaveSignal().connectFront( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
-		self.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ), scoped = False )
+		self.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.dragLeaveSignal().connectFront( Gaffer.WeakMethod( self.__dragLeave ) )
+		self.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ) )
 
 	@staticmethod
 	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
@@ -1149,8 +1147,7 @@ class _CompareModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		}
 
 		plug.node().viewportGadget().keyPressSignal().connect(
-			Gaffer.WeakMethod( self.__keyPress ),
-			scoped = False
+			Gaffer.WeakMethod( self.__keyPress )
 		)
 
 	def _updateFromValues( self, values, exception ) :
@@ -1236,8 +1233,8 @@ class _CompareWipePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.PlugValueWidget.__init__( self, self.__button, plug, **kw )
 
-		self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__toggle  ), scoped = False)
-		plug.node().viewportGadget().keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
+		self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__toggle ) )
+		plug.node().viewportGadget().keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
 	def _updateFromValues( self, values, exception ) :
 
@@ -1280,20 +1277,20 @@ class _CompareImageWidget( GafferUI.Frame ) :
 		with row :
 
 			self.__bookmarkNumber = GafferUI.Label( horizontalAlignment=GafferUI.Label.HorizontalAlignment.Right )
-			self.__bookmarkNumber.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ), scoped=False )
+			self.__bookmarkNumber.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ) )
 
 			self.__icon = GafferUI.Button( hasFrame=False, highlightOnOver=False )
 			self.__icon._qtWidget().setFixedHeight( 13 )
 			self.__icon._qtWidget().setFixedWidth( 13 )
-			self.__icon.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ), scoped=False )
+			self.__icon.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ) )
 
 			self.__menuButton = GafferUI.Button( image="menuIndicator.png", hasFrame=False, highlightOnOver=False )
 			self.__menuButton._qtWidget().setObjectName( "menuDownArrow" )
-			self.__menuButton.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ), scoped=False )
+			self.__menuButton.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ) )
 
 		self.addChild( row )
 
-		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ), scoped=False )
+		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ) )
 
 		self._setState( self.__defaultNodeSet, Gaffer.NodeAlgo.presets( self.__node["compare"]["catalogueOutput"] )[0] )
 

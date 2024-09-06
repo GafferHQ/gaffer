@@ -60,10 +60,10 @@ class ConnectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 		row.append( self.__inputLabel, horizontalAlignment = GafferUI.HorizontalAlignment.Center, expand = True )
 		self.__frame.setChild( row )
 
-		self.__frame.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
-		self.__inputLabel.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
-		self.__frame.enterSignal().connect( functools.partial( GafferUI.Frame.setHighlighted, highlighted=True ), scoped = False )
-		self.__frame.leaveSignal().connect( functools.partial( GafferUI.Frame.setHighlighted, highlighted=False ), scoped = False )
+		self.__frame.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
+		self.__inputLabel.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
+		self.__frame.enterSignal().connect( functools.partial( GafferUI.Frame.setHighlighted, highlighted=True ) )
+		self.__frame.leaveSignal().connect( functools.partial( GafferUI.Frame.setHighlighted, highlighted=False ) )
 
 		self._addPopupMenu( self.__frame )
 

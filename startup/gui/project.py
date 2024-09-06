@@ -67,7 +67,7 @@ def __scriptAdded( container, script ) :
 
 	GafferImage.FormatPlug.acquireDefaultFormatPlug( script )
 
-application.root()["scripts"].childAddedSignal().connect( __scriptAdded, scoped = False )
+application.root()["scripts"].childAddedSignal().connect( __scriptAdded )
 
 ##########################################################################
 # Bookmarks

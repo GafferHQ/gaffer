@@ -202,7 +202,7 @@ class _ShaderNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			self.__stringPlugValueWidget = GafferUI.StringPlugValueWidget( plugs )
 			self.__reloadButton = GafferUI.Button( image = "refresh.png", hasFrame = False, toolTip = "Click to reload shader" )
-			self.__reloadButton.clickedSignal().connect( Gaffer.WeakMethod( self.__reloadButtonClicked ), scoped = False )
+			self.__reloadButton.clickedSignal().connect( Gaffer.WeakMethod( self.__reloadButtonClicked ) )
 
 	def setPlugs( self, plugs ) :
 
@@ -371,7 +371,7 @@ def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 
 	)
 
-GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu, scoped = False )
+GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu )
 
 
 ##########################################################################
@@ -660,7 +660,7 @@ class _PathMatcherPathFilter( Gaffer.PathFilter ) :
 		self.__pathMatcherDirty = True
 		self.__pathMatcher = IECore.PathMatcher()
 
-		rootPath.pathChangedSignal().connect( Gaffer.WeakMethod( self.__rootPathChanged ), scoped = False )
+		rootPath.pathChangedSignal().connect( Gaffer.WeakMethod( self.__rootPathChanged ) )
 
 	def setMatchPatterns( self, patterns ) :
 
@@ -787,13 +787,13 @@ class _ShaderDialogueBase( GafferUI.Dialogue ) :
 
 		self._setWidget( mainColumn )
 
-		self.__pathListingWidget.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__updateButtonState ), scoped = False )
-		self.__pathListingWidget.buttonReleaseSignal().connectFront( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
-		self.__pathListingWidget.pathSelectedSignal().connect( Gaffer.WeakMethod( self.__pathSelected ), scoped = False )
+		self.__pathListingWidget.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__updateButtonState ) )
+		self.__pathListingWidget.buttonReleaseSignal().connectFront( Gaffer.WeakMethod( self.__buttonRelease ) )
+		self.__pathListingWidget.pathSelectedSignal().connect( Gaffer.WeakMethod( self.__pathSelected ) )
 
 		self._addButton( "Cancel" )
 		self.__confirmButton = self._addButton( "OK" )
-		self.__confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
+		self.__confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 
 		self.__selectedSignal = Gaffer.Signal1()
 

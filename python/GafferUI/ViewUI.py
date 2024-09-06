@@ -260,7 +260,7 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 		with row :
 
 			self.__button = GafferUI.Button( "", self.__imagePrefix + "Off.png", hasFrame=False )
-			self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ), scoped = False )
+			self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
 
 			if not isinstance( plug, Gaffer.BoolPlug ) :
 				plugValueWidget = GafferUI.PlugValueWidget.create( plug, typeMetadata = None )

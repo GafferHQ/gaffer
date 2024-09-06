@@ -70,8 +70,8 @@ class EventSignalCombinerTest( GafferUITest.TestCase ) :
 	def testShortCutting( self ) :
 
 		s = GafferUI.Gadget.ButtonSignal()
-		s.connect( self.trueSlot, scoped = False )
-		s.connect( self.falseSlot, scoped = False )
+		s.connect( self.trueSlot )
+		s.connect( self.falseSlot )
 
 		self.assertEqual( self.trueSlotCalled, False )
 		self.assertEqual( self.falseSlotCalled, False )
@@ -84,8 +84,8 @@ class EventSignalCombinerTest( GafferUITest.TestCase ) :
 	def testNoShortCutting( self ) :
 
 		s = GafferUI.Gadget.ButtonSignal()
-		s.connect( self.falseSlot, scoped = False )
-		s.connect( self.trueSlot, scoped = False )
+		s.connect( self.falseSlot )
+		s.connect( self.trueSlot )
 
 		self.assertEqual( self.trueSlotCalled, False )
 		self.assertEqual( self.falseSlotCalled, False )
@@ -102,8 +102,8 @@ class EventSignalCombinerTest( GafferUITest.TestCase ) :
 		# those slots to be printed as warnings.
 
 		s = GafferUI.Gadget.ButtonSignal()
-		s.connect( self.exceptionSlot, scoped = False )
-		s.connect( self.trueSlot, scoped = False )
+		s.connect( self.exceptionSlot )
+		s.connect( self.trueSlot )
 
 		self.assertEqual( self.exceptionSlotCalled, False )
 		self.assertEqual( self.trueSlotCalled, False )

@@ -166,7 +166,7 @@ class BoolMetadataWidget( MetadataWidget ) :
 		MetadataWidget.__init__( self, self.__boolWidget, key, target, defaultValue = defaultValue, **kw )
 
 		self.__boolWidget.stateChangedSignal().connect(
-			Gaffer.WeakMethod( self.__stateChanged ), scoped = False
+			Gaffer.WeakMethod( self.__stateChanged )
 		)
 
 	def _updateFromValue( self, value ) :
@@ -187,7 +187,7 @@ class StringMetadataWidget( MetadataWidget ) :
 		self.__acceptEmptyString = acceptEmptyString
 
 		self.__textWidget.editingFinishedSignal().connect(
-			Gaffer.WeakMethod( self.__editingFinished ), scoped = False
+			Gaffer.WeakMethod( self.__editingFinished )
 		)
 
 	def textWidget( self ) :
@@ -214,7 +214,7 @@ class MultiLineStringMetadataWidget( MetadataWidget ) :
 		MetadataWidget.__init__( self, self.__textWidget, key, target, defaultValue = defaultValue, **kw )
 
 		self.__textWidget.editingFinishedSignal().connect(
-			Gaffer.WeakMethod( self.__editingFinished ), scoped = False
+			Gaffer.WeakMethod( self.__editingFinished )
 		)
 
 	def textWidget( self ) :
@@ -240,7 +240,7 @@ class ColorSwatchMetadataWidget( MetadataWidget ) :
 		self.__swatch._qtWidget().setFixedHeight( 18 )
 		self.__swatch._qtWidget().setMaximumWidth( 40 )
 
-		self.__swatch.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
+		self.__swatch.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
 
 	def _updateFromValue( self, value ) :
 
@@ -315,13 +315,13 @@ class FileSystemPathMetadataWidget( MetadataWidget ) :
 		self.__row.append( self.__pathWidget )
 
 		button = GafferUI.Button( image = "pathChooser.png", hasFrame=False )
-		button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
+		button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 		self.__row.append( button )
 
 		self.__acceptEmptyString = acceptEmptyString
 
 		self.__pathWidget.editingFinishedSignal().connect(
-			Gaffer.WeakMethod( self.__editingFinished ), scoped = False
+			Gaffer.WeakMethod( self.__editingFinished )
 		)
 
 	def _updateFromValue( self, value ) :
@@ -362,7 +362,7 @@ class NumericMetadataWidget( MetadataWidget ) :
 		MetadataWidget.__init__( self, self.__numericWidget, key, target, defaultValue = defaultValue, **kw )
 
 		self.__numericWidget.valueChangedSignal().connect(
-			Gaffer.WeakMethod( self.__valueChanged ), scoped = False
+			Gaffer.WeakMethod( self.__valueChanged )
 		)
 
 	def numericWidget( self ) :

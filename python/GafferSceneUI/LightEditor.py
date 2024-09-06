@@ -107,9 +107,9 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 			self.__pathListing.setDragPointer( "objects" )
 			self.__pathListing.setSortable( False )
 			self.__selectionChangedConnection = self.__pathListing.selectionChangedSignal().connect(
-				Gaffer.WeakMethod( self.__selectionChanged ), scoped = False
+				Gaffer.WeakMethod( self.__selectionChanged )
 			)
-			self.__pathListing.columnContextMenuSignal().connect( Gaffer.WeakMethod( self.__columnContextMenuSignal ), scoped = False )
+			self.__pathListing.columnContextMenuSignal().connect( Gaffer.WeakMethod( self.__columnContextMenuSignal ) )
 
 		self._updateFromSet()
 		self.__setPathListingPath()
@@ -429,7 +429,7 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self._qtWidget().currentChanged.connect( Gaffer.WeakMethod( self.__currentChanged ) )
 		self.__ignoreCurrentChanged = False
 
-		plug.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ), scoped = False )
+		plug.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
 
 		# Borrow the styling from the Spreadsheet's section chooser.
 		## \todo Should we be introducing a `GafferUI.TabBar` class which can be used in

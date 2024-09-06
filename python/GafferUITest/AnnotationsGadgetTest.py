@@ -144,7 +144,7 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 		def error( *unused ) :
 			with errorCondition :
 				errorCondition.notify()
-		script["errorNode"].errorSignal().connect( error, scoped = False )
+		script["errorNode"].errorSignal().connect( error )
 
 		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as callHandler :
 

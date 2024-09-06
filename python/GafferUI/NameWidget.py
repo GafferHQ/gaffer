@@ -54,7 +54,7 @@ class NameWidget( GafferUI.TextWidget ) :
 		self.__graphComponent = False # Sentinel that forces `setGraphComponent()` to update
 		self.setGraphComponent( graphComponent )
 
-		self.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setName ), scoped = False )
+		self.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setName ) )
 
 	def setGraphComponent( self, graphComponent ) :
 

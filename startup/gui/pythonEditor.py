@@ -46,4 +46,4 @@ def __pythonEditorCreated( editor ) :
 		if "." not in name and ( name.startswith( "Gaffer" ) or name.startswith( "IECore" ) )  :
 			editor.namespace()[name] = module
 
-GafferUI.PythonEditor.instanceCreatedSignal().connect( __pythonEditorCreated, scoped = False )
+GafferUI.PythonEditor.instanceCreatedSignal().connect( __pythonEditorCreated )

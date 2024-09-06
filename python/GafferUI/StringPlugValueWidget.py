@@ -58,9 +58,9 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self._addPopupMenu( self.__textWidget )
 
-		self.__textWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
-		self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ), scoped = False )
-		self.__textChangedConnection = self.__textWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ), scoped = False )
+		self.__textWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ) )
+		self.__textChangedConnection = self.__textWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
 
 	def textWidget( self ) :
 

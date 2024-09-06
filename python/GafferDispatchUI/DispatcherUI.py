@@ -203,7 +203,7 @@ class _DispatchButton( GafferUI.Button ) :
 		GafferUI.Button.__init__( self, "Dispatch", **kw )
 
 		self.__node = node
-		self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ), scoped = False )
+		self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
 
 	def __clicked( self, button ) :
 
@@ -283,7 +283,7 @@ class _DispatcherCreationWidget( GafferUI.Widget ) :
 					# Dummy `gaffer://...` URL is sufficient to trigger `linkActivatedSignal`, which is all we need.
 					f'<a href="gaffer://createDispatcher"><font color={textColor}>Create a dispatcher</font></a> <font color={textColor}>to execute this node</font>',
 				)
-				label.linkActivatedSignal().connect( Gaffer.WeakMethod( self.__linkActivated ), scoped = False )
+				label.linkActivatedSignal().connect( Gaffer.WeakMethod( self.__linkActivated ) )
 
 				GafferUI.Spacer( size = imath.V2i( 0 ), parenting = { "expand" : True } )
 

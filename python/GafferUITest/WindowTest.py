@@ -184,7 +184,7 @@ class WindowTest( GafferUITest.TestCase ) :
 		w.setVisible( True )
 		self.assertEqual( w.getVisible(), True )
 
-		w.closedSignal().connect( closeFn, scoped = False )
+		w.closedSignal().connect( closeFn )
 
 		self.assertEqual( w.close(), True )
 		self.assertEqual( w.getVisible(), False )
@@ -201,7 +201,7 @@ class WindowTest( GafferUITest.TestCase ) :
 		w.setVisible( True )
 		self.assertEqual( w.getVisible(), True )
 
-		w.closedSignal().connect( closeFn, scoped = False )
+		w.closedSignal().connect( closeFn )
 
 		# simulate user clicking on the x
 		w._qtWidget().close()
@@ -230,7 +230,7 @@ class WindowTest( GafferUITest.TestCase ) :
 		w.setVisible( True )
 		self.assertEqual( w.getVisible(), True )
 
-		w.closedSignal().connect( closeFn, scoped = False )
+		w.closedSignal().connect( closeFn )
 
 		self.assertEqual( w.close(), False )
 		self.assertEqual( w.getVisible(), True )
@@ -471,7 +471,7 @@ class WindowTest( GafferUITest.TestCase ) :
 			nonlocal preCloseSlotResult
 			return preCloseSlotResult
 
-		window.preCloseSignal().connect( preCloseSlot, scoped = False )
+		window.preCloseSignal().connect( preCloseSlot )
 		preCloseCapturingSlot = GafferTest.CapturingSlot( window.preCloseSignal() )
 		closedSlot = GafferTest.CapturingSlot( window.closedSignal() )
 

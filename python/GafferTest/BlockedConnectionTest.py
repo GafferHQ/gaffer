@@ -48,7 +48,7 @@ class BlockedConnectionTest( GafferTest.TestCase ) :
 			self.numCalls += 1
 
 		s = Gaffer.Signals.Signal0()
-		c = s.connect( f, scoped = False )
+		c = s.connect( f )
 
 		s()
 		self.assertEqual( self.numCalls, 1 )
@@ -68,7 +68,7 @@ class BlockedConnectionTest( GafferTest.TestCase ) :
 			self.numCalls += 1
 
 		s = Gaffer.Signals.Signal0()
-		c = s.connect( f, scoped = False )
+		c = s.connect( f )
 
 		s()
 		self.assertEqual( self.numCalls, 1 )

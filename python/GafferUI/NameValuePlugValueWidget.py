@@ -67,7 +67,7 @@ class NameValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 				horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
 			)
 			nameWidget.label()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
-			nameWidget.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ), scoped = False )
+			nameWidget.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ) )
 		else :
 			nameWidget = GafferUI.StringPlugValueWidget( { plug["name"] for plug in self.getPlugs() } )
 			nameWidget.textWidget()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )

@@ -43,5 +43,5 @@ def __editorCreated( editor ) :
 	GafferUI.GraphBookmarksUI.connectToEditor( editor )
 	GafferSceneUI.SceneHistoryUI.connectToEditor( editor )
 
-GafferUI.Editor.instanceCreatedSignal().connect( __editorCreated, scoped = False )
-GafferUI.CompoundEditor.nodeSetMenuSignal().connect( GafferUI.GraphBookmarksUI.appendNodeSetMenuDefinitions, scoped = False )
+GafferUI.Editor.instanceCreatedSignal().connect( __editorCreated )
+GafferUI.CompoundEditor.nodeSetMenuSignal().connect( GafferUI.GraphBookmarksUI.appendNodeSetMenuDefinitions )

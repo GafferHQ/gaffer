@@ -2326,7 +2326,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 					message
 				) )
 
-			node.errorSignal().connect( fail, scoped = False )
+			node.errorSignal().connect( fail )
 
 		return node
 

@@ -84,4 +84,4 @@ def __plugContextMenuSignal( graphEditor, plug, menuDefinition ) :
 			}
 		)
 
-GafferUI.GraphEditor.plugContextMenuSignal().connect( __plugContextMenuSignal, scoped = False )
+GafferUI.GraphEditor.plugContextMenuSignal().connect( __plugContextMenuSignal )

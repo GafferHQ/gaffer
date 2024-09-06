@@ -184,7 +184,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 	# over this ordering.
 	__prependSpreadsheetCreationMenuItems( menuDefinition, plugValueWidget )
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
 
 for plugType in ( Gaffer.TransformPlug, Gaffer.Transform2DPlug ) :
 	Gaffer.Metadata.registerValue( plugType, "spreadsheet:plugMenu:includeAsAncestor", True )
@@ -238,4 +238,4 @@ def __nodeEditorToolMenu( nodeEditor, node, menuDefinition ) :
 		}
 	)
 
-GafferUI.NodeEditor.toolMenuSignal().connect( __nodeEditorToolMenu, scoped = False )
+GafferUI.NodeEditor.toolMenuSignal().connect( __nodeEditorToolMenu )

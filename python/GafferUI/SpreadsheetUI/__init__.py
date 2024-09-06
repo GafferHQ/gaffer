@@ -102,7 +102,7 @@ def addRowButtonMenuSignal() :
 # 	menuDefinition.append( "/CustomDivider", { "divider" : True } )
 # 	menuDefinition.append( "/Custom", { "command" : functools.partial( addColumn, widget.getPlug() ) } )
 #
-# GafferUI.SpreadsheetUI.addColumnButtonMenuSignal().connect( customAddColumnMenu, scoped = False )
+# GafferUI.SpreadsheetUI.addColumnButtonMenuSignal().connect( customAddColumnMenu )
 # ```
 #
 # > Tip : The `menuDefinition` will already contain a set of default
