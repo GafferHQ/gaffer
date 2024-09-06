@@ -13,6 +13,7 @@ Improvements
   - Added the ability to edit the scale of node icons.
   - Improved layout of Box node plug creator visibility toggles.
 - ArnoldShader : Moved the `toon` shader's `*_tonemap_hue_saturation` parameters to appropriate sections in the UI.
+- File Browser : The "Type" column can now be sorted. This sorts directories separately from files, which are sorted by their extension.
 
 Fixes
 -----
