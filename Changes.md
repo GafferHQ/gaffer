@@ -26,6 +26,7 @@ API
 ---
 
 - MetadataWidget : Added `NumericMetadataWidget` class.
+- CompoundObjectPlug : The Python binding for `setValue()` now accepts CompoundData in addition to CompoundObject.
 
 Build
 -----
