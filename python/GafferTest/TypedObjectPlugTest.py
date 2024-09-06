@@ -305,6 +305,20 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( s2["n"]["user"]["compoundObject"].getInput(), s2["n"]["user"]["compoundData"] )
 		self.assertEqual( s2["n"]["user"]["compoundObject"].getValue(), IECore.CompoundObject( { "a" : IECore.IntData( 10 ) } ) )
 
+	def testSetCompoundObjectFromCompoundData( self ) :
+
+		data = IECore.CompoundData( { "a" : 10 } )
+
+		plug = Gaffer.CompoundObjectPlug()
+		plug.setValue( data )
+		self.assertEqual( plug.getValue(), IECore.CompoundObject( { "a" : IECore.IntData( 10 ) } ) )
+		self.assertFalse( plug.getValue( _copy = False )["a"].isSame( data["a"] ) )
+
+		data = IECore.CompoundData( { "b" : 10 } )
+		plug.setValue( data, _copy = False )
+		self.assertEqual( plug.getValue(), IECore.CompoundObject( { "b" : IECore.IntData( 10 ) } ) )
+		self.assertTrue( plug.getValue( _copy = False )["b"].isSame( data["b"] ) )
+
 	def testStaticPlugSerialisationWithoutRepr( self ) :
 
 		# This exposed a bug not exposed by `testSerialisationWithoutRepr()`. In

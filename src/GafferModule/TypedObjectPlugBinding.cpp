@@ -44,6 +44,48 @@
 // Deliberately avoiding "using namespace" so that we can be sure
 // TypedPlugBinding uses full namespace qualification for all names.
 
+namespace
+{
+
+// Allows `CompoundObjectPlug.setValue()` to accept CompoundData.
+/// \todo Probably belongs in Cortex.
+struct CompoundObjectFromCompoundData
+{
+
+	CompoundObjectFromCompoundData()
+	{
+		boost::python::converter::registry::push_back(
+			&convertible,
+			&construct,
+			boost::python::type_id<IECore::CompoundObjectPtr>()
+		);
+	}
+
+	static void *convertible( PyObject *obj )
+	{
+		boost::python::extract<IECore::CompoundDataPtr> e( obj );
+		if( e.check() )
+		{
+			return obj;
+		}
+		return nullptr;
+	}
+
+	static void construct( PyObject *obj, boost::python::converter::rvalue_from_python_stage1_data *data )
+	{
+		IECore::CompoundDataPtr compoundData = boost::python::extract<IECore::CompoundDataPtr>( obj );
+		IECore::CompoundObjectPtr compoundObject = new IECore::CompoundObject;
+		compoundObject->members().insert( compoundData->readable().begin(), compoundData->readable().end() );
+
+		void *storage = ((boost::python::converter::rvalue_from_python_storage<IECore::CompoundObjectPtr>*)data)->storage.bytes;
+		new (storage) IECore::CompoundObjectPtr( compoundObject );
+		data->convertible = storage;
+	}
+
+};
+
+} // namespace
+
 void GafferModule::bindTypedObjectPlug()
 {
 	GafferBindings::TypedObjectPlugClass<Gaffer::ObjectPlug>();
@@ -65,4 +107,5 @@ void GafferModule::bindTypedObjectPlug()
 	GafferBindings::TypedObjectPlugClass<Gaffer::CompoundObjectPlug>();
 	GafferBindings::TypedObjectPlugClass<Gaffer::AtomicCompoundDataPlug>();
 	GafferBindings::TypedObjectPlugClass<Gaffer::PathMatcherDataPlug>();
+	CompoundObjectFromCompoundData();
 }
