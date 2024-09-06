@@ -40,6 +40,7 @@ Fixes
   - Fixed error when `resize()` was used on an output plug.
 - CreateViews : Fixed redundant serialisation of internal connections.
 - LightEditor, RenderPassEditor : Removed ambiguous `The selected cells cannot be edited in the current Edit Scope` message when attempting to edit non-editable columns, such as the `Name` column.
+- SetEditor : Fixed right-click to ensure the item under the cursor is selected before the menu is shown.
 
 API
 ---

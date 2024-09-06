@@ -92,7 +92,7 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 			)
 
 			self.__pathListing.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
-			self.__pathListing.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenuSignal ), scoped = False )
+			self.__pathListing.columnContextMenuSignal().connect( Gaffer.WeakMethod( self.__columnContextMenuSignal ), scoped = False )
 			self.__pathListing.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPressSignal ), scoped = False )
 
 		self._updateFromSet()
@@ -179,9 +179,7 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 
 		return False
 
-	def __contextMenuSignal( self, widget ) :
-
-		menuDefinition = IECore.MenuDefinition()
+	def __columnContextMenuSignal( self, column, pathListingWidget, menuDefinition ) :
 
 		selection = self.__pathListing.getSelection()
 		selectedSetNames = self.__selectedSetNames()
@@ -211,11 +209,6 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 				"active" : len( selectedSetNames ) > 0,
 			}
 		)
-
-		self.__contextMenu = GafferUI.Menu( menuDefinition )
-		self.__contextMenu.popup( widget )
-
-		return True
 
 	def __copySelectedSetNames( self, *unused ) :
 
