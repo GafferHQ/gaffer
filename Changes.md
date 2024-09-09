@@ -124,11 +124,25 @@ Improvements
   - Added the ability to edit the scale of node icons.
   - Improved layout of Box node plug creator visibility toggles.
 - ArnoldShader : Moved the `toon` shader's `*_tonemap_hue_saturation` parameters to appropriate sections in the UI.
+- File Browser : The "Type" column can now be sorted. This sorts directories separately from files, which are sorted by their extension.
+
+Fixes
+-----
+
+- SceneWriter : Fixed handling of ':' characters in set names when writing to USD. These were previously converted to '_' but are now preserved.
+- SceneReader : Fixed loading of animated ModelAPI extents from USD.
+- ResamplePrimitiveVariables : Fixed handling of periodic curves.
 
 API
 ---
 
 - MetadataWidget : Added `NumericMetadataWidget` class.
+- RenderPassWedge : Render adaptors may now be used to delete and/or disable render passes, by passing `client = "RenderPassWedge"` to `SceneAlgo.registerRenderAdaptor()`.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.9.2.
 
 1.4.11.0 (relative to 1.4.10.0)
 ========
