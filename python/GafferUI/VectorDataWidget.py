@@ -111,6 +111,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__tableView.customContextMenuRequested.connect( Gaffer.WeakMethod( self.__contextMenu ) )
 
 		self.__tableView.verticalHeader().setDefaultSectionSize( 20 )
+		self.__tableView.setWordWrap( False )
 
 		self.__tableViewHolder = GafferUI.Widget( self.__tableView )
 		self.__column.append( self.__tableViewHolder )

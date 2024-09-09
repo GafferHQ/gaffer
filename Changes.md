@@ -109,13 +109,18 @@ Build
 - USD : Updated to version 24.08.
 - Zstandard : Added version 1.5.0.
 
-1.4.x.x (relative to 1.4.11.0)
+1.4.x.x (relative to 1.4.12.0)
 =======
+
+
+
+1.4.12.0 (relative to 1.4.11.0)
+========
 
 Features
 --------
 
-- Viewer : Added support for Cycles GPU renderering via a new Device option in the Cycles viewer settings.
+- Viewer : Added support for Cycles GPU rendering via a new Device option in the Cycles viewer settings.
 
 Improvements
 ------------
@@ -132,6 +137,7 @@ Fixes
 - SceneWriter : Fixed handling of ':' characters in set names when writing to USD. These were previously converted to '_' but are now preserved.
 - SceneReader : Fixed loading of animated ModelAPI extents from USD.
 - ResamplePrimitiveVariables : Fixed handling of periodic curves.
+- VectorDataWidget : Fixed bug causing paths to display as "..." after the last visible "/" when the widget wasn't wide enough to show the entire path.
 
 API
 ---
@@ -867,10 +873,18 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.16.x (relative to 1.3.16.7)
+1.3.16.x (relative to 1.3.16.8)
 ========
 
 
+
+1.3.16.8 (relative to 1.3.16.7)
+========
+
+Fixes
+-----
+
+- VectorDataWidget : Fixed bug causing paths to display as "..." after the last visible "/" when the widget wasn't wide enough to show the entire path.
 
 1.3.16.7 (relative to 1.3.16.6)
 ========
