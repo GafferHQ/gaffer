@@ -4,7 +4,7 @@
 Features
 --------
 
-- Viewer : Added support for Cycles GPU renderering via a new Device option in the Cycles viewer settings.
+- Viewer : Added support for Cycles GPU rendering via a new Device option in the Cycles viewer settings.
 
 Improvements
 ------------
