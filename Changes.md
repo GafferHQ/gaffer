@@ -1,7 +1,10 @@
 1.3.16.x (relative to 1.3.16.7)
 ========
 
+Fixes
+-----
 
+- VectorDataWidget : Fixed bug causing paths to display as "..." after the last visible "/" when the widget wasn't wide enough to show the entire path.
 
 1.3.16.7 (relative to 1.3.16.6)
 ========
