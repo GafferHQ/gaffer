@@ -248,5 +248,81 @@ class RenderPassWedgeTest( GafferTest.TestCase ) :
 				}
 			)
 
+	def testAdaptorDeletingPasses( self ) :
+
+		def createAdaptor() :
+
+			node = GafferScene.DeleteRenderPasses()
+			node["names"].setValue( "fx*" )
+			return node
+
+		GafferScene.SceneAlgo.registerRenderAdaptor( "RenderPassWedgeTest", createAdaptor, client = "RenderPassWedge" )
+		self.addCleanup( GafferScene.SceneAlgo.deregisterRenderAdaptor, "RenderPassWedgeTest" )
+
+		script = Gaffer.ScriptNode()
+
+		script["renderPasses"] = GafferScene.RenderPasses()
+		script["renderPasses"]["names"].setValue( IECore.StringVectorData( [ "char1", "char2", "fx1", "fx2" ] ) )
+
+		script["log"] = GafferDispatchTest.LoggingTaskNode()
+		script["log"]["dependsOnPass"] = Gaffer.StringPlug( defaultValue = "${renderPass}" )
+
+		script["wedge"] = GafferScene.RenderPassWedge()
+		script["wedge"]["preTasks"].next().setInput( script["log"]["task"] )
+		script["wedge"]["in"].setInput( script["renderPasses"]["out"] )
+
+		script["dispatcher"] = self.__dispatcher()
+		script["dispatcher"]["tasks"].next().setInput( script["wedge"]["task"] )
+		script["dispatcher"]["task"].execute()
+
+		self.assertEqual(
+			{ l.context["renderPass"] for l in script["log"].log },
+			{ "char1", "char2" }
+		)
+
+	def testAdaptorDisablingPasses( self ) :
+
+		def createAdaptor() :
+
+			node = GafferScene.SceneProcessor()
+			node["options"] = GafferScene.CustomOptions()
+			node["options"]["in"].setInput( node["in"] )
+			node["options"]["options"].addChild( Gaffer.NameValuePlug( "renderPass:enabled", False ) )
+
+			node["switch"] = Gaffer.NameSwitch()
+			node["switch"].setup( node["options"]["out"] )
+			node["switch"]["in"][0]["value"].setInput( node["in"] )
+			node["switch"]["in"][1]["value"].setInput( node["options"]["out"] )
+			node["switch"]["in"][1]["name"].setValue( "char*" )
+			node["switch"]["selector"].setValue( "${renderPass}" )
+
+			node["out"].setInput( node["switch"]["out"]["value"] )
+
+			return node
+
+		GafferScene.SceneAlgo.registerRenderAdaptor( "RenderPassWedgeTest", createAdaptor, client = "RenderPassWedge" )
+		self.addCleanup( GafferScene.SceneAlgo.deregisterRenderAdaptor, "RenderPassWedgeTest" )
+
+		script = Gaffer.ScriptNode()
+
+		script["renderPasses"] = GafferScene.RenderPasses()
+		script["renderPasses"]["names"].setValue( IECore.StringVectorData( [ "char1", "char2", "fx1", "fx2" ] ) )
+
+		script["log"] = GafferDispatchTest.LoggingTaskNode()
+		script["log"]["dependsOnPass"] = Gaffer.StringPlug( defaultValue = "${renderPass}" )
+
+		script["wedge"] = GafferScene.RenderPassWedge()
+		script["wedge"]["preTasks"].next().setInput( script["log"]["task"] )
+		script["wedge"]["in"].setInput( script["renderPasses"]["out"] )
+
+		script["dispatcher"] = self.__dispatcher()
+		script["dispatcher"]["tasks"].next().setInput( script["wedge"]["task"] )
+		script["dispatcher"]["task"].execute()
+
+		self.assertEqual(
+			{ l.context["renderPass"] for l in script["log"].log },
+			{ "fx1", "fx2" }
+		)
+
 if __name__ == "__main__":
 	unittest.main()
