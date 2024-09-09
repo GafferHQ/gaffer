@@ -57,8 +57,8 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__lastChangedReason = None
 		self.__mergeGroupId = 0
 
-		self.__numericWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
-		self.__valueChangedConnection = self.__numericWidget.valueChangedSignal().connect( Gaffer.WeakMethod( self.__valueChanged ), scoped = False )
+		self.__numericWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.__valueChangedConnection = self.__numericWidget.valueChangedSignal().connect( Gaffer.WeakMethod( self.__valueChanged ) )
 
 	def numericWidget( self ) :
 

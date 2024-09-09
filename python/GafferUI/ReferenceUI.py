@@ -110,13 +110,13 @@ class _FileNameWidget( GafferUI.Widget ) :
 
 			loadButton = GafferUI.Button( image = "pathChooser.png", hasFrame=False )
 			loadButton.setToolTip( "Load" )
-			loadButton.clickedSignal().connect( Gaffer.WeakMethod( self.__loadClicked ), scoped = False )
+			loadButton.clickedSignal().connect( Gaffer.WeakMethod( self.__loadClicked ) )
 
 			self.__reloadButton = GafferUI.Button( image = "refresh.png", hasFrame=False )
 			self.__reloadButton.setToolTip( "Reload" )
-			self.__reloadButton.clickedSignal().connect( Gaffer.WeakMethod( self.__reloadClicked ), scoped = False )
+			self.__reloadButton.clickedSignal().connect( Gaffer.WeakMethod( self.__reloadClicked ) )
 
-		node.referenceLoadedSignal().connect( Gaffer.WeakMethod( self.__referenceLoaded ), scoped = False )
+		node.referenceLoadedSignal().connect( Gaffer.WeakMethod( self.__referenceLoaded ) )
 
 	def __loadClicked( self, button ) :
 
@@ -207,4 +207,4 @@ def __graphEditorNodeContextMenu( graphEditor, node, menuDefinition ) :
 		}
 	)
 
-GafferUI.GraphEditor.nodeContextMenuSignal().connect( __graphEditorNodeContextMenu, scoped = False )
+GafferUI.GraphEditor.nodeContextMenuSignal().connect( __graphEditorNodeContextMenu )

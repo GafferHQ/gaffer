@@ -77,7 +77,7 @@ def __viewContextMenu( viewer, view, menuDefinition ) :
 	GafferSceneUI.LightUI.appendViewContextMenuItems( viewer, view, menuDefinition )
 	GafferSceneUI.SceneHistoryUI.appendViewContextMenuItems( viewer, view, menuDefinition )
 
-GafferUI.Viewer.viewContextMenuSignal().connect( __viewContextMenu, scoped = False )
+GafferUI.Viewer.viewContextMenuSignal().connect( __viewContextMenu )
 
 # register shading modes
 
@@ -261,6 +261,6 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 		)
 
 # Add catalogue hotkeys to viewers, eg: up/down navigation
-GafferUI.Editor.instanceCreatedSignal().connect( GafferImageUI.CatalogueUI.addCatalogueHotkeys, scoped = False )
-GafferUI.Editor.instanceCreatedSignal().connect( GafferSceneUI.EditScopeUI.addPruningActions, scoped = False )
-GafferUI.Editor.instanceCreatedSignal().connect( GafferSceneUI.EditScopeUI.addVisibilityActions, scoped = False )
+GafferUI.Editor.instanceCreatedSignal().connect( GafferImageUI.CatalogueUI.addCatalogueHotkeys )
+GafferUI.Editor.instanceCreatedSignal().connect( GafferSceneUI.EditScopeUI.addPruningActions )
+GafferUI.Editor.instanceCreatedSignal().connect( GafferSceneUI.EditScopeUI.addVisibilityActions )

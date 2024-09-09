@@ -122,7 +122,7 @@ class _SceneViewInspector( GafferUI.Widget ) :
 					GafferUI.Spacer( imath.V2i( 1 ) )
 					self.__busyWidget = GafferUI.BusyWidget( size = 20, busy = False )
 					hideButton = GafferUI.Button( image="deleteSmall.png", hasFrame=False )
-					hideButton.clickedSignal().connect( Gaffer.WeakMethod( self.__closeButtonClicked ), scoped = False )
+					hideButton.clickedSignal().connect( Gaffer.WeakMethod( self.__closeButtonClicked ) )
 
 				with GafferUI.ScrolledContainer( horizontalMode = GafferUI.ScrollMode.Never ) :
 					with GafferUI.ListContainer( spacing = 20 ) as self.__sections :
@@ -142,7 +142,7 @@ class _SceneViewInspector( GafferUI.Widget ) :
 		# this frame which holds all our contents.
 		self.__frame.setVisible( False )
 
-		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False)
+		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ))
 
 	def _scheduleUpdate( self, inspectorWidget ) :
 
@@ -157,7 +157,7 @@ class _SceneViewInspector( GafferUI.Widget ) :
 		sceneView["inspector"].addChild( Gaffer.BoolPlug( "visible", Gaffer.Plug.Direction.In, True ) )
 		Gaffer.NodeAlgo.applyUserDefaults( sceneView["inspector"] )
 
-		sceneView.viewportGadget().keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
+		sceneView.viewportGadget().keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
 		self.__sceneView = sceneView
 
@@ -302,11 +302,11 @@ class _InspectorWidget( GafferUI.Widget ) :
 			label._qtWidget().setMaximumWidth( 140 )
 
 			self.__valueWidget = _ValueWidget()
-			self.__valueWidget.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__valueDoubleClick ), scoped = False )
+			self.__valueWidget.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__valueDoubleClick ) )
 
 		self.__inspectorResults = []
-		self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = False )
-		self.__inspector.dirtiedSignal().connect( Gaffer.WeakMethod( self.__inspectorDirtied ), scoped = False )
+		self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
+		self.__inspector.dirtiedSignal().connect( Gaffer.WeakMethod( self.__inspectorDirtied ) )
 
 	def context( self ) :
 
@@ -454,9 +454,9 @@ class _ValueWidget( GafferUI.Widget ) :
 
 		self._qtWidget().setStyleSheet( "padding-left: 4px; padding-right: 4px;" )
 
-		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
-		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
-		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
+		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
+		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
 
 		self.__values = []
 		self.setValues( values )

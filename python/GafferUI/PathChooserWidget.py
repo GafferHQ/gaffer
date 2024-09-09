@@ -67,7 +67,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 
 					self.__displayModeButton = GafferUI.Button( image = "pathListingTree.png", hasFrame=False )
 					self.__displayModeButton.setToolTip( "Toggle between list and tree views" )
-					self.__displayModeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__displayModeButtonClicked ), scoped = False )
+					self.__displayModeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__displayModeButtonClicked ) )
 
 					self.__bookmarksButton = GafferUI.MenuButton(
 						image = "bookmarks.png",
@@ -75,17 +75,17 @@ class PathChooserWidget( GafferUI.Widget ) :
 						menu = GafferUI.Menu( Gaffer.WeakMethod( self.__bookmarksMenuDefinition ) ),
 					)
 					self.__bookmarksButton.setToolTip( "Bookmarks" )
-					self.__bookmarksButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__bookmarksButtonDragEnter ), scoped = False )
-					self.__bookmarksButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__bookmarksButtonDragLeave ), scoped = False )
-					self.__bookmarksButton.dropSignal().connect( Gaffer.WeakMethod( self.__bookmarksButtonDrop ), scoped = False )
+					self.__bookmarksButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__bookmarksButtonDragEnter ) )
+					self.__bookmarksButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__bookmarksButtonDragLeave ) )
+					self.__bookmarksButton.dropSignal().connect( Gaffer.WeakMethod( self.__bookmarksButtonDrop ) )
 
 					reloadButton = GafferUI.Button( image = "refresh.png", hasFrame=False )
 					reloadButton.setToolTip( "Refresh view" )
-					reloadButton.clickedSignal().connect( Gaffer.WeakMethod( self.__reloadButtonClicked ), scoped = False )
+					reloadButton.clickedSignal().connect( Gaffer.WeakMethod( self.__reloadButtonClicked ) )
 
 					upButton = GafferUI.Button( image = "pathUpArrow.png", hasFrame=False )
 					upButton.setToolTip( "Up one level" )
-					upButton.clickedSignal().connect( Gaffer.WeakMethod( self.__upButtonClicked ), scoped = False )
+					upButton.clickedSignal().connect( Gaffer.WeakMethod( self.__upButtonClicked ) )
 
 					GafferUI.Spacer( imath.V2i( 2, 2 ) )
 
@@ -101,7 +101,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 						tmpPath,
 						selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows if allowMultipleSelection else GafferUI.PathListingWidget.SelectionMode.Row
 					)
-					self.__directoryListing.displayModeChangedSignal().connect( Gaffer.WeakMethod( self.__displayModeChanged ), scoped = False )
+					self.__directoryListing.displayModeChangedSignal().connect( Gaffer.WeakMethod( self.__displayModeChanged ) )
 					if len( previewTypes ) :
 						self.__previewWidget = GafferUI.CompoundPathPreview( tmpPath, childTypes=previewTypes )
 					else :
@@ -120,9 +120,9 @@ class PathChooserWidget( GafferUI.Widget ) :
 
 		self.__pathSelectedSignal = GafferUI.WidgetSignal()
 
-		self.__directoryListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__listingSelectionChanged ), scoped = False )
-		self.__directoryListing.pathSelectedSignal().connect( Gaffer.WeakMethod( self.__pathSelected ), scoped = False )
-		self.__pathWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__pathSelected ), scoped = False )
+		self.__directoryListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__listingSelectionChanged ) )
+		self.__directoryListing.pathSelectedSignal().connect( Gaffer.WeakMethod( self.__pathSelected ) )
+		self.__pathWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__pathSelected ) )
 
 		self.__path = None
 		self.setPath( path )

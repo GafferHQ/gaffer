@@ -64,7 +64,7 @@ class BrowserEditor( GafferUI.Editor ) :
 				)
 				for mode in self.__modes :
 					modeMenu.append( mode[0] )
-				modeMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__modeChanged ), scoped = False )
+				modeMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__modeChanged ) )
 
 			self.__pathChooser = GafferUI.PathChooserWidget( Gaffer.DictPath( {}, "/" ), previewTypes=GafferUI.PathPreviewWidget.types() )
 			self.__pathChooser.pathWidget().setVisible( False )

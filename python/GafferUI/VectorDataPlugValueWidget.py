@@ -68,7 +68,7 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 			] )
 			self.__dataWidget.setToolTips( [ Gaffer.Metadata.value( p, "description" ) or "" for p in dataPlugs ] )
 
-		self.__dataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ), scoped = False )
+		self.__dataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ) )
 
 	def vectorDataWidget( self ) :
 

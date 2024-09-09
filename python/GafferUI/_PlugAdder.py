@@ -61,7 +61,7 @@ def __plugMenu( title, plugs ) :
 
 	return chosenPlugs[0] if chosenPlugs else None
 
-GafferUI.PlugAdder.plugMenuSignal().connect( __plugMenu, scoped = False )
+GafferUI.PlugAdder.plugMenuSignal().connect( __plugMenu )
 
 def __menu( title, names ) :
 
@@ -93,4 +93,4 @@ def __menu( title, names ) :
 
 	return chosenNames[0] if chosenNames else ""
 
-GafferUI.PlugAdder.menuSignal().connect( __menu, scoped = False )
+GafferUI.PlugAdder.menuSignal().connect( __menu )

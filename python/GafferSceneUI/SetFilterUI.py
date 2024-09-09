@@ -248,10 +248,10 @@ def __drop( nodeGadget, event ) :
 
 def addSetDropTarget( nodeGadget ) :
 
-	nodeGadget.dragEnterSignal().connect( __dragEnter, scoped = False )
-	nodeGadget.dragLeaveSignal().connect( __dragLeave, scoped = False )
-	nodeGadget.dragMoveSignal().connect( __dragMove, scoped = False )
-	nodeGadget.dropSignal().connect( __drop, scoped = False )
+	nodeGadget.dragEnterSignal().connect( __dragEnter )
+	nodeGadget.dragLeaveSignal().connect( __dragLeave )
+	nodeGadget.dragMoveSignal().connect( __dragMove )
+	nodeGadget.dropSignal().connect( __drop )
 
 def __nodeGadget( setFilter ) :
 

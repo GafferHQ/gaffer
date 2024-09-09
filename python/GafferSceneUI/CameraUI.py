@@ -493,4 +493,4 @@ def __nodeEditorToolMenu( nodeEditor, node, menuDefinition ) :
 
 		)
 
-GafferUI.NodeEditor.toolMenuSignal().connect( __nodeEditorToolMenu, scoped = False )
+GafferUI.NodeEditor.toolMenuSignal().connect( __nodeEditorToolMenu )

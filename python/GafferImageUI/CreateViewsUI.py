@@ -130,7 +130,7 @@ class _ViewsFooter( GafferUI.PlugValueWidget ) :
 			GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
 
 			self.__button = GafferUI.Button( image = "plus.png", hasFrame = False )
-			self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
+			self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 
 			GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
 

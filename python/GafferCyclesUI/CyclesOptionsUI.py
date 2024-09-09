@@ -1489,7 +1489,7 @@ class ViewerDevicePlugValueWidget( GafferUI.PresetsPlugValueWidget ) :
 
 		GafferUI.PresetsPlugValueWidget.__init__( self, plugs, **kw )
 
-		self.getPlug().node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ), scoped = False )
+		self.getPlug().node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
 
 	def __plugSet( self, plug ) :
 

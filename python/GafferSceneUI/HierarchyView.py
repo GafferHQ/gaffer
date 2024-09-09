@@ -88,11 +88,11 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 			self.__pathListing.setDragPointer( "objects" )
 			self.__pathListing.setSortable( False )
 
-			self.__selectionChangedConnection = self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ), scoped = False )
-			self.__expansionChangedConnection = self.__pathListing.expansionChangedSignal().connect( Gaffer.WeakMethod( self.__expansionChanged ), scoped = False )
+			self.__selectionChangedConnection = self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
+			self.__expansionChangedConnection = self.__pathListing.expansionChangedSignal().connect( Gaffer.WeakMethod( self.__expansionChanged ) )
 
-			self.__pathListing.columnContextMenuSignal().connect( Gaffer.WeakMethod( self.__columnContextMenuSignal ), scoped = False )
-			self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPressSignal ), scoped = False )
+			self.__pathListing.columnContextMenuSignal().connect( Gaffer.WeakMethod( self.__columnContextMenuSignal ) )
+			self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPressSignal ) )
 
 		self._updateFromSet()
 		self.__setPathListingPath()
@@ -336,7 +336,7 @@ class _SearchFilterWidget( GafferUI.PathFilterWidget ) :
 		GafferUI.PathFilterWidget.__init__( self, self.__patternWidget, pathFilter )
 
 		self.__patternWidget.setPlaceholderText( "Filter..." )
-		self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ), scoped = False )
+		self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ) )
 
 		self._updateFromPathFilter()
 

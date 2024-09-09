@@ -169,4 +169,4 @@ def __tagsPopupMenu( menuDefinition, plugValueWidget ) :
 			}
 		)
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __tagsPopupMenu, scoped = False )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __tagsPopupMenu )

@@ -309,8 +309,7 @@ class _OptionQueryFooter( GafferUI.PlugValueWidget ) :
 			GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand": True } )
 
 		plug.node().plugSetSignal().connect(
-			Gaffer.WeakMethod( self.__updateQueryMetadata ),
-			scoped = False
+			Gaffer.WeakMethod( self.__updateQueryMetadata )
 		)
 
 	def _updateFromEditable( self ) :
@@ -444,4 +443,4 @@ def __deletePlug( plug ) :
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		plug.node().removeQuery( plug )
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )

@@ -176,7 +176,7 @@ class ShufflesPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__plugLayout = GafferUI.PlugLayout( plug )
 			self.__addButton = GafferUI.Button( image = "plus.png", hasFrame = False )
 
-		self.__addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addButtonClicked ), scoped = False )
+		self.__addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addButtonClicked ) )
 
 	def hasLabel( self ) :
 

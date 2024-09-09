@@ -851,7 +851,7 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 				raise RuntimeError( "Bad callback" )
 
 		for i in range( 0, 10 ) :
-			tracker.changedSignal().connect( slot, scoped = False )
+			tracker.changedSignal().connect( slot )
 
 		with IECore.CapturingMessageHandler() as mh :
 			with self.UpdateHandler() :

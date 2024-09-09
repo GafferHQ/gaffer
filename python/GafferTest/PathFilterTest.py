@@ -111,7 +111,7 @@ class PathFilterTest( GafferTest.TestCase ) :
 			self.assertTrue( pf.isSame( pathFilter ) )
 			enabledStates.append( pf.getEnabled() )
 
-		pathFilter.changedSignal().connect( f, scoped = False )
+		pathFilter.changedSignal().connect( f )
 
 		pathFilter.setEnabled( False )
 		pathFilter.setEnabled( False )

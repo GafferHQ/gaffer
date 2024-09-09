@@ -90,6 +90,7 @@ Breaking Changes
 - LightTool : Removed `selection()` and `selectionChangedSignal()`.
 - ArnoldRender, CyclesRender, DelightRender, OpenGLRender : Removed. Use the generic Render node instead.
 - Render : Removed protected constructor for creating renderer-specific derived classes.
+- Signal : The `connect()` and `connectFront()` methods now default to `scoped = False`. If a scoped connection is required, pass `scoped = True`.
 
 Build
 -----

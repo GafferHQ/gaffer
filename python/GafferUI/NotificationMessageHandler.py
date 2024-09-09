@@ -63,7 +63,7 @@ class NotificationMessageHandler( IECore.MessageHandler ) :
 
 		if self.__window is None :
 			self.__window = _Window( self.__windowTitle, self.__widgetKw )
-			self.__window.closedSignal().connect( NotificationMessageHandler.__windowClosed, scoped = False )
+			self.__window.closedSignal().connect( NotificationMessageHandler.__windowClosed )
 			NotificationMessageHandler.__windows.add( self.__window )
 
 		self.__window.appendMessage( level, context, msg )

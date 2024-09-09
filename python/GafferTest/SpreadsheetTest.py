@@ -550,8 +550,8 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 			except Exception as e :
 				exceptions.append( e )
 
-		script["sheet"]["out"].childAddedSignal().connect( outputAddedOrRemoved, scoped = False )
-		script["sheet"]["out"].childRemovedSignal().connect( outputAddedOrRemoved, scoped = False )
+		script["sheet"]["out"].childAddedSignal().connect( outputAddedOrRemoved )
+		script["sheet"]["out"].childRemovedSignal().connect( outputAddedOrRemoved )
 
 		with Gaffer.UndoScope( script ) :
 			script["sheet"]["rows"].addColumn( Gaffer.StringPlug( "column1" ) )

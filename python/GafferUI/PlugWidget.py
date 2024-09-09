@@ -101,9 +101,9 @@ class PlugWidget( GafferUI.Widget ) :
 		# because it has specialised PlugValueWidget._convertValue(). It's also more meaningful to the
 		# user if we highlight the plugValueWidget() on dragEnter rather than the label. So we
 		# forward the dragEnter/dragLeave/drop signals from the labelPlugValueWidget() to the plugValueWidget().
-		self.__label.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__labelDragEnter ), scoped = False )
-		self.__label.dragLeaveSignal().connectFront( Gaffer.WeakMethod( self.__labelDragLeave ), scoped = False )
-		self.__label.dropSignal().connectFront( Gaffer.WeakMethod( self.__labelDrop ), scoped = False )
+		self.__label.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__labelDragEnter ) )
+		self.__label.dragLeaveSignal().connectFront( Gaffer.WeakMethod( self.__labelDragLeave ) )
+		self.__label.dropSignal().connectFront( Gaffer.WeakMethod( self.__labelDrop ) )
 
 	def plugValueWidget( self ) :
 

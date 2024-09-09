@@ -66,7 +66,7 @@ class CollapsibleTest( GafferUITest.TestCase ) :
 			self.__states.append( widget.getCollapsed( ) )
 
 		c = GafferUI.Collapsible( collapsed=True )
-		c.stateChangedSignal().connect( stateChanged, scoped = False )
+		c.stateChangedSignal().connect( stateChanged )
 
 		c.setCollapsed( False )
 		self.assertEqual( self.__states, [ False ] )

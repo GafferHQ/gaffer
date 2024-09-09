@@ -59,7 +59,7 @@ class _ContextVariableListWidget( GafferUI.PlugValueWidget ) :
 
 				GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
 
-				GafferUI.Button( image = "plus.png", hasFrame = False ).clickedSignal().connect( Gaffer.WeakMethod( self.__addItem ), scoped = False )
+				GafferUI.Button( image = "plus.png", hasFrame = False ).clickedSignal().connect( Gaffer.WeakMethod( self.__addItem ) )
 
 				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
 

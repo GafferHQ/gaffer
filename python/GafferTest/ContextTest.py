@@ -67,7 +67,7 @@ class ContextTest( GafferTest.TestCase ) :
 			self.assertTrue( context.isSame( c ) )
 			changes.append( ( name, context.get( name, None ), context.hash() ) )
 
-		c.changedSignal().connect( f, scoped = False )
+		c.changedSignal().connect( f )
 
 		c["a"] = 2
 		hash1 = c.hash()
@@ -835,7 +835,7 @@ class ContextTest( GafferTest.TestCase ) :
 				context[variable] = IECore.PathMatcherData( value )
 
 		context = Gaffer.Context()
-		context.changedSignal().connect( changed, scoped = False )
+		context.changedSignal().connect( changed )
 		context["test"] = IECore.PathMatcherData()
 
 		expected = IECore.PathMatcher()

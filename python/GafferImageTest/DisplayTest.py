@@ -323,12 +323,12 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 
 		subprocess.check_call( [
 			Gaffer.executablePath(), "env", "python", "-c",
-			"""import GafferImage; GafferImage.Display.driverCreatedSignal().connect( lambda d, p : None, scoped = False )"""
+			"""import GafferImage; GafferImage.Display.driverCreatedSignal().connect( lambda d, p : None )"""
 		] )
 
 		subprocess.check_call( [
 			Gaffer.executablePath(), "env", "python", "-c",
-			"""import GafferImage; GafferImage.Display.imageReceivedSignal().connect( lambda p : None, scoped = False )"""
+			"""import GafferImage; GafferImage.Display.imageReceivedSignal().connect( lambda p : None )"""
 		] )
 
 	def __testTransferImage( self, fileName ) :

@@ -179,7 +179,7 @@ class WidgetTest( GafferUITest.TestCase ) :
 
 			WidgetTest.signalsEmitted += 1
 
-		w.buttonPressSignal().connect( f, scoped = False )
+		w.buttonPressSignal().connect( f )
 
 		WidgetTest.signalsEmitted = 0
 
@@ -615,7 +615,7 @@ class WidgetTest( GafferUITest.TestCase ) :
 			self.assertEqual( event.line.p1.x - int( event.line.p1.x ), 0.5 )
 			self.assertEqual( event.line.p1.y - int( event.line.p1.y ), 0.5 )
 
-		w.buttonPressSignal().connect( f, scoped = False )
+		w.buttonPressSignal().connect( f )
 
 		event = QtGui.QMouseEvent( QtCore.QEvent.MouseButtonPress, QtCore.QPoint( 10, 10 ), QtCore.Qt.LeftButton, QtCore.Qt.LeftButton, QtCore.Qt.NoModifier )
 

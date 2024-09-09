@@ -2274,7 +2274,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( postDispatchSlot[0], ( script["dispatcher"], True ) )
 
 		preDispatchConnection = GafferDispatch.Dispatcher.preDispatchSignal().connect(
-			lambda dispatcher : True, scoped = False
+			lambda dispatcher : True
 		)
 
 		script["dispatcher"]["task"].execute()
@@ -2300,17 +2300,17 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		subprocess.check_call( [
 			Gaffer.executablePath(), "env", "python", "-c",
-			"""import GafferDispatch; GafferDispatch.Dispatcher.preDispatchSignal().connect( lambda d : True, scoped = False )"""
+			"""import GafferDispatch; GafferDispatch.Dispatcher.preDispatchSignal().connect( lambda d : True )"""
 		] )
 
 		subprocess.check_call( [
 			Gaffer.executablePath(), "env", "python", "-c",
-			"""import GafferDispatch; GafferDispatch.Dispatcher.dispatchSignal().connect( lambda d : None, scoped = False )"""
+			"""import GafferDispatch; GafferDispatch.Dispatcher.dispatchSignal().connect( lambda d : None )"""
 		] )
 
 		subprocess.check_call( [
 			Gaffer.executablePath(), "env", "python", "-c",
-			"""import GafferDispatch; GafferDispatch.Dispatcher.postDispatchSignal().connect( lambda d, s : None, scoped = False )"""
+			"""import GafferDispatch; GafferDispatch.Dispatcher.postDispatchSignal().connect( lambda d, s : None )"""
 		] )
 
 	def testAccessTaskNodeInSetupPlugs( self ) :

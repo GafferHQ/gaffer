@@ -168,14 +168,14 @@ class _HistoryWindow( GafferUI.Window ) :
 		self.__valueColumnIndex = 1
 		self.__operationColumnIndex = 2
 
-		self.__pathListingWidget.buttonDoubleClickSignal().connectFront( Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
-		self.__pathListingWidget.keyPressSignal().connectFront( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
-		self.__pathListingWidget.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
-		self.__pathListingWidget.updateFinishedSignal().connectFront( Gaffer.WeakMethod( self.__updateFinished ), scoped = False )
+		self.__pathListingWidget.buttonDoubleClickSignal().connectFront( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
+		self.__pathListingWidget.keyPressSignal().connectFront( Gaffer.WeakMethod( self.__keyPress ) )
+		self.__pathListingWidget.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ) )
+		self.__pathListingWidget.updateFinishedSignal().connectFront( Gaffer.WeakMethod( self.__updateFinished ) )
 
-		inspector.dirtiedSignal().connect( Gaffer.WeakMethod( self.__inspectorDirtied ), scoped = False )
+		inspector.dirtiedSignal().connect( Gaffer.WeakMethod( self.__inspectorDirtied ) )
 
-		context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = False )
+		context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
 
 		self.__updatePath( context )
 

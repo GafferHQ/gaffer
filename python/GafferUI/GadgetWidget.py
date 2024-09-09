@@ -61,24 +61,24 @@ class GadgetWidget( GafferUI.GLWidget ) :
 
 		self._qtWidget().setFocusPolicy( QtCore.Qt.ClickFocus )
 
-		self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ), scoped = False )
-		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ), scoped = False )
-		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
-		self.keyReleaseSignal().connect( Gaffer.WeakMethod( self.__keyRelease ), scoped = False )
-		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
-		self.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
-		self.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
-		self.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ), scoped = False )
-		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
-		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ), scoped = False )
-		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
-		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ), scoped = False )
-		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
+		self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) )
+		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) )
+		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.keyReleaseSignal().connect( Gaffer.WeakMethod( self.__keyRelease ) )
+		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
+		self.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
+		self.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ) )
+		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
+		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
+		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
+		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
+		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
 
-		self.wheelSignal().connect( Gaffer.WeakMethod( self.__wheel ), scoped = False )
+		self.wheelSignal().connect( Gaffer.WeakMethod( self.__wheel ) )
 
-		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
+		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
 
 		self.__viewportGadget = None
 		if isinstance( gadget, GafferUI.ViewportGadget ) :
@@ -106,7 +106,7 @@ class GadgetWidget( GafferUI.GLWidget ) :
 			self.__viewportGadget.setVisible( False )
 
 		self.__viewportGadget = viewportGadget
-		self.__viewportGadget.renderRequestSignal().connect( Gaffer.WeakMethod( self.__renderRequest ), scoped = False )
+		self.__viewportGadget.renderRequestSignal().connect( Gaffer.WeakMethod( self.__renderRequest ) )
 		size = self.size()
 		if size.x and size.y :
 			self.__viewportGadget.setViewport( size )

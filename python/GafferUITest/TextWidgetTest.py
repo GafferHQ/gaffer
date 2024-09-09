@@ -62,7 +62,7 @@ class TextWidgetTest( GafferUITest.TestCase ) :
 			self.emissions += 1
 
 		w = GafferUI.TextWidget()
-		w.textChangedSignal().connect( f, scoped = False )
+		w.textChangedSignal().connect( f )
 
 		w.setText( "hello" )
 		self.assertEqual( w.getText(), "hello" )

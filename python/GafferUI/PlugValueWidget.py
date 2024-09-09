@@ -81,13 +81,12 @@ class PlugValueWidget( GafferUI.Widget ) :
 		# classes haven't constructed. We'll do that in `_postConstructor()`.
 		self.__setPlugsInternal( plugs, callUpdateMethods=False )
 
-		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
-		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ), scoped = False )
+		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
+		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 
 		Gaffer.Metadata.nodeValueChangedSignal().connect(
-			Gaffer.WeakMethod( self.__nodeMetadataChanged ),
-			scoped = False
+			Gaffer.WeakMethod( self.__nodeMetadataChanged )
 		)
 
 	## Changes the plugs displayed by this widget. May be overridden by derived classes,
@@ -430,10 +429,10 @@ class PlugValueWidget( GafferUI.Widget ) :
 		# it's unclear under what circumstances we get given a right-click vs a context menu event,
 		# but we try to cover all our bases by connecting to both.
 
-		widget.buttonPressSignal().connect( functools.partial( Gaffer.WeakMethod( self.__buttonPress ), buttonMask = buttons ), scoped = False )
+		widget.buttonPressSignal().connect( functools.partial( Gaffer.WeakMethod( self.__buttonPress ), buttonMask = buttons ) )
 
 		if buttons & GafferUI.ButtonEvent.Buttons.Right :
-			widget.contextMenuSignal().connect( functools.partial( Gaffer.WeakMethod( self.__contextMenu ) ), scoped = False )
+			widget.contextMenuSignal().connect( functools.partial( Gaffer.WeakMethod( self.__contextMenu ) ) )
 
 	## Returns a definition for the popup menu - this is called each time the menu is displayed
 	# to allow for dynamic menus. Subclasses may override this method to customise the menu, but

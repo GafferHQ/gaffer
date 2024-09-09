@@ -166,7 +166,7 @@ class GraphComponentTest( GafferTest.TestCase ) :
 
 		p1["c"] = c
 
-		c.parentChangedSignal().connect( f, scoped = False )
+		c.parentChangedSignal().connect( f )
 
 		p2["c"] = c
 
@@ -186,7 +186,7 @@ class GraphComponentTest( GafferTest.TestCase ) :
 			GraphComponentTest.newParent = child.parent()
 			GraphComponentTest.previousParent = previousParent
 
-		child.parentChangedSignal().connect( f, scoped = False )
+		child.parentChangedSignal().connect( f )
 
 		GraphComponentTest.newParent = "XXX"
 		GraphComponentTest.previousParent = "XXX"
@@ -216,8 +216,8 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		def f( a, b=None ) :
 			GraphComponentTest.numSignals += 1
 
-		child.parentChangedSignal().connect( f, scoped = False )
-		parent.childAddedSignal().connect( f, scoped = False )
+		child.parentChangedSignal().connect( f )
+		parent.childAddedSignal().connect( f )
 
 		parent.addChild( child )
 
@@ -536,10 +536,10 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		def f( *args ) :
 			GraphComponentTest.numSignals += 1
 
-		child.parentChangedSignal().connect( f, scoped = False )
-		parent.childAddedSignal().connect( f, scoped = False )
-		parent.childRemovedSignal().connect( f, scoped = False )
-		child.nameChangedSignal().connect( f, scoped = False )
+		child.parentChangedSignal().connect( f )
+		parent.childAddedSignal().connect( f )
+		parent.childRemovedSignal().connect( f )
+		child.nameChangedSignal().connect( f )
 
 		parent.setChild( "c", child )
 
@@ -1050,7 +1050,7 @@ class GraphComponentTest( GafferTest.TestCase ) :
 			# Demonstrates how you could maintain a parallel data structure
 			# to keep the same order. For example, a list of widgets in the UI.
 			mirror[:] = [ mirror[i] for i in oldIndices ]
-		script["node"]["p"].childrenReorderedSignal().connect( childrenReordered, scoped = False )
+		script["node"]["p"].childrenReorderedSignal().connect( childrenReordered )
 
 		cs = GafferTest.CapturingSlot( p.childrenReorderedSignal() )
 		with Gaffer.UndoScope( script ) :
@@ -1106,7 +1106,7 @@ class GraphComponentTest( GafferTest.TestCase ) :
 			self.assertIsInstance( oldName, str )
 			names.append( ( oldName, g.getName() ) )
 
-		g.nameChangedSignal().connect( f, scoped = False )
+		g.nameChangedSignal().connect( f )
 
 		with Gaffer.UndoScope( s ) :
 			g.setName( "newName" )
@@ -1144,7 +1144,7 @@ class GraphComponentTest( GafferTest.TestCase ) :
 
 				Gaffer.Node.__init__( self, name )
 
-				self.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ), scoped = False )
+				self.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) )
 
 				self.nameChanges = []
 

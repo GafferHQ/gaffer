@@ -142,7 +142,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
 	ParameterValueWidget.popupMenuSignal()( menuDefinition, parameterValueWidget )
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
 
 # add menu items for presets
 

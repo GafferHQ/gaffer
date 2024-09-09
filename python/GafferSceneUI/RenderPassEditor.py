@@ -124,15 +124,15 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
-			self.__addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addButtonClicked ), scoped = False )
-			self.__removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeButtonClicked ), scoped = False )
-			Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__metadataChanged ), scoped = False )
+			self.__addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addButtonClicked ) )
+			self.__removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeButtonClicked ) )
+			Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__metadataChanged ) )
 
-			self.__pathListing.buttonDoubleClickSignal().connectFront( Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
-			self.__pathListing.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
-			self.__pathListing.columnContextMenuSignal().connect( Gaffer.WeakMethod( self.__columnContextMenuSignal ), scoped = False )
-			self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ), scoped = False )
-			self.__pathListing.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
+			self.__pathListing.buttonDoubleClickSignal().connectFront( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
+			self.__pathListing.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+			self.__pathListing.columnContextMenuSignal().connect( Gaffer.WeakMethod( self.__columnContextMenuSignal ) )
+			self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
+			self.__pathListing.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ) )
 
 		self._updateFromSet()
 		self.__setPathListingPath()
@@ -669,7 +669,7 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self._qtWidget().currentChanged.connect( Gaffer.WeakMethod( self.__currentChanged ) )
 		self.__ignoreCurrentChanged = False
 
-		plug.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ), scoped = False )
+		plug.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
 
 		# Borrow the styling from the Spreadsheet's section chooser.
 		## \todo Should we be introducing a `GafferUI.TabBar` class which can be used in
@@ -744,7 +744,7 @@ class _ToggleGroupingPlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.__init__( self, self.__row, plugs )
 
 		self.__groupingModeButton = GafferUI.Button( image = "pathListingList.png", hasFrame=False )
-		self.__groupingModeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__groupingModeButtonClicked ), scoped = False )
+		self.__groupingModeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__groupingModeButtonClicked ) )
 		self.__row.append(
 			self.__groupingModeButton
 		)
@@ -772,10 +772,10 @@ class _SearchFilterWidget( GafferUI.PathFilterWidget ) :
 
 		self.__patternWidget.setPlaceholderText( "Filter..." )
 
-		self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ), scoped = False )
-		self.__patternWidget.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-		self.__patternWidget.dragLeaveSignal().connectFront( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
-		self.__patternWidget.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ), scoped = False )
+		self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ) )
+		self.__patternWidget.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.__patternWidget.dragLeaveSignal().connectFront( Gaffer.WeakMethod( self.__dragLeave ) )
+		self.__patternWidget.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ) )
 
 		self._updateFromPathFilter()
 
@@ -840,9 +840,9 @@ class _RenderPassCreationDialogue( GafferUI.Dialogue ) :
 		self.__confirmButton = self._addButton( confirmLabel )
 
 		if hasattr( self.__renderPassNameWidget, "activatedSignal" ) :
-			self.__renderPassNameWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__renderPassNameActivated ), scoped = False )
+			self.__renderPassNameWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__renderPassNameActivated ) )
 		if hasattr( self.__renderPassNameWidget, "renderPassNameChangedSignal" ) :
-			self.__renderPassNameWidget.renderPassNameChangedSignal().connect( Gaffer.WeakMethod( self.__renderPassNameChanged ), scoped = False )
+			self.__renderPassNameWidget.renderPassNameChangedSignal().connect( Gaffer.WeakMethod( self.__renderPassNameChanged ) )
 			self.__updateButtonState()
 
 	def waitForRenderPassName( self, **kw ) :

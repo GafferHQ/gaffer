@@ -44,10 +44,10 @@ def __toolMenu( nodeEditor, node, menuDefinition ) :
 	GafferSceneUI.FilteredSceneProcessorUI.appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition )
 	GafferSceneUI.CryptomatteUI.appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition )
 
-GafferUI.NodeEditor.toolMenuSignal().connect( __toolMenu, scoped = False )
+GafferUI.NodeEditor.toolMenuSignal().connect( __toolMenu )
 
 def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
 	GafferUI.NodeUI.appendPlugDeletionMenuDefinitions( plugValueWidget, menuDefinition )
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )

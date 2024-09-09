@@ -111,7 +111,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 
 				self.__toolChooser = _ToolChooser()
 				self.__toolChooser.primaryToolChangedSignal().connect(
-					Gaffer.WeakMethod( self.__primaryToolChanged ), scoped = False
+					Gaffer.WeakMethod( self.__primaryToolChanged )
 				)
 
 				for toolbarContainer in [ self.__viewToolbars, self.__nodeToolbars, self.__toolToolbars ] :
@@ -136,9 +136,9 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		self.__views = []
 		self.__currentView = None
 
-		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
-		self.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ), scoped = False )
-		self.nodeSetChangedSignal().connect( Gaffer.WeakMethod( self.__updateViewportMessage ), scoped = False )
+		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) )
+		self.nodeSetChangedSignal().connect( Gaffer.WeakMethod( self.__updateViewportMessage ) )
 
 		self._updateFromSet()
 
@@ -355,7 +355,7 @@ class _ToolChooser( GafferUI.Frame ) :
 			self.tools.sort( key = lambda v : Gaffer.Metadata.value( v, "order" ) if Gaffer.Metadata.value( v, "order" ) is not None else 999 )
 
 			for t in self.tools :
-				t.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__toolPlugDirtied, fallbackResult = lambda plug : None ), scoped = False )
+				t.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__toolPlugDirtied, fallbackResult = lambda plug : None ) )
 
 			with GafferUI.ListContainer( spacing = 1 ) as self.widgets :
 

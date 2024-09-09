@@ -59,13 +59,13 @@ class NumericWidget( GafferUI.TextWidget ) :
 		self.__dragValue = None
 		self.__dragStart = None
 
-		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
-		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
-		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
-		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ), scoped = False )
-		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
-		self.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ), scoped = False )
+		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
+		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
+		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
+		self.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ) )
 
 		self.setPreferredCharacterWidth( 10 )
 

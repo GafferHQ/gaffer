@@ -53,9 +53,7 @@ def __initWrapper( originalInit ) :
 	def init( self, *args, **kw ) :
 
 		originalInit( self, *args, **kw )
-		self["views"].childAddedSignal().connect(
-			__viewsChildAdded, scoped = False
-		)
+		self["views"].childAddedSignal().connect( __viewsChildAdded )
 
 	return init
 

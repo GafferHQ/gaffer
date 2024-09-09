@@ -55,7 +55,7 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.__init__( self, self.__row, plugs, **kw )
 
 		self.__ensureChildPlugValueWidgets()
-		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
+		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
 	def setPlugs( self, plugs ) :
 
@@ -212,7 +212,7 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			w.setPlugs( { p[i] for p in self.getPlugs() } )
 			w.setVisible( i < visibleDimensions )
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( CompoundNumericPlugValueWidget._popupMenu, scoped = False )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( CompoundNumericPlugValueWidget._popupMenu )
 
 GafferUI.PlugValueWidget.registerType( Gaffer.V2fPlug, CompoundNumericPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.V3fPlug, CompoundNumericPlugValueWidget )

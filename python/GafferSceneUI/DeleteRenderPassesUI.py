@@ -135,4 +135,4 @@ def __passPopupMenu( menuDefinition, plugValueWidget ) :
 			}
 		)
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __passPopupMenu, scoped = False )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __passPopupMenu )

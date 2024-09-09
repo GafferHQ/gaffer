@@ -109,20 +109,20 @@ class PlugLayout( GafferUI.Widget ) :
 
 		# we need to connect to the childAdded/childRemoved signals on
 		# the parent so we can update the ui when plugs are added and removed.
-		parent.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ), scoped = False )
-		parent.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ), scoped = False )
+		parent.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
+		parent.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
 
 		# since our layout is driven by metadata, we must respond dynamically
 		# to changes in that metadata.
-		Gaffer.Metadata.plugValueChangedSignal( self.__node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False )
+		Gaffer.Metadata.plugValueChangedSignal( self.__node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 		if isinstance( self.__parent, Gaffer.Node ) :
 			Gaffer.Metadata.nodeValueChangedSignal( self.__parent ).connect(
-				Gaffer.WeakMethod( self.__nodeMetadataChanged ), scoped = False
+				Gaffer.WeakMethod( self.__nodeMetadataChanged )
 			)
 
 		# and since our activations are driven by plug values, we must respond
 		# when the plugs are dirtied.
-		self.__node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ), scoped = False )
+		self.__node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
 
 		# frequently events that trigger a ui update come in batches, so we
 		# perform the update lazily using a LazyMethod. the dirty variables
@@ -628,8 +628,7 @@ class _TabLayout( _Layout ) :
 					self.__tabbedContainer._qtWidget().setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Expanding ) )
 
 		self.__currentTabChangedConnection = self.__tabbedContainer.currentChangedSignal().connect(
-			Gaffer.WeakMethod( self.__currentTabChanged ),
-			scoped = False
+			Gaffer.WeakMethod( self.__currentTabChanged )
 		)
 
 	def update( self, section ) :
@@ -725,8 +724,7 @@ class _CollapsibleLayout( _Layout ) :
 					collapsible.setCollapsed( False )
 
 				collapsible.stateChangedSignal().connect(
-					functools.partial( Gaffer.WeakMethod( self.__collapsibleStateChanged ), subsection = subsection ),
-					scoped = False
+					functools.partial( Gaffer.WeakMethod( self.__collapsibleStateChanged ), subsection = subsection )
 				)
 
 				self.__collapsibles[name] = collapsible

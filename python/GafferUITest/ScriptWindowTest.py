@@ -100,7 +100,7 @@ class ScriptWindowTest( GafferUITest.TestCase ) :
 		def grabTitle( window, newTitle ) :
 			self.__title = newTitle
 
-		w.titleChangedSignal().connect( grabTitle, scoped = False )
+		w.titleChangedSignal().connect( grabTitle )
 
 		w.setTitle( "b" )
 		self.assertEqual( self.__title, "b" )

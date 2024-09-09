@@ -69,9 +69,9 @@ class _CryptomatteNamesPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 		removeButton = self.vectorDataWidget().removeButton()
 
 		# Connect at front so we get called before the default handlers
-		addButton.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__convertEvent ), scoped = False )
-		removeButton.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__convertEvent ), scoped = False )
-		self.vectorDataWidget().dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__convertEvent ), scoped = False )
+		addButton.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__convertEvent ) )
+		removeButton.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__convertEvent ) )
+		self.vectorDataWidget().dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__convertEvent ) )
 
 	def __getManifest( self ) :
 
@@ -396,10 +396,10 @@ def __drop( nodeGadget, event ) :
 
 def __addNamesDropTarget( nodeGadget ) :
 
-	nodeGadget.dragEnterSignal().connect( __dragEnter, scoped = False )
-	nodeGadget.dragLeaveSignal().connect( __dragLeave, scoped = False )
-	nodeGadget.dragMoveSignal().connect( __dragMove, scoped = False )
-	nodeGadget.dropSignal().connect( __drop, scoped = False )
+	nodeGadget.dragEnterSignal().connect( __dragEnter )
+	nodeGadget.dragLeaveSignal().connect( __dragLeave )
+	nodeGadget.dragMoveSignal().connect( __dragMove )
+	nodeGadget.dropSignal().connect( __drop )
 
 def __nodeGadget( pathFilter ) :
 

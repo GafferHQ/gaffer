@@ -1352,7 +1352,7 @@ class MetadataTest( GafferTest.TestCase ) :
 			if Gaffer.Metadata.value( node, key ) != 1 :
 				Gaffer.Metadata.registerValue( node, key, 1 )
 
-		Gaffer.Metadata.nodeValueChangedSignal( node ).connect( changed, scoped = False )
+		Gaffer.Metadata.nodeValueChangedSignal( node ).connect( changed )
 		Gaffer.Metadata.registerValue( node, "test", 2 )
 		self.assertEqual( Gaffer.Metadata.value( node, "test" ), 1 )
 

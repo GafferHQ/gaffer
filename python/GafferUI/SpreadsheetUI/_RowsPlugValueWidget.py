@@ -77,7 +77,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 					"index" : ( 1, 0 ),
 				}
 			)
-			self.__sectionChooser.currentSectionChangedSignal().connect( Gaffer.WeakMethod( self.__currentSectionChanged ), scoped = False )
+			self.__sectionChooser.currentSectionChangedSignal().connect( Gaffer.WeakMethod( self.__currentSectionChanged ) )
 
 			with GafferUI.ListContainer(
 				GafferUI.ListContainer.Orientation.Horizontal,
@@ -91,17 +91,17 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			) :
 
 				self.__toggleFilterButton = GafferUI.Button( image = "search.png", hasFrame = False )
-				self.__toggleFilterButton.clickedSignal().connect( Gaffer.WeakMethod( self.__toggleFilterButtonClicked ), scoped = False )
+				self.__toggleFilterButton.clickedSignal().connect( Gaffer.WeakMethod( self.__toggleFilterButtonClicked ) )
 
 				self.__patternWidget = GafferUI.TextWidget( toolTip = "Row filter pattern" )
 				self.__patternWidget.setText( Gaffer.Metadata.value( plug, "spreadsheet:rowFilter" ) )
 				self.__patternWidget.setPlaceholderText( "Filter..." )
 				# Ignore the width in X so that the widget is sized based on the width dictated by `rowNamesTable`.
 				self.__patternWidget._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
-				self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ), scoped = False )
+				self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ) )
 
 				self.__refreshFilterButton = GafferUI.Button( image = "refresh.png", hasFrame = False, toolTip = "Click to refresh row filter" )
-				self.__refreshFilterButton.clickedSignal().connect( Gaffer.WeakMethod( self.__refreshFilterButtonClicked ), scoped = False )
+				self.__refreshFilterButton.clickedSignal().connect( Gaffer.WeakMethod( self.__refreshFilterButtonClicked ) )
 
 				self.__defaultLabel = GafferUI.Label( "<h4>Default</h4>", horizontalAlignment = GafferUI.HorizontalAlignment.Right )
 				self.__defaultLabel._qtWidget().setObjectName( "gafferDefaultRowLabel" )
@@ -130,9 +130,9 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 					image="plus.png", hasFrame=False, toolTip = "Click to add column, or drop plug to connect",
 					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__addColumnMenuDefinition ) )
 				)
-				self.__addColumnButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__addColumnButtonDragEnter ), scoped = False )
-				self.__addColumnButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__addColumnButtonDragLeave ), scoped = False )
-				self.__addColumnButton.dropSignal().connect( Gaffer.WeakMethod( self.__addColumnButtonDrop ), scoped = False )
+				self.__addColumnButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__addColumnButtonDragEnter ) )
+				self.__addColumnButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__addColumnButtonDragLeave ) )
+				self.__addColumnButton.dropSignal().connect( Gaffer.WeakMethod( self.__addColumnButtonDrop ) )
 
 			self.__rowNamesTable = _PlugTableView(
 				selectionModel, _PlugTableView.Mode.RowNames,
@@ -185,10 +185,10 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 					"alignment" : ( GafferUI.HorizontalAlignment.Left, GafferUI.VerticalAlignment.Top ),
 				}
 			)
-			self.__addRowButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addRowButtonClicked ), scoped = False )
-			self.__addRowButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDragEnter ), scoped = False )
-			self.__addRowButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDragLeave ), scoped = False )
-			self.__addRowButton.dropSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDrop ), scoped = False )
+			self.__addRowButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addRowButtonClicked ) )
+			self.__addRowButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDragEnter ) )
+			self.__addRowButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDragLeave ) )
+			self.__addRowButton.dropSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDrop ) )
 
 			if isinstance( plug.node(), Gaffer.Reference ) :
 				# Currently we only allow new rows to be added to references
@@ -210,14 +210,14 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				self.__addColumnButton.setVisible( False )
 
 		for widget in [ self.__addRowButton, self.__addColumnButton, self.__patternWidget, self.__refreshFilterButton, self.__toggleFilterButton ] :
-			widget.enterSignal().connect( Gaffer.WeakMethod( self.__enterToolTippedWidget ), scoped = False )
-			widget.leaveSignal().connect( Gaffer.WeakMethod( self.__leaveToolTippedWidget ), scoped = False )
+			widget.enterSignal().connect( Gaffer.WeakMethod( self.__enterToolTippedWidget ) )
+			widget.leaveSignal().connect( Gaffer.WeakMethod( self.__leaveToolTippedWidget ) )
 
 		for widget in [ self.__defaultTable, self.__cellsTable ] :
-			widget.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__cellsMouseMove ), scoped = False )
-			widget.leaveSignal().connect( Gaffer.WeakMethod( self.__cellsLeave ), scoped = False )
+			widget.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__cellsMouseMove ) )
+			widget.leaveSignal().connect( Gaffer.WeakMethod( self.__cellsLeave ) )
 
-		Gaffer.Metadata.plugValueChangedSignal( plug.node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False )
+		Gaffer.Metadata.plugValueChangedSignal( plug.node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 
 		self.__rowFilterEnabled = Gaffer.Metadata.value( plug, "spreadsheet:rowFilterEnabled" )
 

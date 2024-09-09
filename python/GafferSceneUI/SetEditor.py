@@ -91,9 +91,9 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 			)
 
-			self.__pathListing.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
-			self.__pathListing.columnContextMenuSignal().connect( Gaffer.WeakMethod( self.__columnContextMenuSignal ), scoped = False )
-			self.__pathListing.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPressSignal ), scoped = False )
+			self.__pathListing.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ) )
+			self.__pathListing.columnContextMenuSignal().connect( Gaffer.WeakMethod( self.__columnContextMenuSignal ) )
+			self.__pathListing.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPressSignal ) )
 
 		self._updateFromSet()
 		self.__updatePathListingPath()
@@ -265,10 +265,10 @@ class _SearchFilterWidget( GafferUI.PathFilterWidget ) :
 
 		self.__patternWidget.setPlaceholderText( "Filter..." )
 
-		self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ), scoped = False )
-		self.__patternWidget.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-		self.__patternWidget.dragLeaveSignal().connectFront( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
-		self.__patternWidget.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ), scoped = False )
+		self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ) )
+		self.__patternWidget.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.__patternWidget.dragLeaveSignal().connectFront( Gaffer.WeakMethod( self.__dragLeave ) )
+		self.__patternWidget.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ) )
 
 		self.__context = None
 		self.__scene = None

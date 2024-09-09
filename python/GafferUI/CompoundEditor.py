@@ -64,8 +64,8 @@ class CompoundEditor( GafferUI.Editor ) :
 
 		self.__splitContainer.append( _TabbedContainer() )
 
-		self.__splitContainer.keyPressSignal().connect( CompoundEditor.__keyPress, scoped = False )
-		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
+		self.__splitContainer.keyPressSignal().connect( CompoundEditor.__keyPress )
+		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
 
 		self.__windowState = _state.get( "windowState", {} )
 
@@ -79,7 +79,7 @@ class CompoundEditor( GafferUI.Editor ) :
 		# By Now, all Editors will have been created, so we can restore any state
 		self.__restoreEditorState( _state.get( "editorState", {} ) )
 
-		self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ), scoped=False )
+		self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ) )
 
 	# Returns the editor of the specified type that the user is most likely to
 	# be interested in. If `focussedOnly` is true, only editors with the keyboard
@@ -165,7 +165,7 @@ class CompoundEditor( GafferUI.Editor ) :
 
 		panel = _DetachedPanel( self,  *args, **kwargs )
 		panel.__removeOnCloseConnection = panel.closedSignal().connect( lambda w : w.parent()._removeDetachedPanel( w ), scoped = True )
-		panel.keyPressSignal().connect( CompoundEditor.__keyPress, scoped = False )
+		panel.keyPressSignal().connect( CompoundEditor.__keyPress )
 
 		scriptWindow = self.ancestor( GafferUI.ScriptWindow )
 		if scriptWindow :
@@ -566,10 +566,10 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		cornerWidget._qtWidget().setObjectName( "gafferCompoundEditorTools" )
 		self.setCornerWidget( cornerWidget )
 
-		self.currentChangedSignal().connect( Gaffer.WeakMethod( self.__currentTabChanged ), scoped = False )
-		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
-		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ), scoped = False )
+		self.currentChangedSignal().connect( Gaffer.WeakMethod( self.__currentTabChanged ) )
+		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
+		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 
 		tabBar = self._qtWidget().tabBar()
 		tabBar.setProperty( "gafferHasTabCloseButtons", GafferUI._Variant.toVariant( True ) )
@@ -656,8 +656,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 			functools.partial(
 				lambda editor, container, _ : container().removeEditor( editor() ),
 				weakref.ref( editor ), weakref.ref( self )
-			),
-			scoped = False
+			)
 		)
 
 		tabIndex = self.index( editor )
@@ -1463,21 +1462,21 @@ class _PinningWidget( _Frame ) :
 		with row :
 
 			self.__bookmarkNumber = GafferUI.Label( horizontalAlignment=GafferUI.Label.HorizontalAlignment.Right )
-			self.__bookmarkNumber.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ), scoped=False )
+			self.__bookmarkNumber.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ) )
 
 			self.__icon = GafferUI.Button( hasFrame=False, highlightOnOver=False )
 			self.__icon._qtWidget().setFixedHeight( 13 )
 			self.__icon._qtWidget().setFixedWidth( 13 )
-			self.__icon.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ), scoped=False )
+			self.__icon.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ) )
 
 
 			self.__menuButton = GafferUI.Button( image="menuIndicator.png", hasFrame=False, highlightOnOver=False )
 			self.__menuButton._qtWidget().setObjectName( "menuDownArrow" )
-			self.__menuButton.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ), scoped=False )
+			self.__menuButton.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ) )
 
 		self.addChild( row )
 
-		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ), scoped=False )
+		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ) )
 
 	@staticmethod
 	def editorKeyPress( editor, event ) :

@@ -385,7 +385,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 	__appendPlugResetDefaultMenuItems( menuDefinition, plugValueWidget.getPlug() )
 	__appendPlugPromotionMenuItems( menuDefinition, plugValueWidget.getPlug() )
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
 
 # GraphEditor plug context menu
 ##########################################################################
@@ -487,4 +487,4 @@ def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 
 	__appendPlugPromotionMenuItems( menuDefinition, plug )
 
-GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu, scoped = False )
+GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu )

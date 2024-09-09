@@ -176,11 +176,11 @@ class _ColorField( GafferUI.Widget ) :
 
 		self._qtWidget().paintEvent = Gaffer.WeakMethod( self.__paintEvent )
 
-		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
-		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
-		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ), scoped = False )
-		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
+		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
+		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
+		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
 
 		self.__valueChangedSignal = Gaffer.Signals.Signal2()
 
@@ -480,7 +480,7 @@ class ColorChooser( GafferUI.Widget ) :
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
 				self.__colorField = _ColorField( color, "h" )
-				self.__colorValueChangedConnection = self.__colorField.valueChangedSignal().connect( Gaffer.WeakMethod( self.__colorValueChanged ), scoped = False )
+				self.__colorValueChangedConnection = self.__colorField.valueChangedSignal().connect( Gaffer.WeakMethod( self.__colorValueChanged ) )
 				# \todo Don't hide color field when we're ready to expose the UI
 				self.__colorField.setVisible( False )
 
@@ -498,22 +498,19 @@ class ColorChooser( GafferUI.Widget ) :
 								functools.partial(
 									Gaffer.WeakMethod( self.__setStaticComponent ),
 									component = component
-								),
-								scoped = False
+								)
 							)
 							self.__channelLabels[component].enterSignal().connect(
 								functools.partial(
 									Gaffer.WeakMethod( self.__labelEnter ),
 									component = component
-								),
-								scoped = False
+								)
 							)
 							self.__channelLabels[component].leaveSignal().connect(
 								functools.partial(
 									Gaffer.WeakMethod( self.__labelLeave ),
 									component = component
-								),
-								scoped = False
+								)
 							)
 
 						numericWidget = GafferUI.NumericWidget( 0.0, parenting = { "index" : ( 1, row ) } )
@@ -526,11 +523,11 @@ class ColorChooser( GafferUI.Widget ) :
 						self.__sliders[component] = slider
 
 						self.__componentValueChangedConnections.append(
-							numericWidget.valueChangedSignal().connect( Gaffer.WeakMethod( self.__componentValueChanged ), scoped = False )
+							numericWidget.valueChangedSignal().connect( Gaffer.WeakMethod( self.__componentValueChanged ) )
 						)
 
 						self.__componentValueChangedConnections.append(
-							slider.valueChangedSignal().connect( Gaffer.WeakMethod( self.__componentValueChanged ), scoped = False )
+							slider.valueChangedSignal().connect( Gaffer.WeakMethod( self.__componentValueChanged ) )
 						)
 
 			# initial and current colour swatches
@@ -538,7 +535,7 @@ class ColorChooser( GafferUI.Widget ) :
 
 				self.__initialColorSwatch = GafferUI.ColorSwatch( color, parenting = { "expand" : True } )
 				self.__initialColorSwatch._qtWidget().setFixedHeight( 40 )
-				self.__initialColorSwatch.buttonPressSignal().connect( Gaffer.WeakMethod( self.__initialColorPress ), scoped = False )
+				self.__initialColorSwatch.buttonPressSignal().connect( Gaffer.WeakMethod( self.__initialColorPress ) )
 
 				self.__colorSwatch = GafferUI.ColorSwatch( color, parenting = { "expand" : True } )
 				self.__colorSwatch._qtWidget().setFixedHeight( 40 )

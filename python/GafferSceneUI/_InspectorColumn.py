@@ -441,8 +441,8 @@ def __keyPress( column, pathListing, event ) :
 def __inspectorColumnCreated( column ) :
 
 	if isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
-		column.buttonDoubleClickSignal().connectFront( __buttonDoubleClick, scoped = False )
-		column.contextMenuSignal().connectFront( __contextMenu, scoped = False )
-		column.keyPressSignal().connectFront( __keyPress, scoped = False )
+		column.buttonDoubleClickSignal().connectFront( __buttonDoubleClick )
+		column.contextMenuSignal().connectFront( __contextMenu )
+		column.keyPressSignal().connectFront( __keyPress )
 
-GafferSceneUI.Private.InspectorColumn.instanceCreatedSignal().connect( __inspectorColumnCreated, scoped = False )
+GafferSceneUI.Private.InspectorColumn.instanceCreatedSignal().connect( __inspectorColumnCreated )

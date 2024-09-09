@@ -104,7 +104,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 						self.__dispatchersMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
 						self.__dispatchersMenu.append( [ x.getName() for x in self.__dispatchers ] )
 						self.__dispatchersMenu.setSelection( [ self.__dispatchers[0].getName() ] )
-						self.__dispatchersMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__dispatcherChanged ), scoped = False )
+						self.__dispatchersMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__dispatcherChanged ) )
 						dispatcherMenuColumn.setVisible( len(self.__dispatchers) > 1 )
 
 					self.__dispatcherFrame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None_, borderWidth=0 )
@@ -125,10 +125,10 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 				self.__messageWidget = GafferUI.MessageWidget( toolbars = True )
 				# connect to the collapsible state change so we can increase the window
 				# size when the details pane is first shown.
-				self.__messageCollapsibleConnection = self.__messageCollapsible.stateChangedSignal().connect( Gaffer.WeakMethod( self.__messageCollapsibleChanged ), scoped = False )
+				self.__messageCollapsibleConnection = self.__messageCollapsible.stateChangedSignal().connect( Gaffer.WeakMethod( self.__messageCollapsibleChanged ) )
 
 		self.__backButton = self._addButton( "Back" )
-		self.__backButton.clickedSignal().connectFront( Gaffer.WeakMethod( self.__initiateSettings ), scoped = False )
+		self.__backButton.clickedSignal().connectFront( Gaffer.WeakMethod( self.__initiateSettings ) )
 
 		self.__primaryButton = self._addButton( "Dispatch" )
 

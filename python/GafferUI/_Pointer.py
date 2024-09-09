@@ -63,4 +63,4 @@ def __pointerChanged() :
 			application.setOverrideCursor( cursor )
 			__cursorOverridden = True
 
-GafferUI.Pointer.changedSignal().connect( __pointerChanged, scoped = False )
+GafferUI.Pointer.changedSignal().connect( __pointerChanged )

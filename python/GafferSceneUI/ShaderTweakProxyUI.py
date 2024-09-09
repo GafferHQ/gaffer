@@ -313,4 +313,4 @@ def __plugContextMenuSignal( graphEditor, plug, menuDefinition ) :
 		{ "subMenu" : functools.partial( _plugContextMenu, plug, None ) }
 	)
 
-GafferUI.GraphEditor.plugContextMenuSignal().connect( __plugContextMenuSignal, scoped = False )
+GafferUI.GraphEditor.plugContextMenuSignal().connect( __plugContextMenuSignal )
