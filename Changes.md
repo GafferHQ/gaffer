@@ -21,6 +21,7 @@ Fixes
 - SceneWriter : Fixed handling of ':' characters in set names when writing to USD. These were previously converted to '_' but are now preserved.
 - SceneReader : Fixed loading of animated ModelAPI extents from USD.
 - ResamplePrimitiveVariables : Fixed handling of periodic curves.
+- VectorDataWidget : Fixed bug causing paths to display as "..." after the last visible "/" when the widget wasn't wide enough to show the entire path.
 
 API
 ---
@@ -759,10 +760,18 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.16.x (relative to 1.3.16.7)
+1.3.16.x (relative to 1.3.16.8)
 ========
 
 
+
+1.3.16.8 (relative to 1.3.16.7)
+========
+
+Fixes
+-----
+
+- VectorDataWidget : Fixed bug causing paths to display as "..." after the last visible "/" when the widget wasn't wide enough to show the entire path.
 
 1.3.16.7 (relative to 1.3.16.6)
 ========
