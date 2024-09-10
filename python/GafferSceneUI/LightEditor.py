@@ -47,7 +47,6 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
-from . import ContextAlgo
 from . import _GafferSceneUI
 
 from Qt import QtWidgets
@@ -111,9 +110,13 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 			)
 			self.__pathListing.columnContextMenuSignal().connect( Gaffer.WeakMethod( self.__columnContextMenuSignal ) )
 
+		self.__selectedPathsChangedConnection = GafferSceneUI.ScriptNodeAlgo.selectedPathsChangedSignal( scriptNode ).connect(
+			Gaffer.WeakMethod( self.__selectedPathsChanged )
+		)
+
 		self._updateFromSet()
 		self.__setPathListingPath()
-		self.__transferSelectionFromContext()
+		self.__transferSelectionFromScriptNode()
 		self.__updateColumns()
 
 	__columnRegistry = collections.OrderedDict()
@@ -224,9 +227,6 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 	def _updateFromContext( self, modifiedItems ) :
 
-		if any( ContextAlgo.affectsSelectedPaths( x ) for x in modifiedItems ) :
-			self.__transferSelectionFromContext()
-
 		for item in modifiedItems :
 			if not item.startswith( "ui:" ) :
 				# When the context has changed, the hierarchy of the scene may
@@ -268,17 +268,21 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		self.__setFilter.setContext( contextCopy )
 		self.__pathListing.setPath( GafferScene.ScenePath( self.settings()["in"], contextCopy, "/", filter = self.__setFilter ) )
 
+	def __selectedPathsChanged( self, scriptNode ) :
+
+		self.__transferSelectionFromScriptNode()
+
 	def __selectionChanged( self, pathListing ) :
 
 		assert( pathListing is self.__pathListing )
 
-		with Gaffer.Signals.BlockedConnection( self._contextChangedConnection() ) :
-			ContextAlgo.setSelectedPaths( self.context(), pathListing.getSelection()[0] )
+		with Gaffer.Signals.BlockedConnection( self.__selectedPathsChangedConnection ) :
+			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( self.scriptNode(), pathListing.getSelection()[0] )
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
-	def __transferSelectionFromContext( self ) :
+	def __transferSelectionFromScriptNode( self ) :
 
-		selectedPaths = ContextAlgo.getSelectedPaths( self.context() )
+		selectedPaths = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( self.scriptNode() )
 		with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
 			selection = [selectedPaths] + ( [IECore.PathMatcher()] * ( len( self.__pathListing.getColumns() ) - 1 ) )
 			self.__pathListing.setSelection( selection, scrollToFirst=True )
@@ -357,7 +361,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 			)
 
 		if not isinstance( result, Exception ) :
-			GafferSceneUI.ContextAlgo.setSelectedPaths( context, result )
+			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( self.scriptNode(), result )
 
 	def __deleteLights( self, *unused ) :
 

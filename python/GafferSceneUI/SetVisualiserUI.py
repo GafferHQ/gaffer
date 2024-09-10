@@ -283,7 +283,7 @@ class _SetColorLedgendRowWidget( GafferUI.ListContainer ) :
 		inPlug = outSetsWidget.node()[ "in" ]
 		with outSetsWidget.context() :
 			matcher = inPlug.set( self.__label.getText() ).value
-			GafferSceneUI.ContextAlgo.setSelectedPaths( outSetsWidget.context(), matcher )
+			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( outSetsWidget.scriptNode(), matcher )
 
 	def __addMenuDefinition( self ) :
 

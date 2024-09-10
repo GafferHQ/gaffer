@@ -116,7 +116,7 @@ class LightToolTest( GafferUITest.TestCase ) :
 		tool = GafferSceneUI.LightTool( view )
 		tool["active"].setValue( True )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/light" ] ) )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/light" ] ) )
 
 		with GafferUI.Window() as window :
 			gadgetWidget = GafferUI.GadgetWidget( view.viewportGadget() )

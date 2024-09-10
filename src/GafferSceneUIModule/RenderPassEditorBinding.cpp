@@ -38,7 +38,6 @@
 
 #include "RenderPassEditorBinding.h"
 
-#include "GafferSceneUI/ContextAlgo.h"
 #include "GafferSceneUI/TypeIds.h"
 
 #include "GafferScene/ScenePlug.h"

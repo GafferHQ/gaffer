@@ -38,7 +38,7 @@
 
 #include "GafferSceneUI/Private/ParameterInspector.h"
 #include "GafferSceneUI/Private/Inspector.h"
-#include "GafferSceneUI/ContextAlgo.h"
+#include "GafferSceneUI/ScriptNodeAlgo.h"
 #include "GafferSceneUI/SceneView.h"
 
 #include "GafferScene/ScenePath.h"
@@ -3028,6 +3028,8 @@ LightTool::LightTool( SceneView *view, const std::string &name ) :
 	connectToViewContext();
 	view->contextChangedSignal().connect( boost::bind( &LightTool::connectToViewContext, this ) );
 
+	ScriptNodeAlgo::selectedPathsChangedSignal( view->scriptNode() ).connect( boost::bind( &LightTool::selectedPathsChanged, this ) );
+
 	Metadata::plugValueChangedSignal().connect( boost::bind( &LightTool::metadataChanged, this, ::_3 ) );
 	Metadata::nodeValueChangedSignal().connect( boost::bind( &LightTool::metadataChanged, this, ::_2 ) );
 }
@@ -3056,16 +3058,19 @@ void LightTool::connectToViewContext()
 
 void LightTool::contextChanged( const InternedString &name )
 {
-	if(
-		ContextAlgo::affectsSelectedPaths( name ) ||
-		ContextAlgo::affectsLastSelectedPath( name ) ||
-		!boost::starts_with( name.string(), "ui:" )
-	)
+	if( !boost::starts_with( name.string(), "ui:" ) )
 	{
-		m_handleInspectionsDirty = true;
-		m_handleTransformsDirty = true;
-		m_priorityPathsDirty = true;
+		// Context changes can change the scene, which in turn
+		// dirties our selection.
+		selectedPathsChanged();
 	}
+}
+
+void LightTool::selectedPathsChanged()
+{
+	m_handleInspectionsDirty = true;
+	m_handleTransformsDirty = true;
+	m_priorityPathsDirty = true;
 }
 
 void LightTool::metadataChanged( InternedString key )
@@ -3091,7 +3096,7 @@ void LightTool::updateHandleInspections()
 
 	m_inspectorsDirtiedConnection.clear();
 
-	const PathMatcher selection = ContextAlgo::getSelectedPaths( view()->getContext() );
+	const PathMatcher selection = ScriptNodeAlgo::getSelectedPaths( view()->scriptNode() );
 	if( selection.isEmpty() )
 	{
 		for( auto &c : m_handles->children() )
@@ -3102,7 +3107,7 @@ void LightTool::updateHandleInspections()
 		return;
 	}
 
-	ScenePlug::ScenePath lastSelectedPath = ContextAlgo::getLastSelectedPath( view()->getContext() );
+	ScenePlug::ScenePath lastSelectedPath = ScriptNodeAlgo::getLastSelectedPath( view()->scriptNode() );
 	assert( selection.match( lastSelectedPath ) & PathMatcher::ExactMatch );
 
 	bool lookThroughLight = false;
@@ -3165,13 +3170,13 @@ void LightTool::updateHandleTransforms( float rasterScale )
 		return;
 	}
 
-	const PathMatcher selection = ContextAlgo::getSelectedPaths( view()->getContext() );
+	const PathMatcher selection = ScriptNodeAlgo::getSelectedPaths( view()->scriptNode() );
 	if( selection.isEmpty() )
 	{
 		return;
 	}
 
-	ScenePlug::ScenePath lastSelectedPath = ContextAlgo::getLastSelectedPath( view()->getContext() );
+	ScenePlug::ScenePath lastSelectedPath = ScriptNodeAlgo::getLastSelectedPath( view()->scriptNode() );
 	assert( selection.match( lastSelectedPath ) & PathMatcher::Result::ExactMatch );
 	if( !scene->exists( lastSelectedPath ) )
 	{
@@ -3265,7 +3270,7 @@ void LightTool::preRender()
 		{
 			m_priorityPathsDirty = false;
 			auto sceneGadget = static_cast<SceneGadget *>( view()->viewportGadget()->getPrimaryChild() );
-			sceneGadget->setPriorityPaths( ContextAlgo::getSelectedPaths( view()->getContext() ) );
+			sceneGadget->setPriorityPaths( ScriptNodeAlgo::getSelectedPaths( view()->scriptNode() ) );
 		}
 	}
 

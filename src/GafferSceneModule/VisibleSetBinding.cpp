@@ -53,6 +53,15 @@ using namespace GafferScene;
 namespace
 {
 
+VisibleSet *constructor( const PathMatcher &expansions, const PathMatcher &inclusions, const PathMatcher &exclusions )
+{
+	VisibleSet *result = new VisibleSet;
+	result->expansions = expansions;
+	result->inclusions = inclusions;
+	result->exclusions = exclusions;
+	return result;
+}
+
 std::string visibilityRepr( const VisibleSet::Visibility &visibility )
 {
 	const std::string drawMode = extract<std::string>( object( visibility.drawMode ).attr( "__str__" )() );
@@ -77,7 +86,14 @@ void GafferSceneModule::bindVisibleSet()
 	IECorePython::TypedDataFromType<VisibleSetData>();
 
 	scope s = class_<VisibleSet>( "VisibleSet" )
-		.def( init<>() )
+		.def( "__init__", make_constructor( constructor, default_call_policies(),
+				(
+					arg( "expansions" ) = PathMatcher(),
+					arg( "inclusions" ) = PathMatcher(),
+					arg( "exclusions" ) = PathMatcher()
+				)
+			)
+		)
 		.def( init<const VisibleSet &>() )
 		.def( "visibility", (VisibleSet::Visibility (VisibleSet ::*)( const std::vector<InternedString> &, const size_t ) const)&VisibleSet::visibility, arg( "minimumExpansionDepth" ) = 0 )
 		.def_readwrite( "expansions", &VisibleSet::expansions )

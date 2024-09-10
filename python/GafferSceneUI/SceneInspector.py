@@ -195,6 +195,10 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 				if tab is not None :
 					column.append( GafferUI.Spacer( imath.V2i( 0 ) ), expand = True )
 
+		GafferSceneUI.ScriptNodeAlgo.selectedPathsChangedSignal( scriptNode ).connect(
+			Gaffer.WeakMethod( self.__selectedPathsChanged )
+		)
+
 		self.__targetPaths = None
 		self._updateFromSet()
 
@@ -236,9 +240,14 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 	def _updateFromContext( self, modifiedItems ) :
 
 		for item in modifiedItems :
-			if not item.startswith( "ui:" ) or ( GafferSceneUI.ContextAlgo.affectsSelectedPaths( item ) and self.__targetPaths is None ) :
+			if not item.startswith( "ui:" ) :
 				self.__updateLazily()
 				break
+
+	def __selectedPathsChanged( self, scriptNode ) :
+
+		if self.__targetPaths is None :
+			self.__updateLazily()
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __updateLazily( self ) :
@@ -258,10 +267,10 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 			if self.__targetPaths is not None :
 				paths = self.__targetPaths
 			else :
-				lastSelectedPath = GafferSceneUI.ContextAlgo.getLastSelectedPath( self.context() )
+				lastSelectedPath = GafferSceneUI.ScriptNodeAlgo.getLastSelectedPath( self.scriptNode() )
 				if lastSelectedPath :
 					paths = [ lastSelectedPath ]
-					selectedPaths = GafferSceneUI.ContextAlgo.getSelectedPaths( self.context() ).paths()
+					selectedPaths = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( self.scriptNode() ).paths()
 					if len( selectedPaths ) > 1 :
 						paths.insert( 0, next( p for p in selectedPaths if p != lastSelectedPath ) )
 
@@ -1338,8 +1347,7 @@ class _InheritanceSection( Section ) :
 	def __labelButtonPress( self, label, event ) :
 
 		script = self.__target.scene.ancestor( Gaffer.ScriptNode )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), IECore.PathMatcher( [ label.getText() ] ) )
-
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ label.getText() ] ) )
 
 ##########################################################################
 # Shader section
@@ -2527,9 +2535,7 @@ class _SetDiff( Diff ) :
 			return False
 
 		editor = self.ancestor( SceneInspector )
-
-		context = editor.context()
-		GafferSceneUI.ContextAlgo.setSelectedPaths( context, widget.paths )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( editor.scriptNode(), widget.paths )
 
 		return True
 

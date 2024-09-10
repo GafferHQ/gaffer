@@ -93,19 +93,21 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		view = GafferUI.View.create( script["A"]["out"] )
 
 		def setSelection( paths ) :
-			GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( paths ) )
+			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( view.scriptNode(), IECore.PathMatcher( paths ) )
 
 		def getSelection() :
-			return set( GafferSceneUI.ContextAlgo.getSelectedPaths( view.getContext() ).paths() )
+			return set( GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( view.scriptNode() ).paths() )
 
 		setSelection( [ "/A" ] )
 		self.assertEqual( getSelection(), set( [ "/A" ] ) )
 
 		def setExpandedPaths( paths ) :
-			GafferSceneUI.ContextAlgo.setExpandedPaths( view.getContext(), IECore.PathMatcher( paths ) )
+			visibleSet = GafferSceneUI.ScriptNodeAlgo.getVisibleSet( view.scriptNode() )
+			visibleSet.expansions = IECore.PathMatcher( paths )
+			GafferSceneUI.ScriptNodeAlgo.setVisibleSet( view.scriptNode(), visibleSet )
 
 		def getExpandedPaths() :
-			return set( GafferSceneUI.ContextAlgo.getExpandedPaths( view.getContext() ).paths() )
+			return set( GafferSceneUI.ScriptNodeAlgo.getVisibleSet( view.scriptNode() ).expansions.paths() )
 
 		setExpandedPaths( [ "/" ] )
 		self.assertEqual( getExpandedPaths(), set( [ "/" ] ) )

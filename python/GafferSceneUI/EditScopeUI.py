@@ -166,8 +166,8 @@ class _SceneProcessorWidget( GafferUI.EditScopeUI.SimpleProcessorWidget ) :
 
 	def _linkActivated( self, linkData ) :
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths(
-			self.processor().ancestor( Gaffer.ScriptNode ).context(), linkData
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths(
+			self.processor().ancestor( Gaffer.ScriptNode ), linkData
 		)
 
 class __LocationEditsWidget( _SceneProcessorWidget ) :

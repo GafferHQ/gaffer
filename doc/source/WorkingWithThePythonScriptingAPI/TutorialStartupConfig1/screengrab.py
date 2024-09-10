@@ -103,6 +103,6 @@ with script.context():
 	viewer.view().viewportGadget().frame( script["SceneReader"]["out"].bound( "/" ) )
 	viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 	paths = IECore.PathMatcher( [ "/" ] )
-	GafferSceneUI.ContextAlgo.expand( script.context(), paths )
-	GafferSceneUI.ContextAlgo.expandDescendants( script.context(), paths, script["SceneReader"]["out"] )
+	GafferSceneUI.ScriptNodeAlgo.expandInVisibleSet( script, paths )
+	GafferSceneUI.ScriptNodeAlgo.expandDescendantsInVisibleSet( script, paths, script["SceneReader"]["out"] )
 GafferUI.WidgetAlgo.grab( widget = scriptWindow, imagePath = "images/tutorialVariableSubstitutionTest.png" )

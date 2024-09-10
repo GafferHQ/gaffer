@@ -108,10 +108,6 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 		static void registerRenderer( const std::string &name, const RendererSettingsCreator &settingsCreator );
 		static std::vector<std::string> registeredRenderers();
 
-	protected :
-
-		void contextChanged( const IECore::InternedString &name ) override;
-
 	private :
 
 		// The filter for a preprocessing node used to hide things.
@@ -120,11 +116,10 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 
 		Imath::Box3f framingBound() const;
 
+		void selectedPathsChanged();
+		void visibleSetChanged();
 		bool keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &event );
-		void transferSelectionToContext();
 		void plugSet( Gaffer::Plug *plug );
-
-		Gaffer::Signals::ScopedConnection m_selectionChangedConnection;
 
 		SceneGadgetPtr m_sceneGadget;
 

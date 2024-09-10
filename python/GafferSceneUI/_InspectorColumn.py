@@ -309,7 +309,7 @@ def __selectAffected( pathListing ) :
 			for setExpression in setExpressions :
 				result.addPaths( GafferScene.SetAlgo.evaluateSetExpression( setExpression, editor.settings()["in"] ) )
 
-	GafferSceneUI.ContextAlgo.setSelectedPaths( editor.scriptNode().context(), result )
+	GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( editor.scriptNode(), result )
 
 def __showHistory( pathListing ) :
 

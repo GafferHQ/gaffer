@@ -53,7 +53,7 @@ script.selection().clear()
 script.selection().add( script["StandardAttributes"] )
 __path = "/group/sphere"
 __paths = IECore.PathMatcher( [ __path ] )
-GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), __paths )
+GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, __paths )
 
 from GafferSceneUI.SceneInspector import __AttributesSection
 

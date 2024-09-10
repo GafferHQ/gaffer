@@ -169,7 +169,7 @@ def _pathsFromSelection( plugValueWidget ) :
 	if node is None :
 		return []
 
-	paths = GafferSceneUI.ContextAlgo.getSelectedPaths( plugValueWidget.context() )
+	paths = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( plugValueWidget.scriptNode() )
 	paths = paths.paths() if paths else []
 
 	with plugValueWidget.context() :

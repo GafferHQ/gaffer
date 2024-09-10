@@ -106,7 +106,7 @@ del nodeEditorWindow
 __delay( 0.1 )
 
 # Concept: Querying results
-GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), IECore.PathMatcher( [ "/cube2" ] ) )
+GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/cube2" ] ) )
 #sceneInspector.reveal()
 # Expand the "Transform" section
 #sceneInspector._SceneInspector__sections[2]._Section__collapsible.setCollapsed( False )

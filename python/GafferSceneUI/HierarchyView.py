@@ -45,7 +45,6 @@ import GafferScene
 import GafferSceneUI
 from . import _GafferSceneUI
 
-from . import ContextAlgo
 from . import SetUI
 
 ##########################################################################
@@ -79,8 +78,8 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 				Gaffer.DictPath( {}, "/" ), # temp till we make a ScenePath
 				columns = [
 					GafferUI.PathListingWidget.defaultNameColumn,
-					_GafferSceneUI._HierarchyViewInclusionsColumn( scriptNode.context() ),
-					_GafferSceneUI._HierarchyViewExclusionsColumn( scriptNode.context() )
+					_GafferSceneUI._HierarchyViewInclusionsColumn( scriptNode ),
+					_GafferSceneUI._HierarchyViewExclusionsColumn( scriptNode )
 				],
 				selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
@@ -94,10 +93,17 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 			self.__pathListing.columnContextMenuSignal().connect( Gaffer.WeakMethod( self.__columnContextMenuSignal ) )
 			self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPressSignal ) )
 
+		self.__visibleSetChangedConnection = GafferSceneUI.ScriptNodeAlgo.visibleSetChangedSignal( scriptNode ).connect(
+			Gaffer.WeakMethod( self.__visibleSetChanged )
+		)
+		self.__selectedPathsChangedConnection = GafferSceneUI.ScriptNodeAlgo.selectedPathsChangedSignal( scriptNode ).connect(
+			Gaffer.WeakMethod( self.__selectedPathsChanged )
+		)
+
 		self._updateFromSet()
 		self.__setPathListingPath()
-		self.__transferExpansionFromContext()
-		self.__transferSelectionFromContext()
+		self.__transferExpansionFromScriptNode()
+		self.__transferSelectionFromScriptNode()
 
 	def scene( self ) :
 
@@ -119,11 +125,6 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 		return "GafferSceneUI.HierarchyView( scriptNode )"
 
 	def _updateFromContext( self, modifiedItems ) :
-
-		if any( ContextAlgo.affectsSelectedPaths( x ) for x in modifiedItems ) :
-			self.__transferSelectionFromContext()
-		elif any( ContextAlgo.affectsVisibleSet( x ) for x in modifiedItems ) :
-			self.__transferExpansionFromContext()
 
 		for item in modifiedItems :
 			if not item.startswith( "ui:" ) :
@@ -150,21 +151,29 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 		with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
 			self.__pathListing.setPath( GafferScene.ScenePath( self.settings()["in"], contextCopy, "/", filter = self.__filter ) )
 
+	def __visibleSetChanged( self, scriptNode ) :
+
+		self.__transferExpansionFromScriptNode()
+
+	def __selectedPathsChanged( self, scriptNode ) :
+
+		self.__transferSelectionFromScriptNode()
+
 	def __expansionChanged( self, pathListing ) :
 
 		assert( pathListing is self.__pathListing )
 
-		with Gaffer.Signals.BlockedConnection( self._contextChangedConnection() ) :
-			visibleSet = ContextAlgo.getVisibleSet( self.context() )
+		with Gaffer.Signals.BlockedConnection( self.__visibleSetChangedConnection ) :
+			visibleSet = GafferSceneUI.ScriptNodeAlgo.getVisibleSet( self.scriptNode() )
 			visibleSet.expansions = pathListing.getExpansion()
-			ContextAlgo.setVisibleSet( self.context(), visibleSet )
+			GafferSceneUI.ScriptNodeAlgo.setVisibleSet( self.scriptNode(), visibleSet )
 
 	def __selectionChanged( self, pathListing ) :
 
 		assert( pathListing is self.__pathListing )
 
-		with Gaffer.Signals.BlockedConnection( self._contextChangedConnection() ) :
-			ContextAlgo.setSelectedPaths( self.context(), pathListing.getSelection() )
+		with Gaffer.Signals.BlockedConnection( self.__selectedPathsChangedConnection ) :
+			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( self.scriptNode(), pathListing.getSelection() )
 
 	def __keyPressSignal( self, widget, event ) :
 
@@ -216,16 +225,16 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 			self.__pathListing.scrollToFirst( selection )
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
-	def __transferExpansionFromContext( self ) :
+	def __transferExpansionFromScriptNode( self ) :
 
-		visibleSet = ContextAlgo.getVisibleSet( self.context() )
+		visibleSet = GafferSceneUI.ScriptNodeAlgo.getVisibleSet( self.scriptNode() )
 		with Gaffer.Signals.BlockedConnection( self.__expansionChangedConnection ) :
 			self.__pathListing.setExpansion( visibleSet.expansions )
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
-	def __transferSelectionFromContext( self ) :
+	def __transferSelectionFromScriptNode( self ) :
 
-		selection = ContextAlgo.getSelectedPaths( self.context() )
+		selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( self.scriptNode() )
 		with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
 			self.__pathListing.setSelection( selection, scrollToFirst=False )
 
