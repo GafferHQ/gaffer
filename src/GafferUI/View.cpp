@@ -169,7 +169,6 @@ void View::setContext( Gaffer::ContextPtr context )
 		return;
 	}
 	m_context = context;
-	m_contextChangedConnection = m_context->changedSignal().connect( boost::bind( &View::contextChanged, this, ::_2 ) );
 	contextChangedSignal()( this );
 }
 
@@ -192,15 +191,6 @@ void View::setPreprocessor( Gaffer::NodePtr preprocessor )
 {
 	setChild( "__preprocessor", preprocessor );
 	preprocessor->getChild<Plug>( "in" )->setInput( inPlug() );
-}
-
-void View::contextChanged( const IECore::InternedString &name )
-{
-}
-
-Signals::Connection &View::contextChangedConnection()
-{
-	return m_contextChangedConnection;
 }
 
 View::CreatorMap &View::creators()

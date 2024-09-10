@@ -176,14 +176,6 @@ class GAFFERUI_API View : public Gaffer::Node
 		template<typename T=Gaffer::Plug>
 		T *preprocessedInPlug();
 
-		/// Called when the context changes. Derived classes should call the
-		/// base class implementation if they override this method.
-		virtual void contextChanged( const IECore::InternedString &name );
-		/// Returns the connection used to trigger the call to contextChanged(). Derived
-		/// classes may block this temporarily if they want to prevent the triggering -
-		/// this can be useful when modifying the context.
-		Gaffer::Signals::Connection &contextChangedConnection();
-
 		template<class T>
 		struct ViewDescription
 		{
@@ -206,7 +198,6 @@ class GAFFERUI_API View : public Gaffer::Node
 		ViewportGadgetPtr m_viewportGadget;
 		Gaffer::ContextPtr m_context;
 		UnarySignal m_contextChangedSignal;
-		Gaffer::Signals::ScopedConnection m_contextChangedConnection;
 
 		using CreatorMap = std::map<IECore::TypeId, ViewCreator>;
 		static CreatorMap &creators();

@@ -100,6 +100,7 @@ Breaking Changes
 - View :
   - Changed constructor arguments for View and all subclasses. A ScriptNode must now be passed.
   - Changed `ViewCreator` signature.
+  - Removed `contextChanged()` and `contextChangedConnection()` methods.
 - LightTool : Removed `selection()` and `selectionChangedSignal()`.
 - ArnoldRender, CyclesRender, DelightRender, OpenGLRender : Removed. Use the generic Render node instead.
 - Render : Removed protected constructor for creating renderer-specific derived classes.
