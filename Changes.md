@@ -106,6 +106,7 @@ Breaking Changes
 - Render : Removed protected constructor for creating renderer-specific derived classes.
 - Signal : The `connect()` and `connectFront()` methods now default to `scoped = False`. If a scoped connection is required, pass `scoped = True`.
 - FreezeTransform : Constant primitive variables with point/vector interpretations are now also transformed (this is more correct, but it is a change in behaviour).
+- ImageGadget : Remove non-const variant of `getContext()`.
 
 Build
 -----
