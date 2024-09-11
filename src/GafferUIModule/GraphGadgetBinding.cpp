@@ -250,13 +250,13 @@ struct ContextTrackerSlotCaller
 	}
 };
 
-ContextPtr contextWrapper1( const ContextTracker &contextTracker, const Node &node, bool copy = false )
+ContextPtr contextWrapper1( const ContextTracker &contextTracker, const Node &node, bool copy )
 {
 	ConstContextPtr c = contextTracker.context( &node );
 	return copy ? new Context( *c ) : boost::const_pointer_cast<Context>( c );
 }
 
-ContextPtr contextWrapper2( const ContextTracker &contextTracker, const Plug &plug, bool copy = false )
+ContextPtr contextWrapper2( const ContextTracker &contextTracker, const Plug &plug, bool copy )
 {
 	ConstContextPtr c = contextTracker.context( &plug );
 	return copy ? new Context( *c ) : boost::const_pointer_cast<Context>( c );
