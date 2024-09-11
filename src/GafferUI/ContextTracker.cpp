@@ -474,13 +474,13 @@ bool ContextTracker::isTracked( const Gaffer::Plug *plug ) const
 		return false;
 	}
 
-	auto it = m_nodeContexts.find( plug->node() );
+	auto it = m_nodeContexts.find( plug->node(), TransparentPtrHash<const Node>(), std::equal_to<>() );
 	return it != m_nodeContexts.end() && it->second.allInputsActive;
 }
 
 bool ContextTracker::isTracked( const Gaffer::Node *node ) const
 {
-	return m_nodeContexts.find( node ) != m_nodeContexts.end();
+	return m_nodeContexts.find( node, TransparentPtrHash<const Node>(), std::equal_to<>() ) != m_nodeContexts.end();
 }
 
 Gaffer::ConstContextPtr ContextTracker::context( const Gaffer::Plug *plug ) const
@@ -495,7 +495,7 @@ Gaffer::ConstContextPtr ContextTracker::context( const Gaffer::Plug *plug ) cons
 
 Gaffer::ConstContextPtr ContextTracker::context( const Gaffer::Node *node ) const
 {
-	auto it = m_nodeContexts.find( node );
+	auto it = m_nodeContexts.find( node, TransparentPtrHash<const Node>(), std::equal_to<>() );
 	if( it != m_nodeContexts.end() )
 	{
 		return it->second.context;
@@ -530,7 +530,7 @@ Gaffer::ConstContextPtr ContextTracker::context( const Gaffer::Node *node ) cons
 
 bool ContextTracker::isEnabled( const Gaffer::DependencyNode *node ) const
 {
-	auto it = m_nodeContexts.find( node );
+	auto it = m_nodeContexts.find( node, TransparentPtrHash<const Node>(), std::equal_to<>() );
 	if( it != m_nodeContexts.end() )
 	{
 		return it->second.dependencyNodeEnabled;
@@ -764,7 +764,7 @@ const Gaffer::Context *ContextTracker::findPlugContext( const Gaffer::Plug *plug
 {
 	while( plug )
 	{
-		auto it = m_plugContexts.find( plug );
+		auto it = m_plugContexts.find( plug, TransparentPtrHash<const Plug>(), std::equal_to<>() );
 		if( it != m_plugContexts.end() )
 		{
 			return it->second.get();

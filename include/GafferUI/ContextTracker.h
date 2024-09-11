@@ -45,8 +45,9 @@
 #include "IECore/Canceller.h"
 #include "IECore/RefCounted.h"
 
+#include "boost/unordered_map.hpp"
+
 #include <unordered_map>
-#include <unordered_set>
 
 namespace Gaffer
 {
@@ -188,9 +189,22 @@ class GAFFERUI_API ContextTracker final : public IECore::RefCounted, public Gaff
 			bool allInputsActive = false;
 		};
 
-		using NodeContexts = std::unordered_map<Gaffer::ConstNodePtr, NodeData>;
+		/// Allows `map.find( T * )` to avoid the creation of a temporary `intrusive_ptr<T>`
+		/// when `intrusive_ptr<T>` is used as the key in an `unordered_map`. Should be used
+		/// in conjunction with `std::equal_to<>` in the `unordered_map` instantiation.
+		/// \todo Move to `IECore/RefCounted.h`
+		template<typename T>
+		struct TransparentPtrHash
+		{
+			using is_transparent = void;
+			std::size_t operator()( T *x ) const { return std::hash<T *>()( x ); }
+			std::size_t operator()( const boost::intrusive_ptr<T> &x ) const { return std::hash<T *>()( x.get() ); }
+		};
+
+		/// \todo Use `std::unordered_map` when the VFX platform gods give us C++20.
+		using NodeContexts = boost::unordered_map<Gaffer::ConstNodePtr, NodeData, TransparentPtrHash<const Gaffer::Node>, std::equal_to<>>;
 		NodeContexts m_nodeContexts;
-		using PlugContexts = std::unordered_map<Gaffer::ConstPlugPtr, Gaffer::ConstContextPtr>;
+		using PlugContexts = boost::unordered_map<Gaffer::ConstPlugPtr, Gaffer::ConstContextPtr, TransparentPtrHash<const Gaffer::Plug>, std::equal_to<>>;
 		// Stores plug-specific contexts, which take precedence over `m_nodeContexts`.
 		PlugContexts m_plugContexts;
 
