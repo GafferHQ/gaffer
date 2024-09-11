@@ -854,9 +854,7 @@ TransformTool::TransformTool( SceneView *view, const std::string &name )
 	view->viewportGadget()->keyPressSignal().connect( boost::bind( &TransformTool::keyPress, this, ::_2 ) );
 	plugDirtiedSignal().connect( boost::bind( &TransformTool::plugDirtied, this, ::_1 ) );
 	view->plugDirtiedSignal().connect( boost::bind( &TransformTool::plugDirtied, this, ::_1 ) );
-
-	connectToViewContext();
-	view->contextChangedSignal().connect( boost::bind( &TransformTool::connectToViewContext, this ) );
+	view->contextChangedSignal().connect( boost::bind( &TransformTool::contextChanged, this ) );
 
 	ScriptNodeAlgo::selectedPathsChangedSignal( view->scriptNode() ).connect( boost::bind( &TransformTool::selectedPathsChanged, this ) );
 
@@ -948,19 +946,11 @@ bool TransformTool::affectsHandles( const Gaffer::Plug *input ) const
 	return input == sizePlug();
 }
 
-void TransformTool::connectToViewContext()
+void TransformTool::contextChanged()
 {
-	m_contextChangedConnection = view()->getContext()->changedSignal().connect( boost::bind( &TransformTool::contextChanged, this, ::_2 ) );
-}
-
-void TransformTool::contextChanged( const IECore::InternedString &name )
-{
-	if( !boost::starts_with( name.string(), "ui:" ) )
-	{
-		// Context changes may change the scene hierarchy or transform,
-		// which impacts on the selection and handles.
-		selectedPathsChanged();
-	}
+	// Context changes may change the scene hierarchy or transform,
+	// which impacts on the selection and handles.
+	selectedPathsChanged();
 }
 
 void TransformTool::selectedPathsChanged()
@@ -1113,7 +1103,7 @@ void TransformTool::updateSelection() const
 
 	for( PathMatcher::Iterator it = selectedPaths.begin(), eIt = selectedPaths.end(); it != eIt; ++it )
 	{
-		Selection selection( scene, *it, view()->getContext(), const_cast<EditScope *>( view()->editScope() ) );
+		Selection selection( scene, *it, view()->context(), const_cast<EditScope *>( view()->editScope() ) );
 		m_selection.push_back( selection );
 		if( *it == lastSelectedPath )
 		{

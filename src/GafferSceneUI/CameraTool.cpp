@@ -119,9 +119,7 @@ CameraTool::CameraTool( SceneView *view, const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	connectToViewContext();
-	view->contextChangedSignal().connect( boost::bind( &CameraTool::connectToViewContext, this ) );
-
+	view->contextChangedSignal().connect( boost::bind( &CameraTool::contextChanged, this ) );
 	view->plugDirtiedSignal().connect( boost::bind( &CameraTool::plugDirtied, this, ::_1 ) );
 	plugDirtiedSignal().connect( boost::bind( &CameraTool::plugDirtied, this, ::_1 ) );
 
@@ -162,18 +160,10 @@ const Gaffer::StringPlug *CameraTool::lookThroughCameraPlug() const
 	return view()->descendant<StringPlug>( "camera.lookThroughCamera" );
 }
 
-void CameraTool::connectToViewContext()
+void CameraTool::contextChanged()
 {
-	m_contextChangedConnection = view()->getContext()->changedSignal().connect( boost::bind( &CameraTool::contextChanged, this, ::_2 ) );
-}
-
-void CameraTool::contextChanged( const IECore::InternedString &name )
-{
-	if( !boost::starts_with( name.string(), "ui:" ) )
-	{
-		m_cameraSelectionDirty = true;
-		view()->viewportGadget()->renderRequestSignal()( view()->viewportGadget() );
-	}
+	m_cameraSelectionDirty = true;
+	view()->viewportGadget()->renderRequestSignal()( view()->viewportGadget() );
 }
 
 void CameraTool::plugDirtied( const Gaffer::Plug *plug )
@@ -218,7 +208,7 @@ GafferScene::ScenePlug::ScenePath CameraTool::cameraPath() const
 	string cameraPath = lookThroughCameraPlug()->getValue();
 	if( cameraPath.empty() )
 	{
-		Context::Scope scopedContext( view()->getContext() );
+		Context::Scope scopedContext( view()->context() );
 		IECore::ConstCompoundObjectPtr globals = view()->inPlug<ScenePlug>()->globals();
 		if( auto *cameraData = globals->member<StringData>( "option:render:camera" ) )
 		{
@@ -245,7 +235,7 @@ const TransformTool::Selection &CameraTool::cameraSelection()
 		TransformTool::Selection candidateSelection(
 			scenePlug(),
 			cameraPath,
-			view()->getContext(),
+			view()->context(),
 			view()->editScope()
 		);
 		// TransformTool::Selection will fall back to editing

@@ -273,7 +273,7 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		self.assertEqual( getViewCameraTransform(), imath.M44f().translate( imath.V3f( 200, 0, 0 ) ) )
 
 		# Change the viewer context - since look-through is disabled the user camera should not move.
-		viewer.getContext().setFrame( 10 )
+		script.context().setFrame( 10 )
 		self.waitForIdle( 100 )
 		self.assertEqual( getViewCameraTransform(), imath.M44f().translate( imath.V3f( 200, 0, 0 ) ) )
 

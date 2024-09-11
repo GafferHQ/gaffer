@@ -101,6 +101,8 @@ Breaking Changes
   - Changed constructor arguments for View and all subclasses. A ScriptNode must now be passed.
   - Changed `ViewCreator` signature.
   - Removed `contextChanged()` and `contextChangedConnection()` methods.
+  - Removed `setContext()` and `getContext()` methods. Use `context()` instead of `getContext()`.
+  - The `contextChangedSignal()` is now emitted for all changes to the context, whereas previously it was only emitted by `setContext()`. This simplifies context handling in Tools, which no longer need to connect to `Context::changedSignal()` as well.
 - LightTool : Removed `selection()` and `selectionChangedSignal()`.
 - ArnoldRender, CyclesRender, DelightRender, OpenGLRender : Removed. Use the generic Render node instead.
 - Render : Removed protected constructor for creating renderer-specific derived classes.

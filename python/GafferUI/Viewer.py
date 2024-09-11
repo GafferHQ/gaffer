@@ -202,7 +202,6 @@ class Viewer( GafferUI.NodeSetEditor ) :
 						self.__currentView = GafferUI.View.create( plug )
 						if self.__currentView is not None:
 							Gaffer.NodeAlgo.applyUserDefaults( self.__currentView )
-							self.__currentView.setContext( self.context() )
 							self.__views.append( self.__currentView )
 					# if we succeeded in getting a suitable view, then
 					# don't bother checking the other plugs
@@ -227,14 +226,6 @@ class Viewer( GafferUI.NodeSetEditor ) :
 			self.__updateViewportMessage()
 
 		self.__primaryToolChanged()
-
-	def _updateFromContext( self, modifiedItems ) :
-
-		if all( k.startswith( "ui:" ) for k in modifiedItems ) :
-			return
-
-		for view in self.__views :
-			view.setContext( self.context() )
 
 	def _titleFormat( self ) :
 

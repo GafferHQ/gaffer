@@ -496,7 +496,6 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["plane"]["out"] )
-		view.setContext( script.context() )
 
 		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/plane" ] ) )
 
@@ -526,7 +525,6 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["variables"]["out"] )
-		view.setContext( script.context() )
 
 		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/plane" ] ) )
 
@@ -1284,6 +1282,44 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( promotedX.getValue(), 1 )
 		self.assertEqual( promotedY.getValue(), 2 )
 		self.assertEqual( promotedZ.getValue(), 3 )
+
+	def testPinnedContext( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["contextQuery"] = Gaffer.ContextQuery()
+		script["contextQuery"].addQuery( Gaffer.FloatPlug(), "frame" )
+
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["transform"]["translate"]["x"].setInput( script["contextQuery"]["out"][0]["value"] )
+
+		script["timeWarp"] = Gaffer.TimeWarp()
+		script["timeWarp"].setup( script["plane"]["out"] )
+		script["timeWarp"]["in"].setInput( script["plane"]["out"] )
+		script["timeWarp"]["offset"].setValue( 10 )
+
+		view = GafferSceneUI.SceneView( script )
+		view["in"].setInput( script["timeWarp"]["out"] )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/plane" ] ) )
+
+		# Looking at the TimeWarp.
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+		self.assertEqual( tool.handlesTransform().translation(), imath.V3f( 11, 0, 0 ) )
+
+		# Looking at the Plane directly.
+
+		view["in"].setInput( script["plane"]["out"] )
+		self.assertEqual( tool.handlesTransform().translation(), imath.V3f( 1, 0, 0 ) )
+
+		# Still looking at the Plane, but now with the TimeWarp focussed.
+		# We now have a "pinned" context, looking at the Plane from the
+		# point of view of the TimeWarp.
+
+		with GafferUITest.ContextTrackerTest.UpdateHandler() :
+			script.setFocus( script["timeWarp"] )
+		self.assertEqual( tool.handlesTransform().translation(), imath.V3f( 11, 0, 0 ) )
 
 if __name__ == "__main__":
 	unittest.main()

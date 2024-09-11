@@ -599,7 +599,7 @@ UVView::UVView( Gaffer::ScriptNodePtr scriptNode )
 
 	viewportGadget()->setPrimaryChild( new SceneGadget() );
 	sceneGadget()->setScene( uvScene()->outPlug() );
-	sceneGadget()->setContext( getContext() );
+	sceneGadget()->setContext( context() );
 	CompoundObjectPtr openGLOptions = sceneGadget()->getOpenGLOptions()->copy();
 	openGLOptions->members()["gl:curvesPrimitive:useGLLines"] = new BoolData( true );
 	openGLOptions->members()["gl:primitive:solid"] = new BoolData( false );
@@ -610,6 +610,7 @@ UVView::UVView( Gaffer::ScriptNodePtr scriptNode )
 	sceneGadget()->setLayer( Gadget::Layer::MidFront );
 	sceneGadget()->stateChangedSignal().connect( [this]( SceneGadget *g ) { this->gadgetStateChanged( g, g->state() == SceneGadget::Running ); } );
 
+	contextChangedSignal().connect( boost::bind( &UVView::contextChanged, this ) );
 	plugDirtiedSignal().connect( boost::bind( &UVView::plugDirtied, this, ::_1 ) );
 	viewportGadget()->preRenderSignal().connect( boost::bind( &UVView::preRender, this ) );
 	viewportGadget()->visibilityChangedSignal().connect( boost::bind( &UVView::visibilityChanged, this ) );
@@ -621,16 +622,6 @@ UVView::~UVView()
 	// Make sure background task completes before anything
 	// it relies on is destroyed.
 	m_texturesTask.reset();
-}
-
-void UVView::setContext( Gaffer::ContextPtr context )
-{
-	View::setContext( context );
-	sceneGadget()->setContext( context );
-	for( TextureGadgetIterator it( textureGadgets() ); !it.done(); ++it )
-	{
-		(*it)->imageGadget()->setContext( context );
-	}
 }
 
 // We're accessing plugs by name rather than by index to allow for
@@ -736,6 +727,15 @@ const GafferUI::Gadget *UVView::textureGadgets() const
 	return viewportGadget()->getChild<Gadget>( g_textureGadgetsName );
 }
 
+void UVView::contextChanged()
+{
+	sceneGadget()->setContext( context() );
+	for( TextureGadgetIterator it( textureGadgets() ); !it.done(); ++it )
+	{
+		(*it)->imageGadget()->setContext( context() );
+	}
+}
+
 void UVView::plugDirtied( const Gaffer::Plug *plug )
 {
 	if( plug == texturesPlug() )
@@ -766,7 +766,7 @@ void UVView::preRender()
 		}
 	}
 
-	Context::Scope scopedContext( getContext() );
+	Context::Scope scopedContext( context() );
 	m_texturesTask = ParallelAlgo::callOnBackgroundThread(
 		// Subject
 		texturesPlug(),
@@ -818,7 +818,7 @@ void UVView::updateTextureGadgets( const IECore::ConstCompoundObjectPtr &texture
 		if( !textureGadget )
 		{
 			TextureGadgetPtr g = new TextureGadget();
-			g->imageGadget()->setContext( this->getContext() );
+			g->imageGadget()->setContext( context() );
 			textureGadgets()->setChild( gadgetName, g );
 			textureGadget = g.get();
 

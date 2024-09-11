@@ -70,8 +70,7 @@ class GAFFERSCENEUI_API LightTool : public GafferSceneUI::SelectionTool
 		GafferScene::ScenePlug *scenePlug();
 		const GafferScene::ScenePlug *scenePlug() const;
 
-		void connectToViewContext();
-		void contextChanged( const IECore::InternedString &name );
+		void contextChanged();
 		void selectedPathsChanged();
 		void metadataChanged( IECore::InternedString key );
 		void updateHandleInspections();
@@ -94,7 +93,6 @@ class GAFFERSCENEUI_API LightTool : public GafferSceneUI::SelectionTool
 
 		bool m_dragging;
 
-		Gaffer::Signals::ScopedConnection m_contextChangedConnection;
 		Gaffer::Signals::ScopedConnection m_preRenderConnection;
 
 		std::vector<Gaffer::Signals::ScopedConnection> m_inspectorsDirtiedConnection;

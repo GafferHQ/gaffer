@@ -59,6 +59,12 @@ using namespace GafferUI;
 namespace
 {
 
+ContextPtr contextWrapper( const View &view, bool copy )
+{
+	ConstContextPtr c = view.context();
+	return copy ? new Context( *c ) : boost::const_pointer_cast<Context>( c );
+}
+
 class ViewWrapper : public GafferBindings::NodeWrapper<View>
 {
 
@@ -153,8 +159,7 @@ void bindView()
 		.def( init<const std::string &, ScriptNodePtr, PlugPtr>() )
 		.def( "scriptNode", (ScriptNode *(View::*)())&View::scriptNode, return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "editScope", (EditScope *(View::*)())&View::editScope, return_value_policy<IECorePython::CastToIntrusivePtr>() )
-		.def( "getContext", (Context *(View::*)())&View::getContext, return_value_policy<IECorePython::CastToIntrusivePtr>() )
-		.def( "setContext", &View::setContext )
+		.def( "context", &contextWrapper, ( arg( "_copy" ) = true ) )
 		.def( "contextChangedSignal", &View::contextChangedSignal, return_internal_reference<1>() )
 		.def( "viewportGadget", (ViewportGadget *(View::*)())&View::viewportGadget, return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "_setPreprocessor", &View::setPreprocessor )

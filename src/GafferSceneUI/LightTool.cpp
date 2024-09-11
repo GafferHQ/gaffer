@@ -996,7 +996,7 @@ class LightToolHandle : public Handle
 		// Returns `nullptr` if no inspection exists for the handle.
 		Inspector::ResultPtr handleInspection( const InternedString &metaParameter ) const
 		{
-			ScenePlug::PathScope pathScope( m_view->getContext() );
+			ScenePlug::PathScope pathScope( m_view->context() );
 			pathScope.setPath( &m_handlePath );
 
 			return inspection( metaParameter );
@@ -1022,7 +1022,7 @@ class LightToolHandle : public Handle
 
 				const float originalValue = it->second->typedValue<float>( 0.f );
 				const float nonZeroValue = originalValue == 0 ? 1.f : originalValue;
-				setValueOrAddKey( floatPlug, m_view->getContext()->getTime(), nonZeroValue * mult );
+				setValueOrAddKey( floatPlug, m_view->context()->getTime(), nonZeroValue * mult );
 
 			}
 		}
@@ -1049,7 +1049,7 @@ class LightToolHandle : public Handle
 				const float originalValue = it->second->typedValue<float>( 0.f );
 				setValueOrAddKey(
 					floatPlug,
-					m_view->getContext()->getTime(),
+					m_view->context()->getTime(),
 					std::clamp( originalValue + incr, minValue, maxValue )
 				);
 			}
@@ -1677,7 +1677,7 @@ class SpotLightHandle : public LightToolHandle
 				// Clamp each individual cone angle as well
 				setValueOrAddKey(
 					floatPlug,
-					view()->getContext()->getTime(),
+					view()->context()->getTime(),
 					clampPlugAngle(
 						it->second->typedValue<float>( 0.f ) + angleDelta,
 						coneIt->second->typedValue<float>( 0.f ),
@@ -3024,9 +3024,7 @@ LightTool::LightTool( SceneView *view, const std::string &name ) :
 
 	plugDirtiedSignal().connect( boost::bind( &LightTool::plugDirtied, this, ::_1 ) );
 	view->plugDirtiedSignal().connect( boost::bind( &LightTool::plugDirtied, this, ::_1 ) );
-
-	connectToViewContext();
-	view->contextChangedSignal().connect( boost::bind( &LightTool::connectToViewContext, this ) );
+	view->contextChangedSignal().connect( boost::bind( &LightTool::contextChanged, this ) );
 
 	ScriptNodeAlgo::selectedPathsChangedSignal( view->scriptNode() ).connect( boost::bind( &LightTool::selectedPathsChanged, this ) );
 
@@ -3049,21 +3047,11 @@ const ScenePlug *LightTool::scenePlug() const
 	return getChild<ScenePlug>( g_firstPlugIndex );
 }
 
-void LightTool::connectToViewContext()
+void LightTool::contextChanged()
 {
-	m_contextChangedConnection = view()->getContext()->changedSignal().connect(
-		boost::bind( &LightTool::contextChanged, this, ::_2 )
-	);
-}
-
-void LightTool::contextChanged( const InternedString &name )
-{
-	if( !boost::starts_with( name.string(), "ui:" ) )
-	{
-		// Context changes can change the scene, which in turn
-		// dirties our selection.
-		selectedPathsChanged();
-	}
+	// Context changes can change the scene, which in turn
+	// dirties our selection.
+	selectedPathsChanged();
 }
 
 void LightTool::selectedPathsChanged()
@@ -3121,7 +3109,7 @@ void LightTool::updateHandleInspections()
 		}
 	}
 
-	ScenePlug::PathScope pathScope( view()->getContext() );
+	ScenePlug::PathScope pathScope( view()->context() );
 
 	for( auto &c : m_handles->children() )
 	{
@@ -3161,7 +3149,7 @@ void LightTool::updateHandleInspections()
 
 void LightTool::updateHandleTransforms( float rasterScale )
 {
-	Context::Scope scopedContext( view()->getContext() );
+	Context::Scope scopedContext( view()->context() );
 
 	auto scene = scenePlug()->getInput<ScenePlug>();
 	scene = scene ? scene->getInput<ScenePlug>() : scene;

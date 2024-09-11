@@ -66,8 +66,6 @@ class GAFFERSCENEUI_API UVView : public GafferUI::View
 
 		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::UVView, UVViewTypeId, View );
 
-		void setContext( Gaffer::ContextPtr context ) override;
-
 		Gaffer::StringPlug *uvSetPlug();
 		const Gaffer::StringPlug *uvSetPlug() const;
 
@@ -107,6 +105,7 @@ class GAFFERSCENEUI_API UVView : public GafferUI::View
 		GafferUI::Gadget *textureGadgets();
 		const GafferUI::Gadget *textureGadgets() const;
 
+		void contextChanged();
 		void plugDirtied( const Gaffer::Plug *plug );
 		void preRender();
 		void visibilityChanged();

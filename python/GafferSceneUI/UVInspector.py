@@ -76,11 +76,6 @@ class UVInspector( GafferSceneUI.SceneEditor ) :
 
 		self._updateFromSet()
 
-	def _updateFromContext( self, modifiedItems ) :
-
-		if any( not k.startswith( "ui:" ) for k in modifiedItems ) :
-			self.__uvView.setContext( self.context() )
-
 	def __repr__( self ) :
 
 		return "GafferSceneUI.UVInspector( scriptNode )"
