@@ -1,11 +1,6 @@
 1.x.x.x (relative to 1.4.x.x)
 =======
 
-Features
---------
-
-- IECoreScenePreview/PrimitiveAlgo.h : Added functions transformPrimitive and mergePrimitives.
-
 Improvements
 ------------
 
@@ -104,7 +99,7 @@ Breaking Changes
 - ArnoldRender, CyclesRender, DelightRender, OpenGLRender : Removed. Use the generic Render node instead.
 - Render : Removed protected constructor for creating renderer-specific derived classes.
 - Signal : The `connect()` and `connectFront()` methods now default to `scoped = False`. If a scoped connection is required, pass `scoped = True`.
-- FreezeTransform : Constant primitive variables with point/vector interpretations are now also transformed ( this is more correct, but it is a change in behaviour ).
+- FreezeTransform : Constant primitive variables with point/vector interpretations are now also transformed (this is more correct, but it is a change in behaviour).
 
 Build
 -----
