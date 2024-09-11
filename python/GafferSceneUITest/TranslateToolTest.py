@@ -84,7 +84,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/group/plane" ] ) )
 		self.assertEqual( len( tool.selection() ), 1 )
 		self.assertEqual( tool.selection()[0].path(), "/group/plane" )
-		self.assertEqual( tool.selection()[0].context(), view.getContext() )
+		self.assertEqual( tool.selection()[0].context(), view.context() )
 		self.assertTrue( tool.selection()[0].upstreamScene().isSame( script["plane"]["out"] ) )
 		self.assertEqual( tool.selection()[0].upstreamPath(), "/plane" )
 		self.assertTrue( tool.selection()[0].editTarget().isSame( script["plane"]["transform"] ) )
@@ -93,7 +93,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/group" ] ) )
 		self.assertEqual( tool.selection()[0].path(), "/group" )
-		self.assertEqual( tool.selection()[0].context(), view.getContext() )
+		self.assertEqual( tool.selection()[0].context(), view.context() )
 		self.assertTrue( tool.selection()[0].upstreamScene().isSame( script["group"]["out"] ) )
 		self.assertEqual( tool.selection()[0].upstreamPath(), "/group" )
 		self.assertTrue( tool.selection()[0].editTarget().isSame( script["group"]["transform"] ) )
@@ -110,7 +110,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		script["transformFilter"]["enabled"].setValue( True )
 		self.assertEqual( tool.selection()[0].path(), "/group" )
-		self.assertEqual( tool.selection()[0].context(), view.getContext() )
+		self.assertEqual( tool.selection()[0].context(), view.context() )
 		self.assertTrue( tool.selection()[0].upstreamScene().isSame( script["transform"]["out"] ) )
 		self.assertEqual( tool.selection()[0].upstreamPath(), "/group" )
 		self.assertTrue( tool.selection()[0].editTarget().isSame( script["transform"]["transform"] ) )
@@ -1254,7 +1254,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		with Gaffer.UndoScope( script ) :
 			tool.translate( imath.V3f( 10, 0, 0 ) )
 
-		with view.getContext() :
+		with view.context() :
 			self.assertEqual( script["editScope"]["out"].transform( "/cube" ).translation(), imath.V3f( 10, 0, 0 ) )
 			self.assertEqual( script["editScope"]["out"].transform( "/cube1" ).translation(), imath.V3f( 10, 0, 0 ) )
 			self.assertEqual( script["editScope"]["out"].transform( "/cube2" ).translation(), imath.V3f( 10, 0, 0 ) )

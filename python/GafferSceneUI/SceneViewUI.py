@@ -842,7 +842,7 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.getPlug()["lookThroughCamera"],
 			path = GafferScene.ScenePath(
 				self.getPlug().node()["in"],
-				self.getPlug().node().getContext(),
+				self.getPlug().node().context(),
 				"/",
 				filter = self.__pathFilter()
 			),
@@ -1112,7 +1112,7 @@ def __snapshotToCatalogue( catalogue, view ) :
 	metadata = IECore.CompoundData(
 		{
 			"gaffer:sourceScene" : view["in"].getInput().relativeName( scriptRoot ),
-			"gaffer:context:frame" : view["in"].node().getContext().getFrame()
+			"gaffer:context:frame" : view.context().getFrame()
 		}
 	)
 
