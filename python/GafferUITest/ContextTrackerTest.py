@@ -1124,5 +1124,51 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 			self.assertFalse( tracker.isTracked( plug ) )
 			self.assertEqual( tracker.context( plug ), tracker.context( script["node"] ) )
 
+	def testDefaultContextIsCopyOfTargetContext( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["node1"] = GafferTest.AddNode()
+		script["node2"] = GafferTest.AddNode()
+
+		tracker = GafferUI.ContextTracker.acquireForFocus( script )
+		self.assertTrue( tracker.targetContext().isSame( script.context() ) )
+
+		def assertExpectedNodeContexts( expectedContext = None, expectSame = True ) :
+
+			expectedContext = script.context() if expectedContext is None else expectedContext
+			nodeContexts = [ tracker.context( node, _copy = False ) for node in [ script["node1"], script["node2"] ] ]
+
+			for nodeContext in nodeContexts :
+				self.assertEqual( nodeContext, expectedContext )
+				self.assertFalse( nodeContext.isSame( expectedContext ) )
+				self.assertIsNone( nodeContext.canceller() )
+
+			if expectSame :
+				self.assertTrue( nodeContexts[0].isSame( nodeContexts[1] ) )
+			else :
+				self.assertFalse( nodeContexts[0].isSame( nodeContexts[1] ) )
+
+		assertExpectedNodeContexts()
+
+		script.context().setFrame( 10 )
+		assertExpectedNodeContexts()
+
+		with self.UpdateHandler() :
+			script.setFocus( script["node1"] )
+			assertExpectedNodeContexts() # Update not performed until we leave scope
+
+		# Contexts equal but not same, because one node is tracked and the
+		# other uses the default context.
+		assertExpectedNodeContexts( expectSame = False )
+
+		with self.UpdateHandler() :
+			oldContext = Gaffer.Context( script.context() )
+			script.context().setFrame( 20 )
+			# Update not performed yet. Updates to both tracked and non-tracked
+			# occur simultaneously when the update is complete.
+			assertExpectedNodeContexts( expectedContext = oldContext, expectSame = False )
+
+		assertExpectedNodeContexts( expectSame = False )
+
 if __name__ == "__main__":
 	unittest.main()

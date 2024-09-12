@@ -144,7 +144,11 @@ class GAFFERUI_API ContextTracker final : public IECore::RefCounted, public Gaff
 		///    it was tracked in is chosen.
 		/// 2. If the node or plug is part of a `View` or `Editor`, then
 		///    the context for the node being viewed is chosen.
-		/// 3. Otherwise, `targetContext()` is chosen.
+		/// 3. Otherwise, a copy of `targetContext()` is chosen.
+		///
+		/// > Note : The returned context is immutable, so it is not necessary
+		/// > to monitor it for changes via `Context::changedSignal()`. It is
+		/// > only necessary to monitor `ContextTracker::changedSignal()`.
 		Gaffer::ConstContextPtr context( const Gaffer::Plug *plug ) const;
 		Gaffer::ConstContextPtr context( const Gaffer::Node *node ) const;
 
@@ -164,7 +168,7 @@ class GAFFERUI_API ContextTracker final : public IECore::RefCounted, public Gaff
 		const Gaffer::Context *findPlugContext( const Gaffer::Plug *plug ) const;
 
 		Gaffer::ConstNodePtr m_node;
-		Gaffer::ConstContextPtr m_context;
+		Gaffer::ConstContextPtr m_targetContext;
 		Gaffer::Signals::ScopedConnection m_plugDirtiedConnection;
 
 		Gaffer::Signals::ScopedConnection m_idleConnection;
@@ -212,6 +216,9 @@ class GAFFERUI_API ContextTracker final : public IECore::RefCounted, public Gaff
 			std::deque<std::pair<const Gaffer::Plug *, Gaffer::ConstContextPtr>> &toVisit,
 			NodeContexts &nodeContexts, PlugContexts &plugContexts, const IECore::Canceller *canceller
 		);
+
+		// The context returned for plugs and nodes that we haven't tracked.
+		Gaffer::ConstContextPtr m_defaultContext;
 
 };
 

@@ -185,7 +185,7 @@ const InternedString g_inPlugName( "in" );
 //////////////////////////////////////////////////////////////////////////
 
 ContextTracker::ContextTracker( const Gaffer::NodePtr &node, const Gaffer::ContextPtr &context )
-	:	m_context( context )
+	:	m_targetContext( context ), m_defaultContext( new Context( *context ) )
 {
 	context->changedSignal().connect( boost::bind( &ContextTracker::contextChanged, this, ::_2 ) );
 	updateNode( node );
@@ -226,7 +226,7 @@ ContextTrackerPtr ContextTracker::acquireForFocus( Gaffer::GraphComponent *graph
 	auto it = instances.find( script );
 	if( it != instances.end() )
 	{
-		if( it->second->m_context == script->context() )
+		if( it->second->m_targetContext == script->context() )
 		{
 			return it->second;
 		}
@@ -270,7 +270,7 @@ const Gaffer::Node *ContextTracker::targetNode() const
 
 const Gaffer::Context *ContextTracker::targetContext() const
 {
-	return m_context.get();
+	return m_targetContext.get();
 }
 
 void ContextTracker::scheduleUpdate()
@@ -284,6 +284,7 @@ void ContextTracker::scheduleUpdate()
 		// thread.
 		m_nodeContexts.clear();
 		m_plugContexts.clear();
+		m_defaultContext = new Context( *m_targetContext );
 		m_idleConnection.disconnect();
 		emitChanged();
 		return;
@@ -322,7 +323,7 @@ void ContextTracker::updateInBackground()
 	// We must take a copy of the context for this, because it will be used
 	// on the background thread and the original context may be modified on
 	// the main thread.
-	ConstContextPtr contextCopy = new Context( *m_context );
+	ConstContextPtr contextCopy = new Context( *m_targetContext );
 	std::deque<std::pair<const Plug *, ConstContextPtr>> toVisit;
 	if( m_node )
 	{
@@ -389,9 +390,15 @@ void ContextTracker::updateInBackground()
 				ParallelAlgo::callOnUIThread(
 					// Need to own a reference via `thisRef`, because otherwise we could be deleted
 					// before `callOnUIThread()` gets to us.
-					[thisRef = Ptr( that ), plugContexts = std::move( plugContexts ), nodeContexts = std::move( nodeContexts )] () mutable {
+					[
+						thisRef = Ptr( that ),
+						plugContexts = std::move( plugContexts ),
+						nodeContexts = std::move( nodeContexts ),
+						defaultContext = ConstContextPtr( new Context( *Context::current(), /* omitCanceller = */ true ) )
+					] () mutable {
 						thisRef->m_nodeContexts.swap( nodeContexts );
 						thisRef->m_plugContexts.swap( plugContexts );
+						thisRef->m_defaultContext = defaultContext;
 						thisRef->m_updateTask.reset();
 						thisRef->emitChanged();
 					}
@@ -504,13 +511,13 @@ Gaffer::ConstContextPtr ContextTracker::context( const Gaffer::Node *node ) cons
 	const Node *editor = ::editor( node );
 	if( !editor )
 	{
-		return m_context;
+		return m_defaultContext;
 	}
 
 	auto *inPlug = editor->getChild<Plug>( g_inPlugName );
 	if( !inPlug )
 	{
-		return m_context;
+		return m_defaultContext;
 	}
 
 	auto *inputPlug = inPlug->getInput();
@@ -525,7 +532,7 @@ Gaffer::ConstContextPtr ContextTracker::context( const Gaffer::Node *node ) cons
 		}
 	}
 
-	return inputPlug ? context( inputPlug->source()->node() ) : m_context;
+	return inputPlug ? context( inputPlug->source()->node() ) : m_defaultContext;
 }
 
 bool ContextTracker::isEnabled( const Gaffer::DependencyNode *node ) const
