@@ -56,6 +56,7 @@ Fixes
 - FreezeTransform : Constant primitive variables with point/vector interpretations are now also transformed.
 - usdview : Added Windows support (#5599).
 - ContextTracker : Removed unnecessary reference increment/decrement from `isTracked()`, `context()` and `isEnabled()`.
+- Menu : Fixed bug causing a menu item's tooltip to not hide when moving the cursor to another menu item without a tooltip.
 
 API
 ---
