@@ -138,9 +138,9 @@ class _SelectionWidget( GafferUI.Frame ) :
 
 		self.__update()
 
-	def context( self ) :
+	def scriptNode( self ) : # For LazyMethod's `deferUntilPlaybackStops`
 
-		return self.ancestor( GafferUI.NodeToolbar ).context()
+		return self.__tool.ancestor( GafferUI.View ).scriptNode()
 
 	def getToolTip( self ) :
 
