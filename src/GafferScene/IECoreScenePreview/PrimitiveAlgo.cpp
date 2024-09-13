@@ -876,6 +876,9 @@ private:
 	IntVectorDataPtr m_resultVerticesPerCurveData;
 };
 
+const std::string defaultPointType = "particle";
+const std::string pointTypeName = "type";
+
 class MergePrimitivesPointsResult
 {
 public:
@@ -887,6 +890,33 @@ public:
 	)
 	{
 		result = new IECoreScene::PointsPrimitive( totalInterpolation[ PrimitiveVariable::Vertex ] );
+
+		bool hasType = false;
+		std::string type = pointsType( primitives[0].first, hasType );
+
+		for( const auto & [prim, matrix] : primitives )
+		{
+
+			const std::string &curType = pointsType( prim, hasType );
+			if( curType != type )
+			{
+				msg( Msg::Warning, "mergePrimitives",
+					fmt::format(
+						"Ignoring mismatch in point type between {} and {} and defaulting to {}",
+						type, curType, defaultPointType
+					)
+				);
+				type = defaultPointType;
+				break;
+			}
+		}
+
+		if( hasType )
+		{
+			result->variables.emplace( pointTypeName, PrimitiveVariable( PrimitiveVariable::Constant,
+				new IECore::StringData( type )
+			) );
+		}
 	}
 
 	void copyFromSource(
@@ -912,6 +942,20 @@ public:
 	}
 
 	IECoreScene::PointsPrimitivePtr result;
+
+private:
+
+	const std::string &pointsType( const IECoreScene::Primitive* points, bool &hasType )
+	{
+		const StringData *typeData = points->variableData<StringData>( pointTypeName );
+		if( typeData )
+		{
+			hasType = true;
+			return typeData->readable();
+		}
+		return defaultPointType;
+	}
+
 };
 
 template<class ResultStruct>
@@ -1034,6 +1078,14 @@ IECoreScene::PrimitivePtr mergePrimitivesInternal(
 						)
 					);
 				}
+			}
+
+			if( std::is_same_v< ResultStruct, MergePrimitivesPointsResult > && name == pointTypeName )
+			{
+				// The "type" primvar on Points is treated as topology information, it shouldn't be
+				// handled as a generic primvar.
+				varInfo.interpolation = PrimitiveVariable::Invalid;
+				continue;
 			}
 
 			varInfo.interpolation = ResultStruct::mergeInterpolations( varInfo.interpolation, var.interpolation, name );
