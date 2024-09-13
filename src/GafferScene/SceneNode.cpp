@@ -596,7 +596,7 @@ void SceneNode::hashChildBounds( const Gaffer::Context *context, const ScenePlug
 
 	const IECore::MurmurHash reduction = parallel_deterministic_reduce(
 		SizeRange( 0, childNames.size() ),
-		h,
+		IECore::MurmurHash(),
 		[&] ( const SizeRange &range, const MurmurHash &hash ) {
 
 			ScenePlug::PathScope pathScope( threadState );
