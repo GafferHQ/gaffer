@@ -1,7 +1,10 @@
 1.4.x.x (relative to 1.4.13.0)
 =======
 
+Improvements
+------------
 
+- NumericWidget : Added the ability to use <kbd>Ctrl</kbd> + scroll wheel to adjust values in the same manner as <kbd>Up</kbd> and <kbd>Down</kbd> (#6009).
 
 1.4.13.0 (relative to 1.4.12.0)
 ========
