@@ -69,7 +69,6 @@ jobs:
             testArguments: -excludedCategories performance GafferTest GafferVDBTest GafferUSDTest GafferSceneTest GafferDispatchTest GafferOSLTest GafferImageTest GafferUITest GafferImageUITest GafferSceneUITest GafferDispatchUITest GafferOSLUITest GafferUSDUITest GafferVDBUITest GafferDelightUITest GafferTractorTest GafferTractorUITest
             sconsCacheMegabytes: 800
             jobs: 4
-            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.5.9.2/cortex-10.5.9.2-windows.zip
 
     runs-on: ${{ matrix.os }}
 
