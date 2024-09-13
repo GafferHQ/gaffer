@@ -117,6 +117,7 @@ Build
 - Qt : Updated to version 5.15.14.
 - USD : Updated to version 24.08.
 - Zstandard : Added version 1.5.0.
+- Windows : Update compiler to Visual Studio 2022 / MSVC 17.8 / Runtime library 14.3.
 
 1.4.x.x (relative to 1.4.12.0)
 =======

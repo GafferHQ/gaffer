@@ -377,7 +377,7 @@ options.Add( "GAFFER_VERSION_SUFFIX", "Version suffix", str( gafferVersionSuffix
 
 env = Environment(
 
-	MSVC_VERSION = "14.2",
+	MSVC_VERSION = "14.3",
 
 	options = options,
 
@@ -588,6 +588,8 @@ else:
 				"/wd4003",  # suppress warning "not enough arguments for function-like macro invocation 'BOOST_PP_SEQ_DETAIL_IS_NOT_EMPTY'". Needed for USD.
 				"/wd4702",  # suppress warning "unreachable code". Need for OpenVDB.
 				"/wd4180",  # suppress warning "qualifier applied to function type has no meaning; ignored". Needed for OpenVDB
+				"/wd4146",  # suppress warning "unary minus operator applied to unsigned type, result still unsigned" (from Cryptomatte::MurmurHash3_x86_32())
+				"/D_CRT_NONSTDC_NO_WARNINGS",  # suppress warnings about deprecated POSIX names. The names are deprecated, not the functions, so this is safe.
 			],
 		)
 
