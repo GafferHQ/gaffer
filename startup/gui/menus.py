@@ -281,6 +281,8 @@ nodeMenu.append( "/Scene/Object/Mesh Distortion", GafferScene.MeshDistortion, se
 nodeMenu.append( "/Scene/Object/Mesh Segments", GafferScene.MeshSegments, searchText = "MeshSegments" )
 nodeMenu.append( "/Scene/Object/Mesh Split", GafferScene.MeshSplit, searchText = "MeshSplit" )
 nodeMenu.append( "/Scene/Object/Merge Meshes", GafferScene.MergeMeshes, searchText = "MergeMeshes" )
+nodeMenu.append( "/Scene/Object/Merge Points", GafferScene.MergePoints, searchText = "MergePoints" )
+nodeMenu.append( "/Scene/Object/Merge Curves", GafferScene.MergeCurves, searchText = "MergeCurves" )
 nodeMenu.append( "/Scene/Object/Mesh Subdivide", GafferScene.MeshTessellate, searchText = "MeshTessellate" )
 nodeMenu.append( "/Scene/Object/Camera Tweaks", GafferScene.CameraTweaks, searchText = "CameraTweaks" )
 nodeMenu.append( "/Scene/Object/Curve Sampler", GafferScene.CurveSampler, searchText = "CurveSampler" )

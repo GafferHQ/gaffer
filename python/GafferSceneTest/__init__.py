@@ -184,6 +184,8 @@ from .RenderPassTypeAdaptorTest import RenderPassTypeAdaptorTest
 from .RenderPassShaderTest import RenderPassShaderTest
 from .RenderPassAdaptorTest import RenderPassAdaptorTest
 from .MergeMeshesTest import MergeMeshesTest
+from .MergePointsTest import MergePointsTest
+from .MergeCurvesTest import MergeCurvesTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *

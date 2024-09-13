@@ -185,6 +185,8 @@ enum TypeId
 	ShaderTweakProxyTypeId = 110641,
 	MergeObjectsTypeId = 110642,
 	MergeMeshesTypeId = 110643,
+	MergePointsTypeId = 110644,
+	MergeCurvesTypeId = 110645,
 
 	PreviewPlaceholderTypeId = 110647,
 	PreviewGeometryTypeId = 110648,

@@ -4,7 +4,7 @@
 Features
 --------
 
-- MergeMeshes : Added node for merging meshes.
+- MergeMeshes, MergePoints, MergeCurves : Added nodes for merging various primitive types.
 
 Improvements
 ------------
