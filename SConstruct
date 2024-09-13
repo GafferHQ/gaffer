@@ -1289,7 +1289,7 @@ libraries = {
 				"Gaffer", "GafferScene", "GafferDispatch", "GafferOSL"
 			] + cyclesLibraries + [
 				"OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslexec$OSL_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX",
-				"openvdb$VDB_LIB_SUFFIX", "Alembic", "osdCPU", "OpenColorIO$OCIO_LIB_SUFFIX", "embree4", "Iex", "openpgl",
+				"openvdb$VDB_LIB_SUFFIX", "Alembic", "osdCPU", "OpenColorIO$OCIO_LIB_SUFFIX", "embree4", "Iex", "openpgl", "zstd",
 			],
 			"CXXFLAGS" : [ systemIncludeArgument, "$CYCLES_ROOT/include" ],
 			"CPPDEFINES" : cyclesDefines,
@@ -1301,7 +1301,7 @@ libraries = {
 				"Gaffer", "GafferScene", "GafferDispatch", "GafferBindings", "GafferCycles", "IECoreScene",
 			] + ( cyclesLibraries if includeCyclesLibrariesInPythonModule else [] ) + [
 				"OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslexec$OSL_LIB_SUFFIX", "openvdb$VDB_LIB_SUFFIX",
-				"oslquery$OSL_LIB_SUFFIX", "Alembic", "osdCPU", "OpenColorIO$OCIO_LIB_SUFFIX", "embree4", "Iex", "openpgl",
+				"oslquery$OSL_LIB_SUFFIX", "Alembic", "osdCPU", "OpenColorIO$OCIO_LIB_SUFFIX", "embree4", "Iex", "openpgl", "zstd",
 			],
 			"CXXFLAGS" : [ systemIncludeArgument, "$CYCLES_ROOT/include" ],
 			"CPPDEFINES" : cyclesDefines,
@@ -1454,7 +1454,7 @@ if env["PLATFORM"] == "win32" :
 
 else :
 
-	libraries["GafferCycles"]["envAppends"]["LIBS"].extend( [ "dl", "zstd" ] )
+	libraries["GafferCycles"]["envAppends"]["LIBS"].extend( [ "dl" ] )
 
 # Optionally add vTune requirements
 
