@@ -61,7 +61,7 @@ jobs:
             jobs: 4
 
           - name: windows
-            os: windows-2019
+            os: windows-2022
             buildType: RELEASE
             publish: true
             containerImage:
@@ -86,7 +86,7 @@ jobs:
 
     - uses: ilammy/msvc-dev-cmd@v1.13.0
       with:
-        sdk: 10.0.17763.0
+        sdk: 10.0.19041.0
 
     - name: Install toolchain (Windows)
       run: |
