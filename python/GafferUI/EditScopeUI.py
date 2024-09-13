@@ -169,7 +169,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		editScope = self.__editScope()
 		if editScope is None :
-			return "Edits will be made using the last relevant node, including nodes not in any EditScope."
+			return "Edits will be made using the last relevant node found outside of an edit scope.\n\nTo make an edit in an edit scope, choose it from the menu."
 
 		unusableReason = self.__unusableReason( editScope )
 		if unusableReason :

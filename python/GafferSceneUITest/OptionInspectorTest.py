@@ -651,6 +651,16 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 				edit = s["editScope1"]["standardOptions3"]["options"]["renderCamera"]
 			)
 
+			# When using no scope, make sure that we don't inadvertently edit the contents of an EditScope.
+
+			self.__assertExpectedResult(
+				self.__inspect( s["editScope2"]["out"], "render:camera", None, context ),
+				source = s["editScope1"]["standardOptions3"]["options"]["renderCamera"],
+				sourceType = SourceType.Other,
+				editable = False,
+				nonEditableReason = "Source is in an EditScope. Change scope to editScope1 to edit."
+			)
+
 			# If there is a StandardOptions node outside of an edit scope, make sure we use that with no scope
 
 			s["independentOptions"] = GafferScene.StandardOptions()
@@ -968,6 +978,11 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		inspection = self.__inspect( s["editScope1"]["out"], "render:camera", s["editScope2"] )
 		self.assertFalse( inspection.canDisableEdit() )
 		self.assertEqual( inspection.nonDisableableReason(), "The target edit scope editScope2 is not in the scene history." )
+
+		inspection = self.__inspect( s["editScope2"]["out"], "render:camera", None )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "Source is in an EditScope. Change scope to editScope1 to disable." )
+		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : Source is in an EditScope. Change scope to editScope1 to disable.", inspection.disableEdit )
 
 		inspection = self.__inspect( s["editScope2"]["out"], "render:camera", s["editScope2"] )
 		self.assertFalse( inspection.canDisableEdit() )

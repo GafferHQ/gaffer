@@ -471,11 +471,22 @@ void TransformTool::Selection::initWalk( const GafferScene::SceneAlgo::History *
 		// First, check for a supported node in this history entry
 		initFromSceneNode( history );
 
-		// If we found a node to edit here and the user has requested a
-		// specific scope, check if the edit is in it.
-		if( m_upstreamScene && m_editScope )
+		if( m_upstreamScene )
 		{
-			editScopeFound = m_upstreamScene->ancestor<EditScope>() == m_editScope;
+			const auto upstreamEditScope = m_upstreamScene->ancestor<EditScope>();
+			if( m_editScope )
+			{
+				// If we found a node to edit here and the user has requested a
+				// specific scope, check if the edit is in it.
+				editScopeFound = upstreamEditScope == m_editScope;
+			}
+			else if( upstreamEditScope )
+			{
+				// We don't allow editing if the user hasn't requested a specific scope
+				// and the upstream edit is inside an EditScope.
+				m_warning = "Source is in an EditScope. Change scope to " + displayName( upstreamEditScope ) + " to edit";
+				m_editable = false;
+			}
 		}
 	}
 

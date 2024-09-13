@@ -318,6 +318,16 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			edit = editScopeAttributeTweak
 		)
 
+		# When using no scope, make sure that we don't inadvertently edit the contents of an EditScope.
+
+		self.__assertExpectedResult(
+			self.__inspect( s["editScope2"]["out"], "/light2", "gl:visualiser:scale", None ),
+			source = editScopeAttributeTweak,
+			sourceType = SourceType.Other,
+			editable = False,
+			nonEditableReason = "Source is in an EditScope. Change scope to editScope1 to edit."
+		)
+
 		# If there is a manual tweak outside of an edit scope, make sure we use that with no scope
 		s["independentAttributeTweak"] = GafferScene.AttributeTweaks()
 		s["independentAttributeTweak"]["in"].setInput( s["editScope2"]["out"] )
@@ -894,6 +904,11 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		inspection = self.__inspect( s["editScope1"]["out"], "/group/light", "gl:visualiser:scale", s["editScope2"] )
 		self.assertFalse( inspection.canDisableEdit() )
 		self.assertEqual( inspection.nonDisableableReason(), "The target edit scope editScope2 is not in the scene history." )
+
+		inspection = self.__inspect( s["editScope2"]["out"], "/group/light", "gl:visualiser:scale", None )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "Source is in an EditScope. Change scope to editScope1 to disable." )
+		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : Source is in an EditScope. Change scope to editScope1 to disable.", inspection.disableEdit )
 
 		inspection = self.__inspect( s["editScope2"]["out"], "/group/light", "gl:visualiser:scale", s["editScope2"] )
 		self.assertFalse( inspection.canDisableEdit() )

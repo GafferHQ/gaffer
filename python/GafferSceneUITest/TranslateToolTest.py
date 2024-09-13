@@ -1043,25 +1043,19 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/sphere" ] ) )
 
-		# We want the TranslateTool to pick up and use that edit
-		# even if we haven't told it to use that EditScope.
+		# We don't want the TranslateTool to pick up and use that edit
+		# as we haven't told it to use that EditScope.
 
 		tool = GafferSceneUI.TranslateTool( view )
 		tool["active"].setValue( True )
 
-		self.assertEqual( tool.handlesTransform(), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
 		self.assertEqual( len( tool.selection() ), 1 )
-		self.assertTrue( tool.selectionEditable() )
-		self.assertTrue( tool.selection()[0].editable() )
-		self.assertEqual( tool.selection()[0].acquireTransformEdit( createIfNecessary = False ), transformEdit )
+		self.assertFalse( tool.selectionEditable() )
+		self.assertFalse( tool.selection()[0].editable() )
 		self.assertEqual(
-			tool.selection()[0].editTarget(),
-			transformEdit.translate.ancestor( Gaffer.Spreadsheet.RowPlug )
+			tool.selection()[0].warning(),
+			"Source is in an EditScope. Change scope to editScope to edit"
 		)
-
-		tool.translate( imath.V3f( 0, 1, 0 ) )
-		self.assertEqual( tool.handlesTransform(), imath.M44f().translate( imath.V3f( 1, 1, 0 ) ) )
-		self.assertEqual( transformEdit.translate.getValue(), imath.V3f( 1, 1, 0 ) )
 
 	def testNonEditableSelections( self ) :
 
