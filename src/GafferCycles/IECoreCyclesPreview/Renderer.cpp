@@ -1571,7 +1571,7 @@ class InstanceCache : public IECore::RefCounted
 
 			for( Geometry::iterator it = m_geometry.begin(), eIt = m_geometry.end(); it != eIt; ++it )
 			{
-				if( it->second.unique() )
+				if( it->second.use_count() == 1 )
 				{
 					// Only one reference - this is ours, so
 					// nothing outside of the cache is using the
@@ -1846,7 +1846,7 @@ class CameraCache : public IECore::RefCounted
 			vector<IECore::MurmurHash> toErase;
 			for( Cache::iterator it = m_cache.begin(), eIt = m_cache.end(); it != eIt; ++it )
 			{
-				if( it->second.unique() )
+				if( it->second.use_count() == 1 )
 				{
 					// Only one reference - this is ours, so
 					// nothing outside of the cache is using the
