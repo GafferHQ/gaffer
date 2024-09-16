@@ -309,8 +309,10 @@ void ContextTracker::scheduleUpdate()
 	// multiple times in quick succession.
 
 	m_idleConnection = Gadget::idleSignal().connect(
-		[thisRef = Ptr( this )] () {
-			thisRef->updateInBackground();
+		// OK to capture `this` without owning a reference, because
+		// `~ContextTracker` will remove the connection.
+		[this] () {
+			this->updateInBackground();
 		}
 	);
 }
