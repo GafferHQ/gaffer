@@ -58,6 +58,8 @@ class GAFFERSCENE_API FreezeTransform : public FilteredSceneProcessor
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
+		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
+
 		void hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const override;
 		void hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const override;
 		void hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const override;
@@ -71,6 +73,13 @@ class GAFFERSCENE_API FreezeTransform : public FilteredSceneProcessor
 		// Used to compute the transform to freeze in at a given path.
 		Gaffer::M44fPlug *transformPlug();
 		const Gaffer::M44fPlug *transformPlug() const;
+
+		/// We compute the processed object on this internal plug rather than on
+		/// `out.object` directly. This allows us to use the TaskCollaboration
+		/// task policy for processing objects without paying the overhead when
+		/// we're just passing them through (when the filter doesn't match).
+		Gaffer::ObjectPlug *processedObjectPlug();
+		const Gaffer::ObjectPlug *processedObjectPlug() const;
 
 		static size_t g_firstPlugIndex;
 
