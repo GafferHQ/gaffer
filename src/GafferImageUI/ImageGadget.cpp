@@ -882,14 +882,6 @@ void ImageGadget::updateTiles()
 		}
 	};
 
-
-	// callOnBackgroundThread requires a "subject" that will trigger task cancellation
-	// when dirtied.  This subject usually needs to be in a script, but there's a special
-	// case in BackgroundTask::scriptNode for nodes that are in a GafferUI::View.  We
-	// can work with this by passing in m_image, which is passed to us by ImageView.
-	// This means that any internal nodes of ImageGadget are not part of the automatic
-	// task cancellation and we must ensure that we never modify internal nodes while
-	// the background task is running ( this is easier now that there are no internal nodes ).
 	Context::Scope scopedContext( m_context.get() );
 	m_tilesTask = ParallelAlgo::callOnBackgroundThread(
 		// Subject
