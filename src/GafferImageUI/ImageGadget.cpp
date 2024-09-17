@@ -747,7 +747,7 @@ void ImageGadget::Tile::applyUpdates( const std::vector<Update> &updates )
 
 	for( const auto &u : updates )
 	{
-		if( u.tile )
+		if( u.channelData )
 		{
 			u.tile->m_channelDataToConvert = u.channelData;
 			u.tile->m_channelDataHash = u.channelDataHash;
