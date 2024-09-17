@@ -1,6 +1,11 @@
 1.x.x.x (relative to 1.4.x.x)
 =======
 
+Features
+--------
+
+- MergeMeshes, MergePoints, MergeCurves : Added nodes for merging various primitive types.
+
 Improvements
 ------------
 

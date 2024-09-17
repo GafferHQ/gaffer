@@ -80,6 +80,23 @@ size_t hash_value( const ChildNamesMap::Input &v )
 	return s;
 }
 
+InternedString ChildNamesMap::uniqueName( InternedString name, const std::unordered_set<InternedString> &existingNames )
+{
+	if( existingNames.find( name ) != existingNames.end() )
+	{
+		// uniqueify the name
+		string prefix;
+		int suffix = IECore::StringAlgo::numericSuffix( name.string(), 1, &prefix );
+
+		do
+		{
+			name = prefix + to_string( suffix );
+			suffix++;
+		} while( existingNames.find( name ) != existingNames.end() );
+	}
+	return name;
+}
+
 ChildNamesMap::ChildNamesMap( const std::vector<IECore::ConstInternedStringVectorDataPtr> &inputChildNames )
 	:	m_childNames( new InternedStringVectorData() )
 {
@@ -91,20 +108,7 @@ ChildNamesMap::ChildNamesMap( const std::vector<IECore::ConstInternedStringVecto
 	{
 		for( const auto &inputChildName : childNamesData->readable() )
 		{
-			InternedString outputChildName = inputChildName;
-			if( allNames.find( inputChildName ) != allNames.end() )
-			{
-				// uniqueify the name
-				string prefix;
-				int suffix = IECore::StringAlgo::numericSuffix( inputChildName.string(), 1, &prefix );
-
-				do
-				{
-					outputChildName = prefix + to_string( suffix );
-					suffix++;
-				} while( allNames.find( outputChildName ) != allNames.end() );
-			}
-
+			const InternedString outputChildName = uniqueName( inputChildName, allNames );
 			allNames.insert( outputChildName );
 			outputChildNames.push_back( outputChildName );
 

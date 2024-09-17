@@ -311,6 +311,22 @@ class PrimitiveAlgoTest( GafferTest.TestCase ) :
 		merged = PrimitiveAlgo.mergePrimitives( [( points1, imath.M44f() ), ( points2, imath.M44f() ) ] )
 		self.assertTrue( merged.arePrimitiveVariablesValid() )
 		self.assertEqual( merged["P"], IECoreScene.PrimitiveVariable( Interpolation.Vertex, IECore.V3fVectorData( pointVerts1 + pointVerts2, IECore.GeometricData.Interpretation.Point ) ) )
+		self.assertEqual( merged.keys(), [ "P" ] )
+
+		points1["type"] = IECoreScene.PrimitiveVariable( Interpolation.Constant, IECore.StringData( "sphere" ) )
+
+		with IECore.CapturingMessageHandler() as mh:
+			merged = PrimitiveAlgo.mergePrimitives( [( points1, imath.M44f() ), ( points2, imath.M44f() ) ] )
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].message, 'Ignoring mismatch in point type between sphere and particle and defaulting to particle' )
+
+		self.assertEqual( merged["type"], IECoreScene.PrimitiveVariable( Interpolation.Constant, IECore.StringData( "particle" ) ) )
+
+		points2["type"] = IECoreScene.PrimitiveVariable( Interpolation.Constant, IECore.StringData( "sphere" ) )
+
+		merged = PrimitiveAlgo.mergePrimitives( [( points1, imath.M44f() ), ( points2, imath.M44f() ) ] )
+
+		self.assertEqual( merged["type"], IECoreScene.PrimitiveVariable( Interpolation.Constant, IECore.StringData( "sphere" ) ) )
 
 
 	def testMergePrimitiveMeshInterpolate( self ) :
