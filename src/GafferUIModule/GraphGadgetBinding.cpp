@@ -250,13 +250,13 @@ struct ContextTrackerSlotCaller
 	}
 };
 
-ContextPtr contextWrapper1( const ContextTracker &contextTracker, const Node &node, bool copy = false )
+ContextPtr contextWrapper1( const ContextTracker &contextTracker, const Node &node, bool copy )
 {
 	ConstContextPtr c = contextTracker.context( &node );
 	return copy ? new Context( *c ) : boost::const_pointer_cast<Context>( c );
 }
 
-ContextPtr contextWrapper2( const ContextTracker &contextTracker, const Plug &plug, bool copy = false )
+ContextPtr contextWrapper2( const ContextTracker &contextTracker, const Plug &plug, bool copy )
 {
 	ConstContextPtr c = contextTracker.context( &plug );
 	return copy ? new Context( *c ) : boost::const_pointer_cast<Context>( c );
@@ -341,7 +341,8 @@ void GafferUIModule::bindGraphGadget()
 			.def( "context", &contextWrapper2, ( arg( "plug" ), arg( "_copy" ) = true ) )
 			.def( "isEnabled", &ContextTracker::isEnabled )
 			.def( "updatePending", &ContextTracker::updatePending )
-			.def( "changedSignal", &ContextTracker::changedSignal, return_internal_reference<1>() )
+			.def( "changedSignal", (ContextTracker::Signal &(ContextTracker::*)())&ContextTracker::changedSignal, return_internal_reference<1>() )
+			.def( "changedSignal", (ContextTracker::Signal &(ContextTracker::*)( GraphComponent * ))&ContextTracker::changedSignal, return_internal_reference<1>() )
 		;
 
 		SignalClass<ContextTracker::Signal, DefaultSignalCaller<ContextTracker::Signal>, ContextTrackerSlotCaller>( "Signal" );

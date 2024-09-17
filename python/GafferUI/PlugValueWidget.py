@@ -137,7 +137,10 @@ class PlugValueWidget( GafferUI.Widget ) :
 	## Returns the context in which the widget evaluates the plugs.
 	def context( self ) :
 
-		return self.__context
+		if len( self.__plugs ) :
+			return self.__contextTracker.context( next( iter( self.__plugs ) ) )
+		else :
+			return self.__contextTracker.targetContext()
 
 	## Returns the ScriptNode ancestor for the plugs, or `None` if
 	# no such ancestor exists.
@@ -611,8 +614,10 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __plugInputChanged( self, plug ) :
 
-		if plug in self.__plugs :
+		if plug in self.__plugs or any( plug in plugs for plugs in self.__auxiliaryPlugs ) :
 			self.__updateContextConnection()
+
+		if plug in self.__plugs :
 			self._updateFromEditable()
 
 	def __plugMetadataChanged( self, plug, key, reason ) :
@@ -640,7 +645,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 				self._updateFromEditable()
 				return
 
-	def __contextChanged( self, context, key ) :
+	def __contextChanged( self, contextTracker ) :
 
 		self.__callLegacyUpdateMethods()
 		self.__callUpdateFromValues()
@@ -676,7 +681,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			for node in nodes
 		]
 
-		self.__context = next( ( self.__defaultContext( p ) for p in self.__plugs ), self.__fallbackContext )
+		self.__contextTracker = GafferUI.ContextTracker.acquireForFocus( next( iter( plugs ), None ) )
 
 		self.__auxiliaryPlugs = []
 		auxiliaryNodes = set()
@@ -698,6 +703,10 @@ class PlugValueWidget( GafferUI.Widget ) :
 			node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__auxiliaryPlugDirtied ), scoped = True )
 			for node in auxiliaryNodes
 		]
+		self.__auxiliaryPlugInputChangedConnections = [
+			node.plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ), scoped = True )
+			for node in auxiliaryNodes
+		]
 
 		self.__updateContextConnection()
 
@@ -709,38 +718,12 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __updateContextConnection( self ) :
 
-		if self._valuesDependOnContext() :
-			self.__contextChangedConnection = self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = True )
+		if self._valuesDependOnContext() and len( self.__plugs ) :
+			self.__contextChangedConnection = self.__contextTracker.changedSignal(
+				next( iter( self.__plugs ) )
+			).connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = True )
 		else :
 			self.__contextChangedConnection = None
-
-	__fallbackContext = Gaffer.Context()
-
-	# Note : Despite being private (because we don't want to include it in the official API),
-	# This method is accessed by NodeToolbar and PlugLayout (because we do want to share the
-	# logic internally).
-	@classmethod
-	def __defaultContext( cls, graphComponent ) :
-
-		scriptNode = graphComponent if isinstance( graphComponent, Gaffer.ScriptNode ) else graphComponent.ancestor( Gaffer.ScriptNode )
-		if scriptNode is not None :
-			return scriptNode.context()
-
-		# Special case for plugs that form the settings for a view.
-
-		view = graphComponent if isinstance( graphComponent, GafferUI.View ) else graphComponent.ancestor( GafferUI.View )
-		if view is not None :
-			return view.getContext()
-
-		# Special case for plugs that form the settings for an Editor.
-
-		settings = graphComponent if isinstance( graphComponent, GafferUI.Editor.Settings ) else graphComponent.ancestor( GafferUI.Editor.Settings )
-		if settings is not None :
-			scriptNode = settings["__scriptNode"].source().ancestor( Gaffer.ScriptNode )
-			if scriptNode is not None :
-				return scriptNode.context()
-
-		return cls.__fallbackContext
 
 	def __buttonPress( self, widget, event, buttonMask ) :
 

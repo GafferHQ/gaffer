@@ -66,11 +66,7 @@ class GAFFERSCENEUI_API CameraTool : public GafferSceneUI::SelectionTool
 		const Gaffer::BoolPlug *lookThroughEnabledPlug() const;
 		const Gaffer::StringPlug *lookThroughCameraPlug() const;
 
-		void connectToViewContext();
-		void contextChanged( const IECore::InternedString &name );
-
-		Gaffer::Signals::ScopedConnection m_contextChangedConnection;
-
+		void contextChanged();
 		void plugDirtied( const Gaffer::Plug *plug );
 		GafferScene::ScenePlug::ScenePath cameraPath() const;
 		const TransformTool::Selection &cameraSelection();

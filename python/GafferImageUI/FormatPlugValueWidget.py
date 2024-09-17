@@ -72,12 +72,6 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__pixelAspectWidget = GafferUI.NumericPlugValueWidget( plugs = [] )
 		grid[1,3] = self.__pixelAspectWidget
 
-		# If the plug hasn't got an input, the PlugValueWidget base class assumes we're not
-		# sensitive to context changes and omits calls to `_updateFromValues()`. But the default
-		# format mechanism uses the context, so we must arrange to do updates ourselves when
-		# necessary.
-		self.context().changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
-
 		self._addPopupMenu( self.__menuButton )
 
 		self.__currentFormat = None
@@ -120,6 +114,12 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__maxLabel.setText( "Max" if nonZeroOrigin else "Size" )
 
 		self.__menuButton.setErrored( exception is not None )
+
+	def _valuesDependOnContext( self ) :
+
+		# We use the context in `_updateFromValues()`, so must return True
+		# here so that it is called when the context changes.
+		return True
 
 	def _updateFromMetadata( self ) :
 
@@ -196,11 +196,6 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# state automatically.
 			for p in self.getPlugs() :
 				Gaffer.Metadata.registerValue( p, "formatPlugValueWidget:mode", "custom" )
-
-	def __contextChanged( self, context, key ) :
-
-		if key == "image:defaultFormat" :
-			self._requestUpdateFromValues()
 
 GafferUI.PlugValueWidget.registerType( GafferImage.FormatPlug, FormatPlugValueWidget )
 

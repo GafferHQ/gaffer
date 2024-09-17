@@ -60,6 +60,7 @@ IE_CORE_FORWARDDECLARE( EditScope )
 namespace GafferUI
 {
 
+IE_CORE_FORWARDDECLARE( ContextTracker )
 IE_CORE_FORWARDDECLARE( View )
 
 } // namespace GafferUI
@@ -110,13 +111,8 @@ class GAFFERUI_API View : public Gaffer::Node
 		const Gaffer::EditScope *editScope() const;
 
 		/// The Context in which the View should operate.
-		Gaffer::Context *getContext();
-		const Gaffer::Context *getContext() const;
-		/// May be overridden by derived classes to perform
-		/// additional work, but they _must_ call the base
-		/// class implementation.
-		virtual void setContext( Gaffer::ContextPtr context );
-		/// Signal emitted by setContext().
+		const Gaffer::Context *context() const;
+		/// Signal emitted when the result of `context()` has changed.
 		UnarySignal &contextChangedSignal();
 
 		/// Subclasses are responsible for presenting their content in this viewport.
@@ -176,14 +172,6 @@ class GAFFERUI_API View : public Gaffer::Node
 		template<typename T=Gaffer::Plug>
 		T *preprocessedInPlug();
 
-		/// Called when the context changes. Derived classes should call the
-		/// base class implementation if they override this method.
-		virtual void contextChanged( const IECore::InternedString &name );
-		/// Returns the connection used to trigger the call to contextChanged(). Derived
-		/// classes may block this temporarily if they want to prevent the triggering -
-		/// this can be useful when modifying the context.
-		Gaffer::Signals::Connection &contextChangedConnection();
-
 		template<class T>
 		struct ViewDescription
 		{
@@ -195,6 +183,7 @@ class GAFFERUI_API View : public Gaffer::Node
 
 	private :
 
+		void contextTrackerChanged();
 		void toolsChildAdded( Gaffer::GraphComponent *child );
 		void toolPlugSet( Gaffer::Plug *plug );
 
@@ -204,9 +193,9 @@ class GAFFERUI_API View : public Gaffer::Node
 		ToolPlugSetMap m_toolPlugSetConnections;
 
 		ViewportGadgetPtr m_viewportGadget;
-		Gaffer::ContextPtr m_context;
+		ContextTrackerPtr m_contextTracker;
+		Gaffer::ConstContextPtr m_context;
 		UnarySignal m_contextChangedSignal;
-		Gaffer::Signals::ScopedConnection m_contextChangedConnection;
 
 		using CreatorMap = std::map<IECore::TypeId, ViewCreator>;
 		static CreatorMap &creators();
@@ -262,16 +251,14 @@ class GAFFERUI_API View::DisplayTransform : public Gaffer::Node
 		Gaffer::FloatPlug *gammaPlug();
 		Gaffer::BoolPlug *absolutePlug();
 
-		void connectToViewContext();
-		void contextChanged( const IECore::InternedString &name );
+		void contextChanged();
 		void registrationChanged( const std::string &name );
 		void plugDirtied( const Gaffer::Plug *plug );
 		void preRender();
 		bool keyPress( const KeyEvent &event );
 
-		Gaffer::Signals::ScopedConnection m_contextChangedConnection;
-
 		IECoreGL::Shader::SetupPtr m_shader;
+		IECore::MurmurHash m_shaderContextHash;
 		bool m_shaderDirty;
 		bool m_parametersDirty;
 

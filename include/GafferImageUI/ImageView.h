@@ -109,8 +109,6 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		ImageGadget *imageGadget();
 		const ImageGadget *imageGadget() const;
 
-		void setContext( Gaffer::ContextPtr context ) override;
-
 		class GAFFERIMAGEUI_API ColorInspectorPlug : public Gaffer::ValuePlug
 		{
 			public :
@@ -152,6 +150,7 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 
 	private :
 
+		void contextChanged();
 		void plugSet( Gaffer::Plug *plug );
 		bool keyPress( const GafferUI::KeyEvent &event );
 		void preRender();

@@ -54,7 +54,7 @@ def appendViewContextMenuItems( viewer, view, menuDefinition ) :
 		{
 			"subMenu" : functools.partial(
 				__historySubMenu,
-				context = view.getContext(),
+				context = view.context(),
 				scene = view["in"],
 				selectedPath = __sceneViewSelectedPath( view )
 			)
@@ -186,12 +186,12 @@ def __viewerKeyPress( viewer, event ) :
 	if event == __editSourceKeyPress :
 		selectedPath = __sceneViewSelectedPath( view )
 		if selectedPath is not None :
-			__editSourceNode( view.getContext(), view["in"], selectedPath )
+			__editSourceNode( view.context(), view["in"], selectedPath )
 		return True
 	elif event == __editTweaksKeyPress :
 		selectedPath = __sceneViewSelectedPath( view )
 		if selectedPath is not None :
-			__editTweaksNode( view.getContext(), view["in"], selectedPath )
+			__editTweaksNode( view.context(), view["in"], selectedPath )
 		return True
 
 def __hierarchyViewKeyPress( hierarchyView, event ) :

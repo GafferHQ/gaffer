@@ -174,6 +174,7 @@ ShaderView::ShaderView( Gaffer::ScriptNodePtr scriptNode )
 
 	viewportGadget()->visibilityChangedSignal().connect( boost::bind( &ShaderView::viewportVisibilityChanged, this ) );
 	viewportGadget()->preRenderSignal().connect( boost::bind( &ShaderView::preRender, this ) );
+	contextChangedSignal().connect( boost::bind( &ShaderView::contextChanged, this ) );
 	plugSetSignal().connect( boost::bind( &ShaderView::plugSet, this, ::_1 ) );
 	plugDirtiedSignal().connect( boost::bind( &ShaderView::plugDirtied, this, ::_1 ) );
 	sceneRegistrationChangedSignal().connect( boost::bind( &ShaderView::sceneRegistrationChanged, this, ::_1 ) );
@@ -210,7 +211,7 @@ std::string ShaderView::shaderPrefix() const
 {
 	IECore::ConstCompoundObjectPtr attributes;
 	{
-		Context::Scope scope( getContext() );
+		Context::Scope scope( context() );
 		attributes = inPlug<ShaderPlug>()->attributes();
 	}
 	const char *shaders[] = { "surface", "displacement", "shader", nullptr };
@@ -249,15 +250,14 @@ ShaderView::SceneChangedSignal &ShaderView::sceneChangedSignal()
 	return m_sceneChangedSignal;
 }
 
-void ShaderView::setContext( Gaffer::ContextPtr context )
-{
-	ImageView::setContext( context );
-	updateRendererContext();
-}
-
 void ShaderView::viewportVisibilityChanged()
 {
 	updateRendererState();
+}
+
+void ShaderView::contextChanged()
+{
+	updateRendererContext();
 }
 
 void ShaderView::plugSet( Gaffer::Plug *plug )
@@ -352,7 +352,7 @@ void ShaderView::updateRendererContext()
 {
 	if( m_renderer )
 	{
-		m_renderer->setContext( getContext() );
+		m_renderer->setContext( new Context( *context() ) );
 	}
 }
 
@@ -439,7 +439,7 @@ void ShaderView::preRender()
 	// we get the resolution of the upcoming render from the render
 	// globals and frame ready for that.
 
-	Context::Scope scopedContext( getContext() );
+	Context::Scope scopedContext( context() );
 	/// \todo Maybe we should wrap this up into a `SceneAlgo::resolution()`
 	/// method that also takes care of overscan, multiplier etc?
 	IECore::ConstCompoundObjectPtr globals = m_scene->getChild<ScenePlug>( "out" )->globalsPlug()->getValue();

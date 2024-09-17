@@ -387,7 +387,7 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		plug.node()["colorInspector"]["evaluator"]["pixelColor"].getInput().node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__updateFromImageNode ) )
 
 		plug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
-		plug.node()["in"].getInput().node().scriptNode().context().changedSignal().connect( Gaffer.WeakMethod( self.__updateFromContext ) )
+		plug.node().contextChangedSignal().connect( Gaffer.WeakMethod( self.__updateFromContext ) )
 		Gaffer.Metadata.plugValueChangedSignal( self.getPlug().node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 
 		self.__updateLabels( [ imath.V2i( 0 ) ] * 2 , [ imath.Color4f( 0, 0, 0, 1 ) ] * 2 )
@@ -450,7 +450,7 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# we stored the last evaluated color so we could directly call _updateLabels
 			self.__updateLazily()
 
-	def __updateFromContext( self, context, name ) :
+	def __updateFromContext( self, unused ) :
 
 		self.__updateLazily()
 
@@ -535,7 +535,7 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__updateLabels( sources, [ imath.Color4f( 0 ) ] * 2 )
 			return
 
-		with inputImagePlug.node().scriptNode().context() :
+		with self.getPlug().node().context() :
 			self.__updateInBackground( sources )
 
 	def __evaluateColors( self, sources ):

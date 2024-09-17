@@ -254,8 +254,7 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 
 	private :
 
-		void connectToViewContext();
-		void contextChanged( const IECore::InternedString &name );
+		void contextChanged();
 		void selectedPathsChanged();
 		void plugDirtied( const Gaffer::Plug *plug );
 		void metadataChanged( IECore::InternedString key );
@@ -263,7 +262,6 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 		void preRender();
 		bool keyPress( const GafferUI::KeyEvent &event );
 
-		Gaffer::Signals::ScopedConnection m_contextChangedConnection;
 		Gaffer::Signals::ScopedConnection m_preRenderConnection;
 
 		GafferUI::GadgetPtr m_handles;

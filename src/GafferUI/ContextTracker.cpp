@@ -37,6 +37,7 @@
 #include "GafferUI/ContextTracker.h"
 
 #include "GafferUI/Gadget.h"
+#include "GafferUI/View.h"
 
 #include "Gaffer/BackgroundTask.h"
 #include "Gaffer/Context.h"
@@ -110,6 +111,73 @@ SharedFocusInstances &sharedFocusInstances()
 	return g_sharedInstances;
 }
 
+
+const Gaffer::Node *editor( const Gaffer::GraphComponent *graphComponent )
+{
+	while( graphComponent )
+	{
+		if( auto view = runTimeCast<const View>( graphComponent ) )
+		{
+			return view;
+		}
+		else if( auto node = runTimeCast<const Node>( graphComponent ) )
+		{
+			if( node->isInstanceOf( "GafferUI::Editor::Settings" ) )
+			{
+				return node;
+			}
+		}
+		graphComponent = graphComponent->parent();
+	}
+
+	return nullptr;
+}
+
+Gaffer::Node *editor( Gaffer::GraphComponent *graphComponent )
+{
+	// Preferring cheeky cast to maintaining an identical copy of `editor( const ... )`.
+	return const_cast<Node *>( editor( const_cast<const GraphComponent *>( graphComponent ) ) );
+}
+
+Gaffer::ScriptNode *scriptNode( Gaffer::GraphComponent *graphComponent )
+{
+	if( !graphComponent )
+	{
+		return nullptr;
+	}
+
+	if( auto s = runTimeCast<ScriptNode>( graphComponent ) )
+	{
+		return s;
+	}
+
+	if( auto s = graphComponent->ancestor<ScriptNode>() )
+	{
+		return s;
+	}
+
+	Node *e = editor( graphComponent );
+	if( !e )
+	{
+		return nullptr;
+
+	}
+
+	if( auto view = runTimeCast<View>( e ) )
+	{
+		return view->scriptNode();
+	}
+	else if( auto p = e->getChild<Plug>( "__scriptNode" ) )
+	{
+		// We're looking at an `Editor.Settings` node.
+		return scriptNode( p->getInput() );
+	}
+
+	return nullptr;
+}
+
+const InternedString g_inPlugName( "in" );
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -117,7 +185,7 @@ SharedFocusInstances &sharedFocusInstances()
 //////////////////////////////////////////////////////////////////////////
 
 ContextTracker::ContextTracker( const Gaffer::NodePtr &node, const Gaffer::ContextPtr &context )
-	:	m_context( context )
+	:	m_targetContext( context ), m_defaultContext( new Context( *context ) )
 {
 	context->changedSignal().connect( boost::bind( &ContextTracker::contextChanged, this, ::_2 ) );
 	updateNode( node );
@@ -146,8 +214,9 @@ ContextTrackerPtr ContextTracker::acquire( const Gaffer::NodePtr &node )
 	return instance;
 }
 
-ContextTrackerPtr ContextTracker::acquireForFocus( Gaffer::ScriptNode *script )
+ContextTrackerPtr ContextTracker::acquireForFocus( Gaffer::GraphComponent *graphComponent )
 {
+	auto script = scriptNode( graphComponent );
 	if( !script )
 	{
 		return acquire( script );
@@ -157,7 +226,7 @@ ContextTrackerPtr ContextTracker::acquireForFocus( Gaffer::ScriptNode *script )
 	auto it = instances.find( script );
 	if( it != instances.end() )
 	{
-		if( it->second->m_context == script->context() )
+		if( it->second->m_targetContext == script->context() )
 		{
 			return it->second;
 		}
@@ -201,7 +270,7 @@ const Gaffer::Node *ContextTracker::targetNode() const
 
 const Gaffer::Context *ContextTracker::targetContext() const
 {
-	return m_context.get();
+	return m_targetContext.get();
 }
 
 void ContextTracker::scheduleUpdate()
@@ -215,8 +284,9 @@ void ContextTracker::scheduleUpdate()
 		// thread.
 		m_nodeContexts.clear();
 		m_plugContexts.clear();
+		m_defaultContext = new Context( *m_targetContext );
 		m_idleConnection.disconnect();
-		changedSignal()( *this );
+		emitChanged();
 		return;
 	}
 
@@ -239,8 +309,10 @@ void ContextTracker::scheduleUpdate()
 	// multiple times in quick succession.
 
 	m_idleConnection = Gadget::idleSignal().connect(
-		[thisRef = Ptr( this )] () {
-			thisRef->updateInBackground();
+		// OK to capture `this` without owning a reference, because
+		// `~ContextTracker` will remove the connection.
+		[this] () {
+			this->updateInBackground();
 		}
 	);
 }
@@ -253,7 +325,7 @@ void ContextTracker::updateInBackground()
 	// We must take a copy of the context for this, because it will be used
 	// on the background thread and the original context may be modified on
 	// the main thread.
-	ConstContextPtr contextCopy = new Context( *m_context );
+	ConstContextPtr contextCopy = new Context( *m_targetContext );
 	std::deque<std::pair<const Plug *, ConstContextPtr>> toVisit;
 	if( m_node )
 	{
@@ -320,17 +392,52 @@ void ContextTracker::updateInBackground()
 				ParallelAlgo::callOnUIThread(
 					// Need to own a reference via `thisRef`, because otherwise we could be deleted
 					// before `callOnUIThread()` gets to us.
-					[thisRef = Ptr( that ), plugContexts = std::move( plugContexts ), nodeContexts = std::move( nodeContexts )] () mutable {
+					[
+						thisRef = Ptr( that ),
+						plugContexts = std::move( plugContexts ),
+						nodeContexts = std::move( nodeContexts ),
+						defaultContext = ConstContextPtr( new Context( *Context::current(), /* omitCanceller = */ true ) )
+					] () mutable {
 						thisRef->m_nodeContexts.swap( nodeContexts );
 						thisRef->m_plugContexts.swap( plugContexts );
+						thisRef->m_defaultContext = defaultContext;
 						thisRef->m_updateTask.reset();
-						thisRef->changedSignal()( *thisRef );
+						thisRef->emitChanged();
 					}
 				);
 			}
 		}
 
 	);
+}
+
+void ContextTracker::editorInputChanged( const Gaffer::Plug *plug )
+{
+	const Node *editor = plug->node();
+	auto editorInPlug = editor->getChild<Plug>( g_inPlugName );
+	if( !editorInPlug )
+	{
+		return;
+	}
+
+	if( plug == editorInPlug || ( runTimeCast<const ArrayPlug>( editorInPlug ) && plug->parent() == editorInPlug ) )
+	{
+		auto it = m_trackedEditors.find( editor );
+		assert( it != m_trackedEditors.end() );
+		// Although the tracking itself hasn't changed, `context()`
+		// is sensitive to the editor input, so we emit the changed
+		// signal for this specific editor.
+		it->second.changedSignal( *this );
+	}
+}
+
+void ContextTracker::emitChanged()
+{
+	changedSignal()( *this );
+	for( const auto &[node, trackedEditor] : m_trackedEditors )
+	{
+		trackedEditor.changedSignal( *this );
+	}
 }
 
 bool ContextTracker::updatePending() const
@@ -341,6 +448,27 @@ bool ContextTracker::updatePending() const
 ContextTracker::Signal &ContextTracker::changedSignal()
 {
 	return m_changedSignal;
+}
+
+ContextTracker::Signal &ContextTracker::changedSignal( Gaffer::GraphComponent *graphComponent )
+{
+	const Node *editor = ::editor( graphComponent );
+	if( !editor )
+	{
+		return m_changedSignal;
+	}
+
+	TrackedEditor &tracked = m_trackedEditors[editor];
+	if( !tracked.plugInputChangedConnection.connected() )
+	{
+		// Either first time we've been called for this address, or an old node
+		// at the address was destroyed and our connection was removed.
+		tracked.plugInputChangedConnection = const_cast<Node *>( editor )->plugInputChangedSignal().connect(
+			boost::bind( &ContextTracker::editorInputChanged, this, ::_1 )
+		);
+	}
+
+	return tracked.changedSignal;
 }
 
 bool ContextTracker::isTracked( const Gaffer::Plug *plug ) const
@@ -355,13 +483,13 @@ bool ContextTracker::isTracked( const Gaffer::Plug *plug ) const
 		return false;
 	}
 
-	auto it = m_nodeContexts.find( plug->node() );
+	auto it = m_nodeContexts.find( plug->node(), TransparentPtrHash<const Node>(), std::equal_to<>() );
 	return it != m_nodeContexts.end() && it->second.allInputsActive;
 }
 
 bool ContextTracker::isTracked( const Gaffer::Node *node ) const
 {
-	return m_nodeContexts.find( node ) != m_nodeContexts.end();
+	return m_nodeContexts.find( node, TransparentPtrHash<const Node>(), std::equal_to<>() ) != m_nodeContexts.end();
 }
 
 Gaffer::ConstContextPtr ContextTracker::context( const Gaffer::Plug *plug ) const
@@ -376,13 +504,42 @@ Gaffer::ConstContextPtr ContextTracker::context( const Gaffer::Plug *plug ) cons
 
 Gaffer::ConstContextPtr ContextTracker::context( const Gaffer::Node *node ) const
 {
-	auto it = m_nodeContexts.find( node );
-	return it != m_nodeContexts.end() ? it->second.context : m_context;
+	auto it = m_nodeContexts.find( node, TransparentPtrHash<const Node>(), std::equal_to<>() );
+	if( it != m_nodeContexts.end() )
+	{
+		return it->second.context;
+	}
+
+	const Node *editor = ::editor( node );
+	if( !editor )
+	{
+		return m_defaultContext;
+	}
+
+	auto *inPlug = editor->getChild<Plug>( g_inPlugName );
+	if( !inPlug )
+	{
+		return m_defaultContext;
+	}
+
+	auto *inputPlug = inPlug->getInput();
+	if( !inputPlug )
+	{
+		for( auto &p : Plug::RecursiveRange( *inPlug ) )
+		{
+			if( ( inputPlug = p->getInput() ) )
+			{
+				break;
+			}
+		}
+	}
+
+	return inputPlug ? context( inputPlug->source()->node() ) : m_defaultContext;
 }
 
 bool ContextTracker::isEnabled( const Gaffer::DependencyNode *node ) const
 {
-	auto it = m_nodeContexts.find( node );
+	auto it = m_nodeContexts.find( node, TransparentPtrHash<const Node>(), std::equal_to<>() );
 	if( it != m_nodeContexts.end() )
 	{
 		return it->second.dependencyNodeEnabled;
@@ -616,7 +773,7 @@ const Gaffer::Context *ContextTracker::findPlugContext( const Gaffer::Plug *plug
 {
 	while( plug )
 	{
-		auto it = m_plugContexts.find( plug );
+		auto it = m_plugContexts.find( plug, TransparentPtrHash<const Plug>(), std::equal_to<>() );
 		if( it != m_plugContexts.end() )
 		{
 			return it->second.get();

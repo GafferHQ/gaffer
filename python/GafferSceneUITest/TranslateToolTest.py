@@ -84,7 +84,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/group/plane" ] ) )
 		self.assertEqual( len( tool.selection() ), 1 )
 		self.assertEqual( tool.selection()[0].path(), "/group/plane" )
-		self.assertEqual( tool.selection()[0].context(), view.getContext() )
+		self.assertEqual( tool.selection()[0].context(), view.context() )
 		self.assertTrue( tool.selection()[0].upstreamScene().isSame( script["plane"]["out"] ) )
 		self.assertEqual( tool.selection()[0].upstreamPath(), "/plane" )
 		self.assertTrue( tool.selection()[0].editTarget().isSame( script["plane"]["transform"] ) )
@@ -93,7 +93,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/group" ] ) )
 		self.assertEqual( tool.selection()[0].path(), "/group" )
-		self.assertEqual( tool.selection()[0].context(), view.getContext() )
+		self.assertEqual( tool.selection()[0].context(), view.context() )
 		self.assertTrue( tool.selection()[0].upstreamScene().isSame( script["group"]["out"] ) )
 		self.assertEqual( tool.selection()[0].upstreamPath(), "/group" )
 		self.assertTrue( tool.selection()[0].editTarget().isSame( script["group"]["transform"] ) )
@@ -110,7 +110,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		script["transformFilter"]["enabled"].setValue( True )
 		self.assertEqual( tool.selection()[0].path(), "/group" )
-		self.assertEqual( tool.selection()[0].context(), view.getContext() )
+		self.assertEqual( tool.selection()[0].context(), view.context() )
 		self.assertTrue( tool.selection()[0].upstreamScene().isSame( script["transform"]["out"] ) )
 		self.assertEqual( tool.selection()[0].upstreamPath(), "/group" )
 		self.assertTrue( tool.selection()[0].editTarget().isSame( script["transform"]["transform"] ) )
@@ -496,7 +496,6 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["plane"]["out"] )
-		view.setContext( script.context() )
 
 		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/plane" ] ) )
 
@@ -526,7 +525,6 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["variables"]["out"] )
-		view.setContext( script.context() )
 
 		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/plane" ] ) )
 
@@ -1256,7 +1254,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		with Gaffer.UndoScope( script ) :
 			tool.translate( imath.V3f( 10, 0, 0 ) )
 
-		with view.getContext() :
+		with view.context() :
 			self.assertEqual( script["editScope"]["out"].transform( "/cube" ).translation(), imath.V3f( 10, 0, 0 ) )
 			self.assertEqual( script["editScope"]["out"].transform( "/cube1" ).translation(), imath.V3f( 10, 0, 0 ) )
 			self.assertEqual( script["editScope"]["out"].transform( "/cube2" ).translation(), imath.V3f( 10, 0, 0 ) )
@@ -1284,6 +1282,44 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( promotedX.getValue(), 1 )
 		self.assertEqual( promotedY.getValue(), 2 )
 		self.assertEqual( promotedZ.getValue(), 3 )
+
+	def testPinnedContext( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["contextQuery"] = Gaffer.ContextQuery()
+		script["contextQuery"].addQuery( Gaffer.FloatPlug(), "frame" )
+
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["transform"]["translate"]["x"].setInput( script["contextQuery"]["out"][0]["value"] )
+
+		script["timeWarp"] = Gaffer.TimeWarp()
+		script["timeWarp"].setup( script["plane"]["out"] )
+		script["timeWarp"]["in"].setInput( script["plane"]["out"] )
+		script["timeWarp"]["offset"].setValue( 10 )
+
+		view = GafferSceneUI.SceneView( script )
+		view["in"].setInput( script["timeWarp"]["out"] )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/plane" ] ) )
+
+		# Looking at the TimeWarp.
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+		self.assertEqual( tool.handlesTransform().translation(), imath.V3f( 11, 0, 0 ) )
+
+		# Looking at the Plane directly.
+
+		view["in"].setInput( script["plane"]["out"] )
+		self.assertEqual( tool.handlesTransform().translation(), imath.V3f( 1, 0, 0 ) )
+
+		# Still looking at the Plane, but now with the TimeWarp focussed.
+		# We now have a "pinned" context, looking at the Plane from the
+		# point of view of the TimeWarp.
+
+		with GafferUITest.ContextTrackerTest.UpdateHandler() :
+			script.setFocus( script["timeWarp"] )
+		self.assertEqual( tool.handlesTransform().translation(), imath.V3f( 11, 0, 0 ) )
 
 if __name__ == "__main__":
 	unittest.main()

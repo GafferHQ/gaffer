@@ -734,6 +734,30 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 			tracker = GafferUI.ContextTracker.acquireForFocus( script )
 		self.assertTrue( tracker.isTracked( script["node"] ) )
 
+	def testAcquireForFocusFromViewAndEditor( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["add"] = GafferTest.AddNode()
+		contextTracker = GafferUI.ContextTracker.acquireForFocus( script )
+
+		editor = GafferUI.Editor( GafferUI.Label( "TestEditor" ), script )
+		editor.settings()["testPlug"] = Gaffer.StringPlug()
+		self.assertTrue(
+			GafferUI.ContextTracker.acquireForFocus( editor.settings() ).isSame( contextTracker )
+		)
+		self.assertTrue(
+			GafferUI.ContextTracker.acquireForFocus( editor.settings()["testPlug"] ).isSame( contextTracker )
+		)
+
+		view = GafferUITest.ViewTest.MyView( script )
+		view["testPlug"] = Gaffer.StringPlug()
+		self.assertTrue(
+			GafferUI.ContextTracker.acquireForFocus( view ).isSame( contextTracker )
+		)
+		self.assertTrue(
+			GafferUI.ContextTracker.acquireForFocus( view["testPlug"] ).isSame( contextTracker )
+		)
+
 	def testAcquireNone( self ) :
 
 		tracker1 = GafferUI.ContextTracker.acquire( None )
@@ -990,6 +1014,161 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 
 		self.assertTrue( tracker.isEnabled( script["tracked" ] ) )
 		self.assertFalse( tracker.isEnabled( script["untracked" ] ) )
+
+	def testContextForEditorSettings( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["node"] = GafferTest.AddNode()
+
+		script["contextVariables"] = Gaffer.ContextVariables()
+		script["contextVariables"].setup( script["node"]["sum"] )
+		script["contextVariables"]["in"].setInput( script["node"]["sum"] )
+		script["contextVariables"]["variables"].addChild( Gaffer.NameValuePlug( "testVariable", True ) )
+
+		script.setFocus( script["contextVariables"] )
+
+		editor = GafferUI.Editor( GafferUI.Label( "TestEditor" ), script )
+		editor.settings()["in"] = Gaffer.IntPlug()
+		editor.settings()["testPlug"] = Gaffer.StringPlug()
+
+		with self.UpdateHandler() :
+			tracker = GafferUI.ContextTracker.acquireForFocus( script )
+
+		self.assertIn( "testVariable", tracker.context( script["node"] ) )
+		self.assertNotIn( "testVariable", tracker.context( script["contextVariables"] ) )
+
+		# No node being viewed.
+
+		for plug in ( editor.settings()["in"], editor.settings()["testPlug"] ) :
+			self.assertFalse( tracker.isTracked( plug ) )
+			self.assertEqual( tracker.context( plug ), script.context() )
+
+		# Node being viewed. We want to take the context from that.
+
+		genericChangedSlot = GafferTest.CapturingSlot( tracker.changedSignal() )
+		specificChangedSlot = GafferTest.CapturingSlot( tracker.changedSignal( editor.settings()["testPlug" ] ) )
+
+		editor.settings()["in"].setInput( script["node"]["sum"] )
+
+		self.assertEqual( len( genericChangedSlot ), 0 )
+		self.assertEqual( len( specificChangedSlot ), 1 )
+
+		for plug in ( editor.settings()["in"], editor.settings()["testPlug"] ) :
+			self.assertFalse( tracker.isTracked( plug ) )
+			self.assertEqual( tracker.context( plug ), tracker.context( script["node"] ) )
+
+		# Edit the context. This should also emit the editor-specific signal.
+
+		with self.UpdateHandler() :
+			script["contextVariables"]["variables"][0]["value"].setValue( False )
+
+		self.assertEqual( len( genericChangedSlot ), 1 )
+		self.assertEqual( len( specificChangedSlot ), 2 )
+
+		for plug in ( editor.settings()["in"], editor.settings()["testPlug"] ) :
+			self.assertFalse( tracker.isTracked( plug ) )
+			self.assertEqual( tracker.context( plug ), tracker.context( script["node"] ) )
+
+	def testContextForView( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["node"] = GafferTest.AddNode()
+
+		script["contextVariables"] = Gaffer.ContextVariables()
+		script["contextVariables"].setup( script["node"]["sum"] )
+		script["contextVariables"]["in"].setInput( script["node"]["sum"] )
+		script["contextVariables"]["variables"].addChild( Gaffer.NameValuePlug( "testVariable", True ) )
+
+		script.setFocus( script["contextVariables"] )
+
+		view = GafferUITest.ViewTest.MyView( script )
+		view["testPlug"] = Gaffer.StringPlug()
+
+		with self.UpdateHandler() :
+			tracker = GafferUI.ContextTracker.acquireForFocus( script )
+
+		self.assertIn( "testVariable", tracker.context( script["node"] ) )
+		self.assertNotIn( "testVariable", tracker.context( script["contextVariables"] ) )
+
+		# No node being viewed.
+
+		for plug in ( view["in"], view["testPlug"] ) :
+			self.assertFalse( tracker.isTracked( plug ) )
+			self.assertEqual( tracker.context( plug ), script.context() )
+
+		# Node being viewed. We want to take the context from that.
+
+		genericChangedSlot = GafferTest.CapturingSlot( tracker.changedSignal() )
+		specificChangedSlot = GafferTest.CapturingSlot( tracker.changedSignal( view["testPlug" ] ) )
+
+		view["in"].setInput( script["node"]["sum"] )
+
+		self.assertEqual( len( genericChangedSlot ), 0 )
+		self.assertEqual( len( specificChangedSlot ), 1 )
+
+		for plug in ( view["in"], view["testPlug"] ) :
+			self.assertFalse( tracker.isTracked( plug ) )
+			self.assertEqual( tracker.context( plug ), tracker.context( script["node"] ) )
+
+		# Edit the context. This should also emit the view-specific signal.
+
+		with self.UpdateHandler() :
+			script["contextVariables"]["variables"][0]["value"].setValue( False )
+
+		self.assertEqual( len( genericChangedSlot ), 1 )
+		self.assertEqual( len( specificChangedSlot ), 2 )
+
+		for plug in ( view["in"], view["testPlug"] ) :
+			self.assertFalse( tracker.isTracked( plug ) )
+			self.assertEqual( tracker.context( plug ), tracker.context( script["node"] ) )
+
+	def testDefaultContextIsCopyOfTargetContext( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["node1"] = GafferTest.AddNode()
+		script["node2"] = GafferTest.AddNode()
+
+		tracker = GafferUI.ContextTracker.acquireForFocus( script )
+		self.assertTrue( tracker.targetContext().isSame( script.context() ) )
+
+		def assertExpectedNodeContexts( expectedContext = None, expectSame = True ) :
+
+			expectedContext = script.context() if expectedContext is None else expectedContext
+			nodeContexts = [ tracker.context( node, _copy = False ) for node in [ script["node1"], script["node2"] ] ]
+
+			for nodeContext in nodeContexts :
+				self.assertEqual( nodeContext, expectedContext )
+				self.assertFalse( nodeContext.isSame( expectedContext ) )
+				self.assertIsNone( nodeContext.canceller() )
+
+			if expectSame :
+				self.assertTrue( nodeContexts[0].isSame( nodeContexts[1] ) )
+			else :
+				self.assertFalse( nodeContexts[0].isSame( nodeContexts[1] ) )
+
+		assertExpectedNodeContexts()
+
+		script.context().setFrame( 10 )
+		assertExpectedNodeContexts()
+
+		with self.UpdateHandler() :
+			script.setFocus( script["node1"] )
+			assertExpectedNodeContexts() # Update not performed until we leave scope
+
+		# Contexts equal but not same, because one node is tracked and the
+		# other uses the default context.
+		assertExpectedNodeContexts( expectSame = False )
+
+		with self.UpdateHandler() :
+			oldContext = Gaffer.Context( script.context() )
+			script.context().setFrame( 20 )
+			# Update not performed yet. Updates to both tracked and non-tracked
+			# occur simultaneously when the update is complete.
+			assertExpectedNodeContexts( expectedContext = oldContext, expectSame = False )
+
+		assertExpectedNodeContexts( expectSame = False )
 
 if __name__ == "__main__":
 	unittest.main()

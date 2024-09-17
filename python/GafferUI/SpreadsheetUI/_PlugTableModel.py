@@ -68,7 +68,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 		self.__columnRemovedConnection = rowsPlug.defaultRow()["cells"].childRemovedSignal().connect( Gaffer.WeakMethod( self.__columnRemoved ), scoped = True )
 		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( rowsPlug.node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = True )
 
-		self.__contextTracker = GafferUI.ContextTracker.acquireForFocus( rowsPlug.node().scriptNode() )
+		self.__contextTracker = GafferUI.ContextTracker.acquireForFocus( rowsPlug )
 		self.__contextTrackerChangedConnection = self.__contextTracker.changedSignal().connect( Gaffer.WeakMethod( self.__contextTrackerChanged ), scoped = True )
 		self.__context = None
 		self.__contextTrackerChanged( self.__contextTracker )

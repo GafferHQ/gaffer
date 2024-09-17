@@ -130,7 +130,6 @@ class _SceneViewInspector( GafferUI.Widget ) :
 									GafferSceneUI.Private.ParameterInspector( sceneView["in"], sceneView["editScope"], a, ( "", p ) )
 									for p in _registeredShaderParameters( a )
 								],
-								sceneView.getContext()
 							)
 
 		# We want to hide ourselves when we have nothing to show, and then show
@@ -163,6 +162,7 @@ class _SceneViewInspector( GafferUI.Widget ) :
 		sceneView["inspector"].addChild( Gaffer.BoolPlug( "visible", Gaffer.Plug.Direction.In, True ) )
 		Gaffer.NodeAlgo.applyUserDefaults( sceneView["inspector"] )
 
+		sceneView.contextChangedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
 		sceneView.viewportGadget().keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
 		self.__sceneView = sceneView
@@ -170,6 +170,12 @@ class _SceneViewInspector( GafferUI.Widget ) :
 	def __closeButtonClicked( self, *unused ) :
 
 		self.__sceneView["inspector"]["visible"].setValue( False )
+
+	def __contextChanged( self, sceneView ) :
+
+		for section in self.__sections :
+			self.__pendingUpdates.update( section.inspectorWidgets() )
+		self.__updateLazily()
 
 	def __keyPress( self, gadget, event ) :
 
@@ -198,28 +204,24 @@ class _SceneViewInspector( GafferUI.Widget ) :
 		widgets = self.__pendingUpdates
 		self.__pendingUpdates = set()
 
-		# We copy the contexts and the selected paths so they can be safely used
-		# in the background thread without fear of them being modified on the
+		# We copy the selected paths so they can be safely used in the
+		# background thread without fear of them being modified on the
 		# foreground thread.
-		self.__backgroundUpdate(
-			{
-				w : Gaffer.Context( w.context() )
-				for w in widgets
-			},
-			GafferSceneUI.ScriptNodeAlgo.getSelectedPaths(
-				self.__sceneView.scriptNode()
-			).paths()
-		)
+		with self.__sceneView.context() :
+			self.__backgroundUpdate(
+				widgets,
+				GafferSceneUI.ScriptNodeAlgo.getSelectedPaths(
+					self.__sceneView.scriptNode()
+				).paths()
+			)
 
 	@GafferUI.BackgroundMethod()
-	def __backgroundUpdate( self, pendingUpdates, selectedPaths ) :
+	def __backgroundUpdate( self, widgets, selectedPaths ) :
 
-		canceller = Gaffer.Context.current().canceller()
 		result = {}
-		for widget, context in pendingUpdates.items() :
+		for widget in widgets :
 			try :
-				with Gaffer.Context( context, canceller ) :
-					widgetResult = widget._backgroundUpdate( selectedPaths )
+				widgetResult = widget._backgroundUpdate( selectedPaths )
 			except Exception as e :
 				widgetResult = sys.exc_info()[1]
 				# Avoid circular references that would prevent this
@@ -260,7 +262,7 @@ class _SceneViewInspector( GafferUI.Widget ) :
 # \todo Check how this relates to DiffColumn in the SceneInspector
 class _InspectorSection( GafferUI.ListContainer ) :
 
-	def __init__( self, label, inspectors, context, **kwargs ) :
+	def __init__( self, label, inspectors, **kwargs ) :
 
 		GafferUI.ListContainer.__init__( self, spacing = 4, **kwargs )
 
@@ -271,7 +273,7 @@ class _InspectorSection( GafferUI.ListContainer ) :
 			GafferUI.Divider()
 
 			self.__inspectorWidgets = [
-				_InspectorWidget( inspector, context )
+				_InspectorWidget( inspector )
 				for inspector in inspectors
 			]
 
@@ -297,13 +299,12 @@ class _InspectorSection( GafferUI.ListContainer ) :
 ## \todo Figure out how this relates to the DiffRow in the SceneInspector.
 class _InspectorWidget( GafferUI.Widget ) :
 
-	def __init__( self, inspector, context ) :
+	def __init__( self, inspector ) :
 
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 2 )
 		GafferUI.Widget.__init__( self, column )
 
 		self.__inspector = inspector
-		self.__context = context
 
 		with column :
 
@@ -319,12 +320,7 @@ class _InspectorWidget( GafferUI.Widget ) :
 			self.__valueWidget.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__valueDoubleClick ) )
 
 		self.__inspectorResults = []
-		self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
 		self.__inspector.dirtiedSignal().connect( Gaffer.WeakMethod( self.__inspectorDirtied ) )
-
-	def context( self ) :
-
-		return self.__context
 
 	def valueWidget( self ) :
 
@@ -372,11 +368,6 @@ class _InspectorWidget( GafferUI.Widget ) :
 			self.__valueWidget._qtWidget().setProperty( "gafferInspectorSourceType", "|".join( sorted( str( s ) for s in sourceTypes ) ) )
 			self.__valueWidget._repolish()
 			self.setVisible( len( self.__inspectorResults ) > 0 )
-
-	def __contextChanged( self, context, variableName ) :
-
-		if not variableName.startswith( "ui:" ) :
-			self.__scheduleUpdate()
 
 	def __inspectorDirtied( self, inspector ) :
 

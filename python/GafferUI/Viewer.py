@@ -60,6 +60,21 @@ import IECoreGL
 # without modifying the Views themselves.
 class Viewer( GafferUI.NodeSetEditor ) :
 
+	class Settings( GafferUI.Editor.Settings ) :
+
+		def __init__( self ) :
+
+			GafferUI.Editor.Settings.__init__( self )
+
+			# Receives input from the node being viewed, allowing
+			# `Editor.context()` to get the right context from the
+			# ContextTracker.
+			## \todo Can we centralise this and the behaviour of
+			# SceneEditor in NodeSetEditor?
+			self["in"] = Gaffer.Plug()
+
+	IECore.registerRunTimeTyped( Settings, typeName = "GafferUI::Viewer::Settings" )
+
 	def __init__( self, scriptNode, **kw ) :
 
 		self.__gadgetWidget = GafferUI.GadgetWidget()
@@ -187,12 +202,15 @@ class Viewer( GafferUI.NodeSetEditor ) :
 						self.__currentView = GafferUI.View.create( plug )
 						if self.__currentView is not None:
 							Gaffer.NodeAlgo.applyUserDefaults( self.__currentView )
-							self.__currentView.setContext( self.context() )
 							self.__views.append( self.__currentView )
 					# if we succeeded in getting a suitable view, then
 					# don't bother checking the other plugs
 					if self.__currentView is not None :
 						break
+
+		self.settings()["in"].setInput(
+			self.__currentView["in"].getInput() if self.__currentView is not None else None
+		)
 
 		for toolbar in self.__nodeToolbars :
 			toolbar.setNode( node )

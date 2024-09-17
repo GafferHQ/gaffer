@@ -106,8 +106,7 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		void setImage( GafferImage::ImagePlugPtr image );
 		const GafferImage::ImagePlug *getImage() const;
 
-		void setContext( Gaffer::ContextPtr context );
-		Gaffer::Context *getContext();
+		void setContext( Gaffer::ConstContextPtr context );
 		const Gaffer::Context *getContext() const;
 
 		using Channels = std::array<IECore::InternedString, 4>;
@@ -184,7 +183,7 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		void contextChanged( const IECore::InternedString &name );
 
 		GafferImage::ImagePlugPtr m_image;
-		Gaffer::ContextPtr m_context;
+		Gaffer::ConstContextPtr m_context;
 
 		Gaffer::Signals::ScopedConnection m_plugDirtiedConnection;
 		Gaffer::Signals::ScopedConnection m_contextChangedConnection;

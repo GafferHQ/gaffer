@@ -119,7 +119,7 @@ class _ViewRenderControlUI( GafferUI.Widget ) :
 				self.__renderNodePlugDirtiedConnection = renderNode.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__renderNodePlugDirtied ), scoped = True )
 
 			# We disable the controls if a render is in progress, but not being viewed
-			with self.__view.getContext() :
+			with self.__view.context() :
 				renderNodeStopped = statePlug.getValue() == GafferScene.InteractiveRender.State.Stopped
 				viewedImageIsRendering = self.__imageIsRendering( self.__view["in"] )
 				controlsEnabled  = ( viewedImageIsRendering and not renderNodeStopped ) or renderNodeStopped
@@ -141,7 +141,7 @@ class _ViewRenderControlUI( GafferUI.Widget ) :
 		if not isinstance( view["in"], GafferImage.ImagePlug ) :
 			return None
 
-		with view.getContext() :
+		with view.context() :
 			try :
 				renderScene = GafferScene.SceneAlgo.sourceScene( view["in"] )
 			except :

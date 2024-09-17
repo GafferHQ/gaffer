@@ -256,7 +256,7 @@ def __lightLinksSubMenu( view ) :
 
 	selectedObjects = view.viewportGadget().getPrimaryChild().getSelection()
 	if not selectedObjects.isEmpty() :
-		with view.getContext() :
+		with view.context() :
 			selectedLights = view["in"].set( "__lights" ).value.intersection( selectedObjects )
 		selectedObjects.removePaths( selectedLights )
 	else :
@@ -266,7 +266,7 @@ def __lightLinksSubMenu( view ) :
 		"Select Linked Objects",
 		{
 			"command" : functools.partial(
-				__selectLinked, context = view.getContext(), title = "Selecting Linked Objects",
+				__selectLinked, context = view.context(), title = "Selecting Linked Objects",
 				linkingQuery = functools.partial( GafferScene.SceneAlgo.linkedObjects, view["in"], selectedLights )
 			),
 			"active" : not selectedLights.isEmpty(),
@@ -277,7 +277,7 @@ def __lightLinksSubMenu( view ) :
 		"Select Linked Lights",
 		{
 			"command" : functools.partial(
-				__selectLinked, context = view.getContext(), title = "Selecting Linked Lights",
+				__selectLinked, context = view.context(), title = "Selecting Linked Lights",
 				linkingQuery = functools.partial( GafferScene.SceneAlgo.linkedLights, view["in"], selectedObjects )
 			),
 			"active" : not selectedObjects.isEmpty(),

@@ -363,7 +363,7 @@ const GafferImage::ImagePlug *ImageGadget::getImage() const
 	return m_image.get();
 }
 
-void ImageGadget::setContext( Gaffer::ContextPtr context )
+void ImageGadget::setContext( Gaffer::ConstContextPtr context )
 {
 	if( context == m_context )
 	{
@@ -371,14 +371,11 @@ void ImageGadget::setContext( Gaffer::ContextPtr context )
 	}
 
 	m_context = context;
-	m_contextChangedConnection = m_context->changedSignal().connect( boost::bind( &ImageGadget::contextChanged, this, ::_2 ) );
+	m_contextChangedConnection = const_cast<Context *>( m_context.get() )->changedSignal().connect(
+		boost::bind( &ImageGadget::contextChanged, this, ::_2 )
+	);
 
 	dirty( AllDirty );
-}
-
-Gaffer::Context *ImageGadget::getContext()
-{
-	return m_context.get();
 }
 
 const Gaffer::Context *ImageGadget::getContext() const

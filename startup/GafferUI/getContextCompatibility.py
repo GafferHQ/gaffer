@@ -47,3 +47,4 @@ GafferUI.PlugValueWidget.getContext = getContext
 GafferUI.PlugLayout.getContext = getContext
 GafferUI.Editor.getContext = getContext
 GafferUI.NodeToolbar.getContext = getContext
+GafferUI.View.getContext = getContext

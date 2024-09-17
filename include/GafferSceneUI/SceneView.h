@@ -89,8 +89,6 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 		void expandSelection( size_t depth = 1 );
 		void collapseSelection();
 
-		void setContext( Gaffer::ContextPtr context ) override;
-
 		/// If the view is locked to a particular camera,
 		/// this returns the bound of the resolution gate
 		/// in raster space - this can be useful when
@@ -116,6 +114,7 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 
 		Imath::Box3f framingBound() const;
 
+		void contextChanged();
 		void selectedPathsChanged();
 		void visibleSetChanged();
 		bool keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &event );

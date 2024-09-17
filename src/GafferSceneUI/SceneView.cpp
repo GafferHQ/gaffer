@@ -1434,9 +1434,7 @@ class SceneView::Camera : public Signals::Trackable
 			view->viewportGadget()->viewportChangedSignal().connect( boost::bind( &Camera::viewportChanged, this ) );
 			m_viewportCameraChangedConnection = view->viewportGadget()->cameraChangedSignal().connect( boost::bind( &Camera::viewportCameraChanged, this ) );
 
-			connectToViewContext();
-			view->contextChangedSignal().connect( boost::bind( &Camera::connectToViewContext, this ) );
-
+			view->contextChangedSignal().connect( boost::bind( &Camera::contextChanged, this ) );
 		}
 
 		Gaffer::ValuePlug *plug()
@@ -1533,19 +1531,11 @@ class SceneView::Camera : public Signals::Trackable
 			return static_cast<SceneGadget *>( m_view->viewportGadget()->getPrimaryChild() );
 		}
 
-		void connectToViewContext()
+		void contextChanged()
 		{
-			m_contextChangedConnection = m_view->getContext()->changedSignal().connect( boost::bind( &Camera::contextChanged, this, ::_2 ) );
-		}
-
-		void contextChanged( const IECore::InternedString &name )
-		{
-			if( !boost::starts_with( name.value(), "ui:" ) )
+			if( lookThroughEnabledPlug()->getValue() )
 			{
-				if( lookThroughEnabledPlug()->getValue() )
-				{
-					m_lookThroughCameraDirty = m_viewportCameraDirty = true;
-				}
+				m_lookThroughCameraDirty = m_viewportCameraDirty = true;
 			}
 		}
 
@@ -1664,7 +1654,7 @@ class SceneView::Camera : public Signals::Trackable
 			// Retrieve it, along with the scene globals
 			// and the camera set.
 
-			Context::Scope scopedContext( m_view->getContext() );
+			Context::Scope scopedContext( m_view->context() );
 
 			string cameraPathString = lookThroughCameraPath();
 			ConstCompoundObjectPtr globals;
@@ -1908,7 +1898,6 @@ class SceneView::Camera : public Signals::Trackable
 
 		Signals::ScopedConnection m_plugSetConnection;
 		Signals::ScopedConnection m_viewportCameraChangedConnection;
-		Signals::ScopedConnection m_contextChangedConnection;
 
 		// Cameras that don't exist in the Gaffer scene, so are
 		// always available for use.
@@ -1974,7 +1963,7 @@ SceneView::SceneView( ScriptNodePtr scriptNode )
 	viewportGadget()->setPrimaryChild( m_sceneGadget );
 	viewportGadget()->keyPressSignal().connect( boost::bind( &SceneView::keyPress, this, ::_1, ::_2 ) );
 
-	m_sceneGadget->setContext( getContext() );
+	m_sceneGadget->setContext( context() );
 
 	m_renderer.reset( new Renderer( this ) );
 	m_selectionMask.reset( new SelectionMask( this ) );
@@ -2053,10 +2042,12 @@ SceneView::SceneView( ScriptNodePtr scriptNode )
 
 	m_sceneGadget->setScene( preprocessedInPlug<ScenePlug>() );
 
-	// Connect to ScriptNodeAlgo for selection and visible set updates.
+	// Connect to ScriptNodeAlgo for selection and visible set updates,
+	// and arrange to update when our context changes.
 
 	ScriptNodeAlgo::selectedPathsChangedSignal( scriptNode.get() ).connect( boost::bind( &SceneView::selectedPathsChanged, this ) );
 	ScriptNodeAlgo::visibleSetChangedSignal( scriptNode.get() ).connect( boost::bind( &SceneView::visibleSetChanged, this ) );
+	contextChangedSignal().connect( boost::bind( &SceneView::contextChanged, this ) );
 
 }
 
@@ -2102,12 +2093,6 @@ GafferScene::PathFilter *SceneView::deleteObjectFilter()
 const GafferScene::PathFilter *SceneView::deleteObjectFilter() const
 {
 	return getPreprocessor()->getChild<PathFilter>( "deleteObjectFilter" );
-}
-
-void SceneView::setContext( Gaffer::ContextPtr context )
-{
-	View::setContext( context );
-	m_sceneGadget->setContext( context );
 }
 
 const Box2f &SceneView::resolutionGate() const
@@ -2164,6 +2149,11 @@ Imath::Box3f SceneView::framingBound() const
 	return b;
 }
 
+void SceneView::contextChanged()
+{
+	m_sceneGadget->setContext( context() );
+}
+
 void SceneView::selectedPathsChanged()
 {
 	m_sceneGadget->setSelection( ScriptNodeAlgo::getSelectedPaths( scriptNode() ) );
@@ -2218,7 +2208,7 @@ void SceneView::frame( const PathMatcher &filter, const Imath::V3f &direction )
 {
 	Imath::Box3f bound;
 
-	Context::Scope scope( getContext() );
+	Context::Scope scope( context() );
 
 	PathMatcher paths;
 	const ScenePlug *scene = inPlug<const ScenePlug>();
@@ -2236,7 +2226,7 @@ void SceneView::frame( const PathMatcher &filter, const Imath::V3f &direction )
 
 void SceneView::expandSelection( size_t depth )
 {
-	Context::Scope scope( getContext() );
+	Context::Scope scope( context() );
 	PathMatcher selection = ScriptNodeAlgo::expandDescendantsInVisibleSet( scriptNode(), m_sceneGadget->getSelection(), preprocessedInPlug<ScenePlug>(), depth - 1 );
 	ScriptNodeAlgo::setSelectedPaths( scriptNode(), selection );
 }

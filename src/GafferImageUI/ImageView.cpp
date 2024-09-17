@@ -1508,6 +1508,7 @@ ImageView::ImageView( Gaffer::ScriptNodePtr scriptNode )
 
 	// connect up to some signals
 
+	contextChangedSignal().connect( boost::bind( &ImageView::contextChanged, this ) );
 	plugSetSignal().connect( boost::bind( &ImageView::plugSet, this, ::_1 ) );
 	viewportGadget()->keyPressSignal().connect( boost::bind( &ImageView::keyPress, this, ::_2 ) );
 	viewportGadget()->preRenderSignal().connect( boost::bind( &ImageView::preRender, this ) );
@@ -1516,7 +1517,7 @@ ImageView::ImageView( Gaffer::ScriptNodePtr scriptNode )
 	// hard work of actually displaying the image.
 
 	m_imageGadgets[0]->setImage( preprocessedInPlug<ImagePlug>() );
-	m_imageGadgets[0]->setContext( getContext() );
+	m_imageGadgets[0]->setContext( context() );
 
 	m_comparisonSelect = new Gaffer::ContextVariables( "__comparisonSelect" );
 	addChild( m_comparisonSelect );
@@ -1527,7 +1528,7 @@ ImageView::ImageView( Gaffer::ScriptNodePtr scriptNode )
 	m_comparisonSelect->variablesPlug()->addChild( new NameValuePlug( "imageView:__useComparisonImage",  new StringData( "True" ), true ) );
 
 	m_imageGadgets[1]->setImage( IECore::runTimeCast<GafferImage::ImagePlug>( m_comparisonSelect->outPlug() ) );
-	m_imageGadgets[1]->setContext( getContext() );
+	m_imageGadgets[1]->setContext( context() );
 	m_imageGadgets[1]->setLabelsVisible( false );
 	m_imageGadgets[1]->setVisible( false );
 	viewportGadget()->addChild( m_imageGadgets[1] );
@@ -1684,11 +1685,10 @@ const ImageGadget *ImageView::imageGadget() const
 	return m_imageGadgets[0].get();
 }
 
-void ImageView::setContext( Gaffer::ContextPtr context )
+void ImageView::contextChanged()
 {
-	View::setContext( context );
-	m_imageGadgets[0]->setContext( context );
-	m_imageGadgets[1]->setContext( context );
+	m_imageGadgets[0]->setContext( context() );
+	m_imageGadgets[1]->setContext( context() );
 }
 
 void ImageView::plugSet( Gaffer::Plug *plug )

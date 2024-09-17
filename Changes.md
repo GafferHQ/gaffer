@@ -21,6 +21,8 @@ Improvements
   - Improved formatting of column headers containing whitespace.
   - The "Double-click to toggle" tooltip is no longer displayed while hovering over non-editable cells, and a "Double-click to edit" tooltip is now displayed while hovering over other non-toggleable but editable cells.
 - Spreadsheet : Added yellow underlining to the currently active row.
+- PlugLayout : Summaries and activators are now evaluated in a context determined relative to the focus node.
+- Editor : The node graph is now evaluated in a context determined relative to the focus node.
 
 Fixes
 -----
@@ -47,6 +49,7 @@ Fixes
 - HierarchyView, SetEditor : Fixed thread-safety bugs.
 - FreezeTransform : Constant primitive variables with point/vector interpretations are now also transformed.
 - usdview : Added Windows support (#5599).
+- ContextTracker : Removed unnecessary reference increment/decrement from `isTracked()`, `context()` and `isEnabled()`.
 
 API
 ---
@@ -72,6 +75,7 @@ API
 - VisibleSet : Added Python constructor with keyword arguments for `expansions`, `inclusions` and `exclusions`.
 - ScriptNodeAlgo : Added new namespace with functions for managing shared UI state for GafferSceneUI.
 - ContextAlgo : Deprecated. Use ScriptNodeAlgo instead.
+- ContextTracker : Added support for plugs in Views and `Editor.Settings` nodes, which should use the tracked context for the node being viewed.
 
 Breaking Changes
 ----------------
@@ -96,11 +100,16 @@ Breaking Changes
 - View :
   - Changed constructor arguments for View and all subclasses. A ScriptNode must now be passed.
   - Changed `ViewCreator` signature.
+  - Removed `contextChanged()` and `contextChangedConnection()` methods.
+  - Removed `setContext()` and `getContext()` methods. Use `context()` instead of `getContext()`.
+  - The `contextChangedSignal()` is now emitted for all changes to the context, whereas previously it was only emitted by `setContext()`. This simplifies context handling in Tools, which no longer need to connect to `Context::changedSignal()` as well.
 - LightTool : Removed `selection()` and `selectionChangedSignal()`.
 - ArnoldRender, CyclesRender, DelightRender, OpenGLRender : Removed. Use the generic Render node instead.
 - Render : Removed protected constructor for creating renderer-specific derived classes.
 - Signal : The `connect()` and `connectFront()` methods now default to `scoped = False`. If a scoped connection is required, pass `scoped = True`.
 - FreezeTransform : Constant primitive variables with point/vector interpretations are now also transformed (this is more correct, but it is a change in behaviour).
+- ImageGadget : Remove non-const variant of `getContext()`.
+- LazyMethod : `deferUntilPlaybackStops` now requires that the Widget has a `scriptNode()` method rather than a `context()` method.
 
 Build
 -----
