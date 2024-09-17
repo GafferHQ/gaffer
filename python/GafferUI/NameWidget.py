@@ -125,18 +125,17 @@ class NameWidget( GafferUI.TextWidget ) :
 
 class _Validator( QtGui.QValidator ) :
 
+	__invalidCharacters = re.compile( "[^A-Za-z_:0-9]" )
+
 	def __init__( self, parent ) :
 
 		QtGui.QValidator.__init__( self, parent )
 
 	def validate( self, input, pos ) :
 
-		input = input.replace( " ", "_" )
+		input = self.__invalidCharacters.sub( "_", input )
 		if len( input ) :
-			if re.match( "^(?!__)[A-Za-z_]+[A-Za-z_0-9]*$", input ) :
-				result = QtGui.QValidator.Acceptable
-			else :
-				result = QtGui.QValidator.Invalid
+			result = QtGui.QValidator.Acceptable
 		else :
 			result = QtGui.QValidator.Intermediate
 
