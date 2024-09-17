@@ -5,6 +5,7 @@ Fixes
 -----
 
 - Constraint : The `target` browser now shows locations from the `targetScene` if it has an input connection. Before it always showed locations from the main input.
+- ImageInspector : Fixed broken UI caused by double-clicking in the Image tab.
 
 API
 ---
