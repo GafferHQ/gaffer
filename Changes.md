@@ -141,7 +141,15 @@ Build
 1.4.x.x (relative to 1.4.12.0)
 =======
 
+Fixes
+-----
 
+- Constraint : The `target` browser now shows locations from the `targetScene` if it has an input connection. Before it always showed locations from the main input.
+
+API
+---
+
+- ScenePathPlugValueWidget : The `scenePathPlugValueWidget:scene` metadata now accepts a space-separated list of plugs, taking the first plug which has an input connection.
 
 1.4.12.0 (relative to 1.4.11.0)
 ========
