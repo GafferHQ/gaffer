@@ -342,7 +342,8 @@ class Instancer::EngineData : public Data
 				m_orientations( nullptr ),
 				m_scales( nullptr ),
 				m_uniformScales( nullptr ),
-				m_prototypeContextVariables( prototypeContextVariables )
+				m_prototypeContextVariables( prototypeContextVariables ),
+				m_hasDuplicates( false )
 		{
 			if( !m_primitive )
 			{
@@ -395,7 +396,6 @@ class Instancer::EngineData : public Data
 				}
 			}
 
-			bool hasDuplicates = false;
 			if( m_ids )
 			{
 				for( size_t i = 0, e = numPoints(); i < e; ++i )
@@ -413,7 +413,7 @@ class Instancer::EngineData : public Data
 						// a consistent point index to this id, we omit all point indices that try to use this
 						// id
 						ins.first->second = std::numeric_limits<size_t>::max();
-						hasDuplicates = true;
+						m_hasDuplicates = true;
 					}
 				}
 			}
@@ -433,91 +433,6 @@ class Instancer::EngineData : public Data
 				{
 					throw IECore::Exception( fmt::format( "Context primitive variable for \"{}\" is not a correctly sized Vertex primitive variable", v.name.string() ) );
 				}
-			}
-
-			if( !m_numValidPrototypes )
-			{
-				// We don't need to build m_pointIndicesForPrototype if we're not outputting any prototypes
-				return;
-			}
-
-			int constantPrototypeIndex = -1;
-			if( !m_prototypeIndices )
-			{
-				constantPrototypeIndex = m_prototypeIndexRemap[ 0 ];
-				if( constantPrototypeIndex == -1 )
-				{
-					// If we have no indices to specify other prototypes, and the first prototype is
-					// invalid, we're not going to output anything, and can early exit
-					return;
-				}
-			}
-
-			// We need a list of which point indices belong to each prototype
-			std::vector< std::vector<int> > pointIndicesForPrototypeIndex( m_numPrototypes );
-			// Pre allocate if there's just one prototype, since we know the length will just be every point
-			if( constantPrototypeIndex != -1 )
-			{
-				pointIndicesForPrototypeIndex[ constantPrototypeIndex ].reserve( numPoints() );
-			}
-
-			if( constantPrototypeIndex != -1 && !hasDuplicates )
-			{
-				// If there's a single prototype, and no indices are being omitted because they are duplicates,
-				// then the list of point indices for the prototype is just an identity map of all integers
-				// from 0 .. N - 1.
-				//
-				// It's pretty wasteful to store this, but it avoids special cases throughout this code to skip
-				// using pointIndicesForPrototypeIndex when it isn't needed
-				for( size_t i = 0, e = numPoints(); i < e; ++i )
-				{
-					pointIndicesForPrototypeIndex[ constantPrototypeIndex ].push_back( i );
-				}
-			}
-			else
-			{
-				// The assignment of point indices to prototypes is non-trivial, so we actually have to do
-				// a bit of work
-				for( size_t i = 0, e = numPoints(); i < e; ++i )
-				{
-					// If there are duplicates in the id list, then some point indices will be omitted - we
-					// need to check each point index to see if it got assigned an id correctly
-					if( hasDuplicates )
-					{
-						int id = (*m_ids)[i];
-
-						if( m_idsToPointIndices[id] != i )
-						{
-							continue;
-						}
-					}
-
-					// Add this point index to the list for its prototype
-
-					int prototypeIndex = constantPrototypeIndex != -1 ?
-						constantPrototypeIndex :
-						m_prototypeIndexRemap[ (*m_prototypeIndices)[ i ] % m_numPrototypes ];
-
-					if( prototypeIndex != -1 )
-					{
-						pointIndicesForPrototypeIndex[ prototypeIndex ].push_back( i );
-					}
-				}
-			}
-
-			// We've populated instancerPrototypeIndex with a list of point indices for each prototype index.
-			// When we need this, however, we need it indexed by name, so we move the vectors we've just built
-			// to m_pointIndicesForPrototype which is indexed by name.
-			const std::vector< InternedString > &outputChildNames = m_names->outputChildNames()->readable();
-			for( unsigned int i = 0; i < m_numPrototypes; i++ )
-			{
-				int prototypeIndex = m_prototypeIndexRemap[ i ];
-				if( prototypeIndex == -1 )
-				{
-					continue;
-				}
-
-				m_pointIndicesForPrototype.emplace( IECore::InternedString( outputChildNames[prototypeIndex] ), std::move( pointIndicesForPrototypeIndex[prototypeIndex] ) );
 			}
 		}
 
@@ -563,13 +478,31 @@ class Instancer::EngineData : public Data
 
 		int prototypeIndex( size_t pointIndex ) const
 		{
-			if( m_numPrototypes )
+			if( m_numPrototypes == 0 )
 			{
-				return m_prototypeIndexRemap[ ( m_prototypeIndices ? (*m_prototypeIndices)[pointIndex] : 0 ) % m_numPrototypes ];
+				return -1;
+			}
+
+			if( m_hasDuplicates )
+			{
+				// If there are duplicates in the id list, then some point indices will be omitted - we
+				// need to check each point index to see if it got assigned an id correctly
+
+				int id = (*m_ids)[pointIndex];
+
+				if( m_idsToPointIndices.at(id) != pointIndex )
+				{
+					return -1;
+				}
+			}
+
+			if( m_prototypeIndices )
+			{
+				return m_prototypeIndexRemap[ (*m_prototypeIndices)[pointIndex] % m_numPrototypes ];
 			}
 			else
 			{
-				return -1;
+				return m_prototypeIndexRemap[ 0 ];
 			}
 		}
 
@@ -578,6 +511,11 @@ class Instancer::EngineData : public Data
 		const ScenePlug::ScenePath *prototypeRoot( const InternedString &name ) const
 		{
 			return &( m_roots[m_names->input( name ).index]->readable() );
+		}
+
+		const ScenePlug::ScenePath *prototypeRoot( int prototypeId ) const
+		{
+			return &( m_roots[prototypeId]->readable() );
 		}
 
 		const InternedStringVectorData *prototypeNames() const
@@ -712,11 +650,6 @@ class Instancer::EngineData : public Data
 					throw IECore::Exception( fmt::format( "Context variable \"{}\" : cannot quantize variable of type {}", v.name.string(), v.primVar->data->typeName() ) );
 				}
 			}
-		}
-
-		const std::vector<int> & pointIndicesForPrototype( const IECore::InternedString &prototypeName ) const
-		{
-			return m_pointIndicesForPrototype.at( prototypeName );
 		}
 
 	protected :
@@ -996,6 +929,108 @@ class Instancer::EngineData : public Data
 
 		const std::vector< PrototypeContextVariable > m_prototypeContextVariables;
 
+		bool m_hasDuplicates;
+
+		friend Instancer::EngineSplitPrototypesData;
+};
+
+// If we aren't encapsulating, we need to split the prototypes into groups, requiring us to do extra work
+class Instancer::EngineSplitPrototypesData : public Data
+{
+
+	public :
+
+		EngineSplitPrototypesData(
+			ConstEngineDataPtr engineData
+		)
+			:	m_engineData( engineData )
+		{
+
+			if( !m_engineData->m_numValidPrototypes )
+			{
+				// We don't need to build m_pointIndicesForPrototype if we're not outputting any prototypes.
+				return;
+			}
+
+			int constantPrototypeIndex = -1;
+			if( !m_engineData->m_prototypeIndices )
+			{
+				constantPrototypeIndex = m_engineData->m_prototypeIndexRemap[ 0 ];
+				if( constantPrototypeIndex == -1 )
+				{
+					// If we have no indices to specify other prototypes, and the first prototype is
+					// invalid, we're not going to output anything, and can early exit
+					return;
+				}
+			}
+
+			// We need a list of which point indices belong to each prototype
+			std::vector< std::vector<int> > pointIndicesForPrototypeIndex( m_engineData->m_numPrototypes );
+			// Pre allocate if there's just one prototype, since we know the length will just be every point
+			if( constantPrototypeIndex != -1 )
+			{
+				pointIndicesForPrototypeIndex[ constantPrototypeIndex ].reserve( m_engineData->numPoints() );
+			}
+
+			if( constantPrototypeIndex != -1 && !m_engineData->m_hasDuplicates )
+			{
+				// If there's a single prototype, and no indices are being omitted because they are duplicates,
+				// then the list of point indices for the prototype is just an identity map of all integers
+				// from 0 .. N - 1.
+				//
+				// It's pretty wasteful to store this, but it avoids special cases throughout this code to skip
+				// using pointIndicesForPrototypeIndex when it isn't needed
+				for( size_t i = 0, e = m_engineData->numPoints(); i < e; ++i )
+				{
+					pointIndicesForPrototypeIndex[ constantPrototypeIndex ].push_back( i );
+				}
+			}
+			else
+			{
+				// The assignment of point indices to prototypes is non-trivial, so we actually have to do
+				// a bit of work
+				for( size_t i = 0, e = m_engineData->numPoints(); i < e; ++i )
+				{
+					// Add this point index to the list for its prototype
+					int protoIndex = m_engineData->prototypeIndex( i );
+
+					if( protoIndex != -1 )
+					{
+						pointIndicesForPrototypeIndex[ protoIndex ].push_back( i );
+					}
+				}
+			}
+
+			// We've populated instancerPrototypeIndex with a list of point indices for each prototype index.
+			// When we need this, however, we need it indexed by name, so we move the vectors we've just built
+			// to m_pointIndicesForPrototype which is indexed by name.
+			const std::vector< InternedString > &outputChildNames = m_engineData->m_names->outputChildNames()->readable();
+			for( unsigned int i = 0; i < m_engineData->m_numPrototypes; i++ )
+			{
+				int prototypeIndex = m_engineData->m_prototypeIndexRemap[ i ];
+				if( prototypeIndex == -1 )
+				{
+					continue;
+				}
+
+				m_pointIndicesForPrototype.emplace( IECore::InternedString( outputChildNames[prototypeIndex] ), std::move( pointIndicesForPrototypeIndex[prototypeIndex] ) );
+			}
+		}
+
+		const EngineData *engine() const
+		{
+			return m_engineData.get();
+		}
+
+		const std::vector<int> & pointIndicesForPrototype( const IECore::InternedString &prototypeName ) const
+		{
+			return m_pointIndicesForPrototype.at( prototypeName );
+		}
+
+
+	protected :
+
+		ConstEngineDataPtr m_engineData;
 		std::unordered_map< InternedString, std::vector<int> > m_pointIndicesForPrototype;
 };
 
@@ -1167,7 +1202,7 @@ Instancer::Instancer( const std::string &name )
 	addChild( new StringPlug( "scale", Plug::In ) );
 	addChild( new StringPlug( "attributes", Plug::In ) );
 	addChild( new StringPlug( "attributePrefix", Plug::In ) );
-	addChild( new BoolPlug( "encapsulateInstanceGroups", Plug::In ) );
+	addChild( new BoolPlug( "encapsulate", Plug::In ) );
 	addChild( new BoolPlug( "seedEnabled", Plug::In ) );
 	addChild( new StringPlug( "seedVariable", Plug::In, "seed" ) );
 	addChild( new IntPlug( "seeds", Plug::In, 10, 1 ) );
@@ -1177,6 +1212,7 @@ Instancer::Instancer( const std::string &name )
 	addChild( new ContextVariablePlug( "timeOffset", Plug::In, false, Plug::Flags::Default ) );
 	addChild( new AtomicCompoundDataPlug( "variations", Plug::Out, new CompoundData() ) );
 	addChild( new ObjectPlug( "__engine", Plug::Out, NullObject::defaultNullObject() ) );
+	addChild( new ObjectPlug( "__engineSplitPrototypes", Plug::Out, NullObject::defaultNullObject() ) );
 	addChild( new ScenePlug( "__capsuleScene", Plug::Out ) );
 	addChild( new PathMatcherDataPlug( "__setCollaborate", Plug::Out, new IECore::PathMatcherData() ) );
 
@@ -1325,12 +1361,12 @@ const Gaffer::StringPlug *Instancer::attributePrefixPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 12 );
 }
 
-Gaffer::BoolPlug *Instancer::encapsulateInstanceGroupsPlug()
+Gaffer::BoolPlug *Instancer::encapsulatePlug()
 {
 	return getChild<BoolPlug>( g_firstPlugIndex + 13 );
 }
 
-const Gaffer::BoolPlug *Instancer::encapsulateInstanceGroupsPlug() const
+const Gaffer::BoolPlug *Instancer::encapsulatePlug() const
 {
 	return getChild<BoolPlug>( g_firstPlugIndex + 13 );
 }
@@ -1425,24 +1461,34 @@ const Gaffer::ObjectPlug *Instancer::enginePlug() const
 	return getChild<ObjectPlug>( g_firstPlugIndex + 22 );
 }
 
+Gaffer::ObjectPlug *Instancer::engineSplitPrototypesPlug()
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex + 23 );
+}
+
+const Gaffer::ObjectPlug *Instancer::engineSplitPrototypesPlug() const
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex + 23 );
+}
+
 GafferScene::ScenePlug *Instancer::capsuleScenePlug()
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 23 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 24 );
 }
 
 const GafferScene::ScenePlug *Instancer::capsuleScenePlug() const
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 23 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 24 );
 }
 
 Gaffer::PathMatcherDataPlug *Instancer::setCollaboratePlug()
 {
-	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 24 );
+	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 25 );
 }
 
 const Gaffer::PathMatcherDataPlug *Instancer::setCollaboratePlug() const
 {
-	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 24 );
+	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 25 );
 }
 
 void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
@@ -1476,11 +1522,18 @@ void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) co
 		outputs.push_back( enginePlug() );
 	}
 
+	if(
+		input == enginePlug()
+	)
+	{
+		outputs.push_back( engineSplitPrototypesPlug() );
+	}
+
 	// For the affects of our output plug, we can mostly rely on BranchCreator's mechanism driven
 	// by affectsBranchObject etc., but for these 3 plugs, we have an overridden hash/compute
 	// which in addition to everything that BranchCreator handles, are also affected by
-	// encapsulateInstanceGroupsPlug()
-	if( input == encapsulateInstanceGroupsPlug() )
+	// encapsulatePlug()
+	if( input == encapsulatePlug() )
 	{
 		outputs.push_back( outPlug()->objectPlug() );
 		outputs.push_back( outPlug()->childNamesPlug() );
@@ -1490,7 +1543,7 @@ void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) co
 	if(
 		input->parent() == prototypesPlug() &&
 		input != prototypesPlug()->globalsPlug() &&
-		!encapsulateInstanceGroupsPlug()->isSetToDefault()
+		!encapsulatePlug()->isSetToDefault()
 	)
 	{
 		outputs.push_back( outPlug()->objectPlug() );
@@ -1522,7 +1575,7 @@ void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) co
 	}
 
 	if(
-		input == enginePlug() ||
+		input == engineSplitPrototypesPlug() ||
 		input == prototypesPlug()->setPlug() ||
 		input == namePlug()
 	)
@@ -1552,6 +1605,7 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 		scalePlug()->hash( h );
 		attributesPlug()->hash( h );
 		attributePrefixPlug()->hash( h );
+		encapsulatePlug()->hash( h );
 
 		seedEnabledPlug()->hash( h );
 		seedVariablePlug()->hash( h );
@@ -1575,6 +1629,10 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 			timeOffsetPlug()->quantizePlug()->hash( h );
 		}
 	}
+	else if( output == engineSplitPrototypesPlug() )
+	{
+		enginePlug()->hash( h );
+	}
 	else if( output == variationsPlug() )
 	{
 		// The sum of the variations across different engines depends on all the engines, but
@@ -1595,7 +1653,9 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 	{
 		const ScenePath &sourcePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
 
-		ConstEngineDataPtr engine = this->engine( sourcePath, context );
+		ConstEngineSplitPrototypesDataPtr esp = this->engineSplitPrototypes( sourcePath, context );
+		const EngineData *engine = esp->engine();
+
 		if( !engine->hasContextVariables() )
 		{
 			// We use a slightly approximate version of hasContextVariables in hashBranchSet, to
@@ -1622,7 +1682,7 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 
 		for( const auto &prototypeName : engine->prototypeNames()->readable() )
 		{
-			const std::vector<int> &pointIndicesForPrototype = engine->pointIndicesForPrototype( prototypeName );
+			const std::vector<int> &pointIndicesForPrototype = esp->pointIndicesForPrototype( prototypeName );
 
 			std::atomic<uint64_t> h1Accum( 0 ), h2Accum( 0 );
 			const ThreadState &threadState = ThreadState::current();
@@ -1780,6 +1840,15 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 		);
 		return;
 	}
+	else if( output == engineSplitPrototypesPlug() )
+	{
+		static_cast<ObjectPlug *>( output )->setValue(
+			new EngineSplitPrototypesData(
+				boost::static_pointer_cast<const EngineData>( enginePlug()->getValue() )
+			)
+		);
+		return;
+	}
 	else if( output == variationsPlug() )
 	{
 		// Compute the number of variations by accumulating massive lists of unique hashes from all EngineDatas
@@ -1848,7 +1917,8 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 	{
 		const ScenePath &sourcePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
 
-		ConstEngineDataPtr engine = this->engine( sourcePath, context );
+		ConstEngineSplitPrototypesDataPtr esp = this->engineSplitPrototypes( sourcePath, context );
+		const EngineData* engine = esp->engine();
 
 		PathMatcherDataPtr outputSetData = new PathMatcherData;
 		PathMatcher &outputSet = outputSetData->writable();
@@ -1863,7 +1933,7 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 			branchPath.back() = prototypeName;
 			const ScenePlug::ScenePath *prototypeRoot = engine->prototypeRoot( prototypeName );
 
-			const std::vector<int> &pointIndicesForPrototype = engine->pointIndicesForPrototype( prototypeName );
+			const std::vector<int> &pointIndicesForPrototype = esp->pointIndicesForPrototype( prototypeName );
 
 			tbb::spin_mutex instanceMutex;
 			branchPath.emplace_back( InternedString() );
@@ -1928,7 +1998,7 @@ Gaffer::ValuePlug::CachePolicy Instancer::hashCachePolicy( const Gaffer::ValuePl
 bool Instancer::affectsBranchBound( const Gaffer::Plug *input ) const
 {
 	return
-		input == enginePlug() ||
+		input == engineSplitPrototypesPlug() ||
 		input == namePlug() ||
 		input == prototypesPlug()->boundPlug() ||
 		input == prototypesPlug()->transformPlug() ||
@@ -1993,17 +2063,18 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &sourcePath, const S
 		// because we have direct access to the engine, we can implement this
 		// more efficiently than `ScenePlug::childBounds()`.
 
-		ConstEngineDataPtr e = engine( sourcePath, context );
+		ConstEngineSplitPrototypesDataPtr esp = engineSplitPrototypes( sourcePath, context );
+		const EngineData *e = esp->engine();
 
 		M44f childTransform;
 		Box3f childBound;
 		{
-			PrototypeScope scope( e.get(), context, &sourcePath, &branchPath );
+			PrototypeScope scope( esp->engine(), context, &sourcePath, &branchPath );
 			childTransform = prototypesPlug()->transformPlug()->getValue();
 			childBound = prototypesPlug()->boundPlug()->getValue();
 		}
 
-		const std::vector<int> &pointIndicesForPrototype = e->pointIndicesForPrototype( branchPath.back() );
+		const std::vector<int> &pointIndicesForPrototype = esp->pointIndicesForPrototype( branchPath.back() );
 
 		// TODO - might be worth using a looser approximation - expand point cloud bound by largest diagonal of
 		// prototype bound x largest scale. Especially since this isn't fully accurate anyway: we are getting a
@@ -2218,7 +2289,7 @@ IECore::ConstObjectPtr Instancer::computeBranchObject( const ScenePath &sourcePa
 
 void Instancer::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	if( parent != capsuleScenePlug() && encapsulateInstanceGroupsPlug()->getValue() )
+	if( parent != capsuleScenePlug() && encapsulatePlug()->getValue() )
 	{
 		// Handling this special case here means an extra call to sourceAndBranchPaths
 		// when we're encapsulating and we're not inside a branch - this is a small
@@ -2227,7 +2298,7 @@ void Instancer::hashObject( const ScenePath &path, const Gaffer::Context *contex
 		// BranchCreator, without exposing any new API surface
 		ScenePath sourcePath, branchPath;
 		parentAndBranchPaths( path, sourcePath, branchPath );
-		if( branchPath.size() == 2 )
+		if( branchPath.size() == 1 )
 		{
 			BranchCreator::hashBranchObject( sourcePath, branchPath, context, h );
 			h.append( reinterpret_cast<uint64_t>( this ) );
@@ -2251,11 +2322,11 @@ void Instancer::hashObject( const ScenePath &path, const Gaffer::Context *contex
 
 IECore::ConstObjectPtr Instancer::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( parent != capsuleScenePlug() && encapsulateInstanceGroupsPlug()->getValue() )
+	if( parent != capsuleScenePlug() && encapsulatePlug()->getValue() )
 	{
 		ScenePath sourcePath, branchPath;
 		parentAndBranchPaths( path, sourcePath, branchPath );
-		if( branchPath.size() == 2 )
+		if( branchPath.size() == 1 )
 		{
 			return new InstancerCapsule(
 				this,
@@ -2275,7 +2346,7 @@ bool Instancer::affectsBranchChildNames( const Gaffer::Plug *input ) const
 {
 	return
 		input == namePlug() ||
-		input == enginePlug()
+		input == engineSplitPrototypesPlug()
 	;
 }
 
@@ -2297,7 +2368,7 @@ void Instancer::hashBranchChildNames( const ScenePath &sourcePath, const ScenePa
 	{
 		// "/instances/<prototypeName>"
 		BranchCreator::hashBranchChildNames( sourcePath, branchPath, context, h );
-		engineHash( sourcePath, context, h );
+		engineSplitPrototypesHash( sourcePath, context, h );
 		h.append( branchPath.back() );
 	}
 	else
@@ -2331,9 +2402,9 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 	{
 		// "/instances/<prototypeName>"
 
-		ConstEngineDataPtr engineData = engine( sourcePath, context );
+		ConstEngineSplitPrototypesDataPtr esp = engineSplitPrototypes( sourcePath, context );
 
-		const std::vector<int> &pointIndicesForPrototype = engineData->pointIndicesForPrototype( branchPath.back() );
+		const std::vector<int> &pointIndicesForPrototype = esp->pointIndicesForPrototype( branchPath.back() );
 
 		// The children of the prototypeName are all the instances which use this prototype,
 		// which we can query from the engine - however the names we output under use
@@ -2343,6 +2414,7 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 		std::vector<int> ids;
 		ids.reserve( pointIndicesForPrototype.size() );
 
+		const EngineData *engineData = esp->engine();
 		for( int q : pointIndicesForPrototype )
 		{
 			ids.push_back( engineData->instanceId( q ) );
@@ -2372,11 +2444,11 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 
 void Instancer::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	if( parent != capsuleScenePlug() && encapsulateInstanceGroupsPlug()->getValue() )
+	if( parent != capsuleScenePlug() && encapsulatePlug()->getValue() )
 	{
 		ScenePath sourcePath, branchPath;
 		parentAndBranchPaths( path, sourcePath, branchPath );
-		if( branchPath.size() == 2 )
+		if( branchPath.size() == 1 )
 		{
 			h = outPlug()->childNamesPlug()->defaultValue()->Object::hash();
 			return;
@@ -2388,11 +2460,11 @@ void Instancer::hashChildNames( const ScenePath &path, const Gaffer::Context *co
 
 IECore::ConstInternedStringVectorDataPtr Instancer::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( parent != capsuleScenePlug() && encapsulateInstanceGroupsPlug()->getValue() )
+	if( parent != capsuleScenePlug() && encapsulatePlug()->getValue() )
 	{
 		ScenePath sourcePath, branchPath;
 		parentAndBranchPaths( path, sourcePath, branchPath );
-		if( branchPath.size() == 2 )
+		if( branchPath.size() == 1 )
 		{
 			return outPlug()->childNamesPlug()->defaultValue();
 		}
@@ -2512,7 +2584,7 @@ IECore::ConstPathMatcherDataPtr Instancer::computeBranchSet( const ScenePath &so
 
 void Instancer::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	if( parent != capsuleScenePlug() && encapsulateInstanceGroupsPlug()->getValue() )
+	if( parent != capsuleScenePlug() && encapsulatePlug()->getValue() )
 	{
 		h = inPlug()->setPlug()->hash();
 		return;
@@ -2523,7 +2595,7 @@ void Instancer::hashSet( const IECore::InternedString &setName, const Gaffer::Co
 
 IECore::ConstPathMatcherDataPtr Instancer::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( parent != capsuleScenePlug() && encapsulateInstanceGroupsPlug()->getValue() )
+	if( parent != capsuleScenePlug() && encapsulatePlug()->getValue() )
 	{
 		return inPlug()->setPlug()->getValue();
 	}
@@ -2541,6 +2613,18 @@ void Instancer::engineHash( const ScenePath &sourcePath, const Gaffer::Context *
 {
 	ScenePlug::PathScope scope( context, &sourcePath );
 	enginePlug()->hash( h );
+}
+
+Instancer::ConstEngineSplitPrototypesDataPtr Instancer::engineSplitPrototypes( const ScenePath &sourcePath, const Gaffer::Context *context ) const
+{
+	ScenePlug::PathScope scope( context, &sourcePath );
+	return boost::static_pointer_cast<const EngineSplitPrototypesData>( engineSplitPrototypesPlug()->getValue() );
+}
+
+void Instancer::engineSplitPrototypesHash( const ScenePath &sourcePath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ScenePlug::PathScope scope( context, &sourcePath );
+	engineSplitPrototypesPlug()->hash( h );
 }
 
 const std::type_info &Instancer::instancerCapsuleTypeInfo()
@@ -2684,16 +2768,19 @@ typedef boost::intrusive_ptr< const Prototype > ConstPrototypePtr;
 struct PrototypeCacheGetterKey
 {
 
-	PrototypeCacheGetterKey( const Context *context )
-		: context( context )
+	PrototypeCacheGetterKey( int prototypeId, const Context *context )
+		: prototypeId( prototypeId ), context( context )
 	{
 	}
 
 	operator IECore::MurmurHash () const
 	{
-		return context->hash();
+		IECore::MurmurHash result = context->hash();
+		result.append( prototypeId );
+		return result;
 	}
 
+	const int prototypeId;
 	const Context *context;
 };
 
@@ -2712,9 +2799,9 @@ void Instancer::InstancerCapsule::render( IECoreScenePreview::Renderer *renderer
 	// ============================================================================
 
 	const float onFrameTime = context()->getFrame();
-	Context::EditableScope scope( context() );
+	const Context::Scope scope( context() );
 
-	const ScenePlug::ScenePath enginePath( root().begin(), root().begin() + root().size() - 2 );
+	const ScenePlug::ScenePath enginePath( root().begin(), root().begin() + root().size() - 1 );
 
 	const GafferScene::Private::RendererAlgo::RenderOptions renderOpts = renderOptions();
 
@@ -2740,51 +2827,73 @@ void Instancer::InstancerCapsule::render( IECoreScenePreview::Renderer *renderer
 	// ============================================================================
 
 	std::vector< ConstEngineDataPtr > engines( sampleTimes.size() );
-	for( unsigned int i = 0; i < sampleTimes.size(); i++ )
 	{
-		scope.setFrame( sampleTimes[i] );
-		engines[i] = m_instancer->engine( enginePath, scope.context() );
+		Context::EditableScope frameScope( context() );
+		for( unsigned int i = 0; i < sampleTimes.size(); i++ )
+		{
+			frameScope.setFrame( sampleTimes[i] );
+			engines[i] = m_instancer->engine( enginePath, frameScope.context() );
+		}
 	}
 
-	scope.setFrame( onFrameTime );
-
 	// ============================================================================
-	// Get a constant prototype ( or set up cache that will be used to find
-	// prototypes if the protoype is not constant )
+	// Set up a vector of all the prototypes
+	// Or, if the prototypes depend on context, so there is no fixed prototype for
+	// each prototype index, set up cache that will be used to find each
+	// prototype
 	// ============================================================================
-	const ScenePlug::ScenePath *prototypeRoot = engines[0]->prototypeRoot( root().back() );
-
 	const ScenePlug *prototypesPlug = m_instancer->prototypesPlug();
 
 	const IECore::MurmurHash outerCapsuleHash = Object::hash();
 
 	const bool hasAttributes = engines[0]->numInstanceAttributes() > 0;
 
-	// If constantPrototype is set, then every instance will use the same prototype.
-	ConstPrototypePtr constantPrototype;
+	task_group_context taskGroupContext( task_group_context::isolated );
+	const ThreadState &threadState = ThreadState::current();
+
+	// fixedPrototypes is used when the prototypes don't depend on context
+	std::vector<ConstPrototypePtr> fixedPrototypes;
 	if( !engines[0]->hasContextVariables() )
 	{
-		constantPrototype = new Prototype(
-			prototypesPlug, prototypeRoot, sampleTimes, outerCapsuleHash, renderOpts,
-			scope.context(), renderer,
-			// If we don't have instance attributes, we can prepare renderer attributes ahead of time
-			!hasAttributes
+		fixedPrototypes.resize( engines[0]->numValidPrototypes() );
+
+		const ThreadState &threadState = ThreadState::current();
+		tbb::parallel_for( tbb::blocked_range<size_t>( 0, fixedPrototypes.size() ),
+			[&]( const tbb::blocked_range<size_t> &r )
+			{
+				Context::EditableScope threadScope( threadState );
+
+				for( size_t i = r.begin(); i != r.end(); ++i )
+				{
+					fixedPrototypes[i] = new Prototype(
+						prototypesPlug, engines[0]->prototypeRoot( i ), sampleTimes, outerCapsuleHash, renderOpts,
+						threadScope.context(), renderer,
+						// If we don't have instance attributes, we can prepare renderer attributes ahead of time
+						!hasAttributes
+					);
+
+				}
+			},
+			taskGroupContext
 		);
+
 	}
 
-	// If constantPrototype is not set, we will put prototypes in this cache whenever we first encounter
+	const Context *defaultContext = context();
+
+	// If fixedPrototypes is not set, we will put prototypes in this cache whenever we first encounter
 	// a prototype using a given context.
 	IECorePreview::LRUCache<IECore::MurmurHash, ConstPrototypePtr, IECorePreview::LRUCachePolicy::Parallel, PrototypeCacheGetterKey> prototypeCache(
 		[
-			&prototypesPlug, &prototypeRoot, &sampleTimes, &outerCapsuleHash, &renderOpts,
-			&renderer, &hasAttributes
+			&prototypesPlug, &sampleTimes, &outerCapsuleHash, &renderOpts,
+			&renderer, &hasAttributes, &engines, &defaultContext
 		]
 		( const PrototypeCacheGetterKey &key, size_t &cost, const IECore::Canceller *canceller ) -> ConstPrototypePtr
 		{
 			cost = 1;
 			return new Prototype(
-				prototypesPlug, prototypeRoot, sampleTimes, outerCapsuleHash, renderOpts,
-				key.context, renderer,
+				prototypesPlug, engines[0]->prototypeRoot( key.prototypeId ), sampleTimes, outerCapsuleHash, renderOpts,
+				key.context ? key.context : defaultContext, renderer,
 				// If we don't have instance attributes, we can prepare renderer attributes ahead of time
 				!hasAttributes
 			);
@@ -2796,34 +2905,38 @@ void Instancer::InstancerCapsule::render( IECoreScenePreview::Renderer *renderer
 	// Output the instances
 	// ============================================================================
 
-	const std::vector<int> &pointIndicesForPrototype = engines[0]->pointIndicesForPrototype( root().back() );
-
 	// We've found problems with performance when running too many iterations in parallel, which appear
 	// to be related with hitting AiNode too hard in parallel ( perhaps related to threads spread between
 	// separate processors ). To partially solve this, we set the grain size so that we shouldn't use more
 	// than 32 threads, which appears to help some in testing.
-	size_t grainSize = std::max( (size_t)1, pointIndicesForPrototype.size() / 32 );
-	task_group_context taskGroupContext( task_group_context::isolated );
+	size_t grainSize = std::max( (size_t)1, engines[0]->numPoints() / 32 );
 
-	const ThreadState &threadState = ThreadState::current();
-	tbb::parallel_for( tbb::blocked_range<size_t>( 0, pointIndicesForPrototype.size(), grainSize ),
+	tbb::parallel_for( tbb::blocked_range<size_t>( 0, engines[0]->numPoints(), grainSize ),
 		[&]( const tbb::blocked_range<size_t> &r )
 		{
 			Context::EditableScope prototypeScope( threadState );
 
 			vector<M44f> pointTransforms( sampleTimes.size() );
-			std::string name;
 			IECoreScenePreview::Renderer::AttributesInterfacePtr attribsStorage;
 
+			// Storage for names, indexed by prototype id ( each instance of the same prototype
+			// will reuse this storage )
+			std::vector< std::string > names( engines[0]->numValidPrototypes() );
+			std::vector< int > namePrefixLengths( engines[0]->numValidPrototypes() );
 
-			for( size_t idx = r.begin(); idx != r.end(); ++idx )
+			for( size_t pointIndex = r.begin(); pointIndex != r.end(); ++pointIndex )
 			{
-				int pointIndex = pointIndicesForPrototype[idx];
+				int protoIndex = engines[0]->prototypeIndex( pointIndex );
+				if( protoIndex == -1 )
+				{
+					// Invalid prototype
+					continue;
+				}
 
 				const Prototype *proto;
-				if( constantPrototype )
+				if( fixedPrototypes.size() )
 				{
-					proto = constantPrototype.get();
+					proto = fixedPrototypes[protoIndex].get();
 				}
 				else
 				{
@@ -2843,7 +2956,7 @@ void Instancer::InstancerCapsule::render( IECoreScenePreview::Renderer *renderer
 
 					engines[0]->setPrototypeContextVariables( pointIndex, prototypeScope );
 
-					proto = prototypeCache.get( PrototypeCacheGetterKey( prototypeScope.context() ) ).get();
+					proto = prototypeCache.get( PrototypeCacheGetterKey( protoIndex, prototypeScope.context() ) ).get();
 				}
 
 				if( !proto->m_object.size() )
@@ -2875,10 +2988,27 @@ void Instancer::InstancerCapsule::render( IECoreScenePreview::Renderer *renderer
 
 				int instanceId = engines[0]->instanceId( pointIndex );
 
-				// We are running inside a procedural, so we don't need globally unique name. We are making a whole
-				// lot of these names for instances, so we make these names as absolutely minimal as possible.
-				name.resize( std::numeric_limits< int >::digits10 + 1 );
-				name.resize( std::to_chars( &name[0], &(*name.end()), instanceId ).ptr - &name[0] );
+
+				if( !namePrefixLengths[protoIndex] )
+				{
+					// If we haven't allocated a name for this prototype index, allocate it now,
+					// including additional storage that will hold the digits for each instance id
+					const std::string &protoName = engines[0]->prototypeNames()->readable()[ protoIndex ].string();
+					names[protoIndex].reserve( protoName.size() + std::numeric_limits< int >::digits10 + 1 );
+					names[protoIndex] += protoName;
+					names[protoIndex].append( 1, '/' );
+					namePrefixLengths[protoIndex] = names[protoIndex].size();
+				}
+
+				// Create a name by concatenating the name of the prototype with digits of the current
+				// instance id.
+				// Including the prototype name is not necessary for uniqueness ( the instance ids are
+				// already unique ), but doing this keeps the names more consistent with how things end
+				// up being named when they use the non-encapsulated hierarchy.
+				std::string &name = names[ protoIndex ];
+				const int prefixLen = namePrefixLengths[ protoIndex ];
+				name.resize( namePrefixLengths[protoIndex] + std::numeric_limits< int >::digits10 + 1 );
+				name.resize( std::to_chars( &name[prefixLen], &(*name.end()), instanceId ).ptr - &name[0] );
 
 				IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface;
 				if( proto->m_objectSampleTimes.size() )

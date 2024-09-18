@@ -44,6 +44,8 @@ def __instancerGetItem( originalGetItem ) :
 			key = "prototypes"
 		elif key == "index" :
 			key = "prototypeIndex"
+		elif key == "encapsulateInstanceGroups" :
+			key = "encapsulate"
 
 		return originalGetItem( self, key )
 

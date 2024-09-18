@@ -144,8 +144,8 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 		Gaffer::StringPlug *attributePrefixPlug();
 		const Gaffer::StringPlug *attributePrefixPlug() const;
 
-		Gaffer::BoolPlug *encapsulateInstanceGroupsPlug();
-		const Gaffer::BoolPlug *encapsulateInstanceGroupsPlug() const;
+		Gaffer::BoolPlug *encapsulatePlug();
+		const Gaffer::BoolPlug *encapsulatePlug() const;
 
 		Gaffer::BoolPlug *seedEnabledPlug();
 		const Gaffer::BoolPlug *seedEnabledPlug() const;
@@ -223,10 +223,15 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 	private :
 
 		IE_CORE_FORWARDDECLARE( EngineData );
+		IE_CORE_FORWARDDECLARE( EngineSplitPrototypesData );
 		IE_CORE_FORWARDDECLARE( InstancerCapsule );
 
 		Gaffer::ObjectPlug *enginePlug();
 		const Gaffer::ObjectPlug *enginePlug() const;
+
+		Gaffer::ObjectPlug *engineSplitPrototypesPlug();
+		const Gaffer::ObjectPlug *engineSplitPrototypesPlug() const;
+
 
 		GafferScene::ScenePlug *capsuleScenePlug();
 		const GafferScene::ScenePlug *capsuleScenePlug() const;
@@ -239,6 +244,9 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 
 		ConstEngineDataPtr engine( const ScenePath &sourcePath, const Gaffer::Context *context ) const;
 		void engineHash( const ScenePath &sourcePath, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+
+		ConstEngineSplitPrototypesDataPtr engineSplitPrototypes( const ScenePath &sourcePath, const Gaffer::Context *context ) const;
+		void engineSplitPrototypesHash( const ScenePath &sourcePath, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 
 		struct PrototypeScope : public Gaffer::Context::EditableScope
 		{
