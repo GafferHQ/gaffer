@@ -293,12 +293,13 @@ Inspector::EditFunctionOrFailure OptionInspector::editFunction( Gaffer::EditScop
 				renderPass,
 				option = m_option,
 				context = history->context
-			] () {
+			] ( bool createIfNecessary ) {
 				Context::Scope scope( context.get() );
 				return EditScopeAlgo::acquireRenderPassOptionEdit(
 					editScope.get(),
 					renderPass,
-					option
+					option,
+					createIfNecessary
 				);
 			};
 		}
@@ -326,11 +327,12 @@ Inspector::EditFunctionOrFailure OptionInspector::editFunction( Gaffer::EditScop
 				editScope = EditScopePtr( editScope ),
 				option = m_option,
 				context = history->context
-			] () {
+			] ( bool createIfNecessary ) {
 				Context::Scope scope( context.get() );
 				return EditScopeAlgo::acquireOptionEdit(
 					editScope.get(),
-					option
+					option,
+					createIfNecessary
 				);
 			};
 		}

@@ -28,6 +28,7 @@ Improvements
 - Spreadsheet : Added yellow underlining to the currently active row.
 - PlugLayout : Summaries and activators are now evaluated in a context determined relative to the focus node.
 - Editor : The node graph is now evaluated in a context determined relative to the focus node.
+- LightEditor, RenderPassEditor : The "Disable Edit" right-click menu item and <kdb>D</kdb> shortcut now act as a toggle, where edits disabled in the current session via these actions can be reenabled with <kbd>D</kbd> or by selecting "Reenable Edit" from the right-click menu.
 
 Fixes
 -----
@@ -55,6 +56,7 @@ Fixes
 - FreezeTransform : Constant primitive variables with point/vector interpretations are now also transformed.
 - usdview : Added Windows support (#5599).
 - ContextTracker : Removed unnecessary reference increment/decrement from `isTracked()`, `context()` and `isEnabled()`.
+- Menu : Fixed bug causing a menu item's tooltip to not hide when moving the cursor to another menu item without a tooltip.
 
 API
 ---

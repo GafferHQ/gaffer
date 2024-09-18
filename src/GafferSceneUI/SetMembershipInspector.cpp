@@ -127,6 +127,71 @@ HistoryCache g_historyCache(
 
 );
 
+bool editSetMembership( Gaffer::Plug *plug, const std::string &setName, const ScenePlug::ScenePath &path, EditScopeAlgo::SetMembership setMembership )
+{
+	if( auto objectNode = runTimeCast<ObjectSource>( plug->node() ) )
+	{
+		std::vector<std::string> sets;
+		IECore::StringAlgo::tokenize( objectNode->setsPlug()->getValue(), ' ', sets );
+
+		if( setMembership == EditScopeAlgo::SetMembership::Added )
+		{
+			if( std::find( sets.begin(), sets.end(), setName ) == sets.end() )
+			{
+				sets.push_back( setName );
+			}
+		}
+		else
+		{
+			sets.erase( std::remove( sets.begin(), sets.end(), setName ), sets.end() );
+		}
+
+		objectNode->setsPlug()->setValue( boost::algorithm::join( sets, " " ) );
+
+		return true;
+	}
+
+	if( auto cells = runTimeCast<Gaffer::ValuePlug>( plug ) )
+	{
+		auto row = cells->parent<Spreadsheet::RowPlug>();
+		auto editScope = cells->ancestor<EditScope>();
+		if( row && editScope )
+		{
+			PathMatcher m;
+			m.addPath( path );
+			EditScopeAlgo::setSetMembership(
+				editScope,
+				m,
+				setName,
+				setMembership
+			);
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
+std::string nonDisableableReason( const Gaffer::Plug *plug, const std::string &setName )
+{
+	if( const GraphComponent *readOnlyReason = MetadataAlgo::readOnlyReason( plug ) )
+	{
+		return fmt::format( "{} is locked.", readOnlyReason->relativeName( readOnlyReason->ancestor<ScriptNode>() ) );
+	}
+	else if( auto objectNode = runTimeCast<const ObjectSource>( plug->node() ) )
+	{
+		std::vector<std::string> sets;
+		IECore::StringAlgo::tokenize( objectNode->setsPlug()->getValue(), ' ', sets );
+		if( std::find( sets.begin(), sets.end(), setName ) == sets.end() )
+		{
+			return fmt::format( "{} has no edit to disable.", plug->relativeName( plug->ancestor<ScriptNode>() ) );
+		}
+	}
+
+	return "";
+}
+
 }  // namespace
 
 SetMembershipInspector::SetMembershipInspector(
@@ -148,50 +213,7 @@ m_setName( setName )
 
 bool SetMembershipInspector::editSetMembership( const Result *inspection, const ScenePlug::ScenePath &path, EditScopeAlgo::SetMembership setMembership ) const
 {
-	PlugPtr plug = inspection->acquireEdit();
-
-	if( auto objectNode = runTimeCast<ObjectSource>( plug->node() ) )
-	{
-		std::vector<std::string> sets;
-		IECore::StringAlgo::tokenize( objectNode->setsPlug()->getValue(), ' ', sets );
-
-		if( setMembership == EditScopeAlgo::SetMembership::Added )
-		{
-			if( std::find( sets.begin(), sets.end(), m_setName.string() ) == sets.end() )
-			{
-				sets.push_back( m_setName.string() );
-			}
-		}
-		else
-		{
-			sets.erase( std::remove( sets.begin(), sets.end(), m_setName.string() ), sets.end() );
-		}
-
-		objectNode->setsPlug()->setValue( boost::algorithm::join( sets, " " ) );
-
-		return true;
-	}
-
-	if( auto cells = runTimeCast<Gaffer::ValuePlug>( plug ) )
-	{
-		auto row = cells->parent<Spreadsheet::RowPlug>();
-		auto editScope = cells->ancestor<EditScope>();
-		if( row && editScope )
-		{
-			PathMatcher m;
-			m.addPath( path );
-			EditScopeAlgo::setSetMembership(
-				editScope,
-				m,
-				m_setName.string(),
-				setMembership
-			);
-
-			return true;
-		}
-	}
-
-	return false;
+	return ::editSetMembership( inspection->acquireEdit().get(), m_setName.string(), path, setMembership );
 }
 
 GafferScene::SceneAlgo::History::ConstPtr SetMembershipInspector::history() const
@@ -312,9 +334,29 @@ Inspector::EditFunctionOrFailure SetMembershipInspector::editFunction( Gaffer::E
 			editScope = editScope,
 			setName,
 			context = history->context
-		] () {
+		] ( bool createIfNecessary ) {
 			Context::Scope scope( context.get() );
-			return EditScopeAlgo::acquireSetEdits( editScope, setName );
+			return EditScopeAlgo::acquireSetEdits( editScope, setName, createIfNecessary );
+		};
+	}
+}
+
+Inspector::DisableEditFunctionOrFailure SetMembershipInspector::disableEditFunction( Gaffer::ValuePlug *plug, const GafferScene::SceneAlgo::History *history ) const
+{
+	const std::string nonDisableableReason = ::nonDisableableReason( plug, m_setName );
+
+	if( !nonDisableableReason.empty() )
+	{
+		return nonDisableableReason;
+	}
+	else
+	{
+		return [
+			plug = PlugPtr( plug ),
+			setName = m_setName,
+			path = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName )
+		] () {
+			return ::editSetMembership( plug.get(), setName.string(), path, EditScopeAlgo::SetMembership::Unchanged );
 		};
 	}
 }

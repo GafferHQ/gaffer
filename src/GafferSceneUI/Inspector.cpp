@@ -38,6 +38,7 @@
 
 #include "Gaffer/Animation.h"
 #include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/OptionalValuePlug.h"
 #include "Gaffer/PathFilter.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Spreadsheet.h"
@@ -211,18 +212,23 @@ Inspector::ResultPtr Inspector::inspect() const
 
 	if( result->editScope() && !result->m_editScopeInHistory )
 	{
-		result->m_editFunction = fmt::format(
-			"The target EditScope ({}) is not in the scene history.",
+		const std::string nonEditableReason = fmt::format(
+			"The target edit scope {} is not in the scene history.",
 			result->editScope()->relativeName( result->editScope()->scriptNode() )
 		);
+		result->m_editFunction = nonEditableReason;
+		result->m_disableEditFunction = nonEditableReason;
 		result->m_sourceType = Result::SourceType::Other;
 	}
-
-	else if( !result->m_source && !result->editable() )
+	else if( !result->m_source )
 	{
-		// There's no source plug and no way of making
-		// the property.
-		result->m_editFunction = "No editable source found in history.";
+		if( !result->editable() )
+		{
+			// There's no source plug and no way of making
+			// the property.
+			result->m_editFunction = "No editable source found in history.";
+		}
+		result->m_disableEditFunction = "No editable source found in history.";
 	}
 
 	if( fallbackValue )
@@ -289,13 +295,26 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 
 						if( nonEditableReason.empty() )
 						{
-							result->m_editFunction = [source = result->m_source] () { return source; };
+							result->m_editFunction = [source = result->m_source] ( bool unused ) { return source; };
+							result->m_disableEditFunction = disableEditFunction( result->m_source.get(), history );
 							result->m_editWarning = editWarning;
 						}
 						else
 						{
 							result->m_editFunction = nonEditableReason;
+							result->m_disableEditFunction = nonEditableReason;
 						}
+					}
+					else if( node->ancestor<EditScope>() && node->ancestor<EditScope>() != result->m_editScope )
+					{
+						result->m_disableEditFunction = fmt::format(
+							"Edit is not in the current edit scope. Change scope to {} to disable.",
+							node->ancestor<EditScope>()->relativeName( node->ancestor<EditScope>()->scriptNode() )
+						);
+					}
+					else if( !node->ancestor<EditScope>() && result->m_editScope )
+					{
+						result->m_disableEditFunction = "Edit is not in the current edit scope. Change scope to None to disable.";
 					}
 				}
 			}
@@ -338,7 +357,7 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 			else
 			{
 				result->m_editFunction = fmt::format(
-					"The target EditScope ({}) is disabled.",
+					"The target edit scope {} is disabled.",
 					editScope->relativeName( editScope->scriptNode() )
 				);
 			}
@@ -366,6 +385,47 @@ Gaffer::ValuePlugPtr Inspector::source( const GafferScene::SceneAlgo::History *h
 Inspector::EditFunctionOrFailure Inspector::editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
 {
 	return "Editing not supported";
+}
+
+Inspector::DisableEditFunctionOrFailure Inspector::disableEditFunction( Gaffer::ValuePlug *plug, const GafferScene::SceneAlgo::History *history ) const
+{
+	Gaffer::BoolPlugPtr enabledPlug;
+	if( auto tweakPlug = runTimeCast<TweakPlug>( plug ) )
+	{
+		enabledPlug = tweakPlug->enabledPlug();
+	}
+	else if( auto nameValuePlug = runTimeCast<NameValuePlug>( plug ) )
+	{
+		enabledPlug = nameValuePlug->enabledPlug();
+	}
+	else if( auto optionalValuePlug = runTimeCast<OptionalValuePlug>( plug ) )
+	{
+		enabledPlug = optionalValuePlug->enabledPlug();
+	}
+
+	if( enabledPlug )
+	{
+		if( const GraphComponent *readOnlyReason = MetadataAlgo::readOnlyReason( enabledPlug.get() ) )
+		{
+			return fmt::format( "{} is locked.", readOnlyReason->relativeName( readOnlyReason->ancestor<ScriptNode>() ) );
+		}
+		else if( !enabledPlug->settable() )
+		{
+			return fmt::format( "{} is not settable.", enabledPlug->relativeName( enabledPlug->ancestor<ScriptNode>() ) );
+		}
+		else if( !enabledPlug->getValue() )
+		{
+			return fmt::format( "{} is not enabled.", enabledPlug->relativeName( enabledPlug->ancestor<ScriptNode>() ) );
+		}
+		else
+		{
+			return [ enabledPlug ] () { enabledPlug->setValue( false ); };
+		}
+	}
+	else
+	{
+		return "Disabling edits not supported for this plug.";
+	}
 }
 
 IECore::ConstObjectPtr Inspector::fallbackValue( const GafferScene::SceneAlgo::History *history, std::string &description ) const
@@ -666,14 +726,39 @@ std::string Inspector::Result::nonEditableReason() const
 	return "";
 }
 
-Gaffer::ValuePlugPtr Inspector::Result::acquireEdit() const
+Gaffer::ValuePlugPtr Inspector::Result::acquireEdit( bool createIfNecessary ) const
 {
 	if( m_editFunction.which() == 0 )
 	{
-		return boost::get<EditFunction>( m_editFunction )();
+		return boost::get<EditFunction>( m_editFunction )( createIfNecessary );
 	}
 
 	throw IECore::Exception( "Not editable : " + boost::get<std::string>( m_editFunction ) );
+}
+
+bool Inspector::Result::canDisableEdit() const
+{
+	return m_disableEditFunction.which() == 0 && boost::get<DisableEditFunction>( m_disableEditFunction ) != nullptr;
+}
+
+std::string Inspector::Result::nonDisableableReason() const
+{
+	if( m_disableEditFunction.which() == 1 )
+	{
+		return boost::get<std::string>( m_disableEditFunction );
+	}
+
+	return "";
+}
+
+void Inspector::Result::disableEdit() const
+{
+	if( m_disableEditFunction.which() == 0 )
+	{
+		return boost::get<DisableEditFunction>( m_disableEditFunction )();
+	}
+
+	throw IECore::Exception( "Cannot disable edit : " + boost::get<std::string>( m_disableEditFunction ) );
 }
 
 std::string Inspector::Result::editWarning() const

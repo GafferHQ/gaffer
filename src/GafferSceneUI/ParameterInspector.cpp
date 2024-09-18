@@ -215,13 +215,14 @@ Inspector::EditFunctionOrFailure ParameterInspector::editFunction( Gaffer::EditS
 			attributeName = attributeHistory->attributeName,
 			context = attributeHistory->context,
 			parameter = m_parameter
-		] () {
+		] ( bool createIfNecessary ) {
 				Context::Scope scope( context.get() );
 				return EditScopeAlgo::acquireParameterEdit(
 					editScope.get(),
 					context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ),
 					attributeName,
-					parameter
+					parameter,
+					createIfNecessary
 				);
 		};
 	}

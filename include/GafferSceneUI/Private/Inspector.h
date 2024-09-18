@@ -170,7 +170,7 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Si
 		/// history class?
 		virtual Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const;
 
-		using EditFunction = std::function<Gaffer::ValuePlugPtr ()>;
+		using EditFunction = std::function<Gaffer::ValuePlugPtr ( bool createIfNecessary )>;
 		using EditFunctionOrFailure = boost::variant<EditFunction, std::string>;
 		/// Should be implemented to return a function that will acquire
 		/// an edit from the EditScope at the specified point in the history.
@@ -182,6 +182,14 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Si
 		/// > that this will be dealt with in `source()`, returning a result
 		/// > that edits the processor itself.
 		virtual EditFunctionOrFailure editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const;
+
+		using DisableEditFunction = std::function<void ()>;
+		using DisableEditFunctionOrFailure = boost::variant<DisableEditFunction, std::string>;
+		/// Can be implemented to return a function that will disable an edit
+		/// at the specified plug. If this is not possible, should return an
+		/// error explaining why (this is typically due to `readOnly` metadata).
+		/// Called with `history->context` as the current context.
+		virtual DisableEditFunctionOrFailure disableEditFunction( Gaffer::ValuePlug *plug, const GafferScene::SceneAlgo::History *history ) const;
 
 	protected :
 
@@ -338,10 +346,20 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 		/// Returns a plug that can be used to edit the property
 		/// represented by this inspector, creating it if necessary.
 		/// Throws if `!editable()`.
-		Gaffer::ValuePlugPtr acquireEdit() const;
+		Gaffer::ValuePlugPtr acquireEdit( bool createIfNecessary = true ) const;
 		/// Returns a warning associated with the plug returned
 		/// by `acquireEdit()`. This should be displayed to the user.
 		std::string editWarning() const;
+
+		/// Returns `true` if `disableEdit()` will disable the edit
+		/// at `source()`, and `false` otherwise.
+		bool canDisableEdit() const;
+		/// If `canDisableEdit()` returns false, returns the reason why.
+		/// This should be displayed to the user.
+		std::string nonDisableableReason() const;
+		/// Disables the edit at `source()`. Throws if
+		/// `!canDisableEdit()`
+		void disableEdit() const;
 
 	private :
 
@@ -358,6 +376,8 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 
 		EditFunctionOrFailure m_editFunction;
 		std::string m_editWarning;
+
+		DisableEditFunctionOrFailure m_disableEditFunction;
 
 };
 
