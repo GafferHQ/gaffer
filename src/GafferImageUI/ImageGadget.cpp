@@ -53,6 +53,7 @@
 #include "Gaffer/BackgroundTask.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/Node.h"
+#include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
 
 #include "IECore/MessageHandler.h"
@@ -891,6 +892,7 @@ void ImageGadget::updateTiles()
 			{
 				m_tiles[TileIndex(tileOrigin, channelName)].resetActive();
 			}
+			throw;
 		}
 
 	};
@@ -902,8 +904,24 @@ void ImageGadget::updateTiles()
 		// OK to capture `this` via raw pointer, because ~ImageGadget waits for
 		// the background process to complete.
 		[ this, channelsToCompute, dataWindow, tileFunctor ] {
-			ImageAlgo::parallelProcessTiles( m_image.get(), tileFunctor, dataWindow );
-			m_dirtyFlags &= ~TilesDirty;
+
+			try
+			{
+				ImageAlgo::parallelProcessTiles( m_image.get(), tileFunctor, dataWindow );
+				m_dirtyFlags &= ~TilesDirty;
+			}
+			catch( const Gaffer::ProcessException & )
+			{
+				// No point starting a new compute if it's just
+				// going to error again.
+				m_dirtyFlags &= ~TilesDirty;
+			}
+			catch( const IECore::Cancelled & )
+			{
+				// Don't clear dirty flag, so that we restart
+				// on the next redraw.
+			}
+
 			if( refCount() )
 			{
 				ImageGadgetPtr thisRef = this;
@@ -913,6 +931,7 @@ void ImageGadget::updateTiles()
 					}
 				);
 			}
+
 		}
 	);
 
