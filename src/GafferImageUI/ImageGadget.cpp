@@ -717,25 +717,18 @@ ImageGadget::Tile::Tile( const Tile &other )
 
 ImageGadget::Tile::Update ImageGadget::Tile::computeUpdate( const GafferImage::ImagePlug *image )
 {
-	try
-	{
-		const IECore::MurmurHash h = image->channelDataPlug()->hash();
-		Mutex::scoped_lock lock( m_mutex );
-		if( m_channelDataHash != MurmurHash() && m_channelDataHash == h )
-		{
-			return Update{ this, nullptr, MurmurHash() };
-		}
-
-		m_active = true;
-		m_activeStartTime = std::chrono::steady_clock::now();
-		lock.release(); // Release while doing expensive calculation so UI thread doesn't wait.
-		ConstFloatVectorDataPtr channelData = image->channelDataPlug()->getValue( &h );
-		return Update{ this, channelData, h };
-	}
-	catch( ... )
+	const IECore::MurmurHash h = image->channelDataPlug()->hash();
+	Mutex::scoped_lock lock( m_mutex );
+	if( m_channelDataHash != MurmurHash() && m_channelDataHash == h )
 	{
 		return Update{ this, nullptr, MurmurHash() };
 	}
+
+	m_active = true;
+	m_activeStartTime = std::chrono::steady_clock::now();
+	lock.release(); // Release while doing expensive calculation so UI thread doesn't wait.
+	ConstFloatVectorDataPtr channelData = image->channelDataPlug()->getValue( &h );
+	return Update{ this, channelData, h };
 }
 
 void ImageGadget::Tile::applyUpdates( const std::vector<Update> &updates )
@@ -759,6 +752,12 @@ void ImageGadget::Tile::applyUpdates( const std::vector<Update> &updates )
 	{
 		u.tile->m_mutex.unlock();
 	}
+}
+
+void ImageGadget::Tile::resetActive()
+{
+	Mutex::scoped_lock lock( m_mutex );
+	m_active = false;
 }
 
 const IECoreGL::Texture *ImageGadget::Tile::texture( bool &active )
@@ -858,28 +857,42 @@ void ImageGadget::updateTiles()
 
 	auto tileFunctor = [this, channelsToCompute] ( const ImagePlug *image, const V2i &tileOrigin ) {
 
-		vector<Tile::Update> updates;
-		ImagePlug::ChannelDataScope channelScope( Context::current() );
-		for( auto &channelName : channelsToCompute )
+		try
 		{
-			channelScope.setChannelName( &channelName );
-			Tile &tile = m_tiles[TileIndex(tileOrigin, channelName)];
-			updates.push_back( tile.computeUpdate( image ) );
+			vector<Tile::Update> updates;
+			ImagePlug::ChannelDataScope channelScope( Context::current() );
+			for( auto &channelName : channelsToCompute )
+			{
+				channelScope.setChannelName( &channelName );
+				Tile &tile = m_tiles[TileIndex(tileOrigin, channelName)];
+				updates.push_back( tile.computeUpdate( image ) );
+			}
+
+			Tile::applyUpdates( updates );
+
+			if( refCount() && !m_renderRequestPending.exchange( true ) )
+			{
+				// Must hold a reference to stop us dying before our UI thread call is scheduled.
+				ImageGadgetPtr thisRef = this;
+				ParallelAlgo::callOnUIThread(
+					[thisRef] {
+						thisRef->m_renderRequestPending = false;
+						thisRef->Gadget::dirty( DirtyType::Render );
+					}
+				);
+			}
+		}
+		catch( ... )
+		{
+			// We don't want to call `Tile::applyUpdates()` because we won't have
+			// a complete set of updates for all channels. But we do need to turn off
+			// the active flag for each tile.
+			for( auto &channelName : channelsToCompute )
+			{
+				m_tiles[TileIndex(tileOrigin, channelName)].resetActive();
+			}
 		}
 
-		Tile::applyUpdates( updates );
-
-		if( refCount() && !m_renderRequestPending.exchange( true ) )
-		{
-			// Must hold a reference to stop us dying before our UI thread call is scheduled.
-			ImageGadgetPtr thisRef = this;
-			ParallelAlgo::callOnUIThread(
-				[thisRef] {
-					thisRef->m_renderRequestPending = false;
-					thisRef->Gadget::dirty( DirtyType::Render );
-				}
-			);
-		}
 	};
 
 	Context::Scope scopedContext( m_context.get() );
