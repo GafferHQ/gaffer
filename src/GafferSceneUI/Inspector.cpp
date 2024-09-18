@@ -213,7 +213,7 @@ Inspector::ResultPtr Inspector::inspect() const
 	if( result->editScope() && !result->m_editScopeInHistory )
 	{
 		const std::string nonEditableReason = fmt::format(
-			"The target EditScope ({}) is not in the scene history.",
+			"The target edit scope {} is not in the scene history.",
 			result->editScope()->relativeName( result->editScope()->scriptNode() )
 		);
 		result->m_editFunction = nonEditableReason;
@@ -357,7 +357,7 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 			else
 			{
 				result->m_editFunction = fmt::format(
-					"The target EditScope ({}) is disabled.",
+					"The target edit scope {} is disabled.",
 					editScope->relativeName( editScope->scriptNode() )
 				);
 			}

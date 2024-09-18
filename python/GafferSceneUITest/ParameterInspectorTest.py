@@ -156,7 +156,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( s["group"]["out"], "/group/light", "intensity", s["editScope1"] ),
 			source = s["light"]["parameters"]["intensity"], sourceType = SourceType.Other,
-			editable = False, nonEditableReason = "The target EditScope (editScope1) is not in the scene history."
+			editable = False, nonEditableReason = "The target edit scope editScope1 is not in the scene history."
 		)
 
 		# If it is in the history though, and we're told to use it, then we will.
@@ -302,7 +302,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( s["independentLightTweak"]["out"], "/group/light", "intensity", s["editScope2"] ),
 			source = independentLightTweakPlug, sourceType = SourceType.Downstream,
-			editable = False, nonEditableReason = "The target EditScope (editScope2) is disabled."
+			editable = False, nonEditableReason = "The target edit scope editScope2 is disabled."
 		)
 
 		s["editScope2"]["enabled"].setValue( True )
@@ -378,7 +378,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( light["out"], "/light", "exposure", editScope ),
 			source = light["parameters"]["exposure"], sourceType = SourceType.Other,
-			editable = False, nonEditableReason = "The target EditScope (EditScope) is not in the scene history."
+			editable = False, nonEditableReason = "The target edit scope EditScope is not in the scene history."
 		)
 
 		self.__assertExpectedResult(
@@ -390,7 +390,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( shaderTweaks["out"], "/light", "exposure", editScope ),
 			source = shaderTweaks["tweaks"][0], sourceType = SourceType.Other,
-			editable = False, nonEditableReason = "The target EditScope (EditScope) is not in the scene history."
+			editable = False, nonEditableReason = "The target edit scope EditScope is not in the scene history."
 		)
 
 	def testAcquireEditCreateIfNecessary( self ) :
@@ -467,7 +467,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		inspection = self.__inspect( s["editScope"]["out"], "/light", "exposure", s["editScope2"] )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "The target EditScope (editScope2) is not in the scene history." )
+		self.assertEqual( inspection.nonDisableableReason(), "The target edit scope editScope2 is not in the scene history." )
 
 		inspection = self.__inspect( s["editScope2"]["out"], "/light", "exposure", s["editScope2"] )
 		self.assertFalse( inspection.canDisableEdit() )

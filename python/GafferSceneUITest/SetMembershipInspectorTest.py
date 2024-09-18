@@ -192,7 +192,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 			source = s["plane"]["sets"],
 			sourceType = SourceType.Other,
 			editable = False,
-			nonEditableReason = "The target EditScope (editScope1) is not in the scene history."
+			nonEditableReason = "The target edit scope editScope1 is not in the scene history."
 		)
 
 		# If it is in the history though, and we're told to use it, then we will.
@@ -329,7 +329,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 			source = s["independentSet"]["name"],
 			sourceType = SourceType.Downstream,
 			editable = False,
-			nonEditableReason = "The target EditScope (editScope2) is disabled."
+			nonEditableReason = "The target edit scope editScope2 is disabled."
 		)
 
 		s["editScope2"]["enabled"].setValue( True )

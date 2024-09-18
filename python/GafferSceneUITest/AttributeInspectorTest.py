@@ -219,7 +219,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			source = s["light"]["visualiserAttributes"]["scale"],
 			sourceType = SourceType.Other,
 			editable=False,
-			nonEditableReason = "The target EditScope (editScope1) is not in the scene history."
+			nonEditableReason = "The target edit scope editScope1 is not in the scene history."
 		)
 
 		# If it is in the history though, and we're told to use it, then we will.
@@ -369,7 +369,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			source = independentAttributeTweakPlug,
 			sourceType = SourceType.Downstream,
 			editable = False,
-			nonEditableReason = "The target EditScope (editScope2) is disabled."
+			nonEditableReason = "The target edit scope editScope2 is disabled."
 		)
 
 		s["editScope2"]["enabled"].setValue( True )
@@ -455,7 +455,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			source = light["visualiserAttributes"]["scale"],
 			sourceType = SourceType.Other,
 			editable = False,
-			nonEditableReason = "The target EditScope (EditScope) is not in the scene history."
+			nonEditableReason = "The target edit scope EditScope is not in the scene history."
 		)
 
 		self.__assertExpectedResult(
@@ -471,7 +471,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			source = attributeTweaks["tweaks"][0],
 			sourceType = SourceType.Other,
 			editable = False,
-			nonEditableReason = "The target EditScope (EditScope) is not in the scene history."
+			nonEditableReason = "The target edit scope EditScope is not in the scene history."
 		)
 
 	def testDisabledTweaks( self ) :
@@ -893,7 +893,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 		inspection = self.__inspect( s["editScope1"]["out"], "/group/light", "gl:visualiser:scale", s["editScope2"] )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "The target EditScope (editScope2) is not in the scene history." )
+		self.assertEqual( inspection.nonDisableableReason(), "The target edit scope editScope2 is not in the scene history." )
 
 		inspection = self.__inspect( s["editScope2"]["out"], "/group/light", "gl:visualiser:scale", s["editScope2"] )
 		self.assertFalse( inspection.canDisableEdit() )

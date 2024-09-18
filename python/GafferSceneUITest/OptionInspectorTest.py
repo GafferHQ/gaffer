@@ -162,7 +162,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 			source = s["standardOptions"]["options"]["renderCamera"],
 			sourceType = SourceType.Other,
 			editable = False,
-			nonEditableReason = "The target EditScope (editScope1) is not in the scene history."
+			nonEditableReason = "The target edit scope editScope1 is not in the scene history."
 		)
 
 		# If it is in the history though, and we're told to use it, then we will.
@@ -285,7 +285,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 			source = s["independentOptions"]["options"]["renderCamera"],
 			sourceType = SourceType.Downstream,
 			editable = False,
-			nonEditableReason = "The target EditScope (editScope2) is disabled."
+			nonEditableReason = "The target edit scope editScope2 is disabled."
 		)
 
 		s["editScope2"]["enabled"].setValue( True )
@@ -561,7 +561,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 				source = s["standardOptions"]["options"]["renderCamera"],
 				sourceType = SourceType.Other,
 				editable = False,
-				nonEditableReason = "The target EditScope (editScope1) is not in the scene history."
+				nonEditableReason = "The target edit scope editScope1 is not in the scene history."
 			)
 
 			# If it is in the history though, and we're told to use it, then we will.
@@ -684,7 +684,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 				source = s["independentOptions"]["options"]["renderCamera"],
 				sourceType = SourceType.Downstream,
 				editable = False,
-				nonEditableReason = "The target EditScope (editScope2) is disabled."
+				nonEditableReason = "The target edit scope editScope2 is disabled."
 			)
 
 			s["editScope2"]["enabled"].setValue( True )
@@ -967,7 +967,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 
 		inspection = self.__inspect( s["editScope1"]["out"], "render:camera", s["editScope2"] )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "The target EditScope (editScope2) is not in the scene history." )
+		self.assertEqual( inspection.nonDisableableReason(), "The target edit scope editScope2 is not in the scene history." )
 
 		inspection = self.__inspect( s["editScope2"]["out"], "render:camera", s["editScope2"] )
 		self.assertFalse( inspection.canDisableEdit() )
