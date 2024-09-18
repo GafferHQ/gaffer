@@ -57,6 +57,7 @@ Fixes
 - usdview : Added Windows support (#5599).
 - ContextTracker : Removed unnecessary reference increment/decrement from `isTracked()`, `context()` and `isEnabled()`.
 - Menu : Fixed bug causing a menu item's tooltip to not hide when moving the cursor to another menu item without a tooltip.
+- Python : Fixed startup failures caused by conflicting Python modules in the user `site-packages` directory.
 
 API
 ---
@@ -117,6 +118,7 @@ Breaking Changes
 - FreezeTransform : Constant primitive variables with point/vector interpretations are now also transformed (this is more correct, but it is a change in behaviour).
 - ImageGadget : Remove non-const variant of `getContext()`.
 - LazyMethod : `deferUntilPlaybackStops` now requires that the Widget has a `scriptNode()` method rather than a `context()` method.
+- Python : Gaffer now disables the user site-packages directory by setting `PYTHONNOUSERSITE=1`. To revert to the previous behaviour, set `PYTHONNOUSERSITE=0` before launching Gaffer.
 
 Build
 -----

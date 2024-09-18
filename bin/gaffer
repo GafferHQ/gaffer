@@ -170,6 +170,15 @@ fi
 
 prependToPath "$GAFFER_ROOT/python" PYTHONPATH
 
+if [[ -z $PYTHONNOUSERSITE ]] ; then
+	# Prevent Python automatically adding a user-level `site-packages`
+	# directory to the `sys.path`. These frequently contain modules which
+	# conflict with our own. Users who know what they are doing can set
+	# `PYTHONNOUSERSITE=0` before running Gaffer if they want to use
+	# the user directory.
+	export PYTHONNOUSERSITE=1
+fi
+
 # Stop Cortex from making all Python modules load with RTLD_GLOBAL.
 export IECORE_RTLD_GLOBAL=0
 
