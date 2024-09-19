@@ -68,22 +68,22 @@ void warnIfUnsupported( const IECoreScene::SpherePrimitive *sphere )
 	}
 }
 
-AtNode *convert( const IECoreScene::SpherePrimitive *sphere, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode )
+AtNode *convert( const IECoreScene::SpherePrimitive *sphere, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
 	warnIfUnsupported( sphere );
 
 	AtNode *result = AiNode( universe, g_sphereArnoldString, AtString( nodeName.c_str() ), parentNode );
-	ShapeAlgo::convertPrimitiveVariables( sphere, result );
+	ShapeAlgo::convertPrimitiveVariables( sphere, result, nullptr, messageContext );
 
 	AiNodeSetFlt( result, g_radiusArnoldString, sphere->radius() );
 
 	return result;
 }
 
-AtNode *convert( const std::vector<const IECoreScene::SpherePrimitive *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode )
+AtNode *convert( const std::vector<const IECoreScene::SpherePrimitive *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
 	AtNode *result = AiNode( universe, g_sphereArnoldString, AtString( nodeName.c_str() ), parentNode );
-	ShapeAlgo::convertPrimitiveVariables( samples.front(), result );
+	ShapeAlgo::convertPrimitiveVariables( samples.front(), result, nullptr, messageContext );
 
 	AtArray *radiusSamples = AiArrayAllocate( 1, samples.size(), AI_TYPE_FLOAT );
 

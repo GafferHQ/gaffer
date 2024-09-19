@@ -33,6 +33,9 @@ Improvements
 - FreezeTransform :
   - Improved performance for large meshes by using multithreading.
   - Improved UI responsiveness by supporting cancellation of long computes.
+- Arnold :
+  - Added location names to warning messages.
+  - A missing "P" primitive variable no longer aborts the render, but outputs a warning message instead.
 
 Fixes
 -----
@@ -123,6 +126,7 @@ Breaking Changes
 - ImageGadget : Remove non-const variant of `getContext()`.
 - LazyMethod : `deferUntilPlaybackStops` now requires that the Widget has a `scriptNode()` method rather than a `context()` method.
 - Python : Gaffer now disables the user site-packages directory by setting `PYTHONNOUSERSITE=1`. To revert to the previous behaviour, set `PYTHONNOUSERSITE=0` before launching Gaffer.
+- IECoreArnold : Added `messageContext` argument to `NodeAlgo::Converter` and `NodeAlgo::MotionConverter`.
 
 Build
 -----

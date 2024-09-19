@@ -57,7 +57,7 @@ const AtString g_pointsArnoldString( "points" );
 const AtString g_quadArnoldString( "quad" );
 const AtString g_sphereArnoldString( "sphere" );
 
-AtNode *convertCommon( const IECoreScene::PointsPrimitive *points, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode = nullptr )
+AtNode *convertCommon( const IECoreScene::PointsPrimitive *points, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
 
 	AtNode *result = AiNode( universe, g_pointsArnoldString, AtString( nodeName.c_str() ), parentNode );
@@ -81,38 +81,38 @@ AtNode *convertCommon( const IECoreScene::PointsPrimitive *points, AtUniverse *u
 		}
 		else
 		{
-			IECore::msg( IECore::Msg::Warning, "ToArnoldPointsConverter::doConversion", fmt::format( "Unknown type \"{}\" - reverting to disk mode.", t->readable() ) );
+			IECore::msg( IECore::Msg::Warning, messageContext, fmt::format( "Unknown type \"{}\" - reverting to disk mode.", t->readable() ) );
 		}
 	}
 
 	// arbitrary user parameters
 
 	const char *ignore[] = { "P", "width", "radius", nullptr };
-	ShapeAlgo::convertPrimitiveVariables( points, result, ignore );
+	ShapeAlgo::convertPrimitiveVariables( points, result, ignore, messageContext );
 
 	return result;
 
 }
 
-AtNode *convert( const IECoreScene::PointsPrimitive *points, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode )
+AtNode *convert( const IECoreScene::PointsPrimitive *points, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
-	AtNode *result = convertCommon( points, universe, nodeName, parentNode );
+	AtNode *result = convertCommon( points, universe, nodeName, parentNode, messageContext );
 
-	ShapeAlgo::convertP( points, result, g_pointsArnoldString );
-	ShapeAlgo::convertRadius( points, result );
+	ShapeAlgo::convertP( points, result, g_pointsArnoldString, messageContext );
+	ShapeAlgo::convertRadius( points, result, messageContext );
 
 	/// \todo Aspect, rotation
 
 	return result;
 }
 
-AtNode *convert( const std::vector<const IECoreScene::PointsPrimitive *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode )
+AtNode *convert( const std::vector<const IECoreScene::PointsPrimitive *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
-	AtNode *result = convertCommon( samples.front(), universe, nodeName, parentNode );
+	AtNode *result = convertCommon( samples.front(), universe, nodeName, parentNode, messageContext );
 
 	std::vector<const IECoreScene::Primitive *> primitiveSamples( samples.begin(), samples.end() );
-	ShapeAlgo::convertP( primitiveSamples, result, g_pointsArnoldString );
-	ShapeAlgo::convertRadius( primitiveSamples, result );
+	ShapeAlgo::convertP( primitiveSamples, result, g_pointsArnoldString, messageContext );
+	ShapeAlgo::convertRadius( primitiveSamples, result, messageContext );
 
 
 	AiNodeSetFlt( result, g_motionStartArnoldString, motionStart );

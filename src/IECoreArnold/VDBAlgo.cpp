@@ -123,12 +123,12 @@ CompoundDataPtr createParameters(const IECoreVDB::VDBObject* vdbObject)
 	return parameters;
 }
 
-AtNode *convert( const IECoreVDB::VDBObject *vdbObject, AtUniverse *universe, const std::string &name, const AtNode* parent )
+AtNode *convert( const IECoreVDB::VDBObject *vdbObject, AtUniverse *universe, const std::string &name, const AtNode* parent, const std::string &messageContext )
 {
 	AtNode *node = AiNode( universe, g_volume, AtString( name.c_str() ), parent );
 
 	CompoundDataPtr parameters = createParameters( vdbObject );
-	ParameterAlgo::setParameters( node, parameters->readable() );
+	ParameterAlgo::setParameters( node, parameters->readable(), messageContext );
 
 	return node;
 }

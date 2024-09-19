@@ -57,30 +57,30 @@ namespace
 using ArrayPtr = std::unique_ptr<AtArray, void (*)( AtArray *)>;
 
 template<typename T>
-inline const T *dataCast( const char *name, const IECore::Data *data )
+inline const T *dataCast( const char *name, const IECore::Data *data, const std::string &messageContext )
 {
 	const T *result = runTimeCast<const T>( data );
 	if( result )
 	{
 		return result;
 	}
-	msg( Msg::Warning, "setParameter", fmt::format( "Unsupported value type \"{}\" for parameter \"{}\" (expected {}).", data->typeName(), name, T::staticTypeName() ) );
+	msg( Msg::Warning, messageContext, fmt::format( "Unsupported value type \"{}\" for parameter \"{}\" (expected {}).", data->typeName(), name, T::staticTypeName() ) );
 	return nullptr;
 }
 
-void setParameterInternal( AtNode *node, AtString name, int parameterType, bool array, const IECore::Data *value )
+void setParameterInternal( AtNode *node, AtString name, int parameterType, bool array, const IECore::Data *value, const std::string &messageContext )
 {
 	if( array )
 	{
 		AtArray *a = ParameterAlgo::dataToArray( value, parameterType );
 		if( !a )
 		{
-			msg( Msg::Warning, "setParameter", fmt::format( "Unable to create array from data of type \"{}\" for parameter \"{}\"", value->typeName(), name ) );
+			msg( Msg::Warning, messageContext, fmt::format( "Unable to create array from data of type \"{}\" for parameter \"{}\"", value->typeName(), name ) );
 			return;
 		}
 		if( AiArrayGetType( a ) != parameterType )
 		{
-			msg( Msg::Warning, "setParameter", fmt::format( "Unable to create array of type {} from data of type \"{}\" for parameter \"{}\"", AiParamGetTypeName( parameterType ), value->typeName(), name ) );
+			msg( Msg::Warning, messageContext, fmt::format( "Unable to create array of type {} from data of type \"{}\" for parameter \"{}\"", AiParamGetTypeName( parameterType ), value->typeName(), name ) );
 			return;
 		}
 		AiNodeSetArray( node, name, a );
@@ -90,7 +90,7 @@ void setParameterInternal( AtNode *node, AtString name, int parameterType, bool 
 		switch( parameterType )
 		{
 			case AI_TYPE_INT :
-				if( const IntData *data = dataCast<IntData>( name, value ) )
+				if( const IntData *data = dataCast<IntData>( name, value, messageContext ) )
 				{
 					AiNodeSetInt( node, name, data->readable() );
 				}
@@ -100,7 +100,7 @@ void setParameterInternal( AtNode *node, AtString name, int parameterType, bool 
 				{
 					AiNodeSetUInt( node, name, std::max( 0, data->readable() ) );
 				}
-				else if( const UIntData *data = dataCast<UIntData>( name, value ) )
+				else if( const UIntData *data = dataCast<UIntData>( name, value, messageContext ) )
 				{
 					AiNodeSetUInt( node, name, data->readable() );
 				}
@@ -110,7 +110,7 @@ void setParameterInternal( AtNode *node, AtString name, int parameterType, bool 
 				{
 					AiNodeSetByte( node, name, data->readable() );
 				}
-				else if( const UCharData *data = dataCast<UCharData>( name, value ) )
+				else if( const UCharData *data = dataCast<UCharData>( name, value, messageContext ) )
 				{
 					AiNodeSetByte( node, name, data->readable() );
 				}
@@ -120,7 +120,7 @@ void setParameterInternal( AtNode *node, AtString name, int parameterType, bool 
 				{
 					AiNodeSetFlt( node, name, data->readable() );
 				}
-				else if( const FloatData *data = dataCast<FloatData>( name, value ) )
+				else if( const FloatData *data = dataCast<FloatData>( name, value, messageContext ) )
 				{
 					AiNodeSetFlt( node, name, data->readable() );
 				}
@@ -130,20 +130,20 @@ void setParameterInternal( AtNode *node, AtString name, int parameterType, bool 
 				{
 					AiNodeSetStr( node, name, AtString( data->readable().c_str() ) );
 				}
-				else if( const StringData *data = dataCast<StringData>( name, value ) )
+				else if( const StringData *data = dataCast<StringData>( name, value, messageContext ) )
 				{
 					AiNodeSetStr( node, name, AtString( data->readable().c_str() ) );
 				}
 				break;
 			case AI_TYPE_RGB :
-				if( const Color3fData *data = dataCast<Color3fData>( name, value ) )
+				if( const Color3fData *data = dataCast<Color3fData>( name, value, messageContext ) )
 				{
 					const Imath::Color3f &c = data->readable();
 					AiNodeSetRGB( node, name, c[0], c[1], c[2] );
 				}
 				break;
 			case AI_TYPE_RGBA :
-				if( const Color4fData *data = dataCast<Color4fData>( name, value ) )
+				if( const Color4fData *data = dataCast<Color4fData>( name, value, messageContext ) )
 				{
 					const Imath::Color4f &c = data->readable();
 					AiNodeSetRGBA( node, name, c[0], c[1], c[2], c[3] );
@@ -165,13 +165,13 @@ void setParameterInternal( AtNode *node, AtString name, int parameterType, bool 
 				}
 				// Then try getting a string, with the usual warning if nothing
 				// has been found yet.
-				else if( const StringData *data = dataCast<StringData>( name, value ) )
+				else if( const StringData *data = dataCast<StringData>( name, value, messageContext ) )
 				{
 					AiNodeSetStr( node, name, AtString( data->readable().c_str() ) );
 				}
 				break;
 			case AI_TYPE_BOOLEAN :
-				if( const BoolData *data = dataCast<BoolData>( name, value ) )
+				if( const BoolData *data = dataCast<BoolData>( name, value, messageContext ) )
 				{
 					AiNodeSetBool( node, name, data->readable() );
 				}
@@ -184,7 +184,7 @@ void setParameterInternal( AtNode *node, AtString name, int parameterType, bool 
 					const Imath::V2i &v = data->readable();
 					AiNodeSetVec2( node, name, v.x, v.y );
 				}
-				else if( const V2fData *data = dataCast<V2fData>( name, value ) )
+				else if( const V2fData *data = dataCast<V2fData>( name, value, messageContext ) )
 				{
 					const Imath::V2f &v = data->readable();
 					AiNodeSetVec2( node, name, v.x, v.y );
@@ -198,7 +198,7 @@ void setParameterInternal( AtNode *node, AtString name, int parameterType, bool 
 					const Imath::V3i &v = data->readable();
 					AiNodeSetVec( node, name, v.x, v.y, v.z );
 				}
-				else if( const V3fData *data = dataCast<V3fData>( name, value ) )
+				else if( const V3fData *data = dataCast<V3fData>( name, value, messageContext ) )
 				{
 					const Imath::V3f &v = data->readable();
 					AiNodeSetVec( node, name, v.x, v.y, v.z );
@@ -210,7 +210,7 @@ void setParameterInternal( AtNode *node, AtString name, int parameterType, bool 
 					const Imath::M44f v( data->readable() );
 					AiNodeSetMatrix( node, name, reinterpret_cast<const AtMatrix &>( v.x ) );
 				}
-				else if( const M44fData *data = dataCast<M44fData>( name, value ) )
+				else if( const M44fData *data = dataCast<M44fData>( name, value, messageContext ) )
 				{
 					const Imath::M44f &v = data->readable();
 
@@ -227,7 +227,7 @@ void setParameterInternal( AtNode *node, AtString name, int parameterType, bool 
 					nodeStr = AiNodeEntryGetName( AiNodeGetNodeEntry( node ) );
 				}
 
-				msg( Msg::Warning, "setParameter", fmt::format( "Arnold parameter \"{}\" on node \"{}\" has unsupported type \"{}\".", name, nodeStr, AiParamGetTypeName( parameterType ) ) );
+				msg( Msg::Warning, messageContext, fmt::format( "Arnold parameter \"{}\" on node \"{}\" has unsupported type \"{}\".", name, nodeStr, AiParamGetTypeName( parameterType ) ) );
 			}
 		}
 	}
@@ -329,7 +329,7 @@ namespace IECoreArnold
 namespace ParameterAlgo
 {
 
-void setParameter( AtNode *node, const AtParamEntry *parameter, const IECore::Data *value )
+void setParameter( AtNode *node, const AtParamEntry *parameter, const IECore::Data *value, const std::string &messageContext )
 {
 	bool isArray = false;
 	int type = AiParamGetType( parameter );
@@ -339,15 +339,15 @@ void setParameter( AtNode *node, const AtParamEntry *parameter, const IECore::Da
 		isArray = true;
 	}
 
-	setParameterInternal( node, AiParamGetName( parameter ), type, isArray, value );
+	setParameterInternal( node, AiParamGetName( parameter ), type, isArray, value, messageContext );
 }
 
-void setParameter( AtNode *node, AtString name, const IECore::Data *value )
+void setParameter( AtNode *node, AtString name, const IECore::Data *value, const std::string &messageContext )
 {
 	const AtParamEntry *parameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), name );
 	if( parameter )
 	{
-		setParameter( node, parameter, value );
+		setParameter( node, parameter, value, messageContext );
 	}
 	else
 	{
@@ -365,29 +365,29 @@ void setParameter( AtNode *node, AtString name, const IECore::Data *value )
 			{
 				AiNodeDeclare( node, name, typeString.c_str() );
 			}
-			setParameterInternal( node, name, type, array, value );
+			setParameterInternal( node, name, type, array, value, messageContext );
 		}
 		else
 		{
 			msg(
 				Msg::Warning,
-				"setParameter",
+				messageContext,
 				fmt::format( "Unsupported data type \"{}\" for name \"{}\"", value->typeName(), name )
 			);
 		}
 	}
 }
 
-void setParameter( AtNode *node, const char* name, const IECore::Data *value )
+void setParameter( AtNode *node, const char* name, const IECore::Data *value, const std::string &messageContext )
 {
-	setParameter( node, AtString( name ), value );
+	setParameter( node, AtString( name ), value, messageContext );
 }
 
-void setParameters( AtNode *node, const IECore::CompoundDataMap &values )
+void setParameters( AtNode *node, const IECore::CompoundDataMap &values, const std::string &messageContext )
 {
 	for( CompoundDataMap::const_iterator it=values.begin(); it!=values.end(); it++ )
 	{
-		setParameter( node, it->first.value().c_str(), it->second.get() );
+		setParameter( node, it->first.value().c_str(), it->second.get(), messageContext );
 	}
 }
 
