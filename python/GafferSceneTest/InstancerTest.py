@@ -3112,6 +3112,16 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 			nodes["instancer"]["out"].childNames( "/plane/instances/sphere" )
 			nodes["instancer"]["out"].childNames( "/plane/instances/cube" )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testEncapsulatedRenderPerf( self ):
+		nodes = self.initSimpleInstancer( withPrototypes = True, withIds = False )
+		nodes["instancer"]["encapsulateInstanceGroups"].setValue( True )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			nodes["instancer"]["out"].object( "/plane/instances/sphere" ).render( renderer )
+			nodes["instancer"]["out"].object( "/plane/instances/cube" ).render( renderer )
 
 if __name__ == "__main__":
 	unittest.main()
