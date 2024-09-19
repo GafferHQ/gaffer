@@ -293,6 +293,16 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 			edit = s["editScope1"]["setPlane2"]["name"]
 		)
 
+		# When using no scope, make sure that we don't inadvertently edit the contents of an EditScope.
+
+		self.__assertExpectedResult(
+			self.__inspect( s["editScope2"]["out"], "/plane2", "planeSet", None ),
+			source = s["editScope1"]["setPlane2"]["name"],
+			sourceType = SourceType.Other,
+			editable = False,
+			nonEditableReason = "Source is in an EditScope. Change scope to editScope1 to edit."
+		)
+
 		# If there is a manual set node outside of an edit scope, make sure we use that with no scope
 		s["independentSet"] = GafferScene.Set()
 		s["independentSet"]["name"].setValue( "planeSet" )
@@ -673,13 +683,18 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 			)
 
 			Gaffer.MetadataAlgo.setReadOnly( s["editScope1"], True )
-			inspection = self.__inspect( s["editScope1"]["out"], "/group/plane", "planeSetEditScope", None )
+			inspection = self.__inspect( s["editScope1"]["out"], "/group/plane", "planeSetEditScope", s["editScope1"] )
 			self.assertFalse( inspection.canDisableEdit() )
 			self.assertEqual( inspection.nonDisableableReason(), "editScope1 is locked." )
 			self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : editScope1 is locked.", inspection.disableEdit )
 
 			Gaffer.MetadataAlgo.setReadOnly( s["editScope1"], False )
 			inspection = self.__inspect( s["editScope1"]["out"], "/group/plane", "planeSetEditScope", None )
+			self.assertFalse( inspection.canDisableEdit() )
+			self.assertEqual( inspection.nonDisableableReason(), "Source is in an EditScope. Change scope to editScope1 to disable." )
+			self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : Source is in an EditScope. Change scope to editScope1 to disable.", inspection.disableEdit )
+
+			inspection = self.__inspect( s["editScope1"]["out"], "/group/plane", "planeSetEditScope", s["editScope1"] )
 			self.assertTrue( inspection.canDisableEdit() )
 			self.assertEqual( inspection.nonDisableableReason(), "" )
 
