@@ -30,6 +30,9 @@ Improvements
 - Editor : The node graph is now evaluated in a context determined relative to the focus node.
 - LightEditor, RenderPassEditor : The "Disable Edit" right-click menu item and <kdb>D</kdb> shortcut now act as a toggle, where edits disabled in the current session via these actions can be reenabled with <kbd>D</kbd> or by selecting "Reenable Edit" from the right-click menu.
 - EditScope : Setting a Viewer or Editor's target edit scope to "None" will now prevent edits from being made within any upstream edit scope. To make edits in an edit scope, it must be set as the target.
+- FreezeTransform :
+  - Improved performance for large meshes by using multithreading.
+  - Improved UI responsiveness by supporting cancellation of long computes.
 
 Fixes
 -----

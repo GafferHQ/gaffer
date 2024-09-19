@@ -1381,14 +1381,17 @@ void PrimitiveAlgo::transformPrimitive(
 		{
 			std::vector< Imath::V3f >& writable = vecVar->writable();
 
-			for( size_t i = 0; i < writable.size(); i++ )
-			{
-				Canceller::check( canceller );
-				transformPrimVarValue(
-					&writable[i], &writable[i], 1,
-					matrix, normalMatrix, interp
-				);
-			};
+			tbb::parallel_for(
+				tbb::blocked_range<size_t>( 0, writable.size(), 10000 ),
+				[&]( tbb::blocked_range<size_t> &range )
+				{
+					Canceller::check( canceller );
+					transformPrimVarValue(
+						&writable[range.begin()], &writable[range.begin()], range.end() - range.begin(),
+						matrix, normalMatrix, interp
+					);
+				}
+			);
 		}
 		else
 		{
