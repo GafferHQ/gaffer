@@ -103,7 +103,7 @@ class ImageInspector( GafferUI.NodeSetEditor ) :
 						GafferUI.PathListingWidget.defaultNameColumn,
 						GafferUI.StandardPathColumn( "Value", "image:value", sizeMode = GafferUI.PathColumn.SizeMode.Stretch )
 					],
-					displayMode = GafferUI.PathListingWidget.DisplayMode.List,
+					displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 					selectionMode = GafferUI.PathListingWidget.SelectionMode.Cell,
 					horizontalScrollMode = GafferUI.ScrollMode.Automatic,
 					sortable = False,

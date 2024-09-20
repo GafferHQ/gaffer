@@ -69,6 +69,7 @@ namespace
 /// \todo Relax restrictions to only disallow '.' and `/'? We originally had
 /// these strict requirements because we accessed GraphComponent children
 /// as attributes in Python, but that approach has long since gone.
+/// When doing this, also update the validator in NameWidget.
 bool validName( const std::string &name )
 {
 	if( name.empty() )
