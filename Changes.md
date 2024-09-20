@@ -1,5 +1,12 @@
-1.x.x.x (relative to 1.4.x.x)
+1.x.x.x (relative to 1.5.0.0a1)
 =======
+
+
+
+1.5.0.0a1 (relative to 1.4.13.0)
+=========
+
+> Note : Gaffer 1.5 marks the end of provision of GCC 9 builds on Linux. Use Gaffer 1.4 if you require GCC 9 builds.
 
 Features
 --------
