@@ -656,6 +656,8 @@ else:
 			# it with `cxxFlags`, which contains `/external:I`.
 			env[command] = env[command].replace( cxxFlags, "<>" ).replace( "$_CCCOMCOM", cxxFlags ).replace( "<>",  "$_CCCOMCOM" )
 
+env["ONNX_ROOT"] = "/home/john/dev/onnxruntime-inference-examples/c_cxx/onnxruntime-linux-x64-1.19.2"
+
 ###############################################################################################
 # Check for inkscape and sphinx
 ###############################################################################################
@@ -1093,8 +1095,9 @@ libraries = {
 
 	"GafferImage" : {
 		"envAppends" : {
-			"CPPPATH" : [ "$BUILD_DIR/include/freetype2" ],
-			"LIBS" : [ "Gaffer", "GafferDispatch", "Iex$IMATH_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "OpenColorIO$OCIO_LIB_SUFFIX", "freetype" ],
+			"CPPPATH" : [ "$BUILD_DIR/include/freetype2", "$ONNX_ROOT/include" ],
+			"LIBPATH" : [ "$ONNX_ROOT/lib" ],
+			"LIBS" : [ "Gaffer", "GafferDispatch", "Iex$IMATH_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "OpenColorIO$OCIO_LIB_SUFFIX", "freetype", "onnxruntime", "png" ], # TODO : REMOVE PNG
 		},
 		"pythonEnvAppends" : {
 			"CPPPATH" : [ "$PYBIND11/include" ],
@@ -1126,6 +1129,23 @@ libraries = {
 			"LIBS" : [ "GafferBindings", "GafferUI", "GafferImage", "GafferImageUI" ],
 		},
 	},
+
+	"GafferML" : {
+		"envAppends" : {
+			"CPPPATH" : [ "$ONNX_ROOT/include" ],
+			"LIBPATH" : [ "$ONNX_ROOT/lib" ],
+			"LIBS" : [ "Gaffer", "GafferImage", "onnxruntime" ],
+		},
+		"pythonEnvAppends" : {
+			"CPPPATH" : [ "$ONNX_ROOT/include" ],
+			"LIBPATH" : [ "$ONNX_ROOT/lib" ],
+			"LIBS" : [ "GafferBindings", "GafferImage", "GafferML", "onnxruntime" ],
+		},
+	},
+
+	"GafferMLTest" : {},
+
+	"GafferMLUI" : {},
 
 	"IECoreArnold" : {
 		"envAppends" : {
