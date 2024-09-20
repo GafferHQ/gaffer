@@ -187,6 +187,7 @@ export IECORE_RTLD_GLOBAL=0
 
 if [[ `uname` = "Linux" ]] ; then
 	prependToPath "$GAFFER_ROOT/lib" LD_LIBRARY_PATH
+	prependToPath "/home/john/dev/onnxruntime-inference-examples/c_cxx/onnxruntime-linux-x64-1.19.2/lib" LD_LIBRARY_PATH
 else
 	prependToPath "$GAFFER_ROOT/lib" DYLD_FRAMEWORK_PATH
 	prependToPath "$GAFFER_ROOT/lib" DYLD_LIBRARY_PATH
