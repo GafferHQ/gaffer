@@ -21,6 +21,9 @@ API
 ---
 
 - ScenePathPlugValueWidget : The `scenePathPlugValueWidget:scene` metadata now accepts a space-separated list of plugs, taking the first plug which has an input connection.
+- VisibleSet : Added Python constructor with keyword arguments for `expansions`, `inclusions` and `exclusions`.
+- ScriptNodeAlgo : Added new namespace with functions for managing shared UI state for GafferSceneUI.
+- ContextAlgo : Deprecated. Use ScriptNodeAlgo instead.
 
 Build
 -----

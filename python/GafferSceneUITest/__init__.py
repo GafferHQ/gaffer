@@ -63,6 +63,7 @@ from .OptionInspectorTest import OptionInspectorTest
 from .LightPositionToolTest import LightPositionToolTest
 from .RenderPassEditorTest import RenderPassEditorTest
 from .SelectionToolTest import SelectionToolTest
+from .ScriptNodeAlgoTest import ScriptNodeAlgoTest
 
 if __name__ == "__main__":
 	unittest.main()
