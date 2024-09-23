@@ -292,6 +292,7 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 			// Applies previously computed updates for several tiles
 			// such that they become visible to the UI thread together.
 			static void applyUpdates( const std::vector<Update> &updates );
+			void resetActive();
 
 			// Called from the UI thread.
 			const IECoreGL::Texture *texture( bool &active );

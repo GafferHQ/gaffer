@@ -53,6 +53,7 @@
 #include "Gaffer/BackgroundTask.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/Node.h"
+#include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
 
 #include "IECore/MessageHandler.h"
@@ -717,25 +718,18 @@ ImageGadget::Tile::Tile( const Tile &other )
 
 ImageGadget::Tile::Update ImageGadget::Tile::computeUpdate( const GafferImage::ImagePlug *image )
 {
-	try
-	{
-		const IECore::MurmurHash h = image->channelDataPlug()->hash();
-		Mutex::scoped_lock lock( m_mutex );
-		if( m_channelDataHash != MurmurHash() && m_channelDataHash == h )
-		{
-			return Update{ this, nullptr, MurmurHash() };
-		}
-
-		m_active = true;
-		m_activeStartTime = std::chrono::steady_clock::now();
-		lock.release(); // Release while doing expensive calculation so UI thread doesn't wait.
-		ConstFloatVectorDataPtr channelData = image->channelDataPlug()->getValue( &h );
-		return Update{ this, channelData, h };
-	}
-	catch( ... )
+	const IECore::MurmurHash h = image->channelDataPlug()->hash();
+	Mutex::scoped_lock lock( m_mutex );
+	if( m_channelDataHash != MurmurHash() && m_channelDataHash == h )
 	{
 		return Update{ this, nullptr, MurmurHash() };
 	}
+
+	m_active = true;
+	m_activeStartTime = std::chrono::steady_clock::now();
+	lock.release(); // Release while doing expensive calculation so UI thread doesn't wait.
+	ConstFloatVectorDataPtr channelData = image->channelDataPlug()->getValue( &h );
+	return Update{ this, channelData, h };
 }
 
 void ImageGadget::Tile::applyUpdates( const std::vector<Update> &updates )
@@ -747,7 +741,7 @@ void ImageGadget::Tile::applyUpdates( const std::vector<Update> &updates )
 
 	for( const auto &u : updates )
 	{
-		if( u.tile )
+		if( u.channelData )
 		{
 			u.tile->m_channelDataToConvert = u.channelData;
 			u.tile->m_channelDataHash = u.channelDataHash;
@@ -759,6 +753,12 @@ void ImageGadget::Tile::applyUpdates( const std::vector<Update> &updates )
 	{
 		u.tile->m_mutex.unlock();
 	}
+}
+
+void ImageGadget::Tile::resetActive()
+{
+	Mutex::scoped_lock lock( m_mutex );
+	m_active = false;
 }
 
 const IECoreGL::Texture *ImageGadget::Tile::texture( bool &active )
@@ -858,38 +858,45 @@ void ImageGadget::updateTiles()
 
 	auto tileFunctor = [this, channelsToCompute] ( const ImagePlug *image, const V2i &tileOrigin ) {
 
-		vector<Tile::Update> updates;
-		ImagePlug::ChannelDataScope channelScope( Context::current() );
-		for( auto &channelName : channelsToCompute )
+		try
 		{
-			channelScope.setChannelName( &channelName );
-			Tile &tile = m_tiles[TileIndex(tileOrigin, channelName)];
-			updates.push_back( tile.computeUpdate( image ) );
+			vector<Tile::Update> updates;
+			ImagePlug::ChannelDataScope channelScope( Context::current() );
+			for( auto &channelName : channelsToCompute )
+			{
+				channelScope.setChannelName( &channelName );
+				Tile &tile = m_tiles[TileIndex(tileOrigin, channelName)];
+				updates.push_back( tile.computeUpdate( image ) );
+			}
+
+			Tile::applyUpdates( updates );
+
+			if( refCount() && !m_renderRequestPending.exchange( true ) )
+			{
+				// Must hold a reference to stop us dying before our UI thread call is scheduled.
+				ImageGadgetPtr thisRef = this;
+				ParallelAlgo::callOnUIThread(
+					[thisRef] {
+						thisRef->m_renderRequestPending = false;
+						thisRef->Gadget::dirty( DirtyType::Render );
+					}
+				);
+			}
+		}
+		catch( ... )
+		{
+			// We don't want to call `Tile::applyUpdates()` because we won't have
+			// a complete set of updates for all channels. But we do need to turn off
+			// the active flag for each tile.
+			for( auto &channelName : channelsToCompute )
+			{
+				m_tiles[TileIndex(tileOrigin, channelName)].resetActive();
+			}
+			throw;
 		}
 
-		Tile::applyUpdates( updates );
-
-		if( refCount() && !m_renderRequestPending.exchange( true ) )
-		{
-			// Must hold a reference to stop us dying before our UI thread call is scheduled.
-			ImageGadgetPtr thisRef = this;
-			ParallelAlgo::callOnUIThread(
-				[thisRef] {
-					thisRef->m_renderRequestPending = false;
-					thisRef->Gadget::dirty( DirtyType::Render );
-				}
-			);
-		}
 	};
 
-
-	// callOnBackgroundThread requires a "subject" that will trigger task cancellation
-	// when dirtied.  This subject usually needs to be in a script, but there's a special
-	// case in BackgroundTask::scriptNode for nodes that are in a GafferUI::View.  We
-	// can work with this by passing in m_image, which is passed to us by ImageView.
-	// This means that any internal nodes of ImageGadget are not part of the automatic
-	// task cancellation and we must ensure that we never modify internal nodes while
-	// the background task is running ( this is easier now that there are no internal nodes ).
 	Context::Scope scopedContext( m_context.get() );
 	m_tilesTask = ParallelAlgo::callOnBackgroundThread(
 		// Subject
@@ -897,8 +904,24 @@ void ImageGadget::updateTiles()
 		// OK to capture `this` via raw pointer, because ~ImageGadget waits for
 		// the background process to complete.
 		[ this, channelsToCompute, dataWindow, tileFunctor ] {
-			ImageAlgo::parallelProcessTiles( m_image.get(), tileFunctor, dataWindow );
-			m_dirtyFlags &= ~TilesDirty;
+
+			try
+			{
+				ImageAlgo::parallelProcessTiles( m_image.get(), tileFunctor, dataWindow );
+				m_dirtyFlags &= ~TilesDirty;
+			}
+			catch( const Gaffer::ProcessException & )
+			{
+				// No point starting a new compute if it's just
+				// going to error again.
+				m_dirtyFlags &= ~TilesDirty;
+			}
+			catch( const IECore::Cancelled & )
+			{
+				// Don't clear dirty flag, so that we restart
+				// on the next redraw.
+			}
+
 			if( refCount() )
 			{
 				ImageGadgetPtr thisRef = this;
@@ -908,6 +931,7 @@ void ImageGadget::updateTiles()
 					}
 				);
 			}
+
 		}
 	);
 
