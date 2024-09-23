@@ -1,7 +1,13 @@
 1.3.16.x (relative to 1.3.16.8)
 ========
 
+Fixes
+-----
 
+- Viewer, ImageGadget :
+  - Fixed partial image updates when an unrelated InteractiveRender was running (#6043).
+  - Fixed "colour tearing", where updates to some image channels became visible before updates to others.
+  - Fixed unnecessary texture updates when specific image tiles don't change.
 
 1.3.16.8 (relative to 1.3.16.7)
 ========

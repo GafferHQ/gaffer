@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import time
 import unittest
 import imath
 
@@ -119,6 +120,30 @@ class ImageGadgetTest( GafferUITest.TestCase ) :
 		gadget.setPaused( False )
 		self.assertEqual( len( cs ), 2 )
 		self.assertNotEqual( gadget.state(), gadget.State.Paused )
+
+	def testNoUnecessaryUpdates( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["image"] = GafferImage.Checkerboard()
+		script["image"]["format"].setValue( GafferImage.Format( GafferImage.ImagePlug.tileSize(), GafferImage.ImagePlug.tileSize() ) )
+
+		gadget = GafferImageUI.ImageGadget()
+		gadget.setImage( script["image"]["out"] )
+		gadget.setContext( script.context() )
+
+		with GafferUI.Window() as window :
+			GafferUI.GadgetWidget( gadget )
+
+		GafferImageUI.ImageGadget.resetTileUpdateCount()
+		window.setVisible( True )
+		while GafferImageUI.ImageGadget.tileUpdateCount() < 4 :
+			self.waitForIdle()
+
+		for frame in range( 2, 4 ) :
+			script.context().setFrame( frame )
+			time.sleep( 0.5 )
+			self.waitForIdle()
+			self.assertEqual( GafferImageUI.ImageGadget.tileUpdateCount(), 4 )
 
 if __name__ == "__main__":
 	unittest.main()
