@@ -1,7 +1,15 @@
 1.x.x.x (relative to 1.5.0.0a1)
 =======
 
+Fixes
+-----
 
+- Viewer, ImageGadget : [^1]
+  - Fixed partial image updates when an unrelated InteractiveRender was running (#6043).
+  - Fixed "colour tearing", where updates to some image channels became visible before updates to others.
+  - Fixed unnecessary texture updates when specific image tiles don't change.
+
+[^1]: To be omitted from 1.5.0.0 release notes.
 
 1.5.0.0a1 (relative to 1.4.13.0)
 =========
@@ -152,7 +160,18 @@ Build
 1.4.x.x (relative to 1.4.13.0)
 =======
 
+Improvements
+------------
 
+- NumericWidget : Added the ability to use <kbd>Ctrl</kbd> + scroll wheel to adjust values in the same manner as <kbd>Up</kbd> and <kbd>Down</kbd> (#6009).
+
+Fixes
+-----
+
+- Viewer, ImageGadget :
+  - Fixed partial image updates when an unrelated InteractiveRender was running (#6043).
+  - Fixed "colour tearing", where updates to some image channels became visible before updates to others.
+  - Fixed unnecessary texture updates when specific image tiles don't change.
 
 1.4.13.0 (relative to 1.4.12.0)
 ========
@@ -948,7 +967,13 @@ Build
 1.3.16.x (relative to 1.3.16.8)
 ========
 
+Fixes
+-----
 
+- Viewer, ImageGadget :
+  - Fixed partial image updates when an unrelated InteractiveRender was running (#6043).
+  - Fixed "colour tearing", where updates to some image channels became visible before updates to others.
+  - Fixed unnecessary texture updates when specific image tiles don't change.
 
 1.3.16.8 (relative to 1.3.16.7)
 ========
