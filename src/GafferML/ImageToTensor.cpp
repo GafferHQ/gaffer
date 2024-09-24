@@ -131,6 +131,7 @@ void ImageToTensor::hash( const Gaffer::ValuePlug *output, const Gaffer::Context
 			// Tile
 			[&] ( const ImagePlug *image, const string &channelName, const Imath::V2i &tileOrigin )
 			{
+				IECore::Canceller::check( context->canceller() );
 				if( !ImageAlgo::channelExists( inChannels->readable(), channelName ) )
 				{
 					throw IECore::Exception( fmt::format( "Channel \"{}\" does not exist", channelName ) );
@@ -180,6 +181,8 @@ void ImageToTensor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *c
 			channels,
 			[&] ( const ImagePlug *image, const string &channelName, const Imath::V2i &tileOrigin )
 			{
+				IECore::Canceller::check( context->canceller() );
+
 				if( !ImageAlgo::channelExists( inChannels->readable(), channelName ) )
 				{
 					throw IECore::Exception( fmt::format( "Channel \"{}\" does not exist", channelName ) );
