@@ -79,21 +79,17 @@ class _OperationIconColumn( GafferUI.PathColumn ) :
 
 class _NodeNameColumn( GafferUI.PathColumn ) :
 
-	def __init__( self, title, property, scriptNode ) :
+	def __init__( self, title, property ) :
 
 		GafferUI.PathColumn.__init__( self )
 
 		self.__title = title
 		self.__property = property
-		self.__scriptNode = scriptNode
 
 	def cellData( self, path, canceller = None ) :
 
-		cellValue = path.property( self.__property )
-
-		data = self.CellData( cellValue.relativeName( self.__scriptNode ) )
-
-		return data
+		node = path.property( self.__property )
+		return self.CellData( node.relativeName( node.scriptNode() ) )
 
 	def headerData( self, canceller = None ) :
 
@@ -136,9 +132,7 @@ class _ValueColumn( GafferUI.PathColumn ) :
 
 class _HistoryWindow( GafferUI.Window ) :
 
-	def __init__( self, inspector, scenePath, context, scriptNode, title=None, **kw ) :
-
-		assert( isinstance( scriptNode, Gaffer.ScriptNode ) )
+	def __init__( self, inspector, scenePath, context, title=None, **kw ) :
 
 		if title is None :
 			title = "History"
@@ -147,13 +141,12 @@ class _HistoryWindow( GafferUI.Window ) :
 
 		self.__inspector = inspector
 		self.__scenePath = scenePath
-		self.__scriptNode = scriptNode
 
 		with self :
 			self.__pathListingWidget = GafferUI.PathListingWidget(
 				Gaffer.DictPath( {}, "/" ),
 				columns = (
-					_NodeNameColumn( "Node", "history:node", self.__scriptNode ),
+					_NodeNameColumn( "Node", "history:node" ),
 					_ValueColumn( "Value", "history:value", "history:fallbackValue" ),
 					_OperationIconColumn( "Operation", "history:operation" ),
 				),
@@ -291,7 +284,7 @@ class _HistoryWindow( GafferUI.Window ) :
 			# The node and all of its parents up to the script node
 			# contribute to the path name.
 
-			while node is not self.__scriptNode and node is not None :
+			while node is not None and not isinstance( node, Gaffer.ScriptNode ) :
 				self.__nodeNameChangedSignals.append(
 					node.nameChangedSignal().connect(
 						Gaffer.WeakMethod( self.__nodeNameChanged ),

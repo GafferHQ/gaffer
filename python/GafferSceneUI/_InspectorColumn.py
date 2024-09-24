@@ -342,7 +342,6 @@ def __showHistory( pathListing ) :
 				column.inspector(),
 				pathString,
 				inspectionContext,
-				pathListing.ancestor( GafferUI.Editor ).scriptNode(),
 				"History : {} : {}".format( pathString, column.headerData().value )
 			)
 			pathListing.ancestor( GafferUI.Window ).addChildWindow( window, removeOnClose = True )
