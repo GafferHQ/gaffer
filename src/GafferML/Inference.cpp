@@ -75,7 +75,8 @@ Inference::Inference( const std::string &name )
 	:	ComputeNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new TensorPlug( "in", Plug::In ) );
+	addChild( new StringPlug( "model" ) );
+	addChild( new TensorPlug( "in" ) );
 	addChild( new TensorPlug( "out", Plug::Out ) );
 }
 
@@ -83,35 +84,43 @@ Inference::~Inference()
 {
 }
 
+Gaffer::StringPlug *Inference::modelPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::StringPlug *Inference::modelPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
 TensorPlug *Inference::inPlug()
 {
-	return getChild<TensorPlug>( g_firstPlugIndex );
+	return getChild<TensorPlug>( g_firstPlugIndex + 1 );
 
 }
 
 const TensorPlug *Inference::inPlug() const
 {
-	return getChild<TensorPlug>( g_firstPlugIndex );
+	return getChild<TensorPlug>( g_firstPlugIndex + 1 );
 
 }
 
 TensorPlug *Inference::outPlug()
 {
-	return getChild<TensorPlug>( g_firstPlugIndex + 1 );
-
+	return getChild<TensorPlug>( g_firstPlugIndex + 2 );
 }
 
 const TensorPlug *Inference::outPlug() const
 {
-	return getChild<TensorPlug>( g_firstPlugIndex + 1 );
-
+	return getChild<TensorPlug>( g_firstPlugIndex + 2 );
 }
 
 void Inference::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ComputeNode::affects( input, outputs );
 
-	if( input == inPlug() )
+	if( input == inPlug() || input == modelPlug() )
 	{
 		outputs.push_back( outPlug() );
 	}
@@ -123,6 +132,7 @@ void Inference::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 	{
 		ComputeNode::hash( output, context, h );
 		inPlug()->hash( h );
+		modelPlug()->hash( h );
 	}
 	else
 	{
@@ -134,10 +144,10 @@ void Inference::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 {
 	if( output == outPlug() )
 	{
-		const char *modelPath = "/home/john/dev/onnxruntime-inference-examples/c_cxx/candy.onnx";
+		const string model = modelPlug()->getValue();
 
 		// TODO : ARE THESE REUSABLE? SHOULD WE CACHE THEM BY MODEL PATH???
-		Ort::Session session( ortEnv(), modelPath, Ort::SessionOptions() );
+		Ort::Session session( ortEnv(), model.c_str(), Ort::SessionOptions() );
 
 		ConstTensorDataPtr inputTensor = inPlug()->getValue();
 
@@ -145,7 +155,7 @@ void Inference::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 		// LOOKS POSSIBLE VIA RUNOPTIONS, BUT IT ISN'T POLLED - WE'D
 		// NEED TO CALL `SetTerminate()` SOMEHOW.
 
-		/// TODO : VALIDATE INPUT
+		/// TODO : VALIDATE
 
 		const char *inputNames[] = { "inputImage" };
 		const char *outputNames[] = { "outputImage" };

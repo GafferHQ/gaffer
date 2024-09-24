@@ -40,6 +40,7 @@
 #include "GafferML/TensorPlug.h"
 
 #include "Gaffer/ComputeNode.h"
+#include "Gaffer/StringPlug.h"
 
 namespace GafferML
 {
@@ -54,8 +55,11 @@ class GAFFERML_API Inference : public Gaffer::ComputeNode
 
 		GAFFER_NODE_DECLARE_TYPE( GafferML::Inference, InferenceTypeId, Gaffer::ComputeNode );
 
-		// TODO : INITIALISE THESE FROM THE MODEL.
+		Gaffer::StringPlug *modelPlug();
+		const Gaffer::StringPlug *modelPlug() const;
 
+		// TODO : INITIALISE THESE FROM THE MODEL. DIFFERENT MODELS HAVE DIFFERENT NUMBERS
+		// OF INPUTS AND OUTPUTS WITH DIFFERENT NAMES.
 		TensorPlug *inPlug();
 		const TensorPlug *inPlug() const;
 
