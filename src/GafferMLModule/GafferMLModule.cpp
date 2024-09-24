@@ -63,6 +63,10 @@ class InferenceSerialiser : public GafferBindings::NodeSerialiser
 
 	std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const override
 	{
+		/// TODO : MAYBE WE DON'T EVEN WANT THIS? LOADING A MODEL JUST TO LOAD A FILE SEEMS A BIT MUCH.
+		/// AND IF WE WANT TO USE MULTIPLE MODELS WITH THE SAME LAYOUT, IT'S BETTER IF THE INPUTS/OUTPUTS
+		/// ARE JUST DYNAMIC PLUGS THAT ARE MADE AT THE POINT IN TIME YOU CHOOSE THE FIRST MODEL.
+
 		std::string result = GafferBindings::NodeSerialiser::postConstructor( graphComponent, identifier, serialisation );
 		const Inference *inference = static_cast<const Inference *>( graphComponent );
 		const std::string model = inference->modelPlug()->getValue();
