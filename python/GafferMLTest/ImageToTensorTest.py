@@ -55,5 +55,17 @@ class ImageToTensorTest( GafferTest.TestCase ) :
 		with self.assertRaisesRegex( Gaffer.ProcessException, 'Channel "Y" does not exist' ) :
 			tensor["tensor"].getValue()
 
+	def testShufflingChannelsChangesHash( self ) :
+
+		checker = GafferImage.Checkerboard()
+		tensor = GafferML.ImageToTensor()
+		tensor["image"].setInput( checker["out"] )
+
+		self.assertEqual( tensor["channels"].getValue(), IECore.StringVectorData( [ "R", "G", "B" ] ) )
+		h1 = tensor["tensor"].hash()
+
+		tensor["channels"].setValue( IECore.StringVectorData( [ "B", "G", "R" ] ) )
+		self.assertNotEqual( tensor["tensor"].hash(), h1 )
+
 if __name__ == "__main__":
 	unittest.main()
