@@ -169,11 +169,6 @@ class _ColorField( GafferUI.Widget ) :
 
 		GafferUI.Widget.__init__( self, QtWidgets.QWidget(), **kw )
 
-		# \todo Allow the widget to grow if the containing window is resized. It should also
-		# be constrained to be square.
-		self._qtWidget().setMinimumSize( 216, 216 )
-		self._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed )
-
 		self._qtWidget().paintEvent = Gaffer.WeakMethod( self.__paintEvent )
 
 		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
@@ -456,6 +451,126 @@ class _ColorField( GafferUI.Widget ) :
 
 		self.__drawValue( painter )
 
+class _ColorFieldRowLayout( QtWidgets.QLayout ) :
+
+	def __init__( self ) :
+
+		QtWidgets.QLayout.__init__( self, None )
+
+		# No spacing between color field and sliders so the active component icons
+		# line up against the color field. Do add a little space between the sliders
+		# and the options button.
+		self.setSpacing( 0 )
+		self.__buttonSpacing = 4
+		self.__minColorFieldSize = 66  # Height of 3 sliders
+
+		self.__items = []
+
+	def addItem( self, item ) :
+
+		self.__items.append( item )
+
+	def count( self ) :
+
+		return len( self.__items )
+
+	def expandingDirections( self ) :
+
+		return QtCore.Qt.Orientations( QtCore.Qt.Orientation( 0 ) )
+
+	def itemAt( self, index ) :
+
+		return self.__items[index] if index >= 0 and index < len( self.__items ) else None
+
+	def takeAt( self, index ) :
+
+		return self.__items.pop( index ) if index >= 0 and index < len( self.__items ) else None
+
+	def minimumSize( self ) :
+
+		assert( len( self.__items ) == 3 )
+
+		size1 = self.__items[1].minimumSize()
+		size2 = self.__items[2].minimumSize()
+		return QtCore.QSize(
+			self.__minColorFieldSize + size1.width() + size2.width() + self.__buttonSpacing,
+			max( self.__minColorFieldSize, max( size1.height(), size2.height() ) )
+		)
+
+	def maximumSize( self ) :
+
+		return QtCore.QSize( QtWidgets.QLayout.maximumSize( self ).width(), self.sizeHint().height() )
+
+	def sizeHint( self ) :
+
+		assert( len( self.__items ) == 3 )
+
+		size1 = self.__items[1].sizeHint()
+		size2 = self.__items[2].sizeHint()
+		return QtCore.QSize(
+			size1.height() + size1.width() + size2.width() + self.__buttonSpacing,
+			max( self.__minColorFieldSize, max( size1.height(), size2.height() ) )
+		)
+
+	def setGeometry( self, rect ) :
+
+		assert( len( self.__items ) == 3 )
+
+		size1 = self.__items[1].sizeHint()
+		size2 = self.__items[2].sizeHint()
+
+		leftSize = 0
+		if not self.__items[0].isEmpty() :
+			leftSize = max( self.__minColorFieldSize, min( size1.height(), rect.width() / 2 ) )
+			self.__items[0].setGeometry( QtCore.QRect( rect.left(), rect.top(), leftSize, leftSize ) )
+
+		self.__items[1].setGeometry(
+			QtCore.QRect(
+				rect.left() + leftSize,
+				rect.top(),
+				rect.width() - leftSize - size2.width() - self.__buttonSpacing,
+				size1.height()
+			)
+		)
+		self.__items[2].setGeometry(
+			QtCore.QRect( rect.right() - size2.width(), rect.top(), size2.width(), size2.height() )
+		)
+
+
+class _ColorFieldRowContainer( GafferUI.ContainerWidget ) :
+
+	def __init__( self, **kw ) :
+
+		GafferUI.ContainerWidget.__init__( self, QtWidgets.QWidget(), **kw )
+
+		self.__qtLayout = _ColorFieldRowLayout()
+		self.__qtLayout.setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )
+
+		self._qtWidget().setLayout( self.__qtLayout )
+
+		self.__widgets = []
+
+	def addChild( self, child ) :
+
+		assert( isinstance( child, GafferUI.Widget ) )
+		assert( len( self.__widgets ) <=3 )
+
+		oldParent = child.parent()
+		if oldParent is not None :
+			oldParent.removeChild( child )
+
+		self.__widgets.append( child )
+
+		self.__qtLayout.addWidget( child._qtWidget() )
+
+		child._applyVisibility()
+
+	def removeChild( self, child ) :
+
+		self.__widgets.remove( child )
+		child._qtWidget().setParent( None )
+		child._applyVisibility()
+
 class ColorChooser( GafferUI.Widget ) :
 
 	ColorChangedReason = enum.Enum( "ColorChangedReason", [ "Invalid", "SetColor", "Reset" ] )
@@ -487,7 +602,7 @@ class ColorChooser( GafferUI.Widget ) :
 		self.__componentToolTip = "Click to use this component in the color field."
 
 		with self.__column :
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 0 ) :
+			with _ColorFieldRowContainer() :
 
 				self.__colorField = _ColorField( color )
 				self.__colorValueChangedConnection = self.__colorField.valueChangedSignal().connect( Gaffer.WeakMethod( self.__colorValueChanged ) )
@@ -583,8 +698,7 @@ class ColorChooser( GafferUI.Widget ) :
 				GafferUI.MenuButton(
 					image = "gear.png",
 					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__optionsMenuDefinition ) ),
-					hasFrame = False,
-					parenting = { "verticalAlignment": GafferUI.VerticalAlignment.Top }
+					hasFrame = False
 				)
 
 			# initial and current colour swatches
