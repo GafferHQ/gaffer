@@ -34,37 +34,35 @@
 #
 ##########################################################################
 
+import unittest
+
 import Gaffer
+import GafferTest
 import GafferML
 
-Gaffer.Metadata.registerNode(
+class InferenceTest( GafferTest.TestCase ) :
 
-	GafferML.Inference,
+	def testLoadModel( self ) :
 
-	plugs = {
+		script = Gaffer.ScriptNode()
 
-		"model" : [
+		script["inference"] = GafferML.Inference()
+		## \todo Can we use a Python API to generate a test model on the fly?
+		script["inference"].loadModel( "/home/john/dev/onnxruntime-inference-examples/c_cxx/candy.onnx" )
 
-			"nodule:type", "",
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", True,
-			"path:valid", True,
-			"path:bookmarks", "onnx",
-			"fileSystemPath:extensions", "onnx",
+		def assertLoaded( inference ) :
 
-		],
+			self.assertEqual( inference["in"].keys(), [ "inputImage" ] )
+			self.assertIsInstance( inference["in"]["inputImage"], GafferML.TensorPlug )
 
-		"in" : [
+			self.assertEqual( inference["out"].keys(), [ "outputImage" ] )
+			self.assertIsInstance( inference["out"]["outputImage"], GafferML.TensorPlug )
 
-			"nodule:type", "GafferUI::CompoundNodule",
+		assertLoaded( script["inference"] )
 
-		],
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+		assertLoaded( script2["inference"] )
 
-		"out" : [
-
-			"nodule:type", "GafferUI::CompoundNodule",
-
-		],
-
-	}
-)
+if __name__ == "__main__":
+	unittest.main()

@@ -46,8 +46,38 @@
 #include "GafferBindings/TypedObjectPlugBinding.h"
 
 using namespace boost::python;
-//using namespace GafferImageModule;
 using namespace GafferML;
+using namespace GafferBindings;
+
+namespace
+{
+
+void loadModelWrapper( Inference &inference, const std::filesystem::path &model )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	inference.loadModel( model );
+}
+
+class InferenceSerialiser : public GafferBindings::NodeSerialiser
+{
+
+	std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const override
+	{
+		std::string result = GafferBindings::NodeSerialiser::postConstructor( graphComponent, identifier, serialisation );
+		const Inference *inference = static_cast<const Inference *>( graphComponent );
+		const std::string model = inference->modelPlug()->getValue();
+		if( model.size() )
+		{
+			result += fmt::format( "{}.loadModel( \"{}\" )\n", identifier, model );
+		}
+
+		return result;
+	}
+
+};
+
+
+} // namespace
 
 BOOST_PYTHON_MODULE( _GafferML )
 {
@@ -58,6 +88,10 @@ BOOST_PYTHON_MODULE( _GafferML )
 
 	GafferBindings::DependencyNodeClass<ImageToTensor>();
 	GafferBindings::DependencyNodeClass<TensorToImage>();
-	GafferBindings::DependencyNodeClass<Inference>();
+	GafferBindings::DependencyNodeClass<Inference>()
+		.def( "loadModel", &loadModelWrapper )
+	;
+
+	GafferBindings::Serialisation::registerSerialiser( Inference::staticTypeId(), new InferenceSerialiser() );
 
 }

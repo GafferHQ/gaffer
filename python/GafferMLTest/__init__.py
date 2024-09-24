@@ -35,6 +35,7 @@
 ##########################################################################
 
 from .ImageToTensorTest import ImageToTensorTest
+from .InferenceTest import InferenceTest
 
 if __name__ == "__main__":
 	import unittest
