@@ -132,7 +132,7 @@ class _ValueColumn( GafferUI.PathColumn ) :
 
 class _HistoryWindow( GafferUI.Window ) :
 
-	def __init__( self, inspector, scenePath, context, title=None, **kw ) :
+	def __init__( self, inspector, inspectionPath, title=None, **kw ) :
 
 		if title is None :
 			title = "History"
@@ -140,7 +140,7 @@ class _HistoryWindow( GafferUI.Window ) :
 		GafferUI.Window.__init__( self, title, **kw )
 
 		self.__inspector = inspector
-		self.__scenePath = scenePath
+		self.__inspectionPath = inspectionPath
 
 		with self :
 			self.__pathListingWidget = GafferUI.PathListingWidget(
@@ -168,17 +168,19 @@ class _HistoryWindow( GafferUI.Window ) :
 
 		inspector.dirtiedSignal().connect( Gaffer.WeakMethod( self.__inspectorDirtied ) )
 
-		context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
+		## \todo We want to make the inspection framework scene-agnostic. We could add an `Inspector::plug()` method
+		# to provide a scene-agnostic way of querying what is being inspected, and use it here.
+		self.__contextTracker = GafferUI.ContextTracker.acquireForFocus( self.__inspectionPath.getScene() )
+		self.__contextTracker.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
+		self.__updatePath()
 
-		self.__updatePath( context )
+	def __updatePath( self ) :
 
-	def __updatePath( self, newContext ) :
-
-		with Gaffer.Context( newContext ) as context :
-			context["scene:path"] = GafferScene.ScenePlug.stringToPath( self.__scenePath )
+		self.__inspectionPath.setContext( self.__contextTracker.context( self.__inspectionPath.getScene() ) )
+		with self.__inspectionPath.inspectionContext() :
 			self.__path = self.__inspector.historyPath()
-			self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ), scoped = True )
 
+		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ), scoped = True )
 		self.__pathListingWidget.setPath( self.__path )
 
 	def __pathChanged( self, path ) :
@@ -270,9 +272,9 @@ class _HistoryWindow( GafferUI.Window ) :
 
 		self.__path._emitPathChanged()
 
-	def __contextChanged( self, context, key ) :
+	def __contextChanged( self, contextTracker ) :
 
-		self.__updatePath( context )
+		self.__updatePath()
 
 	def __updateFinished( self, pathListing ) :
 

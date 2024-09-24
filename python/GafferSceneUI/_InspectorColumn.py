@@ -329,19 +329,16 @@ def __showHistory( pathListing ) :
 
 	columns = pathListing.getColumns()
 	selection = pathListing.getSelection()
-	path = pathListing.getPath().copy()
 
 	for i, column in enumerate( columns ) :
 		for pathString in selection[i].paths() :
+			path = pathListing.getPath().copy()
 			path.setFromString( pathString )
-			inspectionContext = path.inspectionContext()
-			if inspectionContext is None :
+			if path.inspectionContext() is None :
 				continue
-
 			window = _HistoryWindow(
 				column.inspector(),
-				pathString,
-				inspectionContext,
+				path,
 				"History : {} : {}".format( pathString, column.headerData().value )
 			)
 			pathListing.ancestor( GafferUI.Window ).addChildWindow( window, removeOnClose = True )
