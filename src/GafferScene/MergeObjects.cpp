@@ -776,7 +776,8 @@ void MergeObjects::affects( const Plug *input, AffectedPlugsContainer &outputs )
 		input == inPlug()->objectPlug() ||
 		input == inPlug()->transformPlug() ||
 		input == sourcePlug()->objectPlug() ||
-		input == sourcePlug()->transformPlug()
+		input == sourcePlug()->transformPlug() ||
+		affectsMergedObject( input )
 	)
 	{
 		outputs.push_back( processedObjectPlug() );
@@ -891,6 +892,7 @@ void MergeObjects::hash( const Gaffer::ValuePlug *output, const Gaffer::Context 
 		);
 
 		h.append( reduction );
+		hashMergedObject( path, context, h );
 	}
 }
 
@@ -965,7 +967,7 @@ void MergeObjects::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 			taskGroupContext
 		);
 
-		static_cast<Gaffer::ObjectPlug *>( output )->setValue( mergeObjects( sources, context ) );
+		static_cast<Gaffer::ObjectPlug *>( output )->setValue( computeMergedObject( sources, context ) );
 	}
 	else
 	{
@@ -1514,4 +1516,13 @@ Gaffer::ValuePlug::CachePolicy MergeObjects::computeCachePolicy( const Gaffer::V
 		return ValuePlug::CachePolicy::TaskCollaboration;
 	}
 	return FilteredSceneProcessor::computeCachePolicy( output );
+}
+
+bool MergeObjects::affectsMergedObject( const Gaffer::Plug *input ) const
+{
+	return false;
+}
+
+void MergeObjects::hashMergedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
 }
