@@ -41,6 +41,7 @@
 
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 
 namespace GafferML
 {
@@ -55,16 +56,16 @@ class GAFFERML_API Inference : public Gaffer::ComputeNode
 
 		GAFFER_NODE_DECLARE_TYPE( GafferML::Inference, InferenceTypeId, Gaffer::ComputeNode );
 
+		void loadModel( const std::filesystem::path &model );
+
 		Gaffer::StringPlug *modelPlug();
 		const Gaffer::StringPlug *modelPlug() const;
 
-		// TODO : INITIALISE THESE FROM THE MODEL. DIFFERENT MODELS HAVE DIFFERENT NUMBERS
-		// OF INPUTS AND OUTPUTS WITH DIFFERENT NAMES.
-		TensorPlug *inPlug();
-		const TensorPlug *inPlug() const;
+		Gaffer::ValuePlug *inPlug();
+		const Gaffer::ValuePlug *inPlug() const;
 
-		TensorPlug *outPlug();
-		const TensorPlug *outPlug() const;
+		Gaffer::ValuePlug *outPlug();
+		const Gaffer::ValuePlug *outPlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
@@ -73,6 +74,16 @@ class GAFFERML_API Inference : public Gaffer::ComputeNode
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
+
+	private :
+
+		// We assume that if a model has multiple outputs, then it is more
+		// efficient to compute them all at once. We do that and cache it
+		// on this plug, then dole out individual results from the children
+		// of `outPlug()`.
+		/// \todo Verify the assumption.
+		Gaffer::AtomicCompoundDataPlug *inferencePlug();
+		const Gaffer::AtomicCompoundDataPlug *inferencePlug() const;
 
 		static size_t g_firstPlugIndex;
 
