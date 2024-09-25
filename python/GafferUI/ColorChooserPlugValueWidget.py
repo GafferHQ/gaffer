@@ -86,6 +86,22 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__lastChangedReason = None
 		self.__mergeGroupId = 0
 
+	def setInitialColor( self, color ) :
+
+		self.__colorChooser.setInitialColor( color )
+
+	def getInitialColor( self ) :
+
+		return self.__colorChooser.getInitialColor()
+
+	def setSwatchesVisible( self, visible ) :
+
+		self.__colorChooser.setSwatchesVisible( visible )
+
+	def getSwatchesVisible( self ) :
+
+		return self.__colorChooser.getVisible()
+
 	def _updateFromValues( self, values, exception ) :
 
 		# ColorChooser only supports one colour, and doesn't have
