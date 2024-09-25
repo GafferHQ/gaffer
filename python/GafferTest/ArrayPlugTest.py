@@ -531,6 +531,12 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( s2["n"]["in"][0].getInput(), s2["a"]["sum"] )
 		self.assertEqual( s2["n"]["in"][1].getInput(), s2["a"]["sum"] )
 
+	def testResizeWithoutExistingChildren( self ) :
+
+		p = Gaffer.ArrayPlug( name = "p" )
+		with self.assertRaisesRegex( RuntimeError, "Can't resize ArrayPlug `p` as it has no children" ) :
+			p.resize( 1 )
+
 	def tearDown( self ) :
 
 		# some bugs in the InputGenerator only showed themselves when

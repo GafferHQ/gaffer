@@ -151,6 +151,30 @@ void ArrayPlug::resize( size_t size )
 		throw IECore::Exception( "Invalid size" );
 	}
 
+	if( size && !children().size() )
+	{
+		if( auto scriptNode = ancestor<ScriptNode>() )
+		{
+			if( scriptNode->isExecuting() )
+			{
+				// Needed to allow CreateViews nodes serialised from Gaffer 1.5
+				// to be loaded. In 1.5, CreateViews creates an ArrayPlug with
+				// an element prototype, and uses `resize()` in the
+				// serialisation. We can't resize here because we don't have a
+				// prototype, but as long as we don't error,
+				// `startup/GafferImage/createViewsCompatibility.py` will deal
+				// with the rest for us.
+				return;
+			}
+		}
+		throw IECore::Exception(
+			fmt::format(
+				"Can't resize ArrayPlug `{}` as it has no children",
+				fullName()
+			)
+		);
+	}
+
 	while( size > children().size() )
 	{
 		PlugPtr p = getChild<Plug>( 0 )->createCounterpart( getChild<Plug>( 0 )->getName(), direction() );
