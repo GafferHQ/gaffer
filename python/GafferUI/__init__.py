@@ -304,6 +304,7 @@ from . import NameSwitchUI
 from . import EditScopeUI
 from . import ContextVariableTweaksUI
 from . import CollectUI
+from . import PatternMatchUI
 
 # backwards compatibility
 ## \todo Remove me

@@ -1,6 +1,11 @@
 1.x.x.x (relative to 1.5.0.0a1)
 =======
 
+Features
+--------
+
+- PatternMatch : Added a new node for matching strings against wildcard patterns.
+
 Improvements
 ------------
 
