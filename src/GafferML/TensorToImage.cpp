@@ -58,14 +58,20 @@ namespace
 
 Box2i dataWindow( const TensorData *tensor )
 {
+	/// \todo Does this need to be configurable?
 	const auto shape = tensor->value.GetTensorTypeAndShapeInfo().GetShape();
-	if( shape.size() != 4 )
+	if( shape.size() == 3 )
 	{
-		/// \todo Why 4? Does everyone really use a first dimension of 1?
-		/// \todo And maybe not everyone puts width and height last?
-		throw IECore::Exception( "Expected tensor with 4 dimensions" );
+		return Box2i( V2i( 0 ), V2i( shape[1], shape[2] ) );
 	}
-	return Box2i( V2i( 0 ), V2i( shape[2], shape[3] ) );
+	else if( shape.size() == 4 )
+	{
+		return Box2i( V2i( 0 ), V2i( shape[2], shape[3] ) );
+	}
+	else
+	{
+		throw IECore::Exception( "Expected tensor with 3 or 4 dimensions" );
+	}
 }
 
 } // namespace
