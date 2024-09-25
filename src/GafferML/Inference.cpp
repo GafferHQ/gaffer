@@ -173,6 +173,11 @@ void Inference::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 
 	if( input->parent() == inPlug() )
 	{
+		outputs.push_back( inferencePlug() );
+	}
+
+	if( input == inferencePlug() )
+	{
 		for( auto p : Gaffer::ValuePlug::Range( *outPlug() ) )
 		{
 			outputs.push_back( p.get() );
