@@ -37,11 +37,16 @@
 #include "GafferOSL/Export.h"
 #include "GafferOSL/TypeIds.h"
 
+#include "GafferImage/ImagePlug.h"
+
 #include "IECoreScene/ShaderNetwork.h"
 
 #include "IECore/CompoundData.h"
 
+#include "OpenImageIO/ustring.h"
+
 #include "boost/container/flat_set.hpp"
+#include "boost/container/flat_map.hpp"
 
 namespace GafferOSL
 {
@@ -83,13 +88,17 @@ class GAFFEROSL_API ShadingEngine : public IECore::RefCounted
 		};
 
 		using Transforms = std::map<IECore::InternedString, Transform>;
+		using ImagePlugs = std::map<IECore::InternedString, const GafferImage::ImagePlug *>;
 
 		/// Append a unique hash representing this shading engine to `h`.
 		void hash( IECore::MurmurHash &h ) const;
-		IECore::CompoundDataPtr shade( const IECore::CompoundData *points, const Transforms &transforms = Transforms() ) const;
+		IECore::CompoundDataPtr shade( const IECore::CompoundData *points, const Transforms &transforms = Transforms(), const ImagePlugs &imagePlugs = ImagePlugs() ) const;
 
 		bool needsAttribute( const std::string &name ) const;
 		bool hasDeformation() const;
+		bool needsImageSamples() const;
+
+		IECore::MurmurHash hashPossibleImageSamples( const ImagePlugs &imagePlugs ) const;
 
 	private :
 
@@ -107,6 +116,10 @@ class GAFFEROSL_API ShadingEngine : public IECore::RefCounted
 		bool m_unknownAttributesNeeded;
 
 		bool m_hasDeformation;
+
+		std::vector< OIIO::ustring > m_gafferTexturesRequested;
+
+		boost::container::flat_map< OIIO::ustring, int> m_gafferTextureIndices;
 
 		void *m_shaderGroupRef;
 
