@@ -20,6 +20,7 @@ Breaking Changes
 ----------------
 
 - IECoreArnold : Added `messageContext` argument to `NodeAlgo::Converter` and `NodeAlgo::MotionConverter`.
+- Instancer : `encapsulate` now produces a single Capsule at the `.../instances` location, instead of the previous `encapsulateInstanceGroups` plug which produced separate capsules at each `.../instances/<prototypeName>` location. Outputting a single capsule is slightly less flexible for users, but is much faster to render in Arnold ( Arnold is currently unable to deal effectively with large numbers of fully overlapping procedurals ). This change also allowed us to simplify the code slightly, reducing the time spent in Gaffer when rendering an encapsulated Instancer by around 20%.
 
 [^1]: To be omitted from 1.5.0.0 release notes.
 
