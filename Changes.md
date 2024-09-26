@@ -120,7 +120,7 @@ Breaking Changes
 ----------------
 
 - CameraTweaks : `Replace` mode now errors if the input parameter does not exist. Use `Create` mode or the new `ignoreMissing` plug instead.
-- TweakPlug : Remove deprecated `MissingMode::IgnoreOrReplace`.
+- TweakPlug : Removed deprecated `MissingMode::IgnoreOrReplace`.
 - AttributeTweaks : `Replace` mode no longer errors if the `linkedLights` attribute doesn't exist.
 - ImageReader : Changed handling of lower-cased "r", "g", "b" and "a" channels.
 - Metadata : Path based registrations to a Node or Plug now override equivalent registrations on its descendants.
