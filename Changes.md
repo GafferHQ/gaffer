@@ -7,6 +7,9 @@ Improvements
 - Arnold :
   - Added location names to warning messages.
   - A missing "P" primitive variable no longer aborts the render, but outputs a warning message instead.
+- Instancer :
+  - Improved Arnold raytracing performance for encapsulated instancers with many prototypes. All instances are now output in a single top-level procedural rather than a top-level procedural per prototype, resulting in more optimal BVH traversals in Arnold.
+  - Reduced scene generation time for encapsulated instancers by around 20%.
 
 Fixes
 -----
@@ -20,7 +23,7 @@ Breaking Changes
 ----------------
 
 - IECoreArnold : Added `messageContext` argument to `NodeAlgo::Converter` and `NodeAlgo::MotionConverter`.
-- Instancer : `encapsulate` now produces a single Capsule at the `.../instances` location, instead of the previous `encapsulateInstanceGroups` plug which produced separate capsules at each `.../instances/<prototypeName>` location. Outputting a single capsule is slightly less flexible for users, but is much faster to render in Arnold ( Arnold is currently unable to deal effectively with large numbers of fully overlapping procedurals ). This change also allowed us to simplify the code slightly, reducing the time spent in Gaffer when rendering an encapsulated Instancer by around 20%.
+- Instancer : Renamed `encapsulateInstanceGroups` plug to `encapsulate`. Encapsulation now produces a single capsule at the `.../instances` location, instead of capsules at each `.../instances/<prototypeName>` location.
 
 [^1]: To be omitted from 1.5.0.0 release notes.
 
