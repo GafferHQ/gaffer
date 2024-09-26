@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import imath
 import time
 
 import IECore
@@ -233,3 +234,19 @@ class MeshToLevelSetTest( GafferVDBTest.VDBTestCase ) :
 		# we'll get deadlock.
 
 		meshToLevelSet2["out"].object( "/cube" )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testBasicPerf( self ):
+		sphere = GafferScene.Sphere()
+		sphere["radius"].setValue( 2.0 )
+		sphere["divisions"].setValue( imath.V2i( 1000, 1000 ) )
+
+		meshToLevelSet = GafferVDB.MeshToLevelSet()
+		self.setFilter( meshToLevelSet, '/sphere' )
+		meshToLevelSet["voxelSize"].setValue( 0.05 )
+		meshToLevelSet["in"].setInput( sphere["out"] )
+
+		meshToLevelSet["in"].object( "/sphere" )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			meshToLevelSet["out"].object( "/sphere" )
