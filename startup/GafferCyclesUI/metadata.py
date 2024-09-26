@@ -34,10 +34,11 @@
 #
 ##########################################################################
 
+import functools
+import imath
+
 import Gaffer
 import GafferCycles
-import imath
-import functools
 
 parameterMetadata = {
 	"principled_bsdf" : {
