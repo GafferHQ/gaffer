@@ -38,6 +38,7 @@ import unittest
 import imath
 import inspect
 import os
+import pathlib
 
 import IECore
 
@@ -223,6 +224,19 @@ class CreateViewsTest( GafferImageTest.ImageTestCase ) :
 			# Although the `enabled` plug itself does see the new context, so the node is disabled
 			# for this particular view.
 			self.assertFalse( script["constant"]["enabled"].getValue() )
+
+	def testLoadFromVersion1_5( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "createViews-1.5.0.0.gfr" )
+		script.load()
+
+		self.assertEqual( len( script["CreateViews"]["views"] ), 2 )
+		self.assertEqual( script["CreateViews"]["views"][0]["name"].getValue(), "left" )
+		self.assertEqual( script["CreateViews"]["views"][1]["name"].getValue(), "right" )
+		self.assertTrue( script["CreateViews"]["views"][0]["value"].getInput().isSame( script["Checkerboard"]["out"] ) )
+		self.assertTrue( script["CreateViews"]["views"][1]["value"].getInput().isSame( script["Checkerboard1"]["out"] ) )
+		self.assertEqual( script["CreateViews"]["out"].viewNames(), IECore.StringVectorData( [ "left", "right" ] ) )
 
 if __name__ == "__main__":
 	unittest.main()
