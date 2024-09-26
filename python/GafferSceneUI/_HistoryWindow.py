@@ -79,21 +79,17 @@ class _OperationIconColumn( GafferUI.PathColumn ) :
 
 class _NodeNameColumn( GafferUI.PathColumn ) :
 
-	def __init__( self, title, property, scriptNode ) :
+	def __init__( self, title, property ) :
 
 		GafferUI.PathColumn.__init__( self )
 
 		self.__title = title
 		self.__property = property
-		self.__scriptNode = scriptNode
 
 	def cellData( self, path, canceller = None ) :
 
-		cellValue = path.property( self.__property )
-
-		data = self.CellData( cellValue.relativeName( self.__scriptNode ) )
-
-		return data
+		node = path.property( self.__property )
+		return self.CellData( node.relativeName( node.scriptNode() ) )
 
 	def headerData( self, canceller = None ) :
 
@@ -136,9 +132,7 @@ class _ValueColumn( GafferUI.PathColumn ) :
 
 class _HistoryWindow( GafferUI.Window ) :
 
-	def __init__( self, inspector, scenePath, context, scriptNode, title=None, **kw ) :
-
-		assert( isinstance( scriptNode, Gaffer.ScriptNode ) )
+	def __init__( self, inspector, inspectionPath, title=None, **kw ) :
 
 		if title is None :
 			title = "History"
@@ -146,14 +140,13 @@ class _HistoryWindow( GafferUI.Window ) :
 		GafferUI.Window.__init__( self, title, **kw )
 
 		self.__inspector = inspector
-		self.__scenePath = scenePath
-		self.__scriptNode = scriptNode
+		self.__inspectionPath = inspectionPath
 
 		with self :
 			self.__pathListingWidget = GafferUI.PathListingWidget(
 				Gaffer.DictPath( {}, "/" ),
 				columns = (
-					_NodeNameColumn( "Node", "history:node", self.__scriptNode ),
+					_NodeNameColumn( "Node", "history:node" ),
 					_ValueColumn( "Value", "history:value", "history:fallbackValue" ),
 					_OperationIconColumn( "Operation", "history:operation" ),
 				),
@@ -175,17 +168,19 @@ class _HistoryWindow( GafferUI.Window ) :
 
 		inspector.dirtiedSignal().connect( Gaffer.WeakMethod( self.__inspectorDirtied ) )
 
-		context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
+		## \todo We want to make the inspection framework scene-agnostic. We could add an `Inspector::plug()` method
+		# to provide a scene-agnostic way of querying what is being inspected, and use it here.
+		self.__contextTracker = GafferUI.ContextTracker.acquireForFocus( self.__inspectionPath.getScene() )
+		self.__contextTracker.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
+		self.__updatePath()
 
-		self.__updatePath( context )
+	def __updatePath( self ) :
 
-	def __updatePath( self, newContext ) :
-
-		with Gaffer.Context( newContext ) as context :
-			context["scene:path"] = GafferScene.ScenePlug.stringToPath( self.__scenePath )
+		self.__inspectionPath.setContext( self.__contextTracker.context( self.__inspectionPath.getScene() ) )
+		with self.__inspectionPath.inspectionContext() :
 			self.__path = self.__inspector.historyPath()
-			self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ), scoped = True )
 
+		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ), scoped = True )
 		self.__pathListingWidget.setPath( self.__path )
 
 	def __pathChanged( self, path ) :
@@ -277,9 +272,9 @@ class _HistoryWindow( GafferUI.Window ) :
 
 		self.__path._emitPathChanged()
 
-	def __contextChanged( self, context, key ) :
+	def __contextChanged( self, contextTracker ) :
 
-		self.__updatePath( context )
+		self.__updatePath()
 
 	def __updateFinished( self, pathListing ) :
 
@@ -291,7 +286,7 @@ class _HistoryWindow( GafferUI.Window ) :
 			# The node and all of its parents up to the script node
 			# contribute to the path name.
 
-			while node is not self.__scriptNode and node is not None :
+			while node is not None and not isinstance( node, Gaffer.ScriptNode ) :
 				self.__nodeNameChangedSignals.append(
 					node.nameChangedSignal().connect(
 						Gaffer.WeakMethod( self.__nodeNameChanged ),

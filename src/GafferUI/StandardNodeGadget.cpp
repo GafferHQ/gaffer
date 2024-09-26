@@ -382,6 +382,10 @@ class StandardNodeGadget::ErrorGadget : public Gadget
 		{
 			PlugEntry &entry = m_errors[plug];
 			entry.error = error;
+			if( auto tracker = ContextTracker::acquireForFocus( plug.get() ) )
+			{
+				entry.trackedContext = tracker->context( plug.get() )->hash();
+			}
 			if( !entry.parentChangedConnection.connected() )
 			{
 				entry.parentChangedConnection = plug->parentChangedSignal().connect( boost::bind( &ErrorGadget::plugParentChanged, this, ::_1 ) );
@@ -392,6 +396,27 @@ class StandardNodeGadget::ErrorGadget : public Gadget
 		void removeError( const Plug *plug )
 		{
 			m_errors.erase( plug );
+			m_image->setVisible( m_errors.size() );
+		}
+
+		void removeStaleErrors( const ContextTracker *tracker )
+		{
+			// We call `removeError()` whenever a plug is dirtied, but that can
+			// still leave errors lingering if the original error was a problem
+			// of _context_ rather than plug values. So when the tracked context
+			// changes, we remove any errors which occurred within a different
+			// tracked context.
+			for( auto it = m_errors.begin(); it != m_errors.end(); )
+			{
+				if( it->second.trackedContext != tracker->context( it->first.get() )->hash() )
+				{
+					it = m_errors.erase( it );
+				}
+				else
+				{
+					++it;
+				}
+			}
 			m_image->setVisible( m_errors.size() );
 		}
 
@@ -434,6 +459,7 @@ class StandardNodeGadget::ErrorGadget : public Gadget
 		struct PlugEntry
 		{
 			std::string error;
+			IECore::MurmurHash trackedContext;
 			Signals::ScopedConnection parentChangedConnection;
 		};
 
@@ -786,13 +812,16 @@ void StandardNodeGadget::updateFromContextTracker( const ContextTracker *context
 		{
 			m_nodeEnabledInContextTracker = true;
 		}
-		/// \todo Should we clear ErrorGadget when the context changes?
 	}
 	else
 	{
 		m_nodeEnabledInContextTracker = std::nullopt;
 	}
 	updateStrikeThroughVisibility();
+	if( auto g = errorGadget( /* createIfMissing = */ false ) )
+	{
+		g->removeStaleErrors( contextTracker );
+	}
 }
 
 void StandardNodeGadget::updateTextDimming()

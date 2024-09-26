@@ -10,6 +10,8 @@ Improvements
 - Instancer :
   - Improved Arnold raytracing performance for encapsulated instancers with many prototypes. All instances are now output in a single top-level procedural rather than a top-level procedural per prototype, resulting in more optimal BVH traversals in Arnold.
   - Reduced scene generation time for encapsulated instancers by around 20%.
+- NodeEditor : Added <kbd>Alt</kbd> + middle-click action for showing context variable substitutions in strings.
+- LightEditor, RenderPassEditor : History windows now use a context determined relative to the current focus node.
 
 Fixes
 -----
@@ -18,6 +20,11 @@ Fixes
   - Fixed partial image updates when an unrelated InteractiveRender was running (#6043).
   - Fixed "colour tearing", where updates to some image channels became visible before updates to others.
   - Fixed unnecessary texture updates when specific image tiles don't change.
+- GraphEditor :
+  - Fixed lingering error badges (#3820).
+- RenderPassEditor :
+  - Fixed history window to update on context changes, for example, when the current frame is changed.
+  - Fixed invalid `scene:path` context variables created by the history window. [^1]
 
 Breaking Changes
 ----------------
