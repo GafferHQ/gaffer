@@ -622,5 +622,11 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 		for element in s["n"]["user"]["p"] :
 			self.assertIsInstance( element, Gaffer.IntPlug )
 
+	def testResizeWithoutElementPrototype( self ) :
+
+		p = Gaffer.ArrayPlug( name = "p" )
+		with self.assertRaisesRegex( RuntimeError, "ArrayPlug `p` was constructed without the required `elementPrototype`" ) :
+			p.resize( 1 )
+
 if __name__ == "__main__":
 	unittest.main()
