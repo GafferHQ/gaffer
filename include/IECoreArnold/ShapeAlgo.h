@@ -46,16 +46,16 @@ namespace IECoreArnold
 namespace ShapeAlgo
 {
 
-IECOREARNOLD_API void convertP( const IECoreScene::Primitive *primitive, AtNode *shape, const AtString name );
-IECOREARNOLD_API void convertP( const std::vector<const IECoreScene::Primitive *> &samples, AtNode *shape, const AtString name );
+IECOREARNOLD_API void convertP( const IECoreScene::Primitive *primitive, AtNode *shape, const AtString name, const std::string &messageContext = "ShapeAlgo::convertP" );
+IECOREARNOLD_API void convertP( const std::vector<const IECoreScene::Primitive *> &samples, AtNode *shape, const AtString name, const std::string &messageContext = "ShapeAlgo::convertP" );
 
-IECOREARNOLD_API void convertRadius( const IECoreScene::Primitive *primitive, AtNode *shape );
-IECOREARNOLD_API void convertRadius( const std::vector<const IECoreScene::Primitive *> &samples, AtNode *shape );
+IECOREARNOLD_API void convertRadius( const IECoreScene::Primitive *primitive, AtNode *shape, const std::string &messageContext = "ShapeAlgo::convertRadius" );
+IECOREARNOLD_API void convertRadius( const std::vector<const IECoreScene::Primitive *> &samples, AtNode *shape, const std::string &messageContext = "ShapeAlgo::convertRadius" );
 
-IECOREARNOLD_API void convertPrimitiveVariable( const IECoreScene::Primitive *primitive, const IECoreScene::PrimitiveVariable &primitiveVariable, AtNode *shape, const AtString name );
+IECOREARNOLD_API void convertPrimitiveVariable( const IECoreScene::Primitive *primitive, const IECoreScene::PrimitiveVariable &primitiveVariable, AtNode *shape, const AtString name, const std::string &messageContext = "ShapeAlgo::convertPrimitiveVariable" );
 /// Converts primitive variables from primitive into user parameters on shape, ignoring any variables
 /// whose names are present in the ignore array.
-IECOREARNOLD_API void convertPrimitiveVariables( const IECoreScene::Primitive *primitive, AtNode *shape, const char **namesToIgnore=nullptr );
+IECOREARNOLD_API void convertPrimitiveVariables( const IECoreScene::Primitive *primitive, AtNode *shape, const char **namesToIgnore=nullptr, const std::string &messageContext = "ShapeAlgo::convertPrimitiveVariables" );
 
 } // namespace ShapeAlgo
 

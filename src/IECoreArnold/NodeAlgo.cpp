@@ -34,6 +34,8 @@
 
 #include "IECoreArnold/NodeAlgo.h"
 
+#include "IECore/MessageHandler.h"
+
 #include "boost/unordered_map.hpp"
 
 //////////////////////////////////////////////////////////////////////////
@@ -78,7 +80,7 @@ namespace IECoreArnold
 namespace NodeAlgo
 {
 
-AtNode *convert( const IECore::Object *object, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode )
+AtNode *convert( const IECore::Object *object, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
 	const Registry &r = registry();
 	Registry::const_iterator it = r.find( object->typeId() );
@@ -86,10 +88,10 @@ AtNode *convert( const IECore::Object *object, AtUniverse *universe, const std::
 	{
 		return nullptr;
 	}
-	return it->second.converter( object, universe, nodeName, parentNode );
+	return it->second.converter( object, universe, nodeName, parentNode, messageContext );
 }
 
-AtNode *convert( const std::vector<const IECore::Object *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode )
+AtNode *convert( const std::vector<const IECore::Object *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
 	if( samples.empty() )
 	{
@@ -102,7 +104,8 @@ AtNode *convert( const std::vector<const IECore::Object *> &samples, float motio
 	{
 		if( (*it)->typeId() != firstSampleTypeId )
 		{
-			throw IECore::Exception( "Inconsistent object types." );
+			IECore::msg( IECore::Msg::Error, messageContext, "Inconsistent object types." );
+			return nullptr;
 		}
 	}
 
@@ -115,11 +118,11 @@ AtNode *convert( const std::vector<const IECore::Object *> &samples, float motio
 
 	if( it->second.motionConverter )
 	{
-		return it->second.motionConverter( samples, motionStart, motionEnd, universe, nodeName, parentNode );
+		return it->second.motionConverter( samples, motionStart, motionEnd, universe, nodeName, parentNode, messageContext );
 	}
 	else
 	{
-		return it->second.converter( firstSample, universe, nodeName, parentNode );
+		return it->second.converter( firstSample, universe, nodeName, parentNode, messageContext );
 	}
 }
 
