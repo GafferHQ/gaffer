@@ -397,6 +397,14 @@ py::dict getLights()
 			{
 				in["spot_angle"] = _in["spot_angle"];
 				in["spot_smooth"] = _in["spot_smooth"];
+				in["is_sphere"] = _in["is_sphere"];
+				d["in"] = in;
+				d["enum"] = it->second;
+				result[type] = d;
+			}
+			else if( type == "point_light" )
+			{
+				in["is_sphere"] = _in["is_sphere"];
 				d["in"] = in;
 				d["enum"] = it->second;
 				result[type] = d;

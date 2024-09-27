@@ -14,6 +14,10 @@ Features
     - `colorFieldVisible` : A boolean indicating if the color field should be visible or not.
   - Added a menu item to the color chooser settings to save the UI configuration for the inline color chooser and the dialogue color chooser as a startup script to persist the configuration across Gaffer restarts.
 
+Improvements
+------------
+
+- Cycles : Added `is_sphere` plug to spot and point lights. Disabling `is_sphere` is equivalent to enabling "Soft Falloff" in Blender, which reverts the light to the behaviour of Cycles 3.6 and earlier.
 
 1.5.0.0a2 (relative to 1.5.0.0a1)
 =========
