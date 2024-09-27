@@ -1134,7 +1134,7 @@ libraries = {
 		"envAppends" : {
 			"CPPPATH" : [ "$ONNX_ROOT/include" ],
 			"LIBPATH" : [ "$ONNX_ROOT/lib" ],
-			"LIBS" : [ "Gaffer", "GafferImage", "onnxruntime" ],
+			"LIBS" : [ "Gaffer", "GafferImage", "onnxruntime", "protobuf" ],
 		},
 		"pythonEnvAppends" : {
 			"CPPPATH" : [ "$ONNX_ROOT/include" ],

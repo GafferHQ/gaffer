@@ -40,6 +40,7 @@
 #include "GafferML/ImageToTensor.h"
 #include "GafferML/Inference.h"
 #include "GafferML/TensorPlug.h"
+#include "GafferML/TensorReader.h"
 #include "GafferML/TensorToImage.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
@@ -51,6 +52,16 @@ using namespace GafferBindings;
 
 namespace
 {
+
+IECore::DataPtr dataWrapper( const TensorData &data, bool copy )
+{
+	// TODO : MAYBE WE SHOULD ALWAYS BACK THE TENSOR WITH DATA?
+	if( !copy || !data.data )
+	{
+		return boost::const_pointer_cast<IECore::Data>( data.data );
+	}
+	return data.data->copy();
+}
 
 void loadModelWrapper( Inference &inference, const std::filesystem::path &model )
 {
@@ -86,12 +97,15 @@ class InferenceSerialiser : public GafferBindings::NodeSerialiser
 BOOST_PYTHON_MODULE( _GafferML )
 {
 
-	IECorePython::RunTimeTypedClass<GafferML::TensorData>();
+	IECorePython::RunTimeTypedClass<GafferML::TensorData>()
+		.def( "data", &dataWrapper, ( arg( "_copy" ) = true ) )
+	;
 
 	GafferBindings::TypedObjectPlugClass<GafferML::TensorPlug>();
 
 	GafferBindings::DependencyNodeClass<ImageToTensor>();
 	GafferBindings::DependencyNodeClass<TensorToImage>();
+	GafferBindings::DependencyNodeClass<TensorReader>();
 	GafferBindings::DependencyNodeClass<Inference>()
 		.def( "loadModel", &loadModelWrapper )
 	;
