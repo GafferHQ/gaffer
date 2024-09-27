@@ -56,21 +56,46 @@ using namespace GafferML;
 namespace
 {
 
-Box2i dataWindow( const TensorData *tensor )
+struct ImageShape
 {
-	/// \todo Does this need to be configurable?
+	Box2i dataWindow;
+	int numChannels;
+};
+
+ImageShape imageShape( const TensorData *tensor, bool interleavedChannels )
+{
 	const auto shape = tensor->value.GetTensorTypeAndShapeInfo().GetShape();
+	size_t i;
 	if( shape.size() == 3 )
 	{
-		return Box2i( V2i( 0 ), V2i( shape[1], shape[2] ) );
+		i = 0;
 	}
 	else if( shape.size() == 4 )
 	{
-		return Box2i( V2i( 0 ), V2i( shape[2], shape[3] ) );
+		if( shape[0] != 1 )
+		{
+			throw IECore::Exception( "Expected 4 dimensional tensor to have size 1 in first dimension" );
+		}
+		i = 1;
 	}
 	else
 	{
 		throw IECore::Exception( "Expected tensor with 3 or 4 dimensions" );
+	}
+
+	if( interleavedChannels )
+	{
+		return {
+			Box2i( V2i( 0 ), V2i( (int)shape[i], (int)shape[i+1] ) ),
+			(int)shape[i+2]
+		};
+	}
+	else
+	{
+		return {
+			Box2i( V2i( 0 ), V2i( (int)shape[i+1], (int)shape[i+2] ) ),
+			(int)shape[i]
+		};
 	}
 }
 
@@ -90,6 +115,7 @@ TensorToImage::TensorToImage( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new TensorPlug( "tensor" ) );
 	addChild( new StringVectorDataPlug( "channels", Plug::In, new StringVectorData( { "R", "G", "B" } ) ) );
+	addChild( new BoolPlug( "interleavedChannels" ) );
 }
 
 TensorToImage::~TensorToImage()
@@ -116,6 +142,16 @@ const Gaffer::StringVectorDataPlug *TensorToImage::channelsPlug() const
 	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 1 );
 }
 
+Gaffer::BoolPlug *TensorToImage::interleavedChannelsPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::BoolPlug *TensorToImage::interleavedChannelsPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+}
+
 void TensorToImage::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	FlatImageSource::affects( input, outputs );
@@ -125,12 +161,12 @@ void TensorToImage::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 		outputs.push_back( outPlug()->channelNamesPlug() );
 	}
 
-	if( input == tensorPlug() )
+	if( input == tensorPlug() || input == interleavedChannelsPlug() )
 	{
 		outputs.push_back( outPlug()->dataWindowPlug() );
 	}
 
-	if( input == tensorPlug() || input == channelsPlug() )
+	if( input == tensorPlug() || input == channelsPlug() || input == interleavedChannelsPlug() )
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
 	}
@@ -166,12 +202,13 @@ void TensorToImage::hashDataWindow( const GafferImage::ImagePlug *parent, const 
 {
 	FlatImageSource::hashDataWindow( parent, context, h );
 	tensorPlug()->hash( h );
+	interleavedChannelsPlug()->hash( h );
 }
 
 Imath::Box2i TensorToImage::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	ConstTensorDataPtr tensor = tensorPlug()->getValue();
-	return dataWindow( tensor.get() );
+	return imageShape( tensor.get(), interleavedChannelsPlug()->getValue() ).dataWindow;
 }
 
 void TensorToImage::hashChannelNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -205,6 +242,7 @@ void TensorToImage::hashChannelData( const GafferImage::ImagePlug *parent, const
 		ImagePlug::GlobalScope globalScope( context );
 		tensorPlug()->hash( h );
 		channelsPlug()->hash( h );
+		interleavedChannelsPlug()->hash( h );
 	}
 
 	h.append( context->get<string>( ImagePlug::channelNameContextName ) );
@@ -215,10 +253,12 @@ IECore::ConstFloatVectorDataPtr TensorToImage::computeChannelData( const std::st
 {
 	ConstTensorDataPtr tensorData;
 	ConstStringVectorDataPtr channelsData;
+	bool interleavedChannels;
 	{
 		ImagePlug::GlobalScope globalScope( context );
 		tensorData = tensorPlug()->getValue();
 		channelsData = channelsPlug()->getValue();
+		interleavedChannels = interleavedChannelsPlug()->getValue();
 	}
 
 	const auto channelIt = std::find( channelsData->readable().begin(), channelsData->readable().end(), channelName );
@@ -228,26 +268,42 @@ IECore::ConstFloatVectorDataPtr TensorToImage::computeChannelData( const std::st
 	}
 	const size_t channelIndex = channelIt - channelsData->readable().begin();
 
+	const ImageShape imageShape = ::imageShape( tensorData.get(), interleavedChannels );
+	// TODO : ERROR IF CHANNEL INDEX IS OUTSIDE OF TENSOR BOUNDS
+	// AND ALLOW EMPTY CHANNEL NAME TO SKIP CHANNELS.
+
 	FloatVectorDataPtr outData = new FloatVectorData;
 	vector<float> &out = outData->writable();
 
-	const Box2i dataWindow = ::dataWindow( tensorData.get() );
+	const Box2i dataWindow = imageShape.dataWindow;
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 	const Box2i validTileBound = BufferAlgo::intersection( dataWindow, tileBound );
 	out.resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
 
-	const size_t channelOffset = dataWindow.size().x * dataWindow.size().y * channelIndex;
-	const float *sourceData = tensorData->value.GetTensorData<float>() + channelOffset;
+	const float *sourceData = tensorData->value.GetTensorData<float>();
+	size_t sourceStride;
+	if( interleavedChannels )
+	{
+		sourceData += channelIndex;
+		sourceStride = imageShape.numChannels;
+	}
+	else
+	{
+		sourceData += dataWindow.size().x * dataWindow.size().y * channelIndex;
+		sourceStride = 1;
+	}
+	float *dstData = out.data();
 
 	for( V2i p = validTileBound.min; p.y < validTileBound.max.y ; ++p.y )
 	{
-		const size_t srcIndex = BufferAlgo::index( V2i( p.x, dataWindow.max.y - p.y - 1 ), dataWindow );
-		const size_t dstIndex = BufferAlgo::index( p, tileBound );
-		std::copy(
-			sourceData + srcIndex,
-			sourceData + srcIndex + validTileBound.size().x,
-			out.begin() + dstIndex
-		);
+		size_t srcIndex = BufferAlgo::index( V2i( p.x, dataWindow.max.y - p.y - 1 ), dataWindow ) * sourceStride;
+		size_t dstIndex = BufferAlgo::index( p, tileBound );
+
+		for( int x = validTileBound.min.x; x < validTileBound.max.x; ++x )
+		{
+			dstData[dstIndex++] = sourceData[srcIndex];
+			srcIndex += sourceStride;
+		}
 	}
 
 	return outData;

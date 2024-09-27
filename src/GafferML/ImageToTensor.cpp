@@ -63,6 +63,7 @@ ImageToTensor::ImageToTensor( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ImagePlug( "image", Plug::In ) );
 	addChild( new StringVectorDataPlug( "channels", Plug::In, new StringVectorData( { "R", "G", "B" } ) ) );
+	addChild( new BoolPlug( "interleaveChannels" ) );
 	addChild( new TensorPlug( "tensor", Plug::Out ) );
 }
 
@@ -90,14 +91,24 @@ const Gaffer::StringVectorDataPlug *ImageToTensor::channelsPlug() const
 	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 1 );
 }
 
+Gaffer::BoolPlug *ImageToTensor::interleaveChannelsPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::BoolPlug *ImageToTensor::interleaveChannelsPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+}
+
 TensorPlug *ImageToTensor::tensorPlug()
 {
-	return getChild<TensorPlug>( g_firstPlugIndex + 2 );
+	return getChild<TensorPlug>( g_firstPlugIndex + 3 );
 }
 
 const TensorPlug *ImageToTensor::tensorPlug() const
 {
-	return getChild<TensorPlug>( g_firstPlugIndex + 2 );
+	return getChild<TensorPlug>( g_firstPlugIndex + 3 );
 }
 
 void ImageToTensor::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -108,7 +119,8 @@ void ImageToTensor::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 		input == imagePlug()->dataWindowPlug() ||
 		input == imagePlug()->channelNamesPlug() ||
 		input == imagePlug()->channelDataPlug() ||
-		input == channelsPlug()
+		input == channelsPlug() ||
+		input == interleaveChannelsPlug()
 	)
 	{
 		outputs.push_back( tensorPlug() );
@@ -124,6 +136,8 @@ void ImageToTensor::hash( const Gaffer::ValuePlug *output, const Gaffer::Context
 		const Box2i dataWindow = imagePlug()->dataWindow();
 		ConstStringVectorDataPtr inChannels = imagePlug()->channelNamesPlug()->getValue();
 		ConstStringVectorDataPtr channels = channelsPlug()->getValue();
+
+		interleaveChannelsPlug()->hash( h );
 
 		ImageAlgo::parallelGatherTiles(
 			imagePlug(),
@@ -148,6 +162,7 @@ void ImageToTensor::hash( const Gaffer::ValuePlug *output, const Gaffer::Context
 		);
 
 		h.append( dataWindow );
+
 	}
 	else
 	{
@@ -163,6 +178,8 @@ void ImageToTensor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *c
 		ConstStringVectorDataPtr inChannels = imagePlug()->channelNamesPlug()->getValue();
 		ConstStringVectorDataPtr channelsData = channelsPlug()->getValue();
 		const auto &channels = channelsData->readable();
+
+		const bool interleaveChannels = interleaveChannelsPlug()->getValue();
 
 		const size_t numPixels = dataWindow.size().x * dataWindow.size().y;
 
@@ -206,9 +223,17 @@ void ImageToTensor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *c
 			}
 		);
 
-		ConstTensorDataPtr tensorData = new TensorData(
-			bufferData, { 1, (int64_t)channels.size(), dataWindow.size().x, dataWindow.size().y }
-		);
+		vector<int64_t> shape;
+		if( interleaveChannels )
+		{
+			shape = { 1, dataWindow.size().x, dataWindow.size().y, (int64_t)channels.size() }; // TODO : SHOULD THIS BE YX?
+		}
+		else
+		{
+			shape = { 1, (int64_t)channels.size(), dataWindow.size().x, dataWindow.size().y }; // TODO : SHOULD THIS BE YX?
+		}
+
+		ConstTensorDataPtr tensorData = new TensorData( bufferData, shape );
 		static_cast<TensorPlug *>( output )->setValue( tensorData );
 	}
 

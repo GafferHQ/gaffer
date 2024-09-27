@@ -60,6 +60,9 @@ class GAFFERML_API TensorToImage : public GafferImage::FlatImageSource
 		Gaffer::StringVectorDataPlug *channelsPlug();
 		const Gaffer::StringVectorDataPlug *channelsPlug() const;
 
+		Gaffer::BoolPlug *interleavedChannelsPlug();
+		const Gaffer::BoolPlug *interleavedChannelsPlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
