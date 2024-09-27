@@ -46,11 +46,44 @@
 #include "GafferBindings/TypedObjectPlugBinding.h"
 
 using namespace boost::python;
+using namespace IECore;
 using namespace GafferML;
 using namespace GafferBindings;
 
 namespace
 {
+
+/// TODO : WHERE DO I REALLY BELONG? MAYBE TENSORDATA SHOULD HAVE SOME CONVENIENCE
+/// METHODS INSTEAD OF USING ONLY THE ORT API?
+list shapeWrapper( const TensorData &data )
+{
+	const auto s = data.value.GetTensorTypeAndShapeInfo().GetShape();
+	list o;
+	for( const auto &x : s )
+	{
+		o.append( x );
+	}
+	return o;
+}
+
+IECore::DataPtr dataWrapper( const TensorData &data, bool copy )
+{
+	if( !data.data )
+	{
+		const size_t count = data.value.GetTensorTypeAndShapeInfo().GetElementCount();
+		const float *source = data.value.GetTensorData<float>();
+		// TODO : MAYBE WE SHOULD ALWAYS BACK THE TENSOR WITH DATA?
+		// OR AT THE VERY LEAST, MOVE THIS FUNCTIONALITY INTO TENSORDATA ITSELF
+		FloatVectorDataPtr result = new FloatVectorData;
+		result->writable().insert(
+			result->writable().end(),
+			source, source + count
+		);
+		return result;
+	}
+
+	return copy ? data.data->copy() : boost::const_pointer_cast<IECore::Data>( data.data );
+}
 
 void loadModelWrapper( Inference &inference, const std::filesystem::path &model )
 {
@@ -86,7 +119,10 @@ class InferenceSerialiser : public GafferBindings::NodeSerialiser
 BOOST_PYTHON_MODULE( _GafferML )
 {
 
-	IECorePython::RunTimeTypedClass<GafferML::TensorData>();
+	IECorePython::RunTimeTypedClass<GafferML::TensorData>()
+		.def( "data", &dataWrapper, ( arg( "_copy" ) = true ) )
+		.def( "shape", &shapeWrapper )
+	;
 
 	GafferBindings::TypedObjectPlugClass<GafferML::TensorPlug>();
 

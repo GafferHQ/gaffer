@@ -34,10 +34,28 @@
 #
 ##########################################################################
 
-from .ImageToTensorTest import ImageToTensorTest
-from .InferenceTest import InferenceTest
-from .TensorToImageTest import TensorToImageTest
+import unittest
+
+import IECore
+
+import Gaffer
+import GafferTest
+import GafferImage
+import GafferML
+
+class TensorToImageTest( GafferTest.TestCase ) :
+
+	def test( self ) :
+
+		raise NotImplementedError
+
+		# checker = GafferImage.Checkerboard()
+		# tensor = GafferML.ImageToTensor()
+		# tensor["image"].setInput( checker["out"] )
+		# tensor["channels"].setValue( IECore.StringVectorData( [ "Y" ] ) )
+
+		# with self.assertRaisesRegex( Gaffer.ProcessException, 'Channel "Y" does not exist' ) :
+		# 	tensor["tensor"].getValue()
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()

@@ -62,6 +62,9 @@ class GAFFERML_API ImageToTensor : public Gaffer::ComputeNode
 		Gaffer::StringVectorDataPlug *channelsPlug();
 		const Gaffer::StringVectorDataPlug *channelsPlug() const;
 
+		Gaffer::BoolPlug *interleaveChannelsPlug();
+		const Gaffer::BoolPlug *interleaveChannelsPlug() const;
+
 		TensorPlug *tensorPlug();
 		const TensorPlug *tensorPlug() const;
 
