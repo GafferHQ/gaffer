@@ -264,5 +264,18 @@ class ShaderViewTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].message, 'Scene "NoOutPlug" does not have an "out" output scene plug' )
 
+	def testIdleConnectionDoesntExtendLifetime( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["shader"] = GafferSceneTest.TestShader()
+		script["shader"]["type"].setValue( "test:surface" )
+		script["shader"]["name"].setValue( "test" )
+
+		numSlots = GafferUI.Gadget.idleSignal().numSlots()
+		view = GafferUI.View.create( script["shader"]["out"] )
+		self.assertEqual( GafferUI.Gadget.idleSignal().numSlots(), numSlots + 1 )
+		del view
+		self.assertEqual( GafferUI.Gadget.idleSignal().numSlots(), numSlots )
+
 if __name__ == "__main__":
 	unittest.main()

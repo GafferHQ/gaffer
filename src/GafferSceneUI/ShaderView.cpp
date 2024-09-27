@@ -278,7 +278,9 @@ void ShaderView::plugDirtied( Gaffer::Plug *plug )
 		if( !m_idleConnection.connected() )
 		{
 			m_idleConnection = GafferUI::Gadget::idleSignal().connect(
-				boost::bind( &ShaderView::idleUpdate, ShaderViewPtr( this ) )
+				// OK to bind a raw pointer, because our destructor
+				// will disconnect `m_idleConnection`.
+				boost::bind( &ShaderView::idleUpdate, this )
 			);
 		}
 	}
