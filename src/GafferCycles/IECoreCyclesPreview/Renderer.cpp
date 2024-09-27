@@ -2946,6 +2946,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			ccl::Integrator *integrator = m_scene->integrator;
 			integrator->set_seed( optionValue<int>( g_seedOptionName, frame() ) );
 			integrator->set_motion_blur( optionValue<bool>( g_sampleMotionOptionName, true ) );
+			integrator->set_sampling_pattern( m_session->params.background ? ccl::SAMPLING_PATTERN_BLUE_NOISE_PURE : ccl::SAMPLING_PATTERN_BLUE_NOISE_FIRST );
 
 			if( integrator->is_modified() )
 			{

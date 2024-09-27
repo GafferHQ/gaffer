@@ -81,7 +81,7 @@ class RenderPassAdaptorTest( GafferSceneTest.RenderPassAdaptorTest ) :
 
 		options = GafferCycles.CyclesOptions()
 		options["options"]["samples"]["enabled"].setValue( True )
-		options["options"]["samples"]["value"].setValue( 16 )
+		options["options"]["samples"]["value"].setValue( 20 )
 		return options
 
 if __name__ == "__main__":
