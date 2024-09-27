@@ -21,6 +21,16 @@ Improvements
   - Added `is_sphere` plug to spot and point lights. Disabling `is_sphere` is equivalent to enabling "Soft Falloff" in Blender, which reverts the light to the behaviour of Cycles 3.6 and earlier.
   - Changed sampling pattern to blue noise dithered sampling.
 
+Fixes
+-----
+
+- Cycles : Fixed issue where scaling unnormalized quad and disk lights would not affect their brightness.
+
+Breaking Changes
+----------------
+
+- Cycles : Removed custom handling of unnormalized lights. We now rely on Cycles' inbuilt behaviour which results in a brightness difference for unnormalized point, spot and disk lights.
+
 1.5.0.0a2 (relative to 1.5.0.0a1)
 =========
 
