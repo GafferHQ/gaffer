@@ -212,5 +212,57 @@ class ShaderViewTest( GafferUITest.TestCase ) :
 		self.assertFalse( view["in"].acceptsInput( sphere["out"] ) )
 		self.assertFalse( view["in"].acceptsInput( switch["out"] ) )
 
+	def testSceneCreatorReturningNone( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["shader"] = GafferSceneTest.TestShader()
+		script["shader"]["type"].setValue( "test:surface" )
+		script["shader"]["name"].setValue( "test" )
+
+		GafferSceneUI.ShaderView.registerScene( "test", "Bad", lambda : None )
+		view = GafferUI.View.create( script["shader"]["out"] )
+		with IECore.CapturingMessageHandler() as mh :
+			view["scene"].setValue( "Bad" )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].message, 'SceneCreator "Bad" returned null' )
+		self.assertIsNone( view.scene() )
+
+	def testSceneWithoutShaderPlug( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["shader"] = GafferSceneTest.TestShader()
+		script["shader"]["type"].setValue( "test:surface" )
+		script["shader"]["name"].setValue( "test" )
+
+		GafferSceneUI.ShaderView.registerScene( "test", "NoShaderPlug", lambda : GafferScene.Plane() )
+		view = GafferUI.View.create( script["shader"]["out"] )
+		with IECore.CapturingMessageHandler() as mh :
+			view["scene"].setValue( "NoShaderPlug" )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].message, 'Scene "NoShaderPlug" does not have a "shader" input plug' )
+
+	def testSceneWithoutOutPlug( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["shader"] = GafferSceneTest.TestShader()
+		script["shader"]["type"].setValue( "test:surface" )
+		script["shader"]["name"].setValue( "test" )
+
+		def noOutPlug() :
+
+			node = Gaffer.Node()
+			node["shader"] = GafferScene.ShaderPlug()
+			return node
+
+		GafferSceneUI.ShaderView.registerScene( "test", "NoOutPlug", noOutPlug )
+		view = GafferUI.View.create( script["shader"]["out"] )
+		with IECore.CapturingMessageHandler() as mh :
+			view["scene"].setValue( "NoOutPlug" )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].message, 'Scene "NoOutPlug" does not have an "out" output scene plug' )
+
 if __name__ == "__main__":
 	unittest.main()
