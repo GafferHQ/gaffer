@@ -183,6 +183,7 @@ from .MeshTessellateTest import MeshTessellateTest
 from .RenderPassTypeAdaptorTest import RenderPassTypeAdaptorTest
 from .RenderPassShaderTest import RenderPassShaderTest
 from .RenderPassAdaptorTest import RenderPassAdaptorTest
+from .GlobalsMonitorTest import GlobalsMonitorTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *
