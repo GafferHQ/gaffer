@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2019 Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,23 +34,40 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#include "boost/python.hpp"
 
-namespace GafferImageUI
+#include "DeepSampleGadgetBinding.h"
+
+#include "GafferUIBindings/GadgetBinding.h"
+
+#include "GafferImageUI/DeepSampleGadget.h"
+
+#include "GafferBindings/SignalBinding.h"
+
+#include "Gaffer/Context.h"
+#include "Gaffer/Node.h"
+#include "Gaffer/Plug.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/StandardSet.h"
+
+#include "boost/python/suite/indexing/container_utils.hpp"
+
+using namespace boost::python;
+using namespace IECorePython;
+using namespace GafferUI;
+using namespace GafferUIBindings;
+using namespace GafferImageUI;
+using namespace GafferBindings;
+
+void GafferImageUIModule::bindDeepSampleGadget()
 {
 
-enum TypeId
-{
-	ImageViewTypeId = 110850,
-	ImageGadgetTypeId = 110851,
-	V2fContextVariableTypeId = 110852,
-	Box2iContextVariableTypeId = 110853,
-	ColorInspectorPlugTypeId = 110854,
-	Box2iGadgetTypeId = 110855,
-	V2iGadgetTypeId = 110856,
-	DeepSampleGadgetTypeId = 110857,
+	scope s = GadgetClass<DeepSampleGadget>()
+		.def( init<>() )
+		.def( "setDeepSamples", &DeepSampleGadget::setDeepSamples )
+		.def( "setAutoFrame", &DeepSampleGadget::setAutoFrame )
+		.def( "setLogarithmic", &DeepSampleGadget::setLogarithmic )
+		;
 
-	LastTypeId = 110899
-};
+}
 
-} // namespace GafferImageUI
