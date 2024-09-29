@@ -151,7 +151,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		outputs.addOutput(
 			"beauty",
 			IECoreScene.Output(
-				str( self.temporaryDirectory() / "test.exr" ),
+				( self.temporaryDirectory() / "test.exr" ).as_posix(),
 				"exr",
 				"rgba",
 				{}
@@ -175,7 +175,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		outputs.addOutput(
 			"beauty",
 			IECoreScene.Output(
-				str( self.temporaryDirectory() / "test.exr" ),
+				( self.temporaryDirectory() / "test.exr" ).as_posix(),
 				"exr",
 				"rgba",
 				{}
@@ -240,7 +240,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		outputs.addOutput(
 			"beauty",
 			IECoreScene.Output(
-				str( self.temporaryDirectory() / "test.exr" ),
+				( self.temporaryDirectory() / "test.exr" ).as_posix(),
 				"exr",
 				"rgba",
 				{}
@@ -265,7 +265,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		outputs.addOutput(
 			"beauty",
 			IECoreScene.Output(
-				str( self.temporaryDirectory() / "test.exr" ),
+				( self.temporaryDirectory() / "test.exr" ).as_posix(),
 				"exr",
 				"rgba",
 				{}
