@@ -64,7 +64,7 @@ class ColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 				self.__chooserButton = GafferUI.Button( image = "colorPlugValueWidgetSlidersOff.png", hasFrame = False )
 				self.__chooserButton.clickedSignal().connect( Gaffer.WeakMethod( self.__chooserButtonClicked ), scoped = False )
 
-			self.__colorChooser = GafferUI.ColorChooserPlugValueWidget( plugs )
+		self.__colorChooser = None
 
 		self.setColorChooserVisible(
 			sole( Gaffer.Metadata.value( plug, "colorPlugValueWidget:colorChooserVisible" ) for plug in self.getPlugs() )
@@ -78,10 +78,15 @@ class ColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__colorChooserVisible = visible
 
-		self.__colorChooser.setVisible(
-			self.__colorChooserVisible and
-			not any( p.direction() == Gaffer.Plug.Direction.Out for p in self.getPlugs() )
-		)
+		if visible and self.__colorChooser is None :
+			self.__colorChooser = GafferUI.ColorChooserPlugValueWidget( self.getPlugs() )
+			self.__column.append( self.__colorChooser )
+
+		if self.__colorChooser is not None :
+			self.__colorChooser.setVisible(
+				self.__colorChooserVisible and
+				not any( p.direction() == Gaffer.Plug.Direction.Out for p in self.getPlugs() )
+			)
 
 		self.__chooserButton.setImage(
 			"colorPlugValueWidgetSliders{}.png".format( "On" if visible else "Off" )
@@ -89,14 +94,15 @@ class ColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def getColorChooserVisible( self ) :
 
-		return self.__colorChooser.getVisible()
+		return self.__colorChooser.getVisible() if self.__colorChooser is not None else False
 
 	def setPlugs( self, plugs ) :
 
 		GafferUI.PlugValueWidget.setPlugs( self, plugs )
 
 		self.__compoundNumericWidget.setPlugs( plugs )
-		self.__colorChooser.setPlugs( plugs )
+		if self.__colorChooser is not None :
+			self.__colorChooser.setPlugs( plugs )
 		self.__swatch.setPlugs( plugs )
 
 		# Update widget visibility if the plug directions changed
