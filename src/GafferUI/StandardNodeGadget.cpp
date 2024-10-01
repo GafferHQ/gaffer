@@ -517,6 +517,39 @@ void connect( const DragDropEvent &event, ConnectionCreator *destination )
 	}
 }
 
+bool hasStaticValue( const Gaffer::BoolPlug *plug )
+{
+	if( !PlugAlgo::dependsOnCompute( plug ) )
+	{
+		return true;
+	}
+
+	// Plug depends on a compute, but maybe we can determine
+	// that the compute itself is disabled, and will output
+	// a default value for the plug.
+
+	auto source = plug->source<BoolPlug>();
+	if( source == plug || source->direction() != Plug::Out )
+	{
+		return false;
+	}
+
+	auto sourceNode = IECore::runTimeCast<const DependencyNode>( source->node() );
+	if( !sourceNode )
+	{
+		return false;
+	}
+
+	auto sourceEnabledPlug = sourceNode->enabledPlug();
+	if( !sourceEnabledPlug || !hasStaticValue( sourceEnabledPlug ) || sourceEnabledPlug->getValue() )
+	{
+		return false;
+	}
+
+	// Node will just output a default value for the plug.
+	return !sourceNode->correspondingInput( source );
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -1330,7 +1363,7 @@ void StandardNodeGadget::updateStrikeThroughState( const Gaffer::Plug *dirtiedPl
 	StrikeThroughState strikeThroughState = StrikeThroughState::Invisible;
 	if( enabledPlug )
 	{
-		if( !PlugAlgo::dependsOnCompute( enabledPlug ) )
+		if( hasStaticValue( enabledPlug ) )
 		{
 			// We can evaluate the `enabledPlug` value directly without
 			// triggering a compute and blocking the UI while it completes.
@@ -1344,6 +1377,12 @@ void StandardNodeGadget::updateStrikeThroughState( const Gaffer::Plug *dirtiedPl
 		{
 			// ContextTracker has computed the enabled state for us in
 			// a background task.
+			if( dirtiedPlug )
+			{
+				// Wait for async ContextTracker update, to avoid showing
+				// a stale value in the meantime.
+				return;
+			}
 			if( !*m_nodeEnabledInContextTracker )
 			{
 				strikeThroughState = StrikeThroughState::Dynamic;

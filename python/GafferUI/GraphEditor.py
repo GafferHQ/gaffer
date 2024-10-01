@@ -238,13 +238,13 @@ class GraphEditor( GafferUI.Editor ) :
 	@classmethod
 	def appendEnabledPlugMenuDefinitions( cls, graphEditor, node, menuDefinition ) :
 
-		enabledPlug = node.enabledPlug() if isinstance( node, Gaffer.DependencyNode ) else None
+		enabledPlug = cls.__enabledPlugForEditing( node )
 		if enabledPlug is not None :
 			menuDefinition.append( "/EnabledDivider", { "divider" : True } )
 			menuDefinition.append(
 				"/Enabled",
 				{
-					"command" : functools.partial( cls.__setEnabled, node ),
+					"command" : functools.partial( cls.__setValue, enabledPlug ),
 					"checkBox" : enabledPlug.getValue(),
 					"active" : enabledPlug.settable() and not Gaffer.MetadataAlgo.readOnly( enabledPlug )
 				}
@@ -430,7 +430,7 @@ class GraphEditor( GafferUI.Editor ) :
 					continue
 				if self.graphGadget().nodeGadget( node ) is None :
 					continue
-				enabledPlug = node.enabledPlug()
+				enabledPlug = self.__enabledPlugForEditing( node )
 				if enabledPlug is None or not enabledPlug.settable() or Gaffer.MetadataAlgo.readOnly( enabledPlug ) :
 					continue
 				enabledPlugs.add( enabledPlug )
@@ -741,10 +741,10 @@ class GraphEditor( GafferUI.Editor ) :
 			graphGadget.setNodeOutputConnectionsMinimised( node, not value )
 
 	@classmethod
-	def __setEnabled( cls, node, value ) :
+	def __setValue( cls, plug, value ) :
 
-		with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
-			node.enabledPlug().setValue( value )
+		with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
+			plug.setValue( value )
 
 	@staticmethod
 	def __childrenViewable( node ) :
@@ -761,5 +761,41 @@ class GraphEditor( GafferUI.Editor ) :
 
 		node.scriptNode().selection().clear()
 		node.scriptNode().selection().add( node )
+
+	@staticmethod
+	def __enabledPlugForEditing( node ) :
+
+		if not isinstance( node, Gaffer.DependencyNode ) :
+			return None
+
+		enabledPlug = node.enabledPlug()
+		if enabledPlug is None :
+			return None
+
+		if enabledPlug.getInput() is None :
+			return enabledPlug
+
+		# Plug has an input, but maybe we can edit that instead.
+
+		source = enabledPlug.source()
+		if not Gaffer.PlugAlgo.dependsOnCompute( source ) :
+			return source
+
+		# Plug depends on a compute, but maybe we can enable/disable
+		# that node instead? This only works if the node outputs False
+		# when disabled - things like PatternMatch.
+
+		if source.defaultValue() != False :
+			return enabledPlug
+
+		sourceNode = source.node()
+		if not isinstance( sourceNode, Gaffer.DependencyNode ) :
+			return enabledPlug
+
+		sourceEnabledPlug = sourceNode.enabledPlug()
+		if sourceEnabledPlug is not None and sourceNode.correspondingInput( source ) is None :
+			return sourceEnabledPlug
+
+		return enabledPlug
 
 GafferUI.Editor.registerType( "GraphEditor", GraphEditor )
