@@ -5,7 +5,7 @@ Improvements
 ------------
 
 - NumericWidget : Added the ability to use <kbd>Ctrl</kbd> + scroll wheel to adjust values in the same manner as <kbd>Up</kbd> and <kbd>Down</kbd> (#6009).
-- ColorPlugValueWidget : Improved performance when creating the widget with the color chooser hidden.
+- NodeEditor : Improved performance when showing a node with many colour plugs. Showing the Arnold `standard_surface` shader is now almost 2x faster.
 
 Fixes
 -----
