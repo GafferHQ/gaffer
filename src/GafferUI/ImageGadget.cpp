@@ -48,6 +48,10 @@
 #include "IECore/Exception.h"
 #include "IECore/SearchPath.h"
 
+#include "OpenImageIO/color.h"
+#include "OpenImageIO/imagebuf.h"
+#include "OpenImageIO/imagebufalgo.h"
+
 #include "fmt/format.h"
 
 using namespace Imath;
@@ -63,7 +67,7 @@ using namespace GafferUI;
 namespace
 {
 
-Box3f boundGetter( const std::string &fileName, size_t &cost, const IECore::Canceller *canceller )
+std::string resolvedFileName( const std::string &fileName )
 {
 	const char *s = getenv( "GAFFERUI_IMAGE_PATHS" );
 	IECore::SearchPath sp( s ? s : "" );
@@ -74,32 +78,114 @@ Box3f boundGetter( const std::string &fileName, size_t &cost, const IECore::Canc
 		throw Exception( "Could not find file '" + fileName + "'" );
 	}
 
-	ReaderPtr reader = Reader::create( path.generic_string() );
-	if( !reader )
-	{
-		throw Exception( "Could not create reader for '" + path.generic_string() + "'" );
-	}
+	return path.generic_string();
+}
 
-	ImageReaderPtr imageReader = IECore::runTimeCast<ImageReader>( reader );
-	if( !imageReader )
+Box3f boundGetter( const std::string &fileName, size_t &cost, const IECore::Canceller *canceller )
+{
+	OIIO::ImageBuf imageBuf( resolvedFileName( fileName ) );
+	if( imageBuf.has_error() )
 	{
-		throw IECore::Exception( fmt::format( "File \"{}\" does not contain an image.", fileName ) );
+		throw Exception( imageBuf.geterror() );
 	}
 
 	cost = 1;
-	V2i pixelSize = imageReader->displayWindow().size() + V2i( 1 );
+	const V2i pixelSize( imageBuf.spec().full_width, imageBuf.spec().full_height );
 	V3f size( pixelSize.x, pixelSize.y, 0.0f );
 	return Box3f( -size/2.0f, size/2.0f );
 }
 
-void applyTextureParameters( IECoreGL::Texture *texture )
+void applyTextureParameters( IECoreGL::Texture *texture, const ImageGadget::TextureParameters &parameters )
 {
 	IECoreGL::Texture::ScopedBinding binding( *texture );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -1.0 );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, parameters.minFilter );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, parameters.magFilter );
+	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, parameters.lodBias );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, parameters.wrapS );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, parameters.wrapT );
+}
+
+struct TextureCacheKey
+{
+	std::string fileName;
+	ImageGadget::TextureParameters parameters;
+	bool operator==( const TextureCacheKey &other ) const
+	{
+		return
+			fileName == other.fileName &&
+			parameters.minFilter == other.parameters.minFilter &&
+			parameters.magFilter == other.parameters.magFilter &&
+			parameters.lodBias == other.parameters.lodBias &&
+			parameters.wrapS == other.parameters.wrapS &&
+			parameters.wrapT == other.parameters.wrapT
+		;
+	}
+};
+
+size_t hash_value( const TextureCacheKey &key )
+{
+	size_t result = 0;
+	boost::hash_combine( result, key.fileName );
+	boost::hash_combine( result, key.parameters.minFilter );
+	boost::hash_combine( result, key.parameters.magFilter );
+	boost::hash_combine( result, key.parameters.lodBias );
+	boost::hash_combine( result, key.parameters.wrapS );
+	boost::hash_combine( result, key.parameters.wrapT );
+	return result;
+}
+
+using TextureCache = IECorePreview::LRUCache<TextureCacheKey, ConstTexturePtr>;
+
+IECoreGL::ConstTexturePtr textureGetter( const TextureCacheKey &key, size_t &cost, const IECore::Canceller *canceller )
+{
+	const OIIO::ImageSpec config( OIIO::TypeDesc::UCHAR );
+	const std::string fileName = resolvedFileName( key.fileName );
+	OIIO::ImageBuf imageBuf( fileName, /* subimage = */ 0, /* miplevel = */ 0, /* imagecache = */ nullptr, &config );
+	imageBuf = OIIO::ImageBufAlgo::flip( imageBuf );
+	if( imageBuf.has_error() )
+	{
+		throw Exception( imageBuf.geterror() );
+	}
+
+	static const OIIO::ColorConfig colorConfig( "ocio://default" );
+	static const OIIO::ColorProcessorHandle colorProcessor = colorConfig.createColorProcessor(
+		"sRGB - Texture", "Linear Rec.709 (sRGB)"
+	);
+
+	imageBuf = OIIO::ImageBufAlgo::colorconvert( imageBuf, colorProcessor.get(), true );
+
+	GLint pixelFormat;
+	switch( imageBuf.nchannels() )
+	{
+		case 1 :
+			pixelFormat = GL_RED;
+			break;
+		case 2 :
+			pixelFormat = GL_LUMINANCE_ALPHA;
+			break;
+		case 3 :
+			pixelFormat = GL_RGB;
+			break;
+		case 4 :
+			pixelFormat = GL_RGBA;
+			break;
+		default :
+			throw IECore::Exception( fmt::format( "Unsupported number of channels ({}) in \"{}\"", imageBuf.nchannels(), fileName ) );
+	}
+
+	GLuint id;
+	glGenTextures( 1, &id );
+	TexturePtr texture = new Texture( id );
+	Texture::ScopedBinding binding( *texture );
+
+	glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+	glTexImage2D( GL_TEXTURE_2D, /* level = */ 0, pixelFormat, imageBuf.spec().width, imageBuf.spec().height, /* border = */ 0, pixelFormat, GL_UNSIGNED_BYTE, imageBuf.localpixels() );
+	glGenerateMipmap( GL_TEXTURE_2D );
+
+	applyTextureParameters( texture.get(), key.parameters );
+
+	cost = 0; // Never evict
+	return texture;
 }
 
 const IECoreGL::Texture *loadTexture( IECore::ConstRunTimeTypedPtr &imageOrTextureOrFileName )
@@ -109,22 +195,21 @@ const IECoreGL::Texture *loadTexture( IECore::ConstRunTimeTypedPtr &imageOrTextu
 		return texture;
 	}
 
-	TexturePtr texture;
+	ConstTexturePtr texture;
 	if( const StringData *filename = runTimeCast<const StringData>( imageOrTextureOrFileName.get() ) )
 	{
 		// Load texture from file
-		texture = ImageGadget::textureLoader()->load( filename->readable() );
+		texture = ImageGadget::loadTexture( filename->readable() );
 	}
 	else if( const ImagePrimitive *image = runTimeCast<const ImagePrimitive>( imageOrTextureOrFileName.get() ) )
 	{
 		// Convert image to texture
 		ToGLTextureConverterPtr converter = new ToGLTextureConverter( image );
-		texture =  boost::static_pointer_cast<Texture>( converter->convert() );
-	}
-
-	if( texture )
-	{
-		applyTextureParameters( texture.get() );
+		if( auto converted = boost::static_pointer_cast<Texture>( converter->convert() ) )
+		{
+			applyTextureParameters( converted.get(), ImageGadget::TextureParameters() );
+			texture = converted;
+		}
 	}
 
 	imageOrTextureOrFileName = texture;
@@ -166,26 +251,10 @@ ImageGadget::~ImageGadget()
 {
 }
 
-IECoreGL::TextureLoader *ImageGadget::textureLoader()
+IECoreGL::ConstTexturePtr ImageGadget::loadTexture( const std::string &fileName, const TextureParameters &parameters )
 {
-	static TextureLoaderPtr loader = nullptr;
-	if( !loader )
-	{
-		const char *s = getenv( "GAFFERUI_IMAGE_PATHS" );
-		IECore::SearchPath sp( s ? s : "" );
-		loader = new TextureLoader( sp );
-	}
-	return loader.get();
-}
-
-IECoreGL::ConstTexturePtr ImageGadget::loadTexture( const std::string &fileName )
-{
-	TexturePtr texture = textureLoader()->load( fileName );
-	if( texture )
-	{
-		applyTextureParameters( texture.get() );
-	}
-	return texture;
+	static TextureCache g_textureCache( textureGetter, 10000 );
+	return g_textureCache.get( { fileName, parameters } );
 }
 
 void ImageGadget::renderLayer( Layer layer, const Style *style, RenderReason reason ) const

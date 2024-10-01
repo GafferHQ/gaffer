@@ -63,6 +63,8 @@ Gaffer.Metadata.registerNode(
 			remain the same as the input.
 			""",
 
+			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
+
 		],
 
 	}

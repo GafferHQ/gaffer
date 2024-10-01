@@ -69,19 +69,18 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 		plugDict = {}
 		for plugPath, plug in zip( self.__inPlugPaths, inputs ) :
 			parentDict = plugDict
-			plugPathSplit = plugPath.split( "." )
-			for p in plugPathSplit[:-1] :
+			for p in plugPath[:-1] :
 				parentDict = parentDict.setdefault( p, {} )
 			if isinstance( plug, Gaffer.CompoundDataPlug ) :
 				value = IECore.CompoundData()
 				plug.fillCompoundData( value )
 			else :
 				value = plug.getValue()
-			parentDict[plugPathSplit[-1]] = value
+			parentDict[plugPath[-1]] = value
 
 		for plugPath in self.__outPlugPaths :
 			parentDict = plugDict
-			for p in plugPath.split( "." )[:-1] :
+			for p in plugPath[:-1] :
 				parentDict = parentDict.setdefault( p, {} )
 
 		executionDict = { "imath" : imath, "IECore" : IECore, "parent" : plugDict, "context" : _ContextProxy( context ) }
@@ -91,17 +90,20 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 		result = IECore.ObjectVector()
 		for plugPath in self.__outPlugPaths :
 			parentDict = plugDict
-			plugPathSplit = plugPath.split( "." )
-			for p in plugPathSplit[:-1] :
+			for p in plugPath[:-1] :
 				parentDict = parentDict[p]
-			r = parentDict.get( plugPathSplit[-1], IECore.NullObject.defaultNullObject() )
+			r = parentDict.get( plugPath[-1], IECore.NullObject.defaultNullObject() )
 			try:
 				if isinstance( r, pathlib.Path ) :
 					result.append( r.as_posix() )
 				else :
 					result.append( r )
 			except:
-				raise TypeError( "Unsupported type for result \"%s\" for expression output \"%s\"" % ( str( r ), plugPath ) )
+				raise TypeError(
+					"Unsupported type for result \"{}\" for expression output \"{}\"".format(
+						r, ".".join( plugPath )
+					)
+				)
 
 		return result
 
@@ -204,14 +206,17 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 
 	def __plug( self, node, plugPath ) :
 
-		plug = node.parent().descendant( plugPath )
+		try :
+			plug = node.parent()
+			for p in plugPath :
+				plug = plug[p]
+		except KeyError :
+			raise RuntimeError( "\"{}\" does not exist".format( ".".join( plugPath ) ) ) from None
+
 		if isinstance( plug, Gaffer.ValuePlug ) :
 			return plug
-
-		if plug is None :
-			raise RuntimeError( "\"%s\" does not exist" % plugPath )
 		else :
-			raise RuntimeError( "\"%s\" is not a ValuePlug" % plugPath )
+			raise RuntimeError( "\"{}\" is not a ValuePlug".format( ".".join( plugPath ) ) )
 
 	def __plugRegex( self, node, plug ) :
 
@@ -310,11 +315,10 @@ class _Parser( ast.NodeVisitor ) :
 		result = []
 		while node is not None :
 			if isinstance( node, ast.Subscript ) :
-				if isinstance( node.slice, ast.Index ) :
-					if isinstance( node.slice.value, ast.Str ) :
-						result.insert( 0, node.slice.value.s )
-					else :
-						return []
+				if isinstance( node.slice, ast.Constant ) and isinstance( node.slice.value, str ) :
+					result.insert( 0, node.slice.value )
+				else :
+					return []
 				node = node.value
 			elif isinstance( node, ast.Name ) :
 				result.insert( 0, node.id )
@@ -327,9 +331,9 @@ class _Parser( ast.NodeVisitor ) :
 	def __plugPath( self, path ) :
 
 		if len( path ) < 2 or path[0] != "parent" :
-			return ""
+			return ()
 		else :
-			return ".".join( path[1:] )
+			return tuple( path[1:] )
 
 	def __contextName( self, path ) :
 

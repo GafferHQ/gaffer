@@ -166,7 +166,7 @@ GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/graphEditorR
 def __renderAndGrab( script, widget, imagePath, delay = 15 ) :
 
 	script["variables"]["imageCataloguePort"]["value"].setValue( script["Catalogue"].displayDriverServer().portNumber() )
-	script["InteractiveCyclesRender"]["state"].setValue( script["InteractiveCyclesRender"].State.Running )
+	script["InteractiveRender"]["state"].setValue( script["InteractiveRender"].State.Running )
 
 	# Wait for render. Deliberately not using `__delay()`, as it can wait a
 	# significant amount of time longer than requested when a render is running.
@@ -177,7 +177,7 @@ def __renderAndGrab( script, widget, imagePath, delay = 15 ) :
 
 	# Stop renderer before grabbing, because `grab()` also calls `waitForIdle()`, which would
 	# again cause unwanted delays.
-	script["InteractiveCyclesRender"]["state"].setValue( script["InteractiveCyclesRender"].State.Stopped )
+	script["InteractiveRender"]["state"].setValue( script["InteractiveRender"].State.Stopped )
 
 	GafferUI.EventLoop.waitForIdle()
 	viewport = scriptWindow.getLayout().editors( GafferUI.Viewer )[0].view().viewportGadget()
@@ -191,7 +191,7 @@ __renderAndGrab( script, scriptWindow, "images/mainRenderGrey.png", delay = 1 )
 # Render settings with gap in main window
 script["fileName"].setValue( os.path.abspath( "scripts/renderSettingsWithGap.gfr" ) )
 script.load()
-script.selection().add( [ script["StandardOptions"], script["CyclesOptions"], script["Outputs"], script["InteractiveCyclesRender"], script["Catalogue"] ] )
+script.selection().add( [ script["StandardOptions"], script["CyclesOptions"], script["Outputs"], script["InteractiveRender"], script["Catalogue"] ] )
 graphEditor.frame( script.children( Gaffer.Node ) )
 GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/mainRenderSettingsWithGap.png" )
 

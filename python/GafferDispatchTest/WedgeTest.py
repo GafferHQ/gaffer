@@ -48,7 +48,7 @@ class WedgeTest( GafferTest.TestCase ) :
 
 	def __dispatcher( self, frameRange = None ) :
 
-		result = GafferDispatch.LocalDispatcher()
+		result = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 		result["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
 
 		if frameRange is not None :
@@ -70,7 +70,9 @@ class WedgeTest( GafferTest.TestCase ) :
 		script["wedge"]["mode"].setValue( int( GafferDispatch.Wedge.Mode.StringList ) )
 		script["wedge"]["strings"].setValue( IECore.StringVectorData( [ "tom", "dick", "harry" ] ) )
 
-		self.__dispatcher().dispatch( [ script["wedge"] ] )
+		script["dispatcher"] = self.__dispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["wedge"]["task"] )
+		script["dispatcher"]["task"].execute()
 
 		self.assertEqual(
 			set( self.temporaryDirectory().glob( "*.txt" ) ),
@@ -93,7 +95,9 @@ class WedgeTest( GafferTest.TestCase ) :
 		script["wedge"]["mode"].setValue( int( GafferDispatch.Wedge.Mode.IntList ) )
 		script["wedge"]["ints"].setValue( IECore.IntVectorData( [ 1, 21, 44 ] ) )
 
-		self.__dispatcher().dispatch( [ script["wedge"] ] )
+		script["dispatcher"] = self.__dispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["wedge"]["task"] )
+		script["dispatcher"]["task"].execute()
 
 		self.assertEqual(
 			set( self.temporaryDirectory().glob( "*.txt" ) ),
@@ -117,7 +121,9 @@ class WedgeTest( GafferTest.TestCase ) :
 		script["wedge"]["mode"].setValue( int( GafferDispatch.Wedge.Mode.FloatList ) )
 		script["wedge"]["floats"].setValue( IECore.FloatVectorData( [ 1.25, 2.75, 44.0 ] ) )
 
-		self.__dispatcher().dispatch( [ script["wedge"] ] )
+		script["dispatcher"] = self.__dispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["wedge"]["task"] )
+		script["dispatcher"]["task"].execute()
 
 		self.assertEqual(
 			set( self.temporaryDirectory().glob( "*.txt" ) ),
@@ -147,7 +153,9 @@ class WedgeTest( GafferTest.TestCase ) :
 		script["wedge"]["intMax"].setValue( 7 )
 		script["wedge"]["intStep"].setValue( 2 )
 
-		self.__dispatcher().dispatch( [ script["wedge"] ] )
+		script["dispatcher"] = self.__dispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["wedge"]["task"] )
+		script["dispatcher"]["task"].execute()
 
 		self.assertEqual(
 			set( self.temporaryDirectory().glob( "*.txt" ) ),
@@ -173,7 +181,9 @@ class WedgeTest( GafferTest.TestCase ) :
 		script["wedge"]["floatMax"].setValue( 1 )
 		script["wedge"]["floatSteps"].setValue( 5 )
 
-		self.__dispatcher().dispatch( [ script["wedge"] ] )
+		script["dispatcher"] = self.__dispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["wedge"]["task"] )
+		script["dispatcher"]["task"].execute()
 
 		self.assertEqual(
 			set( self.temporaryDirectory().glob( "*.txt" ) ),
@@ -207,7 +217,9 @@ class WedgeTest( GafferTest.TestCase ) :
 		script["wedge"]["floatMax"].setValue( 1 )
 		script["wedge"]["floatSteps"].setValue( 11 )
 
-		self.__dispatcher().dispatch( [ script["wedge"] ] )
+		script["dispatcher"] = self.__dispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["wedge"]["task"] )
+		script["dispatcher"]["task"].execute()
 
 		self.assertEqual(
 			set( self.temporaryDirectory().glob( "*.txt" ) ),
@@ -253,7 +265,9 @@ class WedgeTest( GafferTest.TestCase ) :
 		script["wedge"]["mode"].setValue( int( GafferDispatch.Wedge.Mode.ColorRange ) )
 		script["wedge"]["colorSteps"].setValue( 3 )
 
-		self.__dispatcher().dispatch( [ script["wedge"] ] )
+		script["dispatcher"] = self.__dispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["wedge"]["task"] )
+		script["dispatcher"]["task"].execute()
 
 		self.assertEqual(
 			set( self.temporaryDirectory().glob( "*.txt" ) ),
@@ -291,7 +305,9 @@ class WedgeTest( GafferTest.TestCase ) :
 		script["wedgeY"]["intMax"].setValue( 2 )
 		script["wedgeY"]["intStep"].setValue( 1 )
 
-		self.__dispatcher().dispatch( [ script["wedgeY"] ] )
+		script["dispatcher"] = self.__dispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["wedgeY"]["task"] )
+		script["dispatcher"]["task"].execute()
 
 		self.assertEqual(
 			set( self.temporaryDirectory().glob( "*.txt" ) ),
@@ -318,7 +334,9 @@ class WedgeTest( GafferTest.TestCase ) :
 		script["wedge"]["mode"].setValue( int( GafferDispatch.Wedge.Mode.StringList ) )
 		script["wedge"]["strings"].setValue( IECore.StringVectorData( [ "tom", "dick", "harry" ] ) )
 
-		self.__dispatcher( frameRange = "21-22" ).dispatch( [ script["wedge"] ] )
+		script["dispatcher"] = self.__dispatcher( frameRange = "21-22" )
+		script["dispatcher"]["tasks"][0].setInput( script["wedge"]["task"] )
+		script["dispatcher"]["task"].execute()
 
 		self.assertEqual(
 			set( self.temporaryDirectory().glob( "*.txt" ) ),
@@ -348,7 +366,9 @@ class WedgeTest( GafferTest.TestCase ) :
 		script["wedge"]["mode"].setValue( int( GafferDispatch.Wedge.Mode.StringList ) )
 		script["wedge"]["strings"].setValue( IECore.StringVectorData( [ "tom", "dick", "harry" ] ) )
 
-		self.__dispatcher().dispatch( [ script["wedge"] ] )
+		script["dispatcher"] = self.__dispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["wedge"]["task"] )
+		script["dispatcher"]["task"].execute()
 
 		self.assertEqual(
 			set( self.temporaryDirectory().glob( "*.txt" ) ),

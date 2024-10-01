@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2022, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,42 +35,22 @@
 ##########################################################################
 
 import IECore
-
 import Gaffer
-import GafferImage
 
-class Anaglyph( GafferImage.ImageProcessor ) :
+Gaffer.Metadata.registerValue( "option:renderPass:enabled", "label", "Enabled" )
+Gaffer.Metadata.registerValue( "option:renderPass:enabled", "description", "Whether the render pass is enabled for rendering." )
+Gaffer.Metadata.registerValue( "option:renderPass:enabled", "defaultValue", IECore.BoolData( True ) )
 
-	def __init__(self, name = 'Anaglyph' ) :
-		GafferImage.ImageProcessor.__init__( self, name )
+Gaffer.Metadata.registerValue( "option:renderPass:type", "label", "Type" )
+Gaffer.Metadata.registerValue(
+	"option:renderPass:type",
+	"description",
+	"""
+	The type of the render pass. This provides simple setup for renders such as reflection and shadow passes,
+	typically by assigning custom shaders to the objects specified by `Casters` and `Catchers`. Use a RenderPassShaders
+	node to customise the shaders used for this purpose.
 
-		self["__SelectLeft"] = GafferImage.SelectView()
-		self["__SelectLeft"]["in"].setInput( self["in"] )
-
-		self["__DeleteChannelsLeft"] = GafferImage.DeleteChannels()
-		self["__DeleteChannelsLeft"]["in"].setInput( self["__SelectLeft"]["out"] )
-		self["__DeleteChannelsLeft"]["channels"].setValue( '[GB] *.[GB]' )
-
-		self["__SelectRight"] = GafferImage.SelectView()
-		self["__SelectRight"]["in"].setInput( self["in"] )
-		self["__SelectRight"]["view"].setValue( 'right' )
-
-		self["__DeleteChannelsRight"] = GafferImage.DeleteChannels()
-		self["__DeleteChannelsRight"]["in"].setInput( self["__SelectRight"]["out"] )
-		self["__DeleteChannelsRight"]["channels"].setValue( '[R] *.[R]' )
-
-		self["__Merge"] = GafferImage.Merge()
-		self["__Merge"]["in"][0].setInput( self["__DeleteChannelsLeft"]["out"] )
-		self["__Merge"]["in"][1].setInput( self["__DeleteChannelsRight"]["out"] )
-		self["__Merge"]["operation"].setValue( GafferImage.Merge.Operation.Max )
-
-		self["__disableSwitch"] = Gaffer.Switch()
-		self["__disableSwitch"].setup( self["in"] )
-		self["__disableSwitch"]["in"][0].setInput( self["in"] )
-		self["__disableSwitch"]["in"][1].setInput( self["__Merge"]["out"] )
-		self["__disableSwitch"]["index"].setInput( self["enabled"] )
-
-		self['out'].setFlags(Gaffer.Plug.Flags.Serialisable, False)
-		self["out"].setInput( self["__disableSwitch"]["out"] )
-
-IECore.registerRunTimeTyped( Anaglyph, typeName = "GafferImage::Anaglyph" )
+	> Hint : Render pass types and their behaviours can be customised using the RenderPassTypeAdaptor API.
+	"""
+)
+Gaffer.Metadata.registerValue( "option:renderPass:type", "defaultValue", IECore.StringData( "" ) )

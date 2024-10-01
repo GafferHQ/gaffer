@@ -452,6 +452,47 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 			# cleanly if it has been fixed.
 			backgroundTask.cancelAndWait()
 
+	def testGlobalsExpression( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"]["in"].setInput( script["plane"]["out"] )
+		script["outputs"].addOutput( "test", IECoreScene.Output( "test.exr", "exr", "rgba" ) )
+
+		script["dot"] = Gaffer.Dot()
+		script["dot"].setup( script["outputs"]["out"] )
+		script["dot"]["in"].setInput( script["outputs"]["out"] )
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			g = parent["outputs"]["out"]["globals"]
+
+			for key in g.keys() :
+				if not key.startswith( "output:" ) :
+					continue
+				g[key].parameters()["myParameter"] = 10
+
+			parent["dot"]["in"]["globals"] = g
+			"""
+		) )
+
+		def assertExpectedScene( scene ) :
+
+			self.assertScenesEqual( scene, script["plane"]["out"], checks = self.allSceneChecks - { "globals" } )
+			self.assertEqual( scene.globals()["output:test"].parameters()["myParameter"], IECore.IntData( 10 ) )
+
+		assertExpectedScene( script["dot"]["out"] )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+
+		assertExpectedScene( script2["dot"]["out"] )
+		self.assertEqual( script2["expression"].getExpression(), script["expression"].getExpression() )
+
 	def setUp( self ) :
 
 		GafferSceneTest.SceneTestCase.setUp( self )

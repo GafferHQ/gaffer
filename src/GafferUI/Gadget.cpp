@@ -45,12 +45,7 @@
 
 #include "IECore/SimpleTypedData.h"
 
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathBoxAlgo.h"
-#else
 #include "Imath/ImathBoxAlgo.h"
-#endif
 
 #include "boost/bind/bind.hpp"
 #include "boost/lexical_cast.hpp"
@@ -485,8 +480,9 @@ Gadget::IdleSignal &Gadget::idleSignal()
 
 Gadget::IdleSignal &Gadget::idleSignalAccessedSignal()
 {
-	static IdleSignal g_idleSignalAccessedSignal;
-	return g_idleSignalAccessedSignal;
+	// See above.
+	static IdleSignal *g_idleSignalAccessedSignal = new IdleSignal;
+	return *g_idleSignalAccessedSignal;
 }
 
 void Gadget::styleChanged()

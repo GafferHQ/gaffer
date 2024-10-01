@@ -102,12 +102,7 @@ class GAFFER_API TweakPlug : public Gaffer::ValuePlug
 		enum class MissingMode
 		{
 			Ignore,
-			Error,
-			/// Legacy mode used by CameraTweaks. Same as
-			/// Ignore mode except when `Mode == Replace`, in
-			/// which case a new parameter is created.
-			/// \deprecated Do not use in new code.
-			IgnoreOrReplace,
+			Error
 		};
 
 		/// \deprecated. Use `TweaksPlug::applyTweaks()` instead.
@@ -117,7 +112,8 @@ class GAFFER_API TweakPlug : public Gaffer::ValuePlug
 		/// \returns true if any tweaks were applied
 		template<class GetDataFunctor, class SetDataFunctor>
 		bool applyTweak(
-			/// Signature : const IECore::Data *functor( const std::string &valueName ).
+			/// Signature : const IECore::Data *functor( const std::string &valueName, const bool withFallback ).
+			/// Passing `withFallback=False` specifies that no fallback value should be returned in place of missing data.
 			/// \returns `nullptr` if `valueName` is invalid.
 			GetDataFunctor &&getDataFunctor,
 			/// Signature : bool functor( const std::string &valueName, IECore::DataPtr newData).
@@ -147,6 +143,8 @@ class GAFFER_API TweakPlug : public Gaffer::ValuePlug
 			TweakPlug::Mode mode,
 			const std::string &tweakName
 		) const;
+
+		void applyReplaceTweak( const IECore::Data *sourceData, IECore::Data *tweakData ) const;
 
 		static const char *modeToString( Gaffer::TweakPlug::Mode mode );
 

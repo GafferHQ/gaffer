@@ -28,18 +28,19 @@ jobs:
         # and then use `include` to define their settings.
 
         name: [
-          linux,
-          linux-debug,
+          linux-gcc9,
+          linux-debug-gcc9,
+          linux-gcc11,
           windows,
         ]
 
         include:
 
-          - name: linux
+          - name: linux-gcc9
             os: ubuntu-20.04
             buildType: RELEASE
             publish: true
-            containerImage: ghcr.io/gafferhq/build/build:2.0.0
+            containerImage: ghcr.io/gafferhq/build/build:2.1.2
             # GitHub container builds run as root. This causes failures for tests that
             # assert that filesystem permissions are respected, because root doesn't
             # respect permissions. So we run the final test suite as a dedicated
@@ -47,16 +48,28 @@ jobs:
             testRunner: su testUser -c
             sconsCacheMegabytes: 400
 
-          - name: linux-debug
+          - name: linux-debug-gcc9
             os: ubuntu-20.04
             buildType: DEBUG
             publish: false
-            containerImage: ghcr.io/gafferhq/build/build:2.0.0
+            containerImage: ghcr.io/gafferhq/build/build:2.1.2
             testRunner: su testUser -c
             testArguments: -excludedCategories performance
             # Debug builds are ludicrously big, so we must use a larger cache
             # limit. In practice this compresses down to 4-500Mb.
             sconsCacheMegabytes: 2500
+
+          - name: linux-gcc11
+            os: ubuntu-20.04
+            buildType: RELEASE
+            publish: true
+            containerImage: ghcr.io/gafferhq/build/build:3.0.0
+            # GitHub container builds run as root. This causes failures for tests that
+            # assert that filesystem permissions are respected, because root doesn't
+            # respect permissions. So we run the final test suite as a dedicated
+            # test user rather than as root.
+            testRunner: su testUser -c
+            sconsCacheMegabytes: 400
 
           - name: windows
             os: windows-2019
@@ -73,6 +86,7 @@ jobs:
 
     env:
       ARNOLD_LICENSE_ORDER: none # Don't waste time looking for a license that doesn't exist
+      ARNOLD_FORCE_ABORT_ON_LICENSE_FAIL: 0 # And don't abort because the license isn't found
       GAFFER_BUILD_DIR: "./build"
       GAFFER_CACHE_DIR: "./sconsCache"
 
@@ -131,7 +145,7 @@ jobs:
       # containing the hash of the archive, for use in the cache key
       # below.
       run: |
-        echo GAFFER_DEPENDENCIES_HASH=`python .github/workflows/main/installDependencies.py --dependenciesDir ${{ env.GAFFER_BUILD_DIR }} --outputFormat "{archiveDigest}"` >> $GITHUB_ENV
+        echo GAFFER_DEPENDENCIES_HASH=`python .github/workflows/main/installDependencies.py ${{ matrix.dependenciesURL != '' && format( '--archiveURL {0}', matrix.dependenciesURL ) || '' }} --dependenciesDir ${{ env.GAFFER_BUILD_DIR }} --outputFormat "{archiveDigest}"` >> $GITHUB_ENV
         ./.github/workflows/main/installDelight.py
         echo DELIGHT=$GITHUB_WORKSPACE/3delight >> $GITHUB_ENV
       shell: bash
@@ -176,7 +190,7 @@ jobs:
         import sys
         import os
 
-        for arnoldVersion in [ "7.1.1.0", "7.2.1.0" ] :
+        for arnoldVersion in [ "7.2.1.0", "7.3.1.0" ] :
           arnoldRoot = os.path.join( os.environ["GITHUB_WORKSPACE"], "arnoldRoot", arnoldVersion )
           os.environ["ARNOLD_ROOT"] = arnoldRoot
 
@@ -204,7 +218,15 @@ jobs:
             f.write( 'ARNOLD_ROOT=%s\n' % arnoldRoot )
       env:
         PYTHONUTF8: 1
+        ARNOLD_DOWNLOAD_USER: ${{ secrets.ARNOLD_DOWNLOAD_USER }}
+        ARNOLD_DOWNLOAD_PASSWORD: ${{ secrets.ARNOLD_DOWNLOAD_PASSWORD }}
       shell: python
+      # We can't build GafferArnold for pull requests from forks, because the
+      # authentication secrets for downloading Arnold aren't available (this is
+      # a GitHub security restriction). The core development team can still build
+      # GafferArnold for pull requests by pushing a branch to the main repo and
+      # making a pull request from there.
+      if: ${{ env.ARNOLD_DOWNLOAD_USER != '' }}
 
     - name: Build Docs and Package
       # Docs builds should be relatively quick. If there is a problem, this
@@ -222,7 +244,7 @@ jobs:
     - name: Validate
       run: |
         echo "::add-matcher::./.github/workflows/main/problemMatchers/validateRelease.json"
-        python ./config/validateRelease.py --archive ${{ env.GAFFER_BUILD_NAME }}.${{ env.PACKAGE_EXTENSION }} ${{ env.GAFFER_VALIDATE_EXTRA_FLAGS }}
+        python ./config/validateRelease.py --archive ${{ env.GAFFER_BUILD_NAME }}.${{ env.PACKAGE_EXTENSION }} ${{ env.GAFFER_VALIDATE_EXTRA_FLAGS }} ${{ secrets.ARNOLD_DOWNLOAD_USER == '' && '--skipPaths arnold' || '' }}
         echo "::remove-matcher owner=validateRelease::"
       if: matrix.publish
 

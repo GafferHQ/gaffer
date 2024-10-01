@@ -45,14 +45,8 @@
 #include "IECoreScene/ShaderNetwork.h"
 #include "IECore/StringAlgo.h"
 
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathColorAlgo.h"
-#include "OpenEXR/ImathRandom.h"
-#else
 #include "Imath/ImathColorAlgo.h"
 #include "Imath/ImathRandom.h"
-#endif
 
 #include "boost/algorithm/string/predicate.hpp"
 

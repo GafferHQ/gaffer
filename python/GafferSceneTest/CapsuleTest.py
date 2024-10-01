@@ -135,5 +135,23 @@ class CapsuleTest( GafferSceneTest.SceneTestCase ) :
 			} )
 		)
 
+	def testCancellerNotStored( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		context = Gaffer.Context( Gaffer.Context(), IECore.Canceller() )
+		context["test"] = 1
+
+		with context :
+			hash = IECore.MurmurHash()
+			for path in ( "/", "/sphere" ) :
+				for method in ( "boundHash", "transformHash", "objectHash", "attributesHash" ) :
+					hash.append( getattr( sphere["out"], method )( path ) )
+
+		capsule = GafferScene.Capsule( sphere["out"], "/", context, hash, sphere["out"].bound( "/" ) )
+		self.assertIsNone( capsule.context().canceller() )
+		self.assertIn( "test", capsule.context() )
+		self.assertEqual( capsule.context()["test"], 1 )
+
 if __name__ == "__main__":
 	unittest.main()

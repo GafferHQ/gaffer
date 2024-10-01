@@ -98,6 +98,12 @@ class ImageTestCase( GafferTest.TestCase ) :
 						tileOrigin.x += GafferImage.ImagePlug.tileSize()
 					tileOrigin.y += GafferImage.ImagePlug.tileSize()
 
+	# maxDifference specifies the acceptable range in which pixels in B can differ from A. Optionally, you may
+	# pass a two element tuple instead of a float, in which case it specifies the minimum and maximum permitted
+	# deviation. For example, if `maxDifference = ( -0.1, 0.3 )`, then the test will pass if all pixels in
+	# imageB are no less than the corresponding pixel in imageA minus 0.1, and no more than the corresponding
+	# pixel in imageA plus 0.3.
+
 	def assertImagesEqual( self, imageA, imageB, maxDifference = 0.0, ignoreMetadata = False, ignoreDataWindow = False, ignoreChannelNamesOrder = False, ignoreViewNamesOrder = False, metadataBlacklist = [] ) :
 
 		self.longMessage = True
@@ -106,6 +112,11 @@ class ImageTestCase( GafferTest.TestCase ) :
 			self.assertEqual( list( imageA.viewNames() ), list( imageB.viewNames() ) )
 		else :
 			self.assertEqual( set( imageA.viewNames() ), set( imageB.viewNames() ) )
+
+		maxDifferenceRange = None
+		if type( maxDifference ) == tuple and len( maxDifference ) == 2:
+			maxDifferenceRange = maxDifference
+			maxDifference = max( abs( maxDifference[0] ), abs( maxDifference[1] ) )
 
 		for view in imageA.viewNames():
 
@@ -141,7 +152,6 @@ class ImageTestCase( GafferTest.TestCase ) :
 					difference = GafferImage.Merge()
 					difference["in"][0].setInput( imageA )
 					difference["in"][1].setInput( imageB )
-					difference["operation"].setValue( GafferImage.Merge.Operation.Difference )
 
 					unionDataWindow = imath.Box2i( dataWindowA )
 					unionDataWindow.extendBy( dataWindowB )
@@ -153,7 +163,18 @@ class ImageTestCase( GafferTest.TestCase ) :
 					for channelName in imageA["channelNames"].getValue() :
 
 						stats["channels"].setValue( IECore.StringVectorData( [ channelName ] * 4 ) )
+
+						# It's important to always do a first test in Difference mode, which
+						# has special handling of NaN and inf values
+						difference["operation"].setValue( GafferImage.Merge.Operation.Difference )
 						self.assertLessEqual( stats["max"]["r"].getValue(), maxDifference, "Channel {0}".format( channelName ) )
+
+						# If an accepted difference range was specified, then do a second test with
+						# Subtract instead of Difference so we can tell the direction
+						if maxDifferenceRange:
+							difference["operation"].setValue( GafferImage.Merge.Operation.Subtract )
+							self.assertGreaterEqual( stats["min"]["r"].getValue(), maxDifferenceRange[0], "Channel {0}".format( channelName ) )
+							self.assertLessEqual( stats["max"]["r"].getValue(), maxDifferenceRange[1], "Channel {0}".format( channelName ) )
 					# Access the tiles, because this will throw an error if the sample offsets are bogus
 					GafferImage.ImageAlgo.tiles( imageA )
 					GafferImage.ImageAlgo.tiles( imageB )
@@ -204,10 +225,10 @@ parent["color"] = imath.Color4f( 0.5, 0.6, 0.7, 0.8 ) if context.get( "collect:l
 """ )
 
 		channelTestImage["Shuffle"] = GafferImage.Shuffle()
-		channelTestImage["Shuffle"]["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "Z", "R" ) )
-		channelTestImage["Shuffle"]["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "ZBack", "G" ) )
-		channelTestImage["Shuffle"]["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "custom", "A" ) )
-		channelTestImage["Shuffle"]["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "mask", "B" ) )
+		channelTestImage["Shuffle"]["shuffles"].addChild( Gaffer.ShufflePlug( "R", "Z" ) )
+		channelTestImage["Shuffle"]["shuffles"].addChild( Gaffer.ShufflePlug( "G", "ZBack" ) )
+		channelTestImage["Shuffle"]["shuffles"].addChild( Gaffer.ShufflePlug( "A", "custom" ) )
+		channelTestImage["Shuffle"]["shuffles"].addChild( Gaffer.ShufflePlug( "B", "mask" ) )
 		channelTestImage["Shuffle"]["in"].setInput( channelTestImage["Constant"]["out"] )
 
 		channelTestImage["in"].setInput( channelTestImage["Shuffle"]["out"] )

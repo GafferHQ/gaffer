@@ -79,6 +79,10 @@ Gaffer.Metadata.registerNode(
 
 			"nodule:type", "",
 			"divider", True,
+			# Needed to make sure the Settings tab comes first,
+			# because otherwise the first plug is `connectedInputs`
+			# which is in the Advanced tab.
+			"layout:index", 0,
 
 		],
 
@@ -149,6 +153,12 @@ Gaffer.Metadata.registerNode(
 		"out.value" : [
 
 			"noduleLayout:label", "out",
+
+		],
+
+		"connectedInputs" : [
+
+			"layout:index", -3,
 
 		],
 

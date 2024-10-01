@@ -83,6 +83,8 @@ PendingUpdates &pendingUpdates()
 	return *p;
 }
 
+const InternedString g_rendererOptionName( "option:render:defaultRenderer" );
+
 } // anon namespace
 
 // A thread-safe message handler for render messaging
@@ -160,6 +162,7 @@ InteractiveRender::InteractiveRender( const IECore::InternedString &rendererType
 	addChild( new StringPlug( rendererType.string().empty() ? "renderer" : "__renderer", Plug::In, rendererType.string() ) );
 	addChild( new IntPlug( "state", Plug::In, Stopped, Stopped, Paused, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new ScenePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
+	addChild( new StringPlug( "resolvedRenderer", Plug::Out, "", Plug::Default & ~Plug::Serialisable ) );
 	addChild( new ObjectPlug( "messages", Plug::Out, new MessagesData(), Plug::Default & ~Plug::Serialisable ) );
 	addChild( new ScenePlug( "__adaptedIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
 
@@ -169,6 +172,8 @@ InteractiveRender::InteractiveRender( const IECore::InternedString &rendererType
 	SceneProcessorPtr adaptors = SceneAlgo::createRenderAdaptors();
 	setChild( "__adaptors", adaptors );
 	adaptors->inPlug()->setInput( inPlug() );
+	adaptors->getChild<StringPlug>( "client" )->setValue( "InteractiveRender" );
+	adaptors->getChild<StringPlug>( "renderer" )->setInput( resolvedRendererPlug() );
 	adaptedInPlug()->setInput( adaptors->outPlug() );
 
 	outPlug()->setInput( inPlug() );
@@ -226,34 +231,44 @@ const ScenePlug *InteractiveRender::outPlug() const
 	return getChild<ScenePlug>( g_firstPlugIndex + 3 );
 }
 
+Gaffer::StringPlug *InteractiveRender::resolvedRendererPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::StringPlug *InteractiveRender::resolvedRendererPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+}
+
 ObjectPlug *InteractiveRender::messagesPlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 4 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 5 );
 }
 
 const ObjectPlug *InteractiveRender::messagesPlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 4 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 5 );
 }
 
 ScenePlug *InteractiveRender::adaptedInPlug()
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 5 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 6 );
 }
 
 const ScenePlug *InteractiveRender::adaptedInPlug() const
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 5 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 6 );
 }
 
 Gaffer::IntPlug *InteractiveRender::messageUpdateCountPlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 6 );
+	return getChild<IntPlug>( g_firstPlugIndex + 7 );
 }
 
 const Gaffer::IntPlug *InteractiveRender::messageUpdateCountPlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 6 );
+	return getChild<IntPlug>( g_firstPlugIndex + 7 );
 }
 
 Gaffer::Context *InteractiveRender::getContext()
@@ -296,6 +311,9 @@ void InteractiveRender::plugSet( const Gaffer::Plug *plug )
 
 void InteractiveRender::update()
 {
+	ConstContextPtr context = effectiveContext();
+	Context::Scope scope( context.get() );
+
 	const State requiredState = (State)statePlug()->getValue();
 
 	// Stop the current render if we've been asked to, or if
@@ -314,8 +332,22 @@ void InteractiveRender::update()
 	{
 		m_messageHandler->clear();
 
+		/// \todo It'd be great if we could deal with live edits to the `render:defaultRenderer`
+		/// option, to switch renderer on the fly. The best way of doing this is probably
+		/// to move the renderer creation to the RenderController. That approach would also
+		/// allow the RenderController to recreate the renderer when unsupported option edits
+		/// are made - for instance, changing `cycles:device`.
+		const std::string rendererType = resolvedRendererPlug()->getValue();
+		if( rendererType.empty() )
+		{
+			m_messageHandler->handle(
+				IECore::Msg::Error, "InteractiveRender", "`render:defaultRenderer` option not set"
+			);
+			return;
+		}
+
 		m_renderer = IECoreScenePreview::Renderer::create(
-			rendererPlug()->getValue(),
+			rendererType,
 			IECoreScenePreview::Renderer::Interactive,
 			"",
 			m_messageHandler.get()
@@ -443,6 +475,11 @@ void InteractiveRender::affects( const Plug *input, AffectedPlugsContainer &outp
 	{
 		outputs.push_back( messagesPlug() );
 	}
+
+	if( input == rendererPlug() || input == inPlug()->globalsPlug() )
+	{
+		outputs.push_back( resolvedRendererPlug() );
+	}
 }
 
 void InteractiveRender::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -453,6 +490,18 @@ void InteractiveRender::hash( const Gaffer::ValuePlug *output, const Gaffer::Con
 	{
 		m_messageHandler->messagesHash( h );
 	}
+	else if( output == resolvedRendererPlug() )
+	{
+		const std::string renderer = rendererPlug()->getValue();
+		if( renderer.empty() )
+		{
+			inPlug()->globalsPlug()->hash( h );
+		}
+		else
+		{
+			h.append( renderer );
+		}
+	}
 }
 
 void InteractiveRender::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
@@ -461,6 +510,19 @@ void InteractiveRender::compute( Gaffer::ValuePlug *output, const Gaffer::Contex
 	{
 		static_cast<ObjectPlug *>( output )->setValue( m_messageHandler->messages() );
 		return;
+	}
+	else if( output == resolvedRendererPlug() )
+	{
+		std::string renderer = rendererPlug()->getValue();
+		if( renderer.empty() )
+		{
+			ConstCompoundObjectPtr globals = inPlug()->globals();
+			if( auto rendererData = globals->member<const StringData>( g_rendererOptionName ) )
+			{
+				renderer = rendererData->readable();
+			}
+		}
+		static_cast<StringPlug *>( output )->setValue( renderer );
 	}
 
 	ComputeNode::compute( output, context );

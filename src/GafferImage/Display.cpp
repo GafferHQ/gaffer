@@ -466,14 +466,14 @@ void Display::affects( const Gaffer::Plug *input, AffectedPlugsContainer &output
 
 Display::DriverCreatedSignal &Display::driverCreatedSignal()
 {
-	static DriverCreatedSignal s;
-	return s;
+	static DriverCreatedSignal *g_driverCreatedSignal = new DriverCreatedSignal;
+	return *g_driverCreatedSignal;
 }
 
 Node::UnaryPlugSignal &Display::imageReceivedSignal()
 {
-	static UnaryPlugSignal s;
-	return s;
+	static UnaryPlugSignal *g_imageReceivedSignal = new UnaryPlugSignal;
+	return *g_imageReceivedSignal;
 }
 
 void Display::setDriver( IECoreImage::DisplayDriverPtr driver, bool copy )

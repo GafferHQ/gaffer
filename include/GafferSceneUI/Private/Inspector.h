@@ -177,6 +177,10 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Si
 		/// > that edits the processor itself.
 		virtual EditFunctionOrFailure editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const;
 
+		/// Can be implemented by derived classes to provide a fallback value for the inspection,
+		/// used when no value is returned from `value()`.
+		virtual IECore::ConstObjectPtr fallbackValue() const;
+
 	protected :
 
 		Gaffer::EditScope *targetEditScope() const;
@@ -308,7 +312,9 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 			Downstream,
 			/// No EditScope was specified, or the EditScope was not found in
 			/// the value's history.
-			Other
+			Other,
+			/// The value was provided from a fallback value from the Inspector.
+			Fallback
 		};
 
 		/// The relationship between `source()` and `editScope()`.

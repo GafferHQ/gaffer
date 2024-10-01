@@ -40,7 +40,6 @@ import imath
 import IECore
 
 import Gaffer
-import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -231,7 +230,7 @@ class FramingConstraintTest( GafferSceneTest.SceneTestCase ) :
 		cameraTweaks = GafferScene.CameraTweaks()
 		cameraTweaks["in"].setInput( group["out"] )
 		cameraTweaks["filter"].setInput( filter["out"] )
-		cameraTweaks["tweaks"]["resolution"] = Gaffer.TweakPlug( "resolution", Gaffer.V2iPlug( "value" ) )
+		cameraTweaks["tweaks"]["resolution"] = Gaffer.TweakPlug( "resolution", Gaffer.V2iPlug( "value" ), Gaffer.TweakPlug.Mode.Create )
 		cameraTweaks["tweaks"]["apertureOffset"] = Gaffer.TweakPlug( "apertureOffset", Gaffer.V2fPlug( "value" ) )
 
 		framing = GafferScene.FramingConstraint()
@@ -353,6 +352,24 @@ class FramingConstraintTest( GafferSceneTest.SceneTestCase ) :
 						else:
 							validateFrustumUsage( "/group/sphere", 0.03, 1.00002, 0.2, 0.04, True )
 
+	def testConstrainingGeometry( self ) :
+
+		cube = GafferScene.Cube()
+		plane = GafferScene.Plane()
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( cube["out"] )
+		parent["children"][0].setInput( plane["out"] )
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		constraint = GafferScene.FramingConstraint()
+		constraint["in"].setInput( parent["out"] )
+		constraint["filter"].setInput( planeFilter["out"] )
+		constraint["target"].setValue( "/cube" )
+
+		self.assertEqual( constraint["out"].fullTransform( "/plane" ), constraint["in"].fullTransform( "/plane" ) )
 
 if __name__ == "__main__":
 	unittest.main()

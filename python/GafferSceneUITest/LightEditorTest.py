@@ -40,6 +40,7 @@ import imath
 import IECore
 
 import Gaffer
+import GafferUI
 from GafferSceneUI import _GafferSceneUI
 import GafferScene
 import GafferSceneUI
@@ -703,6 +704,80 @@ class LightEditorTest( GafferUITest.TestCase ) :
 			widget,
 			True  # quickBoolean
 		)
+
+	def testShaderParameterEditScope( self ) :
+
+		GafferSceneUI.LightEditor.registerParameter( "light", "add.a" )
+		GafferSceneUI.LightEditor.registerParameter( "light", "exposure" )
+
+		script = Gaffer.ScriptNode()
+
+		script["add"] = GafferScene.Shader()
+		script["add"]["parameters"]["a"] = Gaffer.Color3fPlug()
+		script["add"]["out"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out )
+
+		script["light"] = GafferSceneTest.TestLight()
+		script["light"]["parameters"]["intensity"].setInput( script["add"]["out"] )
+
+		script["editScope"] = Gaffer.EditScope()
+		script["editScope"].setup( script["light"]["out"] )
+		script["editScope"]["in"].setInput( script["light"]["out"] )
+
+		attributes = script["editScope"]["out"].attributes( "/light" )
+		self.assertIn( "light", attributes )
+		self.assertIn( "add", attributes["light"].shaders() )
+		self.assertIn( "__shader", attributes["light"].shaders() )
+		self.assertEqual( attributes["light"].shaders()["add"].parameters["a"].value, imath.Color3f( 0.0 ) )
+		self.assertEqual( attributes["light"].shaders()["__shader"].parameters["exposure"].value, 0.0 )
+
+		with GafferUI.Window() as window :
+			editor = GafferSceneUI.LightEditor( script )
+		editor._LightEditor__settingsNode["editScope"].setInput( script["editScope"]["out"] )
+		window.setVisible( True )
+
+		self.waitForIdle( 1000 )
+
+		editor.setNodeSet( Gaffer.StandardSet( [ script["editScope"] ] ) )
+
+		# Find the columns for our `add.a` and `exposure` parameters
+		widget = editor._LightEditor__pathListing
+
+		addAInspector = None
+		exposureInspector = None
+		for c in widget.getColumns() :
+			if not isinstance( c, _GafferSceneUI._LightEditorInspectorColumn ) :
+				continue
+			if c.headerData().value == "A" :
+				addAInspector = c.inspector()
+			elif c.headerData().value == "Exposure" :
+				exposureInspector = c.inspector()
+
+		self.assertIsNotNone( addAInspector )
+		self.assertIsNotNone( exposureInspector )
+
+		with Gaffer.Context() as context :
+			context["scene:path"] = IECore.InternedStringVectorData( ["light"] )
+			addAInspection = addAInspector.inspect()
+			exposureInspection = exposureInspector.inspect()
+
+		self.assertIsNotNone( addAInspection )
+		self.assertIsNotNone( exposureInspection )
+
+		plugA = addAInspection.acquireEdit()
+		plugA["enabled"].setValue( True )
+		plugA["value"].setValue( imath.Color3f( 1.0, 0.5, 0.0 ) )
+
+		plugExposure = exposureInspection.acquireEdit()
+		plugExposure["enabled"].setValue( True )
+		plugExposure["value"].setValue( 2.0 )
+
+		attributes = script["editScope"]["out"].attributes( "/light" )
+		self.assertIn( "light", attributes )
+		self.assertIn( "add", attributes["light"].shaders() )
+		self.assertIn( "__shader", attributes["light"].shaders() )
+		self.assertEqual( attributes["light"].shaders()["add"].parameters["a"].value, imath.Color3f( 1.0, 0.5, 0.0 ) )
+		self.assertEqual( attributes["light"].shaders()["__shader"].parameters["exposure"].value, 2.0 )
+
 
 if __name__ == "__main__" :
 	unittest.main()

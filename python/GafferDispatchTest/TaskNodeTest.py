@@ -194,10 +194,9 @@ class TaskNodeTest( GafferTest.TestCase ) :
 		c = Gaffer.Context()
 
 		n = GafferDispatchTest.LoggingTaskNode()
-		t = GafferDispatch.TaskNode.Task( n, c )
-		t2 = GafferDispatch.TaskNode.Task( n, c )
-		t3 = GafferDispatch.TaskNode.Task( t2 )
-		t4 = GafferDispatch.TaskNode.Task( n["task"], c )
+		t = GafferDispatch.TaskNode.Task( n["task"], c )
+		t2 = GafferDispatch.TaskNode.Task( t )
+		t3 = GafferDispatch.TaskNode.Task( n["task"], c )
 
 		self.assertEqual( t.plug(), n["task"] )
 		self.assertEqual( t.context(), c )
@@ -205,20 +204,18 @@ class TaskNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( t2.context(), c )
 		self.assertEqual( t3.plug(), n["task"] )
 		self.assertEqual( t3.context(), c )
-		self.assertEqual( t4.plug(), n["task"] )
-		self.assertEqual( t4.context(), c )
 
 	def testTaskComparison( self ) :
 
 		c = Gaffer.Context()
 		n = GafferDispatchTest.LoggingTaskNode()
-		t1 = GafferDispatch.TaskNode.Task( n, c )
-		t2 = GafferDispatch.TaskNode.Task( n, c )
+		t1 = GafferDispatch.TaskNode.Task( n["task"], c )
+		t2 = GafferDispatch.TaskNode.Task( n["task"], c )
 		c2 = Gaffer.Context()
 		c2["a"] = 2
-		t3 = GafferDispatch.TaskNode.Task( n, c2 )
+		t3 = GafferDispatch.TaskNode.Task( n["task"], c2 )
 		n2 = GafferDispatchTest.LoggingTaskNode()
-		t4 = GafferDispatch.TaskNode.Task( n2, c2 )
+		t4 = GafferDispatch.TaskNode.Task( n2["task"], c2 )
 
 		self.assertEqual( t1, t1 )
 		self.assertEqual( t1, t2 )
@@ -483,9 +480,10 @@ class TaskNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( postTasks[0].plug(), s["n3"]["internalTask"]["postTasks"][0] )
 		self.assertEqual( postTasks[1].plug(), s["n3"]["internalTask"]["postTasks"][1] )
 
-		dispatcher = GafferDispatchTest.DispatcherTest.TestDispatcher()
-		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
-		dispatcher.dispatch( [ s["n3"] ] )
+		s["dispatcher"] = GafferDispatchTest.DispatcherTest.TestDispatcher()
+		s["dispatcher"]["tasks"][0].setInput( s["n3"]["task"] )
+		s["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["dispatcher"]["task"].execute()
 
 		self.assertEqual( len( log ), 3 )
 		self.assertEqual( [ l.node for l in log ], [ s["n1"], s["n3"]["internalTask"], s["n2"] ] )

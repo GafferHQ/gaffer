@@ -74,14 +74,8 @@
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind/bind.hpp"
 
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathMatrixAlgo.h"
-#include "OpenEXR/ImathSphere.h"
-#else
 #include "Imath/ImathMatrixAlgo.h"
 #include "Imath/ImathSphere.h"
-#endif
 
 #include "fmt/format.h"
 
@@ -106,11 +100,10 @@ namespace
 
 const std::string g_lightAttributePattern = "light *:light";
 
-const Color3f g_lightToolHandleColor = Color3f( 0.825, 0.720f, 0.230f );
+const Color3f g_lightToolArcColor = Color3f( 0.825, 0.720f, 0.230f );
 
-// Color from `StandardLightVisualiser`
-const Color3f g_lightToolHighlightColor = Color3f( 1.0f, 0.835f, 0.07f );
-const Color4f g_lightToolHighlightColor4 = Color4f( g_lightToolHighlightColor.x, g_lightToolHighlightColor.y, g_lightToolHighlightColor.z, 1.f );
+const Color3f g_lightToolColor = Color3f( 0.850f, 0.345f, 0.129f );
+const Color4f g_lightToolColor4 = Color4f( g_lightToolColor.x, g_lightToolColor.y, g_lightToolColor.z, 1.f );
 
 const Color4f g_lightToolDisabledColor4 = Color4f( 0.4f, 0.4f, 0.4f, 1.f );
 
@@ -795,15 +788,13 @@ class LightToolHandle : public Handle
 
 		// Update inspectors and data needed to display and interact with the handle. Called
 		// in `preRender()` if the inspections are dirty.
-		void updateHandlePath( ScenePlugPtr scene, const Context *context, const ScenePlug::ScenePath &handlePath )
+		void updateHandlePath( const ScenePlug::ScenePath &handlePath )
 		{
-			m_scene = scene;
-			m_context = context;
 			m_handlePath = handlePath;
 
 			m_inspectors.clear();
 
-			if( !m_scene->exists( m_handlePath ) )
+			if( !scene()->exists( m_handlePath ) )
 			{
 				return;
 			}
@@ -813,7 +804,7 @@ class LightToolHandle : public Handle
 			/// \todo This can be simplified and some of the logic, especially getting the inspectors, can
 			/// be moved to the constructor when we standardize on a single USDLux light representation.
 
-			ConstCompoundObjectPtr attributes = m_scene->fullAttributes( m_handlePath );
+			ConstCompoundObjectPtr attributes = scene()->fullAttributes( m_handlePath );
 
 			for( const auto &[attributeName, value ] : attributes->members() )
 			{
@@ -823,19 +814,19 @@ class LightToolHandle : public Handle
 				)
 				{
 					const auto shader = attributes->member<ShaderNetwork>( attributeName )->outputShader();
-					std::string shaderAttribute = shader->getType() + ":" + shader->getName();
+					const InternedString metadataTarget = attributeName.string() + ":" + shader->getName();
 
-					if( !isLightType( shaderAttribute ) )
+					if( !isLightType( metadataTarget ) )
 					{
 						continue;
 					}
 
 					for( const auto &m : m_metaParameters )
 					{
-						if( auto parameter = Metadata::value<StringData>( shaderAttribute, m ) )
+						if( auto parameter = Metadata::value<StringData>( metadataTarget, m ) )
 						{
 							m_inspectors[m] = new ParameterInspector(
-								m_scene,
+								scene(),
 								m_editScope,
 								attributeName,
 								ShaderNetwork::Parameter( "", parameter->readable() )
@@ -848,22 +839,6 @@ class LightToolHandle : public Handle
 			}
 
 			handlePathChanged();
-		}
-
-		/// \todo Should these three be protected, or left out entirely until they are needed by client code?
-		const ScenePlug *scene() const
-		{
-			return m_scene.get();
-		}
-
-		const Context *context() const
-		{
-			return m_context;
-		}
-
-		const ScenePlug::ScenePath &handlePath() const
-		{
-			return m_handlePath;
 		}
 
 		/// \todo Remove these and handle the lookThrough logic internally?
@@ -981,11 +956,21 @@ class LightToolHandle : public Handle
 			mouseMoveSignal().connect( boost::bind( &LightToolHandle::mouseMove, this, ::_2 ) );
 		}
 
-		// Returns true if `shaderAttribute` refers to the same light type
-		// as this handle was constructed to apply to.
-		bool isLightType( const std::string &shaderAttribute ) const
+		ScenePlug *scene() const
 		{
-			auto lightType = Metadata::value<StringData>( shaderAttribute, "type" );
+			return m_view->inPlug<ScenePlug>();
+		}
+
+		const ScenePlug::ScenePath &handlePath() const
+		{
+			return m_handlePath;
+		}
+
+		// Returns true if `metadataTarget` refers to the same light type
+		// as this handle was constructed to apply to.
+		bool isLightType( const InternedString &metadataTarget ) const
+		{
+			auto lightType = Metadata::value<StringData>( metadataTarget, "type" );
 
 			if( !lightType || !StringAlgo::matchMultiple( lightType->readable(), m_lightTypePattern ) )
 			{
@@ -1011,7 +996,7 @@ class LightToolHandle : public Handle
 		// Returns `nullptr` if no inspection exists for the handle.
 		Inspector::ResultPtr handleInspection( const InternedString &metaParameter ) const
 		{
-			ScenePlug::PathScope pathScope( m_context );
+			ScenePlug::PathScope pathScope( m_view->getContext() );
 			pathScope.setPath( &m_handlePath );
 
 			return inspection( metaParameter );
@@ -1219,15 +1204,14 @@ class LightToolHandle : public Handle
 			);
 
 			auto standardStyle = runTimeCast<const StandardStyle>( style );
-			assert( standardStyle );
-			const Color3f highlightColor3 = standardStyle->getColor( StandardStyle::Color::HighlightColor );
+			const Color3f highlightColor3 = standardStyle ? standardStyle->getColor( StandardStyle::Color::HighlightColor ) : Color3f( 0.466, 0.612, 0.741 );
 			const Color4f highlightColor4 = Color4f( highlightColor3.x, highlightColor3.y, highlightColor3.z, 1.f );
 
 			const bool enabled = allInspectionsEnabled();
 
 			group->getState()->add(
 				new IECoreGL::Color(
-					enabled ? ( highlighted ? g_lightToolHighlightColor4 : highlightColor4 ) : g_lightToolDisabledColor4
+					enabled ? ( highlighted ? highlightColor4 : g_lightToolColor4 ) : g_lightToolDisabledColor4
 				)
 			);
 
@@ -1268,18 +1252,13 @@ class LightToolHandle : public Handle
 		// Returns `nullptr` if no inspector or no inspection exists.
 		Inspector::ResultPtr inspection( const InternedString &metaParameter ) const
 		{
-			auto it = m_inspectors.find( metaParameter );
+			const auto it = m_inspectors.find( metaParameter );
 			if( it == m_inspectors.end() )
 			{
 				return nullptr;
 			}
 
-			if( Inspector::ResultPtr inspection = it->second->inspect() )
-			{
-				return inspection;
-			}
-
-			return nullptr;
+			return it->second->inspect();
 		}
 
 		bool allInspectionsEnabled() const
@@ -1299,8 +1278,6 @@ class LightToolHandle : public Handle
 			return enabled;
 		}
 
-		ScenePlugPtr m_scene;
-		const Context *m_context;
 		ScenePlug::ScenePath m_handlePath;
 
 		const std::string m_lightTypePattern;
@@ -1468,8 +1445,8 @@ class SpotLightHandle : public LightToolHandle
 				IECoreScene::MeshPrimitivePtr previousSolidArc = nullptr;
 				IECoreScene::MeshPrimitivePtr currentSolidArc = nullptr;
 
-				const Color3f previousColor = g_lightToolHandleColor * g_highlightMultiplier;
-				const Color3f currentColor = g_lightToolHandleColor;
+				const Color3f previousColor = g_lightToolArcColor * g_highlightMultiplier;
+				const Color3f currentColor = g_lightToolArcColor;
 
 				const float arcWidth = g_dragArcWidth * ::rasterScaleFactor( this, V3f( 0, 0, -m_arcRadius ) );
 				previousSolidArc = solidArc(
@@ -1569,18 +1546,18 @@ class SpotLightHandle : public LightToolHandle
 				)
 				{
 					const auto shader = attributes->member<ShaderNetwork>( attributeName )->outputShader();
-					std::string shaderAttribute = shader->getType() + ":" + shader->getName();
+					const InternedString metadataTarget = attributeName.string() + ":" + shader->getName();
 
-					if( !isLightType( shaderAttribute ) )
+					if( !isLightType( metadataTarget ) )
 					{
 						continue;
 					}
 
-					auto penumbraTypeData = Metadata::value<StringData>( shaderAttribute, "penumbraType" );
+					auto penumbraTypeData = Metadata::value<StringData>( metadataTarget, "penumbraType" );
 					m_penumbraType = penumbraTypeData ? std::optional<InternedString>( InternedString( penumbraTypeData->readable() ) ) : std::nullopt;
 
 					m_lensRadius = 0;
-					if( auto lensRadiusParameterName = Metadata::value<StringData>( shaderAttribute, "lensRadiusParameter" ) )
+					if( auto lensRadiusParameterName = Metadata::value<StringData>( metadataTarget, "lensRadiusParameter" ) )
 					{
 						if( auto lensRadiusData = shader->parametersData()->member<FloatData>( lensRadiusParameterName->readable() ) )
 						{
@@ -1588,7 +1565,7 @@ class SpotLightHandle : public LightToolHandle
 						}
 					}
 
-					auto angleType = Metadata::value<StringData>( shaderAttribute, "coneAngleType" );
+					auto angleType = Metadata::value<StringData>( metadataTarget, "coneAngleType" );
 					if( angleType && angleType->readable() == "half" )
 					{
 						m_angleHandleRatio = 1.f;
@@ -2073,21 +2050,21 @@ class EdgeHandle : public LightToolHandle
 				)
 				{
 					const auto shader = attributes->member<ShaderNetwork>( attributeName )->outputShader();
-					std::string shaderAttribute = shader->getType() + ":" + shader->getName();
+					const InternedString metadataTarget = attributeName.string() + ":" + shader->getName();
 
-					if( !isLightType( shaderAttribute ) )
+					if( !isLightType( metadataTarget ) )
 					{
 						continue;
 					}
 
 					m_orientation = M44f();
-					if( auto orientationData = Metadata::value<M44fData>( shaderAttribute, "visualiserOrientation" ) )
+					if( auto orientationData = Metadata::value<M44fData>( metadataTarget, "visualiserOrientation" ) )
 					{
 						m_orientation = orientationData->readable();
 					}
 
 					m_oppositeAdditionalScale = 1.f;
-					if( auto scaleData = Metadata::value<FloatData>( shaderAttribute, m_oppositeScaleAttributeName ) )
+					if( auto scaleData = Metadata::value<FloatData>( metadataTarget, m_oppositeScaleAttributeName ) )
 					{
 						m_oppositeAdditionalScale = scaleData->readable();
 					}
@@ -2777,15 +2754,15 @@ class LengthHandle : public LightToolHandle
 				)
 				{
 					const auto shader = attributes->member<ShaderNetwork>( attributeName )->outputShader();
-					std::string shaderAttribute = shader->getType() + ":" + shader->getName();
+					const InternedString metadataTarget = attributeName.string() + ":" + shader->getName();
 
-					if( !isLightType( shaderAttribute ) )
+					if( !isLightType( metadataTarget ) )
 					{
 						continue;
 					}
 
 					m_orientation = M44f();
-					if( auto orientationData = Metadata::value<M44fData>( shaderAttribute, "visualiserOrientation" ) )
+					if( auto orientationData = Metadata::value<M44fData>( metadataTarget, "visualiserOrientation" ) )
 					{
 						m_orientation = orientationData->readable();
 					}
@@ -3124,13 +3101,6 @@ void LightTool::updateHandleInspections()
 		return;
 	}
 
-	auto scene = scenePlug()->getInput<ScenePlug>();
-	scene = scene ? scene->getInput<ScenePlug>() : scene;
-	if( !scene )
-	{
-		return;
-	}
-
 	m_inspectorsDirtiedConnection.clear();
 
 	const PathMatcher selection = this->selection();
@@ -3165,7 +3135,7 @@ void LightTool::updateHandleInspections()
 		auto handle = runTimeCast<LightToolHandle>( c );
 		assert( handle );
 
-		handle->updateHandlePath( scene, view()->getContext(), lastSelectedPath );
+		handle->updateHandlePath( lastSelectedPath );
 
 		bool handleVisible = true;
 		bool handleEnabled = true;

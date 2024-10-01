@@ -41,6 +41,8 @@
 
 #include "GafferOSL/OSLShader.h"
 
+#include "GafferScene/ShaderTweakProxy.h"
+
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
@@ -53,6 +55,7 @@
 #include "fmt/format.h"
 
 #include "ai_metadata.h"
+#include "ai_version.h"
 
 using namespace std;
 using namespace boost;
@@ -63,12 +66,19 @@ using namespace GafferArnold;
 using namespace Gaffer;
 using namespace GafferOSL;
 
+#if ARNOLD_VERSION_NUM < 70301
+#define AI_NODE_IMAGER AI_NODE_DRIVER
+#endif
+
 namespace
 {
 
 // This is to allow Arnold Shaders to be connected to OSL Shaders
 const bool g_oslRegistration = OSLShader::registerCompatibleShader( "ai:surface" );
 const InternedString g_inputParameterName( "input" );
+
+ShaderTweakProxy::ShaderLoaderDescription<ArnoldShader> g_arnoldShaderTweakProxyLoaderRegistration( "ai" );
+
 
 } // namespace
 
@@ -152,7 +162,7 @@ void ArnoldShader::loadShader( const std::string &shaderName, bool keepExistingV
 		case AI_NODE_COLOR_MANAGER :
 			type = "ai:color_manager";
 			break;
-		case AI_NODE_DRIVER :
+		case AI_NODE_IMAGER :
 			type = "ai:imager";
 			break;
 		default :

@@ -46,6 +46,11 @@ import IECoreArnold
 import GafferUI
 import GafferArnold
 
+if [ int( x ) for x in arnold.AiGetVersion()[:3] ] < [ 7, 3, 1 ] :
+	__AI_NODE_IMAGER = arnold.AI_NODE_DRIVER
+else :
+	__AI_NODE_IMAGER = arnold.AI_NODE_IMAGER
+
 ## \todo Rename. This isn't about loading shaders, it's about loading all sorts
 # of Arnold node definitions.
 def appendShaders( menuDefinition, prefix="/Arnold" ) :
@@ -58,7 +63,7 @@ def appendShaders( menuDefinition, prefix="/Arnold" ) :
 	uncategorisedMenuItems = []
 	with IECoreArnold.UniverseBlock( writable = False ) :
 
-		it = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER | arnold.AI_NODE_LIGHT | arnold.AI_NODE_COLOR_MANAGER | arnold.AI_NODE_DRIVER )
+		it = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER | arnold.AI_NODE_LIGHT | arnold.AI_NODE_COLOR_MANAGER | __AI_NODE_IMAGER )
 
 		while not arnold.AiNodeEntryIteratorFinished( it ) :
 
@@ -88,12 +93,13 @@ def appendShaders( menuDefinition, prefix="/Arnold" ) :
 				nodeCreator = functools.partial( __colorManagerCreator, shaderName, nodeName )
 				displayName = displayName.replace( "Color Manager ", "" )
 			else :
-				assert( arnold.AiNodeEntryGetType( nodeEntry ) == arnold.AI_NODE_DRIVER )
-				# Imagers don't yet have their own node type, but we can
-				# identify them using metadata.
-				if __aiMetadataGetStr( nodeEntry, "", "subtype" ) != "imager" :
-					continue
-				menuPath = "Globals/Imager"
+				assert( arnold.AiNodeEntryGetType( nodeEntry ) == __AI_NODE_IMAGER )
+				if [ int( x ) for x in arnold.AiGetVersion()[:3] ] < [ 7, 3, 1 ] :
+					# Imagers masquerade as drivers, but we can identify them
+					# using metadata.
+					if __aiMetadataGetStr( nodeEntry, "", "subtype" ) != "imager" :
+						continue
+				menuPath = "Globals/Imagers"
 				nodeCreator = functools.partial( __shaderCreator, shaderName, GafferArnold.ArnoldShader, nodeName )
 				displayName = displayName.replace( "Imager ", "" )
 

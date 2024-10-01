@@ -57,14 +57,8 @@
 #include "IECoreScene/Font.h"
 #include "IECoreScene/MeshPrimitive.h"
 
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathVecAlgo.h"
-#include "OpenEXR/ImathMatrixAlgo.h"
-#else
 #include "Imath/ImathVecAlgo.h"
 #include "Imath/ImathMatrixAlgo.h"
-#endif
 
 #include "boost/container/flat_map.hpp"
 #include "boost/tokenizer.hpp"
@@ -581,7 +575,6 @@ void StandardStyle::bind( const Style *currentStyle ) const
 		return;
 	}
 
-	glEnable( GL_BLEND );
 	glBlendFuncSeparate( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
 	glUseProgram( shader()->program() );
 
@@ -1130,17 +1123,7 @@ void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Textur
 	glPushAttrib( GL_COLOR_BUFFER_BIT );
 
 	// As the image is already pre-multiplied we need to change our blend mode.
-	glEnable( GL_BLEND );
-	if( !IECoreGL::Selector::currentSelector() )
-	{
-		// Some users have reported crashes that were traced back to this call
-		// when used on the GL_R32UI data type the `IDRender` selection mode
-		// uses. The `IDRender` buffer would get corrupted with values that
-		// didn't correspond to actual gadgets.
-		// Don't change it when rendering the selection pass since
-		// blending should not be applied to an integer buffer anyways.
-		glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
-	}
+	glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
 
 	glEnable( GL_TEXTURE_2D );
 	glActiveTexture( GL_TEXTURE0 );
@@ -1381,7 +1364,12 @@ static const std::string &vertexSource()
 	// When isCurve is set, this renders a curve defined by start and end points, and start and end tangents.
 	// See contrib/dd/notes/noodleShapes.svg for explanation.
 	static const std::string g_vertexSource =
-
+		""
+		"#if __VERSION__ <= 120\n"
+		"#define in attribute\n"
+		"#define out varying\n"
+		"#endif\n"
+		""
 		"uniform bool isCurve;"
 		"uniform vec3 v0;"
 		"uniform vec3 v1;"
@@ -1389,6 +1377,8 @@ static const std::string &vertexSource()
 		"uniform vec3 t1;"
 		"uniform float endPointSize;"
 		"uniform float lineWidth;"
+
+		"out vec3 geometryP;"
 
 		"void main()"
 		"{"
@@ -1438,6 +1428,7 @@ static const std::string &vertexSource()
 		"	gl_FrontColor = gl_Color;"
 		"	gl_BackColor = gl_Color;"
 		"	gl_TexCoord[0] = gl_MultiTexCoord0;"
+		"	geometryP = gl_Position.xyz;"
 		"}";
 
 	return g_vertexSource;
@@ -1467,8 +1458,10 @@ static const std::string &fragmentSource()
 		"#if __VERSION__ >= 330\n"
 
 		"uniform uint ieCoreGLNameIn;\n"
+		"in vec3 geometryP;\n"
 		"layout( location=0 ) out vec4 outColor;\n"
 		"layout( location=1 ) out uint ieCoreGLNameOut;\n"
+		"layout( location=2 ) out vec4 ieCoreGLCameraDepth;\n"
 		"#define OUTCOLOR outColor\n"
 
 		"#else\n"
@@ -1499,11 +1492,6 @@ static const std::string &fragmentSource()
 		"		OUTCOLOR.a *= ieFilteredPulse( 0.2, 0.8, gl_TexCoord[0].x );"
 		"	}"
 
-		"	if( OUTCOLOR.a == 0.0 )"
-		"	{"
-		"		discard;"
-		"	}"
-
 		/// \todo Deal with all colourspace nonsense outside of the shader. Ideally the shader would accept only linear"
 		/// textures and output only linear data."
 
@@ -1524,8 +1512,14 @@ static const std::string &fragmentSource()
 		"		OUTCOLOR = vec4( OUTCOLOR.rgb, OUTCOLOR.a * texture2D( texture, gl_TexCoord[0].xy ).a );"
 		"	}\n"
 
+		"	if( OUTCOLOR.a == 0.0 )"
+		"	{"
+		"		discard;"
+		"	}\n"
+
 		"#if __VERSION__ >= 330\n"
 		"	ieCoreGLNameOut = ieCoreGLNameIn;\n"
+		"	ieCoreGLCameraDepth = vec4( -geometryP.z, -geometryP.z, -geometryP.z, 1 );\n"
 		"#endif\n"
 		"}";
 

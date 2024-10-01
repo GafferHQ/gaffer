@@ -58,6 +58,7 @@
 #include "device/device.h"
 #include "graph/node.h"
 #include "util/openimagedenoise.h"
+#include "util/path.h"
 
 namespace py = boost::python;
 using namespace boost::python;
@@ -74,9 +75,7 @@ py::list getDevices()
 
 	py::list result;
 
-	std::vector<ccl::DeviceInfo> devices = IECoreCycles::devices();
-
-	for( const ccl::DeviceInfo &device : devices )
+	for( const ccl::DeviceInfo &device : ccl::Device::available_devices() )
 	{
 		py::dict d;
 		d["type"] = ccl::Device::string_from_type( device.type );
@@ -387,8 +386,6 @@ py::dict getLights()
 			}
 			else if( type == "area_light" )
 			{
-				in["axisu"] = _in["axisu"];
-				in["axisv"] = _in["axisv"];
 				in["sizeu"] = _in["sizeu"];
 				in["sizev"] = _in["sizev"];
 				in["spread"] = _in["spread"];
@@ -457,17 +454,16 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 
 	IECoreCycles::init();
 
+	// Must be initialized to ensure the statically linked Cycles module
+	// we are linked to can find the binaries for GPU rendering.
+	ccl::path_init( IECoreCycles::cyclesRoot() );
+
 	py::scope().attr( "devices" ) = getDevices();
 	py::scope().attr( "nodes" ) = getNodes();
 	py::scope().attr( "shaders" ) = getShaders();
 	py::scope().attr( "lights" ) = getLights();
 	py::scope().attr( "passes" ) = getPasses();
 
-#ifdef WITH_CYCLES_TEXTURE_CACHE
-	py::scope().attr( "withTextureCache" ) = true;
-#else
-	py::scope().attr( "withTextureCache" ) = false;
-#endif
 	if( ccl::openimagedenoise_supported() )
 		py::scope().attr( "hasOpenImageDenoise" ) = true;
 	else

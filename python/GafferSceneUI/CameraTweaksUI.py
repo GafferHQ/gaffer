@@ -55,8 +55,6 @@ Gaffer.Metadata.registerNode(
 	of tweaks, and custom camera parameters. Tweaks to camera
 	parameters apply to every camera specified by the filter.
 
-	Tweaks apply to every camera specified by the filter.
-
 	Can add new camera parameters or render options.
 
 	Any existing parameters/options can be replaced or removed.
@@ -69,6 +67,16 @@ Gaffer.Metadata.registerNode(
 	""",
 
 	plugs = {
+
+		"ignoreMissing" : [
+
+			"description",
+			"""
+			Ignores tweaks that would normally cause an error if the input
+			parameter was missing.
+			""",
+
+		],
 
 		"tweaks" : [
 
@@ -91,6 +99,7 @@ Gaffer.Metadata.registerNode(
 
 			"tweakPlugValueWidget:allowRemove", True,
 			"tweakPlugValueWidget:allowCreate", True,
+			"tweakPlugValueWidget:propertyType", "parameter",
 
 		],
 
@@ -134,7 +143,7 @@ def __registerCameraParameters() :
 
 		def creator( name, value ) :
 
-			tweak = Gaffer.TweakPlug( name, value )
+			tweak = Gaffer.TweakPlug( name, value, Gaffer.TweakPlug.Mode.Create )
 			tweak.setName( name )
 			return tweak
 
@@ -221,7 +230,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 			else :
 
 				def creator( plugType ) :
-					tweak = Gaffer.TweakPlug( "", plugType() )
+					tweak = Gaffer.TweakPlug( "", plugType(), Gaffer.TweakPlug.Mode.Create )
 					tweak.setName( "tweak1" )
 					return tweak
 

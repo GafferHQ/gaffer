@@ -66,14 +66,14 @@ Channel names is a list of arbitrary names specifying the channels in the image.
 Additional channels are grouped into layers using a prefix-based naming convention. For example, `diffuse.R`, `diffuse.G` and `diffuse.B` are the RGB channels of the `diffuse` layer. By convention, `Z` identifies a depth channel, and any other name identifies an auxiliary channel.
 
 > Note :
-> Gaffer follows the [OpenEXR convention for channel names](http://www.openexr.com/documentation/InterpretingDeepPixels.pdf).
+> Gaffer follows the [OpenEXR convention for channel names](https://openexr.com/en/latest/InterpretingDeepPixels.html).
 
 
 ### Channel data ###
 
 **Channel data** contains each channel's list of pixel values. Internally, Gaffer represents pixels as 32-bit floating point values, which are converted to and from other bit depths by the ImageReader or ImageWriter nodes, as needed.
 
-Channel data contains no positional information. When an image's pixel data is processed by a computation, the pixels of each channel are grouped into 64x64 pixel tiles, which are arranged in rows and columns to form the complete image. Images can be computed in parallel, on a per-tile, per-channel basis.
+Channel data contains no positional information. When an image's pixel data is processed by a computation, the pixels of each channel are grouped into 128x128 pixel tiles, which are arranged in rows and columns to form the complete image. Images can be computed in parallel, on a per-tile, per-channel basis.
 
 
 ### Image coordinate system ###

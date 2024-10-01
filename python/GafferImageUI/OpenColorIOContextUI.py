@@ -102,6 +102,11 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 			"presetsPlugValueWidget:allowCustom", True,
+			"presetsPlugValueWidget:customWidgetType", "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf", True,
+			"path:valid", True,
+			"path:bookmarks", "openColorIOConfig",
+			"fileSystemPath:extensions", "ocio",
 
 			"preset:$OCIO", "",
 			"preset:ACES 1.3 - CG Config", "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1",

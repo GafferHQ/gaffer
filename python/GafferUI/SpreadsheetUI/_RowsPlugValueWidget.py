@@ -95,7 +95,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 				self.__patternWidget = GafferUI.TextWidget( toolTip = "Row filter pattern" )
 				self.__patternWidget.setText( Gaffer.Metadata.value( plug, "spreadsheet:rowFilter" ) )
-				self.__patternWidget._qtWidget().setPlaceholderText( "Filter..." )
+				self.__patternWidget.setPlaceholderText( "Filter..." )
 				# Ignore the width in X so that the widget is sized based on the width dictated by `rowNamesTable`.
 				self.__patternWidget._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
 				self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ), scoped = False )

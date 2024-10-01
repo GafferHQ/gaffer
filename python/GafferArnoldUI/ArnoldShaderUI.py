@@ -47,6 +47,7 @@ import imath
 
 import Gaffer
 import GafferUI
+import GafferImageUI
 import GafferSceneUI
 import GafferArnold
 
@@ -204,6 +205,8 @@ def __translateNodeMetadata( nodeEntry ) :
 
 	# Shader description. We support Arnold-style "desc" and
 	# OSL style "help".
+	## \todo It seems that Arnold's standard is now "help", so
+	# we may be able to remove "desc".
 
 	description = __aiMetadataGetStr( nodeEntry, None, "desc",
 		defaultValue = __aiMetadataGetStr( nodeEntry, None, "help" )
@@ -244,7 +247,10 @@ def __translateNodeMetadata( nodeEntry ) :
 
 		# Parameter description
 
-		description = __aiMetadataGetStr( nodeEntry, paramName, "desc" )
+		description = __aiMetadataGetStr(
+			nodeEntry, paramName, "desc",
+			defaultValue = __aiMetadataGetStr( nodeEntry, paramName, "help" )
+		)
 		if description is not None :
 			__metadata[paramPath]["description"] = description
 
@@ -287,14 +293,27 @@ def __translateNodeMetadata( nodeEntry ) :
 				"checkBox" : "GafferUI.BoolPlugValueWidget",
 				"popup" : "GafferUI.PresetsPlugValueWidget",
 				"mapper" : "GafferUI.PresetsPlugValueWidget",
-				"filename" : "GafferUI.PathPlugValueWidget",
+				"filename" : "GafferUI.FileSystemPathPlugValueWidget",
 				"camera" : "GafferSceneUI.ScenePathPlugValueWidget",
+				"colorSpace" : "GafferUI.PresetsPlugValueWidget",
 				"null" : "",
-			}[widget]
+			}.get( widget )
 
 			if widget == "camera" :
 				__metadata[paramPath]["scenePathPlugValueWidget:setNames"] = IECore.StringVectorData( [ "__cameras" ] )
 				__metadata[paramPath]["scenePathPlugValueWidget:setsLabel"] = "Show only cameras"
+
+			if widget == "colorSpace" :
+				# Here we're assuming that Arnold is being used with an OCIO
+				# colour manager configured to match Gaffer.
+				__metadata[paramPath]["presetNames"] = GafferImageUI.OpenColorIOTransformUI.colorSpacePresetNames
+				__metadata[paramPath]["presetValues"] = GafferImageUI.OpenColorIOTransformUI.colorSpacePresetValues
+				__metadata[paramPath]["openColorIO:extraPresetNames"] = IECore.StringVectorData( [ "Auto" ] )
+				__metadata[paramPath]["openColorIO:extraPresetValues"] = IECore.StringVectorData( [ "auto" ] )
+				__metadata[paramPath]["openColorIO:includeRoles"] = True
+				# Allow custom values in case Arnold has been configured to use
+				# some other colour manager instead.
+				__metadata[paramPath]["presetsPlugValueWidget:allowCustom"] = True
 
 		# Layout section from OSL "page".
 
@@ -397,6 +416,19 @@ def __translateNodeMetadata( nodeEntry ) :
 		if visibilityActivator is not None :
 			addActivator( visibilityActivator )
 			__metadata[paramPath]["layout:visibilityActivator"] = visibilityActivator
+
+		# FileSystemPathPlugValueWidget metadata
+
+		for gafferKey, arnoldGetter in [
+			( "path:leaf", __aiMetadataGetBool ),
+			( "path:valid", __aiMetadataGetBool ),
+			( "path:bookmarks", __aiMetadataGetStr ),
+			( "fileSystemPath:extensions", __aiMetadataGetStr ),
+			( "fileSystemPath:extensionsLabel", __aiMetadataGetStr ),
+		] :
+			value = arnoldGetter( nodeEntry, paramName, "gaffer.{}".format( gafferKey.replace( ":", "." ) ) )
+			if value is not None :
+				__metadata[paramPath][gafferKey] = value
 
 with IECoreArnold.UniverseBlock( writable = False ) :
 

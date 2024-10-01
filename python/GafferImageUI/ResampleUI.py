@@ -34,10 +34,22 @@
 #
 ##########################################################################
 
+import inspect
 import itertools
 
 import Gaffer
+import GafferUI
 import GafferImage
+
+_filterDeepWarning = """
+> Caution :
+>
+> When deep images are resized using a filter, many additional deep samples are
+> created per pixel. These slow down subsequent image processing and can create
+> prohibitively large files. These overheads should be mitigated by using a
+> DeepToFlat or DeepHoldout node soon after the Resize.
+"""
+
 
 Gaffer.Metadata.registerNode(
 
@@ -48,6 +60,11 @@ Gaffer.Metadata.registerNode(
 	Utility node used internally within GafferImage, but
 	not intended to be used directly by end users.
 	""",
+
+	"layout:customWidget:filterDeepWarning:widgetType", "GafferImageUI.ResampleUI._FilterDeepWarningWidget",
+	"layout:customWidget:filterDeepWarning:section", "Settings",
+	"layout:customWidget:filterDeepWarning:accessory", True,
+	"layout:customWidget:filterDeepWarning:visibilityActivator", lambda node : node["filterDeep"].getValue(),
 
 	plugs = {
 
@@ -74,6 +91,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 			"preset:Default", "",
+			"preset:Nearest", "nearest",
 
 		] + list( itertools.chain(
 
@@ -140,6 +158,39 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"filterDeep" : [
+
+			"description",
+			inspect.cleandoc(
+				"""
+				When on, deep images are resized accurately using the same filter
+				as flat images. When off, deep images are resized using the Nearest
+				filter.
+
+				Filters with negative lobes ( such as Lanczos3 which is the Default
+				for downscaling ) cannot be represented at all depths with perfect
+				accuracy, because deep alpha must be between 0 and 1, and must be
+				non-decreasing. In extreme cases, involving bright segments
+				with very low alpha, it may be preferable to choose a softer filter
+				without negative lobes ( like Blackman-Harris ).
+
+				"""
+			) + _filterDeepWarning,
+		],
+
 	}
 
 )
+
+class _FilterDeepWarningWidget( GafferUI.ListContainer ) :
+
+	def __init__( self, node, **kw ) :
+
+		GafferUI.ListContainer.__init__( self, GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+
+		with self :
+
+			GafferUI.Image( "warningSmall.png" )
+			GafferUI.Label( "Caution : filtering deep images is expensive" )
+
+		self.setToolTip( _filterDeepWarning )

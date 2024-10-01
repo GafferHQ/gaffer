@@ -191,7 +191,8 @@ def __duplicateAsBox( graphEditor, node ) :
 			closeLabel = "Oy vey",
 			parentWindow = graphEditor.ancestor( GafferUI.Window ),
 		) :
-			script.executeFile( node.fileName(), parent = box, continueOnError = True )
+			sp = IECore.SearchPath( os.environ.get( "GAFFER_REFERENCE_PATHS", "" ) )
+			script.executeFile( sp.find( str( node.fileName() ) ), parent = box, continueOnError = True )
 
 def __graphEditorNodeContextMenu( graphEditor, node, menuDefinition ) :
 

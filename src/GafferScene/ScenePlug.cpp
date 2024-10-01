@@ -61,11 +61,7 @@ static ContextAlgo::GlobalScope::Registration g_globalScopeRegistration(
 ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned flags )
 	:	ValuePlug( name, direction, flags )
 {
-	// we don't want the children to be serialised in any way - we always create
-	// them ourselves in this constructor so they aren't Dynamic, and we don't ever
-	// want to store their values because they are meaningless without an input
-	// connection, so they aren't Serialisable either.
-	unsigned childFlags = flags & ~(Dynamic | Serialisable);
+	const unsigned childFlags = flags & ~Dynamic;
 
 	addChild(
 		new AtomicBox3fPlug(

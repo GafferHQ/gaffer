@@ -46,6 +46,7 @@ from .ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
 from .RGBAChannelsPlugValueWidget import RGBAChannelsPlugValueWidget
 from .ChannelPlugValueWidget import ChannelPlugValueWidget
 from .ViewPlugValueWidget import ViewPlugValueWidget
+from .ImageInspector import ImageInspector
 
 from . import ImageReaderPathPreview
 
@@ -76,8 +77,8 @@ from . import ShuffleUI
 from . import PremultiplyUI
 from . import UnpremultiplyUI
 from . import CropUI
-from . import ResizeUI
 from . import ResampleUI
+from . import ResizeUI
 from . import LUTUI
 from . import CDLUI
 from . import DisplayTransformUI
@@ -121,5 +122,8 @@ from . import AnaglyphUI
 from . import LookTransformUI
 from . import OpenColorIOContextUI
 from . import OpenColorIOConfigPlugUI
+from . import DeepSliceUI
+from . import ContactSheetCoreUI
+from . import ContactSheetUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImageUI" )

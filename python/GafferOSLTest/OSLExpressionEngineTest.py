@@ -525,13 +525,15 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 		script["expression"] = Gaffer.Expression()
 		script["expression"].setExpression( f'parent.writer.fileName = "{ ( self.temporaryDirectory() / "test.txt" ).as_posix() }"', "OSL" )
 
-		dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
-		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
-		dispatcher["executeInBackground"].setValue( True )
-		dispatcher.dispatch( [ script["writer"] ] )
+		script["dispatcher"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		script["dispatcher"]["tasks"][0].setInput( script["writer"]["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
+		script["dispatcher"]["executeInBackground"].setValue( True )
+		script["dispatcher"]["task"].execute()
 
-		dispatcher.jobPool().waitForAll()
-		self.assertEqual( len( dispatcher.jobPool().failedJobs() ), 0 )
+		script["dispatcher"].jobPool().waitForAll()
+		self.assertEqual( len( script["dispatcher"].jobPool().jobs() ), 1 )
+		self.assertEqual( script["dispatcher"].jobPool().jobs()[0].status(), script["dispatcher"].Job.Status.Complete )
 
 		self.assertTrue( ( self.temporaryDirectory() / "test.txt" ).exists() )
 

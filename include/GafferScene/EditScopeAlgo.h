@@ -149,6 +149,19 @@ GAFFERSCENE_API Gaffer::TweakPlug *acquireOptionEdit( Gaffer::EditScope *scope, 
 GAFFERSCENE_API void removeOptionEdit( Gaffer::EditScope *scope, const std::string &option );
 GAFFERSCENE_API const Gaffer::GraphComponent *optionEditReadOnlyReason( const Gaffer::EditScope *scope, const std::string &option );
 
+
+// Render Pass Options
+// ===================
+//
+// These methods edit scene options for a particular render pass.
+
+GAFFERSCENE_API bool hasRenderPassOptionEdit( const Gaffer::EditScope *scope, const std::string &renderPass, const std::string &option );
+GAFFERSCENE_API Gaffer::TweakPlug *acquireRenderPassOptionEdit( Gaffer::EditScope *scope, const std::string &renderPass, const std::string &option, bool createIfNecessary = true );
+GAFFERSCENE_API void removeRenderPassOptionEdit( Gaffer::EditScope *scope, const std::string &renderPass, const std::string &option );
+GAFFERSCENE_API const Gaffer::GraphComponent *renderPassOptionEditReadOnlyReason( const Gaffer::EditScope *scope, const std::string &renderPass, const std::string &option );
+
+GAFFERSCENE_API const Gaffer::GraphComponent *renderPassesReadOnlyReason( const Gaffer::EditScope *scope );
+
 } // namespace EditScopeAlgo
 
 } // namespace GafferScene

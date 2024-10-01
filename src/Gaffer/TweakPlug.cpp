@@ -45,6 +45,9 @@
 #include "IECore/StringAlgo.h"
 #include "IECore/TypeTraits.h"
 
+#include "boost/algorithm/string/join.hpp"
+#include "boost/algorithm/string/replace.hpp"
+
 #include "fmt/format.h"
 
 #include <unordered_map>
@@ -102,6 +105,39 @@ T vectorAwareMax( const T &v1, const T &v2 )
 	{
 		return std::max( v1, v2 );
 	}
+}
+
+template<typename T>
+vector<T> tweakedList( const std::vector<T> &source, const std::vector<T> &tweak, TweakPlug::Mode mode )
+{
+	vector<T> result = source;
+
+	result.erase(
+		std::remove_if(
+			result.begin(),
+			result.end(),
+			[&tweak]( const auto &elem )
+			{
+				return std::find(
+					tweak.begin(),
+					tweak.end(),
+					elem
+				) != tweak.end();
+			}
+		),
+		result.end()
+	);
+
+	if( mode == TweakPlug::ListAppend )
+	{
+		result.insert( result.end(), tweak.begin(), tweak.end() );
+	}
+	else if( mode == TweakPlug::ListPrepend )
+	{
+		result.insert( result.begin(), tweak.begin(), tweak.end() );
+	}
+
+	return result;
 }
 
 } // namespace
@@ -243,7 +279,7 @@ Gaffer::PlugPtr TweakPlug::createCounterpart( const std::string &name, Direction
 bool TweakPlug::applyTweak( IECore::CompoundData *parameters, MissingMode missingMode ) const
 {
 	return applyTweak(
-		[&parameters]( const std::string &valueName ) { return parameters->member( valueName ); },
+		[&parameters]( const std::string &valueName, const bool withFallback ) { return parameters->member( valueName ); },
 		[&parameters]( const std::string &valueName, DataPtr newData )
 		{
 			if( newData == nullptr )
@@ -330,6 +366,11 @@ void TweakPlug::applyListTweak(
 ) const
 {
 
+	// Despite being separate function arguments, `tweakData` and `destData`
+	// point to the _same object_, so we must be careful not to assign to
+	// `destData` until after we're done reading from `tweakData`.
+	/// \todo Use a single in-out function argument so that this is obvious.
+
 	dispatch(
 
 		destData,
@@ -340,37 +381,11 @@ void TweakPlug::applyListTweak(
 
 			if constexpr( TypeTraits::IsVectorTypedData<DataType>::value )
 			{
-				const DataType *sourceDataCast = runTimeCast<const DataType>( sourceData );
-				const DataType *tweakDataCast = runTimeCast<const DataType>( tweakData );
-
-				const auto &currentElements = sourceDataCast->readable();
-				const auto &newElements = tweakDataCast->readable();
-
-				data->writable() = typename DataType::ValueType( currentElements );
-				data->writable().erase(
-					std::remove_if(
-						data->writable().begin(),
-						data->writable().end(),
-						[&newElements]( const auto &elem )
-						{
-							return std::find(
-								newElements.begin(),
-								newElements.end(),
-								elem
-							) != newElements.end();
-						}
-					),
-					data->writable().end()
+				data->writable() = tweakedList(
+					static_cast<const DataType *>( sourceData )->readable(),
+					static_cast<const DataType *>( tweakData )->readable(),
+					mode
 				);
-
-				if( mode == TweakPlug::ListAppend )
-				{
-					data->writable().insert( data->writable().end(), newElements.begin(), newElements.end() );
-				}
-				else if( mode == TweakPlug::ListPrepend )
-				{
-					data->writable().insert( data->writable().begin(), newElements.begin(), newElements.end() );
-				}
 			}
 			else if constexpr( std::is_same_v<DataType, PathMatcherData> )
 			{
@@ -385,9 +400,32 @@ void TweakPlug::applyListTweak(
 					data->writable().addPaths( newPaths );
 				}
 			}
+			else if constexpr( std::is_same_v<DataType, StringData> )
+			{
+				vector<string> sourceVector;
+				IECore::StringAlgo::tokenize( static_cast<const DataType *>( sourceData )->readable(), ' ', sourceVector );
+				vector<string> tweakVector;
+				IECore::StringAlgo::tokenize( static_cast<const DataType *>( tweakData )->readable(), ' ', tweakVector );
+				data->writable() = boost::algorithm::join( tweakedList( sourceVector, tweakVector, mode ), " " );
+			}
 		}
 
 	);
+}
+
+void TweakPlug::applyReplaceTweak( const IECore::Data *sourceData, IECore::Data *tweakData ) const
+{
+	if( auto stringData = IECore::runTimeCast<IECore::StringData>( tweakData ) )
+	{
+		boost::replace_all( stringData->writable(), "{source}", static_cast<const IECore::StringData *>( sourceData )->readable() );
+	}
+	else if( auto internedStringData = IECore::runTimeCast<IECore::InternedStringData>( tweakData ) )
+	{
+		internedStringData->writable() = boost::replace_all_copy(
+			internedStringData->readable().string(),
+			"{source}", static_cast<const IECore::InternedStringData *>( sourceData )->readable().string()
+		);
+	}
 }
 
 const char *TweakPlug::modeToString( Gaffer::TweakPlug::Mode mode )

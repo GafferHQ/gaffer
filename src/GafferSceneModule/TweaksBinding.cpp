@@ -43,6 +43,7 @@
 #include "GafferScene/CameraTweaks.h"
 #include "GafferScene/OptionTweaks.h"
 #include "GafferScene/ShaderTweaks.h"
+#include "GafferScene/ShaderTweakProxy.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/PlugBinding.h"
@@ -60,4 +61,8 @@ void GafferSceneModule::bindTweaks()
 	DependencyNodeClass<CameraTweaks>();
 	DependencyNodeClass<AttributeTweaks>();
 	DependencyNodeClass<OptionTweaks>();
+
+	DependencyNodeClass<ShaderTweakProxy>()
+		.def( "setupAutoProxy", &ShaderTweakProxy::setupAutoProxy )
+	;
 }

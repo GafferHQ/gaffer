@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import math
 import imath
 
 import IECore
@@ -115,7 +116,7 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		r["fileName"].setValue( self.__rgbFilePath )
 
 		s = GafferImage.ImageStats()
-		s["area"].setValue( r["out"]["format"].getValue().getDisplayWindow() )
+		s["areaSource"].setValue( GafferImage.ImageStats.AreaSource.DisplayWindow )
 
 		# Get the hashes of the outputs when there is no input.
 		minHash = s["min"].hash()
@@ -137,7 +138,7 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		s["in"].setInput( r["out"] )
 		s["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
 
-		s["area"].setValue( r["out"]["format"].getValue().getDisplayWindow() )
+		s["areaSource"].setValue( GafferImage.ImageStats.AreaSource.DisplayWindow )
 		self.__assertColour( s["average"].getValue(), imath.Color4f( 0.0544, 0.0744, 0.1250, 0.2537 ) )
 		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
 		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ) )
@@ -152,6 +153,31 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		s["in"].setInput( r["out"] )
 		s["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
 
+		s["areaSource"].setValue( GafferImage.ImageStats.AreaSource.DisplayWindow )
+		self.__assertColour( s["average"].getValue(), imath.Color4f(0.054375, 0.074375, 0.125, 0.25375) )
+		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
+		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ) )
+
+		s["areaSource"].setValue( GafferImage.ImageStats.AreaSource.Area )
+		s["area"].setValue( imath.Box2i( imath.V2i( 0, 0 ), imath.V2i( 100, 100 ) ) )
+
+		self.__assertColour( s["average"].getValue(), imath.Color4f(0.054375, 0.074375, 0.125, 0.25375) )
+		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
+		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ) )
+
+		s["areaSource"].setValue( GafferImage.ImageStats.AreaSource.DataWindow )
+		self.__assertColour( s["average"].getValue(), imath.Color4f(0.151042, 0.206597, 0.347222, 0.704861) )
+		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
+		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ) )
+
+		s["areaSource"].setValue( GafferImage.ImageStats.AreaSource.Area )
+		s["area"].setValue( imath.Box2i( imath.V2i( 20, 20 ), imath.V2i( 80, 80 ) ) )
+
+		self.__assertColour( s["average"].getValue(), imath.Color4f(0.151042, 0.206597, 0.347222, 0.704861) )
+		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
+		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ) )
+
+
 		s["area"].setValue( imath.Box2i( imath.V2i( 20, 20 ), imath.V2i( 25, 25 ) ) )
 		self.__assertColour( s["average"].getValue(), imath.Color4f( 0.5, 0, 0, 0.5 ) )
 		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0, 0, 0.5 ) )
@@ -161,6 +187,40 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		self.__assertColour( s["average"].getValue(), imath.Color4f( 0.4048, 0.1905, 0, 0.5952 ) )
 		self.__assertColour( s["min"].getValue(), imath.Color4f( 0.25, 0, 0, 0.5 ) )
 		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0, 0.75 ) )
+
+		# Offset the colors in the image so we can see the effects of whether or not we include pixels outside
+		# the data window.
+
+		g = GafferImage.Grade()
+		g["in"].setInput( r["out"] )
+		g['channels'].setValue( "*" )
+		g['blackClamp'].setValue( False )
+		g['whiteClamp'].setValue( False )
+		g['offset'].setValue( imath.Color4f( 1 ) )
+
+		s["in"].setInput( g["out"] )
+
+		s["area"].setValue( imath.Box2i( imath.V2i( 20, 20 ), imath.V2i( 25, 25 ) ) )
+		self.__assertColour( s["average"].getValue(), imath.Color4f( 1.5, 1, 1, 1.5 ) )
+		self.__assertColour( s["max"].getValue(), imath.Color4f( 1.5, 1, 1, 1.5 ) )
+		self.__assertColour( s["min"].getValue(), imath.Color4f( 1.5, 1, 1, 1.5 ) )
+
+		s["area"].setValue( imath.Box2i( imath.V2i( 19, 20 ), imath.V2i( 24, 25 ) ) )
+		self.__assertColour( s["average"].getValue(), imath.Color4f( 1.2, 0.8, 0.8, 1.2 ) )
+		self.__assertColour( s["max"].getValue(), imath.Color4f( 1.5, 1, 1, 1.5 ) )
+		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
+
+		g['offset'].setValue( imath.Color4f( -2 ) )
+
+		s["area"].setValue( imath.Box2i( imath.V2i( 20, 20 ), imath.V2i( 25, 25 ) ) )
+		self.__assertColour( s["average"].getValue(), imath.Color4f( -1.5, -2, -2, -1.5 ) )
+		self.__assertColour( s["max"].getValue(), imath.Color4f( -1.5, -2, -2, -1.5 ) )
+		self.__assertColour( s["min"].getValue(), imath.Color4f( -1.5, -2, -2, -1.5 ) )
+
+		s["area"].setValue( imath.Box2i( imath.V2i( 19, 20 ), imath.V2i( 24, 25 ) ) )
+		self.__assertColour( s["average"].getValue(), imath.Color4f( -1.2, -1.6, -1.6, -1.2 ) )
+		self.__assertColour( s["max"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
+		self.__assertColour( s["min"].getValue(), imath.Color4f( -1.5, -2, -2, -1.5 ) )
 
 	# Test only tiles which intersect a changed boundary have modified hashes
 	def testROIHash( self ) :
@@ -299,6 +359,31 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 			GafferTest.parallelGetValue( stats["average"]["r"], 10000 )
 
 		self.assertEqual( pm.plugStatistics( stats["__allStats" ] ).computeCount, 1 )
+
+	def testInf( self ) :
+
+		# Make an image with all `inf` values. We can't do this directly
+		# with a Constant because the inputs are clamped at float max,
+		# so we divide an image by zero to get what we want.
+
+		constant0 = GafferImage.Constant()
+		constant1 = GafferImage.Constant()
+		constant1["color"].setValue( imath.Color4f( 1 ) )
+
+		merge = GafferImage.Merge()
+		merge["in"][0].setInput( constant0["out"] )
+		merge["in"][1].setInput( constant1["out"] )
+		merge["operation"].setValue( merge.Operation.Divide )
+
+		# Since all values are `inf`, all outputs should be too.
+
+		stats = GafferImage.ImageStats()
+		stats["in"].setInput( merge["out"] )
+		stats["area"].setValue( stats["in"].format().getDisplayWindow() )
+
+		self.assertTrue( math.isinf( stats["max"][0].getValue() ) )
+		self.assertTrue( math.isinf( stats["min"][0].getValue() ) )
+		self.assertTrue( math.isinf( stats["average"][0].getValue() ) )
 
 	def __assertColour( self, colour1, colour2 ) :
 		for i in range( 0, 4 ):

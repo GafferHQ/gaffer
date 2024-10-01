@@ -56,28 +56,52 @@ using namespace boost::python;
 namespace
 {
 
-BackgroundTask *backgroundTaskConstructor( const Plug *subject, object f )
+std::shared_ptr<BackgroundTask> withGILReleaseDeleter( std::unique_ptr<BackgroundTask> &backgroundTask )
 {
-	auto fPtr = std::make_shared<boost::python::object>( f );
-	return new BackgroundTask(
+	return std::shared_ptr<BackgroundTask>(
+		backgroundTask.release(),
+		// Custom deleter. We need to release the GIL when deleting, because the
+		// destructor waits on the background task, and the background task
+		// might need the GIL in order to complete.
+		[]( BackgroundTask *t ) {
+			IECorePython::ScopedGILRelease gilRelease;
+			delete t;
+		}
+	);
+}
+
+std::shared_ptr<boost::python::object> withGILAcquireDeleter( const boost::python::object &o )
+{
+	return std::shared_ptr<boost::python::object>(
+		new boost::python::object( o ),
+		[]( boost::python::object *o ) {
+			// Custom deleter. We must hold the GIL when deleting Python
+			// objects.
+			IECorePython::ScopedGILLock gilLock;
+			delete o;
+		}
+	);
+}
+
+std::shared_ptr<BackgroundTask> backgroundTaskConstructor( const Plug *subject, object f )
+{
+	auto fPtr = withGILAcquireDeleter( f );
+	auto backgroundTask = std::make_unique<BackgroundTask>(
 		subject,
 		[fPtr]( const IECore::Canceller &canceller ) mutable {
 			IECorePython::ScopedGILLock gilLock;
 			try
 			{
 				(*fPtr)( boost::ref( canceller ) );
-				// We are likely to be the last owner of the python
-				// function object. Make sure we release it while we
-				// still hold the GIL.
-				fPtr.reset();
 			}
 			catch( boost::python::error_already_set & )
 			{
-				fPtr.reset();
 				IECorePython::ExceptionAlgo::translatePythonException();
 			}
 		}
 	);
+
+	return withGILReleaseDeleter( backgroundTask );
 }
 
 void backgroundTaskCancel( BackgroundTask &b )
@@ -203,13 +227,7 @@ std::shared_ptr<BackgroundTask> callOnBackgroundThread( const Plug *subject, boo
 	// The BackgroundTask we return will own the python function we
 	// pass to it. Wrap the function so that the GIL is acquired
 	// before the python object is destroyed.
-	auto fPtr = std::shared_ptr<boost::python::object>(
-		new boost::python::object( f ),
-		[]( boost::python::object *o ) {
-			IECorePython::ScopedGILLock gilLock;
-			delete o;
-		}
-	);
+	auto fPtr = withGILAcquireDeleter( f );
 
 	auto backgroundTask = ParallelAlgo::callOnBackgroundThread(
 		subject,
@@ -226,17 +244,7 @@ std::shared_ptr<BackgroundTask> callOnBackgroundThread( const Plug *subject, boo
 		}
 	);
 
-	return std::shared_ptr<BackgroundTask>(
-		backgroundTask.release(),
-		// Custom deleter. We need to release
-		// the GIL when deleting, because the destructor
-		// waits on the background task, and the background
-		// task might need the GIL in order to complete.
-		[]( BackgroundTask *t ) {
-			IECorePython::ScopedGILRelease gilRelease;
-			delete t;
-		}
-	);
+	return withGILReleaseDeleter( backgroundTask );
 }
 
 } // namespace
@@ -272,6 +280,7 @@ void GafferModule::bindParallelAlgo()
 	def( "callOnUIThread", &callOnUIThread );
 	def( "pushUIThreadCallHandler", &pushUIThreadCallHandler );
 	def( "popUIThreadCallHandler", &popUIThreadCallHandler );
+	def( "canCallOnUIThread", &ParallelAlgo::canCallOnUIThread );
 	def( "callOnBackgroundThread", &callOnBackgroundThread );
 
 }

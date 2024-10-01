@@ -57,10 +57,10 @@ class AnaglyphTest( GafferImageTest.ImageTestCase ) :
 
 		left = GafferImage.Shuffle()
 		left["in"].setInput( reader["out"] )
-		left["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "R", "customRgba.R" ) )
-		left["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "G", "customRgba.G" ) )
-		left["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "B", "customRgba.B" ) )
-		left["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "A", "customRgba.A" ) )
+		left["shuffles"].addChild( Gaffer.ShufflePlug( "customRgba.R", "R" ) )
+		left["shuffles"].addChild( Gaffer.ShufflePlug( "customRgba.G", "G" ) )
+		left["shuffles"].addChild( Gaffer.ShufflePlug( "customRgba.B", "B" ) )
+		left["shuffles"].addChild( Gaffer.ShufflePlug( "customRgba.A", "A" ) )
 
 		right = GafferImage.ImageTransform()
 		right["in"].setInput( left["out"] )

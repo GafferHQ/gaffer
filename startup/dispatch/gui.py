@@ -54,10 +54,15 @@ if application["gui"].getTypedValue() :
 		"GafferImageUI",
 		"GafferArnoldUI",
 		"GafferDelightUI",
-		"GafferTractorUI",
 	) :
 		with IECore.IgnoredExceptions( ImportError ) :
 			__import__( module )
+
+	with IECore.IgnoredExceptions( ImportError ) :
+		# Avoid registering the TractorDispatcher if the Tractor
+		# API isn't available.
+		import tractor.api.author
+		import GafferTractorUI
 
 	menu = GafferDispatchUI.DispatchDialogue.menuDefinition()
 	menu.append( "/Edit/Undo", {

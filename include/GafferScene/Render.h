@@ -80,6 +80,9 @@ class GAFFERSCENE_API Render : public GafferDispatch::TaskNode
 		ScenePlug *outPlug();
 		const ScenePlug *outPlug() const;
 
+		Gaffer::StringPlug *resolvedRendererPlug();
+		const Gaffer::StringPlug *resolvedRendererPlug() const;
+
 	protected :
 
 		// Constructor for derived classes which wish to hardcode the renderer type. Perhaps

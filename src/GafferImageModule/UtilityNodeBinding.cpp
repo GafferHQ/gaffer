@@ -48,8 +48,16 @@ using namespace GafferImage;
 
 void GafferImageModule::bindUtilityNodes()
 {
+	{
+		scope s = GafferBindings::DependencyNodeClass<ImageStats>();
 
-	DependencyNodeClass<ImageStats>();
+		enum_<ImageStats::AreaSource>( "AreaSource" )
+			.value( "Area", ImageStats::Area )
+			.value( "DataWindow", ImageStats::DataWindow )
+			.value( "DisplayWindow", ImageStats::DisplayWindow )
+		;
+	}
+
 	DependencyNodeClass<ImageSampler>();
 	DependencyNodeClass<FormatQuery>();
 

@@ -47,6 +47,7 @@
 
 #include "IECoreScene/Camera.h"
 
+#include "IECorePython/ExceptionAlgo.h"
 #include "IECorePython/RefCountedBinding.h"
 #include "IECorePython/ScopedGILLock.h"
 #include "IECorePython/ScopedGILRelease.h"
@@ -330,8 +331,15 @@ struct RenderAdaptorWrapper
 	SceneProcessorPtr operator()()
 	{
 		IECorePython::ScopedGILLock gilLock;
-		SceneProcessorPtr result = extract<SceneProcessorPtr>( m_pythonAdaptor() );
-		return result;
+		try
+		{
+			SceneProcessorPtr result = extract<SceneProcessorPtr>( m_pythonAdaptor() );
+			return result;
+		}
+		catch( const boost::python::error_already_set & )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
 	}
 
 	private :
@@ -340,9 +348,9 @@ struct RenderAdaptorWrapper
 
 };
 
-void registerRenderAdaptorWrapper( const std::string &name, object adaptor )
+void registerRenderAdaptorWrapper( const std::string &name, object adaptor, const std::string &client, const std::string &renderer )
 {
-	SceneAlgo::registerRenderAdaptor( name, RenderAdaptorWrapper( adaptor ) );
+	SceneAlgo::registerRenderAdaptor( name, RenderAdaptorWrapper( adaptor ), client, renderer );
 }
 
 void applyCameraGlobalsWrapper( IECoreScene::Camera &camera, const IECore::CompoundObject &globals, const ScenePlug &scene )
@@ -441,7 +449,7 @@ void bindSceneAlgo()
 
 	// Render adaptors
 
-	def( "registerRenderAdaptor", &registerRenderAdaptorWrapper );
+	def( "registerRenderAdaptor", &registerRenderAdaptorWrapper, ( arg( "name" ), arg( "adaptor" ), arg( "client" ) = "*", arg( "renderer" ) = "*" ) );
 	def( "deregisterRenderAdaptor", &SceneAlgo::deregisterRenderAdaptor );
 	def( "createRenderAdaptors", &SceneAlgo::createRenderAdaptors );
 

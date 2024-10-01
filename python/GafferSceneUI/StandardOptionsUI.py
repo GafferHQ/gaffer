@@ -42,6 +42,7 @@ import IECoreScene
 import Gaffer
 import GafferUI
 import GafferScene
+import GafferSceneUI
 
 from GafferUI.PlugValueWidget import sole
 
@@ -77,16 +78,27 @@ def __cameraSummary( plug ) :
 
 	return ", ".join( info )
 
-def __purposeSummary( plug ) :
+def __rendererSummary( plug ) :
 
-	if plug["includedPurposes"]["enabled"].getValue() :
-		purposes = plug["includedPurposes"]["value"].getValue()
-		if purposes :
-			return ", ".join( [ p.capitalize() for p in purposes ] )
-		else :
-			return "None"
+	if plug["defaultRenderer"]["enabled"].getValue() :
+		return plug["defaultRenderer"]["value"].getValue()
 
 	return ""
+
+def __renderSetSummary( plug ) :
+
+	info = []
+	if plug["includedPurposes"]["enabled"].getValue() :
+		purposes = plug["includedPurposes"]["value"].getValue()
+		info.append( "Purposes {}".format( " / ".join( [ p.capitalize() for p in purposes ] ) if purposes else "None" ) )
+	if plug["inclusions"]["enabled"].getValue() :
+		info.append( "Inclusions {}".format( plug["inclusions"]["value"].getValue() ) )
+	if plug["exclusions"]["enabled"].getValue() :
+		info.append( "Exclusions {}".format( plug["exclusions"]["value"].getValue() ) )
+	if plug["additionalLights"]["enabled"].getValue() :
+		info.append( "Lights {}".format( plug["additionalLights"]["value"].getValue() ) )
+
+	return ", ".join( info )
 
 def __motionBlurSummary( plug ) :
 
@@ -119,7 +131,8 @@ plugsMetadata = {
 	"options" : [
 
 		"layout:section:Camera:summary", __cameraSummary,
-		"layout:section:Purpose:summary", __purposeSummary,
+		"layout:section:Renderer:summary", __rendererSummary,
+		"layout:section:Render Set:summary", __renderSetSummary,
 		"layout:section:Motion Blur:summary", __motionBlurSummary,
 		"layout:section:Statistics:summary", __statisticsSummary,
 
@@ -336,7 +349,31 @@ plugsMetadata = {
 		"layout:section", "Camera",
 	],
 
-	# Purpose
+	# Renderer
+
+	"options.defaultRenderer" : [
+
+		"description",
+		"""
+		Specifies the default renderer to be used by the Render and
+		InteractiveRender nodes.
+		""",
+
+		"label", "Default Renderer",
+		"layout:section", "Renderer",
+
+	],
+
+	"options.defaultRenderer.value" : [
+
+		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+		"preset:None", "",
+		"presetNames", GafferSceneUI.RenderUI.rendererPresetNames,
+		"presetValues", GafferSceneUI.RenderUI.rendererPresetNames,
+
+	],
+
+	# Render Set
 
 	"options.includedPurposes" : [
 
@@ -349,13 +386,75 @@ plugsMetadata = {
 		> Tip : Use the USDAttributes node to assign the `usd:purpose` attribute.
 		""",
 
-		"layout:section", "Purpose",
+		"layout:section", "Render Set",
 
 	],
 
 	"options.includedPurposes.value" : [
 
 		"plugValueWidget:type", "GafferSceneUI.StandardOptionsUI._IncludedPurposesPlugValueWidget",
+
+	],
+
+	"options.inclusions" : [
+
+		"description",
+		"""
+		A set expression that limits the objects included in the render to only those matched
+		and their descendants. Objects not matched by the set expression will be pruned from
+		the scene.
+
+		> Tip : Cameras are included by default and do not need to be specified here.
+		""",
+
+		"layout:section", "Render Set",
+
+	],
+
+	"options.inclusions.value" : [
+
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
+
+	],
+
+	"options.exclusions" : [
+
+		"description",
+		"""
+		A set expression that excludes the matched objects from the render. Exclusions
+		affect both `inclusions` and `additionalLights` and cause the matching objects and
+		their descendants to be pruned from the scene.
+		""",
+
+		"layout:section", "Render Set",
+
+	],
+
+	"options.exclusions.value" : [
+
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
+
+	],
+
+	"options.additionalLights" : [
+
+		"description",
+		"""
+		A set expression that specifies additional lights to be included in the render.
+		This differs from `inclusions` in that only lights and light filters will be
+		matched by this set expression.
+		""",
+
+		"layout:section", "Render Set",
+
+	],
+
+	"options.additionalLights.value" : [
+
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
 
 	],
 

@@ -43,6 +43,13 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
+namespace
+{
+
+const ConstStringDataPtr g_linkedLightsDefault = new StringData( "defaultLights" );
+
+} // namespace
+
 GAFFER_NODE_DEFINE_TYPE( AttributeTweaks );
 
 size_t AttributeTweaks::g_firstPlugIndex = 0;
@@ -147,9 +154,16 @@ IECore::ConstCompoundObjectPtr AttributeTweaks::computeProcessedAttributes( cons
 	}
 
 	tweaksPlug->applyTweaks(
-		[&source]( const std::string &valueName )
+		[&source]( const std::string &valueName, const bool withFallback ) -> const IECore::Data *
 		{
-			return source->member<Data>( valueName );
+			const Data *result = source->member<Data>( valueName );
+			if( withFallback && !result && valueName == "linkedLights" )
+			{
+				/// \todo Use a registry to provide default values for
+				/// all attributes.
+				return g_linkedLightsDefault.get();
+			}
+			return result;
 		},
 		[&result]( const std::string &valueName, DataPtr newData )
 		{

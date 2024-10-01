@@ -96,8 +96,23 @@ class GAFFER_API ShufflesPlug : public ValuePlug
 
 		/// Shuffles the sources into a destination container. The container type should have a map
 		/// compatible interface with string-compatible keys (eg std::string, IECore::InternedString).
+		/// If `ignoreMissingSource` is false, then an exception will be thrown if a source is not
+		/// found.
 		template<typename T>
-		T shuffle( const T &sourceContainer ) const;
+		T shuffle( const T &sourceContainer, bool ignoreMissingSource = true ) const;
+		/// As above, but using `extraSources` to provide fallback values for sources not
+		/// found in `sourceContainer`. A special key, `*`, may be included to provide a fallback
+		/// for _any_ source.
+		/// > Note : The `additionalSources` container is only searched for exact matches, _not_
+		/// > for wildcard matches.
+		template<typename T>
+		T shuffleWithExtraSources( const T &sourceContainer, const T &extraSources, bool ignoreMissingSource = true ) const;
+
+	private :
+
+		template<typename T>
+		T shuffleInternal( const T &sourceContainer, const T *extraSources, bool ignoreMissingSource ) const;
+
 };
 
 } // namespace Gaffer

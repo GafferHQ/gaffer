@@ -57,8 +57,6 @@ GafferUI.ApplicationMenu.appendDefinitions( scriptWindowMenu, prefix="/Gaffer" )
 GafferUI.FileMenu.appendDefinitions( scriptWindowMenu, prefix="/File" )
 GafferUI.EditMenu.appendDefinitions( scriptWindowMenu, prefix="/Edit" )
 GafferUI.LayoutMenu.appendDefinitions( scriptWindowMenu, name="/Layout" )
-GafferDispatchUI.DispatcherUI.appendMenuDefinitions( scriptWindowMenu, prefix="/Execute" )
-GafferDispatchUI.LocalDispatcherUI.appendMenuDefinitions( scriptWindowMenu, prefix="/Execute" )
 GafferUI.GraphBookmarksUI.appendScriptWindowMenuDefinitions( scriptWindowMenu, prefix="/Edit" )
 
 # Turn on backups by default, so they are supported by the open functions
@@ -134,19 +132,19 @@ if moduleSearchPath.find( "arnold" ) :
 		nodeMenu.append( "/Arnold/CameraShaders", GafferArnold.ArnoldCameraShaders, searchText = "ArnoldCameraShaders"  )
 		nodeMenu.append( "/Arnold/VDB", GafferArnold.ArnoldVDB, searchText = "ArnoldVDB"  )
 		nodeMenu.append( "/Arnold/Attributes", GafferArnold.ArnoldAttributes, searchText = "ArnoldAttributes" )
-		nodeMenu.append( "/Arnold/Render", GafferArnold.ArnoldRender, searchText = "ArnoldRender" )
-		nodeMenu.append( "/Arnold/Interactive Render", GafferArnold.InteractiveArnoldRender, searchText = "InteractiveArnoldRender" )
 		nodeMenu.append( "/Arnold/Shader Ball", GafferArnold.ArnoldShaderBall, searchText = "ArnoldShaderBall" )
 		nodeMenu.append( "/Arnold/Arnold Texture Bake", GafferArnold.ArnoldTextureBake, searchText = "ArnoldTextureBake" )
 
 		GafferArnoldUI.CacheMenu.appendDefinitions( scriptWindowMenu, "/Tools/Arnold" )
 
-		scriptWindowMenu.append(
-			"/Tools/Arnold/Populate GPU Cache",
-			{
-				"command" : GafferArnoldUI.GPUCache.populateGPUCache,
-			}
-		)
+		if [ int( x ) for x in arnold.AiGetVersion()[:2] ] < [ 7, 3 ] :
+			# `AiGPUCachePopulate` was removed in Arnold 7.3.0.0.
+			scriptWindowMenu.append(
+				"/Tools/Arnold/Populate GPU Cache",
+				{
+					"command" : GafferArnoldUI.GPUCache.populateGPUCache,
+				}
+			)
 
 	except Exception as m :
 
@@ -177,10 +175,13 @@ if moduleSearchPath.find( "nsi.py" ) and moduleSearchPath.find( "GafferDelight" 
 				node["geometryType"].setValue( "dl:environment" )
 				Gaffer.Metadata.registerValue( node["geometryType"], "plugValueWidget:type", "" )
 				Gaffer.Metadata.registerValue( node["geometryBound"], "plugValueWidget:type", "" )
-				Gaffer.Metadata.registerValue( node["geometryParameters"], "plugValueWidget:type", "" )
 
 				if shape == "distant" :
-					node["geometryParameters"].addChild( Gaffer.NameValuePlug( "angle", 0.0, name = "angle", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+					anglePlug = Gaffer.NameValuePlug( "angle", 0.0, name = "angle", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+					node["geometryParameters"].addChild( anglePlug )
+					Gaffer.Metadata.registerValue( anglePlug, "nameValuePlugPlugValueWidget:ignoreNamePlug", True )
+				else :
+					Gaffer.Metadata.registerValue( node["geometryParameters"], "plugValueWidget:type", "" )
 
 			Gaffer.Metadata.registerValue( node["shape"], "plugValueWidget:type", "" )
 
@@ -196,6 +197,7 @@ if moduleSearchPath.find( "nsi.py" ) and moduleSearchPath.find( "GafferDelight" 
 			[ "SpotLight", "spotLight", GafferOSL.OSLLight.Shape.Disk ],
 			[ "DistantLight", "distantLight", "distant" ],
 			[ "EnvironmentLight", "environmentLight", "environment" ],
+			[ "SkyLight", "hlight_sky", "environment" ],
 		] :
 			nodeMenu.append(
 				"/3Delight/Light/" + label,
@@ -205,8 +207,6 @@ if moduleSearchPath.find( "nsi.py" ) and moduleSearchPath.find( "GafferDelight" 
 
 		nodeMenu.append( "/3Delight/Attributes", GafferDelight.DelightAttributes, searchText = "DelightAttributes"  )
 		nodeMenu.append( "/3Delight/Options", GafferDelight.DelightOptions, searchText = "DelightOptions"  )
-		nodeMenu.append( "/3Delight/Render", GafferDelight.DelightRender, searchText = "DelightRender"  )
-		nodeMenu.append( "/3Delight/Interactive Render", GafferDelight.InteractiveDelightRender, searchText = "InteractiveDelightRender"  )
 
 	except Exception as m :
 
@@ -229,11 +229,6 @@ if os.environ.get( "CYCLES_ROOT" ) and moduleSearchPath.find( "GafferCycles" ) :
 			nodeMenu.append( "/Cycles/Globals/Options", GafferCycles.CyclesOptions, searchText = "CyclesOptions" )
 			nodeMenu.append( "/Cycles/Globals/Background", GafferCycles.CyclesBackground, searchText = "CyclesBackground" )
 			nodeMenu.append( "/Cycles/Attributes", GafferCycles.CyclesAttributes, searchText = "CyclesAttributes" )
-			nodeMenu.append(
-				"/Cycles/Render", GafferCycles.CyclesRender,
-				searchText = "CyclesRender"
-			)
-			nodeMenu.append( "/Cycles/Interactive Render", GafferCycles.InteractiveCyclesRender, searchText = "InteractiveCyclesRender" )
 			nodeMenu.append( "/Cycles/Shader Ball", GafferCycles.CyclesShaderBall, searchText = "CyclesShaderBall" )
 
 	except Exception as m :
@@ -285,6 +280,7 @@ nodeMenu.append( "/Scene/Object/Reverse Winding", GafferScene.ReverseWinding, se
 nodeMenu.append( "/Scene/Object/Mesh Distortion", GafferScene.MeshDistortion, searchText = "MeshDistortion" )
 nodeMenu.append( "/Scene/Object/Mesh Segments", GafferScene.MeshSegments, searchText = "MeshSegments" )
 nodeMenu.append( "/Scene/Object/Mesh Split", GafferScene.MeshSplit, searchText = "MeshSplit" )
+nodeMenu.append( "/Scene/Object/Mesh Subdivide", GafferScene.MeshTessellate, searchText = "MeshTessellate" )
 nodeMenu.append( "/Scene/Object/Camera Tweaks", GafferScene.CameraTweaks, searchText = "CameraTweaks" )
 nodeMenu.append( "/Scene/Object/Curve Sampler", GafferScene.CurveSampler, searchText = "CurveSampler" )
 nodeMenu.append( "/Scene/Object/Closest Point Sampler", GafferScene.ClosestPointSampler, searchText = "ClosestPointSampler" )
@@ -332,7 +328,6 @@ nodeMenu.append( "/Scene/Globals/Set", GafferScene.Set )
 nodeMenu.append( "/Scene/Globals/Set Visualiser", GafferScene.SetVisualiser, searchText = "SetVisualiser" )
 nodeMenu.append( "/Scene/OpenGL/Attributes", GafferScene.OpenGLAttributes, searchText = "OpenGLAttributes" )
 nodeMenu.definition().append( "/Scene/OpenGL/Shader", { "subMenu" : GafferSceneUI.OpenGLShaderUI.shaderSubMenu } )
-nodeMenu.append( "/Scene/OpenGL/Render", GafferScene.OpenGLRender, searchText = "OpenGLRender" )
 nodeMenu.append( "/Scene/Utility/Filter Query", GafferScene.FilterQuery, searchText = "FilterQuery" )
 nodeMenu.append( "/Scene/Utility/Transform Query", GafferScene.TransformQuery, searchText = "TransformQuery" )
 nodeMenu.append( "/Scene/Utility/Bound Query", GafferScene.BoundQuery, searchText = "BoundQuery" )
@@ -345,11 +340,25 @@ nodeMenu.append( "/Scene/Utility/Primitive Variable Query", GafferScene.Primitiv
 nodeMenu.append( "/Scene/Passes/Render Passes", GafferScene.RenderPasses, searchText = "RenderPasses" )
 nodeMenu.append( "/Scene/Passes/Delete Render Passes", GafferScene.DeleteRenderPasses, searchText = "DeleteRenderPasses" )
 nodeMenu.append( "/Scene/Passes/Render Pass Wedge", GafferScene.RenderPassWedge, searchText = "RenderPassWedge" )
+nodeMenu.append( "/Scene/Passes/Render Pass Shader", GafferScene.RenderPassShader, searchText = "RenderPassShader" )
+nodeMenu.append( "/Scene/Render/Render", GafferScene.Render )
+nodeMenu.append( "/Scene/Render/Interactive Render", GafferScene.InteractiveRender, searchText = "InteractiveRender" )
 
 # Image nodes
 
 import GafferImage
 import GafferImageUI
+
+def __contactSheetCreateCommand( menu ) :
+
+	result = GafferImage.ContactSheet()
+	result["spacing"].gang()
+	result["marginTop"].setInput( result["spacing"]["y"] )
+	result["marginBottom"].setInput( result["spacing"]["y"] )
+	result["marginLeft"].setInput( result["spacing"]["x"] )
+	result["marginRight"].setInput( result["spacing"]["x"] )
+
+	return result
 
 nodeMenu.append( "/Image/File/Reader", GafferImage.ImageReader, searchText = "ImageReader" )
 nodeMenu.append( "/Image/File/Writer", GafferImage.ImageWriter, searchText = "ImageWriter" )
@@ -374,6 +383,7 @@ nodeMenu.append( "/Image/Filter/Erode", GafferImageUI.ErodeUI.nodeMenuCreateComm
 nodeMenu.append( "/Image/Filter/Dilate", GafferImageUI.DilateUI.nodeMenuCreateCommand )
 nodeMenu.append( "/Image/Filter/BleedFill", GafferImage.BleedFill )
 nodeMenu.append( "/Image/Matte/Cryptomatte", GafferScene.Cryptomatte, searchText = "Cryptomatte" )
+nodeMenu.append( "/Image/Merge/Contact Sheet", __contactSheetCreateCommand, searchText = "ContactSheet" )
 nodeMenu.append( "/Image/Merge/Merge", GafferImage.Merge )
 nodeMenu.append( "/Image/Merge/Mix", GafferImage.Mix )
 nodeMenu.append( "/Image/Transform/Resize", GafferImage.Resize )
@@ -382,14 +392,14 @@ nodeMenu.append( "/Image/Transform/Crop", GafferImage.Crop, postCreator = Gaffer
 nodeMenu.append( "/Image/Transform/Offset", GafferImage.Offset )
 nodeMenu.append( "/Image/Transform/Mirror", GafferImage.Mirror )
 nodeMenu.append( "/Image/Warp/VectorWarp", GafferImage.VectorWarp )
-nodeMenu.append( "/Image/Channels/Shuffle", GafferImageUI.ShuffleUI.nodeMenuCreateCommand, searchText = "Shuffle" )
+nodeMenu.append( "/Image/Channels/Shuffle", GafferImage.Shuffle, searchText = "Shuffle" )
 nodeMenu.append( "/Image/Channels/Copy", GafferImage.CopyChannels, searchText = "CopyChannels" )
 nodeMenu.append( "/Image/Channels/Delete", GafferImage.DeleteChannels, searchText = "DeleteChannels" )
 nodeMenu.append( "/Image/Channels/Collect", GafferImage.CollectImages, searchText = "CollectImages" )
 nodeMenu.append( "/Image/Utility/Metadata", GafferImage.ImageMetadata, searchText = "ImageMetadata" )
 nodeMenu.append( "/Image/Utility/Delete Metadata", GafferImage.DeleteImageMetadata, searchText = "DeleteImageMetadata" )
 nodeMenu.append( "/Image/Utility/Copy Metadata", GafferImage.CopyImageMetadata, searchText = "CopyImageMetadata" )
-nodeMenu.append( "/Image/Utility/Stats", GafferImage.ImageStats, searchText = "ImageStats", postCreator = GafferImageUI.ImageStatsUI.postCreate  )
+nodeMenu.append( "/Image/Utility/Stats", GafferImage.ImageStats, searchText = "ImageStats" )
 nodeMenu.append( "/Image/Utility/Sampler", GafferImage.ImageSampler, searchText = "ImageSampler" )
 nodeMenu.append( "/Image/Utility/Catalogue", GafferImage.Catalogue )
 nodeMenu.append( "/Image/Utility/Catalogue Select", GafferImage.CatalogueSelect )
@@ -403,6 +413,7 @@ nodeMenu.append( "/Image/Deep/Sample Counts", GafferImage.DeepSampleCounts, sear
 nodeMenu.append( "/Image/Deep/Deep Sampler", GafferImage.DeepSampler, searchText = "DeepSampler" )
 nodeMenu.append( "/Image/Deep/Deep Holdout", GafferImage.DeepHoldout, searchText = "DeepHoldout" )
 nodeMenu.append( "/Image/Deep/Deep Recolor", GafferImage.DeepRecolor, searchText = "DeepRecolor" )
+nodeMenu.append( "/Image/Deep/Deep Slice", GafferImage.DeepSlice, searchText = "DeepSlice" )
 nodeMenu.append( "/Image/MultiView/Create Views", GafferImage.CreateViews, searchText = "CreateViews", postCreator = GafferImageUI.CreateViewsUI.postCreate )
 nodeMenu.append( "/Image/MultiView/Select View", GafferImage.SelectView, searchText = "SelectView" )
 nodeMenu.append( "/Image/MultiView/Delete Views", GafferImage.DeleteViews, searchText = "DeleteViews" )
@@ -538,6 +549,7 @@ nodeMenu.append( "/Dispatch/Python Command", GafferDispatch.PythonCommand, searc
 nodeMenu.append( "/Dispatch/Task List", GafferDispatch.TaskList, searchText = "TaskList" )
 nodeMenu.append( "/Dispatch/Wedge", GafferDispatch.Wedge )
 nodeMenu.append( "/Dispatch/Frame Mask", GafferDispatch.FrameMask, searchText = "FrameMask" )
+nodeMenu.append( "/Dispatch/Local Dispatcher", GafferDispatch.LocalDispatcher, searchText = "LocalDispatcher" )
 
 # Utility nodes
 
@@ -567,13 +579,16 @@ nodeMenu.append( "/Utility/Collect", Gaffer.Collect )
 
 GafferUI.DotUI.connect( application.root() )
 
+import GafferTractor
+import GafferTractorUI
+
 with IECore.IgnoredExceptions( ImportError ) :
+	# Raises if Tractor not available, thus avoiding adding the TractorDispatcher
+	# to the menus.
+	GafferTractor.tractorAPI()
+	nodeMenu.append( "/Dispatch/Tractor Dispatcher", GafferTractor.TractorDispatcher, searchText = "TractorDispatcher" )
 
-	# Raises if Tractor not available, thus avoiding registering the
-	# TractorDispatcher.
-	import tractor.api.author
-
-	import GafferTractorUI
+GafferDispatchUI.DispatcherUI.appendMenuDefinitions( scriptWindowMenu, "/Tools/Dispatch" )
 
 ## Metadata cleanup
 ###########################################################################

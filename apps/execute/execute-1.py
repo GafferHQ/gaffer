@@ -178,7 +178,7 @@ class execute( Gaffer.Application ) :
 					IECore.msg(
 						IECore.Msg.Level.Debug,
 						"gaffer execute : executing %s" % node.relativeName( scriptNode ),
-						"".join( traceback.format_exception( *sys.exc_info() ) ),
+						traceback.format_exc().strip(),
 					)
 					IECore.msg(
 						IECore.Msg.Level.Error,

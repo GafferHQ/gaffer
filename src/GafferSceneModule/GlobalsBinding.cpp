@@ -44,6 +44,7 @@
 #include "GafferScene/GlobalShader.h"
 #include "GafferScene/Outputs.h"
 #include "GafferScene/RenderPasses.h"
+#include "GafferScene/RenderPassShader.h"
 #include "GafferScene/Set.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
@@ -124,5 +125,6 @@ void GafferSceneModule::bindGlobals()
 		;
 	}
 	DependencyNodeClass<RenderPasses>();
+	DependencyNodeClass<RenderPassShader>();
 
 }

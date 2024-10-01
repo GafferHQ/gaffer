@@ -41,12 +41,7 @@
 #include "IECore/SimpleTypedData.h"
 #include "IECore/VectorTypedData.h"
 
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathBox.h"
-#else
 #include "Imath/ImathBox.h"
-#endif
 
 using namespace Imath;
 using namespace IECore;

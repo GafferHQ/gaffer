@@ -190,6 +190,12 @@ Inspector::ResultPtr Inspector::inspect() const
 	}
 
 	ConstObjectPtr value = this->value( history.get() );
+	bool fallbackValue = false;
+	if( !value )
+	{
+		value = this->fallbackValue();
+		fallbackValue = (bool)value;
+	}
 
 	ResultPtr result = new Result( value, targetEditScope() );
 	inspectHistoryWalk( history.get(), result.get() );
@@ -215,6 +221,11 @@ Inspector::ResultPtr Inspector::inspect() const
 		// There's no source plug and no way of making
 		// the property.
 		result->m_editFunction = "No editable source found in history.";
+	}
+
+	if( fallbackValue )
+	{
+		result->m_sourceType = Result::SourceType::Fallback;
 	}
 
 	return result;
@@ -352,6 +363,11 @@ Gaffer::ValuePlugPtr Inspector::source( const GafferScene::SceneAlgo::History *h
 Inspector::EditFunctionOrFailure Inspector::editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
 {
 	return "Editing not supported";
+}
+
+IECore::ConstObjectPtr Inspector::fallbackValue() const
+{
+	return nullptr;
 }
 
 Gaffer::EditScope *Inspector::targetEditScope() const

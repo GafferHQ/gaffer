@@ -35,6 +35,7 @@
 ##########################################################################
 
 import imath
+import inspect
 import unittest
 
 import IECore
@@ -1563,11 +1564,11 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		history = GafferScene.SceneAlgo.history( tweaks["out"]["attributes"], "/group/light" )
 		attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, "light" )
 
-		self.__assertParameterHistory( attributeHistory, [], tweaks["out"], "/group/light", "light", "light", "exposure", 2.0, 1 )
-		self.__assertParameterHistory( attributeHistory, [ 0 ], tweaks["in"], "/group/light", "light", "light", "exposure", 0.0, 1 )
-		self.__assertParameterHistory( attributeHistory, [ 0, 0 ], group["out"], "/group/light", "light", "light", "exposure", 0.0, 1 )
-		self.__assertParameterHistory( attributeHistory, [ 0, 0, 0 ], group["in"][0], "/light", "light", "light", "exposure", 0.0, 1 )
-		self.__assertParameterHistory( attributeHistory, [ 0, 0, 0, 0 ], testLight["out"], "/light", "light", "light", "exposure", 0.0, 0 )
+		self.__assertParameterHistory( attributeHistory, [], tweaks["out"], "/group/light", "light", "__shader", "exposure", 2.0, 1 )
+		self.__assertParameterHistory( attributeHistory, [ 0 ], tweaks["in"], "/group/light", "light", "__shader", "exposure", 0.0, 1 )
+		self.__assertParameterHistory( attributeHistory, [ 0, 0 ], group["out"], "/group/light", "light", "__shader", "exposure", 0.0, 1 )
+		self.__assertParameterHistory( attributeHistory, [ 0, 0, 0 ], group["in"][0], "/light", "light", "__shader", "exposure", 0.0, 1 )
+		self.__assertParameterHistory( attributeHistory, [ 0, 0, 0, 0 ], testLight["out"], "/light", "light", "__shader", "exposure", 0.0, 0 )
 
 	def testAttributeHistoryWithMissingAttribute( self ) :
 
@@ -1802,6 +1803,123 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 			# isn't leaked into the context used to evaluate the globals.
 			context["scene:path"] = IECore.InternedStringVectorData( [ "plane" ] )
 			assertOptionHistory( "render:camera", nameSwitch["in"][1]["value"], "/020" )
+
+	def testOptionHistoryWithExpression( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["options"]["renderCamera"]["enabled"].setValue( True )
+		script["options"]["options"]["renderCamera"]["value"].setValue( "test" )
+
+		script["dot"] = Gaffer.Dot()
+		script["dot"].setup( script["options"]["out"] )
+		script["dot"]["in"].setInput( script["options"]["out"] )
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+		"""
+		globals = parent["dot"]["in"]["globals"]
+		globals["option:render:camera"] = IECore.StringData( "expression" )
+		parent["dot"]["out"]["globals"] = globals
+		"""
+		) )
+
+		history = GafferScene.SceneAlgo.history( script["dot"]["out"]["globals"] )
+		optionHistory = GafferScene.SceneAlgo.optionHistory( history, "render:camera" )
+
+		self.__assertOptionHistory( optionHistory, [], script["dot"]["out"], "render:camera", "expression", 1 )
+		self.__assertOptionHistory( optionHistory, [ 0 ], script["dot"]["in"], "render:camera", "test", 1 )
+		self.__assertOptionHistory( optionHistory, [ 0, 0 ], script["options"]["out"], "render:camera", "test", 0 )
+
+	def testHistoryWithExpression( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["options"]["renderCamera"]["enabled"].setValue( True )
+		script["options"]["options"]["renderCamera"]["value"].setValue( "test" )
+
+		script["dot"] = Gaffer.Dot()
+		script["dot"].setup( script["options"]["out"] )
+		script["dot"]["in"].setInput( script["options"]["out"] )
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+		"""
+		globals = parent["dot"]["in"]["globals"]
+		globals["option:render:camera"] = IECore.StringData( "expression" )
+		parent["dot"]["out"]["globals"] = globals
+		"""
+		) )
+
+		def runTest() :
+
+			history = GafferScene.SceneAlgo.history( script["dot"]["out"]["globals"] )
+
+			for plug in [
+				script["dot"]["out"],
+				script["dot"]["in"],
+				script["options"]["out"],
+			] :
+				self.assertEqual( history.scene, plug )
+				self.assertLessEqual( len( history.predecessors ), 1 )
+				history = history.predecessors[0] if history.predecessors else None
+
+			self.assertIsNone( history )
+
+		# Test running the test while everything is already cached still works, and doesn't add any
+		# new entries to the cache
+		Gaffer.ValuePlug.clearHashCache()
+		runTest()
+		before = Gaffer.ValuePlug.hashCacheTotalUsage()
+		runTest()
+		self.assertEqual( Gaffer.ValuePlug.hashCacheTotalUsage(), before )
+
+		# Test that even the processes that aren't reading the cache still write to the cache, by
+		# making sure that a subsequent globalsHash doesn't need to do anything
+		Gaffer.ValuePlug.clearHashCache()
+		runTest()
+		with Gaffer.PerformanceMonitor() as pm :
+			script["dot"]["out"].globalsHash()
+		self.assertEqual( pm.combinedStatistics().hashCount, 0 )
+
+		# Test branching history with an expression using two input globals
+		# to produce our output
+		script["options2"] = GafferScene.StandardOptions()
+		script["options2"]["options"]["renderCamera"]["enabled"].setValue( True )
+		script["options2"]["options"]["renderCamera"]["value"].setValue( "other" )
+
+		script["expression"].setExpression( inspect.cleandoc(
+		"""
+		globals = parent["dot"]["in"]["globals"]
+		globals["option:render:camera"] = parent["options2"]["out"]["globals"].get( "option:render:camera" )
+		parent["dot"]["out"]["globals"] = globals
+		"""
+		) )
+
+		history = GafferScene.SceneAlgo.history( script["dot"]["out"]["globals"] )
+		self.assertEqual( len( history.predecessors ), 2 )
+		self.assertEqual( history.predecessors[0].scene, script["dot"]["in"] )
+		self.assertEqual( history.predecessors[1].scene, script["options2"]["out"] )
+
+		# Test that an expression using the value of a non-globals plug to modify the globals
+		# does not affect the history
+		script["cube"] = GafferScene.Cube()
+		script["cube"]["sets"].setValue( "foo" )
+
+		script["expression"].setExpression( inspect.cleandoc(
+		"""
+		globals = parent["dot"]["in"]["globals"]
+		globals["option:render:camera"] = IECore.StringData( "expression" )
+		globals["option:setNames"] = parent["cube"]["out"]["setNames"]
+		parent["dot"]["out"]["globals"] = globals
+		"""
+		) )
+
+		history = GafferScene.SceneAlgo.history( script["dot"]["out"]["globals"] )
+		self.assertEqual( len( history.predecessors ), 1 )
+		self.assertEqual( history.predecessors[0].scene, script["dot"]["in"] )
 
 	def testHistoryWithCanceller( self ) :
 
@@ -2071,6 +2189,76 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertScenesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
 		self.assertSceneHashesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
 
+	def testRenderAdaptorScope( self ) :
+
+		def adaptor() :
+
+			result = GafferScene.CustomOptions()
+			result["options"].addChild( Gaffer.NameValuePlug( "adapted", True ) )
+			return result
+
+		for clientPattern, rendererPattern, client, renderer, expectAdapted in (
+			( "*", "*", None, None, True ),
+			( "*", "*", "Render", "Arnold", True ),
+			( "*", "Arnold", "Render", "Arnold", True ),
+			( "*", "Arnold", "Render", "Cycles", False ),
+			( "Render", "*", "Render", "Arnold", True ),
+			( "Render", "*", "InteractiveRender", "Arnold", False ),
+			( "Render InteractiveRender", "*", "Render", "Arnold", True ),
+			( "Render InteractiveRender", "*", "InteractiveRender", "Arnold", True ),
+			( "Render InteractiveRender", "*", "SceneView", "Arnold", False ),
+			( "Render", "Arnold", "SceneView", "Arnold", False ),
+			( "Render", "Arnold", "Render", "Arnold", True ),
+		) :
+			with self.subTest( clientPattern = clientPattern, rendererPattern = rendererPattern, client = client, renderer = renderer ) :
+
+				GafferScene.SceneAlgo.registerRenderAdaptor( "Test", adaptor, clientPattern, rendererPattern )
+				self.addCleanup( GafferScene.SceneAlgo.deregisterRenderAdaptor, "Test" )
+
+				adaptors = GafferScene.SceneAlgo.createRenderAdaptors()
+				if client is not None :
+					adaptors["client"].setValue( client )
+				if renderer is not None :
+					adaptors["renderer"].setValue( renderer )
+
+				if expectAdapted :
+					self.assertIn( "option:adapted", adaptors["out"].globals() )
+				else :
+					self.assertNotIn( "option:adapted", adaptors["out"].globals() )
+
+	def testRenderAdaptorScopePlugs( self ) :
+
+		def adaptor() :
+
+			result = GafferScene.CustomOptions()
+			result["client"] = Gaffer.StringPlug()
+			result["renderer"] = Gaffer.StringPlug()
+
+			result["options"].addChild( Gaffer.NameValuePlug( "theClient", "" ) )
+			result["options"].addChild( Gaffer.NameValuePlug( "theRenderer", "" ) )
+
+			result["options"][0]["value"].setInput( result["client"] )
+			result["options"][1]["value"].setInput( result["renderer"] )
+
+			return result
+
+		for client, renderer in [
+			( "*", "*" ),
+			( "SceneView", "Arnold" ),
+		] :
+
+			with self.subTest( client = client, renderer = renderer ) :
+
+				GafferScene.SceneAlgo.registerRenderAdaptor( "Test", adaptor, client, renderer )
+				self.addCleanup( GafferScene.SceneAlgo.deregisterRenderAdaptor, "Test" )
+
+				adaptors = GafferScene.SceneAlgo.createRenderAdaptors()
+				adaptors["client"].setValue( "SceneView" )
+				adaptors["renderer"].setValue( "Arnold" )
+
+				self.assertEqual( adaptors["out"].globals()["option:theClient"].value, "SceneView" )
+				self.assertEqual( adaptors["out"].globals()["option:theRenderer"].value, "Arnold" )
+
 	def testNullAdaptor( self ) :
 
 		def a() :
@@ -2086,6 +2274,17 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
 		self.assertEqual( mh.messages[0].context, "SceneAlgo::createRenderAdaptors" )
 		self.assertEqual( mh.messages[0].message, "Adaptor \"Test\" returned null" )
+
+	def testAdaptorCreationException( self ) :
+
+		def a() :
+
+			raise RuntimeError( "Oops" )
+
+		GafferScene.SceneAlgo.registerRenderAdaptor( "Test", a )
+
+		with self.assertRaisesRegex( RuntimeError, "Oops" ) :
+			GafferScene.SceneAlgo.createRenderAdaptors()
 
 	def testValidateName( self ) :
 

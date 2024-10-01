@@ -33,6 +33,9 @@
 				"pointerAdd",
 				"pointerRemove",
 				"pointerRotate",
+				"pointerPivot",
+				"pointerCut",
+				"pointerNotEditable",
 			]
 		},
 
@@ -48,7 +51,12 @@
 				"objects", # \todo prefix with 'pointer'
 				"addObjects", # \todo prefix with 'pointer'
 				"removeObjects", # \todo prefix with 'pointer'
-				"replaceObjects" # \todo prefix with 'pointer'
+				"replaceObjects", # \todo prefix with 'pointer'
+				"targetObjects", # \todo prefix with 'pointer'
+				"pointerSets",
+				"pointerReplaceSets",
+				"pointerAddSets",
+				"pointerRemoveSets",
 			]
 		},
 
@@ -195,6 +203,7 @@
 				'gafferSceneUIScaleTool',
 				'gafferSceneUITranslateTool',
 				'gafferSceneUILightTool',
+				'gafferSceneUILightPositionTool',
 			]
 
 		},
@@ -325,6 +334,7 @@
 			"ids" : [
 				"colorPlugValueWidgetSlidersOff",
 				"colorPlugValueWidgetSlidersOn",
+				"ctrlEnter",
 			]
 
 		},
@@ -439,6 +449,23 @@
 				"emptySet",
 				"setFolder",
 			]
+		},
+
+		"renderPassEditor" : {
+
+			"options" : {
+				"requiredWidth" : 16,
+				"requiredHeight" : 16,
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				"renderPass",
+				"disabledRenderPass",
+				"renderPassFolder",
+				"activeRenderPass",
+				"activeRenderPassFadedHighlighted",
+			]
 		}
 
 	},
@@ -472,6 +499,7 @@
 		'localDispatcherStatusFailed',
 		'localDispatcherStatusKilled',
 		'localDispatcherStatusRunning',
+		'localDispatcherStatusComplete',
 		'minus',
 		'navigationArrow',
 		'nodeSetNodeSelection',
@@ -528,6 +556,8 @@
 		'focusOn',
 		'focusOff',
 		'focusOnHover',
-		'focusOffHover'
+		'focusOffHover',
+		'shaderTweakProxy',
+		'shaderTweakProxyIcon'
 	]
 }

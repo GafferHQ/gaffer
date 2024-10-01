@@ -205,13 +205,13 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 			self["__cameraTweaks"] = GafferScene.CameraTweaks()
 			self["__cameraTweaks"]["in"].setInput( self["__camera"]["out"] )
 			self["__cameraTweaks"]["tweaks"]["projection"] = Gaffer.TweakPlug( "projection", "uv_camera" )
-			self["__cameraTweaks"]["tweaks"]["resolution"] = Gaffer.TweakPlug( "resolution", imath.V2i( 0 ) )
-			self["__cameraTweaks"]["tweaks"]["u_offset"] = Gaffer.TweakPlug( "u_offset", 0.0 )
-			self["__cameraTweaks"]["tweaks"]["v_offset"] = Gaffer.TweakPlug( "v_offset", 0.0 )
-			self["__cameraTweaks"]["tweaks"]["mesh"] = Gaffer.TweakPlug( "mesh", "" )
-			self["__cameraTweaks"]["tweaks"]["uv_set"] = Gaffer.TweakPlug( "uv_set", "" )
-			self["__cameraTweaks"]["tweaks"]["extend_edges"] = Gaffer.TweakPlug( "extend_edges", False )
-			self["__cameraTweaks"]["tweaks"]["offset"] = Gaffer.TweakPlug( "offset", 0.1 )
+			self["__cameraTweaks"]["tweaks"]["resolution"] = Gaffer.TweakPlug( "resolution", imath.V2i( 0 ), Gaffer.TweakPlug.Mode.Create )
+			self["__cameraTweaks"]["tweaks"]["u_offset"] = Gaffer.TweakPlug( "u_offset", 0.0, Gaffer.TweakPlug.Mode.Create )
+			self["__cameraTweaks"]["tweaks"]["v_offset"] = Gaffer.TweakPlug( "v_offset", 0.0, Gaffer.TweakPlug.Mode.Create )
+			self["__cameraTweaks"]["tweaks"]["mesh"] = Gaffer.TweakPlug( "mesh", "", Gaffer.TweakPlug.Mode.Create )
+			self["__cameraTweaks"]["tweaks"]["uv_set"] = Gaffer.TweakPlug( "uv_set", "", Gaffer.TweakPlug.Mode.Create )
+			self["__cameraTweaks"]["tweaks"]["extend_edges"] = Gaffer.TweakPlug( "extend_edges", False, Gaffer.TweakPlug.Mode.Create )
+			self["__cameraTweaks"]["tweaks"]["offset"] = Gaffer.TweakPlug( "offset", 0.1, Gaffer.TweakPlug.Mode.Create )
 
 			self["__cameraTweaks"]["tweaks"]["offset"]["value"].setInput( self["normalOffset"] )
 
@@ -289,6 +289,10 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		# First, setup python commands which will dispatch a chunk of a render or image tasks as
 		# immediate execution once they reach the farm - this allows us to run multiple tasks in
 		# one farm process.
+		## \todo Ideally we would host LocalDispatcher nodes in our internal graph, instead of
+		# constructing them inside of PythonCommands. That's not currently possible because the
+		# hash for the tasks being dispatched relies on the index file, which doesn't exist
+		# prior to dispatch.
 		self["__RenderDispatcher"] = GafferDispatch.PythonCommand()
 		self["__RenderDispatcher"]["preTasks"][0].setInput( self["__CleanPreTasks"]["out"] )
 		self["__RenderDispatcher"]["command"].setValue( inspect.cleandoc(
@@ -297,7 +301,7 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 			# We need to access frame and "BAKE_WEDGE:index" so that the hash of render varies with the wedge index,
 			# so we might as well print what we're doing
 			IECore.msg( IECore.MessageHandler.Level.Info, "Bake Process", "Dispatching render task index %i for frame %i" % ( context["BAKE_WEDGE:index"], context.getFrame() ) )
-			d = GafferDispatch.LocalDispatcher()
+			d = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 			d.dispatch( [ self.parent()["__bakeDirectoryContext"] ] )
 			"""
 		) )
@@ -309,7 +313,7 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 			# We need to access frame and "BAKE_WEDGE:index" so that the hash of render varies with the wedge index,
 			# so we might as well print what we're doing
 			IECore.msg( IECore.MessageHandler.Level.Info, "Bake Process", "Dispatching image task index %i for frame %i" % ( context["BAKE_WEDGE:index"], context.getFrame() ) )
-			d = GafferDispatch.LocalDispatcher()
+			d = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 			d.dispatch( [ self.parent()["__CleanUpSwitch"] ] )
 			"""
 		) )

@@ -151,6 +151,9 @@ Gaffer::PlugPtr compoundParameterHandlerSetupPlug( CompoundParameterHandler &ph,
 
 void compoundParameterHandlerSetParameterValue( CompoundParameterHandler &ph )
 {
+	// Setting a parameter value involves evaluating the plug - we don't want to hold the GIL while evaluating
+	// the Gaffer graph.
+	IECorePython::ScopedGILRelease gilRelease;
 	return ph.CompoundParameterHandler::setParameterValue();
 }
 

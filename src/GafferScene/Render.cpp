@@ -36,6 +36,7 @@
 
 #include "GafferScene/Render.h"
 
+#include "GafferScene/OptionQuery.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/Private/RendererAlgo.h"
 #include "GafferScene/SceneAlgo.h"
@@ -46,6 +47,7 @@
 #include "Gaffer/ApplicationRoot.h"
 #include "Gaffer/MonitorAlgo.h"
 #include "Gaffer/PerformanceMonitor.h"
+#include "Gaffer/Switch.h"
 
 #include "IECore/ObjectPool.h"
 
@@ -111,14 +113,37 @@ Render::Render( const IECore::InternedString &rendererType, const std::string &n
 	addChild( new IntPlug( "mode", Plug::In, RenderMode, RenderMode, SceneDescriptionMode ) );
 	addChild( new StringPlug( "fileName" ) );
 	addChild( new ScenePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
+	addChild( new StringPlug( "resolvedRenderer", Plug::Out, "", Plug::Default & ~Plug::Serialisable ) );
 	addChild( new ScenePlug( "__adaptedIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
 
 	SceneProcessorPtr adaptors = GafferScene::SceneAlgo::createRenderAdaptors();
 	setChild( "__adaptors", adaptors );
 	adaptors->inPlug()->setInput( inPlug() );
+	adaptors->getChild<StringPlug>( "client" )->setValue( "Render" );
+	adaptors->getChild<StringPlug>( "renderer" )->setInput( resolvedRendererPlug() );
 	adaptedInPlug()->setInput( adaptors->outPlug() );
 
 	outPlug()->setInput( inPlug() );
+
+	// Internal network for `resolvedRenderer`. We use a Switch so that we don't
+	// even evaluate the scene globals if the renderer is overridden by `rendererPlug()`.
+
+	OptionQueryPtr optionQuery = new OptionQuery();
+	setChild( "__optionQuery", optionQuery );
+	optionQuery->scenePlug()->setInput( inPlug() );
+	NameValuePlug *rendererQuery = optionQuery->addQuery( rendererPlug() );
+	rendererQuery->namePlug()->setValue( "render:defaultRenderer" );
+
+	SwitchPtr querySwitch = new Switch();
+	setChild( "__querySwitch", querySwitch );
+	querySwitch->setup( rendererPlug() );
+	/// \todo Cast shouldn't be necessary - OptionQuery should provide a non-const accessor.
+	querySwitch->inPlugs()->getChild<Plug>( 0 )->setInput( const_cast<ValuePlug *>( optionQuery->valuePlugFromQuery( rendererQuery ) ) );
+	querySwitch->inPlugs()->getChild<Plug>( 1 )->setInput( rendererPlug() );
+	querySwitch->indexPlug()->setValue( 1 );
+	querySwitch->enabledPlug()->setInput( rendererPlug() );
+
+	resolvedRendererPlug()->setInput( querySwitch->outPlug() );
 }
 
 Render::~Render()
@@ -175,14 +200,24 @@ const ScenePlug *Render::outPlug() const
 	return getChild<ScenePlug>( g_firstPlugIndex + 4 );
 }
 
+Gaffer::StringPlug *Render::resolvedRendererPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 5 );
+}
+
+const Gaffer::StringPlug *Render::resolvedRendererPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 5 );
+}
+
 ScenePlug *Render::adaptedInPlug()
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 5 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 6 );
 }
 
 const ScenePlug *Render::adaptedInPlug() const
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 5 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 6 );
 }
 
 void Render::preTasks( const Gaffer::Context *context, Tasks &tasks ) const
@@ -206,18 +241,19 @@ IECore::MurmurHash Render::hash( const Gaffer::Context *context ) const
 
 	RenderScope renderScope( context );
 
-	const std::string rendererType = rendererPlug()->getValue();
-	if( rendererType.empty() )
+	const std::string rendererType = resolvedRendererPlug()->getValue();
+	const Mode mode = static_cast<Mode>( modePlug()->getValue() );
+	const std::string fileName = fileNamePlug()->getValue();
+	if( rendererType.empty() || ( mode == SceneDescriptionMode && fileName.empty() ) )
 	{
 		return IECore::MurmurHash();
 	}
 
-	const Mode mode = static_cast<Mode>( modePlug()->getValue() );
-	const std::string fileName = fileNamePlug()->getValue();
-	if( mode == SceneDescriptionMode && fileName.empty() )
-	{
-		return IECore::MurmurHash();
-	}
+	/// \todo Since we're computing the globals now (via `resolvedRenderer`),
+	/// maybe our hash should be the hash of the output definitions?
+	/// Then we'd know which parts of the context we were sensitive to
+	/// and wouldn't have such a pessimistic hash that includes all
+	/// context variables.
 
 	IECore::MurmurHash h = TaskNode::hash( context );
 	h.append( (uint64_t)inPlug()->source<Plug>() );
@@ -259,13 +295,11 @@ void Render::executeInternal( bool flushCaches ) const
 	}
 
 	RenderScope renderScope( Context::current() );
-
-	const std::string rendererType = rendererPlug()->getValue();
+	const std::string rendererType = resolvedRendererPlug()->getValue();
 	if( rendererType.empty() )
 	{
 		return;
 	}
-
 	renderScope.set( g_rendererContextName, &rendererType );
 
 	const Mode mode = static_cast<Mode>( modePlug()->getValue() );

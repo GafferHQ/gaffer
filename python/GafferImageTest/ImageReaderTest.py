@@ -294,7 +294,13 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		with context :
 			for i in range( 1000, 1006 ) :
 				context.setFrame( i )
-				self.assertEqual( reader["fileValid"].getValue(), i in ( 1001, 1002, 1004 ) )
+				fileValid = i in ( 1001, 1002, 1004 )
+				self.assertEqual( reader["fileValid"].getValue(), fileValid )
+				if fileValid :
+					self.assertNotIn( "fileValid", reader["out"].metadata() )
+				else :
+					with self.assertRaises( Gaffer.ProcessException ) :
+						reader["out"].metadata()
 
 		# test with frame mask set to hold with range 1001-1005
 		reader["start"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.ClampToFrame )
@@ -302,7 +308,13 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		with context :
 			for i in range( 1000, 1006 ) :
 				context.setFrame( i )
-				self.assertEqual( reader["fileValid"].getValue(), i in ( 1000, 1001, 1002, 1004 ) )
+				fileValid = i in ( 1000, 1001, 1002, 1004 )
+				self.assertEqual( reader["fileValid"].getValue(), fileValid )
+				if fileValid :
+					self.assertNotIn( "fileValid", reader["out"].metadata() )
+				else :
+					with self.assertRaises( Gaffer.ProcessException ) :
+						reader["out"].metadata()
 
 		# test with frame mask set to black with range 1001-1005
 		reader["start"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.BlackOutside )
@@ -310,7 +322,29 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		with context :
 			for i in range( 1000, 1006 ) :
 				context.setFrame( i )
-				self.assertEqual( reader["fileValid"].getValue(), i in (1000, 1001, 1002, 1004) )
+				fileValid = i in ( 1000, 1001, 1002, 1004 )
+				self.assertEqual( reader["fileValid"].getValue(), fileValid )
+				if fileValid :
+					self.assertNotIn( "fileValid", reader["out"].metadata() )
+				else :
+					with self.assertRaises( Gaffer.ProcessException ) :
+						reader["out"].metadata()
+
+		# Test with `missingFrameMode == Hold` and `missingFrameMode == Black`
+
+		for mode in ( reader.MissingFrameMode.Hold, reader.MissingFrameMode.Black ) :
+
+			reader["missingFrameMode"].setValue( mode )
+			with context :
+				for i in range( 1000, 1006 ) :
+					context.setFrame( i )
+					fileValid = i in ( 1000, 1001, 1002, 1004 )
+					self.assertEqual( reader["fileValid"].getValue(), fileValid )
+					if fileValid :
+						self.assertNotIn( "fileValid", reader["out"].metadata() )
+					else :
+						self.assertIn( "fileValid", reader["out"].metadata() )
+						self.assertEqual( reader["out"].metadata()["fileValid"], IECore.BoolData( False ) )
 
 	def testFrameRangeMask( self ) :
 
@@ -490,7 +524,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 			( "exr", "openexr", "half", "" ),
 			( "dpx", "dpx", "uint12", "" ),
 			( "TIFF", "tiff", "float", "" ),
-			( "tif", "tiff", "uint32", str( self.openColorIOPath() / "context.ocio" ) ),
+			( "tif", "tiff", "uint32", ( self.openColorIOPath() / "context.ocio" ).as_posix() ),
 		] :
 
 			w["fileName"].setValue( self.temporaryDirectory() / "{0}.{1}".format( dataType, ext ) )
@@ -924,6 +958,51 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		script2 = Gaffer.ScriptNode()
 		script2.execute( serialisation )
 		self.assertIsInstance( script2["reader"], GafferImage.ImageReader )
+
+	def testDWACompression( self ) :
+
+		reader = GafferImage.ImageReader()
+
+		stats = GafferImage.ImageStats()
+		stats["in"].setInput( reader["out"] )
+		stats["areaSource"].setValue( stats.AreaSource.DataWindow )
+
+		for file in [
+			"dwaHalfWithLayerPrefix.exr",
+			"dwaFloat.exr"
+		] :
+			with self.subTest( file = file ) :
+
+				reader["fileName"].setValue( self.imagesPath() / file )
+				stats["channels"].setValue( reader["out"].channelNames() )
+
+				for stat in ( "min", "max", "average" ) :
+					for c, expected in zip( stats[stat].getValue(), imath.Color4f( 0.3, 0.6, 0.9, 0 ) ) :
+						self.assertAlmostEqual( c, expected, delta = 0.0001 )
+
+	def testConformLowerCaseRGBA( self ) :
+
+		constant = GafferImage.Constant()
+		constant["color"].setValue( imath.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
+
+		shuffle = GafferImage.Shuffle()
+		shuffle["in"].setInput( constant["out"] )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "R", "r", deleteSource = True ) )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "G", "g", deleteSource = True ) )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "B", "b", deleteSource = True ) )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "A", "a", deleteSource = True ) )
+		self.assertEqual( set( shuffle["out"].channelNames( ) ), { "r", "g", "b", "a" } )
+
+		writer = GafferImage.ImageWriter()
+		writer["in"].setInput( shuffle["out"] )
+		writer["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
+		writer["openexr"]["dataType"].setValue( "float" )
+		writer["task"].execute()
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setInput( writer["fileName"] )
+
+		self.assertImagesEqual( reader["out"], constant["out"], ignoreMetadata = True )
 
 if __name__ == "__main__":
 	unittest.main()

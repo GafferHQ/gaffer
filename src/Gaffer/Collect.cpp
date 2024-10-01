@@ -168,6 +168,9 @@ void dispatchPlugFunction( const ValuePlug *plug, F &&functor )
 		case IntVectorDataPlugTypeId :
 			functor( static_cast<const IntVectorDataPlug *>( plug ) );
 			break;
+		case StringVectorDataPlugTypeId :
+			functor( static_cast<const StringVectorDataPlug *>( plug ) );
+			break;
 		case AtomicCompoundDataPlugTypeId :
 			functor( static_cast<const AtomicCompoundDataPlug *>( plug ) );
 			break;

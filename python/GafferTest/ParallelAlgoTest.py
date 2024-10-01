@@ -118,6 +118,8 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 
 		with self.UIThreadCallHandler() as h :
 
+			self.assertTrue( Gaffer.ParallelAlgo.canCallOnUIThread() )
+
 			t = threading.Thread(
 				target = lambda : Gaffer.ParallelAlgo.callOnUIThread( uiThreadFunction )
 			)
@@ -148,6 +150,8 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 
 		with self.UIThreadCallHandler() as h1 :
 
+			self.assertTrue( Gaffer.ParallelAlgo.canCallOnUIThread() )
+
 			t1 = threading.Thread(
 				target = lambda : Gaffer.ParallelAlgo.callOnUIThread( uiThreadFunction1 )
 			)
@@ -156,6 +160,8 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 			h1.assertDone()
 
 			with self.UIThreadCallHandler() as h2 :
+
+				self.assertTrue( Gaffer.ParallelAlgo.canCallOnUIThread() )
 
 				t2 = threading.Thread(
 					target = lambda : Gaffer.ParallelAlgo.callOnUIThread( uiThreadFunction2 )

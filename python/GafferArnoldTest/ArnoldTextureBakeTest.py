@@ -166,9 +166,10 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 		# Dispatch the bake
 		script = Gaffer.ScriptNode()
 		script.addChild( arnoldTextureBake )
-		dispatcher = GafferDispatch.LocalDispatcher()
-		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
-		dispatcher.dispatch( [ arnoldTextureBake ] )
+		script["dispatcher"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		script["dispatcher"]["tasks"][0].setInput( arnoldTextureBake["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"]["task"].execute()
 
 		# Test that we are writing all expected files, and that we have cleaned up all temp files
 		expectedUdims = [ i + j for j in [ 1001, 1033 ] for i in [ 0, 1, 10, 11 ] ]
@@ -231,9 +232,7 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 		shuffleRef["in"].setInput( resizeRef["out"] )
 		for layer in [ "beauty", "diffuse" ]:
 			for channel in [ "R", "G", "B" ]:
-				shuffleRef["channels"].addChild( GafferImage.Shuffle.ChannelPlug() )
-				shuffleRef["channels"][-1]["in"].setValue( channel )
-				shuffleRef["channels"][-1]["out"].setValue( layer + "." + channel )
+				shuffleRef["shuffles"].addChild( Gaffer.ShufflePlug( channel, f"{layer}.{channel}" ) )
 
 		differenceMerge = GafferImage.Merge()
 		differenceMerge["in"]["in0"].setInput( aovCollect["out"] )
@@ -308,9 +307,10 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 		# Dispatch the bake
 		script = Gaffer.ScriptNode()
 		script.addChild( arnoldTextureBake )
-		dispatcher = GafferDispatch.LocalDispatcher()
-		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
-		dispatcher.dispatch( [ arnoldTextureBake ] )
+		script["dispatcher"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		script["dispatcher"]["tasks"][0].setInput( arnoldTextureBake["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"]["task"].execute()
 
 		self.assertEqual( sorted( [ x.name for x in ( self.temporaryDirectory() / 'bakeSpheres' ).iterdir() ] ),
 			[ "BAKE_FILE_INDEX_0.0001.txt", "BAKE_FILE_INDEX_1.0001.txt", "BAKE_FILE_INDEX_2.0001.txt", "beauty", "diffuse" ] )
@@ -370,7 +370,7 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 		pickCode = GafferOSL.OSLCode()
 		pickCode["parameters"].addChild( Gaffer.IntPlug( "targetId" ) )
 		pickCode["out"].addChild( Gaffer.IntPlug( "cull", direction = Gaffer.Plug.Direction.Out ) )
-		pickCode["code"].setValue( 'int randomId; getattribute( "randomId", randomId ); cull = randomId != targetId;' )
+		pickCode["code"].setValue( 'int randomId; getattribute( "randomId", randomId ); cull = randomId != targetId ? 1 : 0;' )
 
 		expression = Gaffer.Expression()
 		pickCode.addChild( expression )
@@ -452,9 +452,11 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 		# Dispatch the bake
 		script = Gaffer.ScriptNode()
 		script.addChild( arnoldTextureBake )
-		dispatcher = GafferDispatch.LocalDispatcher()
-		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
-		dispatcher.dispatch( [ arnoldTextureBake ] )
+
+		script["dispatcher"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		script["dispatcher"]["tasks"][0].setInput( arnoldTextureBake["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"]["task"].execute()
 
 		# Check results
 		imageReader = GafferImage.ImageReader()

@@ -49,16 +49,9 @@
 #include "IECore/AngleConversion.h"
 #include "IECore/MatrixAlgo.h"
 
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathEuler.h"
-#include "OpenEXR/ImathMatrixAlgo.h"
-#include "OpenEXR/ImathRandom.h"
-#else
 #include "Imath/ImathEuler.h"
 #include "Imath/ImathMatrixAlgo.h"
 #include "Imath/ImathRandom.h"
-#endif
 
 #include "fmt/format.h"
 
@@ -188,11 +181,11 @@ PrimitiveVariable inQuaternion( const Primitive *inputPrimitive, Primitive *outp
 	{
 		if( xyzw )
 		{
-			quaternions.push_back( Quatf( q.v.z, V3f( q.r, q.v.x, q.v.y ) ) );
+			quaternions.push_back( Orientation::normalizedIfNeeded( Quatf( q.v.z, V3f( q.r, q.v.x, q.v.y ) ) ) );
 		}
 		else
 		{
-			quaternions.push_back( q );
+			quaternions.push_back( Orientation::normalizedIfNeeded( q ) );
 		}
 	}
 

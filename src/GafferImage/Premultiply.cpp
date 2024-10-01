@@ -54,6 +54,7 @@ Premultiply::Premultiply( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "alphaChannel", Gaffer::Plug::In, "A" ) );
+	addChild( new BoolPlug( "useDeepVisibility", Gaffer::Plug::In, false ) );
 }
 
 Premultiply::~Premultiply()
@@ -70,13 +71,28 @@ const Gaffer::StringPlug *Premultiply::alphaChannelPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
+Gaffer::BoolPlug *Premultiply::useDeepVisibilityPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::BoolPlug *Premultiply::useDeepVisibilityPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
 void Premultiply::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ChannelDataProcessor::affects( input, outputs );
 
 	if(
 		input == inPlug()->channelDataPlug() ||
-		input == alphaChannelPlug() )
+		input == inPlug()->channelNamesPlug() ||
+		input == inPlug()->deepPlug() ||
+		input == inPlug()->sampleOffsetsPlug() ||
+		input == alphaChannelPlug() ||
+		input == useDeepVisibilityPlug()
+	)
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
 	}
@@ -84,9 +100,27 @@ void Premultiply::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 
 void Premultiply::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	std::string alphaChannel = alphaChannelPlug()->getValue();
 
 	ChannelDataProcessor::hashChannelData( output, context, h );
+
+	std::string alphaChannel;
+	ConstStringVectorDataPtr inChannelNamesPtr;
+	bool useDeepVisibility;
+	{
+		ImagePlug::GlobalScope c( context );
+		alphaChannel = alphaChannelPlug()->getValue();
+		inChannelNamesPtr = inPlug()->channelNamesPlug()->getValue();
+		useDeepVisibility = useDeepVisibilityPlug()->getValue();
+		inPlug()->deepPlug()->hash( h );
+	}
+
+	h.append( alphaChannel == context->get<std::string>( ImagePlug::channelNameContextName ) );
+
+	const std::vector<std::string> &inChannelNames = inChannelNamesPtr->readable();
+	if ( std::find( inChannelNames.begin(), inChannelNames.end(), alphaChannel ) == inChannelNames.end() )
+	{
+		throw IECore::Exception( fmt::format( "Channel '{}' does not exist", alphaChannel ) );
+	}
 
 	inPlug()->channelDataPlug()->hash( h );
 
@@ -94,29 +128,38 @@ void Premultiply::hashChannelData( const GafferImage::ImagePlug *output, const G
 	channelDataScope.setChannelName( &alphaChannel );
 
 	inPlug()->channelDataPlug()->hash( h );
+
+	if( useDeepVisibility )
+	{
+		channelDataScope.remove( ImagePlug::channelNameContextName );
+		inPlug()->sampleOffsetsPlug()->hash( h );
+	}
 }
 
 void Premultiply::processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channel, FloatVectorDataPtr outData ) const
 {
-	std::string alphaChannel = alphaChannelPlug()->getValue();
 
-	if ( channel == alphaChannel )
-	{
-		return;
-	}
-
+	std::string alphaChannel;
 	ConstStringVectorDataPtr inChannelNamesPtr;
+	bool useDeepVisibility;
+	bool deep;
 	{
 		ImagePlug::GlobalScope c( context );
+		alphaChannel = alphaChannelPlug()->getValue();
 		inChannelNamesPtr = inPlug()->channelNamesPlug()->getValue();
+		useDeepVisibility = useDeepVisibilityPlug()->getValue();
+		deep = inPlug()->deepPlug()->getValue();
+	}
+
+	if( !useDeepVisibility && channel == alphaChannel )
+	{
+		return;
 	}
 
 	const std::vector<std::string> &inChannelNames = inChannelNamesPtr->readable();
 	if ( std::find( inChannelNames.begin(), inChannelNames.end(), alphaChannel ) == inChannelNames.end() )
 	{
-		std::ostringstream channelError;
-		channelError << "Channel '" << alphaChannel << "' does not exist";
-		throw( IECore::Exception( channelError.str() ) );
+		throw IECore::Exception( fmt::format( "Channel '{}' does not exist", alphaChannel ) );
 	}
 
 	ImagePlug::ChannelDataScope channelDataScope( context );
@@ -126,10 +169,35 @@ void Premultiply::processChannelData( const Gaffer::Context *context, const Imag
 	const std::vector<float> &a = aData->readable();
 	std::vector<float> &out = outData->writable();
 
-	std::vector<float>::const_iterator aIt = a.begin();
-	for ( std::vector<float>::iterator outIt = out.begin(), outItEnd = out.end(); outIt != outItEnd; ++outIt, ++aIt )
+	if( !useDeepVisibility )
 	{
-		*outIt *= *aIt;
+		std::vector<float>::const_iterator aIt = a.begin();
+		for ( std::vector<float>::iterator outIt = out.begin(), outItEnd = out.end(); outIt != outItEnd; ++outIt, ++aIt )
+		{
+			*outIt *= *aIt;
+		}
+		return;
+	}
+
+	if( !deep )
+	{
+		// If it's a flat image, useDeepVisibility means don't do anything
+		// ( There is never a sample in front, so the visibility is always 100%
+		return;
+	}
+
+	channelDataScope.remove( ImagePlug::channelNameContextName );
+	ConstIntVectorDataPtr sampleOffsetsData = inPlug()->sampleOffsetsPlug()->getValue();
+
+	int index = 0;
+	for( int offset : sampleOffsetsData->readable() )
+	{
+		float accumAlpha = 0.0f;
+		for( ; index < offset; index++ )
+		{
+			out[index] *= ( 1.0f - accumAlpha );
+			accumAlpha += ( 1.0f - accumAlpha ) * a[index];
+		}
 	}
 }
 

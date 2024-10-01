@@ -1763,5 +1763,79 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( memberRemovals, [ ( s.focusSet(), n ) ] )
 		self.assertEqual( memberAdditions, [] )
 
+	def testExecuteWithConditionals( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script.execute(
+			inspect.cleandoc(
+				"""
+				if True :
+					script.addChild( Gaffer.Node( "True1" ) )
+				script.addChild( Gaffer.Node( "Unconditional1" ) )
+
+				if False :
+					script.addChild( Gaffer.Node( "False" ) )
+
+				if True :
+					script.addChild( Gaffer.Node( "True2" ) )
+					script.addChild( Gaffer.Node( "True3" ) )
+				script.addChild( Gaffer.Node( "Unconditional2" ) )
+
+				if(True):
+					script.addChild( Gaffer.Node( "True4" ) )
+
+				script.addChild( Gaffer.Node( "Unconditional3" ) )
+
+				if(True) :
+					script.addChild( Gaffer.Node( "True5" ) )
+
+				if (True):
+					script.addChild( Gaffer.Node( "True6" ) )
+
+				if True : script.addChild( Gaffer.Node( "True7" ) )
+				if False : script.addChild( Gaffer.Node( "False" ) )
+
+				"""
+			),
+			continueOnError = True
+		)
+
+		self.assertIn( "True1", script )
+		self.assertIn( "True2", script )
+		self.assertIn( "True3", script )
+		self.assertIn( "True4", script )
+		self.assertIn( "True5", script )
+		self.assertIn( "True6", script )
+		self.assertIn( "True7", script )
+		self.assertIn( "Unconditional1", script )
+		self.assertIn( "Unconditional2", script )
+		self.assertIn( "Unconditional3", script )
+		self.assertNotIn( "False", script )
+		self.assertNotIn( "True8", script )
+
+	def testLineNumbersAfterConditionalExecution( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		with IECore.CapturingMessageHandler() as mh :
+			script.execute(
+				inspect.cleandoc(
+					"""
+					if True :
+						script.addChild( Gaffer.Node( "True" ) )
+					a = 10 * b
+					"""
+				),
+				continueOnError = True
+			)
+
+		self.assertIn( "True", script )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
+		self.assertTrue( "Line 3" in mh.messages[0].context )
+		self.assertTrue( "name 'b' is not defined" in mh.messages[0].message )
+
 if __name__ == "__main__":
 	unittest.main()

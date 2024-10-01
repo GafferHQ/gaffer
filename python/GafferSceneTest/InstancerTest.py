@@ -646,13 +646,14 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		traverseConnection = Gaffer.Signals.ScopedConnection( GafferSceneTest.connectTraverseSceneToPreDispatchSignal( script["instancer"]["out"] ) )
 
-		dispatcher = GafferDispatch.LocalDispatcher()
-		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		script["dispatcher"]["tasks"][0].setInput( script["pythonCommand"]["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
 
 		with Gaffer.Context() as c :
 			for i in range( 1, 10 ) :
 				c.setFrame( i )
-				dispatcher.dispatch( [ script["pythonCommand"] ] )
+				script["dispatcher"]["task"].execute()
 
 	def testTransform( self ) :
 
@@ -660,6 +661,10 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		point["orientation"] = IECoreScene.PrimitiveVariable(
 			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
 			IECore.QuatfVectorData( [ imath.Quatf().setAxisAngle( imath.V3f( 0, 1, 0 ), math.pi / 2.0 ) ] )
+		)
+		point["orientationUnnormalized"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.QuatfVectorData( [ 0.2 * imath.Quatf().setAxisAngle( imath.V3f( 0, 1, 0 ), math.pi / 2.0 ) ] )
 		)
 		point["scale"] = IECoreScene.PrimitiveVariable(
 			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
@@ -684,6 +689,16 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEncapsulatedRendersSame( instancer )
 
 		instancer["orientation"].setValue( "orientation" )
+		self.assertTrue(
+			imath.V3f( 4, 0, -1 ).equalWithAbsError(
+				imath.V3f( 1, 0, 0 ) * instancer["out"].transform( "/object/instances/sphere/0" ),
+				0.00001
+			)
+		)
+		self.assertEncapsulatedRendersSame( instancer )
+
+		# Using the same orientation but not normalized should still have an identical effect
+		instancer["orientation"].setValue( "orientationUnnormalized" )
 		self.assertTrue(
 			imath.V3f( 4, 0, -1 ).equalWithAbsError(
 				imath.V3f( 1, 0, 0 ) * instancer["out"].transform( "/object/instances/sphere/0" ),
@@ -1308,6 +1323,11 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		# roots list matching the prototype root children
 		# we expect the same results as without a roots list
 		updateRoots( IECore.StringVectorData( [ "/foo", "/bar" ] ), IECore.IntVectorData( [ 0, 1, 1, 0 ] ) )
+		self.assertRootsMatchPrototypeSceneChildren( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
+
+		# We should be able to get the same result with an un-indexed primvar
+		updateRoots( IECore.StringVectorData( [ "/foo", "/bar", "/bar", "/foo" ] ), None )
 		self.assertRootsMatchPrototypeSceneChildren( script )
 		self.assertEncapsulatedRendersSame( script["instancer"] )
 
@@ -2186,18 +2206,10 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		self.assertEncapsulatedRendersSame( instancer )
 
 		instancer["prototypeRoots"].setValue( "unindexedRoots" )
-		"""
-		# How things should work
 		self.assertEqual( uniqueCounts(), { "" : 3 } )
 		self.assertEqual( childNameStrings( "points/instances/cube" ), [ str(i) for i in range( 0, 34 ) ] )
 		self.assertEqual( childNameStrings( "points/instances/plane" ), [ str(i) for i in range( 34, 68 ) ] )
 		self.assertEqual( childNameStrings( "points/instances/sphere" ), [ str(i) for i in range( 68, 100 ) ] )
-		"""
-		# How things currently work
-		self.assertEqual( uniqueCounts(), { "" : 1 } )
-		self.assertEqual( childNameStrings( "points/instances/cube" ), [ str(i) for i in range( 100 ) ] )
-		self.assertEqual( childNameStrings( "points/instances/plane" ), [] )
-		self.assertEqual( childNameStrings( "points/instances/sphere" ), [] )
 
 		self.assertEncapsulatedRendersSame( instancer )
 
@@ -2874,6 +2886,109 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 					instancer["out"]["object"],
 					{ x[0] for x in dirtiedPlugs }
 				)
+
+	def testVaryingPrimvars( self ) :
+		plane = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
+		plane["varyingFloat"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Varying, IECore.FloatVectorData( [ 16.25, 16.5, 16.75, 17.0 ] ) )
+		plane["varyingString"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Varying, IECore.StringVectorData( [ "a", "b", "d", "c" ] ) )
+
+		objectToScene = GafferScene.ObjectToScene()
+		objectToScene["object"].setValue( plane )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/object" ] ) )
+
+		sphere = GafferScene.Sphere()
+		sphere["name"].setValue( '${collect:rootName}' )
+
+		prototypeFilter = GafferScene.PathFilter()
+		prototypeFilter["paths"].setValue( IECore.StringVectorData( [ '/*' ] ) )
+
+		contextQuery = Gaffer.ContextQuery()
+		contextQuery.addQuery( Gaffer.FloatPlug( "value", defaultValue = 42.0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+		contextQuery["out"][0].addChild( Gaffer.FloatPlug( "value", direction = Gaffer.Plug.Direction.Out, defaultValue = 0.0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+		contextQuery["queries"][0]["name"].setValue( 'varyingFloat' )
+
+		prototypeAttributes = GafferScene.CustomAttributes()
+		prototypeAttributes["attributes"].addChild( Gaffer.NameValuePlug( "", Gaffer.FloatPlug( "value", defaultValue = 0.0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), True, "member1", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		prototypeAttributes["in"].setInput( sphere["out"] )
+		prototypeAttributes["filter"].setInput( prototypeFilter["out"] )
+		prototypeAttributes["attributes"]["member1"]["name"].setValue( 'testAttribute' )
+		prototypeAttributes["attributes"]["member1"]["value"].setInput( contextQuery["out"][0]["value"] )
+
+
+		prototypeCollect = GafferScene.CollectScenes()
+		prototypeCollect["in"].setInput( prototypeAttributes["out"] )
+		prototypeCollect["rootNames"].setValue( IECore.StringVectorData( [ 'a', 'b', 'c', 'd' ] ) )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( objectToScene["out"] )
+		instancer["prototypes"].setInput( prototypeCollect["out"] )
+		instancer["filter"].setInput( filter["out"] )
+
+		self.assertEqual( instancer["out"].childNames( "/object/instances" ), IECore.InternedStringVectorData( ["a", "b", "c", "d" ] ) )
+		instancer["prototypeMode"].setValue( GafferScene.Instancer.PrototypeMode.RootPerVertex )
+		instancer["prototypeRoots"].setValue( "varyingString" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances" ), IECore.InternedStringVectorData( ["a", "b", "d", "c" ] ) )
+
+		self.assertEqual( [ instancer["out"].attributes( "/object/instances/%s/%i/%s" % ("abdc"[i],i,"abdc"[i]) )["testAttribute"].value for i in range(4) ], [ 42.0 ] * 4 )
+		instancer["contextVariables"].addChild( GafferScene.Instancer.ContextVariablePlug( "context", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+		instancer["contextVariables"]["context"]["name"].setValue( 'varyingFloat' )
+		instancer["contextVariables"]["context"]["quantize"].setValue( 0 )
+		self.assertEqual( [ instancer["out"].attributes( "/object/instances/%s/%i/%s" % ("abdc"[i],i,"abdc"[i]) )["testAttribute"].value for i in range(4) ], [ 16.25, 16.5, 16.75, 17.0 ] )
+
+		self.assertEqual( [ instancer["out"].attributes( "/object/instances/%s/%i" % ("abdc"[i],i) ).get("user:varyingFloat") for i in range(4) ], [ None ] * 4 )
+		instancer["attributes"].setValue( "varyingFloat" )
+		instancer["attributePrefix"].setValue( 'user:' )
+		self.assertEqual( [ instancer["out"].attributes( "/object/instances/%s/%i" % ("abdc"[i],i) ).get("user:varyingFloat").value for i in range(4) ], [ 16.25, 16.5, 16.75, 17.0 ] )
+
+
+		# Test that we ignore invalid varying primvars from a curve where Vertex and Varying counts don't match
+
+		curves = IECoreScene.CurvesPrimitive( IECore.IntVectorData( [4] ), IECore.CubicBasisf.bSpline() )
+		curves["P"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.V3fVectorData( [ imath.V3f( i ) for i in range( 4 ) ] ) )
+		curves["varyingString"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Varying, IECore.StringVectorData( [ "c", "c" ] ) )
+		curves["varyingFloat"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Varying, IECore.FloatVectorData( [ 3, 7 ] ) )
+		curves["vertexString"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.StringVectorData( [ "a", "b", "d", "c" ] ) )
+		self.assertTrue( curves.arePrimitiveVariablesValid() )
+
+		objectToScene["object"].setValue( curves )
+		with self.assertRaisesRegex( RuntimeError, 'prototypeRoots primitive variable "varyingString" must be Vertex StringVectorData when using RootPerVertex mode' ):
+			instancer["out"].childNames( "/object/instances" )
+		instancer["prototypeRoots"].setValue( "vertexString" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances" ), IECore.InternedStringVectorData( ["a", "b", "d", "c" ] ) )
+		self.assertEqual( [ instancer["out"].attributes( "/object/instances/%s/%i/%s" % ("abdc"[i],i,"abdc"[i]) )["testAttribute"].value for i in range(4) ], [ 42.0 ] * 4 )
+		self.assertEqual( [ instancer["out"].attributes( "/object/instances/%s/%i" % ("abdc"[i],i) ).get("user:varyingFloat") for i in range(4) ], [ None ] * 4 )
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 10 )
+	def testBoundPerformance( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["divisions"].setValue( imath.V2i( 1000 ) )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ '/sphere' ] ) )
+
+		orient = GafferScene.Orientation()
+		orient["in"].setInput( sphere["out"] )
+		orient["filter"].setInput( filter["out"] )
+		orient["randomEnabled"].setValue( True )
+		orient["randomSpread"].setValue( 180.0 )
+		orient["randomTwist"].setValue( 180.0 )
+
+		cube = GafferScene.Cube()
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( orient["out"] )
+		instancer["filter"].setInput( filter["out"] )
+		instancer["prototypes"].setInput( cube["out"] )
+		instancer["orientation"].setValue( "orientation" )
+
+		GafferSceneTest.traverseScene( orient["out"] )
+		GafferSceneTest.traverseScene( cube["out"] )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			instancer["out"].bound( "/sphere/instances/cube" )
 
 	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
 	@GafferTest.TestRunner.CategorisedTestMethod( { "expensivePerformance" } )

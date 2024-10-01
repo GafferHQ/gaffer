@@ -84,23 +84,29 @@ class TextWidgetTest( GafferUITest.TestCase ) :
 
 		w = GafferUI.TextWidget()
 		self.assertEqual( w.getSelection(), ( 0, 0 ) )
+		self.assertEqual( w.selectedText(), "" )
 
 		w.setText( "hello" )
 		w.setSelection( 1, 4 )
 		self.assertEqual( w.getText()[slice( *w.getSelection() )], "hello"[1:4] )
+		self.assertEqual( w.selectedText(), "ell" )
 
 		w.setSelection( 0, -2 )
 		self.assertEqual( w.getText()[slice( *w.getSelection() )], "hello"[0:-2] )
+		self.assertEqual( w.selectedText(), "hel" )
 
 		w.setSelection( 0, None )
 		self.assertEqual( w.getText()[slice( *w.getSelection() )], "hello"[0:] )
+		self.assertEqual( w.selectedText(), "hello" )
 
 		w.setSelection( None, -2 )
 		self.assertEqual( w.getText()[slice( *w.getSelection() )], "hello"[:-2] )
+		self.assertEqual( w.selectedText(), "hel" )
 
 		w.setSelection( 0, 0 )
 		self.assertEqual( w.getText()[slice( *w.getSelection() )], "" )
 		self.assertEqual( w.getSelection(), ( 0, 0 ) )
+		self.assertEqual( w.selectedText(), "" )
 
 		c = GafferTest.CapturingSlot( w.selectionChangedSignal() )
 
@@ -158,6 +164,17 @@ class TextWidgetTest( GafferUITest.TestCase ) :
 
 		# checking if the geometry has been updated for the new character width
 		self.assertEqual( newWidth == oldWidth, False )
+
+	def testPlaceholderTest( self ) :
+
+		w = GafferUI.TextWidget()
+		self.assertEqual( w.getPlaceholderText(), "" )
+
+		w.setPlaceholderText( "test" )
+		self.assertEqual( w.getPlaceholderText(), "test" )
+
+		w = GafferUI.TextWidget( placeholderText = "test" )
+		self.assertEqual( w.getPlaceholderText(), "test" )
 
 if __name__ == "__main__":
 	unittest.main()

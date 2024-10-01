@@ -531,7 +531,7 @@ class Slider( GafferUI.Widget ) :
 
 	def __eventValue( self, event ) :
 
-		f = event.line.p0.x / float( self.size().x )
+		f = ( event.line.p0.x - 0.5 ) / float( self.size().x )
 		value = self.__min + ( self.__max - self.__min ) * f
 		if not (event.modifiers & event.modifiers.Shift) :
 			# Clamp

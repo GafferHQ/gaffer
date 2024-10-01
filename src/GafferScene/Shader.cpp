@@ -37,6 +37,8 @@
 
 #include "GafferScene/Shader.h"
 
+#include "GafferScene/ShaderTweakProxy.h"
+
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/NumericPlug.h"
@@ -178,7 +180,7 @@ class Shader::NetworkBuilder
 	public :
 
 		NetworkBuilder( const Gaffer::Plug *output )
-			:	m_output( output )
+			:	m_output( output ), m_hasProxyNodes( false )
 		{
 		}
 
@@ -199,6 +201,8 @@ class Shader::NetworkBuilder
 
 		IECoreScene::ConstShaderNetworkPtr network()
 		{
+			static IECore::InternedString hasProxyNodesIdentifier( "__hasProxyNodes" );
+
 			if( !m_network )
 			{
 				m_network = new IECoreScene::ShaderNetwork;
@@ -210,7 +214,25 @@ class Shader::NetworkBuilder
 					}
 				}
 			}
+
+			if( m_hasProxyNodes )
+			{
+				m_network->blindData()->writable()[hasProxyNodesIdentifier] = new IECore::BoolData( true );
+			}
+
 			return m_network;
+		}
+
+		const ValuePlug *parameterSource( const IECoreScene::ShaderNetwork::Parameter &parameter )
+		{
+			for( auto &[shader, handleAndHash] : m_shaders )
+			{
+				if( handleAndHash.handle == parameter.shader )
+				{
+					return shader->parametersPlug()->descendant<ValuePlug>( parameter.name );
+				}
+			}
+			return nullptr;
 		}
 
 	private :
@@ -274,15 +296,23 @@ class Shader::NetworkBuilder
 			assert( isOutputParameter( parameter ) );
 
 			const Shader *shader = static_cast<const Shader *>( parameter->node() );
+			const Plug *outPlug = shader->outPlug();
+
 			IECore::InternedString outputName;
-			// Set up an output name if we are a descendant of the output plug.
-			// The alternative is a special case ( which should perhaps be removed
-			// in the future ), which is that for nodes with one output, parameter
-			// is the outPlug instead of being a descendant ( and then we use an
-			// empty name ).
-			if( shader->outPlug()->isAncestorOf( parameter ) )
+			if( outPlug->typeId() == Plug::staticTypeId() && parameter != outPlug )
 			{
-				outputName = parameter->relativeName( shader->outPlug() );
+				// Standard case where `out` is just a container, and individual
+				// outputs are parented under it.
+				outputName = parameter->relativeName( outPlug );
+			}
+			else
+			{
+				// Legacy case for subclasses which use `outPlug()` as the sole
+				// output.
+				/// \todo Enforce that `outPlug()` is always a container, and
+				/// all outputs are represented as `out.name` children, even if
+				/// there is only one output.
+				outputName = parameter->relativeName( shader );
 			}
 
 			return { this->handle( shader ), outputName };
@@ -345,25 +375,29 @@ class Shader::NetworkBuilder
 				return handleAndHash.handle;
 			}
 
-			std::string type = shaderNode->typePlug()->getValue();
-			if( shaderNode != m_output->node() && !boost::ends_with( type, "shader" ) )
+			IECoreScene::ShaderPtr shader = new IECoreScene::Shader(
+				shaderNode->namePlug()->getValue(), shaderNode->typePlug()->getValue()
+			);
+			if(
+				!ShaderTweakProxy::isProxy( shader.get() ) &&
+				shaderNode != m_output->node() && !boost::ends_with( shader->getType(), "shader" )
+			)
 			{
 				// Some renderers (Arnold for one) allow surface shaders to be connected
 				// as inputs to other shaders, so we may need to change the shader type to
 				// convert it into a standard shader. We must take care to preserve any
 				// renderer specific prefix when doing this.
-				size_t i = type.find_first_of( ":" );
+				size_t i = shader->getType().find_first_of( ":" );
 				if( i != std::string::npos )
 				{
-					type = type.substr( 0, i + 1 ) + "shader";
+					shader->setType( shader->getType().substr( 0, i + 1 ) + "shader" );
 				}
 				else
 				{
-					type = "shader";
+					shader->setType( "shader" );
 				}
 			}
-
-			IECoreScene::ShaderPtr shader = new IECoreScene::Shader( shaderNode->namePlug()->getValue(), type );
+			m_hasProxyNodes |= ShaderTweakProxy::isProxy( shader.get() );
 
 			const std::string nodeName = shaderNode->nodeNamePlug()->getValue();
 			shader->blindData()->writable()["label"] = new IECore::StringData( nodeName );
@@ -756,6 +790,8 @@ class Shader::NetworkBuilder
 
 		ShaderSet m_downstreamShaders; // Used for detecting cycles
 
+		bool m_hasProxyNodes;
+
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -1096,4 +1132,15 @@ void Shader::nodeMetadataChanged( IECore::InternedString key )
 		IECore::ConstColor3fDataPtr d = Metadata::value<const IECore::Color3fData>( this, g_nodeColorMetadataName );
 		nodeColorPlug()->setValue( d ? d->readable() : Color3f( 0.0f ) );
 	}
+}
+
+const ValuePlug *Shader::parameterSource( const Plug *output, const IECoreScene::ShaderNetwork::Parameter &parameter ) const
+{
+	NetworkBuilder networkBuilder( output );
+	if( networkBuilder.network()->size() )
+	{
+		return networkBuilder.parameterSource( parameter );
+	}
+
+	return nullptr;
 }

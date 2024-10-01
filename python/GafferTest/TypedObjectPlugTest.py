@@ -188,6 +188,7 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 		self.assertTrue( Gaffer.M33fVectorDataPlug.ValueType is IECore.M33fVectorData )
 		self.assertTrue( Gaffer.V2iVectorDataPlug.ValueType is IECore.V2iVectorData )
 		self.assertTrue( Gaffer.V3iVectorDataPlug.ValueType is IECore.V3iVectorData )
+		self.assertTrue( Gaffer.Box2fVectorDataPlug.ValueType is IECore.Box2fVectorData )
 		self.assertTrue( Gaffer.ObjectVectorPlug.ValueType is IECore.ObjectVector )
 		self.assertTrue( Gaffer.AtomicCompoundDataPlug.ValueType is IECore.CompoundData )
 
@@ -363,6 +364,17 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 			hashes.add( h )
 
 			self.assertEqual( node["user"]["stringVector"].getValue(), IECore.StringVectorData( output ) )
+
+	def testDefaultDefaultValue( self ) :
+
+		p = Gaffer.StringVectorDataPlug()
+		self.assertEqual( p.defaultValue(), IECore.StringVectorData() )
+
+		p = Gaffer.M44fVectorDataPlug()
+		self.assertEqual( p.defaultValue(), IECore.M44fVectorData() )
+
+		with self.assertRaisesRegex( ValueError, "Default value must not be None" ) :
+			Gaffer.ObjectPlug()
 
 if __name__ == "__main__":
 	unittest.main()

@@ -158,7 +158,7 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 
 		propertyNameData = self.__propertyFilters().get( pathFilter.getPropertyName(), None )
 
-		self.__patternWidget._qtWidget().setPlaceholderText(
+		self.__patternWidget.setPlaceholderText(
 			"Filter{}".format( ( " by " + propertyNameData.value + "..." ) if propertyNameData is not None else "..." )
 		)
 

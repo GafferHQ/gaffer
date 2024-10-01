@@ -42,6 +42,7 @@
 #include "GafferSceneUI/Private/AttributeInspector.h"
 #include "GafferSceneUI/Private/ParameterInspector.h"
 #include "GafferSceneUI/Private/SetMembershipInspector.h"
+#include "GafferSceneUI/Private/OptionInspector.h"
 
 #include "GafferBindings/PathBinding.h"
 #include "GafferBindings/SignalBinding.h"
@@ -140,6 +141,7 @@ void GafferSceneUIModule::bindInspector()
 			.value( "EditScope", Inspector::Result::SourceType::EditScope )
 			.value( "Downstream", Inspector::Result::SourceType::Downstream )
 			.value( "Other", Inspector::Result::SourceType::Other )
+			.value( "Fallback", Inspector::Result::SourceType::Fallback )
 		;
 	}
 
@@ -166,5 +168,13 @@ void GafferSceneUIModule::bindInspector()
 			)
 		)
 		.def( "editSetMembership", &editSetMembershipWrapper)
+	;
+
+	RefCountedClass<OptionInspector, Inspector>( "OptionInspector" )
+		.def(
+			init<const ScenePlugPtr &, const PlugPtr &, IECore::InternedString>(
+				( arg( "scene" ), arg( "editScope" ), arg( "option" ) )
+			)
+		)
 	;
 }

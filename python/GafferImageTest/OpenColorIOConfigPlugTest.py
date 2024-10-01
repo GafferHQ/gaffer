@@ -106,15 +106,45 @@ class OpenColorIOConfigPlugTest( GafferImageTest.ImageTestCase ) :
 		script["writer"]["fileName"].setValue( self.temporaryDirectory() / "test.txt" )
 		script["writer"]["text"].setValue( "${ocio:config}, ${ocio:stringVar:testA}" )
 
-		dispatcher = GafferDispatch.LocalDispatcher()
-		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() / "testDispatch" )
-		dispatcher["executeInBackground"].setValue( True )
+		script["dispatcher"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		script["dispatcher"]["tasks"][0].setInput( script["writer"]["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() / "testDispatch" )
+		script["dispatcher"]["executeInBackground"].setValue( True )
 
-		dispatcher.dispatch( [ script["writer"] ] )
-		dispatcher.jobPool().waitForAll()
+		script["dispatcher"]["task"].execute()
+		script["dispatcher"].jobPool().waitForAll()
 
 		with open( script["writer"]["fileName"].getValue() ) as f :
 			self.assertEqual( f.readlines(), [ "test.ocio, testValueA" ] )
+
+	def testContextVariableInConfigVariable( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["variables"].addChild( Gaffer.NameValuePlug( "shot", "shot001", defaultEnabled = True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
+		plug = GafferImage.OpenColorIOConfigPlug.acquireDefaultConfigPlug( script )
+		plug["config"].setValue( self.openColorIOPath() / "context.ocio" )
+		plug["variables"].addChild( Gaffer.NameValuePlug( "CDL", "${shot}", defaultEnabled = True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
+		with script.context() :
+			ocioConfig, ocioContext = GafferImage.OpenColorIOAlgo.currentConfigAndContext()
+			self.assertEqual( ocioContext["CDL"], "shot001" )
+			hashes = { GafferImage.OpenColorIOAlgo.currentConfigAndContextHash() }
+
+		script["variables"][0]["value"].setValue( "shot002" )
+
+		with script.context() :
+			ocioConfig, ocioContext = GafferImage.OpenColorIOAlgo.currentConfigAndContext()
+			self.assertEqual( ocioContext["CDL"], "shot002" )
+			hashes.add( GafferImage.OpenColorIOAlgo.currentConfigAndContextHash() )
+			self.assertEqual( len( hashes ), 2 )
+
+		with Gaffer.Context( script.context() ) as c :
+			c["shot"] = "shot003"
+			ocioConfig, ocioContext = GafferImage.OpenColorIOAlgo.currentConfigAndContext()
+			self.assertEqual( ocioContext["CDL"], "shot003" )
+			hashes.add( GafferImage.OpenColorIOAlgo.currentConfigAndContextHash() )
+			self.assertEqual( len( hashes ), 3 )
 
 if __name__ == "__main__":
 	unittest.main()

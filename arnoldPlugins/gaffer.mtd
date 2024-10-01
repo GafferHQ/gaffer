@@ -802,6 +802,10 @@
 		widget STRING "filename"
 		page STRING "Shape"
 		gaffer.layout.index INT 5
+		gaffer.path.leaf BOOL true
+		gaffer.path.valid BOOL true
+		gaffer.path.bookmarks STRING "iesProfile"
+		gaffer.fileSystemPath.extensions STRING "ies"
 	[attr radius]
 		page STRING "Shape"
 		gaffer.layout.index INT 6
@@ -1463,8 +1467,13 @@
 	[attr filename]
 		widget STRING "filename"
 		gaffer.layout.index INT 0
+		gaffer.path.valid BOOL true
+		gaffer.path.leaf BOOL true
+		gaffer.path.bookmarks STRING "texture"
+		gaffer.fileSystemPath.extensions STRING "tx"
 	[attr color_space]
 		gaffer.layout.index INT 1
+		widget STRING "colorSpace"
 	[attr uvset]
 		gaffer.layout.index INT 2
 
@@ -3127,6 +3136,10 @@
 
 	[attr config]
 		widget STRING "filename"
+		gaffer.path.valid BOOL true
+		gaffer.path.leaf BOOL true
+		gaffer.path.bookmarks STRING "openColorIOConfig"
+		gaffer.fileSystemPath.extensions STRING "ocio"
 
 	[attr linear_chromaticities]
 		# Disable because we don't support array plugs yet

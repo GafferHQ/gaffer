@@ -124,6 +124,23 @@ typename T::Ptr construct(
 	return result;
 }
 
+template<typename T>
+typename T::ValueType::Ptr typedObjectPlugDefaultValue()
+{
+	using ValueType = typename T::ValueType;
+	if constexpr( std::is_abstract_v<ValueType> )
+	{
+		// Can't construct `Object` so can't provide a default value.
+		/// \todo Really we want to use `is_default_constructible_v` but
+		/// that fails inexplicably for a bunch of TypedData types.
+		return nullptr;
+	}
+	else
+	{
+		return new ValueType;
+	}
+}
+
 } // namespace Detail
 
 template<typename T, typename TWrapper>
@@ -135,7 +152,7 @@ TypedObjectPlugClass<T, TWrapper>::TypedObjectPlugClass( const char *docString )
 			(
 				boost::python::arg_( "name" )=Gaffer::GraphComponent::defaultName<T>(),
 				boost::python::arg_( "direction" )=Gaffer::Plug::In,
-				boost::python::arg_( "defaultValue" ),
+				boost::python::arg_( "defaultValue" )=Detail::typedObjectPlugDefaultValue<T>(),
 				boost::python::arg_( "flags" )=Gaffer::Plug::Default
 			)
 		)

@@ -462,6 +462,21 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"imageNames" : [
+
+			"description",
+			"""
+			Output containing all the names of the images in the Catalogue.
+			Possible uses include :
+
+			- Looping over all images using a Wedge and a CatalogueSelect.
+			- Making a ContactSheet using the Collect mode and a CatalogueSelect.
+			""",
+
+			"layout:section", "Advanced"
+
+		],
+
 	},
 
 )
@@ -579,7 +594,7 @@ def _duplicateImages( catalogue, plugIndices ) :
 		orderedImages.insert( uiInsertionIndex, imageCopy )
 		insertions.append( len(images) - 1 )
 
-	_ImagesPath._updateUIIndices( orderedImages )
+	_ImagesPath._reorderImages( orderedImages )
 
 	return insertions
 
@@ -627,9 +642,12 @@ class _ImagesPath( Gaffer.Path ) :
 
 	def _orderedImages( self ) :
 
-		# Avoid repeat lookups for plugs with no ui index by first getting all
-		# images with their plug indices, then updating those with any metadata
+		# Start with the order of the Image plugs. Ideally this is all we want
+		# to use.
 		imageAndIndices = [ [ image, plugIndex ] for plugIndex, image in enumerate( self.__images.children() ) ]
+		# Apply ordering from legacy metadata. We used this before we had the
+		# ability to reorder the Image plugs themselves. We'll remove the metadata
+		# the first chance we get - when `_reorderImages()` is called.
 		for imageAndIndex in imageAndIndices :
 			uiIndex = Gaffer.Metadata.value( imageAndIndex[0], _ImagesPath.indexMetadataName )
 			if uiIndex is not None :
@@ -663,10 +681,16 @@ class _ImagesPath( Gaffer.Path ) :
 		}
 
 	@staticmethod
-	def _updateUIIndices( orderedImages ) :
+	def _reorderImages( orderedImages ) :
 
-		for i, image in enumerate( orderedImages ) :
-			Gaffer.Metadata.registerValue( image, _ImagesPath.indexMetadataName, i )
+		# Remove legacy metadata that was once used to reorder images before we
+		# had a `reorderChildren()` method.
+		for image in orderedImages :
+			Gaffer.Metadata.deregisterValue( image, _ImagesPath.indexMetadataName )
+
+		# Because we can reorder the images properly via the API now.
+		if orderedImages :
+			orderedImages[0].parent().reorderChildren( orderedImages )
 
 	def __childAdded( self, parent, child ) :
 
@@ -764,6 +788,8 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 
 					GafferUI.Label( "Description" )
 					self.__descriptionWidget = GafferUI.MultiLineStringPlugValueWidget( plug = None )
+
+		self.__mergeGroupId = 0
 
 		Gaffer.Metadata.plugValueChangedSignal( plug.node() ).connect( Gaffer.WeakMethod( self.__plugMetadataValueChanged ), scoped = False )
 
@@ -956,7 +982,7 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 				self.__images().removeChild( image )
 				orderedImages.remove( image )
 
-			_ImagesPath._updateUIIndices( orderedImages )
+			_ImagesPath._reorderImages( orderedImages )
 
 			# Figure out new selection
 			if orderedImages :
@@ -1035,6 +1061,7 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 		if isinstance( event.data, IECore.StringVectorData ) :
 			# Allow reordering of images
 			self.__moveToPath = None
+			self.__mergeGroupId += 1
 			return True
 
 		if self.__dropImage( event.data ) is None :
@@ -1076,7 +1103,7 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 			imageToReplace = targetPath.property( "catalogue:image" )
 		else :
 			# Drag has gone above or below all listed items. Use closest image.
-			imageToReplace = images[0] if event.line.p0.y < 1 else images[-1]
+			imageToReplace = images[0] if event.line.p0.y < 1.5 else images[-1]
 
 		if not imageToReplace or imageToReplace in imagesToMove :
 			return
@@ -1099,7 +1126,11 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 			images.insert( newIndex, image )
 			previous = image
 
-		_ImagesPath._updateUIIndices( [image for image in images if image ] )
+		with Gaffer.UndoScope(
+			self.getPlug().ancestor( Gaffer.ScriptNode ),
+			mergeGroup = "ImageListing{}{}".format( id( self, ), self.__mergeGroupId )
+		) :
+			_ImagesPath._reorderImages( [image for image in images if image ] )
 
 		self.__pathListing.getPath().pathChangedSignal()( self.__pathListing.getPath() )
 

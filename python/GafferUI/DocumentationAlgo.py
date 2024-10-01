@@ -85,6 +85,11 @@ def exportNodeReference( directory, modules = [], modulePath = "" ) :
 				# another module by one of the compatibility config files.
 				continue
 
+			if name != node.typeName().rpartition( ":" )[2] :
+				# Skip nodes that look like they're aliases of other nodes
+				# injected by a compatibility config file.
+				continue
+
 			__makeDirs( directory + "/" + module.__name__ )
 			with open( "%s/%s/%s.md" % ( directory, module.__name__, name ), "w", encoding = "utf-8" ) as f :
 				f.write( __nodeDocumentation( node ) )
@@ -201,8 +206,22 @@ def markdownToHTML( markdown ) :
 	if cmark is None :
 		return markdown
 
+	parser = cmark.cmark_parser_new( cmark.CMARK_OPT_DEFAULT )
+	for extension in [ "table", "strikethrough" ] :
+		cmark.cmark_parser_attach_syntax_extension(
+			parser, cmark.cmark_find_syntax_extension( bytes( extension, "UTF-8" ) )
+		)
+
 	markdown = markdown.encode( "UTF-8" )
-	return cmark.cmark_markdown_to_html( markdown, len( markdown ), cmark.CMARK_OPT_UNSAFE ).decode( "UTF-8" )
+	cmark.cmark_parser_feed( parser, markdown, len( markdown ) )
+	document = cmark.cmark_parser_finish( parser )
+
+	result = cmark.cmark_render_html( document, cmark.CMARK_OPT_UNSAFE, cmark.cmark_parser_get_syntax_extensions( parser ) ).decode( "UTF-8")
+
+	cmark.cmark_parser_free( parser )
+	cmark.cmark_node_free( document )
+
+	return result
 
 def __nodeDocumentation( node ) :
 
@@ -296,30 +315,62 @@ def __tocString() :
 	return tocString
 
 __cmarkDLL = ""
+__cmarkExtensionsDLL = None
 def __cmark() :
 
 	global __cmarkDLL
+	global __cmarkExtensionsDLL
 	if __cmarkDLL != "" :
 		return __cmarkDLL
 
 	sys = platform.system()
 
 	if sys == "Darwin" :
-		libName = "libcmark-gfm.dylib"
+		prefix = "lib"
+		suffix = ".dylib"
 	elif sys == "Windows" :
-		libName = "cmark-gfm.dll"
+		prefix = ""
+		suffix = ".dll"
 	else :
-		libName = "libcmark-gfm.so"
+		prefix = "lib"
+		suffix = ".so"
 
 	try :
-		__cmarkDLL = ctypes.CDLL( libName )
+		__cmarkDLL = ctypes.CDLL( f"{prefix}cmark-gfm{suffix}" )
+		__cmarkExtensionsDLL = ctypes.CDLL( f"{prefix}cmark-gfm-extensions{suffix}" )
 	except :
 		__cmarkDLL = None
 		return __cmarkDLL
 
+	__cmarkExtensionsDLL.cmark_gfm_core_extensions_ensure_registered()
+
+	__cmarkDLL.cmark_parser_new.restype = ctypes.c_void_p
+	__cmarkDLL.cmark_parser_new.argtypes = [ctypes.c_int]
+
+	__cmarkDLL.cmark_parser_attach_syntax_extension.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+
+	__cmarkDLL.cmark_parser_get_syntax_extensions.restype = ctypes.c_void_p
+	__cmarkDLL.cmark_parser_get_syntax_extensions.argtypes = [ctypes.c_void_p]
+
+	__cmarkDLL.cmark_parser_feed.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_int]
+
+	__cmarkDLL.cmark_parser_finish.restype = ctypes.c_void_p
+	__cmarkDLL.cmark_parser_finish.argtypes = [ctypes.c_void_p]
+
+	__cmarkDLL.cmark_parser_free.argtypes = [ctypes.c_void_p]
+
+	__cmarkDLL.cmark_find_syntax_extension.restype = ctypes.c_void_p
+	__cmarkDLL.cmark_find_syntax_extension.argtypes = [ctypes.c_char_p]
+
+	__cmarkDLL.cmark_node_free.argtypes = [ctypes.c_void_p]
+
+	__cmarkDLL.cmark_render_html.restype = ctypes.c_char_p
+	__cmarkDLL.cmark_render_html.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p]
+
 	__cmarkDLL.cmark_markdown_to_html.restype = ctypes.c_char_p
 	__cmarkDLL.cmark_markdown_to_html.argtypes = [ctypes.c_char_p, ctypes.c_long, ctypes.c_long]
 
+	__cmarkDLL.CMARK_OPT_DEFAULT = 0
 	__cmarkDLL.CMARK_OPT_UNSAFE = 1 << 17
 
 	return __cmarkDLL

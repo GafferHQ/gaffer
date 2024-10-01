@@ -195,5 +195,45 @@ class NameSwitchTest( GafferTest.TestCase ) :
 			del c["selector"]
 			self.assertEqual( s["out"]["value"].getValue(), 1 )
 
+	def testConnectedInputs( self ) :
+
+		switch = Gaffer.NameSwitch()
+		self.assertEqual( switch["connectedInputs"].getValue(), IECore.IntVectorData() )
+
+		switch.setup( Gaffer.IntPlug() )
+		self.assertEqual( switch["connectedInputs"].getValue(), IECore.IntVectorData() )
+
+		inputA = Gaffer.IntPlug()
+		switch["in"][0]["value"].setInput( inputA )
+		self.assertEqual( switch["connectedInputs"].getValue(), IECore.IntVectorData( [ 0 ] ) )
+
+		switch["in"][1]["value"].setInput( inputA )
+		self.assertEqual( switch["connectedInputs"].getValue(), IECore.IntVectorData( [ 0, 1 ] ) )
+
+		switch["in"][0]["value"].setInput( None )
+		self.assertEqual( switch["connectedInputs"].getValue(), IECore.IntVectorData( [ 1 ] ) )
+
+	def testConnectedInputsWithPromotedInPlug( self ) :
+
+		box = Gaffer.Box()
+		box["switch"] =  Gaffer.NameSwitch()
+		self.assertEqual( box["switch"]["connectedInputs"].getValue(), IECore.IntVectorData() )
+
+		box["switch"].setup( Gaffer.IntPlug() )
+		self.assertEqual( box["switch"]["connectedInputs"].getValue(), IECore.IntVectorData() )
+
+		Gaffer.PlugAlgo.promote( box["switch"]["in"] )
+		self.assertEqual( box["switch"]["connectedInputs"].getValue(), IECore.IntVectorData() )
+
+		inputA = Gaffer.IntPlug()
+		box["in"][0]["value"].setInput( inputA )
+		self.assertEqual( box["switch"]["connectedInputs"].getValue(), IECore.IntVectorData( [ 0 ] ) )
+
+		box["in"][1]["value"].setInput( inputA )
+		self.assertEqual( box["switch"]["connectedInputs"].getValue(), IECore.IntVectorData( [ 0, 1 ] ) )
+
+		box["in"][0]["value"].setInput( None )
+		self.assertEqual( box["switch"]["connectedInputs"].getValue(), IECore.IntVectorData( [ 1 ] ) )
+
 if __name__ == "__main__":
 	unittest.main()

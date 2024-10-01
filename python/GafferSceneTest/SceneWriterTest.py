@@ -310,11 +310,12 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 			""".format( filePath.as_posix() )
 		) )
 
-		dispatcher = GafferDispatch.LocalDispatcher()
-		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
-		dispatcher["framesMode"].setValue( dispatcher.FramesMode.CustomRange )
-		dispatcher["frameRange"].setValue( "1-10" )
-		dispatcher.dispatch( [ script["writer"] ] )
+		script["dispatcher"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		script["dispatcher"]["tasks"][0].setInput( script["writer"]["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"]["framesMode"].setValue( script["dispatcher"].FramesMode.CustomRange )
+		script["dispatcher"]["frameRange"].setValue( "1-10" )
+		script["dispatcher"]["task"].execute()
 
 		scene = IECoreScene.SceneInterface.create( str( filePath ), IECore.IndexedIO.OpenMode.Read )
 		self.assertEqual( scene.child( "plane" ).numObjectSamples(), 10 )
@@ -328,11 +329,12 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		script["writer"]["in"].setInput( script["plane"]["out"] )
 		script["writer"]["fileName"].setValue( self.temporaryDirectory() / "test.####.scc" )
 
-		dispatcher = GafferDispatch.LocalDispatcher()
-		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
-		dispatcher["framesMode"].setValue( dispatcher.FramesMode.CustomRange )
-		dispatcher["frameRange"].setValue( "1-10" )
-		dispatcher.dispatch( [ script["writer"] ] )
+		script["dispatcher"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		script["dispatcher"]["tasks"][0].setInput( script["writer"]["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"]["framesMode"].setValue( script["dispatcher"].FramesMode.CustomRange )
+		script["dispatcher"]["frameRange"].setValue( "1-10" )
+		script["dispatcher"]["task"].execute()
 
 		with Gaffer.Context( script.context() ) as context :
 			for frame in range( 1, 10 ) :
@@ -459,6 +461,42 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 				else :
 					self.assertNotIn( "A", sequenceReader["out"].setNames() )
 					self.assertIn( "B", sequenceReader["out"].setNames() )
+
+	def testWriteInvalidUSDChildName( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["name"].setValue( "1" )
+
+		writer = GafferScene.SceneWriter()
+		writer["in"].setInput( sphere["out"] )
+		writer["fileName"].setValue( self.temporaryDirectory() / "test.usda" )
+		writer["task"].execute()
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setInput( writer["fileName"] )
+		self.assertPathsEqual( reader["out"], "/_1", sphere["out"], "/1" )
+
+	def testWriteAnimationWithInvalidUSDChildName( self ) :
+
+		contextQuery = Gaffer.ContextQuery()
+		contextQuery.addQuery( Gaffer.FloatPlug(), "frame" )
+
+		sphere = GafferScene.Sphere()
+		sphere["name"].setValue( "1" )
+		sphere["transform"]["translate"]["x"].setInput( contextQuery["out"][0]["value"] )
+
+		writer = GafferScene.SceneWriter()
+		writer["in"].setInput( sphere["out"] )
+		writer["fileName"].setValue( self.temporaryDirectory() / "test.usda" )
+		writer["task"].executeSequence( [ 1, 2, 3 ] )
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setInput( writer["fileName"] )
+
+		with Gaffer.Context() as context :
+			for frame in [ 1, 2, 3 ] :
+				context.setFrame( frame )
+				self.assertPathsEqual( reader["out"], "/_1", sphere["out"], "/1" )
 
 if __name__ == "__main__":
 	unittest.main()

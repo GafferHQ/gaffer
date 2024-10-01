@@ -43,6 +43,8 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferCycles
+import GafferImage
+import GafferImageUI
 
 ##########################################################################
 # Build a registry of information retrieved from GafferCycles metadata.
@@ -84,7 +86,12 @@ def __translateParamMetadata( nodeTypeName, socketName, value ) :
 		__metadata[paramPath]["plugValueWidget:type"] = "GafferUI.PresetsPlugValueWidget"
 
 	if( socketName == "filename" ) :
-		__metadata[paramPath]["plugValueWidget:type"] = "GafferUI.PathPlugValueWidget"
+		__metadata[paramPath]["plugValueWidget:type"] = "GafferUI.FileSystemPathPlugValueWidget"
+		__metadata[paramPath]["path:leaf"] = True
+		__metadata[paramPath]["path:valid"] = True
+		__metadata[paramPath]["path:bookmarks"] = "texture"
+		__metadata[paramPath]["fileSystemPath:extensions"] = " ".join( GafferImage.OpenImageIOReader.supportedExtensions() )
+		__metadata[paramPath]["fileSystemPath:extensionsLabel"] = "Show only image files"
 
 	__metadata[paramPath]["noduleLayout:visible"] = True
 	__metadata[paramPath]["label"] = label
@@ -116,6 +123,19 @@ for nodeTypeName, nodeType in GafferCycles.lights.items() :
 	paramPath = nodeTypeName + ".parameters.type"
 	__metadata[paramPath]["noduleLayout:visible"] = False
 
+# Add OCIO colorspace menus where appropriate. There doesn't seem to be anywhere
+# we can query this from the Cycles API, so we just hardcode it to shaders know about.
+
+for parameter in [ "image_texture.parameters.colorspace", "environment_texture.parameters.colorspace" ] :
+	# Here we're assuming that Cycles is being used with an OCIO config that matches Gaffer's.
+	__metadata[parameter]["plugValueWidget:type"] = "GafferUI.PresetsPlugValueWidget"
+	__metadata[parameter]["presetNames"] = GafferImageUI.OpenColorIOTransformUI.colorSpacePresetNames
+	__metadata[parameter]["presetValues"] = GafferImageUI.OpenColorIOTransformUI.colorSpacePresetValues
+	__metadata[parameter]["openColorIO:extraPresetNames"] = IECore.StringVectorData( [ "Auto" ] )
+	__metadata[parameter]["openColorIO:extraPresetValues"] = IECore.StringVectorData( [ "" ] )
+	__metadata[parameter]["openColorIO:includeRoles"] = True
+	# Allow custom values in case Cycles has been configured to use some other OCIO config.
+	__metadata[parameter]["presetsPlugValueWidget:allowCustom"] = True
 
 ##########################################################################
 # Gaffer Metadata queries. These are implemented using the preconstructed
@@ -162,7 +182,11 @@ def __plugMetadata( plug, name ) :
 		# Node type is CyclesLight.
 		key = plug.node()["__shader"]["name"].getValue() + "." + plug.relativeName( node )
 
-	return __metadata[key].get( name )
+	result = __metadata[key].get( name )
+	if callable( result ) :
+		return result( plug )
+	else :
+		return result
 
 for nodeType in ( GafferCycles.CyclesShader, GafferCycles.CyclesLight ) :
 

@@ -842,7 +842,7 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 			for index, time in enumerate( objectTimes ) :
 				with Gaffer.Context() as context :
 					context.setFrame( time )
-					self.assertEqual( sphere.capturedSamples()[index].radius, capsule.scene().object( "/group/sphere" ).radius )
+					self.assertEqual( sphere.capturedSamples()[index].radius(), capsule.scene().object( "/group/sphere" ).radius() )
 
 		for frame in ( 0, 1 ) :
 			for deformation in ( False, True ) :

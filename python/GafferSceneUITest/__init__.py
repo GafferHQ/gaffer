@@ -59,6 +59,10 @@ from .LightEditorTest import LightEditorTest
 from .SetMembershipInspectorTest import SetMembershipInspectorTest
 from .SetEditorTest import SetEditorTest
 from .LightToolTest import LightToolTest
+from .OptionInspectorTest import OptionInspectorTest
+from .LightPositionToolTest import LightPositionToolTest
+from .RenderPassEditorTest import RenderPassEditorTest
+from .SelectionToolTest import SelectionToolTest
 
 if __name__ == "__main__":
 	unittest.main()

@@ -130,7 +130,7 @@ class LocationNameColumn : public StandardPathColumn
 				}
 
 				const IECoreScene::Shader *lightShader = shaderNetwork->outputShader();
-				const string metadataTarget = lightShader->getType() + ":" + lightShader->getName();
+				const string metadataTarget = attribute.first.string() + ":" + lightShader->getName();
 				ConstStringDataPtr lightType = Metadata::value<StringData>( metadataTarget, "type" );
 				if( !lightType )
 				{
@@ -154,6 +154,7 @@ const boost::container::flat_map<int, ConstColor4fDataPtr> g_sourceTypeColors = 
 	{ (int)Inspector::Result::SourceType::EditScope, new Color4fData( Imath::Color4f( 48, 100, 153, 150 ) / 255.0f ) },
 	{ (int)Inspector::Result::SourceType::Downstream, new Color4fData( Imath::Color4f( 239, 198, 24, 104 ) / 255.0f ) },
 	{ (int)Inspector::Result::SourceType::Other, nullptr },
+	{ (int)Inspector::Result::SourceType::Fallback, nullptr },
 };
 
 class InspectorColumn : public PathColumn

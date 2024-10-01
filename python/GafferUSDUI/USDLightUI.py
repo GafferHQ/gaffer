@@ -45,42 +45,21 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+		"parameters" : [
+
+			"layout:section:Basic:collapsed", False,
+
+		],
+
 		"parameters.colorTemperature" : [ "layout:activator", lambda plug : plug.parent()["enableColorTemperature"].getValue() ],
 
-		"parameters.width" : [ "layout:section", "Geometry" ],
-		"parameters.height" : [ "layout:section", "Geometry" ],
-		"parameters.radius" : [ "layout:section", "Geometry" ],
-		"parameters.length" : [ "layout:section", "Geometry" ],
-		"parameters.angle" : [ "layout:section", "Geometry" ],
-
-		"parameters.texture:file" : [ "layout:section", "Texture" ],
-		"parameters.texture:format" : [ "layout:section", "Texture" ],
-
-		"parameters.texture:*" : [
-			"label", lambda plug : IECore.CamelCase.toSpaced( plug.getName().replace( "texture:", "" ) )
+		"parameters.shaping:ies:file.value" : [
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"path:bookmarks", "iesProfile",
+			"path:leaf", True,
+			"path:value", True,
+			"fileSystemPath:extensions", "ies",
 		],
-
-		"parameters.shaping:cone:angle" : [ "layout:section", "Shaping" ],
-		"parameters.shaping:cone:softness" : [ "layout:section", "Shaping" ],
-		"parameters.shaping:focus" : [ "layout:section", "Shaping" ],
-		"parameters.shaping:focusTint" : [ "layout:section", "Shaping" ],
-		"parameters.shaping:ies:file" : [ "layout:section", "Shaping" ],
-		"parameters.shaping:ies:angleScale" : [ "layout:section", "Shaping" ],
-		"parameters.shaping:ies:normalize" : [ "layout:section", "Shaping" ],
-
-		"parameters.shaping:*" : [
-			"label", lambda plug : " ".join( IECore.CamelCase.toSpaced( t ) for t in plug.getName().split( ":" )[1:] )
-		],
-
-		"parameters.shadow:enable" : [ "layout:section", "Shadow" ],
-		"parameters.shadow:color" : [ "layout:section", "Shadow" ],
-		"parameters.shadow:distance" : [ "layout:section", "Shadow" ],
-		"parameters.shadow:falloff" : [ "layout:section", "Shadow" ],
-		"parameters.shadow:falloffGamma" : [ "layout:section", "Shadow" ],
-
-		"parameters.shadow:*" : [
-			"label", lambda plug : IECore.CamelCase.toSpaced( plug.getName().replace( "shadow:", "" ) )
-		]
 
 	}
 )

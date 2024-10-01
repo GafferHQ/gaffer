@@ -50,6 +50,8 @@
 
 #include "fmt/format.h"
 
+#include <thread>
+
 using namespace IECore;
 using namespace Gaffer;
 
@@ -90,14 +92,24 @@ const ScriptNode *scriptNode( const GraphComponent *subject )
 		}
 	}
 
-	// The `GafferUI::View` classes house internal nodes which might not be
-	// directly connected to the graph. This hack recovers the ScriptNode from
-	// the node the view is currently connected to.
+	// The `GafferUI::View` and `GafferUI.Editor` classes house internal nodes
+	// which might not be directly connected to the graph. This hack recovers
+	// the ScriptNode from such classes.
 	while( subject )
 	{
 		if( subject->isInstanceOf( "GafferUI::View" ) )
 		{
-			return scriptNode( subject->getChild<Plug>( "in" )->getInput() );
+			if( auto inPlug = subject->getChild<Plug>( "in" ) )
+			{
+				return scriptNode( inPlug->getInput() );
+			}
+		}
+		else if( subject->isInstanceOf( "GafferUI::Editor::Settings" ) )
+		{
+			if( auto scriptPlug = subject->getChild<Plug>( "__scriptNode" ) )
+			{
+				return scriptNode( scriptPlug->getInput() );
+			}
 		}
 		subject = subject->parent();
 	}
@@ -145,9 +157,10 @@ struct BackgroundTask::TaskData : public boost::noncopyable
 
 	Function *function;
 	IECore::Canceller canceller;
-	std::mutex mutex; // Protects `conditionVariable` and `status`
+	std::mutex mutex; // Protects `conditionVariable`, `status` and `threadID`
 	std::condition_variable conditionVariable;
 	Status status;
+	std::thread::id threadId; // Thread that is executing `function`, if any
 };
 
 BackgroundTask::BackgroundTask( const Plug *subject, const Function &function )
@@ -176,6 +189,7 @@ BackgroundTask::BackgroundTask( const Plug *subject, const Function &function )
 			// Otherwise do the work.
 
 			taskData->status = Running;
+			taskData->threadId = std::this_thread::get_id();
 			lock.unlock();
 
 			// Reset thread state rather then inherit the random
@@ -215,6 +229,7 @@ BackgroundTask::BackgroundTask( const Plug *subject, const Function &function )
 
 			lock.lock();
 			taskData->status = status;
+			taskData->threadId = std::thread::id();
 			taskData->conditionVariable.notify_one();
 		}
 	);
@@ -238,6 +253,11 @@ void BackgroundTask::cancel()
 void BackgroundTask::wait()
 {
 	std::unique_lock<std::mutex> lock( m_taskData->mutex );
+	if( m_taskData->threadId == std::this_thread::get_id() )
+	{
+		IECore::msg( IECore::Msg::Error, "BackgroundTask::wait", "Deadlock detected : Task is attempting to wait for itself. Please provide stack trace in bug report." );
+	}
+
 	m_taskData->conditionVariable.wait(
 		lock,
 		[this]{

@@ -89,8 +89,12 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 				const IECore::ConstDataPtr &value = nullptr,
 				const IECore::ConstDataPtr &icon = nullptr,
 				const IECore::ConstDataPtr &background = nullptr,
-				const IECore::ConstDataPtr &toolTip = nullptr
-			)	:	value( value ), icon( icon ), background( background ), toolTip( toolTip ) {}
+				const IECore::ConstDataPtr &toolTip = nullptr,
+				const IECore::ConstDataPtr &sortValue = nullptr,
+				const IECore::ConstDataPtr &foreground = nullptr
+			)	:	value( value ), icon( icon ), background( background ), toolTip( toolTip ),
+					sortValue( sortValue ), foreground( foreground ) {}
+
 			CellData( const CellData &other ) = default;
 
 			/// The primary value to be displayed in a cell or header.
@@ -119,6 +123,14 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 			///
 			/// - StringData
 			IECore::ConstDataPtr toolTip;
+			/// Used to determine sort order. If not specified, `value` is
+			/// used for sorting instead.
+			IECore::ConstDataPtr sortValue;
+			/// The foreground colour for the cell value. Supported types :
+			///
+			/// - Color3fData
+			/// - Color4fData
+			IECore::ConstDataPtr foreground;
 
 			private :
 
@@ -173,6 +185,7 @@ class GAFFERUI_API StandardPathColumn : public PathColumn
 		IE_CORE_DECLAREMEMBERPTR( StandardPathColumn )
 
 		StandardPathColumn( const std::string &label, IECore::InternedString property, PathColumn::SizeMode sizeMode = Default );
+		StandardPathColumn( const CellData &headerData, IECore::InternedString property, PathColumn::SizeMode sizeMode = Default );
 
 		IECore::InternedString property() const;
 
@@ -181,7 +194,7 @@ class GAFFERUI_API StandardPathColumn : public PathColumn
 
 	private :
 
-		IECore::ConstStringDataPtr m_label;
+		const CellData m_headerData;
 		IECore::InternedString m_property;
 
 };
@@ -203,13 +216,17 @@ class GAFFERUI_API IconPathColumn : public PathColumn
 		/// - IntData, UInt44Data
 		/// - BoolData
 		IconPathColumn( const std::string &label, const std::string &prefix, IECore::InternedString property, PathColumn::SizeMode sizeMode = Default );
+		IconPathColumn( const CellData &headerData, const std::string &prefix, IECore::InternedString property, PathColumn::SizeMode sizeMode = Default );
+
+		const std::string &prefix() const;
+		IECore::InternedString property() const;
 
 		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override;
 		CellData headerData( const IECore::Canceller *canceller ) const override;
 
 	private :
 
-		IECore::ConstStringDataPtr m_label;
+		const CellData m_headerData;
 		std::string m_prefix;
 		IECore::InternedString m_property;
 

@@ -43,7 +43,7 @@ import GafferSceneUI
 
 def __tweakCreator( plugName, parameterName, parameterValue ) :
 
-	tweak = Gaffer.TweakPlug( parameterName, parameterValue )
+	tweak = Gaffer.TweakPlug( parameterName, parameterValue, Gaffer.TweakPlug.Mode.Create )
 	tweak.setName( plugName )
 	return tweak
 
@@ -56,7 +56,8 @@ def __shutterCurveTweakCreator() :
 				[ ( 0, 0 ), ( 0.25, 1 ), (0.75, 1 ), ( 1, 0 ) ],
 				Gaffer.SplineDefinitionInterpolation.Linear
 			)
-		)
+		),
+		Gaffer.TweakPlug.Mode.Create
 	)
 	tweak.setName( "shutterCurve" )
 	return tweak

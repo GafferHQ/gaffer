@@ -130,13 +130,29 @@ class SampleMerge
 
 				while( currentSampleId < offset )
 				{
-					// If we exactly match an existing open sample, we don't need to close anything
-					// ( This check avoids closing an open point sample when receiving another
-					// point sample at the same depth )
-					if( m_openSamples.size() && ! ( m_inZ[ m_openSamples.back() ] == m_inZ[currentSampleId] && m_inZBack[ m_openSamples.back() ] == m_inZBack[currentSampleId] ) )
+					const float currentSampleZ = m_inZ[currentSampleId];
+					const float currentSampleZBack = std::max( currentSampleZ, m_inZBack[currentSampleId] );
+
+					if( m_openSamples.size() )
 					{
-						closeOpenSamples( outputDepth, m_inZ[currentSampleId] );
-						outputDepth = m_inZ[currentSampleId];
+						const int lastOpen = m_openSamples.back();
+						// Check if we match the last already open sample, starting with Z
+						if( m_inZ[ lastOpen ] == currentSampleZ && (
+							// Now check if both ZBacks are valid and match
+							m_inZBack[ lastOpen ] == currentSampleZBack ||
+							// Or if neither ZBack is valid, and they are both treated as point samples
+							!( m_inZBack[ lastOpen ] > currentSampleZ || currentSampleZBack > currentSampleZ )
+						) )
+						{
+							// We exactly match an existing open sample, we don't need to close anything
+							// ( This check avoids closing an open point sample when receiving another
+							// point sample at the same depth )
+						}
+						else
+						{
+							closeOpenSamples( outputDepth, m_inZ[currentSampleId] );
+							outputDepth = m_inZ[currentSampleId];
+						}
 					}
 
 					if( m_openSamples.size() == 0 && ( currentSampleId + 1 == offset ||
@@ -150,8 +166,8 @@ class SampleMerge
 						// This does the same thing that that putting it in the open sample list and then
 						// closing it immediately would do, but is an optimization that saves ~15% of
 						// sampleMapping compute time when tidying data that is almost all already tidy
-						m_zOut.push_back( m_inZ[currentSampleId] );
-						m_zBackOut.push_back( m_inZBack[currentSampleId] );
+						m_zOut.push_back( currentSampleZ );
+						m_zBackOut.push_back( currentSampleZBack );
 						m_contributionIdsOut.push_back( currentSampleId );
 						m_contributionAmountsOut.push_back( 1.0 );
 						m_contributionOffsetsOut.push_back( m_contributionIdsOut.size() );
@@ -161,7 +177,7 @@ class SampleMerge
 						// This sample interacts with the previous or next sample, so we need to add it
 						// to the open sample list, so it can be merged appropriately
 						unsigned int insertionIndex = m_openSamples.size();
-						while( insertionIndex > 0 && m_inZBack[ m_openSamples[insertionIndex - 1] ] < m_inZBack[currentSampleId] )
+						while( insertionIndex > 0 && m_inZBack[ m_openSamples[insertionIndex - 1] ] < currentSampleZBack )
 						{
 							insertionIndex--;
 						}
@@ -170,7 +186,7 @@ class SampleMerge
 
 					currentSampleId++;
 				}
-				closeOpenSamples( outputDepth, numeric_limits<float>::max() );
+				closeOpenSamples( outputDepth, numeric_limits<float>::infinity() );
 				sampleOffsetsOut.push_back( m_contributionOffsetsOut.size() );
 			}
 		}
@@ -195,14 +211,14 @@ class SampleMerge
 
 		void closeOpenSamples( float currentDepth, const float closeUpToZ )
 		{
-			while( m_openSamples.size() && m_inZBack[ m_openSamples.back() ] <= closeUpToZ )
+			while( m_openSamples.size() && !( m_inZBack[ m_openSamples.back() ] > closeUpToZ ) )
 			{
-				const float closeBack = m_inZBack[ m_openSamples.back() ];
 				currentDepth = std::max( currentDepth, m_inZ[ m_openSamples.back() ] );
+				const float closeBack = std::max( currentDepth, m_inZBack[ m_openSamples.back() ] );
 
 				outputSample( currentDepth, closeBack );
 
-				while( m_openSamples.size() && m_inZBack[ m_openSamples.back() ] == closeBack )
+				while( m_openSamples.size() && !( m_inZBack[ m_openSamples.back() ] > closeBack ) )
 				{
 					m_openSamples.pop_back();
 				}
@@ -213,7 +229,7 @@ class SampleMerge
 			if( m_openSamples.size() )
 			{
 				currentDepth = std::max( currentDepth, m_inZ[ m_openSamples.back() ] );
-				if( currentDepth != closeUpToZ )
+				if( currentDepth < closeUpToZ )
 				{
 					outputSample( currentDepth, closeUpToZ );
 				}
@@ -223,13 +239,13 @@ class SampleMerge
 		void outputSample( float z, float zBack )
 		{
 			m_zOut.push_back( z );
-			m_zBackOut.push_back( zBack );
-			if( z == zBack )
+			m_zBackOut.push_back( std::max( z, zBack ) );
+			if( zBack <= z )
 			{
 				// Outputting a point sample, it will only contain contributions from matching point samples
 				for( int i = m_openSamples.size() - 1; i >= 0; i-- )
 				{
-					if( m_inZBack[ m_openSamples[i] ] != zBack )
+					if( m_inZBack[ m_openSamples[i] ] > z )
 					{
 						break;
 					}
@@ -241,7 +257,7 @@ class SampleMerge
 			{
 				for( const auto &i : m_openSamples )
 				{
-					const float amount = ( zBack - z ) / ( m_inZBack[i] - m_inZ[i] );
+					const float amount = std::min( 1.0f, ( zBack - z ) / ( m_inZBack[i] - m_inZ[i] ) );
 					m_contributionIdsOut.push_back( i );
 					m_contributionAmountsOut.push_back( amount );
 				}
@@ -756,11 +772,16 @@ void checkState( const std::vector<int> &offsets,
 
 		float z = zChannel[prevOffset];
 		float zBack = zBackChannel[prevOffset];
+		if( zBack < z )
+		{
+			isTidy = false;
+		}
+
 		for( int i = prevOffset + 1; i < offset; i++ )
 		{
 			float newZ = zChannel[i];
 			float newZBack = zBackChannel[i];
-			if( newZ < zBack )
+			if( newZ < zBack || newZBack < newZ )
 			{
 				isTidy = false;
 			}

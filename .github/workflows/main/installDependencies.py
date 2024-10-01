@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import os
 import pathlib
 import sys
 import argparse
@@ -48,10 +49,7 @@ else :
 
 # Determine default archive URL.
 
-defaultURL = "https://github.com/ImageEngine/cortex/releases/download/10.5.4.2/cortex-10.5.4.2-{platform}-python3.{extension}".format(
-	platform = { "darwin" : "osx", "win32" : "windows" }.get( sys.platform, "linux" ),
-	extension = "tar.gz" if sys.platform != "win32" else "zip"
-)
+defaultURL = "https://github.com/ImageEngine/cortex/releases/download/10.5.8.0/cortex-10.5.8.0-{platform}{buildEnvironment}.{extension}"
 
 # Parse command line arguments.
 
@@ -61,6 +59,13 @@ parser.add_argument(
 	"--archiveURL",
 	help = "The URL to download the dependencies archive from.",
 	default = defaultURL,
+)
+
+parser.add_argument(
+	"--buildEnvironment",
+	help = "The build environment of the dependencies archive to download.",
+	choices = [ "gcc9", "gcc11" ],
+	default = os.environ.get( "GAFFER_BUILD_ENVIRONMENT", "gcc9" if sys.platform == "linux" else "" ),
 )
 
 parser.add_argument(
@@ -79,10 +84,16 @@ parser.add_argument(
 
 args = parser.parse_args()
 
+archiveURL = args.archiveURL.format(
+	platform = { "darwin" : "osx", "win32" : "windows" }.get( sys.platform, "linux" ),
+	buildEnvironment = "-{}".format( args.buildEnvironment ) if args.buildEnvironment else "",
+	extension = "tar.gz" if sys.platform != "win32" else "zip"
+)
+
 # Download and unpack the archive.
 
-sys.stderr.write( "Downloading dependencies \"%s\"\n" % args.archiveURL )
-archiveFileName, headers = urlretrieve( args.archiveURL )
+sys.stderr.write( "Downloading dependencies \"{}\"\n".format( archiveURL ) )
+archiveFileName, headers = urlretrieve( archiveURL )
 
 pathlib.Path( args.dependenciesDir ).mkdir( parents = True )
 if sys.platform != "win32" :
@@ -94,7 +105,7 @@ else:
 	)
 	# 7z (and zip extractors generally) don't have an equivalent of --strip-components=1
 	# Copy the files up one directory level to compensate
-	extractedPath = pathlib.Path( args.dependenciesDir ) / pathlib.Path( args.archiveURL ).stem
+	extractedPath = pathlib.Path( args.dependenciesDir ) / pathlib.Path( archiveURL ).stem
 	for p in extractedPath.glob( "*" ) :
 		shutil.move( str( p ), args.dependenciesDir )
 
@@ -110,7 +121,11 @@ if args.outputFormat :
 
 	print(
 		args.outputFormat.format(
-			archiveURL = args.archiveURL,
+			archiveURL = archiveURL,
 			archiveDigest = md5.hexdigest()
 		)
 	)
+
+# Clean up
+
+pathlib.Path( archiveFileName ).unlink()

@@ -175,7 +175,7 @@ class GradeTest( GafferImageTest.ImageTestCase ) :
 		c["color"].setValue( imath.Color4f( 0.125, 0.25, 0.5, 0.75 ) )
 
 		s = GafferImage.Shuffle()
-		s["channels"].addChild( GafferImage.Shuffle.ChannelPlug( 'customChannel', '__white' ) )
+		s["shuffles"].addChild( Gaffer.ShufflePlug( "__white", "customChannel" ) )
 		s["in"].setInput( c["out"] )
 
 		g = GafferImage.Grade()
@@ -255,10 +255,8 @@ class GradeTest( GafferImageTest.ImageTestCase ) :
 		i["fileName"].setValue( self.checkerFile )
 
 		shuffleAlpha = GafferImage.Shuffle()
-		shuffleAlpha["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "channel" ) )
+		shuffleAlpha["shuffles"].addChild( Gaffer.ShufflePlug( "R", "A" ) )
 		shuffleAlpha["in"].setInput( i["out"] )
-		shuffleAlpha["channels"]["channel"]["out"].setValue( 'A' )
-		shuffleAlpha["channels"]["channel"]["in"].setValue( 'R' )
 
 		gradeAlpha = GafferImage.Grade()
 		gradeAlpha["in"].setInput( shuffleAlpha["out"] )

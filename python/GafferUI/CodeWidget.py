@@ -65,7 +65,7 @@ class CodeWidget( GafferUI.MultiLineTextWidget ) :
 		self.__commentPrefix = None
 
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
-		self.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ), scoped = False )
+		self.__textChangedConnection = self.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ), scoped = False )
 
 	def setCompleter( self, completer ) :
 
@@ -77,7 +77,11 @@ class CodeWidget( GafferUI.MultiLineTextWidget ) :
 
 	def setHighlighter( self, highlighter ) :
 
-		self.__highlighter.setHighlighter( highlighter )
+		# Changing the highlighting counts as changing the text as far as Qt is
+		# concerned, so `textChangedSignal()` will be emitted. Block the connection
+		# so that we don't pop up the completion menu inappropriately.
+		with Gaffer.Signals.BlockedConnection( self.__textChangedConnection ) :
+			self.__highlighter.setHighlighter( highlighter )
 
 	def getHighlighter( self ) :
 
@@ -90,6 +94,17 @@ class CodeWidget( GafferUI.MultiLineTextWidget ) :
 	def getCommentPrefix( self ) :
 
 		return self.__commentPrefix
+
+	def _emitEditingFinished( self ) :
+
+		# MultiLineTextWidget considers editing to have finished as soon as
+		# we lose focus. That doesn't make sense when we lost focus due to
+		# popping up the completion menu, because we did that to assist the user
+		# in editing. So we only emit the signal if the menu isn't visible.
+		# We get back focus as soon as the menu closes, so will get another
+		# opportunity to emit the signal before the user navigates elsewhere.
+		if self.__completionMenu is None or not self.__completionMenu.visible() :
+			GafferUI.MultiLineTextWidget._emitEditingFinished( self )
 
 	def __keyPress( self, widget, event ) :
 
@@ -111,6 +126,8 @@ class CodeWidget( GafferUI.MultiLineTextWidget ) :
 			return self.__commentPress()
 		elif event.key == "Return" and event.modifiers == event.Modifiers.None_ :
 			return self.__returnPress()
+		elif event.modifiers == event.Modifiers.Control and event.key == "L" :
+			return self.__extendSelectionPress()
 
 		return False
 
@@ -121,8 +138,8 @@ class CodeWidget( GafferUI.MultiLineTextWidget ) :
 
 		text = self.getText()
 		cursor = self.getCursorPosition()
-		lineStart = max( text.rfind( "\n", 0, cursor ), 0 )
-		line = text[lineStart:cursor]
+		previousNewline = text.rfind( "\n", 0, cursor )
+		line = text[previousNewline+1:cursor]
 
 		return self.__completer.completions( line ), line
 
@@ -241,6 +258,33 @@ class CodeWidget( GafferUI.MultiLineTextWidget ) :
 
 		return True
 
+	def __extendSelectionPress( self ) :
+
+		cursor = self._qtWidget().textCursor()
+
+		if cursor.hasSelection() :
+			# Extend an existing selection to contain the beginning of the
+			# first selected line through to the end of the last selected line.
+			selectionEnd = cursor.selectionEnd()
+			cursor.setPosition( cursor.selectionStart(), cursor.MoveAnchor )
+			cursor.movePosition( cursor.StartOfLine, cursor.MoveAnchor )
+			cursor.setPosition( selectionEnd, cursor.KeepAnchor )
+			cursor.movePosition( cursor.EndOfLine, cursor.KeepAnchor )
+		else :
+			# Select the entire line where the cursor is currently positioned.
+			cursor.movePosition( cursor.StartOfLine, cursor.MoveAnchor )
+			cursor.movePosition( cursor.EndOfLine, cursor.KeepAnchor )
+
+		if not cursor.atEnd() :
+			# Move the cursor to the start of the next line to allow
+			# repeated presses to extend the selection to subsequent lines.
+			cursor.movePosition( cursor.Down, cursor.KeepAnchor )
+			cursor.movePosition( cursor.StartOfLine, cursor.KeepAnchor )
+
+		self._qtWidget().setTextCursor( cursor )
+
+		return True
+
 	def __textChanged( self, widget ) :
 
 		if self.__completionMenu is not None :
@@ -285,7 +329,7 @@ class CodeWidget( GafferUI.MultiLineTextWidget ) :
 
 class Highlighter( object ) :
 
-	Type = enum.Enum(
+	Type = enum.IntEnum(
 		"Type",
 		[
 			"SingleQuotedString", "DoubleQuotedString", "Number",
@@ -411,8 +455,8 @@ class _QtHighlighter( QtGui.QSyntaxHighlighter ) :
 			Highlighter.Type.Number : format( QtGui.QColor( 174, 208, 164 ) ),
 			Highlighter.Type.Keyword : format( QtGui.QColor( 64, 156, 219 ) ),
 			Highlighter.Type.ControlFlow : format( QtGui.QColor( 207, 128, 195 ) ),
-			Highlighter.Type.Braces : None,
-			Highlighter.Type.Operator : None,
+			Highlighter.Type.Braces : format( QtGui.QColor( 255, 215, 0 ) ),
+			Highlighter.Type.Operator : format( QtGui.QColor( 155, 218, 252 ) ),
 			Highlighter.Type.Call : format( QtGui.QColor( 220, 221, 189 ) ),
 			Highlighter.Type.Comment : format( QtGui.QColor( 125, 154, 104 ) ),
 			Highlighter.Type.ReservedWord : format( QtGui.QColor( 200, 0, 0 ) ),

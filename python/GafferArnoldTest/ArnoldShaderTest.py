@@ -181,8 +181,8 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual(
 			network.inputConnections( "surface" ),
 			[
-				network.Connection( ( "noise", "" ), ( "surface", "base_color" ) ),
-				network.Connection( ( "noise", "" ), ( "surface", "specular_color" ) ),
+				network.Connection( ( "noise", "out" ), ( "surface", "base_color" ) ),
+				network.Connection( ( "noise", "out" ), ( "surface", "specular_color" ) ),
 			]
 		)
 
@@ -830,11 +830,11 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 
 				self.assertEqual(
 					network1.inputConnections( "arnoldOut" ),
-					[ network1.Connection( ( "arnoldIn", "" ), ( "arnoldOut", "color" ) ) ]
+					[ network1.Connection( ( "arnoldIn", "out" ), ( "arnoldOut", "color" ) ) ]
 				)
 				self.assertEqual(
 					network2.inputConnections( "oslOut" ),
-					[ network1.Connection( ( "arnoldIn", "" ), ( "oslOut", "c" ) ) ]
+					[ network1.Connection( ( "arnoldIn", "out" ), ( "oslOut", "c" ) ) ]
 				)
 
 			else :
@@ -864,9 +864,9 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual(
 			network.inputConnections( "n2" ),
 			[
-				( ( "n1", "r" ), ( "n2", "color.b" ) ),
-				( ( "n1", "b" ), ( "n2", "color.g" ) ),
-				( ( "n1", "g" ), ( "n2", "color.r" ) ),
+				( ( "n1", "out.r" ), ( "n2", "color.b" ) ),
+				( ( "n1", "out.b" ), ( "n2", "color.g" ) ),
+				( ( "n1", "out.g" ), ( "n2", "color.r" ) ),
 			]
 		)
 
@@ -946,6 +946,48 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIsInstance( shader["parameters"]["camera"], Gaffer.StringPlug )
 		self.assertEqual( shader["parameters"]["camera"].getValue(), "" )
 		self.assertEqual( shader["parameters"]["camera"].defaultValue(), "" )
+
+	def testUSDRoundTrip( self ) :
+
+		userDataRGB = GafferArnold.ArnoldShader()
+		userDataRGB.loadShader( "user_data_rgb" )
+		userDataRGB["parameters"]["attribute"].setValue( "test" )
+
+		noise = GafferArnold.ArnoldShader()
+		noise.loadShader( "noise" )
+		noise["parameters"]["distortion"].setInput( userDataRGB["out"]["r"] )
+
+		stateFloat = GafferArnold.ArnoldShader()
+		stateFloat.loadShader( "state_float" )
+
+		standardSurface = GafferArnold.ArnoldShader()
+		standardSurface.loadShader( "standard_surface" )
+		standardSurface["parameters"]["base_color"].setInput( noise["out"] )
+		standardSurface["parameters"]["coat_color"]["r"].setInput( stateFloat["out"] )
+
+		sphere = GafferScene.Sphere()
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		shaderAssignment = GafferScene.ShaderAssignment()
+		shaderAssignment["in"].setInput( sphere["out"] )
+		shaderAssignment["filter"].setInput( sphereFilter["out"] )
+		shaderAssignment["shader"].setInput( standardSurface["out"] )
+
+		sceneWriter = GafferScene.SceneWriter()
+		sceneWriter["in"].setInput( shaderAssignment["out"] )
+		sceneWriter["fileName"].setValue( self.temporaryDirectory() / "test.usda" )
+		sceneWriter["task"].execute()
+
+		sceneReader = GafferScene.SceneReader()
+		sceneReader["fileName"].setInput( sceneWriter["fileName"] )
+
+		self.assertShaderNetworksEqual(
+			sceneReader["out"].attributes( "/sphere" )["ai:surface"],
+			sceneWriter["in"].attributes( "/sphere" )["ai:surface"],
+			ignoreBlindData = True
+		)
 
 if __name__ == "__main__":
 	unittest.main()

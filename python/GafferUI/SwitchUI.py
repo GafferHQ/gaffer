@@ -35,6 +35,9 @@
 ##########################################################################
 
 import Gaffer
+import GafferUI
+
+from GafferUI.PlugValueWidget import sole
 
 Gaffer.Metadata.registerNode(
 
@@ -98,6 +101,57 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"deleteContextVariables" : [
+
+			"description",
+			"""
+			The names of context variables to be deleted before accessing the array
+			of inputs. Names should be space-separated and may use Gaffer's standard
+			wildcards.
+
+			> Tip : This is convenient for cleaning up context variables only needed
+			to compute the switch index.
+			""",
+
+			"nodule:type", "",
+			"layout:section", "Advanced",
+
+		],
+
+		"connectedInputs" : [
+
+			"description",
+			"""
+			The indices of the input array that have incoming connections.
+
+			> Tip : This can be used to drive a Wedge or Collect node so that
+			> they operate over each input in turn.
+			""",
+
+			"nodule:type", "",
+			"layout:section", "Advanced",
+			"plugValueWidget:type", "GafferUI.SwitchUI._ConnectedInputsPlugValueWidget",
+
+		],
+
 	}
 
 )
+
+class _ConnectedInputsPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plugs, **kw ) :
+
+		self.__textWidget = GafferUI.TextWidget( editable = False )
+		GafferUI.PlugValueWidget.__init__( self, self.__textWidget, plugs, **kw )
+
+	def _updateFromValues( self, values, exception ) :
+
+		value = sole( values )
+		self.__textWidget.setText(
+			", ".join( [ str( x ) for x in value ] )
+			if value is not None
+			else "---"
+		)
+
+		self.__textWidget.setErrored( exception is not None )

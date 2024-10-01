@@ -51,6 +51,7 @@ Backdrop::Backdrop( const std::string &name )
 	addChild( new StringPlug( "title", Plug::In, "Title" ) );
 	addChild( new FloatPlug( "scale", Plug::In, 1.0f, 1.0f ) );
 	addChild( new StringPlug( "description" ) );
+	addChild( new IntPlug( "depth", Plug::In, 0, -1, 1 ) );
 }
 
 Backdrop::~Backdrop()
@@ -85,4 +86,14 @@ Gaffer::StringPlug *Backdrop::descriptionPlug()
 const Gaffer::StringPlug *Backdrop::descriptionPlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
+IntPlug *Backdrop::depthPlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 3 );
+}
+
+const IntPlug *Backdrop::depthPlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 3 );
 }

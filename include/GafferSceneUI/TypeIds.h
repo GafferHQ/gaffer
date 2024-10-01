@@ -57,6 +57,8 @@ enum TypeId
 	HistoryPathTypeId = 110664,
 	SetPathTypeId = 110665,
 	LightToolTypeId = 110666,
+	LightPositionToolTypeId = 110667,
+	RenderPassPathTypeId = 110668,
 
 	LastTypeId = 110700
 };

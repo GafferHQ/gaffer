@@ -46,6 +46,8 @@
 #include "GafferBindings/ComputeNodeBinding.h"
 #include "GafferBindings/PlugBinding.h"
 
+#include "boost/python/suite/indexing/container_utils.hpp"
+
 using namespace boost::python;
 using namespace IECore;
 using namespace Gaffer;
@@ -126,6 +128,43 @@ struct ScenePathFromString
 		{
 			path->push_back( *it );
 		}
+	}
+
+};
+
+// As a convenience we also accept lists in place of ScenePaths when
+// calling from python.
+struct ScenePathFromList
+{
+
+	ScenePathFromList()
+	{
+		boost::python::converter::registry::push_back(
+			&convertible,
+			&construct,
+			boost::python::type_id<ScenePlug::ScenePath>()
+		);
+	}
+
+	static void *convertible( PyObject *obj )
+	{
+		extract<boost::python::list> e( obj );
+		if( e.check() )
+		{
+			return obj;
+		}
+
+		return nullptr;
+	}
+
+	static void construct( PyObject *obj, boost::python::converter::rvalue_from_python_stage1_data *data )
+	{
+		void *storage = (( converter::rvalue_from_python_storage<ScenePlug::ScenePath>* ) data )->storage.bytes;
+		ScenePlug::ScenePath *path = new( storage ) ScenePlug::ScenePath();
+		data->convertible = storage;
+
+		boost::python::list l = extract<boost::python::list>( obj );
+		boost::python::container_utils::extend_container( *path, l );
 	}
 
 };
@@ -303,15 +342,23 @@ class SceneProcessorSerialiser : public NodeSerialiser
 
 	bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
 	{
-		if( child->parent()->typeId() == SceneProcessor::staticTypeId() )
+		const auto sceneProcessor = static_cast<const SceneProcessor *>( child->parent() );
+		const bool isSubclassed = sceneProcessor->typeId() != SceneProcessor::staticTypeId();
+
+		if( !isSubclassed && runTimeCast<const Node>( child ) )
 		{
-			// Parent is exactly a SceneProcessor, not a subclass. Since we don't add
-			// any nodes in the constructor, we know that any nodes added subsequently
-			// will need manual serialisation.
-			if( runTimeCast<const Node>( child ) )
-			{
-				return true;
-			}
+			// SceneProcessor doesn't add any nodes in the constructor, so we
+			// know that any nodes added subsequently will need manual
+			// serialisation.
+			return true;
+		}
+
+		if( isSubclassed && child == sceneProcessor->outPlug() )
+		{
+			// Internal connections shouldn't be serialised for custom node
+			// types, because that leaks their implementation, making it
+			// harder to change internals in future.
+			return false;
 		}
 
 		return NodeSerialiser::childNeedsSerialisation( child, serialisation );
@@ -389,6 +436,7 @@ void GafferSceneModule::bindCore()
 
 	ScenePathFromInternedStringVectorData();
 	ScenePathFromString();
+	ScenePathFromList();
 
 	using SceneNodeWrapper = ComputeNodeWrapper<SceneNode>;
 	GafferBindings::DependencyNodeClass<SceneNode, SceneNodeWrapper>();

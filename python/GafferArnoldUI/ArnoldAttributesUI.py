@@ -258,6 +258,13 @@ Gaffer.Metadata.registerNode(
 			"label", "Shadow Group",
 		],
 
+		"attributes.shadowGroup.value" : [
+
+			"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+			"ui:scene:acceptsSetExpression", True,
+
+		],
+
 		"attributes.diffuseReflectionVisibility" : [
 
 			"description",

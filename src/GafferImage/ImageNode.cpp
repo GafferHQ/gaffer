@@ -266,7 +266,7 @@ void ImageNode::compute( ValuePlug *output, const Context *context ) const
 	}
 	else if( output == imagePlug->channelDataPlug() )
 	{
-		std::string channelName = context->get<string>( ImagePlug::channelNameContextName );
+		const std::string &channelName = context->get<string>( ImagePlug::channelNameContextName );
 		if( channelEnabled( channelName ) )
 		{
 			V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );

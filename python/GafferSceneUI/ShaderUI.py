@@ -445,9 +445,11 @@ class _ShaderInputColumn ( GafferUI.PathColumn ) :
 
 class _ShaderPath( Gaffer.Path ) :
 
-	def __init__( self, shaderNetworks, path, root = "/", filter = None ) :
+	def __init__( self, shaderNetworks, path, root = "/", filter = None, connectedParametersOnly = False ) :
 
 		Gaffer.Path.__init__( self, path, root, filter )
+
+		self.__connectedParametersOnly = connectedParametersOnly
 
 		assert( all( [ isinstance( n, IECoreScene.ShaderNetwork ) for n in shaderNetworks ] ) )
 
@@ -458,7 +460,7 @@ class _ShaderPath( Gaffer.Path ) :
 		if len( self ) > 0 and self.__shaders() is None :
 			return False
 
-		if len( self ) > 1 and self[1] not in self.__parameters() :
+		if len( self ) > 1 and self[1] not in self.__parameters():
 			return False
 
 		if len( self ) > 2 :
@@ -501,7 +503,7 @@ class _ShaderPath( Gaffer.Path ) :
 
 				connections = {
 					c.source.shader for n in self.__shaderNetworks if (
-						self[0] in n.shaders()
+						n.getShader( self[0] ) is not None
 					) for c in n.inputConnections( self[0] ) if (
 						c.destination.name.split( '.' )[0] == self[1]
 					)
@@ -524,7 +526,7 @@ class _ShaderPath( Gaffer.Path ) :
 
 	def copy( self ) :
 
-		return _ShaderPath( self.__shaderNetworks, self[:], self.root(), self.getFilter() )
+		return _ShaderPath( self.__shaderNetworks, self[:], self.root(), self.getFilter(), self.__connectedParametersOnly )
 
 	def _children( self, canceller ) :
 
@@ -560,7 +562,8 @@ class _ShaderPath( Gaffer.Path ) :
 								self.__shaderNetworks,
 								self[:] + [shaderHandle],
 								self.root(),
-								self.getFilter()
+								self.getFilter(),
+								self.__connectedParametersOnly
 							)
 						)
 
@@ -577,7 +580,8 @@ class _ShaderPath( Gaffer.Path ) :
 						self.__shaderNetworks,
 						self[:] + [p],
 						self.root(),
-						self.getFilter()
+						self.getFilter(),
+						self.__connectedParametersOnly
 					)
 				)
 
@@ -591,13 +595,27 @@ class _ShaderPath( Gaffer.Path ) :
 		if len( self ) == 0 :
 			return []
 
+		if self.__connectedParametersOnly :
+			connectedParams = set()
+			for n in self.__shaderNetworks :
+				if n.getShader( self[0] ) is not None :
+					for c in n.inputConnections( self[0] ) :
+						connectedParams.add( c.destination.name )
+			return list( connectedParams )
+
 		return [ p for s in self.__shaders() for p in s.parameters.keys() ]
 
 	# Returns a list of all shaders with a name matching the path's shader name.
 	def __shaders( self ) :
 
 		if len( self ) > 0 :
-			uniqueShaders = { n.shaders()[ self[0] ].hash() : n.shaders()[ self[0] ] for n in self.__shaderNetworks if self[0] in n.shaders() }
+
+			uniqueShaders = {}
+			for network in self.__shaderNetworks :
+				shader = network.getShader( self[0] )
+				if shader is not None :
+					uniqueShaders[shader.hash()] = shader
+
 			return list( uniqueShaders.values() )
 
 		return None
@@ -717,18 +735,18 @@ class _PathMatcherPathFilter( Gaffer.PathFilter ) :
 
 GafferUI.PathFilterWidget.registerType( _PathMatcherPathFilter, GafferUI.MatchPatternPathFilterWidget )
 
-class _ShaderParameterDialogue( GafferUI.Dialogue ) :
+class _ShaderDialogueBase( GafferUI.Dialogue ) :
 
-	def __init__( self, shaderNetworks, title = None, **kw ) :
-
-		if title is None :
-			title = "Select Shader Parameters"
+	def __init__( self, shaderNetworks, title, selectParameters, **kw ) :
 
 		GafferUI.Dialogue.__init__( self, title, **kw )
 
+		self.__selectParameters = selectParameters
+		self.__cancelled = False
+
 		self.__shaderNetworks = shaderNetworks
 
-		self.__path = _ShaderPath( self.__shaderNetworks, path = "/" )
+		self.__path = _ShaderPath( self.__shaderNetworks, path = "/", connectedParametersOnly = not self.__selectParameters )
 
 		self.__filter = _PathMatcherPathFilter( [ "" ], self.__path.copy() )
 		self.__filter.setEnabled( False )
@@ -749,7 +767,7 @@ class _ShaderParameterDialogue( GafferUI.Dialogue ) :
 					GafferUI.PathListingWidget.StandardColumn( "Value", "shader:value" ),
 					_ShaderInputColumn( "Input" ),
 				),
-				allowMultipleSelection = True,
+				allowMultipleSelection = self.__selectParameters,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 				sortable = False,
 				horizontalScrollMode = GafferUI.ScrollMode.Automatic
@@ -769,20 +787,15 @@ class _ShaderParameterDialogue( GafferUI.Dialogue ) :
 		self.__confirmButton = self._addButton( "OK" )
 		self.__confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
 
-		self.__parametersSelectedSignal = Gaffer.Signal1()
+		self.__selectedSignal = Gaffer.Signal1()
 
 		self.__updateButtonState()
 
-	def parametersSelectedSignal( self ) :
+	def _resultSelectedSignal( self ) :
 
-		return self.__parametersSelectedSignal
+		return self.__selectedSignal
 
-	# Causes the dialogue to enter a modal state, returning the selected shader parameters
-	# once they have been selected by the user. Returns None if the dialogue is cancelled.
-	# Parameters are returned as a list of tuples of the form
-	# [ ( "shaderName", "parameterName" ), ... ]
-	def waitForParameters( self, **kw ) :
-
+	def _waitForResult( self, **kw ) :
 		if len( self.__path.children() ) == 0 :
 			dialogue = GafferUI.ConfirmationDialogue(
 				"Shader Browser",
@@ -792,7 +805,6 @@ class _ShaderParameterDialogue( GafferUI.Dialogue ) :
 
 		else :
 			button = self.waitForButton( **kw )
-
 			if button is self.__confirmButton :
 				return self.__result()
 
@@ -801,7 +813,7 @@ class _ShaderParameterDialogue( GafferUI.Dialogue ) :
 	def __buttonClicked( self, button ) :
 
 		if button is self.__confirmButton :
-			self.parametersSelectedSignal()( self.__result() )
+			self._resultSelectedSignal()( self.__result() )
 
 	def __pathSelected( self, pathListing ) :
 
@@ -840,14 +852,57 @@ class _ShaderParameterDialogue( GafferUI.Dialogue ) :
 	def __result( self ) :
 
 		resultPaths = self.__pathListingWidget.getSelection()
+
+		if not self.__selectParameters:
+			if not resultPaths.paths() or resultPaths.paths()[0].rfind( "/" ) > 0:
+				return None
+
+			return resultPaths.paths()[0].strip( "/" )
+
 		resultPaths = [ self.__path.copy().setFromString( x ) for x in resultPaths.paths() ]
 
 		for p in resultPaths :
 			if len( p ) < 2 :
 				return []
-
 		return [ ( p[0], p[1] ) for p in resultPaths ]
 
 	def __updateButtonState( self, *unused ) :
+		self.__confirmButton.setEnabled( bool( self.__result() ) )
 
-		self.__confirmButton.setEnabled( len( self.__result() ) > 0 )
+class _ShaderParameterDialogue( _ShaderDialogueBase ) :
+
+	def __init__( self, shaderNetworks, title = None, **kw ) :
+
+		if title is None :
+			title = "Select Shader Parameters"
+
+		_ShaderDialogueBase.__init__( self, shaderNetworks, title, True, **kw )
+
+	# Causes the dialogue to enter a modal state, returning the selected shader parameters
+	# once they have been selected by the user. Returns None if the dialogue is cancelled.
+	# Parameters are returned as a list of tuples of the form
+	# [ ( "shaderName", "parameterName" ), ... ]
+	def waitForParameters( self, **kw ) :
+		return self._waitForResult( **kw )
+
+	def parametersSelectedSignal( self ) :
+		return self._resultSelectedSignal()
+
+
+
+class _ShaderDialogue( _ShaderDialogueBase ) :
+
+	def __init__( self, shaderNetworks, title = None, **kw ) :
+
+		if title is None :
+			title = "Select Shader"
+
+		_ShaderDialogueBase.__init__( self, shaderNetworks, title, False, **kw )
+
+	# Causes the dialogue to enter a modal state, returning the handle of the selected shader once it
+	# has been selected by the user. Returns None if the dialogue is cancelled.
+	def waitForShader( self, **kw ) :
+		return self._waitForResult( **kw )
+
+	def shaderSelectedSignal( self ) :
+		return self._resultSelectedSignal()

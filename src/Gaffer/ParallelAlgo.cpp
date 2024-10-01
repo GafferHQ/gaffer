@@ -53,8 +53,12 @@ using UIThreadCallHandlers = std::stack<ParallelAlgo::UIThreadCallHandler>;
 std::unique_lock<std::mutex> lockUIThreadCallHandlers( UIThreadCallHandlers *&handlers )
 {
 	static std::mutex g_mutex;
-	static UIThreadCallHandlers g_handlers;
-	handlers = &g_handlers;
+	// Deliberately leaking `g_handlers` here as otherwise we get crashes
+	// when it contains handlers implemented in Python, because Python has
+	// already shut down before static destructors are run, and we can't
+	// destroy a Python object after Python has shut down.
+	static UIThreadCallHandlers *g_handlers = new UIThreadCallHandlers;
+	handlers = g_handlers;
 	return std::unique_lock<std::mutex>( g_mutex );
 }
 
@@ -100,6 +104,13 @@ void ParallelAlgo::popUIThreadCallHandler()
 	{
 		throw IECore::Exception( "No UIThreadCallHandler to pop" );
 	}
+}
+
+bool ParallelAlgo::canCallOnUIThread()
+{
+	UIThreadCallHandlers *handlers = nullptr;
+	auto lock = lockUIThreadCallHandlers( handlers );
+	return handlers->size();
 }
 
 GAFFER_API std::unique_ptr<BackgroundTask> ParallelAlgo::callOnBackgroundThread( const Plug *subject, BackgroundFunction function )

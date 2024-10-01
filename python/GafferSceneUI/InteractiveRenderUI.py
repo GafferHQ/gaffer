@@ -41,6 +41,7 @@ from Qt import QtCore
 import Gaffer
 import GafferImage
 import GafferScene
+import GafferSceneUI
 import GafferUI
 import GafferImageUI
 
@@ -374,6 +375,13 @@ class _MessagesPlugValueWidget( GafferUI.PlugValueWidget ) :
 # Metadata for InteractiveRender node.
 ##########################################################################
 
+def __rendererPresetNames( plug ) :
+
+	return IECore.StringVectorData( [
+		x for x in GafferSceneUI.RenderUI.rendererPresetNames( plug )
+		if x != "OpenGL"
+	] )
+
 Gaffer.Metadata.registerNode(
 
 	GafferScene.InteractiveRender,
@@ -409,8 +417,19 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The renderer to use.
+			The renderer to use. Default mode uses the `render:defaultRenderer` option from
+			the input scene globals to choose the renderer. This can be authored using
+			the StandardOptions node.
+
+			> Note : Changing renderer currently requires that the current render is
+			> manually stopped and restarted.
 			""",
+
+			"plugValueWidget:type", "GafferSceneUI.RenderUI.RendererPlugValueWidget",
+
+			"preset:Default", "",
+			"presetNames", __rendererPresetNames,
+			"presetValues", __rendererPresetNames,
 
 		],
 
@@ -423,6 +442,18 @@ Gaffer.Metadata.registerNode(
 
 			"label", "Render",
 			"plugValueWidget:type", "GafferSceneUI.InteractiveRenderUI._StatePlugValueWidget",
+
+		],
+
+		"resolvedRenderer" : [
+
+			"description",
+			"""
+			The renderer that will be used, accounting for the value of the
+			`render:defaultRenderer` option if `renderer` is set to "Default".
+			""",
+
+			"layout:section", "Advanced",
 
 		],
 

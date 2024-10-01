@@ -127,7 +127,7 @@ class _CommandPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.PlugValueWidget.__init__( self, self.__codeWidget, plug, **kw )
 
-		self.__codeWidget._qtWidget().setPlaceholderText(
+		self.__codeWidget.setPlaceholderText(
 			inspect.cleandoc(
 				"""
 				# Global variables :
@@ -141,8 +141,9 @@ class _CommandPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__codeWidget.setHighlighter( GafferUI.CodeWidget.PythonHighlighter() )
 		self.__codeWidget.setCommentPrefix( "#" )
 
-		self.__codeWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ), scoped = False )
 		self.__codeWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ), scoped = False )
+
+		self._addPopupMenu( self.__codeWidget )
 
 		node = self.__pythonCommandNode()
 		if node is not None :

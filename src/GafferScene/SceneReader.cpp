@@ -481,7 +481,14 @@ IECore::ConstObjectPtr SceneReader::computeObject( const ScenePath &path, const 
 		return parent->objectPlug()->defaultValue();
 	}
 
-	return s->readObject( timeAsDouble( context ), context->canceller() );
+	ConstObjectPtr o = s->readObject( timeAsDouble( context ), context->canceller() );
+	// We checked `hasObject()` already, so we shouldn't _really_ get a nullptr
+	// here. But it can currently happen in at least one circumstance : when a
+	// USDScene loads a UsdVolume with no valid field definitions. This could be
+	// dealt with in USDScene by extending the ObjectAlgo API and making
+	// `hasObject()` more expensive, but in the meantime it's simpler and
+	// cheaper to add some protection here.
+	return o ? o : parent->objectPlug()->defaultValue();
 }
 
 void SceneReader::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const

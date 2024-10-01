@@ -50,31 +50,34 @@ namespace
 
 // Version
 std::string cyclesVersion = CYCLES_VERSION_STRING;
-// Store devices once
-std::vector<ccl::DeviceInfo> cyclesDevices;
 
 }
 
 namespace IECoreCycles
 {
 
-bool init()
+const char *cyclesRoot()
 {
 	const char *cyclesRoot = getenv( "CYCLES_ROOT" );
 	if( !cyclesRoot )
 	{
 		IECore::msg( IECore::Msg::Error, "IECoreCycles::init", "CYCLES_ROOT environment variable not set" );
-		return false;
+		return "";
 	}
+	return cyclesRoot;
+}
 
-	auto kernelFile = std::filesystem::path( cyclesRoot ) / "source" / "kernel" / "types.h";
+bool init()
+{
+	const char *cyclesRootValue = cyclesRoot();
+	auto kernelFile = std::filesystem::path( cyclesRootValue ) / "source" / "kernel" / "types.h";
 	if( !std::filesystem::is_regular_file( kernelFile ) )
 	{
 		IECore::msg( IECore::Msg::Error, "IECoreCycles::init", fmt::format( "File \"{}\" not found", kernelFile ) );
 		return false;
 	}
 
-	ccl::path_init( cyclesRoot );
+	ccl::path_init( cyclesRootValue );
 
 	// This is a global thing for logging
 	const char* argv[] = { "-", "v", "1" };
@@ -82,18 +85,6 @@ bool init()
 	ccl::util_logging_start();
 	ccl::util_logging_verbosity_set( 0 );
 
-	// Get devices
-	ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_HIP | ccl::DEVICE_MASK_CUDA | ccl::DEVICE_MASK_METAL
-#ifdef WITH_OPTIX
-	| ccl::DEVICE_MASK_OPTIX
-#endif
-	);
-	devices.push_back( ccl::Device::get_multi_device( devices, 0, true ) );
-
-	for( auto device : devices )
-	{
-		cyclesDevices.push_back( device );
-	}
 
 	return true;
 }
@@ -116,11 +107,6 @@ int patchVersion()
 const std::string &versionString()
 {
 	return cyclesVersion;
-}
-
-const std::vector<ccl::DeviceInfo> &devices()
-{
-	return cyclesDevices;
 }
 
 }

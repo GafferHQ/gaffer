@@ -161,31 +161,6 @@ T parameter( const IECore::CompoundDataMap &parameters, const IECore::InternedSt
 	}
 }
 
-bool aiVersionLessThan( int arch, int major, int minor, int patch )
-{
-	// This is _not_ the same as `AiCheckAPIVersion()` :
-	//
-	// - `AiCheckAPIVersion()` is for determining ABI compatibility and
-	//   returns false if the `arch` or `major` numbers are not equal.
-	// - `AiCheckAPIVersion()` doesn't support a patch version.
-	// - `aiVersionLess()` is suitable for determining if an Arnold
-	//   feature or bugfix is available.
-	const char *arnoldVersionString = AiGetVersion( nullptr, nullptr, nullptr, nullptr );
-	int arnoldVersion[4];
-	for( int i = 0; i < 4; ++i )
-	{
-		arnoldVersion[i] = strtol( arnoldVersionString, const_cast<char **>( &arnoldVersionString ), 10 );
-		++arnoldVersionString;
-	}
-
-	auto version = { arch, major, minor, patch };
-
-	return std::lexicographical_compare(
-		begin( arnoldVersion ), end( arnoldVersion ),
-		version.begin(), version.end()
-	);
-}
-
 std::string formatHeaderParameter( const std::string name, const IECore::Data *data )
 {
 	if( const IECore::BoolData *boolData = IECore::runTimeCast<const IECore::BoolData>( data ) )
@@ -473,6 +448,10 @@ class ArnoldOutput : public IECore::RefCounted
 		ArnoldOutput( AtUniverse *universe, const IECore::InternedString &name, const IECoreScene::Output *output, NodeDeleter nodeDeleter )
 			:	m_universe( universe ), m_name( name ), m_nodeDeleter( nodeDeleter )
 		{
+			if( m_name.string().find( " " ) != std::string::npos )
+			{
+				throw IECore::Exception( fmt::format( "Unable to create output driver with name \"{}\", Arnold does not allow spaces in output names.", m_name.string() ) );
+			}
 			update( output );
 		}
 
@@ -708,26 +687,6 @@ class ArnoldOutput : public IECore::RefCounted
 				// easier to discover/use, and it should be easier to generalise to other
 				// renderers.
 				m_data += "_*";
-				if( aiVersionLessThan( 7, 1, 3, 0 ) && m_layerName.size() )
-				{
-					// Work around Arnold bug #12282. If a layer name is specified, then Arnold
-					// will fail to apply the light group suffix to it. This causes the EXR driver
-					// to write duplicate channels with the same name, resulting in errors and/or
-					// crashes.
-					m_layerName = "";
-					if( m_lpeName.empty() )
-					{
-						IECore::msg( IECore::Msg::Warning, "ArnoldRenderer",
-							fmt::format( "Cannot use `layerName` with `layerPerLightGroup` for non-LPE output \"{}\", due to Arnold bug #12282", m_name.string() )
-						);
-					}
-					else
-					{
-						// Although we've had to clear the layer name, we'll actually still
-						// get what we want, because the layer name is used as the name of the
-						// LPE.
-					}
-				}
 			}
 
 			// Decide if this render should be updated at interactive rates or
@@ -963,6 +922,7 @@ namespace
 bool isConvertedProcedural( const AtNode *node );
 
 IECore::InternedString g_surfaceShaderAttributeName( "surface" );
+IECore::InternedString g_volumeShaderAttributeName( "volume" );
 IECore::InternedString g_lightShaderAttributeName( "light" );
 IECore::InternedString g_doubleSidedAttributeName( "doubleSided" );
 IECore::InternedString g_setsAttributeName( "sets" );
@@ -992,6 +952,7 @@ IECore::InternedString g_volumeVisibilityAutoBumpAttributeName( "ai:autobump_vis
 IECore::InternedString g_subsurfaceVisibilityAutoBumpAttributeName( "ai:autobump_visibility:subsurface" );
 
 IECore::InternedString g_arnoldSurfaceShaderAttributeName( "ai:surface" );
+IECore::InternedString g_arnoldVolumeShaderAttributeName( "ai:volume" );
 IECore::InternedString g_arnoldLightShaderAttributeName( "ai:light" );
 IECore::InternedString g_arnoldFilterMapAttributeName( "ai:filtermap" );
 IECore::InternedString g_arnoldUVRemapAttributeName( "ai:uv_remap" );
@@ -1098,6 +1059,13 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			if( surfaceShaderAttribute )
 			{
 				m_surfaceShader = shaderCache->get( surfaceShaderAttribute, attributes );
+			}
+
+			const IECoreScene::ShaderNetwork *volumeShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_arnoldVolumeShaderAttributeName, attributes );
+			volumeShaderAttribute = volumeShaderAttribute ? volumeShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_volumeShaderAttributeName, attributes );
+			if( volumeShaderAttribute )
+			{
+				m_volumeShader = shaderCache->get( volumeShaderAttribute, attributes );
 			}
 
 			if( auto filterMapAttribute = attribute<IECoreScene::ShaderNetwork>( g_arnoldFilterMapAttributeName, attributes ) )
@@ -1416,9 +1384,9 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 				AiNodeSetBool( node, g_matteArnoldString, m_shadingFlags & ArnoldAttributes::Matte );
 
-				if( m_surfaceShader && m_surfaceShader->root() )
+				if( AtNode *shader = preferredShader( geometry ) )
 				{
-					AiNodeSetPtr( node, g_shaderArnoldString, m_surfaceShader->root() );
+					AiNodeSetPtr( node, g_shaderArnoldString, shader );
 				}
 				else
 				{
@@ -1537,7 +1505,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			PolyMesh( const IECore::CompoundObject *attributes )
 			{
-				subdivIterations = attributeValue<int>( g_polyMeshSubdivIterationsAttributeName, attributes, 1 );
+				subdivIterations = integralAttribute<uint8_t>( g_polyMeshSubdivIterationsAttributeName, attributes, 1 );
 				subdivAdaptiveError = attributeValue<float>( g_polyMeshSubdivAdaptiveErrorAttributeName, attributes, 0.0f );
 
 				const IECore::StringData *subdivAdaptiveMetricData = attribute<IECore::StringData>( g_polyMeshSubdivAdaptiveMetricAttributeName, attributes );
@@ -1574,7 +1542,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				subdivFrustumIgnore = attributeValue<bool>( g_polyMeshSubdivFrustumIgnoreAttributeName, attributes, false );
 			}
 
-			int subdivIterations;
+			uint8_t subdivIterations;
 			float subdivAdaptiveError;
 			AtString subdivAdaptiveMetric;
 			AtString subdivAdaptiveSpace;
@@ -1902,6 +1870,37 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return defaultValue;
 		}
 
+		template<typename T>
+		static T integralAttribute( const IECore::InternedString &name, const IECore::CompoundObject *attributes, T defaultValue )
+		{
+			IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().find( name );
+			if( it == attributes->members().end() )
+			{
+				return defaultValue;
+			}
+
+			if constexpr( !std::is_same_v<T, int> )
+			{
+				// Gaffer currently uses IntData for all integral attributes regardless of the
+				// actual type in Arnold, so first check for that.
+				/// \todo Produce the expected types in Gaffer.
+				if( auto intData = IECore::runTimeCast<const IECore::IntData>( it->second.get() ) )
+				{
+					return intData->readable();
+				}
+			}
+
+			// Data coming from USD will use the exact Arnold type - for instance `unsigned char`
+			// for `subdiv_iterations`.
+			using DataType = IECore::TypedData<T>;
+			if( auto sd = reportedCast<const DataType>( it->second.get(), "attribute", name ) )
+			{
+				return sd->readable();
+			};
+
+			return defaultValue;
+		}
+
 		static void updateVisibility( unsigned char &visibility, const IECore::InternedString &name, unsigned char rayType, const IECore::CompoundObject *attributes )
 		{
 			if( const IECore::BoolData *d = attribute<IECore::BoolData>( name, attributes ) )
@@ -2005,6 +2004,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			h.append( m_sidedness );
 			h.append( m_shadingFlags );
 			hashOptional( m_surfaceShader.get(), h );
+			hashOptional( m_volumeShader.get(), h );
 			hashOptional( m_filterMap.get(), h );
 			hashOptional( m_uvRemap.get(), h );
 			hashOptional( m_lightShader.get(), h );
@@ -2028,10 +2028,33 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			h.append( m_sssSetName.c_str() ? m_sssSetName.c_str() : "" );
 		}
 
+		AtNode *preferredShader( const AtNode *geometry ) const
+		{
+			if( m_volumeShader )
+			{
+				// Prefer the volume shader if we have one, and the geometry is either
+				// a volume or a shape being rendered as a volume (non-zero step size).
+				bool preferVolume = AiNodeIs( geometry, g_volumeArnoldString );
+				if( !preferVolume && AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( geometry ), g_stepSizeArnoldString ) )
+				{
+					preferVolume = AiNodeGetFlt( geometry, g_stepSizeArnoldString ) > 0.0f;
+				}
+				if( preferVolume )
+				{
+					return m_volumeShader->root();
+				}
+			}
+
+			// Otherwise use the surface shader. We use this even for volume geometry,
+			// because Gaffer has always assigned volume shaders as `ai:surface`.
+			return m_surfaceShader ? m_surfaceShader->root() : nullptr;
+		}
+
 		unsigned char m_visibility;
 		unsigned char m_sidedness;
 		unsigned char m_shadingFlags;
 		ArnoldShaderPtr m_surfaceShader;
+		ArnoldShaderPtr m_volumeShader;
 		ArnoldShaderPtr m_filterMap;
 		ArnoldShaderPtr m_uvRemap;
 		IECoreScene::ConstShaderNetworkPtr m_lightShader;
@@ -2159,7 +2182,7 @@ class InstanceCache : public IECore::RefCounted
 		{
 			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
 
-			if( !arnoldAttributes->canInstanceGeometry( object ) )
+			if( !arnoldAttributes || !arnoldAttributes->canInstanceGeometry( object ) )
 			{
 				return Instance( convert( object, arnoldAttributes, nodeName ) );
 			}
@@ -2302,7 +2325,10 @@ class InstanceCache : public IECore::RefCounted
 				return SharedAtNodePtr();
 			}
 
-			attributes->applyGeometry( object, node );
+			if( attributes )
+			{
+				attributes->applyGeometry( object, node );
+			}
 
 			return SharedAtNodePtr( node, m_nodeDeleter );
 		}
@@ -2325,7 +2351,10 @@ class InstanceCache : public IECore::RefCounted
 				return SharedAtNodePtr();
 			}
 
-			attributes->applyGeometry( samples.front(), node );
+			if( attributes )
+			{
+				attributes->applyGeometry( samples.front(), node );
+			}
 
 			return SharedAtNodePtr( node, m_nodeDeleter );
 
@@ -4259,7 +4288,10 @@ ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::camera( const std::st
 	Instance instance = m_instanceCache->get( camera, attributes, name );
 
 	ObjectInterfacePtr result = new ArnoldObject( instance );
-	result->attributes( attributes );
+	if( attributes )
+	{
+		result->attributes( attributes );
+	}
 	return result;
 }
 
@@ -4270,7 +4302,10 @@ ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::camera( const std::st
 	Instance instance = m_instanceCache->get( vector<const IECore::Object *>( samples.begin(), samples.end() ), times, attributes, name );
 
 	ObjectInterfacePtr result = new ArnoldObject( instance );
-	result->attributes( attributes );
+	if( attributes )
+	{
+		result->attributes( attributes );
+	}
 	return result;
 }
 

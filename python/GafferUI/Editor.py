@@ -49,6 +49,34 @@ from Qt import QtWidgets
 # or its children. These make up the tabs in the UI layout.
 class Editor( GafferUI.Widget ) :
 
+	## Base class used to store settings for an Editor. We store our settings
+	# as plugs on a node for a few reasons :
+	#
+	# - Some editors want to use an EditScopePlugValueWidget, and that requires
+	#   it.
+	# - We get a bunch of useful widgets and signals for free.
+	# - Longer term we want to refactor all Editors to derive from Node, in the
+	#   same way that View does already. This will let us serialise _all_ layout
+	#   state in the same format we serialise node graphs in.
+	# - The `userDefault` metadata provides a convenient way of configuring
+	#   defaults.
+	# - The PlugLayout we use to display the settings allows users to add their
+	#   own widgets to the UI.
+	class Settings( Gaffer.Node ) :
+
+		def __init__( self, name, script ) :
+
+			Gaffer.Node.__init__( self, name )
+
+			# Hack to allow BackgroundTask to recover ScriptNode for
+			# cancellation support - see `BackgroundTask.cpp`.
+			## \todo Perhaps we can make this more natural at the point we derive
+			# Editor from Node?
+			self["__scriptNode"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.Serialisable )
+			self["__scriptNode"].setInput( script["fileName"] )
+
+	IECore.registerRunTimeTyped( Settings, typeName = "GafferUI::Editor::Settings" )
+
 	def __init__( self, topLevelWidget, scriptNode, **kw ) :
 
 		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
@@ -67,6 +95,17 @@ class Editor( GafferUI.Widget ) :
 		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ), scoped = False )
 
 		self.__setContextInternal( scriptNode.context(), callUpdate=False )
+
+	def __del__( self ) :
+
+		for attr in self.__dict__.values() :
+			if isinstance( attr, GafferUI.Editor.Settings ) :
+				# Remove connection to ScriptNode now, on the UI thread.
+				# Otherwise we risk deadlock if the Settings node gets garbage
+				# collected in a BackgroundTask, which would attempt
+				# cancellation of all tasks for the ScriptNode, including the
+				# task itself.
+				attr["__scriptNode"].setInput( None )
 
 	def scriptNode( self ) :
 

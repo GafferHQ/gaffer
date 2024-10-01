@@ -52,19 +52,32 @@ using namespace GafferBindings;
 namespace
 {
 
-CompoundObjectPtr shuffleCompoundObject( const ShufflesPlug &shufflesPlug, CompoundObject &source )
+CompoundObjectPtr shuffleCompoundObject( const ShufflesPlug &shufflesPlug, CompoundObject &source, bool ignoreMissingSource )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-
 	CompoundObjectPtr result = new CompoundObject;
-	result->members() = shufflesPlug.shuffle<CompoundObject::ObjectMap>( source.members() );
+	result->members() = shufflesPlug.shuffle( source.members(), ignoreMissingSource );
 	return result;
 }
 
-CompoundDataPtr shuffleCompoundData( const ShufflesPlug &shufflesPlug, CompoundData &source )
+CompoundObjectPtr shuffleCompoundObjectWithExtraSources( const ShufflesPlug &shufflesPlug, CompoundObject &source, CompoundObject &extraSources, bool ignoreMissingSource )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	return new CompoundData( shufflesPlug.shuffle<CompoundDataMap>( source.readable() ) );
+	CompoundObjectPtr result = new CompoundObject;
+	result->members() = shufflesPlug.shuffleWithExtraSources( source.members(), extraSources.members(), ignoreMissingSource );
+	return result;
+}
+
+CompoundDataPtr shuffleCompoundData( const ShufflesPlug &shufflesPlug, CompoundData &source, bool ignoreMissingSource )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return new CompoundData( shufflesPlug.shuffle( source.readable(), ignoreMissingSource ) );
+}
+
+CompoundDataPtr shuffleCompoundDataWithExtraSources( const ShufflesPlug &shufflesPlug, CompoundData &source, CompoundData &extraSources, bool ignoreMissingSource )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return new CompoundData( shufflesPlug.shuffleWithExtraSources( source.readable(), extraSources.readable(), ignoreMissingSource ) );
 }
 
 class ShufflePlugSerialiser : public ValuePlugSerialiser
@@ -116,8 +129,10 @@ void GafferModule::bindShuffles()
 				)
 			)
 		)
-		.def( "shuffle", &shuffleCompoundObject, ( arg( "sourceContainer" ) ) )
-		.def( "shuffle", &shuffleCompoundData, ( arg( "sourceContainer" ) ) )
+		.def( "shuffle", &shuffleCompoundObject, ( arg( "sourceContainer" ), arg( "ignoreMissingSource" ) = true ) )
+		.def( "shuffle", &shuffleCompoundData, ( arg( "sourceContainer" ), arg( "ignoreMissingSource" ) = true ) )
+		.def( "shuffleWithExtraSources", &shuffleCompoundObjectWithExtraSources, ( arg( "sourceContainer" ), arg( "extraSources" ), arg( "ignoreMissingSource" ) = true ) )
+		.def( "shuffleWithExtraSources", &shuffleCompoundDataWithExtraSources, ( arg( "sourceContainer" ), arg( "extraSources" ), arg( "ignoreMissingSource" ) = true ) )
 	;
 
 }

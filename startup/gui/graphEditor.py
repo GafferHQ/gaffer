@@ -38,6 +38,7 @@
 import functools
 import pathlib
 import re
+import weakref
 
 import imath
 
@@ -102,7 +103,6 @@ def __nodeContextMenu( graphEditor, node, menuDefinition ) :
 
 	GafferUI.GraphEditor.appendEnabledPlugMenuDefinitions( graphEditor, node, menuDefinition )
 	GafferUI.GraphEditor.appendConnectionVisibilityMenuDefinitions( graphEditor, node, menuDefinition )
-	GafferDispatchUI.DispatcherUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
 	GafferUI.GraphEditor.appendContentsMenuDefinitions( graphEditor, node, menuDefinition )
 	GafferUI.UIEditor.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
 	GafferUI.AnnotationsUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
@@ -128,6 +128,8 @@ GafferUI.GraphEditor.connectionContextMenuSignal().connect( __connectionContextM
 ##########################################################################
 # File drop handler
 ##########################################################################
+
+GafferUI.Pointer.registerPointer( "targetObjects", GafferUI.Pointer( "targetObjects.png", imath.V2i( 53, 14 ) ) )
 
 def __sceneFileHandler( fileName ) :
 
@@ -177,34 +179,29 @@ def __dropHandler( s ) :
 	handler = __fileHandlers.get( path.suffix[1:].lower() )
 	return functools.partial( handler, path ) if handler is not None else None
 
-def __canDropFiles( graphEditor, event ) :
+def __canDropFiles( graphGadget, event ) :
 
 	return (
 		isinstance( event.data, IECore.StringVectorData ) and
 		all( __dropHandler( s ) is not None for s in event.data ) and
-		not Gaffer.MetadataAlgo.readOnly( graphEditor.graphGadget().getRoot() ) and
-		not Gaffer.MetadataAlgo.getChildNodesAreReadOnly( graphEditor.graphGadget().getRoot() )
+		not Gaffer.MetadataAlgo.readOnly( graphGadget.getRoot() ) and
+		not Gaffer.MetadataAlgo.getChildNodesAreReadOnly( graphGadget.getRoot() )
 	)
 
-def __dragEnter( graphEditor, event ) :
+def __fileDragEnter( graphGadget, event ) :
 
-	return __canDropFiles( graphEditor, event )
+	return __canDropFiles( graphGadget, event )
 
-def __drop( graphEditor, event ) :
+def __fileDrop( graphGadget, event ) :
 
-	if not __canDropFiles( graphEditor, event ) :
+	if not __canDropFiles( graphGadget, event ) :
 		return False
 
-	graphGadget = graphEditor.graphGadget()
+	position = imath.V2f( event.line.p0.x, event.line.p0.y  )
 
-	position = graphEditor.graphGadgetWidget().getViewportGadget().rasterToGadgetSpace(
-		imath.V2f( event.line.p0.x, event.line.p0.y ),
-		gadget = graphEditor.graphGadget()
-	).p0
-	position = imath.V2f( position.x, position.y )
-
+	scriptNode = graphGadget.getRoot().scriptNode()
 	nodes = Gaffer.StandardSet()
-	with Gaffer.UndoScope( graphEditor.scriptNode() ) :
+	with Gaffer.UndoScope( scriptNode ) :
 
 		for s in event.data :
 
@@ -234,14 +231,95 @@ def __drop( graphEditor, event ) :
 
 			nodes.add( node )
 
-	graphEditor.scriptNode().selection().clear()
-	graphEditor.scriptNode().selection().add( nodes )
+	scriptNode.selection().clear()
+	scriptNode.selection().add( nodes )
+
+	return True
+
+##########################################################################
+# Scene location drop handler
+##########################################################################
+
+def __dropLocationData( event ) :
+
+	if (
+		not isinstance( event.data, IECore.StringVectorData ) or
+		len( event.data ) != 1 or
+		not event.data[0].startswith( "/" )
+	) :
+		return None
+
+	scene = None
+	sourceEditor = event.sourceWidget.ancestor( GafferUI.Editor )
+	if isinstance( sourceEditor, GafferUI.Viewer ) :
+		if isinstance( event.sourceGadget, GafferSceneUI.SceneGadget ) :
+			scene = sourceEditor.view()["in"].getInput()
+	elif isinstance( sourceEditor, GafferSceneUI.HierarchyView ) :
+		scene = sourceEditor.scene()
+
+	if scene is None :
+		return None
+
+	return {
+		"path" : event.data[0],
+		"scene" : scene,
+		"context" : sourceEditor.getContext(),
+	}
+
+def __locationDragEnter( graphGadget, event ) :
+
+	if __dropLocationData( event ) is None :
+		return False
+
+	GafferUI.Pointer.setCurrent( "targetObjects" )
+	return True
+
+def __locationDragLeave( graphGadget, event ) :
+
+	if __dropLocationData( event ) is not None :
+		if event.destinationWidget is None :
+			# Hack to restore (what we assume to have been) the original
+			# drag pointer. We don't do this when another widget has
+			# accepted the drag, because it would clobber any pointer
+			# change they made in `dragEnter`. But of course that means
+			# that if another widget _has_ accepted the drag but hasn't
+			# changed the pointer themselves (maybe they use highlighting
+			# instead), they will be stuck with the wrong pointer.
+			## \todo This is far too fragile. We need to manage
+			# pointer restoration at a higher level, in Widget.py's
+			# _EventFilter (and ViewportGadget's handlers).
+			GafferUI.Pointer.setCurrent( "objects" )
+		return True
+
+	return False
+
+def __locationDrop( graphGadget, event, graphEditor ) :
+
+	dropLocationData = __dropLocationData( event )
+	if dropLocationData is None :
+		return False
+
+	with dropLocationData["context"] :
+		sourceScene = GafferScene.SceneAlgo.source( dropLocationData["scene"], dropLocationData["path"] )
+
+	if sourceScene is not None :
+		graphGadget.setRoot( sourceScene.node().parent() )
+		## \todo The `frame()` method should probably be on the GraphGadget itself, and the `at`
+		# functionality should be made public.
+		graphEditor()._GraphEditor__frame(
+			[ sourceScene.node() ],
+			at = imath.V2f( GafferUI.Widget.mousePosition( relativeTo = graphEditor() ) )
+		)
 
 	return True
 
 def __graphEditorCreated( graphEditor ) :
 
-	graphEditor.dragEnterSignal().connect( __dragEnter, scoped = False )
-	graphEditor.dropSignal().connect( __drop, scoped = False )
+	graphEditor.graphGadget().dragEnterSignal().connect( __fileDragEnter, scoped = False )
+	graphEditor.graphGadget().dropSignal().connect( __fileDrop, scoped = False )
+
+	graphEditor.graphGadget().dragEnterSignal().connect( __locationDragEnter, scoped = False )
+	graphEditor.graphGadget().dragLeaveSignal().connect( __locationDragLeave, scoped = False )
+	graphEditor.graphGadget().dropSignal().connect( functools.partial( __locationDrop, graphEditor = weakref.ref( graphEditor ) ), scoped = False )
 
 GafferUI.GraphEditor.instanceCreatedSignal().connect( __graphEditorCreated, scoped = False )

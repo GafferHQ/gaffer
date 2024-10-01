@@ -402,5 +402,23 @@ class OptionQueryTest( GafferSceneTest.SceneTestCase ):
 		self.assertTrue( query["out"][0]["exists"].getValue() )
 		self.assertEqual( query["out"][0]["value"].getValue(), 2.0 )
 
+	def testNoScenePathInGlobalsContext( self ) :
+
+		customOptions = GafferScene.CustomOptions()
+		customOptions["extraOptions"].setValue( {
+			"test" : IECore.StringData( "test" ),
+		} )
+
+		query = GafferScene.OptionQuery()
+		query["scene"].setInput( customOptions["out"] )
+		query.addQuery( Gaffer.StringPlug( defaultValue = "" ), "test" )
+
+		# Use SceneTestCase's ContextSanitiser to indirectly test that `scene:path`
+		# isn't leaked into the context used to evaluate the globals.
+		with Gaffer.Context() as context :
+			context["scene:path"] = IECore.InternedStringVectorData( [ "plane" ] )
+			self.assertTrue( query["out"][0]["exists"].getValue() )
+			self.assertEqual( query["out"][0]["value"].getValue(), "test" )
+
 if __name__ == "__main__":
 	unittest.main()

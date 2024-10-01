@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import random
 import unittest
 import imath
 
@@ -115,10 +116,7 @@ class AttributeQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testNoScene( self ):
 
-		from random import Random
-		from datetime import datetime
-
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		loc = randomName( r, 5, 10 )
 		name = randomName( r, 5, 10 )
@@ -154,10 +152,7 @@ class AttributeQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testSceneNoSetupNoAttr( self ):
 
-		from random import Random
-		from datetime import datetime
-
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		loc = randomName( r, 5, 10 )
 		name = randomName( r, 5, 10 )
@@ -198,10 +193,7 @@ class AttributeQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testSceneNoSetupAttr( self ):
 
-		from random import Random
-		from datetime import datetime
-
-		r = Random( datetime.now() )
+		r = random.Random()
 		loc = randomName( r, 5, 10 )
 
 		s = GafferScene.Sphere()
@@ -549,10 +541,7 @@ class AttributeQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testSceneSetupAttr( self ):
 
-		from random import Random
-		from datetime import datetime
-
-		r = Random( datetime.now() )
+		r = random.Random()
 		loc = randomName( r, 5, 10 )
 
 		s = GafferScene.Sphere()
@@ -951,10 +940,7 @@ class AttributeQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testSerialisation( self ):
 
-		from random import Random
-		from datetime import datetime
-
-		r = Random( datetime.now() )
+		r = random.Random()
 		loc = randomName( r, 5, 10 )
 
 		c = GafferScene.Sphere()

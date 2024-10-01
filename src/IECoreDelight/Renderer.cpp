@@ -221,6 +221,11 @@ class DelightHandle
 			release();
 		}
 
+		operator bool () const
+		{
+			return m_context != NSI_BAD_CONTEXT;
+		}
+
 	private :
 
 		void release()
@@ -261,17 +266,29 @@ class DelightOutput : public IECore::RefCounted
 			const char *typePtr = output->getType().c_str();
 			const char *namePtr = output->getName().c_str();
 
-			ParameterList driverParams( output->parameters() );
+			ParameterList driverParams;
+			for( const auto &[parameterName, parameterValue] : output->parameters() )
+			{
+				if( parameterName != "filter" && parameterName != "filterwidth" && parameterName != "scalarformat" && parameterName != "colorprofile" && parameterName != "layername" && parameterName != "layerName" && parameterName != "withalpha" )
+				{
+					driverParams.add( parameterName.c_str(), parameterValue.get() );
+				}
+			}
+
 			driverParams.add( { "drivername", &typePtr, NSITypeString, 0, 1, 0 } );
 			driverParams.add( { "imagefilename", &namePtr, NSITypeString, 0, 1, 0 } );
 
-			m_driverHandle = DelightHandle( context, "outputDriver:" + name, ownership, "outputdriver", driverParams );
+			// Since NSICreate will return an existing node if the handle already exists, we can
+			// render multipart EXRs by constructing the NSI outputdriver node handle from the
+			// output file name parameter and then use the same file name on multiple outputs.
+			m_driverHandle = DelightHandle( context, "outputDriver:" + output->getName(), ownership, "outputdriver", driverParams );
 
 			// Layer
 
 			string variableName;
 			string variableSource;
 			string layerType;
+			string scalarFormat;
 			string layerName;
 			int withAlpha = 0;
 
@@ -299,6 +316,11 @@ class DelightOutput : public IECore::RefCounted
 				{
 					layerType = "scalar";
 				}
+				else if( tokens[0] == "uint" )
+				{
+					layerType = "scalar";
+					scalarFormat = "uint32";
+				}
 				else if( tokens[0] == "point" )
 				{
 					layerType = "vector";
@@ -321,11 +343,35 @@ class DelightOutput : public IECore::RefCounted
 					variableSource = nameTokens[0];
 				}
 
-				// Remove the `.` character and use camel case
-				vector<string> layerTokens;
-				IECore::StringAlgo::tokenize( variableName, '.', layerTokens );
-				layerName = IECore::CamelCase::join( layerTokens.begin(), layerTokens.end(), IECore::CamelCase::AllExceptFirst);
+				layerName = variableName;
+				// Shader outputs like `diffuse` and `diffuse.direct` create incompatible layer names
+				// by using `diffuse` both as a container for channels and a container for sublayers.
+				// Replace `.` with `_` to avoid the problem.
+				boost::replace_all( layerName, ".", "_" );
 			}
+
+			// Special cases to match the "standard" expected by OutputBuffer,
+			// which is necessary for Gaffer viewport rendering.
+
+			if( variableName == "Z" )
+			{
+				variableName = "z";
+				variableSource = "builtin";
+			}
+
+			if( variableName == "id" )
+			{
+				variableName = "cortexId";
+				variableSource = "attribute";
+				/// \todo We really want to use something like "uint32" here (as
+				/// provided by the code above), but that maps the `0.0 - 1.0`
+				/// range into the integer range, whereas we want a direct
+				/// mapping. So we render as float and deal with it in
+				/// Display.cpp.
+				scalarFormat = "float";
+			}
+
+			layerName = parameter<string>( output->parameters(), "layerName", layerName );
 
 			ParameterList layerParams;
 
@@ -335,10 +381,36 @@ class DelightOutput : public IECore::RefCounted
 			layerParams.add( "layername", layerName );
 			layerParams.add( { "withalpha", &withAlpha, NSITypeInteger, 0, 1, 0 } );
 
-			const string scalarFormat = this->scalarFormat( output );
-			const string colorProfile = scalarFormat == "float" ? "linear" : "sRGB";
+			scalarFormat = parameter<string>( output->parameters(), "scalarformat", scalarFormat );
+			string colorProfile = parameter<string>( output->parameters(), "colorprofile", "linear" );
+			if( scalarFormat.empty() )
+			{
+				scalarFormat = this->scalarFormat( output );
+				colorProfile = scalarFormat == "float" ? "linear" : "sRGB";
+			}
 			layerParams.add( "scalarformat", scalarFormat );
 			layerParams.add( "colorprofile", colorProfile );
+
+			string filter = parameter<string>( output->parameters(), "filter", "blackman-harris" );
+			if( filter == "closest" )
+			{
+				filter = "zmin";
+			}
+			layerParams.add( "filter", filter );
+
+			const double filterWidth = parameter<float>( output->parameters(), "filterwidth", 3.0 );
+			if( filterWidth != 3.0 )
+			{
+				layerParams.add( { "filterwidth", &filterWidth, NSITypeDouble, 0, 1, 0 } );
+			}
+
+			for( const auto &[parameterName, parameterValue] : output->parameters() )
+			{
+				if( parameterName != "filter" && parameterName != "filterwidth" && parameterName != "scalarformat" && parameterName != "colorprofile" && parameterName != "layerName" )
+				{
+					layerParams.add( parameterName.c_str(), parameterValue.get() );
+				}
+			}
 
 			m_layerHandle = DelightHandle( context, "outputLayer:" + name, ownership, "outputlayer", layerParams );
 
@@ -368,7 +440,7 @@ class DelightOutput : public IECore::RefCounted
 			{
 				return "uint8";
 			}
-			else if( quantize == vector<int>( { 0, 65536, 0, 65536 } ) )
+			else if( quantize == vector<int>( { 0, 65535, 0, 65535 } ) )
 			{
 				return "uint16";
 			}
@@ -402,7 +474,7 @@ class DelightShader : public IECore::RefCounted
 		{
 			ConstShaderNetworkPtr preprocessedNetwork = IECoreDelight::ShaderNetworkAlgo::preprocessedNetwork( shaderNetwork );
 
-			const string name = "shader:" + preprocessedNetwork->Object::hash().toString();
+			const string name = "shader:" + shaderNetwork->Object::hash().toString();
 			IECoreScene::ShaderNetworkAlgo::depthFirstTraverse(
 				preprocessedNetwork.get(),
 				[this, &name, &context, &ownership] ( const ShaderNetwork *shaderNetwork, const InternedString &handle ) {
@@ -592,6 +664,8 @@ namespace
 std::array<std::string, 4> g_surfaceShaderAttributeNames = { "osl:light", "light", "osl:surface", "surface" };
 std::array<std::string, 2> g_volumeShaderAttributeNames = { "osl:volume", "volume" };
 std::array<std::string, 2> g_displacementShaderAttributeNames = { "osl:displacement", "displacement" };
+const InternedString g_USDLightAttributeName = "light";
+const InternedString g_USDSurfaceAttributeName = "surface";
 
 IECore::InternedString g_setsAttributeName( "sets" );
 
@@ -630,6 +704,14 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 				}
 			}
 
+			if( auto o = attributes->member<const Object>( g_USDLightAttributeName ) )
+			{
+				if( auto shaderNetwork = reportedCast<const ShaderNetwork>( o, "attribute", g_USDLightAttributeName ) )
+				{
+					m_usdLightShader = shaderNetwork;
+				}
+			}
+
 			ParameterList params;
 			for( const auto &m : attributes->members() )
 			{
@@ -656,11 +738,15 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 				}
 				else if( boost::starts_with( m.first.string(), "user:" ) )
 				{
-					msg( Msg::Warning, "DelightRenderer", fmt::format( "User attribute \"{}\" not supported", m.first.string() ) );
+					if( const Data *d = reportedCast<const IECore::Data>( m.second.get(), "attribute", m.first ) )
+					{
+						params.add( m.first.c_str(), d, true );
+					}
 				}
-				else if( boost::contains( m.first.string(), ":" ) )
+				else if( boost::contains( m.first.string(), ":" ) || m.first == g_USDLightAttributeName || m.first == g_USDSurfaceAttributeName )
 				{
 					// Attribute for another renderer - ignore
+					// Or a USD light/surface, which we've handled above - ignore
 				}
 				else
 				{
@@ -702,6 +788,11 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 			}
 		}
 
+		const ShaderNetwork *usdLightShader() const
+		{
+			return m_usdLightShader.get();
+		}
+
 		const DelightHandle &handle() const
 		{
 			return m_handle;
@@ -725,6 +816,8 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 		ConstDelightShaderPtr m_surfaceShader;
 		ConstDelightShaderPtr m_volumeShader;
 		ConstDelightShaderPtr m_displacementShader;
+
+		ConstShaderNetworkPtr m_usdLightShader;
 
 };
 
@@ -912,7 +1005,7 @@ IE_CORE_DECLAREPTR( InstanceCache )
 namespace
 {
 
-class DelightObject : public IECoreScenePreview::Renderer::ObjectInterface
+class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 {
 
 	public :
@@ -920,12 +1013,15 @@ class DelightObject : public IECoreScenePreview::Renderer::ObjectInterface
 		DelightObject( NSIContext_t context, const std::string &name, DelightHandleSharedPtr instance, DelightHandle::Ownership ownership )
 			:	m_transformHandle( context, name, ownership, "transform", {} ), m_instance( instance ), m_haveTransform( false )
 		{
-			NSIConnect(
-				m_transformHandle.context(),
-				m_instance->name(), "",
-				m_transformHandle.name(), "objects",
-				0, nullptr
-			);
+			if( m_instance )
+			{
+				NSIConnect(
+					m_transformHandle.context(),
+					m_instance->name(), "",
+					m_transformHandle.name(), "objects",
+					0, nullptr
+				);
+			}
 
 			NSIConnect(
 				m_transformHandle.context(),
@@ -992,6 +1088,11 @@ class DelightObject : public IECoreScenePreview::Renderer::ObjectInterface
 					m_attributes->handle().name(), "",
 					m_transformHandle.name(), "geometryattributes"
 				);
+				NSIDisconnect(
+					m_transformHandle.context(),
+					m_attributes->handle().name(), "",
+					m_transformHandle.name(), "shaderattributes"
+				);
 			}
 
 			m_attributes = static_cast<const DelightAttributes *>( attributes );
@@ -1002,6 +1103,14 @@ class DelightObject : public IECoreScenePreview::Renderer::ObjectInterface
 				0, nullptr
 
 			);
+			NSIConnect(
+				m_transformHandle.context(),
+				m_attributes->handle().name(), "",
+				m_transformHandle.name(), "shaderattributes",
+				0, nullptr
+
+			);
+
 			return true;
 		}
 
@@ -1011,20 +1120,128 @@ class DelightObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 		void assignID( uint32_t id ) override
 		{
-			/// \todo Implement
+			if( !m_idAttributesHandle )
+			{
+				m_idAttributesHandle = DelightHandle(
+					m_transformHandle.context(), string( m_transformHandle.name() ) + ":__idAttributes", m_transformHandle.ownership(), "attributes"
+				);
+				NSIConnect(
+					m_transformHandle.context(),
+					m_idAttributesHandle.name(), "",
+					m_transformHandle.name(), "shaderattributes",
+					0, nullptr
+				);
+			}
+			NSIParam_t param = {
+				"cortexId",
+				&id,
+				NSITypeInteger,
+				0, 1, // array length, count
+				0 // flags
+			};
+			NSISetAttribute( m_idAttributesHandle.context(), m_idAttributesHandle.name(), 1, &param );
 		}
 
-	private :
+	protected :
 
 		const DelightHandle m_transformHandle;
 		// We keep a reference to the instance and attributes so that they
 		// remain alive for at least as long as the object does.
 		ConstDelightAttributesPtr m_attributes;
+
+	private :
+
 		DelightHandleSharedPtr m_instance;
+		DelightHandle m_idAttributesHandle;
 
 		bool m_haveTransform;
 
 };
+
+}  // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// DelightLight
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+class DelightLight : public DelightObject
+{
+
+	public :
+
+		DelightLight( NSIContext_t context, const std::string &name, DelightHandleSharedPtr instance, DelightHandle::Ownership ownership )
+			: DelightObject( context, name, instance, ownership ), m_lightGeometryType( nullptr )
+		{
+		}
+
+		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
+		{
+			DelightObject::attributes( attributes );
+
+			if( const ShaderNetwork *usdLightShader = m_attributes->usdLightShader() )
+			{
+				const char *geometryType = IECoreDelight::ShaderNetworkAlgo::lightGeometryType( usdLightShader );
+
+				if( !geometryType )
+				{
+					msg( Msg::Warning, "IECoreDelight::attributes", "Unknown USD light type." );
+					return true;
+				}
+
+				if( !m_lightGeometryType || strcmp( geometryType, m_lightGeometryType ) )
+				{
+					const std::string lightName = std::string( m_transformHandle.name() ) + ":lightGeometry";
+					if( m_lightGeometry )
+					{
+						NSIDisconnect(
+							m_transformHandle.context(),
+							m_lightGeometry->name(), "",
+							m_transformHandle.name(), "objects"
+						);
+					}
+
+					m_lightGeometry.reset();
+
+					m_lightGeometry = std::make_shared<DelightHandle>(
+						m_transformHandle.context(),
+						lightName,
+						m_transformHandle.ownership(),
+						geometryType
+					);
+
+					NSIConnect(
+						m_transformHandle.context(),
+						m_lightGeometry->name(), "",
+						m_transformHandle.name(), "objects",
+						0, 0
+					);
+
+					m_lightGeometryType = geometryType;
+					m_lightGeometryState = MurmurHash();
+				}
+
+				IECoreDelight::ShaderNetworkAlgo::updateLightGeometry(
+					usdLightShader,
+					m_transformHandle.context(),
+					m_lightGeometry->name(),
+					m_lightGeometryState
+				);
+			}
+
+			return true;
+		}
+
+	private :
+
+		const char *m_lightGeometryType;
+		DelightHandleSharedPtr m_lightGeometry;
+		MurmurHash m_lightGeometryState;
+};
+
+IE_CORE_DECLAREPTR( DelightLight );
 
 } // namespace
 
@@ -1048,6 +1265,8 @@ IECore::InternedString g_maxLengthSpecularOptionName( "dl:maximumraylength.specu
 IECore::InternedString g_maxLengthVolumeOptionName( "dl:maximumraylength.volume" );
 IECore::InternedString g_clampIndirectOptionName( "dl:clampindirect" );
 IECore::InternedString g_showMultipleScatteringOptionName( "dl:show.multiplescattering" );
+IECore::InternedString g_importancesamplefilterOptionName( "dl:importancesamplefilter" );
+IECore::InternedString g_staticsamplingpatternOptionName( "dl:staticsamplingpattern" );
 
 const char *g_screenHandle = "ieCoreDelight:defaultScreen";
 
@@ -1072,6 +1291,27 @@ void setNSIGlobalOption( NSIContext_t context, const InternedString &name, const
 	}
 }
 
+void setNSIScreenOption( NSIContext_t context, const InternedString &name, const Object *value )
+{
+	if( value )
+	{
+		if( const Data *data = reportedCast<const Data>( value, "option", name ) )
+		{
+			ParameterList params;
+			params.add( name.c_str() + 3, data, true );
+			NSISetAttribute( context, g_screenHandle, params.size(), params.data() );
+		}
+		else
+		{
+			NSIDeleteAttribute( context, g_screenHandle, name.c_str() + 3 );
+		}
+	}
+	else
+	{
+		NSIDeleteAttribute( context, g_screenHandle, name.c_str() + 3 );
+	}
+}
+
 IE_CORE_FORWARDDECLARE( DelightRenderer )
 
 class DelightRenderer final : public IECoreScenePreview::Renderer
@@ -1079,29 +1319,44 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 	public :
 
-		DelightRenderer( RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
-			:	m_renderType( renderType ), m_frame( 1 ), m_oversampling( 9 ), m_messageHandler( messageHandler )
+		DelightRenderer( RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler, bool cloud = false )
+			:	m_renderType( renderType ), m_messageHandler( messageHandler )
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
 			vector<NSIParam_t> params;
 
 			const char *apistream = "apistream";
+			const char *streamformat = "autonsi";
 			const char *fileNamePtr = fileName.c_str();
 			if( renderType == SceneDescription )
 			{
 				params = {
 					{ "type", &apistream, NSITypeString, 0, 1, 0 },
+					{ "streamformat", &streamformat, NSITypeString, 0, 1, 0 },
 					{ "streamfilename", &fileNamePtr, NSITypeString , 0, 1, 0 }
 				};
 			}
 
+			void *handler = reinterpret_cast<void *>( &DelightRenderer::nsiErrorHandler );
+			void *data = this;
 			if( messageHandler )
 			{
-				void *handler = reinterpret_cast<void *>( &DelightRenderer::nsiErrorHandler );
-				void *data = this;
 				params.push_back( { "errorhandler",	&handler, NSITypePointer, 0, 1, 0 } );
 				params.push_back( { "errorhandlerdata",	&data, NSITypePointer, 0, 1, 0 } );
+			}
+
+			const int one = 1;
+			if( cloud )
+			{
+				if( renderType == Renderer::RenderType::Batch )
+				{
+					params.push_back( { "cloud", &one, NSITypeInteger, 0, 1, 0 } );
+				}
+				else
+				{
+					IECore::msg( IECore::Msg::Level::Warning, "DelightRenderer", "Cloud rendering is only available for batch renders. Rendering locally instead." );
+				}
 			}
 
 			m_context = NSIBegin( params.size(), params.data() );
@@ -1135,14 +1390,17 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 			if( name == g_frameOptionName )
 			{
-				m_frame = 1;
+				double frame = 1;
 				if( value )
 				{
 					if( const IntData *d = reportedCast<const IntData>( value, "option", name ) )
 					{
-						m_frame = d->readable();
+						frame = d->readable();
 					}
 				}
+				ParameterList params;
+				params.add( { name.c_str(), &frame, NSITypeDouble, 0, 1, 0 } );
+				NSISetAttribute( m_context, NSI_SCENE_GLOBAL, params.size(), params.data() );
 			}
 			else if( name == g_cameraOptionName )
 			{
@@ -1168,25 +1426,15 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( name == g_oversamplingOptionName )
 			{
-				if( value )
-				{
-					if( const IntData *d = reportedCast<const IntData>( value, "option", name ) )
-					{
-						if( m_oversampling != d->readable() )
-						{
-							stop();
-							m_oversampling = d->readable();
-						}
-					}
-					else
-					{
-						m_oversampling = 9;
-					}
-				}
-				else
-				{
-					m_oversampling = 9;
-				}
+				setNSIScreenOption( m_context, name, value );
+			}
+			else if( name == g_importancesamplefilterOptionName )
+			{
+				setNSIScreenOption( m_context, name, value );
+			}
+			else if( name == g_staticsamplingpatternOptionName )
+			{
+				setNSIScreenOption( m_context, name, value );
 			}
 			else if(
 				name == g_maxLengthDiffuseOptionName ||
@@ -1229,9 +1477,6 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-			// 3Delight crashes if we don't stop the render before
-			// modifying the output chain.
-			stop();
 			m_outputs.erase( name );
 			if( !output )
 			{
@@ -1286,13 +1531,27 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 				cameraHandle,
 				ownership()
 			);
-			result->attributes( attributes );
+			if( attributes )
+			{
+				result->attributes( attributes );
+			}
 			return result;
 		}
 
 		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
 		{
-			return this->object( name, object, attributes );
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
+			DelightHandleSharedPtr instance;
+			if( object )
+			{
+				instance = m_instanceCache->get( object );
+			}
+
+			ObjectInterfacePtr result = new DelightLight( m_context, name, instance, ownership() );
+			result->attributes( attributes );
+
+			return result;
 		}
 
 		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
@@ -1361,7 +1620,6 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			const char *start = "start";
 			vector<NSIParam_t> params = {
 				{ "action", &start, NSITypeString, 0, 1, 0 },
-				{ "frame", &m_frame, NSITypeInteger, 0, 1, 0 }
 			};
 
 			if( m_renderType == Interactive )
@@ -1400,6 +1658,16 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			// here, but despite documenting it, 3delight does not
 			// support it. Instead we let 3delight waste cpu time
 			// while we make our edits.
+		}
+
+		IECore::DataPtr command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters ) override
+		{
+			if( boost::starts_with( name.string(), "dl:" ) || name.string().find( ":" ) == string::npos )
+			{
+				IECore::msg( IECore::Msg::Warning, "IECoreDelight::Renderer::command", fmt::format( "Unknown command \"{}\".", name.c_str() ) );
+			}
+
+			return nullptr;
 		}
 
 	private :
@@ -1498,17 +1766,41 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 			// Update the screen
 
-			ParameterList screeenParameters = {
-				{ "oversampling", &m_oversampling, NSITypeInteger, 0, 1, 0 }
-			};
+			ParameterList screeenParameters;
 
-			const V2i &resolution = camera->getResolution();
+			const V2i &resolution = camera->renderResolution();
 			screeenParameters.add( { "resolution", resolution.getValue(), NSITypeInteger, 2, 1, NSIParamIsArray } );
+
+			const bool &overscanOn = camera->getOverscan();
+
+			const int overscanLeft = static_cast<int>(camera->getOverscanLeft() * resolution.x);
+			const int overscanTop = static_cast<int>(camera->getOverscanTop() * resolution.y);
+			const int overscanRight = static_cast<int>(camera->getOverscanRight() * resolution.x);
+			const int overscanBottom = static_cast<int>(camera->getOverscanBottom() * resolution.y);
+
+			const Box2i overscan(
+				V2i(
+					overscanLeft,
+					overscanTop
+				),
+				V2i(
+					overscanRight,
+					overscanBottom
+				)
+			);
+
+			if( overscanOn == true )
+			{
+				screeenParameters.add( { "overscan", overscan.min.getValue(), NSITypeInteger, 2, 2, NSIParamIsArray } );
+			}
 
 			Box2i renderRegion = camera->renderRegion();
 
-			// I can't find any support in 3delight for overscan - and if crop goes outside 0 - 1,
-			// it ignores crop.  So we clamp it.
+			// If crop goes outside 0 - 1, 3Delight ignores it, so we clamp.
+			/// \todo 3Delight interprets crop as 0-1 across the overscanned data window, but
+			/// Gaffer defines it as 0-1 across the original (non-overscanned) display window.
+			/// Adjust for that. This will only work nicely with the CropWindowTool if we also
+			/// update the display driver to output an accurate display window for overscanned renders.
 			renderRegion.min.x = std::max( 0, renderRegion.min.x );
 			renderRegion.max.x = std::min( resolution.x, renderRegion.max.x );
 			renderRegion.min.y = std::max( 0, renderRegion.min.y );
@@ -1563,9 +1855,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 		NSIContext_t m_context;
 		RenderType m_renderType;
 
-		int m_frame;
 		string m_camera;
-		int m_oversampling;
 
 		bool m_rendering = false;
 
@@ -1607,5 +1897,20 @@ const std::vector<IECore::MessageHandler::Level> DelightRenderer::g_ieMsgLevels 
 };
 
 IECoreScenePreview::Renderer::TypeDescription<DelightRenderer> DelightRenderer::g_typeDescription( "3Delight" );
+
+struct CloudTypeDescription
+{
+	CloudTypeDescription()
+	{
+		IECoreScenePreview::Renderer::registerType(
+			"3Delight Cloud",
+			[] ( IECoreScenePreview::Renderer::RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler ) {
+				return new DelightRenderer( renderType, fileName, messageHandler, /* cloud = */ true );
+			}
+		);
+	}
+};
+
+CloudTypeDescription g_cloudTypeDescription;
 
 } // namespace

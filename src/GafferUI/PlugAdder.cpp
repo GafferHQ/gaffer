@@ -67,23 +67,11 @@ using namespace GafferUI;
 namespace
 {
 
-IECoreGL::Texture *texture( Style::State state )
+const IECoreGL::Texture *texture( Style::State state )
 {
-	static IECoreGL::TexturePtr normalTexture;
-	static IECoreGL::TexturePtr highlightedTexture;
-
-	IECoreGL::TexturePtr &texture = state == Style::HighlightedState ? highlightedTexture : normalTexture;
-	if( !texture )
-	{
-		texture = ImageGadget::textureLoader()->load(
-			state == Style::HighlightedState ? "plugAdderHighlighted.png" : "plugAdder.png"
-		);
-
-		IECoreGL::Texture::ScopedBinding binding( *texture );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-	}
-	return texture.get();
+	static IECoreGL::ConstTexturePtr normalTexture = ImageGadget::loadTexture( "plugAdder.png" );
+	static IECoreGL::ConstTexturePtr highlightedTexture = ImageGadget::loadTexture( "plugAdderHighlighted.png" );
+	return state == Style::HighlightedState ? highlightedTexture.get() : normalTexture.get();
 }
 
 V3f tangent( const PlugAdder *g )
@@ -215,14 +203,14 @@ void PlugAdder::updateDragEndPoint( const Imath::V3f position, const Imath::V3f 
 
 PlugAdder::PlugMenuSignal &PlugAdder::plugMenuSignal()
 {
-	static PlugMenuSignal s;
-	return s;
+	static PlugMenuSignal *s = new PlugMenuSignal;
+	return *s;
 }
 
 PlugAdder::MenuSignal &PlugAdder::menuSignal()
 {
-	static MenuSignal s;
-	return s;
+	static MenuSignal *s = new MenuSignal;
+	return *s;
 }
 
 void PlugAdder::renderLayer( Layer layer, const Style *style, RenderReason reason ) const

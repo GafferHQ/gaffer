@@ -94,6 +94,7 @@ class Window( GafferUI.ContainerWidget ) :
 		else :
 			self.setSizeMode( sizeMode )
 
+		self.__preCloseSignal = GafferUI.WidgetSignal()
 		self.__closedSignal = GafferUI.WidgetSignal()
 
 		self.setChild( child )
@@ -359,12 +360,18 @@ class Window( GafferUI.ContainerWidget ) :
 		if not self.getVisible() :
 			return False
 
-		if self._acceptsClose() :
+		if self._acceptsClose() and not self.__preCloseSignal( self ) :
 			self.setVisible( False )
 			self.closedSignal()( self )
 			return True
 		else :
 			return False
+
+	## Emitted when `close()` is called. Slots may return `True` to prevent
+	# the window from being closed.
+	def preCloseSignal( self ) :
+
+		return self.__preCloseSignal
 
 	## Subclasses may override this to deny the closing of a window triggered
 	# either by user action or by a call to close(). Simply return False to

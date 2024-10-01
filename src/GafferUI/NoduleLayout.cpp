@@ -148,7 +148,7 @@ bool visible( const GraphComponent *parent, const InternedString &gadgetName, IE
 
 // Plug metadata accessors. These affect the layout of individual nodules.
 
-using GadgetKey = boost::variant<const Gaffer::Plug *, IECore::InternedString>;
+using GadgetKey = std::variant<const Gaffer::Plug *, IECore::InternedString>;
 
 int layoutIndex( const Plug *plug, int defaultValue )
 {
@@ -194,15 +194,15 @@ bool visible( const Plug *plug, IECore::InternedString section )
 
 InternedString gadgetType( const GraphComponent *parent, const GadgetKey &gadgetKey )
 {
-	if( gadgetKey.which() == 0 )
+	if( gadgetKey.index() == 0 )
 	{
-		const Plug *plug = boost::get<const Plug *>( gadgetKey );
+		const Plug *plug = std::get<const Plug *>( gadgetKey );
 		ConstStringDataPtr d = Metadata::value<IECore::StringData>( plug, g_noduleTypeKey );
 		return d ? d->readable() : "GafferUI::StandardNodule";
 	}
 	else
 	{
-		const InternedString &name = boost::get<InternedString>( gadgetKey );
+		const InternedString &name = std::get<InternedString>( gadgetKey );
 		ConstStringDataPtr d = Metadata::value<StringData>( parent, "noduleLayout:customGadget:" + name.string() + ":gadgetType" );
 		return d ? d->readable() : "";
 	}
@@ -638,9 +638,9 @@ void NoduleLayout::updateNoduleLayout()
 		else
 		{
 			// No gadget created yet, or it's the wrong type
-			if( item.which() == 0 )
+			if( item.index() == 0 )
 			{
-				gadget = Nodule::create( const_cast<Plug *>( boost::get<const Plug *>( item ) ) ); /// \todo Fix cast
+				gadget = Nodule::create( const_cast<Plug *>( std::get<const Plug *>( item ) ) ); /// \todo Fix cast
 			}
 			else if( !gadgetType.string().empty() )
 			{

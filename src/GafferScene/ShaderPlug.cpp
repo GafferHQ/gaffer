@@ -45,6 +45,8 @@
 #include "Gaffer/SubGraph.h"
 #include "Gaffer/Switch.h"
 
+#include "IECoreScene/ShaderNetwork.h"
+
 #include "IECore/MurmurHash.h"
 
 using namespace IECore;
@@ -231,6 +233,7 @@ IECore::MurmurHash ShaderPlug::attributesHash() const
 
 IECore::ConstCompoundObjectPtr ShaderPlug::attributes() const
 {
+	static IECore::InternedString hasProxyNodesIdentifier( "__hasProxyNodes" );
 	if( const Gaffer::Plug *p = shaderOutPlug() )
 	{
 		if( auto s = runTimeCast<const GafferScene::Shader>( p->node() ) )
@@ -242,10 +245,51 @@ IECore::ConstCompoundObjectPtr ShaderPlug::attributes() const
 				outputParameter = p->relativeName( s->outPlug() );
 				scope.set( Shader::g_outputParameterContextName, &outputParameter );
 			}
-			return s->outAttributesPlug()->getValue();
+
+			IECore::ConstCompoundObjectPtr result = s->outAttributesPlug()->getValue();
+
+			// Check for outputs from ShaderTweakProxy, which should only be used with ShaderTweaks nodes
+			for( const auto &i : result->members() )
+			{
+				if( const IECoreScene::ShaderNetwork *shaderNetwork = IECore::runTimeCast< const IECoreScene::ShaderNetwork >( i.second.get() ) )
+				{
+					if( const BoolData *hasProxyNodes = shaderNetwork->blindData()->member<IECore::BoolData>( hasProxyNodesIdentifier ) )
+					{
+						if( hasProxyNodes->readable() )
+						{
+							throw IECore::Exception(
+								"ShaderTweakProxy only works with ShaderTweaks - it doesn't make sense to connect one here"
+							);
+
+						}
+					}
+				}
+			}
+			return result;
 		}
 	}
 	return new CompoundObject;
+}
+
+const Gaffer::ValuePlug *ShaderPlug::parameterSource( const IECoreScene::ShaderNetwork::Parameter &parameter) const
+{
+	if( const Gaffer::Plug *p = shaderOutPlug() )
+	{
+		if( auto s = runTimeCast<const GafferScene::Shader>( p->node() ) )
+		{
+			if( parameter.shader.string().empty() )
+			{
+				return s->parametersPlug()->descendant<ValuePlug>( parameter.name );
+			}
+			return s->parameterSource( p, parameter );
+		}
+	}
+	return nullptr;
+}
+
+Gaffer::ValuePlug *ShaderPlug::parameterSource( const IECoreScene::ShaderNetwork::Parameter &parameter)
+{
+	return const_cast<ValuePlug *>( const_cast<const ShaderPlug *>( this )->parameterSource( parameter ) );
 }
 
 const Gaffer::Plug *ShaderPlug::shaderOutPlug() const

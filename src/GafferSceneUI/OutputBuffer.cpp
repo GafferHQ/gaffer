@@ -39,12 +39,7 @@
 #include "IECoreImage/DisplayDriver.h"
 #include "IECoreImage/OpenImageIOAlgo.h"
 
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathBoxAlgo.h"
-#else
 #include "Imath/ImathBoxAlgo.h"
-#endif
 
 #include "OpenImageIO/imageio.h"
 
@@ -200,8 +195,13 @@ OutputBuffer::OutputBuffer( IECoreScenePreview::Renderer *renderer )
 	using OutputDefinition = std::tuple<const char *, const char *, const char *>;
 	for(
 		auto &[name, data, filter] : {
-			OutputDefinition( "beauty", "rgba", "box" ),
-			OutputDefinition( "depth", "float Z", "closest" ),
+			/// \todo Define standard filter names that can be supported across
+			/// all renderer backends, and settle on one for the beauty.
+			OutputDefinition( "beauty", "rgba", nullptr ),
+			// Using `box` rather than `closest` for Z because it gives a better
+			// approximation of depth at the centre of the pixel, which is important
+			// for accuracy in `SceneGadget::objectAt()`.
+			OutputDefinition( "depth", "float Z", "box" ),
 			OutputDefinition( "id", "uint id", "closest" ),
 		}
 	)
@@ -209,7 +209,10 @@ OutputBuffer::OutputBuffer( IECoreScenePreview::Renderer *renderer )
 		IECoreScene::OutputPtr output = outputTemplate->copy();
 		output->setName( name );
 		output->setData( data );
-		output->parameters()["filter"] = new IECore::StringData( filter );
+		if( filter )
+		{
+			output->parameters()["filter"] = new IECore::StringData( filter );
+		}
 		renderer->output( string( "__outputBuffer:" ) + name, output.get() );
 	}
 }
@@ -232,6 +235,12 @@ void OutputBuffer::renderInternal( bool renderSelection ) const
 {
 	if( m_dataWindow.isEmpty() )
 	{
+		return;
+	}
+
+	if( renderSelection && m_selectionBuffer.size() == 1 && m_selectionBuffer[0] == 0 )
+	{
+		// Selection is empty, so no need to render.
 		return;
 	}
 
@@ -329,6 +338,12 @@ void OutputBuffer::setSelection( const std::vector<uint32_t> &ids )
 	m_selectionBuffer = ids;
 	if( !m_selectionBuffer.size() )
 	{
+		/// \todo OpenGL documentation suggests we should be able to
+		/// make an empty buffer, so I'm not sure why we do this. Either
+		/// because some drivers don't like an empty buffer, or because
+		/// `contains()` requires a non-empty array? If the latter, we
+		/// could remove this because `renderInternal()` now has an early
+		/// return for the no-selection case.
 		m_selectionBuffer.push_back( 0 );
 	}
 

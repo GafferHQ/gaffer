@@ -58,10 +58,14 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 
 		searchFilter = _GafferSceneUI._SetEditor.SearchFilter()
 		emptySetFilter = _GafferSceneUI._SetEditor.EmptySetFilter()
-		emptySetFilter.userData()["UI"] = { "label" : "Hide Empty" }
+		emptySetFilter.userData()["UI"] = { "label" : "Hide Empty Members", "toolTip" : "Hide sets with no members" }
 		emptySetFilter.setEnabled( False )
 
-		self.__filter = Gaffer.CompoundPathFilter( [ searchFilter, emptySetFilter ] )
+		emptySelectionFilter = _GafferSceneUI._SetEditor.EmptySetFilter( propertyName = "setPath:selectedMemberCount" )
+		emptySelectionFilter.userData()["UI"] = { "label" : "Hide Empty Selection", "toolTip" : "Hide sets with no selected members or descendants" }
+		emptySelectionFilter.setEnabled( False )
+
+		self.__filter = Gaffer.CompoundPathFilter( [ searchFilter, emptySetFilter, emptySelectionFilter ] )
 
 		with mainColumn :
 
@@ -69,8 +73,10 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 
 				self.__searchFilterWidget = _SearchFilterWidget( searchFilter )
 				GafferUI.BasicPathFilterWidget( emptySetFilter )
+				GafferUI.BasicPathFilterWidget( emptySelectionFilter )
 
-			self.__setMembersColumn = GafferUI.StandardPathColumn( "Members", "setPath:memberCount" )
+			self.__setMembersColumn = _GafferSceneUI._SetEditor.SetMembersColumn()
+			self.__selectedSetMembersColumn = _GafferSceneUI._SetEditor.SetSelectionColumn()
 			self.__includedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetInclusionsColumn( scriptNode.context() )
 			self.__excludedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetExclusionsColumn( scriptNode.context() )
 			self.__pathListing = GafferUI.PathListingWidget(
@@ -78,6 +84,7 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 				columns = [
 					_GafferSceneUI._SetEditor.SetNameColumn(),
 					self.__setMembersColumn,
+					self.__selectedSetMembersColumn,
 					self.__includedSetMembersColumn,
 					self.__excludedSetMembersColumn,
 				],
@@ -128,12 +135,13 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 	def __updatePathListingPath( self ) :
 
 		if self.__plug is not None :
-			# We take a static copy of our current context for use in the SetPath - this prevents the
-			# PathListing from updating automatically when the original context changes, and allows us to take
-			# control of updates ourselves in _updateFromContext(), using LazyMethod to defer the calls to this
-			# function until we are visible and playback has stopped.
-			## \todo This may no longer be necessary now that the PathListingWidget updates asynchronously and
-			# doesn't update when hidden.
+			# We take a static copy of our current context for use in the SetPath for two reasons :
+			#
+			# 1. To prevent the PathListing from updating automatically when the original context
+			#    changes, allowing us to use LazyMethod to defer updates until playback stops.
+			# 2. Because the PathListingWidget uses a BackgroundTask to evaluate the Path, and it
+			#    would not be thread-safe to directly reference a context that could be modified by
+			#    the UI thread at any time.
 			contextCopy = Gaffer.Context( self.getContext() )
 			self.__searchFilterWidget.setScene( self.__plug )
 			self.__searchFilterWidget.setContext( contextCopy )
@@ -181,10 +189,16 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 			# prevent the path itself from being dragged
 			return IECore.StringVectorData()
 
-		GafferUI.Pointer.setCurrent( "paths" )
 		column = self.__pathListing.columnAt( imath.V2f( event.line.p0.x, event.line.p0.y ) )
+		if isinstance( column, _GafferSceneUI._SetEditor.SetNameColumn ) :
+			GafferUI.Pointer.setCurrent( "sets" )
+		else :
+			GafferUI.Pointer.setCurrent( "paths" )
+
 		if column == self.__setMembersColumn :
 			return IECore.StringVectorData( self.__getSetMembers( setNames ).paths() )
+		elif column == self.__selectedSetMembersColumn :
+			return IECore.StringVectorData( self.__getSelectedSetMembers( setNames ).paths() )
 		elif column == self.__includedSetMembersColumn :
 			return IECore.StringVectorData( self.__getIncludedSetMembers( setNames ).paths() )
 		elif column == self.__excludedSetMembersColumn :
@@ -263,6 +277,14 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 
 		return result
 
+	def __getSelectedSetMembers( self, setNames, *unused ) :
+
+		setMembers = self.__getSetMembers( setNames )
+		return IECore.PathMatcher( [
+			p for p in ContextAlgo.getSelectedPaths( self.getContext() ).paths()
+			if setMembers.match( p ) & ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch )
+		] )
+
 	def __getIncludedSetMembers( self, setNames, *unused ) :
 
 		return self.__getSetMembers( setNames ).intersection( ContextAlgo.getVisibleSet( self.getContext() ).inclusions )
@@ -297,7 +319,7 @@ class _SearchFilterWidget( GafferUI.PathFilterWidget ) :
 		self.__patternWidget = GafferUI.TextWidget()
 		GafferUI.PathFilterWidget.__init__( self, self.__patternWidget, pathFilter )
 
-		self.__patternWidget._qtWidget().setPlaceholderText( "Filter..." )
+		self.__patternWidget.setPlaceholderText( "Filter..." )
 
 		self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ), scoped = False )
 		self.__patternWidget.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )

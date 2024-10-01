@@ -123,11 +123,6 @@ SurfaceTextureCache g_surfaceTextureCache( surfaceTextureGetter, 1024 * 1024 * 6
 
 IECoreGL::RenderablePtr iesVisualisation( const std::string &filename )
 {
-
-#if AI_VERSION_ARCH_NUM < 6
-	return nullptr;
-#else
-
 	// It's not entirely clear from rendered results exactly how radius
 	// interacts with the profile, so we just draw the normalised distribution
 	// of the profile.
@@ -172,8 +167,6 @@ IECoreGL::RenderablePtr iesVisualisation( const std::string &filename )
 	IECoreGL::PointsPrimitivePtr points = new IECoreGL::PointsPrimitive( IECoreGL::PointsPrimitive::Point );
 	points->addPrimitiveVariable( "P", PrimitiveVariable( PrimitiveVariable::Interpolation::Vertex, pData ) );
 	return points;
-
-#endif
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -194,7 +187,7 @@ class ArnoldLightVisualiser : public GafferSceneUI::StandardLightVisualiser
 
 	protected :
 
-		IECore::DataPtr surfaceTexture( const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, int maxTextureResolution ) const override;
+		IECore::DataPtr surfaceTexture( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, int maxTextureResolution ) const override;
 
 	private :
 
@@ -243,7 +236,7 @@ Visualisations ArnoldLightVisualiser::visualise( const IECore::InternedString &a
 	return v;
 }
 
-IECore::DataPtr ArnoldLightVisualiser::surfaceTexture( const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, int maxTextureResolution ) const
+IECore::DataPtr ArnoldLightVisualiser::surfaceTexture( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, int maxTextureResolution ) const
 {
 	const ShaderNetwork::Parameter &output = shaderNetwork->getOutput();
 	if( !output )
@@ -252,7 +245,7 @@ IECore::DataPtr ArnoldLightVisualiser::surfaceTexture( const IECoreScene::Shader
 	}
 
 	const IECoreScene::Shader *outputShader = shaderNetwork->outputShader();
-	const IECore::InternedString metadataTarget = outputShader->getType() + ":" + outputShader->getName();
+	const IECore::InternedString metadataTarget = "ai:light:" + outputShader->getName();
 
 	ConstStringDataPtr colorParamData = Gaffer::Metadata::value<StringData>( metadataTarget, "colorParameter" );
 	if( !colorParamData )

@@ -39,12 +39,7 @@
 
 #include "Gaffer/TypedPlug.h"
 
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathFun.h"
-#else
 #include "Imath/ImathFun.h"
-#endif
 
 using namespace IECore;
 using namespace Gaffer;

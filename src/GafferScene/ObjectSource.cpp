@@ -44,12 +44,7 @@
 #include "IECore/NullObject.h"
 #include "IECore/StringAlgo.h"
 
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathBoxAlgo.h"
-#else
 #include "Imath/ImathBoxAlgo.h"
-#endif
 
 using namespace GafferScene;
 

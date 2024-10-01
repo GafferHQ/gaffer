@@ -1,0 +1,51 @@
+/*
+	OSL does not allow initializing a variable-sized array with an emtpy
+	array value. As a workaround, the AOV variable name arrays default value
+	is set to a single empty string,. which is ignored in the shader. The AOV
+	value arrays default value is set to a single value for the same reason.
+*/
+shader dlAOVGroupFour(
+	color colorAOVValuesA = color( 0, 0, 0),
+	string colorAOVNamesA = "",
+	color colorAOVValuesB = color( 0, 0, 0),
+	string colorAOVNamesB = "",
+	color colorAOVValuesC = color( 0, 0, 0),
+	string colorAOVNamesC = "",
+	color colorAOVValuesD = color( 0, 0, 0),
+	string colorAOVNamesD = "",
+	int visible_in_diffuse = 1 [[
+		string label = "Visible in Diffuse",
+		string widget = "checkBox" ]],
+	int visible_in_reflections = 1 [[
+		string label = "Visible in Reflections",
+		string widget = "checkBox" ]],
+	int visible_in_refractions = 1 [[
+		string label = "Visible in Refractions",
+		string widget = "checkBox" ]],
+	output closure color outColor = 0
+	)
+{
+	color colorAOVValues[4] = { colorAOVValuesA, colorAOVValuesB, colorAOVValuesC, colorAOVValuesD };
+	string colorAOVNames[4] = { colorAOVNamesA, colorAOVNamesB, colorAOVNamesC, colorAOVNamesD };
+	
+	if(
+		raytype("camera") ||
+		(raytype("refraction") && visible_in_refractions) ||
+		(raytype("reflection") && visible_in_reflections) ||
+		(raytype("diffuse") && visible_in_diffuse)
+	)
+	{
+		int numValues = arraylength( colorAOVValues );
+		int numNames = arraylength( colorAOVNames );
+		if( numValues == numNames )
+		{
+			for( int i = 0; i < numValues; i++ )
+			{
+				if( colorAOVNames[i] != "" )
+				{
+					outColor += debug( colorAOVNames[i] ) * colorAOVValues[i];
+				}
+			}
+		}
+	}
+}

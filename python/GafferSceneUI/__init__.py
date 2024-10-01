@@ -47,8 +47,10 @@ from .PrimitiveInspector import PrimitiveInspector
 from .UVInspector import UVInspector
 from .FilterPlugValueWidget import FilterPlugValueWidget
 from .ScenePathPlugValueWidget import ScenePathPlugValueWidget
+from .SetExpressionPlugValueWidget import SetExpressionPlugValueWidget
 from .LightEditor import LightEditor
 from .SetEditor import SetEditor
+from .RenderPassEditor import RenderPassEditor
 from . import SceneHistoryUI
 from . import EditScopeUI
 
@@ -62,6 +64,7 @@ from . import OutputsUI
 from . import OptionsUI
 from . import OpenGLAttributesUI
 from . import SceneWriterUI
+from . import RenderUI
 from . import StandardOptionsUI
 from . import StandardAttributesUI
 from . import ShaderUI
@@ -124,9 +127,9 @@ from . import CubeUI
 from . import AttributeVisualiserUI
 from . import FilterProcessorUI
 from . import MeshToPointsUI
-from . import RenderUI
 from . import ShaderBallUI
 from . import ShaderTweaksUI
+from . import ShaderTweakProxyUI
 from . import CameraTweaksUI
 from . import LightToCameraUI
 from . import FilterResultsUI
@@ -190,6 +193,10 @@ from . import ImageScatterUI
 from . import RenderPassesUI
 from . import DeleteRenderPassesUI
 from . import RenderPassWedgeUI
+from . import LightPositionToolUI
+from . import MeshTessellateUI
+from . import RenderPassTypeAdaptorUI
+from . import RenderPassShaderUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

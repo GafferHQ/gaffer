@@ -52,7 +52,9 @@
 
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/Expression.h"
 #include "Gaffer/Monitor.h"
+#include "Gaffer/NameSwitch.h"
 #include "Gaffer/Private/IECorePreview/LRUCache.h"
 #include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
@@ -468,7 +470,7 @@ class CapturingMonitor : public Monitor
 				ProcessMap::const_iterator it = m_processMap.find( process->parent() );
 				if( it != m_processMap.end() )
 				{
-					CapturedProcess * const * parent = boost::get< CapturedProcess* >( &it->second );
+					CapturedProcess * const * parent = std::get_if<CapturedProcess *>( &it->second );
 					if( parent && *parent )
 					{
 						(*parent)->children.push_back( std::move( capturedProcess ) );
@@ -510,7 +512,8 @@ class CapturingMonitor : public Monitor
 		{
 			return
 				( plug->parent<ScenePlug>() && plug->getName() == m_scenePlugChildName ) ||
-				( (Gaffer::TypeId)plug->typeId() == Gaffer::TypeId::ObjectPlugTypeId && plug->getName() == g_processedObjectPlugName )
+				( (Gaffer::TypeId)plug->typeId() == Gaffer::TypeId::ObjectPlugTypeId && plug->getName() == g_processedObjectPlugName ) ||
+				runTimeCast<const Expression>( plug->node() )
 			;
 		}
 
@@ -518,7 +521,7 @@ class CapturingMonitor : public Monitor
 
 		Mutex m_mutex;
 
-		using ProcessOrScope = boost::variant<CapturedProcess *, std::unique_ptr< Monitor::Scope>>;
+		using ProcessOrScope = std::variant<CapturedProcess *, std::unique_ptr<Monitor::Scope>>;
 		using ProcessMap = boost::unordered_map<const Process *, ProcessOrScope>;
 
 		ProcessMap m_processMap;
@@ -1325,19 +1328,84 @@ void GafferScene::SceneAlgo::validateName( IECore::InternedString name )
 namespace
 {
 
-using RenderAdaptors = boost::container::flat_map<string, SceneAlgo::RenderAdaptor>;
+struct RenderAdaptorRegistration
+{
+	SceneAlgo::RenderAdaptor creator;
+	std::string client;
+	std::string renderer;
+};
+
+using RenderAdaptors = boost::container::flat_map<string, RenderAdaptorRegistration>;
 
 RenderAdaptors &renderAdaptors()
 {
-	static RenderAdaptors a;
-	return a;
+	static RenderAdaptors *a = new RenderAdaptors;
+	return *a;
 }
 
+SceneProcessorPtr createRenderAdaptor( const RenderAdaptorRegistration &registration )
+{
+	SceneProcessorPtr adaptor = registration.creator();
+	if( !adaptor )
+	{
+		return nullptr;
+	}
+
+	if( registration.client == "*" && registration.renderer == "*" )
+	{
+		return adaptor;
+	}
+
+	// Wrap using NameSwitches to enable/disable based on client/renderer.
+
+	SceneProcessorPtr wrapper = new SceneProcessor;
+	wrapper->addChild( new StringPlug( "client" ) );
+	wrapper->addChild( new StringPlug( "renderer" ) );
+	wrapper->addChild( adaptor );
+	adaptor->inPlug()->setInput( wrapper->inPlug() );
+
+	ScenePlug *out = adaptor->outPlug();
+
+	for( const auto &scope : { string( "client" ), string( "renderer" ) } )
+	{
+		if( auto p = adaptor->getChild<StringPlug>( scope ) )
+		{
+			p->setInput( wrapper->getChild<StringPlug>( scope ) );
+		}
+
+		const std::string &scopeValue = scope == "client" ? registration.client : registration.renderer;
+		if( scopeValue == "*" )
+		{
+			continue;
+		}
+
+		NameSwitchPtr nameSwitch = new NameSwitch( scope + "Switch" );
+		wrapper->addChild( nameSwitch );
+		nameSwitch->setup( out );
+		nameSwitch->inPlugs()->getChild<NameValuePlug>( 0 )->valuePlug()->setInput( wrapper->inPlug() );
+		nameSwitch->inPlugs()->getChild<NameValuePlug>( 1 )->valuePlug()->setInput( out );
+		nameSwitch->selectorPlug()->setInput( wrapper->getChild<Plug>( scope ) );
+		/// \todo Remove "unspecified" - see matching comment in `createRenderAdaptors()`.
+		nameSwitch->inPlugs()->getChild<NameValuePlug>( 1 )->namePlug()->setValue( scopeValue + " unspecified" );
+
+		out = nameSwitch->outPlug()->getChild<ScenePlug>( "value" );
+	}
+
+	wrapper->outPlug()->setInput( out );
+
+	return wrapper;
+}
+
+} // namespace
+
+void GafferScene::SceneAlgo::registerRenderAdaptor( const std::string &name, RenderAdaptor adaptor, const std::string &client, const std::string &renderer )
+{
+	renderAdaptors()[name] = { adaptor, client, renderer };
 }
 
 void GafferScene::SceneAlgo::registerRenderAdaptor( const std::string &name, SceneAlgo::RenderAdaptor adaptor )
 {
-	renderAdaptors()[name] = adaptor;
+	registerRenderAdaptor( name, adaptor, "*", "*" );
 }
 
 void GafferScene::SceneAlgo::deregisterRenderAdaptor( const std::string &name )
@@ -1348,26 +1416,44 @@ void GafferScene::SceneAlgo::deregisterRenderAdaptor( const std::string &name )
 SceneProcessorPtr GafferScene::SceneAlgo::createRenderAdaptors()
 {
 	SceneProcessorPtr result = new SceneProcessor;
+	StringPlugPtr clientPlug = new StringPlug( "client" );
+	StringPlugPtr rendererPlug = new StringPlug( "renderer" );
+	result->addChild( clientPlug );
+	result->addChild( rendererPlug );
+
+	/// \todo Remove, and require all clients to set the plugs themselves.
+	clientPlug->setValue( "unspecified" );
+	rendererPlug->setValue( "unspecified" );
 
 	ScenePlug *in = result->inPlug();
 
-	const RenderAdaptors &a = renderAdaptors();
-	for( RenderAdaptors::const_iterator it = a.begin(), eIt = a.end(); it != eIt; ++it )
+	const RenderAdaptors &adaptors = renderAdaptors();
+	for( const auto &[name, a] : adaptors )
 	{
-		SceneProcessorPtr adaptor = it->second();
-		if( adaptor )
-		{
-			result->addChild( adaptor );
-			adaptor->inPlug()->setInput( in );
-			in = adaptor->outPlug();
-		}
-		else
+		SceneProcessorPtr adaptor = createRenderAdaptor( a );
+		if( !adaptor )
 		{
 			IECore::msg(
 				IECore::Msg::Warning, "SceneAlgo::createRenderAdaptors",
-				fmt::format( "Adaptor \"{}\" returned null", it->first )
+				fmt::format( "Adaptor \"{}\" returned null", name )
 			);
+			continue;
 		}
+
+		adaptor->setName( name );
+		if( auto s = adaptor->getChild<StringPlug>( "client" ) )
+		{
+			s->setInput( clientPlug.get() );
+		}
+
+		if( auto s = adaptor->getChild<StringPlug>( "renderer" ) )
+		{
+			s->setInput( rendererPlug.get() );
+		}
+
+		result->addChild( adaptor );
+		adaptor->inPlug()->setInput( in );
+		in = adaptor->outPlug();
 	}
 
 	result->outPlug()->setInput( in );

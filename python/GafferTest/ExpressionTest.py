@@ -304,6 +304,19 @@ class ExpressionTest( GafferTest.TestCase ) :
 				c["myArray"] = IECore.IntVectorData( [ i ] )
 				self.assertEqual( s["n"]["op1"].getValue(), i )
 
+	def testContextGetWithNonString( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferTest.AddNode()
+
+		s["e"] = Gaffer.Expression()
+		with self.assertRaisesRegex( RuntimeError, "Context name must be a string" ) :
+			s["e"].setExpression(
+				"parent['n']['op1'] = context.get( 10 )",
+				"python",
+			)
+
 	def testDirtyPropagation( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -1395,6 +1408,16 @@ class ExpressionTest( GafferTest.TestCase ) :
 			self.assertEqual( s["n"]["op1"].getValue(), 0 )
 			self.assertEqual( s["n"]["op2"].getValue(), 1 )
 
+	def testContextContainsNonString( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferTest.AddNode()
+		s["e"] = Gaffer.Expression()
+
+		with self.assertRaisesRegex( RuntimeError, "Context name must be a string" ) :
+			s["e"].setExpression( """parent["n"]["op1"] = 1 if 10 in context else 0""" )
+
 	def testDuplicateDeserialise( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -1649,6 +1672,18 @@ class ExpressionTest( GafferTest.TestCase ) :
 		script["expression"].setExpression( 'import pathlib; parent["node"]["in"] = pathlib.Path.cwd()' )
 
 		self.assertEqual( script["node"]["in"].getValue(), pathlib.Path.cwd().as_posix() )
+
+	def testCreateExpressionWithLegacyPlugName( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["random"] = Gaffer.Random()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression(
+			'parent["random"]["contextEntry"] = "x"'
+		)
+
+		self.assertEqual( script["random"]["seedVariable"].getValue(), "x" )
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "taskCollaboration:hashAliasing" } )
 	def testHashAliasing( self ) :

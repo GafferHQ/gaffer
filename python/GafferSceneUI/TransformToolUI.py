@@ -59,29 +59,15 @@ Gaffer.Metadata.registerNode(
 	"toolbarLayout:customWidget:SelectionWidget:widgetType", "GafferSceneUI.TransformToolUI._SelectionWidget",
 	"toolbarLayout:customWidget:SelectionWidget:section", "Bottom",
 
-	# So we don't obscure the corner gnomon
-	"toolbarLayout:customWidget:LeftSpacer:widgetType", "GafferSceneUI.TransformToolUI._LeftSpacer",
-	"toolbarLayout:customWidget:LeftSpacer:section", "Bottom",
-	"toolbarLayout:customWidget:LeftSpacer:index", 0,
+	"nodeToolbar:top:type", "GafferUI.StandardNodeToolbar.top",
+	"toolbarLayout:customWidget:TargetTipWidget:widgetType", "GafferSceneUI.TransformToolUI._TargetTipWidget",
+	"toolbarLayout:customWidget:TargetTipWidget:section", "Top",
 
-	# So our layout doesn't jump around too much when our selection widget changes size
-	"toolbarLayout:customWidget:RightSpacer:widgetType", "GafferSceneUI.TransformToolUI._RightSpacer",
-	"toolbarLayout:customWidget:RightSpacer:section", "Bottom",
-	"toolbarLayout:customWidget:RightSpacer:index", -1,
+	"toolbarLayout:customWidget:TopRightSpacer:widgetType", "GafferSceneUI.SelectionToolUI._RightSpacer",
+	"toolbarLayout:customWidget:TopRightSpacer:section", "Top",
+	"toolbarLayout:customWidget:TopRightSpacer:index", -1,
 
 )
-
-class _LeftSpacer( GafferUI.Spacer ) :
-
-	def __init__( self, imageView, **kw ) :
-
-		GafferUI.Spacer.__init__( self, size = imath.V2i( 40, 1 ), maximumSize = imath.V2i( 40, 1 ) )
-
-class _RightSpacer( GafferUI.Spacer ) :
-
-	def __init__( self, imageView, **kw ) :
-
-		GafferUI.Spacer.__init__( self, size = imath.V2i( 0, 0 ) )
 
 def _boldFormatter( graphComponents ) :
 
@@ -101,11 +87,35 @@ def _distance( ancestor, descendant ) :
 
 	return result
 
-class _SelectionWidget( GafferUI.Frame ) :
+class _TargetTipWidget( GafferUI.Frame ) :
 
 	def __init__( self, tool, **kw ) :
 
 		GafferUI.Frame.__init__( self, borderWidth = 4, **kw )
+
+		self.__tool = tool
+
+		tool.plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ), scoped = False )
+
+		with self :
+			with GafferUI.Frame( borderWidth = 0 ) as self.__innerFrame :
+				self.__tipLabel = GafferUI.Label( "" )
+
+		self.__plugSet()
+
+	def __plugSet( self, *unused ) :
+
+		label = Gaffer.Metadata.value( self.__tool, "ui:transformTool:toolTip" ) or ""
+		self.__tipLabel.setText( label )
+
+		if not label :
+			self.__innerFrame.setVisible( False )
+
+class _SelectionWidget( GafferUI.Frame ) :
+
+	def __init__( self, tool, **kw ) :
+
+		GafferUI.Frame.__init__( self, borderWidth = 1, **kw )
 
 		self.__tool = tool
 

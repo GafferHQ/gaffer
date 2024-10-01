@@ -62,12 +62,19 @@ class ChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plugs, **kw ) :
 
-		self.__menuButton = GafferUI.MenuButton( menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
+		column = GafferUI.ListContainer( spacing = 4 )
+		GafferUI.PlugValueWidget.__init__( self, column, plugs, **kw )
 
-		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plugs, **kw )
+		with column :
+
+			self.__menuButton = GafferUI.MenuButton( menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
+			self._addPopupMenu( self.__menuButton )
+			self.__customValueWidget = GafferUI.StringPlugValueWidget( plugs )
 
 		self.__availableChannels = set()
 		self.__currentChannel = None
+
+		self.__customValueWidget.setVisible( self.__isCustom() )
 
 	def _auxiliaryPlugs( self, plug ) :
 
@@ -95,12 +102,23 @@ class ChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__availableChannels = set().union( *[ v["availableChannels"] for v in values ] )
 		self.__currentChannel = sole( v["value"] for v in values )
 
-		label = self.__extraChannels().get( self.__currentChannel, self.__currentChannel )
+		isCustom = self.__isCustom()
+		self.__customValueWidget.setVisible( isCustom )
+
+		if isCustom :
+			label = "Custom"
+		else :
+			label = self.__extraChannels().get( self.__currentChannel, self.__currentChannel )
+
 		self.__menuButton.setText(
 			label if label is not None else "---"
 		)
 
 		self.__menuButton.setErrored( exception is not None )
+
+	def _updateFromMetadata( self ) :
+
+		self._requestUpdateFromValues()
 
 	def _updateFromEditable( self ) :
 
@@ -114,13 +132,15 @@ class ChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 				if channel not in availableChannels :
 					availableChannels.add( channel )
 
+		isCustom = self.__isCustom()
+
 		result = IECore.MenuDefinition()
 		for channel in GafferImage.ImageAlgo.sortedChannelNames( availableChannels ) :
 			result.append(
 				"/{}".format( channel.replace( ".", "/" ) ),
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = channel ),
-					"checkBox" : channel == self.__currentChannel,
+					"checkBox" : not isCustom and channel == self.__currentChannel,
 				}
 			)
 
@@ -139,6 +159,15 @@ class ChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if not result.items() :
 			result.append( "/No Channels Available", { "active" : False } )
 
+		result.append( "/CustomDivider", { "divider" : True } )
+		result.append(
+			"/Custom",
+			{
+				"command" : Gaffer.WeakMethod( self.__applyCustom ),
+				"checkBox" : isCustom,
+			}
+		)
+
 		return result
 
 	def __setValue( self, unused, value ) :
@@ -146,6 +175,17 @@ class ChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
 			for plug in self.getPlugs() :
 				plug.setValue( value )
+				Gaffer.Metadata.deregisterValue( plug, "channelPlugValueWidget:isCustom" )
+
+	def __applyCustom( self, unused ) :
+
+		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+			for plug in self.getPlugs() :
+				Gaffer.Metadata.registerValue( plug, "channelPlugValueWidget:isCustom", True )
+
+	def __isCustom( self ) :
+
+		return any( Gaffer.Metadata.value( p, "channelPlugValueWidget:isCustom" ) for p in self.getPlugs() )
 
 	def __extraChannels( self ) :
 

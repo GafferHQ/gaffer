@@ -59,6 +59,13 @@ class GAFFERIMAGE_API ImageStats : public Gaffer::ComputeNode
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::ImageStats, ImageStatsTypeId, Gaffer::ComputeNode );
 
+		enum AreaSource
+		{
+			Area = 0,
+			DataWindow = 1,
+			DisplayWindow = 2,
+		};
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 		GafferImage::ImagePlug *inPlug();
@@ -69,6 +76,9 @@ class GAFFERIMAGE_API ImageStats : public Gaffer::ComputeNode
 
 		Gaffer::StringVectorDataPlug *channelsPlug();
 		const Gaffer::StringVectorDataPlug *channelsPlug() const;
+
+		Gaffer::IntPlug *areaSourcePlug();
+		const Gaffer::IntPlug *areaSourcePlug() const;
 
 		Gaffer::Box2iPlug *areaPlug();
 		const Gaffer::Box2iPlug *areaPlug() const;

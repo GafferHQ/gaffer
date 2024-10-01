@@ -141,14 +141,14 @@ class SwitchTest( GafferTest.TestCase ) :
 		# not affect the output (dependency is carried by
 		# the connection instead).
 		for plug in [ n["in"][0], n["in"][1] ] :
-			self.assertEqual( n.affects( plug ), [] )
+			self.assertEqual( n.affects( plug ), [ n["connectedInputs"] ] )
 
 		# Now the index is computed, the dependencies
 		# must be declared.
 		a = GafferTest.AddNode()
 		n["index"].setInput( a["sum"] )
 		for plug in [ n["in"][0], n["in"][1] ] :
-			self.assertEqual( n.affects( plug ), [ n["out"] ] )
+			self.assertEqual( n.affects( plug ), [ n["out"], n["connectedInputs"] ] )
 
 		self.assertEqual( n.affects( n["out"] ), [] )
 
@@ -527,6 +527,128 @@ class SwitchTest( GafferTest.TestCase ) :
 		s.setup( Gaffer.NameValuePlug( "name", Gaffer.V3fPlug() ) )
 		self.assertEqual( s.correspondingInput( s["out"]["value"]["x"] ), s["in"][0]["value"]["x"] )
 		self.assertEqual( s.activeInPlug( s["out"]["value"]["y"] ), s["in"][0]["value"]["y"] )
+
+	def testInternalConnectionWithTypeConversionAndCanceller( self ) :
+
+		# Make a switch with 2 inputs.
+
+		switch = Gaffer.Switch()
+		switch.setup( Gaffer.IntPlug() )
+		switch["in"][0].setInput( self.intPlug( 0 ) )
+		switch["in"][1].setInput( self.intPlug( 1 ) )
+
+		# Drive the index with a BoolPlug. This means that `indexPlug()->getValue()`
+		# will perform a type conversion using `ValuePlug::setFrom()`, performed
+		# inside a `Process` which will check for cancellation in its constructor.
+
+		boolPlug = Gaffer.BoolPlug()
+		switch["index"].setInput( boolPlug )
+
+		# Change the index by setting the value of `boolPlug`, but do this in a
+		# Context in which cancellation has been requested. This models a bizarre
+		# condition in which garbage collection destroys a `GafferImage.Shape` node
+		# from within a cancelled background task, and `Switch::plugInputChanged()`
+		# is called as the Shape is destroyed (Shape nodes have a bool->index connection
+		# internally).
+		#
+		# We do not want this to throw `IECore::Cancelled` because the graph authoring
+		# API (here, `setValue()`) is not context-sensitive, so it would be surprising
+		# if it considered the canceller.
+
+		canceller = IECore.Canceller()
+		canceller.cancel()
+		with Gaffer.Context( Gaffer.Context(), canceller ) :
+			for index in ( 0, 1 ) :
+				boolPlug.setValue( index )
+				self.assertTrue( switch["out"].getInput().isSame( switch["in"][index] ) )
+
+	def testConnectedInputs( self ) :
+
+		switch = Gaffer.Switch()
+		self.assertEqual( switch["connectedInputs"].getValue(), IECore.IntVectorData() )
+
+		switch.setup( Gaffer.IntPlug() )
+		self.assertEqual( switch["connectedInputs"].getValue(), IECore.IntVectorData() )
+
+		inputA = Gaffer.IntPlug()
+		switch["in"][0].setInput( inputA )
+		self.assertEqual( switch["connectedInputs"].getValue(), IECore.IntVectorData( [ 0 ] ) )
+
+		switch["in"][1].setInput( inputA )
+		self.assertEqual( switch["connectedInputs"].getValue(), IECore.IntVectorData( [ 0, 1 ] ) )
+
+		switch["in"][0].setInput( None )
+		self.assertEqual( switch["connectedInputs"].getValue(), IECore.IntVectorData( [ 1 ] ) )
+
+	def testConnectedInputsWithPromotedInPlug( self ) :
+
+		box = Gaffer.Box()
+		box["switch"] =  Gaffer.Switch()
+		self.assertEqual( box["switch"]["connectedInputs"].getValue(), IECore.IntVectorData() )
+
+		box["switch"].setup( Gaffer.IntPlug() )
+		self.assertEqual( box["switch"]["connectedInputs"].getValue(), IECore.IntVectorData() )
+
+		Gaffer.PlugAlgo.promote( box["switch"]["in"] )
+		self.assertEqual( box["switch"]["connectedInputs"].getValue(), IECore.IntVectorData() )
+
+		inputA = Gaffer.IntPlug()
+		box["in"][0].setInput( inputA )
+		self.assertEqual( box["switch"]["connectedInputs"].getValue(), IECore.IntVectorData( [ 0 ] ) )
+
+		box["in"][1].setInput( inputA )
+		self.assertEqual( box["switch"]["connectedInputs"].getValue(), IECore.IntVectorData( [ 0, 1 ] ) )
+
+		box["in"][0].setInput( None )
+		self.assertEqual( box["switch"]["connectedInputs"].getValue(), IECore.IntVectorData( [ 1 ] ) )
+
+	def testDeleteContextVariables( self ) :
+
+		add = GafferTest.AddNode()
+		add["op1"].setValue( 10 )
+		add["op2"].setValue( 3 )
+
+		switch = self.intSwitch()
+		switch["in"][0].setInput( add["sum"] )
+		switch["deleteContextVariables"].setValue( "unwanted* pleaseDeleteMe" )
+
+		with Gaffer.Context() as context :
+			context["unwanted1"] = 10
+			context["unwanted2"] = 20
+			context["pleaseDeleteMe"] = 20
+			context["keepMe"] = 3
+			with Gaffer.ContextMonitor( add["sum"] ) as monitor :
+				self.assertEqual( switch["out"].getValue(), 13 )
+
+		self.assertEqual(
+			set( monitor.combinedStatistics().variableNames() ),
+			{ "frame", "framesPerSecond", "keepMe" }
+		)
+
+	def testDeleteContextVariableUsedByIndex( self ) :
+
+		add0 = GafferTest.AddNode()
+		add1 = GafferTest.AddNode()
+		add1["op1"].setValue( 1 )
+
+		indexQuery = Gaffer.ContextQuery()
+		indexQuery.addQuery( Gaffer.IntPlug(), "index" )
+
+		switch = self.intSwitch()
+		switch["in"][0].setInput( add0["sum"] )
+		switch["in"][1].setInput( add1["sum"] )
+		switch["index"].setInput( indexQuery["out"][0]["value"] )
+		switch["deleteContextVariables"].setValue( "index" )
+
+		with Gaffer.Context() as context :
+			context["index"] = 1
+			with Gaffer.ContextMonitor( add1["sum"] ) as monitor :
+				self.assertEqual( switch["out"].getValue(), 1 )
+
+		self.assertEqual(
+			set( monitor.combinedStatistics().variableNames() ),
+			{ "frame", "framesPerSecond" }
+		)
 
 	def setUp( self ) :
 

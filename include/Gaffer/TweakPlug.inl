@@ -93,7 +93,7 @@ bool TweakPlug::applyTweak(
 		return setDataFunctor( name, newData );
 	}
 
-	const IECore::Data *currentValue = getDataFunctor( name );
+	const IECore::Data *currentValue = getDataFunctor( name, /* withFallback = */ mode != Gaffer::TweakPlug::CreateIfMissing );
 
 	if( IECore::runTimeCast<const IECore::InternedStringData>( currentValue ) )
 	{
@@ -125,10 +125,7 @@ bool TweakPlug::applyTweak(
 		{
 			return false;
 		}
-		else if( !( mode == Gaffer::TweakPlug::Replace && missingMode == Gaffer::TweakPlug::MissingMode::IgnoreOrReplace) )
-		{
-			throw IECore::Exception( fmt::format( "Cannot apply tweak with mode {} to \"{}\" : This parameter does not exist", modeToString( mode ), name ) );
-		}
+		throw IECore::Exception( fmt::format( "Cannot apply tweak with mode {} to \"{}\" : This parameter does not exist", modeToString( mode ), name ) );
 	}
 
 	if(
@@ -148,6 +145,10 @@ bool TweakPlug::applyTweak(
 	)
 	{
 		applyListTweak( currentValue, newData.get(), newData.get(), mode, name );
+	}
+	else if( mode == TweakPlug::Replace )
+	{
+		applyReplaceTweak( currentValue, newData.get() );
 	}
 
 	if( mode != Gaffer::TweakPlug::CreateIfMissing )

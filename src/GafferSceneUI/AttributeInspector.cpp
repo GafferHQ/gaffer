@@ -276,7 +276,7 @@ Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::H
 		{
 			if(
 				plug->namePlug()->getValue() == m_attribute.string() &&
-				plug->enabledPlug()->getValue()
+				( !plug->enabledPlug() || plug->enabledPlug()->getValue() )
 			)
 			{
 				/// \todo This is overly conservative. We should test to see if there is more than

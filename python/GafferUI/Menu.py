@@ -408,7 +408,10 @@ class Menu( GafferUI.Widget ) :
 
 		# when an icon file path is defined in the menu definition
 		icon = getattr( item, "icon", None )
-		if icon is not None :
+		# Qt is unable to display a checkbox and icon at the same time.
+		# Unhelpfully, the icon overrides the checkbox so we only display
+		# the icon when there is no checkbox.
+		if icon is not None and not qtAction.isChecked() :
 			if isinstance( icon, str ) :
 				image = GafferUI.Image( icon )
 			else :

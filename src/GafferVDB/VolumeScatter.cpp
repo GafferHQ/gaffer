@@ -45,12 +45,7 @@
 #include "IECoreScene/PointsPrimitive.h"
 #include "IECoreVDB/VDBObject.h"
 
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathRandom.h"
-#else
 #include "Imath/ImathRandom.h"
-#endif
 
 #include "openvdb/openvdb.h"
 #include "openvdb/tools/PointScatter.h"

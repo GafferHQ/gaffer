@@ -126,6 +126,25 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"depth" : [
+
+			"description",
+			"""
+			Determines the drawing order of overlapping backdrops.
+
+			> Note : Larger backdrops are _automatically_ drawn behind smaller ones,
+			> so it is only necessary to manually assign a depth in rare cases where
+			> this is not desirable.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:Back", -1,
+			"preset:Middle", 0,
+			"preset:Front", 1,
+
+
+		],
+
 	}
 
 )

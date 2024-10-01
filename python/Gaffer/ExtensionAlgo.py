@@ -57,10 +57,7 @@ def exportExtension( name, boxes, directory ) :
 	with open( pythonDir / "__init__.py", "w", encoding = "utf-8" ) as initFile :
 
 		for box in boxes :
-
-			with open( pythonDir / (box.getName() + ".py"), "w", encoding = "utf-8" ) as nodeFile :
-				nodeFile.write( __nodeDefinition( box, name ) )
-
+			exportNode( name, box, pythonDir / (box.getName() + ".py") )
 			initFile.write( "from .{name} import {name}\n".format( name = box.getName() ) )
 
 	uiDir = directory / "python" / (name + "UI")
@@ -70,9 +67,7 @@ def exportExtension( name, boxes, directory ) :
 
 		for box in boxes :
 
-			with open( uiDir / (box.getName() + "UI.py"), "w", encoding = "utf-8" ) as uiFile :
-				uiFile.write( __uiDefinition( box, name ) )
-
+			exportNodeUI( name, box, uiDir / (box.getName() + "UI.py" ) )
 			initFile.write( "from . import {name}UI\n".format( name = box.getName() ) )
 
 	startupDir = directory / "startup" / "gui"
@@ -101,6 +96,16 @@ def exportExtension( name, boxes, directory ) :
 				nodeMenuDefinition = "\n".join( nodeMenuDefinition )
 			)
 		)
+
+def exportNode( moduleName, box, fileName ) :
+
+	with open( fileName, "w", encoding = "utf-8" ) as nodeFile :
+		nodeFile.write( __nodeDefinition( box, moduleName ) )
+
+def exportNodeUI( moduleName, box, fileName ) :
+
+	with open( fileName, "w", encoding = "utf-8" ) as uiFile :
+		uiFile.write( __uiDefinition( box, moduleName ) )
 
 __startupTemplate = """\
 import GafferUI
@@ -140,10 +145,10 @@ class {name}( Gaffer.SubGraph ) :
 				for plug in Gaffer.Plug.RecursiveRange( plug ) :
 					plug.setFlags( Gaffer.Plug.Flags.Dynamic, False )
 
-IECore.registerRunTimeTyped( {name}, typeName = "{extension}::{name}" )
+IECore.registerRunTimeTyped( {name}, typeName = "{moduleName}::{name}" )
 """
 
-def __nodeDefinition( box, extension ) :
+def __nodeDefinition( box, moduleName ) :
 
 	invisiblePlug = re.compile( "^__.*$" )
 	children = Gaffer.StandardSet()
@@ -173,18 +178,18 @@ def __nodeDefinition( box, extension ) :
 		imports = "\n".join( sorted( imports ) ),
 		name = box.getName(),
 		constructor = __indent( "\n".join( constructorLines ), 2 ),
-		extension = extension
+		moduleName = moduleName
 	)
 
 __uiTemplate = """\
 import imath
 import IECore
 import Gaffer
-import {extension}
+import {moduleName}
 
 Gaffer.Metadata.registerNode(
 
-	{extension}.{name},
+	{moduleName}.{name},
 
 {metadata}
 {plugMetadata}
@@ -192,11 +197,11 @@ Gaffer.Metadata.registerNode(
 )
 """
 
-def __uiDefinition( box, extension ) :
+def __uiDefinition( box, moduleName ) :
 
 	return __uiTemplate.format(
 
-		extension = extension,
+		moduleName = moduleName,
 		name = box.getName(),
 		metadata = __indent( __metadata( box ), 1 ),
 		plugMetadata = __indent( __plugMetadata( box ), 1 )

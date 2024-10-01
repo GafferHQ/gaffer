@@ -616,12 +616,12 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 		light1 = GafferSceneTest.TestLight()
 		light1["name"].setValue( "light1" )
-		light1["lightShaderName"].setValue( "SphereLight" ) # USDScene requires valid USD light type
+		light1.loadShader( "SphereLight" ) # USDScene requires valid USD light type
 		light1["parameters"]["intensity"] = Gaffer.FloatPlug( defaultValue = 1 ) # USD expects float, not colour
 		light1["defaultLight"].setValue( False )
 
 		light2 = GafferSceneTest.TestLight()
-		light2["lightShaderName"].setValue( "SphereLight" )
+		light2.loadShader( "SphereLight" )
 		light2["parameters"]["intensity"] = Gaffer.FloatPlug( defaultValue = 1 )
 		light2["name"].setValue( "light2" )
 
@@ -812,6 +812,19 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 			self.assertNotIn( "scene:path", contextMonitor.combinedStatistics().variableNames() )
 			self.assertNotIn( "scene:setName", contextMonitor.combinedStatistics().variableNames() )
+
+	def testEmptyUSDVolumeField( self ) :
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( pathlib.Path( __file__ ).parent / "usdFiles" / "volumeWithEmptyField.usda" )
+
+		self.assertEqual( reader["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "volume" ] ) )
+
+		with IECore.CapturingMessageHandler() as mh :
+			self.assertEqual( reader["out"].object( "/volume" ), IECore.NullObject() )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].message, 'No file found for "/volume"' )
 
 if __name__ == "__main__":
 	unittest.main()

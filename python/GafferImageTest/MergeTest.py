@@ -811,7 +811,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 
 		shuf = GafferImage.Shuffle()
 		shuf["in"].setInput( r["out"] )
-		shuf["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "A", "R" ) )
+		shuf["shuffles"].addChild( Gaffer.ShufflePlug( "R", "R" ) )
 
 		delete = GafferImage.DeleteChannels()
 		delete["in"].setInput( shuf["out"] )
@@ -827,8 +827,8 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 
 		referenceShuf = GafferImage.Shuffle()
 		referenceShuf["in"].setInput( delete["out"] )
-		referenceShuf["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "", "__black" ) )
-		referenceShuf["channels"][0]["out"].setInput( delete["channels"] )
+		referenceShuf["shuffles"].addChild( Gaffer.ShufflePlug( "__black", "" ) )
+		referenceShuf["shuffles"][0]["destination"].setInput( delete["channels"] )
 
 		# We're comparing two ways of filling in the deleted channels with black - either by
 		# merging with a black image, or by shuffling in black.  These should be equivalent.
@@ -934,7 +934,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 
 		alphaShuffle = GafferImage.Shuffle()
 		alphaShuffle["in"].setInput( r["out"] )
-		alphaShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "A", "R" ) )
+		alphaShuffle["shuffles"].addChild( Gaffer.ShufflePlug( "R", "A" ) )
 
 		transform = GafferImage.Offset()
 		transform["in"].setInput( alphaShuffle["out"] )

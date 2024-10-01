@@ -229,17 +229,17 @@ class Viewer( GafferUI.NodeSetEditor ) :
 
 				return True
 
-			# \todo The Viewer should not need to know about `TransformTool` and orientations.
-			# This can be made more general by adding metadata to plugs such as
-			# `viewer:cyclePresetShortcut` and acting on that instead of this one special case.
-			if event.key == "O" and t["active"].getValue() and "orientation" in t :
-				orientation = Gaffer.NodeAlgo.currentPreset( t["orientation"] )
-				presets = Gaffer.NodeAlgo.presets( t["orientation"] )
+			if t["active"].getValue() :
+				for plug in Gaffer.ValuePlug.Range( t ) :
+					cycleKey = Gaffer.Metadata.value( plug, "viewer:cyclePresetShortcut" )
+					if event.key == cycleKey :
+						currentValue = Gaffer.NodeAlgo.currentPreset( plug )
+						presets = Gaffer.NodeAlgo.presets( plug )
 
-				Gaffer.NodeAlgo.applyPreset(
-					t["orientation"],
-					presets[ ( presets.index( orientation ) + 1 ) % len( presets ) ]
-				)
+						Gaffer.NodeAlgo.applyPreset(
+							plug,
+							presets[ ( presets.index( currentValue ) + 1 ) % len( presets ) ]
+						)
 
 		return False
 
@@ -331,10 +331,10 @@ class _Toolbar( GafferUI.Frame ) :
 		if self.__node is not None :
 			toolbar = self.__nodeToolbarCache.get( ( self.__node, self.__edge ) )
 			self.setChild( toolbar )
+			self.setVisible( True )
 		else :
+			self.setVisible( False )
 			self.setChild( None )
-
-		self.setVisible( self.getChild() is not None )
 
 	def getNode( self ) :
 

@@ -76,7 +76,7 @@ class GAFFERSCENEUI_API ScaleTool : public TransformTool
 			Scale( const Selection &selection );
 
 			bool canApply( const Imath::V3i &axisMask ) const;
-			void apply( const Imath::V3f &scale );
+			void apply( const Imath::V3i &axisMask, const Imath::V3f &scale );
 
 			private :
 

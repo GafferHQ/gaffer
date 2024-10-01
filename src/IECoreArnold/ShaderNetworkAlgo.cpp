@@ -53,6 +53,8 @@
 #include "boost/lexical_cast.hpp"
 #include "boost/unordered_map.hpp"
 
+#include <unordered_map>
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
@@ -62,41 +64,16 @@ using namespace IECoreArnold;
 namespace
 {
 
+const AtString g_codeArnoldString( "code" );
 const AtString g_emptyArnoldString( "" );
 const AtString g_outputArnoldString( "output" );
 const AtString g_shaderNameArnoldString( "shadername" );
 const AtString g_oslArnoldString( "osl" );
 const AtString g_nameArnoldString( "name" );
 
-using ShaderMap = boost::unordered_map<ShaderNetwork::Parameter, AtNode *>;
+const std::string g_componentNames( "rgbaxyz" );
 
-// Equivalent to Python's `s.partition( c )[0]`.
-InternedString partitionStart( const InternedString &s, char c )
-{
-	const size_t index = s.string().find_first_of( '.' );
-	if( index == string::npos )
-	{
-		return s;
-	}
-	else
-	{
-		return InternedString( s.c_str(), index );
-	}
-}
-
-// Equivalent to Python's `s.partition( c )[2]`.
-InternedString partitionEnd( const InternedString &s, char c )
-{
-	const size_t index = s.string().find_first_of( '.' );
-	if( index == string::npos )
-	{
-		return InternedString();
-	}
-	else
-	{
-		return InternedString( s.c_str() + index + 1 );
-	}
-}
+using ShaderMap = std::unordered_map<IECore::InternedString, AtNode *>;
 
 template<typename NodeCreator>
 AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &name, const NodeCreator &nodeCreator, vector<AtNode *> &nodes, ShaderMap &converted, std::vector<IECoreArnold::ShaderNetworkAlgo::NodeParameter> &nodeParameters )
@@ -108,10 +85,7 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 	// output that is used.
 
 	const IECoreScene::Shader *shader = shaderNetwork->getShader( outputParameter.shader );
-	const bool isOSLShader = boost::starts_with( shader->getType(), "osl:" );
-	const InternedString oslOutput = isOSLShader ? partitionStart( outputParameter.name, '.' ) : InternedString();
-
-	auto inserted = converted.insert( { { outputParameter.shader, oslOutput }, nullptr } );
+	auto inserted = converted.insert( { outputParameter.shader, nullptr } );
 	AtNode *&node = inserted.first->second;
 	if( !inserted.second )
 	{
@@ -125,19 +99,11 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 	{
 		nodeName += ":" + outputParameter.shader.string();
 	}
-	if( oslOutput.string().size() )
-	{
-		nodeName += ":" + oslOutput.string();
-	}
 
+	const bool isOSLShader = boost::starts_with( shader->getType(), "osl:" );
 	if( isOSLShader )
 	{
 		node = nodeCreator( g_oslArnoldString, AtString( nodeName.c_str() ) );
-		if( oslOutput.string().size() )
-		{
-			AiNodeDeclare( node, g_outputArnoldString, "constant STRING" );
-			AiNodeSetStr( node, g_outputArnoldString, AtString( oslOutput.c_str() ) );
-		}
 		AiNodeSetStr( node, g_shaderNameArnoldString, AtString( shader->getName().c_str() ) );
 	}
 	else
@@ -146,6 +112,19 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 			AtString( shader->getName().c_str() ),
 			AtString( nodeName.c_str() )
 		);
+		if( node && AiNodeEntryGetNameAtString( AiNodeGetNodeEntry( node ) ) == g_oslArnoldString )
+		{
+			// Need to set the `code` parameter on `osl` shaders _before_ we try to set
+			// the other parameters, because otherwise they don't exist yet.
+			// Note : This code path is different to the `isOSLShader` one. This code path
+			// deals with shaders authored explicitly to use Arnold's `osl` shader node (which
+			// therefore wouldn't work in other renderers). The `isOSLShader` code path deals
+			// with generically-authored OSL shaders that we are translating to Arnold.
+			if( auto *code = shader->parametersData()->member<StringData>( "code" ) )
+			{
+				AiNodeSetStr( node, g_codeArnoldString, AtString( code->readable().c_str() ) );
+			}
+		}
 	}
 
 	if( !node )
@@ -206,13 +185,6 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 			parameterName = connection.destination.name.string();
 		}
 
-		InternedString sourceName = connection.source.name;
-		const IECoreScene::Shader *sourceShader = shaderNetwork->getShader( connection.source.shader );
-		if( boost::starts_with( sourceShader->getType(), "osl:" ) )
-		{
-			sourceName = partitionEnd( sourceName, '.' );
-		}
-
 		if( parameterName == "color" && ( shader->getName() == "quad_light" || shader->getName() == "skydome_light" || shader->getName() == "mesh_light" ) )
 		{
 			// In general, Arnold should be able to form a connection onto a parameter even if the
@@ -236,12 +208,37 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 		}
 		else
 		{
-			const char *output = sourceName.c_str();
-			if( sourceName.string() == "out" && AiNodeEntryGetNumOutputs( AiNodeGetNodeEntry( sourceNode ) ) == 0 )
+			string output = connection.source.name;
+			const IECoreScene::Shader *sourceShader = shaderNetwork->getShader( connection.source.shader );
+			if( boost::starts_with( sourceShader->getType(), "osl:" ) )
 			{
-				output = "";
+				// OSL shaders always use named outputs, and the name is prefixed
+				// with `param_` to avoid collisions with Arnold's native attributes.
+				output = "param_" + output;
 			}
-			AiNodeLinkOutput( sourceNode, output, node, parameterName.c_str() );
+			else if( output == "" || ( output.size() == 1 && g_componentNames.find( output[0] ) != string::npos ) )
+			{
+				// Our legacy convention for referring to Arnold's default output
+				// or one of its components. The only good thing about this is that
+				// it maps directly to Arnold's API.
+			}
+			else
+			{
+				// We expect either `name` or `name.component`. But `name` could
+				// either refer to a named "multi" output, or to the default
+				// (unnamed) output. For the latter, the expected name is
+				// `out`, but HtoA instead uses the type : `rgb`, `vector` etc.
+				// Check if `name` matches a valid named output, and if it doesn't
+				// then assume it is intended to refer to the default output and
+				// strip it.
+				const size_t i = output.find( '.' );
+				const string outputName = output.substr( 0, i );
+				if( !AiNodeEntryLookUpOutput( AiNodeGetNodeEntry( sourceNode ), AtString( outputName.c_str() ) ) )
+				{
+					output.erase( 0, i != string::npos ? i + 1 : string::npos );
+				}
+			}
+			AiNodeLinkOutput( sourceNode, output.c_str(), node, parameterName.c_str() );
 		}
 	}
 
@@ -720,6 +717,8 @@ const InternedString g_widthParameter( "width" );
 const InternedString g_wrapSParameter( "wrapS" );
 const InternedString g_wrapTParameter( "wrapT" );
 
+const string g_arnoldNamespace( "arnold:" );
+
 void transferUSDLightParameters( ShaderNetwork *network, InternedString shaderHandle, const Shader *usdShader, Shader *shader )
 {
 	Color3f color = parameterValue( usdShader, g_colorParameter, Color3f( 1 ) );
@@ -737,6 +736,14 @@ void transferUSDLightParameters( ShaderNetwork *network, InternedString shaderHa
 
 	transferUSDParameter( network, shaderHandle, usdShader, g_shadowEnableParameter, shader, g_castShadowsParameter, true );
 	transferUSDParameter( network, shaderHandle, usdShader, g_shadowColorParameter, shader, g_shadowColorArnoldParameter, Color3f( 0 ) );
+
+	for( const auto &[name, value] : usdShader->parameters() )
+	{
+		if( boost::starts_with( name.string(), g_arnoldNamespace ) )
+		{
+			shader->parameters()[name.string().substr(g_arnoldNamespace.size())] = value;
+		}
+	}
 }
 
 void transferUSDShapingParameters( ShaderNetwork *network, InternedString shaderHandle, const Shader *usdShader, Shader *shader )
@@ -1001,7 +1008,7 @@ void IECoreArnold::ShaderNetworkAlgo::convertUSDShaders( ShaderNetwork *shaderNe
 		else if( shader->getName() == "UsdTransform2d" )
 		{
 			newShader = new Shader( "matrix_multiply_vector" );
-			transferUSDParameter( shaderNetwork, handle, shader.get(), g_inParameter, newShader.get(), g_inputParameter, string() );
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_inParameter, newShader.get(), g_inputParameter, Color3f( 0 ) );
 			const V2f t = parameterValue( shader.get(), g_translationParameter, V2f( 0 ) );
 			const float r = parameterValue( shader.get(), g_rotationParameter, 0.0f );
 			const V2f s = parameterValue( shader.get(), g_scaleParameter, V2f( 1 ) );

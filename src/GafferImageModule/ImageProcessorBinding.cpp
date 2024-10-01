@@ -57,6 +57,29 @@ using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferImage;
 
+namespace
+{
+
+class ImageProcessorSerialiser : public GafferBindings::NodeSerialiser
+{
+
+	public :
+
+		bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
+		{
+			auto imageProcessor = static_cast<const ImageProcessor *>( child->parent() );
+			if( child == imageProcessor->outPlug() )
+			{
+				return false;
+			}
+
+			return NodeSerialiser::childNeedsSerialisation( child, serialisation );
+		}
+
+};
+
+} // namespace
+
 void GafferImageModule::bindImageProcessor()
 {
 
@@ -71,6 +94,8 @@ void GafferImageModule::bindImageProcessor()
 			)
 		)
 	;
+
+	Serialisation::registerSerialiser( ImageProcessor::staticTypeId(), new ImageProcessorSerialiser );
 
 	GafferBindings::DependencyNodeClass<FlatImageProcessor>();
 
@@ -111,17 +136,10 @@ void GafferImageModule::bindImageProcessor()
 	{
 		scope s = DependencyNodeClass<Shuffle>();
 
-		PlugClass<Shuffle::ChannelPlug>()
-			.def( init<const char *, Plug::Direction, unsigned>(
-					(
-						boost::python::arg_( "name" )=GraphComponent::defaultName<Shuffle::ChannelPlug>(),
-						boost::python::arg_( "direction" )=Plug::In,
-						boost::python::arg_( "flags" )=Plug::Default
-					)
-				)
-			)
-			.def( init<const std::string &, const std::string &>() )
-			.attr( "__qualname__" ) = "Shuffle.ChannelPlug"
+		enum_<Shuffle::MissingSourceMode>( "MissingSourceMode" )
+			.value( "Ignore", Shuffle::MissingSourceMode::Ignore )
+			.value( "Error", Shuffle::MissingSourceMode::Error )
+			.value( "Black", Shuffle::MissingSourceMode::Black )
 		;
 	}
 

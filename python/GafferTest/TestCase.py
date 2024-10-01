@@ -104,6 +104,16 @@ class TestCase( unittest.TestCase ) :
 			# failure.
 			traceback.clear_frames( self._outcome.expectedFailure[1].__traceback__ )
 
+		# Garbage collect any wrapped RefCounted classes (they have an internal
+		# circular reference from C++->Python->C++), so they are destroyed now
+		# rather than potentially polluting other tests. Note that we're _not_
+		# also calling `gc.collect()` because our intention is to never create
+		# circular references in Python code, and
+		# `GafferUITest.TestCast.tearDown()` is checking for them in all Widget
+		# subclasses.
+		## \todo Fix Cortex so that wrapped classes don't require garbage collection.
+		IECore.RefCounted.collectGarbage()
+
 		for root, dirs, files in os.walk( self.temporaryDirectory() ) :
 			for fileName in [ p for p in files + dirs if not ( pathlib.Path( root ) / p ).is_symlink() ] :
 				( pathlib.Path( root ) / fileName ).chmod( stat.S_IRWXU )

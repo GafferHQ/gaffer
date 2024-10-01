@@ -38,6 +38,7 @@
 #include "GafferScene/Instancer.h"
 
 #include "GafferScene/Capsule.h"
+#include "GafferScene/Orientation.h"
 #include "GafferScene/SceneAlgo.h"
 
 #include "GafferScene/Private/ChildNamesMap.h"
@@ -84,11 +85,24 @@ namespace
 const PrimitiveVariable *findVertexVariable( const IECoreScene::Primitive* primitive, const InternedString &name )
 {
 	PrimitiveVariableMap::const_iterator it = primitive->variables.find( name );
-	if( it == primitive->variables.end() || it->second.interpolation != IECoreScene::PrimitiveVariable::Vertex )
+	if( it == primitive->variables.end() )
 	{
 		return nullptr;
 	}
-	return &it->second;
+
+	if(
+		it->second.interpolation == IECoreScene::PrimitiveVariable::Vertex ||
+		(
+			it->second.interpolation == IECoreScene::PrimitiveVariable::Varying &&
+			primitive->variableSize( PrimitiveVariable::Vertex ) == primitive->variableSize( PrimitiveVariable::Varying )
+		)
+	)
+	{
+		return &it->second;
+	}
+
+	return nullptr;
+
 }
 
 // We need to able to quantize all our basic numeric values, so we have a set of templates for this, with
@@ -580,7 +594,11 @@ class Instancer::EngineData : public Data
 			}
 			if( m_orientations )
 			{
-				result = (*m_orientations)[pointIndex].toMatrix44() * result;
+				// Using Orientation::normalizedIfNeeded avoids modifying quaternions that are already
+				// normalized. It's better for consistency to not be pointlessly changing the values
+				// slightly at the limits of floating point precision, when they're already as close to
+				// normalized as they can get, and this saves 4% runtime on InstancerTest.testBoundPerformance.
+				result = Orientation::normalizedIfNeeded((*m_orientations)[pointIndex]).toMatrix44() * result;
 			}
 			if( m_scales )
 			{
@@ -792,7 +810,13 @@ class Instancer::EngineData : public Data
 
 			for( auto &primVar : m_primitive->variables )
 			{
-				if( primVar.second.interpolation != PrimitiveVariable::Vertex )
+				if( !(
+					primVar.second.interpolation == PrimitiveVariable::Vertex ||
+					(
+						primVar.second.interpolation == PrimitiveVariable::Varying &&
+						m_primitive->variableSize( PrimitiveVariable::Vertex ) == m_primitive->variableSize( PrimitiveVariable::Varying )
+					)
+				) )
 				{
 					continue;
 				}
@@ -811,6 +835,7 @@ class Instancer::EngineData : public Data
 		void initPrototypes( PrototypeMode mode, const std::string &prototypeIndex, const std::string &rootsVariable, const StringVectorData *rootsList, const ScenePlug *prototypes )
 		{
 			const std::vector<std::string> *rootStrings = nullptr;
+			std::vector<std::string> rootStringsAlloc;
 
 			switch( mode )
 			{
@@ -861,7 +886,12 @@ class Instancer::EngineData : public Data
 				}
 				case PrototypeMode::RootPerVertex :
 				{
-					const auto view = m_primitive->variableIndexedView<StringVectorData>( rootsVariable, PrimitiveVariable::Vertex );
+					auto view = m_primitive->variableIndexedView<StringVectorData>( rootsVariable, PrimitiveVariable::Vertex );
+					if( !view && m_primitive->variableSize( PrimitiveVariable::Vertex ) == m_primitive->variableSize( PrimitiveVariable::Varying ))
+					{
+						view = m_primitive->variableIndexedView<StringVectorData>( rootsVariable, PrimitiveVariable::Varying );
+					}
+
 					if( !view )
 					{
 						std::string message = fmt::format( "prototypeRoots primitive variable \"{}\" must be Vertex StringVectorData when using RootPerVertex mode", rootsVariable );
@@ -874,6 +904,28 @@ class Instancer::EngineData : public Data
 
 					m_prototypeIndices = view->indices();
 					rootStrings = &view->data();
+
+					if( !m_prototypeIndices )
+					{
+						std::unordered_map<std::string, int> duplicateRootMap;
+
+						m_prototypeIndicesAlloc.reserve( rootStrings->size() );
+						for( const std::string &i : *rootStrings )
+						{
+							auto insertResult = duplicateRootMap.try_emplace( i, rootStringsAlloc.size() );
+							if( insertResult.second )
+							{
+								m_prototypeIndicesAlloc.push_back( rootStringsAlloc.size() );
+								rootStringsAlloc.push_back( i );
+							}
+							else
+							{
+								m_prototypeIndicesAlloc.push_back( insertResult.first->second );
+							}
+						}
+						rootStrings = &rootStringsAlloc;
+						m_prototypeIndices = &m_prototypeIndicesAlloc;
+					}
 					break;
 				}
 			}
@@ -928,6 +980,7 @@ class Instancer::EngineData : public Data
 		Private::ChildNamesMapPtr m_names;
 		std::vector<ConstInternedStringVectorDataPtr> m_roots;
 		std::vector<int> m_prototypeIndexRemap;
+		std::vector<int> m_prototypeIndicesAlloc;
 		const std::vector<int> *m_prototypeIndices;
 		const std::vector<int> *m_ids;
 		const std::vector<Imath::V3f> *m_positions;

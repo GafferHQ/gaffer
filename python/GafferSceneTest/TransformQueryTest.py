@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import random
 import unittest
 import imath
 
@@ -67,10 +68,7 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testNoScene( self ):
 
-		from random import Random
-		from datetime import datetime
-
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		name1 = randomName( r, 5, 10 )
 		name2 = randomName( r, 5, 10 )
@@ -143,9 +141,6 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testRelativeSpaceLocationsEquivalent( self ):
 
-		from random import Random
-		from datetime import datetime
-
 		s1 = GafferScene.Sphere()
 		gr = GafferScene.Group()
 		tq = GafferScene.TransformQuery()
@@ -156,7 +151,7 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 		s1["name"].setValue( "sphere1" )
 		gr["name"].setValue( "group" )
 
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		s1["transform"]["translate"].setValue( imath.V3f(
 			( r.random() - 0.5 ) * 2.0,
@@ -283,9 +278,6 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testMatrix( self ):
 
-		from random import Random
-		from datetime import datetime
-
 		s1 = GafferScene.Sphere()
 		s2 = GafferScene.Sphere()
 		gr = GafferScene.Group()
@@ -299,7 +291,7 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 		s2["name"].setValue( "sphere2" )
 		gr["name"].setValue( "group" )
 
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		s1["transform"]["translate"].setValue( imath.V3f(
 			( r.random() - 0.5 ) * 2.0,
@@ -389,9 +381,6 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testTranslate( self ):
 
-		from random import Random
-		from datetime import datetime
-
 		s1 = GafferScene.Sphere()
 		s2 = GafferScene.Sphere()
 		gr = GafferScene.Group()
@@ -405,7 +394,7 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 		s2["name"].setValue( "sphere2" )
 		gr["name"].setValue( "group" )
 
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		s1["transform"]["translate"].setValue( imath.V3f(
 			( r.random() - 0.5 ) * 2.0,
@@ -472,8 +461,6 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 	def testRotate( self ):
 
 		from math import pi
-		from random import Random
-		from datetime import datetime
 
 		s1 = GafferScene.Sphere()
 		s2 = GafferScene.Sphere()
@@ -488,7 +475,7 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 		s2["name"].setValue( "sphere2" )
 		gr["name"].setValue( "group" )
 
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		s1["transform"]["rotate"].setValue( imath.V3f(
 			( r.random() - 0.5 ) * 2.0 * 180.0,
@@ -562,9 +549,6 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testScale( self ):
 
-		from random import Random
-		from datetime import datetime
-
 		s1 = GafferScene.Sphere()
 		s2 = GafferScene.Sphere()
 		gr = GafferScene.Group()
@@ -578,7 +562,7 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 		s2["name"].setValue( "sphere2" )
 		gr["name"].setValue( "group" )
 
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		s1["transform"]["scale"].setValue( imath.V3f(
 			( r.random() * 2.0 ),

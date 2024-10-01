@@ -735,9 +735,11 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		index = self.__indexAt( event.line.p0 )
 		if index is not None :
-			GafferUI.Pointer.setCurrent( "values" )
+			value = self.getColumns()[index.column()].cellData( path ).value
+			if value is not None :
+				GafferUI.Pointer.setCurrent( "values" )
 
-			return self.getColumns()[index.column()].cellData( path ).value
+				return value
 
 		return None
 
@@ -1072,6 +1074,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 		]
 
 		descendantMatch = any( m & IECore.PathMatcher.Result.DescendantMatch for m in cellMatches )
+		rowMatch = any( m & IECore.PathMatcher.Result.ExactMatch for m in cellMatches )
 
 		for i in range( 0, header.count() ) :
 			cellMatch = cellMatches[i]
@@ -1081,10 +1084,12 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 			cellRect = QtCore.QRectF(left, rect.top(), width, rect.height() )
 
-			if descendantMatch and not( cellMatch & IECore.PathMatcher.Result.ExactMatch ) :
-				self.__drawHighlight( painter, cellRect, 50 )
-			elif cellMatch & IECore.PathMatcher.Result.ExactMatch :
+			if cellMatch & IECore.PathMatcher.Result.ExactMatch :
 				self.__drawHighlight( painter, cellRect, 200 )
+			elif descendantMatch :
+				self.__drawHighlight( painter, cellRect, 50 )
+			elif rowMatch :
+				self.__drawHighlight( painter, cellRect, 25 )
 
 	def __drawHighlight( self, painter, rect, alpha ) :
 

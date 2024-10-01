@@ -53,9 +53,12 @@ import GafferSceneTest
 # rather than GafferScene.InteractiveRender, which we hope to phase out.
 class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
-	# Derived classes should set cls.interactiveRenderNodeClass to
-	# the class of their interactive render node
+	## \todo Phase out InteractiveRender subclasses and just use the `renderer`
+	# field below.
 	interactiveRenderNodeClass = None
+	# Derived classes should set `cls.renderer` to the type of
+	# renderer to be tested.
+	renderer = None
 
 	@classmethod
 	def setUpClass( cls ) :
@@ -118,6 +121,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["variables"].addChild( Gaffer.NameValuePlug( "a", "A", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["variables"].addChild( Gaffer.NameValuePlug( "b", "${a}", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		s["s"] = GafferScene.Sphere()
 
@@ -148,6 +152,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( headers["gaffer:version"], IECore.StringData( Gaffer.About.versionString() ) )
 		self.assertEqual( headers["gaffer:sourceScene"], IECore.StringData( "r.__adaptedIn" ) )
 		self.assertEqual( headers["gaffer:context:a"], IECore.StringData( "A" ) )
+		self.assertEqual( headers["gaffer:context:b"], IECore.StringData( "A" ) )
 
 	def testAddAndRemoveOutput( self ):
 
@@ -556,12 +561,12 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["catalogue"] = GafferImage.Catalogue()
 		s["s"] = GafferScene.Sphere()
 
-		s["shader"], colorPlug = self._createConstantShader()
+		s["shader"], colorPlug, shaderOut = self._createConstantShader()
 		colorPlug.setValue( imath.Color3f( 1, 0, 0 ) )
 
 		s["a"] = GafferScene.ShaderAssignment()
 		s["a"]["in"].setInput( s["s"]["out"] )
-		s["a"]["shader"].setInput( s["shader"]["out"] )
+		s["a"]["shader"].setInput( shaderOut )
 
 		s["o"] = GafferScene.Outputs()
 		s["o"].addOutput(
@@ -937,10 +942,10 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["g"]["in"][1].setInput( s["p"]["out"] )
 		s["g"]["in"][2].setInput( s["c"]["out"] )
 
-		s["s"], unused = self._createMatteShader()
+		s["s"], unused, shaderOut = self._createMatteShader()
 		s["a"] = GafferScene.ShaderAssignment()
 		s["a"]["in"].setInput( s["g"]["out"] )
-		s["a"]["shader"].setInput( s["s"]["out"] )
+		s["a"]["shader"].setInput( shaderOut )
 
 		s["d"] = GafferScene.Outputs()
 		s["d"].addOutput(
@@ -1034,10 +1039,10 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["g"]["in"][1].setInput( s["p"]["out"] )
 		s["g"]["in"][2].setInput( s["c"]["out"] )
 
-		s["s"], unused = self._createMatteShader()
+		s["s"], unused, shaderOut = self._createMatteShader()
 		s["a"] = GafferScene.ShaderAssignment()
 		s["a"]["in"].setInput( s["g"]["out"] )
-		s["a"]["shader"].setInput( s["s"]["out"] )
+		s["a"]["shader"].setInput( shaderOut )
 
 		s["d"] = GafferScene.Outputs()
 		s["d"].addOutput(
@@ -1114,10 +1119,10 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["g"]["in"][1].setInput( s["p"]["out"] )
 		s["g"]["in"][2].setInput( s["c"]["out"] )
 
-		s["s"], unused = self._createMatteShader()
+		s["s"], unused, shaderOut = self._createMatteShader()
 		s["a"] = GafferScene.ShaderAssignment()
 		s["a"]["in"].setInput( s["g"]["out"] )
-		s["a"]["shader"].setInput( s["s"]["out"] )
+		s["a"]["shader"].setInput( shaderOut )
 
 		s["d"] = GafferScene.Outputs()
 		s["d"].addOutput(
@@ -1194,10 +1199,10 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["g"]["in"][1].setInput( s["p"]["out"] )
 		s["g"]["in"][2].setInput( s["c"]["out"] )
 
-		s["s"], unused = self._createMatteShader()
+		s["s"], unused, shaderOut = self._createMatteShader()
 		s["a"] = GafferScene.ShaderAssignment()
 		s["a"]["in"].setInput( s["g"]["out"] )
-		s["a"]["shader"].setInput( s["s"]["out"] )
+		s["a"]["shader"].setInput( shaderOut )
 
 		s["d"] = GafferScene.Outputs()
 		s["d"].addOutput(
@@ -1468,12 +1473,12 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["group"]["in"][0].setInput( s["reflector"]["out"] )
 		s["group"]["in"][1].setInput( s["reflected"]["out"] )
 
-		s["constant"], constantParameter = self._createConstantShader()
+		s["constant"], constantParameter, constantOut = self._createConstantShader()
 		s["constantAssignment"] = GafferScene.ShaderAssignment()
 		s["constantAssignment"]["in"].setInput( s["group"]["out"] )
-		s["constantAssignment"]["shader"].setInput( s["constant"]["out"] )
+		s["constantAssignment"]["shader"].setInput( constantOut )
 
-		traceShader, traceSetParameter = self._createTraceSetShader()
+		traceShader, traceSetParameter, traceShaderOut = self._createTraceSetShader()
 		if traceShader is None :
 			self.skipTest( "Trace set shader not available" )
 
@@ -1484,7 +1489,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["traceAssignment"] = GafferScene.ShaderAssignment()
 		s["traceAssignment"]["in"].setInput( s["constantAssignment"]["out"] )
-		s["traceAssignment"]["shader"].setInput( s["traceShader"]["out"] )
+		s["traceAssignment"]["shader"].setInput( traceShaderOut )
 		s["traceAssignment"]["filter"].setInput( s["traceAssignmentFilter"]["out"] )
 
 		s["set"] = GafferScene.Set()
@@ -1639,10 +1644,10 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["group"]["in"][2].setInput( script["cam"]["out"] )
 		script["group"]["in"][3].setInput( script["attributes"]["out"] )
 
-		script["shader"], unused = self._createMatteShader()
+		script["shader"], unused, shaderOut = self._createMatteShader()
 		script["assignment"] = GafferScene.ShaderAssignment()
 		script["assignment"]["in"].setInput( script["group"]["out"] )
-		script["assignment"]["shader"].setInput( script["shader"]["out"] )
+		script["assignment"]["shader"].setInput( shaderOut )
 
 		script["outputs"] = GafferScene.Outputs()
 		script["outputs"].addOutput(
@@ -1786,10 +1791,10 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		script["plane"] = GafferScene.Plane()
 
-		script["shader"], unused = self._createMatteShader()
+		script["shader"], unused, shaderOut = self._createMatteShader()
 		script["assignment"] = GafferScene.ShaderAssignment()
 		script["assignment"]["in"].setInput( script["plane"]["out"] )
-		script["assignment"]["shader"].setInput( script["shader"]["out"] )
+		script["assignment"]["shader"].setInput( shaderOut )
 
 		script["camera"] = GafferScene.Camera()
 		script["camera"]["transform"]["translate"]["z"].setValue( 1 )
@@ -1870,12 +1875,12 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 			result = GafferScene.SceneProcessor()
 
-			result["__shader"], colorPlug = self._createConstantShader()
+			result["__shader"], colorPlug, shaderOut = self._createConstantShader()
 			colorPlug.setValue( imath.Color3f( 1, 0, 0 ) )
 
 			result["__assignment"] = GafferScene.ShaderAssignment()
 			result["__assignment"]["in"].setInput( result["in"] )
-			result["__assignment"]["shader"].setInput( result["__shader"]["out"] )
+			result["__assignment"]["shader"].setInput( shaderOut )
 
 			result["out"].setInput( result["__assignment"]["out"] )
 
@@ -1931,10 +1936,10 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["g"]["in"][1].setInput( s["p"]["out"] )
 		s["g"]["in"][2].setInput( s["c"]["out"] )
 
-		s["s"], unused = self._createMatteShader()
+		s["s"], unused, shaderOut = self._createMatteShader()
 		s["a"] = GafferScene.ShaderAssignment()
 		s["a"]["in"].setInput( s["g"]["out"] )
-		s["a"]["shader"].setInput( s["s"]["out"] )
+		s["a"]["shader"].setInput( shaderOut )
 
 		s["d"] = GafferScene.Outputs()
 		s["d"].addOutput(
@@ -2018,10 +2023,10 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["group"]["in"][2].setInput( s["plane"]["out"] )
 		s["group"]["in"][3].setInput( s["camera"]["out"] )
 
-		s["shader"], unused = self._createMatteShader()
+		s["shader"], unused, shaderOut = self._createMatteShader()
 		s["shaderAssignment"] = GafferScene.ShaderAssignment()
 		s["shaderAssignment"]["in"].setInput( s["group"]["out"] )
-		s["shaderAssignment"]["shader"].setInput( s["shader"]["out"] )
+		s["shaderAssignment"]["shader"].setInput( shaderOut )
 
 		s["outputs"] = GafferScene.Outputs()
 		s["outputs"].addOutput(
@@ -2149,6 +2154,150 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertNotIn( "gaffer:isRendering", script["catalogue"]["out"].metadata() )
 
+	def testRendererOption( self ):
+
+		script = Gaffer.ScriptNode()
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testRendererOption",
+				}
+			)
+		)
+
+		script["customOptions"] = GafferScene.CustomOptions()
+		script["customOptions"]["in"].setInput( script["outputs"]["out"] )
+
+		script["renderer"] = self._createInteractiveRender( useNodeClass = False )
+		script["renderer"]["renderer"].setValue( "" )
+		script["renderer"]["in"].setInput( script["customOptions"]["out"] )
+
+		# No renderer specified yet, so if we start the render we don't
+		# get an image.
+
+		script["renderer"]["state"].setValue( script["renderer"].State.Running )
+		time.sleep( 1.0 )
+		self.assertIsNone( IECoreImage.ImageDisplayDriver.storedImage( "testRendererOption" ) )
+		self.ignoreMessage( IECore.Msg.Level.Error, "InteractiveRender", "`render:defaultRenderer` option not set" )
+
+		# Set renderer option and start again. We should now get an image.
+
+		script["renderer"]["state"].setValue( script["renderer"].State.Stopped )
+		script["customOptions"]["options"].addChild(
+			Gaffer.NameValuePlug( "render:defaultRenderer", self.renderer )
+		)
+		script["renderer"]["state"].setValue( script["renderer"].State.Running )
+		time.sleep( 1.0 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testRendererOption" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+	def testRendererOptionContext( self ):
+
+		script = Gaffer.ScriptNode()
+		script["variables"].addChild( Gaffer.NameValuePlug( "defaultRendererVariable", self.renderer ) )
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testRendererOptionContext",
+				}
+			)
+		)
+
+		script["standardOptions"] = GafferScene.StandardOptions()
+		script["standardOptions"]["in"].setInput( script["outputs"]["out"] )
+		script["standardOptions"]["options"]["defaultRenderer"]["enabled"].setValue( True )
+		script["standardOptions"]["options"]["defaultRenderer"]["value"].setValue( "${defaultRendererVariable}" )
+
+		script["renderer"] = self._createInteractiveRender( useNodeClass = False )
+		script["renderer"]["renderer"].setValue( "" )
+		script["renderer"]["in"].setInput( script["standardOptions"]["out"] )
+
+		# Check that the globals are evaluated in the right context to provide
+		# the `defaultRendererVariable` and enable the render.
+
+		script["renderer"]["state"].setValue( script["renderer"].State.Running )
+		time.sleep( 1.0 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testRendererOptionContext" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+	def testResolvedRenderer( self ) :
+
+		standardOptions = GafferScene.StandardOptions()
+
+		render = GafferScene.InteractiveRender()
+		render["in"].setInput( standardOptions["out"] )
+		self.assertEqual( render["renderer"].getValue(), "" )
+		self.assertEqual( render["resolvedRenderer"].getValue(), "" )
+
+		standardOptions["options"]["defaultRenderer"]["enabled"].setValue( True )
+		standardOptions["options"]["defaultRenderer"]["value"].setValue( self.renderer )
+		self.assertEqual( render["resolvedRenderer"].getValue(), self.renderer )
+
+		render["renderer"].setValue( "Other" )
+		self.assertEqual( render["resolvedRenderer"].getValue(), "Other" )
+
+	def testAdaptorsCantChangeRenderer( self ) :
+
+		def adaptor() :
+
+			result = GafferScene.StandardOptions()
+			result["options"]["defaultRenderer"]["enabled"].setValue( True )
+			result["options"]["defaultRenderer"]["value"].setValue( "IAmNotAllowed" )
+			return result
+
+		GafferScene.SceneAlgo.registerRenderAdaptor( "Test", adaptor )
+
+		standardOptions = GafferScene.StandardOptions()
+		standardOptions["options"]["defaultRenderer"]["enabled"].setValue( True )
+		standardOptions["options"]["defaultRenderer"]["value"].setValue( self.renderer )
+
+		interactiveRender = GafferScene.InteractiveRender()
+		interactiveRender["in"].setInput( standardOptions["out"] )
+
+		self.assertEqual( interactiveRender["resolvedRenderer"].getValue(), self.renderer )
+
+	def testAdaptorGlobalsDependingOnRenderer( self ) :
+
+		def adaptor() :
+
+			result = GafferScene.SceneProcessor()
+			result["renderer"] = Gaffer.StringPlug()
+
+			result["__customOptions"] = GafferScene.CustomOptions()
+			result["__customOptions"]["options"].addChild( Gaffer.NameValuePlug( "test", Gaffer.StringPlug() ) )
+			result["__customOptions"]["options"][0]["value"].setInput( result["renderer"] )
+
+			result["out"].setInput( result["__customOptions"]["out"] )
+			return result
+
+		GafferScene.SceneAlgo.registerRenderAdaptor( "Test", adaptor )
+
+		standardOptions = GafferScene.StandardOptions()
+		standardOptions["options"]["defaultRenderer"]["enabled"].setValue( True )
+		standardOptions["options"]["defaultRenderer"]["value"].setValue( self.renderer )
+
+		interactiveRender = GafferScene.InteractiveRender()
+		interactiveRender["in"].setInput( standardOptions["out"] )
+
+		self.assertEqual( interactiveRender["resolvedRenderer"].getValue(), self.renderer )
+		self.assertEqual( interactiveRender["__adaptedIn"].globals()["option:test"], IECore.StringData( self.renderer ) )
+
 	def tearDown( self ) :
 
 		GafferSceneTest.SceneTestCase.tearDown( self )
@@ -2158,10 +2307,14 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 	## Should be used in test cases to create an InteractiveRender node
 	# suitably configured for error reporting. If failOnError is
 	# True, then the node's error signal will cause the test to fail.
-	def _createInteractiveRender( self, failOnError = True ) :
+	def _createInteractiveRender( self, failOnError = True, useNodeClass = True ) :
 
-		assert( issubclass( self.interactiveRenderNodeClass, GafferScene.InteractiveRender ) )
-		node = self.interactiveRenderNodeClass()
+		if useNodeClass :
+			assert( issubclass( self.interactiveRenderNodeClass, GafferScene.InteractiveRender ) )
+			node = self.interactiveRenderNodeClass()
+		else :
+			node = GafferScene.InteractiveRender()
+			node["renderer"].setValue( self.renderer )
 
 		if failOnError :
 
@@ -2179,14 +2332,16 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 	## Should be implemented by derived classes to return an
 	# appropriate Shader node with a constant shader loaded,
-	# along with the plug for the colour parameter.
+	# along with the plug for the colour parameter and the output
+	# plug to be connected to a ShaderAssignment.
 	def _createConstantShader( self ) :
 
 		raise NotImplementedError
 
 	## Should be implemented by derived classes to return
 	# an appropriate Shader node with a matte shader loaded,
-	# along with the plug for the colour parameter.
+	# along with the plug for the colour parameter and the output
+	# plug to be connected to a ShaderAssignment.
 	def _createMatteShader( self ) :
 
 		raise NotImplementedError

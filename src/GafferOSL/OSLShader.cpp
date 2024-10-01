@@ -39,6 +39,8 @@
 #include "GafferOSL/ClosurePlug.h"
 #include "GafferOSL/ShadingEngine.h"
 
+#include "GafferScene/ShaderTweakProxy.h"
+
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/NumericPlug.h"
@@ -163,6 +165,13 @@ ShaderTypeSet &compatibleShaders()
 	return g_compatibleShaders;
 }
 
+// Auto-proxies are always allowed to connect, because we don't know what type they will be until we evaluate
+// the graph.
+const bool g_oslShaderTweakAutoProxyRegistration = OSLShader::registerCompatibleShader( "autoProxy" );
+
+ShaderTweakProxy::ShaderLoaderDescription<OSLShader> g_oslShaderTweakProxyLoaderRegistration( "osl" );
+
+
 } // namespace
 
 /////////////////////////////////////////////////////////////////////////
@@ -266,7 +275,16 @@ bool OSLShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 				return true;
 			}
 
-			const IECore::InternedString sourceShaderType = sourceShader->typePlug()->getValue();
+			std::string sourceShaderType;
+			if( const ShaderTweakProxy *shaderTweakProxy = IECore::runTimeCast< const ShaderTweakProxy >( sourceShader ) )
+			{
+				std::string unusedSourceShaderName;
+				shaderTweakProxy->typePrefixAndSourceShaderName( sourceShaderType, unusedSourceShaderName );
+			}
+			else
+			{
+				sourceShaderType = sourceShader->typePlug()->getValue();
+			}
 			const ShaderTypeSet &cs = compatibleShaders();
 			if( cs.find( sourceShaderType ) != cs.end() )
 			{
@@ -1233,11 +1251,19 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	namePlug->source<StringPlug>()->setValue( shaderName );
 	// 3delight sets it's vdbVolume shader as a "shader" type but requires the
 	// attribute name be `volumeshader` which we handle when spooling the scene.
-	typePlug->source<StringPlug>()->setValue(
-		std::string( "osl:" ) + (
-			std::filesystem::path( shaderName ).stem() != "vdbVolume" ? query->shadertype().c_str() : "volume"
-		)
-	);
+
+	if ( std::filesystem::path( shaderName ).stem() == "vdbVolume" )
+	{
+		typePlug->source<StringPlug>()->setValue( std::string( "osl:volume" ));
+	}
+	else if ( std::filesystem::path( shaderName ).stem() == "dlDisplacement" )
+	{
+		typePlug->source<StringPlug>()->setValue( std::string( "osl:displacement" ));
+	}
+	else
+	{
+		typePlug->source<StringPlug>()->setValue( std::string( "osl:" ) + ( query->shadertype().c_str() ));
+	}
 
 	const IECore::CompoundData *metadata = OSLShader::metadata();
 	const IECore::CompoundData *parameterMetadata = nullptr;
@@ -1271,14 +1297,7 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 		setChild( "out", outPlug );
 	}
 
-	if( query->shadertype() == "shader" )
-	{
-		loadShaderParameters( *query, outPlug(), parameterMetadata );
-	}
-	else
-	{
-		outPlug()->clearChildren();
-	}
+	loadShaderParameters( *query, outPlug(), parameterMetadata );
 
 	if( static_cast<bool>( outPlug()->children().size() ) != outPlugHadChildren )
 	{

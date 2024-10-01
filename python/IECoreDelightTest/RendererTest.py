@@ -42,8 +42,11 @@ import shlex
 import pathlib
 import os
 import subprocess
+import math
 
 import imath
+
+import OpenImageIO
 
 import IECore
 import IECoreScene
@@ -68,12 +71,12 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			str( self.temporaryDirectory() / "test.nsi" )
+			str( self.temporaryDirectory() / "test.nsia" )
 		)
 
 		r.render()
 
-		self.assertTrue( ( self.temporaryDirectory() / "test.nsi" ).exists() )
+		self.assertTrue( ( self.temporaryDirectory() / "test.nsia" ).exists() )
 
 	def testOutput( self ) :
 
@@ -90,7 +93,7 @@ class RendererTest( GafferTest.TestCase ) :
 				"rgba",
 				{
 					"filter" : "gaussian",
-					"filterwidth" : imath.V2f( 3.5 ),
+					"filterwidth" : 3.5,
 				}
 			)
 		)
@@ -99,6 +102,42 @@ class RendererTest( GafferTest.TestCase ) :
 		del r
 
 		self.assertTrue( ( self.temporaryDirectory() / "beauty.exr" ).exists() )
+
+	def testOutputMultipart( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+		)
+
+		r.output(
+			"layer_a",
+			IECoreScene.Output(
+				str( self.temporaryDirectory() / "multipart.exr" ),
+				"exr",
+				"rgba"
+			)
+		)
+
+		r.output(
+			"layer_b",
+			IECoreScene.Output(
+				str( self.temporaryDirectory() / "multipart.exr" ),
+				"exr",
+				"color shader:diffuse"
+			)
+		)
+
+		r.render()
+		del r
+
+		self.assertTrue( ( self.temporaryDirectory() / "multipart.exr" ).exists() )
+
+		i = OpenImageIO.ImageInput.open( os.path.join( self.temporaryDirectory(), "multipart.exr" ) )
+		subimages = i.spec().getattribute("oiio:subimages")
+		del i
+
+		self.assertEqual( subimages, 2 )
 
 	def testAOVs( self ) :
 
@@ -144,7 +183,7 @@ class RendererTest( GafferTest.TestCase ) :
 			r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 				"3Delight",
 				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-				str( self.temporaryDirectory() / "test.nsi" )
+				str( self.temporaryDirectory() / "test.nsia" )
 			)
 
 			r.output(
@@ -155,7 +194,7 @@ class RendererTest( GafferTest.TestCase ) :
 					data,
 					{
 						"filter" : "gaussian",
-						"filterwidth" : imath.V2f( 3.5 ),
+						"filterwidth" : 3.5,
 					}
 				)
 			)
@@ -163,7 +202,7 @@ class RendererTest( GafferTest.TestCase ) :
 			r.render()
 			del r
 
-			nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
+			nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
 			self.assertIn( "outputLayer:test", nsi )
 			self.assertEqual( nsi["outputLayer:test"]["nodeType"], "outputlayer")
 			for k, v in expected.items() :
@@ -175,7 +214,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			str( self.temporaryDirectory() / "test.nsi" ),
+			str( self.temporaryDirectory() / "test.nsia" ),
 		)
 
 		r.object(
@@ -187,7 +226,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
 
 		meshes = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "mesh" }
 		self.assertEqual( len( meshes ), 1 )
@@ -228,7 +267,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			str( self.temporaryDirectory() / "test.nsi" ),
+			str( self.temporaryDirectory() / "test.nsia" ),
 		)
 
 		r.object(
@@ -244,7 +283,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
 
 		meshes = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "mesh" }
 		self.assertEqual( len( meshes ), 1 )
@@ -260,12 +299,63 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 		self.assertEqual( mesh["nvertices"], 4 )
 
+	def testMeshWithVaryingPrimitiveVariable( self ) :
+
+		mesh = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ), imath.V2i( 2, 1 ) )
+		mesh["varyingP"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Varying,
+			mesh["P"].data
+		)
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsia" ),
+		)
+		renderer.object( "testPlane", mesh, renderer.attributes( IECore.CompoundObject() ) )
+		renderer.render()
+		del renderer
+
+		print( self.temporaryDirectory() / "test.nsia" )
+
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
+
+		meshes = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "mesh" }
+		self.assertEqual( len( meshes ), 1 )
+
+		mesh = meshes[next( iter( meshes ) )]
+
+		self.assertEqual( mesh["P.indices"], [ 0, 1, 4, 3, 1, 2, 5, 4 ] )
+		self.assertEqual(
+			mesh["P"],
+			[
+				imath.V3f( -1, -1, 0 ),
+				imath.V3f( 0, -1, 0 ),
+				imath.V3f( 1, -1, 0 ),
+				imath.V3f( -1, 1, 0 ),
+				imath.V3f( 0, 1, 0 ),
+				imath.V3f( 1, 1, 0 ),
+			]
+		)
+		self.assertEqual( mesh["varyingP.indices"], [ 0, 1, 4, 3, 1, 2, 5, 4 ] )
+		self.assertEqual(
+			mesh["varyingP"],
+			[
+				imath.V3f( -1, -1, 0 ),
+				imath.V3f( 0, -1, 0 ),
+				imath.V3f( 1, -1, 0 ),
+				imath.V3f( -1, 1, 0 ),
+				imath.V3f( 0, 1, 0 ),
+				imath.V3f( 1, 1, 0 ),
+			]
+		)
+
 	def testPoints( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			str( self.temporaryDirectory() / "test.nsi" ),
+			str( self.temporaryDirectory() / "test.nsia" ),
 		)
 
 		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( x ) for x in range( 0, 4 ) ] ) )
@@ -283,7 +373,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		nsi = self.__parse( self.temporaryDirectory() / "test.nsi" )
+		nsi = self.__parse( self.temporaryDirectory() / "test.nsia" )
 		self.__assertInNSI( '"P" "v point" 4 [ 0 0 0 1 1 1 2 2 2 3 3 3 ]', nsi )
 		self.__assertInNSI( '"width" "v float" 4 [ 1 2 3 4 ]', nsi )
 
@@ -292,7 +382,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			str( self.temporaryDirectory() / "test.nsi" ),
+			str( self.temporaryDirectory() / "test.nsia" ),
 		)
 
 		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( x ) for x in range( 0, 4 ) ] ) )
@@ -306,7 +396,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		nsi = self.__parse( self.temporaryDirectory() / "test.nsi" )
+		nsi = self.__parse( self.temporaryDirectory() / "test.nsia" )
 		self.__assertInNSI( '"width" "float" 1 1', nsi )
 
 	def testCurves( self ) :
@@ -314,7 +404,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			str( self.temporaryDirectory() / "test.nsi" ),
+			str( self.temporaryDirectory() / "test.nsia" ),
 		)
 
 		curves = IECoreScene.CurvesPrimitive(
@@ -336,7 +426,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		nsi = self.__parse( self.temporaryDirectory() / "test.nsi" )
+		nsi = self.__parse( self.temporaryDirectory() / "test.nsia" )
 		self.__assertInNSI( '"nvertices" "int" 2 [ 4 4 ]', nsi )
 		self.__assertInNSI( '"basis" "string" 1 "b-spline"', nsi )
 		self.__assertInNSI( '"P" "v point" 8 [ 0 0 0 1 1 1 2 2 2 3 3 3 0 0 0 -1 -1 -1 -2 -2 -2 -3 -3 -3 ]', nsi )
@@ -346,7 +436,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			str( self.temporaryDirectory() / "test.nsi" ),
+			str( self.temporaryDirectory() / "test.nsia" ),
 		)
 
 		r.object(
@@ -358,7 +448,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		nsi = self.__parse( self.temporaryDirectory() / "test.nsi" )
+		nsi = self.__parse( self.temporaryDirectory() / "test.nsia" )
 
 		# 3Delight doesn't have a disk, so we must convert to particles
 		self.__assertInNSI( '"particles"', nsi )
@@ -371,7 +461,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			str( self.temporaryDirectory() / "test.nsi" ),
+			str( self.temporaryDirectory() / "test.nsia" ),
 		)
 
 		r.object(
@@ -383,7 +473,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		nsi = self.__parse( self.temporaryDirectory() / "test.nsi" )
+		nsi = self.__parse( self.temporaryDirectory() / "test.nsia" )
 
 		# 3Delight doesn't have a sphere, so we must convert to particles
 		self.__assertInNSI( '"particles"', nsi )
@@ -391,12 +481,49 @@ class RendererTest( GafferTest.TestCase ) :
 		self.__assertInNSI( '"width" "v float" 1 4', nsi )
 		self.__assertNotInNSI( '"N"', nsi )
 
+	def testProcedural( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsia" ),
+		)
+
+		r.object(
+			"testProcedural",
+			IECoreScene.ExternalProcedural(
+				str( self.temporaryDirectory() / "testProc.nsi" ),
+				imath.Box3f( imath.V3f( -0.5, -0.5, -0.5 ), imath.V3f( 0.5, 0.5, 0.5 ) ),
+				IECore.CompoundData( {
+					"customParamFloat" : 1.0,
+				} )
+			),
+			r.attributes( IECore.CompoundObject() ),
+		)
+
+		r.render()
+		del r
+
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
+
+		self.assertIn( "testProcedural", nsi )
+		self.assertEqual( nsi["testProcedural"]["nodeType"], "transform" )
+
+		procedurals = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "procedural" }
+		self.assertEqual( len( procedurals ), 1 )
+
+		procedural = procedurals[next( iter( procedurals ) )]
+
+		self.assertEqual( procedural["filename"], str( self.temporaryDirectory() / "testProc.nsi" ) )
+		self.assertEqual( procedural["type"], "apistream" )
+		self.assertEqual( procedural["customParamFloat"], 1.0 )
+
 	def testEnvironment( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			str( self.temporaryDirectory() / "test.nsi" ),
+			str( self.temporaryDirectory() / "test.nsia" ),
 		)
 
 		r.object(
@@ -413,7 +540,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		nsi = self.__parse( self.temporaryDirectory() / "test.nsi" )
+		nsi = self.__parse( self.temporaryDirectory() / "test.nsia" )
 
 		self.__assertInNSI( '"environment"', nsi )
 		self.__assertInNSI( '"angle" "double" 1 25', nsi )
@@ -423,7 +550,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			str( self.temporaryDirectory() / "test.nsi" ),
+			str( self.temporaryDirectory() / "test.nsia" ),
 		)
 
 		r.attributes( IECore.CompoundObject( {
@@ -435,7 +562,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		del r
 
-		nsi = self.__parse( self.temporaryDirectory() / "test.nsi" )
+		nsi = self.__parse( self.temporaryDirectory() / "test.nsia" )
 
 		self.__assertInNSI( '"visibility.diffuse" "int" 1 1', nsi )
 		self.__assertInNSI( '"visibility.camera" "int" 1 0', nsi )
@@ -447,7 +574,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			str( self.temporaryDirectory() / "test.nsi" ),
+			str( self.temporaryDirectory() / "test.nsia" ),
 		)
 
 		r.camera(
@@ -460,9 +587,13 @@ class RendererTest( GafferTest.TestCase ) :
 					"focalLength" : 2.0,
 					"clippingPlanes" : imath.V2f( 0.25, 10 ),
 					"shutter" : imath.V2f( 0, 1 ),
+					"overscan" : True,
+					"overscanTop" : 0.1,
+					"overscanBottom" : 0.2,
+					"overscanLeft" : 0.1,
+					"overscanRight" : 0.2,
 				}
-			),
-			r.attributes( IECore.CompoundObject() )
+			)
 		)
 
 		r.option( "camera", IECore.StringData( "testCamera" ) )
@@ -470,7 +601,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		nsi = self.__parse( self.temporaryDirectory() / "test.nsi" )
+		nsi = self.__parse( self.temporaryDirectory() / "test.nsia" )
 
 		self.__assertInNSI( '"fov" "float" 1 90', nsi )
 		self.__assertInNSI( '"resolution" "int[2]" 1 [ 2000 1000 ]', nsi )
@@ -484,7 +615,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			str( self.temporaryDirectory() / "test.nsi" ),
+			str( self.temporaryDirectory() / "test.nsia" ),
 		)
 
 		m = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
@@ -496,7 +627,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		nsi = self.__parse( self.temporaryDirectory() / "test.nsi" )
+		nsi = self.__parse( self.temporaryDirectory() / "test.nsia" )
 
 		self.assertEqual( nsi.count( '"transform"' ), 2 )
 		self.assertEqual( nsi.count( '"mesh"' ), 1 )
@@ -506,7 +637,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			str( self.temporaryDirectory() / "test.nsi" ),
+			str( self.temporaryDirectory() / "test.nsia" ),
 		)
 
 		m = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
@@ -523,7 +654,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		nsi = self.__parse( self.temporaryDirectory() / "test.nsi" )
+		nsi = self.__parse( self.temporaryDirectory() / "test.nsia" )
 
 		self.__assertNotInNSI( 'DeleteAttribute', nsi )
 		self.__assertNotInNSI( 'SetAttribute "untransformed" "transformationmatrix"', nsi )
@@ -538,7 +669,7 @@ class RendererTest( GafferTest.TestCase ) :
 			r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 				"3Delight",
 				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-				str( self.temporaryDirectory() / "test.nsi" ),
+				str( self.temporaryDirectory() / "test.nsia" ),
 			)
 
 			s = IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "testShader", "surface", { "testStringSubstituted" : text } ) }, output = "output" )
@@ -553,7 +684,7 @@ class RendererTest( GafferTest.TestCase ) :
 			r.render()
 			del r
 
-			nsi = open( self.temporaryDirectory() / "test.nsi", encoding = "utf-8" ).read()
+			nsi = open( self.temporaryDirectory() / "test.nsia", encoding = "utf-8" ).read()
 			return re.findall( '\n *"testStringSubstituted" "string" 1 "(.*)" \n', nsi )[0]
 
 		self.assertEqual( runSubstitutions( "<attr:test:foo> TEST <attr:test:bar>", {} ), " TEST " )
@@ -567,7 +698,7 @@ class RendererTest( GafferTest.TestCase ) :
 		for renderType, fileName, expected in (
 			( RenderType.Batch, "", 2 ),
 			( RenderType.Interactive, "", 2 ),
-			( RenderType.SceneDescription, str( self.temporaryDirectory() / "test.nsi" ), 1 )
+			( RenderType.SceneDescription, str( self.temporaryDirectory() / "test.nsia" ), 1 )
 		) :
 
 			with IECore.CapturingMessageHandler() as fallbackHandler :
@@ -600,7 +731,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			str( self.temporaryDirectory() / "test.nsi" )
+			str( self.temporaryDirectory() / "test.nsia" )
 		)
 
 		options = [
@@ -639,11 +770,45 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		nsi = self.__parse( self.temporaryDirectory() / "test.nsi" )
+		nsi = self.__parse( self.temporaryDirectory() / "test.nsia" )
 
 		for name, value, type in options :
 			self.__assertInNSI(
 				'SetAttribute ".global" "{}" "{}" 1 {}{}{}'.format(
+				name[3:],
+				type,
+				"\"" if type == "string" else "",
+				value.value if not isinstance( value, IECore.BoolData ) else int( value.value ),
+				"\"" if type == "string" else ""
+			),
+			nsi
+		)
+
+	def testScreenOptions( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsia" )
+		)
+
+		options = [
+			( "dl:oversampling", IECore.IntData( 16 ), "int" ),
+			( "dl:importancesamplefilter", IECore.BoolData( True ), "int" ),
+			( "dl:staticsamplingpattern", IECore.BoolData( True ), "int" ),
+		]
+
+		for name, value, type in options :
+			r.option( name, value )
+
+		r.render()
+		del r
+
+		nsi = self.__parse( self.temporaryDirectory() / "test.nsia" )
+
+		for name, value, type in options :
+			self.__assertInNSI(
+				'SetAttribute "ieCoreDelight:defaultScreen" "{}" "{}" 1 {}{}{}'.format(
 				name[3:],
 				type,
 				"\"" if type == "string" else "",
@@ -658,7 +823,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			str( self.temporaryDirectory() / "test.nsi" ),
+			str( self.temporaryDirectory() / "test.nsia" ),
 		)
 
 		vdb = IECoreVDB.VDBObject( ( pathlib.Path( __file__ ).parent / "volumes" / "sphere.vdb" ).as_posix() )
@@ -667,7 +832,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
 
 		self.assertIn( "test_vdb", nsi )
 		self.assertEqual( nsi["test_vdb"]["nodeType"], "transform" )
@@ -685,7 +850,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			str( self.temporaryDirectory() / "test.nsi" ),
+			str( self.temporaryDirectory() / "test.nsia" ),
 		)
 
 		surfaceNetwork = IECoreScene.ShaderNetwork(
@@ -719,19 +884,25 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
 
 		allAttributes = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "attributes" }
 		self.assertEqual( len( allAttributes ), 1 )
 		attributes = allAttributes[next( iter( allAttributes ) )]
 
+		allTransforms = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "transform" }
+		self.assertEqual( len( allTransforms ), 1 )
+		transforms = allTransforms[next( iter( allTransforms ) )]
+
 		self.assertIn( "surfaceshader", attributes )
 		self.assertIn( "volumeshader", attributes )
 		self.assertIn( "displacementshader", attributes )
+		self.assertIn( "shaderattributes", transforms )
 
 		self.assertGreater( len( attributes["surfaceshader"] ), 0 )
 		self.assertGreater( len( attributes["volumeshader"] ), 0 )
 		self.assertGreater( len( attributes["displacementshader"] ), 0 )
+		self.assertGreater( len( transforms["shaderattributes"] ), 0 )
 
 		surfaceShader = self.__connectionSource( attributes["surfaceshader"][0], nsi )
 		volumeShader = self.__connectionSource( attributes["volumeshader"][0], nsi )
@@ -753,7 +924,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			str( self.temporaryDirectory() / "test.nsi" ),
+			str( self.temporaryDirectory() / "test.nsia" ),
 		)
 
 		os.environ["OSL_SHADER_PATHS"] += os.pathsep + ( pathlib.Path( __file__ ).parent / "shaders" ).as_posix()
@@ -840,7 +1011,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
 
 		shaders = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "shader" }
 		self.assertEqual( len( shaders ), 1 )
@@ -916,7 +1087,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			str( self.temporaryDirectory() / "test.nsi" ),
+			str( self.temporaryDirectory() / "test.nsia" ),
 		)
 
 		network = IECoreScene.ShaderNetwork(
@@ -954,7 +1125,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
 
 		shaders = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "shader" }
 		self.assertEqual( len( shaders ), 1 )
@@ -979,7 +1150,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			str( self.temporaryDirectory() / "test.nsi" ),
+			str( self.temporaryDirectory() / "test.nsia" ),
 		)
 
 		s = IECoreScene.ShaderNetwork(
@@ -997,7 +1168,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
 
 		shaders = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "shader" }
 
@@ -1014,7 +1185,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			str( self.temporaryDirectory() / "test.nsi" ),
+			str( self.temporaryDirectory() / "test.nsia" ),
 		)
 
 		s = IECoreScene.ShaderNetwork(
@@ -1036,7 +1207,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
 
 		shaders = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "shader" }
 
@@ -1047,6 +1218,385 @@ class RendererTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( nsi[testShader]["uvCoord"] ), 1 )
 		self.assertEqual( self.__connectionSource( nsi[testShader]["uvCoord"][0], nsi ), nsi[uvShader] )
+
+	def testCornersAndCreases( self ) :
+
+		mesh = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
+		mesh.setInterpolation( "catmullClark" )
+		mesh.setCorners( IECore.IntVectorData( [ 3 ] ), IECore.FloatVectorData( [ 5 ] ) )
+		mesh.setCreases( IECore.IntVectorData( [ 3 ] ), IECore.IntVectorData( [ 0, 1, 2 ] ), IECore.FloatVectorData( [ 6 ] ) )
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsia" ),
+		)
+
+		renderer.object( "testPlane", mesh, renderer.attributes( IECore.CompoundObject() ) )
+
+		renderer.render()
+		del renderer
+
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
+
+		mesh = next( node for node in nsi.values() if node["nodeType"] == "mesh" )
+		self.assertEqual( mesh["subdivision.creasevertices"], [ 0, 1, 1, 2 ] )
+		self.assertEqual( mesh["subdivision.creasesharpness"], [ 6, 6 ] )
+		self.assertEqual( mesh["subdivision.cornervertices"], 3 )
+		self.assertEqual( mesh["subdivision.cornersharpness"], 5 )
+
+	def testFrameOption( self ) :
+
+		for frame in range( 0, 5 ) :
+
+			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				"3Delight",
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+				str( self.temporaryDirectory() / "test.nsia" ),
+			)
+
+			renderer.option( "frame", IECore.IntData( frame ) )
+			renderer.render()
+
+			nsi = self.__parseDict( str( self.temporaryDirectory() / "test.nsia" ) )
+			self.assertEqual( nsi[".global"]["frame"], frame )
+			self.assertIsInstance( nsi[".global"]["frame"], float )
+
+	# `lightSettings` is a list of tuples of the form :
+	# ( USD light type, position, rotation (V3f, degrees), 3Delight geometry type,
+	# 3Delight geometry attributes, 3Delight shader, IECore light parameters, 3Delight parameters )
+	# Returns the path to the rendered NSI file.
+	def __renderLights( self, lightSettings ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsia" ),
+		)
+
+		for lightType, position, rotation, geometryType, geometryAttributes, shader, lightParameters, dlParameters in lightSettings :
+			lightShader = IECoreScene.ShaderNetwork(
+				{
+					"lightHandle": IECoreScene.Shader( lightType, "light", lightParameters ),
+				},
+				output = "lightHandle"
+			)
+			r.light(
+				"test" + lightType,
+				None,  # IECore.Object
+				r.attributes(IECore.CompoundObject( { "light": lightShader } ) )
+			).transform( imath.M44f().translate( position ) * imath.M44f().rotate( IECore.degreesToRadians( rotation ) ) )
+
+		r.render()
+		del r
+
+		return self.temporaryDirectory() / "test.nsia"
+
+	def __assertLightSettings( self, nsi, lightSettings ) :
+
+		for lightType, translation, rotation, geometryType, geometryAttributes, shader, lightParameters, dlParameters in lightSettings :
+			with self.subTest( lightType = lightType ) :
+				lightName = "test" + lightType
+				self.assertIn( lightName, nsi )
+				transform = nsi[lightName]
+
+				self.assertIn( "geometryattributes", transform )
+				self.assertEqual( len( transform["geometryattributes"] ), 1 )
+				attributes = self.__connectionSource( transform["geometryattributes"][0], nsi )
+
+				self.assertIn( "surfaceshader", attributes )
+				self.assertEqual( len( attributes["surfaceshader"] ), 1 )
+				surface = self.__connectionSource( attributes["surfaceshader"][0], nsi )
+
+				self.assertEqual( pathlib.Path( surface["shaderfilename"] ).name, shader )
+				for k, v in dlParameters.items() :
+					with self.subTest( k = k ) :
+						self.assertIn( k, surface )
+						self.assertEqual( surface[k], v )
+
+				self.assertIn( "objects", transform )
+				self.assertEqual( len( transform["objects"] ), 1 )
+				geometry = self.__connectionSource( transform["objects"][0], nsi )
+
+				self.assertEqual( geometry["nodeType"], geometryType )
+				for k, v in geometryAttributes.items() :
+					with self.subTest( k = k ) :
+						self.assertIn( k, geometry )
+						if isinstance( v, list ) :
+							self.assertEqual( len( geometry[k] ), len( v ) )
+							for i in range( 0, len( v ) ) :
+								if isinstance( v[i], imath.V3f ) :
+									for j in range( 0, 3 ) :
+										self.assertAlmostEqual( geometry[k][i][j], v[i][j], places = 5 )
+								else :
+									self.assertAlmostEqual( geometry[k][i], v[i], places = 5 )
+						else :
+							self.assertAlmostEqual( geometry[k], v, places = 5 )
+
+				self.assertIn( "transformationmatrix", transform )
+				xform = imath.M44f().rotate( IECore.degreesToRadians( rotation ) ).translate( translation )
+				for i in range( 0, 4 ) :
+					with self.subTest( i = i ) :
+						for j in range( 0, 4 ) :
+							with self.subTest( j = j ) :
+								self.assertAlmostEqual( transform["transformationmatrix"][i][j], xform[i][j])
+
+	def testUSDLights( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsi" ),
+		)
+
+		# List of tuples of the form :
+		# ( USD light type, position, rotation (V3f, degrees), 3Delight geometry type,
+		# 3Delight geometry attributes, 3Delight shader, IECore light parameters, 3Delight parameters )
+		lightSettings = [
+			(
+				"SphereLight",
+				imath.V3f( 1.0, 2.0, 3.0 ),
+				imath.V3f( 10.0, 20.0, 30.0 ),
+				"particles",
+				{ "P": imath.V3f( 0, 0, 0 ), "width": 6.0, },
+				"pointLight.oso",
+				{ "intensity": 2.0, "diffuse": 0.1, "specular": 0.5, "exposure": 10.0, "color": imath.Color3f( 4.0, 5.0, 6.0 ), "radius": 3.0, },
+				{ "intensity": 2.0, "diffuse_contribution": 0.1, "reflection_contribution": 0.5, "exposure": 10.0, "i_color": imath.Color3f( 4.0, 5.0, 6.0 ) },
+			),
+			(
+				"RectLight",
+				imath.V3f( 1.0, 2.0, 3.0 ),
+				imath.V3f( 10.0, 20.0, 30.0 ),
+				"mesh",
+				{
+					"P": [ imath.V3f( 1.0, 1.5, 0.0 ), imath.V3f( 1.0, -1.5, 0.0 ), imath.V3f( -1.0, -1.5, 0.0 ), imath.V3f( -1.0, 1.5, 0.0 ) ],
+					"P.indices": [ 0, 1, 2, 3 ],
+					"N": imath.V3f( 0.0, 0.0, -1.0 ),
+					"N.indices": [ 0, 0, 0, 0 ],
+					"st": [ imath.V2f( 0.0, 1.0 ), imath.V2f( 0.0, 0.0 ), imath.V2f( 1.0, 0.0 ), imath.V2f( 1.0, 1.0 ) ]
+				},
+				"areaLight.oso",
+				{ "intensity": 2.0, "diffuse": 0.1, "specular": 0.5, "exposure": 10.0, "color": imath.Color3f( 4.0, 5.0, 6.0 ), "width": 2.0, "height": 3.0, },
+				{ "intensity": 2.0, "diffuse_contribution": 0.1, "reflection_contribution": 0.5, "exposure": 10.0, "i_color": imath.Color3f( 4.0, 5.0, 6.0 ) },
+			),
+			(
+				"DiskLight",
+				imath.V3f( 1.0, 2.0, 3.0 ),
+				imath.V3f( 10.0, 20.0, 30.0 ),
+				"particles",
+				{ "P": imath.V3f( 0.0, 0.0, 0.0 ), "width": 6.0, "N": imath.V3f( 0.0, 0.0, -1.0 ) },
+				"areaLight.oso",
+				{ "intensity": 2.0, "diffuse": 0.1, "specular": 0.5, "exposure": 10.0, "color": imath.Color3f( 4.0, 5.0, 6.0 ), "radius": 3.0, },
+				{ "intensity": 2.0, "diffuse_contribution": 0.1, "reflection_contribution": 0.5, "exposure": 10.0, "i_color": imath.Color3f( 4.0, 5.0, 6.0 ) },
+			),
+			(
+				"DistantLight",
+				imath.V3f( 1.0, 2.0, 3.0 ),
+				imath.V3f( 10.0, 20.0, 30.0 ),
+				"environment",
+				{ "angle": 10.0 },
+				"distantLight.oso",
+				{ "intensity": 2.0, "diffuse": 0.1, "specular": 0.5, "exposure": 10.0, "color": imath.Color3f( 4.0, 5.0, 6.0 ), "angle": 10.0 },
+				{ "intensity": 2.0, "diffuse_contribution": 0.1, "reflection_contribution": 0.5, "exposure": 10.0, "i_color": imath.Color3f( 4.0, 5.0, 6.0 ) },
+			),
+			(
+				"DomeLight",
+				imath.V3f( 1.0, 2.0, 3.0 ),
+				imath.V3f( 10.0, 20.0, 30.0 ),
+				"environment",
+				{ "angle": 360.0 },
+				"environmentLight.oso",
+				{ "intensity": 2.0, "diffuse": 0.1, "specular": 0.5, "exposure": 10.0, "color": imath.Color3f( 4.0, 5.0, 6.0 ), "angle": 10.0, "texture:file": "env.exr", "texture:format": "latlong" },
+				{ "intensity": 2.0, "diffuse_contribution": 0.1, "specular_contribution": 0.5, "exposure": 10.0, "i_color": imath.Color3f( 4.0, 5.0, 6.0 ), "image": "env.exr", "mapping": 0 },
+			),
+			(
+				"CylinderLight",
+				imath.V3f( 1.0, 2.0, 3.0 ),
+				imath.V3f( 10.0, 20.0, 30.0 ),
+				"mesh",
+				self.__cylinderMesh( 2.0, 3.0 ),
+				"areaLight.oso",
+				{ "intensity": 2.0, "diffuse": 0.1, "specular": 0.5, "exposure": 10.0, "color": imath.Color3f( 4.0, 5.0, 6.0 ), "length": 2.0, "radius": 3.0 },
+				{ "intensity": 2.0, "diffuse_contribution": 0.1, "reflection_contribution": 0.5, "exposure": 10.0, "i_color": imath.Color3f( 4.0, 5.0, 6.0 ) },
+			),
+		]
+
+		nsi = self.__parseDict( self.__renderLights( lightSettings ) )
+
+		self.__assertLightSettings( nsi, lightSettings )
+
+	def testUSDLightShaping( self ) :
+
+		lightSettings = [
+			(
+				"RectLight",
+				imath.V3f( 1.0, 2.0, 3.0 ),
+				imath.V3f( 10.0, 20.0, 30.0 ),
+				"mesh",
+				{
+					"P": [ imath.V3f( 1.0, 1.5, 0.0 ), imath.V3f( 1.0, -1.5, 0.0 ), imath.V3f( -1.0, -1.5, 0.0 ), imath.V3f( -1.0, 1.5, 0.0 ) ],
+					"P.indices": [ 0, 1, 2, 3 ],
+					"N": imath.V3f( 0.0, 0.0, -1.0 ),
+					"N.indices": [ 0, 0, 0, 0 ],
+					"st": [ imath.V2f( 0.0, 1.0 ), imath.V2f( 0.0, 0.0 ), imath.V2f( 1.0, 0.0 ), imath.V2f( 1.0, 1.0 ) ]
+				},
+				"spotLight.oso",
+				{ "intensity": 2.0, "diffuse": 0.1, "specular": 0.5, "exposure": 10.0, "color": imath.Color3f( 4.0, 5.0, 6.0 ), "width": 2.0, "height": 3.0, "shaping:cone:angle": 45.0, "shaping:cone:softness": 0.1 },
+				{ "intensity": 2.0, "diffuse_contribution": 0.1, "reflection_contribution": 0.5, "exposure": 10.0, "i_color": imath.Color3f( 4.0, 5.0, 6.0 ), "coneAngle": 81.0, "penumbraAngle": 4.5 },
+			),
+			(
+				"DiskLight",
+				imath.V3f( 1.0, 2.0, 3.0 ),
+				imath.V3f( 10.0, 20.0, 30.0 ),
+				"particles",
+				{ "P": imath.V3f( 0.0, 0.0, 0.0 ), "width": 6.0, "N": imath.V3f( 0.0, 0.0, -1.0 ) },
+				"spotLight.oso",
+				{ "intensity": 2.0, "diffuse": 0.1, "specular": 0.5, "exposure": 10.0, "color": imath.Color3f( 4.0, 5.0, 6.0 ), "radius": 3.0, "shaping:cone:angle": 45.0, "shaping:cone:softness": 0.1 },
+				{ "intensity": 2.0, "diffuse_contribution": 0.1, "reflection_contribution": 0.5, "exposure": 10.0, "i_color": imath.Color3f( 4.0, 5.0, 6.0 ), "coneAngle": 81.0, "penumbraAngle": 4.5 },
+			),
+		]
+
+		nsi = self.__parseDict( self.__renderLights( lightSettings ) )
+
+		self.__assertLightSettings( nsi, lightSettings )
+
+	@staticmethod
+	def __cylinderMesh( length, radius ) :
+
+		numSegments = 100
+		halfLength = length * 0.5
+
+		p = []
+		pIndices = []
+		n = []
+		nIndices = []
+
+		for i in range( 0, numSegments + 1 ) :
+			a = ( float(i) / numSegments ) * 2.0 * math.pi
+			z = math.sin( a ) * radius
+			y = math.cos( a ) * radius
+
+			p.append( imath.V3f( halfLength, y, z ) )
+			p.append( imath.V3f( -halfLength, y, z ) )
+			n.append( imath.V3f( 0, y, z ).normalized() )
+
+		for i in range( 0, numSegments ) :
+			pIndices.append( i * 2 )
+			pIndices.append( i * 2 + 1 )
+			pIndices.append( i * 2 + 3 )
+			pIndices.append( i * 2 + 2 )
+
+			nIndices.append( i )
+			nIndices.append( i )
+			nIndices.append( i + 1 )
+			nIndices.append( i + 1 )
+
+		# end caps
+		p.append( imath.V3f( halfLength, 0, 0 ) )
+		p.append( imath.V3f( -halfLength, 0, 0 ) )
+		n.append( imath.V3f( 1, 0, 0 ) )
+		n.append( imath.V3f( -1, 0, 0 ) )
+
+		for i in range( 0, numSegments ) :
+			pIndices.append( numSegments + 1 )
+			pIndices.append( i * 2 )
+			pIndices.append( i * 2 + 2 )
+
+			nIndices.append( numSegments + 1 )
+			nIndices.append( numSegments + 1 )
+			nIndices.append( numSegments + 1 )
+
+			pIndices.append( numSegments + 2 )
+			pIndices.append( i * 2 + 3 )
+			pIndices.append( i * 2 + 1 )
+
+			nIndices.append( numSegments + 2 )
+			nIndices.append( numSegments + 2 )
+			nIndices.append( numSegments + 2 )
+
+		return { "P": p, "P.indices": pIndices, "N": n, "N.indices": nIndices }
+
+	def testOutputLayerNames( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsia" )
+		)
+
+		renderer.output(
+			"diffuse",
+			IECoreScene.Output( "diffuse.exr", "exr", "color shader:diffuse", {} )
+		)
+
+		renderer.output(
+			"directDiffuse",
+			IECoreScene.Output( "directDiffuse.exr", "exr", "color shader:diffuse.direct", {} )
+		)
+
+		renderer.output(
+			"customLayerName",
+			IECoreScene.Output( "customLayerName.exr", "exr", "color shader:diffuse.direct", { "layerName" : "myLayerName" } )
+		)
+
+		renderer.render()
+		del renderer
+
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
+
+		self.assertEqual( nsi["outputLayer:diffuse"]["layername"], "diffuse" )
+		self.assertEqual( nsi["outputLayer:directDiffuse"]["layername"], "diffuse_direct" )
+		self.assertEqual( nsi["outputLayer:customLayerName"]["layername"], "myLayerName" )
+
+	def testOutputLayerAttributes( self ) :
+
+		for data, expected in {
+			"rgba" : {
+				"variablename": "Ci",
+				"variablesource": "shader",
+				"layertype": "color",
+				"withalpha": 1,
+				"filter": "gaussian",
+				"filterwidth": 3.5,
+				"scalarformat": "half",
+				"colorprofile": "sRGB",
+				"layername": "Test",
+				"dithering": 1
+			},
+		}.items() :
+
+			r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				"3Delight",
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+				str( self.temporaryDirectory() / "test.nsia" )
+			)
+
+			r.output(
+				"test",
+				IECoreScene.Output(
+					"beauty.exr",
+					"exr",
+					data,
+					{
+						"filter": "gaussian",
+						"filterwidth": 3.5,
+						"scalarformat": "half",
+						"colorprofile": "sRGB",
+						"layerName": "Test",
+						"dithering": 1
+					}
+				)
+			)
+
+			r.render()
+			del r
+
+			nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
+			self.assertIn( "outputLayer:test", nsi )
+			self.assertEqual( nsi["outputLayer:test"]["nodeType"], "outputlayer")
+			for k, v in expected.items() :
+				self.assertIn( k, nsi["outputLayer:test"] )
+				self.assertEqual( nsi["outputLayer:test"][k], v )
 
 	# Helper methods used to check that NSI files we write contain what we
 	# expect. The 3delight API only allows values to be set, not queried,
@@ -1120,9 +1670,7 @@ class RendererTest( GafferTest.TestCase ) :
 				currentNode = None
 			else :
 				# List of attributes
-				pType = tokens.popleft()
-				if pType == "v normal" or pType == "v point" :
-					pType = "v"
+				pType = tokens.popleft().rpartition( " " )[-1]
 				pSize = int( tokens.popleft() )
 				pLength = 1
 
@@ -1138,7 +1686,15 @@ class RendererTest( GafferTest.TestCase ) :
 					tokens.popleft()  # Closing	`]`
 					continue  # And we're done
 
-				numComponents = { "v": 3, "color": 3, "doublematrix": 16, "float[2]": 2 }.get( pType, 1 )
+				numComponents = {
+					"point" : 3,
+					"vector" : 3,
+					"normal" : 3,
+					"color" : 3,
+					"doublematrix" : 16,
+					"float[2]": 2
+				}.get( pType, 1 )
+
 				numElements = pLength * numComponents * pSize
 				if numElements > 1 :
 					tokens.popleft()  # First `[` of an array
@@ -1152,7 +1708,7 @@ class RendererTest( GafferTest.TestCase ) :
 						value.append( tokens.popleft() )
 					elif pType == "color" :
 						value.append( imath.Color3f( float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ) ) )
-					elif pType == "v" :
+					elif pType in ( "point", "vector", "normal" ) :
 						value.append( imath.V3f( float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ) ) )
 					elif pType == "doublematrix" :
 						value.append(

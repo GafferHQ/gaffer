@@ -34,21 +34,13 @@
 #
 ##########################################################################
 
-import os
+import psutil
+
 import Gaffer
 
 # Set cache memory limit to 8 gigs, capped at 3/4 of the total
 # physical memory.
 
-cacheLimit = 1024**3 * 8 # 8 Gigs
-
-if os.name != "nt" :
-	physicalMemory = os.sysconf( "SC_PAGE_SIZE" ) * os.sysconf( "SC_PHYS_PAGES" )
-	cacheLimit = min( cacheLimit, physicalMemory * 3 // 4  )
-else :
-	# No native Python API for querying physical memory on Windows.
-	# And surely nobody is brave enough to use Windows with less
-	# than 8 gigs ;)
-	pass
-
-Gaffer.ValuePlug.setCacheMemoryLimit( cacheLimit )
+Gaffer.ValuePlug.setCacheMemoryLimit(
+	min( 1024**3 * 8, psutil.virtual_memory().total * 3 // 4 )
+)

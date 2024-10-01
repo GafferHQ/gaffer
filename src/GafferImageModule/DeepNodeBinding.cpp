@@ -45,6 +45,7 @@
 #include "GafferImage/DeepSampler.h"
 #include "GafferImage/DeepHoldout.h"
 #include "GafferImage/DeepRecolor.h"
+#include "GafferImage/DeepSlice.h"
 
 #include "DeepNodeBinding.h"
 
@@ -92,4 +93,5 @@ void GafferImageModule::bindDeepNodes()
 	DependencyNodeClass<DeepSampler>();
 	DependencyNodeClass<DeepHoldout>();
 	DependencyNodeClass<DeepRecolor>();
+	DependencyNodeClass<DeepSlice>();
 }

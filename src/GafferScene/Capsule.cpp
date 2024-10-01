@@ -55,7 +55,7 @@ namespace
 {
 	Gaffer::Context *capsuleContext( const Context &context )
 	{
-		Gaffer::Context *result = new Gaffer::Context( context );
+		Gaffer::Context *result = new Gaffer::Context( context, /* omitCanceller = */ true );
 
 		// We don't want to include the scenePath of the original location of the capsule
 		// as part of the context used downstream to evaluate the insides of the capsule

@@ -52,6 +52,7 @@
 #include "boost/container/flat_set.hpp"
 
 #include "ai_metadata.h"
+#include "ai_version.h"
 
 using namespace std;
 using namespace Imath;
@@ -59,6 +60,10 @@ using namespace boost;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferArnold;
+
+#if ARNOLD_VERSION_NUM < 70301
+#define AI_NODE_IMAGER AI_NODE_DRIVER
+#endif
 
 namespace
 {
@@ -309,7 +314,7 @@ Gaffer::Plug *setupClosurePlug( const IECore::InternedString &parameterName, Gaf
 
 Gaffer::Plug *setupNodePlug( const AtNodeEntry *nodeEntry, const InternedString &parameterName, GraphComponent *plugParent, Plug::Direction direction )
 {
-	if( AiNodeEntryGetType( nodeEntry ) == AI_NODE_DRIVER && parameterName == "input" )
+	if( AiNodeEntryGetType( nodeEntry ) == AI_NODE_IMAGER && parameterName == "input" )
 	{
 		return setupPlug( parameterName, plugParent, direction );
 	}

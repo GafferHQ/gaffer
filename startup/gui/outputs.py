@@ -116,10 +116,19 @@ with IECore.IgnoredExceptions( ImportError ) :
 		"volume_indirect",
 		"volume_albedo",
 		"motionvector",
+		"normal",
+		"depth",
 	] :
 
 		label = aov.replace( "_", " " ).title().replace( " ", "_" )
-		data = "color " + aov if aov != "beauty" else "rgba"
+		if aov == "beauty":
+			data = "rgba"
+		elif aov == "depth":
+			data = "float Z"
+		elif aov == "normal":
+			data = "color N"
+		else:
+			data = "color " + aov
 
 		if aov == "motionvector" :
 			parameters = {
@@ -127,6 +136,9 @@ with IECore.IgnoredExceptions( ImportError ) :
 			}
 		else :
 			parameters = {}
+
+		if aov == "depth":
+			parameters["layerName"] = "Z"
 
 		if aov not in { "motionvector", "emission", "background" } :
 			parameters["layerPerLightGroup"] = False
@@ -174,6 +186,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 	# See `contrib/scripts/3delightOutputs.py` in this repository for a helper script.
 
 	for name, displayName, source, dataType in [
+		( "rgba", "Beauty", "", "" ),
 		( "Ci", "Ci", "shader", "color" ),
 		( "Ci.direct", "Ci (direct)", "shader", "color" ),
 		( "Ci.indirect", "Ci (indirect)", "shader", "color" ),
@@ -213,27 +226,46 @@ with IECore.IgnoredExceptions( ImportError ) :
 		( "motionvector", "Motion Vector", "builtin", "point" ),
 		( "occlusion", "Ambient Occlusion", "shader", "color" ),
 	] :
+		if name == "rgba" :
+			space = ""
+			separator = ""
+			slash = ""
+		else :
+			space = " "
+			separator = ":"
+			slash ="/"
+
 		GafferScene.Outputs.registerOutput(
-			"Interactive/3Delight/{}/{}".format( source.capitalize(), displayName ),
+			"Interactive/3Delight/{}{}{}".format( source.capitalize(), slash, displayName ),
 			IECoreScene.Output(
 				name,
 				"ieDisplay",
-				"{} {}:{}".format( dataType, source, name ),
+				"{}{}{}{}{}".format( dataType, space, source, separator, name ),
 				{
 					"driverType" : "ClientDisplayDriver",
 					"displayHost" : "localhost",
 					"displayPort" : "${image:catalogue:port}",
 					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"scalarformat" : "half",
+					"colorprofile" : "linear",
+					"filter" : "blackman-harris",
+					"filterwidth" : 3.0,
 				}
 			)
 		)
 
 		GafferScene.Outputs.registerOutput(
-			"Batch/3Delight/{}/{}".format( source.capitalize(), displayName ),
+			"Batch/3Delight/{}{}{}".format( source.capitalize(), slash, displayName ),
 			IECoreScene.Output(
 				"${project:rootDirectory}/renders/${script:name}/${renderPass}/%s/%s.####.exr" % ( name, name ),
 				"exr",
-				"{} {}:{}".format( dataType, source, name ),
+				"{}{}{}{}{}".format( dataType, space, source, separator, name ),
+				{
+					"scalarformat" : "half",
+					"colorprofile" : "linear",
+					"filter" : "blackman-harris",
+					"filterwidth" : 3.0,
+				}
 			)
 		)
 

@@ -67,6 +67,7 @@ from .StandardOptionsTest import StandardOptionsTest
 from .ScenePathTest import ScenePathTest
 from .LightTest import LightTest
 from .OpenGLShaderTest import OpenGLShaderTest
+from .RenderTest import RenderTest
 from .OpenGLRenderTest import OpenGLRenderTest
 from .TransformTest import TransformTest
 from .AimConstraintTest import AimConstraintTest
@@ -111,6 +112,7 @@ from .InteractiveRenderTest import InteractiveRenderTest
 from .FilteredSceneProcessorTest import FilteredSceneProcessorTest
 from .ShaderBallTest import ShaderBallTest
 from .ShaderTweaksTest import ShaderTweaksTest
+from .ShaderTweakProxyTest import ShaderTweakProxyTest
 from .FilterResultsTest import FilterResultsTest
 from .RendererAlgoTest import RendererAlgoTest
 from .SetAlgoTest import SetAlgoTest
@@ -176,6 +178,11 @@ from .ImageScatterTest import ImageScatterTest
 from .RenderPassesTest import RenderPassesTest
 from .DeleteRenderPassesTest import DeleteRenderPassesTest
 from .RenderPassWedgeTest import RenderPassWedgeTest
+from .RenderAdaptorTest import RenderAdaptorTest
+from .MeshTessellateTest import MeshTessellateTest
+from .RenderPassTypeAdaptorTest import RenderPassTypeAdaptorTest
+from .RenderPassShaderTest import RenderPassShaderTest
+from .RenderPassAdaptorTest import RenderPassAdaptorTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *

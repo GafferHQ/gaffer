@@ -45,6 +45,10 @@
 #include "GafferUI/Style.h"
 
 #include "boost/bind/bind.hpp"
+#include "boost/multi_index/member.hpp"
+#include "boost/multi_index/ordered_index.hpp"
+#include "boost/multi_index/sequenced_index.hpp"
+#include "boost/multi_index_container.hpp"
 
 using namespace boost::placeholders;
 using namespace Imath;
@@ -53,6 +57,66 @@ using namespace Gaffer;
 using namespace GafferUI;
 using namespace GafferScene;
 using namespace GafferSceneUI;
+
+namespace
+{
+
+using NamedSelectMode = std::pair<std::string, SelectionTool::SelectFunction>;
+using SelectModeMap = boost::multi_index::multi_index_container<
+	NamedSelectMode,
+	boost::multi_index::indexed_by<
+		boost::multi_index::ordered_unique<
+			boost::multi_index::member<NamedSelectMode, std::string, &NamedSelectMode::first>
+		>,
+		boost::multi_index::sequenced<>
+	>
+>;
+
+const std::string g_standardSelectModeName = "/Standard";
+
+SelectModeMap &selectModes()
+{
+	// Deliberately "leaking" map, as it may contain Python functors which
+	// cannot be destroyed during program exit (because Python will have been
+	// shut down first).
+	static auto g_selectModes = new SelectModeMap;
+
+	if( g_selectModes->empty() )
+	{
+		g_selectModes->insert(
+		{
+			g_standardSelectModeName,
+			[]( const ScenePlug *scene, const ScenePlug::ScenePath &path )
+			{
+				return path;
+			}
+		}
+	);
+	}
+	return *g_selectModes;
+}
+
+const GafferScene::ScenePlug::ScenePath modifyPath(
+	const std::string &modeName,
+	const ScenePlug *scene,
+	const GafferScene::ScenePlug::ScenePath &path
+)
+{
+	if( path.empty() || modeName.empty() )
+	{
+		return path;
+	}
+
+	auto it = selectModes().find( modeName );
+	if( it != selectModes().end() )
+	{
+		return it->second( scene, path );
+	}
+
+	return path;
+}
+
+}  // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // DragOverlay implementation
@@ -154,6 +218,8 @@ GAFFER_NODE_DEFINE_TYPE( SelectionTool );
 SelectionTool::ToolDescription<SelectionTool, SceneView> SelectionTool::g_toolDescription;
 static IECore::InternedString g_dragOverlayName( "__selectionToolDragOverlay" );
 
+size_t SelectionTool::g_firstPlugIndex = 0;
+
 SelectionTool::SelectionTool( SceneView *view, const std::string &name )
 	:	Tool( view, name )
 {
@@ -165,15 +231,70 @@ SelectionTool::SelectionTool( SceneView *view, const std::string &name )
 	sg->dragEnterSignal().connect( boost::bind( &SelectionTool::dragEnter, this, ::_1, ::_2 ) );
 	sg->dragMoveSignal().connect( boost::bind( &SelectionTool::dragMove, this, ::_2 ) );
 	sg->dragEndSignal().connect( boost::bind( &SelectionTool::dragEnd, this, ::_2 ) );
+
+	plugSetSignal().connect( boost::bind( &SelectionTool::plugSet, this, ::_1 ) );
+
+	storeIndexOfNextChild( g_firstPlugIndex );
+
+	addChild( new StringPlug( "selectMode", Plug::Direction::In, g_standardSelectModeName ) );
 }
 
 SelectionTool::~SelectionTool()
 {
 }
 
+StringPlug *SelectionTool::selectModePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+const StringPlug *SelectionTool::selectModePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
 SceneGadget *SelectionTool::sceneGadget()
 {
 	return runTimeCast<SceneGadget>( view()->viewportGadget()->getPrimaryChild() );
+}
+
+void SelectionTool::registerSelectMode( const std::string &name, SelectFunction function )
+{
+	auto &m = selectModes();
+	auto [it, inserted] = m.insert( { name, function } );
+
+	if( !inserted )
+	{
+		m.replace( it, { name, function } );
+	}
+}
+
+std::vector<std::string> SelectionTool::registeredSelectModes()
+{
+	std::vector<std::string> result;
+	for( const auto &m : selectModes().get<1>() )
+	{
+		result.push_back( m.first );
+	}
+
+	return result;
+}
+
+void SelectionTool::deregisterSelectMode( const std::string &mode )
+{
+	selectModes().erase( mode );
+}
+
+void SelectionTool::plugSet( Plug *plug )
+{
+	if( plug == selectModePlug() )
+	{
+		const std::string value = selectModePlug()->getValue();
+		for( auto &tool : SelectionTool::Range( *parent() ) )
+		{
+			tool->selectModePlug()->setValue( value );
+		}
+	}
 }
 
 SelectionTool::DragOverlay *SelectionTool::dragOverlay()
@@ -208,6 +329,15 @@ bool SelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 	SceneGadget *sg = sceneGadget();
 	ScenePlug::ScenePath objectUnderMouse;
 	sg->objectAt( event.line, objectUnderMouse );
+
+	{
+		Context::Scope scopedContext( sg->getContext() );
+		objectUnderMouse = modifyPath(
+			selectModePlug()->getValue(),
+			sceneGadget()->getScene(),
+			objectUnderMouse
+		);
+	}
 
 	PathMatcher selection = sg->getSelection();
 
@@ -339,13 +469,27 @@ bool SelectionTool::dragEnd( const GafferUI::DragDropEvent &event )
 
 	if( sg->objectsAt( dragOverlay()->getStartPosition(), dragOverlay()->getEndPosition(), inDragRegion ) )
 	{
+		PathMatcher inDragRegionTransformed;
+		const ScenePlug *scene = sceneGadget()->getScene();
+		const std::string modeName = selectModePlug()->getValue();
+
+		Context::Scope scopedContext( sg->getContext() );
+		for( PathMatcher::Iterator it = inDragRegion.begin(), eIt = inDragRegion.end(); it != eIt; ++it )
+		{
+			ScenePlug::ScenePath modifiedPath = modifyPath( modeName, scene, *it );
+			if( modifiedPath.size() )
+			{
+				inDragRegionTransformed.addPath( modifiedPath );
+			}
+		}
+
 		if( event.modifiers & DragDropEvent::Control )
 		{
-			selection.removePaths( inDragRegion );
+			selection.removePaths( inDragRegionTransformed );
 		}
 		else
 		{
-			selection.addPaths( inDragRegion );
+			selection.addPaths( inDragRegionTransformed );
 		}
 
 		ContextAlgo::setSelectedPaths( view()->getContext(), selection );

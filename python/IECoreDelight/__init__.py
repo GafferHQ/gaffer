@@ -34,19 +34,11 @@
 #
 ##########################################################################
 
-from ._IECoreDelight import *
-
-# The IECoreDelight module does not need any symbols from IECoreDelight, so MSVC tries
-# to be helpful and not load IECoreDelight.dll. Skipping that means that
-# 3Delight is never registered as a renderer, so we import / register it manually.
-
 import os
+import pathlib
 
-if os.name == "nt" :
+if hasattr( os, "add_dll_directory" ) and "DELIGHT" in os.environ :
+	os.add_dll_directory( ( pathlib.Path( os.environ["DELIGHT"] ) / "bin" ).resolve() )
+del os, pathlib # Don't pollute the namespace
 
-	import ctypes
-
-	try :
-		ctypes.CDLL( "IECoreDelight.dll" )
-	except :
-		raise ImportError
+from ._IECoreDelight import *

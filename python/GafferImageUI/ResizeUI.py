@@ -34,11 +34,13 @@
 #
 ##########################################################################
 
+import inspect
 import itertools
 
 import Gaffer
 import GafferUI
 import GafferImage
+import GafferImageUI
 
 Gaffer.Metadata.registerNode(
 
@@ -49,6 +51,11 @@ Gaffer.Metadata.registerNode(
 	Resizes the image to a new resolution, scaling the
 	contents to fit the new size.
 	""",
+
+	"layout:customWidget:filterDeepWarning:widgetType", "GafferImageUI.ResampleUI._FilterDeepWarningWidget",
+	"layout:customWidget:filterDeepWarning:section", "Settings",
+	"layout:customWidget:filterDeepWarning:accessory", True,
+	"layout:customWidget:filterDeepWarning:visibilityActivator", lambda node : node["filterDeep"].getValue(),
 
 	plugs = {
 
@@ -115,7 +122,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The pixel used when transforming the image. Each
+			The filter used when transforming the image. Each
 			filter provides different tradeoffs between sharpness and
 			the danger of aliasing or ringing.
 			""",
@@ -123,6 +130,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 			"preset:Default", "",
+			"preset:Nearest", "nearest",
 
 		] + list( itertools.chain(
 
@@ -131,6 +139,27 @@ Gaffer.Metadata.registerNode(
 			*[ ( "preset:" + x.title(), x ) for x in GafferImage.FilterAlgo.filterNames() if x != "disk" ]
 
 		) ),
+
+		"filterDeep" : [
+
+			"description",
+			inspect.cleandoc(
+				"""
+				When on, deep images are resized accurately using the same filter
+				as flat images. When off, deep images are resized using the Nearest
+				filter.
+
+				Filters with negative lobes ( such as Lanczos3 which is the Default
+				for downscaling ) cannot be represented at all depths with perfect
+				accuracy, because deep alpha must be between 0 and 1, and must be
+				non-decreasing. In extreme cases, involving bright segments
+				with very low alpha, it may be preferable to choose a softer filter
+				without negative lobes ( like Blackman-Harris ).
+
+				"""
+			) + GafferImageUI.ResampleUI._filterDeepWarning,
+
+		],
 
 	}
 

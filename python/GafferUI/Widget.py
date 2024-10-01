@@ -977,6 +977,7 @@ class _EventFilter( QtCore.QObject ) :
 		self.__lastButtonPressWidget = None
 		self.__lastButtonPressEvent = None
 		self.__dragDropEvent = None
+		self.__foreignDragDropEvent = None
 
 		# the vast majority ( ~99% at time of testing ) of events entering
 		# eventFilter() are totally irrelevant to us. it's therefore very
@@ -1552,73 +1553,6 @@ class _EventFilter( QtCore.QObject ) :
 		if widget is None or widget._dragEnterSignal is None :
 			return False
 
-		dragDropEvent = self.__foreignDragDropEvent( qEvent )
-		if dragDropEvent is None :
-			return False
-
-		if widget._dragEnterSignal( widget, dragDropEvent ) :
-			qEvent.acceptProposedAction()
-			return True
-
-		return False
-
-	def __foreignDragMove( self, qObject, qEvent ) :
-
-		widget = Widget._owner( qObject )
-		if widget is None or widget._dragMoveSignal is None :
-			return False
-
-		dragDropEvent = self.__foreignDragDropEvent( qEvent )
-		if dragDropEvent is None :
-			return False
-
-		widget._dragMoveSignal( widget, dragDropEvent )
-		qEvent.accept()
-
-		return True
-
-	def __foreignDragLeave( self, qObject, qEvent ) :
-
-		widget = Widget._owner( qObject )
-		if widget is None or widget._dragLeaveSignal is None :
-			return False
-
-		# Qt doesn't provide buttons, position or modifiers
-		# for a leave event.
-		dragDropEvent = GafferUI.DragDropEvent(
-			GafferUI.DragDropEvent.Buttons.None_,
-			GafferUI.DragDropEvent.Buttons.None_,
-			IECore.LineSegment3f(
-				imath.V3f( 0, 0, 1 ),
-				imath.V3f( 0, 0, 0 )
-			),
-			GafferUI.DragDropEvent.Modifiers.None_,
-		)
-		dragDropEvent.sourceWidget = None
-		dragDropEvent.destinationWidget = widget
-
-		widget._dragLeaveSignal( widget, dragDropEvent )
-		qEvent.accept()
-		return True
-
-	def __foreignDrop( self, qObject, qEvent ) :
-
-		widget = Widget._owner( qObject )
-		if widget is None or widget._dropSignal is None :
-			return False
-
-		dragDropEvent = self.__foreignDragDropEvent( qEvent )
-		if dragDropEvent is None :
-			return False
-
-		if widget._dropSignal( widget, dragDropEvent ) :
-			qEvent.acceptProposedAction()
-			return True
-
-		return False
-
-	def __foreignDragDropEvent( self, qEvent ) :
-
 		if qEvent.mimeData().hasUrls() :
 			data = IECore.StringVectorData( [
 				url.toString( url.PrettyDecoded | url.PreferLocalFile )
@@ -1627,10 +1561,9 @@ class _EventFilter( QtCore.QObject ) :
 		elif qEvent.mimeData().hasText() :
 			data = IECore.StringData( qEvent.mimeData().text() )
 		else :
-			return None
+			return False
 
 		cursorPos = imath.V2i( qEvent.pos().x(), qEvent.pos().y() )
-
 		dragDropEvent = GafferUI.DragDropEvent(
 			Widget._buttons( qEvent.mouseButtons() ),
 			Widget._buttons( qEvent.mouseButtons() ),
@@ -1644,20 +1577,91 @@ class _EventFilter( QtCore.QObject ) :
 		dragDropEvent.sourceWidget = None
 		dragDropEvent.destinationWidget = None
 
-		return dragDropEvent
+		if widget._dragEnterSignal( widget, dragDropEvent ) :
+			qEvent.acceptProposedAction()
+			self.__foreignDragDropEvent = dragDropEvent
+			return True
+
+		return False
+
+	def __foreignDragMove( self, qObject, qEvent ) :
+
+		if self.__foreignDragDropEvent is None :
+			return False
+
+		widget = Widget._owner( qObject )
+		if widget is None or widget._dragMoveSignal is None :
+			return False
+
+		cursorPos = imath.V2i( qEvent.pos().x(), qEvent.pos().y() )
+		self.__foreignDragDropEvent.line = IECore.LineSegment3f(
+			imath.V3f( cursorPos.x, cursorPos.y, 1 ),
+			imath.V3f( cursorPos.x, cursorPos.y, 0 )
+		)
+
+		widget._dragMoveSignal( widget, self.__foreignDragDropEvent )
+		qEvent.accept()
+
+		return True
+
+	def __foreignDragLeave( self, qObject, qEvent ) :
+
+		if self.__foreignDragDropEvent is None :
+			return False
+
+		widget = Widget._owner( qObject )
+		if widget is None or widget._dragLeaveSignal is None :
+			return False
+
+		widget._dragLeaveSignal( widget, self.__foreignDragDropEvent )
+		qEvent.accept()
+		self.__foreignDragDropEvent = None
+
+		return True
+
+	def __foreignDrop( self, qObject, qEvent ) :
+
+		if self.__foreignDragDropEvent is None :
+			return False
+
+		widget = Widget._owner( qObject )
+		if widget is None or widget._dropSignal is None :
+			return False
+
+		cursorPos = imath.V2i( qEvent.pos().x(), qEvent.pos().y() )
+		self.__foreignDragDropEvent.line = IECore.LineSegment3f(
+			imath.V3f( cursorPos.x, cursorPos.y, 1 ),
+			imath.V3f( cursorPos.x, cursorPos.y, 0 )
+		)
+
+		dragDropEvent = self.__foreignDragDropEvent
+		self.__foreignDragDropEvent = None
+
+		if widget._dropSignal( widget, dragDropEvent ) :
+			qEvent.acceptProposedAction()
+			return True
+
+		return False
 
 	# Maps the position of the supplied Qt mouse event into the coordinate
 	# space of the target Gaffer widget. This is required as certain widget
 	# configurations (eg: QTableView with a visible header) result in qEvent
 	# coordinate origins differing from the Gaffer Widget's origin.
+
+	# \todo There should be a 0.5 pixel offset added to the Qt pixel position
+	# so the resulting `LineSegment3f` goes through the center of the
+	# pixel, not the corner. This can be especially important when the returned
+	# line segment is used to calculate positions in a 3d perspective view, where
+	# small differences in direction can introduce significant error at
+	# long distances.
 	def __widgetSpaceLine( self, qEvent, targetWidget ) :
 
 		cursorPos = imath.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() )
 		cursorPos -= targetWidget.bound().min()
 
 		return IECore.LineSegment3f(
-			imath.V3f( cursorPos.x, cursorPos.y, 1 ),
-			imath.V3f( cursorPos.x, cursorPos.y, 0 )
+			imath.V3f( cursorPos.x + 0.5, cursorPos.y + 0.5, 1 ),
+			imath.V3f( cursorPos.x + 0.5, cursorPos.y + 0.5, 0 )
 		)
 
 # this single instance is used by all widgets

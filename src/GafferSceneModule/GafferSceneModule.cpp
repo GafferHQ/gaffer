@@ -44,6 +44,7 @@
 #include "GlobalsBinding.h"
 #include "HierarchyBinding.h"
 #include "IECoreGLPreviewBinding.h"
+#include "IECoreScenePreviewBinding.h"
 #include "IOBinding.h"
 #include "TweaksBinding.h"
 #include "ObjectProcessorBinding.h"
@@ -67,6 +68,8 @@ using namespace GafferSceneModule;
 
 BOOST_PYTHON_MODULE( _GafferScene )
 {
+
+	bindIECoreScenePreview(); // Must be declared early since some things depend on Procedural being registered
 
 	bindCore();
 	bindFilter();

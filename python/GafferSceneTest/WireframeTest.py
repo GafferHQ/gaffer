@@ -42,6 +42,7 @@ import IECore
 import IECoreScene
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -170,6 +171,24 @@ class WireframeTest( GafferSceneTest.SceneTestCase ) :
 		wireframe["adjustBounds"].setValue( False )
 		self.assertScenesEqual( wireframe["in"], wireframe["out"], checks = { "bound" } )
 		self.assertSceneHashesEqual( wireframe["in"], wireframe["out"], checks = { "bound" } )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testPerformance( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["divisions"].setValue( imath.V2i( 1000 ) )
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		wireframe = GafferScene.Wireframe()
+		wireframe["in"].setInput( sphere["out"] )
+		wireframe["filter"].setInput( sphereFilter["out"] )
+
+		GafferSceneTest.traverseScene( wireframe["in"] )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferSceneTest.traverseScene( wireframe["out"] )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -55,12 +55,7 @@
 
 #include "IECore/AngleConversion.h"
 
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathMatrixAlgo.h"
-#else
 #include "Imath/ImathMatrixAlgo.h"
-#endif
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind/bind.hpp"
@@ -1292,12 +1287,36 @@ bool TransformTool::keyPress( const GafferUI::KeyEvent &event )
 
 bool TransformTool::canSetValueOrAddKey( const Gaffer::FloatPlug *plug )
 {
+	// Refuse to edit a plug that is driven by ganging. Our use of
+	// `source()` below would mean that we'd end up editing the driver,
+	// which would cause very unintuitive behaviour.
+	if( auto parent = plug->parent<V3fPlug>() )
+	{
+		if( plug->getInput() && plug->getInput()->parent() == parent )
+		{
+			return false;
+		}
+	}
+
 	if( Animation::isAnimated( plug ) )
 	{
+		// Check editability of the source animation.
 		return !MetadataAlgo::readOnly( plug->source() );
 	}
 
-	return plug->settable() && !MetadataAlgo::readOnly( plug );
+	// We expect `plug` to have been acquired via `spreadsheetAwareSource()`
+	// courtesy of the Selection class. But that _doesn't_ mean that it can't have
+	// an input, because `spreadsheetAwareSource()` operates on the parent V3fPlug,
+	// and won't account for an input to an individual component. So we still
+	// need to call `source()` to find the plug we really want to edit.
+	const FloatPlug *source = plug->source<FloatPlug>();
+	if( !source )
+	{
+		// Input isn't a FloatPlug.
+		return false;
+	}
+
+	return source->settable() && !MetadataAlgo::readOnly( source );
 }
 
 void TransformTool::setValueOrAddKey( Gaffer::FloatPlug *plug, float time, float value )
@@ -1309,6 +1328,8 @@ void TransformTool::setValueOrAddKey( Gaffer::FloatPlug *plug, float time, float
 	}
 	else
 	{
-		plug->setValue( value );
+		FloatPlug *source = plug->source<FloatPlug>();
+		assert( source );
+		source->setValue( value );
 	}
 }

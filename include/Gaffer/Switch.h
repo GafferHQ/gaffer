@@ -39,6 +39,8 @@
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/StringPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 
 namespace Gaffer
 {
@@ -87,6 +89,12 @@ class GAFFER_API Switch : public ComputeNode
 		BoolPlug *enabledPlug() override;
 		const BoolPlug *enabledPlug() const override;
 
+		StringPlug *deleteContextVariablesPlug();
+		const StringPlug *deleteContextVariablesPlug() const;
+
+		IntVectorDataPlug *connectedInputsPlug();
+		const IntVectorDataPlug *connectedInputsPlug() const;
+
 		Plug *correspondingInput( const Plug *output ) override;
 		const Plug *correspondingInput( const Plug *output ) const override;
 
@@ -109,7 +117,7 @@ class GAFFER_API Switch : public ComputeNode
 		void childAdded( GraphComponent *child );
 		void plugSet( Plug *plug );
 		void plugInputChanged( Plug *plug );
-		size_t inputIndex( const Context *context = nullptr ) const;
+		size_t inputIndex( const Context *context ) const;
 
 		// Returns the input corresponding to the output and vice versa. Returns null
 		// if plug is not meaningful to the switching process.

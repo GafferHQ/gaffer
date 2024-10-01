@@ -52,17 +52,13 @@
 #include "IECore/NullObject.h"
 #include "IECore/SimpleTypedData.h"
 
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathBoxAlgo.h"
-#include "OpenEXR/ImathMatrixAlgo.h"
-#else
 #include "Imath/ImathBoxAlgo.h"
 #include "Imath/ImathMatrixAlgo.h"
-#endif
 
 #include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
+
+#include "fmt/format.h"
 
 #include <chrono>
 #include <cmath>
@@ -1116,10 +1112,21 @@ std::vector< Gadget* > ViewportGadget::gadgetsAtInternal( const Imath::Box2f &ra
 	std::vector< Gadget* > gadgets;
 	for( const HitRecord &it : selection )
 	{
-		// We can assume that renderInternal has populated m_renderItem, so we can just index into it
-		// using the index passed to loadName ( reversing the increment-by-one used to avoid the reserved
-		// name "0" )
-		gadgets.push_back( const_cast<Gadget*>( m_renderItems[ it.name - 1 ].gadget ) );
+		// We assume that `renderLayerInternal()` has populated `m_renderItem`, so we can just index into it
+		// using the index passed to `loadName()` (reversing the increment-by-one used to avoid the reserved
+		// name `0`). But we'd crash if we received out-of-range indices for any reason, so check.
+		const size_t index = it.name - 1;
+		if( index < m_renderItems.size() )
+		{
+			gadgets.push_back( const_cast<Gadget*>( m_renderItems[index].gadget ) );
+		}
+		else
+		{
+			IECore::msg(
+				IECore::Msg::Warning, "ViewportGadget::gadgetsAtInternal",
+				fmt::format( "Got out of bounds Gadget index {}", index )
+			);
+		}
 	}
 
 	if( !gadgets.size() )
@@ -1180,7 +1187,6 @@ void ViewportGadget::render() const
 	glClearColor( 0.26f, 0.26f, 0.26f, 0.0f );
 	glClearDepth( 1.0f );
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-	glEnable( GL_BLEND );
 
 	// Set up the camera to world matrix in gl_TextureMatrix[0] so that we can
 	// reference world space positions in shaders
@@ -1275,13 +1281,16 @@ void ViewportGadget::renderInternal( RenderReason reason, Gadget::Layer filterLa
 		if( reason != RenderReason::Draw )
 		{
 			// We're doing selection so post-processing doesn't matter. Just
-			// render direct to output buffer.
+			// render direct to output buffer without blending as that can
+			// corrupt the selection buffer on some graphics hardware.
+			glDisable( GL_BLEND );
 			renderLayerInternal( reason, layer, viewTransform, bound, selector );
 			continue;
 		}
 
-		// Render to intemediate framebuffer.
+		// Render to intermediate framebuffer.
 
+		glEnable( GL_BLEND );
 		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, acquireFramebuffer() );
 		glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
 		glClear( GL_COLOR_BUFFER_BIT );
@@ -1385,7 +1394,7 @@ GLuint ViewportGadget::acquireFramebuffer() const
 
 	// Resize depth buffer and attach to framebuffer
 	glBindRenderbuffer( GL_RENDERBUFFER, m_depthBuffer );
-	glRenderbufferStorageMultisample( GL_RENDERBUFFER, samples, GL_DEPTH_COMPONENT24, size.x, size.y );
+	glRenderbufferStorageMultisample( GL_RENDERBUFFER, samples, GL_DEPTH_COMPONENT32F, size.x, size.y );
 	glFramebufferRenderbuffer( GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthBuffer );
 
 	// Validate framebuffer
@@ -2230,7 +2239,7 @@ void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget
 	m_depthSort = false;
 	camera->render( nullptr );
 
-	m_selector = SelectorPtr( new IECoreGL::Selector( ndcRegion, mode, m_selection ) );
+	m_selector = SelectorPtr( new IECoreGL::Selector( ndcRegion, mode, m_selection, true ) );
 
 	glPushMatrix();
 	glMultMatrixf( transform.getValue() );

@@ -47,7 +47,7 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 
 	def __dispatcher( self ) :
 
-		result = GafferDispatch.LocalDispatcher()
+		result = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 		result["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
 
 		return result
@@ -65,20 +65,21 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 		s["s"]["preTasks"][0].setInput( s["c1"]["task"] )
 		s["s"]["preTasks"][1].setInput( s["c2"]["task"] )
 
-		d = self.__dispatcher()
-		d.dispatch( [ s["s"] ] )
+		s["d"] = self.__dispatcher()
+		s["d"]["tasks"][0].setInput( s["s"]["task"] )
+		s["d"]["task"].execute()
 
 		self.assertEqual( len( s["c1"].log ), 1 )
 		self.assertEqual( len( s["c2"].log ), 0 )
 
 		s["s"]["index"].setValue( 1 )
-		d.dispatch( [ s["s"] ] )
+		s["d"]["task"].execute()
 
 		self.assertEqual( len( s["c1"].log ), 1 )
 		self.assertEqual( len( s["c2"].log ), 1 )
 
 		s["s"]["index"].setValue( 2 )
-		d.dispatch( [ s["s"] ] )
+		s["d"]["task"].execute()
 
 		self.assertEqual( len( s["c1"].log ), 2 )
 		self.assertEqual( len( s["c2"].log ), 1 )
@@ -99,32 +100,34 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( "parent['s']['index'] = context.getFrame()" )
 
-		d = self.__dispatcher()
+		s["d"] = self.__dispatcher()
+		s["d"]["tasks"][0].setInput( s["s"]["task"] )
+
 		with Gaffer.Context() as c :
 
 			c.setFrame( 0 )
-			d.dispatch( [ s["s"] ] )
+			s["d"]["task"].execute()
 
 			self.assertEqual( len( s["c1"].log ), 1 )
 			self.assertEqual( len( s["c2"].log ), 0 )
 			self.assertEqual( len( s["c3"].log ), 0 )
 
 			c.setFrame( 1 )
-			d.dispatch( [ s["s"] ] )
+			s["d"]["task"].execute()
 
 			self.assertEqual( len( s["c1"].log ), 1 )
 			self.assertEqual( len( s["c2"].log ), 1 )
 			self.assertEqual( len( s["c3"].log ), 0 )
 
 			c.setFrame( 2 )
-			d.dispatch( [ s["s"] ] )
+			s["d"]["task"].execute()
 
 			self.assertEqual( len( s["c1"].log ), 1 )
 			self.assertEqual( len( s["c2"].log ), 1 )
 			self.assertEqual( len( s["c3"].log ), 1 )
 
 			c.setFrame( 3 )
-			d.dispatch( [ s["s"] ] )
+			s["d"]["task"].execute()
 
 			self.assertEqual( len( s["c1"].log ), 2 )
 			self.assertEqual( len( s["c2"].log ), 1 )
@@ -143,9 +146,10 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 		s["s"]["preTasks"][0].setInput( None )
 		s["s"]["index"].setValue( 0 )
 
-		d = self.__dispatcher()
+		s["d"] = self.__dispatcher()
+		s["d"]["tasks"][0].setInput( s["s"]["task"] )
 
-		d.dispatch( [ s["s"] ] )
+		s["d"]["task"].execute()
 
 		self.assertEqual( len( s["c1"].log ), 0 )
 		self.assertEqual( len( s["c1"].log ), 0 )
@@ -160,8 +164,9 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertRegex( mh.messages[0].message, "Cycle detected between ScriptNode.s.preTasks.preTask0 and ScriptNode.s.task" )
 
-		d = self.__dispatcher()
-		self.assertRaisesRegex( RuntimeError, "cannot have cyclic dependencies", d.dispatch, [ s["s"] ] )
+		s["d"] = self.__dispatcher()
+		s["d"]["tasks"][0].setInput( s["s"]["task"] )
+		self.assertRaisesRegex( RuntimeError, "cannot have cyclic dependencies", s["d"]["task"].execute )
 
 if __name__ == "__main__":
 	unittest.main()

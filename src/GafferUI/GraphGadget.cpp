@@ -48,6 +48,7 @@
 #include "GafferUI/StandardGraphLayout.h"
 #include "GafferUI/Style.h"
 #include "GafferUI/ViewportGadget.h"
+#include "DragEditGadget.h"
 
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/Context.h"
@@ -72,12 +73,7 @@
 #include "IECore/NullObject.h"
 
 IECORE_PUSH_DEFAULT_VISIBILITY
-#include "OpenEXR/OpenEXRConfig.h"
-#if OPENEXR_VERSION_MAJOR < 3
-#include "OpenEXR/ImathPlane.h"
-#else
 #include "Imath/ImathPlane.h"
-#endif
 IECORE_POP_DEFAULT_VISIBILITY
 
 #include "boost/bind/bind.hpp"
@@ -120,6 +116,7 @@ const InternedString g_outputConnectionsMinimisedPlugName( "__uiOutputConnection
 const InternedString g_nodeGadgetTypeName( "nodeGadget:type" );
 const InternedString g_auxiliaryConnectionsGadgetName( "__auxiliaryConnections" );
 const InternedString g_annotationsGadgetName( "__annotations" );
+const InternedString g_dragEditGadgetName( "__dragEdit" );
 
 struct CompareV2fX{
 	bool operator()(const Imath::V2f &a, const Imath::V2f &b) const
@@ -495,6 +492,7 @@ GraphGadget::GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 
 	setChild( g_auxiliaryConnectionsGadgetName, new AuxiliaryConnectionsGadget() );
 	setChild( g_annotationsGadgetName, new AnnotationsGadget() );
+	setChild( g_dragEditGadgetName, new DragEditGadget() );
 
 	setRoot( root, filter );
 }
@@ -1733,16 +1731,14 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		dirty( DirtyType::Render );
 		return true;
 	}
-	else
+	else if( m_dragMode == Selecting )
 	{
-		// we're drag selecting
 		m_lastDragPosition = V2f( i.x, i.y );
 		updateDragSelection( false, event.modifiers );
 		dirty( DirtyType::Render );
 		return true;
 	}
 
-	assert( 0 ); // shouldn't get here
 	return false;
 }
 

@@ -58,7 +58,7 @@ enum TypeId
 	GradeTypeId = 110763,
 	ShuffleTypeId = 110764,
 	ConstantTypeId = 110765,
-	ShuffleChannelPlugTypeId = 110766,
+	ShuffleChannelPlugTypeId = 110766, // Obsolete - available for reuse
 	ChannelMaskPlugTypeId = 110767,
 	WarpTypeId = 110768,
 	VectorWarpTypeId = 110769,
@@ -73,7 +73,7 @@ enum TypeId
 	DeleteViewsTypeId = 110778,
 	CopyViewsTypeId = 110779,
 	OpenColorIOConfigPlugTypeId = 110780,
-	SincFilterTypeId = 110781, // Obsolete - available for reuse
+	ContactSheetCoreTypeId = 110781,
 	LanczosFilterTypeId = 110782, // Obsolete - available for reuse
 	ImageStatsTypeId = 110783,
 	ImageTransformImplementationTypeId = 110784, // Obsolete - available for reuse
@@ -128,6 +128,7 @@ enum TypeId
 	DeepHoldoutTypeId = 110833,
 	DeepRecolorTypeId = 110834,
 	SaturationTypeId = 110835,
+	DeepSliceTypeId = 110836,
 
 	LastTypeId = 110849
 };

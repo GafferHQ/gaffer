@@ -538,15 +538,6 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( s["g2"]["in"][0].getInput().isSame( b["out"] ) )
 		self.assertTrue( b["out"].getInput().isSame( b["g1"]["out"] ) )
 
-		# this test was causing crashes elsewhere when the script
-		# was finally garbage collected, so we force the collection
-		# here so we can be sure the problem is fixed.
-		del s
-		del b
-		while gc.collect() :
-			pass
-		IECore.RefCounted.collectGarbage()
-
 	def testSetsWithRenaming( self ) :
 
 		l1 = GafferSceneTest.TestLight()
@@ -807,6 +798,46 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 					group["out"].childNames( "/" )
 				with self.assertRaises( Gaffer.ProcessException ) :
 					group["out"].set( "A" )
+
+	def testGroupSets( self ) :
+
+		plane = GafferScene.Plane()
+		plane["sets"].setValue( "A" )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane["out"] )
+
+		self.assertEqual(
+			group["out"].setNames(), plane["out"].setNames()
+		)
+
+		group["sets"].setValue( "B" )
+		self.assertEqual(
+			group["out"].setNames(), IECore.InternedStringVectorData( [ "A", "B" ] )
+		)
+
+		self.assertEqual( group["out"].set( "A" ).value, IECore.PathMatcher( [ "/group/plane" ] ) )
+		self.assertEqual( group["out"].set( "B" ).value, IECore.PathMatcher( [ "/group" ] ) )
+
+		group["name"].setValue( "world" )
+		self.assertEqual( group["out"].set( "A" ).value, IECore.PathMatcher( [ "/world/plane" ] ) )
+		self.assertEqual( group["out"].set( "B" ).value, IECore.PathMatcher( [ "/world" ] ) )
+
+		group["sets"].setValue( "A" )
+		self.assertEqual(
+			group["out"].setNames(), IECore.InternedStringVectorData( [ "A" ] )
+		)
+		self.assertEqual( group["out"].set( "A" ).value, IECore.PathMatcher( [ "/world/plane", "/world" ] ) )
+		self.assertEqual( group["out"].set( "B" ).value, IECore.PathMatcher() )
+
+		group["sets"].setValue( "B C" )
+		self.assertEqual(
+			group["out"].setNames(), IECore.InternedStringVectorData( [ "A", "B", "C" ] )
+		)
+		self.assertEqual( group["out"].set( "A" ).value, IECore.PathMatcher( [ "/world/plane" ] ) )
+		self.assertEqual( group["out"].set( "B" ).value, IECore.PathMatcher( [ "/world" ] ) )
+		self.assertEqual( group["out"].set( "C" ).value, IECore.PathMatcher( [ "/world" ] ) )
+		self.assertEqual( group["out"].set( "D" ).value, IECore.PathMatcher() )
 
 	def setUp( self ) :
 

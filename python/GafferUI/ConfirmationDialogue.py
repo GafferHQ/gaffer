@@ -55,7 +55,9 @@ class ConfirmationDialogue( GafferUI.Dialogue ) :
 
 		self._setWidget( column )
 
-		self._addButton( cancelLabel )
+		if cancelLabel is not None :
+			self._addButton( cancelLabel )
+
 		self.__confirmButton = self._addButton( confirmLabel )
 
 	## Causes the dialogue to enter a modal state, returning True if the confirm

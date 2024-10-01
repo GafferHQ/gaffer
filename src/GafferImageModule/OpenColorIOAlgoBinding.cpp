@@ -36,14 +36,13 @@
 
 #include "boost/python.hpp"
 
-#include "pybind11/pybind11.h"
-
 #include "OpenColorIOAlgoBinding.h"
 
 #include "GafferImage/OpenColorIOAlgo.h"
 
 #include "OpenColorIO/OpenColorIO.h"
 
+#include "IECorePython/PyBindConverter.h"
 #include "IECorePython/ScopedGILRelease.h"
 
 using namespace GafferImage;
@@ -106,57 +105,6 @@ boost::python::object currentConfigAndContextWrapper()
 	return boost::python::make_tuple( config, ocioContext );
 }
 
-// Registers `boost::python` converters for types
-// wrapped using PyBind11.
-template<typename T>
-struct PyBind11Converters
-{
-
-	static void registerConverters()
-	{
-		boost::python::to_python_converter<T, ToPyBind11>();
-		boost::python::converter::registry::push_back(
-			&FromPyBind11::convertible,
-			&FromPyBind11::construct,
-			boost::python::type_id<T>()
-		);
-	}
-
-	private :
-
-		struct ToPyBind11
-		{
-			static PyObject *convert( const T &t )
-			{
-				pybind11::object o = pybind11::cast( t );
-				Py_INCREF( o.ptr() );
-				return o.ptr();
-			}
-		};
-
-		struct FromPyBind11
-		{
-
-			static void *convertible( PyObject *object )
-			{
-				pybind11::handle handle( object );
-				return handle.cast<T>() ? object : nullptr;
-			}
-
-			static void construct( PyObject *object, boost::python::converter::rvalue_from_python_stage1_data *data )
-			{
-				void *storage = ( ( boost::python::converter::rvalue_from_python_storage<T> * ) data )->storage.bytes;
-				T *t = new( storage ) T;
-				data->convertible = storage;
-
-				pybind11::handle handle( object );
-				*t = handle.cast<T>();
-			}
-
-		};
-
-};
-
 } // namespace
 
 void GafferImageModule::bindOpenColorIOAlgo()
@@ -180,7 +128,7 @@ void GafferImageModule::bindOpenColorIOAlgo()
 	boost::python::def( "currentConfigAndContext", &currentConfigAndContextWrapper );
 	boost::python::def( "currentConfigAndContextHash", &OpenColorIOAlgo::currentConfigAndContextHash );
 
-	PyBind11Converters<OCIO_NAMESPACE::ConstConfigRcPtr>::registerConverters();
-	PyBind11Converters<OCIO_NAMESPACE::ConstContextRcPtr>::registerConverters();
+	IECorePython::PyBindConverter<OCIO_NAMESPACE::ConstConfigRcPtr>::registerConverters();
+	IECorePython::PyBindConverter<OCIO_NAMESPACE::ConstContextRcPtr>::registerConverters();
 
 }

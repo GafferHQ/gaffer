@@ -333,6 +333,9 @@ class PlugLayout( GafferUI.Widget ) :
 					with self.getContext() :
 						metadataName = self.__layoutName + ":activator:" + activatorName
 						result = self.__metadataValue( self.__parent, metadataName )
+						if isinstance( result, str ) :
+							localsAndGlobals = { "parent" : self.__parent }
+							result = eval( result, localsAndGlobals, localsAndGlobals )
 						if result is None and metadataName not in Gaffer.Metadata.registeredValues( self.__parent ) :
 							IECore.msg(
 								IECore.Msg.Level.Warning, "PlugLayout",
@@ -354,7 +357,10 @@ class PlugLayout( GafferUI.Widget ) :
 			# Must scope the context because summaries are typically
 			# generated from plug values, and may therefore trigger
 			# a compute.
-			section.summary = self.__metadataValue( self.__parent, self.__layoutName + ":section:" + section.fullName + ":summary" ) or ""
+			try :
+				section.summary = self.__metadataValue( self.__parent, self.__layoutName + ":section:" + section.fullName + ":summary" ) or ""
+			except Gaffer.ProcessException :
+				section.summary = "<img src={}>".format( Gaffer.rootPath() / "graphics" / "errorSmall.png" )
 
 		section.valuesChanged = False
 
