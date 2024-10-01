@@ -217,8 +217,6 @@ class GAFFERUI_API GraphGadget : public ContainerGadget
 		void noduleRemoved( Nodule *nodule );
 		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, Gaffer::Node *node );
 
-		bool keyPressed( GadgetPtr gadget, const KeyEvent &event );
-
 		bool buttonPress( GadgetPtr gadget, const ButtonEvent &event );
 		bool buttonRelease( GadgetPtr gadget, const ButtonEvent &event );
 

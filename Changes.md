@@ -32,6 +32,8 @@ Fixes
 - Viewer : Fixed drawing of custom mesh light texture visualisers (#6002). [^1]
 - GraphEditor :
   - Fixed lingering error badges (#3820).
+  - Fixed <kbd>D</kbd> shortcut to respect read-only metadata on `enabled` plugs. Previously only metadata on the node itself was respected.
+  - Fixed <kbd>D</kbd> shortcut to handle multiple selection with some nodes enabled and some disabled. This will now consistently disabled all nodes if at least one is enabled, rather than toggling each individually.
 - RenderPassEditor :
   - Fixed history window to update on context changes, for example, when the current frame is changed.
   - Fixed invalid `scene:path` context variables created by the history window. [^1]
@@ -41,6 +43,7 @@ Breaking Changes
 
 - IECoreArnold : Added `messageContext` argument to `NodeAlgo::Converter` and `NodeAlgo::MotionConverter`.
 - Instancer : Renamed `encapsulateInstanceGroups` plug to `encapsulate`. Encapsulation now produces a single capsule at the `.../instances` location, instead of capsules at each `.../instances/<prototypeName>` location.
+- GraphGadget : Moved <kbd>D</kbd> shortcut handling to GraphEditor.
 
 [^1]: To be omitted from 1.5.0.0 release notes.
 

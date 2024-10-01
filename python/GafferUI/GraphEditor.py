@@ -423,6 +423,24 @@ class GraphEditor( GafferUI.Editor ) :
 		elif event.key == "Tab" :
 			self.__popupNodeMenu()
 			return True
+		elif event.key == "D" and not event.modifiers :
+			enabledPlugs = set()
+			for node in self.scriptNode().selection() :
+				if not isinstance( node, Gaffer.DependencyNode ) :
+					continue
+				if self.graphGadget().nodeGadget( node ) is None :
+					continue
+				enabledPlug = node.enabledPlug()
+				if enabledPlug is None or not enabledPlug.settable() or Gaffer.MetadataAlgo.readOnly( enabledPlug ) :
+					continue
+				enabledPlugs.add( enabledPlug )
+
+			enabled = any( enabledPlug.getValue() for enabledPlug in enabledPlugs )
+			with Gaffer.UndoScope( self.scriptNode() ) :
+				for enabledPlug in enabledPlugs :
+					enabledPlug.setValue( not enabled )
+
+			return True
 
 		return False
 
