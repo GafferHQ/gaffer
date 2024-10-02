@@ -156,11 +156,11 @@ def _selectAffected( plug, selection ) :
 	scenes = [ s[0] if isinstance( s, Gaffer.ArrayPlug ) else s for s in inPlugs ]
 
 	result = IECore.PathMatcher()
-	scriptNode = targetPlug.ancestor( Gaffer.ScriptNode )
-	with scriptNode.context() :
-		for scene in scenes :
+	for scene in scenes :
+		with GafferUI.ContextTracker.acquireForFocus( scene ).context( scene ) :
 			GafferScene.SceneAlgo.matchingPaths( selection, scene, result )
 
+	scriptNode = targetPlug.ancestor( Gaffer.ScriptNode )
 	GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( scriptNode, result )
 
 class _PathsPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
@@ -290,7 +290,7 @@ def __dropPaths( paths, pathsPlug ) :
 	if not pathFilter["roots"].getInput() :
 		return paths
 
-	with pathsPlug.ancestor( Gaffer.ScriptNode ).context() :
+	with GafferUI.ContextTracker.acquireForFocus( pathsPlug ).context( pathsPlug ) :
 		rootPaths = IECore.PathMatcher()
 		for node in GafferScene.SceneAlgo.filteredNodes( pathFilter ) :
 			scene = node["in"][0] if isinstance( node["in"], Gaffer.ArrayPlug ) else node["in"]
