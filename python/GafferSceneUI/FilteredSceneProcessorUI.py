@@ -98,7 +98,7 @@ GafferUI.NodeGadget.registerNodeGadget( GafferScene.FilteredSceneProcessor, __no
 # GraphEditor context menu
 ##########################################################################
 
-def __selectAffected( node, context ) :
+def __selectAffected( node ) :
 
 	if isinstance( node, GafferScene.FilteredSceneProcessor ) :
 		filter = node["filter"]
@@ -110,8 +110,8 @@ def __selectAffected( node, context ) :
 	scenes = [ s[0] if isinstance( s, Gaffer.ArrayPlug ) else s for s in scenes ]
 
 	pathMatcher = IECore.PathMatcher()
-	with context :
-		for scene in scenes :
+	for scene in scenes :
+		with GafferUI.ContextTracker.acquireForFocus( scene ).context( scene ) :
 			GafferScene.SceneAlgo.matchingPaths( filter, scene, pathMatcher )
 
 	GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( node.scriptNode(), pathMatcher )
@@ -122,7 +122,7 @@ def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 		return
 
 	menuDefinition.append( "/FilteredSceneProcessorDivider", { "divider" : True } )
-	menuDefinition.append( "/Select Affected Objects", { "command" : functools.partial( __selectAffected, node, graphEditor.context() ) } )
+	menuDefinition.append( "/Select Affected Objects", { "command" : functools.partial( __selectAffected, node ) } )
 
 ##########################################################################
 # NodeEditor tool menu
@@ -134,4 +134,4 @@ def appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition ) :
 		return
 
 	menuDefinition.append( "/FilteredSceneProcessorDivider", { "divider" : True } )
-	menuDefinition.append( "/Select Affected Objects", { "command" : functools.partial( __selectAffected, node, nodeEditor.context() ) } )
+	menuDefinition.append( "/Select Affected Objects", { "command" : functools.partial( __selectAffected, node ) } )
