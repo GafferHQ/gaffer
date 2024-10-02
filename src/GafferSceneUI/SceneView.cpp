@@ -1227,7 +1227,7 @@ class CameraOverlay : public GafferUI::Gadget
 					{
 						for( int h = 0; h < div_h; h++ ) 
 						{
-							customGrid.push_back( Box2f(nhea m_resolutionGate.min + ( fraction * V2f( h, v ) ), m_resolutionGate.min + ( fraction * V2f( h, v ) ) + fraction ) );
+							customGrid.push_back( Box2f( m_resolutionGate.min + ( fraction * V2f( h, v ) ), m_resolutionGate.min + ( fraction * V2f( h, v ) ) + fraction ) );
 						}
 					}
 
