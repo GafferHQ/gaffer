@@ -38,6 +38,8 @@
 
 #include "Gaffer/Context.h"
 
+#include "boost/algorithm/string/replace.hpp"
+
 #include "onnxruntime_cxx_api.h"
 
 using namespace std;
@@ -100,8 +102,10 @@ void Inference::loadModel( const std::filesystem::path &model )
 			continue;
 		}
 
-		Ort::AllocatedStringPtr name = session.GetInputNameAllocated( i, Ort::AllocatorWithDefaultOptions() );
-		inPlug()->addChild( new TensorPlug( std::string( name.get() ) ) );
+		Ort::AllocatedStringPtr ortName = session.GetInputNameAllocated( i, Ort::AllocatorWithDefaultOptions() );
+		std::string name( ortName.get() );
+		boost::replace_all( name, ".", "_" );
+		inPlug()->addChild( new TensorPlug( name ) );
 	}
 
 	for( size_t i = 0; i < session.GetOutputCount(); ++i )
@@ -111,8 +115,10 @@ void Inference::loadModel( const std::filesystem::path &model )
 			continue;
 		}
 
-		Ort::AllocatedStringPtr name = session.GetOutputNameAllocated( i, Ort::AllocatorWithDefaultOptions() );
-		outPlug()->addChild( new TensorPlug( std::string( name.get() ), Plug::Out ) );
+		Ort::AllocatedStringPtr ortName = session.GetOutputNameAllocated( i, Ort::AllocatorWithDefaultOptions() );
+		std::string name( ortName.get() );
+		boost::replace_all( name, ".", "_" );
+		outPlug()->addChild( new TensorPlug( name, Plug::Out ) );
 	}
 
 	/// TODO : WHEN DIFFERENT MODELS HAVE THE SAME INPUTS/OUTPUTS IT WOULD BE USEFUL
@@ -213,12 +219,18 @@ void Inference::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 		// TODO : ARE THESE REUSABLE? SHOULD WE CACHE THEM BY MODEL PATH???
 		Ort::Session session( ortEnv(), model.c_str(), Ort::SessionOptions() );
 
+		vector<string> mungedInputNames;
+		mungedInputNames.reserve( inPlug()->children().size() );
+
 		vector<const char *> inputNames;
 		vector<ConstTensorDataPtr> inputOwners;
 		vector<OrtValue *> inputs;
 		for( auto &p : TensorPlug::InputRange( *inPlug() ) )
 		{
-			inputNames.push_back( p->getName().c_str() );
+			std::string mungedName = p->getName();
+			boost::replace_all( mungedName, "_", "." );
+			mungedInputNames.push_back( mungedName );
+			inputNames.push_back( mungedInputNames.back().c_str() );
 			inputOwners.push_back( p->getValue() );
 			inputs.push_back( inputOwners.back()->value );
 		}
