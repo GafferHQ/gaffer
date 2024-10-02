@@ -808,11 +808,11 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 		titleSafeEnabled = self.getPlug()["titleSafeEnabled"].getValue()
 		actionSafeEnabled = self.getPlug()["actionSafeEnabled"].getValue()
 		customGridEnabled = self.getPlug()["customGridEnabled"].getValue()
-		
+
 		# possible way to iterate over all guides instead of doing them one by one:
 
 		# cameraGuides = self.getPlug()["guidesEnabled"].getValue()
-		
+
 		# allGuides = [ "Title Safe", "Action Safe", "Rule of Thirds" ]
 		# for guide in allGuides :
 		# 	newGuides = IECore.StringVectorData( [
@@ -893,7 +893,7 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.getPlug()["lookThroughEnabled"].setValue( True )
 		self.getPlug()["lookThroughCamera"].setValue( path )
-		
+
 	# BHGC START
 
 	# separate functions for each guide, should probably combine these
