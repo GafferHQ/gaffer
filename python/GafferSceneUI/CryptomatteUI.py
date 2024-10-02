@@ -366,7 +366,8 @@ def __drop( nodeGadget, event ) :
 	dropMode = __dropMode( nodeGadget, event )
 
 	if isinstance( event.data, IECore.Color4fData ) :
-		with nodeGadget.node().ancestor( Gaffer.ScriptNode ).context() :
+
+		with GafferUI.ContextTracker.acquireForFocus( nodeGadget.node() ).context( nodeGadget.node() ) :
 			manifest = nodeGadget.node()["__manifest"].getValue()
 
 		manifestValueData = manifest.get( _idToManifestKey( event.data.value[0] ) )
