@@ -893,7 +893,7 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.getPlug()["lookThroughEnabled"].setValue( True )
 		self.getPlug()["lookThroughCamera"].setValue( path )
-	
+		
 	# BHGC START
 
 	# separate functions for each guide, should probably combine these
