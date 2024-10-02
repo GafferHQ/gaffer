@@ -1126,7 +1126,7 @@ class CameraOverlay : public GafferUI::Gadget
 		{
 			return m_icon;
 		}
-		
+
 	protected :
 
 		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override
@@ -1220,25 +1220,25 @@ class CameraOverlay : public GafferUI::Gadget
 				if( m_customGridEnabled )
 				{
 					V2f fraction = V2f( gateDiff / V2f( div_h, div_v ) );
-					vector<Box2f> customGrid; 
+					vector<Box2f> customGrid;
 					customGrid.reserve( div_h * div_v ); // I read that this is galaxy brain C++, maybe not needed, haha
 					
-					for( int v = 0; v < div_v; v++ ) 
+					for( int v = 0; v < div_v; v++ )
 					{
-						for( int h = 0; h < div_h; h++ ) 
+						for( int h = 0; h < div_h; h++ )
 						{
 							customGrid.push_back( Box2f( m_resolutionGate.min + ( fraction * V2f( h, v ) ), m_resolutionGate.min + ( fraction * V2f( h, v ) ) + fraction ) );
 						}
 					}
 
-					for( int i = 0; i < customGrid.size(); i++ ) 
+					for( const auto &i : customGrid )
 					{
-						style->renderRectangle( customGrid[i] );
+						style->renderRectangle( i );
 					}
 				}
 
 				// glDisable( GL_LINE_STIPPLE );
-					
+
 				// BHGC END
 
 				style->renderRectangle( Box2f(
@@ -1492,7 +1492,7 @@ class SceneView::Camera : public Signals::Trackable
 			// BHGC START
 
 			// create plugs for each guide, combine these three into one?
-			
+
 			plug->addChild( new BoolPlug( "actionSafeEnabled", Plug::In, false, Plug::Default & ~Plug::AcceptsInputs ) );
 			plug->addChild( new BoolPlug( "titleSafeEnabled", Plug::In, false, Plug::Default & ~Plug::AcceptsInputs ) );
 			plug->addChild( new BoolPlug( "customGridEnabled", Plug::In, false, Plug::Default & ~Plug::AcceptsInputs ) );
