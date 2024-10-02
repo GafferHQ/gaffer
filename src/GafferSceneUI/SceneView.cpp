@@ -1222,7 +1222,7 @@ class CameraOverlay : public GafferUI::Gadget
 					V2f fraction = V2f( gateDiff / V2f( div_h, div_v ) );
 					vector<Box2f> customGrid;
 					customGrid.reserve( div_h * div_v ); // I read that this is galaxy brain C++, maybe not needed, haha
-					
+
 					for( int v = 0; v < div_v; v++ )
 					{
 						for( int h = 0; h < div_h; h++ )
