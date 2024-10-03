@@ -14,6 +14,7 @@ Fixes
   - Fixed partial image updates when an unrelated InteractiveRender was running (#6043).
   - Fixed "colour tearing", where updates to some image channels became visible before updates to others.
   - Fixed unnecessary texture updates when specific image tiles don't change.
+- Viewer : Fixed drawing of custom mesh light texture visualisers (#6002).
 - ArrayPlug :
   - Fixed error when `resize()` removed plugs with input connections.
   - Fixed error when `resize()` was used on an output plug.
@@ -823,6 +824,7 @@ Fixes
   - Fixed partial image updates when an unrelated InteractiveRender was running (#6043).
   - Fixed "colour tearing", where updates to some image channels became visible before updates to others.
   - Fixed unnecessary texture updates when specific image tiles don't change.
+- Viewer : Fixed drawing of custom mesh light texture visualisers (#6002).
 - ArrayPlug :
   - Fixed error when `resize()` removed plugs with input connections.
   - Fixed error when `resize()` was used on an output plug.
