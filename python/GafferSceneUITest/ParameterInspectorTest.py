@@ -156,7 +156,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( s["group"]["out"], "/group/light", "intensity", s["editScope1"] ),
 			source = s["light"]["parameters"]["intensity"], sourceType = SourceType.Other,
-			editable = False, nonEditableReason = "The target EditScope (editScope1) is not in the scene history."
+			editable = False, nonEditableReason = "The target edit scope editScope1 is not in the scene history."
 		)
 
 		# If it is in the history though, and we're told to use it, then we will.
@@ -247,6 +247,14 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 			editable = True, edit = editScopeShaderTweak
 		)
 
+		# When using no scope, make sure that we don't inadvertently edit the contents of an EditScope.
+
+		self.__assertExpectedResult(
+			self.__inspect( s["editScope2"]["out"], "/light2", "intensity", None ),
+			source = editScopeShaderTweak, sourceType = SourceType.Other,
+			editable = False, nonEditableReason = "Source is in an EditScope. Change scope to editScope1 to edit."
+		)
+
 		# If there is a manual tweak outside of an edit scope make sure we use that with no scope
 
 		s["independentLightTweak"] = GafferScene.ShaderTweaks()
@@ -302,7 +310,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( s["independentLightTweak"]["out"], "/group/light", "intensity", s["editScope2"] ),
 			source = independentLightTweakPlug, sourceType = SourceType.Downstream,
-			editable = False, nonEditableReason = "The target EditScope (editScope2) is disabled."
+			editable = False, nonEditableReason = "The target edit scope editScope2 is disabled."
 		)
 
 		s["editScope2"]["enabled"].setValue( True )
@@ -378,7 +386,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( light["out"], "/light", "exposure", editScope ),
 			source = light["parameters"]["exposure"], sourceType = SourceType.Other,
-			editable = False, nonEditableReason = "The target EditScope (EditScope) is not in the scene history."
+			editable = False, nonEditableReason = "The target edit scope EditScope is not in the scene history."
 		)
 
 		self.__assertExpectedResult(
@@ -390,8 +398,116 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( shaderTweaks["out"], "/light", "exposure", editScope ),
 			source = shaderTweaks["tweaks"][0], sourceType = SourceType.Other,
-			editable = False, nonEditableReason = "The target EditScope (EditScope) is not in the scene history."
+			editable = False, nonEditableReason = "The target edit scope EditScope is not in the scene history."
 		)
+
+	def testAcquireEditCreateIfNecessary( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["light"] = GafferSceneTest.TestLight()
+		s["group"] = GafferScene.Group()
+		s["editScope"] = Gaffer.EditScope()
+
+		s["group"]["in"][0].setInput( s["light"]["out"] )
+
+		s["editScope"].setup( s["group"]["out"] )
+		s["editScope"]["in"].setInput( s["group"]["out"] )
+
+		inspection = self.__inspect( s["group"]["out"], "/group/light", "exposure", None )
+		self.assertEqual( inspection.acquireEdit( createIfNecessary = False ), s["light"]["parameters"]["exposure"] )
+
+		inspection = self.__inspect( s["editScope"]["out"], "/group/light", "exposure", s["editScope"] )
+		self.assertIsNone( inspection.acquireEdit( createIfNecessary = False ) )
+
+		edit = inspection.acquireEdit( createIfNecessary = True )
+		self.assertIsNotNone( edit )
+		self.assertEqual( inspection.acquireEdit( createIfNecessary = False ), edit )
+
+	def testDisableEdit( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["light"] = GafferSceneTest.TestLight()
+
+		s["lightFilter"] = GafferScene.PathFilter()
+		s["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+
+		s["shaderTweaks"] = GafferScene.ShaderTweaks()
+		s["shaderTweaks"]["in"].setInput( s["light"]["out"] )
+		s["shaderTweaks"]["filter"].setInput( s["lightFilter"]["out"] )
+		exposureTweak = Gaffer.TweakPlug( "exposure", 10 )
+		s["shaderTweaks"]["tweaks"].addChild( exposureTweak )
+
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["shaderTweaks"]["out"] )
+		s["editScope"]["in"].setInput( s["shaderTweaks"]["out"] )
+
+		s["editScope2"] = Gaffer.EditScope()
+		s["editScope2"].setup( s["editScope"]["out"] )
+		s["editScope2"]["in"].setInput( s["editScope"]["out"] )
+
+		Gaffer.MetadataAlgo.setReadOnly( exposureTweak["enabled"], True )
+		inspection = self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure", None )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "shaderTweaks.tweaks.tweak.enabled is locked." )
+		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : shaderTweaks.tweaks.tweak.enabled is locked.", inspection.disableEdit )
+
+		Gaffer.MetadataAlgo.setReadOnly( exposureTweak["enabled"], False )
+		Gaffer.MetadataAlgo.setReadOnly( exposureTweak, True )
+		inspection = self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure", None )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "shaderTweaks.tweaks.tweak is locked." )
+		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : shaderTweaks.tweaks.tweak is locked.", inspection.disableEdit )
+
+		Gaffer.MetadataAlgo.setReadOnly( exposureTweak, False )
+		inspection = self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure", None )
+		self.assertTrue( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "" )
+		inspection.disableEdit()
+		self.assertFalse( exposureTweak["enabled"].getValue() )
+
+		lightEdit = GafferScene.EditScopeAlgo.acquireParameterEdit(
+			s["editScope"], "/light", "light", ( "", "exposure" ), createIfNecessary = True
+		)
+		lightEdit["enabled"].setValue( True )
+		lightEdit["value"].setValue( 2.0 )
+
+		inspection = self.__inspect( s["editScope"]["out"], "/light", "exposure", s["editScope2"] )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "The target edit scope editScope2 is not in the scene history." )
+
+		inspection = self.__inspect( s["editScope2"]["out"], "/light", "exposure", None )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "Source is in an EditScope. Change scope to editScope to disable." )
+		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : Source is in an EditScope. Change scope to editScope to disable.", inspection.disableEdit )
+
+		inspection = self.__inspect( s["editScope2"]["out"], "/light", "exposure", s["editScope2"] )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "Edit is not in the current edit scope. Change scope to editScope to disable." )
+		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : Edit is not in the current edit scope. Change scope to editScope to disable.", inspection.disableEdit )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["editScope"], True )
+		inspection = self.__inspect( s["editScope"]["out"], "/light", "exposure", s["editScope"] )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "editScope is locked." )
+		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : editScope is locked.", inspection.disableEdit )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["editScope"], False )
+		inspection = self.__inspect( s["editScope"]["out"], "/light", "exposure", s["editScope"] )
+		self.assertTrue( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "" )
+		inspection.disableEdit()
+		self.assertFalse( lightEdit["enabled"].getValue() )
+
+		inspection = self.__inspect( s["editScope"]["out"], "/light", "exposure", s["editScope"] )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "Edit is not in the current edit scope. Change scope to None to disable." )
+
+		inspection = self.__inspect( s["editScope"]["out"], "/light", "exposure", None )
+		self.assertEqual( inspection.source(), s["light"]["parameters"]["exposure"] )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "Disabling edits not supported for this plug." )
 
 	def testDisabledTweaks( self ) :
 

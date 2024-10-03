@@ -59,7 +59,7 @@ class _ContextVariableListWidget( GafferUI.PlugValueWidget ) :
 
 				GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
 
-				GafferUI.Button( image = "plus.png", hasFrame = False ).clickedSignal().connect( Gaffer.WeakMethod( self.__addItem ), scoped = False )
+				GafferUI.Button( image = "plus.png", hasFrame = False ).clickedSignal().connect( Gaffer.WeakMethod( self.__addItem ) )
 
 				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
@@ -576,11 +576,11 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"encapsulateInstanceGroups" : [
+		"encapsulate" : [
 
 			"description",
 			"""
-			Converts each group of instances into a capsule, which won't
+			Converts instances into a capsule, which won't
 			be expanded until you Unencapsulate or render. When keeping
 			these locations encapsulated, downstream nodes can't see the
 			instance locations, which prevents editing but improves
@@ -588,10 +588,11 @@ Gaffer.Metadata.registerNode(
 			Encapsulate node because it has the following benefits :
 
 			- Substantially improved performance when the prototypes
-			  define sets.
+			define sets.
 			- Fewer unnecessary updates during interactive rendering.
+			- Faster performance in renderer backends with special
+			instancer capsule support ( ie. Arnold )
 			""",
-			"label", "Instance Groups",
 
 			"layout:section", "Settings.Encapsulation",
 

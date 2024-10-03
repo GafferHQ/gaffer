@@ -95,7 +95,7 @@ def __nodeDoubleClick( graphEditor, node ) :
 	GafferUI.NodeEditor.acquire( node, floating = True )
 	return True
 
-GafferUI.GraphEditor.nodeDoubleClickSignal().connect( __nodeDoubleClick, scoped = False )
+GafferUI.GraphEditor.nodeDoubleClickSignal().connect( __nodeDoubleClick )
 
 def __nodeContextMenu( graphEditor, node, menuDefinition ) :
 
@@ -110,20 +110,20 @@ def __nodeContextMenu( graphEditor, node, menuDefinition ) :
 	GafferSceneUI.CryptomatteUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
 	GafferUI.GraphBookmarksUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
 
-GafferUI.GraphEditor.nodeContextMenuSignal().connect( __nodeContextMenu, scoped = False )
+GafferUI.GraphEditor.nodeContextMenuSignal().connect( __nodeContextMenu )
 
 def __plugContextMenu( graphEditor, plug, menuDefinition ) :
 
 	GafferUI.GraphBookmarksUI.appendPlugContextMenuDefinitions( graphEditor, plug, menuDefinition )
 	GafferUI.NodeUI.appendPlugDeletionMenuDefinitions( plug, menuDefinition )
 
-GafferUI.GraphEditor.plugContextMenuSignal().connect( __plugContextMenu, scoped = False )
+GafferUI.GraphEditor.plugContextMenuSignal().connect( __plugContextMenu )
 
 def __connectionContextMenu( graphEditor, destinationPlug, menuDefinition ) :
 
 	GafferUI.GraphEditor.appendConnectionNavigationMenuDefinitions( graphEditor, destinationPlug, menuDefinition )
 
-GafferUI.GraphEditor.connectionContextMenuSignal().connect( __connectionContextMenu, scoped = False )
+GafferUI.GraphEditor.connectionContextMenuSignal().connect( __connectionContextMenu )
 
 ##########################################################################
 # File drop handler
@@ -315,11 +315,11 @@ def __locationDrop( graphGadget, event, graphEditor ) :
 
 def __graphEditorCreated( graphEditor ) :
 
-	graphEditor.graphGadget().dragEnterSignal().connect( __fileDragEnter, scoped = False )
-	graphEditor.graphGadget().dropSignal().connect( __fileDrop, scoped = False )
+	graphEditor.graphGadget().dragEnterSignal().connect( __fileDragEnter )
+	graphEditor.graphGadget().dropSignal().connect( __fileDrop )
 
-	graphEditor.graphGadget().dragEnterSignal().connect( __locationDragEnter, scoped = False )
-	graphEditor.graphGadget().dragLeaveSignal().connect( __locationDragLeave, scoped = False )
-	graphEditor.graphGadget().dropSignal().connect( functools.partial( __locationDrop, graphEditor = weakref.ref( graphEditor ) ), scoped = False )
+	graphEditor.graphGadget().dragEnterSignal().connect( __locationDragEnter )
+	graphEditor.graphGadget().dragLeaveSignal().connect( __locationDragLeave )
+	graphEditor.graphGadget().dropSignal().connect( functools.partial( __locationDrop, graphEditor = weakref.ref( graphEditor ) ) )
 
-GafferUI.GraphEditor.instanceCreatedSignal().connect( __graphEditorCreated, scoped = False )
+GafferUI.GraphEditor.instanceCreatedSignal().connect( __graphEditorCreated )

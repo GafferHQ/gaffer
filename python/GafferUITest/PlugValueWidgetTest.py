@@ -36,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import warnings
 import weakref
 
 import IECore
@@ -68,18 +69,12 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		s["e"].setExpression( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" )
 
 		w = GafferUI.NumericPlugValueWidget( s["m"]["op1"] )
-		self.assertTrue( w.getContext().isSame( s.context() ) )
+		self.assertEqual( w.context(), s.context() )
 
 		s.context().setFrame( 10 )
 		self.waitForUpdate( w )
 		self.assertEqual( w.numericWidget().getValue(), 10 )
-
-		context = Gaffer.Context()
-		context.setFrame( 20 )
-		w.setContext( context )
-		self.assertTrue( w.getContext().isSame( context ) )
-		self.waitForUpdate( w )
-		self.assertEqual( w.numericWidget().getValue(), 20 )
+		self.assertEqual( w.context(), s.context() )
 
 	def testDisableCreationForSpecificTypes( self ) :
 
@@ -260,7 +255,7 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		def _updateFromValues( self, values, exception ) :
 
 			self.updateCount += 1
-			self.updateContexts.append( self.getContext() )
+			self.updateContexts.append( self.context() )
 
 	def testUpdates( self ) :
 
@@ -279,21 +274,43 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		window.setVisible( True )
 		self.waitForIdle()
 		self.assertEqual( widget.updateCount, 1 )
-		self.assertTrue( widget.updateContexts[0].isSame( script.context() ) )
+		self.assertEqual( widget.updateContexts[0], script.context() )
 
-		# No need to do an update when calling `setContext()`
-		# with the same context as already held.
-		self.assertTrue( widget.getContext().isSame( script.context() ) )
-		widget.setContext( script.context() )
-		self.waitForIdle()
+		# Changing the context shouldn't trigger an update, because the
+		# plug value isn't computed.
+		script.context().setFrame( 2 )
+		self.waitForUpdate( widget )
 		self.assertEqual( widget.updateCount, 1 )
 
-		# But changing to a different context should trigger an update.
-		context = Gaffer.Context()
-		widget.setContext( context )
-		self.waitForUpdate( widget ) # Updates are done lazily
+		# Changing the plug should trigger an update.
+		widget.setPlug( script["add"]["op2"] )
+		self.waitForUpdate( widget )
 		self.assertEqual( widget.updateCount, 2 )
-		self.assertTrue( widget.updateContexts[1].isSame( context ) )
+		self.assertEqual( widget.updateContexts[1], script.context() )
+
+		# Changing the context still shouldn't trigger an update, because the
+		# plug value isn't computed.
+		script.context().setFrame( 3 )
+		self.waitForUpdate( widget )
+		self.assertEqual( widget.updateCount, 2 )
+
+		# Changing the plug again should trigger an update again. This time we
+		# see two updates - one to denote the start of the background task, and
+		# one when it completes. This is because the plug's value is computed
+		# and we don't want to block the UI thread with computes.
+		widget.setPlug( script["add"]["sum"] )
+		self.waitForUpdate( widget )
+		self.assertEqual( widget.updateCount, 4 )
+		self.assertEqual( widget.updateContexts[2], script.context() )
+		self.assertEqual( widget.updateContexts[3], script.context() )
+
+		# And now changing the context should trigger an update, since computed
+		# values may be context-sensitive.
+		script.context().setFrame( 4 )
+		self.waitForUpdate( widget )
+		self.assertEqual( widget.updateCount, 6 )
+		self.assertEqual( widget.updateContexts[4], script.context() )
+		self.assertEqual( widget.updateContexts[5], script.context() )
 
 	class LegacyUpdateCountPlugValueWidget( GafferUI.PlugValueWidget ) :
 
@@ -309,29 +326,102 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		def _updateFromPlugs( self ) :
 
 			self.updateCount += 1
-			self.updateContexts.append( self.getContext() )
+			self.updateContexts.append( self.context() )
 
 	def testLegacyUpdates( self ) :
 
 		script = Gaffer.ScriptNode()
 		script["add"] = GafferTest.AddNode()
 
-		# Should do one update during construction
-		widget = self.LegacyUpdateCountPlugValueWidget( script["add"]["op1"] )
-		self.assertEqual( widget.updateCount, 1 )
-		self.assertTrue( widget.updateContexts[0].isSame( script.context() ) )
+		with warnings.catch_warnings() :
 
-		# No need to do an update when calling `setContext()`
-		# with the same context as already held.
-		self.assertTrue( widget.getContext().isSame( script.context() ) )
-		widget.setContext( script.context() )
-		self.assertEqual( widget.updateCount, 1 )
+			warnings.simplefilter( "ignore", DeprecationWarning )
 
-		# But changing to a different context should trigger an update.
-		context = Gaffer.Context()
-		widget.setContext( context )
-		self.assertEqual( widget.updateCount, 2 )
-		self.assertTrue( widget.updateContexts[1].isSame( context ) )
+			# Should do one update during construction.
+			widget = self.LegacyUpdateCountPlugValueWidget( script["add"]["op1"] )
+			self.assertEqual( widget.updateCount, 1 )
+			self.assertEqual( widget.updateContexts[0], script.context() )
+
+			# And shouldn't update when the context changes
+			# because the value is static.
+			script.context().setFrame( 2 )
+			self.assertEqual( widget.updateCount, 1 )
+
+			# Changing the plug should cause an update.
+			widget.setPlug( script["add"]["op2"] )
+			self.assertEqual( widget.updateCount, 2 )
+			self.assertEqual( widget.updateContexts[1], script.context() )
+
+			# But the value is still static, so changing the
+			# context should have no effect.
+			script.context().setFrame( 3 )
+			self.assertEqual( widget.updateCount, 2 )
+
+			# Changing the plug again should cause an update again.
+			widget.setPlug( script["add"]["sum"] )
+			self.assertEqual( widget.updateCount, 3 )
+			self.assertEqual( widget.updateContexts[2], script.context() )
+
+			# And now changing the context does cause an update, because
+			# the plug's value is computed.
+			script.context().setFrame( 4 )
+			self.assertEqual( widget.updateCount, 4 )
+			self.assertEqual( widget.updateContexts[3], script.context() )
+
+	def testContextForEditorSettings( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["node"] = GafferTest.AddNode()
+
+		script["contextVariables"] = Gaffer.ContextVariables()
+		script["contextVariables"].setup( script["node"]["sum"] )
+		script["contextVariables"]["in"].setInput( script["node"]["sum"] )
+		script["contextVariables"]["variables"].addChild( Gaffer.NameValuePlug( "testVariable", "testValue" ) )
+
+		script.setFocus( script["contextVariables"] )
+
+		with GafferUITest.ContextTrackerTest.UpdateHandler() :
+			contextTracker = GafferUI.ContextTracker.acquireForFocus( script )
+
+		self.assertIn( "testVariable", contextTracker.context( script["node"] ) )
+		self.assertNotIn( "testVariable", contextTracker.context( script["contextVariables"] ) )
+
+		editor = GafferUI.Editor( GafferUI.Label( "TestEditor" ), script )
+		editor.settings()["in"] = Gaffer.IntPlug()
+		editor.settings()["testPlug"] = Gaffer.StringPlug()
+		editor.settings()["__contextQuery"] = Gaffer.ContextQuery()
+		editor.settings()["__contextQuery"].addQuery( Gaffer.StringPlug(), "testVariable" )
+		editor.settings()["testPlug"].setInput( editor.settings()["__contextQuery"]["out"][0]["value"] )
+
+		with GafferUI.Window() as window :
+			widget = self.UpdateCountPlugValueWidget( editor.settings()["testPlug"] )
+
+		# Editor not viewing anything yet, so we just use the default
+		# script context.
+
+		window.setVisible( True )
+		self.waitForUpdate( widget )
+		self.assertEqual( widget.updateCount, 2 ) # One at the start of the background update, and one on completion
+		self.assertEqual( widget.updateContexts[1], script.context() )
+
+		# Editor viewing `node`, so we should use the context that has been
+		# tracked for it.
+
+		editor.settings()["in"].setInput( script["node"]["sum"] )
+		self.waitForUpdate( widget )
+		self.assertEqual( widget.updateCount, 4 )
+		self.assertEqual( widget.updateContexts[3], contextTracker.context( script["node"] ) )
+		self.assertIn( "testVariable", widget.updateContexts[3] )
+
+		# Editor viewing `contextVariables`, so we should use the context that
+		# has been tracked for that.
+
+		editor.settings()["in"].setInput( script["contextVariables"]["out"] )
+		self.waitForUpdate( widget )
+		self.assertEqual( widget.updateCount, 6 )
+		self.assertEqual( widget.updateContexts[5], contextTracker.context( script["contextVariables"] ) )
+		self.assertNotIn( "testVariable", widget.updateContexts[5] )
 
 	def tearDown( self ) :
 

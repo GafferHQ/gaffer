@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012-2014, John Haddon. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,42 +34,13 @@
 #
 ##########################################################################
 
-import IECore
-
-import Gaffer
-import GafferUI
+import GafferScene
 import GafferArnold
 
-Gaffer.Metadata.registerNode(
+def __arnoldRender( name ) :
 
-	GafferArnold.ArnoldRender,
+	node = GafferScene.Render( name )
+	node["renderer"].setValue( "Arnold" )
+	return node
 
-	"description",
-	"""
-	Performs offline batch rendering using the
-	Arnold renderer, or optionally generates
-	.ass files for later rendering using a SystemCommand
-	node.
-	""",
-
-	plugs = {
-
-		"fileName" : [
-
-			"description",
-			"""
-			The name of the .ass file to be generated when in
-			scene description mode. If a ".ass.gz" extension
-			is used, then the ass file will be compressed
-			automatically.
-			""",
-
-			"nodule:type", "",
-			"path:bookmarks", "ass",
-			"fileSystemPath:extensions", "ass ass.gz",
-
-		],
-
-	}
-
-)
+GafferArnold.ArnoldRender = __arnoldRender

@@ -215,10 +215,11 @@ IECore::ConstObjectPtr OptionInspector::value( const GafferScene::SceneAlgo::His
 	return nullptr;
 }
 
-IECore::ConstObjectPtr OptionInspector::fallbackValue() const
+IECore::ConstObjectPtr OptionInspector::fallbackValue( const GafferScene::SceneAlgo::History *history, std::string &description ) const
 {
 	if( const auto defaultValue = Gaffer::Metadata::value( g_optionPrefix + m_option.string(), g_defaultValue ) )
 	{
+		description = "Default value";
 		return defaultValue;
 	}
 
@@ -292,12 +293,13 @@ Inspector::EditFunctionOrFailure OptionInspector::editFunction( Gaffer::EditScop
 				renderPass,
 				option = m_option,
 				context = history->context
-			] () {
+			] ( bool createIfNecessary ) {
 				Context::Scope scope( context.get() );
 				return EditScopeAlgo::acquireRenderPassOptionEdit(
 					editScope.get(),
 					renderPass,
-					option
+					option,
+					createIfNecessary
 				);
 			};
 		}
@@ -325,11 +327,12 @@ Inspector::EditFunctionOrFailure OptionInspector::editFunction( Gaffer::EditScop
 				editScope = EditScopePtr( editScope ),
 				option = m_option,
 				context = history->context
-			] () {
+			] ( bool createIfNecessary ) {
 				Context::Scope scope( context.get() );
 				return EditScopeAlgo::acquireOptionEdit(
 					editScope.get(),
-					option
+					option,
+					createIfNecessary
 				);
 			};
 		}

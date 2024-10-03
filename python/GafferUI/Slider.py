@@ -82,14 +82,14 @@ class Slider( GafferUI.Widget ) :
 		self.__hoverPositionVisible = False
 		self.__hoverEvent = None # The mouseMove event that gives us hover status
 
-		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ), scoped = False )
-		self.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ), scoped = False )
-		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
-		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
-		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ), scoped = False )
-		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
-		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
+		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) )
+		self.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ) )
+		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
+		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
+		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
+		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
 		self.__values = []
 		if isinstance( values, ( int, float ) ) :
@@ -430,6 +430,11 @@ class Slider( GafferUI.Widget ) :
 	def __dragBegin( self, widget, event ) :
 
 		if event.buttons == GafferUI.ButtonEvent.Buttons.Left and self.getSelectedIndex() is not None :
+			self.__setValueInternal(
+				self.getSelectedIndex(),
+				self.__eventValue( event ),
+				self.ValueChangedReason.DragBegin
+			)
 			return IECore.NullObject.defaultNullObject()
 
 		return None
@@ -451,7 +456,11 @@ class Slider( GafferUI.Widget ) :
 
 	def __dragEnd( self, widget, event ) :
 
-		self.__dragMove( widget, event )
+		self.__setValueInternal(
+			self.getSelectedIndex(),
+			self.__eventValue( event ),
+			self.ValueChangedReason.DragEnd
+		)
 
 	def __keyPress( self, widget, event ) :
 

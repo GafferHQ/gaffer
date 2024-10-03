@@ -64,7 +64,7 @@ class Backups( object ) :
 
 		applicationRoot["preferences"]["backups"] = self.__settings
 
-		applicationRoot["preferences"].plugSetSignal().connect( self.__plugSet, scoped = False )
+		applicationRoot["preferences"].plugSetSignal().connect( self.__plugSet )
 
 		self.__timer = QtCore.QTimer()
 		self.__timer.timeout.connect( Gaffer.WeakMethod( self.__timeout ) )

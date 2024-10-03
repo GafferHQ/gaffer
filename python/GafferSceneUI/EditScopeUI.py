@@ -47,12 +47,12 @@ import GafferSceneUI
 def addPruningActions( editor ) :
 
 	if isinstance( editor, GafferUI.Viewer ) :
-		editor.keyPressSignal().connect( __pruningKeyPress, scoped = False )
+		editor.keyPressSignal().connect( __pruningKeyPress )
 
 def addVisibilityActions( editor ) :
 
 	if isinstance( editor, GafferUI.Viewer ) :
-		editor.keyPressSignal().connect( __visibilityKeyPress, scoped = False )
+		editor.keyPressSignal().connect( __visibilityKeyPress )
 
 def __pruningKeyPress( viewer, event ) :
 
@@ -94,7 +94,7 @@ def __pruningKeyPress( viewer, event ) :
 
 	# \todo This needs encapsulating in EditScopeAlgo some how so we don't need
 	# to interact with processors directly.
-	with viewer.getContext() :
+	with viewer.context() :
 		if not editScope["enabled"].getValue() :
 			# Spare folks from deleting something when it won't be
 			# apparent what they've done until they reenable the
@@ -136,7 +136,7 @@ def __visibilityKeyPress( viewer, event ) :
 		"scene:visible"
 	)
 
-	with viewer.getContext() as context :
+	with viewer.context() as context :
 		attributeEdits = editScope.acquireProcessor( "AttributeEdits", createIfNecessary = False )
 		if not editScope["enabled"].getValue() or ( attributeEdits is not None and not attributeEdits["enabled"].getValue() ) :
 			# Spare folks from hiding something when it won't be
@@ -166,8 +166,8 @@ class _SceneProcessorWidget( GafferUI.EditScopeUI.SimpleProcessorWidget ) :
 
 	def _linkActivated( self, linkData ) :
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths(
-			self.processor().ancestor( Gaffer.ScriptNode ).context(), linkData
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths(
+			self.processor().ancestor( Gaffer.ScriptNode ), linkData
 		)
 
 class __LocationEditsWidget( _SceneProcessorWidget ) :
@@ -219,7 +219,7 @@ class __LocationEditsWidget( _SceneProcessorWidget ) :
 		summaries[0] = summaries[0][0].upper() + summaries[0][1:]
 		return " and ".join( summaries )
 
-GafferUI.EditScopeUI.ProcessorWidget.registerProcessorWidget( "AttributeEdits TransformEdits *LightEdits *SurfaceEdits", __LocationEditsWidget )
+GafferUI.EditScopeUI.ProcessorWidget.registerProcessorWidget( "AttributeEdits TransformEdits *LightEdits *SurfaceEdits *FilterEdits", __LocationEditsWidget )
 
 class __PruningEditsWidget( _SceneProcessorWidget ) :
 
@@ -303,3 +303,31 @@ class __RenderPassOptionEditsWidget( GafferUI.EditScopeUI.SimpleProcessorWidget 
 
 
 GafferUI.EditScopeUI.ProcessorWidget.registerProcessorWidget( "RenderPassOptionEdits", __RenderPassOptionEditsWidget )
+
+class __SetMembershipEditsWidget( GafferUI.EditScopeUI.SimpleProcessorWidget ) :
+
+	@staticmethod
+	def _summary( processor, linkCreator ) :
+
+		enabledSetCount = 0
+		disabledSetCount = 0
+		for r in processor["edits"] :
+			if r.getName() == "default" :
+				continue
+			if r["enabled"].getValue() :
+				enabledSetCount += 1
+			else :
+				disabledSetCount += 1
+
+		summaries = []
+		if enabledSetCount > 0 :
+			summaries.append( "edits to {} set{}".format( enabledSetCount, "s" if enabledSetCount > 1 else "" ) )
+		if disabledSetCount > 0 :
+			summaries.append( "disabled edits to {} set{}".format( disabledSetCount, "s" if disabledSetCount > 1 else "" ) )
+
+		if not summaries :
+			return None
+		summaries[0] = summaries[0][0].upper() + summaries[0][1:]
+		return " and ".join( summaries )
+
+GafferUI.EditScopeUI.ProcessorWidget.registerProcessorWidget( "SetMembershipEdits", __SetMembershipEditsWidget )

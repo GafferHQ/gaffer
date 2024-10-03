@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2024, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,18 +34,32 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferArnold/ArnoldRender.h"
+#pragma once
 
-using namespace GafferScene;
-using namespace GafferArnold;
+#include "GafferScene/MergeObjects.h"
 
-GAFFER_NODE_DEFINE_TYPE( ArnoldRender );
-
-ArnoldRender::ArnoldRender( const std::string &name )
-	:	Render( "Arnold", name )
+namespace GafferScene
 {
-}
 
-ArnoldRender::~ArnoldRender()
+class GAFFERSCENE_API MergeMeshes : public MergeObjects
 {
-}
+
+	public :
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::MergeMeshes, MergeMeshesTypeId, MergeObjects );
+
+		explicit MergeMeshes( const std::string &name=defaultName<MergeMeshes>() );
+		~MergeMeshes() override;
+
+	protected :
+
+		IECore::ConstObjectPtr mergeObjects( const std::vector< std::pair< IECore::ConstObjectPtr, Imath::M44f > > &sources, const Gaffer::Context *context ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( MergeObjects )
+
+} // namespace GafferScene

@@ -333,5 +333,27 @@ class TransformToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( selection.warning(), "Transform is locked as it is inside \"reference\" which disallows edits to its children" )
 		self.assertFalse( selection.editable() )
 
+	def testDisallowEditingWithEditScopeNone( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+
+		script["editScope"] = Gaffer.EditScope()
+		script["editScope"].setup( script["plane"]["out"] )
+		script["editScope"]["in"].setInput( script["plane"]["out"] )
+
+		selection = GafferSceneUI.TransformTool.Selection( script["editScope"]["out"], "/plane", script.context(), script["editScope"] )
+		edit = selection.acquireTransformEdit()
+		self.assertTrue( script["editScope"].isAncestorOf( edit.translate ) )
+
+		selection = GafferSceneUI.TransformTool.Selection( script["editScope"]["out"], "/plane", script.context(), None )
+		self.assertFalse( selection.editable() )
+		self.assertEqual( selection.warning(), "Source is in an EditScope. Change scope to editScope to edit" )
+
+		selection = GafferSceneUI.TransformTool.Selection( script["editScope"]["out"], "/plane", script.context(), script["editScope"] )
+		self.assertTrue( selection.editable() )
+		self.assertEqual( selection.warning(), "" )
+
 if __name__ == "__main__":
 	unittest.main()

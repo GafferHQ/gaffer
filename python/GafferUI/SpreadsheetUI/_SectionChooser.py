@@ -68,11 +68,10 @@ class _SectionChooser( GafferUI.Widget ) :
 		self.__ignoreCurrentChanged = False
 		tabBar.tabMoved.connect( Gaffer.WeakMethod( self.__tabMoved ) )
 		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( self.__rowsPlug.node() ).connect(
-			Gaffer.WeakMethod( self.__plugMetadataChanged ),
-			scoped = False
+			Gaffer.WeakMethod( self.__plugMetadataChanged )
 		)
-		self.__rowsPlug.defaultRow()["cells"].childAddedSignal().connect( Gaffer.WeakMethod( self.__columnAdded ), scoped = False )
-		self.__rowsPlug.defaultRow()["cells"].childRemovedSignal().connect( Gaffer.WeakMethod( self.__columnRemoved ), scoped = False )
+		self.__rowsPlug.defaultRow()["cells"].childAddedSignal().connect( Gaffer.WeakMethod( self.__columnAdded ) )
+		self.__rowsPlug.defaultRow()["cells"].childRemovedSignal().connect( Gaffer.WeakMethod( self.__columnRemoved ) )
 
 		self.__updateTabs()
 

@@ -62,18 +62,21 @@ class Editor( GafferUI.Widget ) :
 	#   defaults.
 	# - The PlugLayout we use to display the settings allows users to add their
 	#   own widgets to the UI.
+	#
+	# Editor subclasses should subclass Settings as `EditorSubclass.Settings`,
+	# and the settings node will then be created automatically upon
+	# construction.
 	class Settings( Gaffer.Node ) :
 
-		def __init__( self, name, script ) :
+		def __init__( self ) :
 
-			Gaffer.Node.__init__( self, name )
+			Gaffer.Node.__init__( self )
 
 			# Hack to allow BackgroundTask to recover ScriptNode for
 			# cancellation support - see `BackgroundTask.cpp`.
 			## \todo Perhaps we can make this more natural at the point we derive
 			# Editor from Node?
 			self["__scriptNode"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.Serialisable )
-			self["__scriptNode"].setInput( script["fileName"] )
 
 	IECore.registerRunTimeTyped( Settings, typeName = "GafferUI::Editor::Settings" )
 
@@ -86,30 +89,43 @@ class Editor( GafferUI.Widget ) :
 		assert( isinstance( scriptNode, Gaffer.ScriptNode ) )
 
 		self.__scriptNode = scriptNode
-		self.__context = None
+
+		self.__settings = self.Settings()
+		self.__settings.setName( self.__class__.__name__ + "Settings" )
+		self.__settings["__scriptNode"].setInput( scriptNode["fileName"] )
+		Gaffer.NodeAlgo.applyUserDefaults( self.__settings )
+		self.settings().plugDirtiedSignal().connect( Gaffer.WeakMethod( self._updateFromSettings ) )
 
 		self.__title = ""
 		self.__titleChangedSignal = GafferUI.WidgetSignal()
 
-		self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ), scoped = False )
-		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ), scoped = False )
+		self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) )
+		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) )
 
-		self.__setContextInternal( scriptNode.context(), callUpdate=False )
+		self.__contextTracker = GafferUI.ContextTracker.acquireForFocus( self.__settings )
+		self.__context = self.__contextTracker.context( self.__settings )
+		self.__contextChangedConnection = self.__contextTracker.changedSignal( self.__settings ).connect(
+			Gaffer.WeakMethod( self.__contextChanged ), scoped = True
+		)
 
 	def __del__( self ) :
 
-		for attr in self.__dict__.values() :
-			if isinstance( attr, GafferUI.Editor.Settings ) :
-				# Remove connection to ScriptNode now, on the UI thread.
-				# Otherwise we risk deadlock if the Settings node gets garbage
-				# collected in a BackgroundTask, which would attempt
-				# cancellation of all tasks for the ScriptNode, including the
-				# task itself.
-				attr["__scriptNode"].setInput( None )
+		# Remove connection to ScriptNode now, on the UI thread.
+		# Otherwise we risk deadlock if the Settings node gets garbage
+		# collected in a BackgroundTask, which would attempt
+		# cancellation of all tasks for the ScriptNode, including the
+		# task itself. We also need to prevent emission of `plugDirtiedSignal()`
+		# while we do that, to prevent half-destructed UIs from erroring.
+		self.__settings.plugDirtiedSignal().disconnectAllSlots()
+		self.__settings["__scriptNode"].setInput( None )
 
 	def scriptNode( self ) :
 
 		return self.__scriptNode
+
+	def settings( self ) :
+
+		return self.__settings
 
 	## May be called to explicitly set the title for this editor. The
 	# editor itself is not responsible for displaying the title - this
@@ -147,40 +163,10 @@ class Editor( GafferUI.Widget ) :
 
 		return self.__titleChangedSignal
 
-	## By default Editors operate in the main context held by the script node. This function
-	# allows an alternative context to be provided, making it possible for an editor to
-	# display itself at a custom frame (or with any other context modification).
-	## \todo To our knowledge, this has never been useful, and synchronising contexts
-	# between Editor/PlugLayout/PlugValueWidget has only been a pain. Consider
-	# removing it.
-	def setContext( self, context ) :
-
-		self.__setContextInternal( context, callUpdate=True )
-
-	def getContext( self ) :
+	## Returns the context in which the Editor evaluates the node graph.
+	def context( self ) :
 
 		return self.__context
-
-	def __setContextInternal( self, context, callUpdate ) :
-
-		assert( isinstance( context, ( Gaffer.Context, type( None ) ) ) )
-
-		previousContext = self.__context
-		self.__context = context
-		if self.__context is not None :
-			self.__contextChangedConnection = self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = True )
-		else :
-			## \todo I'm not sure why this code allows a None context - surely we
-			# should always have a valid one?
-			self.__contextChangedConnection = None
-
-		if callUpdate :
-			modifiedItems = set()
-			if previousContext is not None :
-				modifiedItems |= set( previousContext.names() )
-			if self.__context is not None :
-				modifiedItems |= set( self.__context.names() )
-			self._updateFromContext( modifiedItems )
 
 	## May be implemented by derived classes to update state based on a change of context.
 	# To temporarily suspend calls to this function, use Gaffer.Signals.BlockedConnection( self._contextChangedConnection() ).
@@ -192,6 +178,12 @@ class Editor( GafferUI.Widget ) :
 
 		return self.__contextChangedConnection
 
+	## May be implemented by derived classes to update based on changes to the
+	# settings plugs.
+	def _updateFromSettings( self, plug ) :
+
+		pass
+
 	## This must be implemented by all derived classes as it is used for serialisation of layouts.
 	# It is not expected that the script being edited is also serialised as part of this operation -
 	# instead the new script will be provided later as a variable named scriptNode. So a suitable
@@ -200,11 +192,19 @@ class Editor( GafferUI.Widget ) :
 
 		raise NotImplementedError
 
-	def __contextChanged( self, context, key ) :
+	def __contextChanged( self, contextTracker ) :
 
-		assert( context.isSame( self.getContext() ) )
+		context = contextTracker.context( self.__settings )
 
-		self._updateFromContext( set( [ key ] ) )
+		modifiedItems = {
+			k for k in context.keys()
+			if k not in self.__context or context[k] != self.__context[k]
+		}
+		modifiedItems.update( set( self.__context.keys() ) - set( context.keys() ) )
+
+		self.__context = context
+		if modifiedItems :
+			self._updateFromContext( modifiedItems )
 
 	@classmethod
 	def types( cls ) :

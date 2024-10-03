@@ -43,6 +43,8 @@ import Gaffer
 import GafferUI
 import GafferCortexUI
 
+from GafferUI.PlugValueWidget import sole
+
 ## Supported userData entries :
 #
 # ["UI"]["sizeEditable"]
@@ -95,10 +97,10 @@ class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWi
 			sizeEditable = sizeEditable,
 		)
 
-		self.__vectorDataWidget.editSignal().connect( Gaffer.WeakMethod( self.__edit ), scoped = False )
-		self.__vectorDataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ), scoped = False )
+		self.__vectorDataWidget.editSignal().connect( Gaffer.WeakMethod( self.__edit ) )
+		self.__vectorDataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ) )
 
-		self._updateFromPlug()
+		self._requestUpdateFromValues()
 
 		return self.__vectorDataWidget
 
@@ -108,30 +110,25 @@ class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWi
 		# need any plug widgets made by the base class.
 		return []
 
-	def _updateFromPlug( self ) :
+	@staticmethod
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 
-		GafferCortexUI.CompoundParameterValueWidget._PlugValueWidget._updateFromPlug( self )
+		result = []
+		for plug in plugs :
+			data = [ childPlug.getValue() for childPlug in plug.children() ]
+			result.append( data )
+
+		return result
+
+	def _updateFromValues( self, values, exception ) :
 
 		if self.__vectorDataWidget is None:
 			return
 
-		data = []
-		for plug in self._parameterHandler().plug().children() :
-			plugData = plug.getValue()
-			if len( data ) and len( plugData ) != len( data[0] ) :
-				# in __dataChanged we have to update the child plug values
-				# one at a time. when adding or removing rows, this means that the
-				# columns will have differing lengths until the last plug
-				# has been set. in this case we shortcut ourselves, and wait
-				# for the final plug to be set before updating the VectorDataWidget.
-				# \todo Now dirty propagation is batched via the UndoScope,
-				# we should remove this workaround, since _updateFromPlug()
-				# will only be called when the plug is in a valid state.
-				return
-			data.append( plugData )
-
+		data = sole( values ) or []
 		self.__vectorDataWidget.setData( data )
 		self.__vectorDataWidget.setEditable( self._editable() )
+		self.__vectorDataWidget.setErrored( exception is not None )
 
 		for columnIndex, childParameter in enumerate( self._parameter().values() ) :
 
@@ -163,7 +160,7 @@ class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWi
 
 		data = vectorDataWidget.getData()
 
-		with Gaffer.Signals.BlockedConnection( self._plugConnections() ) :
+		with self._blockedUpdateFromValues() :
 			with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 				for d, p in zip( data, self._parameterHandler().plug().children() ) :
 					p.setValue( d )
@@ -305,4 +302,4 @@ def __parameterPopupMenu( menuDefinition, parameterValueWidget ) :
 			},
 		)
 
-GafferCortexUI.ParameterValueWidget.popupMenuSignal().connect( __parameterPopupMenu, scoped = False )
+GafferCortexUI.ParameterValueWidget.popupMenuSignal().connect( __parameterPopupMenu )

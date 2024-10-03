@@ -67,16 +67,11 @@ class EditorTest( GafferUITest.TestCase ) :
 	def testContext( self ) :
 
 		s = Gaffer.ScriptNode()
-		c = Gaffer.Context()
-
 		editor = GafferUI.Viewer( s )
 
 		self.assertTrue( editor.scriptNode().isSame( s ) )
-		self.assertTrue( editor.getContext().isSame( s.context() ) )
-
-		editor.setContext( c )
-		self.assertTrue( editor.scriptNode().isSame( s ) )
-		self.assertTrue( editor.getContext().isSame( c ) )
+		self.assertEqual( editor.context(), s.context() )
+		self.assertFalse( editor.context().isSame( s.context() ) )
 
 	def testSerialisation( self ) :
 
@@ -126,9 +121,8 @@ class EditorTest( GafferUITest.TestCase ) :
 
 				GafferUI.Editor.__init__( self, GafferUI.Label( "MyEditor" ), scriptNode )
 
-				self.__settingsNode = self.Settings( "MyEditor", scriptNode )
-
 		editor = TestEditor( script )
+		self.assertIsInstance( editor.settings(), TestEditor.Settings )
 
 		# Then we dispose of that editor.
 

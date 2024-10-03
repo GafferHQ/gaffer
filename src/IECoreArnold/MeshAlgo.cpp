@@ -100,7 +100,7 @@ const T *variableData( const PrimitiveVariableMap &variables, const std::string 
 	return runTimeCast<T>( it->second.data.get() );
 }
 
-void convertUVSet( const std::string &uvSet, const PrimitiveVariable &uvVariable, const vector<int> &vertexIds, AtNode *node )
+void convertUVSet( const std::string &uvSet, const PrimitiveVariable &uvVariable, const vector<int> &vertexIds, AtNode *node, const std::string &messageContext )
 {
 	const V2fVectorData *uvData = runTimeCast<V2fVectorData>( uvVariable.data.get() );
 
@@ -112,7 +112,7 @@ void convertUVSet( const std::string &uvSet, const PrimitiveVariable &uvVariable
 	if( uvVariable.interpolation != PrimitiveVariable::Varying && uvVariable.interpolation != PrimitiveVariable::Vertex && uvVariable.interpolation != PrimitiveVariable::FaceVarying )
 	{
 		msg(
-			Msg::Warning, "ToArnoldMeshConverter::doConversion",
+			Msg::Warning, messageContext,
 			fmt::format( "Variable \"{}\" has an invalid interpolation type - not generating uvs.", uvSet )
 		);
 		return;
@@ -226,7 +226,7 @@ void convertCornersAndCreases( const IECoreScene::MeshPrimitive *mesh, AtNode *n
 	AiNodeSetArray( node, g_creaseSharpnessArnoldString, sharpnessesArray );
 }
 
-AtNode *convertCommon( const IECoreScene::MeshPrimitive *mesh, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode = nullptr )
+AtNode *convertCommon( const IECoreScene::MeshPrimitive *mesh, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
 
 	// Make the result mesh and add topology
@@ -273,7 +273,7 @@ AtNode *convertCommon( const IECoreScene::MeshPrimitive *mesh, AtUniverse *unive
 		{
 			if( data->getInterpretation() == GeometricData::UV )
 			{
-				::convertUVSet( it->first, it->second, vertexIds, result );
+				::convertUVSet( it->first, it->second, vertexIds, result, messageContext );
 				it = variablesToConvert.erase( it );
 			}
 			else
@@ -290,13 +290,13 @@ AtNode *convertCommon( const IECoreScene::MeshPrimitive *mesh, AtUniverse *unive
 	// Finally, do a generic conversion of anything that remains.
 	for( PrimitiveVariableMap::iterator it = variablesToConvert.begin(), eIt = variablesToConvert.end(); it != eIt; ++it )
 	{
-		ShapeAlgo::convertPrimitiveVariable( mesh, it->second, result, AtString( it->first.c_str() ) );
+		ShapeAlgo::convertPrimitiveVariable( mesh, it->second, result, AtString( it->first.c_str() ), messageContext );
 	}
 
 	return result;
 }
 
-const V3fVectorData *normal( const IECoreScene::MeshPrimitive *mesh, PrimitiveVariable::Interpolation &interpolation )
+const V3fVectorData *normal( const IECoreScene::MeshPrimitive *mesh, PrimitiveVariable::Interpolation &interpolation, const std::string &messageContext )
 {
 	PrimitiveVariableMap::const_iterator it = mesh->variables.find( "N" );
 	if( it == mesh->variables.end() )
@@ -307,20 +307,20 @@ const V3fVectorData *normal( const IECoreScene::MeshPrimitive *mesh, PrimitiveVa
 	const V3fVectorData *n = runTimeCast<const V3fVectorData>( it->second.data.get() );
 	if( !n )
 	{
-		msg( Msg::Warning, "MeshAlgo", fmt::format( "Variable \"N\" has unsupported type \"{}\" (expected V3fVectorData).", it->second.data->typeName() ) );
+		msg( Msg::Warning, messageContext, fmt::format( "Variable \"N\" has unsupported type \"{}\" (expected V3fVectorData).", it->second.data->typeName() ) );
 		return nullptr;
 	}
 
 	const PrimitiveVariable::Interpolation thisInterpolation = it->second.interpolation;
 	if( interpolation != PrimitiveVariable::Invalid && thisInterpolation != interpolation )
 	{
-		msg( Msg::Warning, "MeshAlgo", "Variable \"N\" has inconsistent interpolation types - not generating normals." );
+		msg( Msg::Warning, messageContext, "Variable \"N\" has inconsistent interpolation types - not generating normals." );
 		return nullptr;
 	}
 
 	if( thisInterpolation != PrimitiveVariable::Varying && thisInterpolation != PrimitiveVariable::Vertex && thisInterpolation != PrimitiveVariable::FaceVarying )
 	{
-		msg( Msg::Warning, "MeshAlgo", "Variable \"N\" has unsupported interpolation type - not generating normals." );
+		msg( Msg::Warning, messageContext, "Variable \"N\" has unsupported interpolation type - not generating normals." );
 		return nullptr;
 	}
 
@@ -375,16 +375,16 @@ void convertNormalIndices( const IECoreScene::MeshPrimitive *mesh, AtNode *node,
 }
 
 
-AtNode *convert( const IECoreScene::MeshPrimitive *mesh, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode )
+AtNode *convert( const IECoreScene::MeshPrimitive *mesh, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
-	AtNode *result = convertCommon( mesh, universe, nodeName, parentNode );
+	AtNode *result = convertCommon( mesh, universe, nodeName, parentNode, messageContext );
 
-	ShapeAlgo::convertP( mesh, result, g_vlistArnoldString );
+	ShapeAlgo::convertP( mesh, result, g_vlistArnoldString, messageContext );
 
 	// add normals
 
 	PrimitiveVariable::Interpolation nInterpolation = PrimitiveVariable::Invalid;
-	if( const V3fVectorData *n = normal( mesh, nInterpolation ) )
+	if( const V3fVectorData *n = normal( mesh, nInterpolation, messageContext ) )
 	{
 		AiNodeSetArray(
 			result,
@@ -398,12 +398,12 @@ AtNode *convert( const IECoreScene::MeshPrimitive *mesh, AtUniverse *universe, c
 	return result;
 }
 
-AtNode *convert( const std::vector<const IECoreScene::MeshPrimitive *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode )
+AtNode *convert( const std::vector<const IECoreScene::MeshPrimitive *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
-	AtNode *result = convertCommon( samples.front(), universe, nodeName, parentNode );
+	AtNode *result = convertCommon( samples.front(), universe, nodeName, parentNode, messageContext );
 
 	std::vector<const IECoreScene::Primitive *> primitiveSamples( samples.begin(), samples.end() );
-	ShapeAlgo::convertP( primitiveSamples, result, g_vlistArnoldString );
+	ShapeAlgo::convertP( primitiveSamples, result, g_vlistArnoldString, messageContext );
 
 	// add normals
 
@@ -412,7 +412,7 @@ AtNode *convert( const std::vector<const IECoreScene::MeshPrimitive *> &samples,
 	PrimitiveVariable::Interpolation nInterpolation = PrimitiveVariable::Invalid;
 	for( vector<const MeshPrimitive *>::const_iterator it = samples.begin(), eIt = samples.end(); it != eIt; ++it )
 	{
-		if( const V3fVectorData *n = normal( *it, nInterpolation ) )
+		if( const V3fVectorData *n = normal( *it, nInterpolation, messageContext ) )
 		{
 			nSamples.push_back( n );
 		}

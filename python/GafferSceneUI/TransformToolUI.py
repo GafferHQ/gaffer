@@ -95,7 +95,7 @@ class _TargetTipWidget( GafferUI.Frame ) :
 
 		self.__tool = tool
 
-		tool.plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ), scoped = False )
+		tool.plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
 
 		with self :
 			with GafferUI.Frame( borderWidth = 0 ) as self.__innerFrame :
@@ -128,19 +128,19 @@ class _SelectionWidget( GafferUI.Frame ) :
 					self.__infoLabel = GafferUI.Label( "" )
 					self.__nameLabel = GafferUI.NameLabel( graphComponent = None, numComponents = sys.maxsize )
 					self.__nameLabel.setFormatter( _boldFormatter )
-					self.__nameLabel.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
+					self.__nameLabel.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
 
 				with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) as self.__warningRow :
 					GafferUI.Image( "warningSmall.png" )
 					self.__warningLabel = GafferUI.Label( "" )
 
-		self.__tool.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__update, fallbackResult = None ), scoped = False )
+		self.__tool.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__update, fallbackResult = None ) )
 
 		self.__update()
 
-	def context( self ) :
+	def scriptNode( self ) : # For LazyMethod's `deferUntilPlaybackStops`
 
-		return self.ancestor( GafferUI.NodeToolbar ).getContext()
+		return self.__tool.ancestor( GafferUI.View ).scriptNode()
 
 	def getToolTip( self ) :
 

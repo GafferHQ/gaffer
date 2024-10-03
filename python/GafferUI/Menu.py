@@ -728,6 +728,9 @@ class _Menu( QtWidgets.QMenu ) :
 			if action and action.statusTip() :
 				QtWidgets.QToolTip.showText( qEvent.globalPos(), action.statusTip(), self )
 				return True
+			elif QtWidgets.QToolTip.isVisible() :
+				QtWidgets.QToolTip.hideText()
+				return True
 
 		return QtWidgets.QMenu.event( self, qEvent )
 

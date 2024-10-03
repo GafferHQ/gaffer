@@ -1,0 +1,51 @@
+import Gaffer
+import GafferImage
+import imath
+
+Gaffer.Metadata.registerValue( parent, "serialiser:milestoneVersion", 1, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:majorVersion", 4, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:minorVersion", 10, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:patchVersion", 0, persistent=False )
+
+__children = {}
+
+parent["variables"].addChild( Gaffer.NameValuePlug( "image:catalogue:port", Gaffer.IntPlug( "value", defaultValue = 0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), "imageCataloguePort", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+parent["variables"].addChild( Gaffer.NameValuePlug( "project:name", Gaffer.StringPlug( "value", defaultValue = 'default', flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), "projectName", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+parent["variables"].addChild( Gaffer.NameValuePlug( "project:rootDirectory", Gaffer.StringPlug( "value", defaultValue = '$HOME/gaffer/projects/${project:name}', flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), "projectRootDirectory", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+__children["openColorIO"] = GafferImage.OpenColorIOConfigPlug( "openColorIO", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, )
+parent.addChild( __children["openColorIO"] )
+__children["defaultFormat"] = GafferImage.FormatPlug( "defaultFormat", defaultValue = GafferImage.Format( 1920, 1080, 1.000 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, )
+parent.addChild( __children["defaultFormat"] )
+__children["CheckerboardLeft"] = GafferImage.Checkerboard( "CheckerboardLeft" )
+parent.addChild( __children["CheckerboardLeft"] )
+__children["CheckerboardLeft"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["CreateViews"] = GafferImage.CreateViews( "CreateViews" )
+parent.addChild( __children["CreateViews"] )
+__children["CreateViews"]["views"].addChild( Gaffer.NameValuePlug( "left", GafferImage.ImagePlug( "value", ), True, "view0", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+__children["CreateViews"]["views"].addChild( Gaffer.NameValuePlug( "right", GafferImage.ImagePlug( "value", ), True, "view1", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+__children["CreateViews"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["CheckerboardRight"] = GafferImage.Checkerboard( "CheckerboardRight" )
+parent.addChild( __children["CheckerboardRight"] )
+__children["CheckerboardRight"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+parent["variables"]["imageCataloguePort"]["value"].setValue( 37035 )
+Gaffer.Metadata.registerValue( parent["variables"]["imageCataloguePort"], 'readOnly', True )
+Gaffer.Metadata.registerValue( parent["variables"]["projectName"]["name"], 'readOnly', True )
+Gaffer.Metadata.registerValue( parent["variables"]["projectRootDirectory"]["name"], 'readOnly', True )
+__children["CheckerboardLeft"]["size"]["y"].setInput( __children["CheckerboardLeft"]["size"]["x"] )
+__children["CheckerboardLeft"]["__uiPosition"].setValue( imath.V2f( -7.31522799, 2.82158232 ) )
+__children["CreateViews"]["out"]["format"].setInput( __children["CreateViews"]["__switch"]["out"]["format"] )
+__children["CreateViews"]["out"]["dataWindow"].setInput( __children["CreateViews"]["__switch"]["out"]["dataWindow"] )
+__children["CreateViews"]["out"]["metadata"].setInput( __children["CreateViews"]["__switch"]["out"]["metadata"] )
+__children["CreateViews"]["out"]["deep"].setInput( __children["CreateViews"]["__switch"]["out"]["deep"] )
+__children["CreateViews"]["out"]["sampleOffsets"].setInput( __children["CreateViews"]["__switch"]["out"]["sampleOffsets"] )
+__children["CreateViews"]["out"]["channelNames"].setInput( __children["CreateViews"]["__switch"]["out"]["channelNames"] )
+__children["CreateViews"]["out"]["channelData"].setInput( __children["CreateViews"]["__switch"]["out"]["channelData"] )
+__children["CreateViews"]["views"][0]["value"].setInput( __children["CheckerboardLeft"]["out"] )
+__children["CreateViews"]["views"][1]["value"].setInput( __children["CheckerboardRight"]["out"] )
+__children["CreateViews"]["__uiPosition"].setValue( imath.V2f( 0.366687864, -5.34316444 ) )
+__children["CheckerboardRight"]["size"]["y"].setInput( __children["CheckerboardRight"]["size"]["x"] )
+__children["CheckerboardRight"]["__uiPosition"].setValue( imath.V2f( 8.04854202, 2.82158256 ) )
+
+
+del __children
+

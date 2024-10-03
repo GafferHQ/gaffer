@@ -55,12 +55,12 @@ class _SetupButton( GafferUI.Widget ) :
 				GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
 
 				menuButton = GafferUI.Button( image = "plus.png", hasFrame = False )
-				menuButton.clickedSignal().connect( Gaffer.WeakMethod( self.__showMenu ), scoped = False )
+				menuButton.clickedSignal().connect( Gaffer.WeakMethod( self.__showMenu ) )
 
 				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
-		node.childAddedSignal().connect( Gaffer.WeakMethod( self.__updateVisibility ), scoped = False )
-		node.childRemovedSignal().connect( Gaffer.WeakMethod( self.__updateVisibility ), scoped = False )
+		node.childAddedSignal().connect( Gaffer.WeakMethod( self.__updateVisibility ) )
+		node.childRemovedSignal().connect( Gaffer.WeakMethod( self.__updateVisibility ) )
 
 		self.__updateVisibility()
 

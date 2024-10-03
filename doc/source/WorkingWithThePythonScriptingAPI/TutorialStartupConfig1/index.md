@@ -64,7 +64,7 @@ Copy this code to a new a `customVariables.py` file in `~/gaffer/startup/gui`:
 
     	Gaffer.MetadataAlgo.setReadOnly( variables["projectResources"]["name"], True )
 
-    application.root()["scripts"].childAddedSignal().connect( __scriptAdded, scoped = False )
+    application.root()["scripts"].childAddedSignal().connect( __scriptAdded )
 ```
 
 Let's break down what's going on here.
@@ -125,7 +125,7 @@ We wrap up the config by adding our function to an event signal that fires when 
 .. code-block:: python
     :lineno-start: 17
 
-    application.root()["scripts"].childAddedSignal().connect( __scriptAdded, scoped = False )
+    application.root()["scripts"].childAddedSignal().connect( __scriptAdded )
 ```
 
 Notice the use of the `application` variable. This is a special variable that refers to the startup config's parent application.

@@ -163,7 +163,7 @@ def appendScriptWindowMenuDefinitions( menuDefinition, prefix="" ) :
 
 def connectToEditor( editor ) :
 
-	editor.keyPressSignal().connect( __editorKeyPress, scoped = False )
+	editor.keyPressSignal().connect( __editorKeyPress )
 
 ##########################################################################
 # Internal implementation

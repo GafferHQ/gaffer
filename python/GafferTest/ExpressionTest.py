@@ -155,7 +155,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		s["m1"] = GafferTest.MultiplyNode()
 
-		s["m1"].plugDirtiedSignal().connect( f, scoped = False )
+		s["m1"].plugDirtiedSignal().connect( f )
 
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression(
@@ -912,7 +912,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["e"] = Gaffer.Expression()
 		self.assertEqual( s["e"].getExpression(), ( "", "" ) )
 
-		s["e"].expressionChangedSignal().connect( f, scoped = False )
+		s["e"].expressionChangedSignal().connect( f )
 
 		with Gaffer.UndoScope( s ) :
 			s["e"].setExpression( 'parent["n"]["user"]["p"] = 10' )

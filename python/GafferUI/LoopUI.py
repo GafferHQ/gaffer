@@ -180,4 +180,4 @@ def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 		}
 	)
 
-GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu, scoped = False )
+GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu )

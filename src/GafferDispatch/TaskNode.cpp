@@ -286,8 +286,6 @@ TaskNode::TaskNode( const std::string &name )
 
 	PlugPtr dispatcherPlug = new Plug( "dispatcher", Plug::In );
 	addChild( dispatcherPlug );
-
-	Dispatcher::setupPlugs( dispatcherPlug.get() );
 }
 
 TaskNode::~TaskNode()
@@ -399,4 +397,18 @@ void TaskNode::executeSequence( const std::vector<float> &frames ) const
 bool TaskNode::requiresSequenceExecution() const
 {
 	return false;
+}
+
+void GafferDispatch::intrusive_ptr_add_ref( TaskNode *node )
+{
+	bool firstRef = node->refCount() == 0;
+	node->addRef();
+	if( firstRef )
+	{
+		// We defer calling `setupPlugs()` till we have our first reference, as
+		// otherwise Python `setupPlugs()` functions which accessed
+		// `plug.node()` would crash. This also means that `setupPlugs()` is able
+		// to introspect the node type and add different plugs on different nodes.
+		Dispatcher::setupPlugs( node->dispatcherPlug() );
+	}
 }

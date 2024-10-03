@@ -316,8 +316,8 @@ class __OutputIndexColumn( Column ) :
 
 		Column.__init__( self, title )
 
-		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
-		self.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
+		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
 
 	def headerData( self, canceller = None ) :
 
@@ -492,7 +492,7 @@ def addCatalogueHotkeys( editor ) :
 	if not isinstance( editor, GafferUI.Viewer ) :
 		return
 
-	editor.keyPressSignal().connect( __viewerKeyPress, scoped = False )
+	editor.keyPressSignal().connect( __viewerKeyPress )
 
 def __viewerKeyPress( viewer, event ) :
 
@@ -721,79 +721,88 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		self.__column = GafferUI.ListContainer( spacing = 4 )
+		splitContainer = GafferUI.SplitContainer()
 
-		GafferUI.PlugValueWidget.__init__( self, self.__column, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, splitContainer, plug, **kw )
 
-		with self.__column :
+		with splitContainer :
 
-			self.__pathListing = GafferUI.PathListingWidget(
-				_ImagesPath( self.__images(), [] ),
-				columns = self.__listingColumns(),
-				selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
-				sortable = False,
-				horizontalScrollMode = GafferUI.ScrollMode.Automatic
-			)
-			self.__pathListing.setDragPointer( "" )
-			self.__pathListing.setHeaderVisible( True )
-			self.__pathListing.selectionChangedSignal().connect(
-				Gaffer.WeakMethod( self.__pathListingSelectionChanged ), scoped = False
-			)
-			self.__pathListing.dragEnterSignal().connect(
-				Gaffer.WeakMethod( self.__pathListingDragEnter ), scoped = False
-			)
-			self.__pathListing.dragLeaveSignal().connect(
-				Gaffer.WeakMethod( self.__pathListingDragLeave ), scoped = False
-			)
-			self.__pathListing.dragMoveSignal().connect(
-				Gaffer.WeakMethod( self.__pathListingDragMove ), scoped = False
-			)
-			self.__pathListing.dropSignal().connect(
-				Gaffer.WeakMethod( self.__pathListingDrop ), scoped = False
-			)
-			self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
+			with GafferUI.ListContainer( spacing = 4 ) :
 
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) as self.__buttonRow :
+				self.__pathListing = GafferUI.PathListingWidget(
+					_ImagesPath( self.__images(), [] ),
+					columns = self.__listingColumns(),
+					selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
+					sortable = False,
+					horizontalScrollMode = GafferUI.ScrollMode.Automatic
+				)
+				self.__pathListing.setDragPointer( "" )
+				self.__pathListing.setHeaderVisible( True )
+				self.__pathListing.selectionChangedSignal().connect(
+					Gaffer.WeakMethod( self.__pathListingSelectionChanged )
+				)
+				self.__pathListing.dragEnterSignal().connect(
+					Gaffer.WeakMethod( self.__pathListingDragEnter )
+				)
+				self.__pathListing.dragLeaveSignal().connect(
+					Gaffer.WeakMethod( self.__pathListingDragLeave )
+				)
+				self.__pathListing.dragMoveSignal().connect(
+					Gaffer.WeakMethod( self.__pathListingDragMove )
+				)
+				self.__pathListing.dropSignal().connect(
+					Gaffer.WeakMethod( self.__pathListingDrop )
+				)
+				self.__pathListing.getPath().pathChangedSignal().connect(
+					Gaffer.WeakMethod( self.__pathChanged )
+				)
+				self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
-				addButton = GafferUI.Button( image = "pathChooser.png", hasFrame = False, toolTip = "Load image" )
-				addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addClicked ), scoped = False )
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) as self.__buttonRow :
 
-				self.__duplicateButton = GafferUI.Button( image = "duplicate.png", hasFrame = False, toolTip = "Duplicate selected image, hold <kbd>alt</kbd> to view copy. [<kbd>Ctrl-D</kbd>]" )
-				self.__duplicateButton.setEnabled( False )
-				self.__duplicateButton.clickedSignal().connect( Gaffer.WeakMethod( self.__duplicateClicked ), scoped = False )
+					addButton = GafferUI.Button( image = "pathChooser.png", hasFrame = False, toolTip = "Load image" )
+					addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addClicked ) )
 
-				self.__exportButton = GafferUI.Button( image = "export.png", hasFrame = False, toolTip = "Export selected image" )
-				self.__exportButton.setEnabled( False )
-				self.__exportButton.clickedSignal().connect( Gaffer.WeakMethod( self.__exportClicked ), scoped = False )
+					self.__duplicateButton = GafferUI.Button( image = "duplicate.png", hasFrame = False, toolTip = "Duplicate selected image, hold <kbd>alt</kbd> to view copy. [<kbd>Ctrl-D</kbd>]" )
+					self.__duplicateButton.setEnabled( False )
+					self.__duplicateButton.clickedSignal().connect( Gaffer.WeakMethod( self.__duplicateClicked ) )
 
-				self.__extractButton = GafferUI.Button( image = "extract.png", hasFrame = False, toolTip = "Create CatalogueSelect node for selected image" )
-				self.__extractButton.setEnabled( False )
-				self.__extractButton.clickedSignal().connect( Gaffer.WeakMethod( self.__extractClicked ), scoped = False )
+					self.__exportButton = GafferUI.Button( image = "export.png", hasFrame = False, toolTip = "Export selected image" )
+					self.__exportButton.setEnabled( False )
+					self.__exportButton.clickedSignal().connect( Gaffer.WeakMethod( self.__exportClicked ) )
 
-				GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
+					self.__extractButton = GafferUI.Button( image = "extract.png", hasFrame = False, toolTip = "Create CatalogueSelect node for selected image" )
+					self.__extractButton.setEnabled( False )
+					self.__extractButton.clickedSignal().connect( Gaffer.WeakMethod( self.__extractClicked ) )
 
-				self.__removeButton = GafferUI.Button( image = "delete.png", hasFrame = False, toolTip = "Remove selected image [<kbd>Delete</kbd>]" )
-				self.__removeButton.setEnabled( False )
-				self.__removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeClicked ), scoped = False )
+					GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
 
-			GafferUI.Divider()
+					self.__removeButton = GafferUI.Button( image = "delete.png", hasFrame = False, toolTip = "Remove selected image [<kbd>Delete</kbd>]" )
+					self.__removeButton.setEnabled( False )
+					self.__removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeClicked ) )
 
-			with GafferUI.Collapsible( label = "Image Properties", collapsed = False ) :
+				GafferUI.Spacer( size = imath.V2i( 2 ) )
 
-				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 ) :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 ) :
 
-					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-						GafferUI.Label( "Name" )
-						self.__nameWidget = GafferUI.NameWidget( graphComponent = None )
+				GafferUI.Spacer( size = imath.V2i( 2 ) )
 
-					GafferUI.Label( "Description" )
-					self.__descriptionWidget = GafferUI.MultiLineStringPlugValueWidget( plug = None )
+				GafferUI.Label( "<h4>Image Properties</h4>" )
+
+				GafferUI.Spacer( size = imath.V2i( 2 ) )
+
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+					GafferUI.Label( "Name" )
+					self.__nameWidget = GafferUI.NameWidget( graphComponent = None )
+
+				GafferUI.Label( "Description" )
+				self.__descriptionWidget = GafferUI.MultiLineStringPlugValueWidget( plug = None )
 
 		self.__mergeGroupId = 0
 
-		Gaffer.Metadata.plugValueChangedSignal( plug.node() ).connect( Gaffer.WeakMethod( self.__plugMetadataValueChanged ), scoped = False )
+		Gaffer.Metadata.plugValueChangedSignal( plug.node() ).connect( Gaffer.WeakMethod( self.__plugMetadataValueChanged ) )
 
-		self.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ), scoped = False )
+		self.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) )
 
 	def buttonRow( self ):
 
@@ -824,7 +833,19 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 			self.__descriptionWidget.setPlug( None )
 			self.__nameWidget.setGraphComponent( None )
 
-		self.__column.setEnabled( self._editable() )
+	def _updateFromEditable( self ) :
+
+		self.__pathListing.setEnabled( self._editable() )
+		self.__buttonRow.setEnabled( self._editable() )
+		# No need to manage editability of `self.__nameWidget` and
+		# `self.__descriptionWidget` because they deal with that
+		# internally.
+
+	def __pathChanged( self, path ) :
+
+		# `_updateFromValues()` is sensitive to the contents of the image path so
+		# we need to do an update when it changes.
+		self._requestUpdateFromValues()
 
 	def __plugMetadataValueChanged( self, plug, key, reason ) :
 
@@ -1141,7 +1162,7 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 			if image is None :
 				return False
 
-			with self.getContext() :
+			with self.context() :
 				fileName = self.__catalogue().generateFileName( image )
 				imageWriter = GafferImage.ImageWriter()
 				imageWriter["in"].setInput( image )

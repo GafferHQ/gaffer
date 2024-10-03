@@ -235,14 +235,6 @@ def _pathsFromAffected( context, nodes ) :
 
 	return pathMatcher.paths()
 
-def _pathsFromSelection( context ) :
-
-	paths = GafferSceneUI.ContextAlgo.getSelectedPaths( context )
-	paths = paths.paths() if paths else []
-
-	return paths
-
-
 def __browseAffectedShaders( plug, shaderTweaksOverride, menu ) :
 
 	context = plug.ancestor( Gaffer.ScriptNode ).context()
@@ -254,10 +246,11 @@ def __browseAffectedShaders( plug, shaderTweaksOverride, menu ) :
 
 def __browseSelectedShaders( plug, shaderTweaksOverride, menu ) :
 
-	context = plug.ancestor( Gaffer.ScriptNode ).context()
+	scriptNode = plug.ancestor( Gaffer.ScriptNode )
 	shaderTweaks = [ shaderTweaksOverride ] if shaderTweaksOverride else __findConnectedShaderTweaks( plug.node() )
 	__browseShaders(
-		menu.ancestor( GafferUI.Window ), plug, context, shaderTweaks, _pathsFromSelection( context )
+		menu.ancestor( GafferUI.Window ), plug, scriptNode.context(), shaderTweaks,
+		GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( scriptNode ).paths()
 	)
 
 def _plugContextMenu( plug, shaderTweaks ) :
@@ -313,4 +306,4 @@ def __plugContextMenuSignal( graphEditor, plug, menuDefinition ) :
 		{ "subMenu" : functools.partial( _plugContextMenu, plug, None ) }
 	)
 
-GafferUI.GraphEditor.plugContextMenuSignal().connect( __plugContextMenuSignal, scoped = False )
+GafferUI.GraphEditor.plugContextMenuSignal().connect( __plugContextMenuSignal )

@@ -535,12 +535,12 @@ class ArnoldOutput : public IECore::RefCounted
 					}
 				}
 
-				ParameterAlgo::setParameter( m_driver.get(), it->first.c_str(), it->second.get() );
+				ParameterAlgo::setParameter( m_driver.get(), it->first.c_str(), it->second.get(), /* messageContext = */ m_name.string() );
 			}
 
 			if( AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( m_driver.get() ), g_customAttributesArnoldString ) )
 			{
-				ParameterAlgo::setParameter( m_driver.get(), "custom_attributes", customAttributesData.get() );
+				ParameterAlgo::setParameter( m_driver.get(), "custom_attributes", customAttributesData.get(), /* messageContext = */ m_name.string() );
 			}
 
 			// Create a filter node, or reuse an existing one if we can.
@@ -595,7 +595,7 @@ class ArnoldOutput : public IECore::RefCounted
 					}
 				}
 
-				ParameterAlgo::setParameter( m_filter.get(), it->first.c_str() + 6, it->second.get() );
+				ParameterAlgo::setParameter( m_filter.get(), it->first.c_str() + 6, it->second.get(), /* messageContext = */ m_name.string() );
 			}
 
 			// Convert the data specification to the form
@@ -1343,7 +1343,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					continue;
 				}
 
-				ParameterAlgo::setParameter( node, attr.first, attr.second.get() );
+				ParameterAlgo::setParameter( node, attr.first, attr.second.get(), "IECoreArnold::Renderer::attributes" );
 			}
 
 			// Early out for IECoreScene::Procedurals. Arnold's inheritance rules for procedurals are back
@@ -2184,7 +2184,7 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !arnoldAttributes || !arnoldAttributes->canInstanceGeometry( object ) )
 			{
-				return Instance( convert( object, arnoldAttributes, nodeName ) );
+				return Instance( convert( object, arnoldAttributes, nodeName, /* messageContext = */ nodeName ) );
 			}
 
 			IECore::MurmurHash h = object->hash();
@@ -2204,7 +2204,7 @@ class InstanceCache : public IECore::RefCounted
 				{
 					try
 					{
-						writeAccessor->second = convert( object, arnoldAttributes, "instance:" + h.toString() );
+						writeAccessor->second = convert( object, arnoldAttributes, "instance:" + h.toString(), /* messageContext = */ nodeName );
 					}
 					catch( const IECore::Cancelled & )
 					{
@@ -2228,7 +2228,7 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !arnoldAttributes->canInstanceGeometry( samples.front() ) )
 			{
-				return Instance( convert( samples, times, arnoldAttributes, nodeName ) );
+				return Instance( convert( samples, times, arnoldAttributes, nodeName, /* messageContext = */ nodeName ) );
 			}
 
 			IECore::MurmurHash h;
@@ -2256,7 +2256,7 @@ class InstanceCache : public IECore::RefCounted
 				{
 					try
 					{
-						writeAccessor->second = convert( samples, times, arnoldAttributes, "instance:" + h.toString() );
+						writeAccessor->second = convert( samples, times, arnoldAttributes, "instance:" + h.toString(), /* messageContext = */ nodeName );
 					}
 					catch( const IECore::Cancelled & )
 					{
@@ -2276,7 +2276,7 @@ class InstanceCache : public IECore::RefCounted
 			vector<IECore::MurmurHash> toErase;
 			for( Cache::iterator it = m_cache.begin(), eIt = m_cache.end(); it != eIt; ++it )
 			{
-				if( it->second.unique() )
+				if( it->second.use_count() == 1 )
 				{
 					// Only one reference - this is ours, so
 					// nothing outside of the cache is using the
@@ -2303,7 +2303,7 @@ class InstanceCache : public IECore::RefCounted
 
 	private :
 
-		SharedAtNodePtr convert( const IECore::Object *object, const ArnoldAttributes *attributes, const std::string &nodeName )
+		SharedAtNodePtr convert( const IECore::Object *object, const ArnoldAttributes *attributes, const std::string &nodeName, const std::string &messageContext )
 		{
 			if( !object )
 			{
@@ -2317,7 +2317,7 @@ class InstanceCache : public IECore::RefCounted
 			}
 			else
 			{
-				node = NodeAlgo::convert( object, m_universe, nodeName, m_parentNode );
+				node = NodeAlgo::convert( object, m_universe, nodeName, m_parentNode, messageContext );
 			}
 
 			if( !node )
@@ -2333,7 +2333,7 @@ class InstanceCache : public IECore::RefCounted
 			return SharedAtNodePtr( node, m_nodeDeleter );
 		}
 
-		SharedAtNodePtr convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const ArnoldAttributes *attributes, const std::string &nodeName )
+		SharedAtNodePtr convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const ArnoldAttributes *attributes, const std::string &nodeName, const std::string &messageContext )
 		{
 			ensureUniformTimeSamples( times );
 			AtNode *node = nullptr;
@@ -2343,7 +2343,7 @@ class InstanceCache : public IECore::RefCounted
 			}
 			else
 			{
-				node = NodeAlgo::convert( samples, times[0], times[times.size() - 1], m_universe, nodeName, m_parentNode );
+				node = NodeAlgo::convert( samples, times[0], times[times.size() - 1], m_universe, nodeName, m_parentNode, messageContext );
 			}
 
 			if( !node )
@@ -3645,7 +3645,7 @@ class ArnoldGlobals
 					const IECore::Data *dataValue = IECore::runTimeCast<const IECore::Data>( value );
 					if( dataValue )
 					{
-						ParameterAlgo::setParameter( options, arnoldName, dataValue );
+						ParameterAlgo::setParameter( options, arnoldName, dataValue, "IECoreArnold::Renderer::option" );
 					}
 				}
 				return;
@@ -3677,7 +3677,7 @@ class ArnoldGlobals
 
 					if( dataValue )
 					{
-						ParameterAlgo::setParameter( options, arnoldName, dataValue );
+						ParameterAlgo::setParameter( options, arnoldName, dataValue, "IECoreArnold::Renderer::option" );
 					}
 					else
 					{
@@ -3692,7 +3692,7 @@ class ArnoldGlobals
 				const IECore::Data *dataValue = IECore::runTimeCast<const IECore::Data>( value );
 				if( dataValue )
 				{
-					ParameterAlgo::setParameter( options, arnoldName, dataValue );
+					ParameterAlgo::setParameter( options, arnoldName, dataValue, "IECoreArnold::Renderer::option" );
 				}
 				else
 				{
@@ -4006,8 +4006,8 @@ class ArnoldGlobals
 
 			AiRenderRemoveAllInteractiveOutputs( m_renderSession.get() );
 
-			IECoreArnold::ParameterAlgo::setParameter( options, "outputs", outputs.get() );
-			IECoreArnold::ParameterAlgo::setParameter( options, "light_path_expressions", lpes.get() );
+			IECoreArnold::ParameterAlgo::setParameter( options, "outputs", outputs.get(), "IECoreArnold::Renderer" );
+			IECoreArnold::ParameterAlgo::setParameter( options, "light_path_expressions", lpes.get(), "IECoreArnold::Renderer" );
 
 			for( auto i : interactiveIndices )
 			{
@@ -4028,7 +4028,7 @@ class ArnoldGlobals
 					IECoreScene::ConstCameraPtr defaultCortexCamera = new IECoreScene::Camera();
 					m_cameras["ieCoreArnold:defaultCamera"] = defaultCortexCamera;
 					m_defaultCamera = SharedAtNodePtr(
-						NodeAlgo::convert( defaultCortexCamera.get(), m_universeBlock->universe(), "ieCoreArnold:defaultCamera", nullptr ),
+						NodeAlgo::convert( defaultCortexCamera.get(), m_universeBlock->universe(), "ieCoreArnold:defaultCamera", nullptr, "ieCoreArnold:defaultCamera" ),
 						nodeDeleter( m_renderType )
 					);
 				}

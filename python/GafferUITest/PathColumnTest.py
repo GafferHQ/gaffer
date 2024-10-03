@@ -40,6 +40,7 @@ import imath
 
 import IECore
 
+import GafferTest
 import GafferUI
 import GafferUITest
 
@@ -135,6 +136,48 @@ class PathColumnTest( GafferUITest.TestCase ) :
 		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Stretch )
 		self.assertEqual( c.headerData().value, "label" )
 		self.assertEqual( c.headerData().toolTip, "help!" )
+
+	def testInstanceCreatedSignal( self ) :
+
+		cs = GafferTest.CapturingSlot( GafferUI.PathColumn.instanceCreatedSignal() )
+
+		column1 = GafferUI.StandardPathColumn( "l1", "p1" )
+		column2 = GafferUI.StandardPathColumn( "l2", "p2" )
+		column3 = GafferUI.StandardPathColumn( "l3", "p3" )
+
+		self.assertEqual( cs, [ ( column1, ), ( column2, ), ( column3, ) ] )
+
+	def testInstanceCreatedSignalWithPythonColumn( self ) :
+
+		class PythonColumn( GafferUI.PathColumn ) :
+
+			def __init__( self ) :
+
+				self.member = "preInitValue"
+				GafferUI.PathColumn.__init__( self )
+				self.member = "postInitValue"
+
+		columnCreated = None
+
+		def instanceCreated( column ) :
+
+			nonlocal columnCreated
+			columnCreated = column
+
+			# We can query the full derived type of the column in `instanceCreated()`.
+			self.assertIsInstance( column, PythonColumn )
+			# But we see the object in the state in which is called the base
+			# class `__init__()`. Column subclasses which need to be seen in a
+			# fully constructed state should do all their initialisation before
+			# calling the base class `__init__()`. Hopefully this is not too
+			# onerous.
+			self.assertEqual( column.member, "preInitValue" )
+
+		connection = GafferUI.PathColumn.instanceCreatedSignal().connect( instanceCreated, scoped = True )
+		column = PythonColumn()
+
+		self.assertIs( column, columnCreated )
+		self.assertEqual( column.member, "postInitValue" )
 
 if __name__ == "__main__":
 	unittest.main()

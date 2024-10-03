@@ -51,6 +51,10 @@ class RenderPassWedge( GafferDispatch.TaskContextProcessor ) :
 		self["out"].setInput( self["in"] )
 		self["out"].setFlags( Gaffer.Plug.Flags.Serialisable, False )
 
+		self["__Adaptor"] = GafferScene.SceneAlgo.createRenderAdaptors()
+		self["__Adaptor"]["in"].setInput( self["in"] )
+		self["__Adaptor"]["client"].setValue( "RenderPassWedge" )
+
 		self["__ContextQuery"] = Gaffer.ContextQuery()
 		self["__ContextQuery"].addQuery( Gaffer.IntPlug( defaultValue = 1 ) )
 		self["__ContextQuery"].addQuery( Gaffer.StringPlug() )
@@ -58,8 +62,8 @@ class RenderPassWedge( GafferDispatch.TaskContextProcessor ) :
 		self["__ContextQuery"]["queries"][1]["name"].setValue( "renderPass" )
 
 		self["__TimeWarp"] = Gaffer.TimeWarp()
-		self["__TimeWarp"].setup( self["in"] )
-		self["__TimeWarp"]["in"].setInput( self["in"] )
+		self["__TimeWarp"].setup( self["__Adaptor"]["out"] )
+		self["__TimeWarp"]["in"].setInput( self["__Adaptor"]["out"] )
 		self["__TimeWarp"]["speed"].setValue( 0 )
 		self["__TimeWarp"]["offset"].setInput( self["__ContextQuery"]["out"][0]["value"] )
 

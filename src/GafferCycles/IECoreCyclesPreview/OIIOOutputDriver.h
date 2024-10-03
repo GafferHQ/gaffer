@@ -58,7 +58,7 @@ class OIIOOutputDriver : public ccl::OutputDriver
 {
 	public:
 
-		OIIOOutputDriver( const Imath::Box2i &displayWindow, const Imath::Box2i &dataWindow, IECore::ConstCompoundDataPtr parameters );
+		OIIOOutputDriver( const Imath::Box2i &displayWindow, const Imath::Box2i &dataWindow, const IECore::CompoundDataMap &layers );
 		~OIIOOutputDriver() override;
 
 		void write_render_tile( const Tile &tile ) override;

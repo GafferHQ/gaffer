@@ -55,7 +55,7 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self._addPopupMenu( self.__boolWidget )
 
-		self.__stateChangedConnection = self.__boolWidget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ), scoped = False )
+		self.__stateChangedConnection = self.__boolWidget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ) )
 
 	def boolWidget( self ) :
 
@@ -115,14 +115,14 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 		value = self.__boolWidget.getState()
 		assert( value != self.__boolWidget.State.Indeterminate ) # Should be set by us, not by user action
 
-		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.scriptNode() ) :
 			for plug in self.getPlugs() :
 
 				if Gaffer.Animation.isAnimated( plug ) :
 					curve = Gaffer.Animation.acquire( plug )
 					curve.addKey(
 						Gaffer.Animation.Key(
-							time = self.getContext().getTime(),
+							time = self.context().getTime(),
 							value = value,
 							interpolation = Gaffer.Animation.Interpolation.Constant
 						)

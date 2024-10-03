@@ -16,6 +16,7 @@
 # BuildDependency: scripts/taskStandardOptionsDepthOfFieldPlug_edit.gfr
 
 import os
+import pathlib
 import subprocess
 import tempfile
 import time
@@ -39,20 +40,23 @@ def __delay( delay ) :
 		GafferUI.EventLoop.waitForIdle( 1 )
 
 # Create a random directory in `/tmp` for the dispatcher's `jobsDirectory`, so we don't clutter the user's `~gaffer` directory
-__temporaryDirectory = tempfile.mkdtemp( prefix = "gafferDocs" )
+__temporaryDirectory = pathlib.Path( tempfile.mkdtemp( prefix = "gafferDocs" ) )
 
 def __getTempFilePath( fileName, directory = __temporaryDirectory ) :
-	filePath = "/".join( ( directory, fileName ) )
 
-	return filePath
+	return ( directory / fileName ).as_posix()
+
+def __outputImagePath( fileName ) :
+
+	return pathlib.Path( "images/{}.png".format( fileName ) ).absolute().as_posix()
 
 def __dispatchScript( script, tasks, settings ) :
 	command = "gaffer dispatch -script {} -tasks {} -dispatcher Local -settings {} -dispatcher.jobsDirectory '\"{}/dispatcher/local\"'".format(
 		script,
 		" ".join( tasks ),
 		" ".join( settings ),
-		__temporaryDirectory
-		)
+		__temporaryDirectory.as_posix()
+	)
 	subprocess.check_call( command, shell=True )
 
 # Interface: a Camera node in the Graph Editor
@@ -67,8 +71,8 @@ script.setFocus( script["Camera"] )
 __delay( 0.1 )
 viewer.view()["grid"]["visible"].setValue( False )
 paths = IECore.PathMatcher( [ "/camera" ] )
-GafferSceneUI.ContextAlgo.expand( script.context(), paths )
-GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), paths )
+GafferSceneUI.ScriptNodeAlgo.expandInVisibleSet( script, paths )
+GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, paths )
 viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 GafferUI.WidgetAlgo.grab( widget = viewer, imagePath = "images/interfaceCameraVisualizer.png" )
 script.selection().clear()
@@ -127,9 +131,9 @@ __dispatchScript(
 	tasks = [ "ImageWriter" ],
 	settings = [
 		"-ImageReader.fileName '\"{}\"'".format( __tempImagePath ),
-		"-ImageWriter.fileName '\"{}\"'".format( os.path.abspath( "images/{}.png".format( __imageName ) ) )
-		]
-	)
+		"-ImageWriter.fileName '\"{}\"'".format( __outputImagePath( __imageName ) )
+	]
+)
 
 # Task: the Aperture and Focal Length projection mode in the Node Editor
 __imageName = "taskCameraApertureFocalLengthPlugs"
@@ -143,9 +147,9 @@ __dispatchScript(
 	tasks = [ "ImageWriter" ],
 	settings = [
 		"-ImageReader.fileName '\"{}\"'".format( __tempImagePath ),
-		"-ImageWriter.fileName '\"{}\"'".format( os.path.abspath( "images/{}.png".format( __imageName ) ) )
-		]
-	)
+		"-ImageWriter.fileName '\"{}\"'".format( __outputImagePath( __imageName ) )
+	]
+)
 
 # Task: the Custom aperture mode and aperture.x and aperture.y plugs in the Node Editor
 __imageName = "taskCameraCustomAperturePlugs"
@@ -158,9 +162,9 @@ __dispatchScript(
 	tasks = [ "ImageWriter" ],
 	settings = [
 		"-ImageReader.fileName '\"{}\"'".format( __tempImagePath),
-		"-ImageWriter.fileName '\"{}\"'".format( os.path.abspath( "images/{}.png".format( __imageName ) ) )
-		]
-  )
+		"-ImageWriter.fileName '\"{}\"'".format( __outputImagePath( __imageName ) )
+	]
+)
 
 # Task: animation of adjusting the Aperture Offset in the Node Editor, and the corresponding changes to the camera's frustrum in the Viewer
 ## TODO: Automate `images/taskApertureOffset.gif` when these tools become available:
@@ -173,9 +177,9 @@ __dispatchScript(
 	script = "scripts/{}.gfr".format( __imageName ),
 	tasks = [ "Render" ],
 	settings = [
-		"-Outputs.outputs.output1.fileName '\"{}\"'".format( os.path.abspath( "images/{}.png".format( __imageName ) ) )
-		]
-  )
+		"-Outputs.outputs.output1.fileName '\"{}\"'".format( __outputImagePath( __imageName ) )
+	]
+)
 
 # Task: the Depth of Field tab, with settings, in the Node Editor
 script["Camera"]["focusDistance"].setValue( 22.0 )
@@ -202,9 +206,9 @@ __dispatchScript(
 	tasks = [ "ImageWriter" ],
 	settings = [
 		"-ImageReader.fileName '\"{}\"'".format( __tempImagePath ),
-		"-ImageWriter.fileName '\"{}\"'".format( os.path.abspath( "images/{}.png".format( __imageName ) ) )
-		]
-	)
+		"-ImageWriter.fileName '\"{}\"'".format( __outputImagePath( __imageName ) )
+	]
+)
 
 # Task: a Camera node's Render Overrides tab in the Node Editor
 script["Camera"]["renderSettingOverrides"]["resolution"]["value"].setValue( imath.V2i( 5120, 2160 ) )
@@ -236,15 +240,15 @@ __nodeEditorWindow.parent().close()
 
 # Example: Anamorphic Camera Setup
 __dispatchScript(
-	script = os.path.abspath( "../../../examples/rendering/anamorphicCameraSetup.gfr" ),
+	script = pathlib.Path( "../../../examples/rendering/anamorphicCameraSetup.gfr" ).absolute().as_posix(),
 	tasks = [ "Render" ],
 	settings = [
-		"-StandardOptions.options.renderResolution.value.x '240'",
-		"-StandardOptions.options.renderResolution.value.y '270'",
-		"-Outputs.outputs.output1.fileName '\"{}\"'".format( os.path.abspath( "images/exampleAnamorphicCameraSetup.png" ) ),
+		"-StandardOptions.options.renderResolution.value.x 240",
+		"-StandardOptions.options.renderResolution.value.y 270",
+		"-Outputs.outputs.output1.fileName '\"{}\"'".format( __outputImagePath( "exampleAnamorphicCameraSetup" ) ),
 		"-Outputs.outputs.output1.type '\"png\"'"
-		]
-	)
+	]
+)
 
 # Example: Spherical Camera Setup in Arnold
 # __dispatchScript(

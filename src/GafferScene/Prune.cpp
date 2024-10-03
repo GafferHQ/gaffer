@@ -137,6 +137,13 @@ Imath::Box3f Prune::computeBound( const ScenePath &path, const Gaffer::Context *
 		{
 			if( inPlug()->childNamesPlug()->getValue()->readable().size() )
 			{
+				// \todo - Note that this may be completely inaccurate if there is an object at this location.
+				// Having objects at locations with children is not common in Gaffer, but it is allowed.
+				// The only real way to solve this would be having separate plugs for storing the bound
+				// of an object at this location, and the bound of the children ( currently, this would be
+				// confusing with childBoundsPlug, which isn't for storing the child bounds in an efficient
+				// way, it's a helper for dynamically computing the child bounds when we can't use the
+				// bound value from upstream ).
 				return outPlug()->childBoundsPlug()->getValue();
 			}
 			else
@@ -234,20 +241,24 @@ void Prune::hashSet( const IECore::InternedString &setName, const Gaffer::Contex
 	FilteredSceneProcessor::hashSet( setName, context, parent, h );
 	inPlug()->setPlug()->hash( h );
 
-	// The sets themselves do not depend on the "scene:path"
-	// context entry - the whole point is that they're global.
-	// However, the PathFilter is dependent on scene:path, so
-	// we must remove the path before hashing in the filter in
-	// case we're computed from multiple contexts with different
-	// paths (from a SetFilter for instance). If we didn't do this,
-	// our different hashes would lead to huge numbers of redundant
-	// calls to computeSet() and a huge overhead in recomputing
-	// the same sets repeatedly.
-	//
-	// See further comments in acceptsInput()
+
 	FilterPlug::SceneScope sceneScope( context, inPlug() );
-	sceneScope.remove( ScenePlug::scenePathContextName );
+
+	// The filter does not depend on which set we're evaluating, remove it
+	// so we don't make separate cache entries.
 	sceneScope.remove( ScenePlug::setNameContextName );
+
+	// We need to get a hash representing the affects of the filter over
+	// the whole scene, which we currently get by hashing the filterPlug
+	// with no path in the context. It actually shouldn't be necessary to
+	// remove it here, because the path should never be in the context when
+	// evalauting a set - but we remove it to ensure that we're getting
+	// the correct hash. Since this could probably only happen if someone
+	// implements a custom C++ node incorrectly, in the future, it might be
+	// reasonable to just throw an exception if the path is in the context
+	// ( perhaps this could be caught in SceneNode::hash ).
+	sceneScope.remove( ScenePlug::scenePathContextName );
+
 	filterPlug()->hash( h );
 }
 

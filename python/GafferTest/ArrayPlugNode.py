@@ -47,7 +47,7 @@ class ArrayPlugNode( Gaffer.Node ) :
 		self.addChild(
 			Gaffer.ArrayPlug(
 				"in",
-				element = Gaffer.IntPlug( "e1", minValue=0, maxValue=10 ),
+				elementPrototype = Gaffer.IntPlug( "e1", minValue=0, maxValue=10 ),
 				maxSize = 6
 			)
 		)

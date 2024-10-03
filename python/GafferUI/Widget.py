@@ -1278,7 +1278,11 @@ class _EventFilter( QtCore.QObject ) :
 				Widget._modifiers( qEvent.modifiers() ),
 			)
 
-			return widget._wheelSignal( widget, event )
+			result = widget._wheelSignal( widget, event )
+			if result :
+				qEvent.accept()
+
+			return result
 
 		return False
 

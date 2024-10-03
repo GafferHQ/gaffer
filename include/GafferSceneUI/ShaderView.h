@@ -56,7 +56,7 @@ class GAFFERSCENEUI_API ShaderView : public GafferImageUI::ImageView
 
 	public :
 
-		explicit ShaderView( const std::string &name = defaultName<ShaderView>() );
+		explicit ShaderView( Gaffer::ScriptNodePtr scriptNode );
 		~ShaderView() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::ShaderView, ShaderViewTypeId, GafferImageUI::ImageView );
@@ -73,8 +73,6 @@ class GAFFERSCENEUI_API ShaderView : public GafferImageUI::ImageView
 
 		using SceneChangedSignal = Gaffer::Signals::Signal<void ( ShaderView * )>;
 		SceneChangedSignal &sceneChangedSignal();
-
-		void setContext( Gaffer::ContextPtr context ) override;
 
 		using RendererCreator = std::function<GafferScene::InteractiveRenderPtr ()>;
 		static void registerRenderer( const std::string &shaderPrefix, RendererCreator rendererCreator );
@@ -95,6 +93,7 @@ class GAFFERSCENEUI_API ShaderView : public GafferImageUI::ImageView
 
 		void viewportVisibilityChanged();
 
+		void contextChanged();
 		void plugSet( Gaffer::Plug *plug );
 		void plugDirtied( Gaffer::Plug *plug );
 		void sceneRegistrationChanged( const PrefixAndName &prefixAndName );

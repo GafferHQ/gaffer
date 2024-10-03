@@ -64,6 +64,14 @@ class UnpremultiplyTest( GafferImageTest.ImageTestCase ) :
 		h2 = unpremult["out"].channelData( "R", imath.V2i( 0 ) ).hash()
 		self.assertNotEqual( h1, h2 )
 
+		unpremult["alphaChannel"].setValue("doesNotExist")
+		with self.assertRaisesRegex( Gaffer.ProcessException, "Channel 'doesNotExist' does not exist" ) :
+			GafferImageTest.processTiles( unpremult["out"] )
+
+		unpremult["ignoreMissingAlpha"].setValue( True )
+		self.assertImagesEqual( unpremult["out"], unpremult["in"] )
+
+
 	def testEnableBehaviour( self ) :
 
 		g = GafferImage.Unpremultiply()

@@ -87,8 +87,8 @@ class NodeSetEditorTest( GafferUITest.TestCase ) :
 			else :
 				signalData['ne2nodeSetMirror'] = d
 
-		ne1.nodeSetChangedSignal().connect( nodeSetChangedCallback, scoped = False )
-		ne2.nodeSetChangedSignal().connect( nodeSetChangedCallback, scoped = False )
+		ne1.nodeSetChangedSignal().connect( nodeSetChangedCallback )
+		ne2.nodeSetChangedSignal().connect( nodeSetChangedCallback )
 
 		ne1.setNodeSet( n1 )
 		ne2.setNodeSet( n2 )

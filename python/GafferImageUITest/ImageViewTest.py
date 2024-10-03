@@ -49,19 +49,20 @@ class ImageViewTest( GafferUITest.TestCase ) :
 
 	def testFactory( self ) :
 
-		image = GafferImage.Constant()
-		view = GafferUI.View.create( image["out"] )
+		script = Gaffer.ScriptNode()
+		script["image"] = GafferImage.Constant()
+		view = GafferUI.View.create( script["image"]["out"] )
 
 		self.assertTrue( isinstance( view, GafferImageUI.ImageView ) )
-		self.assertTrue( view["in"].getInput().isSame( image["out"] ) )
+		self.assertTrue( view["in"].getInput().isSame( script["image"]["out"] ) )
 
 	def testDeriving( self ) :
 
 		class MyView( GafferImageUI.ImageView ) :
 
-			def __init__( self, viewedPlug = None ) :
+			def __init__( self, scriptNode ) :
 
-				GafferImageUI.ImageView.__init__( self, "MyView" )
+				GafferImageUI.ImageView.__init__( self, scriptNode )
 
 				converter = Gaffer.Node()
 				converter["in"] = Gaffer.StringPlug()
@@ -72,22 +73,22 @@ class ImageViewTest( GafferUITest.TestCase ) :
 
 				self._insertConverter( converter )
 
-				self["in"].setInput( viewedPlug )
-
 		GafferUI.View.registerView( GafferTest.StringInOutNode, "out", MyView )
 
-		string = GafferTest.StringInOutNode()
+		script = Gaffer.ScriptNode()
+		script["string"] = GafferTest.StringInOutNode()
 
-		view = GafferUI.View.create( string["out"] )
+		view = GafferUI.View.create( script["string"]["out"] )
 		self.assertTrue( isinstance( view, MyView ) )
-		self.assertTrue( view["in"].getInput().isSame( string["out"] ) )
+		self.assertTrue( view["in"].getInput().isSame( script["string"]["out"] ) )
 		self.assertTrue( isinstance( view["in"], Gaffer.StringPlug ) )
 		view["displayTransform"]["exposure"].setValue( 1 )
 		view["displayTransform"]["gamma"].setValue( 0.5 )
 
 	def testImageGadget( self ) :
 
-		view = GafferImageUI.ImageView()
+		script = Gaffer.ScriptNode()
+		view = GafferImageUI.ImageView( script )
 		self.assertIsInstance( view.imageGadget(), GafferImageUI.ImageGadget )
 		self.assertTrue( view.viewportGadget().isAncestorOf( view.imageGadget() ) )
 

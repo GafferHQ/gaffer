@@ -102,7 +102,7 @@ class _ViewRenderControlUI( GafferUI.Widget ) :
 		self.__view = view
 
 		if isinstance( self.__view["in"], GafferImage.ImagePlug ) :
-			view.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__viewPlugDirtied ), scoped = False )
+			view.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__viewPlugDirtied ) )
 
 		self.__update()
 
@@ -119,7 +119,7 @@ class _ViewRenderControlUI( GafferUI.Widget ) :
 				self.__renderNodePlugDirtiedConnection = renderNode.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__renderNodePlugDirtied ), scoped = True )
 
 			# We disable the controls if a render is in progress, but not being viewed
-			with self.__view.getContext() :
+			with self.__view.context() :
 				renderNodeStopped = statePlug.getValue() == GafferScene.InteractiveRender.State.Stopped
 				viewedImageIsRendering = self.__imageIsRendering( self.__view["in"] )
 				controlsEnabled  = ( viewedImageIsRendering and not renderNodeStopped ) or renderNodeStopped
@@ -141,7 +141,7 @@ class _ViewRenderControlUI( GafferUI.Widget ) :
 		if not isinstance( view["in"], GafferImage.ImagePlug ) :
 			return None
 
-		with view.getContext() :
+		with view.context() :
 			try :
 				renderScene = GafferScene.SceneAlgo.sourceScene( view["in"] )
 			except :
@@ -203,8 +203,8 @@ class _StatePlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__startPauseButton._qtWidget().setFocusPolicy( QtCore.Qt.NoFocus )
 		self.__stopButton._qtWidget().setFocusPolicy( QtCore.Qt.NoFocus )
 
-		self.__startPauseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__startPauseClicked ), scoped = False )
-		self.__stopButton.clickedSignal().connect( Gaffer.WeakMethod( self.__stopClicked ), scoped = False )
+		self.__startPauseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__startPauseClicked ) )
+		self.__stopButton.clickedSignal().connect( Gaffer.WeakMethod( self.__stopClicked ) )
 
 		self.__stateIcons = {
 			GafferScene.InteractiveRender.State.Running : 'renderPause.png',
@@ -228,7 +228,7 @@ class _StatePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __startPauseClicked( self, button ) :
 
-		with self.getContext() :
+		with self.context() :
 			state = self.getPlug().getValue()
 
 		# When setting the plug value here, we deliberately don't use an UndoScope.
@@ -257,7 +257,7 @@ class _MessageSummaryPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.PlugValueWidget.__init__( self, self.__summaryWidget, plug )
 
-		self.__summaryWidget.levelButtonClickedSignal().connect( Gaffer.WeakMethod( self.__levelButtonClicked ), scoped = False )
+		self.__summaryWidget.levelButtonClickedSignal().connect( Gaffer.WeakMethod( self.__levelButtonClicked ) )
 
 	def getToolTip( self ) :
 
@@ -302,8 +302,8 @@ class _MessagesWindow( GafferUI.Window ) :
 		node = plug.node()
 		scriptNode = node.scriptNode()
 		while node and not node.isSame( scriptNode ) :
-			node.nameChangedSignal().connect( Gaffer.WeakMethod( self.__updateTitle ), scoped = False )
-			node.parentChangedSignal().connect( Gaffer.WeakMethod( self.__destroy ), scoped = False )
+			node.nameChangedSignal().connect( Gaffer.WeakMethod( self.__updateTitle ) )
+			node.parentChangedSignal().connect( Gaffer.WeakMethod( self.__destroy ) )
 			node = node.parent()
 
 		self.__updateTitle()

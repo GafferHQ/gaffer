@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,23 +36,51 @@
 
 #pragma once
 
-#include "GafferScene/Render.h"
+#include "GafferSceneUI/Export.h"
+#include "GafferSceneUI/Private/Inspector.h"
 
-namespace GafferScene
+#include "GafferUI/PathColumn.h"
+
+#include "Gaffer/Path.h"
+
+using namespace IECore;
+
+namespace GafferSceneUI
 {
 
-class GAFFERSCENE_API OpenGLRender : public Render
+namespace Private
+{
+
+/// Column type which makes use of an Inspector.
+class GAFFERSCENEUI_API InspectorColumn : public GafferUI::PathColumn
 {
 
 	public :
 
-		explicit OpenGLRender( const std::string &name=defaultName<OpenGLRender>() );
-		~OpenGLRender() override;
+		IE_CORE_DECLAREMEMBERPTR( InspectorColumn )
 
-		GAFFER_NODE_DECLARE_TYPE( GafferScene::OpenGLRender, OpenGLRenderTypeId, Render );
+		InspectorColumn( GafferSceneUI::Private::InspectorPtr inspector, const std::string &label, const std::string &toolTip = "", PathColumn::SizeMode sizeMode = Default );
+		InspectorColumn( GafferSceneUI::Private::InspectorPtr inspector, const CellData &headerData, PathColumn::SizeMode sizeMode = Default );
+
+		/// Returns the inspector used by this column.
+		GafferSceneUI::Private::Inspector *inspector() const;
+
+		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override;
+		CellData headerData( const IECore::Canceller *canceller ) const override;
+
+	private :
+
+		void inspectorDirtied();
+
+		static IECore::ConstStringDataPtr headerValue( const std::string &columnName );
+
+		const Private::InspectorPtr m_inspector;
+		const CellData m_headerData;
 
 };
 
-IE_CORE_DECLAREPTR( OpenGLRender );
+IE_CORE_DECLAREPTR( InspectorColumn )
 
-} // namespace GafferScene
+} // namespace Private
+
+} // namespace GafferSceneUI

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, John Haddon. All rights reserved.
+//  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,18 +34,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferDelight/DelightRender.h"
+#pragma once
 
-using namespace GafferScene;
-using namespace GafferDelight;
-
-GAFFER_NODE_DEFINE_TYPE( DelightRender );
-
-DelightRender::DelightRender( const std::string &name )
-	:	Render( "3Delight", name )
+namespace GafferSceneUIModule
 {
-}
 
-DelightRender::~DelightRender()
-{
-}
+void bindScriptNodeAlgo();
+
+} // namespace GafferSceneUIModule

@@ -196,7 +196,7 @@ class ChildPlugValueWidget( GafferUI.PlugValueWidget ) :
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 ) as header :
 
 				collapseButton = GafferUI.Button( image = "collapsibleArrowRight.png", hasFrame=False )
-				collapseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__collapseButtonClicked ), scoped = False )
+				collapseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__collapseButtonClicked ) )
 
 				GafferUI.PlugValueWidget.create( childPlug["active"] )
 				self.__label = GafferUI.Label( childPlug["name"].getValue() )
@@ -204,14 +204,14 @@ class ChildPlugValueWidget( GafferUI.PlugValueWidget ) :
 				GafferUI.Spacer( imath.V2i( 1 ), maximumSize = imath.V2i( 100000, 1 ), parenting = { "expand" : True } )
 
 				self.__deleteButton = GafferUI.Button( image = "delete.png", hasFrame=False )
-				self.__deleteButton.clickedSignal().connect( Gaffer.WeakMethod( self.__deleteButtonClicked ), scoped = False )
+				self.__deleteButton.clickedSignal().connect( Gaffer.WeakMethod( self.__deleteButtonClicked ) )
 				self.__deleteButton.setVisible( False )
 
 			self.__detailsColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
 			self.__detailsColumn.setVisible( False )
 
-			header.enterSignal().connect( Gaffer.WeakMethod( self.__enter ), scoped = False )
-			header.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ), scoped = False )
+			header.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) )
+			header.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) )
 
 	def hasLabel( self ) :
 

@@ -50,11 +50,12 @@ class ShaderViewTest( GafferUITest.TestCase ) :
 
 	def testFactory( self ) :
 
-		shader = GafferSceneTest.TestShader()
-		shader["type"].setValue( "test:surface" )
-		shader["name"].setValue( "test" )
+		script = Gaffer.ScriptNode()
+		script["shader"] = GafferSceneTest.TestShader()
+		script["shader"]["type"].setValue( "test:surface" )
+		script["shader"]["name"].setValue( "test" )
 
-		view = GafferUI.View.create( shader["out"] )
+		view = GafferUI.View.create( script["shader"]["out"] )
 		self.assertTrue( isinstance( view, GafferSceneUI.ShaderView ) )
 
 	def testRegisterScene( self ) :
@@ -69,11 +70,12 @@ class ShaderViewTest( GafferUITest.TestCase ) :
 
 		GafferSceneUI.ShaderView.registerScene( "test", "Default", TestShaderBall )
 
-		shader = GafferSceneTest.TestShader()
-		shader["type"].setValue( "test:surface" )
-		shader["name"].setValue( "test" )
+		script = Gaffer.ScriptNode()
+		script["shader"] = GafferSceneTest.TestShader()
+		script["shader"]["type"].setValue( "test:surface" )
+		script["shader"]["name"].setValue( "test" )
 
-		view = GafferUI.View.create( shader["out"] )
+		view = GafferUI.View.create( script["shader"]["out"] )
 		self.assertTrue( isinstance( view.scene(), TestShaderBall ) )
 
 	def testRegisterReferenceScene( self ) :
@@ -93,11 +95,12 @@ class ShaderViewTest( GafferUITest.TestCase ) :
 
 		GafferSceneUI.ShaderView.registerScene( "test", "Default", self.temporaryDirectory() / "test.grf" )
 
-		shader = GafferSceneTest.TestShader()
-		shader["type"].setValue( "test:surface" )
-		shader["name"].setValue( "test" )
+		script = Gaffer.ScriptNode()
+		script["shader"] = GafferSceneTest.TestShader()
+		script["shader"]["type"].setValue( "test:surface" )
+		script["shader"]["name"].setValue( "test" )
 
-		view = GafferUI.View.create( shader["out"] )
+		view = GafferUI.View.create( script["shader"]["out"] )
 		self.assertTrue( isinstance( view.scene(), Gaffer.Reference ) )
 		self.assertEqual( view.scene().fileName(), self.temporaryDirectory() / "test.grf" )
 		self.assertEqual( view.scene()["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "cube" ] ) )
@@ -123,26 +126,27 @@ class ShaderViewTest( GafferUITest.TestCase ) :
 		GafferSceneUI.ShaderView.registerScene( "testA", "Default", TestAShaderBall )
 		GafferSceneUI.ShaderView.registerScene( "testB", "Default", TestBShaderBall )
 
-		shaderA = GafferSceneTest.TestShader()
-		shaderA["type"].setValue( "testA:surface" )
-		shaderA["name"].setValue( "test" )
+		script = Gaffer.ScriptNode()
+		script["shaderA"] = GafferSceneTest.TestShader()
+		script["shaderA"]["type"].setValue( "testA:surface" )
+		script["shaderA"]["name"].setValue( "test" )
 
-		shaderB = GafferSceneTest.TestShader()
-		shaderB["type"].setValue( "testB:surface" )
-		shaderB["name"].setValue( "test" )
+		script["shaderB"] = GafferSceneTest.TestShader()
+		script["shaderB"]["type"].setValue( "testB:surface" )
+		script["shaderB"]["name"].setValue( "test" )
 
-		view = GafferUI.View.create( shaderA["out"] )
+		view = GafferUI.View.create( script["shaderA"]["out"] )
 		sceneA = view.scene()
 		self.assertTrue( isinstance( sceneA, TestAShaderBall ) )
 
-		view["in"].setInput( shaderB["out"] )
+		view["in"].setInput( script["shaderB"]["out"] )
 		sceneB = view.scene()
 		self.assertTrue( isinstance( sceneB, TestBShaderBall ) )
 
-		view["in"].setInput( shaderA["out"] )
+		view["in"].setInput( script["shaderA"]["out"] )
 		self.assertTrue( view.scene().isSame( sceneA ) )
 
-		view["in"].setInput( shaderB["out"] )
+		view["in"].setInput( script["shaderB"]["out"] )
 		self.assertTrue( view.scene().isSame( sceneB ) )
 
 	def testChangeScene( self ) :
@@ -150,11 +154,12 @@ class ShaderViewTest( GafferUITest.TestCase ) :
 		GafferSceneUI.ShaderView.registerScene( "sceneTest", "A", GafferScene.ShaderBall )
 		GafferSceneUI.ShaderView.registerScene( "sceneTest", "B", GafferScene.ShaderBall )
 
-		shader = GafferSceneTest.TestShader()
-		shader["type"].setValue( "sceneTest:surface" )
-		shader["name"].setValue( "test" )
+		script = Gaffer.ScriptNode()
+		script["shader"] = GafferSceneTest.TestShader()
+		script["shader"]["type"].setValue( "sceneTest:surface" )
+		script["shader"]["name"].setValue( "test" )
 
-		view = GafferUI.View.create( shader["out"] )
+		view = GafferUI.View.create( script["shader"]["out"] )
 		view["scene"].setValue( "A" )
 
 		sceneA = view.scene()
@@ -176,11 +181,12 @@ class ShaderViewTest( GafferUITest.TestCase ) :
 
 		GafferSceneUI.ShaderView.registerScene( "test", "Default", functools.partial( shaderBallCreator, 16 ) )
 
-		shader = GafferSceneTest.TestShader()
-		shader["type"].setValue( "test:surface" )
-		shader["name"].setValue( "test" )
+		script = Gaffer.ScriptNode()
+		script["shader"] = GafferSceneTest.TestShader()
+		script["shader"]["type"].setValue( "test:surface" )
+		script["shader"]["name"].setValue( "test" )
 
-		view = GafferUI.View.create( shader["out"] )
+		view = GafferUI.View.create( script["shader"]["out"] )
 		scene1 = view.scene()
 		self.assertEqual( view.scene()["resolution"].getValue(), 16 )
 
@@ -197,20 +203,23 @@ class ShaderViewTest( GafferUITest.TestCase ) :
 
 	def testCannotViewCatalogue( self ) :
 
-		view = GafferSceneUI.ShaderView()
-		catalogue = GafferImage.Catalogue()
-		self.assertFalse( view["in"].acceptsInput( catalogue["out"] ) )
+		script = Gaffer.ScriptNode()
+		script["catalogue"] = GafferImage.Catalogue()
+
+		view = GafferSceneUI.ShaderView( script )
+		self.assertFalse( view["in"].acceptsInput( script["catalogue"]["out"] ) )
 
 	def testCannotViewSceneSwitch( self ) :
 
-		view = GafferSceneUI.ShaderView()
+		script = Gaffer.ScriptNode()
+		script["sphere"] = GafferScene.Sphere()
+		script["switch"] = Gaffer.Switch()
+		script["switch"].setup( script["sphere"]["out"] )
 
-		sphere = GafferScene.Sphere()
-		switch = Gaffer.Switch()
-		switch.setup( sphere["out"] )
+		view = GafferSceneUI.ShaderView( script )
 
-		self.assertFalse( view["in"].acceptsInput( sphere["out"] ) )
-		self.assertFalse( view["in"].acceptsInput( switch["out"] ) )
+		self.assertFalse( view["in"].acceptsInput( script["sphere"]["out"] ) )
+		self.assertFalse( view["in"].acceptsInput( script["switch"]["out"] ) )
 
 if __name__ == "__main__":
 	unittest.main()

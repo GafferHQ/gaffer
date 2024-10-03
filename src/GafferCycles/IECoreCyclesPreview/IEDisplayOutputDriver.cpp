@@ -48,11 +48,9 @@ IECORE_POP_DEFAULT_VISIBILITY
 namespace IECoreCycles
 {
 
-IEDisplayOutputDriver::IEDisplayOutputDriver( const Imath::Box2i &displayWindow, const Imath::Box2i &dataWindow, IECore::ConstCompoundDataPtr parameters )
+IEDisplayOutputDriver::IEDisplayOutputDriver( const Imath::Box2i &displayWindow, const Imath::Box2i &dataWindow, const IECore::CompoundDataMap &layers )
 	:	m_dataWindow( dataWindow )
 {
-	const IECore::CompoundData *layersData = parameters->member<IECore::CompoundData>( "layers", true );
-	const IECore::CompoundDataMap &layers = layersData->readable();
 	const ccl::NodeEnum &typeEnum = *ccl::Pass::get_type_enum();
 
 	for( IECore::CompoundDataMap::const_iterator it = layers.begin(), eIt = layers.end(); it != eIt; ++it )

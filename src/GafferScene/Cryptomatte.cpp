@@ -344,7 +344,7 @@ Cryptomatte::Cryptomatte( const std::string &name )
 	addChild( new FloatVectorDataPlug( "__matteValues", Gaffer::Plug::Out, new FloatVectorData() ) );
 	addChild( new AtomicCompoundDataPlug( "__manifest", Gaffer::Plug::Out, new CompoundData() ) );
 	addChild( new PathMatcherDataPlug( "__manifestPaths", Gaffer::Plug::Out, new PathMatcherData ) );
-	addChild( new ScenePlug( "__manifestScene", Gaffer::Plug::Out ) );
+	addChild( new ScenePlug( "manifestScene", Gaffer::Plug::Out ) );
 	addChild( new FloatVectorDataPlug( "__matteChannelData", Gaffer::Plug::Out, GafferImage::ImagePlug::blackTile() ) );
 
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );

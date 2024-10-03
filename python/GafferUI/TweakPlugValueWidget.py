@@ -47,11 +47,7 @@ from Qt import QtWidgets
 
 # Widget for TweakPlug, which is used to build tweak nodes such as ShaderTweaks
 # and CameraTweaks.  Shows a value plug that you can use to specify a tweak value, along with
-# a target parameter name, an enabled plug, and a mode.  The mode can be "Replace",
-# or "Add"/"Subtract"/"Multiply"/"Min"/"Max" if the plug is numeric,
-# or "ListAppend"/"ListPrepend"/"ListRemove" if the plug is a list or `PathMatcherPlug`,
-# or "Remove" if the metadata "tweakPlugValueWidget:allowRemove" is set,
-# or "Create" and "CreateIfMissing" if the metadata "tweakPlugValueWidget:allowCreate" is set.
+# a target parameter name, an enabled plug, and a mode.
 class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plugs ) :
@@ -150,11 +146,20 @@ GafferUI.PlugValueWidget.registerType( Gaffer.TweakPlug, TweakPlugValueWidget )
 # Metadata
 
 Gaffer.Metadata.registerValue( Gaffer.TweakPlug, "deletable", lambda plug : plug.getFlags( Gaffer.Plug.Flags.Dynamic ) )
+Gaffer.Metadata.registerValue( Gaffer.TweakPlug, "tweakPlugValueWidget:propertyType:promotable", False )
+
+def __propertyType( plug ) :
+
+	source = Gaffer.PlugAlgo.findDestination(
+		plug,
+		lambda p : p if Gaffer.Metadata.value( p.parent(), "tweakPlugValueWidget:propertyType" ) else None
+	) or plug
+
+	return Gaffer.Metadata.value( source.parent(), "tweakPlugValueWidget:propertyType" ) or "property"
 
 def __nameDescription( plug ) :
 
-	property = Gaffer.Metadata.value( plug.parent(), "tweakPlugValueWidget:propertyType" ) or "property"
-	return f"The name of the {property} to apply the tweak to."
+	return f"The name of the {__propertyType( plug )} to apply the tweak to."
 
 Gaffer.Metadata.registerValue( Gaffer.TweakPlug, "name", "description", __nameDescription )
 
@@ -165,11 +170,13 @@ Gaffer.Metadata.registerValue(
 
 def __validModes( plug ) :
 
-	result = []
-	if Gaffer.Metadata.value( plug.parent(), "tweakPlugValueWidget:allowCreate" ) :
-		result += [ Gaffer.TweakPlug.Mode.Create, Gaffer.TweakPlug.Mode.CreateIfMissing ]
+	result = [
+		Gaffer.TweakPlug.Mode.Create,
+		Gaffer.TweakPlug.Mode.CreateIfMissing,
+		Gaffer.TweakPlug.Mode.Replace,
+		Gaffer.TweakPlug.Mode.Remove,
+	]
 
-	result += [ Gaffer.TweakPlug.Mode.Replace ]
 	if hasattr( plug.parent()["value"], "hasMinValue" ) :
 		result += [
 			Gaffer.TweakPlug.Mode.Add,
@@ -200,9 +207,6 @@ def __validModes( plug ) :
 			Gaffer.TweakPlug.Mode.ListPrepend,
 			Gaffer.TweakPlug.Mode.ListRemove
 		]
-
-	if Gaffer.Metadata.value( plug.parent(), "tweakPlugValueWidget:allowRemove" ) :
-		result += [ Gaffer.TweakPlug.Mode.Remove ]
 
 	return result
 
@@ -285,7 +289,7 @@ __modeDescriptions = {
 
 def __modeDescription( plug ) :
 
-	property = Gaffer.Metadata.value( plug.parent(), "tweakPlugValueWidget:propertyType" ) or "property"
+	property = __propertyType( plug )
 
 	result =  "| Mode | Description |\n"
 	result += "| :--- | :---------- |\n"

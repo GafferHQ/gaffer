@@ -59,8 +59,8 @@ class MenuBar( GafferUI.Widget ) :
 		self.__shortcutEventFilter = None
 		self.definition = definition
 
-		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
-		self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ), scoped = False )
+		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
+		self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ) )
 		self.__setupShortcutEventFilter()
 
 	## Adds a listener to the supplied gaffer widget to action any menu items

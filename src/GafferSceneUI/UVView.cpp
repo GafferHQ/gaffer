@@ -36,8 +36,8 @@
 
 #include "GafferSceneUI/UVView.h"
 
-#include "GafferSceneUI/ContextAlgo.h"
 #include "GafferSceneUI/SceneGadget.h"
+#include "GafferSceneUI/ScriptNodeAlgo.h"
 
 #include "GafferScene/Isolate.h"
 #include "GafferScene/PathFilter.h"
@@ -56,6 +56,7 @@
 #include "GafferUI/Style.h"
 #include "GafferUI/ViewportGadget.h"
 
+#include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECore/Math.h"
@@ -574,8 +575,8 @@ static InternedString g_gridGadgetName( "gridGadget" );
 
 GAFFER_NODE_DEFINE_TYPE( UVView )
 
-UVView::UVView( const std::string &name )
-	:	View( name, new ScenePlug ), m_textureGadgetsDirty( true ), m_framed( false )
+UVView::UVView( Gaffer::ScriptNodePtr scriptNode )
+	:	View( defaultName<UVView>(), scriptNode, new ScenePlug ), m_textureGadgetsDirty( true ), m_framed( false )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -598,7 +599,7 @@ UVView::UVView( const std::string &name )
 
 	viewportGadget()->setPrimaryChild( new SceneGadget() );
 	sceneGadget()->setScene( uvScene()->outPlug() );
-	sceneGadget()->setContext( getContext() );
+	sceneGadget()->setContext( context() );
 	CompoundObjectPtr openGLOptions = sceneGadget()->getOpenGLOptions()->copy();
 	openGLOptions->members()["gl:curvesPrimitive:useGLLines"] = new BoolData( true );
 	openGLOptions->members()["gl:primitive:solid"] = new BoolData( false );
@@ -609,9 +610,11 @@ UVView::UVView( const std::string &name )
 	sceneGadget()->setLayer( Gadget::Layer::MidFront );
 	sceneGadget()->stateChangedSignal().connect( [this]( SceneGadget *g ) { this->gadgetStateChanged( g, g->state() == SceneGadget::Running ); } );
 
+	contextChangedSignal().connect( boost::bind( &UVView::contextChanged, this ) );
 	plugDirtiedSignal().connect( boost::bind( &UVView::plugDirtied, this, ::_1 ) );
 	viewportGadget()->preRenderSignal().connect( boost::bind( &UVView::preRender, this ) );
 	viewportGadget()->visibilityChangedSignal().connect( boost::bind( &UVView::visibilityChanged, this ) );
+	ScriptNodeAlgo::selectedPathsChangedSignal( scriptNode.get() ).connect( boost::bind( &UVView::selectedPathsChanged, this ) );
 }
 
 UVView::~UVView()
@@ -619,27 +622,6 @@ UVView::~UVView()
 	// Make sure background task completes before anything
 	// it relies on is destroyed.
 	m_texturesTask.reset();
-}
-
-void UVView::setContext( Gaffer::ContextPtr context )
-{
-	View::setContext( context );
-	sceneGadget()->setContext( context );
-	for( TextureGadgetIterator it( textureGadgets() ); !it.done(); ++it )
-	{
-		(*it)->imageGadget()->setContext( context );
-	}
-}
-
-void UVView::contextChanged( const IECore::InternedString &name )
-{
-	if( ContextAlgo::affectsSelectedPaths( name ) )
-	{
-		const PathMatcher paths = ContextAlgo::getSelectedPaths( getContext() );
-		StringVectorDataPtr data = new StringVectorData;
-		paths.paths( data->writable() );
-		uvScene()->visiblePathsPlug()->setValue( data );
-	}
 }
 
 // We're accessing plugs by name rather than by index to allow for
@@ -745,6 +727,15 @@ const GafferUI::Gadget *UVView::textureGadgets() const
 	return viewportGadget()->getChild<Gadget>( g_textureGadgetsName );
 }
 
+void UVView::contextChanged()
+{
+	sceneGadget()->setContext( context() );
+	for( TextureGadgetIterator it( textureGadgets() ); !it.done(); ++it )
+	{
+		(*it)->imageGadget()->setContext( context() );
+	}
+}
+
 void UVView::plugDirtied( const Gaffer::Plug *plug )
 {
 	if( plug == texturesPlug() )
@@ -775,7 +766,7 @@ void UVView::preRender()
 		}
 	}
 
-	Context::Scope scopedContext( getContext() );
+	Context::Scope scopedContext( context() );
 	m_texturesTask = ParallelAlgo::callOnBackgroundThread(
 		// Subject
 		texturesPlug(),
@@ -806,6 +797,14 @@ void UVView::visibilityChanged()
 	}
 }
 
+void UVView::selectedPathsChanged()
+{
+	const PathMatcher paths = ScriptNodeAlgo::getSelectedPaths( scriptNode() );
+	StringVectorDataPtr data = new StringVectorData;
+	paths.paths( data->writable() );
+	uvScene()->visiblePathsPlug()->setValue( data );
+}
+
 void UVView::updateTextureGadgets( const IECore::ConstCompoundObjectPtr &textures )
 {
 	m_textureGadgetsDirty = false;
@@ -819,7 +818,7 @@ void UVView::updateTextureGadgets( const IECore::ConstCompoundObjectPtr &texture
 		if( !textureGadget )
 		{
 			TextureGadgetPtr g = new TextureGadget();
-			g->imageGadget()->setContext( this->getContext() );
+			g->imageGadget()->setContext( context() );
 			textureGadgets()->setChild( gadgetName, g );
 			textureGadget = g.get();
 

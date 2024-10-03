@@ -145,8 +145,8 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 
 		self.__curveList._qtWidget().setMinimumSize( 160, 0 )
 		self.__curveList._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Ignored )
-		self.__curveList.expansionChangedSignal().connect( Gaffer.WeakMethod( self.__updateGadgetSets ), scoped = False )
-		self.__selectionChangedConnection = self.__curveList.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__updateGadgetSets ), scoped = False )
+		self.__curveList.expansionChangedSignal().connect( Gaffer.WeakMethod( self.__updateGadgetSets ) )
+		self.__selectionChangedConnection = self.__curveList.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__updateGadgetSets ) )
 
 		# Set up the widget responsible for actual curve drawing
 		self.__animationGadget = GafferUI.AnimationGadget()
@@ -154,8 +154,8 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		# Set up signals needed to update selection state in PathListingWidget
 		editable = self.__animationGadget.editablePlugs()
 		self.__editablePlugsConnections = [
-			editable.memberAddedSignal().connect( Gaffer.WeakMethod( self.__editablePlugAdded ), scoped = False ),
-			editable.memberRemovedSignal().connect( Gaffer.WeakMethod( self.__editablePlugRemoved ), scoped = False )
+			editable.memberAddedSignal().connect( Gaffer.WeakMethod( self.__editablePlugAdded ) ),
+			editable.memberRemovedSignal().connect( Gaffer.WeakMethod( self.__editablePlugRemoved ) )
 		]
 
 		self.__gadgetWidget = GafferUI.GadgetWidget()
@@ -197,7 +197,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		self.__gadgetWidget.getViewportGadget().frame( bound )
 
 		# connect context menu for animation gadget
-		self.__gadgetWidget.contextMenuSignal().connect( Gaffer.WeakMethod( self.__animationGadgetContextMenu ), scoped = False )
+		self.__gadgetWidget.contextMenuSignal().connect( Gaffer.WeakMethod( self.__animationGadgetContextMenu ) )
 
 	def _updateFromSet( self ) :
 
@@ -224,7 +224,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 
 	def _updateFromContext( self, modifiedItems ) :
 
-		self.__animationGadget.setContext( self.getContext() )
+		self.__animationGadget.setContext( self.context() )
 
 	def __updateGadgetSets( self, unused = None ) :
 
@@ -427,13 +427,13 @@ class _CurveEditor( GafferUI.TabbedContainer ) :
 
 		# set up signals
 		self.__curveGadget.selectedKeys().memberAddedSignal().connect(
-			Gaffer.WeakMethod( self.__selectedKeysKeyAdded ), scoped = False )
+			Gaffer.WeakMethod( self.__selectedKeysKeyAdded ) )
 		self.__curveGadget.selectedKeys().memberRemovedSignal().connect(
-			Gaffer.WeakMethod( self.__selectedKeysKeyRemoved ), scoped = False )
+			Gaffer.WeakMethod( self.__selectedKeysKeyRemoved ) )
 		self.__curveGadget.editablePlugs().memberAddedSignal().connect(
-			Gaffer.WeakMethod( self.__curveSelected ), scoped = False ),
+			Gaffer.WeakMethod( self.__curveSelected ) ),
 		self.__curveGadget.editablePlugs().memberRemovedSignal().connect(
-			Gaffer.WeakMethod( self.__curveDeselected ), scoped = False )
+			Gaffer.WeakMethod( self.__curveDeselected ) )
 
 		# update all tabs
 		for tab in self :
@@ -543,19 +543,19 @@ class _KeyWidget( GafferUI.GridContainer ) :
 
 		# setup editor connections
 		self.__frameConnection = self.__frameEditor.valueChangedSignal().connect(
-			Gaffer.WeakMethod( self.__setFrame ), scoped = False )
+			Gaffer.WeakMethod( self.__setFrame ) )
 		self.__valueConnection = self.__valueEditor.valueChangedSignal().connect(
-			Gaffer.WeakMethod( self.__setValue ), scoped = False )
+			Gaffer.WeakMethod( self.__setValue ) )
 		self.__slopeConnection = (
 			self.__slopeEditor[ Gaffer.Animation.Direction.In ].valueChangedSignal().connect(
-				functools.partial( Gaffer.WeakMethod( self.__setSlope ), Gaffer.Animation.Direction.In ), scoped = False ),
+				functools.partial( Gaffer.WeakMethod( self.__setSlope ), Gaffer.Animation.Direction.In ) ),
 			self.__slopeEditor[ Gaffer.Animation.Direction.Out ].valueChangedSignal().connect(
-				functools.partial( Gaffer.WeakMethod( self.__setSlope ), Gaffer.Animation.Direction.Out ), scoped = False ) )
+				functools.partial( Gaffer.WeakMethod( self.__setSlope ), Gaffer.Animation.Direction.Out ) ) )
 		self.__scaleConnection = (
 			self.__scaleEditor[ Gaffer.Animation.Direction.In ].valueChangedSignal().connect(
-				functools.partial( Gaffer.WeakMethod( self.__setScale ), Gaffer.Animation.Direction.In ), scoped = False ),
+				functools.partial( Gaffer.WeakMethod( self.__setScale ), Gaffer.Animation.Direction.In ) ),
 			self.__scaleEditor[ Gaffer.Animation.Direction.Out ].valueChangedSignal().connect(
-				functools.partial( Gaffer.WeakMethod( self.__setScale ), Gaffer.Animation.Direction.Out ), scoped = False ) )
+				functools.partial( Gaffer.WeakMethod( self.__setScale ), Gaffer.Animation.Direction.Out ) ) )
 
 		# layout widgets
 		alignment = ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center )
@@ -594,11 +594,11 @@ class _KeyWidget( GafferUI.GridContainer ) :
 	def connect( self, curve ) :
 		if curve not in self.__connections :
 			self.__connections[ curve ] = _KeyWidget.Connections(
-				frame = curve.keyTimeChangedSignal().connect( Gaffer.WeakMethod( self.__keyFrameChanged ), scoped = False ),
-				value = curve.keyValueChangedSignal().connect( Gaffer.WeakMethod( self.__keyValueChanged ), scoped = False ),
-				interpolation = curve.keyInterpolationChangedSignal().connect( Gaffer.WeakMethod( self.__keyInterpolationChanged ), scoped = False ),
-				tieMode = curve.keyTieModeChangedSignal().connect( Gaffer.WeakMethod( self.__keyTieModeChanged ), scoped = False ),
-				tangent = curve.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__keyTangentChanged ), scoped = False ) )
+				frame = curve.keyTimeChangedSignal().connect( Gaffer.WeakMethod( self.__keyFrameChanged ) ),
+				value = curve.keyValueChangedSignal().connect( Gaffer.WeakMethod( self.__keyValueChanged ) ),
+				interpolation = curve.keyInterpolationChangedSignal().connect( Gaffer.WeakMethod( self.__keyInterpolationChanged ) ),
+				tieMode = curve.keyTieModeChangedSignal().connect( Gaffer.WeakMethod( self.__keyTieModeChanged ) ),
+				tangent = curve.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__keyTangentChanged ) ) )
 
 	def disconnect( self, curve ) :
 		if curve in self.__connections :
@@ -954,7 +954,7 @@ class _CurveWidget( GafferUI.GridContainer ) :
 	def connect( self, curve ) :
 		if curve not in self.__connections :
 			self.__connections[ curve ] = _CurveWidget.Connections(
-				extrapolation = curve.extrapolationChangedSignal().connect( Gaffer.WeakMethod( self.__extrapolationChanged ), scoped = False ) )
+				extrapolation = curve.extrapolationChangedSignal().connect( Gaffer.WeakMethod( self.__extrapolationChanged ) ) )
 
 	def disconnect( self, curve ) :
 		if curve in self.__connections :

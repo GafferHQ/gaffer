@@ -129,12 +129,13 @@ namespace IECoreArnold
 namespace ShapeAlgo
 {
 
-void convertP( const IECoreScene::Primitive *primitive, AtNode *shape, const AtString name )
+void convertP( const IECoreScene::Primitive *primitive, AtNode *shape, const AtString name, const std::string &messageContext )
 {
 	const V3fVectorData *p = primitive->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 	if( !p )
 	{
-		throw Exception( "Primitive does not have \"P\" primitive variable of interpolation type Vertex." );
+		IECore::msg( IECore::Msg::Warning, messageContext, "Primitive does not have \"P\" primitive variable of interpolation type Vertex." );
+		return;
 	}
 
 	AiNodeSetArray(
@@ -144,7 +145,7 @@ void convertP( const IECoreScene::Primitive *primitive, AtNode *shape, const AtS
 	);
 }
 
-void convertP( const std::vector<const IECoreScene::Primitive *> &samples, AtNode *shape, const AtString name )
+void convertP( const std::vector<const IECoreScene::Primitive *> &samples, AtNode *shape, const AtString name, const std::string &messageContext )
 {
 	vector<const Data *> dataSamples;
 	dataSamples.reserve( samples.size() );
@@ -154,7 +155,8 @@ void convertP( const std::vector<const IECoreScene::Primitive *> &samples, AtNod
 		const V3fVectorData *p = (*it)->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 		if( !p )
 		{
-			throw Exception( "Primitive does not have \"P\" primitive variable of interpolation type Vertex." );
+			IECore::msg( IECore::Msg::Warning, messageContext, "Primitive does not have \"P\" primitive variable of interpolation type Vertex." );
+			return;
 		}
 		dataSamples.push_back( p );
 	}
@@ -163,7 +165,7 @@ void convertP( const std::vector<const IECoreScene::Primitive *> &samples, AtNod
 	AiNodeSetArray( shape, name, array );
 }
 
-void convertRadius( const IECoreScene::Primitive *primitive, AtNode *shape )
+void convertRadius( const IECoreScene::Primitive *primitive, AtNode *shape, const std::string &messageContext )
 {
 	ConstFloatVectorDataPtr r = radius( primitive );
 
@@ -174,7 +176,7 @@ void convertRadius( const IECoreScene::Primitive *primitive, AtNode *shape )
 	);
 }
 
-void convertRadius( const std::vector<const IECoreScene::Primitive *> &samples, AtNode *shape )
+void convertRadius( const std::vector<const IECoreScene::Primitive *> &samples, AtNode *shape, const std::string &messageContext )
 {
 	vector<ConstFloatVectorDataPtr> radiusSamples; // for ownership
 	vector<const Data *> dataSamples; // for passing to dataToArray()
@@ -192,7 +194,7 @@ void convertRadius( const std::vector<const IECoreScene::Primitive *> &samples, 
 	AiNodeSetArray( shape, g_radiusArnoldString, array );
 }
 
-void convertPrimitiveVariable( const IECoreScene::Primitive *primitive, const PrimitiveVariable &primitiveVariable, AtNode *shape, const AtString name )
+void convertPrimitiveVariable( const IECoreScene::Primitive *primitive, const PrimitiveVariable &primitiveVariable, AtNode *shape, const AtString name, const std::string &messageContext )
 {
 	// make sure the primitive variable doesn't clash with built-ins
 	const AtNodeEntry *entry = AiNodeGetNodeEntry( shape );
@@ -200,7 +202,7 @@ void convertPrimitiveVariable( const IECoreScene::Primitive *primitive, const Pr
 	{
 		msg(
 			Msg::Warning,
-			"ShapeAlgo::convertPrimitiveVariable",
+			messageContext,
 			fmt::format( "Primitive variable \"{}\" will be ignored because it clashes with Arnold's built-in parameters", name.c_str() )
 		);
 		return;
@@ -249,7 +251,7 @@ void convertPrimitiveVariable( const IECoreScene::Primitive *primitive, const Pr
 	{
 		msg(
 			Msg::Warning,
-			"ShapeAlgo::convertPrimitiveVariable",
+			messageContext,
 			fmt::format( "Unable to create user parameter \"{}\" because primitive variable has unsupported interpolation", name )
 		);
 		return;
@@ -273,7 +275,7 @@ void convertPrimitiveVariable( const IECoreScene::Primitive *primitive, const Pr
 
 	if( arnoldInterpolation == "constant" )
 	{
-		ParameterAlgo::setParameter( shape, name, primitiveVariable.data.get() );
+		ParameterAlgo::setParameter( shape, name, primitiveVariable.data.get(), messageContext );
 		return;
 	}
 
@@ -285,7 +287,7 @@ void convertPrimitiveVariable( const IECoreScene::Primitive *primitive, const Pr
 	{
 		msg(
 			Msg::Warning,
-			"ShapeAlgo::convertPrimitiveVariable",
+			messageContext,
 			fmt::format( "Unable to create user parameter \"{}\" for primitive variable of type \"{}\"", name, primitiveVariable.data->typeName() )
 		);
 		return;
@@ -342,12 +344,12 @@ void convertPrimitiveVariable( const IECoreScene::Primitive *primitive, const Pr
 
 	msg(
 		Msg::Warning,
-		"ShapeAlgo::convertPrimitiveVariable",
+		messageContext,
 		fmt::format( "Failed to create array for parameter \"{}\" from data of type \"{}\"", name, primitiveVariable.data->typeName() )
 	);
 }
 
-void convertPrimitiveVariables( const IECoreScene::Primitive *primitive, AtNode *shape, const char **namesToIgnore )
+void convertPrimitiveVariables( const IECoreScene::Primitive *primitive, AtNode *shape, const char **namesToIgnore, const std::string &messageContext )
 {
 	for( PrimitiveVariableMap::const_iterator it = primitive->variables.begin(), eIt = primitive->variables.end(); it!=eIt; it++ )
 	{
@@ -368,7 +370,7 @@ void convertPrimitiveVariables( const IECoreScene::Primitive *primitive, AtNode 
 			}
 		}
 
-		convertPrimitiveVariable( primitive, it->second, shape, AtString( it->first.c_str() ) );
+		convertPrimitiveVariable( primitive, it->second, shape, AtString( it->first.c_str() ), messageContext );
 	}
 }
 

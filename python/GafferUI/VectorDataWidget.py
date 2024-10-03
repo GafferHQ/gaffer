@@ -111,6 +111,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__tableView.customContextMenuRequested.connect( Gaffer.WeakMethod( self.__contextMenu ) )
 
 		self.__tableView.verticalHeader().setDefaultSectionSize( 20 )
+		self.__tableView.setWordWrap( False )
 
 		self.__tableViewHolder = GafferUI.Widget( self.__tableView )
 		self.__column.append( self.__tableViewHolder )
@@ -120,11 +121,11 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__buttonRow = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 
 		addButton = GafferUI.Button( image="plus.png", hasFrame=False )
-		addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addRows ), scoped = False )
+		addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addRows ) )
 		self.__buttonRow.append( addButton )
 
 		removeButton = GafferUI.Button( image="minus.png", hasFrame=False )
-		removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeSelection ), scoped = False )
+		removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeSelection ) )
 		self.__buttonRow.append( removeButton )
 
 		self.__buttonRow.append( GafferUI.Spacer( size = imath.V2i( 0 ), maximumSize = imath.V2i( 100000, 1 ) ), expand=1 )
@@ -132,32 +133,32 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		# stuff for drag enter/leave and drop
 
-		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-		addButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-		removeButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
+		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		addButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		removeButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
 
-		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
-		addButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
-		removeButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
+		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
+		addButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
+		removeButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
 
-		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ), scoped = False )
-		addButton.dropSignal().connect( Gaffer.WeakMethod( self.__drop ), scoped = False )
-		removeButton.dropSignal().connect( Gaffer.WeakMethod( self.__drop ), scoped = False )
+		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
+		addButton.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
+		removeButton.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 		self.__dragPointer = "values"
 
 		# stuff for drag begin
 
 		self.__borrowedButtonPress = None
 		self.__emittingButtonPress = False
-		self.__tableViewHolder.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
-		self.__tableViewHolder.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
-		self.__tableViewHolder.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ), scoped = False )
-		self.__tableViewHolder.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
-		self.__tableViewHolder.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
+		self.__tableViewHolder.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.__tableViewHolder.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
+		self.__tableViewHolder.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ) )
+		self.__tableViewHolder.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
+		self.__tableViewHolder.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
 
 		# key handling
 
-		self.__tableViewHolder.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
+		self.__tableViewHolder.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
 		# popup menu for data
 
@@ -1484,7 +1485,7 @@ class _ColorDelegate( _Delegate ) :
 			self.__colorChooser = GafferUI.ColorChooser( value )
 			self.__popup = GafferUI.PopupWindow( "", child = self.__colorChooser )
 
-			self.__popup.popup()
+			self.__popup.popup( parent = self )
 
 			return self.__popup
 

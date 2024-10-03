@@ -502,4 +502,4 @@ def __parameterPopupMenu( menuDefinition, parameterValueWidget ) :
 	menuDefinition.append( "/Load Preset...", { "command" : IECore.curry( __loadPreset, parameterHandler ), "active" : editable } )
 	menuDefinition.append( "/Delete Presets...", { "command" : IECore.curry( __deletePresets, parameterHandler ) } )
 
-GafferCortexUI.ParameterValueWidget.popupMenuSignal().connect( __parameterPopupMenu, scoped = False )
+GafferCortexUI.ParameterValueWidget.popupMenuSignal().connect( __parameterPopupMenu )

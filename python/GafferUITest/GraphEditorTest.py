@@ -102,7 +102,7 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 
 		def titleChangedHandler( widget ) :
 			self.__signalUpdatedTitle = widget.getTitle()
-		g.titleChangedSignal().connect( titleChangedHandler, scoped = False )
+		g.titleChangedSignal().connect( titleChangedHandler )
 
 		g.graphGadget().setRoot( b1 )
 		self.assertEqual( self.__signalUpdatedTitle, "Graph Editor : a" )

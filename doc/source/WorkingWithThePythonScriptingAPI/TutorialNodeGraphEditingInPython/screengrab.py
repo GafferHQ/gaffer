@@ -98,7 +98,7 @@ GafferUI.WidgetAlgo.grab( widget = nodeEditor, imagePath = "images/nodeEditorOpe
 script["Camera"]["transform"]["translate"]["z"].setValue( 8 )
 script.setFocus( script["Camera"] )
 paths = IECore.PathMatcher( [ "/camera" ] )
-GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), paths )
+GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, paths )
 __delay( 0.1 )
 GafferUI.WidgetAlgo.grab( widget = viewer, imagePath = "images/viewerCameraPosition.png" )
 
@@ -125,8 +125,8 @@ GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/graphEditorR
 # Final script in Viewer
 script.setFocus( script["Group"] )
 paths = IECore.PathMatcher( [ "/group" ] )
-GafferSceneUI.ContextAlgo.setExpandedPaths( script.context(), paths )
-GafferSceneUI.ContextAlgo.expandDescendants( script.context(), paths, script["Group"]["out"] )
+GafferSceneUI.ScriptNodeAlgo.setVisibleSet( script, GafferScene.VisibleSet( expansions = paths ) )
+GafferSceneUI.ScriptNodeAlgo.expandDescendantsInVisibleSet( script, paths, script["Group"]["out"] )
 __delay( 0.1 )
 GafferUI.WidgetAlgo.grab( widget = viewer, imagePath = "images/viewerFinalScene.png" )
 

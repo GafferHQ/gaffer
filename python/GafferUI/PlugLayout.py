@@ -109,20 +109,20 @@ class PlugLayout( GafferUI.Widget ) :
 
 		# we need to connect to the childAdded/childRemoved signals on
 		# the parent so we can update the ui when plugs are added and removed.
-		parent.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ), scoped = False )
-		parent.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ), scoped = False )
+		parent.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
+		parent.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
 
 		# since our layout is driven by metadata, we must respond dynamically
 		# to changes in that metadata.
-		Gaffer.Metadata.plugValueChangedSignal( self.__node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False )
+		Gaffer.Metadata.plugValueChangedSignal( self.__node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 		if isinstance( self.__parent, Gaffer.Node ) :
 			Gaffer.Metadata.nodeValueChangedSignal( self.__parent ).connect(
-				Gaffer.WeakMethod( self.__nodeMetadataChanged ), scoped = False
+				Gaffer.WeakMethod( self.__nodeMetadataChanged )
 			)
 
 		# and since our activations are driven by plug values, we must respond
 		# when the plugs are dirtied.
-		self.__node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ), scoped = False )
+		self.__node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
 
 		# frequently events that trigger a ui update come in batches, so we
 		# perform the update lazily using a LazyMethod. the dirty variables
@@ -136,28 +136,16 @@ class PlugLayout( GafferUI.Widget ) :
 		self.__widgets = {}
 		self.__rootSection = _Section( self.__parent )
 
-		# set up an appropriate default context in which to view the plugs.
-		self.setContext( GafferUI.PlugValueWidget._PlugValueWidget__defaultContext( self.__parent ) )
+		# Set up an appropriate context in which to view the plugs.
+		self.__contextTracker = GafferUI.ContextTracker.acquireForFocus( parent )
+		self.__contextTracker.changedSignal( parent ).connect( Gaffer.WeakMethod( self.__contextChanged ) )
 
 		# Build the layout
 		self.__update()
 
-	def getContext( self ) :
+	def context( self ) :
 
-		return self.__context
-
-	## \todo To our knowledge, this has never been useful, and synchronising contexts
-	# between Editor/PlugLayout/PlugValueWidget has only been a pain. Consider
-	# removing it.
-	def setContext( self, context ) :
-
-		self.__context = context
-		self.__contextChangedConnection = self.__context.changedSignal().connect(
-			Gaffer.WeakMethod( self.__contextChanged ), scoped = True
-		)
-
-		for widget in self.__widgets.values() :
-			self.__applyContext( widget, context )
+		return self.__contextTracker.context( self.__parent )
 
 	## Returns a PlugValueWidget representing the specified child plug.
 	def plugValueWidget( self, childPlug ) :
@@ -312,7 +300,7 @@ class PlugLayout( GafferUI.Widget ) :
 
 	def __updateActivations( self ) :
 
-		with self.getContext() :
+		with self.context() :
 			# Must scope the context when getting activators, because they are typically
 			# computed from the plug values, and may therefore trigger a compute.
 			activators = self.__metadataValue( self.__parent, self.__layoutName + ":activators" ) or {}
@@ -330,7 +318,7 @@ class PlugLayout( GafferUI.Widget ) :
 				activatorName = activatorMetadata
 				result = activators.get( activatorName )
 				if result is None :
-					with self.getContext() :
+					with self.context() :
 						metadataName = self.__layoutName + ":activator:" + activatorName
 						result = self.__metadataValue( self.__parent, metadataName )
 						if isinstance( result, str ) :
@@ -353,7 +341,7 @@ class PlugLayout( GafferUI.Widget ) :
 
 	def __updateSummariesWalk( self, section ) :
 
-		with self.getContext() :
+		with self.context() :
 			# Must scope the context because summaries are typically
 			# generated from plug values, and may therefore trigger
 			# a compute.
@@ -427,8 +415,6 @@ class PlugLayout( GafferUI.Widget ) :
 				QWIDGETSIZE_MAX = 16777215 # qt #define not exposed by PyQt or PySide
 				result.labelPlugValueWidget().label()._qtWidget().setFixedWidth( QWIDGETSIZE_MAX )
 
-		self.__applyContext( result, self.getContext() )
-
 		# Store the metadata value that controlled the type created, so we can compare to it
 		# in the future to determine if we can reuse the widget.
 		result.__plugValueWidgetType = Gaffer.Metadata.value( plug, "plugValueWidget:type" )
@@ -441,7 +427,6 @@ class PlugLayout( GafferUI.Widget ) :
 		widgetClass = self.__import( widgetType )
 
 		result = widgetClass( self.__parent )
-		self.__applyContext( result, self.getContext() )
 
 		return result
 
@@ -498,16 +483,6 @@ class PlugLayout( GafferUI.Widget ) :
 		self.__layoutDirty = True
 		self.__updateLazily()
 
-	def __applyContext( self, widget, context ) :
-
-		if hasattr( widget, "setContext" ) :
-			widget.setContext( context )
-		elif isinstance(  widget, GafferUI.PlugWidget ) :
-			widget.labelPlugValueWidget().setContext( context )
-			widget.plugValueWidget().setContext( context )
-		elif hasattr( widget, "plugValueWidget" ) :
-			widget.plugValueWidget().setContext( context )
-
 	def __plugMetadataChanged( self, plug, key, reason ) :
 
 		if plug.parent() == self.__parent :
@@ -549,7 +524,7 @@ class PlugLayout( GafferUI.Widget ) :
 		self.__summariesDirty = True
 		self.__updateLazily()
 
-	def __contextChanged( self, context, name ) :
+	def __contextChanged( self, contextTracker ) :
 
 		self.__activationsDirty = True
 		self.__summariesDirty = True
@@ -651,8 +626,7 @@ class _TabLayout( _Layout ) :
 					self.__tabbedContainer._qtWidget().setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Expanding ) )
 
 		self.__currentTabChangedConnection = self.__tabbedContainer.currentChangedSignal().connect(
-			Gaffer.WeakMethod( self.__currentTabChanged ),
-			scoped = False
+			Gaffer.WeakMethod( self.__currentTabChanged )
 		)
 
 	def update( self, section ) :
@@ -748,8 +722,7 @@ class _CollapsibleLayout( _Layout ) :
 					collapsible.setCollapsed( False )
 
 				collapsible.stateChangedSignal().connect(
-					functools.partial( Gaffer.WeakMethod( self.__collapsibleStateChanged ), subsection = subsection ),
-					scoped = False
+					functools.partial( Gaffer.WeakMethod( self.__collapsibleStateChanged ), subsection = subsection )
 				)
 
 				self.__collapsibles[name] = collapsible

@@ -102,3 +102,6 @@ Gaffer.Metadata.registerValue( "ai:light:photometric_light", "radiusParameter", 
 # Most profiles generally shine down -y
 Gaffer.Metadata.registerValue( "ai:light:photometric_light", "visualiserOrientation", imath.M44f().rotate( imath.V3f( -0.5 * math.pi, 0 , 0 ) ) )
 Gaffer.Metadata.registerValue( "ai:light:photometric_light", "type", "photometric" )
+
+Gaffer.Metadata.registerValue( "ai:lightFilter:filter:light_blocker", "typeParameter", "geometry_type" )
+Gaffer.Metadata.registerValue( "ai:lightFilter:filter:light_blocker", "type", "lightBlocker" )

@@ -150,7 +150,7 @@ class _ContextFooter( GafferUI.Widget ) :
 				toolTip = "Click to add variables",
 			)
 
-			button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ), scoped = False )
+			button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
 
 			GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
 

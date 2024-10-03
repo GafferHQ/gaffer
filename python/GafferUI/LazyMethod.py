@@ -46,6 +46,9 @@ class LazyMethod( object ) :
 
 	__PendingCall = collections.namedtuple( "__PendingCall", [ "args", "kw" ] )
 
+	# Using `deferUntilPlaybackStops` requires that the widget has a
+	# `scriptNode()` method that returns the appropriate ScriptNode from which
+	# to acquire a Playback object.
 	def __init__( self, deferUntilVisible = True, deferUntilIdle = True, deferUntilPlaybackStops = False, replacePendingCalls = True ) :
 
 		self.__deferUntilVisible = deferUntilVisible
@@ -124,14 +127,9 @@ class LazyMethod( object ) :
 	@classmethod
 	def __playback( cls, widget ) :
 
-		context = None
-		with IECore.IgnoredExceptions( AttributeError ) :
-			context = widget.getContext()
-		if context is None :
-			with IECore.IgnoredExceptions( AttributeError ) :
-				context = widget.context()
-
-		return GafferUI.Playback.acquire( context )
+		return GafferUI.Playback.acquire(
+			widget.scriptNode().context()
+		)
 
 	@classmethod
 	def __visibilityChanged( cls, widget, method ) :
@@ -157,7 +155,7 @@ class LazyMethod( object ) :
 	def __idle( cls, widgetWeakref, method ) :
 
 		widget = widgetWeakref()
-		if widget is None :
+		if widget is None or not GafferUI._qtObjectIsValid( widget._qtWidget() ):
 			return
 
 		cls.__doPendingCalls( widget, method )

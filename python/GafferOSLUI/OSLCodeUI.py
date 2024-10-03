@@ -268,8 +268,8 @@ class _CodePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self._addPopupMenu( self.__codeWidget )
 
-		self.__codeWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ), scoped = False )
-		self.__codeWidget.dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ), scoped = False )
+		self.__codeWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ) )
+		self.__codeWidget.dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ) )
 
 	def codeWidget( self ) :
 
@@ -321,8 +321,8 @@ class _ErrorWidget( GafferUI.Widget ) :
 		self.__messageWidget = GafferUI.MessageWidget()
 		GafferUI.Widget.__init__( self, self.__messageWidget, **kw )
 
-		node.errorSignal().connect( Gaffer.WeakMethod( self.__error ), scoped = False )
-		node.shaderCompiledSignal().connect( Gaffer.WeakMethod( self.__shaderCompiled ), scoped = False )
+		node.errorSignal().connect( Gaffer.WeakMethod( self.__error ) )
+		node.shaderCompiledSignal().connect( Gaffer.WeakMethod( self.__shaderCompiled ) )
 
 		self.__messageWidget.setVisible( False )
 
@@ -363,7 +363,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 			},
 		)
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
 
 ##########################################################################
 # NodeEditor tool menu
@@ -396,7 +396,7 @@ def __exportOSLShader( nodeEditor, node ) :
 
 	with GafferUI.ErrorDialogue.ErrorHandler( title = "Error Exporting Shader", parentWindow = nodeEditor.ancestor( GafferUI.Window ) ) :
 		with open( path, "w", encoding = "utf-8" ) as f :
-			with nodeEditor.getContext() :
+			with nodeEditor.context() :
 				f.write( node.source( os.path.splitext( os.path.basename( path ) )[0] ) )
 
-GafferUI.NodeEditor.toolMenuSignal().connect( __toolMenu, scoped = False )
+GafferUI.NodeEditor.toolMenuSignal().connect( __toolMenu )

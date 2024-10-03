@@ -258,4 +258,4 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 		menuDefinition.prepend( "/RandomiseDivider", { "divider" : True } )
 		menuDefinition.prepend( "/Randomise...", item )
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu, scoped = False )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu )

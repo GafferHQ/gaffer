@@ -68,7 +68,7 @@ class PythonEditor( GafferUI.Editor ) :
 		)
 		self.__outputWidget._qtWidget().setObjectName( "gafferPythonEditorOutputWidget" )
 		self.__outputWidget.contextMenuSignal().connect(
-			Gaffer.WeakMethod( self.__contextMenu ), scoped = False
+			Gaffer.WeakMethod( self.__contextMenu )
 		)
 
 		self.__inputWidget = GafferUI.CodeWidget()
@@ -76,10 +76,10 @@ class PythonEditor( GafferUI.Editor ) :
 		self.__splittable.append( self.__outputWidget )
 		self.__splittable.append( self.__inputWidget )
 
-		self.__inputWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ), scoped = False )
-		self.__inputWidget.dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ), scoped = False )
+		self.__inputWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ) )
+		self.__inputWidget.dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ) )
 		self.__inputWidget.contextMenuSignal().connect(
-			Gaffer.WeakMethod( self.__contextMenu ), scoped = False
+			Gaffer.WeakMethod( self.__contextMenu )
 		)
 		GafferUI.WidgetAlgo.joinEdges(
 			[ self.__outputWidget, self.__inputWidget ],
@@ -130,7 +130,7 @@ class PythonEditor( GafferUI.Editor ) :
 		with self.__outputRedirection() :
 			with _MessageHandler( self.__outputWidget ) :
 				with Gaffer.UndoScope( self.scriptNode() ) :
-					with self.getContext() :
+					with self.context() :
 						try :
 							if len( parsed.body ) == 1 and isinstance( parsed.body[0], ast.Expr ) :
 								result = eval( toExecute, self.__executionDict, self.__executionDict )

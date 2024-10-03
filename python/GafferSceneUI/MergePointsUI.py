@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2017, John Haddon. All rights reserved.
+#  Copyright (c) 2024, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,37 +34,26 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
-import GafferDelight
+import GafferUI
+
+import GafferScene
+import GafferSceneUI
+
+##########################################################################
+# Metadata
+##########################################################################
 
 Gaffer.Metadata.registerNode(
 
-	GafferDelight.DelightRender,
+	GafferScene.MergePoints,
 
 	"description",
 	"""
-	Performs offline batch rendering using the
-	3Delight renderer, or optionally generates
-	.nsi files for later rendering using a SystemCommand
-	node.
+	Merge points from all filtered location into a single points primitive, or into
+	multiple destinations.
 	""",
-
-	plugs = {
-
-		"fileName" : [
-
-			"description",
-			"""
-			The name of the .nsi file to be generated when in
-			scene description mode.
-			""",
-
-			"nodule:type", "",
-			"path:bookmarks", "nsi",
-			"fileSystemPath:extensions", "nsi",
-
-		],
-
-	}
 
 )

@@ -39,7 +39,6 @@
 #include "boost/python.hpp"
 
 #include "GafferScene/InteractiveRender.h"
-#include "GafferScene/OpenGLRender.h"
 #include "GafferScene/Private/RendererAlgo.h"
 #include "GafferScene/Render.h"
 
@@ -202,7 +201,5 @@ void GafferSceneModule::bindRender()
 			def( "outputObjects", &outputObjectsWrapper, ( arg( "scene" ), arg( "globals" ), arg( "renderSets" ), arg( "lightLinks" ), arg( "renderer" ), arg( "root" ) = "/" ) );
 		}
 	}
-
-	TaskNodeClass<OpenGLRender>();
 
 }

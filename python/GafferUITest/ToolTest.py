@@ -59,7 +59,8 @@ class ToolTest( GafferUITest.TestCase ) :
 
 		self.assertIn( "TestTool", GafferUI.Tool.registeredTools( GafferUITest.ViewTest.MyView ) )
 
-		view = GafferUITest.ViewTest.MyView()
+		script = Gaffer.ScriptNode()
+		view = GafferUITest.ViewTest.MyView( script )
 		tool = GafferUI.Tool.create( "TestTool", view )
 		self.assertIsInstance( tool, self.TestTool )
 		self.assertIsInstance( tool, GafferUI.Tool )
@@ -72,7 +73,8 @@ class ToolTest( GafferUITest.TestCase ) :
 
 		# When a tool is created, it is automatically parented to the View's
 		# tool container.
-		view1 = GafferUITest.ViewTest.MyView()
+		script = Gaffer.ScriptNode()
+		view1 = GafferUITest.ViewTest.MyView( script )
 		tool = GafferUI.Tool.create( "TestTool", view1 )
 		self.assertTrue( tool.parent().isSame( view1["tools"] ) )
 		self.assertTrue( tool.view().isSame( view1 ) )
@@ -80,7 +82,7 @@ class ToolTest( GafferUITest.TestCase ) :
 
 		# After that, it can't be reparented to another view. This simplifies
 		# tool implementation substantially.
-		view2 = GafferUITest.ViewTest.MyView()
+		view2 = GafferUITest.ViewTest.MyView( script )
 		self.assertFalse( tool.acceptsParent( view2["tools"] ) )
 
 		# Tool containers don't accept any other children.
@@ -88,7 +90,8 @@ class ToolTest( GafferUITest.TestCase ) :
 
 	def testToolOutlivingView( self ) :
 
-		view = GafferUITest.ViewTest.MyView()
+		script = Gaffer.ScriptNode()
+		view = GafferUITest.ViewTest.MyView( script )
 		tool = GafferUI.Tool.create( "TestTool", view )
 		del view
 		while gc.collect() :

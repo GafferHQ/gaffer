@@ -64,6 +64,12 @@ class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 			focusColour.setAlpha( 30 )
 			painter.fillRect( option.rect, focusColour )
 
+		if index.data( _PlugTableModel.ActiveRole ) :
+			pen = QtGui.QPen( QtGui.QColor( 240, 220, 40, 150 ) )
+			pen.setWidth( 2 )
+			painter.setPen( pen )
+			painter.drawLine( option.rect.bottomLeft(), option.rect.bottomRight() )
+
 		if enabled and cellPlugEnabled :
 			return
 

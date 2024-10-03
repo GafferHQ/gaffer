@@ -45,13 +45,11 @@ class ImageInspector( GafferUI.NodeSetEditor ) :
 
 	# Used to hold settings and internal processing network
 	# for the ImageInspector.
-	## \todo Eventually we want `GafferUI.Editor` to derive from Node itself,
-	# in which case we wouldn't need a separate settings object.
 	class Settings( GafferUI.Editor.Settings ) :
 
-		def __init__( self, script ) :
+		def __init__( self ) :
 
-			GafferUI.Editor.Settings.__init__( self, "ImageInspectorSettings", script )
+			GafferUI.Editor.Settings.__init__( self )
 
 			self["in"] = GafferImage.ImagePlug()
 			self["view"] = Gaffer.StringPlug( defaultValue = "default" )
@@ -90,13 +88,10 @@ class ImageInspector( GafferUI.NodeSetEditor ) :
 
 		GafferUI.NodeSetEditor.__init__( self, column, scriptNode, nodeSet = scriptNode.focusSet(), **kw )
 
-		self.__settingsNode = self.Settings( scriptNode )
-		Gaffer.NodeAlgo.applyUserDefaults( self.__settingsNode )
-
 		with column :
 
 			GafferUI.PlugLayout(
-				self.__settingsNode,
+				self.settings(),
 				rootSection = "Settings"
 			)
 
@@ -108,7 +103,7 @@ class ImageInspector( GafferUI.NodeSetEditor ) :
 						GafferUI.PathListingWidget.defaultNameColumn,
 						GafferUI.StandardPathColumn( "Value", "image:value", sizeMode = GafferUI.PathColumn.SizeMode.Stretch )
 					],
-					displayMode = GafferUI.PathListingWidget.DisplayMode.List,
+					displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 					selectionMode = GafferUI.PathListingWidget.SelectionMode.Cell,
 					horizontalScrollMode = GafferUI.ScrollMode.Automatic,
 					sortable = False,
@@ -185,7 +180,7 @@ class ImageInspector( GafferUI.NodeSetEditor ) :
 			if plug is not None :
 				self.__plugParentChangedConnection = plug.parentChangedSignal().connect( Gaffer.WeakMethod( self.__plugParentChanged ), scoped = True )
 
-		self.__settingsNode["in"].setInput( plug )
+		self.settings()["in"].setInput( plug )
 
 		# Call base class update - this will trigger a call to _titleFormat(),
 		# hence the need for already figuring out the image being viewed.
@@ -202,7 +197,7 @@ class ImageInspector( GafferUI.NodeSetEditor ) :
 
 		return GafferUI.NodeSetEditor._titleFormat(
 			self,
-			_maxNodes = 1 if self.__settingsNode["in"].getInput() is not None else 0,
+			_maxNodes = 1 if self.settings()["in"].getInput() is not None else 0,
 			_reverseNodes = True,
 			_ellipsis = False
 		)
@@ -220,15 +215,15 @@ class ImageInspector( GafferUI.NodeSetEditor ) :
 		# lets us defer updates until playback stops, and also provides important
 		# thread-safety, because the PathListingWidget will access the context
 		# on a background thread.
-		context = Gaffer.Context( self.getContext() )
+		context = Gaffer.Context( self.context() )
 		self.__imagePathListing.setPath(
-			_ImagePath( self.scriptNode(), self.__settingsNode["__sampleStats"]["in"], context, "/" ),
+			_ImagePath( self.scriptNode(), self.settings()["__sampleStats"]["in"], context, "/" ),
 		)
 		self.__channelsPathListing.setPath(
-			_ChannelPath( self.scriptNode(), self.__settingsNode["__imageStats"]["in"], context, "/" ),
+			_ChannelPath( self.scriptNode(), self.settings()["__imageStats"]["in"], context, "/" ),
 		)
 		self.__metadataPathListing.setPath(
-			_MetadataPath( self.scriptNode(), self.__settingsNode["__selectView"]["out"], context, "/" ),
+			_MetadataPath( self.scriptNode(), self.settings()["__selectView"]["out"], context, "/" ),
 		)
 
 GafferUI.Editor.registerType( "ImageInspector", ImageInspector )

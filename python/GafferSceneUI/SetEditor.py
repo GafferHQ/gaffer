@@ -42,26 +42,24 @@ import IECore
 import Gaffer
 import GafferScene
 import GafferUI
+import GafferSceneUI
 
-from . import ContextAlgo
 from . import _GafferSceneUI
 
-## \todo Make a SceneEditor base class to encapsulate the logic about what
-# scene to view, and to track the reparenting of the plug.
-class SetEditor( GafferUI.NodeSetEditor ) :
+class SetEditor( GafferSceneUI.SceneEditor ) :
 
 	def __init__( self, scriptNode, **kw ) :
 
 		mainColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4, spacing = 4 )
 
-		GafferUI.NodeSetEditor.__init__( self, mainColumn, scriptNode, nodeSet = scriptNode.focusSet(), **kw )
+		GafferSceneUI.SceneEditor.__init__( self, mainColumn, scriptNode, **kw )
 
 		searchFilter = _GafferSceneUI._SetEditor.SearchFilter()
-		emptySetFilter = _GafferSceneUI._SetEditor.EmptySetFilter()
+		emptySetFilter = _GafferSceneUI._SetEditor.EmptySetFilter( scriptNode )
 		emptySetFilter.userData()["UI"] = { "label" : "Hide Empty Members", "toolTip" : "Hide sets with no members" }
 		emptySetFilter.setEnabled( False )
 
-		emptySelectionFilter = _GafferSceneUI._SetEditor.EmptySetFilter( propertyName = "setPath:selectedMemberCount" )
+		emptySelectionFilter = _GafferSceneUI._SetEditor.EmptySetFilter( scriptNode, useSelection = True )
 		emptySelectionFilter.userData()["UI"] = { "label" : "Hide Empty Selection", "toolTip" : "Hide sets with no selected members or descendants" }
 		emptySelectionFilter.setEnabled( False )
 
@@ -76,9 +74,9 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 				GafferUI.BasicPathFilterWidget( emptySelectionFilter )
 
 			self.__setMembersColumn = _GafferSceneUI._SetEditor.SetMembersColumn()
-			self.__selectedSetMembersColumn = _GafferSceneUI._SetEditor.SetSelectionColumn()
-			self.__includedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetInclusionsColumn( scriptNode.context() )
-			self.__excludedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetExclusionsColumn( scriptNode.context() )
+			self.__selectedSetMembersColumn = _GafferSceneUI._SetEditor.SetSelectionColumn( scriptNode )
+			self.__includedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetInclusionsColumn( scriptNode )
+			self.__excludedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetExclusionsColumn( scriptNode )
 			self.__pathListing = GafferUI.PathListingWidget(
 				Gaffer.DictPath( {}, "/" ), # temp till we make a SetPath
 				columns = [
@@ -92,73 +90,36 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 			)
 
-			self.__pathListing.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
-			self.__pathListing.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenuSignal ), scoped = False )
-			self.__pathListing.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPressSignal ), scoped = False )
+			self.__pathListing.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ) )
+			self.__pathListing.columnContextMenuSignal().connect( Gaffer.WeakMethod( self.__columnContextMenuSignal ) )
+			self.__pathListing.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPressSignal ) )
 
 		self._updateFromSet()
+		self.__updatePathListingPath()
 
 	def __repr__( self ) :
 
 		return "GafferSceneUI.SetEditor( scriptNode )"
 
-	def __firstValidScenePlug( self, node ):
-
-		for plug in GafferScene.ScenePlug.RecursiveOutputRange( node ) :
-			if not plug.getName().startswith( "__" ):
-				return plug
-		return None
-
-	def _updateFromSet( self ) :
-
-		GafferUI.NodeSetEditor._updateFromSet( self )
-
-		# Decide what plug we're viewing.
-		self.__plug = None
-		self.__plugParentChangedConnection = None
-		node = self._lastAddedNode()
-		if node is not None :
-			self.__plug = self.__firstValidScenePlug( node )
-			if self.__plug is not None :
-				self.__plugParentChangedConnection = self.__plug.parentChangedSignal().connect(
-					Gaffer.WeakMethod( self.__plugParentChanged ), scoped = True
-				)
-
-		self.__updatePathListingPath()
-
 	def _updateFromContext( self, modifiedItems ) :
 
-		if any( not i.startswith( "ui:" ) for i in modifiedItems ) or any( ContextAlgo.affectsSelectedPaths( i ) for i in modifiedItems ) :
+		if any( not i.startswith( "ui:" ) for i in modifiedItems ) :
 			self.__updatePathListingPath()
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __updatePathListingPath( self ) :
 
-		if self.__plug is not None :
-			# We take a static copy of our current context for use in the SetPath for two reasons :
-			#
-			# 1. To prevent the PathListing from updating automatically when the original context
-			#    changes, allowing us to use LazyMethod to defer updates until playback stops.
-			# 2. Because the PathListingWidget uses a BackgroundTask to evaluate the Path, and it
-			#    would not be thread-safe to directly reference a context that could be modified by
-			#    the UI thread at any time.
-			contextCopy = Gaffer.Context( self.getContext() )
-			self.__searchFilterWidget.setScene( self.__plug )
-			self.__searchFilterWidget.setContext( contextCopy )
-			self.__pathListing.setPath( _GafferSceneUI._SetEditor.SetPath( self.__plug, contextCopy, "/", filter = self.__filter ) )
-		else :
-			self.__pathListing.setPath( Gaffer.DictPath( {}, "/" ) )
-
-	def _titleFormat( self ) :
-
-		return GafferUI.NodeSetEditor._titleFormat( self, _maxNodes = 1, _reverseNodes = True, _ellipsis = False )
-
-	def __plugParentChanged( self, plug, oldParent ) :
-
-		# if a plug has been removed or moved to another node, then
-		# we need to stop viewing it - _updateFromSet() will find the
-		# next suitable plug from the current node set.
-		self._updateFromSet()
+		# We take a static copy of our current context for use in the SetPath for two reasons :
+		#
+		# 1. To prevent the PathListing from updating automatically when the original context
+		#    changes, allowing us to use LazyMethod to defer updates until playback stops.
+		# 2. Because the PathListingWidget uses a BackgroundTask to evaluate the Path, and it
+		#    would not be thread-safe to directly reference a context that could be modified by
+		#    the UI thread at any time.
+		contextCopy = Gaffer.Context( self.context() )
+		self.__searchFilterWidget.setScene( self.settings()["in"] )
+		self.__searchFilterWidget.setContext( contextCopy )
+		self.__pathListing.setPath( _GafferSceneUI._SetEditor.SetPath( self.settings()["in"], contextCopy, "/", filter = self.__filter ) )
 
 	def __selectedSetNames( self ) :
 
@@ -217,9 +178,7 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 
 		return False
 
-	def __contextMenuSignal( self, widget ) :
-
-		menuDefinition = IECore.MenuDefinition()
+	def __columnContextMenuSignal( self, column, pathListingWidget, menuDefinition ) :
 
 		selection = self.__pathListing.getSelection()
 		selectedSetNames = self.__selectedSetNames()
@@ -250,30 +209,18 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 			}
 		)
 
-		self.__contextMenu = GafferUI.Menu( menuDefinition )
-		self.__contextMenu.popup( widget )
-
-		return True
-
 	def __copySelectedSetNames( self, *unused ) :
 
-		data = IECore.StringVectorData()
-
-		if self.__plug is not None :
-			data.extend( self.__selectedSetNames() )
-
-		self.__plug.ancestor( Gaffer.ApplicationRoot ).setClipboardContents( data )
+		self.scriptNode().ancestor( Gaffer.ApplicationRoot ).setClipboardContents(
+			IECore.StringVectorData( self.__selectedSetNames() )
+		)
 
 	def __getSetMembers( self, setNames, *unused ) :
 
 		result = IECore.PathMatcher()
-
-		if self.__plug is None :
-			return result
-
-		with Gaffer.Context( self.getContext() ) :
+		with Gaffer.Context( self.context() ) :
 			for setName in setNames :
-				result.addPaths( self.__plug.set( setName ).value )
+				result.addPaths( self.settings()["in"].set( setName ).value )
 
 		return result
 
@@ -281,30 +228,26 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 
 		setMembers = self.__getSetMembers( setNames )
 		return IECore.PathMatcher( [
-			p for p in ContextAlgo.getSelectedPaths( self.getContext() ).paths()
+			p for p in GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( self.scriptNode() ).paths()
 			if setMembers.match( p ) & ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch )
 		] )
 
 	def __getIncludedSetMembers( self, setNames, *unused ) :
 
-		return self.__getSetMembers( setNames ).intersection( ContextAlgo.getVisibleSet( self.getContext() ).inclusions )
+		return self.__getSetMembers( setNames ).intersection( GafferSceneUI.ScriptNodeAlgo.getVisibleSet( self.scriptNode() ).inclusions )
 
 	def __getExcludedSetMembers( self, setNames, *unused ) :
 
-		return self.__getSetMembers( setNames ).intersection( ContextAlgo.getVisibleSet( self.getContext() ).exclusions )
+		return self.__getSetMembers( setNames ).intersection( GafferSceneUI.ScriptNodeAlgo.getVisibleSet( self.scriptNode() ).exclusions )
 
 	def __selectSetMembers( self, *unused ) :
 
-		ContextAlgo.setSelectedPaths( self.getContext(), self.__getSetMembers( self.__selectedSetNames() ) )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( self.scriptNode(), self.__getSetMembers( self.__selectedSetNames() ) )
 
 	def __copySetMembers( self, *unused ) :
 
-		data = IECore.StringVectorData()
-
-		if self.__plug is not None :
-			data.extend( self.__getSetMembers( self.__selectedSetNames() ).paths() )
-
-		self.__plug.ancestor( Gaffer.ApplicationRoot ).setClipboardContents( data )
+		data = self.__getSetMembers( self.__selectedSetNames() ).paths()
+		self.scriptNode().ancestor( Gaffer.ApplicationRoot ).setClipboardContents( IECore.StringVectorData( data ) )
 
 GafferUI.Editor.registerType( "SetEditor", SetEditor )
 
@@ -321,10 +264,10 @@ class _SearchFilterWidget( GafferUI.PathFilterWidget ) :
 
 		self.__patternWidget.setPlaceholderText( "Filter..." )
 
-		self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ), scoped = False )
-		self.__patternWidget.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-		self.__patternWidget.dragLeaveSignal().connectFront( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
-		self.__patternWidget.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ), scoped = False )
+		self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ) )
+		self.__patternWidget.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.__patternWidget.dragLeaveSignal().connectFront( Gaffer.WeakMethod( self.__dragLeave ) )
+		self.__patternWidget.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ) )
 
 		self.__context = None
 		self.__scene = None

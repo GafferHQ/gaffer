@@ -84,7 +84,7 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 
 	public :
 
-		explicit ImageView( const std::string &name = defaultName<ImageView>() );
+		explicit ImageView( Gaffer::ScriptNodePtr scriptNode );
 		~ImageView() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImageUI::ImageView, ImageViewTypeId, GafferUI::View );
@@ -108,8 +108,6 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		/// The gadget responsible for displaying the image.
 		ImageGadget *imageGadget();
 		const ImageGadget *imageGadget() const;
-
-		void setContext( Gaffer::ContextPtr context ) override;
 
 		class GAFFERIMAGEUI_API ColorInspectorPlug : public Gaffer::ValuePlug
 		{
@@ -152,6 +150,7 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 
 	private :
 
+		void contextChanged();
 		void plugSet( Gaffer::Plug *plug );
 		bool keyPress( const GafferUI::KeyEvent &event );
 		void preRender();

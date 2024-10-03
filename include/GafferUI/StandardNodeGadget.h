@@ -118,7 +118,7 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 
 		const Imath::Color3f *userColor() const;
 
-		void activeForFocusNode( bool active ) override;
+		void updateFromContextTracker( const ContextTracker *contextTracker ) override;
 
 	private :
 
@@ -158,7 +158,7 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		bool updateUserColor();
 		void updateMinWidth();
 		void updatePadding();
-		void updateNodeEnabled( const Gaffer::Plug *dirtiedPlug = nullptr );
+		void updateStrikeThroughVisibility( const Gaffer::Plug *dirtiedPlug = nullptr );
 		void updateIcon();
 		bool updateShape();
 		void updateFocusGadgetVisibility();
@@ -169,7 +169,8 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		void error( const Gaffer::Plug *plug, const Gaffer::Plug *source, const std::string &message );
 		void displayError( Gaffer::ConstPlugPtr plug, const std::string &message );
 
-		bool m_nodeEnabled;
+		std::optional<bool> m_nodeEnabledInContextTracker;
+		bool m_strikeThroughVisible;
 		bool m_labelsVisibleOnHover;
 		// We accept drags onto the NodeGadget itself and
 		// use them to create a connection to the

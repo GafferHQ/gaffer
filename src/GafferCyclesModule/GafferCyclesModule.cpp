@@ -49,7 +49,6 @@
 #include "GafferCycles/CyclesLight.h"
 #include "GafferCycles/CyclesMeshLight.h"
 #include "GafferCycles/CyclesShader.h"
-#include "GafferCycles/CyclesRender.h"
 #include "GafferCycles/InteractiveCyclesRender.h"
 
 #include "IECore/MessageHandler.h"
@@ -477,7 +476,6 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 	;
 	DependencyNodeClass<CyclesMeshLight>();
 	DependencyNodeClass<CyclesShader>();
-	TaskNodeClass<CyclesRender>();
 	NodeClass<InteractiveCyclesRender>();
 
 	{

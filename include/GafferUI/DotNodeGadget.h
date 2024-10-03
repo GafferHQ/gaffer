@@ -43,6 +43,7 @@
 namespace Gaffer
 {
 
+IE_CORE_FORWARDDECLARE( Context )
 IE_CORE_FORWARDDECLARE( Plug )
 
 } // namespace Gaffer
@@ -65,6 +66,7 @@ class GAFFERUI_API DotNodeGadget : public StandardNodeGadget
 	protected :
 
 		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override;
+		void updateFromContextTracker( const ContextTracker *contextTracker ) override;
 
 	private :
 
@@ -82,6 +84,7 @@ class GAFFERUI_API DotNodeGadget : public StandardNodeGadget
 
 		Gaffer::Signals::ScopedConnection m_upstreamNameChangedConnection;
 
+		Gaffer::ConstContextPtr m_labelContext;
 		std::string m_label;
 		Imath::V2f m_labelPosition;
 

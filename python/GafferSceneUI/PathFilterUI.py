@@ -156,12 +156,12 @@ def _selectAffected( plug, selection ) :
 	scenes = [ s[0] if isinstance( s, Gaffer.ArrayPlug ) else s for s in inPlugs ]
 
 	result = IECore.PathMatcher()
-	context = targetPlug.ancestor( Gaffer.ScriptNode ).context()
-	with context :
+	scriptNode = targetPlug.ancestor( Gaffer.ScriptNode )
+	with scriptNode.context() :
 		for scene in scenes :
 			GafferScene.SceneAlgo.matchingPaths( selection, scene, result )
 
-	GafferSceneUI.ContextAlgo.setSelectedPaths( context, result )
+	GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( scriptNode, result )
 
 class _PathsPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 
@@ -169,7 +169,7 @@ class _PathsPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 
 		GafferUI.VectorDataPlugValueWidget.__init__( self, plug, **kw )
 
-		self.vectorDataWidget().dataMenuSignal().connect( Gaffer.WeakMethod( self.__dataMenu ), scoped = False )
+		self.vectorDataWidget().dataMenuSignal().connect( Gaffer.WeakMethod( self.__dataMenu ) )
 
 	def __dataMenu( self, vectorDataWidget, menuDefinition ) :
 
@@ -204,7 +204,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 	if isinstance( node, Gaffer.Spreadsheet ) :
 		rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
 
-		with plugValueWidget.getContext() :
+		with plugValueWidget.context() :
 			if __targetFilterPlug( plug ) is not None :
 				cellPlug = plug.ancestor( Gaffer.Spreadsheet.CellPlug )
 				if cellPlug is None :
@@ -226,7 +226,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 		}
 	)
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu, scoped = False )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu )
 
 ##########################################################################
 # NodeGadget drop handler
@@ -389,10 +389,10 @@ def __drop( nodeGadget, event ) :
 
 def addObjectDropTarget( nodeGadget ) :
 
-	nodeGadget.dragEnterSignal().connect( __dragEnter, scoped = False )
-	nodeGadget.dragLeaveSignal().connect( __dragLeave, scoped = False )
-	nodeGadget.dragMoveSignal().connect( __dragMove, scoped = False )
-	nodeGadget.dropSignal().connect( __drop, scoped = False )
+	nodeGadget.dragEnterSignal().connect( __dragEnter )
+	nodeGadget.dragLeaveSignal().connect( __dragLeave )
+	nodeGadget.dragMoveSignal().connect( __dragMove )
+	nodeGadget.dropSignal().connect( __drop )
 
 def __nodeGadget( pathFilter ) :
 

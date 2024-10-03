@@ -47,6 +47,7 @@
 #include "IECorePython/RefCountedBinding.h"
 #include "IECorePython/ScopedGILLock.h"
 
+#include "boost/mpl/vector.hpp"
 #include "boost/python/suite/indexing/container_utils.hpp"
 
 using namespace boost::python;
@@ -70,13 +71,15 @@ class PathListingWidgetAccessor : public GafferUI::PathListingWidget
 	public :
 
 		PathListingWidgetAccessor( object widget )
-			:	m_widget( widget )
+			:	m_widget(
+					boost::python::handle<>( PyWeakref_NewRef( widget.ptr(), nullptr ) )
+				)
 		{
 		}
 
-		object widget()
+		object widget() const
 		{
-			return m_widget;
+			return m_widget();
 		}
 
 		void setColumns( const Columns &columns ) override
@@ -87,13 +90,13 @@ class PathListingWidgetAccessor : public GafferUI::PathListingWidget
 			{
 				pythonColumns.append( c );
 			}
-			m_widget.attr( "setColumns" )( pythonColumns );
+			widget().attr( "setColumns" )( pythonColumns );
 		}
 
 		Columns getColumns() const override
 		{
 			IECorePython::ScopedGILLock gilLock;
-			object pythonColumns = m_widget.attr( "getColumns" )();
+			object pythonColumns = widget().attr( "getColumns" )();
 			Columns columns;
 			boost::python::container_utils::extend_container( columns, pythonColumns );
 			return columns;
@@ -118,13 +121,13 @@ class PathListingWidgetAccessor : public GafferUI::PathListingWidget
 				pythonSelection = pythonList;
 			}
 
-			m_widget.attr( "setSelection" )( pythonSelection );
+			widget().attr( "setSelection" )( pythonSelection );
 		}
 
 		Selection getSelection() const override
 		{
 			IECorePython::ScopedGILLock gilLock;
-			object pythonSelection = m_widget.attr( "getSelection" )();
+			object pythonSelection = widget().attr( "getSelection" )();
 			extract<IECore::PathMatcher> e( pythonSelection );
 			if( e.check() )
 			{
@@ -140,8 +143,87 @@ class PathListingWidgetAccessor : public GafferUI::PathListingWidget
 
 	private :
 
-		// The Python PathListingWidget object.
+		// A `weakref` for the Python PathListingWidget object. We use a
+		// weak reference to avoid `PathListingWidget->Menu->MenuDefinition->PathListingWidget`
+		// reference cycles when a C++ MenuItem stores a PathListingWidgetPtr.
 		object m_widget;
+
+};
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// MenuDefinitionAccessor class
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+struct GILReleaseMenuCommand
+{
+
+	GILReleaseMenuCommand( MenuDefinition::MenuItem::Command command )
+		:	m_command( command )
+	{
+	}
+
+	void operator()()
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		m_command();
+	}
+
+	private :
+
+		MenuDefinition::MenuItem::Command m_command;
+
+};
+
+// Provides a C++ interface to the functionality implemented in the Python
+// MenuDefinition class.
+class MenuDefinitionAccessor : public GafferUI::MenuDefinition
+{
+
+	public :
+
+		MenuDefinitionAccessor( object menuDefinition )
+			:	m_menuDefinition( menuDefinition )
+		{
+		}
+
+		object menuDefinition()
+		{
+			return m_menuDefinition;
+		}
+
+		void append( const std::string &path, const MenuItem &item ) override
+		{
+			IECorePython::ScopedGILLock gilLock;
+
+			dict pythonItem;
+
+			if( item.command != nullptr )
+			{
+				pythonItem["command"] = make_function(
+					GILReleaseMenuCommand( item.command ),
+					boost::python::default_call_policies(),
+					boost::mpl::vector<void>()
+				);
+			}
+
+			pythonItem["description"] = item.description;
+			pythonItem["icon"] = item.icon;
+			pythonItem["shortCut"] = item.shortCut;
+			pythonItem["divider"] = item.divider;
+			pythonItem["active"] = item.active;
+
+			m_menuDefinition.attr( "append" )( path, pythonItem );
+		}
+
+	private :
+
+		// The Python MenuDefinition object.
+		object m_menuDefinition;
 
 };
 
@@ -307,9 +389,9 @@ struct ButtonSignalCaller
 	{
 		// C++-based slots are passed a PathListingWidgetAccessor which gives them limited
 		// access to the functionality of the Python PathListingWidget.
-		PathListingWidgetAccessor accessor( widget );
+		PathListingWidget::Ptr accessor = new PathListingWidgetAccessor( widget );
 		IECorePython::ScopedGILRelease gilRelease;
-		return s( path, accessor, event );
+		return s( path, *accessor, event );
 	}
 };
 
@@ -324,6 +406,62 @@ struct ButtonSignalSlotCaller
 			return slot( PathPtr( &path ), static_cast<PathListingWidgetAccessor&>( widget ).widget(), event );
 		}
 		catch( const error_already_set & )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
+	}
+};
+
+struct ContextMenuSignalCaller
+{
+	static void call( PathColumn::ContextMenuSignal &s, PathColumn &column, object pathListingWidget, object menuDefinition )
+	{
+		PathListingWidget::Ptr pathListingWidgetAccessor = new PathListingWidgetAccessor( pathListingWidget );
+		MenuDefinitionAccessor menuDefinitionAccessor( menuDefinition );
+		IECorePython::ScopedGILRelease gilRelease;
+		s( column, *pathListingWidgetAccessor, menuDefinitionAccessor );
+	}
+};
+
+struct ContextMenuSignalSlotCaller
+{
+	void operator()( boost::python::object slot, PathColumn &column, PathListingWidget &pathListingWidget, MenuDefinition &menuDefinition )
+	{
+		try
+		{
+			slot(
+				PathColumnPtr( &column ),
+				static_cast<PathListingWidgetAccessor &>( pathListingWidget ).widget(),
+				static_cast<MenuDefinitionAccessor &>( menuDefinition ).menuDefinition()
+
+			);
+		}
+		catch( const error_already_set & )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
+	}
+};
+
+struct KeySignalCaller
+{
+	static bool call( PathColumn::KeySignal &s, PathColumn &column, object widget, const KeyEvent &event )
+	{
+		PathListingWidgetAccessor accessor( widget );
+		IECorePython::ScopedGILRelease gilRelease;
+		return s( column, accessor, event );
+	}
+};
+
+struct KeySignalSlotCaller
+{
+	bool operator()( boost::python::object slot, PathColumn &column, PathListingWidget &widget, const KeyEvent &event )
+	{
+		try
+		{
+			return slot( PathColumnPtr( &column ), static_cast<PathListingWidgetAccessor&>( widget ).widget(), event );
+		}
+		catch( const boost::python::error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
@@ -384,6 +522,8 @@ void GafferUIModule::bindPathColumn()
 
 		SignalClass<PathColumn::PathColumnSignal, DefaultSignalCaller<PathColumn::PathColumnSignal>, ChangedSignalSlotCaller>( "PathColumnSignal" );
 		SignalClass<PathColumn::ButtonSignal, ButtonSignalCaller, ButtonSignalSlotCaller>( "ButtonSignal" );
+		SignalClass<PathColumn::ContextMenuSignal, ContextMenuSignalCaller, ContextMenuSignalSlotCaller>( "ContextMenuSignal" );
+		SignalClass<PathColumn::KeySignal, KeySignalCaller, KeySignalSlotCaller>( "KeySignal" );
 	}
 
 	pathColumnClass.def( init<PathColumn::SizeMode>( arg( "sizeMode" ) = PathColumn::SizeMode::Default ) )
@@ -393,6 +533,11 @@ void GafferUIModule::bindPathColumn()
 		.def( "buttonPressSignal", &PathColumn::buttonPressSignal, return_internal_reference<1>() )
 		.def( "buttonReleaseSignal", &PathColumn::buttonReleaseSignal, return_internal_reference<1>() )
 		.def( "buttonDoubleClickSignal", &PathColumn::buttonDoubleClickSignal, return_internal_reference<1>() )
+		.def( "contextMenuSignal", &PathColumn::contextMenuSignal, return_internal_reference<1>() )
+		.def( "keyPressSignal", &PathColumn::keyPressSignal, return_internal_reference<1>() )
+		.def( "keyReleaseSignal", &PathColumn::keyReleaseSignal, return_internal_reference<1>() )
+		.def( "instanceCreatedSignal", &PathColumn::instanceCreatedSignal, return_value_policy<reference_existing_object>() )
+		.staticmethod( "instanceCreatedSignal" )
 		.def( "getSizeMode", (PathColumn::SizeMode (PathColumn::*)() const )&PathColumn::getSizeMode )
 		.def( "setSizeMode", &PathColumn::setSizeMode, ( arg( "sizeMode" ) ) )
 	;

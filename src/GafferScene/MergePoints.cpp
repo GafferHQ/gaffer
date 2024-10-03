@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2018, Alex Fuller. All rights reserved.
+//  Copyright (c) 2024, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,28 +34,55 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#include "GafferScene/MergePoints.h"
 
-#include "GafferCycles/Export.h"
-#include "GafferCycles/TypeIds.h"
+#include "tbb/task_arena.h"
 
-#include "GafferScene/Render.h"
+#include "GafferScene/Private/IECoreScenePreview/PrimitiveAlgo.h"
+#include "IECoreScene/PointsPrimitive.h"
+#include "IECore/NullObject.h"
 
-namespace GafferCycles
+using namespace std;
+using namespace Imath;
+using namespace IECore;
+using namespace IECoreScene;
+using namespace Gaffer;
+using namespace GafferScene;
+
+GAFFER_NODE_DEFINE_TYPE( MergePoints );
+
+size_t MergePoints::g_firstPlugIndex = 0;
+
+MergePoints::MergePoints( const std::string &name )
+	:	MergeObjects( name, "/mergedPoints" )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
+}
 
-class GAFFERCYCLES_API CyclesRender : public GafferScene::Render
+MergePoints::~MergePoints()
 {
+}
 
-	public :
+IECore::ConstObjectPtr MergePoints::mergeObjects( const std::vector< std::pair< IECore::ConstObjectPtr, Imath::M44f > > &sources, const Gaffer::Context *context ) const
+{
+	std::vector< std::pair< const IECoreScene::Primitive *, Imath::M44f > > points;
 
-		explicit CyclesRender( const std::string &name=defaultName<CyclesRender>() );
-		~CyclesRender() override;
+	for( const auto &[object, transform] : sources )
+	{
+		const IECoreScene::PointsPrimitive * m = IECore::runTimeCast< const IECoreScene::PointsPrimitive >( object.get() );
+		if( !m )
+		{
+			// Just skip anything that's not points
+			continue;
+		}
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferCycles::CyclesRender, CyclesRenderTypeId, GafferScene::Render );
+		points.push_back( std::make_pair( m, transform ) );
+	}
 
-};
+	if( !points.size() )
+	{
+		return IECore::NullObject::defaultNullObject();
+	}
 
-IE_CORE_DECLAREPTR( CyclesRender );
-
-} // namespace GafferCycles
+	return IECoreScenePreview::PrimitiveAlgo::mergePrimitives( points, context->canceller() );
+}

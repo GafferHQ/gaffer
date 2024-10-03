@@ -49,14 +49,6 @@ class StandardNodeToolbar( GafferUI.NodeToolbar ) :
 
 		GafferUI.NodeToolbar.__init__( self, node, self.__layout, **kw )
 
-	def setContext( self, context ) :
-
-		if context.isSame( self.getContext() ) :
-			return
-
-		GafferUI.NodeToolbar.setContext( self, context )
-		self.__layout.setContext( context )
-
 	@staticmethod
 	def top( node ) :
 

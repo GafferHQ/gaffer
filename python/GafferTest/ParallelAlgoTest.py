@@ -74,16 +74,22 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 
 			self.__queue.put( f )
 
-		# Waits for a single use of `callOnUIThread()`, raising
-		# a test failure if none arises before `timeout` seconds.
-		def assertCalled( self, timeout = 30.0 ) :
+		# Waits for a single use of `callOnUIThread()` and returns the functor
+		# that was passed. It is the caller's responsibility to call the
+		# functor. Raises a test failure if no call arises before `timeout`
+		# seconds.
+		def receive( self, timeout = 30.0 ) :
 
 			try :
-				f = self.__queue.get( block = True, timeout = timeout )
+				return self.__queue.get( block = True, timeout = timeout )
 			except queue.Empty :
 				raise AssertionError( "UIThread call not made within {} seconds".format( timeout ) )
 
-			f()
+		# Waits for and handles a single use of `callOnUIThread()`, raising a
+		# test failure if none arises before `timeout` seconds.
+		def assertCalled( self, timeout = 30.0 ) :
+
+			self.receive( timeout )()
 
 		# Asserts that no further uses of `callOnUIThread()` will
 		# be made with this handler. This is checked on context exit.

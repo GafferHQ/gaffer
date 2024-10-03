@@ -208,9 +208,9 @@ class _InputFooter( GafferUI.PlugValueWidget ) :
 
 			GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand": True } )
 
-		self.__menuButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-		self.__menuButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
-		self.__menuButton.dropSignal().connect( Gaffer.WeakMethod( self.__drop ), scoped = False )
+		self.__menuButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.__menuButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
+		self.__menuButton.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 
 	def _updateFromEditable( self ) :
 
@@ -398,11 +398,9 @@ def __deletePlug( plug ) :
 		plug.node().removeInput( input )
 
 GafferUI.PlugValueWidget.popupMenuSignal().connect(
-	lambda menuDefinition, plugValueWidget : __plugPopupMenu( menuDefinition, plugValueWidget.getPlug() ),
-	scoped = False
+	lambda menuDefinition, plugValueWidget : __plugPopupMenu( menuDefinition, plugValueWidget.getPlug() )
 )
 
 GafferUI.GraphEditor.plugContextMenuSignal().connect(
-	lambda graphEditor, plug, menuDefinition : __plugPopupMenu( menuDefinition, plug ),
-	scoped = False
+	lambda graphEditor, plug, menuDefinition : __plugPopupMenu( menuDefinition, plug )
 )

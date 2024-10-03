@@ -98,6 +98,12 @@ IECore::ConstObjectPtr ParameterInspector::value( const GafferScene::SceneAlgo::
 	return shader->parametersData()->member( m_parameter.name );
 }
 
+IECore::ConstObjectPtr ParameterInspector::fallbackValue( const GafferScene::SceneAlgo::History *history, std::string &description ) const
+{
+	// No fallback values are provided for parameters. Implemented to override AttributeInspector::fallbackValue().
+	return nullptr;
+}
+
 Gaffer::ValuePlugPtr ParameterInspector::source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const
 {
 	auto sceneNode = runTimeCast<SceneNode>( history->scene->node() );
@@ -209,13 +215,14 @@ Inspector::EditFunctionOrFailure ParameterInspector::editFunction( Gaffer::EditS
 			attributeName = attributeHistory->attributeName,
 			context = attributeHistory->context,
 			parameter = m_parameter
-		] () {
+		] ( bool createIfNecessary ) {
 				Context::Scope scope( context.get() );
 				return EditScopeAlgo::acquireParameterEdit(
 					editScope.get(),
 					context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ),
 					attributeName,
-					parameter
+					parameter,
+					createIfNecessary
 				);
 		};
 	}

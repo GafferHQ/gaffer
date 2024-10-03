@@ -87,8 +87,9 @@ class OpenGLRenderTest( GafferSceneTest.RenderTest ) :
 		)
 		s["outputs"]["in"].setInput( s["assignment"]["out"] )
 
-		s["render"] = GafferScene.OpenGLRender()
+		s["render"] = GafferScene.Render()
 		s["render"]["in"].setInput( s["outputs"]["out"] )
+		s["render"]["renderer"].setValue( "OpenGL" )
 
 		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s.save()

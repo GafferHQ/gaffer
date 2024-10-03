@@ -47,14 +47,14 @@ class LazyMethodTest( GafferUITest.TestCase ) :
 
 			GafferUI.TextWidget.__init__( self, **kw )
 
-			self.__context = Gaffer.Context()
+			self.__scriptNode = Gaffer.ScriptNode()
 
 		## To use deferUntilPlaybackStops, the widget must
-		# have a context() or getContext() method which
-		# provides the context in which it works.
-		def context( self ) :
+		# have a `scriptNode()` method from which a Playback
+		# object can be acquired.
+		def scriptNode( self ) :
 
-			return self.__context
+			return self.__scriptNode
 
 		@GafferUI.LazyMethod()
 		def setTextLazily( self, text ) :
@@ -141,7 +141,7 @@ class LazyMethodTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( cs ), 1 )
 		self.assertEqual( w.getText(), "t" )
 
-		p = GafferUI.Playback.acquire( w.context() )
+		p = GafferUI.Playback.acquire( w.scriptNode().context() )
 
 		p.setState( p.State.PlayingForwards )
 

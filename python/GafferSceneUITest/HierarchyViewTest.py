@@ -44,9 +44,9 @@ import GafferSceneUI
 
 class HierarchyViewTest( GafferUITest.TestCase ) :
 
-	def assertExpanded( self, context, path, expanded ) :
+	def assertExpanded( self, script, path, expanded ) :
 
-		expandedPaths = GafferSceneUI.ContextAlgo.getExpandedPaths( context )
+		expandedPaths = GafferSceneUI.ScriptNodeAlgo.getVisibleSet( script ).expansions
 		self.assertEqual(
 			bool( expandedPaths.match( path ) & IECore.PathMatcher.Result.ExactMatch ),
 			expanded
@@ -66,17 +66,17 @@ class HierarchyViewTest( GafferUITest.TestCase ) :
 		script.selection().add( script["group"] )
 
 		self.waitForIdle( 1000 )
-		self.assertExpanded( script.context(), "/group", False )
+		self.assertExpanded( script, "/group", False )
 
 		# Expand the root, and select /group.
 
-		GafferSceneUI.ContextAlgo.setExpandedPaths( script.context(), IECore.PathMatcher( [ "/" ] ) )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), IECore.PathMatcher( [ "/group" ] ) )
+		GafferSceneUI.ScriptNodeAlgo.setVisibleSet( script, GafferScene.VisibleSet( expansions = IECore.PathMatcher( [ "/" ] ) ) )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/group" ] ) )
 
 		self.waitForIdle( 1000 )
 
-		self.assertExpanded( script.context(), "/", True )
-		self.assertExpanded( script.context(), "/group", False )
+		self.assertExpanded( script, "/", True )
+		self.assertExpanded( script, "/group", False )
 
 		# Tweak the scene to change the name of a
 		# non-expanded location. We expect the expansion to
@@ -85,8 +85,8 @@ class HierarchyViewTest( GafferUITest.TestCase ) :
 		script["plane"]["name"].setValue( "jane" )
 
 		self.waitForIdle( 1000 )
-		self.assertExpanded( script.context(), "/", True )
-		self.assertExpanded( script.context(), "/group", False )
+		self.assertExpanded( script, "/", True )
+		self.assertExpanded( script, "/group", False )
 
 	def testDeselectAndReselectNode( self ) :
 
@@ -104,19 +104,19 @@ class HierarchyViewTest( GafferUITest.TestCase ) :
 
 		groupPathMatcher = IECore.PathMatcher( [ "/group" ] )
 		planePathMatcher = IECore.PathMatcher( [ "/group/plane" ] )
-		GafferSceneUI.ContextAlgo.setExpandedPaths( script.context(), groupPathMatcher )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), planePathMatcher )
+		GafferSceneUI.ScriptNodeAlgo.setVisibleSet( script, GafferScene.VisibleSet( expansions = groupPathMatcher ) )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, planePathMatcher )
 
 		def assertExpectedState() :
 
 			self.waitForIdle( 10000 )
 
 			self.assertEqual(
-				GafferSceneUI.ContextAlgo.getExpandedPaths( script.context() ),
+				GafferSceneUI.ScriptNodeAlgo.getVisibleSet( script ).expansions,
 				groupPathMatcher
 			)
 			self.assertEqual(
-				GafferSceneUI.ContextAlgo.getSelectedPaths( script.context() ),
+				GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( script ),
 				planePathMatcher
 			)
 

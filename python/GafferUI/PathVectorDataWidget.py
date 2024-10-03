@@ -58,7 +58,7 @@ class PathVectorDataWidget( GafferUI.VectorDataWidget ) :
 		self.__path = path if path is not None else Gaffer.FileSystemPath( "/" )
 		self.__pathChooserDialogueKeywords = pathChooserDialogueKeywords
 
-		self.editSignal().connect( Gaffer.WeakMethod( self.__edit ), scoped = False )
+		self.editSignal().connect( Gaffer.WeakMethod( self.__edit ) )
 
 	def path( self ) :
 
@@ -111,7 +111,7 @@ class _Editor( GafferUI.ListContainer ) :
 		with self :
 			GafferUI.PathWidget( path )
 			button = GafferUI.Button( image = "pathChooser.png", hasFrame = False )
-			button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
+			button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 
 			GafferUI.Spacer( imath.V2i( 2 ) )
 
@@ -119,7 +119,7 @@ class _Editor( GafferUI.ListContainer ) :
 		self._qtWidget().setFocusProxy( self.__pathWidget()._qtWidget() )
 
 		self.__dialogue = None
-		GafferUI.Widget.focusChangedSignal().connect( Gaffer.WeakMethod( self.__focusChanged ), scoped = False )
+		GafferUI.Widget.focusChangedSignal().connect( Gaffer.WeakMethod( self.__focusChanged ) )
 
 	def setValue( self, value ) :
 

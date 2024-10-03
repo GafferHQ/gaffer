@@ -67,14 +67,11 @@ class _PlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, self.__parameterHandler.plug(), **kw )
 
 		self._addPopupMenu( self.__menuButton )
-		self._updateFromPlug()
 
-	def _updateFromPlug( self ) :
+	def _updateFromValues( self, values, exception ) :
 
 		with self.getContext() :
 			self.__parameterHandler.setParameterValue()
-
-		self.__menuButton.setEnabled( self._editable() )
 
 		text = ""
 		if self.getPlug() is not None :
@@ -82,6 +79,10 @@ class _PlugValueWidget( GafferUI.PlugValueWidget ) :
 				text = self.__parameterHandler.parameter().getCurrentPresetName() or "Invalid"
 
 		self.__menuButton.setText( text )
+
+	def _updateFromEditable( self ) :
+
+		self.__menuButton.setEnabled( self._editable() )
 
 	def __menuDefinition( self ) :
 

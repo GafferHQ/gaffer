@@ -917,10 +917,11 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		# Check that two multi-view images match only if all views are identical
 		createViews = GafferImage.CreateViews()
-		createViews["views"].addChild( Gaffer.NameValuePlug( "left", GafferImage.ImagePlug(), True, "view0", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
-		createViews["views"].addChild( Gaffer.NameValuePlug( "right", GafferImage.ImagePlug(), True, "view1", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		createViews["views"].resize( 2 )
 		createViews["views"][0]["value"].setInput( constant1["out"] )
+		createViews["views"][0]["name"].setValue( "left" )
 		createViews["views"][1]["value"].setInput( constant2["out"] )
+		createViews["views"][1]["name"].setValue( "right" )
 
 		f3 = catalogue.generateFileName( createViews["out"] )
 		self.assertNotIn( f3, [f1, f2] )

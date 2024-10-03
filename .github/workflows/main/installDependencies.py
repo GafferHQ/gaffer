@@ -49,7 +49,7 @@ else :
 
 # Determine default archive URL.
 
-defaultURL = "https://github.com/ImageEngine/cortex/releases/download/10.5.8.0/cortex-10.5.8.0-{platform}{buildEnvironment}.{extension}"
+defaultURL = "https://github.com/GafferHQ/dependencies/releases/download/9.0.0a3/gafferDependencies-9.0.0a3-{platform}{buildEnvironment}.{extension}"
 
 # Parse command line arguments.
 
@@ -64,8 +64,8 @@ parser.add_argument(
 parser.add_argument(
 	"--buildEnvironment",
 	help = "The build environment of the dependencies archive to download.",
-	choices = [ "gcc9", "gcc11" ],
-	default = os.environ.get( "GAFFER_BUILD_ENVIRONMENT", "gcc9" if sys.platform == "linux" else "" ),
+	choices = [ "gcc11" ],
+	default = os.environ.get( "GAFFER_BUILD_ENVIRONMENT", "gcc11" if sys.platform == "linux" else "" ),
 )
 
 parser.add_argument(

@@ -381,10 +381,10 @@ def _pathsFromSelection( plugValueWidget ) :
 	if node is None :
 		return []
 
-	paths = GafferSceneUI.ContextAlgo.getSelectedPaths( plugValueWidget.getContext() )
+	paths = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( plugValueWidget.scriptNode() )
 	paths = paths.paths() if paths else []
 
-	with plugValueWidget.getContext() :
+	with plugValueWidget.context() :
 		paths = [ p for p in paths if node["scene"].exists( p ) ]
 
 	return paths
@@ -397,7 +397,7 @@ def _shaderAttributes( plugValueWidget, paths, affectedOnly ) :
 	if node is None :
 		return result
 
-	with plugValueWidget.getContext() :
+	with plugValueWidget.context() :
 		useFullAttr = node["inherit"].getValue()
 		attributeNamePatterns = node["shader"].getValue() if affectedOnly else "*"
 
@@ -438,8 +438,7 @@ class _ShaderQueryFooter( GafferUI.PlugValueWidget ) :
 			GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand": True } )
 
 		plug.node().plugSetSignal().connect(
-			Gaffer.WeakMethod( self.__updateQueryMetadata ),
-			scoped = False
+			Gaffer.WeakMethod( self.__updateQueryMetadata )
 		)
 
 	def _updateFromEditable( self ) :
@@ -606,7 +605,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 		menuDefinition.prepend( "/From Location/", { "subMenu" : __setShaderFromLocationMenuDefinition } )
 		menuDefinition.prepend( "/From Selection/", { "subMenu" : __setShaderFromSelectionMenuDefinition } )
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
 
 
 ##########################################################################
@@ -630,4 +629,4 @@ def __deletePlug( plug ) :
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		plug.node().removeQuery( plug )
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )

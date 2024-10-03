@@ -143,7 +143,7 @@ class _OutSetsPlugValueWidget( GafferUI.Widget ) :
 		self.__node = node
 		self.__swatches = []
 
-		node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ), scoped = False )
+		node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
 
 		self._update()
 
@@ -209,7 +209,7 @@ class _OverridesFooter( GafferUI.PlugValueWidget ) :
 			GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
 
 			self.__addButton = GafferUI.Button( image = "plus.png", hasFrame = False )
-			self.__addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addOverride ), scoped = False )
+			self.__addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addOverride ) )
 
 			GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
@@ -243,7 +243,7 @@ class _SetColorLedgendRowWidget( GafferUI.ListContainer ) :
 
 		# Allow right-click to add an override for the target set
 		self.__menu = GafferUI.Menu( Gaffer.WeakMethod( self.__addMenuDefinition ) )
-		self.contextMenuSignal().connect( Gaffer.WeakMethod( self.__menu.popup ), scoped = False )
+		self.contextMenuSignal().connect( Gaffer.WeakMethod( self.__menu.popup ) )
 
 	def setColorAndLabel( self, color, label ) :
 
@@ -283,7 +283,7 @@ class _SetColorLedgendRowWidget( GafferUI.ListContainer ) :
 		inPlug = outSetsWidget.node()[ "in" ]
 		with outSetsWidget.context() :
 			matcher = inPlug.set( self.__label.getText() ).value
-			GafferSceneUI.ContextAlgo.setSelectedPaths( outSetsWidget.context(), matcher )
+			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( outSetsWidget.scriptNode(), matcher )
 
 	def __addMenuDefinition( self ) :
 

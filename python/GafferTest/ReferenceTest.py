@@ -894,7 +894,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		def referenceLoaded( node ) :
 			states.append( State( keys = node.keys(), fileName = node.fileName() ) )
 
-		s["r"].referenceLoadedSignal().connect( referenceLoaded, scoped = False )
+		s["r"].referenceLoadedSignal().connect( referenceLoaded )
 
 		with Gaffer.UndoScope( s ) :
 			s["r"].load( self.temporaryDirectory() / "test.grf" )
@@ -971,7 +971,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["b"] = Gaffer.Box()
-		s["b"]["array"] = Gaffer.ArrayPlug( element = Gaffer.IntPlug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"]["array"] = Gaffer.ArrayPlug( elementPrototype = Gaffer.IntPlug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["b"]["color"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["b"].exportForReference( self.temporaryDirectory() / "test.grf" )
 

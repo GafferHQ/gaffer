@@ -379,6 +379,11 @@ const Plug *Path::cancellationSubject() const
 	return nullptr;
 }
 
+ContextPtr Path::inspectionContext( const IECore::Canceller *canceller ) const
+{
+	return nullptr;
+}
+
 void Path::doChildren( std::vector<PathPtr> &children, const IECore::Canceller *canceller ) const
 {
 }

@@ -37,11 +37,14 @@
 
 #include "GafferUI/View.h"
 
+#include "GafferUI/ContextTracker.h"
+
 #include "Gaffer/Context.h"
 #include "Gaffer/EditScope.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/Plug.h"
 #include "Gaffer/PlugAlgo.h"
+#include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 
 #include "boost/algorithm/string/predicate.hpp"
@@ -84,16 +87,18 @@ GAFFER_NODE_DEFINE_TYPE( View );
 
 size_t View::g_firstPlugIndex = 0;
 
-View::View( const std::string &name, Gaffer::PlugPtr inPlug )
+View::View( const std::string &name, Gaffer::ScriptNodePtr scriptNode, Gaffer::PlugPtr inPlug )
 	:	Node( name ),
-		m_viewportGadget( new ViewportGadget )
+		m_scriptNode( scriptNode ), m_viewportGadget( new ViewportGadget ),
+		m_contextTracker( ContextTracker::acquireForFocus( scriptNode.get() ) )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	setChild( "in", inPlug );
 	addChild( new Plug( g_editScopeName ) );
 	addChild( new ToolContainer( g_toolsName ) );
-	setContext( new Context() );
 
+	m_context = m_contextTracker->context( this );
+	m_contextTracker->changedSignal( this ).connect( boost::bind( &View::contextTrackerChanged, this ) );
 	tools()->childAddedSignal().connect( boost::bind( &View::toolsChildAdded, this, ::_2 ) );
 }
 
@@ -104,6 +109,16 @@ View::~View()
 	// avoids exceptions that would otherwise be caused by Tools responding to
 	// `plugDirtiedSignal()` _after_ they've been removed from the View.
 	tools()->clearChildren();
+}
+
+Gaffer::ScriptNode *View::scriptNode()
+{
+	return m_scriptNode.get();
+}
+
+const Gaffer::ScriptNode *View::scriptNode() const
+{
+	return m_scriptNode.get();
 }
 
 Gaffer::Plug *View::editScopePlug()
@@ -141,25 +156,9 @@ const Gaffer::EditScope *View::editScope() const
 	return p ? p->parent<EditScope>() : nullptr;
 }
 
-Gaffer::Context *View::getContext()
+const Gaffer::Context *View::context() const
 {
 	return m_context.get();
-}
-
-const Gaffer::Context *View::getContext() const
-{
-	return m_context.get();
-}
-
-void View::setContext( Gaffer::ContextPtr context )
-{
-	if( context == m_context )
-	{
-		return;
-	}
-	m_context = context;
-	m_contextChangedConnection = m_context->changedSignal().connect( boost::bind( &View::contextChanged, this, ::_2 ) );
-	contextChangedSignal()( this );
 }
 
 View::UnarySignal &View::contextChangedSignal()
@@ -183,15 +182,6 @@ void View::setPreprocessor( Gaffer::NodePtr preprocessor )
 	preprocessor->getChild<Plug>( "in" )->setInput( inPlug() );
 }
 
-void View::contextChanged( const IECore::InternedString &name )
-{
-}
-
-Signals::Connection &View::contextChangedConnection()
-{
-	return m_contextChangedConnection;
-}
-
 View::CreatorMap &View::creators()
 {
 	static CreatorMap m;
@@ -206,6 +196,17 @@ View::NamedCreatorMap &View::namedCreators()
 
 ViewPtr View::create( Gaffer::PlugPtr plug )
 {
+	Gaffer::ScriptNodePtr scriptNode;
+	if( auto node = plug->source()->node() )
+	{
+		scriptNode = node->scriptNode();
+	}
+
+	if( !scriptNode )
+	{
+		throw IECore::Exception( fmt::format( "Unable to find ScriptNode for `{}`", plug->fullName() ) );
+	}
+
 	const Gaffer::Node *node = plug->node();
 	if( node )
 	{
@@ -221,7 +222,9 @@ ViewPtr View::create( Gaffer::PlugPtr plug )
 				{
 					if( boost::regex_match( plugPath, nIt->first ) )
 					{
-						return nIt->second( plug );
+						ViewPtr view = nIt->second( scriptNode );
+						view->inPlug()->setInput( plug );
+						return view;
 					}
 				}
 			}
@@ -236,7 +239,9 @@ ViewPtr View::create( Gaffer::PlugPtr plug )
 		CreatorMap::const_iterator it = m.find( t );
 		if( it!=m.end() )
 		{
-			return it->second( plug );
+			ViewPtr view = it->second( scriptNode );
+			view->inPlug()->setInput( plug );
+			return view;
 		}
 		t = IECore::RunTimeTyped::baseTypeId( t );
 	}
@@ -252,6 +257,36 @@ void View::registerView( IECore::TypeId plugType, ViewCreator creator )
 void View::registerView( const IECore::TypeId nodeType, const std::string &plugPath, ViewCreator creator )
 {
 	namedCreators()[nodeType].push_back( RegexAndCreator( boost::regex( plugPath ), creator ) );
+}
+
+bool View::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
+{
+	if( !Node::acceptsInput( plug, inputPlug ) )
+	{
+		return false;
+	}
+
+	if( plug != inPlug() || !inputPlug )
+	{
+		return true;
+	}
+
+	// Refuse to view anything which isn't owned by the ScriptNode we
+	// were constructed for. All our state (context etc) is derived from
+	// that ScriptNode, and it doesn't make sense to use it with nodes
+	// from another script.
+	const ScriptNode *script = inputPlug->source()->ancestor<ScriptNode>();
+	return !script || script == scriptNode();
+}
+
+void View::contextTrackerChanged()
+{
+	ConstContextPtr context = m_contextTracker->context( this );
+	if( *m_context != *context )
+	{
+		m_context = context;
+		contextChangedSignal()( this );
+	}
 }
 
 void View::toolsChildAdded( Gaffer::GraphComponent *child )
@@ -338,6 +373,26 @@ RegistrationChangedSignal &registrationChangedSignal()
 
 const IECore::InternedString g_frame( "frame" );
 
+MurmurHash hashWithoutFrame( const Context *context )
+{
+	// This "sum of variable hashes" approach mirrors what `Context::hash()`
+	// does itself, and means that `ui:` prefixed variables have no effect.
+	std::vector<InternedString> names;
+	context->names( names );
+	uint64_t sumH1 = 0, sumH2 = 0;
+	for( const auto &name : names )
+	{
+		if( name == g_frame )
+		{
+			continue;
+		}
+		const MurmurHash vh = context->variableHash( name );
+		sumH1 += vh.h1();
+		sumH2 += vh.h2();
+	}
+	return MurmurHash( sumH1, sumH2 );
+}
+
 } // namespace
 
 size_t View::DisplayTransform::g_firstPlugIndex = 0;
@@ -395,9 +450,8 @@ View::DisplayTransform::DisplayTransform( View *view )
 	);
 
 	view->contextChangedSignal().connect(
-		boost::bind( &DisplayTransform::connectToViewContext, this )
+		boost::bind( &DisplayTransform::contextChanged, this )
 	);
-	connectToViewContext();
 
 }
 
@@ -440,17 +494,12 @@ Gaffer::BoolPlug *View::DisplayTransform::absolutePlug()
 	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 5 );
 }
 
-void View::DisplayTransform::connectToViewContext()
-{
-	m_contextChangedConnection = view()->getContext()->changedSignal().connect( boost::bind( &View::DisplayTransform::contextChanged, this, ::_2 ) );
-}
-
-void View::DisplayTransform::contextChanged( const IECore::InternedString &name )
+void View::DisplayTransform::contextChanged()
 {
 	// DisplayTransformCreators may be context-sensitive, so we need to
 	// call them again. But we can at least avoid the overhead for common
 	// changes which shouldn't affect them.
-	if( name != g_frame && !boost::starts_with( name.string(), "ui:" ) )
+	if( hashWithoutFrame( view()->context() ) != m_shaderContextHash )
 	{
 		m_shaderDirty = true;
 		view()->viewportGadget()->renderRequestSignal()( view()->viewportGadget() );
@@ -497,8 +546,9 @@ void View::DisplayTransform::preRender()
 			auto it = displayTransformCreators().find( name );
 			if( it != displayTransformCreators().end() )
 			{
-				Context::Scope scope( view()->getContext() );
+				Context::Scope scope( view()->context() );
 				m_shader = it->second();
+				m_shaderContextHash = hashWithoutFrame( view()->context() );
 			}
 			else
 			{

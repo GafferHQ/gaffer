@@ -57,6 +57,13 @@ namespace
 
 void loadMetadata( const std::string &pluginPaths )
 {
+	// Arnold issues warnings for non-existent nodes referenced in `.mtd` files,
+	// which is very inconvenient if wanting to author metadata for use across
+	// multiple Arnold versions. So we disable warnings while loading the metadata
+	// and restore them at the end of this function.
+	const int flags = AiMsgGetConsoleFlags( nullptr );
+	AiMsgSetConsoleFlags( nullptr, AI_LOG_ERRORS );
+
 	using Tokenizer = boost::tokenizer<boost::char_separator<char> >;
 	#ifdef _WIN32
 		const char *separator = ";";
@@ -84,6 +91,8 @@ void loadMetadata( const std::string &pluginPaths )
 			IECore::msg( IECore::Msg::Debug, "UniverseBlock", e.what() );
 		}
 	}
+
+	AiMsgSetConsoleFlags( nullptr, flags );
 }
 
 void begin()

@@ -37,6 +37,7 @@
 
 #include "GafferUI/NodeGadget.h"
 
+#include "GafferUI/ContextTracker.h"
 #include "GafferUI/LinearContainer.h"
 #include "GafferUI/NameGadget.h"
 #include "GafferUI/Nodule.h"
@@ -216,8 +217,9 @@ std::string NodeGadget::getToolTip( const IECore::LineSegment3f &line ) const
 	return result;
 }
 
-void NodeGadget::activeForFocusNode( bool active )
+void NodeGadget::updateFromContextTracker( const ContextTracker *contextTracker )
 {
+	const bool active = contextTracker->targetNode() ? contextTracker->isTracked( m_node ) : true;
 	if( m_active != active )
 	{
 		m_active = active;

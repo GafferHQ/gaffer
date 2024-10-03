@@ -42,25 +42,27 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferScene
+import GafferSceneUI
 from . import _GafferSceneUI
 
-from . import ContextAlgo
 from . import SetUI
 
 ##########################################################################
 # HierarchyView
 ##########################################################################
 
-class HierarchyView( GafferUI.NodeSetEditor ) :
+class HierarchyView( GafferSceneUI.SceneEditor ) :
 
 	def __init__( self, scriptNode, **kw ) :
 
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4, spacing = 4 )
 
-		GafferUI.NodeSetEditor.__init__( self, column, scriptNode, nodeSet = scriptNode.focusSet(), **kw )
+		GafferSceneUI.SceneEditor.__init__( self, column, scriptNode, **kw )
 
 		searchFilter = _GafferSceneUI._HierarchyViewSearchFilter()
+		searchFilter.setScene( self.settings()["in"] )
 		setFilter = _GafferSceneUI._HierarchyViewSetFilter()
+		setFilter.setScene( self.settings()["in"] )
 		setFilter.setEnabled( False )
 
 		self.__filter = Gaffer.CompoundPathFilter( [ searchFilter, setFilter ] )
@@ -76,8 +78,8 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 				Gaffer.DictPath( {}, "/" ), # temp till we make a ScenePath
 				columns = [
 					GafferUI.PathListingWidget.defaultNameColumn,
-					_GafferSceneUI._HierarchyViewInclusionsColumn( scriptNode.context() ),
-					_GafferSceneUI._HierarchyViewExclusionsColumn( scriptNode.context() )
+					_GafferSceneUI._HierarchyViewInclusionsColumn( scriptNode ),
+					_GafferSceneUI._HierarchyViewExclusionsColumn( scriptNode )
 				],
 				selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
@@ -85,51 +87,44 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 			self.__pathListing.setDragPointer( "objects" )
 			self.__pathListing.setSortable( False )
 
-			self.__selectionChangedConnection = self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ), scoped = False )
-			self.__expansionChangedConnection = self.__pathListing.expansionChangedSignal().connect( Gaffer.WeakMethod( self.__expansionChanged ), scoped = False )
+			self.__selectionChangedConnection = self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
+			self.__expansionChangedConnection = self.__pathListing.expansionChangedSignal().connect( Gaffer.WeakMethod( self.__expansionChanged ) )
 
-			self.__pathListing.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenuSignal ), scoped = False )
-			self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPressSignal ), scoped = False )
+			self.__pathListing.columnContextMenuSignal().connect( Gaffer.WeakMethod( self.__columnContextMenuSignal ) )
+			self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPressSignal ) )
 
-		self.__plug = None
+		self.__visibleSetChangedConnection = GafferSceneUI.ScriptNodeAlgo.visibleSetChangedSignal( scriptNode ).connect(
+			Gaffer.WeakMethod( self.__visibleSetChanged )
+		)
+		self.__selectedPathsChangedConnection = GafferSceneUI.ScriptNodeAlgo.selectedPathsChangedSignal( scriptNode ).connect(
+			Gaffer.WeakMethod( self.__selectedPathsChanged )
+		)
+
 		self._updateFromSet()
-		self.__transferExpansionFromContext()
-		self.__transferSelectionFromContext()
+		self.__setPathListingPath()
+		self.__transferExpansionFromScriptNode()
+		self.__transferSelectionFromScriptNode()
 
 	def scene( self ) :
 
-		return self.__plug
+		return self.settings()["in"].getInput()
+
+	## Returns the widget used for showing the main scene listing, with the
+	# intention that clients can add custom context menu items via
+	# `sceneListing.columnContextMenuSignal()`.
+	#
+	# > Caution : This currently returns a PathListingWidget, but in future
+	# > will probably return a more specialised widget with fewer privileges.
+	# > Please limit usage to `columnContextMenuSignal()`.
+	def sceneListing( self ) :
+
+		return self.__pathListing
 
 	def __repr__( self ) :
 
 		return "GafferSceneUI.HierarchyView( scriptNode )"
 
-	def _updateFromSet( self ) :
-
-		# first of all decide what plug we're viewing.
-		self.__plug = None
-		self.__plugParentChangedConnection = None
-		node = self._lastAddedNode()
-		if node is not None :
-			self.__plug = next( GafferScene.ScenePlug.RecursiveOutputRange( node ), None )
-			if self.__plug is not None :
-				self.__plugParentChangedConnection = self.__plug.parentChangedSignal().connect(
-					Gaffer.WeakMethod( self.__plugParentChanged ), scoped = True
-				)
-
-		# call base class update - this will trigger a call to _titleFormat(),
-		# hence the need for already figuring out the plug.
-		GafferUI.NodeSetEditor._updateFromSet( self )
-
-		# update our view of the hierarchy
-		self.__setPathListingPath()
-
 	def _updateFromContext( self, modifiedItems ) :
-
-		if any( ContextAlgo.affectsSelectedPaths( x ) for x in modifiedItems ) :
-			self.__transferSelectionFromContext()
-		elif any( ContextAlgo.affectsVisibleSet( x ) for x in modifiedItems ) :
-			self.__transferExpansionFromContext()
 
 		for item in modifiedItems :
 			if not item.startswith( "ui:" ) :
@@ -138,61 +133,47 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 				self.__setPathListingPath()
 				break
 
-	def _titleFormat( self ) :
-
-		return GafferUI.NodeSetEditor._titleFormat(
-			self,
-			_maxNodes = 1 if self.__plug is not None else 0,
-			_reverseNodes = True,
-			_ellipsis = False
-		)
-
-	def __plugParentChanged( self, plug, oldParent ) :
-
-		# the plug we were viewing has been deleted or moved - find
-		# another one to view.
-		self._updateFromSet()
-
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __setPathListingPath( self ) :
 
+		# We take a static copy of our current context for use in the ScenePath for two reasons :
+		#
+		# 1. To prevent the PathListing from updating automatically when the original context
+		#    changes, which allows us to take control of updates ourselves in `_updateFromContext()`,
+		#    using LazyMethod to defer the calls to this function until we are visible and
+		#    playback has stopped.
+		# 2. Because the PathListingWidget uses a BackgroundTask to evaluate the Path, and it
+		#    would not be thread-safe to directly reference a context that could be modified by
+		#    the UI thread at any time.
+		contextCopy = Gaffer.Context( self.context() )
 		for f in self.__filter.getFilters() :
-			f.setScene( self.__plug )
+			f.setContext( contextCopy )
+		with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
+			self.__pathListing.setPath( GafferScene.ScenePath( self.settings()["in"], contextCopy, "/", filter = self.__filter ) )
 
-		if self.__plug is not None :
-			# We take a static copy of our current context for use in the ScenePath for two reasons :
-			#
-			# 1. To prevent the PathListing from updating automatically when the original context
-			#    changes, which allows us to take control of updates ourselves in `_updateFromContext()`,
-			#    using LazyMethod to defer the calls to this function until we are visible and
-			#    playback has stopped.
-			# 2. Because the PathListingWidget uses a BackgroundTask to evaluate the Path, and it
-			#    would not be thread-safe to directly reference a context that could be modified by
-			#    the UI thread at any time.
-			contextCopy = Gaffer.Context( self.getContext() )
-			for f in self.__filter.getFilters() :
-				f.setContext( contextCopy )
-			with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
-				self.__pathListing.setPath( GafferScene.ScenePath( self.__plug, contextCopy, "/", filter = self.__filter ) )
-		else :
-			with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
-				self.__pathListing.setPath( Gaffer.DictPath( {}, "/" ) )
+	def __visibleSetChanged( self, scriptNode ) :
+
+		self.__transferExpansionFromScriptNode()
+
+	def __selectedPathsChanged( self, scriptNode ) :
+
+		self.__transferSelectionFromScriptNode()
 
 	def __expansionChanged( self, pathListing ) :
 
 		assert( pathListing is self.__pathListing )
 
-		with Gaffer.Signals.BlockedConnection( self._contextChangedConnection() ) :
-			visibleSet = ContextAlgo.getVisibleSet( self.getContext() )
+		with Gaffer.Signals.BlockedConnection( self.__visibleSetChangedConnection ) :
+			visibleSet = GafferSceneUI.ScriptNodeAlgo.getVisibleSet( self.scriptNode() )
 			visibleSet.expansions = pathListing.getExpansion()
-			ContextAlgo.setVisibleSet( self.getContext(), visibleSet )
+			GafferSceneUI.ScriptNodeAlgo.setVisibleSet( self.scriptNode(), visibleSet )
 
 	def __selectionChanged( self, pathListing ) :
 
 		assert( pathListing is self.__pathListing )
 
-		with Gaffer.Signals.BlockedConnection( self._contextChangedConnection() ) :
-			ContextAlgo.setSelectedPaths( self.getContext(), pathListing.getSelection() )
+		with Gaffer.Signals.BlockedConnection( self.__selectedPathsChangedConnection ) :
+			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( self.scriptNode(), pathListing.getSelection() )
 
 	def __keyPressSignal( self, widget, event ) :
 
@@ -206,11 +187,9 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 
 		return False
 
-	def __contextMenuSignal( self, widget ) :
+	def __columnContextMenuSignal( self, column, pathListing, menuDefinition ) :
 
-		menuDefinition = IECore.MenuDefinition()
-
-		selection = self.__pathListing.getSelection()
+		selection = pathListing.getSelection()
 		menuDefinition.append(
 			"Copy Path%s" % ( "" if selection.size() == 1 else "s" ),
 			{
@@ -228,20 +207,15 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 			}
 		)
 
-		self.__contextMenu = GafferUI.Menu( menuDefinition )
-		self.__contextMenu.popup( widget )
-
-		return True
-
 	def __copySelectedPaths( self, *unused ) :
 
-		if self.__plug is None :
+		if self.scene() is None :
 			return
 
 		selection = self.__pathListing.getSelection()
 		if not selection.isEmpty() :
 			data = IECore.StringVectorData( selection.paths() )
-			self.__plug.ancestor( Gaffer.ApplicationRoot ).setClipboardContents( data )
+			self.scriptNode().ancestor( Gaffer.ApplicationRoot ).setClipboardContents( data )
 
 	def __frameSelectedPaths( self ) :
 
@@ -251,16 +225,16 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 			self.__pathListing.scrollToFirst( selection )
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
-	def __transferExpansionFromContext( self ) :
+	def __transferExpansionFromScriptNode( self ) :
 
-		visibleSet = ContextAlgo.getVisibleSet( self.getContext() )
+		visibleSet = GafferSceneUI.ScriptNodeAlgo.getVisibleSet( self.scriptNode() )
 		with Gaffer.Signals.BlockedConnection( self.__expansionChangedConnection ) :
 			self.__pathListing.setExpansion( visibleSet.expansions )
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
-	def __transferSelectionFromContext( self ) :
+	def __transferSelectionFromScriptNode( self ) :
 
-		selection = ContextAlgo.getSelectedPaths( self.getContext() )
+		selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( self.scriptNode() )
 		with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
 			self.__pathListing.setSelection( selection, scrollToFirst=False )
 
@@ -371,7 +345,7 @@ class _SearchFilterWidget( GafferUI.PathFilterWidget ) :
 		GafferUI.PathFilterWidget.__init__( self, self.__patternWidget, pathFilter )
 
 		self.__patternWidget.setPlaceholderText( "Filter..." )
-		self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ), scoped = False )
+		self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ) )
 
 		self._updateFromPathFilter()
 

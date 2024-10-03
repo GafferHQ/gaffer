@@ -371,6 +371,10 @@
 				"setMemberHighlighted",
 				"setMemberFaded",
 				"setMemberFadedHighlighted",
+				"boxBlocker",
+				"sphereBlocker",
+				"planeBlocker",
+				"cylinderBlocker",
 			]
 		},
 
@@ -388,6 +392,7 @@
 				"multiplySmall",
 				"replaceSmall",
 				"createSmall",
+				"createIfMissingSmall",
 				"lessThanSmall",
 				"greaterThanSmall",
 				"listAppendSmall",
@@ -465,6 +470,20 @@
 				"renderPassFolder",
 				"activeRenderPass",
 				"activeRenderPassFadedHighlighted",
+			]
+		},
+
+		"colorChooser" : {
+
+			"options" : {
+				"requiredWidth" : 10,
+				"requiredHeight" : 10,
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				"colorChooserStaticChannelIcon",
+				"colorChooserStaticChannelHighlightedIcon",
 			]
 		}
 

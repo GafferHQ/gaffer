@@ -82,7 +82,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		self.__horizontalHeader = GafferUI.Widget( QtWidgets.QHeaderView( QtCore.Qt.Horizontal, tableView ) )
 		self.__horizontalHeader._qtWidget().setDefaultAlignment( QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter )
 		tableView.setHorizontalHeader( self.__horizontalHeader._qtWidget() )
-		self.__horizontalHeader.buttonPressSignal().connect( Gaffer.WeakMethod( self.__headerButtonPress ), scoped = False )
+		self.__horizontalHeader.buttonPressSignal().connect( Gaffer.WeakMethod( self.__headerButtonPress ) )
 
 		if mode in ( self.Mode.Cells, self.Mode.Defaults ) :
 
@@ -111,14 +111,14 @@ class _PlugTableView( GafferUI.Widget ) :
 			tableView.setProperty( "gafferToggleIndicator", True )
 
 		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( tableView.model().rowsPlug().node() ).connect(
-			Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False
+			Gaffer.WeakMethod( self.__plugMetadataChanged )
 		)
-		Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__nodeMetadataChanged ), scoped = False )
+		Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__nodeMetadataChanged ) )
 
-		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ), scoped = False )
-		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
-		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ), scoped = False )
+		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
+		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
+		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 
 		if mode != self.Mode.Defaults :
 			tableView.horizontalHeader().setVisible( False )
@@ -142,9 +142,9 @@ class _PlugTableView( GafferUI.Widget ) :
 		tableView.setEditTriggers( tableView.NoEditTriggers )
 		tableView.setSelectionMode( tableView.ExtendedSelection )
 		tableView.setSelectionBehavior( tableView.SelectItems )
-		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
-		self.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
-		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
+		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
+		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
 		# Drawing
 
@@ -231,7 +231,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		if pattern != "" :
 			model = self._qtWidget().model()
-			with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
+			with self.ancestor( GafferUI.PlugValueWidget ).context() :
 				for i in range( 0, model.rowCount() ) :
 					plug = model.plugForIndex( model.index( i, 0 ) )
 					if plug is not None :
@@ -533,7 +533,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		if mode == self.__DropMode.Set :
 			return event.data
 
-		with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
+		with self.ancestor( GafferUI.PlugValueWidget ).context() :
 			strings = set( destinationPlug["value"].getValue() )
 
 		if mode == self.__DropMode.Add :
@@ -560,7 +560,7 @@ class _PlugTableView( GafferUI.Widget ) :
 				return functools.partial(
 					_ClipboardAlgo.pasteCells,
 					dropData, [ [ destinationPlug ] ],
-					self.ancestor( GafferUI.PlugValueWidget ).getContext().getTime()
+					self.ancestor( GafferUI.PlugValueWidget ).context().getTime()
 				)
 		elif isinstance( event.data, Gaffer.Plug ) :
 			sourcePlug, targetPlug = self.__connectionPlugs( event.data, destinationPlug )
@@ -656,7 +656,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		if any( Gaffer.MetadataAlgo.getReadOnly( p ) for p in Gaffer.Plug.RecursiveRange( targetPlug ) ) :
 			return False
 
-		with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
+		with self.ancestor( GafferUI.PlugValueWidget ).context() :
 			if not targetPlug.ancestor( Gaffer.Spreadsheet.RowPlug )["enabled"].getValue() :
 				return False
 
@@ -1047,7 +1047,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		if not plugMatrix or not _ClipboardAlgo.canCopyPlugs( plugMatrix ) :
 			return
 
-		with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
+		with self.ancestor( GafferUI.PlugValueWidget ).context() :
 			clipboardData = _ClipboardAlgo.valueMatrix( plugMatrix )
 
 		self.__setClipboard( clipboardData )
@@ -1060,7 +1060,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		if not plugMatrix or not _ClipboardAlgo.canPasteCells( clipboard, plugMatrix ) :
 			return
 
-		context = self.ancestor( GafferUI.PlugValueWidget ).getContext()
+		context = self.ancestor( GafferUI.PlugValueWidget ).context()
 		with Gaffer.UndoScope( plugMatrix[0][0].ancestor( Gaffer.ScriptNode ) ) :
 			_ClipboardAlgo.pasteCells( clipboard, plugMatrix, context.getTime() )
 
@@ -1068,7 +1068,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		rowPlugs = _PlugTableView.__orderedRowsPlugs( self.selectedPlugs() )
 
-		with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
+		with self.ancestor( GafferUI.PlugValueWidget ).context() :
 			clipboardData = _ClipboardAlgo.copyRows( rowPlugs )
 
 		self.__setClipboard( clipboardData )
@@ -1127,7 +1127,7 @@ class _PlugTableView( GafferUI.Widget ) :
 						return
 
 		self.__editorWidget = GafferUI.PlugPopup( plugs, title = "" )
-		self.__editorWidget.popup( plugBound.center() )
+		self.__editorWidget.popup( plugBound.center(), parent = self )
 
 		widget = self.__editorWidget.plugValueWidget()
 		if isinstance( widget, GafferUI.StringPlugValueWidget ) :
@@ -1248,7 +1248,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		allSettable = all( [ plug.settable() for plug in enabledPlugs ] )
 
 		enabled = True
-		with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
+		with self.ancestor( GafferUI.PlugValueWidget ).context() :
 			with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
 				enabled = all( [ plug.getValue() for plug in enabledPlugs ] )
 
@@ -1262,7 +1262,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		if any( not p.settable() for p in plugs ) :
 			return
 
-		with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
+		with self.ancestor( GafferUI.PlugValueWidget ).context() :
 			checked = sole( [ plug.getValue() for plug in plugs ] )
 		with Gaffer.UndoScope( next( iter( plugs ) ).ancestor( Gaffer.ScriptNode ) ) :
 			self.__setPlugValues( plugs, not checked )

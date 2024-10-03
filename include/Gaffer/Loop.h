@@ -81,6 +81,11 @@ class GAFFER_API Loop : public ComputeNode
 		Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) override;
 		const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const override;
 
+		/// Returns the input plug and context that form the previous iteration of the loop
+		/// with respect to the `output` plug and the current context. Returns `{ nullptr, nullptr }`
+		/// if there is no such iteration.
+		std::pair<const ValuePlug *, ContextPtr> previousIteration( const ValuePlug *output ) const;
+
 		void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const override;
 
 	protected :

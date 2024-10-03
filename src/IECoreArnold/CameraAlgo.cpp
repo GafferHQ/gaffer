@@ -86,12 +86,12 @@ AtVector2 curvePoint( const Splineff::Point &point )
 	);
 }
 
-void setShutterCurveParameter( AtNode *camera, const IECore::Data *value )
+void setShutterCurveParameter( AtNode *camera, const IECore::Data *value, const std::string &messageContext )
 {
 	auto *splineData = runTimeCast<const SplineffData>( value );
 	if( !splineData )
 	{
-		msg( Msg::Warning, "setShutterCurveParameter", fmt::format( "Unsupported value type \"{}\" (expected SplineffData).", value->typeName() ) );
+		msg( Msg::Warning, messageContext, fmt::format( "Unsupported value type \"{}\" (expected SplineffData).", value->typeName() ) );
 		return;
 	}
 
@@ -127,7 +127,7 @@ void setShutterCurveParameter( AtNode *camera, const IECore::Data *value )
 }
 
 // Performs the part of the conversion that is shared by both animated and non-animated cameras.
-AtNode *convertCommon( const IECoreScene::Camera *camera, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode )
+AtNode *convertCommon( const IECoreScene::Camera *camera, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
 	// Use projection to decide what sort of camera node to create
 	const std::string projection = camera->getProjection();
@@ -171,11 +171,11 @@ AtNode *convertCommon( const IECoreScene::Camera *camera, AtUniverse *universe, 
 		{
 			if( paramNameArnold == g_shutterCurveArnoldString )
 			{
-				setShutterCurveParameter( result, it->second.get() );
+				setShutterCurveParameter( result, it->second.get(), messageContext );
 			}
 			else
 			{
-				ParameterAlgo::setParameter( result, paramNameArnold, it->second.get() );
+				ParameterAlgo::setParameter( result, paramNameArnold, it->second.get(), messageContext );
 			}
 		}
 	}
@@ -260,9 +260,9 @@ void setAnimatedFloat( AtNode *node, AtString name, const std::vector<const IECo
 
 } // namespace
 
-AtNode *CameraAlgo::convert( const IECoreScene::Camera *camera, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode )
+AtNode *CameraAlgo::convert( const IECoreScene::Camera *camera, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
-	AtNode *result = convertCommon( camera, universe, nodeName, parentNode );
+	AtNode *result = convertCommon( camera, universe, nodeName, parentNode, messageContext );
 	if( camera->getProjection()=="perspective" )
 	{
 		AiNodeSetFlt( result, g_fovArnoldString, fieldOfView( camera ) );
@@ -277,9 +277,9 @@ AtNode *CameraAlgo::convert( const IECoreScene::Camera *camera, AtUniverse *univ
 	return result;
 }
 
-AtNode *CameraAlgo::convert( const std::vector<const IECoreScene::Camera *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode )
+AtNode *CameraAlgo::convert( const std::vector<const IECoreScene::Camera *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
-	AtNode *result = convertCommon( samples[0], universe, nodeName, parentNode );
+	AtNode *result = convertCommon( samples[0], universe, nodeName, parentNode, messageContext );
 	if( samples[0]->getProjection()=="perspective" )
 	{
 		setAnimatedFloat( result, g_fovArnoldString, samples, fieldOfView );

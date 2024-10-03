@@ -172,14 +172,14 @@ class ChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __setValue( self, unused, value ) :
 
-		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.scriptNode() ) :
 			for plug in self.getPlugs() :
 				plug.setValue( value )
 				Gaffer.Metadata.deregisterValue( plug, "channelPlugValueWidget:isCustom" )
 
 	def __applyCustom( self, unused ) :
 
-		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.scriptNode() ) :
 			for plug in self.getPlugs() :
 				Gaffer.Metadata.registerValue( plug, "channelPlugValueWidget:isCustom", True )
 

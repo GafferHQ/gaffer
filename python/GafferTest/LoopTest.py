@@ -260,8 +260,8 @@ class LoopTest( GafferTest.TestCase ) :
 
 			valuesWhenDirtied[plug] = plugValue( plug )
 
-		loop.plugDirtiedSignal().connect( plugDirtied, scoped = False )
-		add.plugDirtiedSignal().connect( plugDirtied, scoped = False )
+		loop.plugDirtiedSignal().connect( plugDirtied )
+		add.plugDirtiedSignal().connect( plugDirtied )
 		loop["in"].setValue( 1 )
 
 		# Check that we saw the values we expected.
@@ -306,6 +306,41 @@ class LoopTest( GafferTest.TestCase ) :
 		# compute for the _last_ iteration. This leads to a recursive compute, which can cause deadlock
 		# if not handled appropriately.
 		script["loop"]["out"].getValue()
+
+	def testEmptyLoopVariable( self ) :
+
+		loop = self.intLoop()
+
+		loopBody = GafferTest.AddNode()
+		loopBody["op1"].setInput( loop["previous"] )
+		loopBody["op2"].setValue( 2 )
+		loop["next"].setInput( loopBody["sum"] )
+		loop["iterations"].setValue( 4 )
+
+		self.assertEqual( loop["out"].getValue(), 8 )
+
+		loop["indexVariable"].setValue( "" )
+		self.assertEqual( loop["out"].getValue(), 0 )
+
+	def testPreviousIteration( self ) :
+
+		loop = self.intLoop()
+		loop["next"].setInput( loop["previous"] )
+		loop["iterations"].setValue( 10 )
+
+		iteration = loop.previousIteration( loop["out"] )
+		self.assertTrue( iteration[0].isSame( loop["next"] ) )
+		self.assertEqual( iteration[1]["loop:index"], 9 )
+
+		for i in range( 0, 9 ) :
+			with iteration[1] :
+				iteration = loop.previousIteration( loop["previous"] )
+				self.assertTrue( iteration[0].isSame( loop["next"] ) )
+				self.assertEqual( iteration[1]["loop:index"], 8 - i )
+
+		iteration = loop.previousIteration( loop["previous"] )
+		self.assertTrue( iteration[0].isSame( loop["in"] ) )
+		self.assertNotIn( "loop:index", iteration[1] )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import IECore
+import imath
 
 import Gaffer
 import GafferUI
@@ -63,6 +63,7 @@ class _OperationIconColumn( GafferUI.PathColumn ) :
 			Gaffer.TweakPlug.Mode.Multiply : "multiplySmall.png",
 			Gaffer.TweakPlug.Mode.Remove : "removeSmall.png",
 			Gaffer.TweakPlug.Mode.Create : "createSmall.png",
+			Gaffer.TweakPlug.Mode.CreateIfMissing : "createIfMissingSmall.png",
 			Gaffer.TweakPlug.Mode.Min : "lessThanSmall.png",
 			Gaffer.TweakPlug.Mode.Max : "greaterThanSmall.png",
 			Gaffer.TweakPlug.Mode.ListAppend : "listAppendSmall.png",
@@ -78,31 +79,6 @@ class _OperationIconColumn( GafferUI.PathColumn ) :
 
 class _NodeNameColumn( GafferUI.PathColumn ) :
 
-	def __init__( self, title, property, scriptNode ) :
-
-		GafferUI.PathColumn.__init__( self )
-
-		self.__title = title
-		self.__property = property
-		self.__scriptNode = scriptNode
-
-	def cellData( self, path, canceller = None ) :
-
-		cellValue = path.property( self.__property )
-
-		data = self.CellData( cellValue.relativeName( self.__scriptNode ) )
-
-		return data
-
-	def headerData( self, canceller = None ) :
-
-		return self.CellData( self.__title )
-
-# \todo This duplicates logic from (in this case) `_GafferSceneUI._LightEditorSetMembershipColumn`.
-# Refactor to allow calling `_GafferSceneUI.InspectorColumn.cellData()` from `_HistoryWindow` to
-# remove this duplication for columns that customize their value presentation.
-class _SetMembershipColumn( GafferUI.PathColumn ) :
-
 	def __init__( self, title, property ) :
 
 		GafferUI.PathColumn.__init__( self )
@@ -112,14 +88,41 @@ class _SetMembershipColumn( GafferUI.PathColumn ) :
 
 	def cellData( self, path, canceller = None ) :
 
+		node = path.property( self.__property )
+		return self.CellData( node.relativeName( node.scriptNode() ) )
+
+	def headerData( self, canceller = None ) :
+
+		return self.CellData( self.__title )
+
+# \todo This duplicates logic from (in this case) `_GafferSceneUI._LightEditorInspectorColumn`.
+# Refactor to allow calling `_GafferSceneUI.InspectorColumn.cellData()` from `_HistoryWindow` to
+# remove this duplication for columns that customize their value presentation.
+class _ValueColumn( GafferUI.PathColumn ) :
+
+	def __init__( self, title, property, fallbackProperty ) :
+
+		GafferUI.PathColumn.__init__( self )
+
+		self.__title = title
+		self.__property = property
+		self.__fallbackProperty = fallbackProperty
+
+	def cellData( self, path, canceller = None ) :
+
 		cellValue = path.property( self.__property )
+		fallbackValue = path.property( self.__fallbackProperty )
 
 		data = self.CellData()
 
-		if cellValue & IECore.PathMatcher.Result.ExactMatch :
-			data.icon = "setMember.png"
-		elif cellValue & IECore.PathMatcher.Result.AncestorMatch :
-			data.icon = "setMemberFaded.png"
+		if cellValue is not None :
+			data.value = cellValue
+		elif fallbackValue is not None :
+			data.value = fallbackValue
+			data.foreground = imath.Color4f( 0.64, 0.64, 0.64, 1.0 )
+
+		if isinstance( data.value, ( imath.Color3f, imath.Color4f ) ) :
+			data.icon = data.value
 
 		return data
 
@@ -129,9 +132,7 @@ class _SetMembershipColumn( GafferUI.PathColumn ) :
 
 class _HistoryWindow( GafferUI.Window ) :
 
-	def __init__( self, inspector, scenePath, context, scriptNode, title=None, **kw ) :
-
-		assert( isinstance( scriptNode, Gaffer.ScriptNode ) )
+	def __init__( self, inspector, inspectionPath, title=None, **kw ) :
 
 		if title is None :
 			title = "History"
@@ -139,17 +140,14 @@ class _HistoryWindow( GafferUI.Window ) :
 		GafferUI.Window.__init__( self, title, **kw )
 
 		self.__inspector = inspector
-		self.__scenePath = scenePath
-		self.__scriptNode = scriptNode
+		self.__inspectionPath = inspectionPath
 
 		with self :
 			self.__pathListingWidget = GafferUI.PathListingWidget(
 				Gaffer.DictPath( {}, "/" ),
 				columns = (
-					_NodeNameColumn( "Node", "history:node", self.__scriptNode ),
-					_SetMembershipColumn( "Value", "history:value" ) if (
-						isinstance( inspector, GafferSceneUI.Private.SetMembershipInspector )
-					) else GafferUI.PathListingWidget.StandardColumn( "Value", "history:value" ),
+					_NodeNameColumn( "Node", "history:node" ),
+					_ValueColumn( "Value", "history:value", "history:fallbackValue" ),
 					_OperationIconColumn( "Operation", "history:operation" ),
 				),
 				sortable = False,
@@ -163,24 +161,26 @@ class _HistoryWindow( GafferUI.Window ) :
 		self.__valueColumnIndex = 1
 		self.__operationColumnIndex = 2
 
-		self.__pathListingWidget.buttonDoubleClickSignal().connectFront( Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
-		self.__pathListingWidget.keyPressSignal().connectFront( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
-		self.__pathListingWidget.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
-		self.__pathListingWidget.updateFinishedSignal().connectFront( Gaffer.WeakMethod( self.__updateFinished ), scoped = False )
+		self.__pathListingWidget.buttonDoubleClickSignal().connectFront( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
+		self.__pathListingWidget.keyPressSignal().connectFront( Gaffer.WeakMethod( self.__keyPress ) )
+		self.__pathListingWidget.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ) )
+		self.__pathListingWidget.updateFinishedSignal().connectFront( Gaffer.WeakMethod( self.__updateFinished ) )
 
-		inspector.dirtiedSignal().connect( Gaffer.WeakMethod( self.__inspectorDirtied ), scoped = False )
+		inspector.dirtiedSignal().connect( Gaffer.WeakMethod( self.__inspectorDirtied ) )
 
-		context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = False )
+		## \todo We want to make the inspection framework scene-agnostic. We could add an `Inspector::plug()` method
+		# to provide a scene-agnostic way of querying what is being inspected, and use it here.
+		self.__contextTracker = GafferUI.ContextTracker.acquireForFocus( self.__inspectionPath.getScene() )
+		self.__contextTracker.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
+		self.__updatePath()
 
-		self.__updatePath( context )
+	def __updatePath( self ) :
 
-	def __updatePath( self, newContext ) :
-
-		with Gaffer.Context( newContext ) as context :
-			context["scene:path"] = GafferScene.ScenePlug.stringToPath( self.__scenePath )
+		self.__inspectionPath.setContext( self.__contextTracker.context( self.__inspectionPath.getScene() ) )
+		with self.__inspectionPath.inspectionContext() :
 			self.__path = self.__inspector.historyPath()
-			self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ), scoped = True )
 
+		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ), scoped = True )
 		self.__pathListingWidget.setPath( self.__path )
 
 	def __pathChanged( self, path ) :
@@ -231,7 +231,7 @@ class _HistoryWindow( GafferUI.Window ) :
 			if isinstance( self.__popup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
 				self.__popup.plugValueWidget().setNameVisible( False )
 
-			self.__popup.popup()
+			self.__popup.popup( parent = self )
 
 	def __dragBegin( self, pathListing, event ) :
 
@@ -272,9 +272,9 @@ class _HistoryWindow( GafferUI.Window ) :
 
 		self.__path._emitPathChanged()
 
-	def __contextChanged( self, context, key ) :
+	def __contextChanged( self, contextTracker ) :
 
-		self.__updatePath( context )
+		self.__updatePath()
 
 	def __updateFinished( self, pathListing ) :
 
@@ -286,7 +286,7 @@ class _HistoryWindow( GafferUI.Window ) :
 			# The node and all of its parents up to the script node
 			# contribute to the path name.
 
-			while node is not self.__scriptNode and node is not None :
+			while node is not None and not isinstance( node, Gaffer.ScriptNode ) :
 				self.__nodeNameChangedSignals.append(
 					node.nameChangedSignal().connect(
 						Gaffer.WeakMethod( self.__nodeNameChanged ),

@@ -300,10 +300,10 @@ class GadgetTest( GafferUITest.TestCase ) :
 
 			events.append( ( gadget, gadget.visible() ) )
 
-		g.visibilityChangedSignal().connect( visibilityChanged, scoped = False )
-		g["a"].visibilityChangedSignal().connect( visibilityChanged, scoped = False )
-		g["a"]["c"].visibilityChangedSignal().connect( visibilityChanged, scoped = False )
-		g["b"].visibilityChangedSignal().connect( visibilityChanged, scoped = False )
+		g.visibilityChangedSignal().connect( visibilityChanged )
+		g["a"].visibilityChangedSignal().connect( visibilityChanged )
+		g["a"]["c"].visibilityChangedSignal().connect( visibilityChanged )
+		g["b"].visibilityChangedSignal().connect( visibilityChanged )
 
 		g["b"].setVisible( True )
 		self.assertEqual( len( events ), 0 )

@@ -37,8 +37,6 @@
 #include "GafferSceneUI/LightPositionTool.h"
 #include "GafferSceneUI/SceneView.h"
 
-#include "GafferSceneUI/ContextAlgo.h"
-
 #include "GafferUI/Handle.h"
 #include "GafferUI/Pointer.h"
 #include "GafferUI/StandardStyle.h"
@@ -789,7 +787,7 @@ IECore::RunTimeTypedPtr LightPositionTool::handleDragBegin( Gadget *gadget )
 
 bool LightPositionTool::handleDragMove( Gadget *gadget, const DragDropEvent &event )
 {
-	UndoScope undoScope( selection().back().editTarget()->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
+	UndoScope undoScope( view()->scriptNode(), UndoScope::Enabled, undoMergeGroup() );
 
 	if( gadget == m_distanceHandle.get() )
 	{
@@ -868,7 +866,7 @@ bool LightPositionTool::sceneGadgetDragMove( const DragDropEvent &event )
 		return true;
 	}
 
-	UndoScope undoScope( selection().back().editTarget()->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
+	UndoScope undoScope( view()->scriptNode(), UndoScope::Enabled, undoMergeGroup() );
 
 	placeTarget( event.line );
 	return true;
@@ -973,7 +971,7 @@ bool LightPositionTool::buttonPress( const ButtonEvent &event )
 		return true;
 	}
 
-	UndoScope undoScope( selection().back().editTarget()->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
+	UndoScope undoScope( view()->scriptNode(), UndoScope::Enabled, undoMergeGroup() );
 
 	placeTarget( event.line );
 	return true;

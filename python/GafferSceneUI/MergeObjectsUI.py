@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, Alex Fuller. All rights reserved.
+#  Copyright (c) 2024, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,37 +34,67 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
-import GafferCycles
+import GafferUI
+
+import GafferScene
+import GafferSceneUI
+
+##########################################################################
+# Metadata
+##########################################################################
 
 Gaffer.Metadata.registerNode(
 
-	GafferCycles.CyclesRender,
+	GafferScene.MergeObjects,
 
 	"description",
 	"""
-	Performs offline batch rendering using the
-	Cycles renderer, or optionally generates
-	.xml files for later rendering using a SystemCommand
-	node.
+	The base type for scene nodes that merge locations into combined
+	locations. Appropriate for nodes which merge primitives, or convert
+	transforms to points.
 	""",
 
 	plugs = {
 
-		"fileName" : [
+		"filter" : [
 
 			"description",
 			"""
-			The name of the .xml file to be generated when in
-			scene description mode.
-			""",
+			The filter used to choose the source locations to be merged. Source locations are
+			pruned from the output scene, unless they are reused as part of a destination location
+			(or a separate source scene is connected).
+			"""
+		],
 
-			"nodule:type", "",
-			"path:bookmarks", "xml",
-			"fileSystemPath:extensions", "xml",
+		"source" : [
+
+			"description",
+			"""
+			An optional alternate scene to provide the locations to be merged. When connected :
+
+			- The `filter` chooses locations to be merged from the `source` scene rather than then `in` scene.
+			- Source locations are not pruned from the output scene.
+			"""
 
 		],
 
-	}
+
+		"destination" : [
+
+			"description",
+			"""
+			The destination location where filtered locations will be merged to. The destination
+			location will be created if it doesn't exist already. If the name overlaps with an existing
+			location that isn't filtered, the name will get a suffix. May depend on the current value
+			of scene:path in order to individually map input locations to different destinations.
+			""",
+
+		],
+
+
+	},
 
 )

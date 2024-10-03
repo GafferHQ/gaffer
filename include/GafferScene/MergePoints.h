@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, John Haddon. All rights reserved.
+//  Copyright (c) 2024, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,26 +36,30 @@
 
 #pragma once
 
-#include "GafferDelight/Export.h"
-#include "GafferDelight/TypeIds.h"
+#include "GafferScene/MergeObjects.h"
 
-#include "GafferScene/Render.h"
-
-namespace GafferDelight
+namespace GafferScene
 {
 
-class GAFFERDELIGHT_API DelightRender : public GafferScene::Render
+class GAFFERSCENE_API MergePoints : public MergeObjects
 {
 
 	public :
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::MergePoints, MergePointsTypeId, MergeObjects );
 
-		explicit DelightRender( const std::string &name=defaultName<DelightRender>() );
-		~DelightRender() override;
+		explicit MergePoints( const std::string &name=defaultName<MergePoints>() );
+		~MergePoints() override;
 
-		GAFFER_NODE_DECLARE_TYPE( GafferDelight::DelightRender, DelightRenderTypeId, GafferScene::Render );
+	protected :
+
+		IECore::ConstObjectPtr mergeObjects( const std::vector< std::pair< IECore::ConstObjectPtr, Imath::M44f > > &sources, const Gaffer::Context *context ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
 
 };
 
-IE_CORE_DECLAREPTR( DelightRender );
+IE_CORE_DECLAREPTR( MergeObjects )
 
-} // namespace GafferDelight
+} // namespace GafferScene

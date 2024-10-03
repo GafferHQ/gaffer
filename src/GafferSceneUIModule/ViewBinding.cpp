@@ -315,7 +315,8 @@ struct UVViewSlotCaller
 void GafferSceneUIModule::bindViews()
 {
 
-	GafferBindings::NodeClass<SceneView>()
+	GafferBindings::NodeClass<SceneView>( nullptr, no_init )
+		.def( init<ScriptNodePtr>() )
 		.def( "frame", &frame, ( boost::python::arg_( "filter" ), boost::python::arg_( "direction" ) = Imath::V3f( -0.64, -0.422, -0.64 ) ) )
 		.def( "resolutionGate", &resolutionGateWrapper )
 		.def( "expandSelection", &expandSelection, ( boost::python::arg_( "depth" ) = 1 ) )
@@ -330,7 +331,8 @@ void GafferSceneUIModule::bindViews()
 		.staticmethod( "registeredShadingModes" )
 	;
 
-	GafferBindings::NodeClass<ShaderView>()
+	GafferBindings::NodeClass<ShaderView>( nullptr, no_init )
+		.def( init<ScriptNodePtr>() )
 		.def( "shaderPrefix", &ShaderView::shaderPrefix )
 		.def( "scene", (Gaffer::Node *(ShaderView::*)())&ShaderView::scene, return_value_policy<CastToIntrusivePtr>() )
 		.def( "sceneChangedSignal", &ShaderView::sceneChangedSignal, return_internal_reference<1>() )
@@ -348,7 +350,8 @@ void GafferSceneUIModule::bindViews()
 	SignalClass<ShaderView::SceneChangedSignal, DefaultSignalCaller<ShaderView::SceneChangedSignal>, SceneChangedSlotCaller>( "SceneChangedSignal" );
 
 	{
-		scope s = GafferBindings::NodeClass<UVView>()
+		scope s = GafferBindings::NodeClass<UVView>( nullptr, no_init )
+			.def( init<ScriptNodePtr>() )
 			.def( "setPaused", &setPaused )
 			.def( "getPaused", &UVView::getPaused )
 			.def( "state", &UVView::state )

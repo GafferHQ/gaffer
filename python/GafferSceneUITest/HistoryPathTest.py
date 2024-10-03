@@ -201,6 +201,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 					"fullName",
 					"name",
 					"history:value",
+					"history:fallbackValue",
 					"history:operation",
 					"history:source",
 					"history:editWarning",
@@ -247,6 +248,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( c[0].property( "name" ), str( c[0][-1] ) )
 		self.assertEqual( c[0].property( "history:node" ), s["testLight"] )
 		self.assertEqual( c[0].property( "history:value" ), 0.0 )
+		self.assertEqual( c[0].property( "history:fallbackValue" ), None )
 		self.assertEqual( c[0].property( "history:operation" ), Gaffer.TweakPlug.Mode.Create )
 		self.assertEqual( c[0].property( "history:source" ), s["testLight"]["parameters"]["exposure"] )
 		self.assertEqual( c[0].property( "history:editWarning" ), "" )
@@ -254,6 +256,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( c[1].property( "name" ), str( c[1][-1] ) )
 		self.assertEqual( c[1].property( "history:node" ), s["tweaks"] )
 		self.assertEqual( c[1].property( "history:value" ), 2.0 )
+		self.assertEqual( c[1].property( "history:fallbackValue" ), None )
 		self.assertEqual( c[1].property( "history:operation" ), Gaffer.TweakPlug.Mode.Add )
 		self.assertEqual( c[1].property( "history:source" ), exposureTweak )
 		self.assertEqual( c[1].property( "history:editWarning" ), "" )
@@ -261,6 +264,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( c[2].property( "name" ), str( c[2][-1] ) )
 		self.assertEqual( c[2].property( "history:node" ), s["editScope"]["LightEdits"]["ShaderTweaks"] )
 		self.assertEqual( c[2].property( "history:value" ), 3.0 )
+		self.assertEqual( c[2].property( "history:fallbackValue" ), None )
 		self.assertEqual( c[2].property( "history:operation" ), Gaffer.TweakPlug.Mode.Replace )
 		self.assertEqual( c[2].property( "history:source" ), edit )
 		self.assertEqual( c[2].property( "history:editWarning" ), "" )
@@ -354,6 +358,79 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( len( historyPath.children() ), 0 )
 
+	def testAttributeFallbackValues( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["testLight"] = GafferSceneTest.TestLight()
+
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["testLight"]["out"] )
+
+		s["groupFilter"] = GafferScene.PathFilter()
+		s["groupFilter"]["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+
+		s["tweaks"] = GafferScene.AttributeTweaks()
+		s["tweaks"]["in"].setInput( s["group"]["out"] )
+		s["tweaks"]["filter"].setInput( s["groupFilter"]["out"] )
+
+		groupTextureResolutionTweak = Gaffer.TweakPlug( "gl:visualiser:maxTextureResolution", 1024 )
+		groupTextureResolutionTweak["mode"].setValue( Gaffer.TweakPlug.Mode.Create )
+		s["tweaks"]["tweaks"].addChild( groupTextureResolutionTweak )
+
+		s["lightFilter"] = GafferScene.PathFilter()
+		s["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/group/light" ] ) )
+
+		s["openGLAttributes"] = GafferScene.OpenGLAttributes()
+		s["openGLAttributes"]["in"].setInput( s["tweaks"]["out"] )
+		s["openGLAttributes"]["filter"].setInput( s["lightFilter"]["out"] )
+		s["openGLAttributes"]["attributes"]["visualiserMaxTextureResolution"]["enabled"].setValue( True )
+		s["openGLAttributes"]["attributes"]["visualiserMaxTextureResolution"]["value"].setValue( 1536 )
+
+		inspector = GafferSceneUI.Private.AttributeInspector(
+			s["openGLAttributes"]["out"], None, "gl:visualiser:maxTextureResolution",
+		)
+
+		with Gaffer.Context() as context :
+			context["scene:path"] = IECore.InternedStringVectorData( [ "group", "light" ] )
+			historyPath = inspector.historyPath()
+
+		c = historyPath.children()
+
+		self.assertEqual( c[0].property( "name" ), str( c[0][-1] ) )
+		self.assertEqual( c[0].property( "history:node" ), s["openGLAttributes"] )
+		self.assertEqual( c[0].property( "history:value" ), 1536 )
+		self.assertEqual( c[0].property( "history:fallbackValue" ), 1024 )
+		self.assertEqual( c[0].property( "history:operation" ), Gaffer.TweakPlug.Mode.Create )
+		self.assertEqual( c[0].property( "history:source" ), s["openGLAttributes"]["attributes"]["visualiserMaxTextureResolution"] )
+		self.assertEqual( c[0].property( "history:editWarning" ), "Edits to \"gl:visualiser:maxTextureResolution\" may affect other locations in the scene." )
+
+		s["openGLAttributes"]["enabled"].setValue( False )
+
+		with Gaffer.Context() as context :
+			context["scene:path"] = IECore.InternedStringVectorData( [ "group", "light" ] )
+			historyPath = inspector.historyPath()
+
+		c = historyPath.children()
+
+		self.assertEqual( c[0].property( "name" ), str( c[0][-1] ) )
+		self.assertEqual( c[0].property( "history:node" ), s["testLight"] )
+		self.assertEqual( c[0].property( "history:value" ), None )
+		self.assertEqual( c[0].property( "history:fallbackValue" ), 512 )
+		self.assertEqual( c[0].property( "history:operation" ), Gaffer.TweakPlug.Mode.Create )
+		self.assertEqual( c[0].property( "history:source" ), s["testLight"]["visualiserAttributes"]["maxTextureResolution"] )
+		self.assertEqual( c[0].property( "history:editWarning" ), "" )
+
+		# Disabling the openGLAttributes node results in its `visualiserMaxTextureResolution` plug remaining
+		# in the history but providing no value. We'll be able to see the value set on /group as the fallback
+		# value.
+		self.assertEqual( c[1].property( "name" ), str( c[1][-1] ) )
+		self.assertEqual( c[1].property( "history:node" ), s["openGLAttributes"] )
+		self.assertEqual( c[1].property( "history:value" ), None )
+		self.assertEqual( c[1].property( "history:fallbackValue" ), 1024 )
+		self.assertEqual( c[1].property( "history:operation" ), Gaffer.TweakPlug.Mode.Create )
+		self.assertEqual( c[1].property( "history:source" ), s["openGLAttributes"]["attributes"]["visualiserMaxTextureResolution"] )
+		self.assertEqual( c[1].property( "history:editWarning" ), "Edits to \"gl:visualiser:maxTextureResolution\" may affect other locations in the scene." )
 
 if __name__ == "__main__":
 	unittest.main()

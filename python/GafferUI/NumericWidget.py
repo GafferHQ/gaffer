@@ -59,18 +59,21 @@ class NumericWidget( GafferUI.TextWidget ) :
 		self.__dragValue = None
 		self.__dragStart = None
 
-		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
-		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
-		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
-		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ), scoped = False )
-		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
-		self.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ), scoped = False )
+		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.wheelSignal().connect( Gaffer.WeakMethod( self.__wheel ) )
+		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
+		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
+		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
+		self.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ) )
 
 		self.setPreferredCharacterWidth( 10 )
 
 		self.__numericType = None
 		self.setValue( value )
+
+		self.__scrollWheelRotation = 0
 
 	def setValue( self, value ) :
 
@@ -140,6 +143,20 @@ class NumericWidget( GafferUI.TextWidget ) :
 			return True
 
 		return False
+
+	def __wheel( self, widget, event ) :
+
+		assert( widget is self )
+
+		if not self.getEditable() or not self._qtWidget().hasFocus() or event.modifiers != GafferUI.ModifiableEvent.Modifiers.Control :
+			return False
+
+		self.__scrollWheelRotation += event.wheelRotation
+		if abs( self.__scrollWheelRotation ) >= 15.0 :
+			self.__incrementIndex( self.getCursorPosition(), int( math.copysign( 1, self.__scrollWheelRotation ) ) )
+			self.__scrollWheelRotation %= 15.0
+
+		return True
 
 	def __incrementIndex( self, index, increment ) :
 
@@ -275,6 +292,8 @@ class NumericWidget( GafferUI.TextWidget ) :
 			reason = self.ValueChangedReason.InvalidEdit
 
 		self.__emitValueChanged( reason )
+
+		self.__scrollWheelRotation = 0.0
 
 	def __setValueInternal( self, value, reason ) :
 

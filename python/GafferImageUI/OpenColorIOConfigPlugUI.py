@@ -156,13 +156,7 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__menuButton = GafferUI.MenuButton( "", menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
 		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plugs, **kw )
 
-		self.__updateContextConnection()
-		self.__ensureValidValue()
-
-	def setContext( self, context ) :
-
-		GafferUI.PlugValueWidget.setContext( self, context )
-		self.__updateContextConnection()
+		self.context().changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = True )
 		self.__ensureValidValue()
 
 	def _updateFromValues( self, values, exception ) :
@@ -187,7 +181,7 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 		result = IECore.MenuDefinition()
 
 		activeViews = Gaffer.Metadata.value( self.getPlug(), "openColorIO:activeViews" ) or "*"
-		with self.getContext() :
+		with self.context() :
 
 			try :
 				config = GafferImage.OpenColorIOAlgo.currentConfig()
@@ -236,12 +230,6 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().setValue( f"{display}/{view}" )
 
-	def __updateContextConnection( self ) :
-
-		self.__contextChangedConnection = self.getContext().changedSignal().connect(
-			Gaffer.WeakMethod( self.__contextChanged ), scoped = True
-		)
-
 	def __contextChanged( self, context, key ) :
 
 		if key.startswith( "ocio:" ) :
@@ -251,7 +239,7 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __ensureValidValue( self ) :
 
-		with self.getContext() :
+		with self.context() :
 			try :
 				config = GafferImage.OpenColorIOAlgo.currentConfig()
 			except :
@@ -282,7 +270,7 @@ def connect( script ) :
 	if not hadPlug :
 		Gaffer.NodeAlgo.applyUserDefaults( plug )
 
-	script.plugDirtiedSignal().connect( __scriptPlugDirtied, scoped = False )
+	script.plugDirtiedSignal().connect( __scriptPlugDirtied )
 	__scriptPlugDirtied( plug )
 
 def __displayTransformProcessor( config, context, workingSpace, display, view ) :

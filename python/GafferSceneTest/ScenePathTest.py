@@ -292,5 +292,26 @@ class ScenePathTest( GafferSceneTest.SceneTestCase ) :
 		with self.assertRaises( IECore.Cancelled ) :
 			path.isValid( canceller )
 
+	def testInspectionContext( self ) :
+
+		plane = GafferScene.Plane()
+		path = GafferScene.ScenePath( plane["out"], Gaffer.Context(), "/plane" )
+
+		inspectionContext = path.inspectionContext()
+		self.assertIsNotNone( inspectionContext )
+		self.assertIn( "scene:path", inspectionContext )
+		self.assertEqual( inspectionContext["scene:path"], GafferScene.ScenePlug.stringToPath( "/plane" ) )
+
+		context = Gaffer.Context()
+		context["foo"] = 123
+		path = GafferScene.ScenePath( plane["out"], context, "/plane/bogus" )
+
+		inspectionContext = path.inspectionContext()
+		self.assertIsNotNone( inspectionContext )
+		self.assertIn( "scene:path", inspectionContext )
+		self.assertEqual( inspectionContext["scene:path"], GafferScene.ScenePlug.stringToPath( "/plane/bogus" ) )
+		self.assertIn( "foo", inspectionContext )
+		self.assertEqual( inspectionContext["foo"], 123 )
+
 if __name__ == "__main__":
 	unittest.main()

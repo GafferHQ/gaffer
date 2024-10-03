@@ -67,10 +67,11 @@ class AnaglyphTest( GafferImageTest.ImageTestCase ) :
 		right['transform']['translate'].setValue( imath.V2f( 10, 0 ) )
 
 		createViews = GafferImage.CreateViews()
-		createViews["views"].addChild( Gaffer.NameValuePlug( "left", GafferImage.ImagePlug(), True, "view0", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
-		createViews["views"].addChild( Gaffer.NameValuePlug( "right", GafferImage.ImagePlug(), True, "view1", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		createViews["views"].resize( 2 )
 		createViews["views"][0]["value"].setInput( left["out"] )
+		createViews["views"][0]["name"].setValue( "left" )
 		createViews["views"][1]["value"].setInput( right["out"] )
+		createViews["views"][1]["name"].setValue( "right" )
 
 		anaglyph = GafferImage.Anaglyph()
 		anaglyph["in"].setInput( createViews["out"] )

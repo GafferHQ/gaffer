@@ -105,7 +105,8 @@ class FreezeTransformTest( GafferSceneTest.SceneTestCase ) :
 	def testAffects( self ) :
 
 		t = GafferScene.FreezeTransform()
-		self.assertEqual( set( t.affects( t["in"]["object"] ) ), set( [ t["out"]["object"] ] ) )
+		self.assertEqual( set( t.affects( t["in"]["object"] ) ), set( [ t["out"]["object"], t["__processedObject"] ] ) )
+		self.assertEqual( set( t.affects( t["__processedObject"] ) ), set( [ t["out"]["object"] ] ) )
 
 	def testSetFilter( self ) :
 

@@ -206,7 +206,7 @@ struct HashesPerComputeMetric
 
 // Utility for invoking a templated functor with a particular metric.
 template<typename F>
-std::result_of_t<F(const HashCountMetric &)> dispatchMetric( const F &f, MonitorAlgo::PerformanceMetric performanceMetric )
+std::invoke_result_t<F, const HashCountMetric &> dispatchMetric( const F &f, MonitorAlgo::PerformanceMetric performanceMetric )
 {
 	switch( performanceMetric )
 	{

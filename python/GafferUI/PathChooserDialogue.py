@@ -66,13 +66,13 @@ class PathChooserDialogue( GafferUI.Dialogue ) :
 
 		self.__pathChooserWidget = GafferUI.PathChooserWidget( path, allowMultipleSelection=allowMultipleSelection, bookmarks=bookmarks )
 		self._setWidget( self.__pathChooserWidget )
-		self.__pathChooserWidget.pathSelectedSignal().connect( Gaffer.WeakMethod( self.__pathChooserSelected ), scoped = False )
-		self.__pathChooserWidget.pathListingWidget().selectionChangedSignal().connect( Gaffer.WeakMethod( self.__updateButtonState ), scoped = False )
+		self.__pathChooserWidget.pathSelectedSignal().connect( Gaffer.WeakMethod( self.__pathChooserSelected ) )
+		self.__pathChooserWidget.pathListingWidget().selectionChangedSignal().connect( Gaffer.WeakMethod( self.__updateButtonState ) )
 
 		self.__cancelButton = self._addButton( cancelLabel )
-		self.__cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
+		self.__cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 		self.__confirmButton = self._addButton( confirmLabel )
-		self.__confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
+		self.__confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 
 		self.__pathSelectedSignal = Gaffer.Signals.Signal1()
 

@@ -97,8 +97,6 @@ Gaffer.Metadata.registerNode(
 
 		"tweaks.*" : [
 
-			"tweakPlugValueWidget:allowCreate", True,
-			"tweakPlugValueWidget:allowRemove", True,
 			"tweakPlugValueWidget:propertyType", "attribute",
 
 		],
@@ -192,7 +190,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 		assert( isinstance( node, GafferScene.AttributeTweaks ) )
 
 		pathMatcher = IECore.PathMatcher()
-		with self.getContext() :
+		with self.context() :
 			GafferScene.SceneAlgo.matchingPaths( node["filter"], node["in"], pathMatcher )
 
 		return self.__addFromPathsMenuDefinition( pathMatcher.paths() )
@@ -200,8 +198,8 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 	def __addFromSelectedMenuDefinition( self ) :
 
 		return self.__addFromPathsMenuDefinition(
-			GafferSceneUI.ContextAlgo.getSelectedPaths( self.getContext() ).paths()
-	)
+			GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( self.scriptNode() ).paths()
+		)
 
 	def __addFromPathsMenuDefinition( self, paths ) :
 
@@ -211,7 +209,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 		assert( isinstance( node, GafferScene.AttributeTweaks ) )
 
 		attributes = {}
-		with self.getContext() :
+		with self.context() :
 			useFullAttr = node["localise"].getValue()
 			for path in paths :
 				attr = node["in"].fullAttributes( path ) if useFullAttr else node["in"].attributes( path )

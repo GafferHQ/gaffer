@@ -61,12 +61,10 @@ class GAFFERSCENEUI_API UVView : public GafferUI::View
 
 	public :
 
-		explicit UVView( const std::string &name = defaultName<UVView>() );
+		explicit UVView( Gaffer::ScriptNodePtr scriptNode );
 		~UVView() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::UVView, UVViewTypeId, View );
-
-		void setContext( Gaffer::ContextPtr context ) override;
 
 		Gaffer::StringPlug *uvSetPlug();
 		const Gaffer::StringPlug *uvSetPlug() const;
@@ -92,10 +90,6 @@ class GAFFERSCENEUI_API UVView : public GafferUI::View
 		using UVViewSignal = Gaffer::Signals::Signal<void (UVView *)>;
 		UVViewSignal &stateChangedSignal();
 
-	protected :
-
-		void contextChanged( const IECore::InternedString &name ) override;
-
 	private :
 
 		Gaffer::CompoundObjectPlug *texturesPlug();
@@ -111,9 +105,11 @@ class GAFFERSCENEUI_API UVView : public GafferUI::View
 		GafferUI::Gadget *textureGadgets();
 		const GafferUI::Gadget *textureGadgets() const;
 
+		void contextChanged();
 		void plugDirtied( const Gaffer::Plug *plug );
 		void preRender();
 		void visibilityChanged();
+		void selectedPathsChanged();
 		void updateTextureGadgets( const IECore::ConstCompoundObjectPtr &textures );
 		void gadgetStateChanged( const GafferUI::Gadget *gadget, bool running );
 

@@ -37,7 +37,7 @@
 
 #include "GafferSceneUI/SceneView.h"
 
-#include "GafferSceneUI/ContextAlgo.h"
+#include "GafferSceneUI/ScriptNodeAlgo.h"
 
 #include "GafferScene/AttributeQuery.h"
 #include "GafferScene/CustomAttributes.h"
@@ -58,6 +58,7 @@
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/NameSwitch.h"
 #include "Gaffer/PlugAlgo.h"
+#include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECoreGL/Camera.h"
@@ -1433,9 +1434,7 @@ class SceneView::Camera : public Signals::Trackable
 			view->viewportGadget()->viewportChangedSignal().connect( boost::bind( &Camera::viewportChanged, this ) );
 			m_viewportCameraChangedConnection = view->viewportGadget()->cameraChangedSignal().connect( boost::bind( &Camera::viewportCameraChanged, this ) );
 
-			connectToViewContext();
-			view->contextChangedSignal().connect( boost::bind( &Camera::connectToViewContext, this ) );
-
+			view->contextChangedSignal().connect( boost::bind( &Camera::contextChanged, this ) );
 		}
 
 		Gaffer::ValuePlug *plug()
@@ -1532,19 +1531,11 @@ class SceneView::Camera : public Signals::Trackable
 			return static_cast<SceneGadget *>( m_view->viewportGadget()->getPrimaryChild() );
 		}
 
-		void connectToViewContext()
+		void contextChanged()
 		{
-			m_contextChangedConnection = m_view->getContext()->changedSignal().connect( boost::bind( &Camera::contextChanged, this, ::_2 ) );
-		}
-
-		void contextChanged( const IECore::InternedString &name )
-		{
-			if( !boost::starts_with( name.value(), "ui:" ) )
+			if( lookThroughEnabledPlug()->getValue() )
 			{
-				if( lookThroughEnabledPlug()->getValue() )
-				{
-					m_lookThroughCameraDirty = m_viewportCameraDirty = true;
-				}
+				m_lookThroughCameraDirty = m_viewportCameraDirty = true;
 			}
 		}
 
@@ -1663,7 +1654,7 @@ class SceneView::Camera : public Signals::Trackable
 			// Retrieve it, along with the scene globals
 			// and the camera set.
 
-			Context::Scope scopedContext( m_view->getContext() );
+			Context::Scope scopedContext( m_view->context() );
 
 			string cameraPathString = lookThroughCameraPath();
 			ConstCompoundObjectPtr globals;
@@ -1907,7 +1898,6 @@ class SceneView::Camera : public Signals::Trackable
 
 		Signals::ScopedConnection m_plugSetConnection;
 		Signals::ScopedConnection m_viewportCameraChangedConnection;
-		Signals::ScopedConnection m_contextChangedConnection;
 
 		// Cameras that don't exist in the Gaffer scene, so are
 		// always available for use.
@@ -1935,8 +1925,8 @@ GAFFER_NODE_DEFINE_TYPE( SceneView );
 size_t SceneView::g_firstPlugIndex = 0;
 SceneView::ViewDescription<SceneView> SceneView::g_viewDescription( GafferScene::ScenePlug::staticTypeId() );
 
-SceneView::SceneView( const std::string &name )
-	:	View( name, new GafferScene::ScenePlug() ),
+SceneView::SceneView( ScriptNodePtr scriptNode )
+	:	View( defaultName<SceneView>(), scriptNode, new GafferScene::ScenePlug() ),
 		m_sceneGadget( new SceneGadget )
 {
 
@@ -1973,7 +1963,7 @@ SceneView::SceneView( const std::string &name )
 	viewportGadget()->setPrimaryChild( m_sceneGadget );
 	viewportGadget()->keyPressSignal().connect( boost::bind( &SceneView::keyPress, this, ::_1, ::_2 ) );
 
-	m_sceneGadget->setContext( getContext() );
+	m_sceneGadget->setContext( context() );
 
 	m_renderer.reset( new Renderer( this ) );
 	m_selectionMask.reset( new SelectionMask( this ) );
@@ -2052,6 +2042,13 @@ SceneView::SceneView( const std::string &name )
 
 	m_sceneGadget->setScene( preprocessedInPlug<ScenePlug>() );
 
+	// Connect to ScriptNodeAlgo for selection and visible set updates,
+	// and arrange to update when our context changes.
+
+	ScriptNodeAlgo::selectedPathsChangedSignal( scriptNode.get() ).connect( boost::bind( &SceneView::selectedPathsChanged, this ) );
+	ScriptNodeAlgo::visibleSetChangedSignal( scriptNode.get() ).connect( boost::bind( &SceneView::visibleSetChanged, this ) );
+	contextChangedSignal().connect( boost::bind( &SceneView::contextChanged, this ) );
+
 }
 
 SceneView::~SceneView()
@@ -2098,12 +2095,6 @@ const GafferScene::PathFilter *SceneView::deleteObjectFilter() const
 	return getPreprocessor()->getChild<PathFilter>( "deleteObjectFilter" );
 }
 
-void SceneView::setContext( Gaffer::ContextPtr context )
-{
-	View::setContext( context );
-	m_sceneGadget->setContext( context );
-}
-
 const Box2f &SceneView::resolutionGate() const
 {
 	return m_camera->resolutionGate();
@@ -2127,25 +2118,6 @@ void SceneView::registerRenderer( const std::string &name, const RendererSetting
 std::vector<std::string> SceneView::registeredRenderers()
 {
 	return Renderer::registeredRenderers();
-}
-
-void SceneView::contextChanged( const IECore::InternedString &name )
-{
-	if( ContextAlgo::affectsSelectedPaths( name ) )
-	{
-		m_sceneGadget->setSelection( ContextAlgo::getSelectedPaths( getContext() ) );
-		return;
-	}
-	else if( ContextAlgo::affectsVisibleSet( name ) )
-	{
-		m_sceneGadget->setVisibleSet( ContextAlgo::getVisibleSet( getContext() ) );
-		return;
-	}
-	else if( boost::starts_with( name.value(), "ui:" ) )
-	{
-		// ui context entries shouldn't affect computation.
-		return;
-	}
 }
 
 Imath::Box3f SceneView::framingBound() const
@@ -2175,6 +2147,21 @@ Imath::Box3f SceneView::framingBound() const
 	}
 
 	return b;
+}
+
+void SceneView::contextChanged()
+{
+	m_sceneGadget->setContext( context() );
+}
+
+void SceneView::selectedPathsChanged()
+{
+	m_sceneGadget->setSelection( ScriptNodeAlgo::getSelectedPaths( scriptNode() ) );
+}
+
+void SceneView::visibleSetChanged()
+{
+	m_sceneGadget->setVisibleSet( ScriptNodeAlgo::getVisibleSet( scriptNode() ) );
 }
 
 bool SceneView::keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &event )
@@ -2221,7 +2208,7 @@ void SceneView::frame( const PathMatcher &filter, const Imath::V3f &direction )
 {
 	Imath::Box3f bound;
 
-	Context::Scope scope( getContext() );
+	Context::Scope scope( context() );
 
 	PathMatcher paths;
 	const ScenePlug *scene = inPlug<const ScenePlug>();
@@ -2239,13 +2226,9 @@ void SceneView::frame( const PathMatcher &filter, const Imath::V3f &direction )
 
 void SceneView::expandSelection( size_t depth )
 {
-	// Note that we are scoping this context when expandDescendants computes a new value for the expanded paths.
-	// This could result in unnecessary cache misses due to changing the context entry, but it's OK because the
-	// selected paths is a "ui:" prefixed context variable, and Context is hardcoded to ignore variables with
-	// this prefix during hashing
-	Context::Scope scope( getContext() );
-	PathMatcher selection = ContextAlgo::expandDescendants( getContext(), m_sceneGadget->getSelection(), preprocessedInPlug<ScenePlug>(), depth - 1 );
-	ContextAlgo::setSelectedPaths( getContext(), selection );
+	Context::Scope scope( context() );
+	PathMatcher selection = ScriptNodeAlgo::expandDescendantsInVisibleSet( scriptNode(), m_sceneGadget->getSelection(), preprocessedInPlug<ScenePlug>(), depth - 1 );
+	ScriptNodeAlgo::setSelectedPaths( scriptNode(), selection );
 }
 
 void SceneView::collapseSelection()
@@ -2256,11 +2239,11 @@ void SceneView::collapseSelection()
 		return;
 	}
 
-	PathMatcher expanded = ContextAlgo::getExpandedPaths( getContext() );
+	VisibleSet visibleSet = ScriptNodeAlgo::getVisibleSet( scriptNode() );
 
 	for( PathMatcher::Iterator it = selection.begin(), eIt = selection.end(); it != eIt; ++it )
 	{
-		if( !expanded.removePath( *it ) )
+		if( !visibleSet.expansions.removePath( *it ) )
 		{
 			if( it->size() <= 1 )
 			{
@@ -2268,13 +2251,13 @@ void SceneView::collapseSelection()
 			}
 			selection.removePath( *it );
 			ScenePlug::ScenePath parentPath( it->begin(), it->end() - 1 );
-			expanded.removePath( parentPath );
+			visibleSet.expansions.removePath( parentPath );
 			selection.addPath( parentPath );
 		}
 	}
 
-	ContextAlgo::setExpandedPaths( getContext(), expanded );
-	ContextAlgo::setSelectedPaths( getContext(), selection );
+	ScriptNodeAlgo::setVisibleSet( scriptNode(), visibleSet );
+	ScriptNodeAlgo::setSelectedPaths( scriptNode(), selection );
 }
 
 void SceneView::plugSet( Gaffer::Plug *plug )

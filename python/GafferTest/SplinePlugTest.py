@@ -272,7 +272,7 @@ class SplinePlugTest( GafferTest.TestCase ) :
 			if plug.isSame( p ) :
 				self.__plugSetCount += 1
 
-		n.plugSetSignal().connect( plugSet, scoped = False )
+		n.plugSetSignal().connect( plugSet )
 
 		p.pointYPlug( 2 ).setValue( 1.0 )
 

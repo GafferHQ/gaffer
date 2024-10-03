@@ -55,10 +55,10 @@ class ColorSwatchPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self._addPopupMenu( self.__swatch )
 
-		self.__swatch.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
-		self.__swatch.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
-		self.__swatch.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
-		self.__swatch.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
+		self.__swatch.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.__swatch.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
+		self.__swatch.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
+		self.__swatch.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
 
 	def setHighlighted( self, highlighted ) :
 
@@ -131,17 +131,17 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 		self.__lastChangedReason = None
 		self.__mergeGroupId = 0
 
-		self.__colorChangedConnection = self.colorChooser().colorChangedSignal().connect( Gaffer.WeakMethod( self.__colorChanged ), scoped = False )
-		self.confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
-		self.cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
+		self.__colorChangedConnection = self.colorChooser().colorChangedSignal().connect( Gaffer.WeakMethod( self.__colorChanged ) )
+		self.confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
+		self.cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 
 		self.__plugs = plugs
 		self.__initialValues = { p : p.getValue() for p in self.__plugs }
 
 		nodes = { p.node() for p in self.__plugs }
-		self.__plugSetConnections = [ n.plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ), scoped = False ) for n in nodes ]
+		self.__plugSetConnections = [ n.plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) ) for n in nodes ]
 		for node in nodes :
-			node.parentChangedSignal().connect( Gaffer.WeakMethod( self.__destroy ), scoped = False )
+			node.parentChangedSignal().connect( Gaffer.WeakMethod( self.__destroy ) )
 
 		plug = next( iter( self.__plugs ) )
 		if len( self.__plugs ) == 1 :

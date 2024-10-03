@@ -1481,3 +1481,35 @@ if GafferCycles.hasOpenImageDenoise :
 
 for _pass in GafferCycles.passes.keys():
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.displayPass.value", "preset:%s" % _pass.replace( "_", " " ).title(), "%s" % _pass )
+
+# Used by `startup/gui/cyclesViewerSettings.gfr`.
+class ViewerDevicePlugValueWidget( GafferUI.PresetsPlugValueWidget ) :
+
+	def __init__( self, plugs, **kw ) :
+
+		GafferUI.PresetsPlugValueWidget.__init__( self, plugs, **kw )
+
+		self.getPlug().node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
+
+	def __plugSet( self, plug ) :
+
+		if plug != self.getPlug() :
+			return
+
+		if plug.getValue() != "CPU" :
+			# Switch to SVM shading to prevent CyclesRenderer falling back
+			# to CPU shading due to OSL not being available.
+			## \todo Change CyclesRenderer to fall back to SVM rather than
+			# fall back to CPU.
+			plug.parent()["shadingSystem"].setValue( "SVM" )
+
+		# Cycles can't switch device after render has started, so we need to
+		# force a restart (somewhat hackily). This does cause the SceneView to
+		# create and destroy an OpenGL renderer unnecessarily, but it doesn't
+		# actually get populated with a scene because that doesn't happen until
+		# the viewport is drawn, and we've switched back to Cycles before that
+		# happens.
+
+		if plug.node()["renderer"]["name"].getValue() == "Cycles" :
+			plug.node()["renderer"]["name"].setValue( "OpenGL" )
+			plug.node()["renderer"]["name"].setValue( "Cycles" )

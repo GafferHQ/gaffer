@@ -53,10 +53,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testObjectColor( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.output(
 			"testOutput",
@@ -95,7 +92,6 @@ class RendererTest( GafferTest.TestCase ) :
 		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
 
 		renderer.render()
-		time.sleep( 2 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testObjectColor" )
 		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
@@ -110,10 +106,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testQuadLightColorTexture( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.output(
 			"testOutput",
@@ -168,7 +161,6 @@ class RendererTest( GafferTest.TestCase ) :
 		light.transform( imath.M44f().rotate( imath.V3f( 0, math.pi, 0 ) ) )
 
 		renderer.render()
-		time.sleep( 2.0 )
 
 		# Check that we have a pure red image.
 
@@ -185,10 +177,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testLightWithoutAttribute( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		# Light destined for another renderer - we want to ignore this, and not crash.
 
@@ -208,10 +197,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testBackgroundLightWithoutTexture( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.output(
 			"testOutput",
@@ -263,7 +249,6 @@ class RendererTest( GafferTest.TestCase ) :
 		light.transform( imath.M44f().rotate( imath.V3f( 0, math.pi, 0 ) ) )
 
 		renderer.render()
-		time.sleep( 2.0 )
 
 		# Check that we have a pure red image.
 
@@ -279,10 +264,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testCrashWhenNoBackgroundLight( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.option( "cycles:shadingsystem", IECore.StringData( "SVM" ) )
 
@@ -301,14 +283,10 @@ class RendererTest( GafferTest.TestCase ) :
 
 		# This used to crash. If it doesn't crash now, then we are happy.
 		renderer.render()
-		time.sleep( 2.0 )
 
 	def testBackgroundLightBatchRender( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		fileName = self.temporaryDirectory() / "test.exr"
 		renderer.output(
@@ -601,10 +579,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testMultipleOutputs( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.output(
 			"testOutput:beauty",
@@ -727,10 +702,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testDisplayDriverCropWindow( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.camera(
 			"testCamera",
@@ -759,11 +731,6 @@ class RendererTest( GafferTest.TestCase ) :
 
 		renderer.option( "camera", IECore.StringData( "testCamera" ) )
 		renderer.render()
-		## \todo We could just be running this test with a Batch mode render,
-		# in which case `render()` would block until the image was complete.
-		# But CyclesRenderer is currently hardcoded to only use IEDisplayOutputDriver
-		# for interactive renders.
-		time.sleep( 2.0 )
 		del renderer
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testCropWindow" )
@@ -773,10 +740,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testOutputFileCropWindow( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.camera(
 			"testCamera",
@@ -808,10 +772,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testPointsWithNormals( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.output(
 			"pointsWithNormals",
@@ -861,7 +822,6 @@ class RendererTest( GafferTest.TestCase ) :
 		pointsObject.transform( imath.M44f().translate( imath.V3f( 0, 0, 2 ) ) )
 
 		renderer.render()
-		time.sleep( 2 )
 
 		del pointsObject
 		del renderer
@@ -878,10 +838,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def __testMeshSmoothing( self, cube, smoothingExpected ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.output(
 			"meshSmoothing",
@@ -903,7 +860,6 @@ class RendererTest( GafferTest.TestCase ) :
 		cubeObject.transform( imath.M44f().translate( imath.V3f( 0, 0, 2 ) ).rotate( imath.V3f( 0, math.pi / 4.0, 0 ) ) )
 
 		renderer.render()
-		time.sleep( 2 )
 
 		del cubeObject
 		del renderer
@@ -958,10 +914,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testUnsupportedPrimitiveVariables( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 		attributes = renderer.attributes( IECore.CompoundObject() )
 
 		primitive = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( 0 ) ] ) )
@@ -992,10 +945,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		attributeName = primitiveVariable if attributeName is None else attributeName
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		# Frame the primitive so it fills the entire image.
 
@@ -1457,10 +1407,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testShaderSubstitutions( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		fileName = self.temporaryDirectory() / "test.exr"
 		renderer.output(
@@ -1533,14 +1480,11 @@ class RendererTest( GafferTest.TestCase ) :
 		if c != "":
 			c = "%s." % channelName
 
-		return imath.Color4f( image[c+"R"][i], image[c+"G"][i], image[c+"B"][i], image[c+"A"][i] )
+		return imath.Color4f( image[c+"R"][i], image[c+"G"][i], image[c+"B"][i], image[c+"A"][i] if c+"A" in image.keys() else 0.0 )
 
 	def __testCustomAttributeType( self, primitive, prefix, customAttribute, outputPlug, data, expectedResult, maxDifference = 0.0 ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		# Frame the primitive so it fills the entire image.
 
@@ -1623,10 +1567,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testCustomAttributePrecedence( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.output(
 			"testOutput",
@@ -1665,7 +1606,6 @@ class RendererTest( GafferTest.TestCase ) :
 		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
 
 		renderer.render()
-		time.sleep( 2 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testCustomAttributePrecedence" )
 		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
@@ -1718,10 +1658,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testMissingShaderParameter( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		with IECore.CapturingMessageHandler() as mh :
 			dodgyNetwork = IECoreScene.ShaderNetwork(
@@ -1742,10 +1679,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testOSLComponentConnections( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.output(
 			"testOutput",
@@ -1784,7 +1718,6 @@ class RendererTest( GafferTest.TestCase ) :
 		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
 
 		renderer.render()
-		time.sleep( 2 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testOSLComponentConnections" )
 		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
@@ -1794,10 +1727,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testSurfaceAttributeWithGenericShaderType( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.output(
 			"testOutput",
@@ -1834,7 +1764,6 @@ class RendererTest( GafferTest.TestCase ) :
 		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
 
 		renderer.render()
-		time.sleep( 2 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testSurfaceAttributeWithGenericShaderType" )
 		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
@@ -1859,10 +1788,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testCustomAOV( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		# Custom AOVs are currently not supported in OSL mode.
 		# See https://developer.blender.org/T73266 for further updates
@@ -1934,7 +1860,6 @@ class RendererTest( GafferTest.TestCase ) :
 		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
 
 		renderer.render()
-		time.sleep( 2 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testCustomValueAOV" )
 		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
@@ -1956,10 +1881,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def __testShaderResults( self, shader, expectedResults, maxDifference = 0.0 ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		# Frame so our plane fills the entire image.
 
@@ -2119,10 +2041,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testInvalidShaderParameterValues( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		for name, value in {
 			"sheen_weight" : IECore.StringData( "iShouldBeAFloat" ),
@@ -2156,10 +2075,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testInvalidShaderEnumValue( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		with IECore.CapturingMessageHandler() as mh :
 
@@ -2184,10 +2100,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testUnsupportedShaderParameters( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		with IECore.CapturingMessageHandler() as mh :
 
@@ -2216,10 +2129,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testUSDLightColorTemperature( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.output(
 			"testOutput",
@@ -2270,7 +2180,6 @@ class RendererTest( GafferTest.TestCase ) :
 		light.transform( imath.M44f().rotate( imath.V3f( 0, math.pi, 0 ) ) )
 
 		renderer.render()
-		time.sleep( 2.0 )
 
 		# Check that the color temperature has tinted the image red.
 
@@ -2288,10 +2197,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testOSLInSVMShadingSystem( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.option( "cycles:shadingsystem", IECore.StringData( "SVM" ) )
 
@@ -2336,7 +2242,6 @@ class RendererTest( GafferTest.TestCase ) :
 		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
 
 		renderer.render()
-		time.sleep( 2 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testOSLInSVMShadingSystem" )
 		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
@@ -2352,10 +2257,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testFilmOptions( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		# Get default values
 
@@ -2393,10 +2295,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testIntegratorOptions( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		# Get default values
 
@@ -2434,10 +2333,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testUnknownOptions( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"Cycles",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
-		)
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
 
 		renderer.output(
 			"testOutput",
@@ -2672,6 +2568,179 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].context, "CyclesRenderer::option" )
 		self.assertEqual( mh.messages[0].message, "Option edit requires a manual render restart" )
+
+	def testBackgroundLightgroup( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testOutput",
+				}
+			)
+		)
+
+		renderer.output(
+			"testEnvOutput",
+			IECoreScene.Output(
+				"env",
+				"ieDisplay",
+				"lg env",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testEnvOutput",
+				}
+			)
+		)
+
+		renderer.output(
+			"testOtherOutput",
+			IECoreScene.Output(
+				"env",
+				"ieDisplay",
+				"lg other",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testOtherOutput",
+				}
+			)
+		)
+
+		plane = renderer.object(
+			"/plane",
+			IECoreScene.MeshPrimitive.createPlane(
+				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			),
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"principled_bsdf", "cycles:shader",
+							{ "base_color" : imath.Color3f( 1, 1, 1 ) }
+						),
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		## \todo Default camera is facing down +ve Z but should be facing
+		# down -ve Z.
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+
+		def lightAttributes( lightgroup ) :
+
+			return renderer.attributes( IECore.CompoundObject ( {
+				"cycles:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "background_light", "cycles:light", { "color" : imath.Color3f( 0, 1, 0 ), "lightgroup" : lightgroup } ),
+					},
+					output = "output",
+				),
+			} ) )
+
+		# Render with a background light in the "env" lightgroup.
+		light = renderer.light( "/light", None, lightAttributes( "env" ) )
+
+		renderer.render()
+		time.sleep( 1 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testOutput" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		# Slightly off-centre, to avoid triangle edge artifact in centre of image.
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
+		self.assertEqual( testPixel.r, 0 )
+		self.assertGreater( testPixel.g, 0.99 )
+		self.assertEqual( testPixel.b, 0 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testEnvOutput" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ), "env" )
+		self.assertEqual( testPixel.r, 0 )
+		self.assertGreater( testPixel.g, 0.99 )
+		self.assertEqual( testPixel.b, 0 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testOtherOutput" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ), "other" )
+		self.assertEqual( testPixel.r, 0 )
+		self.assertEqual( testPixel.g, 0 )
+		self.assertEqual( testPixel.b, 0 )
+
+		# Edit the lightgroup and re-render, we should see the light's contribution
+		# change to the other lightgroup output.
+		renderer.pause()
+		light.attributes( lightAttributes( "other" ) )
+		renderer.render()
+		time.sleep( 1 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testOutput" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
+		self.assertEqual( testPixel.r, 0 )
+		self.assertGreater( testPixel.g, 0.99 )
+		self.assertEqual( testPixel.b, 0 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testEnvOutput" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ), "env" )
+		self.assertEqual( testPixel.r, 0 )
+		self.assertEqual( testPixel.g, 0 )
+		self.assertEqual( testPixel.b, 0 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testOtherOutput" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ), "other" )
+		self.assertEqual( testPixel.r, 0 )
+		self.assertGreater( testPixel.g, 0.99 )
+		self.assertEqual( testPixel.b, 0 )
+
+		# Clear the lightgroup and re-render, we shouldn't see the light's contribution
+		# in either lightgroup output.
+		renderer.pause()
+		light.attributes( lightAttributes( "" ) )
+		renderer.render()
+		time.sleep( 1 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testOutput" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
+		self.assertEqual( testPixel.r, 0 )
+		self.assertGreater( testPixel.g, 0.99 )
+		self.assertEqual( testPixel.b, 0 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testEnvOutput" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ), "env" )
+		self.assertEqual( testPixel.r, 0 )
+		self.assertEqual( testPixel.g, 0 )
+		self.assertEqual( testPixel.b, 0 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testOtherOutput" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ), "other" )
+		self.assertEqual( testPixel.r, 0 )
+		self.assertEqual( testPixel.g, 0 )
+		self.assertEqual( testPixel.b, 0 )
+
+		del light, plane
 
 if __name__ == "__main__":
 	unittest.main()

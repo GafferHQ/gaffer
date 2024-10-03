@@ -65,18 +65,13 @@ class GAFFERSCENEUI_API LightTool : public GafferSceneUI::SelectionTool
 
 		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::LightTool, LightToolTypeId, SelectionTool );
 
-		const IECore::PathMatcher selection() const;
-
-		using SelectionChangedSignal = Gaffer::Signals::Signal<void (LightTool &)>;
-		SelectionChangedSignal &selectionChangedSignal();
-
 	private :
 
 		GafferScene::ScenePlug *scenePlug();
 		const GafferScene::ScenePlug *scenePlug() const;
 
-		void connectToViewContext();
-		void contextChanged( const IECore::InternedString &name );
+		void contextChanged();
+		void selectedPathsChanged();
 		void metadataChanged( IECore::InternedString key );
 		void updateHandleInspections();
 		void updateHandleTransforms( float rasterScale );
@@ -96,12 +91,8 @@ class GAFFERSCENEUI_API LightTool : public GafferSceneUI::SelectionTool
 
 		bool m_priorityPathsDirty;
 
-		SelectionChangedSignal m_selectionChangedSignal;
-
 		bool m_dragging;
-		Gaffer::ScriptNodePtr m_scriptNode;
 
-		Gaffer::Signals::ScopedConnection m_contextChangedConnection;
 		Gaffer::Signals::ScopedConnection m_preRenderConnection;
 
 		std::vector<Gaffer::Signals::ScopedConnection> m_inspectorsDirtiedConnection;

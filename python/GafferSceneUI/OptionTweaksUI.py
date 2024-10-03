@@ -119,7 +119,6 @@ Gaffer.Metadata.registerNode(
 
 		"tweaks.*" : [
 
-			"tweakPlugValueWidget:allowCreate", True,
 			"tweakPlugValueWidget:propertyType", "option",
 
 		],
@@ -219,7 +218,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 		node = self.getPlug().node()
 		assert( isinstance( node, GafferScene.OptionTweaks ) )
 
-		with self.getContext() :
+		with self.context() :
 			options = node["out"]["globals"].getValue()
 			existingTweaks = { tweak["name"].getValue() for tweak in node["tweaks"] }
 

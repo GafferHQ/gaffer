@@ -148,15 +148,17 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.__displayModeChangedSignal = GafferUI.WidgetSignal()
 		self.__expansionChangedSignal = GafferUI.WidgetSignal()
 		self.__updateFinishedSignal = GafferUI.WidgetSignal()
+		self.__columnContextMenuSignal = Gaffer.Signal3()
 
 		# Connections for implementing selection and drag and drop.
-		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
-		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
-		self.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
-		self.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
-		self.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ), scoped = False )
-		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
-		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
+		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
+		self.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
+		self.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ) )
+		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
+		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
+		self.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) )
 		self.__dragPointer = "paths"
 
 		self.__path = None
@@ -423,6 +425,19 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		return self.__pathSelectedSignal
 
+	## Signal emitted to generate a context menu for a column. This allows
+	# multiple clients to collaborate in the construction of a menu, with each
+	# providing different items. It should be preferred to the generic
+	# `Widget.contextMenuSignal()`.
+	#
+	# Slots must have the following signature, with the `menuDefinition` being
+	# edited directly in place :
+	#
+	# `slot( column, pathListingWidget, menuDefinition )`
+	def columnContextMenuSignal( self ) :
+
+		return self.__columnContextMenuSignal
+
 	def setDragPointer( self, dragPointer ) :
 
 		self.__dragPointer = dragPointer
@@ -477,6 +492,9 @@ class PathListingWidget( GafferUI.Widget ) :
 	def __dirPath( self ) :
 
 		p = self.__path.copy()
+		if not len( p ) :
+			return p
+
 		if p.isLeaf() :
 			# if it's a leaf then take the parent
 			del p[-1]
@@ -486,11 +504,10 @@ class PathListingWidget( GafferUI.Widget ) :
 				# it's not valid. if we can make it
 				# valid by trimming the last element
 				# then do that
-				if len( p ) :
-					pp = p.copy()
-					del pp[-1]
-					if pp.isValid() :
-						p = pp
+				pp = p.copy()
+				del pp[-1]
+				if pp.isValid() :
+					p = pp
 			else :
 				# it's valid and not a leaf, and
 				# that's what we want.
@@ -561,20 +578,21 @@ class PathListingWidget( GafferUI.Widget ) :
 
 	def __keyPress( self, widget, event ) :
 
+		# Use `__lastSelectedIndex` if available so that shift + keypress
+		# accumulates selection.
+		index = self.__lastSelectedIndex
+		assert( isinstance( index, ( type( None ), QtCore.QPersistentModelIndex ) ) )
+		if index is not None and index.isValid() :
+			# Convert from persistent index
+			index = QtCore.QModelIndex( index )
+		else :
+			index = self._qtWidget().currentIndex()
+
 		if (
 			event.key in ( "Up", "Down" ) or (
 				event.key in ( "Left", "Right" ) and self.__cellSelectionMode()
 			)
 		):
-			# Use `__lastSelectedIndex` if available so that shift + keypress
-			# accumulates selection.
-			index = self.__lastSelectedIndex
-			assert( isinstance( index, ( type( None ), QtCore.QPersistentModelIndex ) ) )
-			if index is not None and index.isValid() :
-				# Convert from persistent index
-				index = QtCore.QModelIndex( index )
-			else :
-				index = self._qtWidget().currentIndex()
 
 			if not index.isValid() :
 				return True
@@ -618,6 +636,13 @@ class PathListingWidget( GafferUI.Widget ) :
 				selection = [IECore.PathMatcher()] * len( self.getColumns() )
 
 			self.__setSelectionInternal( selection, scrollToFirst=False )
+			return True
+
+		# Delegate the keyPress to the PathColumn, if it wants it.
+
+		elif index.isValid() and self.getColumns()[index.column()].keyPressSignal()(
+			self.getColumns()[index.column()], self, event
+		) :
 			return True
 
 		return False
@@ -746,6 +771,47 @@ class PathListingWidget( GafferUI.Widget ) :
 	def __dragEnd( self, widget, event ) :
 
 		GafferUI.Pointer.setCurrent( None )
+
+	def __contextMenu( self, widget ) :
+
+		mousePosition = GafferUI.Widget.mousePosition( relativeTo = self )
+		column = self.columnAt( mousePosition )
+		if not column.contextMenuSignal().numSlots() and not self.columnContextMenuSignal().numSlots() :
+			# Allow legacy clients connected to `Widget.contextMenuSignal()` to
+			# do their own thing instead.
+			return False
+
+		# Select the path under the mouse, if it's not already selected.
+		# The user will expect to be operating on the thing under the mouse.
+
+		path = self.pathAt( mousePosition )
+		if path is not None :
+			path = str( path )
+			selection = self.getSelection()
+			if isinstance( selection, IECore.PathMatcher ) :
+				# Row or Rows mode.
+				if not selection.match( path ) & IECore.PathMatcher.Result.ExactMatch :
+					selection = IECore.PathMatcher( [ path ] )
+					self.setSelection( selection )
+			else :
+				# Cell or Cells mode.
+				columnIndex = self.getColumns().index( column )
+				if not selection[columnIndex].match( path ) & IECore.PathMatcher.Result.ExactMatch :
+					for i in range( 0, len( selection ) ) :
+						selection[i] = IECore.PathMatcher() if columnIndex != i else IECore.PathMatcher( [ path ] )
+					self.setSelection( selection )
+
+		# Use signals to build menu and display it.
+
+		menuDefinition = IECore.MenuDefinition()
+		column.contextMenuSignal()( column, self, menuDefinition )
+		self.columnContextMenuSignal()( column, self, menuDefinition )
+
+		if menuDefinition.size() :
+			self.__columnContextMenu = GafferUI.Menu( menuDefinition )
+			self.__columnContextMenu.popup( self )
+
+		return True
 
 	def __indexAt( self, position ) :
 

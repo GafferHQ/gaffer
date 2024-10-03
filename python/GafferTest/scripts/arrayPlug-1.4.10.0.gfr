@@ -1,0 +1,26 @@
+import Gaffer
+import GafferTest
+
+Gaffer.Metadata.registerValue( parent, "serialiser:milestoneVersion", 1, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:majorVersion", 4, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:minorVersion", 10, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:patchVersion", 0, persistent=False )
+
+__children = {}
+
+__children["n"] = Gaffer.Node( "n" )
+parent.addChild( __children["n"] )
+__children["n"]["user"].addChild( Gaffer.ArrayPlug( "p", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["n"]["user"]["p"].addChild( Gaffer.IntPlug( "e0", defaultValue = 0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["n"]["user"]["p"].addChild( Gaffer.IntPlug( "e1", defaultValue = 0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["n"]["user"]["p"].addChild( Gaffer.IntPlug( "e2", defaultValue = 0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["n"]["user"]["p"].addChild( Gaffer.IntPlug( "e3", defaultValue = 0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["a"] = GafferTest.AddNode( "a" )
+parent.addChild( __children["a"] )
+__children["n"]["user"]["p"][1].setValue( 1 )
+__children["n"]["user"]["p"][2].setInput( __children["a"]["sum"] )
+__children["n"]["user"]["p"][3].setValue( 3 )
+
+
+del __children
+

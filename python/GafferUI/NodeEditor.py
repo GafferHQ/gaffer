@@ -72,7 +72,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 					self.__typeLabel = GafferUI.Label()
 
 					infoButton = GafferUI.Button( image = "info.png", hasFrame = False )
-					infoButton.clickedSignal().connect( Gaffer.WeakMethod( self.__infoButtonClicked ), scoped = False )
+					infoButton.clickedSignal().connect( Gaffer.WeakMethod( self.__infoButtonClicked ) )
 
 				GafferUI.MenuButton(
 					image = "gear.png",

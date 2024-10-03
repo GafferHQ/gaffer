@@ -53,7 +53,7 @@ script.selection().clear()
 script.selection().add( script["StandardAttributes"] )
 __path = "/group/sphere"
 __paths = IECore.PathMatcher( [ __path ] )
-GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), __paths )
+GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, __paths )
 
 from GafferSceneUI.SceneInspector import __AttributesSection
 
@@ -74,6 +74,9 @@ for imageName, sectionClass in [
 	window.setVisible( True )
 
 	GafferUI.WidgetAlgo.grab( widget = sceneInspector, imagePath = "images/interface" + imageName )
+
+	window.close()
+	del window
 
 # Interface: a StandardAttributes node downstream of an object node
 script.selection().clear()

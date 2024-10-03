@@ -919,6 +919,8 @@
 
 	gaffer.nodeMenu.category STRING "AOV"
 
+	[attr aov_input]
+		linkable BOOL true
 
 [node aov_write_rgb]
 
@@ -1095,6 +1097,7 @@
 		page STRING "Flake"
 	[attr flake_layers]
 		page STRING "Flake"
+		linkable BOOL true
 	[attr flake_normal_randomize]
 		page STRING "Flake"
 	[attr flake_coord_space]
@@ -1241,6 +1244,8 @@
 
 	[attr data_input]
 		page STRING "User Data"
+		linkable BOOL true
+		gaffer.graphEditorLayout.visible BOOL true
 	[attr data_gain_min]
 		page STRING "User Data"
 	[attr data_gain_max]
@@ -1255,6 +1260,7 @@
 		page STRING "User Data"
 	[attr data_seed]
 		page STRING "User Data"
+		linkable BOOL true
 
 	[attr proc_gain_min]
 		page STRING "Procedural"
@@ -1270,6 +1276,7 @@
 		page STRING "Procedural"
 	[attr proc_seed]
 		page STRING "Procedural"
+		linkable BOOL true
 
 	[attr obj_gain_min]
 		page STRING "Object"
@@ -1285,6 +1292,7 @@
 		page STRING "Object"
 	[attr obj_seed]
 		page STRING "Object"
+		linkable BOOL true
 
 	[attr face_gain_min]
 		page STRING "Face"
@@ -1300,6 +1308,7 @@
 		page STRING "Face"
 	[attr face_seed]
 		page STRING "Face"
+		linkable BOOL true
 	[attr face_mode]
 		page STRING "Face"
 
@@ -2137,6 +2146,203 @@
 	gaffer.nodeMenu.category STRING "Maths"
 
 
+[node openpbr_surface]
+
+	gaffer.nodeMenu.category STRING "Surface"
+
+	gaffer.graphEditorLayout.defaultVisibility BOOL false
+
+	[attr base_weight]
+		page STRING "Base"
+		label STRING "Weight"
+	[attr base_color]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Base"
+		label STRING "Color"
+	[attr base_metalness]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Base"
+		label STRING "Metalness"
+	[attr base_diffuse_roughness]
+		page STRING "Base"
+		label STRING "Diffuse Roughness"
+
+	[attr specular_weight]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Specular"
+		label STRING "Weight"
+	[attr specular_color]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Specular"
+		label STRING "Color"
+	[attr specular_roughness]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Specular"
+		label STRING "Roughness"
+	[attr specular_roughness_anisotropy]
+		page STRING "Specular"
+		label STRING "Roughness Anisotropy"
+	[attr specular_ior]
+		page STRING "Specular"
+		label STRING "IOR"
+
+	[attr transmission_weight]
+		page STRING "Transmission"
+		label STRING "Weight"
+	[attr transmission_color]
+		page STRING "Transmission"
+		label STRING "Color"
+	[attr transmission_depth]
+		page STRING "Transmission"
+		label STRING "Depth"
+	[attr transmission_scatter]
+		page STRING "Transmission"
+		label STRING "Scatter"
+	[attr transmission_scatter_anisotropy]
+		page STRING "Transmission"
+		label STRING "Scatter Anisotropy"
+	[attr transmission_dispersion_abbe_number]
+		page STRING "Transmission"
+		label STRING "Dispersion Abbe Number"
+	[attr transmission_dispersion_scale]
+		page STRING "Transmission"
+		label STRING "Dispersion Scale"
+	[attr transmission_transmit_aovs]
+		page STRING "Transmission"
+		label STRING "Transmit AOVs"
+	[attr dielectric_priority]
+		page STRING "Transmission"
+
+	[attr subsurface_weight]
+		page STRING "Subsurface"
+		label STRING "Weight"
+	[attr subsurface_color]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Subsurface"
+		label STRING "Color"
+	[attr subsurface_radius]
+		page STRING "Subsurface"
+		label STRING "Radius"
+	[attr subsurface_radius_scale]
+		page STRING "Subsurface"
+		label STRING "Radius Scale"
+	[attr subsurface_scatter_anisotropy]
+		page STRING "Subsurface"
+		label STRING "Scatter Anisotropy"
+
+	[attr coat_weight]
+		page STRING "Coat"
+		label STRING "Weight"
+	[attr coat_color]
+		page STRING "Coat"
+		label STRING "Color"
+	[attr coat_roughness]
+		page STRING "Coat"
+		label STRING "Roughness"
+	[attr coat_roughness_anisotropy]
+		page STRING "Coat"
+		label STRING "Roughness Anisotropy"
+	[attr coat_ior]
+		page STRING "Coat"
+		label STRING "IOR"
+	[attr coat_darkening]
+		page STRING "Coat"
+		label STRING "Darkening"
+
+	[attr fuzz_weight]
+		page STRING "Fuzz"
+		label STRING "Weight"
+	[attr fuzz_color]
+		page STRING "Fuzz"
+		label STRING "Color"
+	[attr fuzz_roughness]
+		page STRING "Fuzz"
+		label STRING "Roughness"
+
+	[attr emission_luminance]
+		page STRING "Emission"
+		label STRING "Luminance"
+	[attr emission_color]
+		page STRING "Emission"
+		label STRING "Color"
+
+	[attr thin_film_weight]
+		page STRING "Thin Film"
+		label STRING "Weight"
+	[attr thin_film_thickness]
+		page STRING "Thin Film"
+		label STRING "Thickness"
+	[attr thin_film_ior]
+		page STRING "Thin Film"
+		label STRING "IOR"
+
+	[attr geometry_thin_walled]
+		page STRING "Geometry"
+		label STRING "Thin Walled"
+	[attr geometry_opacity]
+		page STRING "Geometry"
+		label STRING "Opacity"
+	[attr geometry_normal]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Geometry"
+		label STRING "Normal"
+	[attr geometry_tangent]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Geometry"
+		label STRING "Tangent"
+	[attr geometry_coat_normal]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Geometry"
+		label STRING "Coat Normal"
+	[attr geometry_coat_tangent]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Geometry"
+		label STRING "Coat Tangent"
+
+	[attr caustics]
+		page STRING "Advanced"
+	[attr internal_reflections]
+		page STRING "Advanced"
+	[attr exit_to_background]
+		page STRING "Advanced"
+	[attr indirect_diffuse]
+		page STRING "Advanced"
+	[attr indirect_specular]
+		page STRING "Advanced"
+
+	[attr aov_id1]
+		page STRING "AOV"
+	[attr aov_id2]
+		page STRING "AOV"
+	[attr aov_id3]
+		page STRING "AOV"
+	[attr aov_id4]
+		page STRING "AOV"
+	[attr aov_id5]
+		page STRING "AOV"
+	[attr aov_id6]
+		page STRING "AOV"
+	[attr aov_id7]
+		page STRING "AOV"
+	[attr aov_id8]
+		page STRING "AOV"
+	[attr id1]
+		page STRING "AOV"
+	[attr id2]
+		page STRING "AOV"
+	[attr id3]
+		page STRING "AOV"
+	[attr id4]
+		page STRING "AOV"
+	[attr id5]
+		page STRING "AOV"
+	[attr id6]
+		page STRING "AOV"
+	[attr id7]
+		page STRING "AOV"
+	[attr id8]
+		page STRING "AOV"
+
 [node osl]
 
 	# In Gaffer, you should load OSL shaders in Gaffer, or use OSLCode, which will be
@@ -2228,10 +2434,13 @@
 
 	[attr input_int]
 		gaffer.layout.activator STRING "isInt"
+		linkable BOOL true
 	[attr input_float]
 		gaffer.layout.activator STRING "isFloat"
 	[attr input_color]
 		gaffer.layout.activator STRING "isColor"
+	[attr seed]
+		linkable BOOL true
 
 [node range]
 
@@ -2672,26 +2881,59 @@
 	[attr density]
 		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Density"
+		gaffer.layout.index INT 0
 	[attr density_channel]
 		page STRING "Density"
+		gaffer.layout.index INT 1
 
 	[attr scatter]
 		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Scatter"
+		gaffer.layout.index INT 2
 	[attr scatter_color]
 		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Scatter"
+		gaffer.layout.index INT 3
 	[attr scatter_color_channel]
 		page STRING "Scatter"
+		gaffer.layout.index INT 4
 	[attr scatter_anisotropy]
 		page STRING "Scatter"
+		gaffer.layout.index INT 5
 	[attr scatter_secondary_anisotropy]
 		page STRING "Scatter"
 		label STRING "Secondary Anisotropy"
 		gaffer.layout.activator STRING "secondaryAnisotropyEnabled"
+		gaffer.layout.index INT 6
 	[attr scatter_secondary_anisotropy_mix]
 		page STRING "Scatter"
 		label STRING "Secondary Anisotropy Mix"
+		gaffer.layout.index INT 7
+
+	[attr scatter_diffusion]
+		page STRING "Scatter Diffusion"
+		label STRING "Diffusion"
+		gaffer.layout.index INT 8
+	[attr scatter_diffusion_bias]
+		page STRING "Scatter Diffusion"
+		label STRING "Diffusion Bias"
+		gaffer.layout.index INT 9
+	[attr scatter_diffusion_gain]
+		page STRING "Scatter Diffusion"
+		label STRING "Diffusion Gain"
+		gaffer.layout.index INT 10
+	[attr scatter_diffusion_roughness]
+		page STRING "Scatter Diffusion"
+		label STRING "Diffusion Roughness"
+		gaffer.layout.index INT 11
+	[attr scatter_diffusion_roughness_bias]
+		page STRING "Scatter Diffusion"
+		label STRING "Diffusion Roughness Bias"
+		gaffer.layout.index INT 12
+	[attr scatter_diffusion_roughness_gain]
+		page STRING "Scatter Diffusion"
+		label STRING "Diffusion Roughness Gain"
+		gaffer.layout.index INT 13
 
 	[attr transparent]
 		page STRING "Transparent"
@@ -2764,12 +3006,16 @@
 	primaryInput STRING "input0"
 	gaffer.nodeMenu.category STRING "Utility"
 
+	[attr index]
+		linkable BOOL true
 
 [node switch_shader]
 
 	primaryInput STRING "input0"
 	gaffer.nodeMenu.category STRING "Surface"
 
+	[attr index]
+		linkable BOOL true
 
 [node toon]
 
@@ -2788,6 +3034,10 @@
 		[attr edge_tonemap]
 			gaffer.graphEditorLayout.visible BOOL true
 			page STRING "Edge"
+			gaffer.layout.activator STRING "edgeEnabled"
+		[attr edge_tonemap_hue_saturation]
+			page STRING "Edge"
+			label STRING "Tonemap Hue Saturation"
 			gaffer.layout.activator STRING "edgeEnabled"
 		[attr edge_opacity]
 			page STRING "Edge"
@@ -2837,6 +3087,10 @@
 			gaffer.graphEditorLayout.visible BOOL true
 			page STRING "Silhouette"
 			gaffer.layout.activator STRING "silhouetteEnabled"
+		[attr silhouette_tonemap_hue_saturation]
+			page STRING "Silhouette"
+			label STRING "Tonemap Hue Saturation"
+			gaffer.layout.activator STRING "silhouetteEnabled"
 		[attr silhouette_opacity]
 			page STRING "Silhouette"
 			gaffer.layout.activator STRING "silhouetteEnabled"
@@ -2853,6 +3107,9 @@
 		[attr base_tonemap]
 			gaffer.graphEditorLayout.visible BOOL true
 			page STRING "Base"
+		[attr base_tonemap_hue_saturation]
+			page STRING "Base"
+			label STRING "Tonemap Hue Saturation"
 
 		[attr specular]
 			page STRING "Specular"
@@ -2866,6 +3123,9 @@
 			page STRING "Specular"
 		[attr specular_tonemap]
 			page STRING "Specular"
+		[attr specular_tonemap_hue_saturation]
+			page STRING "Specular"
+			label STRING "Tonemap Hue Saturation"
 
 		[attr lights]
 			page STRING "Stylized Highlight"
@@ -2981,6 +3241,8 @@
 
 	gaffer.nodeMenu.category STRING "Utility"
 
+	[attr default]
+		linkable BOOL true
 
 [node user_data_rgb]
 

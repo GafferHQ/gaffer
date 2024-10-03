@@ -110,6 +110,27 @@ PathColumn::ButtonSignal &PathColumn::buttonDoubleClickSignal()
 	return m_buttonDoubleClickSignal;
 }
 
+PathColumn::ContextMenuSignal &PathColumn::contextMenuSignal()
+{
+	return m_contextMenuSignal;
+}
+
+PathColumn::KeySignal &PathColumn::keyPressSignal()
+{
+	return m_keyPressSignal;
+}
+
+PathColumn::KeySignal &PathColumn::keyReleaseSignal()
+{
+	return m_keyReleaseSignal;
+}
+
+PathColumn::PathColumnSignal &PathColumn::instanceCreatedSignal()
+{
+	static PathColumnSignal g_instanceCreatedSignal;
+	return g_instanceCreatedSignal;
+}
+
 //////////////////////////////////////////////////////////////////////////
 // StandardPathColumn
 //////////////////////////////////////////////////////////////////////////
@@ -241,6 +262,8 @@ FileIconPathColumn::FileIconPathColumn( SizeMode sizeMode )
 
 PathColumn::CellData FileIconPathColumn::cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
 {
+	CellData result;
+
 	std::string s = path.string();
 	if( const FileSystemPath *fileSystemPath = runTimeCast<const FileSystemPath>( &path ) )
 	{
@@ -256,7 +279,13 @@ PathColumn::CellData FileIconPathColumn::cellData( const Gaffer::Path &path, con
 		}
 	}
 
-	return CellData( /* value = */ nullptr, /* icon = */ new StringData( "fileIcon:" + s ) );
+	result.icon = new StringData( "fileIcon:" + s );
+	const auto p = std::filesystem::path( s );
+	// Use a sortValue of `extension:stem` to allow sorting by extension
+	// while maintaining a reasonable ordering within each extension.
+	result.sortValue = new StringData( ( std::filesystem::is_directory( p ) ? " " : p.extension().string() ) + ":" + p.stem().string() );
+
+	return result;
 }
 
 PathColumn::CellData FileIconPathColumn::headerData( const IECore::Canceller *canceller ) const

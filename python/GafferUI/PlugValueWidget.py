@@ -81,13 +81,12 @@ class PlugValueWidget( GafferUI.Widget ) :
 		# classes haven't constructed. We'll do that in `_postConstructor()`.
 		self.__setPlugsInternal( plugs, callUpdateMethods=False )
 
-		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
-		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ), scoped = False )
+		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
+		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 
 		Gaffer.Metadata.nodeValueChangedSignal().connect(
-			Gaffer.WeakMethod( self.__nodeMetadataChanged ),
-			scoped = False
+			Gaffer.WeakMethod( self.__nodeMetadataChanged )
 		)
 
 	## Changes the plugs displayed by this widget. May be overridden by derived classes,
@@ -135,27 +134,22 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		return next( iter( self.__plugs ), None )
 
-	## By default, PlugValueWidgets operate in the main context held by the script node
-	# for the script the plug belongs to. This function allows an alternative context
-	# to be provided, making it possible to view a plug at a custom frame (or with any
-	# other context modification).
-	## \todo To our knowledge, this has never been useful, and synchronising contexts
-	# between Editor/PlugLayout/PlugValueWidget has only been a pain. Consider
-	# removing it.
-	def setContext( self, context ) :
+	## Returns the context in which the widget evaluates the plugs.
+	def context( self ) :
 
-		assert( isinstance( context, Gaffer.Context ) )
-		if context.isSame( self.__context ) :
-			return
+		if len( self.__plugs ) :
+			return self.__contextTracker.context( next( iter( self.__plugs ) ) )
+		else :
+			return self.__contextTracker.targetContext()
 
-		self.__context = context
-		self.__updateContextConnection()
-		self.__callLegacyUpdateMethods()
-		self.__callUpdateFromValues()
+	## Returns the ScriptNode ancestor for the plugs, or `None` if
+	# no such ancestor exists.
+	def scriptNode( self ) :
 
-	def getContext( self ) :
-
-		return self.__context
+		if not len( self.__plugs ) :
+			return None
+		else :
+			return next( iter( self.__plugs ) ).ancestor( Gaffer.ScriptNode )
 
 	## Should be reimplemented to return True if this widget includes
 	# some sort of labelling for the plug. This is used to prevent
@@ -382,8 +376,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 	## \deprecated
 	def _plugConnections( self ) :
 
-		## \todo Emit DeprecationWarning once we can reasonably expect
-		# Gaffer `1.1.x.x` to be history.
+		warnings.warn( "`PlugValueWidget._plugConnections()` is deprecated. Use `_blockedUpdateFromValues()` instead", DeprecationWarning, 2 )
 
 		return (
 			self.__plugDirtiedConnections +
@@ -439,10 +432,10 @@ class PlugValueWidget( GafferUI.Widget ) :
 		# it's unclear under what circumstances we get given a right-click vs a context menu event,
 		# but we try to cover all our bases by connecting to both.
 
-		widget.buttonPressSignal().connect( functools.partial( Gaffer.WeakMethod( self.__buttonPress ), buttonMask = buttons ), scoped = False )
+		widget.buttonPressSignal().connect( functools.partial( Gaffer.WeakMethod( self.__buttonPress ), buttonMask = buttons ) )
 
 		if buttons & GafferUI.ButtonEvent.Buttons.Right :
-			widget.contextMenuSignal().connect( functools.partial( Gaffer.WeakMethod( self.__contextMenu ) ), scoped = False )
+			widget.contextMenuSignal().connect( functools.partial( Gaffer.WeakMethod( self.__contextMenu ) ) )
 
 	## Returns a definition for the popup menu - this is called each time the menu is displayed
 	# to allow for dynamic menus. Subclasses may override this method to customise the menu, but
@@ -499,7 +492,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 				}
 			)
 
-		with self.getContext() :
+		with self.context() :
 			if any( Gaffer.NodeAlgo.presets( p ) for p in self.getPlugs() ) :
 				menuDefinition.append(
 					"/Preset", {
@@ -534,16 +527,12 @@ class PlugValueWidget( GafferUI.Widget ) :
 		# `_updateFromMetadata()`, `_updateFromValues()` etc. But we still
 		# support calling them if they exist.
 
-		updateMethod = getattr( self, "_updateFromPlugs", None )
-		if updateMethod is None :
-			updateMethod = getattr( self, "_updateFromPlug", None )
-
-		if updateMethod is not None :
-			## \todo Emit DeprecationWarning. It doesn't make sense to do
-			# this until we can reasonably expect Gaffer `1.1.x.x` to be
-			# out of use, as maintaining a subclass to use both the old
-			# and the new API would be incredibly painful.
-			updateMethod()
+		for methodName in ( "_updateFromPlugs", "_updateFromPlug" ) :
+			updateMethod = getattr( self, methodName, None )
+			if updateMethod is not None :
+				warnings.warn( f"`PlugValueWidget.{methodName}()` is deprecated. Implement `_updateFromValues()`, `_updateFromMetadata()` and `_updateFromEditable()` instead", DeprecationWarning, 2 )
+				updateMethod()
+				return
 
 	@GafferUI.LazyMethod()
 	def __callUpdateFromValues( self ) :
@@ -554,7 +543,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			# `_updateFromPlug()` method instead.
 			return
 
-		with self.getContext() :
+		with self.context() :
 			if any(
 				isinstance( p, Gaffer.ValuePlug ) and Gaffer.PlugAlgo.dependsOnCompute( p )
 				for p in itertools.chain( self.getPlugs(), *self.__auxiliaryPlugs )
@@ -625,8 +614,10 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __plugInputChanged( self, plug ) :
 
-		if plug in self.__plugs :
+		if plug in self.__plugs or any( plug in plugs for plugs in self.__auxiliaryPlugs ) :
 			self.__updateContextConnection()
+
+		if plug in self.__plugs :
 			self._updateFromEditable()
 
 	def __plugMetadataChanged( self, plug, key, reason ) :
@@ -654,7 +645,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 				self._updateFromEditable()
 				return
 
-	def __contextChanged( self, context, key ) :
+	def __contextChanged( self, contextTracker ) :
 
 		self.__callLegacyUpdateMethods()
 		self.__callUpdateFromValues()
@@ -690,7 +681,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			for node in nodes
 		]
 
-		self.__context = next( ( self.__defaultContext( p ) for p in self.__plugs ), self.__fallbackContext )
+		self.__contextTracker = GafferUI.ContextTracker.acquireForFocus( next( iter( plugs ), None ) )
 
 		self.__auxiliaryPlugs = []
 		auxiliaryNodes = set()
@@ -712,6 +703,10 @@ class PlugValueWidget( GafferUI.Widget ) :
 			node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__auxiliaryPlugDirtied ), scoped = True )
 			for node in auxiliaryNodes
 		]
+		self.__auxiliaryPlugInputChangedConnections = [
+			node.plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ), scoped = True )
+			for node in auxiliaryNodes
+		]
 
 		self.__updateContextConnection()
 
@@ -723,38 +718,12 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __updateContextConnection( self ) :
 
-		if self._valuesDependOnContext() :
-			self.__contextChangedConnection = self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = True )
+		if self._valuesDependOnContext() and len( self.__plugs ) :
+			self.__contextChangedConnection = self.__contextTracker.changedSignal(
+				next( iter( self.__plugs ) )
+			).connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = True )
 		else :
 			self.__contextChangedConnection = None
-
-	__fallbackContext = Gaffer.Context()
-
-	# Note : Despite being private (because we don't want to include it in the official API),
-	# This method is accessed by NodeToolbar and PlugLayout (because we do want to share the
-	# logic internally).
-	@classmethod
-	def __defaultContext( cls, graphComponent ) :
-
-		scriptNode = graphComponent if isinstance( graphComponent, Gaffer.ScriptNode ) else graphComponent.ancestor( Gaffer.ScriptNode )
-		if scriptNode is not None :
-			return scriptNode.context()
-
-		# Special case for plugs that form the settings for a view.
-
-		view = graphComponent if isinstance( graphComponent, GafferUI.View ) else graphComponent.ancestor( GafferUI.View )
-		if view is not None :
-			return view.getContext()
-
-		# Special case for plugs that form the settings for an Editor.
-
-		settings = graphComponent if isinstance( graphComponent, GafferUI.Editor.Settings ) else graphComponent.ancestor( GafferUI.Editor.Settings )
-		if settings is not None :
-			scriptNode = settings["__scriptNode"].source().ancestor( Gaffer.ScriptNode )
-			if scriptNode is not None :
-				return scriptNode.context()
-
-		return cls.__fallbackContext
 
 	def __buttonPress( self, widget, event, buttonMask ) :
 
@@ -785,7 +754,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __copyValue( self ) :
 
-		with self.getContext() :
+		with self.context() :
 			value = self.getPlug().getValue()
 
 		if not isinstance( value, IECore.Object ) :
@@ -801,7 +770,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 		if not isinstance( values, list ) :
 			values = itertools.repeat( values, len( self.getPlugs() ) )
 
-		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.scriptNode() ) :
 			for plug, value in zip( self.getPlugs(), values ) :
 				plug.setValue( value )
 
@@ -829,19 +798,19 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __removeInputs( self ) :
 
-		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.scriptNode() ) :
 			for p in self.getPlugs() :
 				p.setInput( None )
 
 	def __applyUserDefaults( self ) :
 
-		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.scriptNode() ) :
 			for p in self.getPlugs() :
 				Gaffer.NodeAlgo.applyUserDefault( p )
 
 	def __presetsSubMenu( self ) :
 
-		with self.getContext() :
+		with self.context() :
 
 			currentPreset = sole( ( Gaffer.NodeAlgo.currentPreset( p ) or "" for p in self.getPlugs() ) )
 
@@ -872,14 +841,14 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __applyPreset( self, presetName, *unused ) :
 
-		with self.getContext() :
-			with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+		with self.context() :
+			with Gaffer.UndoScope( self.scriptNode() ) :
 				for p in self.getPlugs() :
 					Gaffer.NodeAlgo.applyPreset( p, presetName )
 
 	def __applyReadOnly( self, readOnly ) :
 
-		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.scriptNode() ) :
 			for p in self.getPlugs() :
 				Gaffer.MetadataAlgo.setReadOnly( p, readOnly )
 
@@ -919,7 +888,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		self.setHighlighted( False )
 
-		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).node().scriptNode() ) :
+		with Gaffer.UndoScope( self.scriptNode() ) :
 			if isinstance( event.data, Gaffer.Plug ) :
 				for p in self.getPlugs() :
 					p.setInput( event.data )

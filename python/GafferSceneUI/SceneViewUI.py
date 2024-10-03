@@ -103,8 +103,9 @@ Gaffer.Metadata.registerNode(
 
 		"editScope" : [
 
-			"toolbarLayout:index", -1,
 			"plugValueWidget:type", "GafferUI.EditScopeUI.EditScopePlugValueWidget",
+			"toolbarLayout:index", -1,
+			"toolbarLayout:width", 225,
 
 		],
 
@@ -329,7 +330,7 @@ class _RendererSettingsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__window = None
 
-		button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ), scoped = False )
+		button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
 
 	def __clicked( self, button ) :
 
@@ -343,7 +344,8 @@ class _RendererSettingsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			center = imath.V2i(
 				bound.center().x,
 				bound.max().y + self.__window.bound().size().y / 2 + 8,
-			)
+			),
+			parent = self
 		)
 
 ##########################################################################
@@ -735,8 +737,8 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__settingsWindow = None
 
 		# Must connect at front so we get called before PlugValueWidget's default handlers
-		self.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-		self.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ), scoped = False )
+		self.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ) )
 
 	def setHighlighted( self, highlighted ) :
 
@@ -840,7 +842,7 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.getPlug()["lookThroughCamera"],
 			path = GafferScene.ScenePath(
 				self.getPlug().node()["in"],
-				self.getPlug().node().getContext(),
+				self.getPlug().node().context(),
 				"/",
 				filter = self.__pathFilter()
 			),
@@ -925,7 +927,7 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 		m = IECore.MenuDefinition()
 
 		try :
-			with self.getContext() :
+			with self.context() :
 				set = self.getPlug().node()["in"].set( setName )
 		except :
 			return m
@@ -1110,7 +1112,7 @@ def __snapshotToCatalogue( catalogue, view ) :
 	metadata = IECore.CompoundData(
 		{
 			"gaffer:sourceScene" : view["in"].getInput().relativeName( scriptRoot ),
-			"gaffer:context:frame" : view["in"].node().getContext().getFrame()
+			"gaffer:context:frame" : view.context().getFrame()
 		}
 	)
 
@@ -1198,7 +1200,7 @@ def __viewContextMenu( viewer, view, menuDefinition ) :
 	)
 
 
-GafferUI.Viewer.viewContextMenuSignal().connect( __viewContextMenu, scoped = False )
+GafferUI.Viewer.viewContextMenuSignal().connect( __viewContextMenu )
 
 def __plugValueWidgetContextMenu( menuDefinition, plugValueWidget ) :
 
@@ -1213,7 +1215,7 @@ def __plugValueWidgetContextMenu( menuDefinition, plugValueWidget ) :
 
 	__appendClippingPlaneMenuItems( menuDefinition, "", node, plugValueWidget )
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugValueWidgetContextMenu, scoped = False )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugValueWidgetContextMenu )
 
 ##########################################################################
 # _Spacers
@@ -1276,8 +1278,8 @@ class _StateWidget( GafferUI.Widget ) :
 
 		self.__sceneGadget = sceneView.viewportGadget().getPrimaryChild()
 
-		self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClick ), scoped = False )
-		self.__sceneGadget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ), scoped = False )
+		self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClick ) )
+		self.__sceneGadget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ) )
 
 		self.__update()
 

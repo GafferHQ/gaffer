@@ -35,6 +35,7 @@
 ##########################################################################
 
 import functools
+import re
 import imath
 
 import IECore
@@ -71,6 +72,72 @@ def __annotate( node, name, menu ) :
 	dialogue = __AnnotationsDialogue( node, name )
 	dialogue.wait( parentWindow = menu.ancestor( GafferUI.Window ) )
 
+class _AnnotationsHighlighter( GafferUI.CodeWidget.Highlighter ) :
+
+	__substitutionRe = re.compile( r"(\{[^}]+\})" )
+
+	def __init__( self, node ) :
+
+		GafferUI.CodeWidget.Highlighter.__init__( self )
+		self.__node = node
+
+	def highlights( self, line, previousHighlightType ) :
+
+		result = []
+
+		l = 0
+		for token in self.__substitutionRe.split( line ) :
+			if (
+				len( token ) > 2 and
+				token[0] == "{" and token[-1] == "}" and
+				isinstance( self.__node.descendant( token[1:-1] ), Gaffer.ValuePlug )
+			) :
+				result.append(
+					self.Highlight( l, l + len( token ), self.Type.Keyword )
+				)
+			l += len( token )
+
+		return result
+
+class _AnnotationsCompleter( GafferUI.CodeWidget.Completer ) :
+
+	__incompleteSubstitutionRe = re.compile( r"\{([^.}][^}]*$)" )
+
+	def __init__( self, node ) :
+
+		GafferUI.CodeWidget.Completer.__init__( self )
+		self.__node = node
+
+	def completions( self, text ) :
+
+		m = self.__incompleteSubstitutionRe.search( text )
+		if m is None :
+			return []
+
+		parentPath, _, childName = m.group( 1 ).rpartition( "." )
+		parent = self.__node.descendant( parentPath ) if parentPath else self.__node
+		if parent is None :
+			return []
+
+		result = []
+		for plug in Gaffer.Plug.Range( parent ) :
+			if not hasattr( plug, "getValue" ) and not len( plug ) :
+				continue
+			if plug.getName().startswith( childName ) :
+				childPath = plug.relativeName( self.__node )
+				result.append(
+					self.Completion(
+						"{prefix}{{{childPath}{closingBrace}".format(
+							prefix = text[:m.start()],
+							childPath = childPath,
+							closingBrace = "}" if hasattr( plug, "getValue" ) else ""
+						),
+						label = childPath
+					)
+				)
+
+		return result
+
 class __AnnotationsDialogue( GafferUI.Dialogue ) :
 
 	def __init__( self, node, name ) :
@@ -85,20 +152,28 @@ class __AnnotationsDialogue( GafferUI.Dialogue ) :
 
 		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 ) as layout :
 
-			self.__textWidget = GafferUI.MultiLineTextWidget(
+			self.__textWidget = GafferUI.CodeWidget(
 				text = annotation.text() if annotation else "",
+				placeholderText = "Tip : Use {plugName} to include plug values",
 			)
+			self.__textWidget.setHighlighter( _AnnotationsHighlighter( node ) )
+			self.__textWidget.setCompleter( _AnnotationsCompleter( node ) )
 			self.__textWidget.textChangedSignal().connect(
-				Gaffer.WeakMethod( self.__updateButtonStatus ), scoped = False
+				Gaffer.WeakMethod( self.__updateButtonStatus )
 			)
-
+			self.__textWidget.activatedSignal().connect(
+				Gaffer.WeakMethod( self.__textActivated )
+			)
+			self.__textWidget.contextMenuSignal().connect(
+				Gaffer.WeakMethod( self.__textWidgetContextMenu )
+			)
 			if not template :
 				self.__colorChooser = GafferUI.ColorChooser(
 					annotation.color() if annotation else imath.Color3f( 0.15, 0.26, 0.26 ),
 					displayTransform = GafferUI.Widget.identityDisplayTransform
 				)
 				self.__colorChooser.colorChangedSignal().connect(
-					Gaffer.WeakMethod( self.__updateButtonStatus ), scoped = False
+					Gaffer.WeakMethod( self.__updateButtonStatus )
 				)
 			else :
 				self.__colorChooser = None
@@ -147,3 +222,45 @@ class __AnnotationsDialogue( GafferUI.Dialogue ) :
 			)
 		else :
 			return Gaffer.MetadataAlgo.Annotation( self.__textWidget.getText() )
+
+	def __textActivated( self, *unused ) :
+
+		if self.__annotateButton.getEnabled() :
+			self.__annotateButton.clickedSignal()( self.__annotateButton )
+
+	def __textWidgetContextMenu( self, *unused ) :
+
+		menuDefinition = IECore.MenuDefinition()
+
+		def menuLabel( name ) :
+
+			if "_" in name :
+				name = IECore.CamelCase.fromSpaced( name.replace( "_", " " ) )
+			return IECore.CamelCase.toSpaced( name )
+
+		def walkPlugs( graphComponent ) :
+
+			if graphComponent.getName().startswith( "__" ) :
+				return
+
+			if isinstance( graphComponent, Gaffer.ValuePlug ) and hasattr( graphComponent, "getValue" ) :
+				relativeName = graphComponent.relativeName( self.__node )
+				menuDefinition.append(
+					"/Insert Plug Value/{}".format( "/".join( menuLabel( n ) for n in relativeName.split( "." ) ) ),
+					{
+						"command" : functools.partial( Gaffer.WeakMethod( self.__textWidget.insertText ), f"{{{relativeName}}}" ),
+					}
+				)
+			else :
+				for plug in Gaffer.Plug.InputRange( graphComponent ) :
+					walkPlugs( plug )
+
+		walkPlugs( self.__node )
+
+		if not menuDefinition.size() :
+			menuDefinition.append( "/Insert Plug Value/No plugs available", { "active" : False } )
+
+		self.__popupMenu = GafferUI.Menu( menuDefinition )
+		self.__popupMenu.popup( parent = self )
+
+		return True

@@ -69,15 +69,15 @@ class _CryptomatteNamesPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 		removeButton = self.vectorDataWidget().removeButton()
 
 		# Connect at front so we get called before the default handlers
-		addButton.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__convertEvent ), scoped = False )
-		removeButton.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__convertEvent ), scoped = False )
-		self.vectorDataWidget().dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__convertEvent ), scoped = False )
+		addButton.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__convertEvent ) )
+		removeButton.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__convertEvent ) )
+		self.vectorDataWidget().dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__convertEvent ) )
 
 	def __getManifest( self ) :
 
 		cryptomatteNode = _findCryptomatteNode( self.getPlug() )
 		if cryptomatteNode :
-			with self.getContext() :
+			with self.context() :
 				with IECore.IgnoredExceptions( Exception ) :
 					return cryptomatteNode["__manifest"].getValue()
 
@@ -282,6 +282,15 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"manifestScene" : [
+
+			"description",
+			"""
+			A scene containing locations representing the contents of the Cryptomatte manifest.
+			""",
+
+		],
+
 	}
 
 )
@@ -387,10 +396,10 @@ def __drop( nodeGadget, event ) :
 
 def __addNamesDropTarget( nodeGadget ) :
 
-	nodeGadget.dragEnterSignal().connect( __dragEnter, scoped = False )
-	nodeGadget.dragLeaveSignal().connect( __dragLeave, scoped = False )
-	nodeGadget.dragMoveSignal().connect( __dragMove, scoped = False )
-	nodeGadget.dropSignal().connect( __drop, scoped = False )
+	nodeGadget.dragEnterSignal().connect( __dragEnter )
+	nodeGadget.dragLeaveSignal().connect( __dragLeave )
+	nodeGadget.dragMoveSignal().connect( __dragMove )
+	nodeGadget.dropSignal().connect( __drop )
 
 def __nodeGadget( pathFilter ) :
 
@@ -410,7 +419,7 @@ def __selectAffected( node, context ) :
 	if not isinstance( node, GafferScene.Cryptomatte ) :
 		return
 
-	scene = node["__manifestScene"]
+	scene = node["manifestScene"]
 
 	with context :
 		pathMatcher = IECore.PathMatcher()
@@ -421,7 +430,7 @@ def __selectAffected( node, context ) :
 		pathMatcherResult = IECore.PathMatcher()
 		GafferScene.SceneAlgo.matchingPaths( pathMatcher, scene, pathMatcherResult )
 
-	GafferSceneUI.ContextAlgo.setSelectedPaths( context, pathMatcherResult )
+	GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( node.scriptNode(), pathMatcherResult )
 
 def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 
@@ -429,7 +438,7 @@ def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 		return
 
 	menuDefinition.append( "/CryptomatteDivider", { "divider" : True } )
-	menuDefinition.append( "/Select Affected Objects", { "command" : functools.partial( __selectAffected, node, graphEditor.getContext() ) } )
+	menuDefinition.append( "/Select Affected Objects", { "command" : functools.partial( __selectAffected, node, graphEditor.context() ) } )
 
 ##########################################################################
 # NodeEditor tool menu
@@ -441,4 +450,4 @@ def appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition ) :
 		return
 
 	menuDefinition.append( "/CryptomatteDivider", { "divider" : True } )
-	menuDefinition.append( "/Select Affected Objects", { "command" : functools.partial( __selectAffected, node, nodeEditor.getContext() ) } )
+	menuDefinition.append( "/Select Affected Objects", { "command" : functools.partial( __selectAffected, node, nodeEditor.context() ) } )

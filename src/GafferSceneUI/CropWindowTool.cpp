@@ -739,7 +739,7 @@ void CropWindowTool::overlayRectangleChanged( unsigned reason )
 		flipNDCOrigin( b );
 	}
 
-	UndoScope undoScope( m_cropWindowPlug->ancestor<ScriptNode>() );
+	UndoScope undoScope( view()->scriptNode() );
 
 	if( m_cropWindowEnabledPlug && !m_cropWindowEnabledPlug->getValue() )
 	{
@@ -843,7 +843,7 @@ void CropWindowTool::findScenePlug()
 
 		try
 		{
-			Context::Scope scopedContext( view()->getContext() );
+			Context::Scope scopedContext( view()->context() );
 			scene = findSceneForImage( imagePlug(), msg );
 		}
 		catch( const std::exception &e )
@@ -872,7 +872,7 @@ void CropWindowTool::findCropWindowPlug()
 
 	m_cropWindowPlug = nullptr;
 
-	Context::Scope scopedContext( view()->getContext() );
+	Context::Scope scopedContext( view()->context() );
 
 	findScenePlug();
 
@@ -1012,7 +1012,7 @@ Box2f CropWindowTool::resolutionGate() const
 	{
 		if( const ImagePlug *in = imageView->inPlug<ImagePlug>() )
 		{
-			Context::Scope contextScope( imageView->getContext() );
+			Context::Scope contextScope( imageView->context() );
 			const std::string view = imageView->viewPlug()->getValue();
 			const Format format = in->format( &view );
 			resolutionGate = Box2f( V2f( 0 ), V2f( format.width() * format.getPixelAspect(), format.height() ) );
@@ -1032,7 +1032,7 @@ bool CropWindowTool::keyPress( const KeyEvent &event )
 			activePlug()->setValue( newState );
 			if( m_cropWindowEnabledPlug )
 			{
-				UndoScope undoScope( m_cropWindowPlug->ancestor<ScriptNode>() );
+				UndoScope undoScope( view()->scriptNode() );
 				m_cropWindowEnabledPlug->setValue( newState );
 			}
 		}

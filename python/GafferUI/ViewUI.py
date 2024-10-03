@@ -201,7 +201,7 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __menuDefinition( self ) :
 
-		with self.getContext() :
+		with self.context() :
 			soloChannel = self.getPlug().getValue()
 
 		useShortCuts = Gaffer.Metadata.value( self.getPlug(), "view:displayTransform:useShortcuts" )
@@ -260,7 +260,7 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 		with row :
 
 			self.__button = GafferUI.Button( "", self.__imagePrefix + "Off.png", hasFrame=False )
-			self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ), scoped = False )
+			self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
 
 			if not isinstance( plug, Gaffer.BoolPlug ) :
 				plugValueWidget = GafferUI.PlugValueWidget.create( plug, typeMetadata = None )
@@ -298,7 +298,7 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __clicked( self, button ) :
 
-		with self.getContext() :
+		with self.context() :
 			value = self.getPlug().getValue()
 
 		if value == self.getPlug().defaultValue() and self.__toggleValue is not None :

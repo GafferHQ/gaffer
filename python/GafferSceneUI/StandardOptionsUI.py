@@ -596,8 +596,8 @@ class _IncludedPurposesPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __togglePurpose( self, checked, purpose ) :
 
-		with self.getContext() :
-			with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+		with self.context() :
+			with Gaffer.UndoScope( self.scriptNode() ) :
 				for plug in self.getPlugs() :
 					value = plug.getValue()
 					# Conform value so that only valid purposes are present, and they are

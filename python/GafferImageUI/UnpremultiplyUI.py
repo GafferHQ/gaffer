@@ -67,6 +67,16 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"ignoreMissingAlpha" : [
+
+			"description",
+			"""
+			If set, this node will do nothing if the specified `alphaChannel`
+			is not found, instead of throwing an error.
+			""",
+
+		],
+
 	}
 
 )

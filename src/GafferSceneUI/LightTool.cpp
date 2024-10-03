@@ -38,7 +38,7 @@
 
 #include "GafferSceneUI/Private/ParameterInspector.h"
 #include "GafferSceneUI/Private/Inspector.h"
-#include "GafferSceneUI/ContextAlgo.h"
+#include "GafferSceneUI/ScriptNodeAlgo.h"
 #include "GafferSceneUI/SceneView.h"
 
 #include "GafferScene/ScenePath.h"
@@ -996,7 +996,7 @@ class LightToolHandle : public Handle
 		// Returns `nullptr` if no inspection exists for the handle.
 		Inspector::ResultPtr handleInspection( const InternedString &metaParameter ) const
 		{
-			ScenePlug::PathScope pathScope( m_view->getContext() );
+			ScenePlug::PathScope pathScope( m_view->context() );
 			pathScope.setPath( &m_handlePath );
 
 			return inspection( metaParameter );
@@ -1022,7 +1022,7 @@ class LightToolHandle : public Handle
 
 				const float originalValue = it->second->typedValue<float>( 0.f );
 				const float nonZeroValue = originalValue == 0 ? 1.f : originalValue;
-				setValueOrAddKey( floatPlug, m_view->getContext()->getTime(), nonZeroValue * mult );
+				setValueOrAddKey( floatPlug, m_view->context()->getTime(), nonZeroValue * mult );
 
 			}
 		}
@@ -1049,7 +1049,7 @@ class LightToolHandle : public Handle
 				const float originalValue = it->second->typedValue<float>( 0.f );
 				setValueOrAddKey(
 					floatPlug,
-					m_view->getContext()->getTime(),
+					m_view->context()->getTime(),
 					std::clamp( originalValue + incr, minValue, maxValue )
 				);
 			}
@@ -1677,7 +1677,7 @@ class SpotLightHandle : public LightToolHandle
 				// Clamp each individual cone angle as well
 				setValueOrAddKey(
 					floatPlug,
-					view()->getContext()->getTime(),
+					view()->context()->getTime(),
 					clampPlugAngle(
 						it->second->typedValue<float>( 0.f ) + angleDelta,
 						coneIt->second->typedValue<float>( 0.f ),
@@ -2965,7 +2965,6 @@ LightTool::LightTool( SceneView *view, const std::string &name ) :
 	m_handleTransformsDirty( true ),
 	m_priorityPathsDirty( true ),
 	m_dragging( false ),
-	m_scriptNode( nullptr ),
 	m_mergeGroupId( 0 )
 {
 	view->viewportGadget()->addChild( m_handles );
@@ -3025,9 +3024,9 @@ LightTool::LightTool( SceneView *view, const std::string &name ) :
 
 	plugDirtiedSignal().connect( boost::bind( &LightTool::plugDirtied, this, ::_1 ) );
 	view->plugDirtiedSignal().connect( boost::bind( &LightTool::plugDirtied, this, ::_1 ) );
+	view->contextChangedSignal().connect( boost::bind( &LightTool::contextChanged, this ) );
 
-	connectToViewContext();
-	view->contextChangedSignal().connect( boost::bind( &LightTool::connectToViewContext, this ) );
+	ScriptNodeAlgo::selectedPathsChangedSignal( view->scriptNode() ).connect( boost::bind( &LightTool::selectedPathsChanged, this ) );
 
 	Metadata::plugValueChangedSignal().connect( boost::bind( &LightTool::metadataChanged, this, ::_3 ) );
 	Metadata::nodeValueChangedSignal().connect( boost::bind( &LightTool::metadataChanged, this, ::_2 ) );
@@ -3036,16 +3035,6 @@ LightTool::LightTool( SceneView *view, const std::string &name ) :
 LightTool::~LightTool()
 {
 
-}
-
-const PathMatcher LightTool::selection() const
-{
-	return ContextAlgo::getSelectedPaths( view()->getContext() );
-}
-
-LightTool::SelectionChangedSignal &LightTool::selectionChangedSignal()
-{
-	return m_selectionChangedSignal;
 }
 
 ScenePlug *LightTool::scenePlug()
@@ -3058,26 +3047,18 @@ const ScenePlug *LightTool::scenePlug() const
 	return getChild<ScenePlug>( g_firstPlugIndex );
 }
 
-void LightTool::connectToViewContext()
+void LightTool::contextChanged()
 {
-	m_contextChangedConnection = view()->getContext()->changedSignal().connect(
-		boost::bind( &LightTool::contextChanged, this, ::_2 )
-	);
+	// Context changes can change the scene, which in turn
+	// dirties our selection.
+	selectedPathsChanged();
 }
 
-void LightTool::contextChanged( const InternedString &name )
+void LightTool::selectedPathsChanged()
 {
-	if(
-		ContextAlgo::affectsSelectedPaths( name ) ||
-		ContextAlgo::affectsLastSelectedPath( name ) ||
-		!boost::starts_with( name.string(), "ui:" )
-	)
-	{
-		m_handleInspectionsDirty = true;
-		m_handleTransformsDirty = true;
-		m_priorityPathsDirty = true;
-		selectionChangedSignal()( *this );
-	}
+	m_handleInspectionsDirty = true;
+	m_handleTransformsDirty = true;
+	m_priorityPathsDirty = true;
 }
 
 void LightTool::metadataChanged( InternedString key )
@@ -3103,7 +3084,7 @@ void LightTool::updateHandleInspections()
 
 	m_inspectorsDirtiedConnection.clear();
 
-	const PathMatcher selection = this->selection();
+	const PathMatcher selection = ScriptNodeAlgo::getSelectedPaths( view()->scriptNode() );
 	if( selection.isEmpty() )
 	{
 		for( auto &c : m_handles->children() )
@@ -3114,7 +3095,7 @@ void LightTool::updateHandleInspections()
 		return;
 	}
 
-	ScenePlug::ScenePath lastSelectedPath = ContextAlgo::getLastSelectedPath( view()->getContext() );
+	ScenePlug::ScenePath lastSelectedPath = ScriptNodeAlgo::getLastSelectedPath( view()->scriptNode() );
 	assert( selection.match( lastSelectedPath ) & PathMatcher::ExactMatch );
 
 	bool lookThroughLight = false;
@@ -3128,7 +3109,7 @@ void LightTool::updateHandleInspections()
 		}
 	}
 
-	ScenePlug::PathScope pathScope( view()->getContext() );
+	ScenePlug::PathScope pathScope( view()->context() );
 
 	for( auto &c : m_handles->children() )
 	{
@@ -3168,7 +3149,7 @@ void LightTool::updateHandleInspections()
 
 void LightTool::updateHandleTransforms( float rasterScale )
 {
-	Context::Scope scopedContext( view()->getContext() );
+	Context::Scope scopedContext( view()->context() );
 
 	auto scene = scenePlug()->getInput<ScenePlug>();
 	scene = scene ? scene->getInput<ScenePlug>() : scene;
@@ -3177,13 +3158,13 @@ void LightTool::updateHandleTransforms( float rasterScale )
 		return;
 	}
 
-	const PathMatcher selection = this->selection();
+	const PathMatcher selection = ScriptNodeAlgo::getSelectedPaths( view()->scriptNode() );
 	if( selection.isEmpty() )
 	{
 		return;
 	}
 
-	ScenePlug::ScenePath lastSelectedPath = ContextAlgo::getLastSelectedPath( view()->getContext() );
+	ScenePlug::ScenePath lastSelectedPath = ScriptNodeAlgo::getLastSelectedPath( view()->scriptNode() );
 	assert( selection.match( lastSelectedPath ) & PathMatcher::Result::ExactMatch );
 	if( !scene->exists( lastSelectedPath ) )
 	{
@@ -3226,10 +3207,6 @@ void LightTool::plugDirtied( const Plug *plug )
 		( plug->ancestor<View>() && plug == view()->editScopePlug() )
 	)
 	{
-		if( !m_dragging )
-		{
-			selectionChangedSignal()( *this );
-		}
 		m_handleInspectionsDirty = true;
 		m_priorityPathsDirty = true;
 	}
@@ -3281,14 +3258,7 @@ void LightTool::preRender()
 		{
 			m_priorityPathsDirty = false;
 			auto sceneGadget = static_cast<SceneGadget *>( view()->viewportGadget()->getPrimaryChild() );
-			if( !selection().isEmpty() )
-			{
-				sceneGadget->setPriorityPaths( ContextAlgo::getSelectedPaths( view()->getContext() ) );
-			}
-			else
-			{
-				sceneGadget->setPriorityPaths( IECore::PathMatcher() );
-			}
+			sceneGadget->setPriorityPaths( ScriptNodeAlgo::getSelectedPaths( view()->scriptNode() ) );
 		}
 	}
 
@@ -3323,8 +3293,6 @@ void LightTool::dirtyHandleTransforms()
 RunTimeTypedPtr LightTool::dragBegin( Gadget *gadget )
 {
 	m_dragging = true;
-	m_scriptNode = view()->inPlug()->source()->ancestor<ScriptNode>();
-
 	return nullptr;
 }
 
@@ -3333,7 +3301,7 @@ bool LightTool::dragMove( Gadget *gadget, const DragDropEvent &event )
 	auto handle = runTimeCast<LightToolHandle>( gadget );
 	assert( handle );
 
-	UndoScope undoScope( m_scriptNode.get(), UndoScope::Enabled, undoMergeGroup() );
+	UndoScope undoScope( view()->scriptNode(), UndoScope::Enabled, undoMergeGroup() );
 
 	handle->handleDragMove( event );
 
@@ -3344,8 +3312,6 @@ bool LightTool::dragEnd( Gadget *gadget )
 {
 	m_dragging = false;
 	m_mergeGroupId++;
-	selectionChangedSignal()( *this );
-
 	auto handle = runTimeCast<LightToolHandle>( gadget );
 	handle->handleDragEnd();
 

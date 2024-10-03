@@ -109,12 +109,12 @@ class MetadataWidget( GafferUI.Widget ) :
 
 	## Must be called by derived classes to update
 	# the Metadata value when the widget value changes.
-	def _updateFromWidget( self, value ) :
+	def _updateFromWidget( self, value, mergeGroup = "" ) :
 
 		if self.__target is None :
 			return
 
-		with Gaffer.UndoScope( self.__target.ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.__target.ancestor( Gaffer.ScriptNode ), mergeGroup = mergeGroup ) :
 			Gaffer.Metadata.registerValue( self.__target, self.__key, value )
 
 	## May be called by derived classes to deregister the
@@ -166,7 +166,7 @@ class BoolMetadataWidget( MetadataWidget ) :
 		MetadataWidget.__init__( self, self.__boolWidget, key, target, defaultValue = defaultValue, **kw )
 
 		self.__boolWidget.stateChangedSignal().connect(
-			Gaffer.WeakMethod( self.__stateChanged ), scoped = False
+			Gaffer.WeakMethod( self.__stateChanged )
 		)
 
 	def _updateFromValue( self, value ) :
@@ -187,7 +187,7 @@ class StringMetadataWidget( MetadataWidget ) :
 		self.__acceptEmptyString = acceptEmptyString
 
 		self.__textWidget.editingFinishedSignal().connect(
-			Gaffer.WeakMethod( self.__editingFinished ), scoped = False
+			Gaffer.WeakMethod( self.__editingFinished )
 		)
 
 	def textWidget( self ) :
@@ -214,7 +214,7 @@ class MultiLineStringMetadataWidget( MetadataWidget ) :
 		MetadataWidget.__init__( self, self.__textWidget, key, target, defaultValue = defaultValue, **kw )
 
 		self.__textWidget.editingFinishedSignal().connect(
-			Gaffer.WeakMethod( self.__editingFinished ), scoped = False
+			Gaffer.WeakMethod( self.__editingFinished )
 		)
 
 	def textWidget( self ) :
@@ -240,7 +240,7 @@ class ColorSwatchMetadataWidget( MetadataWidget ) :
 		self.__swatch._qtWidget().setFixedHeight( 18 )
 		self.__swatch._qtWidget().setMaximumWidth( 40 )
 
-		self.__swatch.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
+		self.__swatch.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
 
 	def _updateFromValue( self, value ) :
 
@@ -315,13 +315,13 @@ class FileSystemPathMetadataWidget( MetadataWidget ) :
 		self.__row.append( self.__pathWidget )
 
 		button = GafferUI.Button( image = "pathChooser.png", hasFrame=False )
-		button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
+		button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 		self.__row.append( button )
 
 		self.__acceptEmptyString = acceptEmptyString
 
 		self.__pathWidget.editingFinishedSignal().connect(
-			Gaffer.WeakMethod( self.__editingFinished ), scoped = False
+			Gaffer.WeakMethod( self.__editingFinished )
 		)
 
 	def _updateFromValue( self, value ) :
@@ -347,3 +347,43 @@ class FileSystemPathMetadataWidget( MetadataWidget ) :
 		if chosenPath is not None :
 			self.__path.setFromString( str( chosenPath ) )
 			self.__editingFinished()
+
+class NumericMetadataWidget( MetadataWidget ) :
+
+	def __init__( self, key, target = None, defaultValue = 0, **kw ) :
+
+		self.__numericWidget = GafferUI.NumericWidget( value = defaultValue )
+
+		self.__defaultValue = defaultValue
+		# we use these to decide which actions to merge into a single undo
+		self.__lastChangedReason = None
+		self.__mergeGroupId = 0
+
+		MetadataWidget.__init__( self, self.__numericWidget, key, target, defaultValue = defaultValue, **kw )
+
+		self.__numericWidget.valueChangedSignal().connect(
+			Gaffer.WeakMethod( self.__valueChanged )
+		)
+
+	def numericWidget( self ) :
+
+		return self.__numericWidget
+
+	def _updateFromValue( self, value ) :
+
+		self.__numericWidget.setValue( type( self.__defaultValue )( value ) )
+
+	def __valueChanged( self, widget, reason ) :
+
+		if reason == GafferUI.NumericWidget.ValueChangedReason.InvalidEdit :
+			self._updateFromValue( self.defaultValue() )
+			return
+
+		if not widget.changesShouldBeMerged( self.__lastChangedReason, reason ) :
+			self.__mergeGroupId += 1
+		self.__lastChangedReason = reason
+
+		self._updateFromWidget(
+			self.__numericWidget.getValue(),
+			mergeGroup = "NumericMetadataWidget{}{}".format( id( self, ), self.__mergeGroupId )
+		)

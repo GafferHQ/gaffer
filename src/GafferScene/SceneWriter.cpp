@@ -47,6 +47,7 @@
 #include "tbb/mutex.h"
 
 #include <filesystem>
+#include <unordered_map>
 
 using namespace std;
 using namespace IECore;

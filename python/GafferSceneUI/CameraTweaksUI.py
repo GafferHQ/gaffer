@@ -97,8 +97,6 @@ Gaffer.Metadata.registerNode(
 
 		"tweaks.*" : [
 
-			"tweakPlugValueWidget:allowRemove", True,
-			"tweakPlugValueWidget:allowCreate", True,
 			"tweakPlugValueWidget:propertyType", "parameter",
 
 		],

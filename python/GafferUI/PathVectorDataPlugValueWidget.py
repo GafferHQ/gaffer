@@ -58,7 +58,7 @@ class PathVectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.PlugValueWidget.__init__( self, self.__dataWidget, plug, **kw )
 
-		self.__dataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ), scoped = False )
+		self.__dataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ) )
 		self.__deprecatedPathChooserDialogueKeywords = pathChooserDialogueKeywords
 
 	def path( self ) :

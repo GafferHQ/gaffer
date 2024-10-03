@@ -64,8 +64,9 @@ class CodeWidget( GafferUI.MultiLineTextWidget ) :
 		self.__highlighter = _QtHighlighter( self._qtWidget().document() )
 		self.__commentPrefix = None
 
-		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
-		self.__textChangedConnection = self.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ), scoped = False )
+		self.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ) )
+		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.__textChangedConnection = self.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
 
 	def setCompleter( self, completer ) :
 
@@ -105,6 +106,13 @@ class CodeWidget( GafferUI.MultiLineTextWidget ) :
 		# opportunity to emit the signal before the user navigates elsewhere.
 		if self.__completionMenu is None or not self.__completionMenu.visible() :
 			GafferUI.MultiLineTextWidget._emitEditingFinished( self )
+
+	def __activated( self, widget ) :
+
+		# Dispose of any visible completion menu, if kept it prevents us
+		# from emitting editingFinishedSignal via _emitEditingFinished above.
+		if self.__completionMenu is not None and self.__completionMenu.visible() :
+			self.__completionMenu = None
 
 	def __keyPress( self, widget, event ) :
 

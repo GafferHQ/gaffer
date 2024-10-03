@@ -108,7 +108,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			self.__messageHandler = _MessageHandler()
 			self.__messagesChangedSignal = Gaffer.Signal1()
-			self.__messageHandler.messagesChangedSignal().connect( Gaffer.WeakMethod( self.__messagesChanged, fallbackResult = None ), scoped = False )
+			self.__messageHandler.messagesChangedSignal().connect( Gaffer.WeakMethod( self.__messagesChanged, fallbackResult = None ) )
 
 			self.__initBatchWalk( batch )
 

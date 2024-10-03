@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2024, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,23 +34,32 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/OpenGLRender.h"
+#pragma once
 
-#include "IECoreGL/IECoreGL.h"
-#include "IECoreGL/Renderer.h"
+#include "GafferScene/MergeObjects.h"
 
-#include "IECore/SimpleTypedData.h"
-
-using namespace Gaffer;
-using namespace GafferScene;
-
-GAFFER_NODE_DEFINE_TYPE( OpenGLRender );
-
-OpenGLRender::OpenGLRender( const std::string &name )
-	:	Render( "OpenGL", name )
+namespace GafferScene
 {
-}
 
-OpenGLRender::~OpenGLRender()
+class GAFFERSCENE_API MergeCurves : public MergeObjects
 {
-}
+
+	public :
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::MergeCurves, MergeCurvesTypeId, MergeObjects );
+
+		explicit MergeCurves( const std::string &name=defaultName<MergeCurves>() );
+		~MergeCurves() override;
+
+	protected :
+
+		IECore::ConstObjectPtr mergeObjects( const std::vector< std::pair< IECore::ConstObjectPtr, Imath::M44f > > &sources, const Gaffer::Context *context ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( MergeObjects )
+
+} // namespace GafferScene

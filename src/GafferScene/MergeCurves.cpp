@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2024, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,28 +34,55 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#include "GafferScene/MergeCurves.h"
 
-#include "GafferArnold/Export.h"
-#include "GafferArnold/TypeIds.h"
+#include "tbb/task_arena.h"
 
-#include "GafferScene/Render.h"
+#include "GafferScene/Private/IECoreScenePreview/PrimitiveAlgo.h"
+#include "IECoreScene/CurvesPrimitive.h"
+#include "IECore/NullObject.h"
 
-namespace GafferArnold
+using namespace std;
+using namespace Imath;
+using namespace IECore;
+using namespace IECoreScene;
+using namespace Gaffer;
+using namespace GafferScene;
+
+GAFFER_NODE_DEFINE_TYPE( MergeCurves );
+
+size_t MergeCurves::g_firstPlugIndex = 0;
+
+MergeCurves::MergeCurves( const std::string &name )
+	:	MergeObjects( name, "/mergedCurves" )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
+}
 
-class GAFFERARNOLD_API ArnoldRender : public GafferScene::Render
+MergeCurves::~MergeCurves()
 {
+}
 
-	public :
+IECore::ConstObjectPtr MergeCurves::mergeObjects( const std::vector< std::pair< IECore::ConstObjectPtr, Imath::M44f > > &sources, const Gaffer::Context *context ) const
+{
+	std::vector< std::pair< const IECoreScene::Primitive *, Imath::M44f > > curves;
 
-		explicit ArnoldRender( const std::string &name=defaultName<ArnoldRender>() );
-		~ArnoldRender() override;
+	for( const auto &[object, transform] : sources )
+	{
+		const IECoreScene::CurvesPrimitive * m = IECore::runTimeCast< const IECoreScene::CurvesPrimitive >( object.get() );
+		if( !m )
+		{
+			// Just skip anything that's not a curve
+			continue;
+		}
 
-		GAFFER_NODE_DECLARE_TYPE( GafferArnold::ArnoldRender, ArnoldRenderTypeId, GafferScene::Render );
+		curves.push_back( std::make_pair( m, transform ) );
+	}
 
-};
+	if( !curves.size() )
+	{
+		return IECore::NullObject::defaultNullObject();
+	}
 
-IE_CORE_DECLAREPTR( ArnoldRender );
-
-} // namespace GafferArnold
+	return IECoreScenePreview::PrimitiveAlgo::mergePrimitives( curves, context->canceller() );
+}

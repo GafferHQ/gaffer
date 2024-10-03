@@ -57,7 +57,7 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 				drawModeWidget.append( "Ramp" )
 				drawModeWidget.append( "Curves" )
 				drawModeWidget.setSelection( "Ramp" )
-				drawModeWidget.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__drawModeChanged ), scoped = False )
+				drawModeWidget.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__drawModeChanged ) )
 
 				GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
 				GafferUI.PlugWidget( GafferUI.PlugValueWidget.create( plug["interpolation"] ) )
@@ -71,9 +71,9 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			self.__slider = GafferUI.Slider()
 			self.__slider.setMinimumSize( 2 )
-			self.__positionsChangedConnection = self.__slider.valueChangedSignal().connect( Gaffer.WeakMethod( self.__positionsChanged ), scoped = False )
-			self.__slider.indexRemovedSignal().connect( Gaffer.WeakMethod( self.__indexRemoved ), scoped = False )
-			self.__slider.selectedIndexChangedSignal().connect( Gaffer.WeakMethod( self.__selectedIndexChanged ), scoped = False )
+			self.__positionsChangedConnection = self.__slider.valueChangedSignal().connect( Gaffer.WeakMethod( self.__positionsChanged ) )
+			self.__slider.indexRemovedSignal().connect( Gaffer.WeakMethod( self.__indexRemoved ) )
+			self.__slider.selectedIndexChangedSignal().connect( Gaffer.WeakMethod( self.__selectedIndexChanged ) )
 
 			self.__lastPositionChangedReason = None
 			self.__positionsMergeGroupId = 0

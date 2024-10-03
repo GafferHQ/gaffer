@@ -116,6 +116,61 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			IECore.FloatData( 2.0 )
 		)
 
+	def testFallbackValue( self ) :
+
+		light = GafferSceneTest.TestLight()
+		group = GafferScene.Group()
+		group["in"][0].setInput( light["out"] )
+
+		# With no "gl:visualiser:scale" attribute at /group/light, the inspection returns
+		# the registered default value with `sourceType` identifying it as a fallback.
+
+		inspection = self.__inspect( group["out"], "/group/light", "gl:visualiser:scale" )
+		self.assertEqual( inspection.value().value, Gaffer.Metadata.value( "attribute:gl:visualiser:scale", "defaultValue" ) )
+		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Fallback )
+		self.assertEqual( inspection.fallbackDescription(), "Default value" )
+
+		globalGlAttributes = GafferScene.OpenGLAttributes()
+		globalGlAttributes["in"].setInput( group["out"] )
+		globalGlAttributes["global"].setValue( True )
+		globalGlAttributes["attributes"]["visualiserScale"]["enabled"].setValue( True )
+		globalGlAttributes["attributes"]["visualiserScale"]["value"].setValue( 4.0 )
+
+		# With no "gl:visualiser:scale" attribute at /group/light, the inspection returns
+		# the inherited global attribute value with `sourceType` identifying it as a fallback.
+
+		inspection = self.__inspect( globalGlAttributes["out"], "/group/light", "gl:visualiser:scale" )
+		self.assertEqual( inspection.value(), IECore.FloatData( 4.0 ) )
+		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Fallback )
+		self.assertEqual( inspection.fallbackDescription(), "Global attribute" )
+
+		groupFilter = GafferScene.PathFilter()
+		groupFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+
+		glAttributes = GafferScene.OpenGLAttributes()
+		glAttributes["in"].setInput( globalGlAttributes["out"] )
+		glAttributes["filter"].setInput( groupFilter["out"] )
+		glAttributes["attributes"]["visualiserScale"]["enabled"].setValue( True )
+		glAttributes["attributes"]["visualiserScale"]["value"].setValue( 2.0 )
+
+		# With no "gl:visualiser:scale" attribute at /group/light, the inspection returns
+		# the inherited attribute value from /group with `sourceType` identifying it as a fallback.
+
+		inspection = self.__inspect( glAttributes["out"], "/group/light", "gl:visualiser:scale" )
+		self.assertEqual( inspection.value(), IECore.FloatData( 2.0 ) )
+		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Fallback )
+		self.assertEqual( inspection.fallbackDescription(), "Inherited from /group" )
+
+		# With a "gl:visualiser:scale" attribute created at the inspected location, it is
+		# returned instead of the inherited fallback.
+
+		light["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+		light["visualiserAttributes"]["scale"]["value"].setValue( 4.0 )
+
+		inspection = self.__inspect( glAttributes["out"], "/group/light", "gl:visualiser:scale" )
+		self.assertEqual( inspection.value(), IECore.FloatData( 4.0 ) )
+		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Other )
+
 	def testSourceAndEdits( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -164,7 +219,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			source = s["light"]["visualiserAttributes"]["scale"],
 			sourceType = SourceType.Other,
 			editable=False,
-			nonEditableReason = "The target EditScope (editScope1) is not in the scene history."
+			nonEditableReason = "The target edit scope editScope1 is not in the scene history."
 		)
 
 		# If it is in the history though, and we're told to use it, then we will.
@@ -263,6 +318,16 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			edit = editScopeAttributeTweak
 		)
 
+		# When using no scope, make sure that we don't inadvertently edit the contents of an EditScope.
+
+		self.__assertExpectedResult(
+			self.__inspect( s["editScope2"]["out"], "/light2", "gl:visualiser:scale", None ),
+			source = editScopeAttributeTweak,
+			sourceType = SourceType.Other,
+			editable = False,
+			nonEditableReason = "Source is in an EditScope. Change scope to editScope1 to edit."
+		)
+
 		# If there is a manual tweak outside of an edit scope, make sure we use that with no scope
 		s["independentAttributeTweak"] = GafferScene.AttributeTweaks()
 		s["independentAttributeTweak"]["in"].setInput( s["editScope2"]["out"] )
@@ -314,7 +379,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			source = independentAttributeTweakPlug,
 			sourceType = SourceType.Downstream,
 			editable = False,
-			nonEditableReason = "The target EditScope (editScope2) is disabled."
+			nonEditableReason = "The target edit scope editScope2 is disabled."
 		)
 
 		s["editScope2"]["enabled"].setValue( True )
@@ -400,7 +465,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			source = light["visualiserAttributes"]["scale"],
 			sourceType = SourceType.Other,
 			editable = False,
-			nonEditableReason = "The target EditScope (EditScope) is not in the scene history."
+			nonEditableReason = "The target edit scope EditScope is not in the scene history."
 		)
 
 		self.__assertExpectedResult(
@@ -416,7 +481,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			source = attributeTweaks["tweaks"][0],
 			sourceType = SourceType.Other,
 			editable = False,
-			nonEditableReason = "The target EditScope (EditScope) is not in the scene history."
+			nonEditableReason = "The target edit scope EditScope is not in the scene history."
 		)
 
 	def testDisabledTweaks( self ) :
@@ -654,7 +719,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( light["out"], "/light", "gl:visualiser:scale", None ),
 			source = light["visualiserAttributes"]["scale"],
-			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Fallback,
 			editable = True,
 			edit = light["visualiserAttributes"]["scale"]
 		)
@@ -663,7 +728,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( group["out"], "/group/light", "gl:visualiser:scale", None ),
 			source = light["visualiserAttributes"]["scale"],
-			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Fallback,
 			editable = True,
 			edit = light["visualiserAttributes"]["scale"]
 		)
@@ -679,7 +744,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( editScope["out"], "/light", "gl:visualiser:scale", None ),
 			source = light["visualiserAttributes"]["scale"],
-			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Fallback,
 			editable = True,
 			edit = light["visualiserAttributes"]["scale"]
 		)
@@ -735,6 +800,141 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		row = edit.ancestor( Gaffer.Spreadsheet.RowPlug )
 
 		self.assertEqual( row["name"].getValue(), "/parent/child" )
+
+	def testLightFilter( self ) :
+
+		lightFilter = GafferSceneTest.TestLightFilter()
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( lightFilter["out"] )
+		editScope["in"].setInput( lightFilter["out"] )
+
+		self.__assertExpectedResult(
+			self.__inspect( editScope["out"], "/lightFilter", "filteredLights" ),
+			source = lightFilter["filteredLights"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Fallback,
+			editable = True,
+			edit = lightFilter["filteredLights"]
+		)
+
+		self.assertIsNone( self.__inspect( editScope["out"], "/lightFilter", "bogusAttribute" ) )
+
+		inspection = self.__inspect( editScope["out"], "/lightFilter", "filteredLights", editScope )
+		edit = inspection.acquireEdit()
+		edit["enabled"].setValue( True )
+
+		self.__assertExpectedResult(
+			self.__inspect( editScope["out"], "/lightFilter", "filteredLights", editScope ),
+			source = edit,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.EditScope,
+			editable = True,
+			edit = edit
+		)
+
+	def testAcquireEditCreateIfNecessary( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["light"] = GafferSceneTest.TestLight()
+		s["light"]["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+
+		s["group"] = GafferScene.Group()
+		s["editScope"] = Gaffer.EditScope()
+
+		s["group"]["in"][0].setInput( s["light"]["out"] )
+
+		s["editScope"].setup( s["group"]["out"] )
+		s["editScope"]["in"].setInput( s["group"]["out"] )
+
+		inspection = self.__inspect( s["group"]["out"], "/group/light", "gl:visualiser:scale", None )
+		self.assertEqual( inspection.acquireEdit( createIfNecessary = False ), s["light"]["visualiserAttributes"]["scale"] )
+
+		inspection = self.__inspect( s["editScope"]["out"], "/group/light", "gl:visualiser:scale", s["editScope"] )
+		self.assertIsNone( inspection.acquireEdit( createIfNecessary = False ) )
+
+		edit = inspection.acquireEdit( createIfNecessary = True )
+		self.assertIsNotNone( edit )
+		self.assertEqual( inspection.acquireEdit( createIfNecessary = False ), edit )
+
+	def testDisableEdit( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["light"] = GafferSceneTest.TestLight()
+		s["light"]["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+
+		s["group"] = GafferScene.Group()
+		s["editScope1"] = Gaffer.EditScope()
+		s["editScope2"] = Gaffer.EditScope()
+
+		s["group"]["in"][0].setInput( s["light"]["out"] )
+
+		s["editScope1"].setup( s["group"]["out"] )
+		s["editScope1"]["in"].setInput( s["group"]["out"] )
+
+		s["editScope2"].setup( s["editScope1"]["out"] )
+		s["editScope2"]["in"].setInput( s["editScope1"]["out"] )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["light"]["visualiserAttributes"]["scale"]["enabled"], True )
+		inspection = self.__inspect( s["group"]["out"], "/group/light", "gl:visualiser:scale", None )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "light.visualiserAttributes.scale.enabled is locked." )
+		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : light.visualiserAttributes.scale.enabled is locked.", inspection.disableEdit )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["light"]["visualiserAttributes"]["scale"]["enabled"], False )
+		Gaffer.MetadataAlgo.setReadOnly( s["light"]["visualiserAttributes"]["scale"], True )
+		inspection = self.__inspect( s["group"]["out"], "/group/light", "gl:visualiser:scale", None )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "light.visualiserAttributes.scale is locked." )
+		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : light.visualiserAttributes.scale is locked.", inspection.disableEdit )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["light"]["visualiserAttributes"]["scale"], False )
+		inspection = self.__inspect( s["group"]["out"], "/group/light", "gl:visualiser:scale", None )
+		self.assertTrue( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "" )
+		inspection.disableEdit()
+		self.assertFalse( s["light"]["visualiserAttributes"]["scale"]["enabled"].getValue() )
+
+		lightEdit = GafferScene.EditScopeAlgo.acquireAttributeEdit(
+			s["editScope1"], "/group/light", "gl:visualiser:scale", createIfNecessary = True
+		)
+		lightEdit["enabled"].setValue( True )
+		lightEdit["value"].setValue( 2.0 )
+
+		inspection = self.__inspect( s["editScope1"]["out"], "/group/light", "gl:visualiser:scale", s["editScope2"] )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "The target edit scope editScope2 is not in the scene history." )
+
+		inspection = self.__inspect( s["editScope2"]["out"], "/group/light", "gl:visualiser:scale", None )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "Source is in an EditScope. Change scope to editScope1 to disable." )
+		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : Source is in an EditScope. Change scope to editScope1 to disable.", inspection.disableEdit )
+
+		inspection = self.__inspect( s["editScope2"]["out"], "/group/light", "gl:visualiser:scale", s["editScope2"] )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "Edit is not in the current edit scope. Change scope to editScope1 to disable." )
+		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : Edit is not in the current edit scope. Change scope to editScope1 to disable.", inspection.disableEdit )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["editScope1"], True )
+		inspection = self.__inspect( s["editScope1"]["out"], "/group/light", "gl:visualiser:scale", s["editScope1"] )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "editScope1 is locked." )
+		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : editScope1 is locked.", inspection.disableEdit )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["editScope1"], False )
+		inspection = self.__inspect( s["editScope1"]["out"], "/group/light", "gl:visualiser:scale", s["editScope1"] )
+		self.assertTrue( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "" )
+		inspection.disableEdit()
+		self.assertFalse( lightEdit["enabled"].getValue() )
+
+		inspection = self.__inspect( s["editScope1"]["out"], "/group/light", "gl:visualiser:scale", s["editScope1"] )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "Edit is not in the current edit scope. Change scope to None to disable." )
+
+		inspection = self.__inspect( s["editScope1"]["out"], "/group/light", "gl:visualiser:scale", None )
+		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.nonDisableableReason(), "light.visualiserAttributes.scale.enabled is not enabled." )
 
 if __name__ == "__main__" :
 	unittest.main()

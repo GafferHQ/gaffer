@@ -51,13 +51,13 @@ class ScaleToolTest( GafferUITest.TestCase ) :
 
 		script["plane"] = GafferScene.Plane()
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["plane"]["out"] )
 
 		tool = GafferSceneUI.ScaleTool( view )
 		tool["active"].setValue( True )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/plane" ] ) )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/plane" ] ) )
 
 		with Gaffer.UndoScope( script ) :
 			tool.scale( imath.V3f( 2, 1, 1 ) )
@@ -80,13 +80,13 @@ class ScaleToolTest( GafferUITest.TestCase ) :
 		script = Gaffer.ScriptNode()
 		script["plane"] = GafferScene.Plane()
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["plane"]["out"] )
 
 		tool = GafferSceneUI.ScaleTool( view )
 		tool["active"].setValue( True )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/plane" ] ) )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/plane" ] ) )
 		self.assertEqual( tool.handlesTransform(), imath.M44f() )
 
 		script["plane"]["transform"]["pivot"].setValue( imath.V3f( 1, 0, 0 ) )
@@ -120,11 +120,11 @@ class ScaleToolTest( GafferUITest.TestCase ) :
 		script["editScope"].setup( script["sphere"]["out"] )
 		script["editScope"]["in"].setInput( script["sphere"]["out"] )
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["editScope"]["out"] )
 		view["editScope"].setInput( script["editScope"]["out"] )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere" ] ) )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/sphere" ] ) )
 
 		tool = GafferSceneUI.ScaleTool( view )
 		tool["active"].setValue( True )
@@ -165,10 +165,10 @@ class ScaleToolTest( GafferUITest.TestCase ) :
 		script["constraint"]["filter"].setInput( script["sphereFilter"]["out"] )
 		script["constraint"]["target"].setValue( "/cube" )
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["constraint"]["out"] )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere" ] ) )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/sphere" ] ) )
 
 		tool = GafferSceneUI.ScaleTool( view )
 		tool["active"].setValue( True )
@@ -183,10 +183,10 @@ class ScaleToolTest( GafferUITest.TestCase ) :
 		script["box"]["sphere"] = GafferScene.Sphere()
 		promoted = Gaffer.PlugAlgo.promote( script["box"]["sphere"]["transform"]["scale"]["y"] )
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["box"]["sphere"]["out"] )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere" ] ) )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/sphere" ] ) )
 
 		tool = GafferSceneUI.ScaleTool( view )
 		tool["active"].setValue( True )
@@ -202,10 +202,10 @@ class ScaleToolTest( GafferUITest.TestCase ) :
 		script["sphere"] = GafferScene.Sphere()
 		script["sphere"]["transform"]["scale"].gang()
 
-		view = GafferSceneUI.SceneView()
+		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["sphere"]["out"] )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere" ] ) )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/sphere" ] ) )
 
 		tool = GafferSceneUI.ScaleTool( view )
 		tool["active"].setValue( True )

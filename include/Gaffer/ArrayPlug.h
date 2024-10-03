@@ -49,17 +49,17 @@ class GAFFER_API ArrayPlug : public Plug
 
 	public :
 
-		/// The element plug is used as the first array element,
-		/// and all new array elements are created by calling
-		/// element->createCounterpart(). Currently the element
-		/// names are derived from the name of the first element,
-		/// but this may change in the future. It is strongly
-		/// recommended that ArrayPlug children are only accessed
-		/// through numeric indexing and never via names.
+		/// All array elements are created by calling
+		/// `elementPrototype->createCounterpart()`. Currently the element names
+		/// are derived from the name of the prototype, but this may change in
+		/// the future. It is strongly recommended that ArrayPlug children are
+		/// only accessed through numeric indexing and never via names.
 		explicit ArrayPlug(
 			const std::string &name = defaultName<ArrayPlug>(),
 			Direction direction = In,
-			PlugPtr element = nullptr,
+			/// > Caution : `elementPrototype` should not be null. It only defaults
+			/// > that way to support the loading of legacy serialisations.
+			ConstPlugPtr elementPrototype = nullptr,
 			size_t minSize = 1,
 			size_t maxSize = std::numeric_limits<size_t>::max(),
 			unsigned flags = Default,
@@ -75,8 +75,10 @@ class GAFFER_API ArrayPlug : public Plug
 		void setInput( PlugPtr input ) override;
 		PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
+		const Plug *elementPrototype() const;
 		size_t minSize() const;
 		size_t maxSize() const;
+		/// Resizes the array. This should be preferred to `addChild()`.
 		void resize( size_t size );
 		bool resizeWhenInputsChange() const;
 		/// Returns an unconnected element at the end of the array, adding one
@@ -91,7 +93,9 @@ class GAFFER_API ArrayPlug : public Plug
 	private :
 
 		void inputChanged( Gaffer::Plug *plug );
+		void childAdded();
 
+		ConstPlugPtr m_elementPrototype;
 		size_t m_minSize;
 		size_t m_maxSize;
 		bool m_resizeWhenInputsChange;

@@ -70,6 +70,17 @@ void setupLoop( Loop &n, const ValuePlug &plug )
 	n.setup( &plug );
 }
 
+object previousIterationWrapper( Loop &loop, const Gaffer::ValuePlug &output )
+{
+	std::pair<const ValuePlug *, ContextPtr> result;
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		result = loop.previousIteration( &output );
+	}
+	return boost::python::make_tuple( ValuePlugPtr( const_cast<ValuePlug *>( result.first ) ), result.second );
+}
+
+
 ContextPtr inPlugContext( const ContextProcessor &n )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -189,6 +200,7 @@ void GafferModule::bindContextProcessor()
 
 	DependencyNodeClass<Loop>()
 		.def( "setup", &setupLoop )
+		.def( "previousIteration", &previousIterationWrapper )
 	;
 
 	DependencyNodeClass<ContextProcessor>()

@@ -50,22 +50,17 @@ class NodeToolbar( GafferUI.Widget ) :
 		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
 
 		self.__node = node
-
-		scriptNode = self.__node.scriptNode()
-		self.__context = GafferUI.PlugValueWidget._PlugValueWidget__defaultContext( node )
+		self.__contextTracker = GafferUI.ContextTracker.acquireForFocus( self.__node )
 
 	## Returns the node the toolbar represents.
 	def node( self ) :
 
 		return self.__node
 
-	def getContext( self ) :
+	## Returns the context in which the toolbar shows its plugs.
+	def context( self ) :
 
-		return self.__context
-
-	def setContext( self, context ) :
-
-		self.__context = context
+		return self.__contextTracker.context( self.__node )
 
 	## Creates a NodeToolbar instance for the specified node and edge.
 	# Note that not all nodes have toolbars, so None may be returned.

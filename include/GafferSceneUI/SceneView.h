@@ -71,7 +71,7 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 
 	public :
 
-		explicit SceneView( const std::string &name = defaultName<SceneView>() );
+		explicit SceneView( Gaffer::ScriptNodePtr scriptNode );
 		~SceneView() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::SceneView, SceneViewTypeId, GafferUI::View );
@@ -88,8 +88,6 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 		void frame( const IECore::PathMatcher &filter, const Imath::V3f &direction = Imath::V3f( -0.64, -0.422, -0.64 ) );
 		void expandSelection( size_t depth = 1 );
 		void collapseSelection();
-
-		void setContext( Gaffer::ContextPtr context ) override;
 
 		/// If the view is locked to a particular camera,
 		/// this returns the bound of the resolution gate
@@ -108,10 +106,6 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 		static void registerRenderer( const std::string &name, const RendererSettingsCreator &settingsCreator );
 		static std::vector<std::string> registeredRenderers();
 
-	protected :
-
-		void contextChanged( const IECore::InternedString &name ) override;
-
 	private :
 
 		// The filter for a preprocessing node used to hide things.
@@ -120,11 +114,11 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 
 		Imath::Box3f framingBound() const;
 
+		void contextChanged();
+		void selectedPathsChanged();
+		void visibleSetChanged();
 		bool keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &event );
-		void transferSelectionToContext();
 		void plugSet( Gaffer::Plug *plug );
-
-		Gaffer::Signals::ScopedConnection m_selectionChangedConnection;
 
 		SceneGadgetPtr m_sceneGadget;
 

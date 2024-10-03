@@ -54,8 +54,8 @@ class StandardNodeToolbarTest( GafferUITest.TestCase ) :
 		)
 		Gaffer.Metadata.registerValue( script["node"]["op1"], "toolbarLayout:section", "Top" )
 
-		view = GafferUITest.ViewTest.MyView( script["node"]["op1"] )
-		view.setContext( script.context() )
+		view = GafferUITest.ViewTest.MyView( script )
+		view["in"].setInput( script["node"]["op1"] )
 		view["testPlug"] = Gaffer.IntPlug()
 		Gaffer.Metadata.registerValue(
 			view["testPlug"], "plugValueWidget:type",
@@ -71,7 +71,7 @@ class StandardNodeToolbarTest( GafferUITest.TestCase ) :
 			widget = toolbar._StandardNodeToolbar__layout.plugValueWidget( plug )
 			GafferUITest.PlugValueWidgetTest.waitForUpdate( widget )
 			self.assertEqual( widget.updateCount, 1 )
-			self.assertTrue( widget.updateContexts[0].isSame( script.context() ) )
+			self.assertEqual( widget.updateContexts[0], script.context() )
 
 if __name__ == "__main__":
 	unittest.main()

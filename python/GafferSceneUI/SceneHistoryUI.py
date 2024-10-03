@@ -54,7 +54,7 @@ def appendViewContextMenuItems( viewer, view, menuDefinition ) :
 		{
 			"subMenu" : functools.partial(
 				__historySubMenu,
-				context = view.getContext(),
+				context = view.context(),
 				scene = view["in"],
 				selectedPath = __sceneViewSelectedPath( view )
 			)
@@ -64,11 +64,11 @@ def appendViewContextMenuItems( viewer, view, menuDefinition ) :
 def connectToEditor( editor ) :
 
 	if isinstance( editor, GafferUI.Viewer ) :
-		editor.keyPressSignal().connect( __viewerKeyPress, scoped = False )
+		editor.keyPressSignal().connect( __viewerKeyPress )
 	elif isinstance( editor, GafferSceneUI.HierarchyView ) or isinstance( editor, GafferSceneUI.LightEditor ) :
-		editor.keyPressSignal().connect( __hierarchyViewKeyPress, scoped = False )
+		editor.keyPressSignal().connect( __hierarchyViewKeyPress )
 	elif isinstance( editor, GafferUI.NodeEditor ) :
-		editor.keyPressSignal().connect( __nodeEditorKeyPress, scoped = False )
+		editor.keyPressSignal().connect( __nodeEditorKeyPress )
 
 ##########################################################################
 # Internal implementation
@@ -106,9 +106,9 @@ def __sceneViewSelectedPath( sceneView ) :
 	else :
 		return None
 
-def __contextSelectedPath( context ) :
+def __selectedPath( scriptNode ) :
 
-	selection = GafferSceneUI.ContextAlgo.getSelectedPaths( context )
+	selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( scriptNode )
 	if selection.size() != 1 :
 		return None
 
@@ -186,58 +186,48 @@ def __viewerKeyPress( viewer, event ) :
 	if event == __editSourceKeyPress :
 		selectedPath = __sceneViewSelectedPath( view )
 		if selectedPath is not None :
-			__editSourceNode( view.getContext(), view["in"], selectedPath )
+			__editSourceNode( view.context(), view["in"], selectedPath )
 		return True
 	elif event == __editTweaksKeyPress :
 		selectedPath = __sceneViewSelectedPath( view )
 		if selectedPath is not None :
-			__editTweaksNode( view.getContext(), view["in"], selectedPath )
+			__editTweaksNode( view.context(), view["in"], selectedPath )
 		return True
 
 def __hierarchyViewKeyPress( hierarchyView, event ) :
 
 	if event == __editSourceKeyPress :
-		selectedPath = __contextSelectedPath( hierarchyView.getContext() )
+		selectedPath = __selectedPath( hierarchyView.scriptNode() )
 		if selectedPath is not None :
-			__editSourceNode( hierarchyView.getContext(), hierarchyView.scene(), selectedPath )
+			__editSourceNode( hierarchyView.context(), hierarchyView.scene(), selectedPath )
 		return True
 	elif event == __editTweaksKeyPress :
-		selectedPath = __contextSelectedPath( hierarchyView.getContext() )
+		selectedPath = __selectedPath( hierarchyView.scriptNode() )
 		if selectedPath is not None :
-			__editTweaksNode( hierarchyView.getContext(), hierarchyView.scene(), selectedPath )
+			__editTweaksNode( hierarchyView.context(), hierarchyView.scene(), selectedPath )
 		return True
 
 def __nodeEditorKeyPress( nodeEditor, event ) :
 
-	layout = nodeEditor.ancestor( GafferUI.CompoundEditor )
-	if layout is None :
+	focusNode = nodeEditor.scriptNode().getFocus()
+	if focusNode is None :
 		return False
 
-	## \todo In Gaffer 0.61, we should get the scene directly from the focus node.
-	scene = None
-	for hierarchyView in layout.editors( GafferSceneUI.HierarchyView ) :
-		if hierarchyView.scene() is not None :
-			scene = hierarchyView.scene()
-			break
-
-	if scene is None :
-		for viewer in layout.editors( GafferUI.Viewer ) :
-			if isinstance( viewer.view(), GafferSceneUI.SceneView ) :
-				scene = viewer.view()["in"]
-				break
+	scene = next(
+		( p for p in GafferScene.ScenePlug.RecursiveOutputRange( focusNode ) if not p.getName().startswith( "__" ) ),
+		None
+	)
 
 	if scene is None :
 		return False
-
-	context = layout.scriptNode().context()
 
 	if event == __editSourceKeyPress :
-		selectedPath = __contextSelectedPath( context )
+		selectedPath = __selectedPath( nodeEditor.scriptNode() )
 		if selectedPath is not None :
-			__editSourceNode( context, scene, selectedPath, nodeEditor )
+			__editSourceNode( nodeEditor.scriptNode().context(), scene, selectedPath, nodeEditor )
 		return True
 	elif event == __editTweaksKeyPress :
-		selectedPath = __contextSelectedPath( context )
+		selectedPath = __selectedPath( nodeEditor.scriptNode() )
 		if selectedPath is not None :
-			__editTweaksNode( context, scene, selectedPath, nodeEditor )
+			__editTweaksNode( nodeEditor.scriptNode().context(), scene, selectedPath, nodeEditor )
 		return True

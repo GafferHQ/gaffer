@@ -179,12 +179,12 @@ class _InPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__plugLayout = GafferUI.PlugLayout( plug )
 			self.__addButton = GafferUI.Button( image = "plus.png", hasFrame = False )
 
-		self.__addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addButtonClicked ), scoped = False )
+		self.__addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addButtonClicked ) )
 
-		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ), scoped = False )
-		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
-		self.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ), scoped = False )
+		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
+		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
+		self.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ) )
 
 		self.__currentDragTarget = None
 
@@ -320,10 +320,10 @@ class _DragHandle( GafferUI.Image ) :
 
 		GafferUI.Image.__init__( self, "reorderVertically.png", **kw )
 
-		self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ), scoped = False )
-		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ), scoped = False )
-		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
-		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
+		self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) )
+		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) )
+		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
 
 	def __enter( self, widget ) :
 

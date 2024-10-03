@@ -193,6 +193,7 @@ class GAFFER_API Context : public IECore::RefCounted
 			public :
 
 				/// Constructing the Scope pushes the current context.
+				/// If context is `nullptr` then this is a no-op.
 				Scope( const Context *context );
 				/// Destruction of the Scope pops the previously pushed context.
 				~Scope();

@@ -178,6 +178,16 @@ parameterMetadata = {
 			"label" : "Strength",
 			"layout:index" : 29,
 		},
+		"thin_film_thickness" : {
+			"layout:section" : "Thin Film",
+			"label" : "Thickness",
+			"layout:index" : 30,
+		},
+		"thin_film_ior" : {
+			"layout:section" : "Thin Film",
+			"label" : "IOR",
+			"layout:index" : 31,
+		},
 	},
 	"principled_hair_bsdf" : {
 		"model" : {
@@ -800,12 +810,16 @@ parameterMetadata = {
 			"label" : "IOR",
 			"layout:index" : 5,
 		},
-		"subsurface_anisotropy" : {
-			"label" : "Anisotropy",
+		"subsurface_roughness" : {
+			"label" : "Roughness",
 			"layout:index" : 6,
 		},
-		"normal" : {
+		"subsurface_anisotropy" : {
+			"label" : "Anisotropy",
 			"layout:index" : 7,
+		},
+		"normal" : {
+			"layout:index" : 8,
 		},
 	},
 	"math" : {
@@ -945,7 +959,7 @@ def metadata( plug, name ) :
 	parameterDict = shaderDict.get( plug.getName() )
 	if parameterDict is None :
 		return None
-	
+
 	value = parameterDict.get( name )
 	if callable( value ) :
 		return value( plug )
@@ -961,9 +975,9 @@ for name in ( "label", "layout:section", "layout:index", "userDefault", "layout:
 
 ### tex_mapping section, indexes and labels ###
 
-mapping = [ "parameters.tex_mapping__translation", "parameters.tex_mapping__rotation", "parameters.tex_mapping__scale", "parameters.tex_mapping__use_minmax", 
-			"parameters.tex_mapping__min", "parameters.tex_mapping__max", "parameters.tex_mapping__x_mapping", "parameters.tex_mapping__y_mapping", 
-			"parameters.tex_mapping__z_mapping", "parameters.tex_mapping__type", "parameters.tex_mapping__projection" 
+mapping = [ "parameters.tex_mapping__translation", "parameters.tex_mapping__rotation", "parameters.tex_mapping__scale", "parameters.tex_mapping__use_minmax",
+			"parameters.tex_mapping__min", "parameters.tex_mapping__max", "parameters.tex_mapping__x_mapping", "parameters.tex_mapping__y_mapping",
+			"parameters.tex_mapping__z_mapping", "parameters.tex_mapping__type", "parameters.tex_mapping__projection"
 ]
 mapping_labels = [ "Translation", "Rotation", "Scale", "Use Min Max", "Min", "Max", "X Mapping", "Y Mapping", "Z Mapping", "Type", "Projection" ]
 mapping_index = 89

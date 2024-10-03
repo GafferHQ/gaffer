@@ -34,20 +34,17 @@
 #
 ##########################################################################
 
-import functools
 import sys
 import traceback
 
 import imath
 
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict
 
 import IECore
-import IECoreScene
 
 import Gaffer
 import GafferUI
-import GafferScene
 import GafferSceneUI
 
 from Qt import QtWidgets
@@ -122,7 +119,7 @@ class _SceneViewInspector( GafferUI.Widget ) :
 					GafferUI.Spacer( imath.V2i( 1 ) )
 					self.__busyWidget = GafferUI.BusyWidget( size = 20, busy = False )
 					hideButton = GafferUI.Button( image="deleteSmall.png", hasFrame=False )
-					hideButton.clickedSignal().connect( Gaffer.WeakMethod( self.__closeButtonClicked ), scoped = False )
+					hideButton.clickedSignal().connect( Gaffer.WeakMethod( self.__closeButtonClicked ) )
 
 				with GafferUI.ScrolledContainer( horizontalMode = GafferUI.ScrollMode.Never ) :
 					with GafferUI.ListContainer( spacing = 20 ) as self.__sections :
@@ -133,7 +130,6 @@ class _SceneViewInspector( GafferUI.Widget ) :
 									GafferSceneUI.Private.ParameterInspector( sceneView["in"], sceneView["editScope"], a, ( "", p ) )
 									for p in _registeredShaderParameters( a )
 								],
-								sceneView.getContext()
 							)
 
 		# We want to hide ourselves when we have nothing to show, and then show
@@ -142,13 +138,22 @@ class _SceneViewInspector( GafferUI.Widget ) :
 		# this frame which holds all our contents.
 		self.__frame.setVisible( False )
 
-		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False)
+		GafferSceneUI.ScriptNodeAlgo.selectedPathsChangedSignal( sceneView.scriptNode() ).connect(
+			Gaffer.WeakMethod( self.__selectedPathsChanged )
+		)
+		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
 	def _scheduleUpdate( self, inspectorWidget ) :
 
 		if inspectorWidget not in self.__pendingUpdates :
 			self.__pendingUpdates.add( inspectorWidget )
 			self.__updateLazily()
+
+	def __selectedPathsChanged( self, scriptNode ) :
+
+		for section in self.__sections :
+			self.__pendingUpdates.update( section.inspectorWidgets() )
+		self.__updateLazily()
 
 	def __attachToView( self, sceneView ) :
 
@@ -157,13 +162,20 @@ class _SceneViewInspector( GafferUI.Widget ) :
 		sceneView["inspector"].addChild( Gaffer.BoolPlug( "visible", Gaffer.Plug.Direction.In, True ) )
 		Gaffer.NodeAlgo.applyUserDefaults( sceneView["inspector"] )
 
-		sceneView.viewportGadget().keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
+		sceneView.contextChangedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
+		sceneView.viewportGadget().keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
 		self.__sceneView = sceneView
 
 	def __closeButtonClicked( self, *unused ) :
 
 		self.__sceneView["inspector"]["visible"].setValue( False )
+
+	def __contextChanged( self, sceneView ) :
+
+		for section in self.__sections :
+			self.__pendingUpdates.update( section.inspectorWidgets() )
+		self.__updateLazily()
 
 	def __keyPress( self, gadget, event ) :
 
@@ -192,23 +204,24 @@ class _SceneViewInspector( GafferUI.Widget ) :
 		widgets = self.__pendingUpdates
 		self.__pendingUpdates = set()
 
-		# We copy the contexts so they can be safely used in
-		# the background thread without fear of them being
-		# modified on the foreground thread.
-		self.__backgroundUpdate( {
-			w : Gaffer.Context( w.context() )
-			for w in widgets
-		} )
+		# We copy the selected paths so they can be safely used in the
+		# background thread without fear of them being modified on the
+		# foreground thread.
+		with self.__sceneView.context() :
+			self.__backgroundUpdate(
+				widgets,
+				GafferSceneUI.ScriptNodeAlgo.getSelectedPaths(
+					self.__sceneView.scriptNode()
+				).paths()
+			)
 
 	@GafferUI.BackgroundMethod()
-	def __backgroundUpdate( self, pendingUpdates ) :
+	def __backgroundUpdate( self, widgets, selectedPaths ) :
 
-		canceller = Gaffer.Context.current().canceller()
 		result = {}
-		for widget, context in pendingUpdates.items() :
+		for widget in widgets :
 			try :
-				with Gaffer.Context( context, canceller ) :
-					widgetResult = widget._backgroundUpdate()
+				widgetResult = widget._backgroundUpdate( selectedPaths )
 			except Exception as e :
 				widgetResult = sys.exc_info()[1]
 				# Avoid circular references that would prevent this
@@ -249,7 +262,7 @@ class _SceneViewInspector( GafferUI.Widget ) :
 # \todo Check how this relates to DiffColumn in the SceneInspector
 class _InspectorSection( GafferUI.ListContainer ) :
 
-	def __init__( self, label, inspectors, context, **kwargs ) :
+	def __init__( self, label, inspectors, **kwargs ) :
 
 		GafferUI.ListContainer.__init__( self, spacing = 4, **kwargs )
 
@@ -260,9 +273,13 @@ class _InspectorSection( GafferUI.ListContainer ) :
 			GafferUI.Divider()
 
 			self.__inspectorWidgets = [
-				_InspectorWidget( inspector, context )
+				_InspectorWidget( inspector )
 				for inspector in inspectors
 			]
+
+	def inspectorWidgets( self ) :
+
+		return self.__inspectorWidgets
 
 	# Called by _SceneViewInspector to update our label and
 	# visibility after the _InspectorWidgets are updated.
@@ -282,14 +299,12 @@ class _InspectorSection( GafferUI.ListContainer ) :
 ## \todo Figure out how this relates to the DiffRow in the SceneInspector.
 class _InspectorWidget( GafferUI.Widget ) :
 
-	def __init__( self, inspector, context ) :
+	def __init__( self, inspector ) :
 
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 2 )
 		GafferUI.Widget.__init__( self, column )
 
 		self.__inspector = inspector
-		self.__context = context
-		self.__locations = []
 
 		with column :
 
@@ -302,26 +317,21 @@ class _InspectorWidget( GafferUI.Widget ) :
 			label._qtWidget().setMaximumWidth( 140 )
 
 			self.__valueWidget = _ValueWidget()
-			self.__valueWidget.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__valueDoubleClick ), scoped = False )
+			self.__valueWidget.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__valueDoubleClick ) )
 
 		self.__inspectorResults = []
-		self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = False )
-		self.__inspector.dirtiedSignal().connect( Gaffer.WeakMethod( self.__inspectorDirtied ), scoped = False )
-
-	def context( self ) :
-
-		return self.__context
+		self.__inspector.dirtiedSignal().connect( Gaffer.WeakMethod( self.__inspectorDirtied ) )
 
 	def valueWidget( self ) :
 
 		return self.__valueWidget
 
-	def _backgroundUpdate( self ) :
+	def _backgroundUpdate( self, selectedPaths ) :
 
 		inspectorResults = []
 
 		with Gaffer.Context( Gaffer.Context.current() ) as context :
-			for path in GafferSceneUI.ContextAlgo.getSelectedPaths( context ).paths() :
+			for path in selectedPaths :
 				context.set( "scene:path", IECore.InternedStringVectorData( path[1:].split( "/" ) ) )
 				inspectorResult = self.__inspector.inspect()
 				if inspectorResult is not None :
@@ -358,13 +368,6 @@ class _InspectorWidget( GafferUI.Widget ) :
 			self.__valueWidget._qtWidget().setProperty( "gafferInspectorSourceType", "|".join( sorted( str( s ) for s in sourceTypes ) ) )
 			self.__valueWidget._repolish()
 			self.setVisible( len( self.__inspectorResults ) > 0 )
-
-	def __contextChanged( self, context, variableName ) :
-
-		if variableName.startswith( "ui:" ) and not GafferSceneUI.ContextAlgo.affectsSelectedPaths( variableName ) :
-			return
-
-		self.__scheduleUpdate()
 
 	def __inspectorDirtied( self, inspector ) :
 
@@ -414,7 +417,7 @@ class _InspectorWidget( GafferUI.Widget ) :
 			)
 			if isinstance( self.__popup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
 				self.__popup.plugValueWidget().setNameVisible( False )
-			self.__popup.popup()
+			self.__popup.popup( parent = self )
 
 		else :
 
@@ -425,7 +428,7 @@ class _InspectorWidget( GafferUI.Widget ) :
 						self.__formatWarnings( [ r.nonEditableReason() for r in self.__inspectorResults ] )
 					) )
 
-			self.__popup.popup()
+			self.__popup.popup( parent = self )
 
 		return True
 
@@ -454,9 +457,9 @@ class _ValueWidget( GafferUI.Widget ) :
 
 		self._qtWidget().setStyleSheet( "padding-left: 4px; padding-right: 4px;" )
 
-		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
-		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
-		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
+		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
+		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
 
 		self.__values = []
 		self.setValues( values )

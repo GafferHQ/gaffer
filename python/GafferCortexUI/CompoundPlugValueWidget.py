@@ -107,8 +107,6 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__summary = summary
 
-		CompoundPlugValueWidget._updateFromPlug( self )
-
 	## Returns a PlugValueWidget representing the specified child plug.
 	def childPlugValueWidget( self, childPlug ) :
 
@@ -126,7 +124,7 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return True
 
-	def _updateFromPlug( self ) :
+	def _updateFromValues( self, values, exception ) :
 
 		if self.__summary is not None and self.__collapsible is not None :
 			with self.getContext() :

@@ -70,7 +70,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 						continue
 					corresponding.setValue( i.getValue() )
 
-		encapInstancer["encapsulateInstanceGroups"].setValue( True )
+		encapInstancer["encapsulate"].setValue( True )
 
 		self.assertScenesRenderSame( instancer["out"], encapInstancer["out"], expandProcedurals = True, ignoreLinks = True )
 
@@ -171,14 +171,14 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		encapInstancer["prototypes"].setInput( instanceInput["out"] )
 		encapInstancer["parent"].setValue( "/seeds" )
 		encapInstancer["name"].setValue( "instances" )
-		encapInstancer["encapsulateInstanceGroups"].setValue( True )
+		encapInstancer["encapsulate"].setValue( True )
 
 		# Test an edge case, and make sure while we're at it that we're actually getting an InstancerCapsule
 		# ( Because it's private, it's bound to Python in a sorta weird way that means its typeName() will
 		# report Capsule, not InstancerCapsule, but this error is a quick test that we are actually dealing with
 		# the right thing. )
 		with self.assertRaisesRegex( RuntimeError, "Null renderer passed to InstancerCapsule" ) :
-			encapInstancer["out"].object( "/seeds/instances/sphere" ).render( None )
+			encapInstancer["out"].object( "/seeds/instances" ).render( None )
 
 		# Check that the capsule expands during rendering to render the same as the unencapsulated scene.
 		# ( Except for the light links, which aren't output by the Capsule currently )
@@ -191,8 +191,8 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		unencap["in"].setInput( encapInstancer["out"] )
 		unencap["filter"].setInput( unencapFilter["out"] )
 
-		self.assertTrue( isinstance( encapInstancer["out"].object( "/seeds/instances/sphere/" ), GafferScene.Capsule ) )
-		self.assertEqual( encapInstancer["out"].childNames( "/seeds/instances/sphere/" ), IECore.InternedStringVectorData() )
+		self.assertTrue( isinstance( encapInstancer["out"].object( "/seeds/instances" ), GafferScene.Capsule ) )
+		self.assertEqual( encapInstancer["out"].childNames( "/seeds/instances" ), IECore.InternedStringVectorData() )
 		self.assertScenesEqual( unencap["out"], instancer["out"] )
 
 		# Edit seeds object
@@ -880,7 +880,7 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 			with self.assertRaisesRegex( RuntimeError, 'Instancer.out.transform : Instance id "2" is invalid, instancer produces only 2 children. Topology may have changed during shutter.' ):
 				self.assertScenesRenderSame( instancer["out"], instancer["out"], expandProcedurals = True, ignoreLinks = True )
 
-		instancer["encapsulateInstanceGroups"].setValue( True )
+		instancer["encapsulate"].setValue( True )
 
 		with testContext:
 			with self.assertRaisesRegex( RuntimeError, 'Instance id "2" is invalid, instancer produces only 2 children. Topology may have changed during shutter.' ):
@@ -1432,7 +1432,7 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		encapInstancer["prototypes"].setInput( instances["out"] )
 		encapInstancer["parent"].setValue( "/object" )
 		encapInstancer["prototypeIndex"].setValue( "index" )
-		encapInstancer["encapsulateInstanceGroups"].setValue( True )
+		encapInstancer["encapsulate"].setValue( True )
 
 		unencapFilter = GafferScene.PathFilter()
 		unencapFilter["paths"].setValue( IECore.StringVectorData( [ "/..." ] ) )
@@ -2594,7 +2594,7 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		# When encapsulating, we shouldn't pay any time cost for evaluating the set, even with a huge
 		# number of instances
 		plane["divisions"].setValue( imath.V2i( 1000 ) )
-		instancer["encapsulateInstanceGroups"].setValue( True )
+		instancer["encapsulate"].setValue( True )
 		t = time.time()
 		instancer["out"].set( "set" )
 		totalTime = time.time() - t
@@ -2836,7 +2836,7 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 
 			with self.subTest( encapsulate = encapsulate ) :
 
-				instancer["encapsulateInstanceGroups"].setValue( encapsulate )
+				instancer["encapsulate"].setValue( encapsulate )
 
 				# Prototype properties used by the capsule should be reflected
 				# in the object hash. For the hash to be updated successfully,
@@ -2844,25 +2844,25 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 				# hashes).
 
 				hashes = set()
-				hashes.add( instancer["out"].objectHash( "/plane/instances/sphere" ) )
+				hashes.add( instancer["out"].objectHash( "/plane/instances" ) )
 				self.assertEqual( len( hashes ), 1 )
 
 				sphere["radius"].setValue( 2 + int( encapsulate ) )
-				hashes.add( instancer["out"].objectHash( "/plane/instances/sphere" ) )
+				hashes.add( instancer["out"].objectHash( "/plane/instances" ) )
 				self.assertEqual( len( hashes ), 2 if encapsulate else 1 )
 
 				dirtiedPlugs = GafferTest.CapturingSlot( instancer.plugDirtiedSignal() )
 
 				sphere["transform"]["translate"]["x"].setValue( 2 + int( encapsulate ) )
-				hashes.add( instancer["out"].objectHash( "/plane/instances/sphere" ) )
+				hashes.add( instancer["out"].objectHash( "/plane/instances" ) )
 				self.assertEqual( len( hashes ), 3 if encapsulate else 1 )
 
 				sphereAttributes["attributes"]["test"] = Gaffer.NameValuePlug( "test", encapsulate )
-				hashes.add( instancer["out"].objectHash( "/plane/instances/sphere" ) )
+				hashes.add( instancer["out"].objectHash( "/plane/instances" ) )
 				self.assertEqual( len( hashes ), 4 if encapsulate else 1 )
 
 				sphere["sets"].setValue( "testSet{}".format( encapsulate ) )
-				hashes.add( instancer["out"].objectHash( "/plane/instances/sphere" ) )
+				hashes.add( instancer["out"].objectHash( "/plane/instances" ) )
 				self.assertEqual( len( hashes ), 5 if encapsulate else 1 )
 
 				# When not encapsulating, there should be no unnecessary
@@ -2880,7 +2880,7 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 				del dirtiedPlugs[:]
 
 				sphereOptions["options"]["test"] = Gaffer.NameValuePlug( "test", encapsulate )
-				hashes.add( instancer["out"].objectHash( "/plane/instances/sphere" ) )
+				hashes.add( instancer["out"].objectHash( "/plane/instances" ) )
 				self.assertEqual( len( hashes ), 5 if encapsulate else 1 )
 				self.assertNotIn(
 					instancer["out"]["object"],
@@ -3112,6 +3112,15 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 			nodes["instancer"]["out"].childNames( "/plane/instances/sphere" )
 			nodes["instancer"]["out"].childNames( "/plane/instances/cube" )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testEncapsulatedRenderPerf( self ):
+		nodes = self.initSimpleInstancer( withPrototypes = True, withIds = False )
+		nodes["instancer"]["encapsulate"].setValue( True )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			nodes["instancer"]["out"].object( "/plane/instances" ).render( renderer )
 
 if __name__ == "__main__":
 	unittest.main()

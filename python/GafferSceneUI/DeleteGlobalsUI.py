@@ -107,7 +107,7 @@ def __namesPopupMenu( menuDefinition, plugValueWidget ) :
 	if plug != node["names"] :
 		return
 
-	with plugValueWidget.getContext() :
+	with plugValueWidget.context() :
 		globals = node["in"]["globals"].getValue()
 		currentNames = set( node["names"].getValue().split() )
 
@@ -130,4 +130,4 @@ def __namesPopupMenu( menuDefinition, plugValueWidget ) :
 			}
 		)
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __namesPopupMenu, scoped = False )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __namesPopupMenu )

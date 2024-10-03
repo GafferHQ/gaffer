@@ -137,10 +137,10 @@ object convertWrapper2( object pythonSamples, float motionStart, float motionEnd
 	return atNodeToPythonObject( NodeAlgo::convert( samples, motionStart, motionEnd, pythonObjectToAtUniverse( universe ), nodeName, nullptr ) );
 }
 
-void setParameter( object &pythonNode, const char *name, const IECore::Data *data )
+void setParameter( object &pythonNode, const char *name, const IECore::Data *data, const std::string &messageContext )
 {
 	AtNode *node = atNodeFromPythonObject( pythonNode );
-	ParameterAlgo::setParameter( node, name, data );
+	ParameterAlgo::setParameter( node, name, data, messageContext );
 }
 
 IECore::DataPtr getParameter( object &pythonNode, const char *name )
@@ -204,7 +204,7 @@ BOOST_PYTHON_MODULE( _IECoreArnold )
 		scope().attr( "ParameterAlgo" ) = parameterAlgoModule;
 		scope parameterAlgoModuleScope( parameterAlgoModule );
 
-		def( "setParameter", &setParameter );
+		def( "setParameter", &setParameter, ( arg( "node" ), arg( "name" ), arg( "data" ), arg( "messageContext" ) = "ParameterAlgo::setParameter" ) );
 		def( "getParameter", &getParameter );
 	}
 

@@ -1,5 +1,50 @@
-1.x.x.x (relative to 1.4.x.x)
+1.x.x.x (relative to 1.5.0.0a1)
 =======
+
+Improvements
+------------
+
+- Arnold :
+  - Added location names to warning messages.
+  - A missing "P" primitive variable no longer aborts the render, but outputs a warning message instead.
+- Instancer :
+  - Improved Arnold raytracing performance for encapsulated instancers with many prototypes. All instances are now output in a single top-level procedural rather than a top-level procedural per prototype, resulting in more optimal BVH traversals in Arnold.
+  - Reduced scene generation time for encapsulated instancers by around 20%.
+- NodeEditor : Added <kbd>Alt</kbd> + middle-click action for showing context variable substitutions in strings.
+- LightEditor, RenderPassEditor : History windows now use a context determined relative to the current focus node.
+- NumericWidget : Added the ability to use <kbd>Ctrl</kbd> + scroll wheel to adjust values in the same manner as <kbd>Up</kbd> and <kbd>Down</kbd> (#6009). [^1]
+- NodeEditor : Improved performance when showing a node with many colour plugs. Showing the Arnold `standard_surface` shader is now almost 2x faster. [^1]
+
+Fixes
+-----
+
+- Viewer, ImageGadget : [^1]
+  - Fixed partial image updates when an unrelated InteractiveRender was running (#6043).
+  - Fixed "colour tearing", where updates to some image channels became visible before updates to others.
+  - Fixed unnecessary texture updates when specific image tiles don't change.
+- GraphEditor :
+  - Fixed lingering error badges (#3820).
+- RenderPassEditor :
+  - Fixed history window to update on context changes, for example, when the current frame is changed.
+  - Fixed invalid `scene:path` context variables created by the history window. [^1]
+
+Breaking Changes
+----------------
+
+- IECoreArnold : Added `messageContext` argument to `NodeAlgo::Converter` and `NodeAlgo::MotionConverter`.
+- Instancer : Renamed `encapsulateInstanceGroups` plug to `encapsulate`. Encapsulation now produces a single capsule at the `.../instances` location, instead of capsules at each `.../instances/<prototypeName>` location.
+
+[^1]: To be omitted from 1.5.0.0 release notes.
+
+1.5.0.0a1 (relative to 1.4.13.0)
+=========
+
+> Note : Gaffer 1.5 marks the end of provision of GCC 9 builds on Linux. Use Gaffer 1.4 if you require GCC 9 builds.
+
+Features
+--------
+
+- MergeMeshes, MergePoints, MergeCurves : Added nodes for merging various primitive types.
 
 Improvements
 ------------
@@ -7,19 +52,383 @@ Improvements
 - CameraTweaks : Added `ignoreMissing` plug to align behaviour with the other Tweaks nodes.
 - AttributeTweaks : The `{source}` substitution for `linkedLights` now expands to `defaultLights` if the attribute doesn't exist yet. This makes tweaks such as `({source}) - unwantedLights` reliable even if no light links have been authored yet.
 - ImageReader : Non-standard "r", "g", "b" and "a" channel names are now automatically renamed to "R", "G", "B" and "A" on loading. As with other heuristics, this can be disabled by setting `channelInterpretation` to "EXR Specification".
+- Metadata : Metadata registered to a node or plug targeting a descendant plug will now override metadata registered locally to the target.
+- OptionTweaks, ContextVariableTweaks : Added `Remove` mode.
+- Premultiply, Unpremultiply :
+  - Added `ignoreMissingAlpha` plug.
+  - Optimised the pass-through of the alpha channel.
+- GraphGadget :
+  - Improved highlighting of active nodes, with more accurate tracking of Loop node iterations.
+  - Annotation `{plug}` substitutions are now evaluated in a context determined relative to the focus node.
+  - The strike-through for disabled nodes is now evaluated in a context determined relative to the focus node.
+  - Custom dot labels are now evaluated in a context determined relative to the focus node.
+- LightEditor :
+  - Improved formatting of column headers containing whitespace.
+  - The "Double-click to toggle" tooltip is no longer displayed while hovering over non-editable cells, and a "Double-click to edit" tooltip is now displayed while hovering over other non-toggleable but editable cells.
+- Spreadsheet : Added yellow underlining to the currently active row.
+- PlugLayout : Summaries and activators are now evaluated in a context determined relative to the focus node.
+- Editor : The node graph is now evaluated in a context determined relative to the focus node.
+- LightEditor, RenderPassEditor : The "Disable Edit" right-click menu item and <kdb>D</kdb> shortcut now act as a toggle, where edits disabled in the current session via these actions can be reenabled with <kbd>D</kbd> or by selecting "Reenable Edit" from the right-click menu.
+- EditScope : Setting a Viewer or Editor's target edit scope to "None" will now prevent edits from being made within any upstream edit scope. To make edits in an edit scope, it must be set as the target.
+- FreezeTransform :
+  - Improved performance for large meshes by using multithreading.
+  - Improved UI responsiveness by supporting cancellation of long computes.
+
+Fixes
+-----
+
+- Editor : Fixed `Internal C++ object already deleted` errors when some editors were destroyed.
+- UVInspector : Fixed `Unable to find ScriptNode for UVView` warnings.
+- Scene Editors : Fixed update when ScenePlugs are added to or removed from the node being viewed.
+- PrimitiveInspector : Fixed failure to update when the location being viewed ceases to exist, or is recreated.
+- Shuffle, ShuffleAttributes, ShufflePrimitiveVariables : Fixed some special cases where shuffling a source to itself would fail to have the expected effect.
+- GraphEditor :
+  - Fixed dimming of labels for BoxIn and BoxOut nodes.
+  - Fixed update of custom context-sensitive labels on Dot nodes.
+- GafferCortexUI : Removed usage of legacy PlugValueWidget API.
+- Dispatcher : Fixed crashes caused by a dispatcher's `SetupPlugsFn` attempting to access the TaskNode it was being called for. Dispatchers may now introspect the TaskNode and add different plugs based on type (#915).
+- ArrayPlug :
+  - Fixed error when `resize()` removed plugs with input connections.
+  - Fixed error when `resize()` was used on an output plug.
+- CreateViews : Fixed redundant serialisation of internal connections.
+- LightEditor, RenderPassEditor : Removed ambiguous `The selected cells cannot be edited in the current Edit Scope` message when attempting to edit non-editable columns, such as the `Name` column.
+- SetEditor : Fixed right-click to ensure the item under the cursor is selected before the menu is shown.
+- PrimitiveInspector :
+  - Fixed bug which prevented cancellation of long-running computes, making the UI unresponsive until they completed.
+  - Fixed thread-safety bug.
+- HierarchyView, SetEditor : Fixed thread-safety bugs.
+- FreezeTransform : Constant primitive variables with point/vector interpretations are now also transformed.
+- usdview : Added Windows support (#5599).
+- ContextTracker : Removed unnecessary reference increment/decrement from `isTracked()`, `context()` and `isEnabled()`.
+- Menu : Fixed bug causing a menu item's tooltip to not hide when moving the cursor to another menu item without a tooltip.
+- Python : Fixed startup failures caused by conflicting Python modules in the user `site-packages` directory.
+
+API
+---
+
+- Editor :
+  - Added `settings()` method, which returns a node hosting plugs specifying settings for the editor.
+  - Added `_updateFromSettings()` method, which is called when a subclass should update to reflect changes to the settings.
+- SceneEditor : Added new base class to simplify the creation of scene-specific editors.
+- PlugValueWidget :
+  - A `DeprecationWarning` is now emitted for any subclasses still implementing the legacy `_updateFromPlug()` or `_updateFromPlugs()` methods. Implement `_updateFromValues()`, `_updateFromMetadata()` and `_updateFromEditable()` instead.
+  - A `DeprecationWarning` is now emitted by `_plugConnections()`. Use `_blockedUpdateFromValues()` instead.
+  - Added `scriptNode()` convenience method.
+- NodeGadget, ConnectionGadget : Added `updateFromContextTracker()` virtual methods.
+- Path : Added `inspectionContext()` virtual method.
+- PathColumn :
+  - Added `contextMenuSignal()`, allowing the creation of custom context menus.
+  - Added `instanceCreatedSignal()`, providing an opportunity to connect to the signals on _any_ column, no matter how it is created.
+  - Added `keyPressSignal()` and `keyReleaseSignal()`, allowing a PathColumn to handle key events.
+- ArrayPlug :
+  - It is now legal to construct an ArrayPlug with a minimum size of 0. Previously the minimum size was 1.
+  - Added `elementPrototype()` method.
+- View : Added `scriptNode()` method.
+- VisibleSet : Added Python constructor with keyword arguments for `expansions`, `inclusions` and `exclusions`.
+- ScriptNodeAlgo : Added new namespace with functions for managing shared UI state for GafferSceneUI.
+- ContextAlgo : Deprecated. Use ScriptNodeAlgo instead.
+- ContextTracker : Added support for plugs in Views and `Editor.Settings` nodes, which should use the tracked context for the node being viewed.
 
 Breaking Changes
 ----------------
 
 - CameraTweaks : `Replace` mode now errors if the input parameter does not exist. Use `Create` mode or the new `ignoreMissing` plug instead.
-- TweakPlug : Remove deprecated `MissingMode::IgnoreOrReplace`.
+- TweakPlug : Removed deprecated `MissingMode::IgnoreOrReplace`.
 - AttributeTweaks : `Replace` mode no longer errors if the `linkedLights` attribute doesn't exist.
 - ImageReader : Changed handling of lower-cased "r", "g", "b" and "a" channels.
+- Metadata : Path based registrations to a Node or Plug now override equivalent registrations on its descendants.
+- TweakPlugValueWidget : Removed support for `tweakPlugValueWidget:allowCreate` and `tweakPlugValueWidget:allowRemove` metadata.
+- Editor : Removed arguments from `Settings` constructor.
+- Unpremultiply : Removed `image:channelName` from the context used to evaluate the `alphaChannel` plug.
+- Shuffle, ShuffleAttributes, ShufflePrimitiveVariables : Changed behaviour when shuffling a source to itself.
+- Editor, NodeToolbar, PlugLayout, PlugValueWidget :
+  - Removed `setContext()` methods.
+  - Deprecated `getContext()` methods. Use `context()` instead.
+- Loop : Removed `nextIterationContext()` method.
+- NodeGadget, ConnectionGadget : Removed `activeForFocusNode()` virtual methods. Override `updateFromContextTracker()` instead.
+- ArrayPlug :
+  - Renamed `element` constructor argument to `elementPrototype`.
+  - Deprecated the passing of `element = nullptr` to the constructor.
+- View :
+  - Changed constructor arguments for View and all subclasses. A ScriptNode must now be passed.
+  - Changed `ViewCreator` signature.
+  - Removed `contextChanged()` and `contextChangedConnection()` methods.
+  - Removed `setContext()` and `getContext()` methods. Use `context()` instead of `getContext()`.
+  - The `contextChangedSignal()` is now emitted for all changes to the context, whereas previously it was only emitted by `setContext()`. This simplifies context handling in Tools, which no longer need to connect to `Context::changedSignal()` as well.
+- LightTool : Removed `selection()` and `selectionChangedSignal()`.
+- ArnoldRender, CyclesRender, DelightRender, OpenGLRender : Removed. Use the generic Render node instead.
+- Render : Removed protected constructor for creating renderer-specific derived classes.
+- Signal : The `connect()` and `connectFront()` methods now default to `scoped = False`. If a scoped connection is required, pass `scoped = True`.
+- FreezeTransform : Constant primitive variables with point/vector interpretations are now also transformed (this is more correct, but it is a change in behaviour).
+- ImageGadget : Remove non-const variant of `getContext()`.
+- LazyMethod : `deferUntilPlaybackStops` now requires that the Widget has a `scriptNode()` method rather than a `context()` method.
+- Python : Gaffer now disables the user site-packages directory by setting `PYTHONNOUSERSITE=1`. To revert to the previous behaviour, set `PYTHONNOUSERSITE=0` before launching Gaffer.
 
-1.4.x.x (relative to 1.4.7.0)
+Build
+-----
+
+- Cycles :
+  - Updated to version 4.2.0.
+  - Disabled CUDA binary generation for Kepler and Maxwell architecture GPUs.
+- Embree : Updated to version 4.3.2.
+- Imath : Updated to version 3.1.11.
+- LibJPEG-Turbo : Updated to version 3.0.3.
+- MaterialX : Updated to version 1.38.10.
+- OpenImageIO : Updated to version 2.5.10.1.
+- OpenPGL : Updated to version 0.6.0.
+- PySide : Updated to version 5.15.14.
+- Qt : Updated to version 5.15.14.
+- USD : Updated to version 24.08.
+- Zstandard : Added version 1.5.0.
+- Windows : Update compiler to Visual Studio 2022 / MSVC 17.8 / Runtime library 14.3.
+
+1.4.x.x (relative to 1.4.13.0)
 =======
 
+Improvements
+------------
 
+- NumericWidget : Added the ability to use <kbd>Ctrl</kbd> + scroll wheel to adjust values in the same manner as <kbd>Up</kbd> and <kbd>Down</kbd> (#6009).
+- NodeEditor : Improved performance when showing a node with many colour plugs. Showing the Arnold `standard_surface` shader is now almost 2x faster.
+
+Fixes
+-----
+
+- Viewer, ImageGadget :
+  - Fixed partial image updates when an unrelated InteractiveRender was running (#6043).
+  - Fixed "colour tearing", where updates to some image channels became visible before updates to others.
+  - Fixed unnecessary texture updates when specific image tiles don't change.
+- ArrayPlug :
+  - Fixed error when `resize()` removed plugs with input connections.
+  - Fixed error when `resize()` was used on an output plug.
+- CreateViews : Fixed loading of files saved from Gaffer 1.5+.
+
+1.4.13.0 (relative to 1.4.12.0)
+========
+
+Improvements
+------------
+
+- NodeEditor, NameWidget : Invalid characters are automatically converted to `_` when renaming a node or plug, and `:` is no longer treated as invalid.
+
+Fixes
+-----
+
+- SceneReader :
+  - Fixed loading of facevarying normals skinned with UsdSkel.
+  - Stopped loading USD `lightLinks` and `shadowLinks` collections as sets.
+  - USD asset paths on Windows now use `/` as the path separator, instead of `\`. Set `IECOREUSD_FORCE_ASSET_PATH_FORWARD_SLASH=0` to keep the previous behaviour.
+- SceneWriter : Fixed crash when writing to a USD file that is already open elsewhere.
+- Constraint : The `target` browser now shows locations from the `targetScene` if it has an input connection. Before it always showed locations from the main input.
+- ImageInspector : Fixed broken UI caused by double-clicking in the Image tab.
+
+API
+---
+
+- ScenePathPlugValueWidget : The `scenePathPlugValueWidget:scene` metadata now accepts a space-separated list of plugs, taking the first plug which has an input connection.
+- VisibleSet : Added Python constructor with keyword arguments for `expansions`, `inclusions` and `exclusions`.
+- ScriptNodeAlgo : Added new namespace with functions for managing shared UI state for GafferSceneUI.
+- ContextAlgo : Deprecated. Use ScriptNodeAlgo instead.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.9.4.
+
+1.4.12.0 (relative to 1.4.11.0)
+========
+
+Features
+--------
+
+- Viewer : Added support for Cycles GPU rendering via a new Device option in the Cycles viewer settings.
+
+Improvements
+------------
+
+- UI Editor :
+  - Added the ability to edit the scale of node icons.
+  - Improved layout of Box node plug creator visibility toggles.
+- ArnoldShader : Moved the `toon` shader's `*_tonemap_hue_saturation` parameters to appropriate sections in the UI.
+- File Browser : The "Type" column can now be sorted. This sorts directories separately from files, which are sorted by their extension.
+
+Fixes
+-----
+
+- SceneWriter : Fixed handling of ':' characters in set names when writing to USD. These were previously converted to '_' but are now preserved.
+- SceneReader : Fixed loading of animated ModelAPI extents from USD.
+- ResamplePrimitiveVariables : Fixed handling of periodic curves.
+- VectorDataWidget : Fixed bug causing paths to display as "..." after the last visible "/" when the widget wasn't wide enough to show the entire path.
+
+API
+---
+
+- MetadataWidget : Added `NumericMetadataWidget` class.
+- RenderPassWedge : Render adaptors may now be used to delete and/or disable render passes, by passing `client = "RenderPassWedge"` to `SceneAlgo.registerRenderAdaptor()`.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.9.2.
+
+1.4.11.0 (relative to 1.4.10.0)
+========
+
+Improvements
+------------
+
+- SetExpressions : Set Expressions containing only whitespace characters are now treated as empty rather than producing an error.
+- ArnoldShader :
+  - Added a UI layout for the new `openpbr_surface` shader.
+  - Moved Arnold 7.3.3.0's new `standard_volume.scatter_diffusion` parameters to a "Scatter Diffusion" section of the UI.
+- Viewer : Added diagnostic shading mode for visualising the values of the `usd:purpose` attribute as colours :
+  - White : Default
+  - Green : Render
+  - Blue : Proxy
+  - Red : Guide
+- Catalogue : Added a handle for controlling the relative sizes of the listing and image property widgets.
+- RenderPassEditor, LightEditor : Improved update performance for certain graph configurations, by optimising `SceneAlgo::history()` (#5199).
+
+Fixes
+-----
+
+- Arnold : Fixed bug preventing UI metadata for Imagers from being loaded for Arnold 7.3.
+- WidgetAlgo : Fixed issue preventing `grab()` from capturing popup menus on Windows.
+- ShowURL : Fixed opening of "file://" URLs on Windows (#5861).
+- Shader : Fixed "Revert to Defaults" menu item in NodeEditor (#1862).
+- Catalogue :
+  - Fixed bug which allowed locked Catalogues to be edited.
+  - Fixed NodeEditor update when the first image is added or the last image is removed.
+- NameWidget : Fixed bug which allowed plugs on locked nodes to be renamed.
+- ValuePlug : Fixed the plug passed to `Monitor::forceMonitoring()`. Previously `Process::destinationPlug()` was being passed instead of `Process::plug()`.
+
+API
+---
+
+- PathListingWidget : Added `columnContextMenuSignal()`, allowing multiple clients to collaborate on the creation of a column-specific context menu.
+- HierarchyView : Added `sceneListing()` method, to allow the context menu to be customised.
+
+Documentation
+-------------
+
+- Windows : Documentation is now included in Windows release packages.
+
+1.4.10.0 (relative to 1.4.9.0)
+========
+
+Improvements
+------------
+
+- LightEditor :
+  - Values of inherited attributes are now displayed in the Light Editor. These are presented as dimmed "fallback" values. Values are inherited from an ancestor of the inspected location or from attributes created in the scene globals.
+  - Default values are now displayed as dimmed "fallback" values for attributes that don't exist in the scene.
+  - When a fallback value is displayed, the cell's tooltip includes a description of the source of the value.
+- LightEditor, RenderPassEditor : Fallback values shown in the history window are displayed with the same dimmed text colour used for fallback values in editor columns.
+- EditScope : Filtered the EditScope menu to show only nodes that are active in the relevant context.
+
+Fixes
+-----
+
+- ImageReader : Fixed crash caused by invalid OpenEXR `multiView` attributes.
+- LightEditor, RenderPassEditor : Added missing icon representing use of the `CreateIfMissing` tweak mode in the history window.
+- Slider : Fixed bug where two undo steps were needed to get back to the original value when dragging.
+
+API
+---
+
+- ContextTracker : Added a new class that determines what contexts nodes are evaluated in relative to the focus node. This allows UI components to provide improved context-sensitive feedback to the user.
+- Loop : Added `previousIteration()` method.
+
+1.4.9.0 (relative to 1.4.8.0)
+=======
+
+Improvements
+------------
+
+- Cryptomatte : Renamed `__manifestScene` plug to `manifestScene` so it is no longer considered to be private.
+- EditScopePlugValueWidget : Width can now be configured via `<layoutName>:width` metadata. This enables customisation of the Edit Scope menu width by registering metadata in a startup file, such as `Gaffer.Metadata.registerValue( GafferSceneUI.RenderPassEditor.Settings, "editScope", "layout:width", 450 )` to double the standard width of the Edit Scope menu in the Render Pass Editor.
+- ArnoldShader :
+  - The following parameters are now visible in the GraphEditor :
+    - The `aov_input` parameter of the `aov_write_int` shader.
+    - The `data_input` parameter of the `color_jitter` shader.
+    - The `input_int` and `seed` parameters of the `random` shader.
+    - The `index` parameters of the `switch_rgba` and `switch_shader` shaders.
+    - The `default` parameter of the `user_data_int` shader.
+  - The following parameters can now be made visible in the GraphEditor :
+    - The `flake_layers` parameter of the `car_paint` shader.
+    - The `data_seed`, `proc_seed`, `obj_seed`, and `face_seed` parameters of the `color_jitter` shader.
+- EditScope : Added summaries of set membership edits in the NodeEditor.
+- LightEditor : Mute and solo columns now accurately reflect the presence of the `light:mute` attribute (for the Mute column) and membership in the `soloLights` set (for the Solo column) for all scene locations, not just for lights.
+- RenderPassEditor : The currently active render pass can now be unset by double clicking on its green dot in the "Active" column.
+- HierarchyView, LightEditor, RenderPassEditor, SetEditor : Reduced potential UI stalls when first showing a scene.
+- ShaderTweaks : Added support for wildcards in the shader name, in order to tweak multiple shaders at once.
+
+Fixes
+-----
+
+- HierarchyView, LightEditor, PrimitiveInspector, SceneInspector : Fixed bug which allowed scenes from private plugs to be displayed.
+- PrimitiveInspector : Fixed bug which claimed "Location does not exist" for objects without any primitive variables.
+- OpenColorIO : Fixed the display transform used to show colours in popups.
+- SceneInspector : Fixed "Show History" menu items.
+- ImageGadget : Fixed loading of non-8-bit images. Among other things, this fixes the display of 16 bit node icons in the GraphEditor.
+- Arnold : Fixed rendering of VDB volumes without `file_mem_bytes` metadata.
+- Cycles : Fixed bug preventing a background light from being added to a light group.
+- LightEditor : Fixed regression (introduced in 1.4.8.0) causing the mute and solo icons to not show up for groups.
+- Windows : Fixed conflicts with other software installations on `PATH`. The `PXR_USD_WINDOWS_DLL_PATH` environment variable is now set to an empty string if it is not already set, preventing USD from adding all entries from `PATH` to Python's DLL search paths.
+- AnnotationsGadget : Fixed potential hang in `annotationText()` Python binding.
+- FormatPlug : Fixed potential hang in `acquireDefaultFormatPlug()` Python binding.
+- ImageReader : Fixed array metadata loading bugs, including the loading of `ICCProfile` metadata.
+
+API
+---
+
+- PopupWindow : Added `parent` argument to `popup()` method. This allows popup windows to inherit the display transform from the main UI.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.9.1.
+
+1.4.8.0 (relative to 1.4.7.0)
+=======
+
+Improvements
+------------
+
+- SceneReader : ModelAPI `extentsHints` are now considered when loading the bounding box for a location in Gaffer. This can significantly reduce the time taken to load bounds for large USD assemblies. If necessary, this behaviour can be disabled by setting the `IECOREUSD_USE_MODELAPI_BOUNDS` environment variable with a value of `0`.
+- ColorChooser :
+  - Added channel names to identify sliders.
+  - Setting the saturation to zero no longer resets the hue and setting the value to zero no longer resets the hue and saturation.
+- RenderPassEditor : Added "Select Affected Objects" popup menu item.
+- Annotations :
+  - Added support for `{plug}` value substitutions in node annotations.
+  - Added <kbd>Ctrl</kbd> + <kbd>Enter</kbd> keyboard shortcut to annotation dialogue. This applies the annotation and closes the dialogue.
+- LightEditor : Added support for Arnold light blockers and barndoor, gobo and decay light filters.
+
+Fixes
+-----
+
+- Cycles : Fixed rendering to the Catalogue using the batch Render node (#5905). Note that rendering a mixture of Catalogue and file outputs is still not supported, and in this case any file outputs will be ignored.
+- CodeWidget : Fixed bug that could prevent changes from being committed while the completion menu was visible.
+- Loop : Fixed handling of empty `indexVariable`. This now disables the Loop instead of creating an unnamed context variable.
+- ColorChooser : Fixed emission of `colorChangedSignal()` while the widget was in an inconsistent internal state.
+- LazyMethod : Fixed errors caused by running idle callbacks without a valid Qt Widget.
+
+API
+---
+
+- LightEditor : Added `deregisterColumn()` method for removing columns.
+- ShaderUI : Added support for `nodeGadget:color` metadata registered against `{shaderType}:{shaderName}`, to specify per-shader colouring of nodes in the GraphEditor.
+- ArnoldShaderUI : Added support for `gaffer.nodeGadget.color` RGB metadata in `.mtd` files, to specify per-shader colouring of nodes in the GraphEditor.
+- Loop : Added `nextIterationContext()` method.
+- AnnotationsGadget : Added `annotationText()` method.
+- ParallelAlgoTest : Added `UIThreadCallHandler.receive()` method.
+- LightEditor : Added `registerShaderParameter()` method for registering parameters for shader attributes that are not the same as the `rendererKey`.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.9.0.
 
 1.4.7.0 (relative to 1.4.6.0)
 =======
@@ -585,10 +994,46 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.16.x (relative to 1.3.16.5)
+1.3.16.x (relative to 1.3.16.8)
 ========
 
+Fixes
+-----
 
+- Viewer, ImageGadget :
+  - Fixed partial image updates when an unrelated InteractiveRender was running (#6043).
+  - Fixed "colour tearing", where updates to some image channels became visible before updates to others.
+  - Fixed unnecessary texture updates when specific image tiles don't change.
+- ArrayPlug :
+  - Fixed error when `resize()` removed plugs with input connections.
+  - Fixed error when `resize()` was used on an output plug.
+- CreateViews : Fixed loading of files saved from Gaffer 1.5+.
+
+1.3.16.8 (relative to 1.3.16.7)
+========
+
+Fixes
+-----
+
+- VectorDataWidget : Fixed bug causing paths to display as "..." after the last visible "/" when the widget wasn't wide enough to show the entire path.
+
+1.3.16.7 (relative to 1.3.16.6)
+========
+
+Fixes
+-----
+
+- ImageReader : Fixed crash caused by invalid OpenEXR `multiView` attributes.
+- LightEditor, RenderPassEditor : Added missing icon representing use of the `CreateIfMissing` tweak mode in the history window.
+- Slider : Fixed bug where two undo steps were needed to get back to the original value when dragging.
+
+1.3.16.6 (relative to 1.3.16.5)
+========
+
+Fixes
+-----
+
+- LazyMethod : Fixed errors caused by running idle callbacks without a valid Qt Widget.
 
 1.3.16.5 (relative to 1.3.16.4)
 ========

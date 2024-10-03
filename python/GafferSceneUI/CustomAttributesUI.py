@@ -108,7 +108,7 @@ def __attributePopupMenu( menuDefinition, plugValueWidget ) :
 	if not acceptsAttributeName and not acceptsAttributeNames :
 		return
 
-	selectedPaths = GafferSceneUI.ContextAlgo.getSelectedPaths( plugValueWidget.getContext() ).paths()
+	selectedPaths = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( plugValueWidget.scriptNode() ).paths()
 	if not selectedPaths :
 		return
 
@@ -119,7 +119,7 @@ def __attributePopupMenu( menuDefinition, plugValueWidget ) :
 		nodes = [ node ]
 
 	attributeNames = set()
-	with plugValueWidget.getContext() :
+	with plugValueWidget.context() :
 
 		if acceptsAttributeNames :
 			currentNames = set( plug.getValue().split() )
@@ -154,4 +154,4 @@ def __attributePopupMenu( menuDefinition, plugValueWidget ) :
 			}
 		)
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __attributePopupMenu, scoped = False )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __attributePopupMenu )

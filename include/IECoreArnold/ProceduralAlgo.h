@@ -46,7 +46,7 @@ namespace IECoreArnold
 namespace ProceduralAlgo
 {
 
-IECOREARNOLD_API AtNode *convert( const IECoreScene::ExternalProcedural *procedural, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode );
+IECOREARNOLD_API AtNode *convert( const IECoreScene::ExternalProcedural *procedural, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext = "ProceduralAlgo::convert" );
 
 } // namespace ProceduralAlgo
 

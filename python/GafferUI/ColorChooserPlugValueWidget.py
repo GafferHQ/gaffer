@@ -50,7 +50,7 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__colorChooser.setSwatchesVisible( False )
 
 		self.__colorChangedConnection = self.__colorChooser.colorChangedSignal().connect(
-			Gaffer.WeakMethod( self.__colorChanged ), scoped = False
+			Gaffer.WeakMethod( self.__colorChanged )
 		)
 
 		self.__lastChangedReason = None
@@ -81,7 +81,7 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__lastChangedReason = reason
 
 		with Gaffer.UndoScope(
-			next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ),
+			self.scriptNode(),
 			mergeGroup = "ColorPlugValueWidget%d%d" % ( id( self, ), self.__mergeGroupId )
 		) :
 

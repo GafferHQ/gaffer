@@ -57,8 +57,8 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__lastChangedReason = None
 		self.__mergeGroupId = 0
 
-		self.__numericWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
-		self.__valueChangedConnection = self.__numericWidget.valueChangedSignal().connect( Gaffer.WeakMethod( self.__valueChanged ), scoped = False )
+		self.__numericWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.__valueChangedConnection = self.__numericWidget.valueChangedSignal().connect( Gaffer.WeakMethod( self.__valueChanged ) )
 
 	def numericWidget( self ) :
 
@@ -77,7 +77,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			if result :
 				result += "\n"
 			result += "## Actions\n"
-			result += " - Cursor up/down to increment/decrement\n"
+			result += " - Cursor up/down or <kbd>Ctrl</kbd> + scroll wheel to increment/decrement\n"
 			result += " - Use `+`, `-`, `*`, `/` and `%` to perform simple maths\n"
 
 		return result
@@ -173,7 +173,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __setPlugValues( self, mergeGroup="" ) :
 
-		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ), mergeGroup=mergeGroup ) :
+		with Gaffer.UndoScope( self.scriptNode(), mergeGroup=mergeGroup ) :
 
 			with self._blockedUpdateFromValues() :
 
@@ -181,8 +181,8 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 					if Gaffer.Animation.isAnimated( plug ) :
 						curve = Gaffer.Animation.acquire( plug )
-						if self.__numericWidget.getText() != self.__numericWidget.valueToString( curve.evaluate( self.getContext().getTime() ) ) :
-							curve.insertKey( self.getContext().getTime(), self.__numericWidget.getValue() )
+						if self.__numericWidget.getText() != self.__numericWidget.valueToString( curve.evaluate( self.context().getTime() ) ) :
+							curve.insertKey( self.context().getTime(), self.__numericWidget.getValue() )
 					else :
 						try :
 							plug.setValue( self.__numericWidget.getValue() )

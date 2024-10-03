@@ -49,7 +49,7 @@ def __scriptAdded( container, script ) :
 
 	GafferImageUI.OpenColorIOConfigPlugUI.connect( script )
 
-application.root()["scripts"].childAddedSignal().connect( __scriptAdded, scoped = False )
+application.root()["scripts"].childAddedSignal().connect( __scriptAdded )
 
 Gaffer.Metadata.registerValue( GafferUI.View, "displayTransform.name", "plugValueWidget:type", "GafferImageUI.OpenColorIOConfigPlugUI.DisplayTransformPlugValueWidget" )
 Gaffer.Metadata.registerValue( GafferUI.View, "displayTransform.name", "layout:minimumWidth", 150 )

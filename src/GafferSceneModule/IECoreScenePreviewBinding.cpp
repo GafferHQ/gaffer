@@ -52,6 +52,7 @@
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/Private/IECoreScenePreview/MeshAlgo.h"
+#include "GafferScene/Private/IECoreScenePreview/PrimitiveAlgo.h"
 
 using namespace IECoreScenePreview;
 using namespace boost::python;
@@ -365,6 +366,32 @@ object capturedObjectCapturedLinks( const CapturingRenderer::CapturedObject &o, 
 	}
 }
 
+void transformPrimitiveWrapper( IECoreScene::Primitive &primitive, Imath::M44f matrix, const IECore::Canceller *canceller = nullptr )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return PrimitiveAlgo::transformPrimitive( primitive, matrix, canceller );
+}
+
+IECoreScene::PrimitivePtr mergePrimitivesWrapper( object primitives, const IECore::Canceller *canceller = nullptr )
+{
+	std::vector< std::pair< const IECoreScene::Primitive*, Imath::M44f > > typedPrimitives;
+	for (int i = 0; i < primitives.attr("__len__")(); i++)
+	{
+		object pair(primitives[i]);
+
+
+		typedPrimitives.push_back(
+			std::make_pair(
+				extract<const IECoreScene::Primitive*>(pair[0])(),
+				extract<Imath::M44f>(pair[1])()
+			)
+		);
+	}
+
+	IECorePython::ScopedGILRelease gilRelease;
+	return PrimitiveAlgo::mergePrimitives( typedPrimitives, canceller );
+}
+
 } // namespace
 
 void GafferSceneModule::bindIECoreScenePreview()
@@ -517,4 +544,25 @@ void GafferSceneModule::bindIECoreScenePreview()
 		.def( "numLinkEdits", &CapturingRenderer::CapturedObject::numLinkEdits )
 		.def( "id", &CapturingRenderer::CapturedObject::id )
 	;
+
+	{
+		object primitiveAlgoModule( borrowed( PyImport_AddModule( "GafferScene.Private.IECoreScenePreview.PrimitiveAlgo" ) ) );
+		scope().attr( "PrimitiveAlgo" ) = primitiveAlgoModule;
+
+		scope primitiveAlgoScope( primitiveAlgoModule );
+
+		def( "transformPrimitive", transformPrimitiveWrapper,
+			(
+				arg( "primitive" ), arg( "matrix" ),
+				arg( "canceller" ) = object()
+			)
+		);
+
+		def( "mergePrimitives", mergePrimitivesWrapper,
+			(
+				arg( "primitives" ),
+				arg( "canceller" ) = object()
+			)
+		);
+	}
 }

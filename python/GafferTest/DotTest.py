@@ -143,10 +143,10 @@ class DotTest( GafferTest.TestCase ) :
 	def testArrayPlug( self ) :
 
 		n1 = Gaffer.Node()
-		n1["a"] = Gaffer.ArrayPlug( element = Gaffer.IntPlug() )
+		n1["a"] = Gaffer.ArrayPlug( elementPrototype = Gaffer.IntPlug() )
 
 		n2 = Gaffer.Node()
-		n2["a"] = Gaffer.ArrayPlug( element = Gaffer.IntPlug() )
+		n2["a"] = Gaffer.ArrayPlug( elementPrototype = Gaffer.IntPlug() )
 
 		d = Gaffer.Dot()
 		d.setup( n1["a"] )

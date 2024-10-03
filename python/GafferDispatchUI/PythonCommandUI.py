@@ -141,13 +141,13 @@ class _CommandPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__codeWidget.setHighlighter( GafferUI.CodeWidget.PythonHighlighter() )
 		self.__codeWidget.setCommentPrefix( "#" )
 
-		self.__codeWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ), scoped = False )
+		self.__codeWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ) )
 
 		self._addPopupMenu( self.__codeWidget )
 
 		node = self.__pythonCommandNode()
 		if node is not None :
-			node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__pythonCommandPlugDirtied ), scoped = False )
+			node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__pythonCommandPlugDirtied ) )
 		self.__updateCompleter()
 
 	def _updateFromValues( self, values, exception ) :
@@ -184,7 +184,7 @@ class _CommandPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		node = self.__pythonCommandNode()
 		if node is not None :
-			with self.getContext() :
+			with self.context() :
 				self.__codeWidget.setCompleter(
 					GafferUI.CodeWidget.PythonCompleter( node._executionDict() )
 				)

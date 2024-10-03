@@ -19,6 +19,10 @@ call :prependToPath "%GAFFER_ROOT%\ops" IECORE_OP_PATHS
 
 call :prependToPath "%GAFFER_ROOT%\resources\IECoreUSD" PXR_PLUGINPATH_NAME
 call :prependToPath "%GAFFER_ROOT%\materialX" PXR_MTLX_STDLIB_SEARCH_PATHS
+rem Prevent USD from adding entries from `PATH` to Python binary search paths.
+if "%PXR_USD_WINDOWS_DLL_PATH%" EQU "" (
+	set PXR_USD_WINDOWS_DLL_PATH=""
+)
 
 call :prependToPath "%USERPROFILE%\gaffer\opPresets;%GAFFER_ROOT%\opPresets" IECORE_OP_PRESET_PATHS
 call :prependToPath "%USERPROFILE%\gaffer\procedurals;%GAFFER_ROOT%\procedurals" IECORE_PROCEDURAL_PATHS
@@ -43,6 +47,15 @@ call :prependToPath %GAFFEROSL_CODE_DIRECTORY% PATH
 set PYTHONHOME=%GAFFER_ROOT%
 
 call :prependToPath "%GAFFER_ROOT%\python" PYTHONPATH
+
+if "%PYTHONNOUSERSITE%" EQU "" (
+	REM Prevent Python automatically adding a user-level `site-packages`
+	REM directory to the `sys.path`. These frequently contain modules which
+	REM conflict with our own. Users who know what they are doing can set
+	REM `PYTHONNOUSERSITE=0` before running Gaffer if they want to use
+	REM the user directory.
+	set PYTHONNOUSERSITE=1
+)
 
 call :prependToPath "%GAFFER_ROOT%\lib" PATH
 

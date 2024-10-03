@@ -41,6 +41,7 @@ __import__( "GafferScene" )
 
 from ._GafferSceneUI import *
 
+from .SceneEditor import SceneEditor
 from .HierarchyView import HierarchyView
 from .SceneInspector import SceneInspector
 from .PrimitiveInspector import PrimitiveInspector
@@ -53,6 +54,7 @@ from .SetEditor import SetEditor
 from .RenderPassEditor import RenderPassEditor
 from . import SceneHistoryUI
 from . import EditScopeUI
+from . import _InspectorColumn
 
 from . import SceneNodeUI
 from . import SceneReaderUI
@@ -110,7 +112,6 @@ from . import ScatterUI
 from . import UnionFilterUI
 from . import PathFilterUI
 from . import GroupUI
-from . import OpenGLRenderUI
 from . import PrimitiveVariableProcessorUI
 from . import DeletePrimitiveVariablesUI
 from . import MeshTypeUI
@@ -197,6 +198,10 @@ from . import LightPositionToolUI
 from . import MeshTessellateUI
 from . import RenderPassTypeAdaptorUI
 from . import RenderPassShaderUI
+from . import MergeObjectsUI
+from . import MergeMeshesUI
+from . import MergePointsUI
+from . import MergeCurvesUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

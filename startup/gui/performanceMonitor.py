@@ -253,4 +253,4 @@ def __graphEditorCreated( graphEditor ) :
 
 	annotationsGadget.setVisibleAnnotations( " ".join( visibleAnnotations ) )
 
-GafferUI.GraphEditor.instanceCreatedSignal().connect( __graphEditorCreated, scoped = False )
+GafferUI.GraphEditor.instanceCreatedSignal().connect( __graphEditorCreated )

@@ -63,9 +63,10 @@ class SelectViewTest( GafferImageTest.ImageTestCase ) :
 
 		createViews = GafferImage.CreateViews()
 
-		createViews["views"].addChild( Gaffer.NameValuePlug( "left", GafferImage.ImagePlug(), True, "view0", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
-		createViews["views"].addChild( Gaffer.NameValuePlug( "right", GafferImage.ImagePlug(), True, "view1", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
-		createViews["views"].addChild( Gaffer.NameValuePlug( "default", GafferImage.ImagePlug(), True, "view2", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		createViews["views"].resize( 3 )
+		createViews["views"][0]["name"].setValue( "left" )
+		createViews["views"][1]["name"].setValue( "right" )
+		createViews["views"][2]["name"].setValue( "default" )
 
 		createViews["views"]["view0"]["value"].setInput( reader["out"] )
 		createViews["views"]["view1"]["value"].setInput( constant1["out"] )

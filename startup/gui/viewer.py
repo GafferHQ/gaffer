@@ -59,10 +59,9 @@ Gaffer.Metadata.registerValue( preferences["viewer"], "layout:section", "Viewer"
 
 # register a customised view for viewing scenes
 
-def __sceneView( plug ) :
+def __sceneView( scriptNode ) :
 
-	view = GafferSceneUI.SceneView()
-	view["in"].setInput( plug )
+	view = GafferSceneUI.SceneView( scriptNode )
 	view["grid"]["dimensions"].setInput( preferences["viewer"]["gridDimensions"] )
 
 	return view
@@ -78,7 +77,7 @@ def __viewContextMenu( viewer, view, menuDefinition ) :
 	GafferSceneUI.LightUI.appendViewContextMenuItems( viewer, view, menuDefinition )
 	GafferSceneUI.SceneHistoryUI.appendViewContextMenuItems( viewer, view, menuDefinition )
 
-GafferUI.Viewer.viewContextMenuSignal().connect( __viewContextMenu, scoped = False )
+GafferUI.Viewer.viewContextMenuSignal().connect( __viewContextMenu )
 
 # register shading modes
 
@@ -137,7 +136,56 @@ def __createXRayShader() :
 
 	return xray
 
-GafferSceneUI.SceneView.registerShadingMode( "X-Ray", functools.partial( __createXRayShader ) )
+GafferSceneUI.SceneView.registerShadingMode( "X-Ray", __createXRayShader )
+
+def __createPurposeShadingMode() :
+
+	result = GafferScene.SceneProcessor( "PurposeVisualiser" )
+
+	result["attributeQuery"] = GafferScene.AttributeQuery()
+	result["attributeQuery"].setup( Gaffer.StringPlug() )
+	result["attributeQuery"]["scene"].setInput( result["in"] )
+	result["attributeQuery"]["location"].setValue( "${scene:path}" )
+	result["attributeQuery"]["attribute"].setValue( "usd:purpose" )
+	result["attributeQuery"]["default"].setValue( "default" )
+	result["attributeQuery"]["inherit"].setValue( True )
+
+	result["customAttributes"] = GafferScene.CustomAttributes()
+	result["customAttributes"]["in"].setInput( result["in"] )
+
+	result["spreadsheet"] = Gaffer.Spreadsheet()
+	result["spreadsheet"]["selector"].setInput( result["attributeQuery"]["value"] )
+	result["spreadsheet"]["rows"].addColumn( result["customAttributes"]["extraAttributes"] )
+
+	result["customAttributes"]["extraAttributes"].setInput( result["spreadsheet"]["out"]["extraAttributes"] )
+
+	for purpose, color in {
+		"render" : imath.Color3f( 0, 1, 0 ),
+		"proxy" : imath.Color3f( 0, 0, 1 ),
+		"guide" : imath.Color3f( 1, 0, 0 ),
+		"default" : imath.Color3f( 1, 1, 1 )
+	}.items() :
+		row = result["spreadsheet"]["rows"].addRow()
+		row["name"].setValue( purpose )
+		row["cells"]["extraAttributes"]["value"].setValue(
+			IECore.CompoundObject( {
+				"gl:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"surface" : IECoreScene.Shader(
+							"FacingRatio", "gl:surface",
+							{ "facingColor" : color },
+						)
+					},
+					output = "surface",
+				)
+			} )
+		)
+
+	result["out"].setInput( result["customAttributes"]["out"] )
+
+	return result
+
+GafferSceneUI.SceneView.registerShadingMode( "Diagnostic/USD/Purpose", __createPurposeShadingMode )
 
 def __loadRendererSettings( fileName ) :
 
@@ -213,6 +261,6 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 		)
 
 # Add catalogue hotkeys to viewers, eg: up/down navigation
-GafferUI.Editor.instanceCreatedSignal().connect( GafferImageUI.CatalogueUI.addCatalogueHotkeys, scoped = False )
-GafferUI.Editor.instanceCreatedSignal().connect( GafferSceneUI.EditScopeUI.addPruningActions, scoped = False )
-GafferUI.Editor.instanceCreatedSignal().connect( GafferSceneUI.EditScopeUI.addVisibilityActions, scoped = False )
+GafferUI.Editor.instanceCreatedSignal().connect( GafferImageUI.CatalogueUI.addCatalogueHotkeys )
+GafferUI.Editor.instanceCreatedSignal().connect( GafferSceneUI.EditScopeUI.addPruningActions )
+GafferUI.Editor.instanceCreatedSignal().connect( GafferSceneUI.EditScopeUI.addVisibilityActions )

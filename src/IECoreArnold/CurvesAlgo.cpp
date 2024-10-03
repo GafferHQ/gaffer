@@ -74,7 +74,7 @@ const AtString g_orientationsArnoldString("orientations");
 const AtString g_orientedArnoldString("oriented");
 const AtString g_uvsArnoldString( "uvs" );
 
-ConstCurvesPrimitivePtr resampleCurves( const CurvesPrimitive *curves )
+ConstCurvesPrimitivePtr resampleCurves( const CurvesPrimitive *curves, const std::string &messageContext )
 {
 	if( curves->basis().standardBasis() == StandardCubicBasis::Linear )
 	{
@@ -99,7 +99,7 @@ ConstCurvesPrimitivePtr resampleCurves( const CurvesPrimitive *curves )
 				updatedCurves->variables.erase( it.first );
 				msg(
 					Msg::Warning,
-					"ShapeAlgo::convertPrimitiveVariable",
+					messageContext,
 					fmt::format(
 						"Unable to create user parameter \"{}\" for primitive variable of type \"{}\"",
 						it.first, it.second.data->typeName()
@@ -115,7 +115,7 @@ ConstCurvesPrimitivePtr resampleCurves( const CurvesPrimitive *curves )
 	return updatedCurves ? updatedCurves.get() : curves;
 }
 
-void convertUVs( const IECoreScene::CurvesPrimitive *curves, AtNode *node )
+void convertUVs( const IECoreScene::CurvesPrimitive *curves, AtNode *node, const std::string &messageContext )
 {
 	auto it = curves->variables.find( "uv" );
 	if( it == curves->variables.end() )
@@ -125,7 +125,7 @@ void convertUVs( const IECoreScene::CurvesPrimitive *curves, AtNode *node )
 
 	if( !runTimeCast<const V2fVectorData>( it->second.data.get() ) )
 	{
-		msg( Msg::Warning, "CurvesAlgo", fmt::format( "Variable \"uv\" has unsupported type \"{}\" (expected V2fVectorData).", it->second.data->typeName() ) );
+		msg( Msg::Warning, messageContext, fmt::format( "Variable \"uv\" has unsupported type \"{}\" (expected V2fVectorData).", it->second.data->typeName() ) );
 		return;
 	}
 
@@ -140,7 +140,7 @@ void convertUVs( const IECoreScene::CurvesPrimitive *curves, AtNode *node )
 	AiNodeSetArray( node, g_uvsArnoldString, array );
 }
 
-AtNode *convertCommon( const IECoreScene::CurvesPrimitive *curves, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode )
+AtNode *convertCommon( const IECoreScene::CurvesPrimitive *curves, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
 
 	AtNode *result = AiNode( universe, g_curvesArnoldString, AtString( nodeName.c_str() ), parentNode );
@@ -177,24 +177,24 @@ AtNode *convertCommon( const IECoreScene::CurvesPrimitive *curves, AtUniverse *u
 
 	// Add UVs and arbitrary user parameters
 
-	convertUVs( curves, result );
+	convertUVs( curves, result, messageContext );
 
 	const char *ignore[] = { "P", "N", "width", "radius", "uv", nullptr };
-	ShapeAlgo::convertPrimitiveVariables( curves, result, ignore );
+	ShapeAlgo::convertPrimitiveVariables( curves, result, ignore, messageContext );
 
 	return result;
 
 }
 
-AtNode *convert( const IECoreScene::CurvesPrimitive *curves, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode )
+AtNode *convert( const IECoreScene::CurvesPrimitive *curves, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
 	// Arnold (and IECoreArnold::ShapeAlgo) does not support Vertex PrimitiveVariables for
 	// cubic CurvesPrimitives, so we resample the variables to Varying first.
-	ConstCurvesPrimitivePtr resampledCurves = ::resampleCurves( curves );
+	ConstCurvesPrimitivePtr resampledCurves = ::resampleCurves( curves, messageContext );
 
-	AtNode *result = convertCommon( resampledCurves.get(), universe, nodeName, parentNode );
-	ShapeAlgo::convertP( resampledCurves.get(), result, g_pointsArnoldString );
-	ShapeAlgo::convertRadius( resampledCurves.get(), result );
+	AtNode *result = convertCommon( resampledCurves.get(), universe, nodeName, parentNode, messageContext );
+	ShapeAlgo::convertP( resampledCurves.get(), result, g_pointsArnoldString, messageContext );
+	ShapeAlgo::convertRadius( resampledCurves.get(), result, messageContext );
 
 	// Convert "N" to orientations
 
@@ -211,7 +211,7 @@ AtNode *convert( const IECoreScene::CurvesPrimitive *curves, AtUniverse *univers
 	return result;
 }
 
-AtNode *convert( const std::vector<const IECoreScene::CurvesPrimitive *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode )
+AtNode *convert( const std::vector<const IECoreScene::CurvesPrimitive *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
 	// Arnold (and IECoreArnold::ShapeAlgo) does not support Vertex PrimitiveVariables for
 	// cubic CurvesPrimitives, so we resample the variables to Varying first.
@@ -224,7 +224,7 @@ AtNode *convert( const std::vector<const IECoreScene::CurvesPrimitive *> &sample
 	nSamples.reserve( samples.size() );
 	for( const CurvesPrimitive *curves : samples )
 	{
-		ConstCurvesPrimitivePtr resampledCurves = ::resampleCurves( curves );
+		ConstCurvesPrimitivePtr resampledCurves = ::resampleCurves( curves, messageContext );
 		updatedSamples.push_back( resampledCurves );
 		primitiveSamples.push_back( resampledCurves.get() );
 
@@ -234,11 +234,10 @@ AtNode *convert( const std::vector<const IECoreScene::CurvesPrimitive *> &sample
 		}
 	}
 
-	AtNode *result = convertCommon( updatedSamples.front().get(), universe, nodeName, parentNode );
+	AtNode *result = convertCommon( updatedSamples.front().get(), universe, nodeName, parentNode, messageContext );
 
-	ShapeAlgo::convertP( primitiveSamples, result, g_pointsArnoldString );
-	ShapeAlgo::convertRadius( primitiveSamples, result );
-
+	ShapeAlgo::convertP( primitiveSamples, result, g_pointsArnoldString, messageContext );
+	ShapeAlgo::convertRadius( primitiveSamples, result, messageContext );
 	if( nSamples.size() == samples.size() )
 	{
 		AiNodeSetStr( result, g_modeArnoldString, g_orientedArnoldString );
@@ -247,7 +246,7 @@ AtNode *convert( const std::vector<const IECoreScene::CurvesPrimitive *> &sample
 	}
 	else if( nSamples.size() )
 	{
-		IECore::msg( IECore::Msg::Warning, "CurvesAlgo::convert", "Missing sample for primitive variable \"N\" - not setting orientations." );
+		IECore::msg( IECore::Msg::Warning, messageContext, "Missing sample for primitive variable \"N\" - not setting orientations." );
 	}
 
 	AiNodeSetFlt( result, g_motionStartArnoldString, motionStart );

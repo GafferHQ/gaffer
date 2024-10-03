@@ -50,7 +50,7 @@ class ButtonPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.PlugValueWidget.__init__( self, self.__button, plug, **kw )
 
-		self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ), scoped = False )
+		self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
 
 		self.setPlug( plug )
 
@@ -102,7 +102,7 @@ class ButtonPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		with GafferUI.ErrorDialogue.ErrorHandler( title = "Button Error", parentWindow = self.ancestor( GafferUI.Window ) ) :
 			with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-				with self.getContext() :
+				with self.context() :
 					exec( code, executionDict, executionDict )
 
 	def __plugMetadataChanged( self, plug, key, reason ) :

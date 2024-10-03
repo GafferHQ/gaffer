@@ -36,7 +36,6 @@
 
 from . import DelightAttributesUI
 from . import DelightOptionsUI
-from . import DelightRenderUI
 from . import InteractiveDelightRenderUI
 from . import ShaderMenu
 

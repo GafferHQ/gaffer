@@ -102,8 +102,8 @@ class NumericBookmarkSetTest( GafferTest.TestCase ) :
 
 		b = Gaffer.NumericBookmarkSet( s, 1 )
 
-		b.memberAddedSignal().connect( added, scoped = False )
-		b.memberRemovedSignal().connect( removed, scoped = False )
+		b.memberAddedSignal().connect( added )
+		b.memberRemovedSignal().connect( removed )
 
 		self.assertEqual( set(b), mirror )
 

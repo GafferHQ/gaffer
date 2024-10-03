@@ -51,10 +51,10 @@ class NameWidget( GafferUI.TextWidget ) :
 
 		self._qtWidget().setValidator( _Validator( self._qtWidget() ) )
 
-		self.__graphComponent = None
+		self.__graphComponent = False # Sentinel that forces `setGraphComponent()` to update
 		self.setGraphComponent( graphComponent )
 
-		self.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setName ), scoped = False )
+		self.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setName ) )
 
 	def setGraphComponent( self, graphComponent ) :
 
@@ -62,23 +62,23 @@ class NameWidget( GafferUI.TextWidget ) :
 			return
 
 		self.__graphComponent = graphComponent
+		self.__nameChangedConnection = None
+		self.__nodeMetadataChangedConnection = None
+		self.__plugMetadataChangedConnection = None
+
 		if self.__graphComponent is not None :
 			self.__nameChangedConnection = self.__graphComponent.nameChangedSignal().connect(
 				Gaffer.WeakMethod( self.__setText ), scoped = True
 			)
-			if isinstance( self.__graphComponent, Gaffer.Node ) :
-				self.__metadataChangedConnection = Gaffer.Metadata.nodeValueChangedSignal().connect(
+			if isinstance( self.__graphComponent, ( Gaffer.Node, Gaffer.Plug ) ) :
+				self.__nodeMetadataChangedConnection = Gaffer.Metadata.nodeValueChangedSignal().connect(
 					Gaffer.WeakMethod( self.__nodeMetadataChanged ), scoped = True
 				)
-			elif isinstance( self.__graphComponent, Gaffer.Plug ) :
-				self.__metadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( self.__graphComponent.node() ).connect(
+
+			if isinstance( self.__graphComponent, Gaffer.Plug ) :
+				self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( self.__graphComponent.node() ).connect(
 					Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = True
 				)
-			else :
-				self.__metadataChangedConnection = None
-		else :
-			self.__nameChangedConnection = None
-			self.__metadataChangedConnection = None
 
 		self.__setText()
 		self.__updateEditability()
@@ -125,18 +125,17 @@ class NameWidget( GafferUI.TextWidget ) :
 
 class _Validator( QtGui.QValidator ) :
 
+	__invalidCharacters = re.compile( "[^A-Za-z_:0-9]" )
+
 	def __init__( self, parent ) :
 
 		QtGui.QValidator.__init__( self, parent )
 
 	def validate( self, input, pos ) :
 
-		input = input.replace( " ", "_" )
+		input = self.__invalidCharacters.sub( "_", input )
 		if len( input ) :
-			if re.match( "^(?!__)[A-Za-z_]+[A-Za-z_0-9]*$", input ) :
-				result = QtGui.QValidator.Acceptable
-			else :
-				result = QtGui.QValidator.Invalid
+			result = QtGui.QValidator.Acceptable
 		else :
 			result = QtGui.QValidator.Intermediate
 

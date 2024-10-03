@@ -127,6 +127,31 @@ class ArnoldShaderUITest( GafferUITest.TestCase ) :
 			Gaffer.Metadata.value( light["parameters"]["format"], "presetNames" ),
 		)
 
+	def testImagerMetadata( self ) :
+
+		shader = GafferArnold.ArnoldShader()
+		shader.loadShader( "imager_white_balance" )
+
+		self.assertEqual(
+			Gaffer.Metadata.value( shader["parameters"]["mode"], "nodule:type" ),
+			""
+		)
+
+		self.assertEqual(
+			Gaffer.Metadata.value( shader["parameters"]["mode"], "plugValueWidget:type" ),
+			"GafferUI.PresetsPlugValueWidget"
+		)
+
+		self.assertEqual(
+			Gaffer.Metadata.value( shader["parameters"]["mode"], "presetNames" ),
+			IECore.StringVectorData( [ "illuminant", "temperature", "custom" ] ),
+		)
+
+		self.assertEqual(
+			Gaffer.Metadata.value( shader["parameters"]["mode"], "presetValues" ),
+			Gaffer.Metadata.value( shader["parameters"]["mode"], "presetNames" ),
+		)
+
 	def testUserDefaultMetadata( self ) :
 
 		cacheFilePath =	self.temporaryDirectory() / "testShaderUserDefaults.scc"

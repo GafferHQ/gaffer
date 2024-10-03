@@ -56,6 +56,12 @@ from GafferUI.PlugValueWidget import sole
 # Metadata
 ##########################################################################
 
+def __shaderMetadata( node, key ) :
+
+	return Gaffer.Metadata.value(
+		node["type"].getValue() + ":" + node["name"].getValue(), key
+	)
+
 def __parameterUserDefault( plug ) :
 
 	shader = plug.node()
@@ -75,6 +81,7 @@ Gaffer.Metadata.registerNode(
 	""",
 
 	"nodeGadget:minWidth", 0.0,
+	"nodeGadget:color", functools.partial( __shaderMetadata, key = "nodeGadget:color" ),
 
 	plugs = {
 
@@ -83,7 +90,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The name of the shader being represented. This should
-			be considered read-only. Use the Shader.loadShader()
+			be considered read-only. Use the `Shader.loadShader()`
 			method to load a shader.
 			""",
 
@@ -100,10 +107,11 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The type of the shader being represented. This should
-			be considered read-only. Use the Shader.loadShader()
+			be considered read-only. Use the `Shader.loadShader()`
 			method to load a shader.
 			""",
 
+			"readOnly", True,
 			"layout:section", "",
 			"nodule:type", "",
 			"plugValueWidget:type", "",
@@ -194,7 +202,7 @@ class _ShaderNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			self.__stringPlugValueWidget = GafferUI.StringPlugValueWidget( plugs )
 			self.__reloadButton = GafferUI.Button( image = "refresh.png", hasFrame = False, toolTip = "Click to reload shader" )
-			self.__reloadButton.clickedSignal().connect( Gaffer.WeakMethod( self.__reloadButtonClicked ), scoped = False )
+			self.__reloadButton.clickedSignal().connect( Gaffer.WeakMethod( self.__reloadButtonClicked ) )
 
 	def setPlugs( self, plugs ) :
 
@@ -211,7 +219,7 @@ class _ShaderNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __reloadButtonClicked( self, button ) :
 
-		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.scriptNode() ) :
 			for plug in self.getPlugs() :
 				plug.node().reloadShader()
 
@@ -363,7 +371,7 @@ def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 
 	)
 
-GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu, scoped = False )
+GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu )
 
 
 ##########################################################################
@@ -652,7 +660,7 @@ class _PathMatcherPathFilter( Gaffer.PathFilter ) :
 		self.__pathMatcherDirty = True
 		self.__pathMatcher = IECore.PathMatcher()
 
-		rootPath.pathChangedSignal().connect( Gaffer.WeakMethod( self.__rootPathChanged ), scoped = False )
+		rootPath.pathChangedSignal().connect( Gaffer.WeakMethod( self.__rootPathChanged ) )
 
 	def setMatchPatterns( self, patterns ) :
 
@@ -779,13 +787,13 @@ class _ShaderDialogueBase( GafferUI.Dialogue ) :
 
 		self._setWidget( mainColumn )
 
-		self.__pathListingWidget.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__updateButtonState ), scoped = False )
-		self.__pathListingWidget.buttonReleaseSignal().connectFront( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
-		self.__pathListingWidget.pathSelectedSignal().connect( Gaffer.WeakMethod( self.__pathSelected ), scoped = False )
+		self.__pathListingWidget.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__updateButtonState ) )
+		self.__pathListingWidget.buttonReleaseSignal().connectFront( Gaffer.WeakMethod( self.__buttonRelease ) )
+		self.__pathListingWidget.pathSelectedSignal().connect( Gaffer.WeakMethod( self.__pathSelected ) )
 
 		self._addButton( "Cancel" )
 		self.__confirmButton = self._addButton( "OK" )
-		self.__confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
+		self.__confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 
 		self.__selectedSignal = Gaffer.Signal1()
 

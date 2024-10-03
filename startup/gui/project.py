@@ -67,7 +67,7 @@ def __scriptAdded( container, script ) :
 
 	GafferImage.FormatPlug.acquireDefaultFormatPlug( script )
 
-application.root()["scripts"].childAddedSignal().connect( __scriptAdded, scoped = False )
+application.root()["scripts"].childAddedSignal().connect( __scriptAdded )
 
 ##########################################################################
 # Bookmarks
@@ -120,5 +120,4 @@ for dispatcher in [ GafferDispatch.LocalDispatcher, GafferTractor.TractorDispatc
 
 with IECore.IgnoredExceptions( ImportError ) :
 	import GafferArnold
-	Gaffer.Metadata.registerValue( GafferArnold.ArnoldRender, "fileName", "userDefault", "${project:rootDirectory}/asses/${script:name}/${renderPass}/${script:name}.####.ass" )
 	Gaffer.Metadata.registerValue( GafferArnold.ArnoldTextureBake, "bakeDirectory", "userDefault", "${project:rootDirectory}/bakedTextures/${script:name}/" )

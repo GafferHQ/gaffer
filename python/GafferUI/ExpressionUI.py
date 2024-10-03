@@ -125,7 +125,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 			}
 		)
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu, scoped = False )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu )
 
 # ExpressionWidget
 ##########################################################################
@@ -150,14 +150,14 @@ class ExpressionWidget( GafferUI.Widget ) :
 			self.__textWidget = GafferUI.CodeWidget()
 			self.__textWidget.setEditable( not Gaffer.MetadataAlgo.readOnly( node ) )
 
-			self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ), scoped = False )
-			self.__textWidget.dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ), scoped = False )
-			self.__textWidget.contextMenuSignal().connect( Gaffer.WeakMethod( self.__expressionContextMenu ), scoped = False )
+			self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ) )
+			self.__textWidget.dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ) )
+			self.__textWidget.contextMenuSignal().connect( Gaffer.WeakMethod( self.__expressionContextMenu ) )
 
 			self.__messageWidget = GafferUI.MessageWidget()
 
-		self.__node.expressionChangedSignal().connect( Gaffer.WeakMethod( self.__expressionChanged ), scoped = False )
-		self.__node.errorSignal().connect( Gaffer.WeakMethod( self.__error ), scoped = False )
+		self.__node.expressionChangedSignal().connect( Gaffer.WeakMethod( self.__expressionChanged ) )
+		self.__node.errorSignal().connect( Gaffer.WeakMethod( self.__error ) )
 
 		self.__update()
 

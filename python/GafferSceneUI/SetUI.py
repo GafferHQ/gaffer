@@ -214,7 +214,7 @@ def __insertText( textWidget, text ) :
 
 		# Invisible dummy widget created by SpreadsheetUI. See `__setText`.
 		plugValueWidget = textWidget.ancestor( GafferUI.PlugValueWidget )
-		with plugValueWidget.getContext() :
+		with plugValueWidget.context() :
 			value = plugValueWidget.getPlug().getValue()
 
 		__setValue(
@@ -237,7 +237,7 @@ def __scenePlugs( node ) :
 
 	return result
 
-def __selectAffected( context, nodes, setExpression ) :
+def __selectAffected( scriptNode, context, nodes, setExpression ) :
 
 	result = IECore.PathMatcher()
 
@@ -246,7 +246,7 @@ def __selectAffected( context, nodes, setExpression ) :
 			for scenePlug in __scenePlugs( node ) :
 				result.addPaths( GafferScene.SetAlgo.evaluateSetExpression( setExpression, scenePlug ) )
 
-	GafferSceneUI.ContextAlgo.setSelectedPaths( context, result )
+	GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( scriptNode, result )
 
 ## \todo The `acceptsSetExpression` menu should probably be implemented as part
 # of SetExpressionPlugValueWidget. And it would also make sense to have custom
@@ -296,7 +296,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 		nodes = { node }
 
 	setNames = set()
-	with plugValueWidget.getContext() :
+	with plugValueWidget.context() :
 		for node in nodes :
 			for scenePlug in __scenePlugs( node ) :
 				setNames.update( [ str( n ) for n in scenePlug["setNames"].getValue() if not str( n ).startswith( "__" ) ] )
@@ -310,7 +310,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 	else :
 		# The SpreadsheetUI makes an invisible widget in order to show the popup
 		# menu for a cell directly. The text in this may not be up to date.
-		with plugValueWidget.getContext() :
+		with plugValueWidget.context() :
 			currentText = plugValueWidget.getPlug().getValue()
 
 	# `Select Affected` command
@@ -321,7 +321,8 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 		{
 			"command" : functools.partial(
 				__selectAffected,
-				plugValueWidget.getContext(),
+				plugValueWidget.scriptNode(),
+				plugValueWidget.context(),
 				nodes,
 				selectionSetExpression
 			),
@@ -393,7 +394,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 				}
 			)
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu, scoped = False )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu )
 
 ##########################################################################
 # Gadgets

@@ -125,7 +125,7 @@ void applyDynamicFlag( Plug *plug )
 {
 	plug->setFlags( Plug::Dynamic, true );
 
-	auto compoundTypes = { PlugTypeId, ValuePlugTypeId, ArrayPlugTypeId };
+	auto compoundTypes = { PlugTypeId, ValuePlugTypeId };
 	if( find( begin( compoundTypes ), end( compoundTypes ), (Gaffer::TypeId)plug->typeId() ) != end( compoundTypes ) )
 	{
 		for( Plug::RecursiveIterator it( plug ); !it.done(); ++it )

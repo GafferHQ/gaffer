@@ -187,16 +187,8 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		s["n"]["p"] = Gaffer.IntPlug()
 
 		l = GafferUI.PlugLayout( s["n"] )
-		self.assertTrue( l.getContext().isSame( s.context() ) )
-		self.assertTrue( l.plugValueWidget( s["n"]["p"] ).getContext().isSame( s.context() ) )
-
-		c = Gaffer.Context()
-		l.setContext( c )
-		self.assertTrue( l.getContext().isSame( c ) )
-		self.assertTrue( l.plugValueWidget( s["n"]["p"] ).getContext().isSame( c ) )
-
-		l = GafferUI.PlugLayout( s )
-		self.assertTrue( l.getContext().isSame( s.context() ) )
+		self.assertEqual( l.context(), s.context() )
+		self.assertEqual( l.plugValueWidget( s["n"]["p"] ).context(), s.context() )
 
 	def testContextWithoutScriptNode( self ) :
 
@@ -204,10 +196,10 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		n["p"] = Gaffer.Plug()
 
 		l = GafferUI.PlugLayout( n )
-		self.assertTrue( isinstance( l.getContext(), Gaffer.Context ) )
+		self.assertTrue( isinstance( l.context(), Gaffer.Context ) )
 
 		l = GafferUI.PlugLayout( n["p"] )
-		self.assertTrue( isinstance( l.getContext(), Gaffer.Context ) )
+		self.assertTrue( isinstance( l.context(), Gaffer.Context ) )
 
 	def testContextSensitiveSummariesAndActivators( self ) :
 
@@ -219,6 +211,9 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 
 				self["b"] = Gaffer.BoolPlug()
 				self["s"] = Gaffer.StringPlug()
+
+				self["out"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out )
+				self["out"].setInput( self["s"] )
 
 		IECore.registerRunTimeTyped( SummaryAndActivatorTestNode )
 
@@ -255,6 +250,27 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 
 		p["value"].setValue( True )
 		self.assertEqual( l.plugValueWidget( s["n"]["s"] ).enabled(), True )
+
+		# When a node is focussed, the layout should use the tracked context
+		# instead of the script context.
+
+		s["stringIO"] = GafferTest.StringInOutNode()
+		s["stringIO"]["in"].setInput( s["n"]["out"] )
+
+		s["contextVariables"] = Gaffer.ContextVariables()
+		s["contextVariables"].setup( s["stringIO"]["out"] )
+		s["contextVariables"]["in"].setInput( s["stringIO"]["out"] )
+		s["contextVariables"]["variables"].addChild( Gaffer.NameValuePlug( "bVariable", False ) )
+
+		with GafferUITest.ContextTrackerTest.UpdateHandler() :
+			s.setFocus( s["contextVariables"] )
+
+		self.assertFalse( l.plugValueWidget( s["n"]["s"] ).enabled() )
+
+		with GafferUITest.ContextTrackerTest.UpdateHandler() :
+			s.setFocus( s["stringIO"] )
+
+		self.assertTrue( l.plugValueWidget( s["n"]["s"] ).enabled() )
 
 	def testMultipleLayouts( self ) :
 

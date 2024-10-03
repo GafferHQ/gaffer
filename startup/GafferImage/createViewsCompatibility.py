@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,22 +34,27 @@
 #
 ##########################################################################
 
-import Gaffer
-import GafferScene
+import GafferImage
 
-##########################################################################
-# Metadata
-##########################################################################
+def __viewsChildAdded( parent, child ) :
 
-Gaffer.Metadata.registerNode(
+	if child["name"].defaultValue() :
+		# Legacy code and files create children with non-empty default values
+		# in the `name`` plug. This violates the uniformity of the array, and
+		# can no longer be serialised. Reset the default value while preserving
+		# the current value.
+		value = child["name"].getValue()
+		child["name"].setValue( "" )
+		child["name"].resetDefault()
+		child["name"].setValue( value )
 
-	GafferScene.OpenGLRender,
+def __initWrapper( originalInit ) :
 
-	"description",
-	"""
-	Renders scenes using the same OpenGL engine as is used in the viewer.
-	Use the OpenGLShader and OpenGLAttributes nodes to specify the appearance
-	of objects within the render.
-	""",
+	def init( self, *args, **kw ) :
 
-)
+		originalInit( self, *args, **kw )
+		self["views"].childAddedSignal().connect( __viewsChildAdded )
+
+	return init
+
+GafferImage.CreateViews.__init__ = __initWrapper( GafferImage.CreateViews.__init__ )

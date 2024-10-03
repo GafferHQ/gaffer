@@ -60,6 +60,9 @@ class GAFFERIMAGE_API Unpremultiply : public ChannelDataProcessor
 		//@{
 		Gaffer::StringPlug *alphaChannelPlug();
 		const Gaffer::StringPlug *alphaChannelPlug() const;
+
+		Gaffer::BoolPlug *ignoreMissingAlphaPlug();
+		const Gaffer::BoolPlug *ignoreMissingAlphaPlug() const;
 		//@}
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;

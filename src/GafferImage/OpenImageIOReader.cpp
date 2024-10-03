@@ -744,30 +744,31 @@ class File
 					ParamValue *multiViewAttr = currentSpec.find_attribute( "multiView" );
 					if( multiViewAttr )
 					{
-						singlePartMultiView = true;
-
-						if( multiViewAttr->type().basetype != TypeDesc::STRING )
+						if( multiViewAttr->type().basetype != TypeDesc::STRING || multiViewAttr->type().arraylen <= 0 )
 						{
 							IECore::msg(
 								IECore::Msg::Warning, "OpenImageIOReader",
 								fmt::format(
-									"Ignoring \"multiView\" attribute of invalid type in \"{}\".",
+									"Ignoring invalid \"multiView\" attribute in \"{}\".",
 									infoFileName
 								)
 							);
 						}
-
-						for( int i = 0; i < multiViewAttr->type().arraylen; i++ )
+						else
 						{
-							viewNames.push_back( *((&multiViewAttr->get< char* >())+i) );
-						}
+							singlePartMultiView = true;
 
-						for( const std::string &view : viewNames )
-						{
-							m_views[view] = std::make_unique<View>( currentSpec, 0 );
+							for( int i = 0; i < multiViewAttr->type().arraylen; i++ )
+							{
+								viewNames.push_back( *((&multiViewAttr->get< char* >())+i) );
+							}
+
+							for( const std::string &view : viewNames )
+							{
+								m_views[view] = std::make_unique<View>( currentSpec, 0 );
+							}
 						}
 					}
-
 				}
 
 				View *currentView = nullptr;
