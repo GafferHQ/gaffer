@@ -211,6 +211,6 @@ def _formatLabel( fmt, context ) :
 
 def __spreadsheetFormatter( plug, forToolTip ) :
 
-	return _formatLabel( plug.getValue(), plug.ancestor( Gaffer.ScriptNode ).context() )
+	return _formatLabel( plug.getValue(), Gaffer.Context.current() )
 
 GafferUI.SpreadsheetUI.registerValueFormatter( GafferImage.FormatPlug, __spreadsheetFormatter )
