@@ -23,7 +23,9 @@ Fixes
   - Fixed partial image updates when an unrelated InteractiveRender was running (#6043).
   - Fixed "colour tearing", where updates to some image channels became visible before updates to others.
   - Fixed unnecessary texture updates when specific image tiles don't change.
-- Viewer : Fixed drawing of custom mesh light texture visualisers (#6002). [^1]
+- Viewer :
+  - Fixed drawing of custom mesh light texture visualisers (#6002). [^1]
+  - Fixed BackgroundTask warning when deleting the node being viewed.
 - GraphEditor :
   - Fixed lingering error badges (#3820).
 - RenderPassEditor :

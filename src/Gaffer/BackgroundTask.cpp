@@ -97,14 +97,7 @@ const ScriptNode *scriptNode( const GraphComponent *subject )
 	// the ScriptNode from such classes.
 	while( subject )
 	{
-		if( subject->isInstanceOf( "GafferUI::View" ) )
-		{
-			if( auto inPlug = subject->getChild<Plug>( "in" ) )
-			{
-				return scriptNode( inPlug->getInput() );
-			}
-		}
-		else if( subject->isInstanceOf( "GafferUI::Editor::Settings" ) )
+		if( subject->isInstanceOf( "GafferUI::View" ) || subject->isInstanceOf( "GafferUI::Editor::Settings" ) )
 		{
 			if( auto scriptPlug = subject->getChild<Plug>( "__scriptNode" ) )
 			{
