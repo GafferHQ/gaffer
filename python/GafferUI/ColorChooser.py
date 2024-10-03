@@ -611,7 +611,6 @@ class ColorChooser( GafferUI.Widget ) :
 				with GafferUI.GridContainer( spacing = 0 ) :
 
 					# sliders and numeric widgets
-					c, staticComponent = self.__colorField.getColor()
 					for component in "rgbahsvtmi" :
 						row = { "r" : 0, "g" : 1, "b" : 2, "a" : 4, "h" : 6, "s" : 7, "v" : 8, "t" : 10, "m" : 11, "i" : 12 }[component]
 						self.__channelFrames[component] = GafferUI.Frame(
