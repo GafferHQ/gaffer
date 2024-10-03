@@ -36,10 +36,16 @@
 
 import Gaffer
 import GafferML
+import GafferUI
 
 Gaffer.Metadata.registerNode(
 
 	GafferML.Inference,
+
+	"layout:customWidget:loadButton:widgetType", "GafferMLUI.InferenceUI._LoadButton",
+	"layout:customWidget:loadButton:section", "Settings",
+	"layout:customWidget:loadButton:accessory", True,
+	"layout:customWidget:loadButton:index", 1,
 
 	plugs = {
 
@@ -68,3 +74,18 @@ Gaffer.Metadata.registerNode(
 
 	}
 )
+
+class _LoadButton( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, node, **kw ) :
+
+		button = GafferUI.Button( image = "refresh.png", hasFrame = False )
+		GafferUI.PlugValueWidget.__init__( self, button, node["model"], **kw )
+
+		button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
+
+	def __clicked( self, button ) :
+
+		with self.context() :
+			if self.getPlug().getValue() :
+				self.getPlug().node().loadModel()

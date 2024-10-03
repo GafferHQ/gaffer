@@ -37,10 +37,15 @@
 #include "GafferML/Inference.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/Metadata.h"
+
+#include "IECore/StringAlgo.h"
 
 #include "boost/algorithm/string/replace.hpp"
 
 #include "onnxruntime_cxx_api.h"
+
+#include <mutex>
 
 using namespace std;
 using namespace Imath;
@@ -55,12 +60,34 @@ using namespace GafferML;
 namespace
 {
 
-Ort::Env &ortEnv()
+Ort::Env &acquireEnv()
 {
 	// TODO : FIGURE OUT THE THREADING SITUATION
 	// TODO : SHARE THIS WITH EVERYTHING ELSE
 	static Ort::Env g_env( ORT_LOGGING_LEVEL_WARNING, "Gaffer" );
 	return g_env;
+}
+
+// Constructing a session (loading a model) is relatively expensive,
+// so we only ever create a single session per model. I can't find
+// a reference for this in the docs, but `Session::Run()` is thread-safe
+// and can be called concurrently by multiple clients :
+//
+// https://github.com/microsoft/onnxruntime/issues/114
+Ort::Session &acquireSession( const std::string &fileName )
+{
+	static std::mutex g_mutex;
+	static std::unordered_map<string, Ort::Session> g_map;
+	lock_guard<mutex> lock( g_mutex );
+
+	auto it = g_map.find( fileName );
+	if( it == g_map.end() )
+	{
+		/// \todo Would it be useful to have searchpaths?
+		it = g_map.try_emplace( fileName, acquireEnv(), fileName.c_str(), Ort::SessionOptions() ).first;
+	}
+
+	return it->second;
 }
 
 } // namespace
@@ -87,10 +114,11 @@ Inference::~Inference()
 {
 }
 
-void Inference::loadModel( const std::filesystem::path &model )
+void Inference::loadModel()
 {
-	/// \todo Would it be useful to have searchpaths?
-	Ort::Session session( ortEnv(), model.c_str(), Ort::SessionOptions() );
+	Ort::Session &session = acquireSession( modelPlug()->getValue() );
+
+	/// \todo Keep existing plugs where possible
 
 	inPlug()->clearChildren();
 	outPlug()->clearChildren();
@@ -102,10 +130,18 @@ void Inference::loadModel( const std::filesystem::path &model )
 			continue;
 		}
 
+		// Input names can contain characters like `.` that cannot be used in
+		// plug names. Furthermore, many models have inputs and outputs which
+		// are interchangeable other than trivial differences in naming. So we
+		// use standard numeric names for all inputs instead of the true names.
+		TensorPlugPtr in = new TensorPlug( fmt::format( "in{}", i ), Plug::In, new TensorData(), Plug::Default | Plug::Dynamic );
+		inPlug()->addChild( in );
+		// We instead use the true name as a metadata label to make the UI
+		// potentially a little more friendly.
 		Ort::AllocatedStringPtr ortName = session.GetInputNameAllocated( i, Ort::AllocatorWithDefaultOptions() );
-		std::string name( ortName.get() );
-		boost::replace_all( name, ".", "_" );
-		inPlug()->addChild( new TensorPlug( name ) );
+		IECore::ConstStringDataPtr label = new StringData( ortName.get() );
+		Metadata::registerValue( in.get(), "label", label );
+		Metadata::registerValue( in.get(), "noduleLayout:label", label );
 	}
 
 	for( size_t i = 0; i < session.GetOutputCount(); ++i )
@@ -115,22 +151,16 @@ void Inference::loadModel( const std::filesystem::path &model )
 			continue;
 		}
 
+		// As above, we use standard numeric names for plugs, and register
+		// the true names as metadata labels.
+		TensorPlugPtr out = new TensorPlug( fmt::format( "out{}", i ), Plug::Out, new TensorData(), Plug::Default | Plug::Dynamic );
+		outPlug()->addChild( out );
+
 		Ort::AllocatedStringPtr ortName = session.GetOutputNameAllocated( i, Ort::AllocatorWithDefaultOptions() );
-		std::string name( ortName.get() );
-		boost::replace_all( name, ".", "_" );
-		outPlug()->addChild( new TensorPlug( name, Plug::Out ) );
+		IECore::ConstStringDataPtr label = new StringData( ortName.get() );
+		Metadata::registerValue( out.get(), "label", label );
+		Metadata::registerValue( out.get(), "noduleLayout:label", label );
 	}
-
-	/// TODO : WHEN DIFFERENT MODELS HAVE THE SAME INPUTS/OUTPUTS IT WOULD BE USEFUL
-	/// TO BE ABLE TO SWAP THEM DYNAMICALLY, WITHOUT RELOADING THE MODEL. FOR INSTANCE,
-	/// ALL THE STYLE TRANSFER MODELS HAVE THE SAME IO. IT ALSO SEEMS LIKELY THAT LOTS
-	/// OF IMAGE PROCESSING MODELS WILL HAVE ONE INPUT AND ONE OUTPUT, AND IT's ANNOYING
-	/// WHEN THE NAMES DON'T MATCH. CAN WE DO ANYTHING ABOUT THAT?
-	///
-	/// TODO : IT WOULD ALSO BE USEFUL TO BE ABLE TO QUERY THE REQUIRED DIMENSIONS OF INPUTS
-	/// AUTOMATICALLY, AND USE IT TO DRIVE A RESIZE ON THE FLY>
-
-	modelPlug()->setValue( model );
 }
 
 Gaffer::StringPlug *Inference::modelPlug()
@@ -216,34 +246,35 @@ void Inference::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 	{
 		const string model = modelPlug()->getValue();
 
-		// TODO : ARE THESE REUSABLE? SHOULD WE CACHE THEM BY MODEL PATH???
-		Ort::Session session( ortEnv(), model.c_str(), Ort::SessionOptions() );
+		Ort::Session &session = acquireSession( model );
 
-		vector<string> mungedInputNames;
-		mungedInputNames.reserve( inPlug()->children().size() );
-
+		vector<Ort::AllocatedStringPtr> inputNameOwners;
 		vector<const char *> inputNames;
 		vector<ConstTensorDataPtr> inputOwners;
 		vector<OrtValue *> inputs;
+
 		for( auto &p : TensorPlug::InputRange( *inPlug() ) )
 		{
-			std::string mungedName = p->getName();
-			boost::replace_all( mungedName, "_", "." );
-			mungedInputNames.push_back( mungedName );
-			inputNames.push_back( mungedInputNames.back().c_str() );
+			int inputIndex = StringAlgo::numericSuffix( p->getName().string() );
+			inputNameOwners.push_back( session.GetInputNameAllocated( inputIndex, Ort::AllocatorWithDefaultOptions() ) );
+			inputNames.push_back( inputNameOwners.back().get() );
 			inputOwners.push_back( p->getValue() );
 			inputs.push_back( inputOwners.back()->value );
 		}
 
+		vector<Ort::AllocatedStringPtr> outputNameOwners;
 		vector<const char *> outputNames;
 		for( auto &p : TensorPlug::OutputRange( *outPlug() ) )
 		{
-			outputNames.push_back( p->getName().c_str() );
+			int outputIndex = StringAlgo::numericSuffix( p->getName().string() );
+			outputNameOwners.push_back( session.GetOutputNameAllocated( outputIndex, Ort::AllocatorWithDefaultOptions() ) );
+			outputNames.push_back( outputNameOwners.back().get() );
 		}
 
 		// TODO : WE REALLY WANT TO BE ABLE TO CANCEL THIS
 		// LOOKS POSSIBLE VIA RUNOPTIONS, BUT IT ISN'T POLLED - WE'D
 		// NEED TO CALL `SetTerminate()` SOMEHOW.
+		// MAYBE WE CAN USE `RunAsync()`?
 
 		vector<Ort::Value> outputs = session.Run(
 			Ort::RunOptions(), inputNames.data(),
@@ -260,7 +291,7 @@ void Inference::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 		CompoundDataPtr result = new CompoundData;
 		for( size_t i = 0; i < outputs.size(); ++i )
 		{
-			result->writable()[outputNames[i]] = new TensorData( std::move( outputs[i] ) );
+			result->writable()[outPlug()->children()[i]->getName()] = new TensorData( std::move( outputs[i] ) );
 		}
 
 		static_cast<AtomicCompoundDataPlug *>( output )->setValue( result );
