@@ -50,6 +50,7 @@ Gaffer.Metadata.registerNode(
 
 	"nodeGadget:type", "GafferUI::AuxiliaryNodeGadget",
 	"auxiliaryNodeGadget:label", "*",
+	"nodeGadget:shape", "oval",
 	"nodeGadget:focusGadgetVisible", False,
 	"uiEditor:nodeGadgetTypes", IECore.StringVectorData( [ "GafferUI::AuxiliaryNodeGadget", "GafferUI::StandardNodeGadget" ] ),
 
@@ -61,6 +62,8 @@ Gaffer.Metadata.registerNode(
 			"""
 			The string to be tested.
 			""",
+
+			"nodule:type", "",
 
 		],
 
@@ -82,6 +85,8 @@ Gaffer.Metadata.registerNode(
 			| \\        | Escapes the next character                   |
 			""",
 
+			"nodule:type", "",
+
 		],
 
 		"enabled" : [
@@ -99,6 +104,8 @@ Gaffer.Metadata.registerNode(
 			"""
 			Outputs `true` if the string matches the pattern, and `false` otherwise.
 			""",
+
+			"nodule:type", "",
 
 		],
 
