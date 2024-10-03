@@ -158,7 +158,7 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		bool updateUserColor();
 		void updateMinWidth();
 		void updatePadding();
-		void updateStrikeThroughVisibility( const Gaffer::Plug *dirtiedPlug = nullptr );
+		void updateStrikeThroughState( const Gaffer::Plug *dirtiedPlug = nullptr );
 		void updateIcon();
 		bool updateShape();
 		void updateFocusGadgetVisibility();
@@ -170,7 +170,8 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		void displayError( Gaffer::ConstPlugPtr plug, const std::string &message );
 
 		std::optional<bool> m_nodeEnabledInContextTracker;
-		bool m_strikeThroughVisible;
+		enum class StrikeThroughState : char { Invisible, Static, Dynamic };
+		StrikeThroughState m_strikeThroughState;
 		bool m_labelsVisibleOnHover;
 		// We accept drags onto the NodeGadget itself and
 		// use them to create a connection to the

@@ -87,6 +87,7 @@
 #include "GafferBindings/DependencyNodeBinding.h"
 
 #include "Gaffer/Backdrop.h"
+#include "Gaffer/PatternMatch.h"
 
 #ifdef __linux__
 #include <sys/prctl.h>
@@ -251,6 +252,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindCollect();
 
 	NodeClass<Backdrop>();
+	DependencyNodeClass<PatternMatch>();
 
 	def( "isDebug", &isDebug );
 

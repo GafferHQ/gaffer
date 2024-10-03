@@ -153,6 +153,7 @@ enum TypeId
 	OptionalValuePlugTypeId = 110107,
 	CollectTypeId = 110108,
 	Box2fVectorDataPlugTypeId = 110109,
+	PatternMatchTypeId = 110110,
 
 	LastTypeId = 110159,
 
