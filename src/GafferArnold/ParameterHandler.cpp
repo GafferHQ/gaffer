@@ -152,10 +152,9 @@ Gaffer::Plug *setupNumericPlug( const AtNodeEntry *node, const AtParamEntry *par
 	return plug.get();
 }
 
-template<typename PlugType>
-Gaffer::Plug *setupArrayPlug( const IECore::InternedString &parameterName, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction )
+Gaffer::Plug *setupArrayPlug( const IECore::InternedString &parameterName, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction, int arrayType )
 {
-    PlugType *existingPlug = plugParent->getChild<PlugType>( parameterName );
+    Plug *existingPlug = plugParent->getChild<ArrayPlug>( parameterName );
 
     if(
         existingPlug &&
@@ -165,8 +164,8 @@ Gaffer::Plug *setupArrayPlug( const IECore::InternedString &parameterName, Gaffe
         existingPlug->setFlags( Gaffer::Plug::Dynamic, false );
         return existingPlug;
     }
-
-    typename PlugType::Ptr plug = new PlugType( parameterName, direction, nullptr, 1, std::numeric_limits<size_t>::max(), Plug::Flags::Default, false );
+	Plug *arrayTypePlug = ParameterHandler::setupPlug(parameterName, arrayType, plugParent, direction );
+    ArrayPlugPtr plug = new ArrayPlug( parameterName, direction, arrayTypePlug, 0, std::numeric_limits<size_t>::max(), Plug::Flags::Default, false );
     PlugAlgo::replacePlug( plugParent, plug );
 
     return plug.get();
@@ -599,7 +598,8 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 			break;
 
         case AI_TYPE_ARRAY :
-            plug = setupArrayPlug<ArrayPlug>( AiParamGetName( parameter ).c_str(), plugParent, direction);
+			int arrayType = AiParamGetSubType(parameter);
+            plug = setupArrayPlug( AiParamGetName( parameter ).c_str(), plugParent, direction, arrayType);
             break;
 
 	}
