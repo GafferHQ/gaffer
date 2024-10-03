@@ -62,49 +62,48 @@ using namespace GafferVDB;
 namespace
 {
 
-struct MesherDispatch
+template<class F, typename... Args>
+void dispatchForVdbType( const openvdb::GridBase *grid, F &&functor, Args&&... args )
 {
-	MesherDispatch( openvdb::GridBase::ConstPtr grid, openvdb::tools::VolumeToMesh &mesher ) : m_grid( grid ), m_mesher( mesher )
+	const std::string &type = grid->type();
+
+	if( type == openvdb::FloatGrid::gridType() )
 	{
+		return functor( static_cast<const openvdb::FloatGrid *>( grid ), std::forward<Args>( args )... );
 	}
-
-	template<typename GridType>
-	void execute()
+	else if( type == openvdb::DoubleGrid::gridType() )
 	{
-		if( typename GridType::ConstPtr t = openvdb::GridBase::constGrid<GridType>( m_grid ) )
-		{
-			m_mesher( *t );
-		}
+		return functor( static_cast<const openvdb::DoubleGrid *>( grid ), std::forward<Args>( args )... );
 	}
-
-	openvdb::GridBase::ConstPtr m_grid;
-	openvdb::tools::VolumeToMesh &m_mesher;
-};
-
-std::map<std::string, std::function<void( MesherDispatch& dispatch )> > meshers =
-{
-	{ openvdb::typeNameAsString<bool>(), []( MesherDispatch& dispatch ) { dispatch.execute<openvdb::BoolGrid>(); } },
-	{ openvdb::typeNameAsString<double>(), []( MesherDispatch& dispatch ) { dispatch.execute<openvdb::DoubleGrid>(); } },
-	{ openvdb::typeNameAsString<float>(), []( MesherDispatch& dispatch ) { dispatch.execute<openvdb::FloatGrid>(); } },
-	{ openvdb::typeNameAsString<int32_t>(), []( MesherDispatch& dispatch ) { dispatch.execute<openvdb::Int32Grid>(); } },
-	{ openvdb::typeNameAsString<int64_t>(), []( MesherDispatch& dispatch ) { dispatch.execute<openvdb::Int64Grid>(); } }
-};
-
+	else if( type == openvdb::Int32Grid::gridType() )
+	{
+		return functor( static_cast<const openvdb::Int32Grid *>( grid ), std::forward<Args>( args )... );
+	}
+	else if( type == openvdb::Int64Grid::gridType() )
+	{
+		return functor( static_cast<const openvdb::Int64Grid *>( grid ), std::forward<Args>( args )... );
+	}
+	else if( type == openvdb::BoolGrid::gridType() )
+	{
+		return functor( static_cast<const openvdb::BoolGrid *>( grid ), std::forward<Args>( args )... );
+	}
+	else
+	{
+		throw IECore::Exception( fmt::format( "Incompatible Grid found name: '{}' type: '{}' ", grid->getName(), grid->type() ) );
+	}
+}
 
 IECoreScene::MeshPrimitivePtr volumeToMesh( openvdb::GridBase::ConstPtr grid, double isoValue, double adaptivity )
 {
 	openvdb::tools::VolumeToMesh mesher( isoValue, adaptivity );
-	MesherDispatch dispatch( grid, mesher );
 
-	const auto it = meshers.find( grid->valueType() );
-	if( it != meshers.end() )
-	{
-		it->second( dispatch );
-	}
-	else
-	{
-		throw IECore::InvalidArgumentException( fmt::format( "Incompatible Grid found name: '{}' type: '{}' ", grid->valueType(), grid->getName() ) );
-	}
+	dispatchForVdbType(
+		grid.get(),
+		[ &mesher ]( const auto *typedGrid )
+		{
+			mesher( *typedGrid );
+		}
+	);
 
 	// Copy out topology
 	IntVectorDataPtr verticesPerFaceData = new IntVectorData;
@@ -162,11 +161,10 @@ IECoreScene::MeshPrimitivePtr volumeToMesh( openvdb::GridBase::ConstPtr grid, do
 	return new MeshPrimitive( verticesPerFaceData, vertexIdsData, "linear", pointsData );
 }
 
-
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
-// VolumeToMesh implementation
+// LevelSetToMesh implementation
 //////////////////////////////////////////////////////////////////////////
 
 GAFFER_NODE_DEFINE_TYPE( LevelSetToMesh );
@@ -195,12 +193,12 @@ LevelSetToMesh::~LevelSetToMesh()
 
 Gaffer::StringPlug *LevelSetToMesh::gridPlug()
 {
-	return  getChild<StringPlug>( g_firstPlugIndex );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::StringPlug *LevelSetToMesh::gridPlug() const
 {
-	return  getChild<StringPlug>( g_firstPlugIndex );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 Gaffer::FloatPlug *LevelSetToMesh::isoValuePlug()
