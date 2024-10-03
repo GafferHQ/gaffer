@@ -56,7 +56,8 @@ class GAFFERML_API Inference : public Gaffer::ComputeNode
 
 		GAFFER_NODE_DECLARE_TYPE( GafferML::Inference, InferenceTypeId, Gaffer::ComputeNode );
 
-		void loadModel( const std::filesystem::path &model );
+		/// \todo Document why this isn't like `loadShader()`.
+		void loadModel();
 
 		Gaffer::StringPlug *modelPlug();
 		const Gaffer::StringPlug *modelPlug() const;
