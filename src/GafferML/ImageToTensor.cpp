@@ -187,10 +187,16 @@ void ImageToTensor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *c
 		vector<float> &buffer = bufferData->writable();
 		buffer.resize( numPixels * channels.size() );
 
-		boost::container::flat_map<std::string, float *> channelBuffers;
+		// boost::container::flat_map<std::string, float *> channelBuffers;
+		// for( size_t i = 0; i < channels.size(); ++i )
+		// {
+		// 	channelBuffers[channels[i]] = buffer.data() + numPixels * i;
+		// }
+
+		boost::container::flat_map<std::string, size_t> channelIndices;
 		for( size_t i = 0; i < channels.size(); ++i )
 		{
-			channelBuffers[channels[i]] = buffer.data() + numPixels * i;
+			channelIndices[channels[i]] = i;
 		}
 
 		ImageAlgo::parallelProcessTiles(
@@ -208,17 +214,39 @@ void ImageToTensor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *c
 				ConstFloatVectorDataPtr channelData = image->channelDataPlug()->getValue();
 				const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 				const Box2i validTileBound = BufferAlgo::intersection( tileBound, dataWindow );
-				float *channelBuffer = channelBuffers[channelName];
+				//float *channelBuffer = channelBuffers[channelName];
+
+				const size_t channelIndex = channelIndices[channelName];
+				float *dstData = buffer.data();
+				size_t dstStride;
+				if( interleaveChannels )
+				{
+					dstData += channelIndex;
+					dstStride = channels.size();
+				}
+				else
+				{
+					dstData += numPixels * channelIndex;
+					dstStride = 1;
+				}
+
+				const float *sourceData = channelData->readable().data();
 
 				for( V2i p = validTileBound.min; p.y < validTileBound.max.y; ++p.y )
 				{
-					const size_t dstIndex = BufferAlgo::index( V2i( p.x, dataWindow.max.y - p.y - 1 ), dataWindow );
-					const size_t srcIndex = BufferAlgo::index( p, tileBound );
-					std::copy(
-						channelData->readable().begin() + srcIndex,
-						channelData->readable().begin() + srcIndex + validTileBound.size().x,
-						channelBuffer + dstIndex
-					);
+					size_t dstIndex = BufferAlgo::index( V2i( p.x, dataWindow.max.y - p.y - 1 ), dataWindow ) * dstStride;
+					size_t srcIndex = BufferAlgo::index( p, tileBound );
+					for( int x = validTileBound.min.x; x < validTileBound.max.x; ++x )
+					{
+						dstData[dstIndex] = sourceData[srcIndex++];
+						dstIndex += dstStride;
+					}
+
+					// std::copy(
+					// 	channelData->readable().begin() + srcIndex,
+					// 	channelData->readable().begin() + srcIndex + validTileBound.size().x,
+					// 	channelBuffer + dstIndex
+					// );
 				}
 			}
 		);
