@@ -105,6 +105,10 @@ class WidgetPath( Gaffer.Path ) :
 			"widgetEditor:widgetType",
 			"widgetEditor:width",
 			"widgetEditor:height",
+			"widgetEditor:minimumWidth",
+			"widgetEditor:minimumHeight",
+			"widgetEditor:maximumWidth",
+			"widgetEditor:maximumHeight",
 		]
 
 	def property( self, name, canceller = None ) :
@@ -128,6 +132,14 @@ class WidgetPath( Gaffer.Path ) :
 			return widget.size().x
 		elif name == "widgetEditor:height" :
 			return widget.size().y
+		elif name == "widgetEditor:minimumWidth" :
+			return widget._qtWidget().minimumwidth()
+		elif name == "widgetEditor:minimumHeight" :
+			return widget._qtWidget().minimumheight()
+		elif name == "widgetEditor:maximumWidth" :
+			return widget._qtWidget().maximumWidth()
+		elif name == "widgetEditor:maximumHeight" :
+			return widget._qtWidget().maximumHeight()
 
 	def widget( self ) :
 		# Returns the `GafferUI.Widget` for this path.
@@ -231,6 +243,10 @@ class WidgetEditor( GafferUI.Editor ) :
 					GafferUI.PathListingWidget.StandardColumn( "Type", "widgetEditor:widgetType" ),
 					GafferUI.PathListingWidget.StandardColumn( "Width", "widgetEditor:width" ),
 					GafferUI.PathListingWidget.StandardColumn( "Height", "widgetEditor:height" ),
+					GafferUI.PathListingWidget.StandardColumn( "Minimum Width", "widgetEditor:minumumWidth" ),
+					GafferUI.PathListingWidget.StandardColumn( "Minimum Height", "widgetEditor:minumumHeight" ),
+					GafferUI.PathListingWidget.StandardColumn( "Maximum Width", "widgetEditor:maximumWidth" ),
+					GafferUI.PathListingWidget.StandardColumn( "Maximum Height", "widgetEditor:maximumHeight" ),
 				),
 				selectionMode = GafferUI.PathListingWidget.SelectionMode.Row,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
