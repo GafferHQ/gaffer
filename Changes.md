@@ -20,6 +20,7 @@ Improvements
 - Cycles :
   - Added `is_sphere` plug to spot and point lights. Disabling `is_sphere` is equivalent to enabling "Soft Falloff" in Blender, which reverts the light to the behaviour of Cycles 3.6 and earlier.
   - Changed sampling pattern to blue noise dithered sampling.
+  - Spot, disk, quad and point light strength now better match Blender, Arnold and hdCycles. As a result these lights are now `pi` times brighter at the same intensity when compared with previous versions. If necessary, this adjustment can be disabled by setting the `GAFFERCYCLES_USE_LEGACY_LIGHTS` environment variable with a value of `1`.
 
 Fixes
 -----

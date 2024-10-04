@@ -354,6 +354,15 @@ T parameterValue( const IECore::CompoundDataMap &parameters, const IECore::Inter
 	return defaultValue;
 }
 
+static const bool g_useLegacyLights = []() -> bool {
+	const char *c = getenv( "GAFFERCYCLES_USE_LEGACY_LIGHTS" );
+	if( !c )
+	{
+		return false;
+	}
+	return strcmp( c, "0" );
+}();
+
 // Cycles lights just have a single `strength` parameter which
 // we want to present as separate "virtual" parameters for
 // intensity, color, exposure.
@@ -385,7 +394,38 @@ Imath::Color3f constantLightStrength( const IECoreScene::ShaderNetwork *light )
 	// you'd want to texture that.
 	strength *= powf( 2.0f, parameterValue<float>( lightShader->parameters(), "exposure", 0.0f ) );
 
-	return strength;;
+	if(
+		!g_useLegacyLights &&
+		(
+			lightShader->getName() == "disk_light" ||
+			lightShader->getName() == "point_light" ||
+			lightShader->getName() == "quad_light" ||
+			lightShader->getName() == "spot_light"
+		)
+	)
+	{
+		// Blender/hdCycles scale by `pi` to convert intensity to radiant flux.
+		// We do the same here to ensure lights exported from Blender to USD render
+		// with an equivalent strength. This also causes these lights to match
+		// the equivalent Arnold light at the same intensity.
+		//
+		// Though all is not perfect and we still have the following quirks :
+		//
+		// Blender scales `distant_light` strength down by 4 when exporting intensity
+		// to USD and scales intensity up by 4 when importing USD or rendering with hdCycles.
+		// For lack of clarity in the UsdLuxLight specification, this value appears to have
+		// been chosen as it approximately matches Karma. Given the lack of clarity here, we
+		// do not apply the same scaling factor. As a result, distant lights render with 4
+		// times less strength than Blender/hdCycles but match Arnold.
+		//
+		// Cycles and Arnold normalize point (sphere) and spotlights differently,
+		// with Arnold lights rendering 4 times brighter than Cycles at the same intensity,
+		// though they match when not normalized. For lack of a definition of standard
+		// behaviour in UsdLuxLight, we don't attempt to match normalization between the two.
+		strength *= M_PI;
+	}
+
+	return strength;
 }
 
 const InternedString g_empty( "" );
