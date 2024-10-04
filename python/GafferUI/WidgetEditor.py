@@ -103,6 +103,8 @@ class WidgetPath( Gaffer.Path ) :
 			"widgetEditor:name",
 			"widgetEditor:widget",
 			"widgetEditor:widgetType",
+			"widgetEditor:width",
+			"widgetEditor:height",
 		]
 
 	def property( self, name, canceller = None ) :
@@ -122,6 +124,10 @@ class WidgetPath( Gaffer.Path ) :
 			return widget
 		elif name == "widgetEditor:widgetType" :
 			return type( widget ).__name__
+		elif name == "widgetEditor:width" :
+			return widget.size().x
+		elif name == "widgetEditor:height" :
+			return widget.size().y
 
 	def widget( self ) :
 		# Returns the `GafferUI.Widget` for this path.
@@ -223,6 +229,8 @@ class WidgetEditor( GafferUI.Editor ) :
 				columns = (
 					self.__widgetNameColumn,
 					GafferUI.PathListingWidget.StandardColumn( "Type", "widgetEditor:widgetType" ),
+					GafferUI.PathListingWidget.StandardColumn( "Width", "widgetEditor:width" ),
+					GafferUI.PathListingWidget.StandardColumn( "Height", "widgetEditor:height" ),
 				),
 				selectionMode = GafferUI.PathListingWidget.SelectionMode.Row,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
