@@ -216,8 +216,11 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		n = GafferDispatch.PythonCommand()
 		self.assertFalse( n.requiresSequenceExecution() )
 
-		n["sequence"].setValue( True )
+		n["framesMode"].setValue( n.FramesMode.Sequence )
 		self.assertTrue( n.requiresSequenceExecution() )
+
+		n["framesMode"].setValue( n.FramesMode.Batch )
+		self.assertFalse( n.requiresSequenceExecution() )
 
 	def testFramesNotAvailableInNonSequenceMode( self ) :
 
@@ -236,7 +239,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferDispatch.PythonCommand()
-		s["n"]["sequence"].setValue( True )
+		s["n"]["framesMode"].setValue( GafferDispatch.PythonCommand.FramesMode.Sequence )
 
 		s["n"]["command"].setValue( inspect.cleandoc(
 			"""
@@ -260,7 +263,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["n"] = GafferDispatch.PythonCommand()
-		s["n"]["sequence"].setValue( True )
+		s["n"]["framesMode"].setValue( GafferDispatch.PythonCommand.FramesMode.Sequence )
 		s["n"]["variables"].addChild( Gaffer.NameValuePlug( "testInt", 42 ) )
 
 		s["e"] = Gaffer.Expression()
@@ -304,7 +307,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["n"] = GafferDispatch.PythonCommand()
-		s["n"]["sequence"].setValue( True )
+		s["n"]["framesMode"].setValue( GafferDispatch.PythonCommand.FramesMode.Sequence )
 		s["n"]["variables"].addChild( Gaffer.NameValuePlug( "testInt", 42 ) )
 
 		commandLines = inspect.cleandoc(

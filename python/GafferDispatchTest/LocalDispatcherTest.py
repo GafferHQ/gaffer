@@ -856,7 +856,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 			perSequence = GafferDispatch.PythonCommand()
 			perSequence["command"].setValue( "pass" )
-			perSequence["sequence"].setValue( True )
+			perSequence["framesMode"].setValue( perSequence.FramesMode.Sequence )
 			perSequence["preTasks"][0].setInput( perFrame["task"] )
 			s["perSequence%d" % i] = perSequence
 

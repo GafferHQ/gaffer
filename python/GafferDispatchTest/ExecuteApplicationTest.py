@@ -350,9 +350,9 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 			""" )
 		)
 
-		def validate( sequence ) :
+		def validate( framesMode ) :
 
-			s["PythonCommand"]["sequence"].setValue( sequence )
+			s["PythonCommand"]["framesMode"].setValue( framesMode )
 
 			s["fileName"].setValue( self.__scriptFileName )
 			s.context().setFrame( 10 )
@@ -369,8 +369,8 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 			# we must retain the non-substituted value
 			self.assertEqual( ss["t"]["fileName"].getValue(), "{}/test.####.txt".format( self.temporaryDirectory().as_posix() ) )
 
-		validate( sequence = True )
-		validate( sequence = False )
+		validate( framesMode = GafferDispatch.PythonCommand.FramesMode.Sequence )
+		validate( framesMode = GafferDispatch.PythonCommand.FramesMode.Single )
 
 if __name__ == "__main__":
 	unittest.main()
