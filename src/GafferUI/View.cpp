@@ -97,6 +97,13 @@ View::View( const std::string &name, Gaffer::ScriptNodePtr scriptNode, Gaffer::P
 	addChild( new Plug( g_editScopeName ) );
 	addChild( new ToolContainer( g_toolsName ) );
 
+	// Hack to allow BackgroundTask to recover ScriptNode for
+	// cancellation support - see `BackgroundTask.cpp` and
+	// `Editor.Settings`.
+	PlugPtr scriptNodePlug = new Plug( "__scriptNode" );
+	addChild( scriptNodePlug );
+	scriptNodePlug->setInput( scriptNode->fileNamePlug() );
+
 	m_context = m_contextTracker->context( this );
 	m_contextTracker->changedSignal( this ).connect( boost::bind( &View::contextTrackerChanged, this ) );
 	tools()->childAddedSignal().connect( boost::bind( &View::toolsChildAdded, this, ::_2 ) );
