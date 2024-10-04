@@ -41,6 +41,8 @@
 #include "IECore/SimpleTypedData.h"
 
 IECORE_PUSH_DEFAULT_VISIBILITY
+#include "scene/image.h"
+#include "scene/image_vdb.h"
 // Cycles (for ustring)
 #include "util/param.h"
 #undef fmix // OpenImageIO's farmhash inteferes with IECore::MurmurHash
@@ -188,6 +190,19 @@ ccl::Attribute *convertTypedPrimitiveVariable( const std::string &name, const Pr
 	return attribute;
 }
 
+class IEVolumeLoader : public ccl::VDBImageLoader
+{
+	public:
+		IEVolumeLoader( const IECoreVDB::VDBObject *ieVolume, const string &gridName, const int precision_ )
+		: VDBImageLoader( gridName ), m_ieVolume( ieVolume )
+		{
+			grid = m_ieVolume->findGrid( gridName );
+			precision = precision_;
+		}
+
+		const IECoreVDB::VDBObject *m_ieVolume;
+};
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -200,7 +215,7 @@ namespace IECoreCycles
 namespace GeometryAlgo
 {
 
-ccl::Geometry *convert( const IECore::Object *object, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const IECore::Object *object, const std::string &nodeName )
 {
 	const Registry &r = registry();
 	Registry::const_iterator it = r.find( object->typeId() );
@@ -208,10 +223,10 @@ ccl::Geometry *convert( const IECore::Object *object, const std::string &nodeNam
 	{
 		return nullptr;
 	}
-	return it->second.converter( object, nodeName, scene );
+	return it->second.converter( object, nodeName );
 }
 
-ccl::Geometry *convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const int frameIdx, const std::string &nodeName )
 {
 	if( samples.empty() )
 	{
@@ -236,11 +251,11 @@ ccl::Geometry *convert( const std::vector<const IECore::Object *> &samples, cons
 	}
 	if( it->second.motionConverter )
 	{
-		return it->second.motionConverter( samples, times, frameIdx, nodeName, scene );
+		return it->second.motionConverter( samples, times, frameIdx, nodeName );
 	}
 	else
 	{
-		return it->second.converter( samples.front(), nodeName, scene );
+		return it->second.converter( samples.front(), nodeName );
 	}
 }
 
@@ -374,6 +389,101 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 	else if( name == "uv.tangent" && attr->element == ccl::ATTR_ELEMENT_CORNER && attr->type == ccl::TypeDesc::TypeVector )
 	{
 		attr->std = ccl::ATTR_STD_UV_TANGENT;
+	}
+}
+
+void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *volume, ccl::Scene *scene, const float frame, const int precision )
+{
+	ccl::TypeDesc ctype;// = ccl::TypeDesc::TypeUnknown;
+
+	std::vector<std::string> gridNames = vdbObject->gridNames();
+
+	for( const std::string& gridName : gridNames )
+	{
+		ccl::AttributeStandard std = ccl::ATTR_STD_NONE;
+
+		if( ccl::ustring( gridName.c_str() ) == ccl::Attribute::standard_name( ccl::ATTR_STD_VOLUME_DENSITY ) )
+		{
+			std = ccl::ATTR_STD_VOLUME_DENSITY;
+		}
+		else if( ccl::ustring( gridName.c_str() ) == ccl::Attribute::standard_name( ccl::ATTR_STD_VOLUME_COLOR ) )
+		{
+			std = ccl::ATTR_STD_VOLUME_COLOR;
+		}
+		else if( ccl::ustring( gridName.c_str() ) == ccl::Attribute::standard_name( ccl::ATTR_STD_VOLUME_FLAME ) )
+		{
+			std = ccl::ATTR_STD_VOLUME_FLAME;
+		}
+		else if( ccl::ustring( gridName.c_str() ) == ccl::Attribute::standard_name( ccl::ATTR_STD_VOLUME_HEAT ) )
+		{
+			std = ccl::ATTR_STD_VOLUME_HEAT;
+		}
+		else if( ccl::ustring( gridName.c_str() ) == ccl::Attribute::standard_name( ccl::ATTR_STD_VOLUME_TEMPERATURE ) )
+		{
+			std = ccl::ATTR_STD_VOLUME_TEMPERATURE;
+		}
+		else if( ccl::ustring( gridName.c_str() ) == ccl::Attribute::standard_name( ccl::ATTR_STD_VOLUME_VELOCITY ) )
+		{
+			std = ccl::ATTR_STD_VOLUME_VELOCITY;
+		}
+		else if( ccl::ustring( gridName.c_str() ) == ccl::Attribute::standard_name( ccl::ATTR_STD_VOLUME_VELOCITY_X ) )
+		{
+			std = ccl::ATTR_STD_VOLUME_VELOCITY_X;
+		}
+		else if( ccl::ustring( gridName.c_str() ) == ccl::Attribute::standard_name( ccl::ATTR_STD_VOLUME_VELOCITY_Y ) )
+		{
+			std = ccl::ATTR_STD_VOLUME_VELOCITY_Y;
+		}
+		else if( ccl::ustring( gridName.c_str() ) == ccl::Attribute::standard_name( ccl::ATTR_STD_VOLUME_VELOCITY_Z ) )
+		{
+			std = ccl::ATTR_STD_VOLUME_VELOCITY_Z;
+		}
+		else
+		{
+			openvdb::GridBase::ConstPtr grid = vdbObject->findGrid( gridName );
+			if( grid->isType<openvdb::BoolGrid>() )
+			{
+				ctype = ccl::TypeDesc::TypeInt;
+			}
+			else if( grid->isType<openvdb::DoubleGrid>() )
+			{
+				ctype = ccl::TypeDesc::TypeFloat;
+			}
+			else if( grid->isType<openvdb::FloatGrid>() )
+			{
+				ctype = ccl::TypeDesc::TypeFloat;
+			}
+			else if( grid->isType<openvdb::Int32Grid>() )
+			{
+				ctype = ccl::TypeDesc::TypeInt;
+			}
+			else if( grid->isType<openvdb::Int64Grid>() )
+			{
+				ctype = ccl::TypeDesc::TypeInt;
+			}
+			else if( grid->isType<openvdb::Vec3DGrid>() )
+			{
+				ctype = ccl::TypeDesc::TypeVector;
+			}
+			else if( grid->isType<openvdb::Vec3IGrid>() )
+			{
+				ctype = ccl::TypeDesc::TypeVector;
+			}
+			else if( grid->isType<openvdb::Vec3SGrid>() )
+			{
+				ctype = ccl::TypeDesc::TypeVector;
+			}
+		}
+
+		ccl::Attribute *attr = ( std != ccl::ATTR_STD_NONE ) ?
+							volume->attributes.add( std ) :
+							volume->attributes.add( ccl::ustring( gridName.c_str() ), ctype, ccl::ATTR_ELEMENT_VOXEL );
+
+		ccl::ImageLoader *loader = new IEVolumeLoader( vdbObject, gridName, precision );
+		ccl::ImageParams params;
+		params.frame = frame;
+
+		attr->data_voxel() = scene->image_manager->add_image( loader, params, false );
 	}
 }
 

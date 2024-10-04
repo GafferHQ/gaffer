@@ -238,14 +238,14 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 	return cmesh;
 }
 
-ccl::Geometry *convert( const IECoreScene::MeshPrimitive *mesh, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const IECoreScene::MeshPrimitive *mesh, const std::string &nodeName )
 {
 	ccl::Mesh *cmesh = convertCommon( mesh );
 	cmesh->name = ccl::ustring( nodeName.c_str() );
 	return cmesh;
 }
 
-ccl::Geometry *convert( const std::vector<const IECoreScene::MeshPrimitive *> &meshes, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const std::vector<const IECoreScene::MeshPrimitive *> &meshes, const std::vector<float> &times, const int frameIdx, const std::string &nodeName )
 {
 	const int numSamples = meshes.size();
 
