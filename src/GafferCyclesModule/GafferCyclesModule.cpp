@@ -60,6 +60,10 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 
 	IECoreCycles::init();
 
+	scope().attr( "majorVersion" ) = IECoreCycles::majorVersion();
+	scope().attr( "minorVersion" ) = IECoreCycles::minorVersion();
+	scope().attr( "patchVersion" ) = IECoreCycles::patchVersion();
+	scope().attr( "version" ) = IECoreCycles::versionString();
 	scope().attr( "devices" ) = IECoreCycles::devices();
 	scope().attr( "nodes" ) = IECoreCycles::nodes();
 	scope().attr( "shaders" ) = IECoreCycles::shaders();
