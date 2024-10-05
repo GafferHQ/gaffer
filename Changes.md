@@ -13,6 +13,7 @@ API
 - GafferCycles :
   - Refactored bindings so they are no longer dependent on linking to Cycles.
   - The `devices`, `nodes`, `shaders`, `lights`, and `passes` Python attributes now contain IECore.CompoundData instead of Python dictionaries.
+  - Added `majorVersion`, `minorVersion`, `patchVersion`, and `version` Python attributes containing the Cycles version.
 
 Breaking Changes
 ----------------
