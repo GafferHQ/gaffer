@@ -278,7 +278,9 @@ void ShaderView::plugDirtied( Gaffer::Plug *plug )
 		if( !m_idleConnection.connected() )
 		{
 			m_idleConnection = GafferUI::Gadget::idleSignal().connect(
-				boost::bind( &ShaderView::idleUpdate, ShaderViewPtr( this ) )
+				// OK to bind a raw pointer, because our destructor
+				// will disconnect `m_idleConnection`.
+				boost::bind( &ShaderView::idleUpdate, this )
 			);
 		}
 	}
@@ -370,13 +372,10 @@ void ShaderView::updateRendererState()
 void ShaderView::updateScene()
 {
 	PrefixAndName prefixAndName( shaderPrefix(), scenePlug()->getValue() );
-	if( m_scene && m_scenePrefixAndName == prefixAndName )
+	if( m_scenePrefixAndName == prefixAndName )
 	{
 		return;
 	}
-
-	m_scene = nullptr;
-	m_scenePrefixAndName = prefixAndName;
 
 	Scenes::const_iterator it = m_scenes.find( prefixAndName );
 	if( it != m_scenes.end() )
@@ -391,34 +390,58 @@ void ShaderView::updateScene()
 		SceneCreators::const_iterator it = sc.find( prefixAndName );
 		if( it == sc.end() )
 		{
-			it = sc.find( PrefixAndName( prefixAndName.first, "Default" ) );
+			IECore::msg(
+				IECore::Msg::Error, "ShaderView",
+				fmt::format( "SceneCreator \"{}\" not registered", prefixAndName.second )
+			);
+			m_scene = nullptr;
 		}
-
-		if( it == sc.end() )
+		else
 		{
-			sceneChangedSignal()( this );
-			return;
+			m_scene = it->second();
+			if( !m_scene )
+			{
+				IECore::msg(
+					IECore::Msg::Error, "ShaderView",
+					fmt::format( "SceneCreator \"{}\" returned null", prefixAndName.second )
+				);
+			}
 		}
-
-		m_scene = it->second();
 		m_scenes[prefixAndName] = m_scene;
 	}
 
-	Plug *shaderPlug = m_scene->getChild<Plug>( "shader" );
-	if( !shaderPlug || shaderPlug->direction() != Plug::In )
+	if( m_scene )
 	{
-		throw IECore::Exception( "Scene does not have a \"shader\" input plug" );
+		Plug *shaderPlug = m_scene->getChild<Plug>( "shader" );
+		if( !shaderPlug || shaderPlug->direction() != Plug::In )
+		{
+			IECore::msg(
+				IECore::Msg::Error, "ShaderView",
+				fmt::format( "Scene \"{}\" does not have a \"shader\" input plug", prefixAndName.second )
+			);
+		}
+		else
+		{
+			shaderPlug->setInput( m_imageConverter->getChild<Plug>( "in" ) );
+		}
+
+		ScenePlug *outPlug = m_scene->getChild<ScenePlug>( "out" );
+		if( !outPlug || outPlug->direction() != Plug::Out )
+		{
+			IECore::msg(
+				IECore::Msg::Error, "ShaderView",
+				fmt::format( "Scene \"{}\" does not have an \"out\" output scene plug", prefixAndName.second )
+			);
+			outPlug = nullptr;
+		}
+		m_imageConverter->getChild<DeleteOutputs>( "DeleteOutputs" )->inPlug()->setInput( outPlug );
+	}
+	else
+	{
+		m_imageConverter->getChild<DeleteOutputs>( "DeleteOutputs" )->inPlug()->setInput( nullptr );
 	}
 
-	shaderPlug->setInput( m_imageConverter->getChild<Plug>( "in" ) );
-
-	ScenePlug *outPlug = m_scene->getChild<ScenePlug>( "out" );
-	if( !outPlug || outPlug->direction() != Plug::Out )
-	{
-		throw IECore::Exception( "Scene does not have an \"out\" output scene plug" );
-	}
-	m_imageConverter->getChild<DeleteOutputs>( "DeleteOutputs" )->inPlug()->setInput( outPlug );
-
+	m_scenePrefixAndName = prefixAndName;
 	sceneChangedSignal()( this );
 }
 
