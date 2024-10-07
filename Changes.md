@@ -21,6 +21,7 @@ Improvements
 - NodeEditor : Improved performance when showing a node with many colour plugs. Showing the Arnold `standard_surface` shader is now almost 2x faster. [^1]
 - GraphEditor : Added colour coding to the strike-throughs drawn for disabled nodes. Black indicates that the node is always disabled, and yellow indicates that its `enabled` plug has an input connection, and therefore might be context-sensitive.
 - ListContainer : Adding a child widget with non-default alignment no longer causes the container to take up all available space.
+- PythonCommand : Added a `framesMode` plug which determines if the command is called once for each frame, once for each batch of frames, or once for each complete sequence.
 
 Fixes
 -----
@@ -46,6 +47,7 @@ Breaking Changes
 - IECoreArnold : Added `messageContext` argument to `NodeAlgo::Converter` and `NodeAlgo::MotionConverter`.
 - Instancer : Renamed `encapsulateInstanceGroups` plug to `encapsulate`. Encapsulation now produces a single capsule at the `.../instances` location, instead of capsules at each `.../instances/<prototypeName>` location.
 - GraphGadget : Moved <kbd>D</kbd> shortcut handling to GraphEditor.
+- PythonCommand : Removed `sequence` plug. Settings from old files are remapped automatically to the new `framesMode` plug on loading.
 
 [^1]: To be omitted from 1.5.0.0 release notes.
 

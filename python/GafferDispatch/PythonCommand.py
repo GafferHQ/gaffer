@@ -35,6 +35,7 @@
 ##########################################################################
 
 import ast
+import enum
 
 import IECore
 import imath
@@ -43,6 +44,8 @@ import Gaffer
 import GafferDispatch
 
 class PythonCommand( GafferDispatch.TaskNode ) :
+
+	FramesMode = enum.IntEnum( "FramesMode", [ "Single", "Sequence", "Batch" ], start = 0 )
 
 	def __init__( self, name = "PythonCommand" ) :
 
@@ -53,7 +56,7 @@ class PythonCommand( GafferDispatch.TaskNode ) :
 		# directly anyway.
 		self["command"] = Gaffer.StringPlug( substitutions = IECore.StringAlgo.Substitutions.NoSubstitutions )
 		self["variables"] = Gaffer.CompoundDataPlug()
-		self["sequence"] = Gaffer.BoolPlug()
+		self["framesMode"] = Gaffer.IntPlug( minValue = int( self.FramesMode.Single ), maxValue = int( self.FramesMode.Batch ) )
 
 	def hash( self, context ) :
 
@@ -78,7 +81,7 @@ class PythonCommand( GafferDispatch.TaskNode ) :
 
 		self["variables"].hash( h )
 
-		if self.requiresSequenceExecution() :
+		if self["framesMode"].getValue() != self.FramesMode.Single :
 			h.append( context.getFrame() )
 
 		return h
@@ -91,12 +94,16 @@ class PythonCommand( GafferDispatch.TaskNode ) :
 
 	def executeSequence( self, frames ) :
 
-		if not self.requiresSequenceExecution() :
-			## \todo It'd be nice if the dispatcher didn't call
-			# executeSequence() if requiresSequenceExecution() was False.
-			# At the same time we could look into properly supporting
-			# varying results for requiresSequenceExecution(), with sequences
-			# going into their own batch independent of non-sequence batches.
+		sequence = False
+		with Gaffer.Context( Gaffer.Context.current() ) as frameContext :
+			for frame in frames :
+				frameContext.setFrame( frame )
+				if self["framesMode"].getValue() != self.FramesMode.Single :
+					sequence = True
+					break
+
+		if not sequence :
+			# Calls `execute()`.
 			GafferDispatch.TaskNode.executeSequence( self, frames )
 			return
 
@@ -106,7 +113,7 @@ class PythonCommand( GafferDispatch.TaskNode ) :
 
 	def requiresSequenceExecution( self ) :
 
-		return self["sequence"].getValue()
+		return self["framesMode"].getValue() == self.FramesMode.Sequence
 
 	# Protected rather than private to allow access by PythonCommandUI.
 	# Not for general use.
