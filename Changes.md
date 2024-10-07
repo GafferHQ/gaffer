@@ -197,8 +197,13 @@ Build
 - Zstandard : Added version 1.5.0.
 - Windows : Update compiler to Visual Studio 2022 / MSVC 17.8 / Runtime library 14.3.
 
-1.4.x.x (relative to 1.4.13.0)
+1.4.x.x (relative to 1.4.14.0)
 =======
+
+
+
+1.4.14.0 (relative to 1.4.13.0)
+========
 
 Improvements
 ------------
@@ -218,6 +223,7 @@ Fixes
   - Fixed error when `resize()` removed plugs with input connections.
   - Fixed error when `resize()` was used on an output plug.
 - CreateViews : Fixed loading of files saved from Gaffer 1.5+.
+- PythonCommand : Fixed loading of files saved from Gaffer 1.5+.
 
 1.4.13.0 (relative to 1.4.12.0)
 ========
@@ -1010,7 +1016,12 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.16.x (relative to 1.3.16.8)
+1.3.16.x (relative to 1.3.16.9)
+========
+
+
+
+1.3.16.9 (relative to 1.3.16.8)
 ========
 
 Fixes
@@ -1025,6 +1036,7 @@ Fixes
   - Fixed error when `resize()` removed plugs with input connections.
   - Fixed error when `resize()` was used on an output plug.
 - CreateViews : Fixed loading of files saved from Gaffer 1.5+.
+- PythonCommand : Fixed loading of files saved from Gaffer 1.5+.
 
 1.3.16.8 (relative to 1.3.16.7)
 ========
