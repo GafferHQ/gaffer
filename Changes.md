@@ -13,6 +13,7 @@ Fixes
   - Fixed error when `resize()` removed plugs with input connections.
   - Fixed error when `resize()` was used on an output plug.
 - CreateViews : Fixed loading of files saved from Gaffer 1.5+.
+- PythonCommand : Fixed loading of files saved from Gaffer 1.5+.
 
 1.3.16.8 (relative to 1.3.16.7)
 ========
