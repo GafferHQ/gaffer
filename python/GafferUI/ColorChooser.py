@@ -597,6 +597,7 @@ class ColorChooser( GafferUI.Widget ) :
 		# an empty `QFrame` within the `GafferUI.Frame` is not working, so we
 		# reserve space for each channel with an empty `GafferUI.Image` of the right size.
 		self.__channelIconPlaceholders = { k : GafferUI.Image( "colorFieldEmptyIcon.png" ) for k in "rgbahsvtmi" }
+		self.__spacers = {}
 		self.__componentValueChangedConnections = []
 
 		self.__componentToolTip = "Click to use this component in the color field."
@@ -611,7 +612,8 @@ class ColorChooser( GafferUI.Widget ) :
 
 					# sliders and numeric widgets
 					c, staticComponent = self.__colorField.getColor()
-					for row, component in enumerate( "rgbahsvtmi" ) :
+					for component in "rgbahsvtmi" :
+						row = { "r" : 0, "g" : 1, "b" : 2, "a" : 4, "h" : 6, "s" : 7, "v" : 8, "t" : 10, "m" : 11, "i" : 12 }[component]
 						self.__channelFrames[component] = GafferUI.Frame(
 							self.__channelIconPlaceholders[component],
 							borderWidth = 0,
@@ -693,6 +695,11 @@ class ColorChooser( GafferUI.Widget ) :
 						self.__componentValueChangedConnections.append(
 							slider.valueChangedSignal().connect( Gaffer.WeakMethod( self.__componentValueChanged ) )
 						)
+
+					spacerHeight = 2
+					self.__spacers["a"] = GafferUI.Spacer( imath.V2i( 0, spacerHeight ), parenting = { "index" : ( 0, 3 ) } )
+					self.__spacers["hsv"] = GafferUI.Spacer( imath.V2i( 0, spacerHeight ), parenting = {  "index" : ( 0, 5 ) } )
+					self.__spacers["tmi"] = GafferUI.Spacer( imath.V2i( 0, spacerHeight ), parenting = { "index" : ( 0, 9 ) } )
 
 				# Options Button
 				GafferUI.MenuButton(
@@ -1165,6 +1172,13 @@ class ColorChooser( GafferUI.Widget ) :
 		self.__channelLabels[component].setVisible( visible )
 		self.__numericWidgets[component].setVisible( visible )
 		self.__sliders[component].setVisible( visible )
+
+		if component == "a" :
+			self.__spacers["a"].setVisible( visible and any( self.__channelLabels[c].getVisible() for c in "rgb" ) )
+		elif component in "hsv" :
+			self.__spacers["hsv"].setVisible( visible and any( self.__channelLabels[c].getVisible() for c in "rgba" ) )
+		elif component in "tmi" :
+			self.__spacers["tmi"].setVisible( visible and any( self.__channelLabels[c].getVisible() for c in "rgbahsv" ) )
 
 	def __setVisibleComponentsInternal( self, components ) :
 
