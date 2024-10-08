@@ -1,6 +1,18 @@
 1.x.x.x (relative to 1.5.0.0a2)
 =======
 
+Features
+--------
+
+- ColorChooser :
+  - Added sliders for TMI (temperature, magenta, intensity) color space.
+  - Added color field, a widget giving control of two channels of "RGB", "HSV" or "TMI" triplets. The third channel is held constant.
+  - The color field and RGB, HSV and TMI slider groups can now be toggled on or off.
+  - Default visibility of the UI elements can now be set at startup by setting `colorChooser:inline:` and `colorChooser:dialogue:` entries for the inline chooser and dialogue chooser respectively, with the following suffixes :
+    - `visibleComponents` : A string where each character is a visible component slider. Optional components are `rgbhsvtmi`.
+    - `staticComponent` : A single character string for the component to use as the static component for the color field. The other two components in the "RGB", "HSV" and "TMI" triplets will be controllable in the widget.
+    - `colorFieldVisible` : A boolean indicating if the color field should be visible or not.
+  - Added a menu item to the color chooser settings to save the UI configuration for the inline color chooser and the dialogue color chooser as a startup script to persist the configuration across Gaffer restarts.
 
 
 1.5.0.0a2 (relative to 1.5.0.0a1)
