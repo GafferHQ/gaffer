@@ -47,6 +47,8 @@ import GafferUI
 import GafferImage
 import GafferImageUI
 
+from GafferUI.PlugValueWidget import sole
+
 # General OpenColorIOConfigPlug UI metadata
 
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "plugValueWidget:type", "GafferUI.LayoutPlugValueWidget" )
@@ -156,21 +158,56 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__menuButton = GafferUI.MenuButton( "", menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
 		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plugs, **kw )
 
-		self.context().changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = True )
-		self.__ensureValidValue()
+		self.__currentDisplay = None
+		self.__currentView = None
+
+	## Returns `display, view, valid`.
+	@staticmethod
+	def parseValue( value ) :
+
+		assert( isinstance( value, str ) )
+
+		config = GafferImage.OpenColorIOAlgo.currentConfig()
+		if not value :
+			# Empty string uses the default from the config.
+			display = config.getDefaultDisplay()
+			view = config.getDefaultView( display )
+			valid = True
+		else :
+			elements = value.split( "/" )
+			assert( len( elements ) == 2 )
+			display, view = elements[0], elements[1]
+			valid = display in config.getDisplays() and view in config.getViews( display )
+
+		return display, view, valid
 
 	def _updateFromValues( self, values, exception ) :
 
 		if exception is not None :
 			self.__menuButton.setText( "" )
+			self.__menuButton.setErrored( True )
+			self.__currentDisplay = None
+			self.__currentView = None
 		else :
-			assert( len( values ) == 1 )
-			# Only show the View name, because the Display name is more of
-			# a "set once and forget" affair. The menu shows both for when
-			# you need to check.
-			self.__menuButton.setText( values[0].partition( "/" )[-1] )
+			value = sole( values )
+			if value is None :
+				self.__menuButton.setText( "---" )
+				self.__menuButton.setErrored( not all( self.parseValue( v )[2] for v in values ) )
+				self.__currentDisplay = None
+				self.__currentView = None
+			else :
+				self.__currentDisplay, self.__currentView, valid = self.parseValue( value )
+				# Only show the View name, because the Display name is more of
+				# a "set once and forget" affair. The menu shows both for when
+				# you need to check.
+				self.__menuButton.setText( self.__currentView )
+				self.__menuButton.setErrored( not valid )
 
-		self.__menuButton.setErrored( exception is not None )
+	def _valuesDependOnContext( self ) :
+
+		# We use `OpenColorIOAlgo.currentConfig()` in `_updateFromValues()`,
+		# so are always dependent on the context.
+		return True
 
 	def _updateFromEditable( self ) :
 
@@ -189,19 +226,18 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 				result.append( "/Invalid Config", { "active" : False } )
 				return result
 
-			currentDisplay, currentView = self.getPlug().getValue().split( "/" )
-
 		# View section
 
 		result.append( "/__ViewDivider__", { "divider" : True, "label" : "View" } )
 
-		for view in config.getViews( currentDisplay ) :
+		display = self.__currentDisplay if self.__currentDisplay in config.getDisplays() else config.getDefaultDisplay()
+		for view in config.getViews( display ) :
 			if not IECore.StringAlgo.matchMultiple( view, activeViews ) :
 				continue
 			result.append(
 				f"/{view}", {
-					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), currentDisplay, view ),
-					"checkBox" : view == currentView
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), display, view ),
+					"checkBox" : view == self.__currentView
 				}
 			)
 
@@ -210,11 +246,11 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 		result.append( "/__DisplayDivider__", { "divider" : True, "label" : "Display" } )
 
 		for display in config.getDisplays() :
-			view = currentView if currentView in config.getViews( display ) else config.getDefaultView( display )
+			view = self.__currentView if self.__currentView in config.getViews( display ) else config.getDefaultView( display )
 			result.append(
 				f"/{display}", {
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), display, view ),
-					"checkBox" : display == currentDisplay
+					"checkBox" : display == self.__currentDisplay
 				}
 			)
 
@@ -230,36 +266,6 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().setValue( f"{display}/{view}" )
 
-	def __contextChanged( self, context, key ) :
-
-		if key.startswith( "ocio:" ) :
-			# OCIO config may have changed, and the new config might
-			# not provide the display transform that we want.
-			self.__ensureValidValue()
-
-	def __ensureValidValue( self ) :
-
-		with self.context() :
-			try :
-				config = GafferImage.OpenColorIOAlgo.currentConfig()
-			except :
-				return
-			elements = self.getPlug().getValue().split( "/" )
-
-		if len( elements ) == 2 :
-			display, view = elements[0], elements[1]
-		else :
-			display = config.getDefaultDisplay()
-			view = config.getDefaultView( display )
-
-		if display not in config.getDisplays() :
-			display = config.getDefaultDisplay()
-
-		if view not in config.getViews( display ) :
-			view = config.getDefaultView( display )
-
-		self.__setValue( display, view )
-
 # Connection between default script config and Widget and View display transforms.
 # Calling `connect()` from an application startup file is what makes the UI OpenColorIO-aware.
 
@@ -269,6 +275,10 @@ def connect( script ) :
 	plug = GafferImage.OpenColorIOConfigPlug.acquireDefaultConfigPlug( script )
 	if not hadPlug :
 		Gaffer.NodeAlgo.applyUserDefaults( plug )
+
+	GafferUI.View.DisplayTransform.registerDisplayTransform(
+		"", __defaultViewDisplayTransformCreator
+	)
 
 	script.plugDirtiedSignal().connect( __scriptPlugDirtied )
 	__scriptPlugDirtied( plug )
@@ -288,6 +298,12 @@ def _viewDisplayTransformCreator( display, view ) :
 	workingSpace = GafferImage.OpenColorIOAlgo.getWorkingSpace( Gaffer.Context.current() )
 	processor = __displayTransformProcessor( config, context, workingSpace, display, view )
 	return GafferImageUI.OpenColorIOAlgo.displayTransformToFramebufferShader( processor )
+
+def __defaultViewDisplayTransformCreator() :
+
+	config = GafferImage.OpenColorIOAlgo.currentConfig()
+	display = config.getDefaultDisplay()
+	return _viewDisplayTransformCreator( display, config.getDefaultView( display ) )
 
 def __widgetDisplayTransform( config, context, workingSpace, display, view ) :
 
@@ -315,6 +331,7 @@ def __scriptPlugDirtied( plug ) :
 	with plug.parent().context() :
 		try :
 			config, context = GafferImage.OpenColorIOAlgo.currentConfigAndContext()
+			currentDisplay, currentView, currentValid = DisplayTransformPlugValueWidget.parseValue( plug["displayTransform"].getValue() )
 		except :
 			return
 
@@ -325,15 +342,7 @@ def __scriptPlugDirtied( plug ) :
 				functools.partial( _viewDisplayTransformCreator, display, view )
 			)
 
-	displayTransform = plug["displayTransform"].getValue()
-	if displayTransform :
-		display, view = displayTransform.split( "/" )
-	else :
-		display = config.getDefaultDisplay()
-		view = config.getDefaultView( display )
-
-	workingSpace = GafferImage.OpenColorIOAlgo.getWorkingSpace( plug.parent().context() )
-
 	scriptWindow = GafferUI.ScriptWindow.acquire( plug.parent(), createIfNecessary = False )
 	if scriptWindow is not None :
-		scriptWindow.setDisplayTransform( __widgetDisplayTransform( config, context, workingSpace, display, view ) )
+		workingSpace = GafferImage.OpenColorIOAlgo.getWorkingSpace( plug.parent().context() )
+		scriptWindow.setDisplayTransform( __widgetDisplayTransform( config, context, workingSpace, currentDisplay, currentView ) )
