@@ -52,7 +52,7 @@ class GAFFERSCENE_API MergeMeshes : public MergeObjects
 
 	protected :
 
-		IECore::ConstObjectPtr mergeObjects( const std::vector< std::pair< IECore::ConstObjectPtr, Imath::M44f > > &sources, const Gaffer::Context *context ) const override;
+		IECore::ConstObjectPtr computeMergedObject( const std::vector< std::pair< IECore::ConstObjectPtr, Imath::M44f > > &sources, const Gaffer::Context *context ) const override;
 
 	private :
 

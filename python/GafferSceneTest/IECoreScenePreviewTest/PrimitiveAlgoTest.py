@@ -706,6 +706,25 @@ class PrimitiveAlgoTest( GafferTest.TestCase ) :
 		with GafferTest.TestRunner.PerformanceScope() :
 			PrimitiveAlgo.mergePrimitives( meshes )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testSingleMeshPerf( self ) :
+
+		# Calling mergePrimitives with a single source should use transformPrimitives
+		# and not pay the cost of accumulating topology
+
+		mesh = IECoreScene.MeshPrimitive.createPlane(
+			imath.Box2f( imath.V2f( -2 ), imath.V2f( 2 ) ),
+			divisions = imath.V2i( 2000, 2000 )
+		)
+
+		m = imath.M44f()
+		m.setTranslation( imath.V3f( 0, 1, 0 ) )
+
+		meshes = [ ( mesh, m ) ]
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			PrimitiveAlgo.mergePrimitives( meshes )
+
 
 if __name__ == "__main__":
 	unittest.main()

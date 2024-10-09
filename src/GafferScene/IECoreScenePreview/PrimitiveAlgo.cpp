@@ -583,7 +583,6 @@ public:
 	// This must be called after all calls to copyFromSource
 	void finalize()
 	{
-
 		result->setTopologyUnchecked( m_resultVerticesPerFaceData, m_resultVertexIdsData, m_numVertices, result->interpolation() );
 
 		if( m_resultCornerIdsData )
@@ -964,6 +963,14 @@ IECoreScene::PrimitivePtr mergePrimitivesInternal(
 	const IECore::Canceller *canceller
 )
 {
+	if( primitives.size() == 1 )
+	{
+		// If we have a single input, we just need to transform it
+		IECoreScene::PrimitivePtr result = primitives[0].first->copy();
+		PrimitiveAlgo::transformPrimitive( *result, primitives[0].second, canceller );
+		return result;
+	}
+
 	IECoreScene::TypeId resultTypeId = (IECoreScene::TypeId)ResultStruct::PrimitiveType::staticTypeId();
 
 	// Data we need to store for each primvar we output

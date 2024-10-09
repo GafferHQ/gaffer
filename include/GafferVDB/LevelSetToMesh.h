@@ -39,7 +39,7 @@
 #include "GafferVDB/Export.h"
 #include "GafferVDB/TypeIds.h"
 
-#include "GafferScene/Deformer.h"
+#include "GafferScene/MergeObjects.h"
 
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
@@ -47,7 +47,7 @@
 namespace GafferVDB
 {
 
-class GAFFERVDB_API LevelSetToMesh : public GafferScene::Deformer
+class GAFFERVDB_API LevelSetToMesh : public GafferScene::MergeObjects
 {
 
 	public :
@@ -55,7 +55,7 @@ class GAFFERVDB_API LevelSetToMesh : public GafferScene::Deformer
 		explicit LevelSetToMesh( const std::string &name=defaultName<LevelSetToMesh>() );
 		~LevelSetToMesh() override;
 
-		GAFFER_NODE_DECLARE_TYPE( GafferVDB::LevelSetToMesh, LevelSetToMeshTypeId, GafferScene::Deformer );
+		GAFFER_NODE_DECLARE_TYPE( GafferVDB::LevelSetToMesh, LevelSetToMeshTypeId, GafferScene::MergeObjects );
 
 		Gaffer::StringPlug *gridPlug();
 		const Gaffer::StringPlug *gridPlug() const;
@@ -68,10 +68,13 @@ class GAFFERVDB_API LevelSetToMesh : public GafferScene::Deformer
 
 	protected :
 
-		bool affectsProcessedObject( const Gaffer::Plug *input ) const override;
-		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const override;
-		Gaffer::ValuePlug::CachePolicy processedObjectComputeCachePolicy() const override;
+		bool affectsMergedObject( const Gaffer::Plug *input ) const override;
+
+		void hashMergedObject(
+			const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h
+		) const override;
+
+		IECore::ConstObjectPtr computeMergedObject( const std::vector< std::pair< IECore::ConstObjectPtr, Imath::M44f > > &sources, const Gaffer::Context *context ) const override;
 
 	private :
 

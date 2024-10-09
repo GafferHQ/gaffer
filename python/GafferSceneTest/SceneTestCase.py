@@ -373,7 +373,7 @@ class SceneTestCase( GafferImageTest.ImageTestCase ) :
 				c["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
 				GafferTest.parallelGetValue( scene["object"], 100 )
 
-		if isinstance( scene.node(), GafferScene.ObjectProcessor ) :
+		if isinstance( scene.node(), GafferScene.ObjectProcessor ) or isinstance( scene.node(), GafferScene.MergeObjects ) :
 			self.assertEqual( pm.plugStatistics( scene.node()["__processedObject"] ).computeCount, 1 )
 		elif isinstance( scene.node(), GafferScene.ObjectSource ) :
 			self.assertEqual( pm.plugStatistics( scene.node()["__source"] ).computeCount, 1 )

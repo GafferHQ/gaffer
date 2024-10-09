@@ -39,7 +39,7 @@
 #include "GafferVDB/Export.h"
 #include "GafferVDB/TypeIds.h"
 
-#include "GafferScene/ObjectProcessor.h"
+#include "GafferScene/MergeObjects.h"
 
 #include "Gaffer/NumericPlug.h"
 
@@ -51,7 +51,7 @@ class StringPlug;
 namespace GafferVDB
 {
 
-class GAFFERVDB_API MeshToLevelSet : public GafferScene::ObjectProcessor
+class GAFFERVDB_API MeshToLevelSet : public GafferScene::MergeObjects
 {
 
 	public :
@@ -59,7 +59,7 @@ class GAFFERVDB_API MeshToLevelSet : public GafferScene::ObjectProcessor
 		explicit MeshToLevelSet( const std::string &name=defaultName<MeshToLevelSet>() );
 		~MeshToLevelSet() override;
 
-		GAFFER_NODE_DECLARE_TYPE( GafferVDB::MeshToLevelSet, MeshToLevelSetTypeId, GafferScene::ObjectProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferVDB::MeshToLevelSet, MeshToLevelSetTypeId, GafferScene::MergeObjects );
 
 		Gaffer::StringPlug *gridPlug();
 		const Gaffer::StringPlug *gridPlug() const;
@@ -75,10 +75,13 @@ class GAFFERVDB_API MeshToLevelSet : public GafferScene::ObjectProcessor
 
 	protected :
 
-		bool affectsProcessedObject( const Gaffer::Plug *plug ) const override;
-		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const override;
-		Gaffer::ValuePlug::CachePolicy processedObjectComputeCachePolicy() const override;
+		bool affectsMergedObject( const Gaffer::Plug *input ) const override;
+
+		void hashMergedObject(
+			const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h
+		) const override;
+
+		IECore::ConstObjectPtr computeMergedObject( const std::vector< std::pair< IECore::ConstObjectPtr, Imath::M44f > > &sources, const Gaffer::Context *context ) const override;
 
 	private :
 
