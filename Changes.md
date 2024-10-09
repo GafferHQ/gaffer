@@ -9,7 +9,13 @@ Improvements
 Fixes
 -----
 
+- SceneReader : Fixed crash reading facevarying normals skinned with UsdSkel.
 - ShaderView : Fixed crash caused by a SceneCreator returning `None`.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.9.5.
 
 1.4.14.0 (relative to 1.4.13.0)
 ========
