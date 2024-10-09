@@ -190,12 +190,17 @@ def __presetValues( plug ) :
 	property = __primProperty( plug )
 	if property :
 		allowedTokens = property.GetMetadata( "allowedTokens" )
-		return IECore.StringVectorData( allowedTokens ) if allowedTokens else None
+		if allowedTokens and isinstance( plug, Gaffer.IntPlug ) :
+			return IECore.IntVectorData( [ i for i in range( len( allowedTokens ) ) ] )
+		else :
+			return IECore.StringVectorData( allowedTokens ) if allowedTokens else None
 
 	property = __sdrProperty( plug )
 	options = property.GetOptions()
 	if options :
-		if len( options ) > 1 and all( o[1] == "" for o in options ) :
+		if isinstance( plug, Gaffer.IntPlug ) :
+			return IECore.IntVectorData( [ i for i in range( len( options ) ) ] )
+		elif len( options ) > 1 and all( o[1] == "" for o in options ) :
 			# USD's `_CreateSdrShaderProperty` method in `shaderDefUtils.cpp`
 			# always uses an empty string for the option value when converting
 			# from `allowedTokens`. Ignore that, and use the names as the values
