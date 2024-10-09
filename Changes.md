@@ -27,6 +27,7 @@ Improvements
 Fixes
 -----
 
+- Viewer : Fixed hangs when focussing a node for the first time (bug introduced in 1.5.0.0a2). [^1]
 - Cycles : Fixed issue where scaling unnormalized quad and disk lights would not affect their brightness.
 
 Breaking Changes

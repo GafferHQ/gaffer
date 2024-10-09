@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import time
 import unittest
 
 import imath
@@ -482,6 +483,20 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		view.viewportGadget().preRenderSignal()( view.viewportGadget() ) # Force update
 		self.assertEqual( view.viewportGadget().getCamera().getClippingPlanes(), expectedClippingPlanes )
 		self.assertEqual( view["camera"]["clippingPlanes"].getValue(), expectedClippingPlanes )
+
+	def testConstructWhileBackgroundTaskRuns( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		def task( canceller ) :
+
+			while True :
+				IECore.Canceller.check( canceller )
+				time.sleep( 0.01 )
+
+		backgroundTask = Gaffer.BackgroundTask( script["fileName"], task )
+		GafferSceneUI.SceneView( script )
+		backgroundTask.cancelAndWait()
 
 if __name__ == "__main__":
 	unittest.main()
