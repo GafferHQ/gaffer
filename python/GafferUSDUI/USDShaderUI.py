@@ -112,11 +112,23 @@ def __layoutSection( plug ) :
 
 def __label( plug ) :
 
+	# When the Prman USD plugin is included with OpenUSD, the API
+	# schema for Lux lights gets applied but to match how other
+	# renderers label their custom plugs, we need to add the
+	# (Renderman) suffix to the label here.
+
+	suffix = ""
+	if plug.getName().startswith( "ri:light:" ) :
+		suffix = " (Renderman)"
+
 	property = __primProperty( plug )
 	if property :
-		return property.GetMetadata( "displayName" )
+		return property.GetMetadata( "displayName" ) + suffix
 
-	return __sdrProperty( plug ).GetLabel() or None
+	label = __sdrProperty( plug ).GetLabel() or None
+	if label :
+		label += suffix
+	return label
 
 def __description( plug ) :
 
