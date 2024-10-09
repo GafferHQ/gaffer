@@ -1,10 +1,16 @@
 1.4.x.x (relative to 1.4.14.0)
 =======
 
+Improvements
+------------
+
+- USDLight : Append the (Renderman) suffix to any USD Lux plugs with `ri:light:` prefix.
+
 Fixes
 -----
 
 - ShaderView : Fixed crash caused by a SceneCreator returning `None`.
+- USDShader : Fixed default preset values on IntPlugs that are intended to be enum indexes instead of string values.
 
 1.4.14.0 (relative to 1.4.13.0)
 ========
