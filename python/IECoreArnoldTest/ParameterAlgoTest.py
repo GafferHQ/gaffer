@@ -144,5 +144,23 @@ class ParameterAlgoTest( unittest.TestCase ) :
 			IECoreArnold.ParameterAlgo.setParameter( n, "customV3i", IECore.V3iData( imath.V3i( 3, 4, 5 ) ) )
 			self.assertEqual( arnold.AiNodeGetVec( n, "customV3i" ), arnold.AtVector( 3, 4, 5 ) )
 
+	def testInt64Data( self ) :
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			n = arnold.AiNode( universe, "ginstance" )
+			with IECore.CapturingMessageHandler() as mh :
+				IECoreArnold.ParameterAlgo.setParameter( n, "customInt64", IECore.Int64Data( 1 ) )
+				IECoreArnold.ParameterAlgo.setParameter( n, "customUInt64", IECore.UInt64Data( 2 ) )
+				IECoreArnold.ParameterAlgo.setParameter( n, "customInt64OutOfRange", IECore.Int64Data( 2 ** 31 ) )
+				IECoreArnold.ParameterAlgo.setParameter( n, "customUInt64OutOfRange", IECore.UInt64Data( 2 ** 32 ) )
+
+			self.assertEqual( arnold.AiNodeGetInt( n, "customInt64" ), 1 )
+			self.assertEqual( arnold.AiNodeGetUInt( n, "customUInt64" ), 2 )
+
+			self.assertEqual( len( mh.messages ), 2 )
+			self.assertEqual( mh.messages[0].message, 'Int64Data value 2147483648 is out of range for parameter "customInt64OutOfRange"' )
+			self.assertEqual( mh.messages[1].message, 'UInt64Data value 4294967296 is out of range for parameter "customUInt64OutOfRange"' )
+
 if __name__ == "__main__":
 	unittest.main()

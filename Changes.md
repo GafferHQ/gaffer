@@ -23,11 +23,13 @@ Improvements
   - Added `is_sphere` plug to spot and point lights. Disabling `is_sphere` is equivalent to enabling "Soft Falloff" in Blender, which reverts the light to the behaviour of Cycles 3.6 and earlier.
   - Changed sampling pattern to blue noise dithered sampling.
   - Spot, disk, quad and point light strength now better match Blender, Arnold and hdCycles. As a result these lights are now `pi` times brighter at the same intensity when compared with previous versions. If necessary, this adjustment can be disabled by setting the `GAFFERCYCLES_USE_LEGACY_LIGHTS` environment variable with a value of `1`.
+- Arnold : Added support for Int64Data and UInt64Data custom attributes, allowing USD's `instanceId` to be used as a custom attribute in the Instancer node. Warnings are emitted if values are out of range for Arnold's 32 bit ints. [^1]
 
 Fixes
 -----
 
 - Cycles : Fixed issue where scaling unnormalized quad and disk lights would not affect their brightness.
+- ShaderView : Fixed crash caused by a SceneCreator returning `None`. [^1]
 
 Breaking Changes
 ----------------
@@ -241,7 +243,15 @@ Build
 1.4.x.x (relative to 1.4.14.0)
 =======
 
+Improvements
+------------
 
+- Arnold : Added support for Int64Data and UInt64Data custom attributes, allowing USD's `instanceId` to be used as a custom attribute in the Instancer node. Warnings are emitted if values are out of range for Arnold's 32 bit ints.
+
+Fixes
+-----
+
+- ShaderView : Fixed crash caused by a SceneCreator returning `None`.
 
 1.4.14.0 (relative to 1.4.13.0)
 ========
