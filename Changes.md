@@ -1,6 +1,11 @@
 1.4.x.x (relative to 1.4.14.0)
 =======
 
+Improvements
+------------
+
+- Arnold : Added support for Int64Data and UInt64Data custom attributes, allowing USD's `instanceId` to be used as a custom attribute in the Instancer node. Warnings are emitted if values are out of range for Arnold's 32 bit ints.
+
 Fixes
 -----
 
