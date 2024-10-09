@@ -210,6 +210,12 @@ class _ColorField( GafferUI.Widget ) :
 
 		return xAxis, yAxis
 
+	def _displayTransformChanged( self ) :
+
+		GafferUI.Widget._displayTransformChanged( self )
+		self.__colorFieldToDraw = None
+		self._qtWidget().update()
+
 	def __setColorInternal( self, color, staticComponent, reason ) :
 
 		dragBeginOrEnd = reason in ( GafferUI.Slider.ValueChangedReason.DragBegin, GafferUI.Slider.ValueChangedReason.DragEnd )
