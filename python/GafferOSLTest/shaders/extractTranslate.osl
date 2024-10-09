@@ -39,5 +39,5 @@ surface extractTranslate
 	matrix m = 1
 )
 {
-	Ci = color( m[3][0], m[3][1], m[3][2] ) * debug( "translate", "type", "vector" );
+	Ci = color( m[3][0], m[3][1], m[3][2] ) * debug( "translate", "type", "vector", "value", color( 1 ) );
 }

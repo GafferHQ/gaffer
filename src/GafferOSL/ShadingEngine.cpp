@@ -829,16 +829,6 @@ struct DebugParameters
 	M44f matrixValue;
 	ustring stringValue;
 
-	static void prepare( OSL::RendererServices *rendererServices, int id, void *data )
-	{
-		DebugParameters *debugParameters = static_cast<DebugParameters *>( data );
-		debugParameters->name = ustring();
-		debugParameters->type = ustring();
-		debugParameters->value = Color3f( 1.0f );
-		debugParameters->matrixValue = M44f();
-		debugParameters->stringValue = ustring();
-	}
-
 };
 
 // Must be held in order to modify the shading system.
@@ -900,7 +890,7 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 		/* name */ "debug",
 		/* id */ DebugClosureId,
 		/* params */ debugParams,
-		/* prepare */ DebugParameters::prepare,
+		/* prepare */ nullptr,
 		/* setup */ nullptr
 	);
 
@@ -908,7 +898,7 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 		/* name */ "deformation",
 		/* id */ DeformationClosureId,
 		/* params */ debugParams,
-		/* prepare */ DebugParameters::prepare,
+		/* prepare */ nullptr,
 		/* setup */ nullptr
 	);
 
