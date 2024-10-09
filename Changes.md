@@ -14,6 +14,23 @@ Features
     - `colorFieldVisible` : A boolean indicating if the color field should be visible or not.
   - Added a menu item to the color chooser settings to save the UI configuration for the inline color chooser and the dialogue color chooser as a startup script to persist the configuration across Gaffer restarts.
 
+Improvements
+------------
+
+- Cycles :
+  - Added `is_sphere` plug to spot and point lights. Disabling `is_sphere` is equivalent to enabling "Soft Falloff" in Blender, which reverts the light to the behaviour of Cycles 3.6 and earlier.
+  - Changed sampling pattern to blue noise dithered sampling.
+  - Spot, disk, quad and point light strength now better match Blender, Arnold and hdCycles. As a result these lights are now `pi` times brighter at the same intensity when compared with previous versions. If necessary, this adjustment can be disabled by setting the `GAFFERCYCLES_USE_LEGACY_LIGHTS` environment variable with a value of `1`.
+
+Fixes
+-----
+
+- Cycles : Fixed issue where scaling unnormalized quad and disk lights would not affect their brightness.
+
+Breaking Changes
+----------------
+
+- Cycles : Removed custom handling of unnormalized lights. We now rely on Cycles' inbuilt behaviour which results in a brightness difference for unnormalized point, spot and disk lights.
 
 1.5.0.0a2 (relative to 1.5.0.0a1)
 =========

@@ -564,10 +564,12 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 			)
 		);
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "spot_smooth" ) )), plugsParent, Gaffer::Plug::In ) );
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "is_sphere" ) )), plugsParent, Gaffer::Plug::In ) );
 	}
 	else if( shaderName == "point_light" )
 	{
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "size" ) )), plugsParent, Gaffer::Plug::In ) );
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "is_sphere" ) )), plugsParent, Gaffer::Plug::In ) );
 	}
 	else if( shaderName == "disk_light" )
 	{

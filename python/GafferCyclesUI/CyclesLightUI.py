@@ -96,6 +96,22 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"parameters.is_sphere" : [
+
+			"description",
+			"""
+			Treat the light as a sphere. Disable to avoid
+			sharp boundaries when the light intersects with
+			other geometry.
+
+			> Tip: Disabling this is equivalent to
+			> enabling "Soft Falloff" in Blender and
+			> matches the behaviour of Cycles 3.6 and
+			> earlier.
+			""",
+
+		],
+
 	}
 
 )
