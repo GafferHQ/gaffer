@@ -105,7 +105,7 @@ struct RenderState
 //////////////////////////////////////////////////////////////////////////
 
 
-bool getAttributeInternal( OSL::ShaderGlobals *sg, bool derivatives, ustring object, TypeDesc type, ustring name, std::optional<int> index, void *value )
+bool getAttributeInternal( OSL::ShaderGlobals *sg, bool derivatives, ustringhash object, TypeDesc type, ustringhash name, std::optional<int> index, void *value )
 {
 	const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
 	if( !renderState )
@@ -184,29 +184,29 @@ class RendererServices : public OSL::RendererServices
 			return false;
 		}
 
-		bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustring from, float time ) override
+		bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustringhash from, float time ) override
 		{
 			return false;
 		}
 
-		bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustring from ) override
+		bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustringhash from ) override
 		{
 			return false;
 		}
 
-		bool get_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustring object, TypeDesc type, ustring name, void *value ) override
+		bool get_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustringhash object, TypeDesc type, ustringhash name, void *value ) override
 		{
 			return getAttributeInternal( sg, derivatives, object, type, name, std::nullopt, value );
 		}
 
-		bool get_array_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustring object, TypeDesc type, ustring name, int index, void *value ) override
+		bool get_array_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustringhash object, TypeDesc type, ustringhash name, int index, void *value ) override
 		{
 			return getAttributeInternal( sg, derivatives, object, type, name, index, value );
 		}
 
 		// OSL tries to populate shader parameter values per-object by calling this method.
 		// So we implement it to search for an appropriate input plug and get its value.
-		bool get_userdata( bool derivatives, ustring name, TypeDesc type, OSL::ShaderGlobals *sg, void *value ) override
+		bool get_userdata( bool derivatives, ustringhash name, TypeDesc type, OSL::ShaderGlobals *sg, void *value ) override
 		{
 			RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
 			if( !renderState )
@@ -691,7 +691,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 
 		static void findPlugPaths( const string &expression, vector<string> &inPaths, vector<string> &outPaths )
 		{
-			set<string> visited;
+			std::set<string> visited;
 			const regex plugPathRegex( "(parent\\.[A-Za-z_0-9\\.]+)[ \t]*(=*)" );
 			for( sregex_iterator it = make_regex_iterator( expression, plugPathRegex ); it != sregex_iterator(); ++it )
 			{

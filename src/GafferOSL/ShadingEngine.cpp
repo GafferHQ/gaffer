@@ -286,8 +286,9 @@ bool convertValue( void *dst, TypeDesc dstType, const void *src, TypeDesc srcTyp
 namespace
 {
 
-OIIO::ustring gIndex( "shading:index" );
+ustringhash g_index( "shading:index" );
 ustring g_contextVariableAttributeScope( "gaffer:context" );
+ustringhash g_contextVariableAttributeScopeHash( g_contextVariableAttributeScope );
 
 #if OSL_USE_BATCHED
 template< int WidthT >
@@ -334,13 +335,13 @@ class RenderState
 						// convertValue() in get_userdata().
 						userData.dataView.type.unarray();
 					}
-					m_userData.insert( make_pair( ustring( it->first.c_str() ), userData ) );
+					m_userData.insert( make_pair( ustringhash( it->first.c_str() ), userData ) );
 				}
 			}
 
 			for( ShadingEngine::Transforms::const_iterator it = transforms.begin(); it != transforms.end(); it++ )
 			{
-				m_transforms[ OIIO::ustring( it->first.string() ) ] = it->second;
+				m_transforms[ OIIO::ustringhash( it->first.string() ) ] = it->second;
 			}
 
 			for( const auto &name : contextVariablesNeeded )
@@ -358,7 +359,7 @@ class RenderState
 			}
 		}
 
-		bool contextVariable( ustring name, TypeDesc type, void *value ) const
+		bool contextVariable( ustringhash name, TypeDesc type, void *value ) const
 		{
 			auto it = m_contextVariables.find( name );
 			if( it == m_contextVariables.end() )
@@ -369,9 +370,9 @@ class RenderState
 			return ShadingSystem::convert_value( value, type, it->second.dataView.data, it->second.dataView.type );
 		}
 
-		bool userData( size_t pointIndex, ustring name, TypeDesc type, void *value ) const
+		bool userData( size_t pointIndex, ustringhash name, TypeDesc type, void *value ) const
 		{
-			if( name == gIndex )
+			if( name == g_index )
 			{
 				// if a 4 byte type has been requested then ensure we fit and cast to narrower type
 				// this way f32 reads of shading:index will succeed.
@@ -401,9 +402,9 @@ class RenderState
 
 #if OSL_USE_BATCHED
 		template< int WidthT >
-		Mask<WidthT> userDataWide( size_t pointIndex, ustring name, MaskedData<WidthT> &wval ) const
+		Mask<WidthT> userDataWide( size_t pointIndex, ustringhash name, MaskedData<WidthT> &wval ) const
 		{
-			if( name == gIndex )
+			if( name == g_index )
 			{
 				if( wval.type() == OIIO::TypeDesc( OIIO::TypeDesc::INT32 ) )
 				{
@@ -423,7 +424,7 @@ class RenderState
 				}
 				else
 				{
-					throw IECore::Exception( gIndex.string() + " must be accessed as float or int. " + wval.type().c_str() + " not supported." );
+					throw IECore::Exception( g_index.string() + " must be accessed as float or int. " + wval.type().c_str() + " not supported." );
 				}
 
 				return wval.mask();
@@ -480,7 +481,7 @@ class RenderState
 		}
 #endif
 
-		bool matrixToObject( OIIO::ustring name, Imath::M44f &result ) const
+		bool matrixToObject( OIIO::ustringhash name, Imath::M44f &result ) const
 		{
 			RenderStateTransforms::const_iterator i = m_transforms.find( name );
 			if( i != m_transforms.end() )
@@ -491,7 +492,7 @@ class RenderState
 			return false;
 		}
 
-		bool matrixFromObject( OIIO::ustring name, Imath::M44f &result ) const
+		bool matrixFromObject( OIIO::ustringhash name, Imath::M44f &result ) const
 		{
 			RenderStateTransforms::const_iterator i = m_transforms.find( name );
 			if( i != m_transforms.end() )
@@ -504,7 +505,7 @@ class RenderState
 
 	private :
 
-		using RenderStateTransforms = boost::unordered_map< OIIO::ustring, ShadingEngine::Transform, OIIO::ustringHash>;
+		using RenderStateTransforms = boost::unordered_map< OIIO::ustringhash, ShadingEngine::Transform, std::hash<ustringhash> >;
 		RenderStateTransforms m_transforms;
 
 		struct UserData
@@ -519,8 +520,8 @@ class RenderState
 			ConstDataPtr dataStorage;
 		};
 
-		container::flat_map<ustring, UserData, OIIO::ustringPtrIsLess> m_userData;
-		container::flat_map<ustring, ContextData, OIIO::ustringPtrIsLess> m_contextVariables;
+		container::flat_map<ustringhash, UserData> m_userData;
+		container::flat_map<ustringhash, ContextData> m_contextVariables;
 
 };
 
@@ -608,7 +609,7 @@ class GafferBatchedRendererServices : public OSL::BatchedRendererServices<WidthT
 			return false;
 		}
 
-		Mask get_matrix( BatchedShaderGlobals *sg, Masked<OSL::Matrix44> result, ustring from, Wide<const float> time ) override
+		Mask get_matrix( BatchedShaderGlobals *sg, Masked<OSL::Matrix44> result, ustringhash from, Wide<const float> time ) override
 		{
 			const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->uniform.renderstate ) : nullptr;
 			if( threadRenderState )
@@ -624,7 +625,7 @@ class GafferBatchedRendererServices : public OSL::BatchedRendererServices<WidthT
 			return Mask( false );
 		}
 
-		Mask get_inverse_matrix( BatchedShaderGlobals *sg, Masked<OSL::Matrix44> result, ustring to, Wide<const float> time ) override
+		Mask get_inverse_matrix( BatchedShaderGlobals *sg, Masked<OSL::Matrix44> result, ustringhash to, Wide<const float> time ) override
 		{
 			const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->uniform.renderstate ) : nullptr;
 			if( threadRenderState )
@@ -640,7 +641,7 @@ class GafferBatchedRendererServices : public OSL::BatchedRendererServices<WidthT
 			return Mask( false );
 		}
 
-		Mask get_attribute( BatchedShaderGlobals *sg, ustring object, ustring name, MaskedData wval ) override
+		Mask get_attribute( BatchedShaderGlobals *sg, ustringhash object, ustringhash name, MaskedData wval ) override
 		{
 			const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->uniform.renderstate ) : nullptr;
 			if( !threadRenderState )
@@ -648,7 +649,7 @@ class GafferBatchedRendererServices : public OSL::BatchedRendererServices<WidthT
 				return Mask( false );
 			}
 
-			if( object == g_contextVariableAttributeScope )
+			if( object == g_contextVariableAttributeScopeHash )
 			{
 				int neededSize = wval.type().size();
 				const int maximumAttributeSize = 4096;
@@ -675,7 +676,7 @@ class GafferBatchedRendererServices : public OSL::BatchedRendererServices<WidthT
 			return get_userdata( name, sg, wval );
 		}
 
-		Mask get_userdata( ustring name, BatchedShaderGlobals *sg, MaskedData wval ) override
+		Mask get_userdata( ustringhash name, BatchedShaderGlobals *sg, MaskedData wval ) override
 		{
 			const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->uniform.renderstate ) : nullptr;
 			if( !threadRenderState )
@@ -712,7 +713,7 @@ class RendererServices : public OSL::RendererServices
 			return false;
 		}
 
-		bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustring from, float time ) override
+		bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustringhash from, float time ) override
 		{
 			const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->renderstate ) : nullptr;
 			if( threadRenderState )
@@ -723,7 +724,7 @@ class RendererServices : public OSL::RendererServices
 			return false;
 		}
 
-		bool get_inverse_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustring to, float time ) override
+		bool get_inverse_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustringhash to, float time ) override
 		{
 			const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->renderstate ) : nullptr;
 			if( threadRenderState )
@@ -734,12 +735,12 @@ class RendererServices : public OSL::RendererServices
 			return false;
 		}
 
-		bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustring from ) override
+		bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustringhash from ) override
 		{
 			return false;
 		}
 
-		bool get_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustring object, TypeDesc type, ustring name, void *value ) override
+		bool get_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustringhash object, TypeDesc type, ustringhash name, void *value ) override
 		{
 			const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->renderstate ) : nullptr;
 			if( !threadRenderState )
@@ -747,7 +748,7 @@ class RendererServices : public OSL::RendererServices
 				return false;
 			}
 
-			if( object == g_contextVariableAttributeScope )
+			if( object == g_contextVariableAttributeScopeHash )
 			{
 				if( derivatives )
 				{
@@ -762,12 +763,12 @@ class RendererServices : public OSL::RendererServices
 			return get_userdata( derivatives, name, type, sg, value );
 		}
 
-		bool get_array_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustring object, TypeDesc type, ustring name, int index, void *value ) override
+		bool get_array_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustringhash object, TypeDesc type, ustringhash name, int index, void *value ) override
 		{
 			return false;
 		}
 
-		bool get_userdata( bool derivatives, ustring name, TypeDesc type, OSL::ShaderGlobals *sg, void *value ) override
+		bool get_userdata( bool derivatives, ustringhash name, TypeDesc type, OSL::ShaderGlobals *sg, void *value ) override
 		{
 			const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->renderstate ) : nullptr;
 			if( !threadRenderState )
@@ -828,16 +829,6 @@ struct DebugParameters
 	Color3f value;
 	M44f matrixValue;
 	ustring stringValue;
-
-	static void prepare( OSL::RendererServices *rendererServices, int id, void *data )
-	{
-		DebugParameters *debugParameters = static_cast<DebugParameters *>( data );
-		debugParameters->name = ustring();
-		debugParameters->type = ustring();
-		debugParameters->value = Color3f( 1.0f );
-		debugParameters->matrixValue = M44f();
-		debugParameters->stringValue = ustring();
-	}
 
 };
 
@@ -900,7 +891,7 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 		/* name */ "debug",
 		/* id */ DebugClosureId,
 		/* params */ debugParams,
-		/* prepare */ DebugParameters::prepare,
+		/* prepare */ nullptr,
 		/* setup */ nullptr
 	);
 
@@ -908,7 +899,7 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 		/* name */ "deformation",
 		/* id */ DeformationClosureId,
 		/* params */ debugParams,
-		/* prepare */ DebugParameters::prepare,
+		/* prepare */ nullptr,
 		/* setup */ nullptr
 	);
 

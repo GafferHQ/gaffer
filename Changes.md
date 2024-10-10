@@ -15,6 +15,7 @@ Features
   - Added a menu item to the color chooser settings to save the UI configuration for the inline color chooser and the dialogue color chooser as a startup script to persist the configuration across Gaffer restarts.
 - MeshToLevelSet : Added `destination` plug, allowing multiple input meshes to be merged into a single level set at an arbitrary location.
 - LevelSetToMesh : Added `destination` plug, allowing multiple input level sets to be merged into a single mesh at an arbitrary location.
+- Cycles : Added support for OSL shading with Optix devices.
 
 Improvements
 ------------
@@ -31,6 +32,7 @@ Fixes
 
 - Viewer : Fixed hangs when focussing a node for the first time (bug introduced in 1.5.0.0a2). [^1]
 - Cycles : Fixed issue where scaling unnormalized quad and disk lights would not affect their brightness.
+- SceneReader : Fixed crash reading facevarying normals skinned with UsdSkel. [^1]
 - ShaderView : Fixed crash caused by a SceneCreator returning `None`. [^1]
 
 Breaking Changes
@@ -42,6 +44,14 @@ Breaking Changes
   - Objects which are not level sets are now converted to an empty mesh, instead of being left unchanged.
   - Removed the `adjustBounds` plug. In the rare case where it is important to recompute slightly tighter bounds, one workaround is to use ShufflePrimitiveVariables to shuffle from "P" to "P" with `adjustBounds` checked.
   - Removed support for grid types other than `FloatGrid`. If other types are required, please request them.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.9.5.
+- OpenShadingLanguage :
+  - Updated to version 1.13.11.0.
+  - Enabled Optix support.
 
 1.5.0.0a2 (relative to 1.5.0.0a1)
 =========

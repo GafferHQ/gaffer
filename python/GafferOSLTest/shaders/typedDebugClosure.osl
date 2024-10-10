@@ -36,14 +36,14 @@
 
 surface typedDebugClosure()
 {
-	Ci = u * debug( "f", "type", "float" ) +
-	     color( P ) * debug( "p", "type", "point" ) +
-	     color( P ) * debug( "v", "type", "vector" ) +
-	     color( P ) * debug( "n", "type", "normal" ) +
-	     color( P ) * debug( "c", "type", "color" ) +
-	     color( P ) * debug( "p2", "type", "point2" ) +
-	     color( P ) * debug( "v2", "type", "vector2" ) +
-	     color( P ) * debug( "n2", "type", "normal2" ) +
-	     color( P ) * debug( "uv", "type", "uv" )
+	Ci = u * debug( "f", "type", "float", "value", color( 1 ) ) +
+	     color( P ) * debug( "p", "type", "point", "value", color( 1 ) ) +
+	     color( P ) * debug( "v", "type", "vector", "value", color( 1 ) ) +
+	     color( P ) * debug( "n", "type", "normal", "value", color( 1 ) ) +
+	     color( P ) * debug( "c", "type", "color", "value", color( 1 ) ) +
+	     color( P ) * debug( "p2", "type", "point2", "value", color( 1 ) ) +
+	     color( P ) * debug( "v2", "type", "vector2", "value", color( 1 ) ) +
+	     color( P ) * debug( "n2", "type", "normal2", "value", color( 1 ) ) +
+	     color( P ) * debug( "uv", "type", "uv", "value", color( 1 ) )
 	;
 }
