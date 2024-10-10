@@ -23,6 +23,7 @@ Improvements
   - Added `is_sphere` plug to spot and point lights. Disabling `is_sphere` is equivalent to enabling "Soft Falloff" in Blender, which reverts the light to the behaviour of Cycles 3.6 and earlier.
   - Changed sampling pattern to blue noise dithered sampling.
   - Spot, disk, quad and point light strength now better match Blender, Arnold and hdCycles. As a result these lights are now `pi` times brighter at the same intensity when compared with previous versions. If necessary, this adjustment can be disabled by setting the `GAFFERCYCLES_USE_LEGACY_LIGHTS` environment variable with a value of `1`.
+  - Simplified presentation of `principled_bsdf`, `principled_hair_bsdf`, and `principled_volume` shaders in the Graph Editor. A subset of parameter nodules are now visible by default, the remainder can be accessed by clicking on or connecting to the node's `+` icon and choosing the parameter to make visible.
 - Arnold : Added support for Int64Data and UInt64Data custom attributes, allowing USD's `instanceId` to be used as a custom attribute in the Instancer node. Warnings are emitted if values are out of range for Arnold's 32 bit ints. [^1]
 
 Fixes
