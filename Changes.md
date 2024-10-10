@@ -252,8 +252,13 @@ Build
 - Zstandard : Added version 1.5.0.
 - Windows : Update compiler to Visual Studio 2022 / MSVC 17.8 / Runtime library 14.3.
 
-1.4.x.x (relative to 1.4.14.0)
+1.4.x.x (relative to 1.4.15.0)
 =======
+
+
+
+1.4.15.0 (relative to 1.4.14.0)
+========
 
 Improvements
 ------------
@@ -263,7 +268,13 @@ Improvements
 Fixes
 -----
 
+- SceneReader : Fixed crash reading facevarying normals skinned with UsdSkel.
 - ShaderView : Fixed crash caused by a SceneCreator returning `None`.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.9.5.
 
 1.4.14.0 (relative to 1.4.13.0)
 ========
