@@ -548,22 +548,19 @@ void View::DisplayTransform::preRender()
 	{
 		m_shader = nullptr;
 		const std::string name = namePlug()->getValue();
-		if( !name.empty() )
+		auto it = displayTransformCreators().find( name );
+		if( it != displayTransformCreators().end() )
 		{
-			auto it = displayTransformCreators().find( name );
-			if( it != displayTransformCreators().end() )
-			{
-				Context::Scope scope( view()->context() );
-				m_shader = it->second();
-				m_shaderContextHash = hashWithoutFrame( view()->context() );
-			}
-			else
-			{
-				IECore::msg(
-					IECore::Msg::Warning, "View::DisplayTransform",
-					fmt::format( "Transform \"{}\" not registered", name )
-				);
-			}
+			Context::Scope scope( view()->context() );
+			m_shader = it->second();
+			m_shaderContextHash = hashWithoutFrame( view()->context() );
+		}
+		else
+		{
+			IECore::msg(
+				IECore::Msg::Warning, "View::DisplayTransform",
+				fmt::format( "Transform \"{}\" not registered", name )
+			);
 		}
 
 		view()->viewportGadget()->setPostProcessShader( Gadget::Layer::Main, m_shader );
