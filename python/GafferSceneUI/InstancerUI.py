@@ -284,6 +284,7 @@ Gaffer.Metadata.registerNode(
 
 	"layout:section:Settings.General:collapsed", False,
 	"layout:section:Settings.Transforms:collapsed", False,
+	"layout:section:Settings.Inactive Ids:collapsed", False,
 	"layout:section:Settings.Attributes:collapsed", False,
 
 	"layout:activator:modeIsIndexedRootsList", lambda node : node["prototypeMode"].getValue() == GafferScene.Instancer.PrototypeMode.IndexedRootsList,
@@ -546,6 +547,18 @@ Gaffer.Metadata.registerNode(
 
 			"userDefault", "scale",
 			"layout:section", "Settings.Transforms",
+
+		],
+
+		"inactiveIds" : [
+
+			"description",
+			"""
+			A space separated list of names of a constant primitive variables with lists
+			of ids to make inactive. Inactive instances are not output from the instancer or rendered.
+			""",
+
+			"layout:section", "Settings.Inactive Ids",
 
 		],
 
