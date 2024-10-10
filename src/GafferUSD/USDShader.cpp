@@ -59,6 +59,7 @@
 #include "pxr/usd/usdLux/nonboundableLightBase.h"
 
 #include "boost/algorithm/string/predicate.hpp"
+#include "boost/container/flat_map.hpp"
 
 #include "fmt/format.h"
 
@@ -319,6 +320,61 @@ Plug *loadPrimDefinitionAttribute( const UsdPrimDefinition::Attribute &attribute
 
 const IECore::InternedString g_surface( "surface" );
 const IECore::InternedString g_displacement( "displacement" );
+const IECore::InternedString g_volume( "volume" );
+
+using ShaderRemap = boost::container::flat_map<IECore::InternedString, IECore::InternedString>;
+
+ShaderRemap &shaderNameSpace()
+{
+	static ShaderRemap g_shaderNameSpace;
+	return g_shaderNameSpace;
+}
+
+const std::string remapShaderType( const TfToken sourceType, const TfToken context )
+{
+	const IECore::InternedString stype( sourceType.GetString() );
+	const IECore::InternedString ctx( context.GetString() );
+	std::string nameSpace = stype.string();
+	std::string outputType = g_surface.string();
+
+	const ShaderRemap &shaderNS = shaderNameSpace();
+	ShaderRemap::const_iterator it = shaderNS.find( stype );
+	if( it != shaderNS.end() )
+	{
+		nameSpace = it->second.string();
+	}
+
+	if( ctx == g_displacement )
+	{
+		outputType = g_displacement.string();
+	}
+	else if( ctx == g_volume )
+	{
+		outputType = g_volume.string();
+	}
+
+	if( nameSpace.empty() )
+	{
+		return outputType;
+	}
+
+	return nameSpace + ":" + outputType;
+}
+
+// Ideally this one should translate to `gl` however USDPreviewSurface and friends
+// have their sourceType set to `glslfx` so we leave these without a namespace.
+const bool g_glslfxShaderNameSpaceRegistration = USDShader::registerShaderNameSpace( "glslfx", "" );
+// Prman tends to register their built-in OSL shaders as `OSL` sourceType, which might
+// need to be re-looked at if we don't want Prman built-in shaders to be used in
+// other OSL-compatible renderers or in other GafferOSL functionality.
+const bool g_oslShaderNameSpaceRegistration = USDShader::registerShaderNameSpace( "OSL", "osl" );
+
+// TODO: Put these registers into their respective plugins maybe?
+
+// We shouldn't use Arnold shaders as USD shaders anyways as they're already available in Gaffer from Arnold itself.
+const bool g_arnoldShaderNameSpaceRegistration = USDShader::registerShaderNameSpace( "arnold", "ai" );
+const bool g_prmanShaderNameSpaceRegistration = USDShader::registerShaderNameSpace( "RmanCpp", "ri" );
+
 
 } // namespace
 
@@ -386,7 +442,14 @@ void USDShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	// Set name and type and delete old parameters if necessary.
 
 	namePlug()->setValue( shaderName );
-	typePlug()->setValue( "surface" );
+	if( shader )
+	{
+		typePlug()->setValue( remapShaderType( shader->GetSourceType(), shader->GetContext() ) );
+	}
+	else
+	{
+		typePlug()->setValue( "surface" );
+	}
 
 	Plug *parametersPlug = this->parametersPlug()->source();
 	Plug *outPlug = this->outPlug();
@@ -473,4 +536,10 @@ IECore::ConstCompoundObjectPtr USDShader::attributes( const Gaffer::Plug *output
 		}
 	}
 	return result;
+}
+
+bool USDShader::registerShaderNameSpace( const IECore::InternedString sourceType, const IECore::InternedString nameSpace )
+{
+	ShaderRemap &shaderNS = shaderNameSpace();
+	return shaderNS.insert( { sourceType, nameSpace } ).second;
 }

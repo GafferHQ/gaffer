@@ -5,6 +5,10 @@ Improvements
 ------------
 
 - Arnold : Added support for Int64Data and UInt64Data custom attributes, allowing USD's `instanceId` to be used as a custom attribute in the Instancer node. Warnings are emitted if values are out of range for Arnold's 32 bit ints.
+- USDShader :
+  - A namespace prefix is now set for the shader type from the USD source type, except for `USD` and `glslfx` built-ins which correspond to USDLux lights and USDPreviewSurface built-ins
+  - Added a way to register namespace overrides from USD shader source types if the resulting USD source type is undesirable
+  - The correct shader assignment for displacement and volume shaders are now set for shaders which have a context of `displacement` or `volume` set
 
 Fixes
 -----

@@ -56,6 +56,10 @@ class GAFFERUSD_API USDShader : public GafferScene::Shader
 
 		void loadShader( const std::string &shaderName, bool keepExistingValues = false ) override;
 
+		/// Set a namespace remap based on the sourceType of the registered USD shader
+		/// eg. `USD` remaps to no namespace or `arnold` into `ai`.
+		static bool registerShaderNameSpace( const IECore::InternedString sourceType, const IECore::InternedString nameSpace );
+
 	protected :
 
 		IECore::ConstCompoundObjectPtr attributes( const Gaffer::Plug *output ) const override;

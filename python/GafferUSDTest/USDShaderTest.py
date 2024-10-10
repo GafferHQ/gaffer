@@ -258,5 +258,59 @@ class USDShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( shaderAssignment["out"].attributes( "/sphere" ).keys(), [ "displacement" ] )
 		self.assertIsInstance( shaderAssignment["out"].attributes( "/sphere" )["displacement"], IECoreScene.ShaderNetwork )
 
+	def testMtlxSurfaceAssignment( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		shader = GafferUSD.USDShader()
+		shader.loadShader( "ND_surface" )
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		shaderAssignment = GafferScene.ShaderAssignment()
+		shaderAssignment["in"].setInput( sphere["out"] )
+		shaderAssignment["filter"].setInput( sphereFilter["out"] )
+		shaderAssignment["shader"].setInput( shader["out"]["out"] )
+
+		self.assertEqual( shaderAssignment["out"].attributes( "/sphere" ).keys(), [ "mtlx:surface" ] )
+		self.assertIsInstance( shaderAssignment["out"].attributes( "/sphere" )["mtlx:surface"], IECoreScene.ShaderNetwork )
+
+	def testMtlxDisplacementAssignment( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		shader = GafferUSD.USDShader()
+		shader.loadShader( "ND_displacement_float" )
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		shaderAssignment = GafferScene.ShaderAssignment()
+		shaderAssignment["in"].setInput( sphere["out"] )
+		shaderAssignment["filter"].setInput( sphereFilter["out"] )
+		shaderAssignment["shader"].setInput( shader["out"]["out"] )
+
+		self.assertEqual( shaderAssignment["out"].attributes( "/sphere" ).keys(), [ "mtlx:displacement" ] )
+		self.assertIsInstance( shaderAssignment["out"].attributes( "/sphere" )["mtlx:displacement"], IECoreScene.ShaderNetwork )
+
+	def testMtlxVolumeAssignment( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		shader = GafferUSD.USDShader()
+		shader.loadShader( "ND_volume" )
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		shaderAssignment = GafferScene.ShaderAssignment()
+		shaderAssignment["in"].setInput( sphere["out"] )
+		shaderAssignment["filter"].setInput( sphereFilter["out"] )
+		shaderAssignment["shader"].setInput( shader["out"]["out"] )
+
+		self.assertEqual( shaderAssignment["out"].attributes( "/sphere" ).keys(), [ "mtlx:volume" ] )
+		self.assertIsInstance( shaderAssignment["out"].attributes( "/sphere" )["mtlx:volume"], IECoreScene.ShaderNetwork )
+
 if __name__ == "__main__":
 	unittest.main()
