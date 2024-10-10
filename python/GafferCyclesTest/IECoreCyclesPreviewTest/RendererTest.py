@@ -2380,7 +2380,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testDevices( self ) :
 
 		typeIndices = {}
-		for device in GafferCycles.devices :
+		for device in GafferCycles.devices.values() :
 
 			deviceType = device["type"]
 			typeIndex = typeIndices.setdefault( deviceType, 0 )
@@ -2396,13 +2396,13 @@ class RendererTest( GafferTest.TestCase ) :
 				# Ideally we want clients to emit all options before doing anything else,
 				# to simplify our internal session management. But certain important clients
 				# (SceneGadget, RenderController, I'm looking at you) like to create a camera
-				# first, and we need to accomodate them while preserving the ability to specify
+				# first, and we need to accommodate them while preserving the ability to specify
 				# `cycles:device` afterwards.
 				renderer.camera( "camera", IECoreScene.Camera() )
 
 				renderer.option( "cycles:shadingsystem", IECore.StringData( "SVM" ) )
 				renderer.option( "cycles:device", IECore.StringData( f"{deviceType}:{typeIndex:02d}" ) )
-				self.assertEqual( renderer.command( "cycles:querySession", {} )["device"].value, device["id"] )
+				self.assertEqual( renderer.command( "cycles:querySession", {} )["device"], device["id"] )
 
 	def testExposureEdit( self ) :
 

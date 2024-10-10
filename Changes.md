@@ -40,10 +40,19 @@ Fixes
 - SceneReader : Fixed crash reading facevarying normals skinned with UsdSkel. [^1]
 - ShaderView : Fixed crash caused by a SceneCreator returning `None`. [^1]
 
+API
+---
+
+- GafferCycles :
+  - Refactored bindings so they are no longer dependent on linking to Cycles.
+  - The `devices`, `nodes`, `shaders`, `lights`, and `passes` Python attributes now contain IECore.CompoundData instead of Python dictionaries.
+  - Added `majorVersion`, `minorVersion`, `patchVersion`, and `version` Python attributes containing the Cycles version.
+
 Breaking Changes
 ----------------
 
 - Cycles : Removed custom handling of unnormalized lights. We now rely on Cycles' inbuilt behaviour which results in a brightness difference for unnormalized point, spot and disk lights.
+- GafferCycles : The `devices`, `nodes`, `shaders`, `lights`, and `passes` Python attributes now contain IECore.CompoundData instead of Python dictionaries.
 - MeshToLevelSet : Objects which are not meshes are now converted to an empty VDB grid, instead of being left unchanged.
 - LevelSetToMesh :
   - Objects which are not level sets are now converted to an empty mesh, instead of being left unchanged.
