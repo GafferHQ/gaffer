@@ -99,6 +99,12 @@ const ScriptNode *scriptNode( const GraphComponent *subject )
 	{
 		if( subject->isInstanceOf( "GafferUI::View" ) || subject->isInstanceOf( "GafferUI::Editor::Settings" ) )
 		{
+			if( !subject->refCount() )
+			{
+				// View or Settings still in construction, and therefore can't
+				// be accessed by any background tasks. No need to cancel anything.
+				return nullptr;
+			}
 			if( auto scriptPlug = subject->getChild<Plug>( "__scriptNode" ) )
 			{
 				return scriptNode( scriptPlug->getInput() );
