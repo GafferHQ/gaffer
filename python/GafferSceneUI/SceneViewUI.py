@@ -801,6 +801,64 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 				}
 			)
 
+		# BHGC START
+
+		m.append( "/GuidesDivider", { "divider" : True } )
+
+		titleSafeEnabled = self.getPlug()["titleSafeEnabled"].getValue()
+		actionSafeEnabled = self.getPlug()["actionSafeEnabled"].getValue()
+		customGridEnabled = self.getPlug()["customGridEnabled"].getValue()
+
+		# possible way to iterate over all guides instead of doing them one by one:
+
+		# cameraGuides = self.getPlug()["guidesEnabled"].getValue()
+
+		# allGuides = [ "Title Safe", "Action Safe", "Rule of Thirds" ]
+		# for guide in allGuides :
+		# 	newGuides = IECore.StringVectorData( [
+		# 		g for g in allGuides
+		# 		if
+		# 		( g == guide )
+		# 	] )
+		# 	m.append(
+		# 		"/Guides/{}".format( guide ),
+		# 		{
+		# 			"checkBox" : cameraGuidesEnabled,
+		# 			#"active" : cameraGuidesEnabled,
+		# 			#"command" : functools.partial( self.getPlug()["cameraGuides"]["value"].setValue, newGuides ),
+		# 			"command" : functools.partial( Gaffer.WeakMethod( self.__enableGuides ), "" )
+		# 		}
+		# 	)
+
+		# doing them one by one for now (not sure if the "active" thing is needed):
+
+		m.append(
+				"/Guides/Action Safe",
+				{
+					"checkBox" : actionSafeEnabled,
+					# "active" : actionSafeEnabled,
+					"command" : functools.partial( Gaffer.WeakMethod( self.__enableActionSafe ), "" )
+				}
+			)
+		m.append(
+				"/Guides/Title Safe",
+				{
+					"checkBox" : titleSafeEnabled,
+					# "active" : titleSafeEnabled,
+					"command" : functools.partial( Gaffer.WeakMethod( self.__enableTitleSafe ), "" )
+				}
+			)
+		m.append(
+				"/Guides/Rule of Thirds",
+				{
+					"checkBox" : customGridEnabled,
+					# "active" : customGridEnabled,
+					"command" : functools.partial( Gaffer.WeakMethod( self.__enableCustomGrid ), "" )
+				}
+			)
+
+		# BHGC END
+
 		m.append( "/BrowseDivider", { "divider" : True } )
 
 		m.append(
@@ -835,6 +893,34 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.getPlug()["lookThroughEnabled"].setValue( True )
 		self.getPlug()["lookThroughCamera"].setValue( path )
+
+	# BHGC START
+
+	# separate functions for each guide, should probably combine these
+	# is there a better way to toggle than checking if off or on first?
+
+	def __enableTitleSafe( self, *unused ) :
+
+		if( self.getPlug()["titleSafeEnabled"].getValue() ) :
+			self.getPlug()["titleSafeEnabled"].setValue( False )
+		else :
+			self.getPlug()["titleSafeEnabled"].setValue( True )
+
+	def __enableActionSafe( self, *unused ) :
+
+		if( self.getPlug()["actionSafeEnabled"].getValue() ) :
+			self.getPlug()["actionSafeEnabled"].setValue( False )
+		else :
+			self.getPlug()["actionSafeEnabled"].setValue( True )
+
+	def __enableCustomGrid( self, *unused ) :
+
+		if( self.getPlug()["customGridEnabled"].getValue() ) :
+			self.getPlug()["customGridEnabled"].setValue( False )
+		else :
+			self.getPlug()["customGridEnabled"].setValue( True )
+
+	# BHGC END
 
 	def __browse( self ) :
 
