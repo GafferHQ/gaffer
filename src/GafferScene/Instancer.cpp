@@ -393,6 +393,7 @@ class Instancer::EngineData : public Data
 			const std::string &position,
 			const std::string &orientation,
 			const std::string &scale,
+			const std::string &inactiveIds,
 			const std::string &attributes,
 			const std::string &attributePrefix,
 			const std::vector< PrototypeContextVariable > &prototypeContextVariables
@@ -405,8 +406,7 @@ class Instancer::EngineData : public Data
 				m_orientations( nullptr ),
 				m_scales( nullptr ),
 				m_uniformScales( nullptr ),
-				m_prototypeContextVariables( prototypeContextVariables ),
-				m_hasDuplicates( false )
+				m_prototypeContextVariables( prototypeContextVariables )
 		{
 			if( !m_primitive )
 			{
@@ -464,16 +464,128 @@ class Instancer::EngineData : public Data
 					auto ins = m_idsToPointIndices.try_emplace( id, i );
 					if( !ins.second )
 					{
+						// We have multiple indices trying to use this id.
 						if( !omitDuplicateIds )
 						{
 							throw IECore::Exception( fmt::format( "Instance id \"{}\" is duplicated at index {} and {}. This probably indicates invalid source data, if you want to hack around it, you can set \"omitDuplicateIds\".", id, m_idsToPointIndices[id], i ) );
 						}
 
-						// Invalidate the existing entry in the m_idsToPointIndices map - since we can't assign
-						// a consistent point index to this id, we omit all point indices that try to use this
-						// id
-						ins.first->second = std::numeric_limits<size_t>::max();
-						m_hasDuplicates = true;
+						if( !m_indicesInactive.size() )
+						{
+							m_indicesInactive.resize( numPoints(), false );
+						}
+
+						// If we're omitting duplicate ids, then we need to omit both the current index, and
+						// the index that first tried to use this id.
+						m_indicesInactive[ i ] = true;
+						m_indicesInactive[ ins.first->second ] = true;
+					}
+				}
+			}
+
+			std::vector<std::string> inactiveIdVarNames;
+			IECore::StringAlgo::tokenize( inactiveIds, ' ', inactiveIdVarNames );
+			for( std::string &inactiveIdVarName : inactiveIdVarNames )
+			{
+				if( m_primitive->variables.find( inactiveIdVarName ) == m_primitive->variables.end() )
+				{
+					continue;
+				}
+
+				const PrimitiveVariable *vertexInactiveVar = findVertexVariable( m_primitive.get(), inactiveIdVarName );
+				if( vertexInactiveVar )
+				{
+					if( IECore::size( vertexInactiveVar->data.get() ) != numPoints() )
+					{
+						throw IECore::Exception( fmt::format( "Inactive primitive variable \"{}\" has incorrect size", inactiveIdVarName ) );
+					}
+
+					if( const auto *vertexInactiveData = IECore::runTimeCast<BoolVectorData>( vertexInactiveVar->data.get() ) )
+					{
+						const std::vector<bool> &vertexInactive = vertexInactiveData->readable();
+
+						if( !m_indicesInactive.size() )
+						{
+							// If we don't already have an inactive array set up, we can just directly copy the data
+							// from a vertex primitive variable. Technically, we might not even need to do this copy,
+							// if there aren't any other inactive vars we're merging with, we could just have a
+							// separate way of storing a const pointer for this case, but given that this data is
+							// 32X smaller than any of our other per-vertex data anyway, it's probably fine to pay
+							// the cost of copying it in exchange for slightly simpler code.
+							m_indicesInactive = vertexInactive;
+						}
+						else
+						{
+							for( size_t i = 0; i < vertexInactive.size(); i++ )
+							{
+								if( vertexInactive[i] )
+								{
+									m_indicesInactive[ i ] = true;
+								}
+							}
+						}
+					}
+					else if( const auto *vertexInactiveIntData = IECore::runTimeCast<IntVectorData>( vertexInactiveVar->data.get() ) )
+					{
+						const std::vector<int> &vertexInactiveInt = vertexInactiveIntData->readable();
+
+						if( !m_indicesInactive.size() )
+						{
+							m_indicesInactive.resize( numPoints(), false );
+						}
+
+						for( size_t i = 0; i < vertexInactiveInt.size(); i++ )
+						{
+							if( vertexInactiveInt[i] )
+							{
+								m_indicesInactive[ i ] = true;
+							}
+						}
+					}
+
+					continue;
+				}
+
+				IdData idData;
+				idData.initialize( m_primitive.get(), inactiveIdVarName );
+
+				size_t idSize = idData.size();
+				if( !idSize )
+				{
+					continue;
+				}
+
+				if( !m_indicesInactive.size() )
+				{
+					m_indicesInactive.resize( numPoints(), false );
+				}
+
+				if( m_idsToPointIndices.size() )
+				{
+					for( size_t i = 0; i < idSize; i++ )
+					{
+						auto it = m_idsToPointIndices.find( idData.element(i) );
+						if( it == m_idsToPointIndices.end() )
+						{
+							// I wish I could throw here ... it would be a really helpful clue to get an error
+							// if you've accidentally chosen a bad id. But ids might be changing over time, so
+							// we probably need to allow someone to deactivate an id even if it doesn't exist
+							// on all frames.
+							continue;
+						}
+						m_indicesInactive[ it->second ] = true;
+					}
+				}
+				else
+				{
+					for( size_t i = 0; i < idSize; i++ )
+					{
+						int64_t id = idData.element(i);
+						if( id < 0 || id >= (int64_t)m_indicesInactive.size() )
+						{
+							continue;
+						}
+						m_indicesInactive[ id ] = true;
 					}
 				}
 			}
@@ -543,14 +655,12 @@ class Instancer::EngineData : public Data
 				return -1;
 			}
 
-			if( m_hasDuplicates )
+			if( m_indicesInactive.size() )
 			{
-				// If there are duplicates in the id list, then some point indices will be omitted - we
-				// need to check each point index to see if it got assigned an id correctly
-
-				int64_t id = m_ids.element( pointIndex );
-
-				if( m_idsToPointIndices.at(id) != pointIndex )
+				// If this point is tagged as inactive ( could be due to a user specified inactiveIds,
+				// or due to an id collision when omitDuplicateIds is set ), then we return -1 for
+				// the prototype, which means to omit this point.
+				if( m_indicesInactive[pointIndex] )
 				{
 					return -1;
 				}
@@ -989,7 +1099,7 @@ class Instancer::EngineData : public Data
 
 		const std::vector< PrototypeContextVariable > m_prototypeContextVariables;
 
-		bool m_hasDuplicates;
+		std::vector<bool> m_indicesInactive;
 
 		friend Instancer::EngineSplitPrototypesData;
 };
@@ -1032,7 +1142,7 @@ class Instancer::EngineSplitPrototypesData : public Data
 				pointIndicesForPrototypeIndex[ constantPrototypeIndex ].reserve( m_engineData->numPoints() );
 			}
 
-			if( constantPrototypeIndex != -1 && !m_engineData->m_hasDuplicates )
+			if( constantPrototypeIndex != -1 && !m_engineData->m_indicesInactive.size() )
 			{
 				// If there's a single prototype, and no indices are being omitted because they are duplicates,
 				// then the list of point indices for the prototype is just an identity map of all integers
@@ -1260,6 +1370,7 @@ Instancer::Instancer( const std::string &name )
 	addChild( new StringPlug( "position", Plug::In, "P" ) );
 	addChild( new StringPlug( "orientation", Plug::In ) );
 	addChild( new StringPlug( "scale", Plug::In ) );
+	addChild( new StringPlug( "inactiveIds", Plug::In, "" ) );
 	addChild( new StringPlug( "attributes", Plug::In ) );
 	addChild( new StringPlug( "attributePrefix", Plug::In ) );
 	addChild( new BoolPlug( "encapsulate", Plug::In ) );
@@ -1401,154 +1512,164 @@ const Gaffer::StringPlug *Instancer::scalePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 10 );
 }
 
-Gaffer::StringPlug *Instancer::attributesPlug()
+Gaffer::StringPlug *Instancer::inactiveIdsPlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 11 );
+}
+
+const Gaffer::StringPlug *Instancer::inactiveIdsPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 11 );
+}
+
+Gaffer::StringPlug *Instancer::attributesPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 12 );
 }
 
 const Gaffer::StringPlug *Instancer::attributesPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 11 );
+	return getChild<StringPlug>( g_firstPlugIndex + 12 );
 }
 
 Gaffer::StringPlug *Instancer::attributePrefixPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 12 );
+	return getChild<StringPlug>( g_firstPlugIndex + 13 );
 }
 
 const Gaffer::StringPlug *Instancer::attributePrefixPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 12 );
+	return getChild<StringPlug>( g_firstPlugIndex + 13 );
 }
 
 Gaffer::BoolPlug *Instancer::encapsulatePlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 13 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 14 );
 }
 
 const Gaffer::BoolPlug *Instancer::encapsulatePlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 13 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 14 );
 }
 
 Gaffer::BoolPlug *Instancer::seedEnabledPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 14 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 15 );
 }
 
 const Gaffer::BoolPlug *Instancer::seedEnabledPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 14 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 15 );
 }
 
 Gaffer::StringPlug *Instancer::seedVariablePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 15 );
+	return getChild<StringPlug>( g_firstPlugIndex + 16 );
 }
 
 const Gaffer::StringPlug *Instancer::seedVariablePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 15 );
+	return getChild<StringPlug>( g_firstPlugIndex + 16 );
 }
 
 Gaffer::IntPlug *Instancer::seedsPlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 16 );
+	return getChild<IntPlug>( g_firstPlugIndex + 17 );
 }
 
 const Gaffer::IntPlug *Instancer::seedsPlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 16 );
+	return getChild<IntPlug>( g_firstPlugIndex + 17 );
 }
 
 Gaffer::IntPlug *Instancer::seedPermutationPlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 17 );
+	return getChild<IntPlug>( g_firstPlugIndex + 18 );
 }
 
 const Gaffer::IntPlug *Instancer::seedPermutationPlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 17 );
+	return getChild<IntPlug>( g_firstPlugIndex + 18 );
 }
 
 Gaffer::BoolPlug *Instancer::rawSeedPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 18 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 19 );
 }
 
 const Gaffer::BoolPlug *Instancer::rawSeedPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 18 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 19 );
 }
 
 Gaffer::ValuePlug *Instancer::contextVariablesPlug()
 {
-	return getChild<ValuePlug>( g_firstPlugIndex + 19 );
+	return getChild<ValuePlug>( g_firstPlugIndex + 20 );
 }
 
 const Gaffer::ValuePlug *Instancer::contextVariablesPlug() const
 {
-	return getChild<ValuePlug>( g_firstPlugIndex + 19 );
+	return getChild<ValuePlug>( g_firstPlugIndex + 20 );
 }
 
 GafferScene::Instancer::ContextVariablePlug *Instancer::timeOffsetPlug()
 {
-	return getChild<ContextVariablePlug>( g_firstPlugIndex + 20 );
+	return getChild<ContextVariablePlug>( g_firstPlugIndex + 21 );
 }
 
 const GafferScene::Instancer::ContextVariablePlug *Instancer::timeOffsetPlug() const
 {
-	return getChild<ContextVariablePlug>( g_firstPlugIndex + 20 );
+	return getChild<ContextVariablePlug>( g_firstPlugIndex + 21 );
 }
 
 Gaffer::AtomicCompoundDataPlug *Instancer::variationsPlug()
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 21 );
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 22 );
 }
 
 const Gaffer::AtomicCompoundDataPlug *Instancer::variationsPlug() const
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 21 );
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 22 );
 }
 
 Gaffer::ObjectPlug *Instancer::enginePlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 22 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 23 );
 }
 
 const Gaffer::ObjectPlug *Instancer::enginePlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 22 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 23 );
 }
 
 Gaffer::ObjectPlug *Instancer::engineSplitPrototypesPlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 23 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 24 );
 }
 
 const Gaffer::ObjectPlug *Instancer::engineSplitPrototypesPlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 23 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 24 );
 }
 
 GafferScene::ScenePlug *Instancer::capsuleScenePlug()
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 24 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 25 );
 }
 
 const GafferScene::ScenePlug *Instancer::capsuleScenePlug() const
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 24 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 25 );
 }
 
 Gaffer::PathMatcherDataPlug *Instancer::setCollaboratePlug()
 {
-	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 25 );
+	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 26 );
 }
 
 const Gaffer::PathMatcherDataPlug *Instancer::setCollaboratePlug() const
 {
-	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 25 );
+	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 26 );
 }
 
 void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
@@ -1568,6 +1689,7 @@ void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) co
 		input == positionPlug() ||
 		input == orientationPlug() ||
 		input == scalePlug() ||
+		input == inactiveIdsPlug() ||
 		input == attributesPlug() ||
 		input == attributePrefixPlug() ||
 		input == seedEnabledPlug() ||
@@ -1663,6 +1785,7 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 		positionPlug()->hash( h );
 		orientationPlug()->hash( h );
 		scalePlug()->hash( h );
+		inactiveIdsPlug()->hash( h );
 		attributesPlug()->hash( h );
 		attributePrefixPlug()->hash( h );
 		encapsulatePlug()->hash( h );
@@ -1890,6 +2013,7 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 				positionPlug()->getValue(),
 				orientationPlug()->getValue(),
 				scalePlug()->getValue(),
+				inactiveIdsPlug()->getValue(),
 				attributesPlug()->getValue(),
 				attributePrefixPlug()->getValue(),
 				prototypeContextVariables
