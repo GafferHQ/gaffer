@@ -47,4 +47,3 @@ __children["expr"]["__expression"].setValue( 'parent["__out"]["p0"] = 0' )
 
 
 del __children
-

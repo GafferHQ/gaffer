@@ -39,4 +39,3 @@ __children["CollectScenes"]["__uiPosition"].setValue( imath.V2f( 7.04915667, 3.8
 
 
 del __children
-

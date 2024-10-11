@@ -29,4 +29,3 @@ __children["OSLObject"]["__uiPosition"].setValue( imath.V2f( -5.3499999, -2.1500
 
 
 del __children
-

@@ -62,4 +62,3 @@ __children["LightTweaks2"]["__uiPosition"].setValue( imath.V2f( -0.399145961, -3
 
 
 del __children
-

@@ -48,4 +48,3 @@ __children["CheckerboardRight"]["__uiPosition"].setValue( imath.V2f( 8.04854202,
 
 
 del __children
-

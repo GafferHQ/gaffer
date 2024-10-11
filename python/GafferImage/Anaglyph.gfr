@@ -93,4 +93,3 @@ __children["Anaglyph"]["Dot1"]["__uiPosition"].setValue( imath.V2f( 13.4827852, 
 
 
 del __children
-

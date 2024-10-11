@@ -48,4 +48,3 @@ __children["Box"]["__uiPosition"].setValue( imath.V2f( -9.04999924, 2.25000024 )
 
 
 del __children
-
