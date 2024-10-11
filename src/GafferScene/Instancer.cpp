@@ -264,16 +264,71 @@ struct UniqueHashPrototypeContextVariable
 	}
 };
 
+InternedString g_prototypeRootName( "root" );
+ConstInternedStringVectorDataPtr g_emptyNames = new InternedStringVectorData();
+
+struct IdData
+{
+	IdData() :
+		intElements( nullptr ), int64Elements( nullptr )
+	{
+	}
+
+	void initialize( const Primitive *primitive, const std::string &name )
+	{
+		if( const IntVectorData *intData = primitive->variableData<IntVectorData>( name ) )
+		{
+			intElements = &intData->readable();
+		}
+		else if( const Int64VectorData *int64Data = primitive->variableData<Int64VectorData>( name ) )
+		{
+			int64Elements = &int64Data->readable();
+		}
+
+	}
+
+	size_t size() const
+	{
+		if( intElements )
+		{
+			return intElements->size();
+		}
+		else if( int64Elements )
+		{
+			return int64Elements->size();
+		}
+		else
+		{
+			return 0;
+		}
+	}
+
+	int64_t element( size_t i ) const
+	{
+		if( intElements )
+		{
+			return (*intElements)[i];
+		}
+		else
+		{
+			return (*int64Elements)[i];
+		}
+	}
+
+	const std::vector<int> *intElements;
+	const std::vector<int64_t> *int64Elements;
+
+};
+
 // We create a seed integer that corresponds to the id by hashing the id and then modulo'ing to
 // numSeeds, to create seeds in the range 0 .. numSeeds-1 that persistently correspond to the ids,
 // with a grouping pattern that can be changed with seedScramble
-int seedForPoint( int index, const PrimitiveVariable *primVar, int numSeeds, int seedScramble )
+int seedForPoint( size_t index, const IdData &idData, int numSeeds, int seedScramble )
 {
-	int id = index;
-	if( primVar )
+	int64_t id = index;
+	if( idData.size() )
 	{
-		// TODO - the exception this will throw on non-int primvars may not be very clear to users
-		id = PrimitiveVariable::IndexedView<int>( *primVar )[index];
+		id = idData.element( index );
 	}
 
 	// numSeeds is set to 0 when we're just passing through the id
@@ -293,15 +348,24 @@ int seedForPoint( int index, const PrimitiveVariable *primVar, int numSeeds, int
 
 		IECore::MurmurHash seedHash;
 		seedHash.append( seedScramble );
-		seedHash.append( id );
+
+		if( id <= INT32_MAX && id >= INT_MIN )
+		{
+			// This branch shouldn't be needed, we'd like to just treat ids as 64 bit now ...
+			// but if we just took the branch below, that would changing the seeding of existing
+			// scenes.
+			seedHash.append( (int)id );
+		}
+		else
+		{
+			seedHash.append( id );
+		}
+
 		id = int( ( double( seedHash.h1() ) / double( UINT64_MAX ) ) * double( numSeeds ) );
 		id = id % numSeeds;  // For the rare case h1 / max == 1.0, make sure we stay in range
 	}
 	return id;
 }
-
-InternedString g_prototypeRootName( "root" );
-ConstInternedStringVectorDataPtr g_emptyNames = new InternedStringVectorData();
 
 }
 
@@ -337,7 +401,6 @@ class Instancer::EngineData : public Data
 				m_numPrototypes( 0 ),
 				m_numValidPrototypes( 0 ),
 				m_prototypeIndices( nullptr ),
-				m_ids( nullptr ),
 				m_positions( nullptr ),
 				m_orientations( nullptr ),
 				m_scales( nullptr ),
@@ -352,13 +415,10 @@ class Instancer::EngineData : public Data
 
 			initPrototypes( mode, prototypeIndexName, rootsVariable, rootsList, prototypes );
 
-			if( const IntVectorData *ids = m_primitive->variableData<IntVectorData>( idName ) )
+			m_ids.initialize( m_primitive.get(), idName );
+			if( m_ids.size() && m_ids.size() != numPoints() )
 			{
-				m_ids = &ids->readable();
-				if( m_ids->size() != numPoints() )
-				{
-					throw IECore::Exception( fmt::format( "Id primitive variable \"{}\" has incorrect size", idName ) );
-				}
+				throw IECore::Exception( fmt::format( "Id primitive variable \"{}\" has incorrect size", idName ) );
 			}
 
 			if( const V3fVectorData *p = m_primitive->variableData<V3fVectorData>( position ) )
@@ -396,11 +456,11 @@ class Instancer::EngineData : public Data
 				}
 			}
 
-			if( m_ids )
+			if( m_ids.size() )
 			{
 				for( size_t i = 0, e = numPoints(); i < e; ++i )
 				{
-					int id = (*m_ids)[i];
+					int64_t id = m_ids.element(i);
 					auto ins = m_idsToPointIndices.try_emplace( id, i );
 					if( !ins.second )
 					{
@@ -441,16 +501,16 @@ class Instancer::EngineData : public Data
 			return m_primitive ? m_primitive->variableSize( PrimitiveVariable::Vertex ) : 0;
 		}
 
-		size_t instanceId( size_t pointIndex ) const
+		int64_t instanceId( size_t pointIndex ) const
 		{
-			return m_ids ? (*m_ids)[pointIndex] : pointIndex;
+			return m_ids.size() ? m_ids.element( pointIndex ) : pointIndex;
 		}
 
-		size_t pointIndex( size_t i ) const
+		size_t pointIndex( int64_t i ) const
 		{
-			if( !m_ids )
+			if( !m_ids.size() )
 			{
-				if( i >= numPoints() )
+				if( i >= (int64_t)numPoints() || i < 0 )
 				{
 					throw IECore::Exception( fmt::format( "Instance id \"{}\" is invalid, instancer produces only {} children. Topology may have changed during shutter.", i, numPoints() ) );
 				}
@@ -488,7 +548,7 @@ class Instancer::EngineData : public Data
 				// If there are duplicates in the id list, then some point indices will be omitted - we
 				// need to check each point index to see if it got assigned an id correctly
 
-				int id = (*m_ids)[pointIndex];
+				int64_t id = m_ids.element( pointIndex );
 
 				if( m_idsToPointIndices.at(id) != pointIndex )
 				{
@@ -632,7 +692,7 @@ class Instancer::EngineData : public Data
 
 				if( v.seedMode )
 				{
-					scope.setAllocated( v.name, seedForPoint( pointIndex, v.primVar, v.numSeeds, v.seedScramble ) );
+					scope.setAllocated( v.name, seedForPoint( pointIndex, m_ids, v.numSeeds, v.seedScramble ) );
 					continue;
 				}
 
@@ -660,7 +720,7 @@ class Instancer::EngineData : public Data
 		{
 			if( v.seedMode )
 			{
-				result.append( seedForPoint( pointIndex, v.primVar, v.numSeeds, v.seedScramble ) );
+				result.append( seedForPoint( pointIndex, m_ids, v.numSeeds, v.seedScramble ) );
 				return;
 			}
 
@@ -915,13 +975,13 @@ class Instancer::EngineData : public Data
 		std::vector<int> m_prototypeIndexRemap;
 		std::vector<int> m_prototypeIndicesAlloc;
 		const std::vector<int> *m_prototypeIndices;
-		const std::vector<int> *m_ids;
+		IdData m_ids;
 		const std::vector<Imath::V3f> *m_positions;
 		const std::vector<Imath::Quatf> *m_orientations;
 		const std::vector<Imath::V3f> *m_scales;
 		const std::vector<float> *m_uniformScales;
 
-		using IdsToPointIndices = std::unordered_map <int, size_t>;
+		using IdsToPointIndices = std::unordered_map <int64_t, size_t>;
 		IdsToPointIndices m_idsToPointIndices;
 
 		boost::container::flat_map<InternedString, AttributeCreator> m_attributeCreators;
@@ -1695,7 +1755,7 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 					for( size_t i = r.begin(); i != r.end(); ++i )
 					{
 						const size_t pointIndex = pointIndicesForPrototype[i];
-						size_t instanceId = engine->instanceId( pointIndex );
+						int64_t instanceId = engine->instanceId( pointIndex );
 						engine->setPrototypeContextVariables( pointIndex, scope );
 						IECore::MurmurHash instanceH;
 						instanceH.append( instanceId );
@@ -1791,15 +1851,12 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 
 			if( seedContextName != "" )
 			{
-				const PrimitiveVariable *idPrimVar = findVertexVariable( primitive.get(), idPlug()->getValue() );
-				if( idPrimVar && idPrimVar->data->typeId() != IntVectorDataTypeId )
-				{
-					idPrimVar = nullptr;
-				}
-
 				int seeds = rawSeedPlug()->getValue() ? 0 : seedsPlug()->getValue();
 				int seedScramble = seedPermutationPlug()->getValue();
-				prototypeContextVariables.push_back( { seedContextName, idPrimVar, 0, false, true, seeds, seedScramble } );
+
+				// We set seedMode to true here, which means rather than reading a given primvar, this context
+				// variable will be driven by whatever is driving id.
+				prototypeContextVariables.push_back( { seedContextName, nullptr, 0, false, true, seeds, seedScramble } );
 			}
 
 			if( timeOffsetEnabled )
@@ -1948,7 +2005,7 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 					for( size_t i = r.begin(); i != r.end(); ++i )
 					{
 						const size_t pointIndex = pointIndicesForPrototype[i];
-						size_t instanceId = engine->instanceId( pointIndex );
+						int64_t instanceId = engine->instanceId( pointIndex );
 						engine->setPrototypeContextVariables( pointIndex, scope );
 						ConstPathMatcherDataPtr instanceSet = prototypesPlug()->setPlug()->getValue();
 						PathMatcher pointInstanceSet = instanceSet->readable().subTree( *prototypeRoot );
@@ -2411,7 +2468,7 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 		// the ids, not the point indices, and must be sorted. So we need to allocate a
 		// temp buffer of integer ids, before converting to strings.
 
-		std::vector<int> ids;
+		std::vector<int64_t> ids;
 		ids.reserve( pointIndicesForPrototype.size() );
 
 		const EngineData *engineData = esp->engine();
@@ -2427,7 +2484,7 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 		InternedStringVectorDataPtr childNamesData = new InternedStringVectorData;
 		std::vector<InternedString> &childNames = childNamesData->writable();
 		childNames.reserve( ids.size() );
-		for( size_t id : ids )
+		for( int64_t id : ids )
 		{
 			childNames.emplace_back( id );
 		}
@@ -2987,7 +3044,7 @@ void Instancer::InstancerCapsule::render( IECoreScenePreview::Renderer *renderer
 					attribs = proto->m_rendererAttributes.get();
 				}
 
-				int instanceId = engines[0]->instanceId( pointIndex );
+				int64_t instanceId = engines[0]->instanceId( pointIndex );
 
 
 				if( !namePrefixLengths[protoIndex] )
@@ -3008,7 +3065,7 @@ void Instancer::InstancerCapsule::render( IECoreScenePreview::Renderer *renderer
 				// up being named when they use the non-encapsulated hierarchy.
 				std::string &name = names[ protoIndex ];
 				const int prefixLen = namePrefixLengths[ protoIndex ];
-				name.resize( namePrefixLengths[protoIndex] + std::numeric_limits< int >::digits10 + 1 );
+				name.resize( namePrefixLengths[protoIndex] + std::numeric_limits< int64_t >::digits10 + 1 );
 				name.resize( std::to_chars( &name[prefixLen], &(*name.end()), instanceId ).ptr - &name[0] );
 
 				IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface;
