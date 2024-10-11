@@ -1,6 +1,11 @@
 1.x.x.x (relative to 1.5.0.0a3)
 =======
 
+Improvements
+------------
+
+- Light Editor : Added `is_sphere` column for Cycles lights.
+
 
 
 1.5.0.0a3 (relative to 1.5.0.0a2)
