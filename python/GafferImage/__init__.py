@@ -44,5 +44,6 @@ from .BleedFill import BleedFill
 from .DeepTidy import DeepTidy
 from .Anaglyph import Anaglyph
 from .ContactSheet import ContactSheet
+from .MetadataOverlay import MetadataOverlay
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImage" )
