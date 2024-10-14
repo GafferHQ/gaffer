@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_LIGHTTOOL_H
-#define GAFFERSCENEUI_LIGHTTOOL_H
+#pragma once
 
 #include "GafferSceneUI/Export.h"
 #include "GafferSceneUI/SelectionTool.h"
@@ -106,5 +105,3 @@ class GAFFERSCENEUI_API LightTool : public GafferSceneUI::SelectionTool
 IE_CORE_DECLAREPTR( LightTool )
 
 }  // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_LIGHTTOOL_H
