@@ -55,9 +55,9 @@ from Qt import QtGui
 
 class CodeWidget( GafferUI.MultiLineTextWidget ) :
 
-	def __init__( self, text="", editable=True, fixedLineHeight=None, **kw ) :
+	def __init__( self, text="", editable=True, fixedLineHeight=None, lineNumbersVisible = False, **kw ) :
 
-		GafferUI.MultiLineTextWidget.__init__( self, text, editable, fixedLineHeight = fixedLineHeight, wrapMode = self.WrapMode.None_, role = self.Role.Code, **kw )
+		GafferUI.MultiLineTextWidget.__init__( self, text, editable, fixedLineHeight = fixedLineHeight, wrapMode = self.WrapMode.None_, role = self.Role.Code, lineNumbersVisible = lineNumbersVisible, **kw )
 
 		self.__completer = None
 		self.__completionMenu = None

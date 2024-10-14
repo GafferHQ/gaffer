@@ -36,6 +36,7 @@
 ##########################################################################
 
 import enum
+import math
 
 import imath
 
@@ -43,6 +44,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from ._StyleSheet import _styleColors
 
 from Qt import QtGui
 from Qt import QtWidgets
@@ -53,9 +55,9 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 	WrapMode = enum.Enum( "WrapNode", [ "None_", "Word", "Character", "WordOrCharacter" ] )
 	Role = enum.Enum( "Role", [ "Text", "Code" ] )
 
-	def __init__( self, text="", editable=True, wrapMode=WrapMode.WordOrCharacter, fixedLineHeight=None, role=Role.Text, placeholderText = "", **kw ) :
+	def __init__( self, text="", editable=True, wrapMode=WrapMode.WordOrCharacter, fixedLineHeight=None, role=Role.Text, placeholderText = "", lineNumbersVisible = False, **kw ) :
 
-		GafferUI.Widget.__init__( self, _PlainTextEdit(), **kw )
+		GafferUI.Widget.__init__( self, _PlainTextEdit( lineNumbersVisible ), **kw )
 
 		## \todo This should come from the Style when we get Styles applied to Widgets
 		# (and not just Gadgets as we have currently).
@@ -334,6 +336,14 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 		return self.__dropTextSignal
 
+	def setLineNumbersVisible( self, visible ) :
+
+		self._qtWidget().setLineNumbersVisible( visible )
+
+	def getLineNumbersVisible( self ) :
+
+		return self._qtWidget().getLineNumbersVisible()
+
 	def _emitEditingFinished( self ) :
 
 		self.editingFinishedSignal()( self )
@@ -416,13 +426,34 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 		self.insertText( self.__dropText( event.data ) )
 		return True
 
+class _QLineNumberArea( QtWidgets.QWidget ) :
+
+	def __init__( self, codeEditor ) :
+
+		assert( isinstance( codeEditor, _PlainTextEdit ) )
+		QtWidgets.QWidget.__init__( self, codeEditor )
+
+	def sizeHint( self ) :
+
+		return QtCore.QSize( self.parentWidget().lineNumberAreaWidth(), 0 )
+
+	def paintEvent( self, event ) :
+
+		self.parentWidget().lineNumberAreaPaintEvent( event )
+
 class _PlainTextEdit( QtWidgets.QPlainTextEdit ) :
 
-	def __init__( self, parent = None ) :
+	def __init__( self, lineNumbersVisible, parent = None ) :
 
 		QtWidgets.QPlainTextEdit.__init__( self, parent )
+
+		self.__lineNumberAreaWidget = _QLineNumberArea( self )
+		self.setLineNumbersVisible( lineNumbersVisible )
+
 		self.__fixedLineHeight = None
 
+		self.blockCountChanged.connect( self.__updateLineNumberAreaWidth )
+		self.updateRequest.connect( self.__updateLineNumberArea )
 		self.document().modificationChanged.connect( self.update )
 
 	def setFixedLineHeight( self, fixedLineHeight ) :
@@ -439,6 +470,56 @@ class _PlainTextEdit( QtWidgets.QPlainTextEdit ) :
 	def getFixedLineHeight( self ) :
 
 		return self.__fixedLineHeight
+
+	def setLineNumbersVisible( self, visible ) :
+
+		self.__lineNumbersVisible = visible
+		self.__lineNumberAreaWidget.setVisible( visible )
+		self.__updateLineNumberAreaWidth( 0 )
+
+	def getLineNumbersVisible( self ) :
+
+		return self.__lineNumbersVisible
+
+	def lineNumberAreaWidth( self ) :
+
+		if not self.getLineNumbersVisible() :
+			return 0
+
+		digits = 1 + math.floor( math.log10( self.blockCount() ) )
+
+		return 3 + self.fontMetrics().horizontalAdvance( '9' ) * digits
+
+	def lineNumberAreaPaintEvent( self, event ) :
+
+		block = self.firstVisibleBlock()
+
+		top = round( self.blockBoundingGeometry( block ).translated( self.contentOffset() ).top() )
+		bottom = top + round( self.blockBoundingRect( block ).height() )
+
+		width = self.lineNumberAreaWidth()
+
+		painter = QtGui.QPainter( self.__lineNumberAreaWidget )
+		painter.setFont( self.property( "font" ) )
+
+		nonCursorLineColor = QtGui.QColor( *( _styleColors["backgroundLight"] ) )
+		cursorLineColor = QtGui.QColor( *( _styleColors["foregroundFaded"] ) )
+
+		while block.isValid() and top <= event.rect().bottom() :
+			if block.isVisible() :
+				painter.setPen( cursorLineColor if block == self.textCursor().block() else nonCursorLineColor )
+
+				painter.drawText(
+					0,
+					top,
+					width,
+					self.fontMetrics().height(),
+					QtCore.Qt.AlignRight,
+					str( block.blockNumber() + 1 )
+				)
+			block = block.next()
+			top = bottom
+			bottom = top + round( self.blockBoundingRect( block ).height() )
 
 	def __computeHeight( self, size ) :
 
@@ -483,6 +564,20 @@ class _PlainTextEdit( QtWidgets.QPlainTextEdit ) :
 
 		return QtWidgets.QPlainTextEdit.event( self, event )
 
+	def resizeEvent ( self, event ) :
+
+		QtWidgets.QPlainTextEdit.resizeEvent( self, event )
+
+		contentsRect = self.contentsRect()
+		self.__lineNumberAreaWidget.setGeometry(
+			QtCore.QRect(
+				contentsRect.left(),
+				contentsRect.top(),
+				self.lineNumberAreaWidth(),
+				contentsRect.height()
+			)
+		)
+
 	def focusOutEvent( self, event ) :
 
 		widget = GafferUI.Widget._owner( self )
@@ -523,3 +618,18 @@ class _PlainTextEdit( QtWidgets.QPlainTextEdit ) :
 		pixmap = GafferUI.Image._qtPixmapFromFile( "ctrlEnter.png" )
 		painter.setOpacity( 0.75 )
 		painter.drawPixmap( viewport.width() - ( pixmap.width() + 4 ), viewport.height() - ( pixmap.height() + 4 ), pixmap )
+
+	def __updateLineNumberAreaWidth( self, newBlockCount ) :
+
+		lineNumberAreaWidth = self.lineNumberAreaWidth()
+		self.setViewportMargins( lineNumberAreaWidth + ( 8 if lineNumberAreaWidth > 0 else 0 ), 0, 0, 0 )
+
+	def __updateLineNumberArea( self, rect, scrollY ) :
+
+		if scrollY != 0 :
+			self.__lineNumberAreaWidget.scroll( 0, scrollY )
+		else :
+			self.__lineNumberAreaWidget.update( 0, rect.y(), self.__lineNumberAreaWidget.width(), rect.height() )
+
+		if rect.contains( self.viewport().rect() ) :
+			self.__updateLineNumberAreaWidth( 0 )
