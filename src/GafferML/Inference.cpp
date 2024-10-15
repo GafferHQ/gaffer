@@ -46,6 +46,7 @@
 #include "onnxruntime_cxx_api.h"
 
 #include <mutex>
+#include <condition_variable>
 
 using namespace std;
 using namespace Imath;
@@ -89,6 +90,51 @@ Ort::Session &acquireSession( const std::string &fileName )
 
 	return it->second;
 }
+
+struct AsyncWaiter
+{
+
+	AsyncWaiter( Ort::RunOptions &runOptions )
+		:	m_runOptions( runOptions )
+	{
+	}
+
+	void wait( const IECore::Canceller *canceller )
+	{
+		while( true )
+		{
+			std::unique_lock<std::mutex> lock( m_mutex );
+			m_conditionVariable.wait_for( lock, std::chrono::milliseconds( 100 ) );
+
+			if( m_done )
+			{
+				return;
+			}
+			else if( canceller && canceller->cancelled() )
+			{
+				m_runOptions.SetTerminate();
+			}
+		}
+	}
+
+	static void callback( void *userData, OrtValue **outputs, size_t numOutputs, OrtStatusPtr status )
+	{
+		auto that = (AsyncWaiter *)userData;
+		{
+			std::unique_lock<std::mutex> lock( that->m_mutex );
+			that->m_done = true;
+		}
+		that->m_conditionVariable.notify_all();
+	}
+
+	private :
+
+		Ort::RunOptions &m_runOptions;
+		std::mutex m_mutex;
+		std::condition_variable m_conditionVariable;
+		bool m_done = false;
+
+};
 
 } // namespace
 
@@ -264,11 +310,13 @@ void Inference::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 
 		vector<Ort::AllocatedStringPtr> outputNameOwners;
 		vector<const char *> outputNames;
+		vector<Ort::Value> outputs;
 		for( auto &p : TensorPlug::OutputRange( *outPlug() ) )
 		{
 			int outputIndex = StringAlgo::numericSuffix( p->getName().string() );
 			outputNameOwners.push_back( session.GetOutputNameAllocated( outputIndex, Ort::AllocatorWithDefaultOptions() ) );
 			outputNames.push_back( outputNameOwners.back().get() );
+			outputs.push_back( Ort::Value( nullptr ) );
 		}
 
 		// TODO : WE REALLY WANT TO BE ABLE TO CANCEL THIS
@@ -276,8 +324,11 @@ void Inference::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 		// NEED TO CALL `SetTerminate()` SOMEHOW.
 		// MAYBE WE CAN USE `RunAsync()`?
 
-		vector<Ort::Value> outputs = session.Run(
-			Ort::RunOptions(), inputNames.data(),
+		Ort::RunOptions runOptions;
+		AsyncWaiter waiter( runOptions );
+
+		session.RunAsync(
+			runOptions, inputNames.data(),
 			// The Ort C++ API wants us to pass `Ort::Value *`, but `Ort::Value`
 			// is non-copyable and the original `Ort::Value` instances are in
 			// separate TensorDatas and can't be moved. But `Ort::Value` has the
@@ -285,8 +336,17 @@ void Inference::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 			// just reinterpret cast from the latter. Indeed, `Run()` is going
 			// to cast straight back to `OrtValue *` to call the C API!
 			reinterpret_cast<Ort::Value *>( inputs.data() ),
-			inputs.size(), outputNames.data(), outputNames.size()
+			inputs.size(),
+			outputNames.data(),
+			outputs.data(),
+			outputNames.size(),
+			waiter.callback,
+			&waiter
 		);
+
+		waiter.wait( context->canceller() );
+
+		// TODO : NEED TO CHECK STATUS AND THROW FOR CANCELLATION
 
 		CompoundDataPtr result = new CompoundData;
 		for( size_t i = 0; i < outputs.size(); ++i )
