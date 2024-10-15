@@ -37,6 +37,7 @@
 
 #include "boost/python.hpp"
 
+#include "GafferML/DataToTensor.h"
 #include "GafferML/ImageToTensor.h"
 #include "GafferML/Inference.h"
 #include "GafferML/TensorPlug.h"
@@ -103,6 +104,7 @@ BOOST_PYTHON_MODULE( _GafferML )
 
 	GafferBindings::TypedObjectPlugClass<GafferML::TensorPlug>();
 
+	GafferBindings::DependencyNodeClass<DataToTensor>();
 	GafferBindings::DependencyNodeClass<ImageToTensor>();
 	GafferBindings::DependencyNodeClass<TensorToImage>();
 	GafferBindings::DependencyNodeClass<Inference>()
