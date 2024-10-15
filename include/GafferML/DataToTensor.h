@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,20 +36,52 @@
 
 #pragma once
 
+#include "GafferML/Export.h"
+#include "GafferML/TensorPlug.h"
+
+#include "Gaffer/ComputeNode.h"
+#include "Gaffer/TypedObjectPlug.h"
+
 namespace GafferML
 {
 
-enum TypeId
+class GAFFERML_API DataToTensor : public Gaffer::ComputeNode
 {
-	TensorDataTypeId = 110165, // TODO : DON'T STEAL FROM GAFFERIMAGE
-	TensorPlugTypeId = 110166, // TODO : DON'T STEAL FROM GAFFERIMAGE
-	ImageToTensorTypeId = 110167, // TODO : DON'T STEAL FROM GAFFERIMAGE
-	TensorToImageTypeId = 110168, // TODO : DON'T STEAL FROM GAFFERIMAGE
-	InferenceTypeId = 110169, // TODO : DON'T STEAL FROM GAFFERIMAGE
-	TensorReaderTypeId = 110170, // TODO : DON'T STEAL FROM GAFFERIMAGE
-	DataToTensorTypeId = 110171, // TODO : DON'T STEAL FROM GAFFERIMAGE
 
-	LastTypeId = 110180
+	public :
+
+		explicit DataToTensor( const std::string &name=defaultName<DataToTensor>() );
+		~DataToTensor() override;
+
+		GAFFER_NODE_DECLARE_TYPE( GafferML::DataToTensor, DataToTensorTypeId, Gaffer::ComputeNode );
+
+		/// TODO : MAKE A DATAPLUG THAT ACCEPTS CONNECTIONS FROM ANYTHING THAT CAN
+		/// BE USED WITH PLUGALGO::GETVALUEASDATA()?
+		Gaffer::FloatVectorDataPlug *dataPlug();
+		const Gaffer::FloatVectorDataPlug *dataPlug() const;
+
+		/// TODO : WE PROBABLY WANT INT64DATA HERE.
+		Gaffer::IntVectorDataPlug *shapePlug();
+		const Gaffer::IntVectorDataPlug *shapePlug() const;
+
+		TensorPlug *tensorPlug();
+		const TensorPlug *tensorPlug() const;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+	protected :
+
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
+
+		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
 };
+
+IE_CORE_DECLAREPTR( DataToTensor )
 
 } // namespace GafferML
