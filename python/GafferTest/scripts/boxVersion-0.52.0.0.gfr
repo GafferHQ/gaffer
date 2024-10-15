@@ -56,4 +56,3 @@ __children["AddTen"]["sum"].setInput( __children["AddTen"]["BoxOut"]["__out"] )
 
 
 del __children
-

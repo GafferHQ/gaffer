@@ -28,4 +28,3 @@ __children["ShaderAssignment"]["__uiPosition"].setValue( imath.V2f( -14.8000002,
 
 
 del __children
-

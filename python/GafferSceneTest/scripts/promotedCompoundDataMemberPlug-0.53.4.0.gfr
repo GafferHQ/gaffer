@@ -45,4 +45,3 @@ Gaffer.Metadata.registerValue( __children["Box"]["attributes_visibility"], 'desc
 
 
 del __children
-
