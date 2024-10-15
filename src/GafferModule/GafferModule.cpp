@@ -93,6 +93,12 @@
 #include <sys/prctl.h>
 #endif
 
+#ifdef _MSC_VER
+#include "IECore/MessageHandler.h"
+
+#include "tbb/tbbmalloc_proxy.h"
+#endif
+
 using namespace boost::python;
 using namespace Gaffer;
 using namespace GafferModule;
@@ -187,6 +193,25 @@ void nameProcess()
 #endif
 }
 
+#ifdef _MSC_VER
+void verifyAllocator()
+{
+
+	char **replacementLog;
+	int replacementStatus = TBB_malloc_replacement_log( &replacementLog );
+
+	if( replacementStatus != 0 )
+	{
+		IECore::msg( IECore::Msg::Warning, "Gaffer", "Failed to install TBB memory allocator. Performance may be degraded." );
+		for( char **logEntry = replacementLog; *logEntry != 0; logEntry++ )
+		{
+			IECore::msg( IECore::Msg::Warning, "Gaffer", *logEntry );
+		}
+	}
+
+}
+#endif
+
 } // namespace
 
 // Arrange for `storeArgcArgv()` to be called when our module loads,
@@ -257,5 +282,8 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	def( "isDebug", &isDebug );
 
 	def( "_nameProcess", &nameProcess );
+#ifdef _MSC_VER
+	def( "_verifyAllocator", &verifyAllocator );
+#endif
 
 }
