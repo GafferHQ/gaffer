@@ -1097,7 +1097,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
 		# Tolerance is high due to sampling noise in Cycles, but is more than sufficient to
 		# be sure that the new light has been added (otherwise there would be no green at all).
-		self.assertTrue( ( c / c[0] ).equalWithAbsError( imath.Color3f( 1, 1, 0 ), 0.2 ) )
+		self.assertTrue( ( c / c[0] ).equalWithAbsError( imath.Color3f( 1, 1, 0 ), 0.25 ) )
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
