@@ -65,22 +65,23 @@ struct ImageShape
 ImageShape imageShape( const TensorData *tensor, bool interleavedChannels )
 {
 	const auto shape = tensor->value.GetTensorTypeAndShapeInfo().GetShape();
-	size_t i;
-	if( shape.size() == 3 )
+	if( shape.size() < 3 )
 	{
-		i = 0;
+		throw IECore::Exception( "Expected tensor with at least 3 dimensions" );
 	}
-	else if( shape.size() == 4 )
+
+	size_t i = shape.size() - 3;
+	for( size_t d = 0; d < i; ++d )
 	{
-		if( shape[0] != 1 )
+		if( shape[d] != 1 )
 		{
-			throw IECore::Exception( "Expected 4 dimensional tensor to have size 1 in first dimension" );
+			throw IECore::Exception(
+				fmt::format(
+					"Expected {} dimensional tensor to have size 1 in dimension {}",
+					shape.size(), d
+				)
+			);
 		}
-		i = 1;
-	}
-	else
-	{
-		throw IECore::Exception( "Expected tensor with 3 or 4 dimensions" );
 	}
 
 	if( interleavedChannels )
