@@ -203,7 +203,9 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 				# a "set once and forget" affair. The menu shows both for when
 				# you need to check.
 				self.__menuButton.setText(
-					self.__currentView if value else f"Default ({self.__currentView})"
+					f"Default ({self.__currentView})"
+					if self.__currentValue == "__default__"
+					else self.__currentView
 				)
 				self.__menuButton.setErrored( not valid )
 
@@ -265,7 +267,7 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 		result.append(
 			f"/Default", {
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setToDefault ) ),
-				"checkBox" : self.getPlug().isSetToDefault(),
+				"checkBox" : self.__currentValue == "__default__",
 			}
 		)
 
@@ -286,7 +288,7 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		with Gaffer.UndoScope( self.scriptNode() ) :
 			for plug in self.getPlugs() :
-				self.getPlug().setToDefault()
+				self.getPlug().setValue( "__default__" )
 
 # Connection between default script config and Widget and View display transforms.
 # Calling `connect()` from an application startup file is what makes the UI OpenColorIO-aware.
