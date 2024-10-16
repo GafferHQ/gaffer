@@ -7,6 +7,11 @@ Improvements
 - Light Editor : Added `is_sphere` column for Cycles lights.
 - Windows : Gaffer now uses the TBB memory allocator for significantly better performance.
 
+Fixes
+-----
+
+- Instancer : Added support 64 bit ints for ids ( matching what is loaded from USD ).
+
 
 1.5.0.0a3 (relative to 1.5.0.0a2)
 =========
