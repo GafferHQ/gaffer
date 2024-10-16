@@ -1247,6 +1247,89 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
+	def testDeleteLightShader( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["catalogue"] = GafferImage.Catalogue()
+
+		s["light"], unused = self._createPointLight()
+		s["light"]["transform"]["translate"]["z"].setValue( 1 )
+
+		s["deleteAttributes"] = GafferScene.DeleteAttributes()
+		s["deleteAttributes"]["in"].setInput( s["light"]["out"] )
+
+		s["plane"] = GafferScene.Plane()
+
+		s["camera"] = GafferScene.Camera()
+		s["camera"]["transform"]["translate"]["z"].setValue( 1 )
+
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["deleteAttributes"]["out"] )
+		s["group"]["in"][1].setInput( s["plane"]["out"] )
+		s["group"]["in"][2].setInput( s["camera"]["out"] )
+
+		s["shader"], unused, shaderOut = self._createMatteShader()
+		s["shaderAssignment"] = GafferScene.ShaderAssignment()
+		s["shaderAssignment"]["in"].setInput( s["group"]["out"] )
+		s["shaderAssignment"]["shader"].setInput( shaderOut )
+
+		s["outputs"] = GafferScene.Outputs()
+		s["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( s['catalogue'].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
+				}
+			)
+		)
+		s["outputs"]["in"].setInput( s["shaderAssignment"]["out"] )
+
+		s["options"] = GafferScene.StandardOptions()
+		s["options"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
+		s["options"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["options"]["in"].setInput( s["outputs"]["out"] )
+
+		s["renderer"] = self._createInteractiveRender()
+		s["renderer"]["in"].setInput( s["options"]["out"] )
+
+		# Start a render, give it time to finish, and check the output.
+
+		s["renderer"]["state"].setValue( s["renderer"].State.Running )
+
+		self.uiThreadCallHandler.waitFor( 2 )
+
+		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
+		self.assertNotEqual( c[0], 0.0 )
+
+		# Break the light by removing the shader attribute.
+
+		s["deleteAttributes"]["names"].setValue( "*" )
+		self.uiThreadCallHandler.waitFor( 2 )
+
+		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
+		self.assertEqual( c[0], 0.0 )
+
+		# Fix the light back by putting the attribute back. We allow this to
+		# require the object to be regenerated if necessary.
+
+		self.ignoreMessage( IECore.Msg.Level.Warning, "RenderController", "1 attribute edit required geometry to be regenerated" )
+
+		s["deleteAttributes"]["names"].setValue( "" )
+		self.uiThreadCallHandler.waitFor( 2 )
+
+		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
+
+		self.assertNotEqual( c[0], 0.0 )
+
+		s["renderer"]["state"].setValue( s["renderer"].State.Stopped )
+
 	def testGlobalAttributes( self ) :
 
 		s = Gaffer.ScriptNode()
