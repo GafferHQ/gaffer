@@ -202,11 +202,7 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 				# Only show the View name, because the Display name is more of
 				# a "set once and forget" affair. The menu shows both for when
 				# you need to check.
-				self.__menuButton.setText(
-					f"Default ({self.__currentView})"
-					if self.__currentValue == "__default__"
-					else self.__currentView
-				)
+				self.__menuButton.setText( self.__currentView )
 				self.__menuButton.setErrored( not valid )
 
 	def _valuesDependOnContext( self ) :
@@ -262,12 +258,13 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		# Default section
 
-		result.append( "/__DefaultDivider__", { "divider" : True, "label" : "Default" } )
+		result.append( "/__OptionsDivider__", { "divider" : True, "label" : "Options" } )
 
 		result.append(
-			f"/Default", {
+			f"/Use Default Display And View", {
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setToDefault ) ),
 				"checkBox" : self.__currentValue == "__default__",
+				"description" : "Always uses the default display and view for the current config. Useful when changing configs often, or using context-sensitive configs."
 			}
 		)
 
