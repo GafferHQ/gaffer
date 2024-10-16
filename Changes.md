@@ -6,6 +6,15 @@ Improvements
 
 - Light Editor : Added `is_sphere` column for Cycles lights.
 - Windows : Gaffer now uses the TBB memory allocator for significantly better performance.
+- Python Editor : Added line numbers
+
+API
+---
+
+- MultiLineTextWidget : 
+  - Added the ability to show line numbers by passing `lineNumbers = True` to the constructor.
+  - Added `setLineNumbersVisible()` and `getLineNumbersVisible()`
+- CodeWidget : Added the ability to show line numbers by passing `lineNumbers = True` to the constructor.
 
 Breaking Changes
 ----------------
