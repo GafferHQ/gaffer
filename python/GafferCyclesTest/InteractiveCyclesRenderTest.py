@@ -48,7 +48,6 @@ import GafferCycles
 
 class InteractiveCyclesRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
-	interactiveRenderNodeClass = GafferCycles.InteractiveCyclesRender
 	renderer = "Cycles"
 
 	def testSVMRenderWithCPU( self ) :

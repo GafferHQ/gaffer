@@ -7,6 +7,10 @@ Improvements
 - Light Editor : Added `is_sphere` column for Cycles lights.
 - Windows : Gaffer now uses the TBB memory allocator for significantly better performance.
 
+Breaking Changes
+----------------
+
+- InteractiveRenderTest : Removed `interactiveRenderNodeClass` member and `useNodeClass` argument to `_createInteractiveRender`. All testing is now performed with the InteractiveRender node itself.
 
 1.5.0.0a3 (relative to 1.5.0.0a2)
 =========

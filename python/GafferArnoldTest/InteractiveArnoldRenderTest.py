@@ -55,7 +55,6 @@ import GafferArnold
 
 class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
-	interactiveRenderNodeClass = GafferArnold.InteractiveArnoldRender
 	renderer = "Arnold"
 
 	# Arnold outputs licensing warnings that would cause failures
