@@ -158,6 +158,7 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__menuButton = GafferUI.MenuButton( "", menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
 		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plugs, **kw )
 
+		self.__currentValue = None
 		self.__currentDisplay = None
 		self.__currentView = None
 
@@ -168,8 +169,8 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 		assert( isinstance( value, str ) )
 
 		config = GafferImage.OpenColorIOAlgo.currentConfig()
-		if not value :
-			# Empty string uses the default from the config.
+		if value == "__default__" :
+			# Use the default from the config.
 			display = config.getDefaultDisplay()
 			view = config.getDefaultView( display )
 			valid = True
@@ -186,17 +187,18 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if exception is not None :
 			self.__menuButton.setText( "" )
 			self.__menuButton.setErrored( True )
+			self.__currentValue = None
 			self.__currentDisplay = None
 			self.__currentView = None
 		else :
-			value = sole( values )
-			if value is None :
+			self.__currentValue = sole( values )
+			if self.__currentValue is None :
 				self.__menuButton.setText( "---" )
 				self.__menuButton.setErrored( not all( self.parseValue( v )[2] for v in values ) )
 				self.__currentDisplay = None
 				self.__currentView = None
 			else :
-				self.__currentDisplay, self.__currentView, valid = self.parseValue( value )
+				self.__currentDisplay, self.__currentView, valid = self.parseValue( self.__currentValue )
 				# Only show the View name, because the Display name is more of
 				# a "set once and forget" affair. The menu shows both for when
 				# you need to check.
@@ -297,7 +299,7 @@ def connect( script ) :
 		Gaffer.NodeAlgo.applyUserDefaults( plug )
 
 	GafferUI.View.DisplayTransform.registerDisplayTransform(
-		"", __defaultViewDisplayTransformCreator
+		"__default__", __defaultViewDisplayTransformCreator
 	)
 
 	script.plugDirtiedSignal().connect( __scriptPlugDirtied )
