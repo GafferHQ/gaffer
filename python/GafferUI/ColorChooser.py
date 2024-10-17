@@ -239,10 +239,31 @@ class _ColorField( GafferUI.Widget ) :
 
 		return zIndex
 
+	def __useWheel( self ) :
+
+		return self.__staticComponent in "sv"
+
+	def __cartesianToPolar( self, p, center, maxRadius ) :
+
+		p = p - center
+		radius = p.length()
+		theta = math.atan2( p.y, p.x )
+		twoPi = math.pi * 2.0
+		theta = theta if theta > 0 else twoPi + theta
+
+		return imath.V2f( theta / twoPi, radius / maxRadius )
+
+
 	def __colorToPosition( self, color ) :
 
 		xIndex, yIndex = self.__xyIndices()
 		color = imath.V2f( color[xIndex], color[yIndex] )
+
+		if self.__useWheel() :
+			theta = 2 * math.pi * color.x
+			return imath.V2f( self.bound().size() ) * 0.5 * (
+				imath.V2f( color.y * math.cos( theta ), -color.y * math.sin( theta ) ) + imath.V2f( 1.0 )
+			)
 
 		xComponent, yComponent = self.xyAxes()
 		minC = imath.V2f( _ranges[xComponent].min, _ranges[yComponent].min )
@@ -264,14 +285,24 @@ class _ColorField( GafferUI.Widget ) :
 
 		xComponent, yComponent = self.xyAxes()
 
-		c[xIndex] = ( position.x / float( size.x ) ) * ( _ranges[xComponent].max - _ranges[xComponent].min ) + _ranges[xComponent].min
-		c[yIndex] = ( 1.0 - ( position.y / float( size.y ) ) ) * ( _ranges[yComponent].max - _ranges[yComponent].min ) + _ranges[yComponent].min
+		if self.__useWheel() :
+			halfSize = imath.V2f( size ) * 0.5
+			p = self.__cartesianToPolar( imath.V2f( position.x, size.y - position.y ), halfSize, halfSize.x )
+			c[xIndex] = p.x
+			c[yIndex] = p.y
+		else :
+			c[xIndex] = ( position.x / float( size.x ) ) * ( _ranges[xComponent].max - _ranges[xComponent].min ) + _ranges[xComponent].min
+			c[yIndex] = ( 1.0 - ( position.y / float( size.y ) ) ) * ( _ranges[yComponent].max - _ranges[yComponent].min ) + _ranges[yComponent].min
 
 		return c
 
 	def __buttonPress( self, widget, event ) :
 
 		if event.buttons != GafferUI.ButtonEvent.Buttons.Left :
+			return False
+
+		halfSize = imath.V2f( self.bound().size() ) * 0.5
+		if ( imath.V2f( event.line.p0.x, event.line.p0.y ) - halfSize ).length() > halfSize.x :
 			return False
 
 		c, staticComponent = self.getColor()
@@ -282,6 +313,16 @@ class _ColorField( GafferUI.Widget ) :
 	def __clampPosition( self, position ) :
 
 		size = self.bound().size()
+		if self.__useWheel() :
+			halfSize = imath.V2f( size ) * 0.5
+			centeredPosition = imath.V2f( position.x, position.y ) - halfSize
+			radiusOriginal = centeredPosition.length()
+
+			if radiusOriginal == 0 :
+				return halfSize
+
+			return halfSize + ( centeredPosition / imath.V2f( radiusOriginal )  ) * min( radiusOriginal, halfSize.x )
+
 		return imath.V2f( min( size.x, max( 0.0, position.x ) ), min( size.y, max( 0.0, position.y ) ) )
 
 	def __dragBegin( self, widget, event ) :
@@ -350,24 +391,37 @@ class _ColorField( GafferUI.Widget ) :
 
 			xComponent, yComponent = self.xyAxes()
 
-			for x in range( 0, numStops ) :
-				tx = float( x ) / ( numStops - 1 )
-				c[xIndex] = _ranges[xComponent].min + ( _ranges[xComponent].max - _ranges[xComponent].min ) * tx
+			if self.__useWheel() :
+				maxRadius = float( numStops - 1 ) * 0.5
+				for x in range( 0, numStops ) :
+					for y in range( 0, numStops ) :
+						p = self.__cartesianToPolar( imath.V2f( x, y ), imath.V2f( maxRadius ), maxRadius )
 
-				for y in range( 0, numStops ) :
-					ty = float( y ) / ( numStops - 1 )
+						c[xIndex] = p.x
+						c[yIndex] = p.y
 
-					c[yIndex] = _ranges[yComponent].min + ( _ranges[yComponent].max - _ranges[yComponent].min ) * ty
-
-					if colorSpace == ColorSpace.RGB :
-						cRGB = c
-					elif colorSpace == ColorSpace.HSV :
 						cRGB = c.hsv2rgb()
-					else :
-						cRGB = _tmiToRGB( c )
+						cRGB = displayTransform( cRGB )
+						self.__colorFieldToDraw.setPixel( x, numStops - 1 - y, self._qtColor( cRGB ).rgb() )
+			else :
+				for x in range( 0, numStops ) :
+					tx = float( x ) / ( numStops - 1 )
+					c[xIndex] = _ranges[xComponent].min + ( _ranges[xComponent].max - _ranges[xComponent].min ) * tx
 
-					cRGB = displayTransform( cRGB )
-					self.__colorFieldToDraw.setPixel( x, numStops - 1 - y, self._qtColor( cRGB ).rgb() )
+					for y in range( 0, numStops ) :
+						ty = float( y ) / ( numStops - 1 )
+
+						c[yIndex] = _ranges[yComponent].min + ( _ranges[yComponent].max - _ranges[yComponent].min ) * ty
+
+						if colorSpace == ColorSpace.RGB :
+							cRGB = c
+						elif colorSpace == ColorSpace.HSV :
+							cRGB = c.hsv2rgb()
+						else :
+							cRGB = _tmiToRGB( c )
+
+						cRGB = displayTransform( cRGB )
+						self.__colorFieldToDraw.setPixel( x, numStops - 1 - y, self._qtColor( cRGB ).rgb() )
 
 		painter.drawImage( self._qtWidget().contentsRect(), self.__colorFieldToDraw )
 
@@ -386,52 +440,56 @@ class _ColorField( GafferUI.Widget ) :
 		size = self.size()
 
 		# Use a dot when both axes are a valid value.
-		if position.x >= 0 and position.y >= 0 and position.x <= size.x and position.y <= size.y :
+		positionClamped = self.__clampPosition( position )
+		delta = position - positionClamped
+
+		if abs( delta.x ) < 1e-3 and abs( delta.y ) < 1e-3 :
 			painter.drawEllipse( QtCore.QPoint( position.x, position.y ), 4.5, 4.5 )
 			return
 
 		triangleWidth = 5.0
 		triangleSpacing = 2.0
-		positionClamped = imath.V2f(
-			min( max( 0.0, position.x ), size.x ),
-			min( max( 0.0, position.y ), size.y )
-		)
-		offset = imath.V2f( 0 )
-		# Use a corner triangle if both axes are invalid values.
-		if position.x > size.x and position.y < 0 :
-			rotation = -45.0  # Triangle pointing to the top-right
-			offset = imath.V2f( -triangleSpacing, triangleSpacing )
-		elif position.x < 0 and position.y < 0 :
-			rotation = -135.0  # Top-left
-			offset = imath.V2f( triangleSpacing, triangleSpacing )
-		elif position.x < 0 and position.y > size.y :
-			rotation = -225.0  # Bottom-left
-			offset = imath.V2f( triangleSpacing, -triangleSpacing )
-		elif position.x > size.x and position.y > size.y :
-			rotation = -315.0  # Bottom-right
-			offset = imath.V2f( -triangleSpacing, -triangleSpacing )
 
-		# Finally, use a top / left / bottom / right triangle if one axis is an invalid value.
-		elif position.y < 0 :
-			rotation = -90.0  # Top
-			offset = imath.V2f( 0, triangleSpacing )
-			# Clamp it in more to account for the triangle size
-			positionClamped.x = min( max( triangleWidth + triangleSpacing, positionClamped.x ), size.x - triangleWidth - triangleSpacing )
-		elif position.x < 0 :
-			rotation = -180.0  # Left
-			offset = imath.V2f( triangleSpacing, 0 )
-			positionClamped.y = min( max( triangleWidth + triangleSpacing, positionClamped.y ), size.y - triangleWidth - triangleSpacing )
-		elif position.y > size.y :
-			rotation = -270.0  # Bottom
-			offset = imath.V2f( 0, -triangleSpacing )
-			positionClamped.x = min( max( triangleWidth + triangleSpacing, positionClamped.x ), size.x - triangleWidth - triangleSpacing )
+		offset = imath.V2f( 0 )
+
+		if self.__useWheel() :
+			rotation = math.atan2( delta.y, delta.x )
 		else :
-			rotation = 0.0  # Right
-			offset = imath.V2f( -triangleSpacing, 0 )
-			positionClamped.y = min( max( triangleWidth + triangleSpacing, positionClamped.y ), size.y - triangleWidth - triangleSpacing )
+			# Use a corner triangle if both axes are invalid values.
+			if position.x > size.x and position.y < 0 :
+				rotation = math.radians( -45.0 )  # Triangle pointing to the top-right
+				offset = imath.V2f( -triangleSpacing, triangleSpacing )
+			elif position.x < 0 and position.y < 0 :
+				rotation = math.radians( -135.0 )  # Top-left
+				offset = imath.V2f( triangleSpacing, triangleSpacing )
+			elif position.x < 0 and position.y > size.y :
+				rotation = math.radians( -225.0 )  # Bottom-left
+				offset = imath.V2f( triangleSpacing, -triangleSpacing )
+			elif position.x > size.x and position.y > size.y :
+				rotation = math.radians( -315.0 )  # Bottom-right
+				offset = imath.V2f( -triangleSpacing, -triangleSpacing )
+
+			# Finally, use a top / left / bottom / right triangle if one axis is an invalid value.
+			elif position.y < 0 :
+				rotation = math.radians( -90.0 )  # Top
+				offset = imath.V2f( 0, triangleSpacing )
+				# Clamp it in more to account for the triangle size
+				positionClamped.x = min( max( triangleWidth + triangleSpacing, positionClamped.x ), size.x - triangleWidth - triangleSpacing )
+			elif position.x < 0 :
+				rotation = math.radians( -180.0 )  # Left
+				offset = imath.V2f( triangleSpacing, 0 )
+				positionClamped.y = min( max( triangleWidth + triangleSpacing, positionClamped.y ), size.y - triangleWidth - triangleSpacing )
+			elif position.y > size.y :
+				rotation = math.radians( -270.0 )  # Bottom
+				offset = imath.V2f( 0, -triangleSpacing )
+				positionClamped.x = min( max( triangleWidth + triangleSpacing, positionClamped.x ), size.x - triangleWidth - triangleSpacing )
+			else :
+				rotation = 0.0  # Right
+				offset = imath.V2f( -triangleSpacing, 0 )
+				positionClamped.y = min( max( triangleWidth + triangleSpacing, positionClamped.y ), size.y - triangleWidth - triangleSpacing )
 
 		rightPoints = [ imath.V2f( 0, 0 ), imath.V2f( -6, triangleWidth ), imath.V2f( -6, -triangleWidth ) ]
-		xform = imath.M33f().rotate( math.radians( rotation ) ) * imath.M33f().translate(
+		xform = imath.M33f().rotate( rotation ) * imath.M33f().translate(
 			positionClamped + offset
 		)
 		points = [ p * xform for p in rightPoints ]
@@ -446,6 +504,11 @@ class _ColorField( GafferUI.Widget ) :
 		painter = QtGui.QPainter( self._qtWidget() )
 		painter.setRenderHint( QtGui.QPainter.Antialiasing )
 		painter.setRenderHint( QtGui.QPainter.SmoothPixmapTransform)
+
+		if self.__useWheel() :
+			mask = QtGui.QPainterPath()
+			mask.addEllipse( 0, 0, self.size().x, self.size().y )
+			painter.setClipPath( mask )
 
 		self.__drawBackground( painter )
 
