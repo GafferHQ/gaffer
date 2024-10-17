@@ -71,7 +71,7 @@ IECore::CompoundDataPtr g_passData;
 // Get sockets data
 IECore::CompoundDataPtr getSockets( const ccl::NodeType *nodeType, const bool output )
 {
-	IECore::CompoundData *result = new IECore::CompoundData();
+	IECore::CompoundDataPtr result = new IECore::CompoundData();
 	IECore::CompoundDataMap &sockets = result->writable();
 
 	if( !output )
@@ -134,9 +134,9 @@ IECore::CompoundDataPtr getSockets( const ccl::NodeType *nodeType, const bool ou
 	return IECore::CompoundDataPtr( result );
 }
 
-IECore::CompoundData *deviceData()
+IECore::CompoundDataPtr deviceData()
 {
-	IECore::CompoundData *result = new IECore::CompoundData();
+	IECore::CompoundDataPtr result = new IECore::CompoundData();
 	IECore::CompoundDataMap &devices = result->writable();
 
 	for( const ccl::DeviceInfo &device : ccl::Device::available_devices() )
@@ -162,9 +162,9 @@ IECore::CompoundData *deviceData()
 	return result;
 }
 
-IECore::CompoundData *nodeData()
+IECore::CompoundDataPtr nodeData()
 {
-	IECore::CompoundData *result = new IECore::CompoundData();
+	IECore::CompoundDataPtr result = new IECore::CompoundData();
 	IECore::CompoundDataMap &nodes = result->writable();
 
 	for( const auto& nodeType : ccl::NodeType::types() )
@@ -190,9 +190,9 @@ IECore::CompoundData *nodeData()
 	return result;
 }
 
-IECore::CompoundData *shaderData()
+IECore::CompoundDataPtr shaderData()
 {
-	IECore::CompoundData *result = new IECore::CompoundData();
+	IECore::CompoundDataPtr result = new IECore::CompoundData();
 	IECore::CompoundDataMap &shaders = result->writable();
 
 	for( const auto& nodeType : ccl::NodeType::types() )
@@ -351,9 +351,9 @@ IECore::CompoundData *shaderData()
 	return result;
 }
 
-IECore::CompoundData *lightData()
+IECore::CompoundDataPtr lightData()
 {
-	IECore::CompoundData *result = new IECore::CompoundData();
+	IECore::CompoundDataPtr result = new IECore::CompoundData();
 	IECore::CompoundDataMap &lights = result->writable();
 
 	const ccl::NodeType *cNodeType = ccl::NodeType::find( ccl::ustring( "light" ) );
@@ -447,9 +447,9 @@ IECore::CompoundData *lightData()
 	return result;
 }
 
-IECore::CompoundData *passData()
+IECore::CompoundDataPtr passData()
 {
-	IECore::CompoundData *result = new IECore::CompoundData();
+	IECore::CompoundDataPtr result = new IECore::CompoundData();
 	IECore::CompoundDataMap &passes = result->writable();
 
 	const ccl::NodeEnum *enums = ccl::Pass::get_type_enum();
@@ -474,7 +474,7 @@ IECore::CompoundData *passData()
 	return result;
 }
 
-}
+} // namespace
 
 namespace IECoreCycles
 {
