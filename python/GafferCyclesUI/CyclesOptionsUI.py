@@ -320,7 +320,7 @@ def __registerDevicePresets() :
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU", "CPU" )
 
 	typeIndices = {}
-	for device in GafferCycles.devices :
+	for device in GafferCycles.devices.values() :
 
 		if device["type"] == "CPU" :
 			continue

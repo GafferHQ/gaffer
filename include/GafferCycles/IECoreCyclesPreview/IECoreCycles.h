@@ -36,10 +36,7 @@
 
 #include "GafferCycles/IECoreCyclesPreview/Export.h"
 
-// Cycles
-IECORE_PUSH_DEFAULT_VISIBILITY
-#include "device/device.h"
-IECORE_POP_DEFAULT_VISIBILITY
+#include "IECore/CompoundData.h"
 
 #include <string>
 
@@ -63,5 +60,20 @@ IECORECYCLES_API int minorVersion();
 IECORECYCLES_API int patchVersion();
 /// Returns a string of the form "major.minor.patch"
 IECORECYCLES_API const std::string &versionString();
+
+/// Returns all device data (for python bindings)
+IECORECYCLES_API const IECore::CompoundData *devices();
+/// Returns all node data (for python bindings)
+IECORECYCLES_API const IECore::CompoundData *nodes();
+/// Returns all shader data (for python bindings)
+IECORECYCLES_API const IECore::CompoundData *shaders();
+/// Returns all light data (for python bindings)
+IECORECYCLES_API const IECore::CompoundData *lights();
+/// Returns all pass data (for python bindings)
+IECORECYCLES_API const IECore::CompoundData *passes();
+/// Returns if OpenImageDenoise has been compiled in Cycles
+IECORECYCLES_API bool openImageDenoiseSupported();
+/// Returns if OptixDenoise has been compiled in Cycles
+IECORECYCLES_API bool optixDenoiseSupported();
 
 }
