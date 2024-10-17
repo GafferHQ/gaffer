@@ -548,9 +548,9 @@ void View::DisplayTransform::preRender()
 	{
 		m_shader = nullptr;
 		const std::string name = namePlug()->getValue();
+		auto it = displayTransformCreators().find( name );
 		if( !name.empty() )
 		{
-			auto it = displayTransformCreators().find( name );
 			if( it != displayTransformCreators().end() )
 			{
 				Context::Scope scope( view()->context() );
