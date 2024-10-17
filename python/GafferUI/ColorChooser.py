@@ -100,6 +100,20 @@ _ranges = {
 	"i" : __Range( 0, 1, -sys.float_info.max, sys.float_info.max ),
 }
 
+def _drawIndicator( painter, position ) :
+
+	painter.setBrush( QtCore.Qt.transparent )
+
+	pen = QtGui.QPen( QtGui.QColor( 0, 0, 0, 255 ) )
+	pen.setWidth( 1 )
+	painter.setPen( pen )
+
+	painter.drawEllipse( position, 4.5, 4.5 )
+
+	pen.setColor( QtGui.QColor( 255, 255, 255, 255 ) )
+	painter.setPen( pen )
+	painter.drawEllipse( position, 3.5, 3.5 )
+
 # A custom slider for drawing the backgrounds.
 class _ComponentSlider( GafferUI.Slider ) :
 
@@ -157,6 +171,40 @@ class _ComponentSlider( GafferUI.Slider ) :
 
 		brush = QtGui.QBrush( grad )
 		painter.fillRect( 0, 0, size.x, size.y, brush )
+
+	def _drawValue( self, painter, value, position, state ) :
+
+		size = self.size()
+
+		if position >= 0 and position <= size.x :
+			_drawIndicator( painter, QtCore.QPoint( position, size.y / 2 ) )
+			return
+
+		pen = QtGui.QPen( QtGui.QColor( 0, 0, 0, 255 ) )
+		pen.setWidth( 1 )
+		painter.setPen( pen )
+		painter.setBrush( QtGui.QColor( 255, 255, 255, 255 ) )
+
+		if position < 0 :
+			painter.drawPolygon(
+				QtGui.QPolygonF(
+					[
+						QtCore.QPointF( 8, 4 ),
+						QtCore.QPointF( 8, size.y - 4 ),
+						QtCore.QPointF( 2, size.y / 2 ),
+					]
+				)
+			)
+		elif position > size.x :
+			painter.drawPolygon(
+				QtGui.QPolygonF(
+					[
+						QtCore.QPointF( size.x - 8, 4 ),
+						QtCore.QPointF( size.x - 8, size.y - 4 ),
+						QtCore.QPointF( size.x - 2, size.y / 2 ),
+					]
+				)
+			)
 
 	def _displayTransformChanged( self ) :
 
@@ -429,14 +477,6 @@ class _ColorField( GafferUI.Widget ) :
 
 		position = self.__colorToPosition( self.__color )
 
-		pen = QtGui.QPen( QtGui.QColor( 0, 0, 0, 255 ) )
-		pen.setWidth( 1 )
-		painter.setPen( pen )
-
-		color = QtGui.QColor( 119, 156, 255, 255 )
-
-		painter.setBrush( QtGui.QBrush( color ) )
-
 		size = self.size()
 
 		# Use a dot when both axes are a valid value.
@@ -444,11 +484,19 @@ class _ColorField( GafferUI.Widget ) :
 		delta = position - positionClamped
 
 		if abs( delta.x ) < 1e-3 and abs( delta.y ) < 1e-3 :
-			painter.drawEllipse( QtCore.QPoint( position.x, position.y ), 4.5, 4.5 )
+			_drawIndicator( painter, QtCore.QPoint( position.x, position.y ) )
 			return
 
 		triangleWidth = 5.0
 		triangleSpacing = 2.0
+
+		pen = QtGui.QPen( QtGui.QColor( 0, 0, 0, 255 ) )
+		pen.setWidth( 1 )
+		painter.setPen( pen )
+
+		color = QtGui.QColor( 255, 255, 255, 255 )
+
+		painter.setBrush( QtGui.QBrush( color ) )
 
 		offset = imath.V2f( 0 )
 
