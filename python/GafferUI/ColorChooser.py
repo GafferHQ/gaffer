@@ -575,10 +575,8 @@ class _ColorFieldRowLayout( QtWidgets.QLayout ) :
 		QtWidgets.QLayout.__init__( self, None )
 
 		# No spacing between color field and sliders so the active component icons
-		# line up against the color field. Do add a little space between the sliders
-		# and the options button.
+		# line up against the color field.
 		self.setSpacing( 0 )
-		self.__buttonSpacing = 4
 		self.__minColorFieldSize = 66  # Height of 3 sliders
 
 		self.__items = []
@@ -605,13 +603,12 @@ class _ColorFieldRowLayout( QtWidgets.QLayout ) :
 
 	def minimumSize( self ) :
 
-		assert( len( self.__items ) == 3 )
+		assert( len( self.__items ) == 2 )
 
 		size1 = self.__items[1].minimumSize()
-		size2 = self.__items[2].minimumSize()
 		return QtCore.QSize(
-			self.__minColorFieldSize + size1.width() + size2.width() + self.__buttonSpacing,
-			max( self.__minColorFieldSize, max( size1.height(), size2.height() ) )
+			self.__minColorFieldSize + size1.width(),
+			max( self.__minColorFieldSize, size1.height() )
 		)
 
 	def maximumSize( self ) :
@@ -620,21 +617,19 @@ class _ColorFieldRowLayout( QtWidgets.QLayout ) :
 
 	def sizeHint( self ) :
 
-		assert( len( self.__items ) == 3 )
+		assert( len( self.__items ) == 2 )
 
 		size1 = self.__items[1].sizeHint()
-		size2 = self.__items[2].sizeHint()
 		return QtCore.QSize(
-			size1.height() + size1.width() + size2.width() + self.__buttonSpacing,
-			max( self.__minColorFieldSize, max( size1.height(), size2.height() ) )
+			size1.height() + size1.width(),
+			max( self.__minColorFieldSize, size1.height() )
 		)
 
 	def setGeometry( self, rect ) :
 
-		assert( len( self.__items ) == 3 )
+		assert( len( self.__items ) == 2 )
 
 		size1 = self.__items[1].sizeHint()
-		size2 = self.__items[2].sizeHint()
 
 		leftSize = 0
 		if not self.__items[0].isEmpty() :
@@ -645,14 +640,10 @@ class _ColorFieldRowLayout( QtWidgets.QLayout ) :
 			QtCore.QRect(
 				rect.left() + leftSize,
 				rect.top(),
-				rect.width() - leftSize - size2.width() - self.__buttonSpacing,
+				rect.width() - leftSize,
 				size1.height()
 			)
 		)
-		self.__items[2].setGeometry(
-			QtCore.QRect( rect.right() - size2.width(), rect.top(), size2.width(), size2.height() )
-		)
-
 
 class _ColorFieldRowContainer( GafferUI.ContainerWidget ) :
 
@@ -670,7 +661,7 @@ class _ColorFieldRowContainer( GafferUI.ContainerWidget ) :
 	def addChild( self, child ) :
 
 		assert( isinstance( child, GafferUI.Widget ) )
-		assert( len( self.__widgets ) <=3 )
+		assert( len( self.__widgets ) < 2 )
 
 		oldParent = child.parent()
 		if oldParent is not None :
@@ -725,7 +716,7 @@ class ColorChooser( GafferUI.Widget ) :
 				self.__colorField = _ColorField( color )
 				self.__colorValueChangedConnection = self.__colorField.valueChangedSignal().connect( Gaffer.WeakMethod( self.__colorValueChanged ) )
 
-				with GafferUI.GridContainer( spacing = 0 ) :
+				with GafferUI.GridContainer( spacing = 0 ) as grid :
 
 					# sliders and numeric widgets
 					for component in "rgbahsvtmi" :
@@ -817,12 +808,18 @@ class ColorChooser( GafferUI.Widget ) :
 					self.__spacers["hsv"] = GafferUI.Spacer( imath.V2i( 0, spacerHeight ), parenting = {  "index" : ( 0, 5 ) } )
 					self.__spacers["tmi"] = GafferUI.Spacer( imath.V2i( 0, spacerHeight ), parenting = { "index" : ( 0, 9 ) } )
 
-				# Options Button
-				GafferUI.MenuButton(
-					image = "gear.png",
-					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__optionsMenuDefinition ) ),
-					hasFrame = False
-				)
+					# Options Button.
+
+					GafferUI.Spacer( imath.V2i( 4, 0 ), parenting = { "index" : ( 6, slice( 0, grid.gridSize().y ) ) } )
+					GafferUI.MenuButton(
+						image = "gear.png",
+						menu = GafferUI.Menu( Gaffer.WeakMethod( self.__optionsMenuDefinition ) ),
+						hasFrame = False,
+						# Occupy an entire column of the grid, but aligned to the top of the column.
+						# This keeps the button aligned with the top of the first visible slider, no
+						# matter which that is.
+						parenting = { "index" : ( 7, slice( 0, grid.gridSize().y ) ), "alignment" : ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.Top ) }
+					)
 
 			# initial and current colour swatches
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) as self.__swatchRow :
