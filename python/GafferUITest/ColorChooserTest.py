@@ -138,7 +138,7 @@ class ColorChooserTest( GafferUITest.TestCase ) :
 
 		for c in "rgbhsvtmi" :
 			self.assertTrue( self.__sliderFromWidget( widget, c ).getVisible() )
-		self.assertEqual( self.__getStaticComponent( widget ), "s" )
+		self.assertEqual( self.__getStaticComponent( widget ), "v" )
 		self.assertTrue( self.__getColorFieldVisibility( widget ) )
 
 		for p in [ "rgbPlug1", "rgbPlug2" ] :
@@ -189,7 +189,7 @@ class ColorChooserTest( GafferUITest.TestCase ) :
 
 		for c in "rgbhsvtmi" :
 			self.assertTrue( self.__sliderFromWidget( widget2, c ).getVisible() )
-		self.assertEqual( self.__getStaticComponent( widget2 ), "s" )
+		self.assertEqual( self.__getStaticComponent( widget2 ), "v" )
 		self.assertTrue( self.__getColorFieldVisibility( widget2 ) )
 
 		for p in [ "rgbPlug2" ] :
@@ -209,7 +209,7 @@ class ColorChooserTest( GafferUITest.TestCase ) :
 
 		for c in "rgbhsvtmi" :
 			self.assertTrue( self.__sliderFromWidget( widget, c ).getVisible() )
-		self.assertEqual( self.__getStaticComponent( widget ), "s" )
+		self.assertEqual( self.__getStaticComponent( widget ), "v" )
 		self.assertTrue( self.__getColorFieldVisibility( widget ) )
 
 		for p in [ "rgbPlug1", "rgbPlug2" ] :
@@ -239,8 +239,8 @@ class ColorChooserTest( GafferUITest.TestCase ) :
 			self.assertTrue( self.__sliderFromWidget( rgbWidget, c ).getVisible() )
 			self.assertTrue( self.__sliderFromWidget( rgbaWidget, c ).getVisible() )
 		self.assertTrue( self.__sliderFromWidget( rgbaWidget, "a" ).getVisible() )
-		self.assertEqual( self.__getStaticComponent( rgbWidget ), "s" )
-		self.assertEqual( self.__getStaticComponent( rgbaWidget ), "s" )
+		self.assertEqual( self.__getStaticComponent( rgbWidget ), "v" )
+		self.assertEqual( self.__getStaticComponent( rgbaWidget ), "v" )
 		self.assertTrue( self.__getColorFieldVisibility( rgbWidget ) )
 		self.assertTrue( self.__getColorFieldVisibility( rgbaWidget ) )
 

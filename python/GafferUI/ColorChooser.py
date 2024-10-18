@@ -213,7 +213,7 @@ class _ComponentSlider( GafferUI.Slider ) :
 
 class _ColorField( GafferUI.Widget ) :
 
-	def __init__( self, color = imath.Color3f( 1.0 ), staticComponent = "s", **kw ) :
+	def __init__( self, color = imath.Color3f( 1.0 ), staticComponent = "v", **kw ) :
 
 		GafferUI.Widget.__init__( self, QtWidgets.QWidget(), **kw )
 
