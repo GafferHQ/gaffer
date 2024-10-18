@@ -994,26 +994,27 @@ class ColorChooser( GafferUI.Widget ) :
 			}
 		)
 
-		result.append( "/__colorField__", { "divider": True, "label": "Color Field Axes" } )
+		result.append( "/__colorField__", { "divider": True, "label": "Color Field" } )
 
 		weakSet = Gaffer.WeakMethod( self.setColorFieldStaticComponent )
 		for label, component in [
-			( "/Hue × Value", "s" ),
-			( "/Hue × Saturation", "v" ),
-			( "/Saturation × Value", "h" ),
-			( "/Other/Green × Blue", "r" ),
-			( "/Other/Red × Blue", "g" ),
-			( "/Other/Red × Green", "b" ),
-			( "/Other/Magenta × Intensity", "t" ),
-			( "/Other/Temperature × Intensity", "m" ),
-			( "/Other/Temperature × Magenta", "i" ),
+			( "Hue/Saturation", "v" ),
+			( "Hue/Value", "s" ),
+			( "Saturation/Value", "h" ),
+			( "Red/Green", "b" ),
+			( "Red/Blue", "g" ),
+			( "Green/Blue", "r" ),
+			( "Temperature/Magenta", "i" ),
+			( "Temperature/Intensity", "m" ),
+			( "Magenta/Intensity", "t" ),
 		] :
 			result.append(
-				label,
+				"{}/{}".format( "/Other" if component not in "hsv" else "", component ),
 				{
 					"command": lambda checked, c = component, weakSet = weakSet : weakSet( c ),
 					"checkBox": self.getColorFieldStaticComponent() == component,
 					"active": self.__colorField.getVisible(),
+					"label" : label,
 				}
 			)
 
