@@ -1000,10 +1000,10 @@ class ColorChooser( GafferUI.Widget ) :
 		for label, component in [
 			( "/Hue × Value", "s" ),
 			( "/Hue × Saturation", "v" ),
+			( "/Saturation × Value", "h" ),
 			( "/Other/Green × Blue", "r" ),
 			( "/Other/Red × Blue", "g" ),
 			( "/Other/Red × Green", "b" ),
-			( "/Other/Saturation × Value", "h" ),
 			( "/Other/Magenta × Intensity", "t" ),
 			( "/Other/Temperature × Intensity", "m" ),
 			( "/Other/Temperature × Magenta", "i" ),
