@@ -362,6 +362,9 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 			self.__activatedSignal( self )
 			self._emitEditingFinished()
 			return True
+		elif event.key == "Return" and event.modifiers == event.Modifiers.Shift :
+			self._qtWidget().textCursor().insertBlock()
+			return True
 
 		return False
 
