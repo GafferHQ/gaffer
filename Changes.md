@@ -9,6 +9,7 @@ Improvements
 - ColorChooser :
   - Changed the color field widget to a color wheel when hue is one of the varying components. [^1]
   - Changed the indicator for the color field and color sliders to an unfilled circle so the chosen color is visible in the center.
+- Python Editor : Added line numbers (#6091).
 
 API
 ---
@@ -17,6 +18,8 @@ API
   - Refactored bindings so they are no longer dependent on linking to Cycles.
   - The `devices`, `nodes`, `shaders`, `lights`, and `passes` Python attributes now contain IECore.CompoundData instead of Python dictionaries.
   - Added `majorVersion`, `minorVersion`, `patchVersion`, and `version` Python attributes containing the Cycles version.
+- MultiLineTextWidget, CodeWidget : Added the ability to show line numbers by passing `lineNumbersVisible = True` to the constructor.
+- MultiLineTextWidget : Added `setLineNumbersVisible()` and `getLineNumbersVisible()`
 
 Breaking Changes
 ----------------

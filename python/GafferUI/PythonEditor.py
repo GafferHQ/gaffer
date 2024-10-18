@@ -71,7 +71,7 @@ class PythonEditor( GafferUI.Editor ) :
 			Gaffer.WeakMethod( self.__contextMenu )
 		)
 
-		self.__inputWidget = GafferUI.CodeWidget()
+		self.__inputWidget = GafferUI.CodeWidget( lineNumbersVisible = True )
 
 		self.__splittable.append( self.__outputWidget )
 		self.__splittable.append( self.__inputWidget )
