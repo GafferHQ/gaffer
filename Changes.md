@@ -18,6 +18,7 @@ Improvements
 - PythonEditor, PythonCommand, Expression, UIEditor, OSLCode : Added line numbers to code editors (#6091).
 - CyclesOptions : Added `denoiseDevice` plug for configuring the device used for denoising.
 - AttributeTweaks : Added tooltips and presets for all attribute values.
+- InteractiveRenderer : Added <kbd>Esc</kbd> hotkey handling to pause an interactive render. This is in addition to the existing behavior of pausing the image viewer.
 
 Fixes
 -----

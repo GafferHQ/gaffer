@@ -310,6 +310,15 @@ Duplicate current Catalogue image    | {kbd}`Ctrl` + {kbd}`D`
 Toggle image comparison              | {kbd}`Q`
 Toggle wipes                         | {kbd}`W`
 
+### Interactive Render Viewer ###
+
+> Note :
+> For the following controls and shortcuts, the cursor must hover over the Viewer.
+
+Action                               | Control or shortcut
+-------------------------------------|--------------------
+Pause active render                  | {kdb}`Escape`
+
 ### Crop window tool ###
 
 Action                               | Control or shortcut

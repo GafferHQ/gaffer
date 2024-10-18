@@ -104,6 +104,9 @@ class _ViewRenderControlUI( GafferUI.Widget ) :
 		if isinstance( self.__view["in"], GafferImage.ImagePlug ) :
 			view.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__viewPlugDirtied ) )
 
+		if isinstance( self.__view, GafferUI.View ) :
+			self.__view.viewportGadget().keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+
 		self.__update()
 
 	def __update( self ) :
@@ -178,6 +181,14 @@ class _ViewRenderControlUI( GafferUI.Widget ) :
 
 		if plug.getName() == "state" :
 			self.__updateLazily();
+
+	def __keyPress( self, widget, event ) :
+
+		if event.key == "Escape" :
+			renderNode = self._interactiveRenderNode( self.__view )
+			if renderNode is not None :
+				statePlug = renderNode["state"].source()
+				statePlug.setValue( GafferScene.InteractiveRender.State.Paused )
 
 ##########################################################################
 # UI for the state plug that allows setting the state through buttons
