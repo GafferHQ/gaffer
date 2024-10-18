@@ -189,6 +189,17 @@ class _ViewRenderControlUI( GafferUI.Widget ) :
 			if renderNode is not None :
 				statePlug = renderNode["state"].source()
 				statePlug.setValue( GafferScene.InteractiveRender.State.Paused )
+		elif event.key == "Backslash" and event.modifiers == event.modifiers.Control :
+			renderNode = self._interactiveRenderNode( self.__view )
+			if renderNode is not None :
+				statePlug = renderNode["state"].source()
+				state = statePlug.getValue()
+				if state == GafferScene.InteractiveRender.State.Running :
+					statePlug.setValue( GafferScene.InteractiveRender.State.Paused )
+				else :
+					statePlug.setValue( GafferScene.InteractiveRender.State.Running )
+					if isinstance( self.__view, GafferImageUI.ImageView ) :
+						self.__view.imageGadget().setPaused( False )
 
 ##########################################################################
 # UI for the state plug that allows setting the state through buttons

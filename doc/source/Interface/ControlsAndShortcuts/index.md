@@ -318,6 +318,7 @@ Toggle wipes                         | {kbd}`W`
 Action                               | Control or shortcut
 -------------------------------------|--------------------
 Pause active render                  | {kdb}`Escape`
+Toggle render running / paused       | {kdb}`Ctrl` + {kbd}`\`
 
 ### Crop window tool ###
 
