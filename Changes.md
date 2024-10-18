@@ -1,6 +1,11 @@
 1.x.x.x (relative to 1.5.0.0a3)
 =======
 
+Features
+--------
+
+- MetadataOverlay : Added a new node for adding metadata overlays to images, with control over formatting, layout, font and drop shadow.
+
 Improvements
 ------------
 
