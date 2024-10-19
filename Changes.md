@@ -11,6 +11,11 @@ Improvements
   - Changed the indicator for the color field and color sliders to an unfilled circle so the chosen color is visible in the center.
 - Python Editor : Added line numbers (#6091).
 
+Fixes
+-----
+
+- Expression : Fixed line numbers reported in OSL parse errors.
+
 API
 ---
 

@@ -806,6 +806,11 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 
 			result += "\n)\n";
 
+			// Reset line numbers reported by the OSL parser, so that they
+			// don't include the stuff above.
+
+			result += "#line 1\n";
+
 			// Add on a shader body consisting of the expression itself.
 
 			result += "{\n" + expression;
@@ -904,7 +909,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			}
 
 			string oso;
-			if( !compiler.compile_buffer( shaderSource, oso, options ) )
+			if( !compiler.compile_buffer( shaderSource, oso, options, std::string_view(), "expression" ) )
 			{
 				if( errorHandler.errors().size() )
 				{
