@@ -14,7 +14,7 @@ Improvements
 Fixes
 -----
 
-- Expression : Fixed line numbers reported in OSL parse errors.
+- Expression, OSLCode : Fixed line numbers reported in OSL parse errors.
 
 API
 ---
