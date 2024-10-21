@@ -38,6 +38,8 @@ import IECore
 
 import Gaffer
 
+import pxr.Kind
+
 Gaffer.Metadata.registerValue( "attribute:usd:kind", "label", "Kind" )
 Gaffer.Metadata.registerValue( "attribute:usd:kind", "defaultValue", IECore.StringData( "" ) )
 Gaffer.Metadata.registerValue(
@@ -52,6 +54,9 @@ Gaffer.Metadata.registerValue(
 	> meaning to USD's kind.
 	""",
 )
+Gaffer.Metadata.registerValue( "attribute:usd:kind", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
+Gaffer.Metadata.registerValue( "attribute:usd:kind", "presetNames", IECore.StringVectorData( [ IECore.CamelCase.toSpaced( k ) for k in pxr.Kind.Registry().GetAllKinds() if k != "model" ] ) )
+Gaffer.Metadata.registerValue( "attribute:usd:kind", "presetValues", IECore.StringVectorData( k for k in pxr.Kind.Registry().GetAllKinds() if k != "model" ) )
 
 Gaffer.Metadata.registerValue( "attribute:usd:purpose", "label", "Purpose" )
 Gaffer.Metadata.registerValue( "attribute:usd:purpose", "defaultValue", IECore.StringData( "" ) )
@@ -64,3 +69,6 @@ Gaffer.Metadata.registerValue(
 	the USD documentation for more details.
 	""",
 )
+Gaffer.Metadata.registerValue( "attribute:usd:purpose", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
+Gaffer.Metadata.registerValue( "attribute:usd:purpose", "presetNames", IECore.StringVectorData( [ "Default", "Render", "Proxy", "Guide" ] ) )
+Gaffer.Metadata.registerValue( "attribute:usd:purpose", "presetValues", IECore.StringVectorData( [ "default", "render", "proxy", "guide" ] ) )
