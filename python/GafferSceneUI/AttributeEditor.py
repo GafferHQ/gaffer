@@ -207,8 +207,12 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 
 		for groupKey, sections in self.__columnRegistry.items() :
 			if IECore.StringAlgo.match( tabGroup, groupKey ) :
-				section = sections.get( currentSection or None, {} )
-				sectionColumns += [ c( self.settings()["in"], self.settings()["editScope"] ) for c in section.values() ]
+				if currentSection == "All" and not sections.get( "All" ) :
+					for section in sections.values() :
+						sectionColumns += [ c( self.settings()["in"], self.settings()["editScope"] ) for c in section.values() ]
+				else :
+					section = sections.get( currentSection or None, {} )
+					sectionColumns += [ c( self.settings()["in"], self.settings()["editScope"] ) for c in section.values() ]
 
 		self.__pathListing.setColumns( [ self.__locationNameColumn ] + sectionColumns )
 
@@ -350,6 +354,8 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 				if IECore.StringAlgo.match( tabGroup, groupKey ) :
 					for section in sections.keys() :
 						self._qtWidget().addTab( section or "Main" )
+					if "All" not in sections.keys() and len( sections.keys() ) > 1 :
+						self._qtWidget().addTab( "All" )
 		finally :
 			self.__ignoreCurrentChanged = False
 
