@@ -1,6 +1,11 @@
 1.x.x.x (relative to 1.5.0.0a3)
 =======
 
+Features
+--------
+
+- Instancer : Added `inactiveIds` plug for selecting primitive variables to disable some instances.
+
 Improvements
 ------------
 
@@ -25,6 +30,11 @@ API
   - Added `majorVersion`, `minorVersion`, `patchVersion`, and `version` Python attributes containing the Cycles version.
 - MultiLineTextWidget, CodeWidget : Added the ability to show line numbers by passing `lineNumbersVisible = True` to the constructor.
 - MultiLineTextWidget : Added `setLineNumbersVisible()` and `getLineNumbersVisible()`
+
+Fixes
+-----
+
+- Instancer : Added support 64 bit ints for ids ( matching what is loaded from USD ).
 
 Breaking Changes
 ----------------
