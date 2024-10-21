@@ -77,27 +77,6 @@ using namespace GafferScene;
 namespace
 {
 
-/// \todo Make this into an API for clients to register attributes and corresponding
-/// default values they want to make available. This is needed to get the value of an
-/// attribute that _could_ exist if the user activates it, allowing it to be discovered
-/// in clients of history related APIs such as `AttributeInspector`.
-using CreatableRegistry = std::unordered_map<std::string, const IECore::DataPtr>;
-CreatableRegistry g_attributeRegistry {
-	{ "scene:visible", new BoolData( true ) },
-	{ "gl:visualiser:scale", new IECore::FloatData( 1.0f ) },
-	{ "gl:visualiser:maxTextureResolution", new IECore::IntData( 512 ) },
-	{ "gl:visualiser:frustum", new IECore::StringData( "whenSelected" ) },
-	{ "gl:light:frustumScale", new IECore::FloatData( 1.0f ) },
-	{ "gl:light:drawingMode", new IECore::StringData( "texture" ) },
-	{ "light:mute", new IECore::BoolData( false ) },
-	{ "filteredLights", new StringData( "" ) }
-};
-
-/// Entry keys for `g_optionRegistry` should not include the "option:" prefix.
-CreatableRegistry g_optionRegistry {
-	{ "renderPass:enabled", new BoolData( true ) },
-};
-
 // Pruning
 // =======
 
@@ -471,12 +450,6 @@ ConstObjectPtr attributeValue( const ScenePlug *scene, const ScenePlug::ScenePat
 		if( const auto defaultValue = Gaffer::Metadata::value( g_attributePrefix + attribute, "defaultValue" ) )
 		{
 			return defaultValue;
-		}
-
-		CreatableRegistry::const_iterator registeredAttribute = g_attributeRegistry.find( attribute );
-		if( registeredAttribute != g_attributeRegistry.end() )
-		{
-			return registeredAttribute->second;
 		}
 
 		throw IECore::Exception( fmt::format( "Attribute \"{}\" does not exist", attribute ) );
@@ -1164,12 +1137,6 @@ ConstObjectPtr optionValue( const ScenePlug *scene, const std::string &option )
 
 	if( !result )
 	{
-		CreatableRegistry::const_iterator registeredOption = g_optionRegistry.find( option );
-		if( registeredOption != g_optionRegistry.end() )
-		{
-			return registeredOption->second;
-		}
-
 		throw IECore::Exception( fmt::format( "Option \"{}\" does not exist", option ) );
 	}
 
