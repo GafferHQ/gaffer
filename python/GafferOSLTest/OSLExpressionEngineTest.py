@@ -43,6 +43,7 @@ import re
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferDispatch
 import GafferDispatchTest
 import GafferOSL
@@ -877,6 +878,15 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 			Gaffer.ProcessException, "ePython.__execute : test string",
 			s["n"]["user"]["f"].getValue
 		)
+
+	def testParseErrorLineNumbers( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["node"] = GafferTest.AddNode()
+
+		s["expression"] = Gaffer.Expression()
+		with self.assertRaisesRegex( RuntimeError, "expression:1: error: 'undefinedVariable' was not declared in this scope" ) :
+			s["expression"].setExpression( "parent.node.op1 = undefinedVariable;", "OSL" )
 
 if __name__ == "__main__":
 	unittest.main()

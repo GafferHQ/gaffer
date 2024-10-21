@@ -1743,7 +1743,7 @@ class _ButtonCodeMetadataWidget( GafferUI.MetadataWidget.MetadataWidget ) :
 
 	def __init__( self, target = None, **kw ) :
 
-		self.__codeWidget = GafferUI.CodeWidget()
+		self.__codeWidget = GafferUI.CodeWidget( lineNumbersVisible=True )
 		GafferUI.MetadataWidget.MetadataWidget.__init__( self, self.__codeWidget, "buttonPlugValueWidget:clicked", target, defaultValue = "", **kw )
 
 		self.__codeWidget.setPlaceholderText( inspect.cleandoc(

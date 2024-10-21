@@ -138,7 +138,7 @@ class _CommandPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		self.__codeWidget = GafferUI.CodeWidget()
+		self.__codeWidget = GafferUI.CodeWidget( lineNumbersVisible = True )
 
 		GafferUI.PlugValueWidget.__init__( self, self.__codeWidget, plug, **kw )
 

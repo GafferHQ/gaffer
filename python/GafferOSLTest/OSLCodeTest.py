@@ -369,6 +369,15 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		parameter.setName( "d" )
 		self.assertEqual( len( cs ), 0 )
 
+	def testParseErrorLineNumbers( self ) :
+
+		oslCode = GafferOSL.OSLCode()
+		cs = GafferTest.CapturingSlot( oslCode.errorSignal() )
+		oslCode["code"].setValue( "undefined" )
+
+		self.assertEqual( len( cs ), 1 )
+		self.assertRegex( cs[0][2], "code:1: error: 'undefined' was not declared in this scope$" )
+
 	def __osoFileName( self, oslCode ) :
 
 		# Right now we could get this information by
