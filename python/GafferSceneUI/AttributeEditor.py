@@ -133,7 +133,7 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 		if not columnName :
 			columnName = label or attributeName.split( ":" )[-1]
 
-		toolTip = "<h3>{}</h3>".format( label or columnName )
+		toolTip = "<h3>{}</h3> Attribute : <code>{}</code>".format( label or columnName, attributeName )
 		description = Gaffer.Metadata.value( "attribute:" + attributeName, "description" )
 		if description :
 			## \todo PathListingWidget's PathModel should be handling this instead.
