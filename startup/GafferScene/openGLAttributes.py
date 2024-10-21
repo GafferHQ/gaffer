@@ -191,6 +191,9 @@ Gaffer.Metadata.registerValue(
 	only, allowing a much faster rendering as raw OpenGL points.
 	"""
 )
+Gaffer.Metadata.registerValue( "attribute:gl:pointsPrimitive:useGLPoints", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
+Gaffer.Metadata.registerValue( "attribute:gl:pointsPrimitive:useGLPoints", "presetNames", IECore.StringVectorData( [ "For GL Points", "For Particles And Disks", "For All" ] ) )
+Gaffer.Metadata.registerValue( "attribute:gl:pointsPrimitive:useGLPoints", "presetValues", IECore.StringVectorData( [ "forGLPoints", "forParticlesAndDisks", "forAll" ] ) )
 
 Gaffer.Metadata.registerValue( "attribute:gl:pointsPrimitive:glPointWidth", "label", "GL Point Width" )
 Gaffer.Metadata.registerValue( "attribute:gl:pointsPrimitive:glPointWidth", "defaultValue", IECore.FloatData( 1 ) )
@@ -250,6 +253,9 @@ Gaffer.Metadata.registerValue(
 	Controls how lights are presented in the Viewer.
 	"""
 )
+Gaffer.Metadata.registerValue( "attribute:gl:light:drawingMode", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
+Gaffer.Metadata.registerValue( "attribute:gl:light:drawingMode", "presetNames", IECore.StringVectorData( [ "Wireframe", "Color", "Texture" ] ) )
+Gaffer.Metadata.registerValue( "attribute:gl:light:drawingMode", "presetValues", IECore.StringVectorData( [ "wireframe", "color", "texture" ] ) )
 
 Gaffer.Metadata.registerValue( "attribute:gl:light:frustumScale", "label", "Light Frustum Scale" )
 Gaffer.Metadata.registerValue( "attribute:gl:light:frustumScale", "defaultValue", IECore.FloatData( 1 ) )
@@ -271,6 +277,9 @@ Gaffer.Metadata.registerValue(
 	their projection or frustum.
 	"""
 )
+Gaffer.Metadata.registerValue( "attribute:gl:visualiser:frustum", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
+Gaffer.Metadata.registerValue( "attribute:gl:visualiser:frustum", "presetNames", IECore.StringVectorData( [ "Off", "When Selected", "On" ] ) )
+Gaffer.Metadata.registerValue( "attribute:gl:visualiser:frustum", "presetValues", IECore.StringVectorData( [ "off", "whenSelected", "on" ] ) )
 
 Gaffer.Metadata.registerValue( "attribute:gl:visualiser:maxTextureResolution", "label", "Max Texture Resolution" )
 Gaffer.Metadata.registerValue( "attribute:gl:visualiser:maxTextureResolution", "defaultValue", IECore.IntData( 512 ) )
