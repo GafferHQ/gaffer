@@ -1415,8 +1415,12 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Denoise the image with the selected denoiser.
-			OptiX - Use the OptiX AI denoiser with GPU acceleration, only available on NVIDIA GPUs
-			OpenImageDenoise - Use Intel OpenImageDenoise AI denoiser running on the CPU
+
+			- OptiX : Use the OptiX AI denoiser with GPU acceleration, only available on NVIDIA GPUs
+			- OpenImageDenoise : Use the Intel OpenImageDenoise AI denoiser running on the CPU
+
+			> Tip : Only outputs that include a `denoise` parameter set to `true` will be denoised.
+			> Denoised outputs are renamed to include a "denoised" suffix.
 			""",
 
 			"layout:section", "Denoising",
