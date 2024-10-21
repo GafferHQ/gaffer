@@ -2347,7 +2347,7 @@ ccl::DeviceInfo firstCPUDevice()
 	return ccl::DeviceInfo();
 }
 
-ccl::DeviceInfo matchingDevices( const std::string &pattern, int threads, bool background )
+ccl::DeviceInfo matchingDevices( const std::string &pattern, int threads, bool background, ccl::DenoiserType denoiser = ccl::DenoiserType::DENOISER_NONE )
 {
 	ccl::vector<ccl::DeviceInfo> devices;
 	std::unordered_map<ccl::DeviceType, int> typeIndices;
@@ -2363,13 +2363,25 @@ ccl::DeviceInfo matchingDevices( const std::string &pattern, int threads, bool b
 			StringAlgo::matchMultiple( name, pattern )
 		)
 		{
+			// If a denoiser is specified, only match devices that support it.
+			if( denoiser != ccl::DenoiserType::DENOISER_NONE && !( device.denoisers & denoiser ) )
+			{
+				continue;
+			}
 			devices.push_back( device );
 		}
 	}
 
 	if( devices.empty() )
 	{
-		IECore::msg( IECore::Msg::Warning, "CyclesRenderer", fmt::format( "No devices matching \"{}\" found, reverting to CPU.", pattern ) );
+		if( denoiser != ccl::DenoiserType::DENOISER_NONE )
+		{
+			IECore::msg( IECore::Msg::Warning, "CyclesRenderer", fmt::format( "No compatible {} denoise device matching \"{}\" found, reverting to CPU denoising if available.", ccl::denoiserTypeToHumanReadable( denoiser ), pattern ) );
+		}
+		else
+		{
+			IECore::msg( IECore::Msg::Warning, "CyclesRenderer", fmt::format( "No devices matching \"{}\" found, reverting to CPU.", pattern ) );
+		}
 		devices.push_back( firstCPUDevice() );
 	}
 
@@ -2444,11 +2456,32 @@ ccl::ShadingSystem nameToShadingSystemEnum( const IECore::InternedString &name )
 	return ccl::ShadingSystem::SHADINGSYSTEM_SVM;
 }
 
+// Denoisers
+IECore::InternedString g_denoiseOptix( "optix" );
+IECore::InternedString g_denoiseOpenImageDenoise( "openimagedenoise" );
+
+ccl::DenoiserType nameToDenoiseTypeEnum( const IECore::InternedString &name )
+{
+#define MAP_NAME(enumName, enum) if(name == enumName) return enum;
+	if( IECoreCycles::optixDenoiseSupported() )
+	{
+		MAP_NAME(g_denoiseOptix, ccl::DenoiserType::DENOISER_OPTIX);
+	}
+	if( IECoreCycles::openImageDenoiseSupported() )
+	{
+		MAP_NAME(g_denoiseOpenImageDenoise, ccl::DenoiserType::DENOISER_OPENIMAGEDENOISE);
+	}
+#undef MAP_NAME
+
+	return ccl::DenoiserType::DENOISER_NONE;
+}
+
 // Core
 IECore::InternedString g_frameOptionName( "frame" );
 IECore::InternedString g_cameraOptionName( "camera" );
 IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
 IECore::InternedString g_deviceOptionName( "cycles:device" );
+IECore::InternedString g_denoiseDeviceOptionName( "cycles:denoise_device" );
 IECore::InternedString g_shadingsystemOptionName( "cycles:shadingsystem" );
 IECore::InternedString g_squareSamplesOptionName( "cycles:square_samples" );
 // Logging
@@ -2474,8 +2507,9 @@ IECore::InternedString g_hairShapeOptionName( "cycles:scene:hair_shape" );
 IECore::InternedString g_textureLimitOptionName( "cycles:scene:texture_limit" );
 // Background shader
 IECore::InternedString g_backgroundShaderOptionName( "cycles:background:shader" );
-//
+// Integrator
 IECore::InternedString g_seedOptionName( "cycles:integrator:seed" );
+IECore::InternedString g_denoiserTypeOptionName( "cycles:integrator:denoiser_type" );
 
 const boost::container::flat_map<std::string, ccl::PathRayFlag> g_rayTypes = {
 	{ "camera", ccl::PATH_RAY_CAMERA },
@@ -2827,6 +2861,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			params.threads = threads > 0 ? threads : std::max( (int)std::thread::hardware_concurrency() + threads, 1 );
 			// Device depends on threads, so do that last.
 			params.device = matchingDevices( optionValue<string>( g_deviceOptionName, "CPU", modified ), params.threads, params.background );
+			// Denoise device depends on the chosen denoiser.
+			const ccl::DenoiserType denoiser = nameToDenoiseTypeEnum( optionValue<string>( g_denoiserTypeOptionName, "openimagedenoise", modified ) );
+			params.denoise_device = matchingDevices( optionValue<string>( g_denoiseDeviceOptionName, "*", modified ), params.threads, params.background, denoiser );
 
 			return params;
 		}

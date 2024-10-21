@@ -114,6 +114,7 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:adaptive_threshold", new IECore::FloatData( 0.0f ), false, "adaptiveThreshold" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:adaptive_min_samples", new IECore::IntData( 0 ), false, "adaptiveMinSamples" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:denoiser_type", new IECore::StringData( "openimagedenoise" ), false, "denoiserType" ) );
+	options->addChild( new Gaffer::NameValuePlug( "cycles:denoise_device", new IECore::StringData( "*" ), false, "denoiseDevice" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:denoise_start_sample", new IECore::IntData( 0 ), false, "denoiseStartSample" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:use_denoise_pass_albedo", new IECore::BoolData( true ), false, "useDenoisePassAlbedo" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:use_denoise_pass_normal", new IECore::BoolData( true ), false, "useDenoisePassNormal" ) );
