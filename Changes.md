@@ -4,6 +4,7 @@
 Features
 --------
 
+- AttributeEditor : Added a new editor UI for inspecting and editing attributes. This can be found in the tab next to the RenderPassEditor in the Standard layouts.
 - MetadataOverlay : Added a new node for adding metadata overlays to images, with control over formatting, layout, font and drop shadow.
 
 Improvements
