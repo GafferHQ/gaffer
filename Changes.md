@@ -23,6 +23,7 @@ Fixes
 -----
 
 - Expression, OSLCode : Fixed line numbers reported in OSL parse errors.
+- PathColumn : Fixed display of swatches for cells containing `Color4fData`.
 
 API
 ---
