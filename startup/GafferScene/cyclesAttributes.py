@@ -250,6 +250,10 @@ Gaffer.Metadata.registerValue(
 	Sampling strategy for emissive surfaces.
 	""",
 )
+Gaffer.Metadata.registerValue( "attribute:cycles:shader:emission_sampling_method", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
+Gaffer.Metadata.registerValue( "attribute:cycles:shader:emission_sampling_method", "presetNames", IECore.StringVectorData( [ "None", "Auto", "Front", "Back", "Front-Back" ] ) )
+Gaffer.Metadata.registerValue( "attribute:cycles:shader:emission_sampling_method", "presetValues", IECore.StringVectorData( [ "none", "auto", "front", "back", "front_back" ] ) )
+
 
 Gaffer.Metadata.registerValue( "attribute:cycles:shader:use_transparent_shadow", "label", "Transparent Shadow" )
 Gaffer.Metadata.registerValue( "attribute:cycles:shader:use_transparent_shadow", "defaultValue", IECore.BoolData( True ) )
@@ -282,6 +286,9 @@ Gaffer.Metadata.registerValue(
 	Sampling method to use for volumes.
 	""",
 )
+Gaffer.Metadata.registerValue( "attribute:cycles:shader:volume_sampling_method", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
+Gaffer.Metadata.registerValue( "attribute:cycles:shader:volume_sampling_method", "presetNames", IECore.StringVectorData( [ "Distance", "Equiangular", "Multiple-Importance" ] ) )
+Gaffer.Metadata.registerValue( "attribute:cycles:shader:volume_sampling_method", "presetValues", IECore.StringVectorData( [ "distance", "equiangular", "multiple_importance" ] ) )
 
 Gaffer.Metadata.registerValue( "attribute:cycles:shader:volume_interpolation_method", "label", "Volume Interpolation" )
 Gaffer.Metadata.registerValue( "attribute:cycles:shader:volume_interpolation_method", "defaultValue", IECore.StringData( "linear" ) )
@@ -292,6 +299,9 @@ Gaffer.Metadata.registerValue(
 	Interpolation method to use for volumes.
 	""",
 )
+Gaffer.Metadata.registerValue( "attribute:cycles:shader:volume_interpolation_method", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
+Gaffer.Metadata.registerValue( "attribute:cycles:shader:volume_interpolation_method", "presetNames", IECore.StringVectorData( [ "Linear", "Cubic" ] ) )
+Gaffer.Metadata.registerValue( "attribute:cycles:shader:volume_interpolation_method", "presetValues", IECore.StringVectorData( [ "linear", "cubic" ] ) )
 
 Gaffer.Metadata.registerValue( "attribute:cycles:shader:volume_step_rate", "label", "Volume Step Rate" )
 Gaffer.Metadata.registerValue( "attribute:cycles:shader:volume_step_rate", "defaultValue", IECore.FloatData( 1 ) )
@@ -313,3 +323,6 @@ Gaffer.Metadata.registerValue(
 	Method to use for the displacement.
 	""",
 )
+Gaffer.Metadata.registerValue( "attribute:cycles:shader:displacement_method", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
+Gaffer.Metadata.registerValue( "attribute:cycles:shader:displacement_method", "presetNames", IECore.StringVectorData( [ "Bump", "True", "Both" ] ) )
+Gaffer.Metadata.registerValue( "attribute:cycles:shader:displacement_method", "presetValues", IECore.StringVectorData( [ "bump", "true", "both" ] ) )
