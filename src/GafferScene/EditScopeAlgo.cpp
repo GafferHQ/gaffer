@@ -354,6 +354,8 @@ const GraphComponent *GafferScene::EditScopeAlgo::transformEditReadOnlyReason( c
 namespace
 {
 
+const std::string g_attributePrefix = "attribute:";
+
 SceneProcessorPtr shaderParameterProcessor( const std::string &attribute, const std::string &name )
 {
 	SceneProcessorPtr result = new SceneProcessor( name );
@@ -466,6 +468,11 @@ ConstObjectPtr attributeValue( const ScenePlug *scene, const ScenePlug::ScenePat
 
 	if( !result )
 	{
+		if( const auto defaultValue = Gaffer::Metadata::value( g_attributePrefix + attribute, "defaultValue" ) )
+		{
+			return defaultValue;
+		}
+
 		CreatableRegistry::const_iterator registeredAttribute = g_attributeRegistry.find( attribute );
 		if( registeredAttribute != g_attributeRegistry.end() )
 		{

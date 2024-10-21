@@ -1018,6 +1018,24 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		shuffleAttributes["shuffles"].addChild( Gaffer.ShufflePlug( "gl:visualiser:scale", "test:scale" ) )
 		self.assertEqual( editScope["out"].attributes( "/light" )["test:scale"].value, 1.0 )
 
+	def testAttributeEditFromDefaultValueMetadata( self ) :
+
+		sphere = GafferScene.Sphere()
+		editScope = Gaffer.EditScope()
+		editScope.setup( sphere["out"] )
+		editScope["in"].setInput( sphere["out"] )
+		emptyKeys = editScope.keys()
+
+		with self.assertRaisesRegex( RuntimeError, 'Attribute "test:bogus" does not exist' ) :
+			GafferScene.EditScopeAlgo.acquireAttributeEdit( editScope, "/sphere", "test:bogus" )
+		self.assertEqual( editScope.keys(), emptyKeys )
+
+		Gaffer.Metadata.registerValue( "attribute:test:bogus", "defaultValue", 123 )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, "attribute:test:bogus", "defaultValue" )
+
+		self.assertIsNotNone( GafferScene.EditScopeAlgo.acquireAttributeEdit( editScope, "/sphere", "test:bogus" ) )
+		self.assertNotEqual( editScope.keys(), emptyKeys )
+
 	def testProcessorNames( self ) :
 
 		plane = GafferScene.Plane()
