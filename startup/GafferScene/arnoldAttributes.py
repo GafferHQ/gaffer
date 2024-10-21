@@ -253,6 +253,9 @@ Gaffer.Metadata.registerValue(
 	centred on the object's bounding box middle.
 	""",
 )
+Gaffer.Metadata.registerValue( "attribute:ai:transform_type", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
+Gaffer.Metadata.registerValue( "attribute:ai:transform_type", "presetNames", IECore.StringVectorData( [ "Linear", "RotateAboutOrigin", "RotateAboutCenter" ] ) )
+Gaffer.Metadata.registerValue( "attribute:ai:transform_type", "presetValues", IECore.StringVectorData( [ "linear", "rotate_about_origin", "rotate_about_center" ] ) )
 
 Gaffer.Metadata.registerValue( "attribute:ai:matte", "label", "Matte" )
 Gaffer.Metadata.registerValue( "attribute:ai:matte", "defaultValue", IECore.BoolData( False ) )
@@ -367,6 +370,9 @@ Gaffer.Metadata.registerValue(
 	a displacement shader is applied.
 	""",
 )
+Gaffer.Metadata.registerValue( "attribute:ai:polymesh:subdiv_adaptive_metric", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
+Gaffer.Metadata.registerValue( "attribute:ai:polymesh:subdiv_adaptive_metric", "presetNames", IECore.StringVectorData( [ "Auto", "Edge Length", "Flatness" ] ) )
+Gaffer.Metadata.registerValue( "attribute:ai:polymesh:subdiv_adaptive_metric", "presetValues", IECore.StringVectorData( [ "auto", "edge_length", "flatness" ] ) )
 
 Gaffer.Metadata.registerValue( "attribute:ai:polymesh:subdiv_adaptive_space", "label", "Adaptive Space" )
 Gaffer.Metadata.registerValue( "attribute:ai:polymesh:subdiv_adaptive_space", "defaultValue", IECore.StringData( "raster" ) )
@@ -383,6 +389,9 @@ Gaffer.Metadata.registerValue(
 	size on screen.
 	""",
 )
+Gaffer.Metadata.registerValue( "attribute:ai:polymesh:subdiv_adaptive_space", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
+Gaffer.Metadata.registerValue( "attribute:ai:polymesh:subdiv_adaptive_space", "presetNames", IECore.StringVectorData( [ "Raster", "Object" ] ) )
+Gaffer.Metadata.registerValue( "attribute:ai:polymesh:subdiv_adaptive_space", "presetValues", IECore.StringVectorData( [ "raster", "object" ] ) )
 
 Gaffer.Metadata.registerValue( "attribute:ai:polymesh:subdiv_uv_smoothing", "label", "UV Smoothing" )
 Gaffer.Metadata.registerValue( "attribute:ai:polymesh:subdiv_uv_smoothing", "defaultValue", IECore.StringData( "pin_corners" ) )
@@ -393,6 +402,9 @@ Gaffer.Metadata.registerValue(
 	Determines how UVs are subdivided.
 	""",
 )
+Gaffer.Metadata.registerValue( "attribute:ai:polymesh:subdiv_uv_smoothing", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
+Gaffer.Metadata.registerValue( "attribute:ai:polymesh:subdiv_uv_smoothing", "presetNames", IECore.StringVectorData( [ "Pin Corners", "Pin Borders", "Linear", "Smooth" ] ) )
+Gaffer.Metadata.registerValue( "attribute:ai:polymesh:subdiv_uv_smoothing", "presetValues", IECore.StringVectorData( [ "pin_corners", "pin_borders", "linear", "smooth" ] ) )
 
 Gaffer.Metadata.registerValue( "attribute:ai:polymesh:subdiv_smooth_derivs", "label", "Smooth Derivatives" )
 Gaffer.Metadata.registerValue( "attribute:ai:polymesh:subdiv_smooth_derivs", "defaultValue", IECore.BoolData( False ) )
@@ -456,6 +468,9 @@ Gaffer.Metadata.registerValue(
 	> curves as a primitive variable named "N".
 	""",
 )
+Gaffer.Metadata.registerValue( "attribute:ai:curves:mode", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
+Gaffer.Metadata.registerValue( "attribute:ai:curves:mode", "presetNames", IECore.StringVectorData( [ "Ribbon", "Thick" ] ) )
+Gaffer.Metadata.registerValue( "attribute:ai:curves:mode", "presetValues", IECore.StringVectorData( [ "ribbon", "thick" ] ) )
 
 Gaffer.Metadata.registerValue( "attribute:ai:curves:min_pixel_width", "label", "Min Pixel Width" )
 Gaffer.Metadata.registerValue( "attribute:ai:curves:min_pixel_width", "defaultValue", IECore.FloatData( 0 ) )
