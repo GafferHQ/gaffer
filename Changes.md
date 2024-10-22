@@ -21,6 +21,7 @@ Improvements
 - InteractiveRenderer :
   - Added <kbd>Esc</kbd> hotkey handling to pause an interactive render. This is in addition to the existing behavior of pausing the image viewer.
   - Added <kbd>Ctrl</kbd> + <kbd>\</kbd> hotkey handling to toggle the interactive renderer between paused and running. If the new state is `Running`, the image viewer will also be unpaused.
+  - Starting or unpausing the render using the viewer control play button will also unpause the image viewer.
 
 Fixes
 -----

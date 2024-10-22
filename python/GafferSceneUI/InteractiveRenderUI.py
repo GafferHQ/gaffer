@@ -96,7 +96,7 @@ class _ViewRenderControlUI( GafferUI.Widget ) :
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 				GafferUI.Spacer( imath.V2i( 1, 1 ), imath.V2i( 1, 1 ) )
 				self.__label = GafferUI.Label( "Render" )
-				self.__stateWidget = _StatePlugValueWidget( None )
+				self.__stateWidget = _StatePlugValueWidget( None, view )
 				self.__messagesWidget = _MessageSummaryPlugValueWidget( None )
 
 		self.__view = view
@@ -207,7 +207,7 @@ class _ViewRenderControlUI( GafferUI.Widget ) :
 
 class _StatePlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, *args, **kwargs) :
+	def __init__( self, plug, view = None, *args, **kwargs) :
 
 		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
 		GafferUI.PlugValueWidget.__init__( self, row, plug )
@@ -236,6 +236,7 @@ class _StatePlugValueWidget( GafferUI.PlugValueWidget ) :
 		}
 
 		self.__state = None
+		self.__view = view
 
 	def _updateFromValues( self, values, exception ) :
 
@@ -257,6 +258,8 @@ class _StatePlugValueWidget( GafferUI.PlugValueWidget ) :
 		# Not enabling undo here is done so that users won't accidentally restart/stop their renderings.
 		if state != GafferScene.InteractiveRender.State.Running:
 			self.getPlug().setValue( GafferScene.InteractiveRender.State.Running )
+			if isinstance( self.__view, GafferImageUI.ImageView ) :
+				self.__view.imageGadget().setPaused( False )
 		else:
 			self.getPlug().setValue( GafferScene.InteractiveRender.State.Paused )
 
