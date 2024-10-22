@@ -180,7 +180,7 @@ class _ViewRenderControlUI( GafferUI.Widget ) :
 	def __renderNodePlugDirtied( self, plug ) :
 
 		if plug.getName() == "state" :
-			self.__updateLazily();
+			self.__updateLazily()
 
 	def __keyPress( self, widget, event ) :
 
