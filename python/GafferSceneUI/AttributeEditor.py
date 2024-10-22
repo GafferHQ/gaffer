@@ -99,6 +99,8 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 			self.__selectionChangedConnection = self.__pathListing.selectionChangedSignal().connect(
 				Gaffer.WeakMethod( self.__selectionChanged )
 			)
+			self.__pathListing.columnContextMenuSignal().connect( Gaffer.WeakMethod( self.__columnContextMenuSignal ) )
+			self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPressSignal ) )
 
 		self.__selectedPathsChangedConnection = GafferSceneUI.ScriptNodeAlgo.selectedPathsChangedSignal( scriptNode ).connect(
 			Gaffer.WeakMethod( self.__selectedPathsChanged )
@@ -240,13 +242,44 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 		with Gaffer.Signals.BlockedConnection( self.__selectedPathsChangedConnection ) :
 			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( self.scriptNode(), pathListing.getSelection()[0] )
 
+	def __keyPressSignal( self, widget, event ) :
+
+		if event.key == "F" :
+			self.__frameSelectedPaths()
+			return True
+
+		return False
+
+	def __columnContextMenuSignal( self, column, pathListing, menuDefinition ) :
+
+		columns = pathListing.getColumns()
+
+		if columns.index( column ) == 0 :
+
+			selection = pathListing.getSelection()
+			menuDefinition.append(
+				"Frame Selection",
+				{
+					"command" : Gaffer.WeakMethod( self.__frameSelectedPaths ),
+					"active" : not selection[0].isEmpty(),
+					"shortCut" : "F"
+				}
+			)
+
+	def __frameSelectedPaths( self, *unused ) :
+
+		selection = self.__pathListing.getSelection()
+		if not selection[0].isEmpty() :
+			self.__pathListing.expandTo( selection[0] )
+			self.__pathListing.scrollToFirst( selection[0] )
+
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __transferSelectionFromScriptNode( self ) :
 
 		selectedPaths = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( self.scriptNode() )
 		with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
 			selection = [selectedPaths] + ( [IECore.PathMatcher()] * ( len( self.__pathListing.getColumns() ) - 1 ) )
-			self.__pathListing.setSelection( selection, scrollToFirst=True )
+			self.__pathListing.setSelection( selection, scrollToFirst = False )
 
 GafferUI.Editor.registerType( "AttributeEditor", AttributeEditor )
 

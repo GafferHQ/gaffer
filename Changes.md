@@ -34,6 +34,7 @@ API
   - Added `majorVersion`, `minorVersion`, `patchVersion`, and `version` Python attributes containing the Cycles version.
 - MultiLineTextWidget, CodeWidget : Added the ability to show line numbers by passing `lineNumbersVisible = True` to the constructor.
 - MultiLineTextWidget : Added `setLineNumbersVisible()` and `getLineNumbersVisible()`
+- PathListingWidget : Added `expandTo()` method.
 
 Breaking Changes
 ----------------
