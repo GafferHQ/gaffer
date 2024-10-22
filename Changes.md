@@ -15,6 +15,7 @@ Improvements
   - Changed the color field widget to a color wheel when hue is one of the varying components. [^1]
   - Changed the indicator for the color field and color sliders to an unfilled circle so the chosen color is visible in the center.
 - PythonEditor, PythonCommand, Expression, UIEditor, OSLCode : Added line numbers to code editors (#6091).
+- CyclesOptions : Added `denoiseDevice` plug for configuring the device used for denoising.
 
 Fixes
 -----
