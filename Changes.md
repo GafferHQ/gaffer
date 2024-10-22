@@ -7,6 +7,7 @@ Improvements
 - Instancer :
   - Added `inactiveIds` plug for selecting primitive variables to disable some instances.
   - Added support for 64 bit integer ids (matching what is loaded from USD).
+- DeletePoints : Added modes for deleting points based on a list of ids.
 
 Fixes
 -----

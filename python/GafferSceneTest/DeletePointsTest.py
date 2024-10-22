@@ -149,6 +149,99 @@ class DeletePointsTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( actualPointsDeletedBounds, expectedBoundingBox )
 
+	def testIdList( self ) :
+
+		testObject = IECoreScene.PointsPrimitive(
+			IECore.V3fVectorData( [ imath.V3f( 0, 0, i ) for i in range( 10 ) ] ),
+			IECore.FloatVectorData( range( 10, 20 ) )
+		)
+
+		testObject["testA"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Constant, IECore.IntVectorData( [ 2, 3, 4, 8, 9 ] ) )
+		testObject["testB"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Constant, IECore.Int64VectorData( [ 0, 1, 5, 6, 7 ] ) )
+		testObject["shiftIds"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.Int64VectorData( [ i + 5 for i in range( 10 ) ] ) )
+		testObject["outOfRangeIds"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.Int64VectorData( [ i + 8000000000 for i in range( 10 ) ] ) )
+		testObject["duplicateIds"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.Int64VectorData( [ 0, 0, 1, 1, 2, 2, 3, 3, 4, 4 ] ) )
+
+		self.assertTrue( testObject.arePrimitiveVariablesValid() )
+
+		pointsScene = GafferScene.ObjectToScene()
+		pointsScene["object"].setValue( testObject )
+
+		deletePoints = GafferScene.DeletePoints()
+
+		deletePoints["in"].setInput( pointsScene["out"] )
+
+		pathFilter = GafferScene.PathFilter( "PathFilter" )
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ '/object' ] ) )
+		deletePoints["filter"].setInput( pathFilter["out"] )
+
+		deletePoints["selectionMode"].setValue( GafferScene.DeletePoints.SelectionMode.IdList )
+		deletePoints["idList"].setValue( IECore.Int64VectorData( [ 1, 7 ] ) )
+
+		self.assertEqual(
+			deletePoints["out"].object( "/object" )["r"].data,
+			IECore.FloatVectorData( [ 10, 12, 13, 14, 15, 16, 18, 19 ] )
+		)
+
+		deletePoints["invert"].setValue( True )
+		self.assertEqual(
+			deletePoints["out"].object( "/object" )["r"].data,
+			IECore.FloatVectorData( [ 11, 17 ] )
+		)
+
+		deletePoints["invert"].setValue( False )
+		deletePoints["selectionMode"].setValue( GafferScene.DeletePoints.SelectionMode.IdListPrimitiveVariable )
+		deletePoints["idListVariable"].setValue( "testA" )
+
+		self.assertEqual(
+			deletePoints["out"].object( "/object" )["r"].data,
+			IECore.FloatVectorData( [ 10, 11, 15, 16, 17 ] )
+		)
+
+		deletePoints["idListVariable"].setValue( "testB" )
+
+		self.assertEqual(
+			deletePoints["out"].object( "/object" )["r"].data,
+			IECore.FloatVectorData( [ 12, 13, 14, 18, 19 ] )
+		)
+
+		deletePoints["invert"].setValue( True )
+
+		self.assertEqual(
+			deletePoints["out"].object( "/object" )["r"].data,
+			IECore.FloatVectorData( [ 10, 11, 15, 16, 17 ] )
+		)
+
+		deletePoints["invert"].setValue( False )
+
+		deletePoints["id"].setValue( "shiftIds" )
+
+		self.assertEqual(
+			deletePoints["out"].object( "/object" )["r"].data,
+			IECore.FloatVectorData( [ 13, 14, 15, 16, 17, 18, 19 ] )
+		)
+
+		# Test that we work with ids outside the range of an Int32
+		deletePoints["id"].setValue( "outOfRangeIds" )
+
+		deletePoints["selectionMode"].setValue( GafferScene.DeletePoints.SelectionMode.IdList )
+		deletePoints["idList"].setValue( IECore.Int64VectorData( [ 8000000001,  8000000002, 8000000007, 8000000008 ] ) )
+
+		self.assertEqual(
+			deletePoints["out"].object( "/object" )["r"].data,
+			IECore.FloatVectorData( [ 10, 13, 14, 15, 16, 19 ] )
+		)
+
+		# If multiple point have duplicate ids matching a specified id, we delete all copies of the id.
+		deletePoints["id"].setValue( "duplicateIds" )
+		deletePoints["idList"].setValue( IECore.Int64VectorData( [ 0, 2, 4 ] ) )
+
+		self.assertEqual(
+			deletePoints["out"].object( "/object" )["r"].data,
+			IECore.FloatVectorData( [ 12, 13, 16, 17 ] )
+		)
+
+
 	def testIgnoreMissing( self ) :
 
 		pointsScene = self.makePoints()
