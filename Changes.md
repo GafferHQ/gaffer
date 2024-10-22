@@ -14,6 +14,11 @@ Fixes
 - Render, InteractiveRender : Added default node name arguments to the compatibility shims for removed subclasses such as ArnoldRender.
 - GafferUITest : Fixed `assertNodeUIsHaveExpectedLifetime()` test for invisible nodes.
 
+API
+---
+
+- Int64VectorDataPlug : Added new plug type for passing vectors of int64.
+
 1.5.0.1 (relative to 1.5.0.0)
 =======
 
