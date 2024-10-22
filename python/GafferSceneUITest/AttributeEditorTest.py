@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,38 +34,50 @@
 #
 ##########################################################################
 
-from .SceneViewTest import SceneViewTest
-from .ShaderAssignmentUITest import ShaderAssignmentUITest
-from .StandardGraphLayoutTest import StandardGraphLayoutTest
-from .SceneGadgetTest import SceneGadgetTest
-from .SceneInspectorTest import SceneInspectorTest
-from .HierarchyViewTest import HierarchyViewTest
-from .DocumentationTest import DocumentationTest
-from .ShaderViewTest import ShaderViewTest
-from .ShaderUITest import ShaderUITest
-from .TranslateToolTest import TranslateToolTest
-from .ScaleToolTest import ScaleToolTest
-from .RotateToolTest import RotateToolTest
-from .ContextAlgoTest import ContextAlgoTest
-from .CameraToolTest import CameraToolTest
-from .VisualiserTest import VisualiserTest
-from .TransformToolTest import TransformToolTest
-from .CropWindowToolTest import CropWindowToolTest
-from .NodeUITest import NodeUITest
-from .ParameterInspectorTest import ParameterInspectorTest
-from .AttributeInspectorTest import AttributeInspectorTest
-from .HistoryPathTest import HistoryPathTest
-from .LightEditorTest import LightEditorTest
-from .SetMembershipInspectorTest import SetMembershipInspectorTest
-from .SetEditorTest import SetEditorTest
-from .LightToolTest import LightToolTest
-from .OptionInspectorTest import OptionInspectorTest
-from .LightPositionToolTest import LightPositionToolTest
-from .RenderPassEditorTest import RenderPassEditorTest
-from .SelectionToolTest import SelectionToolTest
-from .InspectorColumnTest import InspectorColumnTest
-from .ScriptNodeAlgoTest import ScriptNodeAlgoTest
-from .AttributeEditorTest import AttributeEditorTest
+import unittest
+
+import Gaffer
+import GafferSceneUI
+import GafferUITest
+
+class AttributeEditorTest( GafferUITest.TestCase ) :
+
+	def testRegisterAttribute( self ) :
+
+		attributeNames = [ "test:visible", "test:this", "test:that", "test:other" ]
+
+		for attribute in attributeNames :
+			GafferSceneUI.AttributeEditor.registerAttribute( "Standard", attribute, "testSection" )
+			self.addCleanup( GafferSceneUI.AttributeEditor.deregisterColumn, "Standard", attribute, "testSection" )
+
+		script = Gaffer.ScriptNode()
+		editor = GafferSceneUI.AttributeEditor( script )
+		editor.settings()["section"].setValue( "testSection" )
+		GafferSceneUI.AttributeEditor._AttributeEditor__updateColumns.flush( editor )
+
+		columnAttributes = [
+			c.inspector().name() for c in editor.sceneListing().getColumns()
+			if isinstance( c, GafferSceneUI.Private.InspectorColumn )
+		]
+
+		for attribute in attributeNames :
+			self.assertIn( attribute, columnAttributes )
+
+		GafferSceneUI.AttributeEditor.deregisterColumn( "Standard", "test:visible", "testSection" )
+
+		editor._AttributeEditor__updateColumns()
+		GafferSceneUI.AttributeEditor._AttributeEditor__updateColumns.flush( editor )
+
+		columnAttributes = [
+			c.inspector().name() for c in editor.sceneListing().getColumns()
+			if isinstance( c, GafferSceneUI.Private.InspectorColumn )
+		]
+
+		for attribute in attributeNames :
+			if attribute != "test:visible" :
+				self.assertIn( attribute, columnAttributes )
+			else :
+				self.assertNotIn( attribute, columnAttributes )
 
 if __name__ == "__main__":
 	unittest.main()

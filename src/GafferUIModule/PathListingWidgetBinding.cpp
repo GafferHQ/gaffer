@@ -237,6 +237,10 @@ QVariant dataToVariant( const IECore::Data *value, int role )
 				const Imath::Color3f &c = static_cast<const IECore::Color3fData *>( value )->readable();
 				return QColor::fromRgbF( c[0], c[1], c[2] );
 			}
+			case IECore::Color4fDataTypeId : {
+				const Imath::Color4f &c = static_cast<const IECore::Color4fData *>( value )->readable();
+				return QColor::fromRgbF( c[0], c[1], c[2], c[3] );
+			}
 			case IECore::CompoundDataTypeId : {
 				auto d = static_cast<const IECore::CompoundData *>( value );
 				QIcon icon;

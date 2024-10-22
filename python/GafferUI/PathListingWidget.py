@@ -266,11 +266,16 @@ class PathListingWidget( GafferUI.Widget ) :
 			self.getExpansion()
 		)
 
+	def expandTo( self, paths ) :
+
+		assert( isinstance( paths, IECore.PathMatcher ) )
+		expansion = self.getExpansion()
+		expansion.addPaths( _GafferUI._pathListingWidgetAncestorPaths( paths ) )
+		self.setExpansion( expansion )
+
 	def expandToSelection( self ) :
 
-		expansion = self.getExpansion()
-		expansion.addPaths( _GafferUI._pathListingWidgetAncestorPaths( self.getSelection() ) )
-		self.setExpansion( expansion )
+		self.expandTo( self.getSelection() )
 
 	def expansionChangedSignal( self ) :
 
