@@ -962,23 +962,18 @@ class ColorChooser( GafferUI.Widget ) :
 
 	## A signal emitted whenever the visible components are changed. Slots
 	# should have the signature slot( ColorChooser ).
-	# `visibleComponents` is a string representing the components currently
-	# visible.
 	def visibleComponentsChangedSignal( self ) :
 
 		return self.__visibleComponentsChangedSignal
 
 	## A signal emitted whenever the static component is changed. Slots
 	# should have the signature slot( ColorChooser ).
-	# `staticComponent` is a single character string representing the
-	# current static component.
 	def staticComponentChangedSignal( self ) :
 
 		return self.__staticComponentChangedSignal
 
 	## A signal emitted whenever the visibility of the color field changes.
 	# Slots should have the signature slot( ColorChooser ).
-	# `visible` is a boolean representing the current visibility.
 	def colorFieldVisibleChangedSignal( self ) :
 
 		return self.__colorFieldVisibleChangedSignal
