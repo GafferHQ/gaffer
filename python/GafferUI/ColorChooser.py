@@ -232,7 +232,7 @@ class _ComponentSlider( GafferUI.Slider ) :
 
 class _ColorField( GafferUI.Widget ) :
 
-	def __init__( self, color = imath.Color3f( 1.0 ), staticComponent = "v", **kw ) :
+	def __init__( self, color = imath.Color3f( 1.0 ), staticComponent = "v", dynamicBackground = True, **kw ) :
 
 		GafferUI.Widget.__init__( self, QtWidgets.QWidget(), **kw )
 
@@ -251,6 +251,8 @@ class _ColorField( GafferUI.Widget ) :
 		self.__colorFieldToDraw = None
 		self.setColor( color, staticComponent )
 
+		self.setDynamicBackground( dynamicBackground )
+
 	# Sets the color and the static component. `color` is in
 	# RGB space for RGB static components, HSV space for
 	# HSV static components and TMI space for TMI components.
@@ -262,6 +264,16 @@ class _ColorField( GafferUI.Widget ) :
 	def getColor( self ) :
 
 		return self.__color, self.__staticComponent
+
+	def setDynamicBackground( self, dynamicBackground ) :
+
+		self.__dynamicBackground = dynamicBackground
+		self.__colorFieldToDraw = None
+		self._qtWidget().update()
+
+	def getDynamicBackground( self ) :
+
+		return self.__dynamicBackground
 
 	## A signal emitted whenever a value has been changed. Slots should
 	# have the signature slot( _ColorField, GafferUI.Slider.ValueChangedReason )
@@ -449,10 +461,15 @@ class _ColorField( GafferUI.Widget ) :
 			xIndex, yIndex = self.__xyIndices()
 			zIndex = self.__zIndex()
 
-			staticValue = self.__color[zIndex]
-
 			c = imath.Color3f()
-			c[zIndex] = staticValue
+			if self.__dynamicBackground or self.__staticComponent == "h" :
+				c[zIndex] = self.__color[zIndex]
+			elif self.__staticComponent in "rgbtm" :
+				c[zIndex] = 0.0
+			elif self.__staticComponent in "sv" :
+				c[zIndex] = 1.0
+			elif self.__staticComponent == "i" :
+				c[zIndex] = 0.5
 
 			ColorSpace = enum.Enum( "ColorSpace", [ "RGB", "HSV", "TMI" ] )
 			if self.__staticComponent in "rgb" :
@@ -944,6 +961,7 @@ class ColorChooser( GafferUI.Widget ) :
 
 		for component, slider in self.__sliders.items() :
 			slider.setDynamicBackground( dynamic )
+		self.__colorField.setDynamicBackground( dynamic )
 
 		self.__dynamicSliderBackgroundsChangedSignal( self )
 
