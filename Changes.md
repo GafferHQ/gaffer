@@ -43,7 +43,7 @@ Breaking Changes
 
 - InteractiveRenderTest : Removed `interactiveRenderNodeClass` member and `useNodeClass` argument to `_createInteractiveRender`. All testing is now performed with the InteractiveRender node itself.
 - GafferCycles : The `devices`, `nodes`, `shaders`, `lights`, and `passes` Python attributes now contain IECore.CompoundData instead of Python dictionaries.
-- InteractiveArnoldRender, InteractiveCyclesRender : Removed. Use the generic InteractiveRender node instead.
+- InteractiveArnoldRender, InteractiveCyclesRender, InteractiveDelightRender : Removed. Use the generic InteractiveRender node instead.
 
 1.5.0.0a3 (relative to 1.5.0.0a2)
 =========
