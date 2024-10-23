@@ -302,7 +302,11 @@ class _ColorField( GafferUI.Widget ) :
 			return
 
 		zIndex = self.__zIndex()
-		if color[zIndex] != self.__color[zIndex] or staticComponent != self.__staticComponent :
+		if (
+			staticComponent != self.__staticComponent or
+			( self.__dynamicBackground and color[zIndex] != self.__color[zIndex] ) or
+			( not self.__dynamicBackground and staticComponent == "h" )
+		) :
 			self.__colorFieldToDraw = None
 
 		self.__color = color
