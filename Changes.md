@@ -10,6 +10,7 @@ Improvements
 - DeletePoints : Added modes for deleting points based on a list of ids.
 - Light Editor, Attribute Editor, Spreadsheet : Add original and current color swatches to color popups.
 - SceneView : Added fallback framing extents to create a reasonable view when `SceneGadget` is empty, for example if the grid is hidden.
+- ColorChooser : Added an option to toggle the dynamic update of colors displayed in the slider backgrounds. When enabled, the widget backgrounds update to show the color that will result from moving the indicator to a given position. When disabled, a static range of values is displayed instead.
 
 Fixes
 -----

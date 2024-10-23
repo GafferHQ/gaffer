@@ -147,6 +147,9 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 		self.colorChooser().colorFieldVisibleChangedSignal().connect(
 			functools.partial( Gaffer.WeakMethod( self.__colorChooserColorFieldVisibleChanged ) )
 		)
+		self.colorChooser().dynamicSliderBackgroundsChangedSignal().connect(
+			functools.partial( Gaffer.WeakMethod( self.__dynamicSliderBackgroundsChanged ) )
+		)
 		self.colorChooser().optionsMenuSignal().connect(
 			functools.partial( Gaffer.WeakMethod( self.__colorChooserOptionsMenu ) ),
 			scoped = False
@@ -182,6 +185,10 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 		colorFieldVisible = self.__colorChooserOption( "colorFieldVisible" )
 		if colorFieldVisible is not None :
 			self.colorChooser().setColorFieldVisible( colorFieldVisible )
+
+		dynamicSliderBackgrounds = self.__colorChooserOption( "dynamicSliderBackgrounds" )
+		if dynamicSliderBackgrounds is not None :
+			self.colorChooser().setDynamicSliderBackgrounds( dynamicSliderBackgrounds )
 
 		parentWindow.addChildWindow( self, removeOnClose = True )
 
@@ -287,3 +294,7 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 	def __colorChooserColorFieldVisibleChanged( self, colorChooser ) :
 
 		self.__colorChooserOptionChanged( "colorFieldVisible", colorChooser.getColorFieldVisible() )
+
+	def __dynamicSliderBackgroundsChanged( self, colorChooser ) :
+
+		self.__colorChooserOptionChanged( "dynamicSliderBackgrounds", colorChooser.getDynamicSliderBackgrounds() )
