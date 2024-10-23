@@ -19,6 +19,7 @@ Improvements
 - CyclesOptions : Added `denoiseDevice` plug for configuring the device used for denoising.
 - AttributeTweaks : Added tooltips and presets for all attribute values.
 - TweakPlug : Improved performance when dealing with large lists.
+- SceneWriter : Improved emulation of component-level shader connections when exporting Cycles shaders to USD. Native adaptor shaders are now used instead of OSL shaders that may not be available in the destination DCC.
 
 Fixes
 -----
@@ -26,6 +27,7 @@ Fixes
 - Expression, OSLCode : Fixed line numbers reported in OSL parse errors.
 - PathColumn : Fixed display of swatches for cells containing `Color4fData`.
 - Arnold : Fixed "Flush Cache" menu items to work with renders being performed by an InteractiveRender node (rather than an InteractiveArnoldRender node).
+- Cycles : Fixed rendering of shaders with connections to individual `rgb` components of a colour or `xyz` components of a vector (#5553).
 
 API
 ---

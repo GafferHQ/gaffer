@@ -1382,6 +1382,9 @@ libraries = {
 
 	},
 
+	# Installs `startup/IECoreScene`.
+	"IECoreScene" : {},
+
 }
 
 libraries["scripts"]["additionalFiles"].append( "bin/gaffer.cmd" if env["PLATFORM"] == "win32" else "bin/gaffer" )
