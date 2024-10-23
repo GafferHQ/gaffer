@@ -1137,12 +1137,12 @@ libraries = {
 		"envAppends" : {
 			"CPPPATH" : [ "$ONNX_ROOT/include" ],
 			"LIBPATH" : [ "$ONNX_ROOT/lib" ],
-			"LIBS" : [ "Gaffer", "GafferImage", "onnxruntime" ],
+			"LIBS" : [ "Gaffer", "GafferImage", "onnxruntime", "GafferScene", "IECoreScene$CORTEX_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"CPPPATH" : [ "$ONNX_ROOT/include" ],
 			"LIBPATH" : [ "$ONNX_ROOT/lib" ],
-			"LIBS" : [ "GafferBindings", "GafferImage", "GafferML", "onnxruntime" ],
+			"LIBS" : [ "GafferBindings", "GafferImage", "GafferML", "onnxruntime", "GafferScene", "IECoreScene$CORTEX_LIB_SUFFIX" ],
 		},
 		"requiredOptions" : [ "ONNX_ROOT" ],
 	},

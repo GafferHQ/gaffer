@@ -562,6 +562,7 @@ import GafferMLUI
 nodeMenu.append( "/ML/Data To Tensor", GafferML.DataToTensor, searchText = "DataToTensor" )
 nodeMenu.append( "/ML/Image To Tensor", GafferML.ImageToTensor, searchText = "ImageToTensor" )
 nodeMenu.append( "/ML/Tensor To Image", GafferML.TensorToImage, searchText = "TensorToImage" )
+nodeMenu.append( "/ML/Tensor To Scene", GafferML.TensorToScene, searchText = "TensorToScene" )
 nodeMenu.append( "/ML/Inference", GafferML.Inference, searchText = "Inference" )
 
 # Utility nodes

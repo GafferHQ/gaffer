@@ -34,8 +34,25 @@
 #
 ##########################################################################
 
-from . import TensorToImageUI
-from . import TensorToSceneUI
-from . import InferenceUI
+import Gaffer
+import GafferML
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferMLUI" )
+Gaffer.Metadata.registerNode(
+
+	GafferML.TensorToScene,
+
+	plugs = {
+
+		"vertices" : [
+
+			"nodule:type", "GafferUI::StandardNodule",
+
+		],
+		"faces" : [
+
+			"nodule:type", "GafferUI::StandardNodule",
+
+		],
+
+	}
+)
