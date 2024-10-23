@@ -45,6 +45,7 @@ BUILD_CACHEDIR = os.environ["GAFFER_CACHE_DIR"]
 
 ARNOLD_ROOT = os.environ.get( "ARNOLD_ROOT", "" )
 DELIGHT_ROOT = os.environ["DELIGHT"]
+ONNX_ROOT = os.environ["ONNX_ROOT"]
 
 BUILD_DIR = os.environ["GAFFER_BUILD_DIR"]
 INSTALL_DIR = os.path.join( "install", os.environ["GAFFER_BUILD_NAME"] )

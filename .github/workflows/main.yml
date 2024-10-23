@@ -139,6 +139,8 @@ jobs:
         echo GAFFER_DEPENDENCIES_HASH=`python .github/workflows/main/installDependencies.py ${{ matrix.dependenciesURL != '' && format( '--archiveURL {0}', matrix.dependenciesURL ) || '' }} --dependenciesDir ${{ env.GAFFER_BUILD_DIR }} --outputFormat "{archiveDigest}"` >> $GITHUB_ENV
         ./.github/workflows/main/installDelight.py
         echo DELIGHT=$GITHUB_WORKSPACE/3delight >> $GITHUB_ENV
+        ./.github/workflows/main/installONNX.py
+        echo ONNX_ROOT=$GITHUB_WORKSPACE/onnxruntime >> $GITHUB_ENV
       shell: bash
 
     - name: Install Mesa (Windows)
