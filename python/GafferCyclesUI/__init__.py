@@ -42,7 +42,6 @@ from . import CyclesMeshLightUI
 from . import CyclesOptionsUI
 from . import CyclesShaderBallUI
 from . import CyclesShaderUI
-from . import InteractiveCyclesRenderUI
 from . import ShaderMenu
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferCyclesUI" )

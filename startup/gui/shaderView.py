@@ -47,7 +47,13 @@ if os.environ.get( "CYCLES_ROOT" ) :
 
 		import GafferCycles
 
-		GafferSceneUI.ShaderView.registerRenderer( "cycles", GafferCycles.InteractiveCyclesRender )
+		def __cyclesRenderer() :
+
+			result = GafferScene.InteractiveRender()
+			result["renderer"].setValue( "Cycles" )
+			return result
+
+		GafferSceneUI.ShaderView.registerRenderer( "cycles", __cyclesRenderer )
 
 		def __cyclesShaderBall() :
 
@@ -65,7 +71,7 @@ if os.environ.get( "CYCLES_ROOT" ) :
 
 		GafferSceneUI.ShaderView.registerScene( "cycles", "Default", __cyclesShaderBall )
 
-		GafferSceneUI.ShaderView.registerRenderer( "osl", GafferCycles.InteractiveCyclesRender )
+		GafferSceneUI.ShaderView.registerRenderer( "osl", __cyclesRenderer )
 		GafferSceneUI.ShaderView.registerScene( "osl", "Default", __cyclesShaderBall )
 
 with IECore.IgnoredExceptions( ImportError ) :

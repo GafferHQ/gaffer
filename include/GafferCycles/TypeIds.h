@@ -44,7 +44,7 @@ enum TypeId
 	CyclesAttributesTypeId = 400000,
 	CyclesOptionsTypeId = 400001,
 	CyclesRenderTypeId = 400002, // Available for reuse
-	InteractiveCyclesRenderTypeId = 400003,
+	InteractiveCyclesRenderTypeId = 400003, // Available for reuse
 	CyclesShaderTypeId = 400004,
 	CyclesLightTypeId = 400005,
 	CyclesBackgroundTypeId = 400006,
