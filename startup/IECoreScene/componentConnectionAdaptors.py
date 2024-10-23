@@ -63,3 +63,24 @@ IECoreScene.ShaderNetworkAlgo.registerJoinAdapter(
 IECoreScene.ShaderNetworkAlgo.registerJoinAdapter(
 	"cycles", IECore.V3fData, IECoreScene.Shader( "combine_xyz", "cycles:shader" ), ( "x", "y", "z" ), "vector"
 )
+
+# Arnold
+# ======
+
+for c, mode in zip( "rgbaxyz", "rgbargb" ) :
+
+	IECoreScene.ShaderNetworkAlgo.registerSplitAdapter(
+			"ai", c, IECoreScene.Shader( "rgba_to_float", "ai:shader", { "mode" : mode } ), "input", "out"
+		)
+
+IECoreScene.ShaderNetworkAlgo.registerJoinAdapter(
+	"ai", IECore.V3fData.staticTypeId(), IECoreScene.Shader( "float_to_rgb", "ai:shader" ), ( "r", "g", "b" ), "out"
+)
+
+IECoreScene.ShaderNetworkAlgo.registerJoinAdapter(
+	"ai", IECore.Color3fData.staticTypeId(), IECoreScene.Shader( "float_to_rgb", "ai:shader" ), ( "r", "g", "b" ), "out"
+)
+
+IECoreScene.ShaderNetworkAlgo.registerJoinAdapter(
+	"ai", IECore.Color4fData.staticTypeId(), IECoreScene.Shader( "float_to_rgba", "ai:shader" ), ( "r", "g", "b", "a" ), "out"
+)

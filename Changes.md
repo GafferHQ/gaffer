@@ -19,7 +19,7 @@ Improvements
 - CyclesOptions : Added `denoiseDevice` plug for configuring the device used for denoising.
 - AttributeTweaks : Added tooltips and presets for all attribute values.
 - TweakPlug : Improved performance when dealing with large lists.
-- SceneWriter : Improved emulation of component-level shader connections when exporting Cycles shaders to USD. Native adaptor shaders are now used instead of OSL shaders that may not be available in the destination DCC.
+- SceneWriter : Improved emulation of component-level shader connections when exporting Arnold and Cycles shaders to USD. Native adaptor shaders are now used instead of OSL shaders that may not be available in the destination DCC.
 
 Fixes
 -----
