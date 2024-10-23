@@ -18,6 +18,7 @@ Improvements
 - PythonEditor, PythonCommand, Expression, UIEditor, OSLCode : Added line numbers to code editors (#6091).
 - CyclesOptions : Added `denoiseDevice` plug for configuring the device used for denoising.
 - AttributeTweaks : Added tooltips and presets for all attribute values.
+- Light Editor, Attribute Editor, Spreadsheet : Added original and current color swatches to color popups.
 
 Fixes
 -----
