@@ -485,5 +485,20 @@ class TweakPlugTest( GafferTest.TestCase ) :
 		self.assertFalse( plug.applyTweak( data, Gaffer.TweakPlug.MissingMode.Ignore ) )
 		self.assertEqual( data, IECore.CompoundData() )
 
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testListPerformance( self ) :
+
+		parameters = IECore.CompoundData(
+			{
+				"l" : IECore.IntVectorData( range( 100000 ) ),
+			}
+		)
+
+		tweaks = Gaffer.TweaksPlug()
+		tweaks.addChild( Gaffer.TweakPlug( "l", IECore.IntVectorData( range( 100000, 200000 ) ), Gaffer.TweakPlug.Mode.ListAppend ) )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			tweaks.applyTweaks( parameters )
+
 if __name__ == "__main__":
 	unittest.main()
