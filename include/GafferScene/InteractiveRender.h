@@ -104,12 +104,6 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::ComputeNode
 
 	protected :
 
-		// Constructor for derived classes which wish to hardcode the renderer type. Perhaps
-		// at some point we won't even have derived classes, but instead will always use the
-		// base class? At the moment the main purpose of the derived classes is to force the
-		// loading of the module which registers the required renderer type.
-		InteractiveRender( const IECore::InternedString &rendererType, const std::string &name );
-
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
