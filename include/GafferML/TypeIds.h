@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -42,15 +41,15 @@ namespace GafferML
 
 enum TypeId
 {
-	TensorDataTypeId = 110165, // TODO : DON'T STEAL FROM GAFFERIMAGE
-	TensorPlugTypeId = 110166, // TODO : DON'T STEAL FROM GAFFERIMAGE
-	ImageToTensorTypeId = 110167, // TODO : DON'T STEAL FROM GAFFERIMAGE
-	TensorToImageTypeId = 110168, // TODO : DON'T STEAL FROM GAFFERIMAGE
-	InferenceTypeId = 110169, // TODO : DON'T STEAL FROM GAFFERIMAGE
-	TensorReaderTypeId = 110170, // TODO : DON'T STEAL FROM GAFFERIMAGE
-	DataToTensorTypeId = 110171, // TODO : DON'T STEAL FROM GAFFERIMAGE
+	TensorDataTypeId = 110451,
+	TensorPlugTypeId = 110166,
+	ImageToTensorTypeId = 110167,
+	TensorToImageTypeId = 110168,
+	InferenceTypeId = 110169,
+	TensorReaderTypeId = 110170,
+	DataToTensorTypeId = 110171,
 
-	LastTypeId = 110180
+	LastTypeId = 110500
 };
 
 } // namespace GafferML
