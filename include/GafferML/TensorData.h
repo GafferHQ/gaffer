@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,19 +34,52 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferML/TensorPlug.h"
+#pragma once
 
-#include "Gaffer/TypedObjectPlugImplementation.h"
+#include "GafferML/Export.h"
+#include "GafferML/TypeIds.h"
 
-#include "IECore/MessageHandler.h"
+#include "IECore/Data.h"
 
-using namespace GafferML;
+#include "onnxruntime_cxx_api.h"
 
-namespace Gaffer
+#include <vector>
+
+namespace GafferML
 {
 
-GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( TensorPlug, TensorPlugTypeId )
+/// TODO : THINK ABOUT CONST PROPAGATION AND CACHING
+/// WILL ALSO NEED THE OPTION OF JUST WRAPPING A VALUE DIRECTLY, WITH NO DATA BACKING
+///   - DATA BACKING IS NICE FOR PYTHON ACCESS THOUGH
+///		- DOESN'T MATTER IF WE JUST BIND `[]` THOUGH, OR IMPLEMENT THE BUFFER PROTOCOL
+/// ADD TYPEID
+/// MAKE CLASS
+/// MEMORY USAGE
+struct GAFFERML_API TensorData : public IECore::Data
+{
 
-template class Gaffer::TypedObjectPlug<TensorData>;
+	IE_CORE_DECLAREEXTENSIONOBJECT( GafferML::TensorData, GafferML::TensorDataTypeId, IECore::Data );
 
-} // namespace Gaffer
+	TensorData();
+
+	TensorData( Ort::Value &&value )
+		: value( std::move( value ) )
+	{
+	}
+
+	template<typename T>
+	TensorData( T data, const std::vector<int64_t> &shape )
+		:	data( data ), value( nullptr )
+	{
+		Ort::MemoryInfo memoryInfo = Ort::MemoryInfo::CreateCpu( OrtArenaAllocator, OrtMemTypeDefault );
+		value = Ort::Value::CreateTensor( memoryInfo.GetConst(), data->writable().data(), data->readable().size(), shape.data(), shape.size() );
+	}
+
+	IECore::ConstDataPtr data;
+	Ort::Value value;
+
+};
+
+IE_CORE_DECLAREPTR( TensorData );
+
+} // namespace GafferML

@@ -36,52 +36,13 @@
 
 #pragma once
 
+#include "GafferML/TensorData.h"
 #include "GafferML/TypeIds.h"
 
 #include "Gaffer/TypedObjectPlug.h"
 
-#include "IECore/Data.h"
-
-#include "onnxruntime_cxx_api.h"
-
-#include <vector>
-
 namespace GafferML
 {
-
-/// TODO : THINK ABOUT CONST PROPAGATION AND CACHING
-/// WILL ALSO NEED THE OPTION OF JUST WRAPPING A VALUE DIRECTLY, WITH NO DATA BACKING
-///   - DATA BACKING IS NICE FOR PYTHON ACCESS THOUGH
-///		- DOESN'T MATTER IF WE JUST BIND `[]` THOUGH, OR IMPLEMENT THE BUFFER PROTOCOL
-/// ADD TYPEID
-/// MAKE CLASS
-/// MEMORY USAGE
-struct GAFFER_API TensorData : public IECore::Data
-{
-
-	IE_CORE_DECLAREEXTENSIONOBJECT( GafferML::TensorData, GafferML::TensorDataTypeId, IECore::Data );
-
-	TensorData();
-
-	TensorData( Ort::Value &&value )
-		: value( std::move( value ) )
-	{
-	}
-
-	template<typename T>
-	TensorData( T data, const std::vector<int64_t> &shape )
-		:	data( data ), value( nullptr )
-	{
-		Ort::MemoryInfo memoryInfo = Ort::MemoryInfo::CreateCpu( OrtArenaAllocator, OrtMemTypeDefault );
-		value = Ort::Value::CreateTensor( memoryInfo.GetConst(), data->writable().data(), data->readable().size(), shape.data(), shape.size() );
-	}
-
-	IECore::ConstDataPtr data;
-	Ort::Value value;
-
-};
-
-IE_CORE_DECLAREPTR( TensorData );
 
 using TensorPlug = Gaffer::TypedObjectPlug<TensorData>;
 

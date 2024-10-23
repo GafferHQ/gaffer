@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,19 +34,57 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferML/TensorPlug.h"
-
-#include "Gaffer/TypedObjectPlugImplementation.h"
-
-#include "IECore/MessageHandler.h"
+#include "GafferML/TensorData.h"
 
 using namespace GafferML;
 
-namespace Gaffer
+//const unsigned int TensorData::m_ioVersion = 0;
+IE_CORE_DEFINEOBJECTTYPEDESCRIPTION( TensorData );
+
+TensorData::TensorData()
+	:	value( nullptr )
 {
+}
 
-GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( TensorPlug, TensorPlugTypeId )
+bool TensorData::isEqualTo( const IECore::Object *other ) const
+{
+	if( !Data::isEqualTo( other ) )
+	{
+		return false;
+	}
 
-template class Gaffer::TypedObjectPlug<TensorData>;
+	//const TensorData *tensordata = static_cast<const TensorData *>( other );
+	return true; // TODO
+}
 
-} // namespace Gaffer
+void TensorData::hash( IECore::MurmurHash &h ) const
+{
+	Data::hash( h );
+	// TODO
+}
+
+void TensorData::copyFrom( const IECore::Object *other, IECore::Object::CopyContext *context )
+{
+	Data::copyFrom( other, context );
+
+	//const TensorData *tensordata = static_cast<const TensorData *>( other );
+	// TODO
+}
+
+void TensorData::save( IECore::Object::SaveContext *context ) const
+{
+	Data::save( context );
+	// TODO
+}
+
+void TensorData::load( IECore::Object::LoadContextPtr context )
+{
+	Data::load( context );
+	// TODO
+}
+
+void TensorData::memoryUsage( IECore::Object::MemoryAccumulator &accumulator ) const
+{
+	Data::memoryUsage( accumulator );
+	// TODO
+}

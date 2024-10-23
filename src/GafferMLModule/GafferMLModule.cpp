@@ -40,6 +40,7 @@
 #include "GafferML/DataToTensor.h"
 #include "GafferML/ImageToTensor.h"
 #include "GafferML/Inference.h"
+#include "GafferML/TensorData.h"
 #include "GafferML/TensorPlug.h"
 #include "GafferML/TensorReader.h"
 #include "GafferML/TensorToImage.h"
