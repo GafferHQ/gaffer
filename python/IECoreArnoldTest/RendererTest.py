@@ -4592,6 +4592,176 @@ class RendererTest( GafferTest.TestCase ) :
 			cameraNode = arnold.AiNodeGetPtr( planeShader, "camera" )
 			self.assertEqual( arnold.AiNodeGetName( cameraNode ), "/camera" )
 
+		# Network with connections to and from colour components.
+
+		shader = IECoreScene.ShaderNetwork(
+			shaders = {
+				"input" : IECoreScene.Shader(
+					"flat", "ai:shader",
+					{
+						"color" : imath.Color3f( 1, 0.5, 0.25 ),
+					}
+				),
+				"output" : IECoreScene.Shader(
+					"flat", "ai:surface",
+					{
+						"color" : imath.Color3f( 0 ),
+					}
+				),
+			},
+			connections = [
+				( ( "input", "out.r" ), ( "output", "color.g" ) ),
+				( ( "input", "out.g" ), ( "output", "color.b" ) ),
+				( ( "input", "out.b" ), ( "output", "color.r" ) ),
+			],
+			output = "output",
+		)
+
+	def testRGBComponentConnections( self ) :
+
+		self.__testComponentConnections(
+
+			network = IECoreScene.ShaderNetwork(
+				shaders = {
+					"input" : IECoreScene.Shader(
+						"flat", "ai:shader",
+						{
+							"color" : imath.Color3f( 1, 0.5, 0.25 ),
+						}
+					),
+					"output" : IECoreScene.Shader(
+						"flat", "ai:surface",
+						{
+							"color" : imath.Color3f( 0 ),
+						}
+					),
+				},
+				connections = [
+					( ( "input", "out.r" ), ( "output", "color.g" ) ),
+					( ( "input", "out.g" ), ( "output", "color.b" ) ),
+					( ( "input", "out.b" ), ( "output", "color.r" ) ),
+				],
+				output = "output",
+			),
+
+			expectedColor = imath.Color4f( 0.25, 1, 0.5, 1 )
+
+		)
+
+	def testXYZComponentConnections( self ) :
+
+		self.__testComponentConnections(
+
+			network = IECoreScene.ShaderNetwork(
+				shaders = {
+					"input" : IECoreScene.Shader(
+						"rgb_to_vector", "ai:shader",
+						{
+							"input" : imath.Color3f( 1, 0.5, 0.25 ),
+						}
+					),
+					"output" : IECoreScene.Shader(
+						"vector_to_rgb", "ai:surface",
+						{
+							"input" : imath.V3f( 0 ),
+						}
+					),
+				},
+				connections = [
+					( ( "input", "out.x" ), ( "output", "input.y" ) ),
+					( ( "input", "out.y" ), ( "output", "input.z" ) ),
+					( ( "input", "out.z" ), ( "output", "input.x" ) ),
+				],
+				output = ( "output", "out" ),
+			),
+
+			expectedColor = imath.Color4f( 0.25, 1, 0.5, 1 )
+
+		)
+
+	def __testComponentConnections( self, network, expectedColor ) :
+
+		# This should render directly without special treatment, because Arnold
+		# supports such connections natively.
+
+		self.__testShaderResults( network, [ ( imath.V2f( 0.5, 0.5 ), expectedColor ) ] )
+
+		# But USD doesn't support such connections, so on export we'll have
+		# to insert split/join adaptors to emulate them. Check that this renders
+		# OK too, since that's what the DCC we've exported to will see.
+
+		network = network.copy()
+		IECoreScene.ShaderNetworkAlgo.addComponentConnectionAdapters( network )
+		self.__testShaderResults( network, [ ( imath.V2f( 0.5, 0.5 ), expectedColor ) ] )
+
+		# And check that we're only using Arnold native nodes as adaptors, otherwise
+		# the shader might not be available in the other DCC.
+
+		for shader in network.shaders().values() :
+			self.assertRegex( shader.type, "ai:.*" )
+
+		# When loading back to Gaffer from USD, we'll remove the adaptors.
+		# Check that renders OK too.
+
+		IECoreScene.ShaderNetworkAlgo.removeComponentConnectionAdapters( network )
+		self.__testShaderResults( network, [ ( imath.V2f( 0.5, 0.5 ), expectedColor ) ] )
+
+	def __testShaderResults( self, shader, expectedResults, maxDifference = 0.0 ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Arnold" )
+
+		# Frame so our plane fills the entire image.
+
+		renderer.camera(
+			"testCamera",
+			IECoreScene.Camera(
+				parameters = {
+					"resolution" : imath.V2i( 100, 100 ),
+					"projection" : "orthographic",
+					"screenWindow" : imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) )
+				}
+			)
+		)
+		renderer.option( "camera", IECore.StringData( "testCamera" ) )
+
+		fileName = self.temporaryDirectory() / "test.exr"
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				str( fileName ),
+				"exr",
+				"rgba",
+				{}
+			)
+		)
+
+		# Render the plane with the shader provided.
+
+		primitiveHandle = renderer.object(
+			"/primitive",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) ) ),
+			renderer.attributes( IECore.CompoundObject( { "ai:surface" : shader } ) )
+		)
+		primitiveHandle.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
+
+		renderer.render()
+		image = OpenImageIO.ImageBuf( str( fileName ) )
+
+		# Check we got what we expected.
+
+		for uv, expectedResult in expectedResults :
+			color = self.__colorAtUV( image, uv )
+			if maxDifference :
+				for i in range( 0, 4 ) :
+					self.assertAlmostEqual( color[i], expectedResult[i], delta = maxDifference )
+			else :
+				self.assertEqual( color, expectedResult )
+
+	def __colorAtUV( self, image, uv ) :
+
+		pixel = image.getpixel( int( uv.x * image.spec().width ), int( uv.y * image.spec().height ) )
+		return imath.Color4f( *pixel )
+
 	@staticmethod
 	def __m44f( m ) :
 
