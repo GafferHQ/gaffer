@@ -96,6 +96,10 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::ComputeNode
 		Gaffer::Context *getContext();
 		const Gaffer::Context *getContext() const;
 
+		/// If a render is currently active, calls `Renderer::command()`,
+		/// pausing the renderer temporarily if necessary.
+		IECore::DataPtr command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters = IECore::CompoundDataMap() );
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :

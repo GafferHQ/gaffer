@@ -294,6 +294,21 @@ void InteractiveRender::setContext( Gaffer::ContextPtr context )
 	}
 }
 
+IECore::DataPtr InteractiveRender::command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters )
+{
+	if( !m_renderer )
+	{
+		return nullptr;
+	}
+
+	IntPlug *stateSourcePlug = statePlug()->source<IntPlug>();
+	const State state = (InteractiveRender::State)stateSourcePlug->getValue();
+	stateSourcePlug->setValue( Paused );
+	DataPtr result = m_renderer->command( name, parameters );
+	stateSourcePlug->setValue( state );
+	return result;
+}
+
 void InteractiveRender::plugSet( const Gaffer::Plug *plug )
 {
 	if( plug == rendererPlug() || plug == statePlug() )

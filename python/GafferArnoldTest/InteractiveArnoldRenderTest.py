@@ -429,8 +429,9 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		# Copy new texture
 		shutil.copyfile( blueTextureFile, tmpTextureFile )
-		# We are testing that flushCaches works correctly on a stopped render.
-		GafferArnold.InteractiveArnoldRender.flushCaches( arnold.AI_CACHE_ALL )
+		# If no renders are currently running, then we must call the Arnold API
+		# directly to flush the global cache.
+		arnold.AiUniverseCacheFlush( None, arnold.AI_CACHE_ALL )
 
 		# Start and stop new render
 		s["r"]["state"].setValue( s["r"].State.Running )
@@ -454,7 +455,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		# Reset texture.
 		shutil.copyfile( redTextureFile, tmpTextureFile )
-		GafferArnold.InteractiveArnoldRender.flushCaches( arnold.AI_CACHE_ALL )
+		arnold.AiUniverseCacheFlush( None, arnold.AI_CACHE_ALL )
 
 		# Now test flush cache during a render
 		s["r"]["state"].setValue( s["r"].State.Running )
@@ -465,7 +466,9 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		# Copy new texture, flush cache and then render for 1 second.
 		shutil.copyfile( blueTextureFile, tmpTextureFile )
-		GafferArnold.InteractiveArnoldRender.flushCaches( arnold.AI_CACHE_ALL )
+		# If the renderer is running, then we use `command()` to flush the
+		# cache, managing the pause/restart for us.
+		s["r"].command( "ai:cacheFlush", { "flags" : arnold.AI_CACHE_ALL } )
 		self.uiThreadCallHandler.waitFor( 1.0 )
 
 		# Get colour of second texture and stop.

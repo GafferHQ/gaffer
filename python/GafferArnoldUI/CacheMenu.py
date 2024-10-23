@@ -38,7 +38,8 @@ import functools
 
 import arnold
 
-import GafferArnold
+import GafferUI
+import GafferScene
 
 def appendDefinitions( menuDefinition, prefix="" ) :
 
@@ -53,6 +54,20 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 			prefix + "/Flush Cache/" + label,
 			{
 				"divider" : flags is None,
-				"command" : functools.partial( GafferArnold.InteractiveArnoldRender.flushCaches, flags ),
+				"command" : functools.partial( __flushCaches, flags = flags ),
 			}
 		)
+
+def __flushCaches( menu, flags ) :
+
+	scriptNode = menu.ancestor( GafferUI.ScriptWindow ).scriptNode()
+	flushed = False
+	for node in GafferScene.InteractiveRender.RecursiveRange( scriptNode ) :
+		if node["state"].getValue() == node.State.Stopped :
+			continue
+		if node.command( "ai:cacheFlush", { "flags" : flags } ) is not None :
+			flushed = True
+
+	if not flushed :
+		# No renders running. Flush global caches ready for next one.
+		arnold.AiUniverseCacheFlush( None, flags )
