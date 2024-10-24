@@ -67,6 +67,8 @@ class GAFFERML_API Tensor : public IECore::Object
 		/// Only const access to the `Ort::Value` is provided, as modifying a
 		/// a `GafferML::Tensor` would corrupt values stored in Gaffer's compute
 		/// cache.
+		/// TODO : MAYBE THE CONSTNESS IS MORE ABOUT COPYING WITHOUT NEEDING TO
+		/// WORRY ABOUT COPY-ON-WRITE AT ALL?
 		const Ort::Value &value() const;
 
 	private :
