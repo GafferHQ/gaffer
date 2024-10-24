@@ -141,7 +141,7 @@ Gaffer.Metadata.registerValue(
 )
 
 Gaffer.Metadata.registerValue( "attribute:ai:disp_autobump", "label", "Autobump" )
-Gaffer.Metadata.registerValue( "attribute:ai:disp_autobump", "defaultValue", IECore.BoolData( True ) )
+Gaffer.Metadata.registerValue( "attribute:ai:disp_autobump", "defaultValue", IECore.BoolData( False ) )
 Gaffer.Metadata.registerValue(
 	"attribute:ai:disp_autobump",
 	"description",
@@ -164,7 +164,7 @@ Gaffer.Metadata.registerValue(
 )
 
 Gaffer.Metadata.registerValue( "attribute:ai:autobump_visibility:shadow", "label", "Shadow" )
-Gaffer.Metadata.registerValue( "attribute:ai:autobump_visibility:shadow", "defaultValue", IECore.BoolData( True ) )
+Gaffer.Metadata.registerValue( "attribute:ai:autobump_visibility:shadow", "defaultValue", IECore.BoolData( False ) )
 Gaffer.Metadata.registerValue(
 	"attribute:ai:autobump_visibility:shadow",
 	"description",
@@ -175,7 +175,7 @@ Gaffer.Metadata.registerValue(
 )
 
 Gaffer.Metadata.registerValue( "attribute:ai:autobump_visibility:diffuse_reflect", "label", "Diffuse Reflection" )
-Gaffer.Metadata.registerValue( "attribute:ai:autobump_visibility:diffuse_reflect", "defaultValue", IECore.BoolData( True ) )
+Gaffer.Metadata.registerValue( "attribute:ai:autobump_visibility:diffuse_reflect", "defaultValue", IECore.BoolData( False ) )
 Gaffer.Metadata.registerValue(
 	"attribute:ai:autobump_visibility:diffuse_reflect",
 	"description",
@@ -186,7 +186,7 @@ Gaffer.Metadata.registerValue(
 )
 
 Gaffer.Metadata.registerValue( "attribute:ai:autobump_visibility:specular_reflect", "label", "Specular Reflection" )
-Gaffer.Metadata.registerValue( "attribute:ai:autobump_visibility:specular_reflect", "defaultValue", IECore.BoolData( True ) )
+Gaffer.Metadata.registerValue( "attribute:ai:autobump_visibility:specular_reflect", "defaultValue", IECore.BoolData( False ) )
 Gaffer.Metadata.registerValue(
 	"attribute:ai:autobump_visibility:specular_reflect",
 	"description",
@@ -197,7 +197,7 @@ Gaffer.Metadata.registerValue(
 )
 
 Gaffer.Metadata.registerValue( "attribute:ai:autobump_visibility:diffuse_transmit", "label", "Diffuse Transmission" )
-Gaffer.Metadata.registerValue( "attribute:ai:autobump_visibility:diffuse_transmit", "defaultValue", IECore.BoolData( True ) )
+Gaffer.Metadata.registerValue( "attribute:ai:autobump_visibility:diffuse_transmit", "defaultValue", IECore.BoolData( False ) )
 Gaffer.Metadata.registerValue(
 	"attribute:ai:autobump_visibility:diffuse_transmit",
 	"description",
@@ -208,7 +208,7 @@ Gaffer.Metadata.registerValue(
 )
 
 Gaffer.Metadata.registerValue( "attribute:ai:autobump_visibility:specular_transmit", "label", "Specular Transmission" )
-Gaffer.Metadata.registerValue( "attribute:ai:autobump_visibility:specular_transmit", "defaultValue", IECore.BoolData( True ) )
+Gaffer.Metadata.registerValue( "attribute:ai:autobump_visibility:specular_transmit", "defaultValue", IECore.BoolData( False ) )
 Gaffer.Metadata.registerValue(
 	"attribute:ai:autobump_visibility:specular_transmit",
 	"description",
@@ -219,7 +219,7 @@ Gaffer.Metadata.registerValue(
 )
 
 Gaffer.Metadata.registerValue( "attribute:ai:autobump_visibility:volume", "label", "Volume" )
-Gaffer.Metadata.registerValue( "attribute:ai:autobump_visibility:volume", "defaultValue", IECore.BoolData( True ) )
+Gaffer.Metadata.registerValue( "attribute:ai:autobump_visibility:volume", "defaultValue", IECore.BoolData( False ) )
 Gaffer.Metadata.registerValue(
 	"attribute:ai:autobump_visibility:volume",
 	"description",
@@ -230,7 +230,7 @@ Gaffer.Metadata.registerValue(
 )
 
 Gaffer.Metadata.registerValue( "attribute:ai:autobump_visibility:subsurface", "label", "Subsurface" )
-Gaffer.Metadata.registerValue( "attribute:ai:autobump_visibility:subsurface", "defaultValue", IECore.BoolData( True ) )
+Gaffer.Metadata.registerValue( "attribute:ai:autobump_visibility:subsurface", "defaultValue", IECore.BoolData( False ) )
 Gaffer.Metadata.registerValue(
 	"attribute:ai:autobump_visibility:subsurface",
 	"description",

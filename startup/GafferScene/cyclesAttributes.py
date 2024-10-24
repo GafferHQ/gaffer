@@ -106,7 +106,7 @@ Gaffer.Metadata.registerValue(
 )
 
 Gaffer.Metadata.registerValue( "attribute:cycles:use_holdout", "label", "Use Holdout" )
-Gaffer.Metadata.registerValue( "attribute:cycles:use_holdout", "defaultValue", IECore.BoolData( True ) )
+Gaffer.Metadata.registerValue( "attribute:cycles:use_holdout", "defaultValue", IECore.BoolData( False ) )
 Gaffer.Metadata.registerValue(
 	"attribute:cycles:use_holdout",
 	"description",
@@ -209,7 +209,7 @@ Gaffer.Metadata.registerValue(
 )
 
 Gaffer.Metadata.registerValue( "attribute:cycles:volume_step_size", "label", "Step Size" )
-Gaffer.Metadata.registerValue( "attribute:cycles:volume_step_size", "defaultValue", IECore.FloatData( 0.001 ) )
+Gaffer.Metadata.registerValue( "attribute:cycles:volume_step_size", "defaultValue", IECore.FloatData( 0 ) )
 Gaffer.Metadata.registerValue(
 	"attribute:cycles:volume_step_size",
 	"description",

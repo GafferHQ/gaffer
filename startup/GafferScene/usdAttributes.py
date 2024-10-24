@@ -59,7 +59,7 @@ Gaffer.Metadata.registerValue( "attribute:usd:kind", "presetNames", IECore.Strin
 Gaffer.Metadata.registerValue( "attribute:usd:kind", "presetValues", IECore.StringVectorData( k for k in pxr.Kind.Registry().GetAllKinds() if k != "model" ) )
 
 Gaffer.Metadata.registerValue( "attribute:usd:purpose", "label", "Purpose" )
-Gaffer.Metadata.registerValue( "attribute:usd:purpose", "defaultValue", IECore.StringData( "" ) )
+Gaffer.Metadata.registerValue( "attribute:usd:purpose", "defaultValue", IECore.StringData( "default" ) )
 Gaffer.Metadata.registerValue(
 	"attribute:usd:purpose",
 	"description",
