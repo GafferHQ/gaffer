@@ -24,6 +24,7 @@ Fixes
 
 - Expression, OSLCode : Fixed line numbers reported in OSL parse errors.
 - PathColumn : Fixed display of swatches for cells containing `Color4fData`.
+- Arnold : Fixed "Flush Cache" menu items to work with renders being performed by an InteractiveRender node (rather than an InteractiveArnoldRender node).
 
 API
 ---
@@ -35,12 +36,15 @@ API
 - MultiLineTextWidget, CodeWidget : Added the ability to show line numbers by passing `lineNumbersVisible = True` to the constructor.
 - MultiLineTextWidget : Added `setLineNumbersVisible()` and `getLineNumbersVisible()`
 - PathListingWidget : Added `expandTo()` method.
+- InteractiveRender : Added `command()` method to run a renderer command.
 
 Breaking Changes
 ----------------
 
 - InteractiveRenderTest : Removed `interactiveRenderNodeClass` member and `useNodeClass` argument to `_createInteractiveRender`. All testing is now performed with the InteractiveRender node itself.
 - GafferCycles : The `devices`, `nodes`, `shaders`, `lights`, and `passes` Python attributes now contain IECore.CompoundData instead of Python dictionaries.
+- InteractiveArnoldRender, InteractiveCyclesRender, InteractiveDelightRender : Removed. Use the generic InteractiveRender node instead.
+- InteractiveRender : Removed protected constructor for creating renderer-specific derived classes.
 
 1.5.0.0a3 (relative to 1.5.0.0a2)
 =========

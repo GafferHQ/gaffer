@@ -48,7 +48,6 @@
 #include "GafferCycles/CyclesLight.h"
 #include "GafferCycles/CyclesMeshLight.h"
 #include "GafferCycles/CyclesShader.h"
-#include "GafferCycles/InteractiveCyclesRender.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -80,7 +79,6 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 	;
 	DependencyNodeClass<CyclesMeshLight>();
 	DependencyNodeClass<CyclesShader>();
-	NodeClass<InteractiveCyclesRender>();
 
 	{
 		object ieCoreCyclesModule( borrowed( PyImport_AddModule( "GafferCycles.IECoreCyclesPreview" ) ) );

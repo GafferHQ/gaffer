@@ -44,3 +44,11 @@ def __cyclesRender( name ) :
 	return node
 
 GafferCycles.CyclesRender = __cyclesRender
+
+def __interactiveCyclesRender( name ) :
+
+	node = GafferScene.InteractiveRender( name )
+	node["renderer"].setValue( "Cycles" )
+	return node
+
+GafferCycles.InteractiveCyclesRender = __interactiveCyclesRender

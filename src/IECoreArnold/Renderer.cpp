@@ -4438,8 +4438,7 @@ class ArnoldRenderer final : public ArnoldRendererBase
 			else if( name == "ai:cacheFlush" )
 			{
 				const int flags = parameter<int>( parameters, "flags", AI_CACHE_ALL );
-				AiUniverseCacheFlush( m_universe, flags );
-				return nullptr;
+				return new IECore::BoolData( AiUniverseCacheFlush( m_universe, flags ) );
 			}
 			else if( boost::starts_with( name.string(), "ai:" ) || name.string().find( ":" ) == string::npos )
 			{

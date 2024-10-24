@@ -38,6 +38,7 @@ import os
 
 import IECore
 
+import GafferScene
 import GafferSceneUI
 
 if os.environ.get( "CYCLES_ROOT" ) :
@@ -46,7 +47,13 @@ if os.environ.get( "CYCLES_ROOT" ) :
 
 		import GafferCycles
 
-		GafferSceneUI.ShaderView.registerRenderer( "cycles", GafferCycles.InteractiveCyclesRender )
+		def __cyclesRenderer() :
+
+			result = GafferScene.InteractiveRender()
+			result["renderer"].setValue( "Cycles" )
+			return result
+
+		GafferSceneUI.ShaderView.registerRenderer( "cycles", __cyclesRenderer )
 
 		def __cyclesShaderBall() :
 
@@ -64,13 +71,19 @@ if os.environ.get( "CYCLES_ROOT" ) :
 
 		GafferSceneUI.ShaderView.registerScene( "cycles", "Default", __cyclesShaderBall )
 
-		GafferSceneUI.ShaderView.registerRenderer( "osl", GafferCycles.InteractiveCyclesRender )
+		GafferSceneUI.ShaderView.registerRenderer( "osl", __cyclesRenderer )
 		GafferSceneUI.ShaderView.registerScene( "osl", "Default", __cyclesShaderBall )
 
 with IECore.IgnoredExceptions( ImportError ) :
 
+	def __arnoldRenderer() :
+
+		result = GafferScene.InteractiveRender()
+		result["renderer"].setValue( "Arnold" )
+		return result
+
 	import GafferArnold
-	GafferSceneUI.ShaderView.registerRenderer( "ai", GafferArnold.InteractiveArnoldRender )
+	GafferSceneUI.ShaderView.registerRenderer( "ai", __arnoldRenderer )
 
 	def __arnoldShaderBall() :
 
@@ -86,5 +99,5 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 	# If Arnold is available, then we assume that the user would prefer
 	# it over Cycles for OSL previews.
-	GafferSceneUI.ShaderView.registerRenderer( "osl", GafferArnold.InteractiveArnoldRender )
+	GafferSceneUI.ShaderView.registerRenderer( "osl", __arnoldRenderer )
 	GafferSceneUI.ShaderView.registerScene( "osl", "Default", __arnoldShaderBall )

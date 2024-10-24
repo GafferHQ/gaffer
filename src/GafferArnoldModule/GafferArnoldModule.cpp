@@ -50,7 +50,6 @@
 #include "GafferArnold/ArnoldShader.h"
 #include "GafferArnold/ArnoldVDB.h"
 #include "GafferArnold/ArnoldLightFilter.h"
-#include "GafferArnold/InteractiveArnoldRender.h"
 
 #include "GafferDispatchBindings/TaskNodeBinding.h"
 
@@ -88,12 +87,6 @@ class ArnoldColorManagerSerialiser : public GafferBindings::NodeSerialiser
 
 };
 
-void flushCaches( int flags )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	InteractiveArnoldRender::flushCaches( flags );
-}
-
 } // namespace
 
 BOOST_PYTHON_MODULE( _GafferArnold )
@@ -121,10 +114,6 @@ BOOST_PYTHON_MODULE( _GafferArnold )
 	GafferBindings::DependencyNodeClass<ArnoldCameraShaders>();
 	GafferBindings::DependencyNodeClass<ArnoldMeshLight>();
 	GafferBindings::DependencyNodeClass<ArnoldAOVShader>();
-	GafferBindings::NodeClass<InteractiveArnoldRender>()
-		.def( "flushCaches", &flushCaches )
-		.staticmethod( "flushCaches" )
-	;
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<ArnoldImager>();

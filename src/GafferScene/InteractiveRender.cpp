@@ -148,18 +148,13 @@ size_t InteractiveRender::g_firstPlugIndex = 0;
 GAFFER_NODE_DEFINE_TYPE( InteractiveRender );
 
 InteractiveRender::InteractiveRender( const std::string &name )
-	:	InteractiveRender( /* rendererType = */ InternedString(), name )
-{
-}
-
-InteractiveRender::InteractiveRender( const IECore::InternedString &rendererType, const std::string &name )
 	:	ComputeNode( name ),
 		m_state( Stopped ),
 		m_messageHandler( new RenderMessageHandler() )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "in" ) );
-	addChild( new StringPlug( rendererType.string().empty() ? "renderer" : "__renderer", Plug::In, rendererType.string() ) );
+	addChild( new StringPlug( "renderer" ) );
 	addChild( new IntPlug( "state", Plug::In, Stopped, Stopped, Paused, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new ScenePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new StringPlug( "resolvedRenderer", Plug::Out, "", Plug::Default & ~Plug::Serialisable ) );
@@ -292,6 +287,21 @@ void InteractiveRender::setContext( Gaffer::ContextPtr context )
 	{
 		m_controller->setContext( effectiveContext() );
 	}
+}
+
+IECore::DataPtr InteractiveRender::command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters )
+{
+	if( !m_renderer )
+	{
+		return nullptr;
+	}
+
+	IntPlug *stateSourcePlug = statePlug()->source<IntPlug>();
+	const State state = (InteractiveRender::State)stateSourcePlug->getValue();
+	stateSourcePlug->setValue( Paused );
+	DataPtr result = m_renderer->command( name, parameters );
+	stateSourcePlug->setValue( state );
+	return result;
 }
 
 void InteractiveRender::plugSet( const Gaffer::Plug *plug )

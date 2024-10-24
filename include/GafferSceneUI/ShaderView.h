@@ -75,6 +75,7 @@ class GAFFERSCENEUI_API ShaderView : public GafferImageUI::ImageView
 		SceneChangedSignal &sceneChangedSignal();
 
 		using RendererCreator = std::function<GafferScene::InteractiveRenderPtr ()>;
+		/// \todo We should probably remove `RendererCreator` and just pass the renderer's name.
 		static void registerRenderer( const std::string &shaderPrefix, RendererCreator rendererCreator );
 		static void deregisterRenderer( const std::string &shaderPrefix );
 

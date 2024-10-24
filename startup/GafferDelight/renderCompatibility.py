@@ -44,3 +44,11 @@ def __delightRender( name ) :
 	return node
 
 GafferDelight.DelightRender = __delightRender
+
+def __interactiveDelightRender( name ) :
+
+	node = GafferScene.InteractiveRender( name )
+	node["renderer"].setValue( "3Delight" )
+	return node
+
+GafferDelight.InteractiveDelightRender = __interactiveDelightRender

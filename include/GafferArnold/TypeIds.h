@@ -47,7 +47,7 @@ enum TypeId
 	ArnoldAttributesTypeId = 110902,
 	ArnoldLightTypeId = 110903,
 	ArnoldVDBTypeId = 110904,
-	InteractiveArnoldRenderTypeId = 110905,
+	InteractiveArnoldRenderTypeId = 110905, // Available for reuse
 	ArnoldRenderTypeId = 110906, // Available for reuse
 	ArnoldDisplacementTypeId = 110907,
 	ArnoldMeshLightTypeId = 110908,

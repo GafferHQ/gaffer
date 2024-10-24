@@ -36,7 +36,6 @@
 
 from . import DelightAttributesUI
 from . import DelightOptionsUI
-from . import InteractiveDelightRenderUI
 from . import ShaderMenu
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferDelightUI" )
