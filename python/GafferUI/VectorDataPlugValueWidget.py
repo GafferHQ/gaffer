@@ -152,6 +152,7 @@ class _VectorDataWidget( GafferUI.VectorDataWidget ) :
 
 GafferUI.PlugValueWidget.registerType( Gaffer.BoolVectorDataPlug, VectorDataPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.IntVectorDataPlug, VectorDataPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.Int64VectorDataPlug, VectorDataPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.FloatVectorDataPlug, VectorDataPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.StringVectorDataPlug, VectorDataPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.V2iVectorDataPlug, VectorDataPlugValueWidget )

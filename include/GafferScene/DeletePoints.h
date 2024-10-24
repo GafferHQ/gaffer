@@ -54,11 +54,30 @@ class GAFFERSCENE_API DeletePoints : public Deformer
 
 	public :
 
+		enum class SelectionMode
+		{
+			VertexPrimitiveVariable,
+			IdListPrimitiveVariable,
+			IdList
+		};
+
 		explicit DeletePoints( const std::string &name = defaultName<DeletePoints>() );
 		~DeletePoints() override;
 
+		Gaffer::IntPlug *selectionModePlug();
+		const Gaffer::IntPlug *selectionModePlug() const;
+
 		Gaffer::StringPlug *pointsPlug();
 		const Gaffer::StringPlug *pointsPlug() const;
+
+		Gaffer::StringPlug *idListVariablePlug();
+		const Gaffer::StringPlug *idListVariablePlug() const;
+
+		Gaffer::Int64VectorDataPlug *idListPlug();
+		const Gaffer::Int64VectorDataPlug *idListPlug() const;
+
+		Gaffer::StringPlug *idPlug();
+		const Gaffer::StringPlug *idPlug() const;
 
 		Gaffer::BoolPlug *invertPlug();
 		const Gaffer::BoolPlug *invertPlug() const;
