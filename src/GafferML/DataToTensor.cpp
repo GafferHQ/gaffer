@@ -55,7 +55,7 @@ DataToTensor::DataToTensor( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new FloatVectorDataPlug( "data" ) );
-	addChild( new IntVectorDataPlug( "shape" ) );
+	addChild( new Int64VectorDataPlug( "shape" ) );
 	addChild( new TensorPlug( "tensor", Plug::Out ) );
 }
 
@@ -73,14 +73,14 @@ const Gaffer::FloatVectorDataPlug *DataToTensor::dataPlug() const
 	return getChild<FloatVectorDataPlug>( g_firstPlugIndex );
 }
 
-Gaffer::IntVectorDataPlug *DataToTensor::shapePlug()
+Gaffer::Int64VectorDataPlug *DataToTensor::shapePlug()
 {
-	return getChild<IntVectorDataPlug>( g_firstPlugIndex + 1 );
+	return getChild<Int64VectorDataPlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::IntVectorDataPlug *DataToTensor::shapePlug() const
+const Gaffer::Int64VectorDataPlug *DataToTensor::shapePlug() const
 {
-	return getChild<IntVectorDataPlug>( g_firstPlugIndex + 1 );
+	return getChild<Int64VectorDataPlug>( g_firstPlugIndex + 1 );
 }
 
 TensorPlug *DataToTensor::tensorPlug()
@@ -124,14 +124,11 @@ void DataToTensor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 {
 	if( output == tensorPlug() )
 	{
-		/// TODO : CAN WE AVOID THE COPY?
+		/// TODO : CAN WE AVOID THE COPY? MAYBE IT DOESN'T MATTER? WORRY MORE ABOUT TENSOR SEMANTICS.
 		FloatVectorDataPtr bufferData = dataPlug()->getValue()->copy();
-		ConstIntVectorDataPtr shapeData = shapePlug()->getValue();
+		ConstInt64VectorDataPtr shapeData = shapePlug()->getValue();
 
-		/// TODO : TAKE INT64 FROM THE PLUG IN THE FIRST PLACE.
-		vector<int64_t> shape( shapeData->readable().begin(), shapeData->readable().end() );
-
-		ConstTensorPtr tensorData = new Tensor( bufferData, shape );
+		ConstTensorPtr tensorData = new Tensor( bufferData, shapeData->readable() );
 		static_cast<TensorPlug *>( output )->setValue( tensorData );
 	}
 

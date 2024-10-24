@@ -60,9 +60,8 @@ class GAFFERML_API DataToTensor : public Gaffer::ComputeNode
 		Gaffer::FloatVectorDataPlug *dataPlug();
 		const Gaffer::FloatVectorDataPlug *dataPlug() const;
 
-		/// TODO : WE PROBABLY WANT INT64DATA HERE.
-		Gaffer::IntVectorDataPlug *shapePlug();
-		const Gaffer::IntVectorDataPlug *shapePlug() const;
+		Gaffer::Int64VectorDataPlug *shapePlug();
+		const Gaffer::Int64VectorDataPlug *shapePlug() const;
 
 		TensorPlug *tensorPlug();
 		const TensorPlug *tensorPlug() const;
