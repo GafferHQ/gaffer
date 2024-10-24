@@ -391,7 +391,7 @@ class RendererTest( GafferTest.TestCase ) :
 		s = IECoreScene.ShaderNetwork(
 			shaders = {
 				"source" : IECoreScene.Shader( "Maths/MixColor", "osl:shader" ),
-				"output" : IECoreScene.Shader( "Maths/MixColor", "osl:shader" ),
+				"output" : IECoreScene.Shader( "Maths/MixColor", "osl:shader", { "a" : imath.Color3f( 0 ) } ),
 			},
 			connections = [
 				( ( "source", "out.r" ), ( "output", "a.g" ) ),
