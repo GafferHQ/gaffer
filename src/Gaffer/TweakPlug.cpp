@@ -50,7 +50,7 @@
 
 #include "fmt/format.h"
 
-#include <unordered_map>
+#include <unordered_set>
 
 using namespace std;
 using namespace IECore;
@@ -112,17 +112,25 @@ vector<T> tweakedList( const std::vector<T> &source, const std::vector<T> &tweak
 {
 	vector<T> result = source;
 
+	struct HashFunc
+	{
+		size_t operator()(const T& x) const
+		{
+			IECore::MurmurHash h;
+			h.append( x );
+			return h.h1();
+		}
+	};
+
+	std::unordered_set<T, HashFunc> tweakSet( tweak.begin(), tweak.end() );
+
 	result.erase(
 		std::remove_if(
 			result.begin(),
 			result.end(),
-			[&tweak]( const auto &elem )
+			[&tweakSet]( const auto &elem )
 			{
-				return std::find(
-					tweak.begin(),
-					tweak.end(),
-					elem
-				) != tweak.end();
+				return tweakSet.count( elem );
 			}
 		),
 		result.end()
