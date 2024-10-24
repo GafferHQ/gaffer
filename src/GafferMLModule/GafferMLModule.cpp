@@ -40,7 +40,7 @@
 #include "GafferML/DataToTensor.h"
 #include "GafferML/ImageToTensor.h"
 #include "GafferML/Inference.h"
-#include "GafferML/TensorData.h"
+#include "GafferML/Tensor.h"
 #include "GafferML/TensorPlug.h"
 #include "GafferML/TensorReader.h"
 #include "GafferML/TensorToImage.h"
@@ -56,11 +56,11 @@ using namespace GafferBindings;
 namespace
 {
 
-/// TODO : WHERE DO I REALLY BELONG? MAYBE TENSORDATA SHOULD HAVE SOME CONVENIENCE
+/// TODO : WHERE DO I REALLY BELONG? MAYBE TENSOR SHOULD HAVE SOME CONVENIENCE
 /// METHODS INSTEAD OF USING ONLY THE ORT API?
-list shapeWrapper( const TensorData &data )
+list shapeWrapper( const Tensor &tensor )
 {
-	const auto s = data.value.GetTensorTypeAndShapeInfo().GetShape();
+	const auto s = tensor.value.GetTensorTypeAndShapeInfo().GetShape();
 	list o;
 	for( const auto &x : s )
 	{
@@ -69,12 +69,12 @@ list shapeWrapper( const TensorData &data )
 	return o;
 }
 
-IECore::DataPtr dataWrapper( const TensorData &data, bool copy )
+IECore::DataPtr dataWrapper( const Tensor &tensor, bool copy )
 {
-	if( !data.data )
+	if( !tensor.data )
 	{
-		const size_t count = data.value.GetTensorTypeAndShapeInfo().GetElementCount();
-		const float *source = data.value.GetTensorData<float>();
+		const size_t count = tensor.value.GetTensorTypeAndShapeInfo().GetElementCount();
+		const float *source = tensor.value.GetTensorData<float>();
 		// TODO : MAYBE WE SHOULD ALWAYS BACK THE TENSOR WITH DATA?
 		// OR AT THE VERY LEAST, MOVE THIS FUNCTIONALITY INTO TENSORDATA ITSELF
 		FloatVectorDataPtr result = new FloatVectorData;
@@ -85,7 +85,7 @@ IECore::DataPtr dataWrapper( const TensorData &data, bool copy )
 		return result;
 	}
 
-	return copy ? data.data->copy() : boost::const_pointer_cast<IECore::Data>( data.data );
+	return copy ? tensor.data->copy() : boost::const_pointer_cast<IECore::Data>( tensor.data );
 }
 
 void loadModelWrapper( Inference &inference )
@@ -99,7 +99,7 @@ void loadModelWrapper( Inference &inference )
 BOOST_PYTHON_MODULE( _GafferML )
 {
 
-	IECorePython::RunTimeTypedClass<GafferML::TensorData>()
+	IECorePython::RunTimeTypedClass<GafferML::Tensor>()
 		.def( "data", &dataWrapper, ( arg( "_copy" ) = true ) )
 		.def( "shape", &shapeWrapper )
 	;

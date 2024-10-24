@@ -34,57 +34,52 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferML/TensorData.h"
+#pragma once
 
-using namespace GafferML;
+#include "GafferML/Export.h"
+#include "GafferML/TypeIds.h"
 
-//const unsigned int TensorData::m_ioVersion = 0;
-IE_CORE_DEFINEOBJECTTYPEDESCRIPTION( TensorData );
+#include "IECore/Data.h"
 
-TensorData::TensorData()
-	:	value( nullptr )
+#include "onnxruntime_cxx_api.h"
+
+#include <vector>
+
+namespace GafferML
 {
-}
 
-bool TensorData::isEqualTo( const IECore::Object *other ) const
+/// TODO : THINK ABOUT CONST PROPAGATION AND CACHING
+/// WILL ALSO NEED THE OPTION OF JUST WRAPPING A VALUE DIRECTLY, WITH NO DATA BACKING
+///   - DATA BACKING IS NICE FOR PYTHON ACCESS THOUGH
+///		- DOESN'T MATTER IF WE JUST BIND `[]` THOUGH, OR IMPLEMENT THE BUFFER PROTOCOL
+/// ADD TYPEID
+/// MAKE CLASS
+/// MEMORY USAGE
+struct GAFFERML_API Tensor : public IECore::Object
 {
-	if( !Data::isEqualTo( other ) )
+
+	Tensor();
+
+	Tensor( Ort::Value &&value )
+		: value( std::move( value ) )
 	{
-		return false;
 	}
 
-	//const TensorData *tensordata = static_cast<const TensorData *>( other );
-	return true; // TODO
-}
+	template<typename T>
+	Tensor( T data, const std::vector<int64_t> &shape )
+		:	data( data ), value( nullptr )
+	{
+		Ort::MemoryInfo memoryInfo = Ort::MemoryInfo::CreateCpu( OrtArenaAllocator, OrtMemTypeDefault );
+		value = Ort::Value::CreateTensor( memoryInfo.GetConst(), data->writable().data(), data->readable().size(), shape.data(), shape.size() );
+	}
 
-void TensorData::hash( IECore::MurmurHash &h ) const
-{
-	Data::hash( h );
-	// TODO
-}
+	IE_CORE_DECLAREEXTENSIONOBJECT( GafferML::Tensor, GafferML::TensorTypeId, IECore::Object );
 
-void TensorData::copyFrom( const IECore::Object *other, IECore::Object::CopyContext *context )
-{
-	Data::copyFrom( other, context );
+	IECore::ConstDataPtr data;
+	Ort::Value value;
 
-	//const TensorData *tensordata = static_cast<const TensorData *>( other );
-	// TODO
-}
+};
 
-void TensorData::save( IECore::Object::SaveContext *context ) const
-{
-	Data::save( context );
-	// TODO
-}
+IE_CORE_DECLAREPTR( Tensor );
 
-void TensorData::load( IECore::Object::LoadContextPtr context )
-{
-	Data::load( context );
-	// TODO
-}
-
-void TensorData::memoryUsage( IECore::Object::MemoryAccumulator &accumulator ) const
-{
-	Data::memoryUsage( accumulator );
-	// TODO
-}
+} // namespace GafferML

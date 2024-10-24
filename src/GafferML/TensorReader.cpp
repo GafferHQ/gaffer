@@ -133,7 +133,7 @@ void TensorReader::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 {
 	if( output == tensorPlug() )
 	{
-		ConstTensorDataPtr tensorData;
+		ConstTensorPtr tensor;
 		const string fileName = fileNamePlug()->getValue();
 		if( !fileName.empty() )
 		{
@@ -160,7 +160,7 @@ void TensorReader::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 			switch( dataType )
 			{
 				case onnx::TensorProto::FLOAT : {
-					tensorData = new TensorData( typedData<FloatVectorData>( proto.raw_data(), proto.float_data() ), shape );
+					tensor = new Tensor( typedData<FloatVectorData>( proto.raw_data(), proto.float_data() ), shape );
 					break;
 				}
 				default :
@@ -172,9 +172,9 @@ void TensorReader::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 		else
 		{
 			// TODO : COULD HAVE A STATIC EMPTY TENSOR?
-			tensorData = new TensorData;
+			tensor = new Tensor;
 		}
-		static_cast<TensorPlug *>( output )->setValue( tensorData );
+		static_cast<TensorPlug *>( output )->setValue( tensor );
 	}
 
 	ComputeNode::compute( output, context );

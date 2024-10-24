@@ -261,8 +261,8 @@ void ImageToTensor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *c
 			shape = { 1, (int64_t)channels.size(), dataWindow.size().x, dataWindow.size().y }; // TODO : SHOULD THIS BE YX?
 		}
 
-		ConstTensorDataPtr tensorData = new TensorData( bufferData, shape );
-		static_cast<TensorPlug *>( output )->setValue( tensorData );
+		ConstTensorPtr tensor = new Tensor( bufferData, shape );
+		static_cast<TensorPlug *>( output )->setValue( tensor );
 	}
 
 	ComputeNode::compute( output, context );

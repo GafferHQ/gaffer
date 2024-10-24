@@ -38,7 +38,7 @@
 
 #include "Gaffer/TypedObjectPlugImplementation.h"
 
-#include "IECore/MessageHandler.h"
+//#include "IECore/MessageHandler.h"
 
 using namespace GafferML;
 
@@ -47,6 +47,6 @@ namespace Gaffer
 
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( TensorPlug, TensorPlugTypeId )
 
-template class Gaffer::TypedObjectPlug<TensorData>;
+template class Gaffer::TypedObjectPlug<Tensor>;
 
 } // namespace Gaffer

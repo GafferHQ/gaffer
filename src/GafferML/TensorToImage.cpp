@@ -62,7 +62,7 @@ struct ImageShape
 	int numChannels;
 };
 
-ImageShape imageShape( const TensorData *tensor, bool interleavedChannels )
+ImageShape imageShape( const Tensor *tensor, bool interleavedChannels )
 {
 	const auto shape = tensor->value.GetTensorTypeAndShapeInfo().GetShape();
 	if( shape.size() < 3 )
@@ -208,7 +208,7 @@ void TensorToImage::hashDataWindow( const GafferImage::ImagePlug *parent, const 
 
 Imath::Box2i TensorToImage::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	ConstTensorDataPtr tensor = tensorPlug()->getValue();
+	ConstTensorPtr tensor = tensorPlug()->getValue();
 	return imageShape( tensor.get(), interleavedChannelsPlug()->getValue() ).dataWindow;
 }
 
@@ -252,7 +252,7 @@ void TensorToImage::hashChannelData( const GafferImage::ImagePlug *parent, const
 
 IECore::ConstFloatVectorDataPtr TensorToImage::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	ConstTensorDataPtr tensorData;
+	ConstTensorPtr tensorData;
 	ConstStringVectorDataPtr channelsData;
 	bool interleavedChannels;
 	{

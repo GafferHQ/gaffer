@@ -36,7 +36,7 @@
 
 #pragma once
 
-#include "GafferML/TensorData.h"
+#include "GafferML/Tensor.h"
 #include "GafferML/TypeIds.h"
 
 #include "Gaffer/TypedObjectPlug.h"
@@ -44,20 +44,8 @@
 namespace GafferML
 {
 
-using TensorPlug = Gaffer::TypedObjectPlug<TensorData>;
+using TensorPlug = Gaffer::TypedObjectPlug<Tensor>;
 
 IE_CORE_DECLAREPTR( TensorPlug );
 
 } // namespace GafferML
-
-
-// #if !defined( GafferML_EXPORTS ) && !defined( _MSC_VER )
-
-// namespace Gaffer
-// {
-
-// extern template class Gaffer::TypedObjectPlug<GafferML::TensorData>;
-
-// } // namespace Gaffer
-
-//#endif

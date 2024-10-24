@@ -131,7 +131,7 @@ void DataToTensor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 		/// TODO : TAKE INT64 FROM THE PLUG IN THE FIRST PLACE.
 		vector<int64_t> shape( shapeData->readable().begin(), shapeData->readable().end() );
 
-		ConstTensorDataPtr tensorData = new TensorData( bufferData, shape );
+		ConstTensorPtr tensorData = new Tensor( bufferData, shape );
 		static_cast<TensorPlug *>( output )->setValue( tensorData );
 	}
 

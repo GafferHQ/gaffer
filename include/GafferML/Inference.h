@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -56,7 +56,6 @@ class GAFFERML_API Inference : public Gaffer::ComputeNode
 
 		GAFFER_NODE_DECLARE_TYPE( GafferML::Inference, InferenceTypeId, Gaffer::ComputeNode );
 
-		/// \todo Document why this isn't like `loadShader()`.
 		void loadModel();
 
 		Gaffer::StringPlug *modelPlug();
@@ -83,8 +82,8 @@ class GAFFERML_API Inference : public Gaffer::ComputeNode
 		// on this plug, then dole out individual results from the children
 		// of `outPlug()`.
 		/// \todo Verify the assumption.
-		Gaffer::AtomicCompoundDataPlug *inferencePlug();
-		const Gaffer::AtomicCompoundDataPlug *inferencePlug() const;
+		Gaffer::CompoundObjectPlug *inferencePlug();
+		const Gaffer::CompoundObjectPlug *inferencePlug() const;
 
 		static size_t g_firstPlugIndex;
 

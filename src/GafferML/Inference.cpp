@@ -107,7 +107,7 @@ Inference::Inference( const std::string &name )
 	addChild( new StringPlug( "model" ) );
 	addChild( new ValuePlug( "in" ) );
 	addChild( new ValuePlug( "out", Plug::Out ) );
-	addChild( new AtomicCompoundDataPlug( "__inference", Plug::Out ) );
+	addChild( new CompoundObjectPlug( "__inference", Plug::Out ) );
 }
 
 Inference::~Inference()
@@ -134,7 +134,7 @@ void Inference::loadModel()
 		// plug names. Furthermore, many models have inputs and outputs which
 		// are interchangeable other than trivial differences in naming. So we
 		// use standard numeric names for all inputs instead of the true names.
-		TensorPlugPtr in = new TensorPlug( fmt::format( "in{}", i ), Plug::In, new TensorData(), Plug::Default | Plug::Dynamic );
+		TensorPlugPtr in = new TensorPlug( fmt::format( "in{}", i ), Plug::In, new Tensor(), Plug::Default | Plug::Dynamic );
 		inPlug()->addChild( in );
 		// We instead use the true name as a metadata label to make the UI
 		// potentially a little more friendly.
@@ -153,7 +153,7 @@ void Inference::loadModel()
 
 		// As above, we use standard numeric names for plugs, and register
 		// the true names as metadata labels.
-		TensorPlugPtr out = new TensorPlug( fmt::format( "out{}", i ), Plug::Out, new TensorData(), Plug::Default | Plug::Dynamic );
+		TensorPlugPtr out = new TensorPlug( fmt::format( "out{}", i ), Plug::Out, new Tensor(), Plug::Default | Plug::Dynamic );
 		outPlug()->addChild( out );
 
 		Ort::AllocatedStringPtr ortName = session.GetOutputNameAllocated( i, Ort::AllocatorWithDefaultOptions() );
@@ -193,14 +193,14 @@ const Gaffer::ValuePlug *Inference::outPlug() const
 	return getChild<ValuePlug>( g_firstPlugIndex + 2 );
 }
 
-Gaffer::AtomicCompoundDataPlug *Inference::inferencePlug()
+Gaffer::CompoundObjectPlug *Inference::inferencePlug()
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 3);
+	return getChild<CompoundObjectPlug>( g_firstPlugIndex + 3);
 }
 
-const Gaffer::AtomicCompoundDataPlug *Inference::inferencePlug() const
+const Gaffer::CompoundObjectPlug *Inference::inferencePlug() const
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 3 );
+	return getChild<CompoundObjectPlug>( g_firstPlugIndex + 3 );
 }
 
 void Inference::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -250,7 +250,7 @@ void Inference::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 
 		vector<Ort::AllocatedStringPtr> inputNameOwners;
 		vector<const char *> inputNames;
-		vector<ConstTensorDataPtr> inputOwners;
+		vector<ConstTensorPtr> inputOwners;
 		vector<OrtValue *> inputs;
 
 		for( auto &p : TensorPlug::InputRange( *inPlug() ) )
@@ -288,18 +288,18 @@ void Inference::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 			inputs.size(), outputNames.data(), outputNames.size()
 		);
 
-		CompoundDataPtr result = new CompoundData;
+		CompoundObjectPtr result = new CompoundObject;
 		for( size_t i = 0; i < outputs.size(); ++i )
 		{
-			result->writable()[outPlug()->children()[i]->getName()] = new TensorData( std::move( outputs[i] ) );
+			result->members()[outPlug()->children()[i]->getName()] = new Tensor( std::move( outputs[i] ) );
 		}
 
-		static_cast<AtomicCompoundDataPlug *>( output )->setValue( result );
+		static_cast<CompoundObjectPlug *>( output )->setValue( result );
 	}
 	else if( output->parent() == outPlug() )
 	{
-		ConstCompoundDataPtr inferenceData = inferencePlug()->getValue();
-		static_cast<TensorPlug *>( output )->setValue( inferenceData->member<TensorData>( output->getName() ) );
+		ConstCompoundObjectPtr inferenceData = inferencePlug()->getValue();
+		static_cast<TensorPlug *>( output )->setValue( inferenceData->member<Tensor>( output->getName() ) );
 	}
 	else
 	{
