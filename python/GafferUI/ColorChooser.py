@@ -129,11 +129,18 @@ class _ComponentSlider( GafferUI.Slider ) :
 		self.color = color
 		self.component = component
 		self.__dynamicBackground = dynamicBackground
+		self.__gradientToDraw = None
+		self.__size = self.size()
 
 	# Sets the slider color in RGB space for RGBA channels,
 	# HSV space for HSV channels and TMI space for TMI channels.
 	def setColor( self, color ) :
 
+		if (
+			( self.__dynamicBackground and color != self.color ) or
+			( not self.__dynamicBackground and self.component == "s" )
+		) :
+			self.__gradientToDraw = None
 		self.color = color
 		self._qtWidget().update()
 
@@ -144,6 +151,7 @@ class _ComponentSlider( GafferUI.Slider ) :
 	def setDynamicBackground( self, dynamicBackground ) :
 
 		self.__dynamicBackground = dynamicBackground
+		self.__gradientToDraw = None
 		self._qtWidget().update()
 
 	def getDynamicBackground( self ) :
@@ -153,43 +161,46 @@ class _ComponentSlider( GafferUI.Slider ) :
 	def _drawBackground( self, painter ) :
 
 		size = self.size()
-		grad = QtGui.QLinearGradient( 0, 0, size.x, 0 )
 
-		displayTransform = self.displayTransform()
+		if self.__gradientToDraw is None or size != self.__size :
+			self.__gradientToDraw = QtGui.QLinearGradient( 0, 0, size.x, 0 )
 
-		if self.component == "a" :
-			c1 = imath.Color3f( 0 )
-			c2 = imath.Color3f( 1 )
-		else :
-			if self.__dynamicBackground :
-				c1 = imath.Color3f( self.color[0], self.color[1], self.color[2] )
-			elif self.component in "rgbvi" :
+			displayTransform = self.displayTransform()
+
+			if self.component == "a" :
 				c1 = imath.Color3f( 0 )
-			elif self.component == "h" :
-				c1 = imath.Color3f( 0, 1, 1 )
-			elif self.component == "s" :
-				c1 = imath.Color3f( self.color[0], 0, 1 )
-			elif self.component in "tm" :
-				c1 = imath.Color3f( 0, 0, 0.5 )
-			c2 = imath.Color3f( c1 )
-			a = { "r" : 0, "g" : 1, "b" : 2, "h" : 0, "s" : 1, "v": 2, "t" : 0, "m" : 1, "i" : 2 }[self.component]
-			c1[a] = -1 if self.component in "tm" else 0
-			c2[a] = 1
+				c2 = imath.Color3f( 1 )
+			else :
+				if self.__dynamicBackground :
+					c1 = imath.Color3f( self.color[0], self.color[1], self.color[2] )
+				elif self.component in "rgbvi" :
+					c1 = imath.Color3f( 0 )
+				elif self.component == "h" :
+					c1 = imath.Color3f( 0, 1, 1 )
+				elif self.component == "s" :
+					c1 = imath.Color3f( self.color[0], 0, 1 )
+				elif self.component in "tm" :
+					c1 = imath.Color3f( 0, 0, 0.5 )
+				c2 = imath.Color3f( c1 )
+				a = { "r" : 0, "g" : 1, "b" : 2, "h" : 0, "s" : 1, "v": 2, "t" : 0, "m" : 1, "i" : 2 }[self.component]
+				c1[a] = -1 if self.component in "tm" else 0
+				c2[a] = 1
 
-		numStops = max( 2, size.x // 2 )
-		for i in range( 0, numStops ) :
+			numStops = max( 2, size.x // 2 )
+			for i in range( 0, numStops ) :
 
-			t = float( i ) / (numStops-1)
-			c = c1 + (c2-c1) * t
-			if self.component in "hsv" :
-				c = c.hsv2rgb()
-			elif self.component in "tmi" :
-				c = _tmiToRGB( c )
+				t = float( i ) / (numStops-1)
+				c = c1 + (c2-c1) * t
+				if self.component in "hsv" :
+					c = c.hsv2rgb()
+				elif self.component in "tmi" :
+					c = _tmiToRGB( c )
 
-			grad.setColorAt( t, self._qtColor( displayTransform( c ) ) )
+				self.__gradientToDraw.setColorAt( t, self._qtColor( displayTransform( c ) ) )
 
-		brush = QtGui.QBrush( grad )
+		brush = QtGui.QBrush( self.__gradientToDraw )
 		painter.fillRect( 0, 0, size.x, size.y, brush )
+		self.__size = size
 
 	def _drawValue( self, painter, value, position, state ) :
 
@@ -228,6 +239,7 @@ class _ComponentSlider( GafferUI.Slider ) :
 	def _displayTransformChanged( self ) :
 
 		GafferUI.Slider._displayTransformChanged( self )
+		self.__gradientToDraw = None
 		self._qtWidget().update()
 
 class _ColorField( GafferUI.Widget ) :
