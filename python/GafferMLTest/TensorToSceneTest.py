@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2024, Lucien Fostier All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,11 +34,22 @@
 #
 ##########################################################################
 
-from .ImageToTensorTest import ImageToTensorTest
-from .InferenceTest import InferenceTest
-from .TensorToImageTest import TensorToImageTest
-from .TensorToSceneTest import TensorToSceneTest
+import unittest
+
+import IECore
+
+import Gaffer
+import GafferTest
+import GafferScene
+import GafferML
+
+class TensorToSceneTest( GafferTest.TestCase ) :
+
+	def test( self ) :
+
+            verticesPlug = GafferML.TensorPlug("vertices", Gaffer.Plug.Direction.Out)
+            facesPlug = GafferML.TensorPlug("faces", Gaffer.Plug.Direction.Out)
+            t2s = GafferML.TensorToScene()
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
