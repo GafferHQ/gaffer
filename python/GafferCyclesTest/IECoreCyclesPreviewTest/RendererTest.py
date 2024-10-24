@@ -2039,6 +2039,39 @@ class RendererTest( GafferTest.TestCase ) :
 			]
 		)
 
+	def testComponentConnections( self ) :
+
+		shader = IECoreScene.ShaderNetwork(
+			shaders = {
+				"input" : IECoreScene.Shader(
+					"convert_point_to_color", "cycles:shader",
+					{
+						"value_point" : imath.V3f( 1, 0.5, 0.25 ),
+					}
+				),
+				"output" : IECoreScene.Shader(
+					"emission", "cycles:surface",
+					{
+						"color" : imath.Color3f( 0 ),
+						"strength" : 1.0,
+					}
+				),
+			},
+			connections = [
+				( ( "input", "value_color.r" ), ( "output", "color.g" ) ),
+				( ( "input", "value_color.g" ), ( "output", "color.b" ) ),
+				( ( "input", "value_color.b" ), ( "output", "color.r" ) ),
+			],
+			output = "output",
+		)
+
+		self.__testShaderResults(
+			shader,
+			[
+				( imath.V2f( 0.5, 0.5 ), imath.Color4f( 0.25, 1, 0.5, 1 ) ),
+			]
+		)
+
 	def testInvalidShaderParameterValues( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
