@@ -259,7 +259,7 @@ void Inference::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 			inputNameOwners.push_back( session.GetInputNameAllocated( inputIndex, Ort::AllocatorWithDefaultOptions() ) );
 			inputNames.push_back( inputNameOwners.back().get() );
 			inputOwners.push_back( p->getValue() );
-			inputs.push_back( inputOwners.back()->value );
+			inputs.push_back( inputOwners.back()->value() );
 		}
 
 		vector<Ort::AllocatedStringPtr> outputNameOwners;

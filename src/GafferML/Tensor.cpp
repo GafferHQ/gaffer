@@ -42,7 +42,12 @@ using namespace GafferML;
 IE_CORE_DEFINEOBJECTTYPEDESCRIPTION( Tensor );
 
 Tensor::Tensor()
-	:	value( nullptr )
+	:	m_value( nullptr )
+{
+}
+
+Tensor::Tensor( Ort::Value &&value )
+	: m_value( std::move( value ) )
 {
 }
 

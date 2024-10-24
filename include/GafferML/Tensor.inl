@@ -36,52 +36,20 @@
 
 #pragma once
 
-#include "GafferML/Export.h"
-#include "GafferML/TypeIds.h"
-
-#include "IECore/Data.h"
-
-#include "onnxruntime_cxx_api.h"
-
-#include <vector>
-
 namespace GafferML
 {
 
-/// Thin wrapper around an `Ort::Value`, allowing it to be passed
-/// through a node graph via TensorPlugs.
-class GAFFERML_API Tensor : public IECore::Object
+template<typename T>
+Tensor::Tensor( T data, const std::vector<int64_t> &shape )
+	:	m_data( data ), m_value( nullptr )
 {
+	Ort::MemoryInfo memoryInfo = Ort::MemoryInfo::CreateCpu( OrtArenaAllocator, OrtMemTypeDefault );
+	m_value = Ort::Value::CreateTensor( memoryInfo.GetConst(), data->writable().data(), data->readable().size(), shape.data(), shape.size() );
+}
 
-	public :
-
-		Tensor();
-		Tensor( Ort::Value &&value );
-
-		/// TODO : MAKE TAKE CONST DATA ONLY. MOVE TEMPLATE SHENANIGANS INSIDE CPP?
-		template<typename T>
-		Tensor( T data, const std::vector<int64_t> &shape );
-
-		IE_CORE_DECLAREEXTENSIONOBJECT( GafferML::Tensor, GafferML::TensorTypeId, IECore::Object );
-
-		/// Only const access to the `Ort::Value` is provided, as modifying a
-		/// a `GafferML::Tensor` would corrupt values stored in Gaffer's compute
-		/// cache.
-		const Ort::Value &value() const;
-
-	private :
-
-		// If we were constructed from TypedData, then this keeps it alive for
-		// as long as `m_value` references it. If we constructed from
-		// `Ort::Value` directly, then this is null and `m_value` owns its own
-		// data.
-		IECore::ConstDataPtr m_data;
-		Ort::Value m_value;
-
-};
-
-IE_CORE_DECLAREPTR( Tensor );
+inline const Ort::Value &Tensor::value() const
+{
+	return m_value;
+}
 
 } // namespace GafferML
-
-#include "GafferML/Tensor.inl"

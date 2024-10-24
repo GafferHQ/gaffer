@@ -60,7 +60,7 @@ namespace
 /// METHODS INSTEAD OF USING ONLY THE ORT API?
 list shapeWrapper( const Tensor &tensor )
 {
-	const auto s = tensor.value.GetTensorTypeAndShapeInfo().GetShape();
+	const auto s = tensor.value().GetTensorTypeAndShapeInfo().GetShape();
 	list o;
 	for( const auto &x : s )
 	{
@@ -71,21 +71,22 @@ list shapeWrapper( const Tensor &tensor )
 
 IECore::DataPtr dataWrapper( const Tensor &tensor, bool copy )
 {
-	if( !tensor.data )
-	{
-		const size_t count = tensor.value.GetTensorTypeAndShapeInfo().GetElementCount();
-		const float *source = tensor.value.GetTensorData<float>();
-		// TODO : MAYBE WE SHOULD ALWAYS BACK THE TENSOR WITH DATA?
-		// OR AT THE VERY LEAST, MOVE THIS FUNCTIONALITY INTO TENSORDATA ITSELF
-		FloatVectorDataPtr result = new FloatVectorData;
-		result->writable().insert(
-			result->writable().end(),
-			source, source + count
-		);
-		return result;
-	}
+	return nullptr;
+	// if( !tensor.data )
+	// {
+	// 	const size_t count = tensor.value.GetTensorTypeAndShapeInfo().GetElementCount();
+	// 	const float *source = tensor.value.GetTensorData<float>();
+	// 	// TODO : MAYBE WE SHOULD ALWAYS BACK THE TENSOR WITH DATA?
+	// 	// OR AT THE VERY LEAST, MOVE THIS FUNCTIONALITY INTO TENSORDATA ITSELF
+	// 	FloatVectorDataPtr result = new FloatVectorData;
+	// 	result->writable().insert(
+	// 		result->writable().end(),
+	// 		source, source + count
+	// 	);
+	// 	return result;
+	// }
 
-	return copy ? tensor.data->copy() : boost::const_pointer_cast<IECore::Data>( tensor.data );
+	// return copy ? tensor.data->copy() : boost::const_pointer_cast<IECore::Data>( tensor.data );
 }
 
 void loadModelWrapper( Inference &inference )

@@ -64,7 +64,7 @@ struct ImageShape
 
 ImageShape imageShape( const Tensor *tensor, bool interleavedChannels )
 {
-	const auto shape = tensor->value.GetTensorTypeAndShapeInfo().GetShape();
+	const auto shape = tensor->value().GetTensorTypeAndShapeInfo().GetShape();
 	if( shape.size() < 3 )
 	{
 		throw IECore::Exception( "Expected tensor with at least 3 dimensions" );
@@ -281,7 +281,7 @@ IECore::ConstFloatVectorDataPtr TensorToImage::computeChannelData( const std::st
 	const Box2i validTileBound = BufferAlgo::intersection( dataWindow, tileBound );
 	out.resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
 
-	const float *sourceData = tensorData->value.GetTensorData<float>();
+	const float *sourceData = tensorData->value().GetTensorData<float>();
 	size_t sourceStride;
 	if( interleavedChannels )
 	{
