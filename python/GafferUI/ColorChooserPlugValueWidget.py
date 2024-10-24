@@ -65,6 +65,10 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if colorFieldVisible is not None :
 			self.__colorChooser.setColorFieldVisible( colorFieldVisible )
 
+		dynamicColors = self.__colorChooserOption( "dynamicColors" )
+		if dynamicColors is not None :
+			self.__colorChooser.setDynamicColors( dynamicColors )
+
 		self.__colorChangedConnection = self.__colorChooser.colorChangedSignal().connect(
 			Gaffer.WeakMethod( self.__colorChanged )
 		)
@@ -77,6 +81,9 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 		)
 		self.__colorChooser.colorFieldVisibleChangedSignal().connect(
 			functools.partial( Gaffer.WeakMethod( self.__colorChooserColorFieldVisibleChanged ) )
+		)
+		self.__colorChooser.dynamicColorsChangedSignal().connect(
+			functools.partial( Gaffer.WeakMethod( self.__dynamicColorsChanged ) )
 		)
 		self.__colorChooser.optionsMenuSignal().connect(
 			functools.partial( Gaffer.WeakMethod( self.__colorChooserOptionsMenu ) ),
@@ -141,6 +148,10 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__colorChooserOptionChanged( "colorFieldVisible", colorChooser.getColorFieldVisible() )
 
+	def __dynamicColorsChanged( self, colorChooser ) :
+
+		self.__colorChooserOptionChanged( "dynamicColors", colorChooser.getDynamicColors() )
+
 	def __colorChooserOptionsMenu( self, colorChooser, menuDefinition ) :
 
 		menuDefinition.append( "/__saveDefaultOptions__", { "divider": True, "label": "Defaults" } )
@@ -177,14 +188,16 @@ def saveDefaultOptions( colorChooser, keyPrefix, scriptPath = None ) :
 	visibleComponents = colorChooser.getVisibleComponents()
 	staticComponent = colorChooser.getColorFieldStaticComponent()
 	colorFieldVisible = colorChooser.getColorFieldVisible()
+	dynamicColors = colorChooser.getDynamicColors()
 
 	for p in [ Gaffer.Color3fPlug, Gaffer.Color4fPlug ] :
-		for k in [ "visibleComponents", "staticComponent", "colorFieldVisible" ] :
+		for k in [ "visibleComponents", "staticComponent", "colorFieldVisible", "dynamicColors" ] :
 			Gaffer.Metadata.deregisterValue( p, keyPrefix + k )
 
 		Gaffer.Metadata.registerValue( p, keyPrefix + "visibleComponents", visibleComponents )
 		Gaffer.Metadata.registerValue( p, keyPrefix + "staticComponent", staticComponent )
 		Gaffer.Metadata.registerValue( p, keyPrefix + "colorFieldVisible", colorFieldVisible )
+		Gaffer.Metadata.registerValue( p, keyPrefix + "dynamicColors", dynamicColors )
 
 	if scriptPath is None :
 		return
@@ -210,6 +223,7 @@ def saveDefaultOptions( colorChooser, keyPrefix, scriptPath = None ) :
 		newScript.append( f"Gaffer.Metadata.registerValue( Gaffer.Color{c}fPlug, \"{keyPrefix}visibleComponents\", \"{visibleComponents}\" )\n" )
 		newScript.append( f"Gaffer.Metadata.registerValue( Gaffer.Color{c}fPlug, \"{keyPrefix}staticComponent\", \"{staticComponent}\" )\n" )
 		newScript.append( f"Gaffer.Metadata.registerValue( Gaffer.Color{c}fPlug, \"{keyPrefix}colorFieldVisible\", {colorFieldVisible} )\n" )
+		newScript.append( f"Gaffer.Metadata.registerValue( Gaffer.Color{c}fPlug, \"{keyPrefix}dynamicColors\", {dynamicColors} )\n" )
 
 	with open( scriptPath, "w" ) as outFile :
 		outFile.writelines( newScript )

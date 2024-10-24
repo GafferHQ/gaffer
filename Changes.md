@@ -15,6 +15,7 @@ Improvements
 - ColorChooser :
   - Changed the color field widget to a color wheel when hue is one of the varying components. [^1]
   - Changed the indicator for the color field and color sliders to an unfilled circle so the chosen color is visible in the center.
+  - Added an option to enable or disable dynamic colors updates of the color sliders and color field. If enabled, the widget colors update to show the color that will result from moving the indicator to a given position. If disabled (the default), the widget always shows the range of values for the channel(s) alone.
 - PythonEditor, PythonCommand, Expression, UIEditor, OSLCode : Added line numbers to code editors (#6091).
 - CyclesOptions : Added `denoiseDevice` plug for configuring the device used for denoising.
 - AttributeTweaks : Added tooltips and presets for all attribute values.

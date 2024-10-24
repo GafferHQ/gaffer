@@ -147,6 +147,9 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 		self.colorChooser().colorFieldVisibleChangedSignal().connect(
 			functools.partial( Gaffer.WeakMethod( self.__colorChooserColorFieldVisibleChanged ) )
 		)
+		self.colorChooser().dynamicColorsChangedSignal().connect(
+			functools.partial( Gaffer.WeakMethod( self.__dynamicColorsChanged ) )
+		)
 		self.colorChooser().optionsMenuSignal().connect(
 			functools.partial( Gaffer.WeakMethod( self.__colorChooserOptionsMenu ) ),
 			scoped = False
@@ -182,6 +185,10 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 		colorFieldVisible = self.__colorChooserOption( "colorFieldVisible" )
 		if colorFieldVisible is not None :
 			self.colorChooser().setColorFieldVisible( colorFieldVisible )
+
+		dynamicColors = self.__colorChooserOption( "dynamicColors" )
+		if dynamicColors is not None :
+			self.colorChooser().setDynamicColors( dynamicColors )
 
 		parentWindow.addChildWindow( self, removeOnClose = True )
 
@@ -287,3 +294,7 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 	def __colorChooserColorFieldVisibleChanged( self, colorChooser ) :
 
 		self.__colorChooserOptionChanged( "colorFieldVisible", colorChooser.getColorFieldVisible() )
+
+	def __dynamicColorsChanged( self, colorChooser ) :
+
+		self.__colorChooserOptionChanged( "dynamicColors", colorChooser.getDynamicColors() )

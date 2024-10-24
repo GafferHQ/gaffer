@@ -123,6 +123,16 @@ class ColorChooserTest( GafferUITest.TestCase ) :
 		c = self.__colorChooserFromWidget( widget )
 		return c.getColorFieldVisible()
 
+	def __setDynamicColors( self, widget, dynamic ) :
+
+		c = self.__colorChooserFromWidget( widget )
+		c.setDynamicColors( dynamic )
+
+	def __getDynamicColors( self, widget ) :
+
+		c = self.__colorChooserFromWidget( widget )
+		return c.getDynamicColors()
+
 	def testMetadata( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -145,12 +155,14 @@ class ColorChooserTest( GafferUITest.TestCase ) :
 			self.assertIsNone( Gaffer.Metadata.value( script["node"][p], "colorChooser:inline:visibleComponents" ) )
 			self.assertIsNone( Gaffer.Metadata.value( script["node"][p], "colorChooser:inline:staticComponent" ) )
 			self.assertIsNone( Gaffer.Metadata.value( script["node"][p], "colorChooser:inline:colorFieldVisible" ) )
+			self.assertIsNone( Gaffer.Metadata.value( script["node"][p], "colorChooser:inline:dynamicColors" ) )
 
 		# Modify widget
 
 		self.__setVisibleComponents( widget, "rgbtmi" )
 		self.__setStaticComponent( widget, "t" )
 		self.__setColorFieldVisibility( widget, False )
+		self.__setDynamicColors( widget, True )
 
 		for c in "rgbtmi" :
 			self.assertTrue( self.__sliderFromWidget( widget, c ).getVisible() )
@@ -158,15 +170,18 @@ class ColorChooserTest( GafferUITest.TestCase ) :
 			self.assertFalse( self.__sliderFromWidget( widget, c ).getVisible() )
 		self.assertEqual( self.__getStaticComponent( widget ), "t" )
 		self.assertFalse( self.__getColorFieldVisibility( widget ) )
+		self.assertTrue( self.__getDynamicColors( widget ) )
 
 		for p in [ "rgbPlug2" ] :
 			self.assertIsNone( Gaffer.Metadata.value( script["node"][p], "colorChooser:inline:visibleComponents" ) )
 			self.assertIsNone( Gaffer.Metadata.value( script["node"][p], "colorChooser:inline:staticComponent" ) )
 			self.assertIsNone( Gaffer.Metadata.value( script["node"][p], "colorChooser:inline:colorFieldVisible" ) )
+			self.assertIsNone( Gaffer.Metadata.value( script["node"][p], "colorChooser:inline:dynamicColors" ) )
 
 		self.assertEqual( set( Gaffer.Metadata.value( script["node"]["rgbPlug1"], "colorChooser:inline:visibleComponents" ) ), set( "rgbtmi" ) )
 		self.assertEqual( Gaffer.Metadata.value( script["node"]["rgbPlug1"], "colorChooser:inline:staticComponent" ), "t" )
 		self.assertFalse( Gaffer.Metadata.value( script["node"]["rgbPlug1"], "colorChooser:inline:colorFieldVisible" ) )
+		self.assertTrue( Gaffer.Metadata.value( script["node"]["rgbPlug1"], "colorChooser:inline:dynamicColors" ) )
 
 		# Recreate widget and should have the same state
 
@@ -180,6 +195,7 @@ class ColorChooserTest( GafferUITest.TestCase ) :
 			self.assertFalse( self.__sliderFromWidget( widget, c ).getVisible() )
 		self.assertEqual( self.__getStaticComponent( widget ), "t" )
 		self.assertFalse( self.__getColorFieldVisibility( widget ) )
+		self.assertTrue( self.__getDynamicColors( widget ) )
 
 		# We haven't saved the defaults, so a widget for a second plug
 		# gets the original defaults.
@@ -191,11 +207,13 @@ class ColorChooserTest( GafferUITest.TestCase ) :
 			self.assertTrue( self.__sliderFromWidget( widget2, c ).getVisible() )
 		self.assertEqual( self.__getStaticComponent( widget2 ), "v" )
 		self.assertTrue( self.__getColorFieldVisibility( widget2 ) )
+		self.assertFalse( self.__getDynamicColors( widget2 ) )
 
 		for p in [ "rgbPlug2" ] :
 			self.assertIsNone( Gaffer.Metadata.value( script["node"][p], "colorChooser:inline:visibleComponents" ) )
 			self.assertIsNone( Gaffer.Metadata.value( script["node"][p], "colorChooser:inline:staticComponent" ) )
 			self.assertIsNone( Gaffer.Metadata.value( script["node"][p], "colorChooser:inline:colorFieldVisible" ) )
+			self.assertIsNone( Gaffer.Metadata.value( script["node"][p], "colorChooser:inline:dynamicColors" ) )
 
 		# Don't serialize state
 
@@ -211,11 +229,13 @@ class ColorChooserTest( GafferUITest.TestCase ) :
 			self.assertTrue( self.__sliderFromWidget( widget, c ).getVisible() )
 		self.assertEqual( self.__getStaticComponent( widget ), "v" )
 		self.assertTrue( self.__getColorFieldVisibility( widget ) )
+		self.assertFalse( self.__getDynamicColors( widget ) )
 
 		for p in [ "rgbPlug1", "rgbPlug2" ] :
 			self.assertIsNone( Gaffer.Metadata.value( script2["node"][p], "colorChooser:inline:visibleComponents" ) )
 			self.assertIsNone( Gaffer.Metadata.value( script2["node"][p], "colorChooser:inline:staticComponent" ) )
 			self.assertIsNone( Gaffer.Metadata.value( script2["node"][p], "colorChooser:inline:colorFieldVisible" ) )
+			self.assertIsNone( Gaffer.Metadata.value( script2["node"][p], "colorChooser:inline:dynamicColors" ) )
 
 	def testSaveDefaultOptions( self ) :
 
@@ -243,12 +263,15 @@ class ColorChooserTest( GafferUITest.TestCase ) :
 		self.assertEqual( self.__getStaticComponent( rgbaWidget ), "v" )
 		self.assertTrue( self.__getColorFieldVisibility( rgbWidget ) )
 		self.assertTrue( self.__getColorFieldVisibility( rgbaWidget ) )
+		self.assertFalse( self.__getDynamicColors( rgbWidget ) )
+		self.assertFalse( self.__getDynamicColors( rgbaWidget ) )
 
 		# Modify `rgbWidget`
 
 		self.__setVisibleComponents( rgbWidget, "rgbhsv" )
 		self.__setStaticComponent( rgbWidget, "g" )
 		self.__setColorFieldVisibility( rgbWidget, False )
+		self.__setDynamicColors( rgbWidget, True )
 
 		# Save defaults
 		colorChooser = self.__colorChooserFromWidget( rgbWidget )
@@ -277,6 +300,8 @@ class ColorChooserTest( GafferUITest.TestCase ) :
 		self.assertEqual( self.__getStaticComponent( rgbaWidget ), "g" )
 		self.assertFalse( self.__getColorFieldVisibility( rgbWidget ) )
 		self.assertFalse( self.__getColorFieldVisibility( rgbaWidget ) )
+		self.assertTrue( self.__getDynamicColors( rgbWidget ) )
+		self.assertTrue( self.__getDynamicColors( rgbaWidget ) )
 
 if __name__ == "__main__" :
 	unittest.main()
