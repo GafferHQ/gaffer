@@ -49,7 +49,7 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Tool for editing spot lights.
+	Tool for editing light shapes, such as spot light cones or quad light width and height.
 	""",
 
 	"viewer:shortCut", "A",
