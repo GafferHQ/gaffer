@@ -124,10 +124,8 @@ void DataToTensor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 {
 	if( output == tensorPlug() )
 	{
-		/// TODO : CAN WE AVOID THE COPY? MAYBE IT DOESN'T MATTER? WORRY MORE ABOUT TENSOR SEMANTICS.
-		FloatVectorDataPtr bufferData = dataPlug()->getValue()->copy();
+		ConstFloatVectorDataPtr bufferData = dataPlug()->getValue();
 		ConstInt64VectorDataPtr shapeData = shapePlug()->getValue();
-
 		ConstTensorPtr tensorData = new Tensor( bufferData, shapeData->readable() );
 		static_cast<TensorPlug *>( output )->setValue( tensorData );
 	}

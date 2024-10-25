@@ -42,9 +42,12 @@ namespace GafferML
 template<typename T>
 Tensor::Tensor( const boost::intrusive_ptr<T> &data, const std::vector<int64_t> &shape )
 {
+	using ElementType = typename T::ValueType::value_type;
 	Ort::MemoryInfo memoryInfo = Ort::MemoryInfo::CreateCpu( OrtArenaAllocator, OrtMemTypeDefault );
 	m_state = new State{
-		Ort::Value::CreateTensor( memoryInfo.GetConst(), data->writable().data(), data->readable().size(), shape.data(), shape.size() ),
+		// `const_cast()` is OK because we only provide const access to the
+		// `Ort::Value` after construction.
+		Ort::Value::CreateTensor( memoryInfo.GetConst(), const_cast<ElementType *>( data->readable().data() ), data->readable().size(), shape.data(), shape.size() ),
 		data
 	};
 }

@@ -171,8 +171,7 @@ void TensorReader::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 		}
 		else
 		{
-			// TODO : COULD HAVE A STATIC EMPTY TENSOR?
-			tensor = new Tensor;
+			tensor = tensorPlug()->defaultValue();
 		}
 		static_cast<TensorPlug *>( output )->setValue( tensor );
 	}
