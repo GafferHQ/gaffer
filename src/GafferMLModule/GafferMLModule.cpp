@@ -56,37 +56,22 @@ using namespace GafferBindings;
 namespace
 {
 
-/// TODO : WHERE DO I REALLY BELONG? MAYBE TENSOR SHOULD HAVE SOME CONVENIENCE
-/// METHODS INSTEAD OF USING ONLY THE ORT API?
-list shapeWrapper( const Tensor &tensor )
+template<typename T>
+TensorPtr tensorConstructorWrapper( const boost::intrusive_ptr<T> &data, object pythonShape )
 {
-	const auto s = tensor.value().GetTensorTypeAndShapeInfo().GetShape();
-	list o;
-	for( const auto &x : s )
-	{
-		o.append( x );
-	}
-	return o;
+	std::vector<int64_t> shape;
+	boost::python::container_utils::extend_container( shape, pythonShape );
+	return new Tensor( data, shape );
 }
 
-IECore::DataPtr dataWrapper( const Tensor &tensor, bool copy )
+list shapeWrapper( const Tensor &tensor )
 {
-	return nullptr;
-	// if( !tensor.data )
-	// {
-	// 	const size_t count = tensor.value.GetTensorTypeAndShapeInfo().GetElementCount();
-	// 	const float *source = tensor.value.GetTensorData<float>();
-	// 	// TODO : MAYBE WE SHOULD ALWAYS BACK THE TENSOR WITH DATA?
-	// 	// OR AT THE VERY LEAST, MOVE THIS FUNCTIONALITY INTO TENSORDATA ITSELF
-	// 	FloatVectorDataPtr result = new FloatVectorData;
-	// 	result->writable().insert(
-	// 		result->writable().end(),
-	// 		source, source + count
-	// 	);
-	// 	return result;
-	// }
-
-	// return copy ? tensor.data->copy() : boost::const_pointer_cast<IECore::Data>( tensor.data );
+	list result;
+	for( const auto &x : tensor.shape() )
+	{
+		result.append( x );
+	}
+	return result;
 }
 
 void loadModelWrapper( Inference &inference )
@@ -101,7 +86,16 @@ BOOST_PYTHON_MODULE( _GafferML )
 {
 
 	IECorePython::RunTimeTypedClass<GafferML::Tensor>()
-		.def( "data", &dataWrapper, ( arg( "_copy" ) = true ) )
+		.def( init<>() )
+		.def( "__init__", make_constructor( tensorConstructorWrapper<FloatVectorData> ) )
+		.def( "__init__", make_constructor( tensorConstructorWrapper<DoubleVectorData> ) )
+		.def( "__init__", make_constructor( tensorConstructorWrapper<UShortVectorData> ) )
+		.def( "__init__", make_constructor( tensorConstructorWrapper<ShortVectorData> ) )
+		.def( "__init__", make_constructor( tensorConstructorWrapper<UIntVectorData> ) )
+		.def( "__init__", make_constructor( tensorConstructorWrapper<IntVectorData> ) )
+		.def( "__init__", make_constructor( tensorConstructorWrapper<UInt64VectorData> ) )
+		.def( "__init__", make_constructor( tensorConstructorWrapper<Int64VectorData> ) )
+		.def( "asData", (IECore::DataPtr (Tensor::*)())&Tensor::asData )
 		.def( "shape", &shapeWrapper )
 	;
 

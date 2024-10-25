@@ -41,15 +41,17 @@ namespace GafferML
 
 template<typename T>
 Tensor::Tensor( const boost::intrusive_ptr<T> &data, const std::vector<int64_t> &shape )
-	:	m_data( data ), m_value( nullptr )
 {
 	Ort::MemoryInfo memoryInfo = Ort::MemoryInfo::CreateCpu( OrtArenaAllocator, OrtMemTypeDefault );
-	m_value = Ort::Value::CreateTensor( memoryInfo.GetConst(), data->writable().data(), data->readable().size(), shape.data(), shape.size() );
+	m_state = new State{
+		Ort::Value::CreateTensor( memoryInfo.GetConst(), data->writable().data(), data->readable().size(), shape.data(), shape.size() ),
+		data
+	};
 }
 
 inline const Ort::Value &Tensor::value() const
 {
-	return m_value;
+	return m_state->value;
 }
 
 } // namespace GafferML

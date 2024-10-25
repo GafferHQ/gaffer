@@ -49,7 +49,7 @@ namespace GafferML
 {
 
 /// Thin wrapper around an `Ort::Value`, allowing it to be passed
-/// through a node graph via TensorPlugs.
+/// through a graph of ComputeNodes via TensorPlugs.
 class GAFFERML_API Tensor : public IECore::Object
 {
 
@@ -58,27 +58,48 @@ class GAFFERML_API Tensor : public IECore::Object
 		Tensor();
 		Tensor( Ort::Value &&value );
 
-		/// TODO : MAKE TAKE CONST DATA ONLY. MOVE TEMPLATE SHENANIGANS INSIDE CPP?
+		/// Constructs from `IECore::TypedData`. The Tensor references `data` directly
+		/// without copying, so it must not be modified after being passed to the constructor.
 		template<typename T>
 		Tensor( const boost::intrusive_ptr<T> &data, const std::vector<int64_t> &shape );
 
 		IE_CORE_DECLAREEXTENSIONOBJECT( GafferML::Tensor, GafferML::TensorTypeId, IECore::Object );
 
-		/// Only const access to the `Ort::Value` is provided, as modifying a
-		/// a `GafferML::Tensor` would corrupt values stored in Gaffer's compute
-		/// cache.
-		/// TODO : MAYBE THE CONSTNESS IS MORE ABOUT COPYING WITHOUT NEEDING TO
-		/// WORRY ABOUT COPY-ON-WRITE AT ALL?
+		/// Only const access to the `Ort::Value` is provided. This lets us
+		/// implement `Object::copy()` extremely cheaply, which is important
+		/// when accessing a Tensor value from a Python Expression.
 		const Ort::Value &value() const;
+
+		/// Convenience accessors
+		/// =====================
+		///
+		/// These don't do anything that can't be achieved directly with
+		/// `value()` and the Ort API, but are provided for symmetry with
+		/// the Python bindings.
+
+		std::vector<int64_t> shape() const;
+
+		/// Conversion to `IECore::Data`
+		/// ============================
+
+		IECore::DataPtr asData();
+		IECore::ConstDataPtr asData() const;
 
 	private :
 
-		// If we were constructed from TypedData, then this keeps it alive for
-		// as long as `m_value` references it. If we constructed from
-		// `Ort::Value` directly, then this is null and `m_value` owns its own
-		// data.
-		IECore::ConstDataPtr m_data;
-		Ort::Value m_value;
+		struct State : public IECore::RefCounted
+		{
+			State( Ort::Value &&value, IECore::ConstDataPtr data = nullptr );
+			Ort::Value value;
+			// If we were constructed from TypedData, then this keeps it alive for
+			// as long as `value` references it. If we constructed from
+			// `Ort::Value` directly, then this is null and `value` owns its own
+			// data.
+			IECore::ConstDataPtr data;
+		};
+		IE_CORE_DECLAREPTR( State );
+
+		ConstStatePtr m_state;
 
 };
 

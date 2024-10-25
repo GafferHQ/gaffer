@@ -34,11 +34,56 @@
 #
 ##########################################################################
 
-from .TensorTest import TensorTest
-from .ImageToTensorTest import ImageToTensorTest
-from .InferenceTest import InferenceTest
-from .TensorToImageTest import TensorToImageTest
+import unittest
+
+import IECore
+import GafferTest
+import GafferML
+
+class TensorTest( GafferTest.TestCase ) :
+
+	def testAsData( self ) :
+
+		for data in [
+			IECore.FloatVectorData( [ 1, 2, 3 ] ),
+			IECore.DoubleVectorData( [ 1, 2, 3 ] ),
+			IECore.IntVectorData( [ 1, 2, 3 ] ),
+			IECore.UInt64VectorData( [ 1, 2, 3 ] ),
+		] :
+
+			tensor = GafferML.Tensor( data, [ 1, 3 ] )
+			self.assertEqual( tensor.asData(), data )
+
+		self.assertIsNone( GafferML.Tensor().asData() )
+
+	def testInvalidShapeThrows( self ) :
+
+		with self.assertRaisesRegex( RuntimeError, "not enough space: expected 16, got 12" ) :
+			GafferML.Tensor( IECore.FloatVectorData( [ 1, 2, 3 ] ), [ 4 ] )
+
+	def testShape( self ) :
+
+		tensor = GafferML.Tensor( IECore.IntVectorData( [ 1, 2, 3, 4, 5, 6 ] ), [ 1, 1, 2, 3 ] )
+		self.assertEqual( tensor.shape(), [ 1, 1, 2, 3 ] )
+
+		tensor = GafferML.Tensor()
+		with self.assertRaisesRegex( RuntimeError, "Null tensor" ) :
+			tensor.shape()
+
+	def testMemoryUsage( self ) :
+
+		tensor = GafferML.Tensor( IECore.IntVectorData( 100 ), [ 100 ] )
+		self.assertEqual( tensor.memoryUsage(), 440 )
+
+	def testHash( self ) :
+
+		tensors = [
+			GafferML.Tensor( IECore.IntVectorData( [ 1, 2, 3 ] ), [ 1, 3 ] ),
+			GafferML.Tensor( IECore.IntVectorData( [ 1, 2, 3 ] ), [ 3, 1 ] ),
+			GafferML.Tensor( IECore.IntVectorData( [ 1, 2, 3, 4 ] ), [ 4 ] )
+		]
+
+		self.assertEqual( len( { t.hash() for t in tensors } ), len( tensors ) )
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
