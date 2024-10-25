@@ -60,7 +60,7 @@ class GAFFERML_API Tensor : public IECore::Object
 
 		/// TODO : MAKE TAKE CONST DATA ONLY. MOVE TEMPLATE SHENANIGANS INSIDE CPP?
 		template<typename T>
-		Tensor( T data, const std::vector<int64_t> &shape );
+		Tensor( const boost::intrusive_ptr<T> &data, const std::vector<int64_t> &shape );
 
 		IE_CORE_DECLAREEXTENSIONOBJECT( GafferML::Tensor, GafferML::TensorTypeId, IECore::Object );
 
