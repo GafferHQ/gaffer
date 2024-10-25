@@ -64,6 +64,11 @@ struct ImageShape
 
 ImageShape imageShape( const Tensor *tensor, bool interleavedChannels )
 {
+	if( !tensor->value() )
+	{
+		throw IECore::Exception( "Empty tensor" );
+	}
+
 	const auto shape = tensor->value().GetTensorTypeAndShapeInfo().GetShape();
 	if( shape.size() < 3 )
 	{

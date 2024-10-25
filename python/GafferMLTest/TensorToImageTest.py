@@ -36,26 +36,17 @@
 
 import unittest
 
-import IECore
-
 import Gaffer
 import GafferTest
-import GafferImage
 import GafferML
 
 class TensorToImageTest( GafferTest.TestCase ) :
 
-	def test( self ) :
+	def testNoInput( self ) :
 
-		raise NotImplementedError
-
-		# checker = GafferImage.Checkerboard()
-		# tensor = GafferML.ImageToTensor()
-		# tensor["image"].setInput( checker["out"] )
-		# tensor["channels"].setValue( IECore.StringVectorData( [ "Y" ] ) )
-
-		# with self.assertRaisesRegex( Gaffer.ProcessException, 'Channel "Y" does not exist' ) :
-		# 	tensor["tensor"].getValue()
+		node = GafferML.TensorToImage()
+		with self.assertRaisesRegex( Gaffer.ProcessException, "Empty tensor" ) :
+			node["out"].dataWindow()
 
 if __name__ == "__main__":
 	unittest.main()
