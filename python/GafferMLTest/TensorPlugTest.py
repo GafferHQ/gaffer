@@ -34,12 +34,35 @@
 #
 ##########################################################################
 
-from .TensorTest import TensorTest
-from .TensorPlugTest import TensorPlugTest
-from .ImageToTensorTest import ImageToTensorTest
-from .InferenceTest import InferenceTest
-from .TensorToImageTest import TensorToImageTest
+import unittest
 
-if __name__ == "__main__":
-	import unittest
+import IECore
+
+import Gaffer
+import GafferTest
+import GafferML
+
+class TensorPlugTest( GafferTest.TestCase ) :
+
+	def testDefaultValue( self ) :
+
+		plug = GafferML.TensorPlug()
+		self.assertEqual( plug.defaultValue(), GafferML.Tensor() )
+		self.assertEqual( plug.getValue(), GafferML.Tensor() )
+
+		plug = GafferML.TensorPlug( defaultValue = GafferML.Tensor( IECore.IntVectorData( [ 1, 2, ] ), [ 2 ] ) )
+		self.assertEqual( plug.defaultValue(), GafferML.Tensor( IECore.IntVectorData( [ 1, 2, ] ), [ 2 ] ) )
+
+	def testSerialisationOfDynamicPlugs( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["node"] = Gaffer.Node()
+		script["node"]["user"]["p"] = GafferML.TensorPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+		self.assertIsInstance( script2["node"]["user"]["p"], GafferML.TensorPlug )
+		self.assertEqual( script2["node"]["user"]["p"].getValue(), GafferML.Tensor() )
+
+if __name__ == "__main__" :
 	unittest.main()

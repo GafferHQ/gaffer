@@ -138,9 +138,56 @@ bool Tensor::isEqualTo( const IECore::Object *other ) const
 		return false;
 	}
 
-	// Just a shallow comparison for now. I don't know what
-	// we would use a deep comparison for.
-	return m_state == static_cast<const Tensor *>( other )->m_state;
+	auto otherTensor = static_cast<const Tensor *>( other );
+	if( m_state == otherTensor->m_state )
+	{
+		return true;
+	}
+	else if( !m_state->value && !otherTensor->m_state->value )
+	{
+		return true;
+	}
+	else if( !m_state->value || !otherTensor->m_state->value )
+	{
+		return false;
+	}
+	else if( shape() != otherTensor->shape() )
+	{
+		return false;
+	}
+
+	// Everything else is equal. Need to compare tensor data now.
+
+	if( m_state->data && otherTensor->m_state->data )
+	{
+		// If both tensors are backed by `IECore::Data`, then compare that.
+		// This has a fast path for when the underlying data is shared.
+		return m_state->data->isEqualTo( otherTensor->m_state->data.get() );
+	}
+
+	// Compare the buffers ourselves.
+
+	if(
+		m_state->value.GetTensorTypeAndShapeInfo().GetElementType() !=
+		otherTensor->m_state->value.GetTensorTypeAndShapeInfo().GetElementType()
+	)
+	{
+		return false;
+	}
+
+	bool equal;
+		dispatchTensorData(
+			m_state->value,
+			[&] ( const auto *data ) {
+
+				using ElementType = remove_const_t<remove_pointer_t<decltype( data )>>;
+				const auto *otherData = otherTensor->m_state->value.GetTensorData<ElementType>();
+				const size_t count = m_state->value.GetTensorTypeAndShapeInfo().GetElementCount();
+				equal = memcmp( data, otherData, count * sizeof( *data ) );
+			}
+		);
+
+	return equal;
 }
 
 void Tensor::hash( IECore::MurmurHash &h ) const

@@ -64,7 +64,7 @@ TensorPtr tensorConstructorWrapper( const boost::intrusive_ptr<T> &data, object 
 	return new Tensor( data, shape );
 }
 
-list shapeWrapper( const Tensor &tensor )
+list tensorShapeWrapper( const Tensor &tensor )
 {
 	list result;
 	for( const auto &x : tensor.shape() )
@@ -72,6 +72,23 @@ list shapeWrapper( const Tensor &tensor )
 		result.append( x );
 	}
 	return result;
+}
+
+std::string tensorRepr( const Tensor &tensor )
+{
+	if( !tensor.value() )
+	{
+		// The most common use of `repr()` is in serialising the
+		// empty default value for TensorPlug constructors. Make sure
+		// we have a nice clean serialisation for that.
+		return "GafferML.Tensor()";
+	}
+	else
+	{
+		// We don't have a good `repr()` for this - just return a default one
+		// and the ValuePlugSerialiser will attempt a base 64 encoding instead.
+		return fmt::format( "<GafferML._GafferML.Tensor object at {}>", (void *)&tensor );
+	}
 }
 
 void loadModelWrapper( Inference &inference )
@@ -96,7 +113,8 @@ BOOST_PYTHON_MODULE( _GafferML )
 		.def( "__init__", make_constructor( tensorConstructorWrapper<UInt64VectorData> ) )
 		.def( "__init__", make_constructor( tensorConstructorWrapper<Int64VectorData> ) )
 		.def( "asData", (IECore::DataPtr (Tensor::*)())&Tensor::asData )
-		.def( "shape", &shapeWrapper )
+		.def( "shape", &tensorShapeWrapper )
+		.def( "__repr__", &tensorRepr )
 	;
 
 	GafferBindings::TypedObjectPlugClass<GafferML::TensorPlug>();

@@ -85,5 +85,38 @@ class TensorTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( { t.hash() for t in tensors } ), len( tensors ) )
 
-if __name__ == "__main__":
+	def testCopy( self ) :
+
+		data = IECore.IntVectorData( [ 1, 2, 3 ] )
+		tensor1 = GafferML.Tensor( data, [ 3 ] )
+		tensor2 = tensor1.copy()
+		self.assertEqual( tensor2, tensor1 )
+		self.assertEqual( tensor2.asData(), data )
+		self.assertEqual( tensor2.shape(), tensor1.shape() )
+
+	def testIsEqual( self ) :
+
+		data = IECore.IntVectorData( [ 1, 2, 3 ] )
+		tensor1 = GafferML.Tensor( data, [ 3 ] )
+
+		tensor2 = GafferML.Tensor( data, [ 3 ] )
+		self.assertEqual( tensor1, tensor2 )
+
+		tensor2 = GafferML.Tensor( data.copy(), [ 3 ] )
+		self.assertEqual( tensor1, tensor2 )
+
+		tensor2 = GafferML.Tensor( IECore.IntVectorData( [ 1, 2, 3 ] ), [ 3 ] )
+		self.assertEqual( tensor1, tensor2 )
+
+		tensor2 = GafferML.Tensor( data, [ 1, 3 ] )
+		self.assertNotEqual( tensor1, tensor2 ) # Different shape
+
+		tensor2 = GafferML.Tensor( IECore.IntVectorData( [ 3, 2, 1 ] ), [ 3 ] )
+		self.assertNotEqual( tensor1, tensor2 ) # Different shape
+
+	def testDefaultRepr( self ) :
+
+		self.assertEqual( repr( GafferML.Tensor() ), "GafferML.Tensor()" )
+
+if __name__ == "__main__" :
 	unittest.main()
