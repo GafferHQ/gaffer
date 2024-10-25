@@ -42,6 +42,13 @@
 #include "GafferScene/SceneNode.h"
 #include "Gaffer/TransformPlug.h"
 
+namespace Gaffer
+{
+
+IE_CORE_FORWARDDECLARE( StringPlug )
+
+} // namespace Gaffer
+
 namespace GafferML
 {
 
@@ -54,6 +61,15 @@ class GAFFERML_API TensorToScene : public GafferScene::SceneNode
 		~TensorToScene() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferML::TensorToScene, TensorToSceneTypeId, GafferScene::SceneNode );
+
+		Gaffer::StringPlug *namePlug();
+		const Gaffer::StringPlug *namePlug() const;
+
+		Gaffer::StringPlug *setsPlug();
+		const Gaffer::StringPlug *setsPlug() const;
+
+		Gaffer::TransformPlug *transformPlug();
+		const Gaffer::TransformPlug *transformPlug() const;
 
 		TensorPlug *verticesTensorPlug();
 		const TensorPlug *verticesTensorPlug() const;
@@ -82,6 +98,10 @@ class GAFFERML_API TensorToScene : public GafferScene::SceneNode
 		IECore::ConstInternedStringVectorDataPtr computeSetNames( const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const override;
 		IECore::ConstPathMatcherDataPtr computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const override;
 
+	private :
+
+		IECore::InternedString validatedName() const;
+		bool setNameValid( const IECore::InternedString &setName ) const;
 
 		static size_t g_firstPlugIndex;
 

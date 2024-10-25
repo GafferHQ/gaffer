@@ -42,6 +42,36 @@ Gaffer.Metadata.registerNode(
 	GafferML.TensorToScene,
 
 	plugs = {
+		"name" : [
+
+			"description",
+			"""
+			The name of the object in the output scene.
+			""",
+
+		],
+
+		"transform" : [
+
+			"description",
+			"""
+			The transform applied to the object.
+			""",
+
+			"layout:section", "Transform",
+
+		],
+
+		"sets" : [
+
+			"description",
+			"""
+			A list of sets to include the object in. The
+			names should be separated by spaces.
+			""",
+
+		],
+
 
 		"vertices" : [
 

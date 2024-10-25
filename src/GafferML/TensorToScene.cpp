@@ -35,6 +35,11 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferML/TensorToScene.h"
+
+#include "GafferScene/SceneAlgo.h"
+
+#include "Gaffer/StringPlug.h"
+
 #include "IECoreScene/MeshPrimitive.h"
 
 #include "onnxruntime_cxx_api.h"
@@ -56,6 +61,10 @@ TensorToScene::TensorToScene( const std::string &name )
 {
 
 	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new Gaffer::StringPlug( "name", Gaffer::Plug::In, "tensor" ) );
+	addChild( new Gaffer::StringPlug( "sets" ) );
+	addChild( new Gaffer::TransformPlug( "transform" ) );
+
 	addChild( new TensorPlug( "vertices" ) );
 	addChild( new TensorPlug( "faces" ) );
 
@@ -65,27 +74,55 @@ TensorToScene::~TensorToScene()
 {
 }
 
+Gaffer::StringPlug *TensorToScene::namePlug()
+{
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::StringPlug *TensorToScene::namePlug() const
+{
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex );
+}
+
+Gaffer::StringPlug *TensorToScene::setsPlug()
+{
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::StringPlug *TensorToScene::setsPlug() const
+{
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 1 );
+}
+
+Gaffer::TransformPlug *TensorToScene::transformPlug()
+{
+	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::TransformPlug *TensorToScene::transformPlug() const
+{
+	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex + 2 );
+}
+
 TensorPlug *TensorToScene::verticesTensorPlug()
 {
-	return getChild<TensorPlug>( g_firstPlugIndex );
+	return getChild<TensorPlug>( g_firstPlugIndex + 3 );
 }
 
 const TensorPlug *TensorToScene::verticesTensorPlug() const
 {
-	return getChild<TensorPlug>( g_firstPlugIndex );
+	return getChild<TensorPlug>( g_firstPlugIndex + 3 );
 }
-
 
 TensorPlug *TensorToScene::facesTensorPlug()
 {
-	return getChild<TensorPlug>( g_firstPlugIndex + 1 );
+	return getChild<TensorPlug>( g_firstPlugIndex + 4 );
 }
 
 const TensorPlug *TensorToScene::facesTensorPlug() const
 {
-	return getChild<TensorPlug>( g_firstPlugIndex + 1 );
+	return getChild<TensorPlug>( g_firstPlugIndex + 4 );
 }
-
 
 void TensorToScene::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
@@ -93,23 +130,39 @@ void TensorToScene::affects( const Plug *input, AffectedPlugsContainer &outputs 
 	if ( input == verticesTensorPlug() )
 	{
 		outputs.push_back(outPlug()->boundPlug());
-		outputs.push_back(outPlug()->transformPlug());
-		outputs.push_back(outPlug()->attributesPlug());
 		outputs.push_back(outPlug()->objectPlug());
-		outputs.push_back(outPlug()->childNamesPlug());
 	}
+	if ( input == facesTensorPlug() )
+	{
+		outputs.push_back(outPlug()->objectPlug());
+	}
+	else if( input == namePlug() )
+	{
+		outputs.push_back( outPlug()->childNamesPlug() );
+		outputs.push_back( outPlug()->setPlug() );
+	}
+	else if( transformPlug()->isAncestorOf( input ) )
+	{
+		outputs.push_back( outPlug()->transformPlug() );
+		outputs.push_back( outPlug()->boundPlug() );
+	}
+	else if( input == setsPlug() )
+	{
+		outputs.push_back( outPlug()->setNamesPlug() );
+		outputs.push_back( outPlug()->setPlug() );
+	}
+
 }
 
 void TensorToScene::hashBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
 {
+	SceneNode::hashBound( path, context, parent, h );
+	verticesTensorPlug()->hash(h);
 	if( path.size() == 0 )
 	{
 		h = parent->childBoundsPlug()->hash();
-	}
-	else
-	{
-		SceneNode::hashBound( path, context, parent, h );
-		verticesTensorPlug()->hash(h);
+		transformPlug()->hash( h );
+
 	}
 
 }
@@ -120,7 +173,7 @@ Imath::Box3f TensorToScene::computeBound( const SceneNode::ScenePath &path, cons
 	const size_t count = verticesTensorData->value.GetTensorTypeAndShapeInfo().GetElementCount();
 	const float *sourceData = verticesTensorData->value.GetTensorData<float>();
 
-	Imath::Box3f bound;
+	Imath::Box3f result;
 	for( size_t i = 0; i < count; i += 3 )
 	{
 		Imath::V3f v;
@@ -128,20 +181,33 @@ Imath::Box3f TensorToScene::computeBound( const SceneNode::ScenePath &path, cons
 		{
 			v[j] = *( sourceData + ( i + j ) );
 		}
-		bound.extendBy( v );
+		result.extendBy( v );
+	}
+	if( path.size() == 0 )
+	{
+		result = Imath::transform( result, transformPlug()->matrix() );
 	}
 
-	return bound;
+	return result;
 }
 
 void TensorToScene::hashTransform( const SceneNode::ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	SceneNode::hashTransform( path, context, parent, h );
+	if( path.size() == 1 )
+	{
+		transformPlug()->hash( h );
+	}
+	
 }
 
 Imath::M44f TensorToScene::computeTransform( const SceneNode::ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
-	return outPlug()->transformPlug()->defaultValue();
+	if( path.size() == 1 )
+	{
+		return transformPlug()->matrix();
+	}
+	return Imath::M44f();
 }
 
 void TensorToScene::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
@@ -235,19 +301,24 @@ IECore::ConstObjectPtr TensorToScene::computeObject( const SceneNode::ScenePath 
 
 void TensorToScene::hashChildNames( const SceneNode::ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	SceneNode::hashChildNames( path, context, parent, h );
+	if( path.size() == 0 )
+	{
+		SceneNode::hashChildNames( path, context, parent, h );
+		namePlug()->hash( h );
+		return;
+	}
+	h = parent->childNamesPlug()->defaultValue()->Object::hash();
 }
 
 IECore::ConstInternedStringVectorDataPtr TensorToScene::computeChildNames( const SceneNode::ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
-	if ( path.size() == 0)
+	if( path.size() == 0 )
 	{
 		IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData();
-		auto& v = result->writable();
-		v.push_back("smpl");
+		result->writable().push_back( validatedName() );
 		return result;
 	}
-	return outPlug()->childNamesPlug()->defaultValue();
+	return parent->childNamesPlug()->defaultValue();
 }
 
 void TensorToScene::hashGlobals( const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
@@ -268,15 +339,56 @@ void TensorToScene::hashSetNames( const Gaffer::Context *context, const GafferSc
 
 IECore::ConstInternedStringVectorDataPtr TensorToScene::computeSetNames( const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
-	return outPlug()->setNamesPlug()->defaultValue();
+	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData;
+	IECore::StringAlgo::tokenize( setsPlug()->getValue(), ' ', result->writable() );
+	return result;
 }
 
 void TensorToScene::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	h = outPlug()->setPlug()->defaultValue()->Object::hash();
+	if( setNameValid( setName ) )
+	{
+		SceneNode::hashSet( setName, context, parent, h );
+		namePlug()->hash( h );
+	}
+	else
+	{
+		h = outPlug()->setPlug()->defaultValue()->Object::hash();
+	}
 }
 
 IECore::ConstPathMatcherDataPtr TensorToScene::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
-	return outPlug()->setPlug()->defaultValue();
+	if( setNameValid( setName ) )
+	{
+		IECore::PathMatcherDataPtr result = new IECore::PathMatcherData;
+		result->writable().addPath( ScenePlug::ScenePath( { validatedName() } ) );
+		return result;
+	}
+	else
+	{
+		return outPlug()->setPlug()->defaultValue();
+	}
 }
+IECore::InternedString TensorToScene::validatedName() const
+{
+	const IECore::InternedString name = namePlug()->getValue();
+	if( name.string().size() )
+	{
+		SceneAlgo::validateName( name );
+		return name;
+	}
+	else
+	{
+		/// \todo Why don't we just let `validateName()` throw for us instead?
+		return "unnamed";
+	}
+}
+
+bool TensorToScene::setNameValid( const IECore::InternedString &setName ) const
+{
+	std::vector<IECore::InternedString> setNames;
+	IECore::StringAlgo::tokenize( setsPlug()->getValue(), ' ', setNames );
+	return std::find( setNames.begin(), setNames.end(), setName ) != setNames.end();
+}
+
