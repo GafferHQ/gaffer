@@ -72,15 +72,13 @@ __metadata = collections.defaultdict( dict )
 
 def __translateParamMetadata( nodeTypeName, socketName, value ) :
 	paramPath = nodeTypeName + ".parameters." + socketName
-	socketType = value["type"]
-	label = value["ui_name"]
-	flags = value["flags"]
+	socketType = value["type"].value
 	if socketType == "enum" :
 		presetNames = IECore.StringVectorData()
 		presetValues = IECore.StringVectorData()
 		for enumName, enumValues in value["enum_values"].items() :
 			presetNames.append(enumName)
-			presetValues.append(enumValues)
+			presetValues.append( enumValues.value )
 		__metadata[paramPath]["presetNames"] = presetNames
 		__metadata[paramPath]["presetValues"] = presetValues
 		__metadata[paramPath]["plugValueWidget:type"] = "GafferUI.PresetsPlugValueWidget"
@@ -94,10 +92,11 @@ def __translateParamMetadata( nodeTypeName, socketName, value ) :
 		__metadata[paramPath]["fileSystemPath:extensionsLabel"] = "Show only image files"
 
 	__metadata[paramPath]["noduleLayout:visible"] = True
+	label = value["ui_name"].value
 	__metadata[paramPath]["label"] = label
 	__metadata[paramPath]["noduleLayout:label"] = label
 	# Linkable
-	linkable = bool( flags.value & ( 1 << 0 ) )
+	linkable = bool( value["flags"].value & ( 1 << 0 ) )
 	__metadata[paramPath]["nodule:type"] = "" if not linkable else None # "" disables the nodule, and None falls through to the default
 
 	if "category" in value :
