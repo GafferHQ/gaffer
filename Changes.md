@@ -1,3 +1,11 @@
+1.5.x.x (relative to 1.5.0.0)
+=======
+
+Fixes
+-----
+
+- CyclesShader : Fixed broken presets menus.
+
 1.5.0.0 (relative to 1.4.15.0)
 =======
 
