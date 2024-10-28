@@ -1,7 +1,17 @@
 1.x.x.x (relative to 1.5.x.x)
 =======
 
+Features
+--------
 
+- Cycles : Added support for light-linking.
+
+Improvements
+------------
+
+- Cycles :
+  - CyclesMeshLight now has emission sampling method strategies on the node itself.
+  - Remove hiding visibility flags on the meshlight created by CyclesMeshLight, this was for Arnold and not correct for Cycles.
 
 1.5.0.0 (relative to 1.4.15.0)
 =======
