@@ -41,6 +41,7 @@ import functools
 import math
 import sys
 import imath
+import enum
 
 import IECore
 
@@ -244,6 +245,8 @@ class _ComponentSlider( GafferUI.Slider ) :
 
 class _ColorField( GafferUI.Widget ) :
 
+	__DragConstraints = enum.Flag( "__DragConstraints", [ "X", "Y" ] )
+
 	def __init__( self, color = imath.Color3f( 1.0 ), staticComponent = "v", dynamicBackground = True, **kw ) :
 
 		GafferUI.Widget.__init__( self, QtWidgets.QWidget(), **kw )
@@ -251,6 +254,7 @@ class _ColorField( GafferUI.Widget ) :
 		self._qtWidget().paintEvent = Gaffer.WeakMethod( self.__paintEvent )
 
 		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
 		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
 		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
 		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
@@ -258,9 +262,14 @@ class _ColorField( GafferUI.Widget ) :
 
 		self.__valueChangedSignal = Gaffer.Signals.Signal2()
 
+		self.__minDraggableHueRadius = 4.0
+
 		self.__color = color
 		self.__staticComponent = staticComponent
 		self.__colorFieldToDraw = None
+		self.__dragConstraints = None
+		self.__constraintPosition = None
+		self.__constraintPath = None
 		self.setColor( color, staticComponent )
 
 		self.setDynamicBackground( dynamicBackground )
@@ -354,6 +363,13 @@ class _ColorField( GafferUI.Widget ) :
 
 		return imath.V2f( theta / twoPi, radius / maxRadius )
 
+	def __polarToCartesian( self, p, center, maxRadius ) :
+
+		a = p.x * math.pi * 2.0
+		return imath.V2f(
+			math.cos( a ) * p.y * maxRadius + center.x,
+			math.sin( a ) * p.y * maxRadius + center.y
+		)
 
 	def __colorToPosition( self, color ) :
 
@@ -389,7 +405,8 @@ class _ColorField( GafferUI.Widget ) :
 		if self.__useWheel() :
 			halfSize = imath.V2f( size ) * 0.5
 			p = self.__cartesianToPolar( imath.V2f( position.x, size.y - position.y ), halfSize, halfSize.x )
-			c[xIndex] = p.x
+			if p.y > 0 :
+				c[xIndex] = p.x
 			c[yIndex] = p.y
 		else :
 			c[xIndex] = ( position.x / float( size.x ) ) * ( _ranges[xComponent].max - _ranges[xComponent].min ) + _ranges[xComponent].min
@@ -397,26 +414,12 @@ class _ColorField( GafferUI.Widget ) :
 
 		return c
 
-	def __buttonPress( self, widget, event ) :
-
-		if event.buttons != GafferUI.ButtonEvent.Buttons.Left :
-			return False
-
-		halfSize = imath.V2f( self.bound().size() ) * 0.5
-		if ( imath.V2f( event.line.p0.x, event.line.p0.y ) - halfSize ).length() > halfSize.x :
-			return False
-
-		c, staticComponent = self.getColor()
-		self.__setColorInternal( self.__positionToColor( event.line.p0 ), staticComponent, GafferUI.Slider.ValueChangedReason.Click )
-
-		return True
-
 	def __clampPosition( self, position ) :
 
 		size = self.bound().size()
 		if self.__useWheel() :
 			halfSize = imath.V2f( size ) * 0.5
-			centeredPosition = imath.V2f( position.x, position.y ) - halfSize
+			centeredPosition = position - halfSize
 			radiusOriginal = centeredPosition.length()
 
 			if radiusOriginal == 0 :
@@ -426,12 +429,150 @@ class _ColorField( GafferUI.Widget ) :
 
 		return imath.V2f( min( size.x, max( 0.0, position.x ) ), min( size.y, max( 0.0, position.y ) ) )
 
+	def __constrainPosition( self, position ) :
+
+		if self.__dragConstraints is None :
+			return position
+
+		assert( bool( self.__dragConstraints ) )
+
+		if not self.__useWheel() :
+			# Determine if `position` is closer to the horizontal line going through
+			# `__constraintPosition` or the vertical line. The distance to the
+			# horizontal line is the vertical difference from `position` to
+			# `__constraintPosition`. The distance to the vertical line is the
+			# horizontal difference.
+			delta = self.__constraintPosition - position
+			delta.x = abs( delta.x )
+			delta.y = abs( delta.y )
+
+			if delta.y < delta.x and (
+				self.__DragConstraints.X in self.__dragConstraints or not self.__DragConstraints.Y in self.__dragConstraints
+			) :
+				# Constrain to horizontal line
+				return imath.V2f( position.x, self.__constraintPosition.y )
+			# Constrain to vertical line
+			return imath.V2f( self.__constraintPosition.x, position.y )
+
+		center = imath.V2f( self.bound().size() ) * 0.5
+		distanceToCenter = ( position - center ).length()
+
+		polarConstraintPosition = self.__cartesianToPolar( self.__constraintPosition, center, center.x )
+
+		# Extend line segment past the widget for distance check
+		extended = self.__polarToCartesian( imath.V2f( polarConstraintPosition.x, 2.0 ), center, center.x )
+
+		radiusLine = imath.Line3f( imath.V3f( center.x, center.y, 0 ), imath.V3f( extended.x, extended.y, 0 ) )
+		position3 = imath.V3f( position.x, position.y, 0 )
+		closestPointOnRadiusLine = radiusLine.closestPointTo( position3 )
+		distanceToRadiusLine = ( closestPointOnRadiusLine - position3 ).length()
+
+		constraintRadius = polarConstraintPosition.y * center.x
+		distanceToCircle = abs( distanceToCenter - constraintRadius )
+
+		dot = ( position - center ).dot( self.__constraintPosition - center )
+
+		polarPosition = self.__cartesianToPolar( position, center, center.x )
+
+		if self.__DragConstraints.X in self.__dragConstraints :
+			if (
+				abs( distanceToCircle ) < distanceToRadiusLine or
+				( dot < 0 and distanceToCenter > constraintRadius * 0.5 )
+			) :
+				# If we're closer to the circle than the radius line, or we're behind the center
+				# (from the point of view of `__constraintPosition`) and reasonably far from the center,
+				# constrain to the circle.
+				return self.__polarToCartesian(
+					imath.V2f( polarPosition.x, polarConstraintPosition.y ), center, center.x
+				)
+
+		if dot < 0 :
+			# If we're not constrained to the circle, but "behind" the center, snap to the center.
+			return center
+
+		# If no constraints are enforced yet, constrain to the radius line.
+		polarClosestPoint = self.__cartesianToPolar(
+			imath.V2f( closestPointOnRadiusLine.x, closestPointOnRadiusLine.y ), center, center.x
+		)
+		return self.__polarToCartesian(
+			imath.V2f( polarConstraintPosition.x, polarClosestPoint.y ),
+			center,
+			center.x
+		)
+
+	def __setupConstraints( self, event ) :
+
+		c, staticComponent = self.getColor()
+
+		self.__constraintPosition = self.__colorToPosition( c )
+
+		center = imath.V2f( self.bound().size() ) * 0.5
+
+		# Set `__dragConstraints` with `__constraintPosition` based on actual color
+		self.__dragConstraints = None
+		if event.modifiers == GafferUI.ButtonEvent.Modifiers.Control :
+			if not self.__useWheel() :
+				self.__dragConstraints = self.__DragConstraints.X | self.__DragConstraints.Y
+			else :
+				self.__dragConstraints = self.__DragConstraints.Y
+
+				center = imath.V2f( self.bound().size() ) * 0.5
+				if ( self.__constraintPosition - center ).length() > self.__minDraggableHueRadius :
+					self.__dragConstraints |= self.__DragConstraints.X
+				else :
+					# Adjust `__constraintPosition` to be along the hue angle, slightly off center. This
+					# allows the radius line constraint to work properly.
+					polarPosition = self.__cartesianToPolar(
+						self.__colorToPosition( imath.Color3f( c.r, 1.0, 1.0 ) ), center, center.x
+					)
+					self.__constraintPosition = self.__polarToCartesian( imath.V2f( polarPosition.x, 1.0 / center.x ), center, center.x )
+
+	def __buttonPress( self, widget, event ) :
+
+		if event.buttons != GafferUI.ButtonEvent.Buttons.Left :
+			return False
+
+		center = imath.V2f( self.bound().size() ) * 0.5
+		if ( imath.V2f( event.line.p0.x, event.line.p0.y ) - center ).length() > center.x :
+			return False
+
+		self.__setupConstraints( event )
+
+		self.__constraintPath = None
+
+		c, staticComponent = self.getColor()
+
+		self.__setColorInternal(
+			self.__positionToColor(
+				self.__clampPosition( self.__constrainPosition( imath.V2f( event.line.p0.x, event.line.p0.y ) ) )
+			),
+			staticComponent,
+			GafferUI.Slider.ValueChangedReason.Click
+		)
+
+		return True
+
+	def __buttonRelease( self, widget, event ) :
+
+		if event.buttons == GafferUI.ButtonEvent.Buttons.Left :
+			return False
+
+		self.__constraintPosition = None
+		self.__dragConstraints = None
+		self.__constraintPath = None
+
+		self._qtWidget().update()
+
 	def __dragBegin( self, widget, event ) :
 
 		if event.buttons == GafferUI.ButtonEvent.Buttons.Left :
+			self.__constraintPath = None
+
 			c, staticComponent = self.getColor()
 			self.__setColorInternal(
-				self.__positionToColor( self.__clampPosition( event.line.p0 ) ),
+				self.__positionToColor(
+					self.__clampPosition( self.__constrainPosition( imath.V2f( event.line.p0.x, event.line.p0.y ) ) )
+				),
 				staticComponent,
 				GafferUI.Slider.ValueChangedReason.DragBegin
 			)
@@ -449,8 +590,19 @@ class _ColorField( GafferUI.Widget ) :
 	def __dragMove( self, widget, event ) :
 
 		c, staticComponent = self.getColor()
+
+		if self.__dragConstraints is None and event.modifiers == GafferUI.ButtonEvent.Modifiers.Control :
+			self.__setupConstraints( event )
+			self.__constraintPath = None
+		elif self.__dragConstraints is not None and event.modifiers != GafferUI.ButtonEvent.Modifiers.Control :
+			self.__constraintPath = None
+			self.__dragConstraints = None
+
+
 		self.__setColorInternal(
-			self.__positionToColor( self.__clampPosition( event.line.p0 ) ),
+			self.__positionToColor(
+				self.__clampPosition( self.__constrainPosition( imath.V2f( event.line.p0.x, event.line.p0.y ) ) )
+			),
 			staticComponent,
 			GafferUI.Slider.ValueChangedReason.DragMove
 		)
@@ -459,11 +611,19 @@ class _ColorField( GafferUI.Widget ) :
 	def __dragEnd( self, widget, event ) :
 
 		c, staticComponent = self.getColor()
+
 		self.__setColorInternal(
-			self.__positionToColor( self.__clampPosition( event.line.p0 ) ),
+			self.__positionToColor(
+				self.__clampPosition( self.__constrainPosition( imath.V2f( event.line.p0.x, event.line.p0.y ) ) )
+			),
 			staticComponent,
 			GafferUI.Slider.ValueChangedReason.DragEnd
 		)
+
+		self.__constraintPosition = None
+		self.__dragConstraints = None
+		self.__constraintPath = None
+
 		return True
 
 	def __drawBackground( self, painter ) :
