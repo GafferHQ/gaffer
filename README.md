@@ -2,7 +2,7 @@
 
 # Gaffer #
 
-Gaffer is a VFX application that enables look developers, lighters, and compositors to easily build, tweak, iterate, and render scenes. Gaffer supports in-application scripting in Python and [OSL](https://github.com/imageworks/OpenShadingLanguage), so VFX artists and technical directors can design shaders, automate processes, and build production workflows.
+Gaffer is a VFX application that enables look developers, lighters, and compositors to easily build, tweak, iterate, and render scenes. Gaffer supports in-application scripting in Python and [OSL](https://github.com/AcademySoftwareFoundation/OpenShadingLanguage), so VFX artists and technical directors can design shaders, automate processes, and build production workflows.
 
 An open-source project, Gaffer also provides an application framework for studios to design and create their own VFX production pipeline tools. Built using the [Cortex](https://github.com/ImageEngine/cortex) libraries, Gaffer ships with a multi-threaded, deferred evaluation engine and a flexible user interface framework.
 
@@ -19,16 +19,16 @@ Participating in the Gaffer community requires abiding by the project's [Code of
 
 Compiled binary releases are available for download from the [releases page](https://github.com/GafferHQ/gaffer/releases).
 
-Gaffer is officially supported and tested on **Linux** (CentOS 7) and **macOS** (macOS 10.14).
+Gaffer is officially supported and tested on **Linux** (RHEL/Rocky/AlmaLinux 9) and **Windows** (Windows 10/11).
 
 
 ## Building ##
 
 [![CI](https://github.com/GafferHQ/gaffer/workflows/CI/badge.svg)](https://github.com/GafferHQ/gaffer/actions?query=workflow%3ACI)
 
-Gaffer targets the [VFX Reference Platform](https://vfxplatform.com). We are currently on **CY2022**. Aside from general platform development packages, we specifically require the following tools that may not be installed by default on your system. Without these, you will not be able to build Gaffer.
+Gaffer targets the [VFX Reference Platform](https://vfxplatform.com). We are currently on **CY2023**. Aside from general platform development packages, we specifically require the following tools that may not be installed by default on your system. Without these, you will not be able to build Gaffer.
 
-> **Note:** From time to time, this list may change. For a complete, accurate, and up-to-date method of installing the prerequisites on CentOS, refer to the [Docker setup](https://github.com/GafferHQ/build/blob/master/Dockerfile) we use for building automatic releases.
+> **Note:** From time to time, this list may change. For a complete, accurate, and up-to-date method of installing the prerequisites on Linux, refer to the [Docker setup](https://github.com/GafferHQ/build/blob/main/Dockerfile) we use for building automatic releases.
 
 ### Build requirements ###
 
@@ -40,7 +40,7 @@ Gaffer targets the [VFX Reference Platform](https://vfxplatform.com). We are cur
 
 Package Name | Version
 ------------ |:--------------:
-[`gcc`](https://gcc.gnu.org/index.html) | 6.3.1
+[`gcc`](https://gcc.gnu.org/index.html) | 11.2.1
 [`scons`](http://www.scons.org) |
 [`inkscape`](http://inkscape.org) |
 
@@ -51,13 +51,13 @@ Package Name | Version
 
 Package Name | Minimum Version
 ------------ |:--------------:
-[`sphinx`](http://www.sphinx-doc.org/) | 1.8
+[`sphinx`](http://www.sphinx-doc.org/) | 4.3.1
 
 Python Module | Required version
 ------------- |:---------------:
-`sphinx_rtd_theme` | 0.4.3
-`recommonmark` | 0.5.0
-`docutils` | 0.12
+`sphinx_rtd_theme` | 1.0.0
+`myst-parser` | 0.15.2
+`docutils` | 0.17.1
 
 
 ### Build process ###
@@ -104,17 +104,17 @@ Gaffer dependencies ships with Cycles, but to build the modules for one of the o
 For example, the following command builds Gaffer with Arnold support:
 
 ```bash
-scons build ARNOLD_ROOT=/path/to/arnold/6 BUILD_DIR=...
+scons build ARNOLD_ROOT=/path/to/arnold BUILD_DIR=...
 ````
 
 ## Questions and troubleshooting ##
 
-If you have any questions about using Gaffer, or encounter problems setting it up, feel free to ask on the [Gaffer community group](https://groups.google.com/forum/#!forum/gaffer-dev). Our users and contributors are happy to help.
+If you have any questions about using Gaffer, or encounter problems setting it up, feel free to ask on the [Gaffer community group](https://groups.google.com/g/gaffer-dev). Our users and contributors are happy to help.
 
 
 ## Requesting features ##
 
-If there is a feature you would like to see in Gaffer, request it on the [Gaffer community group](https://groups.google.com/forum/#!forum/gaffer-dev). Do not create an Issue for it on GitHub.
+If there is a feature you would like to see in Gaffer, request it on the [Gaffer community group](https://groups.google.com/g/gaffer-dev). Do not create an Issue for it on GitHub.
 
 
 ## Contributions and bugs reports ##
@@ -124,10 +124,10 @@ Please see the project's [contribution guidelines](CONTRIBUTING.md).
 
 ## Copyright and license ##
 
-© 2011–2020 John Haddon. All rights reserved.
+© 2011–2024 John Haddon. All rights reserved.
 
-© 2011–2020 Image Engine Design Inc. All rights reserved.
+© 2011–2024 Image Engine Design Inc. All rights reserved.
 
-© 2011–2020 Cinesite VFX Ltd. All rights reserved.
+© 2011–2024 Cinesite VFX Ltd. All rights reserved.
 
 Distributed under the [BSD license](LICENSE).
