@@ -35,6 +35,9 @@ call :prependToPath "%USERPROFILE%\gaffer\apps;%GAFFER_ROOT%\apps" GAFFER_APP_PA
 call :prependToPath "%USERPROFILE%\gaffer\startup" GAFFER_STARTUP_PATHS
 call :appendToPath "%GAFFER_ROOT%\startup" GAFFER_STARTUP_PATHS
 
+call :prependToPath "%USERPROFILE%\gaffer\startup" CORTEX_STARTUP_PATHS
+call :appendToPath "%GAFFER_ROOT%\startup" CORTEX_STARTUP_PATHS
+
 call :prependToPath "%GAFFER_ROOT%\graphics" GAFFERUI_IMAGE_PATHS
 
 set OSLHOME=%GAFFER_ROOT%
