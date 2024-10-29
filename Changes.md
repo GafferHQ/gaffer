@@ -43,6 +43,7 @@ Fixes
 - `gaffer view` : Fixed default OpenColorIO display transform.
 - AnimationEditor : Fixed changing of the current frame by dragging the frame indicator or clicking on the time axis.
 - ImageWriter : Matched view metadata to Nuke when using the Nuke options for `layout`. This should address an issue where EXRs written from Gaffer using Nuke layouts sometimes did not load correctly in Nuke (#6120). In the unlikely situation that you were relying on the old behaviour, you can set the env var `GAFFERIMAGE_IMAGEWRITER_OMIT_DEFAULT_NUKE_VIEW = 1` in order to keep the old behaviour.
+- OSLObject : Fixed `getattribute()` to support 64 bit integer data, such as an `instanceId` primitive variable loaded from USD. Since OSL doesn't provide a 64 bit integer type, values are truncated to 32 bits.
 
 API
 ---

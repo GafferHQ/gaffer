@@ -160,6 +160,33 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		for i, c in enumerate( p["Ci"] ) :
 			self.assertEqual( c[0], float(i) )
 
+	def testInt64GetAttribute( self ) :
+
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "intAttribute.osl" )
+
+		for dataType in ( IECore.Int64VectorData, IECore.UInt64VectorData ) :
+
+			with self.subTest( dataType = dataType ) :
+
+				points = IECore.CompoundData( {
+					"P" : IECore.V3fVectorData( [ imath.V3f( i ) for i in range( 0, 10 ) ] ),
+					"int64Data" : dataType( range( 0, 10 ) )
+				} )
+
+				engine = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( shader, "osl:surface", { "name" : "int64Data" } ),
+					},
+					output = "output"
+				) )
+
+				self.assertTrue( engine.needsAttribute( "int64Data" ) )
+
+				points = engine.shade( points )
+
+				for i, c in enumerate( points["Ci"] ) :
+					self.assertEqual( c[0], float( i ) )
+
 	def testUserDataViaGetAttribute( self ) :
 
 		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "attribute.osl" )

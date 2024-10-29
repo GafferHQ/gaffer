@@ -215,6 +215,29 @@ DataPtr dataFromTypeDesc( TypeDesc type, void *&basePointer )
 	return nullptr;
 }
 
+template<typename SourceType>
+bool convertScalar( void *dst, TypeDesc dstType, const void *src )
+{
+	const SourceType *typedSrc = reinterpret_cast<const SourceType *>( src );
+	if( dstType == TypeDesc::FLOAT )
+	{
+		if( typedSrc && dst )
+		{
+			*((float*)dst) = static_cast<float>( *typedSrc );
+		}
+		return true;
+	}
+	else if( dstType == TypeDesc::INT )
+	{
+		if( typedSrc && dst )
+		{
+			*((int*)dst) = static_cast<int>( *typedSrc );
+		}
+		return true;
+	}
+	return false;
+}
+
 // Equivalent to `OSL::ShadingSystem:convert_value()`, but with support for
 // additional conversions.
 bool convertValue( void *dst, TypeDesc dstType, const void *src, TypeDesc srcType )
@@ -254,24 +277,15 @@ bool convertValue( void *dst, TypeDesc dstType, const void *src, TypeDesc srcTyp
 	}
 	else if( srcType.basetype == TypeDesc::DOUBLE && srcType.aggregate == TypeDesc::SCALAR )
 	{
-		const double *doubleCast = reinterpret_cast<const double *>( src );
-		if( dstType == TypeDesc::FLOAT )
-		{
-			if( doubleCast && dst )
-			{
-				*((float*)dst) = static_cast<float>( *doubleCast );
-			}
-			return true;
-		}
-		else if( dstType == TypeDesc::INT )
-		{
-			if( doubleCast && dst )
-			{
-				*((int*)dst) = static_cast<int>( *doubleCast );
-			}
-			return true;
-		}
-		return false;
+		return convertScalar<double>( dst, dstType, src );
+	}
+	else if( srcType.basetype == TypeDesc::INT64 && srcType.aggregate == TypeDesc::SCALAR )
+	{
+		return convertScalar<int64_t>( dst, dstType, src );
+	}
+	else if( srcType.basetype == TypeDesc::UINT64 && srcType.aggregate == TypeDesc::SCALAR )
+	{
+		return convertScalar<uint64_t>( dst, dstType, src );
 	}
 
 	return false;
