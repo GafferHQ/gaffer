@@ -54,10 +54,10 @@ class DeletePointsTest( GafferSceneTest.SceneTestCase ) :
 					imath.V3f( 1, 0, 0 )
 
 				]
-			),
-			IECore.FloatVectorData( range( 0, 4 ) )
+			)
 		)
 
+		testObject["q"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.FloatVectorData( range( 0, 4 ) ) )
 		testObject["deletePoints"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.IntVectorData( [0, 1, 0, 1] ) )
 		testObject["deletePoints2"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.IntVectorData( [1, 1, 0, 0] ) )
 
@@ -91,7 +91,7 @@ class DeletePointsTest( GafferSceneTest.SceneTestCase ) :
 				#IECore.V3f( 1, 0, 0 )
 			], IECore.GeometricData.Interpretation.Point ) )
 
-		self.assertEqual( pointsDeletedObject["r"].data, IECore.FloatVectorData(
+		self.assertEqual( pointsDeletedObject["q"].data, IECore.FloatVectorData(
 			[
 				0, 2
 			] ) )
@@ -117,7 +117,7 @@ class DeletePointsTest( GafferSceneTest.SceneTestCase ) :
 				imath.V3f( 1, 0, 0 )
 			], IECore.GeometricData.Interpretation.Point ) )
 
-		self.assertEqual( pointsDeletedObject["r"].data, IECore.FloatVectorData(
+		self.assertEqual( pointsDeletedObject["q"].data, IECore.FloatVectorData(
 			[
 				1, 3
 			] ) )
@@ -152,9 +152,9 @@ class DeletePointsTest( GafferSceneTest.SceneTestCase ) :
 	def testIdList( self ) :
 
 		testObject = IECoreScene.PointsPrimitive(
-			IECore.V3fVectorData( [ imath.V3f( 0, 0, i ) for i in range( 10 ) ] ),
-			IECore.FloatVectorData( range( 10, 20 ) )
+			IECore.V3fVectorData( [ imath.V3f( 0, 0, i ) for i in range( 10 ) ] )
 		)
+		testObject["q"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.FloatVectorData( range( 10, 20 ) ) )
 
 		testObject["testA"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Constant, IECore.IntVectorData( [ 2, 3, 4, 8, 9 ] ) )
 		testObject["testB"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Constant, IECore.Int64VectorData( [ 0, 1, 5, 6, 7 ] ) )
@@ -179,13 +179,13 @@ class DeletePointsTest( GafferSceneTest.SceneTestCase ) :
 		deletePoints["idList"].setValue( IECore.Int64VectorData( [ 1, 7 ] ) )
 
 		self.assertEqual(
-			deletePoints["out"].object( "/object" )["r"].data,
+			deletePoints["out"].object( "/object" )["q"].data,
 			IECore.FloatVectorData( [ 10, 12, 13, 14, 15, 16, 18, 19 ] )
 		)
 
 		deletePoints["invert"].setValue( True )
 		self.assertEqual(
-			deletePoints["out"].object( "/object" )["r"].data,
+			deletePoints["out"].object( "/object" )["q"].data,
 			IECore.FloatVectorData( [ 11, 17 ] )
 		)
 
@@ -194,21 +194,21 @@ class DeletePointsTest( GafferSceneTest.SceneTestCase ) :
 		deletePoints["idListVariable"].setValue( "testA" )
 
 		self.assertEqual(
-			deletePoints["out"].object( "/object" )["r"].data,
+			deletePoints["out"].object( "/object" )["q"].data,
 			IECore.FloatVectorData( [ 10, 11, 15, 16, 17 ] )
 		)
 
 		deletePoints["idListVariable"].setValue( "testB" )
 
 		self.assertEqual(
-			deletePoints["out"].object( "/object" )["r"].data,
+			deletePoints["out"].object( "/object" )["q"].data,
 			IECore.FloatVectorData( [ 12, 13, 14, 18, 19 ] )
 		)
 
 		deletePoints["invert"].setValue( True )
 
 		self.assertEqual(
-			deletePoints["out"].object( "/object" )["r"].data,
+			deletePoints["out"].object( "/object" )["q"].data,
 			IECore.FloatVectorData( [ 10, 11, 15, 16, 17 ] )
 		)
 
@@ -217,7 +217,7 @@ class DeletePointsTest( GafferSceneTest.SceneTestCase ) :
 		deletePoints["id"].setValue( "shiftIds" )
 
 		self.assertEqual(
-			deletePoints["out"].object( "/object" )["r"].data,
+			deletePoints["out"].object( "/object" )["q"].data,
 			IECore.FloatVectorData( [ 13, 14, 15, 16, 17, 18, 19 ] )
 		)
 
@@ -228,7 +228,7 @@ class DeletePointsTest( GafferSceneTest.SceneTestCase ) :
 		deletePoints["idList"].setValue( IECore.Int64VectorData( [ 8000000001,  8000000002, 8000000007, 8000000008 ] ) )
 
 		self.assertEqual(
-			deletePoints["out"].object( "/object" )["r"].data,
+			deletePoints["out"].object( "/object" )["q"].data,
 			IECore.FloatVectorData( [ 10, 13, 14, 15, 16, 19 ] )
 		)
 
@@ -237,7 +237,7 @@ class DeletePointsTest( GafferSceneTest.SceneTestCase ) :
 		deletePoints["idList"].setValue( IECore.Int64VectorData( [ 0, 2, 4 ] ) )
 
 		self.assertEqual(
-			deletePoints["out"].object( "/object" )["r"].data,
+			deletePoints["out"].object( "/object" )["q"].data,
 			IECore.FloatVectorData( [ 12, 13, 16, 17 ] )
 		)
 
