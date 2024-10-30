@@ -691,6 +691,42 @@ class _ColorField( GafferUI.Widget ) :
 
 		painter.drawImage( self._qtWidget().contentsRect(), self.__colorFieldToDraw )
 
+		if self.__constraintPath is None and self.__dragConstraints is not None and self.__constraintPosition is not None :
+			path = QtGui.QPainterPath()
+
+			if self.__useWheel() :
+				center = imath.V2f( self.bound().size() ) * 0.5
+
+				if self.__DragConstraints.X in self.__dragConstraints :
+					radius = ( self.__constraintPosition - center ).length()
+					path.addEllipse( QtCore.QPoint( center.x, center.y ), radius, radius )
+
+				if self.__DragConstraints.Y in self.__dragConstraints :
+					radiusEnd = center + ( self.__constraintPosition - center ).normalized() * center.x
+
+					path.moveTo( center.x, center.y )
+					path.lineTo( radiusEnd.x, radiusEnd.y )
+			else :
+				if self.__dragConstraints.X in self.__dragConstraints :
+					path.moveTo( 0, self.__constraintPosition.y )
+					path.lineTo( self.bound().max().x, self.__constraintPosition.y )
+				if self.__DragConstraints.Y in self.__dragConstraints :
+					path.moveTo( self.__constraintPosition.x, 0 )
+					path.lineTo( self.__constraintPosition.x, self.bound().max().y )
+
+			strokedPath = QtGui.QPainterPathStroker()
+			strokedPath.setWidth( 2 )
+
+			self.__constraintPath = strokedPath.createStroke( path )
+
+		if self.__constraintPath is not None :
+			pen = QtGui.QPen( QtGui.QColor( 0, 0, 0, 60 ) )
+			pen.setWidth( 1 )
+			painter.setPen( pen )
+			painter.setBrush( QtGui.QBrush( QtGui.QColor( 255, 255, 255, 60 ) ) )
+
+			painter.drawPath( self.__constraintPath )
+
 	def __drawValue( self, painter ) :
 
 		position = self.__colorToPosition( self.__color )
