@@ -5,6 +5,9 @@ Fixes
 -----
 
 - CyclesShader : Fixed broken presets menus.
+- Windows :
+  - Fixed handling of shader colour component to float connections in Cycles.
+  - Added `CORTEX_STARTUP_PATHS` to match the Linux wrapper.
 
 1.5.0.0 (relative to 1.4.15.0)
 =======
