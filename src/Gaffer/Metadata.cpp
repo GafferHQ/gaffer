@@ -217,7 +217,17 @@ using Values = multi_index::multi_index_container<
 	>
 >;
 
-using MetadataMap = std::map<IECore::InternedString, Values>;
+using NamedValues = std::pair<InternedString, Values>;
+
+using MetadataMap = multi_index::multi_index_container<
+	NamedValues,
+	multi_index::indexed_by<
+		multi_index::ordered_unique<
+			multi_index::member<NamedValues, InternedString, &NamedValues::first>
+		>,
+		multi_index::sequenced<>
+	>
+>;
 
 MetadataMap &metadataMap()
 {
@@ -481,12 +491,23 @@ void Metadata::registerValue( IECore::InternedString target, IECore::InternedStr
 
 void Metadata::registerValue( IECore::InternedString target, IECore::InternedString key, ValueFunction value )
 {
-	NamedValue namedValue( key, value );
-	auto &m = metadataMap()[target];
-	auto i = m.insert( namedValue );
-	if( !i.second )
+	auto &targetMap = metadataMap();
+
+	auto targetIt = targetMap.find( target );
+	if( targetIt == targetMap.end() )
 	{
-		m.replace( i.first, namedValue );
+		targetIt = targetMap.insert( NamedValues( target, Values() ) ).first;
+	}
+
+	// Cast is safe because we don't use `second` as a key in the `multi_index_container`,
+	// so we can modify it without affecting indexing.
+	Values &values = const_cast<Values &>( targetIt->second );
+
+	const NamedValue namedValue( key, value );
+	auto keyIt = values.insert( namedValue );
+	if( !keyIt.second )
+	{
+		values.replace( keyIt.first, namedValue );
 	}
 
 	valueChangedSignal()( target, key );
@@ -501,13 +522,17 @@ void Metadata::deregisterValue( IECore::InternedString target, IECore::InternedS
 		return;
 	}
 
-	auto vIt = mIt->second.find( key );
-	if( vIt == mIt->second.end() )
+	// Cast is safe because we don't use `second` as a key in the `multi_index_container`,
+	// so we can modify it without affecting indexing.
+	Values &values = const_cast<Values &>( mIt->second );
+
+	auto vIt = values.find( key );
+	if( vIt == values.end() )
 	{
 		return;
 	}
 
-	mIt->second.erase( vIt );
+	values.erase( vIt );
 	valueChangedSignal()( target, key );
 }
 
@@ -542,6 +567,25 @@ IECore::ConstDataPtr Metadata::valueInternal( IECore::InternedString target, IEC
 		return vIt->second();
 	}
 	return nullptr;
+}
+
+std::vector<IECore::InternedString> Metadata::targetsWithMetadata( const IECore::StringAlgo::MatchPattern &targetPattern, IECore::InternedString key )
+{
+	vector<InternedString> result;
+	const auto &orderedIndex = metadataMap().get<1>();
+	for( const auto &[target, values] : orderedIndex )
+	{
+		if( !StringAlgo::match( target.c_str(), targetPattern ) )
+		{
+			continue;
+		}
+		if( values.find( key ) != values.end() )
+		{
+			result.push_back( target );
+		}
+	}
+
+	return result;
 }
 
 void Metadata::registerValue( IECore::TypeId typeId, IECore::InternedString key, IECore::ConstDataPtr value )

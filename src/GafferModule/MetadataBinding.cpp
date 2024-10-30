@@ -323,6 +323,16 @@ list registeredGraphComponentValuesDeprecated( const GraphComponent *target, boo
 	return keysToList( keys );
 }
 
+list targetsWithMetadataWrapper( const IECore::StringAlgo::MatchPattern &targetPattern, IECore::InternedString key )
+{
+	std::vector<InternedString> targets;
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		targets = Metadata::targetsWithMetadata( targetPattern, key );
+	}
+	return keysToList( targets );
+}
+
 list plugsWithMetadata( GraphComponent *root, const std::string &key, bool instanceOnly )
 {
 	std::vector<Plug*> plugs = Metadata::plugsWithMetadata( root, key, instanceOnly );
@@ -451,6 +461,14 @@ void GafferModule::bindMetadata()
 		.def( "plugValueChangedSignal", (Metadata::LegacyPlugValueChangedSignal &(*)() )&Metadata::plugValueChangedSignal, return_value_policy<reference_existing_object>() )
 		.def( "plugValueChangedSignal", (Metadata::PlugValueChangedSignal &(*)( Gaffer::Node * ) )&Metadata::plugValueChangedSignal, return_value_policy<reference_existing_object>() )
 		.staticmethod( "plugValueChangedSignal" )
+
+		.def( "targetsWithMetadata", &targetsWithMetadataWrapper,
+			(
+				boost::python::arg( "targetPattern" ),
+				boost::python::arg( "key" )
+			)
+		)
+		.staticmethod( "targetsWithMetadata" )
 
 		.def( "plugsWithMetadata", &plugsWithMetadata,
 			(
