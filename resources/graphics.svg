@@ -3466,6 +3466,15 @@
          y="95"
          transform="matrix(0,1,1,0,0,0)"
          inkscape:label="menuSource" />
+      <rect
+         inkscape:label="menuLock"
+         transform="matrix(0,1,1,0,0,0)"
+         y="113"
+         x="2672"
+         height="12"
+         width="12"
+         id="menuLock"
+         style="fill:none;fill-opacity:1;stroke:none;stroke-width:1" />
     </g>
     <path
        style="fill:none;stroke:url(#foreground);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
@@ -9204,6 +9213,12 @@
            id="path2103-95" />
       </g>
     </g>
+    <path
+       id="menuItemLock"
+       style="display:inline;fill:url(#foreground);stroke:#3c3c3c;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:stroke fill markers"
+       d="m 119,2726.3622 c -0.64455,0 -1.96974,0.1251 -2,2 -0.002,0.131 0.004,1.3744 0,2 -0.0392,0 0.0359,-0.01 0,0 -0.79927,0.015 -0.9991,0.3788 -1,0.7745 -0.006,1.2744 -0.007,1.9514 0,3.2258 0,0 5.56167,-0.013 5.99999,0 l 1e-5,-3.2258 c 0,-0.4319 -0.15861,-0.7533 -1,-0.7745 v 0 c -0.005,-0.6246 -2.7e-4,-1.833 0,-2 0.0106,-1.8456 -1.35545,-1.9976 -2,-2 z m 1,2 c 0.001,0.083 -0.003,1.3973 0,2 -0.72747,0.01 -1.29923,-0.01 -2,0 0.002,-0.6036 -7e-5,-1.9355 0,-2 8e-4,-0.7281 0.28642,-0.9994 1,-1 0.7133,-6e-4 0.98739,0.2748 1,1 z"
+       sodipodi:nodetypes="cscccccsccccsccsss"
+       inkscape:label="menuItemLock" />
     <circle
        id="menuBreadCrumbShape"
        style="display:inline;fill:#63ba86;fill-opacity:0.992157;stroke:#3c3c3c;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"

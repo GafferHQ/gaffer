@@ -144,6 +144,10 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 		# run the default dropSignal handler from PlugValueWidget.
 		self.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ) )
 
+		self.__nodeMetadataChangedConnection = Gaffer.Metadata.nodeValueChangedSignal().connect(
+			Gaffer.WeakMethod( self.__nodeMetadataChanged ), scoped = True
+		)
+
 		self.__updateLabelVisibility()
 		self.__updatePlugInputChangedConnection()
 		self.__acquireContextTracker()
@@ -165,8 +169,11 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 			return "Edits will be made using the last relevant node found outside of an edit scope.\n\nTo make an edit in an edit scope, choose it from the menu."
 
 		unusableReason = self.__unusableReason( editScope )
+		readOnlyReason = self.__readOnlyReason( editScope )
 		if unusableReason :
 			return unusableReason
+		elif readOnlyReason :
+			return readOnlyReason
 		else :
 			return "Edits will be made in {}.".format( editScope.getName() )
 
@@ -185,12 +192,8 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__editScopeNameChangedConnection = editScope.nameChangedSignal().connect(
 				Gaffer.WeakMethod( self.__editScopeNameChanged ), scoped = True
 			)
-			self.__editScopeMetadataChangedConnection = Gaffer.Metadata.nodeValueChangedSignal( editScope ).connect(
-				Gaffer.WeakMethod( self.__editScopeMetadataChanged ), scoped = True
-			)
 		else :
 			self.__editScopeNameChangedConnection = None
-			self.__editScopeMetadataChangedConnection = None
 
 	def __updatePlugInputChangedConnection( self ) :
 
@@ -276,9 +279,13 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__updateMenuButton()
 
-	def __editScopeMetadataChanged( self, editScope, key, reason ) :
+	def __nodeMetadataChanged( self, nodeTypeId, key, node ) :
 
-		if key == "nodeGadget:color" :
+		editScope = self.__editScope()
+		if (
+			Gaffer.MetadataAlgo.readOnlyAffectedByChange( editScope, nodeTypeId, key, node ) or
+			node == editScope and key == "nodeGadget:color"
+		) :
 			self.__updateMenuButton()
 
 	def __contextTrackerChanged( self, contextTracker ) :
@@ -393,7 +400,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 						"checkBox" : editScope == currentEditScope,
 						"icon" : self.__editScopeSwatch( editScope ),
 						"active" : not self.__unusableReason( editScope ),
-						"description" : self.__unusableReason( editScope ),
+						"description" : self.__unusableReason( editScope ) or self.__readOnlyReason( editScope ),
 					}
 				)
 			else :
@@ -498,7 +505,8 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __editScopeSwatch( self, editScope ) :
 
 		return GafferUI.Image.createSwatch(
-			Gaffer.Metadata.value( editScope, "nodeGadget:color" ) or imath.Color3f( 1 )
+			Gaffer.Metadata.value( editScope, "nodeGadget:color" ) or imath.Color3f( 1 ),
+			image = "menuLock.png" if Gaffer.MetadataAlgo.readOnly( editScope ) else None
 		)
 
 	@staticmethod
@@ -589,6 +597,15 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 			return f"{name} cannot be used as it is disabled."
 		else :
 			return None
+
+	def __readOnlyReason( self, editScope ) :
+
+		if Gaffer.MetadataAlgo.readOnly( editScope ) :
+			return "{} is locked.".format(
+				Gaffer.MetadataAlgo.readOnlyReason( editScope ).relativeName( editScope.scriptNode() )
+			)
+
+		return None
 
 # ProcessorWidget
 # ===============
