@@ -9,6 +9,7 @@ Fixes
   - Fixed handling of shader colour component to float connections in Cycles.
   - Added `CORTEX_STARTUP_PATHS` to match the Linux wrapper.
 - PlugPopup : Fixed error when displaying a popup with no PlugValueWidget.
+- Instancer : Fixed issue where wrong prototypes were sometimes used in encapsulated renders.
 
 1.5.0.0 (relative to 1.4.15.0)
 =======
