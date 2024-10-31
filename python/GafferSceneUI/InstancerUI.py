@@ -345,12 +345,9 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The object on which to make the instances. The
-			position, orientation and scale of the instances
-			are taken from per-vertex primitive variables on
-			this object. This is ignored when a filter is
-			connected, in which case the filter specifies
-			multiple objects to make the instances from.
+			Using the `parent` plug to select the source is now deprecated, please use a filter instead.
+			This plug is still supported for backwards compatibility, but is incompatible with recent features,
+			like accurately reporting variation counts.
 			""",
 
 			"layout:section", "Settings.General",
