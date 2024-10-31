@@ -283,6 +283,10 @@ _styleSheet = string.Template(
 		padding: 5px 8px 5px 8px;
 	}
 
+	#gafferMenuBarWidgetContainer {
+		background-color: $backgroundDarkest;
+	}
+
 	QMenu {
 		border: 1px solid $backgroundDark;
 		padding-bottom: 5px;

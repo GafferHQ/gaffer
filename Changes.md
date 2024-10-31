@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.0.1)
 =======
 
+Features
+--------
+
+- EditScope : Introduced the Global Edit Target, providing script-level control over the target used by editors. The Global Edit Target can be set from a new "Edit Target" menu in the menu bar, which displays all available edit targets upstream of the focus node.
+
 Improvements
 ------------
 
