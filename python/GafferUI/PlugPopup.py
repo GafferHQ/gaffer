@@ -157,7 +157,7 @@ class PlugPopup( GafferUI.PopupWindow ) :
 
 	def __focusChanged( self, oldWidget, newWidget ) :
 
-		if self.__plugValueWidget.isAncestorOf( newWidget ) and hasattr( newWidget, "activatedSignal" ) :
+		if self.__plugValueWidget and self.__plugValueWidget.isAncestorOf( newWidget ) and hasattr( newWidget, "activatedSignal" ) :
 			self.__widgetActivatedConnection = newWidget.activatedSignal().connect(
 				Gaffer.WeakMethod( self.__activated ), scoped = True
 			)
