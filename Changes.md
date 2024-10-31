@@ -1,7 +1,10 @@
 1.4.x.x (relative to 1.4.15.0)
 =======
 
+Fixes
+-----
 
+- PlugPopup : Fixed error when displaying a popup with no PlugValueWidget.
 
 1.4.15.0 (relative to 1.4.14.0)
 ========
