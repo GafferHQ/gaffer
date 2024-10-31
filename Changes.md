@@ -6,6 +6,11 @@ Improvements
 
 - Instancer : Added support for 64 bit ints for ids ( matching what is loaded from USD ).
 
+Fixes
+-----
+
+- Render, InteractiveRender : Added default node name arguments to the compatibility shims for removed subclasses such as ArnoldRender.
+
 1.5.0.1 (relative to 1.5.0.0)
 =======
 

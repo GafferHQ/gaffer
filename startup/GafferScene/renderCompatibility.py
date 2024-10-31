@@ -36,7 +36,7 @@
 
 import GafferScene
 
-def __openGLRender( name ) :
+def __openGLRender( name = "OpenGLRender" ) :
 
 	node = GafferScene.Render( name )
 	node["renderer"].setValue( "OpenGL" )
