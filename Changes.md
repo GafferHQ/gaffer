@@ -8,6 +8,7 @@ Fixes
 - Windows :
   - Fixed handling of shader colour component to float connections in Cycles.
   - Added `CORTEX_STARTUP_PATHS` to match the Linux wrapper.
+- PlugPopup : Fixed error when displaying a popup with no PlugValueWidget.
 
 1.5.0.0 (relative to 1.4.15.0)
 =======
@@ -238,10 +239,18 @@ Build
 - Zstandard : Added version 1.5.0.
 - Windows : Updated compiler to Visual Studio 2022 / MSVC 17.8 / Runtime library 14.3.
 
-1.4.x.x (relative to 1.4.15.0)
-=======
+1.4.15.x (relative to 1.4.15.1)
+========
 
 
+
+1.4.15.1 (relative to 1.4.15.0)
+========
+
+Fixes
+-----
+
+- PlugPopup : Fixed error when displaying a popup with no PlugValueWidget.
 
 1.4.15.0 (relative to 1.4.14.0)
 ========
