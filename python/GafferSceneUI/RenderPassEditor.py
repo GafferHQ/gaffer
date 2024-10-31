@@ -402,12 +402,10 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		if editScope is None :
 			# No edit scope provided so use the current selected
-			editScopeInput = self.settings()["editScope"].getInput()
-			if editScopeInput is None :
+			editScope = self.editScope()
+			if editScope is None :
 				# No edit scope selected
 				return False
-
-			editScope = editScopeInput.node()
 
 		if inputNode != editScope and editScope not in Gaffer.NodeAlgo.upstreamNodes( inputNode ) :
 			# Edit scope is downstream of input
@@ -456,11 +454,10 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		if len( selectedRenderPasses ) == 0 :
 			return
 
-		editScopeInput = self.settings()["editScope"].getInput()
-		if editScopeInput is None :
+		editScope = self.editScope()
+		if editScope is None :
 			return
 
-		editScope = editScopeInput.node()
 		localRenderPasses = []
 		renderPassesProcessor = editScope.acquireProcessor( "RenderPasses", createIfNecessary = False )
 		if renderPassesProcessor is not None :
@@ -528,10 +525,9 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 	def __renderPassCreationDialogue( self ) :
 
-		editScopeInput = self.settings()["editScope"].getInput()
-		assert( editScopeInput is not None )
+		editScope = self.editScope()
+		assert( editScope is not None )
 
-		editScope = editScopeInput.node()
 		dialogue = _RenderPassCreationDialogue( self.__renderPassNames( self.settings()["in"] ), editScope )
 		renderPassName = dialogue.waitForRenderPassName( parentWindow = self.ancestor( GafferUI.Window ) )
 		if renderPassName :
@@ -564,14 +560,14 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 	def __metadataChanged( self, nodeTypeId, key, node ) :
 
-		editScopeInput = self.settings()["editScope"].getInput()
-		if editScopeInput is None :
+		editScope = self.editScope()
+		if editScope is None :
 			return
 
-		renderPassesProcessor = editScopeInput.node().acquireProcessor( "RenderPasses", createIfNecessary = False )
+		renderPassesProcessor = editScope.acquireProcessor( "RenderPasses", createIfNecessary = False )
 
 		if (
-			Gaffer.MetadataAlgo.readOnlyAffectedByChange( editScopeInput, nodeTypeId, key, node ) or
+			Gaffer.MetadataAlgo.readOnlyAffectedByChange( editScope, nodeTypeId, key, node ) or
 			( renderPassesProcessor and Gaffer.MetadataAlgo.readOnlyAffectedByChange( renderPassesProcessor, nodeTypeId, key, node ) )
 		) :
 			self.__updateButtonStatus()

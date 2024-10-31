@@ -40,6 +40,7 @@ API
 - OpenColorIOConfigPlugUI :
   - Added `connectToApplication()` function.
   - Deprecated `connect()` function. Use `connectToApplication()` instead.
+- SceneEditor : Added `editScope()` method.
 
 1.5.0.1 (relative to 1.5.0.0)
 =======
