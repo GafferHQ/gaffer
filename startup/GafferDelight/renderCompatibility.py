@@ -37,7 +37,7 @@
 import GafferScene
 import GafferDelight
 
-def __delightRender( name ) :
+def __delightRender( name = "DelightRender" ) :
 
 	node = GafferScene.Render( name )
 	node["renderer"].setValue( "3Delight" )
@@ -45,7 +45,7 @@ def __delightRender( name ) :
 
 GafferDelight.DelightRender = __delightRender
 
-def __interactiveDelightRender( name ) :
+def __interactiveDelightRender( name = "InteractiveDelightRender" ) :
 
 	node = GafferScene.InteractiveRender( name )
 	node["renderer"].setValue( "3Delight" )
