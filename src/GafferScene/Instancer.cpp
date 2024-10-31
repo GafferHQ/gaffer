@@ -2711,6 +2711,7 @@ struct Prototype : public IECore::RefCounted
 
 		IECore::MurmurHash h = hash;
 		h.append( prototypeContext->hash() );
+		h.append( *prototypeRoot );
 
 		// We find the capsules using the engine at shutter open, but the time used to construct the capsules
 		// must be the on-frame time, since the capsules will add their own shutter
