@@ -136,11 +136,6 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 				)
 				# Ignore the width in X so MenuButton width is limited by the overall width of the widget
 				self.__menuButton._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
-				self.__navigationMenuButton = GafferUI.MenuButton(
-					image = "navigationArrow.png",
-					hasFrame = False,
-					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__navigationMenuDefinition ) )
-				)
 				GafferUI.Spacer( imath.V2i( 4, 1 ), imath.V2i( 4, 1 ) )
 
 		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
@@ -184,7 +179,6 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 		editScope = self.__editScope()
 		editScopeActive = editScope is not None
 		self.__updateMenuButton()
-		self.__navigationMenuButton.setEnabled( editScopeActive )
 		if editScopeActive :
 			self.__editScopeNameChangedConnection = editScope.nameChangedSignal().connect(
 				Gaffer.WeakMethod( self.__editScopeNameChanged ), scoped = True
@@ -394,6 +388,26 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 			"/None", { "command" : functools.partial( self.getPlug().setInput, None ) },
 		)
 
+		if currentEditScope is not None :
+			result.append( "/__ActionsDivider__", { "divider" : True, "label" : "Actions" } )
+			nodes = currentEditScope.processors()
+			nodes.extend( self.__userNodes( currentEditScope ) )
+
+			if nodes :
+				for node in nodes :
+					path = node.relativeName( currentEditScope ).replace( ".", "/" )
+					result.append(
+						"/Show Edits/" + path,
+						{
+							"command" : functools.partial( GafferUI.NodeEditor.acquire, node )
+						}
+					)
+			else :
+				result.append(
+					"/Show Edits/EditScope is Empty",
+					{ "active" : False },
+				)
+
 		return result
 
 	def __refreshMenu( self ) :
@@ -402,38 +416,6 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 			# An update will already be in progress so we just show our busy
 			# widget until it is done.
 			self.__busyWidget.setVisible( True )
-
-	def __navigationMenuDefinition( self ) :
-
-		result = IECore.MenuDefinition()
-
-		editScope = self.__editScope()
-		if editScope is None :
-			result.append(
-				"/No EditScope Selected",
-				{ "active" : False },
-			)
-			return result
-
-		nodes = editScope.processors()
-		nodes.extend( self.__userNodes( editScope ) )
-
-		if nodes :
-			for node in nodes :
-				path = node.relativeName( editScope ).replace( ".", "/" )
-				result.append(
-					"/" + path,
-					{
-						"command" : functools.partial( GafferUI.NodeEditor.acquire, node )
-					}
-				)
-		else :
-			result.append(
-				"/EditScope is Empty",
-				{ "active" : False },
-			)
-
-		return result
 
 	def __editScopeSwatch( self, editScope ) :
 
