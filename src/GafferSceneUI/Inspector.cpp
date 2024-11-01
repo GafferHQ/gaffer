@@ -454,7 +454,12 @@ Gaffer::EditScope *Inspector::targetEditScope() const
 		return nullptr;
 	}
 
-	return runTimeCast<EditScope>( m_editScope->getInput()->node() );
+	return PlugAlgo::findSource(
+		m_editScope.get(),
+		[] ( Plug *plug ) {
+			return runTimeCast<EditScope>( plug->node() );
+		}
+	);
 }
 
 void Inspector::editScopeInputChanged( const Gaffer::Plug *plug )
