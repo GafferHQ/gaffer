@@ -257,6 +257,10 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.getPlug().setInput( editScope["out"] )
 
+	def __connectPlug( self, plug, *ignored ) :
+
+		self.getPlug().setInput( plug )
+
 	def __inputNode( self ) :
 
 		node = self.getPlug().node()
@@ -378,7 +382,11 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		result.append( "/__NoneDivider__", { "divider" : True } )
 		result.append(
-			"/None", { "command" : functools.partial( self.getPlug().setInput, None ) },
+			"/None",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__connectPlug ), None ),
+				"checkBox" : self.getPlug().getInput() == None,
+			},
 		)
 
 		if currentEditScope is not None :
