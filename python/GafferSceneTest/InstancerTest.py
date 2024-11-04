@@ -3022,6 +3022,29 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		self.assertEqual( [ instancer["out"].attributes( "/object/instances/%s/%i/%s" % ("abdc"[i],i,"abdc"[i]) )["testAttribute"].value for i in range(4) ], [ 42.0 ] * 4 )
 		self.assertEqual( [ instancer["out"].attributes( "/object/instances/%s/%i" % ("abdc"[i],i) ).get("user:varyingFloat") for i in range(4) ], [ None ] * 4 )
 
+	def testRenderHashes( self ) :
+
+		script = self.buildPrototypeRootsScript()
+		script["instancer"]["prototypeMode"].setValue( GafferScene.Instancer.PrototypeMode.IndexedRootsList )
+		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [
+			"/foo", "/bar"
+		] ) )
+		script["instancer"]["encapsulate"].setValue( True )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch )
+
+		script["instancer"]["out"].object( "/object/instances" ).render( renderer )
+
+		# Make sure that the capsules we produce have different hashes when the prototype roots are different
+		rootsByHash = {}
+		for n in renderer.capturedObjectNames():
+			co = renderer.capturedObject( n ).capturedSamples()[0]
+			if co.hash() in rootsByHash:
+				with self.subTest( location = n ) :
+					self.assertEqual( co.root(), rootsByHash[ co.hash() ] )
+			else:
+				rootsByHash[ co.hash() ] = co.root()
+
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 10 )
 	def testBoundPerformance( self ) :
 
