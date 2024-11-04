@@ -150,6 +150,7 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		bool dragMove( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragLeave( GadgetPtr gadget, const DragDropEvent &event );
 		bool drop( GadgetPtr gadget, const DragDropEvent &event );
+		void noduleAdded( Nodule *nodule );
 
 		ConnectionCreator *closestDragDestination( const DragDropEvent &event ) const;
 
@@ -163,6 +164,7 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		bool updateShape();
 		void updateFocusGadgetVisibility();
 		void updateTextDimming();
+		void applyNoduleLabelVisibilityMetadata();
 
 		IE_CORE_FORWARDDECLARE( ErrorGadget );
 		ErrorGadget *errorGadget( bool createIfMissing = true );

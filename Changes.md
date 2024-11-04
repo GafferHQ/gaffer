@@ -57,6 +57,7 @@ API
   - Deprecated `connect()` function. Use `connectToApplication()` instead.
 - SceneEditor : Added `editScope()` method.
 - Image : Added optional `image` argument to `createSwatch()` static method.
+- StandardNodeGadget : Added support for `nodeGadget:inputNoduleLabelsVisible` and `nodeGadget:outputNoduleLabelsVisible` metadata for setting nodule labels always on. If the metadata entry is not set or `False`, labels will be visible only when they are hovered over.
 
 Build
 -----
