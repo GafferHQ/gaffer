@@ -13,6 +13,7 @@ Fixes
 
 - Render, InteractiveRender : Added default node name arguments to the compatibility shims for removed subclasses such as ArnoldRender.
 - GafferUITest : Fixed `assertNodeUIsHaveExpectedLifetime()` test for invisible nodes.
+- OpDialogue : Fixed `postExecuteBehaviour` handling.
 
 1.5.0.1 (relative to 1.5.0.0)
 =======

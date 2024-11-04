@@ -130,10 +130,16 @@ class OpDialogue( GafferUI.Dialogue ) :
 			with IECore.IgnoredExceptions( KeyError ) :
 				d = opInstance.userData()["UI"]["postExecuteBehaviour"]
 			if d is not None :
-				for v in self.PostExecuteBehaviour.values() :
+				for v in self.PostExecuteBehaviour :
 					if str( v ).lower() == d.value.lower() :
 						postExecuteBehaviour = v
 						break
+
+					# backwards compatibility for IECore.Enum()
+					if str( v ).lower() == f"PostExecuteBehaviour.{d.value}".lower() :
+						postExecuteBehaviour = v
+						break
+
 			else :
 				# backwards compatibility with batata
 				with IECore.IgnoredExceptions( KeyError ) :
