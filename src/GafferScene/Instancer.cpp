@@ -199,14 +199,14 @@ struct PrototypeContextVariable
 struct AccessPrototypeContextVariable
 {
 	template< class T>
-	void operator()( const TypedData<vector<T>> *data, const PrototypeContextVariable &v, int index, Context::EditableScope &scope )
+	void operator()( const TypedData<vector<T>> *data, const PrototypeContextVariable &v, size_t index, Context::EditableScope &scope )
 	{
 		T raw = PrimitiveVariable::IndexedView<T>( *v.primVar )[index];
 		T value = quantize( raw, v.quantize );
 		scope.setAllocated( v.name, value );
 	}
 
-	void operator()( const TypedData<vector<float>> *data, const PrototypeContextVariable &v, int index, Context::EditableScope &scope )
+	void operator()( const TypedData<vector<float>> *data, const PrototypeContextVariable &v, size_t index, Context::EditableScope &scope )
 	{
 		float raw = PrimitiveVariable::IndexedView<float>( *v.primVar )[index];
 		float value = quantize( raw, v.quantize );
@@ -221,7 +221,7 @@ struct AccessPrototypeContextVariable
 		}
 	}
 
-	void operator()( const TypedData<vector<int>> *data, const PrototypeContextVariable &v, int index, Context::EditableScope &scope )
+	void operator()( const TypedData<vector<int>> *data, const PrototypeContextVariable &v, size_t index, Context::EditableScope &scope )
 	{
 		int raw = PrimitiveVariable::IndexedView<int>( *v.primVar )[index];
 		int value = quantize( raw, v.quantize );
@@ -236,7 +236,7 @@ struct AccessPrototypeContextVariable
 		}
 	}
 
-	void operator()( const Data *data, const PrototypeContextVariable &v, int index, Context::EditableScope &scope )
+	void operator()( const Data *data, const PrototypeContextVariable &v, size_t index, Context::EditableScope &scope )
 	{
 		throw IECore::Exception( "Context variable prim vars must contain vector data" );
 	}
@@ -250,7 +250,7 @@ struct AccessPrototypeContextVariable
 struct UniqueHashPrototypeContextVariable
 {
 	template< class T>
-	void operator()( const TypedData<vector<T>> *data, const PrototypeContextVariable &v, int index, MurmurHash &contextHash )
+	void operator()( const TypedData<vector<T>> *data, const PrototypeContextVariable &v, size_t index, MurmurHash &contextHash )
 
 	{
 		T raw = PrimitiveVariable::IndexedView<T>( *v.primVar )[index];
@@ -752,7 +752,7 @@ class Instancer::EngineData : public Data
 			boost::unordered_set< IECore::MurmurHash > totalHashAccumulate;
 
 			size_t n = numPoints();
-			for( unsigned int i = 0; i < n; i++ )
+			for( size_t i = 0; i < n; i++ )
 			{
 				int protoIndex = prototypeIndex( i );
 				if( protoIndex == -1 )
@@ -794,7 +794,7 @@ class Instancer::EngineData : public Data
 
 		// Set the context variables in the context for this point index, based on the m_prototypeContextVariables
 		// set up for this EngineData
-		void setPrototypeContextVariables( int pointIndex, Context::EditableScope &scope ) const
+		void setPrototypeContextVariables( size_t pointIndex, Context::EditableScope &scope ) const
 		{
 			for( unsigned int i = 0; i < m_prototypeContextVariables.size(); i++ )
 			{
@@ -826,7 +826,7 @@ class Instancer::EngineData : public Data
 
 		// Needs to match setPrototypeContextVariables above, except that it operates on one
 		// PrototypeContextVariable at a time instead of iterating through them
-		void hashPrototypeContextVariable( int pointIndex, const PrototypeContextVariable &v, IECore::MurmurHash &result ) const
+		void hashPrototypeContextVariable( size_t pointIndex, const PrototypeContextVariable &v, IECore::MurmurHash &result ) const
 		{
 			if( v.seedMode )
 			{
@@ -1135,7 +1135,7 @@ class Instancer::EngineSplitPrototypesData : public Data
 			}
 
 			// We need a list of which point indices belong to each prototype
-			std::vector< std::vector<int> > pointIndicesForPrototypeIndex( m_engineData->m_numPrototypes );
+			std::vector< std::vector<size_t> > pointIndicesForPrototypeIndex( m_engineData->m_numPrototypes );
 			// Pre allocate if there's just one prototype, since we know the length will just be every point
 			if( constantPrototypeIndex != -1 )
 			{
@@ -1192,7 +1192,7 @@ class Instancer::EngineSplitPrototypesData : public Data
 			return m_engineData.get();
 		}
 
-		const std::vector<int> & pointIndicesForPrototype( const IECore::InternedString &prototypeName ) const
+		const std::vector<size_t> & pointIndicesForPrototype( const IECore::InternedString &prototypeName ) const
 		{
 			return m_pointIndicesForPrototype.at( prototypeName );
 		}
@@ -1201,7 +1201,7 @@ class Instancer::EngineSplitPrototypesData : public Data
 	protected :
 
 		ConstEngineDataPtr m_engineData;
-		std::unordered_map< InternedString, std::vector<int> > m_pointIndicesForPrototype;
+		std::unordered_map< InternedString, std::vector<size_t> > m_pointIndicesForPrototype;
 };
 
 
@@ -1865,7 +1865,7 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 
 		for( const auto &prototypeName : engine->prototypeNames()->readable() )
 		{
-			const std::vector<int> &pointIndicesForPrototype = esp->pointIndicesForPrototype( prototypeName );
+			const std::vector<size_t> &pointIndicesForPrototype = esp->pointIndicesForPrototype( prototypeName );
 
 			std::atomic<uint64_t> h1Accum( 0 ), h2Accum( 0 );
 			const ThreadState &threadState = ThreadState::current();
@@ -2051,7 +2051,6 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 
 		CompoundDataPtr result = new CompoundData;
 
-		std::vector< int > numUnique;
 		std::vector< InternedString > outputNames;
 		if( perLocationHashes.size() == 0 )
 		{
@@ -2061,6 +2060,10 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 		}
 		else
 		{
+			// \todo - we should technically be returning Int64Data in this compound, in case someone
+			// uses rawSeed mode with more than 2^32 points. But this would be a compatibility break,
+			// so I'm not changing it now.
+
 			if( perLocationHashes.size() == 1 )
 			{
 				// We only have one location, so we can just output the sizes of the hash sets
@@ -2114,7 +2117,7 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 			branchPath.back() = prototypeName;
 			const ScenePlug::ScenePath *prototypeRoot = engine->prototypeRoot( prototypeName );
 
-			const std::vector<int> &pointIndicesForPrototype = esp->pointIndicesForPrototype( prototypeName );
+			const std::vector<size_t> &pointIndicesForPrototype = esp->pointIndicesForPrototype( prototypeName );
 
 			tbb::spin_mutex instanceMutex;
 			branchPath.emplace_back( InternedString() );
@@ -2255,7 +2258,7 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &sourcePath, const S
 			childBound = prototypesPlug()->boundPlug()->getValue();
 		}
 
-		const std::vector<int> &pointIndicesForPrototype = esp->pointIndicesForPrototype( branchPath.back() );
+		const std::vector<size_t> &pointIndicesForPrototype = esp->pointIndicesForPrototype( branchPath.back() );
 
 		// TODO - might be worth using a looser approximation - expand point cloud bound by largest diagonal of
 		// prototype bound x largest scale. Especially since this isn't fully accurate anyway: we are getting a
@@ -2585,7 +2588,7 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 
 		ConstEngineSplitPrototypesDataPtr esp = engineSplitPrototypes( sourcePath, context );
 
-		const std::vector<int> &pointIndicesForPrototype = esp->pointIndicesForPrototype( branchPath.back() );
+		const std::vector<size_t> &pointIndicesForPrototype = esp->pointIndicesForPrototype( branchPath.back() );
 
 		// The children of the prototypeName are all the instances which use this prototype,
 		// which we can query from the engine - however the names we output under use
@@ -2596,7 +2599,7 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 		ids.reserve( pointIndicesForPrototype.size() );
 
 		const EngineData *engineData = esp->engine();
-		for( int q : pointIndicesForPrototype )
+		for( size_t q : pointIndicesForPrototype )
 		{
 			ids.push_back( engineData->instanceId( q ) );
 		}
@@ -3176,7 +3179,7 @@ void Instancer::InstancerCapsule::render( IECoreScenePreview::Renderer *renderer
 					// If we haven't allocated a name for this prototype index, allocate it now,
 					// including additional storage that will hold the digits for each instance id
 					const std::string &protoName = engines[0]->prototypeNames()->readable()[ protoIndex ].string();
-					names[protoIndex].reserve( protoName.size() + std::numeric_limits< int >::digits10 + 1 );
+					names[protoIndex].reserve( protoName.size() + std::numeric_limits< int64_t >::digits10 + 1 );
 					names[protoIndex] += protoName;
 					names[protoIndex].append( 1, '/' );
 					namePrefixLengths[protoIndex] = names[protoIndex].size();
