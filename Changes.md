@@ -7,6 +7,7 @@ Improvements
 - Instancer :
   - Added `inactiveIds` plug for selecting primitive variables to disable some instances.
   - Added support for 64 bit integer ids (matching what is loaded from USD).
+- DeletePoints : Added modes for deleting points based on a list of ids.
 
 Fixes
 -----
@@ -14,6 +15,11 @@ Fixes
 - Render, InteractiveRender : Added default node name arguments to the compatibility shims for removed subclasses such as ArnoldRender.
 - GafferUITest : Fixed `assertNodeUIsHaveExpectedLifetime()` test for invisible nodes.
 - OpDialogue : Fixed `postExecuteBehaviour` handling.
+
+API
+---
+
+- Int64VectorDataPlug : Added new plug type for passing vectors of int64.
 
 1.5.0.1 (relative to 1.5.0.0)
 =======

@@ -375,6 +375,10 @@ ValuePlugPtr createPlugFromData( const std::string &name, Plug::Direction direct
 		{
 			return typedObjectValuePlug( name, direction, flags, static_cast<const IntVectorData *>( value ) );
 		}
+		case Int64VectorDataTypeId :
+		{
+			return typedObjectValuePlug( name, direction, flags, static_cast<const Int64VectorData *>( value ) );
+		}
 		case StringVectorDataTypeId :
 		{
 			return typedObjectValuePlug( name, direction, flags, static_cast<const StringVectorData *>( value ) );
@@ -488,6 +492,8 @@ IECore::DataPtr getValueAsData( const ValuePlug *plug )
 			return static_cast<const FloatVectorDataPlug *>( plug )->getValue()->copy();
 		case IntVectorDataPlugTypeId :
 			return static_cast<const IntVectorDataPlug *>( plug )->getValue()->copy();
+		case Int64VectorDataPlugTypeId :
+			return static_cast<const Int64VectorDataPlug *>( plug )->getValue()->copy();
 		case StringVectorDataPlugTypeId :
 			return static_cast<const StringVectorDataPlug *>( plug )->getValue()->copy();
 		case InternedStringVectorDataPlugTypeId :
@@ -1015,6 +1021,7 @@ bool canSetCompoundNumericPlugValue( const Data *value )
 		case V2iVectorDataTypeId :
 		case FloatVectorDataTypeId :
 		case IntVectorDataTypeId :
+		case Int64VectorDataTypeId :
 		case BoolVectorDataTypeId :
 			return IECore::size( value ) == 1;
 		default :
@@ -1071,6 +1078,8 @@ bool canSetValueFromData( const ValuePlug *plug, const IECore::Data *value )
 			return canSetTypedDataPlugValue<FloatVectorDataPlug>( value );
 		case Gaffer::IntVectorDataPlugTypeId:
 			return canSetTypedDataPlugValue<IntVectorDataPlug>( value );
+		case Gaffer::Int64VectorDataPlugTypeId:
+			return canSetTypedDataPlugValue<Int64VectorDataPlug>( value );
 		case Gaffer::StringPlugTypeId:
 			return canSetStringPlugValue( value );
 		case Gaffer::StringVectorDataPlugTypeId:
@@ -1145,6 +1154,8 @@ bool setValueFromData( ValuePlug *plug, const IECore::Data *value )
 			return setTypedDataPlugValue( static_cast<FloatVectorDataPlug *>( plug ), value );
 		case Gaffer::IntVectorDataPlugTypeId:
 			return setTypedDataPlugValue( static_cast<IntVectorDataPlug *>( plug ), value );
+		case Gaffer::Int64VectorDataPlugTypeId:
+			return setTypedDataPlugValue( static_cast<Int64VectorDataPlug *>( plug ), value );
 		case Gaffer::StringPlugTypeId:
 			return setStringPlugValue( static_cast<StringPlug *>( plug ), value );
 		case Gaffer::StringVectorDataPlugTypeId:

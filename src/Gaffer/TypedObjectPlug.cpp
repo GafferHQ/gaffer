@@ -49,6 +49,7 @@ namespace Gaffer
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::ObjectPlug, ObjectPlugTypeId )
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::BoolVectorDataPlug, BoolVectorDataPlugTypeId )
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::IntVectorDataPlug, IntVectorDataPlugTypeId )
+GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::Int64VectorDataPlug, Int64VectorDataPlugTypeId )
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::FloatVectorDataPlug, FloatVectorDataPlugTypeId )
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::StringVectorDataPlug, StringVectorDataPlugTypeId )
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::InternedStringVectorDataPlug, InternedStringVectorDataPlugTypeId )
@@ -153,6 +154,7 @@ void StringVectorDataPlug::setFrom( const ValuePlug *other )
 template class TypedObjectPlug<IECore::Object>;
 template class TypedObjectPlug<IECore::BoolVectorData>;
 template class TypedObjectPlug<IECore::IntVectorData>;
+template class TypedObjectPlug<IECore::Int64VectorData>;
 template class TypedObjectPlug<IECore::FloatVectorData>;
 template class TypedObjectPlug<IECore::StringVectorData>;
 template class TypedObjectPlug<IECore::InternedStringVectorData>;
