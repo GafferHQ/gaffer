@@ -725,6 +725,84 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		)
 		self.assertEncapsulatedRendersSame( instancer )
 
+	def testInactiveIds( self ) :
+
+		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( x, 0, 0 ) for x in range( 0, 10 ) ] ) )
+		points["inactiveIdsTest"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Constant,
+			IECore.IntVectorData( [ 3, 5, 7 ] )
+		)
+		points["inactiveIdsTest64"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Constant,
+			IECore.Int64VectorData( [ 4, 6 ] )
+		)
+		points["inactive"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.BoolVectorData( [ 0, 0, 1, 0, 0, 1, 1, 0, 1, 1 ] )
+		)
+		points["inactiveInt"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.IntVectorData( [ 0, 0, 1, 0, 0, 1, 1, 0, 1, 1 ] )
+		)
+		points["badInactive"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Constant,
+			IECore.IntVectorData( [ 13 ] )
+		)
+		points["alternateIds"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.IntVectorData( [ i + 7 for i in range( 10 ) ] )
+		)
+
+		objectToScene = GafferScene.ObjectToScene()
+		objectToScene["object"].setValue( points )
+
+		sphere = GafferScene.Sphere()
+
+		pointsFilter = GafferScene.PathFilter()
+		pointsFilter["paths"].setValue( IECore.StringVectorData( [ "/object" ] ) )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( objectToScene["out"] )
+		instancer["prototypes"].setInput( sphere["out"] )
+		instancer["filter"].setInput( pointsFilter["out"] )
+
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ str( i ) for i in range( 10 ) ] ) )
+
+		instancer["inactiveIds"].setValue( "inactiveIdsTest" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "0", "1", "2", "4", "6", "8", "9" ] ) )
+
+		instancer["inactiveIds"].setValue( "inactiveIdsTest64" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "0", "1", "2", "3", "5", "7", "8", "9" ] ) )
+
+		instancer["inactiveIds"].setValue( "inactive" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "0", "1", "3", "4", "7" ] ) )
+
+		instancer["inactiveIds"].setValue( "inactiveInt" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "0", "1", "3", "4", "7" ] ) )
+
+		instancer["inactiveIds"].setValue( "inactiveIdsTest inactiveIdsTest64" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "0", "1", "2", "8", "9" ] ) )
+
+		instancer["inactiveIds"].setValue( "inactiveIdsTest inactiveIdsTest64 inactive" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "0", "1" ] ) )
+
+		# If the id is out of bounds, nothing happens
+		instancer["inactiveIds"].setValue( "badInactive" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" ] ) )
+
+		instancer["id"].setValue( "alternateIds" )
+		# A vertex variable applies based on vertex position in the list
+		instancer["inactiveIds"].setValue( "inactive" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "7", "8", "10", "11", "14" ] ) )
+
+		# An id list matches based on ids
+		instancer["inactiveIds"].setValue( "inactive inactiveIdsTest" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "8", "10", "11", "14" ] ) )
+
+		instancer["inactiveIds"].setValue( "badInactive" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "7", "8", "9", "10", "11", "12", "14", "15", "16" ] ) )
+
+
 	def testAnimation( self ) :
 
 		pointA = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [

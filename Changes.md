@@ -4,7 +4,9 @@
 Improvements
 ------------
 
-- Instancer : Added support for 64 bit ints for ids ( matching what is loaded from USD ).
+- Instancer :
+  - Added `inactiveIds` plug for selecting primitive variables to disable some instances.
+  - Added support for 64 bit integer ids (matching what is loaded from USD).
 
 Fixes
 -----
