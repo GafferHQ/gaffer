@@ -20,6 +20,7 @@ Improvements
     - Removed the "Navigation Arrow" button from the right side of the Edit Scope menu. Its actions have been relocated to a "Show Edits" submenu of the Edit Scope menu.
   - Renamed "None" mode to "Source" and added icon.
   - The "Source" menu item now displays a checkbox when chosen.
+  - Added a "No EditScopes Available" menu item that is displayed when no upstream EditScopes are available.
 
 Fixes
 -----

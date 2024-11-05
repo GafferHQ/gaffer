@@ -299,6 +299,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __buildMenu( self, path, currentEditScope ) :
 
 		result = IECore.MenuDefinition()
+		result.append( "/__TargetsDivider__", { "divider" : True, "label" : "Edit Targets" } )
 
 		for childPath in path.children() :
 			itemName = childPath[-1]
@@ -344,6 +345,9 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 						"icon" : icon
 					}
 				)
+
+		if result.size() == 1 :
+			result.append( "No EditScopes Available", { "active" : False } )
 
 		return result
 
