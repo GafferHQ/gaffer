@@ -124,7 +124,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.__init__( self, self.__listContainer, plug, **kw )
 
 		with self.__listContainer :
-			GafferUI.Label( "Edit Target" )
+			self.__label = GafferUI.Label( "Edit Target" )
 			self.__busyWidget = GafferUI.BusyWidget( size = 18 )
 			self.__busyWidget.setVisible( False )
 			self.__menuButton = GafferUI.MenuButton(
@@ -144,6 +144,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 		# run the default dropSignal handler from PlugValueWidget.
 		self.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ) )
 
+		self.__updateLabelVisibility()
 		self.__updatePlugInputChangedConnection()
 		self.__acquireContextTracker()
 
@@ -168,6 +169,10 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 			return unusableReason
 		else :
 			return "Edits will be made in {}.".format( editScope.getName() )
+
+	def _updateFromMetadata( self ) :
+
+		self.__updateLabelVisibility()
 
 	# We don't actually display values, but this is also called whenever the
 	# input changes, which is when we need to update.
@@ -215,6 +220,10 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 		else :
 			# We'll update later in `__contextTrackerChanged()`.
 			pass
+
+	def __updateLabelVisibility( self ) :
+
+		self.__label.setVisible( Gaffer.Metadata.value( self.getPlug(), "editScopePlugValueWidget:showLabel" ) or False )
 
 	def __updateMenuButton( self ) :
 

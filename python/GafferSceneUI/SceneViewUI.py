@@ -105,7 +105,7 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferUI.EditScopeUI.EditScopePlugValueWidget",
 			"toolbarLayout:index", -1,
-			"toolbarLayout:width", 185,
+			"toolbarLayout:width", 130,
 
 		],
 
@@ -1226,7 +1226,7 @@ class _EditScopeBalancingSpacer( GafferUI.Spacer ) :
 	def __init__( self, sceneView, **kw ) :
 
 		# EditScope width - pause button - spacer - spinner - renderer
-		width = 185 - 25 - 4 - 20 - 100
+		width = 130 - 25 - 4 - 20 - 100
 
 		GafferUI.Spacer.__init__(
 			self,

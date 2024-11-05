@@ -23,6 +23,7 @@ Improvements
     - Removed the dark background.
     - Changed the menu button color to be always blue.
     - Removed the "Navigation Arrow" button from the right side of the Edit Scope menu. Its actions have been relocated to a "Show Edits" submenu of the Edit Scope menu.
+    - Hid the label. It can be made visible for a specific plug by registering `editScopePlugValueWidget:showLabel` metadata with a value of `True`.
   - Renamed "None" mode to "Source" and added icon.
   - The "Source" menu item now displays a checkbox when chosen.
   - Added a "No EditScopes Available" menu item that is displayed when no upstream EditScopes are available.
