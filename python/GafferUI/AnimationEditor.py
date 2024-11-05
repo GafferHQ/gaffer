@@ -224,7 +224,14 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 
 	def _updateFromContext( self, modifiedItems ) :
 
-		self.__animationGadget.setContext( self.context() )
+		# Note that we're passing `scriptNode().context()` rather than
+		# `self.context()` because we don't want to use a ContextTracker-based
+		# context in the AnimationEditor.
+		## \todo It would be better if `AnimationGadget::setContext()` connected
+		# to `Context::changedSignal()` and updated automatically after that. We
+		# could also consider removing `setContext()` entirely and connecting to
+		# the ScriptNode's context in the AnimationGadget constructor.
+		self.__animationGadget.setContext( self.scriptNode().context() )
 
 	def __updateGadgetSets( self, unused = None ) :
 

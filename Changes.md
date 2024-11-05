@@ -19,6 +19,7 @@ Fixes
 - OpDialogue : Fixed `postExecuteBehaviour` handling.
 - LocalDispatcher : Fixed job status update when a job was killed _immediately_ after being launched.
 - `gaffer view` : Fixed default OpenColorIO display transform.
+- AnimationEditor : Fixed changing of the current frame by dragging the frame indicator or clicking on the time axis.
 
 API
 ---
