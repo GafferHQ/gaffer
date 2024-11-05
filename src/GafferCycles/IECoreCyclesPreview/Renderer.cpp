@@ -820,6 +820,7 @@ IECore::InternedString g_deformationBlurSegmentsAttributeName( "deformationBlurS
 IECore::InternedString g_displayColorAttributeName( "render:displayColor" );
 IECore::InternedString g_lightAttributeName( "light" );
 IECore::InternedString g_muteLightAttributeName( "light:mute" );
+IECore::InternedString g_automaticInstancingAttributeName( "gaffer:automaticInstancing" );
 // Cycles Attributes
 IECore::InternedString g_cclVisibilityAttributeName( "cycles:visibility" );
 IECore::InternedString g_useHoldoutAttributeName( "cycles:use_holdout" );
@@ -916,6 +917,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_assetName = attributeValue<std::string>( g_cryptomatteAssetAttributeName, attributes, m_assetName );
 			m_isCausticsCaster = attributeValue<bool>( g_isCausticsCasterAttributeName, attributes, m_isCausticsCaster );
 			m_isCausticsReceiver = attributeValue<bool>( g_isCausticsReceiverAttributeName, attributes, m_isCausticsReceiver );
+			m_automaticInstancing = attributeValue<bool>( g_automaticInstancingAttributeName, attributes, true );
 
 			// Surface shader
 			const IECoreScene::ShaderNetwork *surfaceShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesSurfaceShaderAttributeName, attributes );
@@ -1012,8 +1014,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 						if( strcmp( oldHash, newHash ) != 0 )
 						{
-							//m_shader->need_update_uvs = true;
-							//m_shader->need_update_attribute = true;
 							shader->need_update_displacement = true;
 							// Returning false will make Gaffer re-issue a fresh mesh
 							return false;
@@ -1026,8 +1026,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 							// to true in another place of the code inside of Cycles. If we have made it this far in this area, we are just updating
 							// the same shader so this should be safe.
 							shader->attributes = prevShader->attributes;
-							//m_shader->need_update_uvs = false;
-							//m_shader->need_update_attribute = false;
 							shader->need_update_displacement = false;
 						}
 					}
@@ -1129,8 +1127,8 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		/// was this mismatch, and if this function is really needed or not.
 		void hashGeometry( const IECore::Object *object, IECore::MurmurHash &h ) const
 		{
-			// Currently Cycles can only have a shader assigned uniquely and not instanced...
-			//h.append( m_shaderHash );
+			h.append( m_automaticInstancing );
+
 			const IECore::TypeId objectType = object->typeId();
 			switch( (int)objectType )
 			{
@@ -1145,12 +1143,27 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					// No geometry attributes for this type.
 					break;
 			}
+
+			// Apply displacement hash signature so when displacement changes and we need to re-issue a
+			// new mesh, we don't just return the same mesh that already had the previous displacement
+			// applied...
+			if( ccl::Shader *shader = m_shader->shader() )
+			{
+				if( shader->has_displacement && shader->get_displacement_method() != ccl::DISPLACE_BUMP )
+				{
+					const char *dispHash = (shader->graph) ? shader->graph->displacement_hash.c_str() : "";
+					if( strlen( dispHash ) != 0 )
+					{
+						h.append( dispHash );
+					}
+				}
+			}
 		}
 
 		// Returns true if the given geometry can be instanced.
 		bool canInstanceGeometry( const IECore::Object *object ) const
 		{
-			if( !IECore::runTimeCast<const IECoreScene::VisibleRenderable>( object ) )
+			if( !IECore::runTimeCast<const IECoreScene::VisibleRenderable>( object ) || !m_automaticInstancing )
 			{
 				return false;
 			}
@@ -1299,6 +1312,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		// Need to assign shaders in a deferred manner
 		ShaderCache *m_shaderCache;
 		bool m_muteLight;
+		bool m_automaticInstancing;
 
 		using CustomAttributes = ccl::vector<ccl::ParamValue>;
 		CustomAttributes m_custom;
