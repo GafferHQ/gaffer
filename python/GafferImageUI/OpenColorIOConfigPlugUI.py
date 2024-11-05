@@ -261,7 +261,7 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 		result.append( "/__OptionsDivider__", { "divider" : True, "label" : "Options" } )
 
 		result.append(
-			f"/Use Default Display And View", {
+			f"/Follow Default Display And View", {
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setToDefault ) ),
 				"checkBox" : self.__currentValue == "__default__",
 				"description" : "Always uses the default display and view for the current config. Useful when changing configs often, or using context-sensitive configs."
