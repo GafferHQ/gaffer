@@ -255,9 +255,14 @@ def __filterPlug( node ) :
 		return filterPlugs[0]
 	return None
 
+def __editable( plug ) :
+
+	return not Gaffer.MetadataAlgo.readOnly( plug ) and plug.settable()
+
 def __dropMode( nodeGadget, event ) :
 
-	if __pathsPlug( nodeGadget.node() ) is None :
+	pathsPlug = __pathsPlug( nodeGadget.node() )
+	if pathsPlug is None :
 		filter = None
 
 		filterPlug = __filterPlug( nodeGadget.node() )
@@ -267,9 +272,13 @@ def __dropMode( nodeGadget, event ) :
 		if filterPlug.getInput() is not None :
 			filter = filterPlug.source().node()
 		if filter is None :
-			return __DropMode.Replace
+			return __DropMode.Replace if __editable( filterPlug ) else __DropMode.None_
 		elif not isinstance( filter, GafferScene.PathFilter ) :
 			return __DropMode.None_
+		pathsPlug = __pathsPlug( filter )
+
+	if not __editable( pathsPlug ) :
+		return __DropMode.None_
 
 	if event.modifiers & event.Modifiers.Shift :
 		return __DropMode.Add
