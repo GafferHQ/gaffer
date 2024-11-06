@@ -92,7 +92,11 @@ class ScriptWindow( GafferUI.Window ) :
 
 	def setLayout( self, compoundEditor ) :
 
+		# When changing layout we need to manually transfer the edit scope
+		# from an existing CompoundEditor to the new one.
+		currentEditScope = None
 		if len( self.__listContainer ) > 1 :
+			currentEditScope = self.getLayout().settings()["editScope"].getInput()
 			del self.__listContainer[1]
 
 		assert( compoundEditor.scriptNode().isSame( self.scriptNode() ) )
@@ -101,15 +105,16 @@ class ScriptWindow( GafferUI.Window ) :
 		if len( self.__menuContainer ) > 1 :
 			del self.__menuContainer[1:]
 
-		if hasattr( compoundEditor, "settings" ) :
-			self.__menuContainer.append(
-				GafferUI.PlugLayout(
-					compoundEditor.settings(),
-					orientation = GafferUI.ListContainer.Orientation.Horizontal,
-					rootSection = "Settings"
-				)
+		if currentEditScope is not None :
+			compoundEditor.settings()["editScope"].setInput( currentEditScope )
+		self.__menuContainer.append(
+			GafferUI.PlugLayout(
+				compoundEditor.settings(),
+				orientation = GafferUI.ListContainer.Orientation.Horizontal,
+				rootSection = "Settings"
 			)
-			self.__menuContainer.append( GafferUI.Spacer( imath.V2i( 0 ) ) )
+		)
+		self.__menuContainer.append( GafferUI.Spacer( imath.V2i( 0 ) ) )
 
 	def getLayout( self ) :
 
