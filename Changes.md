@@ -51,6 +51,7 @@ API
   - Added `connectToApplication()` function.
   - Deprecated `connect()` function. Use `connectToApplication()` instead.
 - SceneEditor : Added `editScope()` method.
+- Image : Added optional `image` argument to `createSwatch()` static method.
 
 1.5.0.1 (relative to 1.5.0.0)
 =======
