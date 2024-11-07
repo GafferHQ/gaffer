@@ -96,6 +96,22 @@ class ColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return self.__colorChooser.getVisible() if self.__colorChooser is not None else False
 
+	def setInitialColor( self, color ) :
+
+		self.__colorChooser.setInitialColor( color )
+
+	def getInitialColor( self ) :
+
+		return self.__colorChooser.getInitialColor()
+
+	def setSwatchesVisible( self, visible ) :
+
+		self.__colorChooser.setSwatchesVisible( visible )
+
+	def getSwatchesVisible( self ) :
+
+		return self.__colorChooser.getVisible()
+
 	def setPlugs( self, plugs ) :
 
 		GafferUI.PlugValueWidget.setPlugs( self, plugs )
