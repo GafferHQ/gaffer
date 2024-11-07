@@ -4,6 +4,7 @@
 Improvements
 ------------
 
+- Added support for camera guides (action safe, title safe and rule of thirds).
 - Instancer :
   - Added `inactiveIds` plug for selecting primitive variables to disable some instances.
   - Added support for 64 bit integer ids (matching what is loaded from USD).
