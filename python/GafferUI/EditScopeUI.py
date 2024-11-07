@@ -203,6 +203,10 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 		if plug.getName() == "in" and plug.parent() == self.getPlug().node() :
 			# The result of `__inputNode()` will have changed.
 			self.__acquireContextTracker()
+		elif plug == self.getPlug() :
+			# Update menu button width immediately to prevent layout flicker
+			# caused by a deferred update from _updateFromValues.
+			self.__updateMenuButtonWidth()
 
 	def __acquireContextTracker( self ) :
 
@@ -242,10 +246,24 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return compoundEditor.settings()["editScope"]
 
+	def __updateMenuButtonWidth( self ) :
+
+		if self.__followingGlobalEditTarget() :
+			Gaffer.Metadata.registerValue( self.getPlug(), "layout:width", 50, persistent = False )
+			Gaffer.Metadata.registerValue( self.getPlug(), "toolbarLayout:width", 50, persistent = False )
+		else :
+			Gaffer.Metadata.deregisterValue( self.getPlug(), "layout:width" )
+			Gaffer.Metadata.deregisterValue( self.getPlug(), "toolbarLayout:width" )
+
 	def __updateMenuButton( self ) :
 
 		editScope = self.__editScope()
-		self.__menuButton.setText( editScope.getName() if editScope is not None else "Source" )
+		self.__updateMenuButtonWidth()
+
+		if self.__followingGlobalEditTarget() :
+			self.__menuButton.setText( " " )
+		else :
+			self.__menuButton.setText( editScope.getName() if editScope is not None else "Source" )
 
 		if editScope is not None :
 			self.__menuButton.setImage(
