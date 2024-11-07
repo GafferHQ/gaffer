@@ -1519,7 +1519,6 @@ _styleSheet = string.Template(
 	*[gafferClass="GafferSceneUI.TransformToolUI._SelectionWidget"],
 	*[gafferClass="GafferSceneUI.CropWindowToolUI._StatusWidget"],
 	*[gafferClass="GafferSceneUI.TransformToolUI._TargetTipWidget"] > QFrame,
-	*[gafferClass="GafferUI.EditScopeUI.EditScopePlugValueWidget"] > QFrame,
 	*[gafferClass="GafferSceneUI.InteractiveRenderUI._ViewRenderControlUI"] > QFrame,
 	*[gafferClass="GafferSceneUI._SceneViewInspector"] > QFrame
 	{
@@ -1529,7 +1528,7 @@ _styleSheet = string.Template(
 		padding: 2px;
 	}
 
-	*[gafferClass="GafferUI.EditScopeUI.EditScopePlugValueWidget"][editScopeActive="true"] QPushButton[gafferWithFrame="true"][gafferMenuIndicator="true"]
+	*[gafferClass="GafferUI.EditScopeUI.EditScopePlugValueWidget"] QPushButton[gafferWithFrame="true"][gafferMenuIndicator="true"]
 	{
 		border: 1px solid rgb( 46, 75, 107 );
 		border-top-color: rgb( 75, 113, 155 );
