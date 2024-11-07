@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.0.1)
 =======
 
+Features
+--------
+
+- Cycles : Added support for enabling and disabling automatic instancing that can be set onto locations with `StandardAttributes`. Previously automatic instancing was the only option. Partially addresses #4890 as a workaround for "leaking" shaders.
+
 Improvements
 ------------
 
@@ -16,6 +21,7 @@ Fixes
 - Render, InteractiveRender : Added default node name arguments to the compatibility shims for removed subclasses such as ArnoldRender.
 - GafferUITest : Fixed `assertNodeUIsHaveExpectedLifetime()` test for invisible nodes.
 - OpDialogue : Fixed `postExecuteBehaviour` handling.
+- Cycles : Displacement interactive edits won't double-up on displacements.
 
 API
 ---

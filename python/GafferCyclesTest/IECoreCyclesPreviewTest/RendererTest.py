@@ -2775,5 +2775,92 @@ class RendererTest( GafferTest.TestCase ) :
 
 		del light, plane
 
+	def testDisplacementEdit( self ) :
+
+		def surfaceAttributes( height ) :
+
+			return renderer.attributes( IECore.CompoundObject ( {
+				"cycles:shader:displacement_method" : IECore.StringData( "true" ),
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ), "emission_strength" : 1 } ),
+					},
+					output = "output",
+				),
+				"cycles:displacement" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "displacement", "cycles:displacement", { "height" : height } ),
+					},
+					output = "output",
+				),
+			} ) )
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.camera(
+			"testCamera",
+			IECoreScene.Camera(
+				parameters = {
+					"resolution" : imath.V2i( 100, 100 ),
+					"projection" : "orthographic",
+					"screenWindow" : imath.Box2f( imath.V2f( -2 ), imath.V2f( 2 ) )
+				}
+			)
+		)
+		renderer.option( "camera", IECore.StringData( "testCamera" ) )
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testDisplacementEdit",
+				}
+			)
+		)
+
+		sphere = renderer.object(
+			"/sphere",
+			IECoreScene.MeshPrimitive.createSphere( 1 ),
+			surfaceAttributes( 1 )
+		)
+
+		## \todo Default camera is facing down +ve Z but should be facing
+		# down -ve Z.
+		sphere.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+
+		renderer.render()
+		time.sleep( 1 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testDisplacementEdit" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		# Test in a corner where displacement wouldn't be visible
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.9 ) )
+		self.assertEqual( testPixel, imath.Color4f( 0 ) )
+
+		# Edit displacement height and test if it doubles-up
+
+		renderer.pause()
+		sphere.attributes( surfaceAttributes( 0.99 ) )
+
+		renderer.render()
+		time.sleep( 1 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testDisplacementEdit" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		# If the pixel is not black, then we've doubled-up on displacement
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.9 ) )
+		self.assertEqual( testPixel, imath.Color4f( 0 ) )
+
+		del sphere
+
 if __name__ == "__main__":
 	unittest.main()
