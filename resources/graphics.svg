@@ -3457,6 +3457,15 @@
          y="79"
          transform="matrix(0,1,1,0,0,0)"
          inkscape:label="menuBreadCrumb" />
+      <rect
+         style="fill:none;fill-opacity:1;stroke:none;stroke-width:1.4"
+         id="menuSource"
+         width="14"
+         height="14"
+         x="2670"
+         y="95"
+         transform="matrix(0,1,1,0,0,0)"
+         inkscape:label="menuSource" />
     </g>
     <path
        style="fill:none;stroke:url(#foreground);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
@@ -10504,6 +10513,12 @@
          inkscape:connector-curvature="0"
          sodipodi:nodetypes="cc" />
     </g>
+    <path
+       sodipodi:nodetypes="ccccccccccccc"
+       inkscape:connector-curvature="0"
+       id="menuSourceShape"
+       d="m 98,2725.3622 h 4 l -2,4 2,0 0.0385,5.0769 h 0.92308 L 103,2729.3622 h 2 l -2,-4 h 4 v -1 h -9 z"
+       style="display:inline;fill:url(#foreground);fill-opacity:1;stroke:#3c3c3c;stroke-width:1.84615;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill" />
     <g
        id="g6273"
        transform="matrix(0.83291134,0,0,0.8249516,3.9491823,572.50686)"

@@ -18,7 +18,8 @@ Improvements
     - Removed the dark background.
     - Changed the menu button color to be always blue.
     - Removed the "Navigation Arrow" button from the right side of the Edit Scope menu. Its actions have been relocated to a "Show Edits" submenu of the Edit Scope menu.
-  - The "None" menu item now displays a checkbox when chosen.
+  - Renamed "None" mode to "Source" and added icon.
+  - The "Source" menu item now displays a checkbox when chosen.
 
 Fixes
 -----

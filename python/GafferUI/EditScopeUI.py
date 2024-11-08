@@ -124,7 +124,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.__init__( self, self.__listContainer, plug, **kw )
 
 		with self.__listContainer :
-			GafferUI.Label( "Edit Scope" )
+			GafferUI.Label( "Edit Target" )
 			self.__busyWidget = GafferUI.BusyWidget( size = 18 )
 			self.__busyWidget.setVisible( False )
 			self.__menuButton = GafferUI.MenuButton(
@@ -215,14 +215,14 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __updateMenuButton( self ) :
 
 		editScope = self.__editScope()
-		self.__menuButton.setText( editScope.getName() if editScope is not None else "None" )
+		self.__menuButton.setText( editScope.getName() if editScope is not None else "Source" )
 
 		if editScope is not None :
 			self.__menuButton.setImage(
 				self.__editScopeSwatch( editScope ) if not self.__unusableReason( editScope ) else "warningSmall.png"
 			)
 		else :
-			self.__menuButton.setImage( None )
+			self.__menuButton.setImage( "menuSource.png" )
 
 	def __editScopeNameChanged( self, editScope, oldName ) :
 
@@ -380,12 +380,13 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 			result.append( "/__RefreshDivider__", { "divider" : True } )
 			result.append( "/Refresh", { "command" : Gaffer.WeakMethod( self.__refreshMenu ) } )
 
-		result.append( "/__NoneDivider__", { "divider" : True } )
+		result.append( "/__SourceDivider__", { "divider" : True } )
 		result.append(
-			"/None",
+			"/Source",
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__connectPlug ), None ),
 				"checkBox" : self.getPlug().getInput() == None,
+				"icon" : "menuSource.png",
 			},
 		)
 
