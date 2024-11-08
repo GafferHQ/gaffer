@@ -2014,7 +2014,7 @@ class SceneView::Camera : public Signals::Trackable
 			m_overlay->customGridEnabled( m_view->cameraPlug()->getChild<BoolPlug>( "customGridEnabled" )->getValue() );
 
 			// BHGC END
-			
+
 			m_overlay->setVisible( true );
 
 			// Now set up a camera that can see all of the aperture and resolution gates.
