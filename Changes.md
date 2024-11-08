@@ -17,6 +17,7 @@ Fixes
 - Render, InteractiveRender : Added default node name arguments to the compatibility shims for removed subclasses such as ArnoldRender.
 - GafferUITest : Fixed `assertNodeUIsHaveExpectedLifetime()` test for invisible nodes.
 - OpDialogue : Fixed `postExecuteBehaviour` handling.
+- LocalDispatcher : Fixed job status update when a job was killed _immediately_ after being launched.
 
 API
 ---
