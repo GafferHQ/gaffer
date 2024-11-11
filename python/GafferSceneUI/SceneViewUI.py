@@ -74,6 +74,9 @@ Gaffer.Metadata.registerNode(
 	"toolbarLayout:customWidget:StateWidget:section", "Top",
 	"toolbarLayout:customWidget:StateWidget:index", 0,
 
+	## \todo These balancing spacers are horrendous. We should be able to improve PlugLayout
+	# to support arranging plugs horizontally in sections with alignment as well as other
+	# niceties such as collapsible sections, etc.
 	"toolbarLayout:customWidget:EditScopeBalancingSpacer:widgetType", "GafferSceneUI.SceneViewUI._EditScopeBalancingSpacer",
 	"toolbarLayout:customWidget:EditScopeBalancingSpacer:section", "Top",
 	"toolbarLayout:customWidget:EditScopeBalancingSpacer:index", 1,
@@ -85,6 +88,10 @@ Gaffer.Metadata.registerNode(
 	"toolbarLayout:customWidget:CenterRightSpacer:widgetType", "GafferSceneUI.SceneViewUI._Spacer",
 	"toolbarLayout:customWidget:CenterRightSpacer:section", "Top",
 	"toolbarLayout:customWidget:CenterRightSpacer:index", -2,
+
+	"toolbarLayout:customWidget:RightEditScopeBalancingSpacer:widgetType", "GafferSceneUI.SceneViewUI._RightEditScopeBalancingSpacer",
+	"toolbarLayout:customWidget:RightEditScopeBalancingSpacer:section", "Top",
+	"toolbarLayout:customWidget:RightEditScopeBalancingSpacer:index", -2,
 
 	"nodeToolbar:right:type", "GafferUI.StandardNodeToolbar.right",
 
@@ -1221,13 +1228,37 @@ GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugValueWidgetContextMenu
 # _Spacers
 ##########################################################################
 
+# This Spacer balances the left side of the toolbar when
+# the EditScope menu is wider than the tools on the left
 class _EditScopeBalancingSpacer( GafferUI.Spacer ) :
 
 	def __init__( self, sceneView, **kw ) :
 
-		# EditScope width - pause button - spacer - spinner - renderer
-		width = 130 - 25 - 4 - 20 - 100
+		editScopeWidth = Gaffer.Metadata.value( sceneView["editScope"], "toolbarLayout:width" ) or 130
+		# EditScope width + spacer - pause button - spacer - spinner - renderer
+		width = max( editScopeWidth + 4 - 25 - 4 - 20 - 100, 0 )
+		GafferUI.Spacer.__init__(
+			self,
+			imath.V2i( 0 ), # Minimum
+			preferredSize = imath.V2i( width, 1 ),
+			maximumSize = imath.V2i( width, 1 )
+		)
 
+# This Spacer balances the right side of the toolbar when
+# the EditScope menu is narrower than the tools on the left
+class _RightEditScopeBalancingSpacer( GafferUI.Spacer ) :
+
+	def __init__( self, sceneView, **kw ) :
+
+		editScopeWidth = Gaffer.Metadata.value( sceneView["editScope"], "toolbarLayout:width" ) or 130
+		# pause button + spacer + spinner + renderer - spacer - EditScope width
+		width = max( 25 + 4 + 20 + 100 - 4 - editScopeWidth, 0 )
+		GafferUI.Spacer.__init__(
+			self,
+			imath.V2i( 0 ), # Minimum
+			preferredSize = imath.V2i( width, 1 ),
+			maximumSize = imath.V2i( width, 1 )
+		)
 		GafferUI.Spacer.__init__(
 			self,
 			imath.V2i( 0 ), # Minimum
