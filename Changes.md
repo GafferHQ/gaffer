@@ -5,6 +5,7 @@ Features
 --------
 
 - EditScope : Introduced the Global Edit Target, providing script-level control over the target used by editors. The Global Edit Target can be set from a new "Edit Target" menu in the menu bar, which displays all available edit targets upstream of the focus node.
+  - Individual editors can be overridden to use a specific edit target where necessary. An overridden editor can return to following the Global Edit Target via the new "Follow Global Edit Target" menu item.
 
 Improvements
 ------------

@@ -225,6 +225,23 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__label.setVisible( Gaffer.Metadata.value( self.getPlug(), "editScopePlugValueWidget:showLabel" ) or False )
 
+	def __followingGlobalEditTarget( self ) :
+
+		input = self.getPlug().getInput()
+
+		return (
+			input is not None and input.getName() == "editScope" and
+			isinstance( input.node(), GafferUI.Editor.Settings )
+		)
+
+	def __globalEditTargetPlug( self ) :
+
+		compoundEditor = self.ancestor( GafferUI.CompoundEditor )
+		if compoundEditor is None :
+			return None
+
+		return compoundEditor.settings()["editScope"]
+
 	def __updateMenuButton( self ) :
 
 		editScope = self.__editScope()
@@ -253,8 +270,10 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __editScope( self ) :
 
-		input = self.getPlug().getInput()
-		return input.ancestor( Gaffer.EditScope ) if input is not None else None
+		return Gaffer.PlugAlgo.findSource(
+			self.getPlug(),
+			lambda plug : plug.node() if isinstance( plug.node(), Gaffer.EditScope ) else None
+		)
 
 	def __editScopePredicate( self, node ) :
 
@@ -377,7 +396,9 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		currentEditScope = None
 		if self.getPlug().getInput() is not None :
-			currentEditScope = self.getPlug().getInput().parent()
+			input = self.getPlug().getInput().parent()
+			if isinstance( input, Gaffer.EditScope ) :
+				currentEditScope = input
 
 		activeEditScopes = self.__activeEditScopes()
 
@@ -415,6 +436,17 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 				"icon" : "menuSource.png",
 			},
 		)
+
+		if self.__globalEditTargetPlug() is not None :
+			result.append( "/__FollowDivider__", { "divider" : True, "label" : "Options" } )
+			result.append(
+				"/Follow Global Edit Target",
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__connectPlug ), self.__globalEditTargetPlug() ),
+					"checkBox" : self.__followingGlobalEditTarget(),
+					"description" : "Always use the global edit target.",
+				}
+			)
 
 		if currentEditScope is not None :
 			result.append( "/__ActionsDivider__", { "divider" : True, "label" : "Actions" } )
