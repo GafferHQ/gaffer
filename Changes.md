@@ -9,6 +9,7 @@ Improvements
   - Added support for 64 bit integer ids (matching what is loaded from USD).
 - DeletePoints : Added modes for deleting points based on a list of ids.
 - Light Editor, Attribute Editor, Spreadsheet : Add original and current color swatches to color popups.
+- SceneView : Added fallback framing extents to create a reasonable view when `SceneGadget` is empty, for example if the grid is hidden.
 
 Fixes
 -----

@@ -2144,6 +2144,11 @@ Imath::Box3f SceneView::framingBound() const
 			gridGadget->waitForCompletion();
 			b.extendBy( gridGadget->bound() );
 		}
+
+		if( b.isEmpty() )
+		{
+			b.extendBy( Imath::Box3f( Imath::V3f( -5.f, 0.f, -5.f ), Imath::V3f( 5.f, 0.f, 5.f ) ) );
+		}
 	}
 
 	return b;
