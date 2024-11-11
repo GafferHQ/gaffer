@@ -148,8 +148,18 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		if not len( self.__plugs ) :
 			return None
-		else :
-			return next( iter( self.__plugs ) ).ancestor( Gaffer.ScriptNode )
+
+		plug = next( iter( self.__plugs ) )
+		scriptNode = plug.ancestor( Gaffer.ScriptNode )
+		if scriptNode is not None :
+			return scriptNode
+
+		# The plug may otherwise be on an `Editor.Settings` node,
+		# which receives a connection from the ScriptNode.
+		if "__scriptNode" in plug.node() and plug.node()["__scriptNode"].getInput() is not None :
+			return plug.node()["__scriptNode"].getInput().node()
+
+		return None
 
 	## Should be reimplemented to return True if this widget includes
 	# some sort of labelling for the plug. This is used to prevent

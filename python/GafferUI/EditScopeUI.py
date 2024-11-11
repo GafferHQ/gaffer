@@ -201,7 +201,11 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __acquireContextTracker( self ) :
 
-		self.__contextTracker = GafferUI.ContextTracker.acquire( self.__inputNode() )
+		if "in" in self.getPlug().node() :
+			self.__contextTracker = GafferUI.ContextTracker.acquire( self.__inputNode() )
+		else :
+			self.__contextTracker = GafferUI.ContextTracker.acquireForFocus( self.getPlug() )
+
 		self.__contextTrackerChangedConnection = self.__contextTracker.changedSignal().connect(
 			Gaffer.WeakMethod( self.__contextTrackerChanged ), scoped = True
 		)
@@ -265,20 +269,29 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		node = self.getPlug().node()
 		# We assume that our plug is on a node dedicated to holding settings for the
-		# UI, and that it has an `in` plug that is connected to the node in the graph
+		# UI, and if the node has an `in` plug, it is connected to the node in the graph
 		# that is being viewed. We start our node graph traversal at the viewed node
 		# (we can't start at _this_ node, as then we will visit our own input connection
 		# which may no longer be upstream of the viewed node).
-		if node["in"].getInput() is None :
-			return None
+		if "in" in node :
+			if node["in"].getInput() is None :
+				return None
 
-		inputNode = node["in"].getInput().node()
+			inputNode = node["in"].getInput().node()
+		else :
+			# Our node doesn't have an `in` plug so fall back to using the focus node
+			# as the starting point for node graph traversal.
+			inputNode = self.scriptNode().getFocus()
+
 		if not isinstance( inputNode, Gaffer.EditScope ) and isinstance( inputNode, Gaffer.SubGraph ) :
 			# If we're starting from a SubGraph then attempt to begin the search from the
 			# first input of the node's output so we can find any Edit Scopes within.
-			output = node["in"].getInput().getInput()
-			if output is not None and inputNode.isAncestorOf( output ) :
-				return output.node()
+			output = next(
+				( p for p in Gaffer.Plug.RecursiveOutputRange( inputNode ) if not p.getName().startswith( "__" ) ),
+				None
+			)
+			if output is not None and output.getInput() is not None and inputNode.isAncestorOf( output.getInput() ) :
+				return output.getInput().node()
 
 		return inputNode
 
