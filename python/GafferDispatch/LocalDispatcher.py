@@ -181,16 +181,17 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			if self.__backgroundTask is not None :
 				self.__backgroundTask.cancel()
-				if self.__backgroundTask.status() == self.__backgroundTask.Status.Pending :
+				if self.__backgroundTask.status() == self.__backgroundTask.Status.Cancelled :
 					# Usually we'll get to update our status naturally because `__executeInternal()`
 					# will throw `IECore.Cancelled.`. But if `__executeInternal()` hasn't been called
-					# by the BackgroundTask yet, then it will _never_ be called. We work around this by
+					# by the BackgroundTask yet, then it will _never_ be called, and the BackgroundTask
+					# will have transitioned to a Cancelled status _immediately_. We work around this by
 					# updating status manually.
 					#
 					# In many ways it would be great if we used `__backgroundTask.status()` directly
 					# as _our_ status. But that can't work for foreground dispatches, so for the moment
 					# we prefer to track foreground/background status identically.
-					self.__updateState( self.Status.Killed )
+					self.__updateStatus( self.Status.Killed )
 
 		def statusChangedSignal( self ) :
 
