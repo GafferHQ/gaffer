@@ -287,19 +287,31 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 			for plug in self.getPlugs() :
 				self.getPlug().setValue( "__default__" )
 
-# Connection between default script config and Widget and View display transforms.
-# Calling `connect()` from an application startup file is what makes the UI OpenColorIO-aware.
+# Connection between application script configs and Widget and View display
+# transforms. Calling `connectToApplication()` from an application startup file
+# is what makes the UI OpenColorIO-aware.
+def connectToApplication( application ) :
 
+	GafferUI.View.DisplayTransform.registerDisplayTransform(
+		"__default__", __defaultViewDisplayTransformCreator
+	)
+
+	application.root()["scripts"].childAddedSignal().connect( __scriptAdded )
+
+## \deprecated. Use `connectToApplication()` instead.
 def connect( script ) :
+
+	GafferUI.View.DisplayTransform.registerDisplayTransform(
+		"__default__", __defaultViewDisplayTransformCreator
+	)
+	__scriptAdded( script.parent(), script )
+
+def __scriptAdded( container, script ) :
 
 	hadPlug = GafferImage.OpenColorIOConfigPlug.acquireDefaultConfigPlug( script, createIfNecessary = False )
 	plug = GafferImage.OpenColorIOConfigPlug.acquireDefaultConfigPlug( script )
 	if not hadPlug :
 		Gaffer.NodeAlgo.applyUserDefaults( plug )
-
-	GafferUI.View.DisplayTransform.registerDisplayTransform(
-		"__default__", __defaultViewDisplayTransformCreator
-	)
 
 	script.plugDirtiedSignal().connect( __scriptPlugDirtied )
 	__scriptPlugDirtied( plug )
