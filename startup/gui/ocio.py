@@ -45,11 +45,7 @@ import GafferImageUI
 # Make sure every script has a config plug added to it, and that we update
 # the View and Widget display transforms appropriately when the config is changed.
 
-def __scriptAdded( container, script ) :
-
-	GafferImageUI.OpenColorIOConfigPlugUI.connect( script )
-
-application.root()["scripts"].childAddedSignal().connect( __scriptAdded )
+GafferImageUI.OpenColorIOConfigPlugUI.connectToApplication( application )
 
 Gaffer.Metadata.registerValue( GafferUI.View, "displayTransform.name", "plugValueWidget:type", "GafferImageUI.OpenColorIOConfigPlugUI.DisplayTransformPlugValueWidget" )
 Gaffer.Metadata.registerValue( GafferUI.View, "displayTransform.name", "layout:minimumWidth", 150 )

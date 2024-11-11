@@ -18,11 +18,15 @@ Fixes
 - GafferUITest : Fixed `assertNodeUIsHaveExpectedLifetime()` test for invisible nodes.
 - OpDialogue : Fixed `postExecuteBehaviour` handling.
 - LocalDispatcher : Fixed job status update when a job was killed _immediately_ after being launched.
+- `gaffer view` : Fixed default OpenColorIO display transform.
 
 API
 ---
 
 - Int64VectorDataPlug : Added new plug type for passing vectors of int64.
+- OpenColorIOConfigPlugUI :
+  - Added `connectToApplication()` function.
+  - Deprecated `connect()` function. Use `connectToApplication()` instead.
 
 1.5.0.1 (relative to 1.5.0.0)
 =======
