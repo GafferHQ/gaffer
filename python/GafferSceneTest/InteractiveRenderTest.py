@@ -189,7 +189,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["o"].addOutput(
 			"beauty2",
 			IECoreScene.Output(
-				"test1",
+				"test2",
 				"ieDisplay",
 				"rgba",
 				{
@@ -218,7 +218,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["o"].addOutput(
 			"beauty3",
 			IECoreScene.Output(
-				"test1",
+				"test3",
 				"ieDisplay",
 				"rgba",
 				{
