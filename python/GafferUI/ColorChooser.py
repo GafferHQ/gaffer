@@ -117,7 +117,7 @@ def _drawIndicator( painter, position ) :
 # A custom slider for drawing the backgrounds.
 class _ComponentSlider( GafferUI.Slider ) :
 
-	def __init__( self, color, component, **kw ) :
+	def __init__( self, color, component, dynamicBackground = True, **kw ) :
 
 		GafferUI.Slider.__init__(
 			self, 0.0,
@@ -128,11 +128,19 @@ class _ComponentSlider( GafferUI.Slider ) :
 
 		self.color = color
 		self.component = component
+		self.__dynamicBackground = dynamicBackground
+		self.__gradientToDraw = None
+		self.__size = self.size()
 
 	# Sets the slider color in RGB space for RGBA channels,
 	# HSV space for HSV channels and TMI space for TMI channels.
 	def setColor( self, color ) :
 
+		if (
+			( self.__dynamicBackground and color != self.color ) or
+			( not self.__dynamicBackground and self.component == "s" )
+		) :
+			self.__gradientToDraw = None
 		self.color = color
 		self._qtWidget().update()
 
@@ -140,37 +148,59 @@ class _ComponentSlider( GafferUI.Slider ) :
 
 		return self.color
 
+	def setDynamicBackground( self, dynamicBackground ) :
+
+		self.__dynamicBackground = dynamicBackground
+		self.__gradientToDraw = None
+		self._qtWidget().update()
+
+	def getDynamicBackground( self ) :
+
+		return self.__dynamicBackground
+
 	def _drawBackground( self, painter ) :
 
 		size = self.size()
-		grad = QtGui.QLinearGradient( 0, 0, size.x, 0 )
 
-		displayTransform = self.displayTransform()
+		if self.__gradientToDraw is None or size != self.__size :
+			self.__gradientToDraw = QtGui.QLinearGradient( 0, 0, size.x, 0 )
 
-		if self.component == "a" :
-			c1 = imath.Color3f( 0 )
-			c2 = imath.Color3f( 1 )
-		else :
-			c1 = imath.Color3f( self.color[0], self.color[1], self.color[2] )
-			c2 = imath.Color3f( self.color[0], self.color[1], self.color[2] )
-			a = { "r" : 0, "g" : 1, "b" : 2, "h" : 0, "s" : 1, "v": 2, "t" : 0, "m" : 1, "i" : 2 }[self.component]
-			c1[a] = -1 if self.component in "tm" else 0
-			c2[a] = 1
+			displayTransform = self.displayTransform()
 
-		numStops = max( 2, size.x // 2 )
-		for i in range( 0, numStops ) :
+			if self.component == "a" :
+				c1 = imath.Color3f( 0 )
+				c2 = imath.Color3f( 1 )
+			else :
+				if self.__dynamicBackground :
+					c1 = imath.Color3f( self.color[0], self.color[1], self.color[2] )
+				elif self.component in "rgbvi" :
+					c1 = imath.Color3f( 0 )
+				elif self.component == "h" :
+					c1 = imath.Color3f( 0, 1, 1 )
+				elif self.component == "s" :
+					c1 = imath.Color3f( self.color[0], 0, 1 )
+				elif self.component in "tm" :
+					c1 = imath.Color3f( 0, 0, 0.5 )
+				c2 = imath.Color3f( c1 )
+				a = { "r" : 0, "g" : 1, "b" : 2, "h" : 0, "s" : 1, "v": 2, "t" : 0, "m" : 1, "i" : 2 }[self.component]
+				c1[a] = -1 if self.component in "tm" else 0
+				c2[a] = 1
 
-			t = float( i ) / (numStops-1)
-			c = c1 + (c2-c1) * t
-			if self.component in "hsv" :
-				c = c.hsv2rgb()
-			elif self.component in "tmi" :
-				c = _tmiToRGB( c )
+			numStops = max( 2, size.x // 2 )
+			for i in range( 0, numStops ) :
 
-			grad.setColorAt( t, self._qtColor( displayTransform( c ) ) )
+				t = float( i ) / (numStops-1)
+				c = c1 + (c2-c1) * t
+				if self.component in "hsv" :
+					c = c.hsv2rgb()
+				elif self.component in "tmi" :
+					c = _tmiToRGB( c )
 
-		brush = QtGui.QBrush( grad )
+				self.__gradientToDraw.setColorAt( t, self._qtColor( displayTransform( c ) ) )
+
+		brush = QtGui.QBrush( self.__gradientToDraw )
 		painter.fillRect( 0, 0, size.x, size.y, brush )
+		self.__size = size
 
 	def _drawValue( self, painter, value, position, state ) :
 
@@ -209,11 +239,12 @@ class _ComponentSlider( GafferUI.Slider ) :
 	def _displayTransformChanged( self ) :
 
 		GafferUI.Slider._displayTransformChanged( self )
+		self.__gradientToDraw = None
 		self._qtWidget().update()
 
 class _ColorField( GafferUI.Widget ) :
 
-	def __init__( self, color = imath.Color3f( 1.0 ), staticComponent = "v", **kw ) :
+	def __init__( self, color = imath.Color3f( 1.0 ), staticComponent = "v", dynamicBackground = True, **kw ) :
 
 		GafferUI.Widget.__init__( self, QtWidgets.QWidget(), **kw )
 
@@ -232,6 +263,8 @@ class _ColorField( GafferUI.Widget ) :
 		self.__colorFieldToDraw = None
 		self.setColor( color, staticComponent )
 
+		self.setDynamicBackground( dynamicBackground )
+
 	# Sets the color and the static component. `color` is in
 	# RGB space for RGB static components, HSV space for
 	# HSV static components and TMI space for TMI components.
@@ -243,6 +276,16 @@ class _ColorField( GafferUI.Widget ) :
 	def getColor( self ) :
 
 		return self.__color, self.__staticComponent
+
+	def setDynamicBackground( self, dynamicBackground ) :
+
+		self.__dynamicBackground = dynamicBackground
+		self.__colorFieldToDraw = None
+		self._qtWidget().update()
+
+	def getDynamicBackground( self ) :
+
+		return self.__dynamicBackground
 
 	## A signal emitted whenever a value has been changed. Slots should
 	# have the signature slot( _ColorField, GafferUI.Slider.ValueChangedReason )
@@ -271,7 +314,11 @@ class _ColorField( GafferUI.Widget ) :
 			return
 
 		zIndex = self.__zIndex()
-		if color[zIndex] != self.__color[zIndex] or staticComponent != self.__staticComponent :
+		if (
+			staticComponent != self.__staticComponent or
+			( self.__dynamicBackground and color[zIndex] != self.__color[zIndex] ) or
+			( not self.__dynamicBackground and staticComponent == "h" )
+		) :
 			self.__colorFieldToDraw = None
 
 		self.__color = color
@@ -430,10 +477,15 @@ class _ColorField( GafferUI.Widget ) :
 			xIndex, yIndex = self.__xyIndices()
 			zIndex = self.__zIndex()
 
-			staticValue = self.__color[zIndex]
-
 			c = imath.Color3f()
-			c[zIndex] = staticValue
+			if self.__dynamicBackground or self.__staticComponent == "h" :
+				c[zIndex] = self.__color[zIndex]
+			elif self.__staticComponent in "rgbtm" :
+				c[zIndex] = 0.0
+			elif self.__staticComponent in "sv" :
+				c[zIndex] = 1.0
+			elif self.__staticComponent == "i" :
+				c[zIndex] = 0.5
 
 			ColorSpace = enum.Enum( "ColorSpace", [ "RGB", "HSV", "TMI" ] )
 			if self.__staticComponent in "rgb" :
@@ -835,6 +887,7 @@ class ColorChooser( GafferUI.Widget ) :
 		self.__visibleComponentsChangedSignal = Gaffer.Signals.Signal1()
 		self.__staticComponentChangedSignal = Gaffer.Signals.Signal1()
 		self.__colorFieldVisibleChangedSignal = Gaffer.Signals.Signal1()
+		self.__dynamicSliderBackgroundsChangedSignal = Gaffer.Signals.Signal1()
 		self.__optionsMenuSignal = Gaffer.Signals.Signal2()
 
 		self.__colorFieldPrimaryIcon = GafferUI.Image( "colorFieldPrimaryIcon.png" )
@@ -920,6 +973,18 @@ class ColorChooser( GafferUI.Widget ) :
 
 		return self.__colorField.getVisible()
 
+	def setDynamicSliderBackgrounds( self, dynamic ) :
+
+		for component, slider in self.__sliders.items() :
+			slider.setDynamicBackground( dynamic )
+		self.__colorField.setDynamicBackground( dynamic )
+
+		self.__dynamicSliderBackgroundsChangedSignal( self )
+
+	def getDynamicSliderBackgrounds( self ) :
+
+		return self.__sliders["r"].getDynamicBackground()
+
 	## A signal emitted whenever the color is changed. Slots should
 	# have the signature slot( ColorChooser, reason ). The reason
 	# argument may be passed either a ColorChooser.ColorChangedReason,
@@ -931,26 +996,27 @@ class ColorChooser( GafferUI.Widget ) :
 
 	## A signal emitted whenever the visible components are changed. Slots
 	# should have the signature slot( ColorChooser ).
-	# `visibleComponents` is a string representing the components currently
-	# visible.
 	def visibleComponentsChangedSignal( self ) :
 
 		return self.__visibleComponentsChangedSignal
 
 	## A signal emitted whenever the static component is changed. Slots
 	# should have the signature slot( ColorChooser ).
-	# `staticComponent` is a single character string representing the
-	# current static component.
 	def staticComponentChangedSignal( self ) :
 
 		return self.__staticComponentChangedSignal
 
 	## A signal emitted whenever the visibility of the color field changes.
 	# Slots should have the signature slot( ColorChooser ).
-	# `visible` is a boolean representing the current visibility.
 	def colorFieldVisibleChangedSignal( self ) :
 
 		return self.__colorFieldVisibleChangedSignal
+
+	## A signal emitted whenever the dynamic colors option is changed.
+	# Slots should have the signature slot( ColorChooser ).
+	def dynamicSliderBackgroundsChangedSignal( self ) :
+
+		return self.__dynamicSliderBackgroundsChangedSignal
 
 	## A signal emitted whenever the options menu is opened.
 	# Slots should have the signature slot( ColorChooser, menuDefinition )
@@ -1017,6 +1083,19 @@ class ColorChooser( GafferUI.Widget ) :
 					"label" : label,
 				}
 			)
+
+		result.append( "/__sliders__", { "divider": True, "label": "Sliders" } )
+
+		result.append(
+			"/Dynamic Backgrounds",
+			{
+				"command": Gaffer.WeakMethod( self.setDynamicSliderBackgrounds ),
+				"checkBox": self.getDynamicSliderBackgrounds(),
+				"description": """With Dynamic Backgrounds enabled, the backgrounds of the color sliders will
+update to show the color that will result from moving the indicator to a given
+position. When disabled, a static range of values is displayed."""
+			}
+		)
 
 		self.__optionsMenuSignal( self, result )
 
