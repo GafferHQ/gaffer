@@ -30,6 +30,7 @@ Improvements
   - Renamed "None" mode to "Source" and added icon.
   - The "Source" menu item now displays a checkbox when chosen.
   - Added a "No EditScopes Available" menu item that is displayed when no upstream EditScopes are available.
+  - Increased menu item swatch size.
 
 Fixes
 -----
