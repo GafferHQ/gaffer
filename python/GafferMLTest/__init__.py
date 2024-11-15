@@ -37,6 +37,7 @@
 from .TensorTest import TensorTest
 from .TensorPlugTest import TensorPlugTest
 from .DataToTensorTest import DataToTensorTest
+from .InferenceTest import InferenceTest
 
 if __name__ == "__main__":
 	import unittest

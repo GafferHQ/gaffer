@@ -41,6 +41,7 @@
 #include "GafferBindings/TypedObjectPlugBinding.h"
 
 #include "GafferML/DataToTensor.h"
+#include "GafferML/Inference.h"
 #include "GafferML/Tensor.h"
 #include "GafferML/TensorPlug.h"
 
@@ -195,6 +196,12 @@ class DataToTensorSerialiser : public NodeSerialiser
 
 };
 
+void loadModelWrapper( Inference &inference )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	inference.loadModel();
+}
+
 } // namespace
 
 BOOST_PYTHON_MODULE( _GafferML )
@@ -224,5 +231,9 @@ BOOST_PYTHON_MODULE( _GafferML )
 		;
 		Serialisation::registerSerialiser( DataToTensor::staticTypeId(), new DataToTensorSerialiser );
 	}
+
+	GafferBindings::DependencyNodeClass<Inference>()
+		.def( "loadModel", &loadModelWrapper )
+	;
 
 }

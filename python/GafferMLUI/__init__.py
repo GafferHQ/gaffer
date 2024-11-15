@@ -35,5 +35,6 @@
 ##########################################################################
 
 from . import DataToTensorUI
+from . import InferenceUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferMLUI" )
