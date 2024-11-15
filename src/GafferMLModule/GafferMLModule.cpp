@@ -37,8 +37,10 @@
 
 #include "boost/python.hpp"
 
+#include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/TypedObjectPlugBinding.h"
 
+#include "GafferML/DataToTensor.h"
 #include "GafferML/Tensor.h"
 #include "GafferML/TensorPlug.h"
 
@@ -50,7 +52,9 @@
 
 using namespace boost::python;
 using namespace IECore;
+using namespace Gaffer;
 using namespace GafferML;
+using namespace GafferBindings;
 
 namespace
 {
@@ -146,6 +150,51 @@ object tensorGetItemND( const Tensor &tensor, tuple index )
 	return tensorGetItem( tensor, location );
 }
 
+void dataToTensorSetupWrapper( DataToTensor &dataToTensor, ValuePlug &prototypeDataPlug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	dataToTensor.setup( &prototypeDataPlug );
+}
+
+class DataToTensorSerialiser : public NodeSerialiser
+{
+
+	bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
+	{
+		auto dataToTensor = child->parent<DataToTensor>();
+		if( child == dataToTensor->dataPlug() )
+		{
+			// We'll serialise a `setup()` call to construct this.
+			return false;
+		}
+		return NodeSerialiser::childNeedsConstruction( child, serialisation );
+	}
+
+	std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const override
+	{
+		std::string result = NodeSerialiser::postConstructor( graphComponent, identifier, serialisation );
+
+		auto dataPlug = static_cast<const DataToTensor *>( graphComponent )->dataPlug();
+		if( !dataPlug )
+		{
+			return result;
+		}
+
+		if( result.size() )
+		{
+			result += "\n";
+		}
+
+		// Add a call to `setup()` to recreate the plug.
+
+		const Serialiser *plugSerialiser = Serialisation::acquireSerialiser( dataPlug );
+		result += identifier + ".setup( " + plugSerialiser->constructor( dataPlug, serialisation ) + " )\n";
+
+		return result;
+	}
+
+};
+
 } // namespace
 
 BOOST_PYTHON_MODULE( _GafferML )
@@ -162,5 +211,18 @@ BOOST_PYTHON_MODULE( _GafferML )
 	;
 
 	GafferBindings::TypedObjectPlugClass<GafferML::TensorPlug>();
+
+	{
+		scope s = GafferBindings::DependencyNodeClass<DataToTensor>()
+			.def( "canSetup", &DataToTensor::canSetup, ( arg( "prototypeDataPlug" ) ) )
+			.def( "setup", &dataToTensorSetupWrapper, ( arg( "prototypeDataPlug" ) ) )
+		;
+
+		enum_<DataToTensor::ShapeMode>( "ShapeMode" )
+			.value( "Automatic", DataToTensor::ShapeMode::Automatic )
+			.value( "Custom", DataToTensor::ShapeMode::Custom )
+		;
+		Serialisation::registerSerialiser( DataToTensor::staticTypeId(), new DataToTensorSerialiser );
+	}
 
 }
