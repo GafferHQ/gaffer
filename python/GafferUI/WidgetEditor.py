@@ -43,6 +43,7 @@ import GafferUI
 
 from Qt import QtCore
 from Qt import QtWidgets
+from Qt import QtGui
 
 # A `QtCore.Object` for capturing all mouse clicks before any UI elements
 # get the click event so we can identify the widget clicked on.
@@ -253,11 +254,14 @@ class WidgetEditor( GafferUI.Editor ) :
 			)
 
 			self.__widgetListingWidget.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ) )
+			self.__widgetListingWidget.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
 
 		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
 
 		self.__buttonPressFilter = _ButtonPressFilter()
 		self.__buttonPressFilter.widgetPickedSignal().connect( Gaffer.WeakMethod( self.__widgetPicked ) )
+
+		self.__highlightEffects = {}
 
 	def __repr__( self ) :
 
@@ -272,6 +276,28 @@ class WidgetEditor( GafferUI.Editor ) :
 		if column == self.__widgetNameColumn :
 			GafferUI.Pointer.setCurrent( "nodes" )
 			return path
+
+	def __selectionChanged( self, pathListing ) :
+
+		for p, e in self.__highlightEffects.items() :
+			oldEffect, newEffect = e
+			p.property( "widgetEditor:widget" )._qtWidget().setGraphicsEffect( oldEffect )
+
+		self.__highlightEffects = {}
+
+		selection = pathListing.getSelectedPaths()
+
+		for p in selection :
+			w = p.property( "widgetEditor:widget" )
+			if w is not None :
+				oldEffect = w._qtWidget().graphicsEffect()
+
+				newEffect = QtWidgets.QGraphicsColorizeEffect()
+				newEffect.setColor( QtGui.QColor( 119, 156, 189, 255 ) )
+				newEffect.setStrength( 0.85 )
+
+				self.__highlightEffects[p] = ( oldEffect, newEffect )
+				w._qtWidget().setGraphicsEffect( newEffect )
 
 	def __installEventFilter( self ) :
 
