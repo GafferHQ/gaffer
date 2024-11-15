@@ -45,6 +45,7 @@
 #include "GafferML/Inference.h"
 #include "GafferML/Tensor.h"
 #include "GafferML/TensorPlug.h"
+#include "GafferML/TensorToImage.h"
 
 #include "IECorePython/RunTimeTypedBinding.h"
 
@@ -238,5 +239,6 @@ BOOST_PYTHON_MODULE( _GafferML )
 	;
 
 	GafferBindings::DependencyNodeClass<ImageToTensor>();
+	GafferBindings::DependencyNodeClass<TensorToImage>();
 
 }

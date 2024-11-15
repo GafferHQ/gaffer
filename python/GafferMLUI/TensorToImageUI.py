@@ -34,9 +34,62 @@
 #
 ##########################################################################
 
-from . import DataToTensorUI
-from . import InferenceUI
-from . import ImageToTensorUI
-from . import TensorToImageUI
+import Gaffer
+import GafferML
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferMLUI" )
+Gaffer.Metadata.registerNode(
+
+	GafferML.TensorToImage,
+
+	plugs = {
+
+		"tensor" : [
+
+			"description",
+			"""
+			The input tensor to be turned into an image. Typically this would be connected
+			to the output of an Inference node that is doing image processing.
+			""",
+
+			"plugValueWidget:type", "",
+			"nodule:type", "GafferUI::StandardNodule",
+
+		],
+
+		"channels" : [
+
+			"description",
+			"""
+			The names to give to the channels in the output image. These
+			channels are unpacked from the tensor in the order in which they are
+			specified. For example, an order of `[ "B", "G", "R" ]` might be
+			needed for use with models trained on images using OpenCV
+			conventions. An empty channel name may be used to skip a channel
+			when unpacking.
+			""",
+
+		],
+
+		"interleavedChannels" : [
+
+			"description",
+			"""
+			Indicates that the channels are interleaved in the input tensor, in
+			which case they will be deinterleaved when converting to the output
+			image. Whether or not channels are interleaved will depend on the
+			model from which the tensor is obtained.
+			""",
+
+		],
+
+		"out" : [
+
+			"description",
+			"""
+			The output image.
+			""",
+
+		],
+
+	}
+)
