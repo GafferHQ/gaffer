@@ -3451,10 +3451,10 @@
       <rect
          style="fill:none;fill-opacity:1;stroke:none;stroke-width:1"
          id="menuBreadCrumb"
-         width="10"
-         height="10"
-         x="2674"
-         y="79"
+         width="14"
+         height="14"
+         x="2670"
+         y="77"
          transform="matrix(0,1,1,0,0,0)"
          inkscape:label="menuBreadCrumb" />
       <rect
@@ -9209,8 +9209,8 @@
        style="display:inline;fill:#63ba86;fill-opacity:0.992157;stroke:#3c3c3c;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        inkscape:label="menuBreadCrumb"
        cx="84"
-       cy="2731.3623"
-       r="4.5" />
+       cy="2729.3623"
+       r="5.5" />
     <g
        inkscape:groupmode="layer"
        id="layer5"
