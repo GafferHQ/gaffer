@@ -41,6 +41,7 @@
 #include "GafferBindings/TypedObjectPlugBinding.h"
 
 #include "GafferML/DataToTensor.h"
+#include "GafferML/ImageToTensor.h"
 #include "GafferML/Inference.h"
 #include "GafferML/Tensor.h"
 #include "GafferML/TensorPlug.h"
@@ -235,5 +236,7 @@ BOOST_PYTHON_MODULE( _GafferML )
 	GafferBindings::DependencyNodeClass<Inference>()
 		.def( "loadModel", &loadModelWrapper )
 	;
+
+	GafferBindings::DependencyNodeClass<ImageToTensor>();
 
 }
