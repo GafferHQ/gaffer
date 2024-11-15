@@ -37,7 +37,10 @@
 
 #include "boost/python.hpp"
 
+#include "GafferBindings/TypedObjectPlugBinding.h"
+
 #include "GafferML/Tensor.h"
+#include "GafferML/TensorPlug.h"
 
 #include "IECorePython/RunTimeTypedBinding.h"
 
@@ -157,5 +160,7 @@ BOOST_PYTHON_MODULE( _GafferML )
 		.def( "__getitem__", &tensorGetItem1D )
 		.def( "__getitem__", &tensorGetItemND )
 	;
+
+	GafferBindings::TypedObjectPlugClass<GafferML::TensorPlug>();
 
 }
