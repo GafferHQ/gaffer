@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import itertools
+import math
 import unittest
 
 import imath
@@ -52,6 +54,7 @@ class TensorTest( GafferTest.TestCase ) :
 			IECore.DoubleVectorData( [ 1, 2, 3 ] ),
 			IECore.IntVectorData( [ 1, 2, 3 ] ),
 			IECore.UInt64VectorData( [ 1, 2, 3 ] ),
+			IECore.StringVectorData( [ "person", "light", "water" ] )
 		] :
 
 			tensor = GafferML.Tensor( data, [ 1, 3 ] )
@@ -103,39 +106,50 @@ class TensorTest( GafferTest.TestCase ) :
 		tensors = [
 			GafferML.Tensor( IECore.IntVectorData( [ 1, 2, 3 ] ), [ 1, 3 ] ),
 			GafferML.Tensor( IECore.IntVectorData( [ 1, 2, 3 ] ), [ 3, 1 ] ),
-			GafferML.Tensor( IECore.IntVectorData( [ 1, 2, 3, 4 ] ), [ 4 ] )
+			GafferML.Tensor( IECore.IntVectorData( [ 1, 2, 3, 4 ] ), [ 4 ] ),
+			GafferML.Tensor( IECore.StringVectorData( [ "person", "sky", "water" ] ), [ 1, 3 ] ),
+			GafferML.Tensor( IECore.StringVectorData( [ "person", "sky", "water" ] ), [ 3, 1 ] ),
+			GafferML.Tensor( IECore.StringVectorData( [ "string", "foo", "blah", "sky" ] ), [ 4 ] )
 		]
 
 		self.assertEqual( len( { t.hash() for t in tensors } ), len( tensors ) )
 
 	def testCopy( self ) :
 
-		data = IECore.IntVectorData( [ 1, 2, 3 ] )
-		tensor1 = GafferML.Tensor( data, [ 3 ] )
-		tensor2 = tensor1.copy()
-		self.assertEqual( tensor2, tensor1 )
-		self.assertEqual( tensor2.asData(), data )
-		self.assertEqual( tensor2.shape(), tensor1.shape() )
+		for data in [
+			IECore.IntVectorData( [ 1, 2, 3 ] ),
+			IECore.StringVectorData( [ "foo", "blah", "sky" ] ),
+		] :
+			tensor1 = GafferML.Tensor( data, [ 3 ] )
+			tensor2 = tensor1.copy()
+			self.assertEqual( tensor2, tensor1 )
+			self.assertEqual( tensor2.asData(), data )
+			self.assertEqual( tensor2.shape(), tensor1.shape() )
 
 	def testIsEqual( self ) :
 
-		data = IECore.IntVectorData( [ 1, 2, 3 ] )
-		tensor1 = GafferML.Tensor( data, [ 3 ] )
+		for data in [
+			IECore.IntVectorData( [ 1, 2, 3 ] ),
+			IECore.StringVectorData( [ "person", "sky", "foo" ] ),
+		] :
 
-		tensor2 = GafferML.Tensor( data, [ 3 ] )
-		self.assertEqual( tensor1, tensor2 )
+			tensor1 = GafferML.Tensor( data, [ 3 ] )
 
-		tensor2 = GafferML.Tensor( data.copy(), [ 3 ] )
-		self.assertEqual( tensor1, tensor2 )
+			tensor2 = GafferML.Tensor( data, [ 3 ] )
+			self.assertEqual( tensor1, tensor2 )
 
-		tensor2 = GafferML.Tensor( IECore.IntVectorData( [ 1, 2, 3 ] ), [ 3 ] )
-		self.assertEqual( tensor1, tensor2 )
+			tensor2 = GafferML.Tensor( data.copy(), [ 3 ] )
+			self.assertEqual( tensor1, tensor2 )
 
-		tensor2 = GafferML.Tensor( data, [ 1, 3 ] )
-		self.assertNotEqual( tensor1, tensor2 ) # Different shape
+			dataType = type( data )
+			tensor2 = GafferML.Tensor( dataType( list( data ) ), [ 3 ] )
+			self.assertEqual( tensor1, tensor2 )
 
-		tensor2 = GafferML.Tensor( IECore.IntVectorData( [ 3, 2, 1 ] ), [ 3 ] )
-		self.assertNotEqual( tensor1, tensor2 ) # Different data
+			tensor2 = GafferML.Tensor( data, [ 1, 3 ] )
+			self.assertNotEqual( tensor1, tensor2 ) # Different shape
+
+			tensor2 = GafferML.Tensor( dataType( reversed( data ) ), [ 3 ] )
+			self.assertNotEqual( tensor1, tensor2 ) # Different data
 
 	def testDefaultRepr( self ) :
 
@@ -162,6 +176,27 @@ class TensorTest( GafferTest.TestCase ) :
 				v = tensor[i, j]
 				self.assertIsInstance( v, float )
 				self.assertEqual( v, data[i][j] )
+
+	def testStringGetItem( self ) :
+
+		for dimensions in range( 1, 4 ) :
+
+			# Make equivalent integer and string tensors.
+
+			shape = list( range( 2, 2 + dimensions ) )
+			count = math.prod( shape )
+			intData = IECore.IntVectorData( range( 0, count ) )
+			stringData = IECore.StringVectorData( [ str( x ) for x in intData ] )
+
+			intTensor = GafferML.Tensor( intData, shape )
+			stringTensor = GafferML.Tensor( stringData, shape )
+
+			# Check that `__getitem__` yields equivalent values
+			# for every valid index.
+			for index in itertools.product(
+				*[ range( 0, d ) for d in shape ]
+			) :
+				self.assertEqual( stringTensor[index], str( intTensor[index] ) )
 
 	def testGetItemOutOfRange( self ) :
 
