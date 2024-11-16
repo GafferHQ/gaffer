@@ -6,6 +6,7 @@ Improvements
 
 - VisualiserTool : Added new visualisation for orientation (Quatf) data.
 - PrimitiveInspector : Changed column order for quaternions to match Imath's conventions.
+- GafferML : Added support for custom ONNX ops via the `GAFFERML_CUSTOM_OPS_LIBRARIES` environment variable. This should contain a comma-separated list of full paths to libraries containing custom ops.
 
 Fixes
 -----
