@@ -1379,8 +1379,17 @@ std::string cleanExcessDots( std::string name )
 	return name;
 }
 
+struct LayoutForChannel
+{
+	std::string partName;
+	std::string channelName;
+	std::string requestedDataType;
+	bool usesNukeView;
+};
+
+
 // Get the EXR names for the part, and channel for a Gaffer channel, along with the channel's data type
-std::tuple< std::string, std::string, std::string > partChannelNameDataType( const ImageWriter *node, const StringPlug *dataTypePlug, const std::string &view, const std::string &gafferChannel, const std::vector< std::string > &viewNames, bool isDeep )
+LayoutForChannel evaluateLayoutForChannel( const ImageWriter *node, const StringPlug *dataTypePlug, const std::string &view, const std::string &gafferChannel, const std::vector< std::string > &viewNames, bool isDeep, bool testNukeView = false )
 {
 	std::string layer = ImageAlgo::layerName( gafferChannel );
 	std::string baseName = ImageAlgo::baseName( gafferChannel );
@@ -1456,11 +1465,36 @@ std::tuple< std::string, std::string, std::string > partChannelNameDataType( con
 	namingContext.set( "imageWriter:nukeLayerName", &nukeLayerName );
 	namingContext.set( "imageWriter:nukeBaseName", &nukeBaseName );
 
-	return std::make_tuple(
+	if( testNukeView )
+	{
+		static const std::string nukeViewTestToken( "__nukeViewTest" );
+		namingContext.set( "imageWriter:nukeViewName", &nukeViewTestToken );
+		return { "", "", "", node->layoutPartNamePlug()->getValue().find( nukeViewTestToken ) != std::string::npos };
+	}
+
+	return {
 		cleanExcessDots( node->layoutPartNamePlug()->getValue() ),
 		cleanExcessDots( node->layoutChannelNamePlug()->getValue() ),
-		dataTypePlug ? dataTypePlug->getValue() : ""
-	);
+		dataTypePlug ? dataTypePlug->getValue() : "",
+		false
+	};
+}
+
+bool testNukeView( const ImageWriter *node, const StringPlug *dataTypePlug, const std::string &gafferChannel )
+{
+	// Do a special evaluation to test whether layoutPartName depends on the nukeViewName context
+	// variable, because if it does, we enable some Nuke specific behaviour ( Nuke sometimes names
+	// image parts after the view even if no views are used, and then those parts need to get their
+	// view metadata set ).
+
+	// The alternative to this would be to disable substitutions on the plug, and do the substitutions
+	// ourselves with a custom Context::SubstitutionProvider that tracks whether nukeViewName is used.
+	// That wouldn't handle the case where layoutPartName depends on an expression that uses nukeViewName,
+	// though.
+	const std::vector<std::string> defaultViews = { ImagePlug::defaultViewName };
+	return evaluateLayoutForChannel(
+		node, dataTypePlug, ImagePlug::defaultViewName, gafferChannel, defaultViews, false, true
+	).usesNukeView;
 }
 
 struct MetadataRegistration
@@ -1952,9 +1986,8 @@ void ImageWriter::execute() const
 
 		for( const string &i : channelsToWrite )
 		{
-			const auto & [ partName, channelName, requestedDataType ] = partChannelNameDataType( this, dataTypePlug, viewName, i, viewNames, defaultSpec.deep );
-
-			std::string dataType = requestedDataType;
+			LayoutForChannel layout = evaluateLayoutForChannel( this, dataTypePlug, viewName, i, viewNames, defaultSpec.deep );
+			std::string dataType = layout.requestedDataType;
 			if( depthDataTypeOverride != "" && ( i == "Z" || i == "ZBack" ) )
 			{
 				dataType = depthDataTypeOverride;
@@ -1968,17 +2001,14 @@ void ImageWriter::execute() const
 				viewDataType = dataType;
 			}
 
-			// Note that `partName = partName` is a hack to get around an issue with capturing from a
-			// structured binding.  GCC allows it, but the C++17 spec doesn't, and it doesn't work in our
-			// Mac compiler.  Once we're on C++20, it is explicitly supported, and we can remove the ` = partName`
 			size_t partIndex = std::distance(
 				parts.begin(),
-				std::find_if( parts.begin(), parts.end(), [partName = partName] (Part const& p) { return p.name == partName; } )
+				std::find_if( parts.begin(), parts.end(), [&layout] (Part const& p) { return p.name == layout.partName; } )
 			);
 
 			if( partIndex >= parts.size() )
 			{
-				parts.push_back( { partName, { viewName }, defaultSpec, imageFormat, dataWindow, {}, {}, {} } );
+				parts.push_back( { layout.partName, { viewName }, defaultSpec, imageFormat, dataWindow, {}, {}, {} } );
 			}
 			else
 			{
@@ -1998,10 +2028,10 @@ void ImageWriter::execute() const
 			}
 
 			parts[ partIndex ].channels.push_back( viewName + "." + i );
-			parts[ partIndex ].channelNames.push_back( channelName );
+			parts[ partIndex ].channelNames.push_back( layout.channelName );
 			parts[ partIndex ].channelDataTypes.push_back( dataType );
 
-			if( channelName == "A" )
+			if( layout.channelName == "A" )
 			{
 				hasAlpha = true;
 			}
@@ -2045,6 +2075,11 @@ void ImageWriter::execute() const
 		}
 	}
 
+	// \todo: deprecated, this variable can be treated as always true in the next major version,
+	// once we're confident no one is relying on the old behaviour.
+	static const char *nukeViewMetadataDeprecatedBehaviourString = getenv( "GAFFERIMAGE_IMAGEWRITER_OMIT_DEFAULT_NUKE_VIEW" );
+	static const bool nukeViewMetadataDeprecatedBehaviour = nukeViewMetadataDeprecatedBehaviourString && std::string( nukeViewMetadataDeprecatedBehaviourString ) != "0";
+
 	for( Part &part : parts )
 	{
 		if( part.views.size() > 1 )
@@ -2068,6 +2103,10 @@ void ImageWriter::execute() const
 		else if( part.views[0] != ImagePlug::defaultViewName )
 		{
 			part.spec.attribute("view", part.views[0] );
+		}
+		else if( ( !nukeViewMetadataDeprecatedBehaviour ) && testNukeView( this, dataTypePlug, part.channels[0] ) )
+		{
+			part.spec.attribute("view", "main" );
 		}
 
 		if( part.name.size() )
