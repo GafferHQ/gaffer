@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import Gaffer
 import GafferUI
 
@@ -122,6 +124,30 @@ class PlugPopup( GafferUI.PopupWindow ) :
 
 		GafferUI.PopupWindow.popup( self, center, parent )
 
+		colorPlugValueWidget = self.__colorPlugValueWidget( self.__plugValueWidget )
+		if colorPlugValueWidget is not None and len( self.__plugValueWidget.getPlugs() ) > 0 :
+			colors = [
+				p.getValue() for p in self.__plugValueWidget.getPlugs() if (
+					isinstance( p, Gaffer.Color3fPlug ) or isinstance( p, Gaffer.Color4fPlug )
+				)
+			]
+			if len( colors ) == 0 :
+				for c in self.__plugValueWidget.getPlugs() :
+					colors += [ p.getValue() for p in Gaffer.Color3fPlug.RecursiveRange( c ) ]
+			if len( colors ) == 0 :
+				for c in self.__plugValueWidget.getPlugs() :
+					colors += [ p.getValue() for p in Gaffer.Color4fPlug.RecursiveRange( c ) ]
+
+			assert( len( colors ) > 0 )
+			assert(
+				all(
+					isinstance( c, imath.Color3f ) for c in colors
+				) or all( isinstance( c, imath.Color4f ) for c in colors )
+			)
+
+			colorPlugValueWidget.setInitialColor( sum( colors ) / len( colors ) )
+			colorPlugValueWidget.setSwatchesVisible( True )
+
 		# Attempt to focus the first text widget. This is done after making
 		# the window visible, as we check child widget visibility to avoid
 		# attempting to focus hidden widgets.
@@ -157,7 +183,7 @@ class PlugPopup( GafferUI.PopupWindow ) :
 
 	def __focusChanged( self, oldWidget, newWidget ) :
 
-		if self.__plugValueWidget.isAncestorOf( newWidget ) and hasattr( newWidget, "activatedSignal" ) :
+		if self.__plugValueWidget and self.__plugValueWidget.isAncestorOf( newWidget ) and hasattr( newWidget, "activatedSignal" ) :
 			self.__widgetActivatedConnection = newWidget.activatedSignal().connect(
 				Gaffer.WeakMethod( self.__activated ), scoped = True
 			)

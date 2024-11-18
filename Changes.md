@@ -3,6 +3,52 @@
 
 
 
+1.5.x.x (relative to 1.5.0.1)
+=======
+
+Improvements
+------------
+
+- Instancer :
+  - Added `inactiveIds` plug for selecting primitive variables to disable some instances.
+  - Added support for 64 bit integer ids (matching what is loaded from USD).
+- DeletePoints : Added modes for deleting points based on a list of ids.
+- Light Editor, Attribute Editor, Spreadsheet : Add original and current color swatches to color popups.
+- SceneView : Added fallback framing extents to create a reasonable view when `SceneGadget` is empty, for example if the grid is hidden.
+- ColorChooser : Added an option to toggle the dynamic update of colors displayed in the slider and color field backgrounds. When enabled, the widget backgrounds update to show the color that will result from moving the indicator to a given position. When disabled, a static range of values is displayed instead.
+
+Fixes
+-----
+
+- Render, InteractiveRender : Added default node name arguments to the compatibility shims for removed subclasses such as ArnoldRender.
+- GafferUITest : Fixed `assertNodeUIsHaveExpectedLifetime()` test for invisible nodes.
+- OpDialogue : Fixed `postExecuteBehaviour` handling.
+- LocalDispatcher : Fixed job status update when a job was killed _immediately_ after being launched.
+- `gaffer view` : Fixed default OpenColorIO display transform.
+- AnimationEditor : Fixed changing of the current frame by dragging the frame indicator or clicking on the time axis.
+- ImageWriter : Matched view metadata to Nuke when using the Nuke options for `layout`. This should address an issue where EXRs written from Gaffer using Nuke layouts sometimes did not load correctly in Nuke (#6120). In the unlikely situation that you were relying on the old behaviour, you can set the env var `GAFFERIMAGE_IMAGEWRITER_OMIT_DEFAULT_NUKE_VIEW = 1` in order to keep the old behaviour.
+
+API
+---
+
+- Int64VectorDataPlug : Added new plug type for passing vectors of int64.
+- OpenColorIOConfigPlugUI :
+  - Added `connectToApplication()` function.
+  - Deprecated `connect()` function. Use `connectToApplication()` instead.
+
+1.5.0.1 (relative to 1.5.0.0)
+=======
+
+Fixes
+-----
+
+- CyclesShader : Fixed broken presets menus.
+- Windows :
+  - Fixed handling of shader colour component to float connections in Cycles.
+  - Added `CORTEX_STARTUP_PATHS` to match the Linux wrapper.
+- PlugPopup : Fixed error when displaying a popup with no PlugValueWidget.
+- Instancer : Fixed issue where wrong prototypes were sometimes used in encapsulated renders.
+
 1.5.0.0 (relative to 1.4.15.0)
 =======
 
@@ -232,10 +278,18 @@ Build
 - Zstandard : Added version 1.5.0.
 - Windows : Updated compiler to Visual Studio 2022 / MSVC 17.8 / Runtime library 14.3.
 
-1.4.x.x (relative to 1.4.15.0)
-=======
+1.4.15.x (relative to 1.4.15.1)
+========
 
 
+
+1.4.15.1 (relative to 1.4.15.0)
+========
+
+Fixes
+-----
+
+- PlugPopup : Fixed error when displaying a popup with no PlugValueWidget.
 
 1.4.15.0 (relative to 1.4.14.0)
 ========

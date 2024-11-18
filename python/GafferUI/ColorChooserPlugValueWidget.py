@@ -65,6 +65,10 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if colorFieldVisible is not None :
 			self.__colorChooser.setColorFieldVisible( colorFieldVisible )
 
+		dynamicSliderBackgrounds = self.__colorChooserOption( "dynamicSliderBackgrounds" )
+		if dynamicSliderBackgrounds is not None :
+			self.__colorChooser.setDynamicSliderBackgrounds( dynamicSliderBackgrounds )
+
 		self.__colorChangedConnection = self.__colorChooser.colorChangedSignal().connect(
 			Gaffer.WeakMethod( self.__colorChanged )
 		)
@@ -78,6 +82,9 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__colorChooser.colorFieldVisibleChangedSignal().connect(
 			functools.partial( Gaffer.WeakMethod( self.__colorChooserColorFieldVisibleChanged ) )
 		)
+		self.__colorChooser.dynamicSliderBackgroundsChangedSignal().connect(
+			functools.partial( Gaffer.WeakMethod( self.__dynamicSliderBackgroundsChanged ) )
+		)
 		self.__colorChooser.optionsMenuSignal().connect(
 			functools.partial( Gaffer.WeakMethod( self.__colorChooserOptionsMenu ) ),
 			scoped = False
@@ -85,6 +92,22 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__lastChangedReason = None
 		self.__mergeGroupId = 0
+
+	def setInitialColor( self, color ) :
+
+		self.__colorChooser.setInitialColor( color )
+
+	def getInitialColor( self ) :
+
+		return self.__colorChooser.getInitialColor()
+
+	def setSwatchesVisible( self, visible ) :
+
+		self.__colorChooser.setSwatchesVisible( visible )
+
+	def getSwatchesVisible( self ) :
+
+		return self.__colorChooser.getVisible()
 
 	def _updateFromValues( self, values, exception ) :
 
@@ -141,6 +164,10 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__colorChooserOptionChanged( "colorFieldVisible", colorChooser.getColorFieldVisible() )
 
+	def __dynamicSliderBackgroundsChanged( self, colorChooser ) :
+
+		self.__colorChooserOptionChanged( "dynamicSliderBackgrounds", colorChooser.getDynamicSliderBackgrounds() )
+
 	def __colorChooserOptionsMenu( self, colorChooser, menuDefinition ) :
 
 		menuDefinition.append( "/__saveDefaultOptions__", { "divider": True, "label": "Defaults" } )
@@ -177,14 +204,16 @@ def saveDefaultOptions( colorChooser, keyPrefix, scriptPath = None ) :
 	visibleComponents = colorChooser.getVisibleComponents()
 	staticComponent = colorChooser.getColorFieldStaticComponent()
 	colorFieldVisible = colorChooser.getColorFieldVisible()
+	dynamicSliderBackgrounds = colorChooser.getDynamicSliderBackgrounds()
 
 	for p in [ Gaffer.Color3fPlug, Gaffer.Color4fPlug ] :
-		for k in [ "visibleComponents", "staticComponent", "colorFieldVisible" ] :
+		for k in [ "visibleComponents", "staticComponent", "colorFieldVisible", "dynamicSliderBackgrounds" ] :
 			Gaffer.Metadata.deregisterValue( p, keyPrefix + k )
 
 		Gaffer.Metadata.registerValue( p, keyPrefix + "visibleComponents", visibleComponents )
 		Gaffer.Metadata.registerValue( p, keyPrefix + "staticComponent", staticComponent )
 		Gaffer.Metadata.registerValue( p, keyPrefix + "colorFieldVisible", colorFieldVisible )
+		Gaffer.Metadata.registerValue( p, keyPrefix + "dynamicSliderBackgrounds", dynamicSliderBackgrounds )
 
 	if scriptPath is None :
 		return
@@ -210,6 +239,7 @@ def saveDefaultOptions( colorChooser, keyPrefix, scriptPath = None ) :
 		newScript.append( f"Gaffer.Metadata.registerValue( Gaffer.Color{c}fPlug, \"{keyPrefix}visibleComponents\", \"{visibleComponents}\" )\n" )
 		newScript.append( f"Gaffer.Metadata.registerValue( Gaffer.Color{c}fPlug, \"{keyPrefix}staticComponent\", \"{staticComponent}\" )\n" )
 		newScript.append( f"Gaffer.Metadata.registerValue( Gaffer.Color{c}fPlug, \"{keyPrefix}colorFieldVisible\", {colorFieldVisible} )\n" )
+		newScript.append( f"Gaffer.Metadata.registerValue( Gaffer.Color{c}fPlug, \"{keyPrefix}dynamicSliderBackgrounds\", {dynamicSliderBackgrounds} )\n" )
 
 	with open( scriptPath, "w" ) as outFile :
 		outFile.writelines( newScript )
