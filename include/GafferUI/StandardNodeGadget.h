@@ -46,6 +46,7 @@ namespace GafferUI
 class PlugAdder;
 class NoduleLayout;
 class ConnectionCreator;
+class StandardNodule;
 
 /// The standard means of representing a Node in a GraphGadget.
 /// Nodes are represented as rectangular boxes with the name displayed
@@ -164,6 +165,9 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		bool updateShape();
 		void updateFocusGadgetVisibility();
 		void updateTextDimming();
+
+		friend class StandardNodule;
+		// Set the visibility for all nodules based on the metadata registered for this node.
 		void applyNoduleLabelVisibilityMetadata();
 
 		IE_CORE_FORWARDDECLARE( ErrorGadget );
