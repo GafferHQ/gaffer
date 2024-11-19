@@ -111,7 +111,7 @@ GafferUI.Pointer.registerPointer( "addSets", GafferUI.Pointer( "pointerAddSets.p
 GafferUI.Pointer.registerPointer( "removeSets", GafferUI.Pointer( "pointerRemoveSets.png", imath.V2i( 53, 14 ) ) )
 GafferUI.Pointer.registerPointer( "replaceSets", GafferUI.Pointer( "pointerReplaceSets.png", imath.V2i( 53, 14 ) ) )
 
-__DropMode = enum.Enum( "__DropMode", [ "None_", "Add", "Remove", "Replace" ] )
+__DropMode = enum.Enum( "__DropMode", [ "None_", "Add", "Remove", "Replace", "NotEditable" ] )
 
 __originalDragPointer = None
 
@@ -146,13 +146,13 @@ def __dropMode( nodeGadget, event ) :
 		if nodeGadget.node()["filter"].getInput() is not None :
 			filter = nodeGadget.node()["filter"].source().node()
 		if filter is None :
-			return __DropMode.Replace if __editable( nodeGadget.node()["filter"] ) else __DropMode.None_
+			return __DropMode.Replace if __editable( nodeGadget.node()["filter"] ) else __DropMode.NotEditable
 		elif not isinstance( filter, GafferScene.SetFilter ) :
 			return __DropMode.None_
 		setsPlug = filter["setExpression"]
 
 	if not __editable( setsPlug ) :
-		return __DropMode.None_
+		return __DropMode.NotEditable
 
 	if event.modifiers & event.Modifiers.Shift :
 		return __DropMode.Add
@@ -201,7 +201,10 @@ def __dragMove( nodeGadget, event ) :
 	if __originalDragPointer is None :
 		return False
 
-	GafferUI.Pointer.setCurrent( __dropMode( nodeGadget, event ).name.lower() + "Sets" )
+	dropMode = __dropMode( nodeGadget, event )
+	GafferUI.Pointer.setCurrent(
+		dropMode.name.lower() + "Sets" if dropMode != __DropMode.NotEditable else "notEditable"
+	)
 
 	return True
 
@@ -210,6 +213,9 @@ def __drop( nodeGadget, event ) :
 	global __originalDragPointer
 	if __originalDragPointer is None :
 		return False
+
+	if __dropMode( nodeGadget, event ) == __DropMode.NotEditable :
+		return True
 
 	setsPlug = __setsPlug( nodeGadget.node() )
 	if setsPlug is None :

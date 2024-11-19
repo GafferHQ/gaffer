@@ -1,7 +1,11 @@
 1.4.15.x (relative to 1.4.15.1)
 ========
 
+Fixes
+-----
 
+- PathFilter : Fixed bug allowing dropping paths onto read-only `PathFilter` nodes in the graph.
+- VectorDataWidget : Fixed bug allowing dropping paths onto read-only widgets.
 
 1.4.15.1 (relative to 1.4.15.0)
 ========

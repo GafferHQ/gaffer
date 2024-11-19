@@ -621,6 +621,9 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 	def __dragEnter( self, widget, event ) :
 
+		if not self.getEditable() :
+			return False
+
 		if event.sourceWidget is self.__tableViewHolder and widget is not self.__buttonRow[1]:
 			# we don't accept drags from ourself unless the target is the remove button
 			return False
