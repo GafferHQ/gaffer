@@ -36,160 +36,166 @@
 
 import Gaffer
 import GafferUI
+import GafferSceneUI
 
-from csgaffer.nodes import CsVisualiseValueTool
+Gaffer.Metadata.registerNode(
 
-if CsVisualiseValueTool is not None:
-    Gaffer.Metadata.registerNode(
-        CsVisualiseValueTool,
-        "description",
-        """
-        Tool for displaying named primitive variables of type float, V2f or V3f as a coloured overlay.
-        """,
-        "viewer:shortCut",
-        "S",
-        "viewer:shouldAutoActivate",
-        False,
-        "order",
-        1001,
-        "tool:exclusive",
-        False,
-        "layout:activator:activatorFalse",
-        lambda node: False,
-        plugs={
-            "active": (
-                "boolPlugValueWidget:image",
-                "node_icons/tools/visualise_value_data.png",
-                "layout:visibilityActivator",
-                "activatorFalse",
-            ),
-            "name": (
-                "description",
-                """
-                Specifies the name of the primitive variable to visualise. The data should
-                be of type float, V2f or V3f.
-                """,
-                "layout:index",
-                0,
-                "layout:section",
-                "Settings",
-                "label",
-                "Name",
-            ),
-            "valueMin": (
-                "description",
-                """
-                The minimum data channel value that will be mapped to 0.
+	GafferSceneUI.VisualiserTool,
 
-                For float data only the first channel is used. For V2f data only the first 
-                and second channels are used. For V3f data all three channels are used.
-                """,
-                "layout:index",
-                1,
-                "layout:section",
-                "Settings",
-                "label",
-                "Min Value",
-            ),
-            "valueMax": (
-                "description",
-                """
-                The maximum data channel value that will be mapped to 1.
+	"description",
+	"""
+	Tool for displaying named primitive variables of type float, V2f or V3f as a colored overlay.
+	""",
 
-                For float data only the first channel is used. For V2f data only the first 
-                and second channels are used. For V3f data all three channels are used.
-                """,
-                "layout:index",
-                2,
-                "layout:section",
-                "Settings",
-                "label",
-                "Max Value",
-            ),
-            "size": (
-                "description",
-                """
-                Specifies the size of the displayed text.
-                """,
-                "layout:index",
-                3,
-                "layout:section",
-                "Settings",
-                "label",
-                "Size",
-            ),
-            "colour": (
-                "description",
-                """
-                Specifies the colour of the displayed text.
-                """,
-                "layout:index",
-                4,
-                "layout:section",
-                "Settings",
-                "label",
-                "Colour",
-            ),
-        },
-    )
+	"viewer:shortCut", "S",
+	"viewer:shouldAutoActivate", False,
+	"order", 1001,
+	"tool:exclusive", False,
+	"layout:activator:activatorFalse", lambda node: False,
 
-    class _SettingsNodeUI(GafferUI.NodeUI):
-        def __init__(self, node, **kw):
-            self.__mainColumn = GafferUI.ListContainer(
-                GafferUI.ListContainer.Orientation.Vertical, spacing=4, borderWidth=4
-            )
+	plugs = {
 
-            GafferUI.NodeUI.__init__(self, node, self.__mainColumn, **kw)
+		"active" : [
 
-            with self.__mainColumn:
-                self.__plugLayout = GafferUI.PlugLayout(node, rootSection="Settings")
+			"boolPlugValueWidget:image", "node_icons/tools/visualise_value_data.png",
+			"layout:visibilityActivator", "activatorFalse",
 
-        def plugValueWidget(self, plug):
-            hierarchy = []
-            while not plug.isSame(self.node()):
-                hierarchy.insert(0, plug)
-                plug = plug.parent()
+		],
+		"name" : [
 
-            widget = self.__plugLayout.plugValueWidget(hierarchy[0])
-            if widget is None:
-                return None
+			"description",
+			"""
+			Specifies the name of the primitive variable to visualise. The data should
+			be of type float, V2f or V3f.
+			""",
 
-            for i in range(1, len(hierarchy)):
-                widget = widget.childPlugValueWidget(hierarchy[i])
-                if widget is None:
-                    return None
+			"layout:index", 0,
+			"layout:section", "Settings",
+			"label", "Name",
 
-            return widget
+		],
+		"valueMin" : [
 
-        def setReadOnly(self, readOnly):
-            if readOnly == Gaffer.MetadataAlgo.getReadOnly(self.node()):
-                return
+			"description",
+			"""
+			The minimum data channel value that will be mapped to 0.
 
-            Gaffer.NodeUI.setReadOnly(self, readOnly)
+			For float data only the first channel is used. For V2f data only the first
+			and second channels are used. For V3f data all three channels are used.
+			""",
 
-            self.__plugLayout.setReadOnly(readOnly)
+			"layout:index", 1,
+			"layout:section", "Settings",
+			"label", "Min Value",
 
-    def __launchToolSettings(node, plugValueWidget):
-        w = GafferUI.Window(sizeMode=GafferUI.Window.SizeMode.Automatic)
-        w.setTitle("Tool Settings (%s)" % (CsVisualiseValueTool.staticTypeName()))
-        w.setChild(GafferUI.NodeUI.create(node))
-        plugValueWidget.ancestor(GafferUI.Window).addChildWindow(w, removeOnClose=True)
-        w.setVisible(True)
+		],
+		"valueMax" : [
 
-    def __plugPopupMenu(menuDefinition, plugValueWidget):
-        try:
-            plug = plugValueWidget.getPlug()
-        except:
-            pass
-        else:
-            node = plug.node()
-            if plug.getName() == "active" and isinstance(node, CsVisualiseValueTool):
-                import functools
+			"description",
+			"""
+			The maximum data channel value that will be mapped to 1.
 
-                menuDefinition.append("/Tool Settings Divider", {"divider": True})
-                menuDefinition.append(
-                    "/Tool Settings", {"command": functools.partial(__launchToolSettings, node, plugValueWidget)}
-                )
+			For float data only the first channel is used. For V2f data only the first
+			and second channels are used. For V3f data all three channels are used.
+			""",
 
-    GafferUI.NodeUI.registerNodeUI(CsVisualiseValueTool, _SettingsNodeUI)
-    GafferUI.PlugValueWidget.popupMenuSignal().connect(__plugPopupMenu, scoped=False)
+			"layout:index", 2,
+			"layout:section", "Settings",
+			"label", "Max Value",
+
+		],
+		"size": [
+
+			"description",
+			"""
+			Specifies the size of the displayed text.
+			""",
+
+			"layout:index", 3,
+			"layout:section", "Settings",
+			"label", "Size",
+
+		],
+		"color": [
+
+			"description",
+			"""
+			Specifies the color of the displayed text.
+			""",
+
+			"layout:index", 4,
+			"layout:section", "Settings",
+			"label", "Color",
+		],
+	},
+)
+
+class _SettingsNodeUI( GafferUI.NodeUI ) :
+
+	def __init__( self, node, **kw ) :
+
+		self.__mainColumn = GafferUI.ListContainer(
+			GafferUI.ListContainer.Orientation.Vertical, spacing=4, borderWidth=4
+		)
+
+		GafferUI.NodeUI.__init__( self, node, self.__mainColumn, **kw )
+
+		with self.__mainColumn :
+			self.__plugLayout = GafferUI.PlugLayout( node, rootSection = "Settings" )
+
+	def plugValueWidget( self, plug ) :
+
+		hierarchy = []
+		while not plug.isSame( self.node() ) :
+			hierarchy.insert( 0, plug )
+			plug = plug.parent()
+
+		widget = self.__plugLayout.plugValueWidget( hierarchy[0] )
+		if widget is None :
+			return None
+
+		for i in range( 1, len( hierarchy ) ) :
+			widget = widget.childPlugValueWidget( hierarchy[i] )
+			if widget is None:
+				return None
+
+		return widget
+
+	def setReadOnly( self, readOnly ) :
+
+		if readOnly == Gaffer.MetadataAlgo.getReadOnly( self.node() ) :
+			return
+
+		Gaffer.NodeUI.setReadOnly( self, readOnly )
+
+		self.__plugLayout.setReadOnly( readOnly )
+
+def __launchToolSettings( node, plugValueWidget ) :
+
+	w = GafferUI.Window( sizeMode = GafferUI.Window.SizeMode.Automatic )
+	w.setTitle( "Tool Settings (%s)" % ( GafferSceneUI.VisualiserTool.staticTypeName() ) )
+	w.setChild( GafferUI.NodeUI.create( node ) )
+	plugValueWidget.ancestor( GafferUI.Window ).addChildWindow( w, removeOnClose = True )
+	w.setVisible( True )
+
+def __plugPopupMenu( menuDefinition, plugValueWidget ) :
+
+	try :
+		plug = plugValueWidget.getPlug()
+	except :
+		pass
+	else :
+		node = plug.node()
+		if plug.getName() == "active" and isinstance( node, GafferSceneUI.VisualiserTool ) :
+			import functools
+
+			menuDefinition.append( "/Tool Settings Divider", { "divider": True } )
+			menuDefinition.append(
+				"/Tool Settings",
+				{
+					"command": functools.partial( __launchToolSettings, node, plugValueWidget )
+				}
+			)
+
+GafferUI.NodeUI.registerNodeUI( GafferSceneUI.VisualiserTool, _SettingsNodeUI )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )

@@ -59,6 +59,7 @@ enum TypeId
 	LightToolTypeId = 110666,
 	LightPositionToolTypeId = 110667,
 	RenderPassPathTypeId = 110668,
+	VisualiserToolTypeId = 110669,
 
 	LastTypeId = 110700
 };
