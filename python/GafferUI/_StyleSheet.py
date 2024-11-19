@@ -1538,6 +1538,8 @@ _styleSheet = string.Template(
 		border-top-color: rgb( 75, 113, 155 );
 		border-left-color: rgb( 75, 113, 155 );
 		background-color : qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb( 69, 113, 161 ), stop: 0.1 rgb( 48, 99, 153 ), stop: 0.90 rgb( 54, 88, 125 ));
+		margin-top: 2px;
+		margin-bottom: 2px;
 	}
 
 	*[gafferClass="GafferSceneUI.InteractiveRenderUI._ViewRenderControlUI"] QPushButton[gafferWithFrame="true"] {
