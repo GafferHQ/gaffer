@@ -413,6 +413,7 @@
 				"menuChecked",
 				"menuIndicator",
 				"menuIndicatorDisabled",
+				"menuSource",
 			]
 		},
 

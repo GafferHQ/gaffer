@@ -274,6 +274,8 @@ class PlugLayout( GafferUI.Widget ) :
 				self.__widgets[item] = widget
 			else :
 				widget = self.__widgets[item]
+				if self.__itemMetadataValue( item, "width" ) :
+					widget._qtWidget().setFixedWidth( self.__itemMetadataValue( item, "width" ) )
 
 			if widget is None :
 				continue
@@ -492,6 +494,7 @@ class PlugLayout( GafferUI.Widget ) :
 				self.__layoutName + ":index",
 				self.__layoutName + ":section",
 				self.__layoutName + ":accessory",
+				self.__layoutName + ":width",
 				"plugValueWidget:type"
 			) :
 				# We often see sequences of several metadata changes, so

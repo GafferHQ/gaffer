@@ -322,7 +322,7 @@ Gaffer.Metadata.registerNode(
 		"editScope" : [
 
 			"plugValueWidget:type", "GafferUI.EditScopeUI.EditScopePlugValueWidget",
-			"layout:width", 225,
+			"layout:width", 130,
 
 		],
 

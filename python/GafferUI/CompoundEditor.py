@@ -53,6 +53,16 @@ from Qt import QtWidgets
 
 class CompoundEditor( GafferUI.Editor ) :
 
+	class Settings( GafferUI.Editor.Settings ) :
+
+		def __init__( self ) :
+
+			GafferUI.Editor.Settings.__init__( self )
+
+			self["editScope"] = Gaffer.Plug()
+
+	IECore.registerRunTimeTyped( Settings, typeName = "GafferUI::CompoundEditor::Settings" )
+
 	# The CompoundEditor constructor args are considered 'private', used only
 	# by the persistent layout system.
 	def __init__( self, scriptNode, _state={}, **kw ) :
@@ -1660,3 +1670,27 @@ class _PinningWidget( _Frame ) :
 			return nodeSet
 
 		return None
+
+Gaffer.Metadata.registerNode(
+
+	CompoundEditor.Settings,
+
+	plugs = {
+
+		"*" : [
+
+			"label", "",
+
+		],
+
+		"editScope" : [
+
+			"plugValueWidget:type", "GafferUI.EditScopeUI.EditScopePlugValueWidget",
+			"layout:width", 185,
+			"editScopePlugValueWidget:showLabel", True,
+
+		],
+
+	}
+
+)

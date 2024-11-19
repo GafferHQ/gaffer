@@ -70,8 +70,8 @@ class ImageTest( GafferUITest.TestCase ) :
 
 		s = GafferUI.Image.createSwatch( imath.Color3f( 1, 0, 0 ) )
 
-		self.assertEqual( s._qtPixmap().width(), 10 )
-		self.assertEqual( s._qtPixmap().height(), 10 )
+		self.assertEqual( s._qtPixmap().width(), 14 )
+		self.assertEqual( s._qtPixmap().height(), 14 )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -76,14 +76,14 @@ class Image( GafferUI.Widget ) :
 	@staticmethod
 	def createSwatch( color ) :
 
-		pixmap = QtGui.QPixmap( 10, 10 )
+		pixmap = QtGui.QPixmap( 14, 14 )
 		pixmap.fill( QtGui.QColor( 0, 0, 0, 0 ) )
 
 		painter = QtGui.QPainter( pixmap )
 		painter.setRenderHint( QtGui.QPainter.Antialiasing )
 		painter.setPen( GafferUI._StyleSheet.styleColor( "backgroundDarkHighlight" ) )
 		painter.setBrush( QtGui.QColor.fromRgbF( color[0], color[1], color[2] ) )
-		painter.drawRoundedRect( QtCore.QRectF( 0.5, 0.5, 9, 9 ), 2, 2 )
+		painter.drawRoundedRect( QtCore.QRectF( 0.5, 0.5, 13, 13 ), 2, 2 )
 		del painter
 
 		swatch = GafferUI.Image( None )

@@ -1,6 +1,14 @@
 1.5.x.x (relative to 1.5.0.1)
 =======
 
+Features
+--------
+
+- EditScope : Introduced the Global Edit Target, providing script-level control over the target used by editors. The Global Edit Target can be set from a new "Edit Target" menu in the menu bar, which displays all available edit targets upstream of the focus node.
+  - Editors now follow the Global Edit Target by default, allowing for a simpler experience when switching multiple editors to a common target.
+  - Individual editors can be overridden to use a specific edit target where necessary. An overridden editor can return to following the Global Edit Target via the new "Follow Global Edit Target" menu item.
+  - While following the Global Edit Target, an editor's Edit Scope menu will shrink to only display an icon. When an Editor is overridden to a specific edit target, the menu grows to display the name of the target.
+
 Improvements
 ------------
 
@@ -13,6 +21,16 @@ Improvements
 - ColorChooser :
   - Added an option to toggle the dynamic update of colors displayed in the slider and color field backgrounds. When enabled, the widget backgrounds update to show the color that will result from moving the indicator to a given position. When disabled, a static range of values is displayed instead.
   - Holding the <kbd>Control</kbd> key now constrains dragging in the color field to a single axis.
+- EditScope :
+  - Simplified the Edit Scope menu UI :
+    - Removed the dark background.
+    - Changed the menu button color to be always blue.
+    - Removed the "Navigation Arrow" button from the right side of the Edit Scope menu. Its actions have been relocated to a "Show Edits" submenu of the Edit Scope menu.
+    - Hid the label. It can be made visible for a specific plug by registering `editScopePlugValueWidget:showLabel` metadata with a value of `True`.
+  - Renamed "None" mode to "Source" and added icon.
+  - The "Source" menu item now displays a checkbox when chosen.
+  - Added a "No EditScopes Available" menu item that is displayed when no upstream EditScopes are available.
+  - Increased menu item icon sizes.
 
 Fixes
 -----
@@ -32,6 +50,7 @@ API
 - OpenColorIOConfigPlugUI :
   - Added `connectToApplication()` function.
   - Deprecated `connect()` function. Use `connectToApplication()` instead.
+- SceneEditor : Added `editScope()` method.
 
 1.5.0.1 (relative to 1.5.0.0)
 =======

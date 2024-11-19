@@ -153,14 +153,23 @@ const ToolContainer *View::tools() const
 
 Gaffer::EditScope *View::editScope()
 {
-	Plug *p = editScopePlug()->getInput();
-	return p ? p->parent<EditScope>() : nullptr;
+	return PlugAlgo::findSource(
+		editScopePlug(),
+		[] ( Plug *plug ) {
+			return runTimeCast<EditScope>( plug->node() );
+		}
+	);
 }
 
 const Gaffer::EditScope *View::editScope() const
 {
-	const Plug *p = editScopePlug()->getInput();
-	return p ? p->parent<EditScope>() : nullptr;
+	// Cheeky cast to avoid a duplicate `PlugAlgo::findSource( const... )` implementation
+	return PlugAlgo::findSource(
+		const_cast<Plug *>( editScopePlug() ),
+		[] ( Plug *plug ) {
+			return runTimeCast<const EditScope>( plug->node() );
+		}
+	);
 }
 
 const Gaffer::Context *View::context() const
