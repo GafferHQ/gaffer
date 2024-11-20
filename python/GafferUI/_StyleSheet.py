@@ -362,7 +362,7 @@ _styleSheet = string.Template(
 	}
 
 	QMenu::indicator {
-		width: 15px;
+		width: 14px;
 		padding: 0px 0px 0px 3px;
 		/*
 		Work around https://bugreports.qt.io/browse/QTBUG-90242. In Qt 5.12,
@@ -373,7 +373,7 @@ _styleSheet = string.Template(
 		between checkable and non-checkable items. This negative margin negates
 		the shunt in Qt 5.15 and has no effect in Qt 5.12.
 		*/
-		margin-right: -18px;
+		margin-right: -17px;
 	}
 
 	QMenu::indicator:non-exclusive:checked {
