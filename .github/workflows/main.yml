@@ -28,38 +28,12 @@ jobs:
         # and then use `include` to define their settings.
 
         name: [
-          linux-gcc9,
-          linux-debug-gcc9,
           linux-gcc11,
+          linux-debug-gcc11,
           windows,
         ]
 
         include:
-
-          - name: linux-gcc9
-            os: ubuntu-20.04
-            buildType: RELEASE
-            publish: true
-            containerImage: ghcr.io/gafferhq/build/build:2.1.2
-            # GitHub container builds run as root. This causes failures for tests that
-            # assert that filesystem permissions are respected, because root doesn't
-            # respect permissions. So we run the final test suite as a dedicated
-            # test user rather than as root.
-            testRunner: su testUser -c
-            sconsCacheMegabytes: 400
-            jobs: 4
-
-          - name: linux-debug-gcc9
-            os: ubuntu-20.04
-            buildType: DEBUG
-            publish: false
-            containerImage: ghcr.io/gafferhq/build/build:2.1.2
-            testRunner: su testUser -c
-            testArguments: -excludedCategories performance
-            # Debug builds are ludicrously big, so we must use a larger cache
-            # limit. In practice this compresses down to 4-500Mb.
-            sconsCacheMegabytes: 2500
-            jobs: 4
 
           - name: linux-gcc11
             os: ubuntu-20.04
@@ -72,6 +46,18 @@ jobs:
             # test user rather than as root.
             testRunner: su testUser -c
             sconsCacheMegabytes: 400
+            jobs: 4
+
+          - name: linux-debug-gcc11
+            os: ubuntu-20.04
+            buildType: DEBUG
+            publish: false
+            containerImage: ghcr.io/gafferhq/build/build:3.0.0
+            testRunner: su testUser -c
+            testArguments: -excludedCategories performance
+            # Debug builds are ludicrously big, so we must use a larger cache
+            # limit. In practice this compresses down to 4-500Mb.
+            sconsCacheMegabytes: 2500
             jobs: 4
 
           - name: windows
@@ -93,16 +79,12 @@ jobs:
       ARNOLD_FORCE_ABORT_ON_LICENSE_FAIL: 0 # And don't abort because the license isn't found
       GAFFER_BUILD_DIR: "./build"
       GAFFER_CACHE_DIR: "./sconsCache"
-      # GitHub have moved to running actions on Node20, which prevents them from
-      # running on CentOS 7. The below allows actions to continue running on Node16
-      # until October.
-      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
     steps:
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    - uses: ilammy/msvc-dev-cmd@v1.12.1
+    - uses: ilammy/msvc-dev-cmd@v1.13.0
       with:
         sdk: 10.0.17763.0
 
@@ -172,7 +154,7 @@ jobs:
       if: runner.os == 'Windows'
 
     - name: Cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ${{ env.GAFFER_CACHE_DIR }}
         key: ${{ runner.os }}-${{ matrix.containerImage }}-${{env.GAFFER_DEPENDENCIES_HASH}}-${{ matrix.buildType }}-${{ github.sha }}
@@ -259,10 +241,13 @@ jobs:
         echo "::remove-matcher owner=validateRelease::"
       if: matrix.publish
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: ${{ env.GAFFER_BUILD_NAME }}
         path: ${{ env.GAFFER_BUILD_NAME }}.${{ env.PACKAGE_EXTENSION }}
+        # Using compression-level 0 avoids compressing our already compressed
+        # package and results in a significantly faster upload.
+        compression-level: 0
       if: matrix.publish
 
     - name: Publish Release
