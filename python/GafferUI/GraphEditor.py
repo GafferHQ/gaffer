@@ -215,7 +215,7 @@ class GraphEditor( GafferUI.Editor ) :
 
 		if Gaffer.Plug.Direction.In in plugDirections :
 			menuDefinition.append(
-				"/Show Input Connections",
+				"/Connections/Show Input Connections",
 				{
 					"checkBox" : functools.partial( cls.__getNodeInputConnectionsVisible, graphEditor.graphGadget(), node ),
 					"command" : functools.partial( cls.__setNodeInputConnectionsVisible, graphEditor.graphGadget(), node ),
@@ -225,11 +225,31 @@ class GraphEditor( GafferUI.Editor ) :
 
 		if Gaffer.Plug.Direction.Out in plugDirections :
 			menuDefinition.append(
-				"/Show Output Connections",
+				"/Connections/Show Output Connections",
 				{
 					"checkBox" : functools.partial( cls.__getNodeOutputConnectionsVisible, graphEditor.graphGadget(), node ),
 					"command" : functools.partial( cls.__setNodeOutputConnectionsVisible, graphEditor.graphGadget(), node ),
 					"active" : not readOnly
+				}
+			)
+
+		if Gaffer.Plug.Direction.In in plugDirections :
+			menuDefinition.append(
+				"/Connections/Show Input Labels",
+				{
+					"checkBox" : functools.partial( cls.__getNoduleLabelsVisible, node, "input" ),
+					"command" : functools.partial( cls.__setNoduleLabelsVisible, node, "input" ),
+					"active" : not readOnly,
+				}
+			)
+
+		if Gaffer.Plug.Direction.Out in plugDirections :
+			menuDefinition.append(
+				"/Connections/Show Output Labels",
+				{
+					"checkBox" : functools.partial( cls.__getNoduleLabelsVisible, node, "output" ),
+					"command" : functools.partial( cls.__setNoduleLabelsVisible, node, "output" ),
+					"active" : not readOnly,
 				}
 			)
 
@@ -728,6 +748,17 @@ class GraphEditor( GafferUI.Editor ) :
 
 		with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
 			graphGadget.setNodeInputConnectionsMinimised( node, not value )
+
+	@classmethod
+	def __getNoduleLabelsVisible( cls, node, direction ) :
+
+		return Gaffer.Metadata.value( node, f"nodeGadget:{direction}NoduleLabelsVisible" ) or False
+
+	@classmethod
+	def __setNoduleLabelsVisible( cls, node, direction, value ) :
+
+		with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
+			Gaffer.Metadata.registerValue( node, f"nodeGadget:{direction}NoduleLabelsVisible", value )
 
 	@classmethod
 	def __getNodeOutputConnectionsVisible( cls, graphGadget, node ) :
