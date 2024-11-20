@@ -414,6 +414,7 @@
 				"menuIndicator",
 				"menuIndicatorDisabled",
 				"menuSource",
+				"menuLock",
 			]
 		},
 
