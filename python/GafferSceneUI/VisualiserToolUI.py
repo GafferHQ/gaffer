@@ -49,15 +49,14 @@ Gaffer.Metadata.registerNode(
 
 	"viewer:shortCut", "S",
 	"viewer:shouldAutoActivate", False,
-	"order", 1001,
+	"order", 8,
 	"tool:exclusive", False,
 	"layout:activator:activatorFalse", lambda node: False,
 
 	plugs = {
 
-		"active" : [
+		"active": [
 
-			"boolPlugValueWidget:image", "node_icons/tools/visualise_value_data.png",
 			"layout:visibilityActivator", "activatorFalse",
 
 		],
