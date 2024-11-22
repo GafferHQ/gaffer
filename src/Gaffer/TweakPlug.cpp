@@ -63,50 +63,6 @@ using namespace Gaffer;
 namespace
 {
 
-/// \todo - if these make sense, I guess they should be pushed back to cortex
-
-// IsColorTypedData
-template< typename T > struct IsColorTypedData : boost::mpl::and_< TypeTraits::IsTypedData<T>, TypeTraits::IsColor< typename TypeTraits::ValueType<T>::type > > {};
-
-// SupportsArithmeticData
-template< typename T > struct SupportsArithData : boost::mpl::or_<  TypeTraits::IsNumericSimpleTypedData<T>, TypeTraits::IsVecTypedData<T>, IsColorTypedData<T>> {};
-
-template<typename T>
-T vectorAwareMin( const T &v1, const T &v2 )
-{
-	if constexpr( TypeTraits::IsVec<T>::value || TypeTraits::IsColor<T>::value )
-	{
-		T result;
-		for( size_t i = 0; i < T::dimensions(); ++i )
-		{
-			result[i] = std::min( v1[i], v2[i] );
-		}
-		return result;
-	}
-	else
-	{
-		return std::min( v1, v2 );
-	}
-}
-
-template<typename T>
-T vectorAwareMax( const T &v1, const T &v2 )
-{
-	if constexpr( TypeTraits::IsVec<T>::value || TypeTraits::IsColor<T>::value )
-	{
-		T result;
-		for( size_t i = 0; i < T::dimensions(); ++i )
-		{
-			result[i] = std::max( v1[i], v2[i] );
-		}
-		return result;
-	}
-	else
-	{
-		return std::max( v1, v2 );
-	}
-}
-
 template<typename T>
 vector<T> tweakedList( const std::vector<T> &source, const std::vector<T> &tweak, TweakPlug::Mode mode )
 {
@@ -301,7 +257,7 @@ bool TweakPlug::applyTweak( IECore::CompoundData *parameters, MissingMode missin
 	);
 }
 
-void TweakPlug::applyNumericTweak(
+void TweakPlug::applyNumericDataTweak(
 	const IECore::Data *sourceData,
 	const IECore::Data *tweakData,
 	IECore::Data *destData,
@@ -317,48 +273,13 @@ void TweakPlug::applyNumericTweak(
 
 			using DataType = typename std::remove_pointer<decltype( data )>::type;
 
-			if constexpr( SupportsArithData<DataType>::value ) {
-
+			if constexpr( TypeTraits::IsTypedData< DataType >::value )
+			{
 				const DataType *sourceDataCast = runTimeCast<const DataType>( sourceData );
 				const DataType *tweakDataCast = runTimeCast<const DataType>( tweakData );
 
-				switch( mode )
-				{
-					case TweakPlug::Add :
-						data->writable() = sourceDataCast->readable() + tweakDataCast->readable();
-						break;
-					case TweakPlug::Subtract :
-						data->writable() = sourceDataCast->readable() - tweakDataCast->readable();
-						break;
-					case TweakPlug::Multiply :
-						data->writable() = sourceDataCast->readable() * tweakDataCast->readable();
-						break;
-					case TweakPlug::Min :
-						data->writable() = vectorAwareMin( sourceDataCast->readable(), tweakDataCast->readable() );
-						break;
-					case TweakPlug::Max :
-						data->writable() = vectorAwareMax( sourceDataCast->readable(), tweakDataCast->readable() );
-						break;
-					case TweakPlug::ListAppend :
-					case TweakPlug::ListPrepend :
-					case TweakPlug::ListRemove :
-					case TweakPlug::Replace :
-					case TweakPlug::Remove :
-					case TweakPlug::Create :
-					case TweakPlug::CreateIfMissing :
-						// These cases are unused - we handle them outside of numericTweak.
-						// But the compiler gets unhappy if we don't handle some cases.
-						assert( false );
-						break;
-				}
-			}
-			else
-			{
-				throw IECore::Exception(
-					fmt::format(
-						"Cannot apply tweak with mode {} to \"{}\" : Data type {} not supported.",
-						modeToString( mode ), tweakName, sourceData->typeName()
-					)
+				data->writable() = applyNumericTweak(
+					sourceDataCast->readable(), tweakDataCast->readable(), mode, tweakName
 				);
 			}
 		}

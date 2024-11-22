@@ -123,12 +123,20 @@ class GAFFER_API TweakPlug : public Gaffer::ValuePlug
 			MissingMode missingMode = MissingMode::Error
 		) const;
 
+		template< typename T >
+		static T applyNumericTweak(
+			const T &source,
+			const T &tweak,
+			TweakPlug::Mode mode,
+			const std::string &tweakName
+		);
+
 	private :
 
 		Gaffer::ValuePlug *valuePlugInternal();
 		const Gaffer::ValuePlug *valuePlugInternal() const;
 
-		void applyNumericTweak(
+		void applyNumericDataTweak(
 			const IECore::Data *sourceData,
 			const IECore::Data *tweakData,
 			IECore::Data *destData,
@@ -143,6 +151,12 @@ class GAFFER_API TweakPlug : public Gaffer::ValuePlug
 			TweakPlug::Mode mode,
 			const std::string &tweakName
 		) const;
+
+		template<typename T>
+		static T vectorAwareMin( const T &v1, const T &v2 );
+
+		template<typename T>
+		static T vectorAwareMax( const T &v1, const T &v2 );
 
 		void applyReplaceTweak( const IECore::Data *sourceData, IECore::Data *tweakData ) const;
 

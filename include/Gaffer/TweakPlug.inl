@@ -38,6 +38,8 @@
 
 #include "Gaffer/PlugAlgo.h"
 
+#include "IECore/TypeTraits.h"
+
 #include "fmt/format.h"
 
 namespace Gaffer
@@ -136,7 +138,7 @@ bool TweakPlug::applyTweak(
 		mode == Gaffer::TweakPlug::Max
 	)
 	{
-		applyNumericTweak( currentValue, newData.get(), newData.get(), mode, name );
+		applyNumericDataTweak( currentValue, newData.get(), newData.get(), mode, name );
 	}
 	else if(
 		mode == TweakPlug::ListAppend ||
@@ -177,6 +179,102 @@ bool TweaksPlug::applyTweaks(
 	}
 
 	return tweakApplied;
+}
+
+template<typename T>
+T TweakPlug::vectorAwareMin( const T &v1, const T &v2 )
+{
+	if constexpr( IECore::TypeTraits::IsVec<T>::value || IECore::TypeTraits::IsColor<T>::value )
+	{
+		T result;
+		for( size_t i = 0; i < T::dimensions(); ++i )
+		{
+			result[i] = std::min( v1[i], v2[i] );
+		}
+		return result;
+	}
+	else
+	{
+		return std::min( v1, v2 );
+	}
+}
+
+template<typename T>
+T TweakPlug::vectorAwareMax( const T &v1, const T &v2 )
+{
+	if constexpr( IECore::TypeTraits::IsVec<T>::value || IECore::TypeTraits::IsColor<T>::value )
+	{
+		T result;
+		for( size_t i = 0; i < T::dimensions(); ++i )
+		{
+			result[i] = std::max( v1[i], v2[i] );
+		}
+		return result;
+	}
+	else
+	{
+		return std::max( v1, v2 );
+	}
+}
+
+template< typename T >
+T TweakPlug::applyNumericTweak(
+	const T &source,
+	const T &tweak,
+	TweakPlug::Mode mode,
+	const std::string &tweakName
+)
+{
+	if constexpr(
+		( std::is_arithmetic_v<T> && !std::is_same_v< T, bool > ) ||
+		IECore::TypeTraits::IsVec<T>::value ||
+		IECore::TypeTraits::IsColor<T>::value
+	)
+	{
+		switch( mode )
+		{
+			case TweakPlug::Add :
+				return source + tweak;
+			case TweakPlug::Subtract :
+				return source - tweak;
+			case TweakPlug::Multiply :
+				return source * tweak;
+			case TweakPlug::Min :
+				return vectorAwareMin( source, tweak );
+			case TweakPlug::Max :
+				return vectorAwareMax( source, tweak );
+			case TweakPlug::ListAppend :
+			case TweakPlug::ListPrepend :
+			case TweakPlug::ListRemove :
+			case TweakPlug::Replace :
+			case TweakPlug::Remove :
+			case TweakPlug::Create :
+			case TweakPlug::CreateIfMissing :
+				throw IECore::Exception(
+					fmt::format(
+						"Cannot apply tweak with mode {} using applyNumericTweak.",
+						modeToString( mode )
+					)
+				);
+			default:
+				throw IECore::Exception( fmt::format( "Not a valid tweak mode: {}.", mode ) );
+		}
+	}
+	else
+	{
+		// NOTE: If we are operating on variables that aren't actually stored in a Data, then the
+		// data type reported here may not be technically correct - for example, we might want to
+		// call this on elements of a StringVectorData, in which case this would report a type of
+		// "StringData", but there is nothing of actual type "StringData". This message still
+		// communicates the actual problem though ( we don't support arithmetic on strings ).
+
+		throw IECore::Exception(
+			fmt::format(
+				"Cannot apply tweak with mode {} to \"{}\" : Data type {} not supported.",
+				modeToString( mode ), tweakName, IECore::TypedData<T>::staticTypeName()
+			)
+		);
+	}
 }
 
 } // namespace Gaffer

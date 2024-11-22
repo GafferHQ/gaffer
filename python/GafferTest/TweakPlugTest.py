@@ -345,6 +345,47 @@ class TweakPlugTest( GafferTest.TestCase ) :
 		self.assertTrue( result )
 		self.assertEqual( data["a"], IECore.InternedStringData( "stringValue" ) )
 
+	def testInvalidNumeric( self ) :
+
+		parameters = IECore.CompoundData(
+			{
+				"a" : "foo",
+				"b" : IECore.IntVectorData( [ 0, 1, 2 ] ),
+				"c" : IECore.StringVectorData( [ "gouda", "cheddar", "cheddar", "swiss" ] ),
+			}
+		)
+
+		tweaks = Gaffer.TweaksPlug()
+		tweaks.addChild( Gaffer.TweakPlug( "a", "foo", Gaffer.TweakPlug.Mode.Add ) )
+		#tweaks.addChild( Gaffer.TweakPlug( "b", imath.Color3f( 1.0, 2.0, 3.0 ) ) )
+		#tweaks.addChild( Gaffer.TweakPlug( "c", imath.V2f( 1.0, 2.0 ) ) )
+		#tweaks.addChild( Gaffer.TweakPlug( "d", IECore.StringVectorData( [ "brie" ] ) ) )
+		#tweaks.addChild( Gaffer.TweakPlug( "f", IECore.StringVectorData( [] ), Gaffer.TweakPlug.Mode.ListAppend ) )
+
+		with self.assertRaisesRegex( Exception,
+			'Cannot apply tweak with mode Add to "a" : Data type StringData not supported.'
+		) :
+			tweaks.applyTweaks( parameters )
+
+		del tweaks[0]
+
+		tweaks.addChild( Gaffer.TweakPlug( "b", IECore.IntVectorData( [ 0, 1, 2 ] ), Gaffer.TweakPlug.Mode.Multiply ) )
+
+		with self.assertRaisesRegex( Exception,
+			'Cannot apply tweak with mode Multiply to "b" : Data type IntVectorData not supported.'
+		) :
+			tweaks.applyTweaks( parameters )
+
+		del tweaks[0]
+
+		tweaks.addChild( Gaffer.TweakPlug( "c", IECore.StringVectorData( [ "foo" ] ), Gaffer.TweakPlug.Mode.Subtract ) )
+
+		with self.assertRaisesRegex( Exception,
+			'Cannot apply tweak with mode Subtract to "c" : Data type StringVectorData not supported.'
+		) :
+			tweaks.applyTweaks( parameters )
+
+
 	def testPathMatcherListOperations( self ) :
 
 		data = IECore.CompoundData(
