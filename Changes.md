@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.2.0)
 =======
 
+Features
+--------
+
+- PrimitiveVariableTweaks : Added node for tweaking primitive variables. Can affect just part of a primitive based on ids or a mask.
+
 Improvements
 ------------
 

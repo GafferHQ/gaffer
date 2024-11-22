@@ -204,6 +204,7 @@ from . import MergeMeshesUI
 from . import MergePointsUI
 from . import MergeCurvesUI
 from . import VisualiserToolUI
+from . import PrimitiveVariableTweaksUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
