@@ -330,7 +330,12 @@ class VisualiserGadget : public Gadget
 				glEnable( GL_BLEND );
 			}
 
-			GLint polygonMode;
+			// MSVC appears to be doing an optimization that causes the call to
+			// `glPolygonMode( GL_FRONT_AND_BACK, polygonMode )` to fail with an
+			// "invalid enum" error. Initializing the value even when we are going
+			// to immediately set it via `glGetIntegerv()` prevents that optimization
+			// and allows us to successfully reset the value.
+			GLint polygonMode = GL_FILL;
 			glGetIntegerv( GL_POLYGON_MODE, &polygonMode );
 			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
