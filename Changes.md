@@ -32,6 +32,7 @@ Improvements
   - Added a "No EditScopes Available" menu item that is displayed when no upstream EditScopes are available.
   - Increased menu item icon sizes.
   - A lock icon is now displayed next to read-only nodes.
+- RenderPassEditor : Changed the current render pass indicator to yellow to match other context-related UI elements.
 
 Fixes
 -----
