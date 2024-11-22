@@ -151,8 +151,7 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 			functools.partial( Gaffer.WeakMethod( self.__dynamicSliderBackgroundsChanged ) )
 		)
 		self.colorChooser().optionsMenuSignal().connect(
-			functools.partial( Gaffer.WeakMethod( self.__colorChooserOptionsMenu ) ),
-			scoped = False
+			functools.partial( Gaffer.WeakMethod( self.__colorChooserOptionsMenu ) )
 		)
 
 		self.confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
