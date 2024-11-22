@@ -123,6 +123,14 @@ class GAFFER_API TweakPlug : public Gaffer::ValuePlug
 			MissingMode missingMode = MissingMode::Error
 		) const;
 
+		template< typename T >
+		static T applyValueTweak(
+			const T &source,
+			const T &tweak,
+			TweakPlug::Mode mode,
+			const std::string &tweakName
+		);
+
 		static const char *modeToString( Gaffer::TweakPlug::Mode mode );
 
 	private :
@@ -130,23 +138,36 @@ class GAFFER_API TweakPlug : public Gaffer::ValuePlug
 		Gaffer::ValuePlug *valuePlugInternal();
 		const Gaffer::ValuePlug *valuePlugInternal() const;
 
-		void applyNumericTweak(
-			const IECore::Data *sourceData,
-			const IECore::Data *tweakData,
-			IECore::Data *destData,
+		template<typename T>
+		static T vectorAwareMin( const T &v1, const T &v2 );
+
+		template<typename T>
+		static T vectorAwareMax( const T &v1, const T &v2 );
+
+		template<typename T>
+		static std::vector<T> tweakedList( const std::vector<T> &source, const std::vector<T> &tweak, TweakPlug::Mode mode );
+
+		template< typename T >
+		static T applyNumericTweak(
+			const T &source,
+			const T &tweak,
 			TweakPlug::Mode mode,
 			const std::string &tweakName
-		) const;
+		);
 
-		void applyListTweak(
-			const IECore::Data *sourceData,
-			const IECore::Data *tweakData,
-			IECore::Data *destData,
+		template< typename T >
+		static T applyListTweak(
+			const T &source,
+			const T &tweak,
 			TweakPlug::Mode mode,
 			const std::string &tweakName
-		) const;
+		);
 
-		void applyReplaceTweak( const IECore::Data *sourceData, IECore::Data *tweakData ) const;
+		template< typename T >
+		static T applyReplaceTweak(
+			const T &source,
+			const T &tweak
+		);
 
 };
 
