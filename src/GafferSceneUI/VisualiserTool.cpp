@@ -441,6 +441,7 @@ class VisualiserGadget : public Gadget
 				{
 					case IntVectorDataTypeId:
 						type = GL_INT;
+						[[fallthrough]];
 					case FloatVectorDataTypeId:
 						enableVSZ = true;
 						uniforms.valueMin = V3f( valueMin.x );
