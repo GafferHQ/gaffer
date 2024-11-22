@@ -369,7 +369,7 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 		Nodule *prevDestination = IECore::runTimeCast<Nodule>( event.destinationGadget.get() );
 		if( !prevDestination || prevDestination->plug()->node() != plug()->node() )
 		{
-			setCompatibleLabelsVisible( event, true );
+			setCompatibleLabelsVisible( event );
 		}
 
 		dirty( DirtyType::Render );
@@ -397,19 +397,40 @@ bool StandardNodule::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 		{
 			if( newDestination->plug()->node() != plug()->node() )
 			{
-				setCompatibleLabelsVisible( event, false );
+				if( auto nodeGadget = ancestor<StandardNodeGadget>() )
+				{
+					nodeGadget->applyNoduleLabelVisibilityMetadata();
+				}
+				else
+				{
+					setCompatibleLabelsVisible( event, false );
+				}
 			}
 		}
 		else if( NodeGadget *newDestination = IECore::runTimeCast<NodeGadget>( event.destinationGadget.get() ) )
 		{
 			if( newDestination->node() != plug()->node() )
 			{
-				setCompatibleLabelsVisible( event, false );
+				if( auto nodeGadget = ancestor<StandardNodeGadget>() )
+				{
+					nodeGadget->applyNoduleLabelVisibilityMetadata();
+				}
+				else
+				{
+					setCompatibleLabelsVisible( event, false );
+				}
 			}
 		}
 		else
 		{
-			setCompatibleLabelsVisible( event, false );
+			if( auto nodeGadget = ancestor<StandardNodeGadget>() )
+			{
+				nodeGadget->applyNoduleLabelVisibilityMetadata();
+			}
+			else
+			{
+				setCompatibleLabelsVisible( event, false );
+			}
 		}
 		dirty( DirtyType::Render );
 	}
@@ -434,7 +455,14 @@ bool StandardNodule::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 bool StandardNodule::drop( GadgetPtr gadget, const DragDropEvent &event )
 {
 	setHighlighted( false );
-	setCompatibleLabelsVisible( event, false );
+	if( auto nodeGadget = ancestor<StandardNodeGadget>() )
+	{
+		nodeGadget->applyNoduleLabelVisibilityMetadata();
+	}
+	else
+	{
+		setCompatibleLabelsVisible( event, false );
+	}
 
 	if( ConnectionCreator *creator = IECore::runTimeCast<ConnectionCreator>( event.sourceGadget.get() ) )
 	{
@@ -471,6 +499,26 @@ void StandardNodule::setCompatibleLabelsVisible( const DragDropEvent &event, boo
 		{
 			(*it)->setLabelVisible( visible );
 		}
+	}
+}
+
+void StandardNodule::setCompatibleLabelsVisible( const DragDropEvent &event )
+{
+	NodeGadget *nodeGadget = ancestor<NodeGadget>();
+	if( !nodeGadget )
+	{
+		return;
+	}
+
+	ConnectionCreator *creator = IECore::runTimeCast<ConnectionCreator>( event.sourceGadget.get() );
+	if( !creator )
+	{
+		return;
+	}
+
+	for( StandardNodule::RecursiveIterator it( nodeGadget ); !it.done(); ++it )
+	{
+		(*it)->setLabelVisible( creator->canCreateConnection( it->get()->plug() ) ? true : false );
 	}
 }
 

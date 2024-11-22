@@ -33,6 +33,7 @@ Improvements
   - Increased menu item icon sizes.
   - A lock icon is now displayed next to read-only nodes.
 - RenderPassEditor : Changed the current render pass indicator to yellow to match other context-related UI elements.
+- GraphEditor : Moved "Show Input Connections" and "Show Output Connections" to "Connections" sub-menu and added "Show Input Labels" and "Show Output Labels" items.
 
 Fixes
 -----
@@ -57,6 +58,7 @@ API
   - Deprecated `connect()` function. Use `connectToApplication()` instead.
 - SceneEditor : Added `editScope()` method.
 - Image : Added optional `image` argument to `createSwatch()` static method.
+- StandardNodeGadget : Added support for `nodeGadget:inputNoduleLabelsVisible` and `nodeGadget:outputNoduleLabelsVisible` metadata for setting nodule labels always on. If the metadata entry is not set or `False`, labels will be visible only when they are hovered over.
 
 Build
 -----

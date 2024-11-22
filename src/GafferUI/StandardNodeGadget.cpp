@@ -566,6 +566,8 @@ static IECore::InternedString g_paddingKey( "nodeGadget:padding"  );
 static IECore::InternedString g_colorKey( "nodeGadget:color" );
 static IECore::InternedString g_shapeKey( "nodeGadget:shape" );
 static IECore::InternedString g_focusGadgetVisibleKey( "nodeGadget:focusGadgetVisible" );
+static IECore::InternedString g_inputNoduleLabelsVisibleKey( "nodeGadget:inputNoduleLabelsVisible" );
+static IECore::InternedString g_outputNoduleLabelsVisibleKey( "nodeGadget:outputNoduleLabelsVisible" );
 static IECore::InternedString g_iconKey( "icon" );
 static IECore::InternedString g_iconScaleKey( "iconScale" );
 static IECore::InternedString g_errorGadgetName( "__error" );
@@ -700,6 +702,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, bool auxiliary  )
 	dragMoveSignal().connect( boost::bind( &StandardNodeGadget::dragMove, this, ::_1, ::_2 ) );
 	dragLeaveSignal().connect( boost::bind( &StandardNodeGadget::dragLeave, this, ::_1, ::_2 ) );
 	dropSignal().connect( boost::bind( &StandardNodeGadget::drop, this, ::_1, ::_2 ) );
+	noduleAddedSignal().connect( boost::bind( &StandardNodeGadget::noduleAdded, this, ::_2 ) );
 
 	for( int e = FirstEdge; e <= LastEdge; e++ )
 	{
@@ -722,6 +725,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, bool auxiliary  )
 	updateIcon();
 	updateShape();
 	updateFocusGadgetVisibility();
+	applyNoduleLabelVisibilityMetadata();
 }
 
 StandardNodeGadget::~StandardNodeGadget()
@@ -1144,10 +1148,7 @@ void StandardNodeGadget::leave( Gadget *gadget )
 {
 	if( m_labelsVisibleOnHover )
 	{
-		for( StandardNodule::RecursiveIterator it( gadget  ); !it.done(); ++it )
-		{
-			(*it)->setLabelVisible( false );
-		}
+		applyNoduleLabelVisibilityMetadata();
 	}
 }
 
@@ -1202,10 +1203,7 @@ bool StandardNodeGadget::dragLeave( GadgetPtr gadget, const DragDropEvent &event
 	if( m_dragDestination != event.destinationGadget )
 	{
 		m_dragDestination->setHighlighted( false );
-		for( StandardNodule::RecursiveIterator it( this ); !it.done(); ++it )
-		{
-			(*it)->setLabelVisible( false );
-		}
+		applyNoduleLabelVisibilityMetadata();
 	}
 	m_dragDestination = nullptr;
 
@@ -1222,12 +1220,23 @@ bool StandardNodeGadget::drop( GadgetPtr gadget, const DragDropEvent &event )
 	connect( event, m_dragDestination );
 
 	m_dragDestination->setHighlighted( false );
-	for( StandardNodule::RecursiveIterator it( this ); !it.done(); ++it )
-	{
-		(*it)->setLabelVisible( false );
-	}
+	applyNoduleLabelVisibilityMetadata();
+
 	m_dragDestination = nullptr;
 	return true;
+}
+
+void StandardNodeGadget::noduleAdded( Nodule *nodule )
+{
+	if( auto standardNodule = IECore::runTimeCast<StandardNodule>( nodule ) )
+	{
+		IECore::ConstBoolDataPtr d = standardNodule->plug()->direction() == Plug::Direction::In ?
+			Gaffer::Metadata::value<IECore::BoolData>( node(), g_inputNoduleLabelsVisibleKey ) :
+			Gaffer::Metadata::value<IECore::BoolData>( node(), g_outputNoduleLabelsVisibleKey )
+		;
+
+		standardNodule->setLabelVisible( d ? d->readable() : false );
+	}
 }
 
 ConnectionCreator *StandardNodeGadget::closestDragDestination( const DragDropEvent &event ) const
@@ -1302,6 +1311,10 @@ void StandardNodeGadget::nodeMetadataChanged( IECore::InternedString key )
 	else if( key == g_focusGadgetVisibleKey )
 	{
 		updateFocusGadgetVisibility();
+	}
+	else if( key == g_inputNoduleLabelsVisibleKey || key == g_outputNoduleLabelsVisibleKey )
+	{
+		applyNoduleLabelVisibilityMetadata();
 	}
 }
 
@@ -1462,6 +1475,28 @@ void StandardNodeGadget::updateFocusGadgetVisibility()
 {
 	auto d = Metadata::value<IECore::BoolData>( node(), g_focusGadgetVisibleKey );
 	m_focusGadget->setVisible( !d || d->readable() );
+}
+
+void StandardNodeGadget::applyNoduleLabelVisibilityMetadata()
+{
+	bool inputVisible = false;
+	if( IECore::ConstBoolDataPtr d = Gaffer::Metadata::value<IECore::BoolData>( node(), g_inputNoduleLabelsVisibleKey ) )
+	{
+		inputVisible = d->readable();
+	}
+
+	bool outputVisible = false;
+	if( IECore::ConstBoolDataPtr d = Gaffer::Metadata::value<IECore::BoolData>( node(), g_outputNoduleLabelsVisibleKey ) )
+	{
+		outputVisible = d->readable();
+	}
+
+	for( StandardNodule::RecursiveIterator it( this ); !it.done(); ++it )
+	{
+		(*it)->setLabelVisible(
+			(*it)->plug()->direction() == Plug::Direction::In ? inputVisible : outputVisible
+		);
+	}
 }
 
 StandardNodeGadget::ErrorGadget *StandardNodeGadget::errorGadget( bool createIfMissing )
