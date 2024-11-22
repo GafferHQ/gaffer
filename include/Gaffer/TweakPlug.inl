@@ -77,11 +77,11 @@ bool TweakPlug::applyTweak(
 
 	if( mode == Gaffer::TweakPlug::Remove )
 	{
-		return setDataFunctor( name,  nullptr );
+		return setDataFunctor( name, nullptr );
 	}
 
-	IECore::DataPtr newData = Gaffer::PlugAlgo::getValueAsData( valuePlug() );
-	if( !newData )
+	IECore::DataPtr tweakData = Gaffer::PlugAlgo::getValueAsData( valuePlug() );
+	if( !tweakData )
 	{
 		throw IECore::Exception(
 			fmt::format( "Cannot apply tweak to \"{}\" : Value plug has unsupported type \"{}\"", name, valuePlug()->typeName() )
@@ -90,24 +90,17 @@ bool TweakPlug::applyTweak(
 
 	if( mode == Gaffer::TweakPlug::Create )
 	{
-		return setDataFunctor( name, newData );
+		return setDataFunctor( name, tweakData );
 	}
 
 	const IECore::Data *currentValue = getDataFunctor( name, /* withFallback = */ mode != Gaffer::TweakPlug::CreateIfMissing );
 
 	if( IECore::runTimeCast<const IECore::InternedStringData>( currentValue ) )
 	{
-		if( const IECore::StringData *s = IECore::runTimeCast<const IECore::StringData>( newData.get() ) )
+		if( const IECore::StringData *s = IECore::runTimeCast<const IECore::StringData>( tweakData.get() ) )
 		{
-			newData = new IECore::InternedStringData( s->readable() );
+			tweakData = new IECore::InternedStringData( s->readable() );
 		}
-	}
-
-	if( currentValue && currentValue->typeId() != newData->typeId() )
-	{
-		throw IECore::Exception(
-			fmt::format( "Cannot apply tweak to \"{}\" : Value of type \"{}\" does not match parameter of type \"{}\"", name, currentValue->typeName(), newData->typeName() )
-		);
 	}
 
 	if( !currentValue )
@@ -118,7 +111,7 @@ bool TweakPlug::applyTweak(
 			mode == Gaffer::TweakPlug::CreateIfMissing
 		)
 		{
-			setDataFunctor( name, newData );
+			setDataFunctor( name, tweakData );
 			return true;
 		}
 		else if( missingMode == Gaffer::TweakPlug::MissingMode::Ignore || mode == Gaffer::TweakPlug::ListRemove )
@@ -128,36 +121,125 @@ bool TweakPlug::applyTweak(
 		throw IECore::Exception( fmt::format( "Cannot apply tweak with mode {} to \"{}\" : This parameter does not exist", modeToString( mode ), name ) );
 	}
 
-	if(
-		mode == Gaffer::TweakPlug::Add ||
-		mode == Gaffer::TweakPlug::Subtract ||
-		mode == Gaffer::TweakPlug::Multiply ||
-		mode == Gaffer::TweakPlug::Min ||
-		mode == Gaffer::TweakPlug::Max
-	)
+	if( mode == Gaffer::TweakPlug::CreateIfMissing )
 	{
-		applyNumericTweak( currentValue, newData.get(), newData.get(), mode, name );
-	}
-	else if(
-		mode == TweakPlug::ListAppend ||
-		mode == TweakPlug::ListPrepend ||
-		mode == TweakPlug::ListRemove
-	)
-	{
-		applyListTweak( currentValue, newData.get(), newData.get(), mode, name );
-	}
-	else if( mode == TweakPlug::Replace )
-	{
-		applyReplaceTweak( currentValue, newData.get() );
+		// \todo - It would make more sense if this returned false ( this tweak technically is applying, but it's
+		// not doing anything ).  Fixing this now would technically be a compatibility break though. If we fixed
+		//this, we could clarify the documentation of applyTweak:
+		// instead of "returns true if any tweaks were applied" it could be "returns true if any changes were made".
+		return true;
 	}
 
-	if( mode != Gaffer::TweakPlug::CreateIfMissing )
-	{
-		setDataFunctor( name, newData );
-	}
+	// valueTweakData
+	IECore::DataPtr resultData = currentValue->copy();
+
+	applyTweakInternal( resultData.get(), tweakData.get(), mode, name );
+	setDataFunctor( name, resultData );
+
 
 	return true;
 }
+
+template<class GetDataFunctor, class SetDataFunctor>
+bool TweakPlug::applyElementwiseTweak(
+	GetDataFunctor &&getDataFunctor,
+	SetDataFunctor &&setDataFunctor,
+	size_t createSize,
+	const boost::dynamic_bitset<> *mask,
+	MissingMode missingMode
+) const
+{
+	if( !enabledPlug()->getValue() )
+	{
+		return false;
+	}
+
+	const std::string name = namePlug()->getValue();
+	if( name.empty() )
+	{
+		return false;
+	}
+
+	const Mode mode = static_cast<Mode>( modePlug()->getValue() );
+
+	if( mode == Gaffer::TweakPlug::Remove )
+	{
+		return setDataFunctor( name, DataAndIndices() );
+	}
+
+	IECore::DataPtr tweakData = Gaffer::PlugAlgo::getValueAsData( valuePlug() );
+	if( !tweakData )
+	{
+		throw IECore::Exception(
+			fmt::format( "Cannot apply tweak to \"{}\" : Value plug has unsupported type \"{}\"", name, valuePlug()->typeName() )
+		);
+	}
+
+	DataAndIndices current;
+	if( mode != Gaffer::TweakPlug::Create )
+	{
+		current = getDataFunctor( name, /* withFallback = */ mode != Gaffer::TweakPlug::CreateIfMissing );
+	}
+
+	if(
+		mode == Gaffer::TweakPlug::Create ||
+		( !current.data && (
+			mode == Gaffer::TweakPlug::CreateIfMissing ||
+			mode == Gaffer::TweakPlug::ListAppend ||
+			mode == Gaffer::TweakPlug::ListPrepend
+		) )
+	)
+	{
+		DataAndIndices result;
+		if( mask )
+		{
+			result.data = createVectorDataFromElement( tweakData.get(), createSize, false, name );
+
+			applyVectorElementTweak( result.data.get(), tweakData.get(), nullptr, TweakPlug::Replace, name, mask );
+		}
+		else
+		{
+			result.data = createVectorDataFromElement( tweakData.get(), createSize, true, name );
+		}
+		return setDataFunctor( name, result );
+	}
+
+	if( IECore::runTimeCast<const IECore::InternedStringData>( current.data ) )
+	{
+		if( const IECore::StringData *s = IECore::runTimeCast<const IECore::StringData>( tweakData.get() ) )
+		{
+			tweakData = new IECore::InternedStringData( s->readable() );
+		}
+	}
+
+	if( !current.data )
+	{
+		if( missingMode == Gaffer::TweakPlug::MissingMode::Ignore || mode == Gaffer::TweakPlug::ListRemove )
+		{
+			return false;
+		}
+		throw IECore::Exception( fmt::format( "Cannot apply tweak with mode {} to \"{}\" : This parameter does not exist", modeToString( mode ), name ) );
+	}
+
+	if( mode == Gaffer::TweakPlug::CreateIfMissing )
+	{
+		// \todo - See \todo in applyTweak about this return value.
+		return true;
+	}
+
+	DataAndIndices result;
+	result.data = current.data->copy();
+	if( current.indices )
+	{
+		result.indices = current.indices->copy();
+	}
+	applyVectorElementTweak( result.data.get(), tweakData.get(), result.indices.get(), mode, name, mask );
+	setDataFunctor( name, result );
+
+	return true;
+}
+
+
 
 template<class GetDataFunctor, class SetDataFunctor>
 bool TweaksPlug::applyTweaks(
