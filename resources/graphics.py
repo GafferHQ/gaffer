@@ -413,6 +413,8 @@
 				"menuChecked",
 				"menuIndicator",
 				"menuIndicatorDisabled",
+				"menuSource",
+				"menuLock",
 			]
 		},
 

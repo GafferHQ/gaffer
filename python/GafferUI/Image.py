@@ -72,18 +72,45 @@ class Image( GafferUI.Widget ) :
 		self.__pixmapDisabled = None
 
 	## Creates an Image containing a color swatch useful for
-	# button and menu icons.
+	# button and menu icons. An `image` can be overlaid on
+	# top of the swatch, this will be scaled to fit.
 	@staticmethod
-	def createSwatch( color ) :
+	def createSwatch( color, image = None ) :
 
-		pixmap = QtGui.QPixmap( 10, 10 )
+		pixmap = QtGui.QPixmap( 14, 14 )
 		pixmap.fill( QtGui.QColor( 0, 0, 0, 0 ) )
 
 		painter = QtGui.QPainter( pixmap )
 		painter.setRenderHint( QtGui.QPainter.Antialiasing )
 		painter.setPen( GafferUI._StyleSheet.styleColor( "backgroundDarkHighlight" ) )
 		painter.setBrush( QtGui.QColor.fromRgbF( color[0], color[1], color[2] ) )
-		painter.drawRoundedRect( QtCore.QRectF( 0.5, 0.5, 9, 9 ), 2, 2 )
+		painter.drawRoundedRect( QtCore.QRectF( 0.5, 0.5, 13, 13 ), 2, 2 )
+
+		if image is not None :
+
+			try :
+				iconImage = GafferUI.Image( image )
+			except Exception as e:
+				IECore.msg( IECore.Msg.Level.Error, "GafferUI.Image",
+					"Could not read image for swatch icon : " + str( e )
+				)
+				iconImage = GafferUI.Image( "warningSmall.png" )
+
+			iconSize = pixmap.size() - QtCore.QSize( 2, 2 )
+			iconPixmap = iconImage._qtPixmap()
+			if iconPixmap.width() > iconSize.width() or iconPixmap.height() > iconSize.height() :
+				iconPixmap = iconPixmap.scaled(
+					iconSize,
+					QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+					QtCore.Qt.TransformationMode.SmoothTransformation
+				)
+
+			painter.drawPixmap(
+				( pixmap.width() - iconPixmap.width() ) // 2,
+				( pixmap.height() - iconPixmap.height() ) // 2,
+				iconPixmap
+			)
+
 		del painter
 
 		swatch = GafferUI.Image( None )

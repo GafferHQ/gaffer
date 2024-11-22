@@ -438,3 +438,9 @@ Toggle cell selection                                | {kbd}`Ctrl` + {{leftClick
 Edit selected cells                                  | {kbd}`Return`<br>or<br>{kbd}`Enter`
 Disable edit                                         | {kbd}`D`
 Toggle a render pass as active                       | {kbd}`Return` or {{leftClick}} {{leftClick}} a cell within the {{activeRenderPass}} column
+
+## Color Chooser Color Field ##
+
+Action                                               | Control or shortcut
+-----------------------------------------------------|--------------------
+Constrain drag to single axis                        | {kbd}`Ctrl`

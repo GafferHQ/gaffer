@@ -236,6 +236,67 @@ class MenuBarTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( callCounts, { "MenuA" : 1, "MenuB" : 0 } )
 
+	def testAddShortcutTarget( self ) :
+
+		commandInvocations = []
+		def command( arg ) :
+
+			commandInvocations.append( arg )
+
+		withTargetDefinition = IECore.MenuDefinition( [
+			( "/test/command", { "command" : functools.partial( command, "withTarget" ), "shortCut" : "Ctrl+A" } ),
+		] )
+
+		withoutTargetDefinition = IECore.MenuDefinition( [
+			( "/test/command", { "command" : functools.partial( command, "withoutTarget" ), "shortCut" : "Ctrl+A" } ),
+		] )
+
+		with GafferUI.Window() as window :
+			with GafferUI.ListContainer() :
+				with GafferUI.ListContainer() :
+					menu = GafferUI.MenuBar( withTargetDefinition )
+					withTargetLabel = GafferUI.Label( "test" )
+				with GafferUI.ListContainer() :
+					GafferUI.MenuBar( withoutTargetDefinition )
+					withoutTargetLabel = GafferUI.Label( "test" )
+				with GafferUI.ListContainer() :
+					otherLabel = GafferUI.Label( "test" )
+
+		window.setVisible( True )
+		self.waitForIdle( 1000 )
+
+		self.__simulateShortcut( withTargetLabel )
+		self.waitForIdle( 1000 )
+		self.assertEqual( len( commandInvocations ), 1 )
+		self.assertEqual( commandInvocations[0], "withTarget" )
+
+		self.__simulateShortcut( withoutTargetLabel )
+		self.waitForIdle( 1000 )
+		self.assertEqual( len( commandInvocations ), 2 )
+		self.assertEqual( commandInvocations[1], "withoutTarget" )
+
+		self.__simulateShortcut( otherLabel )
+		self.waitForIdle( 1000 )
+		self.assertEqual( len( commandInvocations ), 2 )
+		self.assertEqual( commandInvocations[1], "withoutTarget" )
+
+		self.__simulateShortcut( window )
+		self.waitForIdle( 1000 )
+		self.assertEqual( len( commandInvocations ), 2 )
+		self.assertEqual( commandInvocations[1], "withoutTarget" )
+
+		menu.addShortcutTarget( window )
+
+		self.__simulateShortcut( otherLabel )
+		self.waitForIdle( 1000 )
+		self.assertEqual( len( commandInvocations ), 3 )
+		self.assertEqual( commandInvocations[2], "withTarget" )
+
+		self.__simulateShortcut( window )
+		self.waitForIdle( 1000 )
+		self.assertEqual( len( commandInvocations ), 4 )
+		self.assertEqual( commandInvocations[3], "withTarget" )
+
 	def __simulateShortcut( self, widget ) :
 
 		if Qt.__binding__ in ( "PySide2", "PyQt5" ) :

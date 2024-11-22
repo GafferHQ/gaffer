@@ -283,6 +283,10 @@ _styleSheet = string.Template(
 		padding: 5px 8px 5px 8px;
 	}
 
+	#gafferMenuBarWidgetContainer {
+		background-color: $backgroundDarkest;
+	}
+
 	QMenu {
 		border: 1px solid $backgroundDark;
 		padding-bottom: 5px;
@@ -358,7 +362,7 @@ _styleSheet = string.Template(
 	}
 
 	QMenu::indicator {
-		width: 15px;
+		width: 14px;
 		padding: 0px 0px 0px 3px;
 		/*
 		Work around https://bugreports.qt.io/browse/QTBUG-90242. In Qt 5.12,
@@ -369,7 +373,7 @@ _styleSheet = string.Template(
 		between checkable and non-checkable items. This negative margin negates
 		the shunt in Qt 5.15 and has no effect in Qt 5.12.
 		*/
-		margin-right: -18px;
+		margin-right: -17px;
 	}
 
 	QMenu::indicator:non-exclusive:checked {
@@ -1519,7 +1523,6 @@ _styleSheet = string.Template(
 	*[gafferClass="GafferSceneUI.TransformToolUI._SelectionWidget"],
 	*[gafferClass="GafferSceneUI.CropWindowToolUI._StatusWidget"],
 	*[gafferClass="GafferSceneUI.TransformToolUI._TargetTipWidget"] > QFrame,
-	*[gafferClass="GafferUI.EditScopeUI.EditScopePlugValueWidget"] > QFrame,
 	*[gafferClass="GafferSceneUI.InteractiveRenderUI._ViewRenderControlUI"] > QFrame,
 	*[gafferClass="GafferSceneUI._SceneViewInspector"] > QFrame
 	{
@@ -1529,12 +1532,14 @@ _styleSheet = string.Template(
 		padding: 2px;
 	}
 
-	*[gafferClass="GafferUI.EditScopeUI.EditScopePlugValueWidget"][editScopeActive="true"] QPushButton[gafferWithFrame="true"][gafferMenuIndicator="true"]
+	*[gafferClass="GafferUI.EditScopeUI.EditScopePlugValueWidget"] QPushButton[gafferWithFrame="true"][gafferMenuIndicator="true"]
 	{
 		border: 1px solid rgb( 46, 75, 107 );
 		border-top-color: rgb( 75, 113, 155 );
 		border-left-color: rgb( 75, 113, 155 );
 		background-color : qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb( 69, 113, 161 ), stop: 0.1 rgb( 48, 99, 153 ), stop: 0.90 rgb( 54, 88, 125 ));
+		margin-top: 2px;
+		margin-bottom: 2px;
 	}
 
 	*[gafferClass="GafferSceneUI.InteractiveRenderUI._ViewRenderControlUI"] QPushButton[gafferWithFrame="true"] {
