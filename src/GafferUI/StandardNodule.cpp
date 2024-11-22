@@ -401,10 +401,6 @@ bool StandardNodule::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 				{
 					nodeGadget->applyNoduleLabelVisibilityMetadata();
 				}
-				else
-				{
-					setCompatibleLabelsVisible( event, false );
-				}
 			}
 		}
 		else if( NodeGadget *newDestination = IECore::runTimeCast<NodeGadget>( event.destinationGadget.get() ) )
@@ -415,10 +411,6 @@ bool StandardNodule::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 				{
 					nodeGadget->applyNoduleLabelVisibilityMetadata();
 				}
-				else
-				{
-					setCompatibleLabelsVisible( event, false );
-				}
 			}
 		}
 		else
@@ -426,10 +418,6 @@ bool StandardNodule::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 			if( auto nodeGadget = ancestor<StandardNodeGadget>() )
 			{
 				nodeGadget->applyNoduleLabelVisibilityMetadata();
-			}
-			else
-			{
-				setCompatibleLabelsVisible( event, false );
 			}
 		}
 		dirty( DirtyType::Render );
@@ -459,10 +447,6 @@ bool StandardNodule::drop( GadgetPtr gadget, const DragDropEvent &event )
 	{
 		nodeGadget->applyNoduleLabelVisibilityMetadata();
 	}
-	else
-	{
-		setCompatibleLabelsVisible( event, false );
-	}
 
 	if( ConnectionCreator *creator = IECore::runTimeCast<ConnectionCreator>( event.sourceGadget.get() ) )
 	{
@@ -477,29 +461,6 @@ bool StandardNodule::drop( GadgetPtr gadget, const DragDropEvent &event )
 	}
 
 	return false;
-}
-
-void StandardNodule::setCompatibleLabelsVisible( const DragDropEvent &event, bool visible )
-{
-	NodeGadget *nodeGadget = ancestor<NodeGadget>();
-	if( !nodeGadget )
-	{
-		return;
-	}
-
-	ConnectionCreator *creator = IECore::runTimeCast<ConnectionCreator>( event.sourceGadget.get() );
-	if( !creator )
-	{
-		return;
-	}
-
-	for( StandardNodule::RecursiveIterator it( nodeGadget ); !it.done(); ++it )
-	{
-		if( creator->canCreateConnection( it->get()->plug() ) )
-		{
-			(*it)->setLabelVisible( visible );
-		}
-	}
 }
 
 void StandardNodule::setCompatibleLabelsVisible( const DragDropEvent &event )
