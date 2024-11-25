@@ -86,8 +86,7 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 			functools.partial( Gaffer.WeakMethod( self.__dynamicSliderBackgroundsChanged ) )
 		)
 		self.__colorChooser.optionsMenuSignal().connect(
-			functools.partial( Gaffer.WeakMethod( self.__colorChooserOptionsMenu ) ),
-			scoped = False
+			functools.partial( Gaffer.WeakMethod( self.__colorChooserOptionsMenu ) )
 		)
 
 		self.__lastChangedReason = None
