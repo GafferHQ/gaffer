@@ -107,7 +107,7 @@ const float g_textSizeInc = 0.5f;
 const Color3f g_colorDefault( 1.f, 1.f, 1.f );
 
 // Opacity and value constants
-const float g_opacityDefault = 0.5f;
+const float g_opacityDefault = 1.0f;
 const float g_opacityMin = 0.0f;
 const float g_opacityMax = 1.0f;
 
