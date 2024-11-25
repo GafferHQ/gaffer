@@ -1,6 +1,11 @@
 1.x.x.x (relative to 1.5.x.x)
 =======
 
+Breaking Changes
+----------------
+
+- StandardNodule : Removed deprecated `setCompatibleLabelsVisible()`.
+
 
 
 1.5.x.x (relative to 1.5.1.0)
