@@ -257,6 +257,38 @@ bool TweakPlug::applyTweak( IECore::CompoundData *parameters, MissingMode missin
 	);
 }
 
+const char *TweakPlug::modeToString( Gaffer::TweakPlug::Mode mode )
+{
+	switch( mode )
+	{
+		case Gaffer::TweakPlug::Replace :
+			return "Replace";
+		case Gaffer::TweakPlug::Add :
+			return "Add";
+		case Gaffer::TweakPlug::Subtract :
+			return "Subtract";
+		case Gaffer::TweakPlug::Multiply :
+			return "Multiply";
+		case Gaffer::TweakPlug::Remove :
+			return "Remove";
+		case Gaffer::TweakPlug::Create :
+			return  "Create";
+		case Gaffer::TweakPlug::Min :
+			return "Min";
+		case Gaffer::TweakPlug::Max :
+			return "Max";
+		case Gaffer::TweakPlug::ListAppend :
+			return "ListAppend";
+		case Gaffer::TweakPlug::ListPrepend :
+			return "ListPrepend";
+		case Gaffer::TweakPlug::ListRemove :
+			return "ListRemove";
+		case Gaffer::TweakPlug::CreateIfMissing :
+			return "CreateIfMissing";
+	}
+	return  "Invalid";
+}
+
 void TweakPlug::applyNumericDataTweak(
 	const IECore::Data *sourceData,
 	const IECore::Data *tweakData,
@@ -355,38 +387,6 @@ void TweakPlug::applyReplaceTweak( const IECore::Data *sourceData, IECore::Data 
 			"{source}", static_cast<const IECore::InternedStringData *>( sourceData )->readable().string()
 		);
 	}
-}
-
-const char *TweakPlug::modeToString( Gaffer::TweakPlug::Mode mode )
-{
-	switch( mode )
-	{
-		case Gaffer::TweakPlug::Replace :
-			return "Replace";
-		case Gaffer::TweakPlug::Add :
-			return "Add";
-		case Gaffer::TweakPlug::Subtract :
-			return "Subtract";
-		case Gaffer::TweakPlug::Multiply :
-			return "Multiply";
-		case Gaffer::TweakPlug::Remove :
-			return "Remove";
-		case Gaffer::TweakPlug::Create :
-			return  "Create";
-		case Gaffer::TweakPlug::Min :
-			return "Min";
-		case Gaffer::TweakPlug::Max :
-			return "Max";
-		case Gaffer::TweakPlug::ListAppend :
-			return "ListAppend";
-		case Gaffer::TweakPlug::ListPrepend :
-			return "ListPrepend";
-		case Gaffer::TweakPlug::ListRemove :
-			return "ListRemove";
-		case Gaffer::TweakPlug::CreateIfMissing :
-			return "CreateIfMissing";
-	}
-	return  "Invalid";
 }
 
 //////////////////////////////////////////////////////////////////////////
