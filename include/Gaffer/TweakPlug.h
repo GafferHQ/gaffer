@@ -123,6 +123,8 @@ class GAFFER_API TweakPlug : public Gaffer::ValuePlug
 			MissingMode missingMode = MissingMode::Error
 		) const;
 
+		static const char *modeToString( Gaffer::TweakPlug::Mode mode );
+
 	private :
 
 		Gaffer::ValuePlug *valuePlugInternal();
@@ -145,8 +147,6 @@ class GAFFER_API TweakPlug : public Gaffer::ValuePlug
 		) const;
 
 		void applyReplaceTweak( const IECore::Data *sourceData, IECore::Data *tweakData ) const;
-
-		static const char *modeToString( Gaffer::TweakPlug::Mode mode );
 
 };
 
