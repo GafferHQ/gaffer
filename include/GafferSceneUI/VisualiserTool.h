@@ -50,6 +50,13 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
 
+namespace
+{
+
+class VisualiserGadget;
+
+}  // namespace
+
 namespace GafferSceneUI
 {
 
@@ -79,6 +86,10 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 		Gaffer::Color3fPlug *colorPlug();
 		const Gaffer::Color3fPlug *colorPlug() const;
 
+	private:
+
+		friend VisualiserGadget;
+
 		/// Class encapsulating a selected scene location
 		struct Selection
 		{
@@ -104,8 +115,6 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 		Imath::V2f cursorPos() const;
 
 		const IECore::Data *cursorValue() const;
-
-	private:
 
 		GafferScene::ScenePlug *internalScenePlug();
 		const GafferScene::ScenePlug *internalScenePlug() const;
