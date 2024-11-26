@@ -258,7 +258,7 @@ class VisualiserGadget : public Gadget
 			glBindBufferBase( GL_UNIFORM_BUFFER, g_uniformBlockBindingIndex, m_uniformBuffer->m_buffer );
 
 			// Get the name of the primitive variable to visualise
-			const std::string &name = m_tool->namePlug()->getValue();
+			const std::string &name = m_tool->dataNamePlug()->getValue();
 
 			// Get min/max values and colors and opacity
 			UniformBlock uniforms;
@@ -702,7 +702,7 @@ VisualiserTool::VisualiserTool( SceneView *view, const std::string &name ) : Sel
 
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new StringPlug( "name", Plug::In, "uv" ) );
+	addChild( new StringPlug( "dataName", Plug::In, "uv" ) );
 	addChild( new FloatPlug( "opacity", Plug::In, g_opacityDefault, g_opacityMin, g_opacityMax ) );
 	addChild( new V3fPlug( "valueMin", Plug::In, g_valueMinDefault ) );
 	addChild( new V3fPlug( "valueMax", Plug::In, g_valueMaxDefault ) );
@@ -779,12 +779,12 @@ VisualiserTool::~VisualiserTool()
 	static_cast<VisualiserGadget *>( m_gadget.get() )->resetTool();
 }
 
-StringPlug *VisualiserTool::namePlug()
+StringPlug *VisualiserTool::dataNamePlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-const StringPlug *VisualiserTool::namePlug() const
+const StringPlug *VisualiserTool::dataNamePlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
@@ -1041,7 +1041,7 @@ void VisualiserTool::plugDirtied( const Plug *plug )
 		m_priorityPathsDirty = true;
 	}
 	else if(
-		plug == namePlug() ||
+		plug == dataNamePlug() ||
 		plug == opacityPlug() ||
 		plug == valueMinPlug() ||
 		plug == valueMaxPlug() ||
@@ -1282,7 +1282,7 @@ void VisualiserTool::updateCursorValue()
 
 	// Check mesh has named primitive variable
 
-	const std::string &name = namePlug()->getValue();
+	const std::string &name = dataNamePlug()->getValue();
 	PrimitiveVariableMap::const_iterator vIt = mesh->variables.find( name );
 	if( vIt == mesh->variables.end() || !vIt->second.data )
 	{

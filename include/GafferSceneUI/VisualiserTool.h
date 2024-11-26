@@ -68,8 +68,8 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 
 		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::VisualiserTool, VisualiserToolTypeId, SelectionTool );
 
-		Gaffer::StringPlug *namePlug();
-		const Gaffer::StringPlug *namePlug() const;
+		Gaffer::StringPlug *dataNamePlug();
+		const Gaffer::StringPlug *dataNamePlug() const;
 
 		Gaffer::FloatPlug *opacityPlug();
 		const Gaffer::FloatPlug *opacityPlug() const;

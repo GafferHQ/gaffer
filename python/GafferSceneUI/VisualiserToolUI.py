@@ -54,7 +54,7 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"name" : [
+		"dataName" : [
 
 			"description",
 			"""
