@@ -51,15 +51,9 @@ Gaffer.Metadata.registerNode(
 	"viewer:shouldAutoActivate", False,
 	"order", 8,
 	"tool:exclusive", False,
-	"layout:activator:activatorFalse", lambda node: False,
 
 	plugs = {
 
-		"active": [
-
-			"layout:visibilityActivator", "activatorFalse",
-
-		],
 		"name" : [
 
 			"description",
@@ -68,9 +62,8 @@ Gaffer.Metadata.registerNode(
 			be of type float, V2f or V3f.
 			""",
 
-			"layout:index", 0,
-			"layout:section", "Settings",
-			"label", "Name",
+			"toolbarLayout:section", "Bottom",
+			"toolbarLayout:width", 150,
 
 		],
 		"valueMin" : [
@@ -83,9 +76,8 @@ Gaffer.Metadata.registerNode(
 			and second channels are used. For V3f data all three channels are used.
 			""",
 
-			"layout:index", 1,
-			"layout:section", "Settings",
-			"label", "Min Value",
+			"toolbarLayout:section", "Bottom",
+			"toolbarLayout:width", 175,
 
 		],
 		"valueMax" : [
@@ -98,9 +90,8 @@ Gaffer.Metadata.registerNode(
 			and second channels are used. For V3f data all three channels are used.
 			""",
 
-			"layout:index", 2,
-			"layout:section", "Settings",
-			"label", "Max Value",
+			"toolbarLayout:section", "Bottom",
+			"toolbarLayout:width", 175,
 
 		],
 		"size": [
@@ -110,80 +101,9 @@ Gaffer.Metadata.registerNode(
 			Specifies the size of the displayed text.
 			""",
 
-			"layout:index", 3,
-			"layout:section", "Settings",
-			"label", "Size",
+			"plugValueWidget:type", ""
 
 		],
+
 	},
 )
-
-class _SettingsNodeUI( GafferUI.NodeUI ) :
-
-	def __init__( self, node, **kw ) :
-
-		self.__mainColumn = GafferUI.ListContainer(
-			GafferUI.ListContainer.Orientation.Vertical, spacing=4, borderWidth=4
-		)
-
-		GafferUI.NodeUI.__init__( self, node, self.__mainColumn, **kw )
-
-		with self.__mainColumn :
-			self.__plugLayout = GafferUI.PlugLayout( node, rootSection = "Settings" )
-
-	def plugValueWidget( self, plug ) :
-
-		hierarchy = []
-		while not plug.isSame( self.node() ) :
-			hierarchy.insert( 0, plug )
-			plug = plug.parent()
-
-		widget = self.__plugLayout.plugValueWidget( hierarchy[0] )
-		if widget is None :
-			return None
-
-		for i in range( 1, len( hierarchy ) ) :
-			widget = widget.childPlugValueWidget( hierarchy[i] )
-			if widget is None:
-				return None
-
-		return widget
-
-	def setReadOnly( self, readOnly ) :
-
-		if readOnly == Gaffer.MetadataAlgo.getReadOnly( self.node() ) :
-			return
-
-		Gaffer.NodeUI.setReadOnly( self, readOnly )
-
-		self.__plugLayout.setReadOnly( readOnly )
-
-def __launchToolSettings( node, plugValueWidget ) :
-
-	w = GafferUI.Window( sizeMode = GafferUI.Window.SizeMode.Automatic )
-	w.setTitle( "Tool Settings (%s)" % ( GafferSceneUI.VisualiserTool.staticTypeName() ) )
-	w.setChild( GafferUI.NodeUI.create( node ) )
-	plugValueWidget.ancestor( GafferUI.Window ).addChildWindow( w, removeOnClose = True )
-	w.setVisible( True )
-
-def __plugPopupMenu( menuDefinition, plugValueWidget ) :
-
-	try :
-		plug = plugValueWidget.getPlug()
-	except :
-		pass
-	else :
-		node = plug.node()
-		if plug.getName() == "active" and isinstance( node, GafferSceneUI.VisualiserTool ) :
-			import functools
-
-			menuDefinition.append( "/Tool Settings Divider", { "divider": True } )
-			menuDefinition.append(
-				"/Tool Settings",
-				{
-					"command": functools.partial( __launchToolSettings, node, plugValueWidget )
-				}
-			)
-
-GafferUI.NodeUI.registerNodeUI( GafferSceneUI.VisualiserTool, _SettingsNodeUI )
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
