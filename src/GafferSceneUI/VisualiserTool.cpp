@@ -104,8 +104,6 @@ const float g_textSizeDefault = 9.0f;
 const float g_textSizeMin = 6.0f;
 const float g_textSizeInc = 0.5f;
 
-const Color3f g_colorDefault( 1.f, 1.f, 1.f );
-
 // Opacity and value constants
 const float g_opacityDefault = 1.0f;
 const float g_opacityMin = 0.0f;
@@ -114,14 +112,11 @@ const float g_opacityMax = 1.0f;
 const V3f g_valueMinDefault( 0.f );
 const V3f g_valueMaxDefault( 1.f );
 
-// Convert three component color to four component color with full opacity
-Color4f convertToColor4f( const Color3f &c )
-{
-	return Color4f( c[0], c[1], c[2], 1.f );
-}
-
 // Name of P primitive variable
 const std::string g_pName = "P";
+
+const Color4f g_textShadowColor( 0.2f, 0.2f, 0.2f, 1.f );
+const float g_textShadowOffset = 0.1f;
 
 // Uniform block structure (std140 layout)
 struct UniformBlock
@@ -591,13 +586,29 @@ class VisualiserGadget : public Gadget
 					ViewportGadget::RasterScope raster( viewportGadget );
 					const float size = m_tool->sizePlug()->getValue();
 					const V3f scale( size, -size, 1.f );
-					const Color4f color = convertToColor4f( m_tool->colorPlug()->getValue() );
 					const V2f &rp = m_tool->cursorPos();
 
 					glPushMatrix();
 					glTranslatef( rp.x, rp.y, 0.f );
 					glScalef( scale.x, scale.y, scale.z );
-					style->renderText( Style::LabelText, text, Style::NormalState, &color );
+
+					/// Shadow text
+					glTranslatef( g_textShadowOffset, 0.f, 0.f );
+					style->renderText( Style::LabelText, text, GafferUI::Style::State::NormalState, &g_textShadowColor );
+
+					glTranslatef( -g_textShadowOffset * 2.f, 0.f, 0.f );
+					style->renderText( Style::LabelText, text, GafferUI::Style::State::NormalState, &g_textShadowColor );
+
+					glTranslatef( g_textShadowOffset, g_textShadowOffset, 0.f );
+					style->renderText( Style::LabelText, text, GafferUI::Style::State::NormalState, &g_textShadowColor );
+
+					glTranslatef( 0.f, -g_textShadowOffset * 2.f, 0.f );
+					style->renderText( Style::LabelText, text, GafferUI::Style::State::NormalState, &g_textShadowColor );
+
+					/// Primary text
+					glTranslatef( 0.f, g_textShadowOffset, 0.f );
+					style->renderText( Style::LabelText, text );
+
 					glPopMatrix();
 				}
 			}
@@ -696,7 +707,6 @@ VisualiserTool::VisualiserTool( SceneView *view, const std::string &name ) : Sel
 	addChild( new V3fPlug( "valueMin", Plug::In, g_valueMinDefault ) );
 	addChild( new V3fPlug( "valueMax", Plug::In, g_valueMaxDefault ) );
 	addChild( new FloatPlug( "size", Plug::In, g_textSizeDefault, g_textSizeMin ) );
-	addChild( new Color3fPlug( "color", Plug::In, g_colorDefault ) );
 	addChild( new ScenePlug( "__scene", Plug::In ) );
 
 	internalScenePlug()->setInput( view->inPlug<ScenePlug>() );
@@ -819,24 +829,14 @@ const FloatPlug *VisualiserTool::sizePlug() const
 	return getChild<FloatPlug>( g_firstPlugIndex + 4 );
 }
 
-Color3fPlug *VisualiserTool::colorPlug()
-{
-	return getChild<Color3fPlug>( g_firstPlugIndex + 5 );
-}
-
-const Color3fPlug *VisualiserTool::colorPlug() const
-{
-	return getChild<Color3fPlug>( g_firstPlugIndex + 5 );
-}
-
 ScenePlug *VisualiserTool::internalScenePlug()
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 6 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 5 );
 }
 
 const ScenePlug *VisualiserTool::internalScenePlug() const
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 6 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 5 );
 }
 
 const std::vector<VisualiserTool::Selection> &VisualiserTool::selection() const
@@ -1045,8 +1045,7 @@ void VisualiserTool::plugDirtied( const Plug *plug )
 		plug == opacityPlug() ||
 		plug == valueMinPlug() ||
 		plug == valueMaxPlug() ||
-		plug == sizePlug() ||
-		plug == colorPlug()
+		plug == sizePlug()
 	)
 	{
 		m_gadgetDirty = true;

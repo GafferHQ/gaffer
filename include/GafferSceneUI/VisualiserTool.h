@@ -76,9 +76,6 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 		Gaffer::FloatPlug *sizePlug();
 		const Gaffer::FloatPlug *sizePlug() const;
 
-		Gaffer::Color3fPlug *colorPlug();
-		const Gaffer::Color3fPlug *colorPlug() const;
-
 		/// Class encapsulating a selected scene location
 		struct Selection
 		{
