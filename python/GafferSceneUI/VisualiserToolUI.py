@@ -66,6 +66,17 @@ Gaffer.Metadata.registerNode(
 			"toolbarLayout:width", 150,
 
 		],
+		"opacity" : [
+
+			"description",
+			"""
+			The amount the visualiser will occlude the scene locations being visualised.
+			""",
+
+			"toolbarLayout:section", "Bottom",
+			"toolbarLayout:width", 100,
+
+		],
 		"valueMin" : [
 
 			"description",
