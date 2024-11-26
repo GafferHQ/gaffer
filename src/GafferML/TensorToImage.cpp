@@ -291,6 +291,13 @@ IECore::ConstFloatVectorDataPtr TensorToImage::computeChannelData( const std::st
 		throw IECore::Exception( fmt::format( "Channel \"{}\" out of range", channelName ) );
 	}
 
+	const ONNXTensorElementDataType elementType = tensorData->value().GetTensorTypeAndShapeInfo().GetElementType();
+	if( elementType != ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT )
+	{
+		/// \todo Support other types by converting to float.
+		throw IECore::Exception( fmt::format( "Unsupported tensor data type \"{}\"", elementType ) );
+	}
+
 	FloatVectorDataPtr outData = new FloatVectorData;
 	vector<float> &out = outData->writable();
 
