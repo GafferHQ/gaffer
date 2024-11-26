@@ -115,17 +115,6 @@ Gaffer.Metadata.registerNode(
 			"label", "Size",
 
 		],
-		"color": [
-
-			"description",
-			"""
-			Specifies the color of the displayed text.
-			""",
-
-			"layout:index", 4,
-			"layout:section", "Settings",
-			"label", "Color",
-		],
 	},
 )
 
