@@ -448,6 +448,7 @@ class VisualiserGadget : public Gadget
 						uniforms.valueMin = V3f( valueMin.x, valueMin.y, 0.f );
 						uniforms.valueRange = V3f( valueRange.x, valueRange.y, 0.f );
 						break;
+					case Color3fVectorDataTypeId:
 					case V3fVectorDataTypeId:
 						stride = 3;
 						offset = true;
@@ -569,6 +570,9 @@ class VisualiserGadget : public Gadget
 						break;
 					case V3fDataTypeId:
 						oss << ( assertedStaticCast<const V3fData>( value )->readable() );
+						break;
+					case Color3fDataTypeId:
+						oss << ( assertedStaticCast<const Color3fData>( value )->readable() );
 						break;
 					default:
 						break;
@@ -1297,6 +1301,7 @@ void VisualiserTool::updateCursorValue()
 		case FloatVectorDataTypeId:
 		case V2fVectorDataTypeId:
 		case V3fVectorDataTypeId:
+		case Color3fVectorDataTypeId:
 			break;
 		default:
 			return;
@@ -1364,6 +1369,17 @@ void VisualiserTool::updateCursorValue()
 				data.reset( new V3fData() );
 			}
 			data->writable() = result->vectorPrimVar( evalData.triMesh->variables.at( name ) );
+			cursorValue = data;
+			break;
+		}
+		case Color3fVectorDataTypeId :
+		{
+			auto data = runTimeCast<Color3fData>( cursorValue );
+			if( !data )
+			{
+				data.reset( new Color3fData() );
+			}
+			data->writable() = result->colorPrimVar( evalData.triMesh->variables.at( name ) );
 			cursorValue = data;
 			break;
 		}
