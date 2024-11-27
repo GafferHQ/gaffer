@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Cinesite VFX Ltd. nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,33 +34,8 @@
 #
 ##########################################################################
 
-import os
-import sys
-import glob
-import subprocess
+from .DocumentationTest import DocumentationTest
+from .NodeUITest import NodeUITest
 
-ENV_VARS_TO_IMPORT = "PATH"
-
-BUILD_CACHEDIR = os.environ["GAFFER_CACHE_DIR"]
-
-ARNOLD_ROOT = os.environ.get( "ARNOLD_ROOT", "" )
-DELIGHT_ROOT = os.environ["DELIGHT"]
-ONNX_ROOT = os.environ["ONNX_ROOT"]
-
-BUILD_DIR = os.environ["GAFFER_BUILD_DIR"]
-INSTALL_DIR = os.path.join( "install", os.environ["GAFFER_BUILD_NAME"] )
-
-PACKAGE_FILE = "{}.{}".format(
-	os.environ["GAFFER_BUILD_NAME"],
-	os.environ["PACKAGE_EXTENSION"]
-)
-
-SPHINX = os.environ["GAFFER_SPHINX"]
-
-if sys.platform == "win32" :
-	LOCATE_DEPENDENCY_LIBPATH=os.path.join(os.environ["GAFFER_BUILD_DIR"], "lib")
-	LOCATE_DEPENDENCY_PYTHONPATH=os.path.join(os.environ["GAFFER_BUILD_DIR"], "python")
-	GLEW_LIB_SUFFIX = "32"
-	INKSCAPE = "C:\\Program Files\\Inkscape\\bin\\inkscape.exe"
-	SPHINX = "sphinx-build.exe"
-	ENV_VARS_TO_IMPORT += " GALLIUM_DRIVER"
+if __name__ == "__main__":
+	unittest.main()
