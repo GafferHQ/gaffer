@@ -245,7 +245,8 @@ def __dropLocationData( event ) :
 	if (
 		not isinstance( event.data, IECore.StringVectorData ) or
 		len( event.data ) != 1 or
-		not event.data[0].startswith( "/" )
+		not event.data[0].startswith( "/" ) or
+		event.sourceWidget is None
 	) :
 		return None
 

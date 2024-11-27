@@ -1,7 +1,10 @@
 1.4.15.x (relative to 1.4.15.2)
 ========
 
+Fixes
+-----
 
+- GraphEditor : Fixed errors when dragging an unknown file type into the GraphEditor.
 
 1.4.15.2 (relative to 1.4.15.1)
 ========
