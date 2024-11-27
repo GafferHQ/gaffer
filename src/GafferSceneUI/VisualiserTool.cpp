@@ -702,6 +702,9 @@ VisualiserTool::VisualiserTool( SceneView *view, const std::string &name ) : Sel
 	m_initiatedDrag( false )
 {
 	view->viewportGadget()->addChild( m_gadget );
+	// We want to draw the visualiser gadget before other gadgets
+	// like transform handles.
+	makeGadgetFirst();
 	m_gadget->setVisible( false );
 
 	storeIndexOfNextChild( g_firstPlugIndex );
@@ -1402,6 +1405,30 @@ SceneGadget *VisualiserTool::sceneGadget()
 const SceneGadget * VisualiserTool::sceneGadget() const
 {
 	return runTimeCast<const SceneGadget>( view()->viewportGadget()->getPrimaryChild() );
+}
+
+void VisualiserTool::makeGadgetFirst()
+{
+	const GraphComponent::ChildContainer oldChildren = view()->viewportGadget()->children();
+
+	GraphComponent::ChildContainer newChildren( oldChildren );
+
+	auto it = std::find_if(
+		newChildren.begin(),
+		newChildren.end(),
+		[this]( const auto &c )
+		{
+			return c == m_gadget;
+		}
+	);
+	if( it != newChildren.end() && it != newChildren.begin() )
+	{
+		// `std::swap` would likely be more efficient, but losing the
+		// rest of the tool order causes selection highlighting to be
+		// drawn over transform tools.
+		std::rotate( newChildren.begin(), it, it + 1 );
+		view()->viewportGadget()->reorderChildren( newChildren );
+	}
 }
 
 VisualiserTool::Selection::Selection(

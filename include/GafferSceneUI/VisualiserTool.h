@@ -139,6 +139,8 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 		void contextChanged();
 		void selectedPathsChanged();
 
+		void makeGadgetFirst();
+
 		Gaffer::Signals::ScopedConnection m_preRenderConnection;
 		Gaffer::Signals::ScopedConnection m_buttonPressConnection;
 		Gaffer::Signals::ScopedConnection m_dragBeginConnection;
