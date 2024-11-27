@@ -1,7 +1,10 @@
 1.5.x.x (relative to 1.5.1.0)
 =======
 
+Fixes
+-----
 
+- ApplicationTest : Slightly increased pause before checking process name to ensure it has had time to change it.
 
 1.5.1.0 (relative to 1.5.0.1)
 =======

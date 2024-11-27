@@ -64,7 +64,7 @@ class ApplicationTest( GafferTest.TestCase ) :
 	def testProcessName( self ) :
 
 		process = subprocess.Popen( [ str( Gaffer.executablePath() ), "env", "sleep", "100" ] )
-		time.sleep( 1 )
+		time.sleep( 3 )
 		command = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "command=" ], universal_newlines = True ).strip()
 		name = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "comm=" ], universal_newlines = True ).strip()
 		process.kill()
