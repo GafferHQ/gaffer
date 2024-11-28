@@ -88,8 +88,8 @@ bool TweakPlug::applyTweak(
 		return setDataFunctor( name, nullptr );
 	}
 
-	IECore::DataPtr newData = Gaffer::PlugAlgo::getValueAsData( valuePlug() );
-	if( !newData )
+	IECore::DataPtr tweakData = Gaffer::PlugAlgo::getValueAsData( valuePlug() );
+	if( !tweakData )
 	{
 		throw IECore::Exception(
 			fmt::format( "Cannot apply tweak to \"{}\" : Value plug has unsupported type \"{}\"", name, valuePlug()->typeName() )
@@ -98,16 +98,16 @@ bool TweakPlug::applyTweak(
 
 	if( mode == Gaffer::TweakPlug::Create )
 	{
-		return setDataFunctor( name, newData );
+		return setDataFunctor( name, tweakData );
 	}
 
 	const IECore::Data *currentValue = getDataFunctor( name, /* withFallback = */ mode != Gaffer::TweakPlug::CreateIfMissing );
 
 	if( IECore::runTimeCast<const IECore::InternedStringData>( currentValue ) )
 	{
-		if( const IECore::StringData *s = IECore::runTimeCast<const IECore::StringData>( newData.get() ) )
+		if( const IECore::StringData *s = IECore::runTimeCast<const IECore::StringData>( tweakData.get() ) )
 		{
-			newData = new IECore::InternedStringData( s->readable() );
+			tweakData = new IECore::InternedStringData( s->readable() );
 		}
 	}
 
@@ -119,7 +119,7 @@ bool TweakPlug::applyTweak(
 			mode == Gaffer::TweakPlug::CreateIfMissing
 		)
 		{
-			setDataFunctor( name, newData );
+			setDataFunctor( name, tweakData );
 			return true;
 		}
 		else if( missingMode == Gaffer::TweakPlug::MissingMode::Ignore || mode == Gaffer::TweakPlug::ListRemove )
@@ -134,27 +134,33 @@ bool TweakPlug::applyTweak(
 		return true;
 	}
 
-	IECore::dispatch(
+	IECore::DataPtr resultData = IECore::dispatch(
 		currentValue,
-		[&] ( auto currentValueTyped )
+		[&tweakData, &mode, &name] ( auto currentValueTyped ) -> IECore::DataPtr
 		{
 			using DataType = typename std::remove_const_t<std::remove_pointer_t<decltype( currentValueTyped )> >;
 			if constexpr( IECore::TypeTraits::IsTypedData< DataType >::value )
 			{
-				auto newDataTyped = IECore::runTimeCast< DataType >( newData );
-				if( !newDataTyped )
+				auto tweakDataTyped = IECore::runTimeCast< const DataType >( tweakData );
+				if( !tweakDataTyped )
 				{
 					throw IECore::Exception(
-						fmt::format( "Cannot apply tweak to \"{}\" : Value of type \"{}\" does not match parameter of type \"{}\"", name, currentValue->typeName(), newData->typeName() )
+						fmt::format( "Cannot apply tweak to \"{}\" : Value of type \"{}\" does not match parameter of type \"{}\"", name, currentValueTyped->typeName(), tweakData->typeName() )
 					);
 				}
-				auto &newValue = newDataTyped->writable();
-				newDataTyped->writable() = applyValueTweak( currentValueTyped->readable(), newValue, mode, name );
+
+				typename DataType::Ptr resultData = new DataType();
+				resultData->writable() = applyValueTweak( currentValueTyped->readable(), tweakDataTyped->readable(), mode, name );
+				return resultData;
+			}
+			else
+			{
+				throw IECore::Exception( fmt::format( "Cannot apply tweak to \"{}\" of type \"{}\"", name, currentValueTyped->typeName() ) );
 			}
 		}
 	);
 
-	setDataFunctor( name, newData );
+	setDataFunctor( name, resultData );
 
 
 	return true;
