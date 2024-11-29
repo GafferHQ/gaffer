@@ -834,7 +834,7 @@ class ShaderCache : public IECore::RefCounted
 			IECore::MurmurHash hSubst;
 			if( attributes )
 			{
-				shader->hashSubstitutions( attributes, hSubst );
+				ShaderNetworkAlgo::hashSubstitutions( shader, attributes, hSubst );
 				h.append( hSubst );
 			}
 
@@ -851,7 +851,7 @@ class ShaderCache : public IECore::RefCounted
 				if( hSubst != IECore::MurmurHash() )
 				{
 					IECoreScene::ShaderNetworkPtr substitutedShader = shader->copy();
-					substitutedShader->applySubstitutions( attributes );
+					ShaderNetworkAlgo::applySubstitutions( substitutedShader.get(), attributes );
 					writeAccessor->second = new ArnoldShader( substitutedShader.get(), m_nodeDeleter, m_universe, namePrefix, m_parentNode );
 				}
 				else
