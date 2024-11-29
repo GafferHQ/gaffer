@@ -1,7 +1,10 @@
 1.4.15.x (relative to 1.4.15.2)
 ========
 
+Fixes
+-----
 
+- Catalogue : Fixed bug which "stole" drags that crossed the image listing but which were destined elsewhere, for instance a drag from the HierarchyView to a PathFilter in the GraphEditor.
 
 1.4.15.2 (relative to 1.4.15.1)
 ========
