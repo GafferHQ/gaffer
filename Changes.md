@@ -16,6 +16,7 @@ API
 ---
 
 - PlugLayout : Activations may now depend on the presence of certain plugs, as they are now reevaluated when child plugs are added and removed.
+- IECoreArnold::ShaderNetworkAlgo : Added a new API to allow just-in-time substitutions to be made when translating shaders to Arnold. Use with care.
 
 1.5.1.0 (relative to 1.5.0.1)
 =======
