@@ -6,6 +6,7 @@ Fixes
 
 - GraphEditor : Fixed errors when dragging an unknown file type into the GraphEditor.
 - Widget : Fixed `event.sourceWidget` for DragDropEvents generated from a Qt native drag within the same Gaffer process. This will now reference the `GafferUI.Widget` that the Qt source widget belongs to, if any.
+- Catalogue : Fixed bug which "stole" drags that crossed the image listing but which were destined elsewhere, for instance a drag from the HierarchyView to a PathFilter in the GraphEditor.
 
 1.4.15.2 (relative to 1.4.15.1)
 ========
