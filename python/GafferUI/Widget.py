@@ -1578,8 +1578,12 @@ class _EventFilter( QtCore.QObject ) :
 			Widget._modifiers( qEvent.keyboardModifiers() ),
 		)
 		dragDropEvent.data = data
-		dragDropEvent.sourceWidget = None
 		dragDropEvent.destinationWidget = None
+
+		if isinstance( qEvent.source(), QtWidgets.QWidget ) :
+			dragDropEvent.sourceWidget = GafferUI.Widget._owner( qEvent.source() )
+		else :
+			dragDropEvent.sourceWidget = None
 
 		if widget._dragEnterSignal( widget, dragDropEvent ) :
 			qEvent.acceptProposedAction()

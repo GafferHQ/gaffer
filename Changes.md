@@ -1,7 +1,11 @@
 1.4.15.x (relative to 1.4.15.2)
 ========
 
+Fixes
+-----
 
+- GraphEditor : Fixed errors when dragging an unknown file type into the GraphEditor.
+- Widget : Fixed `event.sourceWidget` for DragDropEvents generated from a Qt native drag within the same Gaffer process. This will now reference the `GafferUI.Widget` that the Qt source widget belongs to, if any.
 
 1.4.15.2 (relative to 1.4.15.1)
 ========
