@@ -975,7 +975,7 @@ bool VisualiserTool::buttonPress( const ButtonEvent &event )
 	m_acceptedButtonPress = false;
 	m_initiatedDrag = false;
 
-	if( event.button & ButtonEvent::Left )
+	if( event.button & ButtonEvent::Left && !( event.modifiers & GafferUI::ButtonEvent::Modifiers::Control ) )
 	{
 		updateCursorValue();
 		if( m_cursorValue )
