@@ -50,6 +50,7 @@ namespace Gaffer
 
 IE_CORE_FORWARDDECLARE( GraphComponent )
 IE_CORE_FORWARDDECLARE( ValuePlug )
+IE_CORE_FORWARDDECLARE( ArrayPlug )
 
 namespace PlugAlgo
 {
@@ -85,6 +86,9 @@ GAFFER_API ValuePlugPtr createPlugFromData( const std::string &name, Plug::Direc
 
 /// Returns a Data value from a plug.
 GAFFER_API IECore::DataPtr getValueAsData( const ValuePlug *plug );
+
+/// Returns a VectorData value from an array plug.
+GAFFER_API IECore::DataPtr getArrayAsVectorData( const ArrayPlug *plug );
 
 /// Sets the value of an existing plug to the specified data.
 /// Returns `true` on success and `false` on failure.
