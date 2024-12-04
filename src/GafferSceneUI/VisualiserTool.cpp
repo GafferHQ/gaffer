@@ -1190,6 +1190,9 @@ void VisualiserTool::preRender()
 		m_gadgetDirty = false;
 	}
 
+	/// \todo This causes a noticeable performance decline due to it's use of `objectAt()`, which
+	/// redraws the scene into a selection buffer. We don't have a solution at the moment, but
+	/// noting this as the cause for future investigation.
 	updateCursorValue();
 }
 
