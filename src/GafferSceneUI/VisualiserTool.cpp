@@ -1229,21 +1229,24 @@ void VisualiserTool::updateCursorValue()
 		return;
 	}
 
-	// Clear any existing selection mask
-
-	const StringVectorData *selectionMask = sg->getSelectionMask();
-	sg->setSelectionMask( nullptr );
-
 	// Get the current object at cursor
 
 	ScenePlug::ScenePath path;
 
+	const StringVectorData *selectionMask = nullptr;
 	try
 	{
+		// Clear any existing selection mask
+		selectionMask = sg->getSelectionMask();
+		sg->setSelectionMask( nullptr );
+
 		if( !sg->objectAt( view()->viewportGadget()->rasterToGadgetSpace( m_cursorPos, sg ), path ) )
 		{
 			return;
 		}
+
+		// restore selection mask
+		sg->setSelectionMask( selectionMask );
 	}
 	catch( const Exception & )
 	{
@@ -1254,6 +1257,9 @@ void VisualiserTool::updateCursorValue()
 		//        catch the exception and return. If we are being called from button press
 		//        we don't want the exception to propagate so again catch and return. In
 		//        both cases the error should happen again during the next render pass.
+
+		// restore selection mask
+		sg->setSelectionMask( selectionMask );
 
 		return;
 	}
@@ -1394,10 +1400,6 @@ void VisualiserTool::updateCursorValue()
 	}
 
 	m_cursorValue = cursorValue;
-
-	// restore selection mask
-
-	sg->setSelectionMask( selectionMask );
 }
 
 SceneGadget *VisualiserTool::sceneGadget()
