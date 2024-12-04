@@ -59,7 +59,7 @@ FPSGadget::~FPSGadget()
 
 void FPSGadget::renderLayer( Gadget::Layer layer, const Style *style, Gadget::RenderReason reason ) const
 {
-	if( layer != Layer::Main )
+	if( layer != Layer::Front )
 	{
 		return;
 	}
@@ -109,7 +109,7 @@ void FPSGadget::renderLayer( Gadget::Layer layer, const Style *style, Gadget::Re
 
 unsigned FPSGadget::layerMask() const
 {
-	return (unsigned)Layer::Main;
+	return (unsigned)Layer::Front;
 }
 
 
