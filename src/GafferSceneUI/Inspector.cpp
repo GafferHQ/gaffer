@@ -292,7 +292,7 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 					if( !result->m_editScope && node->ancestor<EditScope>() )
 					{
 						// We don't allow editing if the user hasn't requested a specific scope
-						// (they have selected "None" from the Menu) and the upstream edit is
+						// (they have selected "Source" from the Menu) and the upstream edit is
 						// inside _any_ EditScope.
 						result->m_editFunction = fmt::format(
 							"Source is in an EditScope. Change scope to {} to edit.",
@@ -328,7 +328,7 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 					}
 					else if( !node->ancestor<EditScope>() && result->m_editScope )
 					{
-						result->m_disableEditFunction = "Edit is not in the current edit scope. Change scope to None to disable.";
+						result->m_disableEditFunction = "Edit is not in the current edit scope. Change scope to Source to disable.";
 					}
 				}
 			}

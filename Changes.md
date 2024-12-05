@@ -1,7 +1,10 @@
 1.5.x.x (relative to 1.5.3.0)
 =======
 
+Fixes
+-----
 
+- AttributeEditor, LightEditor, RenderPassEditor : Fixed warning message which referred to "None" rather than the "Source" scope.
 
 1.5.3.0 (relative to 1.5.2.0)
 =======
