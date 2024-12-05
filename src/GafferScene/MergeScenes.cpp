@@ -302,41 +302,15 @@ void MergeScenes::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
 
 void MergeScenes::hashActiveInputs( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
-
-	if( scenePath.empty() )
-	{
-		h.append( (uint64_t)connectedInputs().to_ulong() );
-	}
-	else
-	{
-		InputMask parentActiveInputs;
-		{
-			ScenePath parentPath = scenePath; parentPath.pop_back();
-			ScenePlug::PathScope parentScope( context, &parentPath );
-			parentActiveInputs = activeInputsPlug()->getValue();
-		}
-
-		if( parentActiveInputs.count() == 1 )
-		{
-			h.append( (uint64_t)parentActiveInputs.to_ulong() );
-		}
-		else
-		{
-			InputMask activeInputs;
-			visit(
-				parentActiveInputs,
-				[&scenePath, &activeInputs] ( InputType type, size_t index, const ScenePlug *scene ) {
-					if( scene->exists( scenePath ) )
-					{
-						activeInputs[index] = true;
-					}
-					return true;
-				}
-			);
-			h.append( (uint64_t)activeInputs.to_ulong() );
-		}
-	}
+	// We anticipate very few unique values for the active inputs, as in most
+	// cases they are inherited directly down the hierarchy. So we want to use a
+	// perfect hash to avoid making lots of duplicate cache entries containing
+	// those repeated values. This means our hash needs to use
+	// `scene->existsPlug()->getValue()` rather than
+	// `scene->existsPlug()->hash()`. Which means our hash function is actually
+	// _identical_ to our compute, so we might as well just call it rather than
+	// duplicate the code.
+	h.append( computeActiveInputs( context ) );
 }
 
 int MergeScenes::computeActiveInputs( const Gaffer::Context *context ) const
