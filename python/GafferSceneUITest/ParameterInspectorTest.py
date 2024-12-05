@@ -502,7 +502,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		inspection = self.__inspect( s["editScope"]["out"], "/light", "exposure", s["editScope"] )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "Edit is not in the current edit scope. Change scope to None to disable." )
+		self.assertEqual( inspection.nonDisableableReason(), "Edit is not in the current edit scope. Change scope to Source to disable." )
 
 		inspection = self.__inspect( s["editScope"]["out"], "/light", "exposure", None )
 		self.assertEqual( inspection.source(), s["light"]["parameters"]["exposure"] )
