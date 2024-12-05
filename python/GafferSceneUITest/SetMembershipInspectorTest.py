@@ -690,9 +690,10 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 
 			Gaffer.MetadataAlgo.setReadOnly( s["editScope1"], False )
 			inspection = self.__inspect( s["editScope1"]["out"], "/group/plane", "planeSetEditScope", None )
+			self.assertTrue( inspection.acquireEdit( False ).isSame( s["plane"]["sets"] ) )
 			self.assertFalse( inspection.canDisableEdit() )
-			self.assertEqual( inspection.nonDisableableReason(), "Source is in an EditScope. Change scope to editScope1 to disable." )
-			self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : Source is in an EditScope. Change scope to editScope1 to disable.", inspection.disableEdit )
+			self.assertEqual( inspection.nonDisableableReason(), "plane.sets has no edit to disable." )
+			self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : plane.sets has no edit to disable.", inspection.disableEdit )
 
 			inspection = self.__inspect( s["editScope1"]["out"], "/group/plane", "planeSetEditScope", s["editScope1"] )
 			self.assertTrue( inspection.canDisableEdit() )
