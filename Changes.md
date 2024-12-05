@@ -12,6 +12,11 @@ Features
   - ImageToTensor : Converts images to tensors for use with the Inference node.
   - TensorToImage : Converts tensors back to images following inference.
 
+Improvements
+------------
+
+- MergeScenes : Removed unnecessary temporary contexts.
+
 API
 ---
 

@@ -351,7 +351,7 @@ int MergeScenes::computeActiveInputs( const Gaffer::Context *context ) const
 			visit(
 				parentActiveInputs,
 				[&result, &scenePath] ( InputType type, size_t index, const ScenePlug *scene ) {
-					if( scene->exists( scenePath ) )
+					if( scene->existsPlug()->getValue() )
 					{
 						result[index] = true;
 					}
