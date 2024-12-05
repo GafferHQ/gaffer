@@ -732,14 +732,15 @@ const std::string &Inspector::Result::fallbackDescription() const
 
 bool Inspector::Result::editable() const
 {
-	return m_editFunction.which() == 0 && boost::get<EditFunction>( m_editFunction ) != nullptr;
+	auto f = std::get_if<EditFunction>( &m_editFunction );
+	return f && *f;
 }
 
 std::string Inspector::Result::nonEditableReason() const
 {
-	if( m_editFunction.which() == 1 )
+	if( auto s = std::get_if<std::string>( &m_editFunction ) )
 	{
-		return boost::get<std::string>( m_editFunction );
+		return *s;
 	}
 
 	return "";
@@ -747,24 +748,25 @@ std::string Inspector::Result::nonEditableReason() const
 
 Gaffer::ValuePlugPtr Inspector::Result::acquireEdit( bool createIfNecessary ) const
 {
-	if( m_editFunction.which() == 0 )
+	if( auto f = std::get_if<EditFunction>( &m_editFunction ) )
 	{
-		return boost::get<EditFunction>( m_editFunction )( createIfNecessary );
+		return (*f)( createIfNecessary );
 	}
 
-	throw IECore::Exception( "Not editable : " + boost::get<std::string>( m_editFunction ) );
+	throw IECore::Exception( "Not editable : " + std::get<std::string>( m_editFunction ) );
 }
 
 bool Inspector::Result::canDisableEdit() const
 {
-	return m_disableEditFunction.which() == 0 && boost::get<DisableEditFunction>( m_disableEditFunction ) != nullptr;
+	auto f = std::get_if<DisableEditFunction>( &m_disableEditFunction );
+	return f && *f;
 }
 
 std::string Inspector::Result::nonDisableableReason() const
 {
-	if( m_disableEditFunction.which() == 1 )
+	if( auto s = std::get_if<std::string>( &m_disableEditFunction ) )
 	{
-		return boost::get<std::string>( m_disableEditFunction );
+		return *s;
 	}
 
 	return "";
@@ -772,12 +774,12 @@ std::string Inspector::Result::nonDisableableReason() const
 
 void Inspector::Result::disableEdit() const
 {
-	if( m_disableEditFunction.which() == 0 )
+	if( auto f = std::get_if<DisableEditFunction>( &m_disableEditFunction ) )
 	{
-		return boost::get<DisableEditFunction>( m_disableEditFunction )();
+		return (*f)();
 	}
 
-	throw IECore::Exception( "Cannot disable edit : " + boost::get<std::string>( m_disableEditFunction ) );
+	throw IECore::Exception( "Cannot disable edit : " + std::get<std::string>( m_disableEditFunction ) );
 }
 
 std::string Inspector::Result::editWarning() const
