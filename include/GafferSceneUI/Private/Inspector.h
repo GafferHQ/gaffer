@@ -374,10 +374,15 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 		Gaffer::EditScopePtr m_editScope;
 		bool m_editScopeInHistory;
 
-		EditFunctionOrFailure m_editFunction;
-		std::string m_editWarning;
+		struct Editors
+		{
+			/// \todo Rename to `acquireEditFunction`?
+			EditFunctionOrFailure editFunction;
+			std::string editWarning;
+			DisableEditFunctionOrFailure disableEditFunction;
+		};
 
-		DisableEditFunctionOrFailure m_disableEditFunction;
+		std::optional<Editors> m_editors;
 
 };
 

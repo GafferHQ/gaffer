@@ -210,25 +210,37 @@ Inspector::ResultPtr Inspector::inspect() const
 		return nullptr;
 	}
 
-	if( result->editScope() && !result->m_editScopeInHistory )
+	// If we failed to initialise our editors, then initialise with failures
+	// explaining why.
+	if( !result->m_editors )
 	{
-		const std::string nonEditableReason = fmt::format(
-			"The target edit scope {} is not in the scene history.",
-			result->editScope()->relativeName( result->editScope()->scriptNode() )
-		);
-		result->m_editFunction = nonEditableReason;
-		result->m_disableEditFunction = nonEditableReason;
-		result->m_sourceType = Result::SourceType::Other;
-	}
-	else if( !result->m_source )
-	{
-		if( !result->editable() )
+		std::string formatString;
+		if( !result->m_source )
 		{
-			// There's no source plug and no way of making
-			// the property.
-			result->m_editFunction = "No editable source found in history.";
+			formatString = "No editable source found in history.";
 		}
-		result->m_disableEditFunction = "No editable source found in history.";
+		else if( result->m_editScope && !result->m_editScopeInHistory )
+		{
+			formatString = fmt::format(
+				"The target edit scope {} is not in the scene history.",
+				result->editScope()->relativeName( result->editScope()->scriptNode() )
+			);
+		}
+		else if( !result->m_editScope )
+		{
+			const EditScope *sourceEditScope = result->m_source->ancestor<EditScope>();
+			if( sourceEditScope )
+			{
+				formatString = fmt::format(
+					"Source is in an EditScope. Change scope to {} to {{}}.",
+					sourceEditScope->relativeName( sourceEditScope->scriptNode() )
+				);
+			}
+		}
+
+		result->m_editors = {
+			fmt::format( formatString, "edit" ), "", fmt::format( formatString, "disable" )
+		};
 	}
 
 	if( fallbackValue )
@@ -249,10 +261,15 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 {
 	Node *node = history->scene->node();
 
-	// If we haven't found the source yet, call `source()`
-	// to see if we can find one here.
+	// If we might have a use for it, see if there's a source for the inspected
+	// value at this point in the history.
 
-	if( !result->m_source && history->scene->direction() == Plug::Out )
+	std::string editWarning;
+	ValuePlugPtr source;
+	if(
+		history->scene->direction() == Plug::Out &&
+		( !result->m_source || !result->m_editors )
+	)
 	{
 		if( auto dependencyNode = runTimeCast<DependencyNode>( node ) )
 		{
@@ -260,130 +277,125 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 			const BoolPlug *enabledPlug = dependencyNode->enabledPlug();
 			if( !enabledPlug || enabledPlug->getValue() )
 			{
-				std::string editWarning;
-				if( auto source = this->source( history, editWarning ) )
+				source = this->source( history, editWarning );
+				if( source )
 				{
-					// We've found the source of the value we're inspecting.
-
-					result->m_source = static_cast<ValuePlug *>( spreadsheetAwareSource( source.get() ) );
-
-					if( result->m_editScope && result->m_editScopeInHistory )
-					{
-						result->m_sourceType = Result::SourceType::Upstream;
-					}
-					else if( result->m_editScope && node->ancestor<EditScope>() == result->m_editScope )
-					{
-						result->m_sourceType = Result::SourceType::EditScope;
-						result->m_editScopeInHistory = true;
-					}
-					else if( result->m_editScope )
-					{
-						// We'll convert this to `Other` later if we don't
-						// find the EditScope.
-						result->m_sourceType = Result::SourceType::Downstream;
-					}
-					else
-					{
-						result->m_sourceType = Result::SourceType::Other;
-					}
-
-					// See if we can use it for editing
-
-					if( !result->m_editScope && node->ancestor<EditScope>() )
-					{
-						// We don't allow editing if the user hasn't requested a specific scope
-						// (they have selected "Source" from the Menu) and the upstream edit is
-						// inside _any_ EditScope.
-						result->m_editFunction = fmt::format(
-							"Source is in an EditScope. Change scope to {} to edit.",
-							node->ancestor<EditScope>()->relativeName( node->ancestor<EditScope>()->scriptNode() )
-						);
-						result->m_disableEditFunction = fmt::format(
-							"Source is in an EditScope. Change scope to {} to disable.",
-							node->ancestor<EditScope>()->relativeName( node->ancestor<EditScope>()->scriptNode() )
-						);
-					}
-					else if( !result->m_editScope || node->ancestor<EditScope>() == result->m_editScope )
-					{
-						const std::string nonEditableReason = ::nonEditableReason( result->m_source.get() );
-
-						if( nonEditableReason.empty() )
-						{
-							result->m_editFunction = [source = result->m_source] ( bool unused ) { return source; };
-							result->m_disableEditFunction = disableEditFunction( result->m_source.get(), history );
-							result->m_editWarning = editWarning;
-						}
-						else
-						{
-							result->m_editFunction = nonEditableReason;
-							result->m_disableEditFunction = nonEditableReason;
-						}
-					}
-					else if( node->ancestor<EditScope>() && node->ancestor<EditScope>() != result->m_editScope )
-					{
-						result->m_disableEditFunction = fmt::format(
-							"Edit is not in the current edit scope. Change scope to {} to disable.",
-							node->ancestor<EditScope>()->relativeName( node->ancestor<EditScope>()->scriptNode() )
-						);
-					}
-					else if( !node->ancestor<EditScope>() && result->m_editScope )
-					{
-						result->m_disableEditFunction = "Edit is not in the current edit scope. Change scope to Source to disable.";
-					}
+					source = static_cast<ValuePlug *>( spreadsheetAwareSource( source.get() ) );
 				}
 			}
 		}
 	}
 
-	// Check to see if we're at the `targetEditScope()`.
+	// If this is the first source we've seen, then initialise
+	// `Result::source()` and `Result::sourceType()` from it.
 
-	if( auto editScope = runTimeCast<EditScope>( node ) )
+	const bool hadSourceAlready = (bool)result->m_source;
+	if( source && !hadSourceAlready )
 	{
-		if( !result->m_editScopeInHistory && history->scene == editScope->inPlug() && editScope == result->m_editScope )
+		result->m_source = source;
+
+		if( result->m_editScope && result->m_editScopeInHistory )
 		{
-			// We are leaving the target EditScope for the first time. We
-			// consider EditScopes on the way out to allow other nodes within
-			// the scope to take precedence. An existing edit in the scope will
-			// have been picked up via `source()` already.
-			//
-			// \todo Should call `editFunction()` with the context from the
-			// `outPlug()` of the EditScope - see TransformTool. We should also
-			// explicitly prefer branches where `scene:path` matches the value
-			// in the `outPlug()` context, to avoid making edits to locations
-			// other than the one emerging from the EditScope.
+			result->m_sourceType = Result::SourceType::Upstream;
+		}
+		else if( result->m_editScope && node->ancestor<EditScope>() == result->m_editScope )
+		{
+			result->m_sourceType = Result::SourceType::EditScope;
 			result->m_editScopeInHistory = true;
-			Context::Scope scope( history->context.get() );
-			if( editScope->enabledPlug()->getValue() )
+		}
+		else
+		{
+			// We'll convert this to Downstream if we later find the edit scope.
+			result->m_sourceType = Result::SourceType::Other;
+		}
+	}
+
+	// If we haven't initialised the editors yet, see if we can do that here.
+
+	if( !result->m_editors )
+	{
+		// Initialise editors from source if we can.
+		if( source && source->ancestor<EditScope>() == result->m_editScope )
+		{
+			const std::string nonEditableReason = ::nonEditableReason( result->m_source.get() );
+			if( nonEditableReason.empty() )
 			{
-				result->m_editFunction = editFunction( editScope, history );
-				if( result->m_source && result->m_sourceType == Result::SourceType::Downstream )
-				{
-					const Node *downstreamNode = result->m_source->node();
-					const auto *downstreamEditScope = downstreamNode->ancestor<EditScope>();
-					downstreamNode = downstreamEditScope ? downstreamEditScope : downstreamNode;
-					result->m_editWarning = fmt::format(
-						"{} has edits downstream in {}.",
-						std::string( 1, std::toupper( type()[0] ) ) + type().substr( 1 ),
-						downstreamNode->relativeName( downstreamNode->scriptNode() )
-					);
-				}
+				result->m_editors = {
+					[source = source] ( bool unused ) { return source; },
+					editWarning,
+					disableEditFunction( source.get(), history )
+				};
 			}
 			else
 			{
-				result->m_editFunction = fmt::format(
-					"The target edit scope {} is disabled.",
-					editScope->relativeName( editScope->scriptNode() )
-				);
+				result->m_editors = { nonEditableReason, "", nonEditableReason };
 			}
+		}
+		// Otherwise try to initialise from EditScope if we've hit it.
+		else if( auto editScope = runTimeCast<EditScope>( node ) )
+		{
+			if( !result->m_editScopeInHistory && history->scene == editScope->inPlug() && editScope == result->m_editScope )
+			{
+				// We are leaving the target EditScope for the first time. We
+				// consider EditScopes on the way out to allow other nodes within
+				// the scope to take precedence. An existing edit in the scope will
+				// have been picked up via `source()` already.
+				//
+				// \todo Should call `editFunction()` with the context from the
+				// `outPlug()` of the EditScope - see TransformTool. We should also
+				// explicitly prefer branches where `scene:path` matches the value
+				// in the `outPlug()` context, to avoid making edits to locations
+				// other than the one emerging from the EditScope.
+				result->m_editScopeInHistory = true;
+				Context::Scope scope( history->context.get() );
+				EditFunctionOrFailure func;
+				if( editScope->enabledPlug()->getValue() )
+				{
+					func = editFunction( editScope, history );
+				}
+				else
+				{
+					func = fmt::format(
+						"The target edit scope {} is disabled.",
+						editScope->relativeName( editScope->scriptNode() )
+					);
+				}
+
+				result->m_editors = {
+					func, "",
+					fmt::format(
+						"There is no edit in {}.", editScope->relativeName( editScope->scriptNode() )
+					)
+				};
+			}
+		}
+
+		if( result->m_editors && hadSourceAlready )
+		{
+			result->m_sourceType = Result::SourceType::Downstream;
+		}
+
+		// If we initialised the edit function, tag on a warning if any edits won't be visible
+		// due to being overridden downstream.
+		if( result->m_editors && std::holds_alternative<EditFunction>( result->m_editors->editFunction ) && result->m_sourceType == Result::SourceType::Downstream )
+		{
+			const Node *downstreamNode = result->m_source->node();
+			const auto *downstreamEditScope = downstreamNode->ancestor<EditScope>();
+			downstreamNode = downstreamEditScope ? downstreamEditScope : downstreamNode;
+			result->m_editors->editWarning = fmt::format(
+				"{} has edits downstream in {}.",
+				std::string( 1, std::toupper( type()[0] ) ) + type().substr( 1 ),
+				downstreamNode->relativeName( downstreamNode->scriptNode() )
+			);
 		}
 	}
 
-	// If we haven't found the source and the EditScope, then recurse up the
-	// history until we have.
+	// If we haven't found everything we want yet, then recurse up the history
+	// until we have.
 
 	for( const auto &predecessor : history->predecessors )
 	{
-		if( result->m_source && ((bool)result->m_editScope == result->m_editScopeInHistory) )
+		if( result->m_source && ((bool)result->m_editScope == result->m_editScopeInHistory) && result->m_editors )
 		{
 			return;
 		}
@@ -732,13 +744,12 @@ const std::string &Inspector::Result::fallbackDescription() const
 
 bool Inspector::Result::editable() const
 {
-	auto f = std::get_if<EditFunction>( &m_editFunction );
-	return f && *f;
+	return m_editors && std::holds_alternative<EditFunction>( m_editors->editFunction );
 }
 
 std::string Inspector::Result::nonEditableReason() const
 {
-	if( auto s = std::get_if<std::string>( &m_editFunction ) )
+	if( auto s = std::get_if<std::string>( &m_editors.value().editFunction ) )
 	{
 		return *s;
 	}
@@ -748,23 +759,22 @@ std::string Inspector::Result::nonEditableReason() const
 
 Gaffer::ValuePlugPtr Inspector::Result::acquireEdit( bool createIfNecessary ) const
 {
-	if( auto f = std::get_if<EditFunction>( &m_editFunction ) )
+	if( auto f = std::get_if<EditFunction>( &m_editors.value().editFunction ) )
 	{
 		return (*f)( createIfNecessary );
 	}
 
-	throw IECore::Exception( "Not editable : " + std::get<std::string>( m_editFunction ) );
+	throw IECore::Exception( "Not editable : " + std::get<std::string>( m_editors.value().editFunction ) );
 }
 
 bool Inspector::Result::canDisableEdit() const
 {
-	auto f = std::get_if<DisableEditFunction>( &m_disableEditFunction );
-	return f && *f;
+	return std::holds_alternative<DisableEditFunction>( m_editors.value().disableEditFunction );
 }
 
 std::string Inspector::Result::nonDisableableReason() const
 {
-	if( auto s = std::get_if<std::string>( &m_disableEditFunction ) )
+	if( auto s = std::get_if<std::string>( &m_editors.value().disableEditFunction ) )
 	{
 		return *s;
 	}
@@ -774,15 +784,15 @@ std::string Inspector::Result::nonDisableableReason() const
 
 void Inspector::Result::disableEdit() const
 {
-	if( auto f = std::get_if<DisableEditFunction>( &m_disableEditFunction ) )
+	if( auto f = std::get_if<DisableEditFunction>( &m_editors.value().disableEditFunction ) )
 	{
 		return (*f)();
 	}
 
-	throw IECore::Exception( "Cannot disable edit : " + std::get<std::string>( m_disableEditFunction ) );
+	throw IECore::Exception( "Cannot disable edit : " + std::get<std::string>( m_editors.value().disableEditFunction ) );
 }
 
 std::string Inspector::Result::editWarning() const
 {
-	return m_editWarning;
+	return m_editors.value().editWarning;
 }
