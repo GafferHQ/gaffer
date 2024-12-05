@@ -320,8 +320,28 @@ int MergeScenes::computeActiveInputs( const Gaffer::Context *context ) const
 	InputMask result;
 	if( scenePath.empty() )
 	{
-		// Root
-		result = connectedInputs();
+		// Root. Every input is active here, but there's a wrinkle : the default
+		// value for `ScenePlug.exists` is `true`, and this is the value we'll
+		// get if the input is not from a computed output. This would mean that
+		// the input would claim to be active for _any_ scene location. We deal
+		// with this once here at the root rather than repeat the workaround at
+		// each descendant location;
+		visit(
+			connectedInputs(),
+			[&result, &scenePath] ( InputType type, size_t index, const ScenePlug *scene ) {
+				if( scene->childNamesPlug()->getValue()->readable().size() )
+				{
+					result[index] = true;
+				}
+				return true;
+			}
+		);
+		if( result.none() )
+		{
+			// Make sure that at least one input is active, so we have
+			// something to use as a pass-through.
+			result[0] = true;
+		}
 	}
 	else
 	{
@@ -849,6 +869,8 @@ IECore::ConstInternedStringVectorDataPtr MergeScenes::computeSetNames( const Gaf
 
 void MergeScenes::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
+	/// \todo It might be a good idea to implement a pass-through for
+	/// the cases where the set only exists in one of the inputs.
 	visit(
 		connectedInputs(),
 		[&] ( InputType type, size_t index, const ScenePlug *scene ) {
