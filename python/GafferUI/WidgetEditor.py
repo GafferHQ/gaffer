@@ -336,4 +336,5 @@ class WidgetEditor( GafferUI.Editor ) :
 		QtWidgets.QApplication.instance().removeEventFilter( self.__buttonPressFilter )
 
 
+IECore.registerRunTimeTyped( WidgetPath, typeName = "GafferUI::WidgetPath" )
 GafferUI.Editor.registerType( "WidgetEditor", WidgetEditor )
