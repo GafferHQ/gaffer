@@ -46,7 +46,8 @@
 #include "GafferSceneUI/SelectionTool.h"
 #include "GafferSceneUI/TransformTool.h"
 #include "GafferSceneUI/TranslateTool.h"
-#include "GafferSceneUI/VisualiserTool.h"
+
+#include "GafferSceneUI/Private/VisualiserTool.h"
 
 #include "GafferUI/Gadget.h"
 
