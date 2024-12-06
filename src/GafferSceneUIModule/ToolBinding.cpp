@@ -47,6 +47,8 @@
 #include "GafferSceneUI/TransformTool.h"
 #include "GafferSceneUI/TranslateTool.h"
 
+#include "GafferSceneUI/Private/VisualiserTool.h"
+
 #include "GafferUI/Gadget.h"
 
 #include "GafferBindings/NodeBinding.h"
@@ -314,5 +316,9 @@ void GafferSceneUIModule::bindTools()
 			.value( "Diffuse", LightPositionTool::Mode::Diffuse )
 		;
 	}
+
+	GafferBindings::NodeClass<VisualiserTool>( nullptr, no_init )
+		.def( init<SceneView *>() )
+	;
 
 }
