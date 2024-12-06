@@ -234,7 +234,7 @@ class MergeScenesTest( GafferSceneTest.SceneTestCase ) :
 
 	def testSingleInputPassThrough( self ) :
 
-		sphere = GafferScene.Sphere()
+		sphere = GafferSceneTest.TestLight()
 		sphere["transform"]["translate"].setValue( imath.V3f( 1, 2, 3 ) )
 		sphere["sets"].setValue( "A" )
 		cube = GafferScene.Cube()
@@ -248,6 +248,25 @@ class MergeScenesTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertScenesEqual( merge["out"], group["out"] )
 		self.assertSceneHashesEqual( merge["out"], group["out"] )
+
+		merge["in"][1].setInput( group["out"] )
+		merge["in"][0].setInput( None )
+
+		self.assertScenesEqual( merge["out"], group["out"] )
+		self.assertSceneHashesEqual( merge["out"], group["out"] )
+
+	def testFirstInputEmptyPassThrough( self ) :
+
+		merge = GafferScene.MergeScenes()
+
+		emptyScene = GafferScene.ScenePlug()
+		merge["in"][0].setInput( emptyScene )
+
+		light = GafferSceneTest.TestLight()
+		merge["in"][1].setInput( light["out"] )
+
+		self.assertScenesEqual( merge["out"], light["out"] )
+		self.assertSceneHashesEqual( merge["out"], light["out"], checks = self.allSceneChecks - { "sets" } )
 
 	def testNoInputsPassThrough( self ) :
 
