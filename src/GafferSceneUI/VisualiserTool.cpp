@@ -47,20 +47,17 @@
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
 
-#define private public
-#include "IECoreGL/Buffer.h"
-#include "IECoreGL/Primitive.h"
-#undef private
-
 #include "IECoreScene/MeshAlgo.h"
 #include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/MeshPrimitiveEvaluator.h"
 #include "IECoreScene/PrimitiveVariable.h"
 
+#include "IECoreGL/Buffer.h"
 #include "IECoreGL/CachedConverter.h"
 #include "IECoreGL/Export.h"
 #include "IECoreGL/GL.h"
 #include "IECoreGL/MeshPrimitive.h"
+#include "IECoreGL/Primitive.h"
 #include "IECoreGL/Renderable.h"
 #include "IECoreGL/Selector.h"
 #include "IECoreGL/Shader.h"
@@ -261,7 +258,7 @@ class VisualiserGadget : public Gadget
 					m_uniformBuffer.reset( new IECoreGL::Buffer( buffer ) );
 				}
 
-				glBindBufferBase( GL_UNIFORM_BUFFER, g_uniformBlockBindingIndex, m_uniformBuffer->m_buffer );
+				glBindBufferBase( GL_UNIFORM_BUFFER, g_uniformBlockBindingIndex, m_uniformBuffer->buffer() );
 
 				// Get the name of the primitive variable to visualise
 				const std::string &name = m_tool->dataNamePlug()->getValue();
@@ -404,36 +401,32 @@ class VisualiserGadget : public Gadget
 						continue;
 					}
 
-					// Find "P" vertex attribute
+					// Find opengl "P" buffer data
 
-					const auto pIt = meshGL->m_vertexAttributes.find( g_pName );
-					if( pIt == meshGL->m_vertexAttributes.end() )
+					IECoreGL::ConstBufferPtr pBuffer = meshGL->getVertexBuffer( g_pName );
+					if( !pBuffer )
 					{
 						continue;
 					}
 
-					auto pData = runTimeCast<const V3fVectorData>( pIt->second );
-					if( !pData )
-					{
-						continue;
-					}
-
-					// Find named vertex attribute (FloatVectorData, V2fVectorData or V3fVectorData)
+					// Find opengl named buffer data
 					//
 					// NOTE : conversion to IECoreGL mesh may generate vertex attributes (eg. "N")
 					//        so check named primitive variable exists on IECore mesh primitive.
 
-					const auto vIt = meshGL->m_vertexAttributes.find( name );
-					if(
-						vIt == meshGL->m_vertexAttributes.end() ||
-						!vIt->second ||
-						mesh->variables.find( name ) == mesh->variables.end()
-					)
+					const auto vIt = mesh->variables.find( name );
+					if( vIt == mesh->variables.end() )
 					{
 						continue;
 					}
 
-					ConstDataPtr vData = vIt->second;
+					IECoreGL::ConstBufferPtr vBuffer = meshGL->getVertexBuffer( name );
+					if( !vBuffer )
+					{
+						continue;
+					}
+
+					ConstDataPtr vData = vIt->second.data;
 					GLsizei stride = 0;
 					GLenum type = GL_FLOAT;
 					bool offset = false;
@@ -466,11 +459,6 @@ class VisualiserGadget : public Gadget
 							continue;
 					}
 
-					// Retrieve cached opengl buffer data
-
-					auto pBuffer = runTimeCast< const IECoreGL::Buffer >( converter->convert( pData.get() ) );
-					auto vBuffer = runTimeCast< const IECoreGL::Buffer >( converter->convert( vData.get() ) );
-
 					// Get the object to world transform
 
 					M44f o2w;
@@ -490,9 +478,9 @@ class VisualiserGadget : public Gadget
 					glBufferData( GL_UNIFORM_BUFFER, sizeof( UniformBlock ), &uniforms, GL_DYNAMIC_DRAW );
 
 					// Draw primitive
-					glBindBuffer( GL_ARRAY_BUFFER, pBuffer->m_buffer );
+					glBindBuffer( GL_ARRAY_BUFFER, pBuffer->buffer() );
 					glVertexAttribPointer( ATTRIB_GLSL_LOCATION_PS, 3, GL_FLOAT, GL_FALSE, 0, nullptr );
-					glBindBuffer( GL_ARRAY_BUFFER, vBuffer->m_buffer );
+					glBindBuffer( GL_ARRAY_BUFFER, vBuffer->buffer() );
 					glVertexAttribPointer( ATTRIB_GLSL_LOCATION_VSX, 1, type, GL_FALSE, stride * sizeof( GLfloat ), nullptr );
 					glVertexAttribPointer(
 						ATTRIB_GLSL_LOCATION_VSY,
