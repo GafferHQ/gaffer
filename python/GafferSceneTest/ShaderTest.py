@@ -407,6 +407,118 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		network = shader.attributes()["test:surface"]
 		self.assertEqual( network.outputShader().parameters["i"], IECore.IntData( 0 ) )
 
+	def testContextProcessors( self ) :
+
+		contextQuery = Gaffer.ContextQuery()
+		contextQuery.addQuery( Gaffer.Color3fPlug(), "c" )
+
+		texture = GafferSceneTest.TestShader( "texture" )
+		texture["parameters"]["c"].setInput( contextQuery["out"][0]["value"] )
+
+		redContext = Gaffer.ContextVariables()
+		redContext.setup( texture["out"] )
+		redContext["variables"].addChild( Gaffer.NameValuePlug( "c", imath.Color3f( 1, 0, 0 ) ) )
+		redContext["in"].setInput( texture["out"] )
+
+		greenContext = Gaffer.ContextVariables()
+		greenContext.setup( texture["out"] )
+		greenContext["variables"].addChild( Gaffer.NameValuePlug( "c", imath.Color3f( 0, 1, 0 ) ) )
+		greenContext["in"].setInput( texture["out"] )
+
+		mix = GafferSceneTest.TestShader( "mix" )
+		mix.loadShader( "mix" )
+		mix["type"].setValue( "test:surface" )
+		mix["parameters"]["a"].setInput( redContext["out"] )
+		mix["parameters"]["b"].setInput( greenContext["out"] )
+
+		shaderPlug = GafferScene.ShaderPlug()
+		shaderPlug.setInput( mix["out"] )
+
+		network = shaderPlug.attributes()["test:surface"]
+		self.assertEqual( len( network.shaders() ), 3 )
+		self.assertEqual( network.getOutput(), ( "mix", "out" ) )
+
+		aInput = network.input( ( "mix", "a" ) )
+		bInput = network.input( ( "mix", "b" ) )
+
+		self.assertEqual( network.getShader( aInput.shader ).parameters["c"], IECore.Color3fData( imath.Color3f( 1, 0, 0 ) ) )
+		self.assertEqual( network.getShader( bInput.shader ).parameters["c"], IECore.Color3fData( imath.Color3f( 0, 1, 0 ) ) )
+
+		self.assertEqual( shaderPlug.parameterSource( ( "texture", "c" ) ), texture["parameters"]["c"] )
+		self.assertEqual( shaderPlug.parameterSource( ( "texture1", "c" ) ), texture["parameters"]["c"] )
+
+	def testContextProcessorsWithSpreadsheets( self ) :
+
+		spreadsheet = Gaffer.Spreadsheet()
+		spreadsheet["selector"].setValue( "${color}" )
+		spreadsheet["rows"].addColumn( Gaffer.Color3fPlug( "c" ) )
+		spreadsheet["rows"].addRows( 2 )
+		spreadsheet["rows"][1]["name"].setValue( "red" )
+		spreadsheet["rows"][1]["cells"]["c"]["value"].setValue( imath.Color3f( 1, 0, 0 ) )
+		spreadsheet["rows"][2]["name"].setValue( "green" )
+		spreadsheet["rows"][2]["cells"]["c"]["value"].setValue( imath.Color3f( 0, 1, 0 ) )
+
+		texture = GafferSceneTest.TestShader( "texture" )
+		texture["parameters"]["c"].setInput( spreadsheet["out"]["c"] )
+
+		redContext = Gaffer.ContextVariables()
+		redContext.setup( texture["out"] )
+		redContext["variables"].addChild( Gaffer.NameValuePlug( "color", "red" ) )
+		redContext["in"].setInput( texture["out"] )
+
+		greenContext = Gaffer.ContextVariables()
+		greenContext.setup( texture["out"] )
+		greenContext["variables"].addChild( Gaffer.NameValuePlug( "color", "green" ) )
+		greenContext["in"].setInput( texture["out"] )
+
+		mix = GafferSceneTest.TestShader( "mix" )
+		mix.loadShader( "mix" )
+		mix["type"].setValue( "test:surface" )
+		mix["parameters"]["a"].setInput( redContext["out"] )
+		mix["parameters"]["b"].setInput( greenContext["out"] )
+
+		shaderPlug = GafferScene.ShaderPlug()
+		shaderPlug.setInput( mix["out"] )
+
+		network = shaderPlug.attributes()["test:surface"]
+		self.assertEqual( len( network.shaders() ), 3 )
+		self.assertEqual( network.getOutput(), ( "mix", "out" ) )
+
+		aInput = network.input( ( "mix", "a" ) )
+		bInput = network.input( ( "mix", "b" ) )
+
+		self.assertEqual( network.getShader( aInput.shader ).parameters["c"], IECore.Color3fData( imath.Color3f( 1, 0, 0 ) ) )
+		self.assertEqual( network.getShader( bInput.shader ).parameters["c"], IECore.Color3fData( imath.Color3f( 0, 1, 0 ) ) )
+
+	@unittest.expectedFailure
+	def testContextProcessorsWithoutContextSensitiveShaders( self ) :
+
+		texture = GafferSceneTest.TestShader( "texture" )
+
+		contextA = Gaffer.ContextVariables()
+		contextA.setup( texture["out"] )
+		contextA["variables"].addChild( Gaffer.NameValuePlug( "c", "A" ) )
+		contextA["in"].setInput( texture["out"] )
+
+		contextB = Gaffer.ContextVariables()
+		contextB.setup( texture["out"] )
+		contextB["variables"].addChild( Gaffer.NameValuePlug( "c", "B" ) )
+		contextB["in"].setInput( texture["out"] )
+
+		mix = GafferSceneTest.TestShader( "mix" )
+		mix.loadShader( "mix" )
+		mix["type"].setValue( "test:surface" )
+		mix["parameters"]["a"].setInput( contextA["out"] )
+		mix["parameters"]["b"].setInput( contextB["out"] )
+
+		# The `texture` shader is the same in both contexts, so there should only
+		# be a single instance of it in the result.
+
+		network = mix.attributes()["test:surface"]
+		self.assertEqual( len( network.shaders() ), 2 )
+		self.assertEqual( network.getOutput(), ( "mix", "out" ) )
+		self.assertEqual( network.input( ( "mix", "a" ) ), network.input( ( "mix", "a" ) ) )
+
 	def testSpline( self ) :
 
 		n1 = GafferSceneTest.TestShader( "n1" )
