@@ -1123,9 +1123,9 @@ void VisualiserTool::updateSelection() const
 		return;
 	}
 
-	for( auto p : selectedPaths )
+	for( PathMatcher::Iterator it = selectedPaths.begin(), eIt = selectedPaths.end(); it != eIt; ++it )
 	{
-		m_selection.emplace_back( *scene, p, *view()->context() );
+		m_selection.emplace_back( *scene, *it, *view()->context() );
 	}
 }
 
