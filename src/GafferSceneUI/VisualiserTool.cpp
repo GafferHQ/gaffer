@@ -225,10 +225,6 @@ class VisualiserGadget : public Gadget
 
 			// Get parent viewport gadget
 			const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
-			if( viewportGadget == nullptr )
-			{
-				return;
-			}
 
 			if( layer == Gadget::Layer::MidFront )
 			{
