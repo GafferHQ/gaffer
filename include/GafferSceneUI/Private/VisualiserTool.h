@@ -128,7 +128,6 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 		bool dragEnd( const GafferUI::DragDropEvent &event );
 		void plugDirtied( const Gaffer::Plug *plug );
 		void plugSet( const Gaffer::Plug *plug );
-		void metadataChanged( const IECore::InternedString &key );
 		void updateSelection() const;
 		void preRender();
 		void updateCursorPos( const GafferUI::ButtonEvent &event );

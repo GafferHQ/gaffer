@@ -44,9 +44,6 @@
 #include "GafferUI/Style.h"
 #include "GafferUI/ViewportGadget.h"
 
-#include "Gaffer/Metadata.h"
-#include "Gaffer/MetadataAlgo.h"
-
 #include "IECoreScene/MeshAlgo.h"
 #include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/MeshPrimitiveEvaluator.h"
@@ -764,13 +761,6 @@ VisualiserTool::VisualiserTool( SceneView *view, const std::string &name ) : Sel
 		boost::bind( &VisualiserTool::selectedPathsChanged, this )
 	);
 
-
-	Metadata::plugValueChangedSignal().connect(
-		boost::bind( &VisualiserTool::metadataChanged, this, boost::placeholders::_3 )
-	);
-	Metadata::nodeValueChangedSignal().connect(
-		boost::bind( &VisualiserTool::metadataChanged, this, boost::placeholders::_2 )
-	);
 }
 
 VisualiserTool::~VisualiserTool()
@@ -1096,25 +1086,6 @@ void VisualiserTool::plugSet( const Plug *plug )
 		}
 
 		valueMinPlug()->setValue( valueMin );
-	}
-}
-
-void VisualiserTool::metadataChanged( const InternedString &key )
-{
-	if( !MetadataAlgo::readOnlyAffectedByChange( key ) )
-	{
-		return;
-	}
-
-	if( !m_selectionDirty )
-	{
-		m_selectionDirty = true;
-	}
-
-	if( !m_gadgetDirty )
-	{
-		m_gadgetDirty = true;
-		view()->viewportGadget()->renderRequestSignal()( view()->viewportGadget() );
 	}
 }
 
