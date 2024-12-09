@@ -47,7 +47,7 @@ Gaffer.Metadata.registerNode(
 	Tool for displaying named primitive variables of type float, V2f or V3f as a colored overlay.
 	""",
 
-	"viewer:shortCut", "S",
+	"viewer:shortCut", "O",
 	"viewer:shouldAutoActivate", False,
 	"order", 8,
 	"tool:exclusive", False,
