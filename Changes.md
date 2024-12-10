@@ -11,6 +11,7 @@ Features
   - Inference : Loads ONNX models and performance inference using an array of input tensors.
   - ImageToTensor : Converts images to tensors for use with the Inference node.
   - TensorToImage : Converts tensors back to images following inference.
+- VisualiserTool : Added tool to 3D viewer for visualising primitive variables on meshes.
 
 Improvements
 ------------

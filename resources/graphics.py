@@ -204,6 +204,7 @@
 				'gafferSceneUITranslateTool',
 				'gafferSceneUILightTool',
 				'gafferSceneUILightPositionTool',
+				'gafferSceneUIVisualiserTool',
 			]
 
 		},
