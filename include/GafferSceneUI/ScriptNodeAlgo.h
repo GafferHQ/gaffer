@@ -40,6 +40,7 @@
 
 #include "GafferScene/VisibleSet.h"
 
+#include "Gaffer/NameValuePlug.h"
 #include "Gaffer/Signals.h"
 
 #include "IECore/PathMatcher.h"
@@ -111,6 +112,16 @@ GAFFERSCENEUI_API std::vector<IECore::InternedString> getLastSelectedPath( const
 
 /// Returns a signal emitted when either the selected paths or last selected path change for `script`.
 GAFFERSCENEUI_API ChangedSignal &selectedPathsChangedSignal( Gaffer::ScriptNode *script );
+
+/// Render Passes
+/// =============
+
+/// Acquires a plug used to specify the current render pass for the script.
+GAFFERSCENEUI_API Gaffer::NameValuePlug *acquireRenderPassPlug( Gaffer::ScriptNode *script, bool createIfMissing = true );
+/// Sets the current render pass for the script.
+GAFFERSCENEUI_API void setCurrentRenderPass( Gaffer::ScriptNode *script, std::string renderPass );
+/// Returns the current render pass for the script.
+GAFFERSCENEUI_API std::string getCurrentRenderPass( const Gaffer::ScriptNode *script );
 
 } // namespace ScriptNodeAlgo
 
