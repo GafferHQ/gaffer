@@ -139,12 +139,8 @@ def __compoundEditorCreated( editor ) :
 	settingsNode.addChild( GafferScene.ScenePlug( "__renderPassMenuInputScene" ) )
 	settingsNode.addChild( GafferScene.ScenePlug( "__renderPassMenuAdaptedScene" ) )
 
-	settingsNode["__renderPassMenuAdaptors"] = GafferScene.SceneAlgo.createRenderAdaptors()
+	settingsNode["__renderPassMenuAdaptors"] = GafferSceneUI.RenderPassEditor._createRenderAdaptors()
 	settingsNode["__renderPassMenuAdaptors"]["in"].setInput( settingsNode["__renderPassMenuInputScene"] )
-	## \todo We currently masquerade as the RenderPassWedge in order to include
-	# adaptors that disable render passes. We may want to find a more general
-	# client name for this usage...
-	settingsNode["__renderPassMenuAdaptors"]["client"].setValue( "RenderPassWedge" )
 	settingsNode["__renderPassMenuAdaptedScene"].setInput( settingsNode["__renderPassMenuAdaptors"]["out"] )
 
 GafferUI.CompoundEditor.instanceCreatedSignal().connect( __compoundEditorCreated )
