@@ -965,7 +965,7 @@ class RenderPassChooserWidget( GafferUI.Widget ) :
 		if focusNode is not None :
 			outputScene = next(
 				( p for p in GafferScene.ScenePlug.RecursiveOutputRange( focusNode ) if not p.getName().startswith( "__" ) ),
-	 			None
+				None
 			)
 			if outputScene is not None :
 				return outputScene
