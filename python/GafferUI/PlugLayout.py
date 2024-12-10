@@ -426,9 +426,14 @@ class PlugLayout( GafferUI.Widget ) :
 	def __createCustomWidget( self, name ) :
 
 		widgetType = self.__itemMetadataValue( name, "widgetType" )
-		widgetClass = self.__import( widgetType )
+		try :
+			widgetClass = self.__import( widgetType )
+			result = widgetClass( self.__parent )
+		except Exception as e :
+			message = "Could not create custom widget \"{}\" : {}".format( name, str( e ) )
+			IECore.msg( IECore.Msg.Level.Error, "GafferUI.PlugLayout", message )
 
-		result = widgetClass( self.__parent )
+			result = _MissingCustomWidget( self.__parent, message )
 
 		return result
 
@@ -753,3 +758,16 @@ class _CollapsibleLayout( _Layout ) :
 	def __collapsibleStateChanged( self, collapsible, subsection ) :
 
 		subsection.saveState( "collapsed", collapsible.getCollapsed() )
+
+class _MissingCustomWidget( GafferUI.Widget ) :
+
+	def __init__( self, parent, warning, **kw ) :
+
+		self.__image = GafferUI.Image( "warningSmall.png" )
+		self.__warning = warning
+
+		GafferUI.Widget.__init__( self, self.__image, **kw )
+
+	def getToolTip( self ) :
+
+		return self.__warning

@@ -17,6 +17,7 @@ Improvements
   - The shading mode menu icon now updates to indicate when a non-default shading mode is in use.
   - Added the ability to toggle between default shading and the last selected shading mode by <kbd>Ctrl</kbd> + clicking the shading mode menu button.
 - PythonEditor : Added workaround for slow code completion caused by poorly performing Python property getters.
+- PlugLayout : A warning widget is now displayed when an invalid custom widget is registered.
 
 Fixes
 -----
