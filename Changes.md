@@ -45,6 +45,7 @@ API
   - Backward compatibility is not trivial to maintain in this case.
 - PlugAlgo : Added `contextSensitiveSource()` method.
 - ShaderPlug : Added Python binding for `parameterSource()` method.
+- ScriptNodeAlgo : Added `setCurrentRenderPass()`, `getCurrentRenderPass()`, and `acquireRenderPassPlug()` methods.
 
 1.5.2.0 (relative to 1.5.1.0)
 =======
