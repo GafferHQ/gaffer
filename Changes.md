@@ -21,7 +21,7 @@ Improvements
 - PlugLayout :
   - A warning widget is now displayed when an invalid custom widget is registered.
   - `layout:customWidget:<name>:width` and `layout:customWidget:<name>:minimumWidth` metadata registrations are now supported for custom widgets.
-- RenderPassEditor : Render passes disabled by render adaptors registered to `client = "RenderPassWedge"` are now shown as disabled. To differentiate these from user disabled render passes, an orange dot is shown in the corner of the disabled icon and the tooltip describes them as automatically disabled.
+- RenderPassEditor : Render passes deleted or disabled by render adaptors registered to `client = "RenderPassWedge"` are now shown as disabled. To differentiate these from user disabled render passes, an orange dot is shown in the corner of the disabled icon and the tooltip describes them as automatically disabled.
 
 Fixes
 -----

@@ -192,7 +192,7 @@ PathMatcher pathMatcherCacheGetter( const PathMatcherCacheGetterKey &key, size_t
 }
 
 using PathMatcherCache = IECorePreview::LRUCache<IECore::MurmurHash, IECore::PathMatcher, IECorePreview::LRUCachePolicy::Parallel, PathMatcherCacheGetterKey>;
-PathMatcherCache g_pathMatcherCache( pathMatcherCacheGetter, 25 );
+PathMatcherCache g_pathMatcherCache( pathMatcherCacheGetter, 50 );
 
 const InternedString g_renderPassContextName( "renderPass" );
 const InternedString g_disableAdaptorsContextName( "renderPassEditor:disableAdaptors" );
@@ -320,6 +320,15 @@ class RenderPassPath : public Gaffer::Path
 			}
 			else if( name == g_renderPassEnabledPropertyName || name == g_renderPassEnabledWithoutAdaptorsPropertyName )
 			{
+				if(
+					name == g_renderPassEnabledPropertyName &&
+					!( pathMatcher( canceller, /* disableAdaptors = */ false ).match( names() ) & PathMatcher::ExactMatch )
+				)
+				{
+					// The render pass has been deleted by a render adaptor, so present it to the user as disabled.
+					return new BoolData( false );
+				}
+
 				const PathMatcher p = pathMatcher( canceller );
 				if( p.match( names() ) & PathMatcher::ExactMatch )
 				{
@@ -402,7 +411,7 @@ class RenderPassPath : public Gaffer::Path
 		// practical as render pass names are used in output file paths where the included '/' characters would be
 		// interpreted as subdirectories. Validation in the UI will prevent users from inserting invalid characters
 		// such as '/' into render pass names.
-		const IECore::PathMatcher pathMatcher( const IECore::Canceller *canceller ) const
+		const IECore::PathMatcher pathMatcher( const IECore::Canceller *canceller, bool disableAdaptors = true ) const
 		{
 			Context::EditableScope scopedContext( m_context.get() );
 			if( canceller )
@@ -410,6 +419,10 @@ class RenderPassPath : public Gaffer::Path
 				scopedContext.setCanceller( canceller );
 			}
 
+			if( disableAdaptors )
+			{
+				scopedContext.set<bool>( g_disableAdaptorsContextName, &disableAdaptors );
+			}
 			if( ConstStringVectorDataPtr renderPassData = m_scene.get()->globals()->member<StringVectorData>( g_renderPassNamesOption ) )
 			{
 				const PathMatcherCacheGetterKey key( renderPassData, m_grouped );

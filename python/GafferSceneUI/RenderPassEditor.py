@@ -1030,11 +1030,16 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 			renderPasses = {}
 
 			with Gaffer.Context( Gaffer.Context.current() ) as context :
+				adaptedRenderPassNames = globalsPlug.getValue().get( "option:renderPass:names", IECore.StringVectorData() )
+				context["renderPassEditor:disableAdaptors"] = True
 				for renderPass in globalsPlug.getValue().get( "option:renderPass:names", IECore.StringVectorData() ) :
 					renderPasses.setdefault( "all", [] ).append( renderPass )
 					context["renderPass"] = renderPass
 					context["renderPassEditor:disableAdaptors"] = False
-					if globalsPlug.getValue().get( "option:renderPass:enabled", IECore.BoolData( True ) ).value :
+					if renderPass not in adaptedRenderPassNames :
+						# The render pass has been deleted by a render adaptor so present it as disabled
+						renderPasses.setdefault( "adaptorDisabled", [] ).append( renderPass )
+					elif globalsPlug.getValue().get( "option:renderPass:enabled", IECore.BoolData( True ) ).value :
 						renderPasses.setdefault( "enabled", [] ).append( renderPass )
 					else :
 						context["renderPassEditor:disableAdaptors"] = True

@@ -208,6 +208,35 @@ class RenderPassEditorTest( GafferUITest.TestCase ) :
 			self.assertEqual( pathCopy.property( "renderPassPath:enabled" ), p in ( "/A", "/D" ) )
 			self.assertTrue( pathCopy.property( "renderPassPath:enabledWithoutAdaptors" ) )
 
+	def testRenderPassPathAdaptorDeletingPasses( self ) :
+
+		def createAdaptor() :
+
+			node = GafferScene.DeleteRenderPasses()
+			node["names"].setValue( "B C" )
+			return node
+
+		GafferScene.SceneAlgo.registerRenderAdaptor( "RenderPassEditorTest", createAdaptor, client = "RenderPassWedge" )
+		self.addCleanup( GafferScene.SceneAlgo.deregisterRenderAdaptor, "RenderPassEditorTest" )
+
+		renderPasses = GafferScene.RenderPasses()
+		renderPasses["names"].setValue( IECore.StringVectorData( [ "A", "B", "C", "D" ] ) )
+
+		adaptors = GafferSceneUI.RenderPassEditor._createRenderAdaptors()
+		adaptors["in"].setInput( renderPasses["out"] )
+
+		context = Gaffer.Context()
+		path = _GafferSceneUI._RenderPassEditor.RenderPassPath( adaptors["out"], context, "/" )
+
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B", "/C", "/D" ] )
+
+		pathCopy = path.copy()
+
+		for p in [ "/A", "/B", "/C", "/D" ] :
+			pathCopy.setFromString( p )
+			self.assertEqual( pathCopy.property( "renderPassPath:enabled" ), p in ( "/A", "/D" ) )
+			self.assertTrue( pathCopy.property( "renderPassPath:enabledWithoutAdaptors" ) )
+
 	def testSearchFilter( self ) :
 
 		renderPasses = GafferScene.RenderPasses()
