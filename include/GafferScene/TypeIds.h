@@ -90,7 +90,7 @@ enum TypeId
 	PruneTypeId = 110546,
 	FreezeTransformTypeId = 110547,
 	MeshDistortionTypeId = 110548,
-	OpenGLRenderTypeId = 110549, // Available for reuse
+	PrimitiveVariableTweaksTypeId = 110549,
 	InteractiveRenderTypeId = 110550,
 	CubeTypeId = 110551,
 	SphereTypeId = 110552,
