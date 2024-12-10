@@ -483,6 +483,7 @@ class PlugLayout( GafferUI.Widget ) :
 		# we do a lazy update so we can batch up several changes into one.
 		# upheaval is over.
 		self.__layoutDirty = True
+		self.__activationsDirty = True
 		self.__updateLazily()
 
 	def __plugMetadataChanged( self, plug, key, reason ) :

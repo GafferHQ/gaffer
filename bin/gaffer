@@ -305,6 +305,19 @@ if [[ -n $DELIGHT ]] ; then
 
 fi
 
+# Set up ONNX
+##########################################################################
+
+if [[ -n $ONNX_ROOT ]] ; then
+
+	if [[ `uname` = "Linux" ]] ; then
+		appendToPath "$ONNX_ROOT/lib" LD_LIBRARY_PATH
+	else
+		appendToPath "$ONNX_ROOT/lib" DYLD_LIBRARY_PATH
+	fi
+
+fi
+
 # Set up 3rd Party extensions
 ##########################################################################
 

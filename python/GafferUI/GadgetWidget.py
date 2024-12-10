@@ -106,7 +106,7 @@ class GadgetWidget( GafferUI.GLWidget ) :
 			self.__viewportGadget.setVisible( False )
 
 		self.__viewportGadget = viewportGadget
-		self.__viewportGadget.renderRequestSignal().connect( Gaffer.WeakMethod( self.__renderRequest ) )
+		self.__renderRequestConnection = self.__viewportGadget.renderRequestSignal().connect( Gaffer.WeakMethod( self.__renderRequest ), scoped = True )
 		size = self.size()
 		if size.x and size.y :
 			self.__viewportGadget.setViewport( size )

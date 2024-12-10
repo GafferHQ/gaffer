@@ -236,7 +236,7 @@ GafferUI.Pointer.registerPointer( "addObjects", GafferUI.Pointer( "addObjects.pn
 GafferUI.Pointer.registerPointer( "removeObjects", GafferUI.Pointer( "removeObjects.png", imath.V2i( 53, 14 ) ) )
 GafferUI.Pointer.registerPointer( "replaceObjects", GafferUI.Pointer( "replaceObjects.png", imath.V2i( 53, 14 ) ) )
 
-__DropMode = enum.Enum( "__DropMode", [ "None_", "Add", "Remove", "Replace" ] )
+__DropMode = enum.Enum( "__DropMode", [ "None_", "Add", "Remove", "Replace", "NotEditable" ] )
 
 __originalDragPointer = None
 
@@ -255,9 +255,14 @@ def __filterPlug( node ) :
 		return filterPlugs[0]
 	return None
 
+def __editable( plug ) :
+
+	return not Gaffer.MetadataAlgo.readOnly( plug ) and plug.settable()
+
 def __dropMode( nodeGadget, event ) :
 
-	if __pathsPlug( nodeGadget.node() ) is None :
+	pathsPlug = __pathsPlug( nodeGadget.node() )
+	if pathsPlug is None :
 		filter = None
 
 		filterPlug = __filterPlug( nodeGadget.node() )
@@ -267,9 +272,13 @@ def __dropMode( nodeGadget, event ) :
 		if filterPlug.getInput() is not None :
 			filter = filterPlug.source().node()
 		if filter is None :
-			return __DropMode.Replace
+			return __DropMode.Replace if __editable( filterPlug ) else __DropMode.NotEditable
 		elif not isinstance( filter, GafferScene.PathFilter ) :
 			return __DropMode.None_
+		pathsPlug = __pathsPlug( filter )
+
+	if not __editable( pathsPlug ) :
+		return __DropMode.NotEditable
 
 	if event.modifiers & event.Modifiers.Shift :
 		return __DropMode.Add
@@ -342,7 +351,10 @@ def __dragMove( nodeGadget, event ) :
 	if __originalDragPointer is None :
 		return False
 
-	GafferUI.Pointer.setCurrent( __dropMode( nodeGadget, event ).name.lower() + "Objects" )
+	dropMode = __dropMode( nodeGadget, event )
+	GafferUI.Pointer.setCurrent(
+		dropMode.name.lower() + "Objects" if dropMode != __DropMode.NotEditable else "notEditable"
+	)
 
 	return True
 
@@ -351,6 +363,9 @@ def __drop( nodeGadget, event ) :
 	global __originalDragPointer
 	if __originalDragPointer is None :
 		return False
+
+	if __dropMode( nodeGadget, event ) == __DropMode.NotEditable :
+		return True
 
 	pathsPlug = __pathsPlug( nodeGadget.node() )
 	if pathsPlug is None :

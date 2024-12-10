@@ -307,6 +307,12 @@ options.Add(
 	)
 )
 
+options.Add(
+	"ONNX_ROOT",
+	"The directory in which the ONNX runtime is installed. Used to build GafferML",
+	"",
+)
+
 # general variables
 
 options.Add(
@@ -771,7 +777,7 @@ commandEnv["ENV"]["PYTHONPATH"] = commandEnv.subst( os.path.pathsep.join( [ "$BU
 # SIP on MacOS prevents DYLD_LIBRARY_PATH being passed down so we make sure
 # we also pass through to gaffer the other base vars it uses to populate paths
 # for third-party support.
-for v in ( 'ARNOLD_ROOT', 'DELIGHT_ROOT' ) :
+for v in ( 'ARNOLD_ROOT', 'DELIGHT_ROOT', 'ONNX_ROOT' ) :
 	commandEnv["ENV"][ v ] = commandEnv[ v ]
 
 def runCommand( command ) :
@@ -1107,6 +1113,33 @@ libraries = {
 			"CPPPATH" : [ "$PYBIND11/include" ],
 			"LIBS" : [ "GafferBindings", "GafferUI", "GafferImage", "GafferImageUI" ],
 		},
+	},
+
+	"GafferML" : {
+		"envAppends" : {
+			"CPPPATH" : [ "$ONNX_ROOT/include" ],
+			"LIBPATH" : [ "$ONNX_ROOT/lib" ],
+			"LIBS" : [ "Gaffer", "GafferImage", "onnxruntime" ],
+		},
+		"pythonEnvAppends" : {
+			"CPPPATH" : [ "$ONNX_ROOT/include" ],
+			"LIBPATH" : [ "$ONNX_ROOT/lib" ],
+			"LIBS" : [ "GafferBindings", "GafferImage", "GafferML", "onnxruntime" ],
+		},
+		"requiredOptions" : [ "ONNX_ROOT" ],
+	},
+
+	"GafferMLTest" : {
+		"requiredOptions" : [ "ONNX_ROOT" ],
+		"additionalFiles" : glob.glob( "python/GafferMLTest/models/*" )
+	},
+
+	"GafferMLUI" : {
+		"requiredOptions" : [ "ONNX_ROOT" ],
+	},
+
+	"GafferMLUITest" : {
+		"requiredOptions" : [ "ONNX_ROOT" ],
 	},
 
 	"IECoreArnold" : {

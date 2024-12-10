@@ -11,7 +11,37 @@ Breaking Changes
 1.5.x.x (relative to 1.5.1.0)
 =======
 
+> Caution : The GafferML features introduced in this release are considered experimental, and are not subject to the usual backwards compatibility guarantees that apply to the rest of Gaffer.
 
+Features
+--------
+
+- GafferML : Added a new module with the following nodes for running maching learning models via ONNX Runtime :
+  - DataToTensor : Converts Gaffer data to tensors.
+  - Inference : Loads ONNX models and performance inference using an array of input tensors.
+  - ImageToTensor : Converts images to tensors for use with the Inference node.
+  - TensorToImage : Converts tensors back to images following inference.
+
+Improvements
+------------
+
+- MergeScenes : Removed unnecessary temporary contexts.
+
+Fixes
+-----
+
+- MergeScenes : Fixed bug handling input connections not originating from the output of another node. These could cause locations provided by other inputs to lose all their properties.
+- PathFilter : Fixed bug allowing dropping paths onto read-only `PathFilter` nodes in the graph.
+- VectorDataWidget : Fixed bug allowing dropping paths onto read-only widgets.
+- GraphEditor : Fixed errors when dragging an unknown file type into the GraphEditor.
+- Widget : Fixed `event.sourceWidget` for DragDropEvents generated from a Qt native drag within the same Gaffer process. This will now reference the `GafferUI.Widget` that the Qt source widget belongs to, if any.
+- Catalogue : Fixed bug which "stole" drags that crossed the image listing but which were destined elsewhere, for instance a drag from the HierarchyView to a PathFilter in the GraphEditor.
+- GadgetWidget : Fixed signal handling bug in `setViewportGadget()`. This could cause the widget to attempt to redraw unnecessarily when the _old_ viewport requested a redraw.
+
+API
+---
+
+- PlugLayout : Activations may now depend on the presence of certain plugs, as they are now reevaluated when child plugs are added and removed.
 
 1.5.1.0 (relative to 1.5.0.1)
 =======
@@ -322,10 +352,25 @@ Build
 - Zstandard : Added version 1.5.0.
 - Windows : Updated compiler to Visual Studio 2022 / MSVC 17.8 / Runtime library 14.3.
 
-1.4.15.x (relative to 1.4.15.1)
+1.4.15.x (relative to 1.4.15.2)
 ========
 
+Fixes
+-----
 
+- GraphEditor : Fixed errors when dragging an unknown file type into the GraphEditor.
+- Widget : Fixed `event.sourceWidget` for DragDropEvents generated from a Qt native drag within the same Gaffer process. This will now reference the `GafferUI.Widget` that the Qt source widget belongs to, if any.
+- Catalogue : Fixed bug which "stole" drags that crossed the image listing but which were destined elsewhere, for instance a drag from the HierarchyView to a PathFilter in the GraphEditor.
+- GadgetWidget : Fixed signal handling bug in `setViewportGadget()`. This could cause the widget to attempt to redraw unnecessarily when the _old_ viewport requested a redraw.
+
+1.4.15.2 (relative to 1.4.15.1)
+========
+
+Fixes
+-----
+
+- PathFilter : Fixed bug allowing dropping paths onto read-only `PathFilter` nodes in the graph.
+- VectorDataWidget : Fixed bug allowing dropping paths onto read-only widgets.
 
 1.4.15.1 (relative to 1.4.15.0)
 ========

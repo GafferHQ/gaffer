@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Cinesite VFX Ltd. nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,33 +34,35 @@
 #
 ##########################################################################
 
-import os
-import sys
-import glob
-import subprocess
+import unittest
 
-ENV_VARS_TO_IMPORT = "PATH"
+import IECore
 
-BUILD_CACHEDIR = os.environ["GAFFER_CACHE_DIR"]
+import Gaffer
+import GafferTest
+import GafferML
 
-ARNOLD_ROOT = os.environ.get( "ARNOLD_ROOT", "" )
-DELIGHT_ROOT = os.environ["DELIGHT"]
-ONNX_ROOT = os.environ["ONNX_ROOT"]
+class TensorPlugTest( GafferTest.TestCase ) :
 
-BUILD_DIR = os.environ["GAFFER_BUILD_DIR"]
-INSTALL_DIR = os.path.join( "install", os.environ["GAFFER_BUILD_NAME"] )
+	def testDefaultValue( self ) :
 
-PACKAGE_FILE = "{}.{}".format(
-	os.environ["GAFFER_BUILD_NAME"],
-	os.environ["PACKAGE_EXTENSION"]
-)
+		plug = GafferML.TensorPlug()
+		self.assertEqual( plug.defaultValue(), GafferML.Tensor() )
+		self.assertEqual( plug.getValue(), GafferML.Tensor() )
 
-SPHINX = os.environ["GAFFER_SPHINX"]
+		plug = GafferML.TensorPlug( defaultValue = GafferML.Tensor( IECore.IntVectorData( [ 1, 2, ] ), [ 2 ] ) )
+		self.assertEqual( plug.defaultValue(), GafferML.Tensor( IECore.IntVectorData( [ 1, 2, ] ), [ 2 ] ) )
 
-if sys.platform == "win32" :
-	LOCATE_DEPENDENCY_LIBPATH=os.path.join(os.environ["GAFFER_BUILD_DIR"], "lib")
-	LOCATE_DEPENDENCY_PYTHONPATH=os.path.join(os.environ["GAFFER_BUILD_DIR"], "python")
-	GLEW_LIB_SUFFIX = "32"
-	INKSCAPE = "C:\\Program Files\\Inkscape\\bin\\inkscape.exe"
-	SPHINX = "sphinx-build.exe"
-	ENV_VARS_TO_IMPORT += " GALLIUM_DRIVER"
+	def testSerialisationOfDynamicPlugs( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["node"] = Gaffer.Node()
+		script["node"]["user"]["p"] = GafferML.TensorPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+		self.assertIsInstance( script2["node"]["user"]["p"], GafferML.TensorPlug )
+		self.assertEqual( script2["node"]["user"]["p"].getValue(), GafferML.Tensor() )
+
+if __name__ == "__main__" :
+	unittest.main()

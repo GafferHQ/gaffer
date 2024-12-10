@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Cinesite VFX Ltd. nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,33 +34,62 @@
 #
 ##########################################################################
 
-import os
-import sys
-import glob
-import subprocess
+import Gaffer
+import GafferML
 
-ENV_VARS_TO_IMPORT = "PATH"
+Gaffer.Metadata.registerNode(
 
-BUILD_CACHEDIR = os.environ["GAFFER_CACHE_DIR"]
+	GafferML.TensorToImage,
 
-ARNOLD_ROOT = os.environ.get( "ARNOLD_ROOT", "" )
-DELIGHT_ROOT = os.environ["DELIGHT"]
-ONNX_ROOT = os.environ["ONNX_ROOT"]
+	plugs = {
 
-BUILD_DIR = os.environ["GAFFER_BUILD_DIR"]
-INSTALL_DIR = os.path.join( "install", os.environ["GAFFER_BUILD_NAME"] )
+		"tensor" : [
 
-PACKAGE_FILE = "{}.{}".format(
-	os.environ["GAFFER_BUILD_NAME"],
-	os.environ["PACKAGE_EXTENSION"]
+			"description",
+			"""
+			The input tensor to be turned into an image. Typically this would be connected
+			to the output of an Inference node that is doing image processing.
+			""",
+
+			"plugValueWidget:type", "",
+			"nodule:type", "GafferUI::StandardNodule",
+
+		],
+
+		"channels" : [
+
+			"description",
+			"""
+			The names to give to the channels in the output image. These
+			channels are unpacked from the tensor in the order in which they are
+			specified. For example, an order of `[ "B", "G", "R" ]` might be
+			needed for use with models trained on images using OpenCV
+			conventions. An empty channel name may be used to skip a channel
+			when unpacking.
+			""",
+
+		],
+
+		"interleavedChannels" : [
+
+			"description",
+			"""
+			Indicates that the channels are interleaved in the input tensor, in
+			which case they will be deinterleaved when converting to the output
+			image. Whether or not channels are interleaved will depend on the
+			model from which the tensor is obtained.
+			""",
+
+		],
+
+		"out" : [
+
+			"description",
+			"""
+			The output image.
+			""",
+
+		],
+
+	}
 )
-
-SPHINX = os.environ["GAFFER_SPHINX"]
-
-if sys.platform == "win32" :
-	LOCATE_DEPENDENCY_LIBPATH=os.path.join(os.environ["GAFFER_BUILD_DIR"], "lib")
-	LOCATE_DEPENDENCY_PYTHONPATH=os.path.join(os.environ["GAFFER_BUILD_DIR"], "python")
-	GLEW_LIB_SUFFIX = "32"
-	INKSCAPE = "C:\\Program Files\\Inkscape\\bin\\inkscape.exe"
-	SPHINX = "sphinx-build.exe"
-	ENV_VARS_TO_IMPORT += " GALLIUM_DRIVER"

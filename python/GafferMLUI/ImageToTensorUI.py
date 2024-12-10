@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Cinesite VFX Ltd. nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,33 +34,85 @@
 #
 ##########################################################################
 
-import os
-import sys
-import glob
-import subprocess
+import Gaffer
+import GafferML
 
-ENV_VARS_TO_IMPORT = "PATH"
+Gaffer.Metadata.registerNode(
 
-BUILD_CACHEDIR = os.environ["GAFFER_CACHE_DIR"]
+	GafferML.ImageToTensor,
 
-ARNOLD_ROOT = os.environ.get( "ARNOLD_ROOT", "" )
-DELIGHT_ROOT = os.environ["DELIGHT"]
-ONNX_ROOT = os.environ["ONNX_ROOT"]
+	"description",
+	"""
+	Converts images to tensors for use with the Inference node.
 
-BUILD_DIR = os.environ["GAFFER_BUILD_DIR"]
-INSTALL_DIR = os.path.join( "install", os.environ["GAFFER_BUILD_NAME"] )
+	> Note : Only the data window is converted, as it would typically be
+	> wasteful to convert and process the empty pixels outside the data window.
+	> If this is necessary, merge the image over a Constant image before
+	> conversion.
+	""",
 
-PACKAGE_FILE = "{}.{}".format(
-	os.environ["GAFFER_BUILD_NAME"],
-	os.environ["PACKAGE_EXTENSION"]
+	plugs = {
+
+		"image" : [
+
+			"description",
+			"""
+			The image to be converted.
+			""",
+
+		],
+
+		"view" : [
+
+			"description",
+			"""
+			The image view to take the tensor data from.
+			""",
+
+			"plugValueWidget:type", "GafferImageUI.ViewPlugValueWidget",
+
+			"noduleLayout:visible", False,
+
+		],
+
+		"channels" : [
+
+			"description",
+			"""
+			The list of channels to convert. Channels are added to the
+			tensor in the order specified, so can be shuffled by changing
+			the order. For example, an order of `[ "B", "G", "R" ]` might
+			be needed for use with models trained on images using OpenCV
+			conventions.
+			""",
+
+			"noduleLayout:visible", False,
+
+		],
+
+		"interleaveChannels" : [
+
+			"description",
+			"""
+			Interleaves the channel data, so that all channels for a single
+			pixel are adjacent in memory. Whether or not this is needed depends
+			on the input requirements of the model the tensor is used with.
+			""",
+
+			"noduleLayout:visible", False,
+
+		],
+
+		"tensor" : [
+
+			"description",
+			"""
+			The output tensor.
+			""",
+
+			"layout:visibilityActivator", lambda plug : False,
+
+		],
+
+	}
 )
-
-SPHINX = os.environ["GAFFER_SPHINX"]
-
-if sys.platform == "win32" :
-	LOCATE_DEPENDENCY_LIBPATH=os.path.join(os.environ["GAFFER_BUILD_DIR"], "lib")
-	LOCATE_DEPENDENCY_PYTHONPATH=os.path.join(os.environ["GAFFER_BUILD_DIR"], "python")
-	GLEW_LIB_SUFFIX = "32"
-	INKSCAPE = "C:\\Program Files\\Inkscape\\bin\\inkscape.exe"
-	SPHINX = "sphinx-build.exe"
-	ENV_VARS_TO_IMPORT += " GALLIUM_DRIVER"
