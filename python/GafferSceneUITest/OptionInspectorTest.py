@@ -652,13 +652,15 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 			)
 
 			# When using no scope, make sure that we don't inadvertently edit the contents of an EditScope.
+			# We should be allowed to edit the source before the scope, but only with a warning about there
+			# being a downstream override.
 
 			self.__assertExpectedResult(
 				self.__inspect( s["editScope2"]["out"], "render:camera", None, context ),
 				source = s["editScope1"]["standardOptions3"]["options"]["renderCamera"],
-				sourceType = SourceType.Other,
-				editable = False,
-				nonEditableReason = "Source is in an EditScope. Change scope to editScope1 to edit."
+				sourceType = SourceType.Downstream,
+				editable = True,
+				editWarning = "Option has edits downstream in editScope1."
 			)
 
 			# If there is a StandardOptions node outside of an edit scope, make sure we use that with no scope
@@ -950,7 +952,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 
 		inspection = self.__inspect( s["editScope2"]["out"], "render:camera", s["editScope2"] )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "Edit is not in the current edit scope. Change scope to None to disable." )
+		self.assertEqual( inspection.nonDisableableReason(), "There is no edit in editScope2." )
 
 		Gaffer.MetadataAlgo.setReadOnly( s["standardOptions"]["options"], True )
 		inspection = self.__inspect( s["group"]["out"], "render:camera", None )
@@ -986,8 +988,8 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 
 		inspection = self.__inspect( s["editScope2"]["out"], "render:camera", s["editScope2"] )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "Edit is not in the current edit scope. Change scope to editScope1 to disable." )
-		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : Edit is not in the current edit scope. Change scope to editScope1 to disable.", inspection.disableEdit )
+		self.assertEqual( inspection.nonDisableableReason(), "There is no edit in editScope2." )
+		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : There is no edit in editScope2.", inspection.disableEdit )
 
 		Gaffer.MetadataAlgo.setReadOnly( s["editScope1"], True )
 		inspection = self.__inspect( s["editScope1"]["out"], "render:camera", s["editScope1"] )

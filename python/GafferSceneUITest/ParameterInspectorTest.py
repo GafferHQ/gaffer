@@ -478,14 +478,15 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( inspection.nonDisableableReason(), "The target edit scope editScope2 is not in the scene history." )
 
 		inspection = self.__inspect( s["editScope2"]["out"], "/light", "exposure", None )
+		self.assertTrue( inspection.acquireEdit( False ).isSame( s["light"]["parameters"]["exposure"] ) )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "Source is in an EditScope. Change scope to editScope to disable." )
-		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : Source is in an EditScope. Change scope to editScope to disable.", inspection.disableEdit )
+		self.assertEqual( inspection.nonDisableableReason(), "Disabling edits not supported for this plug." )
+		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : Disabling edits not supported for this plug.", inspection.disableEdit )
 
 		inspection = self.__inspect( s["editScope2"]["out"], "/light", "exposure", s["editScope2"] )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "Edit is not in the current edit scope. Change scope to editScope to disable." )
-		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : Edit is not in the current edit scope. Change scope to editScope to disable.", inspection.disableEdit )
+		self.assertEqual( inspection.nonDisableableReason(), "There is no edit in editScope2." )
+		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : There is no edit in editScope2.", inspection.disableEdit )
 
 		Gaffer.MetadataAlgo.setReadOnly( s["editScope"], True )
 		inspection = self.__inspect( s["editScope"]["out"], "/light", "exposure", s["editScope"] )
@@ -502,7 +503,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		inspection = self.__inspect( s["editScope"]["out"], "/light", "exposure", s["editScope"] )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "Edit is not in the current edit scope. Change scope to None to disable." )
+		self.assertEqual( inspection.nonDisableableReason(), "There is no edit in editScope." )
 
 		inspection = self.__inspect( s["editScope"]["out"], "/light", "exposure", None )
 		self.assertEqual( inspection.source(), s["light"]["parameters"]["exposure"] )
@@ -1088,6 +1089,72 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 			editWarning = "Edits to box.add may affect other locations in the scene."
 		)
 
+	def testLightCreatedInEditScope( self ) :
+
+		light = GafferSceneTest.TestLight()
+
+		editScope1 = Gaffer.EditScope( "EditScope1" )
+		editScope1.setup( light["out"] )
+
+		editScope1["light"] = light
+		editScope1["parent"] = GafferScene.Parent()
+		editScope1["parent"]["parent"].setValue( "/" )
+		editScope1["parent"]["in"].setInput( editScope1["BoxIn"]["out"] )
+		editScope1["parent"]["children"][0].setInput( editScope1["light"]["out"] )
+
+		editScope1["BoxOut"]["in"].setInput( editScope1["parent"]["out"] )
+
+		editScope2 = Gaffer.EditScope( "EditScope2" )
+		editScope2.setup( editScope1["out"] )
+		editScope2["in"].setInput( editScope1["out"] )
+
+		# Make edit in EditScope2.
+
+		i = self.__inspect( editScope2["out"], "/light", "exposure", editScope2 )
+		scope2Edit = i.acquireEdit()
+		self.assertTrue( editScope2.isAncestorOf( scope2Edit ) )
+		scope2Edit["enabled"].setValue( True )
+		scope2Edit["value"].setValue( 2 )
+
+		# Check that we can still edit in EditScope1, accompanied by
+		# a suitable warning.
+
+		self.__assertExpectedResult(
+			self.__inspect( editScope2["out"], "/light", "exposure", editScope1 ),
+			source = scope2Edit,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Downstream,
+			editable = True,
+			edit = light["parameters"]["exposure"],
+			editWarning = "Parameter has edits downstream in EditScope2."
+		)
+
+	def testSourceWithDownstreamOverride( self ) :
+
+		light = GafferSceneTest.TestLight()
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( light["out"] )
+		editScope["in"].setInput( light["out"] )
+
+		# Make edit in EditScope.
+
+		i = self.__inspect( editScope["out"], "/light", "exposure", editScope )
+		scopeEdit = i.acquireEdit()
+		self.assertTrue( editScope.isAncestorOf( scopeEdit ) )
+		scopeEdit["enabled"].setValue( True )
+		scopeEdit["value"].setValue( 2 )
+
+		# Check that we can still edit the source, accompanied by
+		# a suitable warning.
+
+		self.__assertExpectedResult(
+			self.__inspect( editScope["out"], "/light", "exposure", editScope = None ),
+			source = scopeEdit,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Downstream,
+			editable = True,
+			edit = light["parameters"]["exposure"],
+			editWarning = "Parameter has edits downstream in EditScope."
+		)
 
 if __name__ == "__main__":
 	unittest.main()

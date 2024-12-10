@@ -51,10 +51,10 @@
 #include "boost/multi_index/member.hpp"
 #include "boost/multi_index/random_access_index.hpp"
 #include "boost/multi_index_container.hpp"
-#include "boost/variant.hpp"
 
 #include <unordered_set>
 #include <unordered_map>
+#include <variant>
 
 namespace GafferSceneUIModule
 {
@@ -171,7 +171,7 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Si
 		virtual Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const;
 
 		using EditFunction = std::function<Gaffer::ValuePlugPtr ( bool createIfNecessary )>;
-		using EditFunctionOrFailure = boost::variant<EditFunction, std::string>;
+		using EditFunctionOrFailure = std::variant<EditFunction, std::string>;
 		/// Should be implemented to return a function that will acquire
 		/// an edit from the EditScope at the specified point in the history.
 		/// If this is not possible, should return an error explaining why
@@ -184,7 +184,7 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Si
 		virtual EditFunctionOrFailure editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const;
 
 		using DisableEditFunction = std::function<void ()>;
-		using DisableEditFunctionOrFailure = boost::variant<DisableEditFunction, std::string>;
+		using DisableEditFunctionOrFailure = std::variant<DisableEditFunction, std::string>;
 		/// Can be implemented to return a function that will disable an edit
 		/// at the specified plug. If this is not possible, should return an
 		/// error explaining why (this is typically due to `readOnly` metadata).
@@ -374,10 +374,15 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 		Gaffer::EditScopePtr m_editScope;
 		bool m_editScopeInHistory;
 
-		EditFunctionOrFailure m_editFunction;
-		std::string m_editWarning;
+		struct Editors
+		{
+			/// \todo Rename to `acquireEditFunction`?
+			EditFunctionOrFailure editFunction;
+			std::string editWarning;
+			DisableEditFunctionOrFailure disableEditFunction;
+		};
 
-		DisableEditFunctionOrFailure m_disableEditFunction;
+		std::optional<Editors> m_editors;
 
 };
 
