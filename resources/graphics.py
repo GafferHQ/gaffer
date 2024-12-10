@@ -461,8 +461,8 @@
 		"renderPassEditor" : {
 
 			"options" : {
-				"requiredWidth" : 16,
-				"requiredHeight" : 16,
+				"requiredWidth" : 14,
+				"requiredHeight" : 14,
 				"validatePixelAlignment" : True
 			},
 
