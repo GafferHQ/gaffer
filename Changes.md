@@ -11,11 +11,16 @@ Features
   - Inference : Loads ONNX models and performance inference using an array of input tensors.
   - ImageToTensor : Converts images to tensors for use with the Inference node.
   - TensorToImage : Converts tensors back to images following inference.
+- RenderPassChooserWidget : Added a "Render Pass" menu to the Menu Bar that can be used to choose the current render pass from those available from the scene output from the focus node.
 
 Improvements
 ------------
 
 - MergeScenes : Removed unnecessary temporary contexts.
+- PlugLayout :
+  - A warning widget is now displayed when an invalid custom widget is registered.
+  - `layout:customWidget:<name>:width` and `layout:customWidget:<name>:minimumWidth` metadata registrations are now supported for custom widgets.
+- RenderPassEditor / RenderPassChooserWidget : Render passes deleted or disabled by render adaptors registered to `client = "RenderPassWedge"` are now shown as disabled. To differentiate these from user disabled render passes, an orange dot is shown in the corner of the disabled icon and the tooltip describes them as automatically disabled.
 
 Fixes
 -----
@@ -32,6 +37,7 @@ API
 ---
 
 - PlugLayout : Activations may now depend on the presence of certain plugs, as they are now reevaluated when child plugs are added and removed.
+- ScriptNodeAlgo : Added `setCurrentRenderPass()`, `getCurrentRenderPass()`, and `acquireRenderPassPlug()` methods.
 
 1.5.1.0 (relative to 1.5.0.1)
 =======

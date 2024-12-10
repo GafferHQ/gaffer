@@ -167,6 +167,7 @@ class ScriptWindow( GafferUI.Window ) :
 		if scriptParent is not None :
 			scriptParent.removeChild( self.__script )
 
+	__automaticallyCreatedInstances = [] # strong references to instances made by acquire()
 	__instances = [] # weak references to all instances - used by acquire()
 	## Returns the ScriptWindow for the specified script, creating one
 	# if necessary.
@@ -178,7 +179,13 @@ class ScriptWindow( GafferUI.Window ) :
 			if scriptWindow is not None and scriptWindow.scriptNode().isSame( script ) :
 				return scriptWindow
 
-		return ScriptWindow( script ) if createIfNecessary else None
+		if createIfNecessary :
+			w = ScriptWindow( script )
+			if ScriptWindow.__connected() :
+				ScriptWindow.__automaticallyCreatedInstances.append( w )
+			return w
+
+		return None
 
 	## Returns an IECore.MenuDefinition which is used to define the menu bars for all ScriptWindows
 	# created as part of the specified application. This can be edited at any time to modify subsequently
@@ -201,6 +208,8 @@ class ScriptWindow( GafferUI.Window ) :
 
 		return menuDefinition
 
+	__childAddedConnection = None
+	__childRemovedConnection = None
 	## This function provides the top level functionality for instantiating
 	# the UI. Once called, new ScriptWindows will be instantiated for each
 	# script added to the application, and EventLoop.mainEventLoop().stop() will
@@ -208,17 +217,20 @@ class ScriptWindow( GafferUI.Window ) :
 	@classmethod
 	def connect( cls, applicationRoot ) :
 
-		applicationRoot["scripts"].childAddedSignal().connectFront( ScriptWindow.__scriptAdded )
-		applicationRoot["scripts"].childRemovedSignal().connect( ScriptWindow.__staticScriptRemoved )
+		ScriptWindow.__childAddedConnection = applicationRoot["scripts"].childAddedSignal().connect( ScriptWindow.__scriptAdded )
+		ScriptWindow.__childRemovedConnection = applicationRoot["scripts"].childRemovedSignal().connect( ScriptWindow.__staticScriptRemoved )
 
-	__automaticallyCreatedInstances = [] # strong references to instances made by __scriptAdded()
+	@staticmethod
+	def __connected() :
+
+		return ScriptWindow.__childAddedConnection is not None and ScriptWindow.__childRemovedConnection is not None and ScriptWindow.__childAddedConnection.connected() and ScriptWindow.__childRemovedConnection.connected()
+
 	@staticmethod
 	def __scriptAdded( scriptContainer, script ) :
 
-		w = ScriptWindow( script )
+		w = ScriptWindow.acquire( script )
 		w.setVisible( True )
 		w.getLayout().restoreWindowState()
-		ScriptWindow.__automaticallyCreatedInstances.append( w )
 
 	@staticmethod
 	def __staticScriptRemoved( scriptContainer, script ) :
