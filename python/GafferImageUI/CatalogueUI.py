@@ -1079,7 +1079,7 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 
 	def __pathListingDragEnter( self, widget, event ) :
 
-		if isinstance( event.data, IECore.StringVectorData ) :
+		if event.sourceWidget is widget and isinstance( event.data, IECore.StringVectorData ) and event.data :
 			# Allow reordering of images
 			self.__moveToPath = None
 			self.__mergeGroupId += 1
@@ -1101,7 +1101,7 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 
 	def __pathListingDragMove( self, listing, event ) :
 
-		if not event.data or not isinstance( event.data, IECore.StringVectorData ) :
+		if not ( event.sourceWidget is listing and isinstance( event.data, IECore.StringVectorData ) and event.data ) :
 			return
 
 		targetPath = self.__pathListing.pathAt( event.line.p0 )
