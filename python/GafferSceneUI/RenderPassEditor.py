@@ -35,15 +35,20 @@
 ##########################################################################
 
 import collections
+import functools
 import imath
+import os
 import traceback
 
 import IECore
 
 import Gaffer
 import GafferUI
+import GafferImage
 import GafferScene
 import GafferSceneUI
+
+from GafferUI.PlugValueWidget import sole
 
 from . import _GafferSceneUI
 
@@ -891,3 +896,245 @@ class _AddButtonMenuSignal( Gaffer.Signals.Signal2 ) :
 				)
 				# Remove circular references that would keep the widget in limbo.
 				e.__traceback__ = None
+
+class RenderPassChooserWidget( GafferUI.Widget ) :
+
+	def __init__( self, topLevelWidget, **kw ) :
+
+		self.__scriptNode = topLevelWidget["__scriptNode"].getInput().node()
+		self.__inputPlug = topLevelWidget["__renderPassMenuInputScene"]
+
+		renderPassPlug = GafferSceneUI.ScriptNodeAlgo.acquireRenderPassPlug( self.__scriptNode )
+
+		self.__renderPassPlugValueWidget = _RenderPassPlugValueWidget(
+			renderPassPlug["value"],
+			topLevelWidget["__renderPassMenuAdaptedScene"]["globals"],
+			showLabel = True
+		)
+		GafferUI.Widget.__init__( self, self.__renderPassPlugValueWidget, **kw )
+
+		self.__focusChangedConnection = self.__scriptNode.focusChangedSignal().connect(
+			Gaffer.WeakMethod( self.__focusChanged ), scoped = True
+		)
+
+	def __focusChanged( self, scriptNode, node ) :
+
+		self.__updateInputPlug()
+
+	def __updateInputPlug( self ) :
+
+		self.__inputPlug.setInput( self.__scenePlugFromFocus() )
+
+	def __scenePlugFromFocus( self ) :
+
+		focusNode = self.__scriptNode.getFocus()
+		if focusNode is not None :
+			outputScene = next(
+				( p for p in GafferScene.ScenePlug.RecursiveOutputRange( focusNode ) if not p.getName().startswith( "__" ) ),
+	 			None
+			)
+			if outputScene is not None :
+				return outputScene
+
+			outputImage = next(
+				( p for p in  GafferImage.ImagePlug.RecursiveOutputRange( focusNode ) if not p.getName().startswith( "__" ) ),
+				None
+			)
+			if outputImage is not None :
+				return GafferScene.SceneAlgo.sourceScene( outputImage )
+
+		return None
+
+RenderPassEditor.RenderPassChooserWidget = RenderPassChooserWidget
+
+class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, globalsPlug = None, showLabel = False, **kw ) :
+
+		self.__globalsPlug = globalsPlug
+
+		self.__listContainer = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+
+		GafferUI.PlugValueWidget.__init__( self, self.__listContainer, plug, **kw )
+
+		with self.__listContainer :
+			if showLabel :
+				GafferUI.Label( "Render Pass" )
+			self.__busyWidget = GafferUI.BusyWidget( size = 18 )
+			self.__busyWidget.setVisible( False )
+			self.__menuButton = GafferUI.MenuButton(
+				"",
+				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ),
+				highlightOnOver = False
+			)
+			# Ignore the width in X so MenuButton width is limited by the overall width of the widget
+			self.__menuButton._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
+
+		self.__currentRenderPass = ""
+		self.__renderPasses = {}
+
+		self.__displayGrouped = False
+		self.__hideDisabled = False
+
+		self.__updateMenuButton()
+
+	def getToolTip( self ) :
+
+		if self.__currentRenderPass == "" :
+			return "No render pass is active."
+
+		if self.__currentRenderPass not in self.__renderPasses.get( "all", [] ) :
+			return "{} is not in the scene output from the focus node.".format( self.__currentRenderPass )
+		else :
+			return "{} is the current render pass.".format( self.__currentRenderPass )
+
+	def _auxiliaryPlugs( self, plug ) :
+
+		return [ self.__globalsPlug or self.__acquireGlobalsPlug() ]
+
+	@staticmethod
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
+
+		result = []
+
+		for plug, ( globalsPlug, ) in zip( plugs, auxiliaryPlugs ) :
+
+			renderPasses = {}
+
+			with Gaffer.Context( Gaffer.Context.current() ) as context :
+				for renderPass in globalsPlug.getValue().get( "option:renderPass:names", IECore.StringVectorData() ) :
+					renderPasses.setdefault( "all", [] ).append( renderPass )
+					context["renderPass"] = renderPass
+					if globalsPlug.getValue().get( "option:renderPass:enabled", IECore.BoolData( True ) ).value :
+						renderPasses.setdefault( "enabled", [] ).append( renderPass )
+
+			result.append( {
+				"value" : plug.getValue(),
+				"renderPasses" : renderPasses
+			} )
+
+		return result
+
+	def _updateFromValues( self, values, exception ) :
+
+		self.__currentRenderPass = sole( v["value"] for v in values )
+		self.__renderPasses = sole( v["renderPasses"] for v in values )
+
+		if self.__currentRenderPass is not None :
+			self.__busyWidget.setVisible( False )
+			self.__updateMenuButton()
+
+	def _updateFromEditable( self ) :
+
+		self.__menuButton.setEnabled( self._editable() )
+
+	def __acquireGlobalsPlug( self ) :
+
+		scriptWindow = GafferUI.ScriptWindow.acquire( self.getPlug().node().scriptNode() )
+		return scriptWindow.getLayout().settings()["__renderPassMenuAdaptedScene"]["globals"]
+
+	def __setDisplayGrouped( self, grouped ) :
+
+		self.__displayGrouped = grouped
+
+	def __setHideDisabled( self, hide ) :
+
+		self.__hideDisabled = hide
+
+	def __menuDefinition( self ) :
+
+		result = IECore.MenuDefinition()
+
+		result.append( "/__RenderPassesDivider__", { "divider" : True, "label" : "Render Passes" } )
+
+		renderPasses = self.__renderPasses.get( "enabled", [] ) if self.__hideDisabled else self.__renderPasses.get( "all", [] )
+
+		if self.__renderPasses is None :
+			result.append( "/Refresh", { "command" : Gaffer.WeakMethod( self.__refreshMenu ) } )
+		elif len( renderPasses ) == 0 :
+			result.append( "/No Render Passes Available", { "active" : False } )
+		else :
+			groupingFn = GafferSceneUI.RenderPassEditor.pathGroupingFunction()
+			prefixes = IECore.PathMatcher()
+			if self.__displayGrouped :
+				for name in renderPasses :
+					prefixes.addPath( groupingFn( name ) )
+
+			for name in sorted( renderPasses ) :
+
+				prefix = "/"
+				if self.__displayGrouped :
+					if prefixes.match( name ) & IECore.PathMatcher.Result.ExactMatch :
+						prefix += name
+					else :
+						prefix = groupingFn( name )
+
+				result.append(
+					os.path.join( prefix, name ),
+					{
+						"command" : functools.partial( Gaffer.WeakMethod( self.__setCurrentRenderPass ), name ),
+						"icon" : self.__renderPassIcon( name, activeIndicator = True ),
+					}
+				)
+
+		result.append( "/__NoneDivider__", { "divider" : True } )
+
+		result.append(
+			"/None",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setCurrentRenderPass ), "" ),
+				"icon" : "activeRenderPass.png" if self.__currentRenderPass == "" else None,
+			}
+		)
+
+		result.append( "/__OptionsDivider__", { "divider" : True, "label" : "Options" } )
+
+		result.append(
+			"/Display Grouped",
+			{
+				"checkBox" : self.__displayGrouped,
+				"command" : lambda checked : self.__setDisplayGrouped( checked ),
+				"description" : "Toggle grouped display of render passes."
+			}
+		)
+
+		result.append(
+			"/Hide Disabled",
+			{
+				"checkBox" : self.__hideDisabled,
+				"command" : lambda checked : self.__setHideDisabled( checked ),
+				"description" : "Hide render passes disabled for rendering."
+			}
+		)
+
+		return result
+
+	def __refreshMenu( self ) :
+
+		self.__busyWidget.setVisible( True )
+
+	def __setCurrentRenderPass( self, renderPass, *unused ) :
+
+		for plug in self.getPlugs() :
+			plug.setValue( renderPass )
+
+	def __renderPassIcon( self, renderPass, activeIndicator = False ) :
+
+		if renderPass == "" :
+			return None
+
+		if activeIndicator and renderPass == self.__currentRenderPass :
+			return "activeRenderPass.png"
+		elif renderPass not in self.__renderPasses.get( "all", [] ) :
+			return "warningSmall.png"
+		elif renderPass in self.__renderPasses.get( "enabled", [] ) :
+			return "renderPass.png"
+		else :
+			return "disabledRenderPass.png"
+
+	def __updateMenuButton( self ) :
+
+		self.__menuButton.setText( self.__currentRenderPass or "None" )
+		self.__menuButton.setImage( self.__renderPassIcon( self.__currentRenderPass ) )
+
+RenderPassEditor._RenderPassPlugValueWidget = _RenderPassPlugValueWidget

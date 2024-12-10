@@ -11,6 +11,7 @@ Features
   - Inference : Loads ONNX models and performance inference using an array of input tensors.
   - ImageToTensor : Converts images to tensors for use with the Inference node.
   - TensorToImage : Converts tensors back to images following inference.
+- RenderPassChooserWidget : Added a "Render Pass" menu to the Menu Bar that can be used to choose the current render pass from those available from the scene output from the focus node.
 
 Improvements
 ------------

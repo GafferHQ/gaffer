@@ -38,6 +38,8 @@ import os
 
 import IECore
 import Gaffer
+import GafferScene
+import GafferUI
 import GafferSceneUI
 
 GafferSceneUI.RenderPassEditor.registerOption( "*", "renderPass:enabled" )
@@ -130,3 +132,24 @@ def __defaultPathGroupingFunction( renderPassName ) :
 	return renderPassName.split( "_" )[0] if "_" in renderPassName else ""
 
 GafferSceneUI.RenderPassEditor.registerPathGroupingFunction( __defaultPathGroupingFunction )
+
+def __compoundEditorCreated( editor ) :
+
+	settingsNode = editor.settings()
+	settingsNode.addChild( GafferScene.ScenePlug( "__renderPassMenuInputScene" ) )
+	settingsNode.addChild( GafferScene.ScenePlug( "__renderPassMenuAdaptedScene" ) )
+
+	settingsNode["__renderPassMenuAdaptors"] = GafferScene.SceneAlgo.createRenderAdaptors()
+	settingsNode["__renderPassMenuAdaptors"]["in"].setInput( settingsNode["__renderPassMenuInputScene"] )
+	## \todo We currently masquerade as the RenderPassWedge in order to include
+	# adaptors that disable render passes. We may want to find a more general
+	# client name for this usage...
+	settingsNode["__renderPassMenuAdaptors"]["client"].setValue( "RenderPassWedge" )
+	settingsNode["__renderPassMenuAdaptedScene"].setInput( settingsNode["__renderPassMenuAdaptors"]["out"] )
+
+GafferUI.CompoundEditor.instanceCreatedSignal().connect( __compoundEditorCreated )
+
+Gaffer.Metadata.registerValue( GafferUI.CompoundEditor.Settings, "layout:customWidget:renderPassSelector:widgetType", "GafferSceneUI.RenderPassEditor.RenderPassChooserWidget" )
+Gaffer.Metadata.registerValue( GafferUI.CompoundEditor.Settings, "layout:customWidget:renderPassSelector:section", "Settings" )
+Gaffer.Metadata.registerValue( GafferUI.CompoundEditor.Settings, "layout:customWidget:renderPassSelector:index", 0 )
+Gaffer.Metadata.registerValue( GafferUI.CompoundEditor.Settings, "layout:customWidget:renderPassSelector:width", 185 )
