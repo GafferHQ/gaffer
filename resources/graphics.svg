@@ -3555,41 +3555,41 @@
       <rect
          inkscape:label="renderPassIcon"
          style="display:inline;opacity:0.1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.597614;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
-         width="16"
-         height="16"
-         x="30"
-         y="2776"
+         width="14"
+         height="14"
+         x="31"
+         y="2777"
          id="renderPass" />
       <rect
          id="disabledRenderPass"
-         y="2776"
-         x="50"
-         height="16"
-         width="16"
+         y="2777"
+         x="51"
+         height="14"
+         width="14"
          style="display:inline;opacity:0.1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.597614;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
          inkscape:label="disabledRenderPassIcon" />
       <rect
          id="renderPassFolder"
-         y="2776"
-         x="70"
-         height="16"
-         width="16"
+         y="2777"
+         x="71"
+         height="14"
+         width="14"
          style="display:inline;opacity:0.1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.597614;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
          inkscape:label="renderPassFolderIcon" />
       <rect
          id="activeRenderPass"
-         y="2776"
-         x="90"
-         height="16"
-         width="16"
+         y="2777"
+         x="91"
+         height="14"
+         width="14"
          style="display:inline;opacity:0.1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.597614;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
          inkscape:label="activeRenderPassIcon" />
       <rect
          id="activeRenderPassFadedHighlighted"
-         y="2776"
-         x="110"
-         height="16"
-         width="16"
+         y="2777"
+         x="111"
+         height="14"
+         width="14"
          style="display:inline;opacity:0.1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.597614;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
          inkscape:label="activeRenderPassFadedHighlightedIcon" />
     </g>
@@ -10189,10 +10189,10 @@
        transform="translate(0,159.23177)">
       <rect
          id="rect8"
-         y="2776.1304"
+         y="2777.1304"
          x="9.9351273"
-         height="16"
-         width="16"
+         height="14"
+         width="14"
          style="display:inline;opacity:1;fill:url(#boundsTemplate);fill-opacity:1;stroke:none;stroke-width:0.597614;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
          inkscape:label="sizeGuide" />
       <g

@@ -1307,6 +1307,12 @@ _styleSheet = string.Template(
 		padding-bottom: 0px;
 	}
 
+	*[gafferClass="GafferSceneUI.RenderPassEditor"] QTreeView::item {
+		min-height: 22px;
+		padding-top: 0px;
+		padding-bottom: 0px;
+	}
+
 	*[gafferClass="GafferSceneUI._HistoryWindow"] QTreeView::item {
 		height: 18px;
 		padding-top: 0px;
