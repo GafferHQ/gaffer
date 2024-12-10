@@ -66,5 +66,18 @@ class GadgetWidgetTest( GafferUITest.TestCase ) :
 		self.assertFalse( vg1.visible() )
 		self.assertFalse( vg2.visible() )
 
+	def testConnectionLifetime( self ) :
+
+		gadgetWidget = GafferUI.GadgetWidget()
+		viewportGadget1 = gadgetWidget.getViewportGadget()
+		self.assertEqual( viewportGadget1.renderRequestSignal().numSlots(), 1 )
+
+		viewportGadget2 = GafferUI.ViewportGadget()
+		self.assertEqual( viewportGadget2.renderRequestSignal().numSlots(), 0 )
+
+		gadgetWidget.setViewportGadget( viewportGadget2 )
+		self.assertEqual( viewportGadget1.renderRequestSignal().numSlots(), 0 )
+		self.assertEqual( viewportGadget2.renderRequestSignal().numSlots(), 1 )
+
 if __name__ == "__main__":
 	unittest.main()
