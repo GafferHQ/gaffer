@@ -34,6 +34,11 @@
 #
 ##########################################################################
 
+import functools
+
+import IECore
+import IECoreScene
+
 import Gaffer
 import GafferUI
 import GafferSceneUI
@@ -118,3 +123,63 @@ Gaffer.Metadata.registerNode(
 
 	},
 )
+
+def __setDataName( plug, name, checked ) :
+
+	plug.setValue( name )
+
+def __primitiveVariableContextMenu( menuDefinition, plugValueWidget ) :
+
+	plug = plugValueWidget.getPlug()
+	node = plug.node()
+	if not isinstance( node, GafferSceneUI.VisualiserTool ) :
+		return
+	if plug != node["dataName"] :
+		return
+
+	scenePlug = node.view()["in"].getInput()
+	scriptNode = scenePlug.ancestor( Gaffer.ScriptNode )
+	selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( scriptNode )
+
+	primVars = []
+
+	for path in selection.paths() :
+		primitive = scenePlug.object( path )
+		if not isinstance( primitive, IECoreScene.MeshPrimitive ) :
+			continue
+
+		for v in primitive.keys() :
+			if primitive[v].interpolation not in [
+				IECoreScene.PrimitiveVariable.Interpolation.FaceVarying,
+				IECoreScene.PrimitiveVariable.Interpolation.Uniform,
+				IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			] :
+				continue
+
+			if not isinstance(
+				primitive[v].data,
+				(
+					IECore.IntVectorData,
+					IECore.FloatVectorData,
+					IECore.V2fVectorData,
+					IECore.Color3fVectorData,
+					IECore.V3fVectorData,
+				)
+			) :
+				continue
+
+			primVars.append( v )
+
+	if len( primVars ) > 0 :
+		menuDefinition.prepend( "/PrimitiveVariablesDivider", { "divider" : True } )
+
+	for v in reversed( sorted( primVars ) ) :
+		menuDefinition.prepend(
+			f"/Primitive Variables/{v}",
+			{
+				"command" : functools.partial( __setDataName, plug, v ),
+				"checkBox" : plug.getValue() == v,
+			}
+		)
+
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __primitiveVariableContextMenu )
