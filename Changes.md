@@ -5,6 +5,7 @@ Features
 --------
 
 - PrimitiveVariableTweaks : Added node for tweaking primitive variables. Can affect just part of a primitive based on ids or a mask.
+- Menu Bar : Added a "Render Pass" menu to the Menu Bar that can be used to choose the current render pass from those provided by the focus node.
 
 Improvements
 ------------
