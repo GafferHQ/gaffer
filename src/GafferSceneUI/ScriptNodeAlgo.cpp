@@ -40,6 +40,9 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/NameValuePlug.h"
+#include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/MetadataAlgo.h"
 
 #include "boost/bind/bind.hpp"
 
@@ -146,5 +149,51 @@ std::vector<IECore::InternedString> ScriptNodeAlgo::getLastSelectedPath( const G
 ScriptNodeAlgo::ChangedSignal &ScriptNodeAlgo::selectedPathsChangedSignal( Gaffer::ScriptNode *script )
 {
 	return changedSignals( script ).selectedPathsChangedSignal;
+}
 
+NameValuePlug *ScriptNodeAlgo::acquireRenderPassPlug( Gaffer::ScriptNode *script, bool createIfMissing )
+{
+	for( NameValuePlug::Iterator it( script->variablesPlug() ); !it.done(); ++it )
+	{
+		if( (*it)->getName() == "renderPass" )
+		{
+			if( (*it)->valuePlug<StringPlug>() )
+			{
+				return it->get();
+			}
+			else
+			{
+				throw IECore::Exception( fmt::format( "Plug type of {} is {}, but must be StringPlug", (*it)->valuePlug()->fullName(), (*it)->valuePlug()->typeName() ) );
+			}
+		}
+	}
+
+	if( createIfMissing )
+	{
+		auto renderPassPlug = new NameValuePlug( "renderPass", new StringPlug(), "renderPass", Gaffer::Plug::Flags::Default | Gaffer::Plug::Flags::Dynamic );
+		MetadataAlgo::setReadOnly( renderPassPlug->namePlug(), true );
+		script->variablesPlug()->addChild( renderPassPlug );
+
+		return renderPassPlug;
+	}
+
+	return nullptr;
+}
+
+void ScriptNodeAlgo::setCurrentRenderPass( Gaffer::ScriptNode *script, std::string renderPass )
+{
+	if( auto renderPassPlug = acquireRenderPassPlug( script ) )
+	{
+		renderPassPlug->valuePlug<StringPlug>()->setValue( renderPass );
+	}
+}
+
+std::string ScriptNodeAlgo::getCurrentRenderPass( const Gaffer::ScriptNode *script )
+{
+	if( const auto renderPassPlug = acquireRenderPassPlug( const_cast<ScriptNode *>( script ), /* createIfMissing = */ false ) )
+	{
+		return renderPassPlug->valuePlug<StringPlug>()->getValue();
+	}
+
+	return "";
 }

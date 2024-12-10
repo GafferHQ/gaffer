@@ -360,17 +360,10 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			self.__popup.popup( parent = self )
 			return
 
-		## \todo Perhaps we should add `ScriptNodeAlgo.set/getCurrentRenderPass()`
-		# to wrap this up for general consumption?
-		if "renderPass" not in script["variables"] :
-			renderPassPlug = Gaffer.NameValuePlug( "renderPass", "", "renderPass", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-			script["variables"].addChild( renderPassPlug )
-			Gaffer.MetadataAlgo.setReadOnly( renderPassPlug["name"], True )
-		else :
-			renderPassPlug = script["variables"]["renderPass"]
-
-		currentRenderPass = renderPassPlug["value"].getValue()
-		renderPassPlug["value"].setValue( selectedPassNames[0] if selectedPassNames[0] != currentRenderPass else "" )
+		GafferSceneUI.ScriptNodeAlgo.setCurrentRenderPass(
+			script,
+			selectedPassNames[0] if selectedPassNames[0] != GafferSceneUI.ScriptNodeAlgo.getCurrentRenderPass( script ) else ""
+		)
 
 	def __columnContextMenuSignal( self, column, pathListing, menuDefinition ) :
 

@@ -29,6 +29,7 @@ API
 ---
 
 - PlugLayout : Activations may now depend on the presence of certain plugs, as they are now reevaluated when child plugs are added and removed.
+- ScriptNodeAlgo : Added `setCurrentRenderPass()`, `getCurrentRenderPass()`, and `acquireRenderPassPlug()` methods.
 
 1.5.1.0 (relative to 1.5.0.1)
 =======
