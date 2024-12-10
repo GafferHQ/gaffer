@@ -16,6 +16,7 @@ Improvements
 ------------
 
 - MergeScenes : Removed unnecessary temporary contexts.
+- PlugLayout : A warning widget is now displayed when an invalid custom widget is registered.
 
 Fixes
 -----
