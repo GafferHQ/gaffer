@@ -3592,6 +3592,14 @@
          width="14"
          style="display:inline;opacity:0.1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.597614;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
          inkscape:label="activeRenderPassFadedHighlightedIcon" />
+      <rect
+         id="adaptorDisabledRenderPass"
+         y="2777"
+         x="131"
+         height="14"
+         width="14"
+         style="display:inline;opacity:0.1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.597614;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
+         inkscape:label="adaptorDisabledRenderPassIcon" />
     </g>
     <rect
        style="display:inline;fill:none;fill-opacity:1;stroke:none;stroke-opacity:1"
@@ -10277,6 +10285,32 @@
            cx="56.179211"
            id="circle6253-6"
            style="display:inline;vector-effect:none;fill:#f0dc28;fill-opacity:0.38041458;fill-rule:nonzero;stroke:#779cbd;stroke-width:1.00157;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal" />
+      </g>
+      <g
+         style="fill:url(#backgroundLight);fill-opacity:1"
+         inkscape:label="adaptorDisabledRenderPass"
+         id="g3"
+         transform="translate(79.963757,0.12970317)">
+        <rect
+           style="display:inline;fill:url(#backgroundLight);stroke:#3d3d3d;stroke-width:1;stroke-linejoin:miter;stroke-dasharray:none"
+           id="rect1"
+           width="11"
+           height="7"
+           x="52.537006"
+           y="2782.4839" />
+        <rect
+           style="display:inline;fill:url(#backgroundLight);stroke:#3d3d3d;stroke-width:1;stroke-linejoin:miter;stroke-dasharray:none"
+           id="rect2"
+           width="11"
+           height="2.5"
+           x="52.536243"
+           y="2779.0571" />
+        <circle
+           style="display:inline;fill:#d66800;fill-opacity:1;stroke:none;stroke-width:8.001;stroke-dasharray:none;stroke-opacity:1"
+           id="path3"
+           cx="53.036243"
+           cy="2779.0007"
+           r="2" />
       </g>
     </g>
     <path

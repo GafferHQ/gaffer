@@ -167,6 +167,47 @@ class RenderPassEditorTest( GafferUITest.TestCase ) :
 			else :
 				self.assertIsNone( inspectionContext )
 
+	def testRenderPassPathAdaptorDisablingPasses( self ) :
+
+		def createAdaptor() :
+
+			node = GafferScene.SceneProcessor()
+			node["options"] = GafferScene.CustomOptions()
+			node["options"]["in"].setInput( node["in"] )
+			node["options"]["options"].addChild( Gaffer.NameValuePlug( "renderPass:enabled", False ) )
+
+			node["switch"] = Gaffer.NameSwitch()
+			node["switch"].setup( node["options"]["out"] )
+			node["switch"]["in"][0]["value"].setInput( node["in"] )
+			node["switch"]["in"][1]["value"].setInput( node["options"]["out"] )
+			node["switch"]["in"][1]["name"].setValue( "B C" )
+			node["switch"]["selector"].setValue( "${renderPass}" )
+
+			node["out"].setInput( node["switch"]["out"]["value"] )
+
+			return node
+
+		GafferScene.SceneAlgo.registerRenderAdaptor( "RenderPassEditorTest", createAdaptor, client = "RenderPassWedge" )
+		self.addCleanup( GafferScene.SceneAlgo.deregisterRenderAdaptor, "RenderPassEditorTest" )
+
+		renderPasses = GafferScene.RenderPasses()
+		renderPasses["names"].setValue( IECore.StringVectorData( [ "A", "B", "C", "D" ] ) )
+
+		adaptors = GafferSceneUI.RenderPassEditor._createRenderAdaptors()
+		adaptors["in"].setInput( renderPasses["out"] )
+
+		context = Gaffer.Context()
+		path = _GafferSceneUI._RenderPassEditor.RenderPassPath( adaptors["out"], context, "/" )
+
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B", "/C", "/D" ] )
+
+		pathCopy = path.copy()
+
+		for p in [ "/A", "/B", "/C", "/D" ] :
+			pathCopy.setFromString( p )
+			self.assertEqual( pathCopy.property( "renderPassPath:enabled" ), p in ( "/A", "/D" ) )
+			self.assertTrue( pathCopy.property( "renderPassPath:enabledWithoutAdaptors" ) )
+
 	def testSearchFilter( self ) :
 
 		renderPasses = GafferScene.RenderPasses()

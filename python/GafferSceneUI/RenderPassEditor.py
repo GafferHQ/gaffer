@@ -67,6 +67,12 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			self["editScope"] = Gaffer.Plug()
 			self["displayGrouped"] = Gaffer.BoolPlug()
 
+			self["__adaptors"] = GafferSceneUI.RenderPassEditor._createRenderAdaptors()
+			self["__adaptors"]["in"].setInput( self["in"] )
+
+			self["__adaptedIn"] = GafferScene.ScenePlug()
+			self["__adaptedIn"].setInput( self["__adaptors"]["out"] )
+
 	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::RenderPassEditor::Settings" )
 
 	def __init__( self, scriptNode, **kw ) :
@@ -236,7 +242,19 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		adaptors["__renderAdaptors"]["client"].setValue( "RenderPassWedge" )
 		adaptors["__renderAdaptors"]["in"].setInput( adaptors["in"] )
 
-		adaptors["out"].setInput( adaptors["__renderAdaptors"]["out"] )
+		adaptors["__adaptorSwitch"] = Gaffer.Switch()
+		adaptors["__adaptorSwitch"].setup( GafferScene.ScenePlug() )
+		adaptors["__adaptorSwitch"]["in"]["in0"].setInput( adaptors["__renderAdaptors"]["out"] )
+		adaptors["__adaptorSwitch"]["in"]["in1"].setInput( adaptors["in"] )
+
+		adaptors["__contextQuery"] = Gaffer.ContextQuery()
+		adaptors["__contextQuery"].addQuery( Gaffer.BoolPlug( "disableAdaptors", defaultValue = False ) )
+		adaptors["__contextQuery"]["queries"][0]["name"].setValue( "renderPassEditor:disableAdaptors" )
+
+		adaptors["__adaptorSwitch"]["index"].setInput( adaptors["__contextQuery"]["out"][0]["value"] )
+		adaptors["__adaptorSwitch"]["deleteContextVariables"].setValue( "renderPassEditor:disableAdaptors" )
+
+		adaptors["out"].setInput( adaptors["__adaptorSwitch"]["out"] )
 
 		return adaptors
 
@@ -281,7 +299,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		# control of updates ourselves in _updateFromContext(), using LazyMethod to defer the calls to this
 		# function until we are visible and playback has stopped.
 		contextCopy = Gaffer.Context( self.context() )
-		self.__pathListing.setPath( _GafferSceneUI._RenderPassEditor.RenderPassPath( self.settings()["in"], contextCopy, "/", filter = self.__filter, grouped = self.settings()["displayGrouped"].getValue() ) )
+		self.__pathListing.setPath( _GafferSceneUI._RenderPassEditor.RenderPassPath( self.settings()["__adaptedIn"], contextCopy, "/", filter = self.__filter, grouped = self.settings()["displayGrouped"].getValue() ) )
 
 	def __displayGroupedChanged( self ) :
 
@@ -1015,8 +1033,13 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 				for renderPass in globalsPlug.getValue().get( "option:renderPass:names", IECore.StringVectorData() ) :
 					renderPasses.setdefault( "all", [] ).append( renderPass )
 					context["renderPass"] = renderPass
+					context["renderPassEditor:disableAdaptors"] = False
 					if globalsPlug.getValue().get( "option:renderPass:enabled", IECore.BoolData( True ) ).value :
 						renderPasses.setdefault( "enabled", [] ).append( renderPass )
+					else :
+						context["renderPassEditor:disableAdaptors"] = True
+						if globalsPlug.getValue().get( "option:renderPass:enabled", IECore.BoolData( True ) ).value :
+							renderPasses.setdefault( "adaptorDisabled", [] ).append( renderPass )
 
 			result.append( {
 				"value" : plug.getValue(),
@@ -1079,6 +1102,7 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 					{
 						"command" : functools.partial( Gaffer.WeakMethod( self.__setCurrentRenderPass ), name ),
 						"icon" : self.__renderPassIcon( name, activeIndicator = True ),
+						"description" : self.__renderPassDescription( name )
 					}
 				)
 
@@ -1123,6 +1147,18 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 		for plug in self.getPlugs() :
 			plug.setValue( renderPass )
 
+	def __renderPassDescription( self, renderPass ) :
+
+		if renderPass == "" :
+			return ""
+
+		if renderPass in self.__renderPasses.get( "adaptorDisabled", [] ) :
+			return "{} has been automatically disabled by a render adaptor.".format( renderPass )
+		elif renderPass not in self.__renderPasses.get( "enabled", [] ) :
+			return "{} has been disabled.".format( renderPass )
+
+		return ""
+
 	def __renderPassIcon( self, renderPass, activeIndicator = False ) :
 
 		if renderPass == "" :
@@ -1134,6 +1170,8 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 			return "warningSmall.png"
 		elif renderPass in self.__renderPasses.get( "enabled", [] ) :
 			return "renderPass.png"
+		elif renderPass in self.__renderPasses.get( "adaptorDisabled", [] ) :
+			return "adaptorDisabledRenderPass.png"
 		else :
 			return "disabledRenderPass.png"
 

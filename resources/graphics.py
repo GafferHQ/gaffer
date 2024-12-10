@@ -471,6 +471,7 @@
 			"ids" : [
 				"renderPass",
 				"disabledRenderPass",
+				"adaptorDisabledRenderPass",
 				"renderPassFolder",
 				"activeRenderPass",
 				"activeRenderPassFadedHighlighted",
