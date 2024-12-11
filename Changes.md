@@ -20,6 +20,7 @@ Improvements
 - RenderPassEditor :
   - Added support for entering custom values in the `Type` column. Custom types can be later configured with a downstream NameSwitch selecting based on the value of the `renderPass:type` option.
   - Columns that edit options now include the option name in their header tooltip.
+  - Improved description of `render:cameraExclusions` and `render:matteExclusions` options.
 
 Fixes
 -----
