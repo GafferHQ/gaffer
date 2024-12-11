@@ -17,6 +17,7 @@ Improvements
 ------------
 
 - MergeScenes : Removed unnecessary temporary contexts.
+- RenderPassEditor : Added support for entering custom values in the `Type` column. Custom types can be later configured with a downstream NameSwitch selecting based on the value of the `renderPass:type` option.
 
 Fixes
 -----
