@@ -17,6 +17,9 @@ Improvements
 ------------
 
 - MergeScenes : Removed unnecessary temporary contexts.
+- RenderPassEditor :
+  - Columns that edit options now include the option name in their header tooltip.
+  - Improved description of `render:cameraExclusions` and `render:matteExclusions` options.
 
 Fixes
 -----
