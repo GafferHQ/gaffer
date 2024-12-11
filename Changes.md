@@ -9,7 +9,12 @@ Features
 Improvements
 ------------
 
-- VisualiserTool : Changed `dataName` input widget for choosing the primitive variable to visualise to a list of available variable names for the current selection.
+- VisualiserTool :
+  - Changed `dataName` input widget for choosing the primitive variable to visualise to a list of available variable names for the current selection.
+  - Added `mode` plug. There are currently three modes :
+    - Auto : Currently the same as `Color (Type Range)`.
+    - Color (Type Range) : Float, integer, V2f and color data is displayed without modification. Vector data is remapped from `[-1, 1]` to `[0, 1]`.
+    - Color (Manual Range) : Values are remapped from the range `[valueMin, valueMax]` to `[0, 1]`.
 - Tweaks nodes : Moved list of tweaks to a collapsible "Tweaks" section in the NodeEditor.
 - Viewer :
   - The shading mode menu icon now updates to indicate when a non-default shading mode is in use.

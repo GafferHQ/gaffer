@@ -59,6 +59,8 @@ Gaffer.Metadata.registerNode(
 	"order", 8,
 	"tool:exclusive", False,
 
+	"toolbarLayout:activator:modeIsColorManualRange", lambda node : node["mode"].getValue() == GafferSceneUI.VisualiserTool.Mode.ColorManualRange,
+
 	plugs = {
 
 		"dataName" : [
@@ -86,6 +88,34 @@ Gaffer.Metadata.registerNode(
 			"toolbarLayout:width", 100,
 
 		],
+		"mode" : [
+
+			"description",
+			"""
+			The method for displaying the data.
+
+			Float and integer data are displayed as grayscale. V2f data is displayed with
+			the `x` value for red, `y` value for green and `0` for blue. Vector data is
+			displayed with the `x` value for red, `y` value for green and `z` value for blue.
+			Color data is displayed directly.
+
+			- Auto : Same as `Color (Type Range)`.
+			- Color (Type Range) : Float, integer, V2f and color data is displayed without
+			modification. Vector data is remapped from `[-1, 1]` to `[0, 1]`.
+			- Color (Manual Range) : Values are remapped from the range `[valueMin, valueMax]` to
+			`[0, 1]`.
+			""",
+
+			"preset:Auto", GafferSceneUI.VisualiserTool.Mode.Auto,
+			"preset:Color (Type Range)", GafferSceneUI.VisualiserTool.Mode.ColorTypeRange,
+			"preset:Color (Manual Range)", GafferSceneUI.VisualiserTool.Mode.ColorManualRange,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+			"toolbarLayout:section", "Bottom",
+			"toolbarLayout:width", 150,
+
+		],
 		"valueMin" : [
 
 			"description",
@@ -98,6 +128,8 @@ Gaffer.Metadata.registerNode(
 
 			"toolbarLayout:section", "Bottom",
 			"toolbarLayout:width", 175,
+
+			"toolbarLayout:visibilityActivator", "modeIsColorManualRange",
 
 		],
 		"valueMax" : [
@@ -112,6 +144,8 @@ Gaffer.Metadata.registerNode(
 
 			"toolbarLayout:section", "Bottom",
 			"toolbarLayout:width", 175,
+
+			"toolbarLayout:visibilityActivator", "modeIsColorManualRange",
 
 		],
 		"size": [
