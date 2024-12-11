@@ -258,6 +258,7 @@ class VisualiserGadget : public Gadget
 
 				// Get min/max values and colors and opacity
 				UniformBlock uniforms;
+				const VisualiserTool::Mode mode = (VisualiserTool::Mode)m_tool->modePlug()->getValue();
 				const V3f valueMin = m_tool->valueMinPlug()->getValue();
 				const V3f valueMax = m_tool->valueMaxPlug()->getValue();
 				uniforms.opacity = m_tool->opacityPlug()->getValue();
@@ -265,10 +266,14 @@ class VisualiserGadget : public Gadget
 				// Compute value range reciprocal
 				//
 				// NOTE : when range is <= 0 set the reciprocal to 0 so that value becomes 0 (minimum)
-				V3f valueRange = ( valueMax - valueMin );
-				for( int i = 0; i < 3; ++i )
+				std::optional<V3f> valueRange;
+				if( mode == VisualiserTool::Mode::Color )
 				{
-					valueRange[i] = ( valueRange[i] > 0.f ) ? ( 1.f / valueRange[i] ) : 0.f;
+					valueRange = ( valueMax - valueMin );
+					for( int i = 0; i < 3; ++i )
+					{
+						valueRange.value()[i] = ( valueRange.value()[i] > 0.f ) ? ( 1.f / valueRange.value()[i] ) : 0.f;
+					}
 				}
 
 				// Get the world to clip space matrix
@@ -425,22 +430,29 @@ class VisualiserGadget : public Gadget
 							[[fallthrough]];
 						case FloatVectorDataTypeId:
 							enableVSZ = true;
-							uniforms.valueMin = V3f( valueMin.x );
-							uniforms.valueRange = V3f( valueRange.x );
+							uniforms.valueMin = valueRange ? V3f( valueMin.x ) : V3f( 0.f );
+							uniforms.valueRange = valueRange ? V3f( valueRange.value().x ) : V3f( 1.f );
 							break;
 						case V2fVectorDataTypeId:
 							stride = 2;
 							offset = true;
-							uniforms.valueMin = V3f( valueMin.x, valueMin.y, 0.f );
-							uniforms.valueRange = V3f( valueRange.x, valueRange.y, 0.f );
+							uniforms.valueMin = valueRange ? V3f( valueMin.x, valueMin.y, 0.f ) : V3f( 0.f );
+							uniforms.valueRange = valueRange ? V3f( valueRange.value().x, valueRange.value().y, 0.f ) : V3f( 1.f, 1.f, 0.f );
 							break;
 						case Color3fVectorDataTypeId:
+							stride = 3;
+							offset = true;
+							enableVSZ = true;
+							uniforms.valueMin = valueRange ? valueMin : V3f( 0.f );
+							uniforms.valueRange = valueRange ? valueRange.value() : V3f( 1.f );
+							break;
 						case V3fVectorDataTypeId:
 							stride = 3;
 							offset = true;
 							enableVSZ = true;
-							uniforms.valueMin = valueMin;
-							uniforms.valueRange = valueRange;
+							uniforms.valueMin = valueRange ? valueMin : V3f( -1.f );
+							// Use 0.5 instead of 2.0 to account for reciprocal in `valueRange` above
+							uniforms.valueRange = valueRange ? valueRange.value() : V3f( 0.5f );
 							break;
 						default:
 							continue;
@@ -702,6 +714,7 @@ VisualiserTool::VisualiserTool( SceneView *view, const std::string &name ) : Sel
 
 	addChild( new StringPlug( "dataName", Plug::In, "uv" ) );
 	addChild( new FloatPlug( "opacity", Plug::In, g_opacityDefault, g_opacityMin, g_opacityMax ) );
+	addChild( new IntPlug( "mode", Plug::In, (int)Mode::Auto, (int)Mode::First, (int)Mode::Last ) );
 	addChild( new V3fPlug( "valueMin", Plug::In, g_valueMinDefault ) );
 	addChild( new V3fPlug( "valueMax", Plug::In, g_valueMaxDefault ) );
 	addChild( new FloatPlug( "size", Plug::In, g_textSizeDefault, g_textSizeMin ) );
@@ -790,44 +803,54 @@ const FloatPlug *VisualiserTool::opacityPlug() const
 	return getChild<FloatPlug>( g_firstPlugIndex + 1 );
 }
 
+IntPlug *VisualiserTool::modePlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 2 );
+}
+
+const IntPlug *VisualiserTool::modePlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 2 );
+}
+
 V3fPlug *VisualiserTool::valueMinPlug()
 {
-	return getChild<V3fPlug>( g_firstPlugIndex + 2 );
+	return getChild<V3fPlug>( g_firstPlugIndex + 3 );
 }
 
 const V3fPlug *VisualiserTool::valueMinPlug() const
 {
-	return getChild<V3fPlug>( g_firstPlugIndex + 2 );
+	return getChild<V3fPlug>( g_firstPlugIndex + 3 );
 }
 
 V3fPlug *VisualiserTool::valueMaxPlug()
 {
-	return getChild<V3fPlug>( g_firstPlugIndex + 3 );
+	return getChild<V3fPlug>( g_firstPlugIndex + 4 );
 }
 
 const V3fPlug *VisualiserTool::valueMaxPlug() const
 {
-	return getChild<V3fPlug>( g_firstPlugIndex + 3 );
+	return getChild<V3fPlug>( g_firstPlugIndex + 4 );
 }
 
 FloatPlug *VisualiserTool::sizePlug()
 {
-	return getChild<FloatPlug>( g_firstPlugIndex + 4 );
+	return getChild<FloatPlug>( g_firstPlugIndex + 5 );
 }
 
 const FloatPlug *VisualiserTool::sizePlug() const
 {
-	return getChild<FloatPlug>( g_firstPlugIndex + 4 );
+	return getChild<FloatPlug>( g_firstPlugIndex + 5 );
 }
 
 ScenePlug *VisualiserTool::internalScenePlug()
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 5 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 6 );
 }
 
 const ScenePlug *VisualiserTool::internalScenePlug() const
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 5 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 6 );
 }
 
 const std::vector<VisualiserTool::Selection> &VisualiserTool::selection() const
@@ -1031,7 +1054,8 @@ void VisualiserTool::plugDirtied( const Plug *plug )
 		plug == opacityPlug() ||
 		plug == valueMinPlug() ||
 		plug == valueMaxPlug() ||
-		plug == sizePlug()
+		plug == sizePlug() ||
+		plug == modePlug()
 	)
 	{
 		m_gadgetDirty = true;

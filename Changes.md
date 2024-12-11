@@ -1,6 +1,14 @@
 1.5.x.x (relative to 1.5.4.0)
 =======
 
+Improvements
+------------
+
+- VisualiserTool : Added `mode` plug. The available modes are :
+  - Auto : Chooses the most appropriate mode based on the data and primitive type.
+  - Color (Auto Range) : Float, integer, V2f and color data is displayed without modification. Vector data is remapped from `[-1, 1]` to `[0, 1]`.
+  - Color : Values are remapped from the range `[valueMin, valueMax]` to `[0, 1]`.
+
 Fixes
 -----
 

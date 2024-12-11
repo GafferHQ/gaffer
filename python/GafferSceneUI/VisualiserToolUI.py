@@ -59,6 +59,8 @@ Gaffer.Metadata.registerNode(
 	"order", 8,
 	"tool:exclusive", False,
 
+	"toolbarLayout:activator:modeIsColor", lambda node : node["mode"].getValue() == GafferSceneUI.VisualiserTool.Mode.Color,
+
 	plugs = {
 
 		"dataName" : [
@@ -86,6 +88,28 @@ Gaffer.Metadata.registerNode(
 			"toolbarLayout:width", 100,
 
 		],
+		"mode" : [
+
+			"description",
+			"""
+			The method for displaying the data.
+
+			- Auto : Chooses the most appropriate mode based on the data and primitive type.
+			- Color : Values are remapped from the range `[valueMin, valueMax]` to `[0, 1]`.
+			- Color (Auto Range) : Float, integer, V2f and color data is displayed without
+			modification. Vector data is remapped from `[-1, 1]` to `[0, 1]`.
+			""",
+
+			"preset:Auto", GafferSceneUI.VisualiserTool.Mode.Auto,
+			"preset:Color", GafferSceneUI.VisualiserTool.Mode.Color,
+			"preset:Color (Auto Range)", GafferSceneUI.VisualiserTool.Mode.ColorAutoRange,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+			"toolbarLayout:section", "Bottom",
+			"toolbarLayout:width", 150,
+
+		],
 		"valueMin" : [
 
 			"description",
@@ -98,6 +122,8 @@ Gaffer.Metadata.registerNode(
 
 			"toolbarLayout:section", "Bottom",
 			"toolbarLayout:width", 175,
+
+			"toolbarLayout:visibilityActivator", "modeIsColor",
 
 		],
 		"valueMax" : [
@@ -112,6 +138,8 @@ Gaffer.Metadata.registerNode(
 
 			"toolbarLayout:section", "Bottom",
 			"toolbarLayout:width", 175,
+
+			"toolbarLayout:visibilityActivator", "modeIsColor",
 
 		],
 		"size": [

@@ -68,11 +68,24 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 
 		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::VisualiserTool, VisualiserToolTypeId, SelectionTool );
 
+		enum class Mode
+		{
+			Auto,
+			ColorAutoRange,
+			Color,
+
+			First = Auto,
+			Last = Color
+		};
+
 		Gaffer::StringPlug *dataNamePlug();
 		const Gaffer::StringPlug *dataNamePlug() const;
 
 		Gaffer::FloatPlug *opacityPlug();
 		const Gaffer::FloatPlug *opacityPlug() const;
+
+		Gaffer::IntPlug *modePlug();
+		const Gaffer::IntPlug *modePlug() const;
 
 		Gaffer::V3fPlug *valueMinPlug();
 		const Gaffer::V3fPlug *valueMinPlug() const;
