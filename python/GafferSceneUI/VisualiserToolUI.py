@@ -64,7 +64,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Specifies the name of the primitive variable to visualise. The data should
-			be of type float, V2f or V3f.
+			be of type int, float, V2f, Color3f or V3f.
 			""",
 
 			"toolbarLayout:section", "Bottom",
