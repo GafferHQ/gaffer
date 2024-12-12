@@ -139,36 +139,37 @@ def __primitiveVariableContextMenu( menuDefinition, plugValueWidget ) :
 
 	scenePlug = node.view()["in"].getInput()
 	scriptNode = scenePlug.ancestor( Gaffer.ScriptNode )
-	selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( scriptNode )
+	with node.view().context() :
+		selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( scriptNode )
 
-	primVars = []
+		primVars = []
 
-	for path in selection.paths() :
-		primitive = scenePlug.object( path )
-		if not isinstance( primitive, IECoreScene.MeshPrimitive ) :
-			continue
-
-		for v in primitive.keys() :
-			if primitive[v].interpolation not in [
-				IECoreScene.PrimitiveVariable.Interpolation.FaceVarying,
-				IECoreScene.PrimitiveVariable.Interpolation.Uniform,
-				IECoreScene.PrimitiveVariable.Interpolation.Vertex,
-			] :
+		for path in selection.paths() :
+			primitive = scenePlug.object( path )
+			if not isinstance( primitive, IECoreScene.MeshPrimitive ) :
 				continue
 
-			if not isinstance(
-				primitive[v].data,
-				(
-					IECore.IntVectorData,
-					IECore.FloatVectorData,
-					IECore.V2fVectorData,
-					IECore.Color3fVectorData,
-					IECore.V3fVectorData,
-				)
-			) :
-				continue
+			for v in primitive.keys() :
+				if primitive[v].interpolation not in [
+					IECoreScene.PrimitiveVariable.Interpolation.FaceVarying,
+					IECoreScene.PrimitiveVariable.Interpolation.Uniform,
+					IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+				] :
+					continue
 
-			primVars.append( v )
+				if not isinstance(
+					primitive[v].data,
+					(
+						IECore.IntVectorData,
+						IECore.FloatVectorData,
+						IECore.V2fVectorData,
+						IECore.Color3fVectorData,
+						IECore.V3fVectorData,
+					)
+				) :
+					continue
+
+				primVars.append( v )
 
 	if len( primVars ) > 0 :
 		menuDefinition.prepend( "/PrimitiveVariablesDivider", { "divider" : True } )
