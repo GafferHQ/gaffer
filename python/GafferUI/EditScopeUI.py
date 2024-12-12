@@ -600,9 +600,11 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __readOnlyReason( self, editScope ) :
 
-		if Gaffer.MetadataAlgo.readOnly( editScope ) :
+		readOnlyReason = Gaffer.MetadataAlgo.readOnlyReason( editScope )
+		if readOnlyReason is not None :
 			return "{} is locked.".format(
-				Gaffer.MetadataAlgo.readOnlyReason( editScope ).relativeName( editScope.scriptNode() )
+				"File" if isinstance( readOnlyReason, Gaffer.ScriptNode )
+				else readOnlyReason.relativeName( readOnlyReason.scriptNode() )
 			)
 
 		return None
