@@ -148,7 +148,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		if not columnName :
 			columnName = optionLabel or optionName.split( ":" )[-1]
 
-		toolTip = "<h3>{}</h3>".format( optionLabel or columnName )
+		toolTip = "<h3>{}</h3> Option : <code>{}</code>".format( optionLabel or columnName, optionName )
 		optionDescription = Gaffer.Metadata.value( "option:" + optionName, "description" )
 		if optionDescription :
 			## \todo PathListingWidget's PathModel should be handling this instead.
