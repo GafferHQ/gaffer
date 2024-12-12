@@ -35,13 +35,86 @@
 ##########################################################################
 
 import Gaffer
+import GafferUI
 import GafferSceneUI
 
-Gaffer.Metadata.registerValue( "option:renderPass:type", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
-Gaffer.Metadata.registerValue( "option:renderPass:type", "presetsPlugValueWidget:allowCustom", True )
-Gaffer.Metadata.registerValue( "option:renderPass:type", "preset:Standard", "" )
-## \todo As part of the future great metadata reckoning, it would make more sense for renderPassTypePresetNames to be defined as
-# part of this global metadata rather than by GafferSceneUI.RenderPassTypeAdaptorUI and then called here. This would also allow
-# the registrations in this file to be combined with those in `startup/GafferScene/renderPassOptions.py`.
-Gaffer.Metadata.registerValue( "option:renderPass:type", "presetNames", GafferSceneUI.RenderPassTypeAdaptorUI.renderPassTypePresetNames )
-Gaffer.Metadata.registerValue( "option:renderPass:type", "presetValues", GafferSceneUI.RenderPassTypeAdaptorUI.renderPassTypePresetValues )
+Gaffer.Metadata.registerNode(
+
+	GafferSceneUI.VisualiserTool,
+
+	"description",
+	"""
+	Tool for displaying named primitive variables of type float, V2f or V3f as a colored overlay.
+	""",
+
+	"viewer:shortCut", "O",
+	"viewer:shouldAutoActivate", False,
+	"order", 8,
+	"tool:exclusive", False,
+
+	plugs = {
+
+		"dataName" : [
+
+			"description",
+			"""
+			Specifies the name of the primitive variable to visualise. The data should
+			be of type float, V2f or V3f.
+			""",
+
+			"toolbarLayout:section", "Bottom",
+			"toolbarLayout:width", 150,
+
+		],
+		"opacity" : [
+
+			"description",
+			"""
+			The amount the visualiser will occlude the scene locations being visualised.
+			""",
+
+			"toolbarLayout:section", "Bottom",
+			"toolbarLayout:width", 100,
+
+		],
+		"valueMin" : [
+
+			"description",
+			"""
+			The minimum data channel value that will be mapped to 0.
+
+			For float data only the first channel is used. For V2f data only the first
+			and second channels are used. For V3f data all three channels are used.
+			""",
+
+			"toolbarLayout:section", "Bottom",
+			"toolbarLayout:width", 175,
+
+		],
+		"valueMax" : [
+
+			"description",
+			"""
+			The maximum data channel value that will be mapped to 1.
+
+			For float data only the first channel is used. For V2f data only the first
+			and second channels are used. For V3f data all three channels are used.
+			""",
+
+			"toolbarLayout:section", "Bottom",
+			"toolbarLayout:width", 175,
+
+		],
+		"size": [
+
+			"description",
+			"""
+			Specifies the size of the displayed text.
+			""",
+
+			"plugValueWidget:type", ""
+
+		],
+
+	},
+)

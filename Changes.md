@@ -21,11 +21,16 @@ Features
   - Inference : Loads ONNX models and performance inference using an array of input tensors.
   - ImageToTensor : Converts images to tensors for use with the Inference node.
   - TensorToImage : Converts tensors back to images following inference.
+- VisualiserTool : Added tool to 3D viewer for visualising primitive variables on meshes.
 
 Improvements
 ------------
 
 - MergeScenes : Removed unnecessary temporary contexts.
+- RenderPassEditor :
+  - Added support for entering custom values in the `Type` column. Custom types can be later configured with a downstream NameSwitch selecting based on the value of the `renderPass:type` option.
+  - Columns that edit options now include the option name in their header tooltip.
+  - Improved description of `render:cameraExclusions` and `render:matteExclusions` options.
 
 Fixes
 -----
@@ -42,6 +47,7 @@ API
 ---
 
 - PlugLayout : Activations may now depend on the presence of certain plugs, as they are now reevaluated when child plugs are added and removed.
+- IECoreArnold::ShaderNetworkAlgo : Added a new API to allow just-in-time substitutions to be made when translating shaders to Arnold. Use with care.
 
 1.5.1.0 (relative to 1.5.0.1)
 =======

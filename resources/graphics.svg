@@ -21,6 +21,30 @@
      id="title2005">Gaffer Icons</title>
   <defs
      id="defs4">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient34797">
+      <stop
+         style="stop-color:#cc2929;stop-opacity:1;"
+         offset="0"
+         id="stop34793" />
+      <stop
+         style="stop-color:#ff8080;stop-opacity:0;"
+         offset="1"
+         id="stop34795" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient33700">
+      <stop
+         style="stop-color:#29cc29;stop-opacity:1;"
+         offset="0"
+         id="stop33696" />
+      <stop
+         style="stop-color:#00ff00;stop-opacity:0;"
+         offset="1"
+         id="stop33698" />
+    </linearGradient>
     <inkscape:path-effect
        only_selected="false"
        apply_with_weight="true"
@@ -289,6 +313,26 @@
          offset="0"
          id="stop5780-2" />
     </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient33700"
+       id="linearGradient33702"
+       x1="150.1875"
+       y1="229.86539"
+       x2="150.1875"
+       y2="241.28247"
+       gradientUnits="userSpaceOnUse"
+       spreadMethod="reflect" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient34797"
+       id="linearGradient34799"
+       x1="150.32167"
+       y1="232.44189"
+       x2="159.21875"
+       y2="232.44189"
+       gradientUnits="userSpaceOnUse"
+       spreadMethod="reflect" />
   </defs>
   <sodipodi:namedview
      id="base"
@@ -2569,13 +2613,21 @@
          id="gafferSceneUICropWindowTool"
          style="display:inline;opacity:1;fill:none;fill-opacity:0.992157;stroke:none;stroke-width:0.917663;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill" />
       <rect
-         style="display:inline;opacity:1;fill:none;fill-opacity:0.996078;stroke:none;stroke-width:0.917663;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
+         style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.917663;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
          id="gafferSceneUILightTool"
          width="25"
          height="25"
          x="220"
          y="1774"
          inkscape:label="gafferSceneUILightTool" />
+      <rect
+         style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.917663;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
+         id="gafferSceneUIVisualiserTool"
+         width="25"
+         height="25"
+         x="286"
+         y="1774"
+         inkscape:label="gafferSceneUIVisualiserTool" />
     </g>
     <g
        id="g3414"
@@ -5443,6 +5495,39 @@
              inkscape:connector-curvature="0"
              sodipodi:nodetypes="csc" />
         </g>
+      </g>
+      <g
+         id="g5778"
+         style="display:inline"
+         transform="matrix(1.0477081,0,0,1,141.08559,1606.3513)"
+         inkscape:label="visualisers">
+        <path
+           inkscape:connector-curvature="0"
+           id="path5769"
+           d="m 150.21875,223.51843 -8.5625,2.53125 0.71875,10.4375 7.67381,4.8782 7.95119,-4.7532 0.71875,-10.53125 z"
+           style="display:inline;fill:url(#linearGradient34799);fill-opacity:1;stroke:#3c3c3c;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           sodipodi:nodetypes="ccccccc"
+           transform="translate(0,-1.7e-5)" />
+        <path
+           inkscape:connector-curvature="0"
+           id="path13939"
+           d="m 150.21875,223.51843 -8.5625,2.53125 0.71875,10.4375 7.67381,4.8782 7.95119,-4.7532 0.71875,-10.53125 z"
+           style="display:inline;mix-blend-mode:lighten;fill:url(#linearGradient33702);fill-opacity:1;stroke:#3c3c3c;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           sodipodi:nodetypes="ccccccc"
+           transform="translate(0,-1.7e-5)"
+           inkscape:label="path13939" />
+        <path
+           inkscape:connector-curvature="0"
+           style="display:inline;fill:none;fill-opacity:1;stroke:#3c3c3c;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="m 142.36661,236.49782 -0.71022,-10.45042 8.39242,3.31798 v 12 z"
+           id="path5771"
+           sodipodi:nodetypes="ccccc" />
+        <path
+           inkscape:connector-curvature="0"
+           style="display:inline;fill:none;fill-opacity:1;stroke:#3c3c3c;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="m 141.65639,226.0474 8.39242,3.31798 8.67829,-3.29262 -8.52267,-2.56187 z"
+           id="path5773"
+           sodipodi:nodetypes="ccccc" />
       </g>
     </g>
     <g

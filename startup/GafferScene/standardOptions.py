@@ -182,6 +182,10 @@ Gaffer.Metadata.registerValue(
 	ray visibility. Camera visibility attributes authored in the scene take precedence
 	over this option.
 
+	Typically, this is used to exclude descendants of locations in `cameraInclusions`,
+	as locations not specified in `cameraInclusions` already default to being excluded
+	from camera ray visibility.
+
 	For shadow, reflection and reflectionAlpha pass types, this specifies objects that
 	cast shadows or reflections. Shadow or reflection visibility attributes authored
 	in the scene take precedence over this option.
@@ -209,5 +213,9 @@ Gaffer.Metadata.registerValue(
 	A set expression that excludes the matched objects and their descendants from being
 	treated as matte (holdout) objects. Matte attributes authored in the scene take
 	precedence over this option.
+
+	Typically, this is used to exclude descendants of locations in `matteInclusions`,
+	as locations not specified in `matteInclusions` already default to not being
+	treated as matte objects.
 	"""
 )
