@@ -138,7 +138,7 @@ def __primitiveVariableContextMenu( menuDefinition, plugValueWidget ) :
 		return
 
 	scenePlug = node.view()["in"].getInput()
-	scriptNode = scenePlug.ancestor( Gaffer.ScriptNode )
+	scriptNode = node.view().scriptNode()
 	with node.view().context() :
 		selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( scriptNode )
 
