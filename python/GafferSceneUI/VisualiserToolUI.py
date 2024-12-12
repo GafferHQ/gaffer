@@ -145,6 +145,9 @@ def __primitiveVariableContextMenu( menuDefinition, plugValueWidget ) :
 		primVars = []
 
 		for path in selection.paths() :
+			if not scenePlug.exists( path ) :
+				continue
+
 			primitive = scenePlug.object( path )
 			if not isinstance( primitive, IECoreScene.MeshPrimitive ) :
 				continue
