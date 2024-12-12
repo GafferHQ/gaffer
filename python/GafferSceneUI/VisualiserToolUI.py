@@ -142,7 +142,7 @@ def __primitiveVariableContextMenu( menuDefinition, plugValueWidget ) :
 	with node.view().context() :
 		selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( scriptNode )
 
-		primVars = []
+		primVars = set()
 
 		for path in selection.paths() :
 			if not scenePlug.exists( path ) :
@@ -172,7 +172,7 @@ def __primitiveVariableContextMenu( menuDefinition, plugValueWidget ) :
 				) :
 					continue
 
-				primVars.append( v )
+				primVars.add( v )
 
 	if len( primVars ) > 0 :
 		menuDefinition.prepend( "/PrimitiveVariablesDivider", { "divider" : True } )
