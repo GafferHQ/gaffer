@@ -490,6 +490,19 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 			s2["b2"]["p"]["children"].getInput().fullName()
 		)
 
+	def testLoadPromotedChildrenPlugFrom1_5( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "promotedArrayPlug-1.5.1.0.gfr" )
+		script.load()
+
+		self.assertEqual( script["Box"]["children"][0].getInput(), script["Cube"]["out"] )
+		self.assertEqual( script["Box"]["Parent"]["children"].source(), script["Box"]["children"] )
+		self.assertEqual( script["Box"]["Parent"]["children"][0].source(), script["Cube"]["out"] )
+
+		self.assertSceneValid( script["Box"]["out"] )
+		self.assertEqual( script["Box"]["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "sphere", "cube" ] ) )
+
 	def testSetPassThroughWhenNoParent( self ) :
 
 		sphere = GafferScene.Sphere()

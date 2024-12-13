@@ -34,8 +34,8 @@
 #
 ##########################################################################
 
-import unittest
 import pathlib
+import unittest
 import imath
 
 import IECore
@@ -627,6 +627,17 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 		p = Gaffer.ArrayPlug( name = "p" )
 		with self.assertRaisesRegex( RuntimeError, "ArrayPlug `p` was constructed without the required `elementPrototype`" ) :
 			p.resize( 1 )
+
+	def testLoadOutputPrototypeFrom1_5( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "arrayPlugWithOutputPrototype-1.5.1.0.gfr" )
+		script.load()
+
+		self.assertIsInstance( script["Node"]["user"]["array"], Gaffer.ArrayPlug )
+		self.assertEqual( script["Node"]["user"]["array"].direction(), Gaffer.Plug.Direction.In )
+		self.assertEqual( len( script["Node"]["user"]["array"] ), 1 )
+		self.assertIsInstance( script["Node"]["user"]["array"][0], Gaffer.IntPlug )
 
 if __name__ == "__main__":
 	unittest.main()
