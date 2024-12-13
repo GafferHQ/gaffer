@@ -6,9 +6,12 @@ Breaking Changes
 
 - StandardNodule : Removed deprecated `setCompatibleLabelsVisible()`.
 
+1.5.x.x (relative to 1.5.2.0)
+=======
 
 
-1.5.x.x (relative to 1.5.1.0)
+
+1.5.2.0 (relative to 1.5.1.0)
 =======
 
 > Caution : The GafferML features introduced in this release are considered experimental, and are not subject to the usual backwards compatibility guarantees that apply to the rest of Gaffer.
@@ -16,9 +19,9 @@ Breaking Changes
 Features
 --------
 
-- GafferML : Added a new module with the following nodes for running maching learning models via ONNX Runtime :
+- GafferML : Added a new module with the following nodes for running machine learning models via ONNX Runtime :
   - DataToTensor : Converts Gaffer data to tensors.
-  - Inference : Loads ONNX models and performance inference using an array of input tensors.
+  - Inference : Loads ONNX models and performs inference using an array of input tensors.
   - ImageToTensor : Converts images to tensors for use with the Inference node.
   - TensorToImage : Converts tensors back to images following inference.
 - VisualiserTool : Added tool to 3D viewer for visualising primitive variables on meshes.
@@ -42,6 +45,8 @@ Fixes
 - Widget : Fixed `event.sourceWidget` for DragDropEvents generated from a Qt native drag within the same Gaffer process. This will now reference the `GafferUI.Widget` that the Qt source widget belongs to, if any.
 - Catalogue : Fixed bug which "stole" drags that crossed the image listing but which were destined elsewhere, for instance a drag from the HierarchyView to a PathFilter in the GraphEditor.
 - GadgetWidget : Fixed signal handling bug in `setViewportGadget()`. This could cause the widget to attempt to redraw unnecessarily when the _old_ viewport requested a redraw.
+- EditScope : Fixed error updating the Global Edit Target in read-only files.
+- RandomChoice : Fixed errors right-clicking on non-value plugs in the NodeEditor.
 
 API
 ---
@@ -358,16 +363,23 @@ Build
 - Zstandard : Added version 1.5.0.
 - Windows : Updated compiler to Visual Studio 2022 / MSVC 17.8 / Runtime library 14.3.
 
-1.4.15.x (relative to 1.4.15.2)
+1.4.15.x (relative to 1.4.15.3)
+========
+
+
+
+1.4.15.3 (relative to 1.4.15.2)
 ========
 
 Fixes
 -----
 
+- ArrayPlug : Fixed loading of promoted plugs saved from Gaffer 1.5+.
 - GraphEditor : Fixed errors when dragging an unknown file type into the GraphEditor.
 - Widget : Fixed `event.sourceWidget` for DragDropEvents generated from a Qt native drag within the same Gaffer process. This will now reference the `GafferUI.Widget` that the Qt source widget belongs to, if any.
 - Catalogue : Fixed bug which "stole" drags that crossed the image listing but which were destined elsewhere, for instance a drag from the HierarchyView to a PathFilter in the GraphEditor.
 - GadgetWidget : Fixed signal handling bug in `setViewportGadget()`. This could cause the widget to attempt to redraw unnecessarily when the _old_ viewport requested a redraw.
+- RandomChoice : Fixed errors right-clicking on non-value plugs in the NodeEditor.
 
 1.4.15.2 (relative to 1.4.15.1)
 ========
