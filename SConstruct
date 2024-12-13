@@ -64,7 +64,7 @@ if codecs.lookup( locale.getpreferredencoding() ).name != "utf-8" :
 gafferMilestoneVersion = 1 # for announcing major milestones - may contain all of the below
 gafferMajorVersion = 4 # backwards-incompatible changes
 gafferMinorVersion = 15 # new backwards-compatible features
-gafferPatchVersion = 2 # bug fixes
+gafferPatchVersion = 3 # bug fixes
 gafferVersionSuffix = "" # used for alpha/beta releases : "a1", "b2", etc.
 
 # All of the following must be considered when determining
