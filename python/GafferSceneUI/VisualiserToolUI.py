@@ -63,12 +63,14 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Specifies the name of the primitive variable to visualise. The data should
-			be of type int, float, V2f, Color3f or V3f.
+			Specifies the name of the primitive variable to visualise. Variables of
+			type int, float, V2f, Color3f or V3f can be visualised.
 			""",
 
 			"toolbarLayout:section", "Bottom",
 			"toolbarLayout:width", 150,
+
+			"plugValueWidget:type", "GafferSceneUI.VisualiserToolUI._DataNameChooser",
 
 		],
 		"opacity" : [
@@ -124,66 +126,82 @@ Gaffer.Metadata.registerNode(
 	},
 )
 
-def __setDataName( plug, name, checked ) :
+class _DataNameChooser( GafferUI.PlugValueWidget ) :
 
-	plug.setValue( name )
+	def __init__( self, plug, **kw ) :
 
-def __primitiveVariableContextMenu( menuDefinition, plugValueWidget ) :
-
-	plug = plugValueWidget.getPlug()
-	node = plug.node()
-	if not isinstance( node, GafferSceneUI.VisualiserTool ) :
-		return
-	if plug != node["dataName"] :
-		return
-
-	scenePlug = node.view()["in"].getInput()
-	scriptNode = node.view().scriptNode()
-	with node.view().context() :
-		selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( scriptNode )
-
-		primVars = set()
-
-		for path in selection.paths() :
-			if not scenePlug.exists( path ) :
-				continue
-
-			primitive = scenePlug.object( path )
-			if not isinstance( primitive, IECoreScene.MeshPrimitive ) :
-				continue
-
-			for v in primitive.keys() :
-				if primitive[v].interpolation not in [
-					IECoreScene.PrimitiveVariable.Interpolation.FaceVarying,
-					IECoreScene.PrimitiveVariable.Interpolation.Uniform,
-					IECoreScene.PrimitiveVariable.Interpolation.Vertex,
-				] :
-					continue
-
-				if not isinstance(
-					primitive[v].data,
-					(
-						IECore.IntVectorData,
-						IECore.FloatVectorData,
-						IECore.V2fVectorData,
-						IECore.Color3fVectorData,
-						IECore.V3fVectorData,
-					)
-				) :
-					continue
-
-				primVars.add( v )
-
-	if len( primVars ) > 0 :
-		menuDefinition.prepend( "/PrimitiveVariablesDivider", { "divider" : True } )
-
-	for v in reversed( sorted( primVars ) ) :
-		menuDefinition.prepend(
-			f"/Primitive Variables/{v}",
-			{
-				"command" : functools.partial( __setDataName, plug, v ),
-				"checkBox" : plug.getValue() == v,
-			}
+		self.__menuButton = GafferUI.MenuButton(
+			text = plug.getValue(),
+			menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
 		)
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __primitiveVariableContextMenu )
+		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
+
+	def __menuDefinition( self ) :
+
+		menuDefinition = IECore.MenuDefinition()
+
+		node = self.getPlug().node()
+		if not isinstance( node, GafferSceneUI.VisualiserTool ) :
+			return
+		if self.getPlug() != node["dataName"] :
+			return
+
+		scenePlug = node.view()["in"].getInput()
+		scriptNode = node.view().scriptNode()
+		with node.view().context() :
+			selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( scriptNode )
+
+			primVars = set()
+
+			for path in selection.paths() :
+				if not scenePlug.exists( path ) :
+					continue
+
+				primitive = scenePlug.object( path )
+				if not isinstance( primitive, IECoreScene.MeshPrimitive ) :
+					continue
+
+				for v in primitive.keys() :
+					if primitive[v].interpolation not in [
+						IECoreScene.PrimitiveVariable.Interpolation.FaceVarying,
+						IECoreScene.PrimitiveVariable.Interpolation.Uniform,
+						IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+					] :
+						continue
+
+					if not isinstance(
+						primitive[v].data,
+						(
+							IECore.IntVectorData,
+							IECore.FloatVectorData,
+							IECore.V2fVectorData,
+							IECore.Color3fVectorData,
+							IECore.V3fVectorData,
+						)
+					) :
+						continue
+
+					primVars.add( v )
+
+		if len( primVars ) == 0 :
+			menuDefinition.append( "/None Available", { "active" : False } )
+
+		else :
+			for v in reversed( sorted( primVars ) ) :
+				menuDefinition.prepend(
+					"/" + v,
+					{
+						"command" : functools.partial( Gaffer.WeakMethod( self.__setDataName ), v ),
+						"checkBox" : self.getPlug().getValue() == v,
+					}
+				)
+
+		menuDefinition.prepend( "/PrimVarDivider", { "divider" : True, "label" : "Primitive Variables" } )
+
+		return menuDefinition
+
+	def __setDataName( self, value, *unused ) :
+
+		self.getPlug().setValue( value )
+		self.__menuButton.setText( value )
