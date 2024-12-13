@@ -38,6 +38,7 @@ Fixes
 - Catalogue : Fixed bug which "stole" drags that crossed the image listing but which were destined elsewhere, for instance a drag from the HierarchyView to a PathFilter in the GraphEditor.
 - GadgetWidget : Fixed signal handling bug in `setViewportGadget()`. This could cause the widget to attempt to redraw unnecessarily when the _old_ viewport requested a redraw.
 - EditScope : Fixed error updating the Global Edit Target in read-only files.
+- RandomChoice : Fixed errors right-clicking on non-value plugs in the NodeEditor.
 
 API
 ---
