@@ -1,4 +1,9 @@
-1.5.x.x (relative to 1.5.1.0)
+1.5.x.x (relative to 1.5.2.0)
+=======
+
+
+
+1.5.2.0 (relative to 1.5.1.0)
 =======
 
 > Caution : The GafferML features introduced in this release are considered experimental, and are not subject to the usual backwards compatibility guarantees that apply to the rest of Gaffer.
@@ -6,9 +11,9 @@
 Features
 --------
 
-- GafferML : Added a new module with the following nodes for running maching learning models via ONNX Runtime :
+- GafferML : Added a new module with the following nodes for running machine learning models via ONNX Runtime :
   - DataToTensor : Converts Gaffer data to tensors.
-  - Inference : Loads ONNX models and performance inference using an array of input tensors.
+  - Inference : Loads ONNX models and performs inference using an array of input tensors.
   - ImageToTensor : Converts images to tensors for use with the Inference node.
   - TensorToImage : Converts tensors back to images following inference.
 - VisualiserTool : Added tool to 3D viewer for visualising primitive variables on meshes.
