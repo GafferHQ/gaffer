@@ -1,7 +1,10 @@
 1.5.x.x (relative to 1.5.2.0)
 =======
 
+Fixes
+-----
 
+- VisualiserTool : Fix error when trying to visualise data unsupported data.
 
 1.5.2.0 (relative to 1.5.1.0)
 =======
