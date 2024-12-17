@@ -1,7 +1,13 @@
 1.5.x.x (relative to 1.5.2.0)
 =======
 
+Improvements
+------------
 
+- VisualiserTool : Added `mode` plug. There are three current modes :
+  - Auto : Currently the same as `Color (Type Range)`.
+  - Color (Type Range) : Float, integer, V2f and color data is displayed without modification. Vector data is remapped from `[-1, 1]` to `[0, 1]`.
+  - Color (Manual Range) : Values are remapped from the range `[valueMin, valueMax]` to `[0, 1]`.
 
 1.5.2.0 (relative to 1.5.1.0)
 =======
@@ -16,7 +22,7 @@ Features
   - Inference : Loads ONNX models and performs inference using an array of input tensors.
   - ImageToTensor : Converts images to tensors for use with the Inference node.
   - TensorToImage : Converts tensors back to images following inference.
-- VisualiserTool : Added tool to 3D viewer for visualising primitive variables on meshes.
+- VisualiserTool : Added tool to 3D viewer for visualising primitive variables on meshes. A list of available variable names for the current selection is available from the `dataName` context menu.
 
 Improvements
 ------------

@@ -317,8 +317,16 @@ void GafferSceneUIModule::bindTools()
 		;
 	}
 
-	GafferBindings::NodeClass<VisualiserTool>( nullptr, no_init )
-		.def( init<SceneView *>() )
-	;
+	{
+		scope s = GafferBindings::NodeClass<VisualiserTool>( nullptr, no_init )
+			.def( init<SceneView *>() )
+		;
+
+		enum_<VisualiserTool::Mode>( "Mode" )
+			.value( "Auto", VisualiserTool::Mode::Auto )
+			.value( "ColorTypeRange", VisualiserTool::Mode::ColorTypeRange )
+			.value( "ColorManualRange", VisualiserTool::Mode::ColorManualRange )
+		;
+	}
 
 }
