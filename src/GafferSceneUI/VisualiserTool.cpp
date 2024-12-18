@@ -223,14 +223,16 @@ class VisualiserGadget : public Gadget
 			// Get parent viewport gadget
 			const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
 
+			const VisualiserTool::Mode mode = (VisualiserTool::Mode)m_tool->modePlug()->getValue();
+
 			if( layer == Gadget::Layer::MidFront )
 			{
-				renderColorVisualiser( viewportGadget );
+				renderColorVisualiser( viewportGadget, mode );
 			}
 
 			else if( layer == Gadget::Layer::Front )
 			{
-				renderColorValue( viewportGadget, style );
+				renderColorValue( viewportGadget, style, mode );
 			}
 		}
 
@@ -269,7 +271,11 @@ class VisualiserGadget : public Gadget
 			}
 		}
 
-		void renderColorVisualiser( const ViewportGadget *viewportGadget ) const
+		/// Renders the color visualiser for the given `ViewportGadget`. In general, each visualiser
+		/// is reponsible for determining if it should be drawn for the given `mode`. Objects may
+		/// have different data types for the same variable name, so a visualiser's suitability may
+		/// vary per-object.
+		void renderColorVisualiser( const ViewportGadget *viewportGadget, VisualiserTool::Mode mode ) const
 		{
 			// Bootleg shader
 			buildShader();
@@ -303,7 +309,6 @@ class VisualiserGadget : public Gadget
 
 			// Get min/max values and colors and opacity
 			UniformBlockColorShader uniforms;
-			const VisualiserTool::Mode mode = (VisualiserTool::Mode)m_tool->modePlug()->getValue();
 			const V3f valueMin = m_tool->valueMinPlug()->getValue();
 			const V3f valueMax = m_tool->valueMaxPlug()->getValue();
 			uniforms.opacity = m_tool->opacityPlug()->getValue();
@@ -437,6 +442,25 @@ class VisualiserGadget : public Gadget
 					continue;
 				}
 
+				// Find opengl named buffer data
+				//
+				// NOTE : conversion to IECoreGL mesh may generate vertex attributes (eg. "N")
+				//        so check named primitive variable exists on IECore mesh primitive.
+
+				const auto vIt = mesh->variables.find( name );
+				if( vIt == mesh->variables.end() )
+				{
+					continue;
+				}
+
+				ConstDataPtr vData = vIt->second.data;
+
+				if( mode == VisualiserTool::Mode::Auto && vData->typeId() == IntVectorDataTypeId )
+				{
+					// Will be handled by `renderVertexLabelValue()` instead.
+					continue;
+				}
+
 				// Retrieve cached IECoreGL mesh primitive
 				auto meshGL = runTimeCast<const IECoreGL::MeshPrimitive>( converter->convert( mesh.get() ) );
 				if( !meshGL )
@@ -452,18 +476,6 @@ class VisualiserGadget : public Gadget
 					continue;
 				}
 
-				// Find opengl named buffer data
-				//
-				// NOTE : conversion to IECoreGL mesh may generate vertex attributes (eg. "N")
-				//        so check named primitive variable exists on IECore mesh primitive.
-
-				const auto vIt = mesh->variables.find( name );
-				if( vIt == mesh->variables.end() )
-				{
-					continue;
-				}
-
-				ConstDataPtr vData = vIt->second.data;
 				GLsizei stride = 0;
 				GLenum type = GL_FLOAT;
 				bool offset = false;
@@ -596,11 +608,18 @@ class VisualiserGadget : public Gadget
 			glUseProgram( shaderProgram );
 		}
 
-		void renderColorValue( const ViewportGadget *viewportGadget, const Style *style ) const
+		/// See comment for `renderColorVisualiser()` for requirements for handling `mode`.
+		void renderColorValue( const ViewportGadget *viewportGadget, const Style *style, VisualiserTool::Mode mode ) const
 		{
 			// Display value at cursor as text
 
 			const Data *value = m_tool->cursorValue();
+
+			if( mode == VisualiserTool::Mode::Auto && value && value->typeId() == IntDataTypeId )
+			{
+				return;
+			}
+
 			if( value )
 			{
 				std::ostringstream oss;
