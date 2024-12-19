@@ -115,6 +115,9 @@ const float g_textShadowOffset = 0.1f;
 const std::string g_primitiveVariablePrefix= "primitiveVariable:";
 const int g_primitiveVariablePrefixSize = g_primitiveVariablePrefix.size();
 
+// VertexLabel constants
+const std::string g_vertexIndexDataName = "vertex:index";
+
 //-----------------------------------------------------------------------------
 // Color shader
 //-----------------------------------------------------------------------------
@@ -381,6 +384,7 @@ class VisualiserGadget : public Gadget
 			else if( layer == Gadget::Layer::Front )
 			{
 				renderColorValue( viewportGadget, style, mode );
+				renderVertexLabelValue( viewportGadget, style, mode );
 			}
 		}
 
@@ -836,11 +840,440 @@ class VisualiserGadget : public Gadget
 			}
 		}
 
+		/// See comment for `renderColorVisualiser()` for requirements for handling `mode`.
+		void renderVertexLabelValue( const ViewportGadget *viewportGadget, const Style *style, VisualiserTool::Mode mode ) const
+		{
+			if( mode != VisualiserTool::Mode::Auto )
+			{
+				return;
+			}
+
+			buildShader( m_vertexLabelShader, g_vertexLabelShaderVertSource, g_vertexLabelShaderFragSource );
+
+			if( !m_vertexLabelShader )
+			{
+				return;
+			}
+
+			// Get the cached converter from IECoreGL, this is used to convert primitive
+			// variable data to opengl buffers which will be shared with the IECoreGL renderer
+
+			IECoreGL::CachedConverter *converter = IECoreGL::CachedConverter::defaultCachedConverter();
+
+			GLint uniformBinding;
+			glGetIntegerv( GL_UNIFORM_BUFFER_BINDING, &uniformBinding );
+
+			if( !m_vertexLabelUniformBuffer )
+			{
+				GLuint buffer = 0u;
+				glGenBuffers( 1, &buffer );
+				glBindBuffer( GL_UNIFORM_BUFFER, buffer );
+				glBufferData( GL_UNIFORM_BUFFER, sizeof( UniformBlockVertexLabelShader ), 0, GL_DYNAMIC_DRAW );
+				glBindBuffer( GL_UNIFORM_BUFFER, uniformBinding );
+				m_vertexLabelUniformBuffer.reset( new IECoreGL::Buffer( buffer ) );
+			}
+
+			UniformBlockVertexLabelShader uniforms;
+
+			GLint storageBinding;
+			glGetIntegerv( GL_SHADER_STORAGE_BUFFER_BINDING, &storageBinding );
+
+			if( !m_vertexLabelStorageBuffer )
+			{
+				GLuint buffer = 0u;
+				glGenBuffers( 1, &buffer );
+				m_vertexLabelStorageBuffer.reset( new IECoreGL::Buffer( buffer ) );
+			}
+
+			// Save opengl state
+
+			GLfloat pointSize;
+			glGetFloatv( GL_POINT_SIZE, &pointSize );
+
+			GLint depthFunc;
+			glGetIntegerv( GL_DEPTH_FUNC, &depthFunc );
+
+			GLboolean depthWriteEnabled;
+			glGetBooleanv( GL_DEPTH_WRITEMASK, &depthWriteEnabled );
+
+			const GLboolean depthEnabled = glIsEnabled( GL_DEPTH_TEST );
+			const GLboolean multisampleEnabled = glIsEnabled( GL_MULTISAMPLE );
+
+			GLint shaderProgram;
+			glGetIntegerv( GL_CURRENT_PROGRAM, &shaderProgram );
+
+			GLint arrayBinding;
+			glGetIntegerv( GL_ARRAY_BUFFER_BINDING, &arrayBinding );
+
+			// Get the world to clip space matrix
+
+			Imath::M44f v2c;
+			glGetFloatv( GL_PROJECTION_MATRIX, v2c.getValue() );
+			const Imath::M44f w2c = viewportGadget->getCameraTransform().gjInverse() * v2c;
+
+			// Get raster space bounding box
+
+			const Imath::Box2f rasterBounds = Imath::Box2f(
+				Imath::V2f( 0.f ),
+				Imath::V2f(
+					static_cast<float>( viewportGadget->getViewport().x ),
+					static_cast<float>( viewportGadget->getViewport().y )
+				)
+			);
+
+			// Get text raster space scale and colour
+			//
+			// NOTE : It seems that Gaffer defines the origin of raster space as the top left corner
+			//        of the viewport, however the style text drawing functions assume that y increases
+			//        "up" the screen rather than "down", so invert y to ensure text is not upside down.
+
+			const float size = m_tool->sizePlug()->getValue();
+			const Imath::V3f scale( size, -size, 1.f );
+
+			// Get cursor raster position
+
+			int cursorVertexId = -1;
+			const Imath::V2f cursorRasterPos = m_tool->cursorPos();
+			Imath::V2f cursorVertexRasterPos = Imath::V2f( -1.f );
+			float minDistance2 = std::numeric_limits<float>::max();
+
+			// Get cursor search radius
+			//
+			// NOTE : when the cursor position is invalid set the radius to zero to disable search.
+
+			const Imath::Box2i viewport( Imath::V2i( 0 ), viewportGadget->getViewport() );
+			const float cursorRadius = 0.f;
+				// m_tool->cursorPosValid() && viewport.intersects( cursorRasterPos ) ?
+				// m_tool->cursorRadiusPlug()->getValue() :
+				// 0.f;
+			const float cursorRadius2 = cursorRadius * cursorRadius;
+
+			// Loop through current selection
+
+			std::stringstream oss;
+			for( const auto &location : m_tool->selection() )
+			{
+				GafferScene::ScenePlug::PathScope scope( &location.context() , &location.path() );
+
+				// Check path exists
+
+				if( !location.scene().existsPlug()->getValue() )
+				{
+					continue;
+				}
+
+				// Extract primitive
+
+				auto primitive = runTimeCast<const Primitive>( location.scene().objectPlug()->getValue() );
+
+				if( !primitive )
+				{
+					continue;
+				}
+
+				if( m_tool->dataNamePlug()->getValue() != g_vertexIndexDataName )
+				{
+					continue;
+				}
+
+				// Find "P" vertex attribute
+				//
+				// TODO : We need to use the same polygon offset as the Viewer uses when it draws the
+				//        primitive in polygon points mode. For mesh primitives topology may be different,
+				//        primitive variables were converted to face varying and the mesh triangulated
+				//        with vertex positions duplicated. This means that gl_VertexID in the shader
+				//        no longer corresponds to the vertex id we want to display. It also means there
+				//        may be multiple vertices in the IECoreGL mesh for each vertex in the IECore mesh.
+				//        To get the correct polygon offset we need to draw the mesh using the same
+				//        OpenGL draw call as the Viewer used so we must draw the IECoreGL mesh. So
+				//        we need to search for the (posibly multiple) vertices that correspond to each
+				//        original vertex. If any of these IECoreGL mesh vertices are visible we display
+				//        the IECore mesh vertex id. To accelerate the search we build a multi map keyed
+				//        on vertex position. This assumes that the triangulation and/or conversion to
+				//        face varying attributes processing in IECore does not alter the position of the
+				//        vertices. The building of this map is done after we issue the draw call for the
+				//        mesh primitive, this gives OpenGL an opportunity to concurrently execute the
+				//        visibility pass while we are building the map, ready for the map buffer operation.
+				//        For points and curves primitives there is no polygon offset. For all primitives
+				//        there may be a slight slight precision difference in o2c transform so push vertices
+				//        forward.
+				// NOTE : a cheap alternative approach that solves most of the above problems is to draw
+				//        the visibility pass using "fat" points which cover multiple pixels. This still
+				//        has problems for vertices with negative surrounding curvature ...
+				//
+				// NOTE : We use the primitive variable from the IECore primitive as that has
+				//        vertex interpolation.
+
+				ConstV3fVectorDataPtr pData = primitive->expandedVariableData<IECore::V3fVectorData>(
+					g_pName,
+					IECoreScene::PrimitiveVariable::Vertex,
+					false /* throwIfInvalid */
+				);
+
+				if( !pData )
+				{
+					continue;
+				}
+
+				// Retrieve cached opengl buffer data
+
+				auto pBuffer = runTimeCast<const IECoreGL::Buffer>( converter->convert( pData.get() ) );
+
+				// Get the object to world transform
+
+				Imath::M44f o2w;
+				GafferScene::ScenePlug::ScenePath path( location.path() );
+				while( !path.empty() )
+				{
+					scope.setPath( &path );
+					o2w = o2w * location.scene().transformPlug()->getValue();
+					path.pop_back();
+				}
+
+				// Compute object to clip matrix
+
+				uniforms.o2c = o2w * w2c;
+
+				// Upload opengl uniform block data
+
+				glBindBufferBase( GL_UNIFORM_BUFFER, g_uniformBlockBindingIndex, m_vertexLabelUniformBuffer->buffer() );
+				glBufferData(
+					GL_UNIFORM_BUFFER,
+					sizeof( UniformBlockVertexLabelShader ),
+					&uniforms,
+					GL_DYNAMIC_DRAW
+				);
+
+				// Ensure storage buffer capacity
+
+				glBindBufferBase(
+					GL_SHADER_STORAGE_BUFFER,
+					g_storageBlockBindingIndex,
+					m_vertexLabelStorageBuffer->buffer()
+				);
+
+				const std::size_t storageCapacity =
+					( pData->readable().size() / static_cast<std::size_t>( 32 ) ) +
+					static_cast<std::size_t>( 1 );
+				const std::size_t storageSize = sizeof( std::uint32_t ) * storageCapacity;
+
+				if( m_vertexLabelStorageCapacity < storageCapacity )
+				{
+					glBufferData( GL_SHADER_STORAGE_BUFFER, storageSize, 0, GL_DYNAMIC_DRAW );
+					m_vertexLabelStorageCapacity = storageCapacity;
+				}
+
+				// Clear storage buffer
+				//
+				// NOTE : Shader writes to individual bits using atomicOr instruction so region of
+				//        storage buffer being used for current object needs to be cleared to zero
+
+				const GLuint zeroValue = 0u;
+				glClearBufferSubData(
+					GL_SHADER_STORAGE_BUFFER,
+					GL_R32UI,
+					0,
+					storageSize,
+					GL_RED_INTEGER,
+					GL_UNSIGNED_INT,
+					&zeroValue
+				);
+
+				// Set opengl state
+
+				glPointSize( 3.f );
+				glDepthFunc( GL_LEQUAL );
+				if( !depthEnabled )
+				{
+					glEnable( GL_DEPTH_TEST );
+				}
+				if( depthEnabled )
+				{
+					glDisable( GL_DEPTH_TEST );
+				}
+				if( depthWriteEnabled )
+				{
+					glDepthMask( GL_FALSE );
+				}
+				if( multisampleEnabled )
+				{
+					glDisable( GL_MULTISAMPLE );
+				}
+
+				// Set opengl vertex attribute array state
+
+				glPushClientAttrib( GL_CLIENT_VERTEX_ARRAY_BIT );
+
+				glVertexAttribDivisor( ATTRIB_GLSL_LOCATION_PS, 0 );
+				glEnableVertexAttribArray( ATTRIB_GLSL_LOCATION_PS );
+
+				// Set visibility pass shader
+
+				glUseProgram( m_vertexLabelShader->program() );
+
+				// Draw points and ouput visibility to storage buffer
+
+				glBindBuffer( GL_ARRAY_BUFFER, pBuffer->buffer() );
+				glVertexAttribPointer(
+					ATTRIB_GLSL_LOCATION_PS,
+					3,
+					GL_FLOAT,
+					GL_FALSE,
+					0,
+					nullptr
+				);
+				glDrawArrays( GL_POINTS, 0, static_cast< GLsizei >( pData->readable().size() ) );
+
+				// Restore opengl state
+
+				glPopClientAttrib();
+				glBindBuffer( GL_ARRAY_BUFFER, arrayBinding );
+				glBindBuffer( GL_UNIFORM_BUFFER, uniformBinding );
+
+				glPointSize( pointSize );
+				glDepthFunc( depthFunc );
+				if( !depthEnabled )
+				{
+					glDisable( GL_DEPTH_TEST );
+				}
+				if( depthEnabled )
+				{
+					glEnable( GL_DEPTH_TEST );
+				}
+				if( depthWriteEnabled )
+				{
+					glDepthMask( GL_TRUE );
+				}
+				if( multisampleEnabled )
+				{
+					glEnable( GL_MULTISAMPLE );
+				}
+				glUseProgram( shaderProgram );
+
+				// Map storage buffer
+
+				auto vBuffer = static_cast<const std::uint32_t*>(
+					glMapBufferRange(
+						GL_SHADER_STORAGE_BUFFER,
+						0,
+						storageSize,
+						GL_MAP_READ_BIT
+					)
+				);
+				glBindBuffer( GL_SHADER_STORAGE_BUFFER, storageBinding );
+
+				// Draw vertex ids offset to vertex position in raster space
+
+				if( vBuffer )
+				{
+					ViewportGadget::RasterScope raster( viewportGadget );
+
+					const std::vector<Imath::V3f> &points = pData->readable();
+					for( size_t i = 0; i < points.size(); ++i )
+					{
+						// Check visibility of vertex
+
+						const std::uint32_t index = static_cast<std::uint32_t>( i ) / static_cast<std::uint32_t>( 32u );
+						const std::uint32_t value = static_cast<std::uint32_t>( i ) % static_cast<std::uint32_t>( 32u );
+
+						if( vBuffer[index] & ( static_cast<std::uint32_t>( 1u ) << value ) )
+						{
+							// Transform vertex position to raster space and do manual scissor test
+							//
+							// NOTE : visibility pass encorporates scissor test which culls most
+							//        vertices however some will slip through as visibility pass
+							//        draws "fat" points. bounds test is cheap.
+
+							Imath::V3f worldPos;
+							o2w.multVecMatrix( points[i], worldPos );
+							Imath::V2f rasterPos = viewportGadget->worldToRasterSpace( worldPos );
+							if( rasterBounds.intersects( rasterPos ) )
+							{
+								int vertexId = i;
+
+								// Update cursor vertex id
+								//
+								// NOTE : We defer drawing of the vertex id currently under the cursor, so
+								//        draw the last vertex id label if we replace the cursor vertex id
+
+								const float distance2 = ( cursorRasterPos - rasterPos ).length2();
+								if( ( distance2 < cursorRadius2 ) && ( distance2 < minDistance2 ) )
+								{
+									std::swap( cursorVertexId, vertexId );
+									std::swap( cursorVertexRasterPos, rasterPos );
+									minDistance2 = distance2;
+								}
+
+								// Draw vertex id label
+
+								if( vertexId != -1 )
+								{
+									oss.str( "" );
+									oss.clear();
+									oss << vertexId;
+									const std::string text = oss.str();
+
+									glPushMatrix();
+									glTranslatef(
+										rasterPos.x - style->textBound( GafferUI::Style::LabelText, text ).size().x * 0.5f * scale.x,
+										rasterPos.y,
+										0.f
+									);
+									glScalef( scale.x, scale.y, scale.z );
+									style->renderText( GafferUI::Style::LabelText, text );
+									glPopMatrix();
+								}
+							}
+						}
+					}
+
+					// unmap storage buffer
+
+					glBindBuffer( GL_SHADER_STORAGE_BUFFER, m_vertexLabelStorageBuffer->buffer() );
+					glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
+					glBindBuffer( GL_SHADER_STORAGE_BUFFER, storageBinding );
+				}
+
+				glBindBuffer( GL_SHADER_STORAGE_BUFFER, storageBinding );
+			}
+
+			// draw cursor vertex
+
+			if( cursorVertexId != -1 )
+			{
+				GafferUI::ViewportGadget::RasterScope raster( viewportGadget );
+
+				oss.str( "" );
+				oss.clear();
+				oss << cursorVertexId;
+				std::string const text = oss.str();
+
+				glPushMatrix();
+				glTranslatef(
+					cursorVertexRasterPos.x - style->textBound( GafferUI::Style::LabelText, text ).size().x * scale.x,
+					cursorVertexRasterPos.y,
+					0.f
+				);
+				glScalef( scale.x * 2.f, scale.y * 2.f, scale.z );
+				/// \todo Use highlight color
+				style->renderText( GafferUI::Style::LabelText, text );
+				glPopMatrix();
+			}
+
+			// set tool cursor vertex id
+
+			/// \todo Uncomment this and add method to `VisualiserTool` when enabling drag and drop
+			// m_tool->cursorVertexId( cursorVertexId );
+		}
+
 		const VisualiserTool *m_tool;
 		mutable IECoreGL::ConstShaderPtr m_colorShader;
 		mutable IECoreGL::ConstBufferPtr m_colorUniformBuffer;
 		mutable IECoreGL::ConstShaderPtr m_vertexLabelShader;
-		mutable IECoreGL::ConstShaderPtr m_vertexLabelUniformBuffer;
+		mutable IECoreGL::ConstBufferPtr m_vertexLabelUniformBuffer;
+
+		mutable IECoreGL::ConstBufferPtr m_vertexLabelStorageBuffer;
+		mutable std::size_t m_vertexLabelStorageCapacity;
 };
 
 // Cache for mesh evaluators

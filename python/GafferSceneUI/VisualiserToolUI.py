@@ -51,7 +51,7 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Tool for displaying named primitive variables of type float, V2f or V3f as a colored overlay.
+	Tool for displaying object data.
 	""",
 
 	"viewer:shortCut", "O",
@@ -71,6 +71,9 @@ Gaffer.Metadata.registerNode(
 			prefixed by `primitiveVariable:`. For example, `primitiveVariable:uv`
 			would display the `uv` primitive variable. Primitive variables of
 			type int, float, V2f, Color3f or V3f can be visualised.
+
+			To visualise vertex indices instead of a primitive variable, use the
+			value `vertex:index`.
 			""",
 
 			"toolbarLayout:section", "Bottom",
@@ -162,6 +165,7 @@ class _DataNameChooser( GafferUI.PlugValueWidget ) :
 
 	__primitiveVariablePrefix = "primitiveVariable:"
 	__primitiveVariablePrefixSize = len( __primitiveVariablePrefix )
+	__vertexIndexDataName = "vertex:index"
 
 	def __init__( self, plug, **kw ) :
 
@@ -173,7 +177,12 @@ class _DataNameChooser( GafferUI.PlugValueWidget ) :
 
 	def _updateFromValues( self, values, exception ) :
 
-		self.__menuButton.setText( sole( [ self.__primitiveVariableFromDataName( v ) for v in values ] ) or "None" )
+		singleValue = sole( values )
+		text = "None"
+		if singleValue is not None :
+			text = "Vertex Index" if singleValue == self.__vertexIndexDataName else self.__primitiveVariableFromDataName( singleValue )
+
+		self.__menuButton.setText( text )
 
 	def __menuDefinition( self ) :
 
@@ -236,6 +245,15 @@ class _DataNameChooser( GafferUI.PlugValueWidget ) :
 				)
 
 		menuDefinition.prepend( "/PrimitiveVariableDivider", { "divider" : True, "label" : "Primitive Variables" } )
+
+		menuDefinition.append( "/Other", { "divider" : True, "label" : "Other" } )
+		menuDefinition.append(
+			"/Vertex Index",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setDataName ), self.__vertexIndexDataName ),
+				"checkBox" : self.getPlug().getValue() == self.__vertexIndexDataName,
+			}
+		)
 
 		return menuDefinition
 

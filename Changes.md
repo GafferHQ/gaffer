@@ -4,10 +4,12 @@
 Improvements
 ------------
 
-- VisualiserTool : Added `mode` plug. The available modes are :
-  - Auto : Chooses the most appropriate mode based on the data and primitive type.
-  - Color (Auto Range) : Float, integer, V2f and color data is displayed without modification. Vector data is remapped from `[-1, 1]` to `[0, 1]`.
-  - Color : Values are remapped from the range `[valueMin, valueMax]` to `[0, 1]`.
+- VisualiserTool :
+  - Changed naming requirements for visualising primitive variables. Values in `dataName` now prefix the primitive variable name with `primitiveVariable:`. Setting `dataName` to `vertex:index` will display vertex indices.
+  - Added `mode` plug. The available modes are :
+    - Auto : Chooses the most appropriate mode based on the data and primitive type.
+    - Color (Auto Range) : Float, integer, V2f and color data is displayed without modification. Vector data is remapped from `[-1, 1]` to `[0, 1]`.
+    - Color : Values are remapped from the range `[valueMin, valueMax]` to `[0, 1]`.
 
 Fixes
 -----
