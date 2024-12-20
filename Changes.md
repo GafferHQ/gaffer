@@ -11,6 +11,7 @@ Improvements
 
 - VisualiserTool : Changed `dataName` input widget for choosing the primitive variable to visualise to a list of available variable names for the current selection.
 - Tweaks nodes : Moved list of tweaks to a collapsible "Tweaks" section in the NodeEditor.
+- GafferDispatchTest : Added GraphvizDispatcher for outputting batch graphs in Graphviz DOT format. It can be added to a script using the Python editor : `import GafferDispatchTest; root.addChild( GafferDispatchTest.GraphvizDispatcher())`.
 
 Fixes
 -----
