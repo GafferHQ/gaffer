@@ -67,7 +67,9 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Specifies the name of the primitive variable to visualise. Variables of
+			The name of the data to visualise. Primitive variable names must be
+			prefixed by `primitiveVariable:`. For example, `primitiveVariable:uv`
+			would display the `uv` primitive variable. Primitive variables of
 			type int, float, V2f, Color3f or V3f can be visualised.
 			""",
 
@@ -158,10 +160,12 @@ Gaffer.Metadata.registerNode(
 
 class _DataNameChooser( GafferUI.PlugValueWidget ) :
 
+	__primitiveVariablePrefix = "primitiveVariable:"
+	__primitiveVariablePrefixSize = len( __primitiveVariablePrefix )
+
 	def __init__( self, plug, **kw ) :
 
 		self.__menuButton = GafferUI.MenuButton(
-			text = plug.getValue(),
 			menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
 		)
 
@@ -169,7 +173,7 @@ class _DataNameChooser( GafferUI.PlugValueWidget ) :
 
 	def _updateFromValues( self, values, exception ) :
 
-		self.__menuButton.setText( sole( values ) or "None" )
+		self.__menuButton.setText( sole( [ self.__primitiveVariableFromDataName( v ) for v in values ] ) or "None" )
 
 	def __menuDefinition( self ) :
 
@@ -186,7 +190,7 @@ class _DataNameChooser( GafferUI.PlugValueWidget ) :
 		with node.view().context() :
 			selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( scriptNode )
 
-			primVars = set()
+			primitiveVariables = set()
 
 			for path in selection.paths() :
 				if not scenePlug.exists( path ) :
@@ -216,25 +220,30 @@ class _DataNameChooser( GafferUI.PlugValueWidget ) :
 					) :
 						continue
 
-					primVars.add( v )
+					primitiveVariables.add( v )
 
-		if len( primVars ) == 0 :
+		if len( primitiveVariables ) == 0 :
 			menuDefinition.append( "/None Available", { "active" : False } )
 
 		else :
-			for v in reversed( sorted( primVars ) ) :
+			for v in reversed( sorted( primitiveVariables ) ) :
 				menuDefinition.prepend(
 					"/" + v,
 					{
-						"command" : functools.partial( Gaffer.WeakMethod( self.__setDataName ), v ),
-						"checkBox" : self.getPlug().getValue() == v,
+						"command" : functools.partial( Gaffer.WeakMethod( self.__setDataName ), self.__primitiveVariablePrefix + v ),
+						"checkBox" : self.__primitiveVariableFromDataName( self.getPlug().getValue() ) == v,
 					}
 				)
 
-		menuDefinition.prepend( "/PrimVarDivider", { "divider" : True, "label" : "Primitive Variables" } )
+		menuDefinition.prepend( "/PrimitiveVariableDivider", { "divider" : True, "label" : "Primitive Variables" } )
 
 		return menuDefinition
 
 	def __setDataName( self, value, *unused ) :
 
 		self.getPlug().setValue( value )
+
+	def __primitiveVariableFromDataName( self, name ) :
+
+		return name[self.__primitiveVariablePrefixSize:] if (
+			name.startswith( self.__primitiveVariablePrefix ) ) else ""

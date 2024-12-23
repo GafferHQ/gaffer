@@ -112,6 +112,9 @@ const std::string g_pName = "P";
 const Color4f g_textShadowColor( 0.2f, 0.2f, 0.2f, 1.f );
 const float g_textShadowOffset = 0.1f;
 
+const std::string g_primitiveVariablePrefix= "primitiveVariable:";
+const int g_primitiveVariablePrefixSize = g_primitiveVariablePrefix.size();
+
 //-----------------------------------------------------------------------------
 // Color shader
 //-----------------------------------------------------------------------------
@@ -278,6 +281,45 @@ std::string const g_vertexLabelShaderFragSource
 	"}\n"
 );
 
+//-----------------------------------------------------------------------------
+// Helper Methods
+//-----------------------------------------------------------------------------
+
+std::string primitiveVariableFromDataName( const std::string &dataName )
+{
+	const std::string name = boost::starts_with( dataName, g_primitiveVariablePrefix ) ? dataName.c_str() + g_primitiveVariablePrefixSize : "";
+
+	return name;
+}
+
+std::string stringFromData( const Data *value )
+{
+	switch( value->typeId() )
+	{
+		case IntDataTypeId: return fmt::format( "{}", assertedStaticCast<const IntData>( value )->readable() );
+		case FloatDataTypeId: return fmt::format( "{:.3f}", assertedStaticCast<const FloatData>( value )->readable() );
+		case V2fDataTypeId:
+			{
+				auto v = assertedStaticCast<const V2fData>( value )->readable();
+				return fmt::format( "{:.3f}, {:.3f}", v.x, v.y );
+			}
+		case V3fDataTypeId:
+			{
+				auto v = assertedStaticCast<const V3fData>( value )->readable();
+				return fmt::format( "{:.3f}, {:.3f}, {:.3f}", v.x, v.y, v.z);
+			}
+			break;
+		case Color3fDataTypeId:
+			{
+				auto v = assertedStaticCast<const Color3fData>( value )->readable();
+				return fmt::format( "{:.3f}, {:.3f}, {:.3f}", v.x, v.y, v.z );
+			}
+			break;
+		default:
+			break;
+	}
+	return "";
+}
 
 //-----------------------------------------------------------------------------
 // VisualiserGadget
@@ -383,6 +425,13 @@ class VisualiserGadget : public Gadget
 		/// vary per-object.
 		void renderColorVisualiser( const ViewportGadget *viewportGadget, VisualiserTool::Mode mode ) const
 		{
+			// Get the name of the primitive variable to visualise
+			const std::string name = primitiveVariableFromDataName( m_tool->dataNamePlug()->getValue() );
+			if( name.empty() )
+			{
+				return;
+			}
+
 			// Bootleg shader
 			buildShader( m_colorShader, g_colorShaderVertSource, g_colorShaderFragSource );
 
@@ -409,9 +458,6 @@ class VisualiserGadget : public Gadget
 			}
 
 			glBindBufferBase( GL_UNIFORM_BUFFER, g_uniformBlockBindingIndex, m_colorUniformBuffer->buffer() );
-
-			// Get the name of the primitive variable to visualise
-			const std::string &name = m_tool->dataNamePlug()->getValue();
 
 			// Get min/max values and colors and opacity
 			UniformBlockColorShader uniforms;
@@ -852,7 +898,7 @@ VisualiserTool::VisualiserTool( SceneView *view, const std::string &name ) : Sel
 
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new StringPlug( "dataName", Plug::In, "uv" ) );
+	addChild( new StringPlug( "dataName", Plug::In, g_primitiveVariablePrefix + "uv" ) );
 	addChild( new FloatPlug( "opacity", Plug::In, g_opacityDefault, g_opacityMin, g_opacityMax ) );
 	addChild( new IntPlug( "mode", Plug::In, (int)Mode::Auto, (int)Mode::First, (int)Mode::Last ) );
 	addChild( new V3fPlug( "valueMin", Plug::In, g_valueMinDefault ) );
@@ -1345,6 +1391,12 @@ void VisualiserTool::updateCursorValue()
 		return;
 	}
 
+	const std::string name = primitiveVariableFromDataName( dataNamePlug()->getValue() );
+	if( name.empty() )
+	{
+		return;
+	}
+
 	// Get scene gadget and viewport gadgets
 
 	SceneGadget *sg = sceneGadget();
@@ -1422,7 +1474,6 @@ void VisualiserTool::updateCursorValue()
 
 	// Check mesh has named primitive variable
 
-	const std::string &name = dataNamePlug()->getValue();
 	PrimitiveVariableMap::const_iterator vIt = mesh->variables.find( name );
 	if( vIt == mesh->variables.end() || !vIt->second.data )
 	{
