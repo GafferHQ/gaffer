@@ -112,6 +112,10 @@ const std::string g_pName = "P";
 const Color4f g_textShadowColor( 0.2f, 0.2f, 0.2f, 1.f );
 const float g_textShadowOffset = 0.1f;
 
+//-----------------------------------------------------------------------------
+// Color shader
+//-----------------------------------------------------------------------------
+
 // Uniform block structure (std140 layout)
 struct UniformBlockColorShader
 {
@@ -186,6 +190,108 @@ const std::string g_colorShaderFragSource
 	"}\n"
 );
 
+//-----------------------------------------------------------------------------
+// Vertex label shader
+//-----------------------------------------------------------------------------
+
+struct UniformBlockVertexLabelShader
+{
+	alignas( 16 ) Imath::M44f o2c;
+};
+
+// Block binding indexes for the uniform and shader storage buffers
+
+GLuint const g_storageBlockBindingIndex = 0;
+
+// Uniform block definition (std140 layout)
+
+#define UNIFORM_BLOCK_VERTEX_LABEL_SHADER_GLSL_SOURCE \
+	"layout( std140, row_major ) uniform UniformBlock\n" \
+	"{\n" \
+	"   mat4 o2c;\n" \
+	"} uniforms;\n"
+
+// Shader storage block definition (std430 layout)
+//
+// NOTE : std430 layout ensures that the elements of a uint array are tightly packed
+//        std140 would require 16 byte alignment of each element ...
+
+#define STORAGE_BLOCK_VERTEX_LABEL_SHADER_GLSL_SOURCE \
+	"layout( std430 ) buffer StorageBlock\n" \
+	"{\n" \
+	"   coherent restrict uint visibility[];\n" \
+	"} buffers;\n"
+
+// Vertex attribute definitions
+
+#define ATTRIB_VERTEX_LABEL_SHADER_GLSL_SOURCE \
+	"layout( location = " BOOST_PP_STRINGIZE( ATTRIB_GLSL_LOCATION_PS ) " ) in vec3 ps;\n"
+
+// Interface block definition
+
+#define INTERFACE_BLOCK_VERTEX_LABEL_SHADER_GLSL_SOURCE( STORAGE, NAME ) \
+	BOOST_PP_STRINGIZE( STORAGE ) " InterfaceBlock\n" \
+	"{\n" \
+	"   flat uint vertexId;\n" \
+	"} " BOOST_PP_STRINGIZE( NAME ) ";\n"
+
+// Opengl vertex shader code
+
+std::string const g_vertexLabelShaderVertSource
+(
+	"#version 430\n"
+
+	UNIFORM_BLOCK_VERTEX_LABEL_SHADER_GLSL_SOURCE
+
+	ATTRIB_VERTEX_LABEL_SHADER_GLSL_SOURCE
+
+	INTERFACE_BLOCK_VERTEX_LABEL_SHADER_GLSL_SOURCE( out, outputs )
+
+	"void main()\n"
+	"{\n"
+	"   gl_Position = vec4( ps, 1.0 ) * uniforms.o2c;\n"
+	"   outputs.vertexId = uint( gl_VertexID );\n"
+	"}\n"
+);
+
+// Opengl fragment shader code
+
+std::string const g_vertexLabelShaderFragSource
+(
+	"#version 430\n"
+
+	// NOTE : ensure that shader is only run for fragments that pass depth test.
+
+	"layout( early_fragment_tests ) in;\n"
+
+	STORAGE_BLOCK_VERTEX_LABEL_SHADER_GLSL_SOURCE
+
+	UNIFORM_BLOCK_VERTEX_LABEL_SHADER_GLSL_SOURCE
+
+	INTERFACE_BLOCK_VERTEX_LABEL_SHADER_GLSL_SOURCE( in, inputs )
+
+	"void main()\n"
+	"{\n"
+	"   uint index = inputs.vertexId / 32u;\n"
+	"   uint value = inputs.vertexId % 32u;\n"
+	"   atomicOr( buffers.visibility[ index ], 1u << value );\n"
+	"}\n"
+);
+
+
+//-----------------------------------------------------------------------------
+// VisualiserGadget
+//-----------------------------------------------------------------------------
+
+enum class VisualiserShaderType
+{
+	Color,
+	VertexLabel
+};
+
+std::array<std::string, 2> g_vertSources = { g_colorShaderVertSource, g_vertexLabelShaderVertSource };
+std::array<std::string, 2> g_fragSources = { g_colorShaderFragSource, g_vertexLabelShaderFragSource };
+
 // The gadget that does the actual opengl drawing of the shaded primitive
 class VisualiserGadget : public Gadget
 {
@@ -193,7 +299,7 @@ class VisualiserGadget : public Gadget
 	public :
 
 		explicit VisualiserGadget( const VisualiserTool &tool, const std::string &name = defaultName<VisualiserGadget>() )
-			:	Gadget( name ), m_tool( &tool ), m_shader(), m_uniformBuffer()
+			:	Gadget( name ), m_tool( &tool ), m_colorShader(), m_colorUniformBuffer(), m_vertexLabelShader(), m_vertexLabelUniformBuffer()
 		{
 		}
 
@@ -252,16 +358,16 @@ class VisualiserGadget : public Gadget
 
 	private:
 
-		void buildShader() const
+		void buildShader( IECoreGL::ConstShaderPtr &shader, const std::string &vertSource, const std::string &fragSource ) const
 		{
-			if( !m_shader )
+			if( !shader )
 			{
-				m_shader = IECoreGL::ShaderLoader::defaultShaderLoader()->create(
-					g_colorShaderVertSource, std::string(), g_colorShaderFragSource
+				shader = IECoreGL::ShaderLoader::defaultShaderLoader()->create(
+					vertSource, std::string(), fragSource
 				);
-				if( m_shader )
+				if( shader )
 				{
-					const GLuint program = m_shader->program();
+					const GLuint program = shader->program();
 					const GLuint blockIndex = glGetUniformBlockIndex( program, "UniformBlock" );
 					if( blockIndex != GL_INVALID_INDEX )
 					{
@@ -278,9 +384,9 @@ class VisualiserGadget : public Gadget
 		void renderColorVisualiser( const ViewportGadget *viewportGadget, VisualiserTool::Mode mode ) const
 		{
 			// Bootleg shader
-			buildShader();
+			buildShader( m_colorShader, g_colorShaderVertSource, g_colorShaderFragSource );
 
-			if( !m_shader )
+			if( !m_colorShader )
 			{
 				return;
 			}
@@ -293,16 +399,16 @@ class VisualiserGadget : public Gadget
 			GLint uniformBinding;
 			glGetIntegerv( GL_UNIFORM_BUFFER_BINDING, &uniformBinding );
 
-			if( !m_uniformBuffer )
+			if( !m_colorUniformBuffer )
 			{
 				GLuint buffer = 0u;
 				glGenBuffers( 1, &buffer );
 				glBindBuffer( GL_UNIFORM_BUFFER, buffer );
 				glBufferData( GL_UNIFORM_BUFFER, sizeof( UniformBlockColorShader ), 0, GL_DYNAMIC_DRAW );
-				m_uniformBuffer.reset( new IECoreGL::Buffer( buffer ) );
+				m_colorUniformBuffer.reset( new IECoreGL::Buffer( buffer ) );
 			}
 
-			glBindBufferBase( GL_UNIFORM_BUFFER, g_uniformBlockBindingIndex, m_uniformBuffer->buffer() );
+			glBindBufferBase( GL_UNIFORM_BUFFER, g_uniformBlockBindingIndex, m_colorUniformBuffer->buffer() );
 
 			// Get the name of the primitive variable to visualise
 			const std::string &name = m_tool->dataNamePlug()->getValue();
@@ -406,7 +512,7 @@ class VisualiserGadget : public Gadget
 
 			GLint shaderProgram;
 			glGetIntegerv( GL_CURRENT_PROGRAM, &shaderProgram );
-			glUseProgram( m_shader->program() );
+			glUseProgram( m_colorShader->program() );
 
 			// Set opengl vertex attribute array state
 
@@ -685,8 +791,10 @@ class VisualiserGadget : public Gadget
 		}
 
 		const VisualiserTool *m_tool;
-		mutable IECoreGL::ConstShaderPtr m_shader;
-		mutable IECoreGL::ConstBufferPtr m_uniformBuffer;
+		mutable IECoreGL::ConstShaderPtr m_colorShader;
+		mutable IECoreGL::ConstBufferPtr m_colorUniformBuffer;
+		mutable IECoreGL::ConstShaderPtr m_vertexLabelShader;
+		mutable IECoreGL::ConstShaderPtr m_vertexLabelUniformBuffer;
 };
 
 // Cache for mesh evaluators
@@ -710,6 +818,10 @@ LRUCache<ConstMeshPrimitivePtr, EvaluationData> g_evaluatorCache(
 );
 
 } // namespace
+
+//-----------------------------------------------------------------------------
+// VisualiserTool
+//-----------------------------------------------------------------------------
 
 GAFFER_NODE_DEFINE_TYPE( VisualiserTool )
 
