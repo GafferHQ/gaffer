@@ -122,7 +122,8 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 
 		const std::vector<Selection> &selection() const;
 
-		Imath::V2f cursorPos() const;
+		using CursorPosition = std::optional<Imath::V2f>;
+		CursorPosition cursorPos() const;
 
 		const IECore::Data *cursorValue() const;
 
@@ -159,8 +160,7 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 
 		GafferUI::GadgetPtr m_gadget;
 		mutable std::vector<Selection> m_selection;
-		Imath::V2i m_cursorPos;
-		bool m_cursorPosValid;
+		CursorPosition m_cursorPos;
 		IECore::DataPtr m_cursorValue;
 		bool m_gadgetDirty;
 		mutable bool m_selectionDirty;
