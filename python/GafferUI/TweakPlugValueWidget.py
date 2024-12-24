@@ -189,6 +189,7 @@ def __validModes( plug ) :
 	if type( plug.parent()["value"] ) in [
 		Gaffer.BoolVectorDataPlug,
 		Gaffer.IntVectorDataPlug,
+		Gaffer.Int64VectorDataPlug,
 		Gaffer.FloatVectorDataPlug,
 		Gaffer.StringVectorDataPlug,
 		Gaffer.InternedStringVectorDataPlug,
