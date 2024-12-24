@@ -1396,6 +1396,12 @@ Instancer::Instancer( const std::string &name )
 	capsuleScenePlug()->attributesPlug()->setInput( outPlug()->attributesPlug() );
 	capsuleScenePlug()->setNamesPlug()->setInput( outPlug()->setNamesPlug() );
 	capsuleScenePlug()->globalsPlug()->setInput( outPlug()->globalsPlug() );
+
+	prototypesPlug()->setFlags( Plug::AcceptsDependencyCycles, true );
+	for( Gaffer::Plug::RecursiveIterator it( prototypesPlug() ); !it.done(); ++it )
+	{
+		(*it)->setFlags( Plug::AcceptsDependencyCycles, true );
+	}
 }
 
 Instancer::~Instancer()
@@ -2665,12 +2671,25 @@ bool Instancer::affectsBranchSetNames( const Gaffer::Plug *input ) const
 void Instancer::hashBranchSetNames( const ScenePath &sourcePath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	assert( sourcePath.size() == 0 ); // Expectation driven by `constantBranchSetNames() == true`
+
+	if( prototypesPlug()->getInput() == outPlug() )
+	{
+		h = inPlug()->setNamesPlug()->hash();
+		return;
+	}
+
 	h = prototypesPlug()->setNamesPlug()->hash();
 }
 
 IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchSetNames( const ScenePath &sourcePath, const Gaffer::Context *context ) const
 {
 	assert( sourcePath.size() == 0 ); // Expectation driven by `constantBranchSetNames() == true`
+
+	if( prototypesPlug()->getInput() == outPlug() )
+	{
+		return inPlug()->setNamesPlug()->getValue();
+	}
+
 	return prototypesPlug()->setNamesPlug()->getValue();
 }
 
