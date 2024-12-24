@@ -345,6 +345,24 @@ class TweakPlugTest( GafferTest.TestCase ) :
 		self.assertTrue( result )
 		self.assertEqual( data["a"], IECore.InternedStringData( "stringValue" ) )
 
+	def testListAppendWeirdCornerCase( self ) :
+
+		tweak = Gaffer.TweakPlug( "a", IECore.V3fData( imath.V3f( 7 ) ), Gaffer.TweakPlug.Mode.ListAppend )
+
+		data = IECore.CompoundData()
+
+		# A weird consequence of ListAppend being treated as a "Create" if there are no existing list entries:
+		# A listAppend will succeed when there is no existing data, even if the type of the tweak is completely
+		# invalid for this mode.
+		tweak.applyTweak( data )
+		self.assertEqual( data["a"], IECore.V3fData( imath.V3f( 7 ) ) )
+
+		# Once there is existing data, we get the expected error about the type not being valid.
+		with self.assertRaisesRegex( Exception,
+			'Cannot apply tweak with mode ListAppend to "a" : Data type V3fDataBase not supported.'
+		) :
+			tweak.applyTweak( data )
+
 	def testPathMatcherListOperations( self ) :
 
 		data = IECore.CompoundData(
