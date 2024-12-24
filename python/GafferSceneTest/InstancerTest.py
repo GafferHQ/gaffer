@@ -3123,6 +3123,109 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 			else:
 				rootsByHash[ co.hash() ] = co.root()
 
+	def testRecursive( self ):
+
+		# Create a test scene with the following structure
+		# /plane/prototypes/cube/prototypes/sphere
+		# ... where both the plane and the cube are treated as instancers, resulting in 32 leaf instance spheres
+		# ( each of the 4 vertices of the plane gets a cube of 8 spheres ).
+
+		sphere = GafferScene.Sphere()
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ '/sphere' ] ) )
+
+		testSet = GafferScene.Set()
+		testSet["in"].setInput( sphere["out"] )
+		testSet["filter"].setInput( sphereFilter["out"] )
+		testSet["name"].setValue( 'testSet' )
+
+		cubePrototypes = GafferScene.Group()
+		cubePrototypes["in"][0].setInput( testSet["out"] )
+		cubePrototypes["name"].setValue( 'prototypes' )
+
+		cube = GafferScene.Cube()
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter["paths"].setValue( IECore.StringVectorData( [ '/cube' ] ) )
+
+		cubePrototypeVars = GafferScene.PrimitiveVariableTweaks()
+		cubePrototypeVars["tweaks"].addChild( Gaffer.TweakPlug( Gaffer.StringVectorDataPlug( "value", defaultValue = IECore.StringVectorData( [  ] ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), "tweak1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+		cubePrototypeVars["in"].setInput( cube["out"] )
+		cubePrototypeVars["filter"].setInput( cubeFilter["out"] )
+		cubePrototypeVars["interpolation"].setValue( 1 )
+		cubePrototypeVars["tweaks"]["tweak1"]["name"].setValue( 'prototypeRoots' )
+		cubePrototypeVars["tweaks"]["tweak1"]["mode"].setValue( 5 )
+		cubePrototypeVars["tweaks"]["tweak1"]["value"].setValue( IECore.StringVectorData( [ '/plane/prototypes/cube/prototypes/sphere' ] ) )
+
+		mergeCubePrototypes = GafferScene.Parent()
+		mergeCubePrototypes["in"].setInput( cubePrototypeVars["out"] )
+		mergeCubePrototypes["parent"].setValue( '/cube' )
+		mergeCubePrototypes["children"][0].setInput( cubePrototypes["out"] )
+
+		plane = GafferScene.Plane()
+		plane["dimensions"].setValue( imath.V2f( 10, 10 ) )
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+
+		planePrototypeVars = GafferScene.PrimitiveVariableTweaks()
+		planePrototypeVars["tweaks"].addChild( Gaffer.TweakPlug( Gaffer.StringVectorDataPlug( "value", defaultValue = IECore.StringVectorData( [  ] ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), "tweak1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+		planePrototypeVars["in"].setInput( plane["out"] )
+		planePrototypeVars["filter"].setInput( planeFilter["out"] )
+		planePrototypeVars["interpolation"].setValue( 1 )
+		planePrototypeVars["tweaks"]["tweak1"]["name"].setValue( 'prototypeRoots' )
+		planePrototypeVars["tweaks"]["tweak1"]["mode"].setValue( 5 )
+		planePrototypeVars["tweaks"]["tweak1"]["value"].setValue( IECore.StringVectorData( [ '/plane/prototypes/cube' ] ) )
+
+		planePrototypes = GafferScene.Group()
+		planePrototypes["in"][0].setInput( mergeCubePrototypes["out"] )
+		planePrototypes["name"].setValue( 'prototypes' )
+
+		mergePlanePrototypes = GafferScene.Parent()
+		mergePlanePrototypes["in"].setInput( planePrototypeVars["out"] )
+		mergePlanePrototypes["parent"].setValue( '/plane' )
+		mergePlanePrototypes["children"][0].setInput( planePrototypes["out"] )
+
+		instancersFilter = GafferScene.PathFilter()
+		instancersFilter["paths"].setValue( IECore.StringVectorData( [ '/plane', '/plane/prototypes/cube' ] ) )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( mergePlanePrototypes["out"] )
+		instancer["filter"].setInput( instancersFilter["out"] )
+		instancer['prototypeMode'].setValue( GafferScene.Instancer.PrototypeMode.IndexedRootsVariable )
+		instancer["prototypeIndex"].setValue( 'prototypeIndex' )
+		instancer["__recursiveMode"].setValue( True )
+
+		sphereGeo = sphere["out"].object( "sphere" )
+
+		# Test that all the instances are getting created
+		topLevelInstanceNames = IECore.InternedStringVectorData( [ "0", "1", "2", "3" ] )
+		subLevelInstanceNames = IECore.InternedStringVectorData( [ "0", "1", "2", "3", "4", "5", "6", "7" ] )
+
+		self.assertEqual( instancer["out"].childNames( '/plane/instances/cube' ), topLevelInstanceNames )
+		self.assertEqual( instancer["out"].childNames( '/plane/instances/cube/0/instances/sphere' ), subLevelInstanceNames )
+		self.assertEqual( instancer["out"].childNames( '/plane/instances/cube/1/instances/sphere' ), subLevelInstanceNames )
+		self.assertEqual( instancer["out"].childNames( '/plane/instances/cube/2/instances/sphere' ), subLevelInstanceNames )
+		self.assertEqual( instancer["out"].childNames( '/plane/instances/cube/3/instances/sphere' ), subLevelInstanceNames )
+
+		# Check some random instances to see that there are objects there
+		self.assertEqual( instancer["out"].object( '/plane/instances/cube/0/instances/sphere/7' ), sphereGeo )
+		self.assertEqual( instancer["out"].object( '/plane/instances/cube/2/instances/sphere/4' ), sphereGeo )
+		self.assertEqual( instancer["out"].object( '/plane/instances/cube/3/instances/sphere/0' ), sphereGeo )
+
+		# Make sure encapsulation works
+		self.assertEncapsulatedRendersSame( instancer )
+
+		# Documenting the current behaviour with sets : we don't expand the sets at all ( even though this set
+		# actually should now be echoed throughout many instances ). This is fine in our currently intended use,
+		# as an adaptor that runs right before rendering. If we were officially exposing __recursiveMode, we
+		# would need to do something a lot smarter.
+		self.assertEqual(
+			instancer["out"].set( 'testSet' ),
+			IECore.PathMatcherData( IECore.PathMatcher( ['/plane/prototypes/cube/prototypes/sphere'] ) )
+		)
+
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 10 )
 	def testBoundPerformance( self ) :
 
