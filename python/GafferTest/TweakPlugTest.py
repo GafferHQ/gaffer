@@ -330,6 +330,20 @@ class TweakPlugTest( GafferTest.TestCase ) :
 		self.assertFalse( tweaks.applyTweaks( parameters ) )
 		self.assertNotIn( "f", parameters )
 
+	def testPreservesInterpretation( self ) :
+
+		# Check that the interpretation comes from the source data, not the tweak.
+		data = IECore.CompoundData(
+			{
+				"a" : IECore.V3fData( imath.V3f( 1, 2, 3 ), IECore.GeometricData.Interpretation.Normal ),
+			}
+		)
+
+		tweak = Gaffer.TweakPlug( "a", IECore.V3fData( imath.V3f( 0.5 ) ), Gaffer.TweakPlug.Mode.Add )
+
+		tweak.applyTweak( data )
+		self.assertEqual( data["a"], IECore.V3fData( imath.V3f( 1.5, 2.5, 3.5 ), IECore.GeometricData.Interpretation.Normal ) )
+
 	def testTweakInternedString( self ) :
 
 		data = IECore.CompoundData(
