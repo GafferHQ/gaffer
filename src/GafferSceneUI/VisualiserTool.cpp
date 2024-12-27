@@ -76,10 +76,11 @@ IECORE_POP_DEFAULT_VISIBILITY
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/preprocessor/stringize.hpp"
 
+#include "fmt/format.h"
+
 #include <algorithm>
 #include <cassert>
 #include <limits>
-#include <sstream>
 #include <string>
 
 using namespace Imath;
@@ -829,29 +830,37 @@ class VisualiserGadget : public Gadget
 
 			if( value )
 			{
-				std::ostringstream oss;
+				std::string text;
 				switch( value->typeId() )
 				{
 					case IntDataTypeId:
-						oss << ( assertedStaticCast<const IntData>( value )->readable() );
+						text = fmt::format( "{}", assertedStaticCast<const IntData>( value )->readable() );
 						break;
 					case FloatDataTypeId:
-						oss << ( assertedStaticCast<const FloatData>( value )->readable() );
+						text = fmt::format( "{:.3f}", assertedStaticCast<const FloatData>( value )->readable() );
 						break;
 					case V2fDataTypeId:
-						oss << ( assertedStaticCast<const V2fData>( value )->readable() );
+						{
+							auto v = assertedStaticCast<const V2fData>( value )->readable();
+							text = fmt::format( "{:.3f}, {:.3f}", v.x, v.y );
+						}
 						break;
 					case V3fDataTypeId:
-						oss << ( assertedStaticCast<const V3fData>( value )->readable() );
+						{
+							auto v = assertedStaticCast<const V3fData>( value )->readable();
+							text = fmt::format( "{:.3f}, {:.3f}, {:.3f}", v.x, v.y, v.z);
+						}
 						break;
 					case Color3fDataTypeId:
-						oss << ( assertedStaticCast<const Color3fData>( value )->readable() );
+						{
+							auto v = assertedStaticCast<const Color3fData>( value )->readable();
+							text = fmt::format( "{:.3f}, {:.3f}, {:.3f}", v.x, v.y, v.z );
+						}
 						break;
 					default:
 						break;
 				}
 
-				const std::string text = oss.str();
 				if( !text.empty() )
 				{
 					// Draw in raster space
@@ -981,7 +990,6 @@ class VisualiserGadget : public Gadget
 
 			// Loop through current selection
 
-			std::stringstream oss;
 			for( const auto &location : m_tool->selection() )
 			{
 				GafferScene::ScenePlug::PathScope scope( &location.context() , &location.path() );
@@ -1242,10 +1250,7 @@ class VisualiserGadget : public Gadget
 
 								if( vertexId != -1 )
 								{
-									oss.str( "" );
-									oss.clear();
-									oss << vertexId;
-									const std::string text = oss.str();
+									const std::string text = fmt::format( "{}", vertexId );
 
 									drawStrokedText(
 										viewportGadget,
@@ -1279,10 +1284,7 @@ class VisualiserGadget : public Gadget
 			{
 				GafferUI::ViewportGadget::RasterScope raster( viewportGadget );
 
-				oss.str( "" );
-				oss.clear();
-				oss << cursorVertexId;
-				std::string const text = oss.str();
+				std::string const text = fmt::format( "{}", cursorVertexId );
 
 				drawStrokedText(
 					viewportGadget,
