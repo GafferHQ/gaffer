@@ -289,6 +289,42 @@ std::string const g_vertexLabelShaderFragSource
 // Helper Methods
 //-----------------------------------------------------------------------------
 
+void drawStrokedText(
+	const ViewportGadget *viewportGadget,
+	const std::string &text,
+	const float size,
+	const V2f &rasterPosition,
+	const Style *style,
+	const Style::State state
+)
+{
+	ViewportGadget::RasterScope raster( viewportGadget );
+	const V3f scale( size, -size, 1.f );
+
+	glPushMatrix();
+	glTranslatef( rasterPosition.x, rasterPosition.y, 0.f );
+	glScalef( scale.x, scale.y, scale.z );
+
+	/// Shadow text
+	glTranslatef( g_textShadowOffset, 0.f, 0.f );
+	style->renderText( Style::LabelText, text, GafferUI::Style::State::NormalState, &g_textShadowColor );
+
+	glTranslatef( -g_textShadowOffset * 2.f, 0.f, 0.f );
+	style->renderText( Style::LabelText, text, GafferUI::Style::State::NormalState, &g_textShadowColor );
+
+	glTranslatef( g_textShadowOffset, g_textShadowOffset, 0.f );
+	style->renderText( Style::LabelText, text, GafferUI::Style::State::NormalState, &g_textShadowColor );
+
+	glTranslatef( 0.f, -g_textShadowOffset * 2.f, 0.f );
+	style->renderText( Style::LabelText, text, GafferUI::Style::State::NormalState, &g_textShadowColor );
+
+	/// Primary text
+	glTranslatef( 0.f, g_textShadowOffset, 0.f );
+	style->renderText( Style::LabelText, text, state );
+
+	glPopMatrix();
+}
+
 std::string primitiveVariableFromDataName( const std::string &dataName )
 {
 	const std::string name = boost::starts_with( dataName, g_primitiveVariablePrefix ) ? dataName.c_str() + g_primitiveVariablePrefixSize : "";
@@ -824,32 +860,14 @@ class VisualiserGadget : public Gadget
 					//        of the viewport, however the style text drawing functions assume that y increases
 					//        "up" the screen rather than "down", so invert y to ensure text is not upside down.
 
-					ViewportGadget::RasterScope raster( viewportGadget );
-					const float size = m_tool->sizePlug()->getValue();
-					const V3f scale( size, -size, 1.f );
-
-					glPushMatrix();
-					glTranslatef( cursorPos.value().x, cursorPos.value().y, 0.f );
-					glScalef( scale.x, scale.y, scale.z );
-
-					/// Shadow text
-					glTranslatef( g_textShadowOffset, 0.f, 0.f );
-					style->renderText( Style::LabelText, text, GafferUI::Style::State::NormalState, &g_textShadowColor );
-
-					glTranslatef( -g_textShadowOffset * 2.f, 0.f, 0.f );
-					style->renderText( Style::LabelText, text, GafferUI::Style::State::NormalState, &g_textShadowColor );
-
-					glTranslatef( g_textShadowOffset, g_textShadowOffset, 0.f );
-					style->renderText( Style::LabelText, text, GafferUI::Style::State::NormalState, &g_textShadowColor );
-
-					glTranslatef( 0.f, -g_textShadowOffset * 2.f, 0.f );
-					style->renderText( Style::LabelText, text, GafferUI::Style::State::NormalState, &g_textShadowColor );
-
-					/// Primary text
-					glTranslatef( 0.f, g_textShadowOffset, 0.f );
-					style->renderText( Style::LabelText, text );
-
-					glPopMatrix();
+					drawStrokedText(
+						viewportGadget,
+						text,
+						m_tool->sizePlug()->getValue(),
+						cursorPos.value(),
+						style,
+						Style::State::NormalState
+					);
 				}
 			}
 		}
@@ -1229,15 +1247,17 @@ class VisualiserGadget : public Gadget
 									oss << vertexId;
 									const std::string text = oss.str();
 
-									glPushMatrix();
-									glTranslatef(
-										rasterPos.value().x - style->textBound( GafferUI::Style::LabelText, text ).size().x * 0.5f * scale.x,
-										rasterPos.value().y,
-										0.f
+									drawStrokedText(
+										viewportGadget,
+										text,
+										size,
+										V2f(
+											rasterPos.value().x - style->textBound( GafferUI::Style::LabelText, text ).size().x * 0.5f * scale.x,
+											rasterPos.value().y
+										),
+										style,
+										Style::State::NormalState
 									);
-									glScalef( scale.x, scale.y, scale.z );
-									style->renderText( GafferUI::Style::LabelText, text );
-									glPopMatrix();
 								}
 							}
 						}
@@ -1264,16 +1284,17 @@ class VisualiserGadget : public Gadget
 				oss << cursorVertexId;
 				std::string const text = oss.str();
 
-				glPushMatrix();
-				glTranslatef(
-					cursorVertexRasterPos.value().x - style->textBound( GafferUI::Style::LabelText, text ).size().x * scale.x,
-					cursorVertexRasterPos.value().y,
-					0.f
+				drawStrokedText(
+					viewportGadget,
+					text,
+					scale.x * 2.f,
+					V2f(
+						cursorVertexRasterPos.value().x - style->textBound( GafferUI::Style::LabelText, text ).size().x * scale.x,
+						cursorVertexRasterPos.value().y
+					),
+					style,
+					Style::State::NormalState
 				);
-				glScalef( scale.x * 2.f, scale.y * 2.f, scale.z );
-				/// \todo Use highlight color
-				style->renderText( GafferUI::Style::LabelText, text );
-				glPopMatrix();
 			}
 
 			// Set tool cursor vertex id
