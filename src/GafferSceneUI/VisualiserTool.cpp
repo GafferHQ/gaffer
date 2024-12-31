@@ -388,7 +388,7 @@ class VisualiserGadget : public Gadget
 			m_colorUniformBuffer(),
 			m_vertexLabelShader(),
 			m_vertexLabelUniformBuffer(),
-			m_cursorVertexIndex( -1 )
+			m_cursorVertexData()
 		{
 		}
 
@@ -830,36 +830,7 @@ class VisualiserGadget : public Gadget
 
 			if( value )
 			{
-				std::string text;
-				switch( value->typeId() )
-				{
-					case IntDataTypeId:
-						text = fmt::format( "{}", assertedStaticCast<const IntData>( value )->readable() );
-						break;
-					case FloatDataTypeId:
-						text = fmt::format( "{:.3f}", assertedStaticCast<const FloatData>( value )->readable() );
-						break;
-					case V2fDataTypeId:
-						{
-							auto v = assertedStaticCast<const V2fData>( value )->readable();
-							text = fmt::format( "{:.3f}, {:.3f}", v.x, v.y );
-						}
-						break;
-					case V3fDataTypeId:
-						{
-							auto v = assertedStaticCast<const V3fData>( value )->readable();
-							text = fmt::format( "{:.3f}, {:.3f}, {:.3f}", v.x, v.y, v.z);
-						}
-						break;
-					case Color3fDataTypeId:
-						{
-							auto v = assertedStaticCast<const Color3fData>( value )->readable();
-							text = fmt::format( "{:.3f}, {:.3f}, {:.3f}", v.x, v.y, v.z );
-						}
-						break;
-					default:
-						break;
-				}
+				const std::string text = stringFromData( value );
 
 				if( !text.empty() )
 				{
@@ -973,7 +944,7 @@ class VisualiserGadget : public Gadget
 
 			// Get cursor raster position
 
-			int cursorVertexId = -1;
+			DataPtr cursorVertexData = nullptr;
 			const std::optional<V2f> cursorRasterPos = m_tool->cursorPos();
 			std::optional<V2f> cursorVertexRasterPos;
 			float minDistance2 = std::numeric_limits<float>::max();
@@ -987,6 +958,9 @@ class VisualiserGadget : public Gadget
 				cursorRasterPos && viewport.intersects( cursorRasterPos.value() ) ?
 				g_cursorRadius2 :
 				0.f;
+
+			const std::string dataName = m_tool->dataNamePlug()->getValue();
+			const std::string primitiveVariableName = primitiveVariableFromDataName( dataName );
 
 			// Loop through current selection
 
@@ -1010,9 +984,31 @@ class VisualiserGadget : public Gadget
 					continue;
 				}
 
-				if( m_tool->dataNamePlug()->getValue() != g_vertexIndexDataName )
+				ConstDataPtr vData = nullptr;
+
+				if( dataName != g_vertexIndexDataName )
 				{
-					continue;
+					auto vIt = primitive->variables.find( primitiveVariableName );
+					if( vIt == primitive->variables.end() )
+					{
+						continue;
+					}
+
+					switch( vIt->second.data->typeId() )
+					{
+						case IntVectorDataTypeId :
+							vData = primitive->expandedVariableData<IntVectorData>(
+								primitiveVariableName,
+								IECoreScene::PrimitiveVariable::Vertex,
+								false /* throwIfInvalid */
+							);
+							break;
+						default : break;
+					}
+					if( !vData )
+					{
+						continue;
+					}
 				}
 
 				// Find "P" vertex attribute
@@ -1201,12 +1197,13 @@ class VisualiserGadget : public Gadget
 				);
 				glBindBuffer( GL_SHADER_STORAGE_BUFFER, storageBinding );
 
-				// Draw vertex ids offset to vertex position in raster space
+				// Draw vertex ids or int variable offset to vertex position in raster space
 
 				if( vBuffer )
 				{
 					ViewportGadget::RasterScope raster( viewportGadget );
 
+					DataPtr vertexValue = nullptr;
 					const std::vector<Imath::V3f> &points = pData->readable();
 					for( size_t i = 0; i < points.size(); ++i )
 					{
@@ -1228,29 +1225,51 @@ class VisualiserGadget : public Gadget
 							std::optional<V2f> rasterPos = viewportGadget->worldToRasterSpace( worldPos );
 							if( rasterBounds.intersects( rasterPos.value() ) )
 							{
-								int vertexId = i;
+								if( !vData )
+								{
+									auto data = runTimeCast<IntData>( vertexValue );
+									if( !data )
+									{
+										data.reset( new IntData() );
+									}
+									data->writable() = i;
+									vertexValue = data;
+								}
+								else
+								{
+									if( auto iData = runTimeCast<const IntVectorData>( vData.get() ) )
+									{
+										auto data = runTimeCast<IntData>( vertexValue );
+										if( !data )
+										{
+											data.reset( new IntData() );
+										}
+										data->writable() = iData->readable()[i];
+										vertexValue = data;
+									}
+								}
 
-								// Update cursor vertex id
+								// Update cursor value
 								//
-								// NOTE : We defer drawing of the vertex id currently under the cursor, so
-								//        draw the last vertex id label if we replace the cursor vertex id
+								// NOTE : We defer drawing of the value currently under the cursor, so
+								//        draw the last value label if we replace the cursor value
 
 								if( cursorRasterPos )
 								{
 									const float distance2 = ( cursorRasterPos.value() - rasterPos.value() ).length2();
 									if( ( distance2 < cursorRadius2 ) && ( distance2 < minDistance2 ) )
 									{
-										std::swap( cursorVertexId, vertexId );
+										std::swap( cursorVertexData, vertexValue );
 										std::swap( cursorVertexRasterPos, rasterPos );
 										minDistance2 = distance2;
 									}
 								}
 
-								// Draw vertex id label
+								// Draw value label
 
-								if( vertexId != -1 )
+								if( vertexValue )
 								{
-									const std::string text = fmt::format( "{}", vertexId );
+									const std::string text = stringFromData( vertexValue.get() );
 
 									drawStrokedText(
 										viewportGadget,
@@ -1280,11 +1299,11 @@ class VisualiserGadget : public Gadget
 
 			// Draw cursor vertex
 
-			if( cursorRasterPos && cursorVertexId != -1 )
+			if( cursorVertexData && cursorRasterPos )
 			{
 				GafferUI::ViewportGadget::RasterScope raster( viewportGadget );
 
-				std::string const text = fmt::format( "{}", cursorVertexId );
+				std::string const text = stringFromData( cursorVertexData.get() );
 
 				drawStrokedText(
 					viewportGadget,
@@ -1301,12 +1320,12 @@ class VisualiserGadget : public Gadget
 
 			// Set tool cursor vertex id
 
-			m_cursorVertexIndex = cursorVertexId;
+			m_cursorVertexData = cursorVertexData;
 		}
 
-		int cursorVertexIndex() const
+		DataPtr cursorVertexData() const
 		{
-			return m_cursorVertexIndex;
+			return m_cursorVertexData;
 		}
 
 		const VisualiserTool *m_tool;
@@ -1318,7 +1337,7 @@ class VisualiserGadget : public Gadget
 		mutable IECoreGL::ConstBufferPtr m_vertexLabelStorageBuffer;
 		mutable std::size_t m_vertexLabelStorageCapacity;
 
-		mutable int m_cursorVertexIndex;
+		mutable DataPtr m_cursorVertexData;
 };
 
 // Cache for mesh evaluators
@@ -1867,22 +1886,11 @@ void VisualiserTool::updateCursorValue()
 
 	const std::string &dataName = dataNamePlug()->getValue();
 
-	if( dataName == g_vertexIndexDataName )
+	// We draw all visualisation types each time, and the vertex label visualisation
+	// resets the `cursorVertexData()` each time before potentially setting it to
+	// the closest point. So if there is no such point, this will be `nullptr`.
+	if( auto data = static_cast<VisualiserGadget *>( m_gadget.get() )->cursorVertexData() )
 	{
-		int index = static_cast<VisualiserGadget *>( m_gadget.get() )->cursorVertexIndex();
-		if( index < 0 )
-		{
-			return;
-		}
-
-		auto data = runTimeCast<IntData>( m_cursorValue );
-		if( !data )
-		{
-			data.reset( new IntData() );
-		}
-
-		data->writable() = index;
-
 		m_cursorValue = data;
 		return;
 	}
