@@ -1,6 +1,11 @@
 1.x.x.x (relative to 1.5.x.x)
 =======
 
+Features
+--------
+
+* Arnold : Added multi-layer EXR support. All outputs with the same filename are now written to the same file via a single output driver.
+
 Improvements
 ------------
 
