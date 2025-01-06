@@ -10,6 +10,7 @@ Improvements
     - Auto : Chooses the most appropriate mode based on the data and primitive type.
     - Color (Auto Range) : Float, integer, V2f and color data is displayed without modification. Vector data is remapped from `[-1, 1]` to `[0, 1]`.
     - Color : Values are remapped from the range `[valueMin, valueMax]` to `[0, 1]`.
+    - Vertex Label : Values are displayed as a label next to each vertex.
   - When visualising data as vertex labels, the value for the vertex nearest the mouse cursor gets visual emphasis. This value is also used for drag and drop.
 
 Fixes

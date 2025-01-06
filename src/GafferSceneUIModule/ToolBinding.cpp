@@ -326,6 +326,7 @@ void GafferSceneUIModule::bindTools()
 			.value( "Auto", VisualiserTool::Mode::Auto )
 			.value( "ColorAutoRange", VisualiserTool::Mode::ColorAutoRange )
 			.value( "Color", VisualiserTool::Mode::Color )
+			.value( "VertexLabel", VisualiserTool::Mode::VertexLabel )
 		;
 	}
 

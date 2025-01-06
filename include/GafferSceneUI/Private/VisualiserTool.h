@@ -73,9 +73,10 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 			Auto,
 			ColorAutoRange,
 			Color,
+			VertexLabel,
 
 			First = Auto,
-			Last = Color
+			Last = VertexLabel
 		};
 
 		Gaffer::StringPlug *dataNamePlug();

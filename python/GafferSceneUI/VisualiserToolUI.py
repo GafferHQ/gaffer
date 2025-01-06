@@ -108,6 +108,7 @@ Gaffer.Metadata.registerNode(
 			"preset:Auto", GafferSceneUI.VisualiserTool.Mode.Auto,
 			"preset:Color", GafferSceneUI.VisualiserTool.Mode.Color,
 			"preset:Color (Auto Range)", GafferSceneUI.VisualiserTool.Mode.ColorAutoRange,
+			"preset:Vertex Label", GafferSceneUI.VisualiserTool.Mode.VertexLabel,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 

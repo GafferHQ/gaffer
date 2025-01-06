@@ -477,7 +477,14 @@ class VisualiserGadget : public Gadget
 		{
 			// Get the name of the primitive variable to visualise
 			const std::string name = primitiveVariableFromDataName( m_tool->dataNamePlug()->getValue() );
-			if( name.empty() )
+			if(
+				name.empty() ||
+				(
+					mode != VisualiserTool::Mode::Auto &&
+					mode != VisualiserTool::Mode::Color &&
+					mode != VisualiserTool::Mode::ColorAutoRange
+				)
+			)
 			{
 				return;
 			}
@@ -821,6 +828,15 @@ class VisualiserGadget : public Gadget
 				return;
 			}
 
+			if(
+				mode != VisualiserTool::Mode::Auto &&
+				mode != VisualiserTool::Mode::Color &&
+				mode != VisualiserTool::Mode::ColorAutoRange
+			)
+			{
+				return;
+			}
+
 			const Data *value = m_tool->cursorValue();
 
 			if( mode == VisualiserTool::Mode::Auto && value && value->typeId() == IntDataTypeId )
@@ -855,7 +871,7 @@ class VisualiserGadget : public Gadget
 		/// See comment for `renderColorVisualiser()` for requirements for handling `mode`.
 		void renderVertexLabelValue( const ViewportGadget *viewportGadget, const Style *style, VisualiserTool::Mode mode ) const
 		{
-			if( mode != VisualiserTool::Mode::Auto )
+			if( mode != VisualiserTool::Mode::Auto && mode != VisualiserTool::Mode::VertexLabel )
 			{
 				return;
 			}
@@ -988,24 +1004,30 @@ class VisualiserGadget : public Gadget
 
 				if( dataName != g_vertexIndexDataName )
 				{
-					auto vIt = primitive->variables.find( primitiveVariableName );
-					if( vIt == primitive->variables.end() )
+					vData = primitive->expandedVariableData<Data>(
+						primitiveVariableName,
+						IECoreScene::PrimitiveVariable::Vertex,
+						false /* throwIfInvalid */
+					);
+
+					if( !vData )
 					{
 						continue;
 					}
 
-					switch( vIt->second.data->typeId() )
+					if( mode == VisualiserTool::Mode::Auto && vData->typeId() != IntVectorDataTypeId )
 					{
-						case IntVectorDataTypeId :
-							vData = primitive->expandedVariableData<IntVectorData>(
-								primitiveVariableName,
-								IECoreScene::PrimitiveVariable::Vertex,
-								false /* throwIfInvalid */
-							);
-							break;
-						default : break;
+						// Will be handled by `renderColorVisualiser()` instead.
+						continue;
 					}
-					if( !vData )
+
+					if(
+						vData->typeId() != IntVectorDataTypeId &&
+						vData->typeId() != FloatVectorDataTypeId &&
+						vData->typeId() != V2fVectorDataTypeId &&
+						vData->typeId() != V3fVectorDataTypeId &&
+						vData->typeId() != Color3fVectorDataTypeId
+					)
 					{
 						continue;
 					}
@@ -1245,6 +1267,46 @@ class VisualiserGadget : public Gadget
 											data.reset( new IntData() );
 										}
 										data->writable() = iData->readable()[i];
+										vertexValue = data;
+									}
+									if( auto fData = runTimeCast<const FloatVectorData>( vData.get() ) )
+									{
+										auto data = runTimeCast<FloatData>( vertexValue );
+										if( !data )
+										{
+											data.reset( new FloatData() );
+										}
+										data->writable() = fData->readable()[i];
+										vertexValue = data;
+									}
+									if( auto v2fData = runTimeCast<const V2fVectorData>( vData.get() ) )
+									{
+										auto data = runTimeCast<V2fData>( vertexValue );
+										if( !data )
+										{
+											data.reset( new V2fData() );
+										}
+										data->writable() = v2fData->readable()[i];
+										vertexValue = data;
+									}
+									if( auto v3fData = runTimeCast<const V3fVectorData>( vData.get() ) )
+									{
+										auto data = runTimeCast<V3fData>( vertexValue );
+										if( !data )
+										{
+											data.reset( new V3fData() );
+										}
+										data->writable() = v3fData->readable()[i];
+										vertexValue = data;
+									}
+									if( auto c3fData = runTimeCast<const Color3fVectorData>( vData.get() ) )
+									{
+										auto data = runTimeCast<Color3fData>( vertexValue );
+										if( !data )
+										{
+											data.reset( new Color3fData() );
+										}
+										data->writable() = c3fData->readable()[i];
 										vertexValue = data;
 									}
 								}
@@ -1892,6 +1954,14 @@ void VisualiserTool::updateCursorValue()
 	if( auto data = static_cast<VisualiserGadget *>( m_gadget.get() )->cursorVertexData() )
 	{
 		m_cursorValue = data;
+		return;
+	}
+
+	if( modePlug()->getValue() == (int)Mode::VertexLabel )
+	{
+		// If `VisualiserGadget::cursorVertexValue()` is not set and we're in `VertexLabel`
+		// mode, it means the label failed to draw (for example if the interpolation is not
+		// supported). Don't set the cursor value to a sampled value in that case.
 		return;
 	}
 
