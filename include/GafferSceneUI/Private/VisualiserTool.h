@@ -152,7 +152,7 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 		bool m_gadgetDirty;
 		mutable bool m_selectionDirty;
 		bool m_priorityPathsDirty;
-		bool m_acceptedButtonPress;
+		IECore::DataPtr m_valueAtButtonPress;
 		bool m_initiatedDrag;
 
 		static ToolDescription<VisualiserTool, SceneView> m_toolDescription;
