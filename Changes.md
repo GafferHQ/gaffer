@@ -1,6 +1,10 @@
 1.5.x.x (relative to 1.5.2.0)
 =======
 
+Fixes
+-----
+
+- VisualiserTool : Fixed bug where the value dragged from the visualiser would be slightly different from the initial value on button press. (#6191)
 
 
 1.5.2.0 (relative to 1.5.1.0)
