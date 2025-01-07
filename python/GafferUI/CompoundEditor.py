@@ -1429,7 +1429,14 @@ def _restoreWindowState( gafferWindow, boundData ) :
 		screens = QtWidgets.QApplication.screens()
 		if boundData["screen"] < len(screens) :
 			targetScreen = screens[ boundData["screen"] ]
-			window.setScreen( targetScreen )
+			# \todo In Qt6, `setScreen()` is added to `QWidget` which we should
+			# be able to use to set the screen including for detached windows.
+
+			window.setWindowState( QtCore.Qt.WindowNoState )
+
+			screenGeom = targetScreen.availableGeometry()
+			geometry = window.geometry()
+			window.setGeometry( screenGeom.x(), screenGeom.y(), geometry.width(), geometry.height() )
 
 	if boundData["fullScreen"] :
 		window.setWindowState( QtCore.Qt.WindowFullScreen )
