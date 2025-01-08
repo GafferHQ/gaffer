@@ -24,6 +24,7 @@ API
 ---
 
 - TweakPlug : Added `applyElementwiseTweak()` method, for tweaking elements of a `*VectorData`.
+- ShaderPlug : Added Python binding for `parameterSource()` method.
 
 1.5.2.0 (relative to 1.5.1.0)
 =======
