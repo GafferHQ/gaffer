@@ -9,8 +9,9 @@ Improvements
 Fixes
 -----
 
-- VisualiserTool : Fixed bug where the value dragged from the visualiser would be slightly different from the initial value on button press. (#6191)
-
+- VisualiserTool :
+  - Fixed bug where the value dragged from the visualiser would be slightly different from the initial value on button press. (#6191)
+  - Fixed error when trying to visualise data unsupported data.
 
 1.5.2.0 (relative to 1.5.1.0)
 =======

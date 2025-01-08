@@ -413,12 +413,6 @@ class VisualiserGadget : public Gadget
 						continue;
 					}
 
-					IECoreGL::ConstBufferPtr vBuffer = meshGL->getVertexBuffer( name );
-					if( !vBuffer )
-					{
-						continue;
-					}
-
 					ConstDataPtr vData = vIt->second.data;
 					GLsizei stride = 0;
 					GLenum type = GL_FLOAT;
@@ -450,6 +444,12 @@ class VisualiserGadget : public Gadget
 							break;
 						default:
 							continue;
+					}
+
+					IECoreGL::ConstBufferPtr vBuffer = meshGL->getVertexBuffer( name );
+					if( !vBuffer )
+					{
+						continue;
 					}
 
 					// Get the object to world transform
