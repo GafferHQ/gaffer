@@ -9,6 +9,7 @@ Features
 Improvements
 ------------
 
+- Shader : Added support for ContextProcessor, Loop and Spreadsheet nodes to be used inline between shader nodes.
 - VisualiserTool : Changed `dataName` input widget for choosing the primitive variable to visualise to a list of available variable names for the current selection.
 - Tweaks nodes : Moved list of tweaks to a collapsible "Tweaks" section in the NodeEditor.
 - Viewer :
@@ -23,6 +24,7 @@ Fixes
   - Fixed bug where the value dragged from the visualiser would be slightly different from the initial value on button press. (#6191)
   - Fixed error when trying to visualise data unsupported data.
 - TweakPlug : Fixed preservation of geometric interpretation when tweaking V3f values.
+- Shader : Fixed handling of multiple consecutive Switch nodes in a shader network.
 - ApplicationTest : Extended grace period when testing process name on slower hosts.
 - OpDialogue : Fixed `DefaultButton` handling.
 
