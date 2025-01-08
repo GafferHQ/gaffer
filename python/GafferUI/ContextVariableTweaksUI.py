@@ -52,6 +52,8 @@ Gaffer.Metadata.registerNode(
 	from downstream nodes, resulting in different values given to upstream nodes.
 	""",
 
+	"layout:section:Settings.Tweaks:collapsed", False,
+
 	plugs = {
 
 		"ignoreMissing" : [
@@ -74,6 +76,7 @@ Gaffer.Metadata.registerNode(
 			using the ContextVariableTweaks API via python.
 			""",
 
+			"layout:section", "Settings.Tweaks",
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:customWidget::footer:widgetType", "GafferUI.ContextVariableTweaksUI._TweaksFooter",
 			"layout:customWidget:footer:index", -1,

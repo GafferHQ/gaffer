@@ -88,6 +88,8 @@ Gaffer.Metadata.registerNode(
 	Makes modifications to options.
 	""",
 
+	"layout:section:Settings.Tweaks:collapsed", False,
+
 	plugs = {
 
 		"ignoreMissing" : [
@@ -109,6 +111,7 @@ Gaffer.Metadata.registerNode(
 			using the OptionTweaks API via python.
 			""",
 
+			"layout:section", "Settings.Tweaks",
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:customWidget:footer:widgetType", "GafferSceneUI.OptionTweaksUI._TweaksFooter",
 			"layout:customWidget:footer:index", -1,
