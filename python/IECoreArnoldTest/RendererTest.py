@@ -671,7 +671,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.output(
 			"testB",
 			IECoreScene.Output(
-				"beauty.exr",
+				"beautyWithAlpha.exr",
 				"exr",
 				"color B",
 				{
@@ -769,7 +769,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.output(
 			"testWithAlpha",
 			IECoreScene.Output(
-				"beauty.exr",
+				"beautyWithAlpha.exr",
 				"exr",
 				"lpe C.*D.*",
 				{
