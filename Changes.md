@@ -36,6 +36,7 @@ API
   - Without the ABI change, the API isn't usable for its original intended purpose anyway.
   - Backward compatibility is not trivial to maintain in this case.
 - PlugAlgo : Added `contextSensitiveSource()` method.
+- ShaderPlug : Added Python binding for `parameterSource()` method.
 
 1.5.2.0 (relative to 1.5.1.0)
 =======
