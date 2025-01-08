@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.2.0)
 =======
 
+Improvements
+------------
+
+- VisualiserTool : Changed `dataName` input widget for choosing the primitive variable to visualise to a list of available variable names for the current selection.
+
 Fixes
 -----
 
