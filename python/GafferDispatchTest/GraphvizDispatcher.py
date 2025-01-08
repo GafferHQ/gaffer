@@ -54,43 +54,55 @@ class GraphvizDispatcher( GafferDispatch.Dispatcher ) :
 		if "id" in batch.blindData() :
 			return
 
-		nodeName = batch.plug().node().relativeName( scriptNode ) if batch.plug() is not None else "<root>"
+		nodeName = batch.plug().node().relativeName( scriptNode ) if batch.plug() is not None else "root"
 		nodeType = batch.plug().node().typeName() if batch.plug() is not None else "None"
 		batch.blindData()["id"] = (
 			nodeName + batch.context().hash().toString()
 		) if batch.context() is not None else IECore.MurmurHash().toString()
 
-		frameString = None
-		if self["includeFrames"].getValue() :
-			frameString = "-"
-			frameList = IECore.frameListFromList( [ int( i ) for i in batch.frames() ] )
-			if len( frameList.asList() ) > 0 :
-				if frameList.start == frameList.end :
-					frameString = str( frameList.start )
-				elif frameList.step != 1 :
-					frameString = "{} - {} x {}".format( frameList.start, frameList.end, frameList.step )
-				else :
-					frameString = "{} - {}".format( frameList.start, frameList.end )
+		if nodeName == "root" :
+			outFile.write( "\t{} [shape=oval label=<<B>{}</B>>];\n".format( batch.blindData()["id"], nodeName ) )
+		else :
 
-		contextVariables = {}
+			frameString = None
+			if self["includeFrames"].getValue() :
+				frameString = "-"
+				frameList = IECore.frameListFromList( [ int( i ) for i in batch.frames() ] )
+				if len( frameList.asList() ) > 0 :
+					if frameList.start == frameList.end :
+						frameString = str( frameList.start )
+					elif frameList.step != 1 :
+						frameString = "{} - {} x {}".format( frameList.start, frameList.end, frameList.step )
+					else :
+						frameString = "{} - {}".format( frameList.start, frameList.end )
 
-		if batch.context() is not None :
-			scriptContext = scriptNode.context()
-			matchPattern = self["contextVariables"].getValue()
-			for entry in [ k for k in batch.context().keys() if k != "frame" and not k.startswith( "ui:" ) and not k.startswith( "dispatcher:" ) ] :
-				if IECore.StringAlgo.matchMultiple( entry, matchPattern ) and ( entry not in scriptContext.keys() or batch.context()[entry] != scriptContext[entry] ) :
-					contextVariables[entry] = batch.context().substitute( str( batch.context()[entry] ) )
+			contextVariables = {}
 
-		batchString = '\t"{}" [label="{}\n\t\t{}'.format( batch.blindData()["id"], nodeName, nodeType )
-		if frameString is not None :
-			batchString += "\n\t\t{}".format( frameString )
-		if len( contextVariables ) > 0 :
-			batchString += "\n\t\t" + "\n\t\t".join(
-				[ "{} = {}".format( k, v ) for k, v in contextVariables.items() ]
-			)
+			if batch.context() is not None :
+				scriptContext = scriptNode.context()
+				matchPattern = self["contextVariables"].getValue()
+				for entry in [ k for k in batch.context().keys() if k != "frame" and not k.startswith( "ui:" ) and not k.startswith( "dispatcher:" ) ] :
+					if IECore.StringAlgo.matchMultiple( entry, matchPattern ) and ( entry not in scriptContext.keys() or batch.context()[entry] != scriptContext[entry] ) :
+						contextVariables[entry] = batch.context().substitute( str( batch.context()[entry] ) )
 
-		batchString += '"];\n'
-		outFile.write( batchString )
+			batchString = '<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5">'
+			batchString += '<TR><TD COLSPAN="2"><B>{}</B></TD></TR>'.format( nodeName )
+			batchString += '<TR><TD COLSPAN="2">{}</TD></TR>'.format( nodeType )
+
+
+			if frameString is not None :
+				batchString += "<TR><TD>Frames:</TD><TD>{}</TD></TR>".format( frameString )
+			if len( contextVariables ) > 0 :
+				batchString += "<TR><TD>Context Variables</TD>"
+				batchString += "<TD>"
+				batchString += "".join(
+					[ "{} = {}<BR/>".format( k, v ) for k, v in contextVariables.items() ]
+				)
+				batchString += '</TD></TR>'
+
+			batchString += '</TABLE>'
+
+			outFile.write( '\t"{}" [label=<{}>];\n'.format( batch.blindData()["id"], batchString ) )
 
 		for preTask in batch.preTasks() :
 			self.__walkBatches( preTask, outFile, scriptNode )
@@ -108,6 +120,7 @@ class GraphvizDispatcher( GafferDispatch.Dispatcher ) :
 
 		with open( fileName, "w" ) as outFile :
 			outFile.write( "strict digraph {} {{\n".format( jobName ) )
+			outFile.write( "\tnode [shape=plaintext];\n" )
 			self.__walkBatches( rootBatch, outFile, scriptNode )
 			outFile.write( "}" )
 
