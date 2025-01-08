@@ -168,6 +168,27 @@ struct CycleDetector
 
 IECore::InternedString g_outPlugName( "out" );
 
+const Plug *contextSensitiveSource( const Plug *plug )
+{
+	plug = plug->source();
+
+	if( auto sw = IECore::runTimeCast<const Switch>( plug->node() ) )
+	{
+		if(
+			sw->outPlug() &&
+			( plug == sw->outPlug() || sw->outPlug()->isAncestorOf( plug ) )
+		)
+		{
+			if( auto activeInPlug = sw->activeInPlug( plug ) )
+			{
+				return contextSensitiveSource( activeInPlug );
+			}
+		}
+	}
+
+	return plug;
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -265,18 +286,7 @@ class Shader::NetworkBuilder
 				else
 				{
 					assert( isInputParameter( parameterPlug ) );
-					const Gaffer::Plug *source = parameterPlug->source<Gaffer::Plug>();
-
-					if( auto switchNode = IECore::runTimeCast<const Switch>( source->node() ) )
-					{
-						// Special case for switches with context-varying index values.
-						// Query the active input for this context, and manually traverse
-						// out the other side.
-						if( const Plug *activeInPlug = switchNode->activeInPlug( source ) )
-						{
-							source = activeInPlug->source();
-						}
-					}
+					const Gaffer::Plug *source = contextSensitiveSource( parameterPlug );
 
 					if( source == parameterPlug || !isParameter( source ) )
 					{
