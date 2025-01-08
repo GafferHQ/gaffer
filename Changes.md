@@ -4,7 +4,9 @@
 Fixes
 -----
 
-- USDLayerWriter : Fixed leak of `usdLayerWriter:fileName` context variable.
+- USDLayerWriter :
+  - Fixed silent failures when unable to create the output file (#6197).
+  - Fixed leak of `usdLayerWriter:fileName` context variable.
 
 1.4.15.3 (relative to 1.4.15.2)
 ========

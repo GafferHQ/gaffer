@@ -379,5 +379,8 @@ void USDLayerWriter::executeSequence( const std::vector<float> &frames ) const
 	createDiff( layer->GetPseudoRoot(), *layer, baseLayer->GetPseudoRoot(), *baseLayer );
 
 	createDirectories( outputFileName );
-	layer->Export( outputFileName );
+	if( !layer->Export( outputFileName ) )
+	{
+		throw IECore::Exception( fmt::format( "Failed to export layer to \"{}\"", outputFileName ) );
+	}
 }

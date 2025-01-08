@@ -246,5 +246,19 @@ class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertNotIn( "usdLayerWriter:fileName", monitor.combinedStatistics().variableNames() )
 
+	def testNoWritePermissions( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		layerWriter = GafferUSD.USDLayerWriter()
+		layerWriter["base"].setInput( sphere["out"] )
+		layerWriter["layer"].setInput( sphere["out"] )
+		layerWriter["fileName"].setValue( self.temporaryDirectory() / "layer.usda" )
+
+		self.temporaryDirectory().chmod( 444 )
+
+		with self.assertRaisesRegex( RuntimeError, 'Failed to export layer to "{}"'.format( layerWriter["fileName"].getValue() ) ) :
+			layerWriter["task"].execute()
+
 if __name__ == "__main__":
 	unittest.main()
