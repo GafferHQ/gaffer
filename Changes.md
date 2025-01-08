@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.2.0)
 =======
 
+Features
+--------
+
+- PrimitiveVariableTweaks : Added node for tweaking primitive variables. Can affect just part of a primitive based on ids or a mask.
+
 Improvements
 ------------
 
@@ -12,6 +17,12 @@ Fixes
 - VisualiserTool :
   - Fixed bug where the value dragged from the visualiser would be slightly different from the initial value on button press. (#6191)
   - Fixed error when trying to visualise data unsupported data.
+- TweakPlug : Fixed preservation of geometric interpretation when tweaking V3f values.
+
+API
+---
+
+- TweakPlug : Added `applyElementwiseTweak()` method, for tweaking elements of a `*VectorData`.
 
 1.5.2.0 (relative to 1.5.1.0)
 =======

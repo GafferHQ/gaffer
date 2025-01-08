@@ -42,6 +42,11 @@
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedPlug.h"
 
+#include "IECore/VectorTypedData.h"
+
+#include "boost/dynamic_bitset.hpp"
+
+
 
 namespace Gaffer
 {
@@ -123,30 +128,53 @@ class GAFFER_API TweakPlug : public Gaffer::ValuePlug
 			MissingMode missingMode = MissingMode::Error
 		) const;
 
+
+		struct DataAndIndices{
+			IECore::DataPtr data;
+			IECore::IntVectorDataPtr indices;
+		};
+
+
+
+		/// As above, but applying the tweak to individual elements of VectorTypedData,
+		/// as specified by `mask`.
+		template<class GetDataFunctor, class SetDataFunctor>
+		bool applyElementwiseTweak(
+			/// Signature : const DataAndIndices functor( const std::string &valueName, const bool withFallback ).
+			/// Passing `withFallback=False` specifies that no fallback value should be returned in place of missing data.
+			/// \returns DataAndIndices with members set to `nullptr` if `valueName` is invalid.
+			GetDataFunctor &&getDataFunctor,
+
+			/// Signature : bool functor( const std::string &valueName, DataAndIndices &newData ).
+			/// Passing `nullptr` in `newData.data` removes the entry for `valueName`.
+			/// If the getDataFunctor ever returns indices set to non-null, then setDataFunctor needs
+			/// to deal with receiving modified indices.
+			/// \returns true if the value was set or erased, false if erasure failed.
+			SetDataFunctor &&setDataFunctor,
+
+			// Size of array to make for `Create` mode.
+			size_t createSize,
+
+			// If specified, this bitset must have the same size as the data. Only elements of the data
+			// corresponding to where the mask is true will be tweaked.
+			const boost::dynamic_bitset<> *mask = nullptr,
+
+			MissingMode missingMode = MissingMode::Error
+		) const;
+
+		static const char *modeToString( Gaffer::TweakPlug::Mode mode );
+
 	private :
 
 		Gaffer::ValuePlug *valuePlugInternal();
 		const Gaffer::ValuePlug *valuePlugInternal() const;
 
-		void applyNumericTweak(
-			const IECore::Data *sourceData,
-			const IECore::Data *tweakData,
-			IECore::Data *destData,
-			TweakPlug::Mode mode,
-			const std::string &tweakName
-		) const;
+		static void applyTweakInternal( IECore::Data *data, const IECore::Data *tweakData, TweakPlug::Mode mode, const std::string &name );
 
-		void applyListTweak(
-			const IECore::Data *sourceData,
-			const IECore::Data *tweakData,
-			IECore::Data *destData,
-			TweakPlug::Mode mode,
-			const std::string &tweakName
-		) const;
+		static IECore::DataPtr createVectorDataFromElement( const IECore::Data *elementData, size_t size, bool useElementValueAsDefault, const std::string &name );
 
-		void applyReplaceTweak( const IECore::Data *sourceData, IECore::Data *tweakData ) const;
+		static void applyVectorElementTweak( IECore::Data *vectorData, const IECore::Data *tweakData, IECore::IntVectorData *indicesData, TweakPlug::Mode mode, const std::string &name, const boost::dynamic_bitset<> *mask );
 
-		static const char *modeToString( Gaffer::TweakPlug::Mode mode );
 
 };
 

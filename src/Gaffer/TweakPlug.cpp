@@ -45,10 +45,10 @@
 #include "IECore/StringAlgo.h"
 #include "IECore/TypeTraits.h"
 
+#include "fmt/format.h"
+
 #include "boost/algorithm/string/join.hpp"
 #include "boost/algorithm/string/replace.hpp"
-
-#include "fmt/format.h"
 
 #include <unordered_set>
 
@@ -59,22 +59,13 @@ using namespace Gaffer;
 //////////////////////////////////////////////////////////////////////////
 // Internal utilities
 //////////////////////////////////////////////////////////////////////////
-
 namespace
 {
-
-/// \todo - if these make sense, I guess they should be pushed back to cortex
-
-// IsColorTypedData
-template< typename T > struct IsColorTypedData : boost::mpl::and_< TypeTraits::IsTypedData<T>, TypeTraits::IsColor< typename TypeTraits::ValueType<T>::type > > {};
-
-// SupportsArithmeticData
-template< typename T > struct SupportsArithData : boost::mpl::or_<  TypeTraits::IsNumericSimpleTypedData<T>, TypeTraits::IsVecTypedData<T>, IsColorTypedData<T>> {};
 
 template<typename T>
 T vectorAwareMin( const T &v1, const T &v2 )
 {
-	if constexpr( TypeTraits::IsVec<T>::value || TypeTraits::IsColor<T>::value )
+	if constexpr( IECore::TypeTraits::IsVec<T>::value || IECore::TypeTraits::IsColor<T>::value )
 	{
 		T result;
 		for( size_t i = 0; i < T::dimensions(); ++i )
@@ -92,7 +83,7 @@ T vectorAwareMin( const T &v1, const T &v2 )
 template<typename T>
 T vectorAwareMax( const T &v1, const T &v2 )
 {
-	if constexpr( TypeTraits::IsVec<T>::value || TypeTraits::IsColor<T>::value )
+	if constexpr( IECore::TypeTraits::IsVec<T>::value || IECore::TypeTraits::IsColor<T>::value )
 	{
 		T result;
 		for( size_t i = 0; i < T::dimensions(); ++i )
@@ -107,10 +98,70 @@ T vectorAwareMax( const T &v1, const T &v2 )
 	}
 }
 
-template<typename T>
-vector<T> tweakedList( const std::vector<T> &source, const std::vector<T> &tweak, TweakPlug::Mode mode )
+template< typename T >
+T applyNumericTweak(
+	const T &source,
+	const T &tweak,
+	TweakPlug::Mode mode,
+	const std::string &tweakName
+)
 {
-	vector<T> result = source;
+	if constexpr(
+		( std::is_arithmetic_v<T> && !std::is_same_v< T, bool > ) ||
+		IECore::TypeTraits::IsVec<T>::value ||
+		IECore::TypeTraits::IsColor<T>::value
+	)
+	{
+		switch( mode )
+		{
+			case TweakPlug::Add :
+				return source + tweak;
+			case TweakPlug::Subtract :
+				return source - tweak;
+			case TweakPlug::Multiply :
+				return source * tweak;
+			case TweakPlug::Min :
+				return vectorAwareMin( source, tweak );
+			case TweakPlug::Max :
+				return vectorAwareMax( source, tweak );
+			case TweakPlug::ListAppend :
+			case TweakPlug::ListPrepend :
+			case TweakPlug::ListRemove :
+			case TweakPlug::Replace :
+			case TweakPlug::Remove :
+			case TweakPlug::Create :
+			case TweakPlug::CreateIfMissing :
+				throw IECore::Exception(
+					fmt::format(
+						"Cannot apply tweak with mode {} using applyNumericTweak.",
+						TweakPlug::modeToString( mode )
+					)
+				);
+			default:
+				throw IECore::Exception( fmt::format( "Not a valid tweak mode: {}.", mode ) );
+		}
+	}
+	else
+	{
+		// NOTE: If we are operating on variables that aren't actually stored in a Data, then the
+		// data type reported here may not be technically correct - for example, we might want to
+		// call this on elements of a StringVectorData, in which case this would report a type of
+		// "StringData", but there is nothing of actual type "StringData". This message still
+		// communicates the actual problem though ( we don't support arithmetic on strings ).
+
+		throw IECore::Exception(
+			fmt::format(
+				"Cannot apply tweak with mode {} to \"{}\" : Data type {} not supported.",
+				TweakPlug::modeToString( mode ), tweakName, IECore::TypedData<T>::staticTypeName()
+			)
+		);
+	}
+}
+
+template<typename T>
+std::vector<T> tweakedList( const std::vector<T> &source, const std::vector<T> &tweak, TweakPlug::Mode mode )
+{
+	std::vector<T> result = source;
 
 	struct HashFunc
 	{
@@ -146,6 +197,175 @@ vector<T> tweakedList( const std::vector<T> &source, const std::vector<T> &tweak
 	}
 
 	return result;
+}
+
+template<typename T>
+T applyListTweak(
+	const T &source,
+	const T &tweak,
+	TweakPlug::Mode mode,
+	const std::string &tweakName
+)
+{
+	// \todo - would look cleaner if we had an IsVector in TypeTraits rather than needed to wrap
+	// this is a Data just to check if it's an std::vector
+	if constexpr( IECore::TypeTraits::IsVectorTypedData< IECore::TypedData<T> >::value )
+	{
+		return tweakedList( source, tweak, mode );
+	}
+	else if constexpr( std::is_same_v<T, IECore::PathMatcher> )
+	{
+		IECore::PathMatcher result = source;
+		if( mode == TweakPlug::ListRemove )
+		{
+			result.removePaths( tweak );
+		}
+		else
+		{
+			result.addPaths( tweak );
+		}
+		return result;
+	}
+	else if constexpr( std::is_same_v<T, std::string> )
+	{
+		std::vector<std::string> sourceVector;
+		IECore::StringAlgo::tokenize( source, ' ', sourceVector );
+		std::vector<std::string> tweakVector;
+		IECore::StringAlgo::tokenize( tweak, ' ', tweakVector );
+		return boost::algorithm::join( tweakedList( sourceVector, tweakVector, mode ), " " );
+	}
+	else
+	{
+		throw IECore::Exception(
+			fmt::format(
+				"Cannot apply tweak with mode {} to \"{}\" : Data type {} not supported.",
+				TweakPlug::modeToString( mode ), tweakName, IECore::TypedData<T>::staticTypeName()
+			)
+		);
+	}
+}
+
+template< typename T >
+T applyReplaceTweak(
+	const T &source,
+	const T &tweak
+)
+{
+	if constexpr( std::is_same_v< T, std::string > )
+	{
+		return boost::replace_all_copy( tweak, "{source}", source );
+	}
+	else if constexpr ( std::is_same_v< T, IECore::InternedString > )
+	{
+		return IECore::InternedString( boost::replace_all_copy( tweak.string(), "{source}", source.string() ) );
+	}
+	else
+	{
+		return tweak;
+	}
+}
+
+template< typename T >
+T applyValueTweak(
+	const T &source,
+	const T &tweak,
+	TweakPlug::Mode mode,
+	const std::string &tweakName
+)
+{
+	if(
+		mode == Gaffer::TweakPlug::Add ||
+		mode == Gaffer::TweakPlug::Subtract ||
+		mode == Gaffer::TweakPlug::Multiply ||
+		mode == Gaffer::TweakPlug::Min ||
+		mode == Gaffer::TweakPlug::Max
+	)
+	{
+		return applyNumericTweak( source, tweak, mode, tweakName );
+	}
+	else if(
+		mode == TweakPlug::ListAppend ||
+		mode == TweakPlug::ListPrepend ||
+		mode == TweakPlug::ListRemove
+	)
+	{
+		return applyListTweak( source, tweak, mode, tweakName );
+	}
+	else if( mode == TweakPlug::Replace )
+	{
+		return applyReplaceTweak( source, tweak );
+	}
+	else
+	{
+		throw IECore::Exception(
+			fmt::format(
+				"Cannot apply tweak with mode {} using applyValueTweak.",
+				TweakPlug::modeToString( mode )
+			)
+		);
+	}
+}
+
+
+template <typename T>
+void removeUnusedElements( std::vector<int> &indices, std::vector<T> &data )
+{
+	std::vector<int> used( data.size(), -1 );
+
+	for( const int &i : indices )
+	{
+		used[i] = 1;
+	}
+
+	int accum = 0;
+	for( int &i : used )
+	{
+		if( i != -1 )
+		{
+			i = accum;
+			accum += 1;
+		}
+	}
+
+	if( accum == (int)data.size() )
+	{
+		// All elements were used
+		return;
+	}
+
+	std::vector<T> result;
+	result.reserve( accum );
+	for( size_t j = 0; j < data.size(); j++ )
+	{
+		if( used[j] != -1 )
+		{
+			result.push_back( data[j] );
+		}
+	}
+
+	for( int &i : indices )
+	{
+		i = used[i];
+	}
+
+	data.swap( result );
+}
+
+template< typename T>
+bool constexpr hasZeroConstructor()
+{
+	// Some types, like V3f and Color3f, won't default initialize unless we explicitly
+	// pass 0 to the constructor. Other types don't have a constructor that accepts 0,
+	// so we need to distinguish the two somehow. Currently, I'm using a blacklist of
+	// types that don't need to be initialized to zero ... my rationale is that if a new
+	// type is added, I would rather get a compile error than get uninitialized memory.
+	return !(
+		IECore::TypeTraits::IsBox< T >::value ||
+		IECore::TypeTraits::IsMatrix< T >::value ||
+		IECore::TypeTraits::IsQuat< T >::value ||
+		std::is_same_v< T, IECore::InternedString > ||
+		std::is_same_v< T, std::string >
+	);
 }
 
 } // namespace
@@ -301,141 +521,6 @@ bool TweakPlug::applyTweak( IECore::CompoundData *parameters, MissingMode missin
 	);
 }
 
-void TweakPlug::applyNumericTweak(
-	const IECore::Data *sourceData,
-	const IECore::Data *tweakData,
-	IECore::Data *destData,
-	TweakPlug::Mode mode,
-	const std::string &tweakName
-) const
-{
-	dispatch(
-
-		destData,
-
-		[&] ( auto data ) {
-
-			using DataType = typename std::remove_pointer<decltype( data )>::type;
-
-			if constexpr( SupportsArithData<DataType>::value ) {
-
-				const DataType *sourceDataCast = runTimeCast<const DataType>( sourceData );
-				const DataType *tweakDataCast = runTimeCast<const DataType>( tweakData );
-
-				switch( mode )
-				{
-					case TweakPlug::Add :
-						data->writable() = sourceDataCast->readable() + tweakDataCast->readable();
-						break;
-					case TweakPlug::Subtract :
-						data->writable() = sourceDataCast->readable() - tweakDataCast->readable();
-						break;
-					case TweakPlug::Multiply :
-						data->writable() = sourceDataCast->readable() * tweakDataCast->readable();
-						break;
-					case TweakPlug::Min :
-						data->writable() = vectorAwareMin( sourceDataCast->readable(), tweakDataCast->readable() );
-						break;
-					case TweakPlug::Max :
-						data->writable() = vectorAwareMax( sourceDataCast->readable(), tweakDataCast->readable() );
-						break;
-					case TweakPlug::ListAppend :
-					case TweakPlug::ListPrepend :
-					case TweakPlug::ListRemove :
-					case TweakPlug::Replace :
-					case TweakPlug::Remove :
-					case TweakPlug::Create :
-					case TweakPlug::CreateIfMissing :
-						// These cases are unused - we handle them outside of numericTweak.
-						// But the compiler gets unhappy if we don't handle some cases.
-						assert( false );
-						break;
-				}
-			}
-			else
-			{
-				throw IECore::Exception(
-					fmt::format(
-						"Cannot apply tweak with mode {} to \"{}\" : Data type {} not supported.",
-						modeToString( mode ), tweakName, sourceData->typeName()
-					)
-				);
-			}
-		}
-	);
-}
-
-void TweakPlug::applyListTweak(
-	const IECore::Data *sourceData,
-	const IECore::Data *tweakData,
-	IECore::Data *destData,
-	TweakPlug::Mode mode,
-	const std::string &tweakName
-) const
-{
-
-	// Despite being separate function arguments, `tweakData` and `destData`
-	// point to the _same object_, so we must be careful not to assign to
-	// `destData` until after we're done reading from `tweakData`.
-	/// \todo Use a single in-out function argument so that this is obvious.
-
-	dispatch(
-
-		destData,
-
-		[&] ( auto data ) {
-
-			using DataType = typename std::remove_pointer<decltype( data )>::type;
-
-			if constexpr( TypeTraits::IsVectorTypedData<DataType>::value )
-			{
-				data->writable() = tweakedList(
-					static_cast<const DataType *>( sourceData )->readable(),
-					static_cast<const DataType *>( tweakData )->readable(),
-					mode
-				);
-			}
-			else if constexpr( std::is_same_v<DataType, PathMatcherData> )
-			{
-				const PathMatcher newPaths = runTimeCast<const DataType>( tweakData )->readable();
-				data->writable() = runTimeCast<const DataType>( sourceData )->readable();
-				if( mode == TweakPlug::ListRemove )
-				{
-					data->writable().removePaths( newPaths );
-				}
-				else
-				{
-					data->writable().addPaths( newPaths );
-				}
-			}
-			else if constexpr( std::is_same_v<DataType, StringData> )
-			{
-				vector<string> sourceVector;
-				IECore::StringAlgo::tokenize( static_cast<const DataType *>( sourceData )->readable(), ' ', sourceVector );
-				vector<string> tweakVector;
-				IECore::StringAlgo::tokenize( static_cast<const DataType *>( tweakData )->readable(), ' ', tweakVector );
-				data->writable() = boost::algorithm::join( tweakedList( sourceVector, tweakVector, mode ), " " );
-			}
-		}
-
-	);
-}
-
-void TweakPlug::applyReplaceTweak( const IECore::Data *sourceData, IECore::Data *tweakData ) const
-{
-	if( auto stringData = IECore::runTimeCast<IECore::StringData>( tweakData ) )
-	{
-		boost::replace_all( stringData->writable(), "{source}", static_cast<const IECore::StringData *>( sourceData )->readable() );
-	}
-	else if( auto internedStringData = IECore::runTimeCast<IECore::InternedStringData>( tweakData ) )
-	{
-		internedStringData->writable() = boost::replace_all_copy(
-			internedStringData->readable().string(),
-			"{source}", static_cast<const IECore::InternedStringData *>( sourceData )->readable().string()
-		);
-	}
-}
-
 const char *TweakPlug::modeToString( Gaffer::TweakPlug::Mode mode )
 {
 	switch( mode )
@@ -539,4 +624,218 @@ bool TweaksPlug::applyTweaks( IECore::CompoundData *parameters, TweakPlug::Missi
 		}
 	}
 	return applied;
+}
+
+
+void TweakPlug::applyTweakInternal( IECore::Data *data, const IECore::Data *tweakData, TweakPlug::Mode mode, const std::string &name )
+{
+	IECore::dispatch(
+		data,
+		[&tweakData, &mode, &name] ( auto dataTyped )
+		{
+			using DataType = typename std::remove_const_t<std::remove_pointer_t<decltype( dataTyped )> >;
+			if constexpr( IECore::TypeTraits::IsTypedData< DataType >::value )
+			{
+				auto tweakDataTyped = IECore::runTimeCast< const DataType >( tweakData );
+				if( !tweakDataTyped )
+				{
+					throw IECore::Exception(
+						fmt::format( "Cannot apply tweak to \"{}\" : Value of type \"{}\" does not match parameter of type \"{}\"", name, dataTyped->typeName(), tweakData->typeName() )
+					);
+				}
+
+				auto &value = dataTyped->writable();
+				value = applyValueTweak( value, tweakDataTyped->readable(), mode, name );
+			}
+			else
+			{
+				throw IECore::Exception( fmt::format( "Cannot apply tweak to \"{}\" of type \"{}\"", name, dataTyped->typeName() ) );
+			}
+		}
+	);
+}
+
+IECore::DataPtr TweakPlug::createVectorDataFromElement( const IECore::Data *elementData, size_t size, bool useElementValueAsDefault, const std::string &name )
+{
+	return IECore::dispatch(
+		elementData,
+		[&size, &useElementValueAsDefault, &name] ( auto elementDataTyped ) -> IECore::DataPtr
+		{
+			using DataType = typename std::remove_const_t<std::remove_pointer_t<decltype( elementDataTyped )> >;
+			using ValueType = typename DataType::ValueType;
+
+			if constexpr(
+				IECore::TypeTraits::IsTypedData< DataType >::value &&
+				!IECore::TypeTraits::IsVectorTypedData< DataType >::value &&
+
+				// A bunch of things we're not allowed to make vectors of
+				!IECore::TypeTraits::IsTransformationMatrix< ValueType >::value &&
+				!IECore::TypeTraits::IsSpline< ValueType >::value &&
+				!std::is_same_v< ValueType, IECore::PathMatcher > &&
+				!std::is_same_v< ValueType, boost::posix_time::ptime >
+			)
+			{
+				constexpr bool isGeometric = IECore::TypeTraits::IsGeometricTypedData< DataType >::value;
+				using VectorDataType = std::conditional_t<
+					isGeometric,
+					IECore::GeometricTypedData< std::vector< ValueType > >,
+					IECore::TypedData< std::vector< ValueType > >
+				>;
+
+				typename VectorDataType::Ptr vectorData = new VectorDataType();
+
+				if( useElementValueAsDefault )
+				{
+					vectorData->writable().resize( size, elementDataTyped->readable() );
+				}
+				else
+				{
+					// Some types, like V3f and Color3f, won't default initialize unless we explicitly
+					// pass 0 to the constructor. Other types don't have a constructor that accepts 0,
+					// so we need to distinguish the two somehow. Currently, I'm using a blacklist of
+					// types that don't need to be initialized to zero ... my rationale is that if a new
+					// type is added, I would rather get a compile error than get uninitialized memory.
+					if constexpr( !hasZeroConstructor< ValueType >() )
+					{
+						vectorData->writable().resize( size, ValueType() );
+					}
+					else
+					{
+						vectorData->writable().resize( size, ValueType( 0 ) );
+					}
+				}
+
+				if constexpr( isGeometric )
+				{
+					vectorData->setInterpretation( elementDataTyped->getInterpretation() );
+				}
+
+				return vectorData;
+			}
+			else
+			{
+				throw IECore::Exception( fmt::format(
+					"Invalid type \"{}\" for non-constant element-wise tweak \"{}\".",
+					elementDataTyped->typeName(), name
+				) );
+			}
+		}
+	);
+}
+
+void TweakPlug::applyVectorElementTweak( IECore::Data *vectorData, const IECore::Data *tweakData, IECore::IntVectorData *indicesData, TweakPlug::Mode mode, const std::string &name, const boost::dynamic_bitset<> *mask )
+{
+	IECore::dispatch( vectorData,
+		[&tweakData, &indicesData, &mode, &name, &mask]( auto *vectorDataTyped )
+		{
+			using SourceType = typename std::remove_pointer_t<decltype( vectorDataTyped )>;
+			if constexpr( IECore::TypeTraits::IsVectorTypedData< SourceType >::value )
+			{
+				auto &result = vectorDataTyped->writable();
+				using ElementType = typename SourceType::ValueType::value_type;
+				using ElementDataType = IECore::TypedData< ElementType >;
+
+				const ElementDataType* tweakDataTyped = IECore::runTimeCast< const ElementDataType >( tweakData );
+				if( !tweakDataTyped )
+				{
+					throw IECore::Exception(
+						fmt::format(
+							"Cannot apply tweak to \"{}\" : Parameter should be of type \"{}\" in order to apply "
+							"to an element of \"{}\", but got \"{}\" instead.",
+							name, ElementDataType::staticTypeName(), vectorDataTyped->typeName(), tweakData->typeName()
+						)
+					);
+				}
+
+				auto &tweak = tweakDataTyped->readable();
+
+				if( mask && indicesData )
+				{
+					// OK, this is a somewhat complex special case - we are only tweaking some data, based
+					// on indices, but some indices currently refer to the same data. If we end up tweaking
+					// only some of the indices that currently refer to the same data, then we're splitting
+					// it into two different values, and need to add a new piece of data to hold the new
+					// value.
+
+					result.reserve( result.size() + mask->count() );
+
+
+					std::vector<int> &indices = indicesData->writable();
+					std::unordered_map< int, int > tweakedIndices;
+
+					if( mask->size() != indices.size() )
+					{
+						throw IECore::Exception(
+							fmt::format(
+								"Invalid call to TweakPlug::applyElementwiseTweak. Mask size {} doesn't match indices size {}.",
+								mask->size(), indices.size()
+							)
+						);
+					}
+
+					for( size_t i = 0 ; i < mask->size(); i++ )
+					{
+						if( mask->test(i) )
+						{
+							auto[ it, inserted ] = tweakedIndices.try_emplace( indices[i], result.size() );
+							if( inserted )
+							{
+								result.push_back( applyValueTweak<ElementType>( result[indices[i]], tweak, mode, name ) );
+							}
+							indices[i] = it->second;
+						}
+					}
+
+
+					// If we actually ended up tweaking all indices that used a piece of data, that data is now
+					// abandoned, so we should now do a scan to remove unused data.
+					removeUnusedElements( indices, result );
+
+					result.shrink_to_fit();
+				}
+				else if( mask )
+				{
+					if( mask->size() != result.size() )
+					{
+						throw IECore::Exception(
+							fmt::format(
+								"Invalid call to TweakPlug::applyElementwiseTweak. Mask size {} doesn't match data size {}.",
+								mask->size(), result.size()
+							)
+						);
+					}
+
+					// If there are no indices, then we just modify the data where the mask is true
+					for( size_t i = 0 ; i < result.size(); i++ )
+					{
+						if( mask->test(i) )
+						{
+							result[i] = applyValueTweak<ElementType>( result[i], tweak, mode, name );
+						}
+					}
+				}
+				else
+				{
+					// If there is no mask given, we're just modifying all the data, and it doesn't matter
+					// whether or not there are indices.
+
+					// I probably should have paid more attention to what r-value references are in general,
+					// but in this case it seems like a pretty safe way to force this to work with the
+					// vector-of-bool weirdness
+					for( auto &&i : result )
+					{
+						i = applyValueTweak<ElementType>( i, tweak, mode, name );
+					}
+				}
+			}
+			else
+			{
+				throw IECore::Exception( fmt::format(
+					"Could not apply tweak to \"{}\" : Expected vector typed data, got \"{}\".",
+					name, vectorDataTyped->typeName()
+				) );
+			}
+		}
+	);
+
 }

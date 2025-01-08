@@ -330,6 +330,20 @@ class TweakPlugTest( GafferTest.TestCase ) :
 		self.assertFalse( tweaks.applyTweaks( parameters ) )
 		self.assertNotIn( "f", parameters )
 
+	def testPreservesInterpretation( self ) :
+
+		# Check that the interpretation comes from the source data, not the tweak.
+		data = IECore.CompoundData(
+			{
+				"a" : IECore.V3fData( imath.V3f( 1, 2, 3 ), IECore.GeometricData.Interpretation.Normal ),
+			}
+		)
+
+		tweak = Gaffer.TweakPlug( "a", IECore.V3fData( imath.V3f( 0.5 ) ), Gaffer.TweakPlug.Mode.Add )
+
+		tweak.applyTweak( data )
+		self.assertEqual( data["a"], IECore.V3fData( imath.V3f( 1.5, 2.5, 3.5 ), IECore.GeometricData.Interpretation.Normal ) )
+
 	def testTweakInternedString( self ) :
 
 		data = IECore.CompoundData(
@@ -344,6 +358,60 @@ class TweakPlugTest( GafferTest.TestCase ) :
 		result = tweak.applyTweak( data )
 		self.assertTrue( result )
 		self.assertEqual( data["a"], IECore.InternedStringData( "stringValue" ) )
+
+	def testListAppendWeirdCornerCase( self ) :
+
+		tweak = Gaffer.TweakPlug( "a", IECore.V3fData( imath.V3f( 7 ) ), Gaffer.TweakPlug.Mode.ListAppend )
+
+		data = IECore.CompoundData()
+
+		# A weird consequence of ListAppend being treated as a "Create" if there are no existing list entries:
+		# A listAppend will succeed when there is no existing data, even if the type of the tweak is completely
+		# invalid for this mode.
+		tweak.applyTweak( data )
+		self.assertEqual( data["a"], IECore.V3fData( imath.V3f( 7 ) ) )
+
+		# Once there is existing data, we get the expected error about the type not being valid.
+		with self.assertRaisesRegex( Exception,
+			'Cannot apply tweak with mode ListAppend to "a" : Data type V3fDataBase not supported.'
+		) :
+			tweak.applyTweak( data )
+
+	def testInvalidNumeric( self ) :
+
+		parameters = IECore.CompoundData(
+			{
+				"a" : "foo",
+				"b" : IECore.IntVectorData( [ 0, 1, 2 ] ),
+				"c" : IECore.StringVectorData( [ "gouda", "cheddar", "cheddar", "swiss" ] ),
+			}
+		)
+
+		tweaks = Gaffer.TweaksPlug()
+		tweaks.addChild( Gaffer.TweakPlug( "a", "foo", Gaffer.TweakPlug.Mode.Add ) )
+
+		with self.assertRaisesRegex( Exception,
+			'Cannot apply tweak with mode Add to "a" : Data type StringData not supported.'
+		) :
+			tweaks.applyTweaks( parameters )
+
+		del tweaks[0]
+
+		tweaks.addChild( Gaffer.TweakPlug( "b", IECore.IntVectorData( [ 0, 1, 2 ] ), Gaffer.TweakPlug.Mode.Multiply ) )
+
+		with self.assertRaisesRegex( Exception,
+			'Cannot apply tweak with mode Multiply to "b" : Data type IntVectorData not supported.'
+		) :
+			tweaks.applyTweaks( parameters )
+
+		del tweaks[0]
+
+		tweaks.addChild( Gaffer.TweakPlug( "c", IECore.StringVectorData( [ "foo" ] ), Gaffer.TweakPlug.Mode.Subtract ) )
+
+		with self.assertRaisesRegex( Exception,
+			'Cannot apply tweak with mode Subtract to "c" : Data type StringVectorData not supported.'
+		) :
+			tweaks.applyTweaks( parameters )
 
 	def testPathMatcherListOperations( self ) :
 
