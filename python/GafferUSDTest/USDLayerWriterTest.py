@@ -36,6 +36,8 @@
 
 import pathlib
 import unittest
+import os
+import subprocess
 
 import pxr.Usd
 
@@ -255,10 +257,16 @@ class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 		layerWriter["layer"].setInput( sphere["out"] )
 		layerWriter["fileName"].setValue( self.temporaryDirectory() / "layer.usda" )
 
-		self.temporaryDirectory().chmod( 444 )
+		if os.name != "nt" :
+			self.temporaryDirectory().chmod( 444 )
+		else :
+			subprocess.check_call( [ "icacls", self.temporaryDirectory(), "/deny", "Users:(OI)(CI)(W)" ] )
 
 		with self.assertRaisesRegex( RuntimeError, 'Failed to export layer to "{}"'.format( layerWriter["fileName"].getValue() ) ) :
 			layerWriter["task"].execute()
+
+		if os.name == "nt" :
+			subprocess.check_call( [ "icacls", self.temporaryDirectory(), "/grant", "Users:(OI)(CI)(W)" ] )
 
 if __name__ == "__main__":
 	unittest.main()
