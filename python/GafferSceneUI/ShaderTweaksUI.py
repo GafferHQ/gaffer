@@ -56,6 +56,8 @@ Gaffer.Metadata.registerNode(
 	Makes modifications to shader parameter values.
 	""",
 
+	"layout:section:Settings.Tweaks:collapsed", False,
+
 	plugs = {
 
 		"shader" : [
@@ -110,6 +112,7 @@ Gaffer.Metadata.registerNode(
 			interface, or using the ShaderTweaks API via python.
 			""",
 
+			"layout:section", "Settings.Tweaks",
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:customWidget:footer:widgetType", "GafferSceneUI.ShaderTweaksUI._TweaksFooter",
 			"layout:customWidget:footer:index", -1,
