@@ -413,12 +413,6 @@ class VisualiserGadget : public Gadget
 						continue;
 					}
 
-					IECoreGL::ConstBufferPtr vBuffer = meshGL->getVertexBuffer( name );
-					if( !vBuffer )
-					{
-						continue;
-					}
-
 					ConstDataPtr vData = vIt->second.data;
 					GLsizei stride = 0;
 					GLenum type = GL_FLOAT;
@@ -450,6 +444,12 @@ class VisualiserGadget : public Gadget
 							break;
 						default:
 							continue;
+					}
+
+					IECoreGL::ConstBufferPtr vBuffer = meshGL->getVertexBuffer( name );
+					if( !vBuffer )
+					{
+						continue;
 					}
 
 					// Get the object to world transform
@@ -689,7 +689,7 @@ VisualiserTool::VisualiserTool( SceneView *view, const std::string &name ) : Sel
 	m_gadgetDirty( true ),
 	m_selectionDirty( true ),
 	m_priorityPathsDirty( true ),
-	m_acceptedButtonPress( false ),
+	m_valueAtButtonPress(),
 	m_initiatedDrag( false )
 {
 	view->viewportGadget()->addChild( m_gadget );
@@ -956,7 +956,7 @@ bool VisualiserTool::keyPress( const KeyEvent &event )
 
 bool VisualiserTool::buttonPress( const ButtonEvent &event )
 {
-	m_acceptedButtonPress = false;
+	m_valueAtButtonPress.reset();
 	m_initiatedDrag = false;
 
 	if( event.button & ButtonEvent::Left && !( event.modifiers & GafferUI::ButtonEvent::Modifiers::Control ) )
@@ -964,7 +964,7 @@ bool VisualiserTool::buttonPress( const ButtonEvent &event )
 		updateCursorValue();
 		if( m_cursorValue )
 		{
-			m_acceptedButtonPress = true;
+			m_valueAtButtonPress = m_cursorValue->copy();
 			return true;
 		}
 	}
@@ -974,7 +974,7 @@ bool VisualiserTool::buttonPress( const ButtonEvent &event )
 
 bool VisualiserTool::buttonRelease( const ButtonEvent &event )
 {
-	m_acceptedButtonPress = false;
+	m_valueAtButtonPress.reset();
 	m_initiatedDrag = false;
 
 	return false;
@@ -984,27 +984,22 @@ RunTimeTypedPtr VisualiserTool::dragBegin( const DragDropEvent &event )
 {
 	m_initiatedDrag = false;
 
-	if( !m_acceptedButtonPress )
+	if( !m_valueAtButtonPress )
 	{
 		return RunTimeTypedPtr();
 	}
 
-	m_acceptedButtonPress = false;
+	// NOTE : There is a possibility that the tool has become inactive since the button
+	//        press event that triggered the drag was accepted, the cutoff point is the
+	//        button press event, so any change to the active state after that does not
+	//        affect an ongoing drag operation. We therefore always request a redraw
+	//        here so that the displayed value is cleared.
 
-	if( m_cursorValue )
-	{
-		// NOTE : There is a possibility that the tool has become inactive since the button
-		//        press event that triggered the drag was accepted, the cutoff point is the
-		//        button press event, so any change to the active state after that does not
-		//        affect an ongoing drag operation. We therefore always request a redraw
-		//        here so that the displayed value is cleared.
+	m_initiatedDrag = true;
+	view()->viewportGadget()->renderRequestSignal()( view()->viewportGadget() );
+	Pointer::setCurrent( "values" );
 
-		m_initiatedDrag = true;
-		view()->viewportGadget()->renderRequestSignal()( view()->viewportGadget() );
-		Pointer::setCurrent( "values" );
-	}
-
-	return m_cursorValue;
+	return m_valueAtButtonPress;
 }
 
 bool VisualiserTool::dragEnd( const DragDropEvent &event )
