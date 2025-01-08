@@ -1,7 +1,10 @@
 1.4.15.x (relative to 1.4.15.3)
 ========
 
+Fixes
+-----
 
+- USDLayerWriter : Fixed leak of `usdLayerWriter:fileName` context variable.
 
 1.4.15.3 (relative to 1.4.15.2)
 ========
