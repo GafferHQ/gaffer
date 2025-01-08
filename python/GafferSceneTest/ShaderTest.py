@@ -279,6 +279,42 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 					[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "out", ), network.Parameter( "n3", "c" ) ) ]
 				)
 
+	def testSecondSwitchWithContextSensitiveIndex( self ) :
+
+		contextQuery = Gaffer.ContextQuery()
+		contextQuery.addQuery( Gaffer.IntPlug(), "index" )
+
+		n1 = GafferSceneTest.TestShader( "n1" )
+		n2 = GafferSceneTest.TestShader( "n2" )
+		n3 = GafferSceneTest.TestShader( "n3" )
+		n3["type"].setValue( "test:surface" )
+
+		switch1 = Gaffer.Switch( "switch1" )
+		switch1.setup( n3["parameters"]["c"] )
+		switch2 = Gaffer.Switch( "switch2" )
+		switch2.setup( n3["parameters"]["c"] )
+
+		switch1["index"].setInput( contextQuery["out"][0]["value"] )
+		switch1["in"][0].setInput( n1["out"] )
+		switch1["in"][1].setInput( n2["out"] )
+
+		switch2["index"].setInput( contextQuery["out"][0]["value"] )
+		switch2["in"][0].setInput( n1["out"] )
+		switch2["in"][1].setInput( switch1["out"] )
+
+		n3["parameters"]["c"].setInput( switch2["out"] )
+
+		with Gaffer.Context() as context :
+
+			context["index"] = 1
+
+			network = n3.attributes()["test:surface"]
+			self.assertEqual( len( network ), 2 )
+			self.assertEqual(
+				network.inputConnections( "n3" ),
+				[ network.Connection( network.Parameter( "n2", "out", ), network.Parameter( "n3", "c" ) ) ]
+			)
+
 	def testSwitchWithComponentConnections( self ) :
 
 		s = Gaffer.ScriptNode()
