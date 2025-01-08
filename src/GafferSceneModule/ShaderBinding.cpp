@@ -140,6 +140,12 @@ IECore::CompoundObjectPtr shaderPlugAttributes( const ShaderPlug &p, bool copy=t
 	}
 }
 
+Gaffer::ValuePlugPtr shaderPlugParameterSource( ShaderPlug &p, const IECoreScene::ShaderNetwork::Parameter &parameter )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return p.parameterSource( parameter );
+}
+
 } // namespace
 
 void GafferSceneModule::bindShader()
@@ -167,6 +173,7 @@ void GafferSceneModule::bindShader()
 		// value accessors
 		.def( "attributesHash", &shaderPlugAttributesHash  )
 		.def( "attributes", &shaderPlugAttributes, ( boost::python::arg_( "_copy" ) = true ) )
+		.def( "parameterSource", &shaderPlugParameterSource )
 	;
 
 	GafferBindings::NodeClass<OpenGLShader>();
