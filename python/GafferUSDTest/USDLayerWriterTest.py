@@ -265,8 +265,5 @@ class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 		with self.assertRaisesRegex( RuntimeError, 'Failed to export layer to "{}"'.format( layerWriter["fileName"].getValue() ) ) :
 			layerWriter["task"].execute()
 
-		if os.name == "nt" :
-			subprocess.check_call( [ "icacls", self.temporaryDirectory(), "/grant", "Users:(OI)(CI)(W)" ] )
-
 if __name__ == "__main__":
 	unittest.main()

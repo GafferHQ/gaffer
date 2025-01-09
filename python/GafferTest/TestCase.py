@@ -115,6 +115,9 @@ class TestCase( unittest.TestCase ) :
 		IECore.RefCounted.collectGarbage()
 
 		if self.__temporaryDirectory is not None :
+			if os.name == "nt" :
+				subprocess.check_call( [ "icacls", self.__temporaryDirectory, "/grant", "Users:(OI)(CI)(W)" ] )
+
 			for root, dirs, files in os.walk( self.__temporaryDirectory ) :
 				for fileName in [ p for p in files + dirs if not ( pathlib.Path( root ) / p ).is_symlink() ] :
 					( pathlib.Path( root ) / fileName ).chmod( stat.S_IRWXU )
