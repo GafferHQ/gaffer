@@ -138,7 +138,7 @@ bool isCompoundNumericPlug( const Gaffer::Plug *plug )
 
 using ShaderSet = boost::unordered_set<const Shader *>;
 
-struct CycleDetector
+struct CycleDetector // TODO : DOES THIS NEED TO BE CONTEXT-AWARE? AND COULD/SHOULD WE SUPPORT LOOPS?
 {
 
 	CycleDetector( ShaderSet &downstreamShaders, const Shader *shader )
@@ -169,7 +169,7 @@ struct CycleDetector
 
 IECore::InternedString g_outPlugName( "out" );
 
-/// \todo This is identical to `computedSource()` in Dispatcher.cpp. Consider
+/// \todo This contains a superset of `computedSource()` in Dispatcher.cpp. Consider
 /// consolidating them into a single public function in PlugAlgo.
 tuple<const Plug *, ConstContextPtr> contextSensitiveSource( const Plug *plug )
 {
@@ -198,6 +198,13 @@ tuple<const Plug *, ConstContextPtr> contextSensitiveSource( const Plug *plug )
 			ConstContextPtr context = contextProcessor->inPlugContext();
 			Context::Scope scopedContext( context.get() );
 			return contextSensitiveSource( contextProcessor->inPlug() );
+		}
+	}
+	else if( auto spreadsheet = IECore::runTimeCast<const Spreadsheet>( plug->node() ) )
+	{
+		if( spreadsheet->outPlug()->isAncestorOf( plug ) )
+		{
+			return contextSensitiveSource( spreadsheet->activeInPlug( static_cast<const ValuePlug *>( plug ) ) );
 		}
 	}
 

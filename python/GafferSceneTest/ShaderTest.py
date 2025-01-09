@@ -490,6 +490,51 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( network.getShader( aInput.shader ).parameters["c"], IECore.Color3fData( imath.Color3f( 1, 0, 0 ) ) )
 		self.assertEqual( network.getShader( bInput.shader ).parameters["c"], IECore.Color3fData( imath.Color3f( 0, 1, 0 ) ) )
 
+	def testContextProcessorsWithInlineSpreadsheets( self ) :
+
+		redTexture = GafferSceneTest.TestShader( "redTexture" )
+		redTexture["parameters"]["c"].setValue( imath.Color3f( 1, 0, 0 ) )
+		greenTexture = GafferSceneTest.TestShader( "greenTexture" )
+		greenTexture["parameters"]["c"].setValue( imath.Color3f( 0, 1, 0 ) )
+
+		spreadsheet = Gaffer.Spreadsheet()
+		spreadsheet["selector"].setValue( "${color}" )
+		spreadsheet["rows"].addColumn( Gaffer.Color3fPlug( "texture" ) )
+		spreadsheet["rows"].addRows( 2 )
+		spreadsheet["rows"][1]["name"].setValue( "red" )
+		spreadsheet["rows"][1]["cells"]["texture"]["value"].setInput( redTexture["out"] )
+		spreadsheet["rows"][2]["name"].setValue( "green" )
+		spreadsheet["rows"][2]["cells"]["texture"]["value"].setInput( greenTexture["out"] )
+
+		redContext = Gaffer.ContextVariables()
+		redContext.setup( spreadsheet["out"]["texture"] )
+		redContext["variables"].addChild( Gaffer.NameValuePlug( "color", "red" ) )
+		redContext["in"].setInput( spreadsheet["out"]["texture"] )
+
+		greenContext = Gaffer.ContextVariables()
+		greenContext.setup( spreadsheet["out"]["texture"] )
+		greenContext["variables"].addChild( Gaffer.NameValuePlug( "color", "green" ) )
+		greenContext["in"].setInput( spreadsheet["out"]["texture"] )
+
+		mix = GafferSceneTest.TestShader( "mix" )
+		mix.loadShader( "mix" )
+		mix["type"].setValue( "test:surface" )
+		mix["parameters"]["a"].setInput( redContext["out"] )
+		mix["parameters"]["b"].setInput( greenContext["out"] )
+
+		shaderPlug = GafferScene.ShaderPlug()
+		shaderPlug.setInput( mix["out"] )
+
+		network = shaderPlug.attributes()["test:surface"]
+		self.assertEqual( len( network.shaders() ), 3 )
+		self.assertEqual( network.getOutput(), ( "mix", "out" ) )
+
+		aInput = network.input( ( "mix", "a" ) )
+		bInput = network.input( ( "mix", "b" ) )
+
+		self.assertEqual( network.getShader( aInput.shader ).parameters["c"], IECore.Color3fData( imath.Color3f( 1, 0, 0 ) ) )
+		self.assertEqual( network.getShader( bInput.shader ).parameters["c"], IECore.Color3fData( imath.Color3f( 0, 1, 0 ) ) )
+
 	@unittest.expectedFailure
 	def testContextProcessorsWithoutContextSensitiveShaders( self ) :
 
