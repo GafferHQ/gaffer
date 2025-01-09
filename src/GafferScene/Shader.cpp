@@ -40,10 +40,10 @@
 #include "GafferScene/ShaderTweakProxy.h"
 
 #include "Gaffer/ContextProcessor.h"
-#include "Gaffer/PlugAlgo.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/OptionalValuePlug.h"
+#include "Gaffer/PlugAlgo.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/SplinePlug.h"
