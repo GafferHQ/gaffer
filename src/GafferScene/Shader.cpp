@@ -200,11 +200,23 @@ tuple<const Plug *, ConstContextPtr> contextSensitiveSource( const Plug *plug )
 			return contextSensitiveSource( contextProcessor->inPlug() );
 		}
 	}
-	else if( auto spreadsheet = IECore::runTimeCast<const Spreadsheet>( plug->node() ) )
+	else if( auto valuePlug = IECore::runTimeCast<const ValuePlug>( plug ) )
 	{
-		if( spreadsheet->outPlug()->isAncestorOf( plug ) )
+		if( auto spreadsheet = IECore::runTimeCast<const Spreadsheet>( plug->node() ) )
 		{
-			return contextSensitiveSource( spreadsheet->activeInPlug( static_cast<const ValuePlug *>( plug ) ) );
+			if( spreadsheet->outPlug()->isAncestorOf( plug ) )
+			{
+				return contextSensitiveSource( spreadsheet->activeInPlug( valuePlug ) );
+			}
+		}
+		else if( auto loop = IECore::runTimeCast<const Loop>( plug->node() ) )
+		{
+			auto [previousPlug, previousContext] = loop->previousIteration( valuePlug );
+			if( previousPlug )
+			{
+				Context::Scope scopedContext( previousContext.get() );
+				return contextSensitiveSource( previousPlug );
+			}
 		}
 	}
 
