@@ -38,6 +38,7 @@ import unittest
 import imath
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -534,6 +535,58 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( network.getShader( aInput.shader ).parameters["c"], IECore.Color3fData( imath.Color3f( 1, 0, 0 ) ) )
 		self.assertEqual( network.getShader( bInput.shader ).parameters["c"], IECore.Color3fData( imath.Color3f( 0, 1, 0 ) ) )
+
+	def testLoops( self ) :
+
+		baseTexture = GafferSceneTest.TestShader( "baseTexture" )
+
+		indexQuery = Gaffer.ContextQuery()
+		indexQuery.addQuery( Gaffer.IntPlug(), "loop:index" )
+
+		overlayTexture = GafferSceneTest.TestShader( "overlayTexture" )
+		overlayTexture["parameters"]["i"].setInput( indexQuery["out"][0]["value"] )
+
+		mix = GafferSceneTest.TestShader( "mix" )
+		mix.loadShader( "mix" )
+		mix["type"].setValue( "test:surface" )
+
+		loop = Gaffer.Loop()
+		loop.setup( mix["out"] )
+		loop["in"].setInput( baseTexture["out"] )
+
+		mix["parameters"]["a"].setInput( loop["previous"] )
+		mix["parameters"]["b"].setInput( overlayTexture["out"] )
+
+		loop["next"].setInput( mix["out"] )
+		loop["iterations"].setValue( 3 )
+
+		output = GafferSceneTest.TestShader( "output" )
+		output["type"].setValue( "test:surface" )
+		output["parameters"]["c"].setInput( loop["out"] )
+
+		shaderPlug = GafferScene.ShaderPlug()
+		shaderPlug.setInput( output["out"] )
+
+		network = shaderPlug.attributes()["test:surface"]
+		self.assertEqual( len( network.shaders() ), 8 )
+		self.assertEqual( network.getOutput(), ( "output", "out" ) )
+
+		input = network.input( ( "output", "c" ) )
+		for i in range( 2, -1, -1 ) :
+
+			self.assertEqual(
+				input, IECoreScene.ShaderNetwork.Parameter( "mix{}".format( i if i else "" ), "out" )
+			)
+
+			overlay = network.input( ( input.shader, "b" ) )
+			self.assertEqual(
+				overlay, IECoreScene.ShaderNetwork.Parameter( "overlayTexture{}".format( i if i else "" ), "out" )
+			)
+			self.assertEqual( network.getShader( overlay.shader ).parameters["i"].value, i )
+
+			input = network.input( ( input.shader, "a" ) )
+
+		self.assertEqual( input, IECoreScene.ShaderNetwork.Parameter( "baseTexture", "out" ) )
 
 	@unittest.expectedFailure
 	def testContextProcessorsWithoutContextSensitiveShaders( self ) :
