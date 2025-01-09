@@ -137,34 +137,36 @@ bool isCompoundNumericPlug( const Gaffer::Plug *plug )
 	}
 }
 
-using ShaderSet = boost::unordered_set<const Shader *>;
-
-struct CycleDetector // TODO : DOES THIS NEED TO BE CONTEXT-AWARE? AND COULD/SHOULD WE SUPPORT LOOPS?
+struct CycleDetector
 {
 
-	CycleDetector( ShaderSet &downstreamShaders, const Shader *shader )
-		:	m_downstreamShaders( downstreamShaders ), m_shader( shader )
+	using ShaderAndContext = std::pair<const Shader *, IECore::MurmurHash>;
+	using DownstreamShaders = boost::unordered_set<ShaderAndContext>;
+
+	CycleDetector( DownstreamShaders &downstreamShaders, const Shader *shader )
+		:	m_downstreamShaders( downstreamShaders ),
+			m_shaderAndContext{ shader, Context::current()->hash() }
 	{
-		if( !m_downstreamShaders.insert( m_shader ).second )
+		if( !m_downstreamShaders.insert( m_shaderAndContext ).second )
 		{
-			// throw IECore::Exception(
-			// 	fmt::format(
-			// 		"Shader \"{}\" is involved in a dependency cycle.",
-			// 		m_shader->relativeName( m_shader->ancestor<ScriptNode>() )
-			// 	)
-			// );
+			throw IECore::Exception(
+				fmt::format(
+					"Shader \"{}\" is involved in a dependency cycle.",
+					shader->relativeName( shader->ancestor<ScriptNode>() )
+				)
+			);
 		}
 	}
 
 	~CycleDetector()
 	{
-		m_downstreamShaders.erase( m_shader );
+		m_downstreamShaders.erase( m_shaderAndContext );
 	}
 
 	private :
 
-		ShaderSet &m_downstreamShaders;
-		const Shader *m_shader;
+		DownstreamShaders &m_downstreamShaders;
+		const ShaderAndContext m_shaderAndContext;
 
 };
 
@@ -845,7 +847,7 @@ class Shader::NetworkBuilder
 		using ShaderMap = std::map<ShaderMapKey, HandleAndHash>;
 		ShaderMap m_shaders;
 
-		ShaderSet m_downstreamShaders; // Used for detecting cycles
+		CycleDetector::DownstreamShaders m_downstreamShaders;
 
 		bool m_hasProxyNodes;
 

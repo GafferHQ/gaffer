@@ -588,7 +588,6 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( input, IECoreScene.ShaderNetwork.Parameter( "baseTexture", "out" ) )
 
-	@unittest.expectedFailure
 	def testContextProcessorsWithoutContextSensitiveShaders( self ) :
 
 		texture = GafferSceneTest.TestShader( "texture" )
