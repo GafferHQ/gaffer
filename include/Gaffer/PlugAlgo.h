@@ -48,6 +48,7 @@
 namespace Gaffer
 {
 
+IE_CORE_FORWARDDECLARE( Context )
 IE_CORE_FORWARDDECLARE( GraphComponent )
 IE_CORE_FORWARDDECLARE( ValuePlug )
 
@@ -65,6 +66,20 @@ GAFFER_API void replacePlug( GraphComponent *parent, PlugPtr plug );
 /// Returns `true` if the plug's value is provided by the output
 /// of a ComputeNode, and `false` otherwise.
 GAFFER_API bool dependsOnCompute( const ValuePlug *plug );
+
+/// WHAT SEMANTICS?
+///
+/// - INSPECTOR DOESN'T WANT OUTPUT PLUGS
+/// - EVERYTHING ELSE WANTS THE ACTUAL SOURCE, BUT THEN AGAIN IT'S EASY
+///   TO GET THAT
+///		- AND MAYBE THEY DON'T ACTUALLY CARE? BECAUSE THEY'LL CALL GETVALUE?
+///			- NOT SURE THAT'S TRUE
+///
+/// EITHER WE HAVE A BOOL FOR INSPECTOR TO USE, OR WE NEED GOOD DOCS. GOOD DOCS I THINK.
+///
+/// `computedSource( plug, preferInputs )`
+/// `
+std::tuple<const Plug *, ConstContextPtr> computedSource( const Plug *plug );
 
 /// Visits the plug and its downstream outputs, returning the first `predicate( plug )`
 /// result which evaluates to `true`. Traverses across Spreadsheets to visit the output
