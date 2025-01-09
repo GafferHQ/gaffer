@@ -39,6 +39,7 @@
 from .TextWriter import TextWriter
 from .LoggingTaskNode import LoggingTaskNode
 from .DebugDispatcher import DebugDispatcher
+from .GraphvizDispatcher import GraphvizDispatcher
 from .ErroringTaskNode import ErroringTaskNode
 
 # Test cases
