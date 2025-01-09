@@ -137,22 +137,23 @@ bool isCompoundNumericPlug( const Gaffer::Plug *plug )
 	}
 }
 
+using ShaderAndHash = std::pair<const Shader *, IECore::MurmurHash>;
+
 struct CycleDetector
 {
 
-	using ShaderAndContext = std::pair<const Shader *, IECore::MurmurHash>;
-	using DownstreamShaders = boost::unordered_set<ShaderAndContext>;
+	using DownstreamShaders = boost::unordered_set<ShaderAndHash>;
 
-	CycleDetector( DownstreamShaders &downstreamShaders, const Shader *shader )
+	CycleDetector( DownstreamShaders &downstreamShaders, const ShaderAndHash &shaderAndContext )
 		:	m_downstreamShaders( downstreamShaders ),
-			m_shaderAndContext{ shader, Context::current()->hash() }
+			m_shaderAndContext( shaderAndContext )
 	{
 		if( !m_downstreamShaders.insert( m_shaderAndContext ).second )
 		{
 			throw IECore::Exception(
 				fmt::format(
 					"Shader \"{}\" is involved in a dependency cycle.",
-					shader->relativeName( shader->ancestor<ScriptNode>() )
+					shaderAndContext.first->relativeName( shaderAndContext.first->ancestor<ScriptNode>() )
 				)
 			);
 		}
@@ -166,7 +167,7 @@ struct CycleDetector
 	private :
 
 		DownstreamShaders &m_downstreamShaders;
-		const ShaderAndContext m_shaderAndContext;
+		const ShaderAndHash m_shaderAndContext;
 
 };
 
@@ -236,6 +237,18 @@ struct OptionalScopedContext
 
 } // namespace
 
+template <>
+struct std::hash<ShaderAndHash>
+{
+	std::size_t operator()( const ShaderAndHash &x ) const
+	{
+		size_t result = 0;
+		boost::hash_combine( result, x.first );
+		boost::hash_combine( result, x.second );
+		return result;
+	}
+};
+
 //////////////////////////////////////////////////////////////////////////
 // Shader::NetworkBuilder implementation
 //////////////////////////////////////////////////////////////////////////
@@ -293,9 +306,9 @@ class Shader::NetworkBuilder
 
 		const ValuePlug *parameterSource( const IECoreScene::ShaderNetwork::Parameter &parameter )
 		{
-			for( auto &[key, handleAndHash] : m_shaders )
+			for( auto &[key, handle] : m_shaders )
 			{
-				if( handleAndHash.handle == parameter.shader )
+				if( handle == parameter.shader )
 				{
 					return key.first->parametersPlug()->descendant<ValuePlug>( parameter.name );
 				}
@@ -405,24 +418,24 @@ class Shader::NetworkBuilder
 			assert( shaderNode );
 			assert( shaderNode->enabledPlug()->getValue() );
 
-			CycleDetector cycleDetector( m_downstreamShaders, shaderNode );
+			const ShaderAndHash shaderContext = { shaderNode, Context::current()->hash() } ;
+			CycleDetector cycleDetector( m_downstreamShaders, shaderContext );
 
-			HandleAndHash &handleAndHash = m_shaders[{shaderNode, Context::current()->hash()}];
-			if( handleAndHash.hash != IECore::MurmurHash() )
+			auto [it, inserted] = m_shaderHashes.insert( { shaderContext, IECore::MurmurHash() } );
+			if( inserted )
 			{
-				return handleAndHash.hash;
+				IECore::MurmurHash &h = it->second;
+				h.append( shaderNode->typeId() );
+				shaderNode->namePlug()->hash( h );
+				shaderNode->typePlug()->hash( h );
+
+				shaderNode->nodeNamePlug()->hash( h );
+				shaderNode->nodeColorPlug()->hash( h );
+
+				hashParameterWalk( shaderNode->parametersPlug(), h );
 			}
 
-			handleAndHash.hash.append( shaderNode->typeId() );
-			shaderNode->namePlug()->hash( handleAndHash.hash );
-			shaderNode->typePlug()->hash( handleAndHash.hash );
-
-			shaderNode->nodeNamePlug()->hash( handleAndHash.hash );
-			shaderNode->nodeColorPlug()->hash( handleAndHash.hash );
-
-			hashParameterWalk( shaderNode->parametersPlug(), handleAndHash.hash );
-
-			return handleAndHash.hash;
+			return it->second;
 		}
 
 		IECore::InternedString handle( const Shader *shaderNode )
@@ -430,14 +443,10 @@ class Shader::NetworkBuilder
 			assert( shaderNode );
 			assert( shaderNode->enabledPlug()->getValue() );
 
-			CycleDetector cycleDetector( m_downstreamShaders, shaderNode );
-
-			/// TODO : THIS IS GOING TO BE TOO PESSIMISTIC, AND DUPLICATE SHADERS THAT
-			/// DON'T ACTUALLY HAVE ANY DIFFERENCES IN CONTEXT.
-			HandleAndHash &handleAndHash = m_shaders[{shaderNode, Context::current()->hash()}];
-			if( !handleAndHash.handle.string().empty() )
+			IECore::InternedString &handle = m_shaders[{shaderNode, shaderHash( shaderNode )}];
+			if( !handle.string().empty() )
 			{
-				return handleAndHash.handle;
+				return handle;
 			}
 
 			IECoreScene::ShaderPtr shader = new IECoreScene::Shader(
@@ -473,13 +482,13 @@ class Shader::NetworkBuilder
 			vector<IECoreScene::ShaderNetwork::Connection> inputConnections;
 			addParameterWalk( shaderNode->parametersPlug(), IECore::InternedString(), shader.get(), inputConnections );
 
-			handleAndHash.handle = m_network->addShader( nodeName, std::move( shader ) );
+			handle = m_network->addShader( nodeName, std::move( shader ) );
 			for( const auto &c : inputConnections )
 			{
-				m_network->addConnection( { c.source, { handleAndHash.handle, c.destination.name } } );
+				m_network->addConnection( { c.source, { handle, c.destination.name } } );
 			}
 
-			return handleAndHash.handle;
+			return handle;
 		}
 
 		void hashParameterWalk( const Gaffer::Plug *parameter, IECore::MurmurHash &h )
@@ -837,14 +846,12 @@ class Shader::NetworkBuilder
 		const Plug *m_output;
 		IECoreScene::ShaderNetworkPtr m_network;
 
-		struct HandleAndHash
-		{
-			IECore::InternedString handle;
-			IECore::MurmurHash hash;
-		};
+		// TODO : EXPLAIN KEY.
+		using ShaderHashMap = std::unordered_map<ShaderAndHash, IECore::MurmurHash>;
+		ShaderHashMap m_shaderHashes;
 
-		using ShaderMapKey = std::pair<const Shader *, IECore::MurmurHash>;
-		using ShaderMap = std::map<ShaderMapKey, HandleAndHash>;
+		// TODO : EXPLAIN KEY.
+		using ShaderMap = std::unordered_map<ShaderAndHash, IECore::InternedString>;
 		ShaderMap m_shaders;
 
 		CycleDetector::DownstreamShaders m_downstreamShaders;
