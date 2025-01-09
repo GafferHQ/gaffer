@@ -146,12 +146,12 @@ struct CycleDetector // TODO : DOES THIS NEED TO BE CONTEXT-AWARE? AND COULD/SHO
 	{
 		if( !m_downstreamShaders.insert( m_shader ).second )
 		{
-			throw IECore::Exception(
-				fmt::format(
-					"Shader \"{}\" is involved in a dependency cycle.",
-					m_shader->relativeName( m_shader->ancestor<ScriptNode>() )
-				)
-			);
+			// throw IECore::Exception(
+			// 	fmt::format(
+			// 		"Shader \"{}\" is involved in a dependency cycle.",
+			// 		m_shader->relativeName( m_shader->ancestor<ScriptNode>() )
+			// 	)
+			// );
 		}
 	}
 
