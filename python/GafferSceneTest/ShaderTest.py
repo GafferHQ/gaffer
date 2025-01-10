@@ -451,5 +451,31 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		shader = node.attributes()["test:surface"].outputShader()
 		self.assertNotIn( "optionalString", shader.parameters )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testNetworkBuilderPerformance( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		def build( output, depth ) :
+
+			if depth > 10 :
+				return
+
+			shader = GafferSceneTest.TestShader()
+			shader.loadShader( "mix" )
+			shader["type"].setValue( "test:surface" )
+			script.addChild( shader )
+
+			if output is not None :
+				output.setInput( shader["out"] )
+
+			build( shader["parameters"]["a"], depth + 1 )
+			build( shader["parameters"]["b"], depth + 1 )
+
+		build( None, 0 )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			script["TestShader"].attributes( _copy = False )
+
 if __name__ == "__main__":
 	unittest.main()
