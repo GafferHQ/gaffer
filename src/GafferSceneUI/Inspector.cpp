@@ -88,12 +88,12 @@ Gaffer::Plug *sourceInput( Gaffer::Plug *plug )
 }
 
 /// \todo This is a modified copy of `TransformTool::spreadsheetAwareSource()`,
-/// and is eerily similar to `Dispatcher::computedSource()` and others. This
-/// needs factoring out into some general `contextAwareSource()` method that can
-/// be shared by all these. In this case, we also need to make sure we never
+/// and is eerily similar to `PlugAlgo::contextSensitiveSource()`, which handles
+/// Switches and ContextProcessors too. It would be good if we could use
+/// `contextSensitiveSource()`, but we also need to make sure we never
 /// return an output plug, such as when it is connected to an anim curve. This
 /// seems to suggest that maybe there are two concepts? Something like a pure
-/// `contextAwareSource()` and a `userEditableSource()`?
+/// `contextSensitiveSource()` and a `userEditableSource()`?
 Gaffer::Plug *spreadsheetAwareSource( Gaffer::Plug *plug )
 {
 	if( auto sourceValuePlug = plug->source<ValuePlug>() )

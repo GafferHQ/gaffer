@@ -38,6 +38,7 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ContextProcessor.h"
+#include "Gaffer/PlugAlgo.h"
 #include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
@@ -64,41 +65,6 @@ using namespace GafferDispatch;
 
 namespace
 {
-
-/// \todo Consider moving this to PlugAlgo and using it in
-/// `Shader::NetworkBuilder::effectiveParameter()`.
-tuple<const Plug *, ConstContextPtr> computedSource( const Plug *plug )
-{
-	plug = plug->source();
-
-	if( auto sw = runTimeCast<const Switch>( plug->node() ) )
-	{
-		if(
-			sw->outPlug() &&
-			( plug == sw->outPlug() || sw->outPlug()->isAncestorOf( plug ) )
-		)
-		{
-			if( auto activeInPlug = sw->activeInPlug( plug ) )
-			{
-				return computedSource( activeInPlug );
-			}
-		}
-	}
-	else if( auto contextProcessor = runTimeCast<const ContextProcessor>( plug->node() ) )
-	{
-		if(
-			contextProcessor->outPlug() &&
-			( plug == contextProcessor->outPlug() || contextProcessor->outPlug()->isAncestorOf( plug ) )
-		)
-		{
-			ConstContextPtr context = contextProcessor->inPlugContext();
-			Context::Scope scopedContext( context.get() );
-			return computedSource( contextProcessor->inPlug() );
-		}
-	}
-
-	return make_tuple( plug, Context::current() );
-}
 
 const InternedString g_frame( "frame" );
 
@@ -495,7 +461,7 @@ class Dispatcher::Batcher
 			// Switches and ContextProcessors.
 			{
 				Context::Scope scopedTaskContext( task.context() );
-				auto [sourcePlug, sourceContext] = computedSource( task.plug() );
+				auto [sourcePlug, sourceContext] = PlugAlgo::contextSensitiveSource( task.plug() );
 				if( auto sourceTaskPlug = runTimeCast<const TaskNode::TaskPlug>( sourcePlug ) )
 				{
 					task = TaskNode::Task( sourceTaskPlug, sourceContext ? sourceContext.get() : task.context() );
