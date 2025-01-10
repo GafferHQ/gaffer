@@ -5,6 +5,7 @@ Features
 --------
 
 - Parent/Duplicate/Scatter ( Nodes derived from BranchCreator ) : Added `copySourceAttributes` plug, to preserve attributes when using the `destination` plug to change where in the hierarchy branches are added.
+- GafferUSD : Added render adaptor which automatically expands USD PointInstancers at render time. Can be controlled with the Viewer menu "Expansion > Expand USD Instancers". Defaults on for all renderers besides OpenGL. Can be set manually with the bool attribute `gafferUSD:pointInstancerAdaptor:enabled`. If you want the resulting instances to have some of the point cloud primitive variables promoted to user attributes, you can set the attribute `gafferUSD:pointInstancerAdaptor:attributes`.
 
 Improvements
 ------------

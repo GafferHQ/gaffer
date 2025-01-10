@@ -37,5 +37,6 @@
 __import__( "GafferScene" )
 
 from ._GafferUSD import *
+from ._PointInstancerAdaptor import _PointInstancerAdaptor
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferUSD" )
