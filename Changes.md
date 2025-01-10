@@ -7,6 +7,7 @@ Fixes
 - USDLayerWriter :
   - Fixed silent failures when unable to create the output file (#6197).
   - Fixed leak of `usdLayerWriter:fileName` context variable.
+- PathFilter : Fixed bug preventing display of "Select Affected Objects" menu item in the row name column of promoted Spreadsheets.
 
 1.4.15.3 (relative to 1.4.15.2)
 ========

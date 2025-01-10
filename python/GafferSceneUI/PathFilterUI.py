@@ -199,11 +199,16 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 	if plug is None:
 		return
 
-	node = plug.node()
+	rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
+	if rowPlug is None :
+		return
 
-	if isinstance( node, Gaffer.Spreadsheet ) :
-		rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
+	spreadsheet = Gaffer.PlugAlgo.findDestination(
+		rowPlug,
+		lambda plug : plug.node() if isinstance( plug.node(), Gaffer.Spreadsheet ) else None
+	)
 
+	if spreadsheet is not None :
 		with plugValueWidget.getContext() :
 			if __targetFilterPlug( plug ) is not None :
 				cellPlug = plug.ancestor( Gaffer.Spreadsheet.CellPlug )
@@ -212,7 +217,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 
 				selection = IECore.PathMatcher( plugValueWidget.vectorDataWidget().getData()[0] )
 
-			elif rowPlug and plug == rowPlug["name"] and node["selector"].getValue() == "${scene:path}" :
+			elif rowPlug and plug == rowPlug["name"] and spreadsheet["selector"].getValue() == "${scene:path}" :
 				selection = IECore.PathMatcher( [ plugValueWidget.getPlug().getValue() ] )
 
 	if selection is None :
