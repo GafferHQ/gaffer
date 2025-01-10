@@ -48,6 +48,7 @@
 namespace Gaffer
 {
 
+IE_CORE_FORWARDDECLARE( Context )
 IE_CORE_FORWARDDECLARE( GraphComponent )
 IE_CORE_FORWARDDECLARE( ValuePlug )
 
@@ -76,6 +77,16 @@ std::invoke_result_t<Predicate, Plug *> findDestination( Plug *plug, Predicate &
 /// evaluates to `true`.
 template<typename Predicate>
 std::invoke_result_t<Predicate, Plug *> findSource( Plug *plug, Predicate &&predicate );
+
+/// Similar to `Plug::source()`, but also traversing upstream through Switch,
+/// Spreadsheet, ContextProcessor and Loop nodes, taking into account their
+/// operation in the current context. Returns the source plug and also the context
+/// it is evaluated in.
+///
+/// > Note : If the current context contains a Canceller, then the returned context
+/// > will reference it too. If the context is stored for later usage, the canceller
+/// > should be removed.
+GAFFER_API std::tuple<const Plug *, ConstContextPtr> contextSensitiveSource( const Plug *plug );
 
 /// Conversion to and from `IECore::Data`
 /// =====================================
