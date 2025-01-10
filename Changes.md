@@ -25,6 +25,7 @@ API
 ---
 
 - TweakPlug : Added `applyElementwiseTweak()` method, for tweaking elements of a `*VectorData`.
+- IECoreArnold, IECoreDelight : Added support for config files installed on `GAFFER_STARTUP_PATHS`.
 
 1.5.2.0 (relative to 1.5.1.0)
 =======
