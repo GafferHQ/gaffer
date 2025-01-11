@@ -11,7 +11,9 @@ Improvements
 
 - VisualiserTool : Changed `dataName` input widget for choosing the primitive variable to visualise to a list of available variable names for the current selection.
 - Tweaks nodes : Moved list of tweaks to a collapsible "Tweaks" section in the NodeEditor.
-- Viewer : The shading mode menu icon now updates to indicate when a non-default shading mode is in use.
+- Viewer :
+  - The shading mode menu icon now updates to indicate when a non-default shading mode is in use.
+  - Added the ability to toggle between default shading and the last selected shading mode by <kbd>Ctrl</kbd> + clicking the shading mode menu button.
 
 Fixes
 -----

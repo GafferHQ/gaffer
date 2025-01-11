@@ -557,15 +557,35 @@ class _ShadingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
 
+			self.__menuButton.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+			self.__menuButton.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
+
+			self.__shadingModeToggle = Gaffer.Metadata.value( plug, "shadingModePlugValueWidget:defaultShadingModeToggle" )
+
 		def hasLabel( self ) :
 
 			return True
 
+		def getToolTip( self ) :
+
+			result = GafferUI.PlugValueWidget.getToolTip( self )
+
+			if self.__shadingModeToggle is not None :
+				if result :
+					result += "\n"
+				result += "## Actions\n\n"
+				result += "- <kbd>Ctrl</kbd> + click to toggle shading to `{}`\n".format( self.__shadingModeToggle if self.getPlug().isSetToDefault() else "Default" )
+
+			return result
+
 		def _updateFromValues( self, values, exception ) :
 
-			self.__menuButton.setImage(
-				"shading.png" if sole( values ) == self.getPlug().defaultValue() else "shadingOn.png"
-			)
+			value = sole( values )
+			if value != self.getPlug().defaultValue() :
+				self.__shadingModeToggle = value
+				self.__menuButton.setImage( "shadingOn.png" )
+			else :
+				self.__menuButton.setImage( "shading.png" )
 
 		def __menuDefinition( self ) :
 
@@ -589,6 +609,27 @@ class _ShadingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		def __setValue( self, value, *unused ) :
 
 			self.getPlug().setValue( value )
+
+		def __buttonPress( self, widget, event ) :
+
+			if event.buttons == event.Buttons.Left and event.modifiers == event.Modifiers.Control :
+
+				if not self.getPlug().isSetToDefault() :
+					self.getPlug().setToDefault()
+				elif self.__shadingModeToggle is not None :
+					self.getPlug().setValue( self.__shadingModeToggle )
+
+				return True
+
+			return False
+
+		def __buttonDoubleClick( self, widget, event ) :
+
+			if event.buttons == event.Buttons.Left and event.modifiers == event.Modifiers.Control :
+				# Prevent menu from opening when Control is held.
+				return True
+
+			return False
 
 ##########################################################################
 # _ExpansionPlugValueWidget
