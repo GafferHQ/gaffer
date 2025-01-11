@@ -11,6 +11,7 @@ Improvements
 
 - VisualiserTool : Changed `dataName` input widget for choosing the primitive variable to visualise to a list of available variable names for the current selection.
 - Tweaks nodes : Moved list of tweaks to a collapsible "Tweaks" section in the NodeEditor.
+- Viewer : The shading mode menu icon now updates to indicate when a non-default shading mode is in use.
 
 Fixes
 -----

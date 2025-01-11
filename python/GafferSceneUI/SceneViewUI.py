@@ -50,6 +50,7 @@ import GafferScene
 import GafferSceneUI
 import GafferImage
 
+from GafferUI.PlugValueWidget import sole
 from ._SceneViewInspector import _SceneViewInspector
 
 def __rendererPlugActivator( plug ) :
@@ -548,17 +549,23 @@ class _ShadingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		def __init__( self, plug, **kw ) :
 
-			menuButton = GafferUI.MenuButton(
+			self.__menuButton = GafferUI.MenuButton(
 				image = "shading.png",
 				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Shading" ),
 				hasFrame = False,
 			)
 
-			GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
+			GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
 
 		def hasLabel( self ) :
 
 			return True
+
+		def _updateFromValues( self, values, exception ) :
+
+			self.__menuButton.setImage(
+				"shading.png" if sole( values ) == self.getPlug().defaultValue() else "shadingOn.png"
+			)
 
 		def __menuDefinition( self ) :
 
