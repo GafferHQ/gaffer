@@ -1242,7 +1242,7 @@ class CameraOverlay : public GafferUI::Gadget
 						glBegin(GL_LINES);
 							glVertex2f( m_resolutionGate.min.x, m_resolutionGate.min.y + ( fraction.y * v ) );
 							glVertex2f( m_resolutionGate.max.x, m_resolutionGate.min.y + ( fraction.y * v ) );
-						glEnd();					
+						glEnd();
 					}
 
 					for( int h = 1; h < div_h; h++ )
@@ -1250,7 +1250,7 @@ class CameraOverlay : public GafferUI::Gadget
 						glBegin(GL_LINES);
 							glVertex2f( m_resolutionGate.min.x + ( fraction.x * h ), m_resolutionGate.min.y );
 							glVertex2f( m_resolutionGate.min.x + ( fraction.x * h ), m_resolutionGate.max.y );
-						glEnd();					
+						glEnd();
 					}
 
 					glDisable( GL_LINE_STIPPLE );
