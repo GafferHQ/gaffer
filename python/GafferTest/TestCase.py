@@ -114,11 +114,14 @@ class TestCase( unittest.TestCase ) :
 		## \todo Fix Cortex so that wrapped classes don't require garbage collection.
 		IECore.RefCounted.collectGarbage()
 
-		for root, dirs, files in os.walk( self.temporaryDirectory() ) :
-			for fileName in [ p for p in files + dirs if not ( pathlib.Path( root ) / p ).is_symlink() ] :
-				( pathlib.Path( root ) / fileName ).chmod( stat.S_IRWXU )
-
 		if self.__temporaryDirectory is not None :
+			if os.name == "nt" :
+				subprocess.check_call( [ "icacls", self.__temporaryDirectory, "/grant", "Users:(OI)(CI)(W)" ] )
+
+			for root, dirs, files in os.walk( self.__temporaryDirectory ) :
+				for fileName in [ p for p in files + dirs if not ( pathlib.Path( root ) / p ).is_symlink() ] :
+					( pathlib.Path( root ) / fileName ).chmod( stat.S_IRWXU )
+
 			shutil.rmtree( self.__temporaryDirectory )
 
 		IECore.MessageHandler.setDefaultHandler( self.__defaultMessageHandler )
