@@ -136,7 +136,8 @@
 				'grid', # \todo rename to 'sceneViewGadgets'
 				'selectionMaskOff',
 				'selectionMaskOn',
-				'shading'
+				'shading',
+				'shadingOn',
 			]
 
 		},

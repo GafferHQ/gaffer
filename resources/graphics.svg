@@ -2328,9 +2328,17 @@
          y="1622"
          inkscape:label="shading" />
       <rect
+         style="display:inline;opacity:1;fill:none;fill-opacity:0.992157;stroke:none;stroke-width:0.917663;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
+         id="shadingOn"
+         width="25"
+         height="25"
+         x="68"
+         y="1622"
+         inkscape:label="shadingOn" />
+      <rect
          inkscape:label="sceneViewGadgets"
          y="1622"
-         x="68"
+         x="97"
          height="25"
          width="25"
          id="grid"
@@ -2338,7 +2346,7 @@
       <rect
          inkscape:label="drawingStyles"
          y="1622"
-         x="97"
+         x="126"
          height="25"
          width="25"
          id="drawingStyles"
@@ -2348,13 +2356,13 @@
          id="expansion"
          width="25"
          height="25"
-         x="126"
+         x="155"
          y="1622"
          inkscape:label="expansion" />
       <rect
          inkscape:label="cameraOff"
          y="1622"
-         x="159"
+         x="188"
          height="25"
          width="25"
          id="cameraOff"
@@ -2364,7 +2372,7 @@
          id="cameraOn"
          width="25"
          height="25"
-         x="188"
+         x="217"
          y="1622"
          inkscape:label="cameraOn" />
       <rect
@@ -2372,13 +2380,13 @@
          id="selectionMaskOff"
          width="25"
          height="25"
-         x="221"
+         x="250"
          y="1622"
          inkscape:label="selectionMaskOff" />
       <rect
          inkscape:label="selectionMaskOn"
          y="1622"
-         x="250"
+         x="279"
          height="25"
          width="25"
          id="selectionMaskOn"
@@ -6766,7 +6774,7 @@
        id="g2842"
        inkscape:label="scene view">
       <g
-         transform="translate(39.32094,1514.9159)"
+         transform="translate(68.32094,1514.9159)"
          inkscape:label="drawingStyles"
          id="g30782">
         <path
@@ -6833,7 +6841,7 @@
            r="1.5" />
       </g>
       <g
-         transform="matrix(1.1456995,0,0,1.1456995,23.579778,1490.2263)"
+         transform="matrix(1.1456995,0,0,1.1456995,52.579778,1490.2263)"
          inkscape:label="expansion"
          id="g1472">
         <path
@@ -6882,7 +6890,7 @@
       </g>
       <g
          inkscape:label="cameraOff"
-         transform="matrix(1.15625,0,0,1.15625,-117.54687,1388.4278)"
+         transform="matrix(1.15625,0,0,1.15625,-88.54687,1388.4278)"
          id="group12345">
         <path
            sodipodi:nodetypes="sccssssssssccss"
@@ -6911,7 +6919,7 @@
            cy="255.94325" />
       </g>
       <g
-         transform="translate(57.28125,1513.8438)"
+         transform="translate(86.28125,1513.8438)"
          inkscape:label="selectionMaskOff"
          id="selectionMaskOffOd">
         <g
@@ -6964,7 +6972,7 @@
       </g>
       <g
          id="g2701"
-         transform="matrix(1.15625,0,0,1.15625,-88.546872,1388.4278)"
+         transform="matrix(1.15625,0,0,1.15625,-59.546872,1388.4278)"
          inkscape:label="cameraOn">
         <path
            style="fill:url(#foreground);fill-opacity:1;stroke:#3c3c3c;stroke-width:0.864865;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
@@ -6995,7 +7003,7 @@
       <g
          id="g2763"
          inkscape:label="selectionMaskOn"
-         transform="translate(86.281247,1513.8441)">
+         transform="translate(115.28125,1513.8441)">
         <g
            transform="translate(188)"
            id="g2753">
@@ -7063,6 +7071,27 @@
            id="path3163"
            d="m 48.687871,1683.0928 c -2.092886,1.3787 -2.641656,4.3386 -3.535981,3.1401 -0.894324,-1.1985 0.405111,-3.9723 1.59811,-4.8707 1.192994,-0.8985 4.11797,-1.8938 5.012295,-0.6953 0.894325,1.1985 -1.122142,0.7929 -3.074424,2.4259 z"
            style="fill:#aaaaaa;fill-opacity:1;stroke:none" />
+      </g>
+      <g
+         id="g3"
+         inkscape:label="shadingOn"
+         transform="translate(29)">
+        <circle
+           transform="scale(1,-1)"
+           id="circle1"
+           style="fill:url(#foreground);fill-opacity:1;stroke:#3c3c3c;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           inkscape:label="shading"
+           inkscape:transform-center-x="0.03124999"
+           inkscape:transform-center-y="0.59375002"
+           cx="51.5"
+           cy="-1686.8622"
+           r="9" />
+        <path
+           inkscape:connector-curvature="0"
+           sodipodi:nodetypes="csssc"
+           id="path3"
+           d="m 48.687871,1683.0928 c -2.092886,1.3787 -2.641656,4.3386 -3.535981,3.1401 -0.894324,-1.1985 0.405111,-3.9723 1.59811,-4.8707 1.192994,-0.8985 4.11797,-1.8938 5.012295,-0.6953 0.894325,1.1985 -1.122142,0.7929 -3.074424,2.4259 z"
+           style="fill:#f5f5f5;fill-opacity:1;stroke:none" />
       </g>
     </g>
     <g
@@ -8256,7 +8285,7 @@
     <g
        style="display:inline"
        id="g5781"
-       transform="translate(-216,1.5000004)">
+       transform="translate(-187,1.5000004)">
       <g
          id="g5770">
         <rect
