@@ -1216,7 +1216,7 @@ class CameraOverlay : public GafferUI::Gadget
 				if( m_customGridEnabled )
 				{
 					V2f fraction = V2f( gateDiff / V2f( div_h, div_v ) );
-					vector<Box2f> customGrid;
+					/*vector<Box2f> customGrid;
 					customGrid.reserve( div_h * div_v ); // I read that this is galaxy brain C++, maybe not needed, haha
 
 					for( int v = 0; v < div_v; v++ )
@@ -1230,10 +1230,31 @@ class CameraOverlay : public GafferUI::Gadget
 					for( const auto &i : customGrid )
 					{
 						style->renderRectangle( i );
-					}
-				}
+					}*/
 
-				// glDisable( GL_LINE_STIPPLE );
+					// test line code
+
+					glEnable( GL_LINE_STIPPLE );
+					glLineStipple( 1, 61680 ); // the second parameter is the length of the dash and space in binary. 16 1s (65535) is all dash, 8 1s (255) is half dash, half space.
+
+					for( int v = 1; v < div_v; v++ )
+					{
+						glBegin(GL_LINES);
+							glVertex2f( m_resolutionGate.min.x, m_resolutionGate.min.y + ( fraction.y * v ) );
+							glVertex2f( m_resolutionGate.max.x, m_resolutionGate.min.y + ( fraction.y * v ) );
+						glEnd();					
+					}
+
+					for( int h = 1; h < div_h; h++ )
+					{
+						glBegin(GL_LINES);
+							glVertex2f( m_resolutionGate.min.x + ( fraction.x * h ), m_resolutionGate.min.y );
+							glVertex2f( m_resolutionGate.min.x + ( fraction.x * h ), m_resolutionGate.max.y );
+						glEnd();					
+					}
+
+					glDisable( GL_LINE_STIPPLE );
+				}
 
 				// BHGC END
 
