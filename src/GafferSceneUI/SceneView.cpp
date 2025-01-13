@@ -1181,49 +1181,49 @@ class CameraOverlay : public GafferUI::Gadget
 
 				// BHGC START
 
-				// stipple looks good, but it doesn't work becuase the customGrid edges overlap
+				// stipple looks good, but it doesn't work with rectangles becuase the edges overlap
 
 				// glEnable( GL_LINE_STIPPLE );
 				// glLineStipple(1, 0x00FF);
 
-				V2f gateDiff = V2f( m_resolutionGate.max - m_resolutionGate.min );
+				V2f gateSize = V2f( m_resolutionGate.max - m_resolutionGate.min );
 
-				V2f titlePercent = gateDiff * V2f( std::sqrt( 0.8 ) );
-				V2f actionPercent = gateDiff * V2f( std::sqrt( 0.9 ) );
+				V2f titleSize = gateSize * V2f( std::sqrt( 0.8 ) );
+				V2f actionSize = gateSize * V2f( std::sqrt( 0.9 ) );
 
-				titlePercent = ( gateDiff - titlePercent ) / 2;
-				actionPercent = ( gateDiff - actionPercent ) / 2;
+				titleSize = ( gateSize - titleSize ) / 2;
+				actionSize = ( gateSize - actionSize ) / 2;
 
 				if( m_titleSafeEnabled )
 				{
-					Box2f titleSafe = Box2f( ( m_resolutionGate.min + titlePercent ), ( m_resolutionGate.max - titlePercent ) );
+					Box2f titleSafe = Box2f( ( m_resolutionGate.min + titleSize ), ( m_resolutionGate.max - titleSize ) );
 
 					style->renderRectangle( titleSafe );
 				}
 
 				if( m_actionSafeEnabled )
 				{
-					Box2f actionSafe = Box2f( ( m_resolutionGate.min + actionPercent ), ( m_resolutionGate.max - actionPercent ) );
+					Box2f actionSafe = Box2f( ( m_resolutionGate.min + actionSize ), ( m_resolutionGate.max - actionSize ) );
 
 					style->renderRectangle( actionSafe );
 				}
 
-				// custom grid divisions, 3x3 is rule of thirds
-
-				int div_h = 3;
-				int div_v = 3;
-
 				if( m_customGridEnabled )
 				{
-					V2f fraction = V2f( gateDiff / V2f( div_h, div_v ) );
-					/*vector<Box2f> customGrid;
-					customGrid.reserve( div_h * div_v ); // I read that this is galaxy brain C++, maybe not needed, haha
+					// custom grid divisions, 3x3 is rule of thirds
 
-					for( int v = 0; v < div_v; v++ )
+					int divNumH = 3;
+					int divNumV = 3;
+
+					V2f divSize = V2f( gateSize / V2f( divNumH, divNumV ) );
+					/*vector<Box2f> customGrid;
+					customGrid.reserve( divNumH * divNumV ); // I read that this is galaxy brain C++, maybe not needed, haha
+
+					for( int v = 0; v < divNumV; v++ )
 					{
-						for( int h = 0; h < div_h; h++ )
+						for( int h = 0; h < divNumH; h++ )
 						{
-							customGrid.push_back( Box2f( m_resolutionGate.min + ( fraction * V2f( h, v ) ), m_resolutionGate.min + ( fraction * V2f( h, v ) ) + fraction ) );
+							customGrid.push_back( Box2f( m_resolutionGate.min + ( divSize * V2f( h, v ) ), m_resolutionGate.min + ( divSize * V2f( h, v ) ) + divSize ) );
 						}
 					}
 
@@ -1237,19 +1237,23 @@ class CameraOverlay : public GafferUI::Gadget
 					glEnable( GL_LINE_STIPPLE );
 					glLineStipple( 1, 61680 ); // the second parameter is the length of the dash and space in binary. 16 1s (65535) is all dash, 8 1s (255) is half dash, half space.
 
-					for( int v = 1; v < div_v; v++ )
+					for( int v = 1; v < divNumV; v++ ) // start below the top of the resolution gate and end before the bottom edge
 					{
+						float y = m_resolutionGate.min.y + ( divSize.y * v );
+
 						glBegin(GL_LINES);
-							glVertex2f( m_resolutionGate.min.x, m_resolutionGate.min.y + ( fraction.y * v ) );
-							glVertex2f( m_resolutionGate.max.x, m_resolutionGate.min.y + ( fraction.y * v ) );
+							glVertex2f( m_resolutionGate.min.x, y );
+							glVertex2f( m_resolutionGate.max.x, y );
 						glEnd();
 					}
 
-					for( int h = 1; h < div_h; h++ )
+					for( int h = 1; h < divNumH; h++ )
 					{
+						float x = m_resolutionGate.min.x + ( divSize.x * h );
+
 						glBegin(GL_LINES);
-							glVertex2f( m_resolutionGate.min.x + ( fraction.x * h ), m_resolutionGate.min.y );
-							glVertex2f( m_resolutionGate.min.x + ( fraction.x * h ), m_resolutionGate.max.y );
+							glVertex2f( x, m_resolutionGate.min.y );
+							glVertex2f( x, m_resolutionGate.max.y );
 						glEnd();
 					}
 
