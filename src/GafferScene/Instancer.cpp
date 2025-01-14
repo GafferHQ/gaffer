@@ -2195,13 +2195,7 @@ void Instancer::hashBranchBound( const ScenePath &sourcePath, const ScenePath &b
 	if( branchPath.size() < 2 )
 	{
 		// "/" or "/instances"
-		ScenePath path = sourcePath;
-		path.insert( path.end(), branchPath.begin(), branchPath.end() );
-		if( branchPath.size() == 0 )
-		{
-			path.push_back( namePlug()->getValue() );
-		}
-		h = outPlug()->childBoundsHash( path );
+		h = outPlug()->childBoundsPlug()->hash();
 	}
 	else if( branchPath.size() == 2 )
 	{
@@ -2231,13 +2225,7 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &sourcePath, const S
 	if( branchPath.size() < 2 )
 	{
 		// "/" or "/instances"
-		ScenePath path = sourcePath;
-		path.insert( path.end(), branchPath.begin(), branchPath.end() );
-		if( branchPath.size() == 0 )
-		{
-			path.push_back( namePlug()->getValue() );
-		}
-		return outPlug()->childBounds( path );
+		return outPlug()->childBoundsPlug()->getValue();
 	}
 	else if( branchPath.size() == 2 )
 	{
@@ -2678,6 +2666,7 @@ bool Instancer::affectsBranchSet( const Gaffer::Plug *input ) const
 {
 	return
 		input == enginePlug() ||
+		input == engineSplitPrototypesPlug() ||
 		input == prototypesPlug()->setPlug() ||
 		input == namePlug() ||
 		input == setCollaboratePlug()
@@ -2715,6 +2704,7 @@ void Instancer::hashBranchSet( const ScenePath &sourcePath, const IECore::Intern
 	else
 	{
 		engineHash( sourcePath, context, h );
+		engineSplitPrototypesHash( sourcePath, context, h );
 		prototypesPlug()->setPlug()->hash( h );
 		namePlug()->hash( h );
 	}
@@ -2735,6 +2725,8 @@ IECore::ConstPathMatcherDataPtr Instancer::computeBranchSet( const ScenePath &so
 		return setCollaboratePlug()->getValue();
 	}
 
+	ConstEngineSplitPrototypesDataPtr esp = engineSplitPrototypes( sourcePath, context );
+
 	ConstPathMatcherDataPtr inputSet = prototypesPlug()->setPlug()->getValue();
 
 	PathMatcherDataPtr outputSetData = new PathMatcherData;
@@ -2742,23 +2734,16 @@ IECore::ConstPathMatcherDataPtr Instancer::computeBranchSet( const ScenePath &so
 
 	vector<InternedString> branchPath( { namePlug()->getValue(), InternedString(), InternedString() } );
 
-	vector<InternedString> outputPrototypePath( sourcePath.size() + 2 );
-	outputPrototypePath = sourcePath;
-	outputPrototypePath.push_back( namePlug()->getValue() );
-	outputPrototypePath.push_back( InternedString() );
-
 	for( const auto &prototypeName : engine->prototypeNames()->readable() )
 	{
+		const std::vector<size_t> &pointIndicesForPrototype = esp->pointIndicesForPrototype( prototypeName );
+
 		PathMatcher instanceSet = inputSet->readable().subTree( *engine->prototypeRoot( prototypeName ) );
 		branchPath[1] = prototypeName;
 
-		outputPrototypePath.back() = prototypeName;
-
-		ConstInternedStringVectorDataPtr childNamesData = capsuleScenePlug()->childNames( outputPrototypePath );
-
-		for( const auto &childName : childNamesData->readable() )
+		for( const size_t &index : pointIndicesForPrototype )
 		{
-			branchPath[2] = childName;
+			branchPath[2] = engine->instanceId( index );
 			outputSet.addPaths( instanceSet, branchPath );
 		}
 	}

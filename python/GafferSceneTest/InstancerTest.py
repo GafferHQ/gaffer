@@ -3123,6 +3123,41 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 			else:
 				rootsByHash[ co.hash() ] = co.root()
 
+	def testDestinationBug( self ) :
+
+		# The destination plug should be automatically handled by BranchCreator, but previously Instancer had
+		# some weird special cases that broke this - this tests the specific things that were previously broken
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "sphereSet" )
+
+		cube = GafferScene.Cube()
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter["paths"].setValue( IECore.StringVectorData( [ '/cube' ] ) )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( cube["out"] )
+		instancer["prototypes"].setInput( sphere["out"] )
+		instancer["filter"].setInput( cubeFilter["out"] )
+		instancer["__destination"].setValue( "${scene:path}/.." )
+
+		# Check that the instances are going to right place
+		self.assertEqual(
+			instancer["out"].childNames( "/instances/sphere" ),
+			IECore.InternedStringVectorData( [ str( i ) for i in range( 8 ) ] )
+		)
+		self.assertEqual( instancer["out"].object( "/instances/sphere/4" ), sphere["out"].object( "/sphere" ) )
+
+		# Check the specifics that were previously broken
+		self.assertEqual( instancer["out"].bound( "/" ), imath.Box3f( imath.V3f( -1.5 ), imath.V3f( 1.5 ) ) )
+		self.assertEqual(
+			instancer["out"].set( "sphereSet" ),
+			IECore.PathMatcherData( IECore.PathMatcher( [ "/instances/sphere/%i" % i for i in range( 8 ) ] ) )
+		)
+
+		self.assertSceneValid( instancer["out"] )
+
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 10 )
 	def testBoundPerformance( self ) :
 
