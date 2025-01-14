@@ -10,6 +10,7 @@ Fixes
 - PathFilter :
   - Fixed bug preventing display of "Select Affected Objects" menu item in the row name column of promoted Spreadsheets.
   - Fixed bug preventing use of "Select Affected Objects" menu item in the row name column of Spreadsheets with `enabledRowNames` connected to the `paths` plug of a PathFilter.
+  - Fixed error when using "Select Affected Objects" on Spreadsheet cells connected to the `paths` plug of a PathFilter.
 
 1.4.15.3 (relative to 1.4.15.2)
 ========

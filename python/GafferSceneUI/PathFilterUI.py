@@ -205,7 +205,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 			if cellPlug is None :
 				return
 
-			selection = IECore.PathMatcher( plugValueWidget.vectorDataWidget().getData()[0] )
+			selection = IECore.PathMatcher( plug.getValue() )
 
 		elif plug == rowPlug["name"] and spreadsheet["selector"].getValue() == "${scene:path}" :
 			selection = IECore.PathMatcher( [ plugValueWidget.getPlug().getValue() ] )
