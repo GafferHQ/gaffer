@@ -166,7 +166,10 @@ struct CycleDetector
 
 };
 
-IECore::InternedString g_outPlugName( "out" );
+const IECore::InternedString g_outPlugName( "out" );
+const IECore::InternedString g_label( "label" );
+const IECore::InternedString g_gafferNodeName( "gaffer:nodeName" );
+const IECore::InternedString g_gafferNodeColor( "gaffer:nodeColor" );
 
 } // namespace
 
@@ -400,10 +403,10 @@ class Shader::NetworkBuilder
 			m_hasProxyNodes |= ShaderTweakProxy::isProxy( shader.get() );
 
 			const std::string nodeName = shaderNode->nodeNamePlug()->getValue();
-			shader->blindData()->writable()["label"] = new IECore::StringData( nodeName );
+			shader->blindData()->writable()[g_label] = new IECore::StringData( nodeName );
 			// \todo: deprecated, stop storing gaffer:nodeName after a grace period
-			shader->blindData()->writable()["gaffer:nodeName"] = new IECore::StringData( nodeName );
-			shader->blindData()->writable()["gaffer:nodeColor"] = new IECore::Color3fData( shaderNode->nodeColorPlug()->getValue() );
+			shader->blindData()->writable()[g_gafferNodeName] = new IECore::StringData( nodeName );
+			shader->blindData()->writable()[g_gafferNodeColor] = new IECore::Color3fData( shaderNode->nodeColorPlug()->getValue() );
 
 			vector<IECoreScene::ShaderNetwork::Connection> inputConnections;
 			addParameterWalk( shaderNode->parametersPlug(), IECore::InternedString(), shader.get(), inputConnections );
