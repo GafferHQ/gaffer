@@ -1052,9 +1052,12 @@ void Shader::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *conte
 	{
 		ComputeNode::hash( output, context, h );
 		const Plug *outputParameter = outPlug();
+		std::optional<Context::EditableScope> cleanContext;
 		if( const std::string *name = context->getIfExists< std::string >( g_outputParameterContextName ) )
 		{
 			outputParameter = outputParameter->descendant<Plug>( *name );
+			cleanContext.emplace( context );
+			cleanContext->remove( g_outputParameterContextName );
 		}
 		attributesHash( outputParameter, h );
 		return;
@@ -1078,9 +1081,12 @@ void Shader::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context 
 	if( output == outAttributesPlug() )
 	{
 		const Plug *outputParameter = outPlug();
+		std::optional<Context::EditableScope> cleanContext;
 		if( const std::string *name = context->getIfExists< std::string >( g_outputParameterContextName ) )
 		{
 			outputParameter = outputParameter->descendant<Plug>( *name );
+			cleanContext.emplace( context );
+			cleanContext->remove( g_outputParameterContextName );
 		}
 		static_cast<CompoundObjectPlug *>( output )->setValue( attributes( outputParameter ) );
 		return;
@@ -1153,6 +1159,9 @@ void Shader::nodeMetadataChanged( IECore::InternedString key )
 
 const ValuePlug *Shader::parameterSource( const Plug *output, const IECoreScene::ShaderNetwork::Parameter &parameter ) const
 {
+	Context::EditableScope cleanContext( Context::current() );
+	cleanContext.remove( g_outputParameterContextName );
+
 	NetworkBuilder networkBuilder( output );
 	if( networkBuilder.network()->size() )
 	{

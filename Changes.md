@@ -25,7 +25,9 @@ Fixes
   - Fixed bug where the value dragged from the visualiser would be slightly different from the initial value on button press. (#6191)
   - Fixed error when trying to visualise data unsupported data.
 - TweakPlug : Fixed preservation of geometric interpretation when tweaking V3f values.
-- Shader : Fixed handling of multiple consecutive Switch nodes in a shader network.
+- Shader :
+  - Fixed handling of multiple consecutive Switch nodes in a shader network.
+  - Fixed leak of private `scene:shader:outputParameter` context variable.
 - ApplicationTest : Extended grace period when testing process name on slower hosts.
 - OpDialogue : Fixed `DefaultButton` handling.
 

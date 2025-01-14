@@ -745,5 +745,20 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		with GafferTest.TestRunner.PerformanceScope() :
 			script["TestShader"].attributes( _copy = False )
 
+	def testNoContextVariableLeaks( self ) :
+
+		frame = GafferTest.FrameNode()
+		shader = GafferSceneTest.TestShader()
+		shader["parameters"]["i"].setInput( frame["output"] )
+
+		shaderPlug = GafferScene.ShaderPlug()
+		shaderPlug.setInput( shader["out"]["r"] )
+
+		with Gaffer.ContextMonitor( frame ) as monitor :
+			shaderPlug.attributes()
+			shaderPlug.parameterSource( ( "TestShader", "c" ) )
+
+		self.assertNotIn( "scene:shader:outputParameter", monitor.combinedStatistics().variableNames() )
+
 if __name__ == "__main__":
 	unittest.main()
