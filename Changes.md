@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.4.0)
 =======
 
+Features
+--------
+
+- Parent/Duplicate/Scatter ( Nodes derived from BranchCreator ) : Added `copySourceAttributes` plug, to preserve attributes when using the `destination` plug to change where in the hierarchy branches are added.
+
 Improvements
 ------------
 

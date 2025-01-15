@@ -1258,5 +1258,114 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 			parentCTask.wait()
 			parentA1Task.wait()
 
+	def testCopySourceAttributes( self ) :
+
+		groupA = GafferScene.Group()
+		groupA["name"].setValue( 'A' )
+
+		groupB = GafferScene.Group()
+		groupB["name"].setValue( 'B' )
+		groupB["in"][0].setInput( groupA["out"] )
+		groupB["in"][1].setInput( groupA["out"] )
+
+		groupC = GafferScene.Group()
+		groupC["name"].setValue( 'C' )
+		groupC["in"][0].setInput( groupB["out"] )
+		groupC["in"][1].setInput( groupB["out"] )
+
+		pathFilterAll = GafferScene.PathFilter()
+		pathFilterAll["paths"].setValue( IECore.StringVectorData( [ '/...' ] ) )
+
+		customAttributes = GafferScene.CustomAttributes()
+		customAttributes["attributes"].addChild( Gaffer.NameValuePlug( "attr:${scene:path}", Gaffer.StringPlug( "value", defaultValue = 'test' ), True, "member1" ) )
+		customAttributes["attributes"].addChild( Gaffer.NameValuePlug( "attr:override", Gaffer.StringPlug( "value", defaultValue = '${scene:path}' ), True, "member2" ) )
+		customAttributes["in"].setInput( groupC["out"] )
+		customAttributes["filter"].setInput( pathFilterAll["out"] )
+
+		sphere = GafferScene.Sphere()
+
+		sphereAttributes = GafferScene.CustomAttributes()
+		sphereAttributes["in"].setInput( sphere["out"] )
+		sphereAttributes["filter"].setInput( pathFilterAll["out"] )
+		sphereAttributes["attributes"].addChild( Gaffer.NameValuePlug( "attr:sphere", Gaffer.StringPlug( "value", defaultValue = 'blah' ), True, "member1" ) )
+
+		pathFilterTarget = GafferScene.PathFilter()
+		pathFilterTarget["paths"].setValue( IECore.StringVectorData( [ '/C/B1/A1' ] ) )
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( customAttributes["out"] )
+		parent["children"][0].setInput( sphereAttributes["out"] )
+		parent["filter"].setInput( pathFilterTarget["out"] )
+		parent["destination"].setValue( '/' )
+
+		def attrsAsDict( path ):
+			return { k : v.value for (k,v) in parent["out"].attributes( path ).items() }
+
+		self.assertEqual( attrsAsDict( "/sphere" ), { 'attr:sphere' : 'blah' } )
+
+		parent["copySourceAttributes"].setValue( True )
+
+		# We get all the attributes from the source location
+		self.assertEqual( attrsAsDict( "/sphere" ), {
+			'attr:sphere' : 'blah',
+			'attr:/C': 'test',
+			'attr:/C/B1': 'test',
+			'attr:/C/B1/A1': 'test',
+			'attr:override': '/C/B1/A1',
+		} )
+
+		# Branch attributes can override
+		sphereAttributes["attributes"].addChild( Gaffer.NameValuePlug( "attr:override", Gaffer.StringPlug( "value", defaultValue = 'branchOverride' ), True, "member2" ) )
+
+		self.assertEqual( attrsAsDict( "/sphere" ), {
+			'attr:sphere' : 'blah',
+			'attr:/C': 'test',
+			'attr:/C/B1': 'test',
+			'attr:/C/B1/A1': 'test',
+			'attr:override': 'branchOverride',
+		} )
+
+		del sphereAttributes["attributes"][-1]
+
+		# We only get the attributes that are part of the source hierachy and not the dest hierarchy
+		parent["destination"].setValue( '/C/B1' )
+
+		self.assertEqual( attrsAsDict( "/C/B1/sphere" ), {
+			'attr:sphere' : 'blah',
+			'attr:/C/B1/A1': 'test',
+			'attr:override': '/C/B1/A1',
+		} )
+
+		parent["destination"].setValue( '/C/B1/A1' )
+		self.assertEqual( attrsAsDict( "/C/B1/A1/sphere" ), {
+			'attr:sphere' : 'blah',
+		} )
+
+		parent["destination"].setValue( '/C/B/A' )
+		self.assertEqual( attrsAsDict( "/C/B/A/sphere" ), {
+			'attr:sphere' : 'blah',
+			'attr:/C/B1': 'test',
+			'attr:/C/B1/A1': 'test',
+			'attr:override': '/C/B1/A1',
+		} )
+
+		# Parent two different sources to the root, they each get their attributes
+		pathFilterTarget["paths"].setValue( IECore.StringVectorData( [ '/C/B/A', '/C/B1/A1' ] ) )
+		parent["destination"].setValue( '/' )
+		self.assertEqual( attrsAsDict( "/sphere" ), {
+			'attr:sphere' : 'blah',
+			'attr:/C': 'test',
+			'attr:/C/B': 'test',
+			'attr:/C/B/A': 'test',
+			'attr:override': '/C/B/A',
+		} )
+		self.assertEqual( attrsAsDict( "/sphere1" ), {
+			'attr:sphere' : 'blah',
+			'attr:/C': 'test',
+			'attr:/C/B1': 'test',
+			'attr:/C/B1/A1': 'test',
+			'attr:override': '/C/B1/A1',
+		} )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -54,6 +54,7 @@ Gaffer.Metadata.registerNode(
 
 	"layout:activator:filterNotConnected", lambda node : node["filter"].getInput() is None,
 	"layout:activator:parentInUse", lambda node : node["parent"].getInput() is not None or node["parent"].getValue() != "",
+	"layout:activator:nonDefaultDestination", lambda node : not node["destination"].isSetToDefault(),
 
 	plugs = {
 
@@ -80,6 +81,17 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
 			"ui:spreadsheet:selectorValue", "${scene:path}",
+			"layout:index", -2,
+
+		],
+
+		"copySourceAttributes" : [
+
+			"description",
+			"""
+			Copies attributes to newly created destination locations to match the attributes at the source location.
+			""",
+			"layout:activator", "nonDefaultDestination",
 			"layout:index", -1,
 
 		],
