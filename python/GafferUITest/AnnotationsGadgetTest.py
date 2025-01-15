@@ -458,5 +458,68 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 			# And wait for the task to complete.
 			callHandler.assertCalled()
 
+	def testAnnotationAt( self ) :
+
+		with GafferUI.Window() as window :
+			gadgetWidget = GafferUI.GadgetWidget()
+
+		viewportGadget = gadgetWidget.getViewportGadget()
+
+		script = Gaffer.ScriptNode()
+		script["node1"] = GafferTest.AddNode()
+		script["node2"] = GafferTest.AddNode()
+
+		graphGadget = GafferUI.GraphGadget( script )
+
+		node1Origin = imath.V2f( 0, 0 )
+		node2Origin = imath.V2f( 0, 10 )
+		graphGadget.setNodePosition( script["node1"], node1Origin )
+		graphGadget.setNodePosition( script["node2"], node2Origin )
+
+		viewportGadget.setPrimaryChild( graphGadget )
+
+		for node, name, text in [
+			( script["node1"], "userA", "testNode1UserA" ),
+			( script["node1"], "userB", "testNode1UserB" ),
+			( script["node2"], "userA", "testNode2UserA" ),
+			( script["node2"], "userC", "testNode2UserC" ),
+		] :
+			Gaffer.MetadataAlgo.addAnnotation( node, name, Gaffer.MetadataAlgo.Annotation( text ) )
+
+		window.setVisible( True )
+		self.waitForIdle( 1000 )
+
+		viewportGadget.frame( imath.Box3f( imath.V3f( -3 ), imath.V3f( 13 ) ) )
+
+		annotationsGadget = graphGadget.annotationsGadget()
+
+		nodeGadget1 = graphGadget.nodeGadget( script["node1"] )
+		nodeGadget2 = graphGadget.nodeGadget( script["node2"] )
+
+		node1Corner = imath.V2f( nodeGadget1.bound().max().x, nodeGadget1.bound().max().y ) + node1Origin
+		node2Corner = imath.V2f( nodeGadget2.bound().max().x, nodeGadget2.bound().max().y ) + node2Origin
+
+		for gadgetPosition, desiredNode, desiredName in [
+			( imath.V2f( 0.0, 0.0 ), None, "" ),
+			( node1Corner + imath.V2f( 2.0, -1.0 ), script["node1"], "userA" ),
+			( node1Corner + imath.V2f( 2.0, -4.0 ), script["node1"], "userB" ),
+			( node2Corner + imath.V2f( 2.0, -1.0 ), script["node2"], "userA" ),
+			( node2Corner + imath.V2f( 2.0, -4.0 ), script["node2"], "userC" ),
+		] :
+			with self.subTest( gadgetPosition = gadgetPosition, desiredNode = desiredNode, desiredName = desiredName ) :
+
+				annotation = annotationsGadget.annotationAt(
+					IECore.LineSegment3f(
+						imath.V3f( gadgetPosition.x, gadgetPosition.y, 1000 ),
+						imath.V3f( gadgetPosition.x, gadgetPosition.y, -1000 )
+					)
+				)
+				if desiredNode is not None :
+					node, name = annotation
+					self.assertEqual( node, desiredNode )
+					self.assertEqual( name, desiredName )
+				else :
+					self.assertIsNone( annotation )
+
 if __name__ == "__main__":
 	unittest.main()

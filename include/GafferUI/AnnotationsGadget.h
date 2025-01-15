@@ -41,6 +41,8 @@
 
 #include "GafferUI/Gadget.h"
 
+#include "IECoreGL/Selector.h"
+
 #include "IECore/StringAlgo.h"
 
 #include <unordered_map>
@@ -81,6 +83,11 @@ class GAFFERUI_API AnnotationsGadget : public Gadget
 		const std::string &annotationText( const Gaffer::Node *node, IECore::InternedString annotation = "user" ) const;
 
 		bool acceptsParent( const GraphComponent *potentialParent ) const override;
+
+		// Identifies an annotation by the node and it's name.
+		using AnnotationIdentifier = std::pair<const Gaffer::Node *, std::string>;
+		// Returns the node and annotation name under the specified line.
+		std::optional<AnnotationIdentifier> annotationAt( const IECore::LineSegment3f &lineInGadgetSpace ) const;
 
 	protected :
 
@@ -147,6 +154,15 @@ class GAFFERUI_API AnnotationsGadget : public Gadget
 		void applySubstitutedRenderText( const std::unordered_map<IECore::InternedString, std::string> &renderText, Annotations &annotations );
 		// When we are hidden, we want to cancel all background tasks.
 		void visibilityChanged();
+
+		// Map associating an `IECoreGL::Selector::IDRender` entry with a `AnnotationIndex`.
+		using AnnotationBufferMap = std::unordered_map<unsigned int, AnnotationIdentifier>;
+
+		// If given an `AnnotationBufferMap` and `Selector`, draws all annotations
+		// with a unique `IDRender` index per annotation and fills `selectionIds`.
+		// If they are not given, no modification to the selection buffer IDs are
+		// made (all annotations have the ID for this widget).
+		void renderAnnotations( const Style *style, AnnotationBufferMap *selectionIds = nullptr ) const;
 
 		struct StandardAnnotation : public Gaffer::MetadataAlgo::Annotation
 		{

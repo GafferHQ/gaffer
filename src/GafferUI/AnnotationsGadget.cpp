@@ -36,6 +36,8 @@
 
 #include "GafferUI/AnnotationsGadget.h"
 
+#include "GafferSceneUI/SceneGadget.h"
+
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/ImageGadget.h"
 #include "GafferUI/NodeGadget.h"
@@ -48,6 +50,10 @@
 #include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
+
+#include "IECoreGL/Camera.h"
+#include "IECoreGL/Selector.h"
+#include "IECoreGL/ToGLCameraConverter.h"
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind/bind.hpp"
@@ -349,58 +355,7 @@ void AnnotationsGadget::renderLayer( Layer layer, const Style *style, RenderReas
 		return;
 	}
 
-	const_cast<AnnotationsGadget *>( this )->update();
-
-	for( const auto &ga : m_annotations )
-	{
-		const Annotations &annotations = ga.second;
-		assert( !annotations.dirty );
-		if( !annotations.renderable )
-		{
-			continue;
-		}
-
-		const Box2f b = nodeFrame( ga.first );
-
-		V2f bookmarkIconPos( b.min.x, b.max.y );
-		V2f annotationOrigin( b.max.x + g_offset, b.max.y );
-		if( ga.first->node() == ga.first->node()->ancestor<ScriptNode>()->getFocus() )
-		{
-			const StandardNodeGadget *standardNodeGadget = runTimeCast<const StandardNodeGadget>( ga.first );
-			if( standardNodeGadget )
-			{
-				float fbw = standardNodeGadget->focusBorderWidth();
-				bookmarkIconPos += V2f( -fbw, fbw );
-				annotationOrigin += V2f( fbw, 0.0f );
-			}
-		}
-
-		if( annotations.bookmarked )
-		{
-			style->renderImage( Box2f( bookmarkIconPos - V2f( 1.0 ), bookmarkIconPos + V2f( 1.0 ) ), bookmarkTexture() );
-		}
-
-		if( annotations.numericBookmark.string().size() )
-		{
-			if( !annotations.bookmarked )
-			{
-				style->renderImage( Box2f( bookmarkIconPos - V2f( 1.0 ), bookmarkIconPos + V2f( 1.0 ) ), numericBookmarkTexture() );
-			}
-
-			const Box3f textBounds = style->textBound( Style::LabelText, annotations.numericBookmark.string() );
-
-			const Imath::Color4f textColor( 0.8f );
-			glPushMatrix();
-				IECoreGL::glTranslate( V2f( bookmarkIconPos.x - 0.9 - textBounds.size().x, bookmarkIconPos.y - textBounds.size().y * 0.5 - 0.2 ) );
-				style->renderText( Style::LabelText, annotations.numericBookmark.string(), Style::NormalState, &textColor );
-			glPopMatrix();
-		}
-
-		for( const auto &a : annotations.standardAnnotations )
-		{
-			annotationOrigin = style->renderAnnotation( annotationOrigin, a.renderText, Style::NormalState, a.colorData ? &a.color() : nullptr );
-		}
-	}
+	renderAnnotations( style );
 }
 
 unsigned AnnotationsGadget::layerMask() const
@@ -763,4 +718,100 @@ void AnnotationsGadget::visibilityChanged()
 			annotation.substitutionsTask.reset();
 		}
 	}
+}
+
+void AnnotationsGadget::renderAnnotations( const Style *style, AnnotationBufferMap *selectionIds ) const
+{
+	const_cast<AnnotationsGadget *>( this )->update();
+
+	IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector();
+
+	for( const auto &ga : m_annotations )
+	{
+		const Annotations &annotations = ga.second;
+		assert( !annotations.dirty );
+		if( !annotations.renderable )
+		{
+			continue;
+		}
+
+		const Box2f b = nodeFrame( ga.first );
+
+		V2f bookmarkIconPos( b.min.x, b.max.y );
+		V2f annotationOrigin( b.max.x + g_offset, b.max.y );
+		if( ga.first->node() == ga.first->node()->ancestor<ScriptNode>()->getFocus() )
+		{
+			const StandardNodeGadget *standardNodeGadget = runTimeCast<const StandardNodeGadget>( ga.first );
+			if( standardNodeGadget )
+			{
+				float fbw = standardNodeGadget->focusBorderWidth();
+				bookmarkIconPos += V2f( -fbw, fbw );
+				annotationOrigin += V2f( fbw, 0.0f );
+			}
+		}
+
+		if( !selectionIds )
+		{
+			if( annotations.bookmarked )
+			{
+				style->renderImage( Box2f( bookmarkIconPos - V2f( 1.0 ), bookmarkIconPos + V2f( 1.0 ) ), bookmarkTexture() );
+			}
+
+			if( annotations.numericBookmark.string().size() )
+			{
+				if( !annotations.bookmarked )
+				{
+					style->renderImage( Box2f( bookmarkIconPos - V2f( 1.0 ), bookmarkIconPos + V2f( 1.0 ) ), numericBookmarkTexture() );
+				}
+
+				const Box3f textBounds = style->textBound( Style::LabelText, annotations.numericBookmark.string() );
+
+				const Imath::Color4f textColor( 0.8f );
+				glPushMatrix();
+					IECoreGL::glTranslate( V2f( bookmarkIconPos.x - 0.9 - textBounds.size().x, bookmarkIconPos.y - textBounds.size().y * 0.5 - 0.2 ) );
+					style->renderText( Style::LabelText, annotations.numericBookmark.string(), Style::NormalState, &textColor );
+				glPopMatrix();
+			}
+		}
+
+		for( const auto &a : annotations.standardAnnotations )
+		{
+			if( selectionIds && selector )
+			{
+				unsigned int id = selector->loadName();
+				(*selectionIds)[id] = AnnotationIdentifier( ga.first->node(), a.name );
+			}
+
+			annotationOrigin = style->renderAnnotation( annotationOrigin, a.renderText, Style::NormalState, a.colorData ? &a.color() : nullptr );
+		}
+	}
+}
+
+std::optional<AnnotationsGadget::AnnotationIdentifier> AnnotationsGadget::annotationAt( const LineSegment3f &lineInGadgetSpace ) const
+{
+	std::vector<IECoreGL::HitRecord> selection;
+	AnnotationBufferMap annotationBuffer;
+	{
+		ViewportGadget::SelectionScope selectionScope( lineInGadgetSpace, this, selection, IECoreGL::Selector::Mode::IDRender );
+
+		const Style *currentStyle = style();
+		currentStyle->bind();
+
+		// See `ViewportGadget::renderInternal()` for reasoning behind disabling blending.
+		glDisable( GL_BLEND );
+
+		renderAnnotations( currentStyle, &annotationBuffer );
+	}
+
+	if( selection.empty() )
+	{
+		return std::optional<AnnotationIdentifier>( std::nullopt );
+	}
+
+	auto result = annotationBuffer.find( selection[0].name );
+	if( result == annotationBuffer.end() )
+	{
+		return std::optional<AnnotationIdentifier>( std::nullopt );
+	}
+	return result->second;
 }

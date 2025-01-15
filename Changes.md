@@ -45,6 +45,7 @@ API
 - SceneAlgo : Added `parallelGatherLocations()` function.
 - GraphGadget : Added `annotationsGadget()` function.
 - MetadataAlgo : Added `annotations()` variant accepting `Gaffer::Metadata::RegistrationTypes`. The default is `All` to match existing behavior and the previous `annotations()` variant is deprecated.
+- AnnotationsGadget : Added `annotationAt()` function.
 
 1.5.4.1 (relative to 1.5.4.0)
 =======
