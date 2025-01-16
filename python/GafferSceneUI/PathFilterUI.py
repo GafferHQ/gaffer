@@ -123,11 +123,13 @@ Gaffer.Metadata.registerNode(
 # VectorDataPlugValueWidget customisation
 ###########################################################################
 
-def _targetFilterPlug( plug ) :
+# Searches for a PathFilter whose `paths` plug is eventually driven by `plug`,
+# and returns it.
+def _destinationPathFilter( plug ) :
 
 	return Gaffer.PlugAlgo.findDestination(
 		plug,
-		lambda plug : plug if isinstance( plug.parent(), GafferScene.PathFilter ) and plug.getName() == "paths" else None
+		lambda plug : plug.parent() if isinstance( plug.parent(), GafferScene.PathFilter ) and plug.getName() == "paths" else None
 	)
 
 def _filteredScenes( filter ) :
@@ -171,7 +173,7 @@ class _PathsPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 		menuDefinition.append(
 			"/Select Affected Objects",
 			{
-				"command" : functools.partial( _selectAffected, pathMatcher, _filteredScenes( _targetFilterPlug( self.getPlug() ).node() ) ),
+				"command" : functools.partial( _selectAffected, pathMatcher, _filteredScenes( _destinationPathFilter( self.getPlug() ) ) ),
 				"active" : len( selectedIndices ) > 0,
 			}
 		)
@@ -200,20 +202,15 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 	scenes = None
 	pathMatcher = None
 	with plugValueWidget.getContext() :
-		targetPlug = _targetFilterPlug( plug )
-		if targetPlug is not None :
-			cellPlug = plug.ancestor( Gaffer.Spreadsheet.CellPlug )
-			if cellPlug is None :
-				return
-
+		pathFilter = _destinationPathFilter( plug )
+		if pathFilter is not None :
 			pathMatcher = IECore.PathMatcher( plug.getValue() )
-			scenes = _filteredScenes( targetPlug.node() )
-
+			scenes = _filteredScenes( pathFilter )
 		elif plug == rowPlug["name"] and spreadsheet["selector"].getValue() == "${scene:path}" :
-			pathMatcher = IECore.PathMatcher( [ plugValueWidget.getPlug().getValue() ] )
-			targetPlug = _targetFilterPlug( spreadsheet["enabledRowNames"] )
-			if targetPlug is not None :
-				scenes = _filteredScenes( targetPlug.node() )
+			pathMatcher = IECore.PathMatcher( [ plug.getValue() ] )
+			pathFilter = _destinationPathFilter( spreadsheet["enabledRowNames"] )
+			if pathFilter is not None :
+				scenes = _filteredScenes( pathFilter )
 			else :
 				for output in spreadsheet["out"] :
 					scene = Gaffer.PlugAlgo.findDestination(
