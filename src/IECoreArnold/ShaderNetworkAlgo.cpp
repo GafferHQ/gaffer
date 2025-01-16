@@ -1184,11 +1184,11 @@ bool g_textureSubstitutionsRegistration = [] () {
 	IECoreArnold::ShaderNetworkAlgo::registerSubstitution(
 		"stringSubstitution",
 		// Hash
-		[] ( const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, IECore::MurmurHash &hash ) {
+		[] ( const IECoreScene::ShaderNetwork *shaderNetwork, InternedString attributeName, const IECore::CompoundObject *attributes, IECore::MurmurHash &hash ) {
 			shaderNetwork->hashSubstitutions( attributes, hash );
 		},
 		// Apply
-		[] ( IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes ) {
+		[] ( IECoreScene::ShaderNetwork *shaderNetwork, InternedString attributeName, const IECore::CompoundObject *attributes ) {
 			shaderNetwork->applySubstitutions( attributes );
 		}
 	);
@@ -1233,19 +1233,19 @@ void deregisterSubstitution( const std::string &name )
 	);
 }
 
-void hashSubstitutions( const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, IECore::MurmurHash &hash )
+void hashSubstitutions( const IECoreScene::ShaderNetwork *shaderNetwork, InternedString attributeName, const IECore::CompoundObject *attributes, IECore::MurmurHash &hash )
 {
 	for( const auto &x : substitutions() )
 	{
-		x.hash( shaderNetwork, attributes, hash );
+		x.hash( shaderNetwork, attributeName, attributes, hash );
 	}
 }
 
-void applySubstitutions( IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes )
+void applySubstitutions( IECoreScene::ShaderNetwork *shaderNetwork, InternedString attributeName, const IECore::CompoundObject *attributes )
 {
 	for( const auto &x : substitutions() )
 	{
-		x.apply( shaderNetwork, attributes );
+		x.apply( shaderNetwork, attributeName, attributes );
 	}
 }
 
