@@ -1538,6 +1538,11 @@ _styleSheet = string.Template(
 		padding: 2px;
 	}
 
+	*[gafferClass="GafferSceneUI.RenderPassEditor._RenderPassPlugValueWidget"] QPushButton[gafferWithFrame="true"][gafferMenuIndicator="true"]
+	{
+		min-height: 14px;
+	}
+
 	#gafferMenuBarWidgetContainer QPushButton[gafferWithFrame="true"][gafferMenuIndicator="true"]
 	{
 		border: 1px solid rgb( 70, 70, 70 );
@@ -1546,6 +1551,7 @@ _styleSheet = string.Template(
 		background-color : qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb( 108, 108, 108 ), stop: 0.1 rgb( 91, 91, 91 ), stop: 0.90 rgb( 81, 81, 81 ));
 		margin-top: 2px;
 		margin-bottom: 2px;
+		min-height: 14px;
 	}
 
 	*[gafferClass="GafferUI.EditScopeUI.EditScopePlugValueWidget"] QPushButton[gafferWithFrame="true"][gafferMenuIndicator="true"],
@@ -1557,6 +1563,7 @@ _styleSheet = string.Template(
 		background-color : qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb( 69, 113, 161 ), stop: 0.1 rgb( 48, 99, 153 ), stop: 0.90 rgb( 54, 88, 125 ));
 		margin-top: 2px;
 		margin-bottom: 2px;
+		min-height: 14px;
 	}
 
 	*[gafferClass="GafferSceneUI.InteractiveRenderUI._ViewRenderControlUI"] QPushButton[gafferWithFrame="true"] {
