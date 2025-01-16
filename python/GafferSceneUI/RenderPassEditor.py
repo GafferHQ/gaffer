@@ -399,10 +399,11 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			self.__popup.popup( parent = self )
 			return
 
-		GafferSceneUI.ScriptNodeAlgo.setCurrentRenderPass(
-			script,
-			selectedPassNames[0] if selectedPassNames[0] != GafferSceneUI.ScriptNodeAlgo.getCurrentRenderPass( script ) else ""
-		)
+		with Gaffer.UndoScope( script ) :
+			GafferSceneUI.ScriptNodeAlgo.setCurrentRenderPass(
+				script,
+				selectedPassNames[0] if selectedPassNames[0] != GafferSceneUI.ScriptNodeAlgo.getCurrentRenderPass( script ) else ""
+			)
 
 	def __columnContextMenuSignal( self, column, pathListing, menuDefinition ) :
 
@@ -1150,8 +1151,9 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __setCurrentRenderPass( self, renderPass, *unused ) :
 
-		for plug in self.getPlugs() :
-			plug.setValue( renderPass )
+		with Gaffer.UndoScope( self.scriptNode() ) :
+			for plug in self.getPlugs() :
+				plug.setValue( renderPass )
 
 	def __renderPassDescription( self, renderPass ) :
 
