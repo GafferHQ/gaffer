@@ -31,6 +31,10 @@ API
 
 - TweakPlug : Added `applyElementwiseTweak()` method, for tweaking elements of a `*VectorData`.
 - IECoreArnold, IECoreDelight : Added support for config files installed on `GAFFER_STARTUP_PATHS`.
+- IECoreArnold::ShaderNetworkAlgo : Added `attributeName` arguments to `SubstitutionFunction` and `SubstitutionHashFunction`. This is an ABI break, which would not normally be allowed without a change of major version. We are making a rare exception in this case, with the following justifications :
+  - The API is esoteric and was introduced extremely recently, so we believe nobody to be depending on it yet.
+  - Without the ABI change, the API isn't usable for its original intended purpose anyway.
+  - Backward compatibility is not trivial to maintain in this case.
 
 1.5.2.0 (relative to 1.5.1.0)
 =======
