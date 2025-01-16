@@ -244,15 +244,15 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		adaptors["__adaptorSwitch"] = Gaffer.Switch()
 		adaptors["__adaptorSwitch"].setup( GafferScene.ScenePlug() )
-		adaptors["__adaptorSwitch"]["in"]["in0"].setInput( adaptors["__renderAdaptors"]["out"] )
-		adaptors["__adaptorSwitch"]["in"]["in1"].setInput( adaptors["in"] )
+		adaptors["__adaptorSwitch"]["in"]["in0"].setInput( adaptors["in"] )
+		adaptors["__adaptorSwitch"]["in"]["in1"].setInput( adaptors["__renderAdaptors"]["out"] )
 
 		adaptors["__contextQuery"] = Gaffer.ContextQuery()
-		adaptors["__contextQuery"].addQuery( Gaffer.BoolPlug( "disableAdaptors", defaultValue = False ) )
-		adaptors["__contextQuery"]["queries"][0]["name"].setValue( "renderPassEditor:disableAdaptors" )
+		adaptors["__contextQuery"].addQuery( Gaffer.BoolPlug( "enableAdaptors", defaultValue = False ) )
+		adaptors["__contextQuery"]["queries"][0]["name"].setValue( "renderPassEditor:enableAdaptors" )
 
 		adaptors["__adaptorSwitch"]["index"].setInput( adaptors["__contextQuery"]["out"][0]["value"] )
-		adaptors["__adaptorSwitch"]["deleteContextVariables"].setValue( "renderPassEditor:disableAdaptors" )
+		adaptors["__adaptorSwitch"]["deleteContextVariables"].setValue( "renderPassEditor:enableAdaptors" )
 
 		adaptors["out"].setInput( adaptors["__adaptorSwitch"]["out"] )
 
@@ -1030,19 +1030,20 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 			renderPasses = {}
 
 			with Gaffer.Context( Gaffer.Context.current() ) as context :
+				context["renderPassEditor:enableAdaptors"] = True
 				adaptedRenderPassNames = globalsPlug.getValue().get( "option:renderPass:names", IECore.StringVectorData() )
-				context["renderPassEditor:disableAdaptors"] = True
+				context["renderPassEditor:enableAdaptors"] = False
 				for renderPass in globalsPlug.getValue().get( "option:renderPass:names", IECore.StringVectorData() ) :
 					renderPasses.setdefault( "all", [] ).append( renderPass )
 					context["renderPass"] = renderPass
-					context["renderPassEditor:disableAdaptors"] = False
+					context["renderPassEditor:enableAdaptors"] = True
 					if renderPass not in adaptedRenderPassNames :
 						# The render pass has been deleted by a render adaptor so present it as disabled
 						renderPasses.setdefault( "adaptorDisabled", [] ).append( renderPass )
 					elif globalsPlug.getValue().get( "option:renderPass:enabled", IECore.BoolData( True ) ).value :
 						renderPasses.setdefault( "enabled", [] ).append( renderPass )
 					else :
-						context["renderPassEditor:disableAdaptors"] = True
+						context["renderPassEditor:enableAdaptors"] = False
 						if globalsPlug.getValue().get( "option:renderPass:enabled", IECore.BoolData( True ) ).value :
 							renderPasses.setdefault( "adaptorDisabled", [] ).append( renderPass )
 
