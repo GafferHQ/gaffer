@@ -241,6 +241,7 @@ USDLayerWriter::USDLayerWriter( const std::string &name )
 
 	NameSwitchPtr sceneSwitch = new NameSwitch( "__sceneSwitch" );
 	sceneSwitch->selectorPlug()->setValue( "${usdLayerWriter:fileName}" );
+	sceneSwitch->deleteContextVariablesPlug()->setValue( "usdLayerWriter:fileName" );
 	sceneSwitch->setup( basePlug() );
 	sceneSwitch->inPlugs()->getChild<NameValuePlug>( 0 )->valuePlug()->setInput( basePlug() );
 	sceneSwitch->inPlugs()->getChild<NameValuePlug>( 1 )->valuePlug()->setInput( layerPlug() );
@@ -363,9 +364,6 @@ void USDLayerWriter::executeSequence( const std::vector<float> &frames ) const
 	Context::EditableScope context( Context::current() );
 	for( const auto &fileName : { baseFileName, layerFileName } )
 	{
-		/// \todo Stop this context variable leaking out into the scene
-		/// evaluation. There is some talk of giving NameSwitch a feature to do
-		/// this for us.
 		context.set( "usdLayerWriter:fileName", &fileName );
 		sceneWriter()->taskPlug()->executeSequence( frames );
 	}
@@ -381,5 +379,8 @@ void USDLayerWriter::executeSequence( const std::vector<float> &frames ) const
 	createDiff( layer->GetPseudoRoot(), *layer, baseLayer->GetPseudoRoot(), *baseLayer );
 
 	createDirectories( outputFileName );
-	layer->Export( outputFileName );
+	if( !layer->Export( outputFileName ) )
+	{
+		throw IECore::Exception( fmt::format( "Failed to export layer to \"{}\"", outputFileName ) );
+	}
 }

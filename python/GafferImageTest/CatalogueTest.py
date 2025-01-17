@@ -41,6 +41,7 @@ import shutil
 import imath
 import pathlib
 import unittest
+import subprocess
 
 import IECore
 
@@ -615,13 +616,15 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( len( list( baseDirectory.glob( "*" ) ) ), 0 )
 
-	@unittest.skipIf( os.name == "nt", "Windows allows new files in read-only directories" )
 	def testNonWritableDirectory( self ) :
 
 		s = Gaffer.ScriptNode()
 		s["c"] = GafferImage.Catalogue()
 		s["c"]["directory"].setValue( self.temporaryDirectory() / "catalogue" )
-		os.chmod( self.temporaryDirectory(), stat.S_IREAD )
+		if os.name != "nt" :
+			os.chmod( self.temporaryDirectory(), stat.S_IREAD )
+		else :
+			subprocess.check_call( [ "icacls", self.temporaryDirectory(), "/deny", "Users:(OI)(CI)(W)" ] )
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.imagesPath() / "blurRange.exr" )
@@ -637,9 +640,17 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
-		self.assertIn( "Permission denied", mh.messages[0].message )
+		self.assertIn(
+			"Permission denied" if os.name != "nt" else "Access is denied",
+			mh.messages[0].message
+		)
 
-		with self.assertRaisesRegex( RuntimeError, r".* : Could not open \".*\" \(Permission denied\)" ) :
+		with self.assertRaisesRegex(
+			RuntimeError,
+			r".* : Could not open \".*\" " + (
+				"\(Permission denied\)" if os.name != "nt" else "\(No such file or directory\)"
+			)
+		) :
 			GafferImage.ImageAlgo.image( s["c"]["out"] )
 
 	def testDeleteKeepsOrder( self ) :

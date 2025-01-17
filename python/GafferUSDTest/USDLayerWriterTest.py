@@ -36,12 +36,15 @@
 
 import pathlib
 import unittest
+import os
+import subprocess
 
 import pxr.Usd
 
 import IECore
 import IECoreScene
 
+import Gaffer
 import GafferUSD
 import GafferScene
 import GafferSceneTest
@@ -230,6 +233,37 @@ class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 		reader = GafferScene.SceneReader()
 		reader["fileName"].setValue( compositionFileName )
 		self.assertScenesEqual( reader["out"], spherePrimitive["out"], checks = self.allSceneChecks - { "sets" } )
+
+	def testNoContextLeaks( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		layerWriter = GafferUSD.USDLayerWriter()
+		layerWriter["base"].setInput( sphere["out"] )
+		layerWriter["layer"].setInput( sphere["out"] )
+		layerWriter["fileName"].setValue( self.temporaryDirectory() / "layer.usda" )
+
+		with Gaffer.ContextMonitor( sphere ) as monitor :
+			layerWriter["task"].execute()
+
+		self.assertNotIn( "usdLayerWriter:fileName", monitor.combinedStatistics().variableNames() )
+
+	def testNoWritePermissions( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		layerWriter = GafferUSD.USDLayerWriter()
+		layerWriter["base"].setInput( sphere["out"] )
+		layerWriter["layer"].setInput( sphere["out"] )
+		layerWriter["fileName"].setValue( self.temporaryDirectory() / "layer.usda" )
+
+		if os.name != "nt" :
+			self.temporaryDirectory().chmod( 444 )
+		else :
+			subprocess.check_call( [ "icacls", self.temporaryDirectory(), "/deny", "Users:(OI)(CI)(W)" ] )
+
+		with self.assertRaisesRegex( RuntimeError, 'Failed to export layer to "{}"'.format( layerWriter["fileName"].getValue() ) ) :
+			layerWriter["task"].execute()
 
 if __name__ == "__main__":
 	unittest.main()
