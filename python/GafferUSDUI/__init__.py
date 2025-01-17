@@ -39,5 +39,6 @@ from . import USDLayerWriterUI
 from . import USDShaderUI
 from . import USDLightUI
 from . import _PointInstancerAdaptorUI
+from . import PromotePointInstancesUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferUSDUI" )
