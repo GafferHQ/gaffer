@@ -49,6 +49,7 @@ from GafferUI.PlugValueWidget import sole
 from Qt import QtCore
 from Qt import QtWidgets
 from Qt import QtCompat
+import Qt
 
 from . import _Algo
 from . import _ClipboardAlgo
@@ -250,7 +251,8 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		GafferUI.Widget._displayTransformChanged( self )
 		# Account for _PlugTableModel's dependency on display transform.
-		self._qtWidget().update()
+		if not Qt.__binding__ == "PySide6" :
+			self._qtWidget().update()
 
 	def __applyRowFilter( self ) :
 

@@ -535,7 +535,8 @@ class PathListingWidget( GafferUI.Widget ) :
 
 	def __selectionChanged( self ) :
 
-		self._qtWidget().update()
+		if not Qt.__binding__ == "PySide6" :
+			self._qtWidget().update()
 		self.selectionChangedSignal()( self )
 
 	def __pathChanged( self, path ) :
