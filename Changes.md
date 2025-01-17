@@ -9,6 +9,8 @@ Features
 Improvements
 ------------
 
+- Shader, ShaderPlug : Added support for ContextProcessor, Loop and Spreadsheet nodes to be used inline between shader nodes and as the terminal node connected to
+  ShaderAssignment and other shader-consuming nodes.
 - VisualiserTool : Changed `dataName` input widget for choosing the primitive variable to visualise to a list of available variable names for the current selection.
 - Tweaks nodes : Moved list of tweaks to a collapsible "Tweaks" section in the NodeEditor.
 - Viewer :
@@ -23,6 +25,9 @@ Fixes
   - Fixed bug where the value dragged from the visualiser would be slightly different from the initial value on button press. (#6191)
   - Fixed error when trying to visualise data unsupported data.
 - TweakPlug : Fixed preservation of geometric interpretation when tweaking V3f values.
+- Shader :
+  - Fixed handling of multiple consecutive Switch nodes in a shader network.
+  - Fixed leak of private `scene:shader:outputParameter` context variable.
 - ApplicationTest : Extended grace period when testing process name on slower hosts.
 - OpDialogue : Fixed `DefaultButton` handling.
 
@@ -35,6 +40,8 @@ API
   - The API is esoteric and was introduced extremely recently, so we believe nobody to be depending on it yet.
   - Without the ABI change, the API isn't usable for its original intended purpose anyway.
   - Backward compatibility is not trivial to maintain in this case.
+- PlugAlgo : Added `contextSensitiveSource()` method.
+- ShaderPlug : Added Python binding for `parameterSource()` method.
 
 1.5.2.0 (relative to 1.5.1.0)
 =======

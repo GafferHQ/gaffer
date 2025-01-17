@@ -40,11 +40,15 @@
 #include "Gaffer/Box.h"
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/ComputeNode.h"
+#include "Gaffer/ContextProcessor.h"
+#include "Gaffer/Loop.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/SplinePlug.h"
+#include "Gaffer/Spreadsheet.h"
+#include "Gaffer/Switch.h"
 #include "Gaffer/TransformPlug.h"
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/ValuePlug.h"
@@ -189,6 +193,64 @@ bool Gaffer::PlugAlgo::dependsOnCompute( const ValuePlug *plug )
 		}
 		return false;
 	}
+}
+
+tuple<const Plug *, ConstContextPtr> Gaffer::PlugAlgo::contextSensitiveSource( const Plug *plug )
+{
+	plug = plug->source();
+	if( plug->direction() == Plug::In )
+	{
+		// Avoid all additional overhead for the common case.
+		return make_tuple( plug, Context::current() );
+	}
+
+	const Node *node = plug->node();
+	if( auto sw = IECore::runTimeCast<const Switch>( node ) )
+	{
+		if(
+			sw->outPlug() &&
+			( plug == sw->outPlug() || sw->outPlug()->isAncestorOf( plug ) )
+		)
+		{
+			if( auto activeInPlug = sw->activeInPlug( plug ) )
+			{
+				return contextSensitiveSource( activeInPlug );
+			}
+		}
+	}
+	else if( auto contextProcessor = IECore::runTimeCast<const ContextProcessor>( node ) )
+	{
+		if(
+			contextProcessor->outPlug() &&
+			( plug == contextProcessor->outPlug() || contextProcessor->outPlug()->isAncestorOf( plug ) )
+		)
+		{
+			ConstContextPtr context = contextProcessor->inPlugContext();
+			Context::Scope scopedContext( context.get() );
+			return contextSensitiveSource( contextProcessor->inPlug() );
+		}
+	}
+	else if( auto valuePlug = IECore::runTimeCast<const ValuePlug>( plug ) )
+	{
+		if( auto spreadsheet = IECore::runTimeCast<const Spreadsheet>( node ) )
+		{
+			if( spreadsheet->outPlug()->isAncestorOf( plug ) )
+			{
+				return contextSensitiveSource( spreadsheet->activeInPlug( valuePlug ) );
+			}
+		}
+		else if( auto loop = IECore::runTimeCast<const Loop>( node ) )
+		{
+			auto [previousPlug, previousContext] = loop->previousIteration( valuePlug );
+			if( previousPlug )
+			{
+				Context::Scope scopedContext( previousContext.get() );
+				return contextSensitiveSource( previousPlug );
+			}
+		}
+	}
+
+	return make_tuple( plug, Context::current() );
 }
 
 //////////////////////////////////////////////////////////////////////////
