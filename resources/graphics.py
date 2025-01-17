@@ -136,7 +136,8 @@
 				'grid', # \todo rename to 'sceneViewGadgets'
 				'selectionMaskOff',
 				'selectionMaskOn',
-				'shading'
+				'shading',
+				'shadingOn',
 			]
 
 		},
@@ -462,14 +463,15 @@
 		"renderPassEditor" : {
 
 			"options" : {
-				"requiredWidth" : 16,
-				"requiredHeight" : 16,
+				"requiredWidth" : 14,
+				"requiredHeight" : 14,
 				"validatePixelAlignment" : True
 			},
 
 			"ids" : [
 				"renderPass",
 				"disabledRenderPass",
+				"adaptorDisabledRenderPass",
 				"renderPassFolder",
 				"activeRenderPass",
 				"activeRenderPassFadedHighlighted",

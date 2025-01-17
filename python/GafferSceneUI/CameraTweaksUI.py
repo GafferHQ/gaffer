@@ -66,6 +66,8 @@ Gaffer.Metadata.registerNode(
 	first, then the second, etc.
 	""",
 
+	"layout:section:Settings.Tweaks:collapsed", False,
+
 	plugs = {
 
 		"ignoreMissing" : [
@@ -89,6 +91,7 @@ Gaffer.Metadata.registerNode(
 			interface, or via the CameraTweaks API in Python.
 			""",
 
+			"layout:section", "Settings.Tweaks",
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:customWidget:footer:widgetType", "GafferSceneUI.CameraTweaksUI._TweaksFooter",
 			"layout:customWidget:footer:index", -1,

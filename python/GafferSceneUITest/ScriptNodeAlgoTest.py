@@ -17,7 +17,7 @@
 #
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
-#        promote products derived from this software without specifiscript prior
+#        promote products derived from this software without specific prior
 #        written permission.
 #
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
@@ -203,6 +203,63 @@ class ScriptNodeAlgoTest( GafferUITest.TestCase ) :
 		newLeafs = GafferSceneUI.ScriptNodeAlgo.expandDescendantsInVisibleSet( script, IECore.PathMatcher( [ "/A/C" ] ), A["out"], depth = 1 )
 		self.assertEqual( GafferSceneUI.ScriptNodeAlgo.getVisibleSet( script ).expansions, IECore.PathMatcher( [ "/", "/A", "/A/C" ] ) )
 		self.assertEqual( newLeafs, IECore.PathMatcher( [ "/A/C/G", "/A/C/F" ] ) )
+
+	def testAcquireRenderPassPlug( self ) :
+
+		s1 = Gaffer.ScriptNode()
+		s2 = Gaffer.ScriptNode()
+
+		self.assertIsNone( GafferSceneUI.ScriptNodeAlgo.acquireRenderPassPlug( s1, createIfMissing = False ) )
+
+		p1A = GafferSceneUI.ScriptNodeAlgo.acquireRenderPassPlug( s1 )
+		p1B = GafferSceneUI.ScriptNodeAlgo.acquireRenderPassPlug( s1 )
+
+		p2A = GafferSceneUI.ScriptNodeAlgo.acquireRenderPassPlug( s2 )
+		p2B = GafferSceneUI.ScriptNodeAlgo.acquireRenderPassPlug( s2 )
+
+		self.assertIsNotNone( p1A )
+		self.assertIsNotNone( p2A )
+
+		self.assertTrue( p1A.isSame( p1B ) )
+		self.assertTrue( p2A.isSame( p2B ) )
+		self.assertFalse( p1A.isSame( p2A ) )
+
+	def testAcquireManuallyCreatedRenderPassPlug( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["variables"]["renderPass"] = Gaffer.NameValuePlug( "renderPass", "", "renderPass" )
+
+		self.assertTrue( GafferSceneUI.ScriptNodeAlgo.acquireRenderPassPlug( s ).isSame( s["variables"]["renderPass"] ) )
+
+		s1 = Gaffer.ScriptNode()
+		s1["variables"]["renderPass"] = Gaffer.NameValuePlug( "renderPass", IECore.IntData( 0 ), "renderPass" )
+
+		self.assertRaises( IECore.Exception, GafferSceneUI.ScriptNodeAlgo.acquireRenderPassPlug, s1 )
+
+	def testSetCurrentRenderPass( self ) :
+
+		script = Gaffer.ScriptNode()
+		self.assertNotIn( "renderPass", script["variables"] )
+
+		GafferSceneUI.ScriptNodeAlgo.setCurrentRenderPass( script, "testA" )
+		self.assertIn( "renderPass", script["variables"] )
+		self.assertEqual( "testA", script["variables"]["renderPass"]["value"].getValue() )
+
+		script2 = Gaffer.ScriptNode()
+		script2["variables"]["renderPass"] = Gaffer.NameValuePlug( "renderPass", 123.0, "renderPass" )
+		self.assertRaises( IECore.Exception, GafferSceneUI.ScriptNodeAlgo.setCurrentRenderPass, script2, "testB" )
+
+	def testGetCurrentRenderPass( self ) :
+
+		script = Gaffer.ScriptNode()
+		self.assertEqual( "", GafferSceneUI.ScriptNodeAlgo.getCurrentRenderPass( script ) )
+
+		GafferSceneUI.ScriptNodeAlgo.setCurrentRenderPass( script, "testA" )
+		self.assertEqual( "testA", GafferSceneUI.ScriptNodeAlgo.getCurrentRenderPass( script ) )
+
+		script2 = Gaffer.ScriptNode()
+		script2["variables"]["renderPass"] = Gaffer.NameValuePlug( "renderPass", 123.0, "renderPass" )
+		self.assertRaises( IECore.Exception, GafferSceneUI.ScriptNodeAlgo.getCurrentRenderPass, script2 )
 
 if __name__ == "__main__":
 	unittest.main()

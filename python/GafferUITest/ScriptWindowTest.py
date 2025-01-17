@@ -87,6 +87,38 @@ class ScriptWindowTest( GafferUITest.TestCase ) :
 		w6 = GafferUI.ScriptWindow.acquire( s3, createIfNecessary = True )
 		self.assertTrue( w6.scriptNode().isSame( s3 ) )
 
+	def testLifetimeOfApplicationScriptWindows( self ) :
+
+		class testApp( Gaffer.Application ) :
+
+			def __init__( self ) :
+
+				Gaffer.Application.__init__( self )
+
+		def __scriptAdded( scriptContainer, script ) :
+
+			w = GafferUI.ScriptWindow.acquire( script )
+			w.setTitle( "modified" )
+			self.assertEqual( w.getTitle(), "modified" )
+
+		a = testApp().root()
+		GafferUI.ScriptWindow.connect( a )
+
+		# Acquire and modify the ScriptWindow before it is
+		# shown by the application to ensure that our modified
+		# ScriptWindow survives to be the one shown.
+		a["scripts"].childAddedSignal().connectFront( __scriptAdded )
+
+		s = Gaffer.ScriptNode()
+		a["scripts"]["s"] = s
+
+		self.waitForIdle( 1000 )
+
+		w = GafferUI.ScriptWindow.acquire( s )
+		self.assertEqual( w.getTitle(), "modified" )
+
+		del a["scripts"]["s"]
+
 	def testTitleChangedSignal( self ) :
 
 		self.__title = ""

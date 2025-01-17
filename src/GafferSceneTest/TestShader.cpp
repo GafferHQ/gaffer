@@ -143,4 +143,10 @@ void TestShader::loadShader( const std::string &shaderName, bool keepExistingVal
 		setupTypedPlug<SplinefColor3fPlug>( "spline", parametersPlug, SplineDefinitionfColor3f() );
 		setupOptionalValuePlug<StringPlug>( "optionalString", parametersPlug, new StringPlug() );
 	}
+	else if( shaderName == "mix" )
+	{
+		setupTypedPlug<Color3fPlug>( "a", parametersPlug, Imath::Color3f( 0.f ) );
+		setupTypedPlug<Color3fPlug>( "b", parametersPlug, Imath::Color3f( 0.f ) );
+		setupTypedPlug<FloatPlug>( "mix", parametersPlug, 0.5 );
+	}
 }

@@ -1382,5 +1382,127 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 			script2["box"]["plug"]["child1"]["value"].source()
 		)
 
+	def testContextSensitiveSourceWithSwitch( self ) :
+
+		node1 = GafferTest.AddNode()
+		node2 = GafferTest.AddNode()
+
+		indexQuery = Gaffer.ContextQuery()
+		indexQuery.addQuery( Gaffer.IntPlug(), "index" )
+
+		switch = Gaffer.Switch()
+		switch.setup( node1["sum"] )
+		switch["in"][0].setInput( node1["sum"] )
+		switch["in"][1].setInput( node2["sum"] )
+		switch["index"].setInput( indexQuery["out"][0]["value"] )
+
+		plug = Gaffer.IntPlug()
+		plug.setInput( switch["out"] )
+
+		with Gaffer.Context() as context :
+
+			self.assertEqual(
+				Gaffer.PlugAlgo.contextSensitiveSource( plug ),
+				( node1["sum"], context )
+			)
+
+			context["index"] = 0
+			self.assertEqual(
+				Gaffer.PlugAlgo.contextSensitiveSource( plug ),
+				( node1["sum"], context )
+			)
+
+			context["index"] = 1
+			self.assertEqual(
+				Gaffer.PlugAlgo.contextSensitiveSource( plug ),
+				( node2["sum"], context )
+			)
+
+	def testContextSensitiveSourceWithTimeWarp( self ) :
+
+		node = GafferTest.AddNode()
+		timeWarp = Gaffer.TimeWarp()
+		timeWarp.setup( node["sum"] )
+		timeWarp["in"].setInput( node["sum"] )
+		timeWarp["offset"].setValue( 10 )
+
+		source, sourceContext = Gaffer.PlugAlgo.contextSensitiveSource( timeWarp["out"] )
+		self.assertEqual( source, node["sum"] )
+		self.assertEqual( sourceContext.getFrame(), 11 )
+
+	def testContextSensitiveSourceWithSpreadsheet( self ) :
+
+		node = GafferTest.AddNode()
+
+		spreadsheet = Gaffer.Spreadsheet()
+		spreadsheet["selector"].setValue( "${row}" )
+		spreadsheet["rows"].addColumn( node["op1"] )
+		node["op1"].setInput( spreadsheet["out"]["op1"] )
+
+		spreadsheet["rows"].addRows( 2 )
+		spreadsheet["rows"][1]["name"].setValue( "one" )
+		spreadsheet["rows"][1]["cells"]["op1"]["value"].setValue( 1 )
+		spreadsheet["rows"][2]["name"].setValue( "two" )
+		spreadsheet["rows"][2]["cells"]["op1"]["value"].setValue( 2 )
+
+		with Gaffer.Context() as context :
+
+			self.assertEqual(
+				Gaffer.PlugAlgo.contextSensitiveSource( node["op1"] ),
+				( spreadsheet["rows"][0]["cells"]["op1"]["value"], context )
+			)
+
+			context["row"] = "one"
+			self.assertEqual(
+				Gaffer.PlugAlgo.contextSensitiveSource( node["op1"] ),
+				( spreadsheet["rows"][1]["cells"]["op1"]["value"], context )
+			)
+
+			context["row"] = "two"
+			self.assertEqual(
+				Gaffer.PlugAlgo.contextSensitiveSource( node["op1"] ),
+				( spreadsheet["rows"][2]["cells"]["op1"]["value"], context )
+			)
+
+	def testContextSensitiveSourceWithLoop( self ) :
+
+		node = GafferTest.AddNode()
+
+		loop = Gaffer.Loop()
+		loop.setup( node["op1"] )
+		loop["iterations"].setValue( 5 )
+		loop["next"].setInput( node["sum"] )
+		node["op1"].setInput( loop["previous"] )
+
+		source, context = Gaffer.PlugAlgo.contextSensitiveSource( loop["out"] )
+		self.assertEqual( source, node["sum"] )
+		self.assertEqual( context["loop:index"], 4 )
+
+		for i in range( 3, -1, -1 ) :
+			with context :
+				source, context = Gaffer.PlugAlgo.contextSensitiveSource( node["op1"] )
+				self.assertEqual( source, node["sum"] )
+				self.assertEqual( context["loop:index"], i )
+
+		source, context = Gaffer.PlugAlgo.contextSensitiveSource( node["op1"] )
+		self.assertEqual( source, loop["in"] )
+		self.assertNotIn( "loop:index", context )
+
+	def testContextSensitiveSourceWithCanceller( self ) :
+
+		node = GafferTest.AddNode()
+		timeWarp = Gaffer.TimeWarp()
+		timeWarp.setup( node["sum"] )
+		timeWarp["in"].setInput( node["sum"] )
+		timeWarp["offset"].setValue( 10 )
+
+		canceller = IECore.Canceller()
+		context = Gaffer.Context( Gaffer.Context(), canceller )
+		with context :
+			source, sourceContext = Gaffer.PlugAlgo.contextSensitiveSource( timeWarp["out"] )
+
+		self.assertEqual( sourceContext.getFrame(), 11 )
+		self.assertIsNotNone( sourceContext.canceller() )
+
 if __name__ == "__main__":
 	unittest.main()

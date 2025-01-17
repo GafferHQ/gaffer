@@ -38,6 +38,7 @@ import os
 
 import IECore
 import Gaffer
+import GafferUI
 import GafferSceneUI
 
 GafferSceneUI.RenderPassEditor.registerOption( "*", "renderPass:enabled" )
@@ -130,3 +131,14 @@ def __defaultPathGroupingFunction( renderPassName ) :
 	return renderPassName.split( "_" )[0] if "_" in renderPassName else ""
 
 GafferSceneUI.RenderPassEditor.registerPathGroupingFunction( __defaultPathGroupingFunction )
+
+def __compoundEditorCreated( editor ) :
+
+	if editor.scriptNode().ancestor( Gaffer.ApplicationRoot ).getName() == "gui" :
+
+		Gaffer.Metadata.registerValue( editor.settings(), "layout:customWidget:renderPassSelector:widgetType", "GafferSceneUI.RenderPassEditor.RenderPassChooserWidget" )
+		Gaffer.Metadata.registerValue( editor.settings(), "layout:customWidget:renderPassSelector:section", "Settings" )
+		Gaffer.Metadata.registerValue( editor.settings(), "layout:customWidget:renderPassSelector:index", 0 )
+		Gaffer.Metadata.registerValue( editor.settings(), "layout:customWidget:renderPassSelector:width", 185 )
+
+GafferUI.CompoundEditor.instanceCreatedSignal().connect( __compoundEditorCreated )

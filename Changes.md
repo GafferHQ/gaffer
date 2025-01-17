@@ -6,31 +6,63 @@ Breaking Changes
 
 - StandardNodule : Removed deprecated `setCompatibleLabelsVisible()`.
 
-1.5.x.x (relative to 1.5.2.0)
+1.5.x.x (relative to 1.5.3.0)
+=======
+
+
+
+1.5.3.0 (relative to 1.5.2.0)
 =======
 
 Features
 --------
 
 - PrimitiveVariableTweaks : Added node for tweaking primitive variables. Can affect just part of a primitive based on ids or a mask.
+- Menu Bar : Added a "Render Pass" menu to the Menu Bar that can be used to choose the current render pass from those provided by the focus node.
 
 Improvements
 ------------
 
+- Shader, ShaderPlug : Added support for ContextProcessor, Loop and Spreadsheet nodes to be used inline between shader nodes and as the terminal node connected to
+  ShaderAssignment and other shader-consuming nodes.
 - VisualiserTool : Changed `dataName` input widget for choosing the primitive variable to visualise to a list of available variable names for the current selection.
+- Tweaks nodes : Moved list of tweaks to a collapsible "Tweaks" section in the NodeEditor.
+- Viewer :
+  - The shading mode menu icon now updates to indicate when a non-default shading mode is in use.
+  - Added the ability to toggle between default shading and the last selected shading mode by <kbd>Ctrl</kbd> + clicking the shading mode menu button.
+- PythonEditor : Added workaround for slow code completion caused by poorly performing Python property getters.
+- PlugLayout :
+  - A warning widget is now displayed when an invalid custom widget is registered.
+  - `layout:customWidget:<name>:width` and `layout:customWidget:<name>:minimumWidth` metadata registrations are now supported for custom widgets.
+- RenderPassEditor :
+  - Render passes deleted or disabled by render adaptors registered to `client = "RenderPassWedge"` are now shown as disabled. To differentiate these from user disabled render passes, an orange dot is shown in the corner of the disabled icon and the tooltip describes them as automatically disabled.
+  - Changing the current render pass is now undoable.
 
 Fixes
 -----
 
 - VisualiserTool :
-  - Fixed bug where the value dragged from the visualiser would be slightly different from the initial value on button press. (#6191)
+  - Fixed bug where the value dragged from the visualiser would be slightly different from the initial value on button press (#6191).
   - Fixed error when trying to visualise data unsupported data.
 - TweakPlug : Fixed preservation of geometric interpretation when tweaking V3f values.
+- Shader :
+  - Fixed handling of multiple consecutive Switch nodes in a shader network.
+  - Fixed leak of private `scene:shader:outputParameter` context variable.
+- ApplicationTest : Extended grace period when testing process name on slower hosts.
+- OpDialogue : Fixed `DefaultButton` handling.
 
 API
 ---
 
 - TweakPlug : Added `applyElementwiseTweak()` method, for tweaking elements of a `*VectorData`.
+- IECoreArnold, IECoreDelight : Added support for config files installed on `GAFFER_STARTUP_PATHS`.
+- IECoreArnold::ShaderNetworkAlgo : Added `attributeName` arguments to `SubstitutionFunction` and `SubstitutionHashFunction`. This is an ABI break, which would not normally be allowed without a change of major version. We are making a rare exception in this case, with the following justifications :
+  - The API is esoteric and was introduced extremely recently, so we believe nobody to be depending on it yet.
+  - Without the ABI change, the API isn't usable for its original intended purpose anyway.
+  - Backward compatibility is not trivial to maintain in this case.
+- PlugAlgo : Added `contextSensitiveSource()` method.
+- ShaderPlug : Added Python binding for `parameterSource()` method.
+- ScriptNodeAlgo : Added `setCurrentRenderPass()`, `getCurrentRenderPass()`, and `acquireRenderPassPlug()` methods.
 
 1.5.2.0 (relative to 1.5.1.0)
 =======
@@ -384,10 +416,24 @@ Build
 - Zstandard : Added version 1.5.0.
 - Windows : Updated compiler to Visual Studio 2022 / MSVC 17.8 / Runtime library 14.3.
 
-1.4.15.x (relative to 1.4.15.3)
+1.4.15.x (relative to 1.4.15.4)
 ========
 
 
+
+1.4.15.4 (relative to 1.4.15.3)
+========
+
+Fixes
+-----
+
+- USDLayerWriter :
+  - Fixed silent failures when unable to create the output file (#6197).
+  - Fixed leak of `usdLayerWriter:fileName` context variable.
+- PathFilter :
+  - Fixed bug preventing display of "Select Affected Objects" menu item in the row name column of promoted Spreadsheets.
+  - Fixed bug preventing use of "Select Affected Objects" menu item in the row name column of Spreadsheets with `enabledRowNames` connected to the `paths` plug of a PathFilter.
+  - Fixed error when using "Select Affected Objects" on Spreadsheet cells connected to the `paths` plug of a PathFilter.
 
 1.4.15.3 (relative to 1.4.15.2)
 ========

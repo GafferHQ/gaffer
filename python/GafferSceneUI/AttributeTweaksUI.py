@@ -89,6 +89,8 @@ Gaffer.Metadata.registerNode(
 	Makes modifications to attributes.
 	""",
 
+	"layout:section:Settings.Tweaks:collapsed", False,
+
 	plugs = {
 
 		"localise" : [
@@ -122,6 +124,7 @@ Gaffer.Metadata.registerNode(
 			using the AttributeTweaks API via python.
 			""",
 
+			"layout:section", "Settings.Tweaks",
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:customWidget:footer:widgetType", "GafferSceneUI.AttributeTweaksUI._TweaksFooter",
 			"layout:customWidget:footer:index", -1,

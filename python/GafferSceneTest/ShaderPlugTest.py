@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,13 +34,50 @@
 #
 ##########################################################################
 
-import os
-import pathlib
+import unittest
 
-if hasattr( os, "add_dll_directory" ) and "DELIGHT" in os.environ :
-	os.add_dll_directory( ( pathlib.Path( os.environ["DELIGHT"] ) / "bin" ).resolve() )
-del os, pathlib # Don't pollute the namespace
+import imath
 
-from ._IECoreDelight import *
+import Gaffer
+import GafferScene
+import GafferSceneTest
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "IECoreDelight" )
+class ShaderPlugTest( GafferSceneTest.SceneTestCase ) :
+
+	def testContextProcessorInput( self ) :
+
+		shader1 = GafferSceneTest.TestShader()
+		shader1["type"].setValue( "test:surface" )
+		shader1["parameters"]["c"].setValue( imath.Color3f( 1 ) )
+		shader2 = GafferSceneTest.TestShader()
+		shader2["type"].setValue( "test:surface" )
+		shader2["parameters"]["c"].setValue( imath.Color3f( 2 ) )
+
+		nameSwitch = Gaffer.NameSwitch()
+		nameSwitch.setup( shader2["out"] )
+		nameSwitch["selector"].setValue( "${which}")
+		nameSwitch["in"][0]["name"].setValue( "one" )
+		nameSwitch["in"][0]["value"].setInput( shader1["out"] )
+		nameSwitch["in"][1]["name"].setValue( "two" )
+		nameSwitch["in"][1]["value"].setInput( shader2["out"] )
+
+		contextVariables = Gaffer.ContextVariables()
+		contextVariables.setup( nameSwitch["out"]["value"] )
+		contextVariables["in"].setInput( nameSwitch["out"]["value"] )
+		contextVariables["variables"].addChild( Gaffer.NameValuePlug( "which", "two" ) )
+
+		shaderPlug = GafferScene.ShaderPlug()
+		shaderPlug.setInput( contextVariables["out"] )
+
+		self.assertEqual( shaderPlug.attributes()["test:surface"].outputShader().parameters["c"].value, imath.Color3f( 2 ) )
+
+	def testRejectsScenePlugInputFromContextProcessor( self ) :
+
+		contextVariables = Gaffer.ContextVariables()
+		contextVariables.setup( GafferScene.ScenePlug() )
+
+		shaderPlug = GafferScene.ShaderPlug()
+		self.assertFalse( shaderPlug.acceptsInput( contextVariables["out"] ) )
+
+if __name__ == "__main__":
+	unittest.main()
