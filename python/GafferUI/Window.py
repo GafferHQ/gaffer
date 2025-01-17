@@ -204,9 +204,9 @@ class Window( GafferUI.ContainerWidget ) :
 			# on OSX with Qt5.
 			childWindow._qtWidget().setParent( self._qtWidget() )
 			childWindow._applyVisibility()
-			childWindow._qtWidget().setWindowFlags( childWindowFlags )
+			childWindow._qtWidget().setWindowFlags( childWindowFlags | QtCore.Qt.WindowCloseButtonHint )
 		else :
-			childWindow._qtWidget().setParent( self._qtWidget(), childWindowFlags )
+			childWindow._qtWidget().setParent( self._qtWidget(), childWindowFlags | QtCore.Qt.WindowCloseButtonHint )
 			childWindow._applyVisibility()
 
 		if removeOnClose :
