@@ -1,4 +1,9 @@
-1.5.x.x (relative to 1.5.2.0)
+1.5.x.x (relative to 1.5.3.0)
+=======
+
+
+
+1.5.3.0 (relative to 1.5.2.0)
 =======
 
 Features
@@ -29,7 +34,7 @@ Fixes
 -----
 
 - VisualiserTool :
-  - Fixed bug where the value dragged from the visualiser would be slightly different from the initial value on button press. (#6191)
+  - Fixed bug where the value dragged from the visualiser would be slightly different from the initial value on button press (#6191).
   - Fixed error when trying to visualise data unsupported data.
 - TweakPlug : Fixed preservation of geometric interpretation when tweaking V3f values.
 - Shader :
