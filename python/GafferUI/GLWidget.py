@@ -58,16 +58,19 @@ import OpenGL.GL as GL
 import Qt
 from Qt import QtCore
 
-# Importing directly rather than via Qt.py because Qt.py won't expose the
-# Qt-5-only QOpenGLWidget and QSurfaceFormat classes that we need. Their mantra
-# is to provide only what is available in Qt4/PySide1 - see
-# https://github.com/mottosso/Qt.py/issues/341.
-## \todo Now that Qt 4 is long gone, and PySide is an official
-# Qt project, Qt.py isn't much help. Remove across the board, or see
-# if we can coax the project into bridging Qt 5/6 instead of 4/5?
-from PySide2 import QtGui
-from PySide2 import QtWidgets
-from Qt import QtOpenGL
+# Looks like Qt.py as of v1.4.1 doesn't expose any OpenGL, so use
+# PySide2 or PySide6 directly and work around their differences manually.
+if Qt.__binding__ == "PySide2" :
+	from PySide2 import QtGui
+	from PySide2 import QtWidgets
+	from PySide2.QtWidgets import QOpenGLWidget
+	from PySide2 import QtOpenGL
+elif Qt.__binding__ == "PySide6" :
+	from PySide6 import QtGui
+	from PySide6 import QtWidgets
+	from PySide6.QtOpenGLWidgets import QOpenGLWidget
+else :
+	raise Exception( "GafferUI : No compatible Python binding found for Qt" )
 
 ## The GLWidget is a base class for all widgets which wish to draw using OpenGL.
 # Derived classes override the _draw() method to achieve this.
@@ -262,7 +265,7 @@ class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 		if result is not None :
 			return result
 
-		glWidget = QtWidgets.QOpenGLWidget()
+		glWidget = QOpenGLWidget()
 		# Avoid `QOpenGLFramebufferObject: Framebuffer incomplete attachment`
 		# errors caused by Qt trying to make a framebuffer with zero size.
 		glWidget.setMinimumSize( 1, 1 )
@@ -302,10 +305,14 @@ class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 		# context should therefore be made current before calling this
 		# method.
 
-		qGLFormat = cls.__createQGLFormat( format )
-		result = QtOpenGL.QGLWidget()
-		_GafferUI._glWidgetSetHostedContext( GafferUI._qtAddress( result ), GafferUI._qtAddress( qGLFormat ) )
-		return result
+		try :
+			qGLFormat = cls.__createQGLFormat( format )
+			result = QtOpenGL.QGLWidget()
+			_GafferUI._glWidgetSetHostedContext( GafferUI._qtAddress( result ), GafferUI._qtAddress( qGLFormat ) )
+			return result
+		except :
+			result = QOpenGLWidget()
+			return result
 
 	@classmethod
 	def __createMayaQGLWidget( cls, format ) :

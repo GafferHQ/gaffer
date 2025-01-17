@@ -49,6 +49,7 @@ from ._StyleSheet import _styleSheet
 from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
+import Qt
 
 class _WidgetMetaclass( Gaffer.Signals.Trackable.__class__ ) :
 
@@ -798,11 +799,18 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 	def _key( cls, qtKey ) :
 
 		if not cls.__keyMapping :
-			for k in dir( QtCore.Qt ) :
-				if k.startswith( "Key_" ) :
-					keyValue = int( getattr( QtCore.Qt, k ) )
-					keyString = k[4:]
-					cls.__keyMapping[keyValue] = keyString
+			if Qt.__binding__ == "PySide6" :
+				for k in dir( QtCore.Qt.Key ) :
+					if k.startswith( "Key_" ) :
+						keyValue = int( getattr( QtCore.Qt.Key, k ) )
+						keyString = k[4:]
+						cls.__keyMapping[keyValue] = keyString
+			else :
+				for k in dir( QtCore.Qt ) :
+					if k.startswith( "Key_" ) :
+						keyValue = int( getattr( QtCore.Qt, k ) )
+						keyString = k[4:]
+						cls.__keyMapping[keyValue] = keyString
 
 		return cls.__keyMapping[int(qtKey)]
 
@@ -1096,7 +1104,12 @@ class _EventFilter( QtCore.QObject ) :
 		toolTip = widget.getToolTip()
 		if toolTip :
 			toolTip = GafferUI.DocumentationAlgo.markdownToHTML( toolTip )
-			QtWidgets.QToolTip.showText( qEvent.globalPos(), toolTip, qObject )
+			pos = None
+			if Qt.__binding__ == "PySide6" :
+				pos = qEvent.globalPosition().toPoint()
+			else :
+				pos = qEvent.globalPos()
+			QtWidgets.QToolTip.showText( pos, toolTip, qObject )
 			return True
 		else :
 			return False
@@ -1274,7 +1287,7 @@ class _EventFilter( QtCore.QObject ) :
 				GafferUI.ButtonEvent.Buttons.None_,
 				self.__virtualButtons( qEvent.buttons() ),
 				self.__widgetSpaceLine( qEvent, widget ),
-				qEvent.delta() / 8.0,
+				float( ( qEvent.angleDelta() / 8 ).y() ),
 				Widget._modifiers( qEvent.modifiers() ),
 			)
 
@@ -1393,7 +1406,12 @@ class _EventFilter( QtCore.QObject ) :
 
 	def __doDragEnterAndLeave( self, qObject, qEvent ) :
 
-		candidateWidget = Widget.widgetAt( imath.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() ) )
+		if Qt.__binding__ == "PySide6" :
+			pos = qEvent.globalPosition().toPoint()
+		else :
+			pos = qEvent.globalPos()
+
+		candidateWidget = Widget.widgetAt( imath.V2i( pos.x(), pos.y() ) )
 
 		newDestinationWidget = None
 		while candidateWidget is not None :
@@ -1664,7 +1682,12 @@ class _EventFilter( QtCore.QObject ) :
 	# long distances.
 	def __widgetSpaceLine( self, qEvent, targetWidget ) :
 
-		cursorPos = imath.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() )
+		if Qt.__binding__ == "PySide6" :
+			pos = qEvent.globalPosition().toPoint()
+		else :
+			pos = qEvent.globalPos()
+
+		cursorPos = imath.V2i( pos.x(), pos.y() )
 		cursorPos -= targetWidget.bound().min()
 
 		return IECore.LineSegment3f(

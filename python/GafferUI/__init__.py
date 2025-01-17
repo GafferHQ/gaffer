@@ -100,7 +100,9 @@ def __shiboken() :
 	import Qt
 	assert( "PyQt" not in Qt.__binding__ )
 
-	if Qt.__binding__ == "PySide2" :
+	if Qt.__binding__ == "PySide6" :
+		import shiboken6 as shiboken
+	elif Qt.__binding__ == "PySide2" :
 		try :
 			import PySide2.shiboken2 as shiboken
 		except ImportError :

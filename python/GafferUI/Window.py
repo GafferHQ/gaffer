@@ -199,7 +199,7 @@ class Window( GafferUI.ContainerWidget ) :
 		childWindowType = QtCore.Qt.Tool if sys.platform == "darwin" else QtCore.Qt.Dialog
 		childWindowFlags = ( childWindow._qtWidget().windowFlags() & ~QtCore.Qt.WindowType_Mask ) | childWindowType
 
-		if sys.platform == "darwin" and Qt.__binding__ in ( "PySide2", "PyQt5" ) :
+		if sys.platform == "darwin" and Qt.__binding__ in ( "PySide6", "PySide2", "PyQt5" ) :
 			# Alternative order of operations to work around crashes
 			# on OSX with Qt5.
 			childWindow._qtWidget().setParent( self._qtWidget() )
