@@ -347,7 +347,7 @@ class _TabWidget( QtWidgets.QTabWidget ) :
 
 		result = QtWidgets.QTabWidget.sizeHint( self )
 		if self.tabBar().isHidden() :
-			if self.tabPosition() in ( self.North, self.South ) :
+			if self.tabPosition() in ( QtWidgets.QTabWidget.North, QtWidgets.QTabWidget.South ) :
 				result.setHeight( result.height() - self.tabBar().sizeHint().height() )
 			else :
 				result.setWidth( result.width() - self.tabBar().sizeHint().width() )
@@ -360,7 +360,7 @@ class _TabWidget( QtWidgets.QTabWidget ) :
 
 		result = QtWidgets.QTabWidget.minimumSizeHint( self )
 		if self.tabBar().isHidden() :
-			if self.tabPosition() in ( self.North, self.South ) :
+			if self.tabPosition() in ( QtWidgets.QTabWidget.North, QtWidgets.QTabWidget.South ) :
 				result.setHeight( result.height() - self.tabBar().minimumSizeHint().height() )
 			else :
 				result.setWidth( result.width() - self.tabBar().minimumSizeHint().width() )
@@ -381,7 +381,7 @@ class _VisibilityLink( QtCore.QObject ) :
 	def eventFilter( self, qObject, qEvent ) :
 
 		qEventType = qEvent.type()
-		if qEventType == qEvent.Show or qEventType == qEvent.Hide :
+		if qEventType == QtCore.QEvent.Show or qEventType == QtCore.QEvent.Hide :
 			self.parent().setVisible( qObject.isVisible() )
 
 		return False

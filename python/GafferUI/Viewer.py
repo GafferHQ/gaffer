@@ -351,7 +351,8 @@ class _Toolbar( GafferUI.Frame ) :
 		# Remove the SetMinAndMaxSize constraint that our base class added,
 		# so that we expand to the full width of the viewport, and our toolbar
 		# is centered inside.
-		self._qtWidget().layout().setSizeConstraint( self._qtWidget().layout().SetDefaultConstraint )
+		from Qt.QtWidgets import QLayout
+		self._qtWidget().layout().setSizeConstraint( QLayout.SetDefaultConstraint )
 
 		self.__edge = edge
 		self.__node = []

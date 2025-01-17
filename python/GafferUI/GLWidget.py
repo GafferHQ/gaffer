@@ -215,7 +215,7 @@ class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 
 		glWidget = self.__createGLWidget( format )
 		self.setViewport( glWidget )
-		self.setViewportUpdateMode( self.FullViewportUpdate )
+		self.setViewportUpdateMode( QtWidgets.QGraphicsView.FullViewportUpdate )
 
 	# QAbstractScrollArea (one of our base classes), implements
 	# minimumSizeHint() to include enough room for scrollbars.

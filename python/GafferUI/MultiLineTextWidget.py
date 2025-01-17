@@ -557,7 +557,7 @@ class _PlainTextEdit( QtWidgets.QPlainTextEdit ) :
 
 	def event( self, event ) :
 
-		if event.type() == event.ShortcutOverride and event == QtGui.QKeySequence.Copy :
+		if event.type() == QtCore.QEvent.ShortcutOverride and event == QtGui.QKeySequence.Copy :
 			# QPlainTextEdit doesn't accept this when it's
 			# read only. so we accept it ourselves, which is
 			# enough to reenable copying from a read only
