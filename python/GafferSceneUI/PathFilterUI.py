@@ -168,13 +168,14 @@ class _PathsPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 
 		filterData = vectorDataWidget.getData()[0]
 		pathMatcher = IECore.PathMatcher( [ filterData[row] for column, row in selectedIndices ] )
+		scenes = _filteredScenes( _destinationPathFilter( self.getPlug() ) )
 
 		menuDefinition.append( "/selectDivider", { "divider" : True } )
 		menuDefinition.append(
 			"/Select Affected Objects",
 			{
-				"command" : functools.partial( _selectAffected, pathMatcher, _filteredScenes( _destinationPathFilter( self.getPlug() ) ) ),
-				"active" : len( selectedIndices ) > 0,
+				"command" : functools.partial( _selectAffected, pathMatcher, scenes ),
+				"active" : len( selectedIndices ) > 0 and len( scenes ) > 0,
 			}
 		)
 
@@ -199,7 +200,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 	if spreadsheet is None :
 		return
 
-	scenes = None
+	scenes = []
 	pathMatcher = None
 	with plugValueWidget.getContext() :
 		pathFilter = _destinationPathFilter( plug )
@@ -220,7 +221,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 					if scene is not None :
 						scenes = [ scene ]
 
-	if pathMatcher is None or scenes is None :
+	if pathMatcher is None or len( scenes ) == 0 :
 		return
 
 	menuDefinition.prepend( "/selectAffectedDivider", { "divider" : True } )
