@@ -45,6 +45,8 @@ import GafferImage
 import GafferDispatch
 import GafferTractor
 
+import GafferSceneUI
+
 ##########################################################################
 # Note this file is shared with the `dispatch` app. We need to ensure any
 # changes here have the desired behaviour in both applications.
@@ -66,6 +68,9 @@ def __scriptAdded( container, script ) :
 	Gaffer.MetadataAlgo.setReadOnly( variables["projectRootDirectory"]["name"], True )
 
 	GafferImage.FormatPlug.acquireDefaultFormatPlug( script )
+
+	renderPassPlug = GafferSceneUI.ScriptNodeAlgo.acquireRenderPassPlug( script )
+	Gaffer.Metadata.registerValue( renderPassPlug["value"], "plugValueWidget:type", "GafferSceneUI.RenderPassEditor._RenderPassPlugValueWidget" )
 
 application.root()["scripts"].childAddedSignal().connect( __scriptAdded )
 

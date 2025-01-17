@@ -5,6 +5,7 @@ Features
 --------
 
 - PrimitiveVariableTweaks : Added node for tweaking primitive variables. Can affect just part of a primitive based on ids or a mask.
+- Menu Bar : Added a "Render Pass" menu to the Menu Bar that can be used to choose the current render pass from those provided by the focus node.
 
 Improvements
 ------------
@@ -17,6 +18,12 @@ Improvements
   - The shading mode menu icon now updates to indicate when a non-default shading mode is in use.
   - Added the ability to toggle between default shading and the last selected shading mode by <kbd>Ctrl</kbd> + clicking the shading mode menu button.
 - PythonEditor : Added workaround for slow code completion caused by poorly performing Python property getters.
+- PlugLayout :
+  - A warning widget is now displayed when an invalid custom widget is registered.
+  - `layout:customWidget:<name>:width` and `layout:customWidget:<name>:minimumWidth` metadata registrations are now supported for custom widgets.
+- RenderPassEditor :
+  - Render passes deleted or disabled by render adaptors registered to `client = "RenderPassWedge"` are now shown as disabled. To differentiate these from user disabled render passes, an orange dot is shown in the corner of the disabled icon and the tooltip describes them as automatically disabled.
+  - Changing the current render pass is now undoable.
 
 Fixes
 -----
@@ -42,6 +49,7 @@ API
   - Backward compatibility is not trivial to maintain in this case.
 - PlugAlgo : Added `contextSensitiveSource()` method.
 - ShaderPlug : Added Python binding for `parameterSource()` method.
+- ScriptNodeAlgo : Added `setCurrentRenderPass()`, `getCurrentRenderPass()`, and `acquireRenderPassPlug()` methods.
 
 1.5.2.0 (relative to 1.5.1.0)
 =======

@@ -192,9 +192,10 @@ PathMatcher pathMatcherCacheGetter( const PathMatcherCacheGetterKey &key, size_t
 }
 
 using PathMatcherCache = IECorePreview::LRUCache<IECore::MurmurHash, IECore::PathMatcher, IECorePreview::LRUCachePolicy::Parallel, PathMatcherCacheGetterKey>;
-PathMatcherCache g_pathMatcherCache( pathMatcherCacheGetter, 25 );
+PathMatcherCache g_pathMatcherCache( pathMatcherCacheGetter, 50 );
 
 const InternedString g_renderPassContextName( "renderPass" );
+const InternedString g_enableAdaptorsContextName( "renderPassEditor:enableAdaptors" );
 const InternedString g_renderPassNamePropertyName( "renderPassPath:name" );
 const InternedString g_renderPassEnabledPropertyName( "renderPassPath:enabled" );
 const InternedString g_renderPassNamesOption( "option:renderPass:names" );
@@ -452,9 +453,12 @@ RenderPassPath::Ptr constructor2( ScenePlug &scene, Context &context, const std:
 // RenderPassNameColumn
 //////////////////////////////////////////////////////////////////////////
 
+ConstStringDataPtr g_adaptorDisabledRenderPassIcon = new StringData( "adaptorDisabledRenderPass.png" );
 ConstStringDataPtr g_disabledRenderPassIcon = new StringData( "disabledRenderPass.png" );
 ConstStringDataPtr g_renderPassIcon = new StringData( "renderPass.png" );
 ConstStringDataPtr g_renderPassFolderIcon = new StringData( "renderPassFolder.png" );
+ConstStringDataPtr g_disabledToolTip = new StringData( "Disabled." );
+ConstStringDataPtr g_adaptorDisabledToolTip = new StringData( "Automatically disabled by a render adaptor.");
 const Color4fDataPtr g_dimmedForegroundColor = new Color4fData( Imath::Color4f( 152, 152, 152, 255 ) / 255.0f );
 
 class RenderPassNameColumn : public StandardPathColumn
@@ -473,23 +477,48 @@ class RenderPassNameColumn : public StandardPathColumn
 		{
 			CellData result = StandardPathColumn::cellData( path, canceller );
 
-			const auto renderPassName = runTimeCast<const IECore::StringData>( path.property( g_renderPassNamePropertyName, canceller ) );
-			if( !renderPassName )
+			if( !runTimeCast<const IECore::StringData>( path.property( g_renderPassNamePropertyName, canceller ) ) )
 			{
 				result.icon = g_renderPassFolderIcon;
+				return result;
 			}
-			else
+
+			// Enable render adaptors as they may have disabled or deleted render passes.
+			auto pathCopy = runTimeCast<RenderPassPath>( path.copy() );
+			if( !pathCopy )
 			{
-				if( const auto renderPassEnabled = runTimeCast<const IECore::BoolData>( path.property( g_renderPassEnabledPropertyName, canceller ) ) )
-				{
-					result.icon = renderPassEnabled->readable() ? g_renderPassIcon : g_disabledRenderPassIcon;
-					result.foreground = renderPassEnabled->readable() ? nullptr : g_dimmedForegroundColor;
-				}
-				else
-				{
-					result.icon = g_renderPassIcon;
-				}
+				return result;
 			}
+			ContextPtr adaptorEnabledContext = new Context( *pathCopy->getContext() );
+			adaptorEnabledContext->set<bool>( g_enableAdaptorsContextName, true );
+			pathCopy->setContext( adaptorEnabledContext );
+
+			bool enabled = true;
+			if( !runTimeCast<const IECore::StringData>( pathCopy->property( g_renderPassNamePropertyName, canceller ) ) )
+			{
+				// The render pass has been deleted by a render adaptor, so present it to the user as disabled.
+				enabled = false;
+			}
+			else if( const auto enabledData = runTimeCast<const IECore::BoolData>( pathCopy->property( g_renderPassEnabledPropertyName, canceller ) ) )
+			{
+				enabled = enabledData->readable();
+			}
+
+			if( enabled )
+			{
+				result.icon = g_renderPassIcon;
+				return result;
+			}
+
+			// Check `renderPass:enabled` without render adaptors enabled
+			// to determine whether the render pass was disabled upstream
+			// or by a render adaptor.
+			const auto enabledData = runTimeCast<const IECore::BoolData>( path.property( g_renderPassEnabledPropertyName, canceller ) );
+			enabled = !enabledData || enabledData->readable();
+
+			result.icon = enabled ? g_adaptorDisabledRenderPassIcon : g_disabledRenderPassIcon;
+			result.toolTip = enabled ? g_adaptorDisabledToolTip : g_disabledToolTip;
+			result.foreground = g_dimmedForegroundColor;
 
 			return result;
 		}
@@ -692,10 +721,21 @@ class DisabledRenderPassFilter : public Gaffer::PathFilter
 				leaf = std::all_of( c.begin(), c.end(), [this, canceller] ( const auto &p ) { return remove( p, canceller ); } );
 			}
 
-			bool enabled = false;
-			if( runTimeCast<const IECore::StringData>( path->property( g_renderPassNamePropertyName, canceller ) ) )
+			// Enable render adaptors so we remove any render passes
+			// that have been disabled or deleted by them.
+			auto pathCopy = runTimeCast<RenderPassPath>( path->copy() );
+			if( !pathCopy )
 			{
-				if( const auto enabledData = IECore::runTimeCast<const IECore::BoolData>( path->property( g_renderPassEnabledPropertyName, canceller ) ) )
+				return true;
+			}
+			ContextPtr adaptorEnabledContext = new Context( *pathCopy->getContext() );
+			adaptorEnabledContext->set<bool>( g_enableAdaptorsContextName, true );
+			pathCopy->setContext( adaptorEnabledContext );
+
+			bool enabled = false;
+			if( runTimeCast<const IECore::StringData>( pathCopy->property( g_renderPassNamePropertyName, canceller ) ) )
+			{
+				if( const auto enabledData = IECore::runTimeCast<const IECore::BoolData>( pathCopy->property( g_renderPassEnabledPropertyName, canceller ) ) )
 				{
 					enabled = enabledData->readable();
 				}
