@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - AttributeEditor : Added "Select Affected Objects" menu item to the "Linked Lights" and Arnold "Shadow Group" columns.
+- ScriptNode : Added support for serialising metadata registered on a ScriptNode.
 
 Fixes
 -----

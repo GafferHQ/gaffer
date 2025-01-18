@@ -901,6 +901,14 @@ std::string ScriptNode::serialiseInternal( const Node *parent, const Set *filter
 	{
 		throw IECore::Exception( "Serialisation not available - please link to libGafferBindings." );
 	}
+
+	Context::EditableScope scope( Context::current() );
+	if( ( !parent || parent == this ) && !filter )
+	{
+		static const bool includeParentMetadata = true;
+		scope.set( "serialiser:includeParentMetadata", &includeParentMetadata );
+	}
+
 	return g_serialiseFunction( parent ? parent : this, filter );
 }
 
