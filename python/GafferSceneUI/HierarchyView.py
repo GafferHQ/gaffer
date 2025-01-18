@@ -71,6 +71,9 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
+				_VisibleSetBookmarkWidget()
+				GafferUI.Divider( GafferUI.Divider.Orientation.Vertical )
+
 				_SearchFilterWidget( searchFilter )
 				_SetFilterWidget( setFilter )
 
@@ -356,3 +359,107 @@ class _SearchFilterWidget( GafferUI.PathFilterWidget ) :
 	def __patternEditingFinished( self, widget ) :
 
 		self.pathFilter().setMatchPattern( self.__patternWidget.getText() )
+
+##########################################################################
+# _VisibleSetBookmarkWidget
+##########################################################################
+
+class _VisibleSetBookmarkWidget( GafferUI.Widget ) :
+
+	def __init__( self ) :
+
+		button = GafferUI.MenuButton(
+			image = "bookmarks.png",
+			hasFrame = False,
+			toolTip = "Visible Set Bookmarks",
+			menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title = "Visible Set Bookmarks" )
+		)
+
+		GafferUI.Widget.__init__( self, button )
+
+	def __menuDefinition( self ) :
+
+		scriptNode = self.ancestor( GafferUI.Editor ).scriptNode()
+		readOnly = Gaffer.MetadataAlgo.readOnly( scriptNode )
+
+		menuDefinition = IECore.MenuDefinition()
+
+		bookmarks = sorted( GafferSceneUI.ScriptNodeAlgo.visibleSetBookmarks( scriptNode ) )
+		if bookmarks :
+			for b in bookmarks :
+				menuDefinition.append(
+					"/" + b,
+					{
+						"command" : functools.partial( Gaffer.WeakMethod( self.__restore ), b ),
+						"checkBox" : GafferSceneUI.ScriptNodeAlgo.getVisibleSetBookmark( scriptNode, b ) == GafferSceneUI.ScriptNodeAlgo.getVisibleSet( scriptNode ),
+					}
+				)
+			menuDefinition.append( "/RestoreBookmarkDivider", { "divider" : True } )
+
+			for b in bookmarks :
+				menuDefinition.append(
+					"/Save As/" + b,
+					{
+						"command" : functools.partial( Gaffer.WeakMethod( self.__saveAs ), b ),
+						"active" : not readOnly,
+					}
+				)
+				menuDefinition.append(
+					"/Delete/" + b,
+					{
+						"command" : functools.partial( Gaffer.WeakMethod( self.__delete ), b ),
+						"active" : not readOnly,
+					}
+				)
+			menuDefinition.append( "/Save As/Divider", { "divider" : True } )
+		else :
+			menuDefinition.append( "/No Bookmarks Available", { "active" : False } )
+			menuDefinition.append( "/NoBookmarksDivider", { "divider" : True } )
+
+		menuDefinition.append(
+			"/Save As/New Bookmark...",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__save ) ),
+				"active" : not readOnly,
+			}
+		)
+
+		return menuDefinition
+
+	def __save( self, *unused ) :
+
+		d = GafferUI.TextInputDialogue( initialText = "", title = "Save Bookmark", confirmLabel = "Save" )
+		name = d.waitForText( parentWindow = self.ancestor( GafferUI.Window ) )
+
+		if not name :
+			return
+
+		if name in GafferSceneUI.ScriptNodeAlgo.visibleSetBookmarks( self.ancestor( GafferUI.Editor ).scriptNode() ) :
+			c = GafferUI.ConfirmationDialogue(
+				"Replace existing bookmark?",
+				"A bookmark named {} already exists. Do you want to replace it?".format( name ),
+				confirmLabel = "Replace"
+			)
+			if not c.waitForConfirmation( parentWindow = self.ancestor( GafferUI.Window ) ) :
+				return
+
+		self.__saveAs( name )
+
+	def __saveAs( self, name, *unused ) :
+
+		scriptNode = self.ancestor( GafferUI.Editor ).scriptNode()
+		visibleSet = GafferSceneUI.ScriptNodeAlgo.getVisibleSet( scriptNode )
+		with Gaffer.UndoScope( scriptNode ) :
+			GafferSceneUI.ScriptNodeAlgo.addVisibleSetBookmark( scriptNode, name, visibleSet )
+
+	def __delete( self, name, *unused ) :
+
+		scriptNode = self.ancestor( GafferUI.Editor ).scriptNode()
+		with Gaffer.UndoScope( scriptNode ) :
+			GafferSceneUI.ScriptNodeAlgo.removeVisibleSetBookmark( scriptNode, name )
+
+	def __restore( self, name, *unused ) :
+
+		scriptNode = self.ancestor( GafferUI.Editor ).scriptNode()
+		visibleSet = GafferSceneUI.ScriptNodeAlgo.getVisibleSetBookmark( scriptNode, name )
+		GafferSceneUI.ScriptNodeAlgo.setVisibleSet( scriptNode, visibleSet )

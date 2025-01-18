@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.3.0)
 =======
 
+Features
+--------
+
+- HierarchyView : Added ability to store and recall the Visible Set in named bookmarks that are saved with the script.
+
 Improvements
 ------------
 
