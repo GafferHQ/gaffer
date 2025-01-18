@@ -123,6 +123,22 @@ GAFFERSCENEUI_API void setCurrentRenderPass( Gaffer::ScriptNode *script, std::st
 /// Returns the current render pass for the script.
 GAFFERSCENEUI_API std::string getCurrentRenderPass( const Gaffer::ScriptNode *script );
 
+/// Visible Set Bookmarks
+/// =====================
+
+/// Visible Set bookmarks can be used to store named bookmarks containing a VisibleSet as
+/// metadata on the ScriptNode, allowing users to bookmark important VisibleSets to be
+/// recalled later.
+
+/// Stores a VisibleSet as a named bookmark for the script.
+GAFFERSCENEUI_API void addVisibleSetBookmark( Gaffer::ScriptNode *script, const std::string &name, const GafferScene::VisibleSet &visibleSet, bool persistent = true );
+/// Returns the VisibleSet previously bookmarked as `name`.
+GAFFERSCENEUI_API GafferScene::VisibleSet getVisibleSetBookmark( const Gaffer::ScriptNode *script, const std::string &name );
+/// Removes the bookmark previously stored as `name`.
+GAFFERSCENEUI_API void removeVisibleSetBookmark( Gaffer::ScriptNode *script, const std::string &name );
+/// Returns the names of all VisibleSet bookmarks stored on `script`.
+GAFFERSCENEUI_API std::vector<std::string> visibleSetBookmarks( const Gaffer::ScriptNode *script );
+
 } // namespace ScriptNodeAlgo
 
 } // namespace GafferSceneUI
