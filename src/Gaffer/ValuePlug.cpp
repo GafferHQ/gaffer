@@ -839,24 +839,6 @@ bool ValuePlug::acceptsInput( const Plug *input ) const
 	return true;
 }
 
-void ValuePlug::setInput( PlugPtr input )
-{
-	// set value back to what it was before
-	// we received a connection. we do that
-	// before calling Plug::setInput, so that
-	// we've got our new state set correctly before
-	// the dirty signal is emitted. we don't emit
-	// in the setValueInternal call, because we don't
-	// want to double up on the signals that the Plug
-	// is emitting for us in Plug::setInput().
-	if( getInput() && !input )
-	{
-		setValueInternal( m_staticValue, false );
-	}
-
-	Plug::setInput( input );
-}
-
 PlugPtr ValuePlug::createCounterpart( const std::string &name, Direction direction ) const
 {
 	PlugPtr result = new ValuePlug( name, direction, getFlags() );
