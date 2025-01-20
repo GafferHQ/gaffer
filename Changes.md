@@ -1,7 +1,10 @@
 1.x.x.x (relative to 1.6.x.x)
 =======
 
+Breaking Changes
+----------------
 
+- ValuePlug : Disconnection no longer emits plugSet signal.
 
 1.6.0.0 (relative to 1.5.16.2)
 =======

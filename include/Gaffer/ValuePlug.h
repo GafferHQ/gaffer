@@ -68,8 +68,6 @@ class GAFFER_API ValuePlug : public Plug
 		/// derive from ValuePlug too, and they can deal with them
 		/// in setFrom().
 		bool acceptsInput( const Plug *input ) const override;
-		/// Reimplemented so that values can be propagated from inputs.
-		void setInput( PlugPtr input ) override;
 
 		PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 

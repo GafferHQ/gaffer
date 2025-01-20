@@ -65,8 +65,7 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 
 		n2["op1"].setInput( None )
 
-		self.assertEqual( len( set ), 1 )
-		self.assertTrue( set[0][0].isSame( n2["op1"] ) )
+		self.assertEqual( len( set ), 0 )
 		self.assertEqual( len( dirtied ), 4 )
 		self.assertTrue( dirtied[2][0].isSame( n2["op1"] ) )
 		self.assertTrue( dirtied[3][0].isSame( n2["sum"] ) )
