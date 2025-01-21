@@ -9,7 +9,13 @@ Breaking Changes
 1.5.x.x (relative to 1.5.3.0)
 =======
 
+Fixes
+-----
 
+- AttributeEditor, LightEditor, RenderPassEditor :
+  - Fixed bugs which prevented edits being made in "Source" scope when there was a downstream edit in an EditScope (#6172).
+  - Fixed warning messages when attempting to disable a non-existent edit.
+  - Fixed warning message which referred to "None" rather than the "Source" scope.
 
 1.5.3.0 (relative to 1.5.2.0)
 =======
