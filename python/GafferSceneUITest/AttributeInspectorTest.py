@@ -912,8 +912,8 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 		inspection = self.__inspect( s["editScope2"]["out"], "/group/light", "gl:visualiser:scale", s["editScope2"] )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "Edit is not in the current edit scope. Change scope to editScope1 to disable." )
-		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : Edit is not in the current edit scope. Change scope to editScope1 to disable.", inspection.disableEdit )
+		self.assertEqual( inspection.nonDisableableReason(), "There is no edit in editScope2." )
+		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : There is no edit in editScope2.", inspection.disableEdit )
 
 		Gaffer.MetadataAlgo.setReadOnly( s["editScope1"], True )
 		inspection = self.__inspect( s["editScope1"]["out"], "/group/light", "gl:visualiser:scale", s["editScope1"] )
@@ -930,7 +930,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 		inspection = self.__inspect( s["editScope1"]["out"], "/group/light", "gl:visualiser:scale", s["editScope1"] )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "Edit is not in the current edit scope. Change scope to None to disable." )
+		self.assertEqual( inspection.nonDisableableReason(), "There is no edit in editScope1." )
 
 		inspection = self.__inspect( s["editScope1"]["out"], "/group/light", "gl:visualiser:scale", None )
 		self.assertFalse( inspection.canDisableEdit() )
