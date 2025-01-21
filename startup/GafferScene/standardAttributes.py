@@ -142,7 +142,7 @@ Gaffer.Metadata.registerValue(
 )
 
 Gaffer.Metadata.registerValue( "attribute:linkedLights", "label", "Linked Lights" )
-Gaffer.Metadata.registerValue( "attribute:linkedLights", "defaultValue", IECore.StringData( "" ) )
+Gaffer.Metadata.registerValue( "attribute:linkedLights", "defaultValue", "defaultLights" )
 Gaffer.Metadata.registerValue(
 	"attribute:linkedLights",
 	"description",
