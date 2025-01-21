@@ -9,6 +9,11 @@ Fixes
   - Fixed warning messages when attempting to disable a non-existent edit.
   - Fixed warning message which referred to "None" rather than the "Source" scope.
 
+API
+---
+
+- RenderPassEditor : Added optional `index` argument to `registerOption()` and `registerColumn()`. This can be used to specify the column's position in the UI.
+
 1.5.3.0 (relative to 1.5.2.0)
 =======
 
