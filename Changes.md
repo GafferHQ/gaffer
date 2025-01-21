@@ -5,6 +5,7 @@ Breaking Changes
 ----------------
 
 - StandardNodule : Removed deprecated `setCompatibleLabelsVisible()`.
+- ValuePlug : Disconnection no longer emits plugSet signal. 
 
 1.5.x.x (relative to 1.5.3.0)
 =======

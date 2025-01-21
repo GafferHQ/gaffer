@@ -167,20 +167,6 @@ class NumericPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( n2["op1"].getInput(), None )
 		self.assertEqual( n2["op1"].getValue(), 1010 )
 
-	def testDisconnectEmitsPlugSet( self ) :
-
-		n1 = GafferTest.AddNode()
-		n2 = GafferTest.AddNode()
-
-		n2["op1"].setInput( n1["sum"] )
-
-		set = GafferTest.CapturingSlot( n2.plugSetSignal() )
-
-		n2["op1"].setInput( None )
-
-		self.assertEqual( len( set ), 1 )
-		self.assertTrue( set[0][0].isSame( n2["op1"] ) )
-
 	def testDefaultValue( self ) :
 
 		p = Gaffer.IntPlug(
