@@ -45,13 +45,15 @@ import IECore
 import IECoreScene
 
 import Gaffer
+import GafferTest
+import GafferDispatch
 import GafferUSD
 import GafferScene
 import GafferSceneTest
 
 class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 
-	def __writeLayerAndComposition( self, base, layer ) :
+	def __writeLayerAndComposition( self, base, layer, frames = None ) :
 
 		baseWriter = GafferScene.SceneWriter()
 		baseWriter["in"].setInput( base )
@@ -62,7 +64,10 @@ class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 		layerWriter["base"].setInput( base )
 		layerWriter["layer"].setInput( layer )
 		layerWriter["fileName"].setValue( self.temporaryDirectory() / "layer.usda" )
-		layerWriter["task"].execute()
+		if frames is None :
+			layerWriter["task"].execute()
+		else :
+			layerWriter["task"].executeSequence( frames )
 
 		compositionFilePath = self.temporaryDirectory() / "composed.usda"
 		composition = pxr.Usd.Stage.CreateNew( str( compositionFilePath ) )
@@ -372,6 +377,46 @@ class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 		reader = GafferScene.SceneReader()
 		reader["fileName"].setValue( compositionFileName )
 		self.assertEqual( reader["out"].set( "setA" ), setNode["out"].set( "setA" ) )
+
+	def testAnimatedTransform( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		frame = GafferTest.FrameNode()
+		animatedSphere = GafferScene.Sphere()
+		animatedSphere["transform"]["translate"]["x"].setInput( frame["output"] )
+
+		with Gaffer.Context() as context :
+			# Transforms are identical on frame zero, so we need to detect
+			# that they are different on subsequent frames.
+			layerFileName, compositionFileName = self.__writeLayerAndComposition( sphere["out"], animatedSphere["out"], frames = [ 0, 1, 2, 3 ] )
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( compositionFileName )
+
+		with Gaffer.Context() as context :
+			for frame in [ 0, 1, 2, 3 ] :
+				context.setFrame( frame )
+				self.assertEqual( reader["out"].transform( "/sphere" ), animatedSphere["out"].transform( "/sphere" ) )
+
+	def testDispatch( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["reader"] = GafferScene.SceneReader()
+		script["reader"]["fileName"].setValue( Gaffer.rootPath() / "python" / "GafferSceneTest" / "usdFiles" / "generalTestMesh.usd" )
+
+		script["writer"] = GafferUSD.USDLayerWriter()
+		script["writer"]["base"].setInput( script["reader"]["out"] )
+		script["writer"]["layer"].setInput( script["reader"]["out"] )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() / "test.usda" )
+
+		script["dispatcher"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		script["dispatcher"]["tasks"][0].setInput( script["writer"]["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() / "localJobs" )
+		script["dispatcher"]["task"].execute()
+
+		self.assertTrue( ( self.temporaryDirectory() / "test.usda" ).is_file() )
 
 if __name__ == "__main__":
 	unittest.main()

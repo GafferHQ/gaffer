@@ -27,6 +27,7 @@ Improvements
 - PrimitiveVariableTweaks : Added `invertSelection` plug.
 - Tweaks nodes : Added automatic conversion between numeric types. For example, an integer tweak value can now be applied to a float.
 - SceneWriter : Improved performance. Benchmarks rewriting complex scenes via a SceneReader->SceneWriter graph show around a 2x speedup.
+- USDLayerWriter : Improved performance, including a 50x speedup for one benchmark.
 
 Fixes
 -----
