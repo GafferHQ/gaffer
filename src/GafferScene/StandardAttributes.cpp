@@ -65,6 +65,7 @@ StandardAttributes::StandardAttributes( const std::string &name )
 
 	// light linking
 
+	/// \todo The default value is wrong - it should be "defaultLights".
 	attributes->addChild( new Gaffer::NameValuePlug( "linkedLights", new IECore::StringData( "" ), false, "linkedLights" ) );
 
 	// light filter linking

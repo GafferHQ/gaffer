@@ -4,6 +4,7 @@
 Fixes
 -----
 
+- AttributeEditor : Fixed display of fallback value for `linkedLights` attribute.
 - AttributeEditor, LightEditor, RenderPassEditor :
   - Fixed bugs which prevented edits being made in "Source" scope when there was a downstream edit in an EditScope (#6172).
   - Fixed warning messages when attempting to disable a non-existent edit.
