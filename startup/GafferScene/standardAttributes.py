@@ -152,6 +152,7 @@ Gaffer.Metadata.registerValue(
 	all lights that contribute to illumination by default.
 	"""
 )
+Gaffer.Metadata.registerValue( "attribute:linkedLights", "ui:scene:acceptsSetExpression", True )
 
 Gaffer.Metadata.registerValue( "attribute:filteredLights", "label", "Filtered Lights" )
 Gaffer.Metadata.registerValue( "attribute:filteredLights", "defaultValue", IECore.StringData( "" ) )

@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.3.0)
 =======
 
+Improvements
+------------
+
+- AttributeEditor : Added "Select Affected Objects" menu item to the "Linked Lights" and Arnold "Shadow Group" columns.
+
 Fixes
 -----
 

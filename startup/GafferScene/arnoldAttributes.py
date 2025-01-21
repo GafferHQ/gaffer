@@ -73,6 +73,7 @@ Gaffer.Metadata.registerValue(
 	contribute to illumination by default.
 	""",
 )
+Gaffer.Metadata.registerValue( "attribute:ai:visibility:shadow_group", "ui:scene:acceptsSetExpression", True )
 
 Gaffer.Metadata.registerValue( "attribute:ai:visibility:diffuse_reflect", "label", "Diffuse Reflection" )
 Gaffer.Metadata.registerValue( "attribute:ai:visibility:diffuse_reflect", "defaultValue", IECore.BoolData( True ) )
