@@ -489,7 +489,6 @@ class VisualiserGadget : public Gadget
 				return;
 			}
 
-			// Bootleg shader
 			buildShader( m_colorShader, g_colorShaderVertSource, g_colorShaderFragSource );
 
 			if( !m_colorShader )
@@ -501,7 +500,6 @@ class VisualiserGadget : public Gadget
 			// variable data to opengl buffers which will be shared with the IECoreGL renderer
 			IECoreGL::CachedConverter *converter = IECoreGL::CachedConverter::defaultCachedConverter();
 
-			// Bootleg uniform buffer
 			GLint uniformBinding;
 			glGetIntegerv( GL_UNIFORM_BUFFER_BINDING, &uniformBinding );
 
