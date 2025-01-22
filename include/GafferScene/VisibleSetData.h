@@ -43,7 +43,7 @@
 
 namespace IECore
 {
-	IECORE_DECLARE_TYPEDDATA( VisibleSetData, GafferScene::VisibleSet, void, IECore::SimpleDataHolder );
+	IECORE_DECLARE_TYPEDDATA( VisibleSetData, GafferScene::VisibleSet, void, IECore::SharedDataHolder );
 } // namespace IECore
 
 namespace GafferScene

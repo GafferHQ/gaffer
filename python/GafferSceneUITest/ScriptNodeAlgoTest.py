@@ -261,5 +261,83 @@ class ScriptNodeAlgoTest( GafferUITest.TestCase ) :
 		script2["variables"]["renderPass"] = Gaffer.NameValuePlug( "renderPass", 123.0, "renderPass" )
 		self.assertRaises( IECore.Exception, GafferSceneUI.ScriptNodeAlgo.getCurrentRenderPass, script2 )
 
+	def testVisibleSetBookmarks( self ) :
+
+		s = Gaffer.ScriptNode()
+		self.assertEqual( GafferSceneUI.ScriptNodeAlgo.visibleSetBookmarks( s ), [] )
+		self.assertEqual(
+			GafferSceneUI.ScriptNodeAlgo.getVisibleSetBookmark( s, "test" ),
+			GafferScene.VisibleSet()
+		)
+
+		v = GafferScene.VisibleSet(
+			inclusions = IECore.PathMatcher( [ "/a" ] ),
+			exclusions = IECore.PathMatcher( [ "/b" ] ),
+			expansions = IECore.PathMatcher( [ "/c" ] )
+		)
+
+		cs = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal( s ) )
+		GafferSceneUI.ScriptNodeAlgo.addVisibleSetBookmark( s, "test", v )
+		self.assertTrue( len( cs ) )
+
+		self.assertEqual( GafferSceneUI.ScriptNodeAlgo.visibleSetBookmarks( s ), [ "test" ] )
+		self.assertEqual(
+			GafferSceneUI.ScriptNodeAlgo.getVisibleSetBookmark( s, "test" ),
+			v
+		)
+
+		v2 = GafferScene.VisibleSet( v )
+		v2.inclusions.addPath( "/d" )
+		del cs[:]
+		GafferSceneUI.ScriptNodeAlgo.addVisibleSetBookmark( s, "test2", v2 )
+		self.assertTrue( len( cs ) )
+
+		self.assertEqual( GafferSceneUI.ScriptNodeAlgo.visibleSetBookmarks( s ), [ "test", "test2" ] )
+		self.assertEqual(
+			GafferSceneUI.ScriptNodeAlgo.getVisibleSetBookmark( s, "test2" ),
+			v2
+		)
+
+		del cs[:]
+		GafferSceneUI.ScriptNodeAlgo.removeVisibleSetBookmark( s, "test" )
+		self.assertTrue( len( cs ) )
+
+		self.assertEqual( GafferSceneUI.ScriptNodeAlgo.visibleSetBookmarks( s ), [ "test2" ] )
+		self.assertEqual(
+			GafferSceneUI.ScriptNodeAlgo.getVisibleSetBookmark( s, "test" ),
+			GafferScene.VisibleSet()
+		)
+		self.assertEqual(
+			GafferSceneUI.ScriptNodeAlgo.getVisibleSetBookmark( s, "test2" ),
+			v2
+		)
+
+	def testVisibleSetBookmarkSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		v = GafferScene.VisibleSet(
+			inclusions = IECore.PathMatcher( [ "/a" ] ),
+			exclusions = IECore.PathMatcher( [ "/b/b" ] ),
+			expansions = IECore.PathMatcher( [ "/c/c/c" ] )
+		)
+		GafferSceneUI.ScriptNodeAlgo.addVisibleSetBookmark( s, "serialisationTest", v )
+		self.assertIn( "serialisationTest", GafferSceneUI.ScriptNodeAlgo.visibleSetBookmarks( s ) )
+		self.assertEqual(
+			GafferSceneUI.ScriptNodeAlgo.getVisibleSetBookmark( s, "serialisationTest" ),
+			v
+		)
+
+		se = s.serialise()
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( se )
+
+		self.assertIn( "serialisationTest", GafferSceneUI.ScriptNodeAlgo.visibleSetBookmarks( s2 ) )
+		self.assertEqual(
+			GafferSceneUI.ScriptNodeAlgo.getVisibleSetBookmark( s2, "serialisationTest" ),
+			v
+		)
+
 if __name__ == "__main__":
 	unittest.main()

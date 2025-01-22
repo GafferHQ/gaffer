@@ -378,6 +378,43 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( s2["n"], "serialisationTest" ), 1 )
 		self.assertEqual( Gaffer.Metadata.value( s2["n"]["op1"], "serialisationTest" ), 2 )
 
+	def testScriptNodeSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		Gaffer.Metadata.registerValue( s, "serialisationTest", 1 )
+		Gaffer.Metadata.registerValue( s["variables"], "serialisationTest", 2 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( Gaffer.Metadata.value( s2, "serialisationTest" ), 1 )
+		self.assertEqual( Gaffer.Metadata.value( s2["variables"], "serialisationTest" ), 2 )
+
+	def testScriptNodeMetadataDoesntLeak( self ) :
+
+		a = Gaffer.ApplicationRoot()
+		s = Gaffer.ScriptNode()
+		a["scripts"].addChild( s )
+
+		s["n"] = GafferTest.AddNode()
+
+		Gaffer.Metadata.registerValue( s, "scriptNodeSerialisationTest", 1 )
+		Gaffer.Metadata.registerValue( s["n"], "serialisationTest", 1 )
+		Gaffer.Metadata.registerValue( s["n"]["op1"], "serialisationTest", 2 )
+
+		s2 = Gaffer.ScriptNode()
+		a["scripts"].addChild( s2 )
+
+		s.selection().add( s["n"] )
+		s.copy( parent = s, filter = s.selection() )
+
+		s2.paste()
+
+		self.assertNotIn( "scriptNodeSerialisationTest", Gaffer.Metadata.registeredValues( s2 ) )
+		self.assertEqual( Gaffer.Metadata.value( s2["n"], "serialisationTest" ), 1 )
+		self.assertEqual( Gaffer.Metadata.value( s2["n"]["op1"], "serialisationTest" ), 2 )
+
 	def testStringSerialisationWithNewlinesAndQuotes( self ) :
 
 		trickyStrings = [

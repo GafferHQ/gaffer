@@ -1,10 +1,16 @@
 1.5.x.x (relative to 1.5.3.0)
 =======
 
+Features
+--------
+
+- HierarchyView : Added ability to store and recall the Visible Set in named bookmarks that are saved with the script.
+
 Improvements
 ------------
 
 - AttributeEditor : Added "Select Affected Objects" menu item to the "Linked Lights" and Arnold "Shadow Group" columns.
+- ScriptNode : Added support for serialising metadata registered on a ScriptNode.
 
 Fixes
 -----
@@ -20,6 +26,8 @@ API
 
 - RenderPassEditor : Added optional `index` argument to `registerOption()` and `registerColumn()`. This can be used to specify the column's position in the UI.
 - Metadata : Added `targetsWithMetadata()` function, returning all the string targets which match a pattern and have a specific metadata key.
+- VisibleSetData : Implemented `save()` and `load()`.
+- ScriptNodeAlgo : Added functions for managing VisibleSet bookmarks.
 
 1.5.3.0 (relative to 1.5.2.0)
 =======

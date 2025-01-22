@@ -38,12 +38,16 @@
 
 #include "GafferSceneUI/ContextAlgo.h"
 
+#include "GafferScene/VisibleSetData.h"
+
 #include "Gaffer/Context.h"
+#include "Gaffer/Metadata.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/NameValuePlug.h"
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/MetadataAlgo.h"
 
+#include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind/bind.hpp"
 
 #include <unordered_map>
@@ -54,6 +58,8 @@ using namespace GafferSceneUI;
 
 namespace
 {
+
+const std::string g_visibleSetBookmarkPrefix( "visibleSet:bookmark:" );
 
 struct ChangedSignals
 {
@@ -191,4 +197,44 @@ std::string ScriptNodeAlgo::getCurrentRenderPass( const Gaffer::ScriptNode *scri
 	}
 
 	return "";
+}
+
+// Visible Set Bookmarks
+// =====================
+
+void ScriptNodeAlgo::addVisibleSetBookmark( Gaffer::ScriptNode *script, const std::string &name, const GafferScene::VisibleSet &visibleSet, bool persistent )
+{
+	Metadata::registerValue( script, g_visibleSetBookmarkPrefix + name, new GafferScene::VisibleSetData( visibleSet ), persistent );
+}
+
+GafferScene::VisibleSet ScriptNodeAlgo::getVisibleSetBookmark( const Gaffer::ScriptNode *script, const std::string &name )
+{
+	if( const auto bookmarkData = Metadata::value<VisibleSetData>( script, g_visibleSetBookmarkPrefix + name ) )
+	{
+		return bookmarkData->readable();
+	}
+
+	return GafferScene::VisibleSet();
+}
+
+void ScriptNodeAlgo::removeVisibleSetBookmark( Gaffer::ScriptNode *script, const std::string &name )
+{
+	Metadata::deregisterValue( script, g_visibleSetBookmarkPrefix + name );
+}
+
+std::vector<std::string> ScriptNodeAlgo::visibleSetBookmarks( const Gaffer::ScriptNode *script )
+{
+	std::vector<InternedString> keys;
+	Metadata::registeredValues( script, keys );
+
+	std::vector<std::string> result;
+	for( const auto &key : keys )
+	{
+		if( boost::starts_with( key.string(), g_visibleSetBookmarkPrefix ) )
+		{
+			result.push_back( key.string().substr( g_visibleSetBookmarkPrefix.size(), key.string().size() ) );
+		}
+	}
+
+	return result;
 }

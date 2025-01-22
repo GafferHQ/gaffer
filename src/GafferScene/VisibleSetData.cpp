@@ -36,10 +36,12 @@
 
 #include "GafferScene/VisibleSetData.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/TypeIds.h"
 
 #include "Gaffer/Context.h"
 
+#include "IECore/PathMatcherData.h"
 #include "IECore/TypedData.h"
 #include "IECore/TypedData.inl"
 
@@ -47,6 +49,11 @@ namespace
 {
 
 Gaffer::Context::TypeDescription<GafferScene::VisibleSetData> g_visibleSetDataTypeDescription;
+const IndexedIO::EntryID g_inclusionsEntry( "inclusions" );
+const IndexedIO::EntryID g_exclusionsEntry( "exclusions" );
+const IndexedIO::EntryID g_expansionsEntry( "expansions" );
+const InternedString g_visibleSetEntry( "visibleSet" );
+const unsigned int g_ioVersion = 0;
 
 } // namespace
 
@@ -55,16 +62,40 @@ namespace IECore
 
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferScene::VisibleSetData, GafferScene::VisibleSetDataTypeId )
 
+/// \todo Remove once Cortex has been updated to provide these.
 template<>
-void VisibleSetData::save( SaveContext *context ) const
-{
-	throw IECore::NotImplementedException( "VisibleSetData::save Not implemented" );
-}
+void PathMatcherData::save( SaveContext *context ) const;
 
 template<>
+void PathMatcherData::load( LoadContextPtr context );
+
+template<> GAFFERSCENE_API
+void VisibleSetData::save( SaveContext *context ) const
+{
+	Data::save( context );
+	IndexedIOPtr container = context->container( staticTypeName(), g_ioVersion );
+	IndexedIOPtr visibleSetIO = container->subdirectory( g_visibleSetEntry, IndexedIO::CreateIfMissing );
+
+	IECore::PathMatcherDataPtr inclusionsData = new IECore::PathMatcherData( readable().inclusions );
+	IECore::PathMatcherDataPtr exclusionsData = new IECore::PathMatcherData( readable().exclusions );
+	IECore::PathMatcherDataPtr expansionsData = new IECore::PathMatcherData( readable().expansions );
+
+	context->save( inclusionsData.get(), visibleSetIO.get(), g_inclusionsEntry );
+	context->save( exclusionsData.get(), visibleSetIO.get(), g_exclusionsEntry );
+	context->save( expansionsData.get(), visibleSetIO.get(), g_expansionsEntry );
+}
+
+template<> GAFFERSCENE_API
 void VisibleSetData::load( LoadContextPtr context )
 {
-	throw IECore::NotImplementedException( "VisibleSetData::load Not implemented" );
+	Data::load( context );
+	unsigned int v = 0;
+	ConstIndexedIOPtr container = context->container( staticTypeName(), v );
+	ConstIndexedIOPtr visibleSetIO = container->subdirectory( g_visibleSetEntry, IndexedIO::NullIfMissing );
+
+	writable().inclusions = context->load<PathMatcherData>( visibleSetIO.get(), g_inclusionsEntry )->readable();
+	writable().exclusions = context->load<PathMatcherData>( visibleSetIO.get(), g_exclusionsEntry )->readable();
+	writable().expansions = context->load<PathMatcherData>( visibleSetIO.get(), g_expansionsEntry )->readable();
 }
 
 template class TypedData<GafferScene::VisibleSet>;
