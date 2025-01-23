@@ -1944,7 +1944,7 @@ void VisualiserTool::updateCursorValue()
 		return;
 	}
 
-	const std::string &dataName = dataNamePlug()->getValue();
+	const std::string dataName = dataNamePlug()->getValue();
 
 	// We draw all visualisation types each time, and the vertex label visualisation
 	// resets the `cursorVertexData()` each time before potentially setting it to
