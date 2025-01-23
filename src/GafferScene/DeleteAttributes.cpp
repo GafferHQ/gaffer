@@ -36,6 +36,7 @@
 
 #include "GafferScene/DeleteAttributes.h"
 
+using namespace std;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
@@ -45,11 +46,20 @@ GAFFER_NODE_DEFINE_TYPE( DeleteAttributes );
 size_t DeleteAttributes::g_firstPlugIndex = 0;
 
 DeleteAttributes::DeleteAttributes( const std::string &name )
-	:	AttributeProcessor( name, IECore::PathMatcher::EveryMatch )
+	:	FilteredSceneProcessor( name, IECore::PathMatcher::EveryMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "names" ) );
 	addChild( new BoolPlug( "invertNames" ) );
+
+	// Fast pass-throughs for things we don't modify
+	for( auto &p : Plug::Range( *outPlug() ) )
+	{
+		if( p != outPlug()->attributesPlug() )
+		{
+			p->setInput( inPlug()->getChild<Plug>( p->getName() ) );
+		}
+	}
 }
 
 DeleteAttributes::~DeleteAttributes()
@@ -76,52 +86,90 @@ const Gaffer::BoolPlug *DeleteAttributes::invertNamesPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
 }
 
-bool DeleteAttributes::affectsProcessedAttributes( const Gaffer::Plug *input ) const
+void DeleteAttributes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	return
-		AttributeProcessor::affectsProcessedAttributes( input ) ||
+	FilteredSceneProcessor::affects( input, outputs );
+
+	if(
+		input == filterPlug() ||
 		input == namesPlug() ||
-		input == invertNamesPlug()
-	;
+		input == invertNamesPlug() ||
+		input == inPlug()->attributesPlug()
+	)
+	{
+		outputs.push_back( outPlug()->attributesPlug() );
+	}
 }
 
-void DeleteAttributes::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+DeleteAttributes::Operation DeleteAttributes::operation( const Gaffer::Context *context, std::string &names, bool &invertNames ) const
 {
-	const std::string names = namesPlug()->getValue();
-	const bool invert = invertNamesPlug()->getValue();
-	if( !invert && names.empty() )
+	if( !(filterValue( context ) & PathMatcher::ExactMatch) )
 	{
-		h = inPlug()->attributesPlug()->hash();
-		return;
+		return Operation::PassThrough;
 	}
 
-	AttributeProcessor::hashProcessedAttributes( path, context, h );
-	h.append( names );
-	h.append( invert );
+	names = namesPlug()->getValue();
+	invertNames = invertNamesPlug()->getValue();
+
+	if( !invertNames && names.empty() )
+	{
+		return Operation::PassThrough;
+	}
+	else if(
+		( !invertNames && names == "*" ) ||
+		( invertNames && names == "" )
+	)
+	{
+		return Operation::Clear;
+	}
+
+	return Operation::Delete;
 }
 
-IECore::ConstCompoundObjectPtr DeleteAttributes::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
+void DeleteAttributes::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	if( inputAttributes->members().empty() )
+	string names;
+	bool invertNames;
+	switch( operation( context, names, invertNames ) )
 	{
-		return inputAttributes;
+		case Operation::PassThrough :
+			h = inPlug()->attributesPlug()->hash();
+			return;
+		case Operation::Clear :
+			h = inPlug()->attributesPlug()->defaultHash();
+			return;
+		case Operation::Delete :
+		default :
+			FilteredSceneProcessor::hashAttributes( path, context, parent, h );
+			h.append( names );
+			h.append( invertNames );
+			inPlug()->attributesPlug()->hash( h );
+			return;
 	}
+}
 
-	const std::string names = namesPlug()->getValue();
-	const bool invert = invertNamesPlug()->getValue();
-	if( !invert && names.empty() )
+IECore::ConstCompoundObjectPtr DeleteAttributes::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	string names;
+	bool invertNames;
+	switch( operation( context, names, invertNames ) )
 	{
-		return inputAttributes;
-	}
-
-	CompoundObjectPtr result = new CompoundObject;
-	for( const auto &a : inputAttributes->members() )
-	{
-		if( StringAlgo::matchMultiple( a.first, names ) == invert )
-		{
-			result->members().insert( a );
+		case Operation::PassThrough :
+			return inPlug()->attributesPlug()->getValue();
+		case Operation::Clear :
+			return inPlug()->attributesPlug()->defaultValue();
+		case Operation::Delete :
+		default : {
+			ConstCompoundObjectPtr inputAttributes = inPlug()->attributesPlug()->getValue();
+			CompoundObjectPtr result = new CompoundObject;
+			for( const auto &a : inputAttributes->members() )
+			{
+				if( StringAlgo::matchMultiple( a.first, names ) == invertNames )
+				{
+					result->members().insert( a );
+				}
+			}
+			return result;
 		}
 	}
-
-	return result;
 }
