@@ -139,6 +139,10 @@ class GAFFER_API Metadata
 		/// Utilities
 		/// =========
 
+		/// Returns the names of all matching string targets with the specified
+		/// metadata key.
+		static std::vector<IECore::InternedString> targetsWithMetadata( const IECore::StringAlgo::MatchPattern &targetPattern, IECore::InternedString key );
+
 		/// Lists all node descendants of "root" with the specified metadata key.
 		/// If instanceOnly is true the search is restricted to instance metadata.
 		static std::vector<Node*> nodesWithMetadata( GraphComponent *root, IECore::InternedString key, bool instanceOnly = false );

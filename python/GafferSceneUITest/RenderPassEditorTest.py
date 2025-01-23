@@ -434,3 +434,112 @@ class RenderPassEditorTest( GafferUITest.TestCase ) :
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A/A_A", "/A/A_B" ] )
 		path.setFromString( "/B" )
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/B/B_C", "/B/B_D" ] )
+
+	def testRegisterOption( self ) :
+
+		for columnName in [ "A", "B", "C", "D", "E" ] :
+			GafferSceneUI.RenderPassEditor.registerOption( "*", columnName, "Test" )
+			self.addCleanup( GafferSceneUI.RenderPassEditor.deregisterColumn, "*", columnName, "Test" )
+
+		script = Gaffer.ScriptNode()
+
+		editor = GafferSceneUI.RenderPassEditor( script )
+		editor.settings()["section"].setValue( "Test" )
+
+		GafferSceneUI.RenderPassEditor._RenderPassEditor__updateColumns.flush( editor )
+
+		pathListing = editor._RenderPassEditor__pathListing
+
+		columnNames = [ c.headerData().value for c in pathListing.getColumns() ]
+		for columnName in [ "A", "B", "C", "D", "E" ] :
+			self.assertIn( columnName, columnNames )
+
+		GafferSceneUI.RenderPassEditor.deregisterColumn( "*", "B", "Test" )
+
+		editor._RenderPassEditor__updateColumns()
+		GafferSceneUI.RenderPassEditor._RenderPassEditor__updateColumns.flush( editor )
+
+		columnNames = [ c.headerData().value for c in pathListing.getColumns() ]
+		self.assertNotIn( "B", columnNames )
+		self.assertIn( "A", columnNames )
+		self.assertIn( "C", columnNames )
+		self.assertIn( "D", columnNames )
+		self.assertIn( "E", columnNames )
+
+	def testColumnOrder( self ) :
+
+		script = Gaffer.ScriptNode()
+		editor = GafferSceneUI.RenderPassEditor( script )
+		editor.settings()["section"].setValue( "Test" )
+
+		def assertColumnOrder( columns, order ) :
+
+			for columnName, index in columns :
+				GafferSceneUI.RenderPassEditor.registerOption( "*", columnName, "Test", index = index )
+				self.addCleanup( GafferSceneUI.RenderPassEditor.deregisterColumn, "*", columnName, "Test" )
+
+			editor._RenderPassEditor__updateColumns()
+			GafferSceneUI.RenderPassEditor._RenderPassEditor__updateColumns.flush( editor )
+			columnNames = [ c.headerData().value for c in editor._RenderPassEditor__pathListing.getColumns() if isinstance( c, GafferSceneUI.Private.InspectorColumn ) ]
+			self.assertEqual( columnNames, order )
+
+			for columnName, _ in columns :
+				GafferSceneUI.RenderPassEditor.deregisterColumn( "*", columnName, "Test" )
+
+		assertColumnOrder(
+			[ ( "A", None ), ( "B", None ), ( "C", None ), ( "D", None ), ( "E", None ) ],
+			[ "A", "B", "C", "D", "E" ]
+		)
+
+		assertColumnOrder(
+			[ ( "E", None ), ( "D", None ), ( "C", None ), ( "B", None ), ( "A", None ) ],
+			[ "E", "D", "C", "B", "A" ]
+		)
+
+		assertColumnOrder(
+			[ ( "A", 0 ), ( "B", 1 ), ( "C", 2 ), ( "D", 3 ), ( "E", 4 ) ],
+			[ "A", "B", "C", "D", "E" ]
+		)
+
+		assertColumnOrder(
+			[ ( "A", 4 ), ( "B", 3 ), ( "C", 2 ), ( "D", 1 ), ( "E", 0 ) ],
+			[ "E", "D", "C", "B", "A" ]
+		)
+
+		assertColumnOrder(
+			[ ( "A", None ), ( "B", None ), ( "C", None ), ( "D", 0 ), ( "E", 2 ) ],
+			[ "D", "A", "E", "B", "C" ]
+		)
+
+		assertColumnOrder(
+			[ ( "A", None ), ( "B", None ), ( "C", 0 ), ( "D", -1 ), ( "E", None ) ],
+			[ "C", "A", "B", "E", "D" ]
+		)
+
+		assertColumnOrder(
+			[ ( "A", None ), ( "B", None ), ( "C", -1 ), ( "D", -2 ), ( "E", None ) ],
+			[ "A", "B", "E", "D", "C" ]
+		)
+
+		assertColumnOrder(
+			[ ( "A", None ), ( "B", -1 ), ( "C", None ), ( "D", -1 ), ( "E", None ) ],
+			[ "A", "C", "E", "B", "D" ]
+		)
+
+		assertColumnOrder(
+			[ ( "A", None ), ( "B", 0 ), ( "C", 0 ), ( "D", None ), ( "E", 2 ) ],
+			[ "B", "C", "A", "E", "D" ]
+		)
+
+		assertColumnOrder(
+			[ ( "A", None ), ( "B", 0 ), ( "C", 0 ), ( "D", 0 ), ( "E", 2 ) ],
+			[ "B", "C", "D", "A", "E" ]
+		)
+
+		assertColumnOrder(
+			[ ( "A", None ), ( "B", 0 ), ( "C", 0 ), ( "D", 0 ), ( "E", 1 ) ],
+			[ "B", "C", "D", "E", "A" ]
+		)
+
+if __name__ == "__main__" :
+	unittest.main()

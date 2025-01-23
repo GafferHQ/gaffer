@@ -1356,6 +1356,23 @@ class MetadataTest( GafferTest.TestCase ) :
 		Gaffer.Metadata.registerValue( node, "test", 2 )
 		self.assertEqual( Gaffer.Metadata.value( node, "test" ), 1 )
 
+	def testTargetsWithMetadata( self ) :
+
+		for target, key in [
+			[ "target1", "k1" ],
+			[ "target1", "k2" ],
+			[ "target2", "k2" ],
+			[ "target2", "k3" ],
+			[ "target3", "k4" ],
+			[ "targetA", "k1" ],
+		] :
+			Gaffer.Metadata.registerValue( target, key, "test" )
+			self.addCleanup( Gaffer.Metadata.deregisterValue, target, key )
+
+		self.assertEqual( Gaffer.Metadata.targetsWithMetadata( "target[1-3]", "k2" ), [ "target1", "target2" ] )
+		self.assertEqual( Gaffer.Metadata.targetsWithMetadata( "target*", "k1" ), [ "target1", "targetA" ] )
+		self.assertEqual( Gaffer.Metadata.targetsWithMetadata( "*", "k3" ), [ "target2" ] )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )

@@ -153,7 +153,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 	__columnRegistry = collections.OrderedDict()
 
 	@classmethod
-	def registerOption( cls, groupKey, optionName, section = "Main", columnName = None ) :
+	def registerOption( cls, groupKey, optionName, section = "Main", columnName = None, index = None ) :
 
 		optionLabel = Gaffer.Metadata.value( "option:" + optionName, "label" )
 		if not columnName :
@@ -173,7 +173,8 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 				columnName,
 				toolTip
 			),
-			section
+			section,
+			index
 		)
 
 	# Registers a column in the Render Pass Editor.
@@ -181,12 +182,12 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 	# `inspectorFunction( scene, editScope )` returning a
 	# `GafferSceneUI.Private.InspectorColumn` object.
 	@classmethod
-	def registerColumn( cls, groupKey, columnKey, inspectorFunction, section = "Main" ) :
+	def registerColumn( cls, groupKey, columnKey, inspectorFunction, section = "Main", index = None ) :
 
 		sections = cls.__columnRegistry.setdefault( groupKey, collections.OrderedDict() )
 		section = sections.setdefault( section, collections.OrderedDict() )
 
-		section[columnKey] = inspectorFunction
+		section[columnKey] = ( inspectorFunction, index )
 
 	@classmethod
 	def deregisterColumn( cls, groupKey, columnKey, section = "Main" ) :
@@ -287,9 +288,26 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		for groupKey, sections in self.__columnRegistry.items() :
 			if IECore.StringAlgo.match( tabGroup, groupKey ) :
 				section = sections.get( currentSection or None, {} )
-				sectionColumns += [ c( self.settings()["in"], self.settings()["editScope"] ) for c in section.values() ]
+				sectionColumns += [ ( c( self.settings()["in"], self.settings()["editScope"] ), index ) for ( c, index ) in section.values() ]
 
-		self.__pathListing.setColumns( [ self.__renderPassNameColumn, self.__renderPassActiveColumn ] + sectionColumns )
+		self.__pathListing.setColumns( [ self.__renderPassNameColumn, self.__renderPassActiveColumn ] + self.__orderedColumns( sectionColumns ) )
+
+	@staticmethod
+	def __orderedColumns( columnsAndIndices ) :
+
+		for i, ( column, index ) in enumerate( columnsAndIndices ) :
+			if index is not None :
+				# Negative indices are remapped to their absolute position in the column list.
+				columnsAndIndices[i] = ( column, index if index >= 0 else len( columnsAndIndices ) + index )
+
+		# As column indices may be sparse, we fill in the gaps with any unspecified indices before sorting.
+		availableIndices = iter( sorted( set( range( len( columnsAndIndices ) ) ) - { x[1] for x in columnsAndIndices } ) )
+		orderedColumns = sorted(
+			[ ( column, index if index is not None else next( availableIndices ) ) for column, index in columnsAndIndices ],
+			key = lambda x: x[1]
+		)
+
+		return [ x[0] for x in orderedColumns ]
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __setPathListingPath( self ) :

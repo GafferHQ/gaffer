@@ -9,13 +9,25 @@ Breaking Changes
 1.5.x.x (relative to 1.5.3.0)
 =======
 
+Improvements
+------------
+
+- AttributeEditor : Added "Select Affected Objects" menu item to the "Linked Lights" and Arnold "Shadow Group" columns.
+
 Fixes
 -----
 
+- AttributeEditor : Fixed display of fallback value for `linkedLights` attribute.
 - AttributeEditor, LightEditor, RenderPassEditor :
   - Fixed bugs which prevented edits being made in "Source" scope when there was a downstream edit in an EditScope (#6172).
   - Fixed warning messages when attempting to disable a non-existent edit.
   - Fixed warning message which referred to "None" rather than the "Source" scope.
+
+API
+---
+
+- RenderPassEditor : Added optional `index` argument to `registerOption()` and `registerColumn()`. This can be used to specify the column's position in the UI.
+- Metadata : Added `targetsWithMetadata()` function, returning all the string targets which match a pattern and have a specific metadata key.
 
 1.5.3.0 (relative to 1.5.2.0)
 =======
