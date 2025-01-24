@@ -499,5 +499,22 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 				context.setFrame( frame )
 				self.assertPathsEqual( reader["out"], "/_1", sphere["out"], "/1" )
 
+	def testWriteGlobals( self ) :
+
+		# Tests a feature that only works with `.scc`, isn't used by SceneReader,
+		# and has no documented purpose. Perhaps used at Image Engine?
+
+		options = GafferScene.StandardOptions()
+		options["options"]["renderCamera"]["enabled"].setValue( True )
+		options["options"]["renderCamera"]["value"].setValue( "/camera" )
+
+		writer = GafferScene.SceneWriter()
+		writer["in"].setInput( options["out"] )
+		writer["fileName"].setValue( self.temporaryDirectory() / "test.scc" )
+		writer["task"].execute()
+
+		scene = IECoreScene.SceneCache( writer["fileName"].getValue(), IECore.IndexedIO.Read )
+		self.assertEqual( scene.readAttribute( "gaffer:globals", 1 ), writer["in"].globals() )
+
 if __name__ == "__main__":
 	unittest.main()
