@@ -266,12 +266,11 @@ void SceneWriter::executeSequence( const std::vector<float> &frames ) const
 
 	SceneInterfacePtr output;
 	tbb::mutex mutex;
-	ContextPtr context = new Context( *Context::current() );
-	Context::Scope scopedContext( context.get() );
+	Context::EditableScope scope( Context::current() );
 
-	for( std::vector<float>::const_iterator it = frames.begin(); it != frames.end(); ++it )
+	for( auto frame : frames )
 	{
-		context->setFrame( *it );
+		scope.setFrame( frame );
 
 		ConstCompoundDataPtr sets;
 		bool useSetsAPI = true;
@@ -284,7 +283,7 @@ void SceneWriter::executeSequence( const std::vector<float> &frames ) const
 			useSetsAPI = SceneReader::useSetsAPI( output.get() );
 		}
 
-		LocationWriter locationWriter( output.get(), !useSetsAPI ? sets.get() : nullptr, context->getTime(), mutex );
+		LocationWriter locationWriter( output.get(), !useSetsAPI ? sets.get() : nullptr, scope.context()->getTime(), mutex );
 		SceneAlgo::parallelProcessLocations( scene, locationWriter );
 
 		if( useSetsAPI && sets )
