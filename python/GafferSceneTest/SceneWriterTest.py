@@ -35,7 +35,6 @@
 ##########################################################################
 
 import unittest
-import threading
 import inspect
 import imath
 
@@ -43,7 +42,6 @@ import IECore
 import IECoreScene
 
 import Gaffer
-import GafferTest
 import GafferDispatch
 import GafferScene
 import GafferSceneTest
