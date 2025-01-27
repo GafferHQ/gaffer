@@ -821,7 +821,7 @@ class VisualiserGadget : public Gadget
 			// Display value at cursor as text
 
 			std::optional<V2f> cursorPos = m_tool->cursorPos();
-			if( !cursorPos )
+			if( !cursorPos || !std::holds_alternative<std::monostate>( cursorVertexValue() ) )
 			{
 				return;
 			}
@@ -1013,7 +1013,11 @@ class VisualiserGadget : public Gadget
 						continue;
 					}
 
-					if( mode == VisualiserTool::Mode::Auto && vData->typeId() != IntVectorDataTypeId )
+					if(
+						mode == VisualiserTool::Mode::Auto &&
+						primitive->typeId() == MeshPrimitive::staticTypeId() &&
+						vData->typeId() != IntVectorDataTypeId
+					)
 					{
 						// Will be handled by `renderColorVisualiser()` instead.
 						continue;

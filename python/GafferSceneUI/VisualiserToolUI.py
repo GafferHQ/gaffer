@@ -207,7 +207,7 @@ class _DataNameChooser( GafferUI.PlugValueWidget ) :
 					continue
 
 				primitive = scenePlug.object( path )
-				if not isinstance( primitive, IECoreScene.MeshPrimitive ) :
+				if not isinstance( primitive, IECoreScene.Primitive ) :
 					continue
 
 				for v in primitive.keys() :
