@@ -76,6 +76,7 @@ OSLImage::OSLImage( const std::string &name )
 
 	addChild( new Gaffer::ObjectPlug( "__shading", Gaffer::Plug::Out, new CompoundData() ) );
 	addChild( new Gaffer::StringVectorDataPlug( "__affectedChannels", Gaffer::Plug::Out, new StringVectorData() ) );
+	addChild( new Gaffer::IntPlug( "__allImageDataNeeded", Gaffer::Plug::Out ) );
 
 	addChild( new Plug( "channels", Plug::In, Plug::Default & ~Plug::AcceptsInputs ) );
 	addChild( new OSLCode( "__oslCode" ) );
@@ -139,44 +140,54 @@ const Gaffer::StringVectorDataPlug *OSLImage::affectedChannelsPlug() const
 	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 3 );
 }
 
+Gaffer::IntPlug *OSLImage::allImageDataNeededPlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::IntPlug *OSLImage::allImageDataNeededPlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 4 );
+}
+
 Gaffer::Plug *OSLImage::channelsPlug()
 {
-	return getChild<Gaffer::Plug>( g_firstPlugIndex + 4 );
+	return getChild<Gaffer::Plug>( g_firstPlugIndex + 5 );
 }
 
 const Gaffer::Plug *OSLImage::channelsPlug() const
 {
-	return getChild<Gaffer::Plug>( g_firstPlugIndex + 4 );
+	return getChild<Gaffer::Plug>( g_firstPlugIndex + 5 );
 }
 
 GafferOSL::OSLCode *OSLImage::oslCode()
 {
-	return getChild<GafferOSL::OSLCode>( g_firstPlugIndex + 5 );
+	return getChild<GafferOSL::OSLCode>( g_firstPlugIndex + 6 );
 }
 
 const GafferOSL::OSLCode *OSLImage::oslCode() const
 {
-	return getChild<GafferOSL::OSLCode>( g_firstPlugIndex + 5 );
+	return getChild<GafferOSL::OSLCode>( g_firstPlugIndex + 6 );
 }
 
 GafferImage::Constant *OSLImage::defaultConstant()
 {
-	return getChild<GafferImage::Constant>( g_firstPlugIndex + 6 );
+	return getChild<GafferImage::Constant>( g_firstPlugIndex + 7 );
 }
 
 const GafferImage::Constant *OSLImage::defaultConstant() const
 {
-	return getChild<GafferImage::Constant>( g_firstPlugIndex + 6 );
+	return getChild<GafferImage::Constant>( g_firstPlugIndex + 7 );
 }
 
 GafferImage::ImagePlug *OSLImage::defaultInPlug()
 {
-	return getChild<GafferImage::ImagePlug>( g_firstPlugIndex + 7 );
+	return getChild<GafferImage::ImagePlug>( g_firstPlugIndex + 8 );
 }
 
 const GafferImage::ImagePlug *OSLImage::defaultInPlug() const
 {
-	return getChild<GafferImage::ImagePlug>( g_firstPlugIndex + 7 );
+	return getChild<GafferImage::ImagePlug>( g_firstPlugIndex + 8 );
 }
 
 const GafferImage::ImagePlug *OSLImage::defaultedInPlug() const
@@ -205,6 +216,12 @@ void OSLImage::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 		input == inPlug()->deepPlug() ||
 		input == inPlug()->sampleOffsetsPlug()
 	)
+	{
+		outputs.push_back( shadingPlug() );
+		outputs.push_back( allImageDataNeededPlug() );
+	}
+
+	if( input == allImageDataNeededPlug() )
 	{
 		outputs.push_back( shadingPlug() );
 	}
@@ -298,6 +315,25 @@ void OSLImage::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *con
 			}
 		}
 	}
+	else if( output == allImageDataNeededPlug() )
+	{
+		ConstShadingEnginePtr shadingEngine;
+		if( auto shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() ) )
+		{
+			ImagePlug::GlobalScope globalScope( context );
+			shadingEngine = shader->shadingEngine();
+		}
+
+		if( !shadingEngine )
+		{
+			throw IECore::Exception( "__allImageDataNeeded may only be hashed when there is a shadingEngine" );
+		}
+
+		ShadingEngine::ImagePlugs shadingInputImages;
+		shadingInputImages["in"] = inPlug();
+
+		h.append( shadingEngine->hashPossibleImageSamples( shadingInputImages ) );
+	}
 }
 
 void OSLImage::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
@@ -364,6 +400,10 @@ void OSLImage::compute( Gaffer::ValuePlug *output, const Gaffer::Context *contex
 		// Note that this result has been sorted through insertion into the set
 		StringVectorDataPtr resultVector = new StringVectorData( vector<string>( result.begin(), result.end() ) );
 		static_cast<StringVectorDataPlug *>( output )->setValue( resultVector );
+	}
+	else if( output == allImageDataNeededPlug() )
+	{
+		throw IECore::Exception( "__allImageDataNeeded plug should only ever be hashed, never computed" );
 	}
 
 	ImageProcessor::compute( output, context );
@@ -488,6 +528,15 @@ Imath::Box2i OSLImage::computeDataWindow( const Gaffer::Context *context, const 
 	return defaultedInPlug()->dataWindowPlug()->getValue();
 }
 
+Gaffer::ValuePlug::CachePolicy OSLImage::hashCachePolicy( const Gaffer::ValuePlug *output ) const
+{
+	if( output == allImageDataNeededPlug() )
+	{
+		return ValuePlug::CachePolicy::TaskCollaboration;
+	}
+	return ImageProcessor::hashCachePolicy( output );
+}
+
 void OSLImage::hashShading( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ConstShadingEnginePtr shadingEngine;
@@ -512,6 +561,11 @@ void OSLImage::hashShading( const Gaffer::Context *context, IECore::MurmurHash &
 		defaultedInPlug()->formatPlug()->hash( h );
 		channelNamesData = defaultedInPlug()->channelNamesPlug()->getValue();
 		deep = defaultedInPlug()->deepPlug()->getValue();
+
+		if( shadingEngine->needsImageSamples() )
+		{
+			allImageDataNeededPlug()->hash( h );
+		}
 	}
 
 	if( deep )
@@ -642,9 +696,16 @@ IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *co
 	shadingPoints->writable()["P"] = pData;
 	shadingPoints->writable()["u"] = uData;
 	shadingPoints->writable()["v"] = vData;
+	shadingPoints->writable()["dudx"] = new FloatData( uvStep[0] );
+	shadingPoints->writable()["dudy"] = new FloatData( 0 );
+	shadingPoints->writable()["dvdx"] = new FloatData( 0 );
+	shadingPoints->writable()["dvdy"] = new FloatData( uvStep[1] );
 
+	ShadingEngine::Transforms transforms;
+	ShadingEngine::ImagePlugs shadingInputImages;
+	shadingInputImages["in"] = inPlug();
 
-	CompoundDataPtr result = shadingEngine->shade( shadingPoints.get() );
+	CompoundDataPtr result = shadingEngine->shade( shadingPoints.get(), transforms, shadingInputImages );
 
 	// remove results that aren't suitable to become channels
 	for( CompoundDataMap::iterator it = result->writable().begin(); it != result->writable().end();  )

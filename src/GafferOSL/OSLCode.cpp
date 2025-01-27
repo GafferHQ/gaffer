@@ -165,6 +165,7 @@ string generate( const OSLCode *shader, string &shaderName )
 	{
 		IECore::MurmurHash hash;
 		hash.append( result );
+		hash.append( 14 ); // Bump whenever headers change to avoid using stale oso's
 		shaderName = "oslCode" + hash.toString();
 	}
 
@@ -349,6 +350,13 @@ class CompileProcess : public Gaffer::Process
 			}
 			catch( ... )
 			{
+				// As per comment in updateShader(), we probably want to rework this
+				// so that compilation happens at evaluation time, and we can just throw
+				// an exception, but in the meantime, I think it's an improvement to
+				// blank out the shader when it fails, so we at least halt the calculation
+				// of whatever the OSLCode was previously doing
+				oslCode->namePlug()->setValue( "" );
+				oslCode->typePlug()->setValue( "osl:shader" );
 				handleException();
 			}
 		}
