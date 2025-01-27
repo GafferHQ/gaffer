@@ -15,6 +15,7 @@ Features
 Improvements
 ------------
 
+- RenderPassEditor : Added ability to rename a render pass within the edit scope it was originally created in. A render pass can be renamed from the "Name" column via the "Rename Selected Render Pass..." menu item, double clicking on a cell or selecting a cell and pressing <kbd>Enter</kbd> or <kbd>Return</kbd>.
 - VisualiserTool :
   - Changed naming requirements for visualising primitive variables. Values in `dataName` now prefix the primitive variable name with `primitiveVariable:`. Setting `dataName` to `vertex:index` will display vertex indices.
   - Added `mode` plug. The available modes are :
