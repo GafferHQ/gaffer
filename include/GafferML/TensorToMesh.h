@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
+//  Copyright (c) 2024, Lucien Fostier. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,21 +36,45 @@
 
 #pragma once
 
+#include "GafferML/Export.h"
+#include "GafferML/TensorPlug.h"
+
+#include "GafferScene/ObjectSource.h"
+#include "Gaffer/TransformPlug.h"
+
 namespace GafferML
 {
 
-enum TypeId
+class GAFFERML_API TensorToMesh : public GafferScene::ObjectSource
 {
-	TensorTypeId = 110451,
-	TensorPlugTypeId = 110452,
-	ImageToTensorTypeId = 110453,
-	TensorToImageTypeId = 110454,
-	InferenceTypeId = 110455,
-	TensorReaderTypeId = 110456,
-	DataToTensorTypeId = 110457,
-	TensorToMeshTypeId = 110458,
 
-	LastTypeId = 110500
+	public :
+
+		explicit TensorToMesh( const std::string &name=defaultName<TensorToMesh>() );
+		~TensorToMesh() override;
+
+		GAFFER_NODE_DECLARE_TYPE( GafferML::TensorToMesh, TensorToMeshTypeId, GafferScene::ObjectSource );
+
+		TensorPlug *positionTensorPlug();
+		const TensorPlug *positionTensorPlug() const;
+
+		TensorPlug *vertexIdsTensorPlug();
+		const TensorPlug *vertexIdsTensorPlug() const;
+
+		void affects( const Gaffer::Plug *input, Gaffer::DependencyNode::AffectedPlugsContainer &outputs ) const override;
+
+	protected :
+
+		void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const override;
+
+	private :
+
+
+		static size_t g_firstPlugIndex;
+
 };
+
+IE_CORE_DECLAREPTR( TensorToMesh )
 
 } // namespace GafferML
