@@ -36,8 +36,10 @@
 
 #include "Gaffer/Context.h"
 
+#include "tbb/concurrent_queue.h"
 #include "tbb/enumerable_thread_specific.h"
 #include "tbb/parallel_for.h"
+#include "tbb/task_arena.h"
 
 namespace GafferScene
 {
@@ -178,6 +180,47 @@ void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher
 {
 	Detail::PathMatcherFunctor<ThreadableFunctor> ff( f, filter );
 	parallelTraverse( scene, ff, root );
+}
+
+
+template <class LocationFunctor, class GatherFunctor>
+void parallelGatherLocations( const ScenePlug *scene, LocationFunctor &&locationFunctor, GatherFunctor &&gatherFunctor, const ScenePlug::ScenePath &root )
+{
+	// We use `parallelTraverse()` to run `locationFunctor`, passing the results to
+	// `gatherFunctor` on the current thread via a queue. In testing, this proved to
+	// have lower overhead than using TBB's `parallel_pipeline()`.
+
+	using LocationResult = std::invoke_result_t<LocationFunctor, const ScenePlug *, const ScenePlug::ScenePath &>;
+	tbb::concurrent_bounded_queue<std::optional<LocationResult>> queue;
+	queue.set_capacity( tbb::this_task_arena::max_concurrency() );
+
+	auto locationFunctorWrapper = [&] ( const ScenePlug *scene, const ScenePlug::ScenePath &path ) {
+		queue.push( locationFunctor( scene, path ) );
+		return true;
+	};
+
+	tbb::task_arena( tbb::task_arena::attach() ).enqueue(
+
+		[&, &threadState = Gaffer::ThreadState::current()] () {
+
+			Gaffer::ThreadState::Scope threadStateScope( threadState );
+			SceneAlgo::parallelTraverse( scene, locationFunctorWrapper, root );
+			queue.push( std::nullopt );
+
+		}
+
+	);
+
+	while( true )
+	{
+		std::optional<LocationResult> locationResult;
+		queue.pop( locationResult );
+		if( !locationResult )
+		{
+			break;
+		}
+		gatherFunctor( *locationResult );
+	}
 }
 
 template<typename Predicate>
