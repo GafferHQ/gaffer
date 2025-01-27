@@ -5,6 +5,7 @@ Features
 --------
 
 - HierarchyView : Added ability to store and recall the Visible Set in named bookmarks that are saved with the script.
+- TensorToMesh : Added new ML node for converting a suitable tensor into a 3d mesh.
 
 Improvements
 ------------
