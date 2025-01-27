@@ -1,7 +1,10 @@
 1.4.15.x (relative to 1.4.15.4)
 ========
 
+Fixes
+-----
 
+- PythonEditor : Fixed bug preventing values from being inserted when dragging most VectorData types into the PythonEditor.
 
 1.4.15.4 (relative to 1.4.15.3)
 ========
