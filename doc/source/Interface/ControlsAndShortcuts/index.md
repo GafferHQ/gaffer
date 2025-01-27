@@ -438,6 +438,7 @@ Toggle cell selection                                | {kbd}`Ctrl` + {{leftClick
 Edit selected cells                                  | {kbd}`Return`<br>or<br>{kbd}`Enter`
 Disable edit                                         | {kbd}`D`
 Toggle a render pass as active                       | {kbd}`Return` or {{leftClick}} {{leftClick}} a cell within the {{activeRenderPass}} column
+Rename a render pass                                 | {kbd}`Return` or {{leftClick}} {{leftClick}} a cell within the "Name" column
 
 ## Color Chooser Color Field ##
 
