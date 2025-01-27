@@ -159,7 +159,7 @@ class PythonEditor( GafferUI.Editor ) :
 
 	def __dropText( self, widget, dragData ) :
 
-		if isinstance( dragData, IECore.StringVectorData ) :
+		if IECore.DataTraits.isSequenceDataType( dragData ) :
 			return repr( list( dragData ) )
 		elif isinstance( dragData, Gaffer.GraphComponent ) :
 			if self.scriptNode().isAncestorOf( dragData ) :

@@ -21,6 +21,7 @@ Fixes
   - Fixed bugs which prevented edits being made in "Source" scope when there was a downstream edit in an EditScope (#6172).
   - Fixed warning messages when attempting to disable a non-existent edit.
   - Fixed warning message which referred to "None" rather than the "Source" scope.
+- PythonEditor : Fixed bug preventing values from being inserted when dragging most VectorData types into the PythonEditor.
 
 API
 ---
@@ -438,7 +439,10 @@ Build
 1.4.15.x (relative to 1.4.15.4)
 ========
 
+Fixes
+-----
 
+- PythonEditor : Fixed bug preventing values from being inserted when dragging most VectorData types into the PythonEditor.
 
 1.4.15.4 (relative to 1.4.15.3)
 ========
