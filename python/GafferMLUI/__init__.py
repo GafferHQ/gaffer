@@ -38,5 +38,6 @@ from . import DataToTensorUI
 from . import InferenceUI
 from . import ImageToTensorUI
 from . import TensorToImageUI
+from . import TensorToMeshUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferMLUI" )

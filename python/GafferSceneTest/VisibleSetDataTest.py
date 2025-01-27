@@ -77,6 +77,26 @@ class VisibleSetDataTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( vd2c, vd2 )
 		self.assertEqual( vd2c.hash(), vd2.hash() )
 
+	def testSerialisation( self ) :
+
+		v = GafferScene.VisibleSet()
+		v.expansions = IECore.PathMatcher( [ "/a" ] )
+		v.inclusions = IECore.PathMatcher( [ "/b" ] )
+		v.exclusions = IECore.PathMatcher( [ "/c" ] )
+
+		d = GafferScene.VisibleSetData( v )
+
+		m = IECore.MemoryIndexedIO( IECore.CharVectorData(), [], IECore.IndexedIO.OpenMode.Write )
+
+		d.save( m, "f" )
+
+		m2 = IECore.MemoryIndexedIO( m.buffer(), [], IECore.IndexedIO.OpenMode.Read )
+		d2 = IECore.Object.load( m2, "f" )
+
+		self.assertEqual( d2, d )
+		self.assertEqual( d2.hash(), d.hash() )
+		self.assertEqual( d2.value, v )
+
 	def testStoreInContext( self ) :
 
 		v = GafferScene.VisibleSet()

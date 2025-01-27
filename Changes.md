@@ -9,10 +9,17 @@ Breaking Changes
 1.5.x.x (relative to 1.5.3.0)
 =======
 
+Features
+--------
+
+- HierarchyView : Added ability to store and recall the Visible Set in named bookmarks that are saved with the script.
+- TensorToMesh : Added new ML node for converting a suitable tensor into a 3d mesh.
+
 Improvements
 ------------
 
 - AttributeEditor : Added "Select Affected Objects" menu item to the "Linked Lights" and Arnold "Shadow Group" columns.
+- ScriptNode : Added support for serialising metadata registered on a ScriptNode.
 
 Fixes
 -----
@@ -22,12 +29,15 @@ Fixes
   - Fixed bugs which prevented edits being made in "Source" scope when there was a downstream edit in an EditScope (#6172).
   - Fixed warning messages when attempting to disable a non-existent edit.
   - Fixed warning message which referred to "None" rather than the "Source" scope.
+- PythonEditor : Fixed bug preventing values from being inserted when dragging most VectorData types into the PythonEditor.
 
 API
 ---
 
 - RenderPassEditor : Added optional `index` argument to `registerOption()` and `registerColumn()`. This can be used to specify the column's position in the UI.
 - Metadata : Added `targetsWithMetadata()` function, returning all the string targets which match a pattern and have a specific metadata key.
+- VisibleSetData : Implemented `save()` and `load()`.
+- ScriptNodeAlgo : Added functions for managing VisibleSet bookmarks.
 
 1.5.3.0 (relative to 1.5.2.0)
 =======
@@ -437,7 +447,10 @@ Build
 1.4.15.x (relative to 1.4.15.4)
 ========
 
+Fixes
+-----
 
+- PythonEditor : Fixed bug preventing values from being inserted when dragging most VectorData types into the PythonEditor.
 
 1.4.15.4 (relative to 1.4.15.3)
 ========

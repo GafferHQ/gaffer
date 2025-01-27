@@ -34,17 +34,57 @@
 #
 ##########################################################################
 
-import os
-import pathlib
+import Gaffer
+import GafferML
 
-__import__( "Gaffer" )
-__import__( "GafferImage" )
-__import__( "GafferScene" )
+import GafferSceneUI
 
-if hasattr( os, "add_dll_directory" ) :
-	os.add_dll_directory( ( pathlib.Path( os.environ["ONNX_ROOT"] ) / "lib" ).resolve() )
-del os, pathlib # Don't pollute the namespace
+Gaffer.Metadata.registerNode(
 
-from ._GafferML import *
+	GafferML.TensorToMesh,
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferML" )
+	"description",
+	"""
+	Turns input tensors into a mesh.
+	""",
+
+
+	plugs = {
+
+		"position" : [
+
+			"description",
+			"""
+			The input tensor containing the point positions for the mesh to create. Typically this would be connected
+			to the output of an Inference node that is doing mesh generation/processing.
+			""",
+
+			"plugValueWidget:type", "",
+			"nodule:type", "GafferUI::StandardNodule",
+
+		],
+		"vertexIds" : [
+
+			"description",
+			"""
+			The input tensor containing the vertex ids for the mesh to create. Typically this would be connected
+			to the output of an Inference node that is doing mesh generation/processing.
+			""",
+
+			"plugValueWidget:type", "",
+			"nodule:type", "GafferUI::StandardNodule",
+
+		],
+
+		"out" : [
+
+			"description",
+			"""
+			The output mesh.
+			""",
+
+		],
+
+
+	}
+)

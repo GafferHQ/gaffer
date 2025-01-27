@@ -567,6 +567,7 @@ if os.environ.get( "ONNX_ROOT" ) and moduleSearchPath.find( "GafferML" ) :
 	nodeMenu.append( "/ML/Image To Tensor", GafferML.ImageToTensor, searchText = "ImageToTensor" )
 	nodeMenu.append( "/ML/Tensor To Image", GafferML.TensorToImage, searchText = "TensorToImage" )
 	nodeMenu.append( "/ML/Inference", GafferML.Inference, searchText = "Inference" )
+	nodeMenu.append( "/ML/Tensor To Mesh", GafferML.TensorToMesh, searchText = "TensorToMesh" )
 
 # Utility nodes
 
