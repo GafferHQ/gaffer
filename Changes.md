@@ -6,6 +6,11 @@ Fixes
 
 - ContactSheetCore : Fixed bugs handling changes to the input and output image formats.
 
+Improvements
+------------
+
+- SceneWriter : Improved performance. Benchmarks rewriting complex scenes via a SceneReader->SceneWriter graph show around a 2x speedup.
+
 API
 ---
 
