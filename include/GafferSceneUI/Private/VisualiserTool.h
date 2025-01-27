@@ -50,6 +50,8 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
 
+#include <variant>
+
 namespace
 {
 
@@ -126,7 +128,8 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 		using CursorPosition = std::optional<Imath::V2f>;
 		CursorPosition cursorPos() const;
 
-		const IECore::Data *cursorValue() const;
+		using CursorValue = std::variant<std::monostate, int, float, Imath::V2f, Imath::V3f, Imath::Color3f>;
+		const CursorValue cursorValue() const;
 
 		GafferScene::ScenePlug *internalScenePlug();
 		const GafferScene::ScenePlug *internalScenePlug() const;
@@ -162,11 +165,11 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 		GafferUI::GadgetPtr m_gadget;
 		mutable std::vector<Selection> m_selection;
 		CursorPosition m_cursorPos;
-		IECore::DataPtr m_cursorValue;
+		CursorValue m_cursorValue;
 		bool m_gadgetDirty;
 		mutable bool m_selectionDirty;
 		bool m_priorityPathsDirty;
-		IECore::DataPtr m_valueAtButtonPress;
+		CursorValue m_valueAtButtonPress;
 		bool m_initiatedDrag;
 
 		static ToolDescription<VisualiserTool, SceneView> m_toolDescription;

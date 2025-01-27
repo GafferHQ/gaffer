@@ -333,34 +333,34 @@ std::string primitiveVariableFromDataName( const std::string &dataName )
 	return name;
 }
 
-std::string stringFromData( const Data *value )
+auto stringFromValue = []( auto &&value ) -> std::string
 {
-	switch( value->typeId() )
+	/// \todo Improve on this by adding custom formatters for `fmt::format` to
+	/// handle V2f, V3f and Color3f.
+	using T = std::decay_t<decltype( value )>;
+	if constexpr( std::is_same_v<T, int> )
 	{
-		case IntDataTypeId: return fmt::format( "{}", assertedStaticCast<const IntData>( value )->readable() );
-		case FloatDataTypeId: return fmt::format( "{:.3f}", assertedStaticCast<const FloatData>( value )->readable() );
-		case V2fDataTypeId:
-			{
-				auto v = assertedStaticCast<const V2fData>( value )->readable();
-				return fmt::format( "{:.3f}, {:.3f}", v.x, v.y );
-			}
-		case V3fDataTypeId:
-			{
-				auto v = assertedStaticCast<const V3fData>( value )->readable();
-				return fmt::format( "{:.3f}, {:.3f}, {:.3f}", v.x, v.y, v.z);
-			}
-			break;
-		case Color3fDataTypeId:
-			{
-				auto v = assertedStaticCast<const Color3fData>( value )->readable();
-				return fmt::format( "{:.3f}, {:.3f}, {:.3f}", v.x, v.y, v.z );
-			}
-			break;
-		default:
-			break;
+		return fmt::format( "{}", value );
 	}
+	else if constexpr( std::is_same_v<T, float> )
+	{
+		return fmt::format( "{:.3f}", value );
+	}
+	else if constexpr( std::is_same_v<T, V2f> )
+	{
+		return fmt::format( "{:.3f}, {:.3f}", value.x, value.y );
+	}
+	else if constexpr( std::is_same_v<T, V3f> )
+	{
+		return fmt::format( "{:.3f}, {:.3f}, {:.3f}", value.x, value.y, value.z);
+	}
+	else if constexpr( std::is_same_v<T, Color3f> )
+	{
+		return fmt::format( "{:.3f}, {:.3f}, {:.3f}", value.x, value.y, value.z );
+	}
+
 	return "";
-}
+};
 
 //-----------------------------------------------------------------------------
 // VisualiserGadget
@@ -388,7 +388,7 @@ class VisualiserGadget : public Gadget
 			m_colorUniformBuffer(),
 			m_vertexLabelShader(),
 			m_vertexLabelUniformBuffer(),
-			m_cursorVertexData()
+			m_cursorVertexValue()
 		{
 		}
 
@@ -835,16 +835,16 @@ class VisualiserGadget : public Gadget
 				return;
 			}
 
-			const Data *value = m_tool->cursorValue();
+			const VisualiserTool::CursorValue value = m_tool->cursorValue();
 
-			if( mode == VisualiserTool::Mode::Auto && value && value->typeId() == IntDataTypeId )
+			if( mode == VisualiserTool::Mode::Auto && std::holds_alternative<int>( value ) )
 			{
 				return;
 			}
 
-			if( value )
+			if( !std::holds_alternative<std::monostate>( value ) )
 			{
-				const std::string text = stringFromData( value );
+				const std::string text = std::visit( stringFromValue, value );
 
 				if( !text.empty() )
 				{
@@ -958,7 +958,7 @@ class VisualiserGadget : public Gadget
 
 			// Get cursor raster position
 
-			DataPtr cursorVertexData = nullptr;
+			VisualiserTool::CursorValue cursorVertexValue;
 			const std::optional<V2f> cursorRasterPos = m_tool->cursorPos();
 			std::optional<V2f> cursorVertexRasterPos;
 			float minDistance2 = std::numeric_limits<float>::max();
@@ -1223,7 +1223,7 @@ class VisualiserGadget : public Gadget
 				{
 					ViewportGadget::RasterScope raster( viewportGadget );
 
-					DataPtr vertexValue = nullptr;
+					VisualiserTool::CursorValue vertexValue;
 					const std::vector<Imath::V3f> &points = pData->readable();
 					for( size_t i = 0; i < points.size(); ++i )
 					{
@@ -1247,65 +1247,29 @@ class VisualiserGadget : public Gadget
 							{
 								if( !vData )
 								{
-									auto data = runTimeCast<IntData>( vertexValue );
-									if( !data )
-									{
-										data.reset( new IntData() );
-									}
-									data->writable() = i;
-									vertexValue = data;
+									vertexValue = (int)i;
 								}
 								else
 								{
 									if( auto iData = runTimeCast<const IntVectorData>( vData.get() ) )
 									{
-										auto data = runTimeCast<IntData>( vertexValue );
-										if( !data )
-										{
-											data.reset( new IntData() );
-										}
-										data->writable() = iData->readable()[i];
-										vertexValue = data;
+										vertexValue = iData->readable()[i];
 									}
 									if( auto fData = runTimeCast<const FloatVectorData>( vData.get() ) )
 									{
-										auto data = runTimeCast<FloatData>( vertexValue );
-										if( !data )
-										{
-											data.reset( new FloatData() );
-										}
-										data->writable() = fData->readable()[i];
-										vertexValue = data;
+										vertexValue = fData->readable()[i];
 									}
 									if( auto v2fData = runTimeCast<const V2fVectorData>( vData.get() ) )
 									{
-										auto data = runTimeCast<V2fData>( vertexValue );
-										if( !data )
-										{
-											data.reset( new V2fData() );
-										}
-										data->writable() = v2fData->readable()[i];
-										vertexValue = data;
+										vertexValue = v2fData->readable()[i];
 									}
 									if( auto v3fData = runTimeCast<const V3fVectorData>( vData.get() ) )
 									{
-										auto data = runTimeCast<V3fData>( vertexValue );
-										if( !data )
-										{
-											data.reset( new V3fData() );
-										}
-										data->writable() = v3fData->readable()[i];
-										vertexValue = data;
+										vertexValue = v3fData->readable()[i];
 									}
 									if( auto c3fData = runTimeCast<const Color3fVectorData>( vData.get() ) )
 									{
-										auto data = runTimeCast<Color3fData>( vertexValue );
-										if( !data )
-										{
-											data.reset( new Color3fData() );
-										}
-										data->writable() = c3fData->readable()[i];
-										vertexValue = data;
+										vertexValue = c3fData->readable()[i];
 									}
 								}
 
@@ -1319,7 +1283,7 @@ class VisualiserGadget : public Gadget
 									const float distance2 = ( cursorRasterPos.value() - rasterPos.value() ).length2();
 									if( ( distance2 < cursorRadius2 ) && ( distance2 < minDistance2 ) )
 									{
-										std::swap( cursorVertexData, vertexValue );
+										std::swap( cursorVertexValue, vertexValue );
 										std::swap( cursorVertexRasterPos, rasterPos );
 										minDistance2 = distance2;
 									}
@@ -1327,9 +1291,9 @@ class VisualiserGadget : public Gadget
 
 								// Draw value label
 
-								if( vertexValue )
+								if( !std::holds_alternative<std::monostate>( vertexValue ) && rasterPos )
 								{
-									const std::string text = stringFromData( vertexValue.get() );
+									const std::string text = std::visit( stringFromValue, vertexValue );
 
 									drawStrokedText(
 										viewportGadget,
@@ -1359,11 +1323,11 @@ class VisualiserGadget : public Gadget
 
 			// Draw cursor vertex
 
-			if( cursorVertexData && cursorRasterPos )
+			if( !std::holds_alternative<std::monostate>( cursorVertexValue ) && cursorVertexRasterPos )
 			{
 				GafferUI::ViewportGadget::RasterScope raster( viewportGadget );
 
-				std::string const text = stringFromData( cursorVertexData.get() );
+				std::string const text = std::visit( stringFromValue, cursorVertexValue );
 
 				drawStrokedText(
 					viewportGadget,
@@ -1380,12 +1344,12 @@ class VisualiserGadget : public Gadget
 
 			// Set tool cursor vertex id
 
-			m_cursorVertexData = cursorVertexData;
+			m_cursorVertexValue = cursorVertexValue;
 		}
 
-		DataPtr cursorVertexData() const
+		VisualiserTool::CursorValue cursorVertexValue() const
 		{
-			return m_cursorVertexData;
+			return m_cursorVertexValue;
 		}
 
 		const VisualiserTool *m_tool;
@@ -1397,7 +1361,7 @@ class VisualiserGadget : public Gadget
 		mutable IECoreGL::ConstBufferPtr m_vertexLabelStorageBuffer;
 		mutable std::size_t m_vertexLabelStorageCapacity;
 
-		mutable DataPtr m_cursorVertexData;
+		mutable VisualiserTool::CursorValue m_cursorVertexValue;
 };
 
 // Cache for mesh evaluators
@@ -1605,9 +1569,9 @@ VisualiserTool::CursorPosition VisualiserTool::cursorPos() const
 	return m_cursorPos;
 }
 
-const Data *VisualiserTool::cursorValue() const
+const VisualiserTool::CursorValue VisualiserTool::cursorValue() const
 {
-	return m_cursorValue.get();
+	return m_cursorValue;
 }
 
 void VisualiserTool::connectOnActive()
@@ -1718,15 +1682,15 @@ bool VisualiserTool::keyPress( const KeyEvent &event )
 
 bool VisualiserTool::buttonPress( const ButtonEvent &event )
 {
-	m_valueAtButtonPress.reset();
+	m_valueAtButtonPress = std::monostate();
 	m_initiatedDrag = false;
 
 	if( event.button & ButtonEvent::Left && !( event.modifiers & GafferUI::ButtonEvent::Modifiers::Control ) )
 	{
 		updateCursorValue();
-		if( m_cursorValue )
+		if( !std::holds_alternative<std::monostate>( m_cursorValue ) )
 		{
-			m_valueAtButtonPress = m_cursorValue->copy();
+			m_valueAtButtonPress = m_cursorValue;
 			return true;
 		}
 	}
@@ -1736,7 +1700,7 @@ bool VisualiserTool::buttonPress( const ButtonEvent &event )
 
 bool VisualiserTool::buttonRelease( const ButtonEvent &event )
 {
-	m_valueAtButtonPress.reset();
+	m_valueAtButtonPress = std::monostate();
 	m_initiatedDrag = false;
 
 	return false;
@@ -1746,7 +1710,7 @@ RunTimeTypedPtr VisualiserTool::dragBegin( const DragDropEvent &event )
 {
 	m_initiatedDrag = false;
 
-	if( !m_valueAtButtonPress )
+	if( std::holds_alternative<std::monostate>( m_valueAtButtonPress ) )
 	{
 		return RunTimeTypedPtr();
 	}
@@ -1759,9 +1723,31 @@ RunTimeTypedPtr VisualiserTool::dragBegin( const DragDropEvent &event )
 
 	m_initiatedDrag = true;
 	view()->viewportGadget()->renderRequestSignal()( view()->viewportGadget() );
+
 	Pointer::setCurrent( "values" );
 
-	return m_valueAtButtonPress;
+	if( std::holds_alternative<int>( m_valueAtButtonPress ) )
+	{
+		return new IntData( std::get<int>( m_valueAtButtonPress ) );
+	}
+	if( std::holds_alternative<float>( m_valueAtButtonPress ) )
+	{
+		return new FloatData( std::get<float>( m_valueAtButtonPress ) );
+	}
+	if( std::holds_alternative<V2f>( m_valueAtButtonPress ) )
+	{
+		return new V2fData( std::get<V2f>( m_valueAtButtonPress ) );
+	}
+	if( std::holds_alternative<V3f>( m_valueAtButtonPress ) )
+	{
+		return new V3fData( std::get<V3f>( m_valueAtButtonPress ) );
+	}
+	if( std::holds_alternative<Color3f>( m_valueAtButtonPress ) )
+	{
+		return new Color3fData( std::get<Color3f>( m_valueAtButtonPress ) );
+	}
+
+	return RunTimeTypedPtr();
 }
 
 bool VisualiserTool::dragEnd( const DragDropEvent &event )
@@ -1934,8 +1920,8 @@ void VisualiserTool::updateCursorPos( const ButtonEvent &event )
 
 void VisualiserTool::updateCursorValue()
 {
-	DataPtr cursorValue = m_cursorValue;
-	m_cursorValue.reset();
+	CursorValue cursorValue = m_cursorValue;
+	m_cursorValue = std::monostate();
 
 	// NOTE : during a drag do not update the cursor value
 
@@ -1947,11 +1933,12 @@ void VisualiserTool::updateCursorValue()
 	const std::string dataName = dataNamePlug()->getValue();
 
 	// We draw all visualisation types each time, and the vertex label visualisation
-	// resets the `cursorVertexData()` each time before potentially setting it to
-	// the closest point. So if there is no such point, this will be `nullptr`.
-	if( auto data = static_cast<VisualiserGadget *>( m_gadget.get() )->cursorVertexData() )
+	// resets the `cursorVertexValue()` each time before potentially setting it to
+	// the closest point. So if there is no such point, this will be `std::monostate`.
+	CursorValue v = static_cast<VisualiserGadget *>( m_gadget.get() )->cursorVertexValue();
+	if( !std::holds_alternative<std::monostate>( v ) )
 	{
-		m_cursorValue = data;
+		m_cursorValue = v;
 		return;
 	}
 
@@ -2088,60 +2075,20 @@ void VisualiserTool::updateCursorValue()
 	switch( vIt->second.data->typeId() )
 	{
 		case IntVectorDataTypeId :
-		{
-			auto data = runTimeCast<IntData>( cursorValue );
-			if( !data )
-			{
-				data.reset( new IntData() );
-			}
-			data->writable() = result->intPrimVar( evalData.triMesh->variables.at( name ) );
-			cursorValue = data;
+			cursorValue = result->intPrimVar( evalData.triMesh->variables.at( name ) );
 			break;
-		}
 		case FloatVectorDataTypeId :
-		{
-			auto data =runTimeCast<FloatData>( cursorValue );
-			if( !data )
-			{
-				data.reset( new FloatData() );
-			}
-			data->writable() = result->floatPrimVar( evalData.triMesh->variables.at( name ) );
-			cursorValue = data;
+			cursorValue = result->floatPrimVar( evalData.triMesh->variables.at( name ) );
 			break;
-		}
 		case V2fVectorDataTypeId :
-		{
-			auto data =runTimeCast<V2fData>( cursorValue );
-			if( !data )
-			{
-				data.reset( new V2fData() );
-			}
-			data->writable() = result->vec2PrimVar( evalData.triMesh->variables.at( name ) );
-			cursorValue = data;
+			cursorValue = result->vec2PrimVar( evalData.triMesh->variables.at( name ) );
 			break;
-		}
 		case V3fVectorDataTypeId :
-		{
-			auto data = runTimeCast<V3fData>( cursorValue );
-			if( !data )
-			{
-				data.reset( new V3fData() );
-			}
-			data->writable() = result->vectorPrimVar( evalData.triMesh->variables.at( name ) );
-			cursorValue = data;
+			cursorValue = result->vectorPrimVar( evalData.triMesh->variables.at( name ) );
 			break;
-		}
 		case Color3fVectorDataTypeId :
-		{
-			auto data = runTimeCast<Color3fData>( cursorValue );
-			if( !data )
-			{
-				data.reset( new Color3fData() );
-			}
-			data->writable() = result->colorPrimVar( evalData.triMesh->variables.at( name ) );
-			cursorValue = data;
+			cursorValue = result->colorPrimVar( evalData.triMesh->variables.at( name ) );
 			break;
-		}
 		default:
 			return;
 	}
