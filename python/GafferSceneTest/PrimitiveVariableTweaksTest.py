@@ -761,9 +761,23 @@ class PrimitiveVariableTweaksTest( GafferSceneTest.SceneTestCase ):
 		o = tweak["out"].object( "/plane" )
 		self.assertEqual( o["b"], IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Uniform, IECore.IntVectorData( [ 0, 42, 49, 0 ] ) ) )
 
+		tweak["idList"].setValue( IECore.Int64VectorData( [ 2, 3 ] ) )
+		o = tweak["out"].object( "/plane" )
+		self.assertEqual( o["b"], IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Uniform, IECore.IntVectorData( [ 0, 42, 49, 7 ] ) ) )
+
+		# Test inverting selection
+
+		tweak["invertSelection"].setValue( True )
+		o = tweak["out"].object( "/plane" )
+		self.assertEqual( o["b"], IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Uniform, IECore.IntVectorData( [ 7, 49, 42, 0 ] ) ) )
+
+		# Test selection mode
+
 		tweak["selectionMode"].setValue( GafferScene.PrimitiveVariableTweaks.SelectionMode.All )
 		o = tweak["out"].object( "/plane" )
 		self.assertEqual( o["b"], IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Uniform, IECore.IntVectorData( [ 7, 49, 49, 7 ] ) ) )
+
+		# Test wrong interpolation
 
 		tweak["selectionMode"].setValue( GafferScene.PrimitiveVariableTweaks.SelectionMode.IdList )
 		tweak["id"].setValue( "vertexIds" )

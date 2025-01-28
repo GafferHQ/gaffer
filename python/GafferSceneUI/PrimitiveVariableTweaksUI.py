@@ -67,6 +67,7 @@ Gaffer.Metadata.registerNode(
 	"layout:activator:idListVarVisible", lambda node : __primVarTweaksSelectionModeEnabled( node ) and node["selectionMode"].getValue() == GafferScene.PrimitiveVariableTweaks.SelectionMode.IdListPrimitiveVariable,
 	"layout:activator:idListVisible", lambda node : __primVarTweaksSelectionModeEnabled( node ) and node["selectionMode"].getValue() in [ GafferScene.PrimitiveVariableTweaks.SelectionMode.IdList, GafferScene.PrimitiveVariableTweaks.SelectionMode.IdListPrimitiveVariable ],
 	"layout:activator:maskVarVisible", lambda node : __primVarTweaksSelectionModeEnabled( node ) and node["selectionMode"].getValue() == GafferScene.PrimitiveVariableTweaks.SelectionMode.MaskPrimitiveVariable,
+	"layout:activator:selectionNotAll", lambda node : __primVarTweaksSelectionModeEnabled( node ) and node["selectionMode"].getValue() != GafferScene.PrimitiveVariableTweaks.SelectionMode.All,
 
 	"layout:section:Settings.Tweaks:collapsed", False,
 
@@ -166,6 +167,17 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:visibilityActivator", "maskVarVisible",
+
+		],
+
+		"invertSelection" : [
+
+			"description",
+			"""
+			Swaps which elements are tweaked/not tweaked.
+			""",
+
+			"layout:visibilityActivator", "selectionNotAll",
 
 		],
 
