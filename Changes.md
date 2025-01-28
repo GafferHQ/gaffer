@@ -33,6 +33,11 @@ Fixes
 - InteractiveRender : Fixed potential leak of `scene:path` context variable when computing the value for `resolvedRenderer`.
 - Dispatch app : Fixed poor UI layout in "Completed" dialogue state (#6244).
 
+API
+---
+
+- EditScopeAlgo : Added `renameRenderPass()` and `renameRenderPassNonEditableReason()` functions.
+
 1.5.4.1 (relative to 1.5.4.0)
 =======
 
