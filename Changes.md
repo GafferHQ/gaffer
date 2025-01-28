@@ -33,6 +33,11 @@ Fixes
 - InteractiveRender : Fixed potential leak of `scene:path` context variable when computing the value for `resolvedRenderer`.
 - Dispatch app : Fixed configuration bug which caused GafferSceneUI to be loaded unnecessarily (#6239).
 
+API
+---
+
+- EditScopeAlgo : Added `renameRenderPass()` function.
+
 1.5.4.0 (relative to 1.5.3.0)
 =======
 

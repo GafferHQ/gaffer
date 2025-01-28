@@ -1492,3 +1492,38 @@ const Gaffer::GraphComponent *GafferScene::EditScopeAlgo::renderPassesReadOnlyRe
 
 	return MetadataAlgo::readOnlyReason( scope );
 }
+
+bool GafferScene::EditScopeAlgo::renameRenderPass( Gaffer::EditScope *scope, const std::string &oldName, const std::string &newName )
+{
+	bool renamed = false;
+
+	if( auto renderPassesProcessor = scope->acquireProcessor( g_renderPassesProcessorName, /* createIfNecessary = */ false ) )
+	{
+		auto namesPlug = renderPassesProcessor->getChild<StringVectorDataPlug>( "names" );
+		ConstStringVectorDataPtr renderPasses = namesPlug->getValue();
+		if( std::find( renderPasses->readable().begin(), renderPasses->readable().end(), newName ) != renderPasses->readable().end() )
+		{
+			throw IECore::Exception( fmt::format( "Render Pass \"{}\" already exists", newName ) );
+		}
+
+		if( std::find( renderPasses->readable().begin(), renderPasses->readable().end(), oldName ) != renderPasses->readable().end() )
+		{
+			auto renderPassesCopy = renderPasses->copy();
+			std::replace( renderPassesCopy->writable().begin(), renderPassesCopy->writable().end(), oldName, newName );
+			namesPlug->setValue( renderPassesCopy );
+			renamed = true;
+		}
+	}
+
+	if( auto renderPassOptionEditsProcessor = scope->acquireProcessor( g_renderPassOptionProcessorName, /* createIfNecessary = */ false ) )
+	{
+		auto *rows = renderPassOptionEditsProcessor->getChild<Spreadsheet::RowsPlug>( "edits" );
+		if( Spreadsheet::RowPlug *row = rows->row( oldName ) )
+		{
+			row->namePlug()->setValue( newName );
+			renamed = true;
+		}
+	}
+
+	return renamed;
+}
