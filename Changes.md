@@ -437,7 +437,10 @@ Build
 - Zstandard : Added version 1.5.0.
 - Windows : Updated compiler to Visual Studio 2022 / MSVC 17.8 / Runtime library 14.3.
 
-1.4.15.x (relative to 1.4.15.4)
+1.4.15.x (relative to 1.4.15.5)
+========
+
+1.4.15.5 (relative to 1.4.15.4)
 ========
 
 Fixes
