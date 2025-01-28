@@ -102,7 +102,7 @@ def __toggleBoolean( pathListing, inspectors, inspections ) :
 
 	return True
 
-def __editSelectedCells( pathListing, quickBoolean = True ) :
+def __editSelectedCells( pathListing, quickBoolean = True, ensureEnabled = False ) :
 
 	global __inspectorColumnPopup
 
@@ -145,6 +145,13 @@ def __editSelectedCells( pathListing, quickBoolean = True ) :
 			if not quickBoolean or not __toggleBoolean( pathListing, inspectors, inspections ) :
 				edits = [ i.acquireEdit() for i in inspections ]
 				warnings = "\n".join( [ i.editWarning() for i in inspections if i.editWarning() != "" ] )
+
+				if ensureEnabled :
+					with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
+						for edit in edits :
+							if isinstance( edit, ( Gaffer.NameValuePlug, Gaffer.OptionalValuePlug, Gaffer.TweakPlug ) ) :
+								edit["enabled"].setValue( True )
+
 				# The plugs are either not boolean, boolean with mixed values,
 				# or attributes that don't exist and are not boolean. Show the popup.
 				__inspectorColumnPopup = GafferUI.PlugPopup( edits, warning = warnings )
@@ -433,10 +440,11 @@ def __keyPress( column, pathListing, event ) :
 	if not __validateSelection( pathListing ) :
 		return
 
+	if event.key in ( "Return", "Enter" ) and event.modifiers in ( event.Modifiers.None_, event.modifiers.Control ):
+		__editSelectedCells( pathListing, ensureEnabled = event.modifiers == event.modifiers.Control )
+		return True
+
 	if event.modifiers == event.Modifiers.None_ :
-		if event.key in ( "Return", "Enter" ) :
-			__editSelectedCells( pathListing )
-			return True
 
 		if event.key == "D" :
 			inspections, nonEditableReason, _ = __toggleableInspections( pathListing )
