@@ -5,6 +5,7 @@ Fixes
 -----
 
 - MessageWidget : Fixed bug preventing the horizontal scroll bar from appearing when displaying messages with long lines.
+- VectorDataWidget : Fixed bug preventing dropping a single value onto the `+` and `-` buttons.
 
 1.4.15.5 (relative to 1.4.15.4)
 ========

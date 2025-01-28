@@ -629,7 +629,16 @@ class VectorDataWidget( GafferUI.Widget ) :
 			return False
 
 		data = self.getData()
-		if len( data ) == 1 and event.data.isInstanceOf( data[0].typeId() ) :
+		if (
+			len( data ) == 1 and (
+				event.data.isInstanceOf( data[0].typeId() ) or (
+					hasattr( event.data, "value" ) and isinstance(
+						event.data.value,
+						IECore.DataTraits.valueTypeFromSequenceType( type( data[0] ) )
+					)
+				)
+			)
+		) :
 			# The remove button will be disabled if there's no selection -
 			# we reenable it so it can receive the drag. We'll update it again
 			# in __dragLeave() and __drop().
@@ -653,9 +662,12 @@ class VectorDataWidget( GafferUI.Widget ) :
 		# dragEnter checked that we only had one data array
 		data = self.getData()[0]
 
+		# dragEnter also checked that if the drop value is not a vector, then
+		# the type matches what is contained by the widget's vector.
+
 		if widget is self.__buttonRow[1] :
 			# remove
-			s = set( event.data )
+			s = set( event.data ) if IECore.DataTraits.isSequenceDataType( event.data ) else [event.data.value]
 			newData = data.__class__()
 			for d in data :
 				if d not in s :
@@ -664,7 +676,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 		else :
 			# add, but avoid creating duplicates
 			s = set( data )
-			for d in event.data :
+			eventList = event.data if IECore.DataTraits.isSequenceDataType( event.data ) else [event.data.value]
+			for d in eventList :
 				if d not in s :
 					data.append( d )
 					s.add( d )
