@@ -661,7 +661,7 @@ void BranchCreator::hashTransform( const ScenePath &path, const Gaffer::Context 
 				if( sourcePath != destinationPath )
 				{
 					h.append( inPlug()->fullTransformHash( sourcePath ) );
-					h.append( outPlug()->fullTransform( destinationPath ) );
+					h.append( outPlug()->fullTransformHash( destinationPath ) );
 				}
 			}
 			break;
