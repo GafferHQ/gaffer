@@ -6,7 +6,10 @@ Breaking Changes
 
 - StandardNodule : Removed deprecated `setCompatibleLabelsVisible()`.
 
-1.5.x.x (relative to 1.5.3.0)
+1.5.x.x (relative to 1.5.4.0)
+=======
+
+1.5.4.0 (relative to 1.5.3.0)
 =======
 
 Features
@@ -19,6 +22,7 @@ Improvements
 ------------
 
 - AttributeEditor : Added "Select Affected Objects" menu item to the "Linked Lights" and Arnold "Shadow Group" columns.
+- AttributeEditor, LightEditor, RenderPassEditor : Added <kbd>Ctrl</kbd> + <kbd>Enter</kbd> shortcut to edit the selected cells, enabling the edit if necessary.
 - ScriptNode : Added support for serialising metadata registered on a ScriptNode.
 
 Fixes
@@ -444,7 +448,10 @@ Build
 - Zstandard : Added version 1.5.0.
 - Windows : Updated compiler to Visual Studio 2022 / MSVC 17.8 / Runtime library 14.3.
 
-1.4.15.x (relative to 1.4.15.4)
+1.4.15.x (relative to 1.4.15.5)
+========
+
+1.4.15.5 (relative to 1.4.15.4)
 ========
 
 Fixes
