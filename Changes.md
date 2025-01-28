@@ -11,6 +11,7 @@ Improvements
 ------------
 
 - AttributeEditor : Added "Select Affected Objects" menu item to the "Linked Lights" and Arnold "Shadow Group" columns.
+- AttributeEditor, LightEditor, RenderPassEditor : Added <kbd>Ctrl</kbd> + <kbd>Enter</kbd> shortcut to edit the selected cells, enabling the edit if necessary.
 - ScriptNode : Added support for serialising metadata registered on a ScriptNode.
 
 Fixes
