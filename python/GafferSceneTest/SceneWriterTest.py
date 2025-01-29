@@ -48,7 +48,10 @@ import GafferSceneTest
 
 class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 
-	__extensions = [ ".scc", ".usdc", ".usda", ".abc" ]
+	__extensions = [
+		f".{x}" for x in IECoreScene.SceneInterface.supportedExtensions( IECore.IndexedIO.Write )
+		if x not in [ "usdz" ] ## \todo Fix registration in IECoreUSD - `.usdz` isn't supported for writing
+	]
 
 	def testWrite( self ) :
 
@@ -203,7 +206,7 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 				scSphereGroup = scGroup.child( "sphereGroup" )
 				scSphere = scSphereGroup.child( "sphere" )
 
-				extraSets = [ IECore.InternedString( "ObjectType:MeshPrimitive" ) ] if extension == ".scc" else []
+				extraSets = [ IECore.InternedString( "ObjectType:MeshPrimitive" ) ] if extension in ( ".scc", ".lscc" ) else []
 
 				self.assertEqual( scGroup.readTags(), [] )
 				self.assertEqual( scSphereGroup.readTags(), [ IECore.InternedString( "foo" ) ] )
@@ -400,7 +403,7 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		reader = GafferScene.SceneReader()
 		reader["fileName"].setInput( writer["fileName"] )
 
-		for extension in set( self.__extensions ) - { ".scc" } : # SceneCache doesn't preserve order
+		for extension in set( self.__extensions ) - { ".scc", ".lscc" } : # SceneCache doesn't preserve order
 			with self.subTest( extension = extension ) :
 
 				writer["fileName"].setValue( self.temporaryDirectory() / ( "test" + extension ) )
