@@ -2422,6 +2422,84 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 			IECore.PathMatcher( [ "/group/light1" ] )
 		)
 
+	def testParallelGatherLocations( self ) :
+
+		plane = GafferScene.Plane()
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane["out"] )
+
+		groupFilter = GafferScene.PathFilter()
+		groupFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+
+		duplicate = GafferScene.Duplicate()
+		duplicate["in"].setInput( group["out"] )
+		duplicate["filter"].setInput( groupFilter["out"] )
+		duplicate["copies"].setValue( 100 )
+
+		gathered = []
+		GafferScene.SceneAlgo.parallelGatherLocations(
+
+			duplicate["out"],
+
+			lambda scene, path : path,
+			lambda path : gathered.append( path )
+
+		)
+
+		# We expect to have visited all locations.
+
+		expected = set(
+			[ "/", "/group", "/group/plane" ] +
+			[ f"/group{x}" for x in range( 1, 101 ) ] +
+			[ f"/group{x}/plane" for x in range( 1, 101 ) ]
+		)
+		self.assertEqual( set( gathered ), expected )
+
+		# And we expect to have visited parent locations
+		# before child locations.
+
+		indices = {
+			value : index
+			for index, value in enumerate( gathered )
+		}
+
+		self.assertEqual( gathered[0], "/" )
+		self.assertGreater( indices["/group/plane"], indices["/group"] )
+
+		for i in range( 1, 101 ) :
+			self.assertGreater( indices[f"/group{i}/plane"], indices[f"/group{i}"] )
+
+	def testParallelGatherExceptionHandling( self ) :
+
+		plane = GafferScene.Plane()
+
+		with self.assertRaisesRegex( ZeroDivisionError, "division by zero" ) :
+
+			GafferScene.SceneAlgo.parallelGatherLocations(
+
+				plane["out"],
+				lambda scene, path : path,
+				lambda x : 1/0
+
+			)
+
+	def testParallelGatherLocationExceptionHandling( self ) :
+
+		plane = GafferScene.Plane()
+
+		gathered = []
+		with self.assertRaisesRegex( Exception, "ZeroDivisionError" ) :
+
+			GafferScene.SceneAlgo.parallelGatherLocations(
+
+				plane["out"],
+				lambda scene, path : 1/0,
+				lambda x : gathered.append( x )
+
+			)
+
+		self.assertEqual( gathered, [] )
+
 	def tearDown( self ) :
 
 		GafferSceneTest.SceneTestCase.tearDown( self )

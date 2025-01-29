@@ -84,7 +84,11 @@ struct LocationData
 
 	void write( IECoreScene::SceneInterface *root, float time ) const
 	{
-		SceneInterfacePtr scene = root->scene( m_path, SceneInterface::CreateIfMissing );
+		SceneInterfacePtr scene = root;
+		for( auto &p : m_path )
+		{
+			scene = scene->child( p, SceneInterface::CreateIfMissing );
+		}
 
 		if( m_object->typeId() != IECore::NullObjectTypeId && m_path.size() > 0 )
 		{
@@ -95,7 +99,7 @@ struct LocationData
 
 		if( m_path.size() )
 		{
-			M44dDataPtr td = new IECore::M44dData( Imath::M44d ( // TODO : REUSE ALLOC?
+			M44dDataPtr td = new IECore::M44dData( Imath::M44d (
 				m_transform[0][0], m_transform[0][1], m_transform[0][2], m_transform[0][3],
 				m_transform[1][0], m_transform[1][1], m_transform[1][2], m_transform[1][3],
 				m_transform[2][0], m_transform[2][1], m_transform[2][2], m_transform[2][3],
