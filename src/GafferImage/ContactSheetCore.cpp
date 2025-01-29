@@ -262,7 +262,7 @@ void ContactSheetCore::affects( const Gaffer::Plug *input, AffectedPlugsContaine
 		outputs.push_back( outPlug()->channelNamesPlug() );
 	}
 
-	if( input == formatPlug() || input == tilesPlug() )
+	if( formatPlug()->isAncestorOf( input ) || input == tilesPlug() )
 	{
 		outputs.push_back( coveragePlug() );
 	}
