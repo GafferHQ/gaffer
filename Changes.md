@@ -1,10 +1,16 @@
 1.x.x.x (relative to 1.5.x.x)
 =======
 
+Improvements
+------------
+
+- DeleteAttributes : Optimised case where all attributes are deleted. The input attributes are no longer accessed at all in this case.
+
 Breaking Changes
 ----------------
 
 - StandardNodule : Removed deprecated `setCompatibleLabelsVisible()`.
+- DeleteAttributes : Changed base class and marked as `final`.
 
 1.5.x.x (relative to 1.5.4.0)
 =======

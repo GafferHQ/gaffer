@@ -96,5 +96,61 @@ class DeleteAttributesTest( GafferSceneTest.SceneTestCase ) :
 		d["names"].setValue( "b2 a*" )
 		self.assertEqual( set( d["out"].attributes( "/plane" ).keys() ), set( [ "b1" ] ) )
 
+	def testDeleteAll( self ) :
+
+		plane = GafferScene.Plane()
+		deleteAttributes = GafferScene.DeleteAttributes()
+		deleteAttributes["in"].setInput( plane["out"] )
+
+		with Gaffer.PerformanceMonitor() as monitor :
+			deleteAttributes["out"].attributes( "/plane" )
+		self.assertEqual( monitor.plugStatistics( plane["out"]["attributes"] ).computeCount, 1 )
+
+		Gaffer.ValuePlug.clearCache()
+		deleteAttributes["names"].setValue( "*" )
+		with Gaffer.PerformanceMonitor() as monitor :
+			deleteAttributes["out"].attributes( "/plane" )
+		self.assertEqual( monitor.plugStatistics( plane["out"]["attributes"] ).computeCount, 0 )
+
+		Gaffer.ValuePlug.clearCache()
+		deleteAttributes["names"].setValue( "" )
+		deleteAttributes["invertNames"].setValue( True )
+		with Gaffer.PerformanceMonitor() as monitor :
+			deleteAttributes["out"].attributes( "/plane" )
+		self.assertEqual( monitor.plugStatistics( plane["out"]["attributes"] ).computeCount, 0 )
+
+	def testChangingInputAttributes( self ) :
+
+		plane = GafferScene.Plane()
+		attributes = GafferScene.CustomAttributes()
+		attributes["in"].setInput( plane["out"] )
+		deleteAttributes = GafferScene.DeleteAttributes()
+		deleteAttributes["in"].setInput( attributes["out"] )
+		deleteAttributes["names"].setValue( "a" )
+		self.assertEqual( deleteAttributes["out"].attributes( "/plane" ), IECore.CompoundObject() )
+
+		attributes["attributes"].addChild( Gaffer.NameValuePlug( "a", 10 ) )
+		attributes["attributes"].addChild( Gaffer.NameValuePlug( "b", 10 ) )
+		self.assertEqual( deleteAttributes["out"].attributes( "/plane" ), IECore.CompoundObject( { "b" : IECore.IntData( 10 ) } ) )
+
+	def testChangingFilter( self ) :
+
+		plane = GafferScene.Plane()
+		attributes = GafferScene.CustomAttributes()
+		attributes["in"].setInput( plane["out"] )
+		attributes["attributes"].addChild( Gaffer.NameValuePlug( "a", 10 ) )
+
+		deleteAttributes = GafferScene.DeleteAttributes()
+		deleteAttributes["in"].setInput( attributes["out"] )
+		deleteAttributes["names"].setValue( "a" )
+		self.assertEqual( deleteAttributes["out"].attributes( "/plane" ), IECore.CompoundObject() )
+
+		pathFilter = GafferScene.PathFilter()
+		deleteAttributes["filter"].setInput( pathFilter["out"] )
+		self.assertEqual( deleteAttributes["out"].attributes( "/plane" ), attributes["out"].attributes( "/plane" ) )
+
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+		self.assertEqual( deleteAttributes["out"].attributes( "/plane" ), IECore.CompoundObject() )
+
 if __name__ == "__main__":
 	unittest.main()
