@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.4.0)
 =======
 
+Fixes
+-----
+
+- ContactSheetCore : Fixed bugs handling changes to the input and output image formats.
+
 1.5.4.0 (relative to 1.5.3.0)
 =======
 
