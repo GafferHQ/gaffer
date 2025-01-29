@@ -116,7 +116,11 @@ class TestCase( unittest.TestCase ) :
 
 		if self.__temporaryDirectory is not None :
 			if os.name == "nt" :
-				subprocess.check_call( [ "icacls", self.__temporaryDirectory, "/grant", "Users:(OI)(CI)(W)" ] )
+				subprocess.check_call(
+					[ "icacls", self.__temporaryDirectory, "/grant", "Users:(OI)(CI)(W)" ],
+					stdout = subprocess.DEVNULL,
+					stderr = subprocess.STDOUT
+				)
 
 			for root, dirs, files in os.walk( self.__temporaryDirectory ) :
 				for fileName in [ p for p in files + dirs if not ( pathlib.Path( root ) / p ).is_symlink() ] :

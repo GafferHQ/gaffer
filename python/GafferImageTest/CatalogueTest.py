@@ -624,7 +624,11 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		if os.name != "nt" :
 			os.chmod( self.temporaryDirectory(), stat.S_IREAD )
 		else :
-			subprocess.check_call( [ "icacls", self.temporaryDirectory(), "/deny", "Users:(OI)(CI)(W)" ] )
+			subprocess.check_call(
+				[ "icacls", self.temporaryDirectory(), "/deny", "Users:(OI)(CI)(W)" ],
+				stdout = subprocess.DEVNULL,
+				stderr = subprocess.STDOUT
+			)
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.imagesPath() / "blurRange.exr" )
