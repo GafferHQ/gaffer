@@ -52,6 +52,11 @@ API
 - VisibleSetData : Implemented `save()` and `load()`.
 - ScriptNodeAlgo : Added functions for managing VisibleSet bookmarks.
 
+Documentation
+-------------
+
+- 3Delight : Added GafferDelight to the node reference section.
+
 1.5.3.0 (relative to 1.5.2.0)
 - Tweaks nodes : Moved list of tweaks to a collapsible "Tweaks" section in the NodeEditor.
 - Viewer :
