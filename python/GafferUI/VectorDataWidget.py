@@ -951,7 +951,7 @@ class _Model( QtCore.QAbstractTableModel ) :
 			column = self.__columns[index.column()]
 			column.accessor.setElement( index.row(), column.relativeColumnIndex, value )
 
-			if Qt.__binding__ in ( "PySide2", "PyQt5" ) :
+			if Qt.__binding__ in ( "PySide6", "PySide2", "PyQt5" ) :
 				self.dataChanged.emit( index, index, [ QtCore.Qt.DisplayRole, QtCore.Qt.EditRole ] )
 			else:
 				self.dataChanged.emit( index, index )

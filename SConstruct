@@ -554,6 +554,7 @@ else:
 			"/experimental:external",  # Allow use of /external:I
 			"/external:W0",  # Suppress warnings for headers included with /external:I
 			"/Zc:inline", # Remove unreferenced function or data if it is COMDAT or has internal linkage only
+			"/Zc:__cplusplus", # "Qt requires a C++17 compiler, and a suitable value for __cplusplus. On MSVC, you must pass the /Zc:__cplusplus option to the compiler."
 			"/GR", # Enable RTTI
 			"/TP", # Treat all files as c++ (vs C)
 			"/FC", # Display full paths in diagnostics
