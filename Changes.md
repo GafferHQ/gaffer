@@ -1,6 +1,18 @@
 1.5.x.x (relative to 1.5.4.0)
 =======
 
+Improvements
+------------
+
+- VisualiserTool :
+  - Changed naming requirements for visualising primitive variables. Values in `dataName` now prefix the primitive variable name with `primitiveVariable:`. Setting `dataName` to `vertex:index` will display vertex indices.
+  - Added `mode` plug. The available modes are :
+    - Auto : Chooses the most appropriate mode based on the data and primitive type.
+    - Color (Auto Range) : Float, integer, V2f and color data is displayed without modification. Vector data is remapped from `[-1, 1]` to `[0, 1]`.
+    - Color : Values are remapped from the range `[valueMin, valueMax]` to `[0, 1]`.
+    - Vertex Label : Values are displayed as a label next to each vertex.
+  - When visualising data as vertex labels, the value for the vertex nearest the mouse cursor gets visual emphasis. This value is also used for drag and drop.
+
 Fixes
 -----
 
@@ -41,20 +53,6 @@ API
 - ScriptNodeAlgo : Added functions for managing VisibleSet bookmarks.
 
 1.5.3.0 (relative to 1.5.2.0)
-=======
-
-Features
---------
-
-- PrimitiveVariableTweaks : Added node for tweaking primitive variables. Can affect just part of a primitive based on ids or a mask.
-- Menu Bar : Added a "Render Pass" menu to the Menu Bar that can be used to choose the current render pass from those provided by the focus node.
-
-Improvements
-------------
-
-- Shader, ShaderPlug : Added support for ContextProcessor, Loop and Spreadsheet nodes to be used inline between shader nodes and as the terminal node connected to
-  ShaderAssignment and other shader-consuming nodes.
-- VisualiserTool : Changed `dataName` input widget for choosing the primitive variable to visualise to a list of available variable names for the current selection.
 - Tweaks nodes : Moved list of tweaks to a collapsible "Tweaks" section in the NodeEditor.
 - Viewer :
   - The shading mode menu icon now updates to indicate when a non-default shading mode is in use.

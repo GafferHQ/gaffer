@@ -76,10 +76,11 @@ IECORE_POP_DEFAULT_VISIBILITY
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/preprocessor/stringize.hpp"
 
+#include "fmt/format.h"
+
 #include <algorithm>
 #include <cassert>
 #include <limits>
-#include <sstream>
 #include <string>
 
 using namespace Imath;
@@ -112,8 +113,19 @@ const std::string g_pName = "P";
 const Color4f g_textShadowColor( 0.2f, 0.2f, 0.2f, 1.f );
 const float g_textShadowOffset = 0.1f;
 
+const std::string g_primitiveVariablePrefix= "primitiveVariable:";
+const int g_primitiveVariablePrefixSize = g_primitiveVariablePrefix.size();
+
+// VertexLabel constants
+const float g_cursorRadius2 = 25.f * 25.f;
+const std::string g_vertexIndexDataName = "vertex:index";
+
+//-----------------------------------------------------------------------------
+// Color shader
+//-----------------------------------------------------------------------------
+
 // Uniform block structure (std140 layout)
-struct UniformBlock
+struct UniformBlockColorShader
 {
 	alignas( 16 ) M44f o2c;
 	alignas( 16 ) V3f valueMin;
@@ -123,7 +135,7 @@ struct UniformBlock
 
 const GLuint g_uniformBlockBindingIndex = 0;
 
-#define UNIFORM_BLOCK_GLSL_SOURCE \
+#define UNIFORM_BLOCK_COLOR_SHADER_GLSL_SOURCE \
 	"layout( std140, row_major ) uniform UniformBlock\n" \
 	"{\n" \
 	"   mat4 o2c;\n" \
@@ -137,13 +149,13 @@ const GLuint g_uniformBlockBindingIndex = 0;
 #define ATTRIB_GLSL_LOCATION_VSY 2
 #define ATTRIB_GLSL_LOCATION_VSZ 3
 
-#define ATTRIB_GLSL_SOURCE \
+#define ATTRIB_COLOR_SHADER_GLSL_SOURCE \
 	"layout( location = " BOOST_PP_STRINGIZE( ATTRIB_GLSL_LOCATION_PS ) " ) in vec3 ps;\n" \
 	"layout( location = " BOOST_PP_STRINGIZE( ATTRIB_GLSL_LOCATION_VSX ) " ) in float vsx;\n" \
 	"layout( location = " BOOST_PP_STRINGIZE( ATTRIB_GLSL_LOCATION_VSY ) " ) in float vsy;\n" \
 	"layout( location = " BOOST_PP_STRINGIZE( ATTRIB_GLSL_LOCATION_VSZ ) " ) in float vsz;\n" \
 
-#define INTERFACE_BLOCK_GLSL_SOURCE( STORAGE, NAME ) \
+#define INTERFACE_BLOCK_COLOR_SHADER_GLSL_SOURCE( STORAGE, NAME ) \
 	BOOST_PP_STRINGIZE( STORAGE ) " InterfaceBlock\n" \
 	"{\n" \
 	"   smooth vec3 value;\n" \
@@ -151,14 +163,14 @@ const GLuint g_uniformBlockBindingIndex = 0;
 
 // Opengl vertex shader code
 
-const std::string g_vertSource(
+const std::string g_colorShaderVertSource(
 	"#version 330\n"
 
-	UNIFORM_BLOCK_GLSL_SOURCE
+	UNIFORM_BLOCK_COLOR_SHADER_GLSL_SOURCE
 
-	ATTRIB_GLSL_SOURCE
+	ATTRIB_COLOR_SHADER_GLSL_SOURCE
 
-	INTERFACE_BLOCK_GLSL_SOURCE( out, outputs )
+	INTERFACE_BLOCK_COLOR_SHADER_GLSL_SOURCE( out, outputs )
 
 	"void main()\n"
 	"{\n"
@@ -170,13 +182,13 @@ const std::string g_vertSource(
 
 // Opengl fragment shader code
 
-const std::string g_fragSource
+const std::string g_colorShaderFragSource
 (
 	"#version 330\n"
 
-	UNIFORM_BLOCK_GLSL_SOURCE
+	UNIFORM_BLOCK_COLOR_SHADER_GLSL_SOURCE
 
-	INTERFACE_BLOCK_GLSL_SOURCE( in, inputs )
+	INTERFACE_BLOCK_COLOR_SHADER_GLSL_SOURCE( in, inputs )
 
 	"layout( location = 0 ) out vec4 cs;\n"
 
@@ -186,14 +198,197 @@ const std::string g_fragSource
 	"}\n"
 );
 
+//-----------------------------------------------------------------------------
+// Vertex label shader
+//-----------------------------------------------------------------------------
+
+struct UniformBlockVertexLabelShader
+{
+	alignas( 16 ) Imath::M44f o2c;
+};
+
+// Block binding indexes for the uniform and shader storage buffers
+
+GLuint const g_storageBlockBindingIndex = 0;
+
+// Uniform block definition (std140 layout)
+
+#define UNIFORM_BLOCK_VERTEX_LABEL_SHADER_GLSL_SOURCE \
+	"layout( std140, row_major ) uniform UniformBlock\n" \
+	"{\n" \
+	"   mat4 o2c;\n" \
+	"} uniforms;\n"
+
+// Shader storage block definition (std430 layout)
+//
+// NOTE : std430 layout ensures that the elements of a uint array are tightly packed
+//        std140 would require 16 byte alignment of each element ...
+
+#define STORAGE_BLOCK_VERTEX_LABEL_SHADER_GLSL_SOURCE \
+	"layout( std430 ) buffer StorageBlock\n" \
+	"{\n" \
+	"   coherent restrict uint visibility[];\n" \
+	"} buffers;\n"
+
+// Vertex attribute definitions
+
+#define ATTRIB_VERTEX_LABEL_SHADER_GLSL_SOURCE \
+	"layout( location = " BOOST_PP_STRINGIZE( ATTRIB_GLSL_LOCATION_PS ) " ) in vec3 ps;\n"
+
+// Interface block definition
+
+#define INTERFACE_BLOCK_VERTEX_LABEL_SHADER_GLSL_SOURCE( STORAGE, NAME ) \
+	BOOST_PP_STRINGIZE( STORAGE ) " InterfaceBlock\n" \
+	"{\n" \
+	"   flat uint vertexId;\n" \
+	"} " BOOST_PP_STRINGIZE( NAME ) ";\n"
+
+// Opengl vertex shader code
+
+std::string const g_vertexLabelShaderVertSource
+(
+	"#version 430\n"
+
+	UNIFORM_BLOCK_VERTEX_LABEL_SHADER_GLSL_SOURCE
+
+	ATTRIB_VERTEX_LABEL_SHADER_GLSL_SOURCE
+
+	INTERFACE_BLOCK_VERTEX_LABEL_SHADER_GLSL_SOURCE( out, outputs )
+
+	"void main()\n"
+	"{\n"
+	"   gl_Position = vec4( ps, 1.0 ) * uniforms.o2c;\n"
+	"   outputs.vertexId = uint( gl_VertexID );\n"
+	"}\n"
+);
+
+// Opengl fragment shader code
+
+std::string const g_vertexLabelShaderFragSource
+(
+	"#version 430\n"
+
+	// NOTE : ensure that shader is only run for fragments that pass depth test.
+
+	"layout( early_fragment_tests ) in;\n"
+
+	STORAGE_BLOCK_VERTEX_LABEL_SHADER_GLSL_SOURCE
+
+	UNIFORM_BLOCK_VERTEX_LABEL_SHADER_GLSL_SOURCE
+
+	INTERFACE_BLOCK_VERTEX_LABEL_SHADER_GLSL_SOURCE( in, inputs )
+
+	"void main()\n"
+	"{\n"
+	"   uint index = inputs.vertexId / 32u;\n"
+	"   uint value = inputs.vertexId % 32u;\n"
+	"   atomicOr( buffers.visibility[ index ], 1u << value );\n"
+	"}\n"
+);
+
+//-----------------------------------------------------------------------------
+// Helper Methods
+//-----------------------------------------------------------------------------
+
+void drawStrokedText(
+	const ViewportGadget *viewportGadget,
+	const std::string &text,
+	const float size,
+	const V2f &rasterPosition,
+	const Style *style,
+	const Style::State state
+)
+{
+	ViewportGadget::RasterScope raster( viewportGadget );
+	const V3f scale( size, -size, 1.f );
+
+	glPushMatrix();
+	glTranslatef( rasterPosition.x, rasterPosition.y, 0.f );
+	glScalef( scale.x, scale.y, scale.z );
+
+	/// Shadow text
+	glTranslatef( g_textShadowOffset, 0.f, 0.f );
+	style->renderText( Style::LabelText, text, GafferUI::Style::State::NormalState, &g_textShadowColor );
+
+	glTranslatef( -g_textShadowOffset * 2.f, 0.f, 0.f );
+	style->renderText( Style::LabelText, text, GafferUI::Style::State::NormalState, &g_textShadowColor );
+
+	glTranslatef( g_textShadowOffset, g_textShadowOffset, 0.f );
+	style->renderText( Style::LabelText, text, GafferUI::Style::State::NormalState, &g_textShadowColor );
+
+	glTranslatef( 0.f, -g_textShadowOffset * 2.f, 0.f );
+	style->renderText( Style::LabelText, text, GafferUI::Style::State::NormalState, &g_textShadowColor );
+
+	/// Primary text
+	glTranslatef( 0.f, g_textShadowOffset, 0.f );
+	style->renderText( Style::LabelText, text, state );
+
+	glPopMatrix();
+}
+
+std::string primitiveVariableFromDataName( const std::string &dataName )
+{
+	const std::string name = boost::starts_with( dataName, g_primitiveVariablePrefix ) ? dataName.c_str() + g_primitiveVariablePrefixSize : "";
+
+	return name;
+}
+
+auto stringFromValue = []( auto &&value ) -> std::string
+{
+	/// \todo Improve on this by adding custom formatters for `fmt::format` to
+	/// handle V2f, V3f and Color3f.
+	using T = std::decay_t<decltype( value )>;
+	if constexpr( std::is_same_v<T, int> )
+	{
+		return fmt::format( "{}", value );
+	}
+	else if constexpr( std::is_same_v<T, float> )
+	{
+		return fmt::format( "{:.3f}", value );
+	}
+	else if constexpr( std::is_same_v<T, V2f> )
+	{
+		return fmt::format( "{:.3f}, {:.3f}", value.x, value.y );
+	}
+	else if constexpr( std::is_same_v<T, V3f> )
+	{
+		return fmt::format( "{:.3f}, {:.3f}, {:.3f}", value.x, value.y, value.z);
+	}
+	else if constexpr( std::is_same_v<T, Color3f> )
+	{
+		return fmt::format( "{:.3f}, {:.3f}, {:.3f}", value.x, value.y, value.z );
+	}
+
+	return "";
+};
+
+//-----------------------------------------------------------------------------
+// VisualiserGadget
+//-----------------------------------------------------------------------------
+
+enum class VisualiserShaderType
+{
+	Color,
+	VertexLabel
+};
+
+std::array<std::string, 2> g_vertSources = { g_colorShaderVertSource, g_vertexLabelShaderVertSource };
+std::array<std::string, 2> g_fragSources = { g_colorShaderFragSource, g_vertexLabelShaderFragSource };
+
 // The gadget that does the actual opengl drawing of the shaded primitive
 class VisualiserGadget : public Gadget
 {
 
 	public :
 
-		explicit VisualiserGadget( const VisualiserTool &tool, const std::string &name = defaultName<VisualiserGadget>() )
-			:	Gadget( name ), m_tool( &tool ), m_shader(), m_uniformBuffer()
+		explicit VisualiserGadget( const VisualiserTool &tool, const std::string &name = defaultName<VisualiserGadget>() ) :
+			Gadget( name ),
+			m_tool( &tool ),
+			m_colorShader(),
+			m_colorUniformBuffer(),
+			m_vertexLabelShader(),
+			m_vertexLabelUniformBuffer(),
+			m_cursorVertexValue()
 		{
 		}
 
@@ -223,389 +418,17 @@ class VisualiserGadget : public Gadget
 			// Get parent viewport gadget
 			const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
 
+			const VisualiserTool::Mode mode = (VisualiserTool::Mode)m_tool->modePlug()->getValue();
+
 			if( layer == Gadget::Layer::MidFront )
 			{
-
-				// Bootleg shader
-				buildShader();
-
-				if( !m_shader )
-				{
-					return;
-				}
-
-				// Get the cached converter from IECoreGL, this is used to convert primitive
-				// variable data to opengl buffers which will be shared with the IECoreGL renderer
-				IECoreGL::CachedConverter *converter = IECoreGL::CachedConverter::defaultCachedConverter();
-
-				// Bootleg uniform buffer
-				GLint uniformBinding;
-				glGetIntegerv( GL_UNIFORM_BUFFER_BINDING, &uniformBinding );
-
-				if( !m_uniformBuffer )
-				{
-					GLuint buffer = 0u;
-					glGenBuffers( 1, &buffer );
-					glBindBuffer( GL_UNIFORM_BUFFER, buffer );
-					glBufferData( GL_UNIFORM_BUFFER, sizeof( UniformBlock ), 0, GL_DYNAMIC_DRAW );
-					m_uniformBuffer.reset( new IECoreGL::Buffer( buffer ) );
-				}
-
-				glBindBufferBase( GL_UNIFORM_BUFFER, g_uniformBlockBindingIndex, m_uniformBuffer->buffer() );
-
-				// Get the name of the primitive variable to visualise
-				const std::string &name = m_tool->dataNamePlug()->getValue();
-
-				// Get min/max values and colors and opacity
-				UniformBlock uniforms;
-				const V3f valueMin = m_tool->valueMinPlug()->getValue();
-				const V3f valueMax = m_tool->valueMaxPlug()->getValue();
-				uniforms.opacity = m_tool->opacityPlug()->getValue();
-
-				// Compute value range reciprocal
-				//
-				// NOTE : when range is <= 0 set the reciprocal to 0 so that value becomes 0 (minimum)
-				V3f valueRange = ( valueMax - valueMin );
-				for( int i = 0; i < 3; ++i )
-				{
-					valueRange[i] = ( valueRange[i] > 0.f ) ? ( 1.f / valueRange[i] ) : 0.f;
-				}
-
-				// Get the world to clip space matrix
-				M44f v2c;
-				glGetFloatv( GL_PROJECTION_MATRIX, v2c.getValue() );
-				const M44f w2c = viewportGadget->getCameraTransform().gjInverse() * v2c;
-
-				// Set opengl polygon and blend state
-				//
-				// NOTE : use polygon offset to ensure that any discrepancies between the transform
-				//        from object to clip space do not cause z-fighting. This is necessary as
-				//        the shader uses an object to clip matrix which may give slighly different
-				//        depth results to the transformation used in the IECoreGL renderer.
-				GLint blendEqRgb;
-				GLint blendEqAlpha;
-				glGetIntegerv( GL_BLEND_EQUATION_RGB, &blendEqRgb );
-				glGetIntegerv( GL_BLEND_EQUATION_ALPHA, &blendEqAlpha );
-				glBlendEquation( GL_FUNC_ADD );
-
-				GLint blendSrcRgb;
-				GLint blendSrcAlpha;
-				GLint blendDstRgb;
-				GLint blendDstAlpha;
-				glGetIntegerv( GL_BLEND_SRC_RGB, &blendSrcRgb );
-				glGetIntegerv( GL_BLEND_SRC_ALPHA, &blendSrcAlpha );
-				glGetIntegerv( GL_BLEND_DST_RGB, &blendDstRgb );
-				glGetIntegerv( GL_BLEND_DST_ALPHA, &blendDstAlpha );
-				glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-
-				const GLboolean depthEnabled = glIsEnabled( GL_DEPTH_TEST );
-				if( !depthEnabled )
-				{
-					glEnable( GL_DEPTH_TEST );
-				}
-
-				GLint depthFunc;
-				glGetIntegerv( GL_DEPTH_FUNC, &depthFunc );
-				glDepthFunc( GL_LEQUAL );
-
-				GLboolean depthWriteEnabled;
-				glGetBooleanv( GL_DEPTH_WRITEMASK, &depthWriteEnabled );
-				if( depthWriteEnabled )
-				{
-					glDepthMask( GL_FALSE );
-				}
-
-				const GLboolean blendEnabled = glIsEnabled( GL_BLEND );
-				if( !blendEnabled )
-				{
-					glEnable( GL_BLEND );
-				}
-
-				// MSVC appears to be doing an optimization that causes the call to
-				// `glPolygonMode( GL_FRONT_AND_BACK, polygonMode )` to fail with an
-				// "invalid enum" error. Initializing the value even when we are going
-				// to immediately set it via `glGetIntegerv()` prevents that optimization
-				// and allows us to successfully reset the value.
-				GLint polygonMode = GL_FILL;
-				glGetIntegerv( GL_POLYGON_MODE, &polygonMode );
-				glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-
-				const GLboolean cullFaceEnabled = glIsEnabled( GL_CULL_FACE );
-				if( cullFaceEnabled )
-				{
-					glDisable( GL_CULL_FACE );
-				}
-
-				const GLboolean polgonOffsetFillEnabled = glIsEnabled( GL_POLYGON_OFFSET_FILL );
-				if( !polgonOffsetFillEnabled )
-				{
-					glEnable( GL_POLYGON_OFFSET_FILL );
-				}
-
-				GLfloat polygonOffsetFactor, polygonOffsetUnits;
-				glGetFloatv( GL_POLYGON_OFFSET_FACTOR, &polygonOffsetFactor );
-				glGetFloatv( GL_POLYGON_OFFSET_UNITS, &polygonOffsetUnits );
-				glPolygonOffset( -1, -1 );
-
-				// Enable shader program
-
-				GLint shaderProgram;
-				glGetIntegerv( GL_CURRENT_PROGRAM, &shaderProgram );
-				glUseProgram( m_shader->program() );
-
-				// Set opengl vertex attribute array state
-
-				GLint arrayBinding;
-				glGetIntegerv( GL_ARRAY_BUFFER_BINDING, &arrayBinding );
-
-				glPushClientAttrib( GL_CLIENT_VERTEX_ARRAY_BIT );
-
-				glVertexAttribDivisor( ATTRIB_GLSL_LOCATION_PS, 0 );
-				glEnableVertexAttribArray( ATTRIB_GLSL_LOCATION_PS );
-				glVertexAttribDivisor( ATTRIB_GLSL_LOCATION_VSX, 0 );
-				glEnableVertexAttribArray( ATTRIB_GLSL_LOCATION_VSX );
-				glVertexAttribDivisor( ATTRIB_GLSL_LOCATION_VSY, 0 );
-				glEnableVertexAttribArray( ATTRIB_GLSL_LOCATION_VSY );
-				glVertexAttribDivisor( ATTRIB_GLSL_LOCATION_VSZ, 0 );
-
-				// Loop through current selection
-
-				for( const auto &location : m_tool->selection() )
-				{
-					ScenePlug::PathScope scope( &location.context(), &location.path() );
-
-					// Check path exists
-					if( !location.scene().existsPlug()->getValue() )
-					{
-						continue;
-					}
-
-					// Extract mesh primitive
-					auto mesh = runTimeCast<const MeshPrimitive>( location.scene().objectPlug()->getValue() );
-					if( !mesh )
-					{
-						continue;
-					}
-
-					// Retrieve cached IECoreGL mesh primitive
-					auto meshGL = runTimeCast<const IECoreGL::MeshPrimitive>( converter->convert( mesh.get() ) );
-					if( !meshGL )
-					{
-						continue;
-					}
-
-					// Find opengl "P" buffer data
-
-					IECoreGL::ConstBufferPtr pBuffer = meshGL->getVertexBuffer( g_pName );
-					if( !pBuffer )
-					{
-						continue;
-					}
-
-					// Find opengl named buffer data
-					//
-					// NOTE : conversion to IECoreGL mesh may generate vertex attributes (eg. "N")
-					//        so check named primitive variable exists on IECore mesh primitive.
-
-					const auto vIt = mesh->variables.find( name );
-					if( vIt == mesh->variables.end() )
-					{
-						continue;
-					}
-
-					ConstDataPtr vData = vIt->second.data;
-					GLsizei stride = 0;
-					GLenum type = GL_FLOAT;
-					bool offset = false;
-					bool enableVSZ = false;
-					switch( vData->typeId() )
-					{
-						case IntVectorDataTypeId:
-							type = GL_INT;
-							[[fallthrough]];
-						case FloatVectorDataTypeId:
-							enableVSZ = true;
-							uniforms.valueMin = V3f( valueMin.x );
-							uniforms.valueRange = V3f( valueRange.x );
-							break;
-						case V2fVectorDataTypeId:
-							stride = 2;
-							offset = true;
-							uniforms.valueMin = V3f( valueMin.x, valueMin.y, 0.f );
-							uniforms.valueRange = V3f( valueRange.x, valueRange.y, 0.f );
-							break;
-						case Color3fVectorDataTypeId:
-						case V3fVectorDataTypeId:
-							stride = 3;
-							offset = true;
-							enableVSZ = true;
-							uniforms.valueMin = valueMin;
-							uniforms.valueRange = valueRange;
-							break;
-						default:
-							continue;
-					}
-
-					IECoreGL::ConstBufferPtr vBuffer = meshGL->getVertexBuffer( name );
-					if( !vBuffer )
-					{
-						continue;
-					}
-
-					// Get the object to world transform
-
-					M44f o2w;
-					ScenePlug::ScenePath path( location.path() );
-					while( !path.empty() )
-					{
-						scope.setPath( &path );
-						o2w = o2w * location.scene().transformPlug()->getValue();
-						path.pop_back();
-					}
-
-					// Compute object to clip matrix
-					uniforms.o2c = o2w * w2c;
-
-					// Upload opengl uniform block data
-
-					glBufferData( GL_UNIFORM_BUFFER, sizeof( UniformBlock ), &uniforms, GL_DYNAMIC_DRAW );
-
-					// Draw primitive
-					glBindBuffer( GL_ARRAY_BUFFER, pBuffer->buffer() );
-					glVertexAttribPointer( ATTRIB_GLSL_LOCATION_PS, 3, GL_FLOAT, GL_FALSE, 0, nullptr );
-					glBindBuffer( GL_ARRAY_BUFFER, vBuffer->buffer() );
-					glVertexAttribPointer( ATTRIB_GLSL_LOCATION_VSX, 1, type, GL_FALSE, stride * sizeof( GLfloat ), nullptr );
-					glVertexAttribPointer(
-						ATTRIB_GLSL_LOCATION_VSY,
-						1,
-						type,
-						GL_FALSE,
-						stride * sizeof( GLfloat ),
-						( void const *)( ( offset ? 1 : 0 ) * sizeof( GLfloat ) )
-					);
-					if( enableVSZ )
-					{
-						glEnableVertexAttribArray( ATTRIB_GLSL_LOCATION_VSZ );
-						glVertexAttribPointer(
-							ATTRIB_GLSL_LOCATION_VSZ,
-							1,
-							type,
-							GL_FALSE,
-							stride * sizeof( GLfloat ),
-							( void const *)( ( offset ? 2 : 0 ) * sizeof( GLfloat ) )
-						);
-					}
-					else
-					{
-						glDisableVertexAttribArray( ATTRIB_GLSL_LOCATION_VSZ );
-						glVertexAttrib1f( ATTRIB_GLSL_LOCATION_VSZ, 0.f );
-					}
-
-					meshGL->renderInstances( 1 );
-				}
-
-				// Restore opengl state
-
-				glPopClientAttrib();
-				glBindBuffer( GL_ARRAY_BUFFER, arrayBinding );
-				glBindBuffer( GL_UNIFORM_BUFFER, uniformBinding );
-
-				glDepthFunc( depthFunc );
-				glBlendEquationSeparate( blendEqRgb, blendEqAlpha );
-				glBlendFuncSeparate( blendSrcRgb, blendDstRgb, blendSrcAlpha, blendDstAlpha );
-				glPolygonMode( GL_FRONT_AND_BACK, polygonMode );
-				if( cullFaceEnabled )
-				{
-					glEnable( GL_CULL_FACE );
-				}
-				if( !polgonOffsetFillEnabled )
-				{
-					glDisable( GL_POLYGON_OFFSET_FILL );
-				}
-				glPolygonOffset( polygonOffsetFactor, polygonOffsetUnits );
-
-				if( !blendEnabled )
-				{
-					glDisable( GL_BLEND );
-				}
-				if( !depthEnabled )
-				{
-					glDisable( GL_DEPTH_TEST );
-				}
-				if( depthWriteEnabled )
-				{
-					glDepthMask( GL_TRUE );
-				}
-				glUseProgram( shaderProgram );
+				renderColorVisualiser( viewportGadget, mode );
 			}
 
 			else if( layer == Gadget::Layer::Front )
 			{
-				// Display value at cursor as text
-
-				const Data *value = m_tool->cursorValue();
-				if( value )
-				{
-					std::ostringstream oss;
-					switch( value->typeId() )
-					{
-						case IntDataTypeId:
-							oss << ( assertedStaticCast<const IntData>( value )->readable() );
-							break;
-						case FloatDataTypeId:
-							oss << ( assertedStaticCast<const FloatData>( value )->readable() );
-							break;
-						case V2fDataTypeId:
-							oss << ( assertedStaticCast<const V2fData>( value )->readable() );
-							break;
-						case V3fDataTypeId:
-							oss << ( assertedStaticCast<const V3fData>( value )->readable() );
-							break;
-						case Color3fDataTypeId:
-							oss << ( assertedStaticCast<const Color3fData>( value )->readable() );
-							break;
-						default:
-							break;
-					}
-
-					const std::string text = oss.str();
-					if( !text.empty() )
-					{
-						// Draw in raster space
-						//
-						// NOTE : It seems that Gaffer defines the origin of raster space as the top left corner
-						//        of the viewport, however the style text drawing functions assume that y increases
-						//        "up" the screen rather than "down", so invert y to ensure text is not upside down.
-
-						ViewportGadget::RasterScope raster( viewportGadget );
-						const float size = m_tool->sizePlug()->getValue();
-						const V3f scale( size, -size, 1.f );
-						const V2f &rp = m_tool->cursorPos();
-
-						glPushMatrix();
-						glTranslatef( rp.x, rp.y, 0.f );
-						glScalef( scale.x, scale.y, scale.z );
-
-						/// Shadow text
-						glTranslatef( g_textShadowOffset, 0.f, 0.f );
-						style->renderText( Style::LabelText, text, GafferUI::Style::State::NormalState, &g_textShadowColor );
-
-						glTranslatef( -g_textShadowOffset * 2.f, 0.f, 0.f );
-						style->renderText( Style::LabelText, text, GafferUI::Style::State::NormalState, &g_textShadowColor );
-
-						glTranslatef( g_textShadowOffset, g_textShadowOffset, 0.f );
-						style->renderText( Style::LabelText, text, GafferUI::Style::State::NormalState, &g_textShadowColor );
-
-						glTranslatef( 0.f, -g_textShadowOffset * 2.f, 0.f );
-						style->renderText( Style::LabelText, text, GafferUI::Style::State::NormalState, &g_textShadowColor );
-
-						/// Primary text
-						glTranslatef( 0.f, g_textShadowOffset, 0.f );
-						style->renderText( Style::LabelText, text );
-
-						glPopMatrix();
-					}
-				}
+				renderColorValue( viewportGadget, style, mode );
+				renderVertexLabelValue( viewportGadget, style, mode );
 			}
 		}
 
@@ -625,16 +448,18 @@ class VisualiserGadget : public Gadget
 
 	private:
 
-		void buildShader() const
+		friend VisualiserTool;
+
+		void buildShader( IECoreGL::ConstShaderPtr &shader, const std::string &vertSource, const std::string &fragSource ) const
 		{
-			if( !m_shader )
+			if( !shader )
 			{
-				m_shader = IECoreGL::ShaderLoader::defaultShaderLoader()->create(
-					g_vertSource, std::string(), g_fragSource
+				shader = IECoreGL::ShaderLoader::defaultShaderLoader()->create(
+					vertSource, std::string(), fragSource
 				);
-				if( m_shader )
+				if( shader )
 				{
-					const GLuint program = m_shader->program();
+					const GLuint program = shader->program();
 					const GLuint blockIndex = glGetUniformBlockIndex( program, "UniformBlock" );
 					if( blockIndex != GL_INVALID_INDEX )
 					{
@@ -644,9 +469,903 @@ class VisualiserGadget : public Gadget
 			}
 		}
 
+		/// Renders the color visualiser for the given `ViewportGadget`. In general, each visualiser
+		/// is reponsible for determining if it should be drawn for the given `mode`. Objects may
+		/// have different data types for the same variable name, so a visualiser's suitability may
+		/// vary per-object.
+		void renderColorVisualiser( const ViewportGadget *viewportGadget, VisualiserTool::Mode mode ) const
+		{
+			// Get the name of the primitive variable to visualise
+			const std::string name = primitiveVariableFromDataName( m_tool->dataNamePlug()->getValue() );
+			if(
+				name.empty() ||
+				(
+					mode != VisualiserTool::Mode::Auto &&
+					mode != VisualiserTool::Mode::Color &&
+					mode != VisualiserTool::Mode::ColorAutoRange
+				)
+			)
+			{
+				return;
+			}
+
+			buildShader( m_colorShader, g_colorShaderVertSource, g_colorShaderFragSource );
+
+			if( !m_colorShader )
+			{
+				return;
+			}
+
+			// Get the cached converter from IECoreGL, this is used to convert primitive
+			// variable data to opengl buffers which will be shared with the IECoreGL renderer
+			IECoreGL::CachedConverter *converter = IECoreGL::CachedConverter::defaultCachedConverter();
+
+			GLint uniformBinding;
+			glGetIntegerv( GL_UNIFORM_BUFFER_BINDING, &uniformBinding );
+
+			if( !m_colorUniformBuffer )
+			{
+				GLuint buffer = 0u;
+				glGenBuffers( 1, &buffer );
+				glBindBuffer( GL_UNIFORM_BUFFER, buffer );
+				glBufferData( GL_UNIFORM_BUFFER, sizeof( UniformBlockColorShader ), 0, GL_DYNAMIC_DRAW );
+				m_colorUniformBuffer.reset( new IECoreGL::Buffer( buffer ) );
+			}
+
+			glBindBufferBase( GL_UNIFORM_BUFFER, g_uniformBlockBindingIndex, m_colorUniformBuffer->buffer() );
+
+			// Get min/max values and colors and opacity
+			UniformBlockColorShader uniforms;
+			const V3f valueMin = m_tool->valueMinPlug()->getValue();
+			const V3f valueMax = m_tool->valueMaxPlug()->getValue();
+			uniforms.opacity = m_tool->opacityPlug()->getValue();
+
+			// Compute value range reciprocal
+			//
+			// NOTE : when range is <= 0 set the reciprocal to 0 so that value becomes 0 (minimum)
+			std::optional<V3f> valueRange;
+			if( mode == VisualiserTool::Mode::Color )
+			{
+				valueRange = ( valueMax - valueMin );
+				for( int i = 0; i < 3; ++i )
+				{
+					valueRange.value()[i] = ( valueRange.value()[i] > 0.f ) ? ( 1.f / valueRange.value()[i] ) : 0.f;
+				}
+			}
+
+			// Get the world to clip space matrix
+			M44f v2c;
+			glGetFloatv( GL_PROJECTION_MATRIX, v2c.getValue() );
+			const M44f w2c = viewportGadget->getCameraTransform().gjInverse() * v2c;
+
+			// Set opengl polygon and blend state
+			//
+			// NOTE : use polygon offset to ensure that any discrepancies between the transform
+			//        from object to clip space do not cause z-fighting. This is necessary as
+			//        the shader uses an object to clip matrix which may give slighly different
+			//        depth results to the transformation used in the IECoreGL renderer.
+			GLint blendEqRgb;
+			GLint blendEqAlpha;
+			glGetIntegerv( GL_BLEND_EQUATION_RGB, &blendEqRgb );
+			glGetIntegerv( GL_BLEND_EQUATION_ALPHA, &blendEqAlpha );
+			glBlendEquation( GL_FUNC_ADD );
+
+			GLint blendSrcRgb;
+			GLint blendSrcAlpha;
+			GLint blendDstRgb;
+			GLint blendDstAlpha;
+			glGetIntegerv( GL_BLEND_SRC_RGB, &blendSrcRgb );
+			glGetIntegerv( GL_BLEND_SRC_ALPHA, &blendSrcAlpha );
+			glGetIntegerv( GL_BLEND_DST_RGB, &blendDstRgb );
+			glGetIntegerv( GL_BLEND_DST_ALPHA, &blendDstAlpha );
+			glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+			const GLboolean depthEnabled = glIsEnabled( GL_DEPTH_TEST );
+			if( !depthEnabled )
+			{
+				glEnable( GL_DEPTH_TEST );
+			}
+
+			GLint depthFunc;
+			glGetIntegerv( GL_DEPTH_FUNC, &depthFunc );
+			glDepthFunc( GL_LEQUAL );
+
+			GLboolean depthWriteEnabled;
+			glGetBooleanv( GL_DEPTH_WRITEMASK, &depthWriteEnabled );
+			if( depthWriteEnabled )
+			{
+				glDepthMask( GL_FALSE );
+			}
+
+			const GLboolean blendEnabled = glIsEnabled( GL_BLEND );
+			if( !blendEnabled )
+			{
+				glEnable( GL_BLEND );
+			}
+
+			// MSVC appears to be doing an optimization that causes the call to
+			// `glPolygonMode( GL_FRONT_AND_BACK, polygonMode )` to fail with an
+			// "invalid enum" error. Initializing the value even when we are going
+			// to immediately set it via `glGetIntegerv()` prevents that optimization
+			// and allows us to successfully reset the value.
+			GLint polygonMode = GL_FILL;
+			glGetIntegerv( GL_POLYGON_MODE, &polygonMode );
+			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+
+			const GLboolean cullFaceEnabled = glIsEnabled( GL_CULL_FACE );
+			if( cullFaceEnabled )
+			{
+				glDisable( GL_CULL_FACE );
+			}
+
+			const GLboolean polgonOffsetFillEnabled = glIsEnabled( GL_POLYGON_OFFSET_FILL );
+			if( !polgonOffsetFillEnabled )
+			{
+				glEnable( GL_POLYGON_OFFSET_FILL );
+			}
+
+			GLfloat polygonOffsetFactor, polygonOffsetUnits;
+			glGetFloatv( GL_POLYGON_OFFSET_FACTOR, &polygonOffsetFactor );
+			glGetFloatv( GL_POLYGON_OFFSET_UNITS, &polygonOffsetUnits );
+			glPolygonOffset( -1, -1 );
+
+			// Enable shader program
+
+			GLint shaderProgram;
+			glGetIntegerv( GL_CURRENT_PROGRAM, &shaderProgram );
+			glUseProgram( m_colorShader->program() );
+
+			// Set opengl vertex attribute array state
+
+			GLint arrayBinding;
+			glGetIntegerv( GL_ARRAY_BUFFER_BINDING, &arrayBinding );
+
+			glPushClientAttrib( GL_CLIENT_VERTEX_ARRAY_BIT );
+
+			glVertexAttribDivisor( ATTRIB_GLSL_LOCATION_PS, 0 );
+			glEnableVertexAttribArray( ATTRIB_GLSL_LOCATION_PS );
+			glVertexAttribDivisor( ATTRIB_GLSL_LOCATION_VSX, 0 );
+			glEnableVertexAttribArray( ATTRIB_GLSL_LOCATION_VSX );
+			glVertexAttribDivisor( ATTRIB_GLSL_LOCATION_VSY, 0 );
+			glEnableVertexAttribArray( ATTRIB_GLSL_LOCATION_VSY );
+			glVertexAttribDivisor( ATTRIB_GLSL_LOCATION_VSZ, 0 );
+
+			// Loop through current selection
+
+			for( const auto &location : m_tool->selection() )
+			{
+				ScenePlug::PathScope scope( &location.context(), &location.path() );
+
+				// Check path exists
+				if( !location.scene().existsPlug()->getValue() )
+				{
+					continue;
+				}
+
+				// Extract mesh primitive
+				auto mesh = runTimeCast<const MeshPrimitive>( location.scene().objectPlug()->getValue() );
+				if( !mesh )
+				{
+					continue;
+				}
+
+				// Find opengl named buffer data
+				//
+				// NOTE : conversion to IECoreGL mesh may generate vertex attributes (eg. "N")
+				//        so check named primitive variable exists on IECore mesh primitive.
+
+				const auto vIt = mesh->variables.find( name );
+				if( vIt == mesh->variables.end() )
+				{
+					continue;
+				}
+
+				ConstDataPtr vData = vIt->second.data;
+
+				if( mode == VisualiserTool::Mode::Auto && vData->typeId() == IntVectorDataTypeId )
+				{
+					// Will be handled by `renderVertexLabelValue()` instead.
+					continue;
+				}
+
+				// Retrieve cached IECoreGL mesh primitive
+				auto meshGL = runTimeCast<const IECoreGL::MeshPrimitive>( converter->convert( mesh.get() ) );
+				if( !meshGL )
+				{
+					continue;
+				}
+
+				// Find opengl "P" buffer data
+
+				IECoreGL::ConstBufferPtr pBuffer = meshGL->getVertexBuffer( g_pName );
+				if( !pBuffer )
+				{
+					continue;
+				}
+
+				GLsizei stride = 0;
+				GLenum type = GL_FLOAT;
+				bool offset = false;
+				bool enableVSZ = false;
+				switch( vData->typeId() )
+				{
+					case IntVectorDataTypeId:
+						type = GL_INT;
+						[[fallthrough]];
+					case FloatVectorDataTypeId:
+						enableVSZ = true;
+						uniforms.valueMin = valueRange ? V3f( valueMin.x ) : V3f( 0.f );
+						uniforms.valueRange = valueRange ? V3f( valueRange.value().x ) : V3f( 1.f );
+						break;
+					case V2fVectorDataTypeId:
+						stride = 2;
+						offset = true;
+						uniforms.valueMin = valueRange ? V3f( valueMin.x, valueMin.y, 0.f ) : V3f( 0.f );
+						uniforms.valueRange = valueRange ? V3f( valueRange.value().x, valueRange.value().y, 0.f ) : V3f( 1.f, 1.f, 0.f );
+						break;
+					case Color3fVectorDataTypeId:
+						stride = 3;
+						offset = true;
+						enableVSZ = true;
+						uniforms.valueMin = valueRange ? valueMin : V3f( 0.f );
+						uniforms.valueRange = valueRange ? valueRange.value() : V3f( 1.f );
+						break;
+					case V3fVectorDataTypeId:
+						stride = 3;
+						offset = true;
+						enableVSZ = true;
+						uniforms.valueMin = valueRange ? valueMin : V3f( -1.f );
+						// Use 0.5 instead of 2.0 to account for reciprocal in `valueRange` above
+						uniforms.valueRange = valueRange ? valueRange.value() : V3f( 0.5f );
+						break;
+					default:
+						continue;
+				}
+
+				IECoreGL::ConstBufferPtr vBuffer = meshGL->getVertexBuffer( name );
+				if( !vBuffer )
+				{
+					continue;
+				}
+
+				// Get the object to world transform
+
+				M44f o2w;
+				ScenePlug::ScenePath path( location.path() );
+				while( !path.empty() )
+				{
+					scope.setPath( &path );
+					o2w = o2w * location.scene().transformPlug()->getValue();
+					path.pop_back();
+				}
+
+				// Compute object to clip matrix
+				uniforms.o2c = o2w * w2c;
+
+				// Upload opengl uniform block data
+
+				glBufferData( GL_UNIFORM_BUFFER, sizeof( UniformBlockColorShader ), &uniforms, GL_DYNAMIC_DRAW );
+
+				// Draw primitive
+				glBindBuffer( GL_ARRAY_BUFFER, pBuffer->buffer() );
+				glVertexAttribPointer( ATTRIB_GLSL_LOCATION_PS, 3, GL_FLOAT, GL_FALSE, 0, nullptr );
+				glBindBuffer( GL_ARRAY_BUFFER, vBuffer->buffer() );
+				glVertexAttribPointer( ATTRIB_GLSL_LOCATION_VSX, 1, type, GL_FALSE, stride * sizeof( GLfloat ), nullptr );
+				glVertexAttribPointer(
+					ATTRIB_GLSL_LOCATION_VSY,
+					1,
+					type,
+					GL_FALSE,
+					stride * sizeof( GLfloat ),
+					( void const *)( ( offset ? 1 : 0 ) * sizeof( GLfloat ) )
+				);
+				if( enableVSZ )
+				{
+					glEnableVertexAttribArray( ATTRIB_GLSL_LOCATION_VSZ );
+					glVertexAttribPointer(
+						ATTRIB_GLSL_LOCATION_VSZ,
+						1,
+						type,
+						GL_FALSE,
+						stride * sizeof( GLfloat ),
+						( void const *)( ( offset ? 2 : 0 ) * sizeof( GLfloat ) )
+					);
+				}
+				else
+				{
+					glDisableVertexAttribArray( ATTRIB_GLSL_LOCATION_VSZ );
+					glVertexAttrib1f( ATTRIB_GLSL_LOCATION_VSZ, 0.f );
+				}
+
+				meshGL->renderInstances( 1 );
+			}
+
+			// Restore opengl state
+
+			glPopClientAttrib();
+			glBindBuffer( GL_ARRAY_BUFFER, arrayBinding );
+			glBindBuffer( GL_UNIFORM_BUFFER, uniformBinding );
+
+			glDepthFunc( depthFunc );
+			glBlendEquationSeparate( blendEqRgb, blendEqAlpha );
+			glBlendFuncSeparate( blendSrcRgb, blendDstRgb, blendSrcAlpha, blendDstAlpha );
+			glPolygonMode( GL_FRONT_AND_BACK, polygonMode );
+			if( cullFaceEnabled )
+			{
+				glEnable( GL_CULL_FACE );
+			}
+			if( !polgonOffsetFillEnabled )
+			{
+				glDisable( GL_POLYGON_OFFSET_FILL );
+			}
+			glPolygonOffset( polygonOffsetFactor, polygonOffsetUnits );
+
+			if( !blendEnabled )
+			{
+				glDisable( GL_BLEND );
+			}
+			if( !depthEnabled )
+			{
+				glDisable( GL_DEPTH_TEST );
+			}
+			if( depthWriteEnabled )
+			{
+				glDepthMask( GL_TRUE );
+			}
+			glUseProgram( shaderProgram );
+		}
+
+		/// See comment for `renderColorVisualiser()` for requirements for handling `mode`.
+		void renderColorValue( const ViewportGadget *viewportGadget, const Style *style, VisualiserTool::Mode mode ) const
+		{
+			// Display value at cursor as text
+
+			std::optional<V2f> cursorPos = m_tool->cursorPos();
+			if( !cursorPos || !std::holds_alternative<std::monostate>( cursorVertexValue() ) )
+			{
+				return;
+			}
+
+			if(
+				mode != VisualiserTool::Mode::Auto &&
+				mode != VisualiserTool::Mode::Color &&
+				mode != VisualiserTool::Mode::ColorAutoRange
+			)
+			{
+				return;
+			}
+
+			const VisualiserTool::CursorValue value = m_tool->cursorValue();
+
+			if( mode == VisualiserTool::Mode::Auto && std::holds_alternative<int>( value ) )
+			{
+				return;
+			}
+
+			if( !std::holds_alternative<std::monostate>( value ) )
+			{
+				const std::string text = std::visit( stringFromValue, value );
+
+				if( !text.empty() )
+				{
+					// Draw in raster space
+					//
+					// NOTE : It seems that Gaffer defines the origin of raster space as the top left corner
+					//        of the viewport, however the style text drawing functions assume that y increases
+					//        "up" the screen rather than "down", so invert y to ensure text is not upside down.
+
+					drawStrokedText(
+						viewportGadget,
+						text,
+						m_tool->sizePlug()->getValue(),
+						cursorPos.value(),
+						style,
+						Style::State::NormalState
+					);
+				}
+			}
+		}
+
+		/// See comment for `renderColorVisualiser()` for requirements for handling `mode`.
+		void renderVertexLabelValue( const ViewportGadget *viewportGadget, const Style *style, VisualiserTool::Mode mode ) const
+		{
+			if( mode != VisualiserTool::Mode::Auto && mode != VisualiserTool::Mode::VertexLabel )
+			{
+				return;
+			}
+
+			buildShader( m_vertexLabelShader, g_vertexLabelShaderVertSource, g_vertexLabelShaderFragSource );
+
+			if( !m_vertexLabelShader )
+			{
+				return;
+			}
+
+			// Get the cached converter from IECoreGL, this is used to convert primitive
+			// variable data to opengl buffers which will be shared with the IECoreGL renderer
+
+			IECoreGL::CachedConverter *converter = IECoreGL::CachedConverter::defaultCachedConverter();
+
+			GLint uniformBinding;
+			glGetIntegerv( GL_UNIFORM_BUFFER_BINDING, &uniformBinding );
+
+			if( !m_vertexLabelUniformBuffer )
+			{
+				GLuint buffer = 0u;
+				glGenBuffers( 1, &buffer );
+				glBindBuffer( GL_UNIFORM_BUFFER, buffer );
+				glBufferData( GL_UNIFORM_BUFFER, sizeof( UniformBlockVertexLabelShader ), 0, GL_DYNAMIC_DRAW );
+				glBindBuffer( GL_UNIFORM_BUFFER, uniformBinding );
+				m_vertexLabelUniformBuffer.reset( new IECoreGL::Buffer( buffer ) );
+			}
+
+			UniformBlockVertexLabelShader uniforms;
+
+			GLint storageBinding;
+			glGetIntegerv( GL_SHADER_STORAGE_BUFFER_BINDING, &storageBinding );
+
+			if( !m_vertexLabelStorageBuffer )
+			{
+				GLuint buffer = 0u;
+				glGenBuffers( 1, &buffer );
+				m_vertexLabelStorageBuffer.reset( new IECoreGL::Buffer( buffer ) );
+			}
+
+			// Save opengl state
+
+			GLfloat pointSize;
+			glGetFloatv( GL_POINT_SIZE, &pointSize );
+
+			GLint depthFunc;
+			glGetIntegerv( GL_DEPTH_FUNC, &depthFunc );
+
+			GLboolean depthWriteEnabled;
+			glGetBooleanv( GL_DEPTH_WRITEMASK, &depthWriteEnabled );
+
+			const GLboolean depthEnabled = glIsEnabled( GL_DEPTH_TEST );
+			const GLboolean multisampleEnabled = glIsEnabled( GL_MULTISAMPLE );
+
+			GLint shaderProgram;
+			glGetIntegerv( GL_CURRENT_PROGRAM, &shaderProgram );
+
+			GLint arrayBinding;
+			glGetIntegerv( GL_ARRAY_BUFFER_BINDING, &arrayBinding );
+
+			// Get the world to clip space matrix
+
+			Imath::M44f v2c;
+			glGetFloatv( GL_PROJECTION_MATRIX, v2c.getValue() );
+			const Imath::M44f w2c = viewportGadget->getCameraTransform().gjInverse() * v2c;
+
+			// Get raster space bounding box
+
+			const Imath::Box2f rasterBounds = Imath::Box2f(
+				Imath::V2f( 0.f ),
+				Imath::V2f(
+					static_cast<float>( viewportGadget->getViewport().x ),
+					static_cast<float>( viewportGadget->getViewport().y )
+				)
+			);
+
+			// Get text raster space scale and colour
+			//
+			// NOTE : It seems that Gaffer defines the origin of raster space as the top left corner
+			//        of the viewport, however the style text drawing functions assume that y increases
+			//        "up" the screen rather than "down", so invert y to ensure text is not upside down.
+
+			const float size = m_tool->sizePlug()->getValue();
+			const Imath::V3f scale( size, -size, 1.f );
+
+			// Get cursor raster position
+
+			VisualiserTool::CursorValue cursorVertexValue;
+			const std::optional<V2f> cursorRasterPos = m_tool->cursorPos();
+			std::optional<V2f> cursorVertexRasterPos;
+			float minDistance2 = std::numeric_limits<float>::max();
+
+			// Get cursor search radius
+			//
+			// NOTE : when the cursor position is invalid set the radius to zero to disable search.
+
+			const Imath::Box2i viewport( Imath::V2i( 0 ), viewportGadget->getViewport() );
+			const float cursorRadius2 =
+				cursorRasterPos && viewport.intersects( cursorRasterPos.value() ) ?
+				g_cursorRadius2 :
+				0.f;
+
+			const std::string dataName = m_tool->dataNamePlug()->getValue();
+			const std::string primitiveVariableName = primitiveVariableFromDataName( dataName );
+
+			// Loop through current selection
+
+			for( const auto &location : m_tool->selection() )
+			{
+				GafferScene::ScenePlug::PathScope scope( &location.context() , &location.path() );
+
+				// Check path exists
+
+				if( !location.scene().existsPlug()->getValue() )
+				{
+					continue;
+				}
+
+				// Extract primitive
+
+				auto primitive = runTimeCast<const Primitive>( location.scene().objectPlug()->getValue() );
+
+				if( !primitive )
+				{
+					continue;
+				}
+
+				ConstDataPtr vData = nullptr;
+
+				if( dataName != g_vertexIndexDataName )
+				{
+					vData = primitive->expandedVariableData<Data>(
+						primitiveVariableName,
+						IECoreScene::PrimitiveVariable::Vertex,
+						false /* throwIfInvalid */
+					);
+
+					if( !vData )
+					{
+						continue;
+					}
+
+					if(
+						mode == VisualiserTool::Mode::Auto &&
+						primitive->typeId() == MeshPrimitive::staticTypeId() &&
+						vData->typeId() != IntVectorDataTypeId
+					)
+					{
+						// Will be handled by `renderColorVisualiser()` instead.
+						continue;
+					}
+
+					if(
+						vData->typeId() != IntVectorDataTypeId &&
+						vData->typeId() != FloatVectorDataTypeId &&
+						vData->typeId() != V2fVectorDataTypeId &&
+						vData->typeId() != V3fVectorDataTypeId &&
+						vData->typeId() != Color3fVectorDataTypeId
+					)
+					{
+						continue;
+					}
+				}
+
+				// Find "P" vertex attribute
+				//
+				// TODO : We need to use the same polygon offset as the Viewer uses when it draws the
+				//        primitive in polygon points mode. For mesh primitives topology may be different,
+				//        primitive variables were converted to face varying and the mesh triangulated
+				//        with vertex positions duplicated. This means that gl_VertexID in the shader
+				//        no longer corresponds to the vertex id we want to display. It also means there
+				//        may be multiple vertices in the IECoreGL mesh for each vertex in the IECore mesh.
+				//        To get the correct polygon offset we need to draw the mesh using the same
+				//        OpenGL draw call as the Viewer used so we must draw the IECoreGL mesh. So
+				//        we need to search for the (posibly multiple) vertices that correspond to each
+				//        original vertex. If any of these IECoreGL mesh vertices are visible we display
+				//        the IECore mesh vertex id. To accelerate the search we build a multi map keyed
+				//        on vertex position. This assumes that the triangulation and/or conversion to
+				//        face varying attributes processing in IECore does not alter the position of the
+				//        vertices. The building of this map is done after we issue the draw call for the
+				//        mesh primitive, this gives OpenGL an opportunity to concurrently execute the
+				//        visibility pass while we are building the map, ready for the map buffer operation.
+				//        For points and curves primitives there is no polygon offset. For all primitives
+				//        there may be a slight slight precision difference in o2c transform so push vertices
+				//        forward.
+				// NOTE : a cheap alternative approach that solves most of the above problems is to draw
+				//        the visibility pass using "fat" points which cover multiple pixels. This still
+				//        has problems for vertices with negative surrounding curvature ...
+				//
+				// NOTE : We use the primitive variable from the IECore primitive as that has
+				//        vertex interpolation.
+
+				ConstV3fVectorDataPtr pData = primitive->expandedVariableData<IECore::V3fVectorData>(
+					g_pName,
+					IECoreScene::PrimitiveVariable::Vertex,
+					false /* throwIfInvalid */
+				);
+
+				if( !pData )
+				{
+					continue;
+				}
+
+				// Retrieve cached opengl buffer data
+
+				auto pBuffer = runTimeCast<const IECoreGL::Buffer>( converter->convert( pData.get() ) );
+
+				// Get the object to world transform
+
+				Imath::M44f o2w;
+				GafferScene::ScenePlug::ScenePath path( location.path() );
+				while( !path.empty() )
+				{
+					scope.setPath( &path );
+					o2w = o2w * location.scene().transformPlug()->getValue();
+					path.pop_back();
+				}
+
+				// Compute object to clip matrix
+
+				uniforms.o2c = o2w * w2c;
+
+				// Upload opengl uniform block data
+
+				glBindBufferBase( GL_UNIFORM_BUFFER, g_uniformBlockBindingIndex, m_vertexLabelUniformBuffer->buffer() );
+				glBufferData(
+					GL_UNIFORM_BUFFER,
+					sizeof( UniformBlockVertexLabelShader ),
+					&uniforms,
+					GL_DYNAMIC_DRAW
+				);
+
+				// Ensure storage buffer capacity
+
+				glBindBufferBase(
+					GL_SHADER_STORAGE_BUFFER,
+					g_storageBlockBindingIndex,
+					m_vertexLabelStorageBuffer->buffer()
+				);
+
+				const std::size_t storageCapacity =
+					( pData->readable().size() / static_cast<std::size_t>( 32 ) ) +
+					static_cast<std::size_t>( 1 );
+				const std::size_t storageSize = sizeof( std::uint32_t ) * storageCapacity;
+
+				if( m_vertexLabelStorageCapacity < storageCapacity )
+				{
+					glBufferData( GL_SHADER_STORAGE_BUFFER, storageSize, 0, GL_DYNAMIC_DRAW );
+					m_vertexLabelStorageCapacity = storageCapacity;
+				}
+
+				// Clear storage buffer
+				//
+				// NOTE : Shader writes to individual bits using atomicOr instruction so region of
+				//        storage buffer being used for current object needs to be cleared to zero
+
+				const GLuint zeroValue = 0u;
+				glClearBufferSubData(
+					GL_SHADER_STORAGE_BUFFER,
+					GL_R32UI,
+					0,
+					storageSize,
+					GL_RED_INTEGER,
+					GL_UNSIGNED_INT,
+					&zeroValue
+				);
+
+				// Set opengl state
+
+				glPointSize( 3.f );
+				glDepthFunc( GL_LEQUAL );
+				if( !depthEnabled )
+				{
+					glEnable( GL_DEPTH_TEST );
+				}
+				if( depthEnabled )
+				{
+					glDisable( GL_DEPTH_TEST );
+				}
+				if( depthWriteEnabled )
+				{
+					glDepthMask( GL_FALSE );
+				}
+				if( multisampleEnabled )
+				{
+					glDisable( GL_MULTISAMPLE );
+				}
+
+				// Set opengl vertex attribute array state
+
+				glPushClientAttrib( GL_CLIENT_VERTEX_ARRAY_BIT );
+
+				glVertexAttribDivisor( ATTRIB_GLSL_LOCATION_PS, 0 );
+				glEnableVertexAttribArray( ATTRIB_GLSL_LOCATION_PS );
+
+				// Set visibility pass shader
+
+				glUseProgram( m_vertexLabelShader->program() );
+
+				// Draw points and ouput visibility to storage buffer
+
+				glBindBuffer( GL_ARRAY_BUFFER, pBuffer->buffer() );
+				glVertexAttribPointer(
+					ATTRIB_GLSL_LOCATION_PS,
+					3,
+					GL_FLOAT,
+					GL_FALSE,
+					0,
+					nullptr
+				);
+				glDrawArrays( GL_POINTS, 0, static_cast< GLsizei >( pData->readable().size() ) );
+
+				// Restore opengl state
+
+				glPopClientAttrib();
+				glBindBuffer( GL_ARRAY_BUFFER, arrayBinding );
+				glBindBuffer( GL_UNIFORM_BUFFER, uniformBinding );
+
+				glPointSize( pointSize );
+				glDepthFunc( depthFunc );
+				if( !depthEnabled )
+				{
+					glDisable( GL_DEPTH_TEST );
+				}
+				if( depthEnabled )
+				{
+					glEnable( GL_DEPTH_TEST );
+				}
+				if( depthWriteEnabled )
+				{
+					glDepthMask( GL_TRUE );
+				}
+				if( multisampleEnabled )
+				{
+					glEnable( GL_MULTISAMPLE );
+				}
+				glUseProgram( shaderProgram );
+
+				// Map storage buffer
+
+				auto vBuffer = static_cast<const std::uint32_t*>(
+					glMapBufferRange(
+						GL_SHADER_STORAGE_BUFFER,
+						0,
+						storageSize,
+						GL_MAP_READ_BIT
+					)
+				);
+				glBindBuffer( GL_SHADER_STORAGE_BUFFER, storageBinding );
+
+				// Draw vertex ids or int variable offset to vertex position in raster space
+
+				if( vBuffer )
+				{
+					ViewportGadget::RasterScope raster( viewportGadget );
+
+					VisualiserTool::CursorValue vertexValue;
+					const std::vector<Imath::V3f> &points = pData->readable();
+					for( size_t i = 0; i < points.size(); ++i )
+					{
+						// Check visibility of vertex
+
+						const std::uint32_t index = static_cast<std::uint32_t>( i ) / static_cast<std::uint32_t>( 32u );
+						const std::uint32_t value = static_cast<std::uint32_t>( i ) % static_cast<std::uint32_t>( 32u );
+
+						if( vBuffer[index] & ( static_cast<std::uint32_t>( 1u ) << value ) )
+						{
+							// Transform vertex position to raster space and do manual scissor test
+							//
+							// NOTE : visibility pass encorporates scissor test which culls most
+							//        vertices however some will slip through as visibility pass
+							//        draws "fat" points. bounds test is cheap.
+
+							Imath::V3f worldPos;
+							o2w.multVecMatrix( points[i], worldPos );
+							std::optional<V2f> rasterPos = viewportGadget->worldToRasterSpace( worldPos );
+							if( rasterBounds.intersects( rasterPos.value() ) )
+							{
+								if( !vData )
+								{
+									vertexValue = (int)i;
+								}
+								else
+								{
+									if( auto iData = runTimeCast<const IntVectorData>( vData.get() ) )
+									{
+										vertexValue = iData->readable()[i];
+									}
+									if( auto fData = runTimeCast<const FloatVectorData>( vData.get() ) )
+									{
+										vertexValue = fData->readable()[i];
+									}
+									if( auto v2fData = runTimeCast<const V2fVectorData>( vData.get() ) )
+									{
+										vertexValue = v2fData->readable()[i];
+									}
+									if( auto v3fData = runTimeCast<const V3fVectorData>( vData.get() ) )
+									{
+										vertexValue = v3fData->readable()[i];
+									}
+									if( auto c3fData = runTimeCast<const Color3fVectorData>( vData.get() ) )
+									{
+										vertexValue = c3fData->readable()[i];
+									}
+								}
+
+								// Update cursor value
+								//
+								// NOTE : We defer drawing of the value currently under the cursor, so
+								//        draw the last value label if we replace the cursor value
+
+								if( cursorRasterPos )
+								{
+									const float distance2 = ( cursorRasterPos.value() - rasterPos.value() ).length2();
+									if( ( distance2 < cursorRadius2 ) && ( distance2 < minDistance2 ) )
+									{
+										std::swap( cursorVertexValue, vertexValue );
+										std::swap( cursorVertexRasterPos, rasterPos );
+										minDistance2 = distance2;
+									}
+								}
+
+								// Draw value label
+
+								if( !std::holds_alternative<std::monostate>( vertexValue ) && rasterPos )
+								{
+									const std::string text = std::visit( stringFromValue, vertexValue );
+
+									drawStrokedText(
+										viewportGadget,
+										text,
+										size,
+										V2f(
+											rasterPos.value().x - style->textBound( GafferUI::Style::LabelText, text ).size().x * 0.5f * scale.x,
+											rasterPos.value().y
+										),
+										style,
+										Style::State::NormalState
+									);
+								}
+							}
+						}
+					}
+
+					// unmap storage buffer
+
+					glBindBuffer( GL_SHADER_STORAGE_BUFFER, m_vertexLabelStorageBuffer->buffer() );
+					glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
+					glBindBuffer( GL_SHADER_STORAGE_BUFFER, storageBinding );
+				}
+
+				glBindBuffer( GL_SHADER_STORAGE_BUFFER, storageBinding );
+			}
+
+			// Draw cursor vertex
+
+			if( !std::holds_alternative<std::monostate>( cursorVertexValue ) && cursorVertexRasterPos )
+			{
+				GafferUI::ViewportGadget::RasterScope raster( viewportGadget );
+
+				std::string const text = std::visit( stringFromValue, cursorVertexValue );
+
+				drawStrokedText(
+					viewportGadget,
+					text,
+					scale.x * 2.f,
+					V2f(
+						cursorVertexRasterPos.value().x - style->textBound( GafferUI::Style::LabelText, text ).size().x * scale.x,
+						cursorVertexRasterPos.value().y
+					),
+					style,
+					Style::State::NormalState
+				);
+			}
+
+			// Set tool cursor vertex id
+
+			m_cursorVertexValue = cursorVertexValue;
+		}
+
+		VisualiserTool::CursorValue cursorVertexValue() const
+		{
+			return m_cursorVertexValue;
+		}
+
 		const VisualiserTool *m_tool;
-		mutable IECoreGL::ConstShaderPtr m_shader;
-		mutable IECoreGL::ConstBufferPtr m_uniformBuffer;
+		mutable IECoreGL::ConstShaderPtr m_colorShader;
+		mutable IECoreGL::ConstBufferPtr m_colorUniformBuffer;
+		mutable IECoreGL::ConstShaderPtr m_vertexLabelShader;
+		mutable IECoreGL::ConstBufferPtr m_vertexLabelUniformBuffer;
+
+		mutable IECoreGL::ConstBufferPtr m_vertexLabelStorageBuffer;
+		mutable std::size_t m_vertexLabelStorageCapacity;
+
+		mutable VisualiserTool::CursorValue m_cursorVertexValue;
 };
 
 // Cache for mesh evaluators
@@ -671,6 +1390,10 @@ LRUCache<ConstMeshPrimitivePtr, EvaluationData> g_evaluatorCache(
 
 } // namespace
 
+//-----------------------------------------------------------------------------
+// VisualiserTool
+//-----------------------------------------------------------------------------
+
 GAFFER_NODE_DEFINE_TYPE( VisualiserTool )
 
 Tool::ToolDescription<VisualiserTool, SceneView> VisualiserTool::m_toolDescription;
@@ -683,8 +1406,7 @@ VisualiserTool::VisualiserTool( SceneView *view, const std::string &name ) : Sel
 	m_dragBeginConnection(),
 	m_gadget( new VisualiserGadget( *this ) ),
 	m_selection(),
-	m_cursorPos( -1, -1 ),
-	m_cursorPosValid( false ),
+	m_cursorPos(),
 	m_cursorValue(),
 	m_gadgetDirty( true ),
 	m_selectionDirty( true ),
@@ -700,8 +1422,9 @@ VisualiserTool::VisualiserTool( SceneView *view, const std::string &name ) : Sel
 
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new StringPlug( "dataName", Plug::In, "uv" ) );
+	addChild( new StringPlug( "dataName", Plug::In, g_primitiveVariablePrefix + "uv" ) );
 	addChild( new FloatPlug( "opacity", Plug::In, g_opacityDefault, g_opacityMin, g_opacityMax ) );
+	addChild( new IntPlug( "mode", Plug::In, (int)Mode::Auto, (int)Mode::First, (int)Mode::Last ) );
 	addChild( new V3fPlug( "valueMin", Plug::In, g_valueMinDefault ) );
 	addChild( new V3fPlug( "valueMax", Plug::In, g_valueMaxDefault ) );
 	addChild( new FloatPlug( "size", Plug::In, g_textSizeDefault, g_textSizeMin ) );
@@ -790,44 +1513,54 @@ const FloatPlug *VisualiserTool::opacityPlug() const
 	return getChild<FloatPlug>( g_firstPlugIndex + 1 );
 }
 
+IntPlug *VisualiserTool::modePlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 2 );
+}
+
+const IntPlug *VisualiserTool::modePlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 2 );
+}
+
 V3fPlug *VisualiserTool::valueMinPlug()
 {
-	return getChild<V3fPlug>( g_firstPlugIndex + 2 );
+	return getChild<V3fPlug>( g_firstPlugIndex + 3 );
 }
 
 const V3fPlug *VisualiserTool::valueMinPlug() const
 {
-	return getChild<V3fPlug>( g_firstPlugIndex + 2 );
+	return getChild<V3fPlug>( g_firstPlugIndex + 3 );
 }
 
 V3fPlug *VisualiserTool::valueMaxPlug()
 {
-	return getChild<V3fPlug>( g_firstPlugIndex + 3 );
+	return getChild<V3fPlug>( g_firstPlugIndex + 4 );
 }
 
 const V3fPlug *VisualiserTool::valueMaxPlug() const
 {
-	return getChild<V3fPlug>( g_firstPlugIndex + 3 );
+	return getChild<V3fPlug>( g_firstPlugIndex + 4 );
 }
 
 FloatPlug *VisualiserTool::sizePlug()
 {
-	return getChild<FloatPlug>( g_firstPlugIndex + 4 );
+	return getChild<FloatPlug>( g_firstPlugIndex + 5 );
 }
 
 const FloatPlug *VisualiserTool::sizePlug() const
 {
-	return getChild<FloatPlug>( g_firstPlugIndex + 4 );
+	return getChild<FloatPlug>( g_firstPlugIndex + 5 );
 }
 
 ScenePlug *VisualiserTool::internalScenePlug()
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 5 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 6 );
 }
 
 const ScenePlug *VisualiserTool::internalScenePlug() const
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 5 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 6 );
 }
 
 const std::vector<VisualiserTool::Selection> &VisualiserTool::selection() const
@@ -835,14 +1568,14 @@ const std::vector<VisualiserTool::Selection> &VisualiserTool::selection() const
 	return m_selection;
 }
 
-V2f VisualiserTool::cursorPos() const
+VisualiserTool::CursorPosition VisualiserTool::cursorPos() const
 {
 	return m_cursorPos;
 }
 
-const Data *VisualiserTool::cursorValue() const
+const VisualiserTool::CursorValue VisualiserTool::cursorValue() const
 {
-	return m_cursorValue.get();
+	return m_cursorValue;
 }
 
 void VisualiserTool::connectOnActive()
@@ -895,7 +1628,6 @@ bool VisualiserTool::mouseMove( const ButtonEvent &event )
 	}
 
 	updateCursorPos( event );
-	m_cursorPosValid = true;
 
 	// NOTE : only schedule redraw if tool active
 
@@ -910,7 +1642,6 @@ bool VisualiserTool::mouseMove( const ButtonEvent &event )
 void VisualiserTool::enter( const ButtonEvent &event )
 {
 	updateCursorPos( event );
-	m_cursorPosValid = true;
 
 	// NOTE : only schedule redraw if tool active
 
@@ -922,8 +1653,7 @@ void VisualiserTool::enter( const ButtonEvent &event )
 
 void VisualiserTool::leave( const ButtonEvent &event )
 {
-	updateCursorPos( event );
-	m_cursorPosValid = false;
+	m_cursorPos = CursorPosition( std::nullopt );
 
 	// NOTE : only schedule redraw if tool active
 
@@ -956,15 +1686,15 @@ bool VisualiserTool::keyPress( const KeyEvent &event )
 
 bool VisualiserTool::buttonPress( const ButtonEvent &event )
 {
-	m_valueAtButtonPress.reset();
+	m_valueAtButtonPress = std::monostate();
 	m_initiatedDrag = false;
 
 	if( event.button & ButtonEvent::Left && !( event.modifiers & GafferUI::ButtonEvent::Modifiers::Control ) )
 	{
 		updateCursorValue();
-		if( m_cursorValue )
+		if( !std::holds_alternative<std::monostate>( m_cursorValue ) )
 		{
-			m_valueAtButtonPress = m_cursorValue->copy();
+			m_valueAtButtonPress = m_cursorValue;
 			return true;
 		}
 	}
@@ -974,7 +1704,7 @@ bool VisualiserTool::buttonPress( const ButtonEvent &event )
 
 bool VisualiserTool::buttonRelease( const ButtonEvent &event )
 {
-	m_valueAtButtonPress.reset();
+	m_valueAtButtonPress = std::monostate();
 	m_initiatedDrag = false;
 
 	return false;
@@ -984,7 +1714,7 @@ RunTimeTypedPtr VisualiserTool::dragBegin( const DragDropEvent &event )
 {
 	m_initiatedDrag = false;
 
-	if( !m_valueAtButtonPress )
+	if( std::holds_alternative<std::monostate>( m_valueAtButtonPress ) )
 	{
 		return RunTimeTypedPtr();
 	}
@@ -997,9 +1727,31 @@ RunTimeTypedPtr VisualiserTool::dragBegin( const DragDropEvent &event )
 
 	m_initiatedDrag = true;
 	view()->viewportGadget()->renderRequestSignal()( view()->viewportGadget() );
+
 	Pointer::setCurrent( "values" );
 
-	return m_valueAtButtonPress;
+	if( std::holds_alternative<int>( m_valueAtButtonPress ) )
+	{
+		return new IntData( std::get<int>( m_valueAtButtonPress ) );
+	}
+	if( std::holds_alternative<float>( m_valueAtButtonPress ) )
+	{
+		return new FloatData( std::get<float>( m_valueAtButtonPress ) );
+	}
+	if( std::holds_alternative<V2f>( m_valueAtButtonPress ) )
+	{
+		return new V2fData( std::get<V2f>( m_valueAtButtonPress ) );
+	}
+	if( std::holds_alternative<V3f>( m_valueAtButtonPress ) )
+	{
+		return new V3fData( std::get<V3f>( m_valueAtButtonPress ) );
+	}
+	if( std::holds_alternative<Color3f>( m_valueAtButtonPress ) )
+	{
+		return new Color3fData( std::get<Color3f>( m_valueAtButtonPress ) );
+	}
+
+	return RunTimeTypedPtr();
 }
 
 bool VisualiserTool::dragEnd( const DragDropEvent &event )
@@ -1031,7 +1783,8 @@ void VisualiserTool::plugDirtied( const Plug *plug )
 		plug == opacityPlug() ||
 		plug == valueMinPlug() ||
 		plug == valueMaxPlug() ||
-		plug == sizePlug()
+		plug == sizePlug() ||
+		plug == modePlug()
 	)
 	{
 		m_gadgetDirty = true;
@@ -1171,12 +1924,38 @@ void VisualiserTool::updateCursorPos( const ButtonEvent &event )
 
 void VisualiserTool::updateCursorValue()
 {
-	DataPtr cursorValue = m_cursorValue;
-	m_cursorValue.reset();
+	CursorValue cursorValue = m_cursorValue;
+	m_cursorValue = std::monostate();
 
 	// NOTE : during a drag do not update the cursor value
 
-	if( m_initiatedDrag || !m_cursorPosValid )
+	if( m_initiatedDrag || !cursorPos() )
+	{
+		return;
+	}
+
+	const std::string dataName = dataNamePlug()->getValue();
+
+	// We draw all visualisation types each time, and the vertex label visualisation
+	// resets the `cursorVertexValue()` each time before potentially setting it to
+	// the closest point. So if there is no such point, this will be `std::monostate`.
+	CursorValue v = static_cast<VisualiserGadget *>( m_gadget.get() )->cursorVertexValue();
+	if( !std::holds_alternative<std::monostate>( v ) )
+	{
+		m_cursorValue = v;
+		return;
+	}
+
+	if( modePlug()->getValue() == (int)Mode::VertexLabel )
+	{
+		// If `VisualiserGadget::cursorVertexValue()` is not set and we're in `VertexLabel`
+		// mode, it means the label failed to draw (for example if the interpolation is not
+		// supported). Don't set the cursor value to a sampled value in that case.
+		return;
+	}
+
+	const std::string name = primitiveVariableFromDataName( dataName );
+	if( name.empty() )
 	{
 		return;
 	}
@@ -1200,7 +1979,7 @@ void VisualiserTool::updateCursorValue()
 		selectionMask = sg->getSelectionMask();
 		sg->setSelectionMask( nullptr );
 
-		if( !sg->objectAt( view()->viewportGadget()->rasterToGadgetSpace( m_cursorPos, sg ), path ) )
+		if( !sg->objectAt( view()->viewportGadget()->rasterToGadgetSpace( cursorPos().value(), sg ), path ) )
 		{
 			return;
 		}
@@ -1258,7 +2037,6 @@ void VisualiserTool::updateCursorValue()
 
 	// Check mesh has named primitive variable
 
-	const std::string &name = dataNamePlug()->getValue();
 	PrimitiveVariableMap::const_iterator vIt = mesh->variables.find( name );
 	if( vIt == mesh->variables.end() || !vIt->second.data )
 	{
@@ -1289,7 +2067,7 @@ void VisualiserTool::updateCursorValue()
 
 	// Intersect line from cursor with mesh in object space using evaluator
 
-	const LineSegment3f line = view()->viewportGadget()->rasterToWorldSpace( cursorPos() ) *
+	const LineSegment3f line = view()->viewportGadget()->rasterToWorldSpace( cursorPos().value() ) *
 			item.scene().fullTransform( path ).gjInverse();
 	if( !evalData.evaluator->intersectionPoint( line.p0, line.direction(), result.get() ) )
 	{
@@ -1301,60 +2079,20 @@ void VisualiserTool::updateCursorValue()
 	switch( vIt->second.data->typeId() )
 	{
 		case IntVectorDataTypeId :
-		{
-			auto data = runTimeCast<IntData>( cursorValue );
-			if( !data )
-			{
-				data.reset( new IntData() );
-			}
-			data->writable() = result->intPrimVar( evalData.triMesh->variables.at( name ) );
-			cursorValue = data;
+			cursorValue = result->intPrimVar( evalData.triMesh->variables.at( name ) );
 			break;
-		}
 		case FloatVectorDataTypeId :
-		{
-			auto data =runTimeCast<FloatData>( cursorValue );
-			if( !data )
-			{
-				data.reset( new FloatData() );
-			}
-			data->writable() = result->floatPrimVar( evalData.triMesh->variables.at( name ) );
-			cursorValue = data;
+			cursorValue = result->floatPrimVar( evalData.triMesh->variables.at( name ) );
 			break;
-		}
 		case V2fVectorDataTypeId :
-		{
-			auto data =runTimeCast<V2fData>( cursorValue );
-			if( !data )
-			{
-				data.reset( new V2fData() );
-			}
-			data->writable() = result->vec2PrimVar( evalData.triMesh->variables.at( name ) );
-			cursorValue = data;
+			cursorValue = result->vec2PrimVar( evalData.triMesh->variables.at( name ) );
 			break;
-		}
 		case V3fVectorDataTypeId :
-		{
-			auto data = runTimeCast<V3fData>( cursorValue );
-			if( !data )
-			{
-				data.reset( new V3fData() );
-			}
-			data->writable() = result->vectorPrimVar( evalData.triMesh->variables.at( name ) );
-			cursorValue = data;
+			cursorValue = result->vectorPrimVar( evalData.triMesh->variables.at( name ) );
 			break;
-		}
 		case Color3fVectorDataTypeId :
-		{
-			auto data = runTimeCast<Color3fData>( cursorValue );
-			if( !data )
-			{
-				data.reset( new Color3fData() );
-			}
-			data->writable() = result->colorPrimVar( evalData.triMesh->variables.at( name ) );
-			cursorValue = data;
+			cursorValue = result->colorPrimVar( evalData.triMesh->variables.at( name ) );
 			break;
-		}
 		default:
 			return;
 	}

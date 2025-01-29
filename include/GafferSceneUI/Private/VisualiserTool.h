@@ -50,6 +50,8 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
 
+#include <variant>
+
 namespace
 {
 
@@ -68,11 +70,25 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 
 		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::VisualiserTool, VisualiserToolTypeId, SelectionTool );
 
+		enum class Mode
+		{
+			Auto,
+			ColorAutoRange,
+			Color,
+			VertexLabel,
+
+			First = Auto,
+			Last = VertexLabel
+		};
+
 		Gaffer::StringPlug *dataNamePlug();
 		const Gaffer::StringPlug *dataNamePlug() const;
 
 		Gaffer::FloatPlug *opacityPlug();
 		const Gaffer::FloatPlug *opacityPlug() const;
+
+		Gaffer::IntPlug *modePlug();
+		const Gaffer::IntPlug *modePlug() const;
 
 		Gaffer::V3fPlug *valueMinPlug();
 		const Gaffer::V3fPlug *valueMinPlug() const;
@@ -109,9 +125,11 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 
 		const std::vector<Selection> &selection() const;
 
-		Imath::V2f cursorPos() const;
+		using CursorPosition = std::optional<Imath::V2f>;
+		CursorPosition cursorPos() const;
 
-		const IECore::Data *cursorValue() const;
+		using CursorValue = std::variant<std::monostate, int, float, Imath::V2f, Imath::V3f, Imath::Color3f>;
+		const CursorValue cursorValue() const;
 
 		GafferScene::ScenePlug *internalScenePlug();
 		const GafferScene::ScenePlug *internalScenePlug() const;
@@ -146,13 +164,12 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 
 		GafferUI::GadgetPtr m_gadget;
 		mutable std::vector<Selection> m_selection;
-		Imath::V2i m_cursorPos;
-		bool m_cursorPosValid;
-		IECore::DataPtr m_cursorValue;
+		CursorPosition m_cursorPos;
+		CursorValue m_cursorValue;
 		bool m_gadgetDirty;
 		mutable bool m_selectionDirty;
 		bool m_priorityPathsDirty;
-		IECore::DataPtr m_valueAtButtonPress;
+		CursorValue m_valueAtButtonPress;
 		bool m_initiatedDrag;
 
 		static ToolDescription<VisualiserTool, SceneView> m_toolDescription;
