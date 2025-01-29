@@ -217,5 +217,29 @@ class ContactSheetCoreTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( displayWindowStats["max"]["r"].getValue(), 1 )
 		self.assertEqual( displayWindowStats["max"]["g"].getValue(), 0 )
 
+	def testInFormatAffectsResampleMatrix( self ) :
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( 300, 200 ) )
+		constant["color"].setValue( imath.Color4f( 1, 1, 1, 1 ) )
+
+		contactSheet = GafferImage.ContactSheetCore()
+		contactSheet["in"].setInput( constant["out"] )
+		contactSheet["format"].setValue( GafferImage.Format( 300, 200 ) )
+		contactSheet["tiles"].setValue(
+			IECore.Box2fVectorData( [
+				imath.Box2f( imath.V2f( 0 ), imath.V2f( 300, 200 ) )
+			] )
+		)
+
+		c = Gaffer.Context()
+		c["contactSheet:tileIndex"] = IECore.IntData( 0 )
+		with c:
+			self.assertEqual( contactSheet["__resampleMatrix"].getValue(), imath.M33f((1, 0, 0), (0, 1, 0), (0, 0, 1)) )
+
+			constant["format"].setValue( GafferImage.Format( 150, 100 ) )
+
+			self.assertEqual( contactSheet["__resampleMatrix"].getValue(), imath.M33f((2, 0, 0), (0, 2, 0), (0, 0, 1)) )
+
 if __name__ == "__main__":
 	unittest.main()

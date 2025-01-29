@@ -267,7 +267,7 @@ void ContactSheetCore::affects( const Gaffer::Plug *input, AffectedPlugsContaine
 		outputs.push_back( coveragePlug() );
 	}
 
-	if( input == tilesPlug() || input == tileVariablePlug() )
+	if( input == inPlug()->formatPlug() || input == tilesPlug() || input == tileVariablePlug() )
 	{
 		outputs.push_back( resampleMatrixPlug() );
 	}
