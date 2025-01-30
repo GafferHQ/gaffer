@@ -1,6 +1,11 @@
 1.4.15.x (relative to 1.4.15.5)
 ========
 
+Fixes
+-----
+
+- MessageWidget : Fixed bug preventing the horizontal scroll bar from appearing when displaying messages with long lines.
+
 1.4.15.5 (relative to 1.4.15.4)
 ========
 
