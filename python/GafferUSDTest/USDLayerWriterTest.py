@@ -260,7 +260,11 @@ class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 		if os.name != "nt" :
 			self.temporaryDirectory().chmod( 444 )
 		else :
-			subprocess.check_call( [ "icacls", self.temporaryDirectory(), "/deny", "Users:(OI)(CI)(W)" ] )
+			subprocess.check_call(
+				[ "icacls", self.temporaryDirectory(), "/deny", "Users:(OI)(CI)(W)" ],
+				stdout = subprocess.DEVNULL,
+				stderr = subprocess.STDOUT
+			)
 
 		with self.assertRaisesRegex( RuntimeError, 'Failed to export layer to "{}"'.format( layerWriter["fileName"].getValue() ) ) :
 			layerWriter["task"].execute()

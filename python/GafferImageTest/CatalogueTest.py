@@ -624,7 +624,11 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		if os.name != "nt" :
 			os.chmod( self.temporaryDirectory(), stat.S_IREAD )
 		else :
-			subprocess.check_call( [ "icacls", self.temporaryDirectory(), "/deny", "Users:(OI)(CI)(W)" ] )
+			subprocess.check_call(
+				[ "icacls", self.temporaryDirectory(), "/deny", "Users:(OI)(CI)(W)" ],
+				stdout = subprocess.DEVNULL,
+				stderr = subprocess.STDOUT
+			)
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.imagesPath() / "blurRange.exr" )
@@ -648,7 +652,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		with self.assertRaisesRegex(
 			RuntimeError,
 			r".* : Could not open \".*\" " + (
-				"\(Permission denied\)" if os.name != "nt" else "\(No such file or directory\)"
+				r"\(Permission denied\)" if os.name != "nt" else r"\(No such file or directory\)"
 			)
 		) :
 			GafferImage.ImageAlgo.image( s["c"]["out"] )

@@ -51,7 +51,7 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Tool for displaying named primitive variables of type float, V2f or V3f as a colored overlay.
+	Tool for displaying object data.
 	""",
 
 	"viewer:shortCut", "O",
@@ -59,14 +59,21 @@ Gaffer.Metadata.registerNode(
 	"order", 8,
 	"tool:exclusive", False,
 
+	"toolbarLayout:activator:modeIsColor", lambda node : node["mode"].getValue() == GafferSceneUI.VisualiserTool.Mode.Color,
+
 	plugs = {
 
 		"dataName" : [
 
 			"description",
 			"""
-			Specifies the name of the primitive variable to visualise. Variables of
+			The name of the data to visualise. Primitive variable names must be
+			prefixed by `primitiveVariable:`. For example, `primitiveVariable:uv`
+			would display the `uv` primitive variable. Primitive variables of
 			type int, float, V2f, Color3f or V3f can be visualised.
+
+			To visualise vertex indices instead of a primitive variable, use the
+			value `vertex:index`.
 			""",
 
 			"toolbarLayout:section", "Bottom",
@@ -86,6 +93,29 @@ Gaffer.Metadata.registerNode(
 			"toolbarLayout:width", 100,
 
 		],
+		"mode" : [
+
+			"description",
+			"""
+			The method for displaying the data.
+
+			- Auto : Chooses the most appropriate mode based on the data and primitive type.
+			- Color : Values are remapped from the range `[valueMin, valueMax]` to `[0, 1]`.
+			- Color (Auto Range) : Float, integer, V2f and color data is displayed without
+			modification. Vector data is remapped from `[-1, 1]` to `[0, 1]`.
+			""",
+
+			"preset:Auto", GafferSceneUI.VisualiserTool.Mode.Auto,
+			"preset:Color", GafferSceneUI.VisualiserTool.Mode.Color,
+			"preset:Color (Auto Range)", GafferSceneUI.VisualiserTool.Mode.ColorAutoRange,
+			"preset:Vertex Label", GafferSceneUI.VisualiserTool.Mode.VertexLabel,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+			"toolbarLayout:section", "Bottom",
+			"toolbarLayout:width", 150,
+
+		],
 		"valueMin" : [
 
 			"description",
@@ -98,6 +128,8 @@ Gaffer.Metadata.registerNode(
 
 			"toolbarLayout:section", "Bottom",
 			"toolbarLayout:width", 175,
+
+			"toolbarLayout:visibilityActivator", "modeIsColor",
 
 		],
 		"valueMax" : [
@@ -112,6 +144,8 @@ Gaffer.Metadata.registerNode(
 
 			"toolbarLayout:section", "Bottom",
 			"toolbarLayout:width", 175,
+
+			"toolbarLayout:visibilityActivator", "modeIsColor",
 
 		],
 		"size": [
@@ -130,10 +164,13 @@ Gaffer.Metadata.registerNode(
 
 class _DataNameChooser( GafferUI.PlugValueWidget ) :
 
+	__primitiveVariablePrefix = "primitiveVariable:"
+	__primitiveVariablePrefixSize = len( __primitiveVariablePrefix )
+	__vertexIndexDataName = "vertex:index"
+
 	def __init__( self, plug, **kw ) :
 
 		self.__menuButton = GafferUI.MenuButton(
-			text = plug.getValue(),
 			menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
 		)
 
@@ -141,7 +178,12 @@ class _DataNameChooser( GafferUI.PlugValueWidget ) :
 
 	def _updateFromValues( self, values, exception ) :
 
-		self.__menuButton.setText( sole( values ) or "None" )
+		singleValue = sole( values )
+		text = "None"
+		if singleValue is not None :
+			text = "Vertex Index" if singleValue == self.__vertexIndexDataName else self.__primitiveVariableFromDataName( singleValue )
+
+		self.__menuButton.setText( text )
 
 	def __menuDefinition( self ) :
 
@@ -158,14 +200,14 @@ class _DataNameChooser( GafferUI.PlugValueWidget ) :
 		with node.view().context() :
 			selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( scriptNode )
 
-			primVars = set()
+			primitiveVariables = set()
 
 			for path in selection.paths() :
 				if not scenePlug.exists( path ) :
 					continue
 
 				primitive = scenePlug.object( path )
-				if not isinstance( primitive, IECoreScene.MeshPrimitive ) :
+				if not isinstance( primitive, IECoreScene.Primitive ) :
 					continue
 
 				for v in primitive.keys() :
@@ -188,25 +230,39 @@ class _DataNameChooser( GafferUI.PlugValueWidget ) :
 					) :
 						continue
 
-					primVars.add( v )
+					primitiveVariables.add( v )
 
-		if len( primVars ) == 0 :
+		if len( primitiveVariables ) == 0 :
 			menuDefinition.append( "/None Available", { "active" : False } )
 
 		else :
-			for v in reversed( sorted( primVars ) ) :
+			for v in reversed( sorted( primitiveVariables ) ) :
 				menuDefinition.prepend(
 					"/" + v,
 					{
-						"command" : functools.partial( Gaffer.WeakMethod( self.__setDataName ), v ),
-						"checkBox" : self.getPlug().getValue() == v,
+						"command" : functools.partial( Gaffer.WeakMethod( self.__setDataName ), self.__primitiveVariablePrefix + v ),
+						"checkBox" : self.__primitiveVariableFromDataName( self.getPlug().getValue() ) == v,
 					}
 				)
 
-		menuDefinition.prepend( "/PrimVarDivider", { "divider" : True, "label" : "Primitive Variables" } )
+		menuDefinition.prepend( "/PrimitiveVariableDivider", { "divider" : True, "label" : "Primitive Variables" } )
+
+		menuDefinition.append( "/Other", { "divider" : True, "label" : "Other" } )
+		menuDefinition.append(
+			"/Vertex Index",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setDataName ), self.__vertexIndexDataName ),
+				"checkBox" : self.getPlug().getValue() == self.__vertexIndexDataName,
+			}
+		)
 
 		return menuDefinition
 
 	def __setDataName( self, value, *unused ) :
 
 		self.getPlug().setValue( value )
+
+	def __primitiveVariableFromDataName( self, name ) :
+
+		return name[self.__primitiveVariablePrefixSize:] if (
+			name.startswith( self.__primitiveVariablePrefix ) ) else ""

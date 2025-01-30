@@ -217,5 +217,64 @@ class ContactSheetCoreTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( displayWindowStats["max"]["r"].getValue(), 1 )
 		self.assertEqual( displayWindowStats["max"]["g"].getValue(), 0 )
 
+	def testInFormatAffectsResampleMatrix( self ) :
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( 300, 200 ) )
+		constant["color"].setValue( imath.Color4f( 1, 1, 1, 1 ) )
+
+		contactSheet = GafferImage.ContactSheetCore()
+		contactSheet["in"].setInput( constant["out"] )
+		contactSheet["format"].setValue( GafferImage.Format( 300, 200 ) )
+		contactSheet["tiles"].setValue(
+			IECore.Box2fVectorData( [
+				imath.Box2f( imath.V2f( 0 ), imath.V2f( 300, 200 ) )
+			] )
+		)
+
+		c = Gaffer.Context()
+		c["contactSheet:tileIndex"] = IECore.IntData( 0 )
+		with c:
+			self.assertEqual( contactSheet["__resampleMatrix"].getValue(), imath.M33f((1, 0, 0), (0, 1, 0), (0, 0, 1)) )
+
+			constant["format"].setValue( GafferImage.Format( 150, 100 ) )
+
+			self.assertEqual( contactSheet["__resampleMatrix"].getValue(), imath.M33f((2, 0, 0), (0, 2, 0), (0, 0, 1)) )
+
+	def testModifyFormat( self ) :
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( 300, 200 ) )
+		constant["color"].setValue( imath.Color4f( 1, 1, 1, 1 ) )
+
+		contactSheet = GafferImage.ContactSheetCore()
+		contactSheet["in"].setInput( constant["out"] )
+		contactSheet["format"].setValue( GafferImage.Format( 300, 200 ) )
+		contactSheet["tiles"].setValue(
+			IECore.Box2fVectorData( [
+				imath.Box2f( imath.V2f( 0 ), imath.V2f( 300, 200 ) )
+			] )
+		)
+
+		# I don't really like that ContactSheetCore introduces a bit of resampling error even when the input
+		# and output tile sizes match exactly ... it seems like there could be pretty common usages where
+		# you're dealing with exact sizes, and it would be nice if there was a path that just did an Offset
+		# in those cases, and didn't slightly change pixel values. Though maybe that's not really possible with
+		# this API - since the tiles are specified in float, it might be hard to identify that they are intended
+		# to be exact matches. Anyways, not the purpose of this test, at least this doesn't crash any more.
+		self.assertImagesEqual( contactSheet["out"], constant["out"], maxDifference = 0.0000003 )
+
+		contactSheet["format"].setValue( GafferImage.Format( 600, 400 ) )
+
+		refBackground = GafferImage.Constant()
+		refBackground["format"].setValue( GafferImage.Format( 600, 400 ) )
+		refBackground["color"].setValue( imath.Color4f( 0, 0, 0, 0 ) )
+
+		refMerge = GafferImage.Merge()
+		refMerge["in"][0].setInput( refBackground["out"] )
+		refMerge["in"][1].setInput( constant["out"] )
+
+		self.assertImagesEqual( contactSheet["out"], refMerge["out"], maxDifference = 0.0000003 )
+
 if __name__ == "__main__":
 	unittest.main()
