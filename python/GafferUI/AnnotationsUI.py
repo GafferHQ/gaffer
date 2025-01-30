@@ -37,6 +37,7 @@
 import functools
 import re
 import imath
+import weakref
 
 import IECore
 
@@ -71,6 +72,44 @@ def __annotate( node, name, menu ) :
 
 	dialogue = __AnnotationsDialogue( node, name )
 	dialogue.wait( parentWindow = menu.ancestor( GafferUI.Window ) )
+
+# A signal emitted when a popup menu for an annotation is about to be shown.
+# This provides an opportunity to customize the menu from external code.
+# The signature for slots is ( menuDefinition, node, name ) where `node` and
+# `name` identify which annotation the menu is being created for. Slots should
+# modify `menuDefinition` in place.
+
+__contextMenuSignal = Gaffer.Signals.Signal3()
+
+def contextMenuSignal() :
+	return __contextMenuSignal
+
+def __buttonPress( editorWeakRef, annotationsGadget, event ) :
+
+	if event.buttons & event.Buttons.Right :
+		annotation = annotationsGadget.annotationAt( event.line )
+		if annotation is None :
+			return False
+
+		node, name = annotation
+
+		menuDefinition = IECore.MenuDefinition()
+		contextMenuSignal()( menuDefinition, node, name)
+
+		global __popupMenu
+		__popupMenu = GafferUI.Menu( menuDefinition )
+		__popupMenu.popup( editorWeakRef() )
+
+		return True
+
+	return False
+
+def __graphEditorCreated( editor ) :
+	editor.graphGadget().annotationsGadget().buttonPressSignal().connect(
+		functools.partial( __buttonPress, weakref.ref( editor ) )
+	)
+
+GafferUI.GraphEditor.instanceCreatedSignal().connect( __graphEditorCreated )
 
 class _AnnotationsHighlighter( GafferUI.CodeWidget.Highlighter ) :
 
