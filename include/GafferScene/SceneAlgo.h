@@ -139,6 +139,17 @@ void filteredParallelTraverse( const ScenePlug *scene, const FilterPlug *filterP
 template <class ThreadableFunctor>
 void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher &filter, ThreadableFunctor &f, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
 
+/// Calls `locationFunctor` in parallel for all locations in the scene, passing the results
+/// serially to `gatherFunctor`. Parent locations are guaranteed to be passed to `gatherFunctor`
+/// before their children, but otherwise the order of execution is unspecified.
+template <class LocationFunctor, class GatherFunctor>
+void parallelGatherLocations(
+	const ScenePlug *scene,
+	LocationFunctor &&locationFunctor, // Signature : T locationFunctor( const ScenePlug *scene, const ScenePath &path )
+	GatherFunctor &&gatherFunctor, // Signature : void gatherFunctor( T &locationFunctorResult )
+	const ScenePlug::ScenePath &root = ScenePlug::ScenePath()
+);
+
 /// Searching
 /// =========
 

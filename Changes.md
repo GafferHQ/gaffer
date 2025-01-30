@@ -28,6 +28,16 @@ Fixes
 - ContactSheetCore : Fixed bugs handling changes to the input and output image formats.
 - Dispatch app : Fixed configuration bug which caused GafferSceneUI to be loaded unnecessarily (#6239).
 
+Improvements
+------------
+
+- SceneWriter : Improved performance. Benchmarks rewriting complex scenes via a SceneReader->SceneWriter graph show around a 2x speedup.
+
+API
+---
+
+- SceneAlgo : Added `parallelGatherLocations()` function.
+
 1.5.4.0 (relative to 1.5.3.0)
 =======
 

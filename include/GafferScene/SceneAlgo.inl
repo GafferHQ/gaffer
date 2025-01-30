@@ -36,8 +36,12 @@
 
 #include "Gaffer/Context.h"
 
+#include "tbb/concurrent_queue.h"
 #include "tbb/enumerable_thread_specific.h"
 #include "tbb/parallel_for.h"
+#include "tbb/task_arena.h"
+
+#include <variant>
 
 namespace GafferScene
 {
@@ -178,6 +182,83 @@ void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher
 {
 	Detail::PathMatcherFunctor<ThreadableFunctor> ff( f, filter );
 	parallelTraverse( scene, ff, root );
+}
+
+
+template <class LocationFunctor, class GatherFunctor>
+void parallelGatherLocations( const ScenePlug *scene, LocationFunctor &&locationFunctor, GatherFunctor &&gatherFunctor, const ScenePlug::ScenePath &root )
+{
+	// We use `parallelTraverse()` to run `locationFunctor`, passing the results to
+	// `gatherFunctor` on the current thread via a queue. In testing, this proved to
+	// have lower overhead than using TBB's `parallel_pipeline()`.
+
+	using LocationResult = std::invoke_result_t<LocationFunctor, const ScenePlug *, const ScenePlug::ScenePath &>;
+	using QueueValue = std::variant<std::monostate, LocationResult, std::exception_ptr>;
+	tbb::concurrent_bounded_queue<QueueValue> queue;
+	queue.set_capacity( tbb::this_task_arena::max_concurrency() );
+
+	IECore::Canceller traverseCanceller;
+	auto locationFunctorWrapper = [&] ( const ScenePlug *scene, const ScenePlug::ScenePath &path ) {
+		IECore::Canceller::check( &traverseCanceller );
+		queue.push( std::move( locationFunctor( scene, path ) ) );
+		return true;
+	};
+
+	tbb::task_arena( tbb::task_arena::attach() ).enqueue(
+
+		[&, &threadState = Gaffer::ThreadState::current()] () {
+
+			Gaffer::ThreadState::Scope threadStateScope( threadState );
+			try
+			{
+				SceneAlgo::parallelTraverse( scene, locationFunctorWrapper, root );
+			}
+			catch( ... )
+			{
+				queue.push( std::current_exception() );
+				return;
+			}
+			queue.push( std::monostate() );
+		}
+
+	);
+
+	while( true )
+	{
+		QueueValue value;
+		queue.pop( value );
+		if( auto locationResult = std::get_if<LocationResult>( &value ) )
+		{
+			try
+			{
+				gatherFunctor( *locationResult );
+			}
+			catch( ... )
+			{
+				// We can't rethrow until the `parallelTraverse()` has
+				// completed, as it references the `queue` and
+				// `traverseCanceller` from this stack frame.
+				traverseCanceller.cancel();
+				while( true )
+				{
+					queue.pop( value );
+					if( std::get_if<std::exception_ptr>( &value ) || std::get_if<std::monostate>( &value ) )
+					{
+						throw;
+					}
+				}
+			}
+		}
+		else if( auto exception = std::get_if<std::exception_ptr>( &value ) )
+		{
+			std::rethrow_exception( *exception );
+		}
+		else
+		{
+			// We use `monostate` to signal completion.
+			break;
+		}
+	}
 }
 
 template<typename Predicate>
