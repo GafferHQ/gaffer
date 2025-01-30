@@ -4,11 +4,13 @@
 Features
 --------
 
-- Parent/Duplicate/Scatter ( Nodes derived from BranchCreator ) : Added `copySourceAttributes` plug, to preserve attributes when using the `destination` plug to change where in the hierarchy branches are added.
-- GafferUSD :
-  - Added render adaptor which automatically expands USD PointInstancers at render time. Can be controlled with the Viewer menu "Expansion > Expand USD Instancers". Defaults on for all renderers besides OpenGL. Can be set manually with the bool attribute `gafferUSD:pointInstancerAdaptor:enabled`. If you want the resulting instances to have some of the point cloud primitive variables promoted to user attributes, you can set the attribute `gafferUSD:pointInstancerAdaptor:attributes`.
-  - Added PromotePointInstances node, for workflows which use USD point instancers, but want to selectively convert some points to expanded geometry before rendering.
-- PrimitiveVariableTweaks : Added `invertSelection` plug.
+- Parent, Duplicate, Scatter : Added `copySourceAttributes` plug, to preserve inherited attributes when the `destination` is not parented below the source.
+- USD : Added automatic expansion of USD PointInstancers at render time.
+  - This can be controlled on a per-instancer basis using a `gafferUSD:pointInstancerAdaptor:enabled` boolean attribute.
+  - Which point cloud primitive variables are promoted to user attributes can be controlled using a `gafferUSD:pointInstancerAdaptor:attributes` string attribute.
+  - May be disabled entirely with `GafferScene.SceneAlgo.deregisterRenderAdaptor( "USDPointInstancerAdaptor" )`.
+- Viewer : Added "Expand USD Instancers" item to the Expansion menu. Defaults to on for all renderers except OpenGL.
+- PromotePointInstances : Added a new node for selectively converting a subset of a USD PointInstancer to expanded "hero" geometry.
 
 Improvements
 ------------
@@ -21,11 +23,14 @@ Improvements
     - Color : Values are remapped from the range `[valueMin, valueMax]` to `[0, 1]`.
     - Vertex Label : Values are displayed as a label next to each vertex.
   - When visualising data as vertex labels, the value for the vertex nearest the mouse cursor gets visual emphasis. This value is also used for drag and drop.
+- PrimitiveVariableTweaks : Added `invertSelection` plug.
+- Tweaks nodes : Added automatic conversion between numeric types. For example, an integer tweak value can now be applied to a float.
 
 Fixes
 -----
 
 - ContactSheetCore : Fixed bugs handling changes to the input and output image formats.
+- InteractiveRender : Fixed potential leak of `scene:path` context variable when computing the value for `resolvedRenderer`.
 - Dispatch app : Fixed configuration bug which caused GafferSceneUI to be loaded unnecessarily (#6239).
 
 1.5.4.0 (relative to 1.5.3.0)
