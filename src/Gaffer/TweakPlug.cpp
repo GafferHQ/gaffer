@@ -368,6 +368,51 @@ bool constexpr hasZeroConstructor()
 	);
 }
 
+// There are a lot of different ways data could be convertible - this should probably be
+// expanded. But just handling simple numeric types makes things easier when we need to
+// use this in PromoteInstances.
+
+template< typename A, typename B >
+constexpr bool valueTypesAreConvertible()
+{
+	return std::is_arithmetic_v< A > && std::is_arithmetic_v< B >;
+}
+
+template< typename A, typename B >
+constexpr A convertValueType( const B &b )
+{
+	return b;
+}
+
+template< typename DestDataType, typename SrcDataType >
+typename DestDataType::Ptr convertData( const SrcDataType *srcData )
+{
+	if constexpr( TypeTraits::IsTypedData<SrcDataType>::value )
+	{
+		if constexpr( valueTypesAreConvertible< typename SrcDataType::ValueType, typename DestDataType::ValueType >() )
+		{
+			typename DestDataType::Ptr resultData = new DestDataType();
+			resultData->writable() = convertValueType< typename DestDataType::ValueType >( srcData->readable() );
+			return resultData;
+		}
+		else if constexpr( TypeTraits::IsVectorTypedData< SrcDataType >::value && TypeTraits::IsVectorTypedData< DestDataType >::value )
+		{
+			if constexpr( valueTypesAreConvertible< typename SrcDataType::ValueType::value_type, typename DestDataType::ValueType::value_type >() )
+			{
+				typename DestDataType::Ptr resultData = new DestDataType();
+				auto &result = resultData->writable();
+				result.reserve( srcData->readable().size() );
+				for( const auto &i : srcData->readable() )
+				{
+					result.push_back( convertValueType< typename DestDataType::ValueType::value_type >( i ) );
+				}
+				return resultData;
+			}
+		}
+	}
+	return nullptr;
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -636,8 +681,21 @@ void TweakPlug::applyTweakInternal( IECore::Data *data, const IECore::Data *twea
 			using DataType = typename std::remove_const_t<std::remove_pointer_t<decltype( dataTyped )> >;
 			if constexpr( IECore::TypeTraits::IsTypedData< DataType >::value )
 			{
-				auto tweakDataTyped = IECore::runTimeCast< const DataType >( tweakData );
-				if( !tweakDataTyped )
+				const DataType *tweakDataMatchingTyped = IECore::runTimeCast< const DataType >( tweakData );
+				typename DataType::Ptr tweakDataConverted;
+
+				if( !tweakDataMatchingTyped )
+				{
+					tweakDataConverted = IECore::dispatch( tweakData,
+						[]( const auto *tweakDataTyped )
+						{
+							return convertData<DataType>( tweakDataTyped );
+						}
+					);
+					tweakDataMatchingTyped = tweakDataConverted.get();
+				}
+
+				if( !tweakDataMatchingTyped )
 				{
 					throw IECore::Exception(
 						fmt::format( "Cannot apply tweak to \"{}\" : Value of type \"{}\" does not match parameter of type \"{}\"", name, dataTyped->typeName(), tweakData->typeName() )
@@ -645,7 +703,7 @@ void TweakPlug::applyTweakInternal( IECore::Data *data, const IECore::Data *twea
 				}
 
 				auto &value = dataTyped->writable();
-				value = applyValueTweak( value, tweakDataTyped->readable(), mode, name );
+				value = applyValueTweak( value, tweakDataMatchingTyped->readable(), mode, name );
 			}
 			else
 			{
@@ -735,8 +793,21 @@ void TweakPlug::applyVectorElementTweak( IECore::Data *vectorData, const IECore:
 				using ElementType = typename SourceType::ValueType::value_type;
 				using ElementDataType = IECore::TypedData< ElementType >;
 
-				const ElementDataType* tweakDataTyped = IECore::runTimeCast< const ElementDataType >( tweakData );
-				if( !tweakDataTyped )
+				const ElementDataType* tweakDataMatchingTyped = IECore::runTimeCast< const ElementDataType >( tweakData );
+				typename ElementDataType::Ptr tweakDataConverted;
+
+				if( !tweakDataMatchingTyped )
+				{
+					tweakDataConverted = IECore::dispatch( tweakData,
+						[]( auto *tweakDataTyped )
+						{
+							return convertData<ElementDataType>( tweakDataTyped );
+						}
+					);
+					tweakDataMatchingTyped = tweakDataConverted.get();
+				}
+
+				if( !tweakDataMatchingTyped )
 				{
 					throw IECore::Exception(
 						fmt::format(
@@ -747,7 +818,7 @@ void TweakPlug::applyVectorElementTweak( IECore::Data *vectorData, const IECore:
 					);
 				}
 
-				auto &tweak = tweakDataTyped->readable();
+				auto &tweak = tweakDataMatchingTyped->readable();
 
 				if( mask && indicesData )
 				{

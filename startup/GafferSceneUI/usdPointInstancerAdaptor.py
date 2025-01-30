@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2025, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Image Engine Design Inc nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,14 +34,36 @@
 #
 ##########################################################################
 
-from .ModuleTest import ModuleTest
-from .USDAttributesTest import USDAttributesTest
-from .USDLayerWriterTest import USDLayerWriterTest
-from .USDShaderTest import USDShaderTest
-from .USDLightTest import USDLightTest
-from ._PointInstancerAdaptorTest import _PointInstancerAdaptorTest
-from .PromotePointInstancesTest import PromotePointInstancesTest
+import GafferSceneUI
+import IECore
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+def __expandUSDPointInstancersMenu( menuDefinition, plugValueWidget ) :
+
+	sceneView = plugValueWidget.getPlug().node()
+	try:
+		renderAdaptor = sceneView["__preprocessor"]["RenderAdaptors"]["USDPointInstancerAdaptor"]["_PointInstancerAdaptor"]
+	except:
+		# If there is no adaptor, then this menu doesn't make sense - if the user has deregistered this adaptor,
+		# it probably means they aren't using USD, or they have their own approach to point instancers, so we
+		# can just skip this menu option.
+		return
+
+	renderer = renderAdaptor["renderer"].getValue()
+	currentDict = renderAdaptor["defaultEnabledPerRenderer"].getValue()
+	current = currentDict.get( renderer, IECore.BoolData( True ) ).value
+
+	def callBackFunc( unused ):
+		modified = currentDict.copy()
+		modified[renderer] = IECore.BoolData( not current )
+		renderAdaptor["defaultEnabledPerRenderer"].setValue( modified )
+
+	menuDefinition.append( "/AttributesDivider", { "divider" : True } )
+	menuDefinition.append(
+		"/Expand USD Instancers",
+		{
+			"command" : callBackFunc,
+			"checkBox" : current
+		}
+	)
+
+GafferSceneUI.SceneViewUI._ExpansionPlugValueWidget.menuSignal().connect( __expandUSDPointInstancersMenu )

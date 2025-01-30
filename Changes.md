@@ -1,6 +1,15 @@
 1.5.x.x (relative to 1.5.4.0)
 =======
 
+Features
+--------
+
+- Parent/Duplicate/Scatter ( Nodes derived from BranchCreator ) : Added `copySourceAttributes` plug, to preserve attributes when using the `destination` plug to change where in the hierarchy branches are added.
+- GafferUSD :
+  - Added render adaptor which automatically expands USD PointInstancers at render time. Can be controlled with the Viewer menu "Expansion > Expand USD Instancers". Defaults on for all renderers besides OpenGL. Can be set manually with the bool attribute `gafferUSD:pointInstancerAdaptor:enabled`. If you want the resulting instances to have some of the point cloud primitive variables promoted to user attributes, you can set the attribute `gafferUSD:pointInstancerAdaptor:attributes`.
+  - Added PromotePointInstances node, for workflows which use USD point instancers, but want to selectively convert some points to expanded geometry before rendering.
+- PrimitiveVariableTweaks : Added `invertSelection` plug.
+
 Improvements
 ------------
 

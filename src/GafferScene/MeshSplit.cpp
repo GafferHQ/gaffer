@@ -311,6 +311,7 @@ MeshSplit::MeshSplit( const std::string &name )
 	// See `BranchCreator::computeObject()`. Or perhaps we would never want to allow a
 	// different destination anyway?
 	destinationPlug()->setName( "__destination" );
+	copySourceAttributesPlug()->setName( "__copySourceAttributes" );
 
 	// Since we don't introduce any new sets, but just duplicate parts
 	// of existing ones, we can save the BranchCreator base class some

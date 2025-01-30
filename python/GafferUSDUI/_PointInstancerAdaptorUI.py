@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2025, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Image Engine Design Inc nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,14 +34,43 @@
 #
 ##########################################################################
 
-from .ModuleTest import ModuleTest
-from .USDAttributesTest import USDAttributesTest
-from .USDLayerWriterTest import USDLayerWriterTest
-from .USDShaderTest import USDShaderTest
-from .USDLightTest import USDLightTest
-from ._PointInstancerAdaptorTest import _PointInstancerAdaptorTest
-from .PromotePointInstancesTest import PromotePointInstancesTest
+import Gaffer
+import GafferUSD
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+Gaffer.Metadata.registerNode(
+
+	GafferUSD._PointInstancerAdaptor,
+
+	"description",
+	"""
+	This internal node is used to implement automatic translation of USD point instancers at render time.
+	It should never been by users, but DocumentationTest still complains if it isn't documented.
+	""",
+
+	plugs = {
+
+		"renderer" : [
+
+			"description",
+			"""
+			Part of the standard renderAdaptor API, this is how a render adaptor is passed a string for
+			the current renderer name. Used to decide whether encapsulation is supported.
+			""",
+
+		],
+
+		"defaultEnabledPerRenderer" : [
+
+			"description",
+			"""
+			Controls whether the adaptor is hidden by default. Contains a dict, with a boolean value for
+			each renderer. Defaults true for any renderers not specified in the dict. Slightly weird
+			interface, but is basically internal. It should only ever be edited by the expansion menu
+			set up in startup/GafferSceneUI/usdPointInstancerAdaptor.py
+			""",
+
+		],
+
+	}
+
+)

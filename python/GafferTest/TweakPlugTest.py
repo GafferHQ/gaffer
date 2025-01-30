@@ -553,6 +553,33 @@ class TweakPlugTest( GafferTest.TestCase ) :
 		self.assertFalse( plug.applyTweak( data, Gaffer.TweakPlug.MissingMode.Ignore ) )
 		self.assertEqual( data, IECore.CompoundData() )
 
+	def testConvertibleDataTypes( self ) :
+
+		p = Gaffer.TweakPlug( "test", IECore.IntData( 3 ) )
+		p["mode"].setValue( p.Mode.Add )
+		d = IECore.CompoundData( { "test" : IECore.FloatData( 1.5 ) } )
+		p.applyTweak( d )
+		self.assertEqual( d["test"], IECore.FloatData( 4.5 ) )
+
+		p = Gaffer.TweakPlug( "test", IECore.FloatData( 7.4 ) )
+		p["mode"].setValue( p.Mode.Add )
+		d = IECore.CompoundData( { "test" : IECore.IntData( 10 ) } )
+		p.applyTweak( d )
+		self.assertEqual( d["test"], IECore.IntData( 17 ) )
+
+		p = Gaffer.TweakPlug( "test", IECore.BoolData( True ) )
+		p["mode"].setValue( p.Mode.Add )
+		d = IECore.CompoundData( { "test" : IECore.IntData( 10 ) } )
+		p.applyTweak( d )
+		self.assertEqual( d["test"], IECore.IntData( 11 ) )
+
+		p = Gaffer.TweakPlug( "test", IECore.IntVectorData( [ 10, 11, 12 ] ) )
+		p["mode"].setValue( p.Mode.ListAppend )
+		d = IECore.CompoundData( { "test" : IECore.FloatVectorData( [ 1.5, 3.0, 4.5 ] ) } )
+		p.applyTweak( d )
+		self.assertEqual( d["test"], IECore.FloatVectorData( [ 1.5, 3.0, 4.5, 10, 11, 12 ] ) )
+
+
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
 	def testListPerformance( self ) :
 

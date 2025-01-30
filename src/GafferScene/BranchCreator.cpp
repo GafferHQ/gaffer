@@ -131,6 +131,66 @@ void validateDestination( const ScenePlug::ScenePath &destination )
 	}
 }
 
+unsigned int matchingPrefixLength( const ScenePlug::ScenePath &a, const ScenePlug::ScenePath &b )
+{
+	unsigned int matchingLength = std::min( a.size(), b.size() );
+	for( unsigned int i = 0; i < matchingLength; i++ )
+	{
+		if( a[ i ] != b[ i ] )
+		{
+			matchingLength = i;
+			break;
+		}
+	}
+	return matchingLength;
+}
+
+void hashAttributesAfterCommonRoot(
+	const ScenePlug::ScenePath &queryPath, const ScenePlug::ScenePath &refPath, const ScenePlug *inPlug, IECore::MurmurHash &h
+)
+{
+	unsigned int matchingLength = matchingPrefixLength( queryPath, refPath );
+
+	ScenePlug::ScenePath curPath = queryPath;
+	curPath.resize( matchingLength );
+
+	ScenePlug::PathScope pathScope( Context::current() );
+	for( unsigned int i = matchingLength; i < queryPath.size(); i++ )
+	{
+		curPath.push_back( queryPath[i] );
+		pathScope.setPath( &curPath );
+
+		inPlug->attributesPlug()->hash( h );
+	}
+}
+
+IECore::CompoundObjectPtr attributesAfterCommonRoot(
+	const ScenePlug::ScenePath &queryPath, const ScenePlug::ScenePath &refPath, const ScenePlug *inPlug
+)
+{
+	unsigned int matchingLength = matchingPrefixLength( queryPath, refPath );
+
+	ScenePlug::ScenePath curPath = queryPath;
+	curPath.resize( matchingLength );
+
+	IECore::CompoundObjectPtr result = new CompoundObject();
+
+	ScenePlug::PathScope pathScope( Context::current() );
+	for( unsigned int i = matchingLength; i < queryPath.size(); i++ )
+	{
+		curPath.push_back( queryPath[i] );
+		pathScope.setPath( &curPath );
+
+		IECore::ConstCompoundObjectPtr curAttributes = inPlug->attributesPlug()->getValue();
+		for( const auto &[key, value] : inPlug->attributesPlug()->getValue()->members() )
+		{
+			result->members()[key] = value;
+		}
+	}
+
+	return result;
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -406,6 +466,7 @@ BranchCreator::BranchCreator( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "parent" ) );
 	addChild( new StringPlug( "destination", Gaffer::Plug::In, "${scene:path}" ) );
+	addChild( new BoolPlug( "copySourceAttributes", Gaffer::Plug::In, false ) );
 
 	addChild( new ObjectPlug( "__branches", Gaffer::Plug::Out, IECore::NullObject::defaultNullObject() ) );
 	addChild( new ObjectPlug( "__mapping", Gaffer::Plug::Out, IECore::NullObject::defaultNullObject() ) );
@@ -438,24 +499,34 @@ const Gaffer::StringPlug *BranchCreator::destinationPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
+Gaffer::BoolPlug *BranchCreator::copySourceAttributesPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::BoolPlug *BranchCreator::copySourceAttributesPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+}
+
 Gaffer::ObjectPlug *BranchCreator::branchesPlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 2 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::ObjectPlug *BranchCreator::branchesPlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 2 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 3 );
 }
 
 Gaffer::ObjectPlug *BranchCreator::mappingPlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 3 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 4 );
 }
 
 const Gaffer::ObjectPlug *BranchCreator::mappingPlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 3 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 4 );
 }
 
 void BranchCreator::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
@@ -500,6 +571,7 @@ void BranchCreator::affects( const Plug *input, AffectedPlugsContainer &outputs 
 	if(
 		input == branchesPlug() ||
 		input == mappingPlug() ||
+		input == copySourceAttributesPlug() ||
 		input == inPlug()->attributesPlug() ||
 		affectsBranchAttributes( input )
 	)
@@ -719,6 +791,14 @@ void BranchCreator::hashAttributes( const ScenePath &path, const Gaffer::Context
 	{
 		case Branch :
 			hashBranchAttributes( sourcePath, branchPath, context, h );
+			if( branchPath.size() == 1 && copySourceAttributesPlug()->getValue() )
+			{
+				ScenePath destinationPath = path; destinationPath.pop_back();
+				if( sourcePath != destinationPath )
+				{
+					hashAttributesAfterCommonRoot( sourcePath, destinationPath, inPlug(), h );
+				}
+			}
 			break;
 		case Destination :
 		case Ancestor :
@@ -739,7 +819,27 @@ IECore::ConstCompoundObjectPtr BranchCreator::computeAttributes( const ScenePath
 	switch( locationType )
 	{
 		case Branch :
-			return computeBranchAttributes( sourcePath, branchPath, context );
+		{
+			IECore::ConstCompoundObjectPtr result = computeBranchAttributes( sourcePath, branchPath, context );
+			if( branchPath.size() == 1 && copySourceAttributesPlug()->getValue() )
+			{
+				ScenePath destinationPath = path; destinationPath.pop_back();
+				if( sourcePath != destinationPath )
+				{
+					IECore::CompoundObjectPtr inherited = attributesAfterCommonRoot( sourcePath, destinationPath, inPlug() );
+
+					if( inherited->members().size() )
+					{
+						for( const auto &[key, value] : result->members() )
+						{
+							inherited->members()[key] = value;
+						}
+						result = inherited;
+					}
+				}
+			}
+			return result;
+		}
 		case Destination :
 		case Ancestor :
 		case PassThrough :

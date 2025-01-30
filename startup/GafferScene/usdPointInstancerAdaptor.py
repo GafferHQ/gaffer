@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2025, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Image Engine Design Inc nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,14 +34,17 @@
 #
 ##########################################################################
 
-from .ModuleTest import ModuleTest
-from .USDAttributesTest import USDAttributesTest
-from .USDLayerWriterTest import USDLayerWriterTest
-from .USDShaderTest import USDShaderTest
-from .USDLightTest import USDLightTest
-from ._PointInstancerAdaptorTest import _PointInstancerAdaptorTest
-from .PromotePointInstancesTest import PromotePointInstancesTest
+import GafferScene
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+# Register a render adaptor that converts PointsPrimitives in the usd:pointInstancers set
+# into actual Instancers. This supports how USD PointInstancers are currently loaded from
+# USD files. In the future, they may be first class objects, and this will be unnecessary.
+
+try:
+	import GafferUSD
+	GafferScene.SceneAlgo.registerRenderAdaptor( "USDPointInstancerAdaptor", GafferUSD._PointInstancerAdaptor, "SceneView *Render", "*" )
+except:
+	# We shouldn't have any dependency on GafferUSD in GafferScene - but we need to put this registration here
+	# instead of in startup/GafferUSD because scenes that need adapting can existing without any GafferUSD nodes
+	# in the node graph that would trigger loading of GafferUSD. So just fail silently if GafferUSD isn't available.
+	pass

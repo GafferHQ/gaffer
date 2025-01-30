@@ -1431,7 +1431,7 @@ void GafferScene::SceneAlgo::deregisterRenderAdaptor( const std::string &name )
 
 SceneProcessorPtr GafferScene::SceneAlgo::createRenderAdaptors()
 {
-	SceneProcessorPtr result = new SceneProcessor;
+	SceneProcessorPtr result = new SceneProcessor( "RenderAdaptors" );
 	StringPlugPtr clientPlug = new StringPlug( "client" );
 	StringPlugPtr rendererPlug = new StringPlug( "renderer" );
 	result->addChild( clientPlug );
