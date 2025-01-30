@@ -652,7 +652,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		with self.assertRaisesRegex(
 			RuntimeError,
 			r".* : Could not open \".*\" " + (
-				"\(Permission denied\)" if os.name != "nt" else "\(No such file or directory\)"
+				r"\(Permission denied\)" if os.name != "nt" else r"\(No such file or directory\)"
 			)
 		) :
 			GafferImage.ImageAlgo.image( s["c"]["out"] )
