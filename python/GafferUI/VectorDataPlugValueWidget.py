@@ -107,6 +107,17 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__dataWidget.setEditable( self._editable() )
 
+	def _convertValue( self, value ) :
+
+		plugValueType = type( self.getPlug().defaultValue() )
+		if hasattr( value, "value" ) and isinstance(
+			value.value,
+			IECore.DataTraits.valueTypeFromSequenceType( plugValueType )
+		) :
+			return plugValueType( [ value.value ] )
+		else :
+			return GafferUI.PlugValueWidget._convertValue( self, value )
+
 	def __dataPlugs( self ) :
 
 		if not len( self.getPlug() ) :
