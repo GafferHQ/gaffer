@@ -17,6 +17,7 @@ Fixes
 -----
 
 - ContactSheetCore : Fixed bugs handling changes to the input and output image formats.
+- Dispatch app : Fixed configuration bug which caused GafferSceneUI to be loaded unnecessarily (#6239).
 
 1.5.4.0 (relative to 1.5.3.0)
 =======
