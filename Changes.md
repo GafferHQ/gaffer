@@ -9,6 +9,7 @@ Features
   - This can be controlled on a per-instancer basis using a `gafferUSD:pointInstancerAdaptor:enabled` boolean attribute.
   - Which point cloud primitive variables are promoted to user attributes can be controlled using a `gafferUSD:pointInstancerAdaptor:attributes` string attribute.
   - May be disabled entirely with `GafferScene.SceneAlgo.deregisterRenderAdaptor( "USDPointInstancerAdaptor" )`.
+  - Added Cycles-specific light parameters to USD Lux lights.
 - Viewer : Added "Expand USD Instancers" item to the Expansion menu. Defaults to on for all renderers except OpenGL.
 - PromotePointInstances : Added a new node for selectively converting a subset of a USD PointInstancer to expanded "hero" geometry.
 
