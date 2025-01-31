@@ -263,7 +263,7 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 			PrototypeScope( const EngineData *engine, const Gaffer::Context *context, const ScenePath *parentPath, const ScenePath *branchPath );
 			private :
 				ScenePlug::ScenePath m_prototypePath;
-				void setPrototype( const EngineData *engine, const ScenePath *branchPath );
+				void setPrototype( const EngineData *engine, const ScenePath *sourcePath, const ScenePath *branchPath );
 
 				// Used when PrototypeScope retrieves the EngineData itself, and needs to keep it alive
 				ConstEngineDataPtr m_engine;

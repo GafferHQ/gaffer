@@ -5,6 +5,7 @@ Features
 --------
 
 - USDLight : Added Cycles-specific light parameters.
+- Instancer : Added support for prototype paths that are relative to an instancer. When using the same scene connected to both `in` and `prototypes`, this allows relocating an instancer together with its prototypes to a different location in the hierarchy. Prototype paths beginning with "./" are treated as relative, or you can set the environment variable `GAFFERSCENE_INSTANCER_EXPLICIT_ABSOLUTE_PATHS` to treat any path not beginning with "/" as relative ( this may be the default in the future ).
 
 Improvements
 ------------

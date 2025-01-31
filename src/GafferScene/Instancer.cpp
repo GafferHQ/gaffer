@@ -369,6 +369,19 @@ int seedForPoint( size_t index, const IdData &idData, int numSeeds, int seedScra
 
 std::atomic<int> g_instancerCount( 0 );
 
+bool checkEnvFlag( const char *envVar, bool def )
+{
+	const char *value = getenv( envVar );
+	if( value )
+	{
+		return std::string( value ) != "0";
+	}
+	else
+	{
+		return def;
+	}
+}
+
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -679,14 +692,27 @@ class Instancer::EngineData : public Data
 
 		// Return a pointer since this is for internal use only, and it helps communicate that we
 		// are responsible for holding the storage for this scene path when it gets put in the context
-		const ScenePlug::ScenePath *prototypeRoot( const InternedString &name ) const
+		const ScenePlug::ScenePath *prototypeRoot( const InternedString &name, const ScenePlug::ScenePath &enginePath, ScenePlug::ScenePath &storage ) const
 		{
-			return &( m_roots[m_names->input( name ).index]->readable() );
+			return prototypeRoot( m_names->input( name ).index, enginePath, storage );
 		}
 
-		const ScenePlug::ScenePath *prototypeRoot( int prototypeId ) const
+		const ScenePlug::ScenePath *prototypeRoot( int prototypeId, const ScenePlug::ScenePath &enginePath, ScenePlug::ScenePath &storage ) const
 		{
-			return &( m_roots[prototypeId]->readable() );
+			if( m_roots[prototypeId].relative )
+			{
+				const ScenePlug::ScenePath &prototypePath = m_roots[prototypeId].path->readable();
+				storage.resize( 0 );
+				storage.reserve( enginePath.size() + prototypePath.size() );
+				storage.insert( storage.end(), enginePath.begin(), enginePath.end() );
+				storage.insert( storage.end(), prototypePath.begin(), prototypePath.end() );
+				return &storage;
+
+			}
+			else
+			{
+				return &( m_roots[prototypeId].path->readable() );
+			}
 		}
 
 		const InternedStringVectorData *prototypeNames() const
@@ -762,12 +788,13 @@ class Instancer::EngineData : public Data
 				}
 
 				IECore::MurmurHash totalHash;
-				const InternedStringVectorData &rootPath = *m_roots[ protoIndex ];
+				const auto &rootPath = m_roots[ protoIndex ];
 
 				// Note that we are rehashing the root path for every point, even though they are heavily
 				// reused.  This seems suboptimal, but is simpler, and the more complex version doesn't
 				// appear to make any performance difference in practice
-				totalHash.append( &(rootPath.readable())[0], rootPath.readable().size() );
+				totalHash.append( &(rootPath.path->readable())[0], rootPath.path->readable().size() );
+				totalHash.append( rootPath.relative );
 				for( unsigned int j = 0; j < m_prototypeContextVariables.size(); j++ )
 				{
 					IECore::MurmurHash r; // TODO - if we're using this in inner loops, the constructor should probably be inlined?
@@ -1039,30 +1066,57 @@ class Instancer::EngineData : public Data
 			m_roots.reserve( rootStrings->size() );
 			m_prototypeIndexRemap.reserve( rootStrings->size() );
 
+
+			const static bool g_explicitAbsolutePaths = checkEnvFlag( "GAFFERSCENE_INSTANCER_EXPLICIT_ABSOLUTE_PATHS", false );
+
 			size_t i = 0;
 			ScenePlug::ScenePath path;
+
 			for( const auto &root : *rootStrings )
 			{
-				ScenePlug::stringToPath( root, path );
-				if( path.empty() )
+				if( !root.size() )
 				{
-					if( root == "/" )
+					m_prototypeIndexRemap.emplace_back( -1 );
+					continue;
+				}
+
+				InternedStringVectorDataPtr pathData = new InternedStringVectorData();
+				ScenePlug::ScenePath &path = pathData->writable();
+
+				bool relative = false;
+				if( root[0] == '/' )
+				{
+					ScenePlug::stringToPath( root, path );
+				}
+				else if( root[0] == '.' || g_explicitAbsolutePaths )
+				{
+					if( root[0] == '.' && root.size() >= 2 && root[1] == '/' )
 					{
-						inputNames.emplace_back( new InternedStringVectorData( { g_prototypeRootName } ) );
-						m_roots.emplace_back( new InternedStringVectorData( path ) );
-						m_prototypeIndexRemap.emplace_back( i++ );
+						// \todo - stringToPath should probably take a string_view to avoid this allocation
+						ScenePlug::stringToPath( root.substr( 2 ), path );
 					}
 					else
 					{
-						m_prototypeIndexRemap.emplace_back( -1 );
+						ScenePlug::stringToPath( root, path );
 					}
+					relative = true;
+				}
+				else
+				{
+					ScenePlug::stringToPath( root, path );
+				}
+
+				if( path.empty() )
+				{
+					inputNames.emplace_back( new InternedStringVectorData( { g_prototypeRootName } ) );
 				}
 				else
 				{
 					inputNames.emplace_back( new InternedStringVectorData( { path.back() } ) );
-					m_roots.emplace_back( new InternedStringVectorData( path ) );
-					m_prototypeIndexRemap.emplace_back( i++ );
 				}
+
+				m_roots.emplace_back( relative, std::move( pathData ) );
+				m_prototypeIndexRemap.emplace_back( i++ );
 			}
 
 			m_names = new Private::ChildNamesMap( inputNames );
@@ -1077,7 +1131,13 @@ class Instancer::EngineData : public Data
 		size_t m_numPrototypes;
 		size_t m_numValidPrototypes;
 		Private::ChildNamesMapPtr m_names;
-		std::vector<ConstInternedStringVectorDataPtr> m_roots;
+		struct PrototypeRoot {
+			PrototypeRoot( bool relative, ConstInternedStringVectorDataPtr path ) : relative( relative ), path( path ) {};
+
+			bool relative;
+			ConstInternedStringVectorDataPtr path;
+		};
+		std::vector<PrototypeRoot> m_roots;
 		std::vector<int> m_prototypeIndexRemap;
 		std::vector<int> m_prototypeIndicesAlloc;
 		const std::vector<int> *m_prototypeIndices;
@@ -1809,7 +1869,15 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 		prototypeIndexPlug()->hash( h );
 		prototypeRootsPlug()->hash( h );
 		prototypeRootsListPlug()->hash( h );
-		h.append( prototypesPlug()->childNamesHash( ScenePath() ) );
+
+		PrototypeMode mode = (PrototypeMode)prototypeModePlug()->getValue();
+		if( mode == PrototypeMode::IndexedRootsList )
+		{
+			// We only actually need this if prototypeRootsListPlug() has an empty value - but we probably
+			// shouldn't be evaluating that plug here to check ( maybe we shouldn't even be
+			// evaluating prototypeModePlug() in case someone is driving that with an expensive expression? )
+			h.append( prototypesPlug()->childNamesHash( ScenePath() ) );
+		}
 
 		idPlug()->hash( h );
 		omitDuplicateIdsPlug()->hash( h );
@@ -1921,7 +1989,8 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 				taskGroupContext
 			);
 
-			const ScenePlug::ScenePath *prototypeRoot = engine->prototypeRoot( prototypeName );
+			ScenePlug::ScenePath prototypeRootStorage;
+			const ScenePlug::ScenePath *prototypeRoot = engine->prototypeRoot( prototypeName, sourcePath, prototypeRootStorage );
 			h.append( prototypeName );
 			h.append( &(*prototypeRoot)[0], prototypeRoot->size() );
 			h.append( IECore::MurmurHash( h1Accum, h2Accum ) );
@@ -1954,15 +2023,18 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 	{
 		PrototypeMode mode = (PrototypeMode)prototypeModePlug()->getValue();
 		ConstStringVectorDataPtr prototypeRootsList = prototypeRootsListPlug()->getValue();
+
 		if( mode == PrototypeMode::IndexedRootsList && prototypeRootsList->readable().empty() )
 		{
 			const auto childNames = prototypesPlug()->childNames( ScenePath() );
-			prototypeRootsList = new StringVectorData(
-				std::vector<string>(
-					childNames->readable().begin(),
-					childNames->readable().end()
-				)
-			);
+			StringVectorDataPtr prototypeRootsListEditableData = new StringVectorData();
+			std::vector<std::string>& prototypeRootsListEditable = prototypeRootsListEditableData->writable();
+			prototypeRootsListEditable.reserve( childNames->readable().size() );
+			for( const IECore::InternedString &i : childNames->readable() )
+			{
+				prototypeRootsListEditable.push_back( "/" + i.string() );
+			}
+			prototypeRootsList = prototypeRootsListEditableData;
 		}
 
 		ConstPrimitivePtr primitive = runTimeCast<const Primitive>( inPlug()->objectPlug()->getValue() );
@@ -2162,7 +2234,8 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 		{
 			branchPath.resize( 2 );
 			branchPath.back() = prototypeName;
-			const ScenePlug::ScenePath *prototypeRoot = engine->prototypeRoot( prototypeName );
+			ScenePlug::ScenePath prototypeRootStorage;
+			const ScenePlug::ScenePath *prototypeRoot = engine->prototypeRoot( prototypeName, sourcePath, prototypeRootStorage );
 
 			const std::vector<size_t> &pointIndicesForPrototype = esp->pointIndicesForPrototype( prototypeName );
 
@@ -2245,7 +2318,8 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 
 					for( size_t i = r.begin(); i != r.end(); ++i )
 					{
-						const ScenePlug::ScenePath *prototypeRoot = engineData->prototypeRoot( i );
+						ScenePlug::ScenePath prototypeRootStorage;
+						const ScenePlug::ScenePath *prototypeRoot = engineData->prototypeRoot( i, sourcePath, prototypeRootStorage );
 						if( !prototypesPlug()->exists( *prototypeRoot ) )
 						{
 							throw IECore::Exception( fmt::format( "Prototype root \"{}\" does not exist in the `prototypes` scene", ScenePlug::pathToString( *prototypeRoot ) ) );
@@ -2916,7 +2990,8 @@ IECore::ConstPathMatcherDataPtr Instancer::computeBranchSet( const ScenePath &so
 	{
 		const std::vector<size_t> &pointIndicesForPrototype = esp->pointIndicesForPrototype( prototypeName );
 
-		PathMatcher instanceSet = inputSet->readable().subTree( *engine->prototypeRoot( prototypeName ) );
+		ScenePlug::ScenePath prototypeRootStorage;
+		PathMatcher instanceSet = inputSet->readable().subTree( *engine->prototypeRoot( prototypeName, sourcePath, prototypeRootStorage ) );
 		branchPath[1] = prototypeName;
 
 		for( const size_t &index : pointIndicesForPrototype )
@@ -2987,20 +3062,23 @@ Instancer::PrototypeScope::PrototypeScope( const Gaffer::ObjectPlug *enginePlug,
 	// Must hold a smart pointer to engine so it can't be freed during the lifespan of this scope
 	m_engine = boost::static_pointer_cast<const EngineData>( enginePlug->getValue() );
 
-	setPrototype( m_engine.get(), branchPath );
+	setPrototype( m_engine.get(), sourcePath, branchPath );
 }
 
 Instancer::PrototypeScope::PrototypeScope( const EngineData *engine, const Gaffer::Context *context, const ScenePath *sourcePath, const ScenePath *branchPath )
 	:	Gaffer::Context::EditableScope( context )
 {
-	setPrototype( engine, branchPath );
+	setPrototype( engine, sourcePath, branchPath );
 }
 
-void Instancer::PrototypeScope::setPrototype( const EngineData *engine, const ScenePath *branchPath )
+void Instancer::PrototypeScope::setPrototype( const EngineData *engine, const ScenePath *sourcePath, const ScenePath *branchPath )
 {
 	assert( branchPath->size() >= 2 );
 
-	const ScenePlug::ScenePath *prototypeRoot = engine->prototypeRoot( (*branchPath)[1] );
+	// We pass in m_prototypePath as the storage to prototypeRoot() - it may or may not be set,
+	// becaues prototypeRoot can sometimes just return a pointer without needing to do any allocation.
+	m_prototypePath.resize( 0 );
+	const ScenePlug::ScenePath *prototypeRoot = engine->prototypeRoot( (*branchPath)[1], *sourcePath, m_prototypePath );
 
 	if( branchPath->size() >= 3 && engine->hasContextVariables() )
 	{
@@ -3010,7 +3088,12 @@ void Instancer::PrototypeScope::setPrototype( const EngineData *engine, const Sc
 
 	if( branchPath->size() > 3 )
 	{
-		m_prototypePath = *prototypeRoot;
+		if( !m_prototypePath.size() )
+		{
+			// If prototypeRoot didn't need to do an allocation, we have to do it now so we can modify
+			// m_prototypePath.
+			m_prototypePath = *prototypeRoot;
+		}
 		m_prototypePath.reserve( prototypeRoot->size() + branchPath->size() - 3 );
 		m_prototypePath.insert( m_prototypePath.end(), branchPath->begin() + 3, branchPath->end() );
 		set( ScenePlug::scenePathContextName, &m_prototypePath );
@@ -3215,10 +3298,12 @@ void Instancer::InstancerCapsule::render( IECoreScenePreview::Renderer *renderer
 			{
 				Context::EditableScope threadScope( threadState );
 
+				ScenePlug::ScenePath prototypeRootStorage;
 				for( size_t i = r.begin(); i != r.end(); ++i )
 				{
 					fixedPrototypes[i] = new Prototype(
-						prototypesPlug, engines[0]->prototypeRoot( i ), sampleTimes, outerCapsuleHash, renderOpts,
+						prototypesPlug, engines[0]->prototypeRoot( i, enginePath, prototypeRootStorage ),
+						sampleTimes, outerCapsuleHash, renderOpts,
 						threadScope.context(), renderer,
 						// If we don't have instance attributes, we can prepare renderer attributes ahead of time
 						!hasAttributes
@@ -3238,13 +3323,15 @@ void Instancer::InstancerCapsule::render( IECoreScenePreview::Renderer *renderer
 	IECorePreview::LRUCache<IECore::MurmurHash, ConstPrototypePtr, IECorePreview::LRUCachePolicy::Parallel, PrototypeCacheGetterKey> prototypeCache(
 		[
 			&prototypesPlug, &sampleTimes, &outerCapsuleHash, &renderOpts,
-			&renderer, &hasAttributes, &engines, &defaultContext
+			&renderer, &hasAttributes, &engines, &defaultContext, &enginePath
 		]
 		( const PrototypeCacheGetterKey &key, size_t &cost, const IECore::Canceller *canceller ) -> ConstPrototypePtr
 		{
 			cost = 1;
+			ScenePlug::ScenePath prototypeRootStorage;
 			return new Prototype(
-				prototypesPlug, engines[0]->prototypeRoot( key.prototypeId ), sampleTimes, outerCapsuleHash, renderOpts,
+				prototypesPlug, engines[0]->prototypeRoot( key.prototypeId, enginePath, prototypeRootStorage ),
+				sampleTimes, outerCapsuleHash, renderOpts,
 				key.context ? key.context : defaultContext, renderer,
 				// If we don't have instance attributes, we can prepare renderer attributes ahead of time
 				!hasAttributes

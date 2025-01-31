@@ -39,6 +39,8 @@ import math
 
 import imath
 import inspect
+import os
+import subprocess
 import time
 import unittest
 
@@ -3605,6 +3607,96 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 				instancer["out"].object( "/plane/instances" )
 
 		self.assertEqual( pm.combinedStatistics().computeCount, 0 )
+
+	def testRelativePrototypePaths( self ):
+		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( 0, 0, 0 ), imath.V3f( 4, 0, 0 ), imath.V3f( 8, 0, 0 ) ] ) )
+		points["prototypeRoots"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.StringVectorData( [ "/sphere", "./sphere", "sphere" ] )
+		)
+
+		objectToScene = GafferScene.ObjectToScene()
+		objectToScene["object"].setValue( points )
+
+		sphereA = GafferScene.Sphere()
+
+		parentA = GafferScene.Parent()
+		parentA["in"].setInput( objectToScene["out"] )
+		parentA["children"][0].setInput( sphereA["out"] )
+		parentA["parent"].setValue( "/object" )
+
+		groupA = GafferScene.Group()
+		groupA["name"].setValue( "groupA" )
+		groupA["in"][0].setInput( parentA["out"] )
+
+		sphereB = GafferScene.Sphere()
+
+		parentB = GafferScene.Parent()
+		parentB["in"].setInput( objectToScene["out"] )
+		parentB["children"][0].setInput( sphereB["out"] )
+		parentB["parent"].setValue( "/object" )
+
+		groupB = GafferScene.Group()
+		groupB["name"].setValue( "groupB" )
+		groupB["in"][0].setInput( parentB["out"] )
+
+		rootSphere = GafferScene.Sphere()
+		rootSphere["radius"].setValue( 7 )
+
+		buildScene = GafferScene.Parent()
+		buildScene["parent"].setValue( "/" )
+		buildScene["in"].setInput( rootSphere["out"] )
+		buildScene["children"][0].setInput( groupA["out"] )
+		buildScene["children"][1].setInput( groupB["out"] )
+
+		pointsFilter = GafferScene.PathFilter()
+		pointsFilter["paths"].setValue( IECore.StringVectorData( [ "/groupA/object", "/groupB/object" ] ) )
+
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( buildScene["out"] )
+		instancer["prototypes"].setInput( buildScene["out"] )
+		instancer["filter"].setInput( pointsFilter["out"] )
+		instancer["prototypeMode"].setValue( GafferScene.Instancer.PrototypeMode.RootPerVertex )
+
+		self.assertEncapsulatedRendersSame( instancer )
+
+		instancer["encapsulate"].setValue( True )
+
+		self.assertEqual( instancer["out"].objectHash( "/groupA/object/instances" ), instancer["out"].objectHash( "/groupB/object/instances" ) )
+
+		sphereB["radius"].setValue( 2 )
+
+		self.assertNotEqual( instancer["out"].objectHash( "/groupA/object/instances" ), instancer["out"].objectHash( "/groupB/object/instances" ) )
+
+		instancer["encapsulate"].setValue( False )
+
+		self.assertEncapsulatedRendersSame( instancer )
+
+		self.assertEqual( instancer["out"].object( "/groupA/object/instances/sphere/0" ), rootSphere["out"].object( "/sphere" ) )
+		self.assertEqual( instancer["out"].object( "/groupA/object/instances/sphere1/1" ), sphereA["out"].object( "/sphere" ) )
+		self.assertEqual( instancer["out"].object( "/groupB/object/instances/sphere/0" ), rootSphere["out"].object( "/sphere" ) )
+		self.assertEqual( instancer["out"].object( "/groupB/object/instances/sphere1/1" ), sphereB["out"].object( "/sphere" ) )
+
+		if os.environ.get( "GAFFERSCENE_INSTANCER_EXPLICIT_ABSOLUTE_PATHS", "0" ) != "0":
+			self.assertEqual( instancer["out"].object( "/groupA/object/instances/sphere2/2" ), sphereA["out"].object( "/sphere" ) )
+			self.assertEqual( instancer["out"].object( "/groupB/object/instances/sphere2/2" ), sphereB["out"].object( "/sphere" ) )
+		else:
+			self.assertEqual( instancer["out"].object( "/groupA/object/instances/sphere2/2" ), rootSphere["out"].object( "/sphere" ) )
+			self.assertEqual( instancer["out"].object( "/groupB/object/instances/sphere2/2" ), rootSphere["out"].object( "/sphere" ) )
+
+	def testRelativePrototypePathsWithExplicitAbsolute( self ):
+		try :
+			env = os.environ.copy()
+			env["GAFFERSCENE_INSTANCER_EXPLICIT_ABSOLUTE_PATHS"] = "1"
+			subprocess.check_output(
+				[ str( Gaffer.executablePath() ), "test", "GafferSceneTest.InstancerTest.testRelativePrototypePaths" ],
+				stderr = subprocess.STDOUT,
+				env = env,
+			)
+		except subprocess.CalledProcessError as e :
+			self.fail( e.output )
+
 
 if __name__ == "__main__":
 	unittest.main()
