@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.4.0)
 =======
 
+API
+---
+
+- ScriptWindow : Added `instanceCreatedSignal()`.
+
 1.5.4.0 (relative to 1.5.3.0)
 =======
 
