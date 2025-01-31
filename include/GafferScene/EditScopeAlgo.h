@@ -163,6 +163,8 @@ GAFFERSCENE_API const Gaffer::GraphComponent *renderPassOptionEditReadOnlyReason
 GAFFERSCENE_API const Gaffer::GraphComponent *renderPassesReadOnlyReason( const Gaffer::EditScope *scope );
 /// Renames the render pass `oldName` to `newName` inside `scope`. Returns `true` if renaming occurred.
 GAFFERSCENE_API bool renameRenderPass( Gaffer::EditScope *scope, const std::string &oldName, const std::string &newName );
+/// Returns the reason why a render pass could not be renamed to `newName`.
+GAFFERSCENE_API std::optional<std::string> renameRenderPassNonEditableReason( const Gaffer::EditScope *scope, const std::string &newName );
 
 } // namespace EditScopeAlgo
 

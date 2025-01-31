@@ -1495,16 +1495,16 @@ const Gaffer::GraphComponent *GafferScene::EditScopeAlgo::renderPassesReadOnlyRe
 
 bool GafferScene::EditScopeAlgo::renameRenderPass( Gaffer::EditScope *scope, const std::string &oldName, const std::string &newName )
 {
-	bool renamed = false;
+	if( const auto nonEditableReason = renameRenderPassNonEditableReason( scope, newName ) )
+	{
+		throw IECore::Exception( nonEditableReason.value() );
+	}
 
+	bool renamed = false;
 	if( auto renderPassesProcessor = scope->acquireProcessor( g_renderPassesProcessorName, /* createIfNecessary = */ false ) )
 	{
 		auto namesPlug = renderPassesProcessor->getChild<StringVectorDataPlug>( "names" );
 		ConstStringVectorDataPtr renderPasses = namesPlug->getValue();
-		if( std::find( renderPasses->readable().begin(), renderPasses->readable().end(), newName ) != renderPasses->readable().end() )
-		{
-			throw IECore::Exception( fmt::format( "Render Pass \"{}\" already exists", newName ) );
-		}
 
 		if( std::find( renderPasses->readable().begin(), renderPasses->readable().end(), oldName ) != renderPasses->readable().end() )
 		{
@@ -1526,4 +1526,28 @@ bool GafferScene::EditScopeAlgo::renameRenderPass( Gaffer::EditScope *scope, con
 	}
 
 	return renamed;
+}
+
+std::optional<std::string> GafferScene::EditScopeAlgo::renameRenderPassNonEditableReason( const Gaffer::EditScope *scope, const std::string &newName )
+{
+	if( auto renderPassesProcessor = const_cast<EditScope *>( scope )->acquireProcessor( g_renderPassesProcessorName, /* createIfNecessary = */ false ) )
+	{
+		auto namesPlug = renderPassesProcessor->getChild<StringVectorDataPlug>( "names" );
+		ConstStringVectorDataPtr renderPasses = namesPlug->getValue();
+		if( std::find( renderPasses->readable().begin(), renderPasses->readable().end(), newName ) != renderPasses->readable().end() )
+		{
+			return fmt::format( "A render pass named \"{}\" already exists in {}", newName, renderPassesProcessor->relativeName( scope->parent() ) );
+		}
+	}
+
+	if( auto renderPassOptionEditsProcessor = const_cast<EditScope *>( scope )->acquireProcessor( g_renderPassOptionProcessorName, /* createIfNecessary = */ false ) )
+	{
+		auto *rows = renderPassOptionEditsProcessor->getChild<Spreadsheet::RowsPlug>( "edits" );
+		if( rows->row( newName ) )
+		{
+			return fmt::format( "Edits already exist for render pass \"{}\" in {}", newName, renderPassOptionEditsProcessor->relativeName( scope->parent() ) );
+		}
+	}
+
+	return std::nullopt;
 }

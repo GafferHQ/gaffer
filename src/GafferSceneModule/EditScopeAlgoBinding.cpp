@@ -269,6 +269,13 @@ bool renameRenderPassWrapper( Gaffer::EditScope &scope, const std::string &oldNa
 	return EditScopeAlgo::renameRenderPass( &scope, oldName, newName );
 }
 
+std::string renameRenderPassNonEditableReasonWrapper( Gaffer::EditScope &scope, const std::string &newName )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	std::optional<std::string> result = EditScopeAlgo::renameRenderPassNonEditableReason( &scope, newName );
+	return result ? result.value() : "";
+}
+
 } // namespace
 
 namespace GafferSceneModule
@@ -333,6 +340,7 @@ void bindEditScopeAlgo()
 
 	def( "renderPassesReadOnlyReason", &renderPassesReadOnlyReasonWrapper );
 	def( "renameRenderPass", &renameRenderPassWrapper, ( arg( "scope" ), arg( "oldName" ), arg( "newName" ) ) );
+	def( "renameRenderPassNonEditableReason", &renameRenderPassNonEditableReasonWrapper, ( arg( "scope" ), arg( "newName" ) ) );
 
 }
 

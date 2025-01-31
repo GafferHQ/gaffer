@@ -1740,12 +1740,15 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertFalse( GafferScene.EditScopeAlgo.renameRenderPass( editScope, "notAPass", "notARenamedPass" ) )
 		self.assertEqual( editScope["out"]["globals"].getValue().get( "option:renderPass:names" ), renderPassNames )
 
+		self.assertEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( editScope, "renamedPassB" ), "" )
 		self.assertTrue( GafferScene.EditScopeAlgo.renameRenderPass( editScope, "renderPassB", "renamedPassB" ) )
 		self.assertEqual( editScope["out"]["globals"].getValue().get( "option:renderPass:names" ), IECore.StringVectorData( [ "renderPassA", "renamedPassB", "renderPassC" ] ) )
 
+		self.assertEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( editScope, "renderPassB" ), "" )
 		self.assertTrue( GafferScene.EditScopeAlgo.renameRenderPass( editScope, "renamedPassB", "renderPassB" ) )
 		self.assertEqual( editScope["out"]["globals"].getValue().get( "option:renderPass:names" ), renderPassNames )
 
+		self.assertNotEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( editScope, "renderPassA" ), "" )
 		self.assertRaises( RuntimeError, GafferScene.EditScopeAlgo.renameRenderPass, editScope, "renderPassC", "renderPassA" )
 
 	def testRenameRenderPassDoesNotCreateUnnecessaryProcessors( self ) :
@@ -1788,6 +1791,7 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 				context["renderPass"] = name
 				self.assertEqual( s["editScope"]["out"].globals()["option:test"].value, name )
 
+		self.assertEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( s["editScope"], "renamedPassA" ), "" )
 		self.assertTrue( GafferScene.EditScopeAlgo.renameRenderPass( s["editScope"], "renderPassA", "renamedPassA" ) )
 		self.assertEqual( s["editScope"]["out"]["globals"].getValue().get( "option:renderPass:names" ), IECore.StringVectorData( [ "renamedPassA", "renderPassB", "renderPassC" ] ) )
 
@@ -1799,6 +1803,7 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 				self.assertEqual( s["editScope"]["out"].globals()["option:test"].value, name if name != "renderPassA" else "" )
 
 		# Renaming renderPassB to a previously used name is permitted.
+		self.assertEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( s["editScope"], "renderPassA" ), "" )
 		self.assertTrue( GafferScene.EditScopeAlgo.renameRenderPass( s["editScope"], "renderPassB", "renderPassA" ) )
 		self.assertEqual( s["editScope"]["out"]["globals"].getValue().get( "option:renderPass:names" ), IECore.StringVectorData( [ "renamedPassA", "renderPassA", "renderPassC" ] ) )
 
@@ -1816,6 +1821,7 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( s["editScope"]["out"].globals()["option:test"].value, "renderPassC" )
 
 		# Renaming renderPassC to a currently existing name should error and not change anything.
+		self.assertNotEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( s["editScope"], "renderPassA" ), "" )
 		self.assertRaises( RuntimeError, GafferScene.EditScopeAlgo.renameRenderPass, s["editScope"], "renderPassC", "renderPassA" )
 		self.assertEqual( s["editScope"]["out"]["globals"].getValue().get( "option:renderPass:names" ), IECore.StringVectorData( [ "renamedPassA", "renderPassA", "renderPassC" ] ) )
 
@@ -1833,7 +1839,9 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( s["editScope"]["out"].globals()["option:test"].value, "renderPassC" )
 
 		# Reversing our rename steps should return things to the original state.
+		self.assertEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( s["editScope"], "renderPassB" ), "" )
 		self.assertTrue( GafferScene.EditScopeAlgo.renameRenderPass( s["editScope"], "renderPassA", "renderPassB" ) )
+		self.assertEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( s["editScope"], "renderPassA" ), "" )
 		self.assertTrue( GafferScene.EditScopeAlgo.renameRenderPass( s["editScope"], "renamedPassA", "renderPassA" ) )
 
 		self.assertEqual( s["editScope"]["out"]["globals"].getValue().get( "option:renderPass:names" ), renderPassNames )
@@ -1862,6 +1870,7 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertIsNone( s["editScope"].acquireProcessor( "RenderPasses", createIfNecessary = False ) )
 
+		self.assertEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( s["editScope"], "renamedPassA" ), "" )
 		self.assertTrue( GafferScene.EditScopeAlgo.renameRenderPass( s["editScope"], "renderPassA", "renamedPassA" ) )
 		self.assertIsNone( s["editScope"].acquireProcessor( "RenderPasses", createIfNecessary = False ) )
 
@@ -1873,6 +1882,7 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 				context["renderPass"] = name
 				self.assertEqual( s["editScope"]["out"].globals()["option:test"].value, "renderPassA" if name == "renamedPassA" else name )
 
+		self.assertEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( s["editScope"], "renderPassA" ), "" )
 		self.assertTrue( GafferScene.EditScopeAlgo.renameRenderPass( s["editScope"], "renamedPassA", "renderPassA" ) )
 
 		with Gaffer.Context() as context :
@@ -1882,6 +1892,42 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 			for name in [ "renderPassA", "renderPassB", "renderPassC" ] :
 				context["renderPass"] = name
 				self.assertEqual( s["editScope"]["out"].globals()["option:test"].value, name )
+
+	def testRenameRenderPassNonEditableReason( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["options"] = GafferScene.CustomOptions()
+		s["options"]["options"].addChild( Gaffer.NameValuePlug( "test", IECore.StringData( "" ) ) )
+
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["options"]["out"] )
+		s["editScope"]["in"].setInput( s["options"]["out"] )
+
+		self.assertEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( s["editScope"], "renderPassA" ), "" )
+
+		edit = GafferScene.EditScopeAlgo.acquireRenderPassOptionEdit( s["editScope"], "renderPassA", "test" )
+		edit["enabled"].setValue( True )
+		edit["value"].setValue( "renderPassA" )
+
+		self.assertEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( s["editScope"], "renderPassA" ), "Edits already exist for render pass \"renderPassA\" in editScope.RenderPassOptionEdits" )
+		self.assertEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( s["editScope"], "renderPassB" ), "" )
+
+		renderPasses = s["editScope"].acquireProcessor( "RenderPasses", createIfNecessary = True )
+		renderPasses["names"].setValue( IECore.StringVectorData( [ "renderPassA" ] ) )
+		self.assertEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( s["editScope"], "renderPassA" ), "A render pass named \"renderPassA\" already exists in editScope.RenderPasses" )
+		self.assertEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( s["editScope"], "renderPassB" ), "" )
+
+		renderPasses["names"].setValue( IECore.StringVectorData( [ "renderPassB" ] ) )
+		self.assertEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( s["editScope"], "renderPassA" ), "Edits already exist for render pass \"renderPassA\" in editScope.RenderPassOptionEdits" )
+		self.assertEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( s["editScope"], "renderPassB" ), "A render pass named \"renderPassB\" already exists in editScope.RenderPasses" )
+		self.assertEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( s["editScope"], "renderPassC" ), "" )
+
+		renderPasses["names"].setValue( IECore.StringVectorData( [ "renderPassB", "renderPassC" ] ) )
+		self.assertEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( s["editScope"], "renderPassA" ), "Edits already exist for render pass \"renderPassA\" in editScope.RenderPassOptionEdits" )
+		self.assertEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( s["editScope"], "renderPassB" ), "A render pass named \"renderPassB\" already exists in editScope.RenderPasses" )
+		self.assertEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( s["editScope"], "renderPassC" ), "A render pass named \"renderPassC\" already exists in editScope.RenderPasses" )
+		self.assertEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( s["editScope"], "renderPassD" ), "" )
 
 if __name__ == "__main__":
 	unittest.main()

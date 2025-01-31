@@ -37,7 +37,7 @@ Fixes
 API
 ---
 
-- EditScopeAlgo : Added `renameRenderPass()` function.
+- EditScopeAlgo : Added `renameRenderPass()` and `renameRenderPassNonEditableReason()` functions.
 
 1.5.4.0 (relative to 1.5.3.0)
 =======
