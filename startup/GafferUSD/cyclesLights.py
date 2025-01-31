@@ -1,7 +1,6 @@
-
 ##########################################################################
 #
-#  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2025, Alex Fuller. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,30 +34,20 @@
 #
 ##########################################################################
 
-import Gaffer
-import GafferUSD
+import pathlib
 
-# Default cone angle is 90 (an entire hemisphere), so replace with something
-# that actually looks like a cone for all user-created lights.
-Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters.shaping:cone:angle.value", "userDefault", 25.0 )
+from pxr import Plug
 
-# `texture:format == automatic` isn't well supported at present, so default
-# user-created lights to `latlong`.
-Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters.texture:format", "userDefault", "latlong" )
+# Register a USD plugin that adds Cycles-specific auto-apply schemas for
+# UsdLux lights. We deliberately don't add this to the `PXR_PLUGINPATH_NAME`
+# search path because we don't want it to be loaded in any third-party
+# applications that Gaffer might launch as subprocessses. So instead we
+# register it manually with `RegisterPlugins`. See `GafferCycles.usda`
+# for more details.
 
-# Put Arnold parameters last. We can't do that using the schemas in GafferArnold.usda
-# because they provide no control over property ordering.
-for i, parameter in enumerate( [
-	"aov", "aov_indirect", "portal_mode", "spread", "roundness", "soft_edge", "camera",
-	"transmission", "sss", "indirect", "volume", "max_bounces", "cast_volumetric_shadows",
-	"samples", "volume_samples", "resolution"
-] ) :
-	Gaffer.Metadata.registerValue( GafferUSD.USDLight, f"parameters.arnold:{parameter}", "layout:index", 1000 + i )
-
-# Change Cycles ordering.
-for i, parameter in enumerate( [
-	"lightgroup",
-	"use_mis", "use_camera", "use_diffuse", "use_glossy", "use_transmission", "use_scatter", "use_caustics",
-	"spread", "map_resolution"
-] ) :
-	Gaffer.Metadata.registerValue( GafferUSD.USDLight, f"parameters.cycles:{parameter}", "layout:index", 2000 + i )
+try :
+	import GafferCycles
+	Plug.Registry().RegisterPlugins( str( pathlib.Path( GafferCycles.__file__ ).parents[2] / "plugin" / "GafferCycles" / "plugInfo.json" ) )
+except ImportError :
+	# GafferCycles not available
+	pass
