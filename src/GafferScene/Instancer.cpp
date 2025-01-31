@@ -367,6 +367,20 @@ int seedForPoint( size_t index, const IdData &idData, int numSeeds, int seedScra
 	return id;
 }
 
+bool checkEnvFlag( const char *envVar, bool def )
+{
+	const char *value = getenv( envVar );
+	if( value )
+	{
+		return std::string( value ) != "0";
+	}
+	else
+	{
+		return def;
+	}
+
+}
+
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -387,6 +401,7 @@ class Instancer::EngineData : public Data
 			const std::string &prototypeIndexName,
 			const std::string &rootsVariable,
 			const StringVectorData *rootsList,
+			const std::vector< InternedString > *prototypesRelativeToPath,
 			const ScenePlug *prototypes,
 			const std::string &idName,
 			bool omitDuplicateIds,
@@ -413,7 +428,7 @@ class Instancer::EngineData : public Data
 				return;
 			}
 
-			initPrototypes( mode, prototypeIndexName, rootsVariable, rootsList, prototypes );
+			initPrototypes( mode, prototypeIndexName, rootsVariable, rootsList, prototypesRelativeToPath, prototypes );
 
 			m_ids.initialize( m_primitive.get(), idName );
 			if( m_ids.size() && m_ids.size() != numPoints() )
@@ -935,7 +950,7 @@ class Instancer::EngineData : public Data
 			}
 		}
 
-		void initPrototypes( PrototypeMode mode, const std::string &prototypeIndex, const std::string &rootsVariable, const StringVectorData *rootsList, const ScenePlug *prototypes )
+		void initPrototypes( PrototypeMode mode, const std::string &prototypeIndex, const std::string &rootsVariable, const StringVectorData *rootsList, const std::vector< InternedString > *prototypesRelativeToPath, const ScenePlug *prototypes )
 		{
 			const std::vector<std::string> *rootStrings = nullptr;
 			std::vector<std::string> rootStringsAlloc;
@@ -1038,33 +1053,68 @@ class Instancer::EngineData : public Data
 			m_roots.reserve( rootStrings->size() );
 			m_prototypeIndexRemap.reserve( rootStrings->size() );
 
+
+			const static bool gafferSceneInstancerExplicitAbsolutePaths = checkEnvFlag( "GAFFERSCENE_INSTANCER_EXPLICITABSOLUTEPATHS", false );
+
 			size_t i = 0;
-			ScenePlug::ScenePath path;
+			const ScenePlug::ScenePath *path;
+			ScenePlug::ScenePath absolutePath;
+			ScenePlug::ScenePath relativePath;
+			ScenePlug::ScenePath pathSuffix;
+
+			if( prototypesRelativeToPath )
+			{
+				relativePath = *prototypesRelativeToPath;
+			}
+
 			for( const auto &root : *rootStrings )
 			{
-				ScenePlug::stringToPath( root, path );
-				if( !prototypes->exists( path ) )
+				if( !root.size() )
 				{
-					throw IECore::Exception( fmt::format( "Prototype root \"{}\" does not exist in the `prototypes` scene", root ) );
+					m_prototypeIndexRemap.emplace_back( -1 );
+					continue;
 				}
-
-				if( path.empty() )
+				else if( root[0] == '/' || !prototypesRelativeToPath )
 				{
-					if( root == "/" )
+					ScenePlug::stringToPath( root, absolutePath );
+					path = &absolutePath;
+				}
+				else if( root[0] == '.' || gafferSceneInstancerExplicitAbsolutePaths )
+				{
+					if( root[0] == '.' && root.size() >= 2 && root[1] == '/' )
 					{
-						inputNames.emplace_back( new InternedStringVectorData( { g_prototypeRootName } ) );
-						m_roots.emplace_back( new InternedStringVectorData( path ) );
-						m_prototypeIndexRemap.emplace_back( i++ );
+						// \todo - stringToPath should probably take a string_view to avoid this allocation
+						ScenePlug::stringToPath( root.substr( 2 ), pathSuffix );
 					}
 					else
 					{
-						m_prototypeIndexRemap.emplace_back( -1 );
+						ScenePlug::stringToPath( root, pathSuffix );
 					}
+					relativePath.resize(  prototypesRelativeToPath->size() );
+					relativePath.insert( relativePath.end(), pathSuffix.begin(), pathSuffix.end() );
+					path = &relativePath;
 				}
 				else
 				{
-					inputNames.emplace_back( new InternedStringVectorData( { path.back() } ) );
-					m_roots.emplace_back( new InternedStringVectorData( path ) );
+					ScenePlug::stringToPath( root, absolutePath );
+					path = &absolutePath;
+				}
+
+				if( !prototypes->exists( *path ) )
+				{
+					throw IECore::Exception( fmt::format( "Prototype root \"{}\" does not exist in the `prototypes` scene", ScenePlug::pathToString( *path ) ) );
+				}
+
+				if( path->empty() )
+				{
+					inputNames.emplace_back( new InternedStringVectorData( { g_prototypeRootName } ) );
+					m_roots.emplace_back( new InternedStringVectorData( *path ) );
+					m_prototypeIndexRemap.emplace_back( i++ );
+				}
+				else
+				{
+					inputNames.emplace_back( new InternedStringVectorData( { path->back() } ) );
+					m_roots.emplace_back( new InternedStringVectorData( *path ) );
 					m_prototypeIndexRemap.emplace_back( i++ );
 				}
 			}
@@ -1779,6 +1829,10 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 		prototypeIndexPlug()->hash( h );
 		prototypeRootsPlug()->hash( h );
 		prototypeRootsListPlug()->hash( h );
+
+		// TODO - this is kinda miserable
+		h.append( context->variableHash( ScenePlug::scenePathContextName ) );
+
 		h.append( prototypesPlug()->childNamesHash( ScenePath() ) );
 
 		idPlug()->hash( h );
@@ -1907,6 +1961,9 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 	{
 		PrototypeMode mode = (PrototypeMode)prototypeModePlug()->getValue();
 		ConstStringVectorDataPtr prototypeRootsList = prototypeRootsListPlug()->getValue();
+
+		const std::vector< IECore::InternedString > *prototypesRelativeToPath = nullptr;
+
 		if( mode == PrototypeMode::IndexedRootsList && prototypeRootsList->readable().empty() )
 		{
 			const auto childNames = prototypesPlug()->childNames( ScenePath() );
@@ -1916,6 +1973,12 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 					childNames->readable().end()
 				)
 			);
+		}
+		else
+		{
+			// If we're not in the above condition where no protype roots were specified,
+			// then we may interpret the prototype roots as relative to the current path in the context.
+			prototypesRelativeToPath = &context->get< std::vector<InternedString> >( ScenePlug::scenePathContextName );
 		}
 
 		ConstPrimitivePtr primitive = runTimeCast<const Primitive>( inPlug()->objectPlug()->getValue() );
@@ -2008,6 +2071,7 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 				prototypeIndexPlug()->getValue(),
 				prototypeRootsPlug()->getValue(),
 				prototypeRootsList.get(),
+				prototypesRelativeToPath,
 				prototypesPlug(),
 				idPlug()->getValue(),
 				omitDuplicateIdsPlug()->getValue(),
