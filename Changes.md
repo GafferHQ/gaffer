@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.4.0)
 =======
 
+Fixes
+-----
+
+- LocalJobs : Fixed shutdown confirmation dialogue, which was no longer being shown when there were unfinished local jobs running.
+
 API
 ---
 
