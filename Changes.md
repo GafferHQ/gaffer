@@ -73,6 +73,20 @@ Documentation
 - 3Delight : Added GafferDelight to the node reference section.
 
 1.5.3.0 (relative to 1.5.2.0)
+=======
+
+Features
+--------
+
+- PrimitiveVariableTweaks : Added node for tweaking primitive variables. Can affect just part of a primitive based on ids or a mask.
+- Menu Bar : Added a "Render Pass" menu to the Menu Bar that can be used to choose the current render pass from those provided by the focus node.
+
+Improvements
+------------
+
+- Shader, ShaderPlug : Added support for ContextProcessor, Loop and Spreadsheet nodes to be used inline between shader nodes and as the terminal node connected to
+  ShaderAssignment and other shader-consuming nodes.
+- VisualiserTool : Changed `dataName` input widget for choosing the primitive variable to visualise to a list of available variable names for the current selection.
 - Tweaks nodes : Moved list of tweaks to a collapsible "Tweaks" section in the NodeEditor.
 - Viewer :
   - The shading mode menu icon now updates to indicate when a non-default shading mode is in use.
