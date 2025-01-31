@@ -15,6 +15,7 @@ Features
 Improvements
 ------------
 
+- RenderPassEditor : Added ability to rename a render pass within the edit scope it was originally created in. A render pass can be renamed from the "Name" column via the "Rename Selected Render Pass..." menu item, double clicking on a cell or selecting a cell and pressing <kbd>Enter</kbd> or <kbd>Return</kbd>.
 - VisualiserTool :
   - Changed naming requirements for visualising primitive variables. Values in `dataName` now prefix the primitive variable name with `primitiveVariable:`. Setting `dataName` to `vertex:index` will display vertex indices.
   - Added `mode` plug. The available modes are :
@@ -34,6 +35,11 @@ Fixes
 - Dispatch app :
   - Fixed configuration bug which caused GafferSceneUI to be loaded unnecessarily (#6239).
   - Fixed poor UI layout in "Completed" dialogue state (#6244).
+
+API
+---
+
+- EditScopeAlgo : Added `renameRenderPass()` and `renameRenderPassNonEditableReason()` functions.
 
 1.5.4.0 (relative to 1.5.3.0)
 =======

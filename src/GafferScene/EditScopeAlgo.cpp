@@ -1492,3 +1492,62 @@ const Gaffer::GraphComponent *GafferScene::EditScopeAlgo::renderPassesReadOnlyRe
 
 	return MetadataAlgo::readOnlyReason( scope );
 }
+
+bool GafferScene::EditScopeAlgo::renameRenderPass( Gaffer::EditScope *scope, const std::string &oldName, const std::string &newName )
+{
+	if( const auto nonEditableReason = renameRenderPassNonEditableReason( scope, newName ) )
+	{
+		throw IECore::Exception( nonEditableReason.value() );
+	}
+
+	bool renamed = false;
+	if( auto renderPassesProcessor = scope->acquireProcessor( g_renderPassesProcessorName, /* createIfNecessary = */ false ) )
+	{
+		auto namesPlug = renderPassesProcessor->getChild<StringVectorDataPlug>( "names" );
+		ConstStringVectorDataPtr renderPasses = namesPlug->getValue();
+
+		if( std::find( renderPasses->readable().begin(), renderPasses->readable().end(), oldName ) != renderPasses->readable().end() )
+		{
+			auto renderPassesCopy = renderPasses->copy();
+			std::replace( renderPassesCopy->writable().begin(), renderPassesCopy->writable().end(), oldName, newName );
+			namesPlug->setValue( renderPassesCopy );
+			renamed = true;
+		}
+	}
+
+	if( auto renderPassOptionEditsProcessor = scope->acquireProcessor( g_renderPassOptionProcessorName, /* createIfNecessary = */ false ) )
+	{
+		auto *rows = renderPassOptionEditsProcessor->getChild<Spreadsheet::RowsPlug>( "edits" );
+		if( Spreadsheet::RowPlug *row = rows->row( oldName ) )
+		{
+			row->namePlug()->setValue( newName );
+			renamed = true;
+		}
+	}
+
+	return renamed;
+}
+
+std::optional<std::string> GafferScene::EditScopeAlgo::renameRenderPassNonEditableReason( const Gaffer::EditScope *scope, const std::string &newName )
+{
+	if( auto renderPassesProcessor = const_cast<EditScope *>( scope )->acquireProcessor( g_renderPassesProcessorName, /* createIfNecessary = */ false ) )
+	{
+		auto namesPlug = renderPassesProcessor->getChild<StringVectorDataPlug>( "names" );
+		ConstStringVectorDataPtr renderPasses = namesPlug->getValue();
+		if( std::find( renderPasses->readable().begin(), renderPasses->readable().end(), newName ) != renderPasses->readable().end() )
+		{
+			return fmt::format( "A render pass named \"{}\" already exists in {}", newName, renderPassesProcessor->relativeName( scope->parent() ) );
+		}
+	}
+
+	if( auto renderPassOptionEditsProcessor = const_cast<EditScope *>( scope )->acquireProcessor( g_renderPassOptionProcessorName, /* createIfNecessary = */ false ) )
+	{
+		auto *rows = renderPassOptionEditsProcessor->getChild<Spreadsheet::RowsPlug>( "edits" );
+		if( rows->row( newName ) )
+		{
+			return fmt::format( "Edits already exist for render pass \"{}\" in {}", newName, renderPassOptionEditsProcessor->relativeName( scope->parent() ) );
+		}
+	}
+
+	return std::nullopt;
+}
