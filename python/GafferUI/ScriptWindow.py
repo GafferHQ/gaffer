@@ -81,6 +81,7 @@ class ScriptWindow( GafferUI.Window ) :
 		self.closedSignal().connect( Gaffer.WeakMethod( self.__closed ) )
 
 		ScriptWindow.__instances.append( weakref.ref( self ) )
+		ScriptWindow.__instanceCreatedSignal( self )
 
 	def menuBar( self ) :
 
@@ -207,6 +208,13 @@ class ScriptWindow( GafferUI.Window ) :
 		applicationRoot._scriptWindowMenuDefinition = menuDefinition
 
 		return menuDefinition
+
+	__instanceCreatedSignal = Gaffer.Signals.Signal1()
+	## A signal emitted whenever a ScriptWindow has been created.
+	@classmethod
+	def instanceCreatedSignal( cls ) :
+
+		return cls.__instanceCreatedSignal
 
 	## This function provides the top level functionality for instantiating
 	# the UI. Once called, new ScriptWindows will be instantiated for each

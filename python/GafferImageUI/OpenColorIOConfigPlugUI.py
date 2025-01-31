@@ -297,6 +297,7 @@ def connectToApplication( application ) :
 	)
 
 	application.root()["scripts"].childAddedSignal().connect( __scriptAdded )
+	GafferUI.ScriptWindow.instanceCreatedSignal().connect( __scriptWindowCreated )
 
 ## \deprecated. Use `connectToApplication()` instead.
 def connect( script ) :
@@ -314,7 +315,10 @@ def __scriptAdded( container, script ) :
 		Gaffer.NodeAlgo.applyUserDefaults( plug )
 
 	script.plugDirtiedSignal().connect( __scriptPlugDirtied )
-	__scriptPlugDirtied( plug )
+
+def __scriptWindowCreated( scriptWindow ) :
+
+	__updateDisplayTransforms( scriptWindow.scriptNode() )
 
 def __displayTransformProcessor( config, context, workingSpace, display, view ) :
 
@@ -358,10 +362,16 @@ def __widgetDisplayTransform( config, context, workingSpace, display, view ) :
 
 def __scriptPlugDirtied( plug ) :
 
-	if plug.getName() != "openColorIO" :
+	if plug.getName() == "openColorIO" :
+		__updateDisplayTransforms( plug.node() )
+
+def __updateDisplayTransforms( scriptNode ) :
+
+	plug = scriptNode.getChild( "openColorIO" )
+	if plug is None :
 		return
 
-	with plug.parent().context() :
+	with scriptNode.context() :
 		try :
 			config, context = GafferImage.OpenColorIOAlgo.currentConfigAndContext()
 			currentDisplay, currentView, currentValid = DisplayTransformPlugValueWidget.parseValue( plug["displayTransform"].getValue() )
@@ -375,7 +385,7 @@ def __scriptPlugDirtied( plug ) :
 				functools.partial( _viewDisplayTransformCreator, display, view )
 			)
 
-	scriptWindow = GafferUI.ScriptWindow.acquire( plug.parent(), createIfNecessary = False )
+	scriptWindow = GafferUI.ScriptWindow.acquire( scriptNode, createIfNecessary = False )
 	if scriptWindow is not None :
-		workingSpace = GafferImage.OpenColorIOAlgo.getWorkingSpace( plug.parent().context() )
+		workingSpace = GafferImage.OpenColorIOAlgo.getWorkingSpace( scriptNode.context() )
 		scriptWindow.setDisplayTransform( __widgetDisplayTransform( config, context, workingSpace, currentDisplay, currentView ) )

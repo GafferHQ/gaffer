@@ -1,6 +1,17 @@
 1.5.x.x (relative to 1.5.4.0)
 =======
 
+Fixes
+-----
+
+- OpenColorIO : Fixed UI Display Transform, which was not being applied correctly when a script was loaded.
+- LocalJobs : Fixed shutdown confirmation dialogue, which was no longer being shown when there were unfinished local jobs running.
+
+API
+---
+
+- ScriptWindow : Added `instanceCreatedSignal()`.
+
 1.5.4.0 (relative to 1.5.3.0)
 =======
 
