@@ -143,6 +143,14 @@ jobs:
         echo ONNX_ROOT=$GITHUB_WORKSPACE/onnxruntime >> $GITHUB_ENV
       shell: bash
 
+    - name: Install RenderMan
+      run: echo RMANTREE=`./.github/workflows/main/installRenderMan.py` >> $GITHUB_ENV
+      shell: bash
+      env:
+        RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}
+        RENDERMAN_DOWNLOAD_PASSWORD: ${{ secrets.RENDERMAN_DOWNLOAD_PASSWORD }}
+      if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' }}
+
     - name: Install Mesa (Windows)
       # Installed after dependencies to avoid errors from python related to existing directory `bin`.
       # Adapted from Mesa's `systemwidedeploy.cmd` `osmesa` branch.

@@ -52,3 +52,4 @@ VTUNE_ROOT = "/disk1/apps/intel/system_studio_2018/vtune_amplifier_2018.1.0.5353
 GAFFERCORTEX=1
 
 ONNX_ROOT = os.environ["ONNX_ROOT"]
+RENDERMAN_ROOT = os.environ["RMANTREE"]
