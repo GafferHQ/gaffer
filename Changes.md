@@ -1,4 +1,4 @@
-1.5.x.x (relative to 1.5.4.0)
+1.5.x.x (relative to 1.5.4.1)
 =======
 
 Features
@@ -31,9 +31,22 @@ Fixes
 
 - ContactSheetCore : Fixed bugs handling changes to the input and output image formats.
 - InteractiveRender : Fixed potential leak of `scene:path` context variable when computing the value for `resolvedRenderer`.
-- Dispatch app :
-  - Fixed configuration bug which caused GafferSceneUI to be loaded unnecessarily (#6239).
-  - Fixed poor UI layout in "Completed" dialogue state (#6244).
+- Dispatch app : Fixed poor UI layout in "Completed" dialogue state (#6244).
+
+1.5.4.1 (relative to 1.5.4.0)
+=======
+
+Fixes
+-----
+
+- OpenColorIO : Fixed UI Display Transform, which was not being applied correctly when a script was loaded.
+- LocalJobs : Fixed shutdown confirmation dialogue, which was no longer being shown when there were unfinished local jobs running.
+- Dispatch app : Fixed configuration bug which caused GafferSceneUI to be loaded unnecessarily (#6239).
+
+API
+---
+
+- ScriptWindow : Added `instanceCreatedSignal()`.
 
 1.5.4.0 (relative to 1.5.3.0)
 =======

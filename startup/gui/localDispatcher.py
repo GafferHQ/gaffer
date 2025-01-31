@@ -76,12 +76,8 @@ def __scriptWindowPreClose( scriptWindow ) :
 	# If `Cancel` was pressed, prevent the window from being closed.
 	return dialogue.waitForConfirmation( parentWindow = scriptWindow ) == False
 
-def __scriptAdded( container, script ) :
+def __scriptWindowCreated( scriptWindow ) :
 
-	window = GafferUI.ScriptWindow.acquire( script, createIfNecessary = False )
-	if window is None :
-		return
+	scriptWindow.preCloseSignal().connect( __scriptWindowPreClose )
 
-	window.preCloseSignal().connect( __scriptWindowPreClose )
-
-application.root()["scripts"].childAddedSignal().connect( __scriptAdded )
+GafferUI.ScriptWindow.instanceCreatedSignal().connect( __scriptWindowCreated )

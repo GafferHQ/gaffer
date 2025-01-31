@@ -954,6 +954,9 @@ class RenderPassChooserWidget( GafferUI.Widget ) :
 
 	def __init__( self, settingsNode, **kw ) :
 
+		## \todo It would probably be better if we created the plug in `startup/gui/project.py`, giving
+		# us explicit control over its ordering with respect to the other plugs. Then this widget would
+		# just show the plug if it exists, and if it doesn't show nothing.
 		renderPassPlug = GafferSceneUI.ScriptNodeAlgo.acquireRenderPassPlug( settingsNode["__scriptNode"].getInput().node() )
 		self.__renderPassPlugValueWidget = _RenderPassPlugValueWidget(
 			renderPassPlug["value"],
