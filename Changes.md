@@ -6,6 +6,7 @@ Fixes
 
 - OpenColorIO : Fixed UI Display Transform, which was not being applied correctly when a script was loaded.
 - LocalJobs : Fixed shutdown confirmation dialogue, which was no longer being shown when there were unfinished local jobs running.
+- Dispatch app : Fixed configuration bug which caused GafferSceneUI to be loaded unnecessarily (#6239).
 
 API
 ---
