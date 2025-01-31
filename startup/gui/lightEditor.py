@@ -40,58 +40,6 @@ import IECore
 import Gaffer
 import GafferSceneUI
 
-if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "" ) != "1" :
-
-	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "preset:Cycles", "cycles:light" )
-
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "color" )
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "intensity" )
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "exposure" )
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "lightgroup" )
-
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "cast_shadow", "Contribution" )
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "use_diffuse", "Contribution" )
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "use_glossy", "Contribution" )
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "use_transmission", "Contribution" )
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "use_scatter", "Contribution" )
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "max_bounces", "Contribution" )
-
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "size", "Shape" )
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "spot_angle", "Shape" )
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "spot_smooth", "Shape" )
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "spread", "Shape" )
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "angle", "Shape" )
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "is_sphere", "Shape" )
-
-	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "userDefault", "cycles:light" )
-
-with IECore.IgnoredExceptions( ImportError ) :
-
-	# This import appears unused, but it is intentional; it prevents us from
-	# adding the OSL lights when 3Delight isn't available.
-	import GafferDelight
-	import GafferOSL
-
-	shader = GafferOSL.OSLShader()
-
-	for light in [
-		"pointLight",
-		"spotLight",
-		"distantLight",
-		"environmentLight"
-	] :
-		shader.loadShader( light )
-		for parameter in shader["parameters"] :
-			GafferSceneUI.LightEditor.registerParameter(
-				"osl:light", parameter.getName(),
-				shader.parameterMetadata( parameter, "page" )
-			)
-
-	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "preset:OSL", "osl:light" )
-	# If 3Delight is available, then assume it will be used in preference to Cycles.
-	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "userDefault", "osl:light" )
-
-
 # UsdLux lights
 
 Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "preset:USD", "light" )
@@ -129,6 +77,70 @@ GafferSceneUI.LightEditor.registerParameter( "light", "shadow:color", "Shadow" )
 GafferSceneUI.LightEditor.registerParameter( "light", "shadow:distance", "Shadow" )
 GafferSceneUI.LightEditor.registerParameter( "light", "shadow:falloff", "Shadow" )
 GafferSceneUI.LightEditor.registerParameter( "light", "shadow:falloffGamma", "Shadow" )
+
+if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "" ) != "1" :
+
+	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "preset:Cycles", "cycles:light" )
+
+	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "color" )
+	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "intensity" )
+	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "exposure" )
+	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "lightgroup" )
+
+	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "cast_shadow", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "use_diffuse", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "use_glossy", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "use_transmission", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "use_scatter", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "max_bounces", "Contribution" )
+
+	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "size", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "spot_angle", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "spot_smooth", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "spread", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "angle", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "is_sphere", "Shape" )
+
+	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "userDefault", "cycles:light" )
+
+	# Register Cycles-specific parameters for USD lights.
+	for parameter in [
+		"lightgroup",
+		"use_mis", "use_camera", "use_diffuse", "use_glossy", "use_transmission", "use_scatter", "use_caustics",
+		"spread", "map_resolution", "max_bounces"
+	] :
+		GafferSceneUI.LightEditor.registerParameter(
+			"light", f"cycles:{parameter}", "Cycles",
+			columnName = parameter.replace( "cycles:", "" )
+		)
+
+
+with IECore.IgnoredExceptions( ImportError ) :
+
+	# This import appears unused, but it is intentional; it prevents us from
+	# adding the OSL lights when 3Delight isn't available.
+	import GafferDelight
+	import GafferOSL
+
+	shader = GafferOSL.OSLShader()
+
+	for light in [
+		"pointLight",
+		"spotLight",
+		"distantLight",
+		"environmentLight"
+	] :
+		shader.loadShader( light )
+		for parameter in shader["parameters"] :
+			GafferSceneUI.LightEditor.registerParameter(
+				"osl:light", parameter.getName(),
+				shader.parameterMetadata( parameter, "page" )
+			)
+
+	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "preset:OSL", "osl:light" )
+	# If 3Delight is available, then assume it will be used in preference to Cycles.
+	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "userDefault", "osl:light" )
+
 
 # Arnold lights
 
