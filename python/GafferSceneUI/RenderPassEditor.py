@@ -509,6 +509,17 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
 			renderPassesProcessor["names"].setValue( renderPasses )
 
+	def __warningPopup( self, title, message ) :
+
+		with GafferUI.PopupWindow() as self.__popup :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 ) :
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+					GafferUI.Image( "warningSmall.png" )
+					GafferUI.Label( "<h4>{}</h4>".format( title ) )
+				GafferUI.Label( message )
+
+		self.__popup.popup( parent = self )
+
 	def __renameSelectedRenderPass( self ) :
 
 		selectedRenderPasses = self.__selectedRenderPasses()
@@ -521,14 +532,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		renderPassesProcessor = editScope.acquireProcessor( "RenderPasses", createIfNecessary = False )
 		if renderPassesProcessor is None or selectedRenderPasses[0] not in renderPassesProcessor["names"].getValue() :
-			with GafferUI.PopupWindow() as self.__popup :
-				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 ) :
-					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-						GafferUI.Image( "warningSmall.png" )
-						GafferUI.Label( "<h4>Unable to rename</h4>" )
-					GafferUI.Label( "Pass was not created in {}.".format( editScope.relativeName( self.scriptNode() ) ) )
-			self.__popup.popup( parent = self )
-
+			self.__warningPopup( "Unable to rename", "Pass was not created in {}.".format( editScope.relativeName( self.scriptNode() ) ) )
 			return
 
 		dialogue = _RenderPassCreationDialogue(
@@ -543,6 +547,11 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		renderPassName = dialogue.waitForRenderPassName( parentWindow = self.ancestor( GafferUI.Window ) )
 		if renderPassName is not None and renderPassName != selectedRenderPasses[0] :
+
+			nonEditableReason = GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( editScope, renderPassName )
+			if nonEditableReason != "" :
+				self.__warningPopup( "Unable to rename", nonEditableReason )
+				return
 
 			with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
 				GafferScene.EditScopeAlgo.renameRenderPass( editScope, selectedRenderPasses[0], renderPassName )
