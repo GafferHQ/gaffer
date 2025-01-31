@@ -31,7 +31,9 @@ Fixes
 
 - ContactSheetCore : Fixed bugs handling changes to the input and output image formats.
 - InteractiveRender : Fixed potential leak of `scene:path` context variable when computing the value for `resolvedRenderer`.
-- Dispatch app : Fixed configuration bug which caused GafferSceneUI to be loaded unnecessarily (#6239).
+- Dispatch app :
+  - Fixed configuration bug which caused GafferSceneUI to be loaded unnecessarily (#6239).
+  - Fixed poor UI layout in "Completed" dialogue state (#6244).
 
 1.5.4.0 (relative to 1.5.3.0)
 =======

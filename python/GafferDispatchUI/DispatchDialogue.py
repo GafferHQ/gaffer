@@ -40,6 +40,8 @@ import sys
 import threading
 import traceback
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -119,6 +121,8 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 		# build a ui element for progress feedback and messages
 		with GafferUI.ListContainer( spacing = 4 ) as self.__progressUI :
 
+			GafferUI.Spacer( imath.V2i( 0 ) )
+
 			with GafferUI.ListContainer( parenting = { "horizontalAlignment" : GafferUI.HorizontalAlignment.Center, "verticalAlignment" : GafferUI.VerticalAlignment.Center } ) :
 				self.__progressIconFrame = GafferUI.Frame( borderStyle = GafferUI.Frame.BorderStyle.None_, parenting = { "horizontalAlignment" : GafferUI.HorizontalAlignment.Center } )
 				self.__progressLabel = GafferUI.Label( parenting = { "horizontalAlignment" : GafferUI.HorizontalAlignment.Center } )
@@ -128,6 +132,8 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 				# connect to the collapsible state change so we can increase the window
 				# size when the details pane is first shown.
 				self.__messageCollapsibleConnection = self.__messageCollapsible.stateChangedSignal().connect( Gaffer.WeakMethod( self.__messageCollapsibleChanged ) )
+
+			GafferUI.Spacer( imath.V2i( 0 ) )
 
 		self.__backButton = self._addButton( "Back" )
 		self.__backButton.clickedSignal().connectFront( Gaffer.WeakMethod( self.__initiateSettings ) )
