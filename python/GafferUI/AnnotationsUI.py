@@ -104,12 +104,67 @@ def __buttonPress( editorWeakRef, annotationsGadget, event ) :
 
 	return False
 
+def __clipboardIsAnnotation( clipboard ) :
+
+	return (
+		isinstance( clipboard, IECore.CompoundData ) and
+		[ "color", "name", "text" ] == sorted( clipboard.keys() ) and
+		isinstance( clipboard["color"], IECore.Color3fData ) and
+		isinstance( clipboard["name"], IECore.StringData ) and
+		isinstance( clipboard["text"], IECore.StringData )
+	)
+
+def __keyPress( editor, event ) :
+
+	if event.key == "V" and event.modifiers == event.modifiers.Control :
+		scriptNode = editor.scriptNode()
+		clipboard = scriptNode.ancestor( Gaffer.ApplicationRoot ).getClipboardContents()
+
+		if __clipboardIsAnnotation( clipboard ) :
+			with Gaffer.UndoScope( scriptNode ) :
+				editorSelection = [ i for i in scriptNode.selection() if editor.graphGadget().nodeGadget( i ) is not None ]
+				for n in editorSelection :
+					Gaffer.MetadataAlgo.addAnnotation(
+						n,
+						clipboard["name"].value,
+						Gaffer.MetadataAlgo.Annotation( clipboard["text"].value, clipboard["color"].value )
+					)
+			return True
+
+	return False
+
+def __copyAnnotation( node, name ) :
+
+	annotation = Gaffer.MetadataAlgo.getAnnotation( node, name, True )
+
+	data = IECore.CompoundData(
+		{
+			"color" : IECore.Color3fData( annotation.color() ),
+			"name" : IECore.StringData( name ),
+			"text" : IECore.StringData( annotation.text() ),
+		}
+	)
+
+	node.scriptNode().ancestor( Gaffer.ApplicationRoot ).setClipboardContents( data )
+
+def __contextMenu( menuDefinition, node, name ) :
+
+	menuDefinition.append(
+		"/Copy",
+		{
+			"command" : functools.partial( __copyAnnotation, node, name ),
+		},
+	)
+
 def __graphEditorCreated( editor ) :
 	editor.graphGadget().annotationsGadget().buttonPressSignal().connect(
 		functools.partial( __buttonPress, weakref.ref( editor ) )
 	)
+	editor.keyPressSignal().connect( __keyPress )
 
 GafferUI.GraphEditor.instanceCreatedSignal().connect( __graphEditorCreated )
+
+contextMenuSignal().connect( __contextMenu )
 
 class _AnnotationsHighlighter( GafferUI.CodeWidget.Highlighter ) :
 
