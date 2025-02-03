@@ -269,5 +269,109 @@ class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 		with self.assertRaisesRegex( RuntimeError, 'Failed to export layer to "{}"'.format( layerWriter["fileName"].getValue() ) ) :
 			layerWriter["task"].execute()
 
+	def testAddSet( self ) :
+
+		sphere = GafferScene.Sphere()
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+
+		cube = GafferScene.Cube()
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( group["out"] )
+		parent["children"][0].setInput( cube["out"] )
+		parent["parent"].setValue( "/" )
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/cube", "/group/sphere" ] ) )
+
+		setNode = GafferScene.Set()
+		setNode["in"].setInput( parent["out"] )
+		setNode["filter"].setInput( pathFilter["out"] )
+		setNode["name"].setValue( "setA" )
+		self.assertEqual( setNode["out"].set( "setA" ).value, IECore.PathMatcher( [ "/cube", "/group/sphere" ] ) )
+
+		layerFileName, compositionFileName = self.__writeLayerAndComposition( parent["out"], setNode["out"] )
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( compositionFileName )
+		self.assertEqual( reader["out"].set( "setA" ), setNode["out"].set( "setA" ) )
+
+	# We'll need to analyse the list operations on `apiSchemas` metadata and
+	# author appropriate deletions to make this work.
+	@unittest.expectedFailure
+	def testRemoveSet( self ) :
+
+		plane = GafferScene.Plane()
+		plane["sets"].setValue( "setA setB" )
+
+		deleteSets = GafferScene.DeleteSets()
+		deleteSets["in"].setInput( plane["out"] )
+		deleteSets["names"].setValue( "setA" )
+		self.assertNotIn( "setA", deleteSets["out"].setNames() )
+		self.assertIn( "setB", deleteSets["out"].setNames() )
+
+		layerFileName, compositionFileName = self.__writeLayerAndComposition( plane["out"], deleteSets["out"] )
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( compositionFileName )
+		self.assertNotIn( "setA", reader["out"].setNames() )
+		self.assertIn( "setB", reader["out"].setNames() )
+		self.assertEqual( reader["out"].set( "setB" ).value, IECore.PathMatcher( [ "/plane" ] ) )
+
+	def testAddToSet( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "setA" )
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+
+		cube = GafferScene.Cube()
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( group["out"] )
+		parent["children"][0].setInput( cube["out"] )
+		parent["parent"].setValue( "/" )
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/cube" ] ) )
+
+		setNode = GafferScene.Set()
+		setNode["in"].setInput( parent["out"] )
+		setNode["filter"].setInput( pathFilter["out"] )
+		setNode["name"].setValue( "setA" )
+		setNode["mode"].setValue( setNode.Mode.Add )
+		self.assertEqual( setNode["out"].set( "setA" ).value, IECore.PathMatcher( [ "/cube", "/group/sphere" ] ) )
+
+		layerFileName, compositionFileName = self.__writeLayerAndComposition( parent["out"], setNode["out"] )
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( compositionFileName )
+		self.assertEqual( reader["out"].set( "setA" ), setNode["out"].set( "setA" ) )
+
+	def testRemoveFromSet( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "setA" )
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+		group["in"][1].setInput( sphere["out"] )
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/group/sphere" ] ) )
+
+		setNode = GafferScene.Set()
+		setNode["in"].setInput( group["out"] )
+		setNode["filter"].setInput( pathFilter["out"] )
+		setNode["name"].setValue( "setA" )
+		setNode["mode"].setValue( setNode.Mode.Remove )
+		self.assertEqual( setNode["out"].set( "setA" ).value, IECore.PathMatcher( [ "/group/sphere1" ] ) )
+
+		layerFileName, compositionFileName = self.__writeLayerAndComposition( group["out"], setNode["out"] )
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( compositionFileName )
+		self.assertEqual( reader["out"].set( "setA" ), setNode["out"].set( "setA" ) )
+
 if __name__ == "__main__":
 	unittest.main()
