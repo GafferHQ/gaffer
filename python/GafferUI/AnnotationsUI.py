@@ -102,6 +102,21 @@ def __buttonPress( editorWeakRef, annotationsGadget, event ) :
 
 		return True
 
+	return True  # Needed for `__buttonDoubleClick()` to fire
+
+def __buttonDoubleClick( editorWeakRef, annotationsGadget, event ) :
+
+	if event.buttons == event.Buttons.Left :
+		annotation = annotationsGadget.annotationAt( event.line )
+		if annotation is None :
+			return False
+
+		node, name = annotation
+
+		__annotate( node, name, editorWeakRef() )
+
+		return True
+
 	return False
 
 def __clipboardIsAnnotation( clipboard ) :
@@ -159,6 +174,9 @@ def __contextMenu( menuDefinition, node, name ) :
 def __graphEditorCreated( editor ) :
 	editor.graphGadget().annotationsGadget().buttonPressSignal().connect(
 		functools.partial( __buttonPress, weakref.ref( editor ) )
+	)
+	editor.graphGadget().annotationsGadget().buttonDoubleClickSignal().connect(
+		functools.partial( __buttonDoubleClick, weakref.ref( editor ) )
 	)
 	editor.keyPressSignal().connect( __keyPress )
 

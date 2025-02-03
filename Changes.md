@@ -11,7 +11,9 @@ Features
   - May be disabled entirely with `GafferScene.SceneAlgo.deregisterRenderAdaptor( "USDPointInstancerAdaptor" )`.
 - Viewer : Added "Expand USD Instancers" item to the Expansion menu. Defaults to on for all renderers except OpenGL.
 - PromotePointInstances : Added a new node for selectively converting a subset of a USD PointInstancer to expanded "hero" geometry.
-- Annotations : Added copy and paste of annotations. The right-click menu of an annotation allows you to copy the annotation. Pressing <kbd>Control</kbd> + <kbd>V</kbd> in the Node Editor will paste the annotation to the selected nodes.
+- Annotations :
+  - Added copy and paste of annotations. The right-click menu of an annotation allows you to copy the annotation. Pressing <kbd>Control</kbd> + <kbd>V</kbd> in the Node Editor will paste the annotation to the selected nodes.
+  - Double clicking on an annotation now pops up the annotation editor dialogue.
 
 Improvements
 ------------
