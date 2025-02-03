@@ -1,6 +1,11 @@
 1.4.15.x (relative to 1.4.15.5)
 ========
 
+Improvements
+------------
+
+- USDLight : Append the (Renderman) suffix to any USD Lux plugs with `ri:light:` prefix.
+
 Fixes
 -----
 
@@ -72,6 +77,7 @@ Fixes
 
 - SceneReader : Fixed crash reading facevarying normals skinned with UsdSkel.
 - ShaderView : Fixed crash caused by a SceneCreator returning `None`.
+- USDShader : Fixed default preset values on IntPlugs that are intended to be enum indexes instead of string values.
 
 Build
 -----
