@@ -116,6 +116,7 @@ from .DeepSliceTest import DeepSliceTest
 from .ContactSheetCoreTest import ContactSheetCoreTest
 from .ContactSheetTest import ContactSheetTest
 from .ShuffleImageMetadataTest import ShuffleImageMetadataTest
+from .DiskBlurTest import DiskBlurTest
 
 if __name__ == "__main__":
 	import unittest

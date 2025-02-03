@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.0.0a2)
 =======
 
+Features
+--------
+
+- DiskBlur : Added image node for doing fast variable-radius blur. Will be used as core of upcoming focal blur node.
+
 Improvements
 ------------
 

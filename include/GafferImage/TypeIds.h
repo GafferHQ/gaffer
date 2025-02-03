@@ -121,6 +121,7 @@ enum TypeId
 	DeepRecolorTypeId = 121476,
 	SaturationTypeId = 121477,
 	DeepSliceTypeId = 121478,
+	DiskBlurTypeId = 121479,
 
 	LastTypeId = 121999
 };
