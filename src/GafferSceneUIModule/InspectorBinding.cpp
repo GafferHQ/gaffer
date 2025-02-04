@@ -96,17 +96,6 @@ void editWrapper( GafferSceneUI::Private::Inspector::Result &result, const IECor
 	result.edit( value );
 }
 
-bool editSetMembershipWrapper(
-	const GafferSceneUI::Private::SetMembershipInspector &inspector,
-	const GafferSceneUI::Private::Inspector::Result &inspection,
-	const GafferScene::ScenePlug::ScenePath &path,
-	GafferScene::EditScopeAlgo::SetMembership setMembership
-)
-{
-	ScopedGILRelease gilRelease;
-	return inspector.editSetMembership( &inspection, path, setMembership );
-}
-
 struct DirtiedSlotCaller
 {
 	void operator()( boost::python::object slot, InspectorPtr inspector )
@@ -191,7 +180,6 @@ void GafferSceneUIModule::bindInspector()
 				( arg( "scene" ), arg( "editScope" ), arg( "setName" ) )
 			)
 		)
-		.def( "editSetMembership", &editSetMembershipWrapper)
 	;
 
 	RefCountedClass<OptionInspector, Inspector>( "OptionInspector" )

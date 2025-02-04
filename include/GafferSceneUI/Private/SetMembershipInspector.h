@@ -60,15 +60,6 @@ class GAFFERSCENEUI_API SetMembershipInspector : public Inspector
 			IECore::InternedString setName
 		);
 
-		/// Convenience method to acquire an edit from `inspection` and
-		/// edit the set membership to include or exclude `path`. Returns true
-		/// if an edit was made, false otherwise.
-		bool editSetMembership(
-			const Result *inspection,
-			const GafferScene::ScenePlug::ScenePath &path,
-			GafferScene::EditScopeAlgo::SetMembership setMembership
-		) const;
-
 		IE_CORE_DECLAREMEMBERPTR( SetMembershipInspector );
 
 	protected :

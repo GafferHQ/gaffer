@@ -482,7 +482,8 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "group", "plane" ] )
 			inspection = inspector.inspect()
 
-		self.assertTrue( inspector.editSetMembership( inspection, "/group/plane", GafferScene.EditScopeAlgo.SetMembership.Added ) )
+		self.assertTrue( inspection.canEdit( IECore.BoolData( True ) ) )
+		inspection.edit( IECore.BoolData( True ) )
 
 		planeSet = parent["out"].set( "planeSet" ).value
 
@@ -495,7 +496,8 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 
 		# And remove it
 
-		self.assertTrue( inspector.editSetMembership( inspection, "/group/plane", GafferScene.EditScopeAlgo.SetMembership.Removed ) )
+		self.assertTrue( inspection.canEdit( IECore.BoolData( False ) ) )
+		inspection.edit( IECore.BoolData( False ) )
 
 		planeSet = parent["out"].set( "planeSet" ).value
 
@@ -535,7 +537,8 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "group", "plane" ] )
 			inspection = inspector.inspect()
 
-		self.assertTrue( inspector.editSetMembership( inspection, "/group/plane", GafferScene.EditScopeAlgo.SetMembership.Added ) )
+		self.assertTrue( inspection.canEdit( IECore.BoolData( True ) ) )
+		inspection.edit( IECore.BoolData( True ) )
 
 		planeSet = editScope["out"].set( "planeSet" ).value
 
@@ -557,7 +560,9 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 
 		# And remove it
 
-		self.assertTrue( inspector.editSetMembership( inspection, "/group/plane", GafferScene.EditScopeAlgo.SetMembership.Removed ) )
+		self.assertTrue( inspection.canEdit( IECore.BoolData( False ) ) )
+		inspection.edit( IECore.BoolData( False ) )
+
 		planeSet = parent["out"].set( "planeSet" ).value
 
 		for path, result in [
@@ -602,7 +607,9 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( inspection.source(), setNode["name"] )
 
-		self.assertFalse( inspector.editSetMembership( inspection, "/plane", GafferScene.EditScopeAlgo.SetMembership.Removed ) )
+		self.assertFalse( inspection.canEdit( IECore.BoolData( False ) ) )
+		self.assertEqual( inspection.nonEditableReason( IECore.BoolData( False ) ), "Cannot edit nodes of type \"GafferScene::Set\"." )
+		self.assertRaises( IECore.Exception, inspection.edit, IECore.BoolData( False ) )
 
 	def testAcquireEditCreateIfNecessary( self ) :
 

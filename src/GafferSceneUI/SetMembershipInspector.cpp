@@ -246,11 +246,6 @@ m_setName( setName )
 	Metadata::nodeValueChangedSignal().connect( boost::bind( &SetMembershipInspector::nodeMetadataChanged, this, ::_2, ::_3 ) );
 }
 
-bool SetMembershipInspector::editSetMembership( const Result *inspection, const ScenePlug::ScenePath &path, EditScopeAlgo::SetMembership setMembership ) const
-{
-	return ::editSetMembership( inspection->acquireEdit().get(), m_setName.string(), path, setMembership );
-}
-
 GafferScene::SceneAlgo::History::ConstPtr SetMembershipInspector::history() const
 {
 	if( !m_scene->existsPlug()->getValue() )
