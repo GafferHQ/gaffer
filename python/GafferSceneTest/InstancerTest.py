@@ -3392,6 +3392,13 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 
 
 	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testChildNamesHashPerf( self ):
+		nodes = self.initSimpleInstancer()
+		with GafferTest.TestRunner.PerformanceScope() :
+			nodes["instancer"]["out"].childNamesHash( "/plane/instances/sphere" )
+			nodes["instancer"]["out"].childNamesHash( "/plane/instances/cube" )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testChildNamesPerf( self ):
 		nodes = self.initSimpleInstancer()
 		with GafferTest.TestRunner.PerformanceScope() :
