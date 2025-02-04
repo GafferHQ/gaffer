@@ -25,6 +25,7 @@ Fixes
 - NumericPlug : Fixed serialisation of plugs with infinite min/max values, for example the promoted outputs of an ImageStats node.
 - VisualiserTool : Changed viewer shortcut to <kbd>P</kbd> to fix conflict with the Transform Tool.
 - Render Pass menu : Fixed bug evaluating image nodes in wrong context.
+- Instancer : Fixed obscure bug that could occasionally cause errors while interactively editing prototype hierarchy.
 
 Build
 -----

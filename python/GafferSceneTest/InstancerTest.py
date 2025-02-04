@@ -1307,7 +1307,7 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ) )
 		self.assertRaisesRegex(
 			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
-			script["instancer"]["out"].childNames, "/object/instances",
+			script["instancer"]["out"].childNames, "/object/instances/exist",
 		)
 
 	def testIndexedRootsVariable( self ) :
@@ -1361,7 +1361,7 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ) )
 		self.assertRaisesRegex(
 			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
-			script["instancer"]["out"].childNames, "/object/instances",
+			script["instancer"]["out"].childNames, "/object/instances/exist",
 		)
 
 		script["instancer"]["prototypeRoots"].setValue( "notAPrimVar" )
@@ -1436,7 +1436,7 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		updateRoots( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ), IECore.IntVectorData( [ 0, 1, 1, 0 ] ) )
 		self.assertRaisesRegex(
 			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
-			script["instancer"]["out"].childNames, "/object/instances",
+			script["instancer"]["out"].childNames, "/object/instances/exist",
 		)
 
 		script["instancer"]["prototypeRoots"].setValue( "notAPrimVar" )
@@ -3277,6 +3277,40 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 			instancer["out"].set( 'testSet' ),
 			IECore.PathMatcherData( IECore.PathMatcher( ['/plane/prototypes/cube/prototypes/sphere'] ) )
 		)
+
+	def testInvalidPrototypeScene( self ) :
+		points = GafferScene.Sphere( "points" )
+		points["name"].setValue( 'points' )
+		points["divisions"].setValue( imath.V2i( 3, 6 ) )
+
+		pointsFilter = GafferScene.PathFilter( "pointsFilter" )
+		pointsFilter["paths"].setValue( IECore.StringVectorData( [ '/points' ] ) )
+
+		group = GafferScene.Group( "group" )
+
+		instancer = GafferScene.Instancer( "instancer" )
+		instancer["in"].setInput( points["out"] )
+		instancer["filter"].setInput( pointsFilter["out"] )
+		instancer["prototypes"].setInput( group["out"] )
+		instancer["prototypeRootsList"].setValue( IECore.StringVectorData( [ '/group/sphere' ] ) )
+
+		# Access a location that doesn't exist
+		with self.assertRaisesRegex( RuntimeError, 'Prototype root "/group/sphere" does not exist in the `prototypes` scene' ) :
+			instancer["out"].childNames( "/points/instances/sphere" )
+
+		# Make the locations exist
+		sphere = GafferScene.Sphere( "sphere" )
+		group["in"][0].setInput( sphere["out"] )
+
+		self.assertEqual( instancer["out"].object( "/points/instances/sphere/0" ), sphere["out"].object( "/sphere" ) )
+
+		# Now make the location not exist again ( to make sure that we aren't incorrectly caching that it exists )
+		group["in"][0].setInput( None )
+
+		with self.assertRaisesRegex( RuntimeError, 'Prototype root "/group/sphere" does not exist in the `prototypes` scene' ) :
+			instancer["out"].childNames( "/points/instances/sphere" )
+
+
 
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 10 )
 	def testBoundPerformance( self ) :

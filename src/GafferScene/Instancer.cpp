@@ -387,7 +387,6 @@ class Instancer::EngineData : public Data
 			const std::string &prototypeIndexName,
 			const std::string &rootsVariable,
 			const StringVectorData *rootsList,
-			const ScenePlug *prototypes,
 			const std::string &idName,
 			bool omitDuplicateIds,
 			const std::string &position,
@@ -413,7 +412,7 @@ class Instancer::EngineData : public Data
 				return;
 			}
 
-			initPrototypes( mode, prototypeIndexName, rootsVariable, rootsList, prototypes );
+			initPrototypes( mode, prototypeIndexName, rootsVariable, rootsList );
 
 			m_ids.initialize( m_primitive.get(), idName );
 			if( m_ids.size() && m_ids.size() != numPoints() )
@@ -935,7 +934,7 @@ class Instancer::EngineData : public Data
 			}
 		}
 
-		void initPrototypes( PrototypeMode mode, const std::string &prototypeIndex, const std::string &rootsVariable, const StringVectorData *rootsList, const ScenePlug *prototypes )
+		void initPrototypes( PrototypeMode mode, const std::string &prototypeIndex, const std::string &rootsVariable, const StringVectorData *rootsList )
 		{
 			const std::vector<std::string> *rootStrings = nullptr;
 			std::vector<std::string> rootStringsAlloc;
@@ -1043,11 +1042,6 @@ class Instancer::EngineData : public Data
 			for( const auto &root : *rootStrings )
 			{
 				ScenePlug::stringToPath( root, path );
-				if( !prototypes->exists( path ) )
-				{
-					throw IECore::Exception( fmt::format( "Prototype root \"{}\" does not exist in the `prototypes` scene", root ) );
-				}
-
 				if( path.empty() )
 				{
 					if( root == "/" )
@@ -2008,7 +2002,6 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 				prototypeIndexPlug()->getValue(),
 				prototypeRootsPlug()->getValue(),
 				prototypeRootsList.get(),
-				prototypesPlug(),
 				idPlug()->getValue(),
 				omitDuplicateIdsPlug()->getValue(),
 				positionPlug()->getValue(),
@@ -2543,6 +2536,9 @@ void Instancer::hashBranchChildNames( const ScenePath &sourcePath, const ScenePa
 		BranchCreator::hashBranchChildNames( sourcePath, branchPath, context, h );
 		engineSplitPrototypesHash( sourcePath, context, h );
 		h.append( branchPath.back() );
+
+		PrototypeScope scope( enginePlug(), context, &sourcePath, &branchPath );
+		h.append( prototypesPlug()->existsPlug()->hash() );
 	}
 	else
 	{
@@ -2588,6 +2584,19 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 		ids.reserve( pointIndicesForPrototype.size() );
 
 		const EngineData *engineData = esp->engine();
+
+		PrototypeScope scope( engineData, context, &sourcePath, &branchPath );
+
+		if( !prototypesPlug()->existsPlug()->getValue() )
+		{
+			throw IECore::Exception(
+				fmt::format(
+					"Prototype root \"{}\" does not exist in the `prototypes` scene",
+					ScenePlug::pathToString( scope.context()->get<ScenePath>( ScenePlug::scenePathContextName ) )
+				)
+			);
+		}
+
 		for( size_t q : pointIndicesForPrototype )
 		{
 			ids.push_back( engineData->instanceId( q ) );
@@ -2866,6 +2875,10 @@ struct Prototype : public IECore::RefCounted
 		Context::EditableScope scope( prototypeContext );
 
 		scope.set( ScenePlug::scenePathContextName, prototypeRoot );
+		if( !prototypesPlug->existsPlug()->getValue() )
+		{
+			throw IECore::Exception( fmt::format( "Prototype root \"{}\" does not exist in the `prototypes` scene", ScenePlug::pathToString( *prototypeRoot ) ) );
+		}
 
 		m_attributes = prototypesPlug->attributesPlug()->getValue();
 		if( prepareRendererAttributes )
