@@ -1307,7 +1307,7 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ) )
 		self.assertRaisesRegex(
 			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
-			script["instancer"]["out"].childNames, "/object/instances",
+			script["instancer"]["out"].childNames, "/object/instances/exist",
 		)
 
 	def testIndexedRootsVariable( self ) :
@@ -1361,7 +1361,7 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ) )
 		self.assertRaisesRegex(
 			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
-			script["instancer"]["out"].childNames, "/object/instances",
+			script["instancer"]["out"].childNames, "/object/instances/exist",
 		)
 
 		script["instancer"]["prototypeRoots"].setValue( "notAPrimVar" )
@@ -1436,7 +1436,7 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		updateRoots( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ), IECore.IntVectorData( [ 0, 1, 1, 0 ] ) )
 		self.assertRaisesRegex(
 			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
-			script["instancer"]["out"].childNames, "/object/instances",
+			script["instancer"]["out"].childNames, "/object/instances/exist",
 		)
 
 		script["instancer"]["prototypeRoots"].setValue( "notAPrimVar" )
