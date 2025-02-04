@@ -129,6 +129,49 @@ IECore::MurmurHash matchingPathsHashWrapper2( const IECore::PathMatcher &filter,
 	return SceneAlgo::matchingPathsHash( filter, &scene );
 }
 
+std::shared_ptr<boost::python::object> withGILAcquireDeleter( const boost::python::object &o )
+{
+	return std::shared_ptr<boost::python::object>(
+		new boost::python::object( o ),
+		[]( boost::python::object *o ) {
+			// Custom deleter. We must hold the GIL when deleting Python
+			// objects.
+			IECorePython::ScopedGILLock gilLock;
+			delete o;
+		}
+	);
+}
+
+void parallelGatherLocationsWrapper( const ScenePlug &scene, object locationFunctor, object gatherFunctor, const ScenePlug::ScenePath &root )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+
+	SceneAlgo::parallelGatherLocations(
+		&scene,
+		// Per-location functor
+		[&] ( ConstScenePlugPtr scene, const ScenePlug::ScenePath &path ) {
+			const std::string pathString = ScenePlug::pathToString( path );
+			IECorePython::ScopedGILLock gilLock;
+			try
+			{
+				object result = locationFunctor( boost::const_pointer_cast<ScenePlug>( scene ), pathString );
+				return withGILAcquireDeleter( result );
+			}
+			catch( const boost::python::error_already_set & )
+			{
+				IECorePython::ExceptionAlgo::translatePythonException();
+			};
+		},
+		// Gather functor
+		[&] ( const std::shared_ptr<boost::python::object> &locationResult ) {
+			IECorePython::ScopedGILLock gilLock;
+			gatherFunctor( *locationResult );
+		},
+		root
+	);
+
+}
+
 IECore::PathMatcher findAllWrapper( const ScenePlug &scene, object predicate, const ScenePlug::ScenePath &root )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -382,6 +425,8 @@ void bindSceneAlgo()
 	def( "matchingPaths", &matchingPathsWrapper4 );
 	def( "matchingPathsHash", &matchingPathsHashWrapper1, ( arg( "filter" ), arg( "scene" ), arg( "root" ) = "/" ) );
 	def( "matchingPathsHash", &matchingPathsHashWrapper2, ( arg( "filter" ), arg( "scene" ) ) );
+
+	def( "parallelGatherLocations", &parallelGatherLocationsWrapper, ( arg( "scene" ), arg( "locationFunctor" ), arg( "gatherFunctor" ), arg( "root" ) = "/" ) );
 
 	def( "findAll", &findAllWrapper, ( arg( "scene" ), arg( "predicate" ), arg( "root" ) = "/" ) );
 	def( "findAllWithAttribute", &findAllWithAttributeWrapper, ( arg( "scene" ), arg( "name" ), arg( "value" ) = object(), arg( "root" ) = "/" ) );
