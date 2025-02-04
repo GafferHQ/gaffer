@@ -1390,6 +1390,7 @@ Instancer::Instancer( const std::string &name )
 	// Hide `destination` plug until we resolve issues surrounding `processesRootObject()`.
 	// See `BranchCreator::computeObject()`.
 	destinationPlug()->setName( "__destination" );
+	copySourceAttributesPlug()->setName( "__copySourceAttributes" );
 
 	capsuleScenePlug()->boundPlug()->setInput( outPlug()->boundPlug() );
 	capsuleScenePlug()->transformPlug()->setInput( outPlug()->transformPlug() );

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2025, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,50 +34,36 @@
 #
 ##########################################################################
 
-import Gaffer
-import GafferDispatch
-import GafferUI
-import GafferDispatchUI
+import GafferSceneUI
+import IECore
 
-Gaffer.Metadata.registerValue( GafferDispatch.LocalDispatcher, "executeInBackground", "userDefault", True )
-GafferDispatch.Dispatcher.setDefaultDispatcherType( "Local" )
+def __expandUSDPointInstancersMenu( menuDefinition, plugValueWidget ) :
 
-def __scriptWindowPreClose( scriptWindow ) :
+	sceneView = plugValueWidget.getPlug().node()
+	try:
+		renderAdaptor = sceneView["__preprocessor"]["RenderAdaptors"]["USDPointInstancerAdaptor"]["_PointInstancerAdaptor"]
+	except:
+		# If there is no adaptor, then this menu doesn't make sense - if the user has deregistered this adaptor,
+		# it probably means they aren't using USD, or they have their own approach to point instancers, so we
+		# can just skip this menu option.
+		return
 
-	numScripts = len( scriptWindow.scriptNode().parent() )
-	if numScripts > 1 :
-		return False
+	renderer = renderAdaptor["renderer"].getValue()
+	currentDict = renderAdaptor["defaultEnabledPerRenderer"].getValue()
+	current = currentDict.get( renderer, IECore.BoolData( True ) ).value
 
-	# The last window is about to be closed, which will quit the
-	# application. Check for LocalJobs that are still running,
-	# and prompt the user.
+	def callBackFunc( unused ):
+		modified = currentDict.copy()
+		modified[renderer] = IECore.BoolData( not current )
+		renderAdaptor["defaultEnabledPerRenderer"].setValue( modified )
 
-	incompleteJobs = [
-		job for job in
-		GafferDispatch.LocalDispatcher.defaultJobPool().jobs()
-		if job.status() in (
-			GafferDispatch.LocalDispatcher.Job.Status.Waiting,
-			GafferDispatch.LocalDispatcher.Job.Status.Running,
-		)
-	]
-
-	if len( incompleteJobs ) == 0 :
-		return False
-
-	dialogue = GafferUI.ConfirmationDialogue(
-		"Kill Incomplete Jobs?",
-		"{} LocalDispatcher job{} still running and will be killed".format(
-			len( incompleteJobs ),
-			"s are" if len( incompleteJobs ) > 1 else " is"
-		),
-		confirmLabel = "Kill"
+	menuDefinition.append( "/AttributesDivider", { "divider" : True } )
+	menuDefinition.append(
+		"/Expand USD Instancers",
+		{
+			"command" : callBackFunc,
+			"checkBox" : current
+		}
 	)
 
-	# If `Cancel` was pressed, prevent the window from being closed.
-	return dialogue.waitForConfirmation( parentWindow = scriptWindow ) == False
-
-def __scriptWindowCreated( scriptWindow ) :
-
-	scriptWindow.preCloseSignal().connect( __scriptWindowPreClose )
-
-GafferUI.ScriptWindow.instanceCreatedSignal().connect( __scriptWindowCreated )
+GafferSceneUI.SceneViewUI._ExpansionPlugValueWidget.menuSignal().connect( __expandUSDPointInstancersMenu )

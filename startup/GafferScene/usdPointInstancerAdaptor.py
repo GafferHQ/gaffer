@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2025, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,50 +34,17 @@
 #
 ##########################################################################
 
-import Gaffer
-import GafferDispatch
-import GafferUI
-import GafferDispatchUI
+import GafferScene
 
-Gaffer.Metadata.registerValue( GafferDispatch.LocalDispatcher, "executeInBackground", "userDefault", True )
-GafferDispatch.Dispatcher.setDefaultDispatcherType( "Local" )
+# Register a render adaptor that converts PointsPrimitives in the usd:pointInstancers set
+# into actual Instancers. This supports how USD PointInstancers are currently loaded from
+# USD files. In the future, they may be first class objects, and this will be unnecessary.
 
-def __scriptWindowPreClose( scriptWindow ) :
-
-	numScripts = len( scriptWindow.scriptNode().parent() )
-	if numScripts > 1 :
-		return False
-
-	# The last window is about to be closed, which will quit the
-	# application. Check for LocalJobs that are still running,
-	# and prompt the user.
-
-	incompleteJobs = [
-		job for job in
-		GafferDispatch.LocalDispatcher.defaultJobPool().jobs()
-		if job.status() in (
-			GafferDispatch.LocalDispatcher.Job.Status.Waiting,
-			GafferDispatch.LocalDispatcher.Job.Status.Running,
-		)
-	]
-
-	if len( incompleteJobs ) == 0 :
-		return False
-
-	dialogue = GafferUI.ConfirmationDialogue(
-		"Kill Incomplete Jobs?",
-		"{} LocalDispatcher job{} still running and will be killed".format(
-			len( incompleteJobs ),
-			"s are" if len( incompleteJobs ) > 1 else " is"
-		),
-		confirmLabel = "Kill"
-	)
-
-	# If `Cancel` was pressed, prevent the window from being closed.
-	return dialogue.waitForConfirmation( parentWindow = scriptWindow ) == False
-
-def __scriptWindowCreated( scriptWindow ) :
-
-	scriptWindow.preCloseSignal().connect( __scriptWindowPreClose )
-
-GafferUI.ScriptWindow.instanceCreatedSignal().connect( __scriptWindowCreated )
+try:
+	import GafferUSD
+	GafferScene.SceneAlgo.registerRenderAdaptor( "USDPointInstancerAdaptor", GafferUSD._PointInstancerAdaptor, "SceneView *Render", "*" )
+except:
+	# We shouldn't have any dependency on GafferUSD in GafferScene - but we need to put this registration here
+	# instead of in startup/GafferUSD because scenes that need adapting can existing without any GafferUSD nodes
+	# in the node graph that would trigger loading of GafferUSD. So just fail silently if GafferUSD isn't available.
+	pass

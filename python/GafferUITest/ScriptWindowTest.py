@@ -38,6 +38,7 @@ import unittest
 import weakref
 
 import Gaffer
+import GafferTest
 import GafferUI
 import GafferUITest
 
@@ -136,6 +137,33 @@ class ScriptWindowTest( GafferUITest.TestCase ) :
 
 		w.setTitle( "b" )
 		self.assertEqual( self.__title, "b" )
+
+	def testInstanceCreatedSignal( self ) :
+
+		cs = GafferTest.CapturingSlot( GafferUI.ScriptWindow.instanceCreatedSignal() )
+
+		script1 = Gaffer.ScriptNode()
+		script2 = Gaffer.ScriptNode()
+		self.assertEqual( len( cs ), 0 )
+
+		scriptWindow1 = GafferUI.ScriptWindow( script1 )
+		self.assertEqual( len( cs ), 1 )
+		self.assertIs( cs[0][0], scriptWindow1 )
+
+		scriptWindow2 = GafferUI.ScriptWindow.acquire( script2 )
+		self.assertEqual( len( cs ), 2 )
+		self.assertIs( cs[1][0], scriptWindow2 )
+
+		application = Gaffer.Application()
+		GafferUI.ScriptWindow.connect( application.root() )
+		application.root()["scripts"].addChild( Gaffer.ScriptNode() )
+		self.assertEqual( len( cs ), 3 )
+		self.assertIs(
+			cs[2][0],
+			GafferUI.ScriptWindow.acquire( application.root()["scripts"][0], createIfNecessary = False )
+		)
+
+		del application.root()["scripts"][0]
 
 if __name__ == "__main__":
 	unittest.main()

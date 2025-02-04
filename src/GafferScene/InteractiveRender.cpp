@@ -505,7 +505,7 @@ void InteractiveRender::hash( const Gaffer::ValuePlug *output, const Gaffer::Con
 		const std::string renderer = rendererPlug()->getValue();
 		if( renderer.empty() )
 		{
-			inPlug()->globalsPlug()->hash( h );
+			h.append( inPlug()->globalsHash() );
 		}
 		else
 		{

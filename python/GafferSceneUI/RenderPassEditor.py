@@ -357,6 +357,11 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		if event.button == event.Buttons.Left :
 			column = pathListing.columnAt( event.line.p0 )
+			if column == self.__renderPassNameColumn :
+				if self.__canEditRenderPasses() and len( self.__selectedRenderPasses() ) == 1 :
+					self.__renameSelectedRenderPass()
+					return True
+
 			if column == self.__renderPassActiveColumn :
 				self.__setActiveRenderPass( pathListing )
 				return True
@@ -368,6 +373,11 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		if event.modifiers == event.Modifiers.None_ :
 
 			if event.key == "Return" or event.key == "Enter" :
+				selectedRenderPasses = self.__selectedRenderPasses()
+				if self.__canEditRenderPasses() and len( selectedRenderPasses ) == 1 :
+					self.__renameSelectedRenderPass()
+					return True
+
 				selection = pathListing.getSelection()
 				if len( selection[1].paths() ) :
 					self.__setActiveRenderPass( pathListing )
@@ -435,6 +445,16 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			# Render pass operations
 
 			menuDefinition.append(
+				"Rename Selected Render Pass...",
+				{
+					"command" : Gaffer.WeakMethod( self.__renameSelectedRenderPass ),
+					"active" : self.__canEditRenderPasses() and len( self.__selectedRenderPasses() ) == 1
+				}
+			)
+
+			menuDefinition.append( "__DeleteDivider__", { "divider" : True } )
+
+			menuDefinition.append(
 				"Delete Selected Render Passes",
 				{
 					"command" : Gaffer.WeakMethod( self.__deleteSelectedRenderPasses ),
@@ -488,6 +508,63 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
 			renderPassesProcessor["names"].setValue( renderPasses )
+
+	def __warningPopup( self, title, message ) :
+
+		with GafferUI.PopupWindow() as self.__popup :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 ) :
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+					GafferUI.Image( "warningSmall.png" )
+					GafferUI.Label( "<h4>{}</h4>".format( title ) )
+				GafferUI.Label( message )
+
+		self.__popup.popup( parent = self )
+
+	def __renameSelectedRenderPass( self ) :
+
+		selectedRenderPasses = self.__selectedRenderPasses()
+		if len( selectedRenderPasses ) != 1 :
+			return
+
+		editScope = self.editScope()
+		if editScope is None :
+			return
+
+		renderPassesProcessor = editScope.acquireProcessor( "RenderPasses", createIfNecessary = False )
+		if renderPassesProcessor is None or selectedRenderPasses[0] not in renderPassesProcessor["names"].getValue() :
+			self.__warningPopup( "Unable to rename", "Pass was not created in {}.".format( editScope.relativeName( self.scriptNode() ) ) )
+			return
+
+		dialogue = _RenderPassCreationDialogue(
+			existingNames = [ x for x in self.__renderPassNames( self.settings()["in"] ) if x != selectedRenderPasses[0] ],
+			editScope = editScope,
+			title = "Rename Render Pass",
+			confirmLabel = "Rename",
+			actionDescription = "Rename render pass in",
+			defaultName = selectedRenderPasses[0],
+			message = "<h4>Renaming will only affect the current edit scope.</h4>\nReferences elsewhere in the node graph may need to be updated manually."
+		)
+
+		renderPassName = dialogue.waitForRenderPassName( parentWindow = self.ancestor( GafferUI.Window ) )
+		if renderPassName is not None and renderPassName != selectedRenderPasses[0] :
+
+			nonEditableReason = GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( editScope, renderPassName )
+			if nonEditableReason is not None :
+				self.__warningPopup( "Unable to rename", nonEditableReason )
+				return
+
+			with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
+				GafferScene.EditScopeAlgo.renameRenderPass( editScope, selectedRenderPasses[0], renderPassName )
+
+			if self.settings()["displayGrouped"].getValue() :
+				renamedPath = GafferScene.ScenePlug.stringToPath( self.pathGroupingFunction()( renderPassName ) )
+				renamedPath.append( renderPassName )
+			else :
+				renamedPath = renderPassName
+
+			self.__pathListing.setSelection(
+				[ IECore.PathMatcher( [ renamedPath ] ) if i == 0 else IECore.PathMatcher() for i in range( len( self.__pathListing.getSelection() ) ) ]
+			)
 
 	def __disableRenderPasses( self, renderPasses, editScope ) :
 
@@ -863,7 +940,7 @@ class _SearchFilterWidget( GafferUI.PathFilterWidget ) :
 
 class _RenderPassCreationDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, existingNames = [], editScope = None, title = "Add Render Pass", cancelLabel = "Cancel", confirmLabel = "Add", **kw ) :
+	def __init__( self, existingNames = [], editScope = None, title = "Add Render Pass", cancelLabel = "Cancel", confirmLabel = "Add", actionDescription = "Add render pass to", defaultName = "", message = "", **kw ) :
 
 		GafferUI.Dialogue.__init__( self, title, sizeMode=GafferUI.Window.SizeMode.Fixed, **kw )
 
@@ -873,13 +950,24 @@ class _RenderPassCreationDialogue( GafferUI.Dialogue ) :
 		with self.__column :
 			if editScope :
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-					GafferUI.Label( "Add render pass to" )
+					GafferUI.Label( actionDescription )
 					editScopeColor = Gaffer.Metadata.value( editScope, "nodeGadget:color" )
 					if editScopeColor :
 						GafferUI.Image.createSwatch( editScopeColor )
 					GafferUI.Label( "<h4>{}</h4>".format( editScope.relativeName( editScope.ancestor( Gaffer.ScriptNode ) ) ) )
 
+			if message != "" :
+				lines = message.split( "\n" )
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 ) :
+					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+						GafferUI.Image( "infoSmall.png" )
+						GafferUI.Label( "{}".format( lines[0] ) )
+					for line in lines[1:] :
+						GafferUI.Label( "{}".format( line ) )
+
 			self.__renderPassNameWidget = GafferSceneUI.RenderPassesUI.createRenderPassNameWidget()
+			if defaultName != "" :
+				self.__renderPassNameWidget.setRenderPassName( defaultName )
 
 		self._setWidget( self.__column )
 
@@ -954,6 +1042,9 @@ class RenderPassChooserWidget( GafferUI.Widget ) :
 
 	def __init__( self, settingsNode, **kw ) :
 
+		## \todo It would probably be better if we created the plug in `startup/gui/project.py`, giving
+		# us explicit control over its ordering with respect to the other plugs. Then this widget would
+		# just show the plug if it exists, and if it doesn't show nothing.
 		renderPassPlug = GafferSceneUI.ScriptNodeAlgo.acquireRenderPassPlug( settingsNode["__scriptNode"].getInput().node() )
 		self.__renderPassPlugValueWidget = _RenderPassPlugValueWidget(
 			renderPassPlug["value"],

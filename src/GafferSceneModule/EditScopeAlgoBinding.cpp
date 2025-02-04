@@ -263,6 +263,19 @@ GraphComponentPtr renderPassesReadOnlyReasonWrapper( Gaffer::EditScope &scope )
 	return const_cast<GraphComponent *>( EditScopeAlgo::renderPassesReadOnlyReason( &scope ) );
 }
 
+bool renameRenderPassWrapper( Gaffer::EditScope &scope, const std::string &oldName, const std::string &newName )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return EditScopeAlgo::renameRenderPass( &scope, oldName, newName );
+}
+
+object renameRenderPassNonEditableReasonWrapper( Gaffer::EditScope &scope, const std::string &newName )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	std::optional<std::string> result = EditScopeAlgo::renameRenderPassNonEditableReason( &scope, newName );
+	return result ? object( result.value() ) : object();
+}
+
 } // namespace
 
 namespace GafferSceneModule
@@ -326,6 +339,8 @@ void bindEditScopeAlgo()
 	def( "renderPassOptionEditReadOnlyReason", &renderPassOptionEditReadOnlyReasonWrapper, ( arg( "scope" ), arg( "renderPass" ), arg( "option" ) ) );
 
 	def( "renderPassesReadOnlyReason", &renderPassesReadOnlyReasonWrapper );
+	def( "renameRenderPass", &renameRenderPassWrapper, ( arg( "scope" ), arg( "oldName" ), arg( "newName" ) ) );
+	def( "renameRenderPassNonEditableReason", &renameRenderPassNonEditableReasonWrapper, ( arg( "scope" ), arg( "newName" ) ) );
 
 }
 

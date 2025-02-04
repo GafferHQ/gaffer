@@ -88,6 +88,7 @@ PrimitiveVariableTweaks::PrimitiveVariableTweaks( const std::string &name )
 	addChild( new StringPlug( "idListVariable", Plug::In, "" ) );
 	addChild( new StringPlug( "id", Plug::In, "" ) );
 	addChild( new StringPlug( "maskVariable", Plug::In, "" ) );
+	addChild( new BoolPlug( "invertSelection", Plug::In, false ) );
 	addChild( new BoolPlug( "ignoreMissing", Plug::In, false ) );
 	addChild( new TweaksPlug( "tweaks" ) );
 }
@@ -156,24 +157,34 @@ const Gaffer::StringPlug *PrimitiveVariableTweaks::maskVariablePlug() const
 	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 5 );
 }
 
-Gaffer::BoolPlug *PrimitiveVariableTweaks::ignoreMissingPlug()
+Gaffer::BoolPlug *PrimitiveVariableTweaks::invertSelectionPlug()
 {
 	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 6 );
+}
+
+const Gaffer::BoolPlug *PrimitiveVariableTweaks::invertSelectionPlug() const
+{
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 6 );
+}
+
+Gaffer::BoolPlug *PrimitiveVariableTweaks::ignoreMissingPlug()
+{
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 7 );
 }
 
 const Gaffer::BoolPlug *PrimitiveVariableTweaks::ignoreMissingPlug() const
 {
-	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 6 );
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 7 );
 }
 
 Gaffer::TweaksPlug *PrimitiveVariableTweaks::tweaksPlug()
 {
-	return getChild<Gaffer::TweaksPlug>( g_firstPlugIndex + 7 );
+	return getChild<Gaffer::TweaksPlug>( g_firstPlugIndex + 8 );
 }
 
 const Gaffer::TweaksPlug *PrimitiveVariableTweaks::tweaksPlug() const
 {
-	return getChild<Gaffer::TweaksPlug>( g_firstPlugIndex + 7 );
+	return getChild<Gaffer::TweaksPlug>( g_firstPlugIndex + 8 );
 }
 
 bool PrimitiveVariableTweaks::affectsProcessedObject( const Gaffer::Plug *input ) const
@@ -186,6 +197,7 @@ bool PrimitiveVariableTweaks::affectsProcessedObject( const Gaffer::Plug *input 
 		input == idListVariablePlug() ||
 		input == idPlug() ||
 		input == maskVariablePlug() ||
+		input == invertSelectionPlug() ||
 		input == ignoreMissingPlug() ||
 		tweaksPlug()->isAncestorOf( input )
 	;
@@ -206,6 +218,7 @@ void PrimitiveVariableTweaks::hashProcessedObject( const ScenePath &path, const 
 		idListVariablePlug()->hash( h );
 		idPlug()->hash( h );
 		maskVariablePlug()->hash( h );
+		invertSelectionPlug()->hash( h );
 		ignoreMissingPlug()->hash( h );
 		tweaksPlug()->hash( h );
 	}
@@ -420,6 +433,11 @@ IECore::ConstObjectPtr PrimitiveVariableTweaks::computeProcessedObject( const Sc
 			}
 		);
 
+	}
+
+	if( mask.size() && invertSelectionPlug()->getValue() )
+	{
+		mask.flip();
 	}
 
 	for( const auto &tweak : TweakPlug::Range( *tweaksPlug() ) )

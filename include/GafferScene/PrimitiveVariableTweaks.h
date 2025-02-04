@@ -79,6 +79,9 @@ class GAFFERSCENE_API PrimitiveVariableTweaks : public Deformer
 		Gaffer::StringPlug *maskVariablePlug();
 		const Gaffer::StringPlug *maskVariablePlug() const;
 
+		Gaffer::BoolPlug *invertSelectionPlug();
+		const Gaffer::BoolPlug *invertSelectionPlug() const;
+
 		Gaffer::BoolPlug *ignoreMissingPlug();
 		const Gaffer::BoolPlug *ignoreMissingPlug() const;
 

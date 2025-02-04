@@ -12,12 +12,24 @@ Breaking Changes
 - StandardNodule : Removed deprecated `setCompatibleLabelsVisible()`.
 - DeleteAttributes : Changed base class and marked as `final`.
 
-1.5.x.x (relative to 1.5.4.0)
+1.5.x.x (relative to 1.5.4.1)
 =======
+
+Features
+--------
+
+- Parent, Duplicate, Scatter : Added `copySourceAttributes` plug, to preserve inherited attributes when the `destination` is not parented below the source.
+- USD : Added automatic expansion of USD PointInstancers at render time.
+  - This can be controlled on a per-instancer basis using a `gafferUSD:pointInstancerAdaptor:enabled` boolean attribute.
+  - Which point cloud primitive variables are promoted to user attributes can be controlled using a `gafferUSD:pointInstancerAdaptor:attributes` string attribute.
+  - May be disabled entirely with `GafferScene.SceneAlgo.deregisterRenderAdaptor( "USDPointInstancerAdaptor" )`.
+- Viewer : Added "Expand USD Instancers" item to the Expansion menu. Defaults to on for all renderers except OpenGL.
+- PromotePointInstances : Added a new node for selectively converting a subset of a USD PointInstancer to expanded "hero" geometry.
 
 Improvements
 ------------
 
+- RenderPassEditor : Added ability to rename a render pass within the edit scope it was originally created in. A render pass can be renamed from the "Name" column via the "Rename Selected Render Pass..." menu item, double clicking on a cell or selecting a cell and pressing <kbd>Enter</kbd> or <kbd>Return</kbd>.
 - VisualiserTool :
   - Changed naming requirements for visualising primitive variables. Values in `dataName` now prefix the primitive variable name with `primitiveVariable:`. Setting `dataName` to `vertex:index` will display vertex indices.
   - Added `mode` plug. The available modes are :
@@ -26,12 +38,37 @@ Improvements
     - Color : Values are remapped from the range `[valueMin, valueMax]` to `[0, 1]`.
     - Vertex Label : Values are displayed as a label next to each vertex.
   - When visualising data as vertex labels, the value for the vertex nearest the mouse cursor gets visual emphasis. This value is also used for drag and drop.
+- PrimitiveVariableTweaks : Added `invertSelection` plug.
+- Tweaks nodes : Added automatic conversion between numeric types. For example, an integer tweak value can now be applied to a float.
+- SceneWriter : Improved performance. Benchmarks rewriting complex scenes via a SceneReader->SceneWriter graph show around a 2x speedup.
 
 Fixes
 -----
 
 - ContactSheetCore : Fixed bugs handling changes to the input and output image formats.
+- InteractiveRender : Fixed potential leak of `scene:path` context variable when computing the value for `resolvedRenderer`.
+- Dispatch app : Fixed poor UI layout in "Completed" dialogue state (#6244).
+
+API
+---
+
+- EditScopeAlgo : Added `renameRenderPass()` and `renameRenderPassNonEditableReason()` functions.
+- SceneAlgo : Added `parallelGatherLocations()` function.
+
+1.5.4.1 (relative to 1.5.4.0)
+=======
+
+Fixes
+-----
+
+- OpenColorIO : Fixed UI Display Transform, which was not being applied correctly when a script was loaded.
+- LocalJobs : Fixed shutdown confirmation dialogue, which was no longer being shown when there were unfinished local jobs running.
 - Dispatch app : Fixed configuration bug which caused GafferSceneUI to be loaded unnecessarily (#6239).
+
+API
+---
+
+- ScriptWindow : Added `instanceCreatedSignal()`.
 
 1.5.4.0 (relative to 1.5.3.0)
 =======
@@ -73,6 +110,20 @@ Documentation
 - 3Delight : Added GafferDelight to the node reference section.
 
 1.5.3.0 (relative to 1.5.2.0)
+=======
+
+Features
+--------
+
+- PrimitiveVariableTweaks : Added node for tweaking primitive variables. Can affect just part of a primitive based on ids or a mask.
+- Menu Bar : Added a "Render Pass" menu to the Menu Bar that can be used to choose the current render pass from those provided by the focus node.
+
+Improvements
+------------
+
+- Shader, ShaderPlug : Added support for ContextProcessor, Loop and Spreadsheet nodes to be used inline between shader nodes and as the terminal node connected to
+  ShaderAssignment and other shader-consuming nodes.
+- VisualiserTool : Changed `dataName` input widget for choosing the primitive variable to visualise to a list of available variable names for the current selection.
 - Tweaks nodes : Moved list of tweaks to a collapsible "Tweaks" section in the NodeEditor.
 - Viewer :
   - The shading mode menu icon now updates to indicate when a non-default shading mode is in use.

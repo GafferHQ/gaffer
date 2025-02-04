@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2025, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,49 +35,42 @@
 ##########################################################################
 
 import Gaffer
-import GafferDispatch
-import GafferUI
-import GafferDispatchUI
+import GafferUSD
 
-Gaffer.Metadata.registerValue( GafferDispatch.LocalDispatcher, "executeInBackground", "userDefault", True )
-GafferDispatch.Dispatcher.setDefaultDispatcherType( "Local" )
+Gaffer.Metadata.registerNode(
 
-def __scriptWindowPreClose( scriptWindow ) :
+	GafferUSD._PointInstancerAdaptor,
 
-	numScripts = len( scriptWindow.scriptNode().parent() )
-	if numScripts > 1 :
-		return False
+	"description",
+	"""
+	This internal node is used to implement automatic translation of USD point instancers at render time.
+	It should never been by users, but DocumentationTest still complains if it isn't documented.
+	""",
 
-	# The last window is about to be closed, which will quit the
-	# application. Check for LocalJobs that are still running,
-	# and prompt the user.
+	plugs = {
 
-	incompleteJobs = [
-		job for job in
-		GafferDispatch.LocalDispatcher.defaultJobPool().jobs()
-		if job.status() in (
-			GafferDispatch.LocalDispatcher.Job.Status.Waiting,
-			GafferDispatch.LocalDispatcher.Job.Status.Running,
-		)
-	]
+		"renderer" : [
 
-	if len( incompleteJobs ) == 0 :
-		return False
+			"description",
+			"""
+			Part of the standard renderAdaptor API, this is how a render adaptor is passed a string for
+			the current renderer name. Used to decide whether encapsulation is supported.
+			""",
 
-	dialogue = GafferUI.ConfirmationDialogue(
-		"Kill Incomplete Jobs?",
-		"{} LocalDispatcher job{} still running and will be killed".format(
-			len( incompleteJobs ),
-			"s are" if len( incompleteJobs ) > 1 else " is"
-		),
-		confirmLabel = "Kill"
-	)
+		],
 
-	# If `Cancel` was pressed, prevent the window from being closed.
-	return dialogue.waitForConfirmation( parentWindow = scriptWindow ) == False
+		"defaultEnabledPerRenderer" : [
 
-def __scriptWindowCreated( scriptWindow ) :
+			"description",
+			"""
+			Controls whether the adaptor is hidden by default. Contains a dict, with a boolean value for
+			each renderer. Defaults true for any renderers not specified in the dict. Slightly weird
+			interface, but is basically internal. It should only ever be edited by the expansion menu
+			set up in startup/GafferSceneUI/usdPointInstancerAdaptor.py
+			""",
 
-	scriptWindow.preCloseSignal().connect( __scriptWindowPreClose )
+		],
 
-GafferUI.ScriptWindow.instanceCreatedSignal().connect( __scriptWindowCreated )
+	}
+
+)

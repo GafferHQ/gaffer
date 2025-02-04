@@ -648,6 +648,16 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return True
 
+	__menuSignal = None
+	# Similar to PlugValueWidget.popupMenuSignal(), but specific to this use in the SceneViewUI
+	@classmethod
+	def menuSignal( cls ) :
+
+		if cls.__menuSignal is None :
+			cls.__menuSignal = Gaffer.Signals.Signal2()
+
+		return cls.__menuSignal
+
 	def __menuDefinition( self ) :
 
 		expandAll = bool( self.getPlug().getValue() )
@@ -658,6 +668,8 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 		m.append( "/Collapse Selection", { "command" : self.getPlug().node().collapseSelection, "active" : not expandAll, "shortCut" : "Up" } )
 		m.append( "/Expand All Divider", { "divider" : True } )
 		m.append( "/Expand All", { "checkBox" : expandAll, "command" : Gaffer.WeakMethod( self.__toggleMinimumExpansionDepth ) } )
+
+		self.menuSignal()( m, self )
 
 		return m
 
