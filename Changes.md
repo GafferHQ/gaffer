@@ -26,6 +26,7 @@ Improvements
   - When visualising data as vertex labels, the value for the vertex nearest the mouse cursor gets visual emphasis. This value is also used for drag and drop.
 - PrimitiveVariableTweaks : Added `invertSelection` plug.
 - Tweaks nodes : Added automatic conversion between numeric types. For example, an integer tweak value can now be applied to a float.
+- SceneWriter : Improved performance. Benchmarks rewriting complex scenes via a SceneReader->SceneWriter graph show around a 2x speedup.
 
 Fixes
 -----
@@ -38,6 +39,7 @@ API
 ---
 
 - EditScopeAlgo : Added `renameRenderPass()` and `renameRenderPassNonEditableReason()` functions.
+- SceneAlgo : Added `parallelGatherLocations()` function.
 
 1.5.4.1 (relative to 1.5.4.0)
 =======
@@ -53,16 +55,6 @@ API
 ---
 
 - ScriptWindow : Added `instanceCreatedSignal()`.
-
-Improvements
-------------
-
-- SceneWriter : Improved performance. Benchmarks rewriting complex scenes via a SceneReader->SceneWriter graph show around a 2x speedup.
-
-API
----
-
-- SceneAlgo : Added `parallelGatherLocations()` function.
 
 1.5.4.0 (relative to 1.5.3.0)
 =======
