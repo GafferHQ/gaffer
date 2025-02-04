@@ -83,6 +83,8 @@ class GAFFERSCENEUI_API SetMembershipInspector : public Inspector
 		Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const override;
 		AcquireEditFunctionOrFailure acquireEditFunction( Gaffer::EditScope *scope, const GafferScene::SceneAlgo::History *history ) const override;
 		DisableEditFunctionOrFailure disableEditFunction( Gaffer::ValuePlug *plug, const GafferScene::SceneAlgo::History *history ) const override;
+		CanEditFunction canEditFunction( const GafferScene::SceneAlgo::History *history ) const override;
+		EditFunction editFunction( const GafferScene::SceneAlgo::History *history ) const override;
 
 	private :
 

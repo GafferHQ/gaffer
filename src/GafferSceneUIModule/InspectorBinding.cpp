@@ -84,6 +84,18 @@ void disableEditWrapper( GafferSceneUI::Private::Inspector::Result &result )
 	return result.disableEdit();
 }
 
+bool canEditWrapper( GafferSceneUI::Private::Inspector::Result &result, const IECore::Object *value )
+{
+	std::string reason;
+	return result.canEdit( value, reason );
+}
+
+void editWrapper( GafferSceneUI::Private::Inspector::Result &result, const IECore::Object *value )
+{
+	ScopedGILRelease gilRelease;
+	result.edit( value );
+}
+
 bool editSetMembershipWrapper(
 	const GafferSceneUI::Private::SetMembershipInspector &inspector,
 	const GafferSceneUI::Private::Inspector::Result &inspection,
@@ -138,12 +150,14 @@ void GafferSceneUIModule::bindInspector()
 			.def( "sourceType", &Inspector::Result::sourceType )
 			.def( "fallbackDescription", &Inspector::Result::fallbackDescription, return_value_policy<copy_const_reference>() )
 			.def( "editable", &Inspector::Result::editable )
-			.def( "nonEditableReason", &Inspector::Result::nonEditableReason )
+			.def( "nonEditableReason", &Inspector::Result::nonEditableReason, ( arg( "value" ) = object() ) )
 			.def( "acquireEdit", &acquireEditWrapper, ( arg( "createIfNecessary" ) = true ) )
 			.def( "editWarning", &Inspector::Result::editWarning )
 			.def( "canDisableEdit", &Inspector::Result::canDisableEdit )
 			.def( "nonDisableableReason", &Inspector::Result::nonDisableableReason )
 			.def( "disableEdit", &disableEditWrapper )
+			.def( "canEdit", &canEditWrapper )
+			.def( "edit", &editWrapper, ( arg( "value") ) )
 		;
 
 		enum_<Inspector::Result::SourceType>( "SourceType" )

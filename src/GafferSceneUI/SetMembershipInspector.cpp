@@ -127,6 +127,41 @@ HistoryCache g_historyCache(
 
 );
 
+bool canEdit( const Gaffer::Plug *plug, const IECore::Object *value, std::string &failureReason )
+{
+	if( !runTimeCast<const IECore::BoolData>( value ) )
+	{
+		failureReason = fmt::format( "Data of type \"{}\" is not compatible.", value->typeName() );
+		return false;
+	}
+
+	if( plug->node() )
+	{
+		if( runTimeCast<const ObjectSource>( plug->node() ) )
+		{
+			return true;
+		}
+
+		if( runTimeCast<const Gaffer::ValuePlug>( plug ) && plug->parent<Spreadsheet::RowPlug>() && plug->ancestor<EditScope>() )
+		{
+			return true;
+		}
+		failureReason = fmt::format( "Cannot edit nodes of type \"{}\".", plug->node()->typeName() );
+	}
+	else
+	{
+		// If we've received a plug without a node, it's expected
+		// that this edit would need to be first acquired from an
+		// EditScope, which would create an appropriate plug to
+		// receive a BoolData edit. Typically this situation would
+		// arise from a plug being created by `Inspector::Result::canEdit()`
+		// when it cannot acquire an existing edit.
+		return true;
+	}
+
+	return false;
+}
+
 bool editSetMembership( Gaffer::Plug *plug, const std::string &setName, const ScenePlug::ScenePath &path, EditScopeAlgo::SetMembership setMembership )
 {
 	if( auto objectNode = runTimeCast<ObjectSource>( plug->node() ) )
@@ -339,6 +374,29 @@ Inspector::AcquireEditFunctionOrFailure SetMembershipInspector::acquireEditFunct
 			return EditScopeAlgo::acquireSetEdits( editScope, setName, createIfNecessary );
 		};
 	}
+}
+
+Inspector::CanEditFunction SetMembershipInspector::canEditFunction( const GafferScene::SceneAlgo::History *history ) const
+{
+	return [] ( const Gaffer::Plug *plug, const IECore::Object *value, std::string &failureReason ) { return ::canEdit( plug, value, failureReason ); };
+}
+
+Inspector::EditFunction SetMembershipInspector::editFunction( const GafferScene::SceneAlgo::History *history ) const
+{
+	const auto path = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+	return [
+		setName = m_setName,
+		path
+	] ( Gaffer::Plug *plug, const IECore::Object *value ) {
+		if( const auto boolValue = runTimeCast<const IECore::BoolData>( value ) )
+		{
+			return ::editSetMembership( plug, setName.string(), path, boolValue->readable() ? EditScopeAlgo::SetMembership::Added : EditScopeAlgo::SetMembership::Removed );
+		}
+		else
+		{
+			throw IECore::Exception( fmt::format( "Cannot edit. Data of type \"{}\" is not compatible.", value->typeName() ) );
+		}
+	};
 }
 
 Inspector::DisableEditFunctionOrFailure SetMembershipInspector::disableEditFunction( Gaffer::ValuePlug *plug, const GafferScene::SceneAlgo::History *history ) const

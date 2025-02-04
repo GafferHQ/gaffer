@@ -1156,5 +1156,118 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 			editWarning = "Parameter has edits downstream in EditScope."
 		)
 
+	def testCanEdit( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["light"] = GafferSceneTest.TestLight()
+
+		s["lightFilter"] = GafferScene.PathFilter()
+		s["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+
+		s["shaderTweaks"] = GafferScene.ShaderTweaks()
+		s["shaderTweaks"]["in"].setInput( s["light"]["out"] )
+		s["shaderTweaks"]["filter"].setInput( s["lightFilter"]["out"] )
+		exposureTweak = Gaffer.TweakPlug( "exposure", 10 )
+		s["shaderTweaks"]["tweaks"].addChild( exposureTweak )
+		intensityTweak = Gaffer.TweakPlug( "intensity", imath.Color3f( 1.0 ) )
+		s["shaderTweaks"]["tweaks"].addChild( intensityTweak )
+
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["shaderTweaks"]["out"] )
+		s["editScope"]["in"].setInput( s["shaderTweaks"]["out"] )
+
+		def assertCanEdit( inspection, data, nonEditableReason ) :
+
+			self.assertEqual( inspection.canEdit( data ), nonEditableReason == "" )
+			self.assertEqual( inspection.nonEditableReason( data ), nonEditableReason )
+
+		inspection = self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure", None )
+		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "" )
+		assertCanEdit( inspection, IECore.IntData( 123 ), "" )
+		assertCanEdit( inspection, IECore.StringData( "test" ), "Data of type \"StringData\" is not compatible." )
+		assertCanEdit( inspection, IECore.Color3fData( imath.Color3f( 1.0, 2.0, 3.0 ) ), "Data of type \"Color3fData\" is not compatible." )
+
+		inspection = self.__inspect( s["shaderTweaks"]["out"], "/light", "intensity", None )
+		assertCanEdit( inspection, IECore.Color3fData( imath.Color3f( 1.0, 2.0, 3.0 ) ), "" )
+		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "" )
+		assertCanEdit( inspection, IECore.IntData( 123 ), "" )
+		assertCanEdit( inspection, IECore.StringData( "test" ), "Data of type \"StringData\" is not compatible." )
+
+		inspection = self.__inspect( s["editScope"]["out"], "/light", "exposure", s["editScope"] )
+		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "" )
+		assertCanEdit( inspection, IECore.IntData( 123 ), "" )
+		assertCanEdit( inspection, IECore.StringData( "test" ), "Data of type \"StringData\" is not compatible." )
+		assertCanEdit( inspection, IECore.Color3fData( imath.Color3f( 1.0, 2.0, 3.0 ) ), "Data of type \"Color3fData\" is not compatible." )
+
+		inspection = self.__inspect( s["editScope"]["out"], "/light", "intensity", s["editScope"] )
+		assertCanEdit( inspection, IECore.Color3fData( imath.Color3f( 1.0, 2.0, 3.0 ) ), "" )
+		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "" )
+		assertCanEdit( inspection, IECore.IntData( 123 ), "" )
+		assertCanEdit( inspection, IECore.StringData( "test" ), "Data of type \"StringData\" is not compatible." )
+
+	def testEdit( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["light"] = GafferSceneTest.TestLight()
+
+		s["lightFilter"] = GafferScene.PathFilter()
+		s["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+
+		s["shaderTweaks"] = GafferScene.ShaderTweaks()
+		s["shaderTweaks"]["in"].setInput( s["light"]["out"] )
+		s["shaderTweaks"]["filter"].setInput( s["lightFilter"]["out"] )
+		exposureTweak = Gaffer.TweakPlug( "exposure", 10 )
+		s["shaderTweaks"]["tweaks"].addChild( exposureTweak )
+
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["shaderTweaks"]["out"] )
+		s["editScope"]["in"].setInput( s["shaderTweaks"]["out"] )
+
+		def assertEdit( inspection, data, nonEditableReason ) :
+
+			self.assertEqual( inspection.canEdit( data ), nonEditableReason == "" )
+			self.assertEqual( inspection.nonEditableReason( data ), nonEditableReason )
+			if nonEditableReason == "" :
+				inspection.edit( data )
+			else :
+				self.assertRaisesRegex( IECore.Exception, "Not editable : " + nonEditableReason, inspection.edit, data )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["shaderTweaks"], True )
+		inspection = self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure", None )
+		assertEdit( inspection, IECore.FloatData( 123.0 ), "shaderTweaks is locked." )
+		Gaffer.MetadataAlgo.setReadOnly( s["shaderTweaks"], False )
+
+		Gaffer.MetadataAlgo.setReadOnly( exposureTweak["enabled"], True )
+		inspection = self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure", None )
+		assertEdit( inspection, IECore.FloatData( 123.0 ), "shaderTweaks.tweaks.tweak.enabled is locked." )
+		Gaffer.MetadataAlgo.setReadOnly( exposureTweak["enabled"], False )
+
+		inspection = self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure", None )
+		assertEdit( inspection, IECore.FloatData( 123.0 ), "" )
+		assertEdit( inspection, IECore.StringData( "test" ), "Data of type \"StringData\" is not compatible." )
+
+		inspection = self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure", None )
+		self.assertEqual( inspection.source(), exposureTweak )
+		self.assertEqual( exposureTweak["value"].getValue(), 123.0 )
+
+		inspection = self.__inspect( s["editScope"]["out"], "/light", "exposure", s["editScope"] )
+		assertEdit( inspection, IECore.StringData( "test" ), "Data of type \"StringData\" is not compatible." )
+
+		# Calling `edit()` should create a new edit within the target edit scope
+		assertEdit( inspection, IECore.FloatData( 456.0 ), "" )
+		acquiredEdit = inspection.acquireEdit()
+		self.assertTrue( s["editScope"].isAncestorOf( acquiredEdit ) )
+		self.assertTrue( acquiredEdit["enabled"].getValue() )
+		self.assertEqual( acquiredEdit["value"].getValue(), 456.0 )
+
+		# Editing a disabled edit within an edit scope should re-enable it
+		acquiredEdit["enabled"].setValue( False )
+		inspection = self.__inspect( s["editScope"]["out"], "/light", "exposure", s["editScope"] )
+		assertEdit( inspection, IECore.FloatData( 789.0 ), "" )
+		self.assertTrue( acquiredEdit["enabled"].getValue() )
+		self.assertEqual( acquiredEdit["value"].getValue(), 789.0 )
+
 if __name__ == "__main__":
 	unittest.main()
