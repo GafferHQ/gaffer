@@ -170,8 +170,8 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Si
 		/// history class?
 		virtual Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const;
 
-		using EditFunction = std::function<Gaffer::ValuePlugPtr ( bool createIfNecessary )>;
-		using EditFunctionOrFailure = std::variant<EditFunction, std::string>;
+		using AcquireEditFunction = std::function<Gaffer::ValuePlugPtr ( bool createIfNecessary )>;
+		using AcquireEditFunctionOrFailure = std::variant<AcquireEditFunction, std::string>;
 		/// Should be implemented to return a function that will acquire
 		/// an edit from the EditScope at the specified point in the history.
 		/// If this is not possible, should return an error explaining why
@@ -181,7 +181,7 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Si
 		/// > Note : Where an EditScope already contains an edit, it is expected
 		/// > that this will be dealt with in `source()`, returning a result
 		/// > that edits the processor itself.
-		virtual EditFunctionOrFailure editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const;
+		virtual AcquireEditFunctionOrFailure acquireEditFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const;
 
 		using DisableEditFunction = std::function<void ()>;
 		using DisableEditFunctionOrFailure = std::variant<DisableEditFunction, std::string>;
@@ -376,8 +376,7 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 
 		struct Editors
 		{
-			/// \todo Rename to `acquireEditFunction`?
-			EditFunctionOrFailure editFunction;
+			AcquireEditFunctionOrFailure acquireEditFunction;
 			std::string editWarning;
 			DisableEditFunctionOrFailure disableEditFunction;
 		};

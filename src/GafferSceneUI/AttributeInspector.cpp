@@ -367,7 +367,7 @@ Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::H
 	return nullptr;
 }
 
-Inspector::EditFunctionOrFailure AttributeInspector::editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
+Inspector::AcquireEditFunctionOrFailure AttributeInspector::acquireEditFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
 {
 	InternedString attributeName = m_attribute;
 	if( auto attributeHistory = dynamic_cast<const SceneAlgo::AttributeHistory *>( history ) )
@@ -444,7 +444,7 @@ void AttributeInspector::nodeMetadataChanged( IECore::InternedString key, const 
 	)
 	{
 		// Might affect `EditScopeAlgo::attributeEditReadOnlyReason()`
-		// which we call in `editFunction()`.
+		// which we call in `acquireEditFunction()`.
 		/// \todo Can we ditch the signal processing and call `attributeEditReadOnlyReason()`
 		/// just-in-time from `editable()`? In the past that wasn't possible
 		/// because editability changed the appearance of the UI, but it isn't

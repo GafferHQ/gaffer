@@ -181,7 +181,7 @@ Gaffer::ValuePlugPtr ParameterInspector::source( const GafferScene::SceneAlgo::H
 	return nullptr;
 }
 
-Inspector::EditFunctionOrFailure ParameterInspector::editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
+Inspector::AcquireEditFunctionOrFailure ParameterInspector::acquireEditFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
 {
 	auto attributeHistory = static_cast<const SceneAlgo::AttributeHistory *>( history );
 

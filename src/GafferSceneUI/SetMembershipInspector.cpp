@@ -315,7 +315,7 @@ Gaffer::ValuePlugPtr SetMembershipInspector::source( const GafferScene::SceneAlg
 	return nullptr;
 }
 
-Inspector::EditFunctionOrFailure SetMembershipInspector::editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
+Inspector::AcquireEditFunctionOrFailure SetMembershipInspector::acquireEditFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
 {
 	const GraphComponent *readOnlyReason = EditScopeAlgo::setMembershipReadOnlyReason(
 		editScope,
@@ -398,9 +398,9 @@ void SetMembershipInspector::nodeMetadataChanged( IECore::InternedString key, co
 		( MetadataAlgo::readOnlyAffectedByChange( key ) && scope->isAncestorOf( node ) )
 	)
 	{
-		// Might affect `EditScopeAlgo::setMembershipEditReadOnlyReason()`
-		// which we call in `editFunction()`.
-		/// \todo Can we ditch the signal processing and call `setMembershipEditReadOnlyReason()`
+		// Might affect `EditScopeAlgo::setMembershipReadOnlyReason()`
+		// which we call in `acquireEditFunction()`.
+		/// \todo Can we ditch the signal processing and call `setMembershipReadOnlyReason()`
 		/// just-in-time from `editable()`? In the past that wasn't possible
 		/// because editability changed the appearance of the UI, but it isn't
 		/// doing that currently.

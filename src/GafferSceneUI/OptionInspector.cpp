@@ -263,7 +263,7 @@ Gaffer::ValuePlugPtr OptionInspector::source( const GafferScene::SceneAlgo::Hist
 	return nullptr;
 }
 
-Inspector::EditFunctionOrFailure OptionInspector::editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
+Inspector::AcquireEditFunctionOrFailure OptionInspector::acquireEditFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
 {
 	// If our history's context contains a non-empty `renderPass` variable,
 	// we'll want to make a specific edit for that render pass.
@@ -377,7 +377,7 @@ void OptionInspector::nodeMetadataChanged( IECore::InternedString key, const Gaf
 	)
 	{
 		// Might affect `EditScopeAlgo::optionEditReadOnlyReason()`
-		// which we call in `editFunction()`.
+		// which we call in `acquireEditFunction()`.
 		/// \todo Can we ditch the signal processing and call `optionEditReadOnlyReason()`
 		/// just-in-time from `editable()`? In the past that wasn't possible
 		/// because editability changed the appearance of the UI, but it isn't

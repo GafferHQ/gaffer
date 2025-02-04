@@ -341,17 +341,17 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 				// the scope to take precedence. An existing edit in the scope will
 				// have been picked up via `source()` already.
 				//
-				// \todo Should call `editFunction()` with the context from the
+				// \todo Should call `acquireEditFunction()` with the context from the
 				// `outPlug()` of the EditScope - see TransformTool. We should also
 				// explicitly prefer branches where `scene:path` matches the value
 				// in the `outPlug()` context, to avoid making edits to locations
 				// other than the one emerging from the EditScope.
 				result->m_editScopeInHistory = true;
 				Context::Scope scope( history->context.get() );
-				EditFunctionOrFailure func;
+				AcquireEditFunctionOrFailure func;
 				if( editScope->enabledPlug()->getValue() )
 				{
-					func = editFunction( editScope, history );
+					func = acquireEditFunction( editScope, history );
 				}
 				else
 				{
@@ -375,9 +375,9 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 			result->m_sourceType = Result::SourceType::Downstream;
 		}
 
-		// If we initialised the edit function, tag on a warning if any edits won't be visible
+		// If we initialised the acquire edit function, tag on a warning if any edits won't be visible
 		// due to being overridden downstream.
-		if( result->m_editors && std::holds_alternative<EditFunction>( result->m_editors->editFunction ) && result->m_sourceType == Result::SourceType::Downstream )
+		if( result->m_editors && std::holds_alternative<AcquireEditFunction>( result->m_editors->acquireEditFunction ) && result->m_sourceType == Result::SourceType::Downstream )
 		{
 			const Node *downstreamNode = result->m_source->node();
 			const auto *downstreamEditScope = downstreamNode->ancestor<EditScope>();
@@ -408,7 +408,7 @@ Gaffer::ValuePlugPtr Inspector::source( const GafferScene::SceneAlgo::History *h
 	return nullptr;
 }
 
-Inspector::EditFunctionOrFailure Inspector::editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
+Inspector::AcquireEditFunctionOrFailure Inspector::acquireEditFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
 {
 	return "Editing not supported";
 }
@@ -744,12 +744,12 @@ const std::string &Inspector::Result::fallbackDescription() const
 
 bool Inspector::Result::editable() const
 {
-	return m_editors && std::holds_alternative<EditFunction>( m_editors->editFunction );
+	return m_editors && std::holds_alternative<AcquireEditFunction>( m_editors->acquireEditFunction );
 }
 
 std::string Inspector::Result::nonEditableReason() const
 {
-	if( auto s = std::get_if<std::string>( &m_editors.value().editFunction ) )
+	if( auto s = std::get_if<std::string>( &m_editors.value().acquireEditFunction ) )
 	{
 		return *s;
 	}
@@ -759,12 +759,12 @@ std::string Inspector::Result::nonEditableReason() const
 
 Gaffer::ValuePlugPtr Inspector::Result::acquireEdit( bool createIfNecessary ) const
 {
-	if( auto f = std::get_if<EditFunction>( &m_editors.value().editFunction ) )
+	if( auto f = std::get_if<AcquireEditFunction>( &m_editors.value().acquireEditFunction ) )
 	{
 		return (*f)( createIfNecessary );
 	}
 
-	throw IECore::Exception( "Not editable : " + std::get<std::string>( m_editors.value().editFunction ) );
+	throw IECore::Exception( "Not editable : " + std::get<std::string>( m_editors.value().acquireEditFunction ) );
 }
 
 bool Inspector::Result::canDisableEdit() const
