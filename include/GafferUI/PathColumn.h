@@ -37,8 +37,10 @@
 #pragma once
 
 #include "GafferUI/ButtonEvent.h"
+#include "GafferUI/DragDropEvent.h"
 #include "GafferUI/EventSignalCombiner.h"
 #include "GafferUI/Export.h"
+#include "GafferUI/Gadget.h"
 #include "GafferUI/KeyEvent.h"
 
 #include "Gaffer/Path.h"
@@ -172,6 +174,12 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 		KeySignal &keyPressSignal();
 		KeySignal &keyReleaseSignal();
 
+		using DragDropSignal = Gaffer::Signals::Signal<bool ( PathColumn &column, Gaffer::Path &path, PathListingWidget &widget, const DragDropEvent &event ), EventSignalCombiner<bool>>;
+		DragDropSignal &dragEnterSignal();
+		DragDropSignal &dragMoveSignal();
+		DragDropSignal &dragLeaveSignal();
+		DragDropSignal &dropSignal();
+
 		/// Creation
 		/// ========
 
@@ -190,6 +198,10 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 		ContextMenuSignal m_contextMenuSignal;
 		KeySignal m_keyPressSignal;
 		KeySignal m_keyReleaseSignal;
+		DragDropSignal m_dragEnterSignal;
+		DragDropSignal m_dragMoveSignal;
+		DragDropSignal m_dragLeaveSignal;
+		DragDropSignal m_dropSignal;
 
 		SizeMode m_sizeMode;
 

@@ -125,6 +125,26 @@ PathColumn::KeySignal &PathColumn::keyReleaseSignal()
 	return m_keyReleaseSignal;
 }
 
+PathColumn::DragDropSignal &PathColumn::dragEnterSignal()
+{
+	return m_dragEnterSignal;
+}
+
+PathColumn::DragDropSignal &PathColumn::dragMoveSignal()
+{
+	return m_dragMoveSignal;
+}
+
+PathColumn::DragDropSignal &PathColumn::dragLeaveSignal()
+{
+	return m_dragLeaveSignal;
+}
+
+PathColumn::DragDropSignal &PathColumn::dropSignal()
+{
+	return m_dropSignal;
+}
+
 PathColumn::PathColumnSignal &PathColumn::instanceCreatedSignal()
 {
 	static PathColumnSignal g_instanceCreatedSignal;
