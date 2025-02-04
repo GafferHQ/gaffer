@@ -50,55 +50,21 @@ from GafferSceneUI._HistoryWindow import _HistoryWindow
 # that is easier to implement in Python. This should all be considered as one
 # component.
 
-def __toggleBoolean( pathListing, inspectors, inspections ) :
+def __toggleBoolean( pathListing, inspections ) :
 
-	plugs = [ i.acquireEdit() for i in inspections ]
-	# Make sure all the plugs either contain, or are themselves a BoolPlug or can be edited
-	# by `SetMembershipInspector.editSetMembership()`
-	if not all (
-		(
-			isinstance( plug, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) and
-			isinstance( plug["value"], Gaffer.BoolPlug )
-		) or (
-			isinstance( plug, ( Gaffer.BoolPlug ) )
-		) or (
-			isinstance( inspector, GafferSceneUI.Private.SetMembershipInspector )
-		)
-		for plug, inspector in zip( plugs, inspectors )
+	# Make sure all the inspections contain and accept BoolData
+	if not all(
+		isinstance( i.value(), IECore.BoolData ) and i.canEdit( IECore.BoolData( True ) )
+		for i in inspections
 	) :
 		return False
 
-	currentValues = []
-
-	# Use a single new value for all plugs.
-	# First we need to find out what the new value would be for each plug in isolation.
-	for inspector, pathInspections in inspectors.items() :
-		for path, inspection in pathInspections.items() :
-			currentValues.append( inspection.value().value if inspection.value() is not None else False )
-
-	# Now set the value for all plugs, defaulting to `True` if they are not
-	# currently all the same.
-	newValue = not sole( currentValues )
+	# Default to `True` if values differ.
+	newValue = not sole( [ i.value().value for i in inspections ] )
 
 	with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
-		for inspector, pathInspections in inspectors.items() :
-			for path, inspection in pathInspections.items() :
-				if isinstance( inspector, GafferSceneUI.Private.SetMembershipInspector ) :
-					inspector.editSetMembership(
-						inspection,
-						path,
-						GafferScene.EditScopeAlgo.SetMembership.Added if newValue else GafferScene.EditScopeAlgo.SetMembership.Removed
-					)
-
-				else :
-					plug = inspection.acquireEdit()
-					if isinstance( plug, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) :
-						plug["value"].setValue( newValue )
-						plug["enabled"].setValue( True )
-						if isinstance( plug, Gaffer.TweakPlug ) :
-							plug["mode"].setValue( Gaffer.TweakPlug.Mode.Create )
-					else :
-						plug.setValue( newValue )
+		for inspection in inspections :
+			inspection.edit( IECore.BoolData( newValue ) )
 
 	return True
 
@@ -106,9 +72,6 @@ def __editSelectedCells( pathListing, quickBoolean = True, ensureEnabled = False
 
 	global __inspectorColumnPopup
 
-	# A dictionary of the form :
-	# { inspector : { path1 : inspection, path2 : inspection, ... }, ... }
-	inspectors = {}
 	inspections = []
 
 	path = pathListing.getPath().copy()
@@ -123,10 +86,9 @@ def __editSelectedCells( pathListing, quickBoolean = True, ensureEnabled = False
 				inspection = column.inspector().inspect()
 
 				if inspection is not None :
-					inspectors.setdefault( column.inspector(), {} )[pathString] = inspection
 					inspections.append( inspection )
 
-	if len( inspectors ) == 0 :
+	if len( inspections ) == 0 :
 		with GafferUI.PopupWindow() as __inspectorColumnPopup :
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 				GafferUI.Image( "warningSmall.png" )
@@ -139,27 +101,24 @@ def __editSelectedCells( pathListing, quickBoolean = True, ensureEnabled = False
 	nonEditable = [ i for i in inspections if not i.editable() ]
 
 	if len( nonEditable ) == 0 :
-		## \todo Consider removal of this usage of the Editor's context when
-		# the toggling code is moved the inspectors.
-		with pathListing.ancestor( GafferUI.Editor ).context() :
-			if not quickBoolean or not __toggleBoolean( pathListing, inspectors, inspections ) :
-				edits = [ i.acquireEdit() for i in inspections ]
-				warnings = "\n".join( [ i.editWarning() for i in inspections if i.editWarning() != "" ] )
+		if not quickBoolean or not __toggleBoolean( pathListing, inspections ) :
+			edits = [ i.acquireEdit() for i in inspections ]
+			warnings = "\n".join( [ i.editWarning() for i in inspections if i.editWarning() != "" ] )
 
-				if ensureEnabled :
-					with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
-						for edit in edits :
-							if isinstance( edit, ( Gaffer.NameValuePlug, Gaffer.OptionalValuePlug, Gaffer.TweakPlug ) ) :
-								edit["enabled"].setValue( True )
+			if ensureEnabled :
+				with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
+					for edit in edits :
+						if isinstance( edit, ( Gaffer.NameValuePlug, Gaffer.OptionalValuePlug, Gaffer.TweakPlug ) ) :
+							edit["enabled"].setValue( True )
 
-				# The plugs are either not boolean, boolean with mixed values,
-				# or attributes that don't exist and are not boolean. Show the popup.
-				__inspectorColumnPopup = GafferUI.PlugPopup( edits, warning = warnings )
+			# The plugs are either not boolean, boolean with mixed values,
+			# or attributes that don't exist and are not boolean. Show the popup.
+			__inspectorColumnPopup = GafferUI.PlugPopup( edits, warning = warnings )
 
-				if isinstance( __inspectorColumnPopup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
-					__inspectorColumnPopup.plugValueWidget().setNameVisible( False )
+			if isinstance( __inspectorColumnPopup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
+				__inspectorColumnPopup.plugValueWidget().setNameVisible( False )
 
-				__inspectorColumnPopup.popup( parent = pathListing )
+			__inspectorColumnPopup.popup( parent = pathListing )
 
 	else :
 		with GafferUI.PopupWindow() as __inspectorColumnPopup :
