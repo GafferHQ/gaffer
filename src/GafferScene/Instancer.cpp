@@ -2467,17 +2467,62 @@ void Instancer::hashObject( const ScenePath &path, const Gaffer::Context *contex
 		if( branchPath.size() == 1 )
 		{
 			BranchCreator::hashBranchObject( sourcePath, branchPath, context, h );
+
+			// NOTE: We are only hashing the engine and the prototypes at on-frame time - but
+			// when the capsule actually renders, it will evaluate the engine and prototypes
+			// throughout the shutter ( based on whatever the shutter settings are when they
+			// reach the renderer ). This means that our hash will not capture the change if
+			// something changes its animation while keep it's on-frame position ( or rather,
+			// it's on-frame hash ). This could result in a failure to update in a corner
+			// ... but it is quite unlikely to come up, and dealing with it properly would
+			// reduce the performance of the normal case.
+			engineHash( sourcePath, context, h );
+
+			ConstEngineDataPtr engineData = engine( sourcePath, context );
+
+			// The capsule will include a pointer to the node that created it, so we always must include
+			// our address in the hash.
 			h.append( reinterpret_cast<uint64_t>( this ) );
-			/// We need to include anything that will affect how the capsule will expand.
-			for( const auto &prototypePlug : ValuePlug::Range( *prototypesPlug() ) )
+
+			if( engineData->hasContextVariables() )
 			{
-				if( prototypePlug != prototypesPlug()->globalsPlug() )
+				/// We need to include anything that will affect how the capsule will expand.
+				for( const auto &prototypePlug : ValuePlug::Range( *prototypesPlug() ) )
 				{
-					h.append( prototypePlug->dirtyCount() );
+					if( prototypePlug != prototypesPlug()->globalsPlug() )
+					{
+						h.append( prototypePlug->dirtyCount() );
+					}
+				}
+				h.append( context->hash() );
+			}
+			else
+			{
+				// TODO - multithread?
+				for( size_t i = 0; i < engineData->numValidPrototypes(); i++ )
+				{
+					const ScenePlug::ScenePath *prototypeRoot = engineData->prototypeRoot( i );
+					if( !prototypesPlug()->exists( *prototypeRoot ) )
+					{
+						throw IECore::Exception( fmt::format( "Prototype root \"{}\" does not exist in the `prototypes` scene", ScenePlug::pathToString( *prototypeRoot ) ) );
+					}
+
+					h.append( SceneAlgo::hierarchyHash( prototypesPlug(), *prototypeRoot ) );
+				}
+
+				ScenePlug::SetScope setScope( context );
+				for( const InternedString &i : prototypesPlug()->setNames()->readable() )
+				{
+					setScope.setSetName( &i );
+
+					// \todo : Should we be actually evaluating these sets so we can test if they don't intersect
+					// with any prototypes, and skip them? Or is it OK do do this pessimistic hash in exchange
+					// for saving time on set evaluations?
+					h.append( i );
+					prototypesPlug()->setPlug()->hash( h );
 				}
 			}
-			engineHash( sourcePath, context, h );
-			h.append( context->hash() );
+
 			outPlug()->boundPlug()->hash( h );
 			return;
 		}
