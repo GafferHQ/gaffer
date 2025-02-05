@@ -242,21 +242,14 @@ def __selectedSetExpressions( pathListing ) :
 	# { path1 : set( setExpression1, setExpression2 ), path2 : set( setExpression1 ), ... }
 	result = {}
 
-	# Map of Inspectors to metadata prefixes.
-	prefixMap = {
-		GafferSceneUI.Private.OptionInspector : "option:",
-		GafferSceneUI.Private.AttributeInspector : "attribute:"
-	}
-
 	path = pathListing.getPath().copy()
 	for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
 		if (
 			not columnSelection.isEmpty() and (
-				type( column.inspector() ) not in prefixMap.keys() or
 				not (
-					Gaffer.Metadata.value( prefixMap.get( type( column.inspector() ) ) + column.inspector().name(), "ui:scene:acceptsSetName" ) or
-					Gaffer.Metadata.value( prefixMap.get( type( column.inspector() ) ) + column.inspector().name(), "ui:scene:acceptsSetNames" ) or
-					Gaffer.Metadata.value( prefixMap.get( type( column.inspector() ) ) + column.inspector().name(), "ui:scene:acceptsSetExpression" )
+					__columnMetadata( column, "ui:scene:acceptsSetName" ) or
+					__columnMetadata( column, "ui:scene:acceptsSetNames" ) or
+					__columnMetadata( column, "ui:scene:acceptsSetExpression" )
 				)
 			)
 		) :
