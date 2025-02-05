@@ -43,6 +43,7 @@ API
 
 - EditScopeAlgo : Added `renameRenderPass()` and `renameRenderPassNonEditableReason()` functions.
 - SceneAlgo : Added `parallelGatherLocations()` function.
+- GraphGadget : Added `annotationsGadget()` function.
 
 1.5.4.1 (relative to 1.5.4.0)
 =======

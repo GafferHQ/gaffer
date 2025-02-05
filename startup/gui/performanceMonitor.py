@@ -238,7 +238,7 @@ def __graphEditorCreated( graphEditor ) :
 	# What we really want is for Editors to have plugs (like Views do), and for
 	# the visible annotations to be specified on a promoted plug. Then
 	# we could just set a `userDefault` for that plug.
-	annotationsGadget = graphEditor.graphGadget()["__annotations"]
+	annotationsGadget = graphEditor.graphGadget().annotationsGadget()
 
 	annotations = Gaffer.MetadataAlgo.annotationTemplates() + [ "user", annotationsGadget.untemplatedAnnotations ]
 	visiblePattern = annotationsGadget.getVisibleAnnotations()
