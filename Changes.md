@@ -28,6 +28,7 @@ Improvements
 - Tweaks nodes : Added automatic conversion between numeric types. For example, an integer tweak value can now be applied to a float.
 - SceneWriter : Improved performance. Benchmarks rewriting complex scenes via a SceneReader->SceneWriter graph show around a 2x speedup.
 - USDLayerWriter : Improved performance, including a 50x speedup for one benchmark.
+- RenderPassMenu : Added configuration of the default state of "Hide Disabled" and "Display Grouped" via `renderPassPlugValueWidget:hideDisabled` and `renderPassPlugValueWidget:displayGrouped` metadata registered in a startup file. For example, "Hide Disabled" can be enabled with the following registration `Gaffer.Metadata.registerValue( Gaffer.ScriptNode, "variables.renderPass.value", "renderPassPlugValueWidget:hideDisabled", True )`.
 
 Fixes
 -----
