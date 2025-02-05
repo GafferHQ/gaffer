@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - 3Delight : Added light muting support.
+- VisualiserTool : Added new visualisation for vector (V3f) data.
 
 1.5.6.0 (relative to 1.5.5.0)
 =======
