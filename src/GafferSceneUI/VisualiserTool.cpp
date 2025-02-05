@@ -372,9 +372,6 @@ enum class VisualiserShaderType
 	VertexLabel
 };
 
-std::array<std::string, 2> g_vertSources = { g_colorShaderVertSource, g_vertexLabelShaderVertSource };
-std::array<std::string, 2> g_fragSources = { g_colorShaderFragSource, g_vertexLabelShaderFragSource };
-
 // The gadget that does the actual opengl drawing of the shaded primitive
 class VisualiserGadget : public Gadget
 {
