@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.5.0)
 =======
 
+Improvements
+------------
+
+- VisualiserTool : Added new visualisation for vector (V3f) data.
+
 API
 ---
 
