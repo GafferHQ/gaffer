@@ -36,8 +36,13 @@
 
 #include "GafferUSD/USDLayerWriter.h"
 
+#include "GafferScene/DeleteAttributes.h"
+#include "GafferScene/DeleteObject.h"
+#include "GafferScene/PathFilter.h"
+#include "GafferScene/Prune.h"
 #include "GafferScene/SceneAlgo.h"
 
+#include "Gaffer/ContextQuery.h"
 #include "Gaffer/NameSwitch.h"
 #include "Gaffer/NameValuePlug.h"
 
@@ -50,6 +55,8 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 IECORE_POP_DEFAULT_VISIBILITY
 
 #include "boost/filesystem.hpp"
+
+#include "tbb/parallel_reduce.h"
 
 #include <filesystem>
 
@@ -67,6 +74,152 @@ using namespace GafferUSD;
 
 namespace
 {
+
+const PathMatcher g_emptyPathMatcher;
+
+struct Filters
+{
+	bool fullyPruned = true; // True only if all descendants present in `prune`.
+	PathMatcher prune;
+	PathMatcher deleteObject;
+	PathMatcher deleteAttributes;
+
+	// Merges in filters from sibling locations.
+	void add( const Filters &other )
+	{
+		fullyPruned = fullyPruned && other.fullyPruned;
+		prune.addPaths( other.prune );
+		deleteAttributes.addPaths( other.deleteAttributes );
+		deleteObject.addPaths( other.deleteObject );
+	}
+
+	// Merges in filters from child locations.
+	void addWithPrefix( const Filters &other, const ScenePlug::ScenePath &prefix )
+	{
+		fullyPruned = fullyPruned && other.fullyPruned;
+		prune.addPaths( other.prune, prefix );
+		deleteAttributes.addPaths( other.deleteAttributes, prefix );
+		deleteObject.addPaths( other.deleteObject, prefix );
+	}
+
+};
+
+// Recursively builds the PathMatchers held in a Filters struct, such that :
+//
+// - Objects with identical hashes will be included in `Filter::deleteObject`.
+// - Attributes with identical hashes will be included in `Filter::deleteAttributes`.
+// - Subtrees which are identical in all properties will be included in `Filter::prune`.
+//
+/// \todo The core logic of this could be lifted into a `SceneAlgo::parallelReduceLocations()`
+/// and reused elsewhere. The recursive way we're building PathMatchers by prefixing with the
+/// parent as unwind might outperform other approaches we're using elsewhere.
+Filters filtersWalk( const GafferScene::ScenePlug *baseScene, const GafferScene::ScenePlug *layerScene, const std::vector<float> &frames, const ScenePlug::ScenePath &path, const Gaffer::ThreadState &threadState, tbb::task_group_context &taskGroupContext )
+{
+	ScenePlug::PathScope pathScope( threadState, &path );
+
+	bool attributesMatch = true;
+	bool objectsMatch = true;
+	bool canPrune = true;
+
+	for( auto frame : frames )
+	{
+		pathScope.setFrame( frame );
+
+		if( !layerScene->existsPlug()->getValue() )
+		{
+			return { false, g_emptyPathMatcher, g_emptyPathMatcher, g_emptyPathMatcher };
+		}
+
+		if( attributesMatch )
+		{
+			attributesMatch = baseScene->attributesPlug()->hash() == layerScene->attributesPlug()->hash();
+			canPrune = canPrune && attributesMatch;
+		}
+
+		if( objectsMatch )
+		{
+			objectsMatch = baseScene->objectPlug()->hash() == layerScene->objectPlug()->hash();
+			canPrune = canPrune && objectsMatch;
+		}
+
+		if( canPrune )
+		{
+			canPrune = baseScene->transformPlug()->hash() == layerScene->transformPlug()->hash();
+		}
+
+		if( canPrune )
+		{
+			canPrune = baseScene->boundPlug()->hash() == layerScene->boundPlug()->hash();
+		}
+	}
+
+	ScenePlug::ScenePath localPath;
+	if( path.size() )
+	{
+		// We only need the last part, because we prefix with
+		// the parent path as we unwind the recursion.
+		localPath.push_back( path.back() );
+	}
+
+	Filters result;
+	result.fullyPruned = canPrune;
+	if( attributesMatch )
+	{
+		result.deleteAttributes.addPath( localPath );
+	}
+	if( objectsMatch )
+	{
+		result.deleteObject.addPath( localPath );
+	}
+
+	IECore::ConstInternedStringVectorDataPtr baseChildNamesData = baseScene->childNamesPlug()->getValue();
+	const vector<InternedString> &baseChildNames = baseChildNamesData->readable();
+	if( !baseChildNames.empty() )
+	{
+		using ChildNameRange = tbb::blocked_range<std::vector<IECore::InternedString>::const_iterator>;
+		const ChildNameRange loopRange( baseChildNames.begin(), baseChildNames.end() );
+
+		Filters childFilters = tbb::parallel_reduce(
+
+			loopRange,
+
+			Filters(),
+
+			[&] ( const ChildNameRange &range, Filters x ) {
+
+				ScenePlug::ScenePath childPath = path;
+				childPath.push_back( InternedString() );
+				for( const auto &childName : range )
+				{
+					childPath.back() = childName;
+					const Filters childFilters = filtersWalk( baseScene, layerScene, frames, childPath, threadState, taskGroupContext );
+					x.add( childFilters );
+				}
+				return x;
+			},
+
+			[] ( Filters x, const Filters &y ) {
+
+				x.add( y );
+				return x;
+
+			},
+
+			taskGroupContext
+
+
+		);
+
+		result.addWithPrefix( childFilters, localPath );
+	}
+
+	if( result.fullyPruned )
+	{
+		result.prune.addPath( localPath );
+	}
+
+	return result;
+}
 
 class ScopedDirectory : boost::noncopyable
 {
@@ -241,14 +394,59 @@ USDLayerWriter::USDLayerWriter( const std::string &name )
 
 	NameSwitchPtr sceneSwitch = new NameSwitch( "__sceneSwitch" );
 	sceneSwitch->selectorPlug()->setValue( "${usdLayerWriter:fileName}" );
-	sceneSwitch->deleteContextVariablesPlug()->setValue( "usdLayerWriter:fileName" );
+	sceneSwitch->deleteContextVariablesPlug()->setValue( "usdLayerWriter:*" );
 	sceneSwitch->setup( basePlug() );
 	sceneSwitch->inPlugs()->getChild<NameValuePlug>( 0 )->valuePlug()->setInput( basePlug() );
 	sceneSwitch->inPlugs()->getChild<NameValuePlug>( 1 )->valuePlug()->setInput( layerPlug() );
 	sceneSwitch->inPlugs()->getChild<NameValuePlug>( 1 )->namePlug()->setValue( "*layer.usdc" );
 
 	addChild( sceneSwitch );
-	sceneWriter->inPlug()->setInput( static_cast<NameValuePlug *>( sceneSwitch->outPlug() )->valuePlug() );
+
+	// The biggest bottleneck in USDLayerWriter is writing scenes via the
+	// SceneWriter, where we're hampered by the fact that we can only write from
+	// a single thread. To improve performance, we pre-process the scenes before
+	// writing, to delete identical objects and attributes and prune entire
+	// identical subtrees. This is done with the following internal node network.
+
+	ConstValuePlugPtr queryPrototype = new StringVectorDataPlug( "queryPrototype" );
+	ContextQueryPtr contextQuery = new ContextQuery( "__contextQuery" );
+	const NameValuePlug *pruneQuery = contextQuery->addQuery( queryPrototype.get(), "usdLayerWriter:pruneFilter" );
+	const NameValuePlug *deleteObjectQuery = contextQuery->addQuery( queryPrototype.get(), "usdLayerWriter:deleteObjectFilter" );
+	const NameValuePlug *deleteAttributesQuery = contextQuery->addQuery( queryPrototype.get(), "usdLayerWriter:deleteAttributesFilter" );
+	addChild( contextQuery );
+
+	PathFilterPtr pruneFilter = new PathFilter( "__pruneFilter" );
+	pruneFilter->pathsPlug()->setInput( contextQuery->valuePlugFromQueryPlug( pruneQuery ) );
+	addChild( pruneFilter );
+
+	PrunePtr prune = new Prune( "__prune" );
+	prune->inPlug()->setInput( static_cast<NameValuePlug *>( sceneSwitch->outPlug() )->valuePlug() );
+	// Sneaky pass-through so that sets don't get pruned, since we still need to
+	// write them in full.
+	prune->outPlug()->setPlug()->setInput( prune->inPlug()->setPlug() );
+	prune->filterPlug()->setInput( pruneFilter->outPlug() );
+	addChild( prune );
+
+	PathFilterPtr deleteObjectFilter = new PathFilter( "__deleteObjectFilter" );
+	deleteObjectFilter->pathsPlug()->setInput( contextQuery->valuePlugFromQueryPlug( deleteObjectQuery ) );
+	addChild( deleteObjectFilter );
+
+	DeleteObjectPtr deleteObject = new GafferScene::DeleteObject( "__deleteObject" );
+	deleteObject->inPlug()->setInput( prune->outPlug() );
+	deleteObject->filterPlug()->setInput( deleteObjectFilter->outPlug() );
+	addChild( deleteObject );
+
+	PathFilterPtr deleteAttributesFilter = new PathFilter( "__deleteAttributesFilter" );
+	deleteAttributesFilter->pathsPlug()->setInput( contextQuery->valuePlugFromQueryPlug( deleteAttributesQuery ) );
+	addChild( deleteAttributesFilter );
+
+	DeleteAttributesPtr deleteAttributes = new DeleteAttributes( "__deleteAttributes" );
+	deleteAttributes->inPlug()->setInput( deleteObject->outPlug() );
+	deleteAttributes->filterPlug()->setInput( deleteAttributesFilter->outPlug() );
+	deleteAttributes->namesPlug()->setValue( "*" );
+	addChild( deleteAttributes );
+
+	sceneWriter->inPlug()->setInput( deleteAttributes->outPlug() );
 	sceneWriter->fileNamePlug()->setValue( "${usdLayerWriter:fileName}" );
 
 	outPlug()->setInput( layerPlug() );
@@ -347,21 +545,33 @@ void USDLayerWriter::executeSequence( const std::vector<float> &frames ) const
 		return;
 	}
 
+	// Figure out the filters for our Prune, DeleteObject and DeleteAttribute
+	// nodes.
+	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated ); // Prevents outer tasks silently cancelling our tasks
+	const Filters filters = filtersWalk( basePlug(), layerPlug(), frames, ScenePlug::ScenePath(), ThreadState::current(), taskGroupContext );
+
+	// Pass the filter settings via context variables since we can't call
+	// `Plug::setValue()` from `executeSequence()` because it would violate
+	// thread-safety.
+
+	Context::EditableScope context( Context::current() );
+
+	vector<string> pruneFilter; filters.prune.paths( pruneFilter );
+	context.set( "usdLayerWriter:pruneFilter", &pruneFilter );
+	vector<string> deleteObjectFilter; filters.deleteObject.paths( deleteObjectFilter );
+	context.set( "usdLayerWriter:deleteObjectFilter", &deleteObjectFilter );
+	vector<string> deleteAttributesFilter; filters.deleteAttributes.paths( deleteAttributesFilter );
+	context.set( "usdLayerWriter:deleteAttributesFilter", &deleteAttributesFilter );
+
 	// Write the complete base and layer inputs into temporary USD files. We use
 	// a ScopedDirectory so that the files are cleaned up no matter how we exit
 	// this function.
-	/// \todo Should we add an interface to allow IECoreUSD to write to a
-	/// stage in memory? And can we use DeleteObject to avoid writing objects
-	/// which are identical in both scenes, to avoid the overhead of writing
-	/// them only to discard them in `createDiff()`?
 
 	const std::filesystem::path tempDirectory = std::filesystem::temp_directory_path() / boost::filesystem::unique_path().string();
 	ScopedDirectory scopedTempDirectory( tempDirectory );
 
 	const string baseFileName = ( tempDirectory / "base.usdc" ).generic_string();
 	const string layerFileName = ( tempDirectory / "layer.usdc" ).generic_string();
-
-	Context::EditableScope context( Context::current() );
 	for( const auto &fileName : { baseFileName, layerFileName } )
 	{
 		context.set( "usdLayerWriter:fileName", &fileName );

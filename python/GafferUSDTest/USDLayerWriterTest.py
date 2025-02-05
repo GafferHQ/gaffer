@@ -45,13 +45,15 @@ import IECore
 import IECoreScene
 
 import Gaffer
+import GafferTest
+import GafferDispatch
 import GafferUSD
 import GafferScene
 import GafferSceneTest
 
 class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 
-	def __writeLayerAndComposition( self, base, layer ) :
+	def __writeLayerAndComposition( self, base, layer, frames = None ) :
 
 		baseWriter = GafferScene.SceneWriter()
 		baseWriter["in"].setInput( base )
@@ -62,7 +64,10 @@ class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 		layerWriter["base"].setInput( base )
 		layerWriter["layer"].setInput( layer )
 		layerWriter["fileName"].setValue( self.temporaryDirectory() / "layer.usda" )
-		layerWriter["task"].execute()
+		if frames is None :
+			layerWriter["task"].execute()
+		else :
+			layerWriter["task"].executeSequence( frames )
 
 		compositionFilePath = self.temporaryDirectory() / "composed.usda"
 		composition = pxr.Usd.Stage.CreateNew( str( compositionFilePath ) )
@@ -268,6 +273,150 @@ class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 
 		with self.assertRaisesRegex( RuntimeError, 'Failed to export layer to "{}"'.format( layerWriter["fileName"].getValue() ) ) :
 			layerWriter["task"].execute()
+
+	def testAddSet( self ) :
+
+		sphere = GafferScene.Sphere()
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+
+		cube = GafferScene.Cube()
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( group["out"] )
+		parent["children"][0].setInput( cube["out"] )
+		parent["parent"].setValue( "/" )
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/cube", "/group/sphere" ] ) )
+
+		setNode = GafferScene.Set()
+		setNode["in"].setInput( parent["out"] )
+		setNode["filter"].setInput( pathFilter["out"] )
+		setNode["name"].setValue( "setA" )
+		self.assertEqual( setNode["out"].set( "setA" ).value, IECore.PathMatcher( [ "/cube", "/group/sphere" ] ) )
+
+		layerFileName, compositionFileName = self.__writeLayerAndComposition( parent["out"], setNode["out"] )
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( compositionFileName )
+		self.assertEqual( reader["out"].set( "setA" ), setNode["out"].set( "setA" ) )
+
+	# We'll need to analyse the list operations on `apiSchemas` metadata and
+	# author appropriate deletions to make this work.
+	@unittest.expectedFailure
+	def testRemoveSet( self ) :
+
+		plane = GafferScene.Plane()
+		plane["sets"].setValue( "setA setB" )
+
+		deleteSets = GafferScene.DeleteSets()
+		deleteSets["in"].setInput( plane["out"] )
+		deleteSets["names"].setValue( "setA" )
+		self.assertNotIn( "setA", deleteSets["out"].setNames() )
+		self.assertIn( "setB", deleteSets["out"].setNames() )
+
+		layerFileName, compositionFileName = self.__writeLayerAndComposition( plane["out"], deleteSets["out"] )
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( compositionFileName )
+		self.assertNotIn( "setA", reader["out"].setNames() )
+		self.assertIn( "setB", reader["out"].setNames() )
+		self.assertEqual( reader["out"].set( "setB" ).value, IECore.PathMatcher( [ "/plane" ] ) )
+
+	def testAddToSet( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "setA" )
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+
+		cube = GafferScene.Cube()
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( group["out"] )
+		parent["children"][0].setInput( cube["out"] )
+		parent["parent"].setValue( "/" )
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/cube" ] ) )
+
+		setNode = GafferScene.Set()
+		setNode["in"].setInput( parent["out"] )
+		setNode["filter"].setInput( pathFilter["out"] )
+		setNode["name"].setValue( "setA" )
+		setNode["mode"].setValue( setNode.Mode.Add )
+		self.assertEqual( setNode["out"].set( "setA" ).value, IECore.PathMatcher( [ "/cube", "/group/sphere" ] ) )
+
+		layerFileName, compositionFileName = self.__writeLayerAndComposition( parent["out"], setNode["out"] )
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( compositionFileName )
+		self.assertEqual( reader["out"].set( "setA" ), setNode["out"].set( "setA" ) )
+
+	def testRemoveFromSet( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "setA" )
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+		group["in"][1].setInput( sphere["out"] )
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/group/sphere" ] ) )
+
+		setNode = GafferScene.Set()
+		setNode["in"].setInput( group["out"] )
+		setNode["filter"].setInput( pathFilter["out"] )
+		setNode["name"].setValue( "setA" )
+		setNode["mode"].setValue( setNode.Mode.Remove )
+		self.assertEqual( setNode["out"].set( "setA" ).value, IECore.PathMatcher( [ "/group/sphere1" ] ) )
+
+		layerFileName, compositionFileName = self.__writeLayerAndComposition( group["out"], setNode["out"] )
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( compositionFileName )
+		self.assertEqual( reader["out"].set( "setA" ), setNode["out"].set( "setA" ) )
+
+	def testAnimatedTransform( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		frame = GafferTest.FrameNode()
+		animatedSphere = GafferScene.Sphere()
+		animatedSphere["transform"]["translate"]["x"].setInput( frame["output"] )
+
+		with Gaffer.Context() as context :
+			# Transforms are identical on frame zero, so we need to detect
+			# that they are different on subsequent frames.
+			layerFileName, compositionFileName = self.__writeLayerAndComposition( sphere["out"], animatedSphere["out"], frames = [ 0, 1, 2, 3 ] )
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( compositionFileName )
+
+		with Gaffer.Context() as context :
+			for frame in [ 0, 1, 2, 3 ] :
+				context.setFrame( frame )
+				self.assertEqual( reader["out"].transform( "/sphere" ), animatedSphere["out"].transform( "/sphere" ) )
+
+	def testDispatch( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["reader"] = GafferScene.SceneReader()
+		script["reader"]["fileName"].setValue( Gaffer.rootPath() / "python" / "GafferSceneTest" / "usdFiles" / "generalTestMesh.usd" )
+
+		script["writer"] = GafferUSD.USDLayerWriter()
+		script["writer"]["base"].setInput( script["reader"]["out"] )
+		script["writer"]["layer"].setInput( script["reader"]["out"] )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() / "test.usda" )
+
+		script["dispatcher"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		script["dispatcher"]["tasks"][0].setInput( script["writer"]["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() / "localJobs" )
+		script["dispatcher"]["task"].execute()
+
+		self.assertTrue( ( self.temporaryDirectory() / "test.usda" ).is_file() )
 
 if __name__ == "__main__":
 	unittest.main()
