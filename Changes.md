@@ -4,7 +4,7 @@
 Features
 --------
 
-- AttributeEditor, LightEditor, RenderPassEditor : Added drag and drop editing. Edits can be created or updated by dropping a value into a cell.
+- AttributeEditor, LightEditor, RenderPassEditor : Added drag and drop editing. Edits can be created or updated by dropping a value into a cell. Cells representing a set expression or string array can be modified by holding <kbd>Shift</kbd> to append to an existing edit, or <kbd>Control</kbd> may be held to remove from an existing edit.
 
 Fixes
 -----

@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import enum
 import functools
 
 import IECore
@@ -420,7 +421,14 @@ def __keyPress( column, pathListing, event ) :
 
 	return False
 
+__originalDragPointer = None
+__DropMode = enum.Enum( "__DropMode", [ "Add", "Remove", "Replace", "NotEditable" ] )
+
 def __dragEnter( column, path, pathListing, event ) :
+
+	global __originalDragPointer
+	if __originalDragPointer is None :
+		__originalDragPointer = GafferUI.Pointer.getCurrent()
 
 	if path is None :
 		return False
@@ -429,9 +437,23 @@ def __dragEnter( column, path, pathListing, event ) :
 	if inspectionContext is None :
 		return False
 
+	with inspectionContext :
+		inspection = column.inspector().inspect()
+		if inspection is None :
+			return False
+
+		__updatePointer( column, inspection, event )
+
 	return True
 
 def __dragLeave( column, path, pathListing, event ) :
+
+	global __originalDragPointer
+	if __originalDragPointer is None :
+		return False
+
+	GafferUI.Pointer.setCurrent( __originalDragPointer )
+	__originalDragPointer = None
 
 	return True
 
@@ -444,6 +466,54 @@ def __dragMove( column, path, pathListing, event ) :
 	if inspectionContext is None :
 		return False
 
+	with inspectionContext :
+		inspection = column.inspector().inspect()
+		if inspection is None :
+			return False
+
+		__updatePointer( column, inspection, event )
+
+	return True
+
+def __updatePointer( column, inspection, event ) :
+
+	dropMode = __dropMode( column, inspection, event )
+	if dropMode == __DropMode.Add :
+		GafferUI.Pointer.setCurrent( "add" )
+	elif dropMode == __DropMode.Remove :
+		GafferUI.Pointer.setCurrent( "remove" )
+	elif dropMode == __DropMode.NotEditable :
+		GafferUI.Pointer.setCurrent( "notEditable" )
+	else :
+		GafferUI.Pointer.setCurrent( __originalDragPointer )
+
+def __dropMode( column, inspection, event ) :
+
+	if isinstance( inspection.value(), IECore.StringData ) and (
+		__columnMetadata( column, "ui:scene:acceptsSetNames" ) or __columnMetadata( column, "ui:scene:acceptsSetExpression" )
+	)  :
+		if event.modifiers == event.Modifiers.Shift :
+			return __DropMode.Add if __updatable( inspection ) else __DropMode.NotEditable
+		elif event.modifiers == event.Modifiers.Control :
+			return __DropMode.Remove if __updatable( inspection ) else __DropMode.NotEditable
+	elif isinstance( inspection.value(), IECore.StringVectorData ) :
+		if event.modifiers == event.Modifiers.Shift :
+			return __DropMode.Add
+		elif event.modifiers == event.Modifiers.Control :
+			return __DropMode.Remove
+
+	return __DropMode.Replace
+
+def __updatable( inspection ) :
+
+	if isinstance( inspection.value(), IECore.StringData ) :
+		if any( i in inspection.value().value for i in [ "(", ")", "|", "-", "&" ] ) :
+			return False
+
+		plugTokens = inspection.value().value.split( " " )
+		if any( i in plugTokens for i in [ "in", "containing" ] ) :
+			return False
+
 	return True
 
 def __drop( column, path, pathListing, event ) :
@@ -455,9 +525,21 @@ def __drop( column, path, pathListing, event ) :
 	if inspectionContext is None :
 		return False
 
+	global __originalDragPointer
+	if __originalDragPointer is not None :
+		GafferUI.Pointer.setCurrent( __originalDragPointer )
+		__originalDragPointer = None
+
 	with inspectionContext :
 		inspection = column.inspector().inspect()
-		data = __dropData( inspection, event )
+		if inspection is None :
+			return True
+
+		if __dropMode( column, inspection, event ) == __DropMode.NotEditable :
+			__warningPopup( pathListing, "Cannot modify set expressions containing operators with drag and drop." )
+			return True
+
+		data = __dropData( column, inspection, event )
 		if not inspection.canEdit( data ) :
 			__warningPopup( pathListing, inspection.nonEditableReason( data ) or "Unable to edit." )
 			return True
@@ -467,14 +549,33 @@ def __drop( column, path, pathListing, event ) :
 
 	return True
 
-def __dropData( inspection, event ) :
+def __dropData( column, inspection, event ) :
 
 	if isinstance( event.data, IECore.StringVectorData ) and isinstance( inspection.value(), IECore.StringData ) :
-		return IECore.StringData( " ".join( event.data ) )
+		data = IECore.StringData( " ".join( event.data ) )
 	elif isinstance( event.data, IECore.StringData ) and isinstance( inspection.value(), IECore.StringVectorData ) :
-		return IECore.StringVectorData( event.data.value.split( " " ) )
+		data = IECore.StringVectorData( event.data.value.split( " " ) )
 	else :
-		return event.data
+		data = event.data
+
+	mode = __dropMode( column, inspection, event )
+	if mode == __DropMode.Replace or not isinstance( inspection.value(), ( IECore.StringData, IECore.StringVectorData ) ) :
+		return data
+
+	strings = set( inspection.value().value.split( " " ) if isinstance( inspection.value(), IECore.StringData ) else inspection.value() )
+	updateData = event.data.value.split( " " ) if isinstance( event.data, IECore.StringData ) else event.data
+
+	if mode == __DropMode.Add :
+		strings.update( updateData )
+	elif mode == __DropMode.Remove :
+		strings.difference_update( updateData )
+	else :
+		return data
+
+	if isinstance( inspection.value(), IECore.StringData ) :
+		return IECore.StringData( " ".join( sorted( strings ) ) )
+	else :
+		return IECore.StringVectorData( sorted( strings ) )
 
 def __warningPopup( parent, message ) :
 
@@ -486,6 +587,19 @@ def __warningPopup( parent, message ) :
 			GafferUI.Label( "<h4>{}</h4>".format( message ) )
 
 	__inspectorColumnPopup.popup( parent = parent )
+
+def __columnMetadata( column, metadataKey ) :
+
+	# Map of Inspectors to metadata prefixes.
+	prefixMap = {
+		GafferSceneUI.Private.OptionInspector : "option:",
+		GafferSceneUI.Private.AttributeInspector : "attribute:"
+	}
+
+	if type( column.inspector() ) not in prefixMap.keys() :
+		return None
+
+	return Gaffer.Metadata.value( prefixMap.get( type( column.inspector() ) ) + column.inspector().name(), metadataKey )
 
 def __inspectorColumnCreated( column ) :
 
