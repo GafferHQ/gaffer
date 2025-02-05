@@ -17,6 +17,7 @@ Improvements
   - The vector value being visualised for the vertex nearest the cursor is shown next to the vertex.
 - NameSwitch : Added `enabledNames` output plug.
 - ColorSwatchPlugValueWidget : Changed the display transform of the color chooser dialogue to match that of the `ColorSwatchPlugValueWidget` creating it instead of the script window.
+- Instancer : Improved hashing of instancer capsules. Prevents unnecessary recomputation of instancers when editing something unrelated.
 
 Fixes
 -----
