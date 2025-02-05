@@ -11,6 +11,7 @@ Improvements
 
 - 3Delight : Added light muting support.
 - Arnold : Added support for specifying the name of a shader in the node menu using Arnold's `ui.name` metadata. This improves the formatting of the OpenPBR Surface menu item.
+- VisualiserTool : Added new visualisation for vector (V3f) data.
 
 Fixes
 -----
