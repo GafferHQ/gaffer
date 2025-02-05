@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.5.0)
 =======
 
+Features
+--------
+
+- AttributeEditor, LightEditor, RenderPassEditor : Added drag and drop editing. Edits can be created or updated by dropping a value into a cell.
+
 Fixes
 -----
 

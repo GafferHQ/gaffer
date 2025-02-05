@@ -420,11 +420,82 @@ def __keyPress( column, pathListing, event ) :
 
 	return False
 
+def __dragEnter( column, path, pathListing, event ) :
+
+	if path is None :
+		return False
+
+	inspectionContext = path.inspectionContext()
+	if inspectionContext is None :
+		return False
+
+	return True
+
+def __dragLeave( column, path, pathListing, event ) :
+
+	return True
+
+def __dragMove( column, path, pathListing, event ) :
+
+	if path is None :
+		return False
+
+	inspectionContext = path.inspectionContext()
+	if inspectionContext is None :
+		return False
+
+	return True
+
+def __drop( column, path, pathListing, event ) :
+
+	if path is None :
+		return False
+
+	inspectionContext = path.inspectionContext()
+	if inspectionContext is None :
+		return False
+
+	with inspectionContext :
+		inspection = column.inspector().inspect()
+		data = __dropData( inspection, event )
+		if not inspection.canEdit( data ) :
+			__warningPopup( pathListing, inspection.nonEditableReason( data ) or "Unable to edit." )
+			return True
+
+		with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
+			inspection.edit( data )
+
+	return True
+
+def __dropData( inspection, event ) :
+
+	if isinstance( event.data, IECore.StringVectorData ) and isinstance( inspection.value(), IECore.StringData ) :
+		return IECore.StringData( " ".join( event.data ) )
+	elif isinstance( event.data, IECore.StringData ) and isinstance( inspection.value(), IECore.StringVectorData ) :
+		return IECore.StringVectorData( event.data.value.split( " " ) )
+	else :
+		return event.data
+
+def __warningPopup( parent, message ) :
+
+	global __inspectorColumnPopup
+
+	with GafferUI.PopupWindow() as __inspectorColumnPopup :
+		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+			GafferUI.Image( "warningSmall.png" )
+			GafferUI.Label( "<h4>{}</h4>".format( message ) )
+
+	__inspectorColumnPopup.popup( parent = parent )
+
 def __inspectorColumnCreated( column ) :
 
 	if isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
 		column.buttonDoubleClickSignal().connectFront( __buttonDoubleClick )
 		column.contextMenuSignal().connectFront( __contextMenu )
 		column.keyPressSignal().connectFront( __keyPress )
+		column.dragEnterSignal().connectFront( __dragEnter )
+		column.dragMoveSignal().connectFront( __dragMove )
+		column.dragLeaveSignal().connectFront( __dragLeave )
+		column.dropSignal().connectFront( __drop )
 
 GafferSceneUI.Private.InspectorColumn.instanceCreatedSignal().connect( __inspectorColumnCreated )
