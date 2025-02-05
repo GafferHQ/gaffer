@@ -284,7 +284,10 @@ class GraphEditor( GafferUI.Editor ) :
 			return
 
 		menuDefinition.append( "/ContentsDivider", { "divider" : True } )
-		menuDefinition.append( "/Show Contents...", { "command" : functools.partial( cls.acquire, node ) } )
+		menuDefinition.append( "/Show Contents...", {
+			"command" : functools.partial( cls.acquire, node ),
+			"shortCut" : "Ctrl+Return"
+		} )
 
 	__nodeDoubleClickSignal = GafferUI.WidgetEventSignal()
 	## Returns a signal which is emitted whenever a node is double clicked.
@@ -425,6 +428,10 @@ class GraphEditor( GafferUI.Editor ) :
 			selection = self.scriptNode().selection()
 			if len( selection ) > 0 :
 				self.scriptNode().setFocus( selection[0] )
+		elif event.key == "Return" and event.modifiers == event.modifiers.Control :
+			selection = self.scriptNode().selection()
+			if len( selection ) > 0 :
+				GraphEditor.acquire( selection[0] )
 		elif event.key == "Down" :
 			selection = self.scriptNode().selection()
 			if selection.size() == 1 and selection[0].parent() == self.graphGadget().getRoot() :
