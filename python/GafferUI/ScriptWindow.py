@@ -37,6 +37,8 @@
 
 import weakref
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -56,8 +58,14 @@ class ScriptWindow( GafferUI.Window ) :
 
 		self.__listContainer = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 0 )
 
+		self.__menuContainer = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+		self.__listContainer.append( self.__menuContainer )
+
 		menuDefinition = self.menuDefinition( script.applicationRoot() ) if script.applicationRoot() else IECore.MenuDefinition()
-		self.__listContainer.append( GafferUI.MenuBar( menuDefinition ) )
+		self.__menuBar = GafferUI.MenuBar( menuDefinition )
+		self.__menuBar.addShortcutTarget( self )
+		self.__menuContainer.append( self.__menuBar )
+		self.__menuContainer._qtWidget().setObjectName( "gafferMenuBarWidgetContainer" )
 		# Must parent `__listContainer` to the window before setting the layout,
 		# because `CompoundEditor.__parentChanged` needs to find the ancestor
 		# ScriptWindow.
@@ -76,7 +84,7 @@ class ScriptWindow( GafferUI.Window ) :
 
 	def menuBar( self ) :
 
-		return self.__listContainer[0]
+		return self.__menuContainer[0]
 
 	def scriptNode( self ) :
 
@@ -84,11 +92,29 @@ class ScriptWindow( GafferUI.Window ) :
 
 	def setLayout( self, compoundEditor ) :
 
+		# When changing layout we need to manually transfer the edit scope
+		# from an existing CompoundEditor to the new one.
+		currentEditScope = None
 		if len( self.__listContainer ) > 1 :
+			currentEditScope = self.getLayout().settings()["editScope"].getInput()
 			del self.__listContainer[1]
 
 		assert( compoundEditor.scriptNode().isSame( self.scriptNode() ) )
 		self.__listContainer.append( compoundEditor, expand=True )
+
+		if len( self.__menuContainer ) > 1 :
+			del self.__menuContainer[1:]
+
+		if currentEditScope is not None :
+			compoundEditor.settings()["editScope"].setInput( currentEditScope )
+		self.__menuContainer.append(
+			GafferUI.PlugLayout(
+				compoundEditor.settings(),
+				orientation = GafferUI.ListContainer.Orientation.Horizontal,
+				rootSection = "Settings"
+			)
+		)
+		self.__menuContainer.append( GafferUI.Spacer( imath.V2i( 0 ) ) )
 
 	def getLayout( self ) :
 
@@ -141,6 +167,7 @@ class ScriptWindow( GafferUI.Window ) :
 		if scriptParent is not None :
 			scriptParent.removeChild( self.__script )
 
+	__automaticallyCreatedInstances = [] # strong references to instances made by acquire()
 	__instances = [] # weak references to all instances - used by acquire()
 	## Returns the ScriptWindow for the specified script, creating one
 	# if necessary.
@@ -152,7 +179,13 @@ class ScriptWindow( GafferUI.Window ) :
 			if scriptWindow is not None and scriptWindow.scriptNode().isSame( script ) :
 				return scriptWindow
 
-		return ScriptWindow( script ) if createIfNecessary else None
+		if createIfNecessary :
+			w = ScriptWindow( script )
+			if ScriptWindow.__connected( script.ancestor( Gaffer.ApplicationRoot ) ) :
+				ScriptWindow.__automaticallyCreatedInstances.append( w )
+			return w
+
+		return None
 
 	## Returns an IECore.MenuDefinition which is used to define the menu bars for all ScriptWindows
 	# created as part of the specified application. This can be edited at any time to modify subsequently
@@ -182,17 +215,22 @@ class ScriptWindow( GafferUI.Window ) :
 	@classmethod
 	def connect( cls, applicationRoot ) :
 
-		applicationRoot["scripts"].childAddedSignal().connectFront( ScriptWindow.__scriptAdded )
-		applicationRoot["scripts"].childRemovedSignal().connect( ScriptWindow.__staticScriptRemoved )
+		applicationRoot._scriptWindowChildAddedConnection = applicationRoot["scripts"].childAddedSignal().connect( ScriptWindow.__scriptAdded )
+		applicationRoot._scriptWindowChildRemovedConnection = applicationRoot["scripts"].childRemovedSignal().connect( ScriptWindow.__staticScriptRemoved )
 
-	__automaticallyCreatedInstances = [] # strong references to instances made by __scriptAdded()
+	@staticmethod
+	def __connected( applicationRoot ) :
+
+		childAddedConnection = getattr( applicationRoot, "_scriptWindowChildAddedConnection", None )
+		childRemovedConnection = getattr( applicationRoot, "_scriptWindowChildRemovedConnection", None )
+		return childAddedConnection is not None and childRemovedConnection is not None and childRemovedConnection.connected() and childRemovedConnection.connected()
+
 	@staticmethod
 	def __scriptAdded( scriptContainer, script ) :
 
-		w = ScriptWindow( script )
+		w = ScriptWindow.acquire( script )
 		w.setVisible( True )
 		w.getLayout().restoreWindowState()
-		ScriptWindow.__automaticallyCreatedInstances.append( w )
 
 	@staticmethod
 	def __staticScriptRemoved( scriptContainer, script ) :

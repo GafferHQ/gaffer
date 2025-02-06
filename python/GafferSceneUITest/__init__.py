@@ -65,6 +65,7 @@ from .RenderPassEditorTest import RenderPassEditorTest
 from .SelectionToolTest import SelectionToolTest
 from .InspectorColumnTest import InspectorColumnTest
 from .ScriptNodeAlgoTest import ScriptNodeAlgoTest
+from .AttributeEditorTest import AttributeEditorTest
 
 if __name__ == "__main__":
 	unittest.main()

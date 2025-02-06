@@ -216,8 +216,11 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		n = GafferDispatch.PythonCommand()
 		self.assertFalse( n.requiresSequenceExecution() )
 
-		n["sequence"].setValue( True )
+		n["framesMode"].setValue( n.FramesMode.Sequence )
 		self.assertTrue( n.requiresSequenceExecution() )
+
+		n["framesMode"].setValue( n.FramesMode.Batch )
+		self.assertFalse( n.requiresSequenceExecution() )
 
 	def testFramesNotAvailableInNonSequenceMode( self ) :
 
@@ -236,7 +239,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferDispatch.PythonCommand()
-		s["n"]["sequence"].setValue( True )
+		s["n"]["framesMode"].setValue( GafferDispatch.PythonCommand.FramesMode.Sequence )
 
 		s["n"]["command"].setValue( inspect.cleandoc(
 			"""
@@ -260,7 +263,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["n"] = GafferDispatch.PythonCommand()
-		s["n"]["sequence"].setValue( True )
+		s["n"]["framesMode"].setValue( GafferDispatch.PythonCommand.FramesMode.Sequence )
 		s["n"]["variables"].addChild( Gaffer.NameValuePlug( "testInt", 42 ) )
 
 		s["e"] = Gaffer.Expression()
@@ -304,7 +307,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["n"] = GafferDispatch.PythonCommand()
-		s["n"]["sequence"].setValue( True )
+		s["n"]["framesMode"].setValue( GafferDispatch.PythonCommand.FramesMode.Sequence )
 		s["n"]["variables"].addChild( Gaffer.NameValuePlug( "testInt", 42 ) )
 
 		commandLines = inspect.cleandoc(
@@ -325,6 +328,31 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		self.assertEqual( s["n"].testInt, 42 )
 		self.assertEqual( s["n"].frames, [ 1, 2, 3, 4, 5 ] )
 		self.assertEqual( s["n"].numCalls, 1 )
+
+	def testBatchMode( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferDispatch.PythonCommand()
+		s["n"]["framesMode"].setValue( GafferDispatch.PythonCommand.FramesMode.Batch )
+		s["n"]["variables"].addChild( Gaffer.NameValuePlug( "testInt", 42 ) )
+		s["n"]["dispatcher"]["batchSize"].setValue( 5 )
+		s["n"].calls = []
+
+		s["n"]["command"].setValue( "self.calls.append( frames )" )
+
+		s["d"] = self.__dispatcher( frameRange = "1-20" )
+		s["d"]["tasks"][0].setInput( s["n"]["task"] )
+		s["d"]["task"].execute()
+		self.assertEqual(
+			s["n"].calls,
+			[
+				[ 1, 2, 3, 4, 5 ],
+				[ 6, 7, 8, 9, 10 ],
+				[ 11, 12, 13, 14, 15 ],
+				[ 16, 17, 18, 19, 20 ]
+			]
+		)
 
 	def testCannotAccessVariablesOutsideFrameRange( self ) :
 

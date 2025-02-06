@@ -49,6 +49,7 @@
 
 #include "OSL/oslcomp.h"
 
+#include "boost/algorithm/string/replace.hpp"
 #include "boost/bind/bind.hpp"
 #include "boost/filesystem.hpp"
 
@@ -144,6 +145,11 @@ string generate( const OSLCode *shader, string &shaderName )
 	}
 
 	result += ")\n";
+
+	// Reset line numbers reported by the OSL parser, so that they
+	// don't include the stuff above.
+
+	result += "#line 1\n";
 
 	// Add on body
 
@@ -300,7 +306,9 @@ std::filesystem::path compile( const std::string &shaderName, const std::string 
 	{
 		if( errorHandler.errors().size() )
 		{
-			throw IECore::Exception( errorHandler.errors() );
+			string error = errorHandler.errors();
+			boost::replace_all( error, tempOSLFileName, "code" );
+			throw IECore::Exception( error );
 		}
 		else
 		{

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,18 +34,35 @@
 #
 ##########################################################################
 
+import unittest
+
+import IECore
+
 import Gaffer
-import GafferDelight
+import GafferTest
+import GafferML
 
-Gaffer.Metadata.registerNode(
+class TensorPlugTest( GafferTest.TestCase ) :
 
-	GafferDelight.InteractiveDelightRender,
+	def testDefaultValue( self ) :
 
-	"description",
-	"""
-	Performs interactive renders using 3Delight, updating the render on the fly
-	whenever the input scene changes. 3Delight supports edits to all aspects of
-	the scene without needing to restart the render.
-	""",
+		plug = GafferML.TensorPlug()
+		self.assertEqual( plug.defaultValue(), GafferML.Tensor() )
+		self.assertEqual( plug.getValue(), GafferML.Tensor() )
 
-)
+		plug = GafferML.TensorPlug( defaultValue = GafferML.Tensor( IECore.IntVectorData( [ 1, 2, ] ), [ 2 ] ) )
+		self.assertEqual( plug.defaultValue(), GafferML.Tensor( IECore.IntVectorData( [ 1, 2, ] ), [ 2 ] ) )
+
+	def testSerialisationOfDynamicPlugs( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["node"] = Gaffer.Node()
+		script["node"]["user"]["p"] = GafferML.TensorPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+		self.assertIsInstance( script2["node"]["user"]["p"], GafferML.TensorPlug )
+		self.assertEqual( script2["node"]["user"]["p"].getValue(), GafferML.Tensor() )
+
+if __name__ == "__main__" :
+	unittest.main()

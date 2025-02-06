@@ -136,7 +136,8 @@
 				'grid', # \todo rename to 'sceneViewGadgets'
 				'selectionMaskOff',
 				'selectionMaskOn',
-				'shading'
+				'shading',
+				'shadingOn',
 			]
 
 		},
@@ -204,6 +205,7 @@
 				'gafferSceneUITranslateTool',
 				'gafferSceneUILightTool',
 				'gafferSceneUILightPositionTool',
+				'gafferSceneUIVisualiserTool',
 			]
 
 		},
@@ -413,6 +415,8 @@
 				"menuChecked",
 				"menuIndicator",
 				"menuIndicatorDisabled",
+				"menuSource",
+				"menuLock",
 			]
 		},
 
@@ -459,14 +463,15 @@
 		"renderPassEditor" : {
 
 			"options" : {
-				"requiredWidth" : 16,
-				"requiredHeight" : 16,
+				"requiredWidth" : 14,
+				"requiredHeight" : 14,
 				"validatePixelAlignment" : True
 			},
 
 			"ids" : [
 				"renderPass",
 				"disabledRenderPass",
+				"adaptorDisabledRenderPass",
 				"renderPassFolder",
 				"activeRenderPass",
 				"activeRenderPassFadedHighlighted",
@@ -476,14 +481,15 @@
 		"colorChooser" : {
 
 			"options" : {
-				"requiredWidth" : 10,
-				"requiredHeight" : 10,
 				"validatePixelAlignment" : True
 			},
 
 			"ids" : [
-				"colorChooserStaticChannelIcon",
-				"colorChooserStaticChannelHighlightedIcon",
+				"colorFieldPrimaryHighlightedIcon",
+				"colorFieldPrimaryIcon",
+				"colorFieldSecondaryIcon",
+				"colorFieldSpacerIcon",
+				"colorFieldEmptyIcon",
 			]
 		}
 

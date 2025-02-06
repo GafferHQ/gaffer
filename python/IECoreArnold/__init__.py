@@ -44,3 +44,5 @@ del os, pathlib # Don't pollute the namespace
 from ._IECoreArnold import *
 
 from .UniverseBlock import UniverseBlock
+
+__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "IECoreArnold" )

@@ -249,7 +249,7 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 
 		# Test alternative config
 
-		configPath = Gaffer.rootPath() / "openColorIO" / "config.ocio"
+		configPath = self.openColorIOPath() / "context.ocio"
 		config = PyOpenColorIO.Config.CreateFromFile( str( configPath ) )
 
 		explicitDisplayTransform["display"].setValue( config.getDefaultDisplay() )
@@ -257,6 +257,8 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 
 		with Gaffer.Context() as context :
 			GafferImage.OpenColorIOAlgo.setConfig( context, configPath.as_posix() )
+			GafferImage.OpenColorIOAlgo.addVariable( context, "CDL", "rec709.spi1d" )
+			GafferImage.OpenColorIOAlgo.addVariable( context, "LUT", "cineon.spi1d" )
 			self.assertImagesEqual( defaultDisplayTransform["out"], explicitDisplayTransform["out"] )
 
 if __name__ == "__main__":

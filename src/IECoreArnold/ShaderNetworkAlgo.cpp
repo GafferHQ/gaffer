@@ -1157,3 +1157,96 @@ void IECoreArnold::ShaderNetworkAlgo::convertUSDShaders( ShaderNetwork *shaderNe
 
 	IECoreScene::ShaderNetworkAlgo::removeUnusedShaders( shaderNetwork );
 }
+
+//////////////////////////////////////////////////////////////////////////
+// Substitutions
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+struct Substitution
+{
+	std::string name;
+	IECoreArnold::ShaderNetworkAlgo::SubstitutionHashFunction hash;
+	IECoreArnold::ShaderNetworkAlgo::SubstitutionFunction apply;
+};
+
+using Substitutions = std::vector<Substitution>;
+Substitutions &substitutions()
+{
+	static Substitutions g_substitutions;
+	return g_substitutions;
+}
+
+bool g_textureSubstitutionsRegistration = [] () {
+
+	IECoreArnold::ShaderNetworkAlgo::registerSubstitution(
+		"stringSubstitution",
+		// Hash
+		[] ( const IECoreScene::ShaderNetwork *shaderNetwork, InternedString attributeName, const IECore::CompoundObject *attributes, IECore::MurmurHash &hash ) {
+			shaderNetwork->hashSubstitutions( attributes, hash );
+		},
+		// Apply
+		[] ( IECoreScene::ShaderNetwork *shaderNetwork, InternedString attributeName, const IECore::CompoundObject *attributes ) {
+			shaderNetwork->applySubstitutions( attributes );
+		}
+	);
+
+	return true;
+} ();
+
+} // namespace
+
+namespace IECoreArnold::ShaderNetworkAlgo
+{
+
+void registerSubstitution( const std::string &name, SubstitutionHashFunction hashFunction, SubstitutionFunction substitutionFunction )
+{
+	// Replace existing substitution if it exists.
+	Substitutions &s = substitutions();
+	for( auto &x : s )
+	{
+		if( x.name == name )
+		{
+			x.hash = hashFunction;
+			x.apply = substitutionFunction;
+			return;
+		}
+	}
+	// Otherwise add new substitution.
+	s.push_back( { name, hashFunction, substitutionFunction } );
+}
+
+void deregisterSubstitution( const std::string &name )
+{
+	Substitutions &s = substitutions();
+	s.erase(
+		std::remove_if(
+			s.begin(),
+			s.end(),
+			[&] ( const Substitution &x ) {
+				return x.name == name;
+			}
+		),
+		s.end()
+	);
+}
+
+void hashSubstitutions( const IECoreScene::ShaderNetwork *shaderNetwork, InternedString attributeName, const IECore::CompoundObject *attributes, IECore::MurmurHash &hash )
+{
+	for( const auto &x : substitutions() )
+	{
+		x.hash( shaderNetwork, attributeName, attributes, hash );
+	}
+}
+
+void applySubstitutions( IECoreScene::ShaderNetwork *shaderNetwork, InternedString attributeName, const IECore::CompoundObject *attributes )
+{
+	for( const auto &x : substitutions() )
+	{
+		x.apply( shaderNetwork, attributeName, attributes );
+	}
+}
+
+} // namespace IECoreArnold::ShaderNetworkAlgo

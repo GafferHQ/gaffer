@@ -37,10 +37,18 @@
 import GafferScene
 import GafferArnold
 
-def __arnoldRender( name ) :
+def __arnoldRender( name = "ArnoldRender" ) :
 
 	node = GafferScene.Render( name )
 	node["renderer"].setValue( "Arnold" )
 	return node
 
 GafferArnold.ArnoldRender = __arnoldRender
+
+def __interactiveArnoldRender( name = "InteractiveArnoldRender" ) :
+
+	node = GafferScene.InteractiveRender( name )
+	node["renderer"].setValue( "Arnold" )
+	return node
+
+GafferArnold.InteractiveArnoldRender = __interactiveArnoldRender

@@ -63,9 +63,9 @@ if codecs.lookup( locale.getpreferredencoding() ).name != "utf-8" :
 
 gafferMilestoneVersion = 1 # for announcing major milestones - may contain all of the below
 gafferMajorVersion = 5 # backwards-incompatible changes
-gafferMinorVersion = 0 # new backwards-compatible features
+gafferMinorVersion = 3 # new backwards-compatible features
 gafferPatchVersion = 0 # bug fixes
-gafferVersionSuffix = "a1" # used for alpha/beta releases : "a1", "b2", etc.
+gafferVersionSuffix = "" # used for alpha/beta releases : "a1", "b2", etc.
 
 # All of the following must be considered when determining
 # whether or not a change is backwards-compatible
@@ -305,6 +305,12 @@ options.Add(
 		"Set if you are using a \"monolithic\" single lib install of USD.",
 		False
 	)
+)
+
+options.Add(
+	"ONNX_ROOT",
+	"The directory in which the ONNX runtime is installed. Used to build GafferML",
+	"",
 )
 
 # general variables
@@ -771,7 +777,7 @@ commandEnv["ENV"]["PYTHONPATH"] = commandEnv.subst( os.path.pathsep.join( [ "$BU
 # SIP on MacOS prevents DYLD_LIBRARY_PATH being passed down so we make sure
 # we also pass through to gaffer the other base vars it uses to populate paths
 # for third-party support.
-for v in ( 'ARNOLD_ROOT', 'DELIGHT_ROOT' ) :
+for v in ( 'ARNOLD_ROOT', 'DELIGHT_ROOT', 'ONNX_ROOT' ) :
 	commandEnv["ENV"][ v ] = commandEnv[ v ]
 
 def runCommand( command ) :
@@ -961,24 +967,6 @@ cyclesDefines = [
 	( "WITH_OPTIX" ),
 ]
 
-cyclesLibraries = [
-	"cycles_session", "cycles_scene", "cycles_graph", "cycles_bvh", "cycles_device", "cycles_kernel", "cycles_kernel_osl",
-	"cycles_integrator", "cycles_util", "cycles_subd", "extern_sky", "extern_cuew"
-]
-
-# It's very weird to link the Cycles static libraries twice, to both
-# lib/libGafferCycles.so and python/GafferCycles/_GafferCycles.so, resulting in 2 copies of everything.
-# This has caused issues on Ubuntu where the init stuff cycles_session runs twice, terminating Gaffer with an
-# exception when the node buffer_pass is registered twice. It seems to work fine on Linux if we don't double
-# link it - the symbols from the static library can be included just in libGafferCycles, and the dynamic linker
-# will find them OK.
-# But on Windows, it seems the symbols from the static libraries aren't made available in libGafferCycles, so
-# it wouldn't work to just link them once. It is currently unknown why Windows doesn't have problems with
-# running the initialization in cycles_session twice.
-# Hopefully this hackery works for now - we're hoping in the long run, Cycles might ship as a dynamic lib, which
-# would simplify all this.
-includeCyclesLibrariesInPythonModule = env["PLATFORM"] == "win32"
-
 libraries = {
 
 	"Gaffer" : {},
@@ -1125,6 +1113,33 @@ libraries = {
 			"CPPPATH" : [ "$PYBIND11/include" ],
 			"LIBS" : [ "GafferBindings", "GafferUI", "GafferImage", "GafferImageUI" ],
 		},
+	},
+
+	"GafferML" : {
+		"envAppends" : {
+			"CPPPATH" : [ "$ONNX_ROOT/include" ],
+			"LIBPATH" : [ "$ONNX_ROOT/lib" ],
+			"LIBS" : [ "Gaffer", "GafferImage", "onnxruntime" ],
+		},
+		"pythonEnvAppends" : {
+			"CPPPATH" : [ "$ONNX_ROOT/include" ],
+			"LIBPATH" : [ "$ONNX_ROOT/lib" ],
+			"LIBS" : [ "GafferBindings", "GafferImage", "GafferML", "onnxruntime" ],
+		},
+		"requiredOptions" : [ "ONNX_ROOT" ],
+	},
+
+	"GafferMLTest" : {
+		"requiredOptions" : [ "ONNX_ROOT" ],
+		"additionalFiles" : glob.glob( "python/GafferMLTest/models/*" )
+	},
+
+	"GafferMLUI" : {
+		"requiredOptions" : [ "ONNX_ROOT" ],
+	},
+
+	"GafferMLUITest" : {
+		"requiredOptions" : [ "ONNX_ROOT" ],
 	},
 
 	"IECoreArnold" : {
@@ -1286,8 +1301,9 @@ libraries = {
 			"LIBPATH" : [ "$CYCLES_ROOT/lib" ],
 			"LIBS" : [
 				"IECoreScene$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreVDB$CORTEX_LIB_SUFFIX",
-				"Gaffer", "GafferScene", "GafferDispatch", "GafferOSL"
-			] + cyclesLibraries + [
+				"Gaffer", "GafferScene", "GafferDispatch", "GafferOSL",
+				"cycles_session", "cycles_scene", "cycles_graph", "cycles_bvh", "cycles_device", "cycles_kernel", "cycles_kernel_osl",
+				"cycles_integrator", "cycles_util", "cycles_subd", "extern_sky", "extern_cuew",
 				"OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslexec$OSL_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX",
 				"openvdb$VDB_LIB_SUFFIX", "Alembic", "osdCPU", "OpenColorIO$OCIO_LIB_SUFFIX", "embree4", "Iex", "openpgl", "zstd",
 			],
@@ -1296,12 +1312,8 @@ libraries = {
 			"FRAMEWORKS" : [ "Foundation", "Metal", "IOKit" ],
 		},
 		"pythonEnvAppends" : {
-			"LIBPATH" : [ "$CYCLES_ROOT/lib" ],
 			"LIBS" : [
 				"Gaffer", "GafferScene", "GafferDispatch", "GafferBindings", "GafferCycles", "IECoreScene",
-			] + ( cyclesLibraries if includeCyclesLibrariesInPythonModule else [] ) + [
-				"OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslexec$OSL_LIB_SUFFIX", "openvdb$VDB_LIB_SUFFIX",
-				"oslquery$OSL_LIB_SUFFIX", "Alembic", "osdCPU", "OpenColorIO$OCIO_LIB_SUFFIX", "embree4", "Iex", "openpgl", "zstd",
 			],
 			"CXXFLAGS" : [ systemIncludeArgument, "$CYCLES_ROOT/include" ],
 			"CPPDEFINES" : cyclesDefines,
@@ -1402,6 +1414,9 @@ libraries = {
 		],
 
 	},
+
+	# Installs `startup/IECoreScene`.
+	"IECoreScene" : {},
 
 }
 

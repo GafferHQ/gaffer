@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, John Haddon. All rights reserved.
+//  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,25 +36,58 @@
 
 #pragma once
 
-#include "GafferDelight/Export.h"
-#include "GafferDelight/TypeIds.h"
+#include "GafferML/Export.h"
+#include "GafferML/TensorPlug.h"
 
-#include "GafferScene/InteractiveRender.h"
+#include "GafferImage/ImagePlug.h"
 
-namespace GafferDelight
+#include "Gaffer/ComputeNode.h"
+#include "Gaffer/StringPlug.h"
+
+namespace GafferML
 {
 
-class GAFFERDELIGHT_API InteractiveDelightRender : public GafferScene::InteractiveRender
+class GAFFERML_API ImageToTensor : public Gaffer::ComputeNode
 {
 
 	public :
 
-		explicit InteractiveDelightRender( const std::string &name=defaultName<InteractiveDelightRender>() );
+		explicit ImageToTensor( const std::string &name=defaultName<ImageToTensor>() );
+		~ImageToTensor() override;
 
-		GAFFER_NODE_DECLARE_TYPE( GafferDelight::InteractiveDelightRender, InteractiveDelightRenderTypeId, GafferScene::InteractiveRender );
+		GAFFER_NODE_DECLARE_TYPE( GafferML::ImageToTensor, ImageToTensorTypeId, Gaffer::ComputeNode );
+
+		GafferImage::ImagePlug *imagePlug();
+		const GafferImage::ImagePlug *imagePlug() const;
+
+		Gaffer::StringPlug *viewPlug();
+		const Gaffer::StringPlug *viewPlug() const;
+
+		Gaffer::StringVectorDataPlug *channelsPlug();
+		const Gaffer::StringVectorDataPlug *channelsPlug() const;
+
+		Gaffer::BoolPlug *interleaveChannelsPlug();
+		const Gaffer::BoolPlug *interleaveChannelsPlug() const;
+
+		TensorPlug *tensorPlug();
+		const TensorPlug *tensorPlug() const;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+	protected :
+
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
+
+		Gaffer::ValuePlug::CachePolicy hashCachePolicy( const Gaffer::ValuePlug *output ) const override;
+		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
 
 };
 
-IE_CORE_DECLAREPTR( InteractiveDelightRender );
+IE_CORE_DECLAREPTR( ImageToTensor )
 
-} // namespace GafferDelight
+} // namespace GafferML

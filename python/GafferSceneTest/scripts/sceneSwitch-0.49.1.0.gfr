@@ -46,4 +46,3 @@ __children["SceneSwitch"]["__uiPosition"].setValue( imath.V2f( 0.0499954224, -2.
 
 
 del __children
-

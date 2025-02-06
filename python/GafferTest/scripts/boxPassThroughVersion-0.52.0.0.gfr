@@ -75,4 +75,3 @@ Gaffer.Metadata.registerValue( __children["AddTen"]["enabled"], 'nodule:type', '
 
 
 del __children
-

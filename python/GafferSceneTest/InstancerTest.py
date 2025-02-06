@@ -725,6 +725,84 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		)
 		self.assertEncapsulatedRendersSame( instancer )
 
+	def testInactiveIds( self ) :
+
+		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( x, 0, 0 ) for x in range( 0, 10 ) ] ) )
+		points["inactiveIdsTest"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Constant,
+			IECore.IntVectorData( [ 3, 5, 7 ] )
+		)
+		points["inactiveIdsTest64"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Constant,
+			IECore.Int64VectorData( [ 4, 6 ] )
+		)
+		points["inactive"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.BoolVectorData( [ 0, 0, 1, 0, 0, 1, 1, 0, 1, 1 ] )
+		)
+		points["inactiveInt"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.IntVectorData( [ 0, 0, 1, 0, 0, 1, 1, 0, 1, 1 ] )
+		)
+		points["badInactive"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Constant,
+			IECore.IntVectorData( [ 13 ] )
+		)
+		points["alternateIds"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.IntVectorData( [ i + 7 for i in range( 10 ) ] )
+		)
+
+		objectToScene = GafferScene.ObjectToScene()
+		objectToScene["object"].setValue( points )
+
+		sphere = GafferScene.Sphere()
+
+		pointsFilter = GafferScene.PathFilter()
+		pointsFilter["paths"].setValue( IECore.StringVectorData( [ "/object" ] ) )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( objectToScene["out"] )
+		instancer["prototypes"].setInput( sphere["out"] )
+		instancer["filter"].setInput( pointsFilter["out"] )
+
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ str( i ) for i in range( 10 ) ] ) )
+
+		instancer["inactiveIds"].setValue( "inactiveIdsTest" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "0", "1", "2", "4", "6", "8", "9" ] ) )
+
+		instancer["inactiveIds"].setValue( "inactiveIdsTest64" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "0", "1", "2", "3", "5", "7", "8", "9" ] ) )
+
+		instancer["inactiveIds"].setValue( "inactive" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "0", "1", "3", "4", "7" ] ) )
+
+		instancer["inactiveIds"].setValue( "inactiveInt" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "0", "1", "3", "4", "7" ] ) )
+
+		instancer["inactiveIds"].setValue( "inactiveIdsTest inactiveIdsTest64" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "0", "1", "2", "8", "9" ] ) )
+
+		instancer["inactiveIds"].setValue( "inactiveIdsTest inactiveIdsTest64 inactive" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "0", "1" ] ) )
+
+		# If the id is out of bounds, nothing happens
+		instancer["inactiveIds"].setValue( "badInactive" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" ] ) )
+
+		instancer["id"].setValue( "alternateIds" )
+		# A vertex variable applies based on vertex position in the list
+		instancer["inactiveIds"].setValue( "inactive" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "7", "8", "10", "11", "14" ] ) )
+
+		# An id list matches based on ids
+		instancer["inactiveIds"].setValue( "inactive inactiveIdsTest" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "8", "10", "11", "14" ] ) )
+
+		instancer["inactiveIds"].setValue( "badInactive" )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "7", "8", "9", "10", "11", "12", "14", "15", "16" ] ) )
+
+
 	def testAnimation( self ) :
 
 		pointA = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [
@@ -1498,11 +1576,17 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		)
 
 	def testIds( self ) :
+		with self.subTest( useInt64 = False ):
+			self.runTestIds( False )
+		with self.subTest( useInt64 = True ):
+			self.runTestIds( True )
+
+	def runTestIds( self, useInt64 ) :
 
 		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( x, 0, 0 ) for x in range( 0, 4 ) ] ) )
 		points["id"] = IECoreScene.PrimitiveVariable(
 			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
-			IECore.IntVectorData( [ 10, 100, 111, 5 ] ),
+			( IECore.Int64VectorData if useInt64 else IECore.IntVectorData)( [ 10, 100, 111, 5 ] ),
 		)
 		points["index"] = IECoreScene.PrimitiveVariable(
 			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
@@ -1560,16 +1644,16 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 
 		self.assertEncapsulatedRendersSame( instancer )
 
-	def testNegativeIdsAndIndices( self ) :
+	def testExtremeIdsAndIndices( self ) :
 
-		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( x, 0, 0 ) for x in range( 0, 2 ) ] ) )
+		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( x, 0, 0 ) for x in range( 0, 4 ) ] ) )
 		points["id"] = IECoreScene.PrimitiveVariable(
 			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
-			IECore.IntVectorData( [ -10, -5 ] ),
+			IECore.Int64VectorData( [ -10, -5, 8000000000, 8000000001 ] ),
 		)
 		points["index"] = IECoreScene.PrimitiveVariable(
 			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
-			IECore.IntVectorData( [ -1, -2 ] ),
+			IECore.IntVectorData( [ -1, -2, 1, 0 ] ),
 		)
 
 		objectToScene = GafferScene.ObjectToScene()
@@ -1582,24 +1666,57 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		instances["children"][0].setInput( cube["out"] )
 		instances["parent"].setValue( "/" )
 
+		allFilter = GafferScene.PathFilter()
+		allFilter["paths"].setValue( IECore.StringVectorData( [ '/*' ] ) )
+
+		customAttributes = GafferScene.CustomAttributes()
+		customAttributes["in"].setInput( instances["out"] )
+		customAttributes["filter"].setInput( allFilter["out"] )
+		customAttributes["attributes"].addChild( Gaffer.NameValuePlug( "intAttr", Gaffer.IntPlug( "value", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), True, "member1" ) )
+
+		customAttributes["ReadContextExpression"] = Gaffer.Expression()
+		customAttributes["ReadContextExpression"].setExpression(
+			'parent["attributes"]["member1"]["value"] = context.get( "seed", -1 )'
+		)
+
 		instancer = GafferScene.Instancer()
 		instancer["in"].setInput( objectToScene["out"] )
-		instancer["prototypes"].setInput( instances["out"] )
-		instancer["parent"].setValue( "/object" )
+		instancer["prototypes"].setInput( customAttributes["out"] )
+		instancer["filter"].setInput( allFilter["out"] )
 		instancer["prototypeIndex"].setValue( "index" )
 		instancer["id"].setValue( "id" )
+		instancer["seedEnabled"].setValue( True )
+		instancer["rawSeed"].setValue( True )
 
 		self.assertEqual( instancer["out"].childNames( "/object/instances" ), IECore.InternedStringVectorData( [ "sphere", "cube" ] ) )
-		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "-5" ] ) )
-		self.assertEqual( instancer["out"].childNames( "/object/instances/cube" ), IECore.InternedStringVectorData( [ "-10" ] ) )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "-5", "8000000001" ] ) )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/cube" ), IECore.InternedStringVectorData( [ "-10", "8000000000" ] ) )
 		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere/-5" ), IECore.InternedStringVectorData() )
 		self.assertEqual( instancer["out"].childNames( "/object/instances/cube/-10" ), IECore.InternedStringVectorData() )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere/8000000001" ), IECore.InternedStringVectorData() )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/cube/8000000000" ), IECore.InternedStringVectorData() )
 
 		self.assertEqual( instancer["out"].object( "/object/instances" ), IECore.NullObject.defaultNullObject() )
 		self.assertEqual( instancer["out"].object( "/object/instances/sphere" ), IECore.NullObject.defaultNullObject() )
 		self.assertEqual( instancer["out"].object( "/object/instances/cube" ), IECore.NullObject.defaultNullObject() )
 		self.assertEqual( instancer["out"].object( "/object/instances/sphere/-5" ), sphere["out"].object( "/sphere" ) )
 		self.assertEqual( instancer["out"].object( "/object/instances/cube/-10" ), cube["out"].object( "/cube" ) )
+		self.assertEqual( instancer["out"].object( "/object/instances/sphere/8000000001" ), sphere["out"].object( "/sphere" ) )
+		self.assertEqual( instancer["out"].object( "/object/instances/cube/8000000000" ), cube["out"].object( "/cube" ) )
+
+		self.assertEqual( instancer["out"].attributes( "/object/instances/sphere/-5" )["intAttr"].value, -5 )
+		self.assertEqual( instancer["out"].attributes( "/object/instances/cube/-10" )["intAttr"].value, -10 )
+
+		# We want to fully support int64 typed ids, but for reasons of backwards compatiblity and OSL support,
+		# we're still using int32 for the seed context variable, so these ids get wrapped around even in raw seeds
+		# mode.
+		self.assertEqual( instancer["out"].attributes( "/object/instances/sphere/8000000001" )["intAttr"].value, -589934591 )
+		self.assertEqual( instancer["out"].attributes( "/object/instances/cube/8000000000" )["intAttr"].value, -589934592 )
+
+		self.assertEqual(
+			instancer["variations"].getValue(),
+			IECore.CompoundData( { 'seed' : IECore.IntData( 4 ), '' : IECore.IntData( 4 ) } )
+		)
 
 		self.assertSceneValid( instancer["out"] )
 
@@ -2430,6 +2547,29 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 
 		self.assertEncapsulatedRendersSame( instancer )
 
+
+		# We get different results if we change the id the seeds are based on
+		points["idTest"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.IntVectorData(
+				[ i * 37 for i in range( 100 ) ]
+			)
+		)
+		pointsSource["object"].setValue( points )
+		instancer["id"].setValue( "idTest" )
+		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "color4fVar" : 4, "seed" : 64, "" : 98 } )
+
+		# Works the same using int64 ids
+		points["idTest"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.Int64VectorData(
+				[ i * 37 for i in range( 100 ) ]
+			)
+		)
+		pointsSource["object"].setValue( points )
+		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "color4fVar" : 4, "seed" : 64, "" : 98 } )
+
+		instancer["id"].setToDefault()
+
+
 		# Now turn on time offset as well and play with everything together
 		instancer["seeds"].setValue( 10 )
 		instancer["timeOffset"]["enabled"].setValue( True )
@@ -2959,6 +3099,29 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		self.assertEqual( instancer["out"].childNames( "/object/instances" ), IECore.InternedStringVectorData( ["a", "b", "d", "c" ] ) )
 		self.assertEqual( [ instancer["out"].attributes( "/object/instances/%s/%i/%s" % ("abdc"[i],i,"abdc"[i]) )["testAttribute"].value for i in range(4) ], [ 42.0 ] * 4 )
 		self.assertEqual( [ instancer["out"].attributes( "/object/instances/%s/%i" % ("abdc"[i],i) ).get("user:varyingFloat") for i in range(4) ], [ None ] * 4 )
+
+	def testRenderHashes( self ) :
+
+		script = self.buildPrototypeRootsScript()
+		script["instancer"]["prototypeMode"].setValue( GafferScene.Instancer.PrototypeMode.IndexedRootsList )
+		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [
+			"/foo", "/bar"
+		] ) )
+		script["instancer"]["encapsulate"].setValue( True )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch )
+
+		script["instancer"]["out"].object( "/object/instances" ).render( renderer )
+
+		# Make sure that the capsules we produce have different hashes when the prototype roots are different
+		rootsByHash = {}
+		for n in renderer.capturedObjectNames():
+			co = renderer.capturedObject( n ).capturedSamples()[0]
+			if co.hash() in rootsByHash:
+				with self.subTest( location = n ) :
+					self.assertEqual( co.root(), rootsByHash[ co.hash() ] )
+			else:
+				rootsByHash[ co.hash() ] = co.root()
 
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 10 )
 	def testBoundPerformance( self ) :

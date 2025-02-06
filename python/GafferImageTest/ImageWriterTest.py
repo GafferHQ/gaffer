@@ -1636,9 +1636,6 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			header = self.usefulHeader( writePath )
 			refHeader = self.usefulHeader( self.imagesPath() / ( "channelTest" + referenceFile + ".exr" ) )
 
-			if layout == "Nuke/Interleave Channels":
-				# We don't match the view metadata which Nuke sticks on files without specific views
-				refHeader = list( filter( lambda i : i != 'view (type string): "main"', refHeader ) )
 			self.assertEqual( header, refHeader )
 
 	def testWithMultiViewChannelTestImage( self ):

@@ -76,7 +76,6 @@ void GafferSceneModule::bindObjectProcessor()
 
 	GafferBindings::DependencyNodeClass<GafferScene::ObjectProcessor>();
 	GafferBindings::DependencyNodeClass<GafferScene::Deformer>();
-	GafferBindings::DependencyNodeClass<GafferScene::DeletePoints>();
 	GafferBindings::DependencyNodeClass<GafferScene::DeleteFaces>();
 	GafferBindings::DependencyNodeClass<GafferScene::DeleteCurves>();
 	GafferBindings::DependencyNodeClass<GafferScene::PointsType>();
@@ -97,6 +96,16 @@ void GafferSceneModule::bindObjectProcessor()
 	GafferBindings::DependencyNodeClass<MergeMeshes>();
 	GafferBindings::DependencyNodeClass<MergePoints>();
 	GafferBindings::DependencyNodeClass<MergeCurves>();
+
+	{
+		scope s = GafferBindings::DependencyNodeClass<GafferScene::DeletePoints>();
+
+		enum_<GafferScene::DeletePoints::SelectionMode>( "SelectionMode" )
+			.value( "VertexPrimitiveVariable", GafferScene::DeletePoints::SelectionMode::VertexPrimitiveVariable )
+			.value( "IdListPrimitiveVariable", GafferScene::DeletePoints::SelectionMode::IdListPrimitiveVariable )
+			.value( "IdList", GafferScene::DeletePoints::SelectionMode::IdList )
+		;
+	}
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<GafferScene::MeshTangents>();

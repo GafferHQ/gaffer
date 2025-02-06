@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, Alex Fuller. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,18 +34,50 @@
 #
 ##########################################################################
 
+import unittest
+
 import Gaffer
-import GafferCycles
+import GafferSceneUI
+import GafferUITest
 
-Gaffer.Metadata.registerNode(
+class AttributeEditorTest( GafferUITest.TestCase ) :
 
-	GafferCycles.InteractiveCyclesRender,
+	def testRegisterAttribute( self ) :
 
-	"description",
-	"""
-	Performs interactive renders using Cycles, updating the render on the fly
-	whenever the input scene changes. Cycles supports edits to all aspects of
-	the scene without needing to restart the render.
-	""",
+		attributeNames = [ "test:visible", "test:this", "test:that", "test:other" ]
 
-)
+		for attribute in attributeNames :
+			GafferSceneUI.AttributeEditor.registerAttribute( "Standard", attribute, "testSection" )
+			self.addCleanup( GafferSceneUI.AttributeEditor.deregisterColumn, "Standard", attribute, "testSection" )
+
+		script = Gaffer.ScriptNode()
+		editor = GafferSceneUI.AttributeEditor( script )
+		editor.settings()["section"].setValue( "testSection" )
+		GafferSceneUI.AttributeEditor._AttributeEditor__updateColumns.flush( editor )
+
+		columnAttributes = [
+			c.inspector().name() for c in editor.sceneListing().getColumns()
+			if isinstance( c, GafferSceneUI.Private.InspectorColumn )
+		]
+
+		for attribute in attributeNames :
+			self.assertIn( attribute, columnAttributes )
+
+		GafferSceneUI.AttributeEditor.deregisterColumn( "Standard", "test:visible", "testSection" )
+
+		editor._AttributeEditor__updateColumns()
+		GafferSceneUI.AttributeEditor._AttributeEditor__updateColumns.flush( editor )
+
+		columnAttributes = [
+			c.inspector().name() for c in editor.sceneListing().getColumns()
+			if isinstance( c, GafferSceneUI.Private.InspectorColumn )
+		]
+
+		for attribute in attributeNames :
+			if attribute != "test:visible" :
+				self.assertIn( attribute, columnAttributes )
+			else :
+				self.assertNotIn( attribute, columnAttributes )
+
+if __name__ == "__main__":
+	unittest.main()

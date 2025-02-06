@@ -190,12 +190,12 @@ class TestRunner( unittest.TextTestRunner ) :
 			testMethod = getattr( test, test._testMethodName )
 			## \todo Remove `standard` fallback (breaking change).
 			categories = getattr( testMethod, "categories", { "standard" } )
-			if not any( IECore.StringAlgo.match( c, inclusions ) for c in categories ) :
+			if not any( IECore.StringAlgo.matchMultiple( c, inclusions ) for c in categories ) :
 				setattr(
 					test, test._testMethodName,
 					unittest.skip( f"Categories not included by `{inclusions}`" )( testMethod )
 				)
-			elif any( IECore.StringAlgo.match( c, exclusions ) for c in categories ) :
+			elif any( IECore.StringAlgo.matchMultiple( c, exclusions ) for c in categories ) :
 				setattr(
 					test, test._testMethodName,
 					unittest.skip( f"Categories excluded by `{exclusions}`" )( testMethod )

@@ -46,6 +46,7 @@ namespace GafferUI
 class PlugAdder;
 class NoduleLayout;
 class ConnectionCreator;
+class StandardNodule;
 
 /// The standard means of representing a Node in a GraphGadget.
 /// Nodes are represented as rectangular boxes with the name displayed
@@ -150,6 +151,7 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		bool dragMove( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragLeave( GadgetPtr gadget, const DragDropEvent &event );
 		bool drop( GadgetPtr gadget, const DragDropEvent &event );
+		void noduleAdded( Nodule *nodule );
 
 		ConnectionCreator *closestDragDestination( const DragDropEvent &event ) const;
 
@@ -158,11 +160,15 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		bool updateUserColor();
 		void updateMinWidth();
 		void updatePadding();
-		void updateStrikeThroughVisibility( const Gaffer::Plug *dirtiedPlug = nullptr );
+		void updateStrikeThroughState( const Gaffer::Plug *dirtiedPlug = nullptr );
 		void updateIcon();
 		bool updateShape();
 		void updateFocusGadgetVisibility();
 		void updateTextDimming();
+
+		friend class StandardNodule;
+		// Set the visibility for all nodules based on the metadata registered for this node.
+		void applyNoduleLabelVisibilityMetadata();
 
 		IE_CORE_FORWARDDECLARE( ErrorGadget );
 		ErrorGadget *errorGadget( bool createIfMissing = true );
@@ -170,7 +176,8 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		void displayError( Gaffer::ConstPlugPtr plug, const std::string &message );
 
 		std::optional<bool> m_nodeEnabledInContextTracker;
-		bool m_strikeThroughVisible;
+		enum class StrikeThroughState : char { Invisible, Static, Dynamic };
+		StrikeThroughState m_strikeThroughState;
 		bool m_labelsVisibleOnHover;
 		// We accept drags onto the NodeGadget itself and
 		// use them to create a connection to the

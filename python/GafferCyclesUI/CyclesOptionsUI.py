@@ -40,19 +40,24 @@ import Gaffer
 import GafferUI
 import GafferCycles
 
+def __deviceSummary( plug ) :
+
+	# We don't have enough space to display the full device string, but the
+	# `:00` device indices are kindof confusing. Just strip off the
+	# indices so we're showing a list of device types.
+	devices = set(
+		d.partition( ":" )[0]
+		for d in plug.getValue().split()
+	)
+
+	return " + ".join( devices )
+
 def __sessionSummary( plug ) :
 
 	info = []
 
 	if plug["device"]["enabled"].getValue() :
-		# We don't have enough space to display the full device string, but the
-		# `:00` device indices are kindof confusing. Just strip off the
-		# indices so we're showing a list of device types.
-		devices = set(
-			d.partition( ":" )[0]
-			for d in plug["device"]["value"].getValue().split()
-		)
-		info.append( " + ".join( devices ) )
+		info.append( __deviceSummary( plug["device"]["value"] ) )
 
 	if plug["shadingSystem"]["enabled"].getValue() :
 		info.append( "Shading System {}".format( plug["shadingSystem"]["value"].getValue() ) )
@@ -264,6 +269,9 @@ def __denoisingSummary( plug ) :
 	if plug["denoiserType"]["enabled"].getValue() :
 		info.append( "Denoise Type {}".format( plug["denoiserType"]["value"].getValue() ) )
 
+	if plug["denoiseDevice"]["enabled"].getValue() :
+		info.append( "Device {}".format( __deviceSummary( plug["denoiseDevice"]["value"] ) ) )
+
 	if plug["denoiseStartSample"]["enabled"].getValue() :
 		info.append( "Denoise Start Sample {}".format( plug["denoiseStartSample"]["value"].getValue() ) )
 
@@ -320,7 +328,7 @@ def __registerDevicePresets() :
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU", "CPU" )
 
 	typeIndices = {}
-	for device in GafferCycles.devices :
+	for device in GafferCycles.devices.values() :
 
 		if device["type"] == "CPU" :
 			continue
@@ -359,6 +367,44 @@ def __registerDevicePresets() :
 			"options.device.value",
 			"preset:{}/All + CPU".format( deviceType ),
 			"CPU {}:*".format( deviceType )
+		)
+
+def __registerDenoiseDevicePresets() :
+
+	cpuRegistered = False
+	typeIndices = {}
+	for device in GafferCycles.devices.values() :
+
+		# Ignore devices that don't support any denoisers
+		if device["denoisers"].value == 0 :
+			continue
+
+		if device["type"] == "CPU" :
+			if not cpuRegistered :
+				Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.denoiseDevice.value", "preset:CPU", "CPU" )
+				cpuRegistered = True
+			continue
+
+		typeIndex = typeIndices.setdefault( device["type"], 0 )
+		typeIndices[device["type"]] += 1
+
+		Gaffer.Metadata.registerValue(
+			GafferCycles.CyclesOptions,
+			"options.denoiseDevice.value",
+			"preset:{}/{}".format( device["type"], device["description"] ),
+			"{}:{:02}".format( device["type"], typeIndex )
+		)
+
+	for deviceType, count in typeIndices.items() :
+
+		if count <= 1 :
+			continue
+
+		Gaffer.Metadata.registerValue(
+			GafferCycles.CyclesOptions,
+			"options.denoiseDevice.value",
+			"preset:{}/All".format( deviceType ),
+			"{}:*".format( deviceType )
 		)
 
 Gaffer.Metadata.registerNode(
@@ -1369,8 +1415,12 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Denoise the image with the selected denoiser.
-			OptiX - Use the OptiX AI denoiser with GPU acceleration, only available on NVIDIA GPUs
-			OpenImageDenoise - Use Intel OpenImageDenoise AI denoiser running on the CPU
+
+			- OptiX : Use the OptiX AI denoiser with GPU acceleration, only available on NVIDIA GPUs
+			- OpenImageDenoise : Use the Intel OpenImageDenoise AI denoiser running on the CPU
+
+			> Tip : Only outputs that include a `denoise` parameter set to `true` will be denoised.
+			> Denoised outputs are renamed to include a "denoised" suffix.
 			""",
 
 			"layout:section", "Denoising",
@@ -1381,6 +1431,29 @@ Gaffer.Metadata.registerNode(
 		"options.denoiserType.value" : [
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"options.denoiseDevice" : [
+
+			"description",
+			"""
+			The device to denoise with. If multiple devices are specified, Cycles will denoise with
+			the first suitable device from the list.
+
+			`Automatic` mode allows Cycles to choose from all available devices that support the current
+			denoiser.
+			""",
+
+			"layout:section", "Denoising",
+
+		],
+
+		"options.denoiseDevice.value" : [
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:Automatic", "*",
+			"presetsPlugValueWidget:allowCustom", True,
 
 		],
 
@@ -1470,6 +1543,7 @@ Gaffer.Metadata.registerNode(
 )
 
 __registerDevicePresets()
+__registerDenoiseDevicePresets()
 
 if GafferCycles.hasOptixDenoise :
 

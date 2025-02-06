@@ -241,7 +241,6 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( GraphGadget );
 GraphGadget::GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 	:	m_dragStartPosition( 0 ), m_lastDragPosition( 0 ), m_dragMode( None ), m_dragReconnectCandidate( nullptr ), m_dragReconnectSrcNodule( nullptr ), m_dragReconnectDstNodule( nullptr ), m_dragMergeGroupId( 0 )
 {
-	keyPressSignal().connect( boost::bind( &GraphGadget::keyPressed, this, ::_1,  ::_2 ) );
 	buttonPressSignal().connect( boost::bind( &GraphGadget::buttonPress, this, ::_1,  ::_2 ) );
 	buttonReleaseSignal().connect( boost::bind( &GraphGadget::buttonRelease, this, ::_1,  ::_2 ) );
 	dragBeginSignal().connect( boost::bind( &GraphGadget::dragBegin, this, ::_1, ::_2 ) );
@@ -833,33 +832,6 @@ Box3f GraphGadget::renderBound() const
 	Box3f b;
 	b.makeInfinite();
 	return b;
-}
-
-bool GraphGadget::keyPressed( GadgetPtr gadget, const KeyEvent &event )
-{
-	if( event.key == "D" && !event.modifiers )
-	{
-		/// \todo This functionality would be better provided by a config file,
-		/// rather than being hardcoded in here. For that to be done easily we
-		/// need a static keyPressSignal() in Widget, which needs figuring out
-		/// some more before we commit to it. In the meantime, this will do.
-		Gaffer::UndoScope undoScope( m_scriptNode );
-		Gaffer::Set *selection = m_scriptNode->selection();
-		for( size_t i = 0, s = selection->size(); i != s; i++ )
-		{
-			Gaffer::DependencyNode *node = IECore::runTimeCast<Gaffer::DependencyNode>( selection->member( i ) );
-			if( node && findNodeGadget( node ) && !Gaffer::MetadataAlgo::readOnly( node ) )
-			{
-				Gaffer::BoolPlug *enabledPlug = node->enabledPlug();
-				if( enabledPlug && enabledPlug->settable() )
-				{
-					enabledPlug->setValue( !enabledPlug->getValue() );
-				}
-			}
-		}
-		return true;
-	}
-	return false;
 }
 
 void GraphGadget::rootChildAdded( Gaffer::GraphComponent *root, Gaffer::GraphComponent *child )

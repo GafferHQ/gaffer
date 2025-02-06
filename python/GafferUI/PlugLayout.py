@@ -274,6 +274,8 @@ class PlugLayout( GafferUI.Widget ) :
 				self.__widgets[item] = widget
 			else :
 				widget = self.__widgets[item]
+				if self.__itemMetadataValue( item, "width" ) :
+					widget._qtWidget().setFixedWidth( self.__itemMetadataValue( item, "width" ) )
 
 			if widget is None :
 				continue
@@ -388,22 +390,26 @@ class PlugLayout( GafferUI.Widget ) :
 
 		return result
 
+	def __setWidthFromMetadata( self, widget, item ) :
+
+		width = self.__itemMetadataValue( item, "width" )
+		if width is not None :
+			widget._qtWidget().setFixedWidth( width )
+
+		minimumWidth = self.__itemMetadataValue( item, "minimumWidth" )
+		if minimumWidth is not None :
+			widget._qtWidget().setMinimumWidth( minimumWidth )
+
+		if widget._qtWidget().layout() is not None and ( width is not None or minimumWidth is not None ) :
+			widget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
+
 	def __createPlugWidget( self, plug ) :
 
 		result = GafferUI.PlugValueWidget.create( plug )
 		if result is None :
 			return result
 
-		width = self.__itemMetadataValue( plug, "width" )
-		if width is not None :
-			result._qtWidget().setFixedWidth( width )
-
-		minimumWidth = self.__itemMetadataValue( plug, "minimumWidth" )
-		if minimumWidth is not None :
-			result._qtWidget().setMinimumWidth( minimumWidth )
-
-		if result._qtWidget().layout() is not None and ( width is not None or minimumWidth is not None ) :
-			result._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
+		self.__setWidthFromMetadata( result, plug )
 
 		if isinstance( result, GafferUI.PlugValueWidget ) and not result.hasLabel() and self.__itemMetadataValue( plug, "label" ) != "" :
 			result = GafferUI.PlugWidget( result )
@@ -424,9 +430,15 @@ class PlugLayout( GafferUI.Widget ) :
 	def __createCustomWidget( self, name ) :
 
 		widgetType = self.__itemMetadataValue( name, "widgetType" )
-		widgetClass = self.__import( widgetType )
+		try :
+			widgetClass = self.__import( widgetType )
+			result = widgetClass( self.__parent )
+			self.__setWidthFromMetadata( result, name )
+		except Exception as e :
+			message = "Could not create custom widget \"{}\" : {}".format( name, str( e ) )
+			IECore.msg( IECore.Msg.Level.Error, "GafferUI.PlugLayout", message )
 
-		result = widgetClass( self.__parent )
+			result = _MissingCustomWidget( self.__parent, message )
 
 		return result
 
@@ -481,6 +493,7 @@ class PlugLayout( GafferUI.Widget ) :
 		# we do a lazy update so we can batch up several changes into one.
 		# upheaval is over.
 		self.__layoutDirty = True
+		self.__activationsDirty = True
 		self.__updateLazily()
 
 	def __plugMetadataChanged( self, plug, key, reason ) :
@@ -492,6 +505,7 @@ class PlugLayout( GafferUI.Widget ) :
 				self.__layoutName + ":index",
 				self.__layoutName + ":section",
 				self.__layoutName + ":accessory",
+				self.__layoutName + ":width",
 				"plugValueWidget:type"
 			) :
 				# We often see sequences of several metadata changes, so
@@ -749,3 +763,16 @@ class _CollapsibleLayout( _Layout ) :
 	def __collapsibleStateChanged( self, collapsible, subsection ) :
 
 		subsection.saveState( "collapsed", collapsible.getCollapsed() )
+
+class _MissingCustomWidget( GafferUI.Widget ) :
+
+	def __init__( self, parent, warning, **kw ) :
+
+		self.__image = GafferUI.Image( "warningSmall.png" )
+		self.__warning = warning
+
+		GafferUI.Widget.__init__( self, self.__image, **kw )
+
+	def getToolTip( self ) :
+
+		return self.__warning

@@ -103,6 +103,10 @@ PathColumn::CellData InspectorColumn::cellData( const Gaffer::Path &path, const 
 	/// \todo Should PathModel create a decoration automatically when we
 	/// return a colour for `Role::Value`?
 	result.icon = runTimeCast<const Color3fData>( inspectorResult->value() );
+	if( !result.icon )
+	{
+		result.icon = runTimeCast<const Color4fData>( inspectorResult->value() );
+	}
 	result.background = g_sourceTypeColors.at( (int)inspectorResult->sourceType() );
 	std::string toolTip;
 	if( inspectorResult->sourceType() == Inspector::Result::SourceType::Fallback )

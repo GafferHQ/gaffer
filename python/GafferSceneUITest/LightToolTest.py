@@ -136,13 +136,8 @@ class LightToolTest( GafferUITest.TestCase ) :
 		# we're pretty happy if it doesn't.
 
 		del preRenderSlot[:]
-		with IECore.CapturingMessageHandler() as mh :
-			while not len( preRenderSlot ) :
-				self.waitForIdle( 1000 )
-
-		# Ignore unrelated message from BackgroundTask. This needs a separate fix.
-		self.assertEqual( len( mh.messages ), 1 )
-		self.assertEqual( mh.messages[0].message, "Unable to find ScriptNode for SceneView.__preprocessor.out" )
+		while not len( preRenderSlot ) :
+			self.waitForIdle( 1000 )
 
 if __name__ == "__main__" :
 	unittest.main()

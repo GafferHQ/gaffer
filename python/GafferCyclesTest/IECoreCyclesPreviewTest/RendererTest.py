@@ -2039,6 +2039,39 @@ class RendererTest( GafferTest.TestCase ) :
 			]
 		)
 
+	def testComponentConnections( self ) :
+
+		shader = IECoreScene.ShaderNetwork(
+			shaders = {
+				"input" : IECoreScene.Shader(
+					"convert_point_to_color", "cycles:shader",
+					{
+						"value_point" : imath.V3f( 1, 0.5, 0.25 ),
+					}
+				),
+				"output" : IECoreScene.Shader(
+					"emission", "cycles:surface",
+					{
+						"color" : imath.Color3f( 0 ),
+						"strength" : 1.0,
+					}
+				),
+			},
+			connections = [
+				( ( "input", "value_color.r" ), ( "output", "color.g" ) ),
+				( ( "input", "value_color.g" ), ( "output", "color.b" ) ),
+				( ( "input", "value_color.b" ), ( "output", "color.r" ) ),
+			],
+			output = "output",
+		)
+
+		self.__testShaderResults(
+			shader,
+			[
+				( imath.V2f( 0.5, 0.5 ), imath.Color4f( 0.25, 1, 0.5, 1 ) ),
+			]
+		)
+
 	def testInvalidShaderParameterValues( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
@@ -2380,7 +2413,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testDevices( self ) :
 
 		typeIndices = {}
-		for device in GafferCycles.devices :
+		for device in GafferCycles.devices.values() :
 
 			deviceType = device["type"]
 			typeIndex = typeIndices.setdefault( deviceType, 0 )
@@ -2396,13 +2429,13 @@ class RendererTest( GafferTest.TestCase ) :
 				# Ideally we want clients to emit all options before doing anything else,
 				# to simplify our internal session management. But certain important clients
 				# (SceneGadget, RenderController, I'm looking at you) like to create a camera
-				# first, and we need to accomodate them while preserving the ability to specify
+				# first, and we need to accommodate them while preserving the ability to specify
 				# `cycles:device` afterwards.
 				renderer.camera( "camera", IECoreScene.Camera() )
 
 				renderer.option( "cycles:shadingsystem", IECore.StringData( "SVM" ) )
 				renderer.option( "cycles:device", IECore.StringData( f"{deviceType}:{typeIndex:02d}" ) )
-				self.assertEqual( renderer.command( "cycles:querySession", {} )["device"].value, device["id"] )
+				self.assertEqual( renderer.command( "cycles:querySession", {} )["device"], device["id"] )
 
 	def testExposureEdit( self ) :
 

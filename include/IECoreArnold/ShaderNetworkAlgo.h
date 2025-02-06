@@ -40,6 +40,8 @@
 
 #include "IECoreScene/ShaderNetwork.h"
 
+#include "IECore/CompoundObject.h"
+
 #include "ai_nodes.h"
 
 #include <vector>
@@ -90,6 +92,27 @@ IECOREARNOLD_API bool update( std::vector<AtNode *> &nodes, const IECoreScene::S
 /// is performed automatically by `convert()` and `update()` and is mainly just exposed for the unit
 /// tests.
 IECOREARNOLD_API void convertUSDShaders( IECoreScene::ShaderNetwork *shaderNetwork );
+
+/// A function that performs substitutions on a shader network, given the full
+/// inherited `attributes` for an object. Must be threadsafe.
+using SubstitutionFunction = void (*)( IECoreScene::ShaderNetwork *shaderNetwork, IECore::InternedString attributeName, const IECore::CompoundObject *attributes );
+/// A function that appends to `hash` to uniquely identify the work that will be
+/// performed by a SubstitutionFunction. Particular attention must be paid to
+/// the performance of any such function, as it will be called frequently. If a
+/// substitution will be a no-op, then nothing should be appended to the hash.
+/// Must be threadsafe.
+using SubstitutionHashFunction = void (*)( const IECoreScene::ShaderNetwork *shaderNetwork, IECore::InternedString attributeName, const IECore::CompoundObject *attributes, IECore::MurmurHash &hash );
+
+/// Registers a just-in-time substitution to be performed on shader
+/// networks before the shader is translated to Arnold.
+IECOREARNOLD_API void registerSubstitution( const std::string &name, SubstitutionHashFunction hashFunction, SubstitutionFunction substitutionFunction );
+/// Removes a previously registered substitution with the specified name.
+IECOREARNOLD_API void deregisterSubstitution( const std::string &name );
+
+/// Hashes all the currently registered substitutions for `shaderNetwork`.
+IECOREARNOLD_API void hashSubstitutions( const IECoreScene::ShaderNetwork *shaderNetwork, IECore::InternedString attributeName, const IECore::CompoundObject *attributes, IECore::MurmurHash &hash );
+/// Applies all the currently registered substitutions to `shaderNetwork`.
+IECOREARNOLD_API void applySubstitutions( IECoreScene::ShaderNetwork *shaderNetwork, IECore::InternedString attributeName, const IECore::CompoundObject *attributes );
 
 } // namespace ShaderNetworkAlgo
 

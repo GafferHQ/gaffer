@@ -842,9 +842,9 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 
 		color = color * 255
 		return QtGui.QColor(
-			min( 255, max( 0, color.r ) ),
-			min( 255, max( 0, color.g ) ),
-			min( 255, max( 0, color.b ) ),
+			min( 255, max( 0, color[0] ) ),
+			min( 255, max( 0, color[1] ) ),
+			min( 255, max( 0, color[2] ) ),
 		)
 
 	# We try not to install the event filter until absolutely
@@ -1578,8 +1578,12 @@ class _EventFilter( QtCore.QObject ) :
 			Widget._modifiers( qEvent.keyboardModifiers() ),
 		)
 		dragDropEvent.data = data
-		dragDropEvent.sourceWidget = None
 		dragDropEvent.destinationWidget = None
+
+		if isinstance( qEvent.source(), QtWidgets.QWidget ) :
+			dragDropEvent.sourceWidget = GafferUI.Widget._owner( qEvent.source() )
+		else :
+			dragDropEvent.sourceWidget = None
 
 		if widget._dragEnterSignal( widget, dragDropEvent ) :
 			qEvent.acceptProposedAction()

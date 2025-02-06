@@ -240,6 +240,8 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 		return
 
 	for plug in plugValueWidget.getPlugs() :
+		if not isinstance( plug, Gaffer.ValuePlug ) :
+			return
 		if plug.getInput() is not None or Gaffer.MetadataAlgo.readOnly( plug ) :
 			return
 		if not Gaffer.RandomChoice.canSetup( plug ) :

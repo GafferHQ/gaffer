@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,30 +36,67 @@
 
 #pragma once
 
-#include "GafferArnold/Export.h"
-#include "GafferArnold/TypeIds.h"
+#include "GafferML/Export.h"
+#include "GafferML/TensorPlug.h"
 
-#include "GafferScene/InteractiveRender.h"
+#include "Gaffer/ComputeNode.h"
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 
-namespace GafferArnold
+namespace GafferML
 {
 
-class GAFFERARNOLD_API InteractiveArnoldRender : public GafferScene::InteractiveRender
+class GAFFERML_API DataToTensor : public Gaffer::ComputeNode
 {
 
 	public :
 
-		explicit InteractiveArnoldRender( const std::string &name=defaultName<InteractiveArnoldRender>() );
-		~InteractiveArnoldRender() override;
+		explicit DataToTensor( const std::string &name=defaultName<DataToTensor>() );
+		~DataToTensor() override;
 
-		GAFFER_NODE_DECLARE_TYPE( GafferArnold::InteractiveArnoldRender, InteractiveArnoldRenderTypeId, GafferScene::InteractiveRender );
+		GAFFER_NODE_DECLARE_TYPE( GafferML::DataToTensor, DataToTensorTypeId, Gaffer::ComputeNode );
 
-		/// Utility to call AiUniverseCacheFlush() and
-		/// restart any running sessions.
-		static void flushCaches( int flags );
+		enum class ShapeMode
+		{
+			Automatic,
+			Custom
+		};
+
+		bool canSetup( const Gaffer::ValuePlug *prototypeDataPlug );
+		void setup( const Gaffer::ValuePlug *prototypeDataPlug );
+
+		template<typename T = Gaffer::ValuePlug>
+		T *dataPlug();
+		template<typename T = Gaffer::ValuePlug>
+		const T *dataPlug() const;
+
+		Gaffer::IntPlug *shapeModePlug();
+		const Gaffer::IntPlug *shapeModePlug() const;
+
+		Gaffer::Int64VectorDataPlug *shapePlug();
+		const Gaffer::Int64VectorDataPlug *shapePlug() const;
+
+		TensorPlug *tensorPlug();
+		const TensorPlug *tensorPlug() const;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+	protected :
+
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
+
+		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+		static const IECore::InternedString g_dataPlugName;
 
 };
 
-IE_CORE_DECLAREPTR( InteractiveArnoldRender );
+IE_CORE_DECLAREPTR( DataToTensor )
 
-} // namespace GafferArnold
+} // namespace GafferML
+
+#include "GafferML/DataToTensor.inl"

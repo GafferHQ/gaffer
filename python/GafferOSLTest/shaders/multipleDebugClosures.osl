@@ -36,5 +36,5 @@
 
 surface multipleDebugClosures()
 {
-	Ci = u * debug( "u" ) + v * debug( "v" ) + color( P ) * debug( "P" );
+	Ci = u * debug( "u", "value", color( 1 ) ) + v * debug( "v", "value", color( 1 ) ) + color( P ) * debug( "P", "value", color( 1 ) );
 }

@@ -53,12 +53,11 @@ def appendShaders( menuDefinition, prefix="/Cycles" ) :
 	original = [ "Hsv", "Rgb", "Xyz", "Bw", " To ", "Aov", "Uvmap", "Ies", "Bsdf", "Non Uniform" ]
 	replacement = [ "HSV", "RGB", "XYZ", "BW", " to ", "AOV", "UV Map", "IES", "BSDF", "Nonuniform" ]
 
-	for shader in GafferCycles.shaders :
-		shaderName = str( shader )
+	for shaderName, shader in GafferCycles.shaders.items() :
 		displayName = " ".join( [ IECore.CamelCase.toSpaced( x ) for x in shaderName.split( "_" ) ] )
 		for x, y in zip( original, replacement ) :
 			displayName = displayName.replace( x, y )
-		category = GafferCycles.shaders[shader]["category"]
+		category = shader["category"]
 		menuPath = "Shader"
 
 		nodeCreator = functools.partial( __shaderCreator, shaderName, GafferCycles.CyclesShader )
@@ -68,8 +67,7 @@ def appendShaders( menuDefinition, prefix="/Cycles" ) :
 		else :
 			menuItems.append( MenuItem( "%s/%s/%s" % ( menuPath, category, displayName ), nodeCreator ) )
 
-	for light in GafferCycles.lights :
-		lightName = str( light )
+	for lightName in GafferCycles.lights.keys() :
 		displayName = " ".join( [ IECore.CamelCase.toSpaced( x ) for x in lightName.split( "_" ) ] )
 		menuPath = "Light"
 

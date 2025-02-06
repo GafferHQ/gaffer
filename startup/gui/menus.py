@@ -261,6 +261,7 @@ nodeMenu.append( "/Scene/Object/Delete Primitive Variables", GafferScene.DeleteP
 nodeMenu.append( "/Scene/Object/Shuffle Primitive Variables", GafferScene.ShufflePrimitiveVariables, searchText = "ShufflePrimitiveVariables" )
 nodeMenu.append( "/Scene/Object/Resample Primitive Variables", GafferScene.ResamplePrimitiveVariables, searchText = "ResamplePrimitiveVariables" )
 nodeMenu.append( "/Scene/Object/Collect Primitive Variables", GafferScene.CollectPrimitiveVariables, searchText = "CollectPrimitiveVariables" )
+nodeMenu.append( "/Scene/Object/Primitive Variable Tweaks", GafferScene.PrimitiveVariableTweaks, searchText = "PrimitiveVariableTweaks" )
 nodeMenu.append( "/Scene/Object/Orientation", GafferScene.Orientation )
 nodeMenu.append( "/Scene/Object/Mesh Type", GafferScene.MeshType, searchText = "MeshType" )
 nodeMenu.append( "/Scene/Object/Points Type", GafferScene.PointsType, searchText = "PointsType" )
@@ -402,6 +403,7 @@ nodeMenu.append( "/Image/Channels/Collect", GafferImage.CollectImages, searchTex
 nodeMenu.append( "/Image/Utility/Metadata", GafferImage.ImageMetadata, searchText = "ImageMetadata" )
 nodeMenu.append( "/Image/Utility/Delete Metadata", GafferImage.DeleteImageMetadata, searchText = "DeleteImageMetadata" )
 nodeMenu.append( "/Image/Utility/Copy Metadata", GafferImage.CopyImageMetadata, searchText = "CopyImageMetadata" )
+nodeMenu.append( "/Image/Utility/Metadata Overlay", GafferImage.MetadataOverlay, searchText = "MetadataOverlay" )
 nodeMenu.append( "/Image/Utility/Stats", GafferImage.ImageStats, searchText = "ImageStats" )
 nodeMenu.append( "/Image/Utility/Sampler", GafferImage.ImageSampler, searchText = "ImageSampler" )
 nodeMenu.append( "/Image/Utility/Catalogue", GafferImage.Catalogue )
@@ -554,6 +556,18 @@ nodeMenu.append( "/Dispatch/Wedge", GafferDispatch.Wedge )
 nodeMenu.append( "/Dispatch/Frame Mask", GafferDispatch.FrameMask, searchText = "FrameMask" )
 nodeMenu.append( "/Dispatch/Local Dispatcher", GafferDispatch.LocalDispatcher, searchText = "LocalDispatcher" )
 
+# ML nodes
+
+if os.environ.get( "ONNX_ROOT" ) and moduleSearchPath.find( "GafferML" ) :
+
+	import GafferML
+	import GafferMLUI
+
+	nodeMenu.append( "/ML/Data To Tensor", GafferML.DataToTensor, searchText = "DataToTensor" )
+	nodeMenu.append( "/ML/Image To Tensor", GafferML.ImageToTensor, searchText = "ImageToTensor" )
+	nodeMenu.append( "/ML/Tensor To Image", GafferML.TensorToImage, searchText = "TensorToImage" )
+	nodeMenu.append( "/ML/Inference", GafferML.Inference, searchText = "Inference" )
+
 # Utility nodes
 
 nodeMenu.append( "/Utility/Expression", Gaffer.Expression )
@@ -576,6 +590,7 @@ nodeMenu.append( "/Utility/Time Warp", Gaffer.TimeWarp, searchText = "TimeWarp" 
 nodeMenu.append( "/Utility/Spreadsheet", Gaffer.Spreadsheet )
 nodeMenu.append( "/Utility/Context Query", Gaffer.ContextQuery, searchText = "ContextQuery" )
 nodeMenu.append( "/Utility/Collect", Gaffer.Collect )
+nodeMenu.append( "/Utility/Pattern Match", Gaffer.PatternMatch, searchText = "PatternMatch" )
 
 ## Miscellaneous UI
 ###########################################################################

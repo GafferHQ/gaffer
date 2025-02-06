@@ -37,10 +37,18 @@
 import GafferScene
 import GafferCycles
 
-def __cyclesRender( name ) :
+def __cyclesRender( name = "CyclesRender" ) :
 
 	node = GafferScene.Render( name )
 	node["renderer"].setValue( "Cycles" )
 	return node
 
 GafferCycles.CyclesRender = __cyclesRender
+
+def __interactiveCyclesRender( name = "InteractiveCyclesRender" ) :
+
+	node = GafferScene.InteractiveRender( name )
+	node["renderer"].setValue( "Cycles" )
+	return node
+
+GafferCycles.InteractiveCyclesRender = __interactiveCyclesRender

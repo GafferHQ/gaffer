@@ -43,6 +43,6 @@ surface debugClosure
 	Ci = 0;
 	if( name != "" )
 	{
-		Ci += weight * debug( name );
+		Ci += weight * debug( name, "value", color( 1 ) );
 	}
 }

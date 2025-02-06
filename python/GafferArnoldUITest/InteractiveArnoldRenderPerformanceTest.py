@@ -117,7 +117,8 @@ class InteractiveArnoldRenderPerformanceTest( GafferUITest.TestCase ) :
 		)
 		script["Outputs"]["in"].setInput( script["ArnoldOptions"]["out"] )
 
-		script["InteractiveArnoldRender"] = GafferArnold.InteractiveArnoldRender()
+		script["InteractiveArnoldRender"] = GafferScene.InteractiveRender()
+		script["InteractiveArnoldRender"]["renderer"].setValue( "Arnold" )
 		script["InteractiveArnoldRender"]["in"].setInput( script["Outputs"]["out"] )
 
 		script["Catalogue"] = GafferImage.Catalogue( "Catalogue" )

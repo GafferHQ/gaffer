@@ -38,6 +38,7 @@ import Gaffer
 import GafferSceneUI
 
 Gaffer.Metadata.registerValue( "option:renderPass:type", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
+Gaffer.Metadata.registerValue( "option:renderPass:type", "presetsPlugValueWidget:allowCustom", True )
 Gaffer.Metadata.registerValue( "option:renderPass:type", "preset:Standard", "" )
 ## \todo As part of the future great metadata reckoning, it would make more sense for renderPassTypePresetNames to be defined as
 # part of this global metadata rather than by GafferSceneUI.RenderPassTypeAdaptorUI and then called here. This would also allow

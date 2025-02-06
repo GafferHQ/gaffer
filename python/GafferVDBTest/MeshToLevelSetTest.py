@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import imath
 import time
 
 import IECore
@@ -233,3 +234,60 @@ class MeshToLevelSetTest( GafferVDBTest.VDBTestCase ) :
 		# we'll get deadlock.
 
 		meshToLevelSet2["out"].object( "/cube" )
+
+	def testMerging( self ):
+
+		# Create two non-overlapping spheres
+		sphere = GafferScene.Sphere()
+		sphere["radius"].setValue( 1.0 )
+
+		sphere2 = GafferScene.Sphere()
+		sphere2["name"].setValue( "sphere2" )
+		sphere2["radius"].setValue( 1.0 )
+		sphere2["transform"]["translate"]["x"].setValue( 5 )
+
+		freezeTransform = GafferScene.FreezeTransform()
+		freezeTransform["in"].setInput( sphere2["out"] )
+		self.setFilter( freezeTransform, '/sphere2' )
+
+		parent = GafferScene.Parent()
+		parent["parent"].setValue( "/" )
+		parent["in"].setInput( sphere["out"] )
+		parent["children"][0].setInput( freezeTransform["out"] )
+
+
+		meshToLevelSet = GafferVDB.MeshToLevelSet()
+		meshToLevelSet["in"].setInput( parent["out"] )
+		self.setFilter( meshToLevelSet, '/*' )
+
+		voxelCountA = meshToLevelSet["out"].object( "/sphere" ).findGrid( "surface" ).activeVoxelCount()
+		voxelCountB = meshToLevelSet["out"].object( "/sphere2" ).findGrid( "surface" ).activeVoxelCount()
+
+		# Maybe this could change if OpenVDB's algorithm changes, but I would expect it to be constant
+		# unless something weird changes, so might as well check the actual numbers
+		self.assertEqual( voxelCountA, 7712 )
+		self.assertEqual( voxelCountB, 7712 )
+
+		meshToLevelSet["destination"].setValue( "/merged" )
+
+		# If we write both locations to the same destination, they get merged
+		self.assertEqual(
+			meshToLevelSet["out"].object( "/merged" ).findGrid( "surface" ).activeVoxelCount(),
+			voxelCountA + voxelCountB
+		)
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testBasicPerf( self ):
+		sphere = GafferScene.Sphere()
+		sphere["radius"].setValue( 2.0 )
+		sphere["divisions"].setValue( imath.V2i( 1000, 1000 ) )
+
+		meshToLevelSet = GafferVDB.MeshToLevelSet()
+		self.setFilter( meshToLevelSet, '/sphere' )
+		meshToLevelSet["voxelSize"].setValue( 0.05 )
+		meshToLevelSet["in"].setInput( sphere["out"] )
+
+		meshToLevelSet["in"].object( "/sphere" )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			meshToLevelSet["out"].object( "/sphere" )

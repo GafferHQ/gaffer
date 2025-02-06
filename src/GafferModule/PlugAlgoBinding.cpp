@@ -38,6 +38,7 @@
 
 #include "PlugAlgoBinding.h"
 
+#include "Gaffer/Context.h"
 #include "Gaffer/Plug.h"
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/ValuePlug.h"
@@ -79,6 +80,19 @@ object findSourceWrapper( Plug *plug, object predicate )
 	);
 }
 
+object contextSensitiveSourceWrapper( const Plug *plug )
+{
+	const Plug *sourcePlug;
+	ConstContextPtr sourceContext;
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		std::tie( sourcePlug, sourceContext ) = PlugAlgo::contextSensitiveSource( plug );
+	}
+	return boost::python::make_tuple(
+		PlugPtr( const_cast<Plug *>( sourcePlug ) ),
+		ContextPtr( new Context( *sourceContext ) )
+	);
+}
 
 ValuePlugPtr createPlugFromData( const std::string &name, Plug::Direction direction, unsigned flags, const IECore::Data *value )
 {
@@ -145,6 +159,7 @@ void GafferModule::bindPlugAlgo()
 	def( "dependsOnCompute", &PlugAlgo::dependsOnCompute );
 	def( "findDestination", &findDestinationWrapper );
 	def( "findSource", &findSourceWrapper );
+	def( "contextSensitiveSource", &contextSensitiveSourceWrapper );
 
 	def( "createPlugFromData", &createPlugFromData );
 	def( "extractDataFromPlug", &extractDataFromPlug );

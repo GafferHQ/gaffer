@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, John Haddon. All rights reserved.
+//  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,15 +34,21 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferDelight/InteractiveDelightRender.h"
+#pragma once
 
-using namespace Gaffer;
-using namespace GafferScene;
-using namespace GafferDelight;
-
-GAFFER_NODE_DEFINE_TYPE( InteractiveDelightRender );
-
-InteractiveDelightRender::InteractiveDelightRender( const std::string &name )
-	:	InteractiveRender( "3Delight", name )
+namespace GafferML
 {
+
+template<typename T>
+T *DataToTensor::dataPlug()
+{
+	return getChild<T>( g_dataPlugName );
 }
+
+template<typename T>
+const T *DataToTensor::dataPlug() const
+{
+	return getChild<T>( g_dataPlugName );
+}
+
+} // namespace GafferML

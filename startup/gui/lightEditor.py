@@ -61,6 +61,7 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "spot_smooth", "Shape" )
 	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "spread", "Shape" )
 	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "angle", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "is_sphere", "Shape" )
 
 	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "userDefault", "cycles:light" )
 

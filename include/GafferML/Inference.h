@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2018, Alex Fuller. All rights reserved.
+//  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,25 +36,60 @@
 
 #pragma once
 
-#include "GafferCycles/Export.h"
-#include "GafferCycles/TypeIds.h"
+#include "GafferML/Export.h"
+#include "GafferML/TensorPlug.h"
 
-#include "GafferScene/InteractiveRender.h"
+#include "Gaffer/ArrayPlug.h"
+#include "Gaffer/ComputeNode.h"
+#include "Gaffer/StringPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 
-namespace GafferCycles
+namespace GafferML
 {
 
-class GAFFERCYCLES_API InteractiveCyclesRender : public GafferScene::InteractiveRender
+class GAFFERML_API Inference : public Gaffer::ComputeNode
 {
 
 	public :
 
-		explicit InteractiveCyclesRender( const std::string &name=defaultName<InteractiveCyclesRender>() );
+		explicit Inference( const std::string &name=defaultName<Inference>() );
+		~Inference() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferCycles::InteractiveCyclesRender, InteractiveCyclesRenderTypeId, GafferScene::InteractiveRender );
+		GAFFER_NODE_DECLARE_TYPE( GafferML::Inference, InferenceTypeId, Gaffer::ComputeNode );
+
+		void loadModel();
+
+		Gaffer::StringPlug *modelPlug();
+		const Gaffer::StringPlug *modelPlug() const;
+
+		Gaffer::ArrayPlug *inPlug();
+		const Gaffer::ArrayPlug *inPlug() const;
+
+		Gaffer::ArrayPlug *outPlug();
+		const Gaffer::ArrayPlug *outPlug() const;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+	protected :
+
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
+		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
+
+	private :
+
+		// We assume that if a model has multiple outputs, then it is more
+		// efficient to compute them all at once. We do that and cache it
+		// on this plug, then dole out individual results from the children
+		// of `outPlug()`.
+		/// \todo Verify the assumption.
+		Gaffer::CompoundObjectPlug *inferencePlug();
+		const Gaffer::CompoundObjectPlug *inferencePlug() const;
+
+		static size_t g_firstPlugIndex;
 
 };
 
-IE_CORE_DECLAREPTR( InteractiveCyclesRender );
+IE_CORE_DECLAREPTR( Inference )
 
-} // namespace GafferCycles
+} // namespace GafferML

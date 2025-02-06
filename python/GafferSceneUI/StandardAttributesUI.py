@@ -193,8 +193,8 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The number of segments of transform animation to
-			pass to the renderer when transformBlur is on.
+			The number of segments of deformation animation to
+			pass to the renderer when deformationBlur is on.
 			""",
 
 			"layout:section", "Motion Blur",

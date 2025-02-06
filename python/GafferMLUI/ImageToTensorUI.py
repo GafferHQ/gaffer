@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,17 +35,84 @@
 ##########################################################################
 
 import Gaffer
-import GafferArnold
+import GafferML
 
 Gaffer.Metadata.registerNode(
 
-	GafferArnold.InteractiveArnoldRender,
+	GafferML.ImageToTensor,
 
 	"description",
 	"""
-	Performs interactive renders using Arnold, updating the render on the fly
-	whenever the input scene changes. Arnold supports edits to all aspects of
-	the scene without needing to restart the render.
+	Converts images to tensors for use with the Inference node.
+
+	> Note : Only the data window is converted, as it would typically be
+	> wasteful to convert and process the empty pixels outside the data window.
+	> If this is necessary, merge the image over a Constant image before
+	> conversion.
 	""",
 
+	plugs = {
+
+		"image" : [
+
+			"description",
+			"""
+			The image to be converted.
+			""",
+
+		],
+
+		"view" : [
+
+			"description",
+			"""
+			The image view to take the tensor data from.
+			""",
+
+			"plugValueWidget:type", "GafferImageUI.ViewPlugValueWidget",
+
+			"noduleLayout:visible", False,
+
+		],
+
+		"channels" : [
+
+			"description",
+			"""
+			The list of channels to convert. Channels are added to the
+			tensor in the order specified, so can be shuffled by changing
+			the order. For example, an order of `[ "B", "G", "R" ]` might
+			be needed for use with models trained on images using OpenCV
+			conventions.
+			""",
+
+			"noduleLayout:visible", False,
+
+		],
+
+		"interleaveChannels" : [
+
+			"description",
+			"""
+			Interleaves the channel data, so that all channels for a single
+			pixel are adjacent in memory. Whether or not this is needed depends
+			on the input requirements of the model the tensor is used with.
+			""",
+
+			"noduleLayout:visible", False,
+
+		],
+
+		"tensor" : [
+
+			"description",
+			"""
+			The output tensor.
+			""",
+
+			"layout:visibilityActivator", lambda plug : False,
+
+		],
+
+	}
 )

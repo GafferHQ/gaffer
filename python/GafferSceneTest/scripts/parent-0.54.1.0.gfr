@@ -96,4 +96,3 @@ __children["Cube"]["__uiPosition"].setValue( imath.V2f( 11.5, 12.2999992 ) )
 
 
 del __children
-

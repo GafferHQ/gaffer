@@ -90,13 +90,37 @@ void setParameterInternal( AtNode *node, AtString name, int parameterType, bool 
 		switch( parameterType )
 		{
 			case AI_TYPE_INT :
-				if( const IntData *data = dataCast<IntData>( name, value, messageContext ) )
+				if( const Int64Data *data = runTimeCast<const Int64Data>( value ) )
+				{
+					int i = static_cast<int>( data->readable() );
+					if( i == data->readable() )
+					{
+						AiNodeSetInt( node, name, i );
+					}
+					else
+					{
+						msg( Msg::Warning, "setParameter", fmt::format( "Int64Data value {} is out of range for parameter \"{}\"", data->readable(), name ) );
+					}
+				}
+				else if( const IntData *data = dataCast<IntData>( name, value, messageContext ) )
 				{
 					AiNodeSetInt( node, name, data->readable() );
 				}
 				break;
 			case AI_TYPE_UINT :
-				if( const IntData *data = runTimeCast<const IntData>( value ) )
+				if( const UInt64Data *data = runTimeCast<const UInt64Data>( value ) )
+				{
+					unsigned int i = static_cast<unsigned int>( data->readable() );
+					if( i == data->readable() )
+					{
+						AiNodeSetUInt( node, name, i );
+					}
+					else
+					{
+						msg( Msg::Warning, "setParameter", fmt::format( "UInt64Data value {} is out of range for parameter \"{}\"", data->readable(), name ) );
+					}
+				}
+				else if( const IntData *data = runTimeCast<const IntData>( value ) )
 				{
 					AiNodeSetUInt( node, name, std::max( 0, data->readable() ) );
 				}
@@ -459,9 +483,11 @@ int parameterType( IECore::TypeId dataType, bool &array )
 		// non-array types
 
 		case IntDataTypeId :
+		case Int64DataTypeId :
 			array = false;
 			return AI_TYPE_INT;
 		case UIntDataTypeId :
+		case UInt64DataTypeId :
 			array = false;
 			return AI_TYPE_UINT;
 		case FloatDataTypeId :

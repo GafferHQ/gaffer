@@ -42,3 +42,5 @@ if hasattr( os, "add_dll_directory" ) and "DELIGHT" in os.environ :
 del os, pathlib # Don't pollute the namespace
 
 from ._IECoreDelight import *
+
+__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "IECoreDelight" )

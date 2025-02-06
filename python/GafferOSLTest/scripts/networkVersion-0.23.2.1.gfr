@@ -117,4 +117,3 @@ __children["OutObject"].loadShader( "ObjectProcessing/OutObject", keepExistingVa
 
 
 del __children
-

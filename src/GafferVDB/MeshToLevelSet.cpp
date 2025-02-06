@@ -43,6 +43,7 @@
 #include "Gaffer/StringPlug.h"
 
 #include "IECoreScene/MeshPrimitive.h"
+#include "GafferScene/Private/IECoreScenePreview/PrimitiveAlgo.h"
 
 #include "openvdb/openvdb.h"
 #include "openvdb/tools/MeshToVolume.h"
@@ -64,16 +65,22 @@ namespace
 
 struct CortexMeshAdapter
 {
-
-	CortexMeshAdapter( const MeshPrimitive *mesh, const openvdb::math::Transform *transform )
+	CortexMeshAdapter( const MeshPrimitive *mesh )
 		:	m_numFaces( mesh->numFaces() ),
 			m_numVertices( mesh->variableSize( PrimitiveVariable::Vertex ) ),
 			m_verticesPerFace( mesh->verticesPerFace()->readable() ),
-			m_vertexIds( mesh->vertexIds()->readable() ),
-			m_transform( transform )
+			m_vertexIds( mesh->vertexIds()->readable() )
 	{
 		size_t offset = 0;
 		m_faceOffsets.reserve( m_numFaces );
+
+		// \todo - Preparing this list of face offsets is not an effective way to prepare topology for
+		// OpenVDB. If we wanted to be optimal, we would probably just convert everything to quads, where
+		// the 4 vertex is set to openvdb::util::INVALID_IDX if the face is actually a triangle ( this is
+		// the convention used by OpenVDB in their adapter ). If we were going to do this, we would also
+		// want to process n-gons with > 4 verts somehow to preserve watertightness. Currently, we pass
+		// n-gons through unchanged, and then VDB discards them, which breaks watertightness and causes
+		// level set conversion to completely fail on meshes with n-gons.
 		for( vector<int>::const_iterator it = m_verticesPerFace.begin(), eIt = m_verticesPerFace.end(); it != eIt; ++it )
 		{
 			m_faceOffsets.push_back( offset );
@@ -102,9 +109,8 @@ struct CortexMeshAdapter
 	// Return position pos in local grid index space for polygon n and vertex v
 	void getIndexSpacePoint( size_t polygonIndex, size_t polygonVertexIndex, openvdb::Vec3d &pos ) const
 	{
-		/// \todo Threaded pretransform in constructor?
-		const V3f p = (*m_points)[ m_vertexIds[ m_faceOffsets[polygonIndex] + polygonVertexIndex ] ];
-		pos = m_transform->worldToIndex( openvdb::math::Vec3s( p.x, p.y, p.z ) );
+		const V3f &p = (*m_points)[ m_vertexIds[ m_faceOffsets[polygonIndex] + polygonVertexIndex ] ];
+		pos = openvdb::math::Vec3s( p.x, p.y, p.z );
 	}
 
 	private :
@@ -115,8 +121,6 @@ struct CortexMeshAdapter
 		const vector<int> &m_vertexIds;
 		vector<int> m_faceOffsets;
 		const vector<V3f> *m_points;
-		const openvdb::math::Transform *m_transform;
-
 };
 
 } // namespace
@@ -130,7 +134,7 @@ GAFFER_NODE_DEFINE_TYPE( MeshToLevelSet );
 size_t MeshToLevelSet::g_firstPlugIndex = 0;
 
 MeshToLevelSet::MeshToLevelSet( const std::string &name )
-	:	ObjectProcessor( name )
+	:	MergeObjects( name, "${scene:path}" )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -146,12 +150,12 @@ MeshToLevelSet::~MeshToLevelSet()
 
 Gaffer::StringPlug *MeshToLevelSet::gridPlug()
 {
-	return  getChild<StringPlug>( g_firstPlugIndex );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::StringPlug *MeshToLevelSet::gridPlug() const
 {
-	return  getChild<StringPlug>( g_firstPlugIndex );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 FloatPlug *MeshToLevelSet::voxelSizePlug()
@@ -184,10 +188,10 @@ const FloatPlug *MeshToLevelSet::interiorBandwidthPlug() const
 	return getChild<FloatPlug>( g_firstPlugIndex + 3 );
 }
 
-bool MeshToLevelSet::affectsProcessedObject( const Gaffer::Plug *input ) const
+bool MeshToLevelSet::affectsMergedObject( const Gaffer::Plug *input ) const
 {
 	return
-		ObjectProcessor::affectsProcessedObject( input ) ||
+		MergeObjects::affectsMergedObject( input ) ||
 		input == gridPlug() ||
 		input == voxelSizePlug() ||
 		input == exteriorBandwidthPlug() ||
@@ -195,9 +199,11 @@ bool MeshToLevelSet::affectsProcessedObject( const Gaffer::Plug *input ) const
 	;
 }
 
-void MeshToLevelSet::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void MeshToLevelSet::hashMergedObject(
+	const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h
+) const
 {
-	ObjectProcessor::hashProcessedObject( path, context, h );
+	MergeObjects::hashMergedObject( path, context, h );
 
 	gridPlug()->hash( h );
 	voxelSizePlug()->hash( h );
@@ -205,45 +211,79 @@ void MeshToLevelSet::hashProcessedObject( const ScenePath &path, const Gaffer::C
 	interiorBandwidthPlug()->hash ( h );
 }
 
-IECore::ConstObjectPtr MeshToLevelSet::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const
+IECore::ConstObjectPtr MeshToLevelSet::computeMergedObject( const std::vector< std::pair< IECore::ConstObjectPtr, Imath::M44f > > &sources, const Gaffer::Context *context ) const
 {
-	const MeshPrimitive *mesh = runTimeCast<const MeshPrimitive>( inputObject );
-	if( !mesh )
-	{
-		return inputObject;
-	}
+	std::vector< IECoreScene::MeshPrimitivePtr > meshStorage;
+	std::vector< std::pair< const IECoreScene::Primitive *, Imath::M44f > > meshes;
 
 	const float voxelSize = voxelSizePlug()->getValue();
-	const float exteriorBandwidth = exteriorBandwidthPlug()->getValue();
-	const float interiorBandwidth = interiorBandwidthPlug()->getValue();
 
-	openvdb::math::Transform::Ptr transform = openvdb::math::Transform::createLinearTransform( voxelSize );
-	Interrupter interrupter( context->canceller() );
+	openvdb::math::Transform::Ptr vdbTransform = openvdb::math::Transform::createLinearTransform( voxelSize );
+	Imath::M44f worldToIndex;
+	worldToIndex.setScale( 1.0f / voxelSize );
 
-	openvdb::FloatGrid::Ptr grid = openvdb::tools::meshToVolume<openvdb::FloatGrid>(
-		interrupter,
-		CortexMeshAdapter( mesh, transform.get() ),
-		*transform,
-		exteriorBandwidth, //in voxel units
-		interiorBandwidth, //in voxel units
-		0 //conversionFlags
-	);
+	for( const auto &[object, transform] : sources )
+	{
+		const IECoreScene::MeshPrimitive * m = IECore::runTimeCast< const IECoreScene::MeshPrimitive >( object.get() );
+		if( !m )
+		{
+			// Just skip anything that's not a mesh
+			continue;
+		}
 
-	// If we've been cancelled, the interrupter will have stopped
-	// `meshToVolume()` and we'll have a partial result in the grid.
-	// We need to throw rather than allow this partial result to be
-	// returned.
-	Canceller::check( context->canceller() );
+		// Create a simplified mesh with only basic topology and P - OpenVDB won't use anything else,
+		// and we don't want to spend time merging primvars or creases that won't be used.
+		// The copy-on-write mechanism should ensure that we don't actually duplicate this data.
+		IECoreScene::MeshPrimitivePtr simpleMesh = new IECoreScene::MeshPrimitive();
+		simpleMesh->setTopologyUnchecked(
+			m->verticesPerFace(), m->vertexIds(), m->variableSize( PrimitiveVariable::Interpolation::Vertex )
+		);
+		simpleMesh->variables["P"] = m->variables.at("P");
+		meshStorage.push_back( simpleMesh );
+
+		meshes.push_back( std::make_pair( simpleMesh.get(), transform * worldToIndex ) );
+	}
+
+	openvdb::FloatGrid::Ptr grid;
+	if( !meshes.size() )
+	{
+		// None of the filtered sources were actually meshes. We could consider this an exception,
+		// but I guess the most consistent thing is just to return an empty grid with the correct voxel size.
+		grid = openvdb::FloatGrid::create();
+		grid->setTransform( vdbTransform );
+	}
+	else
+	{
+		IECoreScene::MeshPrimitivePtr mergedMesh = IECore::runTimeCast<MeshPrimitive>(
+			IECoreScenePreview::PrimitiveAlgo::mergePrimitives( meshes, context->canceller() )
+		);
+		assert( mergedMesh );
+
+		const float exteriorBandwidth = exteriorBandwidthPlug()->getValue();
+		const float interiorBandwidth = interiorBandwidthPlug()->getValue();
+
+		Interrupter interrupter( context->canceller() );
+
+		grid = openvdb::tools::meshToVolume<openvdb::FloatGrid>(
+			interrupter,
+			CortexMeshAdapter( mergedMesh.get() ),
+			*vdbTransform,
+			exteriorBandwidth, //in voxel units
+			interiorBandwidth, //in voxel units
+			0 //conversionFlags
+		);
+
+		// If we've been cancelled, the interrupter will have stopped
+		// `meshToVolume()` and we'll have a partial result in the grid.
+		// We need to throw rather than allow this partial result to be
+		// returned.
+		Canceller::check( context->canceller() );
+	}
 
 	grid->setName( gridPlug()->getValue() );
 
-	VDBObjectPtr newVDBObject =  new VDBObject();
+	VDBObjectPtr newVDBObject = new VDBObject();
 	newVDBObject->insertGrid( grid );
 
 	return newVDBObject;
-}
-
-Gaffer::ValuePlug::CachePolicy MeshToLevelSet::processedObjectComputeCachePolicy() const
-{
-	return ValuePlug::CachePolicy::TaskCollaboration;
 }

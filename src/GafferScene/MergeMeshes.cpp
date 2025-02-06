@@ -63,7 +63,7 @@ MergeMeshes::~MergeMeshes()
 {
 }
 
-IECore::ConstObjectPtr MergeMeshes::mergeObjects( const std::vector< std::pair< IECore::ConstObjectPtr, Imath::M44f > > &sources, const Gaffer::Context *context ) const
+IECore::ConstObjectPtr MergeMeshes::computeMergedObject( const std::vector< std::pair< IECore::ConstObjectPtr, Imath::M44f > > &sources, const Gaffer::Context *context ) const
 {
 	std::vector< std::pair< const IECoreScene::Primitive *, Imath::M44f > > meshes;
 

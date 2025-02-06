@@ -52,6 +52,7 @@ from .SetExpressionPlugValueWidget import SetExpressionPlugValueWidget
 from .LightEditor import LightEditor
 from .SetEditor import SetEditor
 from .RenderPassEditor import RenderPassEditor
+from .AttributeEditor import AttributeEditor
 from . import SceneHistoryUI
 from . import EditScopeUI
 from . import _InspectorColumn
@@ -202,6 +203,8 @@ from . import MergeObjectsUI
 from . import MergeMeshesUI
 from . import MergePointsUI
 from . import MergeCurvesUI
+from . import VisualiserToolUI
+from . import PrimitiveVariableTweaksUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

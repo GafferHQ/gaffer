@@ -97,15 +97,14 @@ const ScriptNode *scriptNode( const GraphComponent *subject )
 	// the ScriptNode from such classes.
 	while( subject )
 	{
-		if( subject->isInstanceOf( "GafferUI::View" ) )
+		if( subject->isInstanceOf( "GafferUI::View" ) || subject->isInstanceOf( "GafferUI::Editor::Settings" ) )
 		{
-			if( auto inPlug = subject->getChild<Plug>( "in" ) )
+			if( !subject->refCount() )
 			{
-				return scriptNode( inPlug->getInput() );
+				// View or Settings still in construction, and therefore can't
+				// be accessed by any background tasks. No need to cancel anything.
+				return nullptr;
 			}
-		}
-		else if( subject->isInstanceOf( "GafferUI::Editor::Settings" ) )
-		{
 			if( auto scriptPlug = subject->getChild<Plug>( "__scriptNode" ) )
 			{
 				return scriptNode( scriptPlug->getInput() );

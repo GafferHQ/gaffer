@@ -37,6 +37,7 @@
 import PyOpenColorIO
 
 import Gaffer
+import GafferUI
 import GafferImageUI
 import GafferArnold
 
@@ -51,7 +52,7 @@ def __parameterUserDefault( plug ) :
 def __ocioConfig( plug ) :
 
 	try :
-		context = plug.ancestor( Gaffer.ScriptNode ).context()
+		context = GafferUI.ContextTracker.acquireForFocus( plug ).context( plug )
 		with context :
 			if plug.node()["__shader"]["name"].getValue() != "color_manager_ocio" :
 				return None

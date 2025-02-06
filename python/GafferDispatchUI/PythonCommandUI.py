@@ -79,12 +79,19 @@ Gaffer.Metadata.registerNode(
 
 		),
 
-		"sequence" : (
+		"framesMode" : (
 
 			"description",
 			"""
-			Calls the command once for each sequence, instead of once
-			per frame. In this mode, an additional variable called `frames`
+			Determines how tasks for different frames are distributed
+			between calls to the command :
+
+			- Single : The command will be called for a single frame at a time.
+			- Batch : The command will be called once for each batch of frames
+			  defined by `dispatcher.batchSize`.
+			- Sequence : The command will be called once for all frames.
+
+			In Batch and Sequences modes, an additional variable called `frames`
 			is available to the command, containing a list of all frame
 			numbers for which execution should be performed. The Context may
 			be updated to reference any frame from this list, and accessing
@@ -105,9 +112,17 @@ Gaffer.Metadata.registerNode(
 			# Do some one-time finalization
 			...
 			```
+
+			> Note : In Single mode, the command will only be called for each
+			> frame if the inputs are animated. If the inputs are static
+			> then the command will only be called once.
 			""",
 
 			"layout:section", "Advanced",
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:Single", GafferDispatch.PythonCommand.FramesMode.Single,
+			"preset:Batch", GafferDispatch.PythonCommand.FramesMode.Batch,
+			"preset:Sequence", GafferDispatch.PythonCommand.FramesMode.Sequence,
 
 		),
 
@@ -123,7 +138,7 @@ class _CommandPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		self.__codeWidget = GafferUI.CodeWidget()
+		self.__codeWidget = GafferUI.CodeWidget( lineNumbersVisible = True )
 
 		GafferUI.PlugValueWidget.__init__( self, self.__codeWidget, plug, **kw )
 

@@ -95,6 +95,8 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 					nodeFrame.addChild( self.__nodeEditor( node ) )
 					# remove the per-node execute button
 					Gaffer.Metadata.registerValue( node, "layout:customWidget:dispatchButton:widgetType", "", persistent = False )
+					# remove the per-node widget to create a dispatcher
+					Gaffer.Metadata.registerValue( node, "layout:customWidget:dispatcherCreationWidget:widgetType", "", persistent = False )
 					self.__tabs.setLabel( nodeFrame, node.relativeName( self.__script ) )
 
 				with GafferUI.ListContainer() as dispatcherTab :

@@ -34,32 +34,42 @@
 #
 ##########################################################################
 
+import functools
+import imath
+
 import Gaffer
 import GafferCycles
-import imath
-import functools
 
 parameterMetadata = {
 	"principled_bsdf" : {
+
+		"graphEditorLayout:defaultVisibility" : False,
+
 		"base_color" : {
 			"label" : "Base Color",
 			"layout:index" : 1,
+			"noduleLayout:visible" : True,
 		},
 		"metallic" : {
 			"layout:index" : 2,
+			"noduleLayout:visible" : True,
 		},
 		"roughness" : {
 			"layout:index" : 3,
+			"noduleLayout:visible" : True,
 		},
 		"ior" : {
 			"label" : "IOR",
 			"layout:index" : 4,
+			"noduleLayout:visible" : True,
 		},
 		"alpha" : {
 			"layout:index" : 5,
+			"noduleLayout:visible" : True,
 		},
 		"normal" : {
 			"layout:index" : 6,
+			"noduleLayout:visible" : True,
 		},
 		"subsurface_method" : {
 			"layout:section" : "Subsurface",
@@ -190,12 +200,16 @@ parameterMetadata = {
 		},
 	},
 	"principled_hair_bsdf" : {
+
+		"graphEditorLayout:defaultVisibility" : False,
+
 		"model" : {
 			"userDefault" : "Chiang",
 		},
 		"color" : {
 			"layout:visibilityActivator" : lambda plug : plug.node()["parameters"]["parametrization"].getValue() == "Direct coloring",
 			"layout:index" : 1,
+			"noduleLayout:visible" : True,
 		},
 		"absorption_coefficient" : {
 			"layout:visibilityActivator" : lambda plug : plug.node()["parameters"]["parametrization"].getValue() == "Absorption coefficient",
@@ -217,13 +231,16 @@ parameterMetadata = {
 		},
 		"roughness" : {
 			"layout:index" : 6,
+			"noduleLayout:visible" : True,
 		},
 		"radial_roughness" : {
 			"label" : "Radial Roughness",
 			"layout:index" : 7,
+			"noduleLayout:visible" : True,
 		},
 		"coat" : {
 			"layout:index" : 8,
+			"noduleLayout:visible" : True,
 		},
 		"ior" : {
 			"label" : "IOR",
@@ -265,6 +282,7 @@ parameterMetadata = {
 		"color_attribute" : {
 			"label" : "Color Attribute",
 			"layout:index" : 2,
+			"noduleLayout:visible" : False,
 		},
 		"density" : {
 			"layout:index" : 3,
@@ -273,6 +291,7 @@ parameterMetadata = {
 			"label" : "Density Attribute",
 			"layout:index" : 4,
 			"userDefault" : "density",
+			"noduleLayout:visible" : False,
 		},
 		"anisotropy" : {
 			"layout:index" : 5,
@@ -304,6 +323,7 @@ parameterMetadata = {
 			"label" : "Temperature Attribute",
 			"layout:index" : 12,
 			"userDefault" : "temperature",
+			"noduleLayout:visible" : False,
 		},
 	},
 	"vector_map_range" : {
@@ -960,7 +980,17 @@ def metadata( plug, name ) :
 	if parameterDict is None :
 		return None
 
-	value = parameterDict.get( name )
+	if name == "noduleLayout:visible" :
+		if plug.getInput() is not None :
+			# Before the introduction of nodule visibility controls,
+			# users may have made connections to plugs which are now
+			# hidden by default. Make sure we continue to show them.
+			value = True
+		else :
+			value = parameterDict.get( name, shaderDict.get( "graphEditorLayout:defaultVisibility" ) )
+	else :
+		value = parameterDict.get( name )
+
 	if callable( value ) :
 		return value( plug )
 	else :
@@ -970,7 +1000,7 @@ def metadata( plug, name ) :
 
 ### main metadata assignments ###
 
-for name in ( "label", "layout:section", "layout:index", "userDefault", "layout:visibilityActivator" ) :
+for name in ( "label", "layout:section", "layout:index", "userDefault", "layout:visibilityActivator", "noduleLayout:visible" ) :
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters.*", name, functools.partial( metadata, name = name ) )
 
 ### tex_mapping section, indexes and labels ###
@@ -1032,11 +1062,12 @@ Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.max_bounces
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.cast_shadow", "layout:index", 13 )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_mis", "layout:index", 14 )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_caustics", "layout:index", 15 )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_camera", "layout:index", 16 )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_diffuse", "layout:index", 17 )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_glossy", "layout:index", 18 )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_transmission", "layout:index", 19 )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_scatter", "layout:index", 20 )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.is_sphere", "layout:index", 16 )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_camera", "layout:index", 17 )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_diffuse", "layout:index", 18 )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_glossy", "layout:index", 19 )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_transmission", "layout:index", 20 )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_scatter", "layout:index", 21 )
 
 ### universal sections ###
 

@@ -311,9 +311,8 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 			# or unintuitive
 			deleteEnabled = True
 			inputNode = self.settings()["in"].getInput().node()
-			editScopeInput = self.settings()["editScope"].getInput()
-			if editScopeInput is not None :
-				editScopeNode = editScopeInput.node()
+			editScopeNode = self.editScope()
+			if editScopeNode is not None :
 				if inputNode != editScopeNode and editScopeNode not in Gaffer.NodeAlgo.upstreamNodes( inputNode ) :
 					# Edit scope is downstream of input
 					deleteEnabled = False
@@ -368,7 +367,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		# There may be multiple columns with a selection, but we only operate on the name column.
 		selection = self.__pathListing.getSelection()[0]
 
-		editScope = self.settings()["editScope"].getInput().node()
+		editScope = self.editScope()
 
 		with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
 			GafferScene.EditScopeAlgo.setPruned( editScope, selection, True )
@@ -414,7 +413,7 @@ Gaffer.Metadata.registerNode(
 		"editScope" : [
 
 			"plugValueWidget:type", "GafferUI.EditScopeUI.EditScopePlugValueWidget",
-			"layout:width", 225,
+			"layout:width", 130,
 
 		],
 

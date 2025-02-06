@@ -37,9 +37,14 @@
 
 import weakref
 import imath
+import functools
+
+import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.PlugValueWidget import sole
+from GafferUI.ColorChooserPlugValueWidget import saveDefaultOptions
 
 class ColorSwatchPlugValueWidget( GafferUI.PlugValueWidget ) :
 
@@ -132,6 +137,23 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 		self.__mergeGroupId = 0
 
 		self.__colorChangedConnection = self.colorChooser().colorChangedSignal().connect( Gaffer.WeakMethod( self.__colorChanged ) )
+
+		self.colorChooser().visibleComponentsChangedSignal().connect(
+			functools.partial( Gaffer.WeakMethod( self.__colorChooserVisibleComponentsChanged ) )
+		)
+		self.colorChooser().staticComponentChangedSignal().connect(
+			functools.partial( Gaffer.WeakMethod( self.__colorChooserStaticComponentChanged ) )
+		)
+		self.colorChooser().colorFieldVisibleChangedSignal().connect(
+			functools.partial( Gaffer.WeakMethod( self.__colorChooserColorFieldVisibleChanged ) )
+		)
+		self.colorChooser().dynamicSliderBackgroundsChangedSignal().connect(
+			functools.partial( Gaffer.WeakMethod( self.__dynamicSliderBackgroundsChanged ) )
+		)
+		self.colorChooser().optionsMenuSignal().connect(
+			functools.partial( Gaffer.WeakMethod( self.__colorChooserOptionsMenu ) )
+		)
+
 		self.confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 		self.cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 
@@ -150,6 +172,22 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 			self.setTitle( "{} plugs".format( len( self.__plugs ) ) )
 
 		self.__plugSet( plug )
+
+		visibleComponents = self.__colorChooserOption( "visibleComponents" )
+		if visibleComponents is not None :
+			self.colorChooser().setVisibleComponents( visibleComponents )
+
+		staticComponent = self.__colorChooserOption( "staticComponent" )
+		if staticComponent is not None :
+			self.colorChooser().setColorFieldStaticComponent( staticComponent )
+
+		colorFieldVisible = self.__colorChooserOption( "colorFieldVisible" )
+		if colorFieldVisible is not None :
+			self.colorChooser().setColorFieldVisible( colorFieldVisible )
+
+		dynamicSliderBackgrounds = self.__colorChooserOption( "dynamicSliderBackgrounds" )
+		if dynamicSliderBackgrounds is not None :
+			self.colorChooser().setDynamicSliderBackgrounds( dynamicSliderBackgrounds )
 
 		parentWindow.addChildWindow( self, removeOnClose = True )
 
@@ -211,6 +249,51 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 		assert( not self.visible() )
 		GafferUI.WidgetAlgo.keepUntilIdle( self )
 
+	def __colorChooserOptionsMenu( self, colorChooser, menuDefinition ) :
+
+		menuDefinition.append( "/__saveDefaultOptions__", { "divider": True, "label": "Defaults" } )
+
+		menuDefinition.append(
+			"/Save Default Dialogue Layout",
+			{
+				"command": functools.partial(
+					saveDefaultOptions,
+					colorChooser,
+					"colorChooser:dialogue:",
+					self.ancestor( GafferUI.ScriptWindow ).scriptNode().applicationRoot().preferencesLocation() / "__colorChooser.py"
+				)
+			}
+		)
+
 	def __destroy( self, *unused ) :
 
 		self.parent().removeChild( self )
+
+	# \todo Extract these two methods to share with `ColorChooserPlugValueWidget` which has
+	# an almost identical implementation.
+
+	def __colorChooserOptionChanged( self, keySuffix, value ) :
+
+		for p in self.__plugs :
+			Gaffer.Metadata.deregisterValue( p, "colorChooser:dialogue:" + keySuffix )
+			Gaffer.Metadata.registerValue( p, "colorChooser:dialogue:" + keySuffix, value, persistent = False )
+
+	def __colorChooserOption( self, keySuffix ) :
+
+		return sole( Gaffer.Metadata.value( p, "colorChooser:dialogue:" + keySuffix ) for p in self.__plugs )
+
+	def __colorChooserVisibleComponentsChanged( self, colorChooser ) :
+
+		self.__colorChooserOptionChanged( "visibleComponents", colorChooser.getVisibleComponents() )
+
+	def __colorChooserStaticComponentChanged( self, colorChooser ) :
+
+		self.__colorChooserOptionChanged( "staticComponent", colorChooser.getColorFieldStaticComponent() )
+
+	def __colorChooserColorFieldVisibleChanged( self, colorChooser ) :
+
+		self.__colorChooserOptionChanged( "colorFieldVisible", colorChooser.getColorFieldVisible() )
+
+	def __dynamicSliderBackgroundsChanged( self, colorChooser ) :
+
+		self.__colorChooserOptionChanged( "dynamicSliderBackgrounds", colorChooser.getDynamicSliderBackgrounds() )

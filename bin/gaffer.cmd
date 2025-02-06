@@ -35,6 +35,9 @@ call :prependToPath "%USERPROFILE%\gaffer\apps;%GAFFER_ROOT%\apps" GAFFER_APP_PA
 call :prependToPath "%USERPROFILE%\gaffer\startup" GAFFER_STARTUP_PATHS
 call :appendToPath "%GAFFER_ROOT%\startup" GAFFER_STARTUP_PATHS
 
+call :prependToPath "%USERPROFILE%\gaffer\startup" CORTEX_STARTUP_PATHS
+call :appendToPath "%GAFFER_ROOT%\startup" CORTEX_STARTUP_PATHS
+
 call :prependToPath "%GAFFER_ROOT%\graphics" GAFFERUI_IMAGE_PATHS
 
 set OSLHOME=%GAFFER_ROOT%
@@ -137,6 +140,12 @@ if "%CYCLES_ROOT%" NEQ "" (
 	call :prependToPath "%CYCLES_ROOT%\bin" PATH
 )
 
+rem ONNX
+rem ====
+
+if "%ONNX_ROOT%" NEQ "" (
+	call :appendToPath "%ONNX_ROOT%\lib" PATH
+)
 
 rem Set up 3rd party extensions
 rem Batch files are awkward at `for` loops. The default `for`, without `/f`

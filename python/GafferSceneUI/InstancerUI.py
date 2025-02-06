@@ -284,6 +284,7 @@ Gaffer.Metadata.registerNode(
 
 	"layout:section:Settings.General:collapsed", False,
 	"layout:section:Settings.Transforms:collapsed", False,
+	"layout:section:Settings.Inactive Ids:collapsed", False,
 	"layout:section:Settings.Attributes:collapsed", False,
 
 	"layout:activator:modeIsIndexedRootsList", lambda node : node["prototypeMode"].getValue() == GafferScene.Instancer.PrototypeMode.IndexedRootsList,
@@ -345,12 +346,9 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The object on which to make the instances. The
-			position, orientation and scale of the instances
-			are taken from per-vertex primitive variables on
-			this object. This is ignored when a filter is
-			connected, in which case the filter specifies
-			multiple objects to make the instances from.
+			Using the `parent` plug to select the source is now deprecated, please use a filter instead.
+			This plug is still supported for backwards compatibility, but is incompatible with recent features,
+			like accurately reporting variation counts.
 			""",
 
 			"layout:section", "Settings.General",
@@ -546,6 +544,25 @@ Gaffer.Metadata.registerNode(
 
 			"userDefault", "scale",
 			"layout:section", "Settings.Transforms",
+
+		],
+
+		"inactiveIds" : [
+
+			"description",
+			"""
+			A space separated list of names of primitive variables specifying instances to make inactive.
+			Inactive instances are not output from the instancer or rendered.
+
+			Each primitive variable either must be a constant vector of type Int or Int64 with a list of
+			matching ids to deactivate, or it  must be a vertex bool primitive variable, in which case it
+			will deactivate the instance for the corresponding vertex if the value is true.
+			""",
+
+			# This user default will pick up any of the standard USD ways of controlling this.
+			"userDefault", "inactiveIds invisibleIds",
+
+			"layout:section", "Settings.Inactive Ids",
 
 		],
 

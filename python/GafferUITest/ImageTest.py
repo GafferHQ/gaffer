@@ -39,6 +39,8 @@ import unittest
 
 import imath
 
+import IECore
+
 import GafferUI
 import GafferUITest
 
@@ -70,8 +72,27 @@ class ImageTest( GafferUITest.TestCase ) :
 
 		s = GafferUI.Image.createSwatch( imath.Color3f( 1, 0, 0 ) )
 
-		self.assertEqual( s._qtPixmap().width(), 10 )
-		self.assertEqual( s._qtPixmap().height(), 10 )
+		self.assertEqual( s._qtPixmap().width(), 14 )
+		self.assertEqual( s._qtPixmap().height(), 14 )
+
+	def testCreateSwatchWithImage( self ) :
+
+		s = GafferUI.Image.createSwatch( imath.Color3f( 1, 0, 0 ), image = "arrowRight10.png" )
+
+		self.assertEqual( s._qtPixmap().width(), 14 )
+		self.assertEqual( s._qtPixmap().height(), 14 )
+
+		# Create a swatch with a large image. The swatch size should not increase.
+		s2 = GafferUI.Image.createSwatch( imath.Color3f( 1, 0, 0 ), image = "warningNotification.png" )
+
+		self.assertEqual( s2._qtPixmap().width(), 14 )
+		self.assertEqual( s2._qtPixmap().height(), 14 )
+
+		with IECore.CapturingMessageHandler() as mh :
+			GafferUI.Image.createSwatch( imath.Color3f( 1, 0, 0 ), image = "iAmNotAFile" )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertIn( 'Unable to find file "iAmNotAFile"', mh.messages[0].message )
 
 if __name__ == "__main__":
 	unittest.main()

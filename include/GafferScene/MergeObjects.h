@@ -107,14 +107,29 @@ class GAFFERSCENE_API MergeObjects : public FilteredSceneProcessor
 		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
 
 
-		/// @name Actual object merge function
+		/// If there are any additional plugs that affect the merge, this should be implemented
+		/// to call the base class, and then return true for those extra plugs.
+		virtual bool affectsMergedObject( const Gaffer::Plug *input ) const;
+
+		/// If there are any additional plugs that affect the merge, this should be implemented
+		/// to call the base class, and then add those plugs to the hash.
+		virtual void hashMergedObject(
+			const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h
+		) const;
+
+		/// Actual object merge function
 		/// This must be implemented by derived classes. It receives a vector of pairs of objects
 		/// and the transform that maps each object into the shared space of the output location.
 		///
-		virtual IECore::ConstObjectPtr mergeObjects(
+		virtual IECore::ConstObjectPtr computeMergedObject(
 			const std::vector< std::pair< IECore::ConstObjectPtr, Imath::M44f > > &sources,
 			const Gaffer::Context *context
 		) const = 0;
+
+
+
+
+
 
 		// \todo - should we offer alternate ways to merge bounds? Can we think of any use cases for this?
 		//virtual Imath::Box3f mergeBounds( const std::vector< ScenePath > &sourcePaths, const Gaffer::Context *context ) const;

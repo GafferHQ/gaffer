@@ -203,7 +203,7 @@ std::string Serialisation::result() const
 
 	if( m_protectParentNamespace )
 	{
-		result += "\n\ndel __children\n\n";
+		result += "\n\ndel __children\n";
 	}
 
 	return result;

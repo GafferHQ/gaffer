@@ -64,13 +64,29 @@ class ApplicationTest( GafferTest.TestCase ) :
 	def testProcessName( self ) :
 
 		process = subprocess.Popen( [ str( Gaffer.executablePath() ), "env", "sleep", "100" ] )
-		time.sleep( 1 )
-		command = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "command=" ], universal_newlines = True ).strip()
-		name = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "comm=" ], universal_newlines = True ).strip()
-		process.kill()
+		try :
+			startTime = time.time()
+			while True :
+				time.sleep( 0.1 )
+				command = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "command=" ], universal_newlines = True ).strip()
+				name = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "comm=" ], universal_newlines = True ).strip()
+				try :
+					self.assertEqual( command, "gaffer env sleep 100" )
+					self.assertEqual( name, "gaffer" )
 
-		self.assertEqual( command, "gaffer env sleep 100" )
-		self.assertEqual( name, "gaffer" )
+				except self.failureException :
+					# It can take some time for gaffer to change its own process name, which varies
+					# based on the host's performance.
+					# For that reason, we check until 3 seconds have passed before giving up.
+					if time.time() - startTime > 3.0 :
+						raise
+
+				else :
+					break
+
+		finally :
+			process.kill()
+
 
 if __name__ == "__main__":
 	unittest.main()

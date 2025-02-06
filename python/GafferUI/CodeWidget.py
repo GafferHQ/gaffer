@@ -55,9 +55,9 @@ from Qt import QtGui
 
 class CodeWidget( GafferUI.MultiLineTextWidget ) :
 
-	def __init__( self, text="", editable=True, fixedLineHeight=None, **kw ) :
+	def __init__( self, text="", editable=True, fixedLineHeight=None, lineNumbersVisible = False, **kw ) :
 
-		GafferUI.MultiLineTextWidget.__init__( self, text, editable, fixedLineHeight = fixedLineHeight, wrapMode = self.WrapMode.None_, role = self.Role.Code, **kw )
+		GafferUI.MultiLineTextWidget.__init__( self, text, editable, fixedLineHeight = fixedLineHeight, wrapMode = self.WrapMode.None_, role = self.Role.Code, lineNumbersVisible = lineNumbersVisible, **kw )
 
 		self.__completer = None
 		self.__completionMenu = None
@@ -586,7 +586,19 @@ class PythonCompleter( Completer ) :
 			items = []
 			for n in dir( rootObject ) :
 				with IECore.IgnoredExceptions( AttributeError ) :
-					items.append( ( n, getattr( rootObject, n ) ) )
+					if not isinstance( getattr( type( rootObject ), n, None ), property ) :
+						# Get the value using `getattr()`, so that
+						# `__completions()` can distinguish between callable and
+						# non-callable values.
+						items.append( ( n, getattr( rootObject, n ) ) )
+					else :
+						# Avoid calling the property getter to get the attribute
+						# value, because one particular Gaffer pipeline has many
+						# slow-to-get properties. We assume that this is no
+						# great loss in other pipelines, because it is unlikely that
+						# a property returns a callable.
+						items.append( ( n, None ) )
+
 			return self.__completions(
 				items = items,
 				prefix = prefix, partialName = partial[1:],

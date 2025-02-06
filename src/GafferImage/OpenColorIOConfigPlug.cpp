@@ -67,7 +67,7 @@ OpenColorIOConfigPlug::OpenColorIOConfigPlug( const std::string &name, Direction
 	addChild( new StringPlug( "config", direction, "", childFlags ) );
 	addChild( new StringPlug( "workingSpace", direction, OCIO_NAMESPACE::ROLE_SCENE_LINEAR, childFlags ) );
 	addChild( new ValuePlug( "variables", direction, childFlags ) );
-	addChild( new StringPlug( "displayTransform", direction, "", childFlags ) );
+	addChild( new StringPlug( "displayTransform", direction, "__default__", childFlags ) );
 }
 
 Gaffer::StringPlug *OpenColorIOConfigPlug::configPlug()

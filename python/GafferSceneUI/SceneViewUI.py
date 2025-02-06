@@ -50,6 +50,7 @@ import GafferScene
 import GafferSceneUI
 import GafferImage
 
+from GafferUI.PlugValueWidget import sole
 from ._SceneViewInspector import _SceneViewInspector
 
 def __rendererPlugActivator( plug ) :
@@ -66,6 +67,11 @@ def __rendererPlugActivator( plug ) :
 
 	return plug.parent()["name"].getValue().lower() == plug.getName().lower()
 
+def __condensedEditScopeSpacerActivator( node ) :
+
+	input = node["editScope"].getInput()
+	return input is not None and input.getName() == "editScope" and isinstance( input.node(), GafferUI.Editor.Settings )
+
 Gaffer.Metadata.registerNode(
 
 	GafferSceneUI.SceneView,
@@ -74,6 +80,9 @@ Gaffer.Metadata.registerNode(
 	"toolbarLayout:customWidget:StateWidget:section", "Top",
 	"toolbarLayout:customWidget:StateWidget:index", 0,
 
+	## \todo These balancing spacers are horrendous. We should be able to improve PlugLayout
+	# to support arranging plugs horizontally in sections with alignment as well as other
+	# niceties such as collapsible sections, etc.
 	"toolbarLayout:customWidget:EditScopeBalancingSpacer:widgetType", "GafferSceneUI.SceneViewUI._EditScopeBalancingSpacer",
 	"toolbarLayout:customWidget:EditScopeBalancingSpacer:section", "Top",
 	"toolbarLayout:customWidget:EditScopeBalancingSpacer:index", 1,
@@ -85,6 +94,16 @@ Gaffer.Metadata.registerNode(
 	"toolbarLayout:customWidget:CenterRightSpacer:widgetType", "GafferSceneUI.SceneViewUI._Spacer",
 	"toolbarLayout:customWidget:CenterRightSpacer:section", "Top",
 	"toolbarLayout:customWidget:CenterRightSpacer:index", -2,
+
+	"toolbarLayout:customWidget:RightEditScopeBalancingSpacer:widgetType", "GafferSceneUI.SceneViewUI._RightEditScopeBalancingSpacer",
+	"toolbarLayout:customWidget:RightEditScopeBalancingSpacer:section", "Top",
+	"toolbarLayout:customWidget:RightEditScopeBalancingSpacer:index", -2,
+
+	"toolbarLayout:activator:condensedEditScopeMenu", __condensedEditScopeSpacerActivator,
+	"toolbarLayout:customWidget:CondensedEditScopeBalancingSpacer:widgetType", "GafferSceneUI.SceneViewUI._CondensedEditScopeBalancingSpacer",
+	"toolbarLayout:customWidget:CondensedEditScopeBalancingSpacer:section", "Top",
+	"toolbarLayout:customWidget:CondensedEditScopeBalancingSpacer:index", -2,
+	"toolbarLayout:customWidget:CondensedEditScopeBalancingSpacer:visibilityActivator", "condensedEditScopeMenu",
 
 	"nodeToolbar:right:type", "GafferUI.StandardNodeToolbar.right",
 
@@ -105,7 +124,7 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferUI.EditScopeUI.EditScopePlugValueWidget",
 			"toolbarLayout:index", -1,
-			"toolbarLayout:width", 225,
+			"toolbarLayout:width", 130,
 
 		],
 
@@ -530,17 +549,43 @@ class _ShadingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		def __init__( self, plug, **kw ) :
 
-			menuButton = GafferUI.MenuButton(
+			self.__menuButton = GafferUI.MenuButton(
 				image = "shading.png",
 				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Shading" ),
 				hasFrame = False,
 			)
 
-			GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
+			GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
+
+			self.__menuButton.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+			self.__menuButton.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
+
+			self.__shadingModeToggle = Gaffer.Metadata.value( plug, "shadingModePlugValueWidget:defaultShadingModeToggle" )
 
 		def hasLabel( self ) :
 
 			return True
+
+		def getToolTip( self ) :
+
+			result = GafferUI.PlugValueWidget.getToolTip( self )
+
+			if self.__shadingModeToggle is not None :
+				if result :
+					result += "\n"
+				result += "## Actions\n\n"
+				result += "- <kbd>Ctrl</kbd> + click to toggle shading to `{}`\n".format( self.__shadingModeToggle if self.getPlug().isSetToDefault() else "Default" )
+
+			return result
+
+		def _updateFromValues( self, values, exception ) :
+
+			value = sole( values )
+			if value != self.getPlug().defaultValue() :
+				self.__shadingModeToggle = value
+				self.__menuButton.setImage( "shadingOn.png" )
+			else :
+				self.__menuButton.setImage( "shading.png" )
 
 		def __menuDefinition( self ) :
 
@@ -564,6 +609,27 @@ class _ShadingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		def __setValue( self, value, *unused ) :
 
 			self.getPlug().setValue( value )
+
+		def __buttonPress( self, widget, event ) :
+
+			if event.buttons == event.Buttons.Left and event.modifiers == event.Modifiers.Control :
+
+				if not self.getPlug().isSetToDefault() :
+					self.getPlug().setToDefault()
+				elif self.__shadingModeToggle is not None :
+					self.getPlug().setValue( self.__shadingModeToggle )
+
+				return True
+
+			return False
+
+		def __buttonDoubleClick( self, widget, event ) :
+
+			if event.buttons == event.Buttons.Left and event.modifiers == event.Modifiers.Control :
+				# Prevent menu from opening when Control is held.
+				return True
+
+			return False
 
 ##########################################################################
 # _ExpansionPlugValueWidget
@@ -1221,13 +1287,48 @@ GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugValueWidgetContextMenu
 # _Spacers
 ##########################################################################
 
+# This Spacer balances the left side of the toolbar when
+# the EditScope menu is wider than the tools on the left
 class _EditScopeBalancingSpacer( GafferUI.Spacer ) :
 
 	def __init__( self, sceneView, **kw ) :
 
-		# EditScope width - pause button - spacer - spinner - renderer
-		width = 200 - 25 - 4 - 20 - 100
+		editScopeWidth = Gaffer.Metadata.value( sceneView["editScope"], "toolbarLayout:width" ) or 130
+		# EditScope width + spacer - pause button - spacer - spinner - renderer
+		width = max( editScopeWidth + 4 - 25 - 4 - 20 - 100, 0 )
+		GafferUI.Spacer.__init__(
+			self,
+			imath.V2i( 0 ), # Minimum
+			preferredSize = imath.V2i( width, 1 ),
+			maximumSize = imath.V2i( width, 1 )
+		)
 
+# This Spacer balances the right side of the toolbar when
+# the EditScope menu is narrower than the tools on the left
+class _RightEditScopeBalancingSpacer( GafferUI.Spacer ) :
+
+	def __init__( self, sceneView, **kw ) :
+
+		editScopeWidth = Gaffer.Metadata.value( sceneView["editScope"], "toolbarLayout:width" ) or 130
+		# pause button + spacer + spinner + renderer - spacer - EditScope width
+		width = max( 25 + 4 + 20 + 100 - 4 - editScopeWidth, 0 )
+		GafferUI.Spacer.__init__(
+			self,
+			imath.V2i( 0 ), # Minimum
+			preferredSize = imath.V2i( width, 1 ),
+			maximumSize = imath.V2i( width, 1 )
+		)
+
+# This Spacer balance the right side of the toolbar by
+# preserving the width lost when the EditScope menu is
+# displayed in condensed form.
+class _CondensedEditScopeBalancingSpacer( GafferUI.Spacer ) :
+
+	def __init__( self, sceneView, **kw ) :
+
+		editScopeWidth = Gaffer.Metadata.value( sceneView["editScope"], "toolbarLayout:width" ) or 130
+		# EditScope width - spacer - condensed EditScope width
+		width = max( editScopeWidth - 4 - 50, 0 )
 		GafferUI.Spacer.__init__(
 			self,
 			imath.V2i( 0 ), # Minimum

@@ -237,7 +237,7 @@ def _pathsFromAffected( context, nodes ) :
 
 def __browseAffectedShaders( plug, shaderTweaksOverride, menu ) :
 
-	context = plug.ancestor( Gaffer.ScriptNode ).context()
+	context = GafferUI.ContextTracker.acquireForFocus( plug ).context( plug )
 	shaderTweaks = [ shaderTweaksOverride ] if shaderTweaksOverride else __findConnectedShaderTweaks( plug.node() )
 
 	__browseShaders(
@@ -247,9 +247,11 @@ def __browseAffectedShaders( plug, shaderTweaksOverride, menu ) :
 def __browseSelectedShaders( plug, shaderTweaksOverride, menu ) :
 
 	scriptNode = plug.ancestor( Gaffer.ScriptNode )
+	context = GafferUI.ContextTracker.acquireForFocus( plug ).context( plug )
+
 	shaderTweaks = [ shaderTweaksOverride ] if shaderTweaksOverride else __findConnectedShaderTweaks( plug.node() )
 	__browseShaders(
-		menu.ancestor( GafferUI.Window ), plug, scriptNode.context(), shaderTweaks,
+		menu.ancestor( GafferUI.Window ), plug, context, shaderTweaks,
 		GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( scriptNode ).paths()
 	)
 

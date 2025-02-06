@@ -54,4 +54,3 @@ __children["ShaderAssignment"]["filter"].setInput( __children["UnionFilter"]["ou
 
 
 del __children
-

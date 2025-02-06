@@ -271,22 +271,6 @@ _styleSheet = string.Template(
 		margin-bottom: 6px;
 	}
 
-	QLabel#gafferColorComponentLabel {
-		padding-left: 12px;
-	}
-
-	QLabel#gafferColorComponentLabel[gafferColorStaticComponent="true"] {
-		background-image: url(:/colorChooserStaticChannelIcon.png);
-		background-repeat: no-repeat;
-		background-position: left;
-	}
-
-	QLabel#gafferColorComponentLabel[gafferColorStaticComponentHover="true"] {
-		background-image: url(:/colorChooserStaticChannelHighlightedIcon.png);
-		background-repeat: no-repeat;
-		background-position: left;
-	}
-
 	QMenuBar {
 		background-color: $backgroundDarkest;
 		font-weight: bold;
@@ -297,6 +281,10 @@ _styleSheet = string.Template(
 	QMenuBar::item {
 		background-color: $backgroundDarkest;
 		padding: 5px 8px 5px 8px;
+	}
+
+	#gafferMenuBarWidgetContainer {
+		background-color: $backgroundDarkest;
 	}
 
 	QMenu {
@@ -374,7 +362,7 @@ _styleSheet = string.Template(
 	}
 
 	QMenu::indicator {
-		width: 15px;
+		width: 14px;
 		padding: 0px 0px 0px 3px;
 		/*
 		Work around https://bugreports.qt.io/browse/QTBUG-90242. In Qt 5.12,
@@ -385,7 +373,7 @@ _styleSheet = string.Template(
 		between checkable and non-checkable items. This negative margin negates
 		the shunt in Qt 5.15 and has no effect in Qt 5.12.
 		*/
-		margin-right: -18px;
+		margin-right: -17px;
 	}
 
 	QMenu::indicator:non-exclusive:checked {
@@ -1319,6 +1307,12 @@ _styleSheet = string.Template(
 		padding-bottom: 0px;
 	}
 
+	*[gafferClass="GafferSceneUI.RenderPassEditor"] QTreeView::item {
+		min-height: 22px;
+		padding-top: 0px;
+		padding-bottom: 0px;
+	}
+
 	*[gafferClass="GafferSceneUI._HistoryWindow"] QTreeView::item {
 		height: 18px;
 		padding-top: 0px;
@@ -1535,7 +1529,6 @@ _styleSheet = string.Template(
 	*[gafferClass="GafferSceneUI.TransformToolUI._SelectionWidget"],
 	*[gafferClass="GafferSceneUI.CropWindowToolUI._StatusWidget"],
 	*[gafferClass="GafferSceneUI.TransformToolUI._TargetTipWidget"] > QFrame,
-	*[gafferClass="GafferUI.EditScopeUI.EditScopePlugValueWidget"] > QFrame,
 	*[gafferClass="GafferSceneUI.InteractiveRenderUI._ViewRenderControlUI"] > QFrame,
 	*[gafferClass="GafferSceneUI._SceneViewInspector"] > QFrame
 	{
@@ -1545,12 +1538,32 @@ _styleSheet = string.Template(
 		padding: 2px;
 	}
 
-	*[gafferClass="GafferUI.EditScopeUI.EditScopePlugValueWidget"][editScopeActive="true"] QPushButton[gafferWithFrame="true"][gafferMenuIndicator="true"]
+	*[gafferClass="GafferSceneUI.RenderPassEditor._RenderPassPlugValueWidget"] QPushButton[gafferWithFrame="true"][gafferMenuIndicator="true"]
+	{
+		min-height: 14px;
+	}
+
+	#gafferMenuBarWidgetContainer QPushButton[gafferWithFrame="true"][gafferMenuIndicator="true"]
+	{
+		border: 1px solid rgb( 70, 70, 70 );
+		border-top-color: rgb( 108, 108, 108 );
+		border-left-color: rgb( 108, 108, 108 );
+		background-color : qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb( 108, 108, 108 ), stop: 0.1 rgb( 91, 91, 91 ), stop: 0.90 rgb( 81, 81, 81 ));
+		margin-top: 2px;
+		margin-bottom: 2px;
+		min-height: 14px;
+	}
+
+	*[gafferClass="GafferUI.EditScopeUI.EditScopePlugValueWidget"] QPushButton[gafferWithFrame="true"][gafferMenuIndicator="true"],
+	#gafferMenuBarWidgetContainer *[gafferClass="GafferUI.EditScopeUI.EditScopePlugValueWidget"] QPushButton[gafferWithFrame="true"][gafferMenuIndicator="true"]
 	{
 		border: 1px solid rgb( 46, 75, 107 );
 		border-top-color: rgb( 75, 113, 155 );
 		border-left-color: rgb( 75, 113, 155 );
 		background-color : qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb( 69, 113, 161 ), stop: 0.1 rgb( 48, 99, 153 ), stop: 0.90 rgb( 54, 88, 125 ));
+		margin-top: 2px;
+		margin-bottom: 2px;
+		min-height: 14px;
 	}
 
 	*[gafferClass="GafferSceneUI.InteractiveRenderUI._ViewRenderControlUI"] QPushButton[gafferWithFrame="true"] {

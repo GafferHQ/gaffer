@@ -47,7 +47,6 @@ import GafferDelight
 @unittest.skipIf( GafferTest.inCI(), "No license available in cloud" )
 class InteractiveDelightRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
-	interactiveRenderNodeClass =  GafferDelight.InteractiveDelightRender
 	renderer = "3Delight"
 
 	# Temporarily disable this test (which is implemented in the

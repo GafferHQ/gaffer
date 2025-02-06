@@ -43,6 +43,34 @@ GafferUI.Metadata.registerNode(
 	"""Converts a level set VDB object to a mesh primitive .""",
 
 	plugs={
+		"filter" : [
+			"description",
+			"""
+			The filter used to choose the vdbs to be converted. Source locations are
+			pruned from the output scene, unless they are reused as part of a destination location
+			(or a separate source scene is connected).
+			"""
+		],
+		"source" : [
+			"description",
+			"""
+			An optional alternate scene to provide the vdbs to be converted. When connected :
+
+			- The `filter` chooses locations to be merged from the `source` scene rather than then `in` scene.
+			- Source locations are not pruned from the output scene.
+			"""
+		],
+		"destination" : [
+			"description",
+			"""
+			By default, vdbs will be replaced with a mesh in place, using the destination `${scene:path}`.
+			The destination can be modified to change where the outputs are placed. If multiple filtered locations
+			have the same destination, the vdbs will be merged into one mesh.
+
+			The destination location will be created if it doesn't exist already. If the name overlaps
+			with an existing location that isn't filtered, the name will get a suffix.
+			""",
+		],
 		'grid' : [
 			'description',
 			"""

@@ -15,4 +15,3 @@ __children["n"]["user"].addChild( Gaffer.StringPlug( "p", defaultValue = '', fla
 
 
 del __children
-

@@ -68,6 +68,12 @@ void interactiveRenderSetContext( InteractiveRender &r, Context &context )
 	r.setContext( &context );
 }
 
+IECore::DataPtr interactiveRenderCommandWrapper( InteractiveRender &r, const IECore::InternedString name, const IECore::CompoundDataMap &parameters )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return r.command( name, parameters );
+}
+
 object objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, const std::vector<float> &sampleTimes, IECore::MurmurHash *hash, bool copy )
 {
 	bool result;
@@ -148,6 +154,7 @@ void GafferSceneModule::bindRender()
 		scope s = GafferBindings::NodeClass<InteractiveRender>()
 			.def( "getContext", &interactiveRenderGetContext )
 			.def( "setContext", &interactiveRenderSetContext )
+			.def( "command", &interactiveRenderCommandWrapper, ( arg( "name" ), arg( "parameters" ) = dict() ) )
 		;
 
 		enum_<InteractiveRender::State>( "State" )

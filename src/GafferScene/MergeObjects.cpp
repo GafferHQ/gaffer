@@ -626,6 +626,89 @@ M44f relativeTransform(
 	return fromSource * toDest;
 }
 
+IECore::MurmurHash g_invalidTransformHash = [](){
+	IECore::MurmurHash r;
+	r.append( -1 );
+	return r;
+}();
+
+IECore::MurmurHash relativeTransformHash(
+	const ScenePlug::ScenePath &sourcePath, const ScenePlug::ScenePath &destPath,
+	const ScenePlug *sourceScene, const ScenePlug *destScene,
+	ScenePlug::PathScope &pathScope, ScenePlug::ScenePath &matchingPrefix, IECore::MurmurHash &toDestHash
+)
+{
+	unsigned int matchingLength = std::min( sourcePath.size(), destPath.size() );
+	if( sourceScene != destScene )
+	{
+		// In theory, we could do something more accurate even when the scenes are different, but
+		// we couldn't skip evaluating the transforms in the prefix just because the names match.
+		// We would need a separate code path where we evaluate the transforms at each level, but
+		// don't multiply them onto the matrices if they are identical ( to avoid accumulating error ).
+		// For now, do the simple thing, because preserving existing transforms is most important when
+		// working in place.
+		matchingLength = 0;
+	}
+	else
+	{
+		for( unsigned int i = 0; i < matchingLength; i++ )
+		{
+			if( sourcePath[ i ] != destPath[ i ] )
+			{
+				matchingLength = i;
+				break;
+			}
+		}
+	}
+
+	if( matchingPrefix.size() != matchingLength || toDestHash == g_invalidTransformHash )
+	{
+		ScenePlug::ScenePath &curPath = matchingPrefix;
+
+		if( curPath.size() > matchingLength )
+		{
+			curPath.resize( matchingLength );
+		}
+
+		curPath.reserve( destPath.size() );
+		while( curPath.size() < destPath.size() )
+		{
+			curPath.push_back( destPath[ curPath.size() ] );
+		}
+
+		toDestHash = IECore::MurmurHash();
+		while( curPath.size() > matchingLength )
+		{
+			pathScope.setPath( &curPath );
+			if( destScene->existsPlug()->getValue() )
+			{
+				destScene->transformPlug()->hash( toDestHash );
+			}
+			curPath.pop_back();
+		}
+	}
+
+	ScenePlug::ScenePath &curPath = matchingPrefix;
+
+	curPath.reserve( sourcePath.size() );
+	while( curPath.size() < sourcePath.size() )
+	{
+		curPath.push_back( sourcePath[ curPath.size() ] );
+	}
+
+	IECore::MurmurHash r;
+	while( curPath.size() > matchingLength )
+	{
+		pathScope.setPath( &curPath );
+		sourceScene->transformPlug()->hash( r );
+		curPath.pop_back();
+	}
+
+	r.append( toDestHash );
+
+	return r;
+}
+
 // The filter value used for pruning the existing scene - if the sourcePlug is connected, then no pruning occurs.
 IECore::PathMatcher::Result pruneFilterValue( const GafferScene::ScenePlug *inPlug, const GafferScene::FilterPlug *filterPlug, const GafferScene::ScenePlug *sourcePlug, const Gaffer::Context *context )
 {
@@ -776,7 +859,8 @@ void MergeObjects::affects( const Plug *input, AffectedPlugsContainer &outputs )
 		input == inPlug()->objectPlug() ||
 		input == inPlug()->transformPlug() ||
 		input == sourcePlug()->objectPlug() ||
-		input == sourcePlug()->transformPlug()
+		input == sourcePlug()->transformPlug() ||
+		affectsMergedObject( input )
 	)
 	{
 		outputs.push_back( processedObjectPlug() );
@@ -857,8 +941,6 @@ void MergeObjects::hash( const Gaffer::ValuePlug *output, const Gaffer::Context 
 			throw IECore::Exception( "__processedObject should only be hashed from hashObject, which checks for a matching tree location first" );
 		}
 
-		h.append( outPlug()->fullTransformHash( path ) );
-
 		const ScenePlug *effectiveSource = effectiveSourcePlug();
 
 		const ThreadState &threadState = ThreadState::current();
@@ -867,21 +949,27 @@ void MergeObjects::hash( const Gaffer::ValuePlug *output, const Gaffer::Context 
 		const IECore::MurmurHash reduction = tbb::parallel_deterministic_reduce(
 			tbb::blocked_range<size_t>( 0, sourcePaths->size() ),
 			IECore::MurmurHash(),
-			[&] ( const tbb::blocked_range<size_t> &range, const MurmurHash &hash ) {
+			[&] ( const tbb::blocked_range<size_t> &range, const MurmurHash &hash )
+			{
+				ScenePlug::ScenePath matchingPrefix;
+				IECore::MurmurHash toDestHash = g_invalidTransformHash;
 
 				ScenePlug::PathScope pathScope( threadState );
 				IECore::MurmurHash result = hash;
 				for( size_t i = range.begin(); i != range.end(); ++i )
 				{
 					pathScope.setPath( &((*sourcePaths)[i]) );
-					result.append( effectiveSource->fullTransformHash( (*sourcePaths)[i] ) );
 					effectiveSource->objectPlug()->hash( result );
+					result.append( relativeTransformHash(
+						(*sourcePaths)[i], path, effectiveSource, inPlug(), pathScope,
+						matchingPrefix, toDestHash
+					) );
 				}
+
 				return result;
-
 			},
-			[] ( const MurmurHash &x, const MurmurHash &y ) {
-
+			[] ( const MurmurHash &x, const MurmurHash &y )
+			{
 				MurmurHash result = x;
 				result.append( y );
 				return result;
@@ -891,6 +979,7 @@ void MergeObjects::hash( const Gaffer::ValuePlug *output, const Gaffer::Context 
 		);
 
 		h.append( reduction );
+		hashMergedObject( path, context, h );
 	}
 }
 
@@ -944,8 +1033,8 @@ void MergeObjects::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 
 		tbb::parallel_for(
 			tbb::blocked_range<size_t>( 0, sourcePaths->size() ),
-			[&] ( const tbb::blocked_range<size_t> &range ) {
-
+			[&] ( const tbb::blocked_range<size_t> &range )
+			{
 				ScenePlug::ScenePath matchingPrefix;
 				M44f toDest( 0.0f );
 
@@ -965,7 +1054,7 @@ void MergeObjects::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 			taskGroupContext
 		);
 
-		static_cast<Gaffer::ObjectPlug *>( output )->setValue( mergeObjects( sources, context ) );
+		static_cast<Gaffer::ObjectPlug *>( output )->setValue( computeMergedObject( sources, context ) );
 	}
 	else
 	{
@@ -1514,4 +1603,13 @@ Gaffer::ValuePlug::CachePolicy MergeObjects::computeCachePolicy( const Gaffer::V
 		return ValuePlug::CachePolicy::TaskCollaboration;
 	}
 	return FilteredSceneProcessor::computeCachePolicy( output );
+}
+
+bool MergeObjects::affectsMergedObject( const Gaffer::Plug *input ) const
+{
+	return false;
+}
+
+void MergeObjects::hashMergedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
 }

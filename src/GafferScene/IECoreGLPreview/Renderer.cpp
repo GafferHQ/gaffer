@@ -314,7 +314,7 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 	public :
 
 		OpenGLAttributes( const IECore::CompoundObject *attributes )
-			: m_frustumMode( FrustumMode::WhenSelected )
+			:	m_frustumMode( FrustumMode::WhenSelected ), m_visualisationStateColorSpace( Visualisation::ColorSpace::Display )
 		{
 			const FloatData *visualiserScaleData = attributes->member<FloatData>( "gl:visualiser:scale" );
 			m_visualiserScale = visualiserScaleData ? visualiserScaleData->readable() : 1.0;
@@ -382,6 +382,19 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				}
 
 				m_visualisationState = combinedState;
+				auto solidState = m_visualisationState->get<IECoreGL::Primitive::DrawSolid>();
+				// The Visualiser API doesn't currently allow a colour space to
+				// be associated with the visualisation state. So we use a
+				// heuristic : if the state includes solid drawing then we
+				// assume Scene space. This allows custom mesh light texture
+				// visualisers to be shown with an appropriate colour transform.
+				// Otherwise we assume Display space, which gives us what we
+				// want for the coloured outline from our own mesh light
+				// visualiser.
+				if( !solidState || solidState->value() )
+				{
+					m_visualisationStateColorSpace = Visualisation::ColorSpace::Scene;
+				}
 			}
 		}
 
@@ -390,9 +403,9 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return m_state.get();
 		}
 
-		const State *visualisationState() const
+		const State *visualisationState( Visualisation::ColorSpace colorSpace ) const
 		{
-			return m_visualisationState.get();
+			return colorSpace == m_visualisationStateColorSpace ? m_visualisationState.get() : nullptr;
 		}
 
 		const IECoreGLPreview::Visualisations &visualisations() const
@@ -445,6 +458,7 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		FrustumMode m_frustumMode;
 
 		float m_visualiserScale = 1.0f;
+		Visualisation::ColorSpace m_visualisationStateColorSpace;
 };
 
 IE_CORE_DECLAREPTR( OpenGLAttributes )
@@ -630,19 +644,12 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			// Objects are rendered into `ColorSpace::Scene`, with the caveat that selection
 			// overlays and additional visualisations are drawn into `ColorSpace::Display`.
 
-			const IECoreGL::State *visualisationState = m_attributes->visualisationState();
+			const IECoreGL::State *visualisationState = m_attributes->visualisationState( colorSpace );
 			if( m_renderable && ( colorSpace == Visualisation::ColorSpace::Scene || isSelected || visualisationState ) )
 			{
 				IECoreGL::State::ScopedBinding stateScope( *m_attributes->state(), *currentState );
-				// We assume that any additional state provided by visualisers
-				// is intended to be drawn in `ColorSpace::Display`. Currently
-				// the only such state is the yellow outline added by the mesh
-				// light visualiser, so it would be premature to extend the API
-				// to allow visualiser state to also be specified for
-				// `ColorSpace::Scene`. In fact, the potential uses for
-				// visualiser state seem very limited.
 				std::optional<IECoreGL::State::ScopedBinding> visualisationStateScope;
-				if( visualisationState && colorSpace == Visualisation::ColorSpace::Display )
+				if( visualisationState )
 				{
 					visualisationStateScope.emplace( *visualisationState, *currentState );
 				}

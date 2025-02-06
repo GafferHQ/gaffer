@@ -45,6 +45,41 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
+def __attributeMetadata( plug, name ) :
+
+	option = plug.ancestor( Gaffer.TweakPlug )["name"].getValue()
+	return Gaffer.Metadata.value( "attribute:{}".format( option ), name )
+
+def __attributeMetadataPresets( plug ) :
+
+	result = collections.OrderedDict()
+	option = plug.ancestor( Gaffer.TweakPlug )["name"].getValue()
+	source = "attribute:{}".format( option )
+
+	for n in Gaffer.Metadata.registeredValues( source ) :
+		if n.startswith( "preset:" ) :
+			result[n[7:]] = Gaffer.Metadata.value( source, n )
+
+	presetNames = Gaffer.Metadata.value( source, "presetNames" )
+	presetValues = Gaffer.Metadata.value( source, "presetValues" )
+	if presetNames and presetValues :
+		for presetName, presetValue in zip( presetNames, presetValues ) :
+			result.setdefault( presetName, presetValue )
+
+	return result
+
+def __attributeMetadataPresetNames( plug ) :
+
+	names = list( __attributeMetadataPresets( plug ).keys() )
+
+	return IECore.StringVectorData( names ) if names else None
+
+def __attributeMetadataPresetValues( plug ) :
+
+	values = list( __attributeMetadataPresets( plug ).values() )
+
+	return IECore.DataTraits.dataFromElement( values ) if values else None
+
 Gaffer.Metadata.registerNode(
 
 	GafferScene.AttributeTweaks,
@@ -53,6 +88,8 @@ Gaffer.Metadata.registerNode(
 	"""
 	Makes modifications to attributes.
 	""",
+
+	"layout:section:Settings.Tweaks:collapsed", False,
 
 	plugs = {
 
@@ -87,6 +124,7 @@ Gaffer.Metadata.registerNode(
 			using the AttributeTweaks API via python.
 			""",
 
+			"layout:section", "Settings.Tweaks",
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:customWidget:footer:widgetType", "GafferSceneUI.AttributeTweaksUI._TweaksFooter",
 			"layout:customWidget:footer:index", -1,
@@ -98,6 +136,18 @@ Gaffer.Metadata.registerNode(
 		"tweaks.*" : [
 
 			"tweakPlugValueWidget:propertyType", "attribute",
+
+		],
+
+		"tweaks.*.value" : [
+
+			"description", functools.partial( __attributeMetadata, name = "description" ),
+			"plugValueWidget:type", functools.partial( __attributeMetadata, name = "plugValueWidget:type" ),
+			"presetsPlugValueWidget:allowCustom", functools.partial( __attributeMetadata, name = "presetsPlugValueWidget:allowCustom" ),
+			"ui:scene:acceptsSetExpression", functools.partial( __attributeMetadata, name = "ui:scene:acceptsSetExpression" ),
+
+			"presetNames", __attributeMetadataPresetNames,
+			"presetValues", __attributeMetadataPresetValues,
 
 		],
 

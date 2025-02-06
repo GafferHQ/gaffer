@@ -123,45 +123,36 @@ Gaffer.Metadata.registerNode(
 # VectorDataPlugValueWidget customisation
 ###########################################################################
 
-def __targetFilterPlug( plug ) :
+# Searches for a PathFilter whose `paths` plug is eventually driven by `plug`,
+# and returns it.
+def _destinationPathFilter( plug ) :
 
 	return Gaffer.PlugAlgo.findDestination(
 		plug,
-		lambda plug : plug if isinstance( plug.parent(), GafferScene.PathFilter ) and plug.getName() == "paths" else None
+		lambda plug : plug.parent() if isinstance( plug.parent(), GafferScene.PathFilter ) and plug.getName() == "paths" else None
 	)
 
-def _selectAffected( plug, selection ) :
+def _filteredScenes( filter ) :
 
-	inPlugs = []
+	result = set()
+	for node in GafferScene.SceneAlgo.filteredNodes( filter ) :
+		if isinstance( node["in"], Gaffer.ArrayPlug ) :
+			result.add( node["in"][0] )
+		else :
+			result.add( node["in"] )
 
-	rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
+	return list( result )
 
-	targetPlug = __targetFilterPlug( plug )
-
-	if targetPlug is not None :
-		inPlugs = [ n["in"] for n in GafferScene.SceneAlgo.filteredNodes( targetPlug.node() ) ]
-	elif rowPlug is not None :
-		for output in rowPlug.node()["out"] :
-			targetPlug = Gaffer.PlugAlgo.findDestination(
-				output,
-				lambda plug : plug.node()["out"] if isinstance( plug.node(), GafferScene.SceneNode ) else None
-			)
-			if targetPlug is not None :
-				inPlugs = [ targetPlug ]
-				break
-
-	if targetPlug is None :
-		return
-
-	scenes = [ s[0] if isinstance( s, Gaffer.ArrayPlug ) else s for s in inPlugs ]
+def _selectAffected( pathMatcher, scenes ) :
 
 	result = IECore.PathMatcher()
-	scriptNode = targetPlug.ancestor( Gaffer.ScriptNode )
-	with scriptNode.context() :
-		for scene in scenes :
-			GafferScene.SceneAlgo.matchingPaths( selection, scene, result )
+	for scene in scenes :
+		with GafferUI.ContextTracker.acquireForFocus( scene ).context( scene ) :
+			GafferScene.SceneAlgo.matchingPaths(
+				pathMatcher, scene, result
+			)
 
-	GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( scriptNode, result )
+	GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( scenes[0].ancestor( Gaffer.ScriptNode ), result )
 
 class _PathsPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 
@@ -176,14 +167,15 @@ class _PathsPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 		selectedIndices = vectorDataWidget.selectedIndices()
 
 		filterData = vectorDataWidget.getData()[0]
-		selection = IECore.PathMatcher( [ filterData[row] for column, row in selectedIndices ] )
+		pathMatcher = IECore.PathMatcher( [ filterData[row] for column, row in selectedIndices ] )
+		scenes = _filteredScenes( _destinationPathFilter( self.getPlug() ) )
 
 		menuDefinition.append( "/selectDivider", { "divider" : True } )
 		menuDefinition.append(
 			"/Select Affected Objects",
 			{
-				"command" : functools.partial( _selectAffected, self.getPlug(), selection ),
-				"active" : len( selectedIndices ) > 0,
+				"command" : functools.partial( _selectAffected, pathMatcher, scenes ),
+				"active" : len( selectedIndices ) > 0 and len( scenes ) > 0,
 			}
 		)
 
@@ -193,36 +185,50 @@ class _PathsPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 
 def __popupMenu( menuDefinition, plugValueWidget ) :
 
-	selection = None
-
 	plug = plugValueWidget.getPlug()
 	if plug is None:
 		return
 
-	node = plug.node()
+	rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
+	if rowPlug is None :
+		return
 
-	if isinstance( node, Gaffer.Spreadsheet ) :
-		rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
+	spreadsheet = Gaffer.PlugAlgo.findDestination(
+		rowPlug,
+		lambda plug : plug.node() if isinstance( plug.node(), Gaffer.Spreadsheet ) else None
+	)
+	if spreadsheet is None :
+		return
 
-		with plugValueWidget.context() :
-			if __targetFilterPlug( plug ) is not None :
-				cellPlug = plug.ancestor( Gaffer.Spreadsheet.CellPlug )
-				if cellPlug is None :
-					return
+	scenes = []
+	pathMatcher = None
+	with plugValueWidget.context() :
+		pathFilter = _destinationPathFilter( plug )
+		if pathFilter is not None :
+			pathMatcher = IECore.PathMatcher( plug.getValue() )
+			scenes = _filteredScenes( pathFilter )
+		elif plug == rowPlug["name"] and spreadsheet["selector"].getValue() == "${scene:path}" :
+			pathMatcher = IECore.PathMatcher( [ plug.getValue() ] )
+			pathFilter = _destinationPathFilter( spreadsheet["enabledRowNames"] )
+			if pathFilter is not None :
+				scenes = _filteredScenes( pathFilter )
+			else :
+				for output in spreadsheet["out"] :
+					scene = Gaffer.PlugAlgo.findDestination(
+						output,
+						lambda plug : plug.node()["out"] if isinstance( plug.node(), GafferScene.SceneNode ) else None
+					)
+					if scene is not None :
+						scenes = [ scene ]
 
-				selection = IECore.PathMatcher( plugValueWidget.vectorDataWidget().getData()[0] )
-
-			elif rowPlug and plug == rowPlug["name"] and node["selector"].getValue() == "${scene:path}" :
-				selection = IECore.PathMatcher( [ plugValueWidget.getPlug().getValue() ] )
-
-	if selection is None :
+	if pathMatcher is None or len( scenes ) == 0 :
 		return
 
 	menuDefinition.prepend( "/selectAffectedDivider", { "divider" : True } )
 	menuDefinition.prepend(
 		"/Select Affected Objects",
 		{
-			"command" : functools.partial( _selectAffected, plug, selection )
+			"command" : functools.partial( _selectAffected, pathMatcher, scenes )
 		}
 	)
 
@@ -236,7 +242,7 @@ GafferUI.Pointer.registerPointer( "addObjects", GafferUI.Pointer( "addObjects.pn
 GafferUI.Pointer.registerPointer( "removeObjects", GafferUI.Pointer( "removeObjects.png", imath.V2i( 53, 14 ) ) )
 GafferUI.Pointer.registerPointer( "replaceObjects", GafferUI.Pointer( "replaceObjects.png", imath.V2i( 53, 14 ) ) )
 
-__DropMode = enum.Enum( "__DropMode", [ "None_", "Add", "Remove", "Replace" ] )
+__DropMode = enum.Enum( "__DropMode", [ "None_", "Add", "Remove", "Replace", "NotEditable" ] )
 
 __originalDragPointer = None
 
@@ -255,9 +261,14 @@ def __filterPlug( node ) :
 		return filterPlugs[0]
 	return None
 
+def __editable( plug ) :
+
+	return not Gaffer.MetadataAlgo.readOnly( plug ) and plug.settable()
+
 def __dropMode( nodeGadget, event ) :
 
-	if __pathsPlug( nodeGadget.node() ) is None :
+	pathsPlug = __pathsPlug( nodeGadget.node() )
+	if pathsPlug is None :
 		filter = None
 
 		filterPlug = __filterPlug( nodeGadget.node() )
@@ -267,9 +278,13 @@ def __dropMode( nodeGadget, event ) :
 		if filterPlug.getInput() is not None :
 			filter = filterPlug.source().node()
 		if filter is None :
-			return __DropMode.Replace
+			return __DropMode.Replace if __editable( filterPlug ) else __DropMode.NotEditable
 		elif not isinstance( filter, GafferScene.PathFilter ) :
 			return __DropMode.None_
+		pathsPlug = __pathsPlug( filter )
+
+	if not __editable( pathsPlug ) :
+		return __DropMode.NotEditable
 
 	if event.modifiers & event.Modifiers.Shift :
 		return __DropMode.Add
@@ -290,7 +305,7 @@ def __dropPaths( paths, pathsPlug ) :
 	if not pathFilter["roots"].getInput() :
 		return paths
 
-	with pathsPlug.ancestor( Gaffer.ScriptNode ).context() :
+	with GafferUI.ContextTracker.acquireForFocus( pathsPlug ).context( pathsPlug ) :
 		rootPaths = IECore.PathMatcher()
 		for node in GafferScene.SceneAlgo.filteredNodes( pathFilter ) :
 			scene = node["in"][0] if isinstance( node["in"], Gaffer.ArrayPlug ) else node["in"]
@@ -342,7 +357,10 @@ def __dragMove( nodeGadget, event ) :
 	if __originalDragPointer is None :
 		return False
 
-	GafferUI.Pointer.setCurrent( __dropMode( nodeGadget, event ).name.lower() + "Objects" )
+	dropMode = __dropMode( nodeGadget, event )
+	GafferUI.Pointer.setCurrent(
+		dropMode.name.lower() + "Objects" if dropMode != __DropMode.NotEditable else "notEditable"
+	)
 
 	return True
 
@@ -351,6 +369,9 @@ def __drop( nodeGadget, event ) :
 	global __originalDragPointer
 	if __originalDragPointer is None :
 		return False
+
+	if __dropMode( nodeGadget, event ) == __DropMode.NotEditable :
+		return True
 
 	pathsPlug = __pathsPlug( nodeGadget.node() )
 	if pathsPlug is None :

@@ -97,6 +97,13 @@ View::View( const std::string &name, Gaffer::ScriptNodePtr scriptNode, Gaffer::P
 	addChild( new Plug( g_editScopeName ) );
 	addChild( new ToolContainer( g_toolsName ) );
 
+	// Hack to allow BackgroundTask to recover ScriptNode for
+	// cancellation support - see `BackgroundTask.cpp` and
+	// `Editor.Settings`.
+	PlugPtr scriptNodePlug = new Plug( "__scriptNode" );
+	addChild( scriptNodePlug );
+	scriptNodePlug->setInput( scriptNode->fileNamePlug() );
+
 	m_context = m_contextTracker->context( this );
 	m_contextTracker->changedSignal( this ).connect( boost::bind( &View::contextTrackerChanged, this ) );
 	tools()->childAddedSignal().connect( boost::bind( &View::toolsChildAdded, this, ::_2 ) );
@@ -146,14 +153,23 @@ const ToolContainer *View::tools() const
 
 Gaffer::EditScope *View::editScope()
 {
-	Plug *p = editScopePlug()->getInput();
-	return p ? p->parent<EditScope>() : nullptr;
+	return PlugAlgo::findSource(
+		editScopePlug(),
+		[] ( Plug *plug ) {
+			return runTimeCast<EditScope>( plug->node() );
+		}
+	);
 }
 
 const Gaffer::EditScope *View::editScope() const
 {
-	const Plug *p = editScopePlug()->getInput();
-	return p ? p->parent<EditScope>() : nullptr;
+	// Cheeky cast to avoid a duplicate `PlugAlgo::findSource( const... )` implementation
+	return PlugAlgo::findSource(
+		const_cast<Plug *>( editScopePlug() ),
+		[] ( Plug *plug ) {
+			return runTimeCast<const EditScope>( plug->node() );
+		}
+	);
 }
 
 const Gaffer::Context *View::context() const
@@ -541,9 +557,9 @@ void View::DisplayTransform::preRender()
 	{
 		m_shader = nullptr;
 		const std::string name = namePlug()->getValue();
+		auto it = displayTransformCreators().find( name );
 		if( !name.empty() )
 		{
-			auto it = displayTransformCreators().find( name );
 			if( it != displayTransformCreators().end() )
 			{
 				Context::Scope scope( view()->context() );

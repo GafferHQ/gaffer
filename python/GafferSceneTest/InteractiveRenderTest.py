@@ -53,9 +53,6 @@ import GafferSceneTest
 # rather than GafferScene.InteractiveRender, which we hope to phase out.
 class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
-	## \todo Phase out InteractiveRender subclasses and just use the `renderer`
-	# field below.
-	interactiveRenderNodeClass = None
 	# Derived classes should set `cls.renderer` to the type of
 	# renderer to be tested.
 	renderer = None
@@ -1097,7 +1094,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
 		# Tolerance is high due to sampling noise in Cycles, but is more than sufficient to
 		# be sure that the new light has been added (otherwise there would be no green at all).
-		self.assertTrue( ( c / c[0] ).equalWithAbsError( imath.Color3f( 1, 1, 0 ), 0.2 ) )
+		self.assertTrue( ( c / c[0] ).equalWithAbsError( imath.Color3f( 1, 1, 0 ), 0.25 ) )
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
@@ -2175,7 +2172,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["customOptions"] = GafferScene.CustomOptions()
 		script["customOptions"]["in"].setInput( script["outputs"]["out"] )
 
-		script["renderer"] = self._createInteractiveRender( useNodeClass = False )
+		script["renderer"] = self._createInteractiveRender()
 		script["renderer"]["renderer"].setValue( "" )
 		script["renderer"]["in"].setInput( script["customOptions"]["out"] )
 
@@ -2223,7 +2220,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["standardOptions"]["options"]["defaultRenderer"]["enabled"].setValue( True )
 		script["standardOptions"]["options"]["defaultRenderer"]["value"].setValue( "${defaultRendererVariable}" )
 
-		script["renderer"] = self._createInteractiveRender( useNodeClass = False )
+		script["renderer"] = self._createInteractiveRender()
 		script["renderer"]["renderer"].setValue( "" )
 		script["renderer"]["in"].setInput( script["standardOptions"]["out"] )
 
@@ -2307,14 +2304,10 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 	## Should be used in test cases to create an InteractiveRender node
 	# suitably configured for error reporting. If failOnError is
 	# True, then the node's error signal will cause the test to fail.
-	def _createInteractiveRender( self, failOnError = True, useNodeClass = True ) :
+	def _createInteractiveRender( self, failOnError = True ) :
 
-		if useNodeClass :
-			assert( issubclass( self.interactiveRenderNodeClass, GafferScene.InteractiveRender ) )
-			node = self.interactiveRenderNodeClass()
-		else :
-			node = GafferScene.InteractiveRender()
-			node["renderer"].setValue( self.renderer )
+		node = GafferScene.InteractiveRender()
+		node["renderer"].setValue( self.renderer )
 
 		if failOnError :
 

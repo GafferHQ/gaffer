@@ -517,6 +517,39 @@ void connect( const DragDropEvent &event, ConnectionCreator *destination )
 	}
 }
 
+bool hasStaticValue( const Gaffer::BoolPlug *plug )
+{
+	if( !PlugAlgo::dependsOnCompute( plug ) )
+	{
+		return true;
+	}
+
+	// Plug depends on a compute, but maybe we can determine
+	// that the compute itself is disabled, and will output
+	// a default value for the plug.
+
+	auto source = plug->source<BoolPlug>();
+	if( source == plug || source->direction() != Plug::Out )
+	{
+		return false;
+	}
+
+	auto sourceNode = IECore::runTimeCast<const DependencyNode>( source->node() );
+	if( !sourceNode )
+	{
+		return false;
+	}
+
+	auto sourceEnabledPlug = sourceNode->enabledPlug();
+	if( !sourceEnabledPlug || !hasStaticValue( sourceEnabledPlug ) || sourceEnabledPlug->getValue() )
+	{
+		return false;
+	}
+
+	// Node will just output a default value for the plug.
+	return !sourceNode->correspondingInput( source );
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -533,6 +566,8 @@ static IECore::InternedString g_paddingKey( "nodeGadget:padding"  );
 static IECore::InternedString g_colorKey( "nodeGadget:color" );
 static IECore::InternedString g_shapeKey( "nodeGadget:shape" );
 static IECore::InternedString g_focusGadgetVisibleKey( "nodeGadget:focusGadgetVisible" );
+static IECore::InternedString g_inputNoduleLabelsVisibleKey( "nodeGadget:inputNoduleLabelsVisible" );
+static IECore::InternedString g_outputNoduleLabelsVisibleKey( "nodeGadget:outputNoduleLabelsVisible" );
 static IECore::InternedString g_iconKey( "icon" );
 static IECore::InternedString g_iconScaleKey( "iconScale" );
 static IECore::InternedString g_errorGadgetName( "__error" );
@@ -549,7 +584,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 // can optionally use it without needing to inherit from StandardNodeGadget
 StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, bool auxiliary  )
 	:	NodeGadget( node ),
-		m_strikeThroughVisible( false ),
+		m_strikeThroughState( StrikeThroughState::Invisible ),
 		m_labelsVisibleOnHover( true ),
 		m_dragDestination( nullptr ),
 		m_userColor( 0 ),
@@ -667,6 +702,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, bool auxiliary  )
 	dragMoveSignal().connect( boost::bind( &StandardNodeGadget::dragMove, this, ::_1, ::_2 ) );
 	dragLeaveSignal().connect( boost::bind( &StandardNodeGadget::dragLeave, this, ::_1, ::_2 ) );
 	dropSignal().connect( boost::bind( &StandardNodeGadget::drop, this, ::_1, ::_2 ) );
+	noduleAddedSignal().connect( boost::bind( &StandardNodeGadget::noduleAdded, this, ::_2 ) );
 
 	for( int e = FirstEdge; e <= LastEdge; e++ )
 	{
@@ -689,6 +725,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, bool auxiliary  )
 	updateIcon();
 	updateShape();
 	updateFocusGadgetVisibility();
+	applyNoduleLabelVisibilityMetadata();
 }
 
 StandardNodeGadget::~StandardNodeGadget()
@@ -741,14 +778,23 @@ void StandardNodeGadget::renderLayer( Layer layer, const Style *style, RenderRea
 		{
 			const Box3f b = bound();
 
-			if( m_strikeThroughVisible && !isSelectionRender( reason ) )
+			if( m_strikeThroughState != StrikeThroughState::Invisible && !isSelectionRender( reason ) )
 			{
 				/// \todo Replace renderLine() with a specific method (renderNodeStrikeThrough?) on the Style class
 				/// so that styles can do customised drawing based on knowledge of what is being drawn.
-				Imath::Color4f inactiveCol( 0.2f, 0.2f, 0.2f, 1.0 );
+				Imath::Color4f c;
+				if( m_strikeThroughState == StrikeThroughState::Static )
+				{
+					c = m_active ? Color4f( 0.1f, 0.1f, 0.1f, 1.0f ) : Color4f( 0.2f, 0.2f, 0.2f, 1.0f );
+				}
+				else
+				{
+					c = Color4f( 240 / 255.0, 220 / 255.0, 40 / 255.0, 1.0f );
+				}
+
 				style->renderLine(
 					IECore::LineSegment3f( V3f( b.min.x, b.min.y, 0 ), V3f( b.max.x, b.max.y, 0 ) ),
-					0.5f, m_active ? nullptr : &inactiveCol
+					0.5f, &c
 				);
 			}
 			break;
@@ -817,7 +863,7 @@ void StandardNodeGadget::updateFromContextTracker( const ContextTracker *context
 	{
 		m_nodeEnabledInContextTracker = std::nullopt;
 	}
-	updateStrikeThroughVisibility();
+	updateStrikeThroughState();
 	if( auto g = errorGadget( /* createIfMissing = */ false ) )
 	{
 		g->removeStaleErrors( contextTracker );
@@ -1080,7 +1126,7 @@ bool StandardNodeGadget::getLabelsVisibleOnHover() const
 
 void StandardNodeGadget::plugDirtied( const Gaffer::Plug *plug )
 {
-	updateStrikeThroughVisibility( plug );
+	updateStrikeThroughState( plug );
 	if( ErrorGadget *e = errorGadget( /* createIfMissing = */ false ) )
 	{
 		e->removeError( plug );
@@ -1102,10 +1148,7 @@ void StandardNodeGadget::leave( Gadget *gadget )
 {
 	if( m_labelsVisibleOnHover )
 	{
-		for( StandardNodule::RecursiveIterator it( gadget  ); !it.done(); ++it )
-		{
-			(*it)->setLabelVisible( false );
-		}
+		applyNoduleLabelVisibilityMetadata();
 	}
 }
 
@@ -1160,10 +1203,7 @@ bool StandardNodeGadget::dragLeave( GadgetPtr gadget, const DragDropEvent &event
 	if( m_dragDestination != event.destinationGadget )
 	{
 		m_dragDestination->setHighlighted( false );
-		for( StandardNodule::RecursiveIterator it( this ); !it.done(); ++it )
-		{
-			(*it)->setLabelVisible( false );
-		}
+		applyNoduleLabelVisibilityMetadata();
 	}
 	m_dragDestination = nullptr;
 
@@ -1180,12 +1220,23 @@ bool StandardNodeGadget::drop( GadgetPtr gadget, const DragDropEvent &event )
 	connect( event, m_dragDestination );
 
 	m_dragDestination->setHighlighted( false );
-	for( StandardNodule::RecursiveIterator it( this ); !it.done(); ++it )
-	{
-		(*it)->setLabelVisible( false );
-	}
+	applyNoduleLabelVisibilityMetadata();
+
 	m_dragDestination = nullptr;
 	return true;
+}
+
+void StandardNodeGadget::noduleAdded( Nodule *nodule )
+{
+	if( auto standardNodule = IECore::runTimeCast<StandardNodule>( nodule ) )
+	{
+		IECore::ConstBoolDataPtr d = standardNodule->plug()->direction() == Plug::Direction::In ?
+			Gaffer::Metadata::value<IECore::BoolData>( node(), g_inputNoduleLabelsVisibleKey ) :
+			Gaffer::Metadata::value<IECore::BoolData>( node(), g_outputNoduleLabelsVisibleKey )
+		;
+
+		standardNodule->setLabelVisible( d ? d->readable() : false );
+	}
 }
 
 ConnectionCreator *StandardNodeGadget::closestDragDestination( const DragDropEvent &event ) const
@@ -1261,6 +1312,10 @@ void StandardNodeGadget::nodeMetadataChanged( IECore::InternedString key )
 	{
 		updateFocusGadgetVisibility();
 	}
+	else if( key == g_inputNoduleLabelsVisibleKey || key == g_outputNoduleLabelsVisibleKey )
+	{
+		applyNoduleLabelVisibilityMetadata();
+	}
 }
 
 bool StandardNodeGadget::updateUserColor()
@@ -1305,38 +1360,59 @@ void StandardNodeGadget::updatePadding()
 	paddingRow()->setPadding( Box3f( V3f( -padding ), V3f( padding ) ) );
 }
 
-void StandardNodeGadget::updateStrikeThroughVisibility( const Gaffer::Plug *dirtiedPlug )
+void StandardNodeGadget::updateStrikeThroughState( const Gaffer::Plug *dirtiedPlug )
 {
-	bool strikeThroughVisible = false;
-	if( m_nodeEnabledInContextTracker )
+	const BoolPlug *enabledPlug = nullptr;
+	if( auto dependencyNode = IECore::runTimeCast<DependencyNode>( node() ) )
 	{
-		strikeThroughVisible = !*m_nodeEnabledInContextTracker;
+		enabledPlug = dependencyNode->enabledPlug();
 	}
-	else
+
+	if( dirtiedPlug && dirtiedPlug != enabledPlug )
 	{
-		if( auto dependencyNode = IECore::runTimeCast<DependencyNode>( node() ) )
+		return;
+	}
+
+	StrikeThroughState strikeThroughState = StrikeThroughState::Invisible;
+	if( enabledPlug )
+	{
+		if( hasStaticValue( enabledPlug ) )
 		{
-			strikeThroughVisible = false;
-			if( auto enabledPlug = dependencyNode->enabledPlug() )
+			// We can evaluate the `enabledPlug` value directly without
+			// triggering a compute and blocking the UI while it completes.
+			// This gives us the fastest update.
+			if( !enabledPlug->getValue() )
 			{
-				if( dirtiedPlug && dirtiedPlug != enabledPlug )
-				{
-					return;
-				}
-				// Only evaluate `enabledPlug` if it won't trigger a compute.
-				// We don't want to hang the UI waiting, and we don't really
-				// know what context to perform the compute in anyway.
-				if( !PlugAlgo::dependsOnCompute( enabledPlug ) )
-				{
-					strikeThroughVisible = !enabledPlug->getValue();
-				}
+				strikeThroughState = StrikeThroughState::Static;
 			}
+		}
+		else if( m_nodeEnabledInContextTracker ) // Node is tracked
+		{
+			// ContextTracker has computed the enabled state for us in
+			// a background task.
+			if( dirtiedPlug )
+			{
+				// Wait for async ContextTracker update, to avoid showing
+				// a stale value in the meantime.
+				return;
+			}
+			if( !*m_nodeEnabledInContextTracker )
+			{
+				strikeThroughState = StrikeThroughState::Dynamic;
+			}
+		}
+		else
+		{
+			// State depends on a compute, and ContextTracker isn't tracking
+			// this node. We don't want to hang the UI launching the compute,
+			// and because the node isn't tracked, we don't even know what
+			// context to perform it in anyway.
 		}
 	}
 
-	if( strikeThroughVisible != m_strikeThroughVisible )
+	if( strikeThroughState != m_strikeThroughState )
 	{
-		m_strikeThroughVisible = strikeThroughVisible;
+		m_strikeThroughState = strikeThroughState;
 		dirty( DirtyType::Render );
 	}
 }
@@ -1399,6 +1475,28 @@ void StandardNodeGadget::updateFocusGadgetVisibility()
 {
 	auto d = Metadata::value<IECore::BoolData>( node(), g_focusGadgetVisibleKey );
 	m_focusGadget->setVisible( !d || d->readable() );
+}
+
+void StandardNodeGadget::applyNoduleLabelVisibilityMetadata()
+{
+	bool inputVisible = false;
+	if( IECore::ConstBoolDataPtr d = Gaffer::Metadata::value<IECore::BoolData>( node(), g_inputNoduleLabelsVisibleKey ) )
+	{
+		inputVisible = d->readable();
+	}
+
+	bool outputVisible = false;
+	if( IECore::ConstBoolDataPtr d = Gaffer::Metadata::value<IECore::BoolData>( node(), g_outputNoduleLabelsVisibleKey ) )
+	{
+		outputVisible = d->readable();
+	}
+
+	for( StandardNodule::RecursiveIterator it( this ); !it.done(); ++it )
+	{
+		(*it)->setLabelVisible(
+			(*it)->plug()->direction() == Plug::Direction::In ? inputVisible : outputVisible
+		);
+	}
 }
 
 StandardNodeGadget::ErrorGadget *StandardNodeGadget::errorGadget( bool createIfMissing )
