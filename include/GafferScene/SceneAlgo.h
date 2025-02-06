@@ -315,6 +315,12 @@ GAFFERSCENE_API IECore::PathMatcher linkedLights( const ScenePlug *scene, const 
 /// Returns the paths to all lights which are linked to at least one of the specified objects.
 GAFFERSCENE_API IECore::PathMatcher linkedLights( const ScenePlug *scene, const IECore::PathMatcher &objects );
 
+/// Complex hashing
+/// ===============
+
+// Hashes all properties of a location and all its children. Does not include set membership.
+GAFFERSCENE_API IECore::MurmurHash hierarchyHash( const ScenePlug *scene, const ScenePlug::ScenePath &root );
+
 /// Miscellaneous
 /// =============
 
