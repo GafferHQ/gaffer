@@ -694,7 +694,8 @@ class Shader::NetworkBuilder
 			}
 			else
 			{
-				const Gaffer::Plug *effectiveParameter = this->effectiveParameter( parameter );
+				OptionalScopedContext parameterContext;
+				const Gaffer::Plug *effectiveParameter = this->effectiveParameter( parameter, parameterContext );
 				if( effectiveParameter && isOutputParameter( effectiveParameter ) )
 				{
 					IECore::InternedString inputName = parameterName.string();
