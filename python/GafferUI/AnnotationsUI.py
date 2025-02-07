@@ -75,14 +75,22 @@ def __annotate( node, name, menu ) :
 
 # A signal emitted when a popup menu for an annotation is about to be shown.
 # This provides an opportunity to customize the menu from external code.
-# The signature for slots is ( menuDefinition, node, name ) where `node` and
-# `name` identify which annotation the menu is being created for. Slots should
-# modify `menuDefinition` in place.
+# The signature for slots is ( menuDefinition, annotation, persistent ) where
+# `annotation` is a tuple of `( node, name )` and `persistent` indicates whether
+# or not the annotation will be serialised with the script. Slots should modify
+# `menuDefinition` in place.
 
 __contextMenuSignal = Gaffer.Signals.Signal3()
 
 def contextMenuSignal() :
 	return __contextMenuSignal
+
+def __annotationIsPersistent( annotation ) :
+
+	node, name = annotation
+
+	persistentAnnotations = Gaffer.MetadataAlgo.annotations( node, Gaffer.Metadata.RegistrationTypes.InstancePersistent )
+	return name in persistentAnnotations
 
 def __buttonPress( editorWeakRef, annotationsGadget, event ) :
 
@@ -91,10 +99,8 @@ def __buttonPress( editorWeakRef, annotationsGadget, event ) :
 		if annotation is None :
 			return False
 
-		node, name = annotation
-
 		menuDefinition = IECore.MenuDefinition()
-		contextMenuSignal()( menuDefinition, node, name)
+		contextMenuSignal()( menuDefinition, annotation, __annotationIsPersistent( annotation ) )
 
 		global __popupMenu
 		__popupMenu = GafferUI.Menu( menuDefinition )
@@ -108,7 +114,7 @@ def __buttonDoubleClick( editorWeakRef, annotationsGadget, event ) :
 
 	if event.buttons == event.Buttons.Left :
 		annotation = annotationsGadget.annotationAt( event.line )
-		if annotation is None :
+		if annotation is None or not __annotationIsPersistent( annotation ) :
 			return False
 
 		node, name = annotation
@@ -162,12 +168,14 @@ def __copyAnnotation( node, name ) :
 
 	node.scriptNode().ancestor( Gaffer.ApplicationRoot ).setClipboardContents( data )
 
-def __contextMenu( menuDefinition, node, name ) :
+def __contextMenu( menuDefinition, annotation, persistent ) :
 
+	node, name = annotation
 	menuDefinition.append(
 		"/Copy",
 		{
 			"command" : functools.partial( __copyAnnotation, node, name ),
+			"active" : persistent
 		},
 	)
 
