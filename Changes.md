@@ -36,6 +36,7 @@ Fixes
 - ContactSheetCore : Fixed bugs handling changes to the input and output image formats.
 - InteractiveRender : Fixed potential leak of `scene:path` context variable when computing the value for `resolvedRenderer`.
 - Dispatch app : Fixed poor UI layout in "Completed" dialogue state (#6244).
+- renderPassEditor : Fixed errors when script is not parented to an Application.
 
 API
 ---
