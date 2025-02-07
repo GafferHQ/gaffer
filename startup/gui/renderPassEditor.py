@@ -134,7 +134,8 @@ GafferSceneUI.RenderPassEditor.registerPathGroupingFunction( __defaultPathGroupi
 
 def __compoundEditorCreated( editor ) :
 
-	if editor.scriptNode().ancestor( Gaffer.ApplicationRoot ).getName() == "gui" :
+	applicationRoot = editor.scriptNode().ancestor( Gaffer.ApplicationRoot )
+	if applicationRoot and applicationRoot.getName() == "gui" :
 
 		Gaffer.Metadata.registerValue( editor.settings(), "layout:customWidget:renderPassSelector:widgetType", "GafferSceneUI.RenderPassEditor.RenderPassChooserWidget" )
 		Gaffer.Metadata.registerValue( editor.settings(), "layout:customWidget:renderPassSelector:section", "Settings" )
