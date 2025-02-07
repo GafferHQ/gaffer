@@ -73,6 +73,11 @@ struct ParameterConverter
 		paramList.SetString( name, RtUString( data->readable().c_str() ) );
 	}
 
+	void operator()( const InternedStringData *data, RtUString name, RtParamList &paramList ) const
+	{
+		paramList.SetString( name, RtUString( data->readable().c_str() ) );
+	}
+
 	void operator()( const Color3fData *data, RtUString name, RtParamList &paramList ) const
 	{
 		paramList.SetColor( name, RtColorRGB( data->readable().getValue() ) );
