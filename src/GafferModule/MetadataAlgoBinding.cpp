@@ -39,6 +39,7 @@
 #include "MetadataAlgoBinding.h"
 
 #include "Gaffer/GraphComponent.h"
+#include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Plug.h"
@@ -134,10 +135,9 @@ void removeAnnotationWrapper( Node &node, const std::string &name )
 	removeAnnotation( &node, name );
 }
 
-list annotationsWrapper( const Node &node )
+list annotationsWrapper( const Node &node, Metadata::RegistrationTypes types )
 {
-	std::vector<std::string> names;
-	annotations( &node, names );
+	std::vector<std::string> names = annotations( &node, types );
 	list result;
 	for( const auto &n : names )
 	{
@@ -287,7 +287,7 @@ void GafferModule::bindMetadataAlgo()
 	def( "addAnnotation", &addAnnotationWrapper, ( arg( "node" ), arg( "name" ), arg( "annotation" ), arg( "persistent" ) = true ) );
 	def( "getAnnotation", &getAnnotationWrapper, ( arg( "node" ), arg( "name" ), arg( "inheritTemplate" ) = false ) );
 	def( "removeAnnotation", &removeAnnotationWrapper, ( arg( "node" ), arg( "name" ) ) );
-	def( "annotations", &annotationsWrapper, ( arg( "node" ) ) );
+	def( "annotations", &annotationsWrapper, ( arg( "node" ), arg( "types" ) = Metadata::RegistrationTypes::All ) );
 
 	def( "addAnnotationTemplate", &addAnnotationTemplate, ( arg( "name" ), arg( "annotation" ), arg( "user" ) = true ) );
 	def( "getAnnotationTemplate", &getAnnotationTemplateWrapper, ( arg( "name" ) ) );

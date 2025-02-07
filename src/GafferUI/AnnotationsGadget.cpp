@@ -504,7 +504,6 @@ void AnnotationsGadget::update()
 
 	bool dependsOnContext = false;
 
-	vector<string> names;
 	for( auto &ga : m_annotations )
 	{
 		const Node *node = ga.first->node();
@@ -533,8 +532,7 @@ void AnnotationsGadget::update()
 		annotations.hasPlugValueSubstitutions = false;
 		annotations.standardAnnotations.clear();
 
-		names.clear();
-		MetadataAlgo::annotations( node, names );
+		vector<string> names = MetadataAlgo::annotations( node );
 		for( const auto &name : names )
 		{
 			if( !StringAlgo::matchMultiple( name, m_visibleAnnotations ) )

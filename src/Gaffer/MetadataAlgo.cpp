@@ -452,15 +452,24 @@ void removeAnnotation( Node *node, const std::string &name )
 
 void annotations( const Node *node, std::vector<std::string> &names )
 {
-	const vector<InternedString> keys = Metadata::registeredValues( node );
+	names = annotations( node );
+}
+
+std::vector<std::string> annotations( const Node *node, Gaffer::Metadata::RegistrationTypes types )
+{
+	std::vector<std::string> result;
+
+	const vector<InternedString> keys = Metadata::registeredValues( node, types );
 
 	for( const auto &key : keys )
 	{
 		if( boost::starts_with( key.string(), g_annotationPrefix ) && boost::ends_with( key.string(), ":text" ) )
 		{
-			names.push_back( key.string().substr( g_annotationPrefix.size(), key.string().size() - g_annotationPrefix.size() - 5 ) );
+			result.push_back( key.string().substr( g_annotationPrefix.size(), key.string().size() - g_annotationPrefix.size() - 5 ) );
 		}
 	}
+
+	return result;
 }
 
 void addAnnotationTemplate( const std::string &name, const Annotation &annotation, bool user )
