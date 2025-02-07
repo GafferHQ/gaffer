@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.5.0)
 =======
 
+API
+---
+
+- SceneAlgo :
+  - Added `parallelReduceLocations()` for implementing functions that need to combine results while traversing a ScenePlug.
 
 
 1.5.5.0 (relative to 1.5.4.1)
