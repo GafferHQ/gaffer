@@ -81,7 +81,7 @@ DependencyNodeClass<T, Ptr>::DependencyNodeClass( const char *docString )
 	this->def( "enabledPlug", &Detail::enabledPlug<T> );
 	this->def( "correspondingInput", &Detail::correspondingInput<T> );
 	// Install our custom metaclass.
-	Py_TYPE( this->ptr() ) = Detail::dependencyNodeMetaclass();
+	Py_SET_TYPE( this->ptr(), Detail::dependencyNodeMetaclass() );
 }
 
 template<typename T, typename Ptr>
@@ -92,7 +92,7 @@ DependencyNodeClass<T, Ptr>::DependencyNodeClass( const char *docString, boost::
 	this->def( "enabledPlug", &Detail::enabledPlug<T> );
 	this->def( "correspondingInput", &Detail::correspondingInput<T> );
 	// Install our custom metaclass.
-	Py_TYPE( this->ptr() ) = Detail::dependencyNodeMetaclass();
+	Py_SET_TYPE( this->ptr(), Detail::dependencyNodeMetaclass() );
 }
 
 } // namespace GafferBindings

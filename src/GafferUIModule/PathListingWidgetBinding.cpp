@@ -341,7 +341,7 @@ QVariant dataToVariant( const IECore::Data *value, int role )
 		{
 			const IECore::DateTimeData *d = static_cast<const IECore::DateTimeData *>( value );
 			time_t t = ( d->readable() - from_time_t( 0 ) ).total_seconds();
-			return QVariant( QDateTime::fromTime_t( t ) );
+			return QVariant( QDateTime::fromSecsSinceEpoch( t ) );
 		}
 		default :
 		{
