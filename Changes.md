@@ -5,7 +5,6 @@ Features
 --------
 
 - Parent, Duplicate, Scatter : Added `copySourceAttributes` plug, to preserve inherited attributes when the `destination` is not parented below the source.
-- Viewer : Added "Expand USD Instancers" item to the Expansion menu. Defaults to on for all renderers except OpenGL.
 - PromotePointInstances : Added a new node for selectively converting a subset of a USD PointInstancer to expanded "hero" geometry.
 - Annotations :
   - Added copy and paste of annotations. The right-click menu of an annotation allows you to copy the annotation. Pressing <kbd>Control</kbd> + <kbd>V</kbd> in the Node Editor will paste the annotation to the selected nodes.
