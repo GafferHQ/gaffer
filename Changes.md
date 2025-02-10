@@ -36,6 +36,8 @@ Fixes
 - InteractiveRender : Fixed potential leak of `scene:path` context variable when computing the value for `resolvedRenderer`.
 - Dispatch app : Fixed poor UI layout in "Completed" dialogue state (#6244).
 - RenderPassEditor : Fixed errors when script is not parented to an Application.
+- MessageWidget : Fixed bug preventing the horizontal scroll bar from appearing when displaying messages with long lines.
+- VectorDataWidget, VectorDataPlugValueWidget : Fixed bug preventing dropping a single value onto the `+` and `-` buttons and the plug name.
 
 API
 ---
@@ -506,8 +508,19 @@ Build
 - Zstandard : Added version 1.5.0.
 - Windows : Updated compiler to Visual Studio 2022 / MSVC 17.8 / Runtime library 14.3.
 
-1.4.15.x (relative to 1.4.15.5)
+1.4.15.x (relative to 1.4.15.6)
 ========
+
+
+
+1.4.15.6 (relative to 1.4.15.5)
+========
+
+Fixes
+-----
+
+- MessageWidget : Fixed bug preventing the horizontal scroll bar from appearing when displaying messages with long lines.
+- VectorDataWidget, VectorDataPlugValueWidget : Fixed bug preventing dropping a single value onto the `+` and `-` buttons and the plug name.
 
 1.4.15.5 (relative to 1.4.15.4)
 ========

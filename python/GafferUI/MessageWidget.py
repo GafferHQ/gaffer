@@ -778,7 +778,7 @@ class _MessageTableView( GafferUI.Widget ) :
 
 			# Fortunately we have a fixed set of known message levels so its ok to hard code this here
 			tableView.setColumnWidth( 0, 75 )
-			tableView.horizontalHeader().setStretchLastSection( True )
+			tableView.horizontalHeader().setSectionResizeMode( 1, QtWidgets.QHeaderView.ResizeToContents )
 
 			tableView.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAsNeeded )
 
