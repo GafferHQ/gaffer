@@ -1,7 +1,14 @@
 1.5.x.x (relative to 1.5.5.0)
 =======
 
+Features
+--------
 
+- USD : Added automatic expansion of USD PointInstancers at render time.
+  - This can be controlled on a per-instancer basis using a `gafferUSD:pointInstancerAdaptor:enabled` boolean attribute.
+  - Which point cloud primitive variables are promoted to user attributes can be controlled using a `gafferUSD:pointInstancerAdaptor:attributes` string attribute.
+  - May be disabled entirely with `GafferScene.SceneAlgo.deregisterRenderAdaptor( "USDPointInstancerAdaptor" )`.
+- Viewer : Added "Expand USD Instancers" item to the Expansion menu. Defaults to on for all renderers except OpenGL.
 
 1.5.5.0 (relative to 1.5.4.1)
 =======
