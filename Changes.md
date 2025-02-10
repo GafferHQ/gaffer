@@ -5,10 +5,6 @@ Features
 --------
 
 - Parent, Duplicate, Scatter : Added `copySourceAttributes` plug, to preserve inherited attributes when the `destination` is not parented below the source.
-- USD : Added automatic expansion of USD PointInstancers at render time.
-  - This can be controlled on a per-instancer basis using a `gafferUSD:pointInstancerAdaptor:enabled` boolean attribute.
-  - Which point cloud primitive variables are promoted to user attributes can be controlled using a `gafferUSD:pointInstancerAdaptor:attributes` string attribute.
-  - May be disabled entirely with `GafferScene.SceneAlgo.deregisterRenderAdaptor( "USDPointInstancerAdaptor" )`.
 - Viewer : Added "Expand USD Instancers" item to the Expansion menu. Defaults to on for all renderers except OpenGL.
 - PromotePointInstances : Added a new node for selectively converting a subset of a USD PointInstancer to expanded "hero" geometry.
 - Annotations :
