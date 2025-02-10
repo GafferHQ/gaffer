@@ -704,6 +704,18 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 			Gaffer.MetadataAlgo.Annotation( "abc", imath.Color3f( 0, 1, 0 ) )
 		)
 
+	def testAnnotationRegistrationTypes( self ) :
+
+		n = Gaffer.Node()
+		Gaffer.MetadataAlgo.addAnnotation( n, "persistent", Gaffer.MetadataAlgo.Annotation( "Always here", imath.Color3f( 1, 0, 0 ) ) )
+		Gaffer.MetadataAlgo.addAnnotation( n, "nonPersistent", Gaffer.MetadataAlgo.Annotation( "Ephemeral", imath.Color3f( 0, 1, 0 ) ), False )
+
+		Types = Gaffer.Metadata.RegistrationTypes
+		self.assertEqual( Gaffer.MetadataAlgo.annotations( n, Types.InstancePersistent ), ["persistent"] )
+		self.assertEqual( Gaffer.MetadataAlgo.annotations( n, Types.InstanceNonPersistent ), ["nonPersistent"] )
+		for t in [ Types.None_, Types.TypeId, Types.TypeIdDescendant ] :
+			self.assertEqual( Gaffer.MetadataAlgo.annotations( n, t ), [] )
+
 	def testAnnotationWithoutColor( self ) :
 
 		n = Gaffer.Node()

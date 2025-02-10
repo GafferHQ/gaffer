@@ -37,6 +37,7 @@
 #pragma once
 
 #include "Gaffer/Export.h"
+#include "Gaffer/Metadata.h"
 #include "Gaffer/Node.h"
 
 #include "IECore/SimpleTypedData.h"
@@ -180,7 +181,9 @@ struct GAFFER_API Annotation
 GAFFER_API void addAnnotation( Node *node, const std::string &name, const Annotation &annotation, bool persistent = true );
 GAFFER_API Annotation getAnnotation( const Node *node, const std::string &name, bool inheritTemplate = false );
 GAFFER_API void removeAnnotation( Node *node, const std::string &name );
+[[deprecated( "Use alternative form with `RegistrationTypes` instead")]]
 GAFFER_API void annotations( const Node *node, std::vector<std::string> &names );
+GAFFER_API std::vector<std::string> annotations( const Node *node, Metadata::RegistrationTypes types = Metadata::RegistrationTypes::All );
 
 /// Pass `user = false` for annotations not intended for creation directly by the user.
 GAFFER_API void addAnnotationTemplate( const std::string &name, const Annotation &annotation, bool user = true );

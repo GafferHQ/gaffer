@@ -12,19 +12,22 @@ Breaking Changes
 - StandardNodule : Removed deprecated `setCompatibleLabelsVisible()`.
 - DeleteAttributes : Changed base class and marked as `final`.
 
-1.5.x.x (relative to 1.5.4.1)
+1.5.x.x (relative to 1.5.5.0)
+=======
+
+
+
+1.5.5.0 (relative to 1.5.4.1)
 =======
 
 Features
 --------
 
 - Parent, Duplicate, Scatter : Added `copySourceAttributes` plug, to preserve inherited attributes when the `destination` is not parented below the source.
-- USD : Added automatic expansion of USD PointInstancers at render time.
-  - This can be controlled on a per-instancer basis using a `gafferUSD:pointInstancerAdaptor:enabled` boolean attribute.
-  - Which point cloud primitive variables are promoted to user attributes can be controlled using a `gafferUSD:pointInstancerAdaptor:attributes` string attribute.
-  - May be disabled entirely with `GafferScene.SceneAlgo.deregisterRenderAdaptor( "USDPointInstancerAdaptor" )`.
-- Viewer : Added "Expand USD Instancers" item to the Expansion menu. Defaults to on for all renderers except OpenGL.
 - PromotePointInstances : Added a new node for selectively converting a subset of a USD PointInstancer to expanded "hero" geometry.
+- Annotations :
+  - Added copy and paste of annotations. The right-click menu of an annotation allows you to copy the annotation. Pressing <kbd>Control</kbd> + <kbd>V</kbd> in the Node Editor will paste the annotation to the selected nodes.
+  - Double clicking on an annotation now pops up the annotation editor dialogue.
 
 Improvements
 ------------
@@ -41,6 +44,8 @@ Improvements
 - PrimitiveVariableTweaks : Added `invertSelection` plug.
 - Tweaks nodes : Added automatic conversion between numeric types. For example, an integer tweak value can now be applied to a float.
 - SceneWriter : Improved performance. Benchmarks rewriting complex scenes via a SceneReader->SceneWriter graph show around a 2x speedup.
+- USDLayerWriter : Improved performance, including a 50x speedup for one benchmark.
+- RenderPassMenu : Added configuration of the default state of "Hide Disabled" and "Display Grouped" via `renderPassPlugValueWidget:hideDisabled` and `renderPassPlugValueWidget:displayGrouped` metadata registered in a startup file. For example, "Hide Disabled" can be enabled with the following registration `Gaffer.Metadata.registerValue( Gaffer.ScriptNode, "variables.renderPass.value", "renderPassPlugValueWidget:hideDisabled", True )`.
 
 Fixes
 -----
@@ -48,12 +53,19 @@ Fixes
 - ContactSheetCore : Fixed bugs handling changes to the input and output image formats.
 - InteractiveRender : Fixed potential leak of `scene:path` context variable when computing the value for `resolvedRenderer`.
 - Dispatch app : Fixed poor UI layout in "Completed" dialogue state (#6244).
+- RenderPassEditor : Fixed errors when script is not parented to an Application.
+- MessageWidget : Fixed bug preventing the horizontal scroll bar from appearing when displaying messages with long lines.
+- VectorDataWidget, VectorDataPlugValueWidget : Fixed bug preventing dropping a single value onto the `+` and `-` buttons and the plug name.
 
 API
 ---
 
 - EditScopeAlgo : Added `renameRenderPass()` and `renameRenderPassNonEditableReason()` functions.
 - SceneAlgo : Added `parallelGatherLocations()` function.
+- GraphGadget : Added `annotationsGadget()` function.
+- MetadataAlgo : Added `annotations()` variant accepting `Gaffer::Metadata::RegistrationTypes`. The default is `All` to match existing behavior and the previous `annotations()` variant is deprecated.
+- AnnotationsGadget : Added `annotationAt()` function.
+- AnnotationUI : Added `contextMenuSignal()` allowing customisations to the context menu for annotations.
 
 1.5.4.1 (relative to 1.5.4.0)
 =======
@@ -514,8 +526,19 @@ Build
 - Zstandard : Added version 1.5.0.
 - Windows : Updated compiler to Visual Studio 2022 / MSVC 17.8 / Runtime library 14.3.
 
-1.4.15.x (relative to 1.4.15.5)
+1.4.15.x (relative to 1.4.15.6)
 ========
+
+
+
+1.4.15.6 (relative to 1.4.15.5)
+========
+
+Fixes
+-----
+
+- MessageWidget : Fixed bug preventing the horizontal scroll bar from appearing when displaying messages with long lines.
+- VectorDataWidget, VectorDataPlugValueWidget : Fixed bug preventing dropping a single value onto the `+` and `-` buttons and the plug name.
 
 1.4.15.5 (relative to 1.4.15.4)
 ========

@@ -42,9 +42,8 @@ import GafferScene
 
 try:
 	import GafferUSD
-	GafferScene.SceneAlgo.registerRenderAdaptor( "USDPointInstancerAdaptor", GafferUSD._PointInstancerAdaptor, "SceneView *Render", "*" )
-except:
-	# We shouldn't have any dependency on GafferUSD in GafferScene - but we need to put this registration here
-	# instead of in startup/GafferUSD because scenes that need adapting can existing without any GafferUSD nodes
-	# in the node graph that would trigger loading of GafferUSD. So just fail silently if GafferUSD isn't available.
+	# Disabled while we work on a solution for automatically remapping prototype paths
+	# when pointclouds have been reparented in the scene hierarchy.
+	# GafferScene.SceneAlgo.registerRenderAdaptor( "USDPointInstancerAdaptor", GafferUSD._PointInstancerAdaptor, "SceneView *Render", "*" )
+except ImportError :
 	pass

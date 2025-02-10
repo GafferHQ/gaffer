@@ -1351,6 +1351,8 @@ libraries = {
 				"GafferScene", "IECoreScene",
 				"prman" if env["PLATFORM"] != "win32" else "libprman",
 				"pxrcore" if env["PLATFORM"] != "win32" else "libpxrcore",
+				"oslquery$OSL_LIB_SUFFIX",
+				"OpenImageIO_Util$OIIO_LIB_SUFFIX",
 			],
 			"LIBPATH" : [ "$RENDERMAN_ROOT/lib" ],
 		},

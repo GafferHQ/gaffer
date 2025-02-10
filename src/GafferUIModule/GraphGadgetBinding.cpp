@@ -57,6 +57,8 @@
 #include "Gaffer/Node.h"
 #include "Gaffer/ScriptNode.h"
 
+#include "boost/pointer_cast.hpp"
+
 using namespace boost::python;
 using namespace IECorePython;
 using namespace Gaffer;
@@ -195,6 +197,17 @@ const std::string &annotationTextWrapper( const AnnotationsGadget &gadget, const
 	return gadget.annotationText( &node, annotation );
 }
 
+object annotationAtWrapper( const AnnotationsGadget &gadget, const IECore::LineSegment3f &lineInGadgetSpace )
+{
+	std::optional<AnnotationsGadget::AnnotationIdentifier> a = gadget.annotationAt( lineInGadgetSpace );
+	if( a )
+	{
+		return boost::python::make_tuple( NodePtr( const_cast<Node *>( a.value().first ) ), a.value().second );
+	}
+
+	return object();
+}
+
 bool connectNode( const GraphLayout &layout, GraphGadget &graph, Gaffer::Node &node, Gaffer::Set &potentialInputs )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -279,6 +292,7 @@ void GafferUIModule::bindGraphGadget()
 			.def( "connectionGadgets", &connectionGadgets1, ( arg_( "plug" ), arg_( "excludedNodes" ) = object() ) )
 			.def( "connectionGadgets", &connectionGadgets2, ( arg_( "node" ), arg_( "excludedNodes" ) = object() ) )
 			.def( "auxiliaryConnectionsGadget", (AuxiliaryConnectionsGadget *(GraphGadget::*)())&GraphGadget::auxiliaryConnectionsGadget, return_value_policy<CastToIntrusivePtr>() )
+			.def( "annotationsGadget",  (AnnotationsGadget *(GraphGadget::*)())&GraphGadget::annotationsGadget, return_value_policy<CastToIntrusivePtr>() )
 			.def( "upstreamNodeGadgets", &upstreamNodeGadgets, ( arg( "node" ), arg( "degreesOfSeparation" ) = std::numeric_limits<size_t>::max() ) )
 			.def( "downstreamNodeGadgets", &downstreamNodeGadgets, ( arg( "node" ), arg( "degreesOfSeparation" ) = std::numeric_limits<size_t>::max() ) )
 			.def( "connectedNodeGadgets", &connectedNodeGadgets, ( arg( "node" ), arg( "direction" ) = Gaffer::Plug::Invalid, arg( "degreesOfSeparation" ) = std::numeric_limits<size_t>::max() ) )
@@ -310,6 +324,7 @@ void GafferUIModule::bindGraphGadget()
 		.def( "setVisibleAnnotations", &AnnotationsGadget::setVisibleAnnotations )
 		.def( "getVisibleAnnotations", &AnnotationsGadget::getVisibleAnnotations, return_value_policy<copy_const_reference>() )
 		.def( "annotationText", &annotationTextWrapper, return_value_policy<copy_const_reference>(), ( arg( "node" ), arg( "annotation" ) = "user" ) )
+		.def( "annotationAt", &annotationAtWrapper )
 	;
 
 	IECorePython::RunTimeTypedClass<GraphLayout>()

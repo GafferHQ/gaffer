@@ -466,6 +466,16 @@ const AuxiliaryConnectionsGadget *GraphGadget::auxiliaryConnectionsGadget() cons
 	return getChild<AuxiliaryConnectionsGadget>( g_auxiliaryConnectionsGadgetName );
 }
 
+AnnotationsGadget *GraphGadget::annotationsGadget()
+{
+	return getChild<AnnotationsGadget>( g_annotationsGadgetName );
+}
+
+const AnnotationsGadget *GraphGadget::annotationsGadget() const
+{
+	return getChild<AnnotationsGadget>( g_annotationsGadgetName );
+}
+
 size_t GraphGadget::upstreamNodeGadgets( const Gaffer::Node *node, std::vector<NodeGadget *> &upstreamNodeGadgets, size_t degreesOfSeparation )
 {
 	NodeGadget *g = nodeGadget( node );

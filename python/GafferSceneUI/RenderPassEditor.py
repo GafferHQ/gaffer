@@ -1099,8 +1099,8 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__currentRenderPass = ""
 		self.__renderPasses = {}
 
-		self.__displayGrouped = False
-		self.__hideDisabled = False
+		self.__displayGrouped = Gaffer.Metadata.value( plug, "renderPassPlugValueWidget:displayGrouped" ) or False
+		self.__hideDisabled = Gaffer.Metadata.value( plug, "renderPassPlugValueWidget:hideDisabled" ) or False
 
 		self.__focusChangedConnection = plug.node().scriptNode().focusChangedSignal().connect(
 			Gaffer.WeakMethod( self.__focusChanged ), scoped = True
