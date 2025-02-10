@@ -661,7 +661,7 @@ class GraphEditor( GafferUI.Editor ) :
 	def __annotationsMenu( self ) :
 
 		graphGadget = self.graphGadget()
-		annotationsGadget = graphGadget["__annotations"]
+		annotationsGadget = graphGadget.annotationsGadget()
 
 		annotations = Gaffer.MetadataAlgo.annotationTemplates() + [ "user", annotationsGadget.untemplatedAnnotations ]
 		visiblePattern = annotationsGadget.getVisibleAnnotations()
@@ -734,7 +734,7 @@ class GraphEditor( GafferUI.Editor ) :
 
 	def __setVisibleAnnotations( self, unused, annotations ) :
 
-		annotationsGadget = self.graphGadget()["__annotations"]
+		annotationsGadget = self.graphGadget().annotationsGadget()
 		pattern = " ".join( a.replace( " ", r"\ " ) for a in annotations )
 		annotationsGadget.setVisibleAnnotations( pattern )
 

@@ -37,6 +37,7 @@
 
 #pragma once
 
+#include "GafferUI/AnnotationsGadget.h"
 #include "GafferUI/ContainerGadget.h"
 #include "GafferUI/ContextTracker.h"
 
@@ -132,6 +133,10 @@ class GAFFERUI_API GraphGadget : public ContainerGadget
 		/// Returns the Gadget responsible for representing auxiliary connections.
 		AuxiliaryConnectionsGadget *auxiliaryConnectionsGadget();
 		const AuxiliaryConnectionsGadget *auxiliaryConnectionsGadget() const;
+
+		/// Returns the Gadget responsible for drawing annotations.
+		AnnotationsGadget *annotationsGadget();
+		const AnnotationsGadget *annotationsGadget() const;
 
 		/// Finds all the upstream NodeGadgets connected to the specified node
 		/// and appends them to the specified vector. Returns the new size of the vector.

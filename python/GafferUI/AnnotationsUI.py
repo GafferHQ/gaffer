@@ -37,6 +37,7 @@
 import functools
 import re
 import imath
+import weakref
 
 import IECore
 
@@ -71,6 +72,125 @@ def __annotate( node, name, menu ) :
 
 	dialogue = __AnnotationsDialogue( node, name )
 	dialogue.wait( parentWindow = menu.ancestor( GafferUI.Window ) )
+
+# A signal emitted when a popup menu for an annotation is about to be shown.
+# This provides an opportunity to customize the menu from external code.
+# The signature for slots is ( menuDefinition, annotation, persistent ) where
+# `annotation` is a tuple of `( node, name )` and `persistent` indicates whether
+# or not the annotation will be serialised with the script. Slots should modify
+# `menuDefinition` in place.
+
+__contextMenuSignal = Gaffer.Signals.Signal3()
+
+def contextMenuSignal() :
+	return __contextMenuSignal
+
+def __annotationIsPersistent( annotation ) :
+
+	node, name = annotation
+
+	persistentAnnotations = Gaffer.MetadataAlgo.annotations( node, Gaffer.Metadata.RegistrationTypes.InstancePersistent )
+	return name in persistentAnnotations
+
+def __buttonPress( editorWeakRef, annotationsGadget, event ) :
+
+	if event.buttons & event.Buttons.Right :
+		annotation = annotationsGadget.annotationAt( event.line )
+		if annotation is None :
+			return False
+
+		menuDefinition = IECore.MenuDefinition()
+		contextMenuSignal()( menuDefinition, annotation, __annotationIsPersistent( annotation ) )
+
+		global __popupMenu
+		__popupMenu = GafferUI.Menu( menuDefinition )
+		__popupMenu.popup( editorWeakRef() )
+
+		return True
+
+	return True  # Needed for `__buttonDoubleClick()` to fire
+
+def __buttonDoubleClick( editorWeakRef, annotationsGadget, event ) :
+
+	if event.buttons == event.Buttons.Left :
+		annotation = annotationsGadget.annotationAt( event.line )
+		if annotation is None or not __annotationIsPersistent( annotation ) :
+			return False
+
+		node, name = annotation
+
+		__annotate( node, name, editorWeakRef() )
+
+		return True
+
+	return False
+
+def __clipboardIsAnnotation( clipboard ) :
+
+	return (
+		isinstance( clipboard, IECore.CompoundData ) and
+		[ "color", "name", "text" ] == sorted( clipboard.keys() ) and
+		isinstance( clipboard["color"], IECore.Color3fData ) and
+		isinstance( clipboard["name"], IECore.StringData ) and
+		isinstance( clipboard["text"], IECore.StringData )
+	)
+
+def __keyPress( editor, event ) :
+
+	if event.key == "V" and event.modifiers == event.modifiers.Control :
+		scriptNode = editor.scriptNode()
+		clipboard = scriptNode.ancestor( Gaffer.ApplicationRoot ).getClipboardContents()
+
+		if __clipboardIsAnnotation( clipboard ) :
+			with Gaffer.UndoScope( scriptNode ) :
+				editorSelection = [ i for i in scriptNode.selection() if editor.graphGadget().nodeGadget( i ) is not None ]
+				for n in editorSelection :
+					Gaffer.MetadataAlgo.addAnnotation(
+						n,
+						clipboard["name"].value,
+						Gaffer.MetadataAlgo.Annotation( clipboard["text"].value, clipboard["color"].value )
+					)
+			return True
+
+	return False
+
+def __copyAnnotation( node, name ) :
+
+	annotation = Gaffer.MetadataAlgo.getAnnotation( node, name, True )
+
+	data = IECore.CompoundData(
+		{
+			"color" : IECore.Color3fData( annotation.color() ),
+			"name" : IECore.StringData( name ),
+			"text" : IECore.StringData( annotation.text() ),
+		}
+	)
+
+	node.scriptNode().ancestor( Gaffer.ApplicationRoot ).setClipboardContents( data )
+
+def __contextMenu( menuDefinition, annotation, persistent ) :
+
+	node, name = annotation
+	menuDefinition.append(
+		"/Copy",
+		{
+			"command" : functools.partial( __copyAnnotation, node, name ),
+			"active" : persistent
+		},
+	)
+
+def __graphEditorCreated( editor ) :
+	editor.graphGadget().annotationsGadget().buttonPressSignal().connect(
+		functools.partial( __buttonPress, weakref.ref( editor ) )
+	)
+	editor.graphGadget().annotationsGadget().buttonDoubleClickSignal().connect(
+		functools.partial( __buttonDoubleClick, weakref.ref( editor ) )
+	)
+	editor.keyPressSignal().connect( __keyPress )
+
+GafferUI.GraphEditor.instanceCreatedSignal().connect( __graphEditorCreated )
+
+contextMenuSignal().connect( __contextMenu )
 
 class _AnnotationsHighlighter( GafferUI.CodeWidget.Highlighter ) :
 
