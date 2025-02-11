@@ -1348,7 +1348,7 @@ libraries = {
 			# can continue to compile with warnings as errors.
 			"CPPDEFINES" : [ "RMAN_RIX_NO_WARN_DEPRECATED" ],
 			"LIBS" : [
-				"GafferScene", "IECoreScene",
+				"GafferScene", "IECoreScene$CORTEX_LIB_SUFFIX",
 				"prman" if env["PLATFORM"] != "win32" else "libprman",
 				"pxrcore" if env["PLATFORM"] != "win32" else "libpxrcore",
 				"oslquery$OSL_LIB_SUFFIX",
