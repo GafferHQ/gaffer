@@ -1143,19 +1143,17 @@ class VisualiserGadget : public Gadget
 						continue;
 					}
 
-					if( mode == VisualiserTool::Mode::Auto && vData->typeId() == V3fVectorDataTypeId )
-					{
-						// Will be handled by `renderVectorVisualiser()` instead.
-						continue;
-					}
-
 					if(
 						mode == VisualiserTool::Mode::Auto &&
 						primitive->typeId() == MeshPrimitive::staticTypeId() &&
-						vData->typeId() != IntVectorDataTypeId
+						vData->typeId() != IntVectorDataTypeId &&
+						vData->typeId() != V3fVectorDataTypeId
 					)
 					{
 						// Will be handled by `renderColorVisualiser()` instead.
+						// If the data type is V3f data, we continue right before
+						// drawing the per-vertex label in order to get and display
+						// the value closest to the cursor.
 						continue;
 					}
 
@@ -1427,6 +1425,13 @@ class VisualiserGadget : public Gadget
 										std::swap( cursorVertexRasterPos, rasterPos );
 										minDistance2 = distance2;
 									}
+								}
+
+								if( mode == VisualiserTool::Mode::Auto && vData && vData->typeId() == V3fVectorDataTypeId )
+								{
+									// Do everything except drawing the per-vertex value. That will
+									// be handled by `renderVectorVisualiser()` instead.
+									continue;
 								}
 
 								// Draw value label
