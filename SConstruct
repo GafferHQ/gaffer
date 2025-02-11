@@ -1376,6 +1376,10 @@ libraries = {
 		"requiredOptions" : [ "RENDERMAN_ROOT" ],
 	},
 
+	"IECoreRenderManTest" : {
+		"requiredOptions" : [ "RENDERMAN_ROOT" ],
+	},
+
 	"GafferTractor" : {},
 
 	"GafferTractorTest" : {},
