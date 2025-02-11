@@ -1349,10 +1349,12 @@ libraries = {
 			"CPPDEFINES" : [ "RMAN_RIX_NO_WARN_DEPRECATED" ],
 			"LIBS" : [
 				"GafferScene", "IECoreScene$CORTEX_LIB_SUFFIX",
+				"IECoreVDB$CORTEX_LIB_SUFFIX",
 				"prman" if env["PLATFORM"] != "win32" else "libprman",
 				"pxrcore" if env["PLATFORM"] != "win32" else "libpxrcore",
 				"oslquery$OSL_LIB_SUFFIX",
 				"OpenImageIO_Util$OIIO_LIB_SUFFIX",
+				"openvdb$VDB_LIB_SUFFIX",
 			],
 			"LIBPATH" : [ "$RENDERMAN_ROOT/lib" ],
 		},
