@@ -1364,6 +1364,18 @@ libraries = {
 		"requiredOptions" : [ "RENDERMAN_ROOT" ],
 	},
 
+	"IECoreRenderManDisplay" : {
+		"envAppends" : {
+			"LIBS" : [ "IECoreImage$CORTEX_LIB_SUFFIX" ],
+			"CPPPATH" : [ "$RENDERMAN_ROOT/include" ],
+		},
+		"envReplacements" : {
+			"SHLIBPREFIX" : "",
+		},
+		"installName" : "renderManPlugins/d_ieDisplay",
+		"requiredOptions" : [ "RENDERMAN_ROOT" ],
+	},
+
 	"GafferTractor" : {},
 
 	"GafferTractorTest" : {},
