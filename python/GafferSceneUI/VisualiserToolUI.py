@@ -60,6 +60,7 @@ Gaffer.Metadata.registerNode(
 	"tool:exclusive", False,
 
 	"toolbarLayout:activator:modeIsColor", lambda node : node["mode"].getValue() == GafferSceneUI.VisualiserTool.Mode.Color,
+	"toolbarLayout:activator:modeIsAuto", lambda node : node["mode"].getValue() == GafferSceneUI.VisualiserTool.Mode.Auto,
 
 	plugs = {
 
@@ -90,7 +91,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"toolbarLayout:section", "Bottom",
-			"toolbarLayout:width", 100,
+			"toolbarLayout:width", 45,
 
 		],
 		"mode" : [
@@ -156,6 +157,19 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", ""
+
+		],
+		"vectorScale" : [
+
+			"description",
+			"""
+			The scale factor to apply to vectors.
+			""",
+
+			"toolbarLayout:section", "Bottom",
+			"toolbarLayout:width", 45,
+
+			"toolbarLayout:visibilityActivator", "modeIsAuto",
 
 		],
 

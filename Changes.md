@@ -12,6 +12,7 @@ Improvements
 - 3Delight : Added light muting support.
 - Arnold : Added support for specifying the name of a shader in the node menu using Arnold's `ui.name` metadata. This improves the formatting of the OpenPBR Surface menu item.
 - VisualiserTool : Added new visualisation for vector (V3f) data.
+  - The `vectorScale` plug can be used to scale the vector line. The <kbd>Shift</kbd> + <kbd>+</kbd> and <kbd>Shift</kbd> + <kbd>-</kbd> keyboard shortcuts can also be used to change the scale.
 
 Fixes
 -----

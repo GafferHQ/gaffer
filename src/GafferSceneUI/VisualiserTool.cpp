@@ -99,6 +99,11 @@ const float g_textSizeDefault = 9.0f;
 const float g_textSizeMin = 6.0f;
 const float g_textSizeInc = 0.5f;
 
+// Vector scale constants
+const float g_vectorScaleDefault = 1.f;
+const float g_vectorScaleMin = 10.f * std::numeric_limits< float >::min();
+float const g_vectorScaleInc = 0.01f;
+
 // Opacity and value constants
 const float g_opacityDefault = 1.0f;
 const float g_opacityMin = 0.0f;
@@ -1517,7 +1522,7 @@ class VisualiserGadget : public Gadget
 
 			UniformBlockVectorShader uniforms;
 			uniforms.color = Color3f( 1.f );
-			uniforms.scale = 1.f;
+			uniforms.scale = m_tool->vectorScalePlug()->getValue();
 
 			// Get the world to view and view to clip space matrices
 			const M44f w2v = viewportGadget->getCameraTransform().gjInverse();
@@ -1792,6 +1797,7 @@ VisualiserTool::VisualiserTool( SceneView *view, const std::string &name ) : Sel
 	addChild( new V3fPlug( "valueMin", Plug::In, g_valueMinDefault ) );
 	addChild( new V3fPlug( "valueMax", Plug::In, g_valueMaxDefault ) );
 	addChild( new FloatPlug( "size", Plug::In, g_textSizeDefault, g_textSizeMin ) );
+	addChild( new FloatPlug( "vectorScale", Plug::In, g_vectorScaleDefault, g_vectorScaleMin ) );
 	addChild( new ScenePlug( "__scene", Plug::In ) );
 
 	internalScenePlug()->setInput( view->inPlug<ScenePlug>() );
@@ -1917,14 +1923,24 @@ const FloatPlug *VisualiserTool::sizePlug() const
 	return getChild<FloatPlug>( g_firstPlugIndex + 5 );
 }
 
+FloatPlug *VisualiserTool::vectorScalePlug()
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 6 );
+}
+
+const FloatPlug *VisualiserTool::vectorScalePlug() const
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 6 );
+}
+
 ScenePlug *VisualiserTool::internalScenePlug()
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 6 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 7 );
 }
 
 const ScenePlug *VisualiserTool::internalScenePlug() const
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 6 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 7 );
 }
 
 const std::vector<VisualiserTool::Selection> &VisualiserTool::selection() const
@@ -2038,11 +2054,25 @@ bool VisualiserTool::keyPress( const KeyEvent &event )
 
 	if( event.key == "Plus" || event.key == "Equal" )
 	{
-		sizePlug()->setValue( sizePlug()->getValue() + g_textSizeInc );
+		if( event.modifiers == KeyEvent::Modifiers::None )
+		{
+			sizePlug()->setValue( sizePlug()->getValue() + g_textSizeInc );
+		}
+		else if( event.modifiers == KeyEvent::Modifiers::Shift )
+		{
+			vectorScalePlug()->setValue( vectorScalePlug()->getValue() + g_vectorScaleInc );
+		}
 	}
 	else if( event.key == "Minus" || event.key == "Underscore" )
 	{
-		sizePlug()->setValue( std::max( sizePlug()->getValue() - g_textSizeInc, g_textSizeMin ) );
+		if( event.modifiers == KeyEvent::Modifiers::None )
+		{
+			sizePlug()->setValue( std::max( sizePlug()->getValue() - g_textSizeInc, g_textSizeMin ) );
+		}
+		else if( event.modifiers == KeyEvent::Modifiers::Shift )
+		{
+			vectorScalePlug()->setValue( std::max( vectorScalePlug()->getValue() - g_vectorScaleInc, g_vectorScaleMin ) );
+		}
 	}
 
 	return false;
@@ -2148,7 +2178,8 @@ void VisualiserTool::plugDirtied( const Plug *plug )
 		plug == valueMinPlug() ||
 		plug == valueMaxPlug() ||
 		plug == sizePlug() ||
-		plug == modePlug()
+		plug == modePlug() ||
+		plug == vectorScalePlug()
 	)
 	{
 		m_gadgetDirty = true;
