@@ -99,6 +99,9 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 		Gaffer::FloatPlug *sizePlug();
 		const Gaffer::FloatPlug *sizePlug() const;
 
+		Gaffer::FloatPlug *vectorScalePlug();
+		const Gaffer::FloatPlug *vectorScalePlug() const;
+
 	private:
 
 		friend VisualiserGadget;
