@@ -39,6 +39,7 @@
 #include "tbb/concurrent_queue.h"
 #include "tbb/enumerable_thread_specific.h"
 #include "tbb/parallel_for.h"
+#include "tbb/parallel_reduce.h"
 #include "tbb/task_arena.h"
 
 #include <variant>
@@ -282,6 +283,167 @@ IECore::PathMatcher findAll( const ScenePlug *scene, Predicate &&predicate, cons
 			c.addPaths( b );
 			return c;
 		}
+	);
+}
+
+} // namespace SceneAlgo
+
+namespace Detail
+{
+
+template <typename T, typename LocationFunctor, typename MergeChildrenFunctor, typename ReduceFunctor>
+T parallelReduceLocationsWalk(
+	const GafferScene::ScenePlug *scene, const Gaffer::ThreadState &threadState, const ScenePlug::ScenePath &path,
+	const T& identity,
+	LocationFunctor &&locationFunctor, MergeChildrenFunctor &&mergeChildrenFunctor, ReduceFunctor &&reduceFunctor,
+	tbb::task_group_context &taskGroupContext
+)
+{
+	ScenePlug::PathScope pathScope( threadState, &path );
+
+	T result = locationFunctor( scene, path );
+
+	IECore::ConstInternedStringVectorDataPtr childNamesData = scene->childNamesPlug()->getValue();
+	const std::vector<IECore::InternedString> &childNames = childNamesData->readable();
+
+	if( childNames.empty() )
+	{
+		return result;
+	}
+
+	using ChildNameRange = tbb::blocked_range<std::vector<IECore::InternedString>::const_iterator>;
+	const ChildNameRange loopRange( childNames.begin(), childNames.end() );
+
+	// It's a shame to be using all this boilerplate which could be avoided with a [&] in a lambda,
+	// but using the imperative form of parallel_reduce allows us avoid unnecessary allocations.
+	// This internal ugliness is probably worthwhile if it gives us a public interface and functionality
+	// we're happy with.
+
+	struct LoopBody
+	{
+		T m_result;
+
+		const GafferScene::ScenePlug *m_scene;
+		const Gaffer::ThreadState &m_threadState;
+		const ScenePlug::ScenePath &m_path;
+		const T& m_identity;
+		LocationFunctor &&m_locationFunctor;
+		MergeChildrenFunctor &&m_mergeChildrenFunctor;
+		ReduceFunctor &&m_reduceFunctor;
+		tbb::task_group_context &m_taskGroupContext;
+
+		LoopBody(
+			const GafferScene::ScenePlug *scene,
+			const Gaffer::ThreadState &threadState,
+			const ScenePlug::ScenePath &path,
+			const T& identity,
+			LocationFunctor &&locationFunctor,
+			MergeChildrenFunctor &&mergeChildrenFunctor,
+			ReduceFunctor &&reduceFunctor,
+			tbb::task_group_context &taskGroupContext
+		) :
+			m_result( identity ),
+			m_scene( scene ),
+			m_threadState( threadState ),
+			m_path( path ),
+			m_identity( identity ),
+			m_locationFunctor( locationFunctor ),
+			m_mergeChildrenFunctor( mergeChildrenFunctor ),
+			m_reduceFunctor( reduceFunctor ),
+			m_taskGroupContext( taskGroupContext )
+		{
+		}
+
+		LoopBody( LoopBody& s, tbb::split ) :
+			m_result( s.m_identity ),
+			m_scene( s.m_scene ),
+			m_threadState( s.m_threadState ),
+			m_path( s.m_path ),
+			m_identity( s.m_identity ),
+			m_locationFunctor( s.m_locationFunctor ),
+			m_mergeChildrenFunctor( s.m_mergeChildrenFunctor ),
+			m_reduceFunctor( s.m_reduceFunctor ),
+			m_taskGroupContext( s.m_taskGroupContext )
+		{
+		}
+
+		void operator()( const ChildNameRange &range )
+		{
+			ScenePlug::ScenePath childPath = m_path;
+			childPath.push_back( IECore::InternedString() ); // Space for the child name
+
+			for( auto &childName : range )
+			{
+				childPath.back() = childName;
+				m_reduceFunctor(
+					m_result,
+					parallelReduceLocationsWalk(
+						m_scene, m_threadState, childPath,
+						m_identity, m_locationFunctor, m_mergeChildrenFunctor, m_reduceFunctor,
+						m_taskGroupContext
+					)
+				);
+			}
+		}
+
+		void join( LoopBody& rhs )
+		{
+			m_reduceFunctor( m_result, rhs.m_result );
+		}
+	};
+
+	LoopBody loopBody(
+		scene, threadState, path,
+		identity,
+		locationFunctor, mergeChildrenFunctor, reduceFunctor,
+		taskGroupContext
+	);
+
+	if( childNames.size() > 1 )
+	{
+		tbb::parallel_reduce( loopRange, loopBody, taskGroupContext );
+	}
+	else if( childNames.size() == 1 )
+	{
+		// Serial execution
+		loopBody( loopRange );
+	}
+
+	mergeChildrenFunctor( result, loopBody.m_result );
+
+	return result;
+
+}
+
+} // namespace Detail
+
+namespace SceneAlgo
+{
+
+template <typename T, typename LocationFunctor, typename ReduceFunctor>
+T parallelReduceLocations(
+	const GafferScene::ScenePlug *scene,
+	const T& identity,
+	LocationFunctor &&locationFunctor, ReduceFunctor &&reduceFunctor,
+	const ScenePlug::ScenePath &root )
+{
+	return parallelReduceLocations( scene, identity, locationFunctor, reduceFunctor, reduceFunctor, root );
+}
+
+template <typename T, typename LocationFunctor, typename MergeChildrenFunctor, typename ReduceFunctor>
+T parallelReduceLocations(
+	const GafferScene::ScenePlug *scene,
+	const T& identity,
+	LocationFunctor &&locationFunctor, MergeChildrenFunctor &&mergeChildrenFunctor, ReduceFunctor &&reduceFunctor,
+	const ScenePlug::ScenePath &root )
+{
+	// Prevents outer tasks silently cancelling our tasks
+	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+
+	return Detail::parallelReduceLocationsWalk(
+		scene, Gaffer::ThreadState::current(), root, identity,
+		locationFunctor, mergeChildrenFunctor, reduceFunctor,
+		taskGroupContext
 	);
 }
 

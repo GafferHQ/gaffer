@@ -1239,6 +1239,60 @@ IECore::PathMatcher GafferScene::SceneAlgo::linkedLights( const ScenePlug *scene
 }
 
 //////////////////////////////////////////////////////////////////////////
+// Complex hashing
+//////////////////////////////////////////////////////////////////////////
+
+IECore::MurmurHash GafferScene::SceneAlgo::hierarchyHash( const ScenePlug *scene, const ScenePlug::ScenePath &root )
+{
+	return GafferScene::SceneAlgo::parallelReduceLocations(
+		scene,
+		IECore::MurmurHash(),
+		[&] ( const ScenePlug *scene, const ScenePlug::ScenePath &path )
+		{
+			IECore::MurmurHash h;
+			if( path.size() > root.size() )
+			{
+				h.append( path.back() );
+			}
+
+			// Feels a bit silly to be hashing this is in when we're also hashing the paths of our children - it
+			// feels a bit redundant. But our children are visited out of order, so including this is how we can
+			// catch differences between hierarchies that differ solely in the order of their children.
+			scene->childNamesPlug()->hash( h );
+
+			scene->boundPlug()->hash( h );
+			scene->transformPlug()->hash( h );
+			scene->attributesPlug()->hash( h );
+			scene->objectPlug()->hash( h );
+
+
+			return h;
+		},
+		[]( IECore::MurmurHash &result, const IECore::MurmurHash &childrenResult )
+		{
+			// By doing an actual append with the child results, we ensure that their hash is properly
+			// mixed with the path leaf name hashed in above, so we won't get incorrect matches if the same
+			// children were assigned to different locations.
+			result.append( childrenResult );
+		},
+		[]( IECore::MurmurHash &result, const IECore::MurmurHash &sibling )
+		{
+			// We want our resulting hash to be deterministic, despite the order things are visited in not
+			// being deterministic. We achieve this by doing a simple commutative add here instead of hashing.
+			// Because the inputs are proper hashes with their bits evenly distributed, and they include their
+			// paths in the hash, we should not get a matching sum unless the inputs match ( or we experience an
+			// extremely unlikely collision ). See the comment in ThreadablePathHashAccumulator for more
+			// discussion of why we can get away with this.
+			result = IECore::MurmurHash(
+				result.h1() + sibling.h1(),
+				result.h2() + sibling.h2()
+			);
+		},
+		root
+	);
+}
+
+//////////////////////////////////////////////////////////////////////////
 // Miscellaneous
 //////////////////////////////////////////////////////////////////////////
 
