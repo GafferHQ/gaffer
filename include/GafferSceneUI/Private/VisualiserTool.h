@@ -102,6 +102,9 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 		Gaffer::FloatPlug *vectorScalePlug();
 		const Gaffer::FloatPlug *vectorScalePlug() const;
 
+		Gaffer::Color3fPlug *vectorColorPlug();
+		const Gaffer::Color3fPlug *vectorColorPlug() const;
+
 	private:
 
 		friend VisualiserGadget;

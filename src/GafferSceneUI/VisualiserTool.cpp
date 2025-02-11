@@ -99,10 +99,12 @@ const float g_textSizeDefault = 9.0f;
 const float g_textSizeMin = 6.0f;
 const float g_textSizeInc = 0.5f;
 
-// Vector scale constants
+// Vector constants
 const float g_vectorScaleDefault = 1.f;
 const float g_vectorScaleMin = 10.f * std::numeric_limits< float >::min();
 float const g_vectorScaleInc = 0.01f;
+
+const Color3f g_vectorColorDefault( 1.f, 1.f, 1.f );
 
 // Opacity and value constants
 const float g_opacityDefault = 1.0f;
@@ -1521,7 +1523,7 @@ class VisualiserGadget : public Gadget
 			glBindBufferBase( GL_UNIFORM_BUFFER, g_uniformBlockBindingIndex, m_vectorUniformBuffer->buffer() );
 
 			UniformBlockVectorShader uniforms;
-			uniforms.color = Color3f( 1.f );
+			uniforms.color = m_tool->vectorColorPlug()->getValue();
 			uniforms.scale = m_tool->vectorScalePlug()->getValue();
 
 			// Get the world to view and view to clip space matrices
@@ -1798,6 +1800,7 @@ VisualiserTool::VisualiserTool( SceneView *view, const std::string &name ) : Sel
 	addChild( new V3fPlug( "valueMax", Plug::In, g_valueMaxDefault ) );
 	addChild( new FloatPlug( "size", Plug::In, g_textSizeDefault, g_textSizeMin ) );
 	addChild( new FloatPlug( "vectorScale", Plug::In, g_vectorScaleDefault, g_vectorScaleMin ) );
+	addChild( new Color3fPlug( "vectorColor", Plug::In, g_vectorColorDefault ) );
 	addChild( new ScenePlug( "__scene", Plug::In ) );
 
 	internalScenePlug()->setInput( view->inPlug<ScenePlug>() );
@@ -1933,14 +1936,24 @@ const FloatPlug *VisualiserTool::vectorScalePlug() const
 	return getChild<FloatPlug>( g_firstPlugIndex + 6 );
 }
 
+Color3fPlug *VisualiserTool::vectorColorPlug()
+{
+	return getChild<Color3fPlug>( g_firstPlugIndex + 7 );
+}
+
+const Color3fPlug *VisualiserTool::vectorColorPlug() const
+{
+	return getChild<Color3fPlug>( g_firstPlugIndex + 7 );
+}
+
 ScenePlug *VisualiserTool::internalScenePlug()
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 7 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 8 );
 }
 
 const ScenePlug *VisualiserTool::internalScenePlug() const
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 7 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 8 );
 }
 
 const std::vector<VisualiserTool::Selection> &VisualiserTool::selection() const
@@ -2179,7 +2192,8 @@ void VisualiserTool::plugDirtied( const Plug *plug )
 		plug == valueMaxPlug() ||
 		plug == sizePlug() ||
 		plug == modePlug() ||
-		plug == vectorScalePlug()
+		plug == vectorScalePlug() ||
+		plug == vectorColorPlug()
 	)
 	{
 		m_gadgetDirty = true;
