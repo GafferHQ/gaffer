@@ -83,23 +83,22 @@ struct Filters
 	PathMatcher prune;
 	PathMatcher deleteObject;
 	PathMatcher deleteAttributes;
+	ScenePlug::ScenePath localPath;
 
-	// Merges in filters from sibling locations.
-	void add( const Filters &other )
+	void mergeSibling( const Filters &sibling )
 	{
-		fullyPruned = fullyPruned && other.fullyPruned;
-		prune.addPaths( other.prune );
-		deleteAttributes.addPaths( other.deleteAttributes );
-		deleteObject.addPaths( other.deleteObject );
+		fullyPruned = fullyPruned && sibling.fullyPruned;
+		prune.addPaths( sibling.prune );
+		deleteAttributes.addPaths( sibling.deleteAttributes );
+		deleteObject.addPaths( sibling.deleteObject );
 	}
 
-	// Merges in filters from child locations.
-	void addWithPrefix( const Filters &other, const ScenePlug::ScenePath &prefix )
+	void mergeChildren( const Filters &children )
 	{
-		fullyPruned = fullyPruned && other.fullyPruned;
-		prune.addPaths( other.prune, prefix );
-		deleteAttributes.addPaths( other.deleteAttributes, prefix );
-		deleteObject.addPaths( other.deleteObject, prefix );
+		fullyPruned = fullyPruned && children.fullyPruned;
+		prune.addPaths( children.prune, localPath );
+		deleteAttributes.addPaths( children.deleteAttributes, localPath );
+		deleteObject.addPaths( children.deleteObject, localPath );
 	}
 
 };
@@ -109,116 +108,88 @@ struct Filters
 // - Objects with identical hashes will be included in `Filter::deleteObject`.
 // - Attributes with identical hashes will be included in `Filter::deleteAttributes`.
 // - Subtrees which are identical in all properties will be included in `Filter::prune`.
-//
-/// \todo The core logic of this could be lifted into a `SceneAlgo::parallelReduceLocations()`
-/// and reused elsewhere. The recursive way we're building PathMatchers by prefixing with the
-/// parent as unwind might outperform other approaches we're using elsewhere.
-Filters filtersWalk( const GafferScene::ScenePlug *baseScene, const GafferScene::ScenePlug *layerScene, const std::vector<float> &frames, const ScenePlug::ScenePath &path, const Gaffer::ThreadState &threadState, tbb::task_group_context &taskGroupContext )
+Filters buildFilters( const GafferScene::ScenePlug *baseScene, const GafferScene::ScenePlug *layerScene, const std::vector<float> &frames )
 {
-	ScenePlug::PathScope pathScope( threadState, &path );
+	Context::EditableScope childNamesScope( Context::current() );
 
-	bool attributesMatch = true;
-	bool objectsMatch = true;
-	bool canPrune = true;
+	// We'll evaluate the childNames at shutter open, seems to be consistent with what we do elsewhere.
+	childNamesScope.setFrame( frames[0] );
 
-	for( auto frame : frames )
-	{
-		pathScope.setFrame( frame );
-
-		if( !layerScene->existsPlug()->getValue() )
+	return GafferScene::SceneAlgo::parallelReduceLocations(
+		baseScene,
+		Filters(),
+		[&] ( const ScenePlug *scene, const ScenePlug::ScenePath &path ) -> Filters
 		{
-			return { false, g_emptyPathMatcher, g_emptyPathMatcher, g_emptyPathMatcher };
-		}
+			bool attributesMatch = true;
+			bool objectsMatch = true;
+			bool canPrune = true;
 
-		if( attributesMatch )
-		{
-			attributesMatch = baseScene->attributesPlug()->hash() == layerScene->attributesPlug()->hash();
-			canPrune = canPrune && attributesMatch;
-		}
+			Context::EditableScope scope( Context::current() );
+			for( auto frame : frames )
+			{
+				scope.setFrame( frame );
 
-		if( objectsMatch )
-		{
-			objectsMatch = baseScene->objectPlug()->hash() == layerScene->objectPlug()->hash();
-			canPrune = canPrune && objectsMatch;
-		}
-
-		if( canPrune )
-		{
-			canPrune = baseScene->transformPlug()->hash() == layerScene->transformPlug()->hash();
-		}
-
-		if( canPrune )
-		{
-			canPrune = baseScene->boundPlug()->hash() == layerScene->boundPlug()->hash();
-		}
-	}
-
-	ScenePlug::ScenePath localPath;
-	if( path.size() )
-	{
-		// We only need the last part, because we prefix with
-		// the parent path as we unwind the recursion.
-		localPath.push_back( path.back() );
-	}
-
-	Filters result;
-	result.fullyPruned = canPrune;
-	if( attributesMatch )
-	{
-		result.deleteAttributes.addPath( localPath );
-	}
-	if( objectsMatch )
-	{
-		result.deleteObject.addPath( localPath );
-	}
-
-	IECore::ConstInternedStringVectorDataPtr baseChildNamesData = baseScene->childNamesPlug()->getValue();
-	const vector<InternedString> &baseChildNames = baseChildNamesData->readable();
-	if( !baseChildNames.empty() )
-	{
-		using ChildNameRange = tbb::blocked_range<std::vector<IECore::InternedString>::const_iterator>;
-		const ChildNameRange loopRange( baseChildNames.begin(), baseChildNames.end() );
-
-		Filters childFilters = tbb::parallel_reduce(
-
-			loopRange,
-
-			Filters(),
-
-			[&] ( const ChildNameRange &range, Filters x ) {
-
-				ScenePlug::ScenePath childPath = path;
-				childPath.push_back( InternedString() );
-				for( const auto &childName : range )
+				if( !layerScene->existsPlug()->getValue() )
 				{
-					childPath.back() = childName;
-					const Filters childFilters = filtersWalk( baseScene, layerScene, frames, childPath, threadState, taskGroupContext );
-					x.add( childFilters );
+					return { false, g_emptyPathMatcher, g_emptyPathMatcher, g_emptyPathMatcher, ScenePlug::ScenePath() };
 				}
-				return x;
-			},
 
-			[] ( Filters x, const Filters &y ) {
+				if( attributesMatch )
+				{
+					attributesMatch = baseScene->attributesPlug()->hash() == layerScene->attributesPlug()->hash();
+					canPrune = canPrune && attributesMatch;
+				}
 
-				x.add( y );
-				return x;
+				if( objectsMatch )
+				{
+					objectsMatch = baseScene->objectPlug()->hash() == layerScene->objectPlug()->hash();
+					canPrune = canPrune && objectsMatch;
+				}
 
-			},
+				if( canPrune )
+				{
+					canPrune = baseScene->transformPlug()->hash() == layerScene->transformPlug()->hash();
+				}
 
-			taskGroupContext
+				if( canPrune )
+				{
+					canPrune = baseScene->boundPlug()->hash() == layerScene->boundPlug()->hash();
+				}
+			}
 
+			Filters result;
+			if( path.size() )
+			{
+				// We only need the last part, because we prefix with
+				// the parent path as we unwind the recursion.
+				result.localPath.push_back( path.back() );
+			}
 
-		);
+			result.fullyPruned = canPrune;
+			if( attributesMatch )
+			{
+				result.deleteAttributes.addPath( result.localPath );
+			}
+			if( objectsMatch )
+			{
+				result.deleteObject.addPath( result.localPath );
+			}
 
-		result.addWithPrefix( childFilters, localPath );
-	}
-
-	if( result.fullyPruned )
-	{
-		result.prune.addPath( localPath );
-	}
-
-	return result;
+			return result;
+		},
+		[]( Filters &result, const Filters &childrenResult )
+		{
+			result.mergeChildren( childrenResult );
+			if( result.fullyPruned )
+			{
+				result.prune.addPath( result.localPath );
+			}
+		},
+		[]( Filters &result, const Filters &siblingResult )
+		{
+			result.mergeSibling( siblingResult );
+		}
+	);
 }
 
 class ScopedDirectory : boost::noncopyable
@@ -547,8 +518,7 @@ void USDLayerWriter::executeSequence( const std::vector<float> &frames ) const
 
 	// Figure out the filters for our Prune, DeleteObject and DeleteAttribute
 	// nodes.
-	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated ); // Prevents outer tasks silently cancelling our tasks
-	const Filters filters = filtersWalk( basePlug(), layerPlug(), frames, ScenePlug::ScenePath(), ThreadState::current(), taskGroupContext );
+	const Filters filters = buildFilters( basePlug(), layerPlug(), frames );
 
 	// Pass the filter settings via context variables since we can't call
 	// `Plug::setValue()` from `executeSequence()` because it would violate

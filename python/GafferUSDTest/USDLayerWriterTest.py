@@ -418,5 +418,35 @@ class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertTrue( ( self.temporaryDirectory() / "test.usda" ).is_file() )
 
+	def testIdenticalNamesInDifferentGroups( self ) :
+
+		# /plane  <- modified in layer
+		# /group
+		#   /plane  <- identical
+
+		plane = GafferScene.Plane()
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane["out"] )
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( plane["out"] )
+		parent["children"][0].setInput( group["out"] )
+		parent["parent"].setValue( "/" )
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		primitiveVariables = GafferScene.PrimitiveVariables()
+		primitiveVariables["in"].setInput( parent["out"] )
+		primitiveVariables["filter"].setInput( pathFilter["out"] )
+		primitiveVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "a", 10 ) )
+
+		layerFileName, compositionFileName = self.__writeLayerAndComposition( parent["out"], primitiveVariables["out"] )
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( compositionFileName )
+		self.assertScenesEqual( primitiveVariables["out"], reader["out"], checks = self.allSceneChecks - { "sets" } )
+
 if __name__ == "__main__":
 	unittest.main()
