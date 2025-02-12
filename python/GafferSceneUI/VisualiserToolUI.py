@@ -60,6 +60,7 @@ Gaffer.Metadata.registerNode(
 	"tool:exclusive", False,
 
 	"toolbarLayout:activator:modeIsColor", lambda node : node["mode"].getValue() == GafferSceneUI.VisualiserTool.Mode.Color,
+	"toolbarLayout:activator:modeIsAuto", lambda node : node["mode"].getValue() == GafferSceneUI.VisualiserTool.Mode.Auto,
 
 	plugs = {
 
@@ -156,6 +157,34 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", ""
+
+		],
+		"vectorScale" : [
+
+			"description",
+			"""
+			The scale factor to apply to vectors.
+			""",
+
+			"toolbarLayout:section", "Bottom",
+			"toolbarLayout:width", 100,
+
+			"toolbarLayout:visibilityActivator", "modeIsAuto",
+
+		],
+
+		"vectorColor" : [
+
+			"description",
+			"""
+			The color to use for drawing vectors.
+			""",
+
+			"toolbarLayout:section", "Bottom",
+			"toolbarLayout:width", 175,
+
+			"toolbarLayout:visibilityActivator", "modeIsAuto",
+			"colorPlugValueWidget:colorChooserButtonVisible", False,
 
 		],
 
