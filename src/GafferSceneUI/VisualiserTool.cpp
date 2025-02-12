@@ -1106,6 +1106,8 @@ class VisualiserGadget : public Gadget
 			const std::string dataName = m_tool->dataNamePlug()->getValue();
 			const std::string primitiveVariableName = primitiveVariableFromDataName( dataName );
 
+			float cursorVertexValueTextScale = 2.f;
+
 			// Loop through current selection
 
 			for( const auto &location : m_tool->selection() )
@@ -1424,6 +1426,15 @@ class VisualiserGadget : public Gadget
 										std::swap( cursorVertexValue, vertexValue );
 										std::swap( cursorVertexRasterPos, rasterPos );
 										minDistance2 = distance2;
+
+										if( mode == VisualiserTool::Mode::Auto && vData->typeId() == V3fVectorDataTypeId )
+										{
+											cursorVertexValueTextScale = 1.f;
+										}
+										else
+										{
+											cursorVertexValueTextScale = 2.f;
+										}
 									}
 								}
 
@@ -1477,7 +1488,7 @@ class VisualiserGadget : public Gadget
 				drawStrokedText(
 					viewportGadget,
 					text,
-					scale.x * 2.f,
+					scale.x * cursorVertexValueTextScale,
 					V2f(
 						cursorVertexRasterPos.value().x - style->textBound( GafferUI::Style::LabelText, text ).size().x * scale.x,
 						cursorVertexRasterPos.value().y
