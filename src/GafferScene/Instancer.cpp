@@ -1380,6 +1380,7 @@ Instancer::Instancer( const std::string &name )
 	addChild( new ObjectPlug( "__engineSplitPrototypes", Plug::Out, NullObject::defaultNullObject() ) );
 	addChild( new ScenePlug( "__capsuleScene", Plug::Out ) );
 	addChild( new PathMatcherDataPlug( "__setCollaborate", Plug::Out, new IECore::PathMatcherData() ) );
+	addChild( new Int64VectorDataPlug( "__capsuleComputedHash", Plug::Out ) );
 
 	// Hide `destination` plug until we resolve issues surrounding `processesRootObject()`.
 	// See `BranchCreator::computeObject()`.
@@ -1667,6 +1668,16 @@ const Gaffer::PathMatcherDataPlug *Instancer::setCollaboratePlug() const
 	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 26 );
 }
 
+Gaffer::Int64VectorDataPlug *Instancer::capsuleComputedHashPlug()
+{
+	return getChild<Int64VectorDataPlug>( g_firstPlugIndex + 27 );
+}
+
+const Gaffer::Int64VectorDataPlug *Instancer::capsuleComputedHashPlug() const
+{
+	return getChild<Int64VectorDataPlug>( g_firstPlugIndex + 27 );
+}
+
 void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	BranchCreator::affects( input, outputs );
@@ -1718,9 +1729,18 @@ void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) co
 	}
 
 	if(
-		input->parent() == prototypesPlug() &&
-		input != prototypesPlug()->globalsPlug() &&
-		!encapsulatePlug()->isSetToDefault()
+		input == enginePlug() ||
+		( input->parent() == prototypesPlug() && input != prototypesPlug()->globalsPlug() )
+	)
+	{
+		outputs.push_back( capsuleComputedHashPlug() );
+	}
+
+	if(
+		(
+			( input->parent() == prototypesPlug() && input != prototypesPlug()->globalsPlug() ) ||
+			input == capsuleComputedHashPlug()
+		) && !encapsulatePlug()->isSetToDefault()
 	)
 	{
 		outputs.push_back( outPlug()->objectPlug() );
@@ -1890,6 +1910,23 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 			h.append( &(*prototypeRoot)[0], prototypeRoot->size() );
 			h.append( IECore::MurmurHash( h1Accum, h2Accum ) );
 		}
+	}
+	else if( output == capsuleComputedHashPlug() )
+	{
+		// We use a very pessimistic hash for this plug, which basically only saves us recomputing
+		// the value of this plug if something dirties the in plug, but not the engine ( and not the
+		// prototypes )
+		const ScenePlug::ScenePath &sourcePath = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+		engineHash( sourcePath, context, h );
+		h.append( reinterpret_cast<uint64_t>( this ) );
+		for( const auto &prototypePlug : ValuePlug::Range( *prototypesPlug() ) )
+		{
+			if( prototypePlug != prototypesPlug()->globalsPlug() )
+			{
+				h.append( prototypePlug->dirtyCount() );
+			}
+		}
+		h.append( context->hash() );
 	}
 }
 
@@ -2142,6 +2179,115 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 
 		static_cast<PathMatcherDataPlug *>( output )->setValue( outputSetData );
 		return;
+	}
+	else if( output == capsuleComputedHashPlug() )
+	{
+		IECore::MurmurHash h;
+
+		const ScenePlug::ScenePath &sourcePath = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+
+		// NOTE: We are only hashing the engine and the prototypes at on-frame time - but
+		// when the capsule actually renders, it will evaluate the engine and prototypes
+		// throughout the shutter ( based on whatever the shutter settings are when they
+		// reach the renderer ). This means that our hash will not capture the change if
+		// something changes its animation while keep it's on-frame position ( or rather,
+		// it's on-frame hash ). This could result in a failure to update in a corner
+		// ... but it is quite unlikely to come up, and dealing with it properly would
+		// reduce the performance of the normal case.
+		engineHash( sourcePath, context, h );
+
+		ConstEngineDataPtr engineData = engine( sourcePath, context );
+
+		// The capsule will include a pointer to the node that created it, so we always must include
+		// our address in the hash.
+		h.append( reinterpret_cast<uint64_t>( this ) );
+
+		if( engineData->hasContextVariables() )
+		{
+			/// We need to include anything that will affect how the capsule will expand.
+			for( const auto &prototypePlug : ValuePlug::Range( *prototypesPlug() ) )
+			{
+				if( prototypePlug != prototypesPlug()->globalsPlug() )
+				{
+					h.append( prototypePlug->dirtyCount() );
+				}
+			}
+			h.append( context->hash() );
+		}
+		else
+		{
+			std::atomic<uint64_t> h1Accum( 0 ), h2Accum( 0 );
+
+			// Prevents outer tasks silently cancelling our tasks
+			tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+			const ThreadState &threadState = ThreadState::current();
+
+			tbb::parallel_for(
+				tbb::blocked_range<size_t>( 0, engineData->numValidPrototypes() ),
+				[&]( const tbb::blocked_range<size_t> &r )
+				{
+					Context::EditableScope threadScope( threadState );
+
+					for( size_t i = r.begin(); i != r.end(); ++i )
+					{
+						const ScenePlug::ScenePath *prototypeRoot = engineData->prototypeRoot( i );
+						if( !prototypesPlug()->exists( *prototypeRoot ) )
+						{
+							throw IECore::Exception( fmt::format( "Prototype root \"{}\" does not exist in the `prototypes` scene", ScenePlug::pathToString( *prototypeRoot ) ) );
+						}
+
+						IECore::MurmurHash localH = SceneAlgo::hierarchyHash( prototypesPlug(), *prototypeRoot );
+						// Hash in the index, so that we preserve order of the results, despite using an
+						// order independent sum operation to combine hashes ( to deal with non-determinism
+						// in the parallel_for
+						localH.append( i );
+
+						h1Accum += localH.h1();
+						h2Accum += localH.h2();
+					}
+				},
+				taskGroupContext
+			);
+
+			const auto &prototypeSetNames = prototypesPlug()->setNames()->readable();
+			tbb::parallel_for(
+				tbb::blocked_range<size_t>( 0, prototypeSetNames.size() ),
+				[&]( const tbb::blocked_range<size_t> &r )
+				{
+					ScenePlug::SetScope setScope( threadState );
+					for( size_t i = r.begin(); i != r.end(); ++i )
+					{
+						const InternedString &setName = prototypeSetNames[i];
+						setScope.setSetName( &setName );
+
+						// \todo : Should we be actually evaluating these sets so we can test if they don't intersect
+						// with any prototypes, and skip them? Or is it OK do do this pessimistic hash in exchange
+						// for saving time on set evaluations?
+						IECore::MurmurHash localH;
+						prototypesPlug()->setPlug()->hash( localH );
+						localH.append( setName );
+
+						h1Accum += localH.h1();
+						h2Accum += localH.h2();
+					}
+				},
+				taskGroupContext
+			);
+
+			h.append( IECore::MurmurHash( h1Accum, h2Accum ) );
+		}
+
+		// TODO - this doesn't seem necessary - we're already hashing the engine and the prototypes ...
+		// what else could affect the output bound?
+		//outPlug()->boundPlug()->hash( h );
+
+		Int64VectorDataPtr resultData = new Int64VectorData();
+		auto &result = resultData->writable();
+
+		result.reserve( 2 );
+		result.push_back( h.h1() );
+		result.push_back( h.h2() );
+		static_cast<Int64VectorDataPlug *>( output )->setValue( resultData );
 	}
 
 	BranchCreator::compute( output, context );
@@ -2468,98 +2614,13 @@ void Instancer::hashObject( const ScenePath &path, const Gaffer::Context *contex
 		{
 			BranchCreator::hashBranchObject( sourcePath, branchPath, context, h );
 
-			// NOTE: We are only hashing the engine and the prototypes at on-frame time - but
-			// when the capsule actually renders, it will evaluate the engine and prototypes
-			// throughout the shutter ( based on whatever the shutter settings are when they
-			// reach the renderer ). This means that our hash will not capture the change if
-			// something changes its animation while keep it's on-frame position ( or rather,
-			// it's on-frame hash ). This could result in a failure to update in a corner
-			// ... but it is quite unlikely to come up, and dealing with it properly would
-			// reduce the performance of the normal case.
-			engineHash( sourcePath, context, h );
+			ScenePlug::PathScope pathScope( context );
+			pathScope.setPath( &sourcePath );
 
-			ConstEngineDataPtr engineData = engine( sourcePath, context );
+			ConstInt64VectorDataPtr computedHashData = capsuleComputedHashPlug()->getValue();
+			const auto &computedHash = computedHashData->readable();
+			h.append( IECore::MurmurHash( computedHash[0], computedHash[1] ) );
 
-			// The capsule will include a pointer to the node that created it, so we always must include
-			// our address in the hash.
-			h.append( reinterpret_cast<uint64_t>( this ) );
-
-			if( engineData->hasContextVariables() )
-			{
-				/// We need to include anything that will affect how the capsule will expand.
-				for( const auto &prototypePlug : ValuePlug::Range( *prototypesPlug() ) )
-				{
-					if( prototypePlug != prototypesPlug()->globalsPlug() )
-					{
-						h.append( prototypePlug->dirtyCount() );
-					}
-				}
-				h.append( context->hash() );
-			}
-			else
-			{
-				std::atomic<uint64_t> h1Accum( 0 ), h2Accum( 0 );
-
-				// Prevents outer tasks silently cancelling our tasks
-				tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
-				const ThreadState &threadState = ThreadState::current();
-
-				tbb::parallel_for(
-					tbb::blocked_range<size_t>( 0, engineData->numValidPrototypes() ),
-					[&]( const tbb::blocked_range<size_t> &r )
-					{
-						Context::EditableScope threadScope( threadState );
-
-						for( size_t i = r.begin(); i != r.end(); ++i )
-						{
-							const ScenePlug::ScenePath *prototypeRoot = engineData->prototypeRoot( i );
-							if( !prototypesPlug()->exists( *prototypeRoot ) )
-							{
-								throw IECore::Exception( fmt::format( "Prototype root \"{}\" does not exist in the `prototypes` scene", ScenePlug::pathToString( *prototypeRoot ) ) );
-							}
-
-							IECore::MurmurHash localH = SceneAlgo::hierarchyHash( prototypesPlug(), *prototypeRoot );
-							// Hash in the index, so that we preserve order of the results, despite using an
-							// order independent sum operation to combine hashes ( to deal with non-determinism
-							// in the parallel_for
-							localH.append( i );
-
-							h1Accum += localH.h1();
-							h2Accum += localH.h2();
-						}
-					},
-					taskGroupContext
-				);
-
-				const auto &prototypeSetNames = prototypesPlug()->setNames()->readable();
-				tbb::parallel_for(
-					tbb::blocked_range<size_t>( 0, prototypeSetNames.size() ),
-					[&]( const tbb::blocked_range<size_t> &r )
-					{
-						ScenePlug::SetScope setScope( threadState );
-						for( size_t i = r.begin(); i != r.end(); ++i )
-						{
-							const InternedString &setName = prototypeSetNames[i];
-							setScope.setSetName( &setName );
-
-							// \todo : Should we be actually evaluating these sets so we can test if they don't intersect
-							// with any prototypes, and skip them? Or is it OK do do this pessimistic hash in exchange
-							// for saving time on set evaluations?
-							IECore::MurmurHash localH;
-							prototypesPlug()->setPlug()->hash( localH );
-							localH.append( setName );
-
-							h1Accum += localH.h1();
-							h2Accum += localH.h2();
-						}
-					},
-					taskGroupContext
-				);
-
-				h.append( IECore::MurmurHash( h1Accum, h2Accum ) );
-			}
-
-			outPlug()->boundPlug()->hash( h );
 			return;
 		}
 	}

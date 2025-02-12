@@ -245,6 +245,9 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 		Gaffer::PathMatcherDataPlug *setCollaboratePlug();
 		const Gaffer::PathMatcherDataPlug *setCollaboratePlug() const;
 
+		Gaffer::Int64VectorDataPlug *capsuleComputedHashPlug();
+		const Gaffer::Int64VectorDataPlug *capsuleComputedHashPlug() const;
+
 		ConstEngineDataPtr engine( const ScenePath &sourcePath, const Gaffer::Context *context ) const;
 		void engineHash( const ScenePath &sourcePath, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 
