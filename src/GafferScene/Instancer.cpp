@@ -2498,29 +2498,65 @@ void Instancer::hashObject( const ScenePath &path, const Gaffer::Context *contex
 			}
 			else
 			{
-				// TODO - multithread?
-				for( size_t i = 0; i < engineData->numValidPrototypes(); i++ )
-				{
-					const ScenePlug::ScenePath *prototypeRoot = engineData->prototypeRoot( i );
-					if( !prototypesPlug()->exists( *prototypeRoot ) )
+				std::atomic<uint64_t> h1Accum( 0 ), h2Accum( 0 );
+
+				// Prevents outer tasks silently cancelling our tasks
+				tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+				const ThreadState &threadState = ThreadState::current();
+
+				tbb::parallel_for(
+					tbb::blocked_range<size_t>( 0, engineData->numValidPrototypes() ),
+					[&]( const tbb::blocked_range<size_t> &r )
 					{
-						throw IECore::Exception( fmt::format( "Prototype root \"{}\" does not exist in the `prototypes` scene", ScenePlug::pathToString( *prototypeRoot ) ) );
-					}
+						Context::EditableScope threadScope( threadState );
 
-					h.append( SceneAlgo::hierarchyHash( prototypesPlug(), *prototypeRoot ) );
-				}
+						for( size_t i = r.begin(); i != r.end(); ++i )
+						{
+							const ScenePlug::ScenePath *prototypeRoot = engineData->prototypeRoot( i );
+							if( !prototypesPlug()->exists( *prototypeRoot ) )
+							{
+								throw IECore::Exception( fmt::format( "Prototype root \"{}\" does not exist in the `prototypes` scene", ScenePlug::pathToString( *prototypeRoot ) ) );
+							}
 
-				ScenePlug::SetScope setScope( context );
-				for( const InternedString &i : prototypesPlug()->setNames()->readable() )
-				{
-					setScope.setSetName( &i );
+							IECore::MurmurHash localH = SceneAlgo::hierarchyHash( prototypesPlug(), *prototypeRoot );
+							// Hash in the index, so that we preserve order of the results, despite using an
+							// order independent sum operation to combine hashes ( to deal with non-determinism
+							// in the parallel_for
+							localH.append( i );
 
-					// \todo : Should we be actually evaluating these sets so we can test if they don't intersect
-					// with any prototypes, and skip them? Or is it OK do do this pessimistic hash in exchange
-					// for saving time on set evaluations?
-					h.append( i );
-					prototypesPlug()->setPlug()->hash( h );
-				}
+							h1Accum += localH.h1();
+							h2Accum += localH.h2();
+						}
+					},
+					taskGroupContext
+				);
+
+				const auto &prototypeSetNames = prototypesPlug()->setNames()->readable();
+				tbb::parallel_for(
+					tbb::blocked_range<size_t>( 0, prototypeSetNames.size() ),
+					[&]( const tbb::blocked_range<size_t> &r )
+					{
+						ScenePlug::SetScope setScope( threadState );
+						for( size_t i = r.begin(); i != r.end(); ++i )
+						{
+							const InternedString &setName = prototypeSetNames[i];
+							setScope.setSetName( &setName );
+
+							// \todo : Should we be actually evaluating these sets so we can test if they don't intersect
+							// with any prototypes, and skip them? Or is it OK do do this pessimistic hash in exchange
+							// for saving time on set evaluations?
+							IECore::MurmurHash localH;
+							prototypesPlug()->setPlug()->hash( localH );
+							localH.append( setName );
+
+							h1Accum += localH.h1();
+							h2Accum += localH.h2();
+						}
+					},
+					taskGroupContext
+				);
+
+				h.append( IECore::MurmurHash( h1Accum, h2Accum ) );
 			}
 
 			outPlug()->boundPlug()->hash( h );
