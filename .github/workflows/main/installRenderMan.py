@@ -34,6 +34,7 @@
 ##########################################################################
 
 import os
+import pathlib
 import shutil
 import subprocess
 
@@ -92,7 +93,7 @@ if os.name == "nt" :
 		],
 	)
 
-	print( "c:\Program Files\Pixar\RenderManProServer-26.3" )
+	installLocation = pathlib.Path( "c:\Program Files\Pixar\RenderManProServer-26.3" )
 
 else :
 
@@ -100,4 +101,17 @@ else :
 		[ "rpm", "-i", fileName ]
 	)
 
-	print( "/opt/pixar/RenderManProServer-26.3" )
+	installLocation = pathlib.Path( "/opt/pixar/RenderManProServer-26.3" )
+
+# Remove unnecessary bits. The default installation is a whopping 2.9G, and
+# pushes us to the edge of available space on the GitHub runners. We could
+# probably be more aggressive if we needed, but this alone clears over 1G.
+
+shutil.rmtree( installLocation / "lib" / "RenderManAssetLibrary" )
+shutil.rmtree( installLocation / "lib" / "python2.7" )
+shutil.rmtree( installLocation / "lib" / "python3.7" )
+shutil.rmtree( installLocation / "lib" / "python3.9" )
+shutil.rmtree( installLocation / "lib" / "python3.11" )
+shutil.rmtree( installLocation / "lib" / "textures" )
+
+print( installLocation )
