@@ -1269,5 +1269,11 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.assertTrue( acquiredEdit["enabled"].getValue() )
 		self.assertEqual( acquiredEdit["value"].getValue(), 789.0 )
 
+		# Editing an existing edit should set its mode to `Create`
+		acquiredEdit["mode"].setValue( Gaffer.TweakPlug.Mode.Max )
+		assertEdit( inspection, IECore.FloatData( 123.0 ), "" )
+		self.assertEqual( acquiredEdit["mode"].getValue(), Gaffer.TweakPlug.Mode.Create )
+		self.assertEqual( acquiredEdit["value"].getValue(), 123.0 )
+
 if __name__ == "__main__":
 	unittest.main()

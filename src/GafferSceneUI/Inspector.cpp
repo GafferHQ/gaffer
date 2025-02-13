@@ -215,6 +215,7 @@ void edit( Gaffer::ValuePlug *plug, const IECore::Object *value )
 	else if( auto tweakPlug = runTimeCast<TweakPlug>( plug ) )
 	{
 		tweakPlug->enabledPlug()->setValue( true );
+		tweakPlug->modePlug()->setValue( TweakPlug::Mode::Create );
 		valuePlug = tweakPlug->valuePlug();
 	}
 	else if( auto optionalValuePlug = runTimeCast<OptionalValuePlug>( plug ) )

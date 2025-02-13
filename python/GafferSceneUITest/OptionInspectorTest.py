@@ -1094,5 +1094,11 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		self.assertTrue( acquiredEdit["enabled"].getValue() )
 		self.assertEqual( acquiredEdit["value"].getValue(), "/anotherCamera" )
 
+		# Editing an existing edit should set its mode to `Create`
+		acquiredEdit["mode"].setValue( Gaffer.TweakPlug.Mode.ListAppend )
+		assertEdit( inspection, IECore.StringData( "/existingCamera" ), "" )
+		self.assertEqual( acquiredEdit["mode"].getValue(), Gaffer.TweakPlug.Mode.Create )
+		self.assertEqual( acquiredEdit["value"].getValue(), "/existingCamera" )
+
 if __name__ == "__main__" :
 	unittest.main()
