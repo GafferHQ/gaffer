@@ -1391,6 +1391,36 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( messageHandler.messages[0].context, "IECoreRenderMan" )
 		self.assertEqual( messageHandler.messages[0].message, "No outputs defined." )
 
+
+	def testLPELobeOptions( self ) :
+
+		with IECoreRenderManTest.RileyCapture() as capture :
+
+			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				"RenderMan",
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+			)
+
+			renderer.option( "ri:lpe:user1", IECore.StringData( "test" ) )
+			renderer.option( "ri:lpe:diffuse3", None )
+
+			renderer.object(
+				"sphere", IECoreScene.SpherePrimitive(), renderer.attributes( IECore.CompoundObject() )
+			)
+
+			del renderer
+
+		options = next(
+			x for x in capture.json if x["method"] == "SetOptions"
+		)["sceneOptions"]["params"]
+
+		# Default.
+		self.__assertParameterEqual( options, "lpe:diffuse2", [ "Diffuse,HairDiffuse,diffuse,translucent,hair4,irradiance" ] )
+		# Set explicitly.
+		self.__assertParameterEqual( options, "lpe:user1", [ "test" ] )
+		# Set to default explicitly.
+		self.__assertParameterEqual( options, "lpe:diffuse3", [ "Subsurface,subsurface" ] )
+
 	def __assertParameterEqual( self, paramList, name, data ) :
 
 		p = next( x for x in paramList if x["info"]["name"] == name )
