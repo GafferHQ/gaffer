@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.5.0)
 =======
 
+Fixes
+-----
+
+- StandardNodeGadget : Fixed crash when animating a node's `enabled` plug (#6274).
+
 API
 ---
 

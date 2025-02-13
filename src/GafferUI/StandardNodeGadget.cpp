@@ -528,7 +528,7 @@ bool hasStaticValue( const Gaffer::BoolPlug *plug )
 	// that the compute itself is disabled, and will output
 	// a default value for the plug.
 
-	auto source = plug->source<BoolPlug>();
+	auto source = plug->source<ValuePlug>();
 	if( source == plug || source->direction() != Plug::Out )
 	{
 		return false;
