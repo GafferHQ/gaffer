@@ -333,6 +333,13 @@ void Globals::render()
 	acquireSession();
 	updateIntegrator();
 	updateRenderView();
+	if( m_renderView == riley::RenderViewId::InvalidId() )
+	{
+		// We can't render without a view. In this case, `updateRenderView()` will
+		// already have emitted an explanatory warning, so we don't need to.
+		return;
+	}
+
 	m_session->updatePortals();
 
 	/// \todo Is it worth avoiding this work when nothing has changed?
@@ -429,6 +436,13 @@ void Globals::updateRenderView()
 	}
 
 	// Otherwise we need to build the render view from our list of outputs.
+	// We can't do this if we don't have any outputs, so we warn instead.
+
+	if( m_outputs.empty() )
+	{
+		IECore::msg( IECore::Msg::Warning, "IECoreRenderMan", "No outputs defined." );
+		return;
+	}
 
 	struct DisplayDefinition
 	{

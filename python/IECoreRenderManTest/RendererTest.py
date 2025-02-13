@@ -1376,6 +1376,21 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.command( "ai:unknown", {} ) # Shouldn't warn, because command is for another renderer.
 		self.assertEqual( len( messageHandler.messages ), 2 )
 
+	def testNoOutputs( self ) :
+
+		messageHandler = IECore.CapturingMessageHandler()
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"RenderMan",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+			messageHandler = messageHandler
+		)
+		renderer.render()
+
+		self.assertEqual( len( messageHandler.messages ), 1 )
+		self.assertEqual( messageHandler.messages[0].level, IECore.Msg.Level.Warning )
+		self.assertEqual( messageHandler.messages[0].context, "IECoreRenderMan" )
+		self.assertEqual( messageHandler.messages[0].message, "No outputs defined." )
+
 	def __assertParameterEqual( self, paramList, name, data ) :
 
 		p = next( x for x in paramList if x["info"]["name"] == name )
