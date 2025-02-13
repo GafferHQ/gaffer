@@ -1307,7 +1307,7 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ) )
 		self.assertRaisesRegex(
 			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
-			script["instancer"]["out"].childNames, "/object/instances",
+			script["instancer"]["out"].childNames, "/object/instances/exist",
 		)
 
 	def testIndexedRootsVariable( self ) :
@@ -1361,7 +1361,7 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ) )
 		self.assertRaisesRegex(
 			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
-			script["instancer"]["out"].childNames, "/object/instances",
+			script["instancer"]["out"].childNames, "/object/instances/exist",
 		)
 
 		script["instancer"]["prototypeRoots"].setValue( "notAPrimVar" )
@@ -1436,7 +1436,7 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		updateRoots( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ), IECore.IntVectorData( [ 0, 1, 1, 0 ] ) )
 		self.assertRaisesRegex(
 			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
-			script["instancer"]["out"].childNames, "/object/instances",
+			script["instancer"]["out"].childNames, "/object/instances/exist",
 		)
 
 		script["instancer"]["prototypeRoots"].setValue( "notAPrimVar" )
@@ -3278,6 +3278,40 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 			IECore.PathMatcherData( IECore.PathMatcher( ['/plane/prototypes/cube/prototypes/sphere'] ) )
 		)
 
+	def testInvalidPrototypeScene( self ) :
+		points = GafferScene.Sphere( "points" )
+		points["name"].setValue( 'points' )
+		points["divisions"].setValue( imath.V2i( 3, 6 ) )
+
+		pointsFilter = GafferScene.PathFilter( "pointsFilter" )
+		pointsFilter["paths"].setValue( IECore.StringVectorData( [ '/points' ] ) )
+
+		group = GafferScene.Group( "group" )
+
+		instancer = GafferScene.Instancer( "instancer" )
+		instancer["in"].setInput( points["out"] )
+		instancer["filter"].setInput( pointsFilter["out"] )
+		instancer["prototypes"].setInput( group["out"] )
+		instancer["prototypeRootsList"].setValue( IECore.StringVectorData( [ '/group/sphere' ] ) )
+
+		# Access a location that doesn't exist
+		with self.assertRaisesRegex( RuntimeError, 'Prototype root "/group/sphere" does not exist in the `prototypes` scene' ) :
+			instancer["out"].childNames( "/points/instances/sphere" )
+
+		# Make the locations exist
+		sphere = GafferScene.Sphere( "sphere" )
+		group["in"][0].setInput( sphere["out"] )
+
+		self.assertEqual( instancer["out"].object( "/points/instances/sphere/0" ), sphere["out"].object( "/sphere" ) )
+
+		# Now make the location not exist again ( to make sure that we aren't incorrectly caching that it exists )
+		group["in"][0].setInput( None )
+
+		with self.assertRaisesRegex( RuntimeError, 'Prototype root "/group/sphere" does not exist in the `prototypes` scene' ) :
+			instancer["out"].childNames( "/points/instances/sphere" )
+
+
+
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 10 )
 	def testBoundPerformance( self ) :
 
@@ -3392,6 +3426,13 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 
 
 	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testChildNamesHashPerf( self ):
+		nodes = self.initSimpleInstancer()
+		with GafferTest.TestRunner.PerformanceScope() :
+			nodes["instancer"]["out"].childNamesHash( "/plane/instances/sphere" )
+			nodes["instancer"]["out"].childNamesHash( "/plane/instances/cube" )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testChildNamesPerf( self ):
 		nodes = self.initSimpleInstancer()
 		with GafferTest.TestRunner.PerformanceScope() :
@@ -3439,6 +3480,128 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			nodes["instancer"]["out"].object( "/plane/instances" ).render( renderer )
+
+	def testUnrelatedPrototypeChange( self ):
+
+		points = GafferScene.Plane()
+		points["divisions"].setValue( imath.V2i( 10 ) )
+
+		sphere = GafferScene.Sphere()
+		cube = GafferScene.Cube()
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+		group["in"][1].setInput( cube["out"] )
+
+		unrelated = GafferScene.Group()
+		unrelated["name"].setValue( "unrelated" )
+
+		parent = GafferScene.Parent()
+		parent["parent"].setValue( '/' )
+		parent["in"].setInput( group["out"] )
+		parent["children"][0].setInput( unrelated["out"] )
+
+
+		# Instancer
+		instancerFilter = GafferScene.PathFilter()
+		instancerFilter["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( points["out"] )
+		instancer["filter"].setInput( instancerFilter["out"] )
+		instancer["prototypes"].setInput( parent["out"] )
+		instancer["prototypeMode"].setValue( GafferScene.Instancer.PrototypeMode.IndexedRootsList )
+		instancer["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/group/cube", "/group/sphere" ] ) )
+		instancer["encapsulate"].setValue( True )
+
+		# Changing an unrelated part of the prototype scene should not affect the capsule hash
+		h1 = instancer["out"].objectHash( "/plane/instances" )
+		unrelated["transform"]["translate"]["x"].setValue( 7 )
+		self.assertEqual( instancer["out"].objectHash( "/plane/instances" ), h1 )
+
+		# But changing a prototype that is used does change the hash
+		cube["dimensions"]["x"].setValue( 7 )
+		h2 = instancer["out"].objectHash( "/plane/instances" )
+		self.assertNotEqual( h2, h1 )
+		sphere["radius"].setValue( 7 )
+		h3 = instancer["out"].objectHash( "/plane/instances" )
+		self.assertNotEqual( h3, h1 )
+		self.assertNotEqual( h3, h2 )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testPrototypeHashPerf( self ):
+		points = GafferScene.Plane()
+		points["divisions"].setValue( imath.V2i( 10 ) )
+
+		sphere = GafferScene.Sphere()
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ '/sphere' ] ) )
+
+		duplicate = GafferScene.Duplicate()
+		duplicate["in"].setInput( sphere["out"] )
+		duplicate["filter"].setInput( sphereFilter["out"] )
+		duplicate["copies"].setValue( 40000 )
+
+		# Instancer
+		instancerFilter = GafferScene.PathFilter()
+		instancerFilter["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( points["out"] )
+		instancer["filter"].setInput( instancerFilter["out"] )
+		instancer["prototypes"].setInput( duplicate["out"] )
+		instancer["encapsulate"].setValue( True )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			instancer["out"].objectHash( "/plane/instances" )
+
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testCacheExpensivePrototypeHash( self ):
+		points = GafferScene.Plane()
+		points["divisions"].setValue( imath.V2i( 10 ) )
+
+		unrelated = GafferScene.Plane()
+		unrelated["name"].setValue( "unrelated" )
+
+		parent = GafferScene.Parent()
+		parent["parent"].setValue( '/' )
+		parent["in"].setInput( points["out"] )
+		parent["children"][0].setInput( unrelated["out"] )
+
+		sphere = GafferScene.Sphere()
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ '/sphere' ] ) )
+
+		duplicate = GafferScene.Duplicate()
+		duplicate["in"].setInput( sphere["out"] )
+		duplicate["filter"].setInput( sphereFilter["out"] )
+		duplicate["copies"].setValue( 40000 )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( duplicate["out"] )
+
+		# Instancer
+		instancerFilter = GafferScene.PathFilter()
+		instancerFilter["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( parent["out"] )
+		instancer["filter"].setInput( instancerFilter["out"] )
+		instancer["prototypes"].setInput( group["out"] )
+		instancer["encapsulate"].setValue( True )
+
+		# Cache the current capsule
+		instancer["out"].object( "/plane/instances" )
+
+		unrelated["divisions"].setValue( imath.V2i( 7 ) )
+
+		# It should be very cheap to retrieve the cached capsule since we've only changed something irrelevant
+		with GafferTest.TestRunner.PerformanceScope() :
+
+			instancer["out"].object( "/plane/instances" )
 
 if __name__ == "__main__":
 	unittest.main()
