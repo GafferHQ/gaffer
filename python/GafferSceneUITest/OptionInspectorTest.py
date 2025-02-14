@@ -1004,5 +1004,101 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		inspection.disableEdit()
 		self.assertFalse( cameraEdit["enabled"].getValue() )
 
+	def testCanEdit( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["standardOptions"] = GafferScene.StandardOptions()
+		s["standardOptions"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["standardOptions"]["options"]["renderCamera"]["value"].setValue( "/defaultCamera" )
+		s["standardOptions"]["options"]["resolutionMultiplier"]["enabled"].setValue( True )
+
+		s["editScope1"] = Gaffer.EditScope()
+		s["editScope1"].setup( s["standardOptions"]["out"] )
+		s["editScope1"]["in"].setInput( s["standardOptions"]["out"] )
+
+		def assertCanEdit( inspection, data, nonEditableReason ) :
+
+			self.assertEqual( inspection.canEdit( data ), nonEditableReason == "" )
+			self.assertEqual( inspection.nonEditableReason( data ), nonEditableReason )
+
+		inspection = self.__inspect( s["standardOptions"]["out"], "render:camera", None )
+		assertCanEdit( inspection, IECore.StringData( "/otherCamera" ), "" )
+		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "Data of type \"FloatData\" is not compatible." )
+		assertCanEdit( inspection, IECore.IntData( 123 ), "Data of type \"IntData\" is not compatible." )
+
+		inspection = self.__inspect(  s["standardOptions"]["out"], "render:resolutionMultiplier", None )
+		assertCanEdit( inspection, IECore.FloatData( 2.0 ), "" )
+		assertCanEdit( inspection, IECore.IntData( 2 ), "" )
+		assertCanEdit( inspection, IECore.StringData( "invalid" ), "Data of type \"StringData\" is not compatible." )
+
+		inspection = self.__inspect( s["editScope1"]["out"], "render:camera", s["editScope1"] )
+		assertCanEdit( inspection, IECore.StringData( "/editScopeCamera" ), "" )
+		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "Data of type \"FloatData\" is not compatible." )
+		assertCanEdit( inspection, IECore.IntData( 123 ), "Data of type \"IntData\" is not compatible." )
+
+	def testEdit( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["standardOptions"] = GafferScene.StandardOptions()
+		s["standardOptions"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["standardOptions"]["options"]["renderCamera"]["value"].setValue( "/defaultCamera" )
+
+		s["editScope1"] = Gaffer.EditScope()
+		s["editScope1"].setup( s["standardOptions"]["out"] )
+		s["editScope1"]["in"].setInput( s["standardOptions"]["out"] )
+
+		def assertEdit( inspection, data, nonEditableReason ) :
+
+			self.assertEqual( inspection.canEdit( data ), nonEditableReason == "" )
+			self.assertEqual( inspection.nonEditableReason( data ), nonEditableReason )
+			if nonEditableReason == "" :
+				inspection.edit( data )
+			else :
+				self.assertRaisesRegex( IECore.Exception, "Not editable : " + nonEditableReason, inspection.edit, data )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["standardOptions"]["options"]["renderCamera"]["value"], True )
+		inspection = self.__inspect( s["standardOptions"]["out"], "render:camera", None )
+		assertEdit( inspection, IECore.StringData( "/otherCamera" ), "standardOptions.options.renderCamera.value is locked." )
+		Gaffer.MetadataAlgo.setReadOnly( s["standardOptions"]["options"]["renderCamera"]["value"], False )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["standardOptions"], True )
+		inspection = self.__inspect( s["standardOptions"]["out"], "render:camera", None )
+		assertEdit( inspection, IECore.StringData( "/otherCamera" ), "standardOptions is locked." )
+		Gaffer.MetadataAlgo.setReadOnly( s["standardOptions"], False )
+
+		inspection = self.__inspect( s["standardOptions"]["out"], "render:camera", None )
+		self.assertTrue( inspection.canEdit( IECore.StringData( "/otherCamera" ) ) )
+		assertEdit( inspection, IECore.StringData( "/otherCamera" ), "" )
+
+		self.assertEqual( s["standardOptions"]["options"]["renderCamera"]["value"].getValue(), "/otherCamera" )
+
+		assertEdit( inspection, IECore.IntData( 123 ), "Data of type \"IntData\" is not compatible." )
+		self.assertEqual( s["standardOptions"]["options"]["renderCamera"]["value"].getValue(), "/otherCamera" )
+
+		inspection = self.__inspect( s["editScope1"]["out"], "render:camera", s["editScope1"] )
+		assertEdit( inspection, IECore.IntData( 123 ), "Data of type \"IntData\" is not compatible." )
+
+		# Calling `edit()` should create a new edit within the target edit scope
+		assertEdit( inspection, IECore.StringData( "/editScopeCamera" ), "" )
+		acquiredEdit = inspection.acquireEdit()
+		self.assertTrue( s["editScope1"].isAncestorOf( acquiredEdit ) )
+		self.assertTrue( acquiredEdit["enabled"].getValue() )
+		self.assertEqual( acquiredEdit["value"].getValue(), "/editScopeCamera" )
+
+		# Editing a disabled edit within an edit scope should re-enable it
+		acquiredEdit["enabled"].setValue( False )
+		inspection = self.__inspect( s["editScope1"]["out"], "render:camera", s["editScope1"] )
+		assertEdit( inspection, IECore.StringData( "/anotherCamera" ), "" )
+		self.assertTrue( acquiredEdit["enabled"].getValue() )
+		self.assertEqual( acquiredEdit["value"].getValue(), "/anotherCamera" )
+
+		# Editing an existing edit should set its mode to `Create`
+		acquiredEdit["mode"].setValue( Gaffer.TweakPlug.Mode.ListAppend )
+		assertEdit( inspection, IECore.StringData( "/existingCamera" ), "" )
+		self.assertEqual( acquiredEdit["mode"].getValue(), Gaffer.TweakPlug.Mode.Create )
+		self.assertEqual( acquiredEdit["value"].getValue(), "/existingCamera" )
+
 if __name__ == "__main__" :
 	unittest.main()

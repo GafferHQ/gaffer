@@ -482,7 +482,8 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "group", "plane" ] )
 			inspection = inspector.inspect()
 
-		self.assertTrue( inspector.editSetMembership( inspection, "/group/plane", GafferScene.EditScopeAlgo.SetMembership.Added ) )
+		self.assertTrue( inspection.canEdit( IECore.BoolData( True ) ) )
+		inspection.edit( IECore.BoolData( True ) )
 
 		planeSet = parent["out"].set( "planeSet" ).value
 
@@ -495,7 +496,8 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 
 		# And remove it
 
-		self.assertTrue( inspector.editSetMembership( inspection, "/group/plane", GafferScene.EditScopeAlgo.SetMembership.Removed ) )
+		self.assertTrue( inspection.canEdit( IECore.BoolData( False ) ) )
+		inspection.edit( IECore.BoolData( False ) )
 
 		planeSet = parent["out"].set( "planeSet" ).value
 
@@ -535,7 +537,8 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "group", "plane" ] )
 			inspection = inspector.inspect()
 
-		self.assertTrue( inspector.editSetMembership( inspection, "/group/plane", GafferScene.EditScopeAlgo.SetMembership.Added ) )
+		self.assertTrue( inspection.canEdit( IECore.BoolData( True ) ) )
+		inspection.edit( IECore.BoolData( True ) )
 
 		planeSet = editScope["out"].set( "planeSet" ).value
 
@@ -557,7 +560,9 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 
 		# And remove it
 
-		self.assertTrue( inspector.editSetMembership( inspection, "/group/plane", GafferScene.EditScopeAlgo.SetMembership.Removed ) )
+		self.assertTrue( inspection.canEdit( IECore.BoolData( False ) ) )
+		inspection.edit( IECore.BoolData( False ) )
+
 		planeSet = parent["out"].set( "planeSet" ).value
 
 		for path, result in [
@@ -602,7 +607,9 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( inspection.source(), setNode["name"] )
 
-		self.assertFalse( inspector.editSetMembership( inspection, "/plane", GafferScene.EditScopeAlgo.SetMembership.Removed ) )
+		self.assertFalse( inspection.canEdit( IECore.BoolData( False ) ) )
+		self.assertEqual( inspection.nonEditableReason( IECore.BoolData( False ) ), "Cannot edit nodes of type \"GafferScene::Set\"." )
+		self.assertRaises( IECore.Exception, inspection.edit, IECore.BoolData( False ) )
 
 	def testAcquireEditCreateIfNecessary( self ) :
 
@@ -704,6 +711,120 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 				GafferScene.EditScopeAlgo.getSetMembership( s["editScope1"], "/group/plane", "planeSetEditScope"),
 				GafferScene.EditScopeAlgo.SetMembership.Unchanged
 			)
+
+	def testCanEdit( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+		s["plane"]["sets"].setValue( "planeSetA planeSetB" )
+
+		s["editScope1"] = Gaffer.EditScope()
+		s["editScope1"].setup( s["plane"]["out"] )
+		s["editScope1"]["in"].setInput( s["plane"]["out"] )
+
+		for setName in [ "planeSetA", "planeSetB", "planeSetC" ] :
+
+			inspection = self.__inspect( s["plane"]["out"], "/plane", setName, None )
+			self.assertTrue( inspection.canEdit( IECore.BoolData( False ) ) )
+			self.assertFalse( inspection.canEdit( IECore.StringData( "someOtherSet" ) ) )
+			self.assertEqual( inspection.nonEditableReason( IECore.StringData( "someOtherSet" ) ), "Data of type \"StringData\" is not compatible." )
+			self.assertFalse( inspection.canEdit( IECore.IntData( 1 ) ) )
+			self.assertEqual( inspection.nonEditableReason( IECore.IntData( 1 ) ), "Data of type \"IntData\" is not compatible." )
+
+			Gaffer.MetadataAlgo.setReadOnly( s["plane"]["sets"], True )
+			inspection = self.__inspect( s["plane"]["out"], "/plane", setName, None )
+			self.assertFalse( inspection.canEdit( IECore.BoolData( True ) ) )
+			self.assertEqual( inspection.nonEditableReason( IECore.BoolData( True ) ), "plane.sets is locked." )
+
+			Gaffer.MetadataAlgo.setReadOnly( s["plane"]["sets"], False )
+			inspection = self.__inspect( s["plane"]["out"], "/plane", setName, None )
+			self.assertTrue( inspection.canEdit( IECore.BoolData( True ) ) )
+
+			inspection = self.__inspect( s["editScope1"]["out"], "/plane", setName, s["editScope1"] )
+			self.assertTrue( inspection.canEdit( IECore.BoolData( False ) ) )
+			self.assertEqual( inspection.nonEditableReason( IECore.BoolData( False ) ), "" )
+			self.assertFalse( inspection.canEdit( IECore.StringData( "someOtherSet" ) ) )
+			self.assertEqual( inspection.nonEditableReason( IECore.StringData( "someOtherSet" ) ), "Data of type \"StringData\" is not compatible." )
+
+			Gaffer.MetadataAlgo.setReadOnly( s["editScope1"], True )
+			inspection = self.__inspect( s["editScope1"]["out"], "/plane", setName, s["editScope1"] )
+			self.assertFalse( inspection.canEdit( IECore.BoolData( True ) ) )
+			self.assertEqual( inspection.nonEditableReason( IECore.BoolData( True ) ), "editScope1 is locked." )
+
+			Gaffer.MetadataAlgo.setReadOnly( s["editScope1"], False )
+			inspection = self.__inspect( s["editScope1"]["out"], "/plane", setName, s["editScope1"] )
+			self.assertTrue( inspection.canEdit( IECore.BoolData( True ) ) )
+			self.assertEqual( inspection.nonEditableReason( IECore.BoolData( True ) ), "" )
+
+		s["filter"] = GafferScene.PathFilter()
+		s["filter"]["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		s["set"] = GafferScene.Set()
+		s["set"]["in"].setInput( s["editScope1"]["out"] )
+		s["set"]["name"].setValue( "planeSetC" )
+		s["set"]["filter"].setInput( s["filter"]["out"] )
+
+		# We don't allow direct editing of Set nodes
+		inspection = self.__inspect( s["set"]["out"], "/plane", "planeSetC", None )
+		self.assertEqual( inspection.source(), s["set"]["name"] )
+		self.assertFalse( inspection.canEdit( IECore.BoolData( False ) ) )
+		self.assertEqual( inspection.nonEditableReason( IECore.BoolData( False ) ), "Cannot edit nodes of type \"GafferScene::Set\"." )
+
+	def testEdit( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+		s["plane"]["sets"].setValue( "planeSetA planeSetB" )
+
+		s["group"] = GafferScene.Group()
+
+		s["editScope1"] = Gaffer.EditScope()
+
+		s["group"]["in"][0].setInput( s["plane"]["out"] )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["plane"]["sets"], True )
+		inspection = self.__inspect( s["group"]["out"], "/group/plane", "planeSetA", None )
+		self.assertFalse( inspection.canEdit( IECore.BoolData( False ) ) )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["plane"]["sets"], False )
+		inspection = self.__inspect( s["group"]["out"], "/group/plane", "planeSetA", None )
+		self.assertTrue( inspection.canEdit( IECore.BoolData( False ) ) )
+		self.assertEqual( inspection.nonEditableReason( IECore.BoolData( False ) ), "" )
+		self.assertFalse( inspection.canEdit( IECore.StringData( "False" ) ) )
+		self.assertEqual( inspection.nonEditableReason( IECore.StringData( "False" ) ), "Data of type \"StringData\" is not compatible." )
+		self.assertRaisesRegex( IECore.Exception, "Not editable : Data of type \"StringData\" is not compatible.", inspection.edit, IECore.StringData( "False" ) )
+
+		inspection.edit( IECore.BoolData( False ) )
+		self.assertEqual( s["plane"]["sets"].getValue(), "planeSetB" )
+
+		inspection = self.__inspect( s["group"]["out"], "/group/plane", "planeSetB", None )
+		inspection.edit( IECore.BoolData( False ) )
+		self.assertEqual( s["plane"]["sets"].getValue(), "" )
+
+		s["editScope1"].setup( s["group"]["out"] )
+		s["editScope1"]["in"].setInput( s["group"]["out"] )
+
+		for membership in ( GafferScene.EditScopeAlgo.SetMembership.Added, GafferScene.EditScopeAlgo.SetMembership.Removed ) :
+
+			inspection = self.__inspect( s["editScope1"]["out"], "/group/plane", "planeSetEditScope", s["editScope1"] )
+			inspection.edit( IECore.BoolData( membership == GafferScene.EditScopeAlgo.SetMembership.Added ) )
+			self.assertEqual(
+				GafferScene.EditScopeAlgo.getSetMembership( s["editScope1"], "/group/plane", "planeSetEditScope"),
+				membership
+			)
+
+			Gaffer.MetadataAlgo.setReadOnly( s["editScope1"], True )
+			inspection = self.__inspect( s["editScope1"]["out"], "/group/plane", "planeSetEditScope", s["editScope1"] )
+			self.assertFalse( inspection.canEdit( IECore.BoolData( False ) ) )
+			self.assertEqual( inspection.nonEditableReason( IECore.BoolData( False ) ), "editScope1 is locked." )
+			self.assertRaisesRegex( IECore.Exception, "Not editable : editScope1 is locked.", inspection.edit, IECore.BoolData( False ) )
+
+			Gaffer.MetadataAlgo.setReadOnly( s["editScope1"], False )
+			inspection = self.__inspect( s["editScope1"]["out"], "/group/plane", "planeSetEditScope", s["editScope1"] )
+			self.assertTrue( inspection.canEdit( IECore.BoolData( False ) ) )
+			self.assertEqual( inspection.nonEditableReason( IECore.BoolData( False ) ), "" )
 
 if __name__ == "__main__" :
 	unittest.main()

@@ -363,6 +363,12 @@ IECore::PathMatcher linkedLightsWrapper2( const GafferScene::ScenePlug &scene, c
 	return SceneAlgo::linkedLights( &scene, objects );
 }
 
+IECore::MurmurHash hierarchyHashWrapper( const ScenePlug &scene, const ScenePlug::ScenePath &location )
+{
+	IECorePython::ScopedGILRelease r;
+	return SceneAlgo::hierarchyHash( &scene, location );
+}
+
 struct RenderAdaptorWrapper
 {
 
@@ -492,6 +498,10 @@ void bindSceneAlgo()
 	def( "linkedObjects", &linkedObjectsWrapper2 );
 	def( "linkedLights", &linkedLightsWrapper1 );
 	def( "linkedLights", &linkedLightsWrapper2 );
+
+	// Complex hashing
+
+	def( "hierarchyHash", &hierarchyHashWrapper );
 
 	// Render adaptors
 

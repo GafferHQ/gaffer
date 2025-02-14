@@ -156,6 +156,89 @@ std::string nonEditableReason( const ValuePlug *plug )
 	return "";
 }
 
+bool canEdit( const Gaffer::ValuePlug *plug, const IECore::Object *value, std::string &failureReason )
+{
+	const IECore::Data *data = runTimeCast<const IECore::Data>( value );
+	if( !data )
+	{
+		failureReason = fmt::format( "Unsupported value of type \"{}\".", value->typeName() );
+		return false;
+	}
+
+	const ValuePlug *valuePlug;
+	if( auto nameValuePlug = runTimeCast<const NameValuePlug>( plug ) )
+	{
+		valuePlug = runTimeCast<const ValuePlug>( nameValuePlug->valuePlug() );
+	}
+	else if( auto tweakPlug = runTimeCast<const TweakPlug>( plug ) )
+	{
+		valuePlug = tweakPlug->valuePlug();
+	}
+	else if( auto optionalValuePlug = runTimeCast<const OptionalValuePlug>( plug ) )
+	{
+		valuePlug = optionalValuePlug->valuePlug();
+	}
+	else
+	{
+		valuePlug = plug;
+	}
+
+	if( !valuePlug )
+	{
+		failureReason = "No plug found to edit.";
+		return false;
+	}
+
+	if( !PlugAlgo::canSetValueFromData( valuePlug, data ) )
+	{
+		failureReason = fmt::format( "Data of type \"{}\" is not compatible.", value->typeName() );
+		return false;
+	}
+
+	return true;
+}
+
+void edit( Gaffer::ValuePlug *plug, const IECore::Object *value )
+{
+	const IECore::Data *data = runTimeCast<const IECore::Data>( value );
+	if( !data )
+	{
+		return;
+	}
+
+	ValuePlug *valuePlug;
+	if( auto nameValuePlug = runTimeCast<NameValuePlug>( plug ) )
+	{
+		nameValuePlug->enabledPlug()->setValue( true );
+		valuePlug = runTimeCast<ValuePlug>( nameValuePlug->valuePlug() );
+	}
+	else if( auto tweakPlug = runTimeCast<TweakPlug>( plug ) )
+	{
+		tweakPlug->enabledPlug()->setValue( true );
+		tweakPlug->modePlug()->setValue( TweakPlug::Mode::Create );
+		valuePlug = tweakPlug->valuePlug();
+	}
+	else if( auto optionalValuePlug = runTimeCast<OptionalValuePlug>( plug ) )
+	{
+		optionalValuePlug->enabledPlug()->setValue( true );
+		valuePlug = optionalValuePlug->valuePlug();
+	}
+	else
+	{
+		valuePlug = plug;
+	}
+
+	if( !valuePlug )
+	{
+		throw IECore::Exception( "No plug found to edit" );
+	}
+
+	if( !PlugAlgo::setValueFromData( valuePlug, data ) )
+	{
+		throw IECore::Exception( fmt::format( "Data of type \"{}\" is not compatible.", value->typeName() ) );
+	}
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -239,7 +322,7 @@ Inspector::ResultPtr Inspector::inspect() const
 		}
 
 		result->m_editors = {
-			fmt::format( formatString, "edit" ), "", fmt::format( formatString, "disable" )
+			fmt::format( formatString, "edit" ), "", fmt::format( formatString, "disable" ), nullptr, nullptr
 		};
 	}
 
@@ -323,12 +406,14 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 				result->m_editors = {
 					[source = source] ( bool unused ) { return source; },
 					editWarning,
-					disableEditFunction( source.get(), history )
+					disableEditFunction( source.get(), history ),
+					canEditFunction( history ),
+					editFunction( history )
 				};
 			}
 			else
 			{
-				result->m_editors = { nonEditableReason, "", nonEditableReason };
+				result->m_editors = { nonEditableReason, "", nonEditableReason, canEditFunction( history ), editFunction( history ) };
 			}
 		}
 		// Otherwise try to initialise from EditScope if we've hit it.
@@ -341,17 +426,17 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 				// the scope to take precedence. An existing edit in the scope will
 				// have been picked up via `source()` already.
 				//
-				// \todo Should call `editFunction()` with the context from the
+				// \todo Should call `acquireEditFunction()` with the context from the
 				// `outPlug()` of the EditScope - see TransformTool. We should also
 				// explicitly prefer branches where `scene:path` matches the value
 				// in the `outPlug()` context, to avoid making edits to locations
 				// other than the one emerging from the EditScope.
 				result->m_editScopeInHistory = true;
 				Context::Scope scope( history->context.get() );
-				EditFunctionOrFailure func;
+				AcquireEditFunctionOrFailure func;
 				if( editScope->enabledPlug()->getValue() )
 				{
-					func = editFunction( editScope, history );
+					func = acquireEditFunction( editScope, history );
 				}
 				else
 				{
@@ -365,7 +450,9 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 					func, "",
 					fmt::format(
 						"There is no edit in {}.", editScope->relativeName( editScope->scriptNode() )
-					)
+					),
+					canEditFunction( history ),
+					editFunction( history )
 				};
 			}
 		}
@@ -375,9 +462,9 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 			result->m_sourceType = Result::SourceType::Downstream;
 		}
 
-		// If we initialised the edit function, tag on a warning if any edits won't be visible
+		// If we initialised the acquire edit function, tag on a warning if any edits won't be visible
 		// due to being overridden downstream.
-		if( result->m_editors && std::holds_alternative<EditFunction>( result->m_editors->editFunction ) && result->m_sourceType == Result::SourceType::Downstream )
+		if( result->m_editors && std::holds_alternative<AcquireEditFunction>( result->m_editors->acquireEditFunction ) && result->m_sourceType == Result::SourceType::Downstream )
 		{
 			const Node *downstreamNode = result->m_source->node();
 			const auto *downstreamEditScope = downstreamNode->ancestor<EditScope>();
@@ -408,9 +495,19 @@ Gaffer::ValuePlugPtr Inspector::source( const GafferScene::SceneAlgo::History *h
 	return nullptr;
 }
 
-Inspector::EditFunctionOrFailure Inspector::editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
+Inspector::AcquireEditFunctionOrFailure Inspector::acquireEditFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
 {
 	return "Editing not supported";
+}
+
+Inspector::CanEditFunction Inspector::canEditFunction( const GafferScene::SceneAlgo::History *history ) const
+{
+	return [] ( const Gaffer::ValuePlug *plug, const IECore::Object *value, std::string &failureReason ) { return ::canEdit( plug, value, failureReason ); };
+}
+
+Inspector::EditFunction Inspector::editFunction( const GafferScene::SceneAlgo::History *history ) const
+{
+	return [] ( Gaffer::ValuePlug *plug, const IECore::Object *value ) { ::edit( plug, value ); };
 }
 
 Inspector::DisableEditFunctionOrFailure Inspector::disableEditFunction( Gaffer::ValuePlug *plug, const GafferScene::SceneAlgo::History *history ) const
@@ -744,14 +841,20 @@ const std::string &Inspector::Result::fallbackDescription() const
 
 bool Inspector::Result::editable() const
 {
-	return m_editors && std::holds_alternative<EditFunction>( m_editors->editFunction );
+	return m_editors && std::holds_alternative<AcquireEditFunction>( m_editors->acquireEditFunction );
 }
 
-std::string Inspector::Result::nonEditableReason() const
+std::string Inspector::Result::nonEditableReason( const IECore::Object *value ) const
 {
-	if( auto s = std::get_if<std::string>( &m_editors.value().editFunction ) )
+	if( auto s = std::get_if<std::string>( &m_editors.value().acquireEditFunction ) )
 	{
 		return *s;
+	}
+
+	std::string reason;
+	if( value && !canEdit( value, reason ) )
+	{
+		return reason;
 	}
 
 	return "";
@@ -759,12 +862,12 @@ std::string Inspector::Result::nonEditableReason() const
 
 Gaffer::ValuePlugPtr Inspector::Result::acquireEdit( bool createIfNecessary ) const
 {
-	if( auto f = std::get_if<EditFunction>( &m_editors.value().editFunction ) )
+	if( auto f = std::get_if<AcquireEditFunction>( &m_editors.value().acquireEditFunction ) )
 	{
 		return (*f)( createIfNecessary );
 	}
 
-	throw IECore::Exception( "Not editable : " + std::get<std::string>( m_editors.value().editFunction ) );
+	throw IECore::Exception( "Not editable : " + std::get<std::string>( m_editors.value().acquireEditFunction ) );
 }
 
 bool Inspector::Result::canDisableEdit() const
@@ -795,4 +898,48 @@ void Inspector::Result::disableEdit() const
 std::string Inspector::Result::editWarning() const
 {
 	return m_editors.value().editWarning;
+}
+
+bool Inspector::Result::canEdit( const IECore::Object *value, std::string &failureReason ) const
+{
+	if( !m_editors || !m_editors->editFunction || !m_editors->canEditFunction )
+	{
+		failureReason = "Direct editing is not supported.";
+		return false;
+	}
+
+	ValuePlugPtr plug;
+	if( auto f = std::get_if<AcquireEditFunction>( &m_editors.value().acquireEditFunction ) )
+	{
+		// Attempt to acquire an existing edit to test against.
+		plug = (*f)( /* createIfNecessary = */ false );
+
+		if( !plug )
+		{
+			if( const IECore::Data *currentData = runTimeCast<const IECore::Data>( Result::value() ) )
+			{
+				// If we can't acquire an existing edit, create a temporary plug based on the current
+				// value to avoid creating an edit.
+				plug = PlugAlgo::createPlugFromData( "value", Plug::In, Plug::Default, currentData );
+			}
+		}
+	}
+	else
+	{
+		failureReason = nonEditableReason();
+		return false;
+	}
+
+	return m_editors->canEditFunction( plug.get(), value, failureReason );
+}
+
+void Inspector::Result::edit( const IECore::Object *value ) const
+{
+	std::string reason;
+	if( !canEdit( value, reason ) )
+	{
+		throw IECore::Exception( "Not editable : " + reason );
+	}
+
+	m_editors->editFunction( acquireEdit( /* createIfNecessary = */ true ).get(), value );
 }

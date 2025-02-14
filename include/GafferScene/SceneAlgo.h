@@ -150,6 +150,29 @@ void parallelGatherLocations(
 	const ScenePlug::ScenePath &root = ScenePlug::ScenePath()
 );
 
+/// Calls `locationFunctor` in parallel for all locations in the scene, merging all results
+/// using `reduceFunctor`.
+template <typename T, typename LocationFunctor, typename ReduceFunctor>
+T parallelReduceLocations(
+	const ScenePlug *scene,
+	const T& identity,
+	LocationFunctor &&locationFunctor, // Signature : T locationFunctor( const ScenePlug *scene, const ScenePath &path )
+	ReduceFunctor &&reduceFunctor, // Signature : void reduceFunctor( T &result, const T &other )
+	const ScenePlug::ScenePath &root = ScenePlug::ScenePath()
+);
+
+/// Calls `locationFunctor` in parallel for all locations in the scene. The results from sibling locations
+/// are merged using `reduceFunctor`, and results from children are merged using `mergeChildrenFunctor`.
+template <typename T, typename LocationFunctor, typename MergeChildrenFunctor, typename ReduceFunctor>
+T parallelReduceLocations(
+	const ScenePlug *scene,
+	const T& identity,
+	LocationFunctor &&locationFunctor, // Signature : T locationFunctor( const ScenePlug *scene, const ScenePath &path )
+	MergeChildrenFunctor &&mergeChildrenFunctor, // Signature : void mergeChildrenFunctor( T &result, const T &childrenResult )
+	ReduceFunctor &&reduceFunctor, // Signature : void reduceFunctor( T &result, const T &sibling )
+	const ScenePlug::ScenePath &root = ScenePlug::ScenePath()
+);
+
 /// Searching
 /// =========
 
@@ -291,6 +314,12 @@ GAFFERSCENE_API IECore::PathMatcher linkedObjects( const ScenePlug *scene, const
 GAFFERSCENE_API IECore::PathMatcher linkedLights( const ScenePlug *scene, const ScenePlug::ScenePath &object );
 /// Returns the paths to all lights which are linked to at least one of the specified objects.
 GAFFERSCENE_API IECore::PathMatcher linkedLights( const ScenePlug *scene, const IECore::PathMatcher &objects );
+
+/// Complex hashing
+/// ===============
+
+// Hashes all properties of a location and all its children. Does not include set membership.
+GAFFERSCENE_API IECore::MurmurHash hierarchyHash( const ScenePlug *scene, const ScenePlug::ScenePath &root );
 
 /// Miscellaneous
 /// =============

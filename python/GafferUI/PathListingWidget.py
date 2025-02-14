@@ -158,9 +158,14 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ) )
 		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
 		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
+		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
+		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
+		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 		self.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) )
 		self.__dragPointer = "paths"
-
+		self.__dragBeginIndex = None
+		self.__currentDragIndex = None
 		self.__path = None
 
 		self.setDisplayMode( displayMode )
@@ -768,6 +773,7 @@ class PathListingWidget( GafferUI.Widget ) :
 			value = self.getColumns()[index.column()].cellData( path ).value
 			if value is not None :
 				GafferUI.Pointer.setCurrent( "values" )
+				self.__dragBeginIndex = QtCore.QPersistentModelIndex( index )
 
 				return value
 
@@ -776,6 +782,84 @@ class PathListingWidget( GafferUI.Widget ) :
 	def __dragEnd( self, widget, event ) :
 
 		GafferUI.Pointer.setCurrent( None )
+		self.__dragBeginIndex = None
+		self.__currentDragIndex = None
+
+	def __dragEnter( self, widget, event ) :
+
+		index = self.__indexAt( event.line.p0 )
+		if index is None :
+			return False
+
+		if self.getColumns()[index.column()].dragEnterSignal()(
+			self.getColumns()[index.column()], self.__pathForIndex( index ), self, event
+		) :
+			self.__currentDragIndex = QtCore.QPersistentModelIndex( index )
+			self.__setHighlightedIndex( index )
+			return True
+
+	def __dragMove( self, widget, event ) :
+
+		assert( isinstance( self.__currentDragIndex, ( type( None ), QtCore.QPersistentModelIndex ) ) )
+		if self.__currentDragIndex is not None and self.__currentDragIndex.isValid() :
+			previousIndex = QtCore.QModelIndex( self.__currentDragIndex )
+		else :
+			previousIndex = None
+
+		index = self.__indexAt( event.line.p0 )
+
+		# We've moved out of the previous index
+		if previousIndex is not None and previousIndex != index :
+			self.__currentDragIndex = None
+			self.__setHighlightedIndex( None )
+			self.getColumns()[previousIndex.column()].dragLeaveSignal()(
+				self.getColumns()[previousIndex.column()], self.__pathForIndex( previousIndex ), self, event
+			)
+
+		if index is None or index == self.__dragBeginIndex :
+			return False
+
+		# We've moved into a new index
+		if previousIndex is None or previousIndex != index :
+			if self.getColumns()[index.column()].dragEnterSignal()(
+				self.getColumns()[index.column()], self.__pathForIndex( index ), self, event
+			) :
+				self.__currentDragIndex = QtCore.QPersistentModelIndex( index )
+				self.__setHighlightedIndex( index )
+				return True
+		elif previousIndex == index :
+			# We've moved within the same index
+			return self.getColumns()[index.column()].dragMoveSignal()(
+				self.getColumns()[index.column()], self.__pathForIndex( index ), self, event
+			)
+
+		return False
+
+	def __dragLeave( self, widget, event ) :
+
+		self.__setHighlightedIndex( None )
+
+		assert( isinstance( self.__currentDragIndex, ( type( None ), QtCore.QPersistentModelIndex ) ) )
+		if self.__currentDragIndex is not None and self.__currentDragIndex.isValid() :
+			index = QtCore.QModelIndex( self.__currentDragIndex )
+
+			return self.getColumns()[index.column()].dragLeaveSignal()(
+				self.getColumns()[index.column()], self.__pathForIndex( index ), self, event
+			)
+
+		return False
+
+	def __drop( self, widget, event ) :
+
+		self.__setHighlightedIndex( None )
+
+		index = self.__indexAt( event.line.p0 )
+		if index is None or index != self.__currentDragIndex :
+			return False
+
+		return self.getColumns()[index.column()].dropSignal()(
+			self.getColumns()[index.column()], self.__pathForIndex( index ), self, event
+		)
 
 	def __contextMenu( self, widget ) :
 
@@ -929,6 +1013,10 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		return self.__selectionMode == self.SelectionMode.Rows or self.__selectionMode == self.SelectionMode.Cells
 
+	def __setHighlightedIndex( self, index ) :
+
+		self._qtWidget().setHighlightedIndex( index )
+
 # Private implementation - a QTreeView with some specific size behaviour,
 # and knowledge of how to draw our PathMatcher selection.
 class _TreeView( QtWidgets.QTreeView ) :
@@ -960,6 +1048,13 @@ class _TreeView( QtWidgets.QTreeView ) :
 		self.__columnWidthAdjustments = collections.defaultdict( int )
 
 		self.__currentEventModifiers = QtCore.Qt.NoModifier
+
+		self.__highlightedIndex = None
+
+	def setHighlightedIndex( self, index ) :
+
+		self.__highlightedIndex = QtCore.QPersistentModelIndex( index ) if index is not None else None
+		self.update()
 
 	def setModel( self, model ) :
 
@@ -1093,6 +1188,11 @@ class _TreeView( QtWidgets.QTreeView ) :
 		for i in range( 1, header.count() ) :
 			x = header.sectionViewportPosition( i ) - 1
 			painter.drawLine( x, 0, x, height )
+
+		if self.__highlightedIndex is not None and self.__highlightedIndex.isValid() :
+
+			painter.setPen( QtGui.QColor( *(_styleColors["brightColor"]) ) )
+			painter.drawRect( self.visualRect( self.__highlightedIndex ) )
 
 	def drawRow( self, painter, option, index ) :
 

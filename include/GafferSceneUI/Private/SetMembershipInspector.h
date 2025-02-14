@@ -60,15 +60,6 @@ class GAFFERSCENEUI_API SetMembershipInspector : public Inspector
 			IECore::InternedString setName
 		);
 
-		/// Convenience method to acquire an edit from `inspection` and
-		/// edit the set membership to include or exclude `path`. Returns true
-		/// if an edit was made, false otherwise.
-		bool editSetMembership(
-			const Result *inspection,
-			const GafferScene::ScenePlug::ScenePath &path,
-			GafferScene::EditScopeAlgo::SetMembership setMembership
-		) const;
-
 		IE_CORE_DECLAREMEMBERPTR( SetMembershipInspector );
 
 	protected :
@@ -81,8 +72,10 @@ class GAFFERSCENEUI_API SetMembershipInspector : public Inspector
 		/// appropriate row of a set membership processor spreadsheet or `nullptr` if none of
 		/// those are found.
 		Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const override;
-		EditFunctionOrFailure editFunction( Gaffer::EditScope *scope, const GafferScene::SceneAlgo::History *history ) const override;
+		AcquireEditFunctionOrFailure acquireEditFunction( Gaffer::EditScope *scope, const GafferScene::SceneAlgo::History *history ) const override;
 		DisableEditFunctionOrFailure disableEditFunction( Gaffer::ValuePlug *plug, const GafferScene::SceneAlgo::History *history ) const override;
+		CanEditFunction canEditFunction( const GafferScene::SceneAlgo::History *history ) const override;
+		EditFunction editFunction( const GafferScene::SceneAlgo::History *history ) const override;
 
 	private :
 

@@ -2197,6 +2197,191 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 			result = IECore.PathMatcher()
 			GafferScene.SceneAlgo.matchingPaths( pathMatcher, scene, result )
 
+	def testHierarchyHash( self ) :
+
+		# We need to check that changing basically anything about a scene will result in a unique hash
+
+		baseGroup = GafferScene.Group()
+
+		# Temporarily disable testing of bounds ( we're trying to test features independently here, and
+		# a lot of the other things we're testing have cross-talk with the bounds )
+		testScene = GafferScene.ScenePlug()
+		testScene.setInput( baseGroup["out"] )
+		testScene["bound"].setInput( None )
+
+		hashes = set()
+		def assertHashUnique():
+			h = GafferScene.SceneAlgo.hierarchyHash( testScene, "/group" )
+			self.assertNotIn( h, hashes )
+			hashes.add( h )
+
+		def assertHashNotUnique():
+			h = GafferScene.SceneAlgo.hierarchyHash( testScene, "/group" )
+			self.assertIn( h, hashes )
+
+		assertHashUnique()
+
+		cube = GafferScene.Cube()
+		baseGroup["in"][0].setInput( cube["out"] )
+
+		assertHashUnique()
+
+		sphere = GafferScene.Sphere()
+		baseGroup["in"][1].setInput( sphere["out"] )
+
+		self.assertEqual( baseGroup["out"].childNames( "/group" ), IECore.InternedStringVectorData( [ "cube", "sphere" ] ) )
+		assertHashUnique()
+
+		# Documenting current edge case behaviour: changing the order of children, but nothing else.
+		# We've decided we do want this to affect the hash.
+		baseGroup["in"][1].setInput( cube["out"] )
+		baseGroup["in"][0].setInput( sphere["out"] )
+		self.assertEqual( baseGroup["out"].childNames( "/group" ), IECore.InternedStringVectorData( [ "sphere", "cube" ] ) )
+
+		assertHashUnique()
+
+		sphere["divisions"].setValue( imath.V2i( 3, 6 ) )
+
+		assertHashUnique()
+
+		sphere["transform"]["translate"]["x"].setValue( 2 )
+
+		assertHashUnique()
+
+		cube["transform"]["rotate"]["y"].setValue( 30 )
+
+		assertHashUnique()
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ '/sphere' ] ) )
+		customAttributes = GafferScene.CustomAttributes()
+		customAttributes["in"].setInput( sphere["out"] )
+		customAttributes["filter"].setInput( sphereFilter["out"] )
+		baseGroup["in"][0].setInput( customAttributes["out"] )
+
+		# No attributes added yet
+		assertHashNotUnique()
+
+		customAttributes["attributes"].addChild( Gaffer.NameValuePlug( "foo", Gaffer.StringPlug( "value", defaultValue = 'foo' ), True, "member1" ) )
+
+		# But now it should change
+		assertHashUnique()
+
+		# We can add additional levels of hierarchy inside the scene we're traversing
+		subGroup = GafferScene.Group()
+		subGroup["in"][0].setInput( customAttributes["out"] )
+
+		baseGroup["in"][0].setInput( subGroup["out"] )
+
+		assertHashUnique()
+
+		# And changes within the deeper hierarchy still affect the hash
+
+		customAttributes["attributes"][0]["value"].setValue( "blah" )
+
+		assertHashUnique()
+
+		sphere["transform"]["translate"]["x"].setValue( 3 )
+
+		assertHashUnique()
+
+		# We've now tested basically everything with the exception of the bound - it's hard to specifically
+		# test the bound - if we use existing Gaffer nodes, basically anything we do to affect the bound
+		# would also affect one of the other properties we've already tested ... so we would see the hash
+		# change, but it's hard to be certain of why. So instead, here's an extremely synthetic test just to
+		# confirm that we do check the bound
+
+		loosePlug = GafferScene.ScenePlug()
+		hashA = GafferScene.SceneAlgo.hierarchyHash( loosePlug, "/" )
+		loosePlug["bound"].setValue( imath.Box3f( imath.V3f( 0 ), imath.V3f( 1 ) ) )
+		self.assertNotEqual( GafferScene.SceneAlgo.hierarchyHash( loosePlug, "/" ), hashA )
+
+		# Hashing a hierarchy that is parented somewhere should have exactly the same effect
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( baseGroup["out"] )
+
+		self.assertEqual(
+			GafferScene.SceneAlgo.hierarchyHash( baseGroup["out"], "/group" ),
+			GafferScene.SceneAlgo.hierarchyHash( group["out"], "/group/group" )
+		)
+
+	def testHierarchyHashAssociativity( self ) :
+
+		# A specific check that properties of children are bound to their names - switching which child
+		# has which properties should result in a different hash. This test has been built with specific
+		# attention to the internals of hierarchyHash - it is designed so that it would fail if the
+		# mergeChildrenFunctor acted like the reduceFunctor and did encode a binding between child
+		# properties and their location in the tree.
+
+		sphere = GafferScene.Sphere()
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		attributesA = GafferScene.CustomAttributes()
+		attributesA["in"].setInput( sphere["out"] )
+		attributesA["filter"].setInput( sphereFilter["out"] )
+		attributesA["attributes"].addChild( Gaffer.NameValuePlug( "foo", Gaffer.StringPlug( "value", defaultValue = '' ), True, "member1" ) )
+
+		attributesB = GafferScene.CustomAttributes()
+		attributesB["in"].setInput( sphere["out"] )
+		attributesB["filter"].setInput( sphereFilter["out"] )
+		attributesB["attributes"].addChild( Gaffer.NameValuePlug( "foo", Gaffer.StringPlug( "value", defaultValue = '' ), True, "member1" ) )
+
+		attributesA["attributes"][0]["value"].setValue( "AAA" )
+		attributesB["attributes"][0]["value"].setValue( "BBB" )
+
+		groupA = GafferScene.Group()
+		groupA["in"][0].setInput( attributesA["out"] )
+
+		groupB = GafferScene.Group()
+		groupB["in"][0].setInput( attributesB["out"] )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( groupA["out"] )
+		group["in"][1].setInput( groupB["out"] )
+
+		h1 = GafferScene.SceneAlgo.hierarchyHash( group["out"], "/group" )
+
+		attributesA["attributes"][0]["value"].setValue( "BBB" )
+		attributesB["attributes"][0]["value"].setValue( "AAA" )
+
+		h2 = GafferScene.SceneAlgo.hierarchyHash( group["out"], "/group" )
+
+		self.assertNotEqual( h1, h2 )
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testHierarchyHashPerf( self ):
+
+		sphere = GafferScene.Sphere()
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ '/sphere' ] ) )
+
+		duplicate = GafferScene.Duplicate()
+		duplicate["in"].setInput( sphere["out"] )
+		duplicate["filter"].setInput( pathFilter["out"] )
+		duplicate["copies"].setValue( 300000 )
+
+
+		# Get everything warm - we want to measure the overhead of hierarchyHash, not the cost of
+		# actually computing everything it requires
+		GafferScene.SceneAlgo.hierarchyHash( duplicate["out"], "/" )
+
+		# Even with this attempt to cache things, it's still not a very interesting test. What we
+		# really want to know is whether we're imposing any extra overhead in how we combine hashes,
+		# or with the machinery of parallelReduceLocations itself. But repeatedly hashing plugs is
+		# so much more expensive than any of the other stuff that all we're doing, we're really just
+		# seeing the time to do the hashes. This seems to be true even if I make the hash cache massive:
+		# even pulling hashes from the cache has a cost.
+		#
+		# It's good that we're not imposing measurable overhead here, but it means this
+		# doesn't tell us much about how well parallelReduceLocations can theoretically work.
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferScene.SceneAlgo.hierarchyHash( duplicate["out"], "/" )
+
 	def testRenderAdaptors( self ) :
 
 		sphere = GafferScene.Sphere()

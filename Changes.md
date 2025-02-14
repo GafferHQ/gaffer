@@ -15,7 +15,23 @@ Breaking Changes
 1.5.x.x (relative to 1.5.5.0)
 =======
 
+Features
+--------
 
+- AttributeEditor, LightEditor, RenderPassEditor : Added drag and drop editing. Edits can be created or updated by dropping a value into a cell. Cells representing a set expression or string array can be modified by holding <kbd>Shift</kbd> to append to an existing edit, or <kbd>Control</kbd> may be held to remove from an existing edit.
+
+Fixes
+-----
+
+- StandardNodeGadget : Fixed crash when animating a node's `enabled` plug (#6274).
+
+API
+---
+
+- SceneAlgo :
+  - Added `parallelReduceLocations()` for implementing functions that need to combine results while traversing a ScenePlug.
+  - Added `hierarchyHash()` for hashing all children of a scene location.
+- PathColumn : Added `dragEnterSignal()`, `dragMoveSignal()`, `dragLeaveSignal()` and `dropSignal()`.
 
 1.5.5.0 (relative to 1.5.4.1)
 =======

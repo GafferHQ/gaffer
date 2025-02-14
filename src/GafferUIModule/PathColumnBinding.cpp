@@ -468,6 +468,31 @@ struct KeySignalSlotCaller
 	}
 };
 
+struct DragDropSignalCaller
+{
+	static bool call( PathColumn::DragDropSignal &s, PathColumn &column, Gaffer::Path &path, object widget, const DragDropEvent &event )
+	{
+		PathListingWidgetAccessor accessor( widget );
+		IECorePython::ScopedGILRelease gilRelease;
+		return s( column, path, accessor, event );
+	}
+};
+
+struct DragDropSignalSlotCaller
+{
+	bool operator()( boost::python::object slot, PathColumn &column, Gaffer::Path &path, PathListingWidget &widget, const DragDropEvent &event )
+	{
+		try
+		{
+			return slot( PathColumnPtr( &column ), PathPtr( &path ), static_cast<PathListingWidgetAccessor&>( widget ).widget(), event );
+		}
+		catch( const boost::python::error_already_set & )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
+	}
+};
+
 template<typename T>
 const char *pathColumnProperty( const T &column )
 {
@@ -524,6 +549,7 @@ void GafferUIModule::bindPathColumn()
 		SignalClass<PathColumn::ButtonSignal, ButtonSignalCaller, ButtonSignalSlotCaller>( "ButtonSignal" );
 		SignalClass<PathColumn::ContextMenuSignal, ContextMenuSignalCaller, ContextMenuSignalSlotCaller>( "ContextMenuSignal" );
 		SignalClass<PathColumn::KeySignal, KeySignalCaller, KeySignalSlotCaller>( "KeySignal" );
+		SignalClass<PathColumn::DragDropSignal, DragDropSignalCaller, DragDropSignalSlotCaller>( "DragDropSignal" );
 	}
 
 	pathColumnClass.def( init<PathColumn::SizeMode>( arg( "sizeMode" ) = PathColumn::SizeMode::Default ) )
@@ -536,6 +562,10 @@ void GafferUIModule::bindPathColumn()
 		.def( "contextMenuSignal", &PathColumn::contextMenuSignal, return_internal_reference<1>() )
 		.def( "keyPressSignal", &PathColumn::keyPressSignal, return_internal_reference<1>() )
 		.def( "keyReleaseSignal", &PathColumn::keyReleaseSignal, return_internal_reference<1>() )
+		.def( "dragEnterSignal", &PathColumn::dragEnterSignal, return_internal_reference<1>() )
+		.def( "dragMoveSignal", &PathColumn::dragMoveSignal, return_internal_reference<1>() )
+		.def( "dragLeaveSignal", &PathColumn::dragLeaveSignal, return_internal_reference<1>() )
+		.def( "dropSignal", &PathColumn::dropSignal, return_internal_reference<1>() )
 		.def( "instanceCreatedSignal", &PathColumn::instanceCreatedSignal, return_value_policy<reference_existing_object>() )
 		.staticmethod( "instanceCreatedSignal" )
 		.def( "getSizeMode", (PathColumn::SizeMode (PathColumn::*)() const )&PathColumn::getSizeMode )
