@@ -318,6 +318,25 @@ if [[ -n $ONNX_ROOT ]] ; then
 
 fi
 
+# Set up RenderMan
+##########################################################################
+
+if [[ -n $RMANTREE ]] ; then
+
+	if [[ `uname` = "Linux" ]] ; then
+		appendToPath "$RMANTREE/lib" LD_LIBRARY_PATH
+	else
+		appendToPath "$RMANTREE/lib" DYLD_LIBRARY_PATH
+	fi
+
+	appendToPath "$RMANTREE/bin" PATH
+	appendToPath "$RMANTREE/bin" PYTHONPATH
+	appendToPath "$RMANTREE/lib/plugins" RMAN_RIXPLUGINPATH
+	appendToPath "$GAFFER_ROOT/renderManPlugins" RMAN_DISPLAYS_PATH
+	appendToPath "$RMANTREE/lib/shaders" OSL_SHADER_PATHS
+
+fi
+
 # Set up 3rd Party extensions
 ##########################################################################
 

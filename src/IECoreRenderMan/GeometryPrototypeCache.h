@@ -36,66 +36,48 @@
 
 #pragma once
 
-#include "Imath/ImathMatrix.h"
+#include "IECore/RefCounted.h"
 
-#include "Riley.h"
+#include "Attributes.h"
+#include "RefCountedId.h"
+#include "Session.h"
+
+#include "tbb/concurrent_unordered_map.h"
+
+#include <mutex>
 
 namespace IECoreRenderMan
 {
 
-/// Utility to aid in passing a static transform to Riley.
-struct StaticTransform : riley::Transform
+using GeometryPrototype = RefCountedId<riley::GeometryPrototypeId>;
+IE_CORE_DECLAREPTR( GeometryPrototype )
+
+class GeometryPrototypeCache
 {
 
-	/// Caution : `m` is referenced directly, and must live until the
-	/// StaticTransform is passed to Riley.
-	StaticTransform( const Imath::M44f &m )
-		:	m_time( 0 )
-	{
-		samples = 1;
-		matrix = &reinterpret_cast<const RtMatrix4x4 &>( m );
-		time = &m_time;
-	}
+	public :
+
+		GeometryPrototypeCache( const Session *session );
+
+		// Can be called concurrently with other calls to `get()`.
+		GeometryPrototypePtr get( const IECore::Object *object, const Attributes *attributes, const std::string &messageContext );
+		GeometryPrototypePtr get( const std::vector<const IECore::Object *> &samples, const std::vector<float> &sampleTimes, const Attributes *attributes, const std::string &messageContext );
+
+		// Must not be called concurrently with anything.
+		void clearUnused();
 
 	private :
 
-		float m_time;
+		const Session *m_session;
+
+		struct CacheEntry
+		{
+			std::once_flag onceFlag;
+			GeometryPrototypePtr prototype;
+		};
+		using Cache = tbb::concurrent_unordered_map<IECore::MurmurHash, CacheEntry>;
+		Cache m_cache;
 
 };
-
-/// Utility to aid in passing an animated transform to Riley.
-struct AnimatedTransform : riley::Transform
-{
-
-	/// Caution : `transformSamples` and `sampleTimes` are referenced
-	/// directly, and must live until the AnimatedTransform is passed to Riley.
-	AnimatedTransform( const std::vector<Imath::M44f> &transformSamples, const std::vector<float> &sampleTimes )
-	{
-		samples = transformSamples.size();
-		matrix = reinterpret_cast<const RtMatrix4x4 *>( transformSamples.data() );
-		time = sampleTimes.data();
-	}
-
-};
-
-/// Utility for passing an identity transform to Riley.
-struct IdentityTransform : riley::Transform
-{
-
-	IdentityTransform()
-		:	m_time( 0.0f )
-	{
-		samples = 1;
-		matrix = reinterpret_cast<const RtMatrix4x4 *>( m_matrix.getValue() );
-		time = &m_time;
-	}
-
-	private :
-
-		const float m_time;
-		const Imath::M44f m_matrix;
-
-};
-
 
 } // namespace IECoreRenderMan

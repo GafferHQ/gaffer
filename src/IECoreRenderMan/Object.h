@@ -36,66 +36,43 @@
 
 #pragma once
 
-#include "Imath/ImathMatrix.h"
+#include "Attributes.h"
+#include "GeometryPrototypeCache.h"
+#include "Session.h"
 
-#include "Riley.h"
+#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
 namespace IECoreRenderMan
 {
 
-/// Utility to aid in passing a static transform to Riley.
-struct StaticTransform : riley::Transform
+class Object : public IECoreScenePreview::Renderer::ObjectInterface
 {
 
-	/// Caution : `m` is referenced directly, and must live until the
-	/// StaticTransform is passed to Riley.
-	StaticTransform( const Imath::M44f &m )
-		:	m_time( 0 )
-	{
-		samples = 1;
-		matrix = &reinterpret_cast<const RtMatrix4x4 &>( m );
-		time = &m_time;
-	}
+	public :
+
+		Object( const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, const Session *session );
+		~Object();
+
+		/// \todo RenderMan volumes seem to reject attempts to transform them
+		/// after creation, althought we get lucky and the first one works
+		/// despite returning a failure code. Perhaps we need to add transform
+		/// arguments to `Renderer::object()` and to be able to return a `bool`
+		/// here to request that the object is sent again instead?
+		void transform( const Imath::M44f &transform ) override;
+		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override;
+		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override;
+		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override;
+		void assignID( uint32_t id ) override;
 
 	private :
 
-		float m_time;
+		const Session *m_session;
+		riley::GeometryInstanceId m_geometryInstance;
+		/// Used to keep material etc alive as long as we need it.
+		ConstAttributesPtr m_attributes;
+		/// Used to keep geometry prototype alive as long as we need it.
+		ConstGeometryPrototypePtr m_geometryPrototype;
 
 };
-
-/// Utility to aid in passing an animated transform to Riley.
-struct AnimatedTransform : riley::Transform
-{
-
-	/// Caution : `transformSamples` and `sampleTimes` are referenced
-	/// directly, and must live until the AnimatedTransform is passed to Riley.
-	AnimatedTransform( const std::vector<Imath::M44f> &transformSamples, const std::vector<float> &sampleTimes )
-	{
-		samples = transformSamples.size();
-		matrix = reinterpret_cast<const RtMatrix4x4 *>( transformSamples.data() );
-		time = sampleTimes.data();
-	}
-
-};
-
-/// Utility for passing an identity transform to Riley.
-struct IdentityTransform : riley::Transform
-{
-
-	IdentityTransform()
-		:	m_time( 0.0f )
-	{
-		samples = 1;
-		matrix = reinterpret_cast<const RtMatrix4x4 *>( m_matrix.getValue() );
-		time = &m_time;
-	}
-
-	private :
-
-		const float m_time;
-		const Imath::M44f m_matrix;
-
-};
-
 
 } // namespace IECoreRenderMan

@@ -36,66 +36,56 @@
 
 #pragma once
 
-#include "Imath/ImathMatrix.h"
+#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
-#include "Riley.h"
+#include "MaterialCache.h"
 
 namespace IECoreRenderMan
 {
 
-/// Utility to aid in passing a static transform to Riley.
-struct StaticTransform : riley::Transform
+class Attributes : public IECoreScenePreview::Renderer::AttributesInterface
 {
 
-	/// Caution : `m` is referenced directly, and must live until the
-	/// StaticTransform is passed to Riley.
-	StaticTransform( const Imath::M44f &m )
-		:	m_time( 0 )
-	{
-		samples = 1;
-		matrix = &reinterpret_cast<const RtMatrix4x4 &>( m );
-		time = &m_time;
-	}
+	public :
+
+		Attributes( const IECore::CompoundObject *attributes, MaterialCache *materialCache );
+		~Attributes();
+
+		/// Returns a hash of everything in `prototypeParamList()`, to be
+		/// used by GeometryPrototypeCache when automaticaly deduplicating
+		/// objects. Returns `std::nullopt` if automatic instancing is
+		/// turned off.
+		/// \todo Should we have different hashes for different object types,
+		/// so attributes for curves (for example) don't mess with instancing
+		/// of meshes?
+		const std::optional<IECore::MurmurHash> &prototypeHash() const;
+		/// Attributes to be applied when creating GeometryPrototypes.
+		const RtParamList &prototypeAttributes() const;
+		/// Attributes to be applied to GeometryInstances.
+		const RtParamList &instanceAttributes() const;
+
+		const Material *surfaceMaterial() const;
+		const Displacement *displacement() const { return m_displacement.get(); }
+
+		const IECoreScene::ShaderNetwork *lightShader() const;
+		/// Material to be assigned to lights. RenderMan uses this to
+		/// shade ray hits on mesh lights, while using `lightShader()` for
+		/// light emission. Returns `nullptr` for all non-mesh lights.
+		const Material *lightMaterial() const;
 
 	private :
 
-		float m_time;
+		std::optional<IECore::MurmurHash> m_prototypeHash;
+		RtParamList m_prototypeAttributes;
+		RtParamList m_instanceAttributes;
+		ConstMaterialPtr m_surfaceMaterial;
+		ConstDisplacementPtr m_displacement;
+		/// \todo Could we use the material cache for these too?
+		IECoreScene::ConstShaderNetworkPtr m_lightShader;
+		ConstMaterialPtr m_lightMaterial;
 
 };
 
-/// Utility to aid in passing an animated transform to Riley.
-struct AnimatedTransform : riley::Transform
-{
-
-	/// Caution : `transformSamples` and `sampleTimes` are referenced
-	/// directly, and must live until the AnimatedTransform is passed to Riley.
-	AnimatedTransform( const std::vector<Imath::M44f> &transformSamples, const std::vector<float> &sampleTimes )
-	{
-		samples = transformSamples.size();
-		matrix = reinterpret_cast<const RtMatrix4x4 *>( transformSamples.data() );
-		time = sampleTimes.data();
-	}
-
-};
-
-/// Utility for passing an identity transform to Riley.
-struct IdentityTransform : riley::Transform
-{
-
-	IdentityTransform()
-		:	m_time( 0.0f )
-	{
-		samples = 1;
-		matrix = reinterpret_cast<const RtMatrix4x4 *>( m_matrix.getValue() );
-		time = &m_time;
-	}
-
-	private :
-
-		const float m_time;
-		const Imath::M44f m_matrix;
-
-};
-
+IE_CORE_DECLAREPTR( Attributes )
 
 } // namespace IECoreRenderMan

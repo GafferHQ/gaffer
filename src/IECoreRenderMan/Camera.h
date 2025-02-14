@@ -36,66 +36,36 @@
 
 #pragma once
 
-#include "Imath/ImathMatrix.h"
+#include "Session.h"
 
-#include "Riley.h"
+#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
 namespace IECoreRenderMan
 {
 
-/// Utility to aid in passing a static transform to Riley.
-struct StaticTransform : riley::Transform
+class Camera :  public IECoreScenePreview::Renderer::ObjectInterface
 {
 
-	/// Caution : `m` is referenced directly, and must live until the
-	/// StaticTransform is passed to Riley.
-	StaticTransform( const Imath::M44f &m )
-		:	m_time( 0 )
-	{
-		samples = 1;
-		matrix = &reinterpret_cast<const RtMatrix4x4 &>( m );
-		time = &m_time;
-	}
+	public :
+
+		Camera( const std::string &name, const IECoreScene::Camera *camera, Session *session );
+		~Camera();
+
+		void transform( const Imath::M44f &transform ) override;
+		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override;
+		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override;
+		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override;
+		void assignID( uint32_t id ) override;
 
 	private :
 
-		float m_time;
+		void transformInternal( std::vector<Imath::M44f> samples, const std::vector<float> &times );
+
+		Session *m_session;
+		riley::CameraId m_cameraId;
 
 };
 
-/// Utility to aid in passing an animated transform to Riley.
-struct AnimatedTransform : riley::Transform
-{
-
-	/// Caution : `transformSamples` and `sampleTimes` are referenced
-	/// directly, and must live until the AnimatedTransform is passed to Riley.
-	AnimatedTransform( const std::vector<Imath::M44f> &transformSamples, const std::vector<float> &sampleTimes )
-	{
-		samples = transformSamples.size();
-		matrix = reinterpret_cast<const RtMatrix4x4 *>( transformSamples.data() );
-		time = sampleTimes.data();
-	}
-
-};
-
-/// Utility for passing an identity transform to Riley.
-struct IdentityTransform : riley::Transform
-{
-
-	IdentityTransform()
-		:	m_time( 0.0f )
-	{
-		samples = 1;
-		matrix = reinterpret_cast<const RtMatrix4x4 *>( m_matrix.getValue() );
-		time = &m_time;
-	}
-
-	private :
-
-		const float m_time;
-		const Imath::M44f m_matrix;
-
-};
-
+IE_CORE_DECLAREPTR( Camera );
 
 } // namespace IECoreRenderMan

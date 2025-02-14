@@ -1348,17 +1348,35 @@ libraries = {
 			# can continue to compile with warnings as errors.
 			"CPPDEFINES" : [ "RMAN_RIX_NO_WARN_DEPRECATED" ],
 			"LIBS" : [
-				"GafferScene", "IECoreScene",
+				"GafferScene", "IECoreScene$CORTEX_LIB_SUFFIX",
+				"IECoreVDB$CORTEX_LIB_SUFFIX",
 				"prman" if env["PLATFORM"] != "win32" else "libprman",
 				"pxrcore" if env["PLATFORM"] != "win32" else "libpxrcore",
 				"oslquery$OSL_LIB_SUFFIX",
 				"OpenImageIO_Util$OIIO_LIB_SUFFIX",
+				"openvdb$VDB_LIB_SUFFIX",
 			],
 			"LIBPATH" : [ "$RENDERMAN_ROOT/lib" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "IECoreRenderMan" ],
 		},
+		"requiredOptions" : [ "RENDERMAN_ROOT" ],
+	},
+
+	"IECoreRenderManDisplay" : {
+		"envAppends" : {
+			"LIBS" : [ "IECoreImage$CORTEX_LIB_SUFFIX" ],
+			"CPPPATH" : [ "$RENDERMAN_ROOT/include" ],
+		},
+		"envReplacements" : {
+			"SHLIBPREFIX" : "",
+		},
+		"installName" : "renderManPlugins/d_ieDisplay",
+		"requiredOptions" : [ "RENDERMAN_ROOT" ],
+	},
+
+	"IECoreRenderManTest" : {
 		"requiredOptions" : [ "RENDERMAN_ROOT" ],
 	},
 
