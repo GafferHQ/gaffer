@@ -5,6 +5,11 @@ Features
 --------
 
 - USDLight : Added Cycles-specific light parameters.
+- USD : Added automatic expansion of USD PointInstancers at render time.
+  - This can be controlled on a per-instancer basis using a `gafferUSD:pointInstancerAdaptor:enabled` boolean attribute.
+  - Which point cloud primitive variables are promoted to user attributes can be controlled using a `gafferUSD:pointInstancerAdaptor:attributes` string attribute.
+  - May be disabled entirely with `GafferScene.SceneAlgo.deregisterRenderAdaptor( "USDPointInstancerAdaptor" )`.
+- Viewer : Added "Expand USD Instancers" item to the Expansion menu. Defaults to on for all renderers except OpenGL.
 - Instancer : Added support for prototype paths that are relative to an instancer. When using the same scene connected to both `in` and `prototypes`, this allows relocating an instancer together with its prototypes to a different location in the hierarchy. Prototype paths beginning with "./" are treated as relative, or you can set the environment variable `GAFFERSCENE_INSTANCER_EXPLICIT_ABSOLUTE_PATHS` to treat any path not beginning with "/" as relative ( this may be the default in the future ).
 
 Improvements
