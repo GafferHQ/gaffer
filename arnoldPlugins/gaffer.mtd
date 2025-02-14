@@ -2207,6 +2207,8 @@
 	[attr transmission_dispersion_scale]
 		page STRING "Transmission"
 		label STRING "Dispersion Scale"
+	[attr transmission_shadow_density]
+		page STRING "Transmission"
 	[attr transmission_transmit_aovs]
 		page STRING "Transmission"
 		label STRING "Transmit AOVs"
@@ -2666,6 +2668,8 @@
 	[attr transmission_dispersion]
 		page STRING "Transmission"
 	[attr transmission_extra_roughness]
+		page STRING "Transmission"
+	[attr transmission_shadow_density]
 		page STRING "Transmission"
 	[attr transmit_aovs]
 		page STRING "Transmission"

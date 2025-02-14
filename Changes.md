@@ -6,6 +6,11 @@ Features
 
 - AttributeEditor, LightEditor, RenderPassEditor : Added drag and drop editing. Edits can be created or updated by dropping a value into a cell. Cells representing a set expression or string array can be modified by holding <kbd>Shift</kbd> to append to an existing edit, or <kbd>Control</kbd> may be held to remove from an existing edit.
 
+Improvements
+------------
+
+- ArnoldShader : Moved Arnold 7.3.7.0's new `transmission_shadow_density` parameters to a "Transmission" section of the UI.
+
 Fixes
 -----
 
