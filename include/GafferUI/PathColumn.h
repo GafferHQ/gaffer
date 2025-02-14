@@ -37,8 +37,10 @@
 #pragma once
 
 #include "GafferUI/ButtonEvent.h"
+#include "GafferUI/DragDropEvent.h"
 #include "GafferUI/EventSignalCombiner.h"
 #include "GafferUI/Export.h"
+#include "GafferUI/Gadget.h"
 #include "GafferUI/KeyEvent.h"
 
 #include "Gaffer/Path.h"
@@ -76,6 +78,7 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 		};
 
 		explicit PathColumn( SizeMode sizeMode = Default );
+		~PathColumn();
 
 		/// Returns the current column size mode.
 		SizeMode getSizeMode() const;
@@ -171,6 +174,12 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 		using KeySignal = Gaffer::Signals::Signal<bool ( PathColumn &column, PathListingWidget &widget, const KeyEvent &key ), EventSignalCombiner<bool>>;
 		KeySignal &keyPressSignal();
 		KeySignal &keyReleaseSignal();
+
+		using DragDropSignal = Gaffer::Signals::Signal<bool ( PathColumn &column, Gaffer::Path &path, PathListingWidget &widget, const DragDropEvent &event ), EventSignalCombiner<bool>>;
+		DragDropSignal &dragEnterSignal();
+		DragDropSignal &dragMoveSignal();
+		DragDropSignal &dragLeaveSignal();
+		DragDropSignal &dropSignal();
 
 		/// Creation
 		/// ========

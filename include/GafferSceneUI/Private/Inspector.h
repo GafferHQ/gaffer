@@ -170,8 +170,8 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Si
 		/// history class?
 		virtual Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const;
 
-		using EditFunction = std::function<Gaffer::ValuePlugPtr ( bool createIfNecessary )>;
-		using EditFunctionOrFailure = std::variant<EditFunction, std::string>;
+		using AcquireEditFunction = std::function<Gaffer::ValuePlugPtr ( bool createIfNecessary )>;
+		using AcquireEditFunctionOrFailure = std::variant<AcquireEditFunction, std::string>;
 		/// Should be implemented to return a function that will acquire
 		/// an edit from the EditScope at the specified point in the history.
 		/// If this is not possible, should return an error explaining why
@@ -181,7 +181,7 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Si
 		/// > Note : Where an EditScope already contains an edit, it is expected
 		/// > that this will be dealt with in `source()`, returning a result
 		/// > that edits the processor itself.
-		virtual EditFunctionOrFailure editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const;
+		virtual AcquireEditFunctionOrFailure acquireEditFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const;
 
 		using DisableEditFunction = std::function<void ()>;
 		using DisableEditFunctionOrFailure = std::variant<DisableEditFunction, std::string>;
@@ -190,6 +190,18 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Si
 		/// error explaining why (this is typically due to `readOnly` metadata).
 		/// Called with `history->context` as the current context.
 		virtual DisableEditFunctionOrFailure disableEditFunction( Gaffer::ValuePlug *plug, const GafferScene::SceneAlgo::History *history ) const;
+
+		using CanEditFunction = std::function<bool ( const Gaffer::ValuePlug *plug, const IECore::Object *value, std::string &failureReason )>;
+		/// Can be implemented to return a function that will return whether
+		/// `value` can be set on `plug`. If `value` cannot be set on `plug`,
+		/// `failureReason` should provide the reason why.
+		virtual CanEditFunction canEditFunction( const GafferScene::SceneAlgo::History *history ) const;
+
+		using EditFunction = std::function<void ( Gaffer::ValuePlug *plug, const IECore::Object *value )>;
+		/// Can be implemented to return a function that will directly
+		/// edit `plug` to set `value`. Called with `history->context` as the
+		/// current context.
+		virtual EditFunction editFunction( const GafferScene::SceneAlgo::History *history ) const;
 
 	protected :
 
@@ -340,8 +352,9 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 		/// and `false` otherwise.
 		bool editable() const;
 		/// If `editable()` returns false, returns the reason why.
-		/// This should be displayed to the user.
-		std::string nonEditableReason() const;
+		/// If `canEdit( value )` returns false, `nonEditableReason( value )`
+		/// returns the reason why. This should be displayed to the user.
+		std::string nonEditableReason( const IECore::Object *value = nullptr ) const;
 
 		/// Returns a plug that can be used to edit the property
 		/// represented by this inspector, creating it if necessary.
@@ -361,6 +374,14 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 		/// `!canDisableEdit()`
 		void disableEdit() const;
 
+		/// Returns whether a direct edit can be made with the
+		/// specified value.
+		bool canEdit( const IECore::Object *value, std::string &failureReason ) const;
+		/// Applies a direct edit with the specified value.
+		/// Calls `acquireEdit()` to ensure a plug exists to
+		/// receive the value.
+		void edit( const IECore::Object *value ) const;
+
 	private :
 
 		Result( const IECore::ConstObjectPtr &value, const Gaffer::EditScopePtr &editScope );
@@ -376,10 +397,11 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 
 		struct Editors
 		{
-			/// \todo Rename to `acquireEditFunction`?
-			EditFunctionOrFailure editFunction;
+			AcquireEditFunctionOrFailure acquireEditFunction;
 			std::string editWarning;
 			DisableEditFunctionOrFailure disableEditFunction;
+			CanEditFunction canEditFunction;
+			EditFunction editFunction;
 		};
 
 		std::optional<Editors> m_editors;
