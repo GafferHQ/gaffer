@@ -5,6 +5,11 @@ Features
 --------
 
 - AttributeEditor, LightEditor, RenderPassEditor : Added drag and drop editing. Edits can be created or updated by dropping a value into a cell. Cells representing a set expression or string array can be modified by holding <kbd>Shift</kbd> to append to an existing edit, or <kbd>Control</kbd> may be held to remove from an existing edit.
+- USD : Added automatic expansion of USD PointInstancers at render time.
+  - This can be controlled on a per-instancer basis using a `gafferUSD:pointInstancerAdaptor:enabled` boolean attribute.
+  - Which point cloud primitive variables are promoted to user attributes can be controlled using a `gafferUSD:pointInstancerAdaptor:attributes` string attribute.
+  - May be disabled entirely with `GafferScene.SceneAlgo.deregisterRenderAdaptor( "USDPointInstancerAdaptor" )`.
+- Viewer : Added "Expand USD Instancers" item to the Expansion menu. Defaults to on for all renderers except OpenGL.
 
 Fixes
 -----
