@@ -47,9 +47,6 @@
 
 #include "fmt/format.h"
 
-#include <memory>
-#include <unordered_map>
-
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferUI;
@@ -72,11 +69,6 @@ const std::string basisName( StandardCubicBasis basis )
 	return "Unknown";
 }
 
-std::unordered_map<const PathColumn *, std::unique_ptr<PathColumn::DragDropSignal>> g_dragEnterSignals;
-std::unordered_map<const PathColumn *, std::unique_ptr<PathColumn::DragDropSignal>> g_dragMoveSignals;
-std::unordered_map<const PathColumn *, std::unique_ptr<PathColumn::DragDropSignal>> g_dragLeaveSignals;
-std::unordered_map<const PathColumn *, std::unique_ptr<PathColumn::DragDropSignal>> g_dropSignals;
-
 }  // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -86,18 +78,6 @@ std::unordered_map<const PathColumn *, std::unique_ptr<PathColumn::DragDropSigna
 PathColumn::PathColumn( SizeMode sizeMode )
 	:	m_sizeMode( sizeMode )
 {
-	g_dragEnterSignals[this] = std::make_unique<PathColumn::DragDropSignal>();
-	g_dragMoveSignals[this] = std::make_unique<PathColumn::DragDropSignal>();
-	g_dragLeaveSignals[this] = std::make_unique<PathColumn::DragDropSignal>();
-	g_dropSignals[this] = std::make_unique<PathColumn::DragDropSignal>();
-}
-
-PathColumn::~PathColumn()
-{
-	g_dragEnterSignals.erase( this );
-	g_dragMoveSignals.erase( this );
-	g_dragLeaveSignals.erase( this );
-	g_dropSignals.erase( this );
 }
 
 PathColumn::SizeMode PathColumn::getSizeMode() const
@@ -147,22 +127,22 @@ PathColumn::KeySignal &PathColumn::keyReleaseSignal()
 
 PathColumn::DragDropSignal &PathColumn::dragEnterSignal()
 {
-	return *( g_dragEnterSignals[this] );
+	return m_dragEnterSignal;
 }
 
 PathColumn::DragDropSignal &PathColumn::dragMoveSignal()
 {
-	return *( g_dragMoveSignals[this] );
+	return m_dragMoveSignal;
 }
 
 PathColumn::DragDropSignal &PathColumn::dragLeaveSignal()
 {
-	return *( g_dragLeaveSignals[this] );
+	return m_dragLeaveSignal;
 }
 
 PathColumn::DragDropSignal &PathColumn::dropSignal()
 {
-	return *( g_dropSignals[this] );
+	return m_dropSignal;
 }
 
 PathColumn::PathColumnSignal &PathColumn::instanceCreatedSignal()

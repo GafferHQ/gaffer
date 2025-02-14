@@ -78,7 +78,6 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 		};
 
 		explicit PathColumn( SizeMode sizeMode = Default );
-		~PathColumn();
 
 		/// Returns the current column size mode.
 		SizeMode getSizeMode() const;
@@ -199,6 +198,10 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 		ContextMenuSignal m_contextMenuSignal;
 		KeySignal m_keyPressSignal;
 		KeySignal m_keyReleaseSignal;
+		DragDropSignal m_dragEnterSignal;
+		DragDropSignal m_dragMoveSignal;
+		DragDropSignal m_dragLeaveSignal;
+		DragDropSignal m_dropSignal;
 
 		SizeMode m_sizeMode;
 
