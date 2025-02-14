@@ -68,6 +68,11 @@ if os.name != "nt" :
 		resource.setrlimit( resource.RLIMIT_NOFILE, ( hardFileLimit, hardFileLimit ) )
 		IECore.msg( IECore.Msg.Level.Debug, "Gaffer", "Increased file handle limit to {}".format( hardFileLimit ) )
 
+# Set this env var flag to enable relative prototypes paths output from the IECoreUSD point instancer loader,
+# unless a user has explicitly requested we not do this.
+if not "IECOREUSD_POINTINSTANCER_RELATIVEPROTOTYPES" in os.environ:
+	os.environ["IECOREUSD_POINTINSTANCER_RELATIVEPROTOTYPES"] = "1"
+
 helpText = """Usage :
 
     gaffer -help                    Print this message
