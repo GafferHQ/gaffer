@@ -1,0 +1,130 @@
+#usda 1.0
+(
+	subLayers = [
+		@usdLux/schema.usda@,
+		@usd/schema.usda@
+	]
+)
+
+over "GLOBAL" (
+	customData = {
+		string libraryName = "GafferCycles"
+		bool skipCodeGeneration = 1
+		bool useLiteralIdentifier = 1
+	}
+)
+{
+}
+
+# Here we define a bunch of codeless auto-apply API schemas for extending the
+# standard UsdLux lights with inputs specific to Cycles. This approach is
+# modelled on the one used by UsdRiPxr to add RenderMan-specific inputs, and
+# we believe is the one Pixar intends everyone to use.
+
+class "GafferCyclesLightAPI" (
+	customData = {
+		token[] apiSchemaAutoApplyTo = [ "DistantLight", "DiskLight", "DomeLight", "RectLight", "SphereLight" ]
+		string apiSchemaType = "singleApply"
+		string className = "GafferCyclesLightAPI"
+	}
+	inherits = </APISchemaBase>
+)
+{
+
+	string inputs:cycles:lightgroup = "" (
+		displayGroup = "Basic"
+		displayName = "Light Group (Cycles)"
+	)
+
+	bool inputs:cycles:use_mis = true (
+		displayGroup = "Refine"
+		displayName = "MIS (Cycles)"
+	)
+
+	bool inputs:cycles:use_camera = true (
+		displayGroup = "Refine"
+		displayName = "Camera (Cycles)"
+	)
+
+	bool inputs:cycles:use_diffuse = true (
+		displayGroup = "Refine"
+		displayName = "Diffuse (Cycles)"
+	)
+
+	bool inputs:cycles:use_glossy = true (
+		displayGroup = "Refine"
+		displayName = "Glossy (Cycles)"
+	)
+
+	bool inputs:cycles:use_transmission = true (
+		displayGroup = "Refine"
+		displayName = "Transmission (Cycles)"
+	)
+
+	bool inputs:cycles:use_scatter = true (
+		displayGroup = "Refine"
+		displayName = "Volume Scatter (Cycles)"
+	)
+
+	bool inputs:cycles:use_caustics = false (
+		displayGroup = "Refine"
+		displayName = "Shadow Caustics (Cycles)"
+	)
+
+	int inputs:cycles:max_bounces = 1024 (
+		displayGroup = "Refine"
+		displayName = "Max Bounces (Cycles)"
+	)
+
+}
+
+class "GafferCyclesDiskLightAPI" (
+	customData = {
+		token[] apiSchemaAutoApplyTo = ["DiskLight"]
+		string apiSchemaType = "singleApply"
+		string className = "GafferCyclesDiskLightAPI"
+	}
+	inherits = </APISchemaBase>
+)
+{
+
+	float inputs:cycles:spread = 180.0 (
+		displayGroup = "Geometry"
+		displayName = "Spread (Cycles)"
+	)
+
+}
+
+class "GafferCyclesQuadLightAPI" (
+	customData = {
+		token[] apiSchemaAutoApplyTo = ["RectLight"]
+		string apiSchemaType = "singleApply"
+		string className = "GafferCyclesQuadLightAPI"
+	}
+	inherits = </APISchemaBase>
+)
+{
+
+	float inputs:cycles:spread = 180.0 (
+		displayGroup = "Geometry"
+		displayName = "Spread (Cycles)"
+	)
+
+}
+
+class "GafferCyclesBackgroundLightAPI" (
+	customData = {
+		token[] apiSchemaAutoApplyTo = ["DomeLight"]
+		string apiSchemaType = "singleApply"
+		string className = "GafferCyclesBackgroundLightAPI"
+	}
+	inherits = </APISchemaBase>
+)
+{
+
+	int inputs:cycles:map_resolution = 1024 (
+		displayGroup = "Sampling"
+		displayName = "Map Resolution (Cycles)"
+	)
+
+}

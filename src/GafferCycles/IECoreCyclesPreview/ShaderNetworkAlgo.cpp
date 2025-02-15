@@ -946,6 +946,8 @@ const InternedString g_widthParameter( "width" );
 const InternedString g_wrapSParameter( "wrapS" );
 const InternedString g_wrapTParameter( "wrapT" );
 
+const string g_cyclesNamespace( "cycles:" );
+
 void transferUSDLightParameters( ShaderNetwork *network, InternedString shaderHandle, const Shader *usdShader, Shader *shader )
 {
 	Color3f color = parameterValue( usdShader, g_colorParameter, Color3f( 1 ) );
@@ -967,6 +969,14 @@ void transferUSDLightParameters( ShaderNetwork *network, InternedString shaderHa
 	shader->parameters()[g_useGlossyParameter] = new BoolData( specular > 0.0f );
 
 	shader->parameters()[g_useMISParameter] = new BoolData( true );
+
+	for( const auto &[name, value] : usdShader->parameters() )
+	{
+		if( boost::starts_with( name.string(), g_cyclesNamespace ) )
+		{
+			shader->parameters()[name.string().substr(g_cyclesNamespace.size())] = value;
+		}
+	}
 }
 
 void transferUSDShapingParameters( ShaderNetwork *network, InternedString shaderHandle, const Shader *usdShader, Shader *shader )
