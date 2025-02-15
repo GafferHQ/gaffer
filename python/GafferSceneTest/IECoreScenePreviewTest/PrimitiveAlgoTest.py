@@ -40,6 +40,7 @@ import itertools
 import math
 import pathlib
 import random
+import sys
 import threading
 import time
 
@@ -171,7 +172,7 @@ class PrimitiveAlgoTest( GafferTest.TestCase ) :
 		# than being avoided entirely.
 		time.sleep( 0.01 )
 
-		acceptableCancellationDelay = 0.01 if GafferTest.inCI() else 0.001
+		acceptableCancellationDelay = { "win32" : 0.04 }.get( sys.platform, 0.01 ) if GafferTest.inCI() else 0.001
 
 		canceller.cancel()
 		thread.join()
