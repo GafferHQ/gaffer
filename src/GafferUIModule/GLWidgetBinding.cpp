@@ -41,7 +41,10 @@
 #include "IECore/Exception.h"
 #include "IECore/MessageHandler.h"
 
-#include "QtOpenGL/QGLWidget"
+#include "QtCore/QtGlobal"
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+	#include "QtOpenGL/QGLWidget"
+#endif
 
 #if defined( __linux__ )
 #include "GL/glx.h" // Must come after Qt!
@@ -51,6 +54,8 @@ using namespace boost::python;
 
 namespace
 {
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 
 #if defined( __linux__ )
 
@@ -133,12 +138,21 @@ class HostedGLContext : public QGLContext
 
 #endif
 
+#endif // #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+void setHostedContext( uint64_t glWidgetAddress, uint64_t glFormatAddress )
+{
+	IECore::msg( IECore::Msg::Warning, "HostedGLContext", "Not implemented on this platform." );
+}
+#else
 void setHostedContext( uint64_t glWidgetAddress, uint64_t glFormatAddress )
 {
 	QGLWidget *glWidget = reinterpret_cast<QGLWidget *>( glWidgetAddress );
 	QGLFormat *glFormat = reinterpret_cast<QGLFormat *>( glFormatAddress );
 	glWidget->setContext( new HostedGLContext( *glFormat, glWidget ) );
 }
+#endif
 
 } // namespace
 
