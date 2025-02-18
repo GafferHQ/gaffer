@@ -184,6 +184,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( messageHandler.messages[0].level, IECore.MessageHandler.Level.Warning )
 		self.assertEqual( messageHandler.messages[0].message, "Unable to find shader \"BadShader\"." )
 
+		del lightAttributes
 		del light
 		del renderer
 
