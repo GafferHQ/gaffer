@@ -2196,10 +2196,10 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 						[ "foo%i"%(i//34) for i in range( 100 ) ]
 					) )
 		points["unindexedRoots"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.StringVectorData(
-						[ ["cube","plane","sphere"][i//34] for i in range( 100 ) ]
+						[ ["/cube","/plane","/sphere"][i//34] for i in range( 100 ) ]
 					) )
 		points["indexedRoots"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex,
-			IECore.StringVectorData( [ "cube","plane","sphere"] ),
+			IECore.StringVectorData( [ "/cube","/plane","/sphere"] ),
 			IECore.IntVectorData( [(i//34) for i in range( 100 )] ),
 		)
 		pointsSource = GafferScene.ObjectToScene()
@@ -2373,14 +2373,14 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 
 		self.assertEncapsulatedRendersSame( instancer )
 
-		instancer["prototypeRootsList"].setValue( IECore.StringVectorData( [ "withAttrs", "cube", "plane", "sphere" ] ) )
+		instancer["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/withAttrs", "/cube", "/plane", "/sphere" ] ) )
 		testAttributes( frameAttr = [ 1 ] * 25, floatAttr = floatExpected )
 		self.assertEqual( uniqueCounts(), { "" : 20, "floatVar" : 5 } )
 
 		self.assertEncapsulatedRendersSame( instancer )
 
 		# Test an empty root
-		instancer["prototypeRootsList"].setValue( IECore.StringVectorData( [ "withAttrs", "", "plane", "sphere" ] ) )
+		instancer["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/withAttrs", "", "/plane", "/sphere" ] ) )
 		self.assertEqual( uniqueCounts(), { "" : 15, "floatVar" : 5 } )
 
 		self.assertEncapsulatedRendersSame( instancer )
@@ -3032,7 +3032,7 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 	def testVaryingPrimvars( self ) :
 		plane = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
 		plane["varyingFloat"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Varying, IECore.FloatVectorData( [ 16.25, 16.5, 16.75, 17.0 ] ) )
-		plane["varyingString"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Varying, IECore.StringVectorData( [ "a", "b", "d", "c" ] ) )
+		plane["varyingString"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Varying, IECore.StringVectorData( [ "/a", "/b", "/d", "/c" ] ) )
 
 		objectToScene = GafferScene.ObjectToScene()
 		objectToScene["object"].setValue( plane )
@@ -3091,7 +3091,7 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		curves["P"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.V3fVectorData( [ imath.V3f( i ) for i in range( 4 ) ] ) )
 		curves["varyingString"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Varying, IECore.StringVectorData( [ "c", "c" ] ) )
 		curves["varyingFloat"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Varying, IECore.FloatVectorData( [ 3, 7 ] ) )
-		curves["vertexString"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.StringVectorData( [ "a", "b", "d", "c" ] ) )
+		curves["vertexString"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.StringVectorData( [ "/a", "/b", "/d", "/c" ] ) )
 		self.assertTrue( curves.arePrimitiveVariablesValid() )
 
 		objectToScene["object"].setValue( curves )
