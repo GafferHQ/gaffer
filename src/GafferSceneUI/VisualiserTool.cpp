@@ -39,6 +39,8 @@
 #include "GafferSceneUI/SceneView.h"
 #include "GafferSceneUI/ScriptNodeAlgo.h"
 
+#include "GafferScene/ResamplePrimitiveVariables.h"
+
 #include "GafferUI/Gadget.h"
 #include "GafferUI/Pointer.h"
 #include "GafferUI/Style.h"
@@ -1614,19 +1616,6 @@ class VisualiserGadget : public Gadget
 					continue;
 				}
 
-				// Make sure we have "P" data and it is the correct type.
-				const auto pIt = primitive->variables.find( g_pName );
-				if( pIt == primitive->variables.end() )
-				{
-					continue;
-				}
-
-				auto pData = runTimeCast<const V3fVectorData>( pIt->second.data );
-				if( !pData )
-				{
-					continue;
-				}
-
 				// Find named vertex attribute
 				// NOTE : Conversion to IECoreGL mesh may generate vertex attributes (eg. "N")
 				// so check named primitive variable exists on IECore mesh primitive.
@@ -1643,21 +1632,56 @@ class VisualiserGadget : public Gadget
 					continue;
 				}
 
+				if( vIt->second.interpolation == PrimitiveVariable::Uniform )
+				{
+					primitive = runTimeCast<const Primitive>( location.uniformPScene().objectPlug()->getValue() );
+
+					if( !primitive )
+					{
+						continue;
+					}
+				}
+
+				// Make sure we have "P" data and it is the correct type.
+				const auto pIt = primitive->variables.find( g_pName );
+				if( pIt == primitive->variables.end() )
+				{
+					continue;
+				}
+
+				auto pData = runTimeCast<const V3fVectorData>( pIt->second.data );
+				if( !pData )
+				{
+					continue;
+				}
+
+				IECoreGL::ConstBufferPtr pBuffer = nullptr;
+				IECoreGL::ConstBufferPtr vBuffer = nullptr;
+				GLsizei vertexCount = 0;
+
 				// Retrieve cached IECoreGL primitive
-				auto primitiveGL = runTimeCast<const IECoreGL::Primitive>( converter->convert( primitive.get() ) );
-				if( !primitiveGL )
+
+				if( vIt->second.interpolation == PrimitiveVariable::Uniform )
 				{
-					continue;
+					pBuffer = runTimeCast<const IECoreGL::Buffer>( converter->convert( pData.get() ) );
+					vBuffer = runTimeCast<const IECoreGL::Buffer>( converter->convert( vData.get() ) );
+					vertexCount = (GLsizei)pData->readable().size();
+				}
+				else
+				{
+					// Let `IECoreGL` handle the other interpolations
+					auto primitiveGL = runTimeCast<const IECoreGL::Primitive>( converter->convert( primitive.get() ) );
+					if( !primitiveGL )
+					{
+						continue;
+					}
+
+					pBuffer = primitiveGL->getVertexBuffer( g_pName );
+					vBuffer = primitiveGL->getVertexBuffer( name );
+					vertexCount = primitiveGL->getVertexCount();
 				}
 
-				IECoreGL::ConstBufferPtr pBuffer = primitiveGL->getVertexBuffer( g_pName );
-				if( !pBuffer )
-				{
-					continue;
-				}
-
-				IECoreGL::ConstBufferPtr vBuffer = primitiveGL->getVertexBuffer( name );
-				if( !vBuffer )
+				if( !pBuffer || !vBuffer )
 				{
 					continue;
 				}
@@ -1703,7 +1727,7 @@ class VisualiserGadget : public Gadget
 				glVertexAttribPointer( ATTRIB_GLSL_LOCATION_PS, 3, GL_FLOAT, GL_FALSE, 0, nullptr );
 				glBindBuffer( GL_ARRAY_BUFFER, vBuffer->buffer() );
 				glVertexAttribPointer( ATTRIB_GLSL_LOCATION_VS, 3, GL_FLOAT, GL_FALSE, 0, nullptr );
-				glDrawArraysInstanced( GL_LINES, 0, 2, static_cast<GLsizei>( primitiveGL->getVertexCount() ) );
+				glDrawArraysInstanced( GL_LINES, 0, 2, vertexCount );
 
 			}
 
@@ -1818,8 +1842,23 @@ VisualiserTool::VisualiserTool( SceneView *view, const std::string &name ) : Sel
 	addChild( new FloatPlug( "vectorScale", Plug::In, g_vectorScaleDefault, g_vectorScaleMin ) );
 	addChild( new Color3fPlug( "vectorColor", Plug::In, g_vectorColorDefault ) );
 	addChild( new ScenePlug( "__scene", Plug::In ) );
+	addChild( new ScenePlug( "__uniformPScene", Plug::In ) );
 
-	internalScenePlug()->setInput( view->inPlug<ScenePlug>() );
+	ScenePlug *inScene = view->inPlug<ScenePlug>();
+
+	PathFilterPtr filter = new PathFilter( "__resampleFilter" );
+	filter->pathsPlug()->setValue( new StringVectorData( { "/..." } ) );
+	addChild( filter );
+
+	ResamplePrimitiveVariablesPtr resamplePrimVars = new ResamplePrimitiveVariables( "__resamplePrimVars" );
+	addChild( resamplePrimVars );
+	resamplePrimVars->inPlug()->setInput( inScene );
+	resamplePrimVars->namesPlug()->setValue( "P" );
+	resamplePrimVars->interpolationPlug()->setValue( IECoreScene::PrimitiveVariable::Interpolation::Uniform );
+	resamplePrimVars->filterPlug()->setInput( filter->outPlug() );
+
+	internalScenePlug()->setInput( inScene);
+	internalSceneUniformPPlug()->setInput( resamplePrimVars->outPlug() );
 
 	// Connect signal handlers
 	//
@@ -1970,6 +2009,16 @@ ScenePlug *VisualiserTool::internalScenePlug()
 const ScenePlug *VisualiserTool::internalScenePlug() const
 {
 	return getChild<ScenePlug>( g_firstPlugIndex + 8 );
+}
+
+ScenePlug *VisualiserTool::internalSceneUniformPPlug()
+{
+	return getChild<ScenePlug>( g_firstPlugIndex + 9 );
+}
+
+const ScenePlug *VisualiserTool::internalSceneUniformPPlug() const
+{
+	return getChild<ScenePlug>( g_firstPlugIndex + 9 );
 }
 
 const std::vector<VisualiserTool::Selection> &VisualiserTool::selection() const
@@ -2194,7 +2243,9 @@ void VisualiserTool::plugDirtied( const Plug *plug )
 	if(
 		plug == activePlug() ||
 		plug == internalScenePlug()->objectPlug() ||
-		plug == internalScenePlug()->transformPlug()
+		plug == internalScenePlug()->transformPlug() ||
+		plug == internalSceneUniformPPlug()->objectPlug() ||
+		plug == internalSceneUniformPPlug()->transformPlug()
 	)
 	{
 		m_selectionDirty = true;
@@ -2298,7 +2349,7 @@ void VisualiserTool::updateSelection() const
 
 	for( PathMatcher::Iterator it = selectedPaths.begin(), eIt = selectedPaths.end(); it != eIt; ++it )
 	{
-		m_selection.emplace_back( *scene, *it, *view()->context() );
+		m_selection.emplace_back( *scene, *internalSceneUniformPPlug(), *it, *view()->context() );
 	}
 }
 
@@ -2561,9 +2612,10 @@ void VisualiserTool::makeGadgetFirst()
 
 VisualiserTool::Selection::Selection(
 	const ScenePlug &scene,
+	const ScenePlug &uniformPScene,
 	const ScenePlug::ScenePath &path,
 	const Context &context
-) : m_scene( &scene ), m_path( path ), m_context( &context )
+) : m_scene( &scene ), m_uniformPScene( &uniformPScene ), m_path( path ), m_context( &context )
 {
 
 }
@@ -2571,6 +2623,11 @@ VisualiserTool::Selection::Selection(
 const ScenePlug &VisualiserTool::Selection::scene() const
 {
 	return *m_scene;
+}
+
+const ScenePlug &VisualiserTool::Selection::uniformPScene() const
+{
+	return *m_uniformPScene;
 }
 
 const ScenePlug::ScenePath &VisualiserTool::Selection::path() const
