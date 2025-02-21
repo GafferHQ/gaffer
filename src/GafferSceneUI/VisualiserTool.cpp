@@ -1144,7 +1144,22 @@ class VisualiserGadget : public Gadget
 
 					if( !vData )
 					{
-						continue;
+						vData = primitive->expandedVariableData<Data>(
+							primitiveVariableName,
+							IECoreScene::PrimitiveVariable::Uniform,
+							false /* throwIfInvalid */
+						);
+
+						if( !vData )
+						{
+							continue;
+						}
+
+						primitive = runTimeCast<const Primitive>( location.uniformPScene().objectPlug()->getValue() );
+						if( !primitive )
+						{
+							continue;
+						}
 					}
 
 					if(
@@ -1209,7 +1224,16 @@ class VisualiserGadget : public Gadget
 
 				if( !pData )
 				{
-					continue;
+					pData = primitive->expandedVariableData<V3fVectorData>(
+						g_pName,
+						PrimitiveVariable::Uniform,
+						false /* throwIfInvalid */
+					);
+
+					if( !pData )
+					{
+						continue;
+					}
 				}
 
 				// Retrieve cached opengl buffer data
@@ -1492,7 +1516,7 @@ class VisualiserGadget : public Gadget
 					text,
 					scale.x * cursorVertexValueTextScale,
 					V2f(
-						cursorVertexRasterPos.value().x - style->textBound( GafferUI::Style::LabelText, text ).size().x * scale.x,
+						cursorVertexRasterPos.value().x - style->textBound( GafferUI::Style::LabelText, text ).size().x * 0.5f * cursorVertexValueTextScale * scale.x,
 						cursorVertexRasterPos.value().y
 					),
 					style,
