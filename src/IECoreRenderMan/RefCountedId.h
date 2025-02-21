@@ -36,66 +36,59 @@
 
 #pragma once
 
-#include "Imath/ImathMatrix.h"
+#include "IECore/RefCounted.h"
 
-#include "Riley.h"
+#include "Session.h"
 
 namespace IECoreRenderMan
 {
 
-/// Utility to aid in passing a static transform to Riley.
-struct StaticTransform : riley::Transform
+/// A reference-counted Riley Id, allowing an Id to be shared between multiple
+/// clients. When the last client drops ownership, the Riley entity corresponding
+/// to the Id is deleted.
+template<typename T>
+class RefCountedId : public IECore::RefCounted
 {
 
-	/// Caution : `m` is referenced directly, and must live until the
-	/// StaticTransform is passed to Riley.
-	StaticTransform( const Imath::M44f &m )
-		:	m_time( 0 )
-	{
-		samples = 1;
-		matrix = &reinterpret_cast<const RtMatrix4x4 &>( m );
-		time = &m_time;
-	}
+	public :
+
+		RefCountedId( T id, const Session *session )
+			:	m_session( session ), m_id( id )
+		{
+
+		}
+
+		~RefCountedId() override
+		{
+			if( m_session->renderType != IECoreScenePreview::Renderer::Interactive )
+			{
+				return;
+			}
+
+			if constexpr( std::is_same_v<T, riley::MaterialId> )
+			{
+				m_session->riley->DeleteMaterial( m_id );
+			}
+			else if constexpr( std::is_same_v<T, riley::DisplacementId> )
+			{
+				m_session->riley->DeleteDisplacement( m_id );
+			}
+			// Deliberately not checking type for the last case, so that we get
+			// a compilation error if compiled for types we haven't added a
+			// delete for.
+			else
+			{
+				m_session->riley->DeleteGeometryPrototype( m_id );
+			}
+		}
+
+		const T &id() const { return m_id; }
 
 	private :
 
-		float m_time;
+		const Session *m_session;
+		T m_id;
 
 };
-
-/// Utility to aid in passing an animated transform to Riley.
-struct AnimatedTransform : riley::Transform
-{
-
-	/// Caution : `transformSamples` and `sampleTimes` are referenced
-	/// directly, and must live until the AnimatedTransform is passed to Riley.
-	AnimatedTransform( const std::vector<Imath::M44f> &transformSamples, const std::vector<float> &sampleTimes )
-	{
-		samples = transformSamples.size();
-		matrix = reinterpret_cast<const RtMatrix4x4 *>( transformSamples.data() );
-		time = sampleTimes.data();
-	}
-
-};
-
-/// Utility for passing an identity transform to Riley.
-struct IdentityTransform : riley::Transform
-{
-
-	IdentityTransform()
-		:	m_time( 0.0f )
-	{
-		samples = 1;
-		matrix = reinterpret_cast<const RtMatrix4x4 *>( m_matrix.getValue() );
-		time = &m_time;
-	}
-
-	private :
-
-		const float m_time;
-		const Imath::M44f m_matrix;
-
-};
-
 
 } // namespace IECoreRenderMan

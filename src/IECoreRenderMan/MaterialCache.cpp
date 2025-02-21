@@ -34,68 +34,75 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#include "MaterialCache.h"
 
-#include "Imath/ImathMatrix.h"
+#include "ShaderNetworkAlgo.h"
 
-#include "Riley.h"
+using namespace std;
+using namespace IECore;
+using namespace IECoreScene;
+using namespace IECoreRenderMan;
 
-namespace IECoreRenderMan
+MaterialCache::MaterialCache( const Session *session )
+	:	m_session( session )
 {
+}
 
-/// Utility to aid in passing a static transform to Riley.
-struct StaticTransform : riley::Transform
+ConstMaterialPtr MaterialCache::getMaterial( const IECoreScene::ShaderNetwork *network )
 {
-
-	/// Caution : `m` is referenced directly, and must live until the
-	/// StaticTransform is passed to Riley.
-	StaticTransform( const Imath::M44f &m )
-		:	m_time( 0 )
+	Cache::accessor a;
+	m_cache.insert( a, network->Object::hash() );
+	if( !a->second )
 	{
-		samples = 1;
-		matrix = &reinterpret_cast<const RtMatrix4x4 &>( m );
-		time = &m_time;
+		std::vector<riley::ShadingNode> nodes = ShaderNetworkAlgo::convert( network );
+		riley::MaterialId id = m_session->riley->CreateMaterial( riley::UserId(), { (uint32_t)nodes.size(), nodes.data() }, RtParamList() );
+		a->second = new Material( id, m_session );
+	}
+	return a->second;
+}
+
+ConstDisplacementPtr MaterialCache::getDisplacement( const IECoreScene::ShaderNetwork *network )
+{
+	DisplacementCache::accessor a;
+	m_displacementCache.insert( a, network->Object::hash() );
+	if( !a->second )
+	{
+		std::vector<riley::ShadingNode> nodes = ShaderNetworkAlgo::convert( network );
+		riley::DisplacementId id = m_session->riley->CreateDisplacement( riley::UserId(), { (uint32_t)nodes.size(), nodes.data() }, RtParamList() );
+		a->second = new Displacement( id, m_session );
+	}
+	return a->second;
+}
+
+// Must not be called concurrently with anything.
+void MaterialCache::clearUnused()
+{
+	vector<IECore::MurmurHash> toErase;
+	for( const auto &m : m_cache )
+	{
+		if( m.second->refCount() == 1 )
+		{
+			// Only one reference - this is ours, so
+			// nothing outside of the cache is using the
+			// shader.
+			toErase.push_back( m.first );
+		}
+	}
+	for( const auto &e : toErase )
+	{
+		m_cache.erase( e );
 	}
 
-	private :
-
-		float m_time;
-
-};
-
-/// Utility to aid in passing an animated transform to Riley.
-struct AnimatedTransform : riley::Transform
-{
-
-	/// Caution : `transformSamples` and `sampleTimes` are referenced
-	/// directly, and must live until the AnimatedTransform is passed to Riley.
-	AnimatedTransform( const std::vector<Imath::M44f> &transformSamples, const std::vector<float> &sampleTimes )
+	toErase.clear();
+	for( const auto &m : m_displacementCache )
 	{
-		samples = transformSamples.size();
-		matrix = reinterpret_cast<const RtMatrix4x4 *>( transformSamples.data() );
-		time = sampleTimes.data();
+		if( m.second->refCount() == 1 )
+		{
+			toErase.push_back( m.first );
+		}
 	}
-
-};
-
-/// Utility for passing an identity transform to Riley.
-struct IdentityTransform : riley::Transform
-{
-
-	IdentityTransform()
-		:	m_time( 0.0f )
+	for( const auto &e : toErase )
 	{
-		samples = 1;
-		matrix = reinterpret_cast<const RtMatrix4x4 *>( m_matrix.getValue() );
-		time = &m_time;
+		m_displacementCache.erase( e );
 	}
-
-	private :
-
-		const float m_time;
-		const Imath::M44f m_matrix;
-
-};
-
-
-} // namespace IECoreRenderMan
+}

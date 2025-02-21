@@ -36,66 +36,47 @@
 
 #pragma once
 
-#include "Imath/ImathMatrix.h"
+#include "IECoreScene/ShaderNetwork.h"
 
-#include "Riley.h"
+#include "IECore/RefCounted.h"
+
+#include "RefCountedId.h"
+#include "Session.h"
+
+#include "tbb/concurrent_hash_map.h"
 
 namespace IECoreRenderMan
 {
 
-/// Utility to aid in passing a static transform to Riley.
-struct StaticTransform : riley::Transform
+using Material = RefCountedId<riley::MaterialId>;
+IE_CORE_DECLAREPTR( Material );
+using Displacement = RefCountedId<riley::DisplacementId>;
+IE_CORE_DECLAREPTR( Displacement );
+
+class MaterialCache
 {
 
-	/// Caution : `m` is referenced directly, and must live until the
-	/// StaticTransform is passed to Riley.
-	StaticTransform( const Imath::M44f &m )
-		:	m_time( 0 )
-	{
-		samples = 1;
-		matrix = &reinterpret_cast<const RtMatrix4x4 &>( m );
-		time = &m_time;
-	}
+	public :
+
+		MaterialCache( const Session *session );
+
+		// Can be called concurrently with other calls to `get()`
+		ConstMaterialPtr getMaterial( const IECoreScene::ShaderNetwork *network );
+		ConstDisplacementPtr getDisplacement( const IECoreScene::ShaderNetwork *network );
+
+		// Must not be called concurrently with anything.
+		void clearUnused();
 
 	private :
 
-		float m_time;
+		const Session *m_session;
+
+		using Cache = tbb::concurrent_hash_map<IECore::MurmurHash, ConstMaterialPtr>;
+		Cache m_cache;
+
+		using DisplacementCache = tbb::concurrent_hash_map<IECore::MurmurHash, ConstDisplacementPtr>;
+		DisplacementCache m_displacementCache;
 
 };
-
-/// Utility to aid in passing an animated transform to Riley.
-struct AnimatedTransform : riley::Transform
-{
-
-	/// Caution : `transformSamples` and `sampleTimes` are referenced
-	/// directly, and must live until the AnimatedTransform is passed to Riley.
-	AnimatedTransform( const std::vector<Imath::M44f> &transformSamples, const std::vector<float> &sampleTimes )
-	{
-		samples = transformSamples.size();
-		matrix = reinterpret_cast<const RtMatrix4x4 *>( transformSamples.data() );
-		time = sampleTimes.data();
-	}
-
-};
-
-/// Utility for passing an identity transform to Riley.
-struct IdentityTransform : riley::Transform
-{
-
-	IdentityTransform()
-		:	m_time( 0.0f )
-	{
-		samples = 1;
-		matrix = reinterpret_cast<const RtMatrix4x4 *>( m_matrix.getValue() );
-		time = &m_time;
-	}
-
-	private :
-
-		const float m_time;
-		const Imath::M44f m_matrix;
-
-};
-
 
 } // namespace IECoreRenderMan
