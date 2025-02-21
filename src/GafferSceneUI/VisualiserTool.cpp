@@ -790,7 +790,7 @@ class VisualiserGadget : public Gadget
 				if(
 					mode == VisualiserTool::Mode::Auto && (
 						vData->typeId() == IntVectorDataTypeId ||  // Will be handled by `renderVertexLabelValue()` instead.
-						vData->typeId() == V3fVectorDataTypeId  // Will be handlded by `renderVectorVisualiser()` instead.
+						vData->typeId() == V3fVectorDataTypeId  // Will be handled by `renderVectorVisualiser()` instead.
 					)
 				)
 				{
