@@ -306,6 +306,7 @@ struct UniformBlockVectorShader
 	alignas( 16 ) Imath::M44f v2c;
 	alignas( 16 ) Imath::M44f o2c;
 	alignas( 16 ) Imath::Color3f color;
+	alignas( 4 ) float opacity;
 	alignas( 4 ) float scale;
 };
 
@@ -317,6 +318,7 @@ struct UniformBlockVectorShader
 	"   mat4 v2c;\n" \
 	"   mat4 o2c;\n" \
 	"   vec3 color;\n" \
+	"   float opacity;\n" \
 	"   float scale;\n" \
 	"} uniforms;\n"
 
@@ -407,7 +409,7 @@ std::string const g_vectorShaderFragSource
 
 	"void main()\n"
 	"{\n"
-	"   cs = vec4( uniforms.color, 1.0 );\n"
+	"   cs = vec4( uniforms.color, uniforms.opacity );\n"
 	"}\n"
 );
 
@@ -1542,6 +1544,7 @@ class VisualiserGadget : public Gadget
 
 			UniformBlockVectorShader uniforms;
 			uniforms.color = m_tool->vectorColorPlug()->getValue();
+			uniforms.opacity = m_tool->opacityPlug()->getValue();
 			uniforms.scale = m_tool->vectorScalePlug()->getValue();
 
 			// Get the world to view and view to clip space matrices
@@ -1574,9 +1577,9 @@ class VisualiserGadget : public Gadget
 			}
 
 			const GLboolean blendEnabled = glIsEnabled( GL_BLEND );
-			if( blendEnabled )
+			if( !blendEnabled )
 			{
-				glDisable( GL_BLEND );
+				glEnable( GL_BLEND );
 			}
 
 			// Store current shader program to be restored after drawing.
@@ -1661,7 +1664,7 @@ class VisualiserGadget : public Gadget
 
 				// Retrieve cached IECoreGL primitive
 
-				if( vIt->second.interpolation == PrimitiveVariable::Uniform )
+				if( vIt->second.interpolation != PrimitiveVariable::FaceVarying )
 				{
 					pBuffer = runTimeCast<const IECoreGL::Buffer>( converter->convert( pData.get() ) );
 					vBuffer = runTimeCast<const IECoreGL::Buffer>( converter->convert( vData.get() ) );
@@ -1669,7 +1672,6 @@ class VisualiserGadget : public Gadget
 				}
 				else
 				{
-					// Let `IECoreGL` handle the other interpolations
 					auto primitiveGL = runTimeCast<const IECoreGL::Primitive>( converter->convert( primitive.get() ) );
 					if( !primitiveGL )
 					{
@@ -1743,9 +1745,9 @@ class VisualiserGadget : public Gadget
 			{
 				glEnable( GL_LINE_SMOOTH );
 			}
-			if( blendEnabled )
+			if( !blendEnabled )
 			{
-				glEnable( GL_BLEND );
+				glDisable( GL_BLEND );
 			}
 			if( !depthEnabled )
 			{
