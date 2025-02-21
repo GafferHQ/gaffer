@@ -74,7 +74,7 @@ const riley::CoordinateSystemList g_emptyCoordinateSystems = { 0, nullptr };
 //
 // I don't really know why this is, but I assume that somehow the name
 // is used to share an acceleration table or some such behind the scenes.
-// Why it is should be our responsibility to facilitate that is beyond me.
+// Why it should be our responsibility to facilitate that is beyond me.
 RtUString portalName( RtUString colorMap, const RtMatrix4x4 domeTransform, const RtMatrix4x4 portalTransform )
 {
 	Imath::V3f domeRotation;
