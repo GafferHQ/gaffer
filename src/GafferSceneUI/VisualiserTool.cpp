@@ -1172,7 +1172,7 @@ class VisualiserGadget : public Gadget
 					)
 					{
 						// Will be handled by `renderColorVisualiser()` instead.
-						// If the data type if V3f data, we continue right before
+						// If the data type is V3f data, we continue right before
 						// drawing the per-vertex label in order to get and display
 						// the value closest to the cursor.
 						continue;
