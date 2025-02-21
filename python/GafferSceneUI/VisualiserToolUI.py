@@ -91,7 +91,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"toolbarLayout:section", "Bottom",
-			"toolbarLayout:width", 100,
+			"toolbarLayout:width", 45,
 
 		],
 		"mode" : [
@@ -167,7 +167,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"toolbarLayout:section", "Bottom",
-			"toolbarLayout:width", 100,
+			"toolbarLayout:width", 45,
 
 			"toolbarLayout:visibilityActivator", "modeIsAuto",
 
