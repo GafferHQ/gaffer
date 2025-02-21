@@ -1721,7 +1721,8 @@ class VisualiserGadget : public Gadget
 					case GeometricData::Interpretation::Normal :
 						vDataProgram = m_vectorShaderBivector->program();
 						break;
-					default : vDataProgram = m_vectorShaderVector->program();
+					default :
+						vDataProgram = m_vectorShaderVector->program();
 				}
 				if( !currentShaderProgram || currentShaderProgram.value() != vDataProgram )
 				{
