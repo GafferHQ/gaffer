@@ -644,7 +644,7 @@ class RendererTest( GafferTest.TestCase ) :
 			renderer.attributes( IECore.CompoundObject( {
 				"ri:light" : IECoreScene.ShaderNetwork(
 					shaders = {
-						"output" : IECoreScene.Shader( "PxrPortalLight", "ri:light", { "exposure" : 4.0 } ),
+						"output" : IECoreScene.Shader( "PxrPortalLight", "ri:light", {} ),
 					},
 					output = "output",
 				),
@@ -659,7 +659,35 @@ class RendererTest( GafferTest.TestCase ) :
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.3, 0.5 ) )[0], 0 )
-		self.assertGreater( self.__colorAtUV( image, imath.V2f( 0.6, 0.5 ) )[0], 0.5 )
+		color = self.__colorAtUV( image, imath.V2f( 0.6, 0.5 ) )
+		self.assertGreater( color[0], 0.5 )
+		self.assertGreater( color[1], 0.5 )
+		self.assertGreater( color[2], 0.5 )
+
+		# Increase the intensity of the portal and tint the light colour.
+
+		portal.attributes(
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "PxrPortalLight", "ri:light", { "intensityMult" : 2.0, "tint" : imath.Color3f( 1, 0, 1 ) } ),
+					},
+					output = "output",
+				),
+				"ri:visibility:camera" : IECore.BoolData( False ),
+			} ) )
+		)
+
+		renderer.render()
+		time.sleep( 1 )
+		renderer.pause()
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
+		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.3, 0.5 ) )[0], 0 )
+		expectedColor = color * imath.Color4f( 2, 0, 2, 1 )
+		color = self.__colorAtUV( image, imath.V2f( 0.6, 0.5 ) )
+		for i in range( 0, 4 ) :
+			self.assertAlmostEqual( color[i], expectedColor[i], delta = 0.01 )
 
 		# Now delete the dome light. We should get no illumination at all.
 
