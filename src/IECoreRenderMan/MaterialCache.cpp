@@ -51,7 +51,7 @@ MaterialCache::MaterialCache( const Session *session )
 ConstMaterialPtr MaterialCache::getMaterial( const IECoreScene::ShaderNetwork *network )
 {
 	Cache::accessor a;
-	m_cache.insert( a, network ? network->Object::hash() : IECore::MurmurHash() );
+	m_cache.insert( a, network->Object::hash() );
 	if( !a->second )
 	{
 		std::vector<riley::ShadingNode> nodes = ShaderNetworkAlgo::convert( network );
@@ -68,10 +68,8 @@ ConstDisplacementPtr MaterialCache::getDisplacement( const IECoreScene::ShaderNe
 	if( !a->second )
 	{
 		std::vector<riley::ShadingNode> nodes = ShaderNetworkAlgo::convert( network );
-		a->second = new Displacement(
-			m_session->riley->CreateDisplacement( riley::UserId(), { (uint32_t)nodes.size(), nodes.data() }, RtParamList() ),
-			m_session
-		);
+		riley::DisplacementId id = m_session->riley->CreateDisplacement( riley::UserId(), { (uint32_t)nodes.size(), nodes.data() }, RtParamList() );
+		a->second = new Displacement( id, m_session );
 	}
 	return a->second;
 }
