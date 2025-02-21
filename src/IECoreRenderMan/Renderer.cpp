@@ -56,7 +56,11 @@
 #include "Riley.h"
 #include "RixPredefinedStrings.hpp"
 
+#include "boost/algorithm/string/predicate.hpp"
+
 #include "tbb/spin_rw_mutex.h"
+
+#include "fmt/format.h"
 
 using namespace std;
 using namespace Imath;
@@ -209,6 +213,10 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 		IECore::DataPtr command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters ) override
 		{
 			const IECore::MessageHandler::Scope messageScope( m_messageHandler.get() );
+			if( boost::starts_with( name.string(), "ri:" ) || name.string().find( ":" ) == string::npos )
+			{
+				IECore::msg( IECore::Msg::Warning, "IECoreRenderMan::Renderer::command", fmt::format( "Unknown command \"{}\".", name.c_str() ) );
+			}
 			return nullptr;
 		}
 

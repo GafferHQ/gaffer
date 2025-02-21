@@ -1349,6 +1349,28 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertGreaterEqual( self.__colorAtUV( image, imath.V2f( u, 0.5 ) ).a, 0.1 )
 			self.assertEqual( self.__colorAtUV( image, imath.V2f( u, 0.9 ) ).a, 0 )
 
+	def testUnknownCommands( self ) :
+
+		messageHandler = IECore.CapturingMessageHandler()
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"RenderMan",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+			messageHandler = messageHandler
+		)
+
+		renderer.command( "ri:unknown", {} )
+		self.assertEqual( len( messageHandler.messages ), 1 )
+		self.assertEqual( messageHandler.messages[0].level, IECore.Msg.Level.Warning )
+		self.assertEqual( messageHandler.messages[0].message, 'Unknown command "ri:unknown".' )
+
+		renderer.command( "unknown", {} )
+		self.assertEqual( len( messageHandler.messages ), 2 )
+		self.assertEqual( messageHandler.messages[1].level, IECore.Msg.Level.Warning )
+		self.assertEqual( messageHandler.messages[1].message, 'Unknown command "unknown".' )
+
+		renderer.command( "ai:unknown", {} ) # Shouldn't warn, because command is for another renderer.
+		self.assertEqual( len( messageHandler.messages ), 2 )
+
 	def __assertParameterEqual( self, paramList, name, data ) :
 
 		p = next( x for x in paramList if x["info"]["name"] == name )
