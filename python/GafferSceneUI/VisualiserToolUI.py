@@ -177,7 +177,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The color to use for drawing vectors.
+			The colour to use for drawing vectors.
 			""",
 
 			"toolbarLayout:section", "Bottom",
