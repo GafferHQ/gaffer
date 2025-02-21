@@ -42,8 +42,6 @@ import GafferScene
 
 try:
 	import GafferUSD
-	# Disabled while we work on a solution for automatically remapping prototype paths
-	# when pointclouds have been reparented in the scene hierarchy.
-	# GafferScene.SceneAlgo.registerRenderAdaptor( "USDPointInstancerAdaptor", GafferUSD._PointInstancerAdaptor, "SceneView *Render", "*" )
+	GafferScene.SceneAlgo.registerRenderAdaptor( "USDPointInstancerAdaptor", GafferUSD._PointInstancerAdaptor, "SceneView *Render", "*" )
 except ImportError :
 	pass
