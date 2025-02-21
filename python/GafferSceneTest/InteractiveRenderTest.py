@@ -1247,6 +1247,84 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
+	def testMuteLight( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["catalogue"] = GafferImage.Catalogue()
+
+		s["l"], unused = self._createPointLight()
+		s["l"]["transform"]["translate"]["z"].setValue( 1 )
+
+		s["p"] = GafferScene.Plane()
+
+		s["c"] = GafferScene.Camera()
+		s["c"]["transform"]["translate"]["z"].setValue( 1 )
+
+		s["g"] = GafferScene.Group()
+		s["g"]["in"][0].setInput( s["l"]["out"] )
+		s["g"]["in"][1].setInput( s["p"]["out"] )
+		s["g"]["in"][2].setInput( s["c"]["out"] )
+
+		s["s"], unused, shaderOut = self._createMatteShader()
+		s["a"] = GafferScene.ShaderAssignment()
+		s["a"]["in"].setInput( s["g"]["out"] )
+		s["a"]["shader"].setInput( shaderOut )
+
+		s["d"] = GafferScene.Outputs()
+		s["d"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( s['catalogue'].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
+				}
+			)
+		)
+		s["d"]["in"].setInput( s["a"]["out"] )
+
+		s["o"] = GafferScene.StandardOptions()
+		s["o"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
+		s["o"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["o"]["in"].setInput( s["d"]["out"] )
+
+		s["r"] = self._createInteractiveRender()
+		s["r"]["in"].setInput( s["o"]["out"] )
+
+		# Start a render, give it time to finish, and check the output.
+
+		s["r"]["state"].setValue( s["r"].State.Running )
+
+		self.uiThreadCallHandler.waitFor( 2 )
+
+		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
+		self.assertNotEqual( c[0], 0.0 )
+
+		# Remove the light by muting it.
+
+		s["l"]["mute"]["enabled"].setValue( True )
+		s["l"]["mute"]["value"].setValue( True )
+		self.uiThreadCallHandler.waitFor( 2 )
+
+		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
+		self.assertEqual( c[0], 0.0 )
+
+		# Put the light back by unmuting it.
+
+		s["l"]["mute"]["value"].setValue( False )
+		self.uiThreadCallHandler.waitFor( 2 )
+
+		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
+
+		self.assertNotEqual( c[0], 0.0 )
+
+		s["r"]["state"].setValue( s["r"].State.Stopped )
+
 	def testDeleteLightShader( self ) :
 
 		s = Gaffer.ScriptNode()
