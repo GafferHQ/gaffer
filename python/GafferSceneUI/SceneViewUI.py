@@ -879,6 +879,36 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 				}
 			)
 
+		# BHGC START
+
+		m.append( "/GuidesDivider", { "divider" : True } )
+
+		# might be possible to have a list of all guides and iterate over that, doing one by one for now:
+
+		m.append(
+				"/Guides/Action Safe",
+				{
+					"checkBox" : self.getPlug()["actionSafeEnabled"].getValue(),
+					"command" : self.getPlug()["actionSafeEnabled"].setValue,
+				}
+			)
+		m.append(
+				"/Guides/Title Safe",
+				{
+					"checkBox" : self.getPlug()["titleSafeEnabled"].getValue(),
+					"command" : self.getPlug()["titleSafeEnabled"].setValue,
+				}
+			)
+		m.append(
+				"/Guides/Rule of Thirds",
+				{
+					"checkBox" : self.getPlug()["customGridEnabled"].getValue(),
+					"command" : self.getPlug()["customGridEnabled"].setValue,
+				}
+			)
+
+		# BHGC END
+
 		m.append( "/BrowseDivider", { "divider" : True } )
 
 		m.append(
