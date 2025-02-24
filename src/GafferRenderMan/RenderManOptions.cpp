@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2018, John Haddon. All rights reserved.
+//  Copyright (c) 2019, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,18 +34,20 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-
 #include "GafferRenderMan/RenderManOptions.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-using namespace boost::python;
+using namespace Imath;
+using namespace IECore;
+using namespace Gaffer;
 using namespace GafferRenderMan;
 
-BOOST_PYTHON_MODULE( _GafferRenderMan )
+IE_CORE_DEFINERUNTIMETYPED( RenderManOptions );
+
+RenderManOptions::RenderManOptions( const std::string &name )
+	:	GafferScene::Options( name, "ri" )
 {
+}
 
-	GafferBindings::DependencyNodeClass<RenderManOptions>();
-
+RenderManOptions::~RenderManOptions()
+{
 }
