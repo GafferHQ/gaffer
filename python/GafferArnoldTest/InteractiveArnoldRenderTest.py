@@ -617,6 +617,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		self.assertGreater( litColor.g, 0.1 )
 		self.assertGreater( litColor.b, 0.1 )
 
+	@unittest.skipIf( sys.platform == "win32", "`objectAt()` fails for `GafferArnoldUITest` on Windows" )
 	def testEditLightGroups( self ) :
 
 		for withOtherOutput in ( True, False ) :
