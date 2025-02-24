@@ -84,20 +84,28 @@ void mergeSetNames( const InternedStringVectorData *toAdd, vector<InternedString
 	}
 }
 
-ScenePlug::ScenePath closestExistingPath( const ScenePlug *scene, const ScenePlug::ScenePath &path )
+// Returns the length prefix of the path which exists in the given scene
+size_t existingPathLength( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 {
-	ScenePlug::ScenePath result = path;
 	ScenePlug::PathScope scope( Context::current() );
-	while( result.size() )
+	scope.setPath( &path );
+	if( scene->existsPlug()->getValue() )
 	{
-		scope.setPath( &result );
+		return path.size();
+	}
+
+	ScenePlug::ScenePath prefix = path;
+	prefix.pop_back();
+	while( prefix.size() )
+	{
+		scope.setPath( &prefix );
 		if( scene->existsPlug()->getValue() )
 		{
-			return result;
+			return prefix.size();
 		}
-		result.pop_back();
+		prefix.pop_back();
 	}
-	return result;
+	return 0;
 }
 
 // InternedString compares by pointer address by default, which will give differing
@@ -208,13 +216,11 @@ class BranchCreator::BranchesData : public IECore::Data
 			using ChildMap = std::unordered_map<IECore::InternedString, Ptr>;
 			using SourcePaths = vector<ScenePlug::ScenePath>;
 
-			Location( size_t depth, bool exists ) : exists( exists ), depth( depth ) {}
+			Location( bool exists ) : exists( exists ) {}
 
 			// True if this location exists in the input
 			// scene.
 			const bool exists;
-			// Depth of this location in the scene.
-			const size_t depth;
 			// Child locations.
 			ChildMap children;
 			// The source paths for this destination.
@@ -228,7 +234,7 @@ class BranchCreator::BranchesData : public IECore::Data
 		};
 
 		BranchesData( const BranchCreator *branchCreator, const Context *context )
-			:	m_root( new Location( 0, true ) )
+			:	m_root( new Location( true ) )
 		{
 			auto f = [this, branchCreator]( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &path )
 			{
@@ -320,8 +326,9 @@ class BranchCreator::BranchesData : public IECore::Data
 			return m_root->children.empty() && !m_root->sourcePaths;
 		}
 
-		const Location *locationOrAncestor( const ScenePlug::ScenePath &path ) const
+		const Location *locationOrAncestor( const ScenePlug::ScenePath &path, unsigned int *depthOutput = nullptr ) const
 		{
+			unsigned int depth = 0;
 			const Location *result = m_root.get();
 			for( const auto &name : path )
 			{
@@ -334,14 +341,19 @@ class BranchCreator::BranchesData : public IECore::Data
 				{
 					break;
 				}
+				depth++;
+			}
+			if( depthOutput )
+			{
+				*depthOutput = depth;
 			}
 			return result;
 		}
 
+		// Must only be called on destinations that exist in the data we were initialized with
 		const Location::SourcePaths &sourcePaths( const ScenePlug::ScenePath &destination ) const
 		{
 			const Location *location = locationOrAncestor( destination );
-			assert( location->depth == destination.size() );
 			if( !location->sourcePaths )
 			{
 				throw IECore::Exception( fmt::format( "No source paths found for destination \"{}\"", ScenePlug::pathToString( destination ) ) );
@@ -390,19 +402,18 @@ class BranchCreator::BranchesData : public IECore::Data
 			h.append( destination.data(), destination.size() );
 			h.append( (uint64_t)destination.size() );
 
-			const ScenePlug::ScenePath existing = closestExistingPath( branchCreator->inPlug(), destination );
-			h.append( existing.data(), existing.size() );
-			h.append( (uint64_t)existing.size() );
+			h.append( existingPathLength( branchCreator->inPlug(), destination ) );
 		}
 
 		void addBranch( const BranchCreator *branchCreator, const ScenePlug::ScenePath &path )
 		{
 			const ScenePlug::ScenePath destination = ScenePlug::stringToPath( branchCreator->destinationPlug()->getValue() );
 			validateDestination( destination );
-			const ScenePlug::ScenePath existing = closestExistingPath( branchCreator->inPlug(), destination );
+			const size_t existingPathLen = existingPathLength( branchCreator->inPlug(), destination );
 
 			tbb::spin_mutex::scoped_lock lock( m_mutex );
 
+			unsigned int locationDepth = 0;
 			Location *location = m_root.get();
 			for( const auto &name : destination )
 			{
@@ -412,15 +423,15 @@ class BranchCreator::BranchesData : public IECore::Data
 					// introduced by destinations that didn't previously exist.
 					throw IECore::Exception( fmt::format(
 						"Destination \"{}\" contains a nested destination",
-						ScenePlug::pathToString( ScenePath( destination.begin(), destination.begin() + location->depth ) )
+						ScenePlug::pathToString( ScenePath( destination.begin(), destination.begin() + locationDepth ) )
 					) );
 				}
 
 				const auto inserted = location->children.insert( Location::ChildMap::value_type( name, Location::Ptr() ) );
 				if( inserted.second )
 				{
-					const bool exists = location->depth < existing.size();
-					inserted.first->second = std::make_unique<Location>( location->depth + 1, exists );
+					const bool exists = locationDepth < existingPathLen;
+					inserted.first->second = std::make_unique<Location>( exists );
 					if( !exists )
 					{
 						if( !location->newChildNames )
@@ -431,6 +442,7 @@ class BranchCreator::BranchesData : public IECore::Data
 					}
 				}
 				location = inserted.first->second.get();
+				locationDepth++;
 			}
 
 			if( !location->sourcePaths )
@@ -1309,28 +1321,29 @@ BranchCreator::ConstBranchesDataPtr BranchCreator::branches( const Gaffer::Conte
 BranchCreator::LocationType BranchCreator::sourceAndBranchPaths( const ScenePath &path, ScenePath &sourcePath, ScenePath &branchPath, IECore::ConstInternedStringVectorDataPtr *newChildNames ) const
 {
 	ConstBranchesDataPtr branchesData = branches( Context::current() );
-	const BranchesData::Location *location = branchesData->locationOrAncestor( path );
+	unsigned int locationDepth;
+	const BranchesData::Location *location = branchesData->locationOrAncestor( path, &locationDepth );
 
-	if( newChildNames && location->depth == path.size() )
+	if( newChildNames && locationDepth == path.size() )
 	{
 		*newChildNames = location->newChildNames;
 	}
 
 	if( location->sourcePaths )
 	{
-		if( location->depth < path.size() )
+		if( locationDepth < path.size() )
 		{
 			Private::ConstChildNamesMapPtr mapping;
 			{
-				const ScenePath destinationPath( path.begin(), path.begin() + location->depth );
+				const ScenePath destinationPath( path.begin(), path.begin() + locationDepth );
 				ScenePlug::PathScope pathScope( Context::current(), &destinationPath );
 				mapping = boost::static_pointer_cast<const Private::ChildNamesMap>( mappingPlug()->getValue() );
 			}
 
-			const Private::ChildNamesMap::Input input = mapping->input( path[location->depth] );
+			const Private::ChildNamesMap::Input input = mapping->input( path[locationDepth] );
 			if( input.index >= 1 )
 			{
-				branchPath.assign( path.begin() + location->depth, path.end() );
+				branchPath.assign( path.begin() + locationDepth, path.end() );
 				branchPath[0] = input.name;
 				sourcePath = (*location->sourcePaths)[input.index-1];
 				return Branch;
@@ -1346,7 +1359,7 @@ BranchCreator::LocationType BranchCreator::sourceAndBranchPaths( const ScenePath
 		}
 	}
 
-	if( path.size() == location->depth && !location->children.empty() )
+	if( path.size() == locationDepth && !location->children.empty() )
 	{
 		return location->exists ? Ancestor : NewAncestor;
 	}
