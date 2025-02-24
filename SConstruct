@@ -1380,6 +1380,33 @@ libraries = {
 		"requiredOptions" : [ "RENDERMAN_ROOT" ],
 	},
 
+	"GafferRenderMan" : {
+		"envAppends" : {
+			"CPPPATH" : [ "$RENDERMAN_ROOT/include" ],
+			# The RenderMan headers contain deprecated functionality that we don't use,
+			# but which nonetheless emit compilation warnings. We turn them off so we
+			# can continue to compile with warnings as errors.
+			"CPPDEFINES" : [ "RMAN_RIX_NO_WARN_DEPRECATED" ],
+			"LIBS" : [
+				"Iex$OPENEXR_LIB_SUFFIX", "Gaffer", "GafferDispatch", "GafferScene", "IECoreScene$CORTEX_LIB_SUFFIX",
+				"prman" if env["PLATFORM"] != "win32" else "libprman",
+				"pxrcore" if env["PLATFORM"] != "win32" else "libpxrcore",
+			],
+			"LIBPATH" : [ "$RENDERMAN_ROOT/lib" ],
+		},
+		"pythonEnvAppends" : {
+			"LIBS" : [ "GafferBindings", "GafferDispatch", "GafferRenderMan", "GafferScene" ],
+			"LIBPATH" : [ "$RENDERMAN_ROOT/lib" ],
+		},
+		"requiredOptions" : [ "RENDERMAN_ROOT" ],
+	},
+
+	"GafferRenderManTest" : {},
+
+	"GafferRenderManUI" : {},
+
+	"GafferRenderManUITest" : {},
+
 	"GafferTractor" : {},
 
 	"GafferTractorTest" : {},
