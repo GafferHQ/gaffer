@@ -1190,6 +1190,15 @@ class VisualiserGadget : public Gadget
 					}
 				}
 
+				if( mode == VisualiserTool::Mode::Auto && vData && vData->typeId() == V3fVectorDataTypeId )
+				{
+					cursorVertexValueTextScale = 1.f;
+				}
+				else
+				{
+					cursorVertexValueTextScale = 2.f;
+				}
+
 				// Find "P" vertex attribute
 				//
 				// TODO : We need to use the same polygon offset as the Viewer uses when it draws the
@@ -1454,15 +1463,6 @@ class VisualiserGadget : public Gadget
 										std::swap( cursorVertexValue, vertexValue );
 										std::swap( cursorVertexRasterPos, rasterPos );
 										minDistance2 = distance2;
-
-										if( mode == VisualiserTool::Mode::Auto && vData && vData->typeId() == V3fVectorDataTypeId )
-										{
-											cursorVertexValueTextScale = 1.f;
-										}
-										else
-										{
-											cursorVertexValueTextScale = 2.f;
-										}
 									}
 								}
 
