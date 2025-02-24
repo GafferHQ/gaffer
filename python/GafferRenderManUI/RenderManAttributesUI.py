@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, John Haddon. All rights reserved.
+#  Copyright (c) 2019, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,10 +34,18 @@
 #
 ##########################################################################
 
-from .ModuleTest import ModuleTest
-from .RenderManAttributesTest import RenderManAttributesTest
-from .RenderManOptionsTest import RenderManOptionsTest
+import IECore
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+import Gaffer
+import GafferRenderMan
+
+Gaffer.Metadata.registerNode(
+
+	GafferRenderMan.RenderManAttributes,
+
+	"description",
+	"""
+	Applies RenderMan attributes to objects in the scene.
+	""",
+
+)

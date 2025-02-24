@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2018, John Haddon. All rights reserved.
+//  Copyright (c) 2019, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,20 +34,28 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#pragma once
 
-#include "GafferRenderMan/RenderManAttributes.h"
-#include "GafferRenderMan/RenderManOptions.h"
+#include "GafferRenderMan/Export.h"
+#include "GafferRenderMan/TypeIds.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferScene/Attributes.h"
 
-using namespace boost::python;
-using namespace GafferRenderMan;
-
-BOOST_PYTHON_MODULE( _GafferRenderMan )
+namespace GafferRenderMan
 {
 
-	GafferBindings::DependencyNodeClass<RenderManAttributes>();
-	GafferBindings::DependencyNodeClass<RenderManOptions>();
+class GAFFERRENDERMAN_API RenderManAttributes : public GafferScene::Attributes
+{
 
-}
+	public :
+
+		RenderManAttributes( const std::string &name=defaultName<RenderManAttributes>() );
+		~RenderManAttributes() override;
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferRenderMan::RenderManAttributes, RenderManAttributesTypeId, GafferScene::Attributes );
+
+};
+
+IE_CORE_DECLAREPTR( RenderManAttributes )
+
+} // namespace GafferRenderMan
