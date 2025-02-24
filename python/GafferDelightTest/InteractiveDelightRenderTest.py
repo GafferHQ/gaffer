@@ -49,15 +49,6 @@ class InteractiveDelightRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 	renderer = "3Delight"
 
-	# Temporarily disable this test (which is implemented in the
-	# base class) because it fails. The issue is that we're automatically
-	# instancing the geometry for the two lights, and that appears to
-	# trigger a bug in 3delight where the sampling goes awry.
-	@unittest.skip( "Awaiting feedback from 3delight developers" )
-	def testAddLight( self ) :
-
-		pass
-
 	# Disable this test for now as we don't have light linking support in
 	# 3Delight, yet.
 	@unittest.skip( "No light linking support just yet" )

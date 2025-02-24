@@ -1,7 +1,10 @@
 1.5.x.x (relative to 1.5.6.0)
 =======
 
+Improvements
+------------
 
+- 3Delight : Added light muting support.
 
 1.5.6.0 (relative to 1.5.5.0)
 =======
