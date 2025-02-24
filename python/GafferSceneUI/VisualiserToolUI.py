@@ -186,10 +186,20 @@ Gaffer.Metadata.registerNode(
 			"toolbarLayout:visibilityActivator", "modeIsAuto",
 			"colorPlugValueWidget:colorChooserButtonVisible", False,
 
+			"plugValueWidget:type", "GafferSceneUI.VisualiserToolUI._UntransformedColorWidget",
+
 		],
 
 	},
 )
+
+class _UntransformedColorWidget( GafferUI.ColorPlugValueWidget ) :
+
+	def __init__( self, plugs, **kw ) :
+
+		GafferUI.ColorPlugValueWidget.__init__( self, plugs, **kw )
+
+		self.setDisplayTransform( GafferUI.Widget.identityDisplayTransform )
 
 class _DataNameChooser( GafferUI.PlugValueWidget ) :
 
