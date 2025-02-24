@@ -37,9 +37,20 @@
 
 #include "GafferScene/Options.h"
 
+#include "Gaffer/Metadata.h"
+#include "Gaffer/PlugAlgo.h"
+
 using namespace std;
+using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
+
+namespace
+{
+
+const InternedString g_defaultValue( "defaultValue" );
+
+} // namespace
 
 GAFFER_NODE_DEFINE_TYPE( Options );
 
@@ -51,6 +62,19 @@ Options::Options( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new CompoundDataPlug( "options" ) );
 	addChild( new CompoundObjectPlug( "extraOptions", Plug::In, new IECore::CompoundObject ) );
+}
+
+Options::Options( const std::string &name, const std::string &rendererPrefix )
+	:	Options( name )
+{
+	const string targetPattern = fmt::format( "option:{}:*", rendererPrefix );
+	for( const auto &target : Metadata::targetsWithMetadata( targetPattern, g_defaultValue ) )
+	{
+		const std::string optionName = target.string().substr( 7 );
+		ConstDataPtr defaultValue = Metadata::value( target, g_defaultValue );
+		NameValuePlugPtr optionPlug = new NameValuePlug( optionName, defaultValue.get(), false, optionName );
+		optionsPlug()->addChild( optionPlug );
+	}
 }
 
 Options::~Options()
