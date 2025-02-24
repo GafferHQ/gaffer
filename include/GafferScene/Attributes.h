@@ -68,6 +68,10 @@ class GAFFERSCENE_API Attributes : public AttributeProcessor
 
 	protected :
 
+		/// Automatically adds plugs for all attributes for the specified renderer, based
+		/// on `attribute:{rendererPrefix}:*` metadata registrations.
+		Attributes( const std::string &name, const std::string &rendererPrefix );
+
 		void hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const override;
 		IECore::ConstCompoundObjectPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const override;
 

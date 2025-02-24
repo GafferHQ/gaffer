@@ -6,6 +6,11 @@ Improvements
 
 - 3Delight : Added light muting support.
 
+API
+---
+
+- Attributes, Options : Added protected constructors for initialising from attributes/options defined by metadata.
+
 1.5.6.0 (relative to 1.5.5.0)
 =======
 

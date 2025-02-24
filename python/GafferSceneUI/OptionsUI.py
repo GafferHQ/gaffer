@@ -35,8 +35,15 @@
 ##########################################################################
 
 import Gaffer
-import GafferUI
 import GafferScene
+
+def __optionMetadata( plug, key ) :
+
+	if not isinstance( plug, Gaffer.NameValuePlug ) :
+		plug = plug.parent()
+
+	target = "option:" + plug["name"].getValue()
+	return Gaffer.Metadata.value( target, key )
 
 Gaffer.Metadata.registerNode(
 
@@ -65,6 +72,18 @@ Gaffer.Metadata.registerNode(
 		"options.*" : [
 
 			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+
+			"description", lambda plug : __optionMetadata( plug, "description" ),
+			"label", lambda plug : __optionMetadata( plug, "label" ),
+			"layout:section", lambda plug : __optionMetadata( plug, "layout:section" ),
+
+		],
+
+		"options.*.value" : [
+
+			"plugValueWidget:type", lambda plug : __optionMetadata( plug, "plugValueWidget:type" ),
+			"presetNames", lambda plug : __optionMetadata( plug, "presetNames" ),
+			"presetValues", lambda plug : __optionMetadata( plug, "presetValues" ),
 
 		],
 

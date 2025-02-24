@@ -37,13 +37,24 @@
 
 #include "GafferScene/Attributes.h"
 
+#include "Gaffer/Metadata.h"
+#include "Gaffer/PlugAlgo.h"
+
 #include "boost/bind/bind.hpp"
 #include "boost/logic/tribool.hpp"
 
+using namespace std;
 using namespace boost::placeholders;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
+
+namespace
+{
+
+const InternedString g_defaultValue( "defaultValue" );
+
+} // namespace
 
 GAFFER_NODE_DEFINE_TYPE( Attributes );
 
@@ -61,6 +72,20 @@ Attributes::Attributes( const std::string &name )
 	// and attributes based on the value of globalPlug().
 	plugSetSignal().connect( boost::bind( &Attributes::plugSet, this, ::_1 ) );
 	plugInputChangedSignal().connect( boost::bind( &Attributes::plugInputChanged, this, ::_1 ) );
+}
+
+
+Attributes::Attributes( const std::string &name, const std::string &rendererPrefix )
+	:	Attributes( name )
+{
+	const string targetPattern = fmt::format( "attribute:{}:*", rendererPrefix );
+	for( const auto &target : Metadata::targetsWithMetadata( targetPattern, g_defaultValue ) )
+	{
+		const std::string attributeName = target.string().substr( 10 );
+		ConstDataPtr defaultValue = Metadata::value( target, g_defaultValue );
+		NameValuePlugPtr attributePlug = new NameValuePlug( attributeName, defaultValue.get(), false, attributeName );
+		attributesPlug()->addChild( attributePlug );
+	}
 }
 
 Attributes::~Attributes()
