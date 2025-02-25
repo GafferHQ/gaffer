@@ -99,6 +99,12 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 		Gaffer::FloatPlug *sizePlug();
 		const Gaffer::FloatPlug *sizePlug() const;
 
+		Gaffer::FloatPlug *vectorScalePlug();
+		const Gaffer::FloatPlug *vectorScalePlug() const;
+
+		Gaffer::Color3fPlug *vectorColorPlug();
+		const Gaffer::Color3fPlug *vectorColorPlug() const;
+
 	private:
 
 		friend VisualiserGadget;
@@ -108,17 +114,20 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 		{
 			Selection(
 				const GafferScene::ScenePlug &scene,
+				const GafferScene::ScenePlug &uniformPScene,
 				const GafferScene::ScenePlug::ScenePath &path,
 				const Gaffer::Context &context
 			);
 
 			const GafferScene::ScenePlug &scene() const;
+			const GafferScene::ScenePlug &uniformPScene() const;
 			const GafferScene::ScenePlug::ScenePath &path() const;
 			const Gaffer::Context &context() const;
 
 			private:
 
 				GafferScene::ConstScenePlugPtr m_scene;
+				GafferScene::ConstScenePlugPtr m_uniformPScene;
 				GafferScene::ScenePlug::ScenePath m_path;
 				Gaffer::ConstContextPtr m_context;
 		};
@@ -133,6 +142,9 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 
 		GafferScene::ScenePlug *internalScenePlug();
 		const GafferScene::ScenePlug *internalScenePlug() const;
+
+		GafferScene::ScenePlug *internalSceneUniformPPlug();
+		const GafferScene::ScenePlug *internalSceneUniformPPlug() const;
 
 		void connectOnActive();
 		void disconnectOnInactive();
