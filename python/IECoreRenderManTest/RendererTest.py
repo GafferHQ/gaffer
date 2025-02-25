@@ -121,12 +121,16 @@ class RendererTest( GafferTest.TestCase ) :
 		del r
 
 		self.assertTrue( ( self.temporaryDirectory() / "rgb.exr" ).is_file() )
-		imageSpec = OpenImageIO.ImageInput.open( str( self.temporaryDirectory() / "rgb.exr" ) ).spec()
+		imageFile = OpenImageIO.ImageInput.open( str( self.temporaryDirectory() / "rgb.exr" ) )
+		imageSpec = imageFile.spec()
+		imageFile.close()
 		self.assertEqual( imageSpec.nchannels, 3 )
 		self.assertEqual( imageSpec.channelnames, ( "R", "G", "B" ) )
 
 		self.assertTrue( ( self.temporaryDirectory() / "rgba.exr" ).is_file() )
-		imageSpec = OpenImageIO.ImageInput.open( str( self.temporaryDirectory() / "rgba.exr" ) ).spec()
+		imageFile = OpenImageIO.ImageInput.open( str( self.temporaryDirectory() / "rgba.exr" ) )
+		imageSpec = imageFile.spec()
+		imageFile.close()
 		self.assertEqual( imageSpec.nchannels, 4 )
 		self.assertEqual( imageSpec.channelnames, ( "R", "G", "B", "A" ) )
 
@@ -184,6 +188,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( messageHandler.messages[0].level, IECore.MessageHandler.Level.Warning )
 		self.assertEqual( messageHandler.messages[0].message, "Unable to find shader \"BadShader\"." )
 
+		del lightAttributes
 		del light
 		del renderer
 
