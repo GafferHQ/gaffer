@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.6.0)
 =======
 
+Features
+--------
+
+- USDLight : Added Cycles-specific light parameters.
+
 Improvements
 ------------
 
