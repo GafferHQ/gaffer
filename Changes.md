@@ -6,6 +6,17 @@ Improvements
 
 - 3Delight : Added light muting support.
 
+Fixes
+-----
+
+- SceneWriter : Fixed writing of animated attributes and bounds to USD.
+- NumericPlug : Fixed serialisation of plugs with infinite min/max values, for example the promoted outputs of an ImageStats node.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.13.0.
+
 1.5.6.0 (relative to 1.5.5.0)
 =======
 
