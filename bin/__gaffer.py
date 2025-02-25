@@ -51,6 +51,12 @@ signal.signal( signal.SIGINT, signal.SIG_DFL )
 # to catch all the naughty deprecated things we do.
 warnings.simplefilter( "default", DeprecationWarning )
 
+# Load USD PointInstancer prototypes as relative paths by default. This allows
+# the _PointInstancerAdaptor to function even when the instancers are reparented
+# in the Gaffer hierarchy.
+if "IECOREUSD_POINTINSTANCER_RELATIVE_PROTOTYPES" not in os.environ :
+	os.environ["IECOREUSD_POINTINSTANCER_RELATIVE_PROTOTYPES"] = "1"
+
 import Gaffer
 Gaffer._Gaffer._nameProcess()
 
