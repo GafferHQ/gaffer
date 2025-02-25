@@ -114,6 +114,8 @@ jobs:
         echo $PATH > $GITHUB_PATH
         echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH >> $GITHUB_ENV
         echo DISPLAY=:99.0 >> $GITHUB_ENV
+        # Provides `libtinfo.so.5`, which is required by RenderMan.
+        dnf install -y ncurses-compat-libs
       shell: bash
       if: runner.os == 'Linux'
 

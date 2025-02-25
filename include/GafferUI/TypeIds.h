@@ -87,7 +87,7 @@ enum TypeId
 	ViewDisplayTransformTypeId = 110293,
 	DragEditGadgetTypeId = 110294,
 
-	LastTypeId = 110450
+	LastTypeId = 110399
 };
 
 } // namespace GafferUI
