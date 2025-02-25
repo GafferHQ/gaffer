@@ -51,6 +51,12 @@ signal.signal( signal.SIGINT, signal.SIG_DFL )
 # to catch all the naughty deprecated things we do.
 warnings.simplefilter( "default", DeprecationWarning )
 
+# Load USD PointInstancer prototypes as relative paths by default. This allows
+# the _PointInstancerAdaptor to function even when the instancers are reparented
+# in the Gaffer hierarchy.
+if "IECOREUSD_POINTINSTANCER_RELATIVE_PROTOTYPES" not in os.environ :
+	os.environ["IECOREUSD_POINTINSTANCER_RELATIVE_PROTOTYPES"] = "1"
+
 import Gaffer
 Gaffer._Gaffer._nameProcess()
 
@@ -67,11 +73,6 @@ if os.name != "nt" :
 	if softFileLimit < hardFileLimit :
 		resource.setrlimit( resource.RLIMIT_NOFILE, ( hardFileLimit, hardFileLimit ) )
 		IECore.msg( IECore.Msg.Level.Debug, "Gaffer", "Increased file handle limit to {}".format( hardFileLimit ) )
-
-# Set this env var flag to enable relative prototypes paths output from the IECoreUSD point instancer loader,
-# unless a user has explicitly requested we not do this.
-if not "IECOREUSD_POINTINSTANCER_RELATIVEPROTOTYPES" in os.environ:
-	os.environ["IECOREUSD_POINTINSTANCER_RELATIVEPROTOTYPES"] = "1"
 
 helpText = """Usage :
 
