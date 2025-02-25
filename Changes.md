@@ -7,6 +7,17 @@ Improvements
 - 3Delight : Added light muting support.
 - Arnold : Added support for specifying the name of a shader in the node menu using Arnold's `ui.name` metadata. This improves the formatting of the OpenPBR Surface menu item.
 
+Fixes
+-----
+
+- SceneWriter : Fixed writing of animated attributes and bounds to USD.
+- NumericPlug : Fixed serialisation of plugs with infinite min/max values, for example the promoted outputs of an ImageStats node.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.13.0.
+
 1.5.6.0 (relative to 1.5.5.0)
 =======
 
