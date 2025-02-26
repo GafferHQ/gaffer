@@ -37,7 +37,6 @@
 import Gaffer
 import GafferUI
 import GafferUITest
-import GafferScene
 
 class ExamplesTest( GafferUITest.TestCase ) :
 
@@ -108,7 +107,7 @@ class ExamplesTest( GafferUITest.TestCase ) :
 
 		e1key = self.__testKeys[0]
 		e1path = "/nodes/a"
-		e1nodes = [ GafferScene.Camera, GafferScene.Group ]
+		e1nodes = [ Gaffer.ContextQuery, Gaffer.ContextVariables ]
 
 		e2key = self.__testKeys[1]
 		e2path = "/nodes/b"
@@ -129,11 +128,11 @@ class ExamplesTest( GafferUITest.TestCase ) :
 		self.assertNotIn( e1key, examples )
 		self.assertIn( e2key, examples )
 
-		examples = GafferUI.Examples.registeredExamples( node = GafferScene.Camera )
+		examples = GafferUI.Examples.registeredExamples( node = Gaffer.ContextQuery )
 		self.assertIn( e1key, examples )
 		self.assertNotIn( e2key, examples )
 
-		examples = GafferUI.Examples.registeredExamples( node = GafferScene.Group )
+		examples = GafferUI.Examples.registeredExamples( node = Gaffer.ContextVariables )
 		self.assertIn( e1key, examples )
 		self.assertNotIn( e2key, examples )
 
