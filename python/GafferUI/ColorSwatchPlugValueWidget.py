@@ -101,7 +101,7 @@ class ColorSwatchPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if not self._editable() :
 			return False
 
-		_ColorPlugValueDialogue.acquire( self.getPlugs() )
+		_ColorPlugValueDialogue.acquire( self.getPlugs(), self.displayTransform() )
 
 		return True
 
@@ -125,11 +125,12 @@ def _colorFromPlugs( plugs ) :
 # actually be functionality of CompoundEditor?
 class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 
-	def __init__( self, plugs, parentWindow ) :
+	def __init__( self, plugs, parentWindow, displayTransform ) :
 
 		GafferUI.ColorChooserDialogue.__init__(
 			self,
-			color = _colorFromPlugs( plugs )
+			color = _colorFromPlugs( plugs ),
+			displayTransform = displayTransform
 		)
 
 		# we use these to decide which actions to merge into a single undo
@@ -192,7 +193,7 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 		parentWindow.addChildWindow( self, removeOnClose = True )
 
 	@classmethod
-	def acquire( cls, plugs ) :
+	def acquire( cls, plugs, displayTransform ) :
 
 		plug = next( iter( plugs ) )
 
@@ -212,7 +213,7 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 				window.setVisible( True )
 				return window
 
-		window = _ColorPlugValueDialogue( plugs, scriptWindow )
+		window = _ColorPlugValueDialogue( plugs, scriptWindow, displayTransform )
 		window.setVisible( True )
 		return False
 
