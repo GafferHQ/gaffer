@@ -50,6 +50,7 @@
 #include "Gaffer/Private/IECorePreview/LRUCache.h"
 
 #include "IECoreScene/Primitive.h"
+#include "IECoreScene/MeshPrimitive.h"
 
 #include "IECore/DataAlgo.h"
 #include "IECore/MessageHandler.h"
@@ -3438,6 +3439,7 @@ void Instancer::InstancerCapsule::render( IECoreScenePreview::Renderer *renderer
 				else
 				{
 					objectInterface = renderer->object(
+						//name, new IECoreScene::MeshPrimitive(), attribs
 						name, proto->m_object[0].get(), attribs
 					);
 				}
