@@ -1360,6 +1360,8 @@ libraries = {
 			"LIBPATH" : [ "$RENDERMAN_ROOT/lib" ],
 		},
 		"pythonEnvAppends" : {
+			"CPPDEFINES" : [ "RMAN_RIX_NO_WARN_DEPRECATED" ],
+			"CPPPATH" : [ "$RENDERMAN_ROOT/include" ],
 			"LIBS" : [ "IECoreRenderMan" ],
 		},
 		"requiredOptions" : [ "RENDERMAN_ROOT" ],

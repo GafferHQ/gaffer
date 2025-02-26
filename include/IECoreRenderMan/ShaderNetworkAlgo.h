@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
+//  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,19 +34,20 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#pragma once
 
-#include "IECoreRenderMan/ShaderNetworkAlgo.h"
+#include "Export.h"
 
-using namespace boost::python;
-using namespace IECoreRenderMan;
+#include "IECoreScene/ShaderNetwork.h"
 
-BOOST_PYTHON_MODULE( _IECoreRenderMan )
+#include "Riley.h"
+
+namespace IECoreRenderMan::ShaderNetworkAlgo
 {
 
-	object shaderNetworkAlgoModule( borrowed( PyImport_AddModule( "IECoreRenderMan.ShaderNetworkAlgo" ) ) );
-	scope().attr( "ShaderNetworkAlgo" ) = shaderNetworkAlgoModule;
-	scope shaderNetworkAlgoScope( shaderNetworkAlgoModule );
+std::vector<riley::ShadingNode> convert( const IECoreScene::ShaderNetwork *network );
 
-	def( "convertUSDShaders", &ShaderNetworkAlgo::convertUSDShaders );
-}
+/// Converts any UsdPreviewSurface shaders into native RenderMan shaders.
+IECORERENDERMAN_API void convertUSDShaders( IECoreScene::ShaderNetwork *shaderNetwork );
+
+} // namespace IECoreRenderMan::ShaderNetworkAlgo
