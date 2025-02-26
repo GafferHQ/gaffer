@@ -125,6 +125,9 @@ void dispatchTensorData( const Ort::Value &value, F &&functor )
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64 :
 			functor( value.GetTensorData<int64_t>() );
 			break;
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING :
+			functor( value.GetTensorData<std::string>() );
+			break;
 		default :
 			throw IECore::Exception( fmt::format( "Unsupported element type {}", elementType ) );
 	}
@@ -211,6 +214,23 @@ Tensor::Tensor( const IECore::ConstDataPtr &data, std::vector<int64_t> shape )
 					allocator, shape.data(), shape.size(), ONNX_TENSOR_ELEMENT_DATA_TYPE_BOOL
 				);
 				std::copy( typedData->readable().begin(), typedData->readable().end(), value.GetTensorMutableData<bool>() );
+				m_state = new State{ std::move( value ), nullptr };
+			}
+			else if constexpr( std::is_same_v<DataType, StringVectorData> )
+			{
+				std::vector<const char*> cStringData;
+				const auto& strings = typedData->readable();
+				cStringData.reserve( strings.size() );
+				for ( const auto& string : strings )
+				{
+					cStringData.push_back( string.c_str() );
+				}
+
+				Ort::AllocatorWithDefaultOptions allocator;
+				Ort::Value value = Ort::Value::CreateTensor(
+					allocator, shape.data(), shape.size(), ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING
+				);
+				value.FillStringTensor( cStringData.data(), strings.size() );
 				m_state = new State{ std::move( value ), nullptr };
 			}
 			else if constexpr( HasTensorType<BaseType>::value )

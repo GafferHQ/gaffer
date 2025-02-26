@@ -60,6 +60,24 @@ using namespace GafferML;
 namespace
 {
 
+std::vector<std::string> customOpLibraryPaths()
+{
+	std::vector<std::string> pathList;
+
+	const char* envVar = std::getenv( "GAFFERML_CUSTOM_OPS_LIBRARIES" );
+
+	if ( !envVar )
+	{
+		// silent return because this is optional only when using model
+		// that might requires some components from the onnx runtime extensions
+		return pathList;
+	}
+
+	StringAlgo::tokenize( envVar, ',', pathList );
+
+	return pathList;
+}
+
 Ort::Env &acquireEnv()
 {
 	static Ort::Env g_env( ORT_LOGGING_LEVEL_WARNING, "Gaffer" );
@@ -94,7 +112,13 @@ Ort::Session &acquireSession( const std::string &fileName )
 		throw Exception( fmt::format( "Could not find file \"{}\" on GAFFERML_MODEL_PATHS", fileName ) );
 	}
 
-	it = g_map.try_emplace( fileName, acquireEnv(), path.c_str(), Ort::SessionOptions() ).first;
+	auto sessionOpt = Ort::SessionOptions();
+	auto customLibraryPaths = customOpLibraryPaths();
+	for ( const auto& customLibraryPath : customLibraryPaths )
+	{
+		sessionOpt.RegisterCustomOpsLibrary( customLibraryPath.c_str() );
+	}
+	it = g_map.try_emplace( fileName, acquireEnv(), path.string().c_str(), sessionOpt ).first;
 	return it->second;
 }
 
