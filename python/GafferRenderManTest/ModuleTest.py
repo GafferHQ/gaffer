@@ -34,6 +34,10 @@
 #
 ##########################################################################
 
+import os
+import subprocess
+
+import Gaffer
 import GafferTest
 
 class ModuleTest( GafferTest.TestCase ) :
@@ -42,6 +46,24 @@ class ModuleTest( GafferTest.TestCase ) :
 
 		self.assertModuleDoesNotImportUI( "GafferRenderMan" )
 		self.assertModuleDoesNotImportUI( "GafferRenderManTest" )
+
+	def testCanLoadGUIConfigsWithoutRenderMan( self ) :
+
+		# Start a subprocess without RMANTREE set, and without the side-effects
+		# of it having been set when our wrapper ran earlier. And in that subprocess,
+		# check that we can still load the GUI configs cleanly.
+
+		env = os.environ.copy()
+		for var in ( "RMANTREE", "PYTHONPATH", "LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH", "GAFFER_STARTUP_PATHS" ) :
+			env.pop( var, None )
+
+		try :
+			subprocess.check_output(
+				[ str( Gaffer.executablePath() ), "test", "GafferUITest.TestCase.assertCanLoadGUIConfigs" ],
+				env = env, stderr = subprocess.STDOUT
+			)
+		except subprocess.CalledProcessError as e :
+			self.fail( e.output )
 
 if __name__ == "__main__":
 	unittest.main()
