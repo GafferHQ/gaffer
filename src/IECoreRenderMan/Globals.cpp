@@ -37,7 +37,8 @@
 #include "Globals.h"
 #include "ParamListAlgo.h"
 #include "Transform.h"
-#include "ShaderNetworkAlgo.h"
+
+#include "IECoreRenderMan/ShaderNetworkAlgo.h"
 
 #include "IECore/SimpleTypedData.h"
 #include "IECore/StringAlgo.h"

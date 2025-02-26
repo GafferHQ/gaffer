@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "ShaderNetworkAlgo.h"
+#include "IECoreRenderMan/ShaderNetworkAlgo.h"
 
 #include "ParamListAlgo.h"
 
@@ -434,7 +434,10 @@ void convertShaderNetworkWalk( const ShaderNetwork::Parameter &outputParameter, 
 // External API
 //////////////////////////////////////////////////////////////////////////
 
-std::vector<riley::ShadingNode> IECoreRenderMan::ShaderNetworkAlgo::convert( const IECoreScene::ShaderNetwork *network )
+namespace IECoreRenderMan::ShaderNetworkAlgo
+{
+
+std::vector<riley::ShadingNode> convert( const IECoreScene::ShaderNetwork *network )
 {
 	vector<riley::ShadingNode> result;
 	result.reserve( network->size() );
@@ -444,3 +447,10 @@ std::vector<riley::ShadingNode> IECoreRenderMan::ShaderNetworkAlgo::convert( con
 
 	return result;
 }
+
+void convertUSDShaders( ShaderNetwork *shaderNetwork )
+{
+	throw IECore::NotImplementedException( "IECoreRenderMan::ShaderNetworkAlgo::convertUSDShaders Not implemented" );
+}
+
+} // namespace IECoreRenderMan::ShaderNetworkAlgo
