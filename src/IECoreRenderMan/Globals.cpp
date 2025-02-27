@@ -77,6 +77,28 @@ const vector<InternedString> g_rejectedOutputFilterParameters = {
 	"filterwidth"
 };
 
+// These must be kept in sync with `startup/GafferScene/renderManOptions.py`
+// See that file for a fuller explanation of this mess.
+const unordered_map<string, string> g_lpeLobeDefaults = {
+	{ "lpe:diffuse2", "Diffuse,HairDiffuse,diffuse,translucent,hair4,irradiance" },
+	{ "lpe:diffuse3", "Subsurface,subsurface" },
+	{ "lpe:diffuse4", "" },
+	{ "lpe:specular2", "Specular,HairSpecularR,specular,hair1" },
+	{ "lpe:specular3", "RoughSpecular,HairSpecularTRT,hair3" },
+	{ "lpe:specular4", "Clearcoat" },
+	{ "lpe:specular5", "Iridescence" },
+	{ "lpe:specular6", "Fuzz,HairSpecularGLINTS" },
+	{ "lpe:specular7", "SingleScatter,HairSpecularTT,hair2" },
+	{ "lpe:specular8", "Glass,specular" },
+	{ "lpe:user2", "Albedo,DiffuseAlbedo,SubsurfaceAlbedo,HairAlbedo" },
+	{ "lpe:user3", "Position" },
+	{ "lpe:user4", "UserColor" },
+	{ "lpe:user5", "" },
+	{ "lpe:user6", "Normal,DiffuseNormal,HairTangent,SubsurfaceNormal,SpecularNormal,RoughSpecularNormal,SingleScatterNormal,FuzzNormal,IridescenceNormal,GlassNormal" },
+	{ "lpe:user7", "" },
+	{ "lpe:user8", "" },
+};
+
 template<typename T>
 T *optionCast( const IECore::RunTimeTyped *v, const IECore::InternedString &name )
 {
@@ -142,14 +164,11 @@ Globals::Globals( IECoreScenePreview::Renderer::RenderType renderType, const IEC
 		m_options.SetString( Rix::k_bucket_order, RtUString( "circle" ) );
 	}
 
-	// The RenderMan documentation tells you to use "CU6L" as the normal AOV
-	// for the denoiser, but that doesn't actually work unless the right user
-	// lobe has been defined. So we define it here.
-	/// \todo Consider defining other LPE defaults.
-	m_options.SetString(
-		RtUString( "lpe:user6" ),
-		RtUString( "Normal,DiffuseNormal,HairTangent,SubsurfaceNormal,SpecularNormal,RoughSpecularNormal,SingleScatterNormal,FuzzNormal,IridescenceNormal,GlassNormal" )
-	);
+	for( const auto &[name, value] : g_lpeLobeDefaults )
+	{
+		// Set up default lobe definitions.
+		m_options.SetString( RtUString( name.c_str() ), RtUString( value.c_str() ) );
+	}
 }
 
 Globals::~Globals()
@@ -239,6 +258,19 @@ void Globals::option( const IECore::InternedString &name, const IECore::Object *
 		auto *d = optionCast<const V2fData>( value, name );
 		m_pixelFilterSize = d ? riley::FilterSize( { d->readable().x, d->readable().y } ) : g_defaultPixelFilterSize;
 		deleteRenderView();
+	}
+	else if( boost::starts_with( name.c_str(), "ri:lpe:" ) )
+	{
+		const RtUString renderManName( name.c_str() + g_renderManPrefix.size() );
+		if( auto data = optionCast<const Data>( value, name ) )
+		{
+			ParamListAlgo::convertParameter( renderManName, data, m_options );
+		}
+		else
+		{
+			auto it = g_lpeLobeDefaults.find( renderManName.CStr() );
+			m_options.SetString( renderManName, RtUString( it != g_lpeLobeDefaults.end() ? it->second.c_str() : "" ) );
+		}
 	}
 	else if( boost::starts_with( name.c_str(), g_renderManPrefix.c_str() ) )
 	{
@@ -333,6 +365,13 @@ void Globals::render()
 	acquireSession();
 	updateIntegrator();
 	updateRenderView();
+	if( m_renderView == riley::RenderViewId::InvalidId() )
+	{
+		// We can't render without a view. In this case, `updateRenderView()` will
+		// already have emitted an explanatory warning, so we don't need to.
+		return;
+	}
+
 	m_session->updatePortals();
 
 	/// \todo Is it worth avoiding this work when nothing has changed?
@@ -429,6 +468,13 @@ void Globals::updateRenderView()
 	}
 
 	// Otherwise we need to build the render view from our list of outputs.
+	// We can't do this if we don't have any outputs, so we warn instead.
+
+	if( m_outputs.empty() )
+	{
+		IECore::msg( IECore::Msg::Warning, "IECoreRenderMan", "No outputs defined." );
+		return;
+	}
 
 	struct DisplayDefinition
 	{
