@@ -228,6 +228,7 @@ Camera Tool                          | {kbd}`T`
 Crop Window Tool                     | {kbd}`C`
 Crop Window Tool and crop enabled    | {kbd}`Alt` + {kbd}`C`
 Light Position Tool                  | {kbd}`D`
+Visualiser Tool                      | {kbd}`P`
 Pin to numeric bookmark              | {kbd}`1` … {kbd}`9`
 
 ### 3D scenes ###

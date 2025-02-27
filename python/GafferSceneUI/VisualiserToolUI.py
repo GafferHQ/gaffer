@@ -54,7 +54,7 @@ Gaffer.Metadata.registerNode(
 	Tool for displaying object data.
 	""",
 
-	"viewer:shortCut", "O",
+	"viewer:shortCut", "P",
 	"viewer:shouldAutoActivate", False,
 	"order", 8,
 	"tool:exclusive", False,
