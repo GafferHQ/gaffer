@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2019, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,49 +36,26 @@
 
 #pragma once
 
-#include "GafferScene/GlobalsProcessor.h"
+#include "GafferRenderMan/Export.h"
+#include "GafferRenderMan/TypeIds.h"
 
-#include "Gaffer/CompoundDataPlug.h"
+#include "GafferScene/Options.h"
 
-namespace GafferScene
+namespace GafferRenderMan
 {
 
-class GAFFERSCENE_API Options : public GlobalsProcessor
+class GAFFERRENDERMAN_API RenderManOptions : public GafferScene::Options
 {
 
 	public :
 
-		explicit Options( const std::string &name=defaultName<Options>() );
-		~Options() override;
+		RenderManOptions( const std::string &name=defaultName<RenderManOptions>() );
+		~RenderManOptions() override;
 
-		GAFFER_NODE_DECLARE_TYPE( GafferScene::Options, OptionsTypeId, GlobalsProcessor );
-
-		Gaffer::CompoundDataPlug *optionsPlug();
-		const Gaffer::CompoundDataPlug *optionsPlug() const;
-
-		Gaffer::CompoundObjectPlug *extraOptionsPlug();
-		const Gaffer::CompoundObjectPlug *extraOptionsPlug() const;
-
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-
-	protected :
-
-		/// Automatically adds plugs for all options for the specified renderer, based
-		/// on `option:{rendererPrefix}:*` metadata registrations.
-		Options( const std::string &name, const std::string &rendererPrefix );
-
-		void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const override;
-
-		virtual void hashPrefix( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual std::string computePrefix( const Gaffer::Context *context ) const;
-
-	private :
-
-		static size_t g_firstPlugIndex;
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferRenderMan::RenderManOptions, RenderManOptionsTypeId, GafferScene::Options );
 
 };
 
-IE_CORE_DECLAREPTR( Options );
+IE_CORE_DECLAREPTR( RenderManOptions );
 
-} // namespace GafferScene
+} // namespace GafferRenderMan
