@@ -367,6 +367,8 @@ int seedForPoint( size_t index, const IdData &idData, int numSeeds, int seedScra
 	return id;
 }
 
+std::atomic<int> g_instancerCount( 0 );
+
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1382,6 +1384,10 @@ Instancer::Instancer( const std::string &name )
 	addChild( new PathMatcherDataPlug( "__setCollaborate", Plug::Out, new IECore::PathMatcherData() ) );
 	addChild( new Int64VectorDataPlug( "__capsuleComputedHash", Plug::Out ) );
 
+	// \todo : This should be a const member var, not a plug, but that would break ABI. Remove this plug
+	// and add the member next time we break ABI.
+	addChild( new IntPlug( "__nodeIdPlug", Plug::In, g_instancerCount.fetch_add( 1 ) ) );
+
 	// Hide `destination` plug until we resolve issues surrounding `processesRootObject()`.
 	// See `BranchCreator::computeObject()`.
 	destinationPlug()->setName( "__destination" );
@@ -1678,6 +1684,16 @@ const Gaffer::Int64VectorDataPlug *Instancer::capsuleComputedHashPlug() const
 	return getChild<Int64VectorDataPlug>( g_firstPlugIndex + 27 );
 }
 
+Gaffer::IntPlug *Instancer::nodeIdPlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 28 );
+}
+
+const Gaffer::IntPlug *Instancer::nodeIdPlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 28 );
+}
+
 void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	BranchCreator::affects( input, outputs );
@@ -1918,7 +1934,7 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 		// prototypes )
 		const ScenePlug::ScenePath &sourcePath = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
 		engineHash( sourcePath, context, h );
-		h.append( reinterpret_cast<uint64_t>( this ) );
+		h.append( nodeIdPlug()->getValue() );
 		for( const auto &prototypePlug : ValuePlug::Range( *prototypesPlug() ) )
 		{
 			if( prototypePlug != prototypesPlug()->globalsPlug() )
@@ -2199,8 +2215,8 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 		ConstEngineDataPtr engineData = engine( sourcePath, context );
 
 		// The capsule will include a pointer to the node that created it, so we always must include
-		// our address in the hash.
-		h.append( reinterpret_cast<uint64_t>( this ) );
+		// our node id in the hash.
+		h.append( nodeIdPlug()->getValue() );
 
 		if( engineData->hasContextVariables() )
 		{
