@@ -322,6 +322,13 @@ class CapturingRendererTest( GafferTest.TestCase ) :
 					)
 
 				if aObjects[i] != bObjects[i]:
+					if type( aObjects[i] ) == IECoreScene.MeshPrimitive:
+						GafferTest.TestCase.assertEqual( GafferTest.TestCase(), aObjects[i].verticesPerFace, bObjects[i].verticesPerFace )
+						GafferTest.TestCase.assertEqual( GafferTest.TestCase(), aObjects[i].vertexIds, bObjects[i].vertexIds )
+						GafferTest.TestCase.assertEqual( GafferTest.TestCase(), aObjects[i].keys(), bObjects[i].keys() )
+						for k in aObjects[i].keys():
+							GafferTest.TestCase.assertEqual( GafferTest.TestCase(), aObjects[i][k], bObjects[i][k] )
+
 					raise AssertionError( "Mismatch for objects of type %s at path '%s', sample %i" % ( type( aObjects[i] ).__name__, k, i ) )
 
 			aTransformTimes = expandA[k].capturedTransformSampleTimes
