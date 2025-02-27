@@ -3668,6 +3668,8 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 
 		instancer["encapsulate"].setValue( False )
 
+		unused = GafferScene.Instancer()
+
 		self.assertEncapsulatedRendersSame( instancer )
 
 		self.assertEqual( instancer["out"].object( "/groupA/object/instances/sphere/0" ), rootSphere["out"].object( "/sphere" ) )

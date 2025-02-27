@@ -1988,6 +1988,7 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 		const ScenePlug::ScenePath &sourcePath = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
 		engineHash( sourcePath, context, h );
 		h.append( reinterpret_cast<uint64_t>( this ) );
+		//h.append( this->fullName() );
 		for( const auto &prototypePlug : ValuePlug::Range( *prototypesPlug() ) )
 		{
 			if( prototypePlug != prototypesPlug()->globalsPlug() )
@@ -2274,6 +2275,7 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 		// The capsule will include a pointer to the node that created it, so we always must include
 		// our address in the hash.
 		h.append( reinterpret_cast<uint64_t>( this ) );
+		//h.append( this->fullName() );
 
 		if( engineData->hasContextVariables() )
 		{
@@ -3439,7 +3441,6 @@ void Instancer::InstancerCapsule::render( IECoreScenePreview::Renderer *renderer
 				else
 				{
 					objectInterface = renderer->object(
-						//name, new IECoreScene::MeshPrimitive(), attribs
 						name, proto->m_object[0].get(), attribs
 					);
 				}
