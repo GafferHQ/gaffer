@@ -289,6 +289,17 @@ Action                                        | Control or shortcut
 Set shadow target position                    | {kbd}`V` + {{leftClick}}
 Set shadow pivot position                     | {kbd}`Shift` + {kbd}`V` + {{leftClick}}
 
+### Visualiser Tool ###
+
+> Note :
+> For the following controls and shortcuts, the Visualiser Tool must be active.
+
+Action                                        | Control or shortcut
+----------------------------------------------|--------------------
+Increase vertex label size                    | {kbd}`+`
+Decrease vertex label size                    | {kbd}`-`
+Increase vector size                          | {kbd}`Shift` + {kbd}`+`
+Decrease vector size                          | {kbd}`Shift` + {kbd}`-`
 
 ### 2D images ###
 
