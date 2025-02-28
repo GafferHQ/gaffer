@@ -84,6 +84,19 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 	] )
 
+if os.environ.get( "GAFFERRENDERMAN_HIDE_UI", "" ) != "1" :
+
+	with IECore.IgnoredExceptions( ImportError ) :
+
+		import GafferRenderMan
+
+		__registerShaderPresets( [
+
+			( "RenderMan Surface", "ri:surface" ),
+			( "RenderMan Light", "ri:light" ),
+
+		] )
+
 __registerShaderPresets( [
 
 		( "OpenGL Surface", "gl:surface" ),
