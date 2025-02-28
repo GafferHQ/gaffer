@@ -222,12 +222,13 @@ Pause processing                     | {kbd}`Escape`
 Selection Tool                       | {kbd}`Q`
 Translate Tool                       | {kbd}`W`
 Rotate Tool                          | {kbd}`E`
-Cycle Transform Tool Orientation     | {kbd}`O`
 Scale Tool                           | {kbd}`R`
 Camera Tool                          | {kbd}`T`
 Crop Window Tool                     | {kbd}`C`
 Crop Window Tool and crop enabled    | {kbd}`Alt` + {kbd}`C`
+Light Tool                           | {kbd}`A`
 Light Position Tool                  | {kbd}`D`
+Visualiser Tool                      | {kbd}`P`
 Pin to numeric bookmark              | {kbd}`1` … {kbd}`9`
 
 ### 3D scenes ###
@@ -266,7 +267,7 @@ Add animation key to transform of selected object(s)| {kbd}`S`
 Adjust, fine precision                              | Hold {kbd}`Shift` during action
 Adjust, snapping to rounded increments              | Hold {kbd}`Ctrl` during action
 Target mode (Translate and Rotate only)             | Hold {kbd}`V` then {{leftClick}} on target geometry
-
+Cycle tool orientation (Translate and Rotate only)  | {kbd}`O`
 
 ### Light Tool ###
 
@@ -288,6 +289,17 @@ Action                                        | Control or shortcut
 Set shadow target position                    | {kbd}`V` + {{leftClick}}
 Set shadow pivot position                     | {kbd}`Shift` + {kbd}`V` + {{leftClick}}
 
+### Visualiser Tool ###
+
+> Note :
+> For the following controls and shortcuts, the Visualiser Tool must be active.
+
+Action                                        | Control or shortcut
+----------------------------------------------|--------------------
+Increase vertex label size                    | {kbd}`+`
+Decrease vertex label size                    | {kbd}`-`
+Increase vector size                          | {kbd}`Shift` + {kbd}`+`
+Decrease vector size                          | {kbd}`Shift` + {kbd}`-`
 
 ### 2D images ###
 

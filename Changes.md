@@ -22,6 +22,7 @@ Fixes
 
 - SceneWriter : Fixed writing of animated attributes and bounds to USD.
 - NumericPlug : Fixed serialisation of plugs with infinite min/max values, for example the promoted outputs of an ImageStats node.
+- VisualiserTool : Changed viewer shortcut to <kbd>P</kbd> to fix conflict with the Transform Tool.
 
 Build
 -----
