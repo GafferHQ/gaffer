@@ -37,6 +37,7 @@
 from .ModuleTest import ModuleTest
 from .RenderManAttributesTest import RenderManAttributesTest
 from .RenderManOptionsTest import RenderManOptionsTest
+from .RenderManShaderTest import RenderManShaderTest
 
 if __name__ == "__main__":
 	import unittest
