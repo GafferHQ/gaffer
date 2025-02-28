@@ -53,6 +53,7 @@ NameSwitch::NameSwitch( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new StringPlug( "selector" ) );
+	addChild( new StringVectorDataPlug( "enabledNames", Plug::Out ) );
 	addChild( new IntPlug( "__outIndex", Plug::Out ) );
 	indexPlug()->setName( "__index" );
 	indexPlug()->setInput( outIndexPlug() );
@@ -103,14 +104,24 @@ const StringPlug *NameSwitch::selectorPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
+StringVectorDataPlug *NameSwitch::enabledNamesPlug()
+{
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 1 );
+}
+
+const StringVectorDataPlug *NameSwitch::enabledNamesPlug() const
+{
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 1 );
+}
+
 IntPlug *NameSwitch::outIndexPlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+	return getChild<IntPlug>( g_firstPlugIndex + 2 );
 }
 
 const IntPlug *NameSwitch::outIndexPlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+	return getChild<IntPlug>( g_firstPlugIndex + 2 );
 }
 
 void NameSwitch::affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
@@ -128,6 +139,15 @@ void NameSwitch::affects( const Plug *input, DependencyNode::AffectedPlugsContai
 	{
 		outputs.push_back( outIndexPlug() );
 	}
+
+	if(
+		nameValuePlug && nameValuePlug->parent() == inPlugs() &&
+		nameValuePlug != inPlugs()->getChild( 0 ) &&
+		( input == nameValuePlug->namePlug() || input == nameValuePlug->enabledPlug() )
+	)
+	{
+		outputs.push_back( enabledNamesPlug() );
+	}
 }
 
 void NameSwitch::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
@@ -143,6 +163,18 @@ void NameSwitch::hash( const ValuePlug *output, const Context *context, IECore::
 			auto p = in->getChild<NameValuePlug>( i );
 			p->enabledPlug()->hash( h );
 			p->namePlug()->hash( h );
+		}
+	}
+	else if( output == enabledNamesPlug() )
+	{
+		if( const ArrayPlug *in = inPlugs() )
+		{
+			for( int i = 1, e = in->children().size(); i < e; ++i )
+			{
+				auto p = in->getChild<NameValuePlug>( i );
+				p->enabledPlug()->hash( h );
+				p->namePlug()->hash( h );
+			}
 		}
 	}
 }
@@ -170,6 +202,28 @@ void NameSwitch::compute( ValuePlug *output, const Context *context ) const
 		}
 
 		static_cast<IntPlug *>( output )->setValue( outIndex );
+		return;
+	}
+	else if( output == enabledNamesPlug() )
+	{
+		StringVectorDataPtr enabledNamesData = new StringVectorData;
+		if( const ArrayPlug *in = inPlugs() )
+		{
+			vector<string> &enabledNames = enabledNamesData->writable();
+			for( int i = 1, e = in->children().size(); i < e; ++i )
+			{
+				auto p = in->getChild<NameValuePlug>( i );
+				if( p->enabledPlug()->getValue() )
+				{
+					const string name = p->namePlug()->getValue();
+					if( !name.empty() )
+					{
+						enabledNames.push_back( name );
+					}
+				}
+			}
+		}
+		static_cast<StringVectorDataPlug *>( output )->setValue( enabledNamesData );
 		return;
 	}
 

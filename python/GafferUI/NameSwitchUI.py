@@ -158,6 +158,23 @@ Gaffer.Metadata.registerNode(
 
 		"connectedInputs" : [
 
+			"layout:index", -4,
+
+		],
+
+		"enabledNames" : [
+
+			"description",
+			"""
+			An output plug containing the names of all currently enabled inputs.
+			Example uses include driving `Collect.contextValues` to collect all
+			the inputs, or `Wedge.strings` to dispatch a task per input.
+			""",
+
+			"layout:section", "Advanced",
+			"plugValueWidget:type", "GafferUI.ConnectionPlugValueWidget",
+			"nodule:type", "",
+
 			"layout:index", -3,
 
 		],
