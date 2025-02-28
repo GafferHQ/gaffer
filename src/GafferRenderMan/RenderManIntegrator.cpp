@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2018, John Haddon. All rights reserved.
+//  Copyright (c) 2019, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,20 +34,77 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#include "GafferRenderMan/RenderManIntegrator.h"
 
-namespace GafferRenderMan
+#include "GafferScene/Shader.h"
+#include "GafferScene/ShaderPlug.h"
+
+#include "Gaffer/StringPlug.h"
+
+using namespace IECore;
+using namespace Gaffer;
+using namespace GafferRenderMan;
+
+IE_CORE_DEFINERUNTIMETYPED( RenderManIntegrator );
+
+RenderManIntegrator::RenderManIntegrator( const std::string &name )
+	:	GlobalShader( name )
 {
+}
 
-enum TypeId
+RenderManIntegrator::~RenderManIntegrator()
 {
-	RenderManAttributesTypeId = 110400,
-	RenderManOptionsTypeId = 110401,
-	RenderManShaderTypeId = 110402,
-	RenderManLightTypeId = 110403,
-	RenderManMeshLightTypeId = 110404,
-	RenderManIntegratorTypeId = 110405,
-	LastTypeId = 110450
-};
+}
 
-} // namespace GafferRenderMan
+bool RenderManIntegrator::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
+{
+	if( !GlobalShader::acceptsInput( plug, inputPlug ) )
+	{
+		return false;
+	}
+
+	if( plug != shaderPlug() )
+	{
+		return true;
+	}
+
+	if( !inputPlug )
+	{
+		return true;
+	}
+
+	const Plug *sourcePlug = inputPlug->source();
+	auto *sourceShader = runTimeCast<const GafferScene::Shader>( sourcePlug->node() );
+	if( !sourceShader )
+	{
+		return true;
+	}
+
+	const Plug *sourceShaderOutPlug = sourceShader->outPlug();
+	if( !sourceShaderOutPlug )
+	{
+		return true;
+	}
+
+	if( sourcePlug != sourceShaderOutPlug && !sourceShaderOutPlug->isAncestorOf( sourcePlug ) )
+	{
+		return true;
+	}
+
+	return sourceShader->typePlug()->getValue() == "ri:integrator";
+}
+
+bool RenderManIntegrator::affectsOptionName( const Gaffer::Plug *input ) const
+{
+	return false;
+}
+
+void RenderManIntegrator::hashOptionName( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	// No need to hash anything, because our option name is constant
+}
+
+std::string RenderManIntegrator::computeOptionName( const Gaffer::Context *context ) const
+{
+	return "ri:integrator";
+}

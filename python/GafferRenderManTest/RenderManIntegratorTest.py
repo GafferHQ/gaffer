@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, John Haddon. All rights reserved.
+#  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,12 +34,46 @@
 #
 ##########################################################################
 
-__import__( "GafferSceneUI" )
+import unittest
 
-from . import RenderManAttributesUI
-from . import RenderManOptionsUI
-from . import RenderManShaderUI
-from . import RenderManMeshLightUI
-from . import RenderManIntegratorUI
+import IECoreScene
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferRenderManUI" )
+import GafferSceneTest
+import GafferRenderMan
+
+class RenderManIntegratorTest( GafferSceneTest.SceneTestCase ) :
+
+	def test( self ) :
+
+		shader = GafferRenderMan.RenderManShader()
+		shader.loadShader( "PxrPathTracer" )
+
+		self.assertEqual( shader["name"].getValue(), "PxrPathTracer" )
+		self.assertEqual( shader["type"].getValue(), "ri:integrator" )
+
+		shader["parameters"]["maxIndirectBounces"].setValue( 2 )
+
+		integrator = GafferRenderMan.RenderManIntegrator()
+		self.assertNotIn( "option:ri:integrator", integrator["out"].globals() )
+
+		integrator["shader"].setInput( shader["out"] )
+		self.assertIn( "option:ri:integrator", integrator["out"].globals() )
+
+		network = integrator["out"].globals()["option:ri:integrator"]
+		self.assertIsInstance( network, IECoreScene.ShaderNetwork )
+
+		self.assertEqual( len( network.shaders() ), 1 )
+		self.assertEqual( network.outputShader().name, "PxrPathTracer" )
+		self.assertEqual( network.outputShader().type, "ri:integrator" )
+		self.assertEqual( network.outputShader().parameters["maxIndirectBounces"].value, 2 )
+
+	def testRejectsNonIntegratorInputs( self ) :
+
+		shader = GafferRenderMan.RenderManShader()
+		shader.loadShader( "PxrConstant" )
+
+		node = GafferRenderMan.RenderManIntegrator()
+		self.assertFalse( node["shader"].acceptsInput( shader["out"] ) )
+
+if __name__ == "__main__":
+	unittest.main()
