@@ -788,7 +788,8 @@ for option, envVar in {
 	"ONNX_ROOT" : "ONNX_ROOT",
 	"RENDERMAN_ROOT" : "RMANTREE",
 }.items() :
-	commandEnv["ENV"][envVar] = commandEnv[option]
+	if commandEnv[option] != "" :
+		commandEnv["ENV"][envVar] = commandEnv[option]
 
 def runCommand( command ) :
 
