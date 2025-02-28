@@ -222,7 +222,6 @@ Pause processing                     | {kbd}`Escape`
 Selection Tool                       | {kbd}`Q`
 Translate Tool                       | {kbd}`W`
 Rotate Tool                          | {kbd}`E`
-Cycle Transform Tool Orientation     | {kbd}`O`
 Scale Tool                           | {kbd}`R`
 Camera Tool                          | {kbd}`T`
 Crop Window Tool                     | {kbd}`C`
@@ -268,7 +267,7 @@ Add animation key to transform of selected object(s)| {kbd}`S`
 Adjust, fine precision                              | Hold {kbd}`Shift` during action
 Adjust, snapping to rounded increments              | Hold {kbd}`Ctrl` during action
 Target mode (Translate and Rotate only)             | Hold {kbd}`V` then {{leftClick}} on target geometry
-
+Cycle tool orientation (Translate and Rotate only)  | {kbd}`O`
 
 ### Light Tool ###
 
