@@ -187,3 +187,49 @@ if "RMANTREE" in os.environ :
 	Gaffer.Metadata.registerValue( "option:ri:volume:aggregatespace", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
 	Gaffer.Metadata.registerValue( "option:ri:volume:aggregatespace", "presetNames", IECore.StringVectorData( [ "World", "Camera" ] ) )
 	Gaffer.Metadata.registerValue( "option:ri:volume:aggregatespace", "presetValues", IECore.StringVectorData( [ "world", "camera" ] ) )
+
+	# Add options used by GafferRenderMan._InteractiveDenoiserAdaptor. These don't mean
+	# anything to RenderMan, but we still use the "ri:" prefix to keep things consistent
+	# for the end user.
+	## \todo Should we use a different prefix?
+
+	Gaffer.Metadata.registerValue( "option:ri:interactiveDenoiser:enabled", "defaultValue", False )
+	Gaffer.Metadata.registerValue( "option:ri:interactiveDenoiser:enabled", "description",
+		"""
+		Enables interactive denoising using RenderMan's `quicklyNoiseless` display driver. When on, all
+		required denoising AOVs are added to the render automatically.
+		"""
+	)
+	Gaffer.Metadata.registerValue( "option:ri:interactiveDenoiser:enabled", "label", "Enabled" )
+	Gaffer.Metadata.registerValue( "option:ri:interactiveDenoiser:enabled", "layout:section", "Interactive Denoiser" )
+
+	Gaffer.Metadata.registerValue( "option:ri:interactiveDenoiser:cheapPass", "defaultValue", True )
+	Gaffer.Metadata.registerValue( "option:ri:interactiveDenoiser:cheapPass", "description",
+		"""
+		When on, the first pass will use a cheaper (slightly faster but lower
+		quality) heuristic. This can be useful if rendering something that is
+		converging very quickly and you want to prioritize getting a denoised
+		result faster.
+		"""
+	)
+	Gaffer.Metadata.registerValue( "option:ri:interactiveDenoiser:cheapPass", "label", "Cheap First Pass" )
+	Gaffer.Metadata.registerValue( "option:ri:interactiveDenoiser:cheapPass", "layout:section", "Interactive Denoiser" )
+
+	Gaffer.Metadata.registerValue( "option:ri:interactiveDenoiser:interval", "defaultValue", 4.0 )
+	Gaffer.Metadata.registerValue( "option:ri:interactiveDenoiser:interval", "description",
+		"""
+		The time interval in between denoise runs (in seconds).
+		"""
+	)
+	Gaffer.Metadata.registerValue( "option:ri:interactiveDenoiser:interval", "label", "Interval" )
+	Gaffer.Metadata.registerValue( "option:ri:interactiveDenoiser:interval", "layout:section", "Interactive Denoiser" )
+
+	Gaffer.Metadata.registerValue( "option:ri:interactiveDenoiser:minSamples", "defaultValue", 2 )
+	Gaffer.Metadata.registerValue( "option:ri:interactiveDenoiser:minSamples", "description",
+		"""
+		The minimum number of average samples per bucket before the interactive denoiser runs for the first time.
+		Changing this preference requires the render to be restarted for this option to be respected.
+		"""
+	)
+	Gaffer.Metadata.registerValue( "option:ri:interactiveDenoiser:minSamples", "label", "Min Samples" )
+	Gaffer.Metadata.registerValue( "option:ri:interactiveDenoiser:minSamples", "layout:section", "Interactive Denoiser" )
