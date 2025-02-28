@@ -39,6 +39,8 @@ import math
 
 import imath
 import inspect
+import os
+import subprocess
 import time
 import unittest
 
@@ -1307,7 +1309,7 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ) )
 		self.assertRaisesRegex(
 			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
-			script["instancer"]["out"].childNames, "/object/instances",
+			script["instancer"]["out"].childNames, "/object/instances/exist",
 		)
 
 	def testIndexedRootsVariable( self ) :
@@ -1361,7 +1363,7 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ) )
 		self.assertRaisesRegex(
 			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
-			script["instancer"]["out"].childNames, "/object/instances",
+			script["instancer"]["out"].childNames, "/object/instances/exist",
 		)
 
 		script["instancer"]["prototypeRoots"].setValue( "notAPrimVar" )
@@ -1436,7 +1438,7 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		updateRoots( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ), IECore.IntVectorData( [ 0, 1, 1, 0 ] ) )
 		self.assertRaisesRegex(
 			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
-			script["instancer"]["out"].childNames, "/object/instances",
+			script["instancer"]["out"].childNames, "/object/instances/exist",
 		)
 
 		script["instancer"]["prototypeRoots"].setValue( "notAPrimVar" )
@@ -2194,10 +2196,10 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 						[ "foo%i"%(i//34) for i in range( 100 ) ]
 					) )
 		points["unindexedRoots"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.StringVectorData(
-						[ ["cube","plane","sphere"][i//34] for i in range( 100 ) ]
+						[ ["/cube","/plane","/sphere"][i//34] for i in range( 100 ) ]
 					) )
 		points["indexedRoots"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex,
-			IECore.StringVectorData( [ "cube","plane","sphere"] ),
+			IECore.StringVectorData( [ "/cube","/plane","/sphere"] ),
 			IECore.IntVectorData( [(i//34) for i in range( 100 )] ),
 		)
 		pointsSource = GafferScene.ObjectToScene()
@@ -2371,14 +2373,14 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 
 		self.assertEncapsulatedRendersSame( instancer )
 
-		instancer["prototypeRootsList"].setValue( IECore.StringVectorData( [ "withAttrs", "cube", "plane", "sphere" ] ) )
+		instancer["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/withAttrs", "/cube", "/plane", "/sphere" ] ) )
 		testAttributes( frameAttr = [ 1 ] * 25, floatAttr = floatExpected )
 		self.assertEqual( uniqueCounts(), { "" : 20, "floatVar" : 5 } )
 
 		self.assertEncapsulatedRendersSame( instancer )
 
 		# Test an empty root
-		instancer["prototypeRootsList"].setValue( IECore.StringVectorData( [ "withAttrs", "", "plane", "sphere" ] ) )
+		instancer["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/withAttrs", "", "/plane", "/sphere" ] ) )
 		self.assertEqual( uniqueCounts(), { "" : 15, "floatVar" : 5 } )
 
 		self.assertEncapsulatedRendersSame( instancer )
@@ -3030,7 +3032,7 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 	def testVaryingPrimvars( self ) :
 		plane = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
 		plane["varyingFloat"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Varying, IECore.FloatVectorData( [ 16.25, 16.5, 16.75, 17.0 ] ) )
-		plane["varyingString"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Varying, IECore.StringVectorData( [ "a", "b", "d", "c" ] ) )
+		plane["varyingString"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Varying, IECore.StringVectorData( [ "/a", "/b", "/d", "/c" ] ) )
 
 		objectToScene = GafferScene.ObjectToScene()
 		objectToScene["object"].setValue( plane )
@@ -3089,7 +3091,7 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		curves["P"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.V3fVectorData( [ imath.V3f( i ) for i in range( 4 ) ] ) )
 		curves["varyingString"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Varying, IECore.StringVectorData( [ "c", "c" ] ) )
 		curves["varyingFloat"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Varying, IECore.FloatVectorData( [ 3, 7 ] ) )
-		curves["vertexString"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.StringVectorData( [ "a", "b", "d", "c" ] ) )
+		curves["vertexString"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.StringVectorData( [ "/a", "/b", "/d", "/c" ] ) )
 		self.assertTrue( curves.arePrimitiveVariablesValid() )
 
 		objectToScene["object"].setValue( curves )
@@ -3278,6 +3280,40 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 			IECore.PathMatcherData( IECore.PathMatcher( ['/plane/prototypes/cube/prototypes/sphere'] ) )
 		)
 
+	def testInvalidPrototypeScene( self ) :
+		points = GafferScene.Sphere( "points" )
+		points["name"].setValue( 'points' )
+		points["divisions"].setValue( imath.V2i( 3, 6 ) )
+
+		pointsFilter = GafferScene.PathFilter( "pointsFilter" )
+		pointsFilter["paths"].setValue( IECore.StringVectorData( [ '/points' ] ) )
+
+		group = GafferScene.Group( "group" )
+
+		instancer = GafferScene.Instancer( "instancer" )
+		instancer["in"].setInput( points["out"] )
+		instancer["filter"].setInput( pointsFilter["out"] )
+		instancer["prototypes"].setInput( group["out"] )
+		instancer["prototypeRootsList"].setValue( IECore.StringVectorData( [ '/group/sphere' ] ) )
+
+		# Access a location that doesn't exist
+		with self.assertRaisesRegex( RuntimeError, 'Prototype root "/group/sphere" does not exist in the `prototypes` scene' ) :
+			instancer["out"].childNames( "/points/instances/sphere" )
+
+		# Make the locations exist
+		sphere = GafferScene.Sphere( "sphere" )
+		group["in"][0].setInput( sphere["out"] )
+
+		self.assertEqual( instancer["out"].object( "/points/instances/sphere/0" ), sphere["out"].object( "/sphere" ) )
+
+		# Now make the location not exist again ( to make sure that we aren't incorrectly caching that it exists )
+		group["in"][0].setInput( None )
+
+		with self.assertRaisesRegex( RuntimeError, 'Prototype root "/group/sphere" does not exist in the `prototypes` scene' ) :
+			instancer["out"].childNames( "/points/instances/sphere" )
+
+
+
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 10 )
 	def testBoundPerformance( self ) :
 
@@ -3392,6 +3428,13 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 
 
 	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testChildNamesHashPerf( self ):
+		nodes = self.initSimpleInstancer()
+		with GafferTest.TestRunner.PerformanceScope() :
+			nodes["instancer"]["out"].childNamesHash( "/plane/instances/sphere" )
+			nodes["instancer"]["out"].childNamesHash( "/plane/instances/cube" )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testChildNamesPerf( self ):
 		nodes = self.initSimpleInstancer()
 		with GafferTest.TestRunner.PerformanceScope() :
@@ -3439,6 +3482,221 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			nodes["instancer"]["out"].object( "/plane/instances" ).render( renderer )
+
+	def testUnrelatedPrototypeChange( self ):
+
+		points = GafferScene.Plane()
+		points["divisions"].setValue( imath.V2i( 10 ) )
+
+		sphere = GafferScene.Sphere()
+		cube = GafferScene.Cube()
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+		group["in"][1].setInput( cube["out"] )
+
+		unrelated = GafferScene.Group()
+		unrelated["name"].setValue( "unrelated" )
+
+		parent = GafferScene.Parent()
+		parent["parent"].setValue( '/' )
+		parent["in"].setInput( group["out"] )
+		parent["children"][0].setInput( unrelated["out"] )
+
+
+		# Instancer
+		instancerFilter = GafferScene.PathFilter()
+		instancerFilter["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( points["out"] )
+		instancer["filter"].setInput( instancerFilter["out"] )
+		instancer["prototypes"].setInput( parent["out"] )
+		instancer["prototypeMode"].setValue( GafferScene.Instancer.PrototypeMode.IndexedRootsList )
+		instancer["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/group/cube", "/group/sphere" ] ) )
+		instancer["encapsulate"].setValue( True )
+
+		# Changing an unrelated part of the prototype scene should not affect the capsule hash
+		h1 = instancer["out"].objectHash( "/plane/instances" )
+		unrelated["transform"]["translate"]["x"].setValue( 7 )
+		self.assertEqual( instancer["out"].objectHash( "/plane/instances" ), h1 )
+
+		# But changing a prototype that is used does change the hash
+		cube["dimensions"]["x"].setValue( 7 )
+		h2 = instancer["out"].objectHash( "/plane/instances" )
+		self.assertNotEqual( h2, h1 )
+		sphere["radius"].setValue( 7 )
+		h3 = instancer["out"].objectHash( "/plane/instances" )
+		self.assertNotEqual( h3, h1 )
+		self.assertNotEqual( h3, h2 )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testPrototypeHashPerf( self ):
+		points = GafferScene.Plane()
+		points["divisions"].setValue( imath.V2i( 10 ) )
+
+		sphere = GafferScene.Sphere()
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ '/sphere' ] ) )
+
+		duplicate = GafferScene.Duplicate()
+		duplicate["in"].setInput( sphere["out"] )
+		duplicate["filter"].setInput( sphereFilter["out"] )
+		duplicate["copies"].setValue( 40000 )
+
+		# Instancer
+		instancerFilter = GafferScene.PathFilter()
+		instancerFilter["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( points["out"] )
+		instancer["filter"].setInput( instancerFilter["out"] )
+		instancer["prototypes"].setInput( duplicate["out"] )
+		instancer["encapsulate"].setValue( True )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			instancer["out"].objectHash( "/plane/instances" )
+
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testCacheExpensivePrototypeHash( self ):
+		points = GafferScene.Plane()
+		points["divisions"].setValue( imath.V2i( 10 ) )
+
+		unrelated = GafferScene.Plane()
+		unrelated["name"].setValue( "unrelated" )
+
+		parent = GafferScene.Parent()
+		parent["parent"].setValue( '/' )
+		parent["in"].setInput( points["out"] )
+		parent["children"][0].setInput( unrelated["out"] )
+
+		sphere = GafferScene.Sphere()
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ '/sphere' ] ) )
+
+		duplicate = GafferScene.Duplicate()
+		duplicate["in"].setInput( sphere["out"] )
+		duplicate["filter"].setInput( sphereFilter["out"] )
+		duplicate["copies"].setValue( 40000 )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( duplicate["out"] )
+
+		# Instancer
+		instancerFilter = GafferScene.PathFilter()
+		instancerFilter["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( parent["out"] )
+		instancer["filter"].setInput( instancerFilter["out"] )
+		instancer["prototypes"].setInput( group["out"] )
+		instancer["encapsulate"].setValue( True )
+
+		# Cache the current capsule
+		instancer["out"].object( "/plane/instances" )
+
+		unrelated["divisions"].setValue( imath.V2i( 7 ) )
+
+		# It should be very cheap to retrieve the cached capsule since we've only changed something irrelevant
+		with GafferTest.TestRunner.PerformanceScope() :
+
+			with Gaffer.PerformanceMonitor() as pm :
+				instancer["out"].object( "/plane/instances" )
+
+		self.assertEqual( pm.combinedStatistics().computeCount, 0 )
+
+	def testRelativePrototypePaths( self ):
+		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( 0, 0, 0 ), imath.V3f( 4, 0, 0 ), imath.V3f( 8, 0, 0 ) ] ) )
+		points["prototypeRoots"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.StringVectorData( [ "/sphere", "./sphere", "sphere" ] )
+		)
+
+		objectToScene = GafferScene.ObjectToScene()
+		objectToScene["object"].setValue( points )
+
+		sphereA = GafferScene.Sphere()
+
+		parentA = GafferScene.Parent()
+		parentA["in"].setInput( objectToScene["out"] )
+		parentA["children"][0].setInput( sphereA["out"] )
+		parentA["parent"].setValue( "/object" )
+
+		groupA = GafferScene.Group()
+		groupA["name"].setValue( "groupA" )
+		groupA["in"][0].setInput( parentA["out"] )
+
+		sphereB = GafferScene.Sphere()
+
+		parentB = GafferScene.Parent()
+		parentB["in"].setInput( objectToScene["out"] )
+		parentB["children"][0].setInput( sphereB["out"] )
+		parentB["parent"].setValue( "/object" )
+
+		groupB = GafferScene.Group()
+		groupB["name"].setValue( "groupB" )
+		groupB["in"][0].setInput( parentB["out"] )
+
+		rootSphere = GafferScene.Sphere()
+		rootSphere["radius"].setValue( 7 )
+
+		buildScene = GafferScene.Parent()
+		buildScene["parent"].setValue( "/" )
+		buildScene["in"].setInput( rootSphere["out"] )
+		buildScene["children"][0].setInput( groupA["out"] )
+		buildScene["children"][1].setInput( groupB["out"] )
+
+		pointsFilter = GafferScene.PathFilter()
+		pointsFilter["paths"].setValue( IECore.StringVectorData( [ "/groupA/object", "/groupB/object" ] ) )
+
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( buildScene["out"] )
+		instancer["prototypes"].setInput( buildScene["out"] )
+		instancer["filter"].setInput( pointsFilter["out"] )
+		instancer["prototypeMode"].setValue( GafferScene.Instancer.PrototypeMode.RootPerVertex )
+
+		self.assertEncapsulatedRendersSame( instancer )
+
+		instancer["encapsulate"].setValue( True )
+
+		self.assertEqual( instancer["out"].objectHash( "/groupA/object/instances" ), instancer["out"].objectHash( "/groupB/object/instances" ) )
+
+		sphereB["radius"].setValue( 2 )
+
+		self.assertNotEqual( instancer["out"].objectHash( "/groupA/object/instances" ), instancer["out"].objectHash( "/groupB/object/instances" ) )
+
+		instancer["encapsulate"].setValue( False )
+
+		self.assertEncapsulatedRendersSame( instancer )
+
+		self.assertEqual( instancer["out"].object( "/groupA/object/instances/sphere/0" ), rootSphere["out"].object( "/sphere" ) )
+		self.assertEqual( instancer["out"].object( "/groupA/object/instances/sphere1/1" ), sphereA["out"].object( "/sphere" ) )
+		self.assertEqual( instancer["out"].object( "/groupB/object/instances/sphere/0" ), rootSphere["out"].object( "/sphere" ) )
+		self.assertEqual( instancer["out"].object( "/groupB/object/instances/sphere1/1" ), sphereB["out"].object( "/sphere" ) )
+
+		if os.environ.get( "GAFFERSCENE_INSTANCER_EXPLICIT_ABSOLUTE_PATHS", "0" ) != "0":
+			self.assertEqual( instancer["out"].object( "/groupA/object/instances/sphere2/2" ), sphereA["out"].object( "/sphere" ) )
+			self.assertEqual( instancer["out"].object( "/groupB/object/instances/sphere2/2" ), sphereB["out"].object( "/sphere" ) )
+		else:
+			self.assertEqual( instancer["out"].object( "/groupA/object/instances/sphere2/2" ), rootSphere["out"].object( "/sphere" ) )
+			self.assertEqual( instancer["out"].object( "/groupB/object/instances/sphere2/2" ), rootSphere["out"].object( "/sphere" ) )
+
+	def testRelativePrototypePathsWithExplicitAbsolute( self ):
+		try :
+			env = os.environ.copy()
+			env["GAFFERSCENE_INSTANCER_EXPLICIT_ABSOLUTE_PATHS"] = "1"
+			subprocess.check_output(
+				[ str( Gaffer.executablePath() ), "test", "GafferSceneTest.InstancerTest.testRelativePrototypePaths" ],
+				stderr = subprocess.STDOUT,
+				env = env,
+			)
+		except subprocess.CalledProcessError as e :
+			self.fail( e.output )
+
 
 if __name__ == "__main__":
 	unittest.main()

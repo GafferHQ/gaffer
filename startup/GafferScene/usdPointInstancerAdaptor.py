@@ -40,10 +40,16 @@ import GafferScene
 # into actual Instancers. This supports how USD PointInstancers are currently loaded from
 # USD files. In the future, they may be first class objects, and this will be unnecessary.
 
-try:
-	import GafferUSD
-	# Disabled while we work on a solution for automatically remapping prototype paths
-	# when pointclouds have been reparented in the scene hierarchy.
-	# GafferScene.SceneAlgo.registerRenderAdaptor( "USDPointInstancerAdaptor", GafferUSD._PointInstancerAdaptor, "SceneView *Render", "*" )
-except ImportError :
-	pass
+# We don't want to create a dependency on GafferUSD - this should silently do nothing if GafferUSD
+# isn't available. We also don't want to import GafferUSD right away - that could lead to circular
+# import problems. So instead we register this callback that will try to import GafferUSD
+def createPointInstancerAdaptor():
+	try:
+		import GafferUSD
+		return GafferUSD._PointInstancerAdaptor()
+	except ImportError :
+		r = GafferScene.SceneProcessor()
+		r["out"].setInput( r["in"] )
+		return r
+
+GafferScene.SceneAlgo.registerRenderAdaptor( "USDPointInstancerAdaptor", createPointInstancerAdaptor, "SceneView *Render", "*" )
