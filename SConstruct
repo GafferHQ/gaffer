@@ -1401,11 +1401,17 @@ libraries = {
 		"requiredOptions" : [ "RENDERMAN_ROOT" ],
 	},
 
-	"GafferRenderManTest" : {},
+	"GafferRenderManTest" : {
+		"requiredOptions" : [ "RENDERMAN_ROOT" ],
+	},
 
-	"GafferRenderManUI" : {},
+	"GafferRenderManUI" : {
+		"requiredOptions" : [ "RENDERMAN_ROOT" ],
+	},
 
-	"GafferRenderManUITest" : {},
+	"GafferRenderManUITest" : {
+		"requiredOptions" : [ "RENDERMAN_ROOT" ],
+	},
 
 	"GafferTractor" : {},
 
