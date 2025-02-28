@@ -510,6 +510,10 @@ void RenderManShader::loadShader( const std::string &shaderName, bool keepExisti
 	{
 		shaderType = "surface";
 	}
+	else if( shaderType == "lightfilter" )
+	{
+		shaderType = "lightFilter";
+	}
 
 	typePlug()->source<StringPlug>()->setValue( "ri:" + shaderType );
 
