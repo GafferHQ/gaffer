@@ -37,6 +37,7 @@
 #include "boost/python.hpp"
 
 #include "GafferRenderMan/RenderManAttributes.h"
+#include "GafferRenderMan/RenderManLight.h"
 #include "GafferRenderMan/RenderManOptions.h"
 #include "GafferRenderMan/RenderManShader.h"
 
@@ -45,9 +46,22 @@
 using namespace boost::python;
 using namespace GafferRenderMan;
 
-BOOST_PYTHON_MODULE( _GafferRenderMan )
+namespace
 {
 
+void loadShader( RenderManLight &l, const std::string &shaderName )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	l.loadShader( shaderName );
+}
+
+} // namespace
+
+BOOST_PYTHON_MODULE( _GafferRenderMan )
+{
+	GafferBindings::DependencyNodeClass<RenderManLight>()
+		.def( "loadShader", &loadShader )
+	;
 	GafferBindings::DependencyNodeClass<RenderManAttributes>();
 	GafferBindings::DependencyNodeClass<RenderManOptions>();
 	GafferBindings::DependencyNodeClass<RenderManShader>();

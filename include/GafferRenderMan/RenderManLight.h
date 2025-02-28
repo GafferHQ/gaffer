@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2018, John Haddon. All rights reserved.
+//  Copyright (c) 2019, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,16 +36,47 @@
 
 #pragma once
 
+#include "GafferRenderMan/Export.h"
+#include "GafferRenderMan/TypeIds.h"
+
+#include "GafferScene/Light.h"
+#include "GafferScene/Shader.h"
+#include "GafferScene/ShaderPlug.h"
+
 namespace GafferRenderMan
 {
 
-enum TypeId
+class GAFFERRENDERMAN_API RenderManLight : public GafferScene::Light
 {
-	RenderManAttributesTypeId = 110400,
-	RenderManOptionsTypeId = 110401,
-	RenderManShaderTypeId = 110402,
-	RenderManLightTypeId = 110403,
-	LastTypeId = 110450
+
+	public :
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferRenderMan::RenderManLight, RenderManLightTypeId, GafferScene::Light );
+
+		RenderManLight( const std::string &name=defaultName<RenderManLight>() );
+		~RenderManLight() override;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+		void loadShader( const std::string &shaderName );
+
+	protected :
+
+		void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECoreScene::ConstShaderNetworkPtr computeLight( const Gaffer::Context *context ) const override;
+
+	private :
+
+		GafferScene::Shader *shaderNode();
+		const GafferScene::Shader *shaderNode() const;
+
+		GafferScene::ShaderPlug *shaderInPlug();
+		const GafferScene::ShaderPlug *shaderInPlug() const;
+
+		static size_t g_firstPlugIndex;
+
 };
+
+IE_CORE_DECLAREPTR( RenderManLight )
 
 } // namespace GafferRenderMan
