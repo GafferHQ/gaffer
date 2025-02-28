@@ -1322,7 +1322,8 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 				None
 			)
 			if outputImage is not None :
-				return GafferScene.SceneAlgo.sourceScene( outputImage )
+				with self.context() :
+					return GafferScene.SceneAlgo.sourceScene( outputImage )
 
 		return None
 
