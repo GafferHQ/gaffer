@@ -235,5 +235,32 @@ class NameSwitchTest( GafferTest.TestCase ) :
 		box["in"][0]["value"].setInput( None )
 		self.assertEqual( box["switch"]["connectedInputs"].getValue(), IECore.IntVectorData( [ 1 ] ) )
 
+	def testEnabledNames( self ) :
+
+		switch = Gaffer.NameSwitch()
+		self.assertEqual( switch["enabledNames"].getValue(), IECore.StringVectorData() )
+
+		switch.setup( Gaffer.IntPlug() )
+		self.assertEqual( switch["enabledNames"].getValue(), IECore.StringVectorData() )
+
+		switch["in"][1]["name"].setValue( "A" )
+		self.assertEqual( switch["enabledNames"].getValue(), IECore.StringVectorData( [ "A" ] ) )
+
+		switch["in"].resize( 3 )
+		switch["in"][2]["name"].setValue( "B" )
+		self.assertEqual( switch["enabledNames"].getValue(), IECore.StringVectorData( [ "A", "B" ] ) )
+
+		switch["in"][1]["enabled"].setValue( False )
+		self.assertEqual( switch["enabledNames"].getValue(), IECore.StringVectorData( [ "B" ] ) )
+
+		switch["in"][2]["enabled"].setValue( False )
+		self.assertEqual( switch["enabledNames"].getValue(), IECore.StringVectorData() )
+
+		switch["in"][1]["name"].setValue( "C" )
+		switch["in"][1]["enabled"].setValue( True )
+		self.assertEqual( switch["enabledNames"].getValue(), IECore.StringVectorData( [ "C" ] ) )
+		switch["in"][2]["enabled"].setValue( True )
+		self.assertEqual( switch["enabledNames"].getValue(), IECore.StringVectorData( [ "C", "B" ] ) )
+
 if __name__ == "__main__":
 	unittest.main()
