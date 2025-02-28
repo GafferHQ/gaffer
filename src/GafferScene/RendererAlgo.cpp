@@ -90,9 +90,24 @@ const InternedString g_deformationBlurOptionName( "option:render:deformationBlur
 const InternedString g_shutterOptionName( "option:render:shutter" );
 const InternedString g_includedPurposesOptionName( "option:render:includedPurposes" );
 const InternedString g_purposeAttributeName( "usd:purpose" );
+const InternedString g_frameOptionName( "frame" );
+const InternedString g_cameraOptionLegacyName( "option:render:camera" );
 
 const ConstStringVectorDataPtr g_defaultIncludedPurposes( new StringVectorData( { "default", "render" } ) );
 const std::string g_defaultPurpose( "default" );
+
+const std::string g_optionPrefix( "option:" );
+
+InternedString optionName( const InternedString &globalsName )
+{
+	if( globalsName == g_cameraOptionLegacyName )
+	{
+		/// \todo Just rename the options themselves in StandardOptions and remove this?
+		return globalsName.string().substr( g_optionPrefix.size() + 7 );
+	}
+
+	return globalsName.string().substr( g_optionPrefix.size() );
+}
 
 } // namespace
 
@@ -137,6 +152,66 @@ bool RenderOptions::purposeIncluded( const CompoundObject *attributes ) const
 	const std::string &purpose = purposeData ? purposeData->readable() : g_defaultPurpose;
 	const vector<string> &purposes = includedPurposes->readable();
 	return std::find( purposes.begin(), purposes.end(), purpose ) != purposes.end();
+}
+
+
+void RenderOptions::outputOptions( IECoreScenePreview::Renderer *renderer, const RenderOptions *previousRenderOptions )
+{
+	// Output the current frame.
+
+	renderer->option( g_frameOptionName, new IntData( (int)round( Context::current()->getFrame() ) ) );
+
+	// Output anything that has changed or was added since last time.
+
+	CompoundObject::ObjectMap::const_iterator it, eIt;
+	for( it = globals->members().begin(), eIt = globals->members().end(); it != eIt; ++it )
+	{
+		if( !boost::starts_with( it->first.string(), g_optionPrefix ) )
+		{
+			continue;
+		}
+		if( const Object *object = it->second.get() )
+		{
+			bool changedOrAdded = true;
+			if( previousRenderOptions )
+			{
+				if( const Object *previousObject = previousRenderOptions->globals->member<Object>( it->first ) )
+				{
+					changedOrAdded = *previousObject != *object;
+				}
+			}
+			if( changedOrAdded )
+			{
+				renderer->option( optionName( it->first ), object );
+			}
+		}
+		else
+		{
+			throw IECore::Exception( "Global \"" + it->first.string() + "\" is null" );
+		}
+	}
+
+	// Remove anything that has been removed since last time.
+
+	if( !previousRenderOptions )
+	{
+		return;
+	}
+
+	for( it = previousRenderOptions->globals->members().begin(), eIt = previousRenderOptions->globals->members().end(); it != eIt; ++it )
+	{
+		if( !boost::starts_with( it->first.string(), g_optionPrefix ) )
+		{
+			continue;
+		}
+		if( it->second.get() )
+		{
+			if( !globals->member<Object>( it->first ) )
+			{
+				renderer->option( optionName( it->first ), nullptr );
+			}
+		}
+	}
 }
 
 } // namespace GafferScene::Private::RendererAlgo
@@ -1072,23 +1147,7 @@ void LightLinks::outputLightFilterLinks( const std::string &lightName, IECoreSce
 namespace
 {
 
-const std::string g_optionPrefix( "option:" );
-
-const IECore::InternedString g_frameOptionName( "frame" );
-const IECore::InternedString g_cameraOptionLegacyName( "option:render:camera" );
-
 InternedString g_visibleAttributeName( "scene:visible" );
-
-IECore::InternedString optionName( const IECore::InternedString &globalsName )
-{
-	if( globalsName == g_cameraOptionLegacyName )
-	{
-		/// \todo Just rename the options themselves in StandardOptions and remove this?
-		return globalsName.string().substr( g_optionPrefix.size() + 7 );
-	}
-
-	return globalsName.string().substr( g_optionPrefix.size() );
-}
 
 // Base class for functors which output objects/lights etc.
 struct LocationOutput
@@ -1635,70 +1694,6 @@ namespace Private
 
 namespace RendererAlgo
 {
-
-void outputOptions( const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer )
-{
-	outputOptions( globals, /* previousGlobals = */ nullptr, renderer );
-}
-
-void outputOptions( const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer )
-{
-	// Output the current frame.
-
-	renderer->option( g_frameOptionName, new IntData( (int)round( Context::current()->getFrame() ) ) );
-
-	// Output anything that has changed or was added since last time.
-
-	CompoundObject::ObjectMap::const_iterator it, eIt;
-	for( it = globals->members().begin(), eIt = globals->members().end(); it != eIt; ++it )
-	{
-		if( !boost::starts_with( it->first.string(), g_optionPrefix ) )
-		{
-			continue;
-		}
-		if( const Object *object = it->second.get() )
-		{
-			bool changedOrAdded = true;
-			if( previousGlobals )
-			{
-				if( const Object *previousObject = previousGlobals->member<Object>( it->first ) )
-				{
-					changedOrAdded = *previousObject != *object;
-				}
-			}
-			if( changedOrAdded )
-			{
-				renderer->option( optionName( it->first ), object );
-			}
-		}
-		else
-		{
-			throw IECore::Exception( "Global \"" + it->first.string() + "\" is null" );
-		}
-	}
-
-	// Remove anything that has been removed since last time.
-
-	if( !previousGlobals )
-	{
-		return;
-	}
-
-	for( it = previousGlobals->members().begin(), eIt = previousGlobals->members().end(); it != eIt; ++it )
-	{
-		if( !boost::starts_with( it->first.string(), g_optionPrefix ) )
-		{
-			continue;
-		}
-		if( it->second.get() )
-		{
-			if( !globals->member<Object>( it->first ) )
-			{
-				renderer->option( optionName( it->first ), nullptr );
-			}
-		}
-	}
-}
 
 void outputOutputs( const ScenePlug *scene, const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer )
 {

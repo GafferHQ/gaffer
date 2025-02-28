@@ -1624,7 +1624,7 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 		if( m_dirtyGlobalComponents & GlobalsGlobalComponent )
 		{
 			RenderOptions renderOptions( m_scene.get() );
-			Private::RendererAlgo::outputOptions( renderOptions.globals.get(), m_renderOptions.globals.get(), m_renderer.get() );
+			renderOptions.outputOptions( m_renderer.get(), &m_renderOptions );
 			Private::RendererAlgo::outputOutputs( m_scene.get(), renderOptions.globals.get(), m_renderOptions.globals.get(), m_renderer.get() );
 			if( *renderOptions.globals != *m_renderOptions.globals )
 			{

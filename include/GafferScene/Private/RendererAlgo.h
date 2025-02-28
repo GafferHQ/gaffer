@@ -81,6 +81,7 @@ struct GAFFERSCENE_API RenderOptions
 	/// Returns true if `includedPurposes` includes the purpose defined by
 	/// `attributes`.
 	bool purposeIncluded( const IECore::CompoundObject *attributes ) const;
+	void outputOptions( IECoreScenePreview::Renderer *renderer, const RenderOptions *previousOptions = nullptr );
 };
 
 /// Creates the directories necessary to receive the outputs defined in globals.
@@ -104,9 +105,6 @@ GAFFERSCENE_API bool transformSamples( const Gaffer::M44fPlug *transformPlug, co
 /// hash behave the same as for the transformSamples() method. Multiple samples will only be generated for
 /// Primitives and Cameras, since other object types cannot be interpolated anyway.
 GAFFERSCENE_API bool objectSamples( const Gaffer::ObjectPlug *objectPlug, const std::vector<float> &sampleTimes, std::vector<IECore::ConstObjectPtr> &samples, IECore::MurmurHash *hash = nullptr );
-
-GAFFERSCENE_API void outputOptions( const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer );
-GAFFERSCENE_API void outputOptions( const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
 
 GAFFERSCENE_API void outputOutputs( const ScenePlug *scene, const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer );
 GAFFERSCENE_API void outputOutputs( const ScenePlug *scene, const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
