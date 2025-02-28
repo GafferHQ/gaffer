@@ -59,6 +59,7 @@
 #include "fmt/compile.h"
 #include "fmt/format.h"
 
+#include <unordered_map>
 #include <unordered_set>
 
 using namespace std;

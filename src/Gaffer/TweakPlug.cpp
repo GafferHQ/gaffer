@@ -50,6 +50,7 @@
 #include "boost/algorithm/string/join.hpp"
 #include "boost/algorithm/string/replace.hpp"
 
+#include <unordered_map>
 #include <unordered_set>
 
 using namespace std;
