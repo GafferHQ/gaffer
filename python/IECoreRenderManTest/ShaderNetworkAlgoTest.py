@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, John Haddon. All rights reserved.
+#  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,10 +34,39 @@
 #
 ##########################################################################
 
-from .RileyCapture import RileyCapture
-from .RendererTest import RendererTest
-from .ShaderNetworkAlgoTest import ShaderNetworkAlgoTest
+import unittest
 
-if __name__ == "__main__":
-	import unittest
+import imath
+
+import IECore
+import IECoreScene
+import IECoreRenderMan
+
+class ShaderNetworkAlgoTest( unittest.TestCase ) :
+
+	def testUSDPreviewSurface( self ) :
+
+		parameters = {
+			"diffuseColor" : IECore.Color3fData( imath.Color3f( 0.1, 0.2, 0.3 ) ),
+		}
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"previewSurface" : IECoreScene.Shader(
+					"UsdPreviewSurface", "surface", parameters
+				)
+			},
+			output = "previewSurface"
+		)
+
+		convertedNetwork = network.copy()
+		IECoreRenderMan.ShaderNetworkAlgo.convertUSDShaders( convertedNetwork )
+
+		convertedShader = convertedNetwork.getShader( "previewSurface" )
+		self.assertEqual( convertedShader.name, "PxrSurface" )
+		self.assertEqual( convertedShader.type, "ri:surface" )
+
+		self.assertEqual( convertedShader.parameters["diffuseColor"].value, imath.Color3f( 0.1, 0.2, 0.3 ) )
+
+if __name__ == "__main__" :
 	unittest.main()
