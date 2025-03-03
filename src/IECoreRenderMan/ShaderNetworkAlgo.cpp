@@ -47,6 +47,7 @@
 
 #include "OSL/oslquery.h"
 
+#include "boost/algorithm/string.hpp"
 #include "boost/container/flat_map.hpp"
 #include "boost/property_tree/xml_parser.hpp"
 
@@ -505,7 +506,43 @@ void transferUSDParameter( ShaderNetwork *network, InternedString shaderHandle, 
 	}
 }
 
+const InternedString g_bumpNormalParameter( "bumpNormal" );
+const InternedString g_clearcoatFaceColorParameter( "clearcoatFaceColor" );
+const InternedString g_clearcoatEdgeColorParameter( "clearcoatEdgeColor" );
+const InternedString g_clearcoatRoughnessParameter( "clearcoatRoughness" );
 const InternedString g_diffuseColorParameter( "diffuseColor" );
+const InternedString g_diffuseGainParameter( "diffuseGain") ;
+const InternedString g_glassIorParameter( "glassIor" );
+const InternedString g_glassRoughnessParameter( "glassRoughness" );
+const InternedString g_glowColorParameter( "glowColor" );
+const InternedString g_glowGainParameter( "glowGain" );
+const InternedString g_normalParameter( "normal" );
+const InternedString g_normalInParameter( "normalIn" );
+const InternedString g_presenceParameter( "presence" );
+const InternedString g_refractionGainParameter( "refractionGain" );
+const InternedString g_specularEdgeColorParameter( "specularEdgeColor" );
+const InternedString g_specularFaceColorParameter( "specularFaceColor" );
+const InternedString g_specularIorParameter( "specularIor" );
+const InternedString g_specularRoughnessParameter( "specularRoughness" );
+
+const std::vector<InternedString> g_pxrSurfaceParameters = {
+	g_diffuseGainParameter,
+	g_diffuseColorParameter,
+	g_specularFaceColorParameter,
+	g_specularEdgeColorParameter,
+	g_specularRoughnessParameter,
+	g_specularIorParameter,
+	g_clearcoatFaceColorParameter,
+	g_clearcoatEdgeColorParameter,
+	g_clearcoatRoughnessParameter,
+	g_glowGainParameter,
+	g_glowColorParameter,
+	g_bumpNormalParameter,
+	g_glassIorParameter,
+	g_glassRoughnessParameter,
+	g_refractionGainParameter,
+	g_presenceParameter
+};
 
 void replaceUSDShader( ShaderNetwork *network, InternedString handle, ShaderPtr &&newShader )
 {
@@ -550,11 +587,23 @@ void convertUSDShaders( ShaderNetwork *shaderNetwork )
 		ShaderPtr newShader;
 		if( shader->getName() == "UsdPreviewSurface" )
 		{
-			newShader = new Shader( "PxrSurface", "ri:surface" );
+			newShader = new Shader( "__usd/__UsdPreviewSurfaceParameters", "osl:shader" );
 
-			// Easy stuff with a one-to-one correspondence between `UsdPreviewSurface` and `PxrSurface`.
+			// `UsdPreviewSurface` and `UsdPreviewSurfaceParameters` match except for `normal` -> `normalIn`.
+			for( const auto &[p, v] : shader->parameters() )
+			{
+				newShader->parameters()[p != g_normalParameter ? p : g_normalInParameter] = v;
+			}
 
-			transferUSDParameter( shaderNetwork, handle, shader.get(), g_diffuseColorParameter, newShader.get(), g_diffuseColorParameter, Color3f( 0.18f ) );
+			ShaderPtr pxrSurfaceShader = new Shader( "PxrSurface", "ri:surface" );
+			const InternedString pxrSurfaceHandle = shaderNetwork->addShader( handle.string() + "PxrSurface", std::move( pxrSurfaceShader ) );
+
+			for( const auto &p : g_pxrSurfaceParameters )
+			{
+				shaderNetwork->addConnection( ShaderNetwork::Connection( { handle, InternedString( p.string() + "Out" ) }, { pxrSurfaceHandle, p } ) );
+			}
+
+			shaderNetwork->setOutput( { pxrSurfaceHandle, "" } );
 		}
 
 		if( newShader )
