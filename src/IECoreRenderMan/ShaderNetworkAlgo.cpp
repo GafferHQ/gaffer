@@ -38,6 +38,8 @@
 
 #include "ParamListAlgo.h"
 
+#include "IECoreScene/ShaderNetworkAlgo.h"
+
 #include "IECore/DataAlgo.h"
 #include "IECore/LRUCache.h"
 #include "IECore/MessageHandler.h"
@@ -54,6 +56,7 @@
 #include <unordered_set>
 
 using namespace std;
+using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;
 using namespace IECoreRenderMan;
@@ -421,6 +424,104 @@ void convertShaderNetworkWalk( const ShaderNetwork::Parameter &outputParameter, 
 	shadingNodes.push_back( node );
 }
 
+//////////////////////////////////////////////////////////////////////////
+// USD conversion code
+//////////////////////////////////////////////////////////////////////////
+
+template<typename T>
+T parameterValue( const Shader *shader, InternedString parameterName, const T &defaultValue )
+{
+	if( auto d = shader->parametersData()->member<TypedData<T>>( parameterName ) )
+	{
+		return d->readable();
+	}
+
+	if constexpr( is_same_v<remove_cv_t<T>, Color3f > )
+	{
+		// Correction for USD files which author `float3` instead of `color3f`.
+		// See `ShaderNetworkAlgoTest.testConvertUSDFloat3ToColor3f()`.
+		if( auto d = shader->parametersData()->member<V3fData>( parameterName ) )
+		{
+			return d->readable();
+		}
+		// Conversion of Color4 to Color3, for cases like converting `UsdUVTexture.scale`
+		// to `PxrTexture.colorScale`.
+		if( auto d = shader->parametersData()->member<Color4fData>( parameterName ) )
+		{
+			const Color4f &c = d->readable();
+			return Color3f( c[0], c[1], c[2] );
+		}
+	}
+	else if constexpr( is_same_v<remove_cv_t<T>, std::string> )
+	{
+		// Support for USD `token`, which will be loaded as `InternedString`, but which
+		// we want to translate to `string`.
+		if( auto d = shader->parametersData()->member<InternedStringData>( parameterName ) )
+		{
+			return d->readable().string();
+		}
+	}
+
+	return defaultValue;
+}
+
+// Traits class to handle the GeometricTypedData fiasco.
+template<typename T>
+struct DataTraits
+{
+
+	using DataType = IECore::TypedData<T>;
+
+};
+
+template<typename T>
+struct DataTraits<Vec2<T> >
+{
+
+	using DataType = IECore::GeometricTypedData<Vec2<T>>;
+
+};
+
+template<typename T>
+struct DataTraits<Vec3<T> >
+{
+
+	using DataType = IECore::GeometricTypedData<Vec3<T>>;
+
+};
+
+template<typename T>
+void transferUSDParameter( ShaderNetwork *network, InternedString shaderHandle, const Shader *usdShader, InternedString usdName, Shader *shader, InternedString name, const T &defaultValue )
+{
+	shader->parameters()[name] = new typename DataTraits<T>::DataType( parameterValue( usdShader, usdName, defaultValue ) );
+
+	if( ShaderNetwork::Parameter input = network->input( { shaderHandle, usdName } ) )
+	{
+		if( name != usdName )
+		{
+			network->addConnection( { input, { shaderHandle, name } } );
+			network->removeConnection( { input, { shaderHandle, usdName } } );
+		}
+	}
+}
+
+const InternedString g_diffuseColorParameter( "diffuseColor" );
+
+void replaceUSDShader( ShaderNetwork *network, InternedString handle, ShaderPtr &&newShader )
+{
+	// Replace original shader with the new.
+	network->setShader( handle, std::move( newShader ) );
+}
+
+ShaderNetworkPtr preprocessedNetwork( const IECoreScene::ShaderNetwork *shaderNetwork )
+{
+	ShaderNetworkPtr result = shaderNetwork->copy();
+
+	IECoreRenderMan::ShaderNetworkAlgo::convertUSDShaders( result.get() );
+
+	return result;
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -432,18 +533,36 @@ namespace IECoreRenderMan::ShaderNetworkAlgo
 
 std::vector<riley::ShadingNode> convert( const IECoreScene::ShaderNetwork *network )
 {
+	ConstShaderNetworkPtr preprocessedNetwork = ::preprocessedNetwork( network );
 	vector<riley::ShadingNode> result;
-	result.reserve( network->size() );
+	result.reserve( preprocessedNetwork->size() );
 
 	HandleSet visited;
-	convertShaderNetworkWalk( network->getOutput(), network, result, visited );
+	convertShaderNetworkWalk( preprocessedNetwork->getOutput(), preprocessedNetwork.get(), result, visited );
 
 	return result;
 }
 
 void convertUSDShaders( ShaderNetwork *shaderNetwork )
 {
-	throw IECore::NotImplementedException( "IECoreRenderMan::ShaderNetworkAlgo::convertUSDShaders Not implemented" );
+	for( const auto &[handle, shader] : shaderNetwork->shaders() )
+	{
+		ShaderPtr newShader;
+		if( shader->getName() == "UsdPreviewSurface" )
+		{
+			newShader = new Shader( "PxrSurface", "ri:surface" );
+
+			// Easy stuff with a one-to-one correspondence between `UsdPreviewSurface` and `PxrSurface`.
+
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_diffuseColorParameter, newShader.get(), g_diffuseColorParameter, Color3f( 0.18f ) );
+		}
+
+		if( newShader )
+		{
+			replaceUSDShader( shaderNetwork, handle, std::move( newShader ) );
+		}
+	}
+	IECoreScene::ShaderNetworkAlgo::removeUnusedShaders( shaderNetwork );
 }
 
 } // namespace IECoreRenderMan::ShaderNetworkAlgo
