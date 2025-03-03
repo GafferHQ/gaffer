@@ -517,6 +517,7 @@ void transferUSDParameter( ShaderNetwork *network, InternedString shaderHandle, 
 }
 
 const InternedString g_bumpNormalParameter( "bumpNormal" );
+const InternedString g_clearcoatDoubleSidedParameter( "clearcoatDoubleSided" );
 const InternedString g_clearcoatFaceColorParameter( "clearcoatFaceColor" );
 const InternedString g_clearcoatEdgeColorParameter( "clearcoatEdgeColor" );
 const InternedString g_clearcoatRoughnessParameter( "clearcoatRoughness" );
@@ -524,6 +525,7 @@ const InternedString g_defaultFloatParameter( "defaultFloat" );
 const InternedString g_defaultFloat3Parameter( "defaultFloat3" );
 const InternedString g_defaultIntParameter( "defaultInt" );
 const InternedString g_diffuseColorParameter( "diffuseColor" );
+const InternedString g_diffuseDoubleSidedParameter( "diffuseDoubleSided" );
 const InternedString g_diffuseGainParameter( "diffuseGain") ;
 const InternedString g_fallbackParameter( "fallback" );
 const InternedString g_glassIorParameter( "glassIor" );
@@ -536,9 +538,12 @@ const InternedString g_presenceParameter( "presence" );
 const InternedString g_refractionGainParameter( "refractionGain" );
 const InternedString g_resultFParameter( "resultF" );
 const InternedString g_resultRGBParameter( "resultRGB" );
+const InternedString g_roughSpecularDoubleSidedParameter( "roughSpecularDoubleSided" );
+const InternedString g_specularDoubleSidedParameter( "specularDoubleSided" );
 const InternedString g_specularEdgeColorParameter( "specularEdgeColor" );
 const InternedString g_specularFaceColorParameter( "specularFaceColor" );
 const InternedString g_specularIorParameter( "specularIor" );
+const InternedString g_specularModelTypeParameter( "specularModelType" );
 const InternedString g_specularRoughnessParameter( "specularRoughness" );
 const InternedString g_typeParameter( "type" );
 const InternedString g_usdPrimvarReaderIntShaderName( "UsdPrimvarReader_int" );
@@ -659,6 +664,13 @@ void convertUSDShaders( ShaderNetwork *shaderNetwork )
 			}
 
 			ShaderPtr pxrSurfaceShader = new Shader( "PxrSurface", "ri:surface" );
+			// Use GGX instead of Beckman specular model.
+			pxrSurfaceShader->parameters()[g_specularModelTypeParameter] = new IECore::IntData( 1 );
+			pxrSurfaceShader->parameters()[g_diffuseDoubleSidedParameter] = new IECore::IntData( 1 );
+			pxrSurfaceShader->parameters()[g_specularDoubleSidedParameter] = new IECore::IntData( 1 );
+			pxrSurfaceShader->parameters()[g_roughSpecularDoubleSidedParameter] = new IECore::IntData( 1 );
+			pxrSurfaceShader->parameters()[g_clearcoatDoubleSidedParameter] = new IECore::IntData( 1 );
+
 			const InternedString pxrSurfaceHandle = shaderNetwork->addShader( handle.string() + "PxrSurface", std::move( pxrSurfaceShader ) );
 
 			for( const auto &p : g_pxrSurfaceParameters )
