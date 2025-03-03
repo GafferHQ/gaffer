@@ -460,6 +460,16 @@ T parameterValue( const Shader *shader, InternedString parameterName, const T &d
 			return Color3f( c[0], c[1], c[2] );
 		}
 	}
+	else if constexpr( is_same_v<remove_cv_t<T>, V3f > )
+	{
+		// Conversion of V2f to V3f, for cases like converting `UsdPrimvarReader_float2.fallback`
+		// to `PxrPrimvar.defaultFloat3`
+		if( auto d = shader->parametersData()->member<V2fData>( parameterName ) )
+		{
+			const V2f &v = d->readable();
+			return V3f( v[0], v[1], 0.f );
+		}
+	}
 	else if constexpr( is_same_v<remove_cv_t<T>, std::string> )
 	{
 		// Support for USD `token`, which will be loaded as `InternedString`, but which
@@ -517,8 +527,12 @@ const InternedString g_bumpNormalParameter( "bumpNormal" );
 const InternedString g_clearcoatFaceColorParameter( "clearcoatFaceColor" );
 const InternedString g_clearcoatEdgeColorParameter( "clearcoatEdgeColor" );
 const InternedString g_clearcoatRoughnessParameter( "clearcoatRoughness" );
+const InternedString g_defaultFloatParameter( "defaultFloat" );
+const InternedString g_defaultFloat3Parameter( "defaultFloat3" );
+const InternedString g_defaultIntParameter( "defaultInt" );
 const InternedString g_diffuseColorParameter( "diffuseColor" );
 const InternedString g_diffuseGainParameter( "diffuseGain") ;
+const InternedString g_fallbackParameter( "fallback" );
 const InternedString g_glassIorParameter( "glassIor" );
 const InternedString g_glassRoughnessParameter( "glassRoughness" );
 const InternedString g_glowColorParameter( "glowColor" );
@@ -527,10 +541,17 @@ const InternedString g_normalParameter( "normal" );
 const InternedString g_normalInParameter( "normalIn" );
 const InternedString g_presenceParameter( "presence" );
 const InternedString g_refractionGainParameter( "refractionGain" );
+const InternedString g_resultFParameter( "resultF" );
+const InternedString g_resultIParameter( "resultI" );
+const InternedString g_resultRGBParameter( "resultRGB" );
 const InternedString g_specularEdgeColorParameter( "specularEdgeColor" );
 const InternedString g_specularFaceColorParameter( "specularFaceColor" );
 const InternedString g_specularIorParameter( "specularIor" );
 const InternedString g_specularRoughnessParameter( "specularRoughness" );
+const InternedString g_typeParameter( "type" );
+const InternedString g_usdPrimvarReaderIntShaderName( "UsdPrimvarReader_int" );
+const InternedString g_usdPrimvarReaderFloatShaderName( "UsdPrimvarReader_float" );
+const InternedString g_varnameParameter( "varname" );
 
 const std::vector<InternedString> g_pxrSurfaceParameters = {
 	g_diffuseGainParameter,
@@ -551,10 +572,57 @@ const std::vector<InternedString> g_pxrSurfaceParameters = {
 	g_presenceParameter
 };
 
+const std::unordered_map<std::string, std::tuple<std::string, InternedString, std::variant<float, V3f, int>>> g_primVarMap = {
+	{ "UsdPrimvarReader_float", { "float", g_defaultFloatParameter, 0.f } },
+	{ "UsdPrimvarReader_float2", { "float2", g_defaultFloat3Parameter, V3f( 0.f ) } },
+	{ "UsdPrimvarReader_float3", { "vector", g_defaultFloat3Parameter, V3f( 0.f ) } },
+	{ "UsdPrimvarReader_normal", { "normal", g_defaultFloat3Parameter, V3f( 0.f ) } },
+	{ "UsdPrimvarReader_point", { "point", g_defaultFloat3Parameter, V3f( 0.f ) } },
+	{ "UsdPrimvarReader_vector", { "vector", g_defaultFloat3Parameter, V3f( 0.f ) } },
+	{ "UsdPrimvarReader_int", { "int", g_defaultIntParameter, 0 } }
+};
+
+const InternedString remapOutputParameterName( const InternedString name, const InternedString shaderName )
+{
+	if( boost::starts_with( shaderName.string(), "UsdPrimvarReader" ) )
+	{
+		if( shaderName == g_usdPrimvarReaderFloatShaderName )
+		{
+			return g_resultFParameter;
+		}
+		else if( shaderName == g_usdPrimvarReaderIntShaderName )
+		{
+			return g_resultIParameter;
+		}
+		else
+		{
+			return g_resultRGBParameter;
+		}
+	}
+
+	return name;
+}
+
 void replaceUSDShader( ShaderNetwork *network, InternedString handle, ShaderPtr &&newShader )
 {
+	const InternedString shaderName = network->getShader( handle )->getName();
+
 	// Replace original shader with the new.
 	network->setShader( handle, std::move( newShader ) );
+
+	// Iterating over a copy because we will modify the range during iteration
+	ShaderNetwork::ConnectionRange range = network->outputConnections( handle );
+	std::vector<ShaderNetwork::Connection> outputConnections( range.begin(), range.end() );
+	for( auto &c : outputConnections )
+	{
+		const InternedString remappedName = remapOutputParameterName( c.source.name, shaderName );
+		if( remappedName != c.source.name )
+		{
+			network->removeConnection( c );
+			c.source.name = remapOutputParameterName( c.source.name, shaderName );
+			network->addConnection( c );
+		}
+	}
 }
 
 ShaderNetworkPtr preprocessedNetwork( const IECoreScene::ShaderNetwork *shaderNetwork )
@@ -611,6 +679,23 @@ void convertUSDShaders( ShaderNetwork *shaderNetwork )
 			}
 
 			shaderNetwork->setOutput( { pxrSurfaceHandle, "" } );
+		}
+
+		const auto it = g_primVarMap.find( shader->getName() );
+		if( it != g_primVarMap.end() )
+		{
+			newShader = new Shader( "PxrAttribute", "osl:shader" );
+			const auto &[typeName, defaultParameter, defaultValue] = it->second;
+
+			newShader->parameters()[g_typeParameter] = new StringData( typeName );
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_varnameParameter, newShader.get(), g_varnameParameter, string() );
+			std::visit(
+				[&shaderNetwork, &handle, &shader, &newShader, &defaultParameter]( auto &&v )
+				{
+					transferUSDParameter( shaderNetwork, handle, shader.get(), g_fallbackParameter, newShader.get(), defaultParameter, v );
+				},
+				defaultValue
+			);
 		}
 
 		if( newShader )
