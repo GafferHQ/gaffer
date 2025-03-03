@@ -98,6 +98,12 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 		self.assertEqual( convertedSurface.name, "PxrSurface" )
 		self.assertEqual( convertedSurface.type, "ri:surface" )
 
+		self.assertEqual( convertedSurface.parameters["specularModelType"].value, 1 )
+		self.assertEqual( convertedSurface.parameters["diffuseDoubleSided"].value, 1 )
+		self.assertEqual( convertedSurface.parameters["specularDoubleSided"].value, 1 )
+		self.assertEqual( convertedSurface.parameters["roughSpecularDoubleSided"].value, 1 )
+		self.assertEqual( convertedSurface.parameters["clearcoatDoubleSided"].value, 1 )
+
 		for pxrSurfaceIn in [
 			"diffuseGain",
 			"diffuseColor",
