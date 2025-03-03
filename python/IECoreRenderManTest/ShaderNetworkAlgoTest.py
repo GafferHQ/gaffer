@@ -120,6 +120,47 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 		self.assertEqual( network.getOutput(), ( "previewSurfacePxrSurface", "" ) )
 
+	def testConvertUSDPrimvarReader( self ) :
+
+		for usdDataType, fallback, riType, riDefaultParameter, riDefault, readerOut, surfaceIn in [
+			( "float", 2.0, "float", "defaultFloat", 2.0, "resultF", "metallic" ),
+			( "float2", imath.V2f( 1, 2 ), "float2", "defaultFloat3", imath.Color3f( 1, 2, 0 ), "resultRGB", "diffuseColor" ),
+			( "float3", imath.V3f( 1, 2, 3 ), "vector", "defaultFloat3", imath.Color3f( 1, 2, 3 ), "resultRGB", "diffuseColor" ),
+			( "normal", imath.V3f( 1, 2, 3 ), "normal", "defaultFloat3", imath.Color3f( 1, 2, 3 ), "resultRGB", "diffuseColor" ),
+			( "point", imath.V3f( 1, 2, 3 ), "point", "defaultFloat3", imath.Color3f( 1, 2, 3 ), "resultRGB", "diffuseColor" ),
+			( "vector", imath.V3f( 1, 2, 3 ), "vector", "defaultFloat3", imath.Color3f( 1, 2, 3 ), "resultRGB", "diffuseColor" ),
+			( "int", 10, "int", "defaultInt", 10, "resultF", "metallic" ),
+		] :
+			with self.subTest( usdDataType = usdDataType, fallback = fallback, riType = riType, riDefaultParameter = riDefaultParameter, riDefault = riDefault, readerOut = readerOut, surfaceIn = surfaceIn ) :
+				network = IECoreScene.ShaderNetwork(
+					shaders = {
+						"previewSurface" : IECoreScene.Shader( "UsdPreviewSurface" ),
+						"reader" : IECoreScene.Shader(
+							"UsdPrimvarReader_{}".format( usdDataType ), "shader",
+							{
+								"varname" : "test",
+								"fallback" : fallback,
+							}
+						),
+					},
+					connections = [
+						( ( "reader", readerOut ), ( "previewSurface", surfaceIn ) ),
+					],
+					output = "previewSurface",
+				)
+
+				IECoreRenderMan.ShaderNetworkAlgo.convertUSDShaders( network )
+
+				reader = network.getShader( "reader" )
+				self.assertEqual( reader.name, "PxrPrimvar" )
+				self.assertEqual( len( reader.parameters ), 3 )
+				self.assertEqual( reader.parameters["varname"].value, "test" )
+				self.assertEqual( reader.parameters["type"].value, riType )
+				if riDefaultParameter is not None :
+					self.assertEqual( reader.parameters[riDefaultParameter].value, riDefault )
+
+				self.assertEqual( network.input( ( "previewSurface", surfaceIn ) ), ( "reader", readerOut ) )
+
 
 if __name__ == "__main__" :
 	unittest.main()
