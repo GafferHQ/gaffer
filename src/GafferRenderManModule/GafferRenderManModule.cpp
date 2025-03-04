@@ -38,6 +38,7 @@
 
 #include "GafferRenderMan/RenderManAttributes.h"
 #include "GafferRenderMan/RenderManOptions.h"
+#include "GafferRenderMan/RenderManShader.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
@@ -49,5 +50,5 @@ BOOST_PYTHON_MODULE( _GafferRenderMan )
 
 	GafferBindings::DependencyNodeClass<RenderManAttributes>();
 	GafferBindings::DependencyNodeClass<RenderManOptions>();
-
+	GafferBindings::DependencyNodeClass<RenderManShader>();
 }

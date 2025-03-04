@@ -541,6 +541,51 @@ class RendererTest( GafferTest.TestCase ) :
 		image = OpenImageIO.ImageBuf( fileName )
 		self.assertEqual( image.getpixel( 320, 240, 0 ), ( 1.0, 0.5, 0.25, 1.0 ) )
 
+	def testArrayConnections( self ) :
+
+		with IECoreRenderManTest.RileyCapture() as capture :
+
+			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				"RenderMan",
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+			)
+
+			renderer.object(
+				"sphere",
+				IECoreScene.SpherePrimitive(),
+				renderer.attributes( IECore.CompoundObject( {
+					"ri:surface" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"mattes" : IECoreScene.Shader( "PxrMatteID", "osl:shader" ),
+							"styles" : IECoreScene.Shader( "PxrStylizedControl", "osl:shader" ),
+							"output" : IECoreScene.Shader( "PxrSurface", "ri:surface" ),
+						},
+						connections = [
+							( ( "mattes", "resultAOV" ), ( "output", "utilityPattern[0]" ) ),
+							( ( "styles", "resultAOV" ), ( "output", "utilityPattern[1]" ) ),
+						],
+						output = "output",
+					),
+				} ) )
+			)
+
+			del renderer
+
+		material = next(
+			x for x in capture.json if x["method"] == "CreateMaterial"
+		)
+		outputNode = next(
+			x for x in material["material"]["nodes"] if x["name"] == "PxrSurface"
+		)
+		utilityPattern = next(
+			x for x in outputNode["params"]["params"] if x["info"]["name"] == "utilityPattern"
+		)
+		self.assertEqual( utilityPattern["data"], [ "mattes:resultAOV", "styles:resultAOV" ] )
+		self.assertEqual( utilityPattern["info"]["array"], True )
+		self.assertEqual( utilityPattern["info"]["length"], 2 )
+		self.assertEqual( utilityPattern["info"]["detail"], 5 ) #  Reference
+		self.assertEqual( utilityPattern["info"]["type"], 0 ) # Integer
+
 	def testPortalLight( self ) :
 
 		# Render with a dome light on its own.

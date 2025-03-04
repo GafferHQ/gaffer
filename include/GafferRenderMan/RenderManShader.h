@@ -36,15 +36,28 @@
 
 #pragma once
 
+#include "GafferRenderMan/Export.h"
+#include "GafferRenderMan/TypeIds.h"
+
+#include "GafferScene/Shader.h"
+
 namespace GafferRenderMan
 {
 
-enum TypeId
+class GAFFERRENDERMAN_API RenderManShader : public GafferScene::Shader
 {
-	RenderManAttributesTypeId = 110400,
-	RenderManOptionsTypeId = 110401,
-	RenderManShaderTypeId = 110402,
-	LastTypeId = 110450
+
+	public :
+
+		RenderManShader( const std::string &name=defaultName<RenderManShader>() );
+		~RenderManShader() override;
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferRenderMan::RenderManShader, RenderManShaderTypeId, GafferScene::Shader );
+
+		void loadShader( const std::string &shaderName, bool keepExistingValues=false ) override;
+
 };
+
+IE_CORE_DECLAREPTR( RenderManShader )
 
 } // namespace GafferRenderMan

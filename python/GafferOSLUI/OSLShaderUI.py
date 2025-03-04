@@ -127,7 +127,9 @@ __widgetTypes = {
 	"checkBox" : "GafferUI.BoolPlugValueWidget",
 	"popup" : "GafferUI.PresetsPlugValueWidget",
 	"mapper" : "GafferUI.PresetsPlugValueWidget",
-	"filename" : "GafferUI.PathPlugValueWidget",
+	"filename" : "GafferUI.FileSystemPathPlugValueWidget",
+	# For RenderMan.
+	"assetIdInput" : "GafferUI.FileSystemPathPlugValueWidget",
 	"null" : "",
 }
 

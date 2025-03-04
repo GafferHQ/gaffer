@@ -50,6 +50,7 @@
 
 #include "fmt/format.h"
 
+#include <regex>
 #include <unordered_set>
 
 using namespace std;
@@ -67,7 +68,7 @@ namespace
 struct ShaderInfo
 {
 	riley::ShadingNode::Type type = riley::ShadingNode::Type::k_Invalid;
-	using ParameterTypeMap = std::unordered_map<InternedString, pxrcore::DataType>;
+	using ParameterTypeMap = std::unordered_map<RtUString, pxrcore::DataType>;
 	ParameterTypeMap parameterTypes;
 };
 
@@ -79,7 +80,7 @@ void loadParameterTypes( const boost::property_tree::ptree &tree, ShaderInfo::Pa
 	{
 		if( child.first == "param" )
 		{
-			const string name = child.second.get<string>( "<xmlattr>.name" );
+			const RtUString name( child.second.get<string>( "<xmlattr>.name" ).c_str() );
 			const string type = child.second.get<string>( "<xmlattr>.type" );
 			if( type == "int" )
 			{
@@ -135,7 +136,7 @@ void loadParameterTypes( const boost::property_tree::ptree &tree, ShaderInfo::Pa
 			}
 			else
 			{
-				IECore::msg( IECore::Msg::Warning, "IECoreRenderMan", fmt::format( "Unknown type `{}` for parameter \"{}\".", type, name ) );
+				IECore::msg( IECore::Msg::Warning, "IECoreRenderMan", fmt::format( "Unknown type `{}` for parameter \"{}\".", type, name.CStr() ) );
 			}
 		}
 		else if( child.first == "page" )
@@ -208,41 +209,44 @@ ConstShaderInfoPtr shaderInfoFromOSLQuery( OSL::OSLQuery &query )
 
 	for( const auto &parameter : query )
 	{
-		if( parameter.type == OIIO::TypeInt )
+		const RtUString name( parameter.name.c_str() );
+		OIIO::TypeDesc type = parameter.type;
+		type.unarray();
+		if( type == OIIO::TypeInt )
 		{
-			result->parameterTypes[parameter.name.c_str()] = pxrcore::DataType::k_integer;
+			result->parameterTypes[name] = pxrcore::DataType::k_integer;
 		}
-		else if( parameter.type == OIIO::TypeFloat )
+		else if( type == OIIO::TypeFloat )
 		{
-			result->parameterTypes[parameter.name.c_str()] = pxrcore::DataType::k_float;
+			result->parameterTypes[name] = pxrcore::DataType::k_float;
 		}
-		else if( parameter.type == OIIO::TypeColor )
+		else if( type == OIIO::TypeColor )
 		{
-			result->parameterTypes[parameter.name.c_str()] = pxrcore::DataType::k_color;
+			result->parameterTypes[name] = pxrcore::DataType::k_color;
 		}
-		else if( parameter.type == OIIO::TypePoint )
+		else if( type == OIIO::TypePoint )
 		{
-			result->parameterTypes[parameter.name.c_str()] = pxrcore::DataType::k_point;
+			result->parameterTypes[name] = pxrcore::DataType::k_point;
 		}
-		else if( parameter.type == OIIO::TypeVector )
+		else if( type == OIIO::TypeVector )
 		{
-			result->parameterTypes[parameter.name.c_str()] = pxrcore::DataType::k_vector;
+			result->parameterTypes[name] = pxrcore::DataType::k_vector;
 		}
-		else if( parameter.type == OIIO::TypeNormal )
+		else if( type == OIIO::TypeNormal )
 		{
-			result->parameterTypes[parameter.name.c_str()] = pxrcore::DataType::k_normal;
+			result->parameterTypes[name] = pxrcore::DataType::k_normal;
 		}
-		else if( parameter.type == OIIO::TypeMatrix44 )
+		else if( type == OIIO::TypeMatrix44 )
 		{
-			result->parameterTypes[parameter.name.c_str()] = pxrcore::DataType::k_matrix;
+			result->parameterTypes[name] = pxrcore::DataType::k_matrix;
 		}
-		else if( parameter.type == OIIO::TypeString )
+		else if( type == OIIO::TypeString )
 		{
-			result->parameterTypes[parameter.name.c_str()] = pxrcore::DataType::k_string;
+			result->parameterTypes[name] = pxrcore::DataType::k_string;
 		}
 		else if( parameter.isstruct )
 		{
-			result->parameterTypes[parameter.name.c_str()] = pxrcore::DataType::k_struct;
+			result->parameterTypes[name] = pxrcore::DataType::k_struct;
 		}
 		else
 		{
@@ -290,9 +294,26 @@ ShaderInfoCache g_shaderInfoCache(
 
 );
 
-void convertConnection( const IECoreScene::ShaderNetwork::Connection &connection, const ShaderInfo *shaderInfo, RtParamList &paramList )
+using ArrayConnections = std::unordered_map<RtUString, vector<RtUString>>;
+const std::regex g_arrayIndexRegex( R"((\w+)\[([0-9]+)\])" );
+
+void convertConnection( const IECoreScene::ShaderNetwork::Connection &connection, const ShaderInfo *shaderInfo, RtParamList &paramList, ArrayConnections &arrayConnections )
 {
-	auto it = shaderInfo->parameterTypes.find( connection.destination.name );
+	RtUString destination;
+	std::optional<size_t> destinationIndex;
+
+	std::smatch arrayIndexMatch;
+	if( std::regex_match( connection.destination.name.string(), arrayIndexMatch, g_arrayIndexRegex ) )
+	{
+		destination = RtUString( arrayIndexMatch.str( 1 ).c_str() );
+		destinationIndex = std::stoi( arrayIndexMatch.str( 2 ) );
+	}
+	else
+	{
+		destination = RtUString( connection.destination.name.c_str() );
+	}
+
+	auto it = shaderInfo->parameterTypes.find( destination );
 	if( it == shaderInfo->parameterTypes.end() )
 	{
 		IECore::msg(
@@ -310,20 +331,30 @@ void convertConnection( const IECoreScene::ShaderNetwork::Connection &connection
 	{
 		reference += ":" + connection.source.name.string();
 	}
-
 	const RtUString referenceU( reference.c_str() );
 
-	RtParamList::ParamInfo const info = {
-		RtUString( connection.destination.name.c_str() ),
-		it->second,
-		pxrcore::DetailType::k_reference,
-		1,
-		false,
-		false,
-		false
-	};
+	if( !destinationIndex )
+	{
+		RtParamList::ParamInfo const info = {
+			destination,
+			it->second,
+			pxrcore::DetailType::k_reference,
+			1,
+			false,
+			false,
+			false
+		};
 
-	paramList.SetParam( info, &referenceU );
+		paramList.SetParam( info, &referenceU );
+	}
+	else
+	{
+		// We must connect all array elements at once. Buffer up for
+		// later connection.
+		auto &array = arrayConnections[destination];
+		array.resize( max( array.size(), *destinationIndex + 1 ) );
+		array[*destinationIndex] = referenceU;
+	}
 }
 
 using HandleSet = std::unordered_set<InternedString>;
@@ -349,12 +380,42 @@ void convertShaderNetworkWalk( const ShaderNetwork::Parameter &outputParameter, 
 		RtParamList()
 	};
 
-	ParamListAlgo::convertParameters( shader->parameters(), node.params );
+	for( const auto &[parameterName, parameterValue] : shader->parameters() )
+	{
+		if( std::regex_match( parameterName.string(), g_arrayIndexRegex ) )
+		{
+			// Ignore array element values for now. Gaffer generates these when
+			// we use ArrayPlugs to represent shader parameters, but RenderMan
+			// only accepts whole arrays as values. In practice, we're only using
+			// ArrayPlugs where RenderMan is only interested in connections and not
+			// values anyway, so we're not losing anything.
+		}
+		else
+		{
+			ParamListAlgo::convertParameter( RtUString( parameterName.c_str() ), parameterValue.get(), node.params );
+		}
+	}
 
+	ArrayConnections arrayConnections;
 	for( const auto &connection : shaderNetwork->inputConnections( outputParameter.shader ) )
 	{
 		convertShaderNetworkWalk( connection.source, shaderNetwork, shadingNodes, visited );
-		convertConnection( connection, shaderInfo.get(), node.params );
+		convertConnection( connection, shaderInfo.get(), node.params, arrayConnections );
+	}
+
+	for( const auto &[destination, references] : arrayConnections )
+	{
+		RtParamList::ParamInfo const info = {
+			destination,
+			shaderInfo->parameterTypes.at( destination ),
+			pxrcore::DetailType::k_reference,
+			(uint32_t)references.size(),
+			true,
+			false,
+			false
+		};
+
+		node.params.SetParam( info, references.data() );
 	}
 
 	shadingNodes.push_back( node );

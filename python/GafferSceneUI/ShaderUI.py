@@ -62,13 +62,18 @@ def __shaderMetadata( node, key ) :
 		node["type"].getValue() + ":" + node["name"].getValue(), key
 	)
 
-def __parameterUserDefault( plug ) :
+def __parameterMetadata( plug, key, shaderFallbackKey = None ) :
 
 	shader = plug.node()
-	return Gaffer.Metadata.value(
+	result = Gaffer.Metadata.value(
 		shader["type"].getValue() + ":" + shader["name"].getValue() + ":" + plug.relativeName( shader["parameters"] ),
-		"userDefault"
+		key
 	)
+
+	if result is not None :
+		return result
+
+	return __shaderMetadata( shader, shaderFallbackKey ) if shaderFallbackKey is not None else None
 
 Gaffer.Metadata.registerNode(
 
@@ -135,7 +140,13 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"parameters..." : [
+		"parameters.*" : [
+
+			"noduleLayout:visible", functools.partial( __parameterMetadata, key = "noduleLayout:visible", shaderFallbackKey = "noduleLayout:defaultVisibility" ),
+
+		],
+
+		"parameters.*..." : [
 
 			# Although the parameters plug is positioned
 			# as we want above, we must also register
@@ -144,7 +155,7 @@ Gaffer.Metadata.registerNode(
 			# individually.
 			"noduleLayout:section", "left",
 
-			"userDefault", __parameterUserDefault,
+			"userDefault", functools.partial( __parameterMetadata, key = "userDefault" ),
 
 		],
 

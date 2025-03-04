@@ -43,6 +43,7 @@ API
 ---
 
 - Attributes, Options : Added protected constructors for initialising from attributes/options defined by metadata.
+- ShaderUI : Added support for `noduleLayout:visible` and `noduleLayout:defaultVisibility` metadata, which can be registered via the Metadata API in the same way as `userDefault`.
 
 1.5.6.0 (relative to 1.5.5.0)
 =======
