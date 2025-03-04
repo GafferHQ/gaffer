@@ -1362,7 +1362,7 @@ libraries = {
 		"pythonEnvAppends" : {
 			"CPPDEFINES" : [ "RMAN_RIX_NO_WARN_DEPRECATED" ],
 			"CPPPATH" : [ "$RENDERMAN_ROOT/include" ],
-			"LIBS" : [ "IECoreRenderMan" ],
+			"LIBS" : [ "IECoreRenderMan", "IECoreScene$CORTEX_LIB_SUFFIX" ],
 		},
 		"requiredOptions" : [ "RENDERMAN_ROOT" ],
 	},
