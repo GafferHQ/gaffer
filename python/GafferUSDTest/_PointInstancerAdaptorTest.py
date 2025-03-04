@@ -202,6 +202,64 @@ class _PointInstancerAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( type( pointInstancerAdaptorEncapsulating["out"].object( "/inst/instances" ) ), GafferScene.Capsule )
 		self.assertScenesRenderSame( pointInstancerAdaptor["out"], pointInstancerAdaptorEncapsulating["out"], expandProcedurals = True, ignoreLinks = True )
 
+	def testRelativePrototypes( self ):
+
+		# Since we've tested with this scene above, and know it works, we can use it to validate how we handle
+		# relative prototypes
+		sceneReader = GafferScene.SceneReader()
+		sceneReader["fileName"].setValue( "${GAFFER_ROOT}/python/GafferSceneTest/usdFiles/recursiveInst.usda" )
+
+		pointInstancerAdaptor = GafferUSD._PointInstancerAdaptor()
+		pointInstancerAdaptor["in"].setInput( sceneReader["out"] )
+		pointInstancerAdaptor["renderer"].setValue( "Arnold" )
+
+		postGroup = GafferScene.Group()
+		postGroup["transform"]["rotate"]["x"].setValue( 30 )
+		postGroup["in"][0].setInput( pointInstancerAdaptor["out"] )
+
+		preGroup = GafferScene.Group()
+		preGroup["transform"]["rotate"]["x"].setValue( 30 )
+		preGroup["in"][0].setInput( sceneReader["out"] )
+
+		pointInstancerAdaptorAfterGroup = GafferUSD._PointInstancerAdaptor()
+		pointInstancerAdaptorAfterGroup["in"].setInput( preGroup["out"] )
+		pointInstancerAdaptorAfterGroup["renderer"].setValue( "Arnold" )
+
+		self.assertScenesRenderSame( postGroup["out"], pointInstancerAdaptorAfterGroup["out"], expandProcedurals = True, ignoreLinks = True )
+
+		# It would be nice if these capsules would hash the same, but they don't, because the global sets are
+		# different between these two setups. Instead, in order to demonstrate getting matching hashes when
+		# the same instancing is performed at different points in the hierarchy, we need to construct a scene
+		# with both instancers at once, so the sets will match.
+		self.assertNotEqual(
+			pointInstancerAdaptorAfterGroup["out"].object( "/group/inst/instances" ).hash(),
+			pointInstancerAdaptor["out"].object( "/inst/instances" ).hash()
+		)
+
+		refMerge = GafferScene.Parent()
+		refMerge["parent"].setValue( "/" )
+		refMerge["in"].setInput( pointInstancerAdaptor["out"] )
+		refMerge["children"][0].setInput( pointInstancerAdaptorAfterGroup["out"] )
+
+		preMerge = GafferScene.Parent()
+		preMerge["parent"].setValue( "/" )
+		preMerge["in"].setInput( sceneReader["out"] )
+		preMerge["children"][0].setInput( preGroup["out"] )
+
+		pointInstancerAdaptorAfterMerge = GafferUSD._PointInstancerAdaptor()
+		pointInstancerAdaptorAfterMerge["in"].setInput( preMerge["out"] )
+		pointInstancerAdaptorAfterMerge["renderer"].setValue( "Arnold" )
+
+		self.assertScenesRenderSame( pointInstancerAdaptorAfterMerge["out"], refMerge["out"], expandProcedurals = True, ignoreLinks = True )
+
+		# Make sure that the same source, placed at different points in the hierarchy, results in a capsule
+		# with the same hash, so that the renderer will instance these capsules properly.
+		self.assertEqual(
+			pointInstancerAdaptorAfterMerge["out"].object( "/inst/instances" ).hash(),
+			pointInstancerAdaptorAfterMerge["out"].object( "/group/inst/instances" ).hash()
+		)
+
+
 	def testNullObjectInInstancerSet( self ):
 		# If the user has applied an Instancer node of their own, there may be locations that are tagged as being
 		# in the usd:pointInstancers set, but don't have a point cloud object there. We want to ignore these
