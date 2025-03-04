@@ -36,7 +36,7 @@
 
 #include "MaterialCache.h"
 
-#include "ShaderNetworkAlgo.h"
+#include "IECoreRenderMan/ShaderNetworkAlgo.h"
 
 using namespace std;
 using namespace IECore;
