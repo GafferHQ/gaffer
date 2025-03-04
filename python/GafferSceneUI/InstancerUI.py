@@ -220,8 +220,9 @@ class _ColumnHeadings( GafferUI.ListContainer ):
 		GafferUI.ListContainer.__init__( self, GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 		with self:
 			GafferUI.Label( "<h4><b>" + headings[0] + "</b></h4>", toolTip = toolTipOverride )._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
-			GafferUI.Spacer( imath.V2i( 25, 2 ) ) # approximate width of a BoolWidget Switch
+			GafferUI.Spacer( imath.V2i( 25, 2 ), imath.V2i( 25, 2 ) ) # approximate width of a BoolWidget Switch
 			self.addChild( GafferUI.Label( "<h4><b>" + headings[1] + "</b></h4>", toolTip = toolTipOverride ), expand = True, horizontalAlignment=GafferUI.HorizontalAlignment.Left )
+			GafferUI.Spacer( imath.V2i( 0 ) )
 			GafferUI.Label( "<h4><b>" + headings[2] + "</b></h4>", toolTip = toolTipOverride )._qtWidget().setFixedWidth( _variationsPlugValueWidgetWidth() )
 
 # Would be really nice if we could specify constructor arguments for widgets in the metadata,
@@ -295,50 +296,50 @@ Gaffer.Metadata.registerNode(
 
 	"layout:customWidget:seedColumnHeadings:widgetType", "GafferSceneUI.InstancerUI._SeedColumnHeadings",
 	"layout:customWidget:seedColumnHeadings:section", "Context Variations",
-	"layout:customWidget:seedColumnHeadings:index", 19,
+	"layout:customWidget:seedColumnHeadings:index", 100,
 
 	"layout:customWidget:idContextCountSpacer:widgetType", "GafferSceneUI.InstancerUI._SeedCountSpacer",
 	"layout:customWidget:idContextCountSpacer:section", "Context Variations",
-	"layout:customWidget:idContextCountSpacer:index", 20,
+	"layout:customWidget:idContextCountSpacer:index", 101,
 	"layout:customWidget:idContextCountSpacer:accessory", True,
 
 	"layout:customWidget:idContextCount:widgetType", "GafferSceneUI.InstancerUI._SeedCountWidget",
 	"layout:customWidget:idContextCount:section", "Context Variations",
-	"layout:customWidget:idContextCount:index", 20,
+	"layout:customWidget:idContextCount:index", 101,
 	"layout:customWidget:idContextCount:accessory", True,
 
 	"layout:customWidget:seedVariableSpacer:widgetType", "GafferSceneUI.InstancerUI._VariationSpacer",
 	"layout:customWidget:seedVariableSpacer:section", "Context Variations",
-	"layout:customWidget:seedVariableSpacer:index", 21,
+	"layout:customWidget:seedVariableSpacer:index", 102,
 	"layout:customWidget:seedVariableSpacer:accessory", True,
 
 	"layout:customWidget:seedsSpacer:widgetType", "GafferSceneUI.InstancerUI._VariationSpacer",
 	"layout:customWidget:seedsSpacer:section", "Context Variations",
-	"layout:customWidget:seedsSpacer:index", 22,
+	"layout:customWidget:seedsSpacer:index", 103,
 	"layout:customWidget:seedsSpacer:accessory", True,
 
 	"layout:customWidget:seedPermutationSpacer:widgetType", "GafferSceneUI.InstancerUI._VariationSpacer",
 	"layout:customWidget:seedPermutationSpacer:section", "Context Variations",
-	"layout:customWidget:seedPermutationSpacer:index", 23,
+	"layout:customWidget:seedPermutationSpacer:index", 104,
 	"layout:customWidget:seedPermutationSpacer:accessory", True,
 
 	"layout:customWidget:seedSpacer:widgetType", "GafferSceneUI.InstancerUI._SectionSpacer",
 	"layout:customWidget:seedSpacer:section", "Context Variations",
-	"layout:customWidget:seedSpacer:index", 24,
+	"layout:customWidget:seedSpacer:index", 105,
 
 	"layout:customWidget:timeOffsetHeadings:widgetType", "GafferSceneUI.InstancerUI._TimeOffsetColumnHeadings",
 	"layout:customWidget:timeOffsetHeadings:section", "Context Variations",
-	"layout:customWidget:timeOffsetHeadings:index", 25,
+	"layout:customWidget:timeOffsetHeadings:index", 106,
 	"layout:customWidget:timeOffsetHeadings:description", "Testing description",
 
 	"layout:customWidget:timeOffsetSpacer:widgetType", "GafferSceneUI.InstancerUI._SectionSpacer",
 	"layout:customWidget:timeOffsetSpacer:section", "Context Variations",
-	"layout:customWidget:timeOffsetSpacer:index", 26,
+	"layout:customWidget:timeOffsetSpacer:index", 107,
 	"layout:customWidget:timeOffsetSpacer:divider", True,
 
 	"layout:customWidget:totalSpacer:widgetType", "GafferSceneUI.InstancerUI._SectionSpacer",
 	"layout:customWidget:totalSpacer:section", "Context Variations",
-	"layout:customWidget:totalSpacer:index", 27,
+	"layout:customWidget:totalSpacer:index", 108,
 
 	plugs = {
 
@@ -624,6 +625,7 @@ Gaffer.Metadata.registerNode(
 			be used with a Random node to randomise properties of the prototype.
 			""",
 			"layout:section", "Context Variations",
+			"layout:index", 101,
 		],
 
 		"seedVariable" : [
@@ -632,6 +634,7 @@ Gaffer.Metadata.registerNode(
 			Name of the context variable to put the seed value in.
 			""",
 			"layout:section", "Context Variations",
+			"layout:index", 102,
 			"layout:visibilityActivator", "seedEnabled",
 		],
 
@@ -642,6 +645,7 @@ Gaffer.Metadata.registerNode(
 			to be driven by the seed, increasing the total number of variations required.
 			""",
 			"layout:section", "Context Variations",
+			"layout:index", 103,
 			"layout:visibilityActivator", "seedEnabled",
 			"layout:activator", "seedParameters",
 		],
@@ -653,6 +657,7 @@ Gaffer.Metadata.registerNode(
 			grouping of which instances end up with the same seed.
 			""",
 			"layout:section", "Context Variations",
+			"layout:index", 104,
 			"layout:visibilityActivator", "seedEnabled",
 			"layout:activator", "seedParameters",
 		],
@@ -666,6 +671,7 @@ Gaffer.Metadata.registerNode(
 			total instances.
 			""",
 			"layout:section", "Context Variations",
+			"layout:index", 105,
 			"layout:visibilityActivator", "seedEnabled",
 		],
 
@@ -678,6 +684,7 @@ Gaffer.Metadata.registerNode(
 			prototypes scene too many times.
 			""",
 			"layout:section", "Context Variations",
+			"layout:index", 106,
 			"plugValueWidget:type", "GafferSceneUI.InstancerUI._ContextVariableListWidget",
 		],
 
@@ -711,6 +718,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"Modify the current time when evaluating the prototypes network, by adding a primvar.",
 			"layout:section", "Context Variations",
+			"layout:index", 107,
 			"plugValueWidget:type", "GafferSceneUI.InstancerUI._TimeOffsetContextVariableWidget",
 		],
 		"timeOffset.name" : [
@@ -751,7 +759,7 @@ Gaffer.Metadata.registerNode(
 			Note that variations are measured across all locations in the scene where the instancer is filtered.
 			""",
 			"layout:section", "Context Variations",
-			"layout:index", 27,
+			"layout:index", 108,
 			"plugValueWidget:type", "GafferSceneUI.InstancerUI._TotalCountWidget",
 		],
 	}
