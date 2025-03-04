@@ -36,24 +36,25 @@ jobs:
         include:
 
           - name: linux-gcc11
-            os: ubuntu-20.04
+            os: ubuntu-24.04
             buildType: RELEASE
             publish: true
             containerImage: ghcr.io/gafferhq/build/build:3.0.0
             # GitHub container builds run as root. This causes failures for tests that
             # assert that filesystem permissions are respected, because root doesn't
             # respect permissions. So we run the final test suite as a dedicated
-            # test user rather than as root.
-            testRunner: su testUser -c
+            # test user rather than as root. We also run with `libSegFault.so` loaded
+            # to get more information from any crashes which occur.
+            testRunner: LD_PRELOAD=libSegFault.so su testUser -c
             sconsCacheMegabytes: 400
             jobs: 4
 
           - name: linux-debug-gcc11
-            os: ubuntu-20.04
+            os: ubuntu-24.04
             buildType: DEBUG
             publish: false
             containerImage: ghcr.io/gafferhq/build/build:3.0.0
-            testRunner: su testUser -c
+            testRunner: LD_PRELOAD=libSegFault.so su testUser -c
             testArguments: -excludedCategories performance
             # Debug builds are ludicrously big, so we must use a larger cache
             # limit. In practice this compresses down to 4-500Mb.
@@ -102,7 +103,6 @@ jobs:
         Xvfb :99 -screen 0 1280x1024x24 &
         metacity --display :99.0 &
         useradd -m testUser
-        echo LD_PRELOAD=libSegFault.so >> $GITHUB_ENV
         # The Docker container configures bash shells such that they enable the
         # software collections we want. If we could set GitHub's
         # `defaults.run.shell` to `bash` then all our build steps would pick up
