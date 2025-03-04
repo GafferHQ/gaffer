@@ -537,6 +537,7 @@ const InternedString g_normalInParameter( "normalIn" );
 const InternedString g_presenceParameter( "presence" );
 const InternedString g_refractionGainParameter( "refractionGain" );
 const InternedString g_resultFParameter( "resultF" );
+const InternedString g_resultIParameter( "resultI" );
 const InternedString g_resultRGBParameter( "resultRGB" );
 const InternedString g_roughSpecularDoubleSidedParameter( "roughSpecularDoubleSided" );
 const InternedString g_specularDoubleSidedParameter( "specularDoubleSided" );
@@ -583,9 +584,13 @@ const InternedString remapOutputParameterName( const InternedString name, const 
 {
 	if( boost::starts_with( shaderName.string(), "UsdPrimvarReader" ) )
 	{
-		if( shaderName == g_usdPrimvarReaderFloatShaderName || shaderName == g_usdPrimvarReaderIntShaderName )
+		if( shaderName == g_usdPrimvarReaderFloatShaderName )
 		{
 			return g_resultFParameter;
+		}
+		else if( shaderName == g_usdPrimvarReaderIntShaderName )
+		{
+			return g_resultIParameter;
 		}
 		else
 		{
@@ -684,7 +689,7 @@ void convertUSDShaders( ShaderNetwork *shaderNetwork )
 		const auto it = g_primVarMap.find( shader->getName() );
 		if( it != g_primVarMap.end() )
 		{
-			newShader = new Shader( "PxrPrimvar", "osl:shader" );
+			newShader = new Shader( "PxrAttribute", "osl:shader" );
 			const auto &[typeName, defaultParameter, defaultValue] = it->second;
 
 			newShader->parameters()[g_typeParameter] = new StringData( typeName );

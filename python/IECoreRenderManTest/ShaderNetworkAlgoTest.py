@@ -135,7 +135,7 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 			( "normal", imath.V3f( 1, 2, 3 ), "normal", "defaultFloat3", imath.Color3f( 1, 2, 3 ), "resultRGB", "diffuseColor" ),
 			( "point", imath.V3f( 1, 2, 3 ), "point", "defaultFloat3", imath.Color3f( 1, 2, 3 ), "resultRGB", "diffuseColor" ),
 			( "vector", imath.V3f( 1, 2, 3 ), "vector", "defaultFloat3", imath.Color3f( 1, 2, 3 ), "resultRGB", "diffuseColor" ),
-			( "int", 10, "int", "defaultInt", 10, "resultF", "metallic" ),
+			( "int", 10, "int", "defaultInt", 10, "resultI", "metallic" ),
 		] :
 			with self.subTest( usdDataType = usdDataType, fallback = fallback, riType = riType, riDefaultParameter = riDefaultParameter, riDefault = riDefault, readerOut = readerOut, surfaceIn = surfaceIn ) :
 				network = IECoreScene.ShaderNetwork(
@@ -158,7 +158,7 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 				IECoreRenderMan.ShaderNetworkAlgo.convertUSDShaders( network )
 
 				reader = network.getShader( "reader" )
-				self.assertEqual( reader.name, "PxrPrimvar" )
+				self.assertEqual( reader.name, "PxrAttribute" )
 				self.assertEqual( len( reader.parameters ), 3 )
 				self.assertEqual( reader.parameters["varname"].value, "test" )
 				self.assertEqual( reader.parameters["type"].value, riType )
