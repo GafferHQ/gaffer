@@ -658,7 +658,7 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		reader = GafferScene.SceneReader()
 		reader["fileName"].setInput( writer["fileName"] )
 
-		for extension in IECoreScene.SceneInterface.supportedExtensions() :
+		for extension in IECoreScene.SceneInterface.supportedExtensions( IECore.IndexedIO.OpenMode.Write ) :
 
 			if extension in { "abc", "usdz", "vdb" } :
 				# - `IECoreAlembic::AlembicScene::writeSet()` hasn't been implemented properly for
