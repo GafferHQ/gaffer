@@ -649,7 +649,7 @@ const std::vector<riley::RenderOutputId> &Globals::acquireRenderOutputs( const I
 			}
 			else if( tokens[0] == "lpe" )
 			{
-				if( layerName == "normal" )
+				if( layerName == "normal" || layerName == "normal_mse" )
 				{
 					type = riley::RenderOutputType::k_Vector;
 				}
