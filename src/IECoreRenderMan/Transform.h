@@ -49,7 +49,7 @@ struct StaticTransform : riley::Transform
 
 	/// Caution : `m` is referenced directly, and must live until the
 	/// StaticTransform is passed to Riley.
-	StaticTransform( const Imath::M44f &m = Imath::M44f() )
+	StaticTransform( const Imath::M44f &m )
 		:	m_time( 0 )
 	{
 		samples = 1;

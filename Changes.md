@@ -12,13 +12,70 @@ Breaking Changes
 - StandardNodule : Removed deprecated `setCompatibleLabelsVisible()`.
 - DeleteAttributes : Changed base class and marked as `final`.
 
-1.5.x.x (relative to 1.5.5.0)
+1.5.x.x (relative to 1.5.7.0)
+=======
+
+
+
+1.5.7.0 (relative to 1.5.6.0)
+=======
+
+Features
+--------
+
+- USDLight : Added Cycles-specific light parameters.
+- USD : Added automatic expansion of USD PointInstancers at render time.
+  - This can be controlled on a per-instancer basis using a `gafferUSD:pointInstancerAdaptor:enabled` boolean attribute.
+  - Which point cloud primitive variables are promoted to user attributes can be controlled using a `gafferUSD:pointInstancerAdaptor:attributes` string attribute.
+  - May be disabled entirely with `GafferScene.SceneAlgo.deregisterRenderAdaptor( "USDPointInstancerAdaptor" )`.
+- Viewer : Added "Expand USD Instancers" item to the Expansion menu. Defaults to on for all renderers except OpenGL.
+- Instancer : Added support for prototype paths that are relative to an instancer. When using the same scene connected to both `in` and `prototypes`, this allows relocating an instancer together with its prototypes to a different location in the hierarchy. Prototype paths beginning with "./" are treated as relative, or you can set the environment variable `GAFFERSCENE_INSTANCER_EXPLICIT_ABSOLUTE_PATHS` to treat any path not beginning with "/" as relative (this may be the default in the future).
+
+Improvements
+------------
+
+- 3Delight : Added light muting support.
+- Arnold : Added support for specifying the name of a shader in the node menu using Arnold's `ui.name` metadata. This improves the formatting of the OpenPBR Surface menu item.
+- VisualiserTool : Added new visualisation for vector (V3f) data.
+  - The `vectorScale` plug can be used to scale the vector line. The <kbd>Shift</kbd> + <kbd>+</kbd> and <kbd>Shift</kbd> + <kbd>-</kbd> keyboard shortcuts can also be used to change the scale.
+  - The `vectorColor` plug can be used to change the color of the vector line.
+  - The vector value being visualised for the vertex nearest the cursor is shown next to the vertex.
+- NameSwitch : Added `enabledNames` output plug.
+- ColorSwatchPlugValueWidget : Changed the display transform of the color chooser dialogue to match that of the `ColorSwatchPlugValueWidget` creating it instead of the script window.
+- Instancer : Improved hashing of instancer capsules. Prevents unnecessary recomputation of instancers when editing something unrelated.
+
+Fixes
+-----
+
+- SceneWriter : Fixed writing of animated attributes and bounds to USD.
+- NumericPlug : Fixed serialisation of plugs with infinite min/max values, for example the promoted outputs of an ImageStats node.
+- VisualiserTool : Changed viewer shortcut to <kbd>P</kbd> to fix conflict with the Transform Tool.
+- Render Pass menu : Fixed bug evaluating image nodes in wrong context.
+- Instancer : Fixed obscure bug that could occasionally cause errors while interactively editing prototype hierarchy.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.13.0.
+
+API
+---
+
+- Attributes, Options : Added protected constructors for initialising from attributes/options defined by metadata.
+- ShaderUI : Added support for `noduleLayout:visible` and `noduleLayout:defaultVisibility` metadata, which can be registered via the Metadata API in the same way as `userDefault`.
+
+1.5.6.0 (relative to 1.5.5.0)
 =======
 
 Features
 --------
 
 - AttributeEditor, LightEditor, RenderPassEditor : Added drag and drop editing. Edits can be created or updated by dropping a value into a cell. Cells representing a set expression or string array can be modified by holding <kbd>Shift</kbd> to append to an existing edit, or <kbd>Control</kbd> may be held to remove from an existing edit.
+
+Improvements
+------------
+
+- ArnoldShader : Moved Arnold 7.3.7.0's new `transmission_shadow_density` parameters to a "Transmission" section of the UI.
 
 Fixes
 -----

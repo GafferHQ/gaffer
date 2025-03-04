@@ -69,7 +69,11 @@ def appendShaders( menuDefinition, prefix="/Arnold" ) :
 
 			nodeEntry = arnold.AiNodeEntryIteratorGetNext( it )
 			shaderName = arnold.AiNodeEntryGetName( nodeEntry )
-			displayName = " ".join( [ IECore.CamelCase.toSpaced( x ) for x in shaderName.split( "_" ) ] )
+
+			displayName = __aiMetadataGetStr( nodeEntry, "", "ui.name" )
+			if displayName is None :
+				displayName = " ".join( [ IECore.CamelCase.toSpaced( x ) for x in shaderName.split( "_" ) ] )
+
 			nodeName = displayName.replace( " ", "" )
 
 			category = __aiMetadataGetStr( nodeEntry, "", "gaffer.nodeMenu.category" )

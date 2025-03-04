@@ -101,7 +101,20 @@ class ColorSwatchPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if not self._editable() :
 			return False
 
-		_ColorPlugValueDialogue.acquire( self.getPlugs() )
+		dialogue = _ColorPlugValueDialogue.acquire( self.getPlugs() )
+		if dialogue.displayTransform() is not self.displayTransform() :
+			# If we have been given a specific transform, then transfer it to
+			# the dialogue. This is currently only necessary for `VisualiserToolUI._UntransformedColorWidget`.
+			## \todo It might be better if we used plug metadata to
+			# opt out of the display transform instead.
+			dialogue.setDisplayTransform( self.displayTransform() )
+		else :
+			# The dialogue has the same display transform as us. Don't call
+			# `setDisplayTransform()` because that would bake the transform in,
+			# preventing updates when the transform on an ancestor is changed
+			# (typically we manage display transforms at the top level on the
+			# ScriptWindow).
+			pass
 
 		return True
 
@@ -214,7 +227,8 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 
 		window = _ColorPlugValueDialogue( plugs, scriptWindow )
 		window.setVisible( True )
-		return False
+
+		return window
 
 	def __plugSet( self, plug ) :
 

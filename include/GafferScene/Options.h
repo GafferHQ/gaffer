@@ -64,6 +64,10 @@ class GAFFERSCENE_API Options : public GlobalsProcessor
 
 	protected :
 
+		/// Automatically adds plugs for all options for the specified renderer, based
+		/// on `option:{rendererPrefix}:*` metadata registrations.
+		Options( const std::string &name, const std::string &rendererPrefix );
+
 		void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const override;
 

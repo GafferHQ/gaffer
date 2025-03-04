@@ -180,6 +180,11 @@ class TestCase( GafferTest.TestCase ) :
 			del script
 			self.assertIsNone( weakScript() )
 
+	def assertCanLoadGUIConfigs( self ) :
+
+		app = Gaffer.Application()
+		app._executeStartupFiles( "gui" )
+
 	@staticmethod
 	def __widgetInstances() :
 

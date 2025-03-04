@@ -147,6 +147,17 @@ if "%ONNX_ROOT%" NEQ "" (
 	call :appendToPath "%ONNX_ROOT%\lib" PATH
 )
 
+rem RenderMan
+rem =========
+
+if "%RMANTREE%" NEQ "" (
+	call :appendToPath "%RMANTREE%" GAFFER_EXTENSION_PATHS
+	call :appendToPath "%RMANTREE%\bin" PYTHONPATH
+	call :appendToPath "%RMANTREE%\lib\plugins" RMAN_RIXPLUGINPATH
+	call :appendToPath "%RMANTREE%\lib\shaders" OSL_SHADER_PATHS
+	call :appendToPath "%GAFFER_ROOT%\renderManPlugins" RMAN_DISPLAYS_PATH
+)
+
 rem Set up 3rd party extensions
 rem Batch files are awkward at `for` loops. The default `for`, without `/f`
 rem uses semi-colons AND spaces as delimiters, meaning we would not be able

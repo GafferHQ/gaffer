@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import os
 import Gaffer
 import GafferUSD
 
@@ -54,3 +55,15 @@ for i, parameter in enumerate( [
 	"samples", "volume_samples", "resolution"
 ] ) :
 	Gaffer.Metadata.registerValue( GafferUSD.USDLight, f"parameters.arnold:{parameter}", "layout:index", 1000 + i )
+
+# Change Cycles ordering.
+for i, parameter in enumerate( [
+	"lightgroup",
+	"use_mis", "use_camera", "use_diffuse", "use_glossy", "use_transmission", "use_scatter", "use_caustics",
+	"spread", "map_resolution", "max_bounces"
+] ) :
+	Gaffer.Metadata.registerValue( GafferUSD.USDLight, f"parameters.cycles:{parameter}", "layout:index", 2000 + i )
+
+# Only show the Cycles parameters if Cycles exists and not hidden
+Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters", "layout:activator:cyclesUIEnabled", lambda x : os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "" ) != "1" )
+Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters.cycles:*", "layout:visibilityActivator", "cyclesUIEnabled" )

@@ -788,7 +788,8 @@ for option, envVar in {
 	"ONNX_ROOT" : "ONNX_ROOT",
 	"RENDERMAN_ROOT" : "RMANTREE",
 }.items() :
-	commandEnv["ENV"][envVar] = commandEnv[option]
+	if commandEnv[option] != "" :
+		commandEnv["ENV"][envVar] = commandEnv[option]
 
 def runCommand( command ) :
 
@@ -1348,17 +1349,68 @@ libraries = {
 			# can continue to compile with warnings as errors.
 			"CPPDEFINES" : [ "RMAN_RIX_NO_WARN_DEPRECATED" ],
 			"LIBS" : [
-				"GafferScene", "IECoreScene",
+				"GafferScene", "IECoreScene$CORTEX_LIB_SUFFIX",
+				"IECoreVDB$CORTEX_LIB_SUFFIX",
 				"prman" if env["PLATFORM"] != "win32" else "libprman",
 				"pxrcore" if env["PLATFORM"] != "win32" else "libpxrcore",
 				"oslquery$OSL_LIB_SUFFIX",
 				"OpenImageIO_Util$OIIO_LIB_SUFFIX",
+				"openvdb$VDB_LIB_SUFFIX",
 			],
 			"LIBPATH" : [ "$RENDERMAN_ROOT/lib" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "IECoreRenderMan" ],
 		},
+		"requiredOptions" : [ "RENDERMAN_ROOT" ],
+	},
+
+	"IECoreRenderManDisplay" : {
+		"envAppends" : {
+			"LIBS" : [ "IECoreImage$CORTEX_LIB_SUFFIX" ],
+			"CPPPATH" : [ "$RENDERMAN_ROOT/include" ],
+		},
+		"envReplacements" : {
+			"SHLIBPREFIX" : "",
+		},
+		"installName" : "renderManPlugins/d_ieDisplay",
+		"requiredOptions" : [ "RENDERMAN_ROOT" ],
+	},
+
+	"IECoreRenderManTest" : {
+		"requiredOptions" : [ "RENDERMAN_ROOT" ],
+	},
+
+	"GafferRenderMan" : {
+		"envAppends" : {
+			"CPPPATH" : [ "$RENDERMAN_ROOT/include" ],
+			# The RenderMan headers contain deprecated functionality that we don't use,
+			# but which nonetheless emit compilation warnings. We turn them off so we
+			# can continue to compile with warnings as errors.
+			"CPPDEFINES" : [ "RMAN_RIX_NO_WARN_DEPRECATED" ],
+			"LIBS" : [
+				"Iex$OPENEXR_LIB_SUFFIX", "Gaffer", "GafferDispatch", "GafferScene", "IECoreScene$CORTEX_LIB_SUFFIX",
+				"prman" if env["PLATFORM"] != "win32" else "libprman",
+				"pxrcore" if env["PLATFORM"] != "win32" else "libpxrcore",
+			],
+			"LIBPATH" : [ "$RENDERMAN_ROOT/lib" ],
+		},
+		"pythonEnvAppends" : {
+			"LIBS" : [ "GafferBindings", "GafferDispatch", "GafferRenderMan", "GafferScene" ],
+			"LIBPATH" : [ "$RENDERMAN_ROOT/lib" ],
+		},
+		"requiredOptions" : [ "RENDERMAN_ROOT" ],
+	},
+
+	"GafferRenderManTest" : {
+		"requiredOptions" : [ "RENDERMAN_ROOT" ],
+	},
+
+	"GafferRenderManUI" : {
+		"requiredOptions" : [ "RENDERMAN_ROOT" ],
+	},
+
+	"GafferRenderManUITest" : {
 		"requiredOptions" : [ "RENDERMAN_ROOT" ],
 	},
 

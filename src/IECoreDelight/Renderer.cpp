@@ -667,7 +667,8 @@ std::array<std::string, 2> g_displacementShaderAttributeNames = { "osl:displacem
 const InternedString g_USDLightAttributeName = "light";
 const InternedString g_USDSurfaceAttributeName = "surface";
 
-IECore::InternedString g_setsAttributeName( "sets" );
+const IECore::InternedString g_setsAttributeName( "sets" );
+const IECore::InternedString g_lightMuteAttributeName( "light:mute" );
 
 class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterface
 {
@@ -675,7 +676,8 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 	public :
 
 		DelightAttributes( NSIContext_t context, const IECore::CompoundObject *attributes, ShaderCache *shaderCache, DelightHandle::Ownership ownership )
-			:	m_handle( context, "attributes:" + attributes->Object::hash().toString(), ownership, "attributes", {} )
+			:	m_handle( context, "attributes:" + attributes->Object::hash().toString(), ownership, "attributes", {} ),
+				m_lightMute( false )
 		{
 			for( const auto &attributeName : g_surfaceShaderAttributeNames )
 			{
@@ -786,6 +788,15 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 					0, nullptr
 				);
 			}
+
+			auto it = attributes->members().find( g_lightMuteAttributeName );
+			if( it != attributes->members().end() )
+			{
+				if( auto d = reportedCast<const BoolData>( it->second.get(), "attribute", g_lightMuteAttributeName ) )
+				{
+					m_lightMute = d->readable();
+				}
+			}
 		}
 
 		const ShaderNetwork *usdLightShader() const
@@ -796,6 +807,11 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 		const DelightHandle &handle() const
 		{
 			return m_handle;
+		}
+
+		bool lightMute() const
+		{
+			return m_lightMute;
 		}
 
 	private :
@@ -818,6 +834,7 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 		ConstDelightShaderPtr m_displacementShader;
 
 		ConstShaderNetworkPtr m_usdLightShader;
+		bool m_lightMute;
 
 };
 
@@ -1179,7 +1196,26 @@ class DelightLight : public DelightObject
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
+			const bool wasMuted = m_attributes && m_attributes->lightMute();
 			DelightObject::attributes( attributes );
+
+			if( wasMuted && !m_attributes->lightMute() )
+			{
+				NSIConnect(
+					m_transformHandle.context(),
+					m_transformHandle.name(), "",
+					NSI_SCENE_ROOT, "objects",
+					0, nullptr
+				);
+			}
+			else if( !wasMuted && m_attributes->lightMute() )
+			{
+				NSIDisconnect(
+					m_transformHandle.context(),
+					m_transformHandle.name(), "",
+					NSI_SCENE_ROOT, "objects"
+				);
+			}
 
 			if( const ShaderNetwork *usdLightShader = m_attributes->usdLightShader() )
 			{
