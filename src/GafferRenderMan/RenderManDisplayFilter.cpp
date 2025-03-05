@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2018, John Haddon. All rights reserved.
+//  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,24 +34,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#include "GafferRenderMan/RenderManDisplayFilter.h"
 
-namespace GafferRenderMan
+using namespace GafferRenderMan;
+
+GAFFER_NODE_DEFINE_TYPE( RenderManDisplayFilter );
+
+RenderManDisplayFilter::RenderManDisplayFilter( const std::string &name )
+	:	RenderManOutputFilter( name, FilterType::Display )
 {
+}
 
-enum TypeId
+RenderManDisplayFilter::~RenderManDisplayFilter()
 {
-	RenderManAttributesTypeId = 110400,
-	RenderManOptionsTypeId = 110401,
-	RenderManShaderTypeId = 110402,
-	RenderManLightTypeId = 110403,
-	RenderManMeshLightTypeId = 110404,
-	RenderManIntegratorTypeId = 110405,
-	RenderManOutputFilterTypeId = 110406,
-	RenderManDisplayFilterTypeId = 110407,
-	RenderManSampleFilterTypeId = 110408,
-
-	LastTypeId = 110450
-};
-
-} // namespace GafferRenderMan
+}

@@ -37,10 +37,12 @@
 #include "boost/python.hpp"
 
 #include "GafferRenderMan/RenderManAttributes.h"
+#include "GafferRenderMan/RenderManDisplayFilter.h"
 #include "GafferRenderMan/RenderManIntegrator.h"
 #include "GafferRenderMan/RenderManLight.h"
 #include "GafferRenderMan/RenderManMeshLight.h"
 #include "GafferRenderMan/RenderManOptions.h"
+#include "GafferRenderMan/RenderManSampleFilter.h"
 #include "GafferRenderMan/RenderManShader.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
@@ -69,4 +71,16 @@ BOOST_PYTHON_MODULE( _GafferRenderMan )
 	GafferBindings::DependencyNodeClass<RenderManShader>();
 	GafferBindings::DependencyNodeClass<RenderManMeshLight>();
 	GafferBindings::DependencyNodeClass<RenderManIntegrator>();
+
+	{
+		scope s = GafferBindings::DependencyNodeClass<RenderManOutputFilter>( nullptr, no_init );
+		enum_<RenderManOutputFilter::Mode>( "Mode" )
+			.value( "Replace", RenderManOutputFilter::Mode::Replace )
+			.value( "InsertFirst", RenderManOutputFilter::Mode::InsertFirst )
+			.value( "InsertLast", RenderManOutputFilter::Mode::InsertLast )
+		;
+	}
+
+	GafferBindings::DependencyNodeClass<RenderManSampleFilter>();
+	GafferBindings::DependencyNodeClass<RenderManDisplayFilter>();
 }

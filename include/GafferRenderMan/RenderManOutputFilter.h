@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2018, John Haddon. All rights reserved.
+//  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,22 +36,63 @@
 
 #pragma once
 
+#include "GafferRenderMan/Export.h"
+#include "GafferRenderMan/TypeIds.h"
+
+#include "GafferScene/GlobalsProcessor.h"
+#include "GafferScene/ShaderPlug.h"
+
 namespace GafferRenderMan
 {
 
-enum TypeId
+/// Base class which contains all the shared implementation for RenderManDisplayFilter
+/// and RenderManSampleFilter.
+class GAFFERRENDERMAN_API RenderManOutputFilter : public GafferScene::GlobalsProcessor
 {
-	RenderManAttributesTypeId = 110400,
-	RenderManOptionsTypeId = 110401,
-	RenderManShaderTypeId = 110402,
-	RenderManLightTypeId = 110403,
-	RenderManMeshLightTypeId = 110404,
-	RenderManIntegratorTypeId = 110405,
-	RenderManOutputFilterTypeId = 110406,
-	RenderManDisplayFilterTypeId = 110407,
-	RenderManSampleFilterTypeId = 110408,
 
-	LastTypeId = 110450
+	public :
+
+		~RenderManOutputFilter() override;
+
+		GAFFER_NODE_DECLARE_TYPE( GafferRenderMan::RenderManOutputFilter, RenderManOutputFilterTypeId, GafferScene::GlobalsProcessor );
+
+		enum class Mode
+		{
+			Replace,
+			InsertFirst,
+			InsertLast
+		};
+
+		GafferScene::ShaderPlug *shaderPlug();
+		const GafferScene::ShaderPlug *shaderPlug() const;
+
+		Gaffer::IntPlug *modePlug();
+		const Gaffer::IntPlug *modePlug() const;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+	protected :
+
+		enum class FilterType
+		{
+			Display,
+			Sample
+		};
+
+		RenderManOutputFilter( const std::string &name, FilterType filterType );
+
+		bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const override;
+
+		void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const override;
+
+	private :
+
+		const FilterType m_filterType;
+		static size_t g_firstPlugIndex;
+
 };
+
+IE_CORE_DECLAREPTR( RenderManOutputFilter )
 
 } // namespace GafferRenderMan

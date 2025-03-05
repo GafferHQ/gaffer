@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2018, John Haddon. All rights reserved.
+//  Copyright (c) 2024, Alex Fuller. All rights reserved.
+//  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,22 +37,23 @@
 
 #pragma once
 
+#include "GafferRenderMan/RenderManOutputFilter.h"
+
 namespace GafferRenderMan
 {
 
-enum TypeId
+class GAFFERRENDERMAN_API RenderManSampleFilter : public RenderManOutputFilter
 {
-	RenderManAttributesTypeId = 110400,
-	RenderManOptionsTypeId = 110401,
-	RenderManShaderTypeId = 110402,
-	RenderManLightTypeId = 110403,
-	RenderManMeshLightTypeId = 110404,
-	RenderManIntegratorTypeId = 110405,
-	RenderManOutputFilterTypeId = 110406,
-	RenderManDisplayFilterTypeId = 110407,
-	RenderManSampleFilterTypeId = 110408,
 
-	LastTypeId = 110450
+	public :
+
+		explicit RenderManSampleFilter( const std::string &name=defaultName<RenderManSampleFilter>() );
+		~RenderManSampleFilter() override;
+
+		GAFFER_NODE_DECLARE_TYPE( GafferRenderMan::RenderManSampleFilter, RenderManSampleFilterTypeId, RenderManOutputFilter );
+
 };
+
+IE_CORE_DECLAREPTR( RenderManSampleFilter )
 
 } // namespace GafferRenderMan
