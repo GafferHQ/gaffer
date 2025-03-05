@@ -83,7 +83,7 @@ shader UsdPreviewSurfaceParameters
     // them based on an output from this shader. We have to make the backface-
     // shading decision here.
     
-    int isDoubleSided = 0;
+    int isDoubleSided = 1;  // Default to 1 to match Gaffer default.
     getattribute("user:hydra:doubleSided", isDoubleSided);
     int isFrontSide = !backfacing();
 
