@@ -1466,6 +1466,186 @@ class RendererTest( GafferTest.TestCase ) :
 		# Set to default explicitly.
 		self.__assertParameterEqual( options, "lpe:diffuse3", [ "Subsurface,subsurface" ] )
 
+	def testDisplayFilter( self ):
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"RenderMan",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+
+		renderer.output(
+			"test",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testDisplayFilter",
+				}
+			)
+		)
+
+		# First test without any display filters.
+
+		renderer.render()
+		time.sleep( 1 )
+		renderer.pause()
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testDisplayFilter" )
+		self.assertEqual( self.__colorAtUV( image, imath.V2i( 0.5 ) ), imath.Color4f( 0 ) )
+
+		# Then apply a single display filter.
+
+		renderer.option(
+			"ri:displayfilter",
+			IECoreScene.ShaderNetwork(
+				shaders = {
+					"output" : IECoreScene.Shader(
+						"PxrBackgroundDisplayFilter", "ri:displayfilter",
+						{
+							"backgroundColor" : imath.Color3f( 1, 0, 0 ),
+						}
+					),
+				},
+				output = "output"
+			)
+		)
+
+		renderer.render()
+		time.sleep( 1 )
+		renderer.pause()
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testDisplayFilter" )
+		self.assertEqual( self.__colorAtUV( image, imath.V2i( 0.5 ) ), imath.Color4f( 1, 0, 0, 0 ) )
+
+		# And finally a combined one, the grade filter should apply after the background.
+
+		renderer.option(
+			"ri:displayfilter",
+			IECoreScene.ShaderNetwork(
+				shaders = {
+					"combiner" : IECoreScene.Shader(
+						"PxrDisplayFilterCombiner", "ri:displayfilter",
+					),
+					"background" : IECoreScene.Shader(
+						"PxrBackgroundDisplayFilter", "ri:displayfilter",
+						{
+							"backgroundColor" : imath.Color3f( 1, 0, 0 ),
+						}
+					),
+					"grade" : IECoreScene.Shader(
+						"PxrGradeDisplayFilter", "ri:displayfilter",
+						{
+							"multiply" : imath.Color3f( 0.5 ),
+						}
+					),
+				},
+				connections = [
+						( ( "background", "out" ), ( "combiner", "filter[0]" ) ),
+						( ( "grade", "out" ), ( "combiner", "filter[1]" ) ),
+				],
+				output = "combiner"
+			)
+		)
+
+		renderer.render()
+		time.sleep( 1 )
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testDisplayFilter" )
+		self.assertEqual( self.__colorAtUV( image, imath.V2i( 0.5 ) ), imath.Color4f( 0.5, 0, 0, 0 ) )
+
+		del renderer
+
+	def testSampleFilter( self ):
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"RenderMan",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+
+		renderer.output(
+			"test",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testSampleFilter",
+				}
+			)
+		)
+
+		# First test without any sample filters.
+
+		renderer.render()
+		time.sleep( 1 )
+		renderer.pause()
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testSampleFilter" )
+		self.assertEqual( self.__colorAtUV( image, imath.V2i( 0.5 ) ), imath.Color4f( 0 ) )
+
+		# Then apply a single sample filter.
+
+		renderer.option(
+			"ri:samplefilter",
+			IECoreScene.ShaderNetwork(
+				shaders = {
+					"output" : IECoreScene.Shader(
+						"PxrBackgroundSampleFilter", "ri:samplefilter",
+						{
+							"backgroundColor" : imath.Color3f( 1, 0, 0 ),
+						}
+					),
+				},
+				output = "output"
+			)
+		)
+
+		renderer.render()
+		time.sleep( 1 )
+		renderer.pause()
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testSampleFilter" )
+		self.assertEqual( self.__colorAtUV( image, imath.V2i( 0.5 ) ), imath.Color4f( 1, 0, 0, 0 ) )
+
+		# And finally a combined one, the grade filter should apply after the background.
+
+		renderer.option(
+			"ri:samplefilter",
+			IECoreScene.ShaderNetwork(
+				shaders = {
+					"combiner" : IECoreScene.Shader(
+						"PxrSampleFilterCombiner", "ri:samplefilter"
+					),
+					"background" : IECoreScene.Shader(
+						"PxrBackgroundSampleFilter", "ri:samplefilter",
+						{
+							"backgroundColor" : imath.Color3f( 1, 0, 0 ),
+						}
+					),
+					"grade" : IECoreScene.Shader(
+						"PxrGradeSampleFilter", "ri:samplefilter",
+						{
+							"multiply" : imath.Color3f( 0.5 ),
+						}
+					),
+				},
+				connections = [
+						( ( "background", "out" ), ( "combiner", "filter[0]" ) ),
+						( ( "grade", "out" ), ( "combiner", "filter[1]" ) ),
+				],
+				output = "combiner"
+			)
+		)
+
+		renderer.render()
+		time.sleep( 1 )
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testSampleFilter" )
+		self.assertEqual( self.__colorAtUV( image, imath.V2i( 0.5 ) ), imath.Color4f( 0.5, 0, 0, 0 ) )
+
+		del renderer
+
 	def __assertParameterEqual( self, paramList, name, data ) :
 
 		p = next( x for x in paramList if x["info"]["name"] == name )

@@ -313,8 +313,8 @@ void convertConnection( const IECoreScene::ShaderNetwork::Connection &connection
 		destination = RtUString( connection.destination.name.c_str() );
 	}
 
-	auto it = shaderInfo->parameterTypes.find( destination );
-	if( it == shaderInfo->parameterTypes.end() )
+	auto typeIt = shaderInfo->parameterTypes.find( destination );
+	if( typeIt == shaderInfo->parameterTypes.end() )
 	{
 		IECore::msg(
 			IECore::Msg::Warning, "IECoreRenderMan",
@@ -327,7 +327,13 @@ void convertConnection( const IECoreScene::ShaderNetwork::Connection &connection
 	}
 
 	std::string reference = connection.source.shader;
-	if( !connection.source.name.string().empty() )
+	if(
+		connection.source.name.string().size() &&
+		// Display and sample filters don't have named outputs, and
+		// connections will silently fail if we include one.
+		typeIt->second != pxrcore::DataType::k_displayfilter &&
+		typeIt->second != pxrcore::DataType::k_samplefilter
+	)
 	{
 		reference += ":" + connection.source.name.string();
 	}
@@ -337,7 +343,7 @@ void convertConnection( const IECoreScene::ShaderNetwork::Connection &connection
 	{
 		RtParamList::ParamInfo const info = {
 			destination,
-			it->second,
+			typeIt->second,
 			pxrcore::DetailType::k_reference,
 			1,
 			false,
