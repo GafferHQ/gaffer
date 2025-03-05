@@ -206,6 +206,7 @@
 				'gafferSceneUILightTool',
 				'gafferSceneUILightPositionTool',
 				'gafferSceneUIVisualiserTool',
+				'gafferSceneUIImagePickTool',
 			]
 
 		},
