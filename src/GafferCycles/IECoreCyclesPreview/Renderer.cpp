@@ -730,6 +730,14 @@ class ShaderCache : public IECore::RefCounted
 					}
 					ccl::Geometry *geo = static_cast<ccl::Geometry*>( shaderAssignPair.first );
 					geo->set_used_shaders( shaderAssignPair.second );
+					if( geo->is_volume() && geo->is_modified() && static_cast<ccl::Volume*>( geo )->get_triangles().size() )
+					{
+						// We're replacing an existing shader on a volume
+						// from which Cycles has already built a mesh, so
+						// we cheekily clear the modified tag to prevent
+						// the volume from disappearing.
+						geo->clear_modified();
+					}
 				}
 				else if( shaderAssignPair.first->is_a( ccl::Light::get_node_type() ) )
 				{

@@ -2811,7 +2811,7 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		vdb = IECoreVDB.VDBObject( str( pathlib.Path( __file__ ).parents[2] / "GafferVDBTest" / "data" / "smoke.vdb" ) )
-		renderer.object(
+		volume = renderer.object(
 			"/vdb",
 			vdb,
 			renderer.attributes( IECore.CompoundObject ( {
@@ -2835,7 +2835,136 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertGreater( testPixel.g, 0 )
 		self.assertGreater( testPixel.b, 0 )
 
+		# Change the shader and ensure that the volume hasn't disappeared as a result.
+		renderer.pause()
+		volume.attributes(
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:volume" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "principled_volume", "cycles:volume", { "emission_strength" : 0.5 }  )
+					},
+					output = "output",
+				),
+			} ) )
+		)
+
+		renderer.render()
+		time.sleep( 1 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testVDB" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
+		self.assertGreater( testPixel.r, 0 )
+		self.assertGreater( testPixel.g, 0 )
+		self.assertGreater( testPixel.b, 0 )
+
 		del camera
+		del volume
+		del vdb
+
+	def testDuplicateVDB( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		camera = renderer.camera(
+			"testCamera",
+			IECoreScene.Camera(
+				parameters = {
+					"resolution" : imath.V2i( 64, 64 ),
+					"projection" : "orthographic",
+					"aperture" : imath.V2f( 100, 100 )
+				}
+			)
+		)
+		camera.transform( imath.M44f().translate( imath.V3f( 15, 40, 150 ) ) )
+		renderer.option( "camera", IECore.StringData( "testCamera" ) )
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testVDB",
+				}
+			)
+		)
+
+		vdb = IECoreVDB.VDBObject( str( pathlib.Path( __file__ ).parents[2] / "GafferVDBTest" / "data" / "smoke.vdb" ) )
+		volume = renderer.object(
+			"/vdb",
+			vdb,
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:volume" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "principled_volume", "cycles:volume", { "emission_strength" : 1.0 } )
+					},
+					output = "output",
+				)
+			} ) )
+		)
+
+		volume2 = renderer.object(
+			"/vdb2",
+			vdb,
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:volume" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "principled_volume", "cycles:volume", { "emission_strength" : 0.9 } )
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		volume2.transform( imath.M44f().translate( imath.V3f( 50, 0, 0 ) ) )
+
+		renderer.render()
+		time.sleep( 1 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testVDB" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		# Ensure both volumes are visible.
+		for x in [ imath.V2f( 0.25, 0.5 ), imath.V2f( 0.75, 0.5 ) ] :
+			testPixel = self.__colorAtUV( image, x )
+			self.assertGreater( testPixel.r, 0 )
+			self.assertGreater( testPixel.g, 0 )
+			self.assertGreater( testPixel.b, 0 )
+
+		# Change the shader on one volume and ensure that neither volume has disappeared as a result.
+		renderer.pause()
+		volume.attributes(
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:volume" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "principled_volume", "cycles:volume", { "emission_strength" : 0.5 }  )
+					},
+					output = "output",
+				),
+			} ) )
+		)
+
+		renderer.render()
+		time.sleep( 1 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testVDB" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		for x in [ imath.V2f( 0.25, 0.5 ), imath.V2f( 0.75, 0.5 ) ] :
+			testPixel = self.__colorAtUV( image, x )
+			self.assertGreater( testPixel.r, 0 )
+			self.assertGreater( testPixel.g, 0 )
+			self.assertGreater( testPixel.b, 0 )
+
+		del camera
+		del volume
+		del volume2
 		del vdb
 
 if __name__ == "__main__":
