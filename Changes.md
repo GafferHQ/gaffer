@@ -3,6 +3,11 @@
 
 
 
+Fixes
+-----
+
+- Cryptomatte : Fixed handling of PxrCryptomatte output, and other files with less conventional metadata formatting.
+
 1.5.7.0 (relative to 1.5.6.0)
 =======
 
