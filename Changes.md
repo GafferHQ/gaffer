@@ -1,7 +1,10 @@
 1.5.x.x (relative to 1.5.7.0)
 =======
 
+Features
+--------
 
+- ShuffleImageMetadata : Added a new node for shuffling image metadata.
 
 Fixes
 -----

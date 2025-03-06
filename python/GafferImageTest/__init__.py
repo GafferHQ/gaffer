@@ -118,6 +118,7 @@ from .OpenColorIOConfigPlugTest import OpenColorIOConfigPlugTest
 from .DeepSliceTest import DeepSliceTest
 from .ContactSheetCoreTest import ContactSheetCoreTest
 from .ContactSheetTest import ContactSheetTest
+from .ShuffleImageMetadataTest import ShuffleImageMetadataTest
 
 if __name__ == "__main__":
 	import unittest
