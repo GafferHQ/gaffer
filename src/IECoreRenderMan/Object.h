@@ -50,7 +50,7 @@ class Object : public IECoreScenePreview::Renderer::ObjectInterface
 
 	public :
 
-		Object( const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, const Session *session );
+		Object( const std::string &name, const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, const Session *session );
 		~Object();
 
 		/// \todo RenderMan volumes seem to reject attempts to transform them
@@ -72,6 +72,7 @@ class Object : public IECoreScenePreview::Renderer::ObjectInterface
 		ConstAttributesPtr m_attributes;
 		/// Used to keep geometry prototype alive as long as we need it.
 		ConstGeometryPrototypePtr m_geometryPrototype;
+		RtParamList m_extraAttributes;
 
 };
 
