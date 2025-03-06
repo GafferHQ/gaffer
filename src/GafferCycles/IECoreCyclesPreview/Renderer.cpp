@@ -1246,11 +1246,17 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					if( ccl::Volume *volume = (ccl::Volume*)object->get_geometry() )
 					{
 						if( clipping )
+						{
 							volume->set_clipping( clipping.value() );
+						}
 						if( stepSize )
+						{
 							volume->set_step_size( stepSize.value() );
+						}
 						if( objectSpace )
+						{
 							volume->set_object_space( objectSpace.value() );
+						}
 					}
 				}
 			}
