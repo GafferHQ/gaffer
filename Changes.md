@@ -9,7 +9,7 @@ Features
 Improvements
 ------------
 
-- CyclesAttributes : Added `volumePrecision` plug.
+- CyclesAttributes : Added `volumePrecision` and `volumeVelocityScale` plugs.
 
 Fixes
 -----

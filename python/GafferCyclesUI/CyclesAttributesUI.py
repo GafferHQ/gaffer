@@ -69,7 +69,7 @@ def __subdivisionSummary( plug ) :
 def __volumeSummary( plug ) :
 
 	info = []
-	for childName in ( "volumeClipping", "volumeStepSize", "volumeObjectSpace", "volumePrecision" ) :
+	for childName in ( "volumeClipping", "volumeStepSize", "volumeObjectSpace", "volumeVelocityScale", "volumePrecision" ) :
 		if plug[childName]["enabled"].getValue() :
 			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
 
@@ -335,6 +335,17 @@ Gaffer.Metadata.registerNode(
 			Specify volume density and step size in object or world space.
 			By default object space is used, so that the volume opacity and
 			detail remains the same regardless of object scale.
+			""",
+
+			"layout:section", "Volume",
+
+		],
+
+		"attributes.volumeVelocityScale" : [
+
+			"description",
+			"""
+			Scales velocity vectors used in motion blur computation.
 			""",
 
 			"layout:section", "Volume",

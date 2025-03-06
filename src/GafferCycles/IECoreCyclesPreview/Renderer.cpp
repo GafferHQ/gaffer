@@ -860,6 +860,7 @@ IECore::InternedString g_lightGroupAttributeName( "cycles:lightgroup" );
 IECore::InternedString g_volumeClippingAttributeName( "cycles:volume_clipping" );
 IECore::InternedString g_volumeStepSizeAttributeName( "cycles:volume_step_size" );
 IECore::InternedString g_volumeObjectSpaceAttributeName( "cycles:volume_object_space" );
+IECore::InternedString g_volumeVelocityScaleAttributeName( "cycles:volume_velocity_scale");
 IECore::InternedString g_volumePrecisionAttributeName( "cycles:volume_precision" );
 
 std::array<IECore::InternedString, 2> g_volumePrecisionEnumNames = { {
@@ -1238,12 +1239,14 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				clipping = optionalAttribute<float>( g_volumeClippingAttributeName, attributes );
 				stepSize = optionalAttribute<float>( g_volumeStepSizeAttributeName, attributes );
 				objectSpace = optionalAttribute<bool>( g_volumeObjectSpaceAttributeName, attributes );
+				velocityScale = optionalAttribute<float>( g_volumeVelocityScaleAttributeName, attributes );
 				precision = optionalAttribute<string>( g_volumePrecisionAttributeName, attributes );
 			}
 
 			std::optional<float> clipping;
 			std::optional<float> stepSize;
 			std::optional<bool> objectSpace;
+			std::optional<float> velocityScale;
 			std::optional<string> precision;
 
 			void hash( IECore::MurmurHash &h ) const
@@ -1259,6 +1262,10 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				if( objectSpace && objectSpace.value() != false )
 				{
 					h.append( objectSpace.value() );
+				}
+				if( velocityScale && velocityScale.value() != 1.0f )
+				{
+					h.append( velocityScale.value() );
 				}
 				if( precision && precision.value() != g_volumePrecisionEnumNames[0].c_str() )
 				{
@@ -1283,6 +1290,10 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 						if( objectSpace )
 						{
 							volume->set_object_space( objectSpace.value() );
+						}
+						if( velocityScale )
+						{
+							volume->set_velocity_scale( velocityScale.value() );
 						}
 					}
 				}
