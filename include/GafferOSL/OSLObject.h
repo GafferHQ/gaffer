@@ -111,4 +111,6 @@ class GAFFEROSL_API OSLObject : public GafferScene::Deformer
 
 };
 
+IE_CORE_DECLAREPTR( OSLObject )
+
 } // namespace GafferOSL
