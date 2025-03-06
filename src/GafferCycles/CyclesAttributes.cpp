@@ -75,6 +75,7 @@ CyclesAttributes::CyclesAttributes( const std::string &name )
 	attributes->addChild( new Gaffer::NameValuePlug( "cycles:volume_clipping", new IECore::FloatData( 0.001f ), false, "volumeClipping" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "cycles:volume_step_size", new IECore::FloatData( 0.0f ), false, "volumeStepSize" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "cycles:volume_object_space", new IECore::BoolData( true ), false, "volumeObjectSpace" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "cycles:volume_precision", new IECore::StringData( "full" ), false, "volumePrecision" ) );
 
 	// Asset name for cryptomatte
 	attributes->addChild( new Gaffer::NameValuePlug( "cycles:asset_name", new IECore::StringData( "" ), false, "assetName" ) );

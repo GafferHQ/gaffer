@@ -6,6 +6,11 @@ Features
 
 - ShuffleImageMetadata : Added a new node for shuffling image metadata.
 
+Improvements
+------------
+
+- CyclesAttributes : Added `volumePrecision` plug.
+
 Fixes
 -----
 

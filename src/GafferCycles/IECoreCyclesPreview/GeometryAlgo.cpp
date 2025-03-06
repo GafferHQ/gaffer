@@ -193,10 +193,11 @@ ccl::Attribute *convertTypedPrimitiveVariable( const std::string &name, const Pr
 class IEVolumeLoader : public ccl::VDBImageLoader
 {
 	public:
-		IEVolumeLoader( const IECoreVDB::VDBObject *ieVolume, const string &gridName )
+		IEVolumeLoader( const IECoreVDB::VDBObject *ieVolume, const string &gridName, const int precision_ )
 		: VDBImageLoader( gridName ), m_ieVolume( ieVolume )
 		{
 			grid = m_ieVolume->findGrid( gridName );
+			precision = precision_;
 		}
 
 		const IECoreVDB::VDBObject *m_ieVolume;
@@ -391,7 +392,7 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 	}
 }
 
-void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *volume, ccl::Scene *scene )
+void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *volume, ccl::Scene *scene, const int precision )
 {
 	ccl::TypeDesc ctype;// = ccl::TypeDesc::TypeUnknown;
 
@@ -478,7 +479,7 @@ void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *volu
 			volume->attributes.add( std ) :
 			volume->attributes.add( ccl::ustring( gridName.c_str() ), ctype, ccl::ATTR_ELEMENT_VOXEL );
 
-		ccl::ImageLoader *loader = new IEVolumeLoader( vdbObject, gridName );
+		ccl::ImageLoader *loader = new IEVolumeLoader( vdbObject, gridName, precision );
 		ccl::ImageParams params;
 		params.frame = 0.0f;
 
