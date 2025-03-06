@@ -74,6 +74,7 @@
 
 #include "fmt/format.h"
 
+#include <tuple>
 #include <unordered_map>
 
 // Cycles
@@ -138,6 +139,8 @@ using SharedCGeometryPtr = std::shared_ptr<ccl::Geometry>;
 typedef std::pair<ccl::Node*, ccl::array<ccl::Node*>> ShaderAssignPair;
 // Defer adding the created nodes to the scene lock
 using NodesCreated = tbb::concurrent_vector<ccl::Node *>;
+// Defer creation of volumes to the scene lock
+typedef std::tuple<const IECoreVDB::VDBObject*, ccl::Volume*> VolumeToConvert;
 
 // The shared pointer never deletes, we leave that up to Cycles to do the final delete
 using NodeDeleter = bool (*)( ccl::Node * );
@@ -1033,9 +1036,9 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					}
 				}
 
-				if( ccl::Mesh *mesh = (ccl::Mesh*)object->get_geometry() )
+				if( object->get_geometry() && object->get_geometry()->is_mesh() )
 				{
-					if( mesh->geometry_type == ccl::Geometry::MESH )
+					if( ccl::Mesh *mesh = (ccl::Mesh*)object->get_geometry() )
 					{
 						if( mesh->get_subd_params() )
 						{
@@ -1045,6 +1048,18 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 								return false;
 							}
 						}
+					}
+				}
+				else if( object->get_geometry() && object->get_geometry()->is_volume() )
+				{
+					IECore::MurmurHash previousVolumeHash;
+					previousAttributes->m_volume.hash( previousVolumeHash );
+
+					IECore::MurmurHash currentVolumeHash;
+					m_volume.hash( currentVolumeHash );
+					if( previousVolumeHash != currentVolumeHash )
+					{
+						return false;
 					}
 				}
 			}
@@ -1082,8 +1097,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				}
 			}
 
-			if( !m_volume.apply( object ) )
-				return false;
+			m_volume.apply( object );
 
 			object->set_lightgroup( ccl::ustring( m_lightGroup.c_str() ) );
 
@@ -1140,6 +1154,9 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 						h.append( m_dicingRate );
 						h.append( m_maxLevel );
 					}
+					break;
+				case IECoreVDB::VDBObjectTypeId :
+					m_volume.hash( h );
 					break;
 				default :
 					// No geometry attributes for this type.
@@ -1206,19 +1223,36 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			std::optional<float> stepSize;
 			std::optional<bool> objectSpace;
 
-			bool apply( ccl::Object *object ) const
+			void hash( IECore::MurmurHash &h ) const
 			{
-				if( object->get_geometry()->geometry_type == ccl::Geometry::VOLUME )
+				if( clipping && clipping.value() != 0.001f )
 				{
-					ccl::Volume *volume = (ccl::Volume*)object->get_geometry();
-					if( clipping )
-						volume->set_clipping( clipping.value() );
-					if( stepSize )
-						volume->set_step_size( stepSize.value() );
-					if( objectSpace )
-						volume->set_object_space( objectSpace.value() );
+					h.append( clipping.value() );
 				}
-				return true;
+				if( stepSize && stepSize.value() != 0.0f )
+				{
+					h.append( stepSize.value() );
+				}
+				if( objectSpace && objectSpace.value() != false )
+				{
+					h.append( objectSpace.value() );
+				}
+			}
+
+			void apply( ccl::Object *object ) const
+			{
+				if( object->get_geometry() && object->get_geometry()->is_volume() )
+				{
+					if( ccl::Volume *volume = (ccl::Volume*)object->get_geometry() )
+					{
+						if( clipping )
+							volume->set_clipping( clipping.value() );
+						if( stepSize )
+							volume->set_step_size( stepSize.value() );
+						if( objectSpace )
+							volume->set_object_space( objectSpace.value() );
+					}
+				}
 			}
 
 		};
@@ -1437,6 +1471,7 @@ class InstanceCache : public IECore::RefCounted
 
 		void update( NodesCreated &object, NodesCreated &geometry )
 		{
+			updateVolumes();
 			updateObjects( object );
 			updateGeometry( geometry );
 		}
@@ -1597,13 +1632,19 @@ class InstanceCache : public IECore::RefCounted
 
 	private :
 
-		SharedCGeometryPtr convert( const IECore::Object *object, const CyclesAttributes *attributes, const std::string &nodeName ) const
+		SharedCGeometryPtr convert( const IECore::Object *object, const CyclesAttributes *attributes, const std::string &nodeName )
 		{
 			ccl::Geometry *geometry = GeometryAlgo::convert( object, nodeName, m_scene );
 			if( geometry )
 			{
 				geometry->set_owner( m_scene );
 			}
+
+			if( object->typeId() == IECoreVDB::VDBObject::staticTypeId() )
+			{
+				m_volumesToConvert.push_back( VolumeToConvert( IECore::runTimeCast<const IECoreVDB::VDBObject>( object ), static_cast<ccl::Volume*>( geometry ) ) );
+			}
+
 			return SharedCGeometryPtr( geometry, nullNodeDeleter );
 		}
 
@@ -1613,13 +1654,19 @@ class InstanceCache : public IECore::RefCounted
 			const int frame,
 			const CyclesAttributes *attributes,
 			const std::string &nodeName
-		) const
+		)
 		{
 			ccl::Geometry *geometry = GeometryAlgo::convert( samples, times, frame, nodeName, m_scene );
 			if( geometry )
 			{
 				geometry->set_owner( m_scene );
 			}
+
+			if( samples.front()->typeId() == IECoreVDB::VDBObject::staticTypeId() )
+			{
+				m_volumesToConvert.push_back( VolumeToConvert( IECore::runTimeCast<const IECoreVDB::VDBObject>( samples.front() ), static_cast<ccl::Volume*>( geometry ) ) );
+			}
+
 			return SharedCGeometryPtr( geometry, nullNodeDeleter );
 		}
 
@@ -1637,6 +1684,15 @@ class InstanceCache : public IECore::RefCounted
 			}
 
 			return Instance( object, geometry, prototype );
+		}
+
+		void updateVolumes()
+		{
+			for( VolumeToConvert volume : m_volumesToConvert )
+			{
+				GeometryAlgo::convertVoxelGrids( std::get<0>( volume ), std::get<1>( volume ), m_scene );
+			}
+			m_volumesToConvert.clear();
 		}
 
 		void updateObjects( NodesCreated &nodes )
@@ -1707,6 +1763,8 @@ class InstanceCache : public IECore::RefCounted
 		Geometry m_geometry;
 		using UniqueGeometry = tbb::concurrent_vector<SharedCGeometryPtr>;
 		UniqueGeometry m_uniqueGeometry;
+		using VolumesToConvert = tbb::concurrent_vector<VolumeToConvert>;
+		VolumesToConvert m_volumesToConvert;
 
 };
 
