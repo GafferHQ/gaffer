@@ -333,8 +333,9 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Specify volume density and step size in object or world space.
-			By default object space is used, so that the volume opacity and
-			detail remains the same regardless of object scale.
+			By default world space is used, enable object space to ensure
+			that the volume opacity and detail remains the same regardless
+			of object scale.
 			""",
 
 			"layout:section", "Volume",
