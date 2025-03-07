@@ -40,11 +40,14 @@
 
 #include "IECore/Object.h"
 
+#include "IECoreVDB/VDBObject.h"
+
 #include <vector>
 
 // Cycles
 IECORE_PUSH_DEFAULT_VISIBILITY
 #include "scene/geometry.h"
+#include "scene/volume.h"
 // Currently only VDBs need scene to get to the image manager
 #include "scene/scene.h"
 IECORE_POP_DEFAULT_VISIBILITY
@@ -63,6 +66,9 @@ IECORECYCLES_API ccl::Geometry *convert( const std::vector<const IECore::Object 
 
 /// Converts a primitive variable to a `ccl::Attribute` inside of a `ccl::AttributeSet`.
 IECORECYCLES_API void convertPrimitiveVariable( const std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes, ccl::AttributeElement attributeElement );
+
+/// Converts voxel grids from a VDB object.
+IECORECYCLES_API void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *geometry, ccl::Scene *scene, const int precision = 0 );
 
 /// Signature of a function which can convert to `ccl:Geometry`.
 /// \todo There's really no need to pass the node name here, because it's not a unique handle that
