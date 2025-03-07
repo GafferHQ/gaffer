@@ -41,6 +41,8 @@ import GafferScene
 
 def __matteAdaptor() :
 
+	__matteAttributes = [ "ai:matte", "cycles:use_holdout", "dl:matte", "ri:Ri:Matte" ]
+
 	processor = GafferScene.SceneProcessor()
 
 	processor["__optionQuery"] = GafferScene.OptionQuery()
@@ -71,18 +73,17 @@ def __matteAdaptor() :
 
 	processor["__allMatte"] = GafferScene.CustomAttributes()
 	processor["__allMatte"]["in"].setInput( processor["in"] )
-	processor["__allMatte"]["attributes"].addChild( Gaffer.NameValuePlug( "ai:matte", Gaffer.BoolPlug( defaultValue = True ) ) )
-	processor["__allMatte"]["attributes"].addChild( Gaffer.NameValuePlug( "cycles:use_holdout", Gaffer.BoolPlug( defaultValue = True ) ) )
-	processor["__allMatte"]["attributes"].addChild( Gaffer.NameValuePlug( "dl:matte", Gaffer.BoolPlug( defaultValue = True ) ) )
+	for attribute in __matteAttributes :
+		processor["__allMatte"]["attributes"].addChild( Gaffer.NameValuePlug( attribute, Gaffer.BoolPlug( defaultValue = True ) ) )
+
 	processor["__allMatte"]["global"].setValue( True )
 	# all locations are matte if `render:matteInclusions` matches the root of the scene
 	processor["__allMatte"]["enabled"].setInput( processor["__filterQuery"]["exactMatch"] )
 
 	processor["__matteInclusions"] = GafferScene.AttributeTweaks()
 	processor["__matteInclusions"]["in"].setInput( processor["__allMatte"]["out"] )
-	processor["__matteInclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "ai:matte", Gaffer.BoolPlug( defaultValue = True ), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
-	processor["__matteInclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "cycles:use_holdout", Gaffer.BoolPlug( defaultValue = True ), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
-	processor["__matteInclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "dl:matte", Gaffer.BoolPlug( defaultValue = True ), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
+	for attribute in __matteAttributes :
+		processor["__matteInclusions"]["tweaks"].addChild( Gaffer.TweakPlug( attribute, Gaffer.BoolPlug( defaultValue = True ), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
 
 	processor["__matteInclusions"]["filter"].setInput( processor["__matteInclusionsFilter"]["out"] )
 	# __matteInclusions is only required when `render:matteInclusions` exists and the root of the scene hasn't been set as matte
@@ -96,9 +97,8 @@ def __matteAdaptor() :
 
 	processor["__matteExclusions"] = GafferScene.AttributeTweaks()
 	processor["__matteExclusions"]["in"].setInput( processor["__matteInclusions"]["out"] )
-	processor["__matteExclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "ai:matte", Gaffer.BoolPlug(), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
-	processor["__matteExclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "cycles:use_holdout", Gaffer.BoolPlug(), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
-	processor["__matteExclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "dl:matte", Gaffer.BoolPlug(), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
+	for attribute in __matteAttributes :
+		processor["__matteExclusions"]["tweaks"].addChild( Gaffer.TweakPlug( attribute, Gaffer.BoolPlug(), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
 
 	processor["__matteExclusions"]["filter"].setInput( processor["__matteExclusionsFilter"]["out"] )
 	# __matteExclusions is only required when `render:matteExclusions` exists
