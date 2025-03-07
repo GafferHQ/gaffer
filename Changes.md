@@ -10,6 +10,7 @@ Fixes
 -----
 
 - Cryptomatte : Fixed handling of PxrCryptomatte output, and other files with less conventional metadata formatting.
+- VisualiserTool : Changed viewer shortcut to <kbd>L</kbd> to fix conflict with the pinning shortcut.
 
 1.5.7.0 (relative to 1.5.6.0)
 =======
