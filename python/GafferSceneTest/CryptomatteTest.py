@@ -36,6 +36,7 @@
 
 import unittest
 
+import inspect
 import pathlib
 import imath
 import json
@@ -68,6 +69,7 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		i = GafferImage.ImageMetadata()
 		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/conversion", "uint32_to_float32" ) )
 		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/hash", "MurmurHash3_32" ) )
+		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/name", "crypto_object" ) )
 		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/manifest", json.dumps( manifest ) ) )
 
 		c = GafferScene.Cryptomatte()
@@ -456,6 +458,36 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 			c["manifestScene"].childNames( "/GAFFERBOT/C_torso_GRP" ),
 			IECore.InternedStringVectorData( [ "C_head_GRP", "C_key_GRP", "C_torso_CPT", "L_armUpper_GRP", "L_legUpper_GRP", "R_armUpper_GRP", "R_legUpper_GRP" ] )
 		)
+
+	def testUnconventionalMetadata( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["reader"] = GafferImage.ImageReader()
+		script["reader"]["fileName"].setValue( self.testImage )
+
+		script["cryptomatte"] = GafferScene.Cryptomatte()
+		script["cryptomatte"]["in"].setInput( script["reader"]["out"] )
+		script["cryptomatte"]["layer"].setValue( "crypto_object" )
+		self.assertEqual( script["cryptomatte"]["manifestScene"].childNames( "/" ), IECore.InternedStringVectorData( [ "GAFFERBOT", "cow", "cow1" ] ) )
+
+		# Convention dictates the use of this strange hash to identify the
+		# metadata for each particular set of cryptomattes.
+		self.assertEqual( script["reader"]["out"].metadata()["cryptomatte/f834d0a/name"].value, "crypto_object" )
+
+		# But the spec allows anything to be used as long as it is no greater
+		# than seven characters. Shuffle the metadata to use different names.
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			parent["cryptomatte"]["in"]["metadata"] = IECore.CompoundData( {
+				k.replace( "f834d0a", "object" ) : v
+				for k, v in parent["reader"]["out"]["metadata"].items()
+			} )
+			"""
+		) )
+
+		# And check that we can still find the manifest from this new metadata.
+		self.assertEqual( script["cryptomatte"]["manifestScene"].childNames( "/" ), IECore.InternedStringVectorData( [ "GAFFERBOT", "cow", "cow1" ] ) )
 
 if __name__ == "__main__":
 	unittest.main()

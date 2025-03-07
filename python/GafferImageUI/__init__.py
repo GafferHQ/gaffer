@@ -126,5 +126,6 @@ from . import DeepSliceUI
 from . import ContactSheetCoreUI
 from . import ContactSheetUI
 from . import MetadataOverlayUI
+from . import ShuffleImageMetadataUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImageUI" )

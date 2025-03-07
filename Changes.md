@@ -12,10 +12,31 @@ Breaking Changes
 - StandardNodule : Removed deprecated `setCompatibleLabelsVisible()`.
 - DeleteAttributes : Changed base class and marked as `final`.
 
-1.5.x.x (relative to 1.5.7.0)
+1.5.x.x (relative to 1.5.8.0)
 =======
 
 
+
+1.5.8.0 (relative to 1.5.7.0)
+=======
+
+Features
+--------
+
+- ShuffleImageMetadata : Added a new node for shuffling image metadata.
+
+Improvements
+------------
+
+- CyclesAttributes : Added `volumePrecision` and `volumeVelocityScale` plugs.
+
+Fixes
+-----
+
+- Cryptomatte : Fixed handling of PxrCryptomatte output, and other files with less conventional metadata formatting.
+- VisualiserTool : Changed viewer shortcut to <kbd>L</kbd> to fix conflict with the pinning shortcut.
+- RenderPassMenu : Fixed handling of the addition and removal of the render pass plug.
+- Cycles : Fixed crash when rendering volumes (#5824).
 
 1.5.7.0 (relative to 1.5.6.0)
 =======
