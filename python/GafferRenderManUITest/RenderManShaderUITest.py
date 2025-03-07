@@ -141,7 +141,7 @@ class RenderManShaderUITest( GafferUITest.TestCase ) :
 
 				for m in mh.messages :
 					## \todo Add support for these types.
-					self.assertRegex( m.message, 'Spline parameter .* not supported|.* has unsupported type "bxdf|.* has unsupported type "struct"' )
+					self.assertRegex( m.message, 'Spline parameter .* not supported|.* has unsupported type "struct"' )
 
 				# Trigger metadata parsing and ensure there are no errors
 				Gaffer.Metadata.value( node, "description" )

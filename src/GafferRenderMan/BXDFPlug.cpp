@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2018, John Haddon. All rights reserved.
+//  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,25 +34,39 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#include "GafferRenderMan/BXDFPlug.h"
 
-namespace GafferRenderMan
+using namespace IECore;
+using namespace Gaffer;
+using namespace GafferRenderMan;
+
+GAFFER_PLUG_DEFINE_TYPE( BXDFPlug );
+
+BXDFPlug::BXDFPlug( const std::string &name, Direction direction, unsigned flags )
+	:	Plug( name, direction, flags )
 {
+}
 
-enum TypeId
+BXDFPlug::~BXDFPlug()
 {
-	RenderManAttributesTypeId = 110400,
-	RenderManOptionsTypeId = 110401,
-	RenderManShaderTypeId = 110402,
-	RenderManLightTypeId = 110403,
-	RenderManMeshLightTypeId = 110404,
-	RenderManIntegratorTypeId = 110405,
-	RenderManOutputFilterTypeId = 110406,
-	RenderManDisplayFilterTypeId = 110407,
-	RenderManSampleFilterTypeId = 110408,
-	BXDFPlugTypeId = 110409,
+}
 
-	LastTypeId = 110450
-};
+bool BXDFPlug::acceptsChild( const GraphComponent *potentialChild ) const
+{
+	return false;
+}
 
-} // namespace GafferRenderMan
+Gaffer::PlugPtr BXDFPlug::createCounterpart( const std::string &name, Direction direction ) const
+{
+	return new BXDFPlug( name, direction, getFlags() );
+}
+
+bool BXDFPlug::acceptsInput( const Gaffer::Plug *input ) const
+{
+	if( !Plug::acceptsInput( input ) )
+	{
+		return false;
+	}
+
+	return !input || runTimeCast<const BXDFPlug>( input );
+}

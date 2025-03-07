@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2018, John Haddon. All rights reserved.
+//  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,23 +36,31 @@
 
 #pragma once
 
+#include "GafferRenderMan/Export.h"
+#include "GafferRenderMan/TypeIds.h"
+
+#include "Gaffer/Plug.h"
+
 namespace GafferRenderMan
 {
 
-enum TypeId
+/// Plug used to represent BXDF outputs and inputs for RenderManShader.
+class GAFFERRENDERMAN_API BXDFPlug : public Gaffer::Plug
 {
-	RenderManAttributesTypeId = 110400,
-	RenderManOptionsTypeId = 110401,
-	RenderManShaderTypeId = 110402,
-	RenderManLightTypeId = 110403,
-	RenderManMeshLightTypeId = 110404,
-	RenderManIntegratorTypeId = 110405,
-	RenderManOutputFilterTypeId = 110406,
-	RenderManDisplayFilterTypeId = 110407,
-	RenderManSampleFilterTypeId = 110408,
-	BXDFPlugTypeId = 110409,
 
-	LastTypeId = 110450
+	public :
+
+		explicit BXDFPlug( const std::string &name=defaultName<BXDFPlug>(), Direction direction=In, unsigned flags=Default );
+		~BXDFPlug() override;
+
+		GAFFER_PLUG_DECLARE_TYPE( GafferRenderMan::BXDFPlug, BXDFPlugTypeId, Plug );
+
+		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
+		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
+		bool acceptsInput( const Gaffer::Plug *input ) const override;
+
 };
+
+IE_CORE_DECLAREPTR( BXDFPlug );
 
 } // namespace GafferRenderMan
