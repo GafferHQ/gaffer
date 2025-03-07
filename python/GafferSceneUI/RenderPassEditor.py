@@ -1042,15 +1042,27 @@ class RenderPassChooserWidget( GafferUI.Widget ) :
 
 	def __init__( self, settingsNode, **kw ) :
 
-		## \todo It would probably be better if we created the plug in `startup/gui/project.py`, giving
-		# us explicit control over its ordering with respect to the other plugs. Then this widget would
-		# just show the plug if it exists, and if it doesn't show nothing.
-		renderPassPlug = GafferSceneUI.ScriptNodeAlgo.acquireRenderPassPlug( settingsNode["__scriptNode"].getInput().node() )
-		self.__renderPassPlugValueWidget = _RenderPassPlugValueWidget(
-			renderPassPlug["value"],
-			showLabel = True
-		)
-		GafferUI.Widget.__init__( self, self.__renderPassPlugValueWidget, **kw )
+		self.__container = GafferUI.ListContainer()
+		GafferUI.Widget.__init__( self, self.__container, **kw )
+
+		self.__scriptNode = settingsNode["__scriptNode"].getInput().node()
+		self.__scriptNode["variables"].childAddedSignal().connect( Gaffer.WeakMethod( self.__updateWidget ) )
+		self.__scriptNode["variables"].childRemovedSignal().connect( Gaffer.WeakMethod( self.__updateWidget ) )
+
+		self.__updateWidget()
+
+	def __updateWidget( self, *args ) :
+
+		renderPassPlug = GafferSceneUI.ScriptNodeAlgo.acquireRenderPassPlug( self.__scriptNode, createIfMissing = False )
+
+		if renderPassPlug is not None :
+			widgets = self.__container[:]
+			if not widgets or not widgets[0].getPlug().isSame( renderPassPlug["value"] ) :
+				widgets = [ _RenderPassPlugValueWidget( renderPassPlug["value"], showLabel = True ) ]
+		else :
+			widgets = []
+
+		self.__container[:] = widgets
 
 RenderPassEditor.RenderPassChooserWidget = RenderPassChooserWidget
 
