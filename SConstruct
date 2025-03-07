@@ -1453,6 +1453,9 @@ libraries = {
 	},
 
 	"GafferRenderManUI" : {
+		"envAppends" : {
+			"LIBS" : [ "GafferScene" ],
+		},
 		"requiredOptions" : [ "RENDERMAN_ROOT" ],
 		"installRoot" : renderManInstallRoot,
 	},
