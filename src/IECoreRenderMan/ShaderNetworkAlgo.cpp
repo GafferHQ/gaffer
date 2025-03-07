@@ -329,10 +329,11 @@ void convertConnection( const IECoreScene::ShaderNetwork::Connection &connection
 	std::string reference = connection.source.shader;
 	if(
 		connection.source.name.string().size() &&
-		// Display and sample filters don't have named outputs, and
-		// connections will silently fail if we include one.
+		// Several node types don't have named outputs, and
+		// connections will silently fail if we include a name.
 		typeIt->second != pxrcore::DataType::k_displayfilter &&
-		typeIt->second != pxrcore::DataType::k_samplefilter
+		typeIt->second != pxrcore::DataType::k_samplefilter &&
+		typeIt->second != pxrcore::DataType::k_bxdf
 	)
 	{
 		reference += ":" + connection.source.name.string();
