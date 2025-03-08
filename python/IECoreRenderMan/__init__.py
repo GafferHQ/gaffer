@@ -35,12 +35,3 @@
 ##########################################################################
 
 from ._IECoreRenderMan import *
-
-import os
-import ctypes
-if os.name == "nt" :
-	# Because `_IECoreRenderMan.pyd` currently doesn't require any symbols
-	# from `IECoreRenderMan.dll`, the Windows linker omits the latter. Load
-	# it explicitly, because it registers the renderer.
-	ctypes.CDLL( "IECoreRenderMan.dll" )
-del os, ctypes

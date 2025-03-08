@@ -36,10 +36,17 @@
 
 #include "boost/python.hpp"
 
+#include "IECoreRenderMan/ShaderNetworkAlgo.h"
+
 using namespace boost::python;
+using namespace IECoreRenderMan;
 
 BOOST_PYTHON_MODULE( _IECoreRenderMan )
 {
-	// The module exists solely to link in libIECoreRenderMan, to
-	// register the RenderMan renderer.
+
+	object shaderNetworkAlgoModule( borrowed( PyImport_AddModule( "IECoreRenderMan.ShaderNetworkAlgo" ) ) );
+	scope().attr( "ShaderNetworkAlgo" ) = shaderNetworkAlgoModule;
+	scope shaderNetworkAlgoScope( shaderNetworkAlgoModule );
+
+	def( "convertUSDShaders", &ShaderNetworkAlgo::convertUSDShaders );
 }
