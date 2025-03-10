@@ -299,7 +299,7 @@ class MenuBarTest( GafferUITest.TestCase ) :
 
 	def __simulateShortcut( self, widget ) :
 
-		if Qt.__binding__ in ( "PySide2", "PyQt5" ) :
+		if Qt.__binding__ in ( "PySide6", "PySide2", "PyQt5" ) :
 
 			# Qt5's handling of key events appears to have
 			# changed, such that we must manually send the

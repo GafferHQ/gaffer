@@ -49,6 +49,7 @@ from ._StyleSheet import _styleSheet
 from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
+import Qt
 
 class _WidgetMetaclass( Gaffer.Signals.Trackable.__class__ ) :
 
@@ -798,11 +799,18 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 	def _key( cls, qtKey ) :
 
 		if not cls.__keyMapping :
-			for k in dir( QtCore.Qt ) :
-				if k.startswith( "Key_" ) :
-					keyValue = int( getattr( QtCore.Qt, k ) )
-					keyString = k[4:]
-					cls.__keyMapping[keyValue] = keyString
+			if Qt.__binding__ == "PySide6" :
+				for k in dir( QtCore.Qt.Key ) :
+					if k.startswith( "Key_" ) :
+						keyValue = int( getattr( QtCore.Qt.Key, k ) )
+						keyString = k[4:]
+						cls.__keyMapping[keyValue] = keyString
+			else :
+				for k in dir( QtCore.Qt ) :
+					if k.startswith( "Key_" ) :
+						keyValue = int( getattr( QtCore.Qt, k ) )
+						keyString = k[4:]
+						cls.__keyMapping[keyValue] = keyString
 
 		return cls.__keyMapping[int(qtKey)]
 
@@ -815,7 +823,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 		result = GafferUI.ButtonEvent.Buttons.None_
 		if qtButtons & QtCore.Qt.LeftButton :
 			result |= GafferUI.ButtonEvent.Buttons.Left
-		if qtButtons & QtCore.Qt.MidButton :
+		if qtButtons & QtCore.Qt.MiddleButton :
 			result |= GafferUI.ButtonEvent.Buttons.Middle
 		if qtButtons & QtCore.Qt.RightButton :
 			result |= GafferUI.ButtonEvent.Buttons.Right
@@ -1016,11 +1024,11 @@ class _EventFilter( QtCore.QObject ) :
 			return False
 
 		# we display tooltips and emit visibility events even on disabled widgets
-		if qEventType==qEvent.ToolTip :
+		if qEventType==QtCore.QEvent.ToolTip :
 
 			return self.__toolTip( qObject, qEvent )
 
-		elif qEventType==qEvent.Show or qEventType==qEvent.Hide :
+		elif qEventType==QtCore.QEvent.Show or qEventType==QtCore.QEvent.Hide :
 
 			return self.__showHide( qObject, qEvent )
 
@@ -1028,63 +1036,63 @@ class _EventFilter( QtCore.QObject ) :
 		if not qObject.isEnabled() :
 			return False
 
-		if qEventType==qEvent.KeyPress :
+		if qEventType==QtCore.QEvent.KeyPress :
 
 			return self.__keyPress( qObject, qEvent )
 
-		elif qEventType==qEvent.KeyRelease :
+		elif qEventType==QtCore.QEvent.KeyRelease :
 
 			return self.__keyRelease( qObject, qEvent )
 
-		elif qEventType==qEvent.MouseButtonPress :
+		elif qEventType==QtCore.QEvent.MouseButtonPress :
 
 			return self.__mouseButtonPress( qObject, qEvent )
 
-		elif qEventType==qEvent.MouseButtonRelease :
+		elif qEventType==QtCore.QEvent.MouseButtonRelease :
 
 			return self.__mouseButtonRelease( qObject, qEvent )
 
-		elif qEventType==qEvent.MouseButtonDblClick :
+		elif qEventType==QtCore.QEvent.MouseButtonDblClick :
 
 			return self.__mouseButtonDblClick( qObject, qEvent )
 
-		elif qEventType==qEvent.MouseMove :
+		elif qEventType==QtCore.QEvent.MouseMove :
 
 			return self.__mouseMove( qObject, qEvent )
 
-		elif qEventType==qEvent.Enter :
+		elif qEventType==QtCore.QEvent.Enter :
 
 			return self.__enter( qObject, qEvent )
 
-		elif qEventType==qEvent.Leave :
+		elif qEventType==QtCore.QEvent.Leave :
 
 			return self.__leave( qObject, qEvent )
 
-		elif qEventType==qEvent.Wheel :
+		elif qEventType==QtCore.QEvent.Wheel :
 
 			return self.__wheel( qObject, qEvent )
 
-		elif qEventType==qEvent.ContextMenu :
+		elif qEventType==QtCore.QEvent.ContextMenu :
 
 			return self.__contextMenu( qObject, qEvent )
 
-		elif qEventType==qEvent.ParentChange :
+		elif qEventType==QtCore.QEvent.ParentChange :
 
 			return self.__parentChange( qObject, qEvent )
 
-		elif qEventType==qEvent.DragEnter :
+		elif qEventType==QtCore.QEvent.DragEnter :
 
 			return self.__foreignDragEnter( qObject, qEvent )
 
-		elif qEventType==qEvent.DragMove :
+		elif qEventType==QtCore.QEvent.DragMove :
 
 			return self.__foreignDragMove( qObject, qEvent )
 
-		elif qEventType==qEvent.DragLeave :
+		elif qEventType==QtCore.QEvent.DragLeave :
 
 			return self.__foreignDragLeave( qObject, qEvent )
 
-		elif qEventType==qEvent.Drop :
+		elif qEventType==QtCore.QEvent.Drop :
 
 			return self.__foreignDrop( qObject, qEvent )
 
@@ -1096,7 +1104,12 @@ class _EventFilter( QtCore.QObject ) :
 		toolTip = widget.getToolTip()
 		if toolTip :
 			toolTip = GafferUI.DocumentationAlgo.markdownToHTML( toolTip )
-			QtWidgets.QToolTip.showText( qEvent.globalPos(), toolTip, qObject )
+			pos = None
+			if Qt.__binding__ == "PySide6" :
+				pos = qEvent.globalPosition().toPoint()
+			else :
+				pos = qEvent.globalPos()
+			QtWidgets.QToolTip.showText( pos, toolTip, qObject )
 			return True
 		else :
 			return False
@@ -1274,7 +1287,7 @@ class _EventFilter( QtCore.QObject ) :
 				GafferUI.ButtonEvent.Buttons.None_,
 				self.__virtualButtons( qEvent.buttons() ),
 				self.__widgetSpaceLine( qEvent, widget ),
-				qEvent.delta() / 8.0,
+				float( ( qEvent.angleDelta() / 8 ).y() ),
 				Widget._modifiers( qEvent.modifiers() ),
 			)
 
@@ -1393,7 +1406,12 @@ class _EventFilter( QtCore.QObject ) :
 
 	def __doDragEnterAndLeave( self, qObject, qEvent ) :
 
-		candidateWidget = Widget.widgetAt( imath.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() ) )
+		if Qt.__binding__ == "PySide6" :
+			pos = qEvent.globalPosition().toPoint()
+		else :
+			pos = qEvent.globalPos()
+
+		candidateWidget = Widget.widgetAt( imath.V2i( pos.x(), pos.y() ) )
 
 		newDestinationWidget = None
 		while candidateWidget is not None :
@@ -1664,7 +1682,12 @@ class _EventFilter( QtCore.QObject ) :
 	# long distances.
 	def __widgetSpaceLine( self, qEvent, targetWidget ) :
 
-		cursorPos = imath.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() )
+		if Qt.__binding__ == "PySide6" :
+			pos = qEvent.globalPosition().toPoint()
+		else :
+			pos = qEvent.globalPos()
+
+		cursorPos = imath.V2i( pos.x(), pos.y() )
 		cursorPos -= targetWidget.bound().min()
 
 		return IECore.LineSegment3f(
