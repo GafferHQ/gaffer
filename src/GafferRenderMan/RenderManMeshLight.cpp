@@ -65,9 +65,9 @@ RenderManMeshLight::RenderManMeshLight( const std::string &name )
 	RenderManAttributesPtr attributes = new RenderManAttributes( "__attributes" );
 	attributes->inPlug()->setInput( inPlug() );
 	attributes->filterPlug()->setInput( filterPlug() );
-	for( const auto &name : { "ri:visibility:indirect", "ri:visibility:transmission" } )
+	for( const auto &attributeName : { "ri:visibility:indirect", "ri:visibility:transmission" } )
 	{
-		auto plug = attributes->attributesPlug()->getChild<NameValuePlug>( name );
+		auto plug = attributes->attributesPlug()->getChild<NameValuePlug>( attributeName );
 		plug->enabledPlug()->setValue( true );
 		plug->valuePlug<IntPlug>()->setValue( 0 );
 	}
