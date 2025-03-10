@@ -38,6 +38,8 @@ from .ModuleTest import ModuleTest
 from .RenderManAttributesTest import RenderManAttributesTest
 from .RenderManOptionsTest import RenderManOptionsTest
 from .RenderManShaderTest import RenderManShaderTest
+from .RenderManLightTest import RenderManLightTest
+from .RenderManMeshLightTest import RenderManMeshLightTest
 
 if __name__ == "__main__":
 	import unittest

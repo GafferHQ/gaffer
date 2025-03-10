@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2018, John Haddon. All rights reserved.
+//  Copyright (c) 2019, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,37 +34,49 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#pragma once
 
-#include "GafferRenderMan/RenderManAttributes.h"
-#include "GafferRenderMan/RenderManLight.h"
-#include "GafferRenderMan/RenderManMeshLight.h"
-#include "GafferRenderMan/RenderManOptions.h"
-#include "GafferRenderMan/RenderManShader.h"
+#include "GafferRenderMan/Export.h"
+#include "GafferRenderMan/TypeIds.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferScene/Light.h"
+#include "GafferScene/Shader.h"
+#include "GafferScene/ShaderPlug.h"
 
-using namespace boost::python;
-using namespace GafferRenderMan;
-
-namespace
+namespace GafferRenderMan
 {
 
-void loadShader( RenderManLight &l, const std::string &shaderName )
+class GAFFERRENDERMAN_API RenderManLight : public GafferScene::Light
 {
-	IECorePython::ScopedGILRelease gilRelease;
-	l.loadShader( shaderName );
-}
 
-} // namespace
+	public :
 
-BOOST_PYTHON_MODULE( _GafferRenderMan )
-{
-	GafferBindings::DependencyNodeClass<RenderManLight>()
-		.def( "loadShader", &loadShader )
-	;
-	GafferBindings::DependencyNodeClass<RenderManAttributes>();
-	GafferBindings::DependencyNodeClass<RenderManOptions>();
-	GafferBindings::DependencyNodeClass<RenderManShader>();
-	GafferBindings::DependencyNodeClass<RenderManMeshLight>();
-}
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferRenderMan::RenderManLight, RenderManLightTypeId, GafferScene::Light );
+
+		RenderManLight( const std::string &name=defaultName<RenderManLight>() );
+		~RenderManLight() override;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+		void loadShader( const std::string &shaderName );
+
+	protected :
+
+		void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECoreScene::ConstShaderNetworkPtr computeLight( const Gaffer::Context *context ) const override;
+
+	private :
+
+		GafferScene::Shader *shaderNode();
+		const GafferScene::Shader *shaderNode() const;
+
+		GafferScene::ShaderPlug *shaderInPlug();
+		const GafferScene::ShaderPlug *shaderInPlug() const;
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( RenderManLight )
+
+} // namespace GafferRenderMan

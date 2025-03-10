@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, John Haddon. All rights reserved.
+#  Copyright (c) 2019, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,11 +34,25 @@
 #
 ##########################################################################
 
-__import__( "GafferSceneUI" )
+import Gaffer
 
-from . import RenderManAttributesUI
-from . import RenderManOptionsUI
-from . import RenderManShaderUI
-from . import RenderManMeshLightUI
+for type in [
+	"PxrCyclinderLight", "PxrDomeLight", "PxrDiskLight", "PxrDistantLight",
+	"PxrEnvDayLight", "PxrMeshLight",  "PxrRectLight", "PxrSphereLight",
+] :
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferRenderManUI" )
+	Gaffer.Metadata.registerValue( "ri:light:" + type, "intensityParameter", "intensity" )
+	Gaffer.Metadata.registerValue( "ri:light:" + type, "exposureParameter", "exposure" )
+	Gaffer.Metadata.registerValue( "ri:light:" + type, "colorParameter", "lightColor" )
+
+Gaffer.Metadata.registerValue( "ri:light:PxrCylinderLight", "type", "cylinder" )
+Gaffer.Metadata.registerValue( "ri:light:PxrDomeLight", "type", "environment" )
+Gaffer.Metadata.registerValue( "ri:light:PxrDiskLight", "type", "disk" )
+Gaffer.Metadata.registerValue( "ri:light:PxrEnvDayLight", "type", "environment" )
+Gaffer.Metadata.registerValue( "ri:light:PxrDistantLight", "type", "distant" )
+Gaffer.Metadata.registerValue( "ri:light:PxrMeshLight", "type", "mesh" )
+Gaffer.Metadata.registerValue( "ri:light:PxrPortalLight", "type", "portal" )
+Gaffer.Metadata.registerValue( "ri:light:PxrRectLight", "type", "quad" )
+Gaffer.Metadata.registerValue( "ri:light:PxrSphereLight", "type", "point" )
+
+Gaffer.Metadata.registerValue( "ri:light:PxrDomeLight", "textureNameParameter", "lightColorMap" )

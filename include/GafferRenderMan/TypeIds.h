@@ -44,6 +44,8 @@ enum TypeId
 	RenderManAttributesTypeId = 110400,
 	RenderManOptionsTypeId = 110401,
 	RenderManShaderTypeId = 110402,
+	RenderManLightTypeId = 110403,
+	RenderManMeshLightTypeId = 110404,
 	LastTypeId = 110450
 };
 

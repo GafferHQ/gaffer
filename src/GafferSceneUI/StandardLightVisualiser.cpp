@@ -472,7 +472,16 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	const InternedString metadataTarget = metadataTargetForNetwork( attributeName, shaderNetwork );
 	const IECore::CompoundData *shaderParameters = shaderNetwork->outputShader()->parametersData();
 
-	ConstStringDataPtr type = Metadata::value<StringData>( metadataTarget, g_typeString );
+	ConstStringDataPtr typeData = Metadata::value<StringData>( metadataTarget, g_typeString );
+	string type = typeData ? typeData->readable() : "";
+	if( type == "quad" )
+	{
+		// Cycles and Arnold define portals via a parameter on a quad, rather having a specific light type.
+		if( parameter<bool>( metadataTarget, shaderParameters, g_portalParameterString, false ) )
+		{
+			type = "portal";
+		}
+	}
 
 	const Color3f color = parameter<Color3f>( metadataTarget, shaderParameters, g_colorParameterString, Color3f( 1.0f ) );
 	const Color3f tint = parameter<Color3f>( metadataTarget, shaderParameters, g_tintParameterString, Color3f( 1.0f ) );
@@ -504,7 +513,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	// before dealing with specific light types.
 
 	const bool haveCone =
-		( type && type->readable() == "spot" ) ||
+		type == "spot" ||
 		parameter<float>( metadataTarget, shaderParameters, g_coneAngleParameterString, -1.0f ) >= 0.0f
 	;
 	if( haveCone )
@@ -523,7 +532,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 
 	// Now do visualisations based on light type.
 
-	if( type && type->readable() == "environment" )
+	if( type == "environment" )
 	{
 		if( drawShaded )
 		{
@@ -538,7 +547,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 			/* affectsFramingBound = */ true
 		) );
 	}
-	else if( type && type->readable() == "spot" )
+	else if( type == "spot" )
 	{
 		const float radius = parameter<float>( metadataTarget, shaderParameters, g_radiusParameterString, 0.0f );
 		result.push_back( Visualisation(
@@ -548,12 +557,12 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 		result.push_back( Visualisation::createOrnament( colorIndicator( color ), /* affectsFramingBound = */ false, Visualisation::ColorSpace::Scene ) );
 	}
-	else if( type && type->readable() == "distant" )
+	else if( type == "distant" )
 	{
 		result.push_back( Visualisation::createOrnament( distantRays( muted ), /* affectsFramingBound = */ true ) );
 		result.push_back( Visualisation::createOrnament( colorIndicator( color ), /* affectsFramingBound = */ false, Visualisation::ColorSpace::Scene ) );
 	}
-	else if( type && type->readable() == "quad" )
+	else if( type == "quad" )
 	{
 		ConstM33fDataPtr uvOrientation = Metadata::value<M33fData>( metadataTarget, g_uvOrientationString );
 
@@ -562,37 +571,37 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 			parameter<float>( metadataTarget, shaderParameters, g_heightParameterString, 2.0f )
 		);
 
-		// Cycles/Arnold define portals via a parameter on a quad, rather than as it's own light type.
-		if( parameter<bool>( metadataTarget, shaderParameters, g_portalParameterString, false ) )
+		if( drawShaded )
 		{
-			// Because we don't support variable size lights, we keep a fixed hatching scale
-			result.push_back( Visualisation::createGeometry( quadPortal( size, /* hatchingScale = */ 1.0f, muted ) ) );
+			ConstDataPtr textureData = drawTextured ? surfaceTexture( attributeName, shaderNetwork, attributes, maxTextureResolution ) : nullptr;
+			result.push_back( Visualisation::createGeometry(
+				quadSurface( size, textureData, tint, maxTextureResolution, color, uvOrientation ? uvOrientation->readable() : M33f() ),
+				Visualisation::ColorSpace::Scene
+			) );
 		}
 		else
 		{
-			if( drawShaded )
-			{
-				ConstDataPtr textureData = drawTextured ? surfaceTexture( attributeName, shaderNetwork, attributes, maxTextureResolution ) : nullptr;
-				result.push_back( Visualisation::createGeometry(
-					quadSurface( size, textureData, tint, maxTextureResolution, color, uvOrientation ? uvOrientation->readable() : M33f() ),
-					Visualisation::ColorSpace::Scene
-				) );
-			}
-			else
-			{
-				result.push_back( Visualisation::createOrnament( colorIndicator( color * tint ), /* affectsFramingBound = */ true, Visualisation::ColorSpace::Scene ) );
-			}
-			result.push_back( Visualisation::createGeometry( quadWireframe( size, muted ) ) );
+			result.push_back( Visualisation::createOrnament( colorIndicator( color * tint ), /* affectsFramingBound = */ true, Visualisation::ColorSpace::Scene ) );
+		}
+		result.push_back( Visualisation::createGeometry( quadWireframe( size, muted ) ) );
 
-			const float spread = parameter<float>( metadataTarget, shaderParameters, g_spreadParameterString, -1 );
-			if( spread >= 0.0f )
-			{
-				addAreaSpread( spread, ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
-			}
+		const float spread = parameter<float>( metadataTarget, shaderParameters, g_spreadParameterString, -1 );
+		if( spread >= 0.0f )
+		{
+			addAreaSpread( spread, ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 		}
 		addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 	}
-	else if( type && type->readable() == "disk" )
+	else if( type == "portal" )
+	{
+		const V2f size(
+			parameter<float>( metadataTarget, shaderParameters, g_widthParameterString, 1.0f ),
+			parameter<float>( metadataTarget, shaderParameters, g_heightParameterString, 1.0f )
+		);
+		result.push_back( Visualisation::createGeometry( quadPortal( size, /* hatchingScale = */ 1.0f, muted ) ) );
+		addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
+	}
+	else if( type == "disk" )
 	{
 		float radius = parameter<float>( metadataTarget, shaderParameters, g_widthParameterString, 2.0f ) / 2.0f;
 		radius = parameter<float>( metadataTarget, shaderParameters, g_radiusParameterString, radius );
@@ -619,7 +628,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 			addAreaSpread( spread, ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 		}
 	}
-	else if( type && type->readable() == "cylinder" )
+	else if( type == "cylinder" )
 	{
 		const float radius = parameter<float>( metadataTarget, shaderParameters, g_radiusParameterString, 1 );
 		const float length = parameter<float>( metadataTarget, shaderParameters, g_lengthParameterString, 2 );
@@ -634,7 +643,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 			result.push_back( Visualisation::createOrnament( colorIndicator( color * tint ), /* affectsFramingBound = */ false, Visualisation::ColorSpace::Scene ) );
 		}
 	}
-	else if( type && type->readable() == "mesh" )
+	else if( type == "mesh" )
 	{
 		// There isn't any meaningful place to draw anything for the mesh
 		// light, so instead we make the mesh outline visible and light coloured.
@@ -645,7 +654,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		meshState->add( new IECoreGL::OutlineColorStateComponent( muted ? g_mutedLightWireframeColor4 : g_lightWireframeColor4 ) );
 		state = meshState;
 	}
-	else if( type && type->readable() == "photometric" )
+	else if( type == "photometric" )
 	{
 		const float radius = parameter<float>( metadataTarget, shaderParameters, g_radiusParameterString, 0 );
 		if( radius > 0 )
