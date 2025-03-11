@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2018, John Haddon. All rights reserved.
+//  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,37 +34,32 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#pragma once
 
-#include "GafferRenderMan/RenderManAttributes.h"
-#include "GafferRenderMan/RenderManLight.h"
-#include "GafferRenderMan/RenderManMeshLight.h"
-#include "GafferRenderMan/RenderManOptions.h"
-#include "GafferRenderMan/RenderManShader.h"
+#include "GafferRenderMan/Export.h"
+#include "GafferRenderMan/TypeIds.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferScene/FilteredSceneProcessor.h"
 
-using namespace boost::python;
-using namespace GafferRenderMan;
-
-namespace
+namespace GafferRenderMan
 {
 
-void loadShader( RenderManLight &l, const std::string &shaderName )
+class GAFFERRENDERMAN_API RenderManMeshLight : public GafferScene::FilteredSceneProcessor
 {
-	IECorePython::ScopedGILRelease gilRelease;
-	l.loadShader( shaderName );
-}
 
-} // namespace
+	public :
 
-BOOST_PYTHON_MODULE( _GafferRenderMan )
-{
-	GafferBindings::DependencyNodeClass<RenderManLight>()
-		.def( "loadShader", &loadShader )
-	;
-	GafferBindings::DependencyNodeClass<RenderManAttributes>();
-	GafferBindings::DependencyNodeClass<RenderManOptions>();
-	GafferBindings::DependencyNodeClass<RenderManShader>();
-	GafferBindings::DependencyNodeClass<RenderManMeshLight>();
-}
+		explicit RenderManMeshLight( const std::string &name=defaultName<RenderManMeshLight>() );
+		~RenderManMeshLight() override;
+
+		GAFFER_NODE_DECLARE_TYPE( GafferRenderMan::RenderManMeshLight, RenderManMeshLightTypeId, FilteredSceneProcessor );
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( RenderManMeshLight )
+
+} // namespace GafferRenderMan
