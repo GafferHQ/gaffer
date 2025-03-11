@@ -74,6 +74,7 @@ void addWireframeCurveState( IECoreGL::Group *group )
 
 void addRect(
 	const V2f &innerSize,
+	const V2f &innerScale,
 	const float radius,
 	const float falloffWidth,
 	std::vector<int> &vertsPerCurve,
@@ -81,14 +82,16 @@ void addRect(
 )
 {
 	const V3f halfSize( innerSize.x * 0.5f, innerSize.y * 0.5f, 0.f );
+	const V3f scale( innerScale.x, innerScale.y, 0.f );
 
 	if( radius == 0 && falloffWidth == 0.f )
 	{
+		const V3f halfSizeScaled = halfSize * scale;
 		vertsPerCurve.push_back( 4 );
-		p.push_back( V3f( -halfSize.x, -halfSize.y, 0.f ) );
-		p.push_back( V3f( halfSize.x, -halfSize.y, 0.f ) );
-		p.push_back( V3f( halfSize.x, halfSize.y, 0.f ) );
-		p.push_back( V3f( -halfSize.x, halfSize.y, 0.f ) );
+		p.push_back( V3f( -halfSizeScaled.x, -halfSizeScaled.y, 0.f ) );
+		p.push_back( V3f( halfSizeScaled.x, -halfSizeScaled.y, 0.f ) );
+		p.push_back( V3f( halfSizeScaled.x, halfSizeScaled.y, 0.f ) );
+		p.push_back( V3f( -halfSizeScaled.x, halfSizeScaled.y, 0.f ) );
 
 		return;
 	}
@@ -109,7 +112,7 @@ void addRect(
 		{
 			const float angle = 2.f * M_PI * (float)i / (float)numDivisions;
 			const V3f delta( cos( angle ), sin( angle ), 0.f );
-			p.push_back( delta * radius + ( halfSize * quadrantMult ) + ( delta * falloffWidth ) );
+			p.push_back( ( delta * radius + ( halfSize * quadrantMult ) ) * scale + ( delta * falloffWidth ) );
 		}
 	}
 }
@@ -160,6 +163,10 @@ Visualisations BarnVisualiser::visualise( const InternedString &attributeName, c
 
 	const V2f innerSize = V2f( parameterOrDefault( barnParameters, "width", 1.f ), parameterOrDefault( barnParameters, "height", 1.f ) );
 	const float radius = parameterOrDefault( barnParameters, "radius", 0.f );
+	const V2f innerScale(
+		parameterOrDefault( barnParameters, "scaleWidth", 1.f ),
+		parameterOrDefault( barnParameters, "scaleHeight", 1.f )
+	);
 
 	IntVectorDataPtr innerVertsPerCurveData = new IntVectorData();
 	V3fVectorDataPtr innerPData = new V3fVectorData();
@@ -167,7 +174,7 @@ Visualisations BarnVisualiser::visualise( const InternedString &attributeName, c
 	std::vector<int> &innerVertsPerCurve = innerVertsPerCurveData->writable();
 	std::vector<V3f> &innerP = innerPData->writable();
 
-	addRect( innerSize, radius, 0.f, innerVertsPerCurve, innerP );
+	addRect( innerSize, innerScale, radius, 0.f, innerVertsPerCurve, innerP );
 
 	IECoreGL::CurvesPrimitivePtr rect = new IECoreGL::CurvesPrimitive( CubicBasisf::linear(), /* periodic */ true, innerVertsPerCurveData );
 	rect->addPrimitiveVariable( "P", PrimitiveVariable( PrimitiveVariable::Vertex, innerPData ) );
@@ -187,7 +194,7 @@ Visualisations BarnVisualiser::visualise( const InternedString &attributeName, c
 		std::vector<int> &edgeVertsPerCurve = edgeVertsPerCurveData->writable();
 		std::vector<V3f> &edgeP = edgePData->writable();
 
-		addRect( innerSize, radius, edge, edgeVertsPerCurve, edgeP );
+		addRect( innerSize, innerScale, radius, edge, edgeVertsPerCurve, edgeP );
 
 		IECoreGL::CurvesPrimitivePtr edgeRect = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic */ true, edgeVertsPerCurveData );
 		edgeRect->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, edgePData ) );
