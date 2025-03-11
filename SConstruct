@@ -833,7 +833,7 @@ if not boostVersionHeader :
 
 with open( str( boostVersionHeader ) ) as f :
 	for line in f.readlines() :
-		m = re.match( "^#define BOOST_LIB_VERSION \"(.*)\"\s*$", line )
+		m = re.match( r"^#define BOOST_LIB_VERSION \"(.*)\"\s*$", line )
 		if m :
 			boostVersion = m.group( 1 )
 			m = re.match( "^([0-9]+)_([0-9]+)(?:_([0-9]+)|)$", boostVersion )
@@ -929,7 +929,7 @@ if env["ARNOLD_ROOT"] :
 
 	arnoldVersions = {}
 	for line in open( arnoldHeader ) :
-		m = re.match( "^#define AI_VERSION_(ARCH|MAJOR)_NUM\s*([0-9]+)", line )
+		m = re.match( r"^#define AI_VERSION_(ARCH|MAJOR)_NUM\s*([0-9]+)", line )
 		if m :
 			arnoldVersions[m.group(1)] = m.group( 2 )
 
