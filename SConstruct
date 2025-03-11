@@ -457,6 +457,7 @@ if env["PLATFORM"] != "win32" :
 	if env["PLATFORM"] == "darwin" :
 
 		env.Append( CXXFLAGS = [ "-D__USE_ISOC99" ] )
+		env.Append( CXXFLAGS = [ "-DBOOST_NO_CXX98_FUNCTION_BASE", "-D_HAS_AUTO_PTR_ETC=0" ] )
 		env["GAFFER_PLATFORM"] = "macos"
 
 	else :
