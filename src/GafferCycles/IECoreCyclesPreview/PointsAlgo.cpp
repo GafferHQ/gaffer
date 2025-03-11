@@ -210,7 +210,8 @@ ccl::Geometry *convert( const vector<const IECoreScene::PointsPrimitive *> &poin
 	pointcloud->set_use_motion_blur( true );
 	pointcloud->set_motion_steps( samples.size() + 1 );
 	ccl::Attribute *attr_mP = pointcloud->attributes.add( ccl::ATTR_STD_MOTION_VERTEX_POSITION, ccl::ustring("motion_P") );
-	ccl::float3 *mP = attr_mP->data_float3();
+	ccl::float4 *mP = attr_mP->data_float4();
+	float *radius = pointcloud->get_radius().data();
 
 	for( size_t i = 0; i < samples.size(); ++i )
 	{
@@ -229,7 +230,7 @@ ccl::Geometry *convert( const vector<const IECoreScene::PointsPrimitive *> &poin
 					size_t numVerts = samplePData->readable().size();
 
 					for( size_t j = 0; j < numVerts; ++j, ++mP )
-						*mP = ccl::make_float3( sampleP[j].x, sampleP[j].y, sampleP[j].z );
+						*mP = ccl::make_float4( sampleP[j].x, sampleP[j].y, sampleP[j].z, radius[j] );
 				}
 				else
 				{
@@ -248,7 +249,7 @@ ccl::Geometry *convert( const vector<const IECoreScene::PointsPrimitive *> &poin
 			}
 		}
 	}
-	mP = attr_mP->data_float3();
+	mP = attr_mP->data_float4();
 
 	pointcloud->name = ccl::ustring( nodeName.c_str() );
 	return pointcloud;
