@@ -2151,6 +2151,25 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( len( messageHandler.messages ), 1 )
 		self.assertEqual( messageHandler.messages[0].message, "R56049 Incremental rendering recovery succeeded; resuming render at checkpoint 2." )
 
+	def testAssignID( self ) :
+
+		with IECoreRenderManTest.RileyCapture() as capture :
+
+			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				"RenderMan",
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+			)
+
+			object = renderer.object( "/sphere", IECoreScene.SpherePrimitive( 1 ), renderer.attributes( IECore.CompoundObject() ) )
+			object.assignID( 1 )
+
+			del renderer
+
+		self.__assertParameterEqual(
+			next( x for x in capture.json if x["method"] == "ModifyGeometryInstance" )["attributes"]["params"],
+			"identifier:id", [ 1 ]
+		)
+
 	def __assertParameterEqual( self, paramList, name, data ) :
 
 		p = next( x for x in paramList if x["info"]["name"] == name )
