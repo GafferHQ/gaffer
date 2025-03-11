@@ -61,6 +61,7 @@ struct NodeParameter
 {
 	NodeParameter( AtNode *node, AtString parameterName, AtString parameterValue );
 	NodeParameter( const NodeParameter &other ) = default;
+	NodeParameter& operator=( const NodeParameter &other ) = default;
 
 	/// Uses `AiNodeLookUpByName()` to find the right node, and assign it to the
 	/// parameter.
