@@ -72,11 +72,17 @@ void addWireframeCurveState( IECoreGL::Group *group )
 	group->getState()->add( new IECoreGL::LineSmoothingStateComponent( true ) );
 }
 
-void addRect( const V2f &innerSize, const float radius, std::vector<int> &vertsPerCurve, std::vector<V3f> &p )
+void addRect(
+	const V2f &innerSize,
+	const float radius,
+	const float falloffWidth,
+	std::vector<int> &vertsPerCurve,
+	std::vector<V3f> &p
+)
 {
 	const V3f halfSize( innerSize.x * 0.5f, innerSize.y * 0.5f, 0.f );
 
-	if( radius == 0 )
+	if( radius == 0 && falloffWidth == 0.f )
 	{
 		vertsPerCurve.push_back( 4 );
 		p.push_back( V3f( -halfSize.x, -halfSize.y, 0.f ) );
@@ -102,7 +108,8 @@ void addRect( const V2f &innerSize, const float radius, std::vector<int> &vertsP
 		for( int i = startIndex, eI = startIndex + ( numDivisions / 4 ); i <= eI; ++i )
 		{
 			const float angle = 2.f * M_PI * (float)i / (float)numDivisions;
-			p.push_back( V3f( cos( angle ), sin( angle ), 0.f ) * radius + ( halfSize * quadrantMult ) );
+			const V3f delta( cos( angle ), sin( angle ), 0.f );
+			p.push_back( delta * radius + ( halfSize * quadrantMult ) + ( delta * falloffWidth ) );
 		}
 	}
 }
@@ -160,13 +167,35 @@ Visualisations BarnVisualiser::visualise( const InternedString &attributeName, c
 	std::vector<int> &innerVertsPerCurve = innerVertsPerCurveData->writable();
 	std::vector<V3f> &innerP = innerPData->writable();
 
-	addRect( innerSize, radius, innerVertsPerCurve, innerP );
+	addRect( innerSize, radius, 0.f, innerVertsPerCurve, innerP );
 
 	IECoreGL::CurvesPrimitivePtr rect = new IECoreGL::CurvesPrimitive( CubicBasisf::linear(), /* periodic */ true, innerVertsPerCurveData );
 	rect->addPrimitiveVariable( "P", PrimitiveVariable( PrimitiveVariable::Vertex, innerPData ) );
 	rect->addPrimitiveVariable( "Cs", PrimitiveVariable( PrimitiveVariable::Constant, new Color3fData( Color3f( 255.f / 255.f, 171.f / 255.f, 15.f / 255.f ) ) ) );
 
 	result->addChild( rect );
+
+	const float edge = parameterOrDefault( barnParameters, "edge", 0.f );
+	if( edge > 0 )
+	{
+		IECoreGL::GroupPtr edgeGroup = new IECoreGL::Group();
+		edgeGroup->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 1.0f ) );
+
+		IntVectorDataPtr edgeVertsPerCurveData = new IntVectorData();
+		V3fVectorDataPtr edgePData = new V3fVectorData();
+
+		std::vector<int> &edgeVertsPerCurve = edgeVertsPerCurveData->writable();
+		std::vector<V3f> &edgeP = edgePData->writable();
+
+		addRect( innerSize, radius, edge, edgeVertsPerCurve, edgeP );
+
+		IECoreGL::CurvesPrimitivePtr edgeRect = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic */ true, edgeVertsPerCurveData );
+		edgeRect->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, edgePData ) );
+		edgeRect->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 0.f ) ) ) );
+
+		edgeGroup->addChild( edgeRect );
+		result->addChild( edgeGroup );
+	}
 
 	return { Visualisation::createGeometry( result ) };
 }
