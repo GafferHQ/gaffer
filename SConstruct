@@ -814,7 +814,6 @@ baseLibEnv.Append(
 		"fmt",
 		"Imath$IMATH_LIB_SUFFIX",
 		"IECore$CORTEX_LIB_SUFFIX",
-		"fmt"
 	],
 
 )
@@ -900,7 +899,6 @@ if basePythonEnv["PLATFORM"]=="darwin" :
 
 	basePythonEnv.Append(
 		CPPPATH = [ "$BUILD_DIR/lib/Python.framework/Versions/$PYTHON_VERSION/include/python$PYTHON_VERSION" ],
-		LIBS = [ "python$PYTHON_VERSION" ],
 		LIBPATH = [ "$BUILD_DIR/lib/Python.framework/Versions/$PYTHON_VERSION/lib" ]
 	)
 
@@ -1075,7 +1073,7 @@ libraries = {
 			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "GafferImage", "IECoreScene$CORTEX_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
-			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferBindings", "GafferScene", "GafferSceneTest" ],
+			"LIBS" : [ "GafferDispatch", "GafferBindings", "GafferScene", "GafferSceneTest" ],
 		},
 		"additionalFiles" : glob.glob( "python/GafferSceneTest/*/*" ),
 	},
@@ -1107,7 +1105,7 @@ libraries = {
 			"LIBS" : [ "Gaffer", "GafferImage", "OpenImageIO$OIIO_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
-			"LIBS" : [ "GafferImage", "GafferImageTest", "fmt" ],
+			"LIBS" : [ "GafferImage", "GafferImageTest" ],
 		},
 		"additionalFiles" :
 			glob.glob( "python/GafferImageTest/scripts/*" ) + glob.glob( "python/GafferImageTest/images/*" ) +
@@ -1189,7 +1187,7 @@ libraries = {
 		},
 		"pythonEnvAppends" : {
 			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ] if env["PLATFORM"] != "win32" else [ "$ARNOLD_ROOT/bin", "$ARNOLD_ROOT/lib" ],
-			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferVDB", "GafferDispatch", "GafferArnold", "GafferOSL", "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreArnold" ],
+			"LIBS" : [ "GafferScene", "GafferBindings", "GafferVDB", "GafferDispatch", "GafferArnold", "GafferOSL", "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreArnold" ],
 			"CXXFLAGS" : [ "-DAI_ENABLE_DEPRECATION_WARNINGS" ],
 			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
 		},
@@ -1325,7 +1323,7 @@ libraries = {
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [
-				"Gaffer", "GafferScene", "GafferDispatch", "GafferBindings", "GafferCycles", "IECoreScene",
+				"GafferScene", "GafferDispatch", "GafferBindings", "GafferCycles", "IECoreScene",
 			],
 			"CXXFLAGS" : [ systemIncludeArgument, "$CYCLES_ROOT/include" ],
 			"CPPDEFINES" : cyclesDefines,
@@ -1425,7 +1423,7 @@ libraries = {
 
 	"GafferUSD" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "GafferImage", "IECoreScene$CORTEX_LIB_SUFFIX" ] + [ "${USD_LIB_PREFIX}" + x for x in ( [ "sdf", "arch", "tf", "vt", "ndr", "sdr", "usd", "usdLux" ] if not env["USD_MONOLITHIC"] else [ "usd_ms" ] ) ],
+			"LIBS" : [ "GafferDispatch", "GafferScene", "GafferImage", "IECoreScene$CORTEX_LIB_SUFFIX" ] + [ "${USD_LIB_PREFIX}" + x for x in ( [ "sdf", "arch", "tf", "vt", "ndr", "sdr", "usd", "usdLux" ] if not env["USD_MONOLITHIC"] else [ "usd_ms" ] ) ],
 			# USD includes "at least one deprecated or antiquated header", so we
 			# have to drop our usual strict warning levels.
 			"CXXFLAGS" : [ "-Wno-deprecated" if env["PLATFORM"] != "win32" else "/wd4996" ],
