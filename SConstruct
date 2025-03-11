@@ -1894,7 +1894,10 @@ for libraryName, libraryDef in libraries.items() :
 
 		subprocess.check_call(
 			[
-				shutil.which( "usdGenSchema.cmd" if sys.platform == "win32" else "usdGenSchema", path = commandEnv["ENV"]["PATH"] ),
+				shutil.which( "python", path = commandEnv["ENV"]["PATH"] ),
+				# `shutil.which()` on Windows also returns executables that match the input so we
+				# strip the extension as we require the Python script rather than the wrapper.
+				shutil.which( "usdGenSchema", path = commandEnv["ENV"]["PATH"] ).rstrip( ".CMD" ),
 				str( source[0] ), targetDir
 			],
 			env = commandEnv["ENV"]
