@@ -607,7 +607,7 @@ class _Widget( QtWidgets.QWidget ) :
 
 	def event( self, event ) :
 
-		if event.type() == event.ShortcutOverride :
+		if event.type() == QtCore.QEvent.ShortcutOverride :
 			if event.key() in ( QtCore.Qt.Key_Delete, QtCore.Qt.Key_Backspace ) :
 				event.accept()
 				return True

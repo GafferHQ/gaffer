@@ -43,6 +43,7 @@ import GafferUI
 from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
+import Qt
 
 import weakref
 
@@ -166,7 +167,7 @@ class _ShortcutEventFilter( QtCore.QObject ) :
 		# striving to do all event handling in GafferUI with this
 		# bubble-up-until-handled methodology anyway, so doing
 		# shortcuts this way seems to make sense.
-		if qEvent.type() == qEvent.ShortcutOverride :
+		if qEvent.type() == QtCore.QEvent.ShortcutOverride :
 
 			self.__shortcutAction = None
 			keySequence = self.__keySequence( qEvent )
@@ -187,7 +188,7 @@ class _ShortcutEventFilter( QtCore.QObject ) :
 		# We handle the shortcut override event, but that just
 		# means that we then have the option of handling the
 		# associated keypress, which is what we do here.
-		elif qEvent.type() == qEvent.KeyPress :
+		elif qEvent.type() == QtCore.QEvent.KeyPress :
 
 			if self.__shortcutAction is not None and self.__keySequence( qEvent ) in self.__shortcutAction.shortcuts() :
 				self.__shortcutAction.trigger()
@@ -207,7 +208,10 @@ class _ShortcutEventFilter( QtCore.QObject ) :
 
 	def __keySequence( self, keyEvent ) :
 
-		return QtGui.QKeySequence( keyEvent.key() | int( keyEvent.modifiers() ) )
+		if Qt.__binding__ == "PySide6" :
+			return QtGui.QKeySequence( keyEvent.keyCombination() )
+		else :
+			return QtGui.QKeySequence( keyEvent.key() | int( keyEvent.modifiers() ) )
 
 	def __matchingAction( self, keySequence, menu ) :
 
