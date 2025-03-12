@@ -233,3 +233,12 @@ if "RMANTREE" in os.environ :
 	)
 	Gaffer.Metadata.registerValue( "option:ri:interactiveDenoiser:minSamples", "label", "Min Samples" )
 	Gaffer.Metadata.registerValue( "option:ri:interactiveDenoiser:minSamples", "layout:section", "Interactive Denoiser" )
+
+	# Add an option to allow checkpoint recovery - this is handled by `IECoreRenderMan::Session::Session()`
+	# since it is not an official RenderMan option.
+
+	Gaffer.Metadata.registerValue( "option:ri:checkpoint:recover", "label", "Checkpoint Recover" )
+	Gaffer.Metadata.registerValue( "option:ri:checkpoint:recover", "description", "Enables recovery from a checkpoint created by a previous render." )
+	Gaffer.Metadata.registerValue( "option:ri:checkpoint:recover", "defaultValue", 0 )
+	Gaffer.Metadata.registerValue( "option:ri:checkpoint:recover", "layout:section", "Display" )
+	Gaffer.Metadata.registerValue( "option:ri:checkpoint:recover", "plugValueWidget:type", "GafferUI.BoolPlugValueWidget" )
