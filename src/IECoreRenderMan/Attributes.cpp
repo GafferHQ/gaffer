@@ -120,6 +120,7 @@ const InternedString g_renderManDisplacementAttributeName( "ri:displacement" );
 const InternedString g_renderManLightShaderAttributeName( "ri:light" );
 const InternedString g_renderManSurfaceAttributeName( "ri:surface" );
 const InternedString g_surfaceAttributeName( "surface" );
+const RtUString g_userMaterialId( "user:__materialid" );
 
 template<typename T>
 T *attributeCast( const IECore::RunTimeTyped *v, const IECore::InternedString &name )
@@ -211,6 +212,8 @@ IECoreScene::ConstShaderNetworkPtr g_black = []() {
 
 Attributes::Attributes( const IECore::CompoundObject *attributes, MaterialCache *materialCache )
 {
+	// Convert shaders.
+
 	const ShaderNetwork *surface = attribute<ShaderNetwork>( attributes->members(), g_renderManSurfaceAttributeName );
 	surface = surface ? surface : attribute<ShaderNetwork>( attributes->members(), g_surfaceAttributeName );
 	m_surfaceMaterial = materialCache->getMaterial( surface ? surface : g_facingRatio.get() );
@@ -232,6 +235,17 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, MaterialCache 
 		// if they want further control. Other lights don't have materials.
 		m_lightMaterial = materialCache->getMaterial( surface ? surface : g_black.get() );
 	}
+
+	if( surface )
+	{
+		// Set up material id for PxrCryptomatte. This can be overridden if desired
+		// by specifying it in `attributes`, in which case it will be set again below.
+		const string materialId = surface->Object::hash().toString();
+		m_instanceAttributes.SetString( g_userMaterialId, RtUString( materialId.c_str() ) );
+	}
+
+	// Convert attributes into parameter lists for instances and prototypes, and
+	// calculate a hash for how the latter affects automatic instancing.
 
 	if( attributeValue<bool>( attributes->members(), g_automaticInstancingAttributeName, true ) )
 	{

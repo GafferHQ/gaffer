@@ -145,11 +145,15 @@ def __shadersSubMenu( plugins ) :
 
 	for name, plugin in plugins.items() :
 
-		if name in [ "PxrSeExpr" ] :
+		if name in {
 			# Deprecated in RenderMan 24 - don't let folks become dependent on it.
+			"PxrSeExpr",
+			# Not needed because we combine filters automatically.
+			"PxrDisplayFilterCombiner", "PxrSampleFilterCombiner",
+		} :
 			continue
 
-		if plugin["type"] not in { "bxdf", "pattern", "integrator" } :
+		if plugin["type"] not in { "bxdf", "pattern", "integrator", "displayfilter", "samplefilter" } :
 			continue
 
 		result.append(

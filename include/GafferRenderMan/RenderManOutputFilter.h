@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
+//  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,44 +36,63 @@
 
 #pragma once
 
-#include "Attributes.h"
-#include "GeometryPrototypeCache.h"
-#include "Session.h"
+#include "GafferRenderMan/Export.h"
+#include "GafferRenderMan/TypeIds.h"
 
-#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+#include "GafferScene/GlobalsProcessor.h"
+#include "GafferScene/ShaderPlug.h"
 
-namespace IECoreRenderMan
+namespace GafferRenderMan
 {
 
-class Object : public IECoreScenePreview::Renderer::ObjectInterface
+/// Base class which contains all the shared implementation for RenderManDisplayFilter
+/// and RenderManSampleFilter.
+class GAFFERRENDERMAN_API RenderManOutputFilter : public GafferScene::GlobalsProcessor
 {
 
 	public :
 
-		Object( const std::string &name, const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, const Session *session );
-		~Object();
+		~RenderManOutputFilter() override;
 
-		/// \todo RenderMan volumes seem to reject attempts to transform them
-		/// after creation, althought we get lucky and the first one works
-		/// despite returning a failure code. Perhaps we need to add transform
-		/// arguments to `Renderer::object()` and to be able to return a `bool`
-		/// here to request that the object is sent again instead?
-		void transform( const Imath::M44f &transform ) override;
-		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override;
-		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override;
-		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override;
-		void assignID( uint32_t id ) override;
+		GAFFER_NODE_DECLARE_TYPE( GafferRenderMan::RenderManOutputFilter, RenderManOutputFilterTypeId, GafferScene::GlobalsProcessor );
+
+		enum class Mode
+		{
+			Replace,
+			InsertFirst,
+			InsertLast
+		};
+
+		GafferScene::ShaderPlug *shaderPlug();
+		const GafferScene::ShaderPlug *shaderPlug() const;
+
+		Gaffer::IntPlug *modePlug();
+		const Gaffer::IntPlug *modePlug() const;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+	protected :
+
+		enum class FilterType
+		{
+			Display,
+			Sample
+		};
+
+		RenderManOutputFilter( const std::string &name, FilterType filterType );
+
+		bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const override;
+
+		void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const override;
 
 	private :
 
-		const Session *m_session;
-		riley::GeometryInstanceId m_geometryInstance;
-		/// Used to keep material etc alive as long as we need it.
-		ConstAttributesPtr m_attributes;
-		/// Used to keep geometry prototype alive as long as we need it.
-		ConstGeometryPrototypePtr m_geometryPrototype;
-		RtParamList m_extraAttributes;
+		const FilterType m_filterType;
+		static size_t g_firstPlugIndex;
 
 };
 
-} // namespace IECoreRenderMan
+IE_CORE_DECLAREPTR( RenderManOutputFilter )
+
+} // namespace GafferRenderMan

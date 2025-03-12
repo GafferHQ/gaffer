@@ -38,19 +38,26 @@
 
 #include "Transform.h"
 
+#include "RixPredefinedStrings.hpp"
+
 using namespace std;
 using namespace IECoreRenderMan;
 
 namespace
 {
 
-static riley::CoordinateSystemList g_emptyCoordinateSystems = { 0, nullptr };
+const riley::CoordinateSystemList g_emptyCoordinateSystems = { 0, nullptr };
 
 } // namespace
 
-Object::Object( const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, const Session *session )
+Object::Object( const std::string &name, const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, const Session *session )
 	:	m_session( session ), m_geometryInstance( riley::GeometryInstanceId::InvalidId() ), m_attributes( attributes ), m_geometryPrototype( geometryPrototype )
 {
+	m_extraAttributes.SetString( Rix::k_identifier_name, RtUString( name.c_str() ) );
+
+	RtParamList allAttributes = m_attributes->instanceAttributes();
+	allAttributes.Update( m_extraAttributes );
+
 	m_geometryInstance = m_session->riley->CreateGeometryInstance(
 		riley::UserId(),
 		/* group = */ riley::GeometryPrototypeId::InvalidId(),
@@ -58,7 +65,7 @@ Object::Object( const ConstGeometryPrototypePtr &geometryPrototype, const Attrib
 		m_attributes->surfaceMaterial()->id(),
 		g_emptyCoordinateSystems,
 		IdentityTransform(),
-		m_attributes->instanceAttributes()
+		allAttributes
 	);
 }
 
@@ -117,13 +124,16 @@ bool Object::attributes( const IECoreScenePreview::Renderer::AttributesInterface
 		return false;
 	}
 
+	RtParamList allAttributes = typedAttributes->instanceAttributes();
+	allAttributes.Update( m_extraAttributes );
+
 	const riley::GeometryInstanceResult result = m_session->riley->ModifyGeometryInstance(
 		/* group = */ riley::GeometryPrototypeId::InvalidId(),
 		m_geometryInstance,
 		&typedAttributes->surfaceMaterial()->id(),
 		/* coordsys = */ nullptr,
 		/* xform = */ nullptr,
-		&typedAttributes->instanceAttributes()
+		&allAttributes
 	);
 	m_attributes = typedAttributes;
 

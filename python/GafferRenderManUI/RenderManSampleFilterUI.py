@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, John Haddon. All rights reserved.
+#  Copyright (c) 2024, Alex Fuller. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,15 +34,34 @@
 #
 ##########################################################################
 
-__import__( "GafferSceneUI" )
+import Gaffer
+import GafferRenderMan
 
-from . import RenderManAttributesUI
-from . import RenderManOptionsUI
-from . import RenderManShaderUI
-from . import RenderManMeshLightUI
-from . import RenderManIntegratorUI
-from . import RenderManOutputFilterUI
-from . import RenderManDisplayFilterUI
-from . import RenderManSampleFilterUI
+Gaffer.Metadata.registerNode(
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferRenderManUI" )
+	GafferRenderMan.RenderManSampleFilter,
+
+	"description",
+	"""
+	Assigns a sample filter. This is stored as an `ri:samplefilter` option in
+	Gaffer's globals, and applied to all render outputs.
+	""",
+
+	plugs = {
+
+		"sampleFilter" : [
+
+			"description",
+			"""
+			The sample filter to be assigned. This should be connected to the
+			output of a RenderManShader node containing a sample filter.
+			""",
+
+			"noduleLayout:section", "left",
+			"nodule:type", "GafferUI::StandardNodule",
+
+		],
+
+	}
+
+)

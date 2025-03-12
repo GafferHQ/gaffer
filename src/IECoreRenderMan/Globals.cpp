@@ -37,8 +37,7 @@
 #include "Globals.h"
 #include "ParamListAlgo.h"
 #include "Transform.h"
-
-#include "IECoreScene/ShaderNetwork.h"
+#include "ShaderNetworkAlgo.h"
 
 #include "IECore/SimpleTypedData.h"
 #include "IECore/StringAlgo.h"
@@ -64,6 +63,8 @@ const IECore::InternedString g_layerName( "layerName" );
 const IECore::InternedString g_sampleMotionOption( "sampleMotion" );
 const IECore::InternedString g_frameOption( "frame" );
 const IECore::InternedString g_integratorOption( "ri:integrator" );
+const IECore::InternedString g_displayFilterOption( "ri:displayfilter" );
+const IECore::InternedString g_sampleFilterOption( "ri:samplefilter" );
 const IECore::InternedString g_pixelFilterNameOption( "ri:Ri:PixelFilterName" );
 const IECore::InternedString g_pixelFilterWidthOption( "ri:Ri:PixelFilterWidth" );
 const IECore::InternedString g_pixelVarianceOption( "ri:Ri:PixelVariance" );
@@ -136,6 +137,22 @@ T parameter( const CompoundDataMap &parameters, const IECore::InternedString &na
 	return defaultValue;
 }
 
+template<typename ListType>
+ListType idToList( std::remove_pointer_t<decltype( ListType::ids )> &id )
+{
+	using IdType = std::remove_pointer_t<decltype( ListType::ids )>;
+	if( id == IdType::InvalidId() )
+	{
+		return { 0, nullptr };
+	}
+	else
+	{
+		return { 1, &id };
+	}
+}
+
+const IECoreScene::ConstShaderNetworkPtr g_emptyShaderNetwork = new IECoreScene::ShaderNetwork();
+
 } // namespace
 
 Globals::Globals( IECoreScenePreview::Renderer::RenderType renderType, const IECore::MessageHandlerPtr &messageHandler )
@@ -203,6 +220,28 @@ void Globals::option( const IECore::InternedString &name, const IECore::Object *
 		else
 		{
 			m_integratorToConvert = new Shader( "PxrPathTracer", "ri:integrator" );
+		}
+	}
+	else if( name == g_displayFilterOption )
+	{
+		if( auto *network = optionCast<const ShaderNetwork>( value, name ) )
+		{
+			m_displayFilterToConvert = network;
+		}
+		else
+		{
+			m_displayFilterToConvert = g_emptyShaderNetwork;
+		}
+	}
+	else if( name == g_sampleFilterOption )
+	{
+		if( auto *network = optionCast<const ShaderNetwork>( value, name ) )
+		{
+			m_sampleFilterToConvert = network;
+		}
+		else
+		{
+			m_sampleFilterToConvert = g_emptyShaderNetwork;
 		}
 	}
 	else if( name == g_cameraOption )
@@ -360,6 +399,50 @@ void Globals::updateIntegrator()
 	m_integratorToConvert = nullptr;
 }
 
+void Globals::updateDisplayFilter()
+{
+	if( !m_displayFilterToConvert )
+	{
+		return;
+	}
+
+	if( m_displayFilterId != riley::DisplayFilterId::InvalidId() )
+	{
+		m_session->riley->DeleteDisplayFilter( m_displayFilterId );
+		m_displayFilterId = riley::DisplayFilterId::InvalidId();
+	}
+
+	if( m_displayFilterToConvert != g_emptyShaderNetwork )
+	{
+		const std::vector<riley::ShadingNode> nodes = ShaderNetworkAlgo::convert( m_displayFilterToConvert.get() );
+		m_displayFilterId = m_session->riley->CreateDisplayFilter( riley::UserId(), { (uint32_t)nodes.size(), nodes.data() }, RtParamList() );
+	}
+
+	m_displayFilterToConvert = nullptr;
+}
+
+void Globals::updateSampleFilter()
+{
+	if( !m_sampleFilterToConvert )
+	{
+		return;
+	}
+
+	if( m_sampleFilterId != riley::SampleFilterId::InvalidId() )
+	{
+		m_session->riley->DeleteSampleFilter( m_sampleFilterId );
+		m_sampleFilterId = riley::SampleFilterId::InvalidId();
+	}
+
+	if( m_sampleFilterToConvert != g_emptyShaderNetwork )
+	{
+		const std::vector<riley::ShadingNode> nodes = ShaderNetworkAlgo::convert( m_sampleFilterToConvert.get() );
+		m_sampleFilterId = m_session->riley->CreateSampleFilter( riley::UserId(), { (uint32_t)nodes.size(), nodes.data() }, RtParamList() );
+	}
+
+	m_sampleFilterToConvert = nullptr;
+}
+
 void Globals::render()
 {
 	acquireSession();
@@ -446,6 +529,11 @@ void Globals::updateRenderView()
 		extent.y = resolution[1];
 	}
 
+	// Update Filters if necessary.
+
+	updateDisplayFilter();
+	updateSampleFilter();
+
 	// If we still have a render view, then it is valid for
 	// `m_outputs`, and all we need to do is update the camera and
 	// resolution.
@@ -461,8 +549,10 @@ void Globals::updateRenderView()
 			);
 			m_renderTargetExtent = extent;
 		}
+		const auto displayFilterList = idToList<riley::DisplayFilterList>( m_displayFilterId );
+		const auto sampleFilterList = idToList<riley::SampleFilterList>( m_sampleFilterId );
 		m_session->riley->ModifyRenderView(
-			m_renderView, nullptr, &camera.id, &m_integratorId, nullptr, nullptr, nullptr
+			m_renderView, nullptr, &camera.id, &m_integratorId, &displayFilterList, &sampleFilterList, nullptr
 		);
 		return;
 	}
@@ -584,8 +674,8 @@ void Globals::updateRenderView()
 		m_renderTarget,
 		camera.id,
 		m_integratorId,
-		{ 0, nullptr },
-		{ 0, nullptr },
+		idToList<riley::DisplayFilterList>( m_displayFilterId ),
+		idToList<riley::SampleFilterList>( m_sampleFilterId ),
 		RtParamList()
 	);
 

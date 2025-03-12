@@ -40,6 +40,7 @@
 
 #include "IECoreScene/Output.h"
 #include "IECoreScene/Shader.h"
+#include "IECoreScene/ShaderNetwork.h"
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
@@ -76,6 +77,8 @@ class Globals : public boost::noncopyable
 
 		bool worldBegun();
 		void updateIntegrator();
+		void updateDisplayFilter();
+		void updateSampleFilter();
 		void updateRenderView();
 		void deleteRenderView();
 
@@ -90,6 +93,8 @@ class Globals : public boost::noncopyable
 		RtParamList m_options;
 		std::string m_cameraOption;
 		IECoreScene::ConstShaderPtr m_integratorToConvert;
+		IECoreScene::ConstShaderNetworkPtr m_displayFilterToConvert;
+		IECoreScene::ConstShaderNetworkPtr m_sampleFilterToConvert;
 		std::unordered_map<IECore::InternedString, IECoreScene::ConstOutputPtr> m_outputs;
 		RtUString m_pixelFilter;
 		riley::FilterSize m_pixelFilterSize;
@@ -111,6 +116,8 @@ class Globals : public boost::noncopyable
 		const std::vector<riley::RenderOutputId> &acquireRenderOutputs( const IECoreScene::Output *output );
 		std::unordered_map<IECore::MurmurHash, std::vector<riley::RenderOutputId>> m_renderOutputs;
 
+		riley::DisplayFilterId m_displayFilterId;
+		riley::SampleFilterId m_sampleFilterId;
 		std::vector<riley::DisplayId> m_displays;
 		riley::RenderTargetId m_renderTarget;
 		riley::Extent m_renderTargetExtent;

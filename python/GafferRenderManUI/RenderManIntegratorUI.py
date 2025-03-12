@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, John Haddon. All rights reserved.
+#  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,15 +34,32 @@
 #
 ##########################################################################
 
-__import__( "GafferSceneUI" )
+import Gaffer
+import GafferRenderMan
 
-from . import RenderManAttributesUI
-from . import RenderManOptionsUI
-from . import RenderManShaderUI
-from . import RenderManMeshLightUI
-from . import RenderManIntegratorUI
-from . import RenderManOutputFilterUI
-from . import RenderManDisplayFilterUI
-from . import RenderManSampleFilterUI
+Gaffer.Metadata.registerNode(
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferRenderManUI" )
+	GafferRenderMan.RenderManIntegrator,
+
+	"description",
+	"""
+	Specifies the RenderMan integrator to be used. This is stored in
+	an `ri:integrator` option in the scene globals. If not specified,
+	a default PxrPathTracer integrator is used.
+	""",
+
+	plugs = {
+
+		"shader" : [
+
+			"description",
+			"""
+			The integrator to be assigned. A RenderManShader node holding an integrator
+			such as PxrPathTracer or PxrUnified should be connected here.
+			"""
+
+		],
+
+	}
+
+)

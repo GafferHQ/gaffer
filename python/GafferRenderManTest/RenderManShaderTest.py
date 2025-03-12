@@ -176,5 +176,20 @@ class RenderManShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIsInstance( shader["parameters"]["utilityPattern"], Gaffer.ArrayPlug )
 		self.assertIsInstance( shader["parameters"]["utilityPattern"].elementPrototype(), Gaffer.IntPlug )
 
+	def testBXDFParameters( self ) :
+
+		dielectric = GafferRenderMan.RenderManShader()
+		dielectric.loadShader( "LamaDielectric" )
+		self.assertEqual( dielectric["out"].keys(), [ "bxdf_out" ] )
+		self.assertIsInstance( dielectric["out"]["bxdf_out"], GafferRenderMan.BXDFPlug )
+
+		surface = GafferRenderMan.RenderManShader()
+		surface.loadShader( "LamaSurface" )
+		for parameter in ( "materialFront", "materialBack" ) :
+			self.assertIn( parameter, surface["parameters"] )
+			self.assertIsInstance( surface["parameters"][parameter], GafferRenderMan.BXDFPlug )
+
+		surface["parameters"]["materialFront"].setInput( dielectric["out"]["bxdf_out"] )
+
 if __name__ == "__main__":
 	unittest.main()

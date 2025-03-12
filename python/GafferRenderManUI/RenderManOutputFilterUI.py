@@ -1,6 +1,7 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, John Haddon. All rights reserved.
+#  Copyright (c) 2024, Alex Fuller. All rights reserved.
+#  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,15 +35,37 @@
 #
 ##########################################################################
 
-__import__( "GafferSceneUI" )
+import Gaffer
+import GafferRenderMan
 
-from . import RenderManAttributesUI
-from . import RenderManOptionsUI
-from . import RenderManShaderUI
-from . import RenderManMeshLightUI
-from . import RenderManIntegratorUI
-from . import RenderManOutputFilterUI
-from . import RenderManDisplayFilterUI
-from . import RenderManSampleFilterUI
+Gaffer.Metadata.registerNode(
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferRenderManUI" )
+	GafferRenderMan.RenderManOutputFilter,
+
+	plugs = {
+
+		"mode" : [
+
+			"description",
+			"""
+			The mode used to combine the filter input with any
+			filters that already exist in the scene globals.
+
+			- Replace : Removes all pre-existing filter, and replaces them with
+			  the new one.
+			- InsertFirst : Inserts the new filter so that it will be run before
+			  any pre-existing filters.
+			- InsertLast : Inserts the new filter so that it will be run after
+			  any pre-existing filters.
+			""",
+
+			"preset:Replace", GafferRenderMan.RenderManOutputFilter.Mode.Replace,
+			"preset:InsertFirst", GafferRenderMan.RenderManOutputFilter.Mode.InsertFirst,
+			"preset:InsertLast", GafferRenderMan.RenderManOutputFilter.Mode.InsertLast,
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+	}
+
+)

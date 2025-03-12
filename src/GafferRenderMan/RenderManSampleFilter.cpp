@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
+//  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,46 +34,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#include "GafferRenderMan/RenderManSampleFilter.h"
 
-#include "Attributes.h"
-#include "GeometryPrototypeCache.h"
-#include "Session.h"
+using namespace GafferRenderMan;
 
-#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+GAFFER_NODE_DEFINE_TYPE( RenderManSampleFilter );
 
-namespace IECoreRenderMan
+RenderManSampleFilter::RenderManSampleFilter( const std::string &name )
+	:	RenderManOutputFilter( name, FilterType::Sample )
 {
+}
 
-class Object : public IECoreScenePreview::Renderer::ObjectInterface
+RenderManSampleFilter::~RenderManSampleFilter()
 {
-
-	public :
-
-		Object( const std::string &name, const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, const Session *session );
-		~Object();
-
-		/// \todo RenderMan volumes seem to reject attempts to transform them
-		/// after creation, althought we get lucky and the first one works
-		/// despite returning a failure code. Perhaps we need to add transform
-		/// arguments to `Renderer::object()` and to be able to return a `bool`
-		/// here to request that the object is sent again instead?
-		void transform( const Imath::M44f &transform ) override;
-		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override;
-		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override;
-		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override;
-		void assignID( uint32_t id ) override;
-
-	private :
-
-		const Session *m_session;
-		riley::GeometryInstanceId m_geometryInstance;
-		/// Used to keep material etc alive as long as we need it.
-		ConstAttributesPtr m_attributes;
-		/// Used to keep geometry prototype alive as long as we need it.
-		ConstGeometryPrototypePtr m_geometryPrototype;
-		RtParamList m_extraAttributes;
-
-};
-
-} // namespace IECoreRenderMan
+}

@@ -36,13 +36,18 @@
 
 #include "boost/python.hpp"
 
+#include "GafferRenderMan/BXDFPlug.h"
 #include "GafferRenderMan/RenderManAttributes.h"
+#include "GafferRenderMan/RenderManDisplayFilter.h"
+#include "GafferRenderMan/RenderManIntegrator.h"
 #include "GafferRenderMan/RenderManLight.h"
 #include "GafferRenderMan/RenderManMeshLight.h"
 #include "GafferRenderMan/RenderManOptions.h"
+#include "GafferRenderMan/RenderManSampleFilter.h"
 #include "GafferRenderMan/RenderManShader.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferBindings/PlugBinding.h"
 
 using namespace boost::python;
 using namespace GafferRenderMan;
@@ -60,6 +65,18 @@ void loadShader( RenderManLight &l, const std::string &shaderName )
 
 BOOST_PYTHON_MODULE( _GafferRenderMan )
 {
+	GafferBindings::PlugClass<BXDFPlug>()
+		.def( init<const std::string &, Gaffer::Plug::Direction, unsigned>(
+				(
+					arg( "name" ) = Gaffer::GraphComponent::defaultName<BXDFPlug>(),
+					arg( "direction" ) = Gaffer::Plug::In,
+					arg( "flags" ) = Gaffer::Plug::Default
+				)
+			)
+		)
+	;
+
+
 	GafferBindings::DependencyNodeClass<RenderManLight>()
 		.def( "loadShader", &loadShader )
 	;
@@ -67,4 +84,17 @@ BOOST_PYTHON_MODULE( _GafferRenderMan )
 	GafferBindings::DependencyNodeClass<RenderManOptions>();
 	GafferBindings::DependencyNodeClass<RenderManShader>();
 	GafferBindings::DependencyNodeClass<RenderManMeshLight>();
+	GafferBindings::DependencyNodeClass<RenderManIntegrator>();
+
+	{
+		scope s = GafferBindings::DependencyNodeClass<RenderManOutputFilter>( nullptr, no_init );
+		enum_<RenderManOutputFilter::Mode>( "Mode" )
+			.value( "Replace", RenderManOutputFilter::Mode::Replace )
+			.value( "InsertFirst", RenderManOutputFilter::Mode::InsertFirst )
+			.value( "InsertLast", RenderManOutputFilter::Mode::InsertLast )
+		;
+	}
+
+	GafferBindings::DependencyNodeClass<RenderManSampleFilter>();
+	GafferBindings::DependencyNodeClass<RenderManDisplayFilter>();
 }
