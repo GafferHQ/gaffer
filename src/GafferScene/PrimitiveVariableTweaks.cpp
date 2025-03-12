@@ -529,7 +529,7 @@ IECore::ConstObjectPtr PrimitiveVariableTweaks::computeProcessedObject( const Sc
 				{
 					return source.data.get();
 				},
-				[&result, &targetInterpolation]( const std::string &valueName, DataPtr newData )
+				[&result]( const std::string &valueName, DataPtr newData )
 				{
 					if( newData )
 					{

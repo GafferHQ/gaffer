@@ -457,6 +457,7 @@ if env["PLATFORM"] != "win32" :
 	if env["PLATFORM"] == "darwin" :
 
 		env.Append( CXXFLAGS = [ "-D__USE_ISOC99" ] )
+		env.Append( CXXFLAGS = [ "-DBOOST_NO_CXX98_FUNCTION_BASE", "-D_HAS_AUTO_PTR_ETC=0" ] )
 		env["GAFFER_PLATFORM"] = "macos"
 
 	else :
@@ -813,7 +814,6 @@ baseLibEnv.Append(
 		"fmt",
 		"Imath$IMATH_LIB_SUFFIX",
 		"IECore$CORTEX_LIB_SUFFIX",
-		"fmt"
 	],
 
 )
@@ -833,7 +833,7 @@ if not boostVersionHeader :
 
 with open( str( boostVersionHeader ) ) as f :
 	for line in f.readlines() :
-		m = re.match( "^#define BOOST_LIB_VERSION \"(.*)\"\s*$", line )
+		m = re.match( r"^#define BOOST_LIB_VERSION \"(.*)\"\s*$", line )
 		if m :
 			boostVersion = m.group( 1 )
 			m = re.match( "^([0-9]+)_([0-9]+)(?:_([0-9]+)|)$", boostVersion )
@@ -899,7 +899,6 @@ if basePythonEnv["PLATFORM"]=="darwin" :
 
 	basePythonEnv.Append(
 		CPPPATH = [ "$BUILD_DIR/lib/Python.framework/Versions/$PYTHON_VERSION/include/python$PYTHON_VERSION" ],
-		LIBS = [ "python$PYTHON_VERSION" ],
 		LIBPATH = [ "$BUILD_DIR/lib/Python.framework/Versions/$PYTHON_VERSION/lib" ]
 	)
 
@@ -929,7 +928,7 @@ if env["ARNOLD_ROOT"] :
 
 	arnoldVersions = {}
 	for line in open( arnoldHeader ) :
-		m = re.match( "^#define AI_VERSION_(ARCH|MAJOR)_NUM\s*([0-9]+)", line )
+		m = re.match( r"^#define AI_VERSION_(ARCH|MAJOR)_NUM\s*([0-9]+)", line )
 		if m :
 			arnoldVersions[m.group(1)] = m.group( 2 )
 
@@ -1074,7 +1073,7 @@ libraries = {
 			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "GafferImage", "IECoreScene$CORTEX_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
-			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferBindings", "GafferScene", "GafferSceneTest" ],
+			"LIBS" : [ "GafferDispatch", "GafferBindings", "GafferScene", "GafferSceneTest" ],
 		},
 		"additionalFiles" : glob.glob( "python/GafferSceneTest/*/*" ),
 	},
@@ -1106,7 +1105,7 @@ libraries = {
 			"LIBS" : [ "Gaffer", "GafferImage", "OpenImageIO$OIIO_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
-			"LIBS" : [ "GafferImage", "GafferImageTest", "fmt" ],
+			"LIBS" : [ "GafferImage", "GafferImageTest" ],
 		},
 		"additionalFiles" :
 			glob.glob( "python/GafferImageTest/scripts/*" ) + glob.glob( "python/GafferImageTest/images/*" ) +
@@ -1188,7 +1187,7 @@ libraries = {
 		},
 		"pythonEnvAppends" : {
 			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ] if env["PLATFORM"] != "win32" else [ "$ARNOLD_ROOT/bin", "$ARNOLD_ROOT/lib" ],
-			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferVDB", "GafferDispatch", "GafferArnold", "GafferOSL", "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreArnold" ],
+			"LIBS" : [ "GafferScene", "GafferBindings", "GafferVDB", "GafferDispatch", "GafferArnold", "GafferOSL", "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreArnold" ],
 			"CXXFLAGS" : [ "-DAI_ENABLE_DEPRECATION_WARNINGS" ],
 			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
 		},
@@ -1324,7 +1323,7 @@ libraries = {
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [
-				"Gaffer", "GafferScene", "GafferDispatch", "GafferBindings", "GafferCycles", "IECoreScene",
+				"GafferScene", "GafferDispatch", "GafferBindings", "GafferCycles", "IECoreScene",
 			],
 			"CXXFLAGS" : [ systemIncludeArgument, "$CYCLES_ROOT/include" ],
 			"CPPDEFINES" : cyclesDefines,
@@ -1424,7 +1423,7 @@ libraries = {
 
 	"GafferUSD" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "GafferImage", "IECoreScene$CORTEX_LIB_SUFFIX" ] + [ "${USD_LIB_PREFIX}" + x for x in ( [ "sdf", "arch", "tf", "vt", "ndr", "sdr", "usd", "usdLux" ] if not env["USD_MONOLITHIC"] else [ "usd_ms" ] ) ],
+			"LIBS" : [ "GafferDispatch", "GafferScene", "GafferImage", "IECoreScene$CORTEX_LIB_SUFFIX" ] + [ "${USD_LIB_PREFIX}" + x for x in ( [ "sdf", "arch", "tf", "vt", "ndr", "sdr", "usd", "usdLux" ] if not env["USD_MONOLITHIC"] else [ "usd_ms" ] ) ],
 			# USD includes "at least one deprecated or antiquated header", so we
 			# have to drop our usual strict warning levels.
 			"CXXFLAGS" : [ "-Wno-deprecated" if env["PLATFORM"] != "win32" else "/wd4996" ],
@@ -1894,7 +1893,10 @@ for libraryName, libraryDef in libraries.items() :
 
 		subprocess.check_call(
 			[
-				shutil.which( "usdGenSchema.cmd" if sys.platform == "win32" else "usdGenSchema", path = commandEnv["ENV"]["PATH"] ),
+				shutil.which( "python", path = commandEnv["ENV"]["PATH"] ),
+				# `shutil.which()` on Windows also returns executables that match the input so we
+				# strip the extension as we require the Python script rather than the wrapper.
+				shutil.which( "usdGenSchema", path = commandEnv["ENV"]["PATH"] ).rstrip( ".CMD" ),
 				str( source[0] ), targetDir
 			],
 			env = commandEnv["ENV"]
