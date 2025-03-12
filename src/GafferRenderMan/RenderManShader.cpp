@@ -36,6 +36,8 @@
 
 #include "GafferRenderMan/RenderManShader.h"
 
+#include "GafferRenderMan/BXDFPlug.h"
+
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/PlugAlgo.h"
@@ -227,6 +229,17 @@ PlugPtr acquireMatrixParameter( const boost::property_tree::ptree &parameter, IE
 	return new M44fPlug( name, direction );
 }
 
+PlugPtr acquireBXDFParameter( IECore::InternedString name, Plug::Direction direction, Plug *candidatePlug )
+{
+	auto existingPlug = runTimeCast<BXDFPlug>( candidatePlug );
+	if( existingPlug )
+	{
+		return existingPlug;
+	}
+
+	return new BXDFPlug( name, direction );
+}
+
 Gaffer::Plug *loadParameter( const boost::property_tree::ptree &parameter, Plug *parent )
 {
 	if( parameter.get<string>( "<xmlattr>.omitFromRender", "False" ) == "True" )
@@ -314,6 +327,10 @@ Gaffer::Plug *loadParameter( const boost::property_tree::ptree &parameter, Plug 
 	else if( type == "matrix" )
 	{
 		acquiredPlug = acquireMatrixParameter( parameter, name, Plug::In, candidatePlug );
+	}
+	else if( type == "bxdf" )
+	{
+		acquiredPlug = acquireBXDFParameter( name, Plug::In, candidatePlug );
 	}
 	else
 	{
@@ -421,9 +438,11 @@ Gaffer::Plug *loadOutput( const boost::property_tree::ptree &output, Plug *paren
 	return acquiredPlug.get();
 }
 
-void loadOutputs( const boost::property_tree::ptree &tree, Plug *parent )
+const InternedString g_bxdfOut( "bxdf_out" );
+
+void loadOutputs( const boost::property_tree::ptree &tree, Plug *parent, const std::string &shaderName, const std::string &shaderType )
 {
-	// Load all the parameters
+	// Load all the outputs.
 
 	std::unordered_set<const Plug *> validPlugs;
 	for( const auto &child : tree )
@@ -433,6 +452,21 @@ void loadOutputs( const boost::property_tree::ptree &tree, Plug *parent )
 			if( const Plug *p = loadOutput( child.second, parent ) )
 			{
 				validPlugs.insert( p );
+			}
+		}
+	}
+
+	if( !validPlugs.size() && shaderType == "surface" )
+	{
+		// For some reason, BXDF outputs aren't declared explicitly in the `.args` files,
+		// and are just implicit based on the shader type. So deal with that.
+		Plug *candidatePlug = parent->getChild<Plug>( g_bxdfOut );
+		if( auto acquiredPlug = acquireBXDFParameter( g_bxdfOut, Plug::Out, candidatePlug ) )
+		{
+			validPlugs.insert( acquiredPlug.get() );
+			if( acquiredPlug != candidatePlug )
+			{
+				PlugAlgo::replacePlug( parent, acquiredPlug );
 			}
 		}
 	}
@@ -496,6 +530,6 @@ void RenderManShader::loadShader( const std::string &shaderName, bool keepExisti
 		outPlug()->clearChildren();
 	}
 
-	loadOutputs( tree.get_child( "args" ), outPlug() );
+	loadOutputs( tree.get_child( "args" ), outPlug(), shaderName, shaderType );
 
 }

@@ -321,7 +321,7 @@ int MergeScenes::computeActiveInputs( const Gaffer::Context *context ) const
 		// each descendant location;
 		visit(
 			connectedInputs(),
-			[&result, &scenePath] ( InputType type, size_t index, const ScenePlug *scene ) {
+			[&result] ( InputType type, size_t index, const ScenePlug *scene ) {
 				if( scene->childNamesPlug()->getValue()->readable().size() )
 				{
 					result[index] = true;
@@ -363,7 +363,7 @@ int MergeScenes::computeActiveInputs( const Gaffer::Context *context ) const
 			// scenes.
 			visit(
 				parentActiveInputs,
-				[&result, &scenePath] ( InputType type, size_t index, const ScenePlug *scene ) {
+				[&result] ( InputType type, size_t index, const ScenePlug *scene ) {
 					if( scene->existsPlug()->getValue() )
 					{
 						result[index] = true;

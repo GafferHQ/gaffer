@@ -59,10 +59,11 @@ if "RMANTREE" in os.environ :
 			# Things that Gaffer has renderer-agnostic attributes for already.
 			"Ri:Sides",
 			"lighting:mute",
+			# Things that we specify internally in the Renderer class.
+			"identifier:name",
 			# Things that we might want to use internally in the Renderer class.
 			"identifier:id",
 			"identifier:id2",
-			"identifier:name",
 			"stats:identifier",
 			"Ri:ReverseOrientation",
 			# Things that we probably want to expose, but which will require

@@ -443,6 +443,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		inclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "ai:visibility:camera", True, True ) )
 		inclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "cycles:visibility:camera", True, True ) )
 		inclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "dl:visibility.camera", True, True ) )
+		inclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "ri:visibility:camera", True, True ) )
 
 		exclusionAttributesFilter = GafferScene.SetFilter()
 		exclusionAttributes = GafferScene.CustomAttributes()
@@ -451,6 +452,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		exclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "ai:visibility:camera", False, True ) )
 		exclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "cycles:visibility:camera", False, True ) )
 		exclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "dl:visibility.camera", False, True ) )
+		exclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "ri:visibility:camera", False, True ) )
 
 		# Create adaptors for the CapturingRenderer
 		testAdaptors = GafferScene.SceneAlgo.createRenderAdaptors()
@@ -487,7 +489,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 
 			for path in allPaths :
 				capturedObject = renderer.capturedObject( path )
-				for attribute in [ "ai:visibility:camera", "cycles:visibility:camera", "dl:visibility.camera" ] :
+				for attribute in [ "ai:visibility:camera", "cycles:visibility:camera", "dl:visibility.camera", "ri:visibility:camera" ] :
 					if path in paths :
 						# path is visible by the absence of the attribute, or its presence with a value of True
 						if attribute in capturedObject.capturedAttributes().attributes() :
@@ -579,6 +581,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		inclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "ai:matte", True, True, "aiMatte" ) )
 		inclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "cycles:use_holdout", True, True, "cyclesUseHoldout" ) )
 		inclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "dl:matte", True, True, "dlMatte" ) )
+		inclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "ri:Ri:Matte", True, True, "riMatte" ) )
 
 		exclusionAttributesFilter = GafferScene.SetFilter()
 		exclusionAttributes = GafferScene.CustomAttributes()
@@ -587,6 +590,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		exclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "ai:matte", False, True, "aiMatte" ) )
 		exclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "cycles:use_holdout", False, True, "cyclesUseHoldout" ) )
 		exclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "dl:matte", False, True, "dlMatte" ) )
+		exclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "ri:Ri:Matte", False, True, "riMatte" ) )
 
 		# Create adaptors for the CapturingRenderer
 		testAdaptors = GafferScene.SceneAlgo.createRenderAdaptors()
@@ -620,7 +624,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 
 			for path in allPaths :
 				capturedObject = renderer.capturedObject( path )
-				for attribute in [ "ai:matte", "cycles:use_holdout", "dl:matte" ] :
+				for attribute in [ "ai:matte", "cycles:use_holdout", "dl:matte", "ri:Ri:Matte" ] :
 					if path in paths :
 						# path is matte only by the presence of the attribute with a value of True
 						self.assertTrue( attribute in capturedObject.capturedAttributes().attributes() )

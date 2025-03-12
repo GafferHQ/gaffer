@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
+//  Copyright (c) 2024, Alex Fuller. All rights reserved.
+//  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,44 +37,23 @@
 
 #pragma once
 
-#include "Attributes.h"
-#include "GeometryPrototypeCache.h"
-#include "Session.h"
+#include "GafferRenderMan/RenderManOutputFilter.h"
 
-#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
-
-namespace IECoreRenderMan
+namespace GafferRenderMan
 {
 
-class Object : public IECoreScenePreview::Renderer::ObjectInterface
+class GAFFERRENDERMAN_API RenderManSampleFilter : public RenderManOutputFilter
 {
 
 	public :
 
-		Object( const std::string &name, const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, const Session *session );
-		~Object();
+		explicit RenderManSampleFilter( const std::string &name=defaultName<RenderManSampleFilter>() );
+		~RenderManSampleFilter() override;
 
-		/// \todo RenderMan volumes seem to reject attempts to transform them
-		/// after creation, althought we get lucky and the first one works
-		/// despite returning a failure code. Perhaps we need to add transform
-		/// arguments to `Renderer::object()` and to be able to return a `bool`
-		/// here to request that the object is sent again instead?
-		void transform( const Imath::M44f &transform ) override;
-		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override;
-		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override;
-		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override;
-		void assignID( uint32_t id ) override;
-
-	private :
-
-		const Session *m_session;
-		riley::GeometryInstanceId m_geometryInstance;
-		/// Used to keep material etc alive as long as we need it.
-		ConstAttributesPtr m_attributes;
-		/// Used to keep geometry prototype alive as long as we need it.
-		ConstGeometryPrototypePtr m_geometryPrototype;
-		RtParamList m_extraAttributes;
+		GAFFER_NODE_DECLARE_TYPE( GafferRenderMan::RenderManSampleFilter, RenderManSampleFilterTypeId, RenderManOutputFilter );
 
 };
 
-} // namespace IECoreRenderMan
+IE_CORE_DECLAREPTR( RenderManSampleFilter )
+
+} // namespace GafferRenderMan

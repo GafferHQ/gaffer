@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
+//  Copyright (c) 2019, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,46 +34,77 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#include "GafferRenderMan/RenderManIntegrator.h"
 
-#include "Attributes.h"
-#include "GeometryPrototypeCache.h"
-#include "Session.h"
+#include "GafferScene/Shader.h"
+#include "GafferScene/ShaderPlug.h"
 
-#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+#include "Gaffer/StringPlug.h"
 
-namespace IECoreRenderMan
+using namespace IECore;
+using namespace Gaffer;
+using namespace GafferRenderMan;
+
+IE_CORE_DEFINERUNTIMETYPED( RenderManIntegrator );
+
+RenderManIntegrator::RenderManIntegrator( const std::string &name )
+	:	GlobalShader( name )
 {
+}
 
-class Object : public IECoreScenePreview::Renderer::ObjectInterface
+RenderManIntegrator::~RenderManIntegrator()
 {
+}
 
-	public :
+bool RenderManIntegrator::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
+{
+	if( !GlobalShader::acceptsInput( plug, inputPlug ) )
+	{
+		return false;
+	}
 
-		Object( const std::string &name, const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, const Session *session );
-		~Object();
+	if( plug != shaderPlug() )
+	{
+		return true;
+	}
 
-		/// \todo RenderMan volumes seem to reject attempts to transform them
-		/// after creation, althought we get lucky and the first one works
-		/// despite returning a failure code. Perhaps we need to add transform
-		/// arguments to `Renderer::object()` and to be able to return a `bool`
-		/// here to request that the object is sent again instead?
-		void transform( const Imath::M44f &transform ) override;
-		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override;
-		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override;
-		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override;
-		void assignID( uint32_t id ) override;
+	if( !inputPlug )
+	{
+		return true;
+	}
 
-	private :
+	const Plug *sourcePlug = inputPlug->source();
+	auto *sourceShader = runTimeCast<const GafferScene::Shader>( sourcePlug->node() );
+	if( !sourceShader )
+	{
+		return true;
+	}
 
-		const Session *m_session;
-		riley::GeometryInstanceId m_geometryInstance;
-		/// Used to keep material etc alive as long as we need it.
-		ConstAttributesPtr m_attributes;
-		/// Used to keep geometry prototype alive as long as we need it.
-		ConstGeometryPrototypePtr m_geometryPrototype;
-		RtParamList m_extraAttributes;
+	const Plug *sourceShaderOutPlug = sourceShader->outPlug();
+	if( !sourceShaderOutPlug )
+	{
+		return true;
+	}
 
-};
+	if( sourcePlug != sourceShaderOutPlug && !sourceShaderOutPlug->isAncestorOf( sourcePlug ) )
+	{
+		return true;
+	}
 
-} // namespace IECoreRenderMan
+	return sourceShader->typePlug()->getValue() == "ri:integrator";
+}
+
+bool RenderManIntegrator::affectsOptionName( const Gaffer::Plug *input ) const
+{
+	return false;
+}
+
+void RenderManIntegrator::hashOptionName( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	// No need to hash anything, because our option name is constant
+}
+
+std::string RenderManIntegrator::computeOptionName( const Gaffer::Context *context ) const
+{
+	return "ri:integrator";
+}

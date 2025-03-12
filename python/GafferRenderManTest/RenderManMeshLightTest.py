@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, John Haddon. All rights reserved.
+#  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,15 +34,52 @@
 #
 ##########################################################################
 
-__import__( "GafferSceneUI" )
+import unittest
 
-from . import RenderManAttributesUI
-from . import RenderManOptionsUI
-from . import RenderManShaderUI
-from . import RenderManMeshLightUI
-from . import RenderManIntegratorUI
-from . import RenderManOutputFilterUI
-from . import RenderManDisplayFilterUI
-from . import RenderManSampleFilterUI
+import IECore
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferRenderManUI" )
+import Gaffer
+import GafferScene
+import GafferSceneTest
+import GafferRenderMan
+
+class RenderManMeshLightTest( GafferSceneTest.SceneTestCase ) :
+
+	def testParameters( self ) :
+
+		light = GafferRenderMan.RenderManMeshLight()
+
+		# Should have all the parameters of a PxrMeshLight shader.
+
+		shader = GafferRenderMan.RenderManShader()
+		shader.loadShader( "PxrMeshLight" )
+		self.assertEqual( light["parameters"].keys(), shader["parameters"].keys() )
+
+		# Parameters should drive a light shader in the scene.
+
+		sphere = GafferScene.Sphere()
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+		light["in"].setInput( sphere["out"] )
+		light["filter"].setInput( sphereFilter["out"] )
+
+		light["parameters"]["exposure"].setValue( 10 )
+		self.assertEqual( light["out"].attributes( "/sphere" )["ri:light"].outputShader().parameters["exposure"], IECore.FloatData( 10 ) )
+
+	def testSerialisation( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["light"] = GafferRenderMan.RenderManMeshLight()
+		script["light"]["parameters"]["intensity"].setValue( 10 )
+
+		serialisation = script.serialise()
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( serialisation )
+		self.assertEqual( script2["light"]["parameters"]["intensity"].getValue(), 10 )
+
+		# One for the node. None for plugs, since they are not dynamic.
+		self.assertEqual( serialisation.count( "addChild" ), 1 )
+
+if __name__ == "__main__":
+	unittest.main()
