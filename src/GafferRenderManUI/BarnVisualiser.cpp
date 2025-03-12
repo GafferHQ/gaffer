@@ -32,6 +32,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "LightFilterVisualiserAlgo.h"
+
 #include "GafferScene/Private/IECoreGLPreview/LightFilterVisualiser.h"
 
 #include "IECoreGL/CurvesPrimitive.h"
@@ -70,73 +72,6 @@ void addWireframeCurveState( IECoreGL::Group *group )
 	group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
 	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 2.0f ) );
 	group->getState()->add( new IECoreGL::LineSmoothingStateComponent( true ) );
-}
-
-void addRect(
-	const V2f &innerSize,
-	const V2f &innerScale,
-	const V4f &innerOffset,  // Convenient way to pass top, left, bottom, right, in that order
-	const float radius,
-	const float falloffWidth,
-	const V4f &falloffScale,  // Same order as above
-	std::vector<int> &vertsPerCurve,
-	std::vector<V3f> &p
-)
-{
-	const V3f halfSize( innerSize.x * 0.5f, innerSize.y * 0.5f, 0.f );
-	const V3f scale( innerScale.x, innerScale.y, 0.f );
-
-	if( radius == 0 && falloffWidth == 0.f )
-	{
-		const V3f halfSizeScaled = halfSize * scale;
-		vertsPerCurve.push_back( 4 );
-		p.push_back( V3f( -halfSizeScaled.x - innerOffset[1] * innerScale.x, -halfSizeScaled.y - innerOffset[2] * innerScale.y, 0.f ) );
-		p.push_back( V3f( halfSizeScaled.x + innerOffset[3] * innerScale.x, -halfSizeScaled.y - innerOffset[2] * innerScale.y, 0.f ) );
-		p.push_back( V3f( halfSizeScaled.x + innerOffset[3] * innerScale.x, halfSizeScaled.y + innerOffset[0] * innerScale.y, 0.f ) );
-		p.push_back( V3f( -halfSizeScaled.x - innerOffset[1] * innerScale.x, halfSizeScaled.y + innerOffset[0] * innerScale.y, 0.f ) );
-
-		return;
-	}
-
-	const int numDivisions = 100;
-	vertsPerCurve.push_back( numDivisions + 4 );
-
-	for(
-		const auto &[startIndex, quadrantMult, quadrantOffset, falloffMult] : std::array<std::tuple<int, V3f, V3f, V3f>, 4> {
-			std::tuple<int, V3f, V3f, V3f>{
-				0,
-				V3f( 1.f, 1.f, 0.f ),
-				V3f( innerOffset[3], innerOffset[0], 0.f ),
-				V3f( falloffScale[3], falloffScale[0], 0.f )
-			},  // Top-right
-			std::tuple<int, V3f, V3f, V3f>{
-				numDivisions / 4,
-				V3f( -1.f, 1.f, 0.f ),
-				V3f( -innerOffset[1], innerOffset[0], 0.f ),
-				V3f( falloffScale[1], falloffScale[0], 0.f )
-			},  // Top-left
-			std::tuple<int, V3f, V3f, V3f>{
-				numDivisions / 2,
-				V3f( -1.f, -1.f, 0.f ),
-				V3f( -innerOffset[1], -innerOffset[2], 0.f ),
-				V3f( falloffScale[1], falloffScale[2], 0.f )
-			},  // Bottom-left
-			std::tuple<int, V3f, V3f, V3f>{
-				( numDivisions * 3 ) / 4,
-				V3f( 1.f, -1.f, 0.f ),
-				V3f( innerOffset[3], -innerOffset[2], 0.f ),
-				V3f( falloffScale[3], falloffScale[2], 0.f )
-			}  // Bottom-right
-		}
-	)
-	{
-		for( int i = startIndex, eI = startIndex + ( numDivisions / 4 ); i <= eI; ++i )
-		{
-			const float angle = 2.f * M_PI * (float)i / (float)numDivisions;
-			const V3f delta( cos( angle ), sin( angle ), 0.f );
-			p.push_back( ( delta * radius + ( halfSize * quadrantMult ) + quadrantOffset ) * scale + ( delta * falloffWidth * falloffMult ) );
-		}
-	}
 }
 
 class BarnVisualiser final : public LightFilterVisualiser
@@ -201,42 +136,10 @@ Visualisations BarnVisualiser::visualise( const InternedString &attributeName, c
 		parameterOrDefault( barnParameters, "bottomEdge", 1.f ),
 		parameterOrDefault( barnParameters, "rightEdge", 1.f )
 	);
-
-	IntVectorDataPtr innerVertsPerCurveData = new IntVectorData();
-	V3fVectorDataPtr innerPData = new V3fVectorData();
-
-	std::vector<int> &innerVertsPerCurve = innerVertsPerCurveData->writable();
-	std::vector<V3f> &innerP = innerPData->writable();
-
-	addRect( innerSize, innerScale, innerOffset, radius, 0.f, V4f( 0.f ), innerVertsPerCurve, innerP );
-
-	IECoreGL::CurvesPrimitivePtr rect = new IECoreGL::CurvesPrimitive( CubicBasisf::linear(), /* periodic */ true, innerVertsPerCurveData );
-	rect->addPrimitiveVariable( "P", PrimitiveVariable( PrimitiveVariable::Vertex, innerPData ) );
-	rect->addPrimitiveVariable( "Cs", PrimitiveVariable( PrimitiveVariable::Constant, new Color3fData( Color3f( 255.f / 255.f, 171.f / 255.f, 15.f / 255.f ) ) ) );
-
-	result->addChild( rect );
-
 	const float edge = parameterOrDefault( barnParameters, "edge", 0.f );
-	if( edge > 0 )
-	{
-		IECoreGL::GroupPtr edgeGroup = new IECoreGL::Group();
-		edgeGroup->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 1.0f ) );
 
-		IntVectorDataPtr edgeVertsPerCurveData = new IntVectorData();
-		V3fVectorDataPtr edgePData = new V3fVectorData();
-
-		std::vector<int> &edgeVertsPerCurve = edgeVertsPerCurveData->writable();
-		std::vector<V3f> &edgeP = edgePData->writable();
-
-		addRect( innerSize, innerScale, innerOffset, radius, edge, falloffScale, edgeVertsPerCurve, edgeP );
-
-		IECoreGL::CurvesPrimitivePtr edgeRect = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic */ true, edgeVertsPerCurveData );
-		edgeRect->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, edgePData ) );
-		edgeRect->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 0.f ) ) ) );
-
-		edgeGroup->addChild( edgeRect );
-		result->addChild( edgeGroup );
-	}
+	IECoreGL::GroupPtr rects = GafferRenderManUI::lightFilterRectangles( innerSize, radius, innerScale, innerOffset, falloffScale, edge );
+	result->addChild( rects );
 
 	return { Visualisation::createGeometry( result ) };
 }
