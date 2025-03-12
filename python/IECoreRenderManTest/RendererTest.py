@@ -1688,6 +1688,47 @@ class RendererTest( GafferTest.TestCase ) :
 
 		del renderer
 
+	def testCheckpointing( self ):
+
+		def render( recover, messageHandler = None ) :
+
+			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				"RenderMan",
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+				messageHandler = messageHandler
+			)
+
+			renderer.output(
+				"test",
+				IECoreScene.Output(
+					( self.temporaryDirectory() / "test.exr" ).as_posix(),
+					"exr",
+					"rgba",
+					{
+						"driverType" : "ImageDisplayDriver",
+						"handle" : "testSampleFilter",
+					}
+				)
+			)
+
+			renderer.option( "ri:hider:incremental", IECore.IntData( 1 ) )
+
+			if recover :
+				renderer.option( "ri:checkpoint:recover", IECore.IntData( 1 ) )
+			else :
+				renderer.option( "ri:checkpoint:interval", IECore.StringData( "1i" ) )
+				renderer.option( "ri:checkpoint:exitat", IECore.StringData( "2i" ) )
+
+			renderer.render()
+			del renderer
+
+		render( False )
+
+		messageHandler = IECore.CapturingMessageHandler()
+		render( True , messageHandler )
+		self.assertEqual( len( messageHandler.messages ), 1 )
+		self.assertEqual( messageHandler.messages[0].message, "R56049 Incremental rendering recovery succeeded; resuming render at checkpoint 2." )
+
 	def __assertParameterEqual( self, paramList, name, data ) :
 
 		p = next( x for x in paramList if x["info"]["name"] == name )
