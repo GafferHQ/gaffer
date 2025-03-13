@@ -73,7 +73,10 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
-    container: ${{ matrix.containerImage }}
+    container:
+      image: ${{ matrix.containerImage }}
+      # This MAC address is required by our RenderMan license.
+      options: --mac-address a4:bb:6d:cf:40:7a
 
     env:
       ARNOLD_LICENSE_ORDER: none # Don't waste time looking for a license that doesn't exist
@@ -149,6 +152,7 @@ jobs:
       env:
         RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}
         RENDERMAN_DOWNLOAD_PASSWORD: ${{ secrets.RENDERMAN_DOWNLOAD_PASSWORD }}
+        RENDERMAN_LICENSE_PASSPHRASE: ${{ secrets.RENDERMAN_LICENSE_PASSPHRASE }}
       if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' }}
 
     - name: Install Mesa (Windows)

@@ -50,7 +50,6 @@ import IECoreRenderManTest
 import GafferTest
 import GafferScene
 
-@unittest.skipIf( GafferTest.inCI(), "RenderMan license not available" )
 class RendererTest( GafferTest.TestCase ) :
 
 	def setUp( self ) :
