@@ -41,6 +41,8 @@
 
 #include "Gaffer/Signals.h"
 
+#include "GafferScene/PathIDMap.h"
+
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/Private/RendererAlgo.h"
 
@@ -104,6 +106,8 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 		std::optional<ScenePlug::ScenePath> pathForID( uint32_t id ) const;
 		IECore::PathMatcher pathsForIDs( const std::vector<uint32_t> &ids ) const;
 
+		const PathIDMap *pathIDMap() const;
+
 		// Returns the ID associated with the specified path, or `0` if that
 		// path has not been rendered and `createIfNecessary` is `false`.
 		uint32_t idForPath( const ScenePlug::ScenePath &path, bool createIfNecessary = false ) const;
@@ -138,12 +142,11 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 
 		class SceneGraph;
 		class SceneGraphUpdateTask;
-		class IDMap;
 
 		ConstScenePlugPtr m_scene;
 		Gaffer::ConstContextPtr m_context;
 		IECoreScenePreview::RendererPtr m_renderer;
-		std::unique_ptr<IDMap> m_idMap;
+		std::unique_ptr<PathIDMap> m_idMap;
 
 		GafferScene::VisibleSet m_visibleSet;
 		size_t m_minimumExpansionDepth;
