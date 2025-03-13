@@ -37,7 +37,8 @@
 #include "Globals.h"
 #include "ParamListAlgo.h"
 #include "Transform.h"
-#include "ShaderNetworkAlgo.h"
+
+#include "IECoreRenderMan/ShaderNetworkAlgo.h"
 
 #include "IECore/SimpleTypedData.h"
 #include "IECore/StringAlgo.h"
@@ -171,7 +172,10 @@ Globals::Globals( IECoreScenePreview::Renderer::RenderType renderType, const IEC
 
 	if( char *p = getenv( "OSL_SHADER_PATHS" ) )
 	{
-		string searchPath = string( p ) + ":@";
+		string searchPath( p );
+		// Convert Windows ';' path entry separator to ':' as `RMAN_SHADERPATH` expects
+		std::replace( searchPath.begin(), searchPath.end(), ';', ':' );
+		searchPath += ":@";
 		m_options.SetString( Rix::k_searchpath_shader, RtUString( searchPath.c_str() ) );
 	}
 
