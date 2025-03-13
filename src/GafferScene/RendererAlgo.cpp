@@ -92,6 +92,7 @@ const InternedString g_includedPurposesOptionName( "option:render:includedPurpos
 const InternedString g_purposeAttributeName( "usd:purpose" );
 const InternedString g_frameOptionName( "frame" );
 const InternedString g_cameraOptionLegacyName( "option:render:camera" );
+const InternedString g_renderManShutterOptionName( "ri:Ri:Shutter" );
 
 const ConstStringVectorDataPtr g_defaultIncludedPurposes( new StringVectorData( { "default", "render" } ) );
 const std::string g_defaultPurpose( "default" );
@@ -160,6 +161,15 @@ void RenderOptions::outputOptions( IECoreScenePreview::Renderer *renderer, const
 	// Output the current frame.
 
 	renderer->option( g_frameOptionName, new IntData( (int)round( Context::current()->getFrame() ) ) );
+
+	if( renderer->name().string() == "RenderMan" )
+	{
+		// Work around RenderMan limitations. Riley needs the `Ri:Shutter`
+		// option to be set on creation, but we would normally only pass it
+		// along later with the render camera.
+		ConstV2fDataPtr shutterData = new V2fData( shutter );
+		renderer->option( g_renderManShutterOptionName, shutterData.get() );
+	}
 
 	// Output anything that has changed or was added since last time.
 
