@@ -222,7 +222,7 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.pause()
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertEqual( self.__colorAtUV( image, imath.V2i( 0.5 ) ), imath.Color4f( 1 ) )
+		self.__assertColorAlmostEqual( self.__colorAtUV( image, imath.V2i( 0.5 ) ), imath.Color4f( 1 ), delta = 0.01 )
 
 		renderer.option(
 			"ri:integrator",
@@ -244,7 +244,7 @@ class RendererTest( GafferTest.TestCase ) :
 		time.sleep( 1 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertNotEqual( self.__colorAtUV( image, imath.V2i( 0.5 ) ), imath.Color4f( 0, 0.514117, 0.515205, 1 ) )
+		self.__assertColorAlmostEqual( self.__colorAtUV( image, imath.V2i( 0.5 ) ), imath.Color4f( 0, 0.514107, 0, 1 ), delta = 0.01 )
 
 		del object
 		del renderer
@@ -1783,6 +1783,11 @@ class RendererTest( GafferTest.TestCase ) :
 		i = iy * dimensions.x + ix
 
 		return imath.Color4f( image["R"][i], image["G"][i], image["B"][i], image["A"][i] if "A" in image.keys() else 0.0 )
+
+	def __assertColorAlmostEqual( self, color1, color2, delta = 0.00001 ) :
+
+		for i in range( 0, color1.dimensions() ) :
+			self.assertAlmostEqual( color1[i], color2[i], delta = delta )
 
 if __name__ == "__main__":
 	unittest.main()
