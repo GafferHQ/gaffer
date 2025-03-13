@@ -1,6 +1,10 @@
 1.5.x.x (relative to 1.5.8.0)
 =======
 
+Fixes
+-----
+
+- Cycles : Fixed incorrect particle motion blur shape (#5862).
 
 
 1.5.8.0 (relative to 1.5.7.0)
