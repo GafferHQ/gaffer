@@ -58,17 +58,6 @@ class AboutTest( GafferTest.TestCase ) :
 			if "source" in d :
 				self.assertTrue( urllib.request.urlopen( d["source"] ) )
 
-# Image Engine internal builds don't package all the dependencies with
-# Gaffer, so the license tests above would fail. We try to detect such
-# builds and mark the test as being an expected failure, so as to cut
-# down on noise.
-packagedWithDependencies = False
-for f in glob.glob( os.path.expandvars( "$GAFFER_ROOT/lib/*" ) ) :
-	if "Gaffer" not in os.path.basename( f ) :
-		packagedWithDependencies = True
-
-if not packagedWithDependencies :
-	AboutTest.test = unittest.expectedFailure( AboutTest.test )
 
 if __name__ == "__main__":
 	unittest.main()
