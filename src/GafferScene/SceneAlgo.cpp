@@ -1497,7 +1497,10 @@ SceneProcessorPtr GafferScene::SceneAlgo::createRenderAdaptors()
 
 	ScenePlug *in = result->inPlug();
 
-	const RenderAdaptors &adaptors = renderAdaptors();
+	// Note : `adaptors` is a copy because rogue adaptors could call
+	// `registerRenderAdaptor()` from `createRenderAdaptor()`, and that
+	// would invalidate our iterators.
+	const RenderAdaptors adaptors = renderAdaptors();
 	for( const auto &[name, a] : adaptors )
 	{
 		SceneProcessorPtr adaptor = createRenderAdaptor( a );

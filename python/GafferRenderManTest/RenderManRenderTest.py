@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2017, John Haddon. All rights reserved.
+#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,10 +34,14 @@
 #
 ##########################################################################
 
-__import__( "GafferScene" )
+import unittest
 
-from ._GafferRenderMan import *
-from . import ArgsFileAlgo
-from ._InteractiveDenoiserAdaptor import _InteractiveDenoiserAdaptor
+import IECoreRenderMan
+import GafferSceneTest
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferRenderMan" )
+class RenderManRenderTest( GafferSceneTest.RenderTest ) :
+
+	renderer = "RenderMan"
+
+if __name__ == "__main__":
+	unittest.main()

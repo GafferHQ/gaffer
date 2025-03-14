@@ -342,7 +342,7 @@ void Render::executeInternal( bool flushCaches ) const
 	}
 	Monitor::Scope performanceMonitorScope( performanceMonitor );
 
-	GafferScene::Private::RendererAlgo::outputOptions( renderOptions.globals.get(), renderer.get() );
+	renderOptions.outputOptions( renderer.get() );
 	GafferScene::Private::RendererAlgo::outputOutputs( inPlug(), renderOptions.globals.get(), renderer.get() );
 
 	{

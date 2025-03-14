@@ -2346,7 +2346,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["renderer"]["state"].setValue( script["renderer"].State.Running )
 		time.sleep( 1.0 )
 
-		image = IECoreImage.ImageDisplayDriver.storedImage( "testRendererOption" )
+		image = IECoreImage.ImageDisplayDriver.removeStoredImage( "testRendererOption" )
 		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
 
 	def testRendererOptionContext( self ):

@@ -50,7 +50,6 @@ import IECoreRenderManTest
 import GafferTest
 import GafferScene
 
-@unittest.skipIf( GafferTest.inCI(), "RenderMan license not available" )
 class RendererTest( GafferTest.TestCase ) :
 
 	def setUp( self ) :
@@ -223,7 +222,7 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.pause()
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertEqual( self.__colorAtUV( image, imath.V2i( 0.5 ) ), imath.Color4f( 1 ) )
+		self.__assertColorAlmostEqual( self.__colorAtUV( image, imath.V2i( 0.5 ) ), imath.Color4f( 1 ), delta = 0.01 )
 
 		renderer.option(
 			"ri:integrator",
@@ -245,7 +244,7 @@ class RendererTest( GafferTest.TestCase ) :
 		time.sleep( 1 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertNotEqual( self.__colorAtUV( image, imath.V2i( 0.5 ) ), imath.Color4f( 0, 0.514117, 0.515205, 1 ) )
+		self.__assertColorAlmostEqual( self.__colorAtUV( image, imath.V2i( 0.5 ) ), imath.Color4f( 0, 0.514107, 0, 1 ), delta = 0.01 )
 
 		del object
 		del renderer
@@ -1688,6 +1687,47 @@ class RendererTest( GafferTest.TestCase ) :
 
 		del renderer
 
+	def testCheckpointing( self ):
+
+		def render( recover, messageHandler = None ) :
+
+			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				"RenderMan",
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+				messageHandler = messageHandler
+			)
+
+			renderer.output(
+				"test",
+				IECoreScene.Output(
+					( self.temporaryDirectory() / "test.exr" ).as_posix(),
+					"exr",
+					"rgba",
+					{
+						"driverType" : "ImageDisplayDriver",
+						"handle" : "testSampleFilter",
+					}
+				)
+			)
+
+			renderer.option( "ri:hider:incremental", IECore.IntData( 1 ) )
+
+			if recover :
+				renderer.option( "ri:checkpoint:recover", IECore.IntData( 1 ) )
+			else :
+				renderer.option( "ri:checkpoint:interval", IECore.StringData( "1i" ) )
+				renderer.option( "ri:checkpoint:exitat", IECore.StringData( "2i" ) )
+
+			renderer.render()
+			del renderer
+
+		render( False )
+
+		messageHandler = IECore.CapturingMessageHandler()
+		render( True , messageHandler )
+		self.assertEqual( len( messageHandler.messages ), 1 )
+		self.assertEqual( messageHandler.messages[0].message, "R56049 Incremental rendering recovery succeeded; resuming render at checkpoint 2." )
+
 	def __assertParameterEqual( self, paramList, name, data ) :
 
 		p = next( x for x in paramList if x["info"]["name"] == name )
@@ -1743,6 +1783,11 @@ class RendererTest( GafferTest.TestCase ) :
 		i = iy * dimensions.x + ix
 
 		return imath.Color4f( image["R"][i], image["G"][i], image["B"][i], image["A"][i] if "A" in image.keys() else 0.0 )
+
+	def __assertColorAlmostEqual( self, color1, color2, delta = 0.00001 ) :
+
+		for i in range( 0, color1.dimensions() ) :
+			self.assertAlmostEqual( color1[i], color2[i], delta = delta )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -114,4 +114,17 @@ shutil.rmtree( installLocation / "lib" / "python3.9" )
 shutil.rmtree( installLocation / "lib" / "python3.11" )
 shutil.rmtree( installLocation / "lib" / "textures" )
 
+# Install the license file. Details of how we store this securely are
+# documented here :
+#
+#  https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#storing-large-secrets
+
+
+subprocess.check_call( [
+	"gpg", "--quiet", "--batch", "--yes", "--decrypt",
+	f"--passphrase={os.environ['RENDERMAN_LICENSE_PASSPHRASE']}",
+	"--output", installLocation.parent / "pixar.license",
+	pathlib.Path( __file__ ).parent / "pixar.license.gpg"
+] )
+
 print( installLocation )
