@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, John Haddon. All rights reserved.
+#  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,19 +34,52 @@
 #
 ##########################################################################
 
-from .ModuleTest import ModuleTest
-from .RenderManAttributesTest import RenderManAttributesTest
-from .RenderManOptionsTest import RenderManOptionsTest
-from .RenderManShaderTest import RenderManShaderTest
-from .RenderManLightTest import RenderManLightTest
-from .RenderManMeshLightTest import RenderManMeshLightTest
-from .RenderManIntegratorTest import RenderManIntegratorTest
-from .RenderManDisplayFilterTest import RenderManDisplayFilterTest
-from .RenderManSampleFilterTest import RenderManSampleFilterTest
-from .RenderManRenderTest import RenderManRenderTest
-from .InteractiveRenderManRenderTest import InteractiveRenderManRenderTest
-from .RenderPassAdaptorTest import RenderPassAdaptorTest
+import unittest
+
+import imath
+
+import IECoreRenderMan
+import GafferSceneTest
+import GafferRenderMan
+
+class RenderPassAdaptorTest( GafferSceneTest.RenderPassAdaptorTest ) :
+
+	renderer = "RenderMan"
+
+	shadowColor = imath.Color4f( 1, 1, 1, 0 )
+	litColor = imath.Color4f( 0 )
+
+	## \todo Remove once light linking is supported.
+	@unittest.skip( "Light linking not supported yet" )
+	def testReflectionCasterLightLinks( self ) :
+
+		pass
+
+	def _createDistantLight( self ) :
+
+		light = GafferRenderMan.RenderManLight()
+		light.loadShader( "PxrDistantLight" )
+		light["parameters"]["exposure"].setValue( 2.0 )
+		return light, light["parameters"]["lightColor"]
+
+	def _createStandardShader( self ) :
+
+		shader = GafferRenderMan.RenderManShader()
+		shader.loadShader( "PxrSurface" )
+		return shader, shader["parameters"]["diffuseColor"]
+
+	def _createFlatShader( self ) :
+
+		shader = GafferRenderMan.RenderManShader()
+		shader.loadShader( "PxrConstant" )
+		return shader, shader["parameters"]["emitColor"]
+
+	def _createOptions( self ) :
+
+		options = GafferRenderMan.RenderManOptions()
+		options["options"]["ri:hider:maxsamples"]["enabled"].setValue( True )
+		options["options"]["ri:hider:maxsamples"]["value"].setValue( 16 )
+		return options
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
