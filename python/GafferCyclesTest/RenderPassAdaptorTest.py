@@ -45,10 +45,6 @@ class RenderPassAdaptorTest( GafferSceneTest.RenderPassAdaptorTest ) :
 
 	renderer = "Cycles"
 
-	## \todo Default camera is facing down +ve Z but should be facing
-	# down -ve Z.
-	reverseCamera = True
-
 	# Cycles outputs black shadows on a white background.
 	shadowColor = imath.Color4f( 0 )
 	litColor = imath.Color4f( 1, 1, 1, 0 )
@@ -81,7 +77,7 @@ class RenderPassAdaptorTest( GafferSceneTest.RenderPassAdaptorTest ) :
 
 		options = GafferCycles.CyclesOptions()
 		options["options"]["samples"]["enabled"].setValue( True )
-		options["options"]["samples"]["value"].setValue( 20 )
+		options["options"]["samples"]["value"].setValue( 16 )
 		return options
 
 if __name__ == "__main__":
