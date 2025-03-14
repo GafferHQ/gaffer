@@ -2511,6 +2511,27 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		with self.assertRaisesRegex( RuntimeError, "Oops" ) :
 			GafferScene.SceneAlgo.createRenderAdaptors()
 
+	def testAdaptorRegistrationFromAdaptorCreator( self ) :
+
+		self.addCleanup( GafferScene.SceneAlgo.deregisterRenderAdaptor, "RegistrationCreator" )
+		for i in range( 0, 100 ) :
+			self.addCleanup( GafferScene.SceneAlgo.deregisterRenderAdaptor, f"RegisteredFromCreator{i}" )
+
+		def creator() :
+
+			for i in range( 0, 100 ) :
+				GafferScene.SceneAlgo.registerRenderAdaptor( f"RegisteredFromCreator{i}", GafferScene.CustomAttributes )
+			return GafferScene.CustomAttributes()
+
+		GafferScene.SceneAlgo.registerRenderAdaptor( "RegistrationCreator", creator )
+		adaptors = GafferScene.SceneAlgo.createRenderAdaptors()
+
+		self.assertIn( "RegistrationCreator", adaptors )
+		for i in range( 0, 100 ) :
+			# We can't expect the registrations made from `creator()` to
+			# have been accounted for.
+			self.assertNotIn( f"RegisteredFromCreator{i}", adaptors )
+
 	def testValidateName( self ) :
 
 		for goodName in [ "obi", "lewis", "ludo" ] :

@@ -5,7 +5,7 @@ Fixes
 -----
 
 - Cycles : Fixed incorrect particle motion blur shape (#5862).
-
+- SceneAlgo : Fixed errors and crashes caused by calling `registerRenderAdaptor()` from an adaptor creation function.
 
 1.5.8.0 (relative to 1.5.7.0)
 =======
