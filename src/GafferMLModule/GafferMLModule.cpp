@@ -63,6 +63,32 @@ using namespace GafferBindings;
 namespace
 {
 
+int64_t toLinearIndex( const std::vector<int64_t>& shape, const std::vector<int64_t>& index)
+{
+	if ( index.size() == 1 )
+	{
+		return index[0];
+	}
+
+	std::vector<int64_t> strides( shape.size() );
+	{
+		int64_t stride = 1;
+		for ( size_t dim = shape.size(); dim > 0; --dim )
+		{
+		  strides[dim - 1] = stride;
+		  stride *= shape[dim - 1];
+		}
+	}
+
+	int64_t offset = 0;
+	for ( size_t i = 0; i < shape.size(); i++ )
+	{
+		offset += index[i] * strides[i];
+	}
+
+	return offset;
+}
+
 TensorPtr tensorConstructorWrapper( const DataPtr &data, object pythonShape )
 {
 	if( pythonShape != object() )
@@ -137,6 +163,8 @@ object tensorGetItem( const Tensor &tensor, const std::vector<int64_t> &location
 			return tensorGetItemTyped<uint64_t>( tensor, location );
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64 :
 			return tensorGetItemTyped<int64_t>( tensor, location );
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING :
+			return object( tensor.value().GetStringTensorElement( toLinearIndex( tensor.shape(), location ) ) );
 		default :
 			throw IECore::Exception( fmt::format( "Unsupported element type {}", elementType ) );
 	}
