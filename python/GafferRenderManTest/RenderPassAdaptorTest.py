@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -38,46 +38,47 @@ import unittest
 
 import imath
 
+import IECoreRenderMan
 import GafferSceneTest
-import GafferCycles
+import GafferRenderMan
 
 class RenderPassAdaptorTest( GafferSceneTest.RenderPassAdaptorTest ) :
 
-	renderer = "Cycles"
+	renderer = "RenderMan"
 
-	# Cycles outputs black shadows on a white background.
-	shadowColor = imath.Color4f( 0 )
-	litColor = imath.Color4f( 1, 1, 1, 0 )
+	shadowColor = imath.Color4f( 1, 1, 1, 0 )
+	litColor = imath.Color4f( 0 )
 
-	@unittest.skip( "Light linking not supported" )
+	## \todo Remove once light linking is supported.
+	@unittest.skip( "Light linking not supported yet" )
 	def testReflectionCasterLightLinks( self ) :
 
 		pass
 
 	def _createDistantLight( self ) :
 
-		light = GafferCycles.CyclesLight()
-		light.loadShader( "distant_light" )
-		return light, light["parameters"]["color"]
+		light = GafferRenderMan.RenderManLight()
+		light.loadShader( "PxrDistantLight" )
+		light["parameters"]["exposure"].setValue( 2.0 )
+		return light, light["parameters"]["lightColor"]
 
 	def _createStandardShader( self ) :
 
-		shader = GafferCycles.CyclesShader()
-		shader.loadShader( "principled_bsdf" )
-		return shader, shader["parameters"]["base_color"]
+		shader = GafferRenderMan.RenderManShader()
+		shader.loadShader( "PxrSurface" )
+		return shader, shader["parameters"]["diffuseColor"]
 
 	def _createFlatShader( self ) :
 
-		shader = GafferCycles.CyclesShader()
-		shader.loadShader( "emission" )
-		shader["parameters"]["strength"].setValue( 1 )
-		return shader, shader["parameters"]["color"]
+		shader = GafferRenderMan.RenderManShader()
+		shader.loadShader( "PxrConstant" )
+		return shader, shader["parameters"]["emitColor"]
 
 	def _createOptions( self ) :
 
-		options = GafferCycles.CyclesOptions()
-		options["options"]["samples"]["enabled"].setValue( True )
-		options["options"]["samples"]["value"].setValue( 16 )
+		options = GafferRenderMan.RenderManOptions()
+		options["options"]["ri:hider:maxsamples"]["enabled"].setValue( True )
+		options["options"]["ri:hider:maxsamples"]["value"].setValue( 16 )
 		return options
 
 if __name__ == "__main__":

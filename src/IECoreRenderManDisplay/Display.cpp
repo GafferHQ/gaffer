@@ -84,7 +84,11 @@ PtDspyError DspyImageOpen( PtDspyImageHandle *image, const char *driverName, con
 
 		vector<string> tokens;
 		StringAlgo::tokenize( format[i].name, '.', tokens );
-		if( tokens.size() > 1 && std::all_of( tokens[1].begin(), tokens[1].end(), [] ( unsigned char c ) { return std::isdigit( c ); } ) )
+		if( tokens.size() == 2 && std::all_of( tokens[0].begin(), tokens[0].end(), [] ( unsigned char c ) { return std::isdigit( c ); } ) )
+		{
+			tokens.erase( tokens.begin() );
+		}
+		else if( tokens.size() > 1 && std::all_of( tokens[1].begin(), tokens[1].end(), [] ( unsigned char c ) { return std::isdigit( c ); } ) )
 		{
 			tokens.erase( tokens.begin() + 1 );
 		}

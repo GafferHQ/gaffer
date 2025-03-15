@@ -709,7 +709,7 @@ const std::vector<riley::RenderOutputId> &Globals::acquireRenderOutputs( const I
 {
 	// Identify type and source.
 
-	const string layerName = parameter<string>( output->parameters(), g_layerName, "" );
+	const string layerName = parameter<string>( output->parameters(), g_layerName, "__undefined__" );
 
 	std::optional<riley::RenderOutputType> type;
 	RtUString source;
@@ -766,7 +766,7 @@ const std::vector<riley::RenderOutputId> &Globals::acquireRenderOutputs( const I
 	// doesn't need to be unique among all render outputs.
 
 	RtUString renderOutputName = source;
-	if( !layerName.empty() )
+	if( layerName != "__undefined__" )
 	{
 		renderOutputName = RtUString( layerName.c_str() );
 	}

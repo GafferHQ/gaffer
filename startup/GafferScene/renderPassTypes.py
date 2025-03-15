@@ -58,6 +58,7 @@ def __renderPassShaderAssignment( usage ):
 	processor["defaultArnoldShader"] = Gaffer.ObjectPlug( defaultValue = IECore.NullObject() )
 	processor["defaultCyclesShader"] = Gaffer.ObjectPlug( defaultValue = IECore.NullObject() )
 	processor["defaultDelightShader"] = Gaffer.ObjectPlug( defaultValue = IECore.NullObject() )
+	processor["defaultRenderManShader"] = Gaffer.ObjectPlug( defaultValue = IECore.NullObject() )
 
 	processor["__optionQuery"] = GafferScene.OptionQuery()
 	processor["__optionQuery"]["scene"].setInput( processor["in"] )
@@ -126,6 +127,9 @@ def __renderPassShaderAssignment( usage ):
 			elif renderer.startswith( "3Delight" ) :
 				shader = validShaderNetwork( parent["defaultDelightShader"], shader )
 				shaderType = "osl:surface"
+			elif renderer == "RenderMan" :
+				shader = validShaderNetwork( parent["defaultRenderManShader"], shader )
+				shaderType = "ri:surface"
 
 			# A renderer specific shader registered in the options takes precedence
 			# over a shader registered to "All" renderers.
@@ -207,7 +211,8 @@ def __shadowCatcherProcessor() :
 	for renderer, attributeName in (
 		( "Arnold", "ai:visibility:shadow" ),
 		( "Cycles", "cycles:visibility:shadow" ),
-		( "3Delight*", "dl:visibility.shadow" )
+		( "3Delight*", "dl:visibility.shadow" ),
+		( "RenderMan", "ri:visibility:transmission" )
 	) :
 		row = processor["__attributeSpreadsheet"]["rows"].addRow()
 		row["name"].setValue( renderer )
@@ -276,6 +281,15 @@ def __shadowCatcherProcessor() :
 		)
 	)
 
+	processor["__shaderAssignment"]["defaultRenderManShader"].setValue(
+		IECoreScene.ShaderNetwork(
+			shaders = {
+				"shadowCatcher" : IECoreScene.Shader( "PxrSurface", "ri:surface", { "diffuseDoubleSided" : True, "diffuseColor" : imath.Color3f( 1 ) } ),
+			},
+			output = "shadowCatcher",
+		)
+	)
+
 	# Localise and copy original shaders back to shadow casters in case they were
 	# deleted as a result of being a descendant of a shadow catcher location.
 	processor["__localiseAttributes"] = GafferScene.LocaliseAttributes()
@@ -320,10 +334,29 @@ def __shadowCatcherProcessor() :
 	processor["__lightShadowVisibility"]["tweaks"][0]["name"].setValue( "dl:visibility.shadow" )
 	processor["__lightShadowVisibility"]["filter"].setInput( processor["__lightsSet"]["out"] )
 
+	# RenderMan specifies shadow catchers with the `ri:trace:holdout` attribute.
+	processor["__renderManCatcherAttributes"] = GafferScene.CustomAttributes()
+	processor["__renderManCatcherAttributes"]["in"].setInput( processor["__copyAttributes"]["out"] )
+	processor["__renderManCatcherAttributes"]["attributes"].addChild( Gaffer.NameValuePlug( "ri:trace:holdout", Gaffer.IntPlug( defaultValue = 1 ) ) )
+	processor["__renderManCatcherAttributes"]["filter"].setInput( processor["__catcherAndCasterFilter"]["catchers"] )
+
+	processor["__globalRenderManCatcherAttributes"] = GafferScene.CustomAttributes()
+	processor["__globalRenderManCatcherAttributes"]["in"].setInput( processor["__renderManCatcherAttributes"]["out"] )
+	processor["__globalRenderManCatcherAttributes"]["attributes"].addChild( Gaffer.NameValuePlug( "ri:trace:holdout", Gaffer.IntPlug( defaultValue = 1 ) ) )
+	processor["__globalRenderManCatcherAttributes"]["global"].setValue( True )
+	processor["__globalRenderManCatcherAttributes"]["enabled"].setInput( processor["__catcherAndCasterFilter"]["globalCatchers"] )
+
+	# On shadow casters we override `ri:trace:holdout` off to ensure
+	# casters that are descendants of catchers do not inherit the attribute.
+	processor["__renderManCasterAttributes"] = GafferScene.CustomAttributes()
+	processor["__renderManCasterAttributes"]["in"].setInput( processor["__globalRenderManCatcherAttributes"]["out"] )
+	processor["__renderManCasterAttributes"]["attributes"].addChild( Gaffer.NameValuePlug( "ri:trace:holdout", Gaffer.IntPlug( defaultValue = 0 ) ) )
+	processor["__renderManCasterAttributes"]["filter"].setInput( processor["__catcherAndCasterFilter"]["casters"] )
+
 	processor["__rendererSwitch"] = Gaffer.NameSwitch()
 	processor["__rendererSwitch"].setup( GafferScene.ScenePlug() )
 	processor["__rendererSwitch"]["selector"].setInput( processor["renderer"] )
-	processor["__rendererSwitch"]["in"].resize( 3 )
+	processor["__rendererSwitch"]["in"].resize( 4 )
 	processor["__rendererSwitch"]["in"]["in0"]["value"].setInput( processor["__copyAttributes"]["out"] )
 
 	processor["__rendererSwitch"]["in"]["in1"]["name"].setValue( "Cycles" )
@@ -331,6 +364,9 @@ def __shadowCatcherProcessor() :
 
 	processor["__rendererSwitch"]["in"]["in2"]["name"].setValue( "3Delight*" )
 	processor["__rendererSwitch"]["in"]["in2"]["value"].setInput( processor["__lightShadowVisibility"]["out"] )
+
+	processor["__rendererSwitch"]["in"]["in3"]["name"].setValue( "RenderMan" )
+	processor["__rendererSwitch"]["in"]["in3"]["value"].setInput( processor["__renderManCasterAttributes"]["out"] )
 
 	processor["out"].setInput( processor["__rendererSwitch"]["out"]["value"] )
 
@@ -348,7 +384,8 @@ def __reflectionCatcherProcessor() :
 	for renderer, attributeName in (
 		( "Arnold", "ai:visibility:specular_reflect" ),
 		( "Cycles", "cycles:visibility:glossy" ),
-		( "3Delight*", "dl:visibility.reflection" )
+		( "3Delight*", "dl:visibility.reflection" ),
+		( "RenderMan", "ri:visibility:indirect" )
 	) :
 		row = processor["__attributeSpreadsheet"]["rows"].addRow()
 		row["name"].setValue( renderer )
@@ -561,9 +598,127 @@ def __redirectCyclesShadowOutputProcessor() :
 
 	return processor
 
+def __renderManShadowDisplayFilterProcessor() :
+
+	processor = GafferScene.SceneProcessor()
+
+	processor["renderer"] = Gaffer.StringPlug()
+
+	processor["__outputs"] = GafferScene.Outputs()
+	processor["__outputs"]["in"].setInput( processor["in"] )
+	processor["__outputs"].addOutput(
+		"occluded",
+		IECoreScene.Output(
+			"null",
+			"null",
+			# While the RenderMan documentation suggests `holdouts;C[DS]+[LO]`, both RfM and RfB use
+			# `holdouts;C[DS]+<L.>` which ignores emission. We also use this as it better matches
+			# Arnold.
+			"lpe holdouts;C[DS]+<L.>",
+			{
+				# RfM sets `relativepixelvariance` to 1.0 to ensure the channels aren't under-sampled.
+				"ri:relativePixelVariance" : 1.0,
+				"layerName" : "occluded",
+			}
+		)
+	)
+	processor["__outputs"].addOutput(
+		"unoccluded",
+		IECoreScene.Output(
+			"null",
+			"null",
+			# While the RenderMan documentation suggests `holdouts;unoccluded;C[DS]+[LO]`, both RfM and RfB use
+			# `holdouts;unoccluded;C[DS]+<L.>` which ignores emission. We also use this as it better matches
+			# Arnold.
+			"lpe holdouts;unoccluded;C[DS]+<L.>",
+			{
+				# RfM sets `relativepixelvariance` to 1.0 to ensure the channels aren't under-sampled.
+				"ri:relativePixelVariance" : 1.0,
+				"layerName" : "unoccluded",
+			}
+		)
+	)
+
+	processor["__shadowDisplayFilter"] = GafferScene.CustomOptions()
+	processor["__shadowDisplayFilter"]["in"].setInput( processor["__outputs"]["out"] )
+
+	processor["__shadowDisplayFilterExpression"] = Gaffer.Expression()
+	processor["__shadowDisplayFilterExpression"].setExpression(
+		inspect.cleandoc(
+			"""
+			import IECoreScene
+
+			shadowDisplayFilter = IECoreScene.ShaderNetwork(
+				shaders = {
+					"PxrShadowDisplayFilter" : IECoreScene.Shader( "PxrShadowDisplayFilter", "ri:displayfilter", {
+						"occludedAov" : "occluded",
+						"unoccludedAov" : "unoccluded",
+						"shadowAov" : "shadow",
+						"shadowThreshold" : 0.01
+					} ),
+				},
+				output = "PxrShadowDisplayFilter",
+			)
+			parent["__shadowDisplayFilter"]["extraOptions"] = IECore.CompoundObject( { "ri:displayfilter" : shadowDisplayFilter } )
+			"""
+		)
+	)
+
+	processor["__rendererSwitch"] = Gaffer.NameSwitch()
+	processor["__rendererSwitch"].setup( GafferScene.ScenePlug() )
+	processor["__rendererSwitch"]["selector"].setInput( processor["renderer"] )
+	processor["__rendererSwitch"]["in"]["in0"]["value"].setInput( processor["in"] )
+
+	processor["__rendererSwitch"]["in"]["in1"]["name"].setValue( "RenderMan" )
+	processor["__rendererSwitch"]["in"]["in1"]["value"].setInput( processor["__shadowDisplayFilter"]["out"] )
+
+	processor["out"].setInput( processor["__rendererSwitch"]["out"]["value"] )
+
+	return processor
+
+def __redirectRenderManShadowOutputProcessor() :
+
+	processor = GafferScene.SceneProcessor()
+
+	processor["renderer"] = Gaffer.StringPlug()
+
+	processor["__rendererSwitch"] = Gaffer.NameSwitch()
+	processor["__rendererSwitch"].setup( GafferScene.ScenePlug() )
+	processor["__rendererSwitch"]["selector"].setInput( processor["renderer"] )
+	processor["__rendererSwitch"]["in"]["in0"]["value"].setInput( processor["in"] )
+
+	processor["__rendererSwitch"]["in"]["in1"]["name"].setValue( "RenderMan" )
+	processor["__rendererSwitch"]["in"]["in1"]["value"].setInput( processor["in"] )
+
+	# Redirect the RenderMan "shadow" AOV to beauty to more closely match
+	# Arnold and 3Delight behaviour.
+	processor["__redirectOutputExpression"] = Gaffer.Expression()
+	processor["__redirectOutputExpression"].setExpression(
+		inspect.cleandoc(
+			"""
+			options = parent["in"]["globals"]
+			for o in options.keys() :
+				if o.startswith( "output:" ) :
+					if options[o].getData() in ( "rgb", "rgba" ) :
+						options[o].setData( "color shadow" )
+						# Set an empty layerName so our channels are written as R, G, B
+						# rather than shadow.R, shadow.G, shadow.B
+						options[o].parameters()["layerName"] = IECore.StringData( "" )
+
+			parent["__rendererSwitch"]["in"]["in1"]["value"]["globals"] = options
+			"""
+		)
+	)
+
+	processor["out"].setInput( processor["__rendererSwitch"]["out"]["value"] )
+
+	return processor
+
 GafferScene.RenderPassTypeAdaptor.registerTypeProcessor( "shadow", "catcher", __shadowCatcherProcessor )
 GafferScene.RenderPassTypeAdaptor.registerTypeProcessor( "shadow", "deleteOutputs", __deleteOutputsProcessor )
+GafferScene.RenderPassTypeAdaptor.registerTypeProcessor( "shadow", "renderManShadowDisplayFilter", __renderManShadowDisplayFilterProcessor )
 GafferScene.RenderPassTypeAdaptor.registerTypeProcessor( "shadow", "redirectCyclesShadowOutput", __redirectCyclesShadowOutputProcessor )
+GafferScene.RenderPassTypeAdaptor.registerTypeProcessor( "shadow", "redirectRenderManShadowOutput", __redirectRenderManShadowOutputProcessor )
 
 GafferScene.RenderPassTypeAdaptor.registerTypeProcessor( "reflection", "catcher", __reflectionCatcherProcessor )
 GafferScene.RenderPassTypeAdaptor.registerTypeProcessor( "reflection", "deleteOutputs", __deleteOutputsProcessor )

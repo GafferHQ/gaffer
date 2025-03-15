@@ -51,10 +51,6 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 	# to be tested.
 	renderer = None
 
-	# Derived classes may set `reverseCamera` if their default camera
-	# faces down +ve Z rather than -ve Z.
-	reverseCamera = False
-
 	# Derived classes may set `shadowColor` and `litColor` to match
 	# their renderer's shadow catcher behaviour.
 	shadowColor = imath.Color4f( 1 )
@@ -80,13 +76,21 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		s["cube"]["dimensions"].setValue( imath.V3f( 0.3 ) )
 
 		s["light"], _ = self._createDistantLight()
-		s["light"]["transform"]["rotate"]["x"].setValue( 120 if self.reverseCamera else -60 )
+		s["light"]["transform"]["rotate"]["x"].setValue( -60 )
 
 		s["group"] = GafferScene.Group()
-		s["group"]["transform"]["translate"]["z"].setValue( 1 if self.reverseCamera else -1 )
+		s["group"]["transform"]["translate"]["z"].setValue( -1 )
 		s["group"]["in"][0].setInput( s["cube"]["out"] )
 		s["group"]["in"][1].setInput( s["plane"]["out"] )
 		s["group"]["in"][2].setInput( s["light"]["out"] )
+
+		s["camera"] = GafferScene.Camera()
+		s["camera"]["fieldOfView"].setValue( 90 )
+
+		s["parent"] = GafferScene.Parent()
+		s["parent"]["parent"].setValue( "/" )
+		s["parent"]["in"].setInput( s["group"]["out"] )
+		s["parent"]["children"]["child0"].setInput( s["camera"]["out"] )
 
 		s["shader"], colorPlug = self._createStandardShader()
 		colorPlug.setValue( imath.Color3f( 1, 0, 0 ) )
@@ -95,7 +99,7 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		s["filter"]["paths"].setValue( IECore.StringVectorData( [ "/group/cube", "/group/plane" ] ) )
 
 		s["assignment"] = GafferScene.ShaderAssignment()
-		s["assignment"]["in"].setInput( s["group"]["out"] )
+		s["assignment"]["in"].setInput( s["parent"]["out"] )
 		s["assignment"]["shader"].setInput( s["shader"]["out"] )
 		s["assignment"]["filter"].setInput( s["filter"]["out"] )
 
@@ -117,6 +121,7 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		s["options"]["options"].addChild( Gaffer.NameValuePlug( "renderPass:type", "shadow" ) )
 		s["options"]["options"].addChild( Gaffer.NameValuePlug( "render:cameraInclusions", "/group/plane" ) )
 		s["options"]["options"].addChild( Gaffer.NameValuePlug( "render:cameraExclusions", "/group/cube" ) )
+		s["options"]["options"].addChild( Gaffer.NameValuePlug( "render:camera", "/camera" ) )
 
 		s["rendererOptions"] = self._createOptions()
 		s["rendererOptions"]["in"].setInput( s["options"]["out"] )
@@ -158,12 +163,20 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 
 		s["cube"] = GafferScene.Cube()
 		# translate cube behind camera so it is only visible in reflection
-		s["cube"]["transform"]["translate"]["z"].setValue( -3 if self.reverseCamera else 3 )
+		s["cube"]["transform"]["translate"]["z"].setValue( 3 )
 
 		s["group"] = GafferScene.Group()
-		s["group"]["transform"]["translate"]["z"].setValue( 1 if self.reverseCamera else -1 )
+		s["group"]["transform"]["translate"]["z"].setValue( -1 )
 		s["group"]["in"][0].setInput( s["cube"]["out"] )
 		s["group"]["in"][1].setInput( s["plane"]["out"] )
+
+		s["camera"] = GafferScene.Camera()
+		s["camera"]["fieldOfView"].setValue( 90 )
+
+		s["parent"] = GafferScene.Parent()
+		s["parent"]["parent"].setValue( "/" )
+		s["parent"]["in"].setInput( s["group"]["out"] )
+		s["parent"]["children"]["child0"].setInput( s["camera"]["out"] )
 
 		s["flatRed"], colorPlug = self._createFlatShader()
 		colorPlug.setValue( imath.Color3f( 1, 0, 0 ) )
@@ -172,7 +185,7 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		s["cubeFilter"]["paths"].setValue( IECore.StringVectorData( [ "/group/cube" ] ) )
 
 		s["assignment"] = GafferScene.ShaderAssignment()
-		s["assignment"]["in"].setInput( s["group"]["out"] )
+		s["assignment"]["in"].setInput( s["parent"]["out"] )
 		s["assignment"]["shader"].setInput( s["flatRed"]["out"] )
 		s["assignment"]["filter"].setInput( s["cubeFilter"]["out"] )
 
@@ -210,6 +223,7 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		s["options"]["options"].addChild( Gaffer.NameValuePlug( "renderPass:type", "reflection" ) )
 		s["options"]["options"].addChild( Gaffer.NameValuePlug( "render:cameraInclusions", "/group/plane" ) )
 		s["options"]["options"].addChild( Gaffer.NameValuePlug( "render:cameraExclusions", "/group/cube" ) )
+		s["options"]["options"].addChild( Gaffer.NameValuePlug( "render:camera", "/camera" ) )
 
 		s["rendererOptions"] = self._createOptions()
 		s["rendererOptions"]["in"].setInput( s["options"]["out"] )
@@ -257,12 +271,20 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 
 		s["cube"] = GafferScene.Cube()
 		# translate cube behind camera so it is only visible in reflection
-		s["cube"]["transform"]["translate"]["z"].setValue( -3 if self.reverseCamera else 3 )
+		s["cube"]["transform"]["translate"]["z"].setValue( 3 )
 
 		s["group"] = GafferScene.Group()
-		s["group"]["transform"]["translate"]["z"].setValue( 1 if self.reverseCamera else -1 )
+		s["group"]["transform"]["translate"]["z"].setValue( -1 )
 		s["group"]["in"][0].setInput( s["cube"]["out"] )
 		s["group"]["in"][1].setInput( s["plane"]["out"] )
+
+		s["camera"] = GafferScene.Camera()
+		s["camera"]["fieldOfView"].setValue( 90 )
+
+		s["parent"] = GafferScene.Parent()
+		s["parent"]["parent"].setValue( "/" )
+		s["parent"]["in"].setInput( s["group"]["out"] )
+		s["parent"]["children"]["child0"].setInput( s["camera"]["out"] )
 
 		s["flat"], colorPlug = self._createFlatShader()
 		colorPlug.setValue( imath.Color3f( 1, 0, 0 ) )
@@ -271,7 +293,7 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		s["filter"]["paths"].setValue( IECore.StringVectorData( [ "/group/cube", "/group/plane" ] ) )
 
 		s["assignment"] = GafferScene.ShaderAssignment()
-		s["assignment"]["in"].setInput( s["group"]["out"] )
+		s["assignment"]["in"].setInput( s["parent"]["out"] )
 		s["assignment"]["shader"].setInput( s["flat"]["out"] )
 		s["assignment"]["filter"].setInput( s["filter"]["out"] )
 
@@ -298,6 +320,7 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		s["options"]["options"].addChild( Gaffer.NameValuePlug( "renderPass:type", "reflectionAlpha" ) )
 		s["options"]["options"].addChild( Gaffer.NameValuePlug( "render:cameraInclusions", "/group/plane" ) )
 		s["options"]["options"].addChild( Gaffer.NameValuePlug( "render:cameraExclusions", "/group/cube" ) )
+		s["options"]["options"].addChild( Gaffer.NameValuePlug( "render:camera", "/camera" ) )
 
 		s["rendererOptions"] = self._createOptions()
 		s["rendererOptions"]["in"].setInput( s["options"]["out"] )
@@ -345,16 +368,24 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 
 		s["cube"] = GafferScene.Cube()
 		# translate cube behind camera so it is only visible in reflection
-		s["cube"]["transform"]["translate"]["z"].setValue( -3 if self.reverseCamera else 3 )
+		s["cube"]["transform"]["translate"]["z"].setValue( 3 )
 
 		s["light"], _ = self._createDistantLight()
-		s["light"]["transform"]["rotate"]["x"].setValue( 30 if self.reverseCamera else -150 )
+		s["light"]["transform"]["rotate"]["x"].setValue( -150 )
 
 		s["group"] = GafferScene.Group()
-		s["group"]["transform"]["translate"]["z"].setValue( 1 if self.reverseCamera else -1 )
+		s["group"]["transform"]["translate"]["z"].setValue( -1 )
 		s["group"]["in"][0].setInput( s["cube"]["out"] )
 		s["group"]["in"][1].setInput( s["plane"]["out"] )
 		s["group"]["in"][2].setInput( s["light"]["out"] )
+
+		s["camera"] = GafferScene.Camera()
+		s["camera"]["fieldOfView"].setValue( 90 )
+
+		s["parent"] = GafferScene.Parent()
+		s["parent"]["parent"].setValue( "/" )
+		s["parent"]["in"].setInput( s["group"]["out"] )
+		s["parent"]["children"]["child0"].setInput( s["camera"]["out"] )
 
 		s["flatRed"], colorPlug = self._createStandardShader()
 		colorPlug.setValue( imath.Color3f( 1, 0, 0 ) )
@@ -363,7 +394,7 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		s["cubeFilter"]["paths"].setValue( IECore.StringVectorData( [ "/group/cube" ] ) )
 
 		s["assignment"] = GafferScene.ShaderAssignment()
-		s["assignment"]["in"].setInput( s["group"]["out"] )
+		s["assignment"]["in"].setInput( s["parent"]["out"] )
 		s["assignment"]["shader"].setInput( s["flatRed"]["out"] )
 		s["assignment"]["filter"].setInput( s["cubeFilter"]["out"] )
 
@@ -401,6 +432,7 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		s["options"]["options"].addChild( Gaffer.NameValuePlug( "renderPass:type", "reflection" ) )
 		s["options"]["options"].addChild( Gaffer.NameValuePlug( "render:cameraInclusions", "/group" ) )
 		s["options"]["options"].addChild( Gaffer.NameValuePlug( "render:cameraExclusions", "/group/cube" ) )
+		s["options"]["options"].addChild( Gaffer.NameValuePlug( "render:camera", "/camera" ) )
 
 		s["rendererOptions"] = self._createOptions()
 		s["rendererOptions"]["in"].setInput( s["options"]["out"] )
