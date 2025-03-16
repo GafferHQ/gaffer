@@ -587,6 +587,86 @@ const std::unordered_map<std::string, std::tuple<std::string, InternedString, st
 	{ "UsdPrimvarReader_int", { "int", g_defaultIntParameter, 0 } }
 };
 
+const InternedString g_intensityParameter( "intensity" );
+const InternedString g_exposureParameter( "exposure" );
+const InternedString g_diffuseParameter( "diffuse" );
+const InternedString g_specularParameter( "specular" );
+
+const InternedString g_colorParameter( "color" );
+const InternedString g_lightColorParameter( "lightColor" );
+
+const InternedString g_textureFileParameter( "texture:file" );
+const InternedString g_lightColorMapParameter( "lightColorMap" );
+
+// No conversion for this one?
+const InternedString g_textureFormatParameter( "texture:format" );
+
+const InternedString g_normalizeParameter( "normalize" );
+const InternedString g_areaNormalizeParameter( "areaNormalize" );
+
+const InternedString g_angleParameter( "angle" );
+const InternedString g_angleExtentParameter( "angleExtent" );
+
+const InternedString g_enableColorTemperatureParameter( "enableColorTemperature" );
+const InternedString g_enableTemperatureParameter( "enableTemperature" );
+
+const InternedString g_colorTemperatureParameter( "colorTemperature" );
+const InternedString g_temperatureParameter( "temperature" );
+
+const InternedString g_shadowEnableParameter( "shadow:enable" );
+const InternedString g_enableShadowsParameter( "enableShadows" );
+
+const InternedString g_usdShadowColorParameter( "shadow:color" );
+const InternedString g_shadowColorParameter( "shadowColor" );
+
+const InternedString g_usdShadowDistanceParameter( "shadow:distance" );
+const InternedString g_shadowDistanceParameter( "shadowDistance" );
+
+const InternedString g_usdShadowFalloffParameter( "shadow:falloff" );
+const InternedString g_shadowFalloffParameter( "shadowFalloff" );
+
+const InternedString g_usdShadowFalloffGammaParameter( "shadow:falloffGamma" );
+const InternedString g_shadowFalloffGammaParameter( "shadowFalloffGamma" );
+
+const InternedString g_shapingFocusParameter( "shaping:focus" );
+const InternedString g_emissionFocusParameter( "emissionFocus" );
+
+const InternedString g_shapingFocusTintParameter( "shaping:focusTint" );
+const InternedString g_emissionFocusTintParameter( "emissionFocusTint" );
+
+const InternedString g_shapingConeAngleParameter( "shaping:cone:angle" );
+const InternedString g_coneAngleParameter( "coneAngle" );
+
+const InternedString g_shapingConeSoftnessParameter( "shaping:cone:softness" );
+const InternedString g_coneSoftnessParameter( "coneSoftness" );
+
+const InternedString g_shapingIesFileParameter( "shaping:ies:file" );
+const InternedString g_iesProfileParameter( "iesProfile" );
+
+const InternedString g_shapingIesAngleScaleParameter( "shaping:ies:angleScale" );
+const InternedString g_iesProfileScaleParameter( "iesProfileScale" );
+
+const InternedString g_shapingIesNormalizeParameter( "shaping:ies:normalize" );
+const InternedString g_iesProfileNormalizeParameter( "iesProfileNormalize" );
+
+const InternedString g_sphereLight( "SphereLight" );
+const InternedString g_diskLight( "DiskLight" );
+const InternedString g_cylinderLight( "CylinderLight" );
+const InternedString g_distantLight( "DistantLight" );
+const InternedString g_domeLight( "DomeLight" );
+const InternedString g_rectLight( "RectLight" );
+
+boost::container::flat_map<InternedString, string> g_lightNameMap = {
+	{ g_sphereLight, "PxrSphereLight" },
+	{ g_diskLight, "PxrDiskLight" },
+	{ g_cylinderLight, "PxrCylinderLight" },
+	{ g_distantLight, "PxrDistantLight" },
+	{ g_domeLight, "PxrDomeLight" },
+	{ g_rectLight, "PxrRectLight" },
+};
+
+const string g_riLightNamespace( "ri:light:" );
+
 const InternedString remapOutputParameterName( const InternedString name, const InternedString shaderName )
 {
 	if( boost::starts_with( shaderName.string(), "UsdPrimvarReader" ) )
@@ -708,6 +788,67 @@ void convertUSDShaders( ShaderNetwork *shaderNetwork )
 				},
 				defaultValue
 			);
+		}
+
+		const auto lightIt = g_lightNameMap.find( shader->getName() );
+		if( lightIt != g_lightNameMap.end() )
+		{
+			newShader = new Shader( lightIt->second, "ri:light" );
+
+			if( lightIt->first == g_distantLight )
+			{
+				transferUSDParameter( shaderNetwork, handle, shader.get(), g_intensityParameter, newShader.get(), g_intensityParameter, 50000.0f );
+				transferUSDParameter( shaderNetwork, handle, shader.get(), g_angleParameter, newShader.get(), g_angleExtentParameter, 0.53f );
+			}
+			else
+			{
+				transferUSDParameter( shaderNetwork, handle, shader.get(), g_intensityParameter, newShader.get(), g_intensityParameter, 1.0f );
+			}
+
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_exposureParameter, newShader.get(), g_exposureParameter, 0.0f );
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_diffuseParameter, newShader.get(), g_diffuseParameter, 1.0f );
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_specularParameter, newShader.get(), g_specularParameter, 1.0f );
+
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_colorParameter, newShader.get(), g_lightColorParameter, Color3f( 1.0 ) );
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_enableColorTemperatureParameter, newShader.get(), g_enableTemperatureParameter, false );
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_colorTemperatureParameter, newShader.get(), g_temperatureParameter, 6500.0f );
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_shadowEnableParameter, newShader.get(), g_enableShadowsParameter, true );
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_usdShadowColorParameter, newShader.get(), g_shadowColorParameter, Color3f( 0 ) );
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_usdShadowDistanceParameter, newShader.get(), g_shadowDistanceParameter, -1.0f );
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_usdShadowFalloffParameter, newShader.get(), g_shadowFalloffParameter, -1.0f );
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_usdShadowFalloffGammaParameter, newShader.get(), g_shadowFalloffGammaParameter, 1.0f );
+
+			if( lightIt->first != g_domeLight )
+			{
+				transferUSDParameter( shaderNetwork, handle, shader.get(), g_normalizeParameter, newShader.get(), g_areaNormalizeParameter, false );
+				transferUSDParameter( shaderNetwork, handle, shader.get(), g_shapingFocusParameter, newShader.get(), g_emissionFocusParameter, 0.0f );
+				transferUSDParameter( shaderNetwork, handle, shader.get(), g_shapingFocusTintParameter, newShader.get(), g_emissionFocusTintParameter, Color3f( 0 ) );
+			}
+
+			if( lightIt->first == g_rectLight || lightIt->first == g_domeLight )
+			{
+				transferUSDParameter( shaderNetwork, handle, shader.get(), g_textureFileParameter, newShader.get(), g_lightColorMapParameter, std::string() );
+			}
+
+			if( lightIt->first != g_distantLight && lightIt->first != g_domeLight )
+			{
+				if( auto d = shader->parametersData()->member<FloatData>( g_shapingConeAngleParameter ) )
+				{
+					transferUSDParameter( shaderNetwork, handle, shader.get(), g_shapingConeAngleParameter, newShader.get(), g_coneAngleParameter, 0.0f );
+					transferUSDParameter( shaderNetwork, handle, shader.get(), g_shapingConeSoftnessParameter, newShader.get(), g_coneSoftnessParameter, 0.0f );
+				}
+				transferUSDParameter( shaderNetwork, handle, shader.get(), g_shapingIesFileParameter, newShader.get(), g_iesProfileParameter, std::string() );
+				transferUSDParameter( shaderNetwork, handle, shader.get(), g_shapingIesAngleScaleParameter, newShader.get(), g_iesProfileScaleParameter, 0.0f );
+				transferUSDParameter( shaderNetwork, handle, shader.get(), g_shapingIesNormalizeParameter, newShader.get(), g_iesProfileNormalizeParameter, false );
+			}
+
+			for( const auto &[name, value] : shader->parameters() )
+			{
+				if( boost::starts_with( name.string(), g_riLightNamespace ) )
+				{
+					newShader->parameters()[name.string().substr(g_riLightNamespace.size())] = value;
+				}
+			}
 		}
 
 		if( newShader )
