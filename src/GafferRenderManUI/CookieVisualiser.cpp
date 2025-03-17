@@ -80,9 +80,29 @@ const char *texturedFragSource()
 		"uniform sampler2D texture;"
 		"uniform vec3 tint;"
 		"uniform float saturation;"
+		"uniform int tileMode;"
 		""
 		"void main()"
 		"{"
+			"if( tileMode == 0 )"
+			"{"
+				"// No repeat\n"
+				"if( fragmentuv.x > 1.0 || fragmentuv.x < 0.0 || fragmentuv.y > 1.0 || fragmentuv.y < 0.0 )"
+				"{"
+					"discard;"
+				"}"
+			"}"
+			"else if ( tileMode == 1 )"
+			"{"
+				"// Edge extend\n"
+				"if( fragmentuv.x > 1.0 || fragmentuv.x < 0.0 || fragmentuv.y > 1.0 || fragmentuv.y < 0.0 )"
+				"{"
+					"gl_FragColor = vec4( 0.0, 0.0, 0.0, 1.0 );"
+					"return;"
+				"}"
+			"}"
+			"// `GL_TEXTURE_WRAP_*` is `GL_REPEAT`, so tiled is the default\n"
+			""
 			"vec3 c = texture2D( texture, fragmentuv ).xyz;"
 			"c = ieAdjustSaturation( c, saturation );"
 			"c *= tint;"
@@ -99,6 +119,30 @@ void addWireframeCurveState( IECoreGL::Group *group )
 	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 2.0f ) );
 	group->getState()->add( new IECoreGL::LineSmoothingStateComponent( true ) );
 }
+
+// Customized IECoreGL primitive supporting `uvOrientation`
+class UVOrientedQuadPrimitive : public IECoreGL::QuadPrimitive
+{
+	public :
+		UVOrientedQuadPrimitive( float width, float height, const M33f &uvOrientation ) : IECoreGL::QuadPrimitive( width, height )
+		{
+			IECore::V2fVectorDataPtr uvData = new IECore::V2fVectorData;
+
+			std::vector<V2f> &uvVector = uvData->writable();
+
+			uvVector.push_back( V2f( -0.5f, -0.5f ) * uvOrientation + V2f( 0.5f, 0.5f ) );
+			uvVector.push_back( V2f( 0.5f, -0.5f ) * uvOrientation + V2f( 0.5f, 0.5f ) );
+			uvVector.push_back( V2f( 0.5f, 0.5f ) * uvOrientation + V2f( 0.5f, 0.5f ) );
+			uvVector.push_back( V2f( -0.5f, 0.5f ) * uvOrientation + V2f( 0.5f, 0.5f ) );
+
+			addVertexAttribute( "uv", uvData );
+		}
+
+		~UVOrientedQuadPrimitive() override
+		{
+
+		}
+};
 
 class CookieVisualiser final : public LightFilterVisualiser
 {
@@ -146,10 +190,9 @@ Visualisations CookieVisualiser::visualise( const InternedString &attributeName,
 
 	if( visualiserDrawingMode != "wireframe" )
 	{
-		IECoreGL::PrimitivePtr quadPrimitive = new IECoreGL::QuadPrimitive( size.x, size.y );
-
 		const std::string map = parameterOrDefault( filterParameters, "map", std::string() );
 
+		IECoreGL::PrimitivePtr quadPrimitive;
 		if( map.empty() || visualiserDrawingMode == "color" )
 		{
 			result->getState()->add(
@@ -162,6 +205,8 @@ Visualisations CookieVisualiser::visualise( const InternedString &attributeName,
 					shaderParameters
 				)
 			);
+
+			quadPrimitive = new IECoreGL::QuadPrimitive( size.x, size.y );
 			quadPrimitive->addPrimitiveVariable(
 				"Cs",
 				PrimitiveVariable(
@@ -184,6 +229,40 @@ Visualisations CookieVisualiser::visualise( const InternedString &attributeName,
 			shaderParameters->members()["saturation"] = new FloatData(
 				parameterOrDefault( filterParameters, "saturation", 1.f )
 			);
+
+			shaderParameters->members()["tileMode"] = new IntData(
+				parameterOrDefault( filterParameters, "tileMode", 0 )
+			);
+
+			M33f textureTransform;
+
+			const int invertU = parameterOrDefault( filterParameters, "invertU", 0 );
+			const int invertV = parameterOrDefault( filterParameters, "invertV", 0 );
+			const float scaleU = parameterOrDefault( filterParameters, "scaleU", 1.f );
+			const float scaleV = parameterOrDefault( filterParameters, "scaleV", 1.f );
+			const float offsetU = parameterOrDefault( filterParameters, "offsetU", 0.f );
+			const float offsetV = parameterOrDefault( filterParameters, "offsetV", 0.f );
+
+			// RenderMan considers the origin to be the top-left corner with + values
+			// extending down and right.
+
+			textureTransform.translate( V2f( -0.5f, 0.5f ) );
+
+			textureTransform.translate( V2f( offsetU, -offsetV ) );
+
+			textureTransform.scale( V2f( scaleU, scaleV ) );
+			textureTransform.translate( V2f( 0.5f, -0.5f ) );
+
+			if( invertU == 1 )
+			{
+				textureTransform.scale( V2f( -1.f, 1.f ) );
+			}
+			if( invertV == 1 )
+			{
+				textureTransform.scale( V2f( 1.f, -1.f ) );
+			}
+
+			quadPrimitive = new UVOrientedQuadPrimitive( size.x, size.y, textureTransform );
 
 			result->getState()->add(
 				new IECoreGL::ShaderStateComponent(
