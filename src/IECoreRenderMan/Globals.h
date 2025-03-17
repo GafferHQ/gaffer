@@ -89,6 +89,11 @@ class Globals : public boost::noncopyable
 		// called `Riley::SetOptions()`. So we buffer all the options and outputs
 		// into the following member variables, and create the Riley session
 		// only when we must.
+		//
+		/// \todo This strategy has fun afoul of Riley threading limitations -
+		/// see  `Renderer::acquireSession()` and the "ri:acquireRiley" command.
+		/// Perhaps a better approach would be to change the Renderer API so
+		/// that the initial options must be passed to the Renderer constructor?
 
 		RtParamList m_options;
 		std::string m_cameraOption;
@@ -103,6 +108,7 @@ class Globals : public boost::noncopyable
 		// When we require the Riley session, we create it in `acquireSession()`.
 
 		std::unique_ptr<Session> m_session;
+		std::thread::id m_expectedSessionCreationThreadId;
 
 		// Then once we have the session, we are free to use the Riley API
 		// to populate the scene, which we store in the following members.

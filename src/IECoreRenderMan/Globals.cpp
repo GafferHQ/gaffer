@@ -159,6 +159,7 @@ const IECoreScene::ConstShaderNetworkPtr g_emptyShaderNetwork = new IECoreScene:
 Globals::Globals( IECoreScenePreview::Renderer::RenderType renderType, const IECore::MessageHandlerPtr &messageHandler )
 	:	m_renderType( renderType ), m_messageHandler( messageHandler ),
 		m_pixelFilter( g_defaultPixelFilter ), m_pixelFilterSize( g_defaultPixelFilterSize ), m_pixelVariance( g_defaultPixelVariance ),
+		m_expectedSessionCreationThreadId( std::this_thread::get_id() ),
 		m_renderTargetExtent()
 {
 	// Initialise `m_integratorToConvert`.
@@ -367,6 +368,15 @@ Session *Globals::acquireSession()
 {
 	if( !m_session )
 	{
+		if( m_expectedSessionCreationThreadId != std::this_thread::get_id() )
+		{
+			IECore::msg(
+				Msg::Error,
+				"RenderMan",
+				"You must call `Renderer::command( \"ri:acquireSession\" )` before commencing "
+				"multithreaded geometry output (RenderMan limitation)."
+			);
+		}
 		m_session = std::make_unique<Session>( m_renderType, m_options, m_messageHandler );
 	}
 
