@@ -73,13 +73,20 @@ const char *texturedFragSource()
 		"#define in varying\n"
 		"#endif\n"
 		""
+		"#include \"IECoreGL/ColorAlgo.h\"\n"
+		""
 		"in vec2 fragmentuv;"
 		""
 		"uniform sampler2D texture;"
+		"uniform vec3 tint;"
+		"uniform float saturation;"
 		""
 		"void main()"
 		"{"
-			"gl_FragColor = texture2D( texture, fragmentuv );"
+			"vec3 c = texture2D( texture, fragmentuv ).xyz;"
+			"c = ieAdjustSaturation( c, saturation );"
+			"c *= tint;"
+			"gl_FragColor = vec4( c, 1.0 );"
 		"}"
 	;
 }
@@ -170,6 +177,13 @@ Visualisations CookieVisualiser::visualise( const InternedString &attributeName,
 			const IntData *maxTextureResolutionData = attributes->member<IntData>( "gl:visualiser:maxTextureResolution" );
 			const int resolution = maxTextureResolutionData ? maxTextureResolutionData->readable() : 512;
 			shaderParameters->members()["texture:maxResolution"] = new IntData( resolution );
+
+			shaderParameters->members()["tint"] = new Color3fData(
+				parameterOrDefault( filterParameters, "tint", Color3f( 1.f ) )
+			);
+			shaderParameters->members()["saturation"] = new FloatData(
+				parameterOrDefault( filterParameters, "saturation", 1.f )
+			);
 
 			result->getState()->add(
 				new IECoreGL::ShaderStateComponent(
