@@ -43,9 +43,8 @@ jobs:
             # GitHub container builds run as root. This causes failures for tests that
             # assert that filesystem permissions are respected, because root doesn't
             # respect permissions. So we run the final test suite as a dedicated
-            # test user rather than as root. We also run with `libSegFault.so` loaded
-            # to get more information from any crashes which occur.
-            testRunner: LD_PRELOAD=libSegFault.so su testUser -c
+            # test user rather than as root.
+            testRunner: su testUser -c
             sconsCacheMegabytes: 400
             jobs: 4
 
@@ -54,7 +53,7 @@ jobs:
             buildType: DEBUG
             publish: false
             containerImage: ghcr.io/gafferhq/build/build:3.2.0
-            testRunner: LD_PRELOAD=libSegFault.so su testUser -c
+            testRunner: su testUser -c
             testArguments: -excludedCategories performance
             # Debug builds are ludicrously big, so we must use a larger cache
             # limit. In practice this compresses down to 4-500Mb.
@@ -75,6 +74,10 @@ jobs:
 
     container:
       image: ${{ matrix.containerImage }}
+      env:
+        # We preload `libSegFault.so` to get more information from any crashes
+        # which might occur during CI.
+        LD_PRELOAD: libSegFault.so
       # This MAC address is required by our RenderMan license.
       options: --mac-address a4:bb:6d:cf:40:7a
 
