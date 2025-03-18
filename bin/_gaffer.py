@@ -66,19 +66,44 @@ def appendToPath( pathToAppend, envVar ) :
 
 def setUpRenderMan() :
 
+	# Determine RenderMan version.
+
 	if "RMANTREE" not in os.environ :
 		return
 
 	rmanTree = pathlib.Path( os.environ.get( "RMANTREE" ) )
-	pluginRoot = pathlib.Path( os.environ.get( "GAFFER_ROOT" ) )
+	renderManHeader = pathlib.Path( rmanTree / "include" / "prmanapi.h" )
+	if not renderManHeader.exists() :
+		sys.stderr.write( "ERROR : unable to find \"{}\".\n".format( renderManHeader ) )
+		return
+
+	renderManVersions = {}
+	for line in open( renderManHeader ) :
+		m = re.match( r"^#define _PRMANAPI_VERSION_(MAJOR|MINOR)_\s*([0-9]+)", line )
+		if m :
+			renderManVersions[m.group(1)] = m.group( 2 )
+			if len( renderManVersions ) == 2 :
+				break
+
+	if set( renderManVersions.keys() ) != { "MAJOR", "MINOR" } :
+		sys.stderr.write( "ERROR : unable to parse \"{}\".\n".format( renderManHeader ) )
+		return
+
+	renderManPluginVersion = "{MAJOR}.{MINOR}".format( **renderManVersions )
+
+	# Set up paths.
+
+	pluginRoot = pathlib.Path( os.environ.get( "GAFFER_ROOT" ) ) / "renderMan" / renderManPluginVersion
 
 	if libraryPath :
 		appendToPath( rmanTree / "lib", libraryPath )
+		appendToPath( pluginRoot / "lib", libraryPath )
 
 	appendToPath( rmanTree / "bin", "PATH" )
 	appendToPath( rmanTree / "bin", "PYTHONPATH" )
+	appendToPath( pluginRoot / "python", "PYTHONPATH" )
 	appendToPath( rmanTree / "lib" / "plugins", "RMAN_RIXPLUGINPATH" )
-	appendToPath( pluginRoot / "renderManPlugins", "RMAN_DISPLAYS_PATH" )
+	appendToPath( pluginRoot / "plugins", "RMAN_DISPLAYS_PATH" )
 	appendToPath( rmanTree / "lib" / "shaders", "OSL_SHADER_PATHS" )
 
 	if sys.platform == "win32" :
