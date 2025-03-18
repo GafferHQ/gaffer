@@ -941,7 +941,7 @@ if env["ARNOLD_ROOT"] :
 	arnoldInstallRoot = "${{BUILD_DIR}}/arnold/{ARCH}.{MAJOR}".format( **arnoldVersions )
 
 ###############################################################################################
-# Definitions for the libraries we wish to build
+# Cycles configuration
 ###############################################################################################
 
 # When Cycles is built, it uses several preprocessor variables that enable and
@@ -976,6 +976,10 @@ cyclesDefines = [
 	( "WITH_CUDA_DYNLOAD" ),
 	( "WITH_OPTIX" ),
 ]
+
+###############################################################################################
+# Definitions for the libraries we wish to build
+###############################################################################################
 
 libraries = {
 
