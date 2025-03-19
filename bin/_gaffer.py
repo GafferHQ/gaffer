@@ -76,6 +76,60 @@ def prependToPath( pathToPrepend, envVar ) :
 
 gafferRoot = pathlib.Path( os.environ["GAFFER_ROOT"] )
 
+# Arnold Setup
+# ============
+
+def setUpArnold() :
+
+	# Determine Arnold version.
+
+	if "ARNOLD_ROOT" not in os.environ :
+		return
+
+	arnoldRoot = pathlib.Path( os.environ.get( "ARNOLD_ROOT" ) )
+	versionHeader = pathlib.Path( arnoldRoot / "include" / "ai_version.h" )
+	if not versionHeader.exists() :
+		sys.stderr.write( "ERROR : unable to find \"{}\".\n".format( versionHeader ) )
+		return
+
+	arnoldVersions = {}
+	for line in open( versionHeader ) :
+		m = re.match( r"^#define AI_VERSION_(ARCH|MAJOR)_NUM\s*([0-9]+)", line )
+		if m :
+			arnoldVersions[m.group(1)] = m.group( 2 )
+			if len( arnoldVersions ) == 2 :
+				break
+
+	if set( arnoldVersions.keys() ) != { "ARCH", "MAJOR" } :
+		sys.stderr.write( "ERROR : unable to parse \"{}\".\n".format( versionHeader ) )
+		return
+
+	# Put GafferArnold on the appropriate paths.
+
+	arnoldPluginVersion = "{ARCH}.{MAJOR}".format( **arnoldVersions )
+	pluginRoot = gafferRoot / "arnold" / arnoldPluginVersion
+
+	if pluginRoot.exists() :
+		prependToPath( pluginRoot, "GAFFER_EXTENSION_PATHS" )
+		prependToPath( pluginRoot / "arnoldPlugins", "ARNOLD_PLUGIN_PATH" )
+	else :
+		sys.stderr.write( "WARNING : GafferArnold extension not available for Arnold {}\n".format( arnoldPluginVersion ) )
+		return
+
+	# Put Arnold's own libs and binaries on the appropriate paths.
+
+	appendToPath( arnoldRoot / "bin", libraryPath )
+	appendToPath( arnoldRoot / "bin", "PATH" )
+	appendToPath( arnoldRoot / "python", "PYTHONPATH" )
+	prependToPath( arnoldRoot / "plugins", "ARNOLD_PLUGIN_PATH" )
+
+	# Disable Autodesk Analytics, unless it is being explicitly managed already
+	# by setting `ARNOLD_ADP_OPTIN` or `ARNOLD_ADP_DISABLE`.
+	if "ARNOLD_ADP_OPTIN" not in os.environ and "ARNOLD_ADP_DISABLE" not in os.environ :
+		os.environ["ARNOLD_ADP_DISABLE"] = "1"
+
+setUpArnold()
+
 # 3Delight Setup
 # ==============
 
