@@ -45,9 +45,6 @@ if "%PYTHONNOUSERSITE%" EQU "" (
 
 call :prependToPath "%GAFFER_ROOT%\lib" PATH
 
-set QT_OPENGL=desktop
-set QT_QPA_PLATFORM_PLUGIN_PATH=%GAFFER_ROOT%\qt\plugins
-
 call :prependToPath "%GAFFER_ROOT%\bin" PATH
 
 if "%GAFFER_DEBUG%" NEQ "" (

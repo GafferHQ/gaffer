@@ -293,6 +293,20 @@ def setUp3rdPartyExtensions() :
 
 setUp3rdPartyExtensions()
 
+# Qt Setup
+# ========
+
+os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = str( gafferRoot / "qt" / "plugins" )
+
+# Work around issue with Qt 5.12+ when using a wacom tablet on linux.
+#   See https://bugreports.qt.io/browse/QTBUG-77826
+# This can hopefully be removed once this patch is in:
+#   https://codereview.qt-project.org/c/qt/qtbase/+/284141
+os.environ["QT_XCB_TABLET_LEGACY_COORDINATES"] = "1"
+
+if sys.platform == "win32" :
+	os.environ["QT_OPENGL"] = "desktop"
+
 # JEMalloc Setup
 # ==============
 
