@@ -105,6 +105,35 @@ if "IECOREUSD_POINTINSTANCER_RELATIVE_PROTOTYPES" not in os.environ :
 # bad serialisations in certain locales.
 os.environ["LC_NUMERIC"] = "C"
 
+# Core Gaffer Setup
+# =================
+
+prependToPath( gafferRoot / "apps", "GAFFER_APP_PATHS" )
+prependToPath( pathlib.Path.home() / "gaffer" / "apps", "GAFFER_APP_PATHS" )
+prependToPath( pathlib.Path.home() / "gaffer" / "startup", "GAFFER_STARTUP_PATHS" )
+appendToPath( gafferRoot / "startup", "GAFFER_STARTUP_PATHS" )
+prependToPath( gafferRoot / "graphics", "GAFFERUI_IMAGE_PATHS" )
+prependToPath( gafferRoot / "python", "PYTHONPATH" )
+prependToPath( gafferRoot / "lib", libraryPath )
+prependToPath( gafferRoot / "bin", "PATH" )
+
+if sys.platform == "darwin" :
+	prependToPath( gafferRoot / "lib", "DYLD_FRAMEWORK_PATH" )
+
+# OSL Setup
+# =========
+
+if ( gafferRoot / "bin" / "oslc" ).exists() :
+	os.environ["OSLHOME"] = str( gafferRoot )
+
+## \todo Should we rename these to "osl" to match our "glsl" folder?
+prependToPath( gafferRoot / "shaders", "OSL_SHADER_PATHS" )
+prependToPath( pathlib.Path.home() / "gaffer" / "shaders", "OSL_SHADER_PATHS" )
+
+if "GAFFEROSL_CODE_DIRECTORY" not in os.environ :
+	os.environ["GAFFEROSL_CODE_DIRECTORY"] = str( pathlib.Path.home() / "gaffer" / "oslCode" )
+	appendToPath( os.environ["GAFFEROSL_CODE_DIRECTORY"], "OSL_SHADER_PATHS" )
+
 # USD Setup
 # =========
 
@@ -313,6 +342,16 @@ if sys.platform == "win32" :
 if sys.platform == "linux" :
 	if os.environ.get( "GAFFER_JEMALLOC", "1" ) != "0" :
 		appendToPath( gafferRoot / "lib" / "libjemalloc.so", "LD_PRELOAD" )
+
+# OIIO Setup
+# ==========
+
+if sys.platform == "win32" :
+	os.environ["OIIO_LOAD_DLLS_FROM_PATH"] = "0"
+elif sys.platform == "darwin" :
+	# Not strictly OIIO-related, but works around clashes between our image
+	# libraries and the system ones.
+	prependToPath( "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ImageIO.framework/Resources", "DYLD_LIBRARY_PATH" )
 
 # OCIO Setup
 # ==========

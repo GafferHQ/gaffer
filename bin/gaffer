@@ -97,39 +97,6 @@ function prependToPath {
 
 }
 
-function appendToPath {
-
-	if [[ ":${!2}:" != *":$1:"* ]] ; then
-
-		if [[ ${!2} ]] ; then
-			eval "export $2=\"${!2}:$1\""
-		else
-			eval "export $2=\"$1\""
-		fi
-
-	fi
-
-}
-
-prependToPath "$HOME/gaffer/apps:$GAFFER_ROOT/apps" GAFFER_APP_PATHS
-
-prependToPath "$HOME/gaffer/startup" GAFFER_STARTUP_PATHS
-appendToPath "$GAFFER_ROOT/startup" GAFFER_STARTUP_PATHS
-
-prependToPath "$GAFFER_ROOT/graphics" GAFFERUI_IMAGE_PATHS
-
-if [[ -e $GAFFER_ROOT/bin/oslc ]] ; then
-	export OSLHOME=$GAFFER_ROOT
-fi
-
-## \todo: should we rename this to "osl" to match our "glsl" folder?
-prependToPath "$HOME/gaffer/shaders:$GAFFER_ROOT/shaders" OSL_SHADER_PATHS
-
-if [[ -z $GAFFEROSL_CODE_DIRECTORY ]] ; then
-	export GAFFEROSL_CODE_DIRECTORY="$HOME/gaffer/oslCode"
-	appendToPath "$GAFFEROSL_CODE_DIRECTORY" OSL_SHADER_PATHS
-fi
-
 # Get python set up properly
 ##########################################################################
 
@@ -140,10 +107,6 @@ fi
 if [[ -e $GAFFER_ROOT/bin/python ]] ; then
 	unset PYTHONHOME
 fi
-
-# Get python module path set up
-
-prependToPath "$GAFFER_ROOT/python" PYTHONPATH
 
 if [[ -z $PYTHONNOUSERSITE ]] ; then
 	# Prevent Python automatically adding a user-level `site-packages`
@@ -161,8 +124,6 @@ if [[ `uname` = "Linux" ]] ; then
 	prependToPath "$GAFFER_ROOT/lib" LD_LIBRARY_PATH
 else
 	prependToPath "$GAFFER_ROOT/lib" DYLD_FRAMEWORK_PATH
-	prependToPath "$GAFFER_ROOT/lib" DYLD_LIBRARY_PATH
-	prependToPath /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ImageIO.framework/Resources/ DYLD_LIBRARY_PATH
 fi
 
 # Get the executable path set up, for running child processes from Gaffer
