@@ -47,7 +47,7 @@ import Gaffer
 # metadata conventions. This is then used to populate the RenderManAttributes
 # node and the AttributeEditor etc.
 
-if "RMANTREE" in os.environ :
+with IECore.IgnoredExceptions( ImportError ) :
 
 	import GafferRenderMan.ArgsFileAlgo
 

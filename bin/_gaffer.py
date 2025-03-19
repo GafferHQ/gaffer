@@ -68,7 +68,7 @@ def setUpRenderMan() :
 
 	# Determine RenderMan version.
 
-	if "RMANTREE" not in os.environ :
+	if "RMANTREE" not in os.environ or os.environ.get( "GAFFERRENDERMAN_FEATURE_PREVIEW", "0" ) != "1" :
 		return
 
 	rmanTree = pathlib.Path( os.environ.get( "RMANTREE" ) )
