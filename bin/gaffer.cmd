@@ -77,18 +77,6 @@ if "%OCIO%" EQU "" (
 	set OCIO=ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1
 )
 
-rem cycles
-
-if "%CYCLES_ROOT%" EQU "" (
-	if exist %GAFFER_ROOT%\cycles (
-		set CYCLES_ROOT=%GAFFER_ROOT%\cycles
-	)
-)
-
-if "%CYCLES_ROOT%" NEQ "" (
-	call :prependToPath "%CYCLES_ROOT%\bin" PATH
-)
-
 if "%GAFFER_DEBUG%" NEQ "" (
 	%GAFFER_DEBUGGER% "%GAFFER_ROOT%"\bin\python.exe "%GAFFER_ROOT%"/bin/_gaffer.py %*
 ) else (

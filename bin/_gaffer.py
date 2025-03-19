@@ -76,6 +76,23 @@ def prependToPath( pathToPrepend, envVar ) :
 
 gafferRoot = pathlib.Path( os.environ["GAFFER_ROOT"] )
 
+# Cycles Setup
+# ============
+
+def setUpCycles() :
+
+	if "CYCLES_ROOT" in os.environ :
+		cyclesRoot = pathlib.Path( os.environ["CYCLES_ROOT"] )
+	else :
+		cyclesRoot = gafferRoot / "cycles"
+		if not cyclesRoot.exists() :
+			return
+		os.environ["CYCLES_ROOT"] = str( cyclesRoot )
+
+	prependToPath( cyclesRoot / "bin", "PATH" )
+
+setUpCycles()
+
 # Arnold Setup
 # ============
 
