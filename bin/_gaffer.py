@@ -61,6 +61,8 @@ def appendToPath( pathToAppend, envVar ) :
 
 	os.environ[envVar] = os.pathsep.join( path )
 
+gafferRoot = pathlib.Path( os.environ["GAFFER_ROOT"] )
+
 # RenderMan Setup
 # ===============
 
@@ -93,7 +95,7 @@ def setUpRenderMan() :
 
 	# Set up paths.
 
-	pluginRoot = pathlib.Path( os.environ.get( "GAFFER_ROOT" ) ) / "renderMan" / renderManPluginVersion
+	pluginRoot = gafferRoot / "renderMan" / renderManPluginVersion
 
 	if libraryPath :
 		appendToPath( rmanTree / "lib", libraryPath )
