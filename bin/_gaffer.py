@@ -359,6 +359,17 @@ elif sys.platform == "darwin" :
 if not os.environ.get( "OCIO" ) :
 	os.environ["OCIO"] = "ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1"
 
+# Python Setup
+# ============
+
+if "PYTHONNOUSERSITE" not in os.environ :
+	# Prevent Python automatically adding a user-level `site-packages`
+	# directory to the `sys.path`. These frequently contain modules which
+	# conflict with our own. Users who know what they are doing can set
+	# `PYTHONNOUSERSITE=0` before running Gaffer if they want to use
+	# the user directory.
+	os.environ["PYTHONNOUSERSITE"] = "1"
+
 # Exec `__gaffer.py`
 # ==================
 

@@ -39,25 +39,22 @@
 # Public-facing launch script for gaffer. This sets up the Python interpreter
 # and then defers to `_gaffer.py` to set up the appropriate environment
 # and finally launch `__gaffer.py`.
-#
-## \todo Move all remaining environment setup to `_gaffer.py`.
 
 set -e
 
 # Remove -psn_0 argument that the OS X launcher adds on annoyingly.
-##########################################################################
 
 if [[ $1 == -psn_0_* ]] ; then
 	shift
 fi
 
-# Find where this script is located, resolving any symlinks that were used
-# to invoke it. Set GAFFER_ROOT based on the script location.
-##########################################################################
+# Set `GAFFER_ROOT`
+# ================
 
 pushd . &> /dev/null
 
-# resolve symlinks
+# Find where this script is located, resolving any symlinks that were used
+# to invoke it.
 thisScript=$0
 while [[ -L $thisScript ]]
 do
@@ -66,17 +63,17 @@ do
 	thisScript=`readlink "$thisScript"`
 done
 
-# find the bin directory we're in
+# Find the bin directory we're in and set `GAFFER_ROOT` from it.
 cd "`dirname "$thisScript"`"
 binDir=`pwd -P`
 export GAFFER_ROOT="`dirname "$binDir"`"
 
 popd &> /dev/null
 
-# Make sure resource paths are set appropriately
-##########################################################################
+# Set up bare minimum Python environment
+# ======================================
 
-# Prepend a directory to a path if it is not
+# Prepends a directory to a path if it is not
 # already there.
 #
 # $1 is the value to include in the path
@@ -97,42 +94,24 @@ function prependToPath {
 
 }
 
-# Get python set up properly
-##########################################################################
-
-# Unset PYTHONHOME to make sure our internal Python build is used in preference
-# to anything in the external environment. We only do this if Gaffer has been
-# built with an internal version of Python - otherwise we assume the existing
-# environment is providing the right value.
 if [[ -e $GAFFER_ROOT/bin/python ]] ; then
+
+	prependToPath "$GAFFER_ROOT/bin" PATH
+
+	if [[ `uname` = "Linux" ]] ; then
+		prependToPath "$GAFFER_ROOT/lib" LD_LIBRARY_PATH
+	else
+		prependToPath "$GAFFER_ROOT/lib" DYLD_FRAMEWORK_PATH
+	fi
+
+	# Unset PYTHONHOME to make sure our internal Python build is used in
+	# preference to anything in the external environment.
 	unset PYTHONHOME
+
 fi
 
-if [[ -z $PYTHONNOUSERSITE ]] ; then
-	# Prevent Python automatically adding a user-level `site-packages`
-	# directory to the `sys.path`. These frequently contain modules which
-	# conflict with our own. Users who know what they are doing can set
-	# `PYTHONNOUSERSITE=0` before running Gaffer if they want to use
-	# the user directory.
-	export PYTHONNOUSERSITE=1
-fi
-
-# Get library paths set up
-##########################################################################
-
-if [[ `uname` = "Linux" ]] ; then
-	prependToPath "$GAFFER_ROOT/lib" LD_LIBRARY_PATH
-else
-	prependToPath "$GAFFER_ROOT/lib" DYLD_FRAMEWORK_PATH
-fi
-
-# Get the executable path set up, for running child processes from Gaffer
-##########################################################################
-
-prependToPath "$GAFFER_ROOT/bin" PATH
-
-# Run gaffer itself
-##########################################################################
+# Run `_gaffer.py` to set up the environment and launch Gaffer
+# ============================================================
 
 if [[ -n $GAFFER_DEBUG ]] ; then
 	if [[ -z $GAFFER_DEBUGGER ]] ; then
