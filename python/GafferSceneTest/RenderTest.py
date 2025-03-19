@@ -42,6 +42,7 @@ import IECore
 import IECoreScene
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -297,6 +298,48 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 
 		render["renderer"].setValue( "Other" )
 		self.assertEqual( render["resolvedRenderer"].getValue(), "Other" )
+
+	def testRenderSignals( self ) :
+
+		outputs = GafferScene.Outputs()
+		outputs.addOutput(
+			"beauty",
+			IECoreScene.Output(
+				str( self.temporaryDirectory() / "test.exr" ),
+				"exr",
+				"rgba",
+				{}
+			)
+		)
+
+		preCS = GafferTest.CapturingSlot( GafferScene.Render.preRenderSignal() )
+		postCS = GafferTest.CapturingSlot( GafferScene.Render.postRenderSignal() )
+
+		render = GafferScene.Render()
+		render["task"].execute()
+		self.assertEqual( len( preCS ), 0 )
+		self.assertEqual( len( postCS ), 0 )
+
+		render["in"].setInput( outputs["out"] )
+		render["task"].execute()
+		self.assertEqual( len( preCS ), 0 )
+		self.assertEqual( len( postCS ), 0 )
+
+		render["renderer"].setValue( self.renderer )
+		render["task"].execute()
+		self.assertEqual( len( preCS ), 1 )
+		self.assertEqual( len( postCS ), 1 )
+		self.assertEqual( preCS[0], ( render, ) )
+		self.assertEqual( postCS[0], ( render, ) )
+
+		with Gaffer.Context() as context :
+			context["scene:render:sceneTranslationOnly"] = IECore.BoolData( True )
+			render["task"].execute()
+
+		self.assertEqual( len( preCS ), 2 )
+		self.assertEqual( len( postCS ), 2 )
+		self.assertEqual( preCS[1], ( render, ) )
+		self.assertEqual( postCS[1], ( render, ) )
 
 if __name__ == "__main__":
 	unittest.main()
