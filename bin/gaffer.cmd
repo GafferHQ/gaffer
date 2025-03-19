@@ -15,12 +15,6 @@ set "HOME=%USERPROFILE:\=/%"
 
 set OIIO_LOAD_DLLS_FROM_PATH=0
 
-call :prependToPath "%GAFFER_ROOT%\resources\IECoreUSD" PXR_PLUGINPATH_NAME
-call :prependToPath "%GAFFER_ROOT%\materialX" PXR_MTLX_STDLIB_SEARCH_PATHS
-rem Prevent USD from adding entries from `PATH` to Python binary search paths.
-if "%PXR_USD_WINDOWS_DLL_PATH%" EQU "" (
-	set PXR_USD_WINDOWS_DLL_PATH=""
-)
 
 call :prependToPath "%USERPROFILE%\gaffer\apps;%GAFFER_ROOT%\apps" GAFFER_APP_PATHS
 

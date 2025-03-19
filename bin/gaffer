@@ -111,9 +111,6 @@ function appendToPath {
 
 }
 
-prependToPath "$GAFFER_ROOT/resources/IECoreUSD" PXR_PLUGINPATH_NAME
-prependToPath "$GAFFER_ROOT/materialX" PXR_MTLX_STDLIB_SEARCH_PATHS
-
 prependToPath "$HOME/gaffer/apps:$GAFFER_ROOT/apps" GAFFER_APP_PATHS
 
 prependToPath "$HOME/gaffer/startup" GAFFER_STARTUP_PATHS

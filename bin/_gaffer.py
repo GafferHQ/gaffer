@@ -105,6 +105,16 @@ if "IECOREUSD_POINTINSTANCER_RELATIVE_PROTOTYPES" not in os.environ :
 # bad serialisations in certain locales.
 os.environ["LC_NUMERIC"] = "C"
 
+# USD Setup
+# =========
+
+prependToPath( gafferRoot / "resources" / "IECoreUSD", "PXR_PLUGINPATH_NAME" )
+prependToPath( gafferRoot / "materialX", "PXR_MTLX_STDLIB_SEARCH_PATHS" )
+
+if sys.platform == "win32" and "PXR_USD_WINDOWS_DLL_PATH" not in os.environ :
+	# Prevent USD from adding entries from `PATH` to Python binary search paths.
+	os.environ["PXR_USD_WINDOWS_DLL_PATH"] = ""
+
 # Cycles Setup
 # ============
 
