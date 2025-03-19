@@ -146,13 +146,6 @@ if "%CYCLES_ROOT%" NEQ "" (
 	call :prependToPath "%CYCLES_ROOT%\bin" PATH
 )
 
-rem ONNX
-rem ====
-
-if "%ONNX_ROOT%" NEQ "" (
-	call :appendToPath "%ONNX_ROOT%\lib" PATH
-)
-
 rem Set up 3rd party extensions
 rem Batch files are awkward at `for` loops. The default `for`, without `/f`
 rem uses semi-colons AND spaces as delimiters, meaning we would not be able

@@ -46,7 +46,8 @@ import sys
 
 libraryPath = {
 	"linux" : "LD_LIBRARY_PATH",
-	"darwin" : "DYLD_LIBRARY_PATH"
+	"darwin" : "DYLD_LIBRARY_PATH",
+	"win32" : "PATH",
 }.get( sys.platform )
 
 def appendToPath( pathToAppend, envVar ) :
@@ -62,6 +63,19 @@ def appendToPath( pathToAppend, envVar ) :
 	os.environ[envVar] = os.pathsep.join( path )
 
 gafferRoot = pathlib.Path( os.environ["GAFFER_ROOT"] )
+
+# ONNX Setup
+# ==========
+
+def setUpONNX() :
+
+	if "ONNX_ROOT" not in os.environ :
+		return
+
+	onnxRoot = pathlib.Path( os.environ.get( "ONNX_ROOT" ) )
+	appendToPath( onnxRoot / "lib", libraryPath )
+
+setUpONNX()
 
 # RenderMan Setup
 # ===============
@@ -97,9 +111,8 @@ def setUpRenderMan() :
 
 	pluginRoot = gafferRoot / "renderMan" / renderManPluginVersion
 
-	if libraryPath :
-		appendToPath( rmanTree / "lib", libraryPath )
-		appendToPath( pluginRoot / "lib", libraryPath )
+	appendToPath( rmanTree / "lib", libraryPath )
+	appendToPath( pluginRoot / "lib", libraryPath )
 
 	appendToPath( rmanTree / "bin", "PATH" )
 	appendToPath( rmanTree / "bin", "PYTHONPATH" )
