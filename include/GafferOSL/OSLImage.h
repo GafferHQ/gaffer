@@ -84,6 +84,9 @@ class GAFFEROSL_API OSLImage : public GafferImage::ImageProcessor
 		GafferImage::Format computeFormat( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const override;
 		Imath::Box2i computeDataWindow( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const override;
 
+		Gaffer::ValuePlug::CachePolicy hashCachePolicy( const Gaffer::ValuePlug *output ) const override;
+
+
 	private :
 
 		GafferScene::ShaderPlug *shaderPlug();
@@ -104,6 +107,9 @@ class GAFFEROSL_API OSLImage : public GafferImage::ImageProcessor
 		// this will also evaluate shadingPlug()
 		Gaffer::StringVectorDataPlug *affectedChannelsPlug();
 		const Gaffer::StringVectorDataPlug *affectedChannelsPlug() const;
+
+		Gaffer::IntPlug *allImageDataNeededPlug();
+		const Gaffer::IntPlug *allImageDataNeededPlug() const;
 
 		void hashShading( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		IECore::ConstCompoundDataPtr computeShading( const Gaffer::Context *context ) const;
