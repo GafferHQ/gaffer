@@ -286,30 +286,6 @@ if [[ $ARNOLD_ROOT ]] ; then
 
 fi
 
-# Set up 3rd Party extensions
-##########################################################################
-
-IFS=:
-for extension in $GAFFER_EXTENSION_PATHS; do
-
-	if [[ `uname` = "Linux" ]] ; then
-		appendToPath "$extension/lib" LD_LIBRARY_PATH
-	else
-		appendToPath "$extension/lib" DYLD_LIBRARY_PATH
-	fi
-
-	appendToPath "$extension/bin" PATH
-	appendToPath "$extension/python" PYTHONPATH
-	appendToPath "$extension/apps" GAFFER_APP_PATHS
-	appendToPath "$extension/graphics" GAFFERUI_IMAGE_PATHS
-	appendToPath "$extension/glsl" IECOREGL_SHADER_PATHS
-	appendToPath "$extension/glsl" IECOREGL_SHADER_INCLUDE_PATHS
-	appendToPath "$extension/shaders" OSL_SHADER_PATHS
-	prependToPath "$extension/startup" GAFFER_STARTUP_PATHS
-
-done
-unset IFS
-
 # Set up jemalloc
 ##########################################################################
 

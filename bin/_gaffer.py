@@ -62,6 +62,18 @@ def appendToPath( pathToAppend, envVar ) :
 
 	os.environ[envVar] = os.pathsep.join( path )
 
+def prependToPath( pathToPrepend, envVar ) :
+
+	pathToPrepend = str( pathToPrepend )
+
+	path = os.environ.get( envVar )
+	path = path.split( os.pathsep ) if path else []
+
+	if pathToPrepend not in path :
+		path.insert( 0, pathToPrepend )
+
+	os.environ[envVar] = os.pathsep.join( path )
+
 gafferRoot = pathlib.Path( os.environ["GAFFER_ROOT"] )
 
 # 3Delight Setup
@@ -146,6 +158,30 @@ def setUpRenderMan() :
 		appendToPath( rmanTree / "lib", "IECORE_DLL_DIRECTORIES" )
 
 setUpRenderMan()
+
+# 3rd Party Extension Setup
+# =========================
+
+def setUp3rdPartyExtensions() :
+
+	paths = os.environ.get( "GAFFER_EXTENSION_PATHS" )
+	if not paths :
+		return
+
+	for path in paths.split( os.pathsep ) :
+
+		extensionRoot = pathlib.Path( path )
+		appendToPath( extensionRoot / "lib", libraryPath )
+		appendToPath( extensionRoot / "bin", "PATH" )
+		appendToPath( extensionRoot / "python", "PYTHONPATH" )
+		appendToPath( extensionRoot / "apps", "GAFFER_APP_PATHS" )
+		appendToPath( extensionRoot / "graphics", "GAFFERUI_IMAGE_PATHS" )
+		appendToPath( extensionRoot / "glsl", "IECOREGL_SHADER_PATHS" )
+		appendToPath( extensionRoot / "glsl", "IECOREGL_SHADER_INCLUDE_PATHS" )
+		appendToPath( extensionRoot / "shaders", "OSL_SHADER_PATHS" )
+		prependToPath( extensionRoot / "startup", "GAFFER_STARTUP_PATHS" )
+
+setUp3rdPartyExtensions()
 
 # Exec `__gaffer.py`
 # ==================
