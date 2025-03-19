@@ -64,6 +64,26 @@ def appendToPath( pathToAppend, envVar ) :
 
 gafferRoot = pathlib.Path( os.environ["GAFFER_ROOT"] )
 
+# 3Delight Setup
+# ==============
+
+def setUp3Delight() :
+
+	if "DELIGHT" not in os.environ :
+		return
+
+	delight = pathlib.Path( os.environ["DELIGHT"] )
+
+	appendToPath( delight / "lib", libraryPath )
+	appendToPath( delight / "bin", "PATH" )
+	appendToPath( delight / "python", "PYTHONPATH" )
+	appendToPath( delight / "osl", "OSL_SHADER_PATHS" )
+	# For backwards compatibility - can be removed when users have had time to
+	# update to `$DELIGHT/osl` pathed shaders.
+	appendToPath( delight, "OSL_SHADER_PATHS" )
+
+setUp3Delight()
+
 # ONNX Setup
 # ==========
 

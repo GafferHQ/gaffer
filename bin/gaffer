@@ -286,26 +286,6 @@ if [[ $ARNOLD_ROOT ]] ; then
 
 fi
 
-# Set up 3Delight
-##########################################################################
-
-if [[ -n $DELIGHT ]] ; then
-
-	if [[ `uname` = "Linux" ]] ; then
-		appendToPath "$DELIGHT/lib" LD_LIBRARY_PATH
-	else
-		appendToPath "$DELIGHT/lib" DYLD_LIBRARY_PATH
-	fi
-
-	appendToPath "$DELIGHT/bin" PATH
-	appendToPath "$DELIGHT/python" PYTHONPATH
-
-	# The `$DELIGHT` component is included for backward compatibility and can be removed
-	# when users have had time to update to `$DELIGHT/osl` pathed shaders.
-	appendToPath "$DELIGHT/osl:$DELIGHT" OSL_SHADER_PATHS
-
-fi
-
 # Set up 3rd Party extensions
 ##########################################################################
 
