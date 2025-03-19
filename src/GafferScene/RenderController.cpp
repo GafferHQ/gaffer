@@ -1624,7 +1624,7 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 		if( m_dirtyGlobalComponents & GlobalsGlobalComponent )
 		{
 			RenderOptions renderOptions( m_scene.get() );
-			Private::RendererAlgo::outputOptions( renderOptions.globals.get(), m_renderOptions.globals.get(), m_renderer.get() );
+			renderOptions.outputOptions( m_renderer.get(), &m_renderOptions );
 			Private::RendererAlgo::outputOutputs( m_scene.get(), renderOptions.globals.get(), m_renderOptions.globals.get(), m_renderer.get() );
 			if( *renderOptions.globals != *m_renderOptions.globals )
 			{
@@ -1687,6 +1687,13 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 		{
 			IECore::CompoundObjectPtr defaultAttributes = new CompoundObject();
 			m_defaultAttributes = m_renderer->attributes( defaultAttributes.get() );
+		}
+
+		if( m_renderer->name().string() == "RenderMan" )
+		{
+			// Workaround for RenderMan API limitations. The backend needs to acquire the Riley
+			// session before we commence multithreaded calls to the Renderer API.
+			m_renderer->command( "ri:acquireRiley", {} );
 		}
 
 		for( int i = SceneGraph::FirstType; i <= SceneGraph::LastType; ++i )

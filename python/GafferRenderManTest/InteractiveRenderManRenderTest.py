@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -36,28 +35,70 @@
 ##########################################################################
 
 import unittest
-import os
-import glob
-import urllib
 
-import IECore
+import IECoreRenderMan
+import GafferSceneTest
+import GafferRenderMan
 
-import Gaffer
-import GafferTest
+class InteractiveRenderManRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
-class AboutTest( GafferTest.TestCase ) :
+	renderer = "RenderMan"
 
-	def test( self ) :
+	@unittest.skip( "Feature not supported yet" )
+	def testLightFilters( self ) :
 
-		for d in Gaffer.About.dependencies() :
+		pass
 
-			if "license" in d :
-				f = os.path.expandvars( d["license"] )
-				self.assertTrue( os.path.exists( f ), "License file \"{0}\" does not exist".format( f ) )
+	@unittest.skip( "Feature not supported yet" )
+	def testLightFiltersAndSetEdits( self ) :
 
-			if "source" in d :
-				self.assertTrue( urllib.request.urlopen( d["source"] ) )
+		pass
 
+	@unittest.skip( "Feature not supported yet" )
+	def testHideLinkedLight( self ) :
+
+		pass
+
+	@unittest.skip( "Feature not supported yet" )
+	def testLightLinking( self ) :
+
+		pass
+
+	@unittest.skip( "Crop window doesn't change data window" )
+	def testEditCropWindow( self ) :
+
+		# RenderMan doesn't reopen the display drivers when the crop
+		# window decreases in size, only when it increases. This will
+		# cause the base class test to fail, even though we are passing
+		# edits and RenderMan is only re-rendering the requested area.
+		pass
+
+	def _createConstantShader( self ) :
+
+		shader = GafferRenderMan.RenderManShader()
+		shader.loadShader( "PxrConstant" )
+		return shader, shader["parameters"]["emitColor"], shader["out"]
+
+	def _createTraceSetShader( self ) :
+
+		return None, None, None
+
+	def _cameraVisibilityAttribute( self ) :
+
+		return "ri:visibility:camera"
+
+	def _createMatteShader( self ) :
+
+		shader = GafferRenderMan.RenderManShader()
+		shader.loadShader( "PxrDiffuse" )
+		return shader, shader["parameters"]["diffuseColor"], shader["out"]
+
+	def _createPointLight( self ) :
+
+		light = GafferRenderMan.RenderManLight()
+		light.loadShader( "PxrSphereLight" )
+
+		return light, light["parameters"]["lightColor"]
 
 if __name__ == "__main__":
 	unittest.main()

@@ -36,6 +36,8 @@
 
 #pragma once
 
+#include "Export.h"
+
 #include "IECoreScene/ShaderNetwork.h"
 
 #include "Riley.h"
@@ -44,5 +46,10 @@ namespace IECoreRenderMan::ShaderNetworkAlgo
 {
 
 std::vector<riley::ShadingNode> convert( const IECoreScene::ShaderNetwork *network );
+
+/// Converts any UsdPreviewSurface shaders into native RenderMan shaders. This conversion
+/// is performed automatically by `preprocessedNetwork()` and is mainly just exposed for the unit
+/// tests.
+IECORERENDERMAN_API void convertUSDShaders( IECoreScene::ShaderNetwork *shaderNetwork );
 
 } // namespace IECoreRenderMan::ShaderNetworkAlgo

@@ -36,7 +36,7 @@
 
 #include "Light.h"
 
-#include "ShaderNetworkAlgo.h"
+#include "IECoreRenderMan/ShaderNetworkAlgo.h"
 #include "Transform.h"
 
 using namespace std;

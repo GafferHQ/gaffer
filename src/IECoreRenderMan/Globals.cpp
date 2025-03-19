@@ -37,7 +37,8 @@
 #include "Globals.h"
 #include "ParamListAlgo.h"
 #include "Transform.h"
-#include "ShaderNetworkAlgo.h"
+
+#include "IECoreRenderMan/ShaderNetworkAlgo.h"
 
 #include "IECore/SimpleTypedData.h"
 #include "IECore/StringAlgo.h"
@@ -158,6 +159,7 @@ const IECoreScene::ConstShaderNetworkPtr g_emptyShaderNetwork = new IECoreScene:
 Globals::Globals( IECoreScenePreview::Renderer::RenderType renderType, const IECore::MessageHandlerPtr &messageHandler )
 	:	m_renderType( renderType ), m_messageHandler( messageHandler ),
 		m_pixelFilter( g_defaultPixelFilter ), m_pixelFilterSize( g_defaultPixelFilterSize ), m_pixelVariance( g_defaultPixelVariance ),
+		m_expectedSessionCreationThreadId( std::this_thread::get_id() ),
 		m_renderTargetExtent()
 {
 	// Initialise `m_integratorToConvert`.
@@ -171,7 +173,10 @@ Globals::Globals( IECoreScenePreview::Renderer::RenderType renderType, const IEC
 
 	if( char *p = getenv( "OSL_SHADER_PATHS" ) )
 	{
-		string searchPath = string( p ) + ":@";
+		string searchPath( p );
+		// Convert Windows ';' path entry separator to ':' as `RMAN_SHADERPATH` expects
+		std::replace( searchPath.begin(), searchPath.end(), ';', ':' );
+		searchPath += ":@";
 		m_options.SetString( Rix::k_searchpath_shader, RtUString( searchPath.c_str() ) );
 	}
 
@@ -363,6 +368,15 @@ Session *Globals::acquireSession()
 {
 	if( !m_session )
 	{
+		if( m_expectedSessionCreationThreadId != std::this_thread::get_id() )
+		{
+			IECore::msg(
+				Msg::Error,
+				"RenderMan",
+				"You must call `Renderer::command( \"ri:acquireSession\" )` before commencing "
+				"multithreaded geometry output (RenderMan limitation)."
+			);
+		}
 		m_session = std::make_unique<Session>( m_renderType, m_options, m_messageHandler );
 	}
 
@@ -705,7 +719,7 @@ const std::vector<riley::RenderOutputId> &Globals::acquireRenderOutputs( const I
 {
 	// Identify type and source.
 
-	const string layerName = parameter<string>( output->parameters(), g_layerName, "" );
+	const string layerName = parameter<string>( output->parameters(), g_layerName, "__undefined__" );
 
 	std::optional<riley::RenderOutputType> type;
 	RtUString source;
@@ -762,7 +776,7 @@ const std::vector<riley::RenderOutputId> &Globals::acquireRenderOutputs( const I
 	// doesn't need to be unique among all render outputs.
 
 	RtUString renderOutputName = source;
-	if( !layerName.empty() )
+	if( layerName != "__undefined__" )
 	{
 		renderOutputName = RtUString( layerName.c_str() );
 	}

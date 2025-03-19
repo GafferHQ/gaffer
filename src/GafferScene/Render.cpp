@@ -342,7 +342,7 @@ void Render::executeInternal( bool flushCaches ) const
 	}
 	Monitor::Scope performanceMonitorScope( performanceMonitor );
 
-	GafferScene::Private::RendererAlgo::outputOptions( renderOptions.globals.get(), renderer.get() );
+	renderOptions.outputOptions( renderer.get() );
 	GafferScene::Private::RendererAlgo::outputOutputs( inPlug(), renderOptions.globals.get(), renderer.get() );
 
 	{
@@ -350,6 +350,13 @@ void Render::executeInternal( bool flushCaches ) const
 		// and `lightLinks` before we call `render()`.
 		GafferScene::Private::RendererAlgo::RenderSets renderSets( adaptedInPlug() );
 		GafferScene::Private::RendererAlgo::LightLinks lightLinks;
+
+		if( renderer->name().string() == "RenderMan" )
+		{
+			// Workaround for RenderMan API limitations. The backend needs to acquire the Riley
+			// session before we commence multithreaded calls to the Renderer API.
+			renderer->command( "ri:acquireRiley", {} );
+		}
 
 		GafferScene::Private::RendererAlgo::outputCameras( adaptedInPlug(), renderOptions, renderSets, renderer.get() );
 		GafferScene::Private::RendererAlgo::outputLights( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );

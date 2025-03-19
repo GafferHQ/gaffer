@@ -72,6 +72,7 @@ namespace
 {
 
 const CompoundDataMap::value_type g_forMeshLightBlindData( "__ieCoreRenderMan:forMeshLight", new BoolData( true ) );
+const InternedString g_acquireRiley( "ri:acquireRiley" );
 
 class RenderManRenderer final : public IECoreScenePreview::Renderer
 {
@@ -213,7 +214,12 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 		IECore::DataPtr command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters ) override
 		{
 			const IECore::MessageHandler::Scope messageScope( m_messageHandler.get() );
-			if( boost::starts_with( name.string(), "ri:" ) || name.string().find( ":" ) == string::npos )
+			if( name == g_acquireRiley )
+			{
+				acquireSession();
+				return nullptr;
+			}
+			else if( boost::starts_with( name.string(), "ri:" ) || name.string().find( ":" ) == string::npos )
 			{
 				IECore::msg( IECore::Msg::Warning, "IECoreRenderMan::Renderer::command", fmt::format( "Unknown command \"{}\".", name.c_str() ) );
 			}
@@ -226,10 +232,19 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 		std::unique_ptr<Globals> m_globals;
 
 		// Used to acquire the Session via `m_globals` at the first point we need it.
-		// Also initialises other members that depend on the session. Needs to be thread-safe
-		// because it is called from `object()`, `attributes()` etc.
+		// Also initialises other members that depend on the session.
 		Session *acquireSession()
 		{
+			/// \todo The mutex may no longer be necessary. We had originally hoped that we could
+			/// automatically acquire the session on whatever thread first required it (when the
+			/// Renderer client is doing multi-threaded scene generation). But it seems that Riley
+			/// crashes if not initialised on the main thread [^1], so we require multithreaded clients
+			/// to call `command( "ri:acquireSession" )` before commencing multithreading anyway.
+			/// Perhaps one day we can lift that restriction and the mutex will be useful again.
+			///
+			/// [^1]: This might be a simplification. It seems like it might be OK to initialise
+			/// on another thread, provided that certain (unspecified) Riley methods are only
+			/// called on that thread. That wouldn't help here anyway though.
 			tbb::spin_rw_mutex::scoped_lock lock( m_acquireSessionMutex, /* write = */ false );
 			if( !m_session )
 			{
