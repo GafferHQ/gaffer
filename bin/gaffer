@@ -212,22 +212,6 @@ export QT_XCB_TABLET_LEGACY_COORDINATES=1
 
 prependToPath "$GAFFER_ROOT/bin" PATH
 
-# Set up jemalloc
-##########################################################################
-
-if [[ $GAFFER_JEMALLOC != "0" ]] ; then
-	if [[ `uname` = "Linux" ]] ; then
-		appendToPath "$GAFFER_ROOT/lib/libjemalloc.so" LD_PRELOAD
-	fi
-fi
-
-# Set up OCIO
-##########################################################################
-
-if [[ -z $OCIO ]] ; then
-	export OCIO="ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1"
-fi
-
 # Run gaffer itself
 ##########################################################################
 

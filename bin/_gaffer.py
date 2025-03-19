@@ -254,6 +254,19 @@ def setUp3rdPartyExtensions() :
 
 setUp3rdPartyExtensions()
 
+# JEMalloc Setup
+# ==============
+
+if sys.platform == "linux" :
+	if os.environ.get( "GAFFER_JEMALLOC", "1" ) != "0" :
+		appendToPath( gafferRoot / "lib" / "libjemalloc.so", "LD_PRELOAD" )
+
+# OCIO Setup
+# ==========
+
+if not os.environ.get( "OCIO" ) :
+	os.environ["OCIO"] = "ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1"
+
 # Exec `__gaffer.py`
 # ==================
 

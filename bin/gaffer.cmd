@@ -13,8 +13,6 @@ set "GAFFER_ROOT=%GAFFER_ROOT:\=/%"
 
 set "HOME=%USERPROFILE:\=/%"
 
-set GAFFER_JEMALLOC=0
-
 set OIIO_LOAD_DLLS_FROM_PATH=0
 
 call :prependToPath "%GAFFER_ROOT%\glsl" IECOREGL_SHADER_PATHS
@@ -72,10 +70,6 @@ set QT_OPENGL=desktop
 set QT_QPA_PLATFORM_PLUGIN_PATH=%GAFFER_ROOT%\qt\plugins
 
 call :prependToPath "%GAFFER_ROOT%\bin" PATH
-
-if "%OCIO%" EQU "" (
-	set OCIO=ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1
-)
 
 if "%GAFFER_DEBUG%" NEQ "" (
 	%GAFFER_DEBUGGER% "%GAFFER_ROOT%"\bin\python.exe "%GAFFER_ROOT%"/bin/_gaffer.py %*
