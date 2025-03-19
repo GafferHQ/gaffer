@@ -15,12 +15,6 @@ set "HOME=%USERPROFILE:\=/%"
 
 set OIIO_LOAD_DLLS_FROM_PATH=0
 
-call :prependToPath "%GAFFER_ROOT%\glsl" IECOREGL_SHADER_PATHS
-call :prependToPath "%GAFFER_ROOT%\glsl" IECOREGL_SHADER_INCLUDE_PATHS
-
-call :prependToPath "%GAFFER_ROOT%\fonts" IECORE_FONT_PATHS
-call :prependToPath "%GAFFER_ROOT%\ops" IECORE_OP_PATHS
-
 call :prependToPath "%GAFFER_ROOT%\resources\IECoreUSD" PXR_PLUGINPATH_NAME
 call :prependToPath "%GAFFER_ROOT%\materialX" PXR_MTLX_STDLIB_SEARCH_PATHS
 rem Prevent USD from adding entries from `PATH` to Python binary search paths.
@@ -28,19 +22,10 @@ if "%PXR_USD_WINDOWS_DLL_PATH%" EQU "" (
 	set PXR_USD_WINDOWS_DLL_PATH=""
 )
 
-call :prependToPath "%USERPROFILE%\gaffer\opPresets;%GAFFER_ROOT%\opPresets" IECORE_OP_PRESET_PATHS
-call :prependToPath "%USERPROFILE%\gaffer\procedurals;%GAFFER_ROOT%\procedurals" IECORE_PROCEDURAL_PATHS
-call :prependToPath "%USERPROFILE%\gaffer\proceduralPresets;%GAFFER_ROOT%\proceduralPresets" IECORE_PROCEDURAL_PRESET_PATHS
-
-set CORTEX_POINTDISTRIBUTION_TILESET=%GAFFER_ROOT%\resources\cortex\tileset_2048.dat
-
 call :prependToPath "%USERPROFILE%\gaffer\apps;%GAFFER_ROOT%\apps" GAFFER_APP_PATHS
 
 call :prependToPath "%USERPROFILE%\gaffer\startup" GAFFER_STARTUP_PATHS
 call :appendToPath "%GAFFER_ROOT%\startup" GAFFER_STARTUP_PATHS
-
-call :prependToPath "%USERPROFILE%\gaffer\startup" CORTEX_STARTUP_PATHS
-call :appendToPath "%GAFFER_ROOT%\startup" CORTEX_STARTUP_PATHS
 
 call :prependToPath "%GAFFER_ROOT%\graphics" GAFFERUI_IMAGE_PATHS
 

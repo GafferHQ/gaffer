@@ -51,12 +51,6 @@ if [[ $1 == -psn_0_* ]] ; then
 	shift
 fi
 
-# Work around https://github.com/ImageEngine/cortex/issues/1338, which
-# causes bad serialisations in certain locales.
-##########################################################################
-
-export LC_NUMERIC=C
-
 # Find where this script is located, resolving any symlinks that were used
 # to invoke it. Set GAFFER_ROOT based on the script location.
 ##########################################################################
@@ -117,30 +111,13 @@ function appendToPath {
 
 }
 
-prependToPath "$GAFFER_ROOT/glsl" IECOREGL_SHADER_PATHS
-prependToPath "$GAFFER_ROOT/glsl" IECOREGL_SHADER_INCLUDE_PATHS
-
-prependToPath "$GAFFER_ROOT/fonts" IECORE_FONT_PATHS
-prependToPath "$HOME/gaffer/ops:$GAFFER_ROOT/ops" IECORE_OP_PATHS
-
 prependToPath "$GAFFER_ROOT/resources/IECoreUSD" PXR_PLUGINPATH_NAME
 prependToPath "$GAFFER_ROOT/materialX" PXR_MTLX_STDLIB_SEARCH_PATHS
-
-prependToPath "$HOME/gaffer/opPresets:$GAFFER_ROOT/opPresets" IECORE_OP_PRESET_PATHS
-prependToPath "$HOME/gaffer/procedurals:$GAFFER_ROOT/procedurals" IECORE_PROCEDURAL_PATHS
-prependToPath "$HOME/gaffer/proceduralPresets:$GAFFER_ROOT/proceduralPresets" IECORE_PROCEDURAL_PRESET_PATHS
-
-if [[ -z $CORTEX_POINTDISTRIBUTION_TILESET ]] ; then
-	export CORTEX_POINTDISTRIBUTION_TILESET="$GAFFER_ROOT/resources/cortex/tileset_2048.dat"
-fi
 
 prependToPath "$HOME/gaffer/apps:$GAFFER_ROOT/apps" GAFFER_APP_PATHS
 
 prependToPath "$HOME/gaffer/startup" GAFFER_STARTUP_PATHS
 appendToPath "$GAFFER_ROOT/startup" GAFFER_STARTUP_PATHS
-
-prependToPath "$HOME/gaffer/startup" CORTEX_STARTUP_PATHS
-appendToPath "$GAFFER_ROOT/startup" CORTEX_STARTUP_PATHS
 
 prependToPath "$GAFFER_ROOT/graphics" GAFFERUI_IMAGE_PATHS
 
@@ -179,9 +156,6 @@ if [[ -z $PYTHONNOUSERSITE ]] ; then
 	# the user directory.
 	export PYTHONNOUSERSITE=1
 fi
-
-# Stop Cortex from making all Python modules load with RTLD_GLOBAL.
-export IECORE_RTLD_GLOBAL=0
 
 # Get library paths set up
 ##########################################################################

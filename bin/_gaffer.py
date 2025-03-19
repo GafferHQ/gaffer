@@ -76,6 +76,35 @@ def prependToPath( pathToPrepend, envVar ) :
 
 gafferRoot = pathlib.Path( os.environ["GAFFER_ROOT"] )
 
+# Cortex Setup
+# ============
+
+prependToPath( gafferRoot / "glsl", "IECOREGL_SHADER_PATHS" )
+prependToPath( gafferRoot / "glsl", "IECOREGL_SHADER_INCLUDE_PATHS" )
+prependToPath( gafferRoot / "fonts", "IECORE_FONT_PATHS" )
+prependToPath( gafferRoot / "ops", "IECORE_OP_PATHS" )
+prependToPath( pathlib.Path.home() / "gaffer" / "ops", "IECORE_OP_PATHS" )
+prependToPath( pathlib.Path.home() / "gaffer" / "opPresets", "IECORE_OP_PRESET_PATHS" )
+prependToPath( pathlib.Path.home() / "gaffer" / "startup", "CORTEX_STARTUP_PATHS" )
+appendToPath( gafferRoot / "startup", "CORTEX_STARTUP_PATHS" )
+
+if "CORTEX_POINTDISTRIBUTION_TILESET" not in os.environ :
+	os.environ["CORTEX_POINTDISTRIBUTION_TILESET"] = str( gafferRoot / "resources" / "cortex" / "tileset_2048.dat" )
+
+if sys.platform in ( "linux", "darwin" ) :
+	# Stop Cortex from making all Python modules load with RTLD_GLOBAL.
+	os.environ["IECORE_RTLD_GLOBAL"] = "0"
+
+# Load USD PointInstancer prototypes as relative paths by default. This allows
+# the _PointInstancerAdaptor to function even when the instancers are reparented
+# in the Gaffer hierarchy.
+if "IECOREUSD_POINTINSTANCER_RELATIVE_PROTOTYPES" not in os.environ :
+	os.environ["IECOREUSD_POINTINSTANCER_RELATIVE_PROTOTYPES"] = "1"
+
+# Work around https://github.com/ImageEngine/cortex/issues/1338, which causes
+# bad serialisations in certain locales.
+os.environ["LC_NUMERIC"] = "C"
+
 # Cycles Setup
 # ============
 
