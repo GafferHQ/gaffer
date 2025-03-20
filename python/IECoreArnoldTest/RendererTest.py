@@ -2910,6 +2910,7 @@ class RendererTest( GafferTest.TestCase ) :
 			mh.messages[0].message
 		)
 
+	@unittest.skipIf( os.name == "nt", "Log file can't be deleted on Windows because it is still in use until the process finishes.")
 	def testStatsAndLog( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
