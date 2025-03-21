@@ -215,7 +215,15 @@ jobs:
 
           # Test Arnold extension
           print( "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json" )
-          subprocess.check_call( "${{ matrix.testRunner }} \"" + os.path.join( os.environ["GAFFER_BUILD_DIR"], "bin", "gaffer" ) + " test IECoreArnoldTest GafferArnoldTest GafferArnoldUITest\"", shell = True )
+          # We run tests above in Powershell on Windows, but the shell used by `subprocess`
+          # is the Windows Command Prompt, so we make it use Powershell.
+          subprocess.check_call(
+            [ "powerShell", "-Command" ] if os.name == "nt" else [] + [
+              "${{ matrix.testRunner }}",
+              "\"" + os.path.join( os.environ["GAFFER_BUILD_DIR"], "bin", "gaffer" if os.name != "nt" else "gaffer.cmd" ) + " test IECoreArnoldTest GafferArnoldTest GafferArnoldUITest\"",
+            ],
+            shell = True
+          )
           print( "::remove-matcher owner=unittest::" )
 
           # Publish ARNOLD_ROOT to the environment for subsequent steps,
