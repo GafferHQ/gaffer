@@ -996,15 +996,15 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 			],
 
-			# SphereLight (with bogus out-of-range Houdini softness)
+			# SphereLight (with softness greater than 1)
 
-			"houdiniPenumbra" : [
+			"sphereLightHighSoftness" : [
 
 				IECoreScene.Shader(
 					"SphereLight", "light",
 					{
 						"shaping:cone:angle" : 20.0,
-						"shaping:cone:softness" : 60.0,
+						"shaping:cone:softness" : 2.0,
 					}
 				),
 
@@ -1012,6 +1012,7 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 					"spot_light", "light",
 					expectedLightParameters( {
 						"cone_angle" : 40.0,
+						"penumbra_angle" : 80.0,
 						"cosine_power" : 0.0,
 						"radius" : 0.5,
 					} )
