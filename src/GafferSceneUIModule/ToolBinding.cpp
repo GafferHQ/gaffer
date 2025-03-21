@@ -46,6 +46,7 @@
 #include "GafferSceneUI/SelectionTool.h"
 #include "GafferSceneUI/TransformTool.h"
 #include "GafferSceneUI/TranslateTool.h"
+#include "GafferSceneUI/ImagePickTool.h"
 
 #include "GafferSceneUI/Private/VisualiserTool.h"
 
@@ -329,5 +330,11 @@ void GafferSceneUIModule::bindTools()
 			.value( "VertexLabel", VisualiserTool::Mode::VertexLabel )
 		;
 	}
+
+	GafferBindings::NodeClass<ImagePickTool>( nullptr, no_init )
+		.def( init<GafferUI::View *>() )
+		.def( "status", &ImagePickTool::status )
+		.def( "statusChangedSignal", &ImagePickTool::statusChangedSignal, return_internal_reference<1>() )
+	;
 
 }
