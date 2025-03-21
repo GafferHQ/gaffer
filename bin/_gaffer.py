@@ -129,7 +129,8 @@ elif sys.platform == "win32" :
 # OSL Setup
 # =========
 
-if ( gafferRoot / "bin" / "oslc" ).exists() :
+oslcPath = gafferRoot / "bin" / ( "oslc.exe" if sys.platform == "win32" else "oslc" )
+if oslcPath.exists() :
 	os.environ["OSLHOME"] = str( gafferRoot )
 
 ## \todo Should we rename these to "osl" to match our "glsl" folder?
