@@ -283,16 +283,14 @@ def setUpRenderMan() :
 	# Set up paths.
 
 	pluginRoot = gafferRoot / "renderMan" / renderManPluginVersion
+	prependToPath( pluginRoot, "GAFFER_EXTENSION_PATHS" )
 
 	appendToPath( rmanTree / "lib", libraryPath )
-	appendToPath( pluginRoot / "lib", libraryPath )
-
 	appendToPath( rmanTree / "bin", "PATH" )
 	appendToPath( rmanTree / "bin", "PYTHONPATH" )
-	appendToPath( pluginRoot / "python", "PYTHONPATH" )
 	appendToPath( rmanTree / "lib" / "plugins", "RMAN_RIXPLUGINPATH" )
-	appendToPath( pluginRoot / "plugins", "RMAN_DISPLAYS_PATH" )
 	appendToPath( rmanTree / "lib" / "shaders", "OSL_SHADER_PATHS" )
+	appendToPath( pluginRoot / "plugins", "RMAN_DISPLAYS_PATH" )
 
 	if sys.platform == "win32" :
 		appendToPath( rmanTree / "bin", "IECORE_DLL_DIRECTORIES" )
