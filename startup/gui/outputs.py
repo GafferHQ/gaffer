@@ -441,6 +441,95 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 		__registerOutputs( lightPasses, True )
 		__registerOutputs( dataPasses )
 
+
+# Add standard RenderMan outputs.
+
+if os.environ.get( "GAFFERRENDERMAN_HIDE_UI", "" ) != "1" :
+
+	with IECore.IgnoredExceptions( ImportError ) :
+
+		# If RenderMan isn't available for any reason, this will fail
+		# and we won't add any unnecessary output definitions.
+		import GafferRenderMan
+
+		for name, data, accumulationRule in [
+			( "albedo", "lpe nothruput;noinfinitecheck;noclamp;unoccluded;overwrite;C<.S'passthru'>*((U2L)|O)", "filter" ),
+			( "albedo_mse", "lpe nothruput;noinfinitecheck;noclamp;unoccluded;overwrite;C<.S'passthru'>*((U2L)|O)", "mse" ),
+			( "beauty", "rgba", "filter" ),
+			( "matteID0", "color MatteID0", "filter" ),
+			( "matteID1", "color MatteID1", "filter" ),
+			( "matteID2", "color MatteID2", "filter" ),
+			( "matteID3", "color MatteID3", "filter" ),
+			( "matteID4", "color MatteID4", "filter" ),
+			( "matteID5", "color MatteID5", "filter" ),
+			( "matteID6", "color MatteID6", "filter" ),
+			( "matteID7", "color MatteID7", "filter" ),
+			( "mse", "rgb", "mse" ),
+			( "cpuTime", "float cpuTime", "sum" ),
+			( "depth", "float z", "zmin" ),
+			( "emission", "lpe C[<L.>O]", "filter" ),
+			( "diffuse", "lpe C(D[DS]*[LO])|[LO]", "filter" ),
+			( "diffuse_mse", "lpe C(D[DS]*[LO])|[LO]", "mse" ),
+			( "directDiffuse", "lpe C<RD>[<L.>O]", "filter" ),
+			( "directSpecular", "lpe C<RS>[<L.>O]", "filter" ),
+			( "indirectDiffuse", "lpe C<RD>.+[<L.>O]", "filter" ),
+			( "indirectSpecular", "lpe C<RS>.+[<L.>O]", "filter" ),
+			( "normal", "lpe nothruput;noinfinitecheck;noclamp;unoccluded;overwrite;CU6L", "filter" ),
+			( "normal_mse", "lpe nothruput;noinfinitecheck;noclamp;unoccluded;overwrite;CU6L", "mse" ),
+			( "sampleCount", "float sampleCount", "sum" ),
+			( "specular", "lpe CS[DS]*[LO]", "filter" ),
+			( "specular_mse", "lpe CS[DS]*[LO]", "mse" ),
+			( "subsurface", "lpe C<TD>.*[<L.>O]", "filter" ),
+			( "transmission", "lpe C<TS>.*[<L.>O]", "filter" ),
+		] :
+
+			label = IECore.CamelCase.toSpaced( name )
+			parameters = {
+				"ri:accumulationRule" : accumulationRule,
+				"ri:relativePixelVariance" : 0.0,
+			}
+
+			if data == "float z" :
+				parameters["layerName"] = "Z"
+			elif data != "rgba" :
+				parameters["layerName"] = name
+
+			interactiveParameters = parameters.copy()
+			interactiveParameters.update( {
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : "${image:catalogue:port}",
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+			} )
+
+			GafferScene.Outputs.registerOutput(
+				"Interactive/RenderMan/" + label,
+				IECoreScene.Output(
+					name,
+					"ieDisplay",
+					data,
+					interactiveParameters
+				)
+			)
+
+			GafferScene.Outputs.registerOutput(
+				"Batch/RenderMan/" + label,
+				IECoreScene.Output(
+					"${project:rootDirectory}/renders/${script:name}/${renderPass}/%s/%s.####.exr" % ( name, name ),
+					"exr",
+					data,
+					parameters,
+				)
+			)
+
+		# Add presets for accumulation rule
+
+		Gaffer.Metadata.registerValue( GafferScene.Outputs, "outputs.*.parameters.ri_accumulationRule.value", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
+		for rule in [
+			"filter", "average", "min", "max", "zmin", "zmax", "sum", "variance", "mse", "even", "odd"
+		] :
+			Gaffer.Metadata.registerValue( GafferScene.Outputs, "outputs.*.parameters.ri_accumulationRule.value", f"preset:{rule}", rule )
+
 # Publish the Catalogue port number as a context variable, so we can refer
 # to it easily in output definitions.
 

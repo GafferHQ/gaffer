@@ -165,6 +165,83 @@ with IECore.IgnoredExceptions( ImportError ) :
 			columnName = parameter.replace( "arnold:", "" )
 		)
 
+# RenderMan lights
+
+if os.environ.get( "GAFFERRENDERMAN_HIDE_UI", "" ) != "1" :
+
+	with IECore.IgnoredExceptions( ImportError ) :
+
+		# This import appears unused, but it is intentional; it prevents us from
+		# registering when RenderMan isn't available.
+		import GafferRenderMan
+
+		Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "preset:RenderMan", "ri:light" )
+		# If RenderMan is available, then assume it is the renderer of choice.
+		Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "userDefault", "ri:light" )
+
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "intensity" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "exposure" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "lightColor" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "enableTemperature" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "temperature" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "lightColorMap" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "colorMapGamma" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "colorMapSaturation" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "angleExtent" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "textureColor" )
+
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "emissionFocus", "Refine" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "emissionFocusNormalize", "Refine" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "emissionFocusTint", "Refine" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "specular", "Refine" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "diffuse", "Refine" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "intensityNearDist", "Refine" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "specularNearDist", "Refine" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "diffuseNearDist", "Refine" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "coneAngle", "Refine" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "coneSoftness", "Refine" )
+
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "iesProfile", "Light Profile" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "iesProfileScale", "Light Profile" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "iesProfileNormalize", "Light Profile" )
+
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "enableShadows", "Shadows" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "shadowColor", "Shadows" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "shadowDistance", "Shadows" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "shadowFalloff", "Shadows" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "shadowFalloffGamma", "Shadows" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "shadowSubset", "Shadows" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "shadowExcludeSubset", "Shadows" )
+
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "sunDirection", "Day Light" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "haziness", "Day Light" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "skyTint", "Day Light" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "sunTint", "Day Light" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "sunSize", "Day Light" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "groundMode", "Day Light" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "groundColor", "Day Light" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "month", "Day Light" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "day", "Day Light" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "year", "Day Light" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "hour", "Day Light" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "zone", "Day Light" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "latitude", "Day Light" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "longitude", "Day Light" )
+
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "areaNormalize", "Advanced" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "traceLightPaths", "Advanced" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "thinShadow", "Advanced" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "visibleInRefractionPath", "Advanced" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "cheapCaustics", "Advanced" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "cheapCausticsExcludeGroup", "Advanced" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "fixedSampleCount", "Advanced" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "lightGroup", "Advanced" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "importanceMultiplier", "Advanced" )
+
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "msApprox", "Multi-Scattering Approx" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "msApproxBleed", "Multi-Scattering Approx" )
+		GafferSceneUI.LightEditor.registerParameter( "ri:light", "msApproxContribution", "Multi-Scattering Approx" )
+
 # Register generic light attributes
 for attributeName in [
 	"gl:visualiser:scale",

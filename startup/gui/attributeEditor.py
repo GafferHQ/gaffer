@@ -183,6 +183,25 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 	GafferSceneUI.AttributeEditor.registerAttribute( "3Delight", "dl:matte", "Shading" )
 
+if os.environ.get( "GAFFERRENDERMAN_HIDE_UI", "" ) != "1" :
+
+	with IECore.IgnoredExceptions( ImportError ) :
+
+		# This import appears unused, but it is intentional; it prevents us from
+		# registering when RenderMan isn't available.
+		import GafferRenderMan
+
+		Gaffer.Metadata.registerValue( GafferSceneUI.AttributeEditor.Settings, "tabGroup", "preset:RenderMan", "RenderMan" )
+
+		# Register all options we have metadata for.
+		## \todo We should probably do things this way for the other renderers too. The
+		# AttributeEditor could just read the metadata itself then, and we wouldn't
+		# need `registerAttribute()` at all.
+		for target in Gaffer.Metadata.targetsWithMetadata( "attribute:ri:*", "defaultValue" ) :
+			GafferSceneUI.AttributeEditor.registerAttribute(
+				"RenderMan", target[10:], Gaffer.Metadata.value( target, "layout:section" ), Gaffer.Metadata.value( target, "label" )
+			)
+
 Gaffer.Metadata.registerValue( GafferSceneUI.AttributeEditor.Settings, "tabGroup", "preset:OpenGL", "OpenGL" )
 
 GafferSceneUI.AttributeEditor.registerAttribute( "OpenGL", "gl:primitive:solid", "Shading" )

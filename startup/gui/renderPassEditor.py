@@ -124,6 +124,24 @@ with IECore.IgnoredExceptions( ImportError ) :
 	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:GI_volume_depth", "Ray Depth", "Volume" )
 	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:auto_transparency_depth", "Ray Depth", "Transparency" )
 
+if os.environ.get( "GAFFERRENDERMAN_HIDE_UI", "" ) != "1" :
+
+	with IECore.IgnoredExceptions( ImportError ) :
+
+		# This import appears unused, but it is intentional; it prevents us from
+		# registering when RenderMan isn't available.
+		import GafferRenderMan
+
+		Gaffer.Metadata.registerValue( GafferSceneUI.RenderPassEditor.Settings, "tabGroup", "preset:RenderMan", "RenderMan" )
+		Gaffer.Metadata.registerValue( GafferSceneUI.RenderPassEditor.Settings, "tabGroup", "userDefault", "RenderMan" )
+
+		# Register all options we have metadata for.
+		## \todo We should probably do things this way for the other renderers too.
+		for target in Gaffer.Metadata.targetsWithMetadata( "option:ri:*", "defaultValue" ) :
+			GafferSceneUI.RenderPassEditor.registerOption(
+				"RenderMan", target[7:], Gaffer.Metadata.value( target, "layout:section" ), Gaffer.Metadata.value( target, "label" )
+			)
+
 # Register the default grouping function used to display render passes in a hierarchy.
 # This groups render passes based on the first token in their name delimited by "_".
 def __defaultPathGroupingFunction( renderPassName ) :

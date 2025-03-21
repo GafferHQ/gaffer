@@ -40,8 +40,12 @@ import imath
 
 import Gaffer
 
+# Register metadata so that StandardLightVisualiser will visualise the RenderMan
+# lights for us.
+## \todo I think we'd be better off with some dedicated visualisers instead.
+
 for type in [
-	"PxrCyclinderLight", "PxrDomeLight", "PxrDiskLight", "PxrDistantLight",
+	"PxrCylinderLight", "PxrDomeLight", "PxrDiskLight", "PxrDistantLight",
 	"PxrEnvDayLight", "PxrMeshLight",  "PxrRectLight", "PxrSphereLight",
 ] :
 
