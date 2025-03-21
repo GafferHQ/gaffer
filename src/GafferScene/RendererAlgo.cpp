@@ -41,6 +41,7 @@
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/SceneProcessor.h"
 #include "GafferScene/SetAlgo.h"
+#include "GafferScene/RenderManifest.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/Metadata.h"
@@ -93,6 +94,7 @@ const InternedString g_purposeAttributeName( "usd:purpose" );
 const InternedString g_frameOptionName( "frame" );
 const InternedString g_cameraOptionLegacyName( "option:render:camera" );
 const InternedString g_renderManShutterOptionName( "ri:Ri:Shutter" );
+const InternedString g_idManifestFilePathOptionName( "option:render:idManifestFilePath" );
 
 const ConstStringVectorDataPtr g_defaultIncludedPurposes( new StringVectorData( { "default", "render" } ) );
 const std::string g_defaultPurpose( "default" );
@@ -138,6 +140,19 @@ RenderOptions::RenderOptions( const ScenePlug *scene )
 
 	const StringVectorData *includedPurposesData = globals->member<StringVectorData>( g_includedPurposesOptionName );
 	includedPurposes = includedPurposesData ? includedPurposesData : g_defaultIncludedPurposes;
+
+	const StringData *idManifestFilePathData = globals->member<StringData>( g_idManifestFilePathOptionName );
+	if( idManifestFilePathData && idManifestFilePathData->readable() != "" )
+	{
+		idManifestFilePath = idManifestFilePathData->readable();
+
+		// We are just going to treat this as an id, but I'm not sure what we would put in here other than the
+		// current time ... so there's probably no reason to hash this if there's only one source anyway, might
+		// as well just use the current time in milliseconds
+
+		// ( Discarding everything but the last 32 bits because Arnold can't write int64s to the header )
+		idManifestIdentifier = (int32_t)( std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() );
+	}
 }
 
 bool RenderOptions::operator==( const RenderOptions &other ) const
@@ -155,7 +170,6 @@ bool RenderOptions::purposeIncluded( const CompoundObject *attributes ) const
 	return std::find( purposes.begin(), purposes.end(), purpose ) != purposes.end();
 }
 
-
 void RenderOptions::outputOptions( IECoreScenePreview::Renderer *renderer, const RenderOptions *previousRenderOptions )
 {
 	// Output the current frame.
@@ -172,7 +186,6 @@ void RenderOptions::outputOptions( IECoreScenePreview::Renderer *renderer, const
 	}
 
 	// Output anything that has changed or was added since last time.
-
 	CompoundObject::ObjectMap::const_iterator it, eIt;
 	for( it = globals->members().begin(), eIt = globals->members().end(); it != eIt; ++it )
 	{
@@ -1551,8 +1564,9 @@ struct LightFiltersOutput : public LocationOutput
 struct ObjectOutput : public LocationOutput
 {
 
-	ObjectOutput( IECoreScenePreview::Renderer *renderer, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, const GafferScene::Private::RendererAlgo::LightLinks *lightLinks, const ScenePlug::ScenePath &root, const ScenePlug *scene )
-		:	LocationOutput( renderer, renderOptions, renderSets, root, scene ), m_cameraSet( renderSets.camerasSet() ), m_lightSet( renderSets.lightsSet() ), m_lightFiltersSet( renderSets.lightFiltersSet() ), m_lightLinks( lightLinks )
+	ObjectOutput( IECoreScenePreview::Renderer *renderer, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, const GafferScene::Private::RendererAlgo::LightLinks *lightLinks, const ScenePlug::ScenePath &root, const ScenePlug *scene, RenderManifest *renderManifest )
+
+		:	LocationOutput( renderer, renderOptions, renderSets, root, scene ), m_cameraSet( renderSets.camerasSet() ), m_lightSet( renderSets.lightsSet() ), m_lightFiltersSet( renderSets.lightFiltersSet() ), m_lightLinks( lightLinks ), m_renderManifest( renderManifest )
 	{
 	}
 
@@ -1615,6 +1629,12 @@ struct ObjectOutput : public LocationOutput
 			{
 				m_lightLinks->outputLightLinks( scene, attributes(), objectInterface.get() );
 			}
+
+			if( m_renderManifest )
+			{
+				int id = m_renderManifest->acquireID( path );
+				objectInterface->assignID( id );
+			}
 		}
 
 		return true;
@@ -1624,6 +1644,7 @@ struct ObjectOutput : public LocationOutput
 	const PathMatcher &m_lightSet;
 	const PathMatcher &m_lightFiltersSet;
 	const GafferScene::Private::RendererAlgo::LightLinks *m_lightLinks;
+	RenderManifest *m_renderManifest;
 
 };
 
@@ -1636,7 +1657,22 @@ struct ObjectOutput : public LocationOutput
 namespace
 {
 
-ConstOutputPtr addGafferOutputParameters( const Output *output, const ScenePlug *scene, const std::string &outputID, const IECoreScenePreview::Renderer *renderer )
+bool outputUsesId( const Output *output )
+{
+	vector<std::string> tokens;
+	IECore::StringAlgo::tokenize( output->getData(), ' ', tokens );
+	for( std::string &t : tokens )
+	{
+		if( t == "id" )
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+ConstOutputPtr addGafferOutputParameters( const Output *output, const ScenePlug *scene, const std::string &outputID, const IECoreScenePreview::Renderer *renderer, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions )
 {
 	CompoundDataPtr param = output->parametersData()->copy();
 
@@ -1653,6 +1689,13 @@ ConstOutputPtr addGafferOutputParameters( const Output *output, const ScenePlug 
 
 	// Include the path to the render node to allow tools to back-track from the image
 	param->writable()["header:gaffer:sourceScene"] = new StringData( scene->relativeName( script ) );
+
+	if( renderOptions.idManifestFilePath != "" && outputUsesId( output ) )
+	{
+		// TODO - relativize
+		param->writable()["header:gaffer:idManifestFilePath"] = new StringData( renderOptions.idManifestFilePath );
+		param->writable()["header:gaffer:idManifestIdentifier"] = new IntData( renderOptions.idManifestIdentifier );
+	}
 
 	// Include the current context
 	const Context *context = Context::current();
@@ -1705,19 +1748,19 @@ namespace Private
 namespace RendererAlgo
 {
 
-void outputOutputs( const ScenePlug *scene, const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer )
+void outputOutputs( const ScenePlug *scene, const RenderOptions &renderOptions, IECoreScenePreview::Renderer *renderer )
 {
-	outputOutputs( scene, globals, /* previousGlobals = */ nullptr, renderer );
+	outputOutputs( scene, renderOptions, /* previousGlobals = */ nullptr, renderer );
 }
 
-void outputOutputs( const ScenePlug *scene, const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer )
+void outputOutputs( const ScenePlug *scene, const RenderOptions &renderOptions, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer )
 {
 	static const std::string prefix( "output:" );
 
 	// Output anything that has changed or was added since last time.
 
 	CompoundObject::ObjectMap::const_iterator it, eIt;
-	for( it = globals->members().begin(), eIt = globals->members().end(); it != eIt; ++it )
+	for( it = renderOptions.globals->members().begin(), eIt = renderOptions.globals->members().end(); it != eIt; ++it )
 	{
 		if( !boost::starts_with( it->first.string(), prefix ) )
 		{
@@ -1726,7 +1769,12 @@ void outputOutputs( const ScenePlug *scene, const IECore::CompoundObject *global
 		if( const Output *output = runTimeCast<Output>( it->second.get() ) )
 		{
 			bool changedOrAdded = true;
-			if( previousGlobals )
+			if( renderOptions.idManifestFilePath != "" && outputUsesId( output ) )
+			{
+				// If we are writing an id manifest and this is an id AOV, we must always update this AOV
+				// ( it will always get a fresh manifest id )
+			}
+			else if( previousGlobals )
 			{
 				if( const Output *previousOutput = previousGlobals->member<Output>( it->first ) )
 				{
@@ -1736,7 +1784,7 @@ void outputOutputs( const ScenePlug *scene, const IECore::CompoundObject *global
 			if( changedOrAdded )
 			{
 				const string outputID = it->first.string().substr( prefix.size() );
-				ConstOutputPtr updatedOutput = addGafferOutputParameters( output, scene, outputID, renderer );
+				ConstOutputPtr updatedOutput = addGafferOutputParameters( output, scene, outputID, renderer, renderOptions );
 				renderer->output( outputID, updatedOutput.get() );
 			}
 		}
@@ -1761,7 +1809,7 @@ void outputOutputs( const ScenePlug *scene, const IECore::CompoundObject *global
 		}
 		if( runTimeCast<Output>( it->second.get() ) )
 		{
-			if( !globals->member<Output>( it->first ) )
+			if( !renderOptions.globals->member<Output>( it->first ) )
 			{
 				renderer->output( it->first.string().substr( prefix.size() ), nullptr );
 			}
@@ -1818,9 +1866,10 @@ void outputLights( const ScenePlug *scene, const RenderOptions &renderOptions, c
 	SceneAlgo::parallelProcessLocations( scene, output );
 }
 
-void outputObjects( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, const LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root )
+void outputObjects( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, const LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root, RenderManifest *renderManifest )
 {
-	ObjectOutput output( renderer, renderOptions, renderSets, lightLinks, root, scene );
+	ObjectOutput output( renderer, renderOptions, renderSets, lightLinks, root, scene, renderManifest );
+
 	SceneAlgo::parallelProcessLocations( scene, output, root );
 }
 
