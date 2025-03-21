@@ -47,6 +47,7 @@ API
   - Updated `targetsWithMetadata()` function to support matching multiple targets.
 - MetadataAlgo : Added `createPlugFromMetadata()` function.
 - RenderController : Added `renderManifest()` method.
+- ImageGadget : Added support for showing selected and highlighted ids. Controlled using `setIDChannel`, `setSelectedIDs`, and `setHighlightID`.
 
 Breaking Changes
 ----------------
