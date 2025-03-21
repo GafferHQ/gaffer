@@ -68,6 +68,15 @@
 #include "tbb/task.h"
 
 #include "fmt/format.h"
+#include "OpenEXR/ImfChannelList.h"
+#include "OpenEXR/ImfFrameBuffer.h"
+#include "OpenEXR/ImfHeader.h"
+#include "OpenEXR/ImfIDManifest.h"
+#include "OpenEXR/ImfIntAttribute.h"
+#include "OpenEXR/ImfMultiPartOutputFile.h"
+#include "OpenEXR/ImfOutputPart.h"
+#include "OpenEXR/ImfPartType.h"
+#include "OpenEXR/ImfStandardAttributes.h"
 
 #include <filesystem>
 
@@ -266,6 +275,66 @@ void createOutputDirectories( const IECore::CompoundObject *globals )
 			}
 		}
 	}
+}
+
+void writeIdManifest( const std::string &filePath, const std::vector<IDPair> &idPairs, int idManifestIdentifier )
+{
+	if( !boost::ends_with( filePath, ".exr" ) )
+	{
+		throw IECore::Exception( "Id manifest file path does not end in \".exr\": " + filePath  );
+	}
+
+	Imf::IDManifest::ChannelGroupManifest idManifest;
+	// We're actually using this as a sidecar manifest ... there is no actual id pass in this exr. But if there
+	// were, we would call it "id".
+	idManifest.setChannel( "id" );
+
+	// Each id corresponds to a single string, which is a path
+	idManifest.setComponent( "path" );
+	idManifest.setEncodingScheme( Imf::IDManifest::ID_SCHEME );
+	idManifest.setHashScheme( Imf::IDManifest::NOTHASHED );
+	idManifest.setLifetime( Imf::IDManifest::LIFETIME_FRAME );
+
+	for( const auto &i : idPairs )
+	{
+		idManifest.insert( i.second, ScenePlug::pathToString( i.first ) );
+	}
+
+	std::vector< Imf::Header > headers( 1 );
+
+	Imath::Box2i window( Imath::V2i( 0 ), Imath::V2i( 30, 2 ) );
+
+	headers[0].dataWindow() = window;
+	headers[0].displayWindow() = window;
+	headers[0].setType( Imf::SCANLINEIMAGE );
+	headers[0].channels().insert( "id", Imf::Channel( Imf::FLOAT ) );
+	headers[0].insert( "gaffer:idManifestIdentifier", Imf::IntAttribute( idManifestIdentifier ) );
+
+	Imf::IDManifest manifestContainer;
+	manifestContainer.add( idManifest );
+	Imf::addIDManifest( headers[0], manifestContainer );
+
+	Imf::MultiPartOutputFile exrOutput( filePath.c_str(), headers.data(), 1 );
+
+	float image[93] = {
+		1,1,0,0,0,1,1,0,1,1,0,0,0,1,0,0,1,1,1,0,1,1,1,0,0,1,1,0,1,1,1,
+		1,1,1,0,1,0,1,0,1,0,1,0,0,1,0,0,1,1,0,0,1,1,0,0,0,1,0,0,0,1,0,
+		1,0,1,0,1,0,1,0,1,0,1,0,0,1,0,0,1,0,0,0,1,1,1,0,1,1,0,0,0,1,0
+	};
+	Imf::FrameBuffer outBuf;
+	outBuf.insert (
+		"id",
+		Imf::Slice (
+			Imf::FLOAT,
+			(char*)image,
+			sizeof( float ),
+			sizeof( float ) * 31
+		)
+	);
+
+	Imf::OutputPart outPart( exrOutput, 0 );
+	outPart.setFrameBuffer( outBuf );
+	outPart.writePixels( 3 );
 }
 
 bool motionTimes( bool motionBlur, const V2f &shutter, const CompoundObject *attributes, const InternedString &attributeName, const InternedString &segmentsAttributeName, std::vector<float> &times )

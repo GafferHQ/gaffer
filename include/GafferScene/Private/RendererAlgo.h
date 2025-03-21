@@ -87,6 +87,10 @@ struct GAFFERSCENE_API RenderOptions
 /// Creates the directories necessary to receive the outputs defined in globals.
 GAFFERSCENE_API void createOutputDirectories( const IECore::CompoundObject *globals );
 
+using IDPair = std::pair< ScenePlug::ScenePath, int >;
+
+GAFFERSCENE_API void writeIdManifest( const std::string &filePath, const std::vector<IDPair> &idPairs, int idManifestIdentifier );
+
 /// Sets `times` to a list of times to sample the transform or deformation of a
 /// location at, based on the render options and location attributes. Returns `true`
 /// if `times` was altered and `false` if it was already set correctly.
