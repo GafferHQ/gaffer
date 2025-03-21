@@ -278,6 +278,50 @@ std::string channelNameFromEXR( std::string view, std::string part, std::string 
 
 }
 
+enum class IntegerMapping { Remap, Reinterpret, Cast };
+
+inline void applyIntegerMapping( float* x, TypeDesc originalType, IntegerMapping integerMapping )
+{
+	if( integerMapping == IntegerMapping::Reinterpret )
+	{
+		// Our initial loading is done as a reinterpret ( since it's the only mapping that doesn't lose information )
+		return;
+	}
+
+	if( originalType == TypeDesc::UINT32 )
+	{
+		uint32_t orig;
+		memcpy( &orig, x, 4 );
+
+		if( integerMapping == IntegerMapping::Remap )
+		{
+			// The default OIIO conversion is a remap
+			OIIO::convert_type( &orig, x, 1 );
+		}
+		else
+		{
+			// A cast will preserve integers that are small enough to be represented by floats
+			*x = (float)orig;
+		}
+	}
+	else if( originalType == TypeDesc::INT32 )
+	{
+		int32_t orig;
+		memcpy( &orig, x, 4 );
+
+		if( integerMapping == IntegerMapping::Remap )
+		{
+			// The default OIIO conversion is a remap
+			OIIO::convert_type( &orig, x, 1 );
+		}
+		else
+		{
+			// A cast will preserve integers that are small enough to be represented by floats
+			*x = (float)orig;
+		}
+	}
+}
+
 inline void basicBlit(
 	int width, int height,
 	const float* src, int srcStrideX, int srcStrideY,
@@ -347,9 +391,10 @@ inline void sampleCountBlit(
 inline void deepBlit(
 	int width, int height,
 	const OIIO::DeepData &src, int channel, int srcStartIndex, int srcStrideY,
-	const int* dstOffsets, int dstStartIndex, int dstStrideY, float *dst
+	const int* dstOffsets, int dstStartIndex, int dstStrideY, float *dst, IntegerMapping integerMapping
 )
 {
+	TypeDesc channelType = src.channeltype( channel );
 	for( int i = 0; i < height; i++ )
 	{
 		int prevOffset = 0;
@@ -365,7 +410,21 @@ inline void deepBlit(
 			int numSamples = src.samples( j );
 			for( int k = 0; k < numSamples; k++ )
 			{
-				*curDst = src.deep_value( j, channel, k );
+				if( channelType == TypeDesc::UINT32 || channelType == TypeDesc::UINT32 )
+				{
+					// Load into the float destination using a bit-wise reinterpret, then
+					// call applyIntegerMapping to do the actual mapping.
+					// \todo - This would be much cleaner in C++20 using std::bit_cast
+					uint32_t uintRead = src.deep_value_uint( j, channel, k );
+					memcpy( curDst, &uintRead, 4 );
+
+					applyIntegerMapping( curDst, channelType, integerMapping );
+				}
+				else
+				{
+					*curDst = src.deep_value( j, channel, k );
+				}
+
 				curDst++;
 			}
 		}
@@ -542,7 +601,7 @@ void blitOIIOSampleCountsToTileBatch(
 void blitDeepOIIORectToTileBatch(
 	int numChannels, const OIIO::DeepData &deepData, const Box2i &rect,
 	const V2i &tileBatchSize, const V3i &tileBatchOrigin, std::vector< float* > &tileChannelPointers,
-	const std::vector< int* > &tileOffsetPointers
+	const std::vector< int* > &tileOffsetPointers, IntegerMapping integerMapping
 )
 {
 	const unsigned int tileBatchChannelSize = tileBatchSize.x * tileBatchSize.y;
@@ -589,7 +648,8 @@ void blitDeepOIIORectToTileBatch(
 					width, height,
 					deepData, channel, rectStartIndex, -rectSize.x,
 					tileOffsetPointers[ tileBatchIndex ], tileStartIndex, ImagePlug::tileSize(),
-					tileChannelPointers[ channel * tileBatchChannelSize + tileBatchIndex ]
+					tileChannelPointers[ channel * tileBatchChannelSize + tileBatchIndex ],
+					integerMapping
 				);
 			}
 		}
@@ -950,6 +1010,30 @@ class File
 			const int tileBatchNumTileChannels = spec.nchannels * view.tileBatchSize.y * view.tileBatchSize.x;
 			const int tileBatchNumTiles = view.tileBatchSize.y * view.tileBatchSize.x;
 
+			// \todo : For it to really be useful to be able to change this, you'd want to be able to
+			// override it in Gaffer, rather than needing to rewrite the file.
+
+			// NOTE : The default value "remap" matches the default behaviour of OIIO when loading integers,
+			// and also the previous behaviour of Gaffer.
+			std::string integerMappingString = spec.get_string_attribute( "gaffer:integerMapping", "remap" );
+			IntegerMapping integerMapping;
+			if( integerMappingString == "remap" )
+			{
+				integerMapping = IntegerMapping::Remap;
+			}
+			else if( integerMappingString == "reinterpret" )
+			{
+				integerMapping = IntegerMapping::Reinterpret;
+			}
+			else if( integerMappingString == "cast" )
+			{
+				integerMapping = IntegerMapping::Cast;
+			}
+			else
+			{
+				throw IECore::Exception( "Metadata specifies gaffer:integerMapping of '" + integerMappingString + "', which is not a known mapping." );
+			}
+
 			ObjectVectorPtr resultChannels = new ObjectVector();
 			resultChannels->members().resize( tileBatchNumTileChannels );
 			std::vector< float* > tileChannelPointers( tileBatchNumTileChannels );
@@ -1078,7 +1162,7 @@ class File
 					spec, tileBatchOrigin, fileTargetRegion, buffer,
 					view.tileBatchSize, tileChannelPointers, tileDataWindows,
 					deepRectsData.size() ? &deepRectsData[0] : nullptr,
-					deepRects.size() ? &deepRects[0] : nullptr, tileOffsetPointers
+					deepRects.size() ? &deepRects[0] : nullptr, tileOffsetPointers, integerMapping
 				);
 			}
 			else if( tileSize == V2i( 0 ) )
@@ -1141,7 +1225,7 @@ class File
 								spec, tileBatchOrigin, batchRect, buffer,
 								view.tileBatchSize, tileChannelPointers, tileDataWindows,
 								deepRectsData.size() ? &deepRectsData[i] : nullptr,
-								deepRects.size() ? &deepRects[i] : nullptr, tileOffsetPointers
+								deepRects.size() ? &deepRects[i] : nullptr, tileOffsetPointers, integerMapping
 							);
 						}
 					},
@@ -1166,7 +1250,7 @@ class File
 					spec, tileBatchOrigin, BufferAlgo::intersection( fileTileRegion, fileDataWindow ), buffer,
 					view.tileBatchSize, tileChannelPointers, tileDataWindows,
 					deepRectsData.size() ? &deepRectsData[0] : nullptr,
-					deepRects.size() ? &deepRects[0] : nullptr, tileOffsetPointers
+					deepRects.size() ? &deepRects[0] : nullptr, tileOffsetPointers, integerMapping
 				);
 			}
 			else
@@ -1205,7 +1289,7 @@ class File
 								spec, tileBatchOrigin, batchRect, buffer,
 								view.tileBatchSize, tileChannelPointers, tileDataWindows,
 								deepRectsData.size() ? &deepRectsData[i] : nullptr,
-								deepRects.size() ? &deepRects[i] : nullptr, tileOffsetPointers
+								deepRects.size() ? &deepRects[i] : nullptr, tileOffsetPointers, integerMapping
 							);
 						}
 					},
@@ -1267,7 +1351,7 @@ class File
 							blitDeepOIIORectToTileBatch(
 								spec.nchannels, deepRectsData[i], deepRects[i],
 								view.tileBatchSize, tileBatchOrigin, tileChannelPointers,
-								tileOffsetPointers
+								tileOffsetPointers, integerMapping
 							);
 						}
 					},
@@ -1314,10 +1398,13 @@ class File
 			const ImageSpec &spec, const V3i &tileBatchOrigin, const Box2i &regionRect, std::vector<float> &buffer,
 			const V2i &tileBatchSize, std::vector< float* > &tileChannelPointers,
 			const std::vector< Box2i > &tileDataWindows,
-			OIIO::DeepData *deepRectData, Box2i *deepRect, std::vector< int* > &tileOffsetPointers
+			OIIO::DeepData *deepRectData, Box2i *deepRect, std::vector< int* > &tileOffsetPointers, IntegerMapping integerMapping
 		)
 		{
 			Box2i gafferRegionRect = flopDisplayWindow( regionRect, spec );
+
+			TypeDesc channelType = spec.channelformat( tileBatchOrigin.z );
+			bool isInteger = channelType == TypeDesc::UINT32 || channelType == TypeDesc::INT32;
 
 			if( !spec.deep )
 			{
@@ -1325,13 +1412,26 @@ class File
 					buffer, spec.nchannels * regionRect.size().x * regionRect.size().y
 				);
 
+				// For integer channels, we claim the temp buffer is of the native type, so we get an implicit
+				// reinterpret cast. This preserves the data, and then we apply an appropriate mapping
+				// according to the metadata "gaffer:integerMapping" below.
+				TypeDesc readFormat = isInteger ? channelType : TypeDesc::FLOAT;
+
 				// Tell OIIO to do the actual read/decompress to the temp buffer
 				if( !m_imageInput->read_scanlines(
 					tileBatchOrigin.z, 0,
-					regionRect.min.y, regionRect.max.y, 0, 0, spec.nchannels, TypeDesc::FLOAT, &buffer[0]
+					regionRect.min.y, regionRect.max.y, 0, 0, spec.nchannels, readFormat, &buffer[0]
 				) )
 				{
 					handleOIIOError( "Failed to read scanlines", gafferRegionRect );
+				}
+
+				if( isInteger )
+				{
+					for( float &f : buffer )
+					{
+						applyIntegerMapping( &f, channelType, integerMapping );
+					}
 				}
 
 				// Copy the data from the temp buffer to whatever tiles it belongs in
@@ -1370,10 +1470,13 @@ class File
 			const ImageSpec &spec, const V3i &tileBatchOrigin, const Box2i &regionRect, std::vector<float> &buffer,
 			const V2i &tileBatchSize, std::vector< float* > &tileChannelPointers,
 			const std::vector< Box2i > &tileDataWindows,
-			OIIO::DeepData *deepRectData, Box2i *deepRect, std::vector< int* > &tileOffsetPointers
+			OIIO::DeepData *deepRectData, Box2i *deepRect, std::vector< int* > &tileOffsetPointers, IntegerMapping integerMapping
 		)
 		{
 			Box2i gafferRegionRect = flopDisplayWindow( regionRect, spec );
+
+			TypeDesc channelType = spec.channelformat( tileBatchOrigin.z );
+			bool isInteger = channelType == TypeDesc::UINT32 || channelType == TypeDesc::INT32;
 
 			if( !spec.deep )
 			{
@@ -1381,14 +1484,27 @@ class File
 					buffer, spec.nchannels * regionRect.size().x * regionRect.size().y
 				);
 
-				// Tell OIIO to do the actual read/decompress to the temp buffer
+				// For integer channels, we claim the temp buffer is of thet native type, so we get an implicit
+				// reinterpret cast. This preserves the data, and then we apply an appropriate mapping
+				// according to the metadata "gaffer:integerMapping" below.
+				TypeDesc readFormat = isInteger ? channelType : TypeDesc::FLOAT;
+
+				// Tell OIIO to do the actual read/decompress to the temp buffer.
 				if( ! m_imageInput->read_tiles(
 					tileBatchOrigin.z, 0,
 					regionRect.min.x, regionRect.max.x, regionRect.min.y, regionRect.max.y,
-					0, 1, 0, spec.nchannels, TypeDesc::FLOAT, &buffer[0]
+					0, 1, 0, spec.nchannels, readFormat, &buffer[0]
 				) )
 				{
 					handleOIIOError( "Failed to read tiles", gafferRegionRect );
+				}
+
+				if( isInteger )
+				{
+					for( float &f : buffer )
+					{
+						applyIntegerMapping( &f, channelType, integerMapping );
+					}
 				}
 
 				// Copy the data from the temp buffer to whatever tiles it belongs in
