@@ -116,6 +116,9 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		void setChannels( const Channels &channels );
 		const Channels &getChannels() const;
 
+		void setIdChannel( const IECore::InternedString &idChannel );
+		const IECore::InternedString getIdChannel();
+
 		using ImageGadgetSignal = Gaffer::Signals::Signal<void (ImageGadget *)>;
 		ImageGadgetSignal &channelsChangedSignal();
 
@@ -167,6 +170,15 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		void setWipeAngle( float angle );
 		float getWipeAngle() const;
 
+
+		void setSelectedIds( std::vector<uint32_t> &&ids );
+
+		void setHighlightId( uint32_t id );
+
+		// Copied from GafferSceneUI/Private/OutputBuffer.h
+		// TODO : Currently public so it can be accessed from TileShaderSelectedIds::ScopedBinding
+		class BufferTexture;
+
 	protected :
 
 		void renderLayer( Layer layer, const GafferUI::Style *style, RenderReason reason ) const override;
@@ -195,6 +207,8 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		Channels m_rgbaChannels;
 		int m_soloChannel;
 		ImageGadgetSignal m_channelsChangedSignal;
+
+		IECore::InternedString m_idChannel;
 
 		bool m_labelsVisible;
 		bool m_paused;
@@ -294,7 +308,7 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 			void resetActive();
 
 			// Called from the UI thread.
-			const IECoreGL::Texture *texture( bool &active );
+			const IECoreGL::Texture *texture( bool &active, bool loadAsId );
 
 			private :
 
@@ -323,10 +337,15 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		// Rendering.
 
 		void visibilityChanged();
-		void renderTiles() const;
+		void renderTiles( bool ids = false ) const;
 		void renderText( const std::string &text, const Imath::V2f &position, const Imath::V2f &alignment, const GafferUI::Style *style ) const;
 
 		BlendMode m_blendMode;
+
+		std::vector<uint32_t> m_selectedIds;
+
+		mutable std::unique_ptr<BufferTexture> m_selectedIdsBuffer;
+		uint32_t m_highlightId;
 };
 
 IE_CORE_DECLAREPTR( ImageGadget )

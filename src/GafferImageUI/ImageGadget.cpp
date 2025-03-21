@@ -82,6 +82,45 @@ using namespace GafferUI;
 using namespace GafferImage;
 using namespace GafferImageUI;
 
+// TODO - copied from GafferSceneUI::OutputBuffer
+class GafferImageUI::ImageGadget::BufferTexture
+{
+	public :
+
+		BufferTexture()
+		{
+			glGenTextures( 1, &m_texture );
+			glGenBuffers( 1, &m_buffer );
+		}
+
+		~BufferTexture()
+		{
+			glDeleteBuffers( 1, &m_buffer );
+			glDeleteTextures( 1, &m_texture );
+		}
+
+		GLuint texture() const
+		{
+			return m_texture;
+		}
+
+		void updateBuffer( const vector<uint32_t> &data )
+		{
+			glBindBuffer( GL_TEXTURE_BUFFER, m_buffer );
+			glBufferData( GL_TEXTURE_BUFFER, sizeof( uint32_t ) * data.size(), data.data(), GL_STREAM_DRAW );
+
+			glBindTexture( GL_TEXTURE_BUFFER, m_texture );
+			glTexBuffer( GL_TEXTURE_BUFFER, GL_R32UI, m_buffer );
+		}
+
+	private :
+
+		GLuint m_texture;
+		GLuint m_buffer;
+
+};
+
+
 namespace {
 void findUsableTextureFormats( GLenum &monochromeFormat, GLenum &colorFormat )
 {
@@ -303,8 +342,166 @@ const TileShader *tileShader()
 	return g_tileShader;
 }
 
-} // namespace
+class TileShaderSelectedIds
+{
 
+	public :
+
+		TileShaderSelectedIds()
+		{
+			m_shader = ShaderLoader::defaultShaderLoader()->create( vertexSource(), "", fragmentSource() );
+
+			// Query shader parameters
+
+			m_idTextureUnit = m_shader->uniformParameter( "idTexture" )->textureUnit;
+			m_selectionTextureUnit = m_shader->uniformParameter( "selectionTexture" )->textureUnit;
+		}
+
+		~TileShaderSelectedIds()
+		{
+		}
+
+		// Binds shader and provides `loadTile()` method to update
+		// parameters for a specific tile.
+		struct ScopedBinding : PushAttrib
+		{
+
+			ScopedBinding( const TileShaderSelectedIds &tileShader, ImageGadget::BufferTexture *ids, uint32_t highlightId )
+				:	PushAttrib( GL_COLOR_BUFFER_BIT ), m_tileShader( tileShader )
+			{
+				glGetIntegerv( GL_CURRENT_PROGRAM, &m_previousProgram );
+				glUseProgram( m_tileShader.m_shader->program() );
+
+				glEnable( GL_TEXTURE_2D );
+
+				glGetIntegerv( GL_BLEND_SRC, &m_prevBlendSrc );
+				glGetIntegerv( GL_BLEND_DST, &m_prevBlendDst );
+
+				glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
+
+				glActiveTexture( GL_TEXTURE0 + tileShader.m_selectionTextureUnit );
+				glBindTexture( GL_TEXTURE_BUFFER, ids->texture() );
+				glUniform1i( tileShader.m_shader->uniformParameter( "selectionTexture" )->location, tileShader.m_selectionTextureUnit );
+
+				glUniform1ui( tileShader.m_shader->uniformParameter( "highlightId" )->location, highlightId );
+
+				glUniform1i( tileShader.m_shader->uniformParameter( "idTexture" )->location, tileShader.m_idTextureUnit );
+			}
+
+			~ScopedBinding()
+			{
+				glUseProgram( m_previousProgram );
+				glBlendFunc( m_prevBlendSrc, m_prevBlendDst );
+			}
+
+			void loadTile( IECoreGL::ConstTexturePtr idTexture )
+			{
+				glActiveTexture( GL_TEXTURE0 + m_tileShader.m_idTextureUnit );
+				idTexture->bind();
+			}
+
+			private :
+
+				const TileShaderSelectedIds &m_tileShader;
+				GLint m_previousProgram;
+				GLint m_prevBlendSrc, m_prevBlendDst;
+		};
+
+	private :
+
+		IECoreGL::ShaderPtr m_shader;
+
+		GLuint m_idTextureUnit;
+		GLuint m_selectionTextureUnit;
+
+		static const char *vertexSource()
+		{
+			static const char *g_vertexSource =
+			"void main()"
+			"{"
+			"	gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * gl_Vertex;"
+			"	gl_TexCoord[0] = gl_MultiTexCoord0;"
+			"	gl_TexCoord[1] = gl_MultiTexCoord1;"
+			"}";
+
+			return g_vertexSource;
+		}
+
+		static const std::string &fragmentSource()
+		{
+
+			// TODO - need to copy wipe features in here too
+			static std::string g_fragmentSource;
+			if( g_fragmentSource.empty() )
+			{
+				g_fragmentSource = R"(
+#version 330 compatibility
+
+// Assumes texture contains sorted values.
+bool contains( usamplerBuffer array, uint value )
+{
+	int high = textureSize( array ) - 1;
+	int low = 0;
+	while( low != high )
+	{
+		int mid = (low + high + 1) / 2;
+		if( texelFetch( array, mid ).r > value )
+		{
+			high = mid - 1;
+		}
+		else
+		{
+			low = mid;
+		}
+	}
+	return texelFetch( array, low ).r == value;
+}
+
+uniform usamplerBuffer selectionTexture;
+uniform usampler2D idTexture;
+uniform uint highlightId;
+
+layout( location=0 ) out vec4 outColor;
+
+void main()
+{
+	vec2 pixelWidth = vec2( dFdx( gl_TexCoord[0].x ), dFdy( gl_TexCoord[0].y ) );
+	vec2 offset = pixelWidth * 4.0;
+	uint id = texture( idTexture, gl_TexCoord[0].xy ).r;
+	bool edge = false;
+	bool selected = contains( selectionTexture, id );
+	bool highlighted = highlightId != 0u && id == highlightId;
+	outColor = vec4( 0 );
+	if( selected || highlighted )
+	{
+		edge = edge || id != texture( idTexture, gl_TexCoord[0].xy + offset * vec2( 1, 0 ) ).r;
+		edge = edge || id != texture( idTexture, gl_TexCoord[0].xy + offset * vec2( -1, 0 ) ).r;
+		edge = edge || id != texture( idTexture, gl_TexCoord[0].xy + offset * vec2( 0, 1 ) ).r;
+		edge = edge || id != texture( idTexture, gl_TexCoord[0].xy + offset * vec2( 0, -1 ) ).r;
+
+		float n = 1.0 / sqrt( 2.0 );
+		edge = edge || id != texture( idTexture, gl_TexCoord[0].xy + offset * vec2( n, n ) ).r;
+		edge = edge || id != texture( idTexture, gl_TexCoord[0].xy + offset * vec2( -n, n ) ).r;
+		edge = edge || id != texture( idTexture, gl_TexCoord[0].xy + offset * vec2( n, -n ) ).r;
+		edge = edge || id != texture( idTexture, gl_TexCoord[0].xy + offset * vec2( -n, -n ) ).r;
+
+		outColor = ( highlighted ? vec4( 0.8, 0.9, 1.0, 1.0 ) : vec4( 0.54, 0.72, 0.87, 1.0 ) ) * ( edge ? 1.0 : 0.3 );
+	}
+}
+)";
+			}
+			return g_fragmentSource;
+		}
+
+};
+
+const TileShaderSelectedIds *tileShaderSelectedIds()
+{
+	static const TileShaderSelectedIds *g_tileShaderSelectedIds = new TileShaderSelectedIds();
+	return g_tileShaderSelectedIds;
+}
+
+} // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // ImageGadget implementation
@@ -319,7 +516,8 @@ ImageGadget::ImageGadget()
 		m_wipeEnabled( false ),
 		m_dirtyFlags( AllDirty ),
 		m_renderRequestPending( false ),
-		m_blendMode( BlendMode::Over )
+		m_blendMode( BlendMode::Over ),
+		m_highlightId( 0 )
 {
 	m_rgbaChannels[0] = "R";
 	m_rgbaChannels[1] = "G";
@@ -399,6 +597,24 @@ void ImageGadget::setChannels( const Channels &channels )
 const ImageGadget::Channels &ImageGadget::getChannels() const
 {
 	return m_rgbaChannels;
+}
+
+void ImageGadget::setIdChannel( const IECore::InternedString & idChannel )
+{
+	if( idChannel == m_idChannel )
+	{
+		return;
+	}
+
+	m_idChannel = idChannel;
+
+	channelsChangedSignal()( this );
+	dirty( TilesDirty );
+}
+
+const IECore::InternedString ImageGadget::getIdChannel()
+{
+	return m_idChannel;
 }
 
 ImageGadget::ImageGadgetSignal &ImageGadget::channelsChangedSignal()
@@ -544,9 +760,26 @@ void ImageGadget::setWipeAngle( float angle )
 	m_wipeAngle = angle;
 }
 
-float  ImageGadget::getWipeAngle() const
+float ImageGadget::getWipeAngle() const
 {
 	return m_wipeAngle;
+}
+
+void ImageGadget::setSelectedIds( std::vector<uint32_t> &&ids )
+{
+	m_selectedIds = std::move( ids );
+	std::sort( m_selectedIds.begin(), m_selectedIds.end() );
+
+	// TODO - extremely hacky, working around OpenGL apparently not supporting zero sized buffers.
+	if( m_selectedIds.size() == 0 )
+	{
+		m_selectedIds.push_back( -1 );
+	}
+}
+
+void ImageGadget::setHighlightId( uint32_t id )
+{
+	m_highlightId = id;
 }
 
 Imath::Box3f ImageGadget::bound() const
@@ -703,6 +936,26 @@ IECoreGL::Texture *blackTexture()
 	return g_texture.get();
 }
 
+IECoreGL::Texture *blackIntTexture()
+{
+	static IECoreGL::TexturePtr g_texture;
+	if( !g_texture )
+	{
+		GLuint texture;
+		glGenTextures( 1, &texture );
+		g_texture = new Texture( texture );
+		Texture::ScopedBinding binding( *g_texture );
+
+		const unsigned int black = 0;
+		glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+		glTexImage2D(
+			GL_TEXTURE_2D, 0, GL_R32UI, /* width = */ 1, /* height = */ 1, 0, GL_RED_INTEGER,
+			GL_UNSIGNED_INT, &black
+		);
+	}
+	return g_texture.get();
+}
+
 } // namespace
 
 ImageGadget::Tile::Tile( const Tile &other )
@@ -758,7 +1011,7 @@ void ImageGadget::Tile::resetActive()
 	m_active = false;
 }
 
-const IECoreGL::Texture *ImageGadget::Tile::texture( bool &active )
+const IECoreGL::Texture *ImageGadget::Tile::texture( bool &active, bool loadAsId )
 {
 	const auto now = std::chrono::steady_clock::now();
 	Mutex::scoped_lock lock( m_mutex );
@@ -784,23 +1037,45 @@ const IECoreGL::Texture *ImageGadget::Tile::texture( bool &active )
 			m_texture = new Texture( texture ); // Lock not needed, because this is only touched on the UI thread.
 			Texture::ScopedBinding binding( *m_texture );
 
-			glTexImage2D(
-				GL_TEXTURE_2D, 0, monochromeTextureFormat, ImagePlug::tileSize(), ImagePlug::tileSize(), 0, GL_RED,
-				GL_FLOAT, nullptr
-			);
+			if( loadAsId )
+			{
+				glTexImage2D(
+					GL_TEXTURE_2D, 0, GL_R32UI, ImagePlug::tileSize(), ImagePlug::tileSize(), 0, GL_RED_INTEGER,
+					GL_UNSIGNED_INT, nullptr
+				);
+			}
+			else
+			{
+				glTexImage2D(
+					GL_TEXTURE_2D, 0, monochromeTextureFormat, ImagePlug::tileSize(), ImagePlug::tileSize(), 0, GL_RED,
+					GL_FLOAT, nullptr
+				);
+			}
 
 			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
 			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+
 		}
 
 		Texture::ScopedBinding binding( *m_texture );
 		glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
-		glTexSubImage2D(
-			GL_TEXTURE_2D, 0, 0, 0, ImagePlug::tileSize(), ImagePlug::tileSize(), GL_RED,
-			GL_FLOAT, channelDataToConvert->readable().data()
-		);
+
+		if( loadAsId )
+		{
+			glTexSubImage2D(
+				GL_TEXTURE_2D, 0, 0, 0, ImagePlug::tileSize(), ImagePlug::tileSize(), GL_RED_INTEGER,
+				GL_UNSIGNED_INT, channelDataToConvert->readable().data()
+			);
+		}
+		else
+		{
+			glTexSubImage2D(
+				GL_TEXTURE_2D, 0, 0, 0, ImagePlug::tileSize(), ImagePlug::tileSize(), GL_RED,
+				GL_FLOAT, channelDataToConvert->readable().data()
+			);
+		}
 
 		g_tileUpdateCount++;
 	}
@@ -845,6 +1120,11 @@ void ImageGadget::updateTiles()
 			{
 				channelsToCompute.push_back( *it );
 			}
+		}
+
+		if( *it == m_idChannel.string() )
+		{
+			channelsToCompute.push_back( *it );
 		}
 	}
 
@@ -971,17 +1251,38 @@ void ImageGadget::visibilityChanged()
 	}
 }
 
-void ImageGadget::renderTiles() const
+void ImageGadget::renderTiles( bool ids ) const
 {
 	float radians = m_wipeAngle * M_PI / 180.0f;
 	const Box2i dataWindow = this->dataWindow();
 
-	TileShader::ScopedBinding shaderBinding(
-		*tileShader(),
-		m_wipeEnabled ? m_wipePos : V2f( dataWindow.min.x, dataWindow.min.y ),
-		m_wipeEnabled ? V2f( cosf( radians ), sinf( radians ) ) : V2f( -1, 0 ),
-		m_blendMode
-	);
+	std::variant< int, TileShader::ScopedBinding, TileShaderSelectedIds::ScopedBinding > shaderBinding;
+
+	if( !ids )
+	{
+		shaderBinding.emplace<TileShader::ScopedBinding>(
+			*tileShader(),
+			m_wipeEnabled ? m_wipePos : V2f( dataWindow.min.x, dataWindow.min.y ),
+			m_wipeEnabled ? V2f( cosf( radians ), sinf( radians ) ) : V2f( -1, 0 ),
+			m_blendMode
+		);
+	}
+	else
+	{
+		if( !m_selectedIdsBuffer )
+		{
+			m_selectedIdsBuffer = std::make_unique<BufferTexture>();
+		}
+
+		m_selectedIdsBuffer->updateBuffer( m_selectedIds );
+
+		shaderBinding.emplace<TileShaderSelectedIds::ScopedBinding>(
+			*tileShaderSelectedIds(),
+			m_selectedIdsBuffer.get(),
+			m_highlightId
+		);
+
+	}
 
 	const float pixelAspect = this->format().getPixelAspect();
 
@@ -990,22 +1291,41 @@ void ImageGadget::renderTiles() const
 	{
 		for( tileOrigin.x = ImagePlug::tileOrigin( dataWindow.min ).x; tileOrigin.x < dataWindow.max.x; tileOrigin.x += ImagePlug::tileSize() )
 		{
-			bool active = false;
-			IECoreGL::ConstTexturePtr channelTextures[4];
-			for( int i = 0; i < 4; ++i )
+
+			if( std::holds_alternative<TileShader::ScopedBinding>( shaderBinding ) )
 			{
-				const InternedString channelName = ( m_soloChannel < 0 || i == 3 ) ? m_rgbaChannels[i] : m_rgbaChannels[m_soloChannel];
-				Tiles::const_iterator it = m_tiles.find( TileIndex( tileOrigin, channelName ) );
+				bool active = false;
+				IECoreGL::ConstTexturePtr channelTextures[4];
+				for( int i = 0; i < 4; ++i )
+				{
+					const InternedString channelName = ( m_soloChannel < 0 || i == 3 ) ? m_rgbaChannels[i] : m_rgbaChannels[m_soloChannel];
+					Tiles::const_iterator it = m_tiles.find( TileIndex( tileOrigin, channelName ) );
+					if( it != m_tiles.end() )
+					{
+						channelTextures[i] = it->second.texture( active, false );
+					}
+					else
+					{
+						channelTextures[i] = blackTexture();
+					}
+				}
+				std::get<TileShader::ScopedBinding>( shaderBinding ).loadTile( channelTextures, active );
+			}
+			else
+			{
+				IECoreGL::ConstTexturePtr idTexture;
+				Tiles::const_iterator it = m_tiles.find( TileIndex( tileOrigin, m_idChannel ) );
 				if( it != m_tiles.end() )
 				{
-					channelTextures[i] = it->second.texture( active );
+					bool temp = false;
+					idTexture = it->second.texture( temp, true );
 				}
 				else
 				{
-					channelTextures[i] = blackTexture();
+					idTexture = blackIntTexture();
 				}
+				std::get<TileShaderSelectedIds::ScopedBinding>( shaderBinding ).loadTile( idTexture );
 			}
-			shaderBinding.loadTile( channelTextures, active );
 
 			const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 			const Box2i validBound = BufferAlgo::intersection( tileBound, dataWindow );
@@ -1131,6 +1451,11 @@ void ImageGadget::renderLayer( Layer layer, const GafferUI::Style *style, Render
 	{
 		renderTiles();
 		return;
+	}
+
+	if( m_idChannel != "" && layer == Layer::Front)
+	{
+		renderTiles( true );
 	}
 
 	// We've already handled Back and Main, so this must be the Front Layer
