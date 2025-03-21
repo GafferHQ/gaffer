@@ -67,7 +67,7 @@ jobs:
             publish: true
             containerImage:
             testRunner: Invoke-Expression
-            testArguments: -excludedCategories performance GafferTest GafferVDBTest GafferUSDTest GafferSceneTest GafferDispatchTest GafferOSLTest GafferImageTest GafferUITest GafferImageUITest GafferSceneUITest GafferDispatchUITest GafferOSLUITest GafferUSDUITest GafferVDBUITest GafferDelightUITest GafferTractorTest GafferTractorUITest GafferMLTest GafferMLUITest
+            testArguments: -excludedCategories performance
             sconsCacheMegabytes: 800
             jobs: 4
 
@@ -182,16 +182,6 @@ jobs:
       env:
         PYTHONUTF8: 1
 
-    - name: Test
-      # Tests should complete in well under an hour. If they don't it's most likely because
-      # of a hang, in which case we'd like to know more quickly than the default 6hr timeout
-      # allows.
-      timeout-minutes: 60
-      run: |
-        echo "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json"
-        ${{ matrix.testRunner }} "${{ env.GAFFER_BUILD_DIR }}/bin/gaffer test ${{ matrix.testArguments }}"
-        echo "::remove-matcher owner=unittest::"
-
     - name: Build and test Arnold extension
       run: |
         import subprocess
@@ -213,11 +203,18 @@ jobs:
           #Build Arnold extension
           subprocess.check_call( "scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions", shell = True )
 
-          if os.name != "nt" :
-            # Test Arnold extension
-            print( "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json" )
-            subprocess.check_call( "${{ matrix.testRunner }} \"" + os.path.join( os.environ["GAFFER_BUILD_DIR"], "bin", "gaffer" ) + " test IECoreArnoldTest GafferArnoldTest GafferArnoldUITest\"", shell = True )
-            print( "::remove-matcher owner=unittest::" )
+          # Test Arnold extension
+          print( "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json" )
+          # We run tests above in Powershell on Windows, but the shell used by `subprocess`
+          # is the Windows Command Prompt, so we make it use Powershell.
+          subprocess.check_call(
+            [ "powerShell", "-Command" ] if os.name == "nt" else [] + [
+              "${{ matrix.testRunner }}",
+              "\"" + os.path.join( os.environ["GAFFER_BUILD_DIR"], "bin", "gaffer" if os.name != "nt" else "gaffer.cmd" ) + " test IECoreArnoldTest GafferArnoldTest GafferArnoldUITest\"",
+            ],
+            shell = True
+          )
+          print( "::remove-matcher owner=unittest::" )
 
           # Publish ARNOLD_ROOT to the environment for subsequent steps,
           # so we can build the docs for GafferArnold.

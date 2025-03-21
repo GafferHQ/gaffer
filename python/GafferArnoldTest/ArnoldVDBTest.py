@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import os
 import pathlib
 import imath
 
@@ -76,7 +77,12 @@ class ArnoldVDBTest( GafferSceneTest.SceneTestCase ) :
 		# As should invalid file names.
 		v["grids"].setValue( "density" )
 		v["fileName"].setValue( "notAFile.vdb" )
-		with self.assertRaisesRegex( Gaffer.ProcessException, "No such file or directory" ) :
+		if os.name != "nt" :
+			errorMessage = "No such file or directory"
+		else :
+			errorMessage = ".* could not get size of file notAFile.vdb"
+
+		with self.assertRaisesRegex( Gaffer.ProcessException, errorMessage ) :
 			v["out"].bound( "/volume" )
 
 	def testStepSize( self ) :
