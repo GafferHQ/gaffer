@@ -48,8 +48,8 @@ if [[ $1 == -psn_0_* ]] ; then
 	shift
 fi
 
-# Set `GAFFER_ROOT`
-# ================
+# Find root of installation
+# =========================
 
 pushd . &> /dev/null
 
@@ -63,10 +63,10 @@ do
 	thisScript=`readlink "$thisScript"`
 done
 
-# Find the bin directory we're in and set `GAFFER_ROOT` from it.
+# Find the bin directory we're in, and get the root directory from that.
 cd "`dirname "$thisScript"`"
 binDir=`pwd -P`
-export GAFFER_ROOT="`dirname "$binDir"`"
+rootDir="`dirname "$binDir"`"
 
 popd &> /dev/null
 
@@ -94,21 +94,17 @@ function prependToPath {
 
 }
 
-if [[ -e $GAFFER_ROOT/bin/python ]] ; then
+prependToPath "$rootDir/bin" PATH
 
-	prependToPath "$GAFFER_ROOT/bin" PATH
-
-	if [[ `uname` = "Linux" ]] ; then
-		prependToPath "$GAFFER_ROOT/lib" LD_LIBRARY_PATH
-	else
-		prependToPath "$GAFFER_ROOT/lib" DYLD_FRAMEWORK_PATH
-	fi
-
-	# Unset PYTHONHOME to make sure our internal Python build is used in
-	# preference to anything in the external environment.
-	unset PYTHONHOME
-
+if [[ `uname` = "Linux" ]] ; then
+	prependToPath "$rootDir/lib" LD_LIBRARY_PATH
+else
+	prependToPath "$rootDir/lib" DYLD_FRAMEWORK_PATH
 fi
+
+# Unset PYTHONHOME to make sure our internal Python build is used in
+# preference to anything in the external environment.
+unset PYTHONHOME
 
 # Run `_gaffer.py` to set up the environment and launch Gaffer
 # ============================================================
@@ -122,7 +118,7 @@ if [[ -n $GAFFER_DEBUG ]] ; then
 		fi
 	fi
 	# Using `which` because lldb doesn't seem to respect $PATH
-	exec $GAFFER_DEBUGGER `which python` "$GAFFER_ROOT/bin/_gaffer.py" "$@"
+	exec $GAFFER_DEBUGGER `which python` "$rootDir/bin/_gaffer.py" "$@"
 else
-	exec python "$GAFFER_ROOT/bin/_gaffer.py" "$@"
+	exec python "$rootDir/bin/_gaffer.py" "$@"
 fi

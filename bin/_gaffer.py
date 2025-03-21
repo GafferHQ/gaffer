@@ -74,7 +74,7 @@ def prependToPath( pathToPrepend, envVar ) :
 
 	os.environ[envVar] = os.pathsep.join( path )
 
-gafferRoot = pathlib.Path( os.environ["GAFFER_ROOT"] )
+gafferRoot = pathlib.Path( __file__ ).resolve().parents[1]
 
 # Cortex Setup
 # ============
@@ -107,6 +107,10 @@ os.environ["LC_NUMERIC"] = "C"
 
 # Core Gaffer Setup
 # =================
+
+## \todo Do we really need `as_posix()` here? We use '\' separators
+# for all the other paths on Windows.
+os.environ["GAFFER_ROOT"] = gafferRoot.as_posix()
 
 prependToPath( gafferRoot / "apps", "GAFFER_APP_PATHS" )
 prependToPath( pathlib.Path.home() / "gaffer" / "apps", "GAFFER_APP_PATHS" )
