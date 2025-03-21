@@ -1,5 +1,11 @@
 @echo off
 
+rem Public-facing launch script for gaffer. This sets up the Python interpreter
+rem and then defers to `_gaffer.py` to set up the appropriate environment
+rem and finally launch `__gaffer.py`.
+rem
+rem \todo Move all remaining environment setup to `_gaffer.py`.
+
 setlocal EnableDelayedExpansion
 
 set GAFFER_ROOT=%~dp0%..
@@ -147,17 +153,6 @@ if "%ONNX_ROOT%" NEQ "" (
 	call :appendToPath "%ONNX_ROOT%\lib" PATH
 )
 
-rem RenderMan
-rem =========
-
-if "%RMANTREE%" NEQ "" (
-	call :appendToPath "%RMANTREE%" GAFFER_EXTENSION_PATHS
-	call :appendToPath "%RMANTREE%\bin" PYTHONPATH
-	call :appendToPath "%RMANTREE%\lib\plugins" RMAN_RIXPLUGINPATH
-	call :appendToPath "%RMANTREE%\lib\shaders" OSL_SHADER_PATHS
-	call :appendToPath "%GAFFER_ROOT%\renderManPlugins" RMAN_DISPLAYS_PATH
-)
-
 rem Set up 3rd party extensions
 rem Batch files are awkward at `for` loops. The default `for`, without `/f`
 rem uses semi-colons AND spaces as delimiters, meaning we would not be able
@@ -188,9 +183,9 @@ for /f "tokens=1* delims=;" %%A in ("%EXTENSION_PATH%") do (
 )
 
 if "%GAFFER_DEBUG%" NEQ "" (
-	%GAFFER_DEBUGGER% "%GAFFER_ROOT%"\bin\python.exe "%GAFFER_ROOT%"/bin/__gaffer.py %*
+	%GAFFER_DEBUGGER% "%GAFFER_ROOT%"\bin\python.exe "%GAFFER_ROOT%"/bin/_gaffer.py %*
 ) else (
-	"%GAFFER_ROOT%"\bin\python.exe "%GAFFER_ROOT%"/bin/__gaffer.py %*
+	"%GAFFER_ROOT%"\bin\python.exe "%GAFFER_ROOT%"/bin/_gaffer.py %*
 )
 
 ENDLOCAL

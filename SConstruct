@@ -37,6 +37,7 @@
 ##########################################################################
 
 import os
+import pathlib
 import re
 import sys
 import glob
@@ -941,7 +942,42 @@ if env["ARNOLD_ROOT"] :
 	arnoldInstallRoot = "${{BUILD_DIR}}/arnold/{ARCH}.{MAJOR}".format( **arnoldVersions )
 
 ###############################################################################################
-# Definitions for the libraries we wish to build
+# RenderMan configuration
+###############################################################################################
+
+renderManInstallRoot = ""
+if env["RENDERMAN_ROOT"] :
+
+	# Version
+
+	renderManHeader = pathlib.Path( env.subst( "$RENDERMAN_ROOT/include/prmanapi.h" ) )
+	if not renderManHeader.exists() :
+		sys.stderr.write( "ERROR : unable to find \"{}\".\n".format( renderManHeader ) )
+		Exit( 1 )
+
+	renderManVersions = {}
+	for line in open( renderManHeader ) :
+		m = re.match( r"^#define _PRMANAPI_VERSION_(MAJOR|MINOR)_\s*([0-9]+)", line )
+		if m :
+			renderManVersions[m.group(1)] = m.group( 2 )
+
+	if set( renderManVersions.keys() ) != { "MAJOR", "MINOR" } :
+		sys.stderr.write( "ERROR : unable to parse \"{}\".\n".format( renderManHeader ) )
+		Exit( 1 )
+
+	# Install root. We install to different roots by RenderMan version, in
+	# anticipation of wanting to support multiple versions concurrently at some
+	# point. It's not really clear what we should use for the version number;
+	# the official Rix APIs advertise compatibility within a major version, but
+	# as far as I can tell, the Riley API doesn't provide any guarantees at all.
+	# It has a separate `RILEY_LIBRARY_VERSION_MAJOR` define, which is currently
+	# at 0.4. So we use PRMan's `{MAJOR}.{MINOR}` to hedge against Riley
+	# changes, and because it provides a more easily recognised number.
+
+	renderManInstallRoot = "${{BUILD_DIR}}/renderMan/{MAJOR}.{MINOR}".format( **renderManVersions )
+
+###############################################################################################
+# Cycles configuration
 ###############################################################################################
 
 # When Cycles is built, it uses several preprocessor variables that enable and
@@ -976,6 +1012,10 @@ cyclesDefines = [
 	( "WITH_CUDA_DYNLOAD" ),
 	( "WITH_OPTIX" ),
 ]
+
+###############################################################################################
+# Definitions for the libraries we wish to build
+###############################################################################################
 
 libraries = {
 
@@ -1364,6 +1404,7 @@ libraries = {
 			"LIBS" : [ "IECoreRenderMan", "IECoreScene$CORTEX_LIB_SUFFIX" ],
 		},
 		"requiredOptions" : [ "RENDERMAN_ROOT" ],
+		"installRoot" : renderManInstallRoot,
 	},
 
 	"IECoreRenderManDisplay" : {
@@ -1374,12 +1415,14 @@ libraries = {
 		"envReplacements" : {
 			"SHLIBPREFIX" : "",
 		},
-		"installName" : "renderManPlugins/d_ieDisplay",
+		"installName" : "plugins/d_ieDisplay",
 		"requiredOptions" : [ "RENDERMAN_ROOT" ],
+		"installRoot" : renderManInstallRoot,
 	},
 
 	"IECoreRenderManTest" : {
 		"requiredOptions" : [ "RENDERMAN_ROOT" ],
+		"installRoot" : renderManInstallRoot,
 	},
 
 	"GafferRenderMan" : {
@@ -1401,18 +1444,22 @@ libraries = {
 			"LIBPATH" : [ "$RENDERMAN_ROOT/lib" ],
 		},
 		"requiredOptions" : [ "RENDERMAN_ROOT" ],
+		"installRoot" : renderManInstallRoot,
 	},
 
 	"GafferRenderManTest" : {
 		"requiredOptions" : [ "RENDERMAN_ROOT" ],
+		"installRoot" : renderManInstallRoot,
 	},
 
 	"GafferRenderManUI" : {
 		"requiredOptions" : [ "RENDERMAN_ROOT" ],
+		"installRoot" : renderManInstallRoot,
 	},
 
 	"GafferRenderManUITest" : {
 		"requiredOptions" : [ "RENDERMAN_ROOT" ],
+		"installRoot" : renderManInstallRoot,
 	},
 
 	"GafferTractor" : {},
@@ -1477,7 +1524,7 @@ libraries = {
 	},
 
 	"scripts" : {
-		"additionalFiles" : [ "bin/__gaffer.py" ],
+		"additionalFiles" : [ "bin/_gaffer.py", "bin/__gaffer.py" ],
 	},
 
 	"misc" : {
