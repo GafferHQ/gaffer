@@ -81,6 +81,7 @@ jobs:
     env:
       ARNOLD_LICENSE_ORDER: none # Don't waste time looking for a license that doesn't exist
       ARNOLD_FORCE_ABORT_ON_LICENSE_FAIL: 0 # And don't abort because the license isn't found
+      GAFFERRENDERMAN_FEATURE_PREVIEW: 1
       GAFFER_BUILD_DIR: "./build"
       GAFFER_CACHE_DIR: "./sconsCache"
 

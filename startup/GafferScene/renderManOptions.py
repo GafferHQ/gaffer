@@ -45,7 +45,7 @@ import Gaffer
 # and register them using Gaffer's standard metadata conventions. This is then
 # used to populate the RenderManOptions node and the RenderPassEditor etc.
 
-if "RMANTREE" in os.environ :
+with IECore.IgnoredExceptions( ImportError ) :
 
 	import GafferRenderMan.ArgsFileAlgo
 

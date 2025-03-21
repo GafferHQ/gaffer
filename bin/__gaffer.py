@@ -35,9 +35,8 @@
 #
 ##########################################################################
 
-# Note: This file is generally considered private. Those wishing to launch
-# gaffer should use the gaffer wrapper script (also in this directory)
-# as it ensures the correct process environment is set up prior to launch.
+# This script is private and should not be called directly. Use the `gaffer`
+# command to launch Gaffer (`gaffer.cmd` on Windows).
 
 import os
 import sys

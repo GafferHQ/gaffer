@@ -36,10 +36,11 @@
 #
 ##########################################################################
 
-# Wrapper script for gaffer. This ensures that relevant environment
-# variables are set appropriately and then runs gaffer.py in the
-# correct python interpreter.
-##########################################################################
+# Public-facing launch script for gaffer. This sets up the Python interpreter
+# and then defers to `_gaffer.py` to set up the appropriate environment
+# and finally launch `__gaffer.py`.
+#
+## \todo Move all remaining environment setup to `_gaffer.py`.
 
 set -e
 
@@ -318,25 +319,6 @@ if [[ -n $ONNX_ROOT ]] ; then
 
 fi
 
-# Set up RenderMan
-##########################################################################
-
-if [[ -n $RMANTREE ]] ; then
-
-	if [[ `uname` = "Linux" ]] ; then
-		appendToPath "$RMANTREE/lib" LD_LIBRARY_PATH
-	else
-		appendToPath "$RMANTREE/lib" DYLD_LIBRARY_PATH
-	fi
-
-	appendToPath "$RMANTREE/bin" PATH
-	appendToPath "$RMANTREE/bin" PYTHONPATH
-	appendToPath "$RMANTREE/lib/plugins" RMAN_RIXPLUGINPATH
-	appendToPath "$GAFFER_ROOT/renderManPlugins" RMAN_DISPLAYS_PATH
-	appendToPath "$RMANTREE/lib/shaders" OSL_SHADER_PATHS
-
-fi
-
 # Set up 3rd Party extensions
 ##########################################################################
 
@@ -389,7 +371,7 @@ if [[ -n $GAFFER_DEBUG ]] ; then
 		fi
 	fi
 	# Using `which` because lldb doesn't seem to respect $PATH
-	exec $GAFFER_DEBUGGER `which python` "$GAFFER_ROOT/bin/__gaffer.py" "$@"
+	exec $GAFFER_DEBUGGER `which python` "$GAFFER_ROOT/bin/_gaffer.py" "$@"
 else
-	exec python "$GAFFER_ROOT/bin/__gaffer.py" "$@"
+	exec python "$GAFFER_ROOT/bin/_gaffer.py" "$@"
 fi
