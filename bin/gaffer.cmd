@@ -19,5 +19,5 @@ if "%GAFFER_DEBUG%" NEQ "" (
 	"%GAFFER_ROOT%"\bin\python.exe "%GAFFER_ROOT%"/bin/_gaffer.py %*
 )
 
-ENDLOCAL
+endlocal
 exit /B %ERRORLEVEL%
