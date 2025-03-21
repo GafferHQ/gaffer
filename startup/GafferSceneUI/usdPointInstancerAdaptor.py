@@ -49,13 +49,15 @@ def __expandUSDPointInstancersMenu( menuDefinition, plugValueWidget ) :
 		return
 
 	renderer = renderAdaptor["renderer"].getValue()
-	currentDict = renderAdaptor["defaultEnabledPerRenderer"].getValue()
-	current = currentDict.get( renderer, IECore.BoolData( True ) ).value
+	currentList = list( renderAdaptor["enabledRenderers"].getValue() )
+	current = renderer in currentList
 
 	def callBackFunc( unused ):
-		modified = currentDict.copy()
-		modified[renderer] = IECore.BoolData( not current )
-		renderAdaptor["defaultEnabledPerRenderer"].setValue( modified )
+		if current:
+			modifiedList = [ i for i in currentList if i != renderer ]
+		else:
+			modifiedList = currentList + [ renderer ]
+		renderAdaptor["enabledRenderers"].setValue( IECore.StringVectorData( modifiedList ) )
 
 	menuDefinition.append( "/AttributesDivider", { "divider" : True } )
 	menuDefinition.append(
