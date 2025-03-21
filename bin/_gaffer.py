@@ -119,6 +119,8 @@ prependToPath( gafferRoot / "bin", "PATH" )
 
 if sys.platform == "darwin" :
 	prependToPath( gafferRoot / "lib", "DYLD_FRAMEWORK_PATH" )
+elif sys.platform == "win32" :
+	appendToPath( gafferRoot / "lib", "IECORE_DLL_DIRECTORIES" )
 
 # OSL Setup
 # =========
@@ -319,6 +321,9 @@ def setUp3rdPartyExtensions() :
 		appendToPath( extensionRoot / "glsl", "IECOREGL_SHADER_INCLUDE_PATHS" )
 		appendToPath( extensionRoot / "shaders", "OSL_SHADER_PATHS" )
 		prependToPath( extensionRoot / "startup", "GAFFER_STARTUP_PATHS" )
+
+		if sys.platform == "win32" :
+			appendToPath( extensionRoot / "lib", "IECORE_DLL_DIRECTORIES" )
 
 setUp3rdPartyExtensions()
 
