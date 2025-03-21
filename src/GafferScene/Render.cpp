@@ -366,7 +366,7 @@ void Render::executeInternal( bool flushCaches ) const
 	Monitor::Scope performanceMonitorScope( performanceMonitor );
 
 	renderOptions.outputOptions( renderer.get() );
-	GafferScene::Private::RendererAlgo::outputOutputs( inPlug(), renderOptions.globals.get(), renderer.get() );
+	GafferScene::Private::RendererAlgo::outputOutputs( inPlug(), renderOptions, renderer.get() );
 
 	{
 		// Using nested scope so that we free the memory used by `renderSets`
@@ -385,7 +385,17 @@ void Render::executeInternal( bool flushCaches ) const
 		GafferScene::Private::RendererAlgo::outputLights( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
 		GafferScene::Private::RendererAlgo::outputLightFilters( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
 		lightLinks.outputLightFilterLinks( adaptedInPlug() );
-		GafferScene::Private::RendererAlgo::outputObjects( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
+
+		if( renderOptions.idManifestFilePath != "" )
+		{
+			GafferScene::RenderManifest renderManifest;
+			GafferScene::Private::RendererAlgo::outputObjects( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get(), ScenePlug::ScenePath(), &renderManifest );
+			renderManifest.writeEXRManifest( renderOptions.idManifestFilePath );
+		}
+		else
+		{
+			GafferScene::Private::RendererAlgo::outputObjects( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
+		}
 	}
 
 	if( !renderScope.sceneTranslationOnly() )
