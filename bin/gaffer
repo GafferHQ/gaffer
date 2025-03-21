@@ -39,31 +39,22 @@
 # Public-facing launch script for gaffer. This sets up the Python interpreter
 # and then defers to `_gaffer.py` to set up the appropriate environment
 # and finally launch `__gaffer.py`.
-#
-## \todo Move all remaining environment setup to `_gaffer.py`.
 
 set -e
 
 # Remove -psn_0 argument that the OS X launcher adds on annoyingly.
-##########################################################################
 
 if [[ $1 == -psn_0_* ]] ; then
 	shift
 fi
 
-# Work around https://github.com/ImageEngine/cortex/issues/1338, which
-# causes bad serialisations in certain locales.
-##########################################################################
-
-export LC_NUMERIC=C
-
-# Find where this script is located, resolving any symlinks that were used
-# to invoke it. Set GAFFER_ROOT based on the script location.
-##########################################################################
+# Find root of installation
+# =========================
 
 pushd . &> /dev/null
 
-# resolve symlinks
+# Find where this script is located, resolving any symlinks that were used
+# to invoke it.
 thisScript=$0
 while [[ -L $thisScript ]]
 do
@@ -72,17 +63,17 @@ do
 	thisScript=`readlink "$thisScript"`
 done
 
-# find the bin directory we're in
+# Find the bin directory we're in, and get the root directory from that.
 cd "`dirname "$thisScript"`"
 binDir=`pwd -P`
-export GAFFER_ROOT="`dirname "$binDir"`"
+rootDir="`dirname "$binDir"`"
 
 popd &> /dev/null
 
-# Make sure resource paths are set appropriately
-##########################################################################
+# Set up bare minimum Python environment
+# ======================================
 
-# Prepend a directory to a path if it is not
+# Prepends a directory to a path if it is not
 # already there.
 #
 # $1 is the value to include in the path
@@ -103,264 +94,20 @@ function prependToPath {
 
 }
 
-function appendToPath {
-
-	if [[ ":${!2}:" != *":$1:"* ]] ; then
-
-		if [[ ${!2} ]] ; then
-			eval "export $2=\"${!2}:$1\""
-		else
-			eval "export $2=\"$1\""
-		fi
-
-	fi
-
-}
-
-prependToPath "$GAFFER_ROOT/glsl" IECOREGL_SHADER_PATHS
-prependToPath "$GAFFER_ROOT/glsl" IECOREGL_SHADER_INCLUDE_PATHS
-
-prependToPath "$GAFFER_ROOT/fonts" IECORE_FONT_PATHS
-prependToPath "$HOME/gaffer/ops:$GAFFER_ROOT/ops" IECORE_OP_PATHS
-
-prependToPath "$GAFFER_ROOT/resources/IECoreUSD" PXR_PLUGINPATH_NAME
-prependToPath "$GAFFER_ROOT/materialX" PXR_MTLX_STDLIB_SEARCH_PATHS
-
-prependToPath "$HOME/gaffer/opPresets:$GAFFER_ROOT/opPresets" IECORE_OP_PRESET_PATHS
-prependToPath "$HOME/gaffer/procedurals:$GAFFER_ROOT/procedurals" IECORE_PROCEDURAL_PATHS
-prependToPath "$HOME/gaffer/proceduralPresets:$GAFFER_ROOT/proceduralPresets" IECORE_PROCEDURAL_PRESET_PATHS
-
-if [[ -z $CORTEX_POINTDISTRIBUTION_TILESET ]] ; then
-	export CORTEX_POINTDISTRIBUTION_TILESET="$GAFFER_ROOT/resources/cortex/tileset_2048.dat"
-fi
-
-prependToPath "$HOME/gaffer/apps:$GAFFER_ROOT/apps" GAFFER_APP_PATHS
-
-prependToPath "$HOME/gaffer/startup" GAFFER_STARTUP_PATHS
-appendToPath "$GAFFER_ROOT/startup" GAFFER_STARTUP_PATHS
-
-prependToPath "$HOME/gaffer/startup" CORTEX_STARTUP_PATHS
-appendToPath "$GAFFER_ROOT/startup" CORTEX_STARTUP_PATHS
-
-prependToPath "$GAFFER_ROOT/graphics" GAFFERUI_IMAGE_PATHS
-
-if [[ -e $GAFFER_ROOT/bin/oslc ]] ; then
-	export OSLHOME=$GAFFER_ROOT
-fi
-
-## \todo: should we rename this to "osl" to match our "glsl" folder?
-prependToPath "$HOME/gaffer/shaders:$GAFFER_ROOT/shaders" OSL_SHADER_PATHS
-
-if [[ -z $GAFFEROSL_CODE_DIRECTORY ]] ; then
-	export GAFFEROSL_CODE_DIRECTORY="$HOME/gaffer/oslCode"
-	appendToPath "$GAFFEROSL_CODE_DIRECTORY" OSL_SHADER_PATHS
-fi
-
-# Get python set up properly
-##########################################################################
-
-# Unset PYTHONHOME to make sure our internal Python build is used in preference
-# to anything in the external environment. We only do this if Gaffer has been
-# built with an internal version of Python - otherwise we assume the existing
-# environment is providing the right value.
-if [[ -e $GAFFER_ROOT/bin/python ]] ; then
-	unset PYTHONHOME
-fi
-
-# Get python module path set up
-
-prependToPath "$GAFFER_ROOT/python" PYTHONPATH
-
-if [[ -z $PYTHONNOUSERSITE ]] ; then
-	# Prevent Python automatically adding a user-level `site-packages`
-	# directory to the `sys.path`. These frequently contain modules which
-	# conflict with our own. Users who know what they are doing can set
-	# `PYTHONNOUSERSITE=0` before running Gaffer if they want to use
-	# the user directory.
-	export PYTHONNOUSERSITE=1
-fi
-
-# Stop Cortex from making all Python modules load with RTLD_GLOBAL.
-export IECORE_RTLD_GLOBAL=0
-
-# Get library paths set up
-##########################################################################
+prependToPath "$rootDir/bin" PATH
 
 if [[ `uname` = "Linux" ]] ; then
-	prependToPath "$GAFFER_ROOT/lib" LD_LIBRARY_PATH
+	prependToPath "$rootDir/lib" LD_LIBRARY_PATH
 else
-	prependToPath "$GAFFER_ROOT/lib" DYLD_FRAMEWORK_PATH
-	prependToPath "$GAFFER_ROOT/lib" DYLD_LIBRARY_PATH
-	prependToPath /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ImageIO.framework/Resources/ DYLD_LIBRARY_PATH
+	prependToPath "$rootDir/lib" DYLD_FRAMEWORK_PATH
 fi
 
-# Set up Qt
-##########################################################################
+# Unset PYTHONHOME to make sure our internal Python build is used in
+# preference to anything in the external environment.
+unset PYTHONHOME
 
-if [[ -e $GAFFER_ROOT/qt/plugins ]] ; then
-	export QT_QPA_PLATFORM_PLUGIN_PATH="$GAFFER_ROOT/qt/plugins"
-fi
-
-# Work around issue with Qt 5.12+ when using a wacom tablet on linux.
-#   See https://bugreports.qt.io/browse/QTBUG-77826
-# This can hopefully be removed once this patch is in:
-#   https://codereview.qt-project.org/c/qt/qtbase/+/284141
-export QT_XCB_TABLET_LEGACY_COORDINATES=1
-
-# Get the executable path set up, for running child processes from Gaffer
-##########################################################################
-
-prependToPath "$GAFFER_ROOT/bin" PATH
-
-# Set up Cycles
-##########################################################################
-
-if [[ -z $CYCLES_ROOT && -d $GAFFER_ROOT/cycles ]] ; then
-
-	export CYCLES_ROOT="$GAFFER_ROOT/cycles"
-
-fi
-
-if [[ $CYCLES_ROOT ]] ; then
-
-	prependToPath "$CYCLES_ROOT/bin" PATH
-
-fi
-
-# Set up Arnold
-##########################################################################
-
-if [[ $ARNOLD_ROOT ]] ; then
-
-	# Put Arnold's own libs and binaries on the appropriate paths.
-
-	if [[ `uname` = "Linux" ]] ; then
-		appendToPath "$ARNOLD_ROOT/bin" LD_LIBRARY_PATH
-	else
-		appendToPath "$ARNOLD_ROOT/bin" DYLD_LIBRARY_PATH
-	fi
-
-	appendToPath "$ARNOLD_ROOT/bin" PATH
-	appendToPath "$ARNOLD_ROOT/python" PYTHONPATH
-
-	# Figure out the Arnold version, and set up the matching Gaffer extension.
-
-	if [[ -f "$ARNOLD_ROOT/include/ai_version.h" ]] ; then
-
-		# Parse Arnold version information into an array of `[ arch, major, minor ]`
-		arnoldVersion=($(awk \
-			'$1=="#define" && $2=="AI_VERSION_ARCH_NUM"{arch = $3}; \
-			$1=="#define" && $2=="AI_VERSION_MAJOR_NUM"{major = $3}; \
-			$1=="#define" && $2=="AI_VERSION_MINOR_NUM"{print arch,major,$3}' \
-			"$ARNOLD_ROOT/include/ai_version.h"
-		))
-
-		# Look for a compiled plugin matching `arch.major`.
-		arnoldPluginVersion=${arnoldVersion[0]}.${arnoldVersion[1]}
-		if [[ -d "$GAFFER_ROOT/arnold/$arnoldPluginVersion" ]] ; then
-			prependToPath "$GAFFER_ROOT/arnold/$arnoldPluginVersion" GAFFER_EXTENSION_PATHS
-			prependToPath "$ARNOLD_ROOT/plugins:$GAFFER_ROOT/arnold/$arnoldPluginVersion/arnoldPlugins" ARNOLD_PLUGIN_PATH
-		else
-			echo "WARNING : GafferArnold extension not available for Arnold $arnoldVersion" >&2
-		fi
-
-	else
-		echo "WARNING : Unable to determine Arnold version" >&2
-	fi
-
-	# Disable Autodesk Analytics, unless is is being explicitly managed already
-	# by setting `ARNOLD_ADP_OPTIN` or `ARNOLD_ADP_DISABLE`.
-	if [[ -z $ARNOLD_ADP_OPTIN && -z $ARNOLD_ADP_DISABLE ]] ; then
-		arnoldVersionNum=$(( ${arnoldVersion[0]} * 10000 + ${arnoldVersion[1]} * 100 + ${arnoldVersion[2]} ))
-		if (( ${arnoldVersionNum} >= 70104 )) ; then
-			# `ARNOLD_ADP_DISABLE` is new in Arnold `7.1.4.0`, and is claimed
-			# to completely disable ADP.
-			export ARNOLD_ADP_DISABLE=1
-		else
-			# In older Arnold versions, we only have `ARNOLD_ADP_OPTIN`, which
-			# still allows ADP to run, but is meant to opt out of reporting.
-			# In Arnold 7.1.4.0 is has been observed to cause hangs.
-			export ARNOLD_ADP_OPTIN=0
-		fi
-	fi
-
-fi
-
-# Set up 3Delight
-##########################################################################
-
-if [[ -n $DELIGHT ]] ; then
-
-	if [[ `uname` = "Linux" ]] ; then
-		appendToPath "$DELIGHT/lib" LD_LIBRARY_PATH
-	else
-		appendToPath "$DELIGHT/lib" DYLD_LIBRARY_PATH
-	fi
-
-	appendToPath "$DELIGHT/bin" PATH
-	appendToPath "$DELIGHT/python" PYTHONPATH
-
-	# The `$DELIGHT` component is included for backward compatibility and can be removed
-	# when users have had time to update to `$DELIGHT/osl` pathed shaders.
-	appendToPath "$DELIGHT/osl:$DELIGHT" OSL_SHADER_PATHS
-
-fi
-
-# Set up ONNX
-##########################################################################
-
-if [[ -n $ONNX_ROOT ]] ; then
-
-	if [[ `uname` = "Linux" ]] ; then
-		appendToPath "$ONNX_ROOT/lib" LD_LIBRARY_PATH
-	else
-		appendToPath "$ONNX_ROOT/lib" DYLD_LIBRARY_PATH
-	fi
-
-fi
-
-# Set up 3rd Party extensions
-##########################################################################
-
-IFS=:
-for extension in $GAFFER_EXTENSION_PATHS; do
-
-	if [[ `uname` = "Linux" ]] ; then
-		appendToPath "$extension/lib" LD_LIBRARY_PATH
-	else
-		appendToPath "$extension/lib" DYLD_LIBRARY_PATH
-	fi
-
-	appendToPath "$extension/bin" PATH
-	appendToPath "$extension/python" PYTHONPATH
-	appendToPath "$extension/apps" GAFFER_APP_PATHS
-	appendToPath "$extension/graphics" GAFFERUI_IMAGE_PATHS
-	appendToPath "$extension/glsl" IECOREGL_SHADER_PATHS
-	appendToPath "$extension/glsl" IECOREGL_SHADER_INCLUDE_PATHS
-	appendToPath "$extension/shaders" OSL_SHADER_PATHS
-	prependToPath "$extension/startup" GAFFER_STARTUP_PATHS
-
-done
-unset IFS
-
-# Set up jemalloc
-##########################################################################
-
-if [[ $GAFFER_JEMALLOC != "0" ]] ; then
-	if [[ `uname` = "Linux" ]] ; then
-		appendToPath "$GAFFER_ROOT/lib/libjemalloc.so" LD_PRELOAD
-	fi
-fi
-
-# Set up OCIO
-##########################################################################
-
-if [[ -z $OCIO ]] ; then
-	export OCIO="ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1"
-fi
-
-# Run gaffer itself
-##########################################################################
+# Run `_gaffer.py` to set up the environment and launch Gaffer
+# ============================================================
 
 if [[ -n $GAFFER_DEBUG ]] ; then
 	if [[ -z $GAFFER_DEBUGGER ]] ; then
@@ -371,7 +118,7 @@ if [[ -n $GAFFER_DEBUG ]] ; then
 		fi
 	fi
 	# Using `which` because lldb doesn't seem to respect $PATH
-	exec $GAFFER_DEBUGGER `which python` "$GAFFER_ROOT/bin/_gaffer.py" "$@"
+	exec $GAFFER_DEBUGGER `which python` "$rootDir/bin/_gaffer.py" "$@"
 else
-	exec python "$GAFFER_ROOT/bin/_gaffer.py" "$@"
+	exec python "$rootDir/bin/_gaffer.py" "$@"
 fi

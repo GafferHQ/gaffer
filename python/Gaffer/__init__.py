@@ -38,14 +38,6 @@
 import os
 import pathlib
 
-# Make sure we can can find DLLs that are linked into Python modules on Windows.
-if hasattr( os, "add_dll_directory" ) :
-	os.add_dll_directory( ( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "lib" ).resolve() )
-	for extensionPath in os.environ.get( "GAFFER_EXTENSION_PATHS", "" ).split( os.pathsep ) :
-		for dllPath in [ pathlib.Path( extensionPath ) / d for d in [ "bin", "lib" ] ] :
-			if dllPath.is_dir() :
-				os.add_dll_directory( dllPath.resolve() )
-
 __import__( "IECore" )
 
 from ._Gaffer import *
