@@ -1280,7 +1280,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 
 RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer::ConstContextPtr &context, const IECoreScenePreview::RendererPtr &renderer )
 	:	m_renderer( renderer ),
-		m_idMap( std::make_unique<PathIDMap>( true ) ),
+		m_idMap( std::make_unique<PathIdMap>( true ) ),
 		m_minimumExpansionDepth( 0 ),
 		m_updateRequired( false ),
 		m_updateRequested( false ),
@@ -1564,7 +1564,7 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 		{
 			RenderOptions renderOptions( m_scene.get() );
 			renderOptions.outputOptions( m_renderer.get(), &m_renderOptions );
-			Private::RendererAlgo::outputOutputs( m_scene.get(), renderOptions.globals.get(), m_renderOptions.globals.get(), m_renderer.get() );
+			Private::RendererAlgo::outputOutputs( m_scene.get(), renderOptions, m_renderOptions.globals.get(), m_renderer.get() );
 			if( *renderOptions.globals != *m_renderOptions.globals )
 			{
 				m_changedGlobalComponents |= GlobalsGlobalComponent;
@@ -1746,14 +1746,14 @@ void RenderController::cancelBackgroundTask()
 	}
 }
 
-const PathIDMap *RenderController::pathIDMap() const
+const PathIdMap *RenderController::pathIdMap() const
 {
 	return m_idMap.get();
 }
 
 std::optional<ScenePlug::ScenePath> RenderController::pathForID( uint32_t id ) const
 {
-	return m_idMap->pathForID( id );
+	return m_idMap->pathForId( id );
 }
 
 IECore::PathMatcher RenderController::pathsForIDs( const std::vector<uint32_t> &ids ) const
@@ -1761,7 +1761,7 @@ IECore::PathMatcher RenderController::pathsForIDs( const std::vector<uint32_t> &
 	IECore::PathMatcher result;
 	for( auto id : ids )
 	{
-		if( auto path = m_idMap->pathForID( id ) )
+		if( auto path = m_idMap->pathForId( id ) )
 		{
 			result.addPath( *path );
 		}
