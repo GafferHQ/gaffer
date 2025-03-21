@@ -366,7 +366,7 @@ void Render::executeInternal( bool flushCaches ) const
 	Monitor::Scope performanceMonitorScope( performanceMonitor );
 
 	renderOptions.outputOptions( renderer.get() );
-	GafferScene::Private::RendererAlgo::outputOutputs( inPlug(), renderOptions.globals.get(), renderer.get() );
+	GafferScene::Private::RendererAlgo::outputOutputs( inPlug(), renderOptions, renderer.get() );
 
 	{
 		// Using nested scope so that we free the memory used by `renderSets`
@@ -385,7 +385,23 @@ void Render::executeInternal( bool flushCaches ) const
 		GafferScene::Private::RendererAlgo::outputLights( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
 		GafferScene::Private::RendererAlgo::outputLightFilters( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
 		lightLinks.outputLightFilterLinks( adaptedInPlug() );
-		GafferScene::Private::RendererAlgo::outputObjects( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
+
+		if( renderOptions.renderManifestFilePath() != "" )
+		{
+			GafferScene::RenderManifest renderManifest;
+			GafferScene::Private::RendererAlgo::outputObjects( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get(), ScenePlug::ScenePath(), &renderManifest );
+
+			// Make sure the directory exists to write the exr manifest to.
+			std::filesystem::create_directories(
+				std::filesystem::path( renderOptions.renderManifestFilePath() ).parent_path()
+			);
+
+			renderManifest.writeEXRManifest( renderOptions.renderManifestFilePath() );
+		}
+		else
+		{
+			GafferScene::Private::RendererAlgo::outputObjects( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
+		}
 	}
 
 	if( !renderScope.sceneTranslationOnly() )
