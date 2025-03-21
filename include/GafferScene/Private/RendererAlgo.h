@@ -78,6 +78,8 @@ struct GAFFERSCENE_API RenderOptions
 	bool deformationBlur;
 	Imath::V2f shutter;
 	IECore::ConstStringVectorDataPtr includedPurposes;
+	std::string idManifestFilePath;
+	int32_t idManifestIdentifier;
 	/// Returns true if `includedPurposes` includes the purpose defined by
 	/// `attributes`.
 	bool purposeIncluded( const IECore::CompoundObject *attributes ) const;
@@ -87,9 +89,9 @@ struct GAFFERSCENE_API RenderOptions
 /// Creates the directories necessary to receive the outputs defined in globals.
 GAFFERSCENE_API void createOutputDirectories( const IECore::CompoundObject *globals );
 
-using IDPair = std::pair< ScenePlug::ScenePath, int >;
+using IdPair = std::pair< ScenePlug::ScenePath, int >;
 
-GAFFERSCENE_API void writeIdManifest( const std::string &filePath, const std::vector<IDPair> &idPairs, int idManifestIdentifier );
+GAFFERSCENE_API void writeIdManifest( const std::string &filePath, const std::vector<IdPair> &idPairs, int idManifestIdentifier );
 
 /// Sets `times` to a list of times to sample the transform or deformation of a
 /// location at, based on the render options and location attributes. Returns `true`
@@ -110,8 +112,8 @@ GAFFERSCENE_API bool transformSamples( const Gaffer::M44fPlug *transformPlug, co
 /// Primitives and Cameras, since other object types cannot be interpolated anyway.
 GAFFERSCENE_API bool objectSamples( const Gaffer::ObjectPlug *objectPlug, const std::vector<float> &sampleTimes, std::vector<IECore::ConstObjectPtr> &samples, IECore::MurmurHash *hash = nullptr );
 
-GAFFERSCENE_API void outputOutputs( const ScenePlug *scene, const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer );
-GAFFERSCENE_API void outputOutputs( const ScenePlug *scene, const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
+GAFFERSCENE_API void outputOutputs( const ScenePlug *scene, const RenderOptions &renderOptions, IECoreScenePreview::Renderer *renderer );
+GAFFERSCENE_API void outputOutputs( const ScenePlug *scene, const RenderOptions &renderOptions, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
 
 /// Utility class to handle all the set computations needed for a render.
 class GAFFERSCENE_API RenderSets : boost::noncopyable
@@ -284,7 +286,7 @@ class GAFFERSCENE_API LightLinks : boost::noncopyable
 GAFFERSCENE_API void outputCameras( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer );
 GAFFERSCENE_API void outputLightFilters( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer );
 GAFFERSCENE_API void outputLights( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer );
-GAFFERSCENE_API void outputObjects( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, const LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
+GAFFERSCENE_API void outputObjects( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, const LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root = ScenePlug::ScenePath(), std::vector< IdPair > *idList = nullptr );
 
 } // namespace RendererAlgo
 
