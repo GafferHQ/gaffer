@@ -5,6 +5,7 @@ Features
 --------
 
 - Arnold : Added multi-layer EXR support. All outputs with the same filename are now written to the same file via a single output driver.
+- Image Selection Tool : Added new tool that allows selecting scene paths based on an image. Works with both Catalogue images and images on disk. Has two requirements: an `id` AOV ( may be added using the `ID` preset on an `Outputs` ), and a render manifest ( can be added to a render using StandardOptions > Render Manifest > File Path ).
 
 Improvements
 ------------
