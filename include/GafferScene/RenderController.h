@@ -41,6 +41,8 @@
 
 #include "Gaffer/Signals.h"
 
+#include "GafferScene/PathIdMap.h"
+
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/Private/RendererAlgo.h"
 
@@ -100,9 +102,13 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 		//
 		// These allow IDs acquired from a standard `uint id` AOV to be mapped
 		// back to the scene paths they came from.
+		// \todo : The new naming convention is to use "Id" rather than "ID" as our camel case spelling, but I'm not
+		// sure if we want to change this existing function signature
 
 		std::optional<ScenePlug::ScenePath> pathForID( uint32_t id ) const;
 		IECore::PathMatcher pathsForIDs( const std::vector<uint32_t> &ids ) const;
+
+		const PathIdMap *pathIdMap() const;
 
 		// Returns the ID associated with the specified path, or `0` if that
 		// path has not been rendered and `createIfNecessary` is `false`.
@@ -138,12 +144,11 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 
 		class SceneGraph;
 		class SceneGraphUpdateTask;
-		class IDMap;
 
 		ConstScenePlugPtr m_scene;
 		Gaffer::ConstContextPtr m_context;
 		IECoreScenePreview::RendererPtr m_renderer;
-		std::unique_ptr<IDMap> m_idMap;
+		std::unique_ptr<PathIdMap> m_idMap;
 
 		GafferScene::VisibleSet m_visibleSet;
 		size_t m_minimumExpansionDepth;

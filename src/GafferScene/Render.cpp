@@ -343,7 +343,7 @@ void Render::executeInternal( bool flushCaches ) const
 	Monitor::Scope performanceMonitorScope( performanceMonitor );
 
 	renderOptions.outputOptions( renderer.get() );
-	GafferScene::Private::RendererAlgo::outputOutputs( inPlug(), renderOptions.globals.get(), renderer.get() );
+	GafferScene::Private::RendererAlgo::outputOutputs( inPlug(), renderOptions, renderer.get() );
 
 	{
 		// Using nested scope so that we free the memory used by `renderSets`
@@ -362,7 +362,21 @@ void Render::executeInternal( bool flushCaches ) const
 		GafferScene::Private::RendererAlgo::outputLights( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
 		GafferScene::Private::RendererAlgo::outputLightFilters( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
 		lightLinks.outputLightFilterLinks( adaptedInPlug() );
-		GafferScene::Private::RendererAlgo::outputObjects( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
+
+		if( renderOptions.idManifestFilePath != "" )
+		{
+			// \TODO : This is definitely one of the sketchier places in the APIs I'm playing with here. It would
+			// definitely look simpler here if manifest writing was made part of outputObjects() ... then IdPair
+			// probably wouldn't even need to be public. But it seems a bit unexpected that a function named
+			// outputObjects would write an id manifest?
+			std::vector< GafferScene::Private::RendererAlgo::IdPair > idList;
+			GafferScene::Private::RendererAlgo::outputObjects( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get(), ScenePlug::ScenePath(), &idList );
+			GafferScene::Private::RendererAlgo::writeIdManifest( renderOptions.idManifestFilePath, idList, renderOptions.idManifestIdentifier );
+		}
+		else
+		{
+			GafferScene::Private::RendererAlgo::outputObjects( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
+		}
 	}
 
 	if( renderScope.sceneTranslationOnly() )

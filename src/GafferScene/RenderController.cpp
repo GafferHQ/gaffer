@@ -232,67 +232,6 @@ struct ObjectInterfaceHandle : public boost::noncopyable
 
 } // namespace
 
-//////////////////////////////////////////////////////////////////////////
-// Internal implementation details
-//////////////////////////////////////////////////////////////////////////
-
-// Maps between scene locations and integer IDs.
-class RenderController::IDMap
-{
-
-	public :
-
-		uint32_t idForPath( const ScenePlug::ScenePath &path, bool createIfNecessary = false )
-		{
-			Mutex::scoped_lock lock( m_mutex, /* write = */ false );
-			auto it = m_map.find( path );
-			if( it != m_map.end() )
-			{
-				return it->second;
-			}
-
-			if( !createIfNecessary)
-			{
-				return 0;
-			}
-
-			lock.upgrade_to_writer();
-			return m_map.insert( PathAndID( path, m_map.size() + 1 ) ).first->second;
-		}
-
-		std::optional<ScenePlug::ScenePath> pathForID( uint32_t id ) const
-		{
-			Mutex::scoped_lock lock( m_mutex, /* write = */ false );
-			auto &index = m_map.get<1>();
-			auto it = index.find( id );
-			if( it != index.end() )
-			{
-				return it->first;
-			}
-			return std::nullopt;
-		}
-
-	private :
-
-		using PathAndID = std::pair<ScenePlug::ScenePath, uint32_t>;
-		using Map = boost::multi_index::multi_index_container<
-			PathAndID,
-			boost::multi_index::indexed_by<
-				boost::multi_index::ordered_unique<
-					boost::multi_index::member<PathAndID, ScenePlug::ScenePath, &PathAndID::first>
-				>,
-				boost::multi_index::ordered_unique<
-					boost::multi_index::member<PathAndID, uint32_t, &PathAndID::second>
-				>
-			>
-		>;
-		using Mutex = tbb::spin_rw_mutex;
-
-		Map m_map;
-		mutable Mutex m_mutex;
-
-};
-
 // Represents a location in the Gaffer scene as specified to the
 // renderer. We use this to build up a persistent representation of
 // the scene which we can traverse to perform selective updates to
@@ -546,7 +485,7 @@ class RenderController::SceneGraph
 					/// \todo Measure overhead and consider using same IDs everywhere.
 					if( controller->m_renderer->name() != g_openGLRendererName )
 					{
-						m_objectInterface->assignID( controller->m_idMap->idForPath( path, /* createIfNecessary = */ true ) );
+						m_objectInterface->assignID( controller->m_idMap->mapPath( path ) );
 					}
 				}
 
@@ -1341,7 +1280,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 
 RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer::ConstContextPtr &context, const IECoreScenePreview::RendererPtr &renderer )
 	:	m_renderer( renderer ),
-		m_idMap( std::make_unique<IDMap>() ),
+		m_idMap( std::make_unique<PathIdMap>( true ) ),
 		m_minimumExpansionDepth( 0 ),
 		m_updateRequired( false ),
 		m_updateRequested( false ),
@@ -1625,7 +1564,7 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 		{
 			RenderOptions renderOptions( m_scene.get() );
 			renderOptions.outputOptions( m_renderer.get(), &m_renderOptions );
-			Private::RendererAlgo::outputOutputs( m_scene.get(), renderOptions.globals.get(), m_renderOptions.globals.get(), m_renderer.get() );
+			Private::RendererAlgo::outputOutputs( m_scene.get(), renderOptions, m_renderOptions.globals.get(), m_renderer.get() );
 			if( *renderOptions.globals != *m_renderOptions.globals )
 			{
 				m_changedGlobalComponents |= GlobalsGlobalComponent;
@@ -1807,9 +1746,14 @@ void RenderController::cancelBackgroundTask()
 	}
 }
 
+const PathIdMap *RenderController::pathIdMap() const
+{
+	return m_idMap.get();
+}
+
 std::optional<ScenePlug::ScenePath> RenderController::pathForID( uint32_t id ) const
 {
-	return m_idMap->pathForID( id );
+	return m_idMap->pathForId( id );
 }
 
 IECore::PathMatcher RenderController::pathsForIDs( const std::vector<uint32_t> &ids ) const
@@ -1817,7 +1761,7 @@ IECore::PathMatcher RenderController::pathsForIDs( const std::vector<uint32_t> &
 	IECore::PathMatcher result;
 	for( auto id : ids )
 	{
-		if( auto path = m_idMap->pathForID( id ) )
+		if( auto path = m_idMap->pathForId( id ) )
 		{
 			result.addPath( *path );
 		}
@@ -1827,7 +1771,14 @@ IECore::PathMatcher RenderController::pathsForIDs( const std::vector<uint32_t> &
 
 uint32_t RenderController::idForPath( const ScenePlug::ScenePath &path, bool createIfNecessary ) const
 {
-	return m_idMap->idForPath( path, createIfNecessary );
+	if( createIfNecessary )
+	{
+		return m_idMap->mapPath( path );
+	}
+	else
+	{
+		return m_idMap->idForPath( path );
+	}
 }
 
 std::vector<uint32_t> RenderController::idsForPaths( const IECore::PathMatcher &paths, bool createIfNecessary ) const

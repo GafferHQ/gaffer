@@ -6,7 +6,7 @@
    height="1000"
    id="svg2"
    version="1.1"
-   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
    sodipodi:docname="graphics.svg"
    enable-background="new"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -300,7 +300,7 @@
          id="stop2644-7" />
     </linearGradient>
     <linearGradient
-       gradientTransform="translate(0.275696,-0.72264739)"
+       gradientTransform="translate(66.275696,-0.72264739)"
        gradientUnits="userSpaceOnUse"
        y2="1838.3621"
        x2="269.50001"
@@ -2634,6 +2634,14 @@
          width="25"
          height="25"
          x="286"
+         y="1774"
+         inkscape:label="gafferSceneUIVisualiserTool" />
+      <rect
+         style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.917663;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
+         id="gafferSceneUIImagePickTool"
+         width="25"
+         height="25"
+         x="319"
          y="1774"
          inkscape:label="gafferSceneUIVisualiserTool" />
     </g>
@@ -5552,6 +5560,199 @@
            d="m 141.65639,226.0474 8.39242,3.31798 8.67829,-3.29262 -8.52267,-2.56187 z"
            id="path5773"
            sodipodi:nodetypes="ccccc" />
+      </g>
+      <g
+         id="imagePick"
+         style="display:inline"
+         transform="translate(0,-1.7e-5)">
+        <rect
+           style="fill:#454545;fill-opacity:1;stroke:none;stroke-linecap:round"
+           id="rect2549-5"
+           width="25"
+           height="25"
+           x="319"
+           y="1826.3622" />
+        <g
+           id="g9911-3"
+           style="fill:#787878;fill-opacity:1">
+          <rect
+             style="fill:#787878;fill-opacity:1;stroke:none;stroke-linecap:round"
+             id="rect9478-5"
+             width="12"
+             height="20"
+             x="331.5"
+             y="1830.8622" />
+          <rect
+             style="fill:#787878;fill-opacity:1;stroke:none;stroke-linecap:round"
+             id="rect9824-6"
+             width="16"
+             height="16"
+             x="327.5"
+             y="1834.8622" />
+          <rect
+             style="fill:#787878;fill-opacity:1;stroke:none;stroke-linecap:round"
+             id="rect9826-2"
+             width="20"
+             height="12"
+             x="323.5"
+             y="1838.8622" />
+        </g>
+        <g
+           id="g8604-9">
+          <rect
+             style="fill:#000000;fill-opacity:1;stroke:none;stroke-linecap:round"
+             id="rect6127-1"
+             width="1"
+             height="25"
+             x="319"
+             y="1826.3622" />
+          <rect
+             style="fill:#000000;fill-opacity:1;stroke:none;stroke-linecap:round"
+             id="rect6869-2"
+             width="1"
+             height="25"
+             x="323"
+             y="1826.3622" />
+          <rect
+             style="fill:#000000;fill-opacity:1;stroke:none;stroke-linecap:round"
+             id="rect6871-7"
+             width="1"
+             height="25"
+             x="327"
+             y="1826.3622" />
+          <rect
+             style="fill:#000000;fill-opacity:1;stroke:none;stroke-linecap:round"
+             id="rect6873-0"
+             width="1"
+             height="25"
+             x="331"
+             y="1826.3622" />
+          <rect
+             style="fill:#000000;fill-opacity:1;stroke:none;stroke-linecap:round"
+             id="rect6875-9"
+             width="1"
+             height="25"
+             x="335"
+             y="1826.3622" />
+          <rect
+             style="fill:#000000;fill-opacity:1;stroke:none;stroke-linecap:round"
+             id="rect6877-3"
+             width="1"
+             height="25"
+             x="339"
+             y="1826.3622" />
+          <rect
+             style="fill:#000000;fill-opacity:1;stroke:none;stroke-linecap:round"
+             id="rect6879-6"
+             width="1"
+             height="25"
+             x="343"
+             y="1826.3622" />
+        </g>
+        <g
+           id="g8620-0"
+           transform="rotate(90,331.5,1838.8622)">
+          <rect
+             style="fill:#000000;fill-opacity:1;stroke:none;stroke-linecap:round"
+             id="rect8606-6"
+             width="1"
+             height="25"
+             x="319"
+             y="1826.3622" />
+          <rect
+             style="fill:#000000;fill-opacity:1;stroke:none;stroke-linecap:round"
+             id="rect8608-2"
+             width="1"
+             height="25"
+             x="323"
+             y="1826.3622" />
+          <rect
+             style="fill:#000000;fill-opacity:1;stroke:none;stroke-linecap:round"
+             id="rect8610-6"
+             width="1"
+             height="25"
+             x="327"
+             y="1826.3622" />
+          <rect
+             style="fill:#000000;fill-opacity:1;stroke:none;stroke-linecap:round"
+             id="rect8612-1"
+             width="1"
+             height="25"
+             x="331"
+             y="1826.3622" />
+          <rect
+             style="fill:#000000;fill-opacity:1;stroke:none;stroke-linecap:round"
+             id="rect8614-8"
+             width="1"
+             height="25"
+             x="335"
+             y="1826.3622" />
+          <rect
+             style="fill:#000000;fill-opacity:1;stroke:none;stroke-linecap:round"
+             id="rect8616-7"
+             width="1"
+             height="25"
+             x="339"
+             y="1826.3622" />
+          <rect
+             style="fill:#000000;fill-opacity:1;stroke:none;stroke-linecap:round"
+             id="rect8618-9"
+             width="1"
+             height="25"
+             x="343"
+             y="1826.3622" />
+        </g>
+        <g
+           id="g10085-2">
+          <rect
+             style="fill:url(#brightColor);fill-opacity:1;stroke:none;stroke-linecap:round"
+             id="rect9935-0"
+             width="1"
+             height="13"
+             x="323"
+             y="1838.3622" />
+          <rect
+             style="fill:url(#brightColor);fill-opacity:1;stroke:none;stroke-linecap:round"
+             id="rect9943-2"
+             width="5"
+             height="1"
+             x="323"
+             y="1838.3622" />
+          <rect
+             style="fill:url(#brightColor);fill-opacity:1;stroke:none;stroke-linecap:round"
+             id="rect9951-3"
+             width="1"
+             height="5"
+             x="327"
+             y="1834.3622" />
+          <rect
+             style="fill:url(#brightColor);fill-opacity:1;stroke:none;stroke-linecap:round"
+             id="rect9959-7"
+             width="5"
+             height="1"
+             x="327"
+             y="1834.3622" />
+          <rect
+             style="fill:url(#brightColor);fill-opacity:1;stroke:none;stroke-linecap:round"
+             id="rect9967-5"
+             width="1"
+             height="5"
+             x="331"
+             y="1830.3622" />
+          <rect
+             style="fill:url(#brightColor);fill-opacity:1;stroke:none;stroke-linecap:round"
+             id="rect9975-9"
+             width="13"
+             height="1"
+             x="331"
+             y="1830.3622" />
+        </g>
+        <path
+           style="display:inline;fill:#ffffff;fill-opacity:1;stroke:#3c3c3c;stroke-width:1;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="m 333.56046,1846.4578 v -11.8711 -0.1289 l 8,9 h -3 l 1.5,3 v 2 h -2 L 336,1844.3622 Z"
+           id="path4761-3-2"
+           inkscape:connector-curvature="0"
+           sodipodi:nodetypes="cccccccccc" />
       </g>
     </g>
     <g
@@ -10297,7 +10498,7 @@
       <g
          style="fill:url(#backgroundLight);fill-opacity:1"
          inkscape:label="adaptorDisabledRenderPass"
-         id="g3"
+         id="g1614"
          transform="translate(79.963757,0.12970317)">
         <rect
            style="display:inline;fill:url(#backgroundLight);stroke:#3d3d3d;stroke-width:1;stroke-linejoin:miter;stroke-dasharray:none"
@@ -10315,7 +10516,7 @@
            y="2779.0571" />
         <circle
            style="display:inline;fill:#d66800;fill-opacity:1;stroke:none;stroke-width:8.001;stroke-dasharray:none;stroke-opacity:1"
-           id="path3"
+           id="circle1612"
            cx="53.036243"
            cy="2779.0007"
            r="2" />

@@ -39,6 +39,7 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferScene
+import GafferImage
 
 ## Base class to simplify the creation of Editors which operate on ScenePlugs.
 class SceneEditor( GafferUI.NodeSetEditor ) :
@@ -93,6 +94,27 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 					( p for p in GafferScene.ScenePlug.RecursiveOutputRange( node ) if not p.getName().startswith( "__" ) ),
 					None
 				)
+				if outputScenePlug is None:
+					outputImagePlug = next(
+						( p for p in GafferImage.ImagePlug.RecursiveOutputRange( node ) if not p.getName().startswith( "__" ) ),
+						None
+					)
+					if outputImagePlug:
+						try:
+							# \todo - if this succeeds, do we need to add a callback so we're updated if the
+							# metadata changes, rather than forcing the user to click to view a different node
+							# and back in order to refresh? The main place this has shown up for me in testing
+							# is if you view a Catalogue, and then start an InteractiveRender, it won't
+							# automatically start showing you the hiearchy.
+							outputScenePlug = GafferScene.SceneAlgo.sourceScene( outputImagePlug )
+						except:
+							# The call to sourceScene could easily fail ( for example, because you're looking
+							# at an ImageReader with an invalid file path, so you can't read the metadata ).
+							# If the image is invalid, then there is no corresponding scene, and it's correct
+							# to leave outputScenePlug set to None
+							pass
+
+
 				if outputScenePlug is not None :
 					inputsToFill.pop( 0 ).setInput( outputScenePlug )
 					plugConnection = self.__parentingConnections.get( outputScenePlug )

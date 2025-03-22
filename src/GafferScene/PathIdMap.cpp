@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2025, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,35 +34,85 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#include "GafferScene/PathIdMap.h"
 
-namespace GafferSceneUI
+using namespace GafferScene;
+
+PathIdMap::PathIdMap( bool threadsafe ) : m_threadsafe( threadsafe )
 {
+}
 
-enum TypeId
+uint32_t PathIdMap::mapPath( const ScenePlug::ScenePath &path )
 {
-	SceneViewTypeId = 110651,
-	SceneGadgetTypeId = 110652,
-	SelectionToolTypeId = 110653,
-	CropWindowToolTypeId = 110654,
-	ShaderViewTypeId = 110655,
-	ShaderNodeGadgetTypeId = 110656,
-	TransformToolTypeId = 110657,
-	TranslateToolTypeId = 110658,
-	ScaleToolTypeId = 110659,
-	RotateToolTypeId = 110660,
-	CameraToolTypeId = 110661,
-	UVViewTypeId = 110662,
-	UVSceneTypeId = 110663,
-	HistoryPathTypeId = 110664,
-	SetPathTypeId = 110665,
-	LightToolTypeId = 110666,
-	LightPositionToolTypeId = 110667,
-	RenderPassPathTypeId = 110668,
-	VisualiserToolTypeId = 110669,
-	ImagePickToolTypeId = 110670,
+	std::optional<Mutex::scoped_lock> lock;
+	if( m_threadsafe )
+	{
+		lock.emplace( m_mutex, /* write = */ false );
+	}
 
-	LastTypeId = 110700
-};
+	auto it = m_map.find( path );
+	if( it != m_map.end() )
+	{
+		return it->second;
+	}
 
-} // namespace GafferSceneUI
+	if( lock )
+	{
+		lock->upgrade_to_writer();
+	}
+	return m_map.insert( PathAndId( path, m_map.size() + 1 ) ).first->second;
+}
+
+void PathIdMap::insertPath( const ScenePlug::ScenePath &path, uint32_t id )
+{
+	std::optional<Mutex::scoped_lock> lock;
+	if( m_threadsafe )
+	{
+		lock.emplace( m_mutex, /* write = */ true );
+	}
+	m_map.insert( PathAndId( path, id ) );
+}
+
+uint32_t PathIdMap::idForPath( const ScenePlug::ScenePath &path ) const
+{
+	std::optional<Mutex::scoped_lock> lock;
+	if( m_threadsafe )
+	{
+		lock.emplace( m_mutex, /* write = */ false );
+	}
+
+	auto it = m_map.find( path );
+	if( it != m_map.end() )
+	{
+		return it->second;
+	}
+
+	return 0;
+}
+
+std::optional<ScenePlug::ScenePath> PathIdMap::pathForId( uint32_t id ) const
+{
+	std::optional<Mutex::scoped_lock> lock;
+	if( m_threadsafe )
+	{
+		lock.emplace( m_mutex, /* write = */ false );
+	}
+
+	auto &index = m_map.get<1>();
+	auto it = index.find( id );
+	if( it != index.end() )
+	{
+		return it->first;
+	}
+	return std::nullopt;
+}
+
+void PathIdMap::clear()
+{
+	m_map.clear();
+}
+
+size_t PathIdMap::size() const
+{
+	return m_map.size();
+}

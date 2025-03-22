@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2025, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,33 +36,56 @@
 
 #pragma once
 
-namespace GafferSceneUI
+#include "GafferScene/Export.h"
+
+#include "GafferScene/ScenePlug.h"
+
+#include "boost/multi_index/member.hpp"
+#include "boost/multi_index/ordered_index.hpp"
+#include "boost/multi_index_container.hpp"
+
+#include "tbb/spin_rw_mutex.h"
+
+// Maps between scene locations and integer ids.
+
+namespace GafferScene
 {
 
-enum TypeId
+class GAFFERSCENE_API PathIdMap
 {
-	SceneViewTypeId = 110651,
-	SceneGadgetTypeId = 110652,
-	SelectionToolTypeId = 110653,
-	CropWindowToolTypeId = 110654,
-	ShaderViewTypeId = 110655,
-	ShaderNodeGadgetTypeId = 110656,
-	TransformToolTypeId = 110657,
-	TranslateToolTypeId = 110658,
-	ScaleToolTypeId = 110659,
-	RotateToolTypeId = 110660,
-	CameraToolTypeId = 110661,
-	UVViewTypeId = 110662,
-	UVSceneTypeId = 110663,
-	HistoryPathTypeId = 110664,
-	SetPathTypeId = 110665,
-	LightToolTypeId = 110666,
-	LightPositionToolTypeId = 110667,
-	RenderPassPathTypeId = 110668,
-	VisualiserToolTypeId = 110669,
-	ImagePickToolTypeId = 110670,
 
-	LastTypeId = 110700
+	public :
+		PathIdMap( bool threadsafe );
+
+		uint32_t mapPath( const ScenePlug::ScenePath &path );
+		void insertPath( const ScenePlug::ScenePath &path, uint32_t id );
+
+		uint32_t idForPath( const ScenePlug::ScenePath &path ) const;
+		std::optional<ScenePlug::ScenePath> pathForId( uint32_t id ) const;
+
+		void clear();
+		size_t size() const;
+
+	private :
+
+		using PathAndId = std::pair<ScenePlug::ScenePath, uint32_t>;
+		using Map = boost::multi_index::multi_index_container<
+			PathAndId,
+			boost::multi_index::indexed_by<
+				boost::multi_index::ordered_unique<
+					boost::multi_index::member<PathAndId, ScenePlug::ScenePath, &PathAndId::first>
+				>,
+				boost::multi_index::ordered_unique<
+					boost::multi_index::member<PathAndId, uint32_t, &PathAndId::second>
+				>
+			>
+		>;
+		using Mutex = tbb::spin_rw_mutex;
+
+		Map m_map;
+		bool m_threadsafe;
+		mutable Mutex m_mutex;
+
 };
 
-} // namespace GafferSceneUI
+} // namespace GafferScene
