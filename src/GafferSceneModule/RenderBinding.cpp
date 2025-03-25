@@ -44,11 +44,16 @@
 
 #include "GafferDispatchBindings/TaskNodeBinding.h"
 
+#include "GafferBindings/SignalBinding.h"
+
 #include "Gaffer/Context.h"
+
+#include "IECorePython/ExceptionAlgo.h"
 
 using namespace boost::python;
 
 using namespace Imath;
+using namespace IECorePython;
 using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferDispatchBindings;
@@ -145,6 +150,23 @@ void outputObjectsWrapper( const ScenePlug &scene, const GafferScene::Private::R
 	GafferScene::Private::RendererAlgo::outputObjects( &scene, renderOptions, renderSets, &lightLinks, &renderer, root );
 }
 
+struct RenderSlotCaller
+{
+	bool operator()( boost::python::object slot, const Render *r )
+	{
+		try
+		{
+			RenderPtr render = const_cast<Render * >( r );
+			return slot( render );
+		}
+		catch( const boost::python::error_already_set & )
+		{
+			ExceptionAlgo::translatePythonException();
+		}
+		return false;
+	}
+};
+
 } // namespace
 
 void GafferSceneModule::bindRender()
@@ -165,12 +187,18 @@ void GafferSceneModule::bindRender()
 	}
 
 	{
-		scope s = TaskNodeClass<GafferScene::Render>();
+		scope s = TaskNodeClass<GafferScene::Render>()
+		.def( "preRenderSignal", &Render::preRenderSignal, return_value_policy<reference_existing_object>() )
+		.def( "postRenderSignal", &Render::postRenderSignal, return_value_policy<reference_existing_object>() )
+			.staticmethod( "postRenderSignal" )
+		;
 
 		enum_<GafferScene::Render::Mode>( "Mode" )
 			.value( "RenderMode", GafferScene::Render::RenderMode )
 			.value( "SceneDescriptionMode", GafferScene::Render::SceneDescriptionMode )
 		;
+
+		SignalClass<Render::RenderSignal, DefaultSignalCaller<Render::RenderSignal>, RenderSlotCaller>( "RenderSignal" );
 	}
 
 	{
