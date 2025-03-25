@@ -109,6 +109,9 @@ def setUpRenderMan() :
 	if sys.platform == "win32" :
 		appendToPath( rmanTree / "bin", "IECORE_DLL_DIRECTORIES" )
 		appendToPath( rmanTree / "lib", "IECORE_DLL_DIRECTORIES" )
+		appendToPath( pluginRoot / "lib", "IECORE_DLL_DIRECTORIES" )
+		appendToPath( pluginRoot / "bin", "PATH" )
+		appendToPath( pluginRoot / "lib", "PATH" )
 
 setUpRenderMan()
 
