@@ -46,6 +46,11 @@ namespace IECoreArnold
 namespace ShapeAlgo
 {
 
+/// \todo Rename to `convertP()`. The only difference is the return value.
+IECOREARNOLD_API bool convertPChecked( const IECoreScene::Primitive *primitive, AtNode *shape, const AtString name, const std::string &messageContext = "ShapeAlgo::convertP" );
+IECOREARNOLD_API bool convertPChecked( const std::vector<const IECoreScene::Primitive *> &samples, AtNode *shape, const AtString name, const std::string &messageContext = "ShapeAlgo::convertP" );
+
+/// \todo Remove.
 IECOREARNOLD_API void convertP( const IECoreScene::Primitive *primitive, AtNode *shape, const AtString name, const std::string &messageContext = "ShapeAlgo::convertP" );
 IECOREARNOLD_API void convertP( const std::vector<const IECoreScene::Primitive *> &samples, AtNode *shape, const AtString name, const std::string &messageContext = "ShapeAlgo::convertP" );
 

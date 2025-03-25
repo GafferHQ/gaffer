@@ -1840,6 +1840,57 @@ class RendererTest( GafferTest.TestCase ) :
 
 				self.assertEqual( arnold.AiNodeGetStr( mesh, "subdiv_uv_smoothing" ), uvSmoothing or "pin_corners" )
 
+	def testPointlessPrimitives( self ) :
+
+		pointlessMesh = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
+		del pointlessMesh["P"]
+
+		for primitive in (
+			pointlessMesh,
+			IECoreScene.PointsPrimitive( 10 ),
+			IECoreScene.CurvesPrimitive( IECore.IntVectorData( [ 4 ] ) ),
+		) :
+
+			with self.subTest( type = primitive.typeName() ) :
+
+				renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+					"Arnold",
+					GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+				)
+
+				renderer.output(
+					"test",
+					IECoreScene.Output(
+						str( self.temporaryDirectory() / "beauty.exr" ),
+						"exr",
+						"rgba",
+						{
+						}
+					)
+				)
+
+				with IECore.CapturingMessageHandler() as mh :
+
+					objectInterface = renderer.object(
+						"/pointless", primitive,
+						renderer.attributes( IECore.CompoundObject() )
+					)
+
+					self.assertEqual( len( mh.messages ), 1 )
+					self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
+					self.assertEqual( mh.messages[0].context, "/pointless" )
+					self.assertEqual( mh.messages[0].message, 'Primitive does not have "P" primitive variable of interpolation type Vertex.' )
+
+				renderer.render()
+
+				renderer.pause()
+				# This would crash Arnold if we had given it a shape without
+				# any points (tested in 7.3.7.0).
+				objectInterface.link( "lights", None )
+
+				del objectInterface
+				del renderer
+
 	def testMeshLight( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(

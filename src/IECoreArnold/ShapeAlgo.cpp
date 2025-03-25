@@ -117,6 +117,24 @@ ConstFloatVectorDataPtr radius( const Primitive *primitive )
 	return calculatedRadius;
 }
 
+const V3fVectorData *checkedP( const IECoreScene::Primitive *primitive, const std::string &messageContext )
+{
+	const V3fVectorData *result = primitive->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+	if( !result )
+	{
+		IECore::msg( IECore::Msg::Warning, messageContext, "Primitive does not have \"P\" primitive variable of interpolation type Vertex." );
+		return nullptr;
+	}
+
+	if( result->readable().size() != primitive->variableSize( PrimitiveVariable::Interpolation::Vertex ) )
+	{
+		IECore::msg( IECore::Msg::Warning, messageContext, "Primitive variable \"P\" has wrong size." );
+		return nullptr;
+	}
+
+	return result;
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -129,40 +147,48 @@ namespace IECoreArnold
 namespace ShapeAlgo
 {
 
-void convertP( const IECoreScene::Primitive *primitive, AtNode *shape, const AtString name, const std::string &messageContext )
+bool convertPChecked( const IECoreScene::Primitive *primitive, AtNode *shape, const AtString name, const std::string &messageContext )
 {
-	const V3fVectorData *p = primitive->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-	if( !p )
+	if( const V3fVectorData *p = checkedP( primitive, messageContext ) )
 	{
-		IECore::msg( IECore::Msg::Warning, messageContext, "Primitive does not have \"P\" primitive variable of interpolation type Vertex." );
-		return;
+		AiNodeSetArray(
+			shape,
+			name,
+			AiArrayConvert( p->readable().size(), 1, AI_TYPE_VECTOR, (void *)&( p->readable()[0] ) )
+		);
+		return true;
 	}
-
-	AiNodeSetArray(
-		shape,
-		name,
-		AiArrayConvert( p->readable().size(), 1, AI_TYPE_VECTOR, (void *)&( p->readable()[0] ) )
-	);
+	return false;
 }
 
-void convertP( const std::vector<const IECoreScene::Primitive *> &samples, AtNode *shape, const AtString name, const std::string &messageContext )
+bool convertPChecked( const std::vector<const IECoreScene::Primitive *> &samples, AtNode *shape, const AtString name, const std::string &messageContext )
 {
 	vector<const Data *> dataSamples;
 	dataSamples.reserve( samples.size() );
 
-	for( vector<const Primitive *>::const_iterator it = samples.begin(), eIt = samples.end(); it != eIt; ++it )
+	for( auto primitive : samples )
 	{
-		const V3fVectorData *p = (*it)->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+		const V3fVectorData *p = checkedP( primitive, messageContext );
 		if( !p )
 		{
-			IECore::msg( IECore::Msg::Warning, messageContext, "Primitive does not have \"P\" primitive variable of interpolation type Vertex." );
-			return;
+			return false;
 		}
 		dataSamples.push_back( p );
 	}
 
 	AtArray *array = ParameterAlgo::dataToArray( dataSamples, AI_TYPE_VECTOR );
 	AiNodeSetArray( shape, name, array );
+	return true;
+}
+
+void convertP( const IECoreScene::Primitive *primitive, AtNode *shape, const AtString name, const std::string &messageContext )
+{
+	convertPChecked( primitive, shape, name, messageContext );
+}
+
+void convertP( const std::vector<const IECoreScene::Primitive *> &samples, AtNode *shape, const AtString name, const std::string &messageContext )
+{
+	convertPChecked( samples, shape, name, messageContext );
 }
 
 void convertRadius( const IECoreScene::Primitive *primitive, AtNode *shape, const std::string &messageContext )
