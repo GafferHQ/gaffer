@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.9.0)
 =======
 
+Features
+--------
+
+- ShuffleRenderPasses : Added a new node for shuffling render passes.
+
 Fixes
 -----
 
