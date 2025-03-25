@@ -761,19 +761,7 @@ void transferUSDShapingParameters( ShaderNetwork *network, InternedString shader
 		// - https://groups.google.com/u/1/g/usd-interest/c/Ybe4aroAKbc/m/0Ui3DKMyCgAJ, in
 		//   which folks take their best guess.
 		const float softness = parameterValue( usdShader, g_shapingConeSoftnessParameter, 0.0f );
-		if( softness > 1.0 )
-		{
-			// Houdini apparently has (or had?) its own interpretation of softness, with the "bar scene"
-			// containing lights with an angle of 20 degrees and a softness of 60! We have no idea how
-			// to interpret that, so punt for now.
-			/// \todo Hopefully things get more standardised and we can remove this, because the RenderMan
-			/// docs do imply that values above one are allowed.
-			IECore::msg( IECore::Msg::Warning, "transferUSDShapingParameters", "Ignoring `shaping:cone:softness` as it is greater than 1" );
-		}
-		else
-		{
-			shader->parameters()[g_penumbraAngleParameter] = new FloatData( d->readable() * 2.0f * softness );
-		}
+		shader->parameters()[g_penumbraAngleParameter] = new FloatData( d->readable() * 2.0f * softness );
 		// Same here.
 		shader->parameters()[g_cosinePowerParameter] = new FloatData( parameterValue( usdShader, g_shapingSoftnessParameter, 0.0f ) );
 	}

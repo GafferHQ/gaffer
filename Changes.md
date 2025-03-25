@@ -19,6 +19,7 @@ Breaking Changes
 Fixes
 -----
 
+- Arnold : Fixed handling of `shaping:cone:softness` values greater than one on USD lights. These are now translated identically to `hdArnold`, rather than being ignored.
 - Cycles : Fixed incorrect particle motion blur shape (#5862).
 - SceneAlgo : Fixed errors and crashes caused by calling `registerRenderAdaptor()` from an adaptor creation function.
 
