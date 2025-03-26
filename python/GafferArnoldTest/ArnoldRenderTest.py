@@ -1627,5 +1627,51 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 			with GafferTest.TestRunner.PerformanceScope() :
 				s["render"]["task"].execute()
 
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testManySimpleObjectIds( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		rootFilter = GafferScene.PathFilter()
+		rootFilter["paths"].setValue( IECore.StringVectorData( [ '/*' ] ) )
+
+		duplicate = GafferScene.Duplicate()
+		duplicate["in"].setInput( sphere["out"] )
+		duplicate["filter"].setInput( rootFilter["out"] )
+
+
+		group1 = GafferScene.Group()
+		group1["in"][0].setInput( duplicate["out"] )
+
+		duplicate2 = GafferScene.Duplicate()
+		duplicate2["in"].setInput( group1["out"] )
+		duplicate2["filter"].setInput( rootFilter["out"] )
+
+		group2 = GafferScene.Group()
+		group2["in"][0].setInput( duplicate2["out"] )
+
+		duplicate3 = GafferScene.Duplicate()
+		duplicate3["in"].setInput( group2["out"] )
+		duplicate3["filter"].setInput( rootFilter["out"] )
+
+		# TODO - use StandardAttributes if we keep this test
+		customOptions = GafferScene.CustomOptions()
+		customOptions["options"].addChild( Gaffer.NameValuePlug( "", Gaffer.StringPlug( "value", defaultValue = '', flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), True, "member1", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		customOptions["in"].setInput( duplicate3["out"] )
+		customOptions["options"]["member1"]["name"].setValue( 'render:idManifestFilePath' )
+		customOptions["options"]["member1"]["value"].setValue( '/tmp/fooIdManifest.exr' )
+
+		duplicate["copies"].setValue( 100 )
+		duplicate2["copies"].setValue( 100 )
+		duplicate3["copies"].setValue( 100 )
+
+		render = GafferScene.Render()
+		render["in"].setInput( customOptions["out"] )
+		render["renderer"].setValue( "Arnold" )
+
+		with Gaffer.Context() as c :
+			c["scene:render:sceneTranslationOnly"] = IECore.BoolData( True )
+			render["task"].execute()
+
 if __name__ == "__main__":
 	unittest.main()
