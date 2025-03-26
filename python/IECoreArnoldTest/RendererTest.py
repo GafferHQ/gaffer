@@ -38,6 +38,7 @@ import ctypes
 import json
 import os
 import pathlib
+import subprocess
 import sys
 import time
 import unittest
@@ -1006,7 +1007,9 @@ class RendererTest( GafferTest.TestCase ) :
 
 		# Check that we can read the metadata using OpenImageIO.
 
-		imageSpec = OpenImageIO.ImageInput.open( str( self.temporaryDirectory() / "beauty.exr" ) ).spec()
+		imageFile = OpenImageIO.ImageInput.open( str( self.temporaryDirectory() / "beauty.exr" ) )
+		imageSpec = imageFile.spec()
+		imageFile.close()
 		# We can preserve some types.
 		self.assertEqual( imageSpec.getattribute( "foo" ), "bar" )
 		self.assertEqual( imageSpec.get_string_attribute( "emptyString" ), "" )
@@ -2090,7 +2093,7 @@ class RendererTest( GafferTest.TestCase ) :
 			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			options = arnold.AiUniverseGetOptions( universe )
-			self.assertTrue( str( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "shaders" ) in arnold.AiNodeGetStr( options, "plugin_searchpath" ) )
+			self.assertTrue( ( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "shaders" ).as_posix() in arnold.AiNodeGetStr( options, "plugin_searchpath" ) )
 
 			n = arnold.AiNodeLookUpByName( universe, "testPlane" )
 
@@ -2887,7 +2890,14 @@ class RendererTest( GafferTest.TestCase ) :
 		# error message.
 
 		( self.temporaryDirectory() / "readOnly" ).mkdir()
-		( self.temporaryDirectory() / "readOnly" ).chmod( 444 )
+		if os.name != "nt" :
+			( self.temporaryDirectory() / "readOnly" ).chmod( 444 )
+		else :
+			subprocess.check_call(
+				[ "icacls", self.temporaryDirectory() / "readOnly", "/deny", "Users:(OI)(CI)(W)" ],
+				stdout = subprocess.DEVNULL,
+				stderr = subprocess.STDOUT
+			)
 
 		with IECore.CapturingMessageHandler() as mh :
 			r.option( "ai:log:filename", IECore.StringData( ( self.temporaryDirectory() / "readOnly" / "nested" / "log.txt" ).as_posix() ) )
@@ -2895,8 +2905,12 @@ class RendererTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
-		self.assertTrue( "Permission denied" in mh.messages[0].message )
+		self.assertIn(
+			"Permission denied" if os.name != "nt" else "Access is denied",
+			mh.messages[0].message
+		)
 
+	@unittest.skipIf( os.name == "nt", "Log file can't be deleted on Windows because it is still in use until the process finishes.")
 	def testStatsAndLog( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
