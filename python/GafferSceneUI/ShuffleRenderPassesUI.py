@@ -81,6 +81,12 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"shuffles.*.source" : [
+
+			"ui:scene:acceptsRenderPassName", True,
+
+		]
+
 	}
 
 )

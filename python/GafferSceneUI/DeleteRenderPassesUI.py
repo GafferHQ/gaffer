@@ -103,12 +103,16 @@ def __passPopupMenu( menuDefinition, plugValueWidget ) :
 	if plug is None :
 		return
 
-	if not Gaffer.Metadata.value( plug, "ui:scene:acceptsRenderPassNames" ) :
+	acceptsRenderPassName = Gaffer.Metadata.value( plug, "ui:scene:acceptsRenderPassName" )
+	acceptsRenderPassNames = Gaffer.Metadata.value( plug, "ui:scene:acceptsRenderPassNames" )
+
+	if not acceptsRenderPassName and not acceptsRenderPassNames :
 		return
 
 	with plugValueWidget.context() :
 		globals = plug.node()["in"]["globals"].getValue()
-		currentNames = set( plug.getValue().split() )
+		currentText = plug.getValue()
+		currentNames = set( currentText.split() )
 
 	menuDefinition.prepend( "/RenderPassesDivider", { "divider" : True } )
 
@@ -119,20 +123,33 @@ def __passPopupMenu( menuDefinition, plugValueWidget ) :
 
 	for passName in reversed( sorted( list( passNames ) ) ) :
 
-		newNames = set( currentNames )
+		if acceptsRenderPassNames :
 
-		if passName not in currentNames :
-			newNames.add( passName )
-		else :
-			newNames.discard( passName )
+			newNames = set( currentNames )
 
-		menuDefinition.prepend(
-			"/Render Passes/{}".format( passName ),
-			{
-				"command" : functools.partial( __setValue, plug, " ".join( sorted( newNames ) ) ),
-				"checkBox" : passName in currentNames,
-				"active" : plug.settable() and not Gaffer.MetadataAlgo.readOnly( plug ),
-			}
-		)
+			if passName not in currentNames :
+				newNames.add( passName )
+			else :
+				newNames.discard( passName )
+
+			menuDefinition.prepend(
+				"/Render Passes/{}".format( passName ),
+				{
+					"command" : functools.partial( __setValue, plug, " ".join( sorted( newNames ) ) ),
+					"checkBox" : passName in currentNames,
+					"active" : plug.settable() and not Gaffer.MetadataAlgo.readOnly( plug ),
+				}
+			)
+
+		else : # acceptsRenderPassName
+
+			menuDefinition.prepend(
+				"/Render Passes/{}".format( passName ),
+				{
+					"command" : functools.partial( __setValue, plug, passName if currentText != passName else "" ),
+					"checkBox" : passName == currentText,
+					"active" : plug.settable() and not Gaffer.MetadataAlgo.readOnly( plug ),
+				}
+			)
 
 GafferUI.PlugValueWidget.popupMenuSignal().connect( __passPopupMenu )
