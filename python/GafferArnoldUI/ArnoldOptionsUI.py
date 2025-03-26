@@ -206,6 +206,8 @@ def __statisticsSummary( plug ) :
 		info.append( "Stats File: " + plug["statisticsFileName"]["value"].getValue() )
 	if plug["profileFileName"]["enabled"].getValue() :
 		info.append( "Profile File: " + plug["profileFileName"]["value"].getValue() )
+	if plug["reportFileName"]["enabled"].getValue() :
+		info.append( "Report File: " + plug["reportFileName"]["value"].getValue() )
 
 	return ", ".join( info )
 
@@ -1119,6 +1121,19 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Statistics",
 			"label", "Profile File",
+
+		],
+
+		"options.reportFileName" : [
+
+			"description",
+			"""
+			The name of a an HTML file where Arnold will store a
+			detailed statistics report in an easily browsable form.
+			""",
+
+			"layout:section", "Statistics",
+			"label", "HTML Report File",
 
 		],
 

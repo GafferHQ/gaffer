@@ -3213,6 +3213,7 @@ const IECore::InternedString g_logMaxWarningsOptionName( "ai:log:max_warnings" )
 const IECore::InternedString g_pluginSearchPathOptionName( "ai:plugin_searchpath" );
 const IECore::InternedString g_profileFileNameOptionName( "ai:profileFileName" );
 const IECore::InternedString g_progressiveMinAASamplesOptionName( "ai:progressive_min_AA_samples" );
+const IECore::InternedString g_reportFileNameOptionName( "ai:reportFileName" );
 const IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
 const IECore::InternedString g_statisticsFileNameOptionName( "ai:statisticsFileName" );
 const IECore::InternedString g_subdivDicingCameraOptionName( "ai:subdiv_dicing_camera" );
@@ -3461,6 +3462,36 @@ class ArnoldGlobals
 
 					AiProfileSetFileName( d->readable().c_str() );
 				}
+				return;
+			}
+			else if( name == g_reportFileNameOptionName )
+			{
+#if ARNOLD_VERSION_NUM >= 70400
+				if( value == nullptr )
+				{
+					AiReportSetFileName( "" );
+				}
+				else if( const IECore::StringData *d = reportedCast<const IECore::StringData>( value, "option", name ) )
+				{
+					if( !d->readable().empty() )
+					{
+						try
+						{
+							std::filesystem::create_directories(
+								std::filesystem::path( d->readable() ).parent_path()
+							);
+						}
+						catch( const std::exception &e )
+						{
+							IECore::msg( IECore::Msg::Error, "ArnoldRenderer::option()", e.what() );
+						}
+					}
+					AiReportSetFileName( d->readable().c_str() );
+
+				}
+#else
+				IECore::msg( IECore::Msg::Error, "ArnoldRenderer::option()", fmt::format( "\"\" requires Arnold 7.4 or later", g_reportFileNameOptionName.string() ) );
+#endif
 				return;
 			}
 			else if( name == g_logMaxWarningsOptionName )

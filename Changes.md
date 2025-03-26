@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.8.0)
 =======
 
+Improvements
+------------
+
+- ArnoldOptions : Added `reportFileName` option, to specify the destination for Arnold 7.4's new HTML reports.
+
 Fixes
 -----
 
