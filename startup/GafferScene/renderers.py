@@ -55,6 +55,7 @@ for renderer, module in [
 	( "Arnold", "IECoreArnold" ),
 	( "3Delight", "IECoreDelight" ),
 	( "3Delight Cloud", "IECoreDelight" ),
+	( "RenderMan", "IECoreRenderMan" ),
 ] :
 	if renderer in GafferScene.Private.IECoreScenePreview.Renderer.types() :
 		# Already registered

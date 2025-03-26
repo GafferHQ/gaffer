@@ -215,6 +215,22 @@ const ScenePlug *Render::adaptedInPlug() const
 	return getChild<ScenePlug>( g_firstPlugIndex + 6 );
 }
 
+Render::RenderSignal &Render::preRenderSignal()
+{
+	// Deliberately "leaking" the signal since it is likely to contain
+	// Python slots that can't be destroyed during shutdown (because Python
+	// has already been shut down).
+	static RenderSignal *g_preRenderSignal = new RenderSignal;
+	return *g_preRenderSignal;
+}
+
+Render::RenderSignal &Render::postRenderSignal()
+{
+	// See above.
+	static RenderSignal *g_postRenderSignal = new RenderSignal;
+	return *g_postRenderSignal;
+}
+
 void Render::preTasks( const Gaffer::Context *context, Tasks &tasks ) const
 {
 	RenderScope scope( context );
@@ -326,6 +342,13 @@ void Render::executeInternal( bool flushCaches ) const
 		return;
 	}
 
+	// Signal emission isn't thread-safe. It's extremely unlikely that two renders
+	// run concurrently, and even less likely that they start concurrently, but to
+	// be on the safe side we use a mutex to serialise emission.
+	static std::mutex g_preRenderSignalMutex;
+	std::unique_lock preRenderSignalLock( g_preRenderSignalMutex );
+	preRenderSignal()( this );
+
 	GafferScene::Private::RendererAlgo::RenderOptions renderOptions( adaptedInPlug() );
 	if( !renderScope.sceneTranslationOnly() )
 	{
@@ -365,37 +388,39 @@ void Render::executeInternal( bool flushCaches ) const
 		GafferScene::Private::RendererAlgo::outputObjects( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
 	}
 
-	if( renderScope.sceneTranslationOnly() )
+	if( !renderScope.sceneTranslationOnly() )
 	{
-		return;
-	}
-
-	if( flushCaches )
-	{
-		// Now we have generated the scene, flush Cortex and Gaffer caches to
-		// provide more memory to the renderer. We limit this to the `execute`
-		// and `dispatch` applications for two reasons :
-		//
-		// - In a GUI application, we don't want to clear the caches because
-		//   we'll probably benefit from using them again later.
-		// - In `execute` and `dispatch` we know we're not executing concurrently
-		//   with anything else, and can therefore pass `now = true` to
-		//   `clearHashCache()` safely.
-		auto *application = ancestor<ApplicationRoot>();
-		if( application && ( application->getName() == "execute" || application->getName() == "dispatch" ) )
+		if( flushCaches )
 		{
-			ObjectPool::defaultObjectPool()->clear();
-			ValuePlug::clearCache();
-			ValuePlug::clearHashCache( /* now = */ true );
+			// Now we have generated the scene, flush Cortex and Gaffer caches to
+			// provide more memory to the renderer. We limit this to the `execute`
+			// and `dispatch` applications for two reasons :
+			//
+			// - In a GUI application, we don't want to clear the caches because
+			//   we'll probably benefit from using them again later.
+			// - In `execute` and `dispatch` we know we're not executing concurrently
+			//   with anything else, and can therefore pass `now = true` to
+			//   `clearHashCache()` safely.
+			auto *application = ancestor<ApplicationRoot>();
+			if( application && ( application->getName() == "execute" || application->getName() == "dispatch" ) )
+			{
+				ObjectPool::defaultObjectPool()->clear();
+				ValuePlug::clearCache();
+				ValuePlug::clearHashCache( /* now = */ true );
+			}
+		}
+
+		renderer->render();
+		renderer.reset();
+
+		if( performanceMonitor )
+		{
+			std::cerr << "\nPerformance Monitor\n===================\n\n";
+			std::cerr << MonitorAlgo::formatStatistics( *performanceMonitor );
 		}
 	}
 
-	renderer->render();
-	renderer.reset();
-
-	if( performanceMonitor )
-	{
-		std::cerr << "\nPerformance Monitor\n===================\n\n";
-		std::cerr << MonitorAlgo::formatStatistics( *performanceMonitor );
-	}
+	static std::mutex g_postRenderMutex;
+	std::unique_lock postRenderLock( g_postRenderMutex );
+	postRenderSignal()( this );
 }
