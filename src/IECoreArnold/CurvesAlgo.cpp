@@ -193,7 +193,15 @@ AtNode *convert( const IECoreScene::CurvesPrimitive *curves, AtUniverse *univers
 	ConstCurvesPrimitivePtr resampledCurves = ::resampleCurves( curves, messageContext );
 
 	AtNode *result = convertCommon( resampledCurves.get(), universe, nodeName, parentNode, messageContext );
-	ShapeAlgo::convertP( resampledCurves.get(), result, g_pointsArnoldString, messageContext );
+
+	if( !ShapeAlgo::convertPChecked( resampledCurves.get(), result, g_pointsArnoldString, messageContext ) )
+	{
+		/// \todo Would be nice to refactor `ObjectAlgo::convert()` to return `unique_ptr<AtNode>`
+		/// so we don't do manual deletion like this.
+		AiNodeDestroy( result );
+		return nullptr;
+	}
+
 	ShapeAlgo::convertRadius( resampledCurves.get(), result, messageContext );
 
 	// Convert "N" to orientations
@@ -236,7 +244,12 @@ AtNode *convert( const std::vector<const IECoreScene::CurvesPrimitive *> &sample
 
 	AtNode *result = convertCommon( updatedSamples.front().get(), universe, nodeName, parentNode, messageContext );
 
-	ShapeAlgo::convertP( primitiveSamples, result, g_pointsArnoldString, messageContext );
+	if( !ShapeAlgo::convertPChecked( primitiveSamples, result, g_pointsArnoldString, messageContext ) )
+	{
+		AiNodeDestroy( result );
+		return nullptr;
+	}
+
 	ShapeAlgo::convertRadius( primitiveSamples, result, messageContext );
 	if( nSamples.size() == samples.size() )
 	{

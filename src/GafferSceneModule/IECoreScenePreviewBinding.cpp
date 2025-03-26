@@ -196,9 +196,13 @@ void objectInterfaceTransform2( Renderer::ObjectInterface &objectInterface, obje
 
 void objectInterfaceLink( Renderer::ObjectInterface &objectInterface, const IECore::InternedString &type, object pythonObjectSet )
 {
-	std::vector<Renderer::ObjectInterfacePtr> objectVector;
-	container_utils::extend_container( objectVector, pythonObjectSet );
-	auto objectSet = std::make_shared<Renderer::ObjectSet>( objectVector.begin(), objectVector.end() );
+	IECoreScenePreview::Renderer::ConstObjectSetPtr objectSet;
+	if( pythonObjectSet != object() )
+	{
+		std::vector<Renderer::ObjectInterfacePtr> objectVector;
+		container_utils::extend_container( objectVector, pythonObjectSet );
+		objectSet = std::make_shared<Renderer::ObjectSet>( objectVector.begin(), objectVector.end() );
+	}
 	objectInterface.link( type, objectSet );
 }
 
