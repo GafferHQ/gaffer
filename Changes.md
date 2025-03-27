@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.8.0)
 =======
 
+Features
+--------
+
+- Arnold : Added support for Arnold 7.4.
+
 Improvements
 ------------
 
