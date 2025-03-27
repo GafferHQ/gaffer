@@ -440,37 +440,35 @@ class ArnoldRendererBase : public IECoreScenePreview::Renderer
 namespace
 {
 
-class ArnoldOutput : public IECore::RefCounted
-{
+const IECore::InternedString g_cameraOverrideInternedString( "cameraOverride" );
+const IECore::InternedString g_customAttributesInternedString( "customAttributes" );
+const IECore::InternedString g_driverNodeTypeInternedString( "driverNodeType" );
+const IECore::InternedString g_fileNameInternedString( "fileName" );
+const IECore::InternedString g_filterInternedString( "filter" );
+const IECore::InternedString g_filterwidthInternedString( "filterwidth" );
+const IECore::InternedString g_gafferOutputIDInternedString( "gaffer:outputID" );
+const IECore::InternedString g_updateInteractivelyInternedString( "updateInteractively" );
 
+
+class ArnoldDriver : public IECore::RefCounted
+{
 	public :
 
-		ArnoldOutput( AtUniverse *universe, const IECore::InternedString &name, const IECoreScene::Output *output, NodeDeleter nodeDeleter )
+		ArnoldDriver( AtUniverse *universe, const IECore::InternedString &name, const IECore::CompoundData* parameters, NodeDeleter nodeDeleter )
 			:	m_universe( universe ), m_name( name ), m_nodeDeleter( nodeDeleter )
 		{
 			if( m_name.string().find( " " ) != std::string::npos )
 			{
 				throw IECore::Exception( fmt::format( "Unable to create output driver with name \"{}\", Arnold does not allow spaces in output names.", m_name.string() ) );
 			}
-			update( output );
+			update( parameters );
 		}
 
-		void update( const IECoreScene::Output *output )
+		void update( const IECore::CompoundData* parameters )
 		{
 			// Create a driver node, or reuse the existing one if we can.
 
-			AtString driverNodeType( output->getType().c_str() );
-			if( AiNodeEntryGetType( AiNodeEntryLookUp( driverNodeType ) ) != AI_NODE_DRIVER )
-			{
-				// Automatically map tiff to driver_tiff and so on, to provide a degree of
-				// compatibility with existing renderman driver names.
-				AtString prefixedType( ( std::string("driver_") + driverNodeType.c_str() ).c_str() );
-				if( AiNodeEntryLookUp( prefixedType ) )
-				{
-					driverNodeType = prefixedType;
-				}
-			}
-
+			const AtString driverNodeType( parameters->member<IECore::StringData>( g_driverNodeTypeInternedString )->readable().c_str() );
 			if( m_driver && AiNodeEntryGetNameAtString( AiNodeGetNodeEntry( m_driver.get() ) ) == driverNodeType )
 			{
 				// Reuse
@@ -495,57 +493,46 @@ class ArnoldOutput : public IECore::RefCounted
 
 			if( const AtParamEntry *fileNameParameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( m_driver.get() ), g_fileNameArnoldString ) )
 			{
-				AiNodeSetStr( m_driver.get(), AiParamGetName( fileNameParameter ), AtString( output->getName().c_str() ) );
-			}
-
-			IECore::StringVectorDataPtr customAttributesData;
-			if( const IECore::StringVectorData *d = output->parametersData()->member<IECore::StringVectorData>( "custom_attributes") )
-			{
-				customAttributesData = d->copy();
-			}
-			else
-			{
-				customAttributesData = new IECore::StringVectorData();
-			}
-
-			m_cameraOverride = "";
-			std::vector<std::string> &customAttributes = customAttributesData->writable();
-			for( IECore::CompoundDataMap::const_iterator it = output->parameters().begin(), eIt = output->parameters().end(); it != eIt; ++it )
-			{
-				if( boost::starts_with( it->first.string(), "filter" ) )
-				{
-					continue;
-				}
-
-				if( boost::starts_with( it->first.string(), "header:" ) )
-				{
-					std::string formattedString = formatHeaderParameter( it->first.string().substr( 7 ), it->second.get() );
-					if( !formattedString.empty())
-					{
-						customAttributes.push_back( formattedString );
-					}
-				}
-
-				if( it->first.string() == "camera" )
-				{
-					if( const IECore::StringData *d = IECore::runTimeCast<const IECore::StringData>( it->second.get() ) )
-					{
-						m_cameraOverride = d->readable();
-						continue;
-					}
-				}
-
-				ParameterAlgo::setParameter( m_driver.get(), it->first.c_str(), it->second.get(), /* messageContext = */ m_name.string() );
+				const AtString fileName( parameters->member<IECore::StringData>( g_fileNameInternedString )->readable().c_str() );
+				AiNodeSetStr( m_driver.get(), AiParamGetName( fileNameParameter ), fileName );
 			}
 
 			if( AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( m_driver.get() ), g_customAttributesArnoldString ) )
 			{
-				ParameterAlgo::setParameter( m_driver.get(), "custom_attributes", customAttributesData.get(), /* messageContext = */ m_name.string() );
+				const IECore::StringVectorData* customAttributes = parameters->member<IECore::StringVectorData>( g_customAttributesInternedString, true );
+				ParameterAlgo::setParameter( m_driver.get(), g_customAttributesArnoldString, customAttributes, /* messageContext = */ m_name.string() );
+			}
+
+			std::string filterPrefix( "filter" );
+			for( const auto &it : parameters->readable() )
+			{
+				const IECore::InternedString &name = it.first;
+				if(
+					name == g_fileNameInternedString ||
+					name == g_driverNodeTypeInternedString ||
+					name == g_customAttributesInternedString ||
+					boost::starts_with( it.first.string(), filterPrefix ) ||
+					name == g_cameraOverrideInternedString
+				)
+				{
+					// Some parameters have special handling so we don't want to use the generic way of outputting
+					// them. Examples include:
+					// - fileName / customAttributes - we skip outputting these if the parameter doesn't exist on
+					//     the driver
+					// - driverNodeType - this determines the type of the node, not a parameter on the node
+					// - filter:* - these parameters go on the filter, not the driver
+					// - cameraOverride - this parameter isn't intended for us to do anything with, it just gets
+					//     put in driverParameters because we want to flag the issue that would occur if we tried
+					//     to merge outputs with different cameras
+					continue;
+				}
+
+				ParameterAlgo::setParameter( m_driver.get(), name.c_str(), it.second.get(), /* messageContext = */ m_name.string() );
 			}
 
 			// Create a filter node, or reuse an existing one if we can.
 
-			std::string filterNodeType = parameter<std::string>( output->parameters(), "filter", "gaussian" );
+			std::string filterNodeType = parameter<std::string>( parameters->readable(), "filter", "gaussian" );
 			if( AiNodeEntryGetType( AiNodeEntryLookUp( AtString( filterNodeType.c_str() ) ) ) != AI_NODE_FILTER )
 			{
 				filterNodeType = filterNodeType + "_filter";
@@ -573,18 +560,18 @@ class ArnoldOutput : public IECore::RefCounted
 
 			// Set filter parameters.
 
-			for( IECore::CompoundDataMap::const_iterator it = output->parameters().begin(), eIt = output->parameters().end(); it != eIt; ++it )
+			for( auto &it : parameters->readable() )
 			{
-				if( !boost::starts_with( it->first.string(), "filter" ) || it->first == "filter" )
+				if( !boost::starts_with( it.first.string(), filterPrefix ) || it.first == g_filterInternedString )
 				{
 					continue;
 				}
 
-				if( it->first == "filterwidth" )
+				if( it.first == g_filterwidthInternedString )
 				{
 					// Special case to convert RenderMan style `float filterwidth[2]` into
 					// Arnold style `float width`.
-					if( const IECore::V2fData *v = IECore::runTimeCast<const IECore::V2fData>( it->second.get() ) )
+					if( const IECore::V2fData *v = IECore::runTimeCast<const IECore::V2fData>( it.second.get() ) )
 					{
 						if( v->readable().x != v->readable().y )
 						{
@@ -595,22 +582,155 @@ class ArnoldOutput : public IECore::RefCounted
 					}
 				}
 
-				ParameterAlgo::setParameter( m_filter.get(), it->first.c_str() + 6, it->second.get(), /* messageContext = */ m_name.string() );
+				ParameterAlgo::setParameter( m_filter.get(), it.first.c_str() + filterPrefix.size(), it.second.get(), /* messageContext = */ m_name.string() );
 			}
+		}
+
+		void updateImager( AtNode *imager )
+		{
+			AiNodeSetPtr( m_driver.get(), g_inputArnoldString, imager );
+		}
+
+		std::string nodeName() const
+		{
+			return AiNodeGetName( m_driver.get() );
+		}
+
+		std::string filterNodeName() const
+		{
+			return AiNodeGetName( m_filter.get() );
+		}
+
+	private :
+
+		AtUniverse *m_universe;
+		const IECore::InternedString m_name;
+		NodeDeleter m_nodeDeleter;
+		SharedAtNodePtr m_driver;
+		SharedAtNodePtr m_filter;
+};
+
+IE_CORE_DECLAREPTR( ArnoldDriver )
+using DriverMap = std::map<std::string, ArnoldDriverPtr>;
+
+class ArnoldOutput : public IECore::RefCounted
+{
+
+	public :
+
+		ArnoldOutput( const IECore::InternedString &name, const IECoreScene::Output *output )
+			:	m_name( name )
+		{
+			if( m_name.string().find( " " ) != std::string::npos )
+			{
+				throw IECore::Exception( fmt::format( "Unable to create output driver with name \"{}\", Arnold does not allow spaces in output names.", m_name.string() ) );
+			}
+			update( output );
+		}
+
+		void update( const IECoreScene::Output *output )
+		{
+			// Create a driver node, or reuse the existing one if we can.
+
+			std::string driverNodeType( output->getType() );
+			if( AiNodeEntryGetType( AiNodeEntryLookUp( AtString( driverNodeType.c_str() ) ) ) != AI_NODE_DRIVER )
+			{
+				// Automatically map tiff to driver_tiff and so on, to provide a degree of
+				// compatibility with existing renderman driver names.
+				std::string prefixedType = "driver_" + driverNodeType;
+				if( AiNodeEntryLookUp( AtString( prefixedType.c_str() ) ) )
+				{
+					driverNodeType = prefixedType;
+				}
+			}
+
+			// Set driver parameters.
+
+			m_driverName = output->getName();
+			m_driverParameters = new IECore::CompoundData();
+			m_driverParameters->writable()[g_driverNodeTypeInternedString] = new IECore::StringData( driverNodeType );
+			m_driverParameters->writable()[g_fileNameInternedString] = new IECore::StringData( output->getName() );
+
+			IECore::StringVectorDataPtr customAttributesData;
+			if( const IECore::StringVectorData *d = output->parametersData()->member<IECore::StringVectorData>( g_customAttributesInternedString ) )
+			{
+				customAttributesData = d->copy();
+			}
+			else
+			{
+				customAttributesData = new IECore::StringVectorData();
+			}
+
+			m_cameraOverride = "";
+
+			const std::string headerPrefix( "header:" );
+			std::vector<std::string> &customAttributes = customAttributesData->writable();
+			for( IECore::CompoundDataMap::const_iterator it = output->parameters().begin(), eIt = output->parameters().end(); it != eIt; ++it )
+			{
+				if( boost::starts_with( it->first.string(), headerPrefix ) )
+				{
+					// \todo - it would make sense if we omitted these from m_driverParameters when
+					// customAttributes is actually going to be used, rather than outputting them
+					// in both formats ... but the current reorganization is trying not to change any
+					// output in existing scenarios, so I won't worry about that for now.
+					std::string formattedString = formatHeaderParameter( it->first.string().substr( 7 ), it->second.get() );
+					if( !formattedString.empty())
+					{
+						customAttributes.push_back( formattedString );
+					}
+				}
+
+				if( it->first.string() == "camera" )
+				{
+					if( const IECore::StringData *d = IECore::runTimeCast<const IECore::StringData>( it->second.get() ) )
+					{
+						m_cameraOverride = d->readable();
+						continue;
+					}
+				}
+
+				if(
+					it->first.string() == "layerName" || it->first.string() == "layerPerLightGroup" ||
+					it->first == g_updateInteractivelyInternedString
+				)
+				{
+					// Layer names, light groups and updateInteractively are handled by the output, not the driver
+					continue;
+				}
+
+				m_driverParameters->writable()[ it->first ] = it->second;
+			}
+
+			if( m_cameraOverride.size() )
+			{
+				// Put the camera override in the driver parameters. ArnoldDriver knows not to actually output
+				// this, but putting it in the driver parameters will throw an exception if you tried to merge
+				// outputs with different cameras, which is not supported, and otherwise would produce
+				// unexpected results ( whichever camera renders last would overwrite all layers ).
+				m_driverParameters->writable()[ g_cameraOverrideInternedString ] = new IECore::StringData( m_cameraOverride );
+			}
+
+			m_driverParameters->writable()[ g_customAttributesInternedString ] = customAttributesData;
 
 			// Convert the data specification to the form
 			// supported by Arnold.
 
 			m_layerName = parameter<std::string>( output->parameters(), "layerName", "" );
-			if( m_layerName.size() && AiNodeIs( m_driver.get(), g_driverEXRArnoldString ) )
+
+			bool preserveLayerName;
+
+			if( const IECore::BoolData* preserveLayerNameData = output->parametersData()->member<IECore::BoolData>( "preserve_layer_name" ) )
+			{
+				preserveLayerName = preserveLayerNameData->readable();
+			}
+			else
 			{
 				// If a custom `layerName` has been requested, then default to using it
 				// in the EXR driver (otherwise there would have been no point specifying it).
-				if( !output->parametersData()->member( "preserve_layer_name" ) )
-				{
-					AiNodeSetBool( m_driver.get(), g_preserveLayerNameArnoldString, true );
-				}
+				preserveLayerName = m_layerName.size() && driverNodeType == g_driverEXRArnoldString.c_str();
 			}
+
+			m_driverParameters->writable()[ "preserve_layer_name" ] = new IECore::BoolData( preserveLayerName );
 
 			if( output->getData()=="rgb" )
 			{
@@ -693,20 +813,18 @@ class ArnoldOutput : public IECore::RefCounted
 			// not. We update all beauty outputs interactively by default, and
 			// allow others to be overridden using a parameter.
 			m_updateInteractively = parameter<bool>(
-				output->parameters(), "updateInteractively",
+				output->parameters(), g_updateInteractivelyInternedString,
 				m_data == "RGBA" || m_data == "RGB"
 			);
 		}
 
-		void updateImager( AtNode *imager )
-		{
-			AiNodeSetPtr( m_driver.get(), g_inputArnoldString, imager );
-		}
-
-		void append( std::vector<std::string> &outputs, std::vector<std::string> &lightPathExpressions ) const
+		void append( std::vector<std::string> &outputs, std::vector<std::string> &lightPathExpressions, const DriverMap &drivers ) const
 		{
 			const string layerNameSuffix = m_layerName.size() ? " " + m_layerName : "";
-			outputs.push_back( fmt::format( "{} {} {} {}{}", m_data, m_type, AiNodeGetName( m_filter.get() ), AiNodeGetName( m_driver.get() ), layerNameSuffix ) );
+
+			const ArnoldDriver &driver = *drivers.at( m_driverName );
+			outputs.push_back( fmt::format( "{} {} {} {}{}", m_data, m_type, driver.filterNodeName(), driver.nodeName(), layerNameSuffix ) );
+
 			if( m_lpeValue.size() )
 			{
 				lightPathExpressions.push_back( m_lpeName + " " + m_lpeValue );
@@ -728,13 +846,23 @@ class ArnoldOutput : public IECore::RefCounted
 			return m_data == "id";
 		}
 
+		const IECore::InternedString &driverName()
+		{
+			return m_driverName;
+		}
+
+		const IECore::CompoundData* driverParameters()
+		{
+			return m_driverParameters.get();
+		}
+
 	private :
 
-		AtUniverse *m_universe;
 		const IECore::InternedString m_name;
-		NodeDeleter m_nodeDeleter;
-		SharedAtNodePtr m_driver;
-		SharedAtNodePtr m_filter;
+
+		IECore::InternedString m_driverName;
+		IECore::CompoundDataPtr m_driverParameters;
+
 		std::string m_data;
 		std::string m_type;
 		std::string m_layerName;
@@ -746,6 +874,7 @@ class ArnoldOutput : public IECore::RefCounted
 };
 
 IE_CORE_DECLAREPTR( ArnoldOutput )
+using OutputMap = std::map<IECore::InternedString, ArnoldOutputPtr>;
 
 } // namespace
 
@@ -3320,6 +3449,7 @@ class ArnoldGlobals
 			// Delete nodes we own before universe is destroyed.
 			m_shaderCache.reset();
 			m_outputs.clear();
+			m_drivers.clear();
 			m_aovShaders.clear();
 			m_colorManager.reset();
 			m_atmosphere.reset();
@@ -3603,10 +3733,10 @@ class ArnoldGlobals
 						m_imager = m_shaderCache->get( d, IECore::InternedString(), nullptr );
 					}
 				}
-				for( const auto &output : m_outputs )
-				{
-					output.second->updateImager( m_imager ? m_imager->root() : nullptr );
-				}
+
+				// NOTE : If we weren't always updating the drivers, we would need to flag here that the driver
+				// has been dirtied. However, currently, we've been unable to observe any perceptible cost to just
+				// updating the drivers every time we render, so we don't need to flag anything here.
 				return;
 			}
 			else if( boost::starts_with( name.c_str(), "ai:aov_shader:" ) )
@@ -3728,9 +3858,8 @@ class ArnoldGlobals
 				}
 				else
 				{
-					arnoldOutput = new ArnoldOutput( m_universeBlock->universe(), name, output, nodeDeleter( m_renderType ) );
+					arnoldOutput = new ArnoldOutput( name, output );
 				}
-				arnoldOutput->updateImager( m_imager ? m_imager->root() : nullptr );
 			}
 			catch( const std::exception &e )
 			{
@@ -3751,6 +3880,7 @@ class ArnoldGlobals
 		{
 			updateIDAOV();
 			updateCameraMeshes();
+			updateDrivers();
 
 			AtNode *options = AiUniverseGetOptions( m_universeBlock->universe() );
 
@@ -3988,9 +4118,9 @@ class ArnoldGlobals
 			IECore::StringVectorDataPtr outputs = new IECore::StringVectorData;
 			IECore::StringVectorDataPtr lpes = new IECore::StringVectorData;
 			vector<int> interactiveIndices;
-			for( OutputMap::const_iterator it = m_outputs.begin(), eIt = m_outputs.end(); it != eIt; ++it )
+			for( auto & it : m_outputs )
 			{
-				std::string outputCamera = it->second->cameraOverride();
+				std::string outputCamera = it.second->cameraOverride();
 				if( outputCamera == "" )
 				{
 					outputCamera = m_cameraName;
@@ -3998,11 +4128,12 @@ class ArnoldGlobals
 
 				if( outputCamera == cameraName )
 				{
-					if( it->second->updateInteractively() )
+					// We're relying on updateDrivers being called before updateCamera
+					if( it.second->updateInteractively() )
 					{
 						interactiveIndices.push_back( outputs->writable().size() );
 					}
-					it->second->append( outputs->writable(), lpes->writable() );
+					it.second->append( outputs->writable(), lpes->writable(), m_drivers );
 				}
 			}
 
@@ -4150,6 +4281,109 @@ class ArnoldGlobals
 			}
 		}
 
+		void updateDrivers()
+		{
+
+			struct SharedDriverParameters
+			{
+				std::vector< std::string > outputNames;
+				std::string name;
+				std::vector< std::string > outputIds;
+				IECore::StringDataPtr outputIdsString;
+			};
+
+			std::map< std::string, SharedDriverParameters > sharedDriverParameters;
+
+			for( const auto& [ outputName, output ] : m_outputs )
+			{
+				SharedDriverParameters &shared = sharedDriverParameters.try_emplace( output->driverName() ).first->second;
+				shared.outputNames.push_back( outputName );
+				const IECore::StringData *outputIdData = output->driverParameters()->member<IECore::StringData>( g_gafferOutputIDInternedString );
+				if( outputIdData )
+				{
+					shared.outputIds.push_back( outputIdData->readable() );
+				}
+			}
+
+			for( auto& [ driverName, shared ] : sharedDriverParameters )
+			{
+				std::sort( shared.outputNames.begin(), shared.outputNames.end() );
+				shared.name = boost::algorithm::join( shared.outputNames, "," );
+				std::sort( shared.outputIds.begin(), shared.outputIds.end() );
+				shared.outputIdsString = new IECore::StringData( boost::algorithm::join( shared.outputIds, " " ) );
+			}
+
+			std::map< std::string, IECore::ConstCompoundDataPtr > requiredDrivers;
+
+			for( const auto& [ outputName, output ] : m_outputs )
+			{
+				IECore::CompoundDataPtr currentParametersData = output->driverParameters()->copy();
+				IECore::CompoundDataMap &currentParameters = currentParametersData->writable();
+				SharedDriverParameters &shared = sharedDriverParameters.at( output->driverName() );
+				currentParameters[g_gafferOutputIDInternedString] = shared.outputIdsString;
+
+				auto existingDriver = requiredDrivers.find( output->driverName() );
+				if( existingDriver != requiredDrivers.end() )
+				{
+					const IECore::CompoundDataMap &existingParameters = existingDriver->second->readable();
+					if( currentParameters != existingParameters )
+					{
+						for( const auto &i : currentParameters )
+						{
+							if( !existingParameters.count( i.first ) )
+							{
+								throw IECore::Exception( fmt::format( "Mismatch in combined output driver for file name \"{}\" : missing parameter \"{}\"", output->driverName().string(), i.first.string() ) );
+							}
+						}
+
+						for( const auto &i : existingParameters )
+						{
+							if( !currentParameters.count( i.first ) )
+							{
+								throw IECore::Exception( fmt::format( "Mismatch in combined output driver for file name \"{}\" : missing parameter \"{}\"", output->driverName().string(), i.first.string() ) );
+							}
+							else if( *currentParameters.at( i.first ) != *existingParameters.at( i.first ) )
+							{
+								throw IECore::Exception( fmt::format( "Mismatch in combined output driver for file name \"{}\" : value of parameter \"{}\"", output->driverName().string(), i.first.string() ) );
+							}
+						}
+					}
+				}
+				else
+				{
+					requiredDrivers[ output->driverName() ] = currentParametersData;
+				}
+			}
+
+
+			// Erase any drivers that are no longer used ( would be clearer as an erase_if once we're on C++20
+			for( auto it = m_drivers.begin(); it != m_drivers.end(); )
+			{
+				if( requiredDrivers.count( it->first ) == 0 )
+				{
+					it = m_drivers.erase( it );
+				}
+				else
+				{
+					it++;
+				}
+			}
+
+			for( const auto& requiredDriver : requiredDrivers )
+			{
+				ArnoldDriverPtr &arnoldDriver = m_drivers[ requiredDriver.first ];
+				if( arnoldDriver )
+				{
+					arnoldDriver->update( requiredDriver.second.get() );
+				}
+				else
+				{
+					arnoldDriver = new ArnoldDriver( m_universeBlock->universe(), sharedDriverParameters[ requiredDriver.first ].name, requiredDriver.second.get(), nodeDeleter( m_renderType ) );
+				}
+				arnoldDriver->updateImager( m_imager ? m_imager->root() : nullptr );
+			}
+		}
+
 		static void messageCallback( int mask, int severity, const char *message, AtParamValueMap *metadata, void *userPtr )
 		{
 			const ArnoldGlobals *that = static_cast<ArnoldGlobals *>( userPtr );
@@ -4208,7 +4442,7 @@ class ArnoldGlobals
 		IECore::MessageHandlerPtr m_messageHandler;
 		std::optional<unsigned> m_messageCallbackId;
 
-		using OutputMap = std::map<std::string, ArnoldOutputPtr>;
+		DriverMap m_drivers;
 		OutputMap m_outputs;
 
 		using AOVShaderMap = std::map<IECore::InternedString, ArnoldShaderPtr>;

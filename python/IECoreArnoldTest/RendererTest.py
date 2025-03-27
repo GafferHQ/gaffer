@@ -671,7 +671,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.output(
 			"testB",
 			IECoreScene.Output(
-				"beauty.exr",
+				"beautyWithAlpha.exr",
 				"exr",
 				"color B",
 				{
@@ -769,7 +769,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.output(
 			"testWithAlpha",
 			IECoreScene.Output(
-				"beauty.exr",
+				"beautyWithAlpha.exr",
 				"exr",
 				"lpe C.*D.*",
 				{
@@ -801,6 +801,123 @@ class RendererTest( GafferTest.TestCase ) :
 				"ieCoreArnold:lpe:test C.*D.*",
 				"ieCoreArnold:lpe:testWithAlpha C.*D.*"
 			] ) )
+
+	def testCombinedOutputs( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.ass" )
+		)
+
+		r.output(
+			"testA",
+			IECoreScene.Output(
+				"combined.exr",
+				"exr",
+				"color A",
+				{}
+			)
+		)
+
+		r.output(
+			"testB",
+			IECoreScene.Output(
+				"combined.exr",
+				"exr",
+				"color B",
+				{ "testParm" : 2 }
+			)
+		)
+
+		with self.assertRaisesRegex( RuntimeError, 'Mismatch in combined output driver for file name "combined.exr" : missing parameter "testParm"' ):
+			r.render()
+
+		r.output(
+			"testA",
+			IECoreScene.Output(
+				"combined.exr",
+				"exr",
+				"color A",
+				{ "testParm" : 2 }
+			)
+		)
+
+		r.output(
+			"testC",
+			IECoreScene.Output(
+				"single.exr",
+				"exr",
+				"color C",
+				{ "whatever" : 3 }
+			)
+		)
+
+		r.output(
+			"testD",
+			IECoreScene.Output(
+				"combined2.exr",
+				"exr",
+				"color D",
+				{ "filter" : "catrom" }
+			)
+		)
+
+		r.output(
+			"testE",
+			IECoreScene.Output(
+				"combined2.exr",
+				"exr",
+				"color E",
+				{ "filter" : "catrom" }
+			)
+		)
+
+		r.output(
+			"testF",
+			IECoreScene.Output(
+				"combined2.exr",
+				"exr",
+				"color F",
+				{ "filter" : "catrom" }
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
+
+			options = arnold.AiUniverseGetOptions( universe )
+			outputs = arnold.AiNodeGetArray( options, "outputs" )
+			outputSet = set( arnold.AiArrayGetStr( outputs, i ) for i in range( 0, arnold.AiArrayGetNumElements( outputs ) ) )
+			self.assertEqual( outputSet, set( [
+				"A RGB ieCoreArnold:filter:testA,testB ieCoreArnold:display:testA,testB",
+				"E RGB ieCoreArnold:filter:testD,testE,testF ieCoreArnold:display:testD,testE,testF",
+				"B RGB ieCoreArnold:filter:testA,testB ieCoreArnold:display:testA,testB",
+				"C RGB ieCoreArnold:filter:testC ieCoreArnold:display:testC",
+				"D RGB ieCoreArnold:filter:testD,testE,testF ieCoreArnold:display:testD,testE,testF",
+				"F RGB ieCoreArnold:filter:testD,testE,testF ieCoreArnold:display:testD,testE,testF"
+			] ) )
+
+			driver1 = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:display:testA,testB" )
+			self.assertEqual( arnold.AiNodeGetStr( driver1, "filename" ), "combined.exr" )
+			self.assertEqual( arnold.AiNodeGetInt( driver1, "testParm" ), 2 )
+			filter1 = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:filter:testA,testB" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( filter1 ) ), "gaussian_filter" )
+
+			driver2 = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:display:testC" )
+			self.assertEqual( arnold.AiNodeGetStr( driver2, "filename" ), "single.exr" )
+			self.assertEqual( arnold.AiNodeGetInt( driver2, "whatever" ), 3 )
+			filter2 = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:filter:testC" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( filter2 ) ), "gaussian_filter" )
+
+			driver3 = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:display:testD,testE,testF" )
+			self.assertEqual( arnold.AiNodeGetStr( driver3, "filename" ), "combined2.exr" )
+			filter3 = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:filter:testD,testE,testF" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( filter3 ) ), "catrom_filter" )
 
 	def testMultipleCameras( self ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
