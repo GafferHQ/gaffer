@@ -1,6 +1,10 @@
 1.5.x.x (relative to 1.5.11.0)
 =======
 
+Improvements
+------------
+
+- VisualiserTool : Added new visualisation for orientation (Quatf) data.
 
 
 1.5.11.0 (relative to 1.5.10.1)

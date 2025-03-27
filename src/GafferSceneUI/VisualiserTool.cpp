@@ -108,6 +108,11 @@ float const g_vectorScaleInc = 0.01f;
 
 const Color3f g_vectorColorDefault( 1.f, 1.f, 1.f );
 
+// Orientation constants
+const Color3f g_colorX( 1.f, 0.f, 0.f );
+const Color3f g_colorY( 0.f, 1.f, 0.f );
+const Color3f g_colorZ( 0.f, 0.f, 1.f );
+
 // Opacity and value constants
 const float g_opacityDefault = 1.0f;
 const float g_opacityMin = 0.0f;
@@ -414,6 +419,95 @@ std::string const g_vectorShaderFragSource
 );
 
 //-----------------------------------------------------------------------------
+// Orientation shader
+//-----------------------------------------------------------------------------
+
+struct UniformBlockOrientationShader
+{
+	alignas( 16 ) Imath::M44f o2c;
+	alignas( 16 ) Imath::Color3f colorX;
+	alignas( 16 ) Imath::Color3f colorY;
+	alignas( 16 ) Imath::Color3f colorZ;
+	alignas( 16 ) float scale; // NOTE : following vec3 array must align to 16 byte address
+};
+
+#define UNIFORM_BLOCK_ORIENTATION_GLSL_SOURCE \
+	"layout( std140, row_major ) uniform UniformBlock\n" \
+	"{\n" \
+	"   mat4 o2c;\n" \
+	"   vec3 color[ 3 ];\n" \
+	"   float scale;\n" \
+	"} uniforms;\n"
+
+#define ATTRIB_GLSL_LOCATION_QS 1
+
+#define ATTRIB_ORIENTATION_GLSL_SOURCE \
+	"layout( location = " BOOST_PP_STRINGIZE( ATTRIB_GLSL_LOCATION_PS ) " ) in vec3 ps;\n" \
+	"layout( location = " BOOST_PP_STRINGIZE( ATTRIB_GLSL_LOCATION_QS ) " ) in vec4 qs;\n"
+
+#define INTERFACE_BLOCK_ORIENTATION_GLSL_SOURCE( STORAGE, NAME ) \
+	BOOST_PP_STRINGIZE( STORAGE ) " InterfaceBlock\n" \
+	"{\n" \
+	"   flat vec3 color;\n" \
+	"} " BOOST_PP_STRINGIZE( NAME ) ";\n"
+
+std::string const g_orientationShaderVertSource
+(
+	"#version 330\n"
+
+	UNIFORM_BLOCK_ORIENTATION_GLSL_SOURCE
+
+	ATTRIB_ORIENTATION_GLSL_SOURCE
+
+	INTERFACE_BLOCK_ORIENTATION_GLSL_SOURCE( out, outputs )
+
+	"void main()\n"
+	"{\n"
+	"   vec3 position = ps;\n"
+	"   int axis = gl_VertexID / 2;\n"
+
+	"   if( ( gl_VertexID % 2 ) > 0 )\n"
+	"   {\n"
+	"       float r = qs.x;\n"
+	"       vec3  v = qs.yzw;\n"
+	"       mat3  m = mat3(\n"
+	"           1.0 - 2.0 * dot( v.yz, v.yz ),\n"
+	"                 2.0 * dot( v.xz, vec2( v.y,  r ) ),\n"
+	"                 2.0 * dot( v.zy, vec2( v.x, -r ) ),\n"
+
+	"                 2.0 * dot( v.xz, vec2( v.y, -r ) ),\n"
+	"           1.0 - 2.0 * dot( v.zx, v.zx ),\n"
+	"                 2.0 * dot( v.yx, vec2( v.z,  r ) ),\n"
+
+	"                 2.0 * dot( v.zy, vec2( v.x,  r ) ),\n"
+	"                 2.0 * dot( v.yx, vec2( v.z, -r ) ),\n"
+	"           1.0 - 2.0 * dot( v.yx, v.yx ) );\n"
+
+	"       position += normalize( m[ axis ] ) * uniforms.scale;\n"
+	"   }\n"
+
+	"   gl_Position = vec4( position, 1.0 ) * uniforms.o2c;\n"
+	"   outputs.color = uniforms.color[ axis ];\n"
+	"}\n"
+);
+
+std::string const g_orientationShaderFragSource
+(
+	"#version 330\n"
+
+	UNIFORM_BLOCK_ORIENTATION_GLSL_SOURCE
+
+	INTERFACE_BLOCK_ORIENTATION_GLSL_SOURCE( in, inputs )
+
+	"layout( location = 0 ) out vec4 cs;\n"
+
+	"void main()\n"
+	"{\n"
+	"   cs = vec4( inputs.color, 1.0 );\n"
+	"}\n"
+);
+
+//-----------------------------------------------------------------------------
 // Helper Methods
 //-----------------------------------------------------------------------------
 
@@ -548,6 +642,7 @@ class VisualiserGadget : public Gadget
 			{
 				renderColorVisualiser( viewportGadget, mode );
 				renderVectorVisualiser( viewportGadget, mode );
+				renderOrientationVisualiser( viewportGadget, mode );
 			}
 
 			else if( layer == Gadget::Layer::Front )
@@ -806,7 +901,8 @@ class VisualiserGadget : public Gadget
 				if(
 					mode == VisualiserTool::Mode::Auto && (
 						vData->typeId() == IntVectorDataTypeId ||  // Will be handled by `renderVertexLabelValue()` instead.
-						vData->typeId() == V3fVectorDataTypeId  // Will be handled by `renderVectorVisualiser()` instead.
+						vData->typeId() == V3fVectorDataTypeId ||  // Will be handled by `renderVectorVisualiser()` instead.
+						vData->typeId() == QuatfVectorDataTypeId   // Will be handled by `renderOrientationVisualiser()` instead.
 					)
 				)
 				{
@@ -1771,6 +1867,245 @@ class VisualiserGadget : public Gadget
 			glUseProgram( shaderProgram );
 		}
 
+		void renderOrientationVisualiser( const ViewportGadget *viewportGadget, VisualiserTool::Mode mode ) const
+		{
+			const std::string name = primitiveVariableFromDataName( m_tool->dataNamePlug()->getValue() );
+			if( name.empty() || mode != VisualiserTool::Mode::Auto )
+			{
+				return;
+			}
+
+			buildShader( m_orientationShader, g_orientationShaderVertSource, g_orientationShaderFragSource );
+
+			if( !m_orientationShader )
+			{
+				return;
+			}
+
+			// Get the cached converter from IECoreGL, this is used to convert primitive
+			// variable data to opengl buffers which will be shared with the IECoreGL renderer
+			IECoreGL::CachedConverter *converter = IECoreGL::CachedConverter::defaultCachedConverter();
+
+			GLint uniformBinding;
+			glGetIntegerv( GL_UNIFORM_BUFFER_BINDING, &uniformBinding );
+
+			if( !m_orientationUniformBuffer )
+			{
+				GLuint buffer = 0u;
+				glGenBuffers( 1, &buffer );
+				glBindBuffer( GL_UNIFORM_BUFFER, buffer );
+				glBufferData( GL_UNIFORM_BUFFER, sizeof( UniformBlockOrientationShader ), 0, GL_DYNAMIC_DRAW );
+				m_orientationUniformBuffer.reset( new IECoreGL::Buffer( buffer ) );
+			}
+
+			glBindBufferBase( GL_UNIFORM_BUFFER, g_uniformBlockBindingIndex, m_orientationUniformBuffer->buffer() );
+
+			UniformBlockOrientationShader uniforms;
+			uniforms.colorX = g_colorX;
+			uniforms.colorY = g_colorY;
+			uniforms.colorZ = g_colorZ;
+			uniforms.scale = m_tool->vectorScalePlug()->getValue();
+
+			// Set OpenGL state
+			GLfloat lineWidth;
+			glGetFloatv( GL_LINE_WIDTH, &lineWidth );
+			glLineWidth( 1.f );
+
+			const GLboolean depthEnabled = glIsEnabled( GL_DEPTH_TEST );
+			if( !depthEnabled )
+			{
+				glEnable( GL_DEPTH_TEST );
+			}
+
+			GLboolean depthWriteEnabled;
+			glGetBooleanv( GL_DEPTH_WRITEMASK, &depthWriteEnabled );
+			if( depthWriteEnabled )
+			{
+				glDepthMask( GL_FALSE );
+			}
+
+			GLboolean lineSmooth;
+			glGetBooleanv( GL_LINE_SMOOTH, &lineSmooth );
+			if( lineSmooth )
+			{
+				glDisable( GL_LINE_SMOOTH );
+			}
+
+			const GLboolean blendEnabled = glIsEnabled( GL_BLEND );
+			if( !blendEnabled )
+			{
+				glEnable( GL_BLEND );
+			}
+
+			// Store current shader program to be restored after drawing.
+			GLint shaderProgram;
+			glGetIntegerv( GL_CURRENT_PROGRAM, &shaderProgram );
+			glUseProgram( m_orientationShader->program() );
+
+			// Set OpenGL vertex attribute array state
+			GLint arrayBinding;
+			glGetIntegerv( GL_ARRAY_BUFFER_BINDING, &arrayBinding );
+
+			// Get the world to clip space matrix
+			Imath::M44f v2c;
+			glGetFloatv( GL_PROJECTION_MATRIX, v2c.getValue() );
+			const Imath::M44f w2c = viewportGadget->getCameraTransform().gjInverse() * v2c;
+
+			glPushClientAttrib( GL_CLIENT_VERTEX_ARRAY_BIT );
+
+			glVertexAttribDivisor( ATTRIB_GLSL_LOCATION_PS, 1 );
+			glEnableVertexAttribArray( ATTRIB_GLSL_LOCATION_PS );
+			glVertexAttribDivisor( ATTRIB_GLSL_LOCATION_QS, 1 );
+			glEnableVertexAttribArray( ATTRIB_GLSL_LOCATION_QS );
+
+			// Loop through the current selection
+			for( const auto &location : m_tool->selection() )
+			{
+				ScenePlug::PathScope scope( &location.context(), &location.path() );
+
+				ConstPrimitivePtr primitive;
+				M44f o2w;
+				try
+				{
+					// Check path exists
+					if( !location.scene().existsPlug()->getValue() )
+					{
+						continue;
+					}
+
+					// Extract primitive
+					primitive = runTimeCast<const Primitive>( location.scene().objectPlug()->getValue() );
+					if( !primitive )
+					{
+						continue;
+					}
+
+					// Get the object to world transform
+					o2w = location.scene().fullTransform( location.path() );
+				}
+				catch( const std::exception & )
+				{
+					continue;
+				}
+
+				// Find named vertex attribute
+				// NOTE : Conversion to IECoreGL mesh may generate vertex attributes (eg. "N")
+				// so check named primitive variable exists on IECore mesh primitive.
+				const auto qIt = primitive->variables.find( name );
+				if( qIt == primitive->variables.end() )
+				{
+					continue;
+				}
+
+				auto qData = runTimeCast<const QuatfVectorData>( qIt->second.data );
+				if( !qData )
+				{
+					// Will be handled by `renderColorVisualiser()`, `renderVertexLabelValue()`
+					// or `vectorVisualiser()` instead.
+					continue;
+				}
+
+				if( qIt->second.interpolation == PrimitiveVariable::Uniform )
+				{
+					try
+					{
+						primitive = runTimeCast<const Primitive>( location.uniformPScene().objectPlug()->getValue() );
+
+						if( !primitive )
+						{
+							continue;
+						}
+					}
+					catch( const std::exception & )
+					{
+						continue;
+					}
+				}
+
+				// Make sure we have "P" data and it is the correct type.
+				const auto pIt = primitive->variables.find( g_pName );
+				if( pIt == primitive->variables.end() )
+				{
+					continue;
+				}
+
+				auto pData = runTimeCast<const V3fVectorData>( pIt->second.data );
+				if( !pData )
+				{
+					continue;
+				}
+
+				IECoreGL::ConstBufferPtr pBuffer = nullptr;
+				IECoreGL::ConstBufferPtr qBuffer = nullptr;
+				GLsizei vertexCount = 0;
+
+				// Retrieve cached IECoreGL primitive
+
+				if( qIt->second.interpolation != PrimitiveVariable::FaceVarying )
+				{
+					pBuffer = runTimeCast<const IECoreGL::Buffer>( converter->convert( pData.get() ) );
+					qBuffer = runTimeCast<const IECoreGL::Buffer>( converter->convert( qData.get() ) );
+					vertexCount = (GLsizei)pData->readable().size();
+				}
+				else
+				{
+					auto primitiveGL = runTimeCast<const IECoreGL::Primitive>( converter->convert( primitive.get() ) );
+					if( !primitiveGL )
+					{
+						continue;
+					}
+
+					pBuffer = primitiveGL->getVertexBuffer( g_pName );
+					qBuffer = primitiveGL->getVertexBuffer( name );
+					vertexCount = primitiveGL->getVertexCount();
+				}
+
+				if( !pBuffer || !qBuffer )
+				{
+					continue;
+				}
+
+				uniforms.o2c = o2w * w2c;
+
+				// Upload OpenGL uniform block data
+				glBufferData( GL_UNIFORM_BUFFER, sizeof( UniformBlockOrientationShader ), &uniforms, GL_DYNAMIC_DRAW );
+
+				// Instance a line segment for each element of orientation data
+				glBindBuffer( GL_ARRAY_BUFFER, pBuffer->buffer() );
+				glVertexAttribPointer( ATTRIB_GLSL_LOCATION_PS, 3, GL_FLOAT, GL_FALSE, 0, nullptr );
+				glBindBuffer( GL_ARRAY_BUFFER, qBuffer->buffer() );
+				glVertexAttribPointer( ATTRIB_GLSL_LOCATION_VS, 4, GL_FLOAT, GL_FALSE, 0, nullptr );
+				glDrawArraysInstanced( GL_LINES, 0, 6, vertexCount );
+
+			}
+
+			// Restore OpenGL state
+
+			glPopClientAttrib();
+			glBindBuffer( GL_ARRAY_BUFFER, arrayBinding );
+			glBindBuffer( GL_UNIFORM_BUFFER, uniformBinding );
+
+			glLineWidth( lineWidth );
+
+			if( lineSmooth )
+			{
+				glEnable( GL_LINE_SMOOTH );
+			}
+			if( !blendEnabled )
+			{
+				glDisable( GL_BLEND );
+			}
+			if( !depthEnabled )
+			{
+				glDisable( GL_DEPTH_TEST );
+			}
+			if( depthWriteEnabled )
+			{
+				glDepthMask( GL_TRUE );
+			}
+			glUseProgram( shaderProgram );
+		}
+
 		VisualiserTool::CursorValue cursorVertexValue() const
 		{
 			return m_cursorVertexValue;
@@ -1785,6 +2120,8 @@ class VisualiserGadget : public Gadget
 		mutable IECoreGL::ConstShaderPtr m_vectorShaderVector;
 		mutable IECoreGL::ConstShaderPtr m_vectorShaderBivector;
 		mutable IECoreGL::ConstBufferPtr m_vectorUniformBuffer;
+		mutable IECoreGL::ConstShaderPtr m_orientationShader;
+		mutable IECoreGL::ConstBufferPtr m_orientationUniformBuffer;
 
 		mutable IECoreGL::ConstBufferPtr m_vertexLabelStorageBuffer;
 		mutable std::size_t m_vertexLabelStorageCapacity;
