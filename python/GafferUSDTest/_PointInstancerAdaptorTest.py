@@ -63,9 +63,8 @@ class _PointInstancerAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		pointInstancerSet["filter"].setInput( cubeFilter["out"] )
 		pointInstancerSet["name"].setValue( 'usd:pointInstancers' )
 
-		customAttributes = GafferScene.CustomAttributes()
-		customAttributes["in"].setInput( pointInstancerSet["out"] )
-		customAttributes["filter"].setInput( cubeFilter["out"] )
+		customOptions = GafferScene.CustomOptions()
+		customOptions["in"].setInput( pointInstancerSet["out"] )
 
 		sphere = GafferScene.Sphere()
 
@@ -74,12 +73,14 @@ class _PointInstancerAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		prototypes["name"].setValue( 'prototypes' )
 
 		parent = GafferScene.Parent()
-		parent["in"].setInput( customAttributes["out"] )
+		parent["in"].setInput( customOptions["out"] )
 		parent["parent"].setValue( '/cube' )
 		parent["children"][0].setInput( prototypes["out"] )
 
 		pointInstancerAdaptor = GafferUSD._PointInstancerAdaptor()
 		pointInstancerAdaptor["in"].setInput( parent["out"] )
+		pointInstancerAdaptor["enabledRenderers"].setValue( IECore.StringVectorData( ["test", "Arnold"] ) )
+		pointInstancerAdaptor["renderer"].setValue( "test" )
 
 		self.assertEqual(
 			pointInstancerAdaptor["out"].childNames( "/cube" ),
@@ -120,19 +121,19 @@ class _PointInstancerAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( type( pointInstancerAdaptor["out"].object( "/cube/instances" ) ), GafferScene.Capsule )
 
 		# This parameter controls the default for whether locations get processed, based on the chosen renderer
-		pointInstancerAdaptor["defaultEnabledPerRenderer"].setValue( { "Arnold" : False } )
+		pointInstancerAdaptor["enabledRenderers"].setValue( IECore.StringVectorData( [ "test" ] ) )
 		self.assertScenesEqual( pointInstancerAdaptor["out"], pointInstancerAdaptor["in"] )
 
 		# The attribute can override
-		customAttributes["attributes"].addChild( Gaffer.NameValuePlug( "gafferUSD:pointInstancerAdaptor:enabled", Gaffer.BoolPlug( "value", defaultValue = True ), True, "member1" ) )
+		customOptions["options"].addChild( Gaffer.NameValuePlug( "gafferUSD:pointInstancerAdaptor:enabled", Gaffer.BoolPlug( "value", defaultValue = True ), True, "member1" ) )
 
 		self.assertEqual( type( pointInstancerAdaptor["out"].object( "/cube/instances" ) ), GafferScene.Capsule )
 
-		pointInstancerAdaptor["defaultEnabledPerRenderer"].setValue( { "Arnold" : True } )
+		pointInstancerAdaptor["enabledRenderers"].setValue( IECore.StringVectorData( ["test", "Arnold" ] ) )
 
 		self.assertEqual( type( pointInstancerAdaptor["out"].object( "/cube/instances" ) ), GafferScene.Capsule )
 
-		customAttributes["attributes"]["member1"]["value"].setValue( False )
+		customOptions["options"]["member1"]["value"].setValue( False )
 
 		self.assertScenesEqual( pointInstancerAdaptor["out"], pointInstancerAdaptor["in"] )
 
@@ -145,6 +146,8 @@ class _PointInstancerAdaptorTest( GafferSceneTest.SceneTestCase ) :
 
 		pointInstancerAdaptor = GafferUSD._PointInstancerAdaptor()
 		pointInstancerAdaptor["in"].setInput( sceneReader["out"] )
+		pointInstancerAdaptor["enabledRenderers"].setValue( IECore.StringVectorData( [ "test" ] ) )
+		pointInstancerAdaptor["renderer"].setValue( "test" )
 
 		self.assertSceneValid( pointInstancerAdaptor["out"] )
 		self.assertEqual(
@@ -197,6 +200,7 @@ class _PointInstancerAdaptorTest( GafferSceneTest.SceneTestCase ) :
 
 		pointInstancerAdaptorEncapsulating = GafferUSD._PointInstancerAdaptor()
 		pointInstancerAdaptorEncapsulating["in"].setInput( sceneReader["out"] )
+		pointInstancerAdaptorEncapsulating["enabledRenderers"].setValue( IECore.StringVectorData( [ "Arnold" ] ) )
 		pointInstancerAdaptorEncapsulating["renderer"].setValue( "Arnold" )
 
 		self.assertEqual( type( pointInstancerAdaptorEncapsulating["out"].object( "/inst/instances" ) ), GafferScene.Capsule )
@@ -212,6 +216,7 @@ class _PointInstancerAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		pointInstancerAdaptor = GafferUSD._PointInstancerAdaptor()
 		pointInstancerAdaptor["in"].setInput( sceneReader["out"] )
 		pointInstancerAdaptor["renderer"].setValue( "Arnold" )
+		pointInstancerAdaptor["enabledRenderers"].setValue( IECore.StringVectorData( [ "Arnold" ] ) )
 
 		postGroup = GafferScene.Group()
 		postGroup["transform"]["rotate"]["x"].setValue( 30 )
@@ -224,6 +229,7 @@ class _PointInstancerAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		pointInstancerAdaptorAfterGroup = GafferUSD._PointInstancerAdaptor()
 		pointInstancerAdaptorAfterGroup["in"].setInput( preGroup["out"] )
 		pointInstancerAdaptorAfterGroup["renderer"].setValue( "Arnold" )
+		pointInstancerAdaptorAfterGroup["enabledRenderers"].setValue( IECore.StringVectorData( [ "Arnold" ] ) )
 
 		self.assertScenesRenderSame( postGroup["out"], pointInstancerAdaptorAfterGroup["out"], expandProcedurals = True, ignoreLinks = True )
 
@@ -249,6 +255,7 @@ class _PointInstancerAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		pointInstancerAdaptorAfterMerge = GafferUSD._PointInstancerAdaptor()
 		pointInstancerAdaptorAfterMerge["in"].setInput( preMerge["out"] )
 		pointInstancerAdaptorAfterMerge["renderer"].setValue( "Arnold" )
+		pointInstancerAdaptorAfterMerge["enabledRenderers"].setValue( IECore.StringVectorData( [ "Arnold" ] )  )
 
 		self.assertScenesRenderSame( pointInstancerAdaptorAfterMerge["out"], refMerge["out"], expandProcedurals = True, ignoreLinks = True )
 
@@ -281,6 +288,8 @@ class _PointInstancerAdaptorTest( GafferSceneTest.SceneTestCase ) :
 
 		pointInstancerAdaptor = GafferUSD._PointInstancerAdaptor()
 		pointInstancerAdaptor["in"].setInput( pointInstancerSet["out"] )
+		pointInstancerAdaptor["renderer"].setValue( "test Arnold" )
+		pointInstancerAdaptor["enabledRenderers"].setValue( IECore.StringVectorData( [ "test" ] ) )
 
 		# We're not making the children invisible
 		self.assertEqual( pointInstancerAdaptor["out"].attributes( "/group/group" ), IECore.CompoundObject() )

@@ -52,30 +52,21 @@ class _PointInstancerAdaptor( GafferScene.SceneProcessor ) :
 		self["renderer"] = Gaffer.StringPlug()
 
 		# By default, we are enabled for any renderer other than OpenGL
-		self["defaultEnabledPerRenderer"] = Gaffer.AtomicCompoundDataPlug( defaultValue = { "OpenGL" : False } )
+		enabledForRenderers = set( GafferScene.Private.IECoreScenePreview.Renderer.types() )
+		enabledForRenderers = enabledForRenderers - set( [ "OpenGL", "Capturing" ] )
+		self["enabledRenderers"] = Gaffer.StringVectorDataPlug( defaultValue = IECore.StringVectorData( enabledForRenderers ) )
 
-		# First, a simple thing that is a bit messy to do currently: we need all the locations in
-		# the set usd:pointInstancers where the attribute gafferUSD:pointInstancerAdaptor:enabled isn't
-		# set to false. Since we don't have an AttributeFilter, we have to use a FilterResults
-		# to get all the paths, and a Collect to remove the ones where the attribute value is
-		# set to 0.
+		# First, a simple thing that is a bit messy to do: we don't want to process locations that
+		# aren't points. The most obvious way this could come up is if a parent transform is put in
+		# the 'usd:pointInstancers' set - we don't want to hide everything underneath that location.
+		# In order to apply only to actual points primitives, we use a PrimitiveVariableQuery to check
+		# each location for whether it is an object with a P primvar.
 		self["usdPointInstancerSet"] = GafferScene.SetFilter()
 		self["usdPointInstancerSet"]["setExpression"].setValue( 'usd:pointInstancers' )
-
 
 		self["pathInSetFilterResult"] = GafferScene.FilterResults()
 		self["pathInSetFilterResult"]["scene"].setInput( self["in"] )
 		self["pathInSetFilterResult"]["filter"].setInput( self["usdPointInstancerSet"]["out"] )
-
-		self["expandInstancersAttribQuery"] = GafferScene.AttributeQuery()
-		self["expandInstancersAttribQuery"]["scene"].setInput( self["in"] )
-		self["expandInstancersAttribQuery"].setup( Gaffer.BoolPlug( "value", direction = Gaffer.Plug.Direction.Out, defaultValue = False, ) )
-		self["expandInstancersAttribQuery"]["location"].setValue( "${collect:value}" )
-		self["expandInstancersAttribQuery"]["attribute"].setValue( 'gafferUSD:pointInstancerAdaptor:enabled' )
-		self["expandInstancersAttribQuery"]["inherit"].setValue( True )
-
-		self["defaultEnabledExpression"] = Gaffer.Expression()
-		self["defaultEnabledExpression"].setExpression( 'parent["expandInstancersAttribQuery"]["default"] = parent["defaultEnabledPerRenderer"].get( parent["renderer"], IECore.BoolData( True ) )', "python" )
 
 		self["primitiveVariableQuery"] = GafferScene.PrimitiveVariableQuery()
 		self["primitiveVariableQuery"]["scene"].setInput( self["in"] )
@@ -84,19 +75,12 @@ class _PointInstancerAdaptor( GafferScene.SceneProcessor ) :
 		self["primitiveVariableQuery"]["queries"][0]["name"].setValue( 'P' )
 
 		self["collectValidPaths"] = Gaffer.Collect()
-		self["collectValidPaths"].addInput( Gaffer.StringPlug( "StringPlug", defaultValue = '', ) )
+		self["collectValidPaths"].addInput( Gaffer.StringPlug( "paths", defaultValue = '${collect:value}', ) )
 		self["collectValidPaths"]["contextValues"].setInput( self["pathInSetFilterResult"]["outStrings"] )
-
-		self["validPathExpression"] = Gaffer.Expression()
-		self["validPathExpression"].setExpression( "parent.collectValidPaths.enabled = parent.expandInstancersAttribQuery.value && parent.primitiveVariableQuery.out.out0.exists", "OSL" )
+		self["collectValidPaths"]["enabled"].setInput( self["primitiveVariableQuery"]["out"][0]["exists"] )
 
 		self["validPaths"] = GafferScene.PathFilter()
-
-		# We were mostly able to pull this off without Python expressions, but unfortunately, we do need a
-		# Python expression just to connect these two plugs ( enabledValues acts like a StringVectorDataPlug, but
-		# is typed as an ObjectPlug to allow the type of data returned to change in the future ).
-		self["unfortunateExpressionToConnectToObjectPlug"] = Gaffer.Expression()
-		self["unfortunateExpressionToConnectToObjectPlug"].setExpression( 'parent["validPaths"]["paths"] = parent["collectValidPaths"]["enabledValues"]', 'python' )
+		self["validPaths"]["paths"].setInput( self["collectValidPaths"]["out"]["paths"] )
 
 		# Set an invisible attribute on the descendants of the instancers, which shouldn't be visible
 		# ( USD halts draw traversal when it finds PointInstancer )
@@ -110,12 +94,9 @@ class _PointInstancerAdaptor( GafferScene.SceneProcessor ) :
 		self["invisAttribute"]["attributes"]["visibility"]["value"].setValue( False )
 		self["invisAttribute"]["attributes"]["visibility"]["enabled"].setValue( True )
 
-		self["attrAttributesQuery"] = GafferScene.AttributeQuery()
-		self["attrAttributesQuery"]["scene"].setInput( self["in"] )
-		self["attrAttributesQuery"].setup( Gaffer.StringPlug( "value", direction = Gaffer.Plug.Direction.Out, defaultValue = '', ) )
-		self["attrAttributesQuery"]["location"].setValue( '${scene:path}' )
-		self["attrAttributesQuery"]["inherit"].setValue( True )
-		self["attrAttributesQuery"]["attribute"].setValue( 'gafferUSD:pointInstancerAdaptor:attributes' )
+		self["attrOptionQuery"] = GafferScene.OptionQuery()
+		self["attrOptionQuery"]["scene"].setInput( self["in"] )
+		self["attrOptionQuery"].addQuery( Gaffer.StringPlug( "value" ), "gafferUSD:pointInstancerAdaptor:attributes" )
 
 		self["instancer"] = GafferScene.Instancer()
 		self["instancer"]["in"].setInput( self["invisAttribute"]["out"] )
@@ -126,7 +107,7 @@ class _PointInstancerAdaptor( GafferScene.SceneProcessor ) :
 		self["instancer"]["orientation"].setValue( 'orientation' )
 		self["instancer"]["scale"].setValue( 'scale' )
 		self["instancer"]["inactiveIds"].setValue( 'inactiveIds invisibleIds' )
-		self["instancer"]["attributes"].setInput( self["attrAttributesQuery"]["value"] )
+		self["instancer"]["attributes"].setInput( self["attrOptionQuery"]["out"][0]["value"] )
 		self["instancer"]["attributePrefix"].setValue( 'user:' )
 
 		# Do some rewiring to turn this Instancer into a recursive instancer by plumbing the output
@@ -147,6 +128,16 @@ class _PointInstancerAdaptor( GafferScene.SceneProcessor ) :
 		self["encapsulateSwitch"]["in"][1]["value"].setValue( True )
 
 		self["instancer"]["encapsulate"].setInput( self["encapsulateSwitch"]["out"]["value"] )
+
+		self["enabledOptionQuery"] = GafferScene.OptionQuery()
+		self["enabledOptionQuery"]["scene"].setInput( self["in"] )
+		self["enabledOptionQuery"].addQuery( Gaffer.BoolPlug( "value" ), "gafferUSD:pointInstancerAdaptor:enabled" )
+
+		self["defaultEnabledExpression"] = Gaffer.Expression()
+		self["defaultEnabledExpression"].setExpression( 'parent["enabledOptionQuery"]["queries"]["query0"]["value"] = parent["renderer"] in parent["enabledRenderers"]' )
+
+		self["invisAttribute"]["enabled"].setInput( self["enabledOptionQuery"]["out"][0]["value"] )
+		self["instancer"]["enabled"].setInput( self["enabledOptionQuery"]["out"][0]["value"] )
 
 		self["out"].setInput( self["instancer"]["out"] )
 

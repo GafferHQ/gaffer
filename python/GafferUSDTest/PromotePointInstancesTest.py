@@ -82,6 +82,8 @@ class PromotePointInstancesTest( GafferSceneTest.SceneTestCase ) :
 
 		referenceAdaptor = GafferUSD._PointInstancerAdaptor()
 		referenceAdaptor["in"].setInput( simpleParent["out"] )
+		referenceAdaptor["renderer"].setValue( "test" )
+		referenceAdaptor["enabledRenderers"].setValue( IECore.StringVectorData( [ "test" ] ) )
 
 		# Do a simple promote, which both tests the basic functionality, and serves as a reference scene for our
 		# expected output when we're testing trickier cases
@@ -96,6 +98,8 @@ class PromotePointInstancesTest( GafferSceneTest.SceneTestCase ) :
 
 		simplePromoteAdaptor = GafferUSD._PointInstancerAdaptor()
 		simplePromoteAdaptor["in"].setInput( simplePromotePointInstances["out"] )
+		simplePromoteAdaptor["renderer"].setValue( "test" )
+		simplePromoteAdaptor["enabledRenderers"].setValue( IECore.StringVectorData( [ "test" ] ) )
 
 
 		self.assertEqual( simplePromotePointInstances["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "object", "promotedInstances" ] ) )
@@ -137,6 +141,8 @@ class PromotePointInstancesTest( GafferSceneTest.SceneTestCase ) :
 
 		pointInstancerAdaptor = GafferUSD._PointInstancerAdaptor()
 		pointInstancerAdaptor["in"].setInput( promoteInstances["out"] )
+		pointInstancerAdaptor["renderer"].setValue( "test" )
+		pointInstancerAdaptor["enabledRenderers"].setValue( IECore.StringVectorData( [ "test" ] ) )
 
 		# Reordering points should not affect the expanded output
 		self.assertScenesEqual( pointInstancerAdaptor["out"], referenceAdaptor["out"] )
