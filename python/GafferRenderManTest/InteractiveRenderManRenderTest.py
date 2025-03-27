@@ -34,12 +34,15 @@
 #
 ##########################################################################
 
+import os
 import unittest
 
 import IECoreRenderMan
+import GafferTest
 import GafferSceneTest
 import GafferRenderMan
 
+@unittest.skipIf( GafferTest.inCI() and os.name == "nt", "RenderMan cannot get license on Windows.")
 class InteractiveRenderManRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 	renderer = "RenderMan"
