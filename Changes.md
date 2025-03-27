@@ -1,10 +1,16 @@
-1.5.x.x (relative to 1.5.8.0)
+1.5.x.x (relative to 1.5.9.0)
+=======
+
+
+
+1.5.9.0 (relative to 1.5.8.0)
 =======
 
 Features
 --------
 
 - Arnold : Added support for Arnold 7.4.
+- RenderMan : Added preliminary support for rendering with RenderMan. To enable, set `RMANTREE` to the file path of an installation of RenderMan 26.3, and set `GAFFERRENDERMAN_FEATURE_PREVIEW` to `1`. RenderMan support is still under development, with notable missing features including light filters, light linking, and capsules. We are providing this early feature preview to encourage testing and feedback, but do not yet consider it to be production-ready.
 
 Improvements
 ------------
