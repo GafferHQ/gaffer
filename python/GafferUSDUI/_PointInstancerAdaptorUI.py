@@ -63,9 +63,10 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			If a renderer is listed in this space separated list, the adaptor will be enabled by default
-			for that renderer ( it can still be overridden by the option gafferUSD:pointInstancerAdaptor:enabled ).
-			This should plug only ever be edited by the expansion menu set up in
+			If a renderer is listed in this list, the adaptor will be enabled by
+			default for that renderer (it can still be overridden by the option
+			`gafferUSD:pointInstancerAdaptor:enabled`). This plug should only
+			ever be edited by the expansion menu set up in
 			startup/GafferSceneUI/usdPointInstancerAdaptor.py
 			""",
 

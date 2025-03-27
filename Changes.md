@@ -9,6 +9,10 @@ Fixes
   - Fixed crashes caused by invalid `P` primitive variables.
 - Cycles : Fixed incorrect particle motion blur shape (#5862).
 - SceneAlgo : Fixed errors and crashes caused by calling `registerRenderAdaptor()` from an adaptor creation function.
+- USD : Fixed performance regressions in interactive rendering caused by the USD point instancer adaptor. This replaces
+  the `gafferUSD:pointInstancerAdaptor:enabled` and `gafferUSD:pointInstancerAdaptor:attributes` attributes with global options
+  of the same name. Technically, removing the attributes is a breaking change, but we feel that the benefits of fixing the
+  regression outweigh the risks of removing an attribute we don't expect to be in widespread usage.
 
 API
 ---
