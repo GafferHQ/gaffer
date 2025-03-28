@@ -1193,6 +1193,21 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 			self.assertEqual( plug.getValue(), " ".join( data ) )
 			self.assertEqual( plug.isSetToDefault(), len( data ) == 0 )
 
+	def testSetStringVectorValueFromStringData( self ) :
+
+		plug = Gaffer.StringVectorDataPlug()
+
+		for data in [
+			IECore.StringData( "a b c" ),
+			IECore.StringData( "a" ),
+			IECore.StringData()
+		] :
+
+			self.assertTrue( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+			self.assertTrue( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+			self.assertEqual( plug.getValue(), IECore.StringVectorData( data.value.split( " " ) ) if data.value != "" else IECore.StringVectorData() )
+			self.assertEqual( plug.isSetToDefault(), data.value == "" )
+
 	def testDependsOnCompute( self ) :
 
 		add = GafferTest.AddNode()
