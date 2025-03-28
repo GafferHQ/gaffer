@@ -36,8 +36,6 @@
 
 import unittest
 
-import arnold
-
 import IECore
 import IECoreScene
 
@@ -56,12 +54,8 @@ class ArnoldColorManagerTest( GafferSceneTest.SceneTestCase ) :
 			"color_space_linear" : "",
 			"color_space_narrow" : "",
 			"config" : "",
+			"ignore_environment_variable" : False,
 		}
-
-		if [ int( x ) for x in arnold.AiGetVersion()[:2] ] >= [ 7, 3 ] :
-			result |= {
-				"ignore_environment_variable" : False,
-			}
 
 		return IECore.CompoundData( result | kw )
 

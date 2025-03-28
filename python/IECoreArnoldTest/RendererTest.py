@@ -4393,16 +4393,13 @@ class RendererTest( GafferTest.TestCase ) :
 			mix = arnold.AiNodeGetLink( range, "input" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( mix ) ), "mix_rgba" )
 
-			# Before Arnold 7.2.3.0, the `state_float` doesn't have multiple outputs.
-			if [ int( x ) for x in arnold.AiGetVersion()[:3] ] >= [ 7, 2, 3 ] :
-
-				outputIndex = ctypes.c_int()
-				outputComponent = ctypes.c_int()
-				stateFloat = arnold.AiNodeGetLinkOutput( standardSurface, "base", ctypes.byref( outputIndex ), ctypes.byref( outputComponent ) )
-				stateFloatNodeEntry = arnold.AiNodeGetNodeEntry( stateFloat )
-				self.assertEqual( arnold.AiNodeEntryGetName( stateFloatNodeEntry ), "state_float" )
-				self.assertEqual( arnold.AiParamGetName( arnold.AiNodeEntryGetOutput( stateFloatNodeEntry, outputIndex.value ) ), "sx" )
-				self.assertEqual( outputComponent.value, -1 )
+			outputIndex = ctypes.c_int()
+			outputComponent = ctypes.c_int()
+			stateFloat = arnold.AiNodeGetLinkOutput( standardSurface, "base", ctypes.byref( outputIndex ), ctypes.byref( outputComponent ) )
+			stateFloatNodeEntry = arnold.AiNodeGetNodeEntry( stateFloat )
+			self.assertEqual( arnold.AiNodeEntryGetName( stateFloatNodeEntry ), "state_float" )
+			self.assertEqual( arnold.AiParamGetName( arnold.AiNodeEntryGetOutput( stateFloatNodeEntry, outputIndex.value ) ), "sx" )
+			self.assertEqual( outputComponent.value, -1 )
 
 	def testOSLOutParameter( self ) :
 
