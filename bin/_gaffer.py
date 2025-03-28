@@ -106,6 +106,9 @@ def setUpRenderMan() :
 	# Set up paths.
 
 	pluginRoot = pathlib.Path( os.environ.get( "GAFFER_ROOT" ) ) / "renderMan" / renderManPluginVersion
+	if not pluginRoot.exists() :
+		sys.stderr.write( f"WARNING : GafferRenderMan extension not available for RenderMan {renderManPluginVersion}.\n" )
+		return
 
 	if libraryPath :
 		appendToPath( rmanTree / "lib", libraryPath )
