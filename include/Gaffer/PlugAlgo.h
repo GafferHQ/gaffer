@@ -109,6 +109,11 @@ GAFFER_API bool setValueFromData( const ValuePlug *plug, ValuePlug *leafPlug, co
 /// If value is provided, then return true if it can be set from Data with this type id
 GAFFER_API bool canSetValueFromData( const ValuePlug *plug, const IECore::Data *value = nullptr );
 
+/// Sets the value of an existing plug to the specified data. If the plug has existing
+/// animation then a key will be added at `time`.
+/// Returns `true` on success and `false` on failure.
+GAFFER_API bool setValueOrAddKeyFromData( ValuePlug *plug, float time, const IECore::Data *value );
+
 [[deprecated( "Use `getValueAsData()` instead" )]]
 GAFFER_API IECore::DataPtr extractDataFromPlug( const ValuePlug *plug );
 
