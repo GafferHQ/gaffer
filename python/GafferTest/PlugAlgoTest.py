@@ -1104,20 +1104,21 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 				self.assertEqual( plug.getValue(), value )
 				self.assertFalse( plug.isSetToDefault() )
 
-				# Array length 2, can't set
+				# Array length 2, can't set unless setting StringVectorData on StringPlug
 
+				canSetArray = isinstance( data, IECore.StringVectorData ) and plugType == Gaffer.StringPlug
 				data.append( data[0] )
 				plug.setToDefault()
-				self.assertFalse( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
-				self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
-				self.assertTrue( plug.isSetToDefault() )
+				self.assertEqual( Gaffer.PlugAlgo.canSetValueFromData( plug, data ), canSetArray )
+				self.assertEqual( Gaffer.PlugAlgo.setValueFromData( plug, data ), canSetArray )
+				self.assertNotEqual( plug.isSetToDefault(), canSetArray )
 
-				# Array length 0, can't set
+				# Array length 0, can't set unless setting StringVectorData on a StringPlug
 
 				data.resize( 0 )
 				plug.setToDefault()
-				self.assertFalse( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
-				self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+				self.assertEqual( Gaffer.PlugAlgo.canSetValueFromData( plug, data ), canSetArray )
+				self.assertEqual( Gaffer.PlugAlgo.setValueFromData( plug, data ), canSetArray )
 				self.assertTrue( plug.isSetToDefault() )
 
 	def testSetBoxValueFromVectorData( self ) :
@@ -1176,6 +1177,21 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 					for componentPlug in childPlug :
 						self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
 				self.assertTrue( plug.isSetToDefault() )
+
+	def testSetStringValueFromStringVectorData( self ) :
+
+		plug = Gaffer.StringPlug()
+
+		for data in [
+			IECore.StringVectorData( [ "a", "b", "c" ] ),
+			IECore.StringVectorData( [ "a" ] ),
+			IECore.StringVectorData()
+		] :
+
+			self.assertTrue( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+			self.assertTrue( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+			self.assertEqual( plug.getValue(), " ".join( data ) )
+			self.assertEqual( plug.isSetToDefault(), len( data ) == 0 )
 
 	def testDependsOnCompute( self ) :
 

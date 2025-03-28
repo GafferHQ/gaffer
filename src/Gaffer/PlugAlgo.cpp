@@ -56,6 +56,7 @@
 #include "IECore/DataAlgo.h"
 #include "IECore/SplineData.h"
 
+#include "boost/algorithm/string/join.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/algorithm/string/replace.hpp"
 
@@ -761,12 +762,8 @@ bool setStringPlugValue( StringPlug *plug, const Data *value )
 			return true;
 		case IECore::StringVectorDataTypeId : {
 			const auto *data = static_cast<const StringVectorData *>( value );
-			if( data->readable().size() == 1 )
-			{
-				plug->setValue( data->readable()[0] );
-				return true;
-			}
-			return false;
+			plug->setValue( boost::algorithm::join( data->readable(), " " ) );
+			return true;
 		}
 		case IECore::InternedStringVectorDataTypeId : {
 			const auto *data = static_cast<const InternedStringVectorData *>( value );
@@ -1047,8 +1044,8 @@ bool canSetStringPlugValue( const Data *value )
 	{
 		case IECore::StringDataTypeId:
 		case IECore::InternedStringDataTypeId:
-			return true;
 		case IECore::StringVectorDataTypeId:
+			return true;
 		case IECore::InternedStringVectorDataTypeId:
 			return IECore::size( value ) == 1;
 		default:
