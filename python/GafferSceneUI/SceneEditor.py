@@ -64,7 +64,7 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 
 		GafferUI.NodeSetEditor.__init__( self, topLevelWidget, scriptNode, nodeSet = scriptNode.focusSet(), **kw )
 
-		self.__parentingConnections = {}
+		self.__nodeConnections = {}
 
 		self.__globalEditTargetLinked = False
 		self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ) )
@@ -83,8 +83,10 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 
 		# Find ScenePlugs and connect them to `settings()["in"]`.
 
-		updatedParentingConnections = {}
+		updatedNodeConnections = {}
 		inputsToFill = [ self.settings()["in"] ] if isinstance( self.settings()["in"], GafferScene.ScenePlug ) else list( self.settings()["in"].children() )
+
+		updatedImageDirtiedConnections = {}
 
 		with Gaffer.DirtyPropagationScope() :
 
@@ -101,12 +103,6 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 					)
 					if outputImagePlug:
 						try:
-							# \todo - if this succeeds, do we need to add a callback so we're updated if the
-							# metadata changes, rather than forcing the user to click to view a different node
-							# and back in order to refresh? The main place this has shown up for me in testing
-							# is if you view a Catalogue, and then start an InteractiveRender, it won't
-							# automatically start showing you the hiearchy.
-
 							with self.context():
 								outputScenePlug = GafferScene.SceneAlgo.sourceScene( outputImagePlug )
 						except:
@@ -116,23 +112,23 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 							# to leave outputScenePlug set to None
 							pass
 
-
 				if outputScenePlug is not None :
 					inputsToFill.pop( 0 ).setInput( outputScenePlug )
-					plugConnection = self.__parentingConnections.get( outputScenePlug )
+					plugConnection = self.__nodeConnections.get( outputScenePlug )
 					if plugConnection is None :
 						plugConnection = outputScenePlug.parentChangedSignal().connect(
 							Gaffer.WeakMethod( self.__scenePlugParentChanged ), scoped = True
 						)
-					updatedParentingConnections[outputScenePlug] = plugConnection
+					updatedNodeConnections[outputScenePlug] = plugConnection
 
-				nodeConnections = self.__parentingConnections.get( node )
+				nodeConnections = self.__nodeConnections.get( node )
 				if nodeConnections is None :
 					nodeConnections = [
 						node.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ), scoped = True ),
 						node.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ), scoped = True ),
+						node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ), scoped = True ),
 					]
-				updatedParentingConnections[node] = nodeConnections
+				updatedNodeConnections[node] = nodeConnections
 
 			for unfilledInput in inputsToFill :
 				unfilledInput.setInput( None )
@@ -141,7 +137,7 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 		# into infinite loops. We are called from the very signals we are
 		# connecting to, so if we made _new_ connections then we would be called
 		# _again_ for the same invocation of the signal.
-		self.__parentingConnections = updatedParentingConnections
+		self.__nodeConnections = updatedNodeConnections
 
 		# Called last, because it will call `_titleFormat()`, which depends on
 		# the inputs we just created.
@@ -179,3 +175,19 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 
 		if isinstance( child, GafferScene.ScenePlug ) :
 			self._updateFromSet()
+
+
+	def __plugDirtied( self, plug ) :
+
+		# If the node we're editing has an image output, then we might be using that image's metadata
+		# to find an appropriate scene to edit - in which case a change to that metadata requires an
+		# update.
+		if (
+			plug.direction() == Gaffer.Plug.Direction.Out and
+			type( plug.parent() ) == GafferImage.ImagePlug and
+			plug == plug.parent()["metadata"]
+		):
+			self._updateFromSet()
+
+			# TODO - why does HiearchyView not actually update the heirarchy if I just call _updateFromSet()?
+			self._updateFromContext( [ "foo" ] )
