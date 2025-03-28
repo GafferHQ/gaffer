@@ -706,6 +706,36 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		self.assertEqual( s["rows"][1]["cells"][0]["value"].getValue(), 2.0 )
 		self.assertEqual( s["rows"][1]["cells"][1]["value"].getValue(), 2 )
 
+		s["rows"][1]["cells"][0]["value"].setValue( 3.0 )
+
+		data = _ClipboardAlgo.valueMatrix( [ [ row["cells"][0] ] ] )
+		_ClipboardAlgo.pasteCells( data, [ [ row["cells"][1] ] ], 0 )
+
+		self.assertEqual( s["rows"][1]["cells"][0]["value"].getValue(), 3.0 )
+		self.assertEqual( s["rows"][1]["cells"][1]["value"].getValue(), 3 )
+
+	def testBoolToIntConversion( self ) :
+
+		s = Gaffer.Spreadsheet()
+		s["rows"].addColumn( Gaffer.BoolPlug( defaultValue = False ) )
+		s["rows"].addColumn( Gaffer.IntPlug( defaultValue = 2 ) )
+		row = s["rows"].addRow()
+
+		self.assertEqual( s["rows"][1]["cells"][0]["value"].getValue(), False )
+		self.assertEqual( s["rows"][1]["cells"][1]["value"].getValue(), 2 )
+
+		data = _ClipboardAlgo.valueMatrix( [ [ row["cells"][1] ] ] )
+		_ClipboardAlgo.pasteCells( data, [ [ row["cells"][0] ] ], 0 )
+
+		self.assertEqual( s["rows"][1]["cells"][0]["value"].getValue(), True )
+		self.assertEqual( s["rows"][1]["cells"][1]["value"].getValue(), 2 )
+
+		data = _ClipboardAlgo.valueMatrix( [ [ row["cells"][0] ] ] )
+		_ClipboardAlgo.pasteCells( data, [ [ row["cells"][1] ] ], 0 )
+
+		self.assertEqual( s["rows"][1]["cells"][0]["value"].getValue(), True )
+		self.assertEqual( s["rows"][1]["cells"][1]["value"].getValue(), 1 )
+
 	def testStringConversion( self ) :
 
 		s = Gaffer.Spreadsheet()

@@ -306,12 +306,12 @@ class ValueAdaptor :
 
 		plugData = ValueAdaptor.get( plug )
 
-		if cls.dataSchemaMatches( data, plugData ) :
+		if Gaffer.PlugAlgo.canSetValueFromData( plug, data ) or cls.dataSchemaMatches( data, plugData ) :
 			return True
 
 		# Support basic value embedding for NameValuePlug -> ValuePlug
 		if isinstance( data, IECore.CompoundData ) and "value" in data :
-			return ValueAdaptor.dataSchemaMatches( data[ "value" ], plugData )
+			return Gaffer.PlugAlgo.canSetValueFromData( plug, data[ "value" ] ) or ValueAdaptor.dataSchemaMatches( data[ "value" ], plugData )
 
 		return False
 
@@ -350,16 +350,9 @@ class ValueAdaptor :
 		return True
 
 	@staticmethod
-	def _setOrKeyValue( plug, value, atTime ) :
+	def _setOrKeyValue( plug, data, atTime ) :
 
-		if hasattr( value, 'value' ) :
-			value = value.value
-
-		if Gaffer.Animation.isAnimated( plug ) :
-			curve = Gaffer.Animation.acquire( plug )
-			curve.insertKey( atTime, value )
-		else :
-			plug.setValue( value )
+		Gaffer.PlugAlgo.setValueOrAddKeyFromData( plug, atTime, data )
 
 	@staticmethod
 	def __adaptor( plug ) :
@@ -447,59 +440,6 @@ class CellPlugValueAdaptor( ValueAdaptor ) :
 		return enabledData, valueData
 
 ValueAdaptor.registerAdaptor( Gaffer.Spreadsheet.CellPlug, CellPlugValueAdaptor )
-
-class FloatPlugValueAdaptor( ValueAdaptor ) :
-
-	@classmethod
-	def _canSet( cls, data, plug ) :
-
-		# FloatPlug.setValue will take care conversion for us
-		if isinstance( data, ( IECore.FloatData, IECore.IntData ) ) :
-			return cls._canSetKeyOrValue( plug )
-
-		return ValueAdaptor._canSet( data, plug )
-
-ValueAdaptor.registerAdaptor( Gaffer.FloatPlug, FloatPlugValueAdaptor )
-
-class StringPlugValueAdaptor( ValueAdaptor ) :
-
-	@classmethod
-	def _canSet( cls, data, plug ) :
-
-		if isinstance( data, IECore.StringVectorData ) :
-			return cls._canSetKeyOrValue( plug )
-
-		return ValueAdaptor._canSet( data, plug )
-
-	@classmethod
-	def _set( cls, data, plug, atTime ) :
-
-		if isinstance( data, IECore.StringVectorData ) :
-			data = IECore.StringData( " ".join( data ) )
-
-		ValueAdaptor._set( data, plug, atTime )
-
-ValueAdaptor.registerAdaptor( Gaffer.StringPlug, StringPlugValueAdaptor )
-
-class StringVectorDataPlugValueAdaptor( ValueAdaptor ) :
-
-	@classmethod
-	def _canSet( cls, data, plug ) :
-
-		if isinstance( data, IECore.StringData ) :
-			return cls._canSetKeyOrValue( plug )
-
-		return ValueAdaptor._canSet( data, plug )
-
-	@classmethod
-	def _set( cls, data, plug, atTime ) :
-
-		if isinstance( data, IECore.StringData ) :
-			data = IECore.StringVectorData( [ data.value ] )
-
-		ValueAdaptor._set( data, plug, atTime )
-
-ValueAdaptor.registerAdaptor( Gaffer.StringVectorDataPlug, StringVectorDataPlugValueAdaptor )
 
 ## Allows RowPlugs to be copy/pasted across different column configurations,
 # matching by the column names.

@@ -129,6 +129,12 @@ bool canSetValueFromData( const ValuePlug *plug, const IECore::Data *value )
 	return PlugAlgo::canSetValueFromData( plug, value );
 }
 
+bool setValueOrAddKeyFromData( ValuePlug *plug, float time, const IECore::Data *value )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return PlugAlgo::setValueOrAddKeyFromData( plug, time, value );
+}
+
 PlugPtr promote( Plug &plug, Plug *parent, const IECore::StringAlgo::MatchPattern &excludeMetadata )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -167,6 +173,7 @@ void GafferModule::bindPlugAlgo()
 	def( "setValueFromData", &setLeafValueFromData );
 	def( "setValueFromData", &setValueFromData );
 	def( "canSetValueFromData", &canSetValueFromData, ( arg( "plug" ), arg( "value" ) = object() ) );
+	def( "setValueOrAddKeyFromData", &setValueOrAddKeyFromData );
 
 	def( "canPromote", &PlugAlgo::canPromote, ( arg( "plug" ), arg( "parent" ) = object() ) );
 	def( "promote", &promote, ( arg( "plug" ), arg( "parent" ) = object(), arg( "excludeMetadata" ) = "layout:*" ) );
