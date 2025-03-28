@@ -19,7 +19,7 @@ Fixes
 API
 ---
 
-- PlugAlgo : Added support in `setValueFromData()` for setting StringPlug values from StringVectorData.
+- PlugAlgo : Added support in `setValueFromData()` for setting StringPlug values from StringVectorData and StringVectorDataPlugValues from StringData.
 
 1.5.9.0 (relative to 1.5.8.0)
 =======

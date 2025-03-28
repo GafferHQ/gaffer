@@ -56,9 +56,11 @@
 #include "IECore/DataAlgo.h"
 #include "IECore/SplineData.h"
 
+#include "boost/algorithm/string/classification.hpp"
 #include "boost/algorithm/string/join.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/algorithm/string/replace.hpp"
+#include "boost/algorithm/string/split.hpp"
 
 #include "fmt/format.h"
 
@@ -750,6 +752,28 @@ bool setTypedDataPlugValue( PlugType *plug, const Data *value )
 	return false;
 }
 
+bool setStringVectorDataPlugValue( StringVectorDataPlug *plug, const Data *value )
+{
+	switch( value->typeId() )
+	{
+		case IECore::StringVectorDataTypeId :
+			plug->setValue( static_cast<const StringVectorData *>( value ) );
+			return true;
+		case IECore::StringDataTypeId : {
+			const auto *data = static_cast<const StringData *>( value );
+			IECore::StringVectorDataPtr result = new IECore::StringVectorData;
+			if( !data->readable().empty() )
+			{
+				boost::split( result->writable(), data->readable(), boost::is_any_of( " " ) );
+			}
+			plug->setValue( result );
+			return true;
+		}
+		default :
+			return false;
+	}
+}
+
 bool setStringPlugValue( StringPlug *plug, const Data *value )
 {
 	switch( value->typeId() )
@@ -1034,6 +1058,21 @@ bool canSetTypedDataPlugValue( const Data *value )
 	return false;
 }
 
+bool canSetStringVectorDataPlugValue( const Data *value )
+{
+	if( !value )
+	{
+		return true;  // Data type not specified, so it could be a match
+	}
+
+	if( value->typeId() == IECore::StringDataTypeId )
+	{
+		return true;
+	}
+
+	return canSetTypedDataPlugValue<StringVectorDataPlug>( value );
+}
+
 bool canSetStringPlugValue( const Data *value )
 {
 	if( !value )
@@ -1142,7 +1181,7 @@ bool canSetValueFromData( const ValuePlug *plug, const IECore::Data *value )
 		case Gaffer::StringPlugTypeId:
 			return canSetStringPlugValue( value );
 		case Gaffer::StringVectorDataPlugTypeId:
-			return canSetTypedDataPlugValue<StringVectorDataPlug>( value );
+			return canSetStringVectorDataPlugValue( value );
 		case Gaffer::InternedStringVectorDataPlugTypeId:
 			return canSetTypedDataPlugValue<InternedStringVectorDataPlug>( value );
 		case Gaffer::Color3fPlugTypeId:
@@ -1218,7 +1257,7 @@ bool setValueFromData( ValuePlug *plug, const IECore::Data *value )
 		case Gaffer::StringPlugTypeId:
 			return setStringPlugValue( static_cast<StringPlug *>( plug ), value );
 		case Gaffer::StringVectorDataPlugTypeId:
-			return setTypedDataPlugValue( static_cast<StringVectorDataPlug *>( plug ), value );
+			return setStringVectorDataPlugValue( static_cast<StringVectorDataPlug *>( plug ), value );
 		case Gaffer::InternedStringVectorDataPlugTypeId:
 			return setTypedDataPlugValue( static_cast<InternedStringVectorDataPlug *>( plug ), value );
 		case Gaffer::Color3fPlugTypeId:
