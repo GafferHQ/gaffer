@@ -10,6 +10,7 @@ Improvements
 ------------
 
 - Wrapper : Added warning when GafferRenderMan is not available for current RenderMan version.
+- Spreadsheet : A wider range of types are converted when copy/pasting values between cells, such as BoolData to IntData, FloatData to IntData, etc.
 
 Fixes
 -----
