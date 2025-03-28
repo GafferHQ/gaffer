@@ -187,6 +187,7 @@ enum TypeId
 	MergeMeshesTypeId = 110643,
 	MergePointsTypeId = 110644,
 	MergeCurvesTypeId = 110645,
+	ShuffleRenderPassesTypeId = 110646,
 
 	PreviewPlaceholderTypeId = 110647,
 	PreviewGeometryTypeId = 110648,
