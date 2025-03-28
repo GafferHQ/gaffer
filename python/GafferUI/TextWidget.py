@@ -388,11 +388,11 @@ class _LineEdit( QtWidgets.QLineEdit ) :
 
 		# but then calculate our own width
 		numChars = self.__fixedCharacterWidth if self.__fixedCharacterWidth is not None else self.__preferredCharacterWidth
-		textMargins = self.getTextMargins()
-		contentsMargins = self.getContentsMargins()
+		textMargins = self.textMargins()
+		contentsMargins = self.contentsMargins()
 
 		width = self.fontMetrics().boundingRect( "M" * numChars ).width()
-		width += contentsMargins[0] + contentsMargins[2] + textMargins[0] + textMargins[2]
+		width += contentsMargins.left() + contentsMargins.right() + textMargins.left() + textMargins.right()
 
 		options = QtWidgets.QStyleOptionFrame()
 		self.initStyleOption( options )
@@ -408,7 +408,7 @@ class _LineEdit( QtWidgets.QLineEdit ) :
 
 	def event(self, event):
 
-		if event.type() == event.ShortcutOverride :
+		if event.type() == QtCore.QEvent.ShortcutOverride :
 			if event == QtGui.QKeySequence.Undo :
 				if not self.isModified() or not self.isUndoAvailable() :
 					return False
