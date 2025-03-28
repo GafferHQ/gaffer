@@ -37,6 +37,7 @@
 
 #include "Gaffer/PlugAlgo.h"
 
+#include "Gaffer/Animation.h"
 #include "Gaffer/Box.h"
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/ComputeNode.h"
@@ -1374,6 +1375,62 @@ bool setValueFromData( const ValuePlug *plug, ValuePlug *leafPlug, const IECore:
 
 	return setValueFromData( leafPlug, value );
 
+}
+
+bool setValueOrAddKeyFromData( ValuePlug *plug, float time, const IECore::Data *value )
+{
+	if( Animation::isAnimated( plug ) )
+	{
+		// convert input data to a float value for a keyframe
+		float keyValue = 0.0f;
+		switch( value->typeId() )
+		{
+			case HalfDataTypeId :
+				keyValue = static_cast<const HalfData *>( value )->readable();
+				break;
+			case FloatDataTypeId :
+				keyValue = static_cast<const FloatData *>( value )->readable();
+				break;
+			case DoubleDataTypeId :
+				keyValue = static_cast<const DoubleData *>( value )->readable();
+				break;
+			case CharDataTypeId :
+				keyValue = static_cast<const CharData *>( value )->readable();
+				break;
+			case UCharDataTypeId :
+				keyValue = static_cast<const UCharData *>( value )->readable();
+				break;
+			case ShortDataTypeId :
+				keyValue = static_cast<const ShortData *>( value )->readable();
+				break;
+			case UShortDataTypeId :
+				keyValue = static_cast<const UShortData *>( value )->readable();
+				break;
+			case IntDataTypeId :
+				keyValue = static_cast<const IntData *>( value )->readable();
+				break;
+			case UIntDataTypeId :
+				keyValue = static_cast<const UIntData *>( value )->readable();
+				break;
+			case Int64DataTypeId :
+				keyValue = static_cast<const Int64Data *>( value )->readable();
+				break;
+			case UInt64DataTypeId :
+				keyValue = static_cast<const UInt64Data *>( value )->readable();
+				break;
+			case BoolDataTypeId :
+				keyValue = static_cast<const BoolData *>( value )->readable();
+				break;
+			default :
+				return false;
+		}
+
+		Animation::CurvePlug *curve = Animation::acquire( plug );
+		curve->insertKey( time, keyValue );
+		return true;
+	}
+
+	return setValueFromData( plug, value );
 }
 
 }  // namespace PlugAlgo

@@ -848,6 +848,53 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 			IECore.V2iData( imath.V2i( 1.0 ) )
 		)
 
+	def testSetValueOrAddKeyFromData( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+
+		for data in [
+			IECore.HalfData( 2.5 ),
+			IECore.FloatData( 0.25 ),
+			IECore.DoubleData( 25.5 ),
+			IECore.CharData( "a" ),
+			IECore.UCharData( 11 ),
+			IECore.ShortData( -101 ),
+			IECore.UShortData( 102 ),
+			IECore.UIntData( 405 ),
+			IECore.Int64Data( -1001 ),
+			IECore.UInt64Data( 1002 ),
+			IECore.BoolData( True )
+		] :
+
+			for plugType in [
+				Gaffer.IntPlug,
+				Gaffer.FloatPlug,
+				Gaffer.BoolPlug,
+			] :
+
+				with self.subTest( data = data, plugType = plugType ) :
+
+					plug = plugType()
+					s["n"].addChild( plug )
+
+					self.assertTrue( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+
+					self.assertTrue( Gaffer.PlugAlgo.setValueOrAddKeyFromData( plug, 1002, data ) )
+					self.assertFalse( Gaffer.Animation.isAnimated( plug ) )
+
+					value = ord( data.value ) if isinstance( data, IECore.CharData ) else data.value
+					self.assertEqual( plug.getValue(), plugType.ValueType( value ) )
+
+					curve = Gaffer.Animation.acquire( plug )
+					curve.addKey( Gaffer.Animation.Key( 0, 1001 ) )
+					self.assertFalse( curve.hasKey( 1002 ) )
+
+					self.assertTrue( Gaffer.PlugAlgo.setValueOrAddKeyFromData( plug, 1002, data ) )
+					self.assertTrue( curve.hasKey( 1002 ) )
+					self.assertEqual( curve.getKey( 1002 ).getValue(), Gaffer.FloatPlug.ValueType( value ) )
+
 	def testCanSetPlugFromValue( self ) :
 		compatiblePlugs = [
 			Gaffer.BoolPlug(),
