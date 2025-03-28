@@ -1,7 +1,10 @@
 1.5.x.x (relative to 1.5.9.0)
 =======
 
+Fixes
+-----
 
+- RenderMan : Fixed bug preventing startup files from being loaded from versioned GafferRenderMan modules.
 
 1.5.9.0 (relative to 1.5.8.0)
 =======

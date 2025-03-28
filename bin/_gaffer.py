@@ -61,6 +61,18 @@ def appendToPath( pathToAppend, envVar ) :
 
 	os.environ[envVar] = os.pathsep.join( path )
 
+def prependToPath( pathToPrepend, envVar ) :
+
+	pathToPrepend = str( pathToPrepend )
+
+	path = os.environ.get( envVar )
+	path = path.split( os.pathsep ) if path else []
+
+	if pathToPrepend not in path :
+		path.insert( 0, pathToPrepend )
+
+	os.environ[envVar] = os.pathsep.join( path )
+
 # RenderMan Setup
 # ===============
 
@@ -105,6 +117,7 @@ def setUpRenderMan() :
 	appendToPath( rmanTree / "lib" / "plugins", "RMAN_RIXPLUGINPATH" )
 	appendToPath( pluginRoot / "plugins", "RMAN_DISPLAYS_PATH" )
 	appendToPath( rmanTree / "lib" / "shaders", "OSL_SHADER_PATHS" )
+	prependToPath( pluginRoot / "startup", "GAFFER_STARTUP_PATHS" )
 
 	if sys.platform == "win32" :
 		appendToPath( rmanTree / "bin", "IECORE_DLL_DIRECTORIES" )
