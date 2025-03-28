@@ -6,6 +6,11 @@ Features
 
 - ShuffleRenderPasses : Added a new node for shuffling render passes.
 
+Improvements
+------------
+
+- Wrapper : Added warning when GafferRenderMan is not available for current RenderMan version.
+
 Fixes
 -----
 
