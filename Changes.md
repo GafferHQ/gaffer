@@ -18,15 +18,37 @@ Breaking Changes
 - DeleteAttributes : Changed base class and marked as `final`.
 - Wrapper : The `gaffer` wrapper on Linux no longer allows a custom Python build to be used. If you wish to use a custom Python, call `python _gaffer.py` instead.
 
-1.5.x.x (relative to 1.5.8.0)
+1.5.x.x (relative to 1.5.9.0)
 =======
+
+
+
+1.5.9.0 (relative to 1.5.8.0)
+=======
+
+Features
+--------
+
+- Arnold : Added support for Arnold 7.4.
+- RenderMan : Added preliminary support for rendering with RenderMan. To enable, set `RMANTREE` to the file path of an installation of RenderMan 26.3, and set `GAFFERRENDERMAN_FEATURE_PREVIEW` to `1`. RenderMan support is still under development, with notable missing features including light filters, light linking, and capsules. We are providing this early feature preview to encourage testing and feedback, but do not yet consider it to be production-ready.
+
+Improvements
+------------
+
+- ArnoldOptions : Added `reportFileName` option, to specify the destination for Arnold 7.4's new HTML reports.
 
 Fixes
 -----
 
-- Arnold : Fixed handling of `shaping:cone:softness` values greater than one on USD lights. These are now translated identically to `hdArnold`, rather than being ignored.
+- Arnold :
+  - Fixed handling of `shaping:cone:softness` values greater than one on USD lights. These are now translated identically to `hdArnold`, rather than being ignored.
+  - Fixed crashes caused by invalid `P` primitive variables.
 - Cycles : Fixed incorrect particle motion blur shape (#5862).
 - SceneAlgo : Fixed errors and crashes caused by calling `registerRenderAdaptor()` from an adaptor creation function.
+- USD : Fixed performance regressions in interactive rendering caused by the USD point instancer adaptor. This replaces
+  the `gafferUSD:pointInstancerAdaptor:enabled` and `gafferUSD:pointInstancerAdaptor:attributes` attributes with global options
+  of the same name. Technically, removing the attributes is a breaking change, but we feel that the benefits of fixing the
+  regression outweigh the risks of removing an attribute we don't expect to be in widespread usage.
 
 API
 ---

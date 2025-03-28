@@ -174,11 +174,16 @@ root["SceneWriter"]["fileName"].setValue( "{cacheFilePath.as_posix()}" )
 root["SceneWriter"].execute()
 		"""
 
+		scriptPath = self.temporaryDirectory() / "testScript.py"
+		with open( scriptPath, "w" ) as outFile :
+			outFile.write( script )
+
 		env = os.environ.copy()
 		subprocess.check_call(
-			[ str( Gaffer.executablePath() ), "env", "python","-c", script ],
+			[ str( Gaffer.executablePath() ), "env", "python", str( scriptPath ) ],
 			env = env
 		)
+		self.assertTrue( cacheFilePath.is_file() )
 		scene = IECoreScene.SceneCache( str( cacheFilePath ), IECore.IndexedIO.OpenMode.Read )
 		sphere = scene.child( "sphere" )
 		parms = sphere.readAttributeAtSample( "ai:surface", 0 ).outputShader().parameters
@@ -193,9 +198,9 @@ root["SceneWriter"].execute()
 		self.assertEqual( parms["filename"].value, "" )
 		self.assertEqual( parms["filter"].value, "smart_bicubic" )
 
-		env["ARNOLD_PLUGIN_PATH"] = pathlib.Path( __file__ ).parent / "metadata"
+		env["ARNOLD_PLUGIN_PATH"] = str( pathlib.Path( __file__ ).parent / "metadata" )
 		subprocess.check_call(
-			[ str( Gaffer.executablePath() ), "env", "python","-c", script ],
+			[ str( Gaffer.executablePath() ), "env", "python", str( scriptPath ) ],
 			env = env
 		)
 		scene = IECoreScene.SceneCache( str( cacheFilePath ), IECore.IndexedIO.OpenMode.Read )

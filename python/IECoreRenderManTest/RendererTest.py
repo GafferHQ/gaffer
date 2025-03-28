@@ -35,6 +35,7 @@
 ##########################################################################
 
 import math
+import os
 import time
 import unittest
 
@@ -50,6 +51,7 @@ import IECoreRenderManTest
 import GafferTest
 import GafferScene
 
+@unittest.skipIf( GafferTest.inCI() and os.name == "nt", "RenderMan cannot get license on Windows.")
 class RendererTest( GafferTest.TestCase ) :
 
 	def setUp( self ) :

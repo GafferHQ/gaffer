@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import os
 import unittest
 import imath
 
@@ -41,11 +42,13 @@ import IECore
 import IECoreScene
 
 import Gaffer
+import GafferTest
 import GafferScene
 
 import IECoreRenderMan
 import GafferSceneTest
 
+@unittest.skipIf( GafferTest.inCI() and os.name == "nt", "RenderMan cannot get license on Windows.")
 class RenderManRenderTest( GafferSceneTest.RenderTest ) :
 
 	renderer = "RenderMan"

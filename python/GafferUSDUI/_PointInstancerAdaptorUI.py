@@ -59,14 +59,15 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"defaultEnabledPerRenderer" : [
+		"enabledRenderers" : [
 
 			"description",
 			"""
-			Controls whether the adaptor is hidden by default. Contains a dict, with a boolean value for
-			each renderer. Defaults true for any renderers not specified in the dict. Slightly weird
-			interface, but is basically internal. It should only ever be edited by the expansion menu
-			set up in startup/GafferSceneUI/usdPointInstancerAdaptor.py
+			If a renderer is listed in this list, the adaptor will be enabled by
+			default for that renderer (it can still be overridden by the option
+			`gafferUSD:pointInstancerAdaptor:enabled`). This plug should only
+			ever be edited by the expansion menu set up in
+			startup/GafferSceneUI/usdPointInstancerAdaptor.py
 			""",
 
 		],

@@ -135,6 +135,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		i = OpenImageIO.ImageInput.open( os.path.join( self.temporaryDirectory(), "multipart.exr" ) )
 		subimages = i.spec().getattribute("oiio:subimages")
+		i.close()
 		del i
 
 		self.assertEqual( subimages, 2 )
