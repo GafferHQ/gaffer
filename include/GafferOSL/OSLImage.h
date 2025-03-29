@@ -129,4 +129,6 @@ class GAFFEROSL_API OSLImage : public GafferImage::ImageProcessor
 
 };
 
+IE_CORE_DECLAREPTR( OSLImage )
+
 } // namespace GafferOSL

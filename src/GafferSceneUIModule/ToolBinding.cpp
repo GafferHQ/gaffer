@@ -46,6 +46,7 @@
 #include "GafferSceneUI/SelectionTool.h"
 #include "GafferSceneUI/TransformTool.h"
 #include "GafferSceneUI/TranslateTool.h"
+#include "GafferSceneUI/ImagePickTool.h"
 
 #include "GafferSceneUI/Private/VisualiserTool.h"
 
@@ -87,6 +88,21 @@ struct StatusChangedSlotCaller
 		try
 		{
 			slot( CropWindowToolPtr( &t ) );
+		}
+		catch( const error_already_set & )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
+	}
+};
+
+struct ImageSelectionToolStatusChangedSlotCaller
+{
+	void operator()( boost::python::object slot, ImagePickTool &t )
+	{
+		try
+		{
+			slot( ImagePickToolPtr( &t ) );
 		}
 		catch( const error_already_set & )
 		{
@@ -330,4 +346,13 @@ void GafferSceneUIModule::bindTools()
 		;
 	}
 
+	{
+		GafferBindings::NodeClass<ImagePickTool>( nullptr, no_init )
+			.def( init<GafferUI::View *>() )
+			.def( "status", &ImagePickTool::status )
+			.def( "statusChangedSignal", &ImagePickTool::statusChangedSignal, return_internal_reference<1>() )
+		;
+
+		GafferBindings::SignalClass<ImagePickTool::StatusChangedSignal, GafferBindings::DefaultSignalCaller<ImagePickTool::StatusChangedSignal>, ImageSelectionToolStatusChangedSlotCaller>( "StatusChangedSignal" );
+	}
 }

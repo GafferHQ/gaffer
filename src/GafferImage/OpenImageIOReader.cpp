@@ -1381,14 +1381,33 @@ class File
 					buffer, spec.nchannels * regionRect.size().x * regionRect.size().y
 				);
 
-				// Tell OIIO to do the actual read/decompress to the temp buffer
-				if( ! m_imageInput->read_tiles(
-					tileBatchOrigin.z, 0,
-					regionRect.min.x, regionRect.max.x, regionRect.min.y, regionRect.max.y,
-					0, 1, 0, spec.nchannels, TypeDesc::FLOAT, &buffer[0]
-				) )
+				if( spec.format == TypeDesc::UINT32 && spec.get_int_attribute( "gaffer:loadAsUint", 0 ) )
 				{
-					handleOIIOError( "Failed to read tiles", gafferRegionRect );
+					// Claim the temp buffer is of type UINT, so we get an implicit reinterpret cast from UINT
+					// to float. We use this special flag for loading "id" aovs - we'll need to reinterpret back to
+					// uint before we use these values.
+
+					// Tell OIIO to do the actual read/decompress to the temp buffer.
+					if( ! m_imageInput->read_tiles(
+						tileBatchOrigin.z, 0,
+						regionRect.min.x, regionRect.max.x, regionRect.min.y, regionRect.max.y,
+						0, 1, 0, spec.nchannels, TypeDesc::UINT, &buffer[0]
+					) )
+					{
+						handleOIIOError( "Failed to read tiles", gafferRegionRect );
+					}
+				}
+				else
+				{
+					// Tell OIIO to do the actual read/decompress to the temp buffer
+					if( ! m_imageInput->read_tiles(
+						tileBatchOrigin.z, 0,
+						regionRect.min.x, regionRect.max.x, regionRect.min.y, regionRect.max.y,
+						0, 1, 0, spec.nchannels, TypeDesc::FLOAT, &buffer[0]
+					) )
+					{
+						handleOIIOError( "Failed to read tiles", gafferRegionRect );
+					}
 				}
 
 				// Copy the data from the temp buffer to whatever tiles it belongs in
