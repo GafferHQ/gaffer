@@ -97,21 +97,7 @@ class _StatusWidget( GafferUI.Frame ) :
 				GafferUI.Spacer( size = imath.V2i( 4 ), maximumSize = imath.V2i( 4 ) )
 				self.__label = GafferUI.Label( "" )
 
-				GafferUI.Spacer( size = imath.V2i( 8 ), maximumSize = imath.V2i( 8 ) )
-				GafferUI.Divider( orientation = GafferUI.Divider.Orientation.Vertical )
-				GafferUI.Spacer( size = imath.V2i( 8 ), maximumSize = imath.V2i( 8 ) )
-
-				with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) as self.__controls :
-
-					self.__enabledLabel = GafferUI.Label( "Enabled" )
-					self.__enabled = GafferUI.BoolPlugValueWidget( None )
-					self.__enabled.boolWidget().setDisplayMode( GafferUI.BoolWidget.DisplayMode.Switch )
-
-					button = GafferUI.Button( "Reset" )
-					button._qtWidget().setFixedWidth( 50 )
-					button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
-
-		#self.__tool.statusChangedSignal().connect( Gaffer.WeakMethod( self.__update, fallbackResult = None ) )
+		self.__tool.statusChangedSignal().connect( Gaffer.WeakMethod( self.__update, fallbackResult = None ) )
 
 		self.__update()
 
@@ -119,15 +105,8 @@ class _StatusWidget( GafferUI.Frame ) :
 
 		return self.__tool.ancestor( GafferUI.View ).scriptNode()
 
-	def getToolTip( self ) :
-
-		toolTip = GafferUI.Frame.getToolTip( self )
-		if toolTip :
-			return toolTip
-
-		return self.__tool.status()
-
-	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
+	# TODO - why does CropWindowTool use LazyMethod? Why does it break things for me?
+	#@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __update( self, *unused ) :
 
 		if not self.__tool["active"].getValue() :
@@ -141,9 +120,8 @@ class _StatusWidget( GafferUI.Frame ) :
 
 		state, _, message = status.partition( ":" )
 
-		self.__label.setText( message.strip() )
+		self.__label.setText( message )
 
-		state = state.strip().lower()
 		info = warn = error = False
 		if state == "error" :
 			error = True
@@ -155,23 +133,3 @@ class _StatusWidget( GafferUI.Frame ) :
 		self.__infoIcon.setVisible( info )
 		self.__warningIcon.setVisible( warn )
 		self.__errorIcon.setVisible( error )
-
-		#plug = self.__tool.plug()
-		#enabledPlug = self.__tool.enabledPlug()
-
-		#self.__controls.setVisible( plug is not None )
-
-		#self.__enabled.setPlug( enabledPlug )
-		#self.__enabled.setVisible( enabledPlug is not None )
-		#self.__enabledLabel.setVisible( enabledPlug is not None )
-
-	def __buttonClicked( self, *unused ) :
-
-		plug = self.__tool.plug()
-
-		if plug is None :
-			return
-
-		with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-			plug["min"].setValue( imath.V2f( 0 ) )
-			plug["max"].setValue( imath.V2f( 1 ) )

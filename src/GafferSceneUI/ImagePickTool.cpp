@@ -136,7 +136,22 @@ ImagePickTool::~ImagePickTool()
 
 std::string ImagePickTool::status() const
 {
-	return "TEST STATUS MESSAGE";
+	return m_status;
+}
+
+void ImagePickTool::setStatus( const std::string &message, bool error )
+{
+	m_status = "";
+
+	if( error )
+	{
+		m_status = "error:" + message;
+	}
+	else if( message.size() )
+	{
+		m_status = "info:" + message;
+	}
+	statusChangedSignal()( *this );
 }
 
 ImagePickTool::StatusChangedSignal &ImagePickTool::statusChangedSignal()
@@ -159,17 +174,6 @@ ImageGadget *ImagePickTool::imageGadget()
 	return runTimeCast<ImageGadget>( view()->viewportGadget()->getPrimaryChild() );
 }
 
-void ImagePickTool::setOverlayMessage( const std::string &message )
-{
-	m_overlayMessage = message;
-	statusChangedSignal()( *this );
-}
-
-void ImagePickTool::setErrorMessage( const std::string &message )
-{
-	m_errorMessage = message;
-	statusChangedSignal()( *this );
-}
 
 void ImagePickTool::plugDirtied( const Gaffer::Plug *plug )
 {
@@ -181,7 +185,7 @@ void ImagePickTool::plugDirtied( const Gaffer::Plug *plug )
 
 IECore::PathMatcher ImagePickTool::pathsForIds( const std::vector<uint32_t> &ids, std::string &message )
 {
-	updateRenderManifest();
+	updateRenderManifest( message );
 	if( !m_renderManifest )
 	{
 		return PathMatcher();
@@ -192,8 +196,12 @@ IECore::PathMatcher ImagePickTool::pathsForIds( const std::vector<uint32_t> &ids
 
 std::vector<uint32_t> ImagePickTool::idsForPaths( const IECore::PathMatcher &paths, std::string &message )
 {
-	updateRenderManifest();
+	updateRenderManifest( message );
 
+	if( !m_renderManifest )
+	{
+		return std::vector<uint32_t>();
+	}
 	// TODO - skip checking leaves? TODO???
 
 	return m_renderManifest->idsForPaths( paths );
@@ -225,7 +233,7 @@ void ImagePickTool::updateSelection()
 	imageGadget()->setSelectedIds( idsForPaths( ScriptNodeAlgo::getSelectedPaths( view()->scriptNode() ), message ) );
 }
 
-void ImagePickTool::updateRenderManifest()
+void ImagePickTool::updateRenderManifest( std::string &message )
 {
 	m_renderManifest = nullptr;
 
@@ -250,7 +258,8 @@ void ImagePickTool::updateRenderManifest()
 
 	if( sideCarManifestPath == "" )
 	{
-		throw IECore::Exception( "TODO" );
+		message = "No source InteractiveRender node or gaffer:idManifestFilePath metadata found. Selection not supported without id manifest.";
+		return;
 	}
 
 	if( m_sideCarManifestPath == sideCarManifestPath && m_sideCarManifestIdentifier == sideCarManifestIdentifier )
@@ -260,11 +269,20 @@ void ImagePickTool::updateRenderManifest()
 		return;
 	}
 
+	try
+	{
+		m_renderManifestStorage.readEXRManifest( sideCarManifestPath.c_str() );
+	}
+	catch( std::exception &e )
+	{
+		message = std::string( "Exception : " ) + e.what();
+		return;
+	}
+
+	m_renderManifest = &m_renderManifestStorage;
+
 	m_sideCarManifestPath = sideCarManifestPath;
 	m_sideCarManifestIdentifier = sideCarManifestIdentifier;
-
-	m_renderManifestStorage.readEXRManifest( m_sideCarManifestPath.c_str() );
-	m_renderManifest = &m_renderManifestStorage;
 }
 
 void ImagePickTool::preRender()
@@ -376,9 +394,38 @@ bool ImagePickTool::mouseMove( const GafferUI::ButtonEvent &event )
 
 	Imath::V2f pixel = ig->pixelAt( event.line );
 
-	imageGadget()->setHighlightId( sampleId( pixel ) );
+	// TODO - catch invalid ids
+	uint32_t id = sampleId( pixel );
+	imageGadget()->setHighlightId( id );
+
+	if( id == 0 )
+	{
+		setStatus( "", false );
+		view()->viewportGadget()->renderRequestSignal()( view()->viewportGadget() );
+	}
+
+	std::vector<uint32_t> ids = { id };
+	std::string message;
+	PathMatcher paths = pathsForIds( ids, message );
+
+	if( paths.size() )
+	{
+		setStatus( GafferScene::ScenePlug::pathToString( *PathMatcher::Iterator( paths.begin() ) ), false );
+	}
+	else if( message.size() )
+	{
+		setStatus( message, true );
+	}
 
 	view()->viewportGadget()->renderRequestSignal()( view()->viewportGadget() );
 
+	return false;
+}
+
+bool ImagePickTool::leaveSignal( const GafferUI::ButtonEvent &event )
+{
+	imageGadget()->setHighlightId( 0 );
+	setStatus( "", false );
+	view()->viewportGadget()->renderRequestSignal()( view()->viewportGadget() );
 	return false;
 }
