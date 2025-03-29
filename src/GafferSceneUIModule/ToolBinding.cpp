@@ -96,6 +96,21 @@ struct StatusChangedSlotCaller
 	}
 };
 
+struct ImageSelectionToolStatusChangedSlotCaller
+{
+	void operator()( boost::python::object slot, ImagePickTool &t )
+	{
+		try
+		{
+			slot( ImagePickToolPtr( &t ) );
+		}
+		catch( const error_already_set & )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
+	}
+};
+
 boost::python::list selection( const TransformTool &tool )
 {
 	vector<TransformTool::Selection> selection;
@@ -331,10 +346,13 @@ void GafferSceneUIModule::bindTools()
 		;
 	}
 
-	GafferBindings::NodeClass<ImagePickTool>( nullptr, no_init )
-		.def( init<GafferUI::View *>() )
-		.def( "status", &ImagePickTool::status )
-		.def( "statusChangedSignal", &ImagePickTool::statusChangedSignal, return_internal_reference<1>() )
-	;
+	{
+		GafferBindings::NodeClass<ImagePickTool>( nullptr, no_init )
+			.def( init<GafferUI::View *>() )
+			.def( "status", &ImagePickTool::status )
+			.def( "statusChangedSignal", &ImagePickTool::statusChangedSignal, return_internal_reference<1>() )
+		;
 
+		GafferBindings::SignalClass<ImagePickTool::StatusChangedSignal, GafferBindings::DefaultSignalCaller<ImagePickTool::StatusChangedSignal>, ImageSelectionToolStatusChangedSlotCaller>( "StatusChangedSignal" );
+	}
 }

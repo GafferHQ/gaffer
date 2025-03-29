@@ -82,9 +82,7 @@ class GAFFERSCENEUI_API ImagePickTool : public GafferUI::Tool
 
 		GafferImageUI::ImageGadget *imageGadget();
 
-		// We hold separate state here as the tool requires data from several
-		// sources, that have their own invalidation life cycles.
-		void setOverlayMessage( const std::string &message );
+		void setStatus( const std::string &message, bool error );
 		void setErrorMessage( const std::string &message );
 
 		void plugDirtied( const Gaffer::Plug *plug );
@@ -100,13 +98,14 @@ class GAFFERSCENEUI_API ImagePickTool : public GafferUI::Tool
 
 		void updateSelection();
 
-		void updateRenderManifest();
+		void updateRenderManifest( std::string &message );
 
 		void preRender();
 
 		bool keyPress( const GafferUI::KeyEvent &event );
 		bool buttonPress( const GafferUI::ButtonEvent &event );
 		bool mouseMove( const GafferUI::ButtonEvent &event );
+		bool leaveSignal( const GafferUI::ButtonEvent &event );
 
 		GafferImage::ImageSamplerPtr m_imageSampler;
 
@@ -115,8 +114,7 @@ class GAFFERSCENEUI_API ImagePickTool : public GafferUI::Tool
 		std::string m_sideCarManifestPath;
 		int m_sideCarManifestIdentifier;
 
-		std::string m_overlayMessage;
-		std::string m_errorMessage;
+		std::string m_status;
 		StatusChangedSignal m_statusChangedSignal;
 
 		bool m_selectionDirty = true;
