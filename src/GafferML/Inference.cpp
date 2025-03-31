@@ -94,7 +94,12 @@ Ort::Session &acquireSession( const std::string &fileName )
 		throw Exception( fmt::format( "Could not find file \"{}\" on GAFFERML_MODEL_PATHS", fileName ) );
 	}
 
-	it = g_map.try_emplace( fileName, acquireEnv(), path.c_str(), Ort::SessionOptions() ).first;
+	OrtCUDAProviderOptions cudaOptions;
+	Ort::SessionOptions options;
+
+	options.AppendExecutionProvider_CUDA( cudaOptions );
+
+	it = g_map.try_emplace( fileName, acquireEnv(), path.c_str(), options ).first;
 	return it->second;
 }
 
