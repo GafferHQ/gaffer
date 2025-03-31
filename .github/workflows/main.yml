@@ -256,7 +256,7 @@ jobs:
     - name: Validate
       run: |
         echo "::add-matcher::./.github/workflows/main/problemMatchers/validateRelease.json"
-        python ./config/validateRelease.py --archive ${{ env.GAFFER_BUILD_NAME }}.${{ env.PACKAGE_EXTENSION }} ${{ env.GAFFER_VALIDATE_EXTRA_FLAGS }} ${{ secrets.ARNOLD_DOWNLOAD_USER == '' && '--skipPaths arnold' || '' }}
+        python ./config/validateRelease.py --archive ${{ env.GAFFER_BUILD_NAME }}.${{ env.PACKAGE_EXTENSION }} ${{ env.GAFFER_VALIDATE_EXTRA_FLAGS }} ${{ secrets.ARNOLD_DOWNLOAD_USER == '' && '--skipPaths arnold' || '' }} ${{ secrets.RENDERMAN_DOWNLOAD_USER == '' && '--skipPaths renderMan' || '' }}
         echo "::remove-matcher owner=validateRelease::"
       if: matrix.publish
 
