@@ -14,6 +14,9 @@ Improvements
 Breaking Changes
 ----------------
 
+- Arnold :
+  - Removed support for Arnold 7.2.
+  - Removed `GafferArnoldUI.GPUCache.populateGPUCache()` function.
 - StandardNodule : Removed deprecated `setCompatibleLabelsVisible()`.
 - DeleteAttributes : Changed base class and marked as `final`.
 - Wrapper : The `gaffer` wrapper on Linux no longer allows a custom Python build to be used. If you wish to use a custom Python, call `python _gaffer.py` instead.

@@ -461,14 +461,9 @@ def __translateNodeMetadata( nodeEntry ) :
 			if value is not None :
 				__metadata[paramPath][gafferKey] = value
 
-if [ int( x ) for x in arnold.AiGetVersion()[:3] ] < [ 7, 3, 1 ] :
-	__AI_NODE_IMAGER = arnold.AI_NODE_DRIVER
-else :
-	__AI_NODE_IMAGER = arnold.AI_NODE_IMAGER
-
 with IECoreArnold.UniverseBlock( writable = False ) :
 
-	nodeIt = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER | arnold.AI_NODE_LIGHT | arnold.AI_NODE_COLOR_MANAGER | __AI_NODE_IMAGER )
+	nodeIt = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER | arnold.AI_NODE_LIGHT | arnold.AI_NODE_COLOR_MANAGER | arnold.AI_NODE_IMAGER )
 	while not arnold.AiNodeEntryIteratorFinished( nodeIt ) :
 
 		__translateNodeMetadata( arnold.AiNodeEntryIteratorGetNext( nodeIt ) )
