@@ -80,10 +80,10 @@ def setUpRenderMan() :
 
 	# Determine RenderMan version.
 
-	if "RMANTREE" not in os.environ or os.environ.get( "GAFFERRENDERMAN_FEATURE_PREVIEW", "0" ) != "1" :
+	if not os.environ.get( "RMANTREE" ) or os.environ.get( "GAFFERRENDERMAN_FEATURE_PREVIEW", "0" ) != "1" :
 		return
 
-	rmanTree = pathlib.Path( os.environ.get( "RMANTREE" ) )
+	rmanTree = pathlib.Path( os.environ["RMANTREE"] )
 	renderManHeader = pathlib.Path( rmanTree / "include" / "prmanapi.h" )
 	if not renderManHeader.exists() :
 		sys.stderr.write( "ERROR : unable to find \"{}\".\n".format( renderManHeader ) )

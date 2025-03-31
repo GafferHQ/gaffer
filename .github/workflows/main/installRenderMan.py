@@ -37,6 +37,7 @@ import os
 import pathlib
 import shutil
 import subprocess
+import sys
 
 import requests
 
@@ -54,6 +55,10 @@ cookies = requests.post(
 		"action" : "login"
 	}
 ).cookies
+
+if not { "bbpassword", "bbuserid" }.issubset( cookies.keys() ) :
+	sys.stderr.write( "Error : Login failed\n" )
+	sys.exit( 1 )
 
 # The various versions of RenderMan are listed on a download page, each
 # with a link that takes you to _another_ page which has the file ids
