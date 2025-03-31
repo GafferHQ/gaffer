@@ -94,7 +94,7 @@ class _InteractiveDenoiserAdaptor( GafferScene.SceneProcessor ) :
 
 		if templateOutput.getType() == "ieDisplay" :
 			templateOutput.parameters()["dspyDSOPath"] = IECore.StringData(
-				str( Gaffer.rootPath() / "renderManPlugins" / "d_ieDisplay.so" )
+				str( pathlib.Path( __file__ ).parents[2] / "plugins" / "d_ieDisplay.so" )
 			)
 		else :
 			templateOutput.parameters()["dspyDSOPath"] = IECore.StringData(
