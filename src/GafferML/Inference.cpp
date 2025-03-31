@@ -94,7 +94,23 @@ Ort::Session &acquireSession( const std::string &fileName )
 		throw Exception( fmt::format( "Could not find file \"{}\" on GAFFERML_MODEL_PATHS", fileName ) );
 	}
 
-	it = g_map.try_emplace( fileName, acquireEnv(), path.c_str(), Ort::SessionOptions() ).first;
+	Ort::SessionOptions options;
+
+	const char *useCuda = getenv( "GAFFERML_USE_CUDA" );
+	if( useCuda && strcmp( useCuda, "0" ) != 0 )
+	{
+		try
+		{
+			OrtCUDAProviderOptions cudaOptions;
+			options.AppendExecutionProvider_CUDA( cudaOptions );
+		}
+		catch( const std::exception &e )
+		{
+			throw IECore::Exception( fmt::format( "Error Initializing CUDA inference : {}", e.what() ) );
+		}
+	}
+
+	it = g_map.try_emplace( fileName, acquireEnv(), path.c_str(), options ).first;
 	return it->second;
 }
 
