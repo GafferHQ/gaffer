@@ -114,6 +114,21 @@ Ort::Session &acquireSession( const std::string &fileName )
 	{
 		sessionOpt.RegisterCustomOpsLibrary( customLibraryPath.c_str() );
 	}
+
+	const char *useCuda = getenv( "GAFFERML_USE_CUDA" );
+	if( useCuda && strcmp( useCuda, "0" ) != 0 )
+	{
+		try
+		{
+			OrtCUDAProviderOptions cudaOptions;
+			sessionOpt.AppendExecutionProvider_CUDA( cudaOptions );
+		}
+		catch( const std::exception &e )
+		{
+			throw IECore::Exception( fmt::format( "Error Initializing CUDA inference : {}", e.what() ) );
+		}
+	}
+
 	it = g_map.try_emplace( fileName, acquireEnv(), path.c_str(), sessionOpt ).first;
 	return it->second;
 }

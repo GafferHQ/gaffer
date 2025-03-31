@@ -258,6 +258,16 @@ def setUpONNX() :
 	onnxRoot = pathlib.Path( os.environ.get( "ONNX_ROOT" ) )
 	appendToPath( onnxRoot / "lib", libraryPath )
 
+	if "GAFFERML_USE_CUDA" not in os.environ or os.environ["GAFFERML_USE_CUDA"] == "0" :
+		return
+
+	if "CUDNN_ROOT" not in os.environ :
+		sys.stderr.write( f"WARNING : \"CUDNN_ROOT\" environment variable not found. Ensure cuDNN is installed and \"CUDNN_ROOT\" environment variable is set." )
+		return
+
+	cuDNNRoot = pathlib.Path( os.environ.get( "CUDNN_ROOT" ) )
+	appendToPath( cuDNNRoot / ( "bin" if sys.platform == "win32" else "lib" ), libraryPath )
+
 setUpONNX()
 
 # RenderMan Setup
