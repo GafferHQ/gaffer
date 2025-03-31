@@ -9,7 +9,9 @@ Features
 Improvements
 ------------
 
-- Wrapper : Added warning when GafferRenderMan is not available for current RenderMan version.
+- Wrapper :
+  - Added warning when GafferRenderMan is not available for current RenderMan version.
+  - An empty `RMANTREE` variable now disables GafferRenderMan startup, instead of emitting a warning.
 
 Fixes
 -----
