@@ -36,6 +36,8 @@
 
 #include "GafferScene/Private/IECoreGLPreview/LightFilterVisualiser.h"
 
+#include "Gaffer/Private/IECorePreview/LRUCache.h"
+
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/Group.h"
 #include "IECoreGL/Primitive.h"
@@ -43,6 +45,8 @@
 #include "IECoreGL/ShaderLoader.h"
 #include "IECoreGL/ShaderStateComponent.h"
 #include "IECoreGL/TextureLoader.h"
+
+#include "OpenImageIO/imageio.h"
 
 using namespace Imath;
 using namespace IECoreGLPreview;
@@ -80,6 +84,7 @@ const char *texturedFragSource()
 		"uniform sampler2D texture;"
 		"uniform vec3 tint;"
 		"uniform float saturation;"
+		"uniform float aspectRatio;"
 		"uniform int tileMode;"
 		""
 		"void main()"
@@ -103,9 +108,18 @@ const char *texturedFragSource()
 			"}"
 			"// `GL_TEXTURE_WRAP_*` is `GL_REPEAT`, so tiled is the default\n"
 			""
-			"vec3 c = texture2D( texture, fragmentuv ).xyz;"
-			"c = ieAdjustSaturation( c, saturation );"
-			"c *= tint;"
+			"vec2 uvMult = aspectRatio > 1.0 ? vec2( 1.0, aspectRatio ) : vec2( 1.0 / aspectRatio, 1.0 );"
+			"vec2 uvCenter = vec2( 0.5, 0.5 );"
+			"vec2 effectiveUV = ( mod( fragmentuv, 1.0 ) - uvCenter ) * uvMult + uvCenter;"
+
+			"vec3 c = vec3( 0.0, 0.0, 0.0 );"
+			"if( effectiveUV.x >= 0.0 && effectiveUV.x <= 1.0 && effectiveUV.y >= 0.0 && effectiveUV.y <= 1.0 )"
+			"{"
+				"c = texture2D( texture, effectiveUV ).xyz;"
+				"c = ieAdjustSaturation( c, saturation );"
+				"c *= tint;"
+			"}"
+			""
 			"gl_FragColor = vec4( c, 1.0 );"
 		"}"
 	;
@@ -143,6 +157,32 @@ class UVOrientedQuadPrimitive : public IECoreGL::QuadPrimitive
 
 		}
 };
+
+using AspectRatioQueryCache = IECorePreview::LRUCache<std::string, float, IECorePreview::LRUCachePolicy::Parallel>;
+AspectRatioQueryCache g_aspectRatioQueryCache(
+	[]( const std::string &fileName, size_t &cost, const Canceller *canceller )
+	{
+		cost = 1;
+
+		OIIO::ImageInput::unique_ptr imageInput( OIIO::ImageInput::create( fileName ) );
+
+		if( !imageInput )
+		{
+			return 1.f;
+		}
+
+		OIIO::ImageSpec spec;
+		if( !imageInput->open( fileName, spec ) )
+		{
+			return 1.f;
+		}
+
+		const float result = spec.get_float_attribute( "fovcot", 1.f );
+
+		return result;
+	},
+	128
+);
 
 class CookieVisualiser final : public LightFilterVisualiser
 {
@@ -233,6 +273,8 @@ Visualisations CookieVisualiser::visualise( const InternedString &attributeName,
 			shaderParameters->members()["tileMode"] = new IntData(
 				parameterOrDefault( filterParameters, "tileMode", 0 )
 			);
+
+			shaderParameters->members()["aspectRatio"] = new FloatData( g_aspectRatioQueryCache.get( map ) );
 
 			M33f textureTransform;
 
