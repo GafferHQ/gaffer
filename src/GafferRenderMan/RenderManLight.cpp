@@ -44,6 +44,13 @@ using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferRenderMan;
 
+namespace
+{
+
+const ConstIntDataPtr g_oneData = new IntData( 1 );
+
+} // namespace
+
 IE_CORE_DEFINERUNTIMETYPED( RenderManLight );
 
 size_t RenderManLight::g_firstPlugIndex = 0;
@@ -52,6 +59,10 @@ RenderManLight::RenderManLight( const std::string &name )
 	:	GafferScene::Light( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
+
+	attributesPlug()->addChild(
+		new NameValuePlug( "ri:visibility:camera", g_oneData.get(), false, "ri:visibility:camera" )
+	);
 
 	addChild( new RenderManShader( "__shader" ) );
 	addChild( new ShaderPlug( "__shaderIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
