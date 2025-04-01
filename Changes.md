@@ -13,6 +13,7 @@ Fixes
 - RenderManShader : Fixed handling of minimum and maximum values for `color`, `vector`, `normal` and `point` parameters.
 - FreezeTransform : Fixed double transforming when the input primitive contains multiple primitive variables sharing the same data.
 - 3Delight : Fixed rendering of `dlToon` outlines for `Beauty` and `Outlines` outputs.
+- VisualiserTool : Fixed broken OpenGL viewer when an error occurs on an upstream node when visualisation is active.
 
 1.5.10.1 (relative to 1.5.10.0)
 ========
