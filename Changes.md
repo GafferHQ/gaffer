@@ -1,7 +1,10 @@
 1.5.x.x (relative to 1.5.10.0)
 =======
 
+Fixes
+-----
 
+- browser : Fixed QDesktopWidget.availableGeometry(int screen) const is deprecated warning
 
 1.5.10.0 (relative to 1.5.9.0)
 ========
