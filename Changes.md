@@ -20,6 +20,11 @@ Fixes
   - Fixed interactive denoiser configuration.
   - Fixed bug preventing startup files from being loaded from versioned GafferRenderMan modules.
 
+API
+---
+
+- Light : Added `attributes` plug.
+
 1.5.9.0 (relative to 1.5.8.0)
 =======
 

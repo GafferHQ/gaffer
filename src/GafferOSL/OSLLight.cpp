@@ -74,7 +74,6 @@ OSLLight::OSLLight( const std::string &name )
 	addChild( new StringPlug( "geometryType" ) );
 	addChild( new Box3fPlug( "geometryBound", Plug::In, Box3f( V3f( -1 ), V3f( 1 ) ) ) );
 	addChild( new CompoundDataPlug( "geometryParameters" ) );
-	addChild( new CompoundDataPlug( "attributes" ) );
 
 	addChild( new OSLShader( "__shader" ) );
 	addChild( new ShaderPlug( "__shaderIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
@@ -155,32 +154,32 @@ const Gaffer::CompoundDataPlug *OSLLight::geometryParametersPlug() const
 
 Gaffer::CompoundDataPlug *OSLLight::attributesPlug()
 {
-	return getChild<CompoundDataPlug>( g_firstPlugIndex + 6 );
+	return Light::attributesPlug();
 }
 
 const Gaffer::CompoundDataPlug *OSLLight::attributesPlug() const
 {
-	return getChild<CompoundDataPlug>( g_firstPlugIndex + 6 );
+	return Light::attributesPlug();
 }
 
 OSLShader *OSLLight::shaderNode()
 {
-	return getChild<OSLShader>( g_firstPlugIndex + 7 );
+	return getChild<OSLShader>( g_firstPlugIndex + 6 );
 }
 
 const OSLShader *OSLLight::shaderNode() const
 {
-	return getChild<OSLShader>( g_firstPlugIndex + 7 );
+	return getChild<OSLShader>( g_firstPlugIndex + 6 );
 }
 
 GafferScene::ShaderPlug *OSLLight::shaderInPlug()
 {
-	return getChild<ShaderPlug>( g_firstPlugIndex + 8 );
+	return getChild<ShaderPlug>( g_firstPlugIndex + 7 );
 }
 
 const GafferScene::ShaderPlug *OSLLight::shaderInPlug() const
 {
-	return getChild<ShaderPlug>( g_firstPlugIndex + 8 );
+	return getChild<ShaderPlug>( g_firstPlugIndex + 7 );
 }
 
 void OSLLight::loadShader( const std::string &shaderName )
@@ -204,10 +203,7 @@ void OSLLight::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 		outputs.push_back( sourcePlug() );
 	}
 
-	if(
-		input == shaderInPlug() ||
-		attributesPlug()->isAncestorOf( input )
-	)
+	if( input == shaderInPlug() )
 	{
 		outputs.push_back( outPlug()->attributesPlug() );
 	}
@@ -247,15 +243,11 @@ IECore::ConstObjectPtr OSLLight::computeSource( const Gaffer::Context *context )
 void OSLLight::hashAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	Light::hashAttributes( path, context, parent, h );
-	attributesPlug()->hash( h );
 }
 
 IECore::ConstCompoundObjectPtr OSLLight::computeAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
-	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
-	result->members() = Light::computeAttributes( path, context, parent )->members();
-	attributesPlug()->fillCompoundObject( result->members() );
-	return result;
+	return Light::computeAttributes( path, context, parent );
 }
 
 void OSLLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const

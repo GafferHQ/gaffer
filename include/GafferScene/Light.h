@@ -55,15 +55,20 @@ class GAFFERSCENE_API Light : public ObjectSource
 		explicit Light( const std::string &name=defaultName<Light>() );
 		~Light() override;
 
+		Gaffer::CompoundDataPlug *attributesPlug();
+		const Gaffer::CompoundDataPlug *attributesPlug() const;
+
 		Gaffer::Plug *parametersPlug();
 		const Gaffer::Plug *parametersPlug() const;
 
 		Gaffer::BoolPlug *defaultLightPlug();
 		const Gaffer::BoolPlug *defaultLightPlug() const;
 
+		/// \todo Consolidate into `attributesPlug()`.
 		Gaffer::NameValuePlug *mutePlug();
 		const Gaffer::NameValuePlug *mutePlug() const;
 
+		/// \todo Consolidate into `attributesPlug()`.
 		Gaffer::CompoundDataPlug *visualiserAttributesPlug();
 		const Gaffer::CompoundDataPlug *visualiserAttributesPlug() const;
 
