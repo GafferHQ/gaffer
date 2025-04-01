@@ -29,10 +29,19 @@ Features
 
 - ShuffleRenderPasses : Added a new node for shuffling render passes.
 
+Improvements
+------------
+
+- Wrapper :
+  - Added warning when GafferRenderMan is not available for current RenderMan version.
+  - An empty `RMANTREE` variable now disables GafferRenderMan startup, instead of emitting a warning.
+
 Fixes
 -----
 
-- RenderMan : Fixed bug preventing startup files from being loaded from versioned GafferRenderMan modules.
+- RenderMan :
+  - Fixed interactive denoiser configuration.
+  - Fixed bug preventing startup files from being loaded from versioned GafferRenderMan modules.
 
 1.5.9.0 (relative to 1.5.8.0)
 =======

@@ -81,6 +81,7 @@ sys.stdout.flush()
 requiredPaths = [
 	os.path.join( "resources", "examples" ),
 	"arnold",
+	"renderMan",
 ]
 
 if args.skipDocs :
