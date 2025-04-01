@@ -5,6 +5,7 @@ Fixes
 -----
 
 - ScriptNodeAlgo : Fixed crash during shutdown (#6363).
+- Browser app : Fixed `QDesktopWidget.availableGeometry()` deprecation warning.
 
 1.5.10.0 (relative to 1.5.9.0)
 ========
