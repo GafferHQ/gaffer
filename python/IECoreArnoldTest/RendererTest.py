@@ -4615,6 +4615,7 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.render()
 		assertCameraParameter( renderer, "/camera1" )
 
+		renderer.pause()
 		del camera1, plane
 		del renderer
 
