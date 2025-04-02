@@ -54,21 +54,21 @@
 namespace GafferSceneUI
 {
 
-class GAFFERSCENEUI_API ImagePickTool : public GafferUI::Tool
+class GAFFERSCENEUI_API ImageSelectionTool : public GafferUI::Tool
 {
 
 	public :
 
-		explicit ImagePickTool( GafferUI::View *view, const std::string &name = defaultName<ImagePickTool>() );
+		explicit ImageSelectionTool( GafferUI::View *view, const std::string &name = defaultName<ImageSelectionTool>() );
 
-		~ImagePickTool() override;
+		~ImageSelectionTool() override;
 
 		std::string status() const;
 
-		using StatusChangedSignal = Gaffer::Signals::Signal<void (ImagePickTool &)>;
+		using StatusChangedSignal = Gaffer::Signals::Signal<void (ImageSelectionTool &)>;
 		StatusChangedSignal &statusChangedSignal();
 
-		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::ImagePickTool, ImagePickToolTypeId, GafferUI::Tool );
+		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::ImageSelectionTool, ImageSelectionToolTypeId, GafferUI::Tool );
 
 	private :
 
@@ -120,10 +120,10 @@ class GAFFERSCENEUI_API ImagePickTool : public GafferUI::Tool
 		bool m_selectionDirty = true;
 
 		static size_t g_firstPlugIndex;
-		static ToolDescription<ImagePickTool, GafferImageUI::ImageView> g_imageToolDescription;
+		static ToolDescription<ImageSelectionTool, GafferImageUI::ImageView> g_imageToolDescription;
 
 };
 
-IE_CORE_DECLAREPTR( ImagePickTool )
+IE_CORE_DECLAREPTR( ImageSelectionTool )
 
 } // namespace GafferSceneUI

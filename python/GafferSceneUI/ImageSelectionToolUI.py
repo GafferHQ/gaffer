@@ -42,7 +42,7 @@ import GafferSceneUI
 
 Gaffer.Metadata.registerNode(
 
-	GafferSceneUI.ImagePickTool,
+	GafferSceneUI.ImageSelectionTool,
 
 	"description",
 	"""
@@ -54,11 +54,11 @@ Gaffer.Metadata.registerNode(
 
 	"nodeToolbar:bottom:type", "GafferUI.StandardNodeToolbar.bottom",
 
-	"toolbarLayout:customWidget:SelectionWidget:widgetType", "GafferSceneUI.ImagePickToolUI._StatusWidget",
+	"toolbarLayout:customWidget:SelectionWidget:widgetType", "GafferSceneUI.ImageSelectionToolUI._StatusWidget",
 	"toolbarLayout:customWidget:SelectionWidget:section", "Bottom",
 
 	# So our widget doesn't center, add a stretchy spacer to the right
-	"toolbarLayout:customWidget:RightSpacer:widgetType", "GafferSceneUI.ImagePickToolUI._RightSpacer",
+	"toolbarLayout:customWidget:RightSpacer:widgetType", "GafferSceneUI.ImageSelectionToolUI._RightSpacer",
 	"toolbarLayout:customWidget:RightSpacer:section", "Bottom",
 	"toolbarLayout:customWidget:RightSpacer:index", -1,
 
