@@ -52,7 +52,7 @@ class RefCountedId : public IECore::RefCounted
 
 	public :
 
-		RefCountedId( T id, const Session *session )
+		RefCountedId( T id, Session *session )
 			:	m_session( session ), m_id( id )
 		{
 
@@ -73,6 +73,10 @@ class RefCountedId : public IECore::RefCounted
 			{
 				m_session->riley->DeleteDisplacement( m_id );
 			}
+			else if constexpr( std::is_same_v<T, riley::LightShaderId> )
+			{
+				m_session->deleteLightShader( m_id );
+			}
 			// Deliberately not checking type for the last case, so that we get
 			// a compilation error if compiled for types we haven't added a
 			// delete for.
@@ -86,7 +90,7 @@ class RefCountedId : public IECore::RefCounted
 
 	private :
 
-		const Session *m_session;
+		Session *m_session;
 		T m_id;
 
 };

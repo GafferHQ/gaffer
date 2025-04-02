@@ -43,7 +43,7 @@ using namespace IECore;
 using namespace IECoreScene;
 using namespace IECoreRenderMan;
 
-MaterialCache::MaterialCache( const Session *session )
+MaterialCache::MaterialCache( Session *session )
 	:	m_session( session )
 {
 }
@@ -70,6 +70,30 @@ ConstDisplacementPtr MaterialCache::getDisplacement( const IECoreScene::ShaderNe
 		std::vector<riley::ShadingNode> nodes = ShaderNetworkAlgo::convert( network );
 		riley::DisplacementId id = m_session->riley->CreateDisplacement( riley::UserId(), { (uint32_t)nodes.size(), nodes.data() }, RtParamList() );
 		a->second = new Displacement( id, m_session );
+	}
+	return a->second;
+}
+
+ConstLightShaderPtr MaterialCache::getLightShader( const IECoreScene::ShaderNetwork *network, const IECoreScene::ShaderNetwork *lightFilter )
+{
+	IECore::MurmurHash h = network->Object::hash();
+	if( lightFilter )
+	{
+		lightFilter->hash( h );
+	}
+
+	LightShaderCache::accessor a;
+	m_lightShaderCache.insert( a, h );
+	if( !a->second )
+	{
+		std::vector<riley::ShadingNode> nodes = ShaderNetworkAlgo::convert( network );
+		std::vector<riley::ShadingNode> filterNodes;
+		if( lightFilter )
+		{
+			filterNodes = ShaderNetworkAlgo::convert( lightFilter );
+		}
+		riley::LightShaderId id = m_session->createLightShader( { (uint32_t)nodes.size(), nodes.data() }, { (uint32_t)filterNodes.size(), filterNodes.data() } );
+		a->second = new LightShader( id, m_session );
 	}
 	return a->second;
 }
@@ -104,5 +128,18 @@ void MaterialCache::clearUnused()
 	for( const auto &e : toErase )
 	{
 		m_displacementCache.erase( e );
+	}
+
+	toErase.clear();
+	for( const auto &m : m_lightShaderCache )
+	{
+		if( m.second->refCount() == 1 )
+		{
+			toErase.push_back( m.first );
+		}
+	}
+	for( const auto &e : toErase )
+	{
+		m_lightShaderCache.erase( e );
 	}
 }

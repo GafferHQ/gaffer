@@ -57,7 +57,7 @@ class GeometryPrototypeCache
 
 	public :
 
-		GeometryPrototypeCache( const Session *session );
+		GeometryPrototypeCache( Session *session );
 
 		// Can be called concurrently with other calls to `get()`.
 		GeometryPrototypePtr get( const IECore::Object *object, const Attributes *attributes, const std::string &messageContext );
@@ -68,7 +68,7 @@ class GeometryPrototypeCache
 
 	private :
 
-		const Session *m_session;
+		Session *m_session;
 
 		struct CacheEntry
 		{
