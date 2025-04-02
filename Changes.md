@@ -19,6 +19,7 @@ Fixes
 - RenderMan :
   - Fixed interactive denoiser configuration.
   - Fixed bug preventing startup files from being loaded from versioned GafferRenderMan modules.
+- VisualiserTool : Fixed broken OpenGL viewer when an error occurs on an upstream node when visualisation is active.
 
 1.5.9.0 (relative to 1.5.8.0)
 =======
