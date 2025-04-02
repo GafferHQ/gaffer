@@ -47,6 +47,12 @@ namespace IECoreRenderMan::ShaderNetworkAlgo
 
 std::vector<riley::ShadingNode> convert( const IECoreScene::ShaderNetwork *network );
 
+/// Merges multiple light filters into a single PxrCombinerLightFilter according
+/// to the rules documented for the `combineMode` parameter. The Riley API only
+/// allows a single filter per light, so it becomes the responsibility of every
+/// host to do this combining.
+IECoreScene::ConstShaderNetworkPtr combineLightFilters( const std::vector<const IECoreScene::ShaderNetwork *> networks );
+
 /// Converts any UsdPreviewSurface shaders into native RenderMan shaders. This conversion
 /// is performed automatically by `preprocessedNetwork()` and is mainly just exposed for the unit
 /// tests.
