@@ -37,6 +37,7 @@
 #include "Light.h"
 
 #include "IECoreRenderMan/ShaderNetworkAlgo.h"
+#include "LightFilter.h"
 #include "Transform.h"
 
 using namespace std;
@@ -73,15 +74,18 @@ M44f correctiveTransform( const Attributes *attributes )
 	}
 }
 
+const IECore::InternedString g_lightFilters( "lightFilters" );
+
 } // namespace
 
-Light::Light( const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, Session *session )
-	:	m_session( session ), m_lightShader( riley::LightShaderId::InvalidId() ),
+Light::Light( const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, MaterialCache *materialCache, LightLinker *lightLinker, Session *session )
+	:	m_materialCache( materialCache ), m_session( session ), m_lightLinker( lightLinker ),
 		m_lightInstance( riley::LightInstanceId::InvalidId() ), m_correctiveTransform( correctiveTransform( attributes ) ),
 		m_attributes( attributes ), m_geometryPrototype( geometryPrototype )
+
 {
 	updateLightShader( attributes );
-	if( m_lightShader == riley::LightShaderId::InvalidId() )
+	if( !m_lightShader || m_lightShader->id() == riley::LightShaderId::InvalidId() )
 	{
 		// Riley crashes if we try to edit the transform on a light
 		// without a shader, so we just don't make such lights.
@@ -91,21 +95,22 @@ Light::Light( const ConstGeometryPrototypePtr &geometryPrototype, const Attribut
 	const Material *material = attributes->lightMaterial();
 	m_lightInstance = m_session->createLightInstance(
 		m_geometryPrototype ? m_geometryPrototype->id() : riley::GeometryPrototypeId(),
-		material ? material->id() : riley::MaterialId(), m_lightShader, { 0, nullptr }, IdentityTransform(), attributes->instanceAttributes()
+		material ? material->id() : riley::MaterialId(), m_lightShader->id(), { 0, nullptr }, IdentityTransform(), attributes->instanceAttributes()
 	);
 }
 
 Light::~Light()
 {
+	if( m_linkedFilters )
+	{
+		m_lightLinker->deregisterFilterLinks( this, m_linkedFilters );
+	}
+
 	if( m_session->renderType == IECoreScenePreview::Renderer::Interactive )
 	{
 		if( m_lightInstance != riley::LightInstanceId::InvalidId() )
 		{
 			m_session->deleteLightInstance( m_lightInstance );
-		}
-		if( m_lightShader != riley::LightShaderId::InvalidId() )
-		{
-			m_session->riley->DeleteLightShader( m_lightShader );
 		}
 	}
 }
@@ -183,10 +188,10 @@ bool Light::attributes( const IECoreScenePreview::Renderer::AttributesInterface 
 		// attributes have a valid shader, because we don't know the
 		// transform. If we now have a shader, then return false to
 		// request that the whole object is sent again from scratch.
-		return m_lightShader == riley::LightShaderId::InvalidId();
+		return !m_lightShader || m_lightShader->id() == riley::LightShaderId::InvalidId();
 	}
 
-	if( m_lightShader == riley::LightShaderId::InvalidId() )
+	if( !m_lightShader || m_lightShader->id() == riley::LightShaderId::InvalidId() )
 	{
 		// Riley crashes when a light doesn't have a valid shader, so we delete the light.
 		// If we get a valid shader from a later attribute edit, we'll handle that above.
@@ -199,7 +204,7 @@ bool Light::attributes( const IECoreScenePreview::Renderer::AttributesInterface 
 	const riley::LightInstanceResult result = m_session->modifyLightInstance(
 		m_lightInstance,
 		/* material = */ material ? &material->id() : nullptr,
-		/* light shader = */ &m_lightShader,
+		/* light shader = */ &m_lightShader->id(),
 		/* coordinateSystems = */ nullptr,
 		/* xform = */ nullptr,
 		&renderManAttributes->instanceAttributes()
@@ -217,24 +222,94 @@ bool Light::attributes( const IECoreScenePreview::Renderer::AttributesInterface 
 
 void Light::link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects )
 {
+	if( m_lightInstance == riley::LightInstanceId::InvalidId() )
+	{
+		return;
+	}
+
+	if( type != g_lightFilters )
+	{
+		return;
+	}
+
+	// Update registrations with LightLinker, so we can get updated
+	// when the filter parameters are modified.
+
+	if( m_linkedFilters )
+	{
+		m_lightLinker->deregisterFilterLinks( this, m_linkedFilters );
+	}
+
+	m_linkedFilters = objects;
+
+	if( m_linkedFilters )
+	{
+		m_lightFilterShader = m_lightLinker->registerFilterLinks( this, m_linkedFilters );
+	}
+	else
+	{
+		m_lightFilterShader = nullptr;
+	}
+
+	// Update our shader and coordinate systems to include everything
+	// from the filters.
+
+	updateLightShader( m_attributes.get() );
+
+	vector<riley::CoordinateSystemId> coordinateSystems;
+	if( m_linkedFilters )
+	{
+		for( const auto &s : *m_linkedFilters )
+		{
+			auto lightFilter = static_cast<const LightFilter *>( s.get() );
+			coordinateSystems.push_back( lightFilter->coordinateSystem() );
+		}
+	}
+
+	const riley::CoordinateSystemList list = { (uint32_t)coordinateSystems.size(), coordinateSystems.data() };
+	m_session->modifyLightInstance(
+		m_lightInstance,
+		/* material = */ nullptr,
+		/* light shader = */ &m_lightShader->id(),
+		&list,
+		/* transform = */ nullptr,
+		/* attributes = */ nullptr
+
+	);
 }
 
 void Light::assignID( uint32_t id )
 {
 }
 
-void Light::updateLightShader( const Attributes *attributes )
+void Light::updateLightFilterShader( const IECoreScene::ConstShaderNetworkPtr &lightFilterShader )
 {
-	if( m_lightShader != riley::LightShaderId::InvalidId() )
+	if( m_lightInstance == riley::LightInstanceId::InvalidId() )
 	{
-		m_session->deleteLightShader( m_lightShader );
-		m_lightShader = riley::LightShaderId::InvalidId();
+		return;
 	}
 
-	/// \todo Could manage light shaders in MaterialCache.
+	m_lightFilterShader = lightFilterShader;
+	updateLightShader( m_attributes.get() );
+
+	m_session->modifyLightInstance(
+		m_lightInstance,
+		/* material = */ nullptr,
+		/* light shader = */ &m_lightShader->id(),
+		/* coordinateSystems = */ nullptr,
+		/* xform = */ nullptr,
+		nullptr
+	);
+}
+
+void Light::updateLightShader( const Attributes *attributes )
+{
 	if( attributes->lightShader() )
 	{
-		std::vector<riley::ShadingNode> nodes = ShaderNetworkAlgo::convert( attributes->lightShader() );
-		m_lightShader = m_session->createLightShader( { (uint32_t)nodes.size(), nodes.data() }, { 0, nullptr } );
+		m_lightShader = m_materialCache->getLightShader( attributes->lightShader(), m_lightFilterShader.get() );
+	}
+	else
+	{
+		m_lightShader = nullptr;
 	}
 }
