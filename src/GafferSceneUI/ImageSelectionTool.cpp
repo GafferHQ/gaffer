@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferSceneUI/ImagePickTool.h"
+#include "GafferSceneUI/ImageSelectionTool.h"
 
 #include "GafferImageUI/ImageGadget.h"
 
@@ -98,15 +98,15 @@ std::pair< std::string, int > findSideCarMetadata( const ImagePlug *image )
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
-// ImagePickTool implementation
+// ImageSelectionTool implementation
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_NODE_DEFINE_TYPE( ImagePickTool );
+GAFFER_NODE_DEFINE_TYPE( ImageSelectionTool );
 
-size_t ImagePickTool::g_firstPlugIndex = 0;
-ImagePickTool::ToolDescription<ImagePickTool, ImageView> ImagePickTool::g_imageToolDescription;
+size_t ImageSelectionTool::g_firstPlugIndex = 0;
+ImageSelectionTool::ToolDescription<ImageSelectionTool, ImageView> ImageSelectionTool::g_imageToolDescription;
 
-ImagePickTool::ImagePickTool( View *view, const std::string &name )
+ImageSelectionTool::ImageSelectionTool( View *view, const std::string &name )
 	:	Tool( view, name ), m_renderManifestStorage()
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
@@ -118,28 +118,28 @@ ImagePickTool::ImagePickTool( View *view, const std::string &name )
 	m_imageSampler->interpolatePlug()->setValue( false );
 	m_imageSampler->channelsPlug()->setValue( new StringVectorData( { "id", "id", "id", "id" } ) );
 
-	view->viewportGadget()->preRenderSignal().connect( boost::bind( &ImagePickTool::preRender, this ) );
-	plugDirtiedSignal().connect( boost::bind( &ImagePickTool::plugDirtied, this, ::_1 ) );
+	view->viewportGadget()->preRenderSignal().connect( boost::bind( &ImageSelectionTool::preRender, this ) );
+	plugDirtiedSignal().connect( boost::bind( &ImageSelectionTool::plugDirtied, this, ::_1 ) );
 
-	view->viewportGadget()->keyPressSignal().connect( boost::bind( &ImagePickTool::keyPress, this, ::_2 ) );
+	view->viewportGadget()->keyPressSignal().connect( boost::bind( &ImageSelectionTool::keyPress, this, ::_2 ) );
 
 	ImageGadget *ig = imageGadget();
-	ig->buttonPressSignal().connect( boost::bind( &ImagePickTool::buttonPress, this, ::_2 ) );
-	ig->mouseMoveSignal().connect( boost::bind( &ImagePickTool::mouseMove, this, ::_2 ) );
+	ig->buttonPressSignal().connect( boost::bind( &ImageSelectionTool::buttonPress, this, ::_2 ) );
+	ig->mouseMoveSignal().connect( boost::bind( &ImageSelectionTool::mouseMove, this, ::_2 ) );
 
-	ScriptNodeAlgo::selectedPathsChangedSignal( view->scriptNode() ).connect( boost::bind( &ImagePickTool::selectedPathsChanged, this ) );
+	ScriptNodeAlgo::selectedPathsChangedSignal( view->scriptNode() ).connect( boost::bind( &ImageSelectionTool::selectedPathsChanged, this ) );
 }
 
-ImagePickTool::~ImagePickTool()
+ImageSelectionTool::~ImageSelectionTool()
 {
 }
 
-std::string ImagePickTool::status() const
+std::string ImageSelectionTool::status() const
 {
 	return m_status;
 }
 
-void ImagePickTool::setStatus( const std::string &message, bool error )
+void ImageSelectionTool::setStatus( const std::string &message, bool error )
 {
 	m_status = "";
 
@@ -154,28 +154,28 @@ void ImagePickTool::setStatus( const std::string &message, bool error )
 	statusChangedSignal()( *this );
 }
 
-ImagePickTool::StatusChangedSignal &ImagePickTool::statusChangedSignal()
+ImageSelectionTool::StatusChangedSignal &ImageSelectionTool::statusChangedSignal()
 {
 	return m_statusChangedSignal;
 }
 
-GafferImage::ImagePlug *ImagePickTool::imagePlug()
+GafferImage::ImagePlug *ImageSelectionTool::imagePlug()
 {
 	return getChild<ImagePlug>( g_firstPlugIndex );
 }
 
-const GafferImage::ImagePlug *ImagePickTool::imagePlug() const
+const GafferImage::ImagePlug *ImageSelectionTool::imagePlug() const
 {
 	return getChild<ImagePlug>( g_firstPlugIndex );
 }
 
-ImageGadget *ImagePickTool::imageGadget()
+ImageGadget *ImageSelectionTool::imageGadget()
 {
 	return runTimeCast<ImageGadget>( view()->viewportGadget()->getPrimaryChild() );
 }
 
 
-void ImagePickTool::plugDirtied( const Gaffer::Plug *plug )
+void ImageSelectionTool::plugDirtied( const Gaffer::Plug *plug )
 {
 	if( plug == imagePlug()->metadataPlug() )
 	{
@@ -183,7 +183,7 @@ void ImagePickTool::plugDirtied( const Gaffer::Plug *plug )
 	}
 }
 
-IECore::PathMatcher ImagePickTool::pathsForIds( const std::vector<uint32_t> &ids, std::string &message )
+IECore::PathMatcher ImageSelectionTool::pathsForIds( const std::vector<uint32_t> &ids, std::string &message )
 {
 	updateRenderManifest( message );
 	if( !m_renderManifest )
@@ -194,7 +194,7 @@ IECore::PathMatcher ImagePickTool::pathsForIds( const std::vector<uint32_t> &ids
 	return m_renderManifest->pathsForIDs( ids );
 }
 
-std::vector<uint32_t> ImagePickTool::idsForPaths( const IECore::PathMatcher &paths, std::string &message )
+std::vector<uint32_t> ImageSelectionTool::idsForPaths( const IECore::PathMatcher &paths, std::string &message )
 {
 	updateRenderManifest( message );
 
@@ -207,7 +207,7 @@ std::vector<uint32_t> ImagePickTool::idsForPaths( const IECore::PathMatcher &pat
 	return m_renderManifest->idsForPaths( paths );
 }
 
-uint32_t ImagePickTool::sampleId( const Imath::V2f &pixel )
+uint32_t ImageSelectionTool::sampleId( const Imath::V2f &pixel )
 {
 	m_imageSampler->pixelPlug()->setValue( pixel );
 
@@ -219,7 +219,7 @@ uint32_t ImagePickTool::sampleId( const Imath::V2f &pixel )
 	return id;
 }
 
-void ImagePickTool::selectedPathsChanged()
+void ImageSelectionTool::selectedPathsChanged()
 {
 	m_selectionDirty = true;
 	view()->viewportGadget()->renderRequestSignal()(
@@ -227,13 +227,13 @@ void ImagePickTool::selectedPathsChanged()
 	);
 }
 
-void ImagePickTool::updateSelection()
+void ImageSelectionTool::updateSelection()
 {
 	std::string message;
 	imageGadget()->setSelectedIds( idsForPaths( ScriptNodeAlgo::getSelectedPaths( view()->scriptNode() ), message ) );
 }
 
-void ImagePickTool::updateRenderManifest( std::string &message )
+void ImageSelectionTool::updateRenderManifest( std::string &message )
 {
 	m_renderManifest = nullptr;
 
@@ -285,7 +285,7 @@ void ImagePickTool::updateRenderManifest( std::string &message )
 	m_sideCarManifestIdentifier = sideCarManifestIdentifier;
 }
 
-void ImagePickTool::preRender()
+void ImageSelectionTool::preRender()
 {
 	bool active = activePlug()->getValue();
 	imageGadget()->setIdChannel( active ? "id" : "" );
@@ -297,7 +297,7 @@ void ImagePickTool::preRender()
 	}
 }
 
-bool ImagePickTool::keyPress( const KeyEvent &event )
+bool ImageSelectionTool::keyPress( const KeyEvent &event )
 {
 	if( const auto hotkey = Gaffer::Metadata::value<StringData>( this, "viewer:shortCut" ) )
 	{
@@ -311,7 +311,7 @@ bool ImagePickTool::keyPress( const KeyEvent &event )
 	return false;
 }
 
-bool ImagePickTool::buttonPress( const GafferUI::ButtonEvent &event )
+bool ImageSelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 {
 	// TODO : In addition to supporting clicks, we should probably support all selection interactions
 	// from the viewport ( like dragging for rectangle selection? )
@@ -388,7 +388,7 @@ bool ImagePickTool::buttonPress( const GafferUI::ButtonEvent &event )
 	return true;
 }
 
-bool ImagePickTool::mouseMove( const GafferUI::ButtonEvent &event )
+bool ImageSelectionTool::mouseMove( const GafferUI::ButtonEvent &event )
 {
 	ImageGadget *ig = imageGadget();
 
@@ -422,7 +422,7 @@ bool ImagePickTool::mouseMove( const GafferUI::ButtonEvent &event )
 	return false;
 }
 
-bool ImagePickTool::leaveSignal( const GafferUI::ButtonEvent &event )
+bool ImageSelectionTool::leaveSignal( const GafferUI::ButtonEvent &event )
 {
 	imageGadget()->setHighlightId( 0 );
 	setStatus( "", false );
