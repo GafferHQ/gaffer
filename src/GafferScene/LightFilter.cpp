@@ -82,7 +82,14 @@ void LightFilter::loadShader( const std::string &shaderName, bool keepExistingVa
 {
 	shaderNode()->loadShader( shaderName, keepExistingValues );
 	shaderPlug()->setInput( shaderNode()->outPlug() );
-	shaderNode()->attributeSuffixPlug()->setValue( "filter" );
+	/// \todo We don't really want an attribute suffix for _any_ light filters,
+	/// but historically we had one, so for now we are preserving that behaviour
+	/// for all but the new RenderManLightFilter. We should remove the suffix
+	/// and update the Arnold backend to use `ai:lightFilter` attributes directly.
+	if( strcmp( typeName(), "GafferRenderMan::RenderManLightFilter" ) )
+	{
+		shaderNode()->attributeSuffixPlug()->setValue( "filter" );
+	}
 }
 
 GafferScene::Shader *LightFilter::shaderNode()

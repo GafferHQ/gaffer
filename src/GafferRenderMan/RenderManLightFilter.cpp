@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2018, John Haddon. All rights reserved.
+//  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,25 +34,21 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#include "GafferRenderMan/RenderManLightFilter.h"
 
-namespace GafferRenderMan
+#include "GafferRenderMan/RenderManShader.h"
+
+using namespace Gaffer;
+using namespace GafferScene;
+using namespace GafferRenderMan;
+
+GAFFER_NODE_DEFINE_TYPE( RenderManLightFilter );
+
+RenderManLightFilter::RenderManLightFilter( const std::string &name )
+	:	GafferScene::LightFilter( new RenderManShader(), name )
 {
+}
 
-enum TypeId
+RenderManLightFilter::~RenderManLightFilter()
 {
-	RenderManAttributesTypeId = 110400,
-	RenderManOptionsTypeId = 110401,
-	RenderManShaderTypeId = 110402,
-	RenderManLightTypeId = 110403,
-	RenderManMeshLightTypeId = 110404,
-	RenderManIntegratorTypeId = 110405,
-	RenderManOutputFilterTypeId = 110406,
-	RenderManDisplayFilterTypeId = 110407,
-	RenderManSampleFilterTypeId = 110408,
-	BXDFPlugTypeId = 110409,
-	RenderManLightFilterTypeId = 110410,
-	LastTypeId = 110450
-};
-
-} // namespace GafferRenderMan
+}

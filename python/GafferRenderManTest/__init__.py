@@ -46,6 +46,7 @@ from .RenderManSampleFilterTest import RenderManSampleFilterTest
 from .RenderManRenderTest import RenderManRenderTest
 from .InteractiveRenderManRenderTest import InteractiveRenderManRenderTest
 from .RenderPassAdaptorTest import RenderPassAdaptorTest
+from .RenderManLightFilterTest import RenderManLightFilterTest
 
 if __name__ == "__main__":
 	import unittest
