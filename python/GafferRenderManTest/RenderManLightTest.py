@@ -36,6 +36,8 @@
 
 import unittest
 
+import IECore
+
 import Gaffer
 import GafferSceneTest
 import GafferRenderMan
@@ -101,6 +103,18 @@ class RenderManLightTest( GafferSceneTest.SceneTestCase ) :
 			set( light["out"].attributes( "/light" )["ri:light"].outputShader().parameters.keys() ),
 			{ "intensityMult", "tint" }
 		)
+
+	def testCameraVisibility( self ) :
+
+		light = GafferRenderMan.RenderManLight()
+		light.loadShader( "PxrRectLight" )
+		self.assertNotIn( "ri:visibility:camera", light["out"].attributes( "/light" ) )
+
+		light["attributes"]["ri:visibility:camera"]["enabled"].setValue( True )
+		self.assertEqual( light["out"].attributes( "/light" )["ri:visibility:camera"], IECore.IntData( 1 ) )
+
+		light["attributes"]["ri:visibility:camera"]["value"].setValue( 0 )
+		self.assertEqual( light["out"].attributes( "/light" )["ri:visibility:camera"], IECore.IntData( 0 ) )
 
 if __name__ == "__main__":
 	unittest.main()

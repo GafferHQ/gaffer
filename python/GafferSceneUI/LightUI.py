@@ -53,6 +53,14 @@ def __lightTypeMatches( node, types ):
 		t = Gaffer.Metadata.value( lightName, "type" )
 		return t in types
 
+def __attributeMetadata( plug, key ) :
+
+	if not isinstance( plug, Gaffer.NameValuePlug ) :
+		plug = plug.parent()
+
+	target = "attribute:" + plug["name"].getValue()
+	return Gaffer.Metadata.value( target, key )
+
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Light,
@@ -67,6 +75,36 @@ Gaffer.Metadata.registerNode(
 		"sets" : [
 
 			"layout:divider", True
+
+		],
+
+		"attributes" : [
+
+			"description",
+			"""
+			Arbitrary attributes which are applied to the light. Typical
+			uses include setting renderer specific visibility attributes
+			to hide the shape from the camera.
+			""",
+
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+
+		],
+
+		"attributes.*" : [
+
+			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+
+			"description", lambda plug : __attributeMetadata( plug, "description" ),
+			"label", lambda plug : __attributeMetadata( plug, "label" ),
+
+		],
+
+		"attributes.*.value" : [
+
+			"plugValueWidget:type", lambda plug : __attributeMetadata( plug, "plugValueWidget:type" ),
+			"presetNames", lambda plug : __attributeMetadata( plug, "presetNames" ),
+			"presetValues", lambda plug : __attributeMetadata( plug, "presetValues" ),
 
 		],
 

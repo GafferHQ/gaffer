@@ -19,6 +19,12 @@ Fixes
 - RenderMan :
   - Fixed interactive denoiser configuration.
   - Fixed bug preventing startup files from being loaded from versioned GafferRenderMan modules.
+- RenderManLight : Added plug to control the camera visibility of the light. This defaults on to match the RenderMan defaults, but can be configured to default off with `Gaffer.Metadata.registerValue( GafferRenderMan.RenderManLight, "attributes.ri:visibility:camera.value", "userDefault", 0 )`.
+
+API
+---
+
+- Light : Added `attributes` plug.
 
 1.5.9.0 (relative to 1.5.8.0)
 =======

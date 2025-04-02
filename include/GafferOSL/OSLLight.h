@@ -42,8 +42,6 @@
 #include "GafferScene/Light.h"
 #include "GafferScene/ShaderPlug.h"
 
-#include "Gaffer/CompoundDataPlug.h"
-
 namespace GafferOSL
 {
 
@@ -84,6 +82,7 @@ class GAFFEROSL_API OSLLight : public GafferScene::Light
 		Gaffer::CompoundDataPlug *geometryParametersPlug();
 		const Gaffer::CompoundDataPlug *geometryParametersPlug() const;
 
+		/// \todo Remove. This is provided by the base class now.
 		Gaffer::CompoundDataPlug *attributesPlug();
 		const Gaffer::CompoundDataPlug *attributesPlug() const;
 
@@ -96,6 +95,7 @@ class GAFFEROSL_API OSLLight : public GafferScene::Light
 		void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const override;
 
+		/// \todo Remove. This doesn't override anything any more.
 		void hashAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const override;
 		IECore::ConstCompoundObjectPtr computeAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const override;
 
