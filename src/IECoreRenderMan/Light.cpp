@@ -91,7 +91,7 @@ Light::Light( const ConstGeometryPrototypePtr &geometryPrototype, const Attribut
 	const Material *material = attributes->lightMaterial();
 	m_lightInstance = m_session->createLightInstance(
 		m_geometryPrototype ? m_geometryPrototype->id() : riley::GeometryPrototypeId(),
-		material ? material->id() : riley::MaterialId(), m_lightShader, IdentityTransform(), attributes->instanceAttributes()
+		material ? material->id() : riley::MaterialId(), m_lightShader, { 0, nullptr }, IdentityTransform(), attributes->instanceAttributes()
 	);
 }
 
@@ -124,6 +124,7 @@ void Light::transform( const Imath::M44f &transform )
 		m_lightInstance,
 		/* material = */ nullptr,
 		/* light shader = */ nullptr,
+		/* coordinateSystems = */ nullptr,
 		&staticTransform,
 		/* attributes = */ nullptr
 	);
@@ -152,6 +153,7 @@ void Light::transform( const std::vector<Imath::M44f> &samples, const std::vecto
 		m_lightInstance,
 		/* material = */ nullptr,
 		/* light shader = */ nullptr,
+		/* coordinateSystems = */ nullptr,
 		&animatedTransform,
 		/* attributes = */ nullptr
 	);
@@ -198,6 +200,7 @@ bool Light::attributes( const IECoreScenePreview::Renderer::AttributesInterface 
 		m_lightInstance,
 		/* material = */ material ? &material->id() : nullptr,
 		/* light shader = */ &m_lightShader,
+		/* coordinateSystems = */ nullptr,
 		/* xform = */ nullptr,
 		&renderManAttributes->instanceAttributes()
 	);
@@ -232,6 +235,6 @@ void Light::updateLightShader( const Attributes *attributes )
 	if( attributes->lightShader() )
 	{
 		std::vector<riley::ShadingNode> nodes = ShaderNetworkAlgo::convert( attributes->lightShader() );
-		m_lightShader = m_session->createLightShader( { (uint32_t)nodes.size(), nodes.data() } );
+		m_lightShader = m_session->createLightShader( { (uint32_t)nodes.size(), nodes.data() }, { 0, nullptr } );
 	}
 }
