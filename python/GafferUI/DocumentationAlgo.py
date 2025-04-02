@@ -80,6 +80,9 @@ def exportNodeReference( directory, modules = [], modulePath = "" ) :
 			except :
 				continue
 
+			if name.startswith( "_" ) :
+				continue
+
 			if not node.__module__.startswith( module.__name__ + "." ) :
 				# Skip nodes which look like they've been injected from
 				# another module by one of the compatibility config files.
