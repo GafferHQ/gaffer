@@ -65,6 +65,7 @@ _rendererAttributePrefixes = {
 	"gl" : "OpenGL",
 	"osl" : "OSL",
 	"cycles" : "Cycles",
+	"ri" : "RenderMan",
 	"" : "USD",
 };
 
