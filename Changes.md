@@ -27,6 +27,11 @@ API
 
 - Light : Added `attributes` plug.
 
+Documentation
+-------------
+
+- RenderMan : Added GafferRenderMan to the node reference section.
+
 1.5.9.0 (relative to 1.5.8.0)
 =======
 
