@@ -1,7 +1,10 @@
 1.5.x.x (relative to 1.5.10.0)
 =======
 
+Fixes
+-----
 
+- 3Delight : Fixed rendering of `dlToon` outlines for `Beauty` and `Outlines` outputs.
 
 1.5.10.0 (relative to 1.5.9.0)
 ========
