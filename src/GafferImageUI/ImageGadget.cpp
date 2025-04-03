@@ -82,7 +82,7 @@ using namespace GafferUI;
 using namespace GafferImage;
 using namespace GafferImageUI;
 
-// TODO - copied from GafferSceneUI::OutputBuffer
+// NOTE : Copied from GafferSceneUI::OutputBuffer, would be nice if it was somewhere central.
 class GafferImageUI::ImageGadget::BufferTexture
 {
 	public :
@@ -366,7 +366,7 @@ class TileShaderSelectedIds
 		struct ScopedBinding : PushAttrib
 		{
 
-			ScopedBinding( const TileShaderSelectedIds &tileShader, ImageGadget::BufferTexture *ids, uint32_t highlightId )
+			ScopedBinding( const TileShaderSelectedIds &tileShader, GLuint idsTexture, uint32_t highlightId )
 				:	PushAttrib( GL_COLOR_BUFFER_BIT ), m_tileShader( tileShader )
 			{
 				glGetIntegerv( GL_CURRENT_PROGRAM, &m_previousProgram );
@@ -380,7 +380,7 @@ class TileShaderSelectedIds
 				glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
 
 				glActiveTexture( GL_TEXTURE0 + tileShader.m_selectionTextureUnit );
-				glBindTexture( GL_TEXTURE_BUFFER, ids->texture() );
+				glBindTexture( GL_TEXTURE_BUFFER, idsTexture );
 				glUniform1i( tileShader.m_shader->uniformParameter( "selectionTexture" )->location, tileShader.m_selectionTextureUnit );
 
 				glUniform1ui( tileShader.m_shader->uniformParameter( "highlightId" )->location, highlightId );
@@ -1278,7 +1278,7 @@ void ImageGadget::renderTiles( bool ids ) const
 
 		shaderBinding.emplace<TileShaderSelectedIds::ScopedBinding>(
 			*tileShaderSelectedIds(),
-			m_selectedIdsBuffer.get(),
+			m_selectedIdsBuffer->texture(),
 			m_highlightId
 		);
 
