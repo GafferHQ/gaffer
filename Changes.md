@@ -21,6 +21,7 @@ Fixes
 - RenderMan :
   - Fixed interactive denoiser configuration.
   - Fixed bug preventing startup files from being loaded from versioned GafferRenderMan modules.
+  - Fixed GraphEditor representation of PxrUnified. The plugs are no longer visible.
 - RenderPasses : Fixed custom widget registration via `GafferSceneUI.RenderPassesUI.registerRenderPassNameWidget()`.
 - Metadata : Fixed fallback to less specific registrations when a metadata override returns `None`.
 
