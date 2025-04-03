@@ -175,10 +175,6 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 
 		void setHighlightId( uint32_t id );
 
-		// Copied from GafferSceneUI/Private/OutputBuffer.h
-		// TODO : Currently public so it can be accessed from TileShaderSelectedIds::ScopedBinding
-		class BufferTexture;
-
 	protected :
 
 		void renderLayer( Layer layer, const GafferUI::Style *style, RenderReason reason ) const override;
@@ -343,6 +339,8 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		BlendMode m_blendMode;
 
 		std::vector<uint32_t> m_selectedIds;
+
+		class BufferTexture;
 
 		mutable std::unique_ptr<BufferTexture> m_selectedIdsBuffer;
 		uint32_t m_highlightId;
