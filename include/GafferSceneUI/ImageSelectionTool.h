@@ -92,8 +92,6 @@ class GAFFERSCENEUI_API ImageSelectionTool : public GafferUI::Tool
 
 		uint32_t sampleId( const Imath::V2f &pixel );
 
-		// TODO
-		//std::vector<uint32_t> m_ids;
 		void selectedPathsChanged();
 
 		void updateSelection();
