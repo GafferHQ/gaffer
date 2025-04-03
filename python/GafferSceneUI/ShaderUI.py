@@ -142,6 +142,7 @@ Gaffer.Metadata.registerNode(
 
 		"parameters.*" : [
 
+			"nodule:type", functools.partial( __parameterMetadata, key = "nodule:type" ),
 			"noduleLayout:visible", functools.partial( __parameterMetadata, key = "noduleLayout:visible", shaderFallbackKey = "noduleLayout:defaultVisibility" ),
 
 		],

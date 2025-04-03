@@ -1410,6 +1410,36 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.targetsWithMetadata( "target*", "k1" ), [ "target1", "targetA" ] )
 		self.assertEqual( Gaffer.Metadata.targetsWithMetadata( "*", "k3" ), [ "target2" ] )
 
+	def testFallbackFromOverrideReturningNone( self ) :
+
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "op1", "test", lambda plug : "fallback" )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, GafferTest.AddNode, "op1", "test" )
+
+		node = self.DerivedAddNode()
+		self.assertEqual( Gaffer.Metadata.value( node["op1"], "test" ), "fallback" )
+
+		Gaffer.Metadata.registerValue( self.DerivedAddNode, "op1", "test", lambda plug : "override" )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, self.DerivedAddNode, "op1", "test" )
+		self.assertEqual( Gaffer.Metadata.value( node["op1"], "test" ), "override" )
+
+		Gaffer.Metadata.registerValue( self.DerivedAddNode, "op1", "test", lambda plug : None )
+		self.assertEqual( Gaffer.Metadata.value( node["op1"], "test" ), "fallback" )
+
+	def testFallbackToWildcard( self ) :
+
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "*", "test", lambda plug : "fallback" )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, GafferTest.AddNode, "*", "test" )
+
+		node = self.DerivedAddNode()
+		self.assertEqual( Gaffer.Metadata.value( node["op1"], "test" ), "fallback" )
+
+		Gaffer.Metadata.registerValue( self.DerivedAddNode, "op1", "test", lambda plug : "override" )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, self.DerivedAddNode, "op1", "test" )
+		self.assertEqual( Gaffer.Metadata.value( node["op1"], "test" ), "override" )
+
+		Gaffer.Metadata.registerValue( self.DerivedAddNode, "op1", "test", lambda plug : None )
+		self.assertEqual( Gaffer.Metadata.value( node["op1"], "test" ), "fallback" )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )
