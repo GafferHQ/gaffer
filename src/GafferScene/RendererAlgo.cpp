@@ -140,19 +140,6 @@ RenderOptions::RenderOptions( const ScenePlug *scene )
 
 	const StringVectorData *includedPurposesData = globals->member<StringVectorData>( g_includedPurposesOptionName );
 	includedPurposes = includedPurposesData ? includedPurposesData : g_defaultIncludedPurposes;
-
-	const StringData *idManifestFilePathData = globals->member<StringData>( g_idManifestFilePathOptionName );
-	if( idManifestFilePathData && idManifestFilePathData->readable() != "" )
-	{
-		idManifestFilePath = idManifestFilePathData->readable();
-
-		// We are just going to treat this as an id, but I'm not sure what we would put in here other than the
-		// current time ... so there's probably no reason to hash this if there's only one source anyway, might
-		// as well just use the current time in milliseconds
-
-		// ( Discarding everything but the last 32 bits because Arnold can't write int64s to the header )
-		idManifestIdentifier = (int32_t)( std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() );
-	}
 }
 
 bool RenderOptions::operator==( const RenderOptions &other ) const
@@ -235,6 +222,17 @@ void RenderOptions::outputOptions( IECoreScenePreview::Renderer *renderer, const
 			}
 		}
 	}
+}
+
+std::string RenderOptions::idManifestFilePath() const
+{
+	const StringData *idManifestFilePathData = globals->member<StringData>( g_idManifestFilePathOptionName );
+	if( !idManifestFilePathData )
+	{
+		return "";
+	}
+
+	return idManifestFilePathData->readable();
 }
 
 } // namespace GafferScene::Private::RendererAlgo
@@ -1690,11 +1688,10 @@ ConstOutputPtr addGafferOutputParameters( const Output *output, const ScenePlug 
 	// Include the path to the render node to allow tools to back-track from the image
 	param->writable()["header:gaffer:sourceScene"] = new StringData( scene->relativeName( script ) );
 
-	if( renderOptions.idManifestFilePath != "" && outputUsesId( output ) )
+	if( renderOptions.idManifestFilePath() != "" && outputUsesId( output ) )
 	{
 		// TODO - relativize
-		param->writable()["header:gaffer:idManifestFilePath"] = new StringData( renderOptions.idManifestFilePath );
-		param->writable()["header:gaffer:idManifestIdentifier"] = new IntData( renderOptions.idManifestIdentifier );
+		param->writable()["header:gaffer:idManifestFilePath"] = new StringData( renderOptions.idManifestFilePath() );
 	}
 
 	// Include the current context
@@ -1769,7 +1766,7 @@ void outputOutputs( const ScenePlug *scene, const RenderOptions &renderOptions, 
 		if( const Output *output = runTimeCast<Output>( it->second.get() ) )
 		{
 			bool changedOrAdded = true;
-			if( renderOptions.idManifestFilePath != "" && outputUsesId( output ) )
+			if( renderOptions.idManifestFilePath() != "" && outputUsesId( output ) )
 			{
 				// If we are writing an id manifest and this is an id AOV, we must always update this AOV
 				// ( it will always get a fresh manifest id )

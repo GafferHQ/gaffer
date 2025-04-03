@@ -79,14 +79,14 @@ struct GAFFERSCENE_API RenderOptions
 	bool deformationBlur;
 	Imath::V2f shutter;
 	IECore::ConstStringVectorDataPtr includedPurposes;
-	std::string idManifestFilePath;
 
-	// TODO
-	int32_t idManifestIdentifier;
 	/// Returns true if `includedPurposes` includes the purpose defined by
 	/// `attributes`.
 	bool purposeIncluded( const IECore::CompoundObject *attributes ) const;
 	void outputOptions( IECoreScenePreview::Renderer *renderer, const RenderOptions *previousOptions = nullptr );
+
+	// Returns a manifest file path if it's set, otherwise empty string
+	std::string idManifestFilePath() const;
 };
 
 /// Creates the directories necessary to receive the outputs defined in globals.
