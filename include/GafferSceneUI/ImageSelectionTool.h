@@ -112,7 +112,8 @@ class GAFFERSCENEUI_API ImageSelectionTool : public GafferUI::Tool
 		const GafferScene::RenderManifest *m_renderManifest;
 		GafferScene::RenderManifest m_renderManifestStorage;
 		std::string m_sideCarManifestPath;
-		int m_sideCarManifestIdentifier;
+		std::filesystem::file_time_type m_sideCarManifestModTime;
+		bool m_sideCarManifestModTimeDirty;
 
 		std::string m_status;
 		StatusChangedSignal m_statusChangedSignal;

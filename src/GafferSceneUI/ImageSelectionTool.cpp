@@ -64,39 +64,6 @@ using namespace GafferSceneUI;
 using namespace GafferImage;
 using namespace GafferImageUI;
 
-namespace {
-
-std::pair< std::string, int > findSideCarMetadata( const ImagePlug *image )
-{
-	std::string resultPath;
-	std::string resultIdentifier;
-	ConstStringVectorDataPtr views = image->viewNames();
-
-	for( const std::string &view : views->readable() )
-	{
-		GafferImage::ImagePlug::ViewScope viewScope( Context::current() );
-		viewScope.setViewName( &view );
-		ConstCompoundDataPtr metadata = image->metadata();
-		const StringData *filePathData = metadata->member<StringData>( "gaffer:idManifestFilePath" );
-		if( filePathData )
-		{
-			int identifier = 0;
-
-			const IntData *identifierData = metadata->member<IntData>( "gaffer:idManifestIdentifier" );
-			if( identifierData )
-			{
-				identifier = identifierData->readable();
-			}
-
-			return std::make_pair( filePathData->readable(), identifier );
-		}
-	}
-
-	return std::make_pair( "", 0 );
-}
-
-} // namespace
-
 //////////////////////////////////////////////////////////////////////////
 // ImageSelectionTool implementation
 //////////////////////////////////////////////////////////////////////////
@@ -107,7 +74,7 @@ size_t ImageSelectionTool::g_firstPlugIndex = 0;
 ImageSelectionTool::ToolDescription<ImageSelectionTool, ImageView> ImageSelectionTool::g_imageToolDescription;
 
 ImageSelectionTool::ImageSelectionTool( View *view, const std::string &name )
-	:	Tool( view, name ), m_renderManifestStorage()
+	:	Tool( view, name ), m_renderManifestStorage(), m_sideCarManifestModTimeDirty( true )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ImagePlug( "__image", Plug::In ) );
@@ -179,7 +146,11 @@ void ImageSelectionTool::plugDirtied( const Gaffer::Plug *plug )
 {
 	if( plug == imagePlug()->metadataPlug() )
 	{
-		// TODO - probably need to respond to this by updating the manifest ( and corresponding ids ) if necessary
+		// We use this dirty signal in a somewhat unconventional way : we don't actually care about whether
+		// the metadata has changed, but we assume that if the input image is modified, it will trigger this
+		// signal. That gives us a cue that we need to recheck the manifest - even if none of the metadata
+		// has changed, if the image was rewritten, the manifest might have been rewritten as well.
+		m_sideCarManifestModTimeDirty = true;
 	}
 }
 
@@ -254,7 +225,17 @@ void ImageSelectionTool::updateRenderManifest( std::string &message )
 		}
 	}
 
-	const auto& [ sideCarManifestPath, sideCarManifestIdentifier ] = findSideCarMetadata( image );
+	std::string sideCarManifestPath;
+	for( const std::string &view : image->viewNames()->readable() )
+	{
+		ConstCompoundDataPtr metadata = image->metadata( &view );
+		const StringData *filePathData = metadata->member<StringData>( "gaffer:idManifestFilePath" );
+		if( filePathData )
+		{
+			sideCarManifestPath = filePathData->readable();
+			break;
+		}
+	}
 
 	if( sideCarManifestPath == "" )
 	{
@@ -262,7 +243,18 @@ void ImageSelectionTool::updateRenderManifest( std::string &message )
 		return;
 	}
 
-	if( m_sideCarManifestPath == sideCarManifestPath && m_sideCarManifestIdentifier == sideCarManifestIdentifier )
+
+	std::filesystem::file_time_type currentModTime;
+	if( m_sideCarManifestPath == sideCarManifestPath && !m_sideCarManifestModTimeDirty )
+	{
+		currentModTime = m_sideCarManifestModTime;
+	}
+	else
+	{
+		currentModTime = std::filesystem::last_write_time( sideCarManifestPath );
+	}
+
+	if( m_sideCarManifestPath == sideCarManifestPath && m_sideCarManifestModTime == currentModTime )
 	{
 		// We're using a manifest file, and it hasn't changed since we last updated m_renderManifestStorage
 		m_renderManifest = &m_renderManifestStorage;
@@ -282,7 +274,8 @@ void ImageSelectionTool::updateRenderManifest( std::string &message )
 	m_renderManifest = &m_renderManifestStorage;
 
 	m_sideCarManifestPath = sideCarManifestPath;
-	m_sideCarManifestIdentifier = sideCarManifestIdentifier;
+	m_sideCarManifestModTime = currentModTime;
+	m_sideCarManifestModTimeDirty = false;
 }
 
 void ImageSelectionTool::preRender()
