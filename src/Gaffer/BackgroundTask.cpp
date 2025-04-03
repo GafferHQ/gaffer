@@ -86,6 +86,20 @@ const ScriptNode *scriptNode( const GraphComponent *subject )
 	// graph.
 	if( auto p = runTimeCast<const Plug>( subject ) )
 	{
+		if( !p->node() )
+		{
+			// FOR DISCUSSION: If this plug isn't attached to a node, it's probably not participating
+			// in a compute, and we don't need to worry about cancelling anything?
+			//
+			// One common case where this could happen is if this plug has already been detached from
+			// a node during its destructor ( in which case we definitely don't want to cancel things ).
+			//
+			// I'm not sure about other possibilities though - could you ever have the input to a
+			// compute node be a free-floating plug? Then if you changed the input to that free floating
+			// plug, you would want to cancel things?
+			return nullptr;
+		}
+
 		if( auto s = scriptNode( p->getInput() ) )
 		{
 			return s;
