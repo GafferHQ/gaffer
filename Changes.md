@@ -14,6 +14,7 @@ Improvements
 - 3Delight, Cycles, OpenGL : Added support for custom EXR metadata, using `header:*` parameters on the output definition.
 - RenderManAttributes, RenderManOptions : Plugs now respect minimum and maximum values specified by RenderMan.
 - Cycles : Added support for `layerName` parameter in outputs, to control the naming of channels in EXR outputs.
+- StandardOptions : Added render manifest option.
 
 Fixes
 -----
