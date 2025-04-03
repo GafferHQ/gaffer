@@ -22,6 +22,7 @@ Fixes
   - Fixed interactive denoiser configuration.
   - Fixed bug preventing startup files from being loaded from versioned GafferRenderMan modules.
 - RenderPasses : Fixed custom widget registration via `GafferSceneUI.RenderPassesUI.registerRenderPassNameWidget()`.
+- ScriptNodeAlgo : Fixed potential crash during shutdown.
 
 API
 ---
