@@ -13,6 +13,7 @@ Improvements
   - Added warning when GafferRenderMan is not available for current RenderMan version.
   - An empty `RMANTREE` variable now disables GafferRenderMan startup, instead of emitting a warning.
 - Viewer : Added support for RenderMan lights in the floating inspector panel.
+- RenderManLight : Added plug to control the camera visibility of the light. This defaults on to match the RenderMan defaults, but can be configured to default off with `Gaffer.Metadata.registerValue( GafferRenderMan.RenderManLight, "attributes.ri:visibility:camera.value", "userDefault", 0 )`.
 
 Fixes
 -----
@@ -20,7 +21,6 @@ Fixes
 - RenderMan :
   - Fixed interactive denoiser configuration.
   - Fixed bug preventing startup files from being loaded from versioned GafferRenderMan modules.
-- RenderManLight : Added plug to control the camera visibility of the light. This defaults on to match the RenderMan defaults, but can be configured to default off with `Gaffer.Metadata.registerValue( GafferRenderMan.RenderManLight, "attributes.ri:visibility:camera.value", "userDefault", 0 )`.
 - RenderPasses : Fixed custom widget registration via `GafferSceneUI.RenderPassesUI.registerRenderPassNameWidget()`.
 
 API
