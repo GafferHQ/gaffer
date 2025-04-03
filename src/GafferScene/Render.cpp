@@ -386,11 +386,11 @@ void Render::executeInternal( bool flushCaches ) const
 		GafferScene::Private::RendererAlgo::outputLightFilters( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
 		lightLinks.outputLightFilterLinks( adaptedInPlug() );
 
-		if( renderOptions.idManifestFilePath != "" )
+		if( renderOptions.idManifestFilePath() != "" )
 		{
 			GafferScene::RenderManifest renderManifest;
 			GafferScene::Private::RendererAlgo::outputObjects( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get(), ScenePlug::ScenePath(), &renderManifest );
-			renderManifest.writeEXRManifest( renderOptions.idManifestFilePath );
+			renderManifest.writeEXRManifest( renderOptions.idManifestFilePath() );
 		}
 		else
 		{
