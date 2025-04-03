@@ -269,7 +269,7 @@ class DelightOutput : public IECore::RefCounted
 			ParameterList driverParams;
 			for( const auto &[parameterName, parameterValue] : output->parameters() )
 			{
-				if( parameterName != "filter" && parameterName != "filterwidth" && parameterName != "scalarformat" && parameterName != "colorprofile" && parameterName != "layername" && parameterName != "layerName" && parameterName != "withalpha" )
+				if( parameterName != "filter" && parameterName != "filterwidth" && parameterName != "scalarformat" && parameterName != "colorprofile" && parameterName != "layername" && parameterName != "layerName" && parameterName != "withalpha" && parameterName != "drawoutlines" )
 				{
 					driverParams.add( parameterName.c_str(), parameterValue.get() );
 				}
@@ -380,6 +380,14 @@ class DelightOutput : public IECore::RefCounted
 			layerParams.add( "layertype", layerType );
 			layerParams.add( "layername", layerName );
 			layerParams.add( { "withalpha", &withAlpha, NSITypeInteger, 0, 1, 0 } );
+
+			const int drawOutlines = 1;
+			if( variableName == "Ci" || variableName == "outlines" )
+			{
+				// Enable toon outlines for these outputs by default. This can
+				// still be overridden by an explicit parameter added to the output.
+				layerParams.add( { "drawoutlines", &drawOutlines, NSITypeInteger, 0, 1, 0 } );
+			}
 
 			scalarFormat = parameter<string>( output->parameters(), "scalarformat", scalarFormat );
 			string colorProfile = parameter<string>( output->parameters(), "colorprofile", "linear" );
