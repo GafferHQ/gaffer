@@ -151,5 +151,36 @@ class EditorTest( GafferUITest.TestCase ) :
 		# waiting on itself would never finish.
 		task.wait()
 
+	def testIssue5877Variant( self ) :
+
+		# Slightly more complex variant of `testIssue5877` above.
+
+		script = Gaffer.ScriptNode()
+		script["node"] = GafferTest.MultiplyNode()
+
+		class TestEditor( GafferUI.Editor ) :
+
+			def __init__( self, scriptNode, **kw ) :
+
+				GafferUI.Editor.__init__( self, GafferUI.Label( "MyEditor" ), scriptNode )
+
+		editor = TestEditor( script )
+		self.assertIsInstance( editor.settings(), TestEditor.Settings )
+
+		# This time there are connections from the script into additional plugs
+		# on the node. This models things like the ScenePlug input for SceneEditor.
+		editor.settings()["in"] = Gaffer.IntPlug()
+		editor.settings()["in"].setInput( script["node"]["product"] )
+
+		del editor
+
+		def f( canceller ) :
+
+			script["node"]["product"].getValue()
+			IECore.RefCounted.collectGarbage()
+
+		task = Gaffer.BackgroundTask( script["node"]["product"], f )
+		task.wait()
+
 if __name__ == "__main__":
 	unittest.main()
