@@ -83,6 +83,11 @@ StandardOptions::StandardOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "render:shutter", new IECore::V2fData( Imath::V2f( -0.25, 0.25 ) ), false, "shutter" ) );
 	options->addChild( new Gaffer::NameValuePlug( "sampleMotion", new IECore::BoolData( true ), false, "sampleMotion" ) );
 
+	// Id Manifest
+
+	options->addChild( new Gaffer::NameValuePlug( "render:idManifestFilePath", new IECore::StringData( "" ), false, "idManifestFilePath" ) );
+
+
 	// Statistics
 
 	options->addChild( new Gaffer::NameValuePlug( "render:performanceMonitor", new IECore::BoolData( false ), false, "performanceMonitor" ) );
