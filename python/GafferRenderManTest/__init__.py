@@ -47,6 +47,7 @@ from .RenderManRenderTest import RenderManRenderTest
 from .InteractiveRenderManRenderTest import InteractiveRenderManRenderTest
 from .RenderPassAdaptorTest import RenderPassAdaptorTest
 from .RenderManLightFilterTest import RenderManLightFilterTest
+from .StylizedAOVAdaptorTest import StylizedAOVAdaptorTest
 
 if __name__ == "__main__":
 	import unittest

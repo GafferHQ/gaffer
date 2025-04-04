@@ -1,7 +1,10 @@
 1.5.x.x (relative to 1.5.10.0)
 =======
 
+Improvements
+------------
 
+- RenderMan : Stylized Looks no longer require manual AOV setup. The relevant AOVs are added automatically whenever a stylized display filter is present.
 
 1.5.10.0 (relative to 1.5.9.0)
 ========
