@@ -1688,10 +1688,14 @@ ConstOutputPtr addGafferOutputParameters( const Output *output, const ScenePlug 
 	// Include the path to the render node to allow tools to back-track from the image
 	param->writable()["header:gaffer:sourceScene"] = new StringData( scene->relativeName( script ) );
 
+	// TODO - output for all AOVs? So it doesn't matter which one you take metadata from?
 	if( renderOptions.idManifestFilePath() != "" && outputUsesId( output ) )
 	{
-		// TODO - relativize
-		param->writable()["header:gaffer:idManifestFilePath"] = new StringData( renderOptions.idManifestFilePath() );
+		std::string relativePath = std::filesystem::relative(
+			std::filesystem::path( renderOptions.idManifestFilePath() ),
+			std::filesystem::path( output->getName() ).parent_path()
+		).generic_string();
+		param->writable()["header:gaffer:idManifestFilePath"] = new StringData( relativePath );
 	}
 
 	// Include the current context
