@@ -105,6 +105,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 			"screenWindowWidth" : IECore.FloatData( 1 ),
 			"fileFormat" : IECore.StringData( "openexr" ),
 			"dataType" : IECore.StringData( "float" ),
+			"filePath" : IECore.StringData( str( self.fileName ) ),
 		} )
 
 		self.assertEqual( n["out"]["metadata"].getValue(), expectedMetadata )

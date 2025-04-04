@@ -1273,6 +1273,7 @@ ImageSpec createImageSpec( const ImageWriter *node, const ImageOutput *out, cons
 	metadata->writable().erase( "oiio:Gamma" );
 	metadata->writable().erase( "oiio:UnassociatedAlpha" );
 	metadata->writable().erase( "fileFormat" );
+	metadata->writable().erase( "filePath" );
 	// Including fileValid is technically redundant here - it is usually a BoolData, and
 	// IECoreImage::OpenImageIOAlgo::DataView fails to support bools. But we keep this erase()
 	// for a hypothetical future where bools might be supported.
