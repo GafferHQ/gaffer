@@ -775,8 +775,8 @@ class File
 	public:
 
 		// Create a File handle object for an image input and image spec
-		File( std::unique_ptr<ImageInput> imageInput, const std::string &infoFileName, ImageReader::ChannelInterpretation channelNaming )
-			: m_imageInput( std::move( imageInput ) )
+		File( std::unique_ptr<ImageInput> imageInput, const std::string &filePath, ImageReader::ChannelInterpretation channelNaming )
+			: m_imageInput( std::move( imageInput ) ), m_filePath( filePath )
 		{
 			m_viewNamesData = new StringVectorData();
 			auto &viewNames = m_viewNamesData->writable();
@@ -794,7 +794,7 @@ class File
 
 				if( currentSpec.depth != 1 )
 				{
-					throw IECore::Exception( "OpenImageIOReader : " + infoFileName + " : GafferImage does not support 3D pixel arrays " );
+					throw IECore::Exception( "OpenImageIOReader : " + filePath + " : GafferImage does not support 3D pixel arrays " );
 				}
 
 				std::string viewName = currentSpec.get_string_attribute( "view", "" );
@@ -810,7 +810,7 @@ class File
 								IECore::Msg::Warning, "OpenImageIOReader",
 								fmt::format(
 									"Ignoring invalid \"multiView\" attribute in \"{}\".",
-									infoFileName
+									filePath
 								)
 							);
 						}
@@ -859,7 +859,7 @@ class File
 								IECore::Msg::Warning, "OpenImageIOReader",
 								fmt::format(
 									"Ignoring subimage {} of \"{}\" because we only support one part per view for deep images.",
-									subImageIndex, infoFileName
+									subImageIndex, filePath
 								)
 							);
 
@@ -968,7 +968,7 @@ class File
 					{
 						std::string m = fmt::format(
 							"Ignoring channel \"{}\" in subimage \"{}\" of \"{}\" because it's already in subimage \"{}\"",
-							channelName, subImageIndex, infoFileName, mapEntry->second.subImage
+							channelName, subImageIndex, filePath, mapEntry->second.subImage
 						);
 						if( viewName != "" )
 						{
@@ -1550,6 +1550,11 @@ class File
 			return m_imageInput->format_name();
 		}
 
+		const std::string &filePath() const
+		{
+			return m_filePath;
+		}
+
 		ConstStringVectorDataPtr channelNamesData( const Context *c )
 		{
 			return lookupView( c ).channelNamesData;
@@ -1685,6 +1690,7 @@ class File
 		}
 
 		std::unique_ptr<ImageInput> m_imageInput;
+		std::string m_filePath;
 		StringVectorDataPtr m_viewNamesData;
 		std::map<std::string, std::unique_ptr< View > > m_views;
 };
@@ -2182,6 +2188,8 @@ IECore::ConstCompoundDataPtr OpenImageIOReader::computeMetadata( const Gaffer::C
 
 	// Add file format
 	result->writable()["fileFormat"] = new StringData( file->formatName() );
+
+	result->writable()["filePath"] = new StringData( file->filePath() );
 
 	// Add on any custom metadata provided by the file format
 
