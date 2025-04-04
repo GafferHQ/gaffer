@@ -41,6 +41,30 @@ import GafferUI
 
 import GafferScene
 
+def __parameterUserDefault( plug ) :
+
+	lightFilter = plug.node()
+	result = Gaffer.Metadata.value(
+		"{}:{}:{}".format(
+			lightFilter["__shader"]["type"].getValue(),
+			lightFilter["__shader"]["name"].getValue(),
+			plug.relativeName( lightFilter["parameters"] )
+		),
+		"userDefault"
+	)
+	if result is None :
+		# \todo Remove this fallback when the `filter` suffix is removed
+		# from `GafferScene::LightFilter` internal shader.
+		result = Gaffer.Metadata.value(
+			"{}:filter:{}:{}".format(
+				lightFilter["__shader"]["type"].getValue(),
+				lightFilter["__shader"]["name"].getValue(),
+				plug.relativeName( lightFilter["parameters"] )
+			),
+			"userDefault"
+		)
+	return result
+
 Gaffer.Metadata.registerNode(
 
 	GafferScene.LightFilter,
@@ -101,6 +125,12 @@ Gaffer.Metadata.registerNode(
 			# individually.
 			"noduleLayout:section", "left",
 			"nodule:type", "",
+
+		],
+
+		"parameters..." : [
+
+			"userDefault", __parameterUserDefault,
 
 		],
 

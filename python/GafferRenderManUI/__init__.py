@@ -34,6 +34,21 @@
 #
 ##########################################################################
 
+import ctypes
+import platform
+
+# There is no `GafferRenderManUI` Python module, so we load the root module
+# manually in order to register the light filter visualisers.
+
+prefix, suffix = {
+	"Darwin" : ( "lib", ".dylib" ),
+	"Windows" : ( "", ".dll" ),
+}.get( platform.system(), ( "lib", ".so" ) )
+
+ctypes.CDLL( f"{prefix}GafferRenderManUI{suffix}" )
+
+del ctypes, platform
+
 __import__( "GafferSceneUI" )
 
 from . import RenderManAttributesUI

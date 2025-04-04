@@ -86,6 +86,8 @@ void LightFilter::loadShader( const std::string &shaderName, bool keepExistingVa
 	/// but historically we had one, so for now we are preserving that behaviour
 	/// for all but the new RenderManLightFilter. We should remove the suffix
 	/// and update the Arnold backend to use `ai:lightFilter` attributes directly.
+	/// We should also remove the fallback check for the "filter" suffix in
+	/// `LightFilterUI.py`.
 	if( strcmp( typeName(), "GafferRenderMan::RenderManLightFilter" ) )
 	{
 		shaderNode()->attributeSuffixPlug()->setValue( "filter" );
