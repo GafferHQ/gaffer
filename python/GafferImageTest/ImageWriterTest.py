@@ -533,7 +533,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			for metaName in expectedMetadata.keys() :
 				if metaName in metadataToIgnore :
 					continue
-				if metaName in ( "fileFormat", "dataType" ) :
+				if metaName in ( "filePath", "fileFormat", "dataType" ) :
 					# These are added on automatically by the ImageReader, and
 					# we can't expect them to be the same when converting between
 					# image formats.
@@ -831,6 +831,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		expectedMetadata["Artist"] = IECore.StringData( os.environ.get("USER") or os.environ["USERNAME"] ) #Linux or windows
 		expectedMetadata["DocumentName"] = IECore.StringData( "untitled" )
 		expectedMetadata["fileFormat"] = regularReaderMetadata["fileFormat"]
+		expectedMetadata["filePath"] = IECore.StringData( regularReaderMetadata["filePath"].value.replace( "regularMetadata", "misleadingMetadata" ) )
 		expectedMetadata["dataType"] = regularReaderMetadata["dataType"]
 
 		self.__addExpectedIPTCMetadata( regularReaderMetadata, expectedMetadata )
@@ -859,6 +860,8 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			if metaName == "DateTime" :
 				dateTimeDiff = datetime.datetime.strptime( str( regularReaderMetadata[metaName] ), "%Y:%m:%d %H:%M:%S" ) - datetime.datetime.strptime( str( misledReaderMetadata[metaName] ), "%Y:%m:%d %H:%M:%S" )
 				self.assertLessEqual( abs( dateTimeDiff ), datetime.timedelta( seconds=1 ) )
+			elif metaName == "filePath" :
+				pass # The file paths are different
 			else :
 				self.assertEqual( regularReaderMetadata[metaName], misledReaderMetadata[metaName], "Metadata does not match for key \"{}\" : {}".format(metaName, ext) )
 

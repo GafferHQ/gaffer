@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.12.0)
 =======
 
+Improvements
+------------
+
+- ImageReader : Automatically set "filePath" metadata when reading images, making it easier to determine the path an image was loaded from.
+
 Fixes
 -----
 

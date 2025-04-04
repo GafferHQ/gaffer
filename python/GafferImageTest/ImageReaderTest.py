@@ -1026,7 +1026,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		expectedReader["fileName"].setValue( self.imagesPath() / "rgb.100x100.exr" )
 
 		with IECore.CapturingMessageHandler() as mh :
-			self.assertImagesEqual( reader["out"], expectedReader["out"], metadataBlacklist = [ "DateTime" ] )
+			self.assertImagesEqual( reader["out"], expectedReader["out"], metadataBlacklist = [ "DateTime", "filePath" ] )
 
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertIn( 'Ignoring invalid "multiView" attribute', mh.messages[0].message )
