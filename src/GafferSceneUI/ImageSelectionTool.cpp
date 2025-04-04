@@ -173,7 +173,6 @@ std::vector<uint32_t> ImageSelectionTool::idsForPaths( const IECore::PathMatcher
 	{
 		return std::vector<uint32_t>();
 	}
-	// TODO - skip checking leaves? TODO???
 
 	return m_renderManifest->idsForPaths( paths );
 }
@@ -229,10 +228,24 @@ void ImageSelectionTool::updateRenderManifest( std::string &message )
 	for( const std::string &view : image->viewNames()->readable() )
 	{
 		ConstCompoundDataPtr metadata = image->metadata( &view );
-		const StringData *filePathData = metadata->member<StringData>( "gaffer:idManifestFilePath" );
-		if( filePathData )
+		const StringData *manifestFilePathData = metadata->member<StringData>( "gaffer:idManifestFilePath" );
+		if( manifestFilePathData )
 		{
-			sideCarManifestPath = filePathData->readable();
+			std::filesystem::path rawManifestPath( manifestFilePathData->readable() );
+			if( rawManifestPath.is_absolute() )
+			{
+				sideCarManifestPath = rawManifestPath.generic_string();
+			}
+			else
+			{
+				const StringData *filePathData = metadata->member<StringData>( "filePath" );
+				if( !filePathData )
+				{
+					message = "Can't find \"filePath\" metadata to locate relative manifest path. It should have been set by the ImageReader.";
+					return;
+				}
+				sideCarManifestPath = ( std::filesystem::path( filePathData->readable() ).parent_path() / rawManifestPath ).generic_string();
+			}
 			break;
 		}
 	}
@@ -244,19 +257,30 @@ void ImageSelectionTool::updateRenderManifest( std::string &message )
 	}
 
 
-	std::filesystem::file_time_type currentModTime;
 	if( m_sideCarManifestPath == sideCarManifestPath && !m_sideCarManifestModTimeDirty )
 	{
-		currentModTime = m_sideCarManifestModTime;
+		// We're using a manifest file, and there's no reason to think it's changed since we last
+		// updated m_renderManifestStorage
+		m_renderManifest = &m_renderManifestStorage;
+		return;
 	}
-	else
+
+	// We've received a metadata update - we don't know whether it's changed anything, but we better
+	// a least check the mod time of the manifest.
+	std::filesystem::file_time_type currentModTime;
+	try
 	{
 		currentModTime = std::filesystem::last_write_time( sideCarManifestPath );
+	}
+	catch( std::exception &e )
+	{
+		message = std::string( "Could not find manifest file : " ) + sideCarManifestPath + " : " + e.what();
+		return;
 	}
 
 	if( m_sideCarManifestPath == sideCarManifestPath && m_sideCarManifestModTime == currentModTime )
 	{
-		// We're using a manifest file, and it hasn't changed since we last updated m_renderManifestStorage
+		// We're using a manifest file, and the timestamp hasn't changed since we last updated m_renderManifestStorage
 		m_renderManifest = &m_renderManifestStorage;
 		return;
 	}
