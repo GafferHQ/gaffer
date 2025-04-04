@@ -199,6 +199,13 @@ void RenderManifest::writeEXRManifest( const std::filesystem::path &filePath ) c
 		throw IECore::Exception( "Id manifest file path does not end in \".exr\": " + filePath.generic_string() );
 	}
 
+	if( !filePath.is_absolute() )
+	{
+		throw IECore::Exception( "Id manifest file path is not an absolute file path : " + filePath.generic_string() );
+	}
+
+	std::filesystem::create_directories( filePath.parent_path() );
+
 	Imf::IDManifest::ChannelGroupManifest idManifest;
 	// We're actually using this as a sidecar manifest ... there is no actual id pass in this exr. But if there
 	// were, we would call it "id".
