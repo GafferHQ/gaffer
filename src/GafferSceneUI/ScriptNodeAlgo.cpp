@@ -83,8 +83,11 @@ void contextChanged( IECore::InternedString variable, ScriptNode *script, Change
 
 ChangedSignals &changedSignals( ScriptNode *script )
 {
-	static std::unordered_map<const ScriptNode *, ChangedSignals> g_signals;
-	ChangedSignals &result = g_signals[script];
+	// Deliberately "leaking" map as it may contain Python slots which can't
+	// be destroyed during static destruction (because Python has already
+	// shut down at that point).
+	static std::unordered_map<const ScriptNode *, ChangedSignals> *g_signals = new std::unordered_map<const ScriptNode *, ChangedSignals>;
+	ChangedSignals &result = (*g_signals)[script];
 	if( !result.connection.connected() )
 	{
 		// Either we just made the signals, or an old ScriptNode
