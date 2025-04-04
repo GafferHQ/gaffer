@@ -39,5 +39,6 @@ __import__( "GafferScene" )
 from ._GafferRenderMan import *
 from . import ArgsFileAlgo
 from ._InteractiveDenoiserAdaptor import _InteractiveDenoiserAdaptor
+from ._StylizedAOVAdaptor import _StylizedAOVAdaptor
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferRenderMan" )
