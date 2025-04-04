@@ -184,8 +184,17 @@ PlugPtr acquireCompoundNumericParameter( const boost::property_tree::ptree &para
 	typedef typename ValueType::BaseType BaseType;
 
 	const ValueType defaultValue = parseCompoundNumericValue<ValueType>( parameter.get( "<xmlattr>.default", "0 0 0" ) );
-	const ValueType minValue( numeric_limits<BaseType>::min() );
-	const ValueType maxValue( numeric_limits<BaseType>::max() );
+
+	ValueType minValue( numeric_limits<BaseType>::lowest() );
+	if( auto m = parameter.get_optional<std::string>( "<xmlattr>.min" ) )
+	{
+		minValue = parseCompoundNumericValue<ValueType>( *m );
+	}
+	ValueType maxValue( numeric_limits<BaseType>::max() );
+	if( auto m = parameter.get_optional<std::string>( "<xmlattr>.max" ) )
+	{
+		maxValue = parseCompoundNumericValue<ValueType>( *m );
+	}
 
 	auto existingPlug = runTimeCast<PlugType>( candidatePlug );
 	if(
