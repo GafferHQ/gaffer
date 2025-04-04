@@ -191,5 +191,26 @@ class RenderManShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		surface["parameters"]["materialFront"].setInput( dielectric["out"]["bxdf_out"] )
 
+	def testMinAndMaxValues( self ) :
+
+		shader = GafferRenderMan.RenderManShader()
+		shader.loadShader( "PxrSurface" )
+
+		self.assertTrue( shader["parameters"]["diffuseGain"].hasMinValue() )
+		self.assertEqual( shader["parameters"]["diffuseGain"].minValue(), 0.0 )
+
+		self.assertFalse( shader["parameters"]["diffuseExponent"].hasMinValue() )
+		self.assertFalse( shader["parameters"]["diffuseExponent"].hasMaxValue() )
+		self.assertFalse( shader["parameters"]["diffuseColor"].hasMinValue() )
+		self.assertFalse( shader["parameters"]["diffuseColor"].hasMaxValue() )
+
+		shader.loadShader( "PxrDisney" )
+
+		self.assertTrue( shader["parameters"]["subsurfaceColor"].hasMinValue() )
+		self.assertEqual( shader["parameters"]["subsurfaceColor"].minValue(), imath.Color3f( 0 ) )
+
+		self.assertTrue( shader["parameters"]["subsurfaceColor"].hasMaxValue() )
+		self.assertEqual( shader["parameters"]["subsurfaceColor"].maxValue(), imath.Color3f( 1 ) )
+
 if __name__ == "__main__":
 	unittest.main()
