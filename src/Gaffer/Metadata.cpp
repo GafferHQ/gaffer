@@ -861,7 +861,7 @@ IECore::ConstDataPtr Metadata::valueInternal( const GraphComponent *target, IECo
 		{
 			const GraphComponent *ancestor = plug->parent();
 			vector<InternedString> plugPath( { plug->getName() } );
-			Metadata::PlugValueFunction valueFn;
+			ConstDataPtr value;
 			while( ancestor )
 			{
 				IECore::TypeId typeId = ancestor->typeId();
@@ -878,8 +878,10 @@ IECore::ConstDataPtr Metadata::valueInternal( const GraphComponent *target, IECo
 							auto vIt = it->second.find( key );
 							if( vIt != it->second.end() )
 							{
-								valueFn = vIt->second;
-								break;
+								if( value = vIt->second( plug ) )
+								{
+									break;
+								}
 							}
 						}
 
@@ -892,13 +894,15 @@ IECore::ConstDataPtr Metadata::valueInternal( const GraphComponent *target, IECo
 								auto vIt = it->second.find( key );
 								if( vIt != it->second.end() )
 								{
-									valueFn = vIt->second;
-									break;
+									if( value = vIt->second( plug ) )
+									{
+										break;
+									}
 								}
 							}
 						}
 
-						if( valueFn != nullptr )
+						if( value )
 						{
 							break;
 						}
@@ -910,9 +914,9 @@ IECore::ConstDataPtr Metadata::valueInternal( const GraphComponent *target, IECo
 				ancestor = ancestor->parent();
 			}
 
-			if( valueFn != nullptr )
+			if( value )
 			{
-				return valueFn( plug );
+				return value;
 			}
 		}
 	}
