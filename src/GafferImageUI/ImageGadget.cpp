@@ -462,28 +462,10 @@ layout( location=0 ) out vec4 outColor;
 
 void main()
 {
-	vec2 pixelWidth = vec2( dFdx( gl_TexCoord[0].x ), dFdy( gl_TexCoord[0].y ) );
-	vec2 offset = pixelWidth * 4.0;
 	uint id = texture( idTexture, gl_TexCoord[0].xy ).r;
-	bool edge = false;
 	bool selected = contains( selectionTexture, id );
 	bool highlighted = highlightId != 0u && id == highlightId;
-	outColor = vec4( 0 );
-	if( selected || highlighted )
-	{
-		edge = edge || id != texture( idTexture, gl_TexCoord[0].xy + offset * vec2( 1, 0 ) ).r;
-		edge = edge || id != texture( idTexture, gl_TexCoord[0].xy + offset * vec2( -1, 0 ) ).r;
-		edge = edge || id != texture( idTexture, gl_TexCoord[0].xy + offset * vec2( 0, 1 ) ).r;
-		edge = edge || id != texture( idTexture, gl_TexCoord[0].xy + offset * vec2( 0, -1 ) ).r;
-
-		float n = 1.0 / sqrt( 2.0 );
-		edge = edge || id != texture( idTexture, gl_TexCoord[0].xy + offset * vec2( n, n ) ).r;
-		edge = edge || id != texture( idTexture, gl_TexCoord[0].xy + offset * vec2( -n, n ) ).r;
-		edge = edge || id != texture( idTexture, gl_TexCoord[0].xy + offset * vec2( n, -n ) ).r;
-		edge = edge || id != texture( idTexture, gl_TexCoord[0].xy + offset * vec2( -n, -n ) ).r;
-
-		outColor = ( highlighted ? vec4( 0.8, 0.9, 1.0, 1.0 ) : vec4( 0.54, 0.72, 0.87, 1.0 ) ) * ( edge ? 1.0 : 0.3 );
-	}
+	outColor = vec4( float( selected ), float( highlighted ), 0.0, 0.0 );
 }
 )";
 			}
@@ -1380,7 +1362,7 @@ void ImageGadget::renderText( const std::string &text, const Imath::V2f &positio
 
 void ImageGadget::renderLayer( Layer layer, const GafferUI::Style *style, RenderReason reason ) const
 {
-	if( !( layer == Layer::Back || layer == Layer::Main || layer == Layer::Front )  )
+	if( !( layer == Layer::Back || layer == Layer::Main || layer == Layer::MidFront || layer == Layer::Front )  )
 	{
 		return;
 	}
@@ -1450,9 +1432,13 @@ void ImageGadget::renderLayer( Layer layer, const GafferUI::Style *style, Render
 		return;
 	}
 
-	if( m_idChannel != "" && layer == Layer::Front)
+	if( layer == Layer::MidFront)
 	{
-		renderTiles( true );
+		if( m_idChannel != "" )
+		{
+			renderTiles( true );
+		}
+		return;
 	}
 
 	// We've already handled Back and Main, so this must be the Front Layer
@@ -1506,7 +1492,7 @@ void ImageGadget::renderLayer( Layer layer, const GafferUI::Style *style, Render
 
 unsigned ImageGadget::layerMask() const
 {
-	return (unsigned)Layer::Back | Layer::Main | Layer::Front;
+	return (unsigned)Layer::Back | Layer::Main | Layer::MidFront | Layer::Front;
 }
 
 Imath::Box3f ImageGadget::renderBound() const
