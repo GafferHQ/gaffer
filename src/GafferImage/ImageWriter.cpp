@@ -1070,6 +1070,7 @@ class DeepScanlineWriter
 // See associated blacklist in OpenImageIOReader.
 boost::container::flat_set<InternedString> g_metadataBlacklist = {
 	"name",
+	"filePath",
 	"oiio:subimagename",
 	"oiio:subimages"
 };

@@ -41,6 +41,7 @@ import shutil
 import unittest
 import imath
 import random
+import struct
 
 import IECore
 import IECoreImage
@@ -747,6 +748,40 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		self.assertNotIn( "name", metadata )
 		self.assertNotIn( "oiio:subimagename", metadata )
 		self.assertNotIn( "oiio:subimages", metadata )
+
+	def testIntegerMapping( self ):
+
+		reader = GafferImage.ImageReader()
+		reader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Specification )
+
+		range1 = 1073741824
+		range2 = 2147483648
+		range3 = 3221225472
+
+		for fileName in [ "integerMapping.exr", "integerMappingTiled.exr", "integerMappingDeep.exr" ]:
+			reader["fileName"].setValue( self.imagesPath() / fileName )
+
+			for channel, expectedMapping in [ ("uint0", "remap"), ("uint1", "remap" ), ("uint2", "reinterpret"), ("uint3", "cast" ) ]:
+
+				# For deep images, we don't support multiple parts with different metadata in one file
+				if fileName == "integerMappingDeep.exr":
+					reader["fileName"].setValue( self.imagesPath() / ( fileName.replace( "Deep", "Deep" + channel[-1] ) ) )
+
+				with self.subTest( fileName = fileName, integerMapping = expectedMapping ):
+					data = list( reader["out"].channelData( channel, imath.V2i( 0 ) )[:32] )
+
+					if expectedMapping == "remap":
+						self.assertEqual( data,
+							[ i * 2.3283064365386963e-10 for i in range( 8 ) ] + [ 0.25 ] * 8 + [ 0.5 ] * 8 + [ 0.75 ] * 8
+						)
+					elif expectedMapping == "reinterpret":
+
+						rawValues = list( range(8) ) + list( range( range1, range1 + 8 ) ) + list( range( range2, range2 + 8 ) ) + list( range( range3, range3 + 8 ) )
+						self.assertEqual( data, [ struct.unpack('f', struct.pack('I', i) )[0] for i in rawValues ] )
+					else:
+						self.assertEqual( data,
+							list( range( 8 ) ) + [ range1 ] * 8 + [ range2 ] * 8 + [ range3 ] * 8
+						)
 
 	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
 	@GafferTest.TestRunner.PerformanceTestMethod()

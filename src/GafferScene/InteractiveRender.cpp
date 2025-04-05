@@ -492,6 +492,11 @@ void InteractiveRender::affects( const Plug *input, AffectedPlugsContainer &outp
 	}
 }
 
+const RenderManifest *InteractiveRender::renderManifest() const
+{
+	return m_controller->renderManifest();
+}
+
 void InteractiveRender::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ComputeNode::hash( output, context, h );
