@@ -881,6 +881,58 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( V2iGadget )
 
 const float g_wipeHandleThickness = 14.0f;
 
+static const std::string g_selectionVertexSource = R"(
+#version 330 compatibility
+
+in vec3 vertexP;
+in vec2 vertexuv;
+out vec2 fragmentuv;
+
+void main()
+{
+	gl_Position = vec4( vertexP, 1.0 );
+	fragmentuv = vertexuv;
+}
+
+)";
+
+static const std::string g_selectionFragmentSource = R"(
+#version 330 compatibility
+
+uniform sampler2D framebufferTexture;
+uniform int radius;
+in vec2 fragmentuv;
+
+layout( location=0 ) out vec4 outColor;
+
+void main()
+{
+	vec2 pixelWidth = vec2( dFdx( fragmentuv.x ), dFdy( fragmentuv.y ) );
+
+	int maxR2 = ( radius + 1 ) * ( radius + 1 );
+	int iDist2 = maxR2;
+	ivec2 iP = ivec2( fragmentuv / pixelWidth );
+	for( int iY = -radius; iY <= radius; iY++ )
+	{
+		for( int iX = -radius; iX <= radius; iX++ )
+		{
+			if( texelFetch( framebufferTexture, iP + ivec2( iX, iY ), 0 ).r > 0.0f )
+			{
+				iDist2 = min( iDist2, iX * iX + iY * iY );
+			}
+		}
+	}
+	vec4 center = texelFetch( framebufferTexture, ivec2( fragmentuv / pixelWidth ), 0 );
+
+	float fade = 0.0;
+	if( iDist2 < maxR2 && center.r == 0.0 )
+	{
+		fade = 1.0 - ( sqrt( float( iDist2 ) ) - 1.0 ) / sqrt( float( radius * radius ) );
+	}
+	outColor = ( center.g * 0.25 + fade ) * vec4( 0.8, 0.9, 1.0, 1.0 );
+}
+)";
+
 } // namespace
 
 class ImageView::WipeHandle : public GafferUI::Gadget
@@ -1543,6 +1595,13 @@ ImageView::ImageView( Gaffer::ScriptNodePtr scriptNode )
 	m_wipeHandle = new WipeHandle();
 	m_wipeHandle->setVisible( false );
 	viewportGadget()->setChild( "__wipeHandle", m_wipeHandle );
+
+	IECoreGL::Shader::SetupPtr selectionPostShader = new IECoreGL::Shader::Setup(
+		IECoreGL::ShaderLoader::defaultShaderLoader()->create( g_selectionVertexSource, "", g_selectionFragmentSource )
+	);
+	selectionPostShader->addUniformParameter( "radius", new IECore::IntData( 10 ) );
+
+	viewportGadget()->setPostProcessShader( Gadget::Layer::MidFront, selectionPostShader );
 
 }
 
