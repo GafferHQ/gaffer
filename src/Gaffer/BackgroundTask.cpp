@@ -84,8 +84,17 @@ const ScriptNode *scriptNode( const GraphComponent *subject )
 	// UI classes often house their own internal plugs which receive their input
 	// from nodes in the graph. Follow the inputs to see if we can find the
 	// graph.
+	/// \todo This is an old mechanism that has been superceded by
+	/// the View/Settings mechanism below. We _think_ it can be removed.
 	if( auto p = runTimeCast<const Plug>( subject ) )
 	{
+		if( !p->node() )
+		{
+			// Avoid triggering cancellation when plugs/nodes are undergoing
+			// destruction - see `EditorTest.testIssue5877Variant`.
+			return nullptr;
+		}
+
 		if( auto s = scriptNode( p->getInput() ) )
 		{
 			return s;

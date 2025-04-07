@@ -21,8 +21,23 @@ Breaking Changes
 - DeleteAttributes : Changed base class and marked as `final`.
 - Wrapper : The `gaffer` wrapper on Linux no longer allows a custom Python build to be used. If you wish to use a custom Python, call `python _gaffer.py` instead.
 
-1.5.x.x (relative to 1.5.9.0)
+1.5.x.x (relative to 1.5.10.1)
 =======
+
+
+
+1.5.10.1 (relative to 1.5.10.0)
+========
+
+Fixes
+-----
+
+- BackgroundTask : Fixed hangs caused by garbage collection of `Editor.Settings` nodes.
+- ScriptNodeAlgo : Fixed crash during shutdown (#6363).
+- Browser app : Fixed `QDesktopWidget.availableGeometry()` deprecation warning.
+
+1.5.10.0 (relative to 1.5.9.0)
+========
 
 Features
 --------
@@ -35,6 +50,8 @@ Improvements
 - Wrapper :
   - Added warning when GafferRenderMan is not available for current RenderMan version.
   - An empty `RMANTREE` variable now disables GafferRenderMan startup, instead of emitting a warning.
+- Viewer : Added support for RenderMan lights in the floating inspector panel.
+- RenderManLight : Added plug to control the camera visibility of the light. This defaults on to match the RenderMan defaults, but can be configured to default off with `Gaffer.Metadata.registerValue( GafferRenderMan.RenderManLight, "attributes.ri:visibility:camera.value", "userDefault", 0 )`.
 
 Fixes
 -----
@@ -42,6 +59,17 @@ Fixes
 - RenderMan :
   - Fixed interactive denoiser configuration.
   - Fixed bug preventing startup files from being loaded from versioned GafferRenderMan modules.
+- RenderPasses : Fixed custom widget registration via `GafferSceneUI.RenderPassesUI.registerRenderPassNameWidget()`.
+
+API
+---
+
+- Light : Added `attributes` plug.
+
+Documentation
+-------------
+
+- RenderMan : Added GafferRenderMan to the node reference section.
 
 1.5.9.0 (relative to 1.5.8.0)
 =======

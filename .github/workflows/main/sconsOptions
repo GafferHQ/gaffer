@@ -39,7 +39,7 @@ import sys
 import glob
 import subprocess
 
-ENV_VARS_TO_IMPORT = "PATH"
+ENV_VARS_TO_IMPORT = "PATH GAFFERRENDERMAN_FEATURE_PREVIEW"
 
 BUILD_CACHEDIR = os.environ["GAFFER_CACHE_DIR"]
 

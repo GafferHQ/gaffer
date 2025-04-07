@@ -142,19 +142,6 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"attributes" : [
-
-			"description",
-			"""
-			Arbitrary attributes which are applied to the light. Typical
-			uses include setting renderer specific visibility attributes
-			to hide the shape from the camera.
-			""",
-
-			"layout:section", "Settings.Attributes",
-
-		],
-
 	}
 
 )

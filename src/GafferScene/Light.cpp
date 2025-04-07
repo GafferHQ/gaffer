@@ -65,6 +65,7 @@ Light::Light( const std::string &name )
 	:	ObjectSource( name, "light" )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new CompoundDataPlug( "attributes" ) );
 	addChild( new Plug( "parameters" ) );
 	addChild( new BoolPlug( "defaultLight", Gaffer::Plug::Direction::In, true ) );
 	addChild( new Gaffer::NameValuePlug( "light:mute", new IECore::BoolData( false ), false, "mute" ) );
@@ -94,44 +95,54 @@ Light::~Light()
 {
 }
 
+Gaffer::CompoundDataPlug *Light::attributesPlug()
+{
+	return getChild<Gaffer::CompoundDataPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::CompoundDataPlug *Light::attributesPlug() const
+{
+	return getChild<Gaffer::CompoundDataPlug>( g_firstPlugIndex );
+}
+
 Gaffer::Plug *Light::parametersPlug()
 {
-	return getChild<Plug>( g_firstPlugIndex );
+	return getChild<Plug>( g_firstPlugIndex + 1 );
 }
 
 const Gaffer::Plug *Light::parametersPlug() const
 {
-	return getChild<Plug>( g_firstPlugIndex );
+	return getChild<Plug>( g_firstPlugIndex + 1 );
 }
 
 Gaffer::BoolPlug *Light::defaultLightPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::BoolPlug *Light::defaultLightPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
 }
 
 Gaffer::NameValuePlug *Light::mutePlug()
 {
-	return getChild<Gaffer::NameValuePlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::NameValuePlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::NameValuePlug *Light::mutePlug() const
 {
-	return getChild<Gaffer::NameValuePlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::NameValuePlug>( g_firstPlugIndex + 3 );
 }
 
 Gaffer::CompoundDataPlug *Light::visualiserAttributesPlug()
 {
-	return getChild<Gaffer::CompoundDataPlug>( g_firstPlugIndex + 3 );
+	return getChild<Gaffer::CompoundDataPlug>( g_firstPlugIndex + 4 );
 }
 
 const Gaffer::CompoundDataPlug *Light::visualiserAttributesPlug() const
 {
-	return getChild<Gaffer::CompoundDataPlug>( g_firstPlugIndex + 3 );
+	return getChild<Gaffer::CompoundDataPlug>( g_firstPlugIndex + 4 );
 }
 
 void Light::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -140,6 +151,7 @@ void Light::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 
 	if(
 		parametersPlug()->isAncestorOf( input )
+		|| attributesPlug()->isAncestorOf( input )
 		|| visualiserAttributesPlug()->isAncestorOf( input )
 		|| mutePlug()->isAncestorOf( input )
 	) {
@@ -174,6 +186,7 @@ IECore::ConstObjectPtr Light::computeSource( const Context *context ) const
 void Light::hashAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	hashLight( context, h );
+	attributesPlug()->hash( h );
 	visualiserAttributesPlug()->hash( h );
 	mutePlug()->hash( h );
 }
@@ -193,6 +206,7 @@ IECore::ConstCompoundObjectPtr Light::computeAttributes( const SceneNode::SceneP
 	// As we output as const, then this just lets us get through the next few lines...
 	result->members()[lightAttribute] = const_cast<IECoreScene::ShaderNetwork*>( lightShaders.get() );
 
+	attributesPlug()->fillCompoundObject( result->members() );
 	visualiserAttributesPlug()->fillCompoundObject( result->members() );
 
 	if( mutePlug()->enabledPlug()->getValue() )

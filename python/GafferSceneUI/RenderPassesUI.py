@@ -141,6 +141,7 @@ __renderPassNameWidget = _RenderPassNameWidget
 ## be emitted to inform observers of changes to, or the choice of render pass name.
 def registerRenderPassNameWidget( w ) :
 
+	global __renderPassNameWidget
 	__renderPassNameWidget = w
 
 def createRenderPassNameWidget() :
