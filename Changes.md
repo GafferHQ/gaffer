@@ -1,7 +1,10 @@
 1.5.x.x (relative to 1.5.10.0)
 =======
 
+Fixes
+-----
 
+- ScriptNodeAlgo : Fixed potential crash during shutdown.
 
 1.5.10.0 (relative to 1.5.9.0)
 ========
@@ -27,7 +30,6 @@ Fixes
   - Fixed interactive denoiser configuration.
   - Fixed bug preventing startup files from being loaded from versioned GafferRenderMan modules.
 - RenderPasses : Fixed custom widget registration via `GafferSceneUI.RenderPassesUI.registerRenderPassNameWidget()`.
-- ScriptNodeAlgo : Fixed potential crash during shutdown.
 
 API
 ---
