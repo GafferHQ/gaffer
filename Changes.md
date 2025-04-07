@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - RenderMan : Stylized Looks no longer require manual AOV setup. The relevant AOVs are added automatically whenever a stylized display filter is present.
+- Arnold : Added translation of UsdLux IES parameters to Arnold.
 
 Fixes
 -----

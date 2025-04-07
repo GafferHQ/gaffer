@@ -691,6 +691,7 @@ const InternedString g_shadowColorParameter( "shadow:color" );
 const InternedString g_shadowColorArnoldParameter( "shadow_color" );
 const InternedString g_shapingConeAngleParameter( "shaping:cone:angle" );
 const InternedString g_shapingConeSoftnessParameter( "shaping:cone:softness" );
+const InternedString g_shapingIesFileParameter( "shaping:ies:file" );
 const InternedString g_shapingSoftnessParameter( "shaping:softness" );
 const InternedString g_sourceColorSpaceParameter( "sourceColorSpace" );
 const InternedString g_specularParameter( "specular" );
@@ -748,6 +749,15 @@ void transferUSDLightParameters( ShaderNetwork *network, InternedString shaderHa
 
 void transferUSDShapingParameters( ShaderNetwork *network, InternedString shaderHandle, const Shader *usdShader, Shader *shader )
 {
+	if( auto dFile = usdShader->parametersData()->member<StringData>( g_shapingIesFileParameter ) )
+	{
+		if( !dFile->readable().empty() )
+		{
+			shader->setName( "photometric_light" );
+			shader->parameters()[g_filenameParameter] = new StringData( dFile->readable() );
+			return;
+		}
+	}
 	if( auto d = usdShader->parametersData()->member<FloatData>( g_shapingConeAngleParameter ) )
 	{
 		shader->setName( "spot_light" );
