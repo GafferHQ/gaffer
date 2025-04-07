@@ -4,6 +4,7 @@
 Fixes
 -----
 
+- BackgroundTask : Fixed hangs caused by garbage collection of `Editor.Settings` nodes.
 - ScriptNodeAlgo : Fixed crash during shutdown (#6363).
 - Browser app : Fixed `QDesktopWidget.availableGeometry()` deprecation warning.
 
