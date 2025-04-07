@@ -1,7 +1,10 @@
 1.5.x.x (relative to 1.5.10.1)
 =======
 
+Fixes
+-----
 
+- RenderManShader : Fixed handling of minimum and maximum values for `color`, `vector`, `normal` and `point` parameters.
 
 1.5.10.1 (relative to 1.5.10.0)
 ========
