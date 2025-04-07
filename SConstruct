@@ -1453,6 +1453,9 @@ libraries = {
 	},
 
 	"GafferRenderManUI" : {
+		"envAppends" : {
+			"LIBS" : [ "GafferScene", "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", ],
+		},
 		"requiredOptions" : [ "RENDERMAN_ROOT" ],
 		"installRoot" : renderManInstallRoot,
 	},

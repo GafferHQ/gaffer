@@ -217,3 +217,6 @@ for shader, metadata in shaderMetadata.items() :
 		else :
 
 			Gaffer.Metadata.registerValue( shader, key, value )
+
+# Reset the map from its default which uses the `pixar` format and can't be read by OIIO.
+Gaffer.Metadata.registerValue( "ri:lightFilter:PxrCookieLightFilter:map", "userDefault", "" )
