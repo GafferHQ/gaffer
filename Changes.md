@@ -4,7 +4,7 @@
 Fixes
 -----
 
-- ScriptNodeAlgo : Fixed potential crash during shutdown.
+- ScriptNodeAlgo : Fixed crash during shutdown (#6363).
 
 1.5.10.0 (relative to 1.5.9.0)
 ========
