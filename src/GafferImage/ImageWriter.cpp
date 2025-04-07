@@ -1088,14 +1088,6 @@ void metadataToImageSpecAttributes( const CompoundData *metadata, ImageSpec &spe
 			continue;
 		}
 
-		if( it->first == "fileValid" )
-		{
-			// Don't want to write `fileValid = False` into files! Dealt
-			// with separately from blacklist above because we don't need to
-			// emit a warning for it.
-			continue;
-		}
-
 		const IECoreImage::OpenImageIOAlgo::DataView dataView( it->second.get() );
 		if( dataView.data )
 		{
@@ -1273,10 +1265,18 @@ ImageSpec createImageSpec( const ImageWriter *node, const ImageOutput *out, cons
 	// and file-format-specific metadata created by the OpenImageIOReader.
 	CompoundDataPtr metadata = node->inPlug()->metadataPlug()->getValue()->copy();
 
+	// Metadata we never want to write into files, and always want to silently ignore. Usually because
+	// it's stuff we automatically set up when reading a file, based on other information. There is a
+	// separate blacklist inside metadataToImageSpecAttributes for things we want to warn about.
+
 	metadata->writable().erase( "oiio:ColorSpace" );
 	metadata->writable().erase( "oiio:Gamma" );
 	metadata->writable().erase( "oiio:UnassociatedAlpha" );
 	metadata->writable().erase( "fileFormat" );
+	// Including fileValid is technically redundant here - it is usually a BoolData, and
+	// IECoreImage::OpenImageIOAlgo::DataView fails to support bools. But we keep this erase()
+	// for a hypothetical future where bools might be supported.
+	metadata->writable().erase( "fileValid" );
 	metadata->writable().erase( "dataType" );
 
 	// Also erase multiView metadata - if you want to create multi-view images, use CreateViews
