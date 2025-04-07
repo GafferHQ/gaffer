@@ -911,25 +911,19 @@ void main()
 
 	int maxR2 = ( radius + 1 ) * ( radius + 1 );
 	int iDist2 = maxR2;
+	vec2 query = vec2( 0.0 );
 	ivec2 iP = ivec2( fragmentuv / pixelWidth );
 	for( int iY = -radius; iY <= radius; iY++ )
 	{
 		for( int iX = -radius; iX <= radius; iX++ )
 		{
-			if( texelFetch( framebufferTexture, iP + ivec2( iX, iY ), 0 ).r > 0.0f )
-			{
-				iDist2 = min( iDist2, iX * iX + iY * iY );
-			}
+			query = max( query, texelFetch( framebufferTexture, iP + ivec2( iX, iY ), 0 ).rg );
 		}
 	}
 	vec4 center = texelFetch( framebufferTexture, ivec2( fragmentuv / pixelWidth ), 0 );
 
-	float fade = 0.0;
-	if( iDist2 < maxR2 && center.r == 0.0 )
-	{
-		fade = 1.0 - ( sqrt( float( iDist2 ) ) - 1.0 ) / sqrt( float( radius * radius ) );
-	}
-	outColor = ( center.g * 0.25 + fade ) * vec4( 0.8, 0.9, 1.0, 1.0 );
+	outColor = center.g == 0 && query.g != 0 ? vec4( 0.8, 0.9, 1.0, 1.0 ) : ( center.r != 0 ? 0.25 : query.r ) * vec4( 0.54, 0.72, 0.87, 1.0 );
+
 }
 )";
 
@@ -1599,7 +1593,7 @@ ImageView::ImageView( Gaffer::ScriptNodePtr scriptNode )
 	IECoreGL::Shader::SetupPtr selectionPostShader = new IECoreGL::Shader::Setup(
 		IECoreGL::ShaderLoader::defaultShaderLoader()->create( g_selectionVertexSource, "", g_selectionFragmentSource )
 	);
-	selectionPostShader->addUniformParameter( "radius", new IECore::IntData( 10 ) );
+	selectionPostShader->addUniformParameter( "radius", new IECore::IntData( 2 ) );
 
 	viewportGadget()->setPostProcessShader( Gadget::Layer::MidFront, selectionPostShader );
 
