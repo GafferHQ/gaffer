@@ -88,7 +88,7 @@ Gaffer.Metadata.registerNode(
 
 		"extraOptions" : [
 
-			"plugValueWidget:type", None,
+			"layout:visibilityActivator", True,
 
 		],
 

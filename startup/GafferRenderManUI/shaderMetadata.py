@@ -203,6 +203,25 @@ shaderMetadata = {
 
 	},
 
+	"ri:integrator:PxrUnified" : {
+
+		"parameters" : {
+
+			k : { "nodule:type" : "" }
+			for k in [
+				"accumOpacity", "allowMultilobeIndirect", "catchAllLights", "causticClamp", "directClamp", "emissionMultiplier", "enableSampleTimers",
+				"enableShadingTimers", "enableVolumeCaustics", "indirectClamp", "indirectDirectionalBlurRadius", "indirectOversampling", "indirectSpatialBlurRadius",
+				"indirectTrainingSamples", "jointSampling", "manifoldWalk", "maxIndirectBounces", "maxInterfaces", "maxIterations", "maxNonStochasticOpacityEvents",
+				"maxRayDistance", "numBxdfSamples", "numIndirectSamples", "numLightSamples", "numVolumeAggregateSamples", "photonAdaptive", "photonEstimationNumber",
+				"photonEstimationRadius", "photonVisibilityRod", "photonVisibilityRodDirectProb", "photonVisibilityRodMax", "photonVisibilityRodMin", "risPathGuiding",
+				"rouletteDepth", "rouletteLightDepth", "rouletteThreshold", "sssOversampling", "suppressNaNs", "traceLightPaths", "useTraceDepth", "volumeAggregate",
+				"volumeAggregateNameCamera", "volumeAggregateNameIndirect", "volumeAggregateNameTransmission", "walkThreshold"
+			]
+
+		},
+
+	},
+
 }
 
 for shader, metadata in shaderMetadata.items() :

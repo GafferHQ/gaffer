@@ -104,9 +104,9 @@ Gaffer.Metadata.registerNode(
 			is taken.
 			""",
 
-			"plugValueWidget:type", "",
 			"layout:section", "Extra",
 			"nodule:type", "",
+			"layout:visibilityActivator", True,
 
 		],
 
