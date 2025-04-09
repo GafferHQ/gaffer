@@ -567,8 +567,12 @@ class Catalogue::InternalImage : public ImageNode
 					// Set up an ImageWriter to do the actual saving.
 					// We do all graph construction here in the main thread
 					// so that the background thread only does execution.
+
+					m_modifyMetadata = new GafferImage::ImageMetadata;
+					m_modifyMetadata->inPlug()->setInput( m_imageCopy->outPlug() );
+
 					m_writer = new GafferImage::ImageWriter;
-					m_writer->inPlug()->setInput( m_imageCopy->outPlug() );
+					m_writer->inPlug()->setInput( m_modifyMetadata->outPlug() );
 					m_writer->fileNamePlug()->setValue( fileName );
 
 					// Set up a spreadsheet that will set the data type to full 32 bit floats when storing the
@@ -584,10 +588,54 @@ class Catalogue::InternalImage : public ImageNode
 					row->namePlug()->setValue( "id" );
 					row->cellsPlug()->getChild<Spreadsheet::CellPlug>(0)->valuePlug<StringPlug>()->setValue( "float" );
 					dataTypePlug->setInput( spreadsheet->outPlug()->getChild<Plug>( 0 ) );
+
+					IECore::ConstCompoundDataPtr metadata = m_imageCopy->outPlug()->metadata();
+					const StringData *manifestPath = metadata->member<StringData>( "gaffer:renderManifestFilePath" );
+					if( manifestPath && manifestPath->readable().size() )
+					{
+						m_manifestSource = manifestPath->readable();
+
+						std::string manifestFilename = fileName.filename().generic_string();
+
+						// Remove ".exr"
+						manifestFilename.resize( manifestFilename.size() - 4);
+
+						// Add manifest suffix
+						manifestFilename = manifestFilename + "_manifest.exr";
+
+						m_manifestDest = fileName;
+						m_manifestDest.replace_filename( manifestFilename );
+
+						m_modifyMetadata->metadataPlug()->addChild(
+							new NameValuePlug(
+								"gaffer:renderManifestFilePath", new StringData( manifestFilename )
+							)
+						);
+					}
 				}
 
 				void save( WeakPtr forWrapUp )
 				{
+					if( !m_manifestDest.empty() )
+					{
+						// Copy the manifest to a location relative to this saved image ( this will
+						// ensure we keep an accurate manifest matching this image, even if a future
+						// render overwrites the source location ).
+						try
+						{
+							std::filesystem::copy( m_manifestSource, m_manifestDest );
+						}
+						catch( std::filesystem::filesystem_error &e )
+						{
+							// The most likely cause of this is snapshotting a render in progress, which
+							// won't have written its manifest yet. If we wanted this to work, we would
+							// need to trigger a signal in InternalImage::driverClosed which something
+							// could listen to and tell the RenderController to dump its current manifest
+							// before we try this copy.
+							IECore::msg( IECore::Msg::Error, "Saving Catalogue image manifest", e.what() );
+						}
+					}
+
 					GafferImage::ImageAlgo::parallelGatherTiles(
 						m_imageCopy->copyChannels()->outPlug(),
 						m_imageCopy->copyChannels()->outPlug()->channelNamesPlug()->getValue()->readable(),
@@ -657,7 +705,12 @@ class Catalogue::InternalImage : public ImageNode
 				}
 
 				InternalImagePtr m_imageCopy;
+				GafferImage::ImageMetadataPtr m_modifyMetadata;
 				GafferImage::ImageWriterPtr m_writer;
+
+
+				std::filesystem::path m_manifestSource;
+				std::filesystem::path m_manifestDest;
 
 				std::thread m_thread;
 				set<InternalImage *> m_clients;
