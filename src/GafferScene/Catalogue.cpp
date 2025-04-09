@@ -53,6 +53,7 @@
 #include "Gaffer/ParallelAlgo.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/Spreadsheet.h"
 
 #include "IECore/NullObject.h"
 
@@ -569,6 +570,20 @@ class Catalogue::InternalImage : public ImageNode
 					m_writer = new GafferImage::ImageWriter;
 					m_writer->inPlug()->setInput( m_imageCopy->outPlug() );
 					m_writer->fileNamePlug()->setValue( fileName );
+
+					// Set up a spreadsheet that will set the data type to full 32 bit floats when storing the
+					// "id" channel. We are currently using integers bitcast to floats for ids ... converting
+					// these to 16 bit floats completely destroys the data.
+					StringPlug *dataTypePlug = m_writer->fileFormatSettingsPlug( "openexr" )->getChild<StringPlug>( "dataType" );
+
+					Gaffer::SpreadsheetPtr spreadsheet = new Gaffer::Spreadsheet();
+					m_writer->addChild( spreadsheet );
+					spreadsheet->selectorPlug()->setValue( "${imageWriter:channelName}" );
+					spreadsheet->rowsPlug()->addColumn( new Gaffer::StringPlug( "dataType", Gaffer::Plug::Direction::In, "half" ) );
+					Spreadsheet::RowPlug *row = spreadsheet->rowsPlug()->addRow();
+					row->namePlug()->setValue( "id" );
+					row->cellsPlug()->getChild<Spreadsheet::CellPlug>(0)->valuePlug<StringPlug>()->setValue( "float" );
+					dataTypePlug->setInput( spreadsheet->outPlug()->getChild<Plug>( 0 ) );
 				}
 
 				void save( WeakPtr forWrapUp )
