@@ -581,6 +581,10 @@ auto stringFromValue = []( auto &&value ) -> std::string
 	{
 		return fmt::format( "{:.3f}, {:.3f}, {:.3f}", value.x, value.y, value.z );
 	}
+	else if constexpr( std::is_same_v<T, Quatf> )
+	{
+		return fmt::format( "{:.3f}, ( {:.3f}, {:.3f}, {:.3f} )", value.r, value.v.x, value.v.y, value.v.z );
+	}
 
 	return "";
 };
@@ -1072,7 +1076,8 @@ class VisualiserGadget : public Gadget
 			if(
 				mode == VisualiserTool::Mode::Auto && (
 					std::holds_alternative<int>( value ) ||
-					std::holds_alternative<V3f>( value )
+					std::holds_alternative<V3f>( value ) ||
+					std::holds_alternative<Quatf>( value )
 				)
 			)
 			{
@@ -1264,13 +1269,14 @@ class VisualiserGadget : public Gadget
 						mode == VisualiserTool::Mode::Auto &&
 						primitive->typeId() == MeshPrimitive::staticTypeId() &&
 						vData->typeId() != IntVectorDataTypeId &&
-						vData->typeId() != V3fVectorDataTypeId
+						vData->typeId() != V3fVectorDataTypeId &&
+						vData->typeId() != QuatfVectorDataTypeId
 					)
 					{
 						// Will be handled by `renderColorVisualiser()` instead.
-						// If the data type is V3f data, we continue right before
-						// drawing the per-vertex label in order to get and display
-						// the value closest to the cursor.
+						// If the data type is V3f or Quatf data, we continue right
+						// before drawing the per-vertex label in order to get and
+						// display the value closest to the cursor.
 						continue;
 					}
 
@@ -1279,14 +1285,20 @@ class VisualiserGadget : public Gadget
 						vData->typeId() != FloatVectorDataTypeId &&
 						vData->typeId() != V2fVectorDataTypeId &&
 						vData->typeId() != V3fVectorDataTypeId &&
-						vData->typeId() != Color3fVectorDataTypeId
+						vData->typeId() != Color3fVectorDataTypeId &&
+						vData->typeId() != QuatfVectorDataTypeId
 					)
 					{
 						continue;
 					}
 				}
 
-				if( mode == VisualiserTool::Mode::Auto && vData && vData->typeId() == V3fVectorDataTypeId )
+				if(
+					mode == VisualiserTool::Mode::Auto && vData && (
+						vData->typeId() == V3fVectorDataTypeId ||
+						vData->typeId() == QuatfVectorDataTypeId
+					)
+				)
 				{
 					cursorVertexValueTextScale = 1.f;
 				}
@@ -1524,6 +1536,10 @@ class VisualiserGadget : public Gadget
 									{
 										vertexValue = c3fData->readable()[i];
 									}
+									if( auto qData = runTimeCast<const QuatfVectorData>( vData.get() ) )
+									{
+										vertexValue = qData->readable()[i];
+									}
 								}
 
 								// Update cursor value
@@ -1542,7 +1558,12 @@ class VisualiserGadget : public Gadget
 									}
 								}
 
-								if( mode == VisualiserTool::Mode::Auto && vData && vData->typeId() == V3fVectorDataTypeId )
+								if(
+									mode == VisualiserTool::Mode::Auto && vData && (
+										vData->typeId() == V3fVectorDataTypeId ||
+										vData->typeId() == QuatfVectorDataTypeId
+									)
+								)
 								{
 									// Do everything except drawing the per-vertex value. That will
 									// be handled by `renderVectorVisualiser()` instead.
@@ -2574,6 +2595,10 @@ RunTimeTypedPtr VisualiserTool::dragBegin( const DragDropEvent &event )
 	if( std::holds_alternative<Color3f>( m_valueAtButtonPress ) )
 	{
 		return new Color3fData( std::get<Color3f>( m_valueAtButtonPress ) );
+	}
+	if( std::holds_alternative<Quatf>( m_valueAtButtonPress ) )
+	{
+		return new QuatfData( std::get<Quatf>( m_valueAtButtonPress ) );
 	}
 
 	return RunTimeTypedPtr();
