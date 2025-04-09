@@ -53,6 +53,7 @@
 #include "Gaffer/ParallelAlgo.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/Spreadsheet.h"
 
 #include "IECore/NullObject.h"
 
@@ -574,6 +575,16 @@ class Catalogue::InternalImage : public ImageNode
 					m_writer->inPlug()->setInput( m_modifyMetadata->outPlug() );
 					m_writer->fileNamePlug()->setValue( fileName );
 
+					StringPlug *dataTypePlug = m_writer->fileFormatSettingsPlug( "openexr" )->getChild<StringPlug>( "dataType" );
+
+					Gaffer::SpreadsheetPtr spreadsheet = new Gaffer::Spreadsheet();
+					m_writer->addChild( spreadsheet );
+					spreadsheet->selectorPlug()->setValue( "${imageWriter:channelName}" );
+					spreadsheet->rowsPlug()->addColumn( new Gaffer::StringPlug( "dataType", Gaffer::Plug::Direction::In, "half" ) );
+					Spreadsheet::RowPlug *row = spreadsheet->rowsPlug()->addRow();
+					row->namePlug()->setValue( "id" );
+					row->cellsPlug()->getChild<Spreadsheet::CellPlug>(0)->valuePlug<StringPlug>()->setValue( "float" );
+					dataTypePlug->setInput( spreadsheet->outPlug()->getChild<Plug>( 0 ) );
 
 					IECore::ConstCompoundDataPtr metadata = m_imageCopy->outPlug()->metadata();
 					const StringData *manifestPath = metadata->member<StringData>( "gaffer:idManifestFilePath" );
