@@ -1098,6 +1098,11 @@ void ImageGadget::updateTiles()
 			if( m_soloChannel < 0 || m_rgbaChannels[m_soloChannel] == *it || m_rgbaChannels[3] == *it )
 			{
 				channelsToCompute.push_back( *it );
+
+				// Continuing here makes sure we don't include a channel twice if it used both as an
+				// rgbaChannel and the id channel. ( A channel appearing twice in channelsToCompute
+				// can cause a deadlock ).
+				continue;
 			}
 		}
 
