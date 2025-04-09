@@ -428,7 +428,8 @@ struct UniformBlockOrientationShader
 	alignas( 16 ) Imath::Color3f colorX;
 	alignas( 16 ) Imath::Color3f colorY;
 	alignas( 16 ) Imath::Color3f colorZ;
-	alignas( 16 ) float scale; // NOTE : following vec3 array must align to 16 byte address
+	alignas( 16 ) float scale;
+	alignas( 4 ) float opacity;
 };
 
 #define UNIFORM_BLOCK_ORIENTATION_GLSL_SOURCE \
@@ -437,6 +438,7 @@ struct UniformBlockOrientationShader
 	"   mat4 o2c;\n" \
 	"   vec3 color[ 3 ];\n" \
 	"   float scale;\n" \
+	"   float opacity;\n" \
 	"} uniforms;\n"
 
 #define ATTRIB_GLSL_LOCATION_QS 1
@@ -503,7 +505,7 @@ std::string const g_orientationShaderFragSource
 
 	"void main()\n"
 	"{\n"
-	"   cs = vec4( inputs.color, 1.0 );\n"
+	"   cs = vec4( inputs.color, uniforms.opacity );\n"
 	"}\n"
 );
 
@@ -1905,6 +1907,7 @@ class VisualiserGadget : public Gadget
 			uniforms.colorY = g_colorY;
 			uniforms.colorZ = g_colorZ;
 			uniforms.scale = m_tool->vectorScalePlug()->getValue();
+			uniforms.opacity = m_tool->opacityPlug()->getValue();
 
 			// Set OpenGL state
 			GLfloat lineWidth;
