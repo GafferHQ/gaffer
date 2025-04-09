@@ -5,6 +5,7 @@ Features
 --------
 
 - Arnold : Added multi-layer EXR support. All outputs with the same filename are now written to the same file via a single output driver.
+- Catalogue : Automatically save render manifest mapping ids to path whenever saving a render with an ID output.
 
 Improvements
 ------------
