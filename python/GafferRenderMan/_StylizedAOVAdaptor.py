@@ -119,7 +119,7 @@ class _StylizedAOVAdaptor( GafferScene.SceneProcessor ) :
 		for aov in _StylizedAOVAdaptor.__aovDefinitions :
 
 			output = IECoreScene.Output(
-				aov, "null", _StylizedAOVAdaptor.__aovDefinitions[aov],
+				f"_StylizedAOVAdaptor:{aov}", "null", _StylizedAOVAdaptor.__aovDefinitions[aov],
 				{ "layerName" : aov }
 			)
 			if aov == "sampleCount" :
