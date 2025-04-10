@@ -1655,21 +1655,6 @@ struct ObjectOutput : public LocationOutput
 namespace
 {
 
-bool outputUsesId( const Output *output )
-{
-	vector<std::string> tokens;
-	IECore::StringAlgo::tokenize( output->getData(), ' ', tokens );
-	for( std::string &t : tokens )
-	{
-		if( t == "id" )
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
-
 ConstOutputPtr addGafferOutputParameters( const Output *output, const ScenePlug *scene, const std::string &outputID, const IECoreScenePreview::Renderer *renderer, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions )
 {
 	CompoundDataPtr param = output->parametersData()->copy();
@@ -1688,14 +1673,18 @@ ConstOutputPtr addGafferOutputParameters( const Output *output, const ScenePlug 
 	// Include the path to the render node to allow tools to back-track from the image
 	param->writable()["header:gaffer:sourceScene"] = new StringData( scene->relativeName( script ) );
 
-	// TODO - output for all AOVs? So it doesn't matter which one you take metadata from?
-	if( renderOptions.idManifestFilePath() != "" && outputUsesId( output ) )
+	if( renderOptions.idManifestFilePath() != "" )
 	{
-		std::string relativePath = std::filesystem::relative(
+		std::string manifestPath = std::filesystem::relative(
 			std::filesystem::path( renderOptions.idManifestFilePath() ),
 			std::filesystem::path( output->getName() ).parent_path()
 		).generic_string();
-		param->writable()["header:gaffer:idManifestFilePath"] = new StringData( relativePath );
+		if( !manifestPath.size() )
+		{
+			// If we can't find a relative path, use an absolute path
+			manifestPath = renderOptions.idManifestFilePath();
+		}
+		param->writable()["header:gaffer:idManifestFilePath"] = new StringData( manifestPath );
 	}
 
 	// Include the current context
@@ -1770,18 +1759,20 @@ void outputOutputs( const ScenePlug *scene, const RenderOptions &renderOptions, 
 		if( const Output *output = runTimeCast<Output>( it->second.get() ) )
 		{
 			bool changedOrAdded = true;
-			if( renderOptions.idManifestFilePath() != "" && outputUsesId( output ) )
-			{
-				// If we are writing an id manifest and this is an id AOV, we must always update this AOV
-				// ( it will always get a fresh manifest id )
-			}
-			else if( previousGlobals )
+
+			if( previousGlobals )
 			{
 				if( const Output *previousOutput = previousGlobals->member<Output>( it->first ) )
 				{
 					changedOrAdded = *previousOutput != *output;
 				}
 			}
+
+			// NOTE : We don't current catch changes to the outputs caused by global changes during a render,
+			// such as changing the base script context ( which gets put in the header ), or changing the
+			// id manifest file path ( which is set by a render option ). Perhaps this is fine - these aren't
+			// the sorts of things you would usually want to change during an interactive render.
+
 			if( changedOrAdded )
 			{
 				const string outputID = it->first.string().substr( prefix.size() );
