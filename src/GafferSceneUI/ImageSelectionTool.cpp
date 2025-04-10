@@ -41,6 +41,9 @@
 #include "GafferSceneUI/SceneView.h"
 #include "GafferSceneUI/ScriptNodeAlgo.h"
 
+#include "GafferUI/Pointer.h"
+#include "GafferUI/Style.h"
+
 #include "GafferScene/InteractiveRender.h"
 #include "GafferScene/ScenePlug.h"
 
@@ -69,7 +72,97 @@ namespace
 
 std::string g_isRenderingMetadataName = "gaffer:isRendering";
 
+static IECore::InternedString g_dragOverlayName( "__imageSelectionToolDragOverlay" );
+
 }
+
+class ImageSelectionTool::DragOverlay : public GafferUI::Gadget
+{
+
+	public :
+
+		DragOverlay()
+			:   Gadget()
+		{
+		}
+
+		Imath::Box3f bound() const override
+		{
+			// we draw in raster space so don't have a sensible bound
+			return Box3f();
+		}
+
+		void setStartPosition( const V3f &p )
+		{
+			if( m_startPosition == p )
+			{
+				return;
+			}
+			m_startPosition = p;
+			dirty( DirtyType::Render );
+		}
+
+		const V3f &getStartPosition() const
+		{
+			return m_startPosition;
+		}
+
+		void setEndPosition( const V3f &p )
+		{
+			if( m_endPosition == p )
+			{
+				return;
+			}
+			m_endPosition = p;
+			dirty( DirtyType::Render );
+		}
+
+		const V3f &getEndPosition() const
+		{
+			return m_endPosition;
+		}
+
+	protected :
+
+		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override
+		{
+			// TODO - should be MidFront, if we weren't (mis)using that for id selection
+			assert( layer == Layer::Front );
+
+			if( isSelectionRender( reason ) )
+			{
+				return;
+			}
+
+			const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
+			ViewportGadget::RasterScope rasterScope( viewportGadget );
+
+			Box2f b;
+			b.extendBy( viewportGadget->gadgetToRasterSpace( m_startPosition, this ) );
+			b.extendBy( viewportGadget->gadgetToRasterSpace( m_endPosition, this ) );
+
+			style->renderSelectionBox( b );
+		}
+
+		unsigned layerMask() const override
+		{
+			return (unsigned)Layer::Front;
+		}
+
+		Imath::Box3f renderBound() const override
+		{
+			// we draw in raster space so don't have a sensible bound
+			Box3f b;
+			b.makeInfinite();
+			return b;
+		}
+
+	private :
+
+		Imath::V3f m_startPosition;
+		Imath::V3f m_endPosition;
+
+};
 
 //////////////////////////////////////////////////////////////////////////
 // ImageSelectionTool implementation
@@ -99,7 +192,13 @@ ImageSelectionTool::ImageSelectionTool( View *view, const std::string &name )
 
 	ImageGadget *ig = imageGadget();
 	ig->buttonPressSignal().connect( boost::bind( &ImageSelectionTool::buttonPress, this, ::_2 ) );
+	ig->buttonReleaseSignal().connect( boost::bind( &ImageSelectionTool::buttonRelease, this, ::_2 ) );
+	ig->dragBeginSignal().connect( boost::bind( &ImageSelectionTool::dragBegin, this, ::_1, ::_2 ) );
+    ig->dragEnterSignal().connect( boost::bind( &ImageSelectionTool::dragEnter, this, ::_1, ::_2 ) );
+    ig->dragMoveSignal().connect( boost::bind( &ImageSelectionTool::dragMove, this, ::_2 ) );
+    ig->dragEndSignal().connect( boost::bind( &ImageSelectionTool::dragEnd, this, ::_2 ) );
 	ig->mouseMoveSignal().connect( boost::bind( &ImageSelectionTool::mouseMove, this, ::_2 ) );
+	ig->leaveSignal().connect( boost::bind( &ImageSelectionTool::leave, this, ::_2 ) );
 
 	ScriptNodeAlgo::selectedPathsChangedSignal( view->scriptNode() ).connect( boost::bind( &ImageSelectionTool::selectedPathsChanged, this ) );
 }
@@ -159,6 +258,7 @@ void ImageSelectionTool::plugDirtied( const Gaffer::Plug *plug )
 		// has changed, if the image was rewritten, the manifest might have been rewritten as well.
 		m_sideCarManifestModTimeDirty = true;
 		m_selectionDirty = true;
+		setStatus( "", false );
 	}
 }
 
@@ -327,6 +427,21 @@ void ImageSelectionTool::preRender()
 	}
 }
 
+// TODO - share somehow with SelectionTool?
+ImageSelectionTool::DragOverlay *ImageSelectionTool::dragOverlay()
+{
+	// All instances of SelectionTool share a single drag overlay - this
+	// allows SelectionTool to be subclassed for the creation of other tools.
+	DragOverlay *result = view()->viewportGadget()->getChild<DragOverlay>( g_dragOverlayName );
+	if( !result )
+	{
+		result = new DragOverlay;
+		view()->viewportGadget()->setChild( g_dragOverlayName, result );
+		result->setVisible( false );
+	}
+	return result;
+}
+
 bool ImageSelectionTool::keyPress( const KeyEvent &event )
 {
 	if( const auto hotkey = Gaffer::Metadata::value<StringData>( this, "viewer:shortCut" ) )
@@ -343,8 +458,8 @@ bool ImageSelectionTool::keyPress( const KeyEvent &event )
 
 bool ImageSelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 {
-	// TODO : In addition to supporting clicks, we should probably support all selection interactions
-	// from the viewport ( like dragging for rectangle selection? )
+	m_acceptedButtonPress = false;
+	m_initiatedDrag = false;
 
 	if( event.buttons != ButtonEvent::Left )
 	{
@@ -415,6 +530,145 @@ bool ImageSelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 		}
 	}
 
+	m_acceptedButtonPress = true;
+	return true;
+}
+
+bool ImageSelectionTool::buttonRelease( const GafferUI::ButtonEvent &event )
+{
+	m_acceptedButtonPress = false;
+	m_initiatedDrag = false;
+	return false;
+}
+
+IECore::RunTimeTypedPtr ImageSelectionTool::dragBegin( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
+{
+	// Derived classes may wish to override the handling of buttonPress. To
+	// consume the event, they must return true from it. This also tells the
+	// drag system that they may wish to start a drag later, and so it will
+	// then call 'dragBegin'. If they have no interest in actually performing
+	// a drag (as maybe they just wanted to do something on click) this is a
+	// real pain as now they also have to implement dragBegin to prevent the
+	// code below from doing its thing. To avoid this boilerplate overhead,
+	// we only start our own drag if we know we were the one who returned
+	// true from buttonPress. We also track whether we initiated a drag so
+	// the other drag methods can early-out accordingly.
+	m_initiatedDrag = false;
+	if( !m_acceptedButtonPress )
+	{
+		return nullptr;
+	}
+	m_acceptedButtonPress = false;
+
+	//SceneGadget *sg = sceneGadget();
+	//ScenePlug::ScenePath objectUnderMouse;
+
+	//if( !sg->objectAt( event.line, objectUnderMouse ) )
+	{
+		// drag to select
+		dragOverlay()->setStartPosition( event.line.p1 );
+		dragOverlay()->setEndPosition( event.line.p1 );
+		dragOverlay()->setVisible( true );
+		m_initiatedDrag = true;
+		return gadget;
+	}
+	// TODO - should we support dragging paths from the image?
+	/*else
+	{
+		const PathMatcher &selection = sg->getSelection();
+		if( selection.match( objectUnderMouse ) & PathMatcher::ExactMatch )
+		{
+			// drag the selection somewhere
+			IECore::StringVectorDataPtr dragData = new IECore::StringVectorData();
+			selection.paths( dragData->writable() );
+			Pointer::setCurrent( "objects" );
+			m_initiatedDrag = true;
+			return dragData;
+		}
+	}*/
+	return nullptr;
+}
+
+bool ImageSelectionTool::dragEnter( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
+{
+	return m_initiatedDrag && event.sourceGadget == gadget && event.data == gadget;
+}
+
+bool ImageSelectionTool::dragMove( const GafferUI::DragDropEvent &event )
+{
+	if( !m_initiatedDrag )
+	{
+		return false;
+	}
+
+	dragOverlay()->setEndPosition( event.line.p1 );
+	return true;
+}
+
+bool ImageSelectionTool::dragEnd( const GafferUI::DragDropEvent &event )
+{
+	if( !m_initiatedDrag )
+	{
+		return false;
+	}
+
+	Pointer::setCurrent( "" );
+	if( !dragOverlay()->getVisible() )
+	{
+		return false;
+	}
+
+	dragOverlay()->setVisible( false );
+
+	ImageGadget *ig = imageGadget();
+	// TODO - ugly
+	Imath::V2f startPixel = ig->pixelAt( IECore::LineSegment3f( V3f( dragOverlay()->getStartPosition().x, dragOverlay()->getStartPosition().y, 0 ), dragOverlay()->getStartPosition() ) );
+	Imath::V2f endPixel = ig->pixelAt( IECore::LineSegment3f( V3f( dragOverlay()->getEndPosition().x, dragOverlay()->getEndPosition().y, 0 ), dragOverlay()->getEndPosition() ) );
+
+	std::cerr << "PIXELS " << startPixel << ", " << endPixel << "\n";
+
+	Imath::Box2i region;
+	region.extendBy( startPixel );
+	region.extendBy( endPixel );
+
+	std::unordered_set<uint32_t> idsSet;
+
+
+	V2i pixel;
+	// TODO - off by 1
+	for( pixel.y = region.min.y; pixel.y < region.max.y; pixel.y++ )
+	{
+		for( pixel.x = region.min.x; pixel.x < region.max.x; pixel.x++ )
+		{
+			// TODO - incredibly slow
+			idsSet.insert( sampleId( pixel ) );
+		}
+	}
+	std::vector<uint32_t> ids;
+	ids.reserve( idsSet.size() );
+	for( uint32_t i : idsSet )
+	{
+		ids.push_back( i );
+	}
+
+	std::string message;
+	PathMatcher paths = pathsForIds( ids, message );
+
+	if( paths.size() )
+	{
+		PathMatcher selection = ScriptNodeAlgo::getSelectedPaths( view()->scriptNode() );
+		if( event.modifiers & DragDropEvent::Control )
+		{
+			selection.removePaths( paths );
+		}
+		else
+		{
+			selection.addPaths( paths );
+		}
+
+		ScriptNodeAlgo::setSelectedPaths( view()->scriptNode(), selection );
+	}
+
 	return true;
 }
 
@@ -452,7 +706,7 @@ bool ImageSelectionTool::mouseMove( const GafferUI::ButtonEvent &event )
 	return false;
 }
 
-bool ImageSelectionTool::leaveSignal( const GafferUI::ButtonEvent &event )
+bool ImageSelectionTool::leave( const GafferUI::ButtonEvent &event )
 {
 	imageGadget()->setHighlightId( 0 );
 	setStatus( "", false );

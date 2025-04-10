@@ -102,8 +102,20 @@ class GAFFERSCENEUI_API ImageSelectionTool : public GafferUI::Tool
 
 		bool keyPress( const GafferUI::KeyEvent &event );
 		bool buttonPress( const GafferUI::ButtonEvent &event );
+		bool buttonRelease( const GafferUI::ButtonEvent &event );
+		IECore::RunTimeTypedPtr dragBegin( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
+		bool dragEnter( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
+		bool dragMove( const GafferUI::DragDropEvent &event );
+		bool dragEnd( const GafferUI::DragDropEvent &event );
 		bool mouseMove( const GafferUI::ButtonEvent &event );
-		bool leaveSignal( const GafferUI::ButtonEvent &event );
+		bool leave( const GafferUI::ButtonEvent &event );
+
+		class DragOverlay;
+		DragOverlay *dragOverlay();
+
+		bool m_acceptedButtonPress = false;
+		bool m_initiatedDrag = false;
+
 
 		GafferImage::ImageSamplerPtr m_imageSampler;
 
