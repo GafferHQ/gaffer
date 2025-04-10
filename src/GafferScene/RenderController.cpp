@@ -1306,6 +1306,16 @@ RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer
 
 RenderController::~RenderController()
 {
+	if( m_renderOptions.renderManifestFilePath().size() && m_renderManifest )
+	{
+		// Make sure the directory exists to write the exr manifest to.
+		std::filesystem::create_directories(
+			std::filesystem::path( m_renderOptions.renderManifestFilePath() ).parent_path()
+		);
+
+		renderManifest()->writeEXRManifest( m_renderOptions.renderManifestFilePath() );
+	}
+
 	// Cancel background task before the things it relies
 	// on are destroyed.
 	cancelBackgroundTask();
