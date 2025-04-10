@@ -76,6 +76,33 @@ ConstDisplacementPtr MaterialCache::getDisplacement( const IECoreScene::ShaderNe
 
 ConstLightShaderPtr MaterialCache::getLightShader( const IECoreScene::ShaderNetwork *network, const IECoreScene::ShaderNetwork *lightFilter )
 {
+	auto convert = [&] {
+
+		std::vector<riley::ShadingNode> nodes = ShaderNetworkAlgo::convert( network );
+		std::vector<riley::ShadingNode> filterNodes;
+		if( lightFilter )
+		{
+			filterNodes = ShaderNetworkAlgo::convert( lightFilter );
+		}
+		riley::LightShaderId id = m_session->createLightShader( { (uint32_t)nodes.size(), nodes.data() }, { (uint32_t)filterNodes.size(), filterNodes.data() } );
+		return new LightShader( id, m_session );
+
+	};
+
+	if( auto *outputShader = network->outputShader() )
+	{
+		if( outputShader->getName() == "PxrPortalLight" )
+		{
+			// We can't cache portal shaders, because they are subject to last-minute edits
+			// in `Session::updatePortals()`, and those edits are dependent on the light's
+			// transform. Hence two lights with the same transform can't share a portal shader.
+			/// \todo Refactor portal handling to be more like LightFilter handling, so the
+			/// shader modifications are performed on a ShaderNetwork before being passed to
+			/// `getLightShader()`.
+			return convert();
+		}
+	}
+
 	IECore::MurmurHash h = network->Object::hash();
 	if( lightFilter )
 	{
@@ -86,14 +113,7 @@ ConstLightShaderPtr MaterialCache::getLightShader( const IECoreScene::ShaderNetw
 	m_lightShaderCache.insert( a, h );
 	if( !a->second )
 	{
-		std::vector<riley::ShadingNode> nodes = ShaderNetworkAlgo::convert( network );
-		std::vector<riley::ShadingNode> filterNodes;
-		if( lightFilter )
-		{
-			filterNodes = ShaderNetworkAlgo::convert( lightFilter );
-		}
-		riley::LightShaderId id = m_session->createLightShader( { (uint32_t)nodes.size(), nodes.data() }, { (uint32_t)filterNodes.size(), filterNodes.data() } );
-		a->second = new LightShader( id, m_session );
+		a->second = convert();
 	}
 	return a->second;
 }

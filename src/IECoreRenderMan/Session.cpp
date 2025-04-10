@@ -381,7 +381,8 @@ void Session::updatePortals()
 	{
 		/// \todo To support multiple domes, we need to add a mechanism for
 		/// linking them to portals. Perhaps this can be achieved via
-		/// `ObjectInterface::link()`?
+		/// `ObjectInterface::link()`? If so, this entire mechanism might be
+		/// better off being implemented in the LightLinker class.
 		IECore::msg( IECore::Msg::Warning, "IECoreRenderMan::Renderer", "PxrPortalLights combined with multiple PxrDomeLights are not yet supported" );
 	}
 
