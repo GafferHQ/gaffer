@@ -494,6 +494,11 @@ void InteractiveRender::affects( const Plug *input, AffectedPlugsContainer &outp
 
 const RenderManifest *InteractiveRender::renderManifest() const
 {
+	if( !m_controller )
+	{
+		return nullptr;
+	}
+
 	return m_controller->renderManifest();
 }
 
