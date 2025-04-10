@@ -64,6 +64,13 @@ using namespace GafferSceneUI;
 using namespace GafferImage;
 using namespace GafferImageUI;
 
+namespace
+{
+
+std::string g_isRenderingMetadataName = "gaffer:isRendering";
+
+}
+
 //////////////////////////////////////////////////////////////////////////
 // ImageSelectionTool implementation
 //////////////////////////////////////////////////////////////////////////
@@ -151,6 +158,7 @@ void ImageSelectionTool::plugDirtied( const Gaffer::Plug *plug )
 		// signal. That gives us a cue that we need to recheck the manifest - even if none of the metadata
 		// has changed, if the image was rewritten, the manifest might have been rewritten as well.
 		m_sideCarManifestModTimeDirty = true;
+		m_selectionDirty = true;
 	}
 }
 
@@ -210,18 +218,23 @@ void ImageSelectionTool::updateRenderManifest( std::string &message )
 	Context::Scope scopedContext( view()->context() );
 	const ImagePlug *image = imagePlug();
 
-	// Const cast is safe here since source scene only needs a non-const input in order to return a non-const
-	// result, and we treat the result as const.
-	const ScenePlug *scenePlug = SceneAlgo::sourceScene( const_cast<ImagePlug*>( image ) );
-
-	if( scenePlug )
+	ConstBoolDataPtr isRenderingData = image->metadata()->member<BoolData>( g_isRenderingMetadataName );
+	if( isRenderingData && isRenderingData->readable() )
 	{
-		const InteractiveRender *interactiveRenderNode = IECore::runTimeCast<const InteractiveRender>( scenePlug->node() );
-		if( interactiveRenderNode )
+		// Const cast is safe here since source scene only needs a non-const input in order to return a non-const
+		// result, and we treat the result as const.
+		const ScenePlug *scenePlug = SceneAlgo::sourceScene( const_cast<ImagePlug*>( image ) );
+
+		if( scenePlug )
 		{
-			m_renderManifest = interactiveRenderNode->renderManifest();
-			return;
+			const InteractiveRender *interactiveRenderNode = IECore::runTimeCast<const InteractiveRender>( scenePlug->node() );
+			if( interactiveRenderNode )
+			{
+				m_renderManifest = interactiveRenderNode->renderManifest();
+			}
 		}
+
+		return;
 	}
 
 	std::string sideCarManifestPath;
