@@ -1306,6 +1306,11 @@ RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer
 
 RenderController::~RenderController()
 {
+	if( m_renderOptions.idManifestFilePath().size() && m_renderManifest )
+	{
+		renderManifest()->writeEXRManifest( m_renderOptions.idManifestFilePath() );
+	}
+
 	// Cancel background task before the things it relies
 	// on are destroyed.
 	cancelBackgroundTask();
