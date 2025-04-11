@@ -137,7 +137,7 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 		using CursorPosition = std::optional<Imath::V2f>;
 		CursorPosition cursorPos() const;
 
-		using CursorValue = std::variant<std::monostate, int, float, Imath::V2f, Imath::V3f, Imath::Color3f>;
+		using CursorValue = std::variant<std::monostate, int, float, Imath::V2f, Imath::V3f, Imath::Color3f, Imath::Quatf>;
 		const CursorValue cursorValue() const;
 
 		GafferScene::ScenePlug *internalScenePlug();
