@@ -62,8 +62,6 @@ const RtUString g_pxrDomeLightUStr( "PxrDomeLight" );
 const RtUString g_pxrPortalLightUStr( "PxrPortalLight" );
 const RtUString g_tintUStr( "tint" );
 
-const riley::CoordinateSystemList g_emptyCoordinateSystems = { 0, nullptr };
-
 // Returns a unique portal name based on a color map and rotation, to
 // satisfy these requirements from the RenderMan docs :
 //
@@ -205,15 +203,16 @@ void Session::deleteCamera( riley::CameraId cameraId )
 }
 
 
-riley::LightShaderId Session::createLightShader( const riley::ShadingNetwork &light )
+riley::LightShaderId Session::createLightShader( const riley::ShadingNetwork &light, const riley::ShadingNetwork &lightFilter )
 {
-	riley::LightShaderId result = riley->CreateLightShader( riley::UserId(), light, { 0, nullptr } );
+	riley::LightShaderId result = riley->CreateLightShader( riley::UserId(), light, lightFilter );
 	RtUString type = light.nodeCount ? light.nodes[light.nodeCount-1].name : RtUString();
 	if( type == g_pxrDomeLightUStr || type == g_pxrPortalLightUStr )
 	{
 		LightShaderInfo &lightShaderInfo = m_domeAndPortalShaders[result.AsUInt32()];
 		assert( lightShaderInfo.shaders.empty() ); // ID should be unique.
 		lightShaderInfo.shaders.insert( lightShaderInfo.shaders.end(), light.nodes, light.nodes + light.nodeCount );
+		lightShaderInfo.lightFilterShaders.insert( lightShaderInfo.lightFilterShaders.end(), lightFilter.nodes, lightFilter.nodes + lightFilter.nodeCount );
 		m_portalsDirty = true;
 	}
 
@@ -237,12 +236,12 @@ void Session::deleteLightShader( riley::LightShaderId lightShaderId )
 	}
 }
 
-riley::LightInstanceId Session::createLightInstance( riley::GeometryPrototypeId geometry, riley::MaterialId materialId, riley::LightShaderId lightShaderId, const riley::Transform &transform, const RtParamList &attributes )
+riley::LightInstanceId Session::createLightInstance( riley::GeometryPrototypeId geometry, riley::MaterialId materialId, riley::LightShaderId lightShaderId, const riley::CoordinateSystemList &coordinateSystems, const riley::Transform &transform, const RtParamList &attributes )
 {
 	riley::LightInstanceId result = riley->CreateLightInstance(
 		riley::UserId(), riley::GeometryPrototypeId(), geometry,
 		materialId, lightShaderId,
-		g_emptyCoordinateSystems, transform, attributes
+		coordinateSystems, transform, attributes
 	);
 
 	if( m_domeAndPortalShaders.count( lightShaderId.AsUInt32() ) )
@@ -259,13 +258,13 @@ riley::LightInstanceId Session::createLightInstance( riley::GeometryPrototypeId 
 }
 
 riley::LightInstanceResult Session::modifyLightInstance(
-	riley::LightInstanceId lightInstanceId, const riley::MaterialId *materialId, const riley::LightShaderId *lightShaderId, const riley::Transform *transform,
+	riley::LightInstanceId lightInstanceId, const riley::MaterialId *materialId, const riley::LightShaderId *lightShaderId, const riley::CoordinateSystemList *coordinateSystems, const riley::Transform *transform,
 	const RtParamList *attributes
 )
 {
 	riley::LightInstanceResult result = riley->ModifyLightInstance(
 		riley::GeometryPrototypeId(), lightInstanceId,
-		materialId, lightShaderId, nullptr, transform, attributes
+		materialId, lightShaderId, coordinateSystems, transform, attributes
 	);
 
 	/// \todo Consider the possibility of a non-portal/dome turning
@@ -382,7 +381,8 @@ void Session::updatePortals()
 	{
 		/// \todo To support multiple domes, we need to add a mechanism for
 		/// linking them to portals. Perhaps this can be achieved via
-		/// `ObjectInterface::link()`?
+		/// `ObjectInterface::link()`? If so, this entire mechanism might be
+		/// better off being implemented in the LightLinker class.
 		IECore::msg( IECore::Msg::Warning, "IECoreRenderMan::Renderer", "PxrPortalLights combined with multiple PxrDomeLights are not yet supported" );
 	}
 
@@ -442,7 +442,8 @@ void Session::updatePortals()
 				// Update the light shader. We can modify the existing one in
 				// place because we know we're only using it on this one light.
 				riley::ShadingNetwork shaders = { (uint32_t)portalShader.shaders.size(), portalShader.shaders.data() };
-				riley->ModifyLightShader( info.lightShader, &shaders, /* lightFilter = */ nullptr );
+				riley::ShadingNetwork lightFilterShaders = { (uint32_t)portalShader.lightFilterShaders.size(), portalShader.lightFilterShaders.data() };
+				riley->ModifyLightShader( info.lightShader, &shaders, &lightFilterShaders );
 
 				// Unmute, in case we muted previously due to lack of a dome.
 				riley->ModifyLightInstance(

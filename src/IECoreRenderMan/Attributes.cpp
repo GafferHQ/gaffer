@@ -119,6 +119,7 @@ const InternedString g_oslDisplacementAttributeName( "osl:displacement" );
 const InternedString g_renderManDisplacementAttributeName( "ri:displacement" );
 const InternedString g_renderManLightShaderAttributeName( "ri:light" );
 const InternedString g_renderManSurfaceAttributeName( "ri:surface" );
+const InternedString g_renderManLightFilterAttributeName( "ri:lightFilter" );
 const InternedString g_surfaceAttributeName( "surface" );
 const RtUString g_userMaterialId( "user:__materialid" );
 
@@ -300,6 +301,8 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, MaterialCache 
 
 		}
 	}
+
+	m_lightFilter = attribute<ShaderNetwork>( attributes->members(), g_renderManLightFilterAttributeName );
 }
 
 Attributes::~Attributes()
@@ -334,4 +337,9 @@ const Material *Attributes::lightMaterial() const
 const IECoreScene::ShaderNetwork *Attributes::lightShader() const
 {
 	return m_lightShader.get();
+}
+
+const IECoreScene::ShaderNetwork *Attributes::lightFilter() const
+{
+	return m_lightFilter.get();
 }

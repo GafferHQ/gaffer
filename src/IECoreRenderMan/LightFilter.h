@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
+//  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -39,9 +39,7 @@
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
 #include "Attributes.h"
-#include "GeometryPrototypeCache.h"
 #include "LightLinker.h"
-#include "MaterialCache.h"
 #include "Session.h"
 
 #include "Riley.h"
@@ -49,13 +47,13 @@
 namespace IECoreRenderMan
 {
 
-class Light : public IECoreScenePreview::Renderer::ObjectInterface
+class LightFilter : public IECoreScenePreview::Renderer::ObjectInterface
 {
 
 	public :
 
-		Light( const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, MaterialCache *materialCache, LightLinker *lightLinker, Session *session );
-		~Light();
+		LightFilter( const std::string &name, const Attributes *attributes, Session *session, LightLinker *lightLinker );
+		~LightFilter();
 
 		// ObjectInterface overrides
 		// =========================
@@ -66,27 +64,34 @@ class Light : public IECoreScenePreview::Renderer::ObjectInterface
 		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override;
 		void assignID( uint32_t id ) override;
 
-		// Interface used by LightLinker
-		// =============================
+		// Interface used by Light and LightLinker
+		// =======================================
+		//
+		// Light filters aren't first class objects in RenderMan. Instead they
+		// are just bits of state on light shaders and light instances. The
+		// methods here allow Light and LightLinker to update lights to reflect
+		// changes to the filters linked to them.
 
-		void updateLightFilterShader( const IECoreScene::ConstShaderNetworkPtr &lightFilterShader );
+		riley::CoordinateSystemId coordinateSystem() const { return m_coordinateSystem; }
+		const IECoreScene::ShaderNetwork *shader() const { return m_shader.get(); }
+
+		using WeakObjectSetPtr = std::weak_ptr<const IECoreScenePreview::Renderer::ObjectSet>;
+		/// \todo Use `unordered_map` (or `concurrent_unordered_map`) when `std::owner_hash()`
+		/// becomes available (C++26).
+		using SetMemberships = std::set<WeakObjectSetPtr, std::owner_less<WeakObjectSetPtr>>;
+		SetMemberships &setMemberships() { return m_setMemberships; }
+		const SetMemberships &setMemberships() const { return m_setMemberships; }
 
 	private :
 
-		void updateLightShader( const Attributes *attributes );
-
-		MaterialCache *m_materialCache;
 		Session *m_session;
+
+		RtUString m_coordinateSystemName;
+		riley::CoordinateSystemId m_coordinateSystem;
+		IECore::MurmurHash m_shaderHash;
+		IECoreScene::ConstShaderNetworkPtr m_shader;
 		LightLinker *m_lightLinker;
-		ConstLightShaderPtr m_lightShader;
-		riley::LightInstanceId m_lightInstance;
-		Imath::M44f m_correctiveTransform;
-		/// Used to keep material etc alive as long as we need it.
-		ConstAttributesPtr m_attributes;
-		/// Used to keep geometry prototype alive as long as we need it.
-		ConstGeometryPrototypePtr m_geometryPrototype;
-		IECoreScene::ConstShaderNetworkPtr m_lightFilterShader;
-		IECoreScenePreview::Renderer::ConstObjectSetPtr m_linkedFilters;
+		SetMemberships m_setMemberships;
 
 };
 

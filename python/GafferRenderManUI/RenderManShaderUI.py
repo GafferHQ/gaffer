@@ -71,6 +71,13 @@ def appendShaders( menuDefinition, prefix = "/RenderMan" ) :
 		}
 	)
 
+	menuDefinition.append(
+		prefix + "/Light Filter",
+		{
+			"subMenu" : functools.partial( __lightFiltersSubMenu, plugins ),
+		}
+	)
+
 def __plugins() :
 
 	result = {}
@@ -126,7 +133,7 @@ def __loadShader( shaderName, nodeType ) :
 	node = nodeType( nodeName )
 	node.loadShader( shaderName )
 
-	if isinstance( node, GafferRenderMan.RenderManLight ) :
+	if isinstance( node, ( GafferRenderMan.RenderManLight, GafferRenderMan.RenderManLightFilter ) ) :
 		node["name"].setValue(
 			shaderName.replace( "Pxr", "pxr" )
 		)
@@ -202,6 +209,40 @@ def __lightsSubMenu( plugins ) :
 					functools.partial( __loadShader, name, GafferRenderMan.RenderManLight )
 					if name != "PxrMeshLight" else
 					GafferRenderMan.RenderManMeshLight
+				)
+			}
+		)
+
+	return result
+
+def __lightFiltersSubMenu( plugins ) :
+
+	result = IECore.MenuDefinition()
+
+	for name, plugin in plugins.items() :
+
+		if plugin["type"] != "lightfilter" :
+			continue
+
+		if name in [
+			# These two are deprecated in RenderMan 26, so best
+			# not to let folks get used to them.
+			"PxrGoboLightFilter",
+			"PxrBlockerLightFilter",
+			# This one only seems useful when linked to specific
+			# _objects_ (rather than lights), and I'm not sure how
+			# to do that yet.
+			"PxrIntMultLightFilter",
+			# Seems more like this isn't intended to be user facing.
+			"PxrCombinerLightFilter",
+		] :
+			continue
+
+		result.append(
+			"/" + name,
+			{
+				"command" : GafferUI.NodeMenu.nodeCreatorWrapper(
+					functools.partial( __loadShader, name, GafferRenderMan.RenderManLightFilter )
 				)
 			}
 		)

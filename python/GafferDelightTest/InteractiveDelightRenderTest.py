@@ -63,20 +63,6 @@ class InteractiveDelightRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		pass
 
-	# Disable this test for now as we don't have light filter support in
-	# 3Delight, yet.
-	@unittest.skip( "No light filter support just yet" )
-	def testLightFilters( self ) :
-
-		pass
-
-	# Disable this test for now as we don't have light filter support in
-	# 3Delight, yet.
-	@unittest.skip( "No light filter support just yet" )
-	def testLightFiltersAndSetEdits( self ) :
-
-		pass
-
 	@unittest.skip( "Need to be able to close old driver _after_ opening new one" )
 	def testEditCropWindow( self ) :
 
@@ -111,6 +97,22 @@ class InteractiveDelightRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		light["attributes"].addChild( Gaffer.NameValuePlug( "dl:visibility.camera", False ) )
 
 		return light, light["parameters"]["i_color"]
+
+	def _createSpotLight( self ) :
+
+		light = GafferOSL.OSLLight()
+		light.loadShader( "spotLight" )
+		light["attributes"].addChild( Gaffer.NameValuePlug( "dl:visibility.camera", False ) )
+
+		return light, light["parameters"]["i_color"]
+
+	def _createLightFilter( self ) :
+
+		self.skipTest( "Light filters not supported" )
+
+	def _createGobo( self ) :
+
+		self.skipTest( "Light filters not supported" )
 
 if __name__ == "__main__":
 	unittest.main()

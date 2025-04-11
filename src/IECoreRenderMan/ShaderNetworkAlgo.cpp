@@ -337,7 +337,8 @@ void convertConnection( const IECoreScene::ShaderNetwork::Connection &connection
 		// connections will silently fail if we include a name.
 		typeIt->second != pxrcore::DataType::k_displayfilter &&
 		typeIt->second != pxrcore::DataType::k_samplefilter &&
-		typeIt->second != pxrcore::DataType::k_bxdf
+		typeIt->second != pxrcore::DataType::k_bxdf &&
+		typeIt->second != pxrcore::DataType::k_lightfilter
 	)
 	{
 		reference += ":" + connection.source.name.string();
@@ -658,6 +659,51 @@ std::vector<riley::ShadingNode> convert( const IECoreScene::ShaderNetwork *netwo
 	convertShaderNetworkWalk( preprocessedNetwork->getOutput(), preprocessedNetwork.get(), result, visited );
 
 	return result;
+}
+
+IECoreScene::ConstShaderNetworkPtr combineLightFilters( const std::vector<const IECoreScene::ShaderNetwork *> networks )
+{
+	if( networks.empty() )
+	{
+		return nullptr;
+	}
+
+	if( networks.size() == 1 )
+	{
+		return networks[0];
+	}
+
+	unordered_map<string, size_t> numConnections;
+
+	ShaderNetworkPtr combinedNetwork = new ShaderNetwork;
+	auto combinerHandle = combinedNetwork->addShader(
+		"combiner", new Shader( "PxrCombinerLightFilter", "lightFilter" )
+	);
+	combinedNetwork->setOutput( { combinerHandle, "out" } );
+
+	for( auto network : networks )
+	{
+		const Shader *outputShader = network->outputShader();
+		if( !outputShader )
+		{
+			continue;
+		}
+
+		string combineMode = "mult";
+		if( auto combineModeData = outputShader->parametersData()->member<StringData>( "combineMode" ) )
+		{
+			combineMode = combineModeData->readable();
+		}
+
+		ShaderNetwork::Parameter filterHandle = IECoreScene::ShaderNetworkAlgo::addShaders( combinedNetwork.get(), network );
+
+		const size_t connectionIndex = numConnections[combineMode]++;
+		combinedNetwork->addConnection(
+			ShaderNetwork::Connection( filterHandle, { combinerHandle, fmt::format( "{}[{}]", combineMode, connectionIndex ) } )
+		);
+	}
+
+	return combinedNetwork;
 }
 
 void convertUSDShaders( ShaderNetwork *shaderNetwork )

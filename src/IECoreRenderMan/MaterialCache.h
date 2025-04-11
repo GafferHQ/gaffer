@@ -52,30 +52,36 @@ using Material = RefCountedId<riley::MaterialId>;
 IE_CORE_DECLAREPTR( Material );
 using Displacement = RefCountedId<riley::DisplacementId>;
 IE_CORE_DECLAREPTR( Displacement );
+using LightShader = RefCountedId<riley::LightShaderId>;
+IE_CORE_DECLAREPTR( LightShader );
 
 class MaterialCache
 {
 
 	public :
 
-		MaterialCache( const Session *session );
+		MaterialCache( Session *session );
 
 		// Can be called concurrently with other calls to `get()`
 		ConstMaterialPtr getMaterial( const IECoreScene::ShaderNetwork *network );
 		ConstDisplacementPtr getDisplacement( const IECoreScene::ShaderNetwork *network );
+		ConstLightShaderPtr getLightShader( const IECoreScene::ShaderNetwork *network, const IECoreScene::ShaderNetwork *lightFilter );
 
 		// Must not be called concurrently with anything.
 		void clearUnused();
 
 	private :
 
-		const Session *m_session;
+		Session *m_session;
 
 		using Cache = tbb::concurrent_hash_map<IECore::MurmurHash, ConstMaterialPtr>;
 		Cache m_cache;
 
 		using DisplacementCache = tbb::concurrent_hash_map<IECore::MurmurHash, ConstDisplacementPtr>;
 		DisplacementCache m_displacementCache;
+
+		using LightShaderCache = tbb::concurrent_hash_map<IECore::MurmurHash, ConstLightShaderPtr>;
+		LightShaderCache m_lightShaderCache;
 
 };
 
