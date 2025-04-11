@@ -12,6 +12,7 @@ Fixes
 
 - RenderManShader : Fixed handling of minimum and maximum values for `color`, `vector`, `normal` and `point` parameters.
 - FreezeTransform : Fixed double transforming when the input primitive contains multiple primitive variables sharing the same data.
+- ResamplePrimitiveVariables : Fixed cancellation of long-running operations on curves and points.
 
 1.5.10.1 (relative to 1.5.10.0)
 ========
