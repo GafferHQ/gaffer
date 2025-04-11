@@ -518,6 +518,20 @@ plugsMetadata = {
 
 	],
 
+	"options.idManifestFilePath" : [
+
+		"description",
+		"""
+		Specifies a file to write a sidecar id manifest to. If a
+		render is set up with both an id manifest, and a correctly
+		set up id AOV, that will allow the use of the Image
+		Selection Tool to select objects in the rendered image.
+		""",
+
+		"layout:section", "Id Manifest",
+
+	],
+
 	# Statistics plugs
 
 	"options.performanceMonitor" : [
