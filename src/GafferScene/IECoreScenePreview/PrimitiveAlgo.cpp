@@ -44,12 +44,13 @@
 #include "IECore/DataAlgo.h"
 #include "IECore/TypeTraits.h"
 
-#include <unordered_map>
-#include <numeric>
-
 #include "fmt/format.h"
 
 #include "tbb/parallel_for.h"
+
+#include <numeric>
+#include <unordered_map>
+#include <unordered_set>
 
 using namespace IECoreScene;
 using namespace IECore;
@@ -1364,6 +1365,7 @@ void PrimitiveAlgo::transformPrimitive(
 
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 
+	std::unordered_set<const Data *> alreadyProcessedData;
 	for( const auto &[name, var] : primitive.variables )
 	{
 		Canceller::check( canceller );
@@ -1380,6 +1382,13 @@ void PrimitiveAlgo::transformPrimitive(
 			interp == GeometricData::Interpretation::Vector ||
 			interp == GeometricData::Interpretation::Normal
 		) )
+		{
+			continue;
+		}
+
+		// Multiple primitive variables can reference the same data,
+		// Make sure we only transform such data once.
+		if( !alreadyProcessedData.insert( var.data.get() ).second )
 		{
 			continue;
 		}

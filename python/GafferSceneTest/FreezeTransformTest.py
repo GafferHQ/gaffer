@@ -124,5 +124,27 @@ class FreezeTransformTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( freezeTransform["out"] )
 		self.assertEqual( freezeTransform["out"].transform( "/plane" ), imath.M44f() )
 
+	def testShuffledPrimitiveVariables( self ) :
+
+		p = GafferScene.Plane()
+		p["transform"]["translate"].setValue( imath.V3f( 1, 2, 3 ) )
+
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		shuffle = GafferScene.ShufflePrimitiveVariables( "ShufflePrimitiveVariables" )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "P", "Pref" ) )
+		shuffle["in"].setInput( p["out"] )
+		shuffle["filter"].setInput( f["out"] )
+
+		t = GafferScene.FreezeTransform()
+		t["in"].setInput( shuffle["out"] )
+
+		self.assertSceneValid( t["out"] )
+
+		self.assertEqual( t["out"].transform( "/plane" ), imath.M44f() )
+		self.assertEqual( t["out"].bound( "/plane" ), imath.Box3f( imath.V3f( 0.5, 1.5, 3 ), imath.V3f( 1.5, 2.5, 3 ) ) )
+		self.assertEqual( t["out"].object( "/plane" ).bound(), imath.Box3f( imath.V3f( 0.5, 1.5, 3 ), imath.V3f( 1.5, 2.5, 3 ) ) )
+
 if __name__ == "__main__":
 	unittest.main()

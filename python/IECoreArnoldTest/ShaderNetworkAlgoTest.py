@@ -996,6 +996,87 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 			],
 
+			"sphereLightToPhotometricLight" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"shaping:ies:file" : "photometric.ies",
+					}
+				),
+
+				IECoreScene.Shader(
+					"photometric_light", "light",
+					expectedLightParameters( {
+						"filename" : "photometric.ies",
+						"radius" : 0.5,
+					} )
+				),
+
+			],
+
+			"sphereLightToPhotometricLightEmptyFile" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"shaping:ies:file" : "",
+					}
+				),
+
+				IECoreScene.Shader(
+					"point_light", "light",
+					expectedLightParameters( {
+						"radius" : 0.5,
+					} )
+				),
+
+			],
+
+			"sphereLightToPhotometricLightNotSpot" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"shaping:cone:angle" : 20.0,
+						"shaping:cone:softness" : 0.5,
+						"shaping:ies:file" : "photometric.ies",
+					}
+				),
+
+				IECoreScene.Shader(
+					"photometric_light", "light",
+					expectedLightParameters( {
+						"filename" : "photometric.ies",
+						"radius" : 0.5,
+					} )
+				),
+
+			],
+
+			"sphereLightToSpotLightEmptyIESFile" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"shaping:ies:file" : "",
+						"shaping:cone:angle" : 20.0,
+						"shaping:cone:softness" : 0.5,
+					}
+				),
+
+				IECoreScene.Shader(
+					"spot_light", "light",
+					expectedLightParameters( {
+						"cone_angle" : 40.0,
+						"penumbra_angle" : 20.0,
+						"cosine_power" : 0.0,
+						"radius" : 0.5,
+					} )
+				),
+
+			],
+
 			# SphereLight (with softness greater than 1)
 
 			"sphereLightHighSoftness" : [

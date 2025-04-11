@@ -111,15 +111,25 @@ class _StylizedAOVAdaptor( GafferScene.SceneProcessor ) :
 		if not displayFilters.intersection( _StylizedAOVAdaptor.__stylizedFilters ) :
 			return inputGlobals
 
-		# Stylized Looks are in use, so add all the AOVs needed. We use a `null`
-		# display driver for this - if the user wants to write them to disk then
-		# they can specify separate outputs for that themselves.
+		# Stylized Looks are in use, so make sure we have all the AOVs needed.
+		# We use a `null` display driver for this - if the user wants to write
+		# them to disk then they can specify separate outputs for that
+		# themselves.
+
+		existingAOVs = {
+			output.getData()
+			for name, output in inputGlobals.items()
+			if name.startswith( "output:" )
+		}
 
 		outputGlobals = inputGlobals.copy()
 		for aov in _StylizedAOVAdaptor.__aovDefinitions :
 
+			if _StylizedAOVAdaptor.__aovDefinitions[aov] in existingAOVs :
+				continue
+
 			output = IECoreScene.Output(
-				aov, "null", _StylizedAOVAdaptor.__aovDefinitions[aov],
+				f"_StylizedAOVAdaptor:{aov}", "null", _StylizedAOVAdaptor.__aovDefinitions[aov],
 				{ "layerName" : aov }
 			)
 			if aov == "sampleCount" :
