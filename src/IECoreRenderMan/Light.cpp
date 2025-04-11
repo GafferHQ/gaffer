@@ -39,12 +39,20 @@
 #include "IECoreRenderMan/ShaderNetworkAlgo.h"
 #include "Transform.h"
 
+#include "IECore/DataAlgo.h"
+
 using namespace std;
 using namespace Imath;
+using namespace IECore;
 using namespace IECoreRenderMan;
 
 namespace
 {
+
+const InternedString g_widthParameter( "width" );
+const InternedString g_heightParameter( "height" );
+const InternedString g_radiusParameter( "radius" );
+const InternedString g_lengthParameter( "length" );
 
 M44f correctiveTransform( const Attributes *attributes )
 {
@@ -59,13 +67,61 @@ M44f correctiveTransform( const Attributes *attributes )
 		return M44f();
 	}
 
-	if( lightShader->getName() == "PxrDomeLight" || lightShader->getName() == "PxrEnvDayLight" )
+	if( lightShader->getName() == "PxrDomeLight" || lightShader->getName() == "PxrEnvDayLight" || lightShader->getName() == "DomeLight" )
 	{
 		return M44f().rotate( V3f( -M_PI_2, M_PI_2, 0.0f ) );
 	}
 	else if( lightShader->getName() == "PxrMeshLight" )
 	{
 		return M44f();
+	}
+	else if( lightShader->getName() == "RectLight" )
+	{
+		V3f scale( 1.0f );
+		if( auto d = lightShader->parametersData()->member<FloatData>( g_widthParameter ) )
+		{
+			scale.x = d->readable();
+		}
+		if( auto d = lightShader->parametersData()->member<FloatData>( g_heightParameter ) )
+		{
+			scale.y = d->readable();
+		}
+		return M44f().scale( scale * V3f( 1, 1, -1 ) );
+	}
+	else if( lightShader->getName() == "DiskLight" )
+	{
+		V3f scale( 1.0f );
+		if( auto d = lightShader->parametersData()->member<FloatData>( g_radiusParameter ) )
+		{
+			const float radius = d->readable();
+			scale.x = radius / 0.5f;
+			scale.y = radius / 0.5f;
+		}
+		return M44f().scale( scale * V3f( 1, 1, -1 ) );
+	}
+	else if( lightShader->getName() == "CylinderLight" )
+	{
+		V3f scale( 1.0f );
+		if( auto d = lightShader->parametersData()->member<FloatData>( g_lengthParameter ) )
+		{
+			scale.x = d->readable();
+		}
+		if( auto d = lightShader->parametersData()->member<FloatData>( g_radiusParameter ) )
+		{
+			const float radius = d->readable();
+			scale.y = radius / 0.5f;
+			scale.z = radius / 0.5f;
+		}
+		return M44f().scale( scale * V3f( 1, 1, -1 ) );
+	}
+	else if( lightShader->getName() == "SphereLight" )
+	{
+		V3f scale( 1.0f );
+		if( auto d = lightShader->parametersData()->member<FloatData>( g_radiusParameter ) )
+		{
+			scale *= d->readable();
+		}
+		return M44f().scale( scale * V3f( 1, 1, -1 ) );
 	}
 	else
 	{

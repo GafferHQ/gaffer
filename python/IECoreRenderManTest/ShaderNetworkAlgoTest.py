@@ -167,6 +167,324 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 				self.assertEqual( network.input( ( "previewSurface", surfaceIn ) ), ( "reader", readerOut ) )
 
+	def testConvertUSDLights( self ) :
+
+		def expectedLightParameters( parameters ) :
+
+			# Start with defaults
+			result = {
+				"intensity" : 1.0,
+				"exposure" : 0.0,
+				"color" : imath.Color3f( 1, 1, 1 ),
+				"diffuse" : 1.0,
+				"specular" : 1.0,
+				"normalize" : False,
+				"enableShadows" : True,
+				"shadowColor" : imath.Color3f( 0 ),
+			}
+			result.update( parameters )
+			return result
+
+		for testName, shaders in {
+
+			# Basic SphereLight -> PxrSphereLight conversion
+
+			"sphereLightToPointLight" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"intensity" : 2.5,
+						"exposure" : 1.1,
+						"color" : imath.Color3f( 1, 2, 3 ),
+						"diffuse" : 0.5,
+						"specular" : 0.75,
+						"radius" : 0.5,
+						"normalize" : True,
+						"ri:light:lightgroup" : "test", # todo: get the right name
+						"ri:light:samples" : 3, # todo: get the right name
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrSphereLight", "light",
+					expectedLightParameters( {
+						"intensity" : 2.5,
+						"exposure" : 1.1,
+						"color" : imath.Color3f( 1, 2, 3 ),
+						"diffuse" : 0.5,
+						"specular" : 0.75,
+						# TODO: Check xform differences
+						"normalize" : True,
+						"lightgroup" : "test", # todo: get the right name
+						"samples" : 3, # todo: get the right name
+					} )
+				),
+
+			],
+
+			# Basic SphereLight -> PxrSphereLight conversion, testing default values
+
+			"defaultParameters" : [
+
+				IECoreScene.Shader( "SphereLight", "light", {} ),
+
+				IECoreScene.Shader(
+					"PxrSphereLight", "light",
+					expectedLightParameters( {
+						# TODO: Check xform differences
+					} )
+				),
+
+			],
+
+			# SphereLight with `treatAsPoint = true`.
+
+			"treatAsPoint" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"treatAsPoint" : True,
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrSphereLight", "light",
+					expectedLightParameters( {
+						# TODO: Check xform differences
+						"normalize" : True,
+					} )
+				),
+
+			],
+
+			# SphereLight (with shaping) -> PxrSphereLight conversion
+
+			"sphereLightToSpotLight" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"shaping:cone:angle" : 20.0,
+						"shaping:cone:softness" : 0.5,
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrSphereLight", "light",
+					expectedLightParameters( {
+						"coneAngle" : 20.0,
+						"coneSoftness" : 0.5,
+					} )
+				),
+
+			],
+
+			# RectLight -> PxrRectLight, with USD default width and height
+
+			"rectLight" : [
+
+				IECoreScene.Shader( "RectLight", "light", {} ),
+
+				IECoreScene.Shader(
+					"PxrRectLight", "light",
+					expectedLightParameters( {
+						# TODO: Check xform differences
+					} )
+				),
+
+			],
+
+			# RectLight -> PxrRectLight
+
+			"rectLight" : [
+
+				IECoreScene.Shader(
+					"RectLight", "light",
+					{
+						"width" : 20.0,
+						"height" : 60.0,
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrRectLight", "light",
+					expectedLightParameters( {
+						# TODO: Check xform differences
+					} )
+				),
+
+			],
+
+			# DistantLight -> PxrDistantLight
+
+			"distantLight" : [
+
+				IECoreScene.Shader(
+					"DistantLight", "light",
+					{
+						"angle" : 1.0,
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrDistantLight", "light",
+					expectedLightParameters( {
+						"angleExtent" : 1.0
+					} )
+				),
+
+			],
+
+			# CylinderLight -> PxrCylinderLight
+
+			"cylinderLight" : [
+
+				IECoreScene.Shader(
+					"CylinderLight", "light",
+					{
+						"intensity" : 2.5,
+						"exposure" : 1.1,
+						"radius" : 0.5,
+						"length" : 2.0,
+						"normalize" : True,
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrCylinderLight", "light",
+					expectedLightParameters( {
+						"intensity" : 2.5,
+						"exposure" : 1.1,
+						"normalize" : True,
+					} )
+				),
+
+			],
+
+			# CylinderLight with `treatAsLine = true`.
+
+			"cylinderLight" : [
+
+				IECoreScene.Shader(
+					"CylinderLight", "light",
+					{
+						"radius" : 1.0,
+						"length" : 2.0,
+						"treatAsLine" : True,
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrCylinderLight", "light",
+					expectedLightParameters( {
+						"normalize" : True,
+					} )
+				),
+
+			],
+
+			# SphereLight with ShadowAPI parameters.
+
+			"shadowAPI" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"shadow:enable" : False,
+						"shadow:color" : imath.V3f( 1, 0, 0 ),
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrSphereLight", "light",
+					expectedLightParameters( {
+						"enableShadows" : False,
+						"shadowColor" : imath.Color3f( 1, 0, 0 ),
+					} )
+				),
+
+			],
+
+		}.items() :
+
+			with self.subTest( testName = testName ) :
+
+				network = IECoreScene.ShaderNetwork(
+					shaders = {
+						"light" : shaders[0],
+					},
+					output = "light",
+				)
+
+				IECoreRenderMan.ShaderNetworkAlgo.convertUSDShaders( network )
+
+				light = network.getShader( "light" )
+				self.__assertShadersEqual( network.getShader( "light" ), shaders[1], "Testing {}".format( testName ) )
+
+	def testConvertUSDRectLightTexture( self ) :
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"light" : IECoreScene.Shader(
+					"RectLight", "light",
+					{
+						"texture:file" : "myFile.tx"
+					}
+				)
+			},
+			output = "light"
+		)
+
+		IECoreRenderMan.ShaderNetworkAlgo.convertUSDShaders( network )
+
+		output = network.outputShader()
+		self.assertEqual( output.name, "PxrRectLight" )
+		self.assertEqual( output.parameters["lightColorMap"].value, "myFile.tx" )
+
+	def testConvertUSDDomeLightTexture( self ) :
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"light" : IECoreScene.Shader(
+					"DomeLight", "light",
+					{
+						"texture:file" : "myFile.tx",
+					}
+				)
+			},
+			output = "light"
+		)
+
+		IECoreRenderMan.ShaderNetworkAlgo.convertUSDShaders( network )
+
+		output = network.outputShader()
+		self.assertEqual( output.name, "PxrDomeLight" )
+		self.assertEqual( output.parameters["lightColorMap"].value, "myFile.tx" )
+
+	def testConvertUSDRectLightTextureWithColor( self ) :
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"light" : IECoreScene.Shader(
+					"RectLight", "light",
+					{
+						"texture:file" : "myFile.tx",
+						"color" : imath.Color3f( 1, 2, 3 ),
+					}
+				)
+			},
+			output = "light"
+		)
+
+		IECoreRenderMan.ShaderNetworkAlgo.convertUSDShaders( network )
+
+		output = network.outputShader()
+		self.assertEqual( output.name, "PxrRectLight" )
+		self.assertEqual( output.parameters["lightColorMap"].value, "myFile.tx" )
+		self.assertEqual( output.parameters["lightColor"].value, imath.Color3f( 1, 2, 3 ) )
+
 
 if __name__ == "__main__" :
 	unittest.main()
