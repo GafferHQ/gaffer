@@ -80,6 +80,9 @@ class RendererTest( GafferTest.TestCase ) :
 
 		handler.exception.__traceback__ = None
 
+		del attributes
+		del renderer
+
 	def testSceneDescription( self ) :
 
 		with self.assertRaisesRegex( RuntimeError, "SceneDescription mode not supported" ) :
@@ -1223,6 +1226,7 @@ class RendererTest( GafferTest.TestCase ) :
 					for i in range( 0, 10 ) :
 						renderer.object( f"mesh{i}", mesh, attributes )
 
+					del attributes
 					del renderer
 
 				self.assertEqual(
@@ -1252,6 +1256,7 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 			renderer.object( "mesh", mesh, attributes )
 
+			del attributes
 			del renderer
 
 		prototype = next(
@@ -1293,6 +1298,7 @@ class RendererTest( GafferTest.TestCase ) :
 			renderer.object( "concave2", mesh, concaveAttributes )
 			renderer.object( "convex2", mesh, convexAttributes )
 
+			del concaveAttributes, convexAttributes
 			del renderer
 
 		prototypes = [ x for x in capture.json if x["method"] == "CreateGeometryPrototype" ]
@@ -1380,6 +1386,7 @@ class RendererTest( GafferTest.TestCase ) :
 			renderer.object( "mesh1B", mesh, displacementAttributes1 )
 			renderer.object( "mesh2B", mesh, displacementAttributes2 )
 
+			del displacementAttributes1, displacementAttributes2
 			del renderer
 
 		displacements = [ x for x in capture.json if x["method"] == "CreateDisplacement" ]
@@ -1441,6 +1448,9 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( self.__colorAtUV( image, imath.V2f( u, 0.1 ) ).a, 0 )
 			self.assertGreaterEqual( self.__colorAtUV( image, imath.V2f( u, 0.5 ) ).a, 0.1 )
 			self.assertEqual( self.__colorAtUV( image, imath.V2f( u, 0.9 ) ).a, 0 )
+
+		del object
+		del renderer
 
 	def testUnknownCommands( self ) :
 
