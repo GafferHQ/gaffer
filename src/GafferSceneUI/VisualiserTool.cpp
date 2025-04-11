@@ -2005,13 +2005,7 @@ class VisualiserGadget : public Gadget
 					}
 
 					// Get the object to world transform
-					ScenePlug::ScenePath path( location.path() );
-					while( !path.empty() )
-					{
-						scope.setPath( &path );
-						o2w = o2w * location.scene().transformPlug()->getValue();
-						path.pop_back();
-					}
+					o2w = location.scene().fullTransform( location.path() );
 				}
 				catch( const std::exception & )
 				{
