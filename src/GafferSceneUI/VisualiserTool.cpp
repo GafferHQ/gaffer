@@ -761,16 +761,38 @@ class VisualiserGadget : public Gadget
 			{
 				ScenePlug::PathScope scope( &location.context(), &location.path() );
 
-				// Check path exists
-				if( !location.scene().existsPlug()->getValue() )
+				ConstMeshPrimitivePtr mesh;
+				M44f o2w;
+				try
 				{
-					continue;
-				}
+					// Check path exists
+					if( !location.scene().existsPlug()->getValue() )
+					{
+						continue;
+					}
 
-				// Extract mesh primitive
-				auto mesh = runTimeCast<const MeshPrimitive>( location.scene().objectPlug()->getValue() );
-				if( !mesh )
+					// Extract mesh primitive
+					mesh = runTimeCast<const MeshPrimitive>( location.scene().objectPlug()->getValue() );
+					if( !mesh )
+					{
+						continue;
+					}
+
+					// Get the object to world transform
+					ScenePlug::ScenePath path( location.path() );
+					while( !path.empty() )
+					{
+						scope.setPath( &path );
+						o2w = o2w * location.scene().transformPlug()->getValue();
+						path.pop_back();
+					}
+				}
+				catch( const std::exception & )
 				{
+					/// \todo Ideally the GL state would be handled by `IECoreGL::State` and related classes
+					/// which would restore the GL state via RAII in the case of exceptions.
+					/// But those don't handle everything we need like shader attribute block alignment,
+					/// `GL_POLYGON_OFFSET` and more, so we use try / catch blocks throughout this tool.
 					continue;
 				}
 
@@ -855,17 +877,6 @@ class VisualiserGadget : public Gadget
 				if( !vBuffer )
 				{
 					continue;
-				}
-
-				// Get the object to world transform
-
-				M44f o2w;
-				ScenePlug::ScenePath path( location.path() );
-				while( !path.empty() )
-				{
-					scope.setPath( &path );
-					o2w = o2w * location.scene().transformPlug()->getValue();
-					path.pop_back();
 				}
 
 				// Compute object to clip matrix
@@ -1118,18 +1129,32 @@ class VisualiserGadget : public Gadget
 			{
 				GafferScene::ScenePlug::PathScope scope( &location.context() , &location.path() );
 
-				// Check path exists
-
-				if( !location.scene().existsPlug()->getValue() )
+				ConstPrimitivePtr primitive;
+				Imath::M44f o2w;
+				try
 				{
-					continue;
+					// Check path exists
+					if( !location.scene().existsPlug()->getValue() )
+					{
+						continue;
+					}
+
+					primitive = runTimeCast<const Primitive>( location.scene().objectPlug()->getValue() );
+					if( !primitive )
+					{
+						continue;
+					}
+
+					// Get the object to world transform
+					GafferScene::ScenePlug::ScenePath path( location.path() );
+					while( !path.empty() )
+					{
+						scope.setPath( &path );
+						o2w = o2w * location.scene().transformPlug()->getValue();
+						path.pop_back();
+					}
 				}
-
-				// Extract primitive
-
-				auto primitive = runTimeCast<const Primitive>( location.scene().objectPlug()->getValue() );
-
-				if( !primitive )
+				catch( const std::exception & )
 				{
 					continue;
 				}
@@ -1226,17 +1251,6 @@ class VisualiserGadget : public Gadget
 				// Retrieve cached opengl buffer data
 
 				auto pBuffer = runTimeCast<const IECoreGL::Buffer>( converter->convert( pData.get() ) );
-
-				// Get the object to world transform
-
-				Imath::M44f o2w;
-				GafferScene::ScenePlug::ScenePath path( location.path() );
-				while( !path.empty() )
-				{
-					scope.setPath( &path );
-					o2w = o2w * location.scene().transformPlug()->getValue();
-					path.pop_back();
-				}
 
 				// Compute object to clip matrix
 
@@ -1606,15 +1620,33 @@ class VisualiserGadget : public Gadget
 			{
 				ScenePlug::PathScope scope( &location.context(), &location.path() );
 
-				// Check path exists
-				if( !location.scene().existsPlug()->getValue() )
+				ConstPrimitivePtr primitive;
+				M44f o2w;
+				try
 				{
-					continue;
-				}
+					// Check path exists
+					if( !location.scene().existsPlug()->getValue() )
+					{
+						continue;
+					}
 
-				// Extract primitive
-				auto primitive = runTimeCast<const Primitive>( location.scene().objectPlug()->getValue() );
-				if( !primitive )
+					// Extract primitive
+					primitive = runTimeCast<const Primitive>( location.scene().objectPlug()->getValue() );
+					if( !primitive )
+					{
+						continue;
+					}
+
+					// Get the object to world transform
+					ScenePlug::ScenePath path( location.path() );
+					while( !path.empty() )
+					{
+						scope.setPath( &path );
+						o2w = o2w * location.scene().transformPlug()->getValue();
+						path.pop_back();
+					}
+				}
+				catch( const std::exception & )
 				{
 					continue;
 				}
@@ -1637,7 +1669,14 @@ class VisualiserGadget : public Gadget
 
 				if( vIt->second.interpolation == PrimitiveVariable::Uniform )
 				{
-					primitive = runTimeCast<const Primitive>( location.uniformPScene().objectPlug()->getValue() );
+					try
+					{
+						primitive = runTimeCast<const Primitive>( location.uniformPScene().objectPlug()->getValue() );
+					}
+					catch( const std::exception & )
+					{
+						continue;
+					}
 
 					if( !primitive )
 					{
@@ -1704,16 +1743,6 @@ class VisualiserGadget : public Gadget
 				{
 					glUseProgram( vDataProgram );
 					currentShaderProgram = vDataProgram;
-				}
-
-				// Get the object to world transform
-				M44f o2w;
-				ScenePlug::ScenePath path( location.path() );
-				while( !path.empty() )
-				{
-					scope.setPath( &path );
-					o2w = o2w * location.scene().transformPlug()->getValue();
-					path.pop_back();
 				}
 
 				// Compute object/normal to view and object to clip matrices
@@ -2507,7 +2536,16 @@ void VisualiserTool::updateCursorValue()
 
 	// Extract mesh primitive object
 
-	auto mesh = runTimeCast<const MeshPrimitive>( item.scene().objectPlug()->getValue() );
+	ConstMeshPrimitivePtr mesh;
+	try
+	{
+		mesh = runTimeCast<const MeshPrimitive>( item.scene().objectPlug()->getValue() );
+	}
+	catch( const std::exception & )
+	{
+		return;
+	}
+
 	if( !mesh )
 	{
 		return;
