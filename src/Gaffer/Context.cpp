@@ -42,6 +42,7 @@
 #include "IECore/PathMatcherData.h"
 
 #include "boost/lexical_cast.hpp"
+#include "boost/algorithm/string.hpp"
 
 // Headers needed to access environment - these differ
 // between OS X and Linux.
@@ -599,6 +600,14 @@ const std::string &Context::SubstitutionProvider::variable( const boost::string_
 		// variable not in context - try environment
 		return *v;
 	}
+
+	#ifdef _WIN32
+	else if( const std::string *v = g_environment.get( boost::to_upper_copy( internedName.string() ) ) )
+	{
+		// on Windows backend gaffer app, env vars will be convert to uppercase by Python's os.environ
+		return *v;
+	}
+	#endif
 
 	m_formattedString.clear();
 	return m_formattedString;
