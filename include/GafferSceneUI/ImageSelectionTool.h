@@ -90,7 +90,8 @@ class GAFFERSCENEUI_API ImageSelectionTool : public GafferUI::Tool
 		IECore::PathMatcher pathsForIds( const std::vector<uint32_t> &ids, std::string &message );
 		std::vector<uint32_t> idsForPaths( const IECore::PathMatcher &paths, std::string &message );
 
-		uint32_t sampleId( const Imath::V2f &pixel );
+		uint32_t pixelId( const Imath::V2i &pixel );
+		std::unordered_set<uint32_t> rectIds( const Imath::Box2i &rect );
 
 		void selectedPathsChanged();
 
@@ -115,9 +116,6 @@ class GAFFERSCENEUI_API ImageSelectionTool : public GafferUI::Tool
 
 		bool m_acceptedButtonPress = false;
 		bool m_initiatedDrag = false;
-
-
-		GafferImage::ImageSamplerPtr m_imageSampler;
 
 		const GafferScene::RenderManifest *m_renderManifest;
 		GafferScene::RenderManifest m_renderManifestStorage;

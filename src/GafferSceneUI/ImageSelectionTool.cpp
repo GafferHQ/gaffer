@@ -49,7 +49,9 @@
 
 #include "GafferScene/Private/RendererAlgo.h"
 
+#include "GafferImage/ImageAlgo.h"
 #include "GafferImage/ImagePlug.h"
+#include "GafferImage/Sampler.h"
 
 #include "Gaffer/Metadata.h"
 #include "Gaffer/ScriptNode.h"
@@ -70,7 +72,9 @@ using namespace GafferImageUI;
 namespace
 {
 
-std::string g_isRenderingMetadataName = "gaffer:isRendering";
+const InternedString g_idChannelName( "id" );
+
+const std::string g_isRenderingMetadataName = "gaffer:isRendering";
 
 static IECore::InternedString g_dragOverlayName( "__imageSelectionToolDragOverlay" );
 
@@ -180,11 +184,6 @@ ImageSelectionTool::ImageSelectionTool( View *view, const std::string &name )
 	addChild( new ImagePlug( "__image", Plug::In ) );
 	imagePlug()->setInput( view->inPlug<ImagePlug>() );
 
-	m_imageSampler = new GafferImage::ImageSampler();
-	m_imageSampler->imagePlug()->setInput( imagePlug() );
-	m_imageSampler->interpolatePlug()->setValue( false );
-	m_imageSampler->channelsPlug()->setValue( new StringVectorData( { "id", "id", "id", "id" } ) );
-
 	view->viewportGadget()->preRenderSignal().connect( boost::bind( &ImageSelectionTool::preRender, this ) );
 	plugDirtiedSignal().connect( boost::bind( &ImageSelectionTool::plugDirtied, this, ::_1 ) );
 
@@ -285,16 +284,75 @@ std::vector<uint32_t> ImageSelectionTool::idsForPaths( const IECore::PathMatcher
 	return m_renderManifest->idsForPaths( paths );
 }
 
-uint32_t ImageSelectionTool::sampleId( const Imath::V2f &pixel )
+uint32_t ImageSelectionTool::pixelId( const Imath::V2i &pixel )
 {
-	m_imageSampler->pixelPlug()->setValue( pixel );
 
-	Context::Scope scopedContext( view()->context() );
-	float floatId = m_imageSampler->colorPlug()->getChild( 0 )->getValue();
-
+	float floatId = GafferImage::Sampler(
+		imagePlug(), g_idChannelName, Box2i( pixel, pixel + V2i( 1 ) )
+	).sample( pixel.x, pixel.y );
 	uint32_t id;
 	memcpy( &id, &floatId, 4 );
 	return id;
+}
+
+std::unordered_set<uint32_t> ImageSelectionTool::rectIds( const Imath::Box2i &rect )
+{
+	const Imath::Box2i validRect = BufferAlgo::intersection( rect, imagePlug()->dataWindow() );
+
+	std::unordered_set<uint32_t> result;
+
+	ImageAlgo::parallelGatherTiles(
+		imagePlug(),
+		// Tile
+		[&validRect] ( const ImagePlug *imageP, const Imath::V2i &tileOrigin )
+		{
+			ConstFloatVectorDataPtr idsData = imageP->channelData( g_idChannelName, tileOrigin );
+			const std::vector<float> &ids = idsData->readable();
+
+			Box2i relativeRect = BufferAlgo::intersection(
+				Box2i( V2i( 0 ), V2i( ImagePlug::tileSize() ) ),
+				Box2i( validRect.min - tileOrigin, validRect.max - tileOrigin )
+			);
+
+			std::unordered_set<uint32_t> tileResult;
+
+			uint32_t idAsUint;
+			V2i p = relativeRect.min;
+			float prevFloatId = ids[ ImagePlug::pixelIndex( p, V2i( 0 ) ) ];
+
+			memcpy( &idAsUint, &prevFloatId, 4 );
+			tileResult.insert( idAsUint );
+
+			for( p.y = relativeRect.min.y; p.y < relativeRect.max.y; p.y++ )
+			{
+				for( p.x = relativeRect.min.x; p.x < relativeRect.max.x; p.x++ )
+				{
+					// Hopefully the optimizer sees throughthe V2i and removes this unnecessary arithmetic
+					float floatId = ids[ ImagePlug::pixelIndex( p, V2i( 0 ) ) ];
+
+					if( floatId == prevFloatId )
+					{
+						continue;
+					}
+
+					prevFloatId = floatId;
+					memcpy( &idAsUint, &floatId, 4 );
+					tileResult.insert( idAsUint );
+				}
+			}
+
+			return tileResult;
+		},
+		// Gather
+		[ &result ] ( const ImagePlug *imageP, const Imath::V2i &tileOrigin, const std::unordered_set<uint32_t> &tileResult )
+		{
+			// Should be able to use merge() here ... why can't we get non-const access to the tile results?
+			result.insert( tileResult.begin(), tileResult.end() );
+		},
+		validRect
+	);
+
+	return result;
 }
 
 void ImageSelectionTool::selectedPathsChanged()
@@ -474,7 +532,7 @@ bool ImageSelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 	ImageGadget *ig = imageGadget();
 
 	Imath::V2f pixel = ig->pixelAt( event.line );
-	uint32_t id = sampleId( pixel );
+	uint32_t id = pixelId( pixel );
 
 	std::vector<uint32_t> ids = { id };
 
@@ -631,19 +689,7 @@ bool ImageSelectionTool::dragEnd( const GafferUI::DragDropEvent &event )
 	region.extendBy( startPixel );
 	region.extendBy( endPixel );
 
-	std::unordered_set<uint32_t> idsSet;
-
-
-	V2i pixel;
-	// TODO - off by 1
-	for( pixel.y = region.min.y; pixel.y < region.max.y; pixel.y++ )
-	{
-		for( pixel.x = region.min.x; pixel.x < region.max.x; pixel.x++ )
-		{
-			// TODO - incredibly slow
-			idsSet.insert( sampleId( pixel ) );
-		}
-	}
+	std::unordered_set<uint32_t> idsSet = rectIds( region );
 	std::vector<uint32_t> ids;
 	ids.reserve( idsSet.size() );
 	for( uint32_t i : idsSet )
@@ -679,7 +725,7 @@ bool ImageSelectionTool::mouseMove( const GafferUI::ButtonEvent &event )
 	Imath::V2f pixel = ig->pixelAt( event.line );
 
 	// TODO - catch invalid ids
-	uint32_t id = sampleId( pixel );
+	uint32_t id = pixelId( pixel );
 	imageGadget()->setHighlightId( id );
 
 	if( id == 0 )
