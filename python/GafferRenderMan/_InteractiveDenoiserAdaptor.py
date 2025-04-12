@@ -87,7 +87,7 @@ class _InteractiveDenoiserAdaptor( GafferScene.SceneProcessor ) :
 				break
 
 		if templateOutput is None :
-			IECore.msg( IECore.Msg.Warning, "_InteractiveDenoiserAdaptor", "No beauty output found" )
+			IECore.msg( IECore.Msg.Level.Warning, "_InteractiveDenoiserAdaptor", "No beauty output found" )
 			return inputGlobals
 
 		# Set up the template for the `quicklyNoiseless` driver.
