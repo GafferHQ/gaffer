@@ -167,6 +167,146 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 				self.assertEqual( network.input( ( "previewSurface", surfaceIn ) ), ( "reader", readerOut ) )
 
+	def testConvertUSDLights( self ) :
+
+		def expectedLightParameters( parameters ) :
+
+			# Start with defaults
+			result = {
+				"intensity" : 1.0,
+				"exposure" : 0.0,
+				"lightColor" : imath.Color3f( 1.0, 1.0, 1.0 ),
+				"diffuse" : 1.0,
+				"specular" : 1.0,
+				"areaNormalize" : False,  # Common to all lights except DomeLight
+				"enableTemperature" : False,
+				"temperature" : 6500.0,
+				"enableShadows" : True,
+				"shadowColor" : imath.Color3f( 0.0, 0.0, 0.0 ),
+				"shadowDistance" : -1.0,
+				"shadowFalloff" : -1.0,
+				"shadowFalloffGamma" : 1.0,
+			}
+			result.update( parameters )
+			return result
+
+		for testName, shaders in {
+
+			# Basic SphereLight -> point_light conversion, testing default values
+
+			"defaultParameters" : [
+
+				IECoreScene.Shader( "SphereLight", "light", {} ),
+
+				IECoreScene.Shader(
+					"PxrSphereLight", "light",
+					expectedLightParameters( {} )
+				)
+
+			],
+
+			# Basic SphereLight -> PxrSphereLight conversion
+
+			"sphereLightToPointLight" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"intensity" : 2.5,
+						"exposure" : 1.1,
+						"color" : imath.Color3f( 1, 2, 3 ),
+						"diffuse" : 0.5,
+						"specular" : 0.75,
+						"radius" : 0.5,
+						"normalize" : True,
+						"enableColorTemperature" : True,
+						"colorTemperature" : 5500.0,
+						"ri:thinShadow" : False,
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrSphereLight", "light",
+					expectedLightParameters( {
+						"intensity" : 2.5,
+						"exposure" : 1.1,
+						"lightColor" : imath.Color3f( 1, 2, 3 ),
+						"diffuse" : 0.5,
+						"specular" : 0.75,
+						"areaNormalize" : True,
+						"enableTemperature" : True,
+						"temperature" : 5500.0,
+						"thinShadow" : False,
+					} )
+				),
+
+			],
+
+			"shadowAPI" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"shadow:enable" : False,
+						"shadow:color" : imath.V3f( 1.0, 0.0, 0.0 ),
+						"shadow:distance" : 2.0,
+						"shadow:falloff" : 3.0,
+						"shadow:falloffGamma" : 0.5,
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrSphereLight", "light",
+					expectedLightParameters( {
+						"enableShadows" : False,
+						"shadowColor" : imath.Color3f( 1.0, 0.0, 0.0 ),
+						"shadowDistance" : 2.0,
+						"shadowFalloff" : 3.0,
+						"shadowFalloffGamma" : 0.5,
+					} )
+				),
+
+			],
+
+		}.items() :
+			with self.subTest( testName = testName ) :
+
+				network = IECoreScene.ShaderNetwork(
+					shaders = {
+						"light" : shaders[0],
+					},
+					output = "light"
+				)
+
+				IECoreRenderMan.ShaderNetworkAlgo.convertUSDShaders( network )
+
+				self.__assertShadersEqual( network.getShader( "light" ), shaders[1], "Testing {}".format( testName ) )
+
+	def testUSDLightTransform( self ) :
+
+		for shader, transform in {
+
+			IECoreScene.Shader( "SphereLight", "light", { "radius" : 2.0 } ) : imath.M44f().scale( imath.V3f( 4.0 ) ),
+
+		}.items() :
+			with self.subTest() :
+
+				self.assertEqual(
+					IECoreRenderMan.ShaderNetworkAlgo.USDLightTransform( shader ),
+					transform,
+					"Testing {}".format( shader.name )
+				)
+
+	def __assertShadersEqual( self, shader1, shader2, message = None ) :
+
+		self.assertEqual( shader1.name, shader2.name, message )
+		self.assertEqual( shader1.parameters.keys(), shader2.parameters.keys(), message )
+		for k in shader1.parameters.keys() :
+			self.assertEqual(
+				shader1.parameters[k], shader2.parameters[k],
+				"{}(Parameter = {})".format( message or "", k )
+			)
+
 
 if __name__ == "__main__" :
 	unittest.main()
