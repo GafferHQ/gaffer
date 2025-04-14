@@ -316,7 +316,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			# we can capture everything and then let the LocalJobs UI filter
 			# it dynamically.
 
-			env = os.environ.copy()
+			env = Gaffer.environment()
 			env["IECORE_LOG_LEVEL"] = "DEBUG"
 
 			# Launch process.

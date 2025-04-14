@@ -11,6 +11,17 @@ Improvements
 
 - DeleteAttributes : Optimised case where all attributes are deleted. The input attributes are no longer accessed at all in this case.
 
+Fixes
+-----
+
+- LocalDispatcher, SystemCommand, `gaffer env` : Fixed unwanted upper-casing of environment variable names on Windows (#6371).
+
+API
+---
+
+- Gaffer module : Added `environment()` method, returning a dictionary containing all current environment variables. Unlike `os.environ`, this preserves
+  case on Windows.
+
 Breaking Changes
 ----------------
 

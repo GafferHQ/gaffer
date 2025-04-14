@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import sys
 import time
 import subprocess
 import unittest
@@ -87,6 +88,36 @@ class ApplicationTest( GafferTest.TestCase ) :
 		finally :
 			process.kill()
 
+	def testEnvironmentVariableCase( self ) :
+
+		# On Windows, the `os` module will screw this up, and create an all-upper-case
+		# environment variable instead. Still, we want to test that variables created
+		# this way are passed to child applications.
+		os.environ["gafferApplicationTestMIXEDcaseA"] = "testTEST"
+		self.addCleanup( os.environ.__delitem__, "gafferApplicationTestMIXEDcaseA" )
+
+		# If we bypass `os.environ`, then we can create a mixed-case variable even
+		# on Windows.
+		os.putenv( "gafferApplicationTestMIXEDcaseB", "testTEST" )
+		self.addCleanup( os.unsetenv, "gafferApplicationTestMIXEDcaseB" )
+
+		childEnvironment = subprocess.check_output( [ Gaffer.executablePath(), "env" ], text = True )
+		childEnvironment = {
+			line.partition( "=" )[0] : line.partition( "=" )[2]
+			for line in childEnvironment.split( "\n" )
+		}
+
+		# We preseve mixed-case environment variables on all platforms.
+		self.assertEqual( childEnvironment["gafferApplicationTestMIXEDcaseB"], "testTEST" )
+
+		if sys.platform == "win32" :
+			# Assert that Python botched this one as expected.
+			self.assertEqual( childEnvironment["GAFFERAPPLICATIONTESTMIXEDCASEA"], "testTEST" )
+			# Check standard variable that happens to be mixed case.
+			self.assertIn( "ProgramData", childEnvironment )
+		else :
+			# On Linux, everything actually makes sense.
+			self.assertEqual( childEnvironment["gafferApplicationTestMIXEDcaseA"], "testTEST" )
 
 if __name__ == "__main__":
 	unittest.main()

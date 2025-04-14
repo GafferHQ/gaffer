@@ -99,7 +99,7 @@ class env( Gaffer.Application ) :
 
 		# get environment
 
-		env = os.environ.copy()
+		env = Gaffer.environment()
 		i = 0
 		while i < len( args["arguments"] ) :
 			s = args["arguments"][i].split( "=" )

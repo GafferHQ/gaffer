@@ -78,7 +78,7 @@ class SystemCommand( GafferDispatch.TaskNode ) :
 		command = self["command"].getValue()
 		command = command.format( **substitutions )
 
-		env = os.environ.copy()
+		env = Gaffer.environment()
 		environmentVariables = IECore.CompoundData()
 		self["environmentVariables"].fillCompoundData( environmentVariables )
 		for name, value in environmentVariables.items() :
