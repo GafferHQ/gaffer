@@ -3687,7 +3687,7 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 
 	def testRelativePrototypePathsWithExplicitAbsolute( self ):
 		try :
-			env = os.environ.copy()
+			env = Gaffer.environment()
 			env["GAFFERSCENE_INSTANCER_EXPLICIT_ABSOLUTE_PATHS"] = "1"
 			subprocess.check_output(
 				[ str( Gaffer.executablePath() ), "test", "GafferSceneTest.InstancerTest.testRelativePrototypePaths" ],

@@ -550,7 +550,7 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 
 		def assertAssignment( expected, envVar ) :
 
-			env = os.environ.copy()
+			env = Gaffer.environment()
 			if envVar is not None :
 				env["GAFFERSCENE_SHADERASSIGNMENT_OSL_PREFIX"] = envVar
 

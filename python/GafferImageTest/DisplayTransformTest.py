@@ -175,7 +175,7 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 		s["fileName"].setValue( scriptFileName )
 		s.save()
 
-		env = os.environ.copy()
+		env = Gaffer.environment()
 		env["OCIO"] = str( self.openColorIOPath() / "context.ocio" )
 		env["LUT"] = "srgb.spi1d"
 		env["CDL"] = "cineon.spi1d"
