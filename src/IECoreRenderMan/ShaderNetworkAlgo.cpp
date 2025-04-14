@@ -524,40 +524,65 @@ void transferUSDParameter( ShaderNetwork *network, InternedString shaderHandle, 
 	}
 }
 
+const InternedString g_areaNormalizeParameter( "areaNormalize" );
 const InternedString g_bumpNormalParameter( "bumpNormal" );
 const InternedString g_clearcoatDoubleSidedParameter( "clearcoatDoubleSided" );
 const InternedString g_clearcoatFaceColorParameter( "clearcoatFaceColor" );
 const InternedString g_clearcoatEdgeColorParameter( "clearcoatEdgeColor" );
 const InternedString g_clearcoatRoughnessParameter( "clearcoatRoughness" );
+const InternedString g_colorParameter( "color" );
+const InternedString g_colorTemperatureParameter( "colorTemperature" );
 const InternedString g_defaultFloatParameter( "defaultFloat" );
 const InternedString g_defaultFloat3Parameter( "defaultFloat3" );
 const InternedString g_defaultIntParameter( "defaultInt" );
+const InternedString g_diffuseParameter( "diffuse" );
 const InternedString g_diffuseColorParameter( "diffuseColor" );
 const InternedString g_diffuseDoubleSidedParameter( "diffuseDoubleSided" );
 const InternedString g_diffuseGainParameter( "diffuseGain") ;
+const InternedString g_enableColorTemperatureParameter( "enableColorTemperature" );
+const InternedString g_enableShadowsParameter( "enableShadows" );
+const InternedString g_enableTemperatureParameter( "enableTemperature" );
+const InternedString g_exposureParameter( "exposure" );
 const InternedString g_fallbackParameter( "fallback" );
 const InternedString g_glassIorParameter( "glassIor" );
 const InternedString g_glassRoughnessParameter( "glassRoughness" );
 const InternedString g_glowColorParameter( "glowColor" );
 const InternedString g_glowGainParameter( "glowGain" );
+const InternedString g_intensityParameter( "intensity" );
+const InternedString g_lightColorParameter( "lightColor" );
 const InternedString g_normalParameter( "normal" );
 const InternedString g_normalInParameter( "normalIn" );
+const InternedString g_normalizeParameter( "normalize" );
 const InternedString g_presenceParameter( "presence" );
+const InternedString g_radiusParameter( "radius" );
 const InternedString g_refractionGainParameter( "refractionGain" );
 const InternedString g_resultFParameter( "resultF" );
 const InternedString g_resultIParameter( "resultI" );
 const InternedString g_resultRGBParameter( "resultRGB" );
 const InternedString g_roughSpecularDoubleSidedParameter( "roughSpecularDoubleSided" );
+const InternedString g_shadowColorParameter( "shadowColor" );
+const InternedString g_shadowColorUSDParameter( "shadow:color" );
+const InternedString g_shadowDistanceParameter( "shadowDistance" );
+const InternedString g_shadowDistanceUSDParameter( "shadow:distance" );
+const InternedString g_shadowEnableParameter( "shadow:enable" );
+const InternedString g_shadowFalloffParameter( "shadowFalloff" );
+const InternedString g_shadowFalloffUSDParameter( "shadow:falloff" );
+const InternedString g_shadowFalloffGammaParameter( "shadowFalloffGamma");
+const InternedString g_shadowFalloffGammaUSDParameter( "shadow:falloffGamma" );
+const InternedString g_specularParameter( "specular" );
 const InternedString g_specularDoubleSidedParameter( "specularDoubleSided" );
 const InternedString g_specularEdgeColorParameter( "specularEdgeColor" );
 const InternedString g_specularFaceColorParameter( "specularFaceColor" );
 const InternedString g_specularIorParameter( "specularIor" );
 const InternedString g_specularModelTypeParameter( "specularModelType" );
 const InternedString g_specularRoughnessParameter( "specularRoughness" );
+const InternedString g_temperatureParameter( "temperature" );
 const InternedString g_typeParameter( "type" );
 const InternedString g_usdPrimvarReaderIntShaderName( "UsdPrimvarReader_int" );
 const InternedString g_usdPrimvarReaderFloatShaderName( "UsdPrimvarReader_float" );
 const InternedString g_varnameParameter( "varname" );
+
+const std::string g_renderManLightNamespace( "ri:light:" );
 
 const std::vector<InternedString> g_pxrSurfaceParameters = {
 	g_diffuseGainParameter,
@@ -587,6 +612,31 @@ const std::unordered_map<std::string, std::tuple<std::string, InternedString, st
 	{ "UsdPrimvarReader_vector", { "vector", g_defaultFloat3Parameter, V3f( 0.f ) } },
 	{ "UsdPrimvarReader_int", { "int", g_defaultIntParameter, 0 } }
 };
+
+void transferUSDLightParameters( ShaderNetwork *network, InternedString shaderHandle, const Shader *usdShader, Shader *shader )
+{
+	transferUSDParameter( network, shaderHandle, usdShader, g_colorParameter, shader, g_lightColorParameter, Color3f( 1.f, 1.f, 1.f ) );
+	transferUSDParameter( network, shaderHandle, usdShader, g_diffuseParameter, shader, g_diffuseParameter, 1.0f );
+	transferUSDParameter( network, shaderHandle, usdShader, g_exposureParameter, shader, g_exposureParameter, 0.0f );
+	transferUSDParameter( network, shaderHandle, usdShader, g_intensityParameter, shader, g_intensityParameter, 1.0f );
+	transferUSDParameter( network, shaderHandle, usdShader, g_specularParameter, shader, g_specularParameter, 1.0f );
+	transferUSDParameter( network, shaderHandle, usdShader, g_enableColorTemperatureParameter, shader, g_enableTemperatureParameter, false );
+	transferUSDParameter( network, shaderHandle, usdShader, g_colorTemperatureParameter, shader, g_temperatureParameter, 6500.f );
+
+	transferUSDParameter( network, shaderHandle, usdShader, g_shadowEnableParameter, shader, g_enableShadowsParameter, true );
+	transferUSDParameter( network, shaderHandle, usdShader, g_shadowColorUSDParameter, shader, g_shadowColorParameter, Color3f( 0 ) );
+	transferUSDParameter( network, shaderHandle, usdShader, g_shadowDistanceUSDParameter, shader, g_shadowDistanceParameter, -1.f );
+	transferUSDParameter( network, shaderHandle, usdShader, g_shadowFalloffUSDParameter, shader, g_shadowFalloffParameter, -1.f );
+	transferUSDParameter( network, shaderHandle, usdShader, g_shadowFalloffGammaUSDParameter, shader, g_shadowFalloffGammaParameter, 1.f );
+
+	for( const auto &[name, value] : usdShader->parameters() )
+	{
+		if( boost::starts_with( name.string(), g_renderManLightNamespace ) )
+		{
+			shader->parameters()[name.string().substr(g_renderManLightNamespace.size())] = value;
+		}
+	}
+}
 
 const InternedString remapOutputParameterName( const InternedString name, const InternedString shaderName )
 {
@@ -738,6 +788,12 @@ void convertUSDShaders( ShaderNetwork *shaderNetwork )
 
 			shaderNetwork->setOutput( { pxrSurfaceHandle, "" } );
 		}
+		else if( shader->getName() == "SphereLight" )
+		{
+			newShader = new Shader( "PxrSphereLight", "ri:light" );
+			transferUSDLightParameters( shaderNetwork, handle, shader.get(), newShader.get() );
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_normalizeParameter, newShader.get(), g_areaNormalizeParameter, false );
+		}
 
 		const auto it = g_primVarMap.find( shader->getName() );
 		if( it != g_primVarMap.end() )
@@ -762,6 +818,19 @@ void convertUSDShaders( ShaderNetwork *shaderNetwork )
 		}
 	}
 	IECoreScene::ShaderNetworkAlgo::removeUnusedShaders( shaderNetwork );
+}
+
+M44f usdLightTransform( const Shader *lightShader )
+{
+	assert( lightShader );
+
+	if( lightShader->getName() == "SphereLight" )
+	{
+		const float radius = parameterValue( lightShader, g_radiusParameter, 0.5f );
+		return M44f().scale( V3f( radius * 2.f ) );
+	}
+
+	return M44f();
 }
 
 } // namespace IECoreRenderMan::ShaderNetworkAlgo

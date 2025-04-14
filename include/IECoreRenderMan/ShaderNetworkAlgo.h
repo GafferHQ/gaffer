@@ -53,9 +53,12 @@ std::vector<riley::ShadingNode> convert( const IECoreScene::ShaderNetwork *netwo
 /// host to do this combining.
 IECoreScene::ConstShaderNetworkPtr combineLightFilters( const std::vector<const IECoreScene::ShaderNetwork *> networks );
 
-/// Converts any UsdPreviewSurface shaders into native RenderMan shaders. This conversion
+/// Converts any UsdPreviewSurface and UsdLux shaders into native RenderMan shaders. This conversion
 /// is performed automatically by `preprocessedNetwork()` and is mainly just exposed for the unit
 /// tests.
 IECORERENDERMAN_API void convertUSDShaders( IECoreScene::ShaderNetwork *shaderNetwork );
+
+/// Returns the matrix needed to transform a Pxr*Light to match a UsdLux shader.
+IECORERENDERMAN_API Imath::M44f usdLightTransform( const IECoreScene::Shader *lightShader );
 
 } // namespace IECoreRenderMan::ShaderNetworkAlgo
