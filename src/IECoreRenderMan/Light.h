@@ -70,6 +70,7 @@ class Light : public IECoreScenePreview::Renderer::ObjectInterface
 		// =============================
 
 		void updateLightFilterShader( const IECoreScene::ConstShaderNetworkPtr &lightFilterShader );
+		void updateGroupingMemberships( RtUString memberships );
 
 	private :
 
@@ -85,6 +86,7 @@ class Light : public IECoreScenePreview::Renderer::ObjectInterface
 		ConstAttributesPtr m_attributes;
 		/// Used to keep geometry prototype alive as long as we need it.
 		ConstGeometryPrototypePtr m_geometryPrototype;
+		RtParamList m_extraAttributes;
 		IECoreScene::ConstShaderNetworkPtr m_lightFilterShader;
 		IECoreScenePreview::Renderer::ConstObjectSetPtr m_linkedFilters;
 
