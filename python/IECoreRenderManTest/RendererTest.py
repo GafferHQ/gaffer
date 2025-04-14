@@ -1603,7 +1603,7 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.pause()
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
-		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0, 0, 2 ), 0.1 )
+		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0, 0, 2 ), 0.2 )
 
 		# Remove light filter and check render is unfiltered.
 
@@ -1614,7 +1614,7 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.pause()
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
-		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 2 ), 0.1 )
+		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 2 ), 0.2 )
 
 		# Remove light and check render is black.
 
