@@ -15,6 +15,9 @@ Fixes
 - 3Delight : Fixed rendering of `dlToon` outlines for `Beauty` and `Outlines` outputs.
 - VisualiserTool : Fixed broken OpenGL viewer when an error occurs on an upstream node when visualisation is active.
 - ResamplePrimitiveVariables : Fixed cancellation of long-running operations on curves and points.
+- RenderMan :
+  - Fixed interactive denoiser configuration on Windows.
+  - Fixed error when interactive denoising is enabled and no beauty output is found.
 
 1.5.10.1 (relative to 1.5.10.0)
 ========
