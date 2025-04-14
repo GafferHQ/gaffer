@@ -40,26 +40,18 @@
 #include "LightFilter.h"
 #include "Transform.h"
 
+#include "IECore/SimpleTypedData.h"
+
 using namespace std;
 using namespace Imath;
+using namespace IECore;
 using namespace IECoreRenderMan;
 
 namespace
 {
 
-M44f correctiveTransform( const Attributes *attributes )
+M44f correctiveTransform( const IECoreScene::Shader *lightShader )
 {
-	if( !attributes->lightShader() )
-	{
-		return M44f();
-	}
-
-	const IECoreScene::Shader *lightShader = attributes->lightShader()->outputShader();
-	if( !lightShader )
-	{
-		return M44f();
-	}
-
 	if( lightShader->getName() == "PxrDomeLight" || lightShader->getName() == "PxrEnvDayLight" )
 	{
 		return M44f().rotate( V3f( -M_PI_2, M_PI_2, 0.0f ) );
@@ -76,11 +68,28 @@ M44f correctiveTransform( const Attributes *attributes )
 
 const IECore::InternedString g_lightFilters( "lightFilters" );
 
+M44f preTransform( const Attributes *attributes )
+{
+	if( !attributes->lightShader() )
+	{
+		return M44f();
+	}
+
+	const IECoreScene::Shader *lightShader = attributes->lightShader()->outputShader();
+
+	if( !lightShader )
+	{
+		return M44f();
+	}
+
+	return IECoreRenderMan::ShaderNetworkAlgo::USDLightTransform( lightShader ) * correctiveTransform( lightShader );
+}
+
 } // namespace
 
 Light::Light( const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, MaterialCache *materialCache, LightLinker *lightLinker, Session *session )
 	:	m_materialCache( materialCache ), m_session( session ), m_lightLinker( lightLinker ),
-		m_lightInstance( riley::LightInstanceId::InvalidId() ), m_correctiveTransform( correctiveTransform( attributes ) ),
+		m_lightInstance( riley::LightInstanceId::InvalidId() ), m_preTransform( preTransform( attributes ) ),
 		m_attributes( attributes ), m_geometryPrototype( geometryPrototype )
 
 {
@@ -122,7 +131,7 @@ void Light::transform( const Imath::M44f &transform )
 		return;
 	}
 
-	const M44f correctedTransform = m_correctiveTransform * transform;
+	const M44f correctedTransform = m_preTransform * transform;
 	StaticTransform staticTransform( correctedTransform );
 
 	const riley::LightInstanceResult result = m_session->modifyLightInstance(
@@ -150,7 +159,7 @@ void Light::transform( const std::vector<Imath::M44f> &samples, const std::vecto
 	vector<Imath::M44f> correctedSamples = samples;
 	for( auto &m : correctedSamples )
 	{
-		m = m_correctiveTransform * m;
+		m = m_preTransform * m;
 	}
 	AnimatedTransform animatedTransform( correctedSamples, times );
 
@@ -172,10 +181,13 @@ void Light::transform( const std::vector<Imath::M44f> &samples, const std::vecto
 bool Light::attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
 {
 	auto renderManAttributes = static_cast<const Attributes *>( attributes );
-	if( correctiveTransform( renderManAttributes ) != m_correctiveTransform )
+	if( preTransform( renderManAttributes ) != m_preTransform )
 	{
-		// This can only happen when the light type changes, which is pretty unlikely.
-		// We don't know the light's transform, so just request that it be recreated.
+		// This can happen when the light type changes, which is pretty unlikely, or
+		// geometry related changes, which are common. We don't know the light's
+		// transform, so just request that it be recreated.
+		/// \todo Would there be a performance benefit to RenderMan if we don't recreate
+		/// the light with each geometry edit?
 		return false;
 	}
 
