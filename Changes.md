@@ -7,6 +7,14 @@ Improvements
 - VisualiserTool : Added new visualisation for orientation (Quatf) data.
 - PrimitiveInspector : Changed column order for quaternions to match Imath's conventions.
 
+Fixes
+-----
+
+- RenderMan UI : Fixed various metadata-related problems :
+  - PxrUnified, PxrBarnLightFilter, PxrCookieLightFilter, PxrRodLightFilter : Hid unwanted inputs in the GraphEditor.
+  - PxrCookieLightFilter : Added button for reloading the map.
+  - PxrSurface, PxrLayerSurface : Moved `utilityPattern` parameter to "Globals" section.
+
 API
 ---
 
