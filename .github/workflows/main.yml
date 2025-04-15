@@ -142,7 +142,7 @@ jobs:
       # containing the hash of the archive, for use in the cache key
       # below.
       run: |
-        echo GAFFER_DEPENDENCIES_HASH=`python .github/workflows/main/installDependencies.py ${{ matrix.dependenciesURL != '' && format( '--archiveURL {0}', matrix.dependenciesURL ) || '' }} --dependenciesDir ${{ env.GAFFER_BUILD_DIR }} --outputFormat "{archiveDigest}"` >> $GITHUB_ENV
+        python .github/workflows/main/installDependencies.py ${{ matrix.dependenciesURL != '' && format( '--archiveURL {0}', matrix.dependenciesURL ) || '' }} --dependenciesDir ${{ env.GAFFER_BUILD_DIR }} --outputFormat "GAFFER_DEPENDENCIES_HASH={archiveDigest}" >> $GITHUB_ENV
         ./.github/workflows/main/installDelight.py
         echo DELIGHT=$GITHUB_WORKSPACE/3delight >> $GITHUB_ENV
         ./.github/workflows/main/installONNX.py
@@ -150,7 +150,7 @@ jobs:
       shell: bash
 
     - name: Install RenderMan
-      run: echo RMANTREE=`./.github/workflows/main/installRenderMan.py` >> $GITHUB_ENV
+      run: ./.github/workflows/main/installRenderMan.py --outputFormat "RMANTREE={rmanTree}" >> $GITHUB_ENV
       shell: bash
       env:
         RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}

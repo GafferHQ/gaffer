@@ -33,6 +33,7 @@
 #
 ##########################################################################
 
+import argparse
 import os
 import pathlib
 import shutil
@@ -40,6 +41,16 @@ import subprocess
 import sys
 
 import requests
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+	"--outputFormat",
+	help = "A format string that specifies the output printed "
+		"by this script. May contain an {rmanTree} token that "
+		"will be subtituted with the installation location.",
+	default = "",
+)
+args = parser.parse_args()
 
 # RenderMan is only available for download through a web interface connected to
 # the RenderMan support forums, and the download requires valid credentials.
@@ -132,4 +143,9 @@ subprocess.check_call( [
 	pathlib.Path( __file__ ).parent / "pixar.license.gpg"
 ] )
 
-print( installLocation )
+if args.outputFormat :
+	print(
+		args.outputFormat.format(
+			rmanTree = installLocation
+		)
+	)
