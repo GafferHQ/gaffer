@@ -21,13 +21,20 @@ Breaking Changes
 - DeleteAttributes : Changed base class and marked as `final`.
 - Wrapper : The `gaffer` wrapper on Linux no longer allows a custom Python build to be used. If you wish to use a custom Python, call `python _gaffer.py` instead.
 
-1.5.x.x (relative to 1.5.10.1)
+1.5.x.x (relative to 1.5.11.0)
 =======
+
+
+
+1.5.11.0 (relative to 1.5.10.1)
+========
 
 Improvements
 ------------
 
-- RenderMan : Stylized Looks no longer require manual AOV setup. The relevant AOVs are added automatically whenever a stylized display filter is present.
+- RenderMan :
+  - Added support for light filters.
+  - Stylized Looks no longer require manual AOV setup. The relevant AOVs are added automatically whenever a stylized display filter is present.
 - Arnold : Added translation of UsdLux IES parameters to Arnold.
 
 Fixes
@@ -35,6 +42,13 @@ Fixes
 
 - RenderManShader : Fixed handling of minimum and maximum values for `color`, `vector`, `normal` and `point` parameters.
 - FreezeTransform : Fixed double transforming when the input primitive contains multiple primitive variables sharing the same data.
+- 3Delight : Fixed rendering of `dlToon` outlines for `Beauty` and `Outlines` outputs.
+- VisualiserTool : Fixed broken OpenGL viewer when an error occurs on an upstream node when visualisation is active.
+- ResamplePrimitiveVariables : Fixed cancellation of long-running operations on curves and points.
+- RenderMan :
+  - Fixed interactive denoiser configuration on Windows.
+  - Fixed error when interactive denoising is enabled and no beauty output is found.
+- AttributeEditor, LightEditor, RenderPassEditor : Fixed crash when using drag and drop editing to edit a NameValuePlug without an `enabled` plug.
 
 1.5.10.1 (relative to 1.5.10.0)
 ========

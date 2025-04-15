@@ -87,18 +87,19 @@ class _InteractiveDenoiserAdaptor( GafferScene.SceneProcessor ) :
 				break
 
 		if templateOutput is None :
-			IECore.msg( IECore.Msg.Warning, "_InteractiveDenoiserAdaptor", "No beauty output found" )
+			IECore.msg( IECore.Msg.Level.Warning, "_InteractiveDenoiserAdaptor", "No beauty output found" )
 			return inputGlobals
 
 		# Set up the template for the `quicklyNoiseless` driver.
 
+		suffix = ".dll" if os.name == "nt" else ".so"
 		if templateOutput.getType() == "ieDisplay" :
 			templateOutput.parameters()["dspyDSOPath"] = IECore.StringData(
-				str( pathlib.Path( __file__ ).parents[2] / "plugins" / "d_ieDisplay.so" )
+				str( pathlib.Path( __file__ ).parents[2] / "plugins" / f"d_ieDisplay{suffix}" )
 			)
 		else :
 			templateOutput.parameters()["dspyDSOPath"] = IECore.StringData(
-				str( pathlib.Path( os.environ["RMANTREE"] ) / "lib" / "plugins" / "d_socket.so" )
+				str( pathlib.Path( os.environ["RMANTREE"] ) / "lib" / "plugins" / f"d_socket{suffix}" )
 			)
 
 		templateOutput.setType( "quicklyNoiseless" )

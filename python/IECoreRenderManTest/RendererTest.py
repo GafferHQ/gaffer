@@ -80,6 +80,9 @@ class RendererTest( GafferTest.TestCase ) :
 
 		handler.exception.__traceback__ = None
 
+		del attributes
+		del renderer
+
 	def testSceneDescription( self ) :
 
 		with self.assertRaisesRegex( RuntimeError, "SceneDescription mode not supported" ) :
@@ -224,7 +227,7 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.pause()
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.__assertColorAlmostEqual( self.__colorAtUV( image, imath.V2i( 0.5 ) ), imath.Color4f( 1 ), delta = 0.01 )
+		self.__assertEqualWithAbsError( self.__colorAtUV( image, imath.V2i( 0.5 ) ), imath.Color4f( 1 ), error = 0.01 )
 
 		renderer.option(
 			"ri:integrator",
@@ -246,7 +249,7 @@ class RendererTest( GafferTest.TestCase ) :
 		time.sleep( 1 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.__assertColorAlmostEqual( self.__colorAtUV( image, imath.V2i( 0.5 ) ), imath.Color4f( 0, 0.514107, 0, 1 ), delta = 0.01 )
+		self.__assertEqualWithAbsError( self.__colorAtUV( image, imath.V2i( 0.5 ) ), imath.Color4f( 0, 0.514107, 0, 1 ), error = 0.01 )
 
 		del object
 		del renderer
@@ -1223,6 +1226,7 @@ class RendererTest( GafferTest.TestCase ) :
 					for i in range( 0, 10 ) :
 						renderer.object( f"mesh{i}", mesh, attributes )
 
+					del attributes
 					del renderer
 
 				self.assertEqual(
@@ -1252,6 +1256,7 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 			renderer.object( "mesh", mesh, attributes )
 
+			del attributes
 			del renderer
 
 		prototype = next(
@@ -1293,6 +1298,7 @@ class RendererTest( GafferTest.TestCase ) :
 			renderer.object( "concave2", mesh, concaveAttributes )
 			renderer.object( "convex2", mesh, convexAttributes )
 
+			del concaveAttributes, convexAttributes
 			del renderer
 
 		prototypes = [ x for x in capture.json if x["method"] == "CreateGeometryPrototype" ]
@@ -1380,6 +1386,7 @@ class RendererTest( GafferTest.TestCase ) :
 			renderer.object( "mesh1B", mesh, displacementAttributes1 )
 			renderer.object( "mesh2B", mesh, displacementAttributes2 )
 
+			del displacementAttributes1, displacementAttributes2
 			del renderer
 
 		displacements = [ x for x in capture.json if x["method"] == "CreateDisplacement" ]
@@ -1442,6 +1449,9 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertGreaterEqual( self.__colorAtUV( image, imath.V2f( u, 0.5 ) ).a, 0.1 )
 			self.assertEqual( self.__colorAtUV( image, imath.V2f( u, 0.9 ) ).a, 0 )
 
+		del object
+		del renderer
+
 	def testUnknownCommands( self ) :
 
 		messageHandler = IECore.CapturingMessageHandler()
@@ -1479,6 +1489,361 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( messageHandler.messages[0].context, "IECoreRenderMan" )
 		self.assertEqual( messageHandler.messages[0].message, "No outputs defined." )
 
+	def testLightFilter( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"RenderMan",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+
+		renderer.output(
+			"test",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "lightFilterTest",
+				}
+			)
+		)
+
+		sphere = renderer.object(
+			"sphere",
+			IECoreScene.SpherePrimitive(),
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"PxrDiffuse",
+							parameters = {
+								"diffuseColor" : imath.Color3f( 1.0 )
+							}
+						)
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		sphere.transform( imath.M44f().translate( imath.V3f( 0, 0, -2 ) ) )
+
+		def lightAttributes( exposure = 0.0 ) :
+
+			return renderer.attributes(
+				IECore.CompoundObject( {
+					"ri:light" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"output" : IECoreScene.Shader(
+								"PxrDomeLight", "ri:light",
+								parameters = { "exposure" : exposure }
+							),
+						},
+						output = "output",
+					),
+					"ri:visibility:camera" : IECore.BoolData( False ),
+				} )
+			)
+
+		light = renderer.light( "light", None, lightAttributes() )
+
+		renderer.render()
+		time.sleep( 1 )
+		renderer.pause()
+
+		# No light filter yet. Sphere should appear white.
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 1 ), 0.1 )
+
+		# Add a green light filter. Sphere should appear green.
+
+		def lightFilterAttributes( tint ) :
+
+			return renderer.attributes(
+				IECore.CompoundObject( {
+					"ri:lightFilter" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"output" : IECoreScene.Shader(
+								"PxrIntMultLightFilter", "ri:lightFilter",
+								parameters = { "tint" : tint }
+							),
+						},
+						output = "output",
+					)
+				} )
+			)
+
+		lightFilter = renderer.lightFilter( "filter", None, lightFilterAttributes( imath.Color3f( 0, 1, 0 ) ) )
+		light.link( "lightFilters", { lightFilter } )
+
+		renderer.render()
+		time.sleep( 1 )
+		renderer.pause()
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0, 1, 0 ), 0.1 )
+
+		# Edit light filter tint. Sphere should update.
+
+		lightFilter.attributes( lightFilterAttributes( imath.Color3f( 0, 0, 1 ) ) )
+
+		renderer.render()
+		time.sleep( 1 )
+		renderer.pause()
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0, 0, 1 ), 0.1 )
+
+		# Edit light, and make sure filter is still applied.
+
+		light.attributes( lightAttributes( 1.0 ) )
+		renderer.render()
+		time.sleep( 1 )
+		renderer.pause()
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0, 0, 2 ), 0.2 )
+
+		# Remove light filter and check render is unfiltered.
+
+		light.link( "lightFilters", None )
+
+		renderer.render()
+		time.sleep( 1 )
+		renderer.pause()
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 2 ), 0.2 )
+
+		# Remove light and check render is black.
+
+		del light
+
+		renderer.render()
+		time.sleep( 1 )
+		renderer.pause()
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0 ), 0.1 )
+
+		# Clean up.
+
+		del sphere, lightFilter
+		del renderer
+
+	def testLightFilterTransforms( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"RenderMan",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+
+		renderer.output(
+			"test",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "lightFilterTest",
+				}
+			)
+		)
+
+		plane = renderer.object(
+			"plane",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"PxrDiffuse",
+							parameters = {
+								"diffuseColor" : imath.Color3f( 1.0 )
+							}
+						)
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -2 ) ) )
+
+		light = renderer.light(
+			"light", None,
+			renderer.attributes(
+				IECore.CompoundObject( {
+					"ri:light" : IECoreScene.ShaderNetwork(
+						shaders = { "output" : IECoreScene.Shader( "PxrDomeLight", "ri:light" ) },
+						output = "output",
+					),
+					"ri:visibility:camera" : IECore.BoolData( False ),
+				} )
+			)
+		)
+
+		lightFilter = renderer.lightFilter(
+			"filter", None,
+			renderer.attributes(
+				IECore.CompoundObject( {
+					"ri:lightFilter" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"output" : IECoreScene.Shader(
+								"PxrRodLightFilter"
+							),
+						},
+						output = "output",
+					)
+				} )
+			)
+		)
+		lightFilter.transform( imath.M44f().translate( imath.V3f( 0, 0, -2 ) ).scale( imath.V3f( 0.1 ) ) )
+		light.link( "lightFilters", { lightFilter } )
+
+		# Render with rod in center of plane and check expected result.
+
+		renderer.render()
+		time.sleep( 1 )
+		renderer.pause()
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0 ), 0.1 )
+		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.68, 0.5 ) ), imath.Color3f( 1 ), 0.1 )
+
+		# Move rod to right hand side of plane, and check expected result.
+
+		lightFilter.transform( imath.M44f().translate( imath.V3f( 1, 0, -2 ) ).scale( imath.V3f( 0.1 ) ) )
+		renderer.render()
+		time.sleep( 1 )
+		renderer.pause()
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 1 ), 0.1 )
+		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.68, 0.5 ) ), imath.Color3f( 0 ), 0.1 )
+
+		# Clean up.
+
+		del plane, light, lightFilter
+		del renderer
+
+	def testLightFilterCombineModes( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"RenderMan",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+
+		renderer.output(
+			"test",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "lightFilterTest",
+				}
+			)
+		)
+
+		sphere = renderer.object(
+			"sphere",
+			IECoreScene.SpherePrimitive(),
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"PxrDiffuse",
+							parameters = {
+								"diffuseColor" : imath.Color3f( 1.0 )
+							}
+						)
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		sphere.transform( imath.M44f().translate( imath.V3f( 0, 0, -2 ) ) )
+
+		light = renderer.light(
+			"light", None,
+			renderer.attributes(
+				IECore.CompoundObject( {
+					"ri:light" : IECoreScene.ShaderNetwork(
+						shaders = { "output" : IECoreScene.Shader( "PxrDomeLight" ) },
+						output = "output",
+					),
+					"ri:visibility:camera" : IECore.BoolData( False ),
+				} )
+			)
+		)
+
+		def lightFilterAttributes( tint, combineMode ) :
+
+			return renderer.attributes(
+				IECore.CompoundObject( {
+					"ri:lightFilter" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"output" : IECoreScene.Shader(
+								"PxrIntMultLightFilter", "ri:lightFilter",
+								parameters = { "tint" : imath.Color3f( tint ), "combineMode" : combineMode }
+							),
+						},
+						output = "output",
+					)
+				} )
+			)
+
+		lightFilter1 = renderer.lightFilter(
+			"lightFilter1", None, lightFilterAttributes( 0.5, "mult" )
+		)
+
+		lightFilter2 = renderer.lightFilter(
+			"lightFilter2", None, lightFilterAttributes( 0.5, "mult" )
+		)
+
+		light.link( "lightFilters", { lightFilter1, lightFilter2 } )
+
+		renderer.render()
+		time.sleep( 1 )
+		renderer.pause()
+
+		# `0.5 * 0.5 == 0.25`
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0.25 ), 0.05 )
+
+		# `min( 0.75, 0.5 ) == 0.5`
+
+		lightFilter1.attributes( lightFilterAttributes( 0.75, "min" ) )
+		lightFilter2.attributes( lightFilterAttributes( 0.5, "min" ) )
+
+		renderer.render()
+		time.sleep( 1 )
+		renderer.pause()
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0.5 ), 0.05 )
+
+		# The results from different groups are multiplied together
+		# so this is also `0.5 * 0.5 == 0.25`.
+
+		lightFilter1.attributes( lightFilterAttributes( 0.5, "max" ) )
+		lightFilter2.attributes( lightFilterAttributes( 0.5, "min" ) )
+
+		renderer.render()
+		time.sleep( 1 )
+		renderer.pause()
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
+		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0.25 ), 0.05 )
+
+		# Clean up.
+
+		del sphere, light, lightFilter1, lightFilter2
+		del renderer
 
 	def testLPELobeOptions( self ) :
 
@@ -1786,10 +2151,24 @@ class RendererTest( GafferTest.TestCase ) :
 
 		return imath.Color4f( image["R"][i], image["G"][i], image["B"][i], image["A"][i] if "A" in image.keys() else 0.0 )
 
-	def __assertColorAlmostEqual( self, color1, color2, delta = 0.00001 ) :
+	def __color3AtUV( self, image, uv ) :
 
-		for i in range( 0, color1.dimensions() ) :
-			self.assertAlmostEqual( color1[i], color2[i], delta = delta )
+		c = self.__colorAtUV( image, uv )
+		return imath.Color3f( c.r, c.g, c.b )
+
+	def __assertEqualWithAbsError( self, x, y, error ) :
+
+		if isinstance( x, imath.Color4f ) :
+			equal = True
+			for i in range( 0, 4 ) :
+				equal = equal and math.fabs( x[i] - y[i] ) <= error
+		else :
+			equal = x.equalWithAbsError( y, error )
+
+		if not equal :
+			raise self.failureException(
+				f"{x} != {y} with error of {error}"
+			)
 
 if __name__ == "__main__":
 	unittest.main()

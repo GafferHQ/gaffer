@@ -37,6 +37,8 @@
 import os
 import unittest
 
+import imath
+
 import IECoreRenderMan
 import GafferTest
 import GafferSceneTest
@@ -46,16 +48,6 @@ import GafferRenderMan
 class InteractiveRenderManRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 	renderer = "RenderMan"
-
-	@unittest.skip( "Feature not supported yet" )
-	def testLightFilters( self ) :
-
-		pass
-
-	@unittest.skip( "Feature not supported yet" )
-	def testLightFiltersAndSetEdits( self ) :
-
-		pass
 
 	@unittest.skip( "Feature not supported yet" )
 	def testHideLinkedLight( self ) :
@@ -102,6 +94,24 @@ class InteractiveRenderManRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		light.loadShader( "PxrSphereLight" )
 
 		return light, light["parameters"]["lightColor"]
+
+	def _createSpotLight( self ) :
+
+		light = GafferRenderMan.RenderManLight()
+		light.loadShader( "PxrSphereLight" )
+		light["parameters"]["coneAngle"].setValue( 65 )
+		return light, light["parameters"]["lightColor"]
+
+	def _createLightFilter( self ) :
+
+		lightFilter = GafferRenderMan.RenderManLightFilter()
+		lightFilter.loadShader( "PxrIntMultLightFilter" )
+		lightFilter["parameters"]["tint"].setValue( imath.Color3f( 0 ) )
+		return lightFilter, lightFilter["parameters"]["density"]
+
+	def _createGobo( self ) :
+
+		self.skipTest( "Light filters not supported" )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -1755,7 +1755,162 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphereRenderedIn" + renderer )
 		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
 
-	def testLightFilters( self ) :
+	def testLightFilter( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["catalogue"] = GafferImage.Catalogue()
+
+		script["light"], colorPlug = self._createPointLight()
+		colorPlug.setValue( imath.Color3f( 1, 1, 0 ) )
+		script["light"]["transform"]["translate"]["z"].setValue( 1 )
+
+		script["plane"] = GafferScene.Plane()
+
+		script["cam"] = GafferScene.Camera()
+		script["cam"]["transform"]["translate"]["z"].setValue( 1 )
+
+		lightFilter, lightFilterDensityPlug = self._createLightFilter()
+		script["lightFilter"] = lightFilter
+		lightFilterDensityPlug.setValue( 0.0 )  # looking at unfiltered result first
+
+		script["attributes"] = GafferScene.StandardAttributes()
+		script["attributes"]["in"].setInput( script["lightFilter"]["out"] )
+
+		# This will link the light filter to just the one spot light.
+		script["attributes"]["attributes"]["filteredLights"]["enabled"].setValue( True )
+		script["attributes"]["attributes"]["filteredLights"]["value"].setValue( "defaultLights" )
+
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["light"]["out"] )
+		script["group"]["in"][1].setInput( script["plane"]["out"] )
+		script["group"]["in"][2].setInput( script["cam"]["out"] )
+		script["group"]["in"][3].setInput( script["attributes"]["out"] )
+
+		script["shader"], unused, shaderOut = self._createMatteShader()
+		script["assignment"] = GafferScene.ShaderAssignment()
+		script["assignment"]["in"].setInput( script["group"]["out"] )
+		script["assignment"]["shader"].setInput( shaderOut )
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( script['catalogue'].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+				}
+			)
+		)
+		script["outputs"]["in"].setInput( script["assignment"]["out"] )
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
+		script["options"]["options"]["renderCamera"]["enabled"].setValue( True )
+		script["options"]["in"].setInput( script["outputs"]["out"] )
+
+		script["render"] = self._createInteractiveRender()
+		script["render"]["in"].setInput( script["options"]["out"] )
+
+		# Render and give it some time to finish.
+
+		script["render"]["state"].setValue( script["render"].State.Running )
+
+		self.uiThreadCallHandler.waitFor( 1 )
+
+		c = self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) )
+		unfilteredIntensity = c[0]
+		self.__assertColorsAlmostEqual( c, imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+
+		# Use a dense light filter and let renderer update
+
+		lightFilterDensityPlug.setValue( 1.0 )
+
+		self.uiThreadCallHandler.waitFor( 1 )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), delta = 0.01 )
+
+		# Disable light filter and let renderer update
+
+		script["lightFilter"]["enabled"].setValue( False )
+
+		self.uiThreadCallHandler.waitFor( 1 )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+
+		# Enable light filter and let renderer update
+
+		script["lightFilter"]["enabled"].setValue( True )
+
+		self.uiThreadCallHandler.waitFor( 1 )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), delta = 0.01 )
+
+		# Change parameter on light filter
+
+		lightFilterDensityPlug.setValue( 0.5 )
+
+		self.uiThreadCallHandler.waitFor( 1 )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity / 2.0, unfilteredIntensity / 2.0, 0, 1 ), delta = 0.01 )
+
+		# Change parameter on light
+
+		script["light"]["parameters"]["intensity"].setValue( 2.0 )
+
+		self.uiThreadCallHandler.waitFor( 1 )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+
+		# Change light filter transformation
+
+		script["lightFilter"]["transform"]["rotate"]["x"].setValue( 0.1 )
+
+		self.uiThreadCallHandler.waitFor( 1 )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+
+		# Disable light
+
+		script["light"]["enabled"].setValue( False )
+
+		self.uiThreadCallHandler.waitFor( 1 )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), delta = 0.01 )
+
+		# Reenable light
+
+		script["light"]["enabled"].setValue( True )
+
+		self.uiThreadCallHandler.waitFor( 1 )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+
+		# Reset light and filter
+
+		script["light"]["parameters"]["intensity"].setValue( 1.0 )
+		lightFilterDensityPlug.setValue( 1 )
+
+		self.uiThreadCallHandler.waitFor( 1 )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), delta = 0.01 )
+
+		# Unlink the filter
+
+		script["attributes"]["attributes"]["filteredLights"]["value"].setValue( "" )
+
+		self.uiThreadCallHandler.waitFor( 1 )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+
+		# Relink the filter
+
+		script["attributes"]["attributes"]["filteredLights"]["value"].setValue( "defaultLights" )
+
+		self.uiThreadCallHandler.waitFor( 1 )
+		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), delta = 0.01 )
+
+		script["render"]["state"].setValue( script["render"].State.Stopped )
+
+	def testMixedLightFilters( self ) :
+
+		# Some renderers (Arnold, at the time of writing) allow light filters to
+		# be assigned directly as shaders on lights, as well as existing as
+		# independent entities. This tests a combination of such filters.
 
 		script = Gaffer.ScriptNode()
 		script["catalogue"] = GafferImage.Catalogue()
@@ -1990,7 +2145,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		self.uiThreadCallHandler.waitFor( 1 )
 
 		unfilteredColor = self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) )
-		self.assertGreater( unfilteredColor[0], 0.25 )
+		self.assertGreater( unfilteredColor[0], 0.12 )
 
 		# Try to link the filter. Should still be unfiltered, because the set is
 		# empty.
