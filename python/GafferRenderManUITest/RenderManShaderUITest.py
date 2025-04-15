@@ -54,8 +54,6 @@ class RenderManShaderUITest( GafferUITest.TestCase ) :
 		n = GafferRenderMan.RenderManShader()
 		n.loadShader( "PxrSurface" )
 
-		self.ignoreMessage( IECore.Msg.Level.Warning, "RenderManShader::loadShader", 'Array parameter "utilityPattern" not supported' )
-
 		self.assertEqual(
 			Gaffer.Metadata.value( n["parameters"]["diffuseGain"], "layout:section" ),
 			"Diffuse"
