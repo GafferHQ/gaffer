@@ -209,7 +209,10 @@ void edit( Gaffer::ValuePlug *plug, const IECore::Object *value )
 	ValuePlug *valuePlug;
 	if( auto nameValuePlug = runTimeCast<NameValuePlug>( plug ) )
 	{
-		nameValuePlug->enabledPlug()->setValue( true );
+		if( auto enabledPlug = nameValuePlug->enabledPlug() )
+		{
+			enabledPlug->setValue( true );
+		}
 		valuePlug = runTimeCast<ValuePlug>( nameValuePlug->valuePlug() );
 	}
 	else if( auto tweakPlug = runTimeCast<TweakPlug>( plug ) )

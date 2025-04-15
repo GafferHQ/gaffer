@@ -18,6 +18,7 @@ Fixes
 - RenderMan :
   - Fixed interactive denoiser configuration on Windows.
   - Fixed error when interactive denoising is enabled and no beauty output is found.
+- AttributeEditor, LightEditor, RenderPassEditor : Fixed crash when using drag and drop editing to edit a NameValuePlug without an `enabled` plug.
 
 1.5.10.1 (relative to 1.5.10.0)
 ========
