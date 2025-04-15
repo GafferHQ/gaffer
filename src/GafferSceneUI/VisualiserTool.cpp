@@ -108,11 +108,6 @@ float const g_vectorScaleInc = 0.01f;
 
 const Color3f g_vectorColorDefault( 1.f, 1.f, 1.f );
 
-// Orientation constants
-const Color3f g_colorX( 1.f, 0.f, 0.f );
-const Color3f g_colorY( 0.f, 1.f, 0.f );
-const Color3f g_colorZ( 0.f, 0.f, 1.f );
-
 // Opacity and value constants
 const float g_opacityDefault = 1.0f;
 const float g_opacityMin = 0.0f;
@@ -425,9 +420,6 @@ std::string const g_vectorShaderFragSource
 struct UniformBlockOrientationShader
 {
 	alignas( 16 ) Imath::M44f o2c;
-	alignas( 16 ) Imath::Color3f colorX;
-	alignas( 16 ) Imath::Color3f colorY;
-	alignas( 16 ) Imath::Color3f colorZ;
 	alignas( 16 ) float scale;
 	alignas( 4 ) float opacity;
 };
@@ -436,7 +428,6 @@ struct UniformBlockOrientationShader
 	"layout( std140, row_major ) uniform UniformBlock\n" \
 	"{\n" \
 	"   mat4 o2c;\n" \
-	"   vec3 color[ 3 ];\n" \
 	"   float scale;\n" \
 	"   float opacity;\n" \
 	"} uniforms;\n"
@@ -465,6 +456,11 @@ std::string const g_orientationShaderVertSource
 
 	"void main()\n"
 	"{\n"
+	"   vec3 color[ 3 ];\n"
+	"   // Match colors to `StandardStyle::colorForAxes()`\n"
+	"   color[0] = vec3( 0.73, 0.17, 0.17 );\n"
+	"   color[1] = vec3( 0.2, 0.57, 0.2 );\n"
+	"   color[2] = vec3( 0.2, 0.36, 0.74 );\n"
 	"   vec3 position = ps;\n"
 	"   int axis = gl_VertexID / 2;\n"
 
@@ -489,7 +485,7 @@ std::string const g_orientationShaderVertSource
 	"   }\n"
 
 	"   gl_Position = vec4( position, 1.0 ) * uniforms.o2c;\n"
-	"   outputs.color = uniforms.color[ axis ];\n"
+	"   outputs.color = color[ axis ];\n"
 	"}\n"
 );
 
@@ -1924,9 +1920,6 @@ class VisualiserGadget : public Gadget
 			glBindBufferBase( GL_UNIFORM_BUFFER, g_uniformBlockBindingIndex, m_orientationUniformBuffer->buffer() );
 
 			UniformBlockOrientationShader uniforms;
-			uniforms.colorX = g_colorX;
-			uniforms.colorY = g_colorY;
-			uniforms.colorZ = g_colorZ;
 			uniforms.scale = m_tool->vectorScalePlug()->getValue();
 			uniforms.opacity = m_tool->opacityPlug()->getValue();
 
