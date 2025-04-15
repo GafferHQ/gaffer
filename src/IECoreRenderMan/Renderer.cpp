@@ -40,6 +40,8 @@
 #include "GeometryPrototypeCache.h"
 #include "Globals.h"
 #include "Light.h"
+#include "LightFilter.h"
+#include "LightLinker.h"
 #include "MaterialCache.h"
 #include "Globals.h"
 #include "Object.h"
@@ -100,6 +102,7 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 		{
 			m_materialCache.reset();
 			m_geometryPrototypeCache.reset();
+			m_lightLinker.reset();
 			m_globals.reset();
 			g_haveInstance = false;
 		}
@@ -153,13 +156,15 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 				geometryPrototype = m_geometryPrototypeCache->get( meshCopy.get(), typedAttributes, /* messageContext = */ name );
 			}
 
-			return new IECoreRenderMan::Light( geometryPrototype, typedAttributes, m_session );
+			return new IECoreRenderMan::Light( geometryPrototype, typedAttributes, m_materialCache.get(), m_lightLinker.get(), m_session );
 		}
 
 		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
 		{
 			const IECore::MessageHandler::Scope messageScope( m_messageHandler.get() );
-			return nullptr;
+			acquireSession();
+			auto typedAttributes = static_cast<const Attributes *>( attributes );
+			return new LightFilter( name, typedAttributes, m_session, m_lightLinker.get() );
 		}
 
 		Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
@@ -201,6 +206,7 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 		{
 			const IECore::MessageHandler::Scope messageScope( m_messageHandler.get() );
 			acquireSession();
+			m_lightLinker->updateDirtyLinks();
 			m_materialCache->clearUnused();
 			m_globals->render();
 		}
@@ -254,6 +260,7 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 					m_session = m_globals->acquireSession();
 					m_materialCache = std::make_unique<MaterialCache>( m_session );
 					m_geometryPrototypeCache = std::make_unique<GeometryPrototypeCache>( m_session );
+					m_lightLinker = std::make_unique<LightLinker>();
 				}
 			}
 			return m_session;
@@ -265,6 +272,7 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 		Session *m_session;
 		std::unique_ptr<MaterialCache> m_materialCache;
 		std::unique_ptr<GeometryPrototypeCache> m_geometryPrototypeCache;
+		std::unique_ptr<LightLinker> m_lightLinker;
 
 		static Renderer::TypeDescription<RenderManRenderer> g_typeDescription;
 		static std::atomic_bool g_haveInstance;

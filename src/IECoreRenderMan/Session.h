@@ -91,12 +91,12 @@ struct Session
 	/// Lights
 	/// ------
 
-	riley::LightShaderId createLightShader( const riley::ShadingNetwork &light );
+	riley::LightShaderId createLightShader( const riley::ShadingNetwork &light, const riley::ShadingNetwork &lightFilter );
 	void deleteLightShader( riley::LightShaderId lightShaderId );
 
-	riley::LightInstanceId createLightInstance( riley::GeometryPrototypeId geometry, riley::MaterialId materialId, riley::LightShaderId lightShaderId, const riley::Transform &transform, const RtParamList &attributes );
+	riley::LightInstanceId createLightInstance( riley::GeometryPrototypeId geometry, riley::MaterialId materialId, riley::LightShaderId lightShaderId, const riley::CoordinateSystemList &coordinateSystems, const riley::Transform &transform, const RtParamList &attributes );
 	riley::LightInstanceResult modifyLightInstance(
-		riley::LightInstanceId lightInstanceId, const riley::MaterialId *materialId, const riley::LightShaderId *lightShaderId, const riley::Transform *transform,
+		riley::LightInstanceId lightInstanceId, const riley::MaterialId *materialId, const riley::LightShaderId *lightShaderId, const riley::CoordinateSystemList *coordinateSystems, const riley::Transform *transform,
 		const RtParamList *attributes
 	);
 	void deleteLightInstance( riley::LightInstanceId lightInstanceId );
@@ -146,6 +146,7 @@ struct Session
 		struct LightShaderInfo
 		{
 			std::vector<riley::ShadingNode> shaders;
+			std::vector<riley::ShadingNode> lightFilterShaders;
 		};
 
 		// Keys are `riley::LightShaderId`. The `concurrent_unordered_map` gives
