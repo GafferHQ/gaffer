@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - VisualiserTool : Added new visualisation for orientation (Quatf) data.
+- PrimitiveInspector : Changed column order for quaternions to match Imath's conventions.
 
 
 1.5.11.0 (relative to 1.5.10.1)
