@@ -7,6 +7,10 @@ Improvements
 - VisualiserTool : Added new visualisation for orientation (Quatf) data.
 - PrimitiveInspector : Changed column order for quaternions to match Imath's conventions.
 
+API
+---
+
+- ShaderUI : Added support for automatically looking up metadata registered to `{shaderType}:{shaderName}:{parameterName}` metadata targets.
 
 1.5.11.0 (relative to 1.5.10.1)
 ========
