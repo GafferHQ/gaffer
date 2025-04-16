@@ -141,6 +141,15 @@ class PathListingWidgetAccessor : public GafferUI::PathListingWidget
 			}
 		}
 
+		std::vector<std::string> getSortedSelection() const override
+		{
+			IECorePython::ScopedGILLock gilLock;
+			object pythonSelection = m_widget.attr( "getSortedSelection" )();
+			std::vector<std::string> selection;
+			container_utils::extend_container( selection, pythonSelection );
+			return selection;
+		}
+
 	private :
 
 		// A `weakref` for the Python PathListingWidget object. We use a

@@ -303,6 +303,7 @@ class PathListingWidget : public IECore::RefCounted
 		using Selection = std::variant<IECore::PathMatcher, std::vector<IECore::PathMatcher>>;
 		virtual void setSelection( const Selection &selection ) = 0;
 		virtual Selection getSelection() const = 0;
+		virtual std::vector<std::string> getSortedSelection() const = 0;
 
 };
 

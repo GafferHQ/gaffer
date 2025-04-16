@@ -16,6 +16,7 @@ API
   - Added `setValueOrAddKeyFromData()`.
 - Gaffer : Added ObjectMatrix.
 - GafferUI : Added ClipboardAlgo.
+- PathListingWidget : Added `getSortedSelection()`.
 
 1.5.11.0 (relative to 1.5.10.1)
 ========

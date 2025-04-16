@@ -329,6 +329,86 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		w.setSelection( [ s31, s12 ] )
 		self.assertEqual( w.getSelection(), [ s31, s12 ] )
 
+	def testOrderedRowSelection( self ) :
+
+		d = {}
+		for i in range( 0, 10 ) :
+			dd = {}
+			for j in range( 0, 10 ) :
+				dd[str(j)] = j
+			d[str(i)] = dd
+
+		p = Gaffer.DictPath( d, "/" )
+
+		w = GafferUI.PathListingWidget(
+			path = p,
+			columns = [
+				GafferUI.PathListingWidget.defaultNameColumn,
+				GafferUI.PathListingWidget.StandardColumn( "Value", "dict:value" )
+			],
+			sortable = True,
+			selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+		)
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
+
+		s = IECore.PathMatcher( [ "/1", "/2", "/9", "/2/5", "/2/1" ] )
+		w.setSelection( s, scrollToFirst = False )
+		self.assertEqual( w.getSelection(), s )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+
+		w._qtWidget().header().setSortIndicator( 0, QtCore.Qt.AscendingOrder )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( w.getSortedSelection(), [ "/1", "/2", "/2/1", "/2/5", "/9" ] )
+
+		w._qtWidget().header().setSortIndicator( 0, QtCore.Qt.DescendingOrder )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( w.getSortedSelection(), [ "/9", "/2", "/2/5", "/2/1", "/1" ] )
+
+		w._qtWidget().header().setSortIndicator( 1, QtCore.Qt.AscendingOrder )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( w.getSortedSelection(), [ "/1", "/2", "/2/1", "/2/5", "/9" ] )
+
+	def testOrderedCellSelection( self ) :
+
+		d = {}
+		for i in range( 0, 10 ) :
+			dd = {}
+			for j in range( 0, 10 ) :
+				dd[str(j)] = j
+			d[str(i)] = dd
+
+		p = Gaffer.DictPath( d, "/" )
+
+		w = GafferUI.PathListingWidget(
+			path = p,
+			columns = [
+				GafferUI.PathListingWidget.defaultNameColumn,
+				GafferUI.PathListingWidget.StandardColumn( "Value", "dict:value" )
+			],
+			sortable = True,
+			selectionMode = GafferUI.PathListingWidget.SelectionMode.Cells,
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+		)
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
+
+		s = [ IECore.PathMatcher( [ "/1", "/2", "/2/1" ] ), IECore.PathMatcher( [ "/9", "/2/5" ] ) ]
+		w.setSelection( s, scrollToFirst = False )
+		self.assertEqual( w.getSelection(), s )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+
+		w._qtWidget().header().setSortIndicator( 0, QtCore.Qt.AscendingOrder )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( w.getSortedSelection(), [ "/1", "/2", "/2/1", "/2/5", "/9" ] )
+
+		w._qtWidget().header().setSortIndicator( 0, QtCore.Qt.DescendingOrder )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( w.getSortedSelection(), [ "/9", "/2", "/2/5", "/2/1", "/1" ] )
+
+		w._qtWidget().header().setSortIndicator( 1, QtCore.Qt.AscendingOrder )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( w.getSortedSelection(), [ "/1", "/2", "/2/1", "/2/5", "/9" ] )
+
 	def testRowSelectionScrolling( self ) :
 
 		d = {}
