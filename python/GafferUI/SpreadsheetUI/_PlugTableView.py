@@ -170,6 +170,16 @@ class _PlugTableView( GafferUI.Widget ) :
 		index = self._qtWidget().indexAt( point )
 		return self._qtWidget().model().plugForIndex( index )
 
+	def selectPlugs( self, plugs, scrollTo = True ) :
+
+		tableView = self._qtWidget()
+
+		indexes = [ tableView.model().indexForPlug( plug ) for plug in plugs ]
+		if scrollTo :
+			tableView.scrollTo( indexes[ -1 ] )
+
+		self.__selectIndexes( indexes )
+
 	def selectedPlugs( self ) :
 
 		selection = self._qtWidget().selectionModel().selectedIndexes()
@@ -1148,7 +1158,7 @@ class _PlugTableView( GafferUI.Widget ) :
 			selectionModel.select( selection, QtCore.QItemSelectionModel.ClearAndSelect )
 
 		if not selectionModel.isSelected( selectionModel.currentIndex() ) :
-			selectionModel.setCurrentIndex( indexes[ -1 ], QtCore.QItemSelectionModel.ClearAndSelect )
+			selectionModel.setCurrentIndex( indexes[ -1 ], QtCore.QItemSelectionModel.Select )
 
 	def __setColumnLabel( self, cellPlug ) :
 
