@@ -35,6 +35,8 @@
 ##########################################################################
 
 import functools
+import inspect
+import re
 from xml.etree import ElementTree
 
 import imath
@@ -127,12 +129,15 @@ def registerMetadata( argsFile, parametersToIgnore = set() ) :
 
 		elif element.tag == "help" and event == "end" :
 
+			# Using `partial()` to defer processing of description until it is queried,
+			# since it relatively expensive.
+			description = functools.partial( __cleanDescription, currentParameterTarget, element )
 			if currentParameterTarget is not None :
-				Gaffer.Metadata.registerValue( currentParameterTarget or target, "description", element.text )
+				Gaffer.Metadata.registerValue( currentParameterTarget or target, "description", description )
 			else :
 				# We may not have the `target` yet, because a couple of files don't
 				# specify `shaderType` first. Store it and register at the end.
-				targetDescription = element.text
+				targetDescription = description
 
 		elif element.tag == "hintdict" and element.attrib.get( "name" ) == "options" :
 			if event == "end" and currentParameterTarget :
@@ -244,3 +249,19 @@ def __parsePresets( options, parameterTarget, parameterType ) :
 
 	Gaffer.Metadata.registerValue( parameterTarget, "presetNames", presetNames )
 	Gaffer.Metadata.registerValue( parameterTarget, "presetValues", presetValues )
+
+def __cleanDescription( parameterTarget, element ) :
+
+	description = ElementTree.tostring( element, encoding = "unicode", method = "html" ).strip()
+	description = description.removeprefix( "<help>" )
+	description = description.removesuffix( "</help>" )
+	description = inspect.cleandoc( description )
+
+	if parameterTarget is not None :
+		# Several descriptions start with `{parameterName}:`, which is redundant
+		# everywhere it is presented in Gaffer. Strip it out, being careful to
+		# maintain any preceding `<p>` tag.
+		parameterName = parameterTarget.rpartition( ":" )[-1]
+		description = re.sub( rf"^(\<p\>\n?|){parameterName}:", r"\g<1>", description )
+
+	return description

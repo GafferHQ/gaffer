@@ -144,6 +144,14 @@ class RenderManShaderUITest( GafferUITest.TestCase ) :
 					## \todo Add support for these types.
 					self.assertRegex( m.message, 'Spline parameter .* not supported|.* has unsupported type "struct"' )
 
+				for parameter in node["parameters"] :
+					description = Gaffer.Metadata.value( parameter, "description" )
+					if description is not None :
+						self.assertNotIn( "<help>", description )
+						self.assertNotIn( "</help>", description )
+						self.assertNotIn( "{}:".format( parameter.getName() ), description )
+						self.assertEqual( description.count( "<p>" ), description.count( "</p>" ) )
+
 				shadersLoaded.add( argsFile.stem )
 
 		# Guard against shaders being moved and this test therefore not

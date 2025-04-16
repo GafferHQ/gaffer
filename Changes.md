@@ -14,6 +14,7 @@ Fixes
   - PxrUnified, PxrBarnLightFilter, PxrCookieLightFilter, PxrRodLightFilter : Hid unwanted inputs in the GraphEditor.
   - PxrCookieLightFilter : Added button for reloading the map.
   - PxrSurface, PxrLayerSurface : Moved `utilityPattern` parameter to "Globals" section.
+  - Fixed formatting of parameter tooltips, and Node Reference descriptions.
 
 API
 ---
