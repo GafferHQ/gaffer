@@ -89,9 +89,9 @@ jobs:
 
     steps:
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-    - uses: ilammy/msvc-dev-cmd@v1.13.0
+    - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
       with:
         sdk: 10.0.19041.0
 
@@ -142,7 +142,7 @@ jobs:
       # containing the hash of the archive, for use in the cache key
       # below.
       run: |
-        echo GAFFER_DEPENDENCIES_HASH=`python .github/workflows/main/installDependencies.py ${{ matrix.dependenciesURL != '' && format( '--archiveURL {0}', matrix.dependenciesURL ) || '' }} --dependenciesDir ${{ env.GAFFER_BUILD_DIR }} --outputFormat "{archiveDigest}"` >> $GITHUB_ENV
+        python .github/workflows/main/installDependencies.py ${{ matrix.dependenciesURL != '' && format( '--archiveURL {0}', matrix.dependenciesURL ) || '' }} --dependenciesDir ${{ env.GAFFER_BUILD_DIR }} --outputFormat "GAFFER_DEPENDENCIES_HASH={archiveDigest}" >> $GITHUB_ENV
         ./.github/workflows/main/installDelight.py
         echo DELIGHT=$GITHUB_WORKSPACE/3delight >> $GITHUB_ENV
         ./.github/workflows/main/installONNX.py
@@ -150,7 +150,7 @@ jobs:
       shell: bash
 
     - name: Install RenderMan
-      run: echo RMANTREE=`./.github/workflows/main/installRenderMan.py` >> $GITHUB_ENV
+      run: ./.github/workflows/main/installRenderMan.py --outputFormat "RMANTREE={rmanTree}" >> $GITHUB_ENV
       shell: bash
       env:
         RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}
@@ -171,7 +171,7 @@ jobs:
       if: runner.os == 'Windows'
 
     - name: Cache
-      uses: actions/cache@v4
+      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
       with:
         path: ${{ env.GAFFER_CACHE_DIR }}
         key: ${{ runner.os }}-${{ matrix.containerImage }}-${{env.GAFFER_DEPENDENCIES_HASH}}-${{ matrix.buildType }}-${{ github.sha }}
@@ -260,7 +260,7 @@ jobs:
         echo "::remove-matcher owner=validateRelease::"
       if: matrix.publish
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: ${{ env.GAFFER_BUILD_NAME }}
         path: ${{ env.GAFFER_BUILD_NAME }}.${{ env.PACKAGE_EXTENSION }}
