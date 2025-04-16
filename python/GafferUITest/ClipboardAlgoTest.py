@@ -226,5 +226,166 @@ class ClipboardAlgoTest( GafferUITest.TestCase ) :
 			self.assertEqual( adaptor.value( row, column ), value )
 			self.assertEqual( adaptor.value( row, column, extractValue = True ), value["value"] if isinstance( value, IECore.CompoundData ) else value )
 
+	def testPathListingAdaptor( self ) :
+
+		d = {
+			"a" : 1,
+			"b" : 2,
+			"c" : 3,
+			"d" : 4,
+			"e" : 5
+		}
+
+		p = Gaffer.DictPath( d, "/" )
+
+		w = GafferUI.PathListingWidget(
+			p,
+			columns = [
+				GafferUI.PathListingWidget.defaultNameColumn,
+				GafferUI.PathListingWidget.StandardColumn( "A", "dict:value" )
+			],
+			selectionMode = GafferUI.PathListingWidget.SelectionMode.Cells,
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+		)
+
+		# select non-contiguous cells in the same column
+
+		s1 = [ IECore.PathMatcher( [] ), IECore.PathMatcher( [ "/a", "/c", "/e" ] ) ]
+
+		w.setSelection( s1 )
+		self.assertEqual( w.getSelection(), s1 )
+
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		adaptor = GafferUI.ClipboardAlgo._PathListingAdaptor( w )
+		self.assertTrue( adaptor.isValid() )
+		self.assertEqual(
+			adaptor.data(),
+			Gaffer.ObjectMatrix( 1, 3, [ IECore.IntData( x ) for x in [ 1, 3, 5 ] ] )
+		)
+
+		# select contiguous cells in the same column
+
+		s2 = [ IECore.PathMatcher( [ "/b", "/c" ] ), IECore.PathMatcher( [] ) ]
+
+		w.setSelection( s2 )
+		self.assertEqual( w.getSelection(), s2 )
+
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		adaptor = GafferUI.ClipboardAlgo._PathListingAdaptor( w )
+		self.assertTrue( adaptor.isValid() )
+		self.assertEqual(
+			adaptor.data(),
+			Gaffer.ObjectMatrix( 1, 2, [ IECore.StringData( x ) for x in [ "b", "c" ] ] )
+		)
+
+		# select the same row across both columns
+
+		s3 = [ IECore.PathMatcher( [ "/e" ] ), IECore.PathMatcher( [ "/e" ] ) ]
+		w.setSelection( s3 )
+		self.assertEqual( w.getSelection(), s3 )
+
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		adaptor = GafferUI.ClipboardAlgo._PathListingAdaptor( w )
+		self.assertTrue( adaptor.isValid() )
+		self.assertEqual(
+			adaptor.data(),
+			Gaffer.ObjectMatrix( 2, 1, [ IECore.StringData( "e" ), IECore.IntData( 5 ) ] )
+		)
+
+		# select non-contiguous rows
+
+		s4 = [ IECore.PathMatcher( [ "/b", "/d" ] ), IECore.PathMatcher( [ "/b", "/d" ] ) ]
+		w.setSelection( s4 )
+		self.assertEqual( w.getSelection(), s4 )
+
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		adaptor = GafferUI.ClipboardAlgo._PathListingAdaptor( w )
+		self.assertTrue( adaptor.isValid() )
+
+		self.assertEqual( adaptor.data().value( 0, 0 ), IECore.StringData( "b" ) )
+		self.assertEqual( adaptor.data().value( 1, 0 ), IECore.IntData( 2 ) )
+		self.assertEqual( adaptor.data().value( 0, 1 ), IECore.StringData( "d" ) )
+		self.assertEqual( adaptor.data().value( 1, 1 ), IECore.IntData( 4 ) )
+
+		# test selection of mixed data types, these would end up copied to the same column and the
+		# result is not considered valid
+
+		s5 = [ IECore.PathMatcher( [ "/a" ] ), IECore.PathMatcher( [ "/d" ] ) ]
+		w.setSelection( s5 )
+		self.assertEqual( w.getSelection(), s5 )
+
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		adaptor = GafferUI.ClipboardAlgo._PathListingAdaptor( w )
+		self.assertFalse( adaptor.isValid() )
+
+	def testCopyFromPathListingWidgetPasteToSpreadsheet( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["s"] = self.__createSpreadsheet()
+		rowsPlug = script["s"]["rows"]
+
+		sw = GafferUI.ScriptWindow.acquire( script )
+		r = GafferUI.PlugValueWidget.acquire( rowsPlug )
+		cellsTable = r._RowsPlugValueWidget__cellsTable
+
+		d = {
+			"a" : 101,
+			"b" : 202,
+			"c" : 303,
+			"d" : 404,
+			"e" : 505
+		}
+
+		p = Gaffer.DictPath( d, "/" )
+
+		w = GafferUI.PathListingWidget(
+			p,
+			columns = [
+				GafferUI.PathListingWidget.defaultNameColumn,
+				GafferUI.PathListingWidget.StandardColumn( "A", "dict:value" )
+			],
+			selectionMode = GafferUI.PathListingWidget.SelectionMode.Cells,
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+		)
+
+		w.setSelection( [ IECore.PathMatcher( [ "/a", "/c", "/e" ] ), IECore.PathMatcher( [ "/a", "/c", "/e" ] ) ] )
+
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		pathListingAdaptor = GafferUI.ClipboardAlgo._PathListingAdaptor( w )
+		self.assertTrue( pathListingAdaptor.isValid() )
+
+		targetPlugs = [
+			rowsPlug[2]["cells"][0], rowsPlug[2]["cells"][1],
+			rowsPlug[3]["cells"][0], rowsPlug[3]["cells"][1],
+			rowsPlug[4]["cells"][0], rowsPlug[4]["cells"][2]
+		]
+		originalValues = [ x["value"].getValue() for x in targetPlugs ]
+
+		cellsTable.selectPlugs( targetPlugs )
+
+		spreadsheetAdaptor = GafferUI.ClipboardAlgo._SpreadsheetAdaptor( pathListingAdaptor.data() )
+		self.assertTrue( spreadsheetAdaptor.canPaste( cellsTable ) )
+		spreadsheetAdaptor.paste( cellsTable )
+
+		pastedValues = [ x["value"].getValue() for x in targetPlugs ]
+		self.assertNotEqual( pastedValues, originalValues )
+		self.assertEqual( pastedValues, [ "a", 101, "c", 303, "e", 505 ] )
+
+		# extend selection to more rows than we copied and paste again
+
+		targetPlugs.extend( [
+			rowsPlug[5]["cells"][0], rowsPlug[5]["cells"][1],
+			rowsPlug[6]["cells"][0], rowsPlug[6]["cells"][1]
+		] )
+
+		cellsTable.selectPlugs( targetPlugs )
+		spreadsheetAdaptor = GafferUI.ClipboardAlgo._SpreadsheetAdaptor( pathListingAdaptor.data() )
+		self.assertTrue( spreadsheetAdaptor.canPaste( cellsTable ) )
+		spreadsheetAdaptor.paste( cellsTable )
+
+		# pasted values should repeat outside of the copied range
+
+		self.assertEqual( [ x["value"].getValue() for x in targetPlugs ], [ "a", 101, "c", 303, "e", 505, "a", 101, "c", 303 ] )
+
 if __name__ == "__main__":
 	unittest.main()

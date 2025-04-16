@@ -432,6 +432,7 @@ Toggle cell selection                                | {kbd}`Ctrl` + {{leftClick
 Edit selected cells                                  | {kbd}`Return`<br>or<br>{kbd}`Enter`
 Disable Edit                                         | {kbd}`D`
 Remove Attribute                                     | {kbd}`Delete`
+Copy/Paste selected cells                            | {kbd}`Ctrl` + {kbd}`C`/{kbd}`V`
 
 ## Set Editor ##
 
@@ -451,6 +452,7 @@ Edit selected cells                                  | {kbd}`Return`<br>or<br>{k
 Disable edit                                         | {kbd}`D`
 Toggle a render pass as active                       | {kbd}`Return` or {{leftClick}} {{leftClick}} a cell within the {{activeRenderPass}} column
 Rename a render pass                                 | {kbd}`Return` or {{leftClick}} {{leftClick}} a cell within the "Name" column
+Copy/Paste selected cells                            | {kbd}`Ctrl` + {kbd}`C`/{kbd}`V`
 
 ## Color Chooser Color Field ##
 

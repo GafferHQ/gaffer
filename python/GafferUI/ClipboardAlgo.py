@@ -149,6 +149,89 @@ class _ClipboardAdaptor( object ) :
 
 		return True
 
+class _PathListingAdaptor( _ClipboardAdaptor ) :
+
+	def __init__( self, source ) :
+
+		_ClipboardAdaptor.__init__( self, source )
+
+		if isinstance( source, GafferUI.PathListingWidget ) :
+			self.__dataFromPathListing( source )
+
+	def __dataFromPathListing( self, pathListing ) :
+
+		values = []
+
+		path = pathListing.getPath().copy()
+		selection = self.__orderedSelection( pathListing )
+		for pathString, columns in selection :
+			path.setFromString( pathString )
+
+			for column in columns :
+				## \todo Store values as a CompoundData including the column name so values could be pasted to a row and matched by name.
+				values.append( column.cellData( path ).value )
+
+		rows = len( selection )
+		columns = len( selection[0][1] )
+		if len( values ) == rows * columns :
+			self.setData( Gaffer.ObjectMatrix( columns, rows, values ) )
+
+	## \todo Support `atTime` once `Inspection::edit()` has support for it.
+	def _pasteFunctionsAndNonPasteableReason( self, pathListing, atTime ) :
+
+		if not self.isValid() :
+			return [], "Clipboard contents not pasteable"
+
+		pasteFunctions = []
+
+		path = pathListing.getPath().copy()
+		selection = self.__orderedSelection( pathListing )
+		for rowIndex, (pathString, columns) in enumerate( selection ) :
+			sourceIndex = 0
+			path.setFromString( pathString )
+			inspectionContext = path.inspectionContext()
+			if inspectionContext is None :
+					continue
+
+			with inspectionContext :
+				for column in columns :
+					if not hasattr( column, "inspector" ) :
+						return [], "Column \"{}\" does not support pasting.".format( column.headerData().value )
+
+					inspection = column.inspector().inspect()
+					if inspection is None :
+						return "Path \"{}\" is not editable.".format( pathString ), []
+
+					value = self.value( rowIndex, sourceIndex, extractValue = True )
+					sourceIndex += 1
+
+					if inspection.canEdit( value ) :
+						pasteFunctions.append( functools.partial( inspection.edit, value ) )
+					elif len( columns ) > 1 :
+						return [], "{} : {}".format( column.headerData().value, inspection.nonEditableReason( value ) )
+					else :
+						return [], inspection.nonEditableReason( value )
+
+		return pasteFunctions, ""
+
+	@staticmethod
+	def __orderedSelection( pathListing ) :
+
+		# Returns the current selection ordered based on the
+		# current sort order of the PathListingWidget.
+
+		rows = {}
+		for selection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
+			for path in selection.paths() :
+				rows.setdefault( path, [] ).append( column )
+
+		matrix = []
+		sortedSelection = pathListing.getSortedSelection()
+		for path, columns in sorted( rows.items(), key = lambda item : sortedSelection.index( item[0] ) ) :
+			matrix.append( ( path, columns ) )
+
+		return matrix
+
 class _PlugMatrixAdaptor( _ClipboardAdaptor ) :
 
 	def __init__( self, source ) :
@@ -503,7 +586,9 @@ def __createAdaptorFromClipboard( target ) :
 
 	clipboard = __applicationRoot( target ).getClipboardContents()
 
-	if isinstance( target, GafferUI.SpreadsheetUI._PlugTableView._PlugTableView ) :
+	if isinstance( target, GafferUI.PathListingWidget ) :
+		return _PathListingAdaptor( clipboard )
+	elif isinstance( target, GafferUI.SpreadsheetUI._PlugTableView._PlugTableView ) :
 		return _SpreadsheetAdaptor( clipboard )
 	elif _PlugMatrixAdaptor._isPlugMatrix( target ) :
 		return _PlugMatrixAdaptor( clipboard )
@@ -512,7 +597,9 @@ def __createAdaptorFromClipboard( target ) :
 
 def __createAdaptor( source ) :
 
-	if isinstance( source, GafferUI.SpreadsheetUI._PlugTableView._PlugTableView ) :
+	if isinstance( source, GafferUI.PathListingWidget ) :
+		return _PathListingAdaptor( source )
+	elif isinstance( source, GafferUI.SpreadsheetUI._PlugTableView._PlugTableView ) :
 		return _SpreadsheetAdaptor( source )
 	elif _PlugMatrixAdaptor._isPlugMatrix( source ) :
 		return _PlugMatrixAdaptor( source )

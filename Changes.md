@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.11.0)
 =======
 
+Features
+--------
+
+- AttributeEditor, LightEditor, RenderPassEditor : Added copy and paste editing. Cell values can be copied to the clipboard and pasted to create edits on other cells. Cells can also be copied from and pasted into Spreadsheet nodes.
+
 Improvements
 ------------
 

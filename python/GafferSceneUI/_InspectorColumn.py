@@ -341,6 +341,27 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 	if not __validateSelection( pathListing ) :
 		return
 
+	pluralSuffix = "" if sum( [ x.size() for x in pathListing.getSelection() ] ) == 1 else "s"
+	menuDefinition.append(
+		f"Copy Value{pluralSuffix}",
+		{
+			"command" : functools.partial( __copySelectedValues, pathListing ),
+			"active" : functools.partial( GafferUI.ClipboardAlgo.canCopySelection, pathListing )
+		}
+	)
+
+	menuDefinition.append(
+		f"Paste Value{pluralSuffix}",
+		{
+			"command" : functools.partial( __pasteValues, pathListing ),
+			"active" : functools.partial( GafferUI.ClipboardAlgo.canPaste, pathListing )
+		}
+	)
+
+	menuDefinition.append(
+		"CopyPasteDivider", { "divider" : True }
+	)
+
 	menuDefinition.append(
 		"Show History...",
 		{
@@ -395,6 +416,14 @@ def __keyPress( column, pathListing, event ) :
 
 	if event.key in ( "Return", "Enter" ) and event.modifiers in ( event.Modifiers.None_, event.modifiers.Control ):
 		__editSelectedCells( pathListing, ensureEnabled = event.modifiers == event.modifiers.Control )
+		return True
+
+	if event.key == "C" and event.modifiers == event.Modifiers.Control :
+		__copySelectedValues( pathListing )
+		return True
+
+	if event.key == "V" and event.modifiers == event.Modifiers.Control :
+		__pasteValues( pathListing )
 		return True
 
 	if event.modifiers == event.Modifiers.None_ :
@@ -593,6 +622,24 @@ def __columnMetadata( column, metadataKey ) :
 		return None
 
 	return Gaffer.Metadata.value( prefixMap.get( type( column.inspector() ) ) + column.inspector().name(), metadataKey )
+
+def __copySelectedValues( pathListing ) :
+
+	if not GafferUI.ClipboardAlgo.canCopy( pathListing ) :
+		__warningPopup( pathListing, "Cannot copy. Selection has varying row lengths." )
+		return
+
+	GafferUI.ClipboardAlgo.copy( pathListing )
+
+def __pasteValues( pathListing ) :
+
+	nonPasteableReason = GafferUI.ClipboardAlgo.nonPasteableReason( pathListing )
+	if nonPasteableReason != "" :
+		__warningPopup( pathListing, nonPasteableReason )
+		return
+
+	with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
+		GafferUI.ClipboardAlgo.paste( pathListing )
 
 def __inspectorColumnCreated( column ) :
 
