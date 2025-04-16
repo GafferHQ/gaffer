@@ -1,6 +1,13 @@
 1.5.x.x (relative to 1.5.11.0)
 =======
 
+Improvements
+------------
+
+- Spreadsheet :
+  - A wider range of types are converted when copy/pasting values between cells, such as BoolData to IntData, FloatData to IntData, etc.
+  - Added support for converting StringData values when pasted or dropped onto a StringVectorData cell. The string array value is formed by splitting the string on spaces.
+
 API
 ---
 
@@ -8,6 +15,7 @@ API
   - Added support in `setValueFromData()` for setting StringPlug values from StringVectorData and StringVectorDataPlugValues from StringData.
   - Added `setValueOrAddKeyFromData()`.
 - Gaffer : Added ObjectMatrix.
+- GafferUI : Added ClipboardAlgo.
 
 1.5.11.0 (relative to 1.5.10.1)
 ========
