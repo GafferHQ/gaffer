@@ -79,6 +79,9 @@ class RenderManShaderUITest( GafferUITest.TestCase ) :
 			IECore.IntVectorData( [ 0, 1, 2 ] )
 		)
 
+		n.loadShader( "PxrVisualizer" )
+		self.assertIn( "A utility integrator to navigate and inspect large scenes interactively", Gaffer.Metadata.value( n, "description" ) )
+
 	def testCustomMetadata( self ) :
 
 		# Check that all the metadata registered by
@@ -140,9 +143,6 @@ class RenderManShaderUITest( GafferUITest.TestCase ) :
 				for m in mh.messages :
 					## \todo Add support for these types.
 					self.assertRegex( m.message, 'Spline parameter .* not supported|.* has unsupported type "struct"' )
-
-				# Trigger metadata parsing and ensure there are no errors
-				Gaffer.Metadata.value( node, "description" )
 
 				shadersLoaded.add( argsFile.stem )
 

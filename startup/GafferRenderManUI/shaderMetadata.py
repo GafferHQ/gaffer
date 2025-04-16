@@ -35,10 +35,13 @@
 ##########################################################################
 
 import Gaffer
+import GafferRenderManUI
 
 # RenderManShaderUI derives UI metadata from `.args` files automatically. But
 # this doesn't cover everything we need for a good user experience, so here we
 # manually register additional Gaffer-specific metadata for that.
+
+GafferRenderManUI.RenderManShaderUI.registerMetadata()
 
 shaderMetadata = {
 
