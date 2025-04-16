@@ -7,6 +7,7 @@ API
 - PlugAlgo :
   - Added support in `setValueFromData()` for setting StringPlug values from StringVectorData and StringVectorDataPlugValues from StringData.
   - Added `setValueOrAddKeyFromData()`.
+- Gaffer : Added ObjectMatrix.
 
 1.5.11.0 (relative to 1.5.10.1)
 ========
