@@ -213,6 +213,10 @@ Gaffer.Metadata.registerNode(
 			If a `manif_file` metadata entry exists for the selected Cryptomatte
 			layer, it will be appended to this directory. The manifest is read from
 			the file at the resulting path.
+
+			If this is not specified, the directory will be inferred from the
+			image's `filePath` metadata.
+
 			""",
 
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",

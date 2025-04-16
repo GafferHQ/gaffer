@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - ImageReader : Automatically set "filePath" metadata when reading images, making it easier to determine the path an image was loaded from.
+- Cryptomatte : Improved automatic finding of manifests. Now, if the image's metadata references a sidecar manifest file, but no explicit `manifestDirectory` is specified, it will look in the directory the image was loaded from ( as determined by the "filePath" metadata ). This makes it more likely that cryptomatte files will work automatically.
 
 Fixes
 -----

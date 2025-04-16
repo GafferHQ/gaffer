@@ -187,11 +187,19 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		c = GafferScene.Cryptomatte()
 		c["in"].setInput( d["out"] )
 		c["manifestSource"].setValue( GafferScene.Cryptomatte.ManifestSource.Metadata )
+
+		# With no manifest directory specified, we automatically infer it from the filePath
+
+		self.compareValues( c, ["crypto_object", "crypto_material"] )
+
+		# Or we can set it explicitly
 		c["manifestDirectory"].setValue( self.testImage.parent )
 
 		self.compareValues( c, ["crypto_object", "crypto_material"] )
 
+		# If there is no manifestDirectory or filePath specified, we get an exception
 		c["manifestDirectory"].setValue( "" )
+		d["names"].setValue( "cryptomatte/*/manifest filePath" )
 
 		with self.assertRaisesRegex( Gaffer.ProcessException, r'No manifest directory provided.' ) as raised :
 			self.compareValues( c, ["crypto_object"] )
