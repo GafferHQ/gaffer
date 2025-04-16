@@ -57,7 +57,18 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 
 	def testCryptomatteHash( self ) :
 
-		manifest = {
+
+		i = GafferImage.ImageMetadata()
+		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/conversion", "uint32_to_float32" ) )
+		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/hash", "MurmurHash3_32" ) )
+		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/name", "crypto_object" ) )
+		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/manifest", json.dumps( {} ) ) )
+
+		c = GafferScene.Cryptomatte()
+		c["in"].setInput( i["out"] )
+		c["layer"].setValue( "crypto_object" )
+
+		expectedValues = {
 			"hello": 6.0705627102400005616e-17,
 			"cube": -4.08461912519e+15,
 			"sphere": 2.79018604383e+15,
@@ -65,20 +76,9 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 			"/GAFFERBOT/C_torso_GRP/C_head_GRP/C_head_CPT/C_head001_REN": -2.5222249091461295e+36,
 			"shader:b0d1fe5b982bcae64d6329033cbadc70": 876260905451520.0,
 		}
-
-		i = GafferImage.ImageMetadata()
-		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/conversion", "uint32_to_float32" ) )
-		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/hash", "MurmurHash3_32" ) )
-		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/name", "crypto_object" ) )
-		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/manifest", json.dumps( manifest ) ) )
-
-		c = GafferScene.Cryptomatte()
-		c["in"].setInput( i["out"] )
-		c["layer"].setValue( "crypto_object" )
-
-		for name in sorted( manifest.keys() ) :
+		for name in sorted( expectedValues.keys() ) :
 			c["matteNames"].setValue( IECore.StringVectorData( [name] ) )
-			self.assertEqual( IECore.FloatData( manifest[name] ), IECore.FloatData( c["__matteValues"].getValue()[0] ) )
+			self.assertEqual( IECore.FloatData( expectedValues[name] ), IECore.FloatData( c["__matteValues"].getValue()[0] ) )
 
 	def compareValues( self, c, layers ) :
 
