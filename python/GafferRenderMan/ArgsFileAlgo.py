@@ -43,27 +43,13 @@ import IECore
 
 import Gaffer
 
-## Parses a RenderMan `.args` file, converting it to a dictionary
-# using Gaffer's standard metadata conventions :
-#
-# ```
-# {
-#	"description" : ...,
-#	"parameters" : {
-# 		"parameter1" : {
-#       	"description" : ...
-#       	"plugValueWidget:type" : ...
-#           ...
-#		}
-#   }
-# }
-# ```
-def parseMetadata( argsFile ) :
-
-	result = { "parameters" : {} }
+## Parses a RenderMan `.args` file, registering Gaffer metadata for it and all its parameters.
+# Parameter metadata is registered to `{target}:{parameterName}`.
+def registerMetadata( argsFile, target, parametersToIgnore = set() ) :
 
 	pageStack = []
-	currentParameter = None
+	currentParameterTarget = None
+	currentParameterType = None
 	for event, element in cElementTree.iterparse( argsFile, events = ( "start", "end" ) ) :
 
 		if element.tag == "page" :
@@ -77,71 +63,50 @@ def parseMetadata( argsFile ) :
 
 			if event == "start" :
 
-				currentParameter = {}
-				result["parameters"][element.attrib["name"]] = currentParameter
+				if element.attrib["name"] in parametersToIgnore :
+					continue
+
+				currentParameterTarget = "{}:{}".format( target, element.attrib["name"] )
 
 				# We need to know the parameter type to be able to parse presets and
 				# default values. There are two different ways this is defined, so try
 				# to normalise on the "Sdr" type.
-				currentParameter["__type"] = element.attrib.get( "sdrUsdDefinitionType" )
-				if currentParameter["__type"] is None :
-					currentParameter["__type"] = element.attrib["type"] + element.attrib.get( "arraySize", "" )
+				currentParameterType = element.attrib.get( "sdrUsdDefinitionType" )
+				if currentParameterType is None :
+					currentParameterType = element.attrib["type"] + element.attrib.get( "arraySize", "" )
 
-				currentParameter["label"] = element.attrib.get( "label" )
-				currentParameter["description"] = element.attrib.get( "help" )
-				currentParameter["layout:section"] = ".".join( pageStack )
-				currentParameter["plugValueWidget:type"] = __widgetTypes.get( element.attrib.get( "widget" ) )
+				Gaffer.Metadata.registerValue( currentParameterTarget, "label", element.attrib.get( "label" ) )
+				Gaffer.Metadata.registerValue( currentParameterTarget, "description", element.attrib.get( "help" ) )
+				Gaffer.Metadata.registerValue( currentParameterTarget, "layout:section", ".".join( pageStack ) )
+				Gaffer.Metadata.registerValue( currentParameterTarget, "plugValueWidget:type", __widgetTypes.get( element.attrib.get( "widget" ) ) )
 
-				if element.attrib.get( "connectable", "true" ).lower() == "false" or currentParameter["plugValueWidget:type"] == "" :
-					currentParameter["nodule:type"] = ""
+				if element.attrib.get( "connectable", "true" ).lower() == "false" or element.attrib.get( "widget" ) == "null" :
+					Gaffer.Metadata.registerValue( currentParameterTarget, "nodule:type", "" )
 				elif element.attrib.get( "isDynamicArray" ) == "1" :
-					currentParameter["nodule:type"] = "GafferUI::CompoundNodule"
+					Gaffer.Metadata.registerValue( currentParameterTarget, "nodule:type", "GafferUI::CompoundNodule" )
 
-				defaultValue = __parseValue( element.attrib.get( "default" ), currentParameter["__type"] )
+				defaultValue = __parseValue( element.attrib.get( "default" ), currentParameterType )
 				if defaultValue is not None :
-					currentParameter["defaultValue"] = defaultValue
+					Gaffer.Metadata.registerValue( currentParameterTarget, "defaultValue", defaultValue )
 
 				if element.attrib.get( "options" ) :
-					__parsePresets( element.attrib.get( "options" ), currentParameter )
+					__parsePresets( element.attrib.get( "options" ), currentParameterTarget, currentParameterType )
 
 			elif event == "end" :
 
-				del currentParameter["__type"] # Implementation detail not for public consumption
-				currentParameter = None
+				currentParameterTarget = None
+				currentParameterType = None
 
 		elif element.tag == "help" and event == "end" :
 
-			if currentParameter :
-				currentParameter["description"] = element.text
-			else :
-				result["description"] = element.text
+			Gaffer.Metadata.registerValue( currentParameterTarget or target, "description", element.text )
 
 		elif element.tag == "hintdict" and element.attrib.get( "name" ) == "options" :
-			if event == "end" :
-				__parsePresets( element, currentParameter )
+			if event == "end" and currentParameterTarget :
+				__parsePresets( element, currentParameterTarget, currentParameterType )
 
 		elif element.tag == "rfhdata" and event == "end" :
-			result["classification"] = element.attrib.get( "classification" )
-
-	return result
-
-## Parses a RenderMan `.args` file, registering Gaffer metadata for it and all its parameters.
-# Parameter metadata is registered to `{target}:{parameterName}`.
-def registerMetadata( argsFile, target, parametersToIgnore = set() ) :
-
-	metadata = parseMetadata( argsFile )
-
-	Gaffer.Metadata.registerValue( target, "description", metadata.get( "description", "" ) )
-	Gaffer.Metadata.registerValue( target, "classification", metadata.get( "classification", "Other" ) )
-
-	for name, values in metadata["parameters"].items() :
-
-		if name in parametersToIgnore :
-			continue
-
-		parameterTarget = f"{target}:{name}"
-		for key, value in values.items() :
-			Gaffer.Metadata.registerValue( parameterTarget, key, value )
+			Gaffer.Metadata.registerValue( target, "classification", element.attrib.get( "classification" ) )
 
 __widgetTypes = {
 	"number" : "GafferUI.NumericPlugValueWidget",
@@ -210,9 +175,9 @@ __presetContainers = {
 	"string" : IECore.StringVectorData,
 }
 
-def __parsePresets( options, parameter ) :
+def __parsePresets( options, parameterTarget, parameterType ) :
 
-	containerType = __presetContainers.get( parameter["__type"] )
+	containerType = __presetContainers.get( parameterType )
 	if containerType is None :
 		return
 
@@ -224,11 +189,11 @@ def __parsePresets( options, parameter ) :
 			optionSplit = option.split( ":" )
 			if len( optionSplit ) == 2 :
 				name = optionSplit[0]
-				value = __parseValue( optionSplit[1], parameter["__type"] )
+				value = __parseValue( optionSplit[1], parameterType )
 			else :
 				assert( len( optionSplit ) == 1 )
 				name = IECore.CamelCase.toSpaced( optionSplit[0] )
-				value = __parseValue( optionSplit[0], parameter["__type"] )
+				value = __parseValue( optionSplit[0], parameterType )
 			presetNames.append( name )
 			presetValues.append( value )
 	else :
@@ -239,7 +204,7 @@ def __parsePresets( options, parameter ) :
 			if name is None :
 				name = IECore.CamelCase.toSpaced( value )
 			presetNames.append( name )
-			presetValues.append( __parseValue( value, parameter["__type"] ) )
+			presetValues.append( __parseValue( value, parameterType ) )
 
-	parameter["presetNames"] = presetNames
-	parameter["presetValues"] = presetValues
+	Gaffer.Metadata.registerValue( parameterTarget, "presetNames", presetNames )
+	Gaffer.Metadata.registerValue( parameterTarget, "presetValues", presetValues )
