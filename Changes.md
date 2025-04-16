@@ -15,6 +15,7 @@ Fixes
   - PxrCookieLightFilter : Added button for reloading the map.
   - PxrSurface, PxrLayerSurface : Moved `utilityPattern` parameter to "Globals" section.
   - Fixed formatting of parameter tooltips, and Node Reference descriptions.
+- RenderManShader : Fixed loading of C++ pattern shaders such as `aaOceanPrmanShader`.
 
 API
 ---
