@@ -138,7 +138,7 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 			[ s["rows"][1]["cells"][0] ]
 		] ) )
 
-		# Two rows (contigious)
+		# Two rows (contiguous)
 
 		self.assertTrue( _ClipboardAlgo.canCopyPlugs( [
 			[ s["rows"][1]["cells"][0] ],
@@ -182,7 +182,7 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 
 		# Mixed column types
 
-		self.assertFalse( _ClipboardAlgo.canCopyPlugs( [
+		self.assertTrue( _ClipboardAlgo.canCopyPlugs( [
 			[ s["rows"][1]["cells"][0], s["rows"][1]["cells"][1] ],
 			[ s["rows"][4]["cells"][1], s["rows"][4]["cells"][2] ],
 		] ) )
@@ -194,58 +194,7 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 			[ s["rows"][4]["cells"][1] ]
 		] ) )
 
-	def testIsValueMatrix( self ) :
-
-		O = IECore.ObjectVector
-		C = IECore.CompoundData
-		B = IECore.BoolData
-		I = IECore.IntData
-		F = IECore.FloatData
-
-		for d in (
-			"cat",
-			1,
-			None,
-			[],
-			[ 1, 2, 3 ],
-			[ [ 1 ] ],
-			[ [ 1, 4 ] ],
-			# Incorrect cell data type
-			O([
-				O([ O([ I( 1 ), I( 2 ) ]) ])
-			]),
-			# Mixed row value types
-			O([
-				O([ C({ "enabled" : B( True ), "value" : I( 2 ) }) ]),
-				O([ C({ "enabled" : B( True ), "value" : F( 2 ) }) ])
-			]),
-			# Mixed row keys
-			O([
-				O([ C({ "enabled" : B( True ), "value" : I( 2 ) }) ]),
-				O([ C({ "znabled" : B( True ), "value" : I( 2 ) }) ])
-			]),
-		) :
-			self.assertFalse( _ClipboardAlgo.isValueMatrix( d ) )
-
-		for d in (
-			# one row, one column
-			O([ O([ C({ "enabled" : B( True ), "value" : I( 1 ) }) ]) ]),
-			# one row, two columns
-			O([ O([ C({ "enabled" : B( True ), "value" : I( 2 ) }), C({ "enabled" : B( True ), "value" : F( 2 ) }) ]) ]),
-			# two rows, one column
-			O([
-				O([ C({ "enabled" : B( True ), "value" : I( 3 ) }) ]),
-				O([ C({ "enabled" : B( True ), "value" : I( 3 ) }) ])
-			]),
-			# two rows, two columns
-			O([
-				O([ C({ "enabled" : B( True ), "value" : I( 4 ) }), C({ "enabled" : B( False ), "value" : F( 4 ) }) ]),
-				O([ C({ "enabled" : B( True ), "value" : I( 4 ) }), C({ "enabled" : B( True ),  "value" : F( 4 ) }) ])
-			]),
-		) :
-			self.assertTrue( _ClipboardAlgo.isValueMatrix( d ) )
-
-	def testValueMatrix( self ) :
+	def testObjectMatrixFromPlugMatrix( self ) :
 
 		s = self.__createSpreadsheet()
 
@@ -260,31 +209,25 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 			]
 		]
 
-		expected = IECore.ObjectVector( [
-			IECore.ObjectVector( [
-				IECore.CompoundData( { "enabled" : c["enabled"].getValue(), "value" : c["value"].getValue() } ) for c in r
-			] ) for r in plugs
-		] )
+		expected = IECore.ObjectMatrix( 2, 5 )
+		for i, row in enumerate( plugs ) :
+			for j, cell in enumerate( row ) :
+				expected[i, j] = IECore.CompoundData( { "enabled" : cell["enabled"].getValue(), "value" : cell["value"].getValue() } )
 
-		data = _ClipboardAlgo.valueMatrix( plugs )
+		self.assertEqual( _ClipboardAlgo._objectMatrixFromPlugMatrix( plugs ), expected )
 
-		self.assertTrue( _ClipboardAlgo.isValueMatrix( data ) )
-		self.assertEqual( data, expected )
-
-		# Test inerleaved compatible (int) columns
+		# Test interleaved compatible (int) columns
 
 		plugs = [ [ s["rows"][r]["cells"][ ( r % 2 ) + 1 ] ] for r in ( 1, 2 ) ]
 
-		expected = IECore.ObjectVector( [
-			IECore.ObjectVector( [
-				IECore.CompoundData( {
-					"enabled" : s["rows"][r]["cells"][ ( r % 2 ) + 1 ]["enabled"].getValue(),
-					"value" : s["rows"][r]["cells"][ ( r % 2 ) + 1 ]["value"].getValue()
-				} )
-			] ) for r in ( 1, 2 )
-		] )
+		expected = IECore.ObjectMatrix( 2, 1 )
+		for i, r in enumerate( ( 1, 2 ) ) :
+			expected[i, 0] = IECore.CompoundData( {
+				"enabled" : s["rows"][r]["cells"][ ( r % 2 ) + 1 ]["enabled"].getValue(),
+				"value" : s["rows"][r]["cells"][ ( r % 2 ) + 1 ]["value"].getValue()
+			} )
 
-		self.assertEqual( _ClipboardAlgo.valueMatrix( plugs ), expected )
+		self.assertEqual( _ClipboardAlgo._objectMatrixFromPlugMatrix( plugs ), expected )
 
 	def testCanPasteCells( self ) :
 
@@ -293,11 +236,12 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		# Single Column
 
 		plugs = [ [ s["rows"][r]["cells"][1] ] for r in ( 1, 2 ) ]
-		data = _ClipboardAlgo.valueMatrix( plugs )
+		data = _ClipboardAlgo._objectMatrixFromPlugMatrix( plugs )
 
 		# Bad data
 
 		self.assertFalse( _ClipboardAlgo.canPasteCells( "I'm a duck", plugs ) )
+		self.assertEqual( _ClipboardAlgo.nonPasteableReason( "I'm a duck", plugs ), "No ObjectMatrix to paste" )
 
 		self.assertTrue( _ClipboardAlgo.canPasteCells( data, plugs ) )
 
@@ -319,11 +263,21 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 
 		#   - invalid column type
 
-		self.assertFalse( _ClipboardAlgo.canPasteCells( data, [ [ s["rows"][r]["cells"][0] ] for r in range( 1, 5 ) ] ) )
+		plugs = [ [ s["rows"][r]["cells"][0] ] for r in range( 1, 5 ) ]
+		self.assertFalse( _ClipboardAlgo.canPasteCells( data, plugs ) )
+		self.assertEqual(
+			_ClipboardAlgo.nonPasteableReason( data, plugs ),
+			"Value of type IntData is not compatible with plug row1.cells.column0.value"
+		)
 
 		#   - different columns, one invalid type
 
-		self.assertFalse( _ClipboardAlgo.canPasteCells( data, [ [ s["rows"][r]["cells"][ ( r % 2 ) ] ] for r in range( 1, 5 ) ] ) )
+		plugs = [ [ s["rows"][r]["cells"][ ( r % 2 ) ] ] for r in range( 1, 5 ) ]
+		self.assertFalse( _ClipboardAlgo.canPasteCells( data, plugs ) )
+		self.assertEqual(
+			_ClipboardAlgo.nonPasteableReason( data, plugs ),
+			"Value of type IntData is not compatible with plug row2.cells.column0.value"
+		)
 
 		#   - column wrap with multiple valid target columns
 
@@ -332,7 +286,7 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		# Multiple Columns
 
 		plugs = [ [ s["rows"][r]["cells"][c] for c in range( 3 ) ] for r in ( 1, 2 ) ]
-		data = _ClipboardAlgo.valueMatrix( plugs )
+		data = _ClipboardAlgo._objectMatrixFromPlugMatrix( plugs )
 
 		self.assertTrue( _ClipboardAlgo.canPasteCells( data, plugs ) )
 
@@ -350,8 +304,13 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 
 		#  - invalid column types
 
+		plugs = [ [ s["rows"][r]["cells"][c] for c in range( 3 + 1 ) ] for r in range( 1, 3 ) ]
 		self.assertFalse(
-			_ClipboardAlgo.canPasteCells( data, [ [ s["rows"][r]["cells"][c] for c in range( 3 + 1 ) ] for r in range( 1, 3 ) ] )
+			_ClipboardAlgo.canPasteCells( data, plugs )
+		)
+		self.assertEqual(
+			_ClipboardAlgo.nonPasteableReason( data, plugs ),
+			"Value of type StringData is not compatible with plug row1.cells.column3.value"
 		)
 
 		#  - valid column subset
@@ -360,10 +319,10 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 			_ClipboardAlgo.canPasteCells( data, [ [ s["rows"][r]["cells"][0] ] for r in range( 1, 3 ) ] )
 		)
 
-		#  - column wrap with additional colunms
+		#  - column wrap with additional columns
 
 		plugs = [ [ s["rows"][r]["cells"][c] for c in ( 1, 2 ) ] for r in ( 1, 2 ) ]
-		data = _ClipboardAlgo.valueMatrix( plugs )
+		data = _ClipboardAlgo._objectMatrixFromPlugMatrix( plugs )
 
 		self.assertTrue(
 			_ClipboardAlgo.canPasteCells( data, [ [ s["rows"][r]["cells"][c] for c in ( 1, 2, 4 ) ] for r in range( 1, 2 ) ] )
@@ -378,7 +337,7 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		sourceCells = [ [ s["rows"][r]["cells"][1] ] for r in range( 1, 5 ) ]
 		sourceHashes = self.__cellPlugHashes( sourceCells )
 
-		data = _ClipboardAlgo.valueMatrix( sourceCells )
+		data = _ClipboardAlgo._objectMatrixFromPlugMatrix( sourceCells )
 
 		#   - matching dest
 
@@ -427,7 +386,7 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		sourceCells = [ [ s["rows"][r]["cells"][c] for c in range( len(s["rows"][0]["cells"]) ) ] for r in range( 1, 3 ) ]
 		sourceHashes = self.__cellPlugHashes( sourceCells )
 
-		data = _ClipboardAlgo.valueMatrix( sourceCells )
+		data = _ClipboardAlgo._objectMatrixFromPlugMatrix( sourceCells )
 
 		destCells = [ [ s["rows"][r]["cells"][c] for c in range( len(s["rows"][0]["cells"]) ) ] for r in range( 5, 9 ) ]
 		self.assertNotEqual( self.__cellPlugHashes( destCells ), sourceHashes )
@@ -441,10 +400,10 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 
 		s = self.__createSpreadsheet()
 
-		subsetValueMatrix = _ClipboardAlgo.valueMatrix( [ [ s["rows"][r]["cells"][c] for c in range(2) ] for r in range( 2, 4 ) ] )
-		self.assertFalse( _ClipboardAlgo.canPasteRows( subsetValueMatrix, s["rows"] ) )
+		subsetObjectMatrix = _ClipboardAlgo._objectMatrixFromPlugMatrix( [ [ s["rows"][r]["cells"][c] for c in range(2) ] for r in range( 2, 4 ) ] )
+		self.assertFalse( _ClipboardAlgo.canPasteRows( subsetObjectMatrix, s["rows"] ) )
 
-		rowData = _ClipboardAlgo.copyRows( [ s["rows"][r] for r in ( 2, 3 ) ] )
+		rowData = _ClipboardAlgo._objectMatrixFromPlugMatrix( [ [ s["rows"][r] for r in ( 2, 3 ) ] ] )
 
 		self.assertTrue( _ClipboardAlgo.canPasteRows( rowData, s["rows"] ) )
 
@@ -459,7 +418,7 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 
 		sourceRows = [ [ s["rows"][r] ] for r in range( 2, 4 ) ]
 		sourceHashes = self.__cellPlugHashes( sourceRows )
-		rowData = _ClipboardAlgo.valueMatrix( sourceRows )
+		rowData = _ClipboardAlgo._objectMatrixFromPlugMatrix( sourceRows )
 
 		self.assertEqual( len( s["rows"].children() ), 6 )
 		existingHashes = self.__cellPlugHashes( [ [ s["rows"][r] ] for r in range( 6 ) ] )
@@ -487,7 +446,7 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 
 		# Fewer columns -> more columns
 
-		data = _ClipboardAlgo.copyRows( [ s1["rows"][1] ] )
+		data = _ClipboardAlgo._objectMatrixFromPlugMatrix( [ [ s1["rows"][1] ] ] )
 		self.assertTrue( _ClipboardAlgo.canPasteRows( data, s2["rows"] ) )
 		_ClipboardAlgo.pasteRows( data, s2["rows"] )
 
@@ -500,7 +459,7 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 
 		s2["rows"].addRow()
 
-		data = _ClipboardAlgo.copyRows( [ s2["rows"][2] ] )
+		data = _ClipboardAlgo._objectMatrixFromPlugMatrix( [ [ s2["rows"][2] ] ] )
 		self.assertTrue( _ClipboardAlgo.canPasteRows( data, s1["rows"] ) )
 		_ClipboardAlgo.pasteRows( data, s1["rows"] )
 
@@ -513,7 +472,7 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		s1["rows"].addColumn( Gaffer.StringPlug(), "mismatched" )
 		s2["rows"].addColumn( Gaffer.IntPlug(), "mismatched" )
 
-		data = _ClipboardAlgo.copyRows( [ s1["rows"][2] ] )
+		data = _ClipboardAlgo._objectMatrixFromPlugMatrix( [ [ s1["rows"][2] ] ] )
 		self.assertFalse( _ClipboardAlgo.canPasteRows( data, s2["rows"] ) )
 
 		# No Matches
@@ -526,7 +485,7 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		s4["rows"].addColumn( Gaffer.IntPlug(), "b" )
 		s4["rows"].addRow()
 
-		data = _ClipboardAlgo.valueMatrix( [ [ s3["rows"][1] ] ] )
+		data = _ClipboardAlgo._objectMatrixFromPlugMatrix( [ [ s3["rows"][1] ] ] )
 		self.assertFalse( _ClipboardAlgo.canPasteRows( data, s4["rows"] ) )
 
 		# Test match with value coercion
@@ -559,11 +518,12 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 			Gaffer.MetadataAlgo.setReadOnly( t, True )
 
 		sourceCells = [ [ s["rows"][r]["cells"][0] ] for r in range( 7 ) ]
-		data = _ClipboardAlgo.valueMatrix( sourceCells )
+		data = _ClipboardAlgo._objectMatrixFromPlugMatrix( sourceCells )
 		destCells = [ [ s["rows"][r]["cells"][1] ] for r in range( 7 ) ]
 
 		for t in reversed( targets ) :
 			self.assertFalse( _ClipboardAlgo.canPasteCells( data, destCells ) )
+			self.assertNotEqual( _ClipboardAlgo.nonPasteableReason( data, destCells ), "" )
 			Gaffer.MetadataAlgo.setReadOnly( t, False )
 
 		self.assertTrue( _ClipboardAlgo.canPasteCells( data, destCells ) )
@@ -579,7 +539,7 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		curve.addKey( Gaffer.Animation.Key( 0, 1001 ) )
 		self.assertFalse( curve.hasKey( 1002 ) )
 
-		data = _ClipboardAlgo.valueMatrix( [ [ s["rows"][5]["cells"][1]["value"] ] ] )
+		data = _ClipboardAlgo._objectMatrixFromPlugMatrix( [ [ s["rows"][5]["cells"][1]["value"] ] ] )
 		_ClipboardAlgo.pasteCells( data, [ [ targetPlug ] ], 1002 )
 
 		self.assertTrue( curve.hasKey( 1002 ) )
@@ -602,7 +562,7 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		assertNVPEqual( row["cells"][0]["value"], "a", None, 1 )
 		assertNVPEqual( row["cells"][1]["value"], "b", None, 2 )
 
-		data = _ClipboardAlgo.valueMatrix( [ [ row["cells"][1] ] ] )
+		data = _ClipboardAlgo._objectMatrixFromPlugMatrix( [ [ row["cells"][1] ] ] )
 		_ClipboardAlgo.pasteCells( data, [ [ row["cells"][0] ] ], 0 )
 
 		assertNVPEqual( row["cells"][0]["value"], "a", None, 2 )
@@ -614,7 +574,7 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		assertNVPEqual( row["cells"][2]["value"], "c", True, 3 )
 		assertNVPEqual( row["cells"][3]["value"], "d", False, 4 )
 
-		data = _ClipboardAlgo.valueMatrix( [ [ row["cells"][3] ] ] )
+		data = _ClipboardAlgo._objectMatrixFromPlugMatrix( [ [ row["cells"][3] ] ] )
 		_ClipboardAlgo.pasteCells( data, [ [ row["cells"][2] ] ], 0 )
 
 		assertNVPEqual( row["cells"][2]["value"], "c", False, 4 )
@@ -622,12 +582,12 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 
 		# Test cross-pasting between plugs with/without enabled plugs
 
-		data = _ClipboardAlgo.valueMatrix( [ [ row["cells"][3] ] ] )
+		data = _ClipboardAlgo._objectMatrixFromPlugMatrix( [ [ row["cells"][3] ] ] )
 		_ClipboardAlgo.pasteCells( data, [ [ row["cells"][0] ] ], 0 )
 
 		assertNVPEqual( row["cells"][0]["value"], "a", None, 4 )
 
-		data = _ClipboardAlgo.valueMatrix( [ [ row["cells"][1] ] ] )
+		data = _ClipboardAlgo._objectMatrixFromPlugMatrix( [ [ row["cells"][1] ] ] )
 		_ClipboardAlgo.pasteCells( data, [ [ row["cells"][2] ] ], 0 )
 
 		assertNVPEqual( row["cells"][2]["value"], "c", False, 2 )
@@ -636,7 +596,7 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 
 		s["rows"].addColumn( Gaffer.IntPlug( defaultValue = 5 ) )
 
-		data = _ClipboardAlgo.valueMatrix( [ [ row["cells"][4] ] ] )
+		data = _ClipboardAlgo._objectMatrixFromPlugMatrix( [ [ row["cells"][4] ] ] )
 		_ClipboardAlgo.pasteCells( data, [ [ row["cells"][1], row["cells"][2] ] ], 0 )
 
 		assertNVPEqual( row["cells"][1]["value"], "b", None, 5 )
@@ -644,7 +604,7 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 
 		row["cells"][2]["value"]["value"].setValue( 3 )
 
-		data = _ClipboardAlgo.valueMatrix( [ [ row["cells"][2] ] ] )
+		data = _ClipboardAlgo._objectMatrixFromPlugMatrix( [ [ row["cells"][2] ] ] )
 		_ClipboardAlgo.pasteCells( data, [ [ row["cells"][4] ] ], 0 )
 
 		self.assertEqual( row["cells"][4]["value"].getValue(), 3 )
@@ -685,7 +645,7 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 			resetEnabledState()
 			row["cells"][ source ].enabledPlug().setValue( False )
 
-			data = _ClipboardAlgo.valueMatrix( [ [ row["cells"][ source ] ] ] )
+			data = _ClipboardAlgo._objectMatrixFromPlugMatrix( [ [ row["cells"][ source ] ] ] )
 			_ClipboardAlgo.pasteCells( data, [ [ row["cells"][ t ] for t in targets ] ], 0 )
 
 			assertPostCondition( *expected )
@@ -700,11 +660,41 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		self.assertEqual( s["rows"][1]["cells"][0]["value"].getValue(), 1.0 )
 		self.assertEqual( s["rows"][1]["cells"][1]["value"].getValue(), 2 )
 
-		data = _ClipboardAlgo.valueMatrix( [ [ row["cells"][1] ] ] )
+		data = _ClipboardAlgo._objectMatrixFromPlugMatrix( [ [ row["cells"][1] ] ] )
 		_ClipboardAlgo.pasteCells( data, [ [ row["cells"][0] ] ], 0 )
 
 		self.assertEqual( s["rows"][1]["cells"][0]["value"].getValue(), 2.0 )
 		self.assertEqual( s["rows"][1]["cells"][1]["value"].getValue(), 2 )
+
+		s["rows"][1]["cells"][0]["value"].setValue( 3.0 )
+
+		data = _ClipboardAlgo._objectMatrixFromPlugMatrix( [ [ row["cells"][0] ] ] )
+		_ClipboardAlgo.pasteCells( data, [ [ row["cells"][1] ] ], 0 )
+
+		self.assertEqual( s["rows"][1]["cells"][0]["value"].getValue(), 3.0 )
+		self.assertEqual( s["rows"][1]["cells"][1]["value"].getValue(), 3 )
+
+	def testBoolToIntConversion( self ) :
+
+		s = Gaffer.Spreadsheet()
+		s["rows"].addColumn( Gaffer.BoolPlug( defaultValue = False ) )
+		s["rows"].addColumn( Gaffer.IntPlug( defaultValue = 2 ) )
+		row = s["rows"].addRow()
+
+		self.assertEqual( s["rows"][1]["cells"][0]["value"].getValue(), False )
+		self.assertEqual( s["rows"][1]["cells"][1]["value"].getValue(), 2 )
+
+		data = _ClipboardAlgo._objectMatrixFromPlugMatrix( [ [ row["cells"][1] ] ] )
+		_ClipboardAlgo.pasteCells( data, [ [ row["cells"][0] ] ], 0 )
+
+		self.assertEqual( s["rows"][1]["cells"][0]["value"].getValue(), True )
+		self.assertEqual( s["rows"][1]["cells"][1]["value"].getValue(), 2 )
+
+		data = _ClipboardAlgo._objectMatrixFromPlugMatrix( [ [ row["cells"][0] ] ] )
+		_ClipboardAlgo.pasteCells( data, [ [ row["cells"][1] ] ], 0 )
+
+		self.assertEqual( s["rows"][1]["cells"][0]["value"].getValue(), True )
+		self.assertEqual( s["rows"][1]["cells"][1]["value"].getValue(), 1 )
 
 	def testStringConversion( self ) :
 
@@ -765,6 +755,10 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		s["rows"][1]["cells"][0]["value"].setInput( p )
 
 		self.assertFalse( _ClipboardAlgo.canPasteCells( IECore.IntData( 1 ), [ s["rows"][1]["cells"].children() ] ) )
+		self.assertEqual(
+			_ClipboardAlgo.nonPasteableReason( IECore.IntData( 1 ), [ s["rows"][1]["cells"].children() ] ),
+			"Plug is not settable row1.cells.IntPlug.value"
+		)
 
 	def testColumnOrder( self ) :
 

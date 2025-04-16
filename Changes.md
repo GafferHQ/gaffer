@@ -11,6 +11,9 @@ Improvements
 
 - ImageReader : Automatically set "filePath" metadata when reading images, making it easier to determine the path an image was loaded from.
 - Cryptomatte : Improved automatic finding of manifests. Now, if the image's metadata references a sidecar manifest file, but no explicit `manifestDirectory` is specified, it will look in the directory the image was loaded from ( as determined by the "filePath" metadata ). This makes it more likely that cryptomatte files will work automatically.
+- Spreadsheet :
+  - A wider range of types are converted when copy/pasting values between cells, such as BoolData to IntData, FloatData to IntData, etc.
+  - Added support for converting StringData values when pasted or dropped onto a StringVectorData cell. The string array value is formed by splitting the string on spaces.
 
 Fixes
 -----
