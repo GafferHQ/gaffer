@@ -44,15 +44,43 @@ import IECore
 import Gaffer
 
 ## Parses a RenderMan `.args` file, registering Gaffer metadata for it and all its parameters.
-# Parameter metadata is registered to `{target}:{parameterName}`.
-def registerMetadata( argsFile, target, parametersToIgnore = set() ) :
+# Returns the target for the metadata registrations, which is automatically determined from
+# the `shaderType` declared by the args file.
+def registerMetadata( argsFile, parametersToIgnore = set() ) :
 
 	pageStack = []
+	target = None
+	targetDescription = ""
 	currentParameterTarget = None
 	currentParameterType = None
 	for event, element in cElementTree.iterparse( argsFile, events = ( "start", "end" ) ) :
 
-		if element.tag == "page" :
+		if element.tag == "shaderType" and event == "end" :
+
+			assert( target is None )
+
+			tag = element.find( "tag" )
+			pluginType = tag.attrib.get( "value" ) if tag is not None else None
+
+			target = {
+				"bxdf" : "ri:surface:{name}",
+				"pattern" : "ri:shader:{name}",
+				"light" : "ri:light:{name}",
+				"displayfilter" : "ri:displayfilter:{name}",
+				"samplefilter" : "ri:samplefilter:{name}",
+				"lightfilter" : "ri:lightFilter:{name}",
+				"integrator" : "ri:integrator:{name}",
+				"options" : "option:ri",
+				"attributes" : "attribute:ri",
+				"primvar" : "attribute:ri",
+			}.get( pluginType )
+
+			if target is None :
+				return None
+
+			target = target.format( name = argsFile.stem )
+
+		elif element.tag == "page" :
 
 			if event == "start" :
 				pageStack.append( element.attrib["name"] )
@@ -99,7 +127,12 @@ def registerMetadata( argsFile, target, parametersToIgnore = set() ) :
 
 		elif element.tag == "help" and event == "end" :
 
-			Gaffer.Metadata.registerValue( currentParameterTarget or target, "description", element.text )
+			if currentParameterTarget is not None :
+				Gaffer.Metadata.registerValue( currentParameterTarget or target, "description", element.text )
+			else :
+				# We may not have the `target` yet, because a couple of files don't
+				# specify `shaderType` first. Store it and register at the end.
+				targetDescription = element.text
 
 		elif element.tag == "hintdict" and element.attrib.get( "name" ) == "options" :
 			if event == "end" and currentParameterTarget :
@@ -107,6 +140,9 @@ def registerMetadata( argsFile, target, parametersToIgnore = set() ) :
 
 		elif element.tag == "rfhdata" and event == "end" :
 			Gaffer.Metadata.registerValue( target, "classification", element.attrib.get( "classification" ) )
+
+	Gaffer.Metadata.registerValue( target, "description", targetDescription )
+	return target
 
 __widgetTypes = {
 	"number" : "GafferUI.NumericPlugValueWidget",

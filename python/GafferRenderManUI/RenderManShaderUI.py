@@ -37,7 +37,6 @@
 import os
 import functools
 import pathlib
-from xml.etree import cElementTree
 
 import GafferRenderMan.ArgsFileAlgo
 import oslquery
@@ -59,30 +58,8 @@ def registerMetadata() :
 	searchPaths = IECore.SearchPath( os.environ.get( "RMAN_RIXPLUGINPATH", "" ) )
 
 	for path in set( searchPaths.paths ) :
-
 		for argsFile in pathlib.Path( path ).glob( "**/*.args" ) :
-
-			pluginType = None
-			for event, element in cElementTree.iterparse( argsFile, events = ( "start", "end" ) ) :
-				if element.tag == "shaderType" and event == "end" :
-					tag = element.find( "tag" )
-					pluginType = tag.attrib.get( "value" ) if tag is not None else None
-					break
-
-			metadataPrefix = {
-				"bxdf" : "ri:surface",
-				"pattern" : "ri:shader",
-				"light" : "ri:light",
-				"displayfilter" : "ri:displayfilter",
-				"samplefilter" : "ri:samplefilter",
-				"lightfilter" : "ri:lightFilter",
-				"integrator" : "ri:integrator",
-			}.get( pluginType )
-
-			if metadataPrefix is None :
-				continue
-
-			GafferRenderMan.ArgsFileAlgo.registerMetadata( argsFile, f"{metadataPrefix}:{argsFile.stem}" )
+			GafferRenderMan.ArgsFileAlgo.registerMetadata( argsFile )
 
 def appendShaders( menuDefinition, prefix = "/RenderMan" ) :
 
