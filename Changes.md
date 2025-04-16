@@ -5,6 +5,7 @@ Features
 --------
 
 - ArnoldProcedural : Added a new node for making Arnold `.ass` procedural placeholders.
+- AttributeEditor, LightEditor, RenderPassEditor : Added copy and paste editing. Values from one or more cells can be copied to the clipboard with <kbd>Ctrl</kbd> + <kbd>C</kbd> and pasted with <kbd>Ctrl</kbd> + <kbd>V</kbd> to create or update edits. Values copied from these editors can also be pasted into Spreadsheet cells, and vice versa.
 
 Improvements
 ------------
