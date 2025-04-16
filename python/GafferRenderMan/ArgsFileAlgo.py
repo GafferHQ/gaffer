@@ -120,21 +120,28 @@ def parseMetadata( argsFile ) :
 			if event == "end" :
 				__parsePresets( element, currentParameter )
 
+		elif element.tag == "rfhdata" and event == "end" :
+			result["classification"] = element.attrib.get( "classification" )
+
 	return result
 
-## Parses a RenderMan `.args` file, registering Gaffer metadata for all its parameters
-# against targets named `{targetPrefix}{parameterName}`.
-def registerMetadata( argsFile, targetPrefix, parametersToIgnore = set() ) :
+## Parses a RenderMan `.args` file, registering Gaffer metadata for it and all its parameters.
+# Parameter metadata is registered to `{target}:{parameterName}`.
+def registerMetadata( argsFile, target, parametersToIgnore = set() ) :
 
 	metadata = parseMetadata( argsFile )
+
+	Gaffer.Metadata.registerValue( target, "description", metadata.get( "description", "" ) )
+	Gaffer.Metadata.registerValue( target, "classification", metadata.get( "classification", "Other" ) )
+
 	for name, values in metadata["parameters"].items() :
 
 		if name in parametersToIgnore :
 			continue
 
-		target = f"{targetPrefix}{name}"
+		parameterTarget = f"{target}:{name}"
 		for key, value in values.items() :
-			Gaffer.Metadata.registerValue( target, key, value )
+			Gaffer.Metadata.registerValue( parameterTarget, key, value )
 
 __widgetTypes = {
 	"number" : "GafferUI.NumericPlugValueWidget",

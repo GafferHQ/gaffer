@@ -54,7 +54,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 	rmanTree = pathlib.Path( os.environ["RMANTREE"] )
 
 	GafferRenderMan.ArgsFileAlgo.registerMetadata(
-		rmanTree / "lib" / "defaults" / "PRManAttributes.args", "attribute:ri:",
+		rmanTree / "lib" / "defaults" / "PRManAttributes.args", "attribute:ri",
 		parametersToIgnore = {
 			# Things that Gaffer has renderer-agnostic attributes for already.
 			"Ri:Sides",
@@ -84,7 +84,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 	)
 
 	GafferRenderMan.ArgsFileAlgo.registerMetadata(
-		rmanTree / "lib" / "defaults" / "PRManPrimVars.args", "attribute:ri:",
+		rmanTree / "lib" / "defaults" / "PRManPrimVars.args", "attribute:ri",
 		parametersToIgnore = {
 			# Things which we probably need to handle automatically in the
 			# Renderer class.
