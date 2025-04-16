@@ -36,11 +36,11 @@
 
 import os
 import pathlib
-from xml.etree import cElementTree
+from xml.etree import ElementTree
 
 file = pathlib.Path( os.environ["RMANTREE"] ) / "lib" / "defaults" / "PRManPrimVars.args"
 
-for event, element in cElementTree.iterparse( file, events = ( "start", ) ) :
+for event, element in ElementTree.iterparse( file, events = ( "start", ) ) :
 
 	if element.tag == "param" :
 		print( '{{ "ri:{name}", RtUString( "{name}" ) }},'.format( name = element.attrib.get( "name" ) ) )

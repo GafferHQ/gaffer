@@ -37,7 +37,7 @@
 import os
 import pathlib
 import unittest
-from xml.etree import cElementTree
+from xml.etree import ElementTree
 
 import IECore
 
@@ -111,7 +111,7 @@ class RenderManShaderUITest( GafferUITest.TestCase ) :
 
 		def __shaderType( argsFile ) :
 
-			for event, element in cElementTree.iterparse( argsFile, events = ( "start", "end" ) ) :
+			for event, element in ElementTree.iterparse( argsFile, events = ( "start", "end" ) ) :
 				if element.tag == "shaderType" and event == "end" :
 					tag = element.find( "tag" )
 					return tag.attrib.get( "value" ) if tag is not None else None

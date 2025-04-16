@@ -35,7 +35,7 @@
 ##########################################################################
 
 import functools
-from xml.etree import cElementTree
+from xml.etree import ElementTree
 
 import imath
 
@@ -53,7 +53,7 @@ def registerMetadata( argsFile, parametersToIgnore = set() ) :
 	targetDescription = ""
 	currentParameterTarget = None
 	currentParameterType = None
-	for event, element in cElementTree.iterparse( argsFile, events = ( "start", "end" ) ) :
+	for event, element in ElementTree.iterparse( argsFile, events = ( "start", "end" ) ) :
 
 		if element.tag == "shaderType" and event == "end" :
 
