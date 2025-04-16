@@ -78,7 +78,10 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		result = GafferUI.PlugValueWidget.getToolTip( self )
 
-		result += "\n## Actions\n"
+		if result :
+			result += "\n\n"
+
+		result += "## Actions\n\n"
 		result += " - <kbd>Alt</kbd> + middle-click to show context variable substitutions\n"
 
 		return result

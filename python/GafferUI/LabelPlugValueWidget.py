@@ -128,7 +128,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		if self.getPlugs() :
 			if result :
-				result += "\n"
+				result += "\n\n"
 			result += "## Actions\n\n"
 			result += "- Left drag to connect\n"
 			if all( [ hasattr( p, "getValue" ) for p in self.getPlugs() ] ) :

@@ -75,8 +75,8 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		if self.getPlugs() :
 			if result :
-				result += "\n"
-			result += "## Actions\n"
+				result += "\n\n"
+			result += "## Actions\n\n"
 			result += " - Cursor up/down or <kbd>Ctrl</kbd> + scroll wheel to increment/decrement\n"
 			result += " - Use `+`, `-`, `*`, `/` and `%` to perform simple maths\n"
 
