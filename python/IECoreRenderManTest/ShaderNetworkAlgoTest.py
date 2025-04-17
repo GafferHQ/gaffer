@@ -268,6 +268,53 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 			],
 
+			"diskLight" : [
+
+				IECoreScene.Shader(
+					"DiskLight", "light",
+					{
+						"radius" : 2.0,
+					}
+				),
+
+				IECoreScene.Shader( "PxrDiskLight", "light", expectedLightParameters( {} ) )
+
+			],
+
+			"rectLight" : [
+
+				IECoreScene.Shader(
+					"RectLight", "light",
+					{
+						"width" : 20.0,
+						"height" : 60.0,
+						"texture:file" : "test.tex",
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrRectLight", "light",
+					expectedLightParameters( {
+						"lightColorMap" : "test.tex",
+					} )
+				),
+
+			],
+
+			"rectLightNoTexture" : [
+
+				IECoreScene.Shader(
+					"RectLight", "light",
+					{
+						"width" : 20.0,
+						"height" : 60.0,
+					}
+				),
+
+				IECoreScene.Shader( "PxrRectLight", "light", expectedLightParameters( {} ) ),
+
+			],
+
 		}.items() :
 			with self.subTest( testName = testName ) :
 
@@ -287,6 +334,8 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 		for shader, transform in {
 
 			IECoreScene.Shader( "SphereLight", "light", { "radius" : 2.0 } ) : imath.M44f().scale( imath.V3f( 4.0 ) ),
+			IECoreScene.Shader( "RectLight", "light", { "width" : 20.0, "height" : 60.0 } ) : imath.M44f().scale( imath.V3f( 20.0, 60.0, 1.0 ) ),
+			IECoreScene.Shader( "DiskLight", "light", { "radius" : 2.0 } ) : imath.M44f().scale( imath.V3f( 4.0 ) ),
 
 		}.items() :
 			with self.subTest() :

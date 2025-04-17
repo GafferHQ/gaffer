@@ -548,8 +548,10 @@ const InternedString g_glassIorParameter( "glassIor" );
 const InternedString g_glassRoughnessParameter( "glassRoughness" );
 const InternedString g_glowColorParameter( "glowColor" );
 const InternedString g_glowGainParameter( "glowGain" );
+const InternedString g_heightParameter( "height" );
 const InternedString g_intensityParameter( "intensity" );
 const InternedString g_lightColorParameter( "lightColor" );
+const InternedString g_lightColorMapParameter( "lightColorMap" );
 const InternedString g_normalParameter( "normal" );
 const InternedString g_normalInParameter( "normalIn" );
 const InternedString g_normalizeParameter( "normalize" );
@@ -577,10 +579,12 @@ const InternedString g_specularIorParameter( "specularIor" );
 const InternedString g_specularModelTypeParameter( "specularModelType" );
 const InternedString g_specularRoughnessParameter( "specularRoughness" );
 const InternedString g_temperatureParameter( "temperature" );
+const InternedString g_textureFileParameter( "texture:file" );
 const InternedString g_typeParameter( "type" );
 const InternedString g_usdPrimvarReaderIntShaderName( "UsdPrimvarReader_int" );
 const InternedString g_usdPrimvarReaderFloatShaderName( "UsdPrimvarReader_float" );
 const InternedString g_varnameParameter( "varname" );
+const InternedString g_widthParameter( "width" );
 
 const std::string g_renderManLightNamespace( "ri:light:" );
 
@@ -794,6 +798,24 @@ void convertUSDShaders( ShaderNetwork *shaderNetwork )
 			transferUSDLightParameters( shaderNetwork, handle, shader.get(), newShader.get() );
 			transferUSDParameter( shaderNetwork, handle, shader.get(), g_normalizeParameter, newShader.get(), g_areaNormalizeParameter, false );
 		}
+		else if( shader->getName() == "DiskLight" )
+		{
+			newShader = new Shader( "PxrDiskLight", "ri:light" );
+			transferUSDLightParameters( shaderNetwork, handle, shader.get(), newShader.get() );
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_normalizeParameter, newShader.get(), g_areaNormalizeParameter, false );
+		}
+		else if( shader->getName() == "RectLight" )
+		{
+			newShader = new Shader( "PxrRectLight", "ri:light" );
+			transferUSDLightParameters( shaderNetwork, handle, shader.get(), newShader.get() );
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_normalizeParameter, newShader.get(), g_areaNormalizeParameter, false );
+
+			const std::string textureFile = parameterValue( shader.get(), g_textureFileParameter, std::string() );
+			if( !textureFile.empty() )
+			{
+				newShader->parameters()[g_lightColorMapParameter] = new StringData( textureFile );
+			}
+		}
 
 		const auto it = g_primVarMap.find( shader->getName() );
 		if( it != g_primVarMap.end() )
@@ -824,10 +846,16 @@ M44f usdLightTransform( const Shader *lightShader )
 {
 	assert( lightShader );
 
-	if( lightShader->getName() == "SphereLight" )
+	if( lightShader->getName() == "SphereLight" || lightShader->getName() == "DiskLight" )
 	{
 		const float radius = parameterValue( lightShader, g_radiusParameter, 0.5f );
 		return M44f().scale( V3f( radius * 2.f ) );
+	}
+	else if( lightShader->getName() == "RectLight" )
+	{
+		const float width = parameterValue( lightShader, g_widthParameter, 1.f );
+		const float height = parameterValue( lightShader, g_heightParameter, 1.f );
+		return M44f().scale( V3f( width, height, 1.f ) );
 	}
 
 	return M44f();
