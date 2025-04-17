@@ -552,6 +552,7 @@ const InternedString g_glowColorParameter( "glowColor" );
 const InternedString g_glowGainParameter( "glowGain" );
 const InternedString g_heightParameter( "height" );
 const InternedString g_intensityParameter( "intensity" );
+const InternedString g_lengthParameter( "length" );
 const InternedString g_lightColorParameter( "lightColor" );
 const InternedString g_lightColorMapParameter( "lightColorMap" );
 const InternedString g_normalParameter( "normal" );
@@ -849,6 +850,12 @@ void convertUSDShaders( ShaderNetwork *shaderNetwork )
 				);
 			}
 		}
+		else if( shader->getName() == "CylinderLight" )
+		{
+			newShader = new Shader( "PxrCylinderLight", "ri:light" );
+			transferUSDLightParameters( shaderNetwork, handle, shader.get(), newShader.get() );
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_normalizeParameter, newShader.get(), g_areaNormalizeParameter, false );
+		}
 
 		const auto it = g_primVarMap.find( shader->getName() );
 		if( it != g_primVarMap.end() )
@@ -891,6 +898,13 @@ M44f USDLightTransform( const Shader *lightShader )
 		// `IECoreRenderMan::Light` takes care of inverting the z axis. We also need
 		// to invert the x and y axes to keep image maps oriented correctly.
 		return M44f().scale( V3f( -width, -height, 1.f ) );
+	}
+	else if( lightShader->getName() == "CylinderLight" )
+	{
+		const float length = parameterValue( lightShader, g_lengthParameter, 1.f );
+		const float radius = parameterValue( lightShader, g_radiusParameter, 0.5f );
+
+		return M44f().scale( V3f( length, radius * 2.f, radius * 2.f ) );
 	}
 
 	return M44f();
