@@ -524,6 +524,8 @@ void transferUSDParameter( ShaderNetwork *network, InternedString shaderHandle, 
 	}
 }
 
+const InternedString g_angleParameter( "angle" );
+const InternedString g_angleExtentParameter( "angleExtent" );
 const InternedString g_areaNormalizeParameter( "areaNormalize" );
 const InternedString g_bumpNormalParameter( "bumpNormal" );
 const InternedString g_clearcoatDoubleSidedParameter( "clearcoatDoubleSided" );
@@ -617,12 +619,12 @@ const std::unordered_map<std::string, std::tuple<std::string, InternedString, st
 	{ "UsdPrimvarReader_int", { "int", g_defaultIntParameter, 0 } }
 };
 
-void transferUSDLightParameters( ShaderNetwork *network, InternedString shaderHandle, const Shader *usdShader, Shader *shader )
+void transferUSDLightParameters( ShaderNetwork *network, InternedString shaderHandle, const Shader *usdShader, Shader *shader, const float defaultIntensity = 1.f )
 {
 	transferUSDParameter( network, shaderHandle, usdShader, g_colorParameter, shader, g_lightColorParameter, Color3f( 1.f, 1.f, 1.f ) );
 	transferUSDParameter( network, shaderHandle, usdShader, g_diffuseParameter, shader, g_diffuseParameter, 1.0f );
 	transferUSDParameter( network, shaderHandle, usdShader, g_exposureParameter, shader, g_exposureParameter, 0.0f );
-	transferUSDParameter( network, shaderHandle, usdShader, g_intensityParameter, shader, g_intensityParameter, 1.0f );
+	transferUSDParameter( network, shaderHandle, usdShader, g_intensityParameter, shader, g_intensityParameter, defaultIntensity );
 	transferUSDParameter( network, shaderHandle, usdShader, g_specularParameter, shader, g_specularParameter, 1.0f );
 	transferUSDParameter( network, shaderHandle, usdShader, g_enableColorTemperatureParameter, shader, g_enableTemperatureParameter, false );
 	transferUSDParameter( network, shaderHandle, usdShader, g_colorTemperatureParameter, shader, g_temperatureParameter, 6500.f );
@@ -815,6 +817,15 @@ void convertUSDShaders( ShaderNetwork *shaderNetwork )
 			{
 				newShader->parameters()[g_lightColorMapParameter] = new StringData( textureFile );
 			}
+		}
+		else if( shader->getName() == "DistantLight" )
+		{
+			newShader = new Shader( "PxrDistantLight", "ri:light" );
+			transferUSDLightParameters( shaderNetwork, handle, shader.get(), newShader.get(), 50000.f );
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_normalizeParameter, newShader.get(), g_areaNormalizeParameter, false );
+
+			const float angle = parameterValue( shader.get(), g_angleParameter, 0.53f );
+			newShader->parameters()[g_angleExtentParameter] = new FloatData( angle );
 		}
 
 		const auto it = g_primVarMap.find( shader->getName() );
