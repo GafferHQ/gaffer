@@ -315,6 +315,39 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 			],
 
+			"distantLightDefault" : [
+
+				IECoreScene.Shader( "DistantLight", "light", {} ),
+
+				IECoreScene.Shader(
+					"PxrDistantLight", "light",
+					expectedLightParameters( {
+						"intensity" : 50000.0,
+						"angleExtent" : 0.53,
+					} )
+				),
+			],
+
+			"distantLight" : [
+
+				IECoreScene.Shader(
+					"DistantLight", "light",
+					{
+						"intensity" : 11.0,
+						"angle" : 2.0,
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrDistantLight", "light",
+					expectedLightParameters( {
+						"intensity" : 11.0,
+						"angleExtent" : 2.0,
+					} )
+				)
+
+			],
+
 		}.items() :
 			with self.subTest( testName = testName ) :
 
@@ -336,6 +369,7 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 			IECoreScene.Shader( "SphereLight", "light", { "radius" : 2.0 } ) : imath.M44f().scale( imath.V3f( 4.0 ) ),
 			IECoreScene.Shader( "RectLight", "light", { "width" : 20.0, "height" : 60.0 } ) : imath.M44f().scale( imath.V3f( 20.0, 60.0, 1.0 ) ),
 			IECoreScene.Shader( "DiskLight", "light", { "radius" : 2.0 } ) : imath.M44f().scale( imath.V3f( 4.0 ) ),
+			IECoreScene.Shader( "DistantLight", "light", { "angle" : 2.0 } ) : imath.M44f(),
 
 		}.items() :
 			with self.subTest() :
