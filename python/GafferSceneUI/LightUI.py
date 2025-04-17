@@ -160,6 +160,12 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"parameters..." : [
+
+			"userDefault", functools.partial( __parameterMetadata, key = "userDefault" ),
+
+		],
+
 		"defaultLight" : [
 
 			"description",
