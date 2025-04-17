@@ -582,6 +582,7 @@ const InternedString g_specularModelTypeParameter( "specularModelType" );
 const InternedString g_specularRoughnessParameter( "specularRoughness" );
 const InternedString g_temperatureParameter( "temperature" );
 const InternedString g_textureFileParameter( "texture:file" );
+const InternedString g_textureFormatParameter( "texture:format" );
 const InternedString g_typeParameter( "type" );
 const InternedString g_usdPrimvarReaderIntShaderName( "UsdPrimvarReader_int" );
 const InternedString g_usdPrimvarReaderFloatShaderName( "UsdPrimvarReader_float" );
@@ -826,6 +827,27 @@ void convertUSDShaders( ShaderNetwork *shaderNetwork )
 
 			const float angle = parameterValue( shader.get(), g_angleParameter, 0.53f );
 			newShader->parameters()[g_angleExtentParameter] = new FloatData( angle );
+		}
+		else if( shader->getName() == "DomeLight" )
+		{
+			newShader = new Shader( "PxrDomeLight", "ri:light" );
+			transferUSDLightParameters( shaderNetwork, handle, shader.get(), newShader.get() );
+
+			const std::string textureFile = parameterValue( shader.get(), g_textureFileParameter, std::string() );
+			if( !textureFile.empty() )
+			{
+				newShader->parameters()[g_lightColorMapParameter] = new StringData( textureFile );
+			}
+
+			const std::string textureFormat = parameterValue( shader.get(), g_textureFormatParameter, std::string() );
+			if( textureFormat != "automatic" )
+			{
+				IECore::msg(
+					IECore::Msg::Warning,
+					"convertUSDShaders",
+					fmt::format( "Unsupported value \"{}\" for DomeLight.format. Only \"automatic\" is supported. Format will be read from texture file.", textureFormat )
+				);
+			}
 		}
 
 		const auto it = g_primVarMap.find( shader->getName() );
