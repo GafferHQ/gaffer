@@ -5,6 +5,7 @@ Fixes
 -----
 
 - RenderMan : Fixed handling of `render:{name}` attributes, such as the `render:displayColor` attribute created by StandardAttributes, and `primvar:{name}` attributes loaded from USD files. These can now be accessed by PxrAttribute shaders as either `user:{name}` or just `{name}`.
+- Cryptomatte : Fixed hypothetical inconsistencies if the C++ language locale affects the parsing of JSON files ( probably not an issue in practice, since the JSON in question should just be hexadecimal integers, and no known locale should affect the parsing of integers ).
 
 1.5.12.0 (relative to 1.5.11.0)
 ========

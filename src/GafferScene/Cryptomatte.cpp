@@ -167,8 +167,6 @@ IECore::CompoundDataPtr propertyTreeToCompoundData( const boost::property_tree::
 	IECore::CompoundDataPtr resultData = new IECore::CompoundData();
 	CompoundDataMap &result = resultData->writable();
 
-	uint32_t hash;
-
 	for( auto &it : pt )
 	{
 		// NOTE: exclude locations starting with "instance:" under root
@@ -177,7 +175,16 @@ IECore::CompoundDataPtr propertyTreeToCompoundData( const boost::property_tree::
 			continue;
 		}
 
-		std::sscanf( it.second.data().c_str(), "%x", &hash );
+		const std::string &hashString = it.second.data().c_str();
+
+		uint32_t hash = 0;
+
+		auto [_unused, errorCode] = std::from_chars( hashString.data(), hashString.data() + hashString.size(), hash, 16 );
+
+		if( errorCode != std::errc() )
+		{
+			throw IECore::Exception( fmt::format( "Expected hexadecimal while parsing manifest: {}", hashString ) );
+		}
 
 		result[hash] = new StringData( it.first );
 	}
