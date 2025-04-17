@@ -368,6 +368,22 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 				),
 			],
 
+			"cylinderLight" : [
+
+				IECoreScene.Shader(
+					"CylinderLight", "light",
+					{
+						"length" : 2.0,
+						"radius" : 4.0,
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrCylinderLight", "light",
+					expectedLightParameters( {} )
+				)
+			]
+
 		}.items() :
 			with self.subTest( testName = testName ) :
 
@@ -391,6 +407,7 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 			IECoreScene.Shader( "DiskLight", "light", { "radius" : 2.0 } ) : imath.M44f().scale( imath.V3f( 4.0 ) ),
 			IECoreScene.Shader( "DistantLight", "light", { "angle" : 2.0 } ) : imath.M44f(),
 			IECoreScene.Shader( "DomeLight", "light", {} ) : imath.M44f(),
+			IECoreScene.Shader( "CylinderLight", "light", { "length" : 2.0, "radius" : 4.0 } ) : imath.M44f().scale( imath.V3f( 2.0, 8.0, 8.0 ) ),
 
 		}.items() :
 			with self.subTest() :
