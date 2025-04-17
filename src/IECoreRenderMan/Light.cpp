@@ -52,7 +52,7 @@ namespace
 
 M44f correctiveTransform( const IECoreScene::Shader *lightShader )
 {
-	if( lightShader->getName() == "PxrDomeLight" || lightShader->getName() == "PxrEnvDayLight" )
+	if( lightShader->getName() == "PxrDomeLight" || lightShader->getName() == "PxrEnvDayLight" || lightShader->getName() == "DomeLight" )
 	{
 		return M44f().rotate( V3f( -M_PI_2, M_PI_2, 0.0f ) );
 	}

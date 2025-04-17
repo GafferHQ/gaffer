@@ -348,6 +348,25 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 			],
 
+			"domeLight" : [
+
+				IECoreScene.Shader(
+					"DomeLight", "light",
+					{
+						"texture:file" : "test.tex",
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrDomeLight", "light",
+					{
+						k : v for k, v in expectedLightParameters( {
+							"lightColorMap" : "test.tex"
+						} ).items() if k != "areaNormalize"
+					}
+				),
+			],
+
 		}.items() :
 			with self.subTest( testName = testName ) :
 
@@ -370,6 +389,7 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 			IECoreScene.Shader( "RectLight", "light", { "width" : 20.0, "height" : 60.0 } ) : imath.M44f().scale( imath.V3f( -20.0, -60.0, 1.0 ) ),
 			IECoreScene.Shader( "DiskLight", "light", { "radius" : 2.0 } ) : imath.M44f().scale( imath.V3f( 4.0 ) ),
 			IECoreScene.Shader( "DistantLight", "light", { "angle" : 2.0 } ) : imath.M44f(),
+			IECoreScene.Shader( "DomeLight", "light", {} ) : imath.M44f(),
 
 		}.items() :
 			with self.subTest() :
@@ -379,6 +399,29 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 					transform,
 					"Testing {}".format( shader.name )
 				)
+
+	def testDomeLightNotAutomatic( self ) :
+
+		shaderNetwork = IECoreScene.ShaderNetwork(
+			shaders = {
+				"light" : IECoreScene.Shader(
+					"DomeLight", "light",
+					{
+						"texture:format" : "latlong",
+					}
+				)
+			},
+			output = "light",
+		)
+
+		with IECore.CapturingMessageHandler() as mh :
+			IECoreRenderMan.ShaderNetworkAlgo.convertUSDShaders( shaderNetwork )
+			self.assertEqual( len( mh.messages ), 1 )
+			self.assertEqual( mh.messages[0].level, mh.Level.Warning )
+			self.assertEqual(
+				mh.messages[0].message,
+				"Unsupported value \"latlong\" for DomeLight.format. Only \"automatic\" is supported. Format will be read from texture file."
+			)
 
 	def __assertShadersEqual( self, shader1, shader2, message = None ) :
 
