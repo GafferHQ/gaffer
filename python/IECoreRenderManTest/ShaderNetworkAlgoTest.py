@@ -419,6 +419,43 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 			],
 
+			"sphereLightToPhotometricLight" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"shaping:ies:file" : "photometric.ies",
+						"shaping:ies:angleScale" : 2.0,
+						"shaping:ies:normalize" : True
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrSphereLight", "light",
+					expectedLightParameters( {
+						"iesProfile" : "photometric.ies",
+						"iesProfileScale" : 2.0,
+						"iesProfileNormalize" : True,
+					} )
+				),
+
+			],
+
+			"sphereLightToPhotometricLightEmptyProfile" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"shaping:ies:file" : "",
+						"shaping:ies:angleScale" : 2.0,
+						"shaping:ies:normalize" : True,
+					}
+				),
+
+				IECoreScene.Shader( "PxrSphereLight", "light", expectedLightParameters( {} ) ),
+
+			],
+
 		}.items() :
 			with self.subTest( testName = testName ) :
 
