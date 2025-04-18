@@ -551,6 +551,9 @@ const InternedString g_glassRoughnessParameter( "glassRoughness" );
 const InternedString g_glowColorParameter( "glowColor" );
 const InternedString g_glowGainParameter( "glowGain" );
 const InternedString g_heightParameter( "height" );
+const InternedString g_iesProfileParameter( "iesProfile" );
+const InternedString g_iesProfileScaleParameter( "iesProfileScale" );
+const InternedString g_iesProfileNormalizeParameter( "iesProfileNormalize" );
 const InternedString g_intensityParameter( "intensity" );
 const InternedString g_lengthParameter( "length" );
 const InternedString g_lightColorParameter( "lightColor" );
@@ -574,6 +577,9 @@ const InternedString g_shadowFalloffParameter( "shadowFalloff" );
 const InternedString g_shadowFalloffUSDParameter( "shadow:falloff" );
 const InternedString g_shadowFalloffGammaParameter( "shadowFalloffGamma");
 const InternedString g_shadowFalloffGammaUSDParameter( "shadow:falloffGamma" );
+const InternedString g_shapingIesFileParameter( "shaping:ies:file" );
+const InternedString g_shapingIesAngleScaleParameter( "shaping:ies:angleScale" );
+const InternedString g_shapingIesNormalizeParameter( "shaping:ies:normalize" );
 const InternedString g_specularParameter( "specular" );
 const InternedString g_specularDoubleSidedParameter( "specularDoubleSided" );
 const InternedString g_specularEdgeColorParameter( "specularEdgeColor" );
@@ -644,6 +650,19 @@ void transferUSDLightParameters( ShaderNetwork *network, InternedString shaderHa
 		if( boost::starts_with( name.string(), g_renderManLightNamespace ) )
 		{
 			shader->parameters()[name.string().substr(g_renderManLightNamespace.size())] = value;
+		}
+	}
+}
+
+void transferUSDShapingParameters( ShaderNetwork *network, InternedString shaderHandle, const Shader *usdShader, Shader *shader )
+{
+	if( auto dFile = usdShader->parametersData()->member<StringData>( g_shapingIesFileParameter ) )
+	{
+		if( !dFile->readable().empty() )
+		{
+			shader->parameters()[g_iesProfileParameter] = new StringData( dFile->readable() );
+			transferUSDParameter( network, shaderHandle, usdShader, g_shapingIesAngleScaleParameter, shader, g_iesProfileScaleParameter, 0.f );
+			transferUSDParameter( network, shaderHandle, usdShader, g_shapingIesNormalizeParameter, shader, g_iesProfileNormalizeParameter, false );
 		}
 	}
 }
@@ -802,6 +821,7 @@ void convertUSDShaders( ShaderNetwork *shaderNetwork )
 		{
 			newShader = new Shader( "PxrSphereLight", "ri:light" );
 			transferUSDLightParameters( shaderNetwork, handle, shader.get(), newShader.get() );
+			transferUSDShapingParameters( shaderNetwork, handle, shader.get(), newShader.get() );
 			transferUSDParameter( shaderNetwork, handle, shader.get(), g_normalizeParameter, newShader.get(), g_areaNormalizeParameter, false );
 
 			if( parameterValue( shader.get(), g_treatAsPointParameter, false ) )
@@ -813,12 +833,14 @@ void convertUSDShaders( ShaderNetwork *shaderNetwork )
 		{
 			newShader = new Shader( "PxrDiskLight", "ri:light" );
 			transferUSDLightParameters( shaderNetwork, handle, shader.get(), newShader.get() );
+			transferUSDShapingParameters( shaderNetwork, handle, shader.get(), newShader.get() );
 			transferUSDParameter( shaderNetwork, handle, shader.get(), g_normalizeParameter, newShader.get(), g_areaNormalizeParameter, false );
 		}
 		else if( shader->getName() == "RectLight" )
 		{
 			newShader = new Shader( "PxrRectLight", "ri:light" );
 			transferUSDLightParameters( shaderNetwork, handle, shader.get(), newShader.get() );
+			transferUSDShapingParameters( shaderNetwork, handle, shader.get(), newShader.get() );
 			transferUSDParameter( shaderNetwork, handle, shader.get(), g_normalizeParameter, newShader.get(), g_areaNormalizeParameter, false );
 
 			const std::string textureFile = parameterValue( shader.get(), g_textureFileParameter, std::string() );
@@ -831,6 +853,7 @@ void convertUSDShaders( ShaderNetwork *shaderNetwork )
 		{
 			newShader = new Shader( "PxrDistantLight", "ri:light" );
 			transferUSDLightParameters( shaderNetwork, handle, shader.get(), newShader.get(), 50000.f );
+			transferUSDShapingParameters( shaderNetwork, handle, shader.get(), newShader.get() );
 			transferUSDParameter( shaderNetwork, handle, shader.get(), g_normalizeParameter, newShader.get(), g_areaNormalizeParameter, false );
 
 			const float angle = parameterValue( shader.get(), g_angleParameter, 0.53f );
@@ -861,6 +884,7 @@ void convertUSDShaders( ShaderNetwork *shaderNetwork )
 		{
 			newShader = new Shader( "PxrCylinderLight", "ri:light" );
 			transferUSDLightParameters( shaderNetwork, handle, shader.get(), newShader.get() );
+			transferUSDShapingParameters( shaderNetwork, handle, shader.get(), newShader.get() );
 			transferUSDParameter( shaderNetwork, handle, shader.get(), g_normalizeParameter, newShader.get(), g_areaNormalizeParameter, false );
 
 			if( parameterValue( shader.get(), g_treatAsLineParameter, false ) )
