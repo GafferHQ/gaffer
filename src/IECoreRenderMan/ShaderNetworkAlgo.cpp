@@ -584,6 +584,8 @@ const InternedString g_specularRoughnessParameter( "specularRoughness" );
 const InternedString g_temperatureParameter( "temperature" );
 const InternedString g_textureFileParameter( "texture:file" );
 const InternedString g_textureFormatParameter( "texture:format" );
+const InternedString g_treatAsPointParameter( "treatAsPoint" );
+const InternedString g_treatAsLineParameter( "treatAsLine" );
 const InternedString g_typeParameter( "type" );
 const InternedString g_usdPrimvarReaderIntShaderName( "UsdPrimvarReader_int" );
 const InternedString g_usdPrimvarReaderFloatShaderName( "UsdPrimvarReader_float" );
@@ -801,6 +803,11 @@ void convertUSDShaders( ShaderNetwork *shaderNetwork )
 			newShader = new Shader( "PxrSphereLight", "ri:light" );
 			transferUSDLightParameters( shaderNetwork, handle, shader.get(), newShader.get() );
 			transferUSDParameter( shaderNetwork, handle, shader.get(), g_normalizeParameter, newShader.get(), g_areaNormalizeParameter, false );
+
+			if( parameterValue( shader.get(), g_treatAsPointParameter, false ) )
+			{
+				newShader->parameters()[g_areaNormalizeParameter] = new BoolData( true );
+			}
 		}
 		else if( shader->getName() == "DiskLight" )
 		{
@@ -855,6 +862,11 @@ void convertUSDShaders( ShaderNetwork *shaderNetwork )
 			newShader = new Shader( "PxrCylinderLight", "ri:light" );
 			transferUSDLightParameters( shaderNetwork, handle, shader.get(), newShader.get() );
 			transferUSDParameter( shaderNetwork, handle, shader.get(), g_normalizeParameter, newShader.get(), g_areaNormalizeParameter, false );
+
+			if( parameterValue( shader.get(), g_treatAsLineParameter, false ) )
+			{
+				newShader->parameters()[g_areaNormalizeParameter] = new BoolData( true );
+			}
 		}
 
 		const auto it = g_primVarMap.find( shader->getName() );
@@ -886,7 +898,15 @@ M44f usdLightTransform( const Shader *lightShader )
 {
 	assert( lightShader );
 
-	if( lightShader->getName() == "SphereLight" || lightShader->getName() == "DiskLight" )
+	if( lightShader->getName() == "SphereLight" )
+	{
+		const float radius = !parameterValue( lightShader, g_treatAsPointParameter, false ) ?
+			parameterValue( lightShader, g_radiusParameter, 0.5f ) :
+			0.001f
+		;
+		return M44f().scale( V3f( radius * 2.f ) );
+	}
+	else if( lightShader->getName() == "DiskLight" )
 	{
 		const float radius = parameterValue( lightShader, g_radiusParameter, 0.5f );
 		return M44f().scale( V3f( radius * 2.f ) );
@@ -900,7 +920,10 @@ M44f usdLightTransform( const Shader *lightShader )
 	else if( lightShader->getName() == "CylinderLight" )
 	{
 		const float length = parameterValue( lightShader, g_lengthParameter, 1.f );
-		const float radius = parameterValue( lightShader, g_radiusParameter, 0.5f );
+		const float radius = !parameterValue( lightShader, g_treatAsLineParameter, false ) ?
+			parameterValue( lightShader, g_radiusParameter, 0.5f ) :
+			0.001f
+		;
 
 		return M44f().scale( V3f( length, radius * 2.f, radius * 2.f ) );
 	}
