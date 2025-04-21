@@ -502,6 +502,26 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 			],
 
+			"emissionFocus" : [
+
+				IECoreScene.Shader(
+					"RectLight", "light",
+					{
+						"shaping:focus" : 0.5,
+						"shaping:focusTint" : imath.Color3f( 0.1, 0.2, 0.3 ),
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrRectLight", "light",
+					expectedLightParameters( {
+						"emissionFocus" : 0.5,
+						"emissionFocusTint" : imath.Color3f( 0.1, 0.2, 0.3 ),
+					} )
+				),
+
+			],
+
 		}.items() :
 			with self.subTest( testName = testName ) :
 
