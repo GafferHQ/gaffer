@@ -6,6 +6,7 @@ Improvements
 
 - VisualiserTool : Added new visualisation for orientation (Quatf) data.
 - PrimitiveInspector : Changed column order for quaternions to match Imath's conventions.
+- RenderMan : Added support for USDLux lights.
 
 Fixes
 -----

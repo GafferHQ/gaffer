@@ -543,6 +543,8 @@ const InternedString g_diffuseParameter( "diffuse" );
 const InternedString g_diffuseColorParameter( "diffuseColor" );
 const InternedString g_diffuseDoubleSidedParameter( "diffuseDoubleSided" );
 const InternedString g_diffuseGainParameter( "diffuseGain") ;
+const InternedString g_emissionFocusParameter( "emissionFocus" );
+const InternedString g_emissionFocusTintParameter( "emissionFocusTint" );
 const InternedString g_enableColorTemperatureParameter( "enableColorTemperature" );
 const InternedString g_enableShadowsParameter( "enableShadows" );
 const InternedString g_enableTemperatureParameter( "enableTemperature" );
@@ -581,6 +583,8 @@ const InternedString g_shadowFalloffGammaParameter( "shadowFalloffGamma");
 const InternedString g_shadowFalloffGammaUSDParameter( "shadow:falloffGamma" );
 const InternedString g_shapingConeAngleParameter( "shaping:cone:angle" );
 const InternedString g_shapingConeSoftnessParameter( "shaping:cone:softness" );
+const InternedString g_shapingFocusParameter( "shaping:focus" );
+const InternedString g_shapingFocusTintParameter( "shaping:focusTint" );
 const InternedString g_shapingIesFileParameter( "shaping:ies:file" );
 const InternedString g_shapingIesAngleScaleParameter( "shaping:ies:angleScale" );
 const InternedString g_shapingIesNormalizeParameter( "shaping:ies:normalize" );
@@ -675,6 +679,13 @@ void transferUSDShapingParameters( ShaderNetwork *network, InternedString shader
 		shader->parameters()[g_coneAngleParameter] = new FloatData( dAngle->readable() );
 		const float softness = parameterValue( usdShader, g_shapingConeSoftnessParameter, 0.f );
 		shader->parameters()[g_coneSoftnessParameter] = new FloatData( softness );
+	}
+
+	if( auto dFocus = usdShader->parametersData()->member<FloatData>( g_shapingFocusParameter ) )
+	{
+		shader->parameters()[g_emissionFocusParameter] = new FloatData( dFocus->readable() );
+		const Color3f tint = parameterValue( usdShader, g_shapingFocusTintParameter, Color3f( 0.f, 0.f, 0.f ) );
+		shader->parameters()[g_emissionFocusTintParameter] = new Color3fData( tint );
 	}
 }
 
