@@ -457,6 +457,52 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 			],
 
+			"sphereLightToSpotLight" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"shaping:cone:angle" : 20.0,
+						"shaping:cone:softness" : 0.5,
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrSphereLight", "light",
+					expectedLightParameters( {
+						"coneAngle" : 20.0,
+						"coneSoftness" : 0.5,
+					} )
+				),
+
+			],
+
+			"sphereLightToPhotoMetricAndSpot" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"shaping:ies:file" : "photometric.ies",
+						"shaping:ies:angleScale" : 2.0,
+						"shaping:ies:normalize" : True,
+						"shaping:cone:angle" : 20.0,
+						"shaping:cone:softness" : 0.5,
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrSphereLight", "light",
+					expectedLightParameters( {
+						"iesProfile" : "photometric.ies",
+						"iesProfileScale" : 2.0,
+						"iesProfileNormalize" : True,
+						"coneAngle" : 20.0,
+						"coneSoftness" : 0.5,
+					} )
+				),
+
+			],
+
 		}.items() :
 			with self.subTest( testName = testName ) :
 
