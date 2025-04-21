@@ -534,6 +534,8 @@ const InternedString g_clearcoatEdgeColorParameter( "clearcoatEdgeColor" );
 const InternedString g_clearcoatRoughnessParameter( "clearcoatRoughness" );
 const InternedString g_colorParameter( "color" );
 const InternedString g_colorTemperatureParameter( "colorTemperature" );
+const InternedString g_coneAngleParameter( "coneAngle" );
+const InternedString g_coneSoftnessParameter( "coneSoftness" );
 const InternedString g_defaultFloatParameter( "defaultFloat" );
 const InternedString g_defaultFloat3Parameter( "defaultFloat3" );
 const InternedString g_defaultIntParameter( "defaultInt" );
@@ -577,6 +579,8 @@ const InternedString g_shadowFalloffParameter( "shadowFalloff" );
 const InternedString g_shadowFalloffUSDParameter( "shadow:falloff" );
 const InternedString g_shadowFalloffGammaParameter( "shadowFalloffGamma");
 const InternedString g_shadowFalloffGammaUSDParameter( "shadow:falloffGamma" );
+const InternedString g_shapingConeAngleParameter( "shaping:cone:angle" );
+const InternedString g_shapingConeSoftnessParameter( "shaping:cone:softness" );
 const InternedString g_shapingIesFileParameter( "shaping:ies:file" );
 const InternedString g_shapingIesAngleScaleParameter( "shaping:ies:angleScale" );
 const InternedString g_shapingIesNormalizeParameter( "shaping:ies:normalize" );
@@ -664,6 +668,13 @@ void transferUSDShapingParameters( ShaderNetwork *network, InternedString shader
 			transferUSDParameter( network, shaderHandle, usdShader, g_shapingIesAngleScaleParameter, shader, g_iesProfileScaleParameter, 0.f );
 			transferUSDParameter( network, shaderHandle, usdShader, g_shapingIesNormalizeParameter, shader, g_iesProfileNormalizeParameter, false );
 		}
+	}
+
+	if( auto dAngle = usdShader->parametersData()->member<FloatData>( g_shapingConeAngleParameter ) )
+	{
+		shader->parameters()[g_coneAngleParameter] = new FloatData( dAngle->readable() );
+		const float softness = parameterValue( usdShader, g_shapingConeSoftnessParameter, 0.f );
+		shader->parameters()[g_coneSoftnessParameter] = new FloatData( softness );
 	}
 }
 
