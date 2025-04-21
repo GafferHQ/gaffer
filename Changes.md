@@ -7,6 +7,7 @@ Improvements
 - GafferML :
   - Added support for custom ONNX ops via the `GAFFERML_CUSTOM_OPS_LIBRARIES` environment variable. This should contain a comma-separated list of full paths to libraries containing custom ops.
   - Added support for string tensors.
+- RenderMan : Added support for USDLux lights.
 
 1.5.13.0 (relative to 1.5.12.0)
 ========
