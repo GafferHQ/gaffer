@@ -265,6 +265,7 @@ class _DataNameChooser( GafferUI.PlugValueWidget ) :
 							IECore.V2fVectorData,
 							IECore.Color3fVectorData,
 							IECore.V3fVectorData,
+							IECore.QuatfVectorData,
 						)
 					) :
 						continue

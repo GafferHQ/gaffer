@@ -1051,7 +1051,7 @@ class _CompoundDataAccessor( _DataAccessor ) :
 
 	def headerLabel( self, columnIndex ) :
 
-		return [ "X", "Y", "Z", "W" ][columnIndex]
+		return [ "X", "Y", "Z" ][columnIndex]
 
 	def setElement( self, rowIndex, columnIndex, value ) :
 
@@ -1132,17 +1132,21 @@ class _QuatDataAccessor( _CompoundDataAccessor ) :
 
 		return 4
 
+	def headerLabel( self, columnIndex ) :
+
+		return [ "W", "X", "Y", "Z" ][columnIndex]
+
 	def getElement( self, rowIndex, columnIndex ) :
 
 		v = self.data()[rowIndex]
 		if columnIndex == 0:
-			return GafferUI._Variant.toVariant( v.v()[0] )
-		if columnIndex == 1:
-			return GafferUI._Variant.toVariant( v.v()[1] )
-		if columnIndex == 2:
-			return GafferUI._Variant.toVariant( v.v()[2] )
-		if columnIndex == 3:
 			return GafferUI._Variant.toVariant( v.r() )
+		if columnIndex == 1:
+			return GafferUI._Variant.toVariant( v.v()[0] )
+		if columnIndex == 2:
+			return GafferUI._Variant.toVariant( v.v()[1] )
+		if columnIndex == 3:
+			return GafferUI._Variant.toVariant( v.v()[2] )
 
 _DataAccessor.registerType( IECore.QuatfVectorData.staticTypeId(), _QuatDataAccessor )
 _DataAccessor.registerType( IECore.QuatdVectorData.staticTypeId(), _QuatDataAccessor )
