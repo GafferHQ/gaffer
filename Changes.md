@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - RenderMan : Added light linking support.
+- Cycles : Added light linking support.
 - VisualiserTool : Added new visualisation for orientation (Quatf) data.
 - PrimitiveInspector : Changed column order for quaternions to match Imath's conventions.
 

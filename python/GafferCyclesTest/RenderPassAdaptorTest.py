@@ -49,11 +49,6 @@ class RenderPassAdaptorTest( GafferSceneTest.RenderPassAdaptorTest ) :
 	shadowColor = imath.Color4f( 0 )
 	litColor = imath.Color4f( 1, 1, 1, 0 )
 
-	@unittest.skip( "Light linking not supported" )
-	def testReflectionCasterLightLinks( self ) :
-
-		pass
-
 	def _createDistantLight( self ) :
 
 		light = GafferCycles.CyclesLight()
