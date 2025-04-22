@@ -82,6 +82,8 @@ class InteractiveRenderManRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		light = GafferRenderMan.RenderManLight()
 		light.loadShader( "PxrSphereLight" )
+		light["attributes"]["ri:visibility:camera"]["enabled"].setValue( True )
+		light["attributes"]["ri:visibility:camera"]["value"].setValue( False )
 
 		return light, light["parameters"]["lightColor"]
 
