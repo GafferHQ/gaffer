@@ -2222,7 +2222,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		self.__assertColorsAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ), delta = 0.01 )
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
-	def testLightLinking( self ) :
+	def testBasicLightLinking( self ) :
 
 		s = Gaffer.ScriptNode()
 		s["catalogue"] = GafferImage.Catalogue()
@@ -2290,10 +2290,136 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
 		self.assertEqual( c, imath.Color3f( 0, 0, 0 ) )
 
-		# \todo: This should also test the light linking functionaly provided by
-		# StandardAttributes
-
 		s["r"]["state"].setValue( s["r"].State.Stopped )
+
+	def testLinkedLightsAttributes( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["catalogue"] = GafferImage.Catalogue()
+
+		script["spreadsheet"] = Gaffer.Spreadsheet()
+		script["spreadsheet"]["selector"].setValue( "${collect:rootName}" )
+		for i in range( 0, 3 ) :
+			script["spreadsheet"]["rows"].addRow()["name"].setValue( str( i ) )
+
+		script["spreadsheet"]["rows"].addColumn( Gaffer.V3fPlug( "translate" ) )
+		for i, translate in enumerate( [
+			imath.V3f( -1, 1, 0 ),
+			imath.V3f( 1, 1, 0 ),
+			imath.V3f( 1, -1, 0 ),
+		] ) :
+			script["spreadsheet"]["rows"][i+1]["cells"]["translate"]["value"].setValue( translate )
+
+		script["spreadsheet"]["rows"].addColumn( Gaffer.StringPlug( "lightsSet" ) )
+		script["spreadsheet"]["rows"].addColumn( Gaffer.StringPlug( "linkedLights" ) )
+		for i, lightsSet in enumerate( [
+			"red",
+			"green",
+			"blue",
+		] ) :
+			script["spreadsheet"]["rows"][i+1]["cells"]["lightsSet"]["value"].setValue( lightsSet )
+			script["spreadsheet"]["rows"][i+1]["cells"]["linkedLights"]["value"].setValue( lightsSet )
+
+		script["spreadsheet"]["rows"].addColumn( Gaffer.Color3fPlug( "lightColor" ) )
+		for i, lightColor in enumerate( [
+			imath.Color3f( 10, 0, 0 ),
+			imath.Color3f( 0, 10, 0 ),
+			imath.Color3f( 0, 0, 10 ),
+		] ) :
+			script["spreadsheet"]["rows"][i+1]["cells"]["lightColor"]["value"].setValue( lightColor )
+
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["transform"]["translate"].setInput( script["spreadsheet"]["out"]["translate"] )
+
+		script["shader"], unused, shaderOut = self._createMatteShader()
+		script["shaderAssignment"] = GafferScene.ShaderAssignment()
+		script["shaderAssignment"]["in"].setInput( script["plane"]["out"] )
+		script["shaderAssignment"]["shader"].setInput( shaderOut )
+
+		script["planeAttributes"] = GafferScene.StandardAttributes()
+		script["planeAttributes"]["in"].setInput( script["shaderAssignment"]["out"] )
+		script["planeAttributes"]["attributes"]["linkedLights"]["enabled"].setValue( True )
+		script["planeAttributes"]["attributes"]["linkedLights"]["value"].setInput( script["spreadsheet"]["out"]["linkedLights"] )
+
+		script["light"], colorPlug = self._createPointLight()
+		script["light"]["sets"].setInput( script["spreadsheet"]["out"]["lightsSet"] )
+		colorPlug.setInput( script["spreadsheet"]["out"]["lightColor"] )
+		script["light"]["transform"]["translate"]["z"].setValue( 2 )
+
+		script["collectGroup"] = GafferScene.Group()
+		script["collectGroup"]["in"][0].setInput( script["planeAttributes"]["out"] )
+		script["collectGroup"]["in"][1].setInput( script["light"]["out"] )
+
+		script["collect"] = GafferScene.CollectScenes()
+		script["collect"]["in"].setInput( script["collectGroup"]["out"] )
+		script["collect"]["rootNames"].setInput( script["spreadsheet"]["activeRowNames"] )
+
+		script["camera"] = GafferScene.Camera()
+		script["camera"]["transform"]["translate"]["z"].setValue( 4 )
+
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["collect"]["out"] )
+		script["group"]["in"][1].setInput( script["camera"]["out"] )
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( script["catalogue"].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
+				}
+			)
+		)
+		script["outputs"]["in"].setInput( script["group"]["out"] )
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
+		script["options"]["options"]["renderCamera"]["enabled"].setValue( True )
+		script["options"]["in"].setInput( script["outputs"]["out"] )
+
+		script["render"] = self._createInteractiveRender()
+		script["render"]["in"].setInput( script["options"]["out"] )
+
+		# Start a render, give it time to finish, and check the output.
+
+		script["render"]["state"].setValue( script["render"].State.Running )
+		self.uiThreadCallHandler.waitFor( 1 )
+
+		for uv, expectedColor in [
+			( imath.V2f( 0.25, 0.75 ), imath.Color3f( 1, 0, 0 ) ),
+			( imath.V2f( 0.75, 0.75 ), imath.Color3f( 0, 1, 0 ) ),
+			( imath.V2f( 0.75, 0.25 ), imath.Color3f( 0, 0, 1 ) ),
+		] :
+			c = self._color3fAtUV( script["catalogue"], uv )
+			self.assertEqual( c.normalize(), expectedColor )
+
+		# Switch the links around, and check the output again.
+
+		for i, linkedLights in enumerate( [
+			"green",
+			"blue",
+			"red",
+		] ) :
+			script["spreadsheet"]["rows"][i+1]["cells"]["linkedLights"]["value"].setValue( linkedLights )
+
+		self.uiThreadCallHandler.waitFor( 1 )
+
+		for uv, expectedColor in [
+			( imath.V2f( 0.25, 0.75 ), imath.Color3f( 0, 1, 0 ) ),
+			( imath.V2f( 0.75, 0.75 ), imath.Color3f( 0, 0, 1 ) ),
+			( imath.V2f( 0.75, 0.25 ), imath.Color3f( 1, 0, 0 ) ),
+		] :
+			c = self._color3fAtUV( script["catalogue"], uv )
+			self.assertEqual( c.normalize(), expectedColor )
+
+		script["render"]["state"].setValue( script["render"].State.Stopped )
 
 	def testHideLinkedLight( self ) :
 
