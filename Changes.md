@@ -17,6 +17,7 @@ Fixes
   - Fixed formatting of parameter tooltips, and Node Reference descriptions.
 - RenderManShader : Fixed loading of C++ pattern shaders such as `aaOceanPrmanShader`.
 - ShaderTweaks : Fixed error when selecting an array element to tweak, such as `utilityPattern[0]` in a PxrSurface shader (#6383).
+- CompoundVectorParameterValueWidget : Fixed being unable to edit certain parameters when there were too many, by adding a horizontal scroll bar.
 
 API
 ---
