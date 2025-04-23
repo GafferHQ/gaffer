@@ -16,6 +16,7 @@ Fixes
   - PxrSurface, PxrLayerSurface : Moved `utilityPattern` parameter to "Globals" section.
   - Fixed formatting of parameter tooltips, and Node Reference descriptions.
 - RenderManShader : Fixed loading of C++ pattern shaders such as `aaOceanPrmanShader`.
+- ShaderTweaks : Fixed error when selecting an array element to tweak, such as `utilityPattern[0]` in a PxrSurface shader (#6383).
 
 API
 ---
