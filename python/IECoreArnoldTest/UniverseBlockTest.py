@@ -80,7 +80,7 @@ class UniverseBlockTest( unittest.TestCase ) :
 
 			# Relaunch test in subprocess with our metadata on the plugin path.
 
-			env = Gaffer.environment()
+			env = os.environ.copy()
 			env["ARNOLD_PLUGIN_PATH"] = env["ARNOLD_PLUGIN_PATH"] + os.pathsep + str( metadataPath )
 
 			try :
