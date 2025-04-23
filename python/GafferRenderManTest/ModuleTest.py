@@ -53,7 +53,7 @@ class ModuleTest( GafferTest.TestCase ) :
 		# of it having been set when our wrapper ran earlier. And in that subprocess,
 		# check that we can still load the GUI configs cleanly.
 
-		env = os.environ.copy()
+		env = Gaffer.environment()
 		for var in ( "RMANTREE", "PYTHONPATH", "LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH", "GAFFER_STARTUP_PATHS" ) :
 			env.pop( var, None )
 

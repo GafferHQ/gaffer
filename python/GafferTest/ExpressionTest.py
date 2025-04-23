@@ -1641,7 +1641,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		script["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		script.save()
 
-		env = os.environ.copy()
+		env = Gaffer.environment()
 		env["GAFFERTEST_SCRIPT_FILENAME"] = script["fileName"].getValue()
 		try :
 			subprocess.check_output(

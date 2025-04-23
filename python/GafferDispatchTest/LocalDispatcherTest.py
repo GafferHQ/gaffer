@@ -1292,5 +1292,68 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		self.assertTrue( fileToCreate.is_file() )
 
+	def testEnvironmentVariableCase( self ) :
+
+		# On Windows, the `os` module will screw this up, and create an all-upper-case
+		# environment variable instead. Still, we want to test that variables created
+		# this way are passed to child tasks.
+		os.environ["gafferLocalDispatcherTestMIXEDcaseA"] = "testTEST"
+		self.addCleanup( os.environ.__delitem__, "gafferLocalDispatcherTestMIXEDcaseA" )
+
+		# If we bypass `os.environ`, then we can create a mixed-case variable even
+		# on Windows.
+		os.putenv( "gafferLocalDispatcherTestMIXEDcaseB", "testTEST" )
+		self.addCleanup( os.unsetenv, "gafferLocalDispatcherTestMIXEDcaseB" )
+
+		# Dispatch a task that will serialise the environment it finds itself running in.
+
+		environmentFile = self.temporaryDirectory() / "environment.py"
+		script = Gaffer.ScriptNode()
+
+		script["command"] = GafferDispatch.PythonCommand()
+		script["command"]["command"].setValue(
+			inspect.cleandoc(
+				f"""
+				import sys
+				if sys.platform == "win32" :
+					# Use lower-level access to environment,
+					# because `os.environ` botches case preservation
+					# on Windows and we want to check the ground truth
+					# from the process.
+					import nt
+					env = nt.environ
+				else :
+					import os
+					env = os.environ.copy()
+
+				with open( r"{environmentFile}", "w", encoding = "utf-8" ) as f :
+					f.write( repr( env ) )
+				"""
+			)
+		)
+
+		script["dispatcher"] = self.__createLocalDispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["command"]["task"] )
+		script["dispatcher"]["executeInBackground"].setValue( True )
+		script["dispatcher"]["task"].execute()
+		script["dispatcher"].jobPool().waitForAll()
+
+		# Load the environment from the task, and check it is as we expect.
+
+		with open( environmentFile, encoding = "utf-8" ) as f :
+			childEnvironment = eval( compile( f.read(), "test.py", "eval" ) )
+
+		# We preseve mixed-case environment variables on all platforms.
+		self.assertEqual( childEnvironment["gafferLocalDispatcherTestMIXEDcaseB"], "testTEST" )
+
+		if sys.platform == "win32" :
+			# Assert that Python botched this one as expected.
+			self.assertEqual( childEnvironment["GAFFERLOCALDISPATCHERTESTMIXEDCASEA"], "testTEST" )
+			# Check standard variable that happens to be mixed case.
+			self.assertIn( "ProgramData", childEnvironment )
+		else :
+			# On Linux, everything actually makes sense.
+			self.assertEqual( childEnvironment["gafferLocalDispatcherTestMIXEDcaseA"], "testTEST" )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -93,6 +93,11 @@
 #include <sys/prctl.h>
 #endif
 
+#ifdef __APPLE__
+#include <crt_externs.h>
+static char **environ = *_NSGetEnviron();
+#endif
+
 #ifdef _MSC_VER
 #include "IECore/MessageHandler.h"
 
@@ -212,6 +217,26 @@ void verifyAllocator()
 }
 #endif
 
+// Used as a replacement for `os.environ.copy()`, because
+// `os.environ` doesn't preserve case on Windows.
+boost::python::dict environment()
+{
+	boost::python::dict result;
+	for( char **e = environ; *e; e++ )
+	{
+		const char *separator = strchr( *e, '=' );
+		if( !separator )
+		{
+			continue;
+		}
+		const std::string name( *e, separator - *e );
+		const std::string value( separator + 1 );
+		result[name] = value;
+	}
+
+	return result;
+}
+
 } // namespace
 
 // Arrange for `storeArgcArgv()` to be called when our module loads,
@@ -280,6 +305,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	DependencyNodeClass<PatternMatch>();
 
 	def( "isDebug", &isDebug );
+	def( "environment", &environment );
 
 	def( "_nameProcess", &nameProcess );
 #ifdef _MSC_VER

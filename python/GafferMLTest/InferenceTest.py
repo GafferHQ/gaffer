@@ -129,7 +129,7 @@ class InferenceTest( GafferTest.TestCase ) :
 		if os.environ.get( "GAFFERML_MODEL_PATHS", "" ) != testPath :
 
 			self.assertRaises( RuntimeError, node.loadModel )
-			env = os.environ.copy()
+			env = Gaffer.environment()
 			env["GAFFERML_MODEL_PATHS"] = testPath
 			try :
 				subprocess.check_output(

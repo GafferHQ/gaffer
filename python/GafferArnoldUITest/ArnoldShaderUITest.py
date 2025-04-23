@@ -178,7 +178,7 @@ root["SceneWriter"].execute()
 		with open( scriptPath, "w" ) as outFile :
 			outFile.write( script )
 
-		env = os.environ.copy()
+		env = Gaffer.environment()
 		subprocess.check_call(
 			[ str( Gaffer.executablePath() ), "env", "python", str( scriptPath ) ],
 			env = env
