@@ -37,7 +37,7 @@
 import os
 import pathlib
 import unittest
-from xml.etree import cElementTree
+from xml.etree import ElementTree
 
 import IECore
 
@@ -53,8 +53,6 @@ class RenderManShaderUITest( GafferUITest.TestCase ) :
 
 		n = GafferRenderMan.RenderManShader()
 		n.loadShader( "PxrSurface" )
-
-		self.ignoreMessage( IECore.Msg.Level.Warning, "RenderManShader::loadShader", 'Array parameter "utilityPattern" not supported' )
 
 		self.assertEqual(
 			Gaffer.Metadata.value( n["parameters"]["diffuseGain"], "layout:section" ),
@@ -80,6 +78,9 @@ class RenderManShaderUITest( GafferUITest.TestCase ) :
 			Gaffer.Metadata.value( n["parameters"]["continuationRayMode"], "presetValues" ),
 			IECore.IntVectorData( [ 0, 1, 2 ] )
 		)
+
+		n.loadShader( "PxrVisualizer" )
+		self.assertIn( "A utility integrator to navigate and inspect large scenes interactively", Gaffer.Metadata.value( n, "description" ) )
 
 	def testCustomMetadata( self ) :
 
@@ -110,7 +111,7 @@ class RenderManShaderUITest( GafferUITest.TestCase ) :
 
 		def __shaderType( argsFile ) :
 
-			for event, element in cElementTree.iterparse( argsFile, events = ( "start", "end" ) ) :
+			for event, element in ElementTree.iterparse( argsFile, events = ( "start", "end" ) ) :
 				if element.tag == "shaderType" and event == "end" :
 					tag = element.find( "tag" )
 					return tag.attrib.get( "value" ) if tag is not None else None
@@ -143,8 +144,13 @@ class RenderManShaderUITest( GafferUITest.TestCase ) :
 					## \todo Add support for these types.
 					self.assertRegex( m.message, 'Spline parameter .* not supported|.* has unsupported type "struct"' )
 
-				# Trigger metadata parsing and ensure there are no errors
-				Gaffer.Metadata.value( node, "description" )
+				for parameter in node["parameters"] :
+					description = Gaffer.Metadata.value( parameter, "description" )
+					if description is not None :
+						self.assertNotIn( "<help>", description )
+						self.assertNotIn( "</help>", description )
+						self.assertNotIn( "{}:".format( parameter.getName() ), description )
+						self.assertEqual( description.count( "<p>" ), description.count( "</p>" ) )
 
 				shadersLoaded.add( argsFile.stem )
 

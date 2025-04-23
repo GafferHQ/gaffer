@@ -519,6 +519,10 @@ void RenderManShader::loadShader( const std::string &shaderName, bool keepExisti
 	{
 		shaderType = "surface";
 	}
+	else if( shaderType == "pattern" )
+	{
+		shaderType = "shader";
+	}
 	else if( shaderType == "lightfilter" )
 	{
 		shaderType = "lightFilter";

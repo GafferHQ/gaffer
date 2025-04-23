@@ -62,6 +62,15 @@ def __shaderMetadata( node, key ) :
 		node["type"].getValue() + ":" + node["name"].getValue(), key
 	)
 
+def __nodeDescriptionMetadata( node ) :
+
+	description =__shaderMetadata( node, "description" )
+	if description :
+		return description
+
+	renderer = node.typeName().rpartition( ":" )[-1].replace( "Shader", "" )
+	return f"Loads {renderer} shaders. Use a ShaderAssignment node to assign the shader to objects in the scene."
+
 def __parameterMetadata( plug, key, shaderFallbackKey = None ) :
 
 	shader = plug.node()
@@ -79,11 +88,7 @@ Gaffer.Metadata.registerNode(
 
 	GafferScene.Shader,
 
-	"description",
-	"""
-	The base type for all nodes which create shaders. Use the
-	ShaderAssignment node to assign them to objects in the scene.
-	""",
+	"description", __nodeDescriptionMetadata,
 
 	"nodeGadget:minWidth", 0.0,
 	"nodeGadget:color", functools.partial( __shaderMetadata, key = "nodeGadget:color" ),
@@ -142,6 +147,15 @@ Gaffer.Metadata.registerNode(
 
 		"parameters.*" : [
 
+			"label", functools.partial( __parameterMetadata, key = "label" ),
+			"description", functools.partial( __parameterMetadata, key = "description" ),
+			"layout:section", functools.partial( __parameterMetadata, key = "layout:section" ),
+			"layout:accessory", functools.partial( __parameterMetadata, key = "layout:accessory" ),
+			"layout:divider", functools.partial( __parameterMetadata, key = "layout:divider" ),
+			"plugValueWidget:type", functools.partial( __parameterMetadata, key = "plugValueWidget:type" ),
+			"presetNames", functools.partial( __parameterMetadata, key = "presetNames" ),
+			"presetValues", functools.partial( __parameterMetadata, key = "presetValues" ),
+			"nodule:type", functools.partial( __parameterMetadata, key = "nodule:type" ),
 			"noduleLayout:visible", functools.partial( __parameterMetadata, key = "noduleLayout:visible", shaderFallbackKey = "noduleLayout:defaultVisibility" ),
 
 		],

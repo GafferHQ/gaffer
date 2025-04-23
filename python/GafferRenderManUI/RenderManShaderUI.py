@@ -37,8 +37,8 @@
 import os
 import functools
 import pathlib
-from xml.etree import cElementTree
 
+import GafferRenderMan.ArgsFileAlgo
 import oslquery
 
 import IECore
@@ -53,77 +53,101 @@ import GafferRenderMan
 # Node menu
 ##########################################################################
 
-def appendShaders( menuDefinition, prefix = "/RenderMan" ) :
-
-	plugins = __plugins()
-
-	menuDefinition.append(
-		prefix + "/Shader",
-		{
-			"subMenu" : functools.partial( __shadersSubMenu, plugins ),
-		}
-	)
-
-	menuDefinition.append(
-		prefix + "/Light",
-		{
-			"subMenu" : functools.partial( __lightsSubMenu, plugins ),
-		}
-	)
-
-	menuDefinition.append(
-		prefix + "/Light Filter",
-		{
-			"subMenu" : functools.partial( __lightFiltersSubMenu, plugins ),
-		}
-	)
-
-def __plugins() :
-
-	result = {}
+def registerMetadata() :
 
 	searchPaths = IECore.SearchPath( os.environ.get( "RMAN_RIXPLUGINPATH", "" ) )
 
-	pathsVisited = set()
-	for path in searchPaths.paths :
+	for path in set( searchPaths.paths ) :
+		for argsFile in pathlib.Path( path ).glob( "**/*.args" ) :
+			GafferRenderMan.ArgsFileAlgo.registerMetadata( argsFile )
 
-		if path in pathsVisited :
-			continue
-		else :
-			pathsVisited.add( path )
+def appendShaders( menuDefinition, prefix = "/RenderMan" ) :
 
-		for root, dirs, files in os.walk( path ) :
-			for file in [ f for f in files  ] :
+	# All RenderMan's C++ shaders have already been registered with Gaffer's
+	# metadata system, so we can look that up to find everything we might want
+	# to create. We just need to sort things so that we get the menus in the
+	# order we want.
 
-				name, extension = os.path.splitext( file )
-				if extension != ".args" :
-					continue
+	def sortKey( metadataTarget ) :
 
-				plugin = __plugin( os.path.join( root, file ) )
-				if plugin is not None :
-					result[name] = plugin
+		_, shaderType, shaderName = metadataTarget.split( ":" )
+		typeIndex = {
+			"surface" : 0,
+			"shader" : 1,
+			"light" : 2,
+			"lightFilter" : 3
+		}
 
-	return result
+		return typeIndex.get( shaderType, 4 ), shaderName
 
-def __plugin( argsFile ) :
+	metadataTargets = Gaffer.Metadata.targetsWithMetadata( "ri:*", "description" )
+	metadataTargets = [ t for t in metadataTargets if t.count( ":" ) == 2 ] # Ignore parameter metadata
+	metadataTargets = sorted( metadataTargets, key = sortKey )
 
-	pluginType = None
-	classification = ""
-	for event, element in cElementTree.iterparse( argsFile, events = ( "start", "end" ) ) :
-		if element.tag == "shaderType" and event == "end" :
-			tag = element.find( "tag" )
-			if tag is not None :
-				pluginType = tag.attrib.get( "value" )
-		elif element.tag == "rfhdata" :
-			classification = element.attrib.get( "classification" )
-
-	if pluginType is None :
-		return None
-
-	return {
-		"type" : pluginType,
-		"classification" : classification
+	toOmit = {
+		# Deprecated in RenderMan 24 - don't let folks become dependent on it.
+		"PxrSeExpr",
+		# Not needed because we combine filters automatically.
+		"PxrDisplayFilterCombiner", "PxrSampleFilterCombiner", "PxrCombinerLightFilter",
+		# These two are deprecated in RenderMan 26, so best not to let folks
+		# get used to them.
+		"PxrGoboLightFilter",
+		"PxrBlockerLightFilter",
+		# This one only seems useful when linked to specific _objects_
+		# (rather than lights), and I'm not sure how to do that yet.
+		"PxrIntMultLightFilter",
 	}
+
+	nodeTypes = {
+		"light" : GafferRenderMan.RenderManLight,
+		"lightFilter" : GafferRenderMan.RenderManLightFilter,
+	}
+
+	nodeCreators = { "PxrMeshLight" : GafferRenderMan.RenderManMeshLight }
+
+	subMenus = {
+		"light" : "Light",
+		"lightFilter" : "Light Filter",
+	}
+
+	for metadataTarget in metadataTargets :
+
+		_, shaderType, shaderName = metadataTarget.split( ":" )
+		if shaderName in toOmit :
+			continue
+
+		nodeType = nodeTypes.get( shaderType, GafferRenderMan.RenderManShader )
+		subMenu = subMenus.get( shaderType )
+		if subMenu is None :
+			subMenu = "Shader/" + Gaffer.Metadata.value( metadataTarget, "classification" )
+
+		menuDefinition.append(
+			f"{prefix}/{subMenu}/{shaderName}",
+			{
+				"command" : GafferUI.NodeMenu.nodeCreatorWrapper(
+					nodeCreators.get( shaderName, functools.partial( __loadShader, shaderName, nodeType ) )
+				)
+			}
+		)
+
+	# Add RenderMan's OSL pattern shaders.
+
+	oslDir = pathlib.Path( os.environ["RMANTREE"] ) / "lib" / "shaders"
+	for shader in sorted( oslDir.glob( "*.oso" ) ) :
+		query = oslquery.OSLQuery( str( shader ) )
+		classification = "Other"
+		for metadata in query.metadata :
+			if metadata.name == "rfh_classification" :
+				classification = metadata.value
+
+		menuDefinition.append(
+			f"{prefix}/Shader/{classification}/{shader.stem}",
+			{
+				"command" : GafferUI.NodeMenu.nodeCreatorWrapper(
+					functools.partial( __loadShader, shader.stem, GafferOSL.OSLShader )
+				)
+			}
+		)
 
 def __loadShader( shaderName, nodeType ) :
 
@@ -131,7 +155,8 @@ def __loadShader( shaderName, nodeType ) :
 	nodeName = nodeName.replace( ".", "" )
 
 	node = nodeType( nodeName )
-	node.loadShader( shaderName )
+	if hasattr( node, "loadShader" ) :
+		node.loadShader( shaderName )
 
 	if isinstance( node, ( GafferRenderMan.RenderManLight, GafferRenderMan.RenderManLightFilter ) ) :
 		node["name"].setValue(
@@ -146,171 +171,11 @@ def __loadShader( shaderName, nodeType ) :
 
 	return node
 
-def __shadersSubMenu( plugins ) :
-
-	result = IECore.MenuDefinition()
-
-	for name, plugin in plugins.items() :
-
-		if name in {
-			# Deprecated in RenderMan 24 - don't let folks become dependent on it.
-			"PxrSeExpr",
-			# Not needed because we combine filters automatically.
-			"PxrDisplayFilterCombiner", "PxrSampleFilterCombiner",
-		} :
-			continue
-
-		if plugin["type"] not in { "bxdf", "pattern", "integrator", "displayfilter", "samplefilter" } :
-			continue
-
-		result.append(
-			"/{0}/{1}".format( plugin["classification"], name ),
-			{
-				"command" : GafferUI.NodeMenu.nodeCreatorWrapper(
-					functools.partial( __loadShader, name, GafferRenderMan.RenderManShader )
-				)
-			}
-		)
-
-	oslDir = pathlib.Path( os.environ["RMANTREE"] ) / "lib" / "shaders"
-	for shader in sorted( oslDir.glob( "*.oso" ) ) :
-		query = oslquery.OSLQuery( str( shader ) )
-		classification = "Other"
-		for metadata in query.metadata :
-			if metadata.name == "rfh_classification" :
-				classification = metadata.value
-
-		result.append(
-			"/{}/{}".format( classification, shader.stem ),
-			{
-				"command" : GafferUI.NodeMenu.nodeCreatorWrapper(
-					functools.partial( __loadShader, shader.stem, GafferOSL.OSLShader )
-				)
-			}
-		)
-
-	return result
-
 GafferSceneUI.ShaderUI.hideShaders( IECore.PathMatcher( [ "/Pxr*" ] ) )
 
-def __lightsSubMenu( plugins ) :
-
-	result = IECore.MenuDefinition()
-
-	for name, plugin in plugins.items() :
-
-		if plugin["type"] != "light" :
-			continue
-
-		result.append(
-			"/" + name,
-			{
-				"command" : GafferUI.NodeMenu.nodeCreatorWrapper(
-					functools.partial( __loadShader, name, GafferRenderMan.RenderManLight )
-					if name != "PxrMeshLight" else
-					GafferRenderMan.RenderManMeshLight
-				)
-			}
-		)
-
-	return result
-
-def __lightFiltersSubMenu( plugins ) :
-
-	result = IECore.MenuDefinition()
-
-	for name, plugin in plugins.items() :
-
-		if plugin["type"] != "lightfilter" :
-			continue
-
-		if name in [
-			# These two are deprecated in RenderMan 26, so best
-			# not to let folks get used to them.
-			"PxrGoboLightFilter",
-			"PxrBlockerLightFilter",
-			# This one only seems useful when linked to specific
-			# _objects_ (rather than lights), and I'm not sure how
-			# to do that yet.
-			"PxrIntMultLightFilter",
-			# Seems more like this isn't intended to be user facing.
-			"PxrCombinerLightFilter",
-		] :
-			continue
-
-		result.append(
-			"/" + name,
-			{
-				"command" : GafferUI.NodeMenu.nodeCreatorWrapper(
-					functools.partial( __loadShader, name, GafferRenderMan.RenderManLightFilter )
-				)
-			}
-		)
-
-	return result
-
 ##########################################################################
-# Metadata. We register dynamic Gaffer.Metadata entries which are
-# implemented as lookups to data queried from .args files.
+# Additional Metadata
 ##########################################################################
-
-__metadataCache = {}
-def __shaderMetadata( node ) :
-
-	global __metadataCache
-
-	if isinstance( node, GafferRenderMan.RenderManLight ) :
-		shaderName = node["__shader"]["name"].getValue()
-	else :
-		shaderName = node["name"].getValue()
-
-	try :
-		return __metadataCache[shaderName]
-	except KeyError :
-		pass
-
-	searchPaths = IECore.SearchPath( os.environ.get( "RMAN_RIXPLUGINPATH", "" ) )
-	argsFile = searchPaths.find( "Args/" + shaderName + ".args" )
-	if argsFile :
-		result = GafferRenderMan.ArgsFileAlgo.parseMetadata( argsFile )
-	else :
-		result = {}
-
-	__metadataCache[shaderName] = result
-	return result
-
-def __parameterMetadata( plug, key ) :
-
-	return __shaderMetadata( plug.node() )["parameters"].get( plug.getName(), {} ).get( key )
-
-def __nodeDescription( node ) :
-
-	if isinstance( node, GafferRenderMan.RenderManShader ) :
-		defaultDescription = """Loads RenderMan shaders. Use the ShaderAssignment node to assign shaders to objects in the scene."""
-	else :
-		defaultDescription = """Loads RenderMan lights."""
-
-	metadata = __shaderMetadata( node )
-	return metadata.get( "description", defaultDescription )
-
-for nodeType in ( GafferRenderMan.RenderManShader, GafferRenderMan.RenderManLight ) :
-
-	Gaffer.Metadata.registerValue( nodeType, "description", __nodeDescription )
-
-	for key in [
-		"label",
-		"description",
-		"layout:section",
-		"plugValueWidget:type",
-		"presetNames",
-		"presetValues",
-		"nodule:type",
-	] :
-
-		Gaffer.Metadata.registerValue(
-			nodeType, "parameters.*", key,
-			functools.partial( __parameterMetadata, key = key )
-		)
 
 Gaffer.Metadata.registerValue( GafferRenderMan.RenderManShader, "out", "nodule:type", lambda plug : "GafferUI::CompoundNodule" if len( plug ) else "GafferUI::StandardNodule" )
 Gaffer.Metadata.registerValue( GafferRenderMan.RenderManLight, "parameters", "layout:section:Basic:collapsed", False )

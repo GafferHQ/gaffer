@@ -61,6 +61,20 @@ def __attributeMetadata( plug, key ) :
 	target = "attribute:" + plug["name"].getValue()
 	return Gaffer.Metadata.value( target, key )
 
+def __parameterMetadata( plug, key ) :
+
+	node = plug.node()
+	shader = node.getChild( "__shader" )
+	if shader is None :
+		## \todo Refactor Light base class to require the usage
+		# of an internal Shader node.
+		return None
+
+	return Gaffer.Metadata.value(
+		shader["type"].getValue() + ":" + shader["name"].getValue() + ":" + plug.relativeName( node["parameters"] ),
+		key
+	)
+
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Light,
@@ -125,6 +139,17 @@ Gaffer.Metadata.registerNode(
 
 		"parameters.*" : [
 
+			"label", functools.partial( __parameterMetadata, key = "label" ),
+			"description", functools.partial( __parameterMetadata, key = "description" ),
+			"layout:section", functools.partial( __parameterMetadata, key = "layout:section" ),
+			"layout:accessory", functools.partial( __parameterMetadata, key = "layout:accessory" ),
+			"layout:divider", functools.partial( __parameterMetadata, key = "layout:divider" ),
+			"plugValueWidget:type", functools.partial( __parameterMetadata, key = "plugValueWidget:type" ),
+			"presetNames", functools.partial( __parameterMetadata, key = "presetNames" ),
+			"presetValues", functools.partial( __parameterMetadata, key = "presetValues" ),
+			"nodule:type", functools.partial( __parameterMetadata, key = "nodule:type" ),
+			"noduleLayout:visible", functools.partial( __parameterMetadata, key = "noduleLayout:visible" ),
+
 			# Although the parameters plug is positioned
 			# as we want above, we must also register
 			# appropriate values for each individual parameter,
@@ -132,6 +157,12 @@ Gaffer.Metadata.registerNode(
 			# individually.
 			"noduleLayout:section", "left",
 			"nodule:type", "",
+
+		],
+
+		"parameters..." : [
+
+			"userDefault", functools.partial( __parameterMetadata, key = "userDefault" ),
 
 		],
 

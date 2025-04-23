@@ -52,7 +52,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 	rmanTree = pathlib.Path( os.environ["RMANTREE"] )
 
 	GafferRenderMan.ArgsFileAlgo.registerMetadata(
-		rmanTree / "lib" / "defaults" / "PRManOptions.args", "option:ri:",
+		rmanTree / "lib" / "defaults" / "PRManOptions.args",
 		parametersToIgnore = {
 			# Gaffer handles all of these in a renderer-agnostic manner.
 			"Ri:Frame",

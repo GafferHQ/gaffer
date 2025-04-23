@@ -152,6 +152,7 @@ for key in [
 	"noduleLayout:label",
 	"layout:divider",
 	"layout:section",
+	"layout:accessory",
 	"presetNames",
 	"presetValues",
 	"plugValueWidget:type",

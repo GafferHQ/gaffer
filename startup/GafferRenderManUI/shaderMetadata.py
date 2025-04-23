@@ -35,10 +35,13 @@
 ##########################################################################
 
 import Gaffer
+import GafferRenderManUI
 
 # RenderManShaderUI derives UI metadata from `.args` files automatically. But
 # this doesn't cover everything we need for a good user experience, so here we
 # manually register additional Gaffer-specific metadata for that.
+
+GafferRenderManUI.RenderManShaderUI.registerMetadata()
 
 shaderMetadata = {
 
@@ -162,6 +165,19 @@ shaderMetadata = {
 
 		"noduleLayout:defaultVisibility" : False,
 
+		"parameters" : {
+
+			"utilityPattern" : {
+
+				# PxrMarschnerHair puts this tidily away in the Globals section,
+				# but PxrLayerSurface and PxrSurface leave it dangling outside.
+				# Tidy it up.
+				"layout:section" : "Globals",
+
+			},
+
+		},
+
 	},
 
 	"ri:surface:PxrMarschnerHair" : {
@@ -186,6 +202,14 @@ shaderMetadata = {
 			k : { "noduleLayout:visible" : True }
 			for k in [ "diffuseGain", "diffuseColor", "specularFaceColor", "specularEdgeColor", "specularRoughness", "subsurfaceColor", "bumpNormal" ]
 
+		} | {
+
+			"utilityPattern" : {
+
+				"layout:section" : "Globals",
+
+			},
+
 		},
 
 	},
@@ -198,6 +222,85 @@ shaderMetadata = {
 
 			k : { "noduleLayout:visible" : True }
 			for k in [ "diffuseColor", "emitColor", "densityFloat", "densityColor" ]
+
+		},
+
+	},
+
+
+	"ri:lightFilter:PxrBarnLightFilter" : {
+
+		"parameters" : {
+
+			"colorRamp" : {
+
+				"nodule:type" : "",
+
+			},
+
+		},
+
+	},
+
+	"ri:lightFilter:PxrCookieLightFilter" : {
+
+		"parameters" : {
+
+			"map" : {
+
+				# The default map is in the `pixar` format and can't be read by OIIO,
+				# which messes up our visualiser.
+				"userDefault" : "",
+
+			},
+
+			"refreshMap" : {
+
+				# Turn into a button and tuck alongside map field.
+				"label" : "",
+				"layout:accessory" : True,
+				"plugValueWidget:type" : "GafferUI.RefreshPlugValueWidget",
+
+			},
+
+			"linearize" : {
+
+				"nodule:type" : "",
+
+			},
+
+		},
+
+	},
+
+	"ri:lightFilter:PxrRodLightFilter" : {
+
+		"parameters" : {
+
+			"colorRamp" : {
+
+				"nodule:type" : "",
+
+			},
+
+		},
+
+	},
+
+	"ri:integrator:PxrUnified" : {
+
+		"parameters" : {
+
+			k : { "nodule:type" : "" }
+			for k in [
+				"accumOpacity", "allowMultilobeIndirect", "catchAllLights", "causticClamp", "directClamp", "emissionMultiplier", "enableSampleTimers",
+				"enableShadingTimers", "enableVolumeCaustics", "indirectClamp", "indirectDirectionalBlurRadius", "indirectOversampling", "indirectSpatialBlurRadius",
+				"indirectTrainingSamples", "jointSampling", "manifoldWalk", "maxIndirectBounces", "maxInterfaces", "maxIterations", "maxNonStochasticOpacityEvents",
+				"maxRayDistance", "numBxdfSamples", "numIndirectSamples", "numLightSamples", "numVolumeAggregateSamples", "photonAdaptive", "photonEstimationNumber",
+				"photonEstimationRadius", "photonVisibilityRod", "photonVisibilityRodDirectProb", "photonVisibilityRodMax", "photonVisibilityRodMin", "risPathGuiding",
+				"rouletteDepth", "rouletteLightDepth", "rouletteThreshold", "sssOversampling", "suppressNaNs", "traceLightPaths", "useTraceDepth", "volumeAggregate",
+				"volumeAggregateNameCamera", "volumeAggregateNameIndirect", "volumeAggregateNameTransmission", "walkThreshold"
+			]
 
 		},
 
@@ -218,5 +321,3 @@ for shader, metadata in shaderMetadata.items() :
 
 			Gaffer.Metadata.registerValue( shader, key, value )
 
-# Reset the map from its default which uses the `pixar` format and can't be read by OIIO.
-Gaffer.Metadata.registerValue( "ri:lightFilter:PxrCookieLightFilter:map", "userDefault", "" )
