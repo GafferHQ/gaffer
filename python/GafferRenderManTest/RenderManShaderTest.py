@@ -167,6 +167,12 @@ class RenderManShaderTest( GafferSceneTest.SceneTestCase ) :
 		shader.loadShader( "PxrDisplace" )
 		self.assertEqual( shader["type"].getValue(), "osl:displacement" )
 
+	def testPatternShaderType( self ) :
+
+		shader = GafferRenderMan.RenderManShader()
+		shader.loadShader( "PxrBakePointCloud" )
+		self.assertEqual( shader["type"].getValue(), "ri:shader" )
+
 	def testUtilityPatternArray( self ) :
 
 		shader = GafferRenderMan.RenderManShader()

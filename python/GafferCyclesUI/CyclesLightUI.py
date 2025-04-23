@@ -37,18 +37,6 @@
 import Gaffer
 import GafferCycles
 
-## \todo Refactor the GafferScene::Light base class so this can be
-# registered there, and work for all subclasses. The main issue is that
-# there is no simple generic way of querying the required "ai:light:"
-# prefix from the subclass.
-def __parameterUserDefault( plug ) :
-
-	light = plug.node()
-	return Gaffer.Metadata.value(
-		"cycles:light:" + light["__shader"]["name"].getValue() + ":" + plug.relativeName( light["parameters"] ),
-		"userDefault"
-	)
-
 Gaffer.Metadata.registerNode(
 
 	GafferCycles.CyclesLight,
@@ -59,12 +47,6 @@ Gaffer.Metadata.registerNode(
 
 			# Most light parameters are not connectable.
 			"nodule:type", "",
-
-		],
-
-		"parameters..." : [
-
-			"userDefault", __parameterUserDefault,
 
 		],
 

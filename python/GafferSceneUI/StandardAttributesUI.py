@@ -272,7 +272,7 @@ Gaffer.Metadata.registerNode(
 			false to disable that, losing the memory savings. This can be useful
 			in certain cases like using world space displacement and wanting multiple
 			copies to displace differently. Disabling is currently only supported by
-			the Arnold render backend.
+			the Arnold and RenderMan renderer backends.
 			""",
 
 			"layout:section", "Instancing",

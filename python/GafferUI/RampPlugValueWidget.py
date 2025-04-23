@@ -126,7 +126,7 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		if self.getPlug() is not None :
 			if result :
-				result += "\n"
+				result += "\n\n"
 			result += "## Actions\n\n"
 			result += "- Click empty space in slider to add handle\n"
 			result += "- Click handle to select\n"

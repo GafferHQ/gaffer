@@ -572,7 +572,7 @@ class _ShadingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			if self.__shadingModeToggle is not None :
 				if result :
-					result += "\n"
+					result += "\n\n"
 				result += "## Actions\n\n"
 				result += "- <kbd>Ctrl</kbd> + click to toggle shading to `{}`\n".format( self.__shadingModeToggle if self.getPlug().isSetToDefault() else "Default" )
 

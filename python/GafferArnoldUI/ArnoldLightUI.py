@@ -39,33 +39,11 @@ import functools
 import Gaffer
 import GafferArnold
 
-# Defer parameter metadata lookups to the internal shader node
-# aside from nodule:type, which we handle manually to prevent
-# some connectable plugs appearing.
-
-## \todo Refactor the GafferScene::Light base class so this can be
-# registered there, and work for all subclasses. The main issue is that
-# there is no simple generic way of querying the required "ai:light:"
-# prefix from the subclass.
-def __parameterUserDefault( plug ) :
-
-	light = plug.node()
-	return Gaffer.Metadata.value(
-		"ai:light:" + light["__shader"]["name"].getValue() + ":" + plug.relativeName( light["parameters"] ),
-		"userDefault"
-	)
-
 Gaffer.Metadata.registerNode(
 
 	GafferArnold.ArnoldLight,
 
 	plugs = {
-
-		"parameters..." : [
-
-			"userDefault", __parameterUserDefault,
-
-		],
 
 		"parameters.*" : [
 
