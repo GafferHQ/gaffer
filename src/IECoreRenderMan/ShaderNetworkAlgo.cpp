@@ -961,9 +961,7 @@ M44f USDLightTransform( const Shader *lightShader )
 	{
 		const float width = parameterValue( lightShader, g_widthParameter, 1.f );
 		const float height = parameterValue( lightShader, g_heightParameter, 1.f );
-		// `IECoreRenderMan::Light` takes care of inverting the z axis. We also need
-		// to invert the x and y axes to keep image maps oriented correctly.
-		return M44f().scale( V3f( -width, -height, 1.f ) );
+		return M44f().scale( V3f( width, height, 1.f ) );
 	}
 	else if( lightShader->getName() == "CylinderLight" )
 	{

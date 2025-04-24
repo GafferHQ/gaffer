@@ -541,7 +541,7 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 		for shader, transform in {
 
 			IECoreScene.Shader( "SphereLight", "light", { "radius" : 2.0 } ) : imath.M44f().scale( imath.V3f( 4.0 ) ),
-			IECoreScene.Shader( "RectLight", "light", { "width" : 20.0, "height" : 60.0 } ) : imath.M44f().scale( imath.V3f( -20.0, -60.0, 1.0 ) ),
+			IECoreScene.Shader( "RectLight", "light", { "width" : 20.0, "height" : 60.0 } ) : imath.M44f().scale( imath.V3f( 20.0, 60.0, 1.0 ) ),
 			IECoreScene.Shader( "DiskLight", "light", { "radius" : 2.0 } ) : imath.M44f().scale( imath.V3f( 4.0 ) ),
 			IECoreScene.Shader( "DistantLight", "light", { "angle" : 2.0 } ) : imath.M44f(),
 			IECoreScene.Shader( "DomeLight", "light", {} ) : imath.M44f(),
