@@ -263,5 +263,11 @@ class RenderManShaderTest( GafferSceneTest.SceneTestCase ) :
 		network = sceneReader["out"].attributes( "/plane" )["ri:surface"]
 		self.assertEqual( network.input( ( "texture", "manifold" ) ), ( "manifold", "result" ) )
 
+	def testShaderTweakProxy( self ) :
+
+		proxy = GafferScene.ShaderTweakProxy()
+		proxy.loadShader( "ri:PxrConstant" )
+		self.assertIn( "bxdf_out", proxy["out"] )
+
 if __name__ == "__main__":
 	unittest.main()
