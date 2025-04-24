@@ -77,6 +77,7 @@ Fixes
   - Fixed compatibility with ShaderTweakProxy.
 - ShaderTweaks : Fixed error when selecting an array element to tweak, such as `utilityPattern[0]` in a PxrSurface shader (#6383).
 - CompoundVectorParameterValueWidget : Fixed being unable to edit certain parameters when there were too many, by adding a horizontal scroll bar.
+- RenderMan Light : Fixed orientation of color maps on `PxrRectLight`.
 
 API
 ---

@@ -65,7 +65,7 @@ M44f correctiveTransform( const IECoreScene::Shader *lightShader )
 	}
 	else
 	{
-		return M44f().scale( V3f( 1, 1, -1 ) );
+		return M44f().scale( V3f( -1 ) );
 	}
 }
 
