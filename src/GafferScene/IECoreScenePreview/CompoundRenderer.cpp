@@ -39,9 +39,58 @@
 #include "IECore/VectorTypedData.h"
 
 #include "boost/algorithm/string/predicate.hpp"
+#include "boost/container/flat_map.hpp"
+#include "boost/container/static_vector.hpp"
+
+#include <mutex>
 
 using namespace std;
 using namespace IECoreScenePreview;
+
+//////////////////////////////////////////////////////////////////////////
+// ObjectSets class declaration
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+// Manages the decomposition of ObjectSets of CompoundObjectInterfaces into
+// regular ObjectSets of ObjectInterfaces for each renderer.
+struct ObjectSets
+{
+
+	using WeakObjectSetPtr = std::weak_ptr<const IECoreScenePreview::Renderer::ObjectSet>;
+
+	// Array of ObjectSets, one per renderer.
+	using ObjectSetArray = std::array<IECoreScenePreview::Renderer::ConstObjectSetPtr, 2>;
+
+	ObjectSetArray registerObjectSet( const IECoreScenePreview::Renderer::ConstObjectSetPtr &objectSet );
+	void deregisterObjectSet( const WeakObjectSetPtr &objectSet );
+
+	// Everyone can share the same static instance, because lifetimes
+	// of the internal data are governed entirely by ObjectInterface
+	// lifetimes (via `deregisterObjectSet()`). This avoids the Renderer
+	// needing to own an instance and passing the pointer to every single
+	// CompoundObjectInterface.
+	static ObjectSets &instance();
+
+	private :
+
+		struct ObjectSetData
+		{
+			size_t useCount = 0;
+			ObjectSetArray objectSetArray;
+		};
+
+		/// \todo Use `unordered_map` (or `concurrent_unordered_map`) when `std::owner_hash()`
+		/// becomes available (in C++26).
+		using ObjectSetDataMap = std::map<WeakObjectSetPtr, ObjectSetData, std::owner_less<WeakObjectSetPtr>>;
+		std::mutex m_mutex;
+		ObjectSetDataMap m_objectSetData;
+
+};
+
+} // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // Internal object types
@@ -71,6 +120,23 @@ struct CompoundAttributesInterface : public IECoreScenePreview::Renderer::Attrib
 
 struct CompoundObjectInterface : public IECoreScenePreview::Renderer::ObjectInterface
 {
+
+	~CompoundObjectInterface()
+	{
+		if( m_links.empty() )
+		{
+			return;
+		}
+
+		ObjectSets &objectSets = ObjectSets::instance();
+		for( const auto &[type, s] : m_links )
+		{
+			if( s )
+			{
+				objectSets.deregisterObjectSet( s );
+			}
+		}
+	}
 
 	void transform( const Imath::M44f &transform ) override
 	{
@@ -107,26 +173,33 @@ struct CompoundObjectInterface : public IECoreScenePreview::Renderer::ObjectInte
 		return true;
 	}
 
-	void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &compoundObjectSet ) override
+	void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objectSet ) override
 	{
+		Renderer::ConstObjectSetPtr &current = m_links[type];
+		if( current == objectSet )
+		{
+			return;
+		}
+
+		ObjectSets &objectSets = ObjectSets::instance();
+		if( current )
+		{
+			objectSets.deregisterObjectSet( current );
+		}
+
+		current = objectSet;
+
+		ObjectSets::ObjectSetArray array;
+		if( current )
+		{
+			array = objectSets.registerObjectSet( objectSet );
+		}
+
 		for( size_t i = 0; i < objects.size(); ++i )
 		{
-			if( !objects[i] )
+			if( objects[i] )
 			{
-				continue;
-			}
-			else if( !compoundObjectSet )
-			{
-				objects[i]->link( type, nullptr );
-			}
-			else
-			{
-				auto objectSet = std::make_shared<Renderer::ObjectSet>();
-				for( auto &o : *compoundObjectSet )
-				{
-					objectSet->insert( static_cast<CompoundObjectInterface *>( o.get() )->objects[i] );
-				}
-				objects[i]->link( type, objectSet );
+				objects[i]->link( type, array[i] );
 			}
 		}
 	}
@@ -145,9 +218,82 @@ struct CompoundObjectInterface : public IECoreScenePreview::Renderer::ObjectInte
 	/// See comment for CompoundAttributesInterface::attributes.
 	std::array<IECoreScenePreview::Renderer::ObjectInterfacePtr, 2> objects;
 
+	private :
+
+		// We don't anticipate more than a couple of link types per object, so use
+		// a sorted static vector to store links without the overhead of allocations.
+		using LinkMap = boost::container::flat_map<
+			IECore::InternedString, Renderer::ConstObjectSetPtr, std::less<IECore::InternedString>,
+			boost::container::static_vector<std::pair<IECore::InternedString, Renderer::ConstObjectSetPtr>, 3>
+		>;
+
+		LinkMap m_links;
+
 };
 
 IE_CORE_DECLAREPTR( CompoundObjectInterface )
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// ObjectSets implementation
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+ObjectSets::ObjectSetArray ObjectSets::registerObjectSet( const Renderer::ConstObjectSetPtr &objectSet )
+{
+	std::lock_guard guard( m_mutex );
+	ObjectSetData &data = m_objectSetData[objectSet];
+	data.useCount++;
+	if( data.useCount == 1 )
+	{
+		// First usage of this set. Initialise an array of sets for each
+		// renderer.
+		std::array<Renderer::ObjectSetPtr, 2> mutableSets;
+		for( auto &o : mutableSets )
+		{
+			o = std::make_shared<Renderer::ObjectSet>();
+		}
+
+		for( const auto &object : *objectSet )
+		{
+			auto compoundObject = static_cast<const CompoundObjectInterface *>( object.get() );
+			for( size_t i = 0; i < compoundObject->objects.size(); ++i )
+			{
+				if( compoundObject->objects[i] )
+				{
+					mutableSets[i]->insert( compoundObject->objects[i] );
+				}
+			}
+
+		}
+		// Transfer into immutable sets for storage.
+		std::copy( mutableSets.begin(), mutableSets.end(), data.objectSetArray.begin() );
+	}
+
+	return data.objectSetArray;
+}
+
+void ObjectSets::deregisterObjectSet( const ObjectSets::WeakObjectSetPtr &objectSet )
+{
+	std::lock_guard guard( m_mutex );
+	auto it = m_objectSetData.find( objectSet );
+	assert( it != m_objectSetData.end() );
+	assert( it->second.useCount );
+	it->second.useCount--;
+	if( !it->second.useCount )
+	{
+		m_objectSetData.erase( it );
+	}
+}
+
+ObjectSets &ObjectSets::instance()
+{
+	static ObjectSets g_instance;
+	return g_instance;
+}
 
 } // namespace
 
