@@ -38,6 +38,8 @@
 
 #include "GafferRenderMan/BXDFPlug.h"
 
+#include "GafferScene/ShaderTweakProxy.h"
+
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/PlugAlgo.h"
@@ -77,6 +79,13 @@ RenderManShader::RenderManShader( const std::string &name )
 RenderManShader::~RenderManShader()
 {
 }
+
+namespace
+{
+
+ShaderTweakProxy::ShaderLoaderDescription<RenderManShader> g_shaderTweakProxyRegistration( "ri" );
+
+} // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // Shader-specific overrides

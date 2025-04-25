@@ -18,6 +18,7 @@ Fixes
 - RenderManShader :
   - Fixed export of struct connections to USD, including connections to `PxrTexture.manifold`.
   - Fixed loading of C++ pattern shaders such as `aaOceanPrmanShader`.
+  - Fixed compatibility with ShaderTweakProxy.
 - ShaderTweaks : Fixed error when selecting an array element to tweak, such as `utilityPattern[0]` in a PxrSurface shader (#6383).
 - CompoundVectorParameterValueWidget : Fixed being unable to edit certain parameters when there were too many, by adding a horizontal scroll bar.
 
