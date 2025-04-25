@@ -218,5 +218,50 @@ class RenderManShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( shader["parameters"]["subsurfaceColor"].hasMaxValue() )
 		self.assertEqual( shader["parameters"]["subsurfaceColor"].maxValue(), imath.Color3f( 1 ) )
 
+	def testManifoldConnections( self ) :
+
+		# This is testing OSLShader and USDScene more than RenderManShader,
+		# but it is testing stuff essential to the operation of the Pxr
+		# shaders.
+
+		manifold = GafferOSL.OSLShader( "manifold" )
+		manifold.loadShader( "PxrManifold2D" )
+
+		texture = GafferOSL.OSLShader( "texture" )
+		texture.loadShader( "PxrTexture" )
+		texture["parameters"]["manifold"].setInput( manifold["out"]["result"] )
+
+		constant = GafferRenderMan.RenderManShader( "constant" )
+		constant.loadShader( "PxrConstant" )
+		constant["parameters"]["emitColor"].setInput( texture["out"]["resultRGB"] )
+
+		plane = GafferScene.Plane()
+
+		shaderAssignment = GafferScene.ShaderAssignment()
+		shaderAssignment["in"].setInput( plane["out"] )
+		shaderAssignment["shader"].setInput( constant["out"]["bxdf_out"] )
+
+		# Our generic OSL support allows individual struct fields to have values
+		# and connections, but USD just treats structs as atomic types that can
+		# be connected as a whole but don't really have child fields. Check that
+		# we have a top-level connection that works in that world.
+
+		network = shaderAssignment["out"].attributes( "/plane" )["ri:surface"]
+		self.assertEqual( network.input( ( "texture", "manifold" ) ), ( "manifold", "result" ) )
+
+		# Write to USD and read back. Check that we still have the top-level
+		# connection.
+
+		sceneWriter = GafferScene.SceneWriter()
+		sceneWriter["in"].setInput( shaderAssignment["out"] )
+		sceneWriter["fileName"].setValue( self.temporaryDirectory() / "test.usda" )
+		sceneWriter["task"].execute()
+
+		sceneReader = GafferScene.SceneReader()
+		sceneReader["fileName"].setInput( sceneWriter["fileName"] )
+
+		network = sceneReader["out"].attributes( "/plane" )["ri:surface"]
+		self.assertEqual( network.input( ( "texture", "manifold" ) ), ( "manifold", "result" ) )
+
 if __name__ == "__main__":
 	unittest.main()
