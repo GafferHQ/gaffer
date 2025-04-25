@@ -45,7 +45,7 @@ import Gaffer
 ## \todo I think we'd be better off with some dedicated visualisers instead.
 
 for type in [
-	"PxrCylinderLight", "PxrDomeLight", "PxrDiskLight", "PxrDistantLight",
+	"PxrCylinderLight", "PxrDiskLight", "PxrDistantLight",
 	"PxrEnvDayLight", "PxrMeshLight", "PxrSphereLight",
 ] :
 
@@ -54,15 +54,12 @@ for type in [
 	Gaffer.Metadata.registerValue( "ri:light:" + type, "colorParameter", "lightColor" )
 
 Gaffer.Metadata.registerValue( "ri:light:PxrCylinderLight", "type", "cylinder" )
-Gaffer.Metadata.registerValue( "ri:light:PxrDomeLight", "type", "environment" )
 Gaffer.Metadata.registerValue( "ri:light:PxrDiskLight", "type", "disk" )
 Gaffer.Metadata.registerValue( "ri:light:PxrEnvDayLight", "type", "environment" )
 Gaffer.Metadata.registerValue( "ri:light:PxrDistantLight", "type", "distant" )
 Gaffer.Metadata.registerValue( "ri:light:PxrMeshLight", "type", "mesh" )
 Gaffer.Metadata.registerValue( "ri:light:PxrPortalLight", "type", "portal" )
 Gaffer.Metadata.registerValue( "ri:light:PxrSphereLight", "type", "point" )
-
-Gaffer.Metadata.registerValue( "ri:light:PxrDomeLight", "textureNameParameter", "lightColorMap" )
 
 Gaffer.Metadata.registerValue( "ri:light:PxrCylinderLight", "visualiserOrientation", imath.M44f().rotate( imath.V3f( 0, 0.5 * math.pi, 0 ) ).scale( 0.5 ) )
 Gaffer.Metadata.registerValue( "ri:light:PxrDiskLight", "visualiserOrientation", imath.M44f().scale( 0.5 ) )
