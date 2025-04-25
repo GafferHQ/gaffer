@@ -453,6 +453,10 @@ class Shader::NetworkBuilder
 		{
 			if( !isLeafParameter( parameter ) || parameter->parent<Node>() )
 			{
+				if( !parameter->parent<Node>() )
+				{
+					hashParameter( parameter, h );
+				}
 				// Compound parameter - recurse
 				for( Plug::InputIterator it( parameter ); !it.done(); ++it )
 				{
@@ -478,6 +482,15 @@ class Shader::NetworkBuilder
 		{
 			if( !isLeafParameter( parameter ) || parameter->parent<Node>() )
 			{
+				if( !parameter->parent<Node>() )
+				{
+					// Needed to add top-level connections between OSL struct parameters.
+					/// \todo Refactor recursion so this happens more naturally, and so that
+					/// we don't redundantly store the connections between each field
+					/// of the struct as well.
+					addParameter( parameter, parameterName, shader, connections );
+				}
+
 				// Compound parameter - recurse
 				for( Plug::InputIterator it( parameter ); !it.done(); ++it )
 				{

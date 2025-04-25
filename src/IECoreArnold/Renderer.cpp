@@ -3620,7 +3620,7 @@ class ArnoldGlobals
 
 				}
 #else
-				IECore::msg( IECore::Msg::Error, "ArnoldRenderer::option()", fmt::format( "\"\" requires Arnold 7.4 or later", g_reportFileNameOptionName.string() ) );
+				IECore::msg( IECore::Msg::Error, "ArnoldRenderer::option()", fmt::format( "\"{}\" requires Arnold 7.4 or later", g_reportFileNameOptionName.string() ) );
 #endif
 				return;
 			}

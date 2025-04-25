@@ -229,6 +229,7 @@ class _VectorDataWidget( GafferUI.VectorDataWidget ) :
 			columnToolTips = columnToolTips,
 			showIndices = showIndices,
 			sizeEditable = sizeEditable,
+			horizontalScrollMode=GafferUI.ScrollMode.Automatic,
 		)
 
 	# Reimplemented to tie the ParameterValueWidget.popupMenuSignal()
