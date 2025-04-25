@@ -172,7 +172,28 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 
 	Visualisations result;
 
-	if( lightShader->getName() == "PxrRectLight" )
+	if( lightShader->getName() == "PxrDomeLight" )
+	{
+		if( drawShaded )
+		{
+			const std::string lightColorMap = drawTextured ? parameterOrDefault( lightParameters, g_lightColorMapParameter, std::string() ) : "";
+			ConstDataPtr textureData = lightColorMap.empty() ? nullptr : new StringData( lightColorMap );
+
+			result.push_back(
+				Visualisation::createOrnament(
+					LightVisualiserAlgo::environmentSphereSurface( textureData, color, saturation, gamma, maxTextureResolution, color ),
+					true,  // affectsFramingBound
+					Visualisation::ColorSpace::Scene
+				)
+			);
+		}
+		result.push_back( Visualisation::createOrnament(
+			LightVisualiserAlgo::sphereWireframe( 1.05f, Vec3<bool>( true ), 1.0f, V3f( 0.0f ), muted ),
+			true  // affectsFramingBound
+		) );
+	}
+
+	else if( lightShader->getName() == "PxrRectLight" )
 	{
 		if( drawShaded )
 		{
