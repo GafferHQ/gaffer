@@ -4,7 +4,7 @@
 Features
 --------
 
-* Arnold : Added multi-layer EXR support. All outputs with the same filename are now written to the same file via a single output driver.
+- Arnold : Added multi-layer EXR support. All outputs with the same filename are now written to the same file via a single output driver.
 
 Improvements
 ------------
