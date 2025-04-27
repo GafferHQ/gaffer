@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+#include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 
 #include "Gaffer/Private/IECorePreview/LRUCache.h"
 
@@ -58,6 +59,8 @@
 #include "tbb/concurrent_hash_map.h"
 
 #include "fmt/format.h"
+
+#include <filesystem>
 
 #include <unordered_map>
 
@@ -185,7 +188,14 @@ class DelightHandle
 
 		~DelightHandle()
 		{
-			reset();
+			if( boost::starts_with( m_name, "capsule_instance:" ) )
+			{
+				resetRecursive();
+			}
+			else
+			{
+				reset();
+			}
 		}
 
 		DelightHandle &operator=( DelightHandle &&h )
@@ -217,6 +227,17 @@ class DelightHandle
 			if( m_ownership == Owned && m_context != NSI_BAD_CONTEXT )
 			{
 				NSIDelete( m_context, m_name.c_str(), 0, nullptr );
+			}
+			release();
+		}
+
+		void resetRecursive()
+		{
+			const int one = 1;
+			NSIParam_t param = { "recursive", &one, NSITypeInteger, 0, 1, 0 };
+			if( m_ownership == Owned && m_context != NSI_BAD_CONTEXT )
+			{
+				NSIDelete( m_context, m_name.c_str(), 1, &param );
 			}
 			release();
 		}
@@ -766,17 +787,15 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 
 			NSISetAttribute( m_handle.context(), m_handle.name(), params.size(), params.data() );
 
-			if( !m_surfaceShader )
+			if( m_surfaceShader )
 			{
-				m_surfaceShader = shaderCache->defaultSurface();
+				NSIConnect(
+					context,
+					m_surfaceShader->handle().name(), "",
+					m_handle.name(), "surfaceshader",
+					0, nullptr
+				);
 			}
-
-			NSIConnect(
-				context,
-				m_surfaceShader->handle().name(), "",
-				m_handle.name(), "surfaceshader",
-				0, nullptr
-			);
 
 			if( m_volumeShader )
 			{
@@ -915,6 +934,8 @@ class AttributesCache : public IECore::RefCounted
 
 IE_CORE_DECLAREPTR( AttributesCache )
 
+AttributesCachePtr globalAttributesCachePtr;
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -923,6 +944,9 @@ IE_CORE_DECLAREPTR( AttributesCache )
 
 namespace
 {
+
+// Forward declaration
+bool convertProcedural( IECoreScenePreview::ConstProceduralPtr procedural, NSIContext_t context, DelightHandle::Ownership ownership, const char *handle );
 
 class InstanceCache : public IECore::RefCounted
 {
@@ -944,7 +968,19 @@ class InstanceCache : public IECore::RefCounted
 			if( !a->second )
 			{
 				const std::string &name = "instance:" + hash.toString();
-				if( NodeAlgo::convert( object, m_context, name.c_str() ) )
+
+				if( const IECoreScenePreview::Procedural *procedural = IECore::runTimeCast<const IECoreScenePreview::Procedural>( object ) )
+				{
+					if( convertProcedural( procedural, m_context, m_ownership, name.c_str() ) )
+					{
+						a->second = make_shared<DelightHandle>( m_context, "capsule_" + name, m_ownership );
+					}
+					else
+					{
+						a->second = nullptr;
+					}
+				}
+				else if( NodeAlgo::convert( object, m_context, name.c_str() ) )
 				{
 					a->second = make_shared<DelightHandle>( m_context, name, m_ownership );
 				}
@@ -976,7 +1012,19 @@ class InstanceCache : public IECore::RefCounted
 			if( !a->second )
 			{
 				const std::string &name = "instance:" + hash.toString();
-				if( NodeAlgo::convert( samples, times, m_context, name.c_str() ) )
+
+				if( const IECoreScenePreview::Procedural *procedural = IECore::runTimeCast<const IECoreScenePreview::Procedural>( samples.front() ) )
+				{
+					if( convertProcedural( procedural, m_context, m_ownership, name.c_str() ) )
+					{
+						a->second = make_shared<DelightHandle>( m_context, "capsule_" + name, m_ownership );
+					}
+					else
+					{
+						a->second = nullptr;
+					}
+				}
+				else if( NodeAlgo::convert( samples, times, m_context, name.c_str() ) )
 				{
 					a->second = make_shared<DelightHandle>( m_context, name, m_ownership );
 				}
@@ -1021,6 +1069,8 @@ class InstanceCache : public IECore::RefCounted
 
 IE_CORE_DECLAREPTR( InstanceCache )
 
+InstanceCachePtr globalInstanceCachePtr;
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -1035,7 +1085,7 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 
 	public :
 
-		DelightObject( NSIContext_t context, const std::string &name, DelightHandleSharedPtr instance, DelightHandle::Ownership ownership )
+		DelightObject( NSIContext_t context, const std::string &name, DelightHandleSharedPtr instance, DelightHandle::Ownership ownership, std::string root = NSI_SCENE_ROOT )
 			:	m_transformHandle( context, name, ownership, "transform", {} ), m_instance( instance ), m_haveTransform( false )
 		{
 			if( m_instance )
@@ -1051,7 +1101,7 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 			NSIConnect(
 				m_transformHandle.context(),
 				m_transformHandle.name(), "",
-				NSI_SCENE_ROOT, "objects",
+				root.c_str(), "objects",
 				0, nullptr
 			);
 		}
@@ -1197,8 +1247,8 @@ class DelightLight : public DelightObject
 
 	public :
 
-		DelightLight( NSIContext_t context, const std::string &name, DelightHandleSharedPtr instance, DelightHandle::Ownership ownership )
-			: DelightObject( context, name, instance, ownership ), m_lightGeometryType( nullptr )
+		DelightLight( NSIContext_t context, const std::string &name, DelightHandleSharedPtr instance, DelightHandle::Ownership ownership, std::string root = NSI_SCENE_ROOT  )
+			: DelightObject( context, name, instance, ownership, root ), m_lightGeometryType( nullptr )
 		{
 		}
 
@@ -1286,6 +1336,196 @@ class DelightLight : public DelightObject
 };
 
 IE_CORE_DECLAREPTR( DelightLight );
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// DelightProceduralRenderer
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+IE_CORE_FORWARDDECLARE( DelightProceduralRenderer )
+
+class DelightProceduralRenderer final : public IECoreScenePreview::Renderer
+{
+
+	public :
+
+		DelightProceduralRenderer( NSIContext_t context, DelightHandle::Ownership ownership, const char *handle )
+			:	m_context( context ), m_ownership( ownership ), m_frame( 1 ), m_root( handle )
+		{
+			vector<NSIParam_t> params;
+
+			if ( m_ownership == DelightHandle::Owned )
+			{
+				m_instanceCache = new InstanceCache( m_context, DelightHandle::Unowned );
+				m_attributesCache = new AttributesCache( m_context, DelightHandle::Unowned );
+			}
+			else
+			{
+				m_instanceCache = globalInstanceCachePtr;
+				m_attributesCache = globalAttributesCachePtr;
+			}
+		}
+
+		~DelightProceduralRenderer() override
+		{
+			if ( m_ownership == DelightHandle::Owned )
+			{
+				m_attributesCache.reset();
+				m_instanceCache.reset();
+			}
+		}
+
+		IECore::InternedString name() const override
+		{
+			return "3Delight";
+		}
+
+		void option( const IECore::InternedString &name, const IECore::Object *value ) override
+		{
+			IECore::msg( IECore::Msg::Warning, "DelightRenderer", "Procedurals can not call option()" );
+		}
+
+		void output( const IECore::InternedString &name, const IECoreScene::Output *output ) override
+		{
+			IECore::msg( IECore::Msg::Warning, "DelightRenderer", "Procedurals can not call output()" );
+		}
+
+		Renderer::AttributesInterfacePtr attributes( const IECore::CompoundObject *attributes ) override
+		{
+			IECore::CompoundObject* fullAttributes = new IECore::CompoundObject;
+			for( const auto &a : attributes->members() )
+			{
+				fullAttributes->members()[a.first] = a.second;
+			}
+			return m_attributesCache->get( fullAttributes );
+		}
+
+		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
+		{
+			IECore::msg( IECore::Msg::Warning, "DelightRenderer", "Procedurals can not call camera()" );
+			return nullptr;
+		}
+
+		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
+		{
+
+			DelightHandleSharedPtr instance;
+			if( object )
+			{
+				instance = m_instanceCache->get( object );
+			}
+
+			ObjectInterfacePtr result = new DelightLight( m_context, "/" + m_root + name, instance, DelightHandle::Unowned, m_root );
+			result->attributes( attributes );
+
+			return result;
+		}
+
+		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
+		{
+			return nullptr;
+		}
+
+		Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
+		{
+			if( !object )
+			{
+				return nullptr;
+			}
+
+			DelightHandleSharedPtr instance = m_instanceCache->get( object );
+			if( !instance )
+			{
+				return nullptr;
+			}
+
+			ObjectInterfacePtr result = new DelightObject( m_context, "/" + m_root + name, instance, DelightHandle::Unowned, m_root );
+			result->attributes( attributes );
+			return result;
+		}
+
+		ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) override
+		{
+
+			DelightHandleSharedPtr instance = m_instanceCache->get( samples, times );
+			if( !instance )
+			{
+				return nullptr;
+			}
+
+			ObjectInterfacePtr result = new DelightObject( m_context, "/" + m_root + name, instance, DelightHandle::Unowned, m_root );
+			result->attributes( attributes );
+			return result;
+		}
+
+		void render() override
+		{
+			m_instanceCache->clearUnused();
+			m_attributesCache->clearUnused();
+
+			const char *start = "start";
+			vector<NSIParam_t> params = {
+				{ "action", &start, NSITypeString, 0, 1, 0 },
+				{ "frame", &m_frame, NSITypeInteger, 0, 1, 0 }
+			};
+
+			NSIRenderControl(
+				m_context,
+				params.size(), params.data()
+			);
+		}
+
+		void pause() override
+		{
+			// In theory we could use NSIRenderControl "suspend"
+			// here, but despite documenting it, 3delight does not
+			// support it. Instead we let 3delight waste cpu time
+			// while we make our edits.
+		}
+
+	private :
+
+		NSIContext_t m_context;
+		DelightHandle::Ownership m_ownership;
+
+		int m_frame;
+		std::string m_root;
+
+		InstanceCachePtr m_instanceCache;
+		AttributesCachePtr m_attributesCache;
+
+		// Registration with factory
+
+		static Renderer::TypeDescription<DelightProceduralRenderer> g_typeDescription;
+
+};
+
+IE_CORE_DECLAREPTR( DelightProceduralRenderer )
+
+bool convertProcedural( IECoreScenePreview::ConstProceduralPtr procedural, NSIContext_t context, DelightHandle::Ownership ownership, const char *handle )
+{
+	std::string caphandle = handle;
+	caphandle = "capsule_" + caphandle;
+
+	NSICreate( context, caphandle.c_str(), "transform", 0, nullptr );
+
+	DelightProceduralRendererPtr renderer = new DelightProceduralRenderer( context, ownership, caphandle.c_str() );
+
+	tbb::this_task_arena::isolate(
+		// Isolate in case procedural spawns TBB tasks, because
+		// `convertProcedural()` is called behind a lock in
+		// `InstanceCache.get()`.
+		[&]() {
+			procedural->render( renderer.get() );
+		}
+	);
+
+	return true;
+}
 
 } // namespace
 
@@ -1405,7 +1645,9 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 			m_context = NSIBegin( params.size(), params.data() );
 			m_instanceCache = new InstanceCache( m_context, ownership() );
+			globalInstanceCachePtr = m_instanceCache;
 			m_attributesCache = new AttributesCache( m_context, ownership() );
+			globalAttributesCachePtr = m_attributesCache;
 
 			NSICreate( m_context, g_screenHandle, "screen", 0, nullptr );
 		}
