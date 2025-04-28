@@ -177,6 +177,102 @@ class RendererTest( GafferTest.TestCase ) :
 
 		del plane, light
 
+	def testRecycleLightGroups( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testRecycleLightGroups",
+				}
+			)
+		)
+
+		plane = renderer.object(
+			"/plane",
+			IECoreScene.MeshPrimitive.createPlane(
+				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			),
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface" )
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		## \todo Default camera is facing down +ve Z but should be facing
+		# down -ve Z.
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+
+		# Cycles only has 64 distinct light groups, so if more than 64 unique
+		# sets of light links are used, we can't translate the scene accurately.
+		# So for interactive use, we need to be careful to recycle old light
+		# groups to make way for new ones. Here we make 200 unique light sets,
+		# but with only a single one in use at the end, to check that the
+		# recycling works.
+
+		for i in range( 0, 200 ) :
+
+			redLight = renderer.light(
+				"/redLight",
+				None,
+				renderer.attributes( IECore.CompoundObject ( {
+					"cycles:light" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"output" : IECoreScene.Shader( "distant_light", "cycles:light", { "color" : imath.Color3f( 1, 0, 0 ) } ),
+						},
+						output = "output",
+					),
+				} ) )
+			)
+			redLight.transform( imath.M44f().rotate( imath.V3f( 0, math.pi, 0 ) ) )
+
+			greenLight = renderer.light(
+				"/redLight",
+				None,
+				renderer.attributes( IECore.CompoundObject ( {
+					"cycles:light" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"output" : IECoreScene.Shader( "distant_light", "cycles:light", { "color" : imath.Color3f( 0, 1, 0 ) } ),
+						},
+						output = "output",
+					),
+				} ) )
+			)
+			greenLight.transform( imath.M44f().rotate( imath.V3f( 0, math.pi, 0 ) ) )
+
+			plane.link( "lights", { redLight } )
+
+		# Render, and check that we have a pure red image. If green has crept in,
+		# then we know the light linking was broken.
+
+		renderer.render()
+		time.sleep( 1 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testRecycleLightGroups" )
+		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+
+		IECoreImage.ImageWriter( image, "/tmp/test.exr" ).write()
+
+		# Slightly off-centre, to avoid triangle edge artifact in centre of image.
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
+		self.assertGreater( testPixel.r, 0 )
+		self.assertEqual( testPixel.g, 0 )
+		self.assertEqual( testPixel.b, 0 )
+
+		del plane, redLight, greenLight
+
 	def testLightWithoutAttribute( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )

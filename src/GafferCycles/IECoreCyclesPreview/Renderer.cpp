@@ -1852,6 +1852,11 @@ class LightCache : public IECore::RefCounted
 			ccl::Light *light = new ccl::Light();
 			light->name = nodeName.c_str();
 			light->set_owner( m_scene );
+			// All lights are always in the first set, which we use for objects
+			// which don't have any linking applied. But we only add lights to
+			// other sets as they are created by the LightLinker in response to
+			// calls to `CyclesObject::link()`.
+			light->set_light_set_membership( 1 );
 			light->tag_update( m_scene );
 			auto clight = SharedCLightPtr( light, nullNodeDeleter );
 
@@ -1982,28 +1987,88 @@ IE_CORE_DECLAREPTR( CameraCache )
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
+// LightLinker definition
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+class LightLinker
+{
+
+	public :
+
+		uint32_t registerLightLinks( const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights );
+		void deregisterLightLinks( const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights );
+
+	private :
+
+		using WeakObjectSetPtr = std::weak_ptr<const IECoreScenePreview::Renderer::ObjectSet>;
+
+		struct LightSet
+		{
+			size_t useCount = 0;
+			uint32_t index;
+		};
+
+		/// \todo Use `unordered_map` (or `concurrent_unordered_map`) when `std::owner_hash()`
+		/// becomes available (in C++26).
+		using LightSets = std::map<WeakObjectSetPtr, LightSet, std::owner_less<WeakObjectSetPtr>>;
+		std::mutex m_mutex;
+		LightSets m_lightSets;
+		uint64_t m_usedIndices = 1;
+
+};
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
 // CyclesObject
 //////////////////////////////////////////////////////////////////////////
 
 namespace
 {
 
+const IECore::InternedString g_lights( "lights" );
+
 class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 {
 
 	public :
 
-		CyclesObject( ccl::Session *session, const Instance &instance, const float frame )
-			:	m_session( session ), m_instance( instance ), m_frame( frame ), m_attributes( nullptr )
+		CyclesObject( ccl::Session *session, const Instance &instance, const float frame, LightLinker *lightLinker )
+			:	m_session( session ), m_instance( instance ), m_frame( frame ), m_attributes( nullptr ), m_lightLinker( lightLinker )
 		{
 		}
 
 		~CyclesObject() override
 		{
+			if( m_linkedLights )
+			{
+				m_lightLinker->deregisterLightLinks( m_linkedLights );
+			}
 		}
 
 		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override
 		{
+			if( type != g_lights || !m_instance.object() )
+			{
+				return;
+			}
+
+			if( m_linkedLights )
+			{
+				m_lightLinker->deregisterLightLinks( m_linkedLights );
+			}
+			m_linkedLights = objects;
+
+			uint32_t lightSet = 0;
+			if( m_linkedLights )
+			{
+				lightSet = m_lightLinker->registerLightLinks( m_linkedLights );
+			}
+
+			m_instance.object()->set_receiver_light_set( lightSet );
 		}
 
 		void transform( const Imath::M44f &transform ) override
@@ -2192,6 +2257,8 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 		Instance m_instance;
 		const float m_frame;
 		ConstCyclesAttributesPtr m_attributes;
+		LightLinker *m_lightLinker;
+		IECoreScenePreview::Renderer::ConstObjectSetPtr m_linkedLights;
 
 };
 
@@ -2264,6 +2331,19 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 			/// \todo Implement me
 		}
 
+		// Used by LightLinker
+		// ===================
+
+		uint64_t getLightSetMembership() const
+		{
+			return m_light->get_light_set_membership();
+		}
+
+		void setLightSetMembership( uint64_t membership )
+		{
+			m_light->set_light_set_membership( membership );
+		}
+
 	private :
 
 		ccl::Session *m_session;
@@ -2273,6 +2353,90 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 };
 
 IE_CORE_DECLAREPTR( CyclesLight )
+
+} // namespace
+
+
+//////////////////////////////////////////////////////////////////////////
+// LightLinker definition
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+uint64_t indexToMask( int index )
+{
+	return uint64_t( 1 ) << index;
+}
+
+uint32_t LightLinker::registerLightLinks( const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights )
+{
+	std::lock_guard lock( m_mutex );
+	LightSet &lightSet = m_lightSets[lights];
+	lightSet.useCount++;
+	if( lightSet.useCount == 1 )
+	{
+		// First usage of this set. Find an unused index.
+		for( int i = 1; i < LIGHT_LINK_SET_MAX; ++i )
+		{
+			if( ( m_usedIndices & indexToMask( i ) ) == 0 )
+			{
+				lightSet.index = i;
+				m_usedIndices = m_usedIndices | indexToMask( i );
+				break;
+			}
+		}
+
+		if( lightSet.index != 0 )
+		{
+			// Assign membership to lights. Note that we rely on `lock` here to
+			// prevent concurrent modification to the lights from multiple calls
+			// to `registerLightLinks()`.
+			for( const auto &object : *lights )
+			{
+				auto light = static_cast<CyclesLight *>( object.get() );
+				light->setLightSetMembership(
+					light->getLightSetMembership() | indexToMask( lightSet.index )
+				);
+			}
+		}
+		else
+		{
+			// We ran out of indices.
+			IECore::msg(
+				IECore::Msg::Level::Warning, "CyclesRenderer",
+				fmt::format( "Light linking failed because the maximum number of unique light groups ({}) was exceeded.", LIGHT_LINK_SET_MAX )
+			);
+		}
+	}
+	return lightSet.index;
+}
+
+void LightLinker::deregisterLightLinks( const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights )
+{
+	std::lock_guard lock( m_mutex );
+	auto it = m_lightSets.find( lights );
+	assert( it != m_lightSets.end() );
+	assert( it->second.useCount );
+	it->second.useCount--;
+	if( it->second.useCount )
+	{
+		return;
+	}
+
+	// Set no longer in use.
+
+	m_usedIndices = m_usedIndices & ~indexToMask( it->second.index );
+	for( const auto &object : *lights )
+	{
+		auto light = static_cast<CyclesLight *>( object.get() );
+		light->setLightSetMembership(
+			light->getLightSetMembership() & ~indexToMask( it->second.index )
+		);
+	}
+
+	m_lightSets.erase( it );
+}
 
 } // namespace
 
@@ -2789,7 +2953,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				return nullptr;
 			}
 
-			ObjectInterfacePtr result = new CyclesObject( m_session.get(), instance, frame() );
+			ObjectInterfacePtr result = new CyclesObject( m_session.get(), instance, frame(), &m_lightLinker );
 			result->attributes( attributes );
 
 			instance.objectsCreated( m_objectsCreated );
@@ -2824,7 +2988,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				return nullptr;
 			}
 
-			ObjectInterfacePtr result = new CyclesObject( m_session.get(), instance, frame() );
+			ObjectInterfacePtr result = new CyclesObject( m_session.get(), instance, frame(), &m_lightLinker );
 			result->attributes( attributes );
 
 			instance.objectsCreated( m_objectsCreated );
@@ -3623,6 +3787,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		LightCachePtr m_lightCache;
 		InstanceCachePtr m_instanceCache;
 		AttributesCachePtr m_attributesCache;
+		LightLinker m_lightLinker;
 
 		// Nodes created to update to Cycles
 		/// \todo I don't see why these need to be state on the Renderer.

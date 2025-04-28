@@ -115,7 +115,7 @@ class GAFFERSCENE_API CapturingRenderer : public Renderer
 				const std::vector<float> &capturedTransformTimes() const;
 
 				const CapturedAttributes *capturedAttributes() const;
-				std::vector< IECore::InternedString > capturedLinkTypes() const;
+				std::vector<IECore::InternedString> capturedLinkTypes() const;
 				const ObjectSet *capturedLinks( const IECore::InternedString &type ) const;
 
 				int numAttributeEdits() const;

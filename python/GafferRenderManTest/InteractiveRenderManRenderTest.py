@@ -49,16 +49,6 @@ class InteractiveRenderManRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 	renderer = "RenderMan"
 
-	@unittest.skip( "Feature not supported yet" )
-	def testHideLinkedLight( self ) :
-
-		pass
-
-	@unittest.skip( "Feature not supported yet" )
-	def testLightLinking( self ) :
-
-		pass
-
 	@unittest.skip( "Crop window doesn't change data window" )
 	def testEditCropWindow( self ) :
 
@@ -92,6 +82,8 @@ class InteractiveRenderManRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		light = GafferRenderMan.RenderManLight()
 		light.loadShader( "PxrSphereLight" )
+		light["attributes"]["ri:visibility:camera"]["enabled"].setValue( True )
+		light["attributes"]["ri:visibility:camera"]["value"].setValue( False )
 
 		return light, light["parameters"]["lightColor"]
 

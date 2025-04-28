@@ -32,14 +32,23 @@ Breaking Changes
 - DeleteAttributes : Changed base class and marked as `final`.
 - Wrapper : The `gaffer` wrapper on Linux no longer allows a custom Python build to be used. If you wish to use a custom Python, call `python _gaffer.py` instead.
 
-1.5.x.x (relative to 1.5.11.0)
+1.5.x.x (relative to 1.5.12.0)
 =======
+
+
+
+1.5.12.0 (relative to 1.5.11.0)
+========
 
 Improvements
 ------------
 
+- RenderMan : Added light linking support.
+- Cycles : Added light linking support.
 - VisualiserTool : Added new visualisation for orientation (Quatf) data.
 - PrimitiveInspector : Changed column order for quaternions to match Imath's conventions.
+- AttributeEditor : Improved widgets used for editing `linkedLights` and `filteredLights` attributes.
+- Viewer : Improved light linking performance.
 
 Fixes
 -----

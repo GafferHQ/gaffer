@@ -282,9 +282,9 @@ const CapturingRenderer::CapturedAttributes *CapturingRenderer::CapturedObject::
 	return m_capturedAttributes.get();
 }
 
-std::vector< IECore::InternedString > CapturingRenderer::CapturedObject::capturedLinkTypes() const
+std::vector<IECore::InternedString> CapturingRenderer::CapturedObject::capturedLinkTypes() const
 {
-	std::vector< IECore::InternedString > result;
+	std::vector<IECore::InternedString> result;
 	for( const auto &i : m_capturedLinks )
 	{
 		result.push_back( i.first );
