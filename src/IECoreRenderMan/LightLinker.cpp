@@ -41,6 +41,8 @@
 #include "Light.h"
 #include "LightFilter.h"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace Imath;
 using namespace IECoreRenderMan;
@@ -93,7 +95,27 @@ void LightLinker::dirtyLightFilter( const LightFilter *lightFilter )
 	m_dirtyFilterSets.insert( lightFilter->setMemberships().begin(), lightFilter->setMemberships().end() );
 }
 
+const RtUString LightLinker::registerLightLinks( const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights )
+{
+	std::lock_guard lock( m_lightLinksMutex );
+	auto [it, inserted] = m_lightLinks.emplace( lights, RtUString() );
+	if( inserted )
+	{
+		const string groupName = fmt::format( "group{}", m_nextLightLinkGroup++ );
+		it->second = RtUString( groupName.c_str() );
+		m_lightLinksDirty = true;
+	}
+
+	return it->second;
+}
+
 void LightLinker::updateDirtyLinks()
+{
+	updateDirtyFilterLinks();
+	updateDirtyLightLinks();
+}
+
+void LightLinker::updateDirtyFilterLinks()
 {
 	// Not taking any locks, because we're not advertised as being
 	// concurrency-safe.
@@ -134,4 +156,57 @@ IECoreScene::ConstShaderNetworkPtr LightLinker::lightFilterShader( const IECoreS
 		networks.push_back( lightFilter->shader() );
 	}
 	return ShaderNetworkAlgo::combineLightFilters( networks );
+}
+
+void LightLinker::updateDirtyLightLinks()
+{
+	std::lock_guard lock( m_lightLinksMutex );
+	if( !m_lightLinksDirty )
+	{
+		return;
+	}
+
+	// For all lights currently in a linking group, calculate the right value
+	// for their `grouping:membership` attribute by concatenating the light
+	// group names. There are a couple of compromises here :
+	//
+	// - If a light is removed from all groups, it won't get updated at all
+	//   and will retain its old memberships even though those groups are
+	//   no longer used. This seems fairly harmless though.
+	// - We are updating all lights any time linking changes.
+	//
+	// Both these could be addressed, but at the expense of tracking more
+	// complex state.
+	/// \todo See if the more complex tracking is warranted in typical
+	/// production scenarios.
+
+	std::unordered_map<Light *, string> lightMemberships;
+	for( auto it = m_lightLinks.begin(); it != m_lightLinks.end(); )
+	{
+		auto set = it->first.lock();
+		if( !set )
+		{
+			it = m_lightLinks.erase( it );
+		}
+		else
+		{
+			for( auto &light : *set )
+			{
+				auto &memberships = lightMemberships[static_cast<Light *>( light.get() )];
+				if( memberships.size() )
+				{
+					memberships += " ";
+				}
+				memberships += it->second.CStr();
+			}
+			it++;
+		}
+	}
+
+	for( auto &[light, memberships] : lightMemberships )
+	{
+		light->updateGroupingMemberships( RtUString( memberships.c_str() ) );
+	}
+
+	m_lightLinksDirty = false;
 }

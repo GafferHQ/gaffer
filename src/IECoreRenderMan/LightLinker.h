@@ -40,6 +40,8 @@
 
 #include "IECoreScene/ShaderNetwork.h"
 
+#include "RiTypesHelper.h"
+
 #include <map>
 #include <mutex>
 #include <set>
@@ -59,27 +61,34 @@ class LightLinker
 
 	public :
 
-		// Interface used by Light and LightFilter
-		// =======================================
+		// Interface used by Light, LightFilter and ObjectInterface
+		// ========================================================
 		//
 		// These methods are used to keep the LightLinker up to date with
-		// changes made to lights and filters, and may all be called
+		// changes made to the scene, and may all be called
 		// concurrently.
 
 		IECoreScene::ConstShaderNetworkPtr registerFilterLinks( Light *light, const IECoreScenePreview::Renderer::ConstObjectSetPtr &lightFilters );
 		void deregisterFilterLinks( Light *light, const IECoreScenePreview::Renderer::ConstObjectSetPtr &lightFilters );
 		void dirtyLightFilter( const LightFilter *lightFilter );
 
+		// Returns the value to be used in the `lighting:subset` attribute.
+		const RtUString registerLightLinks( const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights );
+
 		// Interface used by Renderer
 		// ==========================
 
-		// Called prior to rendering to synchronise any pending changes to
-		// light filters. Should not be called concurrently with other methods.
+		// Called prior to rendering to synchronise any pending changes. Should
+		// not be called concurrently with other methods.
 		void updateDirtyLinks();
 
 	private :
 
+		// Light Filter Linking
+		// ====================
+
 		static IECoreScene::ConstShaderNetworkPtr lightFilterShader( const IECoreScenePreview::Renderer::ObjectSet *filters );
+		void updateDirtyFilterLinks();
 
 		// Data structure for tracking dependencies between light filters and
 		// lights. The goal is to be able to efficiently update all affected
@@ -119,6 +128,19 @@ class LightLinker
 		using DirtyFilterSets = std::set<WeakObjectSetPtr, std::owner_less<WeakObjectSetPtr>>;
 		std::mutex m_dirtyFilterSetsMutex;
 		DirtyFilterSets m_dirtyFilterSets;
+
+		// Light Linking
+		// =============
+
+		void updateDirtyLightLinks();
+
+		// Maps from a set of lights to its group name.
+		/// \todo As above, use an unordered container when it becomes available.
+		using LightLinks = std::map<WeakObjectSetPtr, RtUString, std::owner_less<WeakObjectSetPtr>>;
+		std::mutex m_lightLinksMutex;
+		LightLinks m_lightLinks;
+		size_t m_nextLightLinkGroup;
+		bool m_lightLinksDirty = false;
 
 };
 

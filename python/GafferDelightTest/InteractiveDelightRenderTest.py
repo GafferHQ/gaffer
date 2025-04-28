@@ -49,15 +49,16 @@ class InteractiveDelightRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 	renderer = "3Delight"
 
-	# Disable this test for now as we don't have light linking support in
-	# 3Delight, yet.
 	@unittest.skip( "No light linking support just yet" )
-	def testLightLinking( self ) :
+	def testBasicLightLinking( self ) :
 
 		pass
 
-	# Disable this test for now as we don't have light linking support in
-	# 3Delight, yet.
+	@unittest.skip( "No light linking support just yet" )
+	def testLinkedLightsAttributes( self ) :
+
+		pass
+
 	@unittest.skip( "No light linking support just yet" )
 	def testHideLinkedLight( self ) :
 

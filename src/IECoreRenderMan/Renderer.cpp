@@ -184,7 +184,7 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 				return nullptr;
 			}
 
-			return new IECoreRenderMan::Object( name, geometryPrototype, typedAttributes, m_session );
+			return new IECoreRenderMan::Object( name, geometryPrototype, typedAttributes, m_lightLinker.get(), m_session );
 		}
 
 		ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) override
@@ -199,7 +199,7 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 				return nullptr;
 			}
 
-			return new IECoreRenderMan::Object( name, geometryPrototype, typedAttributes, m_session );
+			return new IECoreRenderMan::Object( name, geometryPrototype, typedAttributes, m_lightLinker.get(), m_session );
 		}
 
 		void render() override

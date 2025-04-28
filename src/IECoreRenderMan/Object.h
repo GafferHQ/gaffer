@@ -38,6 +38,7 @@
 
 #include "Attributes.h"
 #include "GeometryPrototypeCache.h"
+#include "LightLinker.h"
 #include "Session.h"
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
@@ -50,7 +51,7 @@ class Object : public IECoreScenePreview::Renderer::ObjectInterface
 
 	public :
 
-		Object( const std::string &name, const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, const Session *session );
+		Object( const std::string &name, const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, LightLinker *lightLinker, const Session *session );
 		~Object();
 
 		/// \todo RenderMan volumes seem to reject attempts to transform them
@@ -67,12 +68,14 @@ class Object : public IECoreScenePreview::Renderer::ObjectInterface
 	private :
 
 		const Session *m_session;
+		LightLinker *m_lightLinker;
 		riley::GeometryInstanceId m_geometryInstance;
 		/// Used to keep material etc alive as long as we need it.
 		ConstAttributesPtr m_attributes;
 		/// Used to keep geometry prototype alive as long as we need it.
 		ConstGeometryPrototypePtr m_geometryPrototype;
 		RtParamList m_extraAttributes;
+		IECoreScenePreview::Renderer::ConstObjectSetPtr m_linkedLights;
 
 };
 

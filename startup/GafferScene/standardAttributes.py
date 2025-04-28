@@ -152,6 +152,7 @@ Gaffer.Metadata.registerValue(
 	all lights that contribute to illumination by default.
 	"""
 )
+Gaffer.Metadata.registerValue( "attribute:linkedLights", "plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget" )
 Gaffer.Metadata.registerValue( "attribute:linkedLights", "ui:scene:acceptsSetExpression", True )
 
 Gaffer.Metadata.registerValue( "attribute:filteredLights", "label", "Filtered Lights" )
@@ -166,6 +167,7 @@ Gaffer.Metadata.registerValue(
 	contribute to illumination by default.
 	"""
 )
+Gaffer.Metadata.registerValue( "attribute:filteredLights", "plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget" )
 Gaffer.Metadata.registerValue( "attribute:filteredLights", "ui:scene:acceptsSetExpression", True )
 
 Gaffer.Metadata.registerValue( "attribute:gaffer:automaticInstancing", "label", "Automatic Instancing" )

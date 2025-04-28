@@ -47,11 +47,12 @@ namespace
 {
 
 const riley::CoordinateSystemList g_emptyCoordinateSystems = { 0, nullptr };
+const IECore::InternedString g_lights( "lights" );
 
 } // namespace
 
-Object::Object( const std::string &name, const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, const Session *session )
-	:	m_session( session ), m_geometryInstance( riley::GeometryInstanceId::InvalidId() ), m_attributes( attributes ), m_geometryPrototype( geometryPrototype )
+Object::Object( const std::string &name, const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, LightLinker *lightLinker, const Session *session )
+	:	m_session( session ), m_lightLinker( lightLinker ), m_geometryInstance( riley::GeometryInstanceId::InvalidId() ), m_attributes( attributes ), m_geometryPrototype( geometryPrototype )
 {
 	m_extraAttributes.SetString( Rix::k_identifier_name, RtUString( name.c_str() ) );
 
@@ -146,6 +147,21 @@ bool Object::attributes( const IECoreScenePreview::Renderer::AttributesInterface
 
 void Object::link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects )
 {
+	if( type != g_lights )
+	{
+		return;
+	}
+
+	m_linkedLights = objects;
+
+	RtUString lightingSubset;
+	if( objects )
+	{
+		lightingSubset = m_lightLinker->registerLightLinks( objects );
+	}
+
+	m_extraAttributes.SetString( Rix::k_lighting_subset, lightingSubset );
+	attributes( m_attributes.get() );
 }
 
 void Object::assignID( uint32_t id )
