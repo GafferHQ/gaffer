@@ -209,6 +209,38 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 		}
 	}
 
+	else if( lightShader->getName() == "PxrDiskLight" )
+	{
+		if( drawShaded )
+		{
+			result.push_back(
+				Visualisation::createGeometry(
+					diskSurface( 0.5f, /* textureData = */ nullptr, color, /* saturation = */ 1.f, /* gamma = */ Color3f( 1.f ), maxTextureResolution, Color3f( 1.f ) ),
+					Visualisation::ColorSpace::Scene
+				)
+			);
+		}
+		else
+		{
+			result.push_back(
+				Visualisation::createOrnament(
+					colorIndicator( color ),
+					false,  // affectsFramingBounds
+					Visualisation::ColorSpace::Scene
+				)
+			);
+		}
+
+		result.push_back(
+			Visualisation::createGeometry( diskWireframe( 0.5f, muted ) )
+		);
+
+		const float focus = parameterOrDefault( lightParameters, g_emissionFocusParameter, 0.f );
+		addAreaSpread( pow( 0.707f, focus ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
+
+		addRay( V3f( 0.f ), V3f( 0.f, 0.f, -1.f ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
+	}
+
 	else if( lightShader->getName() == "PxrDomeLight" )
 	{
 		if( drawShaded )
