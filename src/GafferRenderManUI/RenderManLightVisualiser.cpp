@@ -241,6 +241,12 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 		addRay( V3f( 0.f ), V3f( 0.f, 0.f, -1.f ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 	}
 
+	else if( lightShader->getName() == "PxrDistantLight" )
+	{
+		result.push_back( Visualisation::createOrnament( distantRays( muted ), /* affectsFramingBouds = */ true ) );
+		result.push_back( Visualisation::createOrnament( colorIndicator( color ), /* affectsFramingBounds = */ false, Visualisation::ColorSpace::Scene ) );
+	}
+
 	else if( lightShader->getName() == "PxrDomeLight" )
 	{
 		if( drawShaded )

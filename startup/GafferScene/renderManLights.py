@@ -44,14 +44,13 @@ import Gaffer
 # lights for us.
 ## \todo I think we'd be better off with some dedicated visualisers instead.
 
-for type in [ "PxrDistantLight", "PxrEnvDayLight", "PxrMeshLight", "PxrSphereLight" ] :
+for type in [ "PxrEnvDayLight", "PxrMeshLight", "PxrSphereLight" ] :
 
 	Gaffer.Metadata.registerValue( "ri:light:" + type, "intensityParameter", "intensity" )
 	Gaffer.Metadata.registerValue( "ri:light:" + type, "exposureParameter", "exposure" )
 	Gaffer.Metadata.registerValue( "ri:light:" + type, "colorParameter", "lightColor" )
 
 Gaffer.Metadata.registerValue( "ri:light:PxrEnvDayLight", "type", "environment" )
-Gaffer.Metadata.registerValue( "ri:light:PxrDistantLight", "type", "distant" )
 Gaffer.Metadata.registerValue( "ri:light:PxrMeshLight", "type", "mesh" )
 Gaffer.Metadata.registerValue( "ri:light:PxrPortalLight", "type", "portal" )
 Gaffer.Metadata.registerValue( "ri:light:PxrSphereLight", "type", "point" )
