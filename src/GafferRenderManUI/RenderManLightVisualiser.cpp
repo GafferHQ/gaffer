@@ -176,7 +176,40 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 
 	Visualisations result;
 
-	if( lightShader->getName() == "PxrDomeLight" )
+	if( lightShader->getName() == "PxrCylinderLight" )
+	{
+		M44f orientation = M44f().rotate( V3f( 0.f, M_PI_2, 0.f ) );
+
+		IECoreGL::GroupPtr rayGroup = new IECoreGL::Group;
+		rayGroup->setTransform( orientation );
+		rayGroup->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( cylinderRays( 0.5f, muted ) ) );
+		result.push_back( Visualisation::createOrnament( rayGroup, true ) );
+
+		IECoreGL::GroupPtr wireframeGroup = new IECoreGL::Group;
+		wireframeGroup->setTransform( orientation );
+		wireframeGroup->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( cylinderWireframe( 0.5f, 1.f, muted ) ) );
+		result.push_back( Visualisation::createGeometry( wireframeGroup ) );
+
+		IECoreGL::GroupPtr surfaceGroup = new IECoreGL::Group;
+		surfaceGroup->setTransform( orientation );
+		if( drawShaded )
+		{
+			surfaceGroup->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( cylinderSurface( 0.5f, 1.f, color ) ) );
+			result.push_back( Visualisation::createGeometry( surfaceGroup, Visualisation::ColorSpace::Scene ) );
+		}
+		else
+		{
+			surfaceGroup->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
+			result.push_back( Visualisation::createOrnament(
+					surfaceGroup,
+					false,  // affectsFramingBound
+					Visualisation::ColorSpace::Scene
+				)
+			);
+		}
+	}
+
+	else if( lightShader->getName() == "PxrDomeLight" )
 	{
 		if( drawShaded )
 		{
