@@ -1,7 +1,10 @@
 1.5.x.x (relative to 1.5.12.0)
 =======
 
+Fixes
+-----
 
+- RenderMan : Fixed handling of `render:{name}` attributes, such as the `render:displayColor` attribute created by StandardAttributes, and `primvar:{name}` attributes loaded from USD files. These can now be accessed by PxrAttribute shaders as either `user:{name}` or just `{name}`.
 
 1.5.12.0 (relative to 1.5.11.0)
 ========

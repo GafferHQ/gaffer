@@ -497,53 +497,60 @@ class RendererTest( GafferTest.TestCase ) :
 
 		self.assertFalse( OpenImageIO.ImageBufAlgo.compare( image1, image2, failthresh = 0, warnthresh=0 ).error )
 
-	def testUserAttribute( self ) :
+	def testUserAttributes( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
-		)
+		for attributeName, lookupName in [
+			( "render:displayColor", "displayColor" ),
+			( "user:myColor", "user:myColor" ),
+		] :
 
-		fileName = str( self.temporaryDirectory() / "test.exr" )
-		renderer.output(
-			"test",
-			IECoreScene.Output(
-				fileName,
-				"exr",
-				"rgba",
-				{
-				},
-			)
-		)
+			with self.subTest( attributeName = attributeName, lookupName = lookupName ) :
 
-		renderer.object(
-			"sphere",
-			IECoreScene.SpherePrimitive(),
-			renderer.attributes( IECore.CompoundObject( {
-				"ri:surface" : IECoreScene.ShaderNetwork(
-					shaders = {
-						"attribute" : IECoreScene.Shader(
-							"PxrAttribute", "osl:shader", {
-								"varname" : "user:myColor",
-								"type" : "color",
-							}
+				renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+					"RenderMan",
+					GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+				)
+
+				fileName = str( self.temporaryDirectory() / "test.exr" )
+				renderer.output(
+					"test",
+					IECoreScene.Output(
+						fileName,
+						"exr",
+						"rgba",
+						{
+						},
+					)
+				)
+
+				renderer.object(
+					"sphere",
+					IECoreScene.SpherePrimitive(),
+					renderer.attributes( IECore.CompoundObject( {
+						"ri:surface" : IECoreScene.ShaderNetwork(
+							shaders = {
+								"attribute" : IECoreScene.Shader(
+									"PxrAttribute", "osl:shader", {
+										"varname" : lookupName,
+										"type" : "color",
+									}
+								),
+								"output" : IECoreScene.Shader( "PxrConstant", "ri:surface" ),
+							},
+							connections = [
+								( ( "attribute", "resultRGB" ), ( "output", "emitColor" ) )
+							],
+							output = "output",
 						),
-						"output" : IECoreScene.Shader( "PxrConstant", "ri:surface" ),
-					},
-					connections = [
-						( ( "attribute", "resultRGB" ), ( "output", "emitColor" ) )
-					],
-					output = "output",
-				),
-				"user:myColor" : IECore.Color3fData( imath.Color3f( 1, 0.5, 0.25 ) ),
-			} ) )
-		).transform( imath.M44f().translate( imath.V3f( 0, 0, -3 ) ) )
+						attributeName : IECore.Color3fData( imath.Color3f( 1, 0.5, 0.25 ) ),
+					} ) )
+				).transform( imath.M44f().translate( imath.V3f( 0, 0, -3 ) ) )
 
-		renderer.render()
-		del renderer
+				renderer.render()
+				del renderer
 
-		image = OpenImageIO.ImageBuf( fileName )
-		self.assertEqual( image.getpixel( 320, 240, 0 ), ( 1.0, 0.5, 0.25, 1.0 ) )
+				image = OpenImageIO.ImageBuf( fileName )
+				self.assertEqual( image.getpixel( 320, 240, 0 ), ( 1.0, 0.5, 0.25, 1.0 ) )
 
 	def testArrayConnections( self ) :
 
