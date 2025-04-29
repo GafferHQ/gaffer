@@ -41,6 +41,7 @@
 #include "IECore/NullObject.h"
 
 #include <memory>
+#include <unordered_map>
 
 using namespace IECore;
 using namespace Gaffer;
