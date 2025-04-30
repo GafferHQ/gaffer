@@ -587,6 +587,11 @@ class _PlainTextEdit( QtWidgets.QPlainTextEdit ) :
 		if widget is not None :
 			widget._emitEditingFinished()
 
+		if event.reason() != QtCore.Qt.PopupFocusReason :
+			cursor = self.textCursor()
+			cursor.clearSelection()
+			self.setTextCursor( cursor )
+
 		QtWidgets.QPlainTextEdit.focusOutEvent( self, event )
 
 	def paintEvent( self, event ) :
