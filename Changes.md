@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.12.0)
 =======
 
+Features
+--------
+
+- ArnoldProcedural : Added a new node for making Arnold `.ass` procedural placeholders.
+
 Improvements
 ------------
 
