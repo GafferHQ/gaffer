@@ -658,5 +658,44 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( output.name, "shader1" )
 		self.assertEqual( output.blindData()["label"], IECore.StringData( "glass" ) )
 
+	def testSwitchBasedOnScenePath( self ) :
+
+		shader1 = GafferSceneTest.TestShader()
+		shader1["type"].setValue( "test:surface" )
+		shader1["parameters"]["i"].setValue( 1 )
+
+		shader2 = GafferSceneTest.TestShader()
+		shader2["type"].setValue( "test:surface" )
+		shader2["parameters"]["i"].setValue( 2 )
+
+		switch = Gaffer.NameSwitch()
+		switch.setup( shader2["out"] )
+		switch["selector"].setValue( "${scene:path}" )
+		switch["in"].resize( 3 )
+		switch["in"][1]["value"].setInput( shader1["out"] )
+		switch["in"][1]["name"].setValue( "/plane" )
+		switch["in"][2]["value"].setInput( shader2["out"] )
+		switch["in"][2]["name"].setValue( "/sphere" )
+
+		plane = GafferScene.Plane()
+		sphere = GafferScene.Sphere()
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( plane["out"] )
+		parent["children"][0].setInput( sphere["out"] )
+
+		assignment = GafferScene.ShaderAssignment()
+		assignment["in"].setInput( parent["out"] )
+		assignment["shader"].setInput( switch["out"]["value"] )
+
+		self.assertEqual(
+			assignment["out"].attributes( "/plane" )["test:surface"].outputShader().parameters["i"],
+			IECore.IntData( 1 )
+		)
+		self.assertEqual(
+			assignment["out"].attributes( "/sphere" )["test:surface"].outputShader().parameters["i"],
+			IECore.IntData( 2 )
+		)
+
 if __name__ == "__main__":
 	unittest.main()

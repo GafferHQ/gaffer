@@ -100,14 +100,12 @@ bool ShaderAssignment::affectsProcessedAttributes( const Gaffer::Plug *input ) c
 void ShaderAssignment::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	AttributeProcessor::hashProcessedAttributes( path, context, h );
-	ScenePlug::GlobalScope globalScope( context );
 	h.append( shaderPlug()->attributesHash() );
 	labelPlug()->hash( h );
 }
 
 IECore::ConstCompoundObjectPtr ShaderAssignment::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
 {
-	ScenePlug::GlobalScope globalScope( context );
 	ConstCompoundObjectPtr attributes = shaderPlug()->attributes();
 
 	if( attributes->members().empty() )
