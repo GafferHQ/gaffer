@@ -209,6 +209,9 @@ IECoreScene::ConstShaderNetworkPtr g_black = []() {
 
 } ();
 
+const std::string g_renderAttributePrefix( "render:" );
+const std::string g_userAttributePrefix( "user:" );
+
 } // namespace
 
 Attributes::Attributes( const IECore::CompoundObject *attributes, MaterialCache *materialCache )
@@ -274,9 +277,16 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, MaterialCache 
 			int sides = attributeCast<bool>( value.get(), name, true ) ? 2 : 1;
 			m_instanceAttributes.SetInteger( Rix::k_Ri_Sides, sides );
 		}
-		else if( boost::starts_with( name.c_str(), "user:" ) )
+		else if( boost::starts_with( name.string(), g_userAttributePrefix ) )
 		{
 			ParamListAlgo::convertParameter( RtUString( name.c_str() ), data, m_instanceAttributes );
+		}
+		else if( boost::starts_with( name.string(), g_renderAttributePrefix ) )
+		{
+			const string withUserPrefix = g_userAttributePrefix + ( name.c_str() + g_renderAttributePrefix.size() );
+			ParamListAlgo::convertParameter(
+				RtUString( withUserPrefix.c_str() ), data, m_instanceAttributes
+			);
 		}
 
 		if( !boost::starts_with( name.c_str(), g_renderManPrefix.c_str() ) )

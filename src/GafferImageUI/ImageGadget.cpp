@@ -112,9 +112,6 @@ class TileShader
 		TileShader()
 		{
 
-			std::string colorTransformCode;
-			OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc;
-
 			// Build and compile GLSL shader
 			std::string combinedFragmentCode;
 			if( glslVersion() >= 330 )
@@ -123,7 +120,7 @@ class TileShader
 				// define it correctly in the same way as the OpenGL shader preprocessing would.
 				combinedFragmentCode = "#version 330 compatibility\n #define __VERSION__ 330\n\n";
 			}
-			combinedFragmentCode += colorTransformCode + fragmentSource();
+			combinedFragmentCode += fragmentSource();
 
 			m_shader = ShaderLoader::defaultShaderLoader()->create( vertexSource(), "", combinedFragmentCode );
 

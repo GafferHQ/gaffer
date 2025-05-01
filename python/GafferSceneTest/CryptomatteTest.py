@@ -57,7 +57,18 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 
 	def testCryptomatteHash( self ) :
 
-		manifest = {
+
+		i = GafferImage.ImageMetadata()
+		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/conversion", "uint32_to_float32" ) )
+		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/hash", "MurmurHash3_32" ) )
+		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/name", "crypto_object" ) )
+		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/manifest", json.dumps( {} ) ) )
+
+		c = GafferScene.Cryptomatte()
+		c["in"].setInput( i["out"] )
+		c["layer"].setValue( "crypto_object" )
+
+		expectedValues = {
 			"hello": 6.0705627102400005616e-17,
 			"cube": -4.08461912519e+15,
 			"sphere": 2.79018604383e+15,
@@ -65,20 +76,9 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 			"/GAFFERBOT/C_torso_GRP/C_head_GRP/C_head_CPT/C_head001_REN": -2.5222249091461295e+36,
 			"shader:b0d1fe5b982bcae64d6329033cbadc70": 876260905451520.0,
 		}
-
-		i = GafferImage.ImageMetadata()
-		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/conversion", "uint32_to_float32" ) )
-		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/hash", "MurmurHash3_32" ) )
-		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/name", "crypto_object" ) )
-		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/manifest", json.dumps( manifest ) ) )
-
-		c = GafferScene.Cryptomatte()
-		c["in"].setInput( i["out"] )
-		c["layer"].setValue( "crypto_object" )
-
-		for name in sorted( manifest.keys() ) :
+		for name in sorted( expectedValues.keys() ) :
 			c["matteNames"].setValue( IECore.StringVectorData( [name] ) )
-			self.assertEqual( IECore.FloatData( manifest[name] ), IECore.FloatData( c["__matteValues"].getValue()[0] ) )
+			self.assertEqual( IECore.FloatData( expectedValues[name] ), IECore.FloatData( c["__matteValues"].getValue()[0] ) )
 
 	def compareValues( self, c, layers ) :
 
@@ -93,8 +93,9 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		if "crypto_object" in layers :
 			c["layer"].setValue( "crypto_object" )
 			m = c["__manifest"].getValue()
+			self.assertEqual( m['4030791963'], IECore.StringData( "/cow" ) )
+			self.assertEqual( m['2678692000'], IECore.StringData( "/cow1" ) )
 
-			self.assertTrue( IECore.StringData( "/cow" ) in m.values() )
 			self.assertEqual( cowSampler["color"].getValue()[3], 0.0 )
 			self.assertEqual( cow1Sampler["color"].getValue()[3], 0.0 )
 
@@ -113,8 +114,9 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		if "crypto_material" in layers :
 			c["layer"].setValue( "crypto_material" )
 			m = c["__manifest"].getValue()
+			self.assertEqual( m['2757339133'], IECore.StringData( "shader:db33c6a440a2dcf4a92383d8ae16c33a" ) )
+			self.assertEqual( m['1481063705'], IECore.StringData( "shader:b0d1fe5b982bcae64d6329033cbadc70" ) )
 
-			self.assertTrue( IECore.StringData( "shader:db33c6a440a2dcf4a92383d8ae16c33a" ) in m.values() )
 			self.assertEqual( cowSampler["color"].getValue()[3], 0.0 )
 			self.assertEqual( cow1Sampler["color"].getValue()[3], 0.0 )
 
@@ -185,11 +187,19 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		c = GafferScene.Cryptomatte()
 		c["in"].setInput( d["out"] )
 		c["manifestSource"].setValue( GafferScene.Cryptomatte.ManifestSource.Metadata )
+
+		# With no manifest directory specified, we automatically infer it from the filePath
+
+		self.compareValues( c, ["crypto_object", "crypto_material"] )
+
+		# Or we can set it explicitly
 		c["manifestDirectory"].setValue( self.testImage.parent )
 
 		self.compareValues( c, ["crypto_object", "crypto_material"] )
 
+		# If there is no manifestDirectory or filePath specified, we get an exception
 		c["manifestDirectory"].setValue( "" )
+		d["names"].setValue( "cryptomatte/*/manifest filePath" )
 
 		with self.assertRaisesRegex( Gaffer.ProcessException, r'No manifest directory provided.' ) as raised :
 			self.compareValues( c, ["crypto_object"] )

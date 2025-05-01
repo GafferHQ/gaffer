@@ -35,7 +35,17 @@ Breaking Changes
 1.5.x.x (relative to 1.5.12.0)
 =======
 
+Improvements
+------------
 
+- ImageReader : Automatically set "filePath" metadata when reading images, making it easier to determine the path an image was loaded from.
+- Cryptomatte : Improved automatic finding of manifests. Now, if the image's metadata references a sidecar manifest file, but no explicit `manifestDirectory` is specified, it will look in the directory the image was loaded from ( as determined by the "filePath" metadata ). This makes it more likely that cryptomatte files will work automatically.
+
+Fixes
+-----
+
+- RenderMan : Fixed handling of `render:{name}` attributes, such as the `render:displayColor` attribute created by StandardAttributes, and `primvar:{name}` attributes loaded from USD files. These can now be accessed by PxrAttribute shaders as either `user:{name}` or just `{name}`.
+- Cryptomatte : Fixed hypothetical inconsistencies if the C++ language locale affects the parsing of JSON files ( probably not an issue in practice, since the JSON in question should just be hexadecimal integers, and no known locale should affect the parsing of integers ).
 
 1.5.12.0 (relative to 1.5.11.0)
 ========
