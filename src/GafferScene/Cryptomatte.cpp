@@ -167,8 +167,6 @@ IECore::CompoundDataPtr propertyTreeToCompoundData( const boost::property_tree::
 	IECore::CompoundDataPtr resultData = new IECore::CompoundData();
 	CompoundDataMap &result = resultData->writable();
 
-	uint32_t hash;
-
 	for( auto &it : pt )
 	{
 		// NOTE: exclude locations starting with "instance:" under root
@@ -177,7 +175,16 @@ IECore::CompoundDataPtr propertyTreeToCompoundData( const boost::property_tree::
 			continue;
 		}
 
-		std::sscanf( it.second.data().c_str(), "%x", &hash );
+		const std::string &hashString = it.second.data();
+
+		uint32_t hash = 0;
+
+		auto [_unused, errorCode] = std::from_chars( hashString.data(), hashString.data() + hashString.size(), hash, 16 );
+
+		if( errorCode != std::errc() )
+		{
+			throw IECore::Exception( fmt::format( "Expected hexadecimal while parsing manifest: \"{}\"", hashString ) );
+		}
 
 		result[hash] = new StringData( it.first );
 	}
@@ -233,7 +240,7 @@ IECore::CompoundDataPtr parseManifestFromSidecarFile( const std::string &manifes
 	return propertyTreeToCompoundData( pt );
 }
 
-IECore::CompoundDataPtr parseManifestFromMetadataAndSidecar( const std::string &metadataKey, ConstCompoundDataPtr metadata, const std::string &manifestDirectory )
+IECore::CompoundDataPtr parseManifestFromMetadataAndSidecar( const std::string &metadataKey, ConstCompoundDataPtr metadata, std::string manifestDirectory )
 {
 	if( metadata->readable().find( metadataKey ) == metadata->readable().end() )
 	{
@@ -242,9 +249,15 @@ IECore::CompoundDataPtr parseManifestFromMetadataAndSidecar( const std::string &
 
 	if( manifestDirectory == "" )
 	{
-		throw IECore::Exception( "No manifest directory provided. A directory is required to locate the manifest." );
+		const StringData *filePathData = metadata->member<StringData>( "filePath" );
+		if( !filePathData )
+		{
+			throw IECore::Exception( "No manifest directory provided, and no `filePath` metadata that would allow inferring the directory. A directory is required to locate the manifest." );
+		}
+		manifestDirectory = std::filesystem::path( filePathData->readable() ).parent_path().generic_string();
 	}
-	else if( !std::filesystem::is_directory( manifestDirectory ) )
+
+	if( !std::filesystem::is_directory( manifestDirectory ) )
 	{
 		throw IECore::Exception( fmt::format( "Manifest directory not found: {}", manifestDirectory ) );
 	}
