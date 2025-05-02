@@ -49,6 +49,7 @@ from GafferUI.PlugValueWidget import sole
 from Qt import QtCore
 from Qt import QtWidgets
 from Qt import QtCompat
+import Qt
 
 from . import _Algo
 from . import _ClipboardAlgo
@@ -139,9 +140,9 @@ class _PlugTableView( GafferUI.Widget ) :
 		# the QTableView itself won't edit anything, and we then implement
 		# our own editing via PlugValueWidgets in _EditWindow.
 
-		tableView.setEditTriggers( tableView.NoEditTriggers )
-		tableView.setSelectionMode( tableView.ExtendedSelection )
-		tableView.setSelectionBehavior( tableView.SelectItems )
+		tableView.setEditTriggers( QtWidgets.QTableView.NoEditTriggers )
+		tableView.setSelectionMode( QtWidgets.QTableView.ExtendedSelection )
+		tableView.setSelectionBehavior( QtWidgets.QTableView.SelectItems )
 		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		self.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
@@ -154,7 +155,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		tableView.setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
 		tableView.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
-		tableView.setHorizontalScrollMode( tableView.ScrollPerPixel )
+		tableView.setHorizontalScrollMode( QtWidgets.QTableView.ScrollPerPixel )
 
 		tableView.setSizePolicy(
 			QtWidgets.QSizePolicy.Fixed if mode == self.Mode.RowNames else QtWidgets.QSizePolicy.Maximum,
@@ -250,7 +251,8 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		GafferUI.Widget._displayTransformChanged( self )
 		# Account for _PlugTableModel's dependency on display transform.
-		self._qtWidget().update()
+		if not Qt.__binding__ == "PySide6" :
+			self._qtWidget().update()
 
 	def __applyRowFilter( self ) :
 
