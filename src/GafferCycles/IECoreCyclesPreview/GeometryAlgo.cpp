@@ -101,19 +101,19 @@ ccl::TypeDesc typeFromGeometricDataInterpretation( IECore::GeometricData::Interp
 	switch( dataType )
 	{
 		case GeometricData::Numeric :
-			return ccl::TypeDesc::TypeVector;
+			return ccl::TypeVector;
 		case GeometricData::Point :
-			return ccl::TypeDesc::TypePoint;
+			return ccl::TypePoint;
 		case GeometricData::Normal :
-			return ccl::TypeDesc::TypeNormal;
+			return ccl::TypeNormal;
 		case GeometricData::Vector :
-			return ccl::TypeDesc::TypeVector;
+			return ccl::TypeVector;
 		case GeometricData::Color :
-			return ccl::TypeDesc::TypeColor;
+			return ccl::TypeColor;
 		case GeometricData::UV :
-			return ccl::TypeDesc::TypePoint;
+			return ccl::TypePoint;
 		default :
-			return ccl::TypeDesc::TypeVector;
+			return ccl::TypeVector;
 	}
 }
 
@@ -272,7 +272,7 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 		// Simple int-based data. Cycles doesn't support int attributes, so we promote to the equivalent float types.
 
 		case IntDataTypeId :
-			attr = convertTypedPrimitiveVariable<IntData>( name, primitiveVariable, attributes, ccl::TypeDesc::TypeFloat, attributeElement );
+			attr = convertTypedPrimitiveVariable<IntData>( name, primitiveVariable, attributes, ccl::TypeFloat, attributeElement );
 			break;
 		case V2iDataTypeId :
 			attr = convertTypedPrimitiveVariable<V2iData>( name, primitiveVariable, attributes, ccl::TypeFloat2, attributeElement );
@@ -290,7 +290,7 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 		// Vectors of int-based data. Cycles doesn't support int attributes, so we promote to the equivalent float types.
 
 		case IntVectorDataTypeId :
-			attr = convertTypedPrimitiveVariable<IntVectorData>( name, primitiveVariable, attributes, ccl::TypeDesc::TypeFloat, attributeElement );
+			attr = convertTypedPrimitiveVariable<IntVectorData>( name, primitiveVariable, attributes, ccl::TypeFloat, attributeElement );
 			break;
 		case V2iVectorDataTypeId :
 			attr = convertTypedPrimitiveVariable<V2iVectorData>( name, primitiveVariable, attributes, ccl::TypeFloat2, attributeElement );
@@ -308,7 +308,7 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 		// Simple float-based data.
 
 		case FloatDataTypeId :
-			attr = convertTypedPrimitiveVariable<FloatData>( name, primitiveVariable, attributes, ccl::TypeDesc::TypeFloat, attributeElement );
+			attr = convertTypedPrimitiveVariable<FloatData>( name, primitiveVariable, attributes, ccl::TypeFloat, attributeElement );
 			break;
 		case V2fDataTypeId :
 			attr = convertTypedPrimitiveVariable<V2fData>( name, primitiveVariable, attributes, ccl::TypeFloat2, attributeElement );
@@ -323,13 +323,13 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 			);
 			break;
 		case Color3fDataTypeId :
-			attr = convertTypedPrimitiveVariable<Color3fData>( name, primitiveVariable, attributes, ccl::TypeDesc::TypeColor, attributeElement );
+			attr = convertTypedPrimitiveVariable<Color3fData>( name, primitiveVariable, attributes, ccl::TypeColor, attributeElement );
 			break;
 
 		// Vectors of float-based data.
 
 		case FloatVectorDataTypeId :
-			attr = convertTypedPrimitiveVariable<FloatVectorData>( name, primitiveVariable, attributes, ccl::TypeDesc::TypeFloat, attributeElement );
+			attr = convertTypedPrimitiveVariable<FloatVectorData>( name, primitiveVariable, attributes, ccl::TypeFloat, attributeElement );
 			break;
 		case V2fVectorDataTypeId :
 			attr = convertTypedPrimitiveVariable<V2fVectorData>( name, primitiveVariable, attributes, ccl::TypeFloat2, attributeElement );
@@ -344,7 +344,7 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 			);
 			break;
 		case Color3fVectorDataTypeId :
-			attr = convertTypedPrimitiveVariable<Color3fVectorData>( name, primitiveVariable, attributes, ccl::TypeDesc::TypeColor, attributeElement );
+			attr = convertTypedPrimitiveVariable<Color3fVectorData>( name, primitiveVariable, attributes, ccl::TypeColor, attributeElement );
 			break;
 		default :
 			msg(
@@ -369,11 +369,11 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 	/// use `convertPrimitiveVariable()` for most data, instead of having
 	/// custom code paths for `P`, `uv` etc?
 
-	if( name == "N" && attr->element == ccl::ATTR_ELEMENT_VERTEX && attr->type == ccl::TypeDesc::TypeNormal )
+	if( name == "N" && attr->element == ccl::ATTR_ELEMENT_VERTEX && attr->type == ccl::TypeNormal )
 	{
 		attr->std = ccl::ATTR_STD_VERTEX_NORMAL;
 	}
-	else if( name == "N" && attr->element == ccl::ATTR_ELEMENT_FACE && attr->type == ccl::TypeDesc::TypeNormal )
+	else if( name == "N" && attr->element == ccl::ATTR_ELEMENT_FACE && attr->type == ccl::TypeNormal )
 	{
 		attr->std = ccl::ATTR_STD_FACE_NORMAL;
 		attr->name = ccl::Attribute::standard_name( attr->std ); // Cycles calls this `Ng`.
@@ -382,11 +382,11 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 	{
 		attr->std = ccl::ATTR_STD_UV;
 	}
-	else if( name == "uv.tangent_sign" && attr->element == ccl::ATTR_ELEMENT_CORNER && attr->type == ccl::TypeDesc::TypeFloat )
+	else if( name == "uv.tangent_sign" && attr->element == ccl::ATTR_ELEMENT_CORNER && attr->type == ccl::TypeFloat )
 	{
 		attr->std = ccl::ATTR_STD_UV_TANGENT_SIGN;
 	}
-	else if( name == "uv.tangent" && attr->element == ccl::ATTR_ELEMENT_CORNER && attr->type == ccl::TypeDesc::TypeVector )
+	else if( name == "uv.tangent" && attr->element == ccl::ATTR_ELEMENT_CORNER && attr->type == ccl::TypeVector )
 	{
 		attr->std = ccl::ATTR_STD_UV_TANGENT;
 	}
@@ -443,35 +443,35 @@ void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *volu
 			openvdb::GridBase::ConstPtr grid = vdbObject->findGrid( gridName );
 			if( grid->isType<openvdb::BoolGrid>() )
 			{
-				ctype = ccl::TypeDesc::TypeInt;
+				ctype = ccl::TypeInt;
 			}
 			else if( grid->isType<openvdb::DoubleGrid>() )
 			{
-				ctype = ccl::TypeDesc::TypeFloat;
+				ctype = ccl::TypeFloat;
 			}
 			else if( grid->isType<openvdb::FloatGrid>() )
 			{
-				ctype = ccl::TypeDesc::TypeFloat;
+				ctype = ccl::TypeFloat;
 			}
 			else if( grid->isType<openvdb::Int32Grid>() )
 			{
-				ctype = ccl::TypeDesc::TypeInt;
+				ctype = ccl::TypeInt;
 			}
 			else if( grid->isType<openvdb::Int64Grid>() )
 			{
-				ctype = ccl::TypeDesc::TypeInt;
+				ctype = ccl::TypeInt;
 			}
 			else if( grid->isType<openvdb::Vec3DGrid>() )
 			{
-				ctype = ccl::TypeDesc::TypeVector;
+				ctype = ccl::TypeVector;
 			}
 			else if( grid->isType<openvdb::Vec3IGrid>() )
 			{
-				ctype = ccl::TypeDesc::TypeVector;
+				ctype = ccl::TypeVector;
 			}
 			else if( grid->isType<openvdb::Vec3SGrid>() )
 			{
-				ctype = ccl::TypeDesc::TypeVector;
+				ctype = ccl::TypeVector;
 			}
 		}
 

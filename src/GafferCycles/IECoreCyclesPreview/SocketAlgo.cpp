@@ -525,34 +525,34 @@ ccl::ParamValue setParamValue( const IECore::InternedString &name, const IECore:
 			{
 				const BoolData *data = static_cast<const BoolData *>( value );
 				float result = static_cast<float>( data->readable() );
-				return ccl::ParamValue( name.string(), ccl::TypeDesc::TypeFloat, 1, &result );
+				return ccl::ParamValue( name.string(), ccl::TypeFloat, 1, &result );
 			}
 			break;
 		case IntDataTypeId :
 			{
 				const IntData *data = static_cast<const IntData *>( value );
 				float result = static_cast<float>( data->readable() );
-				return ccl::ParamValue( name.string(), ccl::TypeDesc::TypeFloat, 1, &result );
+				return ccl::ParamValue( name.string(), ccl::TypeFloat, 1, &result );
 			}
 			break;
 		case UIntDataTypeId :
 			{
 				const UIntData *data = static_cast<const UIntData *>( value );
 				float result = static_cast<float>( data->readable() );
-				return ccl::ParamValue( name.string(), ccl::TypeDesc::TypeFloat, 1, &result );
+				return ccl::ParamValue( name.string(), ccl::TypeFloat, 1, &result );
 			}
 			break;
 		case DoubleDataTypeId :
 			{
 				const DoubleData *data = static_cast<const DoubleData *>( value );
 				float result = static_cast<float>( data->readable() );
-				return ccl::ParamValue( name.string(), ccl::TypeDesc::TypeFloat, 1, &result );
+				return ccl::ParamValue( name.string(), ccl::TypeFloat, 1, &result );
 			}
 			break;
 		case FloatDataTypeId :
 			{
 				const FloatData *data = static_cast<const FloatData *>( value );
-				return ccl::ParamValue( name.string(), ccl::TypeDesc::TypeFloat, 1, &data->readable() );
+				return ccl::ParamValue( name.string(), ccl::TypeFloat, 1, &data->readable() );
 			}
 			break;
 		case Color3fDataTypeId :
@@ -589,7 +589,7 @@ ccl::ParamValue setParamValue( const IECore::InternedString &name, const IECore:
 				// Need to pad to float4 to prevent an assert in Cycles debug mode
 				const V3f vec = data->readable();
 				const ccl::float4 result = ccl::make_float4( vec[0], vec[1], vec[2], 1.0f );
-				return ccl::ParamValue( name.string(), ccl::TypeDesc::TypeFloat4, 1, &result );
+				return ccl::ParamValue( name.string(), ccl::TypeFloat4, 1, &result );
 			}
 			break;
 		case V3iDataTypeId :
@@ -598,7 +598,7 @@ ccl::ParamValue setParamValue( const IECore::InternedString &name, const IECore:
 				// Need to pad to float4 to prevent an assert in Cycles debug mode
 				const V3i vec = data->readable();
 				const ccl::float4 result = ccl::make_float4( (float)vec[0], (float)vec[1], (float)vec[2], 1.0f );
-				return ccl::ParamValue( name.string(), ccl::TypeDesc::TypeFloat4, 1, &result );
+				return ccl::ParamValue( name.string(), ccl::TypeFloat4, 1, &result );
 			}
 			break;
 		case QuatfDataTypeId :
@@ -612,14 +612,14 @@ ccl::ParamValue setParamValue( const IECore::InternedString &name, const IECore:
 			{
 				const M44fData *data = static_cast<const M44fData *>( value );
 				const ccl::Transform result = setTransform( data->readable() );
-				return ccl::ParamValue( name.string(), ccl::TypeDesc::TypeMatrix, 1, &result );
+				return ccl::ParamValue( name.string(), ccl::TypeMatrix, 1, &result );
 			}
 			break;
 		case M44dDataTypeId :
 			{
 				const M44dData *data = static_cast<const M44dData *>( value );
 				const ccl::Transform result = setTransform( data->readable() );
-				return ccl::ParamValue( name.string(), ccl::TypeDesc::TypeMatrix, 1, &result );
+				return ccl::ParamValue( name.string(), ccl::TypeMatrix, 1, &result );
 			}
 			break;
 		default :
