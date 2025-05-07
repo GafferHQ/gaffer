@@ -48,5 +48,10 @@ class DelightRenderTest( GafferSceneTest.RenderTest ) :
 
 		pass
 
+	@unittest.skip( "No shadow linking support just yet" )
+	def testShadowLinking( self ) :
+
+		pass
+
 if __name__ == "__main__":
 	unittest.main()

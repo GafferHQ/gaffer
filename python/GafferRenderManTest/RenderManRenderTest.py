@@ -121,6 +121,16 @@ class RenderManRenderTest( GafferSceneTest.RenderTest ) :
 
 		return light, light["parameters"]["lightColor"]
 
+	def _createDistantLight( self ) :
+
+		light = GafferRenderMan.RenderManLight()
+		light.loadShader( "PxrDistantLight" )
+		return light, light["parameters"]["lightColor"]
+
+	def _cameraVisibilityAttribute( self ) :
+
+		return "ri:visibility:camera"
+
 	def __colorAtUV( self, image, uv ) :
 
 		dimensions = image.dataWindow.size() + imath.V2i( 1 )

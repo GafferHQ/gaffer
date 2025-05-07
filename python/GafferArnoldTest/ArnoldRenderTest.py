@@ -1640,5 +1640,26 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		light.loadShader( "point_light" )
 		return light, light["parameters"]["color"]
 
+	def _createDistantLight( self ) :
+
+		light = GafferArnold.ArnoldLight()
+		light.loadShader( "distant_light" )
+		return light, light["parameters"]["color"]
+
+	def _cameraVisibilityAttribute( self ) :
+
+		return "ai:visibility:camera"
+
+	def _createOptions( self ) :
+
+		# Stop unwanted bounce light throwing off the shadow linking test
+
+		options = GafferArnold.ArnoldOptions()
+
+		options["options"]["giTotalDepth"]["enabled"].setValue( True )
+		options["options"]["giTotalDepth"]["value"].setValue( 0 )
+
+		return options
+
 if __name__ == "__main__":
 	unittest.main()

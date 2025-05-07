@@ -64,6 +64,12 @@ class InteractiveDelightRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		pass
 
+
+	@unittest.skip( "No shadow linking support just yet" )
+	def testShadowLinking( self ) :
+
+		pass
+
 	@unittest.skip( "Need to be able to close old driver _after_ opening new one" )
 	def testEditCropWindow( self ) :
 

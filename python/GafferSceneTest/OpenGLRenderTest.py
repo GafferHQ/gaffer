@@ -114,5 +114,10 @@ class OpenGLRenderTest( GafferSceneTest.RenderTest ) :
 
 		pass
 
+	@unittest.skip( "Shadow linking not supported" )
+	def testShadowLinking( self ) :
+
+		pass
+
 if __name__ == "__main__":
 	unittest.main()

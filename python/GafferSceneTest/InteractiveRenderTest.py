@@ -2729,6 +2729,119 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( interactiveRender["resolvedRenderer"].getValue(), self.renderer )
 		self.assertEqual( interactiveRender["__adaptedIn"].globals()["option:test"], IECore.StringData( self.renderer ) )
 
+	def testShadowLinking( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["catalogue"] = GafferImage.Catalogue()
+
+		script["camera"] = GafferScene.Camera()
+		script["camera"]["transform"]["translate"]["z"].setValue( 5 )
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["in"].setInput( script["camera"]["out"] )
+		script["parent"]["parent"].setValue( "/" )
+
+		script["shader"], unused, shaderOut = self._createMatteShader()
+
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["dimensions"].setValue( imath.V2f( 10 ) )
+		script["assignment"] = GafferScene.ShaderAssignment()
+		script["assignment"]["in"].setInput( script["plane"]["out"] )
+		script["assignment"]["shader"].setInput( shaderOut )
+		script["parent"]["children"].next().setInput( script["assignment"]["out"] )
+
+		script["light"], unused = self._createPointLight()
+		unused.setValue( imath.Color3f( 1000 ) )
+		script["light"]["name"].setValue( "pointLight" )
+		script["light"]["transform"]["translate"]["z"].setValue( 10 )
+		script["parent"]["children"].next().setInput( script["light"]["out"] )
+
+		script["sphere"] = GafferScene.Sphere()
+		script["sphere"]["radius"].setValue( 0.5 )
+		script["sphere"]["transform"]["translate"]["z"].setValue( 5 )
+
+		script["sphereAssignment"] = GafferScene.ShaderAssignment()
+		script["sphereAssignment"]["in"].setInput( script["sphere"]["out"] )
+		script["sphereAssignment"]["shader"].setInput( shaderOut )
+
+		script["attributes"] = GafferScene.CustomAttributes()
+		script["attributes"]["in"].setInput( script["sphereAssignment"]["out"] )
+		script["attributes"]["attributes"].addChild(
+			Gaffer.NameValuePlug( self._cameraVisibilityAttribute(), False, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		)
+		script["parent"]["children"].next().setInput( script["attributes"]["out"] )
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( script["catalogue"].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+				}
+			)
+		)
+		script["outputs"]["in"].setInput( script["parent"]["out"] )
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["in"].setInput( script["outputs"]["out"] )
+		script["options"]["options"]["renderCamera"]["enabled"].setValue( True )
+		script["options"]["options"]["renderCamera"]["value"].setValue( "/camera" )
+
+		script["rendererOptions"] = self._createOptions()
+		script["rendererOptions"]["in"].setInput( script["options"]["out"] )
+
+		script["render"] = self._createInteractiveRender()
+		script["render"]["in"].setInput( script["rendererOptions"]["out"] )
+
+		script["sampler"] = GafferImage.ImageSampler()
+		script["sampler"]["image"].setInput( script["catalogue"]["out"] )
+		script["sampler"]["pixel"].setValue( imath.V2f( 320, 240 ) )
+
+		# Render, and check the plane is fully shadowed.
+
+		script["render"]["state"].setValue( script["render"].State.Running )
+		self.uiThreadCallHandler.waitFor( 1 )
+		self.assertEqual( script["sampler"]["color"].getValue(), imath.Color4f( 0, 0, 0, 1 ) )
+
+		# Remove shadow link, and check plane isn't shadowed.
+
+		script["attributes"]["attributes"].addChild(
+			Gaffer.NameValuePlug( "shadowedLights", "", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		)
+		self.uiThreadCallHandler.waitFor( 1 )
+		self.assertGreater( script["sampler"]["color"]["r"].getValue(), 0.1 )
+
+		# Link to light explicitly, and check plane is shadowed.
+
+		script["attributes"]["attributes"][-1]["value"].setValue( "/pointLight" )
+		self.uiThreadCallHandler.waitFor( 1 )
+		self.assertEqual( script["sampler"]["color"].getValue(), imath.Color4f( 0, 0, 0, 1 ) )
+
+		# Link to non-existent light, and check plane isn't shadowed.
+
+		script["attributes"]["attributes"][-1]["value"].setValue( "nonExistent" )
+		self.uiThreadCallHandler.waitFor( 1 )
+		self.assertGreater( script["sampler"]["color"]["r"].getValue(), 0.1 )
+
+		# Link to light via `defaultLights`, and check plane is shadowed.
+
+		script["attributes"]["attributes"][-1]["value"].setValue( "defaultLights" )
+		self.uiThreadCallHandler.waitFor( 1 )
+		self.assertEqual( script["sampler"]["color"].getValue(), imath.Color4f( 0, 0, 0, 1 ) )
+
+		# Remove light from set, and check plane isn't shadowed.
+
+		script["light"]["defaultLight"].setValue( False )
+		self.uiThreadCallHandler.waitFor( 1 )
+		self.assertEqual( script["sampler"]["color"].getValue(), imath.Color4f( 0, 0, 0, 1 ) )
+
 	def tearDown( self ) :
 
 		GafferSceneTest.SceneTestCase.tearDown( self )
