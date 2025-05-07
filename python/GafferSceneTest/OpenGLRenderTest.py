@@ -109,5 +109,10 @@ class OpenGLRenderTest( GafferSceneTest.RenderTest ) :
 		self.assertAlmostEqual( imageSampler["color"]["g"].getValue(), 0.666666, delta = 0.001 )
 		self.assertEqual( imageSampler["color"]["b"].getValue(), 0 )
 
+	@unittest.skip( "Light linking not supported" )
+	def testLightLinking( self ) :
+
+		pass
+
 if __name__ == "__main__":
 	unittest.main()

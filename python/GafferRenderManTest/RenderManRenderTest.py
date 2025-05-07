@@ -45,7 +45,7 @@ import Gaffer
 import GafferTest
 import GafferScene
 
-import IECoreRenderMan
+import GafferRenderMan
 import GafferSceneTest
 
 @unittest.skipIf( GafferTest.inCI() and os.name == "nt", "RenderMan cannot get license on Windows.")
@@ -105,6 +105,21 @@ class RenderManRenderTest( GafferSceneTest.RenderTest ) :
 			self.assertAlmostEqual( middlePixel.b, 1, delta = 0.01 )
 			self.assertAlmostEqual( middlePixel.a, 1, delta = 0.01 )
 			self.assertEqual( lowerPixel, imath.Color4f( 0 ) )
+
+	def _createDiffuseShader( self ) :
+
+		shader = GafferRenderMan.RenderManShader()
+		shader.loadShader( "PxrDiffuse" )
+		return shader, shader["parameters"]["diffuseColor"], shader["out"]
+
+	def _createPointLight( self ) :
+
+		light = GafferRenderMan.RenderManLight()
+		light.loadShader( "PxrSphereLight" )
+		light["attributes"]["ri:visibility:camera"]["enabled"].setValue( True )
+		light["attributes"]["ri:visibility:camera"]["value"].setValue( False )
+
+		return light, light["parameters"]["lightColor"]
 
 	def __colorAtUV( self, image, uv ) :
 
