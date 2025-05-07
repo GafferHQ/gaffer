@@ -4,7 +4,7 @@
 Improvements
 ------------
 
-- StandardAttributes : Added `shadowedLights` attribute to specify shadow linking.
+- StandardAttributes : Added `shadowedLights` attribute to specify shadow linking. This supercedes the Arnold-specific `shadowGroup` attribute on the ArnoldAttributes node.
 - GafferML :
   - Added support for custom ONNX ops via the `GAFFERML_CUSTOM_OPS_LIBRARIES` environment variable. This should contain a comma-separated list of full paths to libraries containing custom ops.
   - Added support for string tensors.

@@ -320,13 +320,14 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		# Output the lights to the renderer
 
-		renderOptions = GafferScene.Private.RendererAlgo.RenderOptions( soloSet["out"] )
-		renderSets = GafferScene.Private.RendererAlgo.RenderSets( soloSet["out"] )
-		lightLinks = GafferScene.Private.RendererAlgo.LightLinks()
-
 		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
+
+		renderOptions = GafferScene.Private.RendererAlgo.RenderOptions( soloSet["out"] )
+		renderSets = GafferScene.Private.RendererAlgo.RenderSets( soloSet["out"] )
+		lightLinks = GafferScene.Private.RendererAlgo.LightLinks( renderer )
+
 		GafferScene.Private.RendererAlgo.outputLights( soloSet["out"], renderOptions, renderSets, lightLinks, renderer )
 
 		# Check that the output is correct
@@ -451,13 +452,14 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		# Output the lights to the renderer
 
-		renderOptions = GafferScene.Private.RendererAlgo.RenderOptions( muteAttributes["out"] )
-		renderSets = GafferScene.Private.RendererAlgo.RenderSets( muteAttributes["out"] )
-		lightLinks = GafferScene.Private.RendererAlgo.LightLinks()
-
 		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
+
+		renderOptions = GafferScene.Private.RendererAlgo.RenderOptions( muteAttributes["out"] )
+		renderSets = GafferScene.Private.RendererAlgo.RenderSets( muteAttributes["out"] )
+		lightLinks = GafferScene.Private.RendererAlgo.LightLinks( renderer )
+
 		GafferScene.Private.RendererAlgo.outputLights( muteAttributes["out"], renderOptions, renderSets, lightLinks, renderer )
 
 		# Check that the output is correct
@@ -654,7 +656,8 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 			)
 			GafferScene.Private.RendererAlgo.outputObjects(
-				group["out"], renderOptions, GafferScene.Private.RendererAlgo.RenderSets( scene ), GafferScene.Private.RendererAlgo.LightLinks(),
+				group["out"], renderOptions, GafferScene.Private.RendererAlgo.RenderSets( scene ),
+				GafferScene.Private.RendererAlgo.LightLinks( renderer ),
 				renderer
 			)
 
@@ -798,7 +801,8 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 			)
 			GafferScene.Private.RendererAlgo.outputObjects(
 				scene, GafferScene.Private.RendererAlgo.RenderOptions( scene ),
-				GafferScene.Private.RendererAlgo.RenderSets( scene ), GafferScene.Private.RendererAlgo.LightLinks(),
+				GafferScene.Private.RendererAlgo.RenderSets( scene ),
+				GafferScene.Private.RendererAlgo.LightLinks( renderer ),
 				renderer
 			)
 
@@ -902,7 +906,8 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 				)
 				GafferScene.Private.RendererAlgo.outputObjects(
 					standardOptions["out"], GafferScene.Private.RendererAlgo.RenderOptions( standardOptions["out"] ),
-					GafferScene.Private.RendererAlgo.RenderSets( standardOptions["out"] ), GafferScene.Private.RendererAlgo.LightLinks(),
+					GafferScene.Private.RendererAlgo.RenderSets( standardOptions["out"] ),
+					GafferScene.Private.RendererAlgo.LightLinks( renderer ),
 					renderer
 				)
 

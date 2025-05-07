@@ -281,7 +281,9 @@ class RenderPassTypeAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 			)
 			GafferScene.Private.RendererAlgo.outputObjects(
-				processor["out"], GafferScene.Private.RendererAlgo.RenderOptions( processor["out"] ), GafferScene.Private.RendererAlgo.RenderSets( processor["out"] ), GafferScene.Private.RendererAlgo.LightLinks(),
+				processor["out"], GafferScene.Private.RendererAlgo.RenderOptions( processor["out"] ),
+				GafferScene.Private.RendererAlgo.RenderSets( processor["out"] ),
+				GafferScene.Private.RendererAlgo.LightLinks( renderer ),
 				renderer
 			)
 
@@ -500,7 +502,9 @@ class RenderPassTypeAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 			)
 			GafferScene.Private.RendererAlgo.outputObjects(
-				processor["out"], GafferScene.Private.RendererAlgo.RenderOptions( processor["out"] ), GafferScene.Private.RendererAlgo.RenderSets( processor["out"] ), GafferScene.Private.RendererAlgo.LightLinks(),
+				processor["out"], GafferScene.Private.RendererAlgo.RenderOptions( processor["out"] ),
+				GafferScene.Private.RendererAlgo.RenderSets( processor["out"] ),
+				GafferScene.Private.RendererAlgo.LightLinks( renderer ),
 				renderer
 			)
 
@@ -762,7 +766,9 @@ class RenderPassTypeAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 			)
 			GafferScene.Private.RendererAlgo.outputObjects(
-				processor["out"], GafferScene.Private.RendererAlgo.RenderOptions( processor["out"] ), GafferScene.Private.RendererAlgo.RenderSets( processor["out"] ), GafferScene.Private.RendererAlgo.LightLinks(),
+				processor["out"], GafferScene.Private.RendererAlgo.RenderOptions( processor["out"] ),
+				GafferScene.Private.RendererAlgo.RenderSets( processor["out"] ),
+				GafferScene.Private.RendererAlgo.LightLinks( renderer ),
 				renderer
 			)
 
