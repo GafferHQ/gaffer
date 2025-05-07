@@ -43,5 +43,10 @@ class DelightRenderTest( GafferSceneTest.RenderTest ) :
 	renderer = "3Delight"
 	sceneDescriptionSuffix = ".nsi"
 
+	@unittest.skip( "No light linking support just yet" )
+	def testLightLinking( self ) :
+
+		pass
+
 if __name__ == "__main__":
 	unittest.main()

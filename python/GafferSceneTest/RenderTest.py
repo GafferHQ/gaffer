@@ -38,11 +38,14 @@ import pathlib
 import subprocess
 import unittest
 
+import imath
+
 import IECore
 import IECoreScene
 
 import Gaffer
 import GafferTest
+import GafferImage
 import GafferScene
 import GafferSceneTest
 
@@ -340,6 +343,85 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( postCS ), 2 )
 		self.assertEqual( preCS[1], ( render, ) )
 		self.assertEqual( postCS[1], ( render, ) )
+
+	def testLightLinking( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["camera"] = GafferScene.Camera()
+		script["camera"]["transform"]["translate"]["z"].setValue( 5 )
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["in"].setInput( script["camera"]["out"] )
+		script["parent"]["parent"].setValue( "/" )
+
+		script["shader"], unused, shaderOut = self._createDiffuseShader()
+
+		for label, color in {
+			"red" : imath.Color3f( 1, 0, 0 ),
+			"green" : imath.Color3f( 0, 1, 0 ),
+		}.items() :
+
+			light, colorPlug = self._createPointLight()
+			light["name"].setValue( f"{label}Light" )
+			colorPlug.setValue( color )
+			light["transform"]["translate"]["z"].setValue( 1 )
+			script[f"{label}Light"] = light
+
+			plane = GafferScene.Plane()
+			plane["name"].setValue( f"{label}Plane" )
+			plane["transform"]["translate"].setValue( color )
+			script[f"{label}Plane"] = plane
+
+			assignment = GafferScene.ShaderAssignment()
+			assignment["in"].setInput( plane["out"] )
+			assignment["shader"].setInput( shaderOut )
+			script[f"{label}Assignment"] = assignment
+
+			attributes = GafferScene.StandardAttributes()
+			attributes["attributes"]["linkedLights"]["enabled"].setValue( True )
+			attributes["attributes"]["linkedLights"]["value"].setValue( f"/{label}Light" )
+			attributes["in"].setInput( assignment["out"] )
+			script[f"{label}Attributes"] = attributes
+
+			script["parent"]["children"].next().setInput( light["out"] )
+			script["parent"]["children"].next().setInput( attributes["out"] )
+
+		imagePath = ( self.temporaryDirectory() / "test.exr" )
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				imagePath.as_posix(),
+				"exr",
+				"rgba",
+			)
+		)
+		script["outputs"]["in"].setInput( script["parent"]["out"] )
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["options"]["renderCamera"]["enabled"].setValue( True )
+		script["options"]["options"]["renderCamera"]["value"].setValue( "/camera" )
+		script["options"]["in"].setInput( script["outputs"]["out"] )
+
+		script["render"] = GafferScene.Render()
+		script["render"]["in"].setInput( script["options"]["out"] )
+		script["render"]["renderer"].setValue( self.renderer )
+		script["render"]["task"].execute()
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( imagePath )
+
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( reader["out"] )
+
+		sampler["pixel"].setValue( imath.V2f( 320, 370 ) )
+		self.assertEqual( sampler["color"]["r"].getValue(), 0 )
+		self.assertGreater( sampler["color"]["g"].getValue(), 0.02 )
+
+		sampler["pixel"].setValue( imath.V2f( 455, 232 ) )
+		self.assertGreater( sampler["color"]["r"].getValue(), 0.02 )
+		self.assertEqual( sampler["color"]["g"].getValue(), 0 )
 
 if __name__ == "__main__":
 	unittest.main()

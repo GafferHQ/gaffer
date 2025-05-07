@@ -98,15 +98,29 @@ void LightLinker::dirtyLightFilter( const LightFilter *lightFilter )
 const RtUString LightLinker::registerLightLinks( const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights )
 {
 	std::lock_guard lock( m_lightLinksMutex );
-	auto [it, inserted] = m_lightLinks.emplace( lights, RtUString() );
-	if( inserted )
+	LightSet &lightSet = m_lightSets[lights];
+	lightSet.useCount++;
+	if( lightSet.useCount == 1 )
 	{
-		const string groupName = fmt::format( "group{}", m_nextLightLinkGroup++ );
-		it->second = RtUString( groupName.c_str() );
+		const string groupName = fmt::format( "group{}", m_nextLightGroup++ );
+		lightSet.groupName = RtUString( groupName.c_str() );
 		m_lightLinksDirty = true;
 	}
 
-	return it->second;
+	return lightSet.groupName;
+}
+
+void LightLinker::deregisterLightLinks( const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights )
+{
+	std::lock_guard lock( m_lightLinksMutex );
+	auto it = m_lightSets.find( lights );
+	assert( it != m_lightSets.end() );
+	assert( it->second.useCount );
+	it->second.useCount--;
+	if( !it->second.useCount )
+	{
+		m_lightSets.erase( it );
+	}
 }
 
 void LightLinker::updateDirtyLinks()
@@ -166,7 +180,7 @@ void LightLinker::updateDirtyLightLinks()
 		return;
 	}
 
-	// For all lights currently in a linking group, calculate the right value
+	// For all lights currently in a linking set, calculate the right value
 	// for their `grouping:membership` attribute by concatenating the light
 	// group names. There are a couple of compromises here :
 	//
@@ -181,25 +195,16 @@ void LightLinker::updateDirtyLightLinks()
 	/// production scenarios.
 
 	std::unordered_map<Light *, string> lightMemberships;
-	for( auto it = m_lightLinks.begin(); it != m_lightLinks.end(); )
+	for( const auto &[objectSet, lightSet] : m_lightSets )
 	{
-		auto set = it->first.lock();
-		if( !set )
+		for( auto &light : *objectSet )
 		{
-			it = m_lightLinks.erase( it );
-		}
-		else
-		{
-			for( auto &light : *set )
+			auto &memberships = lightMemberships[static_cast<Light *>( light.get() )];
+			if( memberships.size() )
 			{
-				auto &memberships = lightMemberships[static_cast<Light *>( light.get() )];
-				if( memberships.size() )
-				{
-					memberships += " ";
-				}
-				memberships += it->second.CStr();
+				memberships += " ";
 			}
-			it++;
+			memberships += lightSet.groupName.CStr();
 		}
 	}
 

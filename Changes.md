@@ -15,7 +15,10 @@ Improvements
 Fixes
 -----
 
-- RenderMan : Fixed handling of `render:{name}` attributes, such as the `render:displayColor` attribute created by StandardAttributes, and `primvar:{name}` attributes loaded from USD files. These can now be accessed by PxrAttribute shaders as either `user:{name}` or just `{name}`.
+- Cycles : Fixed light linking in batch renders.
+- RenderMan :
+  - Fixed light linking in batch renders.
+  - Fixed handling of `render:{name}` attributes, such as the `render:displayColor` attribute created by StandardAttributes, and `primvar:{name}` attributes loaded from USD files. These can now be accessed by PxrAttribute shaders as either `user:{name}` or just `{name}`.
 - Cryptomatte : Fixed hypothetical inconsistencies if the C++ language locale affects the parsing of JSON files ( probably not an issue in practice, since the JSON in question should just be hexadecimal integers, and no known locale should affect the parsing of integers ).
 - Alembic : Fixed crashes caused by invalid UVs.
 
