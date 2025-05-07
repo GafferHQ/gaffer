@@ -341,6 +341,27 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 	if not __validateSelection( pathListing ) :
 		return
 
+	pluralSuffix = "" if sum( [ x.size() for x in pathListing.getSelection() ] ) == 1 else "s"
+	menuDefinition.append(
+		f"Copy Value{pluralSuffix}",
+		{
+			"command" : functools.partial( _copySelectedValues, pathListing ),
+			"active" : functools.partial( _canCopySelectedValues, pathListing )
+		}
+	)
+
+	menuDefinition.append(
+		f"Paste Value{pluralSuffix}",
+		{
+			"command" : functools.partial( _pasteValues, pathListing ),
+			"active" : functools.partial( _canPasteValues, pathListing )
+		}
+	)
+
+	menuDefinition.append(
+		"CopyPasteDivider", { "divider" : True }
+	)
+
 	menuDefinition.append(
 		"Show History...",
 		{
@@ -395,6 +416,14 @@ def __keyPress( column, pathListing, event ) :
 
 	if event.key in ( "Return", "Enter" ) and event.modifiers in ( event.Modifiers.None_, event.modifiers.Control ):
 		__editSelectedCells( pathListing, ensureEnabled = event.modifiers == event.modifiers.Control )
+		return True
+
+	if event.key == "C" and event.modifiers == event.Modifiers.Control :
+		_copySelectedValues( pathListing )
+		return True
+
+	if event.key == "V" and event.modifiers == event.Modifiers.Control :
+		_pasteValues( pathListing )
 		return True
 
 	if event.modifiers == event.Modifiers.None_ :
@@ -593,6 +622,196 @@ def __columnMetadata( column, metadataKey ) :
 		return None
 
 	return Gaffer.Metadata.value( prefixMap.get( type( column.inspector() ) ) + column.inspector().name(), metadataKey )
+
+##########################################################################
+# Copy and paste
+##########################################################################
+
+## Returns True if the pathListing selection can be copied to the clipboard.
+def _canCopySelectedValues( pathListing ) :
+
+	dataOrReason = _dataFromPathListingOrReason( pathListing )
+	if isinstance( dataOrReason, str ) :
+		return False
+
+	return True
+
+## Returns the reason why the pathListing selection cannot be copied to the clipboard.
+def _nonCopyableReason( pathListing ) :
+
+	dataOrReason = _dataFromPathListingOrReason( pathListing )
+	if isinstance( dataOrReason, str ) :
+		return dataOrReason
+
+	return ""
+
+## Copies the pathListing selection to the clipboard.
+## \todo The copy functionality implemented here could be relocated to PathListingWidget,
+# this would allow values to be copied from any column.
+def _copySelectedValues( pathListing ) :
+
+	dataOrReason = _dataFromPathListingOrReason( pathListing )
+	if isinstance( dataOrReason, str ) :
+		__warningPopup( pathListing, dataOrReason )
+		return
+
+	scriptNode = pathListing.ancestor( GafferUI.Editor ).scriptNode()
+	scriptNode.ancestor( Gaffer.ApplicationRoot ).setClipboardContents( dataOrReason )
+
+## Returns the pathListing selection as data, or the reason why the selection is not valid.
+def _dataFromPathListingOrReason( pathListing ) :
+
+	path = pathListing.getPath().copy()
+	selection = __orderedSelection( pathListing )
+
+	numColumns = max( [ len( x[1] ) for x in selection ] )
+	if not all( [ len( x[1] ) == numColumns for x in selection ] ) :
+		# Only return data if all rows have the same number of columns
+		## \todo Relax this constraint?
+		return "Each row in the selection must contain the same number of cells."
+
+	objectMatrix = IECore.ObjectMatrix( len( selection ), numColumns )
+	rowIndex = 0
+	for pathString, columns in selection :
+		path.setFromString( pathString )
+
+		for columnIndex, column in enumerate( columns ) :
+			value = column.cellData( path ).value
+			if value is None :
+				reason = "No value to copy."
+				if len( columns ) > 1 :
+					return "{} : {}".format( column.headerData().value, reason )
+				else :
+					return reason
+
+			## \todo Store values as a CompoundData including the column name so values could be pasted to a row and matched by name.
+			objectMatrix[ rowIndex, columnIndex ] = value
+
+		rowIndex += 1
+
+	if objectMatrix.numRows() == 1 and objectMatrix.numColumns() == 1 :
+		# If a single cell is selected, return its data directly.
+		# This allows easy pasting of a single value to PlugValueWidgets.
+		return objectMatrix[0, 0]
+
+	## \todo Return ObjectVector or VectorData for selections of a single row or column.
+	return objectMatrix
+
+## Returns True if the current clipboard contents can be pasted to the pathListing selection.
+def _canPasteValues( pathListing ) :
+
+	objectMatrix = __getObjectMatrixFromClipboard( pathListing )
+	pasteFunctions = __pasteFunctionsOrNonPasteableReason( pathListing, objectMatrix )
+	if isinstance( pasteFunctions, str ) :
+		return False
+
+	return True
+
+## Returns the reason why the current clipboard contents cannot be pasted.
+def _nonPasteableReason( pathListing ) :
+
+	objectMatrix = __getObjectMatrixFromClipboard( pathListing )
+	pasteFunctionsOrReason = __pasteFunctionsOrNonPasteableReason( pathListing, objectMatrix )
+	if isinstance( pasteFunctionsOrReason, str ) :
+		return pasteFunctionsOrReason
+
+	return ""
+
+## Pastes the current clipboard contents to the pathListing selection.
+def _pasteValues( pathListing ) :
+
+	objectMatrix = __getObjectMatrixFromClipboard( pathListing )
+	pasteFunctionsOrReason = __pasteFunctionsOrNonPasteableReason( pathListing, objectMatrix )
+	if isinstance( pasteFunctionsOrReason, str ) :
+		__warningPopup( pathListing, pasteFunctionsOrReason )
+		return
+
+	with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
+		for f in pasteFunctionsOrReason :
+			f()
+
+def __getObjectMatrixFromClipboard( pathListing ) :
+
+	scriptNode = pathListing.ancestor( GafferUI.Editor ).scriptNode()
+
+	clipboard = scriptNode.ancestor( Gaffer.ApplicationRoot ).getClipboardContents()
+	if isinstance( clipboard, IECore.ObjectMatrix ) :
+		return clipboard
+	elif isinstance( clipboard, IECore.Data ) :
+		matrix = IECore.ObjectMatrix( 1, 1 )
+		matrix[0, 0] = clipboard
+		return matrix
+	else :
+		## \todo Support conversion of IECore.ObjectVector and VectorData to ObjectMatrix
+		return None
+
+def __matrixValue( objectMatrix, row, column ) :
+
+	value = objectMatrix[ row % objectMatrix.numRows(), column % objectMatrix.numColumns() ]
+
+	if isinstance( value, IECore.CompoundData ) and "value" in value :
+		value = value["value"]
+		# Values copied from spreadsheets are nested within a CellPlug,
+		# we want `CellPlug.value.value`.
+		if isinstance( value, IECore.CompoundData ) and "value" in value :
+			value = value["value"]
+
+	return value
+
+## \todo Support pasting `atTime` once `Inspection::edit()` has support for it.
+def __pasteFunctionsOrNonPasteableReason( pathListing, objectMatrix ) :
+
+	if objectMatrix is None :
+		return "Nothing to paste"
+
+	pasteFunctions = []
+
+	path = pathListing.getPath().copy()
+	selection = __orderedSelection( pathListing )
+	## \todo Allow a N x 1 or 1 x N sized clipboard to be pasted as either a row or column
+	for rowIndex, (pathString, columns) in enumerate( selection ) :
+		sourceIndex = 0
+		path.setFromString( pathString )
+		inspectionContext = path.inspectionContext()
+		if inspectionContext is None :
+			return "\"{}\" is not editable.".format( pathString )
+
+		with inspectionContext :
+			for column in columns :
+				inspection = column.inspector().inspect()
+				if inspection is None :
+					return "\"{}\" is not editable.".format( pathString )
+
+				value = __matrixValue( objectMatrix, rowIndex, sourceIndex )
+				sourceIndex += 1
+				if value is None :
+					continue
+
+				if inspection.canEdit( value ) :
+					pasteFunctions.append( functools.partial( inspection.edit, value ) )
+				elif len( columns ) > 1 :
+					return "{} : {}".format( column.headerData().value, inspection.nonEditableReason( value ) )
+				else :
+					return inspection.nonEditableReason( value )
+
+	return pasteFunctions
+
+def __orderedSelection( pathListing ) :
+
+	# Returns the current selection ordered based on the
+	# current sort order of the PathListingWidget.
+
+	rows = {}
+	for selection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
+		for path in selection.paths() :
+			rows.setdefault( path, [] ).append( column )
+
+	matrix = []
+	orderedPaths = pathListing.visualOrder( IECore.PathMatcher( list( rows.keys() ) ) )
+	for path, columns in sorted( rows.items(), key = lambda item : orderedPaths.index( item[0] ) ) :
+		matrix.append( ( path, columns ) )
+
+	return matrix
 
 def __inspectorColumnCreated( column ) :
 

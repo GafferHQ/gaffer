@@ -37,6 +37,7 @@
 
 #include "Gaffer/PlugAlgo.h"
 
+#include "Gaffer/Animation.h"
 #include "Gaffer/Box.h"
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/ComputeNode.h"
@@ -56,8 +57,11 @@
 #include "IECore/DataAlgo.h"
 #include "IECore/SplineData.h"
 
+#include "boost/algorithm/string/classification.hpp"
+#include "boost/algorithm/string/join.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/algorithm/string/replace.hpp"
+#include "boost/algorithm/string/split.hpp"
 
 #include "fmt/format.h"
 
@@ -749,6 +753,22 @@ bool setTypedDataPlugValue( PlugType *plug, const Data *value )
 	return false;
 }
 
+bool setStringVectorDataPlugValue( StringVectorDataPlug *plug, const Data *value )
+{
+	if( value->typeId() == IECore::StringDataTypeId )
+	{
+		const auto *data = static_cast<const StringData *>( value );
+		IECore::StringVectorDataPtr result = new IECore::StringVectorData;
+		if( !data->readable().empty() )
+		{
+			boost::split( result->writable(), data->readable(), boost::is_any_of( " " ) );
+		}
+		plug->setValue( result );
+		return true;
+	}
+	return setTypedDataPlugValue( plug, value );
+}
+
 bool setStringPlugValue( StringPlug *plug, const Data *value )
 {
 	switch( value->typeId() )
@@ -761,12 +781,8 @@ bool setStringPlugValue( StringPlug *plug, const Data *value )
 			return true;
 		case IECore::StringVectorDataTypeId : {
 			const auto *data = static_cast<const StringVectorData *>( value );
-			if( data->readable().size() == 1 )
-			{
-				plug->setValue( data->readable()[0] );
-				return true;
-			}
-			return false;
+			plug->setValue( boost::algorithm::join( data->readable(), " " ) );
+			return true;
 		}
 		case IECore::InternedStringVectorDataTypeId : {
 			const auto *data = static_cast<const InternedStringVectorData *>( value );
@@ -1037,6 +1053,21 @@ bool canSetTypedDataPlugValue( const Data *value )
 	return false;
 }
 
+bool canSetStringVectorDataPlugValue( const Data *value )
+{
+	if( !value )
+	{
+		return true;  // Data type not specified, so it could be a match
+	}
+
+	if( value->typeId() == IECore::StringDataTypeId )
+	{
+		return true;
+	}
+
+	return canSetTypedDataPlugValue<StringVectorDataPlug>( value );
+}
+
 bool canSetStringPlugValue( const Data *value )
 {
 	if( !value )
@@ -1047,8 +1078,8 @@ bool canSetStringPlugValue( const Data *value )
 	{
 		case IECore::StringDataTypeId:
 		case IECore::InternedStringDataTypeId:
-			return true;
 		case IECore::StringVectorDataTypeId:
+			return true;
 		case IECore::InternedStringVectorDataTypeId:
 			return IECore::size( value ) == 1;
 		default:
@@ -1145,7 +1176,7 @@ bool canSetValueFromData( const ValuePlug *plug, const IECore::Data *value )
 		case Gaffer::StringPlugTypeId:
 			return canSetStringPlugValue( value );
 		case Gaffer::StringVectorDataPlugTypeId:
-			return canSetTypedDataPlugValue<StringVectorDataPlug>( value );
+			return canSetStringVectorDataPlugValue( value );
 		case Gaffer::InternedStringVectorDataPlugTypeId:
 			return canSetTypedDataPlugValue<InternedStringVectorDataPlug>( value );
 		case Gaffer::Color3fPlugTypeId:
@@ -1221,7 +1252,7 @@ bool setValueFromData( ValuePlug *plug, const IECore::Data *value )
 		case Gaffer::StringPlugTypeId:
 			return setStringPlugValue( static_cast<StringPlug *>( plug ), value );
 		case Gaffer::StringVectorDataPlugTypeId:
-			return setTypedDataPlugValue( static_cast<StringVectorDataPlug *>( plug ), value );
+			return setStringVectorDataPlugValue( static_cast<StringVectorDataPlug *>( plug ), value );
 		case Gaffer::InternedStringVectorDataPlugTypeId:
 			return setTypedDataPlugValue( static_cast<InternedStringVectorDataPlug *>( plug ), value );
 		case Gaffer::Color3fPlugTypeId:
@@ -1338,6 +1369,62 @@ bool setValueFromData( const ValuePlug *plug, ValuePlug *leafPlug, const IECore:
 
 	return setValueFromData( leafPlug, value );
 
+}
+
+bool setValueOrInsertKeyFromData( ValuePlug *plug, float time, const IECore::Data *value )
+{
+	if( Animation::isAnimated( plug ) )
+	{
+		// convert input data to a float value for a keyframe
+		float keyValue = 0.0f;
+		switch( value->typeId() )
+		{
+			case HalfDataTypeId :
+				keyValue = static_cast<const HalfData *>( value )->readable();
+				break;
+			case FloatDataTypeId :
+				keyValue = static_cast<const FloatData *>( value )->readable();
+				break;
+			case DoubleDataTypeId :
+				keyValue = static_cast<const DoubleData *>( value )->readable();
+				break;
+			case CharDataTypeId :
+				keyValue = static_cast<const CharData *>( value )->readable();
+				break;
+			case UCharDataTypeId :
+				keyValue = static_cast<const UCharData *>( value )->readable();
+				break;
+			case ShortDataTypeId :
+				keyValue = static_cast<const ShortData *>( value )->readable();
+				break;
+			case UShortDataTypeId :
+				keyValue = static_cast<const UShortData *>( value )->readable();
+				break;
+			case IntDataTypeId :
+				keyValue = static_cast<const IntData *>( value )->readable();
+				break;
+			case UIntDataTypeId :
+				keyValue = static_cast<const UIntData *>( value )->readable();
+				break;
+			case Int64DataTypeId :
+				keyValue = static_cast<const Int64Data *>( value )->readable();
+				break;
+			case UInt64DataTypeId :
+				keyValue = static_cast<const UInt64Data *>( value )->readable();
+				break;
+			case BoolDataTypeId :
+				keyValue = static_cast<const BoolData *>( value )->readable();
+				break;
+			default :
+				return false;
+		}
+
+		Animation::CurvePlug *curve = Animation::acquire( plug );
+		curve->insertKey( time, keyValue );
+		return true;
+	}
+
+	return setValueFromData( plug, value );
 }
 
 }  // namespace PlugAlgo

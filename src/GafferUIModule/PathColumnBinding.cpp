@@ -141,6 +141,15 @@ class PathListingWidgetAccessor : public GafferUI::PathListingWidget
 			}
 		}
 
+		std::vector<std::string> visualOrder( const IECore::PathMatcher &paths ) const override
+		{
+			IECorePython::ScopedGILLock gilLock;
+			object pythonResult = m_widget.attr( "visualOrder" )( paths );
+			std::vector<std::string> result;
+			container_utils::extend_container( result, pythonResult );
+			return result;
+		}
+
 	private :
 
 		// A `weakref` for the Python PathListingWidget object. We use a

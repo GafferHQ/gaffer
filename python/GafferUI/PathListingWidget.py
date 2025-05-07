@@ -394,6 +394,9 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		return selection
 
+	def visualOrder( self, paths ) :
+
+		return _GafferUI._pathListingWidgetVisualOrder( GafferUI._qtAddress( self._qtWidget() ), paths )
 
 	## \deprecated
 	def getSelectedPaths( self ) :

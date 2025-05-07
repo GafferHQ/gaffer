@@ -848,6 +848,54 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 			IECore.V2iData( imath.V2i( 1.0 ) )
 		)
 
+	def testSetValueOrInsertKeyFromData( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+
+		for data in [
+			IECore.HalfData( 2.5 ),
+			IECore.FloatData( 0.25 ),
+			IECore.DoubleData( 25.5 ),
+			IECore.CharData( "a" ),
+			IECore.UCharData( 11 ),
+			IECore.ShortData( -101 ),
+			IECore.UShortData( 102 ),
+			IECore.UIntData( 405 ),
+			IECore.Int64Data( -1001 ),
+			IECore.UInt64Data( 1002 ),
+			IECore.BoolData( True )
+		] :
+
+			for plugType in [
+				Gaffer.IntPlug,
+				Gaffer.FloatPlug,
+				Gaffer.BoolPlug,
+			] :
+
+				with self.subTest( data = data, plugType = plugType ) :
+
+					plug = plugType()
+					s["n"].addChild( plug )
+
+					self.assertTrue( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+
+					self.assertTrue( Gaffer.PlugAlgo.setValueOrInsertKeyFromData( plug, 1002, data ) )
+					self.assertFalse( Gaffer.Animation.isAnimated( plug ) )
+
+					value = ord( data.value ) if isinstance( data, IECore.CharData ) else data.value
+					self.assertEqual( plug.getValue(), plugType.ValueType( value ) )
+
+					curve = Gaffer.Animation.acquire( plug )
+					curve.addKey( Gaffer.Animation.Key( 0, 1001 ) )
+					self.assertFalse( curve.hasKey( 1002 ) )
+					self.assertTrue( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+
+					self.assertTrue( Gaffer.PlugAlgo.setValueOrInsertKeyFromData( plug, 1002, data ) )
+					self.assertTrue( curve.hasKey( 1002 ) )
+					self.assertEqual( curve.getKey( 1002 ).getValue(), Gaffer.FloatPlug.ValueType( value ) )
+
 	def testCanSetPlugFromValue( self ) :
 		compatiblePlugs = [
 			Gaffer.BoolPlug(),
@@ -1104,20 +1152,21 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 				self.assertEqual( plug.getValue(), value )
 				self.assertFalse( plug.isSetToDefault() )
 
-				# Array length 2, can't set
+				# Array length 2, can't set unless setting StringVectorData on StringPlug
 
+				canSetArray = isinstance( data, IECore.StringVectorData ) and plugType == Gaffer.StringPlug
 				data.append( data[0] )
 				plug.setToDefault()
-				self.assertFalse( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
-				self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
-				self.assertTrue( plug.isSetToDefault() )
+				self.assertEqual( Gaffer.PlugAlgo.canSetValueFromData( plug, data ), canSetArray )
+				self.assertEqual( Gaffer.PlugAlgo.setValueFromData( plug, data ), canSetArray )
+				self.assertNotEqual( plug.isSetToDefault(), canSetArray )
 
-				# Array length 0, can't set
+				# Array length 0, can't set unless setting StringVectorData on a StringPlug
 
 				data.resize( 0 )
 				plug.setToDefault()
-				self.assertFalse( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
-				self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+				self.assertEqual( Gaffer.PlugAlgo.canSetValueFromData( plug, data ), canSetArray )
+				self.assertEqual( Gaffer.PlugAlgo.setValueFromData( plug, data ), canSetArray )
 				self.assertTrue( plug.isSetToDefault() )
 
 	def testSetBoxValueFromVectorData( self ) :
@@ -1176,6 +1225,36 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 					for componentPlug in childPlug :
 						self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
 				self.assertTrue( plug.isSetToDefault() )
+
+	def testSetStringValueFromStringVectorData( self ) :
+
+		plug = Gaffer.StringPlug()
+
+		for data in [
+			IECore.StringVectorData( [ "a", "b", "c" ] ),
+			IECore.StringVectorData( [ "a" ] ),
+			IECore.StringVectorData()
+		] :
+
+			self.assertTrue( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+			self.assertTrue( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+			self.assertEqual( plug.getValue(), " ".join( data ) )
+			self.assertEqual( plug.isSetToDefault(), len( data ) == 0 )
+
+	def testSetStringVectorValueFromStringData( self ) :
+
+		plug = Gaffer.StringVectorDataPlug()
+
+		for data in [
+			IECore.StringData( "a b c" ),
+			IECore.StringData( "a" ),
+			IECore.StringData()
+		] :
+
+			self.assertTrue( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+			self.assertTrue( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+			self.assertEqual( plug.getValue(), IECore.StringVectorData( data.value.split() ) )
+			self.assertEqual( plug.isSetToDefault(), data.value == "" )
 
 	def testDependsOnCompute( self ) :
 
