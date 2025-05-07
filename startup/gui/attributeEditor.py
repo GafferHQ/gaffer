@@ -57,6 +57,7 @@ GafferSceneUI.AttributeEditor.registerAttribute( "Standard", "gaffer:deformation
 GafferSceneUI.AttributeEditor.registerAttribute( "Standard", "gaffer:deformationBlurSegments", "Motion Blur" )
 
 GafferSceneUI.AttributeEditor.registerAttribute( "Standard", "linkedLights", "Light Linking" )
+GafferSceneUI.AttributeEditor.registerAttribute( "Standard", "shadowedLights", "Light Linking" )
 GafferSceneUI.AttributeEditor.registerAttribute( "Standard", "filteredLights", "Light Linking" )
 
 GafferSceneUI.AttributeEditor.registerAttribute( "Standard", "gaffer:automaticInstancing", "Instancing" )

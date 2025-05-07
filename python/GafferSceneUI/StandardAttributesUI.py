@@ -239,6 +239,26 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"attributes.shadowedLights" : [
+
+			"description",
+			"""
+			The lights that cast shadows from this object. Accepts a set
+			expression or a space separated list of lights.
+			""",
+
+			"layout:section", "Light Linking",
+			"label", "Shadowed Lights",
+
+		],
+
+		"attributes.shadowedLights.value" : [
+
+			"ui:scene:acceptsSetExpression", True,
+			"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+
+		],
+
 		"attributes.filteredLights" : [
 
 			"description",
