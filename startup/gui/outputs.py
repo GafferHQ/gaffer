@@ -97,6 +97,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 		"sss",
 		"volume",
 		"albedo",
+		"id",
 		"diffuse_direct",
 		"diffuse_indirect",
 		"diffuse_albedo",
@@ -127,20 +128,24 @@ with IECore.IgnoredExceptions( ImportError ) :
 			data = "float Z"
 		elif aov == "normal":
 			data = "color N"
+		elif aov == "id":
+			data = "uint id"
 		else:
 			data = "color " + aov
 
-		if aov == "motionvector" :
-			parameters = {
-				"filter" : "closest"
-			}
-		else :
-			parameters = {}
+		parameters = {}
+
+		if aov in { "motionvector", "id" } :
+			parameters["filter"] = "closest"
 
 		if aov == "depth":
 			parameters["layerName"] = "Z"
+		elif aov == "id":
+			parameters["layerName"] = "id"
+			parameters["header:gaffer:loadAsUint"] = True
+			parameters["header:gaffer:integerMapping"] = "reinterpret"
 
-		if aov not in { "motionvector", "emission", "background" } :
+		if aov not in { "motionvector", "emission", "background", "id" } :
 			parameters["layerPerLightGroup"] = False
 
 		interactiveParameters = parameters.copy()
