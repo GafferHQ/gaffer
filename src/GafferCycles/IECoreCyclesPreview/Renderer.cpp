@@ -1857,6 +1857,7 @@ class LightCache : public IECore::RefCounted
 			// other sets as they are created by the LightLinker in response to
 			// calls to `CyclesObject::link()`.
 			light->set_light_set_membership( 1 );
+			light->set_shadow_set_membership( 1 );
 			light->tag_update( m_scene );
 			auto clight = SharedCLightPtr( light, nullNodeDeleter );
 
@@ -2000,8 +2001,14 @@ class LightLinker
 
 		LightLinker( IECoreScenePreview::Renderer::RenderType renderType );
 
-		uint32_t registerLightLinks( const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights );
-		void deregisterLightLinks( const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights );
+		enum class SetType
+		{
+			Light = 0,
+			Shadow = 1
+		};
+
+		uint32_t registerLightSet( SetType setType, const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights );
+		void deregisterLightSet( SetType setType, const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights );
 
 	private :
 
@@ -2015,12 +2022,18 @@ class LightLinker
 			uint32_t index;
 		};
 
-		/// \todo Use `unordered_map` (or `concurrent_unordered_map`) when `std::owner_hash()`
-		/// becomes available (in C++26).
-		using LightSets = std::map<WeakObjectSetPtr, LightSet, std::owner_less<WeakObjectSetPtr>>;
+		struct LightSets
+		{
+			/// \todo Use `unordered_map` (or `concurrent_unordered_map`) when `std::owner_hash()`
+			/// becomes available (in C++26).
+			using Map = std::map<WeakObjectSetPtr, LightSet, std::owner_less<WeakObjectSetPtr>>;
+			Map map;
+			uint64_t usedIndices = 1;
+		};
+
 		std::mutex m_mutex;
 		LightSets m_lightSets;
-		uint64_t m_usedIndices = 1;
+		LightSets m_shadowSets;
 
 };
 
@@ -2034,6 +2047,7 @@ namespace
 {
 
 const IECore::InternedString g_lights( "lights" );
+const IECore::InternedString g_shadowedLights( "shadowedLights" );
 
 class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 {
@@ -2049,30 +2063,58 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 		{
 			if( m_linkedLights )
 			{
-				m_lightLinker->deregisterLightLinks( m_linkedLights );
+				m_lightLinker->deregisterLightSet( LightLinker::SetType::Light, m_linkedLights );
+			}
+			if( m_shadowedLights )
+			{
+				m_lightLinker->deregisterLightSet( LightLinker::SetType::Shadow, m_shadowedLights );
 			}
 		}
 
 		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override
 		{
-			if( type != g_lights || !m_instance.object() )
+			if( !m_instance.object() )
 			{
 				return;
 			}
 
-			if( m_linkedLights )
+			IECoreScenePreview::Renderer::ConstObjectSetPtr *setMemberData;
+			LightLinker::SetType setType;
+			if( type == g_lights )
 			{
-				m_lightLinker->deregisterLightLinks( m_linkedLights );
+				setMemberData = &m_linkedLights;
+				setType = LightLinker::SetType::Light;
 			}
-			m_linkedLights = objects;
+			else if( type == g_shadowedLights )
+			{
+				setMemberData = &m_shadowedLights;
+				setType = LightLinker::SetType::Shadow;
+			}
+			else
+			{
+				return;
+			}
+
+			if( *setMemberData )
+			{
+				m_lightLinker->deregisterLightSet( setType, *setMemberData );
+			}
+			*setMemberData = objects;
 
 			uint32_t lightSet = 0;
-			if( m_linkedLights )
+			if( *setMemberData )
 			{
-				lightSet = m_lightLinker->registerLightLinks( m_linkedLights );
+				lightSet = m_lightLinker->registerLightSet( setType, *setMemberData );
 			}
 
-			m_instance.object()->set_receiver_light_set( lightSet );
+			if( setType == LightLinker::SetType::Light )
+			{
+				m_instance.object()->set_receiver_light_set( lightSet );
+			}
+			else
+			{
+				m_instance.object()->set_blocker_shadow_set( lightSet );
+			}
 		}
 
 		void transform( const Imath::M44f &transform ) override
@@ -2263,6 +2305,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 		ConstCyclesAttributesPtr m_attributes;
 		LightLinker *m_lightLinker;
 		IECoreScenePreview::Renderer::ConstObjectSetPtr m_linkedLights;
+		IECoreScenePreview::Renderer::ConstObjectSetPtr m_shadowedLights;
 
 };
 
@@ -2338,14 +2381,21 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 		// Used by LightLinker
 		// ===================
 
-		uint64_t getLightSetMembership() const
+		uint64_t getLightSetMembership( LightLinker::SetType setType ) const
 		{
-			return m_light->get_light_set_membership();
+			return setType == LightLinker::SetType::Light ? m_light->get_light_set_membership() : m_light->get_shadow_set_membership();
 		}
 
-		void setLightSetMembership( uint64_t membership )
+		void setLightSetMembership( LightLinker::SetType setType, uint64_t membership )
 		{
-			m_light->set_light_set_membership( membership );
+			if( setType == LightLinker::SetType::Light )
+			{
+				m_light->set_light_set_membership( membership );
+			}
+			else
+			{
+				m_light->set_shadow_set_membership( membership );
+			}
 		}
 
 	private :
@@ -2378,20 +2428,22 @@ LightLinker::LightLinker( IECoreScenePreview::Renderer::RenderType renderType )
 {
 }
 
-uint32_t LightLinker::registerLightLinks( const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights )
+uint32_t LightLinker::registerLightSet( SetType setType, const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights )
 {
 	std::lock_guard lock( m_mutex );
-	LightSet &lightSet = m_lightSets[lights];
+	LightSets &lightSets = setType == SetType::Light ? m_lightSets : m_shadowSets;
+
+	LightSet &lightSet = lightSets.map[lights];
 	lightSet.useCount++;
 	if( lightSet.useCount == 1 )
 	{
 		// First usage of this set. Find an unused index.
 		for( int i = 1; i < LIGHT_LINK_SET_MAX; ++i )
 		{
-			if( ( m_usedIndices & indexToMask( i ) ) == 0 )
+			if( ( lightSets.usedIndices & indexToMask( i ) ) == 0 )
 			{
 				lightSet.index = i;
-				m_usedIndices = m_usedIndices | indexToMask( i );
+				lightSets.usedIndices = lightSets.usedIndices | indexToMask( i );
 				break;
 			}
 		}
@@ -2400,12 +2452,13 @@ uint32_t LightLinker::registerLightLinks( const IECoreScenePreview::Renderer::Co
 		{
 			// Assign membership to lights. Note that we rely on `lock` here to
 			// prevent concurrent modification to the lights from multiple calls
-			// to `registerLightLinks()`.
+			// to `registerLightSet()`.
 			for( const auto &object : *lights )
 			{
 				auto light = static_cast<CyclesLight *>( object.get() );
 				light->setLightSetMembership(
-					light->getLightSetMembership() | indexToMask( lightSet.index )
+					setType,
+					light->getLightSetMembership( setType ) | indexToMask( lightSet.index )
 				);
 			}
 		}
@@ -2414,14 +2467,18 @@ uint32_t LightLinker::registerLightLinks( const IECoreScenePreview::Renderer::Co
 			// We ran out of indices.
 			IECore::msg(
 				IECore::Msg::Level::Warning, "CyclesRenderer",
-				fmt::format( "Light linking failed because the maximum number of unique light groups ({}) was exceeded.", LIGHT_LINK_SET_MAX )
+				fmt::format(
+					"{} linking failed because the maximum number of unique light groups ({}) was exceeded.",
+					setType == SetType::Light ? "Light" : "Shadow",
+					LIGHT_LINK_SET_MAX
+				)
 			);
 		}
 	}
 	return lightSet.index;
 }
 
-void LightLinker::deregisterLightLinks( const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights )
+void LightLinker::deregisterLightSet( SetType setType, const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights )
 {
 	if( m_renderType != IECoreScenePreview::Renderer::RenderType::Interactive )
 	{
@@ -2431,8 +2488,10 @@ void LightLinker::deregisterLightLinks( const IECoreScenePreview::Renderer::Cons
 	}
 
 	std::lock_guard lock( m_mutex );
-	auto it = m_lightSets.find( lights );
-	assert( it != m_lightSets.end() );
+	LightSets &lightSets = setType == SetType::Light ? m_lightSets : m_shadowSets;
+
+	auto it = lightSets.map.find( lights );
+	assert( it != lightSets.map.end() );
 	assert( it->second.useCount );
 	it->second.useCount--;
 	if( it->second.useCount )
@@ -2442,16 +2501,17 @@ void LightLinker::deregisterLightLinks( const IECoreScenePreview::Renderer::Cons
 
 	// Set no longer in use.
 
-	m_usedIndices = m_usedIndices & ~indexToMask( it->second.index );
+	lightSets.usedIndices = lightSets.usedIndices & ~indexToMask( it->second.index );
 	for( const auto &object : *lights )
 	{
 		auto light = static_cast<CyclesLight *>( object.get() );
 		light->setLightSetMembership(
-			light->getLightSetMembership() & ~indexToMask( it->second.index )
+			setType,
+			light->getLightSetMembership( setType ) & ~indexToMask( it->second.index )
 		);
 	}
 
-	m_lightSets.erase( it );
+	lightSets.map.erase( it );
 }
 
 } // namespace
