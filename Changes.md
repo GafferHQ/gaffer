@@ -32,25 +32,52 @@ Breaking Changes
 - DeleteAttributes : Changed base class and marked as `final`.
 - Wrapper : The `gaffer` wrapper on Linux no longer allows a custom Python build to be used. If you wish to use a custom Python, call `python _gaffer.py` instead.
 
-1.5.x.x (relative to 1.5.12.0)
+1.5.x.x (relative to 1.5.13.0)
 =======
+
+
+
+1.5.13.0 (relative to 1.5.12.0)
+========
 
 Features
 --------
 
 - ArnoldProcedural : Added a new node for making Arnold `.ass` procedural placeholders.
+- AttributeEditor, LightEditor, RenderPassEditor : Added copy and paste editing. Values from one or more cells can be copied to the clipboard with <kbd>Ctrl</kbd> + <kbd>C</kbd> and pasted with <kbd>Ctrl</kbd> + <kbd>V</kbd> to create or update edits. Values copied from these editors can also be pasted into Spreadsheet cells, and vice versa.
 
 Improvements
 ------------
 
 - ImageReader : Automatically set "filePath" metadata when reading images, making it easier to determine the path an image was loaded from.
-- Cryptomatte : Improved automatic finding of manifests. Now, if the image's metadata references a sidecar manifest file, but no explicit `manifestDirectory` is specified, it will look in the directory the image was loaded from ( as determined by the "filePath" metadata ). This makes it more likely that cryptomatte files will work automatically.
+- Cryptomatte : Improved automatic finding of manifests. Now, if the image's metadata references a sidecar manifest file, but no explicit `manifestDirectory` is specified, it will look in the directory the image was loaded from (as determined by the "filePath" metadata). This makes it more likely that cryptomatte files will work automatically.
+- Spreadsheet :
+  - A wider range of types are converted when copy/pasting values between cells, such as BoolData to IntData, FloatData to IntData, etc.
+  - Added support for converting StringData values when pasted or dropped onto a StringVectorData cell. The string array value is formed by splitting the string on spaces.
+- AttributeEditor, LightEditor, RenderPassEditor, Spreadsheet : The current text is selected automatically when editing popup multi-line text fields.
 
 Fixes
 -----
 
-- RenderMan : Fixed handling of `render:{name}` attributes, such as the `render:displayColor` attribute created by StandardAttributes, and `primvar:{name}` attributes loaded from USD files. These can now be accessed by PxrAttribute shaders as either `user:{name}` or just `{name}`.
-- Cryptomatte : Fixed hypothetical inconsistencies if the C++ language locale affects the parsing of JSON files ( probably not an issue in practice, since the JSON in question should just be hexadecimal integers, and no known locale should affect the parsing of integers ).
+- Cycles : Fixed light linking in batch renders.
+- RenderMan :
+  - Fixed light linking in batch renders.
+  - Fixed handling of `render:{name}` attributes, such as the `render:displayColor` attribute created by StandardAttributes, and `primvar:{name}` attributes loaded from USD files. These can now be accessed by PxrAttribute shaders as either `user:{name}` or just `{name}`.
+- Cryptomatte : Fixed hypothetical inconsistencies if the C++ language locale affects the parsing of JSON files (probably not an issue in practice, since the JSON in question should just be hexadecimal integers, and no known locale should affect the parsing of integers).
+- Alembic : Fixed crashes caused by invalid UVs.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.14.0.
+
+API
+---
+
+- PlugAlgo :
+  - Added support in `setValueFromData()` for setting StringPlug values from StringVectorData and StringVectorDataPlugValues from StringData.
+  - Added `setValueOrInsertKeyFromData()`.
+- PathListingWidget : Added `visualOrder()`.
 
 1.5.12.0 (relative to 1.5.11.0)
 ========

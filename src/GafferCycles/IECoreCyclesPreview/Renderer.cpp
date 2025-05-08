@@ -1998,10 +1998,14 @@ class LightLinker
 
 	public :
 
+		LightLinker( IECoreScenePreview::Renderer::RenderType renderType );
+
 		uint32_t registerLightLinks( const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights );
 		void deregisterLightLinks( const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights );
 
 	private :
+
+		const IECoreScenePreview::Renderer::RenderType m_renderType;
 
 		using WeakObjectSetPtr = std::weak_ptr<const IECoreScenePreview::Renderer::ObjectSet>;
 
@@ -2369,6 +2373,11 @@ uint64_t indexToMask( int index )
 	return uint64_t( 1 ) << index;
 }
 
+LightLinker::LightLinker( IECoreScenePreview::Renderer::RenderType renderType )
+	:	m_renderType( renderType )
+{
+}
+
 uint32_t LightLinker::registerLightLinks( const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights )
 {
 	std::lock_guard lock( m_mutex );
@@ -2414,6 +2423,13 @@ uint32_t LightLinker::registerLightLinks( const IECoreScenePreview::Renderer::Co
 
 void LightLinker::deregisterLightLinks( const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights )
 {
+	if( m_renderType != IECoreScenePreview::Renderer::RenderType::Interactive )
+	{
+		// `~CyclesObject` always deregisters links, but in a batch render
+		// that doesn't mean they are no longer wanted.
+		return;
+	}
+
 	std::lock_guard lock( m_mutex );
 	auto it = m_lightSets.find( lights );
 	assert( it != m_lightSets.end() );
@@ -2815,7 +2831,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_rendering( false ),
 				m_outputsChanged( true ),
 				m_messageHandler( messageHandler ),
-				m_cameraCache( new CameraCache() )
+				m_cameraCache( new CameraCache() ),
+				m_lightLinker( renderType )
 
 		{
 		}

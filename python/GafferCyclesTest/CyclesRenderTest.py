@@ -36,11 +36,24 @@
 
 import unittest
 
+import GafferCycles
 import GafferSceneTest
 
 class CyclesRenderTest( GafferSceneTest.RenderTest ) :
 
 	renderer = "Cycles"
+
+	def _createDiffuseShader( self ) :
+
+		shader = GafferCycles.CyclesShader()
+		shader.loadShader( "diffuse_bsdf" )
+		return shader, shader["parameters"]["color"], shader["out"]["BSDF"]
+
+	def _createPointLight( self ) :
+
+		light = GafferCycles.CyclesLight()
+		light.loadShader( "point_light" )
+		return light, light["parameters"]["color"]
 
 if __name__ == "__main__":
 	unittest.main()

@@ -640,6 +640,21 @@ class PathModel : public QAbstractItemModel
 			return m_selection;
 		}
 
+		std::vector<std::string> visualOrder( const IECore::PathMatcher &paths )
+		{
+			std::vector<std::string> result;
+			const auto indices = indicesForPaths( paths );
+			for( auto &i : indices )
+			{
+				if( const auto path = pathForIndex( i ) )
+				{
+					result.push_back( path.get()->string() );
+				}
+			}
+
+			return result;
+		}
+
 		void attachTester()
 		{
 			if( !m_tester )
@@ -2059,6 +2074,21 @@ list getSelection( uint64_t treeViewAddress )
 	return result;
 }
 
+list visualOrder( uint64_t treeViewAddress, const IECore::PathMatcher &paths )
+{
+	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
+	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
+
+	list result;
+
+	for( auto &p : model->visualOrder( paths ) )
+	{
+		result.append( p );
+	}
+
+	return result;
+}
+
 void scrollToFirst( uint64_t treeViewAddress, const IECore::PathMatcher &paths )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -2187,6 +2217,7 @@ void GafferUIModule::bindPathListingWidget()
 	def( "_pathListingWidgetGetExpansion", &getExpansion );
 	def( "_pathListingWidgetSetSelection", &setSelection );
 	def( "_pathListingWidgetGetSelection", &getSelection );
+	def( "_pathListingWidgetVisualOrder", &visualOrder );
 	def( "_pathListingWidgetPathForIndex", &pathForIndex );
 	def( "_pathListingWidgetIndexForPath", &indexForPath );
 	def( "_pathListingWidgetPathsForIndexRange", &pathsForIndexRange );

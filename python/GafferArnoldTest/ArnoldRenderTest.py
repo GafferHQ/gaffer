@@ -1627,5 +1627,18 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 			with GafferTest.TestRunner.PerformanceScope() :
 				s["render"]["task"].execute()
 
+	def _createDiffuseShader( self ) :
+
+		shader = GafferArnold.ArnoldShader()
+		shader.loadShader( "lambert" )
+		shader["parameters"]["Kd"].setValue( 1 )
+		return shader, shader["parameters"]["Kd_color"], shader["out"]
+
+	def _createPointLight( self ) :
+
+		light = GafferArnold.ArnoldLight()
+		light.loadShader( "point_light" )
+		return light, light["parameters"]["color"]
+
 if __name__ == "__main__":
 	unittest.main()

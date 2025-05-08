@@ -78,6 +78,10 @@ Object::~Object()
 		{
 			m_session->riley->DeleteGeometryInstance( riley::GeometryPrototypeId::InvalidId(), m_geometryInstance );
 		}
+		if( m_linkedLights )
+		{
+			m_lightLinker->deregisterLightLinks( m_linkedLights );
+		}
 	}
 }
 
@@ -150,6 +154,11 @@ void Object::link( const IECore::InternedString &type, const IECoreScenePreview:
 	if( type != g_lights )
 	{
 		return;
+	}
+
+	if( m_linkedLights )
+	{
+		m_lightLinker->deregisterLightLinks( m_linkedLights );
 	}
 
 	m_linkedLights = objects;

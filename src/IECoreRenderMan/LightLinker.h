@@ -74,6 +74,7 @@ class LightLinker
 
 		// Returns the value to be used in the `lighting:subset` attribute.
 		const RtUString registerLightLinks( const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights );
+		void deregisterLightLinks( const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights );
 
 		// Interface used by Renderer
 		// ==========================
@@ -135,11 +136,15 @@ class LightLinker
 		void updateDirtyLightLinks();
 
 		// Maps from a set of lights to its group name.
-		/// \todo As above, use an unordered container when it becomes available.
-		using LightLinks = std::map<WeakObjectSetPtr, RtUString, std::owner_less<WeakObjectSetPtr>>;
+		struct LightSet
+		{
+			size_t useCount = 0;
+			RtUString groupName;
+		};
+		using LightSets = std::unordered_map<IECoreScenePreview::Renderer::ConstObjectSetPtr, LightSet>;
 		std::mutex m_lightLinksMutex;
-		LightLinks m_lightLinks;
-		size_t m_nextLightLinkGroup;
+		LightSets m_lightSets;
+		size_t m_nextLightGroup;
 		bool m_lightLinksDirty = false;
 
 };

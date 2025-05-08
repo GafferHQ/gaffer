@@ -924,7 +924,7 @@ class _PlugTableView( GafferUI.Widget ) :
 			) )
 
 		clipboard = self.__getClipboard()
-		pasteRowsPluralSuffix = "" if _ClipboardAlgo.isValueMatrix( clipboard ) and len( clipboard ) == 1 else "s"
+		pasteRowsPluralSuffix = "" if isinstance( clipboard, IECore.ObjectMatrix ) and clipboard.numRows() == 1 else "s"
 
 		canChangeEnabledState, currentEnabledState = self.__canChangeRowEnabledState( rowPlugs )
 		enabledPlugs = [ row["enabled"] for row in rowPlugs ]
@@ -1034,23 +1034,13 @@ class _PlugTableView( GafferUI.Widget ) :
 		appRoot = self._qtWidget().model().rowsPlug().ancestor( Gaffer.ApplicationRoot )
 		return appRoot.getClipboardContents()
 
-	def __setClipboard( self, data ) :
-
-		appRoot = self._qtWidget().model().rowsPlug().ancestor( Gaffer.ApplicationRoot )
-		return appRoot.setClipboardContents( data )
-
 	def __copyCells( self ) :
 
-		selection = self.selectedPlugs()
-		plugMatrix = _ClipboardAlgo.createPlugMatrixFromCells( selection )
-
+		plugMatrix = _ClipboardAlgo.createPlugMatrixFromCells( self.selectedPlugs() )
 		if not plugMatrix or not _ClipboardAlgo.canCopyPlugs( plugMatrix ) :
 			return
 
-		with self.ancestor( GafferUI.PlugValueWidget ).context() :
-			clipboardData = _ClipboardAlgo.valueMatrix( plugMatrix )
-
-		self.__setClipboard( clipboardData )
+		_ClipboardAlgo.copyPlugs( plugMatrix )
 
 	def __pasteCells( self ) :
 
@@ -1069,9 +1059,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		rowPlugs = _PlugTableView.__orderedRowsPlugs( self.selectedPlugs() )
 
 		with self.ancestor( GafferUI.PlugValueWidget ).context() :
-			clipboardData = _ClipboardAlgo.copyRows( rowPlugs )
-
-		self.__setClipboard( clipboardData )
+			_ClipboardAlgo.copyRows( rowPlugs )
 
 	def __pasteRows( self ) :
 
