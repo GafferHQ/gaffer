@@ -15,6 +15,7 @@ Improvements
 - Spreadsheet :
   - A wider range of types are converted when copy/pasting values between cells, such as BoolData to IntData, FloatData to IntData, etc.
   - Added support for converting StringData values when pasted or dropped onto a StringVectorData cell. The string array value is formed by splitting the string on spaces.
+- AttributeEditor, LightEditor, RenderPassEditor, Spreadsheet : The current text is selected automatically when editing popup multi-line text fields.
 
 Fixes
 -----
