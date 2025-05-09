@@ -34,14 +34,12 @@
 #
 ##########################################################################
 
-import os
 import unittest
 import weakref
 import imath
 import math
 
-import IECore
-import IECoreImage
+import OpenImageIO
 
 import GafferUI
 import GafferUITest
@@ -61,8 +59,6 @@ class WidgetAlgoTest( GafferUITest.TestCase ) :
 
 		GafferUI.WidgetAlgo.grab( b, str( self.temporaryDirectory() / "grab.png" ) )
 
-		i = IECore.Reader.create( str( self.temporaryDirectory() / "grab.png" ) ).read()
-
 		## \todo Should we have an official method for getting
 		# physical pixel size like this? Or should `grab()` downsize
 		# to return an image with the logical pixel size?
@@ -75,7 +71,10 @@ class WidgetAlgoTest( GafferUITest.TestCase ) :
 			expectedSize *= screen.devicePixelRatio()
 			expectedSize = imath.V2f( math.ceil( expectedSize.x ), math.ceil( expectedSize.y ) )
 
-		self.assertEqual( imath.V2f( i.displayWindow.size() ) + imath.V2f( 1 ), expectedSize )
+		imageInput = OpenImageIO.ImageInput.open( str( self.temporaryDirectory() / "grab.png" ) )
+		imageSpec = imageInput.spec()
+		imageInput.close()
+		self.assertEqual( imath.V2f( imageSpec.width, imageSpec.height ), expectedSize )
 
 	def testGrabWithEventLoopRunning( self ) :
 
