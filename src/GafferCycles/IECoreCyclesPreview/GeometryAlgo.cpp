@@ -45,6 +45,7 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 #include "scene/image_vdb.h"
 // Cycles (for ustring)
 #include "util/param.h"
+#include "util/version.h"
 #undef fmix // OpenImageIO's farmhash inteferes with IECore::MurmurHash
 IECORE_POP_DEFAULT_VISIBILITY
 
@@ -491,12 +492,16 @@ void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *volu
 			volume->attributes.add( ccl::ustring( gridName.c_str() ), ctype, ccl::ATTR_ELEMENT_VOXEL )
 		;
 
-		ccl::ImageLoader *loader = new VolumeLoader( grid, gridName, precision );
+		auto loader = std::make_unique<VolumeLoader>( grid, gridName, precision );
 		ccl::ImageParams params;
 		params.frame = 0.0f;
 
 		std::scoped_lock lock( scene->mutex );
-		attr->data_voxel() = scene->image_manager->add_image( loader, params, false );
+#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) >= 404
+		attr->data_voxel() = scene->image_manager->add_image( std::move( loader ), params, false );
+#else
+		attr->data_voxel() = scene->image_manager->add_image( loader.release(), params, false );
+#endif
 	}
 }
 

@@ -104,6 +104,7 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 #include "util/time.h"
 #include "util/types.h"
 #include "util/vector.h"
+#include "util/version.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
 using namespace std;
@@ -491,15 +492,31 @@ class CyclesShader : public IECore::RefCounted
 		)
 			:	m_hash( h )
 		{
-			ccl::ShaderGraph *graph = ShaderNetworkAlgo::convertGraph( surfaceShader, displacementShader, volumeShader, scene->shader_manager, name );
+			std::unique_ptr<ccl::ShaderGraph> graph = ShaderNetworkAlgo::convertGraph(
+				surfaceShader, displacementShader, volumeShader,
+#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) >= 404
+				scene->shader_manager.get(),
+#else
+				scene->shader_manager,
+#endif
+				name
+			);
 			if( surfaceShader && singleSided )
 			{
-				ShaderNetworkAlgo::setSingleSided( graph );
+				ShaderNetworkAlgo::setSingleSided( graph.get() );
 			}
 
 			for( const IECoreScene::ShaderNetwork *aovShader : aovShaders )
 			{
-				ShaderNetworkAlgo::convertAOV( aovShader, graph, scene->shader_manager, name );
+				ShaderNetworkAlgo::convertAOV(
+					aovShader, graph.get(),
+#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) >= 404
+					scene->shader_manager.get(),
+#else
+					scene->shader_manager,
+#endif
+					name
+				);
 			}
 
 			m_shader = SceneAlgo::createNodeWithLock<ccl::Shader>( scene );
@@ -514,7 +531,11 @@ class CyclesShader : public IECore::RefCounted
 				m_shader->name = ccl::ustring( shaderName.c_str() );
 			}
 			m_shader->set_displacement_method( displacementMethod );
-			m_shader->set_graph( graph );
+#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) >= 404
+			m_shader->set_graph( std::move( graph ) );
+#else
+			m_shader->set_graph( graph.release() );
+#endif
 
 			SceneAlgo::tagUpdateWithLock( m_shader, scene );
 		}
@@ -2589,7 +2610,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 			acquireSession();
 
-			CyclesLightPtr result = new CyclesLight( m_session->scene, ccl::ustring( name.c_str() ), m_nodeDeleter.get() );
+			CyclesLightPtr result = new CyclesLight( m_scene, ccl::ustring( name.c_str() ), m_nodeDeleter.get() );
 			result->attributes( attributes );
 			return result;
 		}
@@ -2835,7 +2856,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			m_session = std::make_unique<ccl::Session>( sessionParams, sceneParams );
 			m_session->progress.set_update_callback( std::bind( &CyclesRenderer::progress, this ) );
+#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) >= 404
+			m_scene = m_session->scene.get();
+#else
 			m_scene = m_session->scene;
+#endif
 
 			/// \todo Determine why this is here, or remove it.
 			m_scene->camera->need_flags_update = true;
@@ -3076,8 +3101,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				)
 			);
 
-			ccl::set<ccl::Pass *> clearPasses( m_scene->passes.begin(), m_scene->passes.end() );
-			m_scene->delete_nodes( clearPasses );
+			ccl::set<ccl::Pass *> passesToDelete;
+			for( const auto &p : m_scene->passes )
+			{
+				passesToDelete.insert( p );
+			}
+			m_scene->delete_nodes( passesToDelete );
 
 			ccl::CryptomatteType crypto = ccl::CRYPT_NONE;
 
