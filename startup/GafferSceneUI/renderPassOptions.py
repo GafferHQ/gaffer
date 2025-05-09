@@ -37,11 +37,19 @@
 import Gaffer
 import GafferSceneUI
 
-Gaffer.Metadata.registerValue( "option:renderPass:type", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
-Gaffer.Metadata.registerValue( "option:renderPass:type", "presetsPlugValueWidget:allowCustom", True )
-Gaffer.Metadata.registerValue( "option:renderPass:type", "preset:Standard", "" )
-## \todo As part of the future great metadata reckoning, it would make more sense for renderPassTypePresetNames to be defined as
-# part of this global metadata rather than by GafferSceneUI.RenderPassTypeAdaptorUI and then called here. This would also allow
-# the registrations in this file to be combined with those in `startup/GafferScene/renderPassOptions.py`.
-Gaffer.Metadata.registerValue( "option:renderPass:type", "presetNames", GafferSceneUI.RenderPassTypeAdaptorUI.renderPassTypePresetNames )
-Gaffer.Metadata.registerValue( "option:renderPass:type", "presetValues", GafferSceneUI.RenderPassTypeAdaptorUI.renderPassTypePresetValues )
+Gaffer.Metadata.registerValues( {
+
+	"option:renderPass:type" : [
+
+		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+		"presetsPlugValueWidget:allowCustom", True,
+		"preset:Standard", "",
+		## \todo As part of the future great metadata reckoning, it would make more sense for renderPassTypePresetNames to be defined as
+		# part of this global metadata rather than by GafferSceneUI.RenderPassTypeAdaptorUI and then called here. This would also allow
+		# the registrations in this file to be combined with those in `startup/GafferScene/renderPassOptions.py`.
+		"presetNames", GafferSceneUI.RenderPassTypeAdaptorUI.renderPassTypePresetNames,
+		"presetValues", GafferSceneUI.RenderPassTypeAdaptorUI.renderPassTypePresetValues,
+
+	],
+
+} )
