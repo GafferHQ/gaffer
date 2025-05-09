@@ -1640,5 +1640,49 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		light.loadShader( "point_light" )
 		return light, light["parameters"]["color"]
 
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testManySimpleObjectIDs( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		rootFilter = GafferScene.PathFilter()
+		rootFilter["paths"].setValue( IECore.StringVectorData( [ '/*' ] ) )
+
+		duplicate = GafferScene.Duplicate()
+		duplicate["in"].setInput( sphere["out"] )
+		duplicate["filter"].setInput( rootFilter["out"] )
+
+
+		group1 = GafferScene.Group()
+		group1["in"][0].setInput( duplicate["out"] )
+
+		duplicate2 = GafferScene.Duplicate()
+		duplicate2["in"].setInput( group1["out"] )
+		duplicate2["filter"].setInput( rootFilter["out"] )
+
+		group2 = GafferScene.Group()
+		group2["in"][0].setInput( duplicate2["out"] )
+
+		duplicate3 = GafferScene.Duplicate()
+		duplicate3["in"].setInput( group2["out"] )
+		duplicate3["filter"].setInput( rootFilter["out"] )
+
+		standardOptions = GafferScene.StandardOptions()
+		standardOptions["in"].setInput( duplicate3["out"] )
+		standardOptions["options"]["renderManifestFilePath"]["value"].setValue( self.temporaryDirectory() / "testIDManifest.exr" )
+		standardOptions["options"]["renderManifestFilePath"]["enabled"].setValue( True )
+
+		duplicate["copies"].setValue( 40 )
+		duplicate2["copies"].setValue( 40 )
+		duplicate3["copies"].setValue( 40 )
+
+		render = GafferScene.Render()
+		render["in"].setInput( standardOptions["out"] )
+		render["renderer"].setValue( "Arnold" )
+
+		with Gaffer.Context() as c :
+			c["scene:render:sceneTranslationOnly"] = IECore.BoolData( True )
+			render["task"].execute()
+
 if __name__ == "__main__":
 	unittest.main()

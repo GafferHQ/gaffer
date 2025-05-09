@@ -518,6 +518,20 @@ plugsMetadata = {
 
 	],
 
+	"options.renderManifestFilePath" : [
+
+		"description",
+		"""
+		Specifies a file to write a sidecar render manifest to. If a
+		render is set up with both an render manifest, and a correctly
+		set up id AOV, that will allow the use of the Image
+		Selection Tool to select objects in the rendered image.
+		""",
+
+		"layout:section", "Render Manifest",
+
+	],
+
 	# Statistics plugs
 
 	"options.performanceMonitor" : [
