@@ -36,186 +36,203 @@
 
 import imath
 
-import IECore
 import Gaffer
 
-Gaffer.Metadata.registerValue( "option:render:camera", "label", "Camera" )
-Gaffer.Metadata.registerValue( "option:render:camera", "defaultValue", IECore.StringData( "" ) )
-Gaffer.Metadata.registerValue(
-	"option:render:camera",
-	"description",
-	"""
-	The primary camera to be used for rendering. If this
-	is not specified, then a default orthographic camera
-	positioned at the origin is used.
-	"""
-)
+Gaffer.Metadata.registerValues( {
 
-Gaffer.Metadata.registerValue( "option:render:resolution", "label", "Resolution" )
-Gaffer.Metadata.registerValue( "option:render:resolution", "defaultValue", IECore.V2iData( imath.V2i( 1024, 778 ) ) )
-Gaffer.Metadata.registerValue(
-	"option:render:resolution",
-	"description",
-	"""
-	The resolution of the image to be rendered.
-	"""
-)
+	"option:render:camera" : [
 
-Gaffer.Metadata.registerValue( "option:render:resolutionMultiplier", "label", "Resolution Multiplier" )
-Gaffer.Metadata.registerValue( "option:render:resolutionMultiplier", "defaultValue", IECore.FloatData( 1.0 ) )
-Gaffer.Metadata.registerValue(
-	"option:render:resolutionMultiplier",
-	"description",
-	"""
-	Multiplies the resolution of the render by this amount.
-	"""
-)
+		"defaultValue", "",
+		"description",
+		"""
+		The primary camera to be used for rendering. If this
+		is not specified, then a default orthographic camera
+		positioned at the origin is used.
+		""",
+		"label", "Camera",
 
-Gaffer.Metadata.registerValue( "option:render:deformationBlur", "label", "Deformation Blur" )
-Gaffer.Metadata.registerValue( "option:render:deformationBlur", "defaultValue", IECore.BoolData( False ) )
-Gaffer.Metadata.registerValue(
-	"option:render:deformationBlur",
-	"description",
-	"""
-	Whether or not deformation motion is taken into
-	account in the rendered image. To specify the
-	number of deformation segments to use for each
-	object in the scene, use a StandardAttributes
-	node with appropriate filters.
-	"""
-)
+	],
 
-Gaffer.Metadata.registerValue( "option:render:transformBlur", "label", "Transform Blur" )
-Gaffer.Metadata.registerValue( "option:render:transformBlur", "defaultValue", IECore.BoolData( False ) )
-Gaffer.Metadata.registerValue(
-	"option:render:transformBlur",
-	"description",
-	"""
-	Whether or not transform motion is taken into
-	account in the rendered image. To specify the
-	number of transform segments to use for each
-	object in the scene, use a StandardAttributes
-	node with appropriate filters.
-	"""
-)
+	"option:render:resolution" : [
 
-Gaffer.Metadata.registerValue( "option:render:shutter", "label", "Shutter" )
-Gaffer.Metadata.registerValue( "option:render:shutter", "defaultValue", IECore.V2fData( imath.V2f( -0.25, 0.25 ) ) )
-Gaffer.Metadata.registerValue(
-	"option:render:shutter",
-	"description",
-	"""
-	The interval over which the camera shutter is open. Measured
-	in frames, and specified relative to the frame being rendered.
-	"""
-)
+		"defaultValue", imath.V2i( 1024, 778 ),
+		"description",
+		"""
+		The resolution of the image to be rendered.
+		""",
+		"label", "Resolution",
 
-Gaffer.Metadata.registerValue( "option:render:defaultRenderer", "label", "Renderer" )
-Gaffer.Metadata.registerValue( "option:render:defaultRenderer", "defaultValue", "" )
-Gaffer.Metadata.registerValue(
-	"option:render:defaultRenderer",
-	"description",
-	"""
-	Specifies the default renderer to be used by the Render and
-	InteractiveRender nodes.
-	"""
-)
+	],
 
-Gaffer.Metadata.registerValue( "option:render:inclusions", "label", "Inclusions" )
-Gaffer.Metadata.registerValue( "option:render:inclusions", "defaultValue", IECore.StringData( "/" ) )
-Gaffer.Metadata.registerValue(
-	"option:render:inclusions",
-	"description",
-	"""
-	A set expression that limits the objects included in the render to only those matched
-	and their descendants. Objects not matched by the set expression will be pruned from
-	the scene. Cameras are included by default and do not need to be specified here.
-	"""
-)
+	"option:render:resolutionMultiplier" : [
 
-Gaffer.Metadata.registerValue( "option:render:exclusions", "label", "Exclusions" )
-Gaffer.Metadata.registerValue( "option:render:exclusions", "defaultValue", IECore.StringData( "" ) )
-Gaffer.Metadata.registerValue(
-	"option:render:exclusions",
-	"description",
-	"""
-	A set expression that excludes the matched objects from the render. Exclusions
-	affect both `inclusions` and `additionalLights` and cause the matching objects and
-	their descendants to be pruned from the scene.
-	"""
-)
+		"defaultValue", 1.0,
+		"description",
+		"""
+		Multiplies the resolution of the render by this amount.
+		""",
+		"label", "Resolution Multiplier",
 
-Gaffer.Metadata.registerValue( "option:render:additionalLights", "label", "Additional Lights" )
-Gaffer.Metadata.registerValue( "option:render:additionalLights", "defaultValue", IECore.StringData( "" ) )
-Gaffer.Metadata.registerValue(
-	"option:render:additionalLights",
-	"description",
-	"""
-	A set expression that specifies additional lights to be included in the render.
-	This differs from `inclusions` as only lights and light filters will be matched
-	by this set expression.
-	"""
-)
+	],
 
-Gaffer.Metadata.registerValue( "option:render:cameraInclusions", "label", "Camera Inclusions / Catchers" )
-Gaffer.Metadata.registerValue( "option:render:cameraInclusions", "defaultValue", IECore.StringData( "/" ) )
-Gaffer.Metadata.registerValue(
-	"option:render:cameraInclusions",
-	"description",
-	"""
-	A set expression that limits the objects visible to camera rays to only those matched
-	and their descendants. Camera visibility attributes authored in the scene take
-	precedence over this option.
+	"option:render:deformationBlur" : [
 
-	For shadow, reflection and reflectionAlpha pass types, this specifies objects that
-	catch shadows or reflections.
-	"""
-)
+		"defaultValue", False,
+		"description",
+		"""
+		Whether or not deformation motion is taken into
+		account in the rendered image. To specify the
+		number of deformation segments to use for each
+		object in the scene, use a StandardAttributes
+		node with appropriate filters.
+		""",
+		"label", "Deformation Blur",
 
-Gaffer.Metadata.registerValue( "option:render:cameraExclusions", "label", "Camera Exclusions / Casters" )
-Gaffer.Metadata.registerValue( "option:render:cameraExclusions", "defaultValue", IECore.StringData( "" ) )
-Gaffer.Metadata.registerValue(
-	"option:render:cameraExclusions",
-	"description",
-	"""
-	A set expression that excludes the matched objects and their descendants from camera
-	ray visibility. Camera visibility attributes authored in the scene take precedence
-	over this option.
+	],
 
-	Typically, this is used to exclude descendants of locations in `cameraInclusions`,
-	as locations not specified in `cameraInclusions` already default to being excluded
-	from camera ray visibility.
+	"option:render:transformBlur" : [
 
-	For shadow, reflection and reflectionAlpha pass types, this specifies objects that
-	cast shadows or reflections. Shadow or reflection visibility attributes authored
-	in the scene take precedence over this option.
-	"""
-)
+		"defaultValue", False,
+		"description",
+		"""
+		Whether or not transform motion is taken into
+		account in the rendered image. To specify the
+		number of transform segments to use for each
+		object in the scene, use a StandardAttributes
+		node with appropriate filters.
+		""",
+		"label", "Transform Blur",
 
-Gaffer.Metadata.registerValue( "option:render:matteInclusions", "label", "Matte Inclusions" )
-Gaffer.Metadata.registerValue( "option:render:matteInclusions", "defaultValue", IECore.StringData( "" ) )
-Gaffer.Metadata.registerValue(
-	"option:render:matteInclusions",
-	"description",
-	"""
-	A set expression that specifies objects that should be treated as matte (holdout)
-	objects along with their descendants. Matte attributes authored in the scene take
-	precedence over this option.
-	"""
-)
+	],
 
-Gaffer.Metadata.registerValue( "option:render:matteExclusions", "label", "Matte Exclusions" )
-Gaffer.Metadata.registerValue( "option:render:matteExclusions", "defaultValue", IECore.StringData( "" ) )
-Gaffer.Metadata.registerValue(
-	"option:render:matteExclusions",
-	"description",
-	"""
-	A set expression that excludes the matched objects and their descendants from being
-	treated as matte (holdout) objects. Matte attributes authored in the scene take
-	precedence over this option.
+	"option:render:shutter" : [
 
-	Typically, this is used to exclude descendants of locations in `matteInclusions`,
-	as locations not specified in `matteInclusions` already default to not being
-	treated as matte objects.
-	"""
-)
+		"defaultValue", imath.V2f( -0.25, 0.25 ),
+		"description",
+		"""
+		The interval over which the camera shutter is open. Measured
+		in frames, and specified relative to the frame being rendered.
+		""",
+		"label", "Shutter",
+
+	],
+
+	"option:render:defaultRenderer" : [
+
+		"defaultValue", "",
+		"description",
+		"""
+		Specifies the default renderer to be used by the Render and
+		InteractiveRender nodes.
+		""",
+		"label", "Renderer",
+
+	],
+
+	"option:render:inclusions" : [
+
+		"defaultValue", "/",
+		"description",
+		"""
+		A set expression that limits the objects included in the render to only those matched
+		and their descendants. Objects not matched by the set expression will be pruned from
+		the scene. Cameras are included by default and do not need to be specified here.
+		""",
+		"label", "Inclusions",
+
+	],
+
+	"option:render:exclusions" : [
+
+		"defaultValue", "",
+		"description",
+		"""
+		A set expression that excludes the matched objects from the render. Exclusions
+		affect both `inclusions` and `additionalLights` and cause the matching objects and
+		their descendants to be pruned from the scene.
+		""",
+		"label", "Exclusions",
+
+	],
+
+	"option:render:additionalLights" : [
+
+		"defaultValue", "",
+		"description",
+		"""
+		A set expression that specifies additional lights to be included in the render.
+		This differs from `inclusions` as only lights and light filters will be matched
+		by this set expression.
+		""",
+		"label", "Additional Lights",
+
+	],
+
+	"option:render:cameraInclusions" : [
+
+		"defaultValue", "/",
+		"description",
+		"""
+		A set expression that limits the objects visible to camera rays to only those matched
+		and their descendants. Camera visibility attributes authored in the scene take
+		precedence over this option.
+
+		For shadow, reflection and reflectionAlpha pass types, this specifies objects that
+		catch shadows or reflections.
+		""",
+		"label", "Camera Inclusions / Catchers",
+
+	],
+
+	"option:render:cameraExclusions" : [
+
+		"defaultValue", "",
+		"description",
+		"""
+		A set expression that excludes the matched objects and their descendants from camera
+		ray visibility. Camera visibility attributes authored in the scene take precedence
+		over this option.
+
+		Typically, this is used to exclude descendants of locations in `cameraInclusions`,
+		as locations not specified in `cameraInclusions` already default to being excluded
+		from camera ray visibility.
+
+		For shadow, reflection and reflectionAlpha pass types, this specifies objects that
+		cast shadows or reflections. Shadow or reflection visibility attributes authored
+		in the scene take precedence over this option.
+		""",
+		"label", "Camera Exclusions / Casters",
+
+	],
+
+	"option:render:matteInclusions" : [
+
+		"defaultValue", "",
+		"description",
+		"""
+		A set expression that specifies objects that should be treated as matte (holdout)
+		objects along with their descendants. Matte attributes authored in the scene take
+		precedence over this option.
+		""",
+		"label", "Matte Inclusions",
+
+	],
+
+	"option:render:matteExclusions" : [
+
+		"defaultValue", "",
+		"description",
+		"""
+		A set expression that excludes the matched objects and their descendants from being
+		treated as matte (holdout) objects. Matte attributes authored in the scene take
+		precedence over this option.
+
+		Typically, this is used to exclude descendants of locations in `matteInclusions`,
+		as locations not specified in `matteInclusions` already default to not being
+		treated as matte objects.
+		""",
+		"label", "Matte Exclusions",
+
+	],
+
+} )
