@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2025, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,65 +36,52 @@
 
 #include "boost/python.hpp"
 
-#include "AttributesBinding.h"
-#include "CoreBinding.h"
-#include "EditScopeAlgoBinding.h"
-#include "FilterBinding.h"
-#include "GlobalsBinding.h"
-#include "HierarchyBinding.h"
-#include "IECoreGLPreviewBinding.h"
-#include "IECoreScenePreviewBinding.h"
-#include "IOBinding.h"
-#include "TweaksBinding.h"
-#include "ObjectProcessorBinding.h"
-#include "OptionsBinding.h"
-#include "PrimitiveSamplerBinding.h"
-#include "PrimitiveVariablesBinding.h"
-#include "PrimitivesBinding.h"
-#include "RenderBinding.h"
-#include "RenderControllerBinding.h"
 #include "RenderManifestBinding.h"
-#include "SceneAlgoBinding.h"
-#include "ScenePathBinding.h"
-#include "SetAlgoBinding.h"
-#include "ShaderBinding.h"
-#include "TransformBinding.h"
-#include "QueryBinding.h"
-#include "CryptomatteBinding.h"
-#include "VisibleSetBinding.h"
+
+#include "GafferScene/RenderManifest.h"
 
 using namespace boost::python;
-using namespace GafferSceneModule;
+using namespace Gaffer;
+using namespace GafferScene;
 
-BOOST_PYTHON_MODULE( _GafferScene )
+namespace
 {
 
-	bindIECoreScenePreview(); // Must be declared early since some things depend on Procedural being registered
+// Convert return path to string for Python
+std::optional< std::string > pathForIDWrapper( RenderManifest *renderManifest, uint32_t id )
+{
+	// Return a InternedStringVectorDataPtr or None, since our Python bindings don't know how to
+	// deal with an optional<ScenePlug::ScenePath>
+	auto result = renderManifest->pathForID( id );
+	if( !result )
+	{
+		return std::nullopt;
+	}
 
-	bindCore();
-	bindFilter();
-	bindTransform();
-	bindGlobals();
-	bindOptions();
-	bindAttributes();
-	bindSceneAlgo();
-	bindSetAlgo();
-	bindPrimitives();
-	bindScenePath();
-	bindShader();
-	bindRender();
-	bindRenderController();
-	bindHierarchy();
-	bindObjectProcessor();
-	bindPrimitiveVariables();
-	bindTweaks();
-	bindIO();
-	bindPrimitiveSampler();
-	bindIECoreGLPreview();
-	bindEditScopeAlgo();
-	bindQueries();
-	bindCryptomatte();
-	bindVisibleSet();
-	bindRenderManifest();
+	return ScenePlug::pathToString( *result );
+}
+
+std::shared_ptr<RenderManifest> loadFromImageMetadataWrapper( const IECore::CompoundData *metadata, const std::string &cryptomatteLayerName )
+{
+	return std::const_pointer_cast<RenderManifest>( RenderManifest::loadFromImageMetadata( metadata, cryptomatteLayerName ) );
+}
+
+} // namespace
+
+void GafferSceneModule::bindRenderManifest()
+{
+
+	class_<RenderManifest, boost::noncopyable, std::shared_ptr<RenderManifest>>( "RenderManifest" )
+		.def( "acquireID", &RenderManifest::acquireID )
+		.def( "idForPath", &RenderManifest::idForPath )
+		.def( "pathForID", &pathForIDWrapper )
+		.def( "acquireIDs", &RenderManifest::acquireIDs )
+		.def( "pathsForIDs", &RenderManifest::pathsForIDs )
+		.def( "clear", &RenderManifest::clear )
+		.def( "size", &RenderManifest::size )
+		.def( "loadFromImageMetadata", &loadFromImageMetadataWrapper )
+		.staticmethod( "loadFromImageMetadata" )
+		.def( "writeEXRManifest", &RenderManifest::writeEXRManifest )
+	;
 
 }

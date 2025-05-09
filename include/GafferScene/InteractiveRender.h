@@ -102,6 +102,8 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::ComputeNode
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
+		std::shared_ptr<const RenderManifest> renderManifest() const;
+
 	protected :
 
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;

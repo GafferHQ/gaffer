@@ -39,6 +39,7 @@
 #include "GafferScene/ScenePlug.h"
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+#include "GafferScene/RenderManifest.h"
 
 #include "IECoreScene/VisibleRenderable.h"
 
@@ -78,10 +79,14 @@ struct GAFFERSCENE_API RenderOptions
 	bool deformationBlur;
 	Imath::V2f shutter;
 	IECore::ConstStringVectorDataPtr includedPurposes;
+
 	/// Returns true if `includedPurposes` includes the purpose defined by
 	/// `attributes`.
 	bool purposeIncluded( const IECore::CompoundObject *attributes ) const;
 	void outputOptions( IECoreScenePreview::Renderer *renderer, const RenderOptions *previousOptions = nullptr );
+
+	// Returns a manifest file path if it's set, otherwise empty string
+	std::string renderManifestFilePath() const;
 };
 
 /// Creates the directories necessary to receive the outputs defined in globals.
@@ -106,8 +111,8 @@ GAFFERSCENE_API bool transformSamples( const Gaffer::M44fPlug *transformPlug, co
 /// Primitives and Cameras, since other object types cannot be interpolated anyway.
 GAFFERSCENE_API bool objectSamples( const Gaffer::ObjectPlug *objectPlug, const std::vector<float> &sampleTimes, std::vector<IECore::ConstObjectPtr> &samples, IECore::MurmurHash *hash = nullptr );
 
-GAFFERSCENE_API void outputOutputs( const ScenePlug *scene, const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer );
-GAFFERSCENE_API void outputOutputs( const ScenePlug *scene, const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
+GAFFERSCENE_API void outputOutputs( const ScenePlug *scene, const RenderOptions &renderOptions, IECoreScenePreview::Renderer *renderer );
+GAFFERSCENE_API void outputOutputs( const ScenePlug *scene, const RenderOptions &renderOptions, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
 
 /// Utility class to handle all the set computations needed for a render.
 class GAFFERSCENE_API RenderSets : boost::noncopyable
@@ -280,7 +285,10 @@ class GAFFERSCENE_API LightLinks : boost::noncopyable
 GAFFERSCENE_API void outputCameras( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer );
 GAFFERSCENE_API void outputLightFilters( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer );
 GAFFERSCENE_API void outputLights( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer );
-GAFFERSCENE_API void outputObjects( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, const LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
+
+// If a renderManifest is given, the paths of all objects rendered will be added to it, and renderer->assignID() will
+// be called to assign the generated ids to every object.
+GAFFERSCENE_API void outputObjects( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, const LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root = ScenePlug::ScenePath(), RenderManifest *renderManifest = nullptr );
 
 } // namespace RendererAlgo
 

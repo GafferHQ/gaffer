@@ -41,6 +41,8 @@
 
 #include "Gaffer/Signals.h"
 
+#include "GafferScene/RenderManifest.h"
+
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/Private/RendererAlgo.h"
 
@@ -98,9 +100,11 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 		// ID queries
 		// ==========
 		//
-		// These allow IDs acquired from a standard `uint id` AOV to be mapped
+		// Allow IDs acquired from a standard `uint id` AOV to be mapped
 		// back to the scene paths they came from.
+		std::shared_ptr< const RenderManifest> renderManifest() const;
 
+		// \todo : These functions are all deprecated. Use the functions on renderManifest() instead.
 		std::optional<ScenePlug::ScenePath> pathForID( uint32_t id ) const;
 		IECore::PathMatcher pathsForIDs( const std::vector<uint32_t> &ids ) const;
 
@@ -138,12 +142,11 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 
 		class SceneGraph;
 		class SceneGraphUpdateTask;
-		class IDMap;
 
 		ConstScenePlugPtr m_scene;
 		Gaffer::ConstContextPtr m_context;
 		IECoreScenePreview::RendererPtr m_renderer;
-		std::unique_ptr<IDMap> m_idMap;
+		std::shared_ptr<RenderManifest> m_renderManifest;
 
 		GafferScene::VisibleSet m_visibleSet;
 		size_t m_minimumExpansionDepth;
