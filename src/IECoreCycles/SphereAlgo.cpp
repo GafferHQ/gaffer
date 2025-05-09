@@ -32,8 +32,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
-#include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
+#include "GeometryAlgo.h"
+
+#include "IECoreCycles/SocketAlgo.h"
 
 #include "IECoreScene/SpherePrimitive.h"
 

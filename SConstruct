@@ -1346,16 +1346,45 @@ libraries = {
 
 	"GafferDelightUITest" : {},
 
-	"GafferCycles" : {
+	"IECoreCycles" : {
+
 		"envAppends" : {
+			"CXXFLAGS" : [ systemIncludeArgument, "$CYCLES_ROOT/include" ],
+			"CPPDEFINES" : cyclesDefines,
 			"LIBPATH" : [ "$CYCLES_ROOT/lib" ],
 			"LIBS" : [
 				"IECoreScene$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreVDB$CORTEX_LIB_SUFFIX",
-				"Gaffer", "GafferScene", "GafferDispatch", "GafferOSL",
+				## \todo Remove GafferScene. We need it at present to get access to `IECoreScenePreview::Renderer`,
+				# but IECoreCycles must never depend on Gaffer code; logically it is in the layer below Gaffer.
+				"GafferScene",
 				"cycles_session", "cycles_scene", "cycles_graph", "cycles_bvh", "cycles_device", "cycles_kernel", "cycles_kernel_osl",
 				"cycles_integrator", "cycles_util", "cycles_subd", "extern_sky", "extern_cuew",
 				"OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslexec$OSL_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX",
 				"openvdb$VDB_LIB_SUFFIX", "Alembic", "osdCPU", "OpenColorIO$OCIO_LIB_SUFFIX", "embree4", "Iex", "openpgl", "zstd",
+			],
+		},
+		"pythonEnvAppends" : {
+			"LIBS" : [
+				"IECoreScene", "IECoreCycles",
+			],
+			"CXXFLAGS" : [ systemIncludeArgument, "$CYCLES_ROOT/include" ],
+			"CPPDEFINES" : cyclesDefines,
+		},
+		"requiredOptions" : [ "CYCLES_ROOT" ],
+
+	},
+
+	"IECoreCyclesTest" : {
+		"requiredOptions" : [ "CYCLES_ROOT" ],
+	},
+
+	"GafferCycles" : {
+		"envAppends" : {
+			"LIBPATH" : [ "$CYCLES_ROOT/lib" ],
+			"LIBS" : [
+				"IECoreScene$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreVDB$CORTEX_LIB_SUFFIX", "IECoreCycles",
+				"Gaffer", "GafferScene", "GafferDispatch", "GafferOSL",
+				"OpenImageIO_Util$OIIO_LIB_SUFFIX",
 			],
 			"CXXFLAGS" : [ systemIncludeArgument, "$CYCLES_ROOT/include" ],
 			"CPPDEFINES" : cyclesDefines,
@@ -1592,19 +1621,19 @@ for library in ( "GafferUI", ) :
 
 if env["PLATFORM"] == "win32" :
 
-	for library in ( "Gaffer", "GafferCycles", ) :
+	for library in ( "Gaffer", "IECoreCycles", ) :
 
 		libraries[library].setdefault( "envAppends", {} )
 		libraries[library]["envAppends"].setdefault( "LIBS", [] ).extend( [ "Advapi32" ] )
 
-	for library in ( "GafferCycles", ) :
+	for library in ( "IECoreCycles", ) :
 
 		libraries[library].setdefault( "pythonEnvAppends", {} )
 		libraries[library]["pythonEnvAppends"].setdefault( "LIBS", [] ).extend( [ "Advapi32" ] )
 
 else :
 
-	libraries["GafferCycles"]["envAppends"]["LIBS"].extend( [ "dl" ] )
+	libraries["IECoreCycles"]["envAppends"]["LIBS"].extend( [ "dl" ] )
 
 # Optionally add vTune requirements
 

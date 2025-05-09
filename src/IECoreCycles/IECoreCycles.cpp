@@ -32,7 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferCycles/IECoreCyclesPreview/IECoreCycles.h"
+#include "IECoreCycles/IECoreCycles.h"
 
 // Cycles
 #include "util/log.h"

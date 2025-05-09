@@ -32,8 +32,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferCycles/IECoreCyclesPreview/CameraAlgo.h"
-#include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
+#include "CameraAlgo.h"
+
+#include "IECoreCycles/SocketAlgo.h"
 
 #include "IECoreScene/Camera.h"
 

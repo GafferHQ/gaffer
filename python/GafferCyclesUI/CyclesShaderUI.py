@@ -39,6 +39,7 @@ import functools
 import collections
 
 import IECore
+import IECoreCycles
 
 import Gaffer
 import GafferUI
@@ -47,7 +48,7 @@ import GafferImage
 import GafferImageUI
 
 ##########################################################################
-# Build a registry of information retrieved from GafferCycles metadata.
+# Build a registry of information retrieved from IECoreCycles metadata.
 ##########################################################################
 
 def __outPlugNoduleType( plug ) :
@@ -114,11 +115,11 @@ def __translateNodesMetadata( nodeTypes ) :
 		for socketName, value in nodeType["in"].items() :
 			__translateParamMetadata( nodeTypeName, socketName, value )
 
-__translateNodesMetadata( GafferCycles.lights )
-__translateNodesMetadata( GafferCycles.shaders )
+__translateNodesMetadata( IECoreCycles.lights )
+__translateNodesMetadata( IECoreCycles.shaders )
 
 # hide the light type
-for nodeTypeName, nodeType in GafferCycles.lights.items() :
+for nodeTypeName, nodeType in IECoreCycles.lights.items() :
 	paramPath = nodeTypeName + ".parameters.type"
 	__metadata[paramPath]["noduleLayout:visible"] = False
 

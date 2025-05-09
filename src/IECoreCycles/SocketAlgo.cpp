@@ -32,7 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
+#include "IECoreCycles/SocketAlgo.h"
 
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"

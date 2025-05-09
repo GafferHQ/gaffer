@@ -39,6 +39,8 @@ import pathlib
 
 import imath
 
+import IECoreCycles
+
 import Gaffer
 import GafferOSL
 import GafferSceneTest
@@ -79,7 +81,7 @@ class CyclesShaderTest( GafferSceneTest.SceneTestCase ) :
 	def testLoadAllShaders( self ) :
 
 		shader = GafferCycles.CyclesShader()
-		for s in GafferCycles.shaders.keys() :
+		for s in IECoreCycles.shaders.keys() :
 			shader.loadShader( s )
 
 	def testLoadEmission( self ) :

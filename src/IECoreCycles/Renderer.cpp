@@ -36,12 +36,12 @@
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
-#include "GafferCycles/IECoreCyclesPreview/CameraAlgo.h"
-#include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
-#include "GafferCycles/IECoreCyclesPreview/IECoreCycles.h"
-#include "GafferCycles/IECoreCyclesPreview/ShaderNetworkAlgo.h"
-#include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
+#include "IECoreCycles/IECoreCycles.h"
+#include "IECoreCycles/ShaderNetworkAlgo.h"
+#include "IECoreCycles/SocketAlgo.h"
 
+#include "CameraAlgo.h"
+#include "GeometryAlgo.h"
 #include "IEDisplayOutputDriver.h"
 #include "OIIOOutputDriver.h"
 

@@ -37,7 +37,7 @@
 
 #include "GafferCycles/SocketHandler.h"
 
-#include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
+#include "IECoreCycles/SocketAlgo.h"
 
 #include "GafferOSL/ClosurePlug.h"
 
