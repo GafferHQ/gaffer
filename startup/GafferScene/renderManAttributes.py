@@ -134,9 +134,17 @@ with IECore.IgnoredExceptions( ImportError ) :
 			label = re.sub( r"[dD]isplacement ?", "", Gaffer.Metadata.value( target, "label" ) )
 		Gaffer.Metadata.registerValue( target, "label", label )
 
-	Gaffer.Metadata.registerValue( "attribute:ri:displacementbound:CoordinateSystem", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
-	Gaffer.Metadata.registerValue( "attribute:ri:displacementbound:CoordinateSystem", "presetNames", IECore.StringVectorData( [ "Object", "World" ] ) )
-	Gaffer.Metadata.registerValue( "attribute:ri:displacementbound:CoordinateSystem", "presetValues", IECore.StringVectorData( [ "object", "world" ] ) )
+	Gaffer.Metadata.registerValues( {
+
+		"attribute:ri:displacementbound:CoordinateSystem" : [
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"presetNames", IECore.StringVectorData( [ "Object", "World" ] ),
+			"presetValues", IECore.StringVectorData( [ "object", "world" ] ),
+
+		],
+
+	} )
 
 	# Register BoolPlugValueWidget for attributes which are actually integers
 	# but would more logically be bools. We can't change their type, because
