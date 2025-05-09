@@ -969,7 +969,7 @@ bool findGafferSplineParameters( const OSLQuery &query, const OSLQuery::Paramete
 	}
 
 	basisParameter = query.getparam( nameWithoutSuffix + "Basis" );
-	if( !basisParameter || basisParameter->type != TypeDesc::TypeString )
+	if( !basisParameter || basisParameter->type != OIIO::TypeString )
 	{
 		return false;
 	}

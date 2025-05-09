@@ -92,7 +92,7 @@ using namespace GafferOSL;
 
 // keyword matrix parameter macro. reference: OSL/genclosure.h
 #define CLOSURE_MATRIX_KEYPARAM(st, fld, key) \
-	{ TypeDesc::TypeMatrix44, (int)reckless_offsetof(st, fld), key, fieldsize(st, fld) }
+	{ OIIO::TypeMatrix44, (int)reckless_offsetof(st, fld), key, fieldsize(st, fld) }
 
 //////////////////////////////////////////////////////////////////////////
 // Conversion utilities
@@ -1142,7 +1142,7 @@ class ShadingResults
 				char *dst = static_cast<char *>( debugResult.basePointer );
 				dst += pointIndex * debugResult.type.elementsize();
 				ShadingSystem::convert_value(
-					dst, debugResult.type, &value, TypeDesc::TypeMatrix44
+					dst, debugResult.type, &value, OIIO::TypeMatrix44
 				);
 			}
 			else if( parameters->type == g_stringType )
@@ -1161,7 +1161,7 @@ class ShadingResults
 					dst,
 					debugResult.type,
 					&value,
-					debugResult.type.aggregate == TypeDesc::SCALAR ? TypeDesc::TypeFloat : TypeDesc::TypeColor
+					debugResult.type.aggregate == TypeDesc::SCALAR ? OIIO::TypeFloat : OIIO::TypeColor
 				);
 			}
 		}
@@ -1180,7 +1180,7 @@ class ShadingResults
 			{
 				return TypeDesc( TypeDesc::FLOAT, TypeDesc::VEC2, TypeDesc::NORMAL );
 			}
-			return type != ustring() ? TypeDesc( type.c_str() ) : TypeDesc::TypeColor;
+			return type != ustring() ? TypeDesc( type.c_str() ) : OIIO::TypeColor;
 		}
 
 		CompoundDataPtr m_results;

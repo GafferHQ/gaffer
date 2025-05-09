@@ -453,25 +453,25 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			{
 				const TypeDesc type = s->symbol_typedesc( *it );
 				const void *storage = s->symbol_address( *shadingContext, *it );
-				if( type == TypeDesc::TypeFloat )
+				if( type == OIIO::TypeFloat )
 				{
 					result->members().push_back( new FloatData( *(const float *)storage ) );
 				}
-				else if( type == TypeDesc::TypeInt )
+				else if( type == OIIO::TypeInt )
 				{
 					result->members().push_back( new IntData( *(const int *)storage ) );
 				}
-				else if( type == TypeDesc::TypeColor )
+				else if( type == OIIO::TypeColor )
 				{
 					const float *f = (const float *)storage;
 					result->members().push_back( new Color3fData( Color3f( f[0], f[1], f[2] ) ) );
 				}
-				else if( type == TypeDesc::TypeVector )
+				else if( type == OIIO::TypeVector )
 				{
 					const float *f = (const float *)storage;
 					result->members().push_back( new V3fData( V3f( f[0], f[1], f[2] ) ) );
 				}
-				else if( type == TypeDesc::TypeMatrix )
+				else if( type == OIIO::TypeMatrix )
 				{
 					const float *f = (const float *)storage;
 					result->members().push_back( new M44fData( M44f(
@@ -481,7 +481,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 						f[12], f[13], f[14], f[15]
 					) ) );
 				}
-				else if( type == TypeDesc::TypeString )
+				else if( type == OIIO::TypeString )
 				{
 					result->members().push_back( new StringData( *(const char **)storage ) );
 				}
