@@ -35,9 +35,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferCycles/IECoreCyclesPreview/ShaderNetworkAlgo.h"
+#include "IECoreCycles/ShaderNetworkAlgo.h"
 
-#include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
+#include "IECoreCycles/SocketAlgo.h"
 
 #include "IECoreScene/Shader.h"
 #include "IECoreScene/ShaderNetworkAlgo.h"

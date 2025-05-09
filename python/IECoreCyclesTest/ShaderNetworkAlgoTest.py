@@ -43,7 +43,7 @@ import imath
 import IECore
 import IECoreScene
 
-from GafferCycles import IECoreCyclesPreview as IECoreCycles
+import IECoreCycles
 
 class ShaderNetworkAlgoTest( unittest.TestCase ) :
 

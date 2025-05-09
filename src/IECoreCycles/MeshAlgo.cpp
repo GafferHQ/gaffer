@@ -32,7 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
+#include "GeometryAlgo.h"
 
 #include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/MeshAlgo.h"

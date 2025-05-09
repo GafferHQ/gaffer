@@ -45,9 +45,9 @@ import IECore
 import IECoreScene
 import IECoreImage
 import IECoreVDB
+import IECoreCycles
 
 import GafferScene
-import GafferCycles
 
 import GafferTest
 
@@ -2507,7 +2507,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testDevices( self ) :
 
 		typeIndices = {}
-		for device in GafferCycles.devices.values() :
+		for device in IECoreCycles.devices.values() :
 
 			deviceType = device["type"]
 			typeIndex = typeIndices.setdefault( deviceType, 0 )
@@ -2902,7 +2902,7 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 		)
 
-		vdb = IECoreVDB.VDBObject( str( pathlib.Path( __file__ ).parents[2] / "GafferVDBTest" / "data" / "smoke.vdb" ) )
+		vdb = IECoreVDB.VDBObject( str( pathlib.Path( __file__ ).parents[1] / "GafferVDBTest" / "data" / "smoke.vdb" ) )
 		volume = renderer.object(
 			"/vdb",
 			vdb,
@@ -2988,7 +2988,7 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 		)
 
-		vdb = IECoreVDB.VDBObject( str( pathlib.Path( __file__ ).parents[2] / "GafferVDBTest" / "data" / "smoke.vdb" ) )
+		vdb = IECoreVDB.VDBObject( str( pathlib.Path( __file__ ).parents[1] / "GafferVDBTest" / "data" / "smoke.vdb" ) )
 		volume = renderer.object(
 			"/vdb",
 			vdb,

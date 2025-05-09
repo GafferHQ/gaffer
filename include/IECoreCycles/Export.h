@@ -36,11 +36,6 @@
 
 #include "IECore/Export.h"
 
-// Comment out if/when placed into Cortex
-#ifdef GafferCycles_EXPORTS
-	#define IECoreCycles_EXPORTS
-#endif
-
 // define IECORECYCLES_API macro based on whether or not we are compiling
 // IECoreCycles, or including headers for linking to it. the
 // IECORECYCLES_API macro is the one that is used in the class definitions.
