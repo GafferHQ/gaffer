@@ -43,8 +43,6 @@
 #include "IECoreGL/TextureLoader.h"
 #include "IECoreGL/ToGLTextureConverter.h"
 
-#include "IECoreImage/ImageReader.h"
-
 #include "IECore/Exception.h"
 #include "IECore/SearchPath.h"
 
