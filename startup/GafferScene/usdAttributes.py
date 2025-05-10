@@ -40,35 +40,41 @@ import Gaffer
 
 import pxr.Kind
 
-Gaffer.Metadata.registerValue( "attribute:usd:kind", "label", "Kind" )
-Gaffer.Metadata.registerValue( "attribute:usd:kind", "defaultValue", IECore.StringData( "" ) )
-Gaffer.Metadata.registerValue(
-	"attribute:usd:kind",
-	"description",
-	"""
-	Specifies the kind of a location to be any
-	of the values from USD's kind registry. See
-	the USD documentation for more details.
+Gaffer.Metadata.registerValues( {
 
-	> Note : Gaffer doesn't assign any intrinsic
-	> meaning to USD's kind.
-	""",
-)
-Gaffer.Metadata.registerValue( "attribute:usd:kind", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
-Gaffer.Metadata.registerValue( "attribute:usd:kind", "presetNames", IECore.StringVectorData( [ IECore.CamelCase.toSpaced( k ) for k in pxr.Kind.Registry().GetAllKinds() if k != "model" ] ) )
-Gaffer.Metadata.registerValue( "attribute:usd:kind", "presetValues", IECore.StringVectorData( k for k in pxr.Kind.Registry().GetAllKinds() if k != "model" ) )
+	"attribute:usd:kind" : [
 
-Gaffer.Metadata.registerValue( "attribute:usd:purpose", "label", "Purpose" )
-Gaffer.Metadata.registerValue( "attribute:usd:purpose", "defaultValue", IECore.StringData( "default" ) )
-Gaffer.Metadata.registerValue(
-	"attribute:usd:purpose",
-	"description",
-	"""
-	Specifies the purpose of a location to be
-	`default`, `render`, `proxy` or `guide`. See
-	the USD documentation for more details.
-	""",
-)
-Gaffer.Metadata.registerValue( "attribute:usd:purpose", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
-Gaffer.Metadata.registerValue( "attribute:usd:purpose", "presetNames", IECore.StringVectorData( [ "Default", "Render", "Proxy", "Guide" ] ) )
-Gaffer.Metadata.registerValue( "attribute:usd:purpose", "presetValues", IECore.StringVectorData( [ "default", "render", "proxy", "guide" ] ) )
+		"defaultValue", "",
+		"description",
+		"""
+		Specifies the kind of a location to be any
+		of the values from USD's kind registry. See
+		the USD documentation for more details.
+
+		> Note : Gaffer doesn't assign any intrinsic
+		> meaning to USD's kind.
+		""",
+		"label", "Kind",
+		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+		"presetNames", IECore.StringVectorData( [ IECore.CamelCase.toSpaced( k ) for k in pxr.Kind.Registry().GetAllKinds() if k != "model" ] ),
+		"presetValues", IECore.StringVectorData( k for k in pxr.Kind.Registry().GetAllKinds() if k != "model" ),
+
+	],
+
+	"attribute:usd:purpose" : [
+
+		"defaultValue", "default",
+		"description",
+		"""
+		Specifies the purpose of a location to be
+		`default`, `render`, `proxy` or `guide`. See
+		the USD documentation for more details.
+		""",
+		"label", "Purpose",
+		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+		"presetNames", IECore.StringVectorData( [ "Default", "Render", "Proxy", "Guide" ] ),
+		"presetValues", IECore.StringVectorData( [ "default", "render", "proxy", "guide" ] ),
+
+	],
+
+} )

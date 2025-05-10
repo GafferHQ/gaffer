@@ -21,6 +21,7 @@ API
 
 - Gaffer module : Added `environment()` method, returning a dictionary containing all current environment variables. Unlike `os.environ`, this preserves case on Windows.
 - GafferScene::RenderManifest : Added class for representing mapping of ids to paths in renders. Supports reading EXR and cryptomatte manifests, and writing EXR manifests.
+- Metadata : Added `registerValues()` function that registers multiple metadata entries from a dictionary of string targets.
 
 Breaking Changes
 ----------------

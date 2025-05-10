@@ -34,98 +34,109 @@
 #
 ##########################################################################
 
-import IECore
 import Gaffer
 
-Gaffer.Metadata.registerValue( "option:dl:oversampling", "label", "Oversampling" )
-Gaffer.Metadata.registerValue( "option:dl:oversampling", "defaultValue", IECore.IntData( 9 ) )
-Gaffer.Metadata.registerValue(
-	"option:dl:oversampling",
-	"description",
-	"""
-	The number of camera rays to fire for each pixel of
-	the image. Higher values may be needed to resolve fine
-	geometric detail such as hair, or to reduce noise in
-	heavily motion blurred renders.
-	"""
-)
+Gaffer.Metadata.registerValues( {
 
-Gaffer.Metadata.registerValue( "option:dl:quality.shadingsamples", "label", "Shading Samples" )
-Gaffer.Metadata.registerValue( "option:dl:quality.shadingsamples", "defaultValue", IECore.IntData( 64 ) )
-Gaffer.Metadata.registerValue(
-	"option:dl:quality.shadingsamples",
-	"description",
-	"""
-	The number of samples to take when evaluating shading.
-	This is the primary means of improving image quality and
-	reducing shading noise.
-	"""
-)
+	"option:dl:oversampling" : [
 
-Gaffer.Metadata.registerValue( "option:dl:quality.volumesamples", "label", "Volume Samples" )
-Gaffer.Metadata.registerValue( "option:dl:quality.volumesamples", "defaultValue", IECore.IntData( 1 ) )
-Gaffer.Metadata.registerValue(
-	"option:dl:quality.volumesamples",
-	"description",
-	"""
-	The number of samples to take when evaluating volumes.
-	"""
-)
+		"defaultValue", 9,
+		"description",
+		"""
+		The number of camera rays to fire for each pixel of
+		the image. Higher values may be needed to resolve fine
+		geometric detail such as hair, or to reduce noise in
+		heavily motion blurred renders.
+		""",
+		"label", "Oversampling",
 
-Gaffer.Metadata.registerValue( "option:dl:maximumraydepth.diffuse", "label", "Diffuse" )
-Gaffer.Metadata.registerValue( "option:dl:maximumraydepth.diffuse", "defaultValue", IECore.IntData( 1 ) )
-Gaffer.Metadata.registerValue(
-	"option:dl:maximumraydepth.diffuse",
-	"description",
-	"""
-	The maximum bounce depth a diffuse ray can reach. A depth
-	of 1 specifies one additional bounce compared to purely
-	local illumination.
-	"""
-)
+	],
 
-Gaffer.Metadata.registerValue( "option:dl:maximumraydepth.hair", "label", "Hair" )
-Gaffer.Metadata.registerValue( "option:dl:maximumraydepth.hair", "defaultValue", IECore.IntData( 4 ) )
-Gaffer.Metadata.registerValue(
-	"option:dl:maximumraydepth.hair",
-	"description",
-	"""
-	The maximum bounce depth a hair ray can reach. Note that hair
-	is akin to volumetric primitives and might need elevated ray
-	depth to properly capture the illumination.
-	"""
-)
+	"option:dl:quality.shadingsamples" : [
 
-Gaffer.Metadata.registerValue( "option:dl:maximumraydepth.reflection", "label", "Reflection" )
-Gaffer.Metadata.registerValue( "option:dl:maximumraydepth.reflection", "defaultValue", IECore.IntData( 1 ) )
-Gaffer.Metadata.registerValue(
-	"option:dl:maximumraydepth.reflection",
-	"description",
-	"""
-	The maximum bounce depth a reflection ray can reach. Setting
-	the reflection depth to 0 will only compute local illumination
-	meaning that only emissive surfaces will appear in the reflections.
-	"""
-)
+		"defaultValue", 64,
+		"description",
+		"""
+		The number of samples to take when evaluating shading.
+		This is the primary means of improving image quality and
+		reducing shading noise.
+		""",
+		"label", "Shading Samples",
 
-Gaffer.Metadata.registerValue( "option:dl:maximumraydepth.refraction", "label", "Refraction" )
-Gaffer.Metadata.registerValue( "option:dl:maximumraydepth.refraction", "defaultValue", IECore.IntData( 4 ) )
-Gaffer.Metadata.registerValue(
-	"option:dl:maximumraydepth.refraction",
-	"description",
-	"""
-	The maximum bounce depth a refraction ray can reach. A value of 4
-	allows light to shine through a properly modeled object such as a
-	glass.
-	"""
-)
+	],
 
-Gaffer.Metadata.registerValue( "option:dl:maximumraydepth.volume", "label", "Volume" )
-Gaffer.Metadata.registerValue( "option:dl:maximumraydepth.volume", "defaultValue", IECore.IntData( 0 ) )
-Gaffer.Metadata.registerValue(
-	"option:dl:maximumraydepth.volume",
-	"description",
-	"""
-	The maximum bounce depth a volume ray can reach.
-	"""
-)
+	"option:dl:quality.volumesamples" : [
+
+		"defaultValue", 1,
+		"description",
+		"""
+		The number of samples to take when evaluating volumes.
+		""",
+		"label", "Volume Samples",
+
+	],
+
+	"option:dl:maximumraydepth.diffuse" : [
+
+		"defaultValue", 1,
+		"description",
+		"""
+		The maximum bounce depth a diffuse ray can reach. A depth
+		of 1 specifies one additional bounce compared to purely
+		local illumination.
+		""",
+		"label", "Diffuse",
+
+	],
+
+	"option:dl:maximumraydepth.hair" : [
+
+		"defaultValue", 4,
+		"description",
+		"""
+		The maximum bounce depth a hair ray can reach. Note that hair
+		is akin to volumetric primitives and might need elevated ray
+		depth to properly capture the illumination.
+		""",
+		"label", "Hair",
+
+	],
+
+	"option:dl:maximumraydepth.reflection" : [
+
+		"defaultValue", 1,
+		"description",
+		"""
+		The maximum bounce depth a reflection ray can reach. Setting
+		the reflection depth to 0 will only compute local illumination
+		meaning that only emissive surfaces will appear in the reflections.
+		""",
+		"label", "Reflection",
+
+	],
+
+	"option:dl:maximumraydepth.refraction" : [
+
+		"defaultValue", 4,
+		"description",
+		"""
+		The maximum bounce depth a refraction ray can reach. A value of 4
+		allows light to shine through a properly modeled object such as a
+		glass.
+		""",
+		"label", "Refraction",
+
+	],
+
+	"option:dl:maximumraydepth.volume" : [
+
+		"defaultValue", 0,
+		"description",
+		"""
+		The maximum bounce depth a volume ray can reach.
+		""",
+		"label", "Volume",
+
+	],
+
+} )

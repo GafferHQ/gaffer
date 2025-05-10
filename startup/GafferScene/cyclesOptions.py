@@ -34,120 +34,134 @@
 #
 ##########################################################################
 
-import IECore
 import Gaffer
 
-Gaffer.Metadata.registerValue( "option:cycles:session:samples", "label", "Samples" )
-Gaffer.Metadata.registerValue( "option:cycles:session:samples", "defaultValue", IECore.IntData( 1024 ) )
-Gaffer.Metadata.registerValue(
-	"option:cycles:session:samples",
-	"description",
-	"""
-	Number of samples to render for each pixel.
-	"""
-)
+Gaffer.Metadata.registerValues( {
 
-Gaffer.Metadata.registerValue( "option:cycles:integrator:use_adaptive_sampling", "label", "Adaptive Sampling" )
-Gaffer.Metadata.registerValue( "option:cycles:integrator:use_adaptive_sampling", "defaultValue", IECore.BoolData( False ) )
-Gaffer.Metadata.registerValue(
-	"option:cycles:integrator:use_adaptive_sampling",
-	"description",
-	"""
-	Automatically determine the number of samples
-	per pixel based on a variance estimation.
-	"""
-)
+	"option:cycles:session:samples" : [
 
-Gaffer.Metadata.registerValue( "option:cycles:integrator:adaptive_threshold", "label", "Adaptive Threshold" )
-Gaffer.Metadata.registerValue( "option:cycles:integrator:adaptive_threshold", "defaultValue", IECore.FloatData( 0 ) )
-Gaffer.Metadata.registerValue(
-	"option:cycles:integrator:adaptive_threshold",
-	"description",
-	"""
-	Noise level step to stop sampling at, lower values reduce noise the cost of render time.
-	`0` for automatic setting based on number of AA samples.
-	"""
-)
+		"defaultValue", 1024,
+		"description",
+		"""
+		Number of samples to render for each pixel.
+		""",
+		"label", "Samples",
 
-Gaffer.Metadata.registerValue( "option:cycles:integrator:use_guiding", "label", "Path Guiding" )
-Gaffer.Metadata.registerValue( "option:cycles:integrator:use_guiding", "defaultValue", IECore.BoolData( False ) )
-Gaffer.Metadata.registerValue(
-	"option:cycles:integrator:use_guiding",
-	"description",
-	"""
-	Use path guiding for sampling paths. Path guiding incrementally
-	learns the light distribution of the scene and guides paths into directions
-	with high direct and indirect light contributions.
-	"""
-)
+	],
 
-Gaffer.Metadata.registerValue( "option:cycles:integrator:min_bounce", "label", "Min Bounces" )
-Gaffer.Metadata.registerValue( "option:cycles:integrator:min_bounce", "defaultValue", IECore.IntData( 0 ) )
-Gaffer.Metadata.registerValue(
-	"option:cycles:integrator:min_bounce",
-	"description",
-	"""
-	Minimum number of light bounces. Setting this higher reduces noise in the first bounces,
-	but can also be less efficient for more complex geometry like hair and volumes.
-	"""
-)
+	"option:cycles:integrator:use_adaptive_sampling" : [
 
-Gaffer.Metadata.registerValue( "option:cycles:integrator:max_bounce", "label", "Max Bounces" )
-Gaffer.Metadata.registerValue( "option:cycles:integrator:max_bounce", "defaultValue", IECore.IntData( 7 ) )
-Gaffer.Metadata.registerValue(
-	"option:cycles:integrator:max_bounce",
-	"description",
-	"""
-	Total maximum number of bounces.
-	"""
-)
+		"defaultValue", False,
+		"description",
+		"""
+		Automatically determine the number of samples
+		per pixel based on a variance estimation.
+		""",
+		"label", "Adaptive Sampling",
 
-Gaffer.Metadata.registerValue( "option:cycles:integrator:max_diffuse_bounce", "label", "Diffuse" )
-Gaffer.Metadata.registerValue( "option:cycles:integrator:max_diffuse_bounce", "defaultValue", IECore.IntData( 7 ) )
-Gaffer.Metadata.registerValue(
-	"option:cycles:integrator:max_diffuse_bounce",
-	"description",
-	"""
-	Maximum number of diffuse reflection bounces, bounded by total maximum.
-	"""
-)
+	],
 
-Gaffer.Metadata.registerValue( "option:cycles:integrator:max_glossy_bounce", "label", "Glossy" )
-Gaffer.Metadata.registerValue( "option:cycles:integrator:max_glossy_bounce", "defaultValue", IECore.IntData( 7 ) )
-Gaffer.Metadata.registerValue(
-	"option:cycles:integrator:max_glossy_bounce",
-	"description",
-	"""
-	Maximum number of glossy reflection bounces, bounded by total maximum.
-	"""
-)
+	"option:cycles:integrator:adaptive_threshold" : [
 
-Gaffer.Metadata.registerValue( "option:cycles:integrator:max_transmission_bounce", "label", "Transmission" )
-Gaffer.Metadata.registerValue( "option:cycles:integrator:max_transmission_bounce", "defaultValue", IECore.IntData( 7 ) )
-Gaffer.Metadata.registerValue(
-	"option:cycles:integrator:max_transmission_bounce",
-	"description",
-	"""
-	Maximum number of transmission reflection bounces, bounded by total maximum.
-	"""
-)
+		"defaultValue", 0.0,
+		"description",
+		"""
+		Noise level step to stop sampling at, lower values reduce noise the cost of render time.
+		`0` for automatic setting based on number of AA samples.
+		""",
+		"label", "Adaptive Threshold",
 
-Gaffer.Metadata.registerValue( "option:cycles:integrator:max_volume_bounce", "label", "Volume" )
-Gaffer.Metadata.registerValue( "option:cycles:integrator:max_volume_bounce", "defaultValue", IECore.IntData( 7 ) )
-Gaffer.Metadata.registerValue(
-	"option:cycles:integrator:max_volume_bounce",
-	"description",
-	"""
-	Maximum number of volumetric scattering events.
-	"""
-)
+	],
 
-Gaffer.Metadata.registerValue( "option:cycles:integrator:transparent_max_bounce", "label", "Transparency" )
-Gaffer.Metadata.registerValue( "option:cycles:integrator:transparent_max_bounce", "defaultValue", IECore.IntData( 7 ) )
-Gaffer.Metadata.registerValue(
-	"option:cycles:integrator:transparent_max_bounce",
-	"description",
-	"""
-	Maximum number of transparent bounces.
-	"""
-)
+	"option:cycles:integrator:use_guiding" : [
+
+		"defaultValue", False,
+		"description",
+		"""
+		Use path guiding for sampling paths. Path guiding incrementally
+		learns the light distribution of the scene and guides paths into directions
+		with high direct and indirect light contributions.
+		""",
+		"label", "Path Guiding",
+
+	],
+
+	"option:cycles:integrator:min_bounce" : [
+
+		"defaultValue", 0,
+		"description",
+		"""
+		Minimum number of light bounces. Setting this higher reduces noise in the first bounces,
+		but can also be less efficient for more complex geometry like hair and volumes.
+		""",
+		"label", "Min Bounces",
+
+	],
+
+	"option:cycles:integrator:max_bounce" : [
+
+		"defaultValue", 7,
+		"description",
+		"""
+		Total maximum number of bounces.
+		""",
+		"label", "Max Bounces",
+
+	],
+
+	"option:cycles:integrator:max_diffuse_bounce" : [
+
+		"defaultValue", 7,
+		"description",
+		"""
+		Maximum number of diffuse reflection bounces, bounded by total maximum.
+		""",
+		"label", "Diffuse",
+
+	],
+
+	"option:cycles:integrator:max_glossy_bounce" : [
+
+		"defaultValue", 7,
+		"description",
+		"""
+		Maximum number of glossy reflection bounces, bounded by total maximum.
+		""",
+		"label", "Glossy",
+
+	],
+
+	"option:cycles:integrator:max_transmission_bounce" : [
+
+		"defaultValue", 7,
+		"description",
+		"""
+		Maximum number of transmission reflection bounces, bounded by total maximum.
+		""",
+		"label", "Transmission",
+
+	],
+
+	"option:cycles:integrator:max_volume_bounce" : [
+
+		"defaultValue", 7,
+		"description",
+		"""
+		Maximum number of volumetric scattering events.
+		""",
+		"label", "Volume",
+
+	],
+
+	"option:cycles:integrator:transparent_max_bounce" : [
+
+		"defaultValue", 7,
+		"description",
+		"""
+		Maximum number of transparent bounces.
+		""",
+		"label", "Transparency",
+
+	],
+
+} )

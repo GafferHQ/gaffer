@@ -187,6 +187,21 @@ void registerValue( IECore::InternedString target, IECore::InternedString key, o
 	Metadata::registerValue( target, key, objectToValueFunction( key, value ) );
 }
 
+void registerValues( dict valuesDict )
+{
+	list items = valuesDict.items();
+	for( size_t i = 0, e = len( items ); i < e; ++i )
+	{
+		InternedString target = extract<InternedString>( items[i][0] );
+		object values = items[i][1];
+		for( size_t vi = 0, ve = len( values ); vi < ve; vi += 2 )
+		{
+			InternedString key = extract<InternedString>( values[vi] );
+			Metadata::registerValue( target, key, objectToValueFunction( key, values[vi+1] ) );
+		}
+	}
+}
+
 object value( IECore::InternedString target, IECore::InternedString key, bool copy )
 {
 	ConstDataPtr d = Metadata::value( target, key );
@@ -401,6 +416,9 @@ void GafferModule::bindMetadata()
 			)
 		)
 		.staticmethod( "registerValue" )
+
+		.def( "registerValues", &registerValues )
+		.staticmethod( "registerValues" )
 
 		.def( "registeredValues", &registeredValues )
 		.def( "registeredValues", &registeredGraphComponentValuesDeprecated,

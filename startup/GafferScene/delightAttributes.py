@@ -34,95 +34,105 @@
 #
 ##########################################################################
 
-import IECore
-
 import Gaffer
 
-Gaffer.Metadata.registerValue( "attribute:dl:visibility.camera", "label", "Camera" )
-Gaffer.Metadata.registerValue( "attribute:dl:visibility.camera", "defaultValue", IECore.BoolData( True ) )
-Gaffer.Metadata.registerValue(
-	"attribute:dl:visibility.camera",
-	"description",
-	"""
-	Whether or not the object is visible to camera
-	rays. To hide an object completely, use the
-	`scene:visible` attribute instead.
-	""",
-)
+Gaffer.Metadata.registerValues( {
 
-Gaffer.Metadata.registerValue( "attribute:dl:visibility.diffuse", "label", "Diffuse" )
-Gaffer.Metadata.registerValue( "attribute:dl:visibility.diffuse", "defaultValue", IECore.BoolData( True ) )
-Gaffer.Metadata.registerValue(
-	"attribute:dl:visibility.diffuse",
-	"description",
-	"""
-	Whether or not the object is visible to diffuse
-	rays.
-	""",
-)
+	"attribute:dl:visibility.camera" : [
 
-Gaffer.Metadata.registerValue( "attribute:dl:visibility.hair", "label", "Hair" )
-Gaffer.Metadata.registerValue( "attribute:dl:visibility.hair", "defaultValue", IECore.BoolData( True ) )
-Gaffer.Metadata.registerValue(
-	"attribute:dl:visibility.hair",
-	"description",
-	"""
-	Whether or not the object is visible to
-	hair rays.
-	""",
-)
+		"defaultValue", True,
+		"description",
+		"""
+		Whether or not the object is visible to camera
+		rays. To hide an object completely, use the
+		`scene:visible` attribute instead.
+		""",
+		"label", "Camera",
 
-Gaffer.Metadata.registerValue( "attribute:dl:visibility.reflection", "label", "Reflection" )
-Gaffer.Metadata.registerValue( "attribute:dl:visibility.reflection", "defaultValue", IECore.BoolData( True ) )
-Gaffer.Metadata.registerValue(
-	"attribute:dl:visibility.reflection",
-	"description",
-	"""
-	Whether or not the object is visible in
-	reflections.
-	""",
-)
+	],
 
-Gaffer.Metadata.registerValue( "attribute:dl:visibility.refraction", "label", "Refraction" )
-Gaffer.Metadata.registerValue( "attribute:dl:visibility.refraction", "defaultValue", IECore.BoolData( True ) )
-Gaffer.Metadata.registerValue(
-	"attribute:dl:visibility.refraction",
-	"description",
-	"""
-	Whether or not the object is visible in
-	refractions.
-	""",
-)
+	"attribute:dl:visibility.diffuse" : [
 
-Gaffer.Metadata.registerValue( "attribute:dl:visibility.shadow", "label", "Shadow" )
-Gaffer.Metadata.registerValue( "attribute:dl:visibility.shadow", "defaultValue", IECore.BoolData( True ) )
-Gaffer.Metadata.registerValue(
-	"attribute:dl:visibility.shadow",
-	"description",
-	"""
-	Whether or not the object is visible to shadow
-	rays - whether it casts shadows or not.
-	""",
-)
+		"defaultValue", True,
+		"description",
+		"""
+		Whether or not the object is visible to diffuse
+		rays.
+		""",
+		"label", "Diffuse",
 
-Gaffer.Metadata.registerValue( "attribute:dl:visibility.specular", "label", "Specular" )
-Gaffer.Metadata.registerValue( "attribute:dl:visibility.specular", "defaultValue", IECore.BoolData( True ) )
-Gaffer.Metadata.registerValue(
-	"attribute:dl:visibility.specular",
-	"description",
-	"""
-	Whether or not the object is visible to
-	specular rays.
-	""",
-)
+	],
 
-Gaffer.Metadata.registerValue( "attribute:dl:matte", "label", "Matte" )
-Gaffer.Metadata.registerValue( "attribute:dl:matte", "defaultValue", IECore.BoolData( False ) )
-Gaffer.Metadata.registerValue(
-	"attribute:dl:matte",
-	"description",
-	"""
-	Turns the object into a holdout matte.
-	This only affects primary (camera) rays.
-	""",
-)
+	"attribute:dl:visibility.hair" : [
+
+		"defaultValue", True,
+		"description",
+		"""
+		Whether or not the object is visible to
+		hair rays.
+		""",
+		"label", "Hair",
+
+	],
+
+	"attribute:dl:visibility.reflection" : [
+
+		"defaultValue", True,
+		"description",
+		"""
+		Whether or not the object is visible in
+		reflections.
+		""",
+		"label", "Reflection",
+
+	],
+
+	"attribute:dl:visibility.refraction" : [
+
+		"defaultValue", True,
+		"description",
+		"""
+		Whether or not the object is visible in
+		refractions.
+		""",
+		"label", "Refraction",
+
+	],
+
+	"attribute:dl:visibility.shadow" : [
+
+		"defaultValue", True,
+		"description",
+		"""
+		Whether or not the object is visible to shadow
+		rays - whether it casts shadows or not.
+		""",
+		"label", "Shadow",
+
+	],
+
+	"attribute:dl:visibility.specular" : [
+
+		"defaultValue", True,
+		"description",
+		"""
+		Whether or not the object is visible to
+		specular rays.
+		""",
+		"label", "Specular",
+
+	],
+
+	"attribute:dl:matte" : [
+
+		"defaultValue", False,
+		"description",
+		"""
+		Turns the object into a holdout matte.
+		This only affects primary (camera) rays.
+		""",
+		"label", "Matte",
+
+	],
+
+} )

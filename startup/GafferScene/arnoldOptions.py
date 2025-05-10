@@ -34,204 +34,222 @@
 #
 ##########################################################################
 
-import IECore
 import Gaffer
 
 ## \todo Migrate ArnoldOptions to use this metadata so we have one source of truth.
-Gaffer.Metadata.registerValue( "option:ai:AA_samples", "label", "AA Samples" )
-Gaffer.Metadata.registerValue( "option:ai:AA_samples", "defaultValue", IECore.IntData( 3 ) )
-Gaffer.Metadata.registerValue(
-	"option:ai:AA_samples",
-	"description",
-	"""
-	Controls the number of rays per pixel
-	traced from the camera. The more samples,
-	the better the quality of antialiasing,
-	motion blur and depth of field. The actual
-	number of rays per pixel is the square of
-	the AA Samples value - so a value of 3
-	means 9 rays are traced, 4 means 16 rays are
-	traced and so on.
-	"""
-)
+Gaffer.Metadata.registerValues( {
 
-Gaffer.Metadata.registerValue( "option:ai:enable_adaptive_sampling", "label", "Enable Adaptive Sampling" )
-Gaffer.Metadata.registerValue( "option:ai:enable_adaptive_sampling", "defaultValue", IECore.BoolData( False ) )
-Gaffer.Metadata.registerValue(
-	"option:ai:enable_adaptive_sampling",
-	"description",
-	"""
-	If adaptive sampling is enabled, Arnold will
-	take a minimum of ( AA Samples * AA Samples )
-	samples per pixel, and will then take up to
-	( AA Samples Max * AA Samples Max ) samples per
-	pixel, or until the remaining estimated noise
-	gets lower than aaAdaptiveThreshold.
-	"""
-)
+	"option:ai:AA_samples" : [
 
-Gaffer.Metadata.registerValue( "option:ai:AA_samples_max", "label", "AA Samples Max" )
-Gaffer.Metadata.registerValue( "option:ai:AA_samples_max", "defaultValue", IECore.IntData( 0 ) )
-Gaffer.Metadata.registerValue(
-	"option:ai:AA_samples_max",
-	"description",
-	"""
-	The maximum sampling rate during adaptive
-	sampling. Like AA Samples, this value is
-	squared. So AA Samples Max == 6 means up to
-	36 samples per pixel.
-	"""
-)
+		"defaultValue", 3,
+		"description",
+		"""
+		Controls the number of rays per pixel
+		traced from the camera. The more samples,
+		the better the quality of antialiasing,
+		motion blur and depth of field. The actual
+		number of rays per pixel is the square of
+		the AA Samples value - so a value of 3
+		means 9 rays are traced, 4 means 16 rays are
+		traced and so on.
+		""",
+		"label", "AA Samples",
 
-Gaffer.Metadata.registerValue( "option:ai:AA_adaptive_threshold", "label", "AA Adaptive Threshold" )
-Gaffer.Metadata.registerValue( "option:ai:AA_adaptive_threshold", "defaultValue", IECore.FloatData( 0.05 ) )
-Gaffer.Metadata.registerValue(
-	"option:ai:AA_adaptive_threshold",
-	"description",
-	"""
-	How much leftover noise is acceptable when
-	terminating adaptive sampling. Higher values
-	accept more noise, lower values keep rendering
-	longer to achieve smaller amounts of noise.
-	"""
-)
+	],
 
-Gaffer.Metadata.registerValue( "option:ai:GI_diffuse_samples", "label", "Diffuse Samples" )
-Gaffer.Metadata.registerValue( "option:ai:GI_diffuse_samples", "defaultValue", IECore.IntData( 2 ) )
-Gaffer.Metadata.registerValue(
-	"option:ai:GI_diffuse_samples",
-	"description",
-	"""
-	Controls the number of rays traced when
-	computing indirect illumination.
-	"""
-)
+	"option:ai:enable_adaptive_sampling" : [
 
-Gaffer.Metadata.registerValue( "option:ai:GI_specular_samples", "label", "Specular Samples" )
-Gaffer.Metadata.registerValue( "option:ai:GI_specular_samples", "defaultValue", IECore.IntData( 2 ) )
-Gaffer.Metadata.registerValue(
-	"option:ai:GI_specular_samples",
-	"description",
-	"""
-	Controls the number of rays traced when
-	computing specular reflections.
-	"""
-)
+		"defaultValue", False,
+		"description",
+		"""
+		If adaptive sampling is enabled, Arnold will
+		take a minimum of ( AA Samples * AA Samples )
+		samples per pixel, and will then take up to
+		( AA Samples Max * AA Samples Max ) samples per
+		pixel, or until the remaining estimated noise
+		gets lower than aaAdaptiveThreshold.
+		""",
+		"label", "Enable Adaptive Sampling",
 
-Gaffer.Metadata.registerValue( "option:ai:GI_transmission_samples", "label", "Transmission Samples" )
-Gaffer.Metadata.registerValue( "option:ai:GI_transmission_samples", "defaultValue", IECore.IntData( 2 ) )
-Gaffer.Metadata.registerValue(
-	"option:ai:GI_transmission_samples",
-	"description",
-	"""
-	Controls the number of rays traced when
-	computing specular refractions.
-	"""
-)
+	],
 
-Gaffer.Metadata.registerValue( "option:ai:GI_sss_samples", "label", "SSS Samples" )
-Gaffer.Metadata.registerValue( "option:ai:GI_sss_samples", "defaultValue", IECore.IntData( 2 ) )
-Gaffer.Metadata.registerValue(
-	"option:ai:GI_sss_samples",
-	"description",
-	"""
-	Controls the number of rays traced when
-	computing subsurface scattering.
-	"""
-)
+	"option:ai:AA_samples_max" : [
 
-Gaffer.Metadata.registerValue( "option:ai:GI_volume_samples", "label", "Volume Samples" )
-Gaffer.Metadata.registerValue( "option:ai:GI_volume_samples", "defaultValue", IECore.IntData( 2 ) )
-Gaffer.Metadata.registerValue(
-	"option:ai:GI_volume_samples",
-	"description",
-	"""
-	Controls the number of rays traced when
-	computing indirect lighting for volumes.
-	"""
-)
+		"defaultValue", 0,
+		"description",
+		"""
+		The maximum sampling rate during adaptive
+		sampling. Like AA Samples, this value is
+		squared. So AA Samples Max == 6 means up to
+		36 samples per pixel.
+		""",
+		"label", "AA Samples Max",
 
-Gaffer.Metadata.registerValue( "option:ai:light_samples", "label", "Light Samples" )
-Gaffer.Metadata.registerValue( "option:ai:light_samples", "defaultValue", IECore.IntData( 0 ) )
-Gaffer.Metadata.registerValue(
-	"option:ai:light_samples",
-	"description",
-	"""
-	Specifies a fixed number of light samples to be taken at each
-	shading point. This enables "Global Light Sampling", which provides
-	significantly improved performance for scenes containing large numbers
-	of lights. In this mode, the `samples` setting on each light is ignored,
-	and instead the fixed number of samples is distributed among all the
-	lights according to their contribution at the shading point.
+	],
 
-	A value of `0` disables Global Light Sampling, reverting to the original
-	per-light sampling algorithm.
-	"""
-)
+	"option:ai:AA_adaptive_threshold" : [
 
-Gaffer.Metadata.registerValue( "option:ai:GI_total_depth", "label", "Total Depth" )
-Gaffer.Metadata.registerValue( "option:ai:GI_total_depth", "defaultValue", IECore.IntData( 10 ) )
-Gaffer.Metadata.registerValue(
-	"option:ai:GI_total_depth",
-	"description",
-	"""
-	The maximum depth of any ray (Diffuse + Specular +
-	Transmission + Volume).
-	"""
-)
+		"defaultValue", 0.05,
+		"description",
+		"""
+		How much leftover noise is acceptable when
+		terminating adaptive sampling. Higher values
+		accept more noise, lower values keep rendering
+		longer to achieve smaller amounts of noise.
+		""",
+		"label", "AA Adaptive Threshold",
 
-Gaffer.Metadata.registerValue( "option:ai:GI_diffuse_depth", "label", "Diffuse Depth" )
-Gaffer.Metadata.registerValue( "option:ai:GI_diffuse_depth", "defaultValue", IECore.IntData( 2 ) )
-Gaffer.Metadata.registerValue(
-	"option:ai:GI_diffuse_depth",
-	"description",
-	"""
-	Controls the number of ray bounces when
-	computing indirect illumination ("bounce light").
-	"""
-)
+	],
 
+	"option:ai:GI_diffuse_samples" : [
 
-Gaffer.Metadata.registerValue( "option:ai:GI_specular_depth", "label", "Specular Depth" )
-Gaffer.Metadata.registerValue( "option:ai:GI_specular_depth", "defaultValue", IECore.IntData( 2 ) )
-Gaffer.Metadata.registerValue(
-	"option:ai:GI_specular_depth",
-	"description",
-	"""
-	Controls the number of ray bounces when
-	computing specular reflections.
-	"""
-)
+		"defaultValue", 2,
+		"description",
+		"""
+		Controls the number of rays traced when
+		computing indirect illumination.
+		""",
+		"label", "Diffuse Samples",
 
-Gaffer.Metadata.registerValue( "option:ai:GI_transmission_depth", "label", "Transmission Depth" )
-Gaffer.Metadata.registerValue( "option:ai:GI_transmission_depth", "defaultValue", IECore.IntData( 2 ) )
-Gaffer.Metadata.registerValue(
-	"option:ai:GI_transmission_depth",
-	"description",
-	"""
-	Controls the number of ray bounces when
-	computing specular refractions.
-	"""
-)
+	],
 
-Gaffer.Metadata.registerValue( "option:ai:GI_volume_depth", "label", "Volume Depth" )
-Gaffer.Metadata.registerValue( "option:ai:GI_volume_depth", "defaultValue", IECore.IntData( 0 ) )
-Gaffer.Metadata.registerValue(
-	"option:ai:GI_volume_depth",
-	"description",
-	"""
-	Controls the number of ray bounces when
-	computing indirect lighting on volumes.
-	"""
-)
+	"option:ai:GI_specular_samples" : [
 
-Gaffer.Metadata.registerValue( "option:ai:auto_transparency_depth", "label", "Transparency Depth" )
-Gaffer.Metadata.registerValue( "option:ai:auto_transparency_depth", "defaultValue", IECore.IntData( 10 ) )
-Gaffer.Metadata.registerValue(
-	"option:ai:auto_transparency_depth",
+		"defaultValue", 2,
+		"description",
+		"""
+		Controls the number of rays traced when
+		computing specular reflections.
+		""",
+		"label", "Specular Samples",
+
+	],
+
+	"option:ai:GI_transmission_samples" : [
+
+		"defaultValue", 2,
+		"description",
+		"""
+		Controls the number of rays traced when
+		computing specular refractions.
+		""",
+		"label", "Transmission Samples",
+
+	],
+
+	"option:ai:GI_sss_samples" : [
+
+		"defaultValue", 2,
+		"description",
+		"""
+		Controls the number of rays traced when
+		computing subsurface scattering.
+		""",
+		"label", "SSS Samples",
+
+	],
+
+	"option:ai:GI_volume_samples" : [
+
+		"defaultValue", 2,
+		"description",
+		"""
+		Controls the number of rays traced when
+		computing indirect lighting for volumes.
+		""",
+		"label", "Volume Samples",
+
+	],
+
+	"option:ai:light_samples" : [
+
+		"defaultValue", 0,
+		"description",
+		"""
+		Specifies a fixed number of light samples to be taken at each
+		shading point. This enables "Global Light Sampling", which provides
+		significantly improved performance for scenes containing large numbers
+		of lights. In this mode, the `samples` setting on each light is ignored,
+		and instead the fixed number of samples is distributed among all the
+		lights according to their contribution at the shading point.
+
+		A value of `0` disables Global Light Sampling, reverting to the original
+		per-light sampling algorithm.
+		""",
+		"label", "Light Samples",
+
+	],
+
+	"option:ai:GI_total_depth" : [
+
+		"defaultValue", 10,
+		"description",
+		"""
+		The maximum depth of any ray (Diffuse + Specular +
+		Transmission + Volume).
+		""",
+		"label", "Total Depth",
+
+	],
+
+	"option:ai:GI_diffuse_depth" : [
+
+		"defaultValue", 2,
+		"description",
+		"""
+		Controls the number of ray bounces when
+		computing indirect illumination ("bounce light").
+		""",
+		"label", "Diffuse Depth",
+
+	],
+
+	"option:ai:GI_specular_depth" : [
+
+		"defaultValue", 2,
+		"description",
+		"""
+		Controls the number of ray bounces when
+		computing specular reflections.
+		""",
+		"label", "Specular Depth",
+
+	],
+
+	"option:ai:GI_transmission_depth" : [
+
+		"defaultValue", 2,
+		"description",
+		"""
+		Controls the number of ray bounces when
+		computing specular refractions.
+		""",
+		"label", "Transmission Depth",
+
+	],
+
+	"option:ai:GI_volume_depth" : [
+
+		"defaultValue", 0,
+		"description",
+		"""
+		Controls the number of ray bounces when
+		computing indirect lighting on volumes.
+		""",
+		"label", "Volume Depth",
+
+	],
+
+	"option:ai:auto_transparency_depth" : [
+
+	"defaultValue", 10,
 	"description",
 	"""
 	The number of allowable transparent layers - after
 	this the last object will be treated as opaque.
-	"""
-)
+	""",
+	"label", "Transparency Depth",
+
+	]
+
+} )

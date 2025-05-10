@@ -1410,6 +1410,40 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.targetsWithMetadata( "target*", "k1" ), [ "target1", "targetA" ] )
 		self.assertEqual( Gaffer.Metadata.targetsWithMetadata( "*", "k3" ), [ "target2" ] )
 
+	def testRegisterValues( self ) :
+
+		Gaffer.Metadata.registerValues( {
+
+			"testTarget1" : [
+
+				"description", "testTarget1",
+				"otherValue", 100,
+
+			],
+
+			"testTarget2" : [
+
+				"description",
+				"""
+				multi line
+				description
+				""",
+				"otherValue", IECore.StringVectorData( [ "A", "B", "C" ] )
+
+			]
+
+		} )
+
+		for target in ( "testTarget1", "testTarget2" ) :
+			for key in ( "description", "otherValue" ) :
+				self.addCleanup( Gaffer.Metadata.deregisterValue, target, key )
+
+		self.assertEqual( Gaffer.Metadata.value( "testTarget1", "description" ), "testTarget1" )
+		self.assertEqual( Gaffer.Metadata.value( "testTarget1", "otherValue" ), 100 )
+
+		self.assertEqual( Gaffer.Metadata.value( "testTarget2", "description" ), "multi line\ndescription" )
+		self.assertEqual( Gaffer.Metadata.value( "testTarget2", "otherValue" ), IECore.StringVectorData( [ "A", "B", "C" ] ) )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )

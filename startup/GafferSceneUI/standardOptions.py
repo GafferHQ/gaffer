@@ -37,31 +37,67 @@
 import Gaffer
 import GafferSceneUI
 
-Gaffer.Metadata.registerValue( "option:render:defaultRenderer", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
-Gaffer.Metadata.registerValue( "option:render:defaultRenderer", "preset:None", "" )
-## \todo As part of the future great metadata reckoning, it would make more sense for rendererPresetNames to be defined as
-# part of this global metadata rather than by GafferSceneUI.RenderUI and then called here. This would also allow the registrations
-# in this file to be combined with those in `startup/GafferScene/standardOptions.py`.
-Gaffer.Metadata.registerValue( "option:render:defaultRenderer", "presetNames", GafferSceneUI.RenderUI.rendererPresetNames )
-Gaffer.Metadata.registerValue( "option:render:defaultRenderer", "presetValues", GafferSceneUI.RenderUI.rendererPresetNames )
+Gaffer.Metadata.registerValues( {
 
-Gaffer.Metadata.registerValue( "option:render:inclusions", "plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget" )
-Gaffer.Metadata.registerValue( "option:render:inclusions", "ui:scene:acceptsSetExpression", True )
+	"option:render:defaultRenderer" : [
 
-Gaffer.Metadata.registerValue( "option:render:exclusions", "plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget" )
-Gaffer.Metadata.registerValue( "option:render:exclusions", "ui:scene:acceptsSetExpression", True )
+		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+		"preset:None", "",
+		## \todo As part of the future great metadata reckoning, it would make more sense for rendererPresetNames to be defined as
+		# part of this global metadata rather than by GafferSceneUI.RenderUI and then called here. This would also allow the registrations
+		# in this file to be combined with those in `startup/GafferScene/standardOptions.py`.
+		"presetNames", GafferSceneUI.RenderUI.rendererPresetNames,
+		"presetValues", GafferSceneUI.RenderUI.rendererPresetNames,
 
-Gaffer.Metadata.registerValue( "option:render:additionalLights", "plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget" )
-Gaffer.Metadata.registerValue( "option:render:additionalLights", "ui:scene:acceptsSetExpression", True )
+	],
 
-Gaffer.Metadata.registerValue( "option:render:cameraInclusions", "plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget" )
-Gaffer.Metadata.registerValue( "option:render:cameraInclusions", "ui:scene:acceptsSetExpression", True )
+	"option:render:inclusions" : [
 
-Gaffer.Metadata.registerValue( "option:render:cameraExclusions", "plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget" )
-Gaffer.Metadata.registerValue( "option:render:cameraExclusions", "ui:scene:acceptsSetExpression", True )
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
 
-Gaffer.Metadata.registerValue( "option:render:matteInclusions", "plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget" )
-Gaffer.Metadata.registerValue( "option:render:matteInclusions", "ui:scene:acceptsSetExpression", True )
+	],
 
-Gaffer.Metadata.registerValue( "option:render:matteExclusions", "plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget" )
-Gaffer.Metadata.registerValue( "option:render:matteExclusions", "ui:scene:acceptsSetExpression", True )
+	"option:render:exclusions" : [
+
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
+
+	],
+
+	"option:render:additionalLights" : [
+
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
+
+	],
+
+	"option:render:cameraInclusions" : [
+
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
+
+	],
+
+	"option:render:cameraExclusions" : [
+
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
+
+	],
+
+	"option:render:matteInclusions" : [
+
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
+
+	],
+
+	"option:render:matteExclusions" : [
+
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
+
+	],
+
+} )
