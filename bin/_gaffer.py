@@ -46,7 +46,8 @@ import sys
 
 libraryPath = {
 	"linux" : "LD_LIBRARY_PATH",
-	"darwin" : "DYLD_LIBRARY_PATH"
+	"darwin" : "DYLD_LIBRARY_PATH",
+	"win32" : "PATH",
 }.get( sys.platform )
 
 def appendToPath( pathToAppend, envVar ) :
@@ -72,6 +73,29 @@ def prependToPath( pathToPrepend, envVar ) :
 		path.insert( 0, pathToPrepend )
 
 	os.environ[envVar] = os.pathsep.join( path )
+
+# ONNX Setup
+# ==========
+
+def setupONNX() :
+	
+	if "ONNX_ROOT" not in os.environ :
+		return
+
+	onnxRoot = pathlib.Path( os.environ.get( "ONNX_ROOT" ) )
+	appendToPath( onnxRoot / "lib", libraryPath )
+
+	if "GAFFERML_USE_CUDA" not in os.environ or os.environ["GAFFERML_USE_CUDA"] == "0" :
+		return
+	
+	if "CUDNN_ROOT" not in os.environ :
+		sys.stderr.write( f"WARNING : \"CUDNN_ROOT\" environment variable not found. Ensure cuDNN is installed and \"CUDNN_ROOT\" environment variable is set." )
+		return
+
+	cuDNNRoot = pathlib.Path( os.environ.get( "CUDNN_ROOT" ) )
+	appendToPath( cuDNNRoot / "bin", libraryPath )
+
+setupONNX()
 
 # RenderMan Setup
 # ===============
