@@ -36,6 +36,7 @@
 
 #include "GafferScene/ShaderPlug.h"
 
+#include "GafferScene/ScenePlug.h"
 #include "GafferScene/Shader.h"
 
 #include "Gaffer/BoxIO.h"
@@ -234,9 +235,8 @@ struct ShaderPlug::ShaderContext
 {
 
 	ConstContextPtr context;
-	std::optional<Context::Scope> scope;
+	std::optional<ScenePlug::GlobalScope> scope;
 	std::string outputParameter;
-	std::optional<Context::EditableScope> editableScope;
 
 };
 
@@ -333,16 +333,12 @@ const Gaffer::Plug *ShaderPlug::shaderOutPlug( ShaderContext &shaderContext ) co
 		return nullptr;
 	}
 
+	shaderContext.context = context;
+	shaderContext.scope.emplace( context.get() );
 	if( source != shaderOutPlug )
 	{
-		shaderContext.editableScope.emplace( context.get() );
 		shaderContext.outputParameter = source->relativeName( shaderOutPlug );
-		shaderContext.editableScope->set( Shader::g_outputParameterContextName, &shaderContext.outputParameter );
-	}
-	else if( context != Context::current() )
-	{
-		shaderContext.context = context;
-		shaderContext.scope.emplace( context.get() );
+		shaderContext.scope->set( Shader::g_outputParameterContextName, &shaderContext.outputParameter );
 	}
 
 	return source;
