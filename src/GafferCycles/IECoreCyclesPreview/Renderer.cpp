@@ -44,6 +44,7 @@
 
 #include "IEDisplayOutputDriver.h"
 #include "OIIOOutputDriver.h"
+#include "SceneAlgo.h"
 
 #include "IECoreScene/Camera.h"
 #include "IECoreScene/CurvesPrimitive.h"
@@ -129,9 +130,7 @@ namespace
 using CIntegratorPtr = std::unique_ptr<ccl::Integrator>;
 using CBackgroundPtr = std::unique_ptr<ccl::Background>;
 using CFilmPtr = std::unique_ptr<ccl::Film>;
-using CLightPtr = std::unique_ptr<ccl::Light>;
 using SharedCObjectPtr = std::shared_ptr<ccl::Object>;
-using SharedCLightPtr = std::shared_ptr<ccl::Light>;
 using SharedCGeometryPtr = std::shared_ptr<ccl::Geometry>;
 // Need to defer shader assignments to the scene lock
 using ShaderAssignPair = std::pair<ccl::Node *, ccl::array<ccl::Node *>>;
@@ -140,8 +139,6 @@ using NodesCreated = tbb::concurrent_vector<ccl::Node *>;
 // Defer creation of volumes to the scene lock
 using VolumeToConvert = std::tuple<const IECoreVDB::VDBObject *, ccl::Volume *, int>;
 
-// The shared pointer never deletes, we leave that up to Cycles to do the final delete
-using NodeDeleter = bool (*)( ccl::Node * );
 bool nullNodeDeleter( ccl::Node *node )
 {
 	return false;
@@ -243,6 +240,85 @@ T parameter( const IECore::CompoundDataMap &parameters, const IECore::InternedSt
 		return defaultValue;
 	}
 }
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// NodeDeleter
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+// `ccl::Scene::delete_node()` is the official way of removing a node from the
+// scene and deleting it. It is specialised for each node type so that it also
+// tags the appropriate object manager for update. In an ideal world we would
+// just call it whenever we need to delete a node.
+//
+// But a single call to `delete_node()` is `O(n)` in the number of nodes in the
+// scene, making deletion of all nodes `O(n^2)`, which is unacceptable for large
+// scenes. The NodeDeleter class allows us to batch up deletions and use a single
+// call to the more performant `ccl::Scene::delete_nodes()` method to delete
+// multiple nodes at once.
+struct NodeDeleter
+{
+
+	NodeDeleter( ccl::Scene *scene )
+		:	m_scene( scene )
+	{
+	}
+
+	// Deleter for use with `std::shared_ptr` and `std::unique_ptr`.
+	template<typename T>
+	struct Deleter
+	{
+
+		Deleter( NodeDeleter *nodeDeleter = nullptr )
+			:	m_nodeDeleter( nodeDeleter )
+		{
+		}
+
+		void operator()( T *node ) const
+		{
+			if( m_nodeDeleter )
+			{
+				m_nodeDeleter->scheduleDeletion( node );
+			}
+		}
+
+		private :
+
+			NodeDeleter *m_nodeDeleter;
+
+	};
+
+	using LightDeleter = Deleter<ccl::Light>;
+
+	// Must not be called concurrently, either with `scheduleDeletion()` or other
+	// code affecting the scene.
+	void doPendingDeletions()
+	{
+		if( m_pendingLightDeletions.size() )
+		{
+			m_scene->delete_nodes( m_pendingLightDeletions );
+			m_pendingLightDeletions.clear();
+		}
+	}
+
+	private :
+
+		void scheduleDeletion( ccl::Light *light )
+		{
+			std::lock_guard lock( m_mutex );
+			m_pendingLightDeletions.insert( light );
+		}
+
+		ccl::Scene *m_scene;
+
+		std::mutex m_mutex;
+		std::set<ccl::Light *> m_pendingLightDeletions;
+
+};
 
 } // namespace
 
@@ -1823,106 +1899,6 @@ IE_CORE_DECLAREPTR( InstanceCache )
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
-// LightCache
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-class LightCache : public IECore::RefCounted
-{
-
-	public :
-
-		LightCache( ccl::Scene *scene )
-			: m_scene( scene )
-		{
-		}
-
-		void update( NodesCreated &nodes )
-		{
-			updateLights( nodes );
-		}
-
-		// Can be called concurrently with other get() calls.
-		SharedCLightPtr get( const std::string &nodeName )
-		{
-			ccl::Light *light = new ccl::Light();
-			light->name = nodeName.c_str();
-			light->set_owner( m_scene );
-			// All lights are always in the first set, which we use for objects
-			// which don't have any linking applied. But we only add lights to
-			// other sets as they are created by the LightLinker in response to
-			// calls to `CyclesObject::link()`.
-			light->set_light_set_membership( 1 );
-			light->set_shadow_set_membership( 1 );
-			light->tag_update( m_scene );
-			auto clight = SharedCLightPtr( light, nullNodeDeleter );
-
-			m_lights.push_back( clight );
-
-			return clight;
-		}
-
-		// Must not be called concurrently with anything.
-		void clearUnused()
-		{
-			ccl::set<ccl::Light*> toErase;
-
-			for( Lights::iterator it = m_lights.begin(), eIt = m_lights.end(); it != eIt; ++it )
-			{
-				if( it->use_count() == 1 )
-				{
-					// Only one reference - this is ours, so
-					// nothing outside of the cache is using the
-					// node.
-					//toErase.push_back( it->first );
-					toErase.insert( it->get() );
-				}
-			}
-
-			removeNodesInSet( toErase, m_lights );
-			m_scene->delete_nodes( toErase, m_scene );
-		}
-
-		void nodesCreated( NodesCreated &nodes ) const
-		{
-			for( Lights::const_iterator it = m_lights.begin(), eIt = m_lights.end(); it != eIt; ++it )
-			{
-				if( it->get() )
-				{
-					nodes.push_back( it->get() );
-				}
-			}
-		}
-
-	private :
-
-		void updateLights( NodesCreated &nodes )
-		{
-			if( nodes.size() )
-			{
-				ccl::vector<ccl::Light *> &lights = m_scene->lights;
-				for( ccl::Node *node : nodes )
-				{
-					lights.push_back( static_cast<ccl::Light *>( node ) );
-				}
-				m_scene->light_manager->tag_update( m_scene, ccl::LightManager::LIGHT_ADDED );
-				nodes.clear();
-			}
-		}
-
-		ccl::Scene *m_scene;
-		using Lights = tbb::concurrent_vector<SharedCLightPtr>;
-		Lights m_lights;
-
-};
-
-IE_CORE_DECLAREPTR( LightCache )
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
 // LightLinker definition
 //////////////////////////////////////////////////////////////////////////
 
@@ -2258,9 +2234,16 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 
 	public :
 
-		CyclesLight( ccl::Session *session, SharedCLightPtr &light )
-			: m_session( session ), m_light( light ), m_attributes( nullptr )
+		CyclesLight( ccl::Scene *scene, ccl::ustring name, NodeDeleter *nodeDeleter )
+			:	m_scene( scene ), m_light( SceneAlgo::createNodeWithLock<ccl::Light>( scene ), NodeDeleter::LightDeleter( nodeDeleter ) )
 		{
+			m_light->name = name;
+			// All lights are always in the first set, which we use for objects
+			// which don't have any linking applied. But we only add lights to
+			// other sets as they are created by the LightLinker in response to
+			// calls to `CyclesObject::link()`.
+			m_light->set_light_set_membership( 1 );
+			m_light->set_shadow_set_membership( 1 );
 		}
 
 		~CyclesLight() override
@@ -2273,13 +2256,8 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 
 		void transform( const Imath::M44f &transform ) override
 		{
-			ccl::Light *light = m_light.get();
-			if( !light )
-				return;
-			ccl::Transform tfm = SocketAlgo::setTransform( transform );
-			light->set_tfm( tfm );
-
-			light->tag_update( m_session->scene );
+			m_light->set_tfm( SocketAlgo::setTransform( transform ) );
+			m_light->tag_update( m_scene );
 		}
 
 		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
@@ -2291,21 +2269,14 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
 			const CyclesAttributes *cyclesAttributes = static_cast<const CyclesAttributes *>( attributes );
-
-			ccl::Light *light = m_light.get();
-			if( !light || cyclesAttributes->applyLight( light, m_attributes.get() ) )
+			if( cyclesAttributes->applyLight( m_light.get(), m_attributes.get() ) )
 			{
 				m_attributes = cyclesAttributes;
-				light->tag_update( m_session->scene );
+				m_light->tag_update( m_scene );
 				return true;
 			}
 
 			return false;
-		}
-
-		void nodesCreated( NodesCreated &nodes ) const
-		{
-			nodes.push_back( m_light.get() );
 		}
 
 		void assignID( uint32_t id ) override
@@ -2335,8 +2306,9 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 
 	private :
 
-		ccl::Session *m_session;
-		SharedCLightPtr m_light;
+		ccl::Scene *m_scene;
+		using UniqueLightPtr = std::unique_ptr<ccl::Light, NodeDeleter::LightDeleter>;
+		UniqueLightPtr m_light;
 		ConstCyclesAttributesPtr m_attributes;
 
 };
@@ -2924,17 +2896,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 			acquireSession();
 
-			SharedCLightPtr clight = m_lightCache->get( name );
-			if( !clight )
-			{
-				return nullptr;
-			}
-
-			CyclesLightPtr result = new CyclesLight( m_session.get(), clight );
+			CyclesLightPtr result = new CyclesLight( m_session->scene, ccl::ustring( name.c_str() ), m_nodeDeleter.get() );
 			result->attributes( attributes );
-
-			result->nodesCreated( m_lightsCreated );
-
 			return result;
 		}
 
@@ -3018,6 +2981,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				if( m_rendering && m_renderType == Interactive )
 				{
 					clearUnused();
+				}
+
+				if( m_nodeDeleter )
+				{
+					m_nodeDeleter->doPendingDeletions();
 				}
 
 				updateOptions();
@@ -3199,7 +3167,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			m_scene->background->set_transparent( true );
 
-			m_lightCache = new LightCache( m_scene );
+			if( m_renderType == RenderType::Interactive )
+			{
+				m_nodeDeleter = std::make_unique<NodeDeleter>( m_scene );
+			}
+
 			m_shaderCache = new ShaderCache( m_scene );
 			m_instanceCache = new InstanceCache( m_scene );
 			m_attributesCache = new AttributesCache( m_shaderCache );
@@ -3208,7 +3180,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		void clearUnused()
 		{
 			m_instanceCache->clearUnused();
-			m_lightCache->clearUnused();
 			m_attributesCache->clearUnused();
 		}
 
@@ -3217,7 +3188,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// Add every shader each time, less issues
 			m_shaderCache->nodesCreated( m_shadersCreated );
 
-			m_lightCache->update( m_lightsCreated );
 			m_instanceCache->update( m_objectsCreated, m_geometryCreated );
 			m_shaderCache->update( m_shadersCreated );
 		}
@@ -3686,7 +3656,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		void resetCaches()
 		{
 			m_instanceCache.reset();
-			m_lightCache.reset();
 			m_shaderCache.reset();
 			m_attributesCache.reset();
 		}
@@ -3721,6 +3690,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		std::unique_ptr<ccl::Session> m_session;
 		ccl::Scene *m_scene;
 		ccl::BufferParams m_bufferParams;
+		std::unique_ptr<NodeDeleter> m_nodeDeleter;
 
 		// Background shader
 		CyclesShaderPtr m_backgroundShader;
@@ -3738,7 +3708,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		// Caches
 		ShaderCachePtr m_shaderCache;
-		LightCachePtr m_lightCache;
 		InstanceCachePtr m_instanceCache;
 		AttributesCachePtr m_attributesCache;
 		LightLinker m_lightLinker;
@@ -3749,7 +3718,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		/// etc, or we could just stop deferring the addition of objects to
 		/// the `ccl::Scene`.
 		NodesCreated m_objectsCreated;
-		NodesCreated m_lightsCreated;
 		NodesCreated m_geometryCreated;
 		NodesCreated m_shadersCreated;
 
