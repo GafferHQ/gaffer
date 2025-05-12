@@ -281,6 +281,49 @@ Gaffer.Metadata.registerValues( {
 
 	],
 
+	"attribute:gl:visualiser:scale" : [
+
+		"defaultValue", 1.0,
+		"description",
+		"""
+		Scales non-geometric visualisations in the viewport to make them
+		easier to work with.
+		""",
+		"label", "Scale",
+		"layout:section", "Visualisers",
+
+	],
+
+	"attribute:gl:visualiser:maxTextureResolution" : [
+
+		"defaultValue", 512,
+		"description",
+		"""
+		Visualisers that load textures will respect this setting to
+		limit their resolution.
+		""",
+		"label", "Max Texture Resolution",
+		"layout:section", "Visualisers",
+
+	],
+
+	"attribute:gl:visualiser:frustum" : [
+
+		"defaultValue", "whenSelected",
+		"description",
+		"""
+		Controls whether applicable locations draw a representation of
+		their projection or frustum.
+		""",
+		"label", "Frustum",
+		"layout:section", "Visualisers",
+
+		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+		"presetNames", IECore.StringVectorData( [ "Off", "When Selected", "On" ] ),
+		"presetValues", IECore.StringVectorData( [ "off", "whenSelected", "on" ] ),
+
+	],
+
 	"attribute:gl:light:drawingMode" : [
 
 		"defaultValue", "texture",
@@ -305,49 +348,6 @@ Gaffer.Metadata.registerValues( {
 		Allows light projections to be scaled to better suit the scene.
 		""",
 		"label", "Light Frustum Scale",
-		"layout:section", "Visualisers",
-
-	],
-
-	"attribute:gl:visualiser:frustum" : [
-
-		"defaultValue", "whenSelected",
-		"description",
-		"""
-		Controls whether applicable locations draw a representation of
-		their projection or frustum.
-		""",
-		"label", "Frustum",
-		"layout:section", "Visualisers",
-
-		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-		"presetNames", IECore.StringVectorData( [ "Off", "When Selected", "On" ] ),
-		"presetValues", IECore.StringVectorData( [ "off", "whenSelected", "on" ] ),
-
-	],
-
-	"attribute:gl:visualiser:maxTextureResolution" : [
-
-		"defaultValue", 512,
-		"description",
-		"""
-		Visualisers that load textures will respect this setting to
-		limit their resolution.
-		""",
-		"label", "Max Texture Resolution",
-		"layout:section", "Visualisers",
-
-	],
-
-	"attribute:gl:visualiser:scale" : [
-
-		"defaultValue", 1.0,
-		"description",
-		"""
-		Scales non-geometric visualisations in the viewport to make them
-		easier to work with.
-		""",
-		"label", "Scale",
 		"layout:section", "Visualisers",
 
 	],
