@@ -52,6 +52,7 @@ Gaffer.Metadata.registerValues( {
 		the shading.
 		""",
 		"label", "Shaded",
+		"layout:section", "Drawing",
 
 	],
 
@@ -65,6 +66,7 @@ Gaffer.Metadata.registerValues( {
 		attributes for finer control of the wireframe appearance.
 		""",
 		"label", "Wireframe",
+		"layout:section", "Drawing",
 
 	],
 
@@ -77,6 +79,7 @@ Gaffer.Metadata.registerValues( {
 		meaningful if wireframe rendering is turned on.
 		""",
 		"label", "Wireframe Color",
+		"layout:section", "Drawing",
 
 	],
 
@@ -89,6 +92,7 @@ Gaffer.Metadata.registerValues( {
 		meaningful if wireframe rendering is turned on.
 		""",
 		"label", "Wireframe Width",
+		"layout:section", "Drawing",
 
 	],
 
@@ -102,6 +106,7 @@ Gaffer.Metadata.registerValues( {
 		attributes for finer control of the outline.
 		""",
 		"label", "Outline",
+		"layout:section", "Drawing",
 
 	],
 
@@ -114,6 +119,7 @@ Gaffer.Metadata.registerValues( {
 		meaningful if outline rendering is turned on.
 		""",
 		"label", "Outline Color",
+		"layout:section", "Drawing",
 
 	],
 
@@ -126,6 +132,7 @@ Gaffer.Metadata.registerValues( {
 		meaningful if outline rendering is turned on.
 		""",
 		"label", "Outline Width",
+		"layout:section", "Drawing",
 
 	],
 
@@ -140,6 +147,7 @@ Gaffer.Metadata.registerValues( {
 		of the point rendering.
 		""",
 		"label", "Points",
+		"layout:section", "Drawing",
 
 	],
 
@@ -152,6 +160,7 @@ Gaffer.Metadata.registerValues( {
 		meaningful if point rendering is turned on.
 		""",
 		"label", "Point Color",
+		"layout:section", "Drawing",
 
 	],
 
@@ -164,6 +173,7 @@ Gaffer.Metadata.registerValues( {
 		meaningful if point rendering is turned on.
 		""",
 		"label", "Point Width",
+		"layout:section", "Drawing",
 
 	],
 
@@ -178,6 +188,7 @@ Gaffer.Metadata.registerValues( {
 		attribute to change the colour of the bounding box.
 		""",
 		"label", "Bound",
+		"layout:section", "Drawing",
 
 	],
 
@@ -190,6 +201,7 @@ Gaffer.Metadata.registerValues( {
 		meaningful if bounding box rendering is turned on.
 		""",
 		"label", "Bound Color",
+		"layout:section", "Drawing",
 
 	],
 
@@ -204,6 +216,8 @@ Gaffer.Metadata.registerValues( {
 		only, allowing a much faster rendering as raw OpenGL points.
 		""",
 		"label", "Use GL Points",
+		"layout:section", "Points Primitives",
+
 		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 		"presetNames", IECore.StringVectorData( [ "For GL Points", "For Particles And Disks", "For All" ] ),
 		"presetValues", IECore.StringVectorData( [ "forGLPoints", "forParticlesAndDisks", "forAll" ] ),
@@ -220,6 +234,7 @@ Gaffer.Metadata.registerValues( {
 		overridden the point type.
 		""",
 		"label", "GL Point Width",
+		"layout:section", "Points Primitives",
 
 	],
 
@@ -234,6 +249,7 @@ Gaffer.Metadata.registerValues( {
 		a much faster rendering as raw OpenGL lines.
 		""",
 		"label", "Use GL Lines",
+		"layout:section", "Curves Primitives",
 
 	],
 
@@ -247,6 +263,7 @@ Gaffer.Metadata.registerValues( {
 		overridden the drawing to use lines.
 		""",
 		"label", "GL Line Width",
+		"layout:section", "Curves Primitives",
 
 	],
 
@@ -260,6 +277,7 @@ Gaffer.Metadata.registerValues( {
 		instead.
 		""",
 		"label", "Ignore Basis",
+		"layout:section", "Curves Primitives",
 
 	],
 
@@ -271,6 +289,8 @@ Gaffer.Metadata.registerValues( {
 		Controls how lights are presented in the Viewer.
 		""",
 		"label", "Light Drawing Mode",
+		"layout:section", "Visualisers",
+
 		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 		"presetNames", IECore.StringVectorData( [ "Wireframe", "Color", "Texture" ] ),
 		"presetValues", IECore.StringVectorData( [ "wireframe", "color", "texture" ] ),
@@ -285,6 +305,7 @@ Gaffer.Metadata.registerValues( {
 		Allows light projections to be scaled to better suit the scene.
 		""",
 		"label", "Light Frustum Scale",
+		"layout:section", "Visualisers",
 
 	],
 
@@ -297,6 +318,8 @@ Gaffer.Metadata.registerValues( {
 		their projection or frustum.
 		""",
 		"label", "Frustum",
+		"layout:section", "Visualisers",
+
 		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 		"presetNames", IECore.StringVectorData( [ "Off", "When Selected", "On" ] ),
 		"presetValues", IECore.StringVectorData( [ "off", "whenSelected", "on" ] ),
@@ -312,6 +335,7 @@ Gaffer.Metadata.registerValues( {
 		limit their resolution.
 		""",
 		"label", "Max Texture Resolution",
+		"layout:section", "Visualisers",
 
 	],
 
@@ -324,6 +348,7 @@ Gaffer.Metadata.registerValues( {
 		easier to work with.
 		""",
 		"label", "Scale",
+		"layout:section", "Visualisers",
 
 	],
 
