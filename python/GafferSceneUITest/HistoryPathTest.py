@@ -384,8 +384,8 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		s["openGLAttributes"] = GafferScene.OpenGLAttributes()
 		s["openGLAttributes"]["in"].setInput( s["tweaks"]["out"] )
 		s["openGLAttributes"]["filter"].setInput( s["lightFilter"]["out"] )
-		s["openGLAttributes"]["attributes"]["visualiserMaxTextureResolution"]["enabled"].setValue( True )
-		s["openGLAttributes"]["attributes"]["visualiserMaxTextureResolution"]["value"].setValue( 1536 )
+		s["openGLAttributes"]["attributes"]["gl:visualiser:maxTextureResolution"]["enabled"].setValue( True )
+		s["openGLAttributes"]["attributes"]["gl:visualiser:maxTextureResolution"]["value"].setValue( 1536 )
 
 		inspector = GafferSceneUI.Private.AttributeInspector(
 			s["openGLAttributes"]["out"], None, "gl:visualiser:maxTextureResolution",
@@ -402,7 +402,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( c[0].property( "history:value" ), 1536 )
 		self.assertEqual( c[0].property( "history:fallbackValue" ), 1024 )
 		self.assertEqual( c[0].property( "history:operation" ), Gaffer.TweakPlug.Mode.Create )
-		self.assertEqual( c[0].property( "history:source" ), s["openGLAttributes"]["attributes"]["visualiserMaxTextureResolution"] )
+		self.assertEqual( c[0].property( "history:source" ), s["openGLAttributes"]["attributes"]["gl:visualiser:maxTextureResolution"] )
 		self.assertEqual( c[0].property( "history:editWarning" ), "Edits to \"gl:visualiser:maxTextureResolution\" may affect other locations in the scene." )
 
 		s["openGLAttributes"]["enabled"].setValue( False )
@@ -429,7 +429,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( c[1].property( "history:value" ), None )
 		self.assertEqual( c[1].property( "history:fallbackValue" ), 1024 )
 		self.assertEqual( c[1].property( "history:operation" ), Gaffer.TweakPlug.Mode.Create )
-		self.assertEqual( c[1].property( "history:source" ), s["openGLAttributes"]["attributes"]["visualiserMaxTextureResolution"] )
+		self.assertEqual( c[1].property( "history:source" ), s["openGLAttributes"]["attributes"]["gl:visualiser:maxTextureResolution"] )
 		self.assertEqual( c[1].property( "history:editWarning" ), "Edits to \"gl:visualiser:maxTextureResolution\" may affect other locations in the scene." )
 
 if __name__ == "__main__":
