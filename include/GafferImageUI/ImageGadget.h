@@ -339,12 +339,11 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 
 		std::vector<uint32_t> m_selectedIDs;
 
-		class BufferTexture;
-
+		class GAFFERIMAGEUI_API BufferTexture;
 		mutable std::unique_ptr<BufferTexture> m_selectedIDsBuffer;
 		uint32_t m_highlightID;
 
-		class RenderTexture;
+		class GAFFERIMAGEUI_API RenderTexture;
 		std::unique_ptr<RenderTexture> m_selectionRenderTexture;
 };
 

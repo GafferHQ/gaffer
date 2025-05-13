@@ -187,7 +187,7 @@ class GafferImageUI::ImageGadget::RenderTexture
 		}
 
 		/// The RenderScope binds a RenderTexture so that rendering goes to it.
-		class GAFFERUI_API RenderScope : boost::noncopyable
+		class GAFFERIMAGEUI_API RenderScope : boost::noncopyable
 		{
 
 			public :
