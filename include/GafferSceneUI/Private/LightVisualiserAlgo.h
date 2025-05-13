@@ -129,4 +129,18 @@ GAFFERSCENEUI_API void addAreaSpread( float spread, std::vector<int> &vertsPerCu
 GAFFERSCENEUI_API Imath::Color3f lightWireframeColor( const bool muted );
 GAFFERSCENEUI_API Imath::Color4f lightWireframeColor4( const bool muted );
 
+/// Adds the necessary OpenGL state to `group` to draw its contents as a wireframe.
+GAFFERSCENEUI_API void addWireframeCurveState( IECoreGL::Group *group, const float lineWidthScale = 1.0f );
+
+/// Adds a constant color OpenGL shader to `group`. `aimType` can be one of :
+/// -1 : The default vertex shader is used.
+/// 0 : A vertex shader is bound to align points such that the object-space Z
+/// coordinates are not changed and the X an Y axes are facing the camera.
+/// 1 : A vertex shader is bound to align the points in camera-space.
+
+/// \todo Should this be up to the individual implementations to manage, as we want to do with the
+/// `*Surface` methods? The `aimType` functionality is nice to have shared, but could possibly be
+/// made into a function that can be called by implementation shaders.
+GAFFERSCENEUI_API void addConstantShader( IECoreGL::Group *group, const Imath::Color3f &tint, int aimType = -1 );
+
 }  // namespace GafferSceneUI::Private::LightVisualiserAlgo
