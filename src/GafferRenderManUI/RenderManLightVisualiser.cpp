@@ -35,10 +35,20 @@
 #include "GafferSceneUI/Private/LightVisualiserAlgo.h"
 #include "GafferSceneUI/StandardLightVisualiser.h"
 
-#include "IECoreGL/CurvesPrimitive.h"
+#include "IECoreScene/MeshPrimitive.h"
 
+#include "IECoreGL/CurvesPrimitive.h"
+#include "IECoreGL/Font.h"
+#include "IECoreGL/FontLoader.h"
+#include "IECoreGL/MeshPrimitive.h"
+
+#include "IECore/AngleConversion.h"
 #include "IECore/Spline.h"
 #include "IECore/VectorTypedData.h"
+
+IECORE_PUSH_DEFAULT_VISIBILITY
+#include "Imath/ImathMatrixAlgo.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 using namespace Imath;
 using namespace IECore;
@@ -97,8 +107,147 @@ T parameterOrDefault( const P *parameters, const InternedString &name, const T &
 	return defaultValue;
 }
 
+int dayNumber( const int day, const int month, const int year )
+{
+	if( month == 1 )
+	{
+		return day;
+	}
+	if( month == 2 )
+	{
+		return day + 31;
+	}
+
+	int yearMod = 0;
+	if( fmod( year, 4 ) != 0 )
+	{
+		yearMod = 0;
+	}
+	else if( fmod( year, 100 ) != 0 )
+	{
+		yearMod = 1;
+	}
+	else if( fmod( year, 400 ) != 0 )
+	{
+		yearMod = 0;
+	}
+	else
+	{
+		yearMod = 1;
+	}
+	return floor( 30.6f * month - 91.4f ) + day + 59.f + yearMod;
+}
+/// Returns the position of the sun on a unit sphere.
+/// Based on the implementation in https://github.com/prman-pixar/RenderManForBlender
+V3f sunPosition(
+	const float hour,
+	const int day,
+	const int month,
+	const int year,
+	const int timeZone,
+	const float longitude,
+	const float latitude
+)
+{
+	const int dayNumber = ::dayNumber( day, month, year );
+
+	const float dayAngle = 2.f * M_PI * ( dayNumber - 81.f + ( hour - timeZone ) / 24.f ) / 365.f;
+	const float timeCorrection =
+		4.f * ( longitude - 15.f * timeZone ) +
+		9.87f * sin( 2.f * dayAngle ) -
+		7.53f * cos( dayAngle ) -
+		1.5f * sin( dayAngle )
+	;
+	const float hourAngle = degreesToRadians( 15.f ) * ( hour + timeCorrection / 60.f - 12.f );
+	const float declination = asin( sin( degreesToRadians( 23.45f ) ) * sin( dayAngle ) );
+	const float latRadians = degreesToRadians( latitude );
+	const float elevation = asin( sin( declination ) * sin( latRadians ) + cos( declination ) * cos( latRadians ) * cos( hourAngle ) );
+	float azimuth = acos( ( sin( declination ) *  cos( latRadians ) - cos( declination ) * sin( latRadians ) * cos( hourAngle ) ) / cos( elevation ) );
+
+	if( hourAngle > 0.f )
+	{
+		azimuth = 2.f * M_PI - azimuth;
+	}
+
+	return V3f(
+		cos( elevation ) * sin( azimuth ),
+		std::max( sin( elevation ), 0.f ),
+		-cos( elevation ) * cos( azimuth )
+	);
+}
+
+IECoreGL::ConstRenderablePtr triangle( const V3f &p0, const V3f &p1, const V3f &p2, const bool wireFrame )
+{
+	IECoreGL::GroupPtr group = new IECoreGL::Group();
+	if( wireFrame )
+	{
+		LightVisualiserAlgo::addWireframeCurveState( group.get() );
+	}
+
+	V3fVectorDataPtr pData = new V3fVectorData( { p0, p1, p2 } );
+
+	IECoreGL::PrimitivePtr result;
+	if( wireFrame )
+	{
+		IntVectorDataPtr vertsPerCurveData = new IntVectorData( { 3 } );
+		result = new IECoreGL::CurvesPrimitive(
+			CubicBasisf::linear(), /* periodic = */ true, vertsPerCurveData
+		);
+	}
+	else
+	{
+		result = new IECoreGL::MeshPrimitive( 1 );
+		const V3f n( ( p2 - p1 ).cross( p0 - p1 ).normalized() );
+		V3fVectorDataPtr nData = new V3fVectorData( { n, n, n } );
+		nData->setInterpretation( GeometricData::Interpretation::Normal );
+		result->addPrimitiveVariable( "N", PrimitiveVariable( PrimitiveVariable::FaceVarying, nData ) );
+	}
+	result->addPrimitiveVariable( "P", PrimitiveVariable( PrimitiveVariable::FaceVarying, pData ) );
+
+	group->addChild( result );
+
+	return group;
+}
+
+IECoreGL::ConstRenderablePtr sunIndicator( const Color3f &color )
+{
+	const int numSpikes = 12;
+	const int segmentsPerSpike = 6;
+	const int numSegments = numSpikes * segmentsPerSpike;
+	const float innerRadius = 0.1f;
+	const float outerRadius = 0.15f;
+
+	std::vector<V3f> p;
+	p.reserve( numSegments * 3 );
+
+	for( int i = 0; i < numSegments; ++i )
+	{
+		const float angle0 = 2 * M_PI * ( (float)i / (float)numSegments );
+		const float angle1 = 2 * M_PI * ( (float)( i + 1 ) / (float)numSegments );
+		const float angle2 = 2 * M_PI * ( (float)( ( segmentsPerSpike * ( i / segmentsPerSpike ) ) + ( segmentsPerSpike / 2 ) ) / (float)numSegments );
+		p.push_back( V3f( 0, cos( angle0 ), sin( angle0 ) ) * innerRadius );
+		p.push_back( V3f( 0, cos( angle1 ), sin( angle1 ) ) * innerRadius );
+		p.push_back( V3f( 0, cos( angle2 ), sin( angle2 ) ) * outerRadius );
+	}
+
+	IECoreGL::MeshPrimitivePtr mesh = new IECoreGL::MeshPrimitive( numSegments );
+
+	V3fVectorDataPtr nData = new V3fVectorData( std::vector<V3f>( numSegments * 3, V3f( 1.f, 0.f, 0.f ) ) );
+	nData->setInterpretation( GeometricData::Interpretation::Normal );
+	mesh->addPrimitiveVariable( "N", PrimitiveVariable( PrimitiveVariable::FaceVarying, nData ) );
+
+	V3fVectorDataPtr pData = new V3fVectorData( p );
+	mesh->addPrimitiveVariable( "P", PrimitiveVariable( PrimitiveVariable::FaceVarying, pData ) );
+
+	IECoreGL::GroupPtr result = new IECoreGL::Group();
+	result->addChild( mesh );
+
+	return result;
+}
+
 const InternedString g_colorMapGammaParameter( "colorMapGamma" );
 const InternedString g_colorMapSaturationParameter( "colorMapSaturation" );
+const InternedString g_dayParameter( "day" );
 const InternedString g_emissionFocusParameter( "emissionFocus" );
 const InternedString g_enableTemperatureParameter( "enableTemperature" );
 const InternedString g_glLightDrawingModeString( "gl:light:drawingMode" );
@@ -108,7 +257,13 @@ const InternedString g_latitudeParameter( "latitude" );
 const InternedString g_lightColorParameter( "lightColor" );
 const InternedString g_lightColorMapParameter( "lightColorMap" );
 const InternedString g_lightMuteString( "mute" );
+const InternedString g_longitudeParameter( "longitude" );
+const InternedString g_monthParameter( "month" );
+const InternedString g_sunDirectionParameter( "sunDirection" );
+const InternedString g_sunTintParameter( "sunTint" );
 const InternedString g_temperatureParameter( "temperature" );
+const InternedString g_yearParameter( "year" );
+const InternedString g_zoneParameter( "zone" );
 
 }  // namespace
 
@@ -262,6 +417,129 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 			sphereWireframe( 1.05f, Vec3<bool>( true ), 1.0f, V3f( 0.0f ), muted ),
 			true  // affectsFramingBound
 		) );
+	}
+
+	else if ( lightShader->getName() == "PxrEnvDayLight" )
+	{
+		ConstCompoundObjectPtr emptyParameters = new CompoundObject();
+		const float compassScale = 5.f;
+
+		V3f sunPosition;
+
+		const int monthParameter = parameterOrDefault( lightParameters, g_monthParameter, 11 );
+		if( monthParameter != 0 )
+		{
+			IECoreGL::GroupPtr compassGroup = new IECoreGL::Group();
+			// The `LightVisualiserAlgo::constantShader()` applies a tint to the color, which makes
+			// for a muddled color when selected if the tint is set to the light color. Instead we
+			// set the tint to `1.0` and set the color on the group.
+			LightVisualiserAlgo::addConstantShader( compassGroup.get(), Color3f( 1.f ) );
+			compassGroup->getState()->add( new IECoreGL::Color( LightVisualiserAlgo::lightWireframeColor4( muted ) ), /* override = */ true );
+
+			static IECoreGL::FontPtr compassFont = IECoreGL::FontLoader::defaultFontLoader()->load( "VeraBd.ttf" );
+			IECoreGL::GroupPtr compassLabelGroup = new IECoreGL::Group();
+
+			IECoreGL::ConstMeshPrimitivePtr nLabel = compassFont->mesh( 'N' );
+			compassLabelGroup->addChild( boost::const_pointer_cast<IECoreGL::MeshPrimitive>( nLabel ) );
+			compassLabelGroup->setTransform(
+				M44f().translate( V3f( -nLabel->bound().center().x, 2.4f, 0.f ) ) *
+				M44f().rotate( V3f( -M_PI_2, 0.f, 0.f ) ) *
+				M44f().scale( V3f( compassScale * .25f ) )
+			);
+			compassGroup->addChild( compassLabelGroup );
+
+			compassGroup->addChild(
+				boost::const_pointer_cast<IECoreGL::Renderable>(
+					triangle(
+						V3f( compassScale * -0.1f, 0.f, 0.f ),
+						V3f( compassScale * 0.1f, 0.f, 0.f ),
+						V3f( 0.f, 0.f, -compassScale * 0.5f ),
+						false  // Wireframe
+					)
+				)
+			);
+			compassGroup->addChild(
+				boost::const_pointer_cast<IECoreGL::Renderable>(
+					triangle(
+						V3f( compassScale * 0.1f, 0.f, 0.f ),
+						V3f( compassScale * -0.1f, 0.f, 0.f ),
+						V3f( 0.f, 0.f, compassScale * 0.5f ),
+						true  // Wireframe
+					)
+				)
+			);
+
+			result.push_back(
+				Visualisation::createOrnament(
+					compassGroup,
+					true,  // affectsFramingBound
+					Visualisation::ColorSpace::Display
+				)
+			);
+
+			sunPosition = ::sunPosition(
+				parameterOrDefault( lightParameters, g_hourParameter, 14.633333f ),
+				parameterOrDefault( lightParameters, g_dayParameter, 20 ),
+				monthParameter,
+				parameterOrDefault( lightParameters, g_yearParameter, 2014 ),
+				parameterOrDefault( lightParameters, g_zoneParameter, -8 ),
+				parameterOrDefault( lightParameters, g_longitudeParameter, -122.3318f ),
+				parameterOrDefault( lightParameters, g_latitudeParameter, 47.6019f )
+			);
+		}
+		else
+		{
+			sunPosition = parameterOrDefault(
+				lightParameters,
+				g_sunDirectionParameter,
+				V3f( 0.f, 1.f, 0.f )
+			).normalized() * M44f().rotate( V3f( -M_PI_2, 0.f, 0.f ) );
+		}
+
+		IECoreGL::GroupPtr raysGroup = new IECoreGL::Group();
+		raysGroup->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( LightVisualiserAlgo::distantRays( muted ) ) );
+		M44f rayTransform;
+		alignZAxisWithTargetDir( rayTransform, sunPosition, V3f( 0.f, 1.f, 0.f ) );
+		rayTransform.translate( V3f( 0.f, 0.f, compassScale - 1.f ) );
+		raysGroup->setTransform( rayTransform );
+		result.push_back(
+			Visualisation::createOrnament(
+				raysGroup,
+				true,  // affectsFramingBounds
+				Visualisation::ColorSpace::Display
+			)
+		);
+
+		IECoreGL::GroupPtr tintIndicatorGroup = new IECoreGL::Group();
+		tintIndicatorGroup->addChild(
+			boost::const_pointer_cast<IECoreGL::Renderable>(
+				LightVisualiserAlgo::colorIndicator( parameterOrDefault( lightParameters, g_sunTintParameter, Color3f( 1.f ) ) )
+			)
+		);
+		tintIndicatorGroup->setTransform( M44f().translate( sunPosition ) * M44f().scale( V3f( compassScale ) ) );
+		result.push_back(
+			Visualisation::createOrnament(
+				tintIndicatorGroup,
+				true,  //affectsFramingBound
+				Visualisation::ColorSpace::Scene
+			)
+		);
+
+		IECoreGL::GroupPtr sunIndicatorGroup = new IECoreGL::Group();
+		// The `LightVisualiserAlgo::constantShader()` applies a tint to the color, which makes
+		// for a muddled color when selected if the tint is set to the light color. Instead we
+		// set the tint to `1.0` and set the color on the group.
+		LightVisualiserAlgo::addConstantShader( sunIndicatorGroup.get(), Color3f( 1.f ), 1 );
+		sunIndicatorGroup->getState()->add( new IECoreGL::Color( LightVisualiserAlgo::lightWireframeColor4( muted ) ), /* override = */ true );
+		sunIndicatorGroup->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( sunIndicator( LightVisualiserAlgo::lightWireframeColor( muted ) ) ) );
+		sunIndicatorGroup->setTransform( M44f().translate( sunPosition ) * M44f().scale( V3f( compassScale ) ) );
+		result.push_back(
+			Visualisation::createOrnament(
+				sunIndicatorGroup,
+				true,  // affects FramingBound
+				Visualisation::ColorSpace::Display
+			)
+		);
 	}
 
 	else if( lightShader->getName() == "PxrMeshLight" )
