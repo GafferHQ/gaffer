@@ -68,6 +68,7 @@ Breaking Changes
 - CyclesOptions : Option plugs have been renamed to match the name of their option (e.g. `options.samples` is now `options.cycles:session:samples`). A compatibility config has been provided to allow CyclesOptions nodes to be loaded from scripts saved in earlier Gaffer versions.
 - DelightAttributes : Attribute plugs have been renamed to match the name of their attribute with `.` characters replaced with `_` (e.g. `attributes.cameraVisibility` is now `attributes.dl:visibility_camera`). A compatibility config has been provided to allow DelightAttributes nodes to be loaded from scripts saved in earlier Gaffer versions.
 - DelightOptions : Option plugs have been renamed to match the name of their option with `.` characters replaced with `_` (e.g. `options.shadingSamples` is now `options.dl:quality_shadingsamples`). A compatibility config has been provided to allow DelightOptions nodes to be loaded from scripts saved in earlier Gaffer versions.
+- ImageView : Changed image comparison hotkey from <kbd>Q</kbd> to <kbd>K</kbd> ( <kbd>Q</kbd> now selects the selection tool in the image view, same as in the scene view ).
 
 Build
 -----

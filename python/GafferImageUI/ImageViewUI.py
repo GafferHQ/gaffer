@@ -1170,7 +1170,7 @@ class _CompareModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __keyPress( self, gadget, event ) :
 
-		if event.key == "Q" and not event.modifiers :
+		if event.key == "K" and not event.modifiers :
 			self.__setValue( self.__hotkeyTarget() )
 			return True
 
@@ -1197,7 +1197,7 @@ class _CompareModePlugValueWidget( GafferUI.PlugValueWidget ) :
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value ),
 					"icon" : self.__iconDict[value],
 					"checkBox" : value == compareMode,
-					"shortCut" : "Q" if value == hotkeyTarget else None,
+					"shortCut" : "K" if value == hotkeyTarget else None,
 				}
 			)
 
