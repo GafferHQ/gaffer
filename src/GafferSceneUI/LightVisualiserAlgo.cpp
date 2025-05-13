@@ -276,41 +276,9 @@ const char *faceCameraVertexSource()
 
 // Shader state helpers
 
-void addWireframeCurveState( IECoreGL::Group *group, float lineWidthScale = 1.0f )
-{
-	group->getState()->add( new IECoreGL::Primitive::DrawWireframe( false ) );
-	group->getState()->add( new IECoreGL::Primitive::DrawSolid( true ) );
-	group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
-	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 1.5f * lineWidthScale ) );
-	group->getState()->add( new IECoreGL::LineSmoothingStateComponent( true ) );
-}
-
-void addConstantShader( IECoreGL::Group *group, const Color3f &tint, int aimType = -1 )
-{
-	CompoundObjectPtr parameters = new CompoundObject;
-
-	if( aimType > -1 )
-	{
-		parameters->members()["aimType"] = new IntData( aimType );
-	}
-
-	parameters->members()["tint"] = new Color3fData( tint );
-
-	group->getState()->add(
-		new IECoreGL::ShaderStateComponent(
-			IECoreGL::ShaderLoader::defaultShaderLoader(),
-			IECoreGL::TextureLoader::defaultTextureLoader(),
-			aimType > -1 ? faceCameraVertexSource() : "",
-			"",
-			constantFragSource(),
-			parameters
-		)
-	);
-}
-
 void addConstantShader( IECoreGL::Group *group, int aimType = -1 )
 {
-	addConstantShader( group, Color3f( 1.0f ), aimType );
+	GafferSceneUI::Private::LightVisualiserAlgo::addConstantShader( group, Color3f( 1.0f ), aimType );
 }
 
 void addTexturedConstantShader(
@@ -373,7 +341,7 @@ IECoreGL::ConstRenderablePtr ray( bool muted )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get() );
-	addConstantShader( group.get(), 0 );
+	::addConstantShader( group.get(), 0 );
 
 	IntVectorDataPtr vertsPerCurve = new IntVectorData;
 	V3fVectorDataPtr p = new V3fVectorData;
@@ -392,7 +360,7 @@ IECoreGL::ConstRenderablePtr pointRays( float radius, bool muted )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get() );
-	addConstantShader( group.get(), 1 );
+	::addConstantShader( group.get(), 1 );
 
 	IntVectorDataPtr vertsPerCurve = new IntVectorData;
 	V3fVectorDataPtr p = new V3fVectorData;
@@ -437,7 +405,7 @@ IECoreGL::ConstRenderablePtr spotlightCone( float innerAngle, float outerAngle, 
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get(), lineWidthScale );
-	addConstantShader( group.get() );
+	::addConstantShader( group.get() );
 
 	IntVectorDataPtr vertsPerCurve = new IntVectorData;
 	V3fVectorDataPtr p = new V3fVectorData;
@@ -466,7 +434,7 @@ IECoreGL::ConstRenderablePtr pointShape( float radius, bool muted )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get(), 0.5f );
-	addConstantShader( group.get(), 1 );
+	::addConstantShader( group.get(), 1 );
 
 	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
 	V3fVectorDataPtr pData = new V3fVectorData;
@@ -492,7 +460,7 @@ IECoreGL::ConstRenderablePtr quadWireframe( const V2f &size, const bool muted )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get() );
-	addConstantShader( group.get() );
+	::addConstantShader( group.get() );
 
 	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
 	V3fVectorDataPtr pData = new V3fVectorData;
@@ -648,7 +616,7 @@ IECoreGL::ConstRenderablePtr sphereWireframe( float radius, const Vec3<bool> &ax
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get(), lineWidthScale );
-	addConstantShader( group.get() );
+	::addConstantShader( group.get() );
 
 	IntVectorDataPtr vertsPerCurve = new IntVectorData;
 	V3fVectorDataPtr p = new V3fVectorData;
@@ -680,7 +648,7 @@ IECoreGL::ConstRenderablePtr colorIndicator( const Color3f &color )
 
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 
-	addConstantShader( group.get(), 1 );
+	::addConstantShader( group.get(), 1 );
 
 	const float indicatorRad = 0.1f;
 
@@ -734,7 +702,7 @@ IECoreGL::ConstRenderablePtr diskWireframe( float radius, bool muted )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get() );
-	addConstantShader( group.get() );
+	::addConstantShader( group.get() );
 
 	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
 	V3fVectorDataPtr pData = new V3fVectorData;
@@ -784,7 +752,7 @@ IECoreGL::ConstRenderablePtr cylinderRays( float radius, bool muted )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get() );
-	addConstantShader( group.get(), 0 );
+	::addConstantShader( group.get(), 0 );
 
 	const int numRays = 8;
 	for( int i = 0; i < numRays; ++i )
@@ -810,7 +778,7 @@ IECoreGL::ConstRenderablePtr cylinderWireframe( float radius, float length, bool
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get() );
-	addConstantShader( group.get(), 0 );
+	::addConstantShader( group.get(), 0 );
 
 	const float halfLength = length / 2.0f;
 
@@ -842,7 +810,7 @@ IECoreGL::ConstRenderablePtr cylinderWireframe( float radius, float length, bool
 IECoreGL::ConstRenderablePtr cylinderSurface( float radius, float length, const Color3f &color )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
-	addConstantShader( group.get(), 0 );
+	::addConstantShader( group.get(), 0 );
 
 	const float halfLength = length / 2.0f;
 
@@ -923,6 +891,38 @@ Color3f lightWireframeColor( const bool muted )
 Color4f lightWireframeColor4( const bool muted )
 {
 	return muted ? g_mutedLightWireframeColor4 : g_lightWireframeColor4;
+}
+
+void addWireframeCurveState( IECoreGL::Group *group, float lineWidthScale )
+{
+	group->getState()->add( new IECoreGL::Primitive::DrawWireframe( false ) );
+	group->getState()->add( new IECoreGL::Primitive::DrawSolid( true ) );
+	group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
+	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 1.5f * lineWidthScale ) );
+	group->getState()->add( new IECoreGL::LineSmoothingStateComponent( true ) );
+}
+
+void addConstantShader( IECoreGL::Group *group, const Color3f &tint, int aimType )
+{
+	CompoundObjectPtr parameters = new CompoundObject;
+
+	if( aimType > -1 )
+	{
+		parameters->members()["aimType"] = new IntData( aimType );
+	}
+
+	parameters->members()["tint"] = new Color3fData( tint );
+
+	group->getState()->add(
+		new IECoreGL::ShaderStateComponent(
+			IECoreGL::ShaderLoader::defaultShaderLoader(),
+			IECoreGL::TextureLoader::defaultTextureLoader(),
+			aimType > -1 ? faceCameraVertexSource() : "",
+			"",
+			constantFragSource(),
+			parameters
+		)
+	);
 }
 
 }  // namespace GafferSceneUI::Private::LightVisualiserAlgo

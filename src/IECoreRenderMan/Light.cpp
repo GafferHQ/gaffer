@@ -53,11 +53,32 @@ using namespace IECoreRenderMan;
 namespace
 {
 
+template<typename T>
+T parameterOrDefault( const CompoundData *parameters, const InternedString &name, const T &defaultValue )
+{
+	if( const auto d = parameters->member<TypedData<T>>( name ) )
+	{
+		return d->readable();
+	}
+
+	return defaultValue;
+}
+
+const InternedString g_monthParameter( "month" );
+
 M44f correctiveTransform( const IECoreScene::Shader *lightShader )
 {
-	if( lightShader->getName() == "PxrDomeLight" || lightShader->getName() == "PxrEnvDayLight" || lightShader->getName() == "DomeLight" )
+	if( lightShader->getName() == "PxrDomeLight" || lightShader->getName() == "DomeLight" )
 	{
 		return M44f().rotate( V3f( -M_PI_2, M_PI_2, 0.0f ) );
+	}
+	else if( lightShader->getName() == "PxrEnvDayLight" )
+	{
+		if( parameterOrDefault( lightShader->parametersData(), g_monthParameter, 11 ) != 0 )
+		{
+			return M44f().rotate( V3f( -M_PI_2, M_PI_2, 0.0f ) ) * M44f().scale( V3f( -1.f, 1.f, 1.f ) );
+		}
+		return M44f().rotate( V3f( -M_PI_2, 0.f, 0.f ) );  // Transform from Z-up to Y-up
 	}
 	else if( lightShader->getName() == "PxrMeshLight" )
 	{
