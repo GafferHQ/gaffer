@@ -88,7 +88,7 @@ namespace
 void renderUnitSquare( const IECoreGL::Shader::Parameter *pParameter, const IECoreGL::Shader::Parameter *uvParameter = nullptr )
 {
 	static float rectPBufferData[12] = { -1, -1, 0,  -1, 1, 0,  1, -1, 0,  1, 1, 0 };
-	static float rectUvBufferData[12] = { 0, 0,  0, 1,  1, 0,  1, 1 };
+	static float rectUvBufferData[8] = { 0, 0,  0, 1,  1, 0,  1, 1 };
 	static IECoreGL::BufferPtr g_rectPBuffer = new IECoreGL::Buffer( rectPBufferData, sizeof( float ) * 12 );
 	static IECoreGL::BufferPtr g_rectUvBuffer = new IECoreGL::Buffer( rectUvBufferData, sizeof( float ) * 8 );
 
@@ -187,7 +187,7 @@ class GafferImageUI::ImageGadget::RenderTexture
 		}
 
 		/// The RenderScope binds a RenderTexture so that rendering goes to it.
-		class GAFFERUI_API RenderScope : boost::noncopyable
+		class GAFFERIMAGEUI_API RenderScope : boost::noncopyable
 		{
 
 			public :
@@ -1107,9 +1107,19 @@ void ImageGadget::setSelectedIDs( const std::vector<uint32_t> &ids )
 	std::sort( m_selectedIDs.begin(), m_selectedIDs.end() );
 }
 
+const std::vector<uint32_t> &ImageGadget::getSelectedIDs()
+{
+	return m_selectedIDs;
+}
+
 void ImageGadget::setHighlightID( uint32_t id )
 {
 	m_highlightID = id;
+}
+
+uint32_t ImageGadget::getHighlightID()
+{
+	return m_highlightID;
 }
 
 Imath::Box3f ImageGadget::bound() const
