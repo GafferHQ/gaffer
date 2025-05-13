@@ -76,6 +76,44 @@ GafferScene.Outputs.registerOutput(
 	)
 )
 
+GafferScene.Outputs.registerOutput(
+	"Interactive/id",
+	IECoreScene.Output(
+		"id",
+		"ieDisplay",
+		"uint id",
+		{
+			"catalogue:imageName" : "Image",
+			"driverType" : "ClientDisplayDriver",
+			"displayHost" : "localhost",
+			"displayPort" : "${image:catalogue:port}",
+			"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+			"filter" : "closest",
+			"layerName" : "id",
+			"header:gaffer:loadAsUint" : True,
+			"header:gaffer:integerMapping" : "reinterpret",
+		}
+	)
+)
+
+GafferScene.Outputs.registerOutput(
+	"Batch/id",
+	IECoreScene.Output(
+		"${project:rootDirectory}/renders/${script:name}/${renderPass}/id/id.####.exr",
+		"exr",
+		"uint id",
+		{
+			"filter" : "closest",
+			"layerName" : "id",
+			"header:gaffer:loadAsUint" : True,
+			"header:gaffer:integerMapping" : "reinterpret",
+		}
+	)
+)
+
+Gaffer.Metadata.registerValue( GafferScene.StandardOptions, "options.renderManifestFilePath.value", "userDefault", "${project:rootDirectory}/renders/${script:name}/${renderPass}/renderManifest/renderManifest.####.exr" )
+
+
 # Add standard AOVs as they are defined in the aiStandard and alSurface shaders
 
 with IECore.IgnoredExceptions( ImportError ) :
@@ -97,7 +135,6 @@ with IECore.IgnoredExceptions( ImportError ) :
 		"sss",
 		"volume",
 		"albedo",
-		"id",
 		"diffuse_direct",
 		"diffuse_indirect",
 		"diffuse_albedo",
@@ -128,24 +165,18 @@ with IECore.IgnoredExceptions( ImportError ) :
 			data = "float Z"
 		elif aov == "normal":
 			data = "color N"
-		elif aov == "id":
-			data = "uint id"
 		else:
 			data = "color " + aov
 
 		parameters = {}
 
-		if aov in { "motionvector", "id" } :
+		if aov == "motionvector":
 			parameters["filter"] = "closest"
 
 		if aov == "depth":
 			parameters["layerName"] = "Z"
-		elif aov == "id":
-			parameters["layerName"] = "id"
-			parameters["header:gaffer:loadAsUint"] = True
-			parameters["header:gaffer:integerMapping"] = "reinterpret"
 
-		if aov not in { "motionvector", "emission", "background", "id" } :
+		if aov not in { "motionvector", "emission", "background" } :
 			parameters["layerPerLightGroup"] = False
 
 		interactiveParameters = parameters.copy()
