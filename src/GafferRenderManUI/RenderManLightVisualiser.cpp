@@ -268,6 +268,18 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 		) );
 	}
 
+	else if( lightShader->getName() == "PxrMeshLight" )
+	{
+		// There isn't any meaningful place to draw anything for the mesh
+		// light, so instead we make the mesh outline visible and light coloured.
+		IECoreGL::StatePtr meshState = new IECoreGL::State( false );
+		meshState->add( new IECoreGL::Primitive::DrawSolid( false ) );
+		meshState->add( new IECoreGL::Primitive::DrawOutline( true ) );
+		meshState->add( new IECoreGL::Primitive::OutlineWidth( 2.0f ) );
+		meshState->add( new IECoreGL::OutlineColorStateComponent( lightWireframeColor4( muted ) ) );
+		state = meshState;
+	}
+
 	else if( lightShader->getName() == "PxrRectLight" )
 	{
 		if( drawShaded )
