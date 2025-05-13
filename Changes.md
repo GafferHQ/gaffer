@@ -53,6 +53,7 @@ Breaking Changes
 - SceneTestCase : Removed `assertBoxesEqual()` and `assertBoxesAlmostEqual()` methods.
 - RenderController : Removed `pathForID()`, `pathsForIDs()`, `idForPath()` and `idsForPaths()`. Use `renderManifest()` instead.
 - Catalogue, CatalogueSelect, Display : Moved from GafferImage module to GafferScene.
+- ImageView : Changed image comparison hotkey from <kbd>Q</kbd> to <kbd>K</kbd> ( <kbd>Q</kbd> now selects the selection tool in the image view, same as in the scene view ).
 
 1.5.x.x (relative to 1.5.14.0)
 =======
