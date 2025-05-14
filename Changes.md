@@ -9,7 +9,9 @@ Improvements
   - Added support for custom ONNX ops via the `GAFFERML_CUSTOM_OPS_LIBRARIES` environment variable. This should contain a comma-separated list of full paths to libraries containing custom ops.
   - Added support for string tensors.
 - Cycles : Added support for shadow linking.
-- RenderMan : Added support for USDLux lights.
+- RenderMan :
+  - Added support for shadow linking.
+  - Added support for USDLux lights.
 
 Fixes
 -----

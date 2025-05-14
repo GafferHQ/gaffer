@@ -76,6 +76,7 @@ class Object : public IECoreScenePreview::Renderer::ObjectInterface
 		ConstGeometryPrototypePtr m_geometryPrototype;
 		RtParamList m_extraAttributes;
 		IECoreScenePreview::Renderer::ConstObjectSetPtr m_linkedLights;
+		IECoreScenePreview::Renderer::ConstObjectSetPtr m_shadowedLights;
 
 };
 

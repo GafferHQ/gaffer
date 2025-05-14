@@ -70,7 +70,7 @@ class Light : public IECoreScenePreview::Renderer::ObjectInterface
 		// =============================
 
 		void updateLightFilterShader( const IECoreScene::ConstShaderNetworkPtr &lightFilterShader );
-		void updateGroupingMemberships( RtUString memberships );
+		void updateLinking( RtUString memberships, RtUString shadowSubset );
 
 	private :
 
@@ -89,6 +89,7 @@ class Light : public IECoreScenePreview::Renderer::ObjectInterface
 		RtParamList m_extraAttributes;
 		IECoreScene::ConstShaderNetworkPtr m_lightFilterShader;
 		IECoreScenePreview::Renderer::ConstObjectSetPtr m_linkedFilters;
+		RtUString m_shadowSubset;
 
 };
 

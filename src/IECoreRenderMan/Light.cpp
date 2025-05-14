@@ -69,8 +69,6 @@ M44f correctiveTransform( const IECoreScene::Shader *lightShader )
 	}
 }
 
-const IECore::InternedString g_lightFilters( "lightFilters" );
-
 M44f preTransform( const Attributes *attributes )
 {
 	if( !attributes->lightShader() )
@@ -88,12 +86,15 @@ M44f preTransform( const Attributes *attributes )
 	return IECoreRenderMan::ShaderNetworkAlgo::usdLightTransform( lightShader ) * correctiveTransform( lightShader );
 }
 
+const IECore::InternedString g_lightFilters( "lightFilters" );
+const RtUString g_defaultShadowGroup( "defaultShadowGroup" );
+
 } // namespace
 
 Light::Light( const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, MaterialCache *materialCache, LightLinker *lightLinker, Session *session )
 	:	m_materialCache( materialCache ), m_session( session ), m_lightLinker( lightLinker ),
 		m_lightInstance( riley::LightInstanceId::InvalidId() ), m_preTransform( preTransform( attributes ) ),
-		m_attributes( attributes ), m_geometryPrototype( geometryPrototype )
+		m_attributes( attributes ), m_geometryPrototype( geometryPrototype ), m_shadowSubset( g_defaultShadowGroup )
 
 {
 	updateLightShader( attributes );
@@ -324,7 +325,7 @@ void Light::updateLightFilterShader( const IECoreScene::ConstShaderNetworkPtr &l
 	);
 }
 
-void Light::updateGroupingMemberships( RtUString memberships )
+void Light::updateLinking( RtUString memberships, RtUString shadowSubset )
 {
 	m_extraAttributes.SetString( Rix::k_grouping_membership, memberships );
 
@@ -340,10 +341,18 @@ void Light::updateGroupingMemberships( RtUString memberships )
 	}
 	allAttributes.Update( m_extraAttributes );
 
+	const riley::LightShaderId *newLightShader = nullptr;
+	if( m_shadowSubset != shadowSubset )
+	{
+		m_shadowSubset = shadowSubset;
+		updateLightShader( m_attributes.get() );
+		newLightShader = &m_lightShader->id();
+	}
+
 	const riley::LightInstanceResult result = m_session->modifyLightInstance(
 		m_lightInstance,
 		/* material = */ nullptr,
-		/* light shader = */ nullptr,
+		newLightShader,
 		/* coordinateSystems = */ nullptr,
 		/* xform = */ nullptr,
 		&allAttributes
@@ -359,7 +368,7 @@ void Light::updateLightShader( const Attributes *attributes )
 {
 	if( attributes->lightShader() )
 	{
-		m_lightShader = m_materialCache->getLightShader( attributes->lightShader(), m_lightFilterShader.get() );
+		m_lightShader = m_materialCache->getLightShader( attributes->lightShader(), m_lightFilterShader.get(), m_shadowSubset );
 	}
 	else
 	{
