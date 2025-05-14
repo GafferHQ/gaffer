@@ -7,6 +7,7 @@ Improvements
 - GafferML :
   - Added support for custom ONNX ops via the `GAFFERML_CUSTOM_OPS_LIBRARIES` environment variable. This should contain a comma-separated list of full paths to libraries containing custom ops.
   - Added support for string tensors.
+- RenderMan : Added support for USDLux lights.
 
 1.5.13.0 (relative to 1.5.12.0)
 ========
@@ -77,6 +78,7 @@ Fixes
   - Fixed compatibility with ShaderTweakProxy.
 - ShaderTweaks : Fixed error when selecting an array element to tweak, such as `utilityPattern[0]` in a PxrSurface shader (#6383).
 - CompoundVectorParameterValueWidget : Fixed being unable to edit certain parameters when there were too many, by adding a horizontal scroll bar.
+- RenderMan Light : Fixed orientation of color maps on `PxrRectLight`.
 
 API
 ---

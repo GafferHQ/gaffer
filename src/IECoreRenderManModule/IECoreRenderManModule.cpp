@@ -49,4 +49,5 @@ BOOST_PYTHON_MODULE( _IECoreRenderMan )
 	scope shaderNetworkAlgoScope( shaderNetworkAlgoModule );
 
 	def( "convertUSDShaders", &ShaderNetworkAlgo::convertUSDShaders );
+	def( "usdLightTransform", &ShaderNetworkAlgo::usdLightTransform );
 }
