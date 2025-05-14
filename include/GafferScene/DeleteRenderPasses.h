@@ -62,7 +62,7 @@ class GAFFERSCENE_API DeleteRenderPasses : public GlobalsProcessor
 		explicit DeleteRenderPasses( const std::string &name=defaultName<DeleteRenderPasses>() );
 		~DeleteRenderPasses() override;
 
-		GAFFER_NODE_DECLARE_TYPE( GafferScene::DeleteRenderPasses, DeletePassesTypeId, GlobalsProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::DeleteRenderPasses, DeleteRenderPassesTypeId, GlobalsProcessor );
 
 		Gaffer::IntPlug *modePlug();
 		const Gaffer::IntPlug *modePlug() const;
