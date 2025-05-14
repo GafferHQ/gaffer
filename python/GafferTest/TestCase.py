@@ -36,6 +36,7 @@
 
 import contextlib
 import locale
+import math
 import os
 import sys
 import unittest
@@ -48,6 +49,8 @@ import traceback
 import functools
 import pathlib
 import stat
+
+import imath
 
 import IECore
 
@@ -166,6 +169,27 @@ class TestCase( unittest.TestCase ) :
 		locale.setlocale( category, l )
 		yield
 		locale.setlocale( category, previousLocale )
+
+	## Similar to `assertAlmostEqual( delta = error )` but works with Imath
+	# types like `V3f` etc.
+	## \todo Use more widely - there are lots of existing tests that could
+	# be more concise and/or give better failure messages if they used this.
+	def assertEqualWithAbsError( self, x, y, error, message = "" ) :
+
+		if hasattr( x, "equalWithAbsError" ) :
+			equal = x.equalWithAbsError( y, error )
+		elif isinstance( x, imath.Color4f ) :
+			equal = True
+			for i in range( 0, 4 ) :
+				equal = equal and math.fabs( x[i] - y[i] ) <= error
+		else :
+			equal = math.fabs( x - y ) <= error
+
+		if not equal :
+			message = f" : {message}" if message else ""
+			raise self.failureException(
+				f"{x} != {y} with error of {error}{message}"
+			)
 
 	## Attempts to ensure that the hashes for a node
 	# are reasonable by jiggling around input values

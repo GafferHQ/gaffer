@@ -14,6 +14,11 @@ Fixes
 
 - RenderManLight : Fixed orientation of color maps on `PxrRectLight`.
 
+API
+---
+
+- TestCase : Added `assertEqualWithAbsError()` method.
+
 1.5.13.0 (relative to 1.5.12.0)
 ========
 

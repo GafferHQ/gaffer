@@ -375,27 +375,24 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 
 		self.longMessage = True
 		for operation, expected in [
-			( GafferImage.Merge.Operation.Add, ( 1.1, 0.5, 0.4, 0.6 ) ),
-			( GafferImage.Merge.Operation.Atop, ( 0.48, 0.28, 0.28, 0.4 ) ),
-			( GafferImage.Merge.Operation.Divide, ( 10, 1.5, 1/3.0, 0.5 ) ),
-			( GafferImage.Merge.Operation.In, ( 0.4, 0.12, 0.04, 0.08 ) ),
-			( GafferImage.Merge.Operation.Out, ( 0.6, 0.18, 0.06, 0.12 ) ),
-			( GafferImage.Merge.Operation.Mask, ( 0.02, 0.04, 0.06, 0.08 ) ),
-			( GafferImage.Merge.Operation.Matte, ( 0.28, 0.22, 0.26, 0.36 ) ),
-			( GafferImage.Merge.Operation.Multiply, ( 0.1, 0.06, 0.03, 0.08 ) ),
-			( GafferImage.Merge.Operation.Over, ( 1.08, 0.46, 0.34, 0.52 ) ),
-			( GafferImage.Merge.Operation.Subtract, ( 0.9, 0.1, -0.2, -0.2 ) ),
-			( GafferImage.Merge.Operation.Difference, ( 0.9, 0.1, 0.2, 0.2 ) ),
-			( GafferImage.Merge.Operation.Under, ( 0.7, 0.38, 0.36, 0.52 ) ),
-			( GafferImage.Merge.Operation.Min, ( 0.1, 0.2, 0.1, 0.2 ) ),
-			( GafferImage.Merge.Operation.Max, ( 1, 0.3, 0.3, 0.4 ) )
+			( GafferImage.Merge.Operation.Add, imath.Color4f( 1.1, 0.5, 0.4, 0.6 ) ),
+			( GafferImage.Merge.Operation.Atop, imath.Color4f( 0.48, 0.28, 0.28, 0.4 ) ),
+			( GafferImage.Merge.Operation.Divide, imath.Color4f( 10, 1.5, 1/3.0, 0.5 ) ),
+			( GafferImage.Merge.Operation.In, imath.Color4f( 0.4, 0.12, 0.04, 0.08 ) ),
+			( GafferImage.Merge.Operation.Out, imath.Color4f( 0.6, 0.18, 0.06, 0.12 ) ),
+			( GafferImage.Merge.Operation.Mask, imath.Color4f( 0.02, 0.04, 0.06, 0.08 ) ),
+			( GafferImage.Merge.Operation.Matte, imath.Color4f( 0.28, 0.22, 0.26, 0.36 ) ),
+			( GafferImage.Merge.Operation.Multiply, imath.Color4f( 0.1, 0.06, 0.03, 0.08 ) ),
+			( GafferImage.Merge.Operation.Over, imath.Color4f( 1.08, 0.46, 0.34, 0.52 ) ),
+			( GafferImage.Merge.Operation.Subtract, imath.Color4f( 0.9, 0.1, -0.2, -0.2 ) ),
+			( GafferImage.Merge.Operation.Difference, imath.Color4f( 0.9, 0.1, 0.2, 0.2 ) ),
+			( GafferImage.Merge.Operation.Under, imath.Color4f( 0.7, 0.38, 0.36, 0.52 ) ),
+			( GafferImage.Merge.Operation.Min, imath.Color4f( 0.1, 0.2, 0.1, 0.2 ) ),
+			( GafferImage.Merge.Operation.Max, imath.Color4f( 1, 0.3, 0.3, 0.4 ) )
 		] :
 
 			merge["operation"].setValue( operation )
-			self.assertAlmostEqual( sampler["color"]["r"].getValue(), expected[0], msg=operation )
-			self.assertAlmostEqual( sampler["color"]["g"].getValue(), expected[1], msg=operation )
-			self.assertAlmostEqual( sampler["color"]["b"].getValue(), expected[2], msg=operation )
-			self.assertAlmostEqual( sampler["color"]["a"].getValue(), expected[3], msg=operation )
+			self.assertEqualWithAbsError( sampler["color"].getValue(), expected, error = 1e6, message = operation )
 
 	def testDifferenceExceptionalValues( self ) :
 
@@ -482,10 +479,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		sampler["image"].setInput( merge["out"] )
 		sampler["pixel"].setValue( imath.V2f( 10 ) )
 
-		self.assertAlmostEqual( sampler["color"]["r"].getValue(), 0.0 + 1.0 )
-		self.assertAlmostEqual( sampler["color"]["g"].getValue(), 0.2 + 0.0 )
-		self.assertAlmostEqual( sampler["color"]["b"].getValue(), 0.3 + 0.1 )
-		self.assertAlmostEqual( sampler["color"]["a"].getValue(), 0.4 + 0.2 )
+		self.assertEqualWithAbsError( sampler["color"].getValue(), imath.Color4f( 0.0 + 1.0, 0.2 + 0.0, 0.3 + 0.1, 0.4 + 0.2 ), 1e6 )
 
 	def testNonFlatThrows( self ) :
 
