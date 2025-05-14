@@ -193,6 +193,7 @@ enum TypeId
 	PreviewGeometryTypeId = 110648,
 	PreviewProceduralTypeId = 110649,
 
+	ShuffleOptionsTypeId = 110650,
 	LastTypeId = 110650
 };
 
