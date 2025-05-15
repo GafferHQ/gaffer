@@ -53,6 +53,7 @@
 #include "boost/property_tree/json_parser.hpp"
 
 #include <regex>
+#include <unordered_map>
 
 using namespace GafferScene;
 
