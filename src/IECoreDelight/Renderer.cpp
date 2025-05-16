@@ -253,6 +253,8 @@ using DelightHandleWeakPtr = std::weak_ptr<DelightHandle>;
 namespace
 {
 
+const std::string g_headerPrefix( "header:" );
+
 class DelightOutput : public IECore::RefCounted
 {
 
@@ -269,7 +271,14 @@ class DelightOutput : public IECore::RefCounted
 			ParameterList driverParams;
 			for( const auto &[parameterName, parameterValue] : output->parameters() )
 			{
-				if( parameterName != "filter" && parameterName != "filterwidth" && parameterName != "scalarformat" && parameterName != "colorprofile" && parameterName != "layername" && parameterName != "layerName" && parameterName != "withalpha" && parameterName != "drawoutlines" )
+				if( boost::starts_with( parameterName.string(), g_headerPrefix ) && output->getType() == "exr" )
+				{
+					const char *prefixedName = driverParams.allocate(
+						"exrheader_" + parameterName.string().substr( g_headerPrefix.size() )
+					);
+					driverParams.add( prefixedName, parameterValue.get() );
+				}
+				else if( parameterName != "filter" && parameterName != "filterwidth" && parameterName != "scalarformat" && parameterName != "colorprofile" && parameterName != "layername" && parameterName != "layerName" && parameterName != "withalpha" && parameterName != "drawoutlines" )
 				{
 					driverParams.add( parameterName.c_str(), parameterValue.get() );
 				}
