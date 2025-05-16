@@ -591,21 +591,21 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		# Render red sphere
 
-		self.__assertColorsAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ), error = 0.01 )
 
 		# Make it green
 
 		colorPlug.setValue( imath.Color3f( 0, 1, 0 ) )
 		self.uiThreadCallHandler.waitFor( 2.0 )
 
-		self.__assertColorsAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 1, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 1, 0, 1 ), error = 0.01 )
 
 		# Make it blue
 
 		colorPlug.setValue( imath.Color3f( 0, 0, 1 ) )
 		self.uiThreadCallHandler.waitFor( 2.0 )
 
-		self.__assertColorsAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 1, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 1, 1 ), error = 0.01 )
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
@@ -1824,63 +1824,63 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		c = self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) )
 		unfilteredIntensity = c[0]
-		self.__assertColorsAlmostEqual( c, imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( c, imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
 
 		# Use a dense light filter and let renderer update
 
 		lightFilterDensityPlug.setValue( 1.0 )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
 
 		# Disable light filter and let renderer update
 
 		script["lightFilter"]["enabled"].setValue( False )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
 
 		# Enable light filter and let renderer update
 
 		script["lightFilter"]["enabled"].setValue( True )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
 
 		# Change parameter on light filter
 
 		lightFilterDensityPlug.setValue( 0.5 )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity / 2.0, unfilteredIntensity / 2.0, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity / 2.0, unfilteredIntensity / 2.0, 0, 1 ), error = 0.01 )
 
 		# Change parameter on light
 
 		script["light"]["parameters"]["intensity"].setValue( 2.0 )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
 
 		# Change light filter transformation
 
 		script["lightFilter"]["transform"]["rotate"]["x"].setValue( 0.1 )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
 
 		# Disable light
 
 		script["light"]["enabled"].setValue( False )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
 
 		# Reenable light
 
 		script["light"]["enabled"].setValue( True )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
 
 		# Reset light and filter
 
@@ -1888,21 +1888,21 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		lightFilterDensityPlug.setValue( 1 )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
 
 		# Unlink the filter
 
 		script["attributes"]["attributes"]["filteredLights"]["value"].setValue( "" )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
 
 		# Relink the filter
 
 		script["attributes"]["attributes"]["filteredLights"]["value"].setValue( "defaultLights" )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
 
 		script["render"]["state"].setValue( script["render"].State.Stopped )
 
@@ -1987,28 +1987,28 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		c = self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) )
 		unfilteredIntensity = c[0]
-		self.__assertColorsAlmostEqual( c, imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( c, imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
 
 		# Use a dense light filter and let renderer update
 
 		lightFilterDensityPlug.setValue( 1.0 )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
 
 		# Disable light filter and let renderer update
 
 		script["lightFilter"]["enabled"].setValue( False )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
 
 		# Enable light filter and let renderer update
 
 		script["lightFilter"]["enabled"].setValue( True )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
 
 		# Add a gobo and disable light filter
 
@@ -2016,7 +2016,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["lightFilter"]["enabled"].setValue( False )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), error = 0.01 )
 
 		# Look at combined result of light filter and gobo
 
@@ -2024,42 +2024,42 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		lightFilterDensityPlug.setValue( 0.5 )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity * 0.5, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity * 0.5, 0, 1 ), error = 0.01 )
 
 		# Change parameter on light
 
 		script["light"]["parameters"]["intensity"].setValue( 2.0 )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), error = 0.01 )
 
 		# Change light filter transformation
 
 		script["lightFilter"]["transform"]["rotate"]["x"].setValue( 0.1 )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), error = 0.01 )
 
 		# Change light filter parameter
 
 		script["lightFilter"]["parameters"]["geometry_type"].setValue( "sphere" )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), error = 0.01 )
 
 		# Disable light
 
 		script["light"]["enabled"].setValue( False )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
 
 		# Reenable light
 
 		script["light"]["enabled"].setValue( True )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), error = 0.01 )
 
 		# Disable gobo, reset light and filter
 
@@ -2068,21 +2068,21 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		lightFilterDensityPlug.setValue( 1 )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
 
 		# Unlink the filter
 
 		script["attributes"]["attributes"]["filteredLights"]["value"].setValue( "" )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
 
 		# Relink the filter
 
 		script["attributes"]["attributes"]["filteredLights"]["value"].setValue( "defaultLights" )
 
 		self.uiThreadCallHandler.waitFor( 1 )
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
 
 		script["render"]["state"].setValue( script["render"].State.Stopped )
 
@@ -2153,21 +2153,21 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["lightFilter"]["filteredLights"].setValue( "mySet" )
 		self.uiThreadCallHandler.waitFor( 1 )
 
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), unfilteredColor, delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), unfilteredColor, error = 0.01 )
 
 		# Add the light into the set. Now the filtering should happen.
 
 		script["light"]["sets"].setValue( "mySet" )
 		self.uiThreadCallHandler.waitFor( 1 )
 
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
 
 		# Take the light out of the set. Goodbye filtering.
 
 		script["light"]["sets"].setValue( "" )
 		self.uiThreadCallHandler.waitFor( 1 )
 
-		self.__assertColorsAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), unfilteredColor, delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), unfilteredColor, error = 0.01 )
 		script["render"]["state"].setValue( script["render"].State.Stopped )
 
 	def testAdaptors( self ) :
@@ -2219,7 +2219,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		# Render red sphere
 
-		self.__assertColorsAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ), delta = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ), error = 0.01 )
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
 	def testBasicLightLinking( self ) :
@@ -2939,11 +2939,6 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		c = self._color4fAtUV( image, uv )
 		return imath.Color3f( c.r, c.g, c.b )
-
-	def __assertColorsAlmostEqual( self, c0, c1, **kw ) :
-
-		for i in range( 0, 4 ) :
-			self.assertAlmostEqual( c0[i], c1[i], **kw )
 
 if __name__ == "__main__":
 	unittest.main()

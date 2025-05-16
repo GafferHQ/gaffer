@@ -1629,12 +1629,7 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.render()
 		image = IECore.Reader.create( str( fileName ) ).read()
 
-		color = self.__colorAtUV( image, imath.V2f( 0.55 ) )
-		if maxDifference :
-			for i in range( 0, 4 ) :
-				self.assertAlmostEqual( color[i], expectedResult[i], delta = maxDifference )
-		else :
-			self.assertEqual( color, expectedResult )
+		self.assertEqualWithAbsError( self.__colorAtUV( image, imath.V2f( 0.55 ) ), expectedResult, maxDifference )
 
 	def testCustomAttributes( self ) :
 
@@ -2017,12 +2012,7 @@ class RendererTest( GafferTest.TestCase ) :
 		# Check we got what we expected.
 
 		for uv, expectedResult in expectedResults :
-			color = self.__colorAtUV( image, uv )
-			if maxDifference :
-				for i in range( 0, 4 ) :
-					self.assertAlmostEqual( color[i], expectedResult[i], delta = maxDifference )
-			else :
-				self.assertEqual( color, expectedResult )
+			self.assertEqualWithAbsError( self.__colorAtUV( image, uv ), expectedResult, maxDifference )
 
 	def testNumericParameters( self ) :
 
