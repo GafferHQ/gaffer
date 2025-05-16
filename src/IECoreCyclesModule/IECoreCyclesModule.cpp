@@ -36,32 +36,32 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferDispatchBindings/TaskNodeBinding.h"
-
-#include "GafferCycles/CyclesAttributes.h"
-#include "GafferCycles/CyclesBackground.h"
-#include "GafferCycles/CyclesOptions.h"
-#include "GafferCycles/CyclesLight.h"
-#include "GafferCycles/CyclesMeshLight.h"
-#include "GafferCycles/CyclesShader.h"
+#include "IECoreCycles/IECoreCycles.h"
+#include "IECoreCycles/ShaderNetworkAlgo.h"
 
 using namespace boost::python;
-using namespace GafferBindings;
-using namespace GafferDispatchBindings;
-using namespace GafferCycles;
 
-BOOST_PYTHON_MODULE( _GafferCycles )
+BOOST_PYTHON_MODULE( _IECoreCycles )
 {
 
-	DependencyNodeClass<CyclesAttributes>();
-	DependencyNodeClass<CyclesBackground>();
-	DependencyNodeClass<CyclesOptions>();
-	DependencyNodeClass<CyclesLight>()
-		.def( "loadShader", (void (CyclesLight::*)( const std::string & ) )&CyclesLight::loadShader )
-	;
-	DependencyNodeClass<CyclesMeshLight>();
-	DependencyNodeClass<CyclesShader>();
+	IECoreCycles::init();
+
+	scope().attr( "majorVersion" ) = IECoreCycles::majorVersion();
+	scope().attr( "minorVersion" ) = IECoreCycles::minorVersion();
+	scope().attr( "patchVersion" ) = IECoreCycles::patchVersion();
+	scope().attr( "version" ) = IECoreCycles::versionString();
+	scope().attr( "devices" ) = IECoreCycles::devices()->copy();
+	scope().attr( "nodes" ) = IECoreCycles::nodes()->copy();
+	scope().attr( "shaders" ) = IECoreCycles::shaders()->copy();
+	scope().attr( "lights" ) = IECoreCycles::lights()->copy();
+	scope().attr( "passes" ) = IECoreCycles::passes()->copy();
+	scope().attr( "hasOpenImageDenoise" ) = IECoreCycles::openImageDenoiseSupported();
+	scope().attr( "hasOptixDenoise" ) = IECoreCycles::optixDenoiseSupported();
+
+	object shaderNetworkAlgoModule( borrowed( PyImport_AddModule( "IECoreCycles.ShaderNetworkAlgo" ) ) );
+	scope().attr( "ShaderNetworkAlgo" ) = shaderNetworkAlgoModule;
+	scope shaderNetworkAlgoScope( shaderNetworkAlgoModule );
+
+	def( "convertUSDShaders", &IECoreCycles::ShaderNetworkAlgo::convertUSDShaders );
 
 }

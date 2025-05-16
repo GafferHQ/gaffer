@@ -40,6 +40,7 @@ import imath
 
 import IECore
 import IECoreScene
+import IECoreCycles
 
 import GafferSceneTest
 import GafferCycles
@@ -48,7 +49,7 @@ class CyclesLightTest( GafferSceneTest.SceneTestCase ) :
 
 	def testLoadAllLightsWithoutWarnings( self ) :
 
-		for light in GafferCycles.lights.keys() :
+		for light in IECoreCycles.lights.keys() :
 			with IECore.CapturingMessageHandler() as mh :
 				node = GafferCycles.CyclesLight()
 				node.loadShader( light )

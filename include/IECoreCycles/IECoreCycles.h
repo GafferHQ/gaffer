@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2018, Alex Fuller. All rights reserved.
+//  Copyright (c) 2020, Alex Fuller. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,26 +34,46 @@
 
 #pragma once
 
-#include "GafferCycles/IECoreCyclesPreview/Export.h"
+#include "IECoreCycles/Export.h"
 
-#include "IECoreScene/Camera.h"
+#include "IECore/CompoundData.h"
 
-#include <vector>
+#include <string>
 
-// Cycles
-IECORE_PUSH_DEFAULT_VISIBILITY
-#include "scene/camera.h"
-IECORE_POP_DEFAULT_VISIBILITY
-
+/// This namespace contains all components of the core library.
 namespace IECoreCycles
 {
 
-namespace CameraAlgo
-{
+/// Returns the value of the `CYCLES_ROOT` environment variable, or
+/// and empty string if the variable is not defined.
+IECORECYCLES_API const char *cyclesRoot();
 
-/// Converts the specified IECoreScene::Camera into a ccl::Camera.
-IECORECYCLES_API ccl::Camera *convert( const IECoreScene::Camera *camera, const std::string &nodeName, ccl::Scene *scene = nullptr );
+/// Initialises the library using the CYCLES_ROOT environment
+/// variable, which should point to the root of a Cycles installation.
+IECORECYCLES_API bool init();
 
-} // namespace CameraAlgo
+/// Returns the major version for the IECore library
+IECORECYCLES_API int majorVersion();
+/// Returns the minor version for the IECore library
+IECORECYCLES_API int minorVersion();
+/// Returns the patch version for the IECore library
+IECORECYCLES_API int patchVersion();
+/// Returns a string of the form "major.minor.patch"
+IECORECYCLES_API const std::string &versionString();
 
-} // namespace IECoreCycles
+/// Returns all device data (for python bindings)
+IECORECYCLES_API const IECore::CompoundData *devices();
+/// Returns all node data (for python bindings)
+IECORECYCLES_API const IECore::CompoundData *nodes();
+/// Returns all shader data (for python bindings)
+IECORECYCLES_API const IECore::CompoundData *shaders();
+/// Returns all light data (for python bindings)
+IECORECYCLES_API const IECore::CompoundData *lights();
+/// Returns all pass data (for python bindings)
+IECORECYCLES_API const IECore::CompoundData *passes();
+/// Returns if OpenImageDenoise has been compiled in Cycles
+IECORECYCLES_API bool openImageDenoiseSupported();
+/// Returns if OptixDenoise has been compiled in Cycles
+IECORECYCLES_API bool optixDenoiseSupported();
+
+}

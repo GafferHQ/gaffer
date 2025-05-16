@@ -36,7 +36,7 @@
 
 #pragma once
 
-#include "GafferCycles/IECoreCyclesPreview/Export.h"
+#include "IECoreCycles/Export.h"
 
 #include "IECoreScene/ShaderNetwork.h"
 
