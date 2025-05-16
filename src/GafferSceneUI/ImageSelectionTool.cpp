@@ -94,7 +94,7 @@ const InternedString &idChannelName( const std::vector<std::string> &channelName
 	}
 }
 
-const std::string g_isRenderingMetadataName = "gaffer:isRendering";
+const InternedString g_isRenderingMetadataName = "gaffer:isRendering";
 
 static IECore::InternedString g_dragOverlayName( "__imageSelectionToolDragOverlay" );
 
@@ -372,9 +372,11 @@ std::unordered_set<uint32_t> ImageSelectionTool::rectIDs( const Imath::Box2i &re
 		result.insert( prevID );
 	}
 
+	// Note the weird workaround here of doing init-capture of the wipe parameters, since we can't lambda capture
+	// structured bindings until C++20
 	sampler.visitPixels(
 		validRect,
-		[&result, &prevValue, &wipeEnabled, &wipePosition, &wipeDirection] ( float value, int x, int y )
+		[&result, &prevValue, &wipeEnabled = wipeEnabled, &wipePosition = wipePosition, &wipeDirection = wipeDirection] ( float value, int x, int y )
 		{
 			if( wipeEnabled && ( Imath::V2f( x, y ) + Imath::V2f( 0.5f ) - wipePosition ).dot( wipeDirection ) > 0 )
 			{
