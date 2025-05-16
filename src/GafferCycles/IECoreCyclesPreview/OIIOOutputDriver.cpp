@@ -42,6 +42,8 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 #include "util/string.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
+#include "IECoreImage/OpenImageIOAlgo.h"
+
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/VectorTypedData.h"
@@ -49,6 +51,8 @@ IECORE_POP_DEFAULT_VISIBILITY
 IECORE_PUSH_DEFAULT_VISIBILITY
 #include "OpenImageIO/imageio.h"
 IECORE_POP_DEFAULT_VISIBILITY
+
+#include "boost/algorithm/string/predicate.hpp"
 
 namespace
 {
@@ -90,6 +94,7 @@ void applyCryptomatteMetadata( OIIO::ImageSpec &spec, std::string name, IECore::
 }
 
 std::array<IECore::InternedString, 4> g_channels = { { "R", "G", "B", "A" } };
+const std::string g_headerPrefix( "header:" );
 
 } // namespace
 
@@ -147,6 +152,8 @@ OIIOOutputDriver::OIIOOutputDriver( const Imath::Box2i &displayWindow, const Ima
 			layer.typeDesc = OIIO::TypeDesc::HALF;
 		}
 
+		layer.metadata = layerData->copy();
+
 		if( layer.passType == ccl::PASS_CRYPTOMATTE )
 		{
 			layer.name = layer.name.substr( 0, layer.name.length() - 2 );
@@ -166,7 +173,6 @@ OIIOOutputDriver::OIIOOutputDriver( const Imath::Box2i &displayWindow, const Ima
 
 			if( !cryptoFound )
 			{
-				layer.metadata = layerData->copy();
 				m_layers.push_back( layer );
 			}
 		}
@@ -223,6 +229,19 @@ void OIIOOutputDriver::write_render_tile( const Tile &tile )
 		spec.full_height = m_displayWindow.size().y + 1;
 		spec.x = m_dataWindow.min.x;
 		spec.y = m_dataWindow.min.y;
+
+		for( const auto &[parameterName, parameterValue] : layer.metadata->readable() )
+		{
+			if( boost::starts_with( parameterName.string(), g_headerPrefix ) )
+			{
+				IECoreImage::OpenImageIOAlgo::DataView dataView( parameterValue.get() );
+				if( dataView.data )
+				{
+					spec.attribute( parameterName.string().substr( g_headerPrefix.size() ), dataView.type, dataView.data );
+				}
+			}
+		}
+
 		if( !imageOutput->open( layer.path, spec ) )
 		{
 			IECore::msg( IECore::Msg::Error, "OIIOOutputDriver:write_render_tile", "Failed to create image file." );

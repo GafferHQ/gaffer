@@ -529,6 +529,43 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 				c.g /= m
 			self.assertEqualWithAbsError( c, expectedColor, 0.001, f"(x == {x})" )
 
+	def testOutputMetadata( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		metadata = {
+			"test:int" : IECore.IntData( 1 ),
+			"test:float" : IECore.FloatData( 2.5 ),
+			"test:string" : IECore.StringData( "foo" ),
+		}
+
+		fileName = self.temporaryDirectory() / "test.exr"
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				fileName.as_posix(),
+				"exr",
+				"rgba",
+				{
+					f"header:{k}" : v
+					for k, v in metadata.items()
+				}
+			)
+		)
+
+		script["render"] = GafferScene.Render()
+		script["render"]["renderer"].setValue( self.renderer )
+		script["render"]["in"].setInput( script["outputs"]["out"] )
+		script["render"]["task"].execute()
+
+		imageReader = GafferImage.ImageReader()
+		imageReader["fileName"].setValue( fileName )
+
+		for k, v in metadata.items() :
+			self.assertIn( k, imageReader["out"].metadata() )
+			self.assertEqual( imageReader["out"].metadata()[k], v )
+
 	## Should be implemented by derived classes to return
 	# an appropriate Shader node with a diffuse surface shader loaded, along
 	# with the plug for the colour parameter and the output plug to be connected
