@@ -1107,9 +1107,19 @@ void ImageGadget::setSelectedIDs( const std::vector<uint32_t> &ids )
 	std::sort( m_selectedIDs.begin(), m_selectedIDs.end() );
 }
 
+const std::vector<uint32_t> &ImageGadget::getSelectedIDs()
+{
+	return m_selectedIDs;
+}
+
 void ImageGadget::setHighlightID( uint32_t id )
 {
 	m_highlightID = id;
+}
+
+uint32_t ImageGadget::getHighlightID()
+{
+	return m_highlightID;
 }
 
 Imath::Box3f ImageGadget::bound() const

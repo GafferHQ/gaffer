@@ -171,8 +171,10 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		float getWipeAngle() const;
 
 		void setSelectedIDs( const std::vector<uint32_t> &ids );
+		const std::vector<uint32_t> &getSelectedIDs();
 
 		void setHighlightID( uint32_t id );
+		uint32_t getHighlightID();
 
 	protected :
 
