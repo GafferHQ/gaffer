@@ -61,6 +61,8 @@ class LightLinker
 
 	public :
 
+		LightLinker();
+
 		// Interface used by Light, LightFilter and ObjectInterface
 		// ========================================================
 		//
@@ -72,9 +74,18 @@ class LightLinker
 		void deregisterFilterLinks( Light *light, const IECoreScenePreview::Renderer::ConstObjectSetPtr &lightFilters );
 		void dirtyLightFilter( const LightFilter *lightFilter );
 
-		// Returns the value to be used in the `lighting:subset` attribute.
-		const RtUString registerLightLinks( const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights );
-		void deregisterLightLinks( const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights );
+		enum class SetType
+		{
+			Light = 0,
+			Shadow = 1
+		};
+
+		// Returns an attribute to be added to the registering object :
+		//
+		// - SetType::Light : Return value is for the `lighting:subset` attribute.
+		// - SetType::Shadow : Return value is to be included in the `grouping:membership` attribute.
+		const RtUString registerLightSet( SetType setType, const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights );
+		void deregisterLightSet( SetType setType, const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights );
 
 		// Interface used by Renderer
 		// ==========================
@@ -141,10 +152,18 @@ class LightLinker
 			size_t useCount = 0;
 			RtUString groupName;
 		};
-		using LightSets = std::unordered_map<IECoreScenePreview::Renderer::ConstObjectSetPtr, LightSet>;
-		std::mutex m_lightLinksMutex;
+
+		struct LightSets
+		{
+			using Map = std::unordered_map<IECoreScenePreview::Renderer::ConstObjectSetPtr, LightSet>;
+			Map map;
+			std::string groupNamePrefix;
+			size_t nextGroupIndex = 0;
+		};
+
+		std::mutex m_lightAndShadowSetsMutex;
 		LightSets m_lightSets;
-		size_t m_nextLightGroup;
+		LightSets m_shadowSets;
 		bool m_lightLinksDirty = false;
 
 };

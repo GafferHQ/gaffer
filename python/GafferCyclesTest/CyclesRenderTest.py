@@ -55,5 +55,30 @@ class CyclesRenderTest( GafferSceneTest.RenderTest ) :
 		light.loadShader( "point_light" )
 		return light, light["parameters"]["color"]
 
+	def _createDistantLight( self ) :
+
+		light = GafferCycles.CyclesLight()
+		light.loadShader( "distant_light" )
+		return light, light["parameters"]["color"]
+
+	def _cameraVisibilityAttribute( self ) :
+
+		return "cycles:visibility:camera"
+
+	def _createOptions( self ) :
+
+		# Options that speed up the render, which can otherwise take
+		# longer than we might want.
+
+		options = GafferCycles.CyclesOptions()
+
+		options["options"]["maxBounce"]["enabled"].setValue( True )
+		options["options"]["maxBounce"]["value"].setValue( 0 )
+
+		options["options"]["samples"]["enabled"].setValue( True )
+		options["options"]["samples"]["value"].setValue( 8 )
+
+		return options
+
 if __name__ == "__main__":
 	unittest.main()

@@ -174,7 +174,7 @@ class GAFFERSCENE_API LightLinks : boost::noncopyable
 
 	public :
 
-		LightLinks();
+		LightLinks( const IECoreScenePreview::Renderer *renderer );
 
 		/// Registration functions
 		/// ======================
@@ -236,6 +236,10 @@ class GAFFERSCENE_API LightLinks : boost::noncopyable
 		IECoreScenePreview::Renderer::ConstObjectSetPtr linkedLights( const std::string &linkedLightsExpression, const ScenePlug *scene ) const;
 		void outputLightFilterLinks( const std::string &lightName, IECoreScenePreview::Renderer::ObjectInterface *light ) const;
 		void clearLightLinks();
+
+		/// \todo Remove. This just provides temporary backwards compatibility for
+		/// Arnold.
+		const IECore::InternedString *m_shadowedLightsFallbackAttributeName;
 
 		/// Storage for lights. This maps from the light name to the light itself.
 		using LightMap = tbb::concurrent_hash_map<std::string, IECoreScenePreview::Renderer::ObjectInterfacePtr>;

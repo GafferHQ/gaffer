@@ -43,6 +43,13 @@ using namespace IECore;
 using namespace IECoreScene;
 using namespace IECoreRenderMan;
 
+namespace
+{
+
+const RtUString g_shadowSubset( "shadowSubset" );
+
+} // namespace
+
 MaterialCache::MaterialCache( Session *session )
 	:	m_session( session )
 {
@@ -74,11 +81,15 @@ ConstDisplacementPtr MaterialCache::getDisplacement( const IECoreScene::ShaderNe
 	return a->second;
 }
 
-ConstLightShaderPtr MaterialCache::getLightShader( const IECoreScene::ShaderNetwork *network, const IECoreScene::ShaderNetwork *lightFilter )
+ConstLightShaderPtr MaterialCache::getLightShader( const IECoreScene::ShaderNetwork *network, const IECoreScene::ShaderNetwork *lightFilter, RtUString shadowSubset )
 {
 	auto convert = [&] {
 
 		std::vector<riley::ShadingNode> nodes = ShaderNetworkAlgo::convert( network );
+		if( nodes.size() && !shadowSubset.Empty() )
+		{
+			nodes.back().params.SetString( g_shadowSubset, shadowSubset );
+		}
 		std::vector<riley::ShadingNode> filterNodes;
 		if( lightFilter )
 		{
@@ -108,6 +119,7 @@ ConstLightShaderPtr MaterialCache::getLightShader( const IECoreScene::ShaderNetw
 	{
 		lightFilter->hash( h );
 	}
+	h.append( shadowSubset.CStr() ? shadowSubset.CStr() : "" );
 
 	LightShaderCache::accessor a;
 	m_lightShaderCache.insert( a, h );

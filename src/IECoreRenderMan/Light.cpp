@@ -36,7 +36,10 @@
 
 #include "Light.h"
 
+#include "IECore/SimpleTypedData.h"
+
 #include "IECoreRenderMan/ShaderNetworkAlgo.h"
+
 #include "LightFilter.h"
 #include "Transform.h"
 
@@ -44,25 +47,15 @@
 
 using namespace std;
 using namespace Imath;
+using namespace IECore;
 using namespace IECoreRenderMan;
 
 namespace
 {
 
-M44f correctiveTransform( const Attributes *attributes )
+M44f correctiveTransform( const IECoreScene::Shader *lightShader )
 {
-	if( !attributes->lightShader() )
-	{
-		return M44f();
-	}
-
-	const IECoreScene::Shader *lightShader = attributes->lightShader()->outputShader();
-	if( !lightShader )
-	{
-		return M44f();
-	}
-
-	if( lightShader->getName() == "PxrDomeLight" || lightShader->getName() == "PxrEnvDayLight" )
+	if( lightShader->getName() == "PxrDomeLight" || lightShader->getName() == "PxrEnvDayLight" || lightShader->getName() == "DomeLight" )
 	{
 		return M44f().rotate( V3f( -M_PI_2, M_PI_2, 0.0f ) );
 	}
@@ -72,18 +65,36 @@ M44f correctiveTransform( const Attributes *attributes )
 	}
 	else
 	{
-		return M44f().scale( V3f( 1, 1, -1 ) );
+		return M44f().scale( V3f( -1 ) );
 	}
 }
 
+M44f preTransform( const Attributes *attributes )
+{
+	if( !attributes->lightShader() )
+	{
+		return M44f();
+	}
+
+	const IECoreScene::Shader *lightShader = attributes->lightShader()->outputShader();
+
+	if( !lightShader )
+	{
+		return M44f();
+	}
+
+	return IECoreRenderMan::ShaderNetworkAlgo::usdLightTransform( lightShader ) * correctiveTransform( lightShader );
+}
+
 const IECore::InternedString g_lightFilters( "lightFilters" );
+const RtUString g_defaultShadowGroup( "defaultShadowGroup" );
 
 } // namespace
 
 Light::Light( const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, MaterialCache *materialCache, LightLinker *lightLinker, Session *session )
 	:	m_materialCache( materialCache ), m_session( session ), m_lightLinker( lightLinker ),
-		m_lightInstance( riley::LightInstanceId::InvalidId() ), m_correctiveTransform( correctiveTransform( attributes ) ),
-		m_attributes( attributes ), m_geometryPrototype( geometryPrototype )
+		m_lightInstance( riley::LightInstanceId::InvalidId() ), m_preTransform( preTransform( attributes ) ),
+		m_attributes( attributes ), m_geometryPrototype( geometryPrototype ), m_shadowSubset( g_defaultShadowGroup )
 
 {
 	updateLightShader( attributes );
@@ -124,7 +135,7 @@ void Light::transform( const Imath::M44f &transform )
 		return;
 	}
 
-	const M44f correctedTransform = m_correctiveTransform * transform;
+	const M44f correctedTransform = m_preTransform * transform;
 	StaticTransform staticTransform( correctedTransform );
 
 	const riley::LightInstanceResult result = m_session->modifyLightInstance(
@@ -152,7 +163,7 @@ void Light::transform( const std::vector<Imath::M44f> &samples, const std::vecto
 	vector<Imath::M44f> correctedSamples = samples;
 	for( auto &m : correctedSamples )
 	{
-		m = m_correctiveTransform * m;
+		m = m_preTransform * m;
 	}
 	AnimatedTransform animatedTransform( correctedSamples, times );
 
@@ -174,10 +185,13 @@ void Light::transform( const std::vector<Imath::M44f> &samples, const std::vecto
 bool Light::attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
 {
 	auto renderManAttributes = static_cast<const Attributes *>( attributes );
-	if( correctiveTransform( renderManAttributes ) != m_correctiveTransform )
+	if( preTransform( renderManAttributes ) != m_preTransform )
 	{
-		// This can only happen when the light type changes, which is pretty unlikely.
-		// We don't know the light's transform, so just request that it be recreated.
+		// This can happen when the light type changes, which is pretty unlikely, or
+		// geometry related changes, which are common. We don't know the light's
+		// transform, so just request that it be recreated.
+		/// \todo Would there be a performance benefit to RenderMan if we don't recreate
+		/// the light with each geometry edit?
 		return false;
 	}
 
@@ -311,7 +325,7 @@ void Light::updateLightFilterShader( const IECoreScene::ConstShaderNetworkPtr &l
 	);
 }
 
-void Light::updateGroupingMemberships( RtUString memberships )
+void Light::updateLinking( RtUString memberships, RtUString shadowSubset )
 {
 	m_extraAttributes.SetString( Rix::k_grouping_membership, memberships );
 
@@ -327,10 +341,18 @@ void Light::updateGroupingMemberships( RtUString memberships )
 	}
 	allAttributes.Update( m_extraAttributes );
 
+	const riley::LightShaderId *newLightShader = nullptr;
+	if( m_shadowSubset != shadowSubset )
+	{
+		m_shadowSubset = shadowSubset;
+		updateLightShader( m_attributes.get() );
+		newLightShader = &m_lightShader->id();
+	}
+
 	const riley::LightInstanceResult result = m_session->modifyLightInstance(
 		m_lightInstance,
 		/* material = */ nullptr,
-		/* light shader = */ nullptr,
+		newLightShader,
 		/* coordinateSystems = */ nullptr,
 		/* xform = */ nullptr,
 		&allAttributes
@@ -346,7 +368,7 @@ void Light::updateLightShader( const Attributes *attributes )
 {
 	if( attributes->lightShader() )
 	{
-		m_lightShader = m_materialCache->getLightShader( attributes->lightShader(), m_lightFilterShader.get() );
+		m_lightShader = m_materialCache->getLightShader( attributes->lightShader(), m_lightFilterShader.get(), m_shadowSubset );
 	}
 	else
 	{

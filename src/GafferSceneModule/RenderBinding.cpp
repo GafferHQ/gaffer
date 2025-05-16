@@ -227,8 +227,8 @@ void GafferSceneModule::bindRender()
 			class_<GafferScene::Private::RendererAlgo::RenderSets, boost::noncopyable>( "RenderSets" )
 				.def( init<const ScenePlug *>() )
 			;
-			class_<GafferScene::Private::RendererAlgo::LightLinks, boost::noncopyable>( "LightLinks" )
-				.def( init<>() )
+			class_<GafferScene::Private::RendererAlgo::LightLinks, boost::noncopyable>( "LightLinks", no_init )
+				.def( init<const IECoreScenePreview::Renderer *>() )
 			;
 
 			def( "outputCameras", &outputCamerasWrapper );

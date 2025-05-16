@@ -164,6 +164,20 @@ Gaffer.Metadata.registerValues( {
 
 	],
 
+	"attribute:shadowedLights" : [
+
+		"defaultValue", "__lights",
+		"description",
+		"""
+		The lights that cast shadows from this object. Accepts a set
+		expression or a space separated list of lights.
+		""",
+		"label", "Shadowed Lights",
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
+
+	],
+
 	"attribute:filteredLights" : [
 
 		"defaultValue", "",

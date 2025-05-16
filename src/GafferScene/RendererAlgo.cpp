@@ -846,9 +846,11 @@ namespace
 IECore::InternedString g_linkedLightsAttributeName( "linkedLights" );
 IECore::InternedString g_filteredLightsAttributeName( "filteredLights" );
 IECore::InternedString g_defaultLightsSetName( "defaultLights" );
+IECore::InternedString g_shadowedLightsAttributeName( "shadowedLights" );
 IECore::InternedString g_shadowGroupAttributeName( "ai:visibility:shadow_group" );
 IECore::InternedString g_lights( "lights" );
 IECore::InternedString g_lightFilters( "lightFilters" );
+const std::string g_shadowedLightsDefaultValue( "__lights" );
 
 } // namespace
 
@@ -861,8 +863,9 @@ namespace Private
 namespace RendererAlgo
 {
 
-LightLinks::LightLinks()
-	:	m_lightLinksDirty( true ), m_lightFilterLinksDirty( true )
+LightLinks::LightLinks( const IECoreScenePreview::Renderer *renderer )
+	:	m_shadowedLightsFallbackAttributeName( renderer->name() == "Arnold" ? &g_shadowGroupAttributeName : nullptr ),
+		m_lightLinksDirty( true ), m_lightFilterLinksDirty( true )
 {
 }
 
@@ -1023,18 +1026,19 @@ std::string LightLinks::filteredLightsExpression( const IECore::CompoundObject *
 void LightLinks::outputLightLinks( const ScenePlug *scene, const IECore::CompoundObject *attributes, IECoreScenePreview::Renderer::ObjectInterface *object, IECore::MurmurHash *hash ) const
 {
 	const StringData *linkedLightsExpressionData = attributes->member<StringData>( g_linkedLightsAttributeName );
-	/// This is Arnold-specific. We could consider making it a standard,
-	/// or if we find we need to support other renderer-specific attributes, we
-	/// could add a mechanism for registering them.
-	const StringData *linkedShadowsExpressionData = attributes->member<StringData>( g_shadowGroupAttributeName );
+	const StringData *shadowedLightsExpressionData = attributes->member<StringData>( g_shadowedLightsAttributeName );
+	if( !shadowedLightsExpressionData && m_shadowedLightsFallbackAttributeName )
+	{
+		shadowedLightsExpressionData = attributes->member<StringData>( *m_shadowedLightsFallbackAttributeName );
+	}
 	const std::string linkedLightsExpression = linkedLightsExpressionData ? linkedLightsExpressionData->readable() : "defaultLights";
-	const std::string linkedShadowsExpression = linkedShadowsExpressionData ? linkedShadowsExpressionData->readable() : "__lights";
+	const std::string &shadowedLightsExpression = shadowedLightsExpressionData ? shadowedLightsExpressionData->readable() : g_shadowedLightsDefaultValue;
 
 	if( hash )
 	{
 		IECore::MurmurHash h;
 		h.append( linkedLightsExpression );
-		h.append( linkedShadowsExpression );
+		h.append( shadowedLightsExpression );
 		if( !m_lightLinksDirty && *hash == h )
 		{
 			// We're only being called because the attributes have changed as a whole, but the
@@ -1049,8 +1053,8 @@ void LightLinks::outputLightLinks( const ScenePlug *scene, const IECore::Compoun
 
 	IECoreScenePreview::Renderer::ConstObjectSetPtr objectSet = linkedLights( linkedLightsExpression, scene );
 	object->link( g_lights, objectSet );
-	objectSet = linkedLights( linkedShadowsExpression, scene );
-	object->link( g_shadowGroupAttributeName, objectSet );
+	objectSet = linkedLights( shadowedLightsExpression, scene );
+	object->link( g_shadowedLightsAttributeName, objectSet );
 }
 
 IECoreScenePreview::Renderer::ConstObjectSetPtr LightLinks::linkedLights( const std::string &linkedLightsExpression, const ScenePlug *scene ) const

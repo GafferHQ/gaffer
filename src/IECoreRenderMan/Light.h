@@ -70,7 +70,7 @@ class Light : public IECoreScenePreview::Renderer::ObjectInterface
 		// =============================
 
 		void updateLightFilterShader( const IECoreScene::ConstShaderNetworkPtr &lightFilterShader );
-		void updateGroupingMemberships( RtUString memberships );
+		void updateLinking( RtUString memberships, RtUString shadowSubset );
 
 	private :
 
@@ -81,7 +81,7 @@ class Light : public IECoreScenePreview::Renderer::ObjectInterface
 		LightLinker *m_lightLinker;
 		ConstLightShaderPtr m_lightShader;
 		riley::LightInstanceId m_lightInstance;
-		Imath::M44f m_correctiveTransform;
+		Imath::M44f m_preTransform;
 		/// Used to keep material etc alive as long as we need it.
 		ConstAttributesPtr m_attributes;
 		/// Used to keep geometry prototype alive as long as we need it.
@@ -89,6 +89,7 @@ class Light : public IECoreScenePreview::Renderer::ObjectInterface
 		RtParamList m_extraAttributes;
 		IECoreScene::ConstShaderNetworkPtr m_lightFilterShader;
 		IECoreScenePreview::Renderer::ConstObjectSetPtr m_linkedFilters;
+		RtUString m_shadowSubset;
 
 };
 

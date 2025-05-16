@@ -48,6 +48,8 @@ namespace
 
 const riley::CoordinateSystemList g_emptyCoordinateSystems = { 0, nullptr };
 const IECore::InternedString g_lights( "lights" );
+const IECore::InternedString g_shadowedLights( "shadowedLights" );
+const RtUString g_defaultShadowGroup( "defaultShadowGroup" );
 
 } // namespace
 
@@ -80,7 +82,11 @@ Object::~Object()
 		}
 		if( m_linkedLights )
 		{
-			m_lightLinker->deregisterLightLinks( m_linkedLights );
+			m_lightLinker->deregisterLightSet( LightLinker::SetType::Light, m_linkedLights );
+		}
+		if( m_shadowedLights )
+		{
+			m_lightLinker->deregisterLightSet( LightLinker::SetType::Shadow, m_shadowedLights );
 		}
 	}
 }
@@ -151,25 +157,42 @@ bool Object::attributes( const IECoreScenePreview::Renderer::AttributesInterface
 
 void Object::link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects )
 {
-	if( type != g_lights )
+	IECoreScenePreview::Renderer::ConstObjectSetPtr *setMemberData;
+	LightLinker::SetType setType;
+	RtUString attributeName;
+	RtUString defaultAttributeValue;
+
+	if( type == g_lights )
+	{
+		setMemberData = &m_linkedLights;
+		setType = LightLinker::SetType::Light;
+		attributeName = Rix::k_lighting_subset;
+	}
+	else if( type == g_shadowedLights )
+	{
+		setMemberData = &m_shadowedLights;
+		setType = LightLinker::SetType::Shadow;
+		attributeName = Rix::k_grouping_membership;
+		defaultAttributeValue = g_defaultShadowGroup;
+	}
+	else
 	{
 		return;
 	}
 
-	if( m_linkedLights )
+	if( *setMemberData )
 	{
-		m_lightLinker->deregisterLightLinks( m_linkedLights );
+		m_lightLinker->deregisterLightSet( setType, *setMemberData );
 	}
+	*setMemberData = objects;
 
-	m_linkedLights = objects;
-
-	RtUString lightingSubset;
+	RtUString attributeValue = defaultAttributeValue;
 	if( objects )
 	{
-		lightingSubset = m_lightLinker->registerLightLinks( objects );
+		attributeValue = m_lightLinker->registerLightSet( setType, objects );
 	}
 
-	m_extraAttributes.SetString( Rix::k_lighting_subset, lightingSubset );
+	m_extraAttributes.SetString( attributeName, attributeValue );
 	attributes( m_attributes.get() );
 }
 

@@ -1076,6 +1076,7 @@ IECore::InternedString g_automaticInstancingAttributeName( "gaffer:automaticInst
 IECore::InternedString g_muteLightAttributeName( "light:mute" );
 
 IECore::InternedString g_cameraVisibilityAttributeName( "ai:visibility:camera" );
+IECore::InternedString g_shadowedLights( "shadowedLights" );
 IECore::InternedString g_shadowVisibilityAttributeName( "ai:visibility:shadow" );
 IECore::InternedString g_shadowGroup( "ai:visibility:shadow_group" );
 IECore::InternedString g_diffuseReflectVisibilityAttributeName( "ai:visibility:diffuse_reflect" );
@@ -3048,7 +3049,7 @@ class ArnoldObject : public ArnoldObjectBase
 				groupParameterName = g_lightGroupArnoldString;
 				useParameterName = g_useLightGroupArnoldString;
 			}
-			else if( type == g_shadowGroup )
+			else if( type == g_shadowedLights || type == g_shadowGroup ) /// \todo Remove backwards compatibility for `g_shadowGroup`.
 			{
 				groupParameterName = g_shadowGroupArnoldString;
 				useParameterName = g_useShadowGroupArnoldString;

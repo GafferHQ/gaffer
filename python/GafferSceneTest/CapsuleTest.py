@@ -103,7 +103,9 @@ class CapsuleTest( GafferSceneTest.SceneTestCase ) :
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
 		GafferScene.Private.RendererAlgo.outputObjects(
-			encapsulate["out"], GafferScene.Private.RendererAlgo.RenderOptions( encapsulate["out"] ), GafferScene.Private.RendererAlgo.RenderSets( encapsulate["out"] ), GafferScene.Private.RendererAlgo.LightLinks(),
+			encapsulate["out"], GafferScene.Private.RendererAlgo.RenderOptions( encapsulate["out"] ),
+			GafferScene.Private.RendererAlgo.RenderSets( encapsulate["out"] ),
+			GafferScene.Private.RendererAlgo.LightLinks( renderer ),
 			renderer
 		)
 

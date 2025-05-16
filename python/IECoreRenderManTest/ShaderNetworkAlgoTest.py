@@ -167,6 +167,431 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 				self.assertEqual( network.input( ( "previewSurface", surfaceIn ) ), ( "reader", readerOut ) )
 
+	def testConvertUSDLights( self ) :
+
+		def expectedLightParameters( parameters ) :
+
+			# Start with defaults
+			result = {
+				"intensity" : 1.0,
+				"exposure" : 0.0,
+				"lightColor" : imath.Color3f( 1.0, 1.0, 1.0 ),
+				"diffuse" : 1.0,
+				"specular" : 1.0,
+				"areaNormalize" : False,  # Common to all lights except DomeLight
+				"enableTemperature" : False,
+				"temperature" : 6500.0,
+				"enableShadows" : True,
+				"shadowColor" : imath.Color3f( 0.0, 0.0, 0.0 ),
+				"shadowDistance" : -1.0,
+				"shadowFalloff" : -1.0,
+				"shadowFalloffGamma" : 1.0,
+			}
+			result.update( parameters )
+			return result
+
+		for testName, shaders in {
+
+			# Basic SphereLight -> point_light conversion, testing default values
+
+			"defaultParameters" : [
+
+				IECoreScene.Shader( "SphereLight", "light", {} ),
+
+				IECoreScene.Shader(
+					"PxrSphereLight", "light",
+					expectedLightParameters( {} )
+				)
+
+			],
+
+			# Basic SphereLight -> PxrSphereLight conversion
+
+			"sphereLightToPointLight" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"intensity" : 2.5,
+						"exposure" : 1.1,
+						"color" : imath.Color3f( 1, 2, 3 ),
+						"diffuse" : 0.5,
+						"specular" : 0.75,
+						"radius" : 0.5,
+						"normalize" : True,
+						"enableColorTemperature" : True,
+						"colorTemperature" : 5500.0,
+						"ri:light:thinShadow" : False,
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrSphereLight", "light",
+					expectedLightParameters( {
+						"intensity" : 2.5,
+						"exposure" : 1.1,
+						"lightColor" : imath.Color3f( 1, 2, 3 ),
+						"diffuse" : 0.5,
+						"specular" : 0.75,
+						"areaNormalize" : True,
+						"enableTemperature" : True,
+						"temperature" : 5500.0,
+						"thinShadow" : False,
+					} )
+				),
+
+			],
+
+			"shadowAPI" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"shadow:enable" : False,
+						"shadow:color" : imath.V3f( 1.0, 0.0, 0.0 ),
+						"shadow:distance" : 2.0,
+						"shadow:falloff" : 3.0,
+						"shadow:falloffGamma" : 0.5,
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrSphereLight", "light",
+					expectedLightParameters( {
+						"enableShadows" : False,
+						"shadowColor" : imath.Color3f( 1.0, 0.0, 0.0 ),
+						"shadowDistance" : 2.0,
+						"shadowFalloff" : 3.0,
+						"shadowFalloffGamma" : 0.5,
+					} )
+				),
+
+			],
+
+			"diskLight" : [
+
+				IECoreScene.Shader(
+					"DiskLight", "light",
+					{
+						"radius" : 2.0,
+					}
+				),
+
+				IECoreScene.Shader( "PxrDiskLight", "light", expectedLightParameters( {} ) )
+
+			],
+
+			"rectLight" : [
+
+				IECoreScene.Shader(
+					"RectLight", "light",
+					{
+						"width" : 20.0,
+						"height" : 60.0,
+						"texture:file" : "test.tex",
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrRectLight", "light",
+					expectedLightParameters( {
+						"lightColorMap" : "test.tex",
+					} )
+				),
+
+			],
+
+			"rectLightNoTexture" : [
+
+				IECoreScene.Shader(
+					"RectLight", "light",
+					{
+						"width" : 20.0,
+						"height" : 60.0,
+					}
+				),
+
+				IECoreScene.Shader( "PxrRectLight", "light", expectedLightParameters( {} ) ),
+
+			],
+
+			"distantLightDefault" : [
+
+				IECoreScene.Shader( "DistantLight", "light", {} ),
+
+				IECoreScene.Shader(
+					"PxrDistantLight", "light",
+					expectedLightParameters( {
+						"intensity" : 50000.0,
+						"angleExtent" : 0.53,
+					} )
+				),
+			],
+
+			"distantLight" : [
+
+				IECoreScene.Shader(
+					"DistantLight", "light",
+					{
+						"intensity" : 11.0,
+						"angle" : 2.0,
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrDistantLight", "light",
+					expectedLightParameters( {
+						"intensity" : 11.0,
+						"angleExtent" : 2.0,
+					} )
+				)
+
+			],
+
+			"domeLight" : [
+
+				IECoreScene.Shader(
+					"DomeLight", "light",
+					{
+						"texture:file" : "test.tex",
+						"texture:format" : "automatic",
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrDomeLight", "light",
+					{
+						k : v for k, v in expectedLightParameters( {
+							"lightColorMap" : "test.tex"
+						} ).items() if k != "areaNormalize"
+					}
+				),
+			],
+
+			"cylinderLight" : [
+
+				IECoreScene.Shader(
+					"CylinderLight", "light",
+					{
+						"length" : 2.0,
+						"radius" : 4.0,
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrCylinderLight", "light",
+					expectedLightParameters( {} )
+				)
+			],
+
+			"treatAsPoint" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"treatAsPoint" : True,
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrSphereLight", "light",
+					expectedLightParameters( {
+						"areaNormalize" : True,
+					} )
+				),
+
+			],
+
+			"treatAsLine" : [
+
+				IECoreScene.Shader(
+					"CylinderLight", "light",
+					{
+						"treatAsLine" : True,
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrCylinderLight", "light",
+					expectedLightParameters( {
+						"areaNormalize" : True,
+					} )
+				),
+
+			],
+
+			"sphereLightToPhotometricLight" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"shaping:ies:file" : "photometric.ies",
+						"shaping:ies:angleScale" : 2.0,
+						"shaping:ies:normalize" : True
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrSphereLight", "light",
+					expectedLightParameters( {
+						"iesProfile" : "photometric.ies",
+						"iesProfileScale" : 2.0,
+						"iesProfileNormalize" : True,
+					} )
+				),
+
+			],
+
+			"sphereLightToPhotometricLightEmptyProfile" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"shaping:ies:file" : "",
+						"shaping:ies:angleScale" : 2.0,
+						"shaping:ies:normalize" : True,
+					}
+				),
+
+				IECoreScene.Shader( "PxrSphereLight", "light", expectedLightParameters( {} ) ),
+
+			],
+
+			"sphereLightToSpotLight" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"shaping:cone:angle" : 20.0,
+						"shaping:cone:softness" : 0.5,
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrSphereLight", "light",
+					expectedLightParameters( {
+						"coneAngle" : 20.0,
+						"coneSoftness" : 0.5,
+					} )
+				),
+
+			],
+
+			"sphereLightToPhotoMetricAndSpot" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"shaping:ies:file" : "photometric.ies",
+						"shaping:ies:angleScale" : 2.0,
+						"shaping:ies:normalize" : True,
+						"shaping:cone:angle" : 20.0,
+						"shaping:cone:softness" : 0.5,
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrSphereLight", "light",
+					expectedLightParameters( {
+						"iesProfile" : "photometric.ies",
+						"iesProfileScale" : 2.0,
+						"iesProfileNormalize" : True,
+						"coneAngle" : 20.0,
+						"coneSoftness" : 0.5,
+					} )
+				),
+
+			],
+
+			"emissionFocus" : [
+
+				IECoreScene.Shader(
+					"RectLight", "light",
+					{
+						"shaping:focus" : 0.5,
+						"shaping:focusTint" : imath.Color3f( 0.1, 0.2, 0.3 ),
+					}
+				),
+
+				IECoreScene.Shader(
+					"PxrRectLight", "light",
+					expectedLightParameters( {
+						"emissionFocus" : 0.5,
+						"emissionFocusTint" : imath.Color3f( 0.1, 0.2, 0.3 ),
+					} )
+				),
+
+			],
+
+		}.items() :
+			with self.subTest( testName = testName ) :
+
+				network = IECoreScene.ShaderNetwork(
+					shaders = {
+						"light" : shaders[0],
+					},
+					output = "light"
+				)
+
+				IECoreRenderMan.ShaderNetworkAlgo.convertUSDShaders( network )
+
+				self.__assertShadersEqual( network.getShader( "light" ), shaders[1], "Testing {}".format( testName ) )
+
+	def testUSDLightTransform( self ) :
+
+		for shader, transform in {
+
+			IECoreScene.Shader( "SphereLight", "light", { "radius" : 2.0 } ) : imath.M44f().scale( imath.V3f( 4.0 ) ),
+			IECoreScene.Shader( "RectLight", "light", { "width" : 20.0, "height" : 60.0 } ) : imath.M44f().scale( imath.V3f( 20.0, 60.0, 1.0 ) ),
+			IECoreScene.Shader( "DiskLight", "light", { "radius" : 2.0 } ) : imath.M44f().scale( imath.V3f( 4.0 ) ),
+			IECoreScene.Shader( "DistantLight", "light", { "angle" : 2.0 } ) : imath.M44f(),
+			IECoreScene.Shader( "DomeLight", "light", {} ) : imath.M44f(),
+			IECoreScene.Shader( "CylinderLight", "light", { "length" : 2.0, "radius" : 4.0 } ) : imath.M44f().scale( imath.V3f( 2.0, 8.0, 8.0 ) ),
+			IECoreScene.Shader( "SphereLight", "light", { "treatAsPoint" : True } ) : imath.M44f().scale( imath.V3f( 0.002 ) ),
+			IECoreScene.Shader( "CylinderLight", "light", { "treatAsLine" : True } ) : imath.M44f().scale( imath.V3f( 1.0, 0.002, 0.002 ) ),
+
+		}.items() :
+			with self.subTest() :
+
+				self.assertEqual(
+					IECoreRenderMan.ShaderNetworkAlgo.usdLightTransform( shader ),
+					transform,
+					"Testing {}".format( shader.name )
+				)
+
+	def testDomeLightNotAutomatic( self ) :
+
+		shaderNetwork = IECoreScene.ShaderNetwork(
+			shaders = {
+				"light" : IECoreScene.Shader(
+					"DomeLight", "light",
+					{
+						"texture:format" : "latlong",
+					}
+				)
+			},
+			output = "light",
+		)
+
+		with IECore.CapturingMessageHandler() as mh :
+			IECoreRenderMan.ShaderNetworkAlgo.convertUSDShaders( shaderNetwork )
+			self.assertEqual( len( mh.messages ), 1 )
+			self.assertEqual( mh.messages[0].level, mh.Level.Warning )
+			self.assertEqual(
+				mh.messages[0].message,
+				"Unsupported value \"latlong\" for DomeLight.format. Only \"automatic\" is supported. Format will be read from texture file."
+			)
+
+	def __assertShadersEqual( self, shader1, shader2, message = None ) :
+
+		self.assertEqual( shader1.name, shader2.name, message )
+		self.assertEqual( shader1.parameters.keys(), shader2.parameters.keys(), message )
+		for k in shader1.parameters.keys() :
+			self.assertEqual(
+				shader1.parameters[k], shader2.parameters[k],
+				"{}(Parameter = {})".format( message or "", k )
+			)
+
 
 if __name__ == "__main__" :
 	unittest.main()

@@ -1102,11 +1102,7 @@ class RendererTest( GafferTest.TestCase ) :
 				expectedColor = imath.Color4f( expectedColor, expectedColor, expectedColor, 1 )
 
 			color = self.__colorAtUV( image, uv )
-			if maxDifference :
-				for i in range( 0, 4 ) :
-					self.assertAlmostEqual( color[i], expectedColor[i], delta = maxDifference )
-			else :
-				self.assertEqual( color, expectedColor )
+			self.assertEqualWithAbsError( color, expectedColor, maxDifference )
 
 	def testMeshPrimitiveVariableInterpolation( self ) :
 

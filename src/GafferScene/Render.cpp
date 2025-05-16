@@ -372,7 +372,7 @@ void Render::executeInternal( bool flushCaches ) const
 		// Using nested scope so that we free the memory used by `renderSets`
 		// and `lightLinks` before we call `render()`.
 		GafferScene::Private::RendererAlgo::RenderSets renderSets( adaptedInPlug() );
-		GafferScene::Private::RendererAlgo::LightLinks lightLinks;
+		GafferScene::Private::RendererAlgo::LightLinks lightLinks( renderer.get() );
 
 		if( renderer->name().string() == "RenderMan" )
 		{

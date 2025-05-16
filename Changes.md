@@ -39,10 +39,35 @@ Breaking Changes
   - Attribute plugs have been renamed to match the name of their attribute (e.g. `attributes.primitiveWireframeColor` is now `attributes.gl:primitive:wireframeColor`). A compatibility config has been provided to allow OpenGLAttributes nodes to be loaded from scripts saved in earlier Gaffer versions.
   - The default values of the attribute plugs authoring the `gl:primitive:bound`, `gl:primitive:outline`, `gl:primitive:points`, `gl:primitive:pointColor`, `gl:primitive:wireframe`, and `gl:primitive:wireframeColor` attributes have changed to match the default behaviour of the OpenGL renderer. Scripts loaded from previous Gaffer versions with these plugs enabled and set to the default value will see a difference in OpenGL renders.
 
-1.5.x.x (relative to 1.5.13.0)
+1.5.x.x (relative to 1.5.14.0)
 =======
 
 
+
+1.5.14.0 (relative to 1.5.13.0)
+========
+
+Improvements
+------------
+
+- StandardAttributes : Added `shadowedLights` attribute to specify shadow linking. This supercedes the Arnold-specific `shadowGroup` attribute on the ArnoldAttributes node.
+- GafferML :
+  - Added support for custom ONNX ops via the `GAFFERML_CUSTOM_OPS_LIBRARIES` environment variable. This should contain a comma-separated list of full paths to libraries containing custom ops.
+  - Added support for string tensors.
+- Cycles : Added support for shadow linking.
+- RenderMan :
+  - Added support for shadow linking.
+  - Added support for USDLux lights.
+
+Fixes
+-----
+
+- RenderManLight : Fixed orientation of color maps on `PxrRectLight`.
+
+API
+---
+
+- TestCase : Added `assertEqualWithAbsError()` method.
 
 1.5.13.0 (relative to 1.5.12.0)
 ========

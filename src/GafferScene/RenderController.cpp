@@ -1297,7 +1297,7 @@ RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer
 	{
 		// We avoid light linking overhead for the GL renderer,
 		// because we know it doesn't support it.
-		m_lightLinks = std::make_unique<LightLinks>();
+		m_lightLinks = std::make_unique<LightLinks>( m_renderer.get() );
 	}
 
 	setScene( scene );

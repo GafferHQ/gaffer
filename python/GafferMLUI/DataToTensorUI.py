@@ -205,6 +205,8 @@ class _SetupWidget( GafferUI.Widget ) :
 			Gaffer.IntVectorDataPlug,
 			Gaffer.FloatVectorDataPlug,
 			None,
+			Gaffer.StringVectorDataPlug,
+			None,
 			Gaffer.V2iVectorDataPlug,
 			Gaffer.V3iVectorDataPlug,
 			Gaffer.V2fVectorDataPlug,
