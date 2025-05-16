@@ -543,7 +543,8 @@ class PathListingWidget( GafferUI.Widget ) :
 
 	def __selectionChanged( self ) :
 
-		self._qtWidget().update()
+		if not Qt.__binding__ == "PySide6" :
+			self._qtWidget().update()
 		self.selectionChangedSignal()( self )
 
 	def __pathChanged( self, path ) :
@@ -1087,7 +1088,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 	def event( self, event ) :
 
-		if event.type() == event.ShortcutOverride :
+		if event.type() == QtCore.QEvent.ShortcutOverride :
 			if event.key() in ( QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_Left, QtCore.Qt.Key_Right ) :
 				event.accept()
 				return True
