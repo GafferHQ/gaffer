@@ -220,6 +220,12 @@ void deregisterRedundantValuesWrapper( GraphComponent &g )
 	return deregisterRedundantValues( &g );
 }
 
+ValuePlugPtr createPlugFromMetadataWrapper( const std::string &name, Plug::Direction direction, unsigned flags, const std::string &target )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return MetadataAlgo::createPlugFromMetadata( name, direction, flags, target );
+}
+
 } // namespace
 
 void GafferModule::bindMetadataAlgo()
@@ -351,5 +357,10 @@ void GafferModule::bindMetadataAlgo()
 	// =======
 
 	def( "deregisterRedundantValues", &deregisterRedundantValuesWrapper );
+
+	// Plug creation
+	// =============
+
+	def( "createPlugFromMetadata", &createPlugFromMetadataWrapper );
 
 }
