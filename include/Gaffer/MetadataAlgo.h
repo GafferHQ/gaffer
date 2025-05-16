@@ -237,7 +237,7 @@ GAFFER_API bool isPromotable( const GraphComponent *from, const GraphComponent *
 
 /// Removes any redundant metadata registrations from `graphComponent` and all
 /// its descendants. By redundant we mean instance-level registrations that have
-/// the same value as an exising type-based fallback, so that removing the
+/// the same value as an existing type-based fallback, so that removing the
 /// instance registration has no effect on the composed result.
 /// \undoable
 GAFFER_API void deregisterRedundantValues( GraphComponent *graphComponent );
