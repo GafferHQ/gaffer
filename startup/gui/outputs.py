@@ -77,7 +77,7 @@ GafferScene.Outputs.registerOutput(
 )
 
 GafferScene.Outputs.registerOutput(
-	"Interactive/id",
+	"Interactive/ID",
 	IECoreScene.Output(
 		"id",
 		"ieDisplay",
@@ -97,7 +97,7 @@ GafferScene.Outputs.registerOutput(
 )
 
 GafferScene.Outputs.registerOutput(
-	"Batch/id",
+	"Batch/ID",
 	IECoreScene.Output(
 		"${project:rootDirectory}/renders/${script:name}/${renderPass}/id/id.####.exr",
 		"exr",
