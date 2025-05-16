@@ -522,13 +522,13 @@ plugsMetadata = {
 
 		"description",
 		"""
-		Specifies a file to write a sidecar render manifest to. If a
-		render is set up with both an render manifest, and a correctly
-		set up id AOV, that will allow the use of the Image
-		Selection Tool to select objects in the rendered image.
+		Specifies a file to write a manifest to. If a render is set
+		up with both an render manifest, and an ID AOV, the Image Selection
+		Tool may be used to select objects in the rendered image.
 		""",
 
 		"layout:section", "Render Manifest",
+		"label", "File Path",
 
 	],
 
