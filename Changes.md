@@ -16,6 +16,7 @@ Fixes
 -----
 
 - LocalDispatcher, SystemCommand, `gaffer env` : Fixed unwanted upper-casing of environment variable names on Windows (#6371).
+- OpenGLAttributes : The default values of attribute plugs now correctly reflect the default behaviour of the OpenGL renderer.
 
 API
 ---
@@ -34,6 +35,9 @@ Breaking Changes
 - DeleteAttributes : Changed base class and marked as `final`.
 - Wrapper : The `gaffer` wrapper on Linux no longer allows a custom Python build to be used. If you wish to use a custom Python, call `python _gaffer.py` instead.
 - RenderPasses, DeleteRenderPasses : Renamed TypeId enum values to `RenderPassesTypeId` and `DeleteRenderPassesTypeId`.
+- OpenGLAttributes :
+  - Attribute plugs have been renamed to match the name of their attribute (e.g. `attributes.primitiveWireframeColor` is now `attributes.gl:primitive:wireframeColor`). A compatibility config has been provided to allow OpenGLAttributes nodes to be loaded from scripts saved in earlier Gaffer versions.
+  - The default values of the attribute plugs authoring the `gl:primitive:bound`, `gl:primitive:outline`, `gl:primitive:points`, `gl:primitive:pointColor`, `gl:primitive:wireframe`, and `gl:primitive:wireframeColor` attributes have changed to match the default behaviour of the OpenGL renderer. Scripts loaded from previous Gaffer versions with these plugs enabled and set to the default value will see a difference in OpenGL renders.
 
 1.5.x.x (relative to 1.5.13.0)
 =======

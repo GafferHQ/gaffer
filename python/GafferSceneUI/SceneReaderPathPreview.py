@@ -66,9 +66,9 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 
 		# display points and curves GL style rather than disks and ribbons
 		self.__script["OpenGLAttributes"] = GafferScene.OpenGLAttributes( "OpenGLAttributes" )
-		self.__script["OpenGLAttributes"]["attributes"]["pointsPrimitiveUseGLPoints"]["value"].setValue( 'forAll' )
-		self.__script["OpenGLAttributes"]["attributes"]["pointsPrimitiveUseGLPoints"]["enabled"].setValue( True )
-		self.__script["OpenGLAttributes"]["attributes"]["curvesPrimitiveUseGLLines"]["enabled"].setValue( True )
+		self.__script["OpenGLAttributes"]["attributes"]["gl:pointsPrimitive:useGLPoints"]["value"].setValue( 'forAll' )
+		self.__script["OpenGLAttributes"]["attributes"]["gl:pointsPrimitive:useGLPoints"]["enabled"].setValue( True )
+		self.__script["OpenGLAttributes"]["attributes"]["gl:curvesPrimitive:useGLLines"]["enabled"].setValue( True )
 
 		self.__script["camera"] = _Camera()
 		self.__script["camera"]["in"].setInput( self.__script["OpenGLAttributes"]["out"] )

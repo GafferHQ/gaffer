@@ -34,6 +34,10 @@
 #
 ##########################################################################
 
+import pathlib
+
+import imath
+
 import IECore
 
 import Gaffer
@@ -52,8 +56,8 @@ class OpenGLAttributesTest( GafferSceneTest.SceneTestCase ) :
 		aa = a["out"].attributes( "/plane" )
 		self.assertEqual( len( aa ), 0 )
 
-		a["attributes"]["primitiveSolid"]["enabled"].setValue( True )
-		a["attributes"]["primitiveSolid"]["value"].setValue( False )
+		a["attributes"]["gl:primitive:solid"]["enabled"].setValue( True )
+		a["attributes"]["gl:primitive:solid"]["value"].setValue( False )
 
 		aa = a["out"].attributes( "/plane" )
 		self.assertEqual( aa, IECore.CompoundObject( { "gl:primitive:solid" : IECore.BoolData( False ) } ) )
@@ -62,7 +66,7 @@ class OpenGLAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["a"] = GafferScene.OpenGLAttributes()
-		s["a"]["attributes"]["primitiveSolid"]["value"].setValue( False )
+		s["a"]["attributes"]["gl:primitive:solid"]["value"].setValue( False )
 		names = s["a"]["attributes"].keys()
 
 		s2 = Gaffer.ScriptNode()
@@ -70,7 +74,17 @@ class OpenGLAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( s2["a"]["attributes"].keys(), names )
 		self.assertTrue( "attributes1" not in s2["a"] )
-		self.assertEqual( s2["a"]["attributes"]["primitiveSolid"]["value"].getValue(), False )
+		self.assertEqual( s2["a"]["attributes"]["gl:primitive:solid"]["value"].getValue(), False )
+
+	def testLoadFrom1_5( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "openGLAttributes-1.5.13.0.gfr" )
+		script.load()
+
+		self.assertIn( "gl:primitive:wireframeColor", script["OpenGLAttributes"]["attributes"] )
+		self.assertNotIn( "primitiveWireframeColor", script["OpenGLAttributes"]["attributes"] )
+		self.assertEqual( script["OpenGLAttributes"]["attributes"]["gl:primitive:wireframeColor"]["value"].getValue(), imath.Color4f( 0.5, 0.6, 0.7, 1.0 ) )
 
 if __name__ == "__main__":
 	unittest.main()
