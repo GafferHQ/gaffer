@@ -480,7 +480,9 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 			)
 			GafferScene.Private.RendererAlgo.outputObjects(
-				testAdaptors["out"], GafferScene.Private.RendererAlgo.RenderOptions( testAdaptors["out"] ), GafferScene.Private.RendererAlgo.RenderSets( testAdaptors["out"] ), GafferScene.Private.RendererAlgo.LightLinks(),
+				testAdaptors["out"], GafferScene.Private.RendererAlgo.RenderOptions( testAdaptors["out"] ),
+				GafferScene.Private.RendererAlgo.RenderSets( testAdaptors["out"] ),
+				GafferScene.Private.RendererAlgo.LightLinks( renderer ),
 				renderer
 			)
 
@@ -618,7 +620,9 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 			)
 			GafferScene.Private.RendererAlgo.outputObjects(
-				testAdaptors["out"], GafferScene.Private.RendererAlgo.RenderOptions( testAdaptors["out"] ), GafferScene.Private.RendererAlgo.RenderSets( testAdaptors["out"] ), GafferScene.Private.RendererAlgo.LightLinks(),
+				testAdaptors["out"], GafferScene.Private.RendererAlgo.RenderOptions( testAdaptors["out"] ),
+				GafferScene.Private.RendererAlgo.RenderSets( testAdaptors["out"] ),
+				GafferScene.Private.RendererAlgo.LightLinks( renderer ),
 				renderer
 			)
 

@@ -47,6 +47,12 @@ using namespace std;
 using namespace Imath;
 using namespace IECoreRenderMan;
 
+LightLinker::LightLinker()
+{
+	m_lightSets.groupNamePrefix = "lightGroup";
+	m_shadowSets.groupNamePrefix = "shadowGroup";
+}
+
 IECoreScene::ConstShaderNetworkPtr LightLinker::registerFilterLinks( Light *light, const IECoreScenePreview::Renderer::ConstObjectSetPtr &lightFilters )
 {
 	std::lock_guard lock( m_filterSetsMutex );
@@ -95,14 +101,15 @@ void LightLinker::dirtyLightFilter( const LightFilter *lightFilter )
 	m_dirtyFilterSets.insert( lightFilter->setMemberships().begin(), lightFilter->setMemberships().end() );
 }
 
-const RtUString LightLinker::registerLightLinks( const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights )
+const RtUString LightLinker::registerLightSet( SetType setType, const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights )
 {
-	std::lock_guard lock( m_lightLinksMutex );
-	LightSet &lightSet = m_lightSets[lights];
+	std::lock_guard lock( m_lightAndShadowSetsMutex );
+	LightSets &lightSets = setType == SetType::Light ? m_lightSets : m_shadowSets;
+	LightSet &lightSet = lightSets.map[lights];
 	lightSet.useCount++;
 	if( lightSet.useCount == 1 )
 	{
-		const string groupName = fmt::format( "group{}", m_nextLightGroup++ );
+		const string groupName = fmt::format( "{}{}", lightSets.groupNamePrefix, lightSets.nextGroupIndex++ );
 		lightSet.groupName = RtUString( groupName.c_str() );
 		m_lightLinksDirty = true;
 	}
@@ -110,16 +117,17 @@ const RtUString LightLinker::registerLightLinks( const IECoreScenePreview::Rende
 	return lightSet.groupName;
 }
 
-void LightLinker::deregisterLightLinks( const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights )
+void LightLinker::deregisterLightSet( SetType setType, const IECoreScenePreview::Renderer::ConstObjectSetPtr &lights )
 {
-	std::lock_guard lock( m_lightLinksMutex );
-	auto it = m_lightSets.find( lights );
-	assert( it != m_lightSets.end() );
+	std::lock_guard lock( m_lightAndShadowSetsMutex );
+	LightSets &lightSets = setType == SetType::Light ? m_lightSets : m_shadowSets;
+	auto it = lightSets.map.find( lights );
+	assert( it != lightSets.map.end() );
 	assert( it->second.useCount );
 	it->second.useCount--;
 	if( !it->second.useCount )
 	{
-		m_lightSets.erase( it );
+		lightSets.map.erase( it );
 	}
 }
 
@@ -174,7 +182,7 @@ IECoreScene::ConstShaderNetworkPtr LightLinker::lightFilterShader( const IECoreS
 
 void LightLinker::updateDirtyLightLinks()
 {
-	std::lock_guard lock( m_lightLinksMutex );
+	std::lock_guard lock( m_lightAndShadowSetsMutex );
 	if( !m_lightLinksDirty )
 	{
 		return;
@@ -194,23 +202,49 @@ void LightLinker::updateDirtyLightLinks()
 	/// \todo See if the more complex tracking is warranted in typical
 	/// production scenarios.
 
-	std::unordered_map<Light *, string> lightMemberships;
-	for( const auto &[objectSet, lightSet] : m_lightSets )
+	struct LightData
+	{
+		string groupMemberships;
+		string shadowSubsets;
+	};
+	std::unordered_map<Light *, LightData> lightData;
+
+	for( const auto &[objectSet, lightSet] : m_lightSets.map )
 	{
 		for( auto &light : *objectSet )
 		{
-			auto &memberships = lightMemberships[static_cast<Light *>( light.get() )];
-			if( memberships.size() )
+			auto &data = lightData[static_cast<Light *>( light.get() )];
+			if( data.groupMemberships.size() )
 			{
-				memberships += " ";
+				data.groupMemberships += " ";
 			}
-			memberships += lightSet.groupName.CStr();
+			data.groupMemberships += lightSet.groupName.CStr();
 		}
 	}
 
-	for( auto &[light, memberships] : lightMemberships )
+	// Likewise, calculate the right value for the `shadowSubset` parameters.
+
+	for( const auto &[objectSet, shadowSet] : m_shadowSets.map )
 	{
-		light->updateGroupingMemberships( RtUString( memberships.c_str() ) );
+		for( auto &light : *objectSet )
+		{
+			auto &data = lightData[static_cast<Light *>( light.get() )];
+			if( data.shadowSubsets.size() )
+			{
+				data.shadowSubsets += " ";
+			}
+			data.shadowSubsets += shadowSet.groupName.CStr();
+		}
+	}
+
+	// Push the updated data to the lights.
+
+	for( auto &[light, data] : lightData )
+	{
+		light->updateLinking(
+			RtUString( data.groupMemberships.c_str() ),
+			RtUString( ( "defaultShadowGroup " + data.shadowSubsets ).c_str() )
+		);
 	}
 
 	m_lightLinksDirty = false;

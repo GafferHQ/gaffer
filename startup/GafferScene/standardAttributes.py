@@ -155,6 +155,19 @@ Gaffer.Metadata.registerValue(
 Gaffer.Metadata.registerValue( "attribute:linkedLights", "plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget" )
 Gaffer.Metadata.registerValue( "attribute:linkedLights", "ui:scene:acceptsSetExpression", True )
 
+Gaffer.Metadata.registerValue( "attribute:shadowedLights", "label", "Shadowed Lights" )
+Gaffer.Metadata.registerValue( "attribute:shadowedLights", "defaultValue", "__lights" )
+Gaffer.Metadata.registerValue(
+	"attribute:shadowedLights",
+	"description",
+	"""
+	The lights that cast shadows from this object. Accepts a set
+	expression or a space separated list of lights.
+	"""
+)
+Gaffer.Metadata.registerValue( "attribute:shadowedLights", "plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget" )
+Gaffer.Metadata.registerValue( "attribute:shadowedLights", "ui:scene:acceptsSetExpression", True )
+
 Gaffer.Metadata.registerValue( "attribute:filteredLights", "label", "Filtered Lights" )
 Gaffer.Metadata.registerValue( "attribute:filteredLights", "defaultValue", IECore.StringData( "" ) )
 Gaffer.Metadata.registerValue(

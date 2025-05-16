@@ -68,9 +68,9 @@ Gaffer.Metadata.registerValue(
 	"description",
 	"""
 	The lights that cause this object to cast shadows.
-	Accepts a set expression or a space separated list of
-	lights. Use \"defaultLights\" to refer to all lights that
-	contribute to illumination by default.
+
+	> Caution : This attribute has been superceded and will be removed. Use
+	> the standard `shadowedLights` attribute instead.
 	""",
 )
 Gaffer.Metadata.registerValue( "attribute:ai:visibility:shadow_group", "ui:scene:acceptsSetExpression", True )

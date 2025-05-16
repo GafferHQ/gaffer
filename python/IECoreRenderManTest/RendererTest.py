@@ -227,7 +227,7 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.pause()
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.__assertEqualWithAbsError( self.__colorAtUV( image, imath.V2i( 0.5 ) ), imath.Color4f( 1 ), error = 0.01 )
+		self.assertEqualWithAbsError( self.__colorAtUV( image, imath.V2i( 0.5 ) ), imath.Color4f( 1 ), error = 0.01 )
 
 		renderer.option(
 			"ri:integrator",
@@ -249,7 +249,7 @@ class RendererTest( GafferTest.TestCase ) :
 		time.sleep( 1 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.__assertEqualWithAbsError( self.__colorAtUV( image, imath.V2i( 0.5 ) ), imath.Color4f( 0, 0.514107, 0, 1 ), error = 0.01 )
+		self.assertEqualWithAbsError( self.__colorAtUV( image, imath.V2i( 0.5 ) ), imath.Color4f( 0, 0.514107, 0, 1 ), error = 0.01 )
 
 		del object
 		del renderer
@@ -1561,7 +1561,7 @@ class RendererTest( GafferTest.TestCase ) :
 		# No light filter yet. Sphere should appear white.
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
-		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 1 ), 0.1 )
+		self.assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 1 ), 0.1 )
 
 		# Add a green light filter. Sphere should appear green.
 
@@ -1589,7 +1589,7 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.pause()
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
-		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0, 1, 0 ), 0.1 )
+		self.assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0, 1, 0 ), 0.1 )
 
 		# Edit light filter tint. Sphere should update.
 
@@ -1600,7 +1600,7 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.pause()
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
-		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0, 0, 1 ), 0.1 )
+		self.assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0, 0, 1 ), 0.1 )
 
 		# Edit light, and make sure filter is still applied.
 
@@ -1610,7 +1610,7 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.pause()
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
-		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0, 0, 2 ), 0.2 )
+		self.assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0, 0, 2 ), 0.2 )
 
 		# Remove light filter and check render is unfiltered.
 
@@ -1621,7 +1621,7 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.pause()
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
-		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 2 ), 0.2 )
+		self.assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 2 ), 0.2 )
 
 		# Remove light and check render is black.
 
@@ -1632,7 +1632,7 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.pause()
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
-		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0 ), 0.1 )
+		self.assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0 ), 0.1 )
 
 		# Clean up.
 
@@ -1716,8 +1716,8 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.pause()
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
-		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0 ), 0.1 )
-		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.68, 0.5 ) ), imath.Color3f( 1 ), 0.1 )
+		self.assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0 ), 0.1 )
+		self.assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.68, 0.5 ) ), imath.Color3f( 1 ), 0.1 )
 
 		# Move rod to right hand side of plane, and check expected result.
 
@@ -1727,8 +1727,8 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.pause()
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
-		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 1 ), 0.1 )
-		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.68, 0.5 ) ), imath.Color3f( 0 ), 0.1 )
+		self.assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 1 ), 0.1 )
+		self.assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.68, 0.5 ) ), imath.Color3f( 0 ), 0.1 )
 
 		# Clean up.
 
@@ -1820,7 +1820,7 @@ class RendererTest( GafferTest.TestCase ) :
 		# `0.5 * 0.5 == 0.25`
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
-		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0.25 ), 0.05 )
+		self.assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0.25 ), 0.05 )
 
 		# `min( 0.75, 0.5 ) == 0.5`
 
@@ -1832,7 +1832,7 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.pause()
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
-		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0.5 ), 0.05 )
+		self.assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0.5 ), 0.05 )
 
 		# The results from different groups are multiplied together
 		# so this is also `0.5 * 0.5 == 0.25`.
@@ -1845,7 +1845,7 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.pause()
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "lightFilterTest" )
-		self.__assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0.25 ), 0.05 )
+		self.assertEqualWithAbsError( self.__color3AtUV( image, imath.V2f( 0.5, 0.5 ) ), imath.Color3f( 0.25 ), 0.05 )
 
 		# Clean up.
 
@@ -2162,20 +2162,6 @@ class RendererTest( GafferTest.TestCase ) :
 
 		c = self.__colorAtUV( image, uv )
 		return imath.Color3f( c.r, c.g, c.b )
-
-	def __assertEqualWithAbsError( self, x, y, error ) :
-
-		if isinstance( x, imath.Color4f ) :
-			equal = True
-			for i in range( 0, 4 ) :
-				equal = equal and math.fabs( x[i] - y[i] ) <= error
-		else :
-			equal = x.equalWithAbsError( y, error )
-
-		if not equal :
-			raise self.failureException(
-				f"{x} != {y} with error of {error}"
-			)
 
 if __name__ == "__main__":
 	unittest.main()

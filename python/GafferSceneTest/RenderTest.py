@@ -423,5 +423,138 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertGreater( sampler["color"]["r"].getValue(), 0.02 )
 		self.assertEqual( sampler["color"]["g"].getValue(), 0 )
 
+	def testShadowLinking( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["camera"] = GafferScene.Camera()
+		script["camera"]["transform"]["translate"]["z"].setValue( 5 )
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["in"].setInput( script["camera"]["out"] )
+		script["parent"]["parent"].setValue( "/" )
+
+		script["shader"], unused, shaderOut = self._createDiffuseShader()
+
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["dimensions"].setValue( imath.V2f( 10 ) )
+		script["assignment"] = GafferScene.ShaderAssignment()
+		script["assignment"]["in"].setInput( script["plane"]["out"] )
+		script["assignment"]["shader"].setInput( shaderOut )
+		script["parent"]["children"].next().setInput( script["assignment"]["out"] )
+
+		for label, color in {
+			"red" : imath.Color3f( 1, 0, 0 ),
+			"green" : imath.Color3f( 0, 1, 0 ),
+		}.items() :
+
+			light, colorPlug = self._createDistantLight()
+			light["name"].setValue( f"{label}Light" )
+			colorPlug.setValue( color )
+			light["transform"]["translate"]["z"].setValue( 10 )
+			script[f"{label}Light"] = light
+			script["parent"]["children"].next().setInput( light["out"] )
+
+		for index, shadowedLights in enumerate( [ None, "", "/redLight", "/greenLight", "defaultLights" ] ) :
+
+			sphere = GafferScene.Sphere()
+			sphere["radius"].setValue( 0.5 )
+			sphere["transform"]["translate"]["x"].setValue( index - 2 )
+			sphere["transform"]["translate"]["z"].setValue( 5 )
+			script.addChild( sphere )
+
+			assignment = GafferScene.ShaderAssignment()
+			assignment["in"].setInput( sphere["out"] )
+			assignment["shader"].setInput( shaderOut )
+			script.addChild( assignment )
+
+			attributes = GafferScene.CustomAttributes()
+			attributes["in"].setInput( assignment["out"] )
+			attributes["attributes"].addChild(
+				Gaffer.NameValuePlug( self._cameraVisibilityAttribute(), False, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			)
+
+			if shadowedLights is not None :
+				attributes["attributes"].addChild(
+					Gaffer.NameValuePlug( "shadowedLights", shadowedLights, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+				)
+
+			script["parent"]["children"].next().setInput( attributes["out"] )
+			script.addChild( attributes )
+
+		imagePath = self.temporaryDirectory() / "test.exr"
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				imagePath.as_posix(),
+				"exr",
+				"rgba",
+			)
+		)
+		script["outputs"]["in"].setInput( script["parent"]["out"] )
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["in"].setInput( script["outputs"]["out"] )
+		script["options"]["options"]["renderCamera"]["enabled"].setValue( True )
+		script["options"]["options"]["renderCamera"]["value"].setValue( "/camera" )
+
+		script["rendererOptions"] = self._createOptions()
+		script["rendererOptions"]["in"].setInput( script["options"]["out"] )
+
+		script["render"] = GafferScene.Render()
+		script["render"]["in"].setInput( script["rendererOptions"]["out"] )
+		script["render"]["renderer"].setValue( self.renderer )
+		script["render"]["task"].execute()
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( imagePath )
+
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( reader["out"] )
+
+		for x, expectedColor in {
+			47 : imath.Color4f( 0, 0, 0, 1 ),
+			186 : imath.Color4f( 1, 1, 0, 1 ),
+			320 : imath.Color4f( 0, 1, 0, 1 ),
+			454 : imath.Color4f( 1, 0, 0, 1 ),
+			592 : imath.Color4f( 0, 0, 0, 1 ),
+		}.items() :
+
+			sampler["pixel"].setValue( imath.V2f( x, 240 ) )
+			c = sampler["color"].getValue()
+			m = max( c.r, c.g )
+			if m :
+				c.r /= m # Normalize so light intensity/falloff is irrelevant
+				c.g /= m
+			self.assertEqualWithAbsError( c, expectedColor, 0.001, f"(x == {x})" )
+
+	## Should be implemented by derived classes to return
+	# an appropriate Shader node with a diffuse surface shader loaded, along
+	# with the plug for the colour parameter and the output plug to be connected
+	# to a ShaderAssignment.
+	def _createDiffuseShader( self ) :
+
+		raise NotImplementedError
+
+	# Should be implemented by derived classes to return an appropriate Light
+	# node with a distant light loaded, along with the plug for the colour
+	# parameter.
+	def _createDistantLight( self ) :
+
+		raise NotImplementedError
+
+	## Should be implemented by derived classes to return
+	# the name of a bool attribute which controls camera visibility.
+	def _cameraVisibilityAttribute( self ) :
+
+		raise NotImplementedError
+
+	## May be implemented by derived classes to return
+	# an Options node to control rendering.
+	def _createOptions( self ) :
+
+		return GafferScene.CustomOptions()
+
 if __name__ == "__main__":
 	unittest.main()
