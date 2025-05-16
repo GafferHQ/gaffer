@@ -38,6 +38,7 @@
 #include "GafferScene/Attributes.h"
 
 #include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/PlugAlgo.h"
 
 #include "boost/bind/bind.hpp"
@@ -81,10 +82,12 @@ Attributes::Attributes( const std::string &name, const std::string &rendererPref
 	const string targetPattern = fmt::format( "attribute:{}:*", rendererPrefix );
 	for( const auto &target : Metadata::targetsWithMetadata( targetPattern, g_defaultValue ) )
 	{
-		const std::string attributeName = target.string().substr( 10 );
-		ConstDataPtr defaultValue = Metadata::value( target, g_defaultValue );
-		NameValuePlugPtr attributePlug = new NameValuePlug( attributeName, defaultValue.get(), false, attributeName );
-		attributesPlug()->addChild( attributePlug );
+		if( auto valuePlug = MetadataAlgo::createPlugFromMetadata( "value", Plug::Direction::In, Plug::Flags::Default, target ) )
+		{
+			const std::string attributeName = target.string().substr( 10 );
+			NameValuePlugPtr attributePlug = new NameValuePlug( attributeName, valuePlug, false, attributeName );
+			attributesPlug()->addChild( attributePlug );
+		}
 	}
 }
 
