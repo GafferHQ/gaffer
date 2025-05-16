@@ -151,9 +151,9 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
 				lowerPixel = self.__colorAtUV( image, imath.V2f( 0.5, 0.75 ) )
 
-				self.__assertColorsAlmostEqual( upperPixel, self.litColor, delta = 0.01 )
-				self.__assertColorsAlmostEqual( middlePixel, self.shadowColor, delta = 0.01 )
-				self.__assertColorsAlmostEqual( lowerPixel, self.shadowColor, delta = 0.01 )
+				self.assertEqualWithAbsError( upperPixel, self.litColor, error = 0.01 )
+				self.assertEqualWithAbsError( middlePixel, self.shadowColor, error = 0.01 )
+				self.assertEqualWithAbsError( lowerPixel, self.shadowColor, error = 0.01 )
 
 	def testReflectionPass( self ) :
 
@@ -232,7 +232,7 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		s["render"]["renderer"].setValue( self.renderer )
 		s["render"]["in"].setInput( s["rendererOptions"]["out"] )
 
-		for withCustomAttribute, testColor, delta in [
+		for withCustomAttribute, testColor, error in [
 			( False, imath.Color4f( 1, 0, 0, 1 ), 0.01 ),
 			( True, imath.Color4f( 0.2, 0, 0, 1 ), 0.15 ),
 		] :
@@ -259,9 +259,9 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 					middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
 					lowerPixel = self.__colorAtUV( image, imath.V2f( 0.5, 0.95 ) )
 
-					self.__assertColorsAlmostEqual( upperPixel, imath.Color4f( 0 ), delta = 0.01 )
-					self.__assertColorsAlmostEqual( middlePixel, testColor, delta = delta )
-					self.__assertColorsAlmostEqual( lowerPixel, imath.Color4f( 0 ), delta = 0.01 )
+					self.assertEqualWithAbsError( upperPixel, imath.Color4f( 0 ), error = 0.01 )
+					self.assertEqualWithAbsError( middlePixel, testColor, error = error )
+					self.assertEqualWithAbsError( lowerPixel, imath.Color4f( 0 ), error = 0.01 )
 
 	def testReflectionAlphaPass( self ) :
 
@@ -356,9 +356,9 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 					middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
 					lowerPixel = self.__colorAtUV( image, imath.V2f( 0.5, 0.95 ) )
 
-					self.__assertColorsAlmostEqual( upperPixel, imath.Color4f( 0 ), delta = 0.01 )
-					self.__assertColorsAlmostEqual( middlePixel, testColor, delta = 0.01 )
-					self.__assertColorsAlmostEqual( lowerPixel, imath.Color4f( 0 ), delta = 0.01 )
+					self.assertEqualWithAbsError( upperPixel, imath.Color4f( 0 ), error = 0.01 )
+					self.assertEqualWithAbsError( middlePixel, testColor, error = 0.01 )
+					self.assertEqualWithAbsError( lowerPixel, imath.Color4f( 0 ), error = 0.01 )
 
 	def testReflectionCasterLightLinks( self ) :
 
@@ -460,12 +460,12 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
 				lowerPixel = self.__colorAtUV( image, imath.V2f( 0.5, 0.95 ) )
 
-				self.__assertColorsAlmostEqual( upperPixel, imath.Color4f( 0 ), delta = 0.01 )
+				self.assertEqualWithAbsError( upperPixel, imath.Color4f( 0 ), error = 0.01 )
 				self.assertGreaterEqual( middlePixel.r, testColor.r )
 				self.assertAlmostEqual( middlePixel.g, testColor.g, delta = 0.01)
 				self.assertAlmostEqual( middlePixel.b, testColor.b, delta = 0.01 )
 				self.assertAlmostEqual( middlePixel.a, testColor.a, delta = 0.01 )
-				self.__assertColorsAlmostEqual( lowerPixel, imath.Color4f( 0 ), delta = 0.01 )
+				self.assertEqualWithAbsError( lowerPixel, imath.Color4f( 0 ), error = 0.01 )
 
 	# Should be implemented by derived classes to return
 	# an appropriate Light node with a distant light loaded.
@@ -500,11 +500,6 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		i = iy * dimensions.x + ix
 
 		return imath.Color4f( image["R"][i], image["G"][i], image["B"][i], image["A"][i] if "A" in image.keys() else 0.0 )
-
-	def __assertColorsAlmostEqual( self, c0, c1, **kw ) :
-
-		for i in range( 0, 4 ) :
-			self.assertAlmostEqual( c0[i], c1[i], **kw )
 
 if __name__ == "__main__":
 	unittest.main()

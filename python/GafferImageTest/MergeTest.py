@@ -392,7 +392,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		] :
 
 			merge["operation"].setValue( operation )
-			self.assertEqualWithAbsError( sampler["color"].getValue(), expected, error = 1e6, message = operation )
+			self.assertEqualWithAbsError( sampler["color"].getValue(), expected, error = 1e-6, message = operation )
 
 	def testDifferenceExceptionalValues( self ) :
 
@@ -479,7 +479,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		sampler["image"].setInput( merge["out"] )
 		sampler["pixel"].setValue( imath.V2f( 10 ) )
 
-		self.assertEqualWithAbsError( sampler["color"].getValue(), imath.Color4f( 0.0 + 1.0, 0.2 + 0.0, 0.3 + 0.1, 0.4 + 0.2 ), 1e6 )
+		self.assertEqualWithAbsError( sampler["color"].getValue(), imath.Color4f( 0.0 + 1.0, 0.2 + 0.0, 0.3 + 0.1, 0.4 + 0.2 ), 1e-6 )
 
 	def testNonFlatThrows( self ) :
 

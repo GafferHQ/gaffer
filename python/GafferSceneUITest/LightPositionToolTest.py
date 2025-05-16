@@ -115,8 +115,7 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 
 			desiredP = self.__shadowSource( lightP, shadowPivot, shadowPoint )
 
-			for j in range( 0, 3 ) :
-				self.assertAlmostEqual( p[j], desiredP[j], places = 4 )
+			self.assertEqualWithAbsError( p, desiredP, error = 0.0001 )
 
 			desiredO = imath.M44f()
 			imath.M44f.rotationMatrixWithUpDir( desiredO, imath.V3f( 0, 0, -1 ), shadowPoint - shadowPivot, upDir )
@@ -173,9 +172,7 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 				desiredWorldP = self.__shadowSource( worldP, shadowPivot, shadowPoint )
 				desiredLocalP = desiredWorldP * parentInverseTransform
 				t = script["light"]["transform"]["translate"].getValue()
-				for j in range( 0, 3 ) :
-					with self.subTest( j = j ) :
-						self.assertAlmostEqual( t[j], desiredLocalP[j], places = 4 )
+				self.assertEqualWithAbsError( t, desiredLocalP, error = 0.0001 )
 
 				upDir = worldTransform.multDirMatrix( imath.V3f( 0, 1, 0 ) )
 
@@ -185,11 +182,7 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 				worldTransform = script["group"]["out"].fullTransform( "/group/light" )
 				worldO = worldTransform
 				worldO[3][0] = worldO[3][1] = worldO[3][2] = 0.0
-				for j in range( 0, 4 ) :
-					with self.subTest( j = j ) :
-						for k in range( 0, 4 ) :
-							with self.subTest( k = k ) :
-								self.assertAlmostEqual( desiredWorldO[j][k], worldO[j][k], places = 3 )
+				self.assertEqualWithAbsError( worldO, desiredWorldO, 0.0001 )
 
 				parentInverseO = parentInverseTransform
 				parentInverseO[3][0] = parentInverseO[3][1] = parentInverseO[3][2] = 0.0
@@ -197,13 +190,7 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 				localTransform = script["group"]["out"].transform( "/group/light" )
 				localO = localTransform
 				localO[3][0] = localO[3][1] = localO[3][2] = 0.0
-
-				for j in range( 0, 4 ) :
-					with self.subTest( j = j ) :
-						for k in range( 0, 4 ) :
-							with self.subTest( k = k ) :
-								self.assertAlmostEqual( desiredLocalO[j][k], localO[j][k], places = 3 )
-
+				self.assertEqualWithAbsError( localO, desiredLocalO, 0.0001 )
 
 				r = script["light"]["transform"]["rotate"].getValue()
 
@@ -255,9 +242,7 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 			self.assertAlmostEqual( d0, d1, places = 4 )
 
 			desiredP = self.__highlightSource( lightP, highlightP, viewP, normal )
-
-			for j in range( 0, 3 ) :
-				self.assertAlmostEqual( p[j], desiredP[j], places = 4 )
+			self.assertEqualWithAbsError( p, desiredP, 0.0001 )
 
 			desiredO = imath.M44f()
 			imath.M44f.rotationMatrixWithUpDir( desiredO, imath.V3f( 0, 0, -1 ), highlightP - p, upDir )
@@ -310,9 +295,7 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 			self.assertAlmostEqual( d0, d1, places = 4 )
 
 			desiredP = self.__diffuseSource( lightP, diffuseP, normal )
-
-			for j in range( 0, 3 ) :
-				self.assertAlmostEqual( p[j], desiredP[j], places = 4 )
+			self.assertEqualWithAbsError( p, desiredP, 0.0001 )
 
 			desiredO = imath.M44f()
 			imath.M44f.rotationMatrixWithUpDir( desiredO, imath.V3f( 0, 0, -1 ), diffuseP - p, upDir )
