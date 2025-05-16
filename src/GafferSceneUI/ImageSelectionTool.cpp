@@ -94,7 +94,7 @@ const InternedString &idChannelName( const std::vector<std::string> &channelName
 	}
 }
 
-const std::string g_isRenderingMetadataName = "gaffer:isRendering";
+const InternedString g_isRenderingMetadataName = "gaffer:isRendering";
 
 static IECore::InternedString g_dragOverlayName( "__imageSelectionToolDragOverlay" );
 
