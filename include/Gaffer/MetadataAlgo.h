@@ -39,6 +39,7 @@
 #include "Gaffer/Export.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/Node.h"
+#include "Gaffer/ValuePlug.h"
 
 #include "IECore/SimpleTypedData.h"
 #include "IECore/StringAlgo.h"
@@ -241,6 +242,14 @@ GAFFER_API bool isPromotable( const GraphComponent *from, const GraphComponent *
 /// instance registration has no effect on the composed result.
 /// \undoable
 GAFFER_API void deregisterRedundantValues( GraphComponent *graphComponent );
+
+/// Plug creation
+/// =============
+
+/// Creates an appropriate plug to hold the data contained within the "defaultValue" metadata
+/// key registered at `target`. Optional "minValue" and "maxValue" metadata registered at
+/// `target` will be used to define the min and max values of the plug.
+GAFFER_API ValuePlugPtr createPlugFromMetadata( const std::string &name, Plug::Direction direction, unsigned flags, const std::string &target );
 
 } // namespace MetadataAlgo
 
