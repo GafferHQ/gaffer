@@ -115,9 +115,10 @@ def registerMetadata( argsFile, parametersToIgnore = set() ) :
 				elif element.attrib.get( "isDynamicArray" ) == "1" :
 					Gaffer.Metadata.registerValue( currentParameterTarget, "nodule:type", "GafferUI::CompoundNodule" )
 
-				defaultValue = __parseValue( element.attrib.get( "default" ), currentParameterType )
-				if defaultValue is not None :
-					Gaffer.Metadata.registerValue( currentParameterTarget, "defaultValue", defaultValue )
+				for key in ( "default", "min", "max" ) :
+					value = __parseValue( element.attrib.get( key ), currentParameterType )
+					if value is not None :
+						Gaffer.Metadata.registerValue( currentParameterTarget, f"{key}Value", value )
 
 				if element.attrib.get( "options" ) :
 					__parsePresets( element.attrib.get( "options" ), currentParameterTarget, currentParameterType )
