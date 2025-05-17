@@ -2574,10 +2574,12 @@ class ArnoldObjectBase : public IECoreScenePreview::Renderer::ObjectInterface
 				/// it for some reason.
 				if(
 					AiNodeLookUpUserParameter( node, g_cortexIDArnoldString ) ||
-					AiNodeDeclare( node, g_cortexIDArnoldString, "constant UINT" )
+					AiNodeDeclare( node, g_cortexIDArnoldString, "constant FLOAT" )
 				)
 				{
-					AiNodeSetUInt( node, g_cortexIDArnoldString, id );
+					float bitcastID;
+					memcpy( &bitcastID, &id, 4 );
+					AiNodeSetFlt( node, g_cortexIDArnoldString, bitcastID );
 				}
 			}
 		}
@@ -4296,11 +4298,11 @@ class ArnoldGlobals
 				IECoreScene::ShaderNetworkPtr network = new IECoreScene::ShaderNetwork;
 				network->addShader(
 					"userData",
-					new IECoreScene::Shader( "user_data_int", "ai:shader", { { "attribute", new IECore::StringData( "cortex:id" ) } } )
+					new IECoreScene::Shader( "user_data_float", "ai:shader", { { "attribute", new IECore::StringData( "cortex:id" ) } } )
 				);
 				network->addShader(
 					"aovWrite",
-					new IECoreScene::Shader( "aov_write_int", "ai:shader", { { "aov_name", new IECore::StringData( "id" ) } })
+					new IECoreScene::Shader( "aov_write_float", "ai:shader", { { "aov_name", new IECore::StringData( "id" ) } })
 				);
 				network->addConnection( { { "userData", "" }, { "aovWrite", "aov_input" } } );
 				network->setOutput( { "aovWrite", "" } );

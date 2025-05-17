@@ -116,6 +116,9 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		void setChannels( const Channels &channels );
 		const Channels &getChannels() const;
 
+		void setIDChannel( const IECore::InternedString &idChannel );
+		const IECore::InternedString getIDChannel();
+
 		using ImageGadgetSignal = Gaffer::Signals::Signal<void (ImageGadget *)>;
 		ImageGadgetSignal &channelsChangedSignal();
 
@@ -167,6 +170,12 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		void setWipeAngle( float angle );
 		float getWipeAngle() const;
 
+		void setSelectedIDs( const std::vector<uint32_t> &ids );
+		const std::vector<uint32_t> &getSelectedIDs();
+
+		void setHighlightID( uint32_t id );
+		uint32_t getHighlightID();
+
 	protected :
 
 		void renderLayer( Layer layer, const GafferUI::Style *style, RenderReason reason ) const override;
@@ -195,6 +204,8 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		Channels m_rgbaChannels;
 		int m_soloChannel;
 		ImageGadgetSignal m_channelsChangedSignal;
+
+		IECore::InternedString m_idChannel;
 
 		bool m_labelsVisible;
 		bool m_paused;
@@ -294,7 +305,7 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 			void resetActive();
 
 			// Called from the UI thread.
-			const IECoreGL::Texture *texture( bool &active );
+			const IECoreGL::Texture *texture( bool &active, bool loadAsID );
 
 			private :
 
@@ -323,10 +334,19 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		// Rendering.
 
 		void visibilityChanged();
-		void renderTiles() const;
+		void renderTiles( bool ids = false ) const;
 		void renderText( const std::string &text, const Imath::V2f &position, const Imath::V2f &alignment, const GafferUI::Style *style ) const;
 
 		BlendMode m_blendMode;
+
+		std::vector<uint32_t> m_selectedIDs;
+
+		class GAFFERIMAGEUI_API BufferTexture;
+		mutable std::unique_ptr<BufferTexture> m_selectedIDsBuffer;
+		uint32_t m_highlightID;
+
+		class GAFFERIMAGEUI_API RenderTexture;
+		std::unique_ptr<RenderTexture> m_selectionRenderTexture;
 };
 
 IE_CORE_DECLAREPTR( ImageGadget )

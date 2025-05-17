@@ -518,6 +518,20 @@ plugsMetadata = {
 
 	],
 
+	"options.renderManifestFilePath" : [
+
+		"description",
+		"""
+		Specifies a file to write a manifest to. If a render is set
+		up with both an render manifest, and an ID AOV, the Image Selection
+		Tool may be used to select objects in the rendered image.
+		""",
+
+		"layout:section", "Render Manifest",
+		"label", "File Path",
+
+	],
+
 	# Statistics plugs
 
 	"options.performanceMonitor" : [
