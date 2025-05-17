@@ -275,6 +275,18 @@ void OIIOOutputDriver::write_render_tile( const Tile &tile )
 				return;
 			}
 
+			if( layer.name == "id" )
+			{
+				// Cycles renders IDs as float values, but Gaffer's expects them to
+				// be integers, type-punned into a float for storage.
+				for( auto &p : pixels )
+				{
+					/// \todo Use `std::bit_cast` when C++20 is available to us.
+					const uint32_t id = p;
+					memcpy( &p, &id, sizeof( p ) );
+				}
+			}
+
 			imageData = &pixels[0];
 		}
 
