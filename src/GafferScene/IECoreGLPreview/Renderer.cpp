@@ -822,6 +822,8 @@ IE_CORE_FORWARDDECLARE( OpenGLLightFilter )
 namespace
 {
 
+const std::string g_headerPrefix( "header:" );
+
 class OpenGLRenderer final : public IECoreScenePreview::Renderer
 {
 
@@ -1237,6 +1239,14 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 				{
 					IECore::msg( IECore::Msg::Warning, "IECoreGL::Renderer", fmt::format( "Unsupported data format \"{}\".", data ) );
 					return;
+				}
+
+				for( const auto &[parameterName, parameterValue] : namedOutput.second->parameters() )
+				{
+					if( boost::starts_with( parameterName.string(), g_headerPrefix ) )
+					{
+						image->blindData()->writable()[parameterName.string().substr( g_headerPrefix.size() )] = parameterValue;
+					}
 				}
 
 				const string &type = namedOutput.second->getType();
