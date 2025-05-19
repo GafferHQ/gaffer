@@ -46,6 +46,7 @@
 #include "GafferScene/RenderPasses.h"
 #include "GafferScene/RenderPassShader.h"
 #include "GafferScene/Set.h"
+#include "GafferScene/ShuffleOptions.h"
 #include "GafferScene/ShuffleRenderPasses.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
@@ -127,6 +128,7 @@ void GafferSceneModule::bindGlobals()
 	}
 	DependencyNodeClass<RenderPasses>();
 	DependencyNodeClass<RenderPassShader>();
+	DependencyNodeClass<ShuffleOptions>();
 	DependencyNodeClass<ShuffleRenderPasses>();
 	// ShuffleRenderPasses is a ContextProcessor that calls `setup()` in its constructor so we register
 	// the standard NodeSerialiser in place of the ContextProcessor's SetupBasedNodeSerialiser to avoid

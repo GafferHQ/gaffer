@@ -1,7 +1,10 @@
 1.5.x.x (relative to 1.5.14.0)
 =======
 
+Features
+--------
 
+- ShuffleOptions : Added a new node for shuffling options in the scene globals (#6412).
 
 1.5.14.0 (relative to 1.5.13.0)
 ========
