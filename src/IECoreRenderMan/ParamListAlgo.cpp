@@ -118,6 +118,51 @@ struct ParameterConverter
 		paramList.SetIntegerArray( name, data->readable().data(), data->readable().size() );
 	}
 
+	void operator()( const FloatVectorData *data, RtUString name, RtParamList &paramList ) const
+	{
+		paramList.SetFloatArray( name, data->readable().data(), data->readable().size() );
+	}
+
+	void operator()( const StringVectorData *data, RtUString name, RtParamList &paramList ) const
+	{
+		std::vector<RtUString> value; value.reserve( data->readable().size() );
+		for( const auto &s : data->readable() )
+		{
+			value.push_back( RtUString( s.c_str() ) );
+		}
+		paramList.SetStringArray( name, value.data(), value.size() );
+	}
+
+	void operator()( const InternedStringVectorData *data, RtUString name, RtParamList &paramList ) const
+	{
+		std::vector<RtUString> value; value.reserve( data->readable().size() );
+		for( const auto &s : data->readable() )
+		{
+			value.push_back( RtUString( s.c_str() ) );
+		}
+		paramList.SetStringArray( name, value.data(), value.size() );
+	}
+
+	void operator()( const Color3fVectorData *data, RtUString name, RtParamList &paramList ) const
+	{
+		paramList.SetColorArray( name, reinterpret_cast<const RtColorRGB *>( data->readable().data() ), data->readable().size() );
+	}
+
+	void operator()( const V3fVectorData *data, RtUString name, RtParamList &paramList ) const
+	{
+		switch( data->getInterpretation() )
+		{
+			case GeometricData::Vector :
+				paramList.SetVectorArray( name, reinterpret_cast<const RtVector3 *>( data->readable().data() ), data->readable().size() );
+				break;
+			case GeometricData::Normal :
+				paramList.SetNormalArray( name, reinterpret_cast<const RtVector3 *>( data->readable().data() ), data->readable().size() );
+				break;
+			default :
+				paramList.SetPointArray( name, reinterpret_cast<const RtVector3 *>( data->readable().data() ), data->readable().size() );
+		}
+	}
+
 	void operator()( const Data *data, RtUString name, RtParamList &paramList ) const
 	{
 		IECore::msg(
