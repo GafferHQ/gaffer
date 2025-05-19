@@ -497,14 +497,63 @@ class RendererTest( GafferTest.TestCase ) :
 
 		self.assertFalse( OpenImageIO.ImageBufAlgo.compare( image1, image2, failthresh = 0, warnthresh=0 ).error )
 
-	def testUserAttributes( self ) :
+	def testUserAttributeValues( self ) :
 
-		for attributeName, lookupName in [
-			( "render:displayColor", "displayColor" ),
-			( "user:myColor", "user:myColor" ),
+		with IECoreRenderManTest.RileyCapture() as capture :
+
+			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				"RenderMan",
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+			)
+
+			renderer.object(
+				"sphere",
+				IECoreScene.SpherePrimitive(),
+				renderer.attributes( IECore.CompoundObject( {
+					"user:testBool" : IECore.BoolData( False ),
+					"user:testInt" : IECore.IntData( 1 ),
+					"user:testFloat" : IECore.FloatData( 2.5 ),
+					"user:testString" : IECore.StringData( "test" ),
+					"user:testInternedString" : IECore.StringData( "test" ),
+					"user:testColor" : IECore.Color3fData( imath.Color3f( 1, 2, 3 ) ),
+					"user:testV2i" : IECore.V2iData( imath.V2i( 1, 2 ) ),
+					"user:testV2f" : IECore.V2fData( imath.V2f( 1.5, 2.5 ) ),
+					"user:testIntArray" : IECore.IntVectorData( [ 3, 2, 1 ] ),
+					"user:testFloatArray" : IECore.FloatVectorData( [ 3.5, 2.5, 1.5 ] ),
+					"user:testStringArray" : IECore.StringVectorData( [ "a", "b", "c" ] ),
+					"user:testInternedStringArray" : IECore.InternedStringVectorData( [ "a", "b", "c" ] ),
+					"user:testColorArray" : IECore.Color3fVectorData( [ imath.Color3f( x, x, x ) for x in range( 0, 3 ) ] ),
+					"user:testVectorArray" : IECore.V3fVectorData( [ imath.V3f( x, x, x ) for x in range( 0, 3 ) ] ),
+				} ) )
+			)
+
+			del renderer
+
+		attributes = next( x for x in capture.json if x["method"] == "CreateGeometryInstance" )["attributes"]["params"]
+		self.__assertParameterEqual( attributes, "user:testBool", [ 0 ] )
+		self.__assertParameterEqual( attributes, "user:testInt", [ 1 ] )
+		self.__assertParameterEqual( attributes, "user:testFloat", [ 2.5 ] )
+		self.__assertParameterEqual( attributes, "user:testString", [ "test" ] )
+		self.__assertParameterEqual( attributes, "user:testInternedString", [ "test" ] )
+		self.__assertParameterEqual( attributes, "user:testColor", [ 1.0, 2.0, 3.0 ] )
+		self.__assertParameterEqual( attributes, "user:testV2i", [ 1, 2 ] )
+		self.__assertParameterEqual( attributes, "user:testV2f", [ 1.5, 2.5 ] )
+		self.__assertParameterEqual( attributes, "user:testIntArray", [ 3, 2, 1 ] )
+		self.__assertParameterEqual( attributes, "user:testFloatArray", [ 3.5, 2.5, 1.5 ] )
+		self.__assertParameterEqual( attributes, "user:testStringArray", [ "a", "b", "c" ] )
+		self.__assertParameterEqual( attributes, "user:testInternedStringArray", [ "a", "b", "c" ] )
+		self.__assertParameterEqual( attributes, "user:testColorArray", [ 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0 ] )
+		self.__assertParameterEqual( attributes, "user:testVectorArray", [ 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0 ] )
+
+	def testUserAttributeRendering( self ) :
+
+		for attributeName, lookupName, array in [
+			( "render:displayColor", "displayColor", False ),
+			( "render:displayColor", "displayColor", True ),
+			( "user:myColor", "user:myColor", False ),
 		] :
 
-			with self.subTest( attributeName = attributeName, lookupName = lookupName ) :
+			with self.subTest( attributeName = attributeName, lookupName = lookupName, array = array ) :
 
 				renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
 					"RenderMan",
@@ -542,7 +591,7 @@ class RendererTest( GafferTest.TestCase ) :
 							],
 							output = "output",
 						),
-						attributeName : IECore.Color3fData( imath.Color3f( 1, 0.5, 0.25 ) ),
+						attributeName : IECore.Color3fVectorData( [ imath.Color3f( 1, 0.5, 0.25 ) ] ) if array else IECore.Color3fData( imath.Color3f( 1, 0.5, 0.25 ) ),
 					} ) )
 				).transform( imath.M44f().translate( imath.V3f( 0, 0, -3 ) ) )
 
