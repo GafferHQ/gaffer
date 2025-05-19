@@ -831,6 +831,91 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 						if typeValue == instanceValue :
 							self.assertIsNone( Gaffer.Metadata.value( node, "metadataAlgoTest", registrationTypes = Gaffer.Metadata.RegistrationTypes.Instance ) )
 
+	def testCreatePlugFromMetadata( self ) :
+
+		self.assertRaises( RuntimeError, Gaffer.MetadataAlgo.createPlugFromMetadata, "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, "not:a:target" )
+
+		self.addCleanup( Gaffer.Metadata.deregisterValue, "test:testTarget", "defaultValue" )
+
+		for value, plugType in [
+			( 1, Gaffer.IntPlug ),
+			( 2.0, Gaffer.FloatPlug ),
+			( "hello", Gaffer.StringPlug ),
+			( False, Gaffer.BoolPlug ),
+			( imath.Color3f( 1.0 ), Gaffer.Color3fPlug ),
+			( imath.Color4f( 1.0 ), Gaffer.Color4fPlug ),
+			( imath.V2f( 1.0 ), Gaffer.V2fPlug ),
+			( imath.V3f( 1.0 ), Gaffer.V3fPlug ),
+		] :
+			with self.subTest( value = value, plugType = plugType ) :
+				Gaffer.Metadata.registerValue( "test:testTarget", "defaultValue", value )
+
+				plug = Gaffer.MetadataAlgo.createPlugFromMetadata( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, "test:testTarget" )
+				self.assertIsInstance( plug, plugType )
+				self.assertEqual( plug.getName(), "value" )
+				self.assertEqual( plug.direction(), Gaffer.Plug.Direction.In )
+
+		self.addCleanup( Gaffer.Metadata.deregisterValue, "test:testTarget", "minValue" )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, "test:testTarget", "maxValue" )
+
+		for value, minValue, maxValue in [
+			( 5, -1, 10 ),
+			( 5.0, -1.0, 10.0 ),
+			( imath.Color3f( 5.0 ), imath.Color3f( -1.0 ), imath.Color3f( 10.0 ) ),
+			( imath.Color4f( 5.0 ), imath.Color4f( -1.0 ), imath.Color4f( 10.0 ) ),
+		] :
+			with self.subTest( value = value, minValue = minValue, maxValue = maxValue ) :
+				Gaffer.Metadata.registerValue( "test:testTarget", "defaultValue", value )
+
+				plug = Gaffer.MetadataAlgo.createPlugFromMetadata( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, "test:testTarget" )
+				self.assertEqual( plug.defaultValue(), value )
+				self.assertFalse( plug.hasMinValue() )
+				self.assertFalse( plug.hasMaxValue() )
+
+				Gaffer.Metadata.registerValue( "test:testTarget", "minValue", minValue )
+
+				plug = Gaffer.MetadataAlgo.createPlugFromMetadata( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, "test:testTarget" )
+				self.assertEqual( plug.defaultValue(), value )
+				self.assertTrue( plug.hasMinValue() )
+				self.assertEqual( plug.minValue(), minValue )
+				self.assertFalse( plug.hasMaxValue() )
+
+				Gaffer.Metadata.deregisterValue( "test:testTarget", "minValue" )
+				Gaffer.Metadata.registerValue( "test:testTarget", "maxValue", maxValue )
+
+				plug = Gaffer.MetadataAlgo.createPlugFromMetadata( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, "test:testTarget" )
+				self.assertEqual( plug.defaultValue(), value )
+				self.assertFalse( plug.hasMinValue() )
+				self.assertTrue( plug.hasMaxValue() )
+				self.assertEqual( plug.maxValue(), maxValue )
+
+				Gaffer.Metadata.registerValue( "test:testTarget", "minValue", minValue )
+
+				plug = Gaffer.MetadataAlgo.createPlugFromMetadata( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, "test:testTarget" )
+				self.assertEqual( plug.defaultValue(), value )
+				self.assertTrue( plug.hasMinValue() )
+				self.assertEqual( plug.minValue(), minValue )
+				self.assertTrue( plug.hasMaxValue() )
+				self.assertEqual( plug.maxValue(), maxValue )
+
+				Gaffer.Metadata.registerValue( "test:testTarget", "minValue", "bogus" )
+
+				plug = Gaffer.MetadataAlgo.createPlugFromMetadata( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, "test:testTarget" )
+				self.assertEqual( plug.defaultValue(), value )
+				self.assertFalse( plug.hasMinValue() )
+				self.assertTrue( plug.hasMaxValue() )
+				self.assertEqual( plug.maxValue(), maxValue )
+
+				Gaffer.Metadata.registerValue( "test:testTarget", "maxValue", "bogus" )
+
+				plug = Gaffer.MetadataAlgo.createPlugFromMetadata( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, "test:testTarget" )
+				self.assertEqual( plug.defaultValue(), value )
+				self.assertFalse( plug.hasMinValue() )
+				self.assertFalse( plug.hasMaxValue() )
+
+				Gaffer.Metadata.deregisterValue( "test:testTarget", "minValue" )
+				Gaffer.Metadata.deregisterValue( "test:testTarget", "maxValue" )
+
 	def tearDown( self ) :
 
 		for n in ( Gaffer.Node, Gaffer.Box, GafferTest.AddNode ) :

@@ -86,6 +86,8 @@ Gaffer.Metadata.registerValues( {
 	"attribute:gl:primitive:wireframeWidth" : [
 
 		"defaultValue", 1.0,
+		"minValue", 0.1,
+		"maxValue", 32.0,
 		"description",
 		"""
 		The width in pixels of the wireframe rendering. Only
@@ -227,6 +229,8 @@ Gaffer.Metadata.registerValues( {
 	"attribute:gl:pointsPrimitive:glPointWidth" : [
 
 		"defaultValue", 1.0,
+		"minValue", 0.1,
+		"maxValue", 128.0,
 		"description",
 		"""
 		The width in pixels of the GL points rendered when
@@ -256,6 +260,8 @@ Gaffer.Metadata.registerValues( {
 	"attribute:gl:curvesPrimitive:glLineWidth" : [
 
 		"defaultValue", 1.0,
+		"minValue", 0.1,
+		"maxValue", 32.0,
 		"description",
 		"""
 		The width in pixels of the GL lines rendered when
@@ -284,6 +290,7 @@ Gaffer.Metadata.registerValues( {
 	"attribute:gl:visualiser:scale" : [
 
 		"defaultValue", 1.0,
+		"minValue", 0.01,
 		"description",
 		"""
 		Scales non-geometric visualisations in the viewport to make them
@@ -297,6 +304,8 @@ Gaffer.Metadata.registerValues( {
 	"attribute:gl:visualiser:maxTextureResolution" : [
 
 		"defaultValue", 512,
+		"minValue", 2,
+		"maxValue", 2048,
 		"description",
 		"""
 		Visualisers that load textures will respect this setting to
@@ -343,6 +352,7 @@ Gaffer.Metadata.registerValues( {
 	"attribute:gl:light:frustumScale" : [
 
 		"defaultValue", 1.0,
+		"minValue", 0.01,
 		"description",
 		"""
 		Allows light projections to be scaled to better suit the scene.

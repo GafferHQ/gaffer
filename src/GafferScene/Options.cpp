@@ -38,6 +38,7 @@
 #include "GafferScene/Options.h"
 
 #include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/PlugAlgo.h"
 
 using namespace std;
@@ -70,10 +71,12 @@ Options::Options( const std::string &name, const std::string &rendererPrefix )
 	const string targetPattern = fmt::format( "option:{}:*", rendererPrefix );
 	for( const auto &target : Metadata::targetsWithMetadata( targetPattern, g_defaultValue ) )
 	{
-		const std::string optionName = target.string().substr( 7 );
-		ConstDataPtr defaultValue = Metadata::value( target, g_defaultValue );
-		NameValuePlugPtr optionPlug = new NameValuePlug( optionName, defaultValue.get(), false, optionName );
-		optionsPlug()->addChild( optionPlug );
+		if( auto valuePlug = MetadataAlgo::createPlugFromMetadata( "value", Plug::Direction::In, Plug::Flags::Default, target ) )
+		{
+			const std::string optionName = target.string().substr( 7 );
+			NameValuePlugPtr optionPlug = new NameValuePlug( optionName, valuePlug, false, optionName );
+			optionsPlug()->addChild( optionPlug );
+		}
 	}
 }
 

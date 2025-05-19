@@ -12,6 +12,7 @@ Improvements
 - DeleteAttributes : Optimised case where all attributes are deleted. The input attributes are no longer accessed at all in this case.
 - ShaderAssignment : The `scene:path` context variable is now available in Switches connected directly to the `ShaderAssignment.shader` input. This allows different shaders to be assigned to different locations using a single ShaderAssignment node. Please note that the `scene:path` context variable remains unavailable to the individual shader nodes themselves for performance reasons.
 - 3Delight, Cycles, OpenGL : Added support for custom EXR metadata, using `header:*` parameters on the output definition.
+- RenderManAttributes, RenderManOptions : Plugs now respect minimum and maximum values specified by RenderMan.
 
 Fixes
 -----
@@ -25,6 +26,7 @@ API
 - Gaffer module : Added `environment()` method, returning a dictionary containing all current environment variables. Unlike `os.environ`, this preserves case on Windows.
 - GafferScene::RenderManifest : Added class for representing mapping of ids to paths in renders. Supports reading EXR and cryptomatte manifests, and writing EXR manifests.
 - Metadata : Added `registerValues()` function that registers multiple metadata entries from a dictionary of string targets.
+- MetadataAlgo : Added `createPlugFromMetadata()` function.
 
 Breaking Changes
 ----------------
