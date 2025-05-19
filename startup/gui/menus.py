@@ -343,6 +343,7 @@ nodeMenu.append( "/Scene/Globals/Standard Options", GafferScene.StandardOptions,
 nodeMenu.append( "/Scene/Globals/Custom Options", GafferScene.CustomOptions, searchText = "CustomOptions" )
 nodeMenu.append( "/Scene/Globals/Delete Options", GafferScene.DeleteOptions, searchText = "DeleteOptions" )
 nodeMenu.append( "/Scene/Globals/Copy Options", GafferScene.CopyOptions, searchText = "CopyOptions" )
+nodeMenu.append( "/Scene/Globals/Shuffle Options", GafferScene.ShuffleOptions, searchText = "ShuffleOptions" )
 nodeMenu.append( "/Scene/Globals/Option Tweaks", GafferScene.OptionTweaks, searchText = "OptionTweaks" )
 nodeMenu.append( "/Scene/Globals/Set", GafferScene.Set )
 nodeMenu.append( "/Scene/Globals/Set Visualiser", GafferScene.SetVisualiser, searchText = "SetVisualiser" )

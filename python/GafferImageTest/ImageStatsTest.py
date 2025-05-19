@@ -62,14 +62,14 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		s["area"].setValue( r["out"]["format"].getValue().getDisplayWindow() )
 
 		s["channels"].setValue( IECore.StringVectorData( [ "", "G", "B" ] ) )
-		self.__assertColour( s["average"].getValue(), imath.Color4f( 0., 0.0744, 0.1250, 0. ) )
-		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0. ) )
-		self.__assertColour( s["max"].getValue(), imath.Color4f( 0, 0.5, 0.5, 0. ) )
+		self.assertEqualWithAbsError( s["average"].getValue(), imath.Color4f( 0., 0.0744, 0.1250, 0. ), 0.0001 )
+		self.assertEqualWithAbsError( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0. ), 0.0001 )
+		self.assertEqualWithAbsError( s["max"].getValue(), imath.Color4f( 0, 0.5, 0.5, 0. ), 0.0001 )
 
 		s["channels"].setValue( IECore.StringVectorData( [ "R", "", "B" ] ) )
-		self.__assertColour( s["average"].getValue(), imath.Color4f( 0.0544, 0, 0.1250, 0. ) )
-		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0. ) )
-		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0, 0.5, 0. ) )
+		self.assertEqualWithAbsError( s["average"].getValue(), imath.Color4f( 0.0544, 0, 0.1250, 0. ), 0.0001 )
+		self.assertEqualWithAbsError( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0. ), 0.0001 )
+		self.assertEqualWithAbsError( s["max"].getValue(), imath.Color4f( 0.5, 0, 0.5, 0. ), 0.0001 )
 
 	def testDisconnectedDirty( self ) :
 
@@ -139,9 +139,9 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		s["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
 
 		s["areaSource"].setValue( GafferImage.ImageStats.AreaSource.DisplayWindow )
-		self.__assertColour( s["average"].getValue(), imath.Color4f( 0.0544, 0.0744, 0.1250, 0.2537 ) )
-		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
-		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ) )
+		self.assertEqualWithAbsError( s["average"].getValue(), imath.Color4f( 0.0544, 0.0744, 0.1250, 0.2537 ), 0.0001 )
+		self.assertEqualWithAbsError( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ), 0.0001 )
+		self.assertEqualWithAbsError( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ), 0.0001 )
 
 	# Test that we can change the ROI and the outputs are correct.
 	def testROI( self ) :
@@ -154,39 +154,39 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		s["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
 
 		s["areaSource"].setValue( GafferImage.ImageStats.AreaSource.DisplayWindow )
-		self.__assertColour( s["average"].getValue(), imath.Color4f(0.054375, 0.074375, 0.125, 0.25375) )
-		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
-		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ) )
+		self.assertEqualWithAbsError( s["average"].getValue(), imath.Color4f( 0.054375, 0.074375, 0.125, 0.25375 ), 0.0001 )
+		self.assertEqualWithAbsError( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ), 0.0001 )
+		self.assertEqualWithAbsError( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ), 0.0001 )
 
 		s["areaSource"].setValue( GafferImage.ImageStats.AreaSource.Area )
 		s["area"].setValue( imath.Box2i( imath.V2i( 0, 0 ), imath.V2i( 100, 100 ) ) )
 
-		self.__assertColour( s["average"].getValue(), imath.Color4f(0.054375, 0.074375, 0.125, 0.25375) )
-		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
-		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ) )
+		self.assertEqualWithAbsError( s["average"].getValue(), imath.Color4f( 0.054375, 0.074375, 0.125, 0.25375 ), 0.0001 )
+		self.assertEqualWithAbsError( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ), 0.0001 )
+		self.assertEqualWithAbsError( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ), 0.0001 )
 
 		s["areaSource"].setValue( GafferImage.ImageStats.AreaSource.DataWindow )
-		self.__assertColour( s["average"].getValue(), imath.Color4f(0.151042, 0.206597, 0.347222, 0.704861) )
-		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
-		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ) )
+		self.assertEqualWithAbsError( s["average"].getValue(), imath.Color4f( 0.151042, 0.206597, 0.347222, 0.704861 ), 0.0001 )
+		self.assertEqualWithAbsError( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ), 0.0001 )
+		self.assertEqualWithAbsError( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ), 0.0001 )
 
 		s["areaSource"].setValue( GafferImage.ImageStats.AreaSource.Area )
 		s["area"].setValue( imath.Box2i( imath.V2i( 20, 20 ), imath.V2i( 80, 80 ) ) )
 
-		self.__assertColour( s["average"].getValue(), imath.Color4f(0.151042, 0.206597, 0.347222, 0.704861) )
-		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
-		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ) )
+		self.assertEqualWithAbsError( s["average"].getValue(), imath.Color4f( 0.151042, 0.206597, 0.347222, 0.704861 ), 0.0001 )
+		self.assertEqualWithAbsError( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ), 0.0001 )
+		self.assertEqualWithAbsError( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ), 0.0001 )
 
 
 		s["area"].setValue( imath.Box2i( imath.V2i( 20, 20 ), imath.V2i( 25, 25 ) ) )
-		self.__assertColour( s["average"].getValue(), imath.Color4f( 0.5, 0, 0, 0.5 ) )
-		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0, 0, 0.5 ) )
-		self.__assertColour( s["min"].getValue(), imath.Color4f( 0.5, 0, 0, 0.5 ) )
+		self.assertEqualWithAbsError( s["average"].getValue(), imath.Color4f( 0.5, 0, 0, 0.5 ), 0.0001 )
+		self.assertEqualWithAbsError( s["max"].getValue(), imath.Color4f( 0.5, 0, 0, 0.5 ), 0.0001 )
+		self.assertEqualWithAbsError( s["min"].getValue(), imath.Color4f( 0.5, 0, 0, 0.5 ), 0.0001 )
 
 		s["area"].setValue( imath.Box2i( imath.V2i( 20, 20 ), imath.V2i( 41, 30 ) ) )
-		self.__assertColour( s["average"].getValue(), imath.Color4f( 0.4048, 0.1905, 0, 0.5952 ) )
-		self.__assertColour( s["min"].getValue(), imath.Color4f( 0.25, 0, 0, 0.5 ) )
-		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0, 0.75 ) )
+		self.assertEqualWithAbsError( s["average"].getValue(), imath.Color4f( 0.4048, 0.1905, 0, 0.5952 ), 0.0001 )
+		self.assertEqualWithAbsError( s["min"].getValue(), imath.Color4f( 0.25, 0, 0, 0.5 ), 0.0001 )
+		self.assertEqualWithAbsError( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0, 0.75 ), 0.0001 )
 
 		# Offset the colors in the image so we can see the effects of whether or not we include pixels outside
 		# the data window.
@@ -201,26 +201,26 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		s["in"].setInput( g["out"] )
 
 		s["area"].setValue( imath.Box2i( imath.V2i( 20, 20 ), imath.V2i( 25, 25 ) ) )
-		self.__assertColour( s["average"].getValue(), imath.Color4f( 1.5, 1, 1, 1.5 ) )
-		self.__assertColour( s["max"].getValue(), imath.Color4f( 1.5, 1, 1, 1.5 ) )
-		self.__assertColour( s["min"].getValue(), imath.Color4f( 1.5, 1, 1, 1.5 ) )
+		self.assertEqualWithAbsError( s["average"].getValue(), imath.Color4f( 1.5, 1, 1, 1.5 ), 0.0001 )
+		self.assertEqualWithAbsError( s["max"].getValue(), imath.Color4f( 1.5, 1, 1, 1.5 ), 0.0001 )
+		self.assertEqualWithAbsError( s["min"].getValue(), imath.Color4f( 1.5, 1, 1, 1.5 ), 0.0001 )
 
 		s["area"].setValue( imath.Box2i( imath.V2i( 19, 20 ), imath.V2i( 24, 25 ) ) )
-		self.__assertColour( s["average"].getValue(), imath.Color4f( 1.2, 0.8, 0.8, 1.2 ) )
-		self.__assertColour( s["max"].getValue(), imath.Color4f( 1.5, 1, 1, 1.5 ) )
-		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
+		self.assertEqualWithAbsError( s["average"].getValue(), imath.Color4f( 1.2, 0.8, 0.8, 1.2 ), 0.0001 )
+		self.assertEqualWithAbsError( s["max"].getValue(), imath.Color4f( 1.5, 1, 1, 1.5 ), 0.0001 )
+		self.assertEqualWithAbsError( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ), 0.0001 )
 
 		g['offset'].setValue( imath.Color4f( -2 ) )
 
 		s["area"].setValue( imath.Box2i( imath.V2i( 20, 20 ), imath.V2i( 25, 25 ) ) )
-		self.__assertColour( s["average"].getValue(), imath.Color4f( -1.5, -2, -2, -1.5 ) )
-		self.__assertColour( s["max"].getValue(), imath.Color4f( -1.5, -2, -2, -1.5 ) )
-		self.__assertColour( s["min"].getValue(), imath.Color4f( -1.5, -2, -2, -1.5 ) )
+		self.assertEqualWithAbsError( s["average"].getValue(), imath.Color4f( -1.5, -2, -2, -1.5 ), 0.0001 )
+		self.assertEqualWithAbsError( s["max"].getValue(), imath.Color4f( -1.5, -2, -2, -1.5 ), 0.0001 )
+		self.assertEqualWithAbsError( s["min"].getValue(), imath.Color4f( -1.5, -2, -2, -1.5 ), 0.0001 )
 
 		s["area"].setValue( imath.Box2i( imath.V2i( 19, 20 ), imath.V2i( 24, 25 ) ) )
-		self.__assertColour( s["average"].getValue(), imath.Color4f( -1.2, -1.6, -1.6, -1.2 ) )
-		self.__assertColour( s["max"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
-		self.__assertColour( s["min"].getValue(), imath.Color4f( -1.5, -2, -2, -1.5 ) )
+		self.assertEqualWithAbsError( s["average"].getValue(), imath.Color4f( -1.2, -1.6, -1.6, -1.2 ), 0.0001 )
+		self.assertEqualWithAbsError( s["max"].getValue(), imath.Color4f( 0, 0, 0, 0 ), 0.0001 )
+		self.assertEqualWithAbsError( s["min"].getValue(), imath.Color4f( -1.5, -2, -2, -1.5 ), 0.0001 )
 
 	# Test only tiles which intersect a changed boundary have modified hashes
 	def testROIHash( self ) :
@@ -252,13 +252,13 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 
 			stats.append( [ s["min"].getValue(), s["max"].getValue(), s["average"].getValue() ] )
 
-		self.__assertColour( stats[0][0], imath.Color4f( 0, 0, 0, 0 ) )
-		self.__assertColour( stats[0][1], imath.Color4f( 0.8027, 1, 1, 0 ) )
-		self.__assertColour( stats[0][2], imath.Color4f( 0.0031, 0.0499, 0.1956, 0 ) )
+		self.assertEqualWithAbsError( stats[0][0], imath.Color4f( 0, 0, 0, 0 ), 0.0001 )
+		self.assertEqualWithAbsError( stats[0][1], imath.Color4f( 0.8027, 1, 1, 0 ), 0.0001 )
+		self.assertEqualWithAbsError( stats[0][2], imath.Color4f( 0.0031, 0.0499, 0.1956, 0 ), 0.0001 )
 
-		self.__assertColour( stats[1][0], imath.Color4f( 0, 0, 0, 0 ) )
-		self.__assertColour( stats[1][1], imath.Color4f( 0.8027, 1, 1, 0 ) )
-		self.__assertColour( stats[1][2], imath.Color4f( 0.0031, 0.0503, 0.1973, 0 ) )
+		self.assertEqualWithAbsError( stats[1][0], imath.Color4f( 0, 0, 0, 0 ), 0.0001 )
+		self.assertEqualWithAbsError( stats[1][1], imath.Color4f( 0.8027, 1, 1, 0 ), 0.0001 )
+		self.assertEqualWithAbsError( stats[1][2], imath.Color4f( 0.0031, 0.0503, 0.1973, 0 ), 0.0001 )
 
 		numDiff = 0
 		numSame = 0
@@ -385,10 +385,6 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		self.assertTrue( math.isinf( stats["max"][0].getValue() ) )
 		self.assertTrue( math.isinf( stats["min"][0].getValue() ) )
 		self.assertTrue( math.isinf( stats["average"][0].getValue() ) )
-
-	def __assertColour( self, colour1, colour2 ) :
-		for i in range( 0, 4 ):
-			self.assertEqual( "%.4f" % colour2[i], "%.4f" % colour1[i] )
 
 if __name__ == "__main__":
 	unittest.main()
