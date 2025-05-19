@@ -35,6 +35,7 @@
 ##########################################################################
 
 import IECore
+import IECoreCycles
 
 import Gaffer
 import GafferUI
@@ -328,7 +329,7 @@ def __registerDevicePresets() :
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU", "CPU" )
 
 	typeIndices = {}
-	for device in GafferCycles.devices.values() :
+	for device in IECoreCycles.devices.values() :
 
 		if device["type"] == "CPU" :
 			continue
@@ -373,7 +374,7 @@ def __registerDenoiseDevicePresets() :
 
 	cpuRegistered = False
 	typeIndices = {}
-	for device in GafferCycles.devices.values() :
+	for device in IECoreCycles.devices.values() :
 
 		# Ignore devices that don't support any denoisers
 		if device["denoisers"].value == 0 :
@@ -1545,15 +1546,15 @@ Gaffer.Metadata.registerNode(
 __registerDevicePresets()
 __registerDenoiseDevicePresets()
 
-if GafferCycles.hasOptixDenoise :
+if IECoreCycles.hasOptixDenoise :
 
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.denoiserType.value", "preset:OptiX Denoiser", "optix" )
 
-if GafferCycles.hasOpenImageDenoise :
+if IECoreCycles.hasOpenImageDenoise :
 
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.denoiserType.value", "preset:Open Image Denoise", "openimagedenoise" )
 
-for _pass in GafferCycles.passes.keys():
+for _pass in IECoreCycles.passes.keys():
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.displayPass.value", "preset:%s" % _pass.replace( "_", " " ).title(), "%s" % _pass )
 
 # Used by `startup/gui/cyclesViewerSettings.gfr`.
