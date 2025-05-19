@@ -350,22 +350,6 @@ class SceneTestCase( GafferImageTest.ImageTestCase ) :
 			for setName in scenePlug1.setNames() :
 				self.assertNotEqual( scenePlug1.setHash( setName ), scenePlug2.setHash( setName ) )
 
-	def assertBoxesEqual( self, box1, box2 ) :
-
-		for n in "min", "max" :
-			v1 = getattr( box1, n )
-			v2 = getattr( box1, n )
-			for i in range( 0, 3 ) :
-				self.assertEqual( v1[i], v2[i] )
-
-	def assertBoxesAlmostEqual( self, box1, box2, places ) :
-
-		for n in "min", "max" :
-			v1 = getattr( box1, n )()
-			v2 = getattr( box1, n )()
-			for i in range( 0, 3 ) :
-				self.assertAlmostEqual( v1[i], v2[i], places )
-
 	def assertParallelGetValueComputesObjectOnce( self, scene, path ) :
 
 		with Gaffer.PerformanceMonitor() as pm :
