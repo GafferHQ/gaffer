@@ -76,6 +76,44 @@ GafferScene.Outputs.registerOutput(
 	)
 )
 
+GafferScene.Outputs.registerOutput(
+	"Interactive/ID",
+	IECoreScene.Output(
+		"id",
+		"ieDisplay",
+		"uint id",
+		{
+			"catalogue:imageName" : "Image",
+			"driverType" : "ClientDisplayDriver",
+			"displayHost" : "localhost",
+			"displayPort" : "${image:catalogue:port}",
+			"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+			"filter" : "closest",
+			"layerName" : "id",
+			"header:gaffer:loadAsUint" : True,
+			"header:gaffer:integerMapping" : "reinterpret",
+		}
+	)
+)
+
+GafferScene.Outputs.registerOutput(
+	"Batch/ID",
+	IECoreScene.Output(
+		"${project:rootDirectory}/renders/${script:name}/${renderPass}/id/id.####.exr",
+		"exr",
+		"uint id",
+		{
+			"filter" : "closest",
+			"layerName" : "id",
+			"header:gaffer:loadAsUint" : True,
+			"header:gaffer:integerMapping" : "reinterpret",
+		}
+	)
+)
+
+Gaffer.Metadata.registerValue( GafferScene.StandardOptions, "options.renderManifestFilePath.value", "userDefault", "${project:rootDirectory}/renders/${script:name}/${renderPass}/renderManifest/renderManifest.####.exr" )
+
+
 # Add standard AOVs as they are defined in the aiStandard and alSurface shaders
 
 with IECore.IgnoredExceptions( ImportError ) :
@@ -130,12 +168,10 @@ with IECore.IgnoredExceptions( ImportError ) :
 		else:
 			data = "color " + aov
 
-		if aov == "motionvector" :
-			parameters = {
-				"filter" : "closest"
-			}
-		else :
-			parameters = {}
+		parameters = {}
+
+		if aov == "motionvector":
+			parameters["filter"] = "closest"
 
 		if aov == "depth":
 			parameters["layerName"] = "Z"

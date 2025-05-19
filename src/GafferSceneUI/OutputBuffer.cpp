@@ -202,7 +202,7 @@ OutputBuffer::OutputBuffer( IECoreScenePreview::Renderer *renderer )
 			// approximation of depth at the centre of the pixel, which is important
 			// for accuracy in `SceneGadget::objectAt()`.
 			OutputDefinition( "depth", "float Z", "box" ),
-			OutputDefinition( "id", "uint id", "closest" ),
+			OutputDefinition( "id", "float id", "closest" ),
 		}
 	)
 	{
