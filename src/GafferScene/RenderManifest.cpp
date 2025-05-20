@@ -269,22 +269,16 @@ std::shared_ptr<const RenderManifest> RenderManifest::loadFromImageMetadata( con
 
 	if( cryptoManifestStringData )
 	{
-
 		// This copy should never actually result in the string being copied, because we don't modify it.
 		// See `InternalPointerLess` above.
 		IECore::ConstStringDataPtr cacheKey = cryptoManifestStringData->copy();
 
 		Mutex::scoped_lock lock( g_cryptoManifestCacheMutex, /* write = */ false );
-		auto existing = g_cryptoManifestCache.find( cacheKey );
-		if( existing != g_cryptoManifestCache.end() )
+		auto &cachedWeakPtr = g_cryptoManifestCache[cacheKey];
+		if( auto p = cachedWeakPtr.lock() )
 		{
-			std::shared_ptr<RenderManifest> validPointer = existing->second.lock();
-			if( validPointer )
-			{
-				return validPointer;
-			}
+			return p;
 		}
-
 
 		const std::string &cryptoManifestString = cryptoManifestStringData->readable();
 		boost::iostreams::stream<boost::iostreams::array_source> stream( cryptoManifestString.c_str(), cryptoManifestString.size() );
@@ -293,10 +287,9 @@ std::shared_ptr<const RenderManifest> RenderManifest::loadFromImageMetadata( con
 		result->loadCryptomatteJSON( stream );
 
 		lock.upgrade_to_writer();
-		g_cryptoManifestCache[ cacheKey ] = result;
+		cachedWeakPtr = result;
 
 		return result;
-
 	}
 
 	std::filesystem::file_time_type currentModTime;
@@ -312,16 +305,11 @@ std::shared_ptr<const RenderManifest> RenderManifest::loadFromImageMetadata( con
 	FileCacheKey cacheKey( sideCarManifestPath, currentModTime );
 
 	Mutex::scoped_lock lock( g_fileCacheMutex, /* write = */ false );
-	auto existing = g_fileCache.find( cacheKey );
-	if( existing != g_fileCache.end() )
+	auto &cachedWeakPtr = g_fileCache[cacheKey];
+	if( auto p = cachedWeakPtr.lock() )
 	{
-		std::shared_ptr<RenderManifest> validPointer = existing->second.lock();
-		if( validPointer )
-		{
-			return validPointer;
-		}
+		return p;
 	}
-
 
 	std::shared_ptr<RenderManifest> result = std::make_shared<RenderManifest>();
 	if( !isCryptomatte )
@@ -335,7 +323,7 @@ std::shared_ptr<const RenderManifest> RenderManifest::loadFromImageMetadata( con
 	}
 
 	lock.upgrade_to_writer();
-	g_fileCache[cacheKey] = result;
+	cachedWeakPtr = result;
 
 	return result;
 }
