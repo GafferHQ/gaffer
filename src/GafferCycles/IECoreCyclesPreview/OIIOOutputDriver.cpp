@@ -218,9 +218,24 @@ void OIIOOutputDriver::write_render_tile( const Tile &tile )
 		}
 		else
 		{
-			for( int i = 0; i < layer.numChannels; ++i )
+			/// \todo This logic should be shared with IEDisplayOutputDriver.
+			std::string layerName;
+			if( auto d = layer.metadata->member<IECore::StringData>( "layerName" ) )
 			{
-				spec.channelnames.push_back( g_channels[i] );
+				layerName = d->readable();
+			}
+			if( layer.numChannels == 1 )
+			{
+				spec.channelnames.push_back( layerName.size() ? layerName : layer.name );
+			}
+			else
+			{
+				for( int i = 0; i < layer.numChannels; ++i )
+				{
+					spec.channelnames.push_back(
+						fmt::format( "{}{}{}", layerName, layerName.size() ? "." : "", g_channels[i] )
+					);
+				}
 			}
 		}
 		spec.full_x = m_displayWindow.min.x;
