@@ -11,6 +11,7 @@ Fixes
 
 - RenderMan : Added missing attribute handlers for float, string, InternedString, Color3f and V3f array attributes. In particular, this fixes the export of `render:displayColor` attributes loaded from USD.
 - Expression : Fixed error when creating OSL expressions for plugs with `:` characters in their name.
+- PythonEditor : Fixed completions menu not appearing after typing `:` in a partial plug or node name or a dictionary key.
 
 1.5.14.0 (relative to 1.5.13.0)
 ========
