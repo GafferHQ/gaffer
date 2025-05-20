@@ -44,8 +44,7 @@ import Gaffer
 import GafferScene
 import GafferImage
 
-# Add standard beauty output that should be supported by
-# all renderers.
+# Add standard beauty and ID outputs that should be supported by all renderers.
 
 GafferScene.Outputs.registerOutput(
 	"Interactive/Beauty",
@@ -75,6 +74,39 @@ GafferScene.Outputs.registerOutput(
 		}
 	)
 )
+
+GafferScene.Outputs.registerOutput(
+	"Interactive/ID",
+	IECoreScene.Output(
+		"id",
+		"ieDisplay",
+		"float id",
+		{
+			"catalogue:imageName" : "Image",
+			"driverType" : "ClientDisplayDriver",
+			"displayHost" : "localhost",
+			"displayPort" : "${image:catalogue:port}",
+			"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+			"filter" : "closest",
+			"layerName" : "id",
+		}
+	)
+)
+
+GafferScene.Outputs.registerOutput(
+	"Batch/ID",
+	IECoreScene.Output(
+		"${project:rootDirectory}/renders/${script:name}/${renderPass}/id/id.####.exr",
+		"exr",
+		"float id",
+		{
+			"filter" : "closest",
+			"layerName" : "id",
+		}
+	)
+)
+
+Gaffer.Metadata.registerValue( GafferScene.StandardOptions, "options.renderManifestFilePath.value", "userDefault", "${project:rootDirectory}/renders/${script:name}/${renderPass}/renderManifest/renderManifest.####.exr" )
 
 # Add standard AOVs as they are defined in the aiStandard and alSurface shaders
 
