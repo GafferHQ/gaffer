@@ -836,6 +836,8 @@ const TileShaderSelectedIDs *tileShaderSelectedIDs()
 	return g_tileShaderSelectedIDs;
 }
 
+const std::string g_idChannelInternalName( "__internal_ID_channel__" );
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -1306,8 +1308,19 @@ ImageGadget::Tile::Tile( const Tile &other )
 {
 }
 
-ImageGadget::Tile::Update ImageGadget::Tile::computeUpdate( const GafferImage::ImagePlug *image )
+ImageGadget::Tile::Update ImageGadget::Tile::computeUpdate( const GafferImage::ImagePlug *image, bool loadAsID )
 {
+	if( !m_texture )
+	{
+		m_loadAsID = loadAsID;
+	}
+	else
+	{
+		if( loadAsID != m_loadAsID )
+		{
+			throw Exception( "Cannot switch loadAsID once an ImageGadget tile is initialized." );
+		}
+	}
 	const IECore::MurmurHash h = image->channelDataPlug()->hash();
 	Mutex::scoped_lock lock( m_mutex );
 	if( m_channelDataHash != MurmurHash() && m_channelDataHash == h )
@@ -1351,7 +1364,7 @@ void ImageGadget::Tile::resetActive()
 	m_active = false;
 }
 
-const IECoreGL::Texture *ImageGadget::Tile::texture( bool &active, bool loadAsID )
+const IECoreGL::Texture *ImageGadget::Tile::texture( bool &active )
 {
 	const auto now = std::chrono::steady_clock::now();
 	Mutex::scoped_lock lock( m_mutex );
@@ -1377,7 +1390,7 @@ const IECoreGL::Texture *ImageGadget::Tile::texture( bool &active, bool loadAsID
 			m_texture = new Texture( texture ); // Lock not needed, because this is only touched on the UI thread.
 			Texture::ScopedBinding binding( *m_texture );
 
-			if( loadAsID )
+			if( m_loadAsID )
 			{
 				glTexImage2D(
 					GL_TEXTURE_2D, 0, GL_R32UI, ImagePlug::tileSize(), ImagePlug::tileSize(), 0, GL_RED_INTEGER,
@@ -1402,7 +1415,7 @@ const IECoreGL::Texture *ImageGadget::Tile::texture( bool &active, bool loadAsID
 		Texture::ScopedBinding binding( *m_texture );
 		glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
 
-		if( loadAsID )
+		if( m_loadAsID )
 		{
 			glTexSubImage2D(
 				GL_TEXTURE_2D, 0, 0, 0, ImagePlug::tileSize(), ImagePlug::tileSize(), GL_RED_INTEGER,
@@ -1459,17 +1472,12 @@ void ImageGadget::updateTiles()
 			if( m_soloChannel < 0 || m_rgbaChannels[m_soloChannel] == *it || m_rgbaChannels[3] == *it )
 			{
 				channelsToCompute.push_back( *it );
-
-				// Continuing here makes sure we don't include a channel twice if it used both as an
-				// rgbaChannel and the id channel. ( A channel appearing twice in channelsToCompute
-				// can cause a deadlock ).
-				continue;
 			}
 		}
 
 		if( *it == m_idChannel.string() )
 		{
-			channelsToCompute.push_back( *it );
+			channelsToCompute.push_back( g_idChannelInternalName );
 		}
 	}
 
@@ -1486,9 +1494,17 @@ void ImageGadget::updateTiles()
 			ImagePlug::ChannelDataScope channelScope( Context::current() );
 			for( auto &channelName : channelsToCompute )
 			{
-				channelScope.setChannelName( &channelName );
 				Tile &tile = m_tiles[TileIndex(tileOrigin, channelName)];
-				updates.push_back( tile.computeUpdate( image ) );
+				if( channelName == g_idChannelInternalName )
+				{
+					channelScope.setChannelName( &m_idChannel.string() );
+					updates.push_back( tile.computeUpdate( image, true ) );
+				}
+				else
+				{
+					channelScope.setChannelName( &channelName );
+					updates.push_back( tile.computeUpdate( image ) );
+				}
 			}
 
 			Tile::applyUpdates( updates );
@@ -1573,7 +1589,9 @@ void ImageGadget::removeOutOfBoundsTiles() const
 	for( Tiles::iterator it = m_tiles.begin(); it != m_tiles.end(); )
 	{
 		const Box2i tileBound( it->first.tileOrigin, it->first.tileOrigin + V2i( ImagePlug::tileSize() ) );
-		if( !BufferAlgo::intersects( dw, tileBound ) || find( ch.begin(), ch.end(), it->first.channelName.string() ) == ch.end() )
+
+		const std::string &effectiveChannelName = it->first.channelName.string() == g_idChannelInternalName ? m_idChannel.string() : it->first.channelName.string();
+		if( !BufferAlgo::intersects( dw, tileBound ) || find( ch.begin(), ch.end(), effectiveChannelName ) == ch.end() )
 		{
 			it = m_tiles.unsafe_erase( it );
 		}
@@ -1661,7 +1679,7 @@ void ImageGadget::renderTiles( bool ids ) const
 					Tiles::const_iterator it = m_tiles.find( TileIndex( tileOrigin, channelName ) );
 					if( it != m_tiles.end() )
 					{
-						channelTextures[i] = it->second.texture( active, false );
+						channelTextures[i] = it->second.texture( active );
 					}
 					else
 					{
@@ -1673,11 +1691,12 @@ void ImageGadget::renderTiles( bool ids ) const
 			else
 			{
 				IECoreGL::ConstTexturePtr idTexture;
-				Tiles::const_iterator it = m_tiles.find( TileIndex( tileOrigin, m_idChannel ) );
+				Tiles::const_iterator it = m_tiles.find( TileIndex( tileOrigin, g_idChannelInternalName ) );
 				if( it != m_tiles.end() )
 				{
-					bool temp = false;
-					idTexture = it->second.texture( temp, true );
+					bool unusedActive = false; // We don't have activity indicators for the id AOV
+					// \todo : Should we validate that this tile has been loaded as an integer texture?
+					idTexture = it->second.texture( unusedActive );
 				}
 				else
 				{

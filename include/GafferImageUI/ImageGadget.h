@@ -298,14 +298,14 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 
 			// Called from a background thread with the context
 			// already set up appropriately for the tile.
-			Update computeUpdate( const GafferImage::ImagePlug *image );
+			Update computeUpdate( const GafferImage::ImagePlug *image, bool loadAsID = false );
 			// Applies previously computed updates for several tiles
 			// such that they become visible to the UI thread together.
 			static void applyUpdates( const std::vector<Update> &updates );
 			void resetActive();
 
 			// Called from the UI thread.
-			const IECoreGL::Texture *texture( bool &active, bool loadAsID );
+			const IECoreGL::Texture *texture( bool &active );
 
 			private :
 
@@ -313,6 +313,7 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 				IECore::ConstFloatVectorDataPtr m_channelDataToConvert;
 				IECoreGL::TexturePtr m_texture;
 				bool m_active;
+				bool m_loadAsID;
 				std::chrono::steady_clock::time_point m_activeStartTime;
 				using Mutex = tbb::spin_mutex;
 				Mutex m_mutex;
