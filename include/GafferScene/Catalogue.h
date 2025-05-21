@@ -36,6 +36,9 @@
 
 #pragma once
 
+#include "GafferScene/Export.h"
+#include "GafferScene/TypeIds.h"
+
 #include "GafferImage/ImageNode.h"
 
 #include "Gaffer/NumericPlug.h"
@@ -47,7 +50,7 @@
 
 #include <filesystem>
 
-namespace GafferImageModule
+namespace GafferSceneModule
 {
 
 // Forward declaration to enable friend declaration.
@@ -55,26 +58,26 @@ void bindCatalogue();
 
 } // namespace GafferImageModule
 
-namespace GafferImage
+namespace GafferScene
 {
 
-class GAFFERIMAGE_API Catalogue : public ImageNode
+class GAFFERSCENE_API Catalogue : public GafferImage::ImageNode
 {
 
 	public :
 
-		GAFFER_NODE_DECLARE_TYPE( GafferImage::Catalogue, CatalogueTypeId, ImageNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::Catalogue, CatalogueTypeId, GafferImage::ImageNode );
 
 		explicit Catalogue( const std::string &name = defaultName<Catalogue>() );
 		~Catalogue() override;
 
 		/// Plug type used to represent an image in the catalogue.
-		class GAFFERIMAGE_API Image : public Gaffer::Plug
+		class GAFFERSCENE_API Image : public Gaffer::Plug
 		{
 
 			public :
 
-				GAFFER_PLUG_DECLARE_TYPE( GafferImage::Catalogue::Image, CatalogueImageTypeId, Gaffer::Plug );
+				GAFFER_PLUG_DECLARE_TYPE( GafferScene::Catalogue::Image, CatalogueImageTypeId, Gaffer::Plug );
 
 				Image( const std::string &name = defaultName<Image>(), Direction direction = In, unsigned flags = Default );
 
@@ -138,7 +141,7 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 		/// a particular image locally in this Catalogue's directory.
 		/// Primarily exists to be used in the UI.
 		std::filesystem::path generateFileName( const Image *image ) const;
-		std::filesystem::path generateFileName( const ImagePlug *image ) const;
+		std::filesystem::path generateFileName( const GafferImage::ImagePlug *image ) const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
@@ -175,11 +178,11 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 		static size_t g_firstPlugIndex;
 
 		// For bindings
-		friend void GafferImageModule::bindCatalogue();
+		friend void GafferSceneModule::bindCatalogue();
 		static const std::type_info &internalImageTypeInfo();
 
 };
 
 IE_CORE_DECLAREPTR( Catalogue );
 
-} // namespace GafferImage
+} // namespace GafferScene

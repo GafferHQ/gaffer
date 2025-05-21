@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2025, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,45 +34,21 @@
 #
 ##########################################################################
 
-import threading
-
+import IECore
 import Gaffer
-import GafferUI
-
 import GafferImage
+import sys
 
-__all__ = []
+class PatchedGafferImage( sys.modules["GafferImage"].__class__ ):
 
-Gaffer.Metadata.registerNode(
+	@staticmethod
+	def _gafferSceneRedirect( name ):
+		# Don't import GafferScene from GafferImage unless we actually need to use one of these classes
+		import GafferScene
+		return GafferScene.__dict__[ name ]
 
-	GafferImage.Display,
+	Catalogue = property( lambda self : PatchedGafferImage._gafferSceneRedirect( "Catalogue" ) )
+	CatalogueSelect = property( lambda self : PatchedGafferImage._gafferSceneRedirect( "CatalogueSelect" ) )
+	Display = property( lambda self : PatchedGafferImage._gafferSceneRedirect( "Display" ) )
 
-	"description",
-	"""
-	Interactively displays images as they are rendered.
-
-	This node runs a server on a background thread,
-	allowing it to receive images from both local and
-	remote render processes. To set up a render to
-	output to the Display node, use an Outputs node with
-	an Interactive output configured to render to the
-	same port as is specified on the Display node.
-	""",
-
-	plugs = {
-
-		"port" : [
-
-			"description",
-			"""
-			The port number on which to run the display server.
-			Outputs which specify this port number will appear
-			in this node - use multiple nodes with different
-			port numbers to receive multiple images at once.
-			""",
-
-		],
-
-	}
-
-)
+sys.modules["GafferImage"].__class__ = PatchedGafferImage

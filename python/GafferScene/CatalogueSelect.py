@@ -37,6 +37,7 @@ import IECore
 
 import Gaffer
 import GafferImage
+import GafferScene
 
 
 class CatalogueSelect( GafferImage.ImageProcessor ) :
@@ -58,4 +59,4 @@ class CatalogueSelect( GafferImage.ImageProcessor ) :
 		self['out'].setFlags(Gaffer.Plug.Flags.Serialisable, False)
 
 
-IECore.registerRunTimeTyped( CatalogueSelect, typeName = "GafferImage::CatalogueSelect" )
+IECore.registerRunTimeTyped( CatalogueSelect, typeName = "GafferScene::CatalogueSelect" )

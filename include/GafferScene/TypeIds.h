@@ -194,6 +194,12 @@ enum TypeId
 	PreviewProceduralTypeId = 120148,
 
 	ShuffleOptionsTypeId = 120149,
+
+	CatalogueTypeId = 120150,
+	CatalogueImageTypeId = 120151,
+	DisplayTypeId = 120152,
+	GafferDisplayDriverTypeId = 120153,
+
 	LastTypeId = 120999
 };
 

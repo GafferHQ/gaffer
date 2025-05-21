@@ -41,7 +41,7 @@ import GafferImage
 import GafferUI
 import GafferUITest
 
-from GafferImageUI import CatalogueUI
+from GafferSceneUI import CatalogueUI
 
 import IECore
 
@@ -129,7 +129,7 @@ class CatalogueUITest( GafferUITest.TestCase ) :
 		script["catalogue"] = GafferImage.Catalogue()
 		script["catalogue"]["images"].addChild( GafferImage.Catalogue.Image.load( script["imageWriter"]["fileName"].getValue() ) )
 
-		from GafferImageUI.CatalogueUI import _ImagesPath
+		from GafferSceneUI.CatalogueUI import _ImagesPath
 		path = _ImagesPath( script["catalogue"]["images"], "/test" )
 
 		# Header value provider

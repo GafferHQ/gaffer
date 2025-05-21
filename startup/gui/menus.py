@@ -358,6 +358,11 @@ nodeMenu.append( "/Scene/Utility/Set Query", GafferScene.SetQuery, searchText = 
 nodeMenu.append( "/Scene/Utility/Shader Query", GafferScene.ShaderQuery, searchText = "ShaderQuery" )
 nodeMenu.append( "/Scene/Utility/Option Query", GafferScene.OptionQuery, searchText = "OptionQuery" )
 nodeMenu.append( "/Scene/Utility/Primitive Variable Query", GafferScene.PrimitiveVariableQuery, searchText = "PrimitiveVariableQuery" )
+
+# TODO - naming of this group?
+nodeMenu.append( "/Scene/Catalogue/Catalogue", GafferScene.Catalogue )
+nodeMenu.append( "/Scene/Catalogue/Catalogue Select", GafferScene.CatalogueSelect )
+
 nodeMenu.append( "/Scene/Passes/Render Passes", GafferScene.RenderPasses, searchText = "RenderPasses" )
 nodeMenu.append( "/Scene/Passes/Delete Render Passes", GafferScene.DeleteRenderPasses, searchText = "DeleteRenderPasses" )
 nodeMenu.append( "/Scene/Passes/Render Pass Wedge", GafferScene.RenderPassWedge, searchText = "RenderPassWedge" )
@@ -425,8 +430,6 @@ nodeMenu.append( "/Image/Utility/Shuffle Metadata", GafferImage.ShuffleImageMeta
 nodeMenu.append( "/Image/Utility/Metadata Overlay", GafferImage.MetadataOverlay, searchText = "MetadataOverlay" )
 nodeMenu.append( "/Image/Utility/Stats", GafferImage.ImageStats, searchText = "ImageStats" )
 nodeMenu.append( "/Image/Utility/Sampler", GafferImage.ImageSampler, searchText = "ImageSampler" )
-nodeMenu.append( "/Image/Utility/Catalogue", GafferImage.Catalogue )
-nodeMenu.append( "/Image/Utility/Catalogue Select", GafferImage.CatalogueSelect )
 nodeMenu.append( "/Image/Utility/FormatQuery", GafferImage.FormatQuery )
 nodeMenu.append( "/Image/Utility/OpenColorIO Context", GafferImage.OpenColorIOContext, searchText = "OpenColorIOContext" )
 nodeMenu.append( "/Image/Deep/FlatToDeep", GafferImage.FlatToDeep, searchText = "FlatToDeep" )

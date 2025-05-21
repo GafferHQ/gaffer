@@ -190,6 +190,9 @@ from .ShaderPlugTest import ShaderPlugTest
 from .ShuffleRenderPassesTest import ShuffleRenderPassesTest
 from .ShuffleOptionsTest import ShuffleOptionsTest
 from .RenderManifestTest import RenderManifestTest
+from .DisplayTest import DisplayTest
+from .CatalogueTest import CatalogueTest
+from .CatalogueSelectTest import CatalogueSelectTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *

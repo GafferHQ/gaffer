@@ -49,6 +49,7 @@ import GafferTest
 import GafferDispatch
 import GafferImage
 import GafferImageTest
+import GafferScene
 
 class DisplayTest( GafferImageTest.ImageTestCase ) :
 
@@ -65,7 +66,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 			parameters = {
 				"displayHost" : "localHost",
 				"displayPort" : str( port ),
-				"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+				"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
 			}
 			parameters.update( extraParameters )
 
@@ -152,7 +153,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 
 	def testDefaultFormat( self ) :
 
-		d = GafferImage.Display()
+		d = GafferScene.Display()
 
 		with Gaffer.Context() as c :
 			self.assertEqual( d["out"]["format"].getValue(), GafferImage.FormatPlug.getDefaultFormat( c ) )
@@ -161,14 +162,14 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 
 	def testDeep( self ) :
 
-		d = GafferImage.Display()
+		d = GafferScene.Display()
 		self.assertEqual( d["out"]["deep"].getValue(), False )
 
 	def testTileHashes( self ) :
 
-		node = GafferImage.Display()
+		node = GafferScene.Display()
 		server = IECoreImage.DisplayDriverServer()
-		driverCreatedConnection = GafferImage.Display.driverCreatedSignal().connect( lambda driver, parameters : node.setDriver( driver ), scoped = True )
+		driverCreatedConnection = GafferScene.Display.driverCreatedSignal().connect( lambda driver, parameters : node.setDriver( driver ), scoped = True )
 
 		dataWindow = imath.Box2i( imath.V2i( -100, -200 ), imath.V2i( 303, 557 ) )
 		driver = self.Driver(
@@ -234,7 +235,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["d"] = GafferImage.Display()
+		s["d"] = GafferScene.Display()
 
 		s["p"] = GafferDispatch.PythonCommand()
 		s["p"]["command"].setValue( "pass" )
@@ -250,7 +251,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 
 	def testSetDriver( self ) :
 
-		driversCreated = GafferTest.CapturingSlot( GafferImage.Display.driverCreatedSignal() )
+		driversCreated = GafferTest.CapturingSlot( GafferScene.Display.driverCreatedSignal() )
 
 		server = IECoreImage.DisplayDriverServer()
 		dataWindow = imath.Box2i( imath.V2i( 0 ), imath.V2i( GafferImage.ImagePlug.tileSize() ) )
@@ -266,7 +267,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 
 			self.assertTrue( len( driversCreated ), 1 )
 
-			display = GafferImage.Display()
+			display = GafferScene.Display()
 			self.assertIsNone( display.getDriver() )
 			self.assertFalse( display.driverClosed() )
 
@@ -297,7 +298,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 			expectedDirty = { "channelData", "__channelDataCount", "out" }
 			self.assertEqual( set( e[0].getName() for e in dirtiedPlugs ), expectedDirty )
 
-			display2 = GafferImage.Display()
+			display2 = GafferScene.Display()
 			self.assertFalse( display2.driverClosed() )
 			display2.setDriver( display.getDriver(), copy = True )
 			self.assertTrue( display2.driverClosed() )
@@ -323,12 +324,12 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 
 		subprocess.check_call( [
 			Gaffer.executablePath(), "env", "python", "-c",
-			"""import GafferImage; GafferImage.Display.driverCreatedSignal().connect( lambda d, p : None )"""
+			"""import GafferScene; GafferScene.Display.driverCreatedSignal().connect( lambda d, p : None )"""
 		] )
 
 		subprocess.check_call( [
 			Gaffer.executablePath(), "env", "python", "-c",
-			"""import GafferImage; GafferImage.Display.imageReceivedSignal().connect( lambda p : None )"""
+			"""import GafferScene; GafferScene.Display.imageReceivedSignal().connect( lambda p : None )"""
 		] )
 
 	def __testTransferImage( self, fileName ) :
@@ -336,13 +337,13 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 		imageReader = GafferImage.ImageReader()
 		imageReader["fileName"].setValue( fileName )
 
-		imagesReceived = GafferTest.CapturingSlot( GafferImage.Display.imageReceivedSignal() )
+		imagesReceived = GafferTest.CapturingSlot( GafferScene.Display.imageReceivedSignal() )
 
-		node = GafferImage.Display()
+		node = GafferScene.Display()
 		self.assertFalse( node.driverClosed() )
 
 		server = IECoreImage.DisplayDriverServer()
-		driverCreatedConnection = GafferImage.Display.driverCreatedSignal().connect( lambda driver, parameters : node.setDriver( driver ), scoped = True )
+		driverCreatedConnection = GafferScene.Display.driverCreatedSignal().connect( lambda driver, parameters : node.setDriver( driver ), scoped = True )
 
 		self.assertEqual( len( imagesReceived ), 0 )
 

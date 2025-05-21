@@ -207,6 +207,9 @@ from . import VisualiserToolUI
 from . import PrimitiveVariableTweaksUI
 from . import ShuffleRenderPassesUI
 from . import ShuffleOptionsUI
+from . import DisplayUI
+from . import CatalogueUI
+from . import CatalogueSelectUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
