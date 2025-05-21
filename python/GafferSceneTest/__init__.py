@@ -189,6 +189,7 @@ from .MergeCurvesTest import MergeCurvesTest
 from .ShaderPlugTest import ShaderPlugTest
 from .ShuffleRenderPassesTest import ShuffleRenderPassesTest
 from .ShuffleOptionsTest import ShuffleOptionsTest
+from .RenderManifestTest import RenderManifestTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *

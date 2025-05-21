@@ -60,57 +60,25 @@ using namespace GafferScene;
 namespace
 {
 
-struct CacheKey
+struct InternalPointerLess
 {
-	CacheKey() {};
-	CacheKey( IECore::ConstStringDataPtr loadedFromCryptomatteJSONStringData, std::string loadedFromFilePath, std::filesystem::file_time_type loadedFromFilePathModTime )
-		: loadedFromCryptomatteJSONStringData( loadedFromCryptomatteJSONStringData ), loadedFromFilePath( loadedFromFilePath ), loadedFromFilePathModTime( loadedFromFilePathModTime )
+	bool operator()( const IECore::ConstStringDataPtr &lhs, const IECore::ConstStringDataPtr &rhs ) const
 	{
-	}
-
-	bool operator == ( const CacheKey &other ) const
-	{
-		if( other.loadedFromFilePath != loadedFromFilePath || other.loadedFromFilePathModTime != loadedFromFilePathModTime )
-		{
-			return false;
-		}
-
-		if( bool( other.loadedFromCryptomatteJSONStringData ) != bool( loadedFromCryptomatteJSONStringData ) )
-		{
-			return false;
-		}
-
-		if( ( !other.loadedFromCryptomatteJSONStringData ) && ( !loadedFromCryptomatteJSONStringData ) )
-		{
-			return true;
-		}
-
-		return other.loadedFromCryptomatteJSONStringData->isEqualTo( loadedFromCryptomatteJSONStringData.get() );
-	}
-
-	IECore::ConstStringDataPtr loadedFromCryptomatteJSONStringData;
-	std::string loadedFromFilePath;
-	std::filesystem::file_time_type loadedFromFilePathModTime;
-};
-
-
-struct CacheKeyHasher
-{
-	std::size_t operator()( const CacheKey &key ) const
-	{
-		IECore::MurmurHash h;
-		// Don't want to hash the actual contents of what might be an extremely large string.
-		// StringData's internal lazy-copy-on-write will mean that unmodified copies will share the
-		// same address, so we hash that instead.
-		h.append( reinterpret_cast<uintptr_t>( &key.loadedFromCryptomatteJSONStringData->readable() ) );
-		h.append( key.loadedFromFilePath );
-		h.append( key.loadedFromFilePathModTime.time_since_epoch().count() );
-		return h.h1();
+		// We want copies of the same data to compare equal, but we don't want
+		// to compare string values that are potentially extremely long. Knowing
+		// that copies use lazy-copy-on-write allows us to compare the addresses
+		// of the internal data, knowing they will be equal if one was copied
+		// from the other.
+		return std::less<>()( lhs->readable().data(), rhs->readable().data() );
 	}
 };
 
-tbb::spin_rw_mutex g_cacheMutex;
-std::unordered_map< CacheKey, std::weak_ptr< RenderManifest >, CacheKeyHasher > g_cache;
+tbb::spin_rw_mutex g_cryptoManifestCacheMutex;
+std::map<IECore::ConstStringDataPtr, std::weak_ptr<RenderManifest>, InternalPointerLess> g_cryptoManifestCache;
+
+tbb::spin_rw_mutex g_fileCacheMutex;
+using FileCacheKey = std::pair<std::string, std::filesystem::file_time_type>;
+std::map<FileCacheKey, std::weak_ptr<RenderManifest>> g_fileCache;
 
 } // namespace
 
@@ -301,21 +269,16 @@ std::shared_ptr<const RenderManifest> RenderManifest::loadFromImageMetadata( con
 
 	if( cryptoManifestStringData )
 	{
-
 		// This copy should never actually result in the string being copied, because we don't modify it.
-		CacheKey cacheKey( cryptoManifestStringData->copy(), "", std::filesystem::file_time_type() );
+		// See `InternalPointerLess` above.
+		IECore::ConstStringDataPtr cacheKey = cryptoManifestStringData->copy();
 
-		Mutex::scoped_lock lock( g_cacheMutex, /* write = */ false );
-		auto existing = g_cache.find( cacheKey );
-		if( existing != g_cache.end() )
+		Mutex::scoped_lock lock( g_cryptoManifestCacheMutex, /* write = */ false );
+		auto &cachedWeakPtr = g_cryptoManifestCache[cacheKey];
+		if( auto p = cachedWeakPtr.lock() )
 		{
-			std::shared_ptr<RenderManifest> validPointer = existing->second.lock();
-			if( validPointer )
-			{
-				return validPointer;
-			}
+			return p;
 		}
-
 
 		const std::string &cryptoManifestString = cryptoManifestStringData->readable();
 		boost::iostreams::stream<boost::iostreams::array_source> stream( cryptoManifestString.c_str(), cryptoManifestString.size() );
@@ -324,10 +287,9 @@ std::shared_ptr<const RenderManifest> RenderManifest::loadFromImageMetadata( con
 		result->loadCryptomatteJSON( stream );
 
 		lock.upgrade_to_writer();
-		g_cache[ cacheKey ] = result;
+		cachedWeakPtr = result;
 
 		return result;
-
 	}
 
 	std::filesystem::file_time_type currentModTime;
@@ -340,20 +302,14 @@ std::shared_ptr<const RenderManifest> RenderManifest::loadFromImageMetadata( con
 		throw IECore::Exception( std::string( "Could not find manifest file : " ) + sideCarManifestPath + " : " + e.what() );
 	}
 
+	FileCacheKey cacheKey( sideCarManifestPath, currentModTime );
 
-	CacheKey cacheKey( nullptr, sideCarManifestPath, currentModTime );
-
-	Mutex::scoped_lock lock( g_cacheMutex, /* write = */ false );
-	auto existing = g_cache.find( cacheKey );
-	if( existing != g_cache.end() )
+	Mutex::scoped_lock lock( g_fileCacheMutex, /* write = */ false );
+	auto &cachedWeakPtr = g_fileCache[cacheKey];
+	if( auto p = cachedWeakPtr.lock() )
 	{
-		std::shared_ptr<RenderManifest> validPointer = existing->second.lock();
-		if( validPointer )
-		{
-			return validPointer;
-		}
+		return p;
 	}
-
 
 	std::shared_ptr<RenderManifest> result = std::make_shared<RenderManifest>();
 	if( !isCryptomatte )
@@ -367,7 +323,7 @@ std::shared_ptr<const RenderManifest> RenderManifest::loadFromImageMetadata( con
 	}
 
 	lock.upgrade_to_writer();
-	g_cache[ cacheKey ] = result;
+	cachedWeakPtr = result;
 
 	return result;
 }
