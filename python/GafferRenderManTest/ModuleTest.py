@@ -54,7 +54,7 @@ class ModuleTest( GafferTest.TestCase ) :
 		# check that we can still load the GUI configs cleanly.
 
 		env = Gaffer.environment()
-		for var in ( "RMANTREE", "PYTHONPATH", "LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH", "GAFFER_STARTUP_PATHS" ) :
+		for var in ( "RMANTREE", "PYTHONPATH", "LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH", "GAFFER_STARTUP_PATHS", "GAFFER_EXTENSION_PATHS" ) :
 			env.pop( var, None )
 
 		try :
