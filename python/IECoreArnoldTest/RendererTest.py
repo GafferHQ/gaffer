@@ -38,6 +38,7 @@ import ctypes
 import json
 import os
 import pathlib
+import struct
 import subprocess
 import sys
 import time
@@ -4085,7 +4086,7 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		fileName = str( self.temporaryDirectory() / "testID.exr" )
-		r.output( "testID", IECoreScene.Output( fileName, "exr", "uint id", { "filter" : "closest" } ) )
+		r.output( "testID", IECoreScene.Output( fileName, "exr", "float id", { "filter" : "closest" } ) )
 
 		o = r.object(
 			"/sphere",
@@ -4100,8 +4101,12 @@ class RendererTest( GafferTest.TestCase ) :
 
 		imageReader = IECoreImage.ImageReader( fileName )
 		data = imageReader.readChannel( "Y", raw = True )
-		self.assertIsInstance( data, IECore.UIntVectorData )
-		self.assertEqual( data[len(data)//2], 101 )
+		self.assertIsInstance( data, IECore.FloatVectorData )
+
+		# Reinterpret float as int.
+		id = struct.pack( "f", data[len(data)//2] )
+		id = struct.unpack( "I", id )[0]
+		self.assertEqual( id, 101 )
 
 	def testReplaceID( self ) :
 
@@ -4122,7 +4127,11 @@ class RendererTest( GafferTest.TestCase ) :
 
 		universe = ctypes.cast( r.command( "ai:queryUniverse", {} ), ctypes.POINTER( arnold.AtUniverse ) )
 		node = arnold.AiNodeLookUpByName( universe, "/sphere" )
-		self.assertEqual( arnold.AiNodeGetUInt( node, "cortex:id" ), 2 )
+
+		# Reinterpret float as int.
+		id = struct.pack( "f", arnold.AiNodeGetFlt( node, "cortex:id" ) )
+		id = struct.unpack( "I", id )[0]
+		self.assertEqual( id, 2 )
 
 		del o
 		del r

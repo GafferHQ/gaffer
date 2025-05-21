@@ -35,6 +35,7 @@
 ##########################################################################
 
 import pathlib
+import struct
 import subprocess
 import unittest
 
@@ -565,6 +566,85 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		for k, v in metadata.items() :
 			self.assertIn( k, imageReader["out"].metadata() )
 			self.assertEqual( imageReader["out"].metadata()[k], v )
+
+	def testIDOutput( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["camera"] = GafferScene.Camera()
+		script["camera"]["transform"]["translate"]["z"].setValue( 5 )
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["in"].setInput( script["camera"]["out"] )
+		script["parent"]["parent"].setValue( "/" )
+
+		for i in range( 0, 3 ) :
+
+			sphere = GafferScene.Sphere()
+			sphere["name"].setValue( f"sphere{i}" )
+			sphere["radius"].setValue( 0.5 )
+			sphere["transform"]["translate"]["x"].setValue( i - 1 )
+			script.addChild( sphere )
+
+			script["parent"]["children"].next().setInput( sphere["out"] )
+
+		imagePath = self.temporaryDirectory() / "test.exr"
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				imagePath.as_posix(),
+				"exr",
+				"float id",
+				{
+					"layerName" : "id",
+					"filter" : "closest",
+				},
+			)
+		)
+		script["outputs"]["in"].setInput( script["parent"]["out"] )
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["in"].setInput( script["outputs"]["out"] )
+		script["options"]["options"]["renderCamera"]["enabled"].setValue( True )
+		script["options"]["options"]["renderCamera"]["value"].setValue( "/camera" )
+
+		manifestPath = self.temporaryDirectory() / "manifest.exr"
+		script["options"]["options"]["renderManifestFilePath"]["enabled"].setValue( True )
+		script["options"]["options"]["renderManifestFilePath"]["value"].setValue( manifestPath )
+
+		script["rendererOptions"] = self._createOptions()
+		script["rendererOptions"]["in"].setInput( script["options"]["out"] )
+
+		script["render"] = GafferScene.Render()
+		script["render"]["in"].setInput( script["rendererOptions"]["out"] )
+		script["render"]["renderer"].setValue( self.renderer )
+		script["render"]["task"].execute()
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( imagePath )
+
+		manifest = GafferScene.RenderManifest.loadFromImageMetadata( reader["out"].metadata(), "" )
+
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( reader["out"] )
+		sampler["channels"].setValue( IECore.StringVectorData( [ "id" ] * 4 ) )
+		sampler["interpolate"].setValue( False )
+
+		for x, expectedObject in {
+			183 : "/sphere0",
+			320 : "/sphere1",
+			470 : "/sphere2",
+		}.items() :
+
+			sampler["pixel"].setValue( imath.V2f( x, 220 ) )
+			id = sampler["color"]["r"].getValue()
+
+			# Reinterpret float as int.
+			id = struct.pack( "f", id )
+			id = struct.unpack( "I", id )[0]
+
+			self.assertEqual( manifest.pathForID( id ), expectedObject )
 
 	## Should be implemented by derived classes to return
 	# an appropriate Shader node with a diffuse surface shader loaded, along

@@ -347,6 +347,18 @@ void Globals::output( const IECore::InternedString &name, const Output *output )
 	if( output )
 	{
 		OutputPtr copy = output->copy();
+
+		// Conform "standard" ID output defined by Gaffer's OutputBuffer class
+		// (used in the raytraced viewport).
+		if( copy->getData() == "float id" && parameter<string>( copy->parameters(), "filter", "" ) == "closest" )
+		{
+			copy->setData( "int id" );
+			copy->parameters()["accumulationRule"] = new StringData( "zmin" );
+			copy->parameters().erase( "filter" );
+		}
+
+		// Warn for parameters that we don't support, but which folks might
+		// accidentally set.
 		for( const auto &n : g_rejectedOutputFilterParameters )
 		{
 			if( copy->parameters().erase( n ) )

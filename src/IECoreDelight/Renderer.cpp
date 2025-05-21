@@ -372,12 +372,6 @@ class DelightOutput : public IECore::RefCounted
 			{
 				variableName = "cortexId";
 				variableSource = "attribute";
-				/// \todo We really want to use something like "uint32" here (as
-				/// provided by the code above), but that maps the `0.0 - 1.0`
-				/// range into the integer range, whereas we want a direct
-				/// mapping. So we render as float and deal with it in
-				/// Display.cpp.
-				scalarFormat = "float";
 			}
 
 			layerName = parameter<string>( output->parameters(), "layerName", layerName );
@@ -1169,7 +1163,12 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 			NSIParam_t param = {
 				"cortexId",
 				&id,
-				NSITypeInteger,
+				// Deliberately declaring as `float` even though it is an
+				// integer. This lets us render the full range of integer values
+				// out of a float AOV through type-punning. 3Delight does have
+				// integer AOVs, but they are broken, and don't preserve integer
+				// input values.
+				NSITypeFloat,
 				0, 1, // array length, count
 				0 // flags
 			};

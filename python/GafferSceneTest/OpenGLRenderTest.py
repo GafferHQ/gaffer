@@ -119,5 +119,10 @@ class OpenGLRenderTest( GafferSceneTest.RenderTest ) :
 
 		pass
 
+	@unittest.skip( "ID output not supported" )
+	def testIDOutput( self ) :
+
+		pass
+
 if __name__ == "__main__":
 	unittest.main()

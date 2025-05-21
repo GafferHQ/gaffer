@@ -319,7 +319,7 @@ class CyclesOutput : public IECore::RefCounted
 					p["type"] = new StringData( "depth" );
 					passType = "depth";
 				}
-				else if( tokens[0] == "uint" && tokens[1] == "id" )
+				else if( tokens[0] == "float" && tokens[1] == "id" )
 				{
 					m_data = tokens[1];
 					p["name"] = new StringData( tokens[1] );
