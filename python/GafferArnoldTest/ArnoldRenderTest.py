@@ -985,7 +985,7 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		ball = GafferArnold.ArnoldShaderBall()
 		ball["shader"].setInput( mix["out"] )
 
-		catalogue = GafferImage.Catalogue()
+		catalogue = GafferScene.Catalogue()
 
 		outputs = GafferScene.Outputs()
 		outputs.addOutput(
@@ -998,7 +998,7 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 					"driverType" : "ClientDisplayDriver",
 					"displayHost" : "localhost",
 					"displayPort" : str( catalogue.displayDriverServer().portNumber() ),
-					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
 				}
 			)
 		)

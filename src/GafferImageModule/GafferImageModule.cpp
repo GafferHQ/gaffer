@@ -38,7 +38,6 @@
 #include "boost/python.hpp"
 
 #include "BufferAlgoBinding.h"
-#include "CatalogueBinding.h"
 #include "ChannelDataProcessorBinding.h"
 #include "CoreBinding.h"
 #include "DeepNodeBinding.h"
@@ -74,7 +73,6 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	bindChannelDataProcessor();
 	bindDeepNodes();
 	bindUtilityNodes();
-	bindCatalogue();
 	bindImageAlgo();
 	bindBufferAlgo();
 	bindFilterAlgo();

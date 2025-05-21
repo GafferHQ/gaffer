@@ -40,7 +40,6 @@ __import__( "GafferDispatchUI" )
 
 from ._GafferImageUI import *
 
-from . import DisplayUI
 from .FormatPlugValueWidget import FormatPlugValueWidget
 from .ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
 from .RGBAChannelsPlugValueWidget import RGBAChannelsPlugValueWidget
@@ -97,9 +96,7 @@ from . import ErodeUI
 from . import DilateUI
 from . import ColorProcessorUI
 from . import MixUI
-from . import CatalogueUI
 from . import CollectImagesUI
-from . import CatalogueSelectUI
 from . import BleedFillUI
 from . import RectangleUI
 from . import FlatToDeepUI

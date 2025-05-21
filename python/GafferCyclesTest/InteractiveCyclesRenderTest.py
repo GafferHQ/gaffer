@@ -41,7 +41,6 @@ import imath
 import IECoreScene
 
 import Gaffer
-import GafferImage
 import GafferScene
 import GafferSceneTest
 import GafferCycles
@@ -59,7 +58,7 @@ class InteractiveCyclesRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		# keep around.
 
 		script = Gaffer.ScriptNode()
-		script["catalogue"] = GafferImage.Catalogue()
+		script["catalogue"] = GafferScene.Catalogue()
 		script["catalogue"]["directory"].setValue( self.temporaryDirectory() )
 
 		script["sphere"] = GafferScene.Sphere()
@@ -75,7 +74,7 @@ class InteractiveCyclesRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 					"driverType" : "ClientDisplayDriver",
 					"displayHost" : "localhost",
 					"displayPort" : str( script["catalogue"].displayDriverServer().portNumber() ),
-					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
 				}
 			)
 		)

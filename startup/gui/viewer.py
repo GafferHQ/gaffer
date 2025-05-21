@@ -46,7 +46,6 @@ import Gaffer
 import GafferUI
 import GafferScene
 import GafferSceneUI
-import GafferImageUI
 
 # add plugs to the preferences node
 
@@ -279,6 +278,6 @@ if os.environ.get( "GAFFERRENDERMAN_HIDE_UI", "" ) != "1" :
 		] )
 
 # Add catalogue hotkeys to viewers, eg: up/down navigation
-GafferUI.Editor.instanceCreatedSignal().connect( GafferImageUI.CatalogueUI.addCatalogueHotkeys )
+GafferUI.Editor.instanceCreatedSignal().connect( GafferSceneUI.CatalogueUI.addCatalogueHotkeys )
 GafferUI.Editor.instanceCreatedSignal().connect( GafferSceneUI.EditScopeUI.addPruningActions )
 GafferUI.Editor.instanceCreatedSignal().connect( GafferSceneUI.EditScopeUI.addVisibilityActions )

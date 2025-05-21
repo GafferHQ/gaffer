@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2025, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -33,59 +33,24 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 ##########################################################################
-import IECore
-import Gaffer
+
 import GafferImage
+import sys
 
-def __imageNames( plug ) :
-	node = plug.node()
-	imagePlug = node["in"]
 
-	while imagePlug is not None and not isinstance( imagePlug.node(), GafferImage.Catalogue ) :
-		imagePlug = imagePlug.getInput()
+# Due to some sort of Python magic, if we subclass the module type, then we can use property() to
+# redirect accesses to things under deprecated names.
 
-	if imagePlug is None :
-		return []
+class PatchedGafferImage( sys.modules["GafferImage"].__class__ ):
 
-	return imagePlug.node()["images"].keys()
+	@staticmethod
+	def _gafferSceneRedirect( name ):
+		# Don't import GafferScene from GafferImage unless we actually need to use one of these classes
+		import GafferScene
+		return GafferScene.__dict__[ name ]
 
-def __imagePresetNames( plug ) :
+	Catalogue = property( lambda self : PatchedGafferImage._gafferSceneRedirect( "Catalogue" ) )
+	CatalogueSelect = property( lambda self : PatchedGafferImage._gafferSceneRedirect( "CatalogueSelect" ) )
+	Display = property( lambda self : PatchedGafferImage._gafferSceneRedirect( "Display" ) )
 
-	return IECore.StringVectorData(
-		[ "Selected", "Output/1", "Output/2", "Output/3", "Output/4" ] +
-		[ "Image/" + i for i in __imageNames( plug ) ]
-	)
-
-def __imagePresetValues( plug ) :
-
-	return IECore.StringVectorData(
-		[ "", "output:1", "output:2", "output:3", "output:4" ] +
-		__imageNames( plug )
-	)
-
-Gaffer.Metadata.registerNode(
-
-	GafferImage.CatalogueSelect,
-
-	"description",
-	"Finds an image in a directly connected Catalogue by name.",
-
-	plugs = {
-
-		"imageName" : [
-
-			"description",
-			"The name of the image to extract.",
-
-			"presetNames", __imagePresetNames,
-			"presetValues", __imagePresetValues,
-			# Don't promote presets so they are still computed dynamically for
-			# the promoted plug rather than being baked.
-			"presetNames:promotable", False,
-			"presetValues:promotable", False,
-			"presetsPlugValueWidget:allowCustom", True,
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		]
-	}
-)
+sys.modules["GafferImage"].__class__ = PatchedGafferImage

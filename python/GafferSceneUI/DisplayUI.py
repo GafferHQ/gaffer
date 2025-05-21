@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012-2014, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,16 +34,45 @@
 #
 ##########################################################################
 
-__import__( "IECoreScene" )
-__import__( "Gaffer" )
-__import__( "GafferDispatch" )
-__import__( "GafferImage" )
+import threading
 
-from ._GafferScene import *
+import Gaffer
+import GafferUI
 
-from .CatalogueSelect import CatalogueSelect
-from .ShaderBall import ShaderBall
-from .RenderPassWedge import RenderPassWedge
-from .RenderPassTypeAdaptor import RenderPassTypeAdaptor
+import GafferScene
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferScene" )
+__all__ = []
+
+Gaffer.Metadata.registerNode(
+
+	GafferScene.Display,
+
+	"description",
+	"""
+	Interactively displays images as they are rendered.
+
+	This node runs a server on a background thread,
+	allowing it to receive images from both local and
+	remote render processes. To set up a render to
+	output to the Display node, use an Outputs node with
+	an Interactive output configured to render to the
+	same port as is specified on the Display node.
+	""",
+
+	plugs = {
+
+		"port" : [
+
+			"description",
+			"""
+			The port number on which to run the display server.
+			Outputs which specify this port number will appear
+			in this node - use multiple nodes with different
+			port numbers to receive multiple images at once.
+			""",
+
+		],
+
+	}
+
+)

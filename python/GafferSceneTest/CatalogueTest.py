@@ -49,6 +49,8 @@ import Gaffer
 import GafferTest
 import GafferImage
 import GafferImageTest
+import GafferScene
+import GafferSceneTest
 
 class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
@@ -56,7 +58,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 	def sendImage( image, catalogue, extraParameters = {}, waitForSave = True, close = True ) :
 
 		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as h :
-			result = GafferImageTest.DisplayTest.Driver.sendImage( image, GafferImage.Catalogue.displayDriverServer().portNumber(), extraParameters, close = close )
+			result = GafferSceneTest.DisplayTest.Driver.sendImage( image, GafferScene.Catalogue.displayDriverServer().portNumber(), extraParameters, close = close )
 			if catalogue["directory"].getValue() and waitForSave :
 				# When the image has been received, the Catalogue will
 				# save it to disk on a background thread, and we need
@@ -73,11 +75,11 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		images = []
 		readers = []
 		for i, fileName in enumerate( [ "checker.exr", "blurRange.exr", "noisyRamp.exr", "resamplePatterns.exr" ] ) :
-			images.append( GafferImage.Catalogue.Image.load( self.imagesPath() / fileName ) )
+			images.append( GafferScene.Catalogue.Image.load( self.imagesPath() / fileName ) )
 			readers.append( GafferImage.ImageReader() )
 			readers[-1]["fileName"].setValue( images[-1]["fileName"].getValue() )
 
-		c = GafferImage.Catalogue()
+		c = GafferScene.Catalogue()
 
 		for image in images :
 			c["images"].addChild( image )
@@ -98,7 +100,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 	def testDescription( self ) :
 
-		c = GafferImage.Catalogue()
+		c = GafferScene.Catalogue()
 		c["images"].addChild( c.Image.load( self.imagesPath() / "blurRange.exr" ) )
 		self.assertNotIn( "ImageDescription", c["out"]["metadata"].getValue() )
 
@@ -121,19 +123,19 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( w["fileName"].getValue() )
 
-		c = GafferImage.Catalogue()
-		c["images"].addChild( GafferImage.Catalogue.Image.load( w["fileName"].getValue() ) )
+		c = GafferScene.Catalogue()
+		c["images"].addChild( GafferScene.Catalogue.Image.load( w["fileName"].getValue() ) )
 		self.assertEqual( c["images"][0]["description"].getValue(), "" )
 		self.assertEqual( c["out"]["metadata"].getValue()["ImageDescription"].value, "i am a description" )
 
 	def testSerialisation( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["c"] = GafferImage.Catalogue()
+		s["c"] = GafferScene.Catalogue()
 
 		for i, fileName in enumerate( [ "checker.exr", "blurRange.exr" ] ) :
 			s["c"]["images"].addChild(
-				GafferImage.Catalogue.Image.load(
+				GafferScene.Catalogue.Image.load(
 					self.imagesPath() / fileName,
 				)
 			)
@@ -160,14 +162,14 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 	def testDisabling( self ) :
 
-		c1 = GafferImage.Catalogue()
+		c1 = GafferScene.Catalogue()
 		c1["images"].addChild(
-			GafferImage.Catalogue.Image.load( self.imagesPath() / "checker.exr" )
+			GafferScene.Catalogue.Image.load( self.imagesPath() / "checker.exr" )
 		)
 
-		c2 = GafferImage.Catalogue()
+		c2 = GafferScene.Catalogue()
 		c2["images"].addChild(
-			GafferImage.Catalogue.Image.load( self.imagesPath() / "checker.exr" )
+			GafferScene.Catalogue.Image.load( self.imagesPath() / "checker.exr" )
 		)
 
 		self.assertImagesEqual( c1["out"], c2["out"] )
@@ -183,7 +185,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 	def testDisplayDriver( self ) :
 
-		c = GafferImage.Catalogue()
+		c = GafferScene.Catalogue()
 		self.assertEqual( len( c["images"] ), 0 )
 
 		r = GafferImage.ImageReader()
@@ -210,7 +212,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 	def testDisplayDriverAOVGrouping( self ) :
 
-		c = GafferImage.Catalogue()
+		c = GafferScene.Catalogue()
 		self.assertEqual( len( c["images"] ), 0 )
 
 		aov1 = GafferImage.Constant()
@@ -235,7 +237,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 	def testDisplayDriverSaveToFile( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["c"] = GafferImage.Catalogue()
+		s["c"] = GafferScene.Catalogue()
 		s["c"]["directory"].setValue( self.temporaryDirectory() / "catalogue" )
 
 		r = GafferImage.ImageReader()
@@ -260,8 +262,8 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 	def testCatalogueName( self ) :
 
-		c1 = GafferImage.Catalogue()
-		c2 = GafferImage.Catalogue()
+		c1 = GafferScene.Catalogue()
+		c2 = GafferScene.Catalogue()
 		c2["name"].setValue( "catalogue2" )
 
 		self.assertEqual( len( c1["images"] ), 0 )
@@ -296,7 +298,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 	def testDontSerialiseUnsavedRenders( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["c"] = GafferImage.Catalogue()
+		s["c"] = GafferScene.Catalogue()
 
 		constant = GafferImage.Constant()
 		constant["format"].setValue( GafferImage.Format( 100, 100 ) )
@@ -316,7 +318,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
-		s["b"]["c"] = GafferImage.Catalogue()
+		s["b"]["c"] = GafferScene.Catalogue()
 		promotedImages = Gaffer.PlugAlgo.promote( s["b"]["c"]["images"] )
 		promotedImageIndex = Gaffer.PlugAlgo.promote( s["b"]["c"]["imageIndex"] )
 		promotedOut = Gaffer.PlugAlgo.promote( s["b"]["c"]["out"] )
@@ -324,7 +326,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		images = []
 		readers = []
 		for i, fileName in enumerate( [ "checker.exr", "blurRange.exr", "noisyRamp.exr" ] ) :
-			images.append( GafferImage.Catalogue.Image.load( self.imagesPath() / fileName ) )
+			images.append( GafferScene.Catalogue.Image.load( self.imagesPath() / fileName ) )
 			readers.append( GafferImage.ImageReader() )
 			readers[-1]["fileName"].setValue( images[-1]["fileName"].getValue() )
 
@@ -367,7 +369,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
-		s["b"]["c"] = GafferImage.Catalogue()
+		s["b"]["c"] = GafferScene.Catalogue()
 		s["b"]["c"]["directory"].setValue( self.temporaryDirectory() / "catalogue" )
 		promotedImages = Gaffer.PlugAlgo.promote( s["b"]["c"]["images"] )
 		promotedImageIndex = Gaffer.PlugAlgo.promote( s["b"]["c"]["imageIndex"] )
@@ -406,7 +408,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
-		s["b"]["c"] = GafferImage.Catalogue()
+		s["b"]["c"] = GafferScene.Catalogue()
 		promotedImages = Gaffer.PlugAlgo.promote( s["b"]["c"]["images"] )
 		promotedImageIndex = Gaffer.PlugAlgo.promote( s["b"]["c"]["imageIndex"] )
 		promotedOut = Gaffer.PlugAlgo.promote( s["b"]["c"]["out"] )
@@ -425,7 +427,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 	def testUndoRedo( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["c"] = GafferImage.Catalogue()
+		s["c"] = GafferScene.Catalogue()
 		s["c"]["images"].addChild( s["c"].Image.load( self.imagesPath() / "checker.exr" ) )
 
 		r = GafferImage.ImageReader()
@@ -466,7 +468,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		# on a python expression.
 
 		s = Gaffer.ScriptNode()
-		s["catalogue"] = GafferImage.Catalogue()
+		s["catalogue"] = GafferScene.Catalogue()
 
 		s["constant"] = GafferImage.Constant()
 
@@ -498,10 +500,10 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["c"] = GafferImage.Catalogue()
+		s["c"] = GafferScene.Catalogue()
 		s["c"]["directory"].setValue( self.temporaryDirectory() / "catalogue" )
 
-		drivers = GafferTest.CapturingSlot( GafferImage.Display.driverCreatedSignal() )
+		drivers = GafferTest.CapturingSlot( GafferScene.Display.driverCreatedSignal() )
 
 		s["r"] = GafferImage.ImageReader()
 		s["r"]["fileName"].setValue( self.imagesPath() / "checker.exr" )
@@ -524,7 +526,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		# the data in the display driver. These should be identical to a regular
 		# Display node containing the same driver.
 
-		display = GafferImage.Display()
+		display = GafferScene.Display()
 		display.setDriver( drivers[0][0] )
 
 		self.assertEqual(
@@ -539,7 +541,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		# This applies to copies too
 
-		s["c"]["images"].addChild( GafferImage.Catalogue.Image( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["c"]["images"].addChild( GafferScene.Catalogue.Image( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		self.assertEqual( len( s["c"]["images"] ), 2 )
 		s["c"]["images"][1].copyFrom( s["c"]["images"][0] )
 
@@ -556,7 +558,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 	def testCopyFrom( self ) :
 
-		c = GafferImage.Catalogue()
+		c = GafferScene.Catalogue()
 		c["images"].addChild( c.Image.load( self.imagesPath() / "checker.exr" ) )
 		c["images"][0]["description"].setValue( "test" )
 
@@ -571,7 +573,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 	def testDeleteBeforeSaveCompletes( self ) :
 
-		c = GafferImage.Catalogue()
+		c = GafferScene.Catalogue()
 		c["directory"].setValue( self.temporaryDirectory() / "catalogue" )
 
 		r = GafferImage.ImageReader()
@@ -594,7 +596,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		os.chmod( baseDirectory, stat.S_IREAD | stat.S_IEXEC )
 		directory = baseDirectory / "${script:name}" / "images"
 
-		s["c"] = GafferImage.Catalogue()
+		s["c"] = GafferScene.Catalogue()
 		s["c"]["directory"].setValue( directory )
 
 		fullDirectory = pathlib.Path( s.context().substitute( s["c"]["directory"].getValue() ) )
@@ -619,7 +621,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 	def testNonWritableDirectory( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["c"] = GafferImage.Catalogue()
+		s["c"] = GafferScene.Catalogue()
 		s["c"]["directory"].setValue( self.temporaryDirectory() / "catalogue" )
 		if os.name != "nt" :
 			os.chmod( self.temporaryDirectory(), stat.S_IREAD )
@@ -662,7 +664,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		# Send 4 images to a Catalogue : red, green, blue, yellow
 
 		script = Gaffer.ScriptNode()
-		script["catalogue"] = GafferImage.Catalogue()
+		script["catalogue"] = GafferScene.Catalogue()
 		script["catalogue"]["directory"].setValue( self.temporaryDirectory() / "catalogue" )
 
 		script["red"] = GafferImage.Constant()
@@ -759,7 +761,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 	def testLoadWithInvalidNames( self ) :
 
-		sourceFile = pathlib.Path( __file__ ).parent /  "images" / "blurRange.exr"
+		sourceFile = self.imagesPath() / "blurRange.exr"
 
 		for name, expectedName in [
 			( "0", "_0" ),
@@ -770,7 +772,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 			fileName = self.temporaryDirectory() / ( name + ".exr" )
 			shutil.copyfile( sourceFile, fileName )
-			GafferImage.Catalogue.Image.load( fileName )
+			GafferScene.Catalogue.Image.load( fileName )
 
 	def testRenamePromotedImages( self ) :
 
@@ -780,7 +782,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		s["box"] = Gaffer.Box()
 
-		s["box"]["catalogue"] = GafferImage.Catalogue()
+		s["box"]["catalogue"] = GafferScene.Catalogue()
 		s["box"]["catalogue"]["directory"].setValue( self.temporaryDirectory() / "catalogue" )
 
 		images = Gaffer.PlugAlgo.promote( s["box"]["catalogue"]["images"] )
@@ -850,7 +852,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 	def testInternalImagePythonType( self ) :
 
-		c = GafferImage.Catalogue()
+		c = GafferScene.Catalogue()
 		c["images"].addChild( c.Image.load( self.imagesPath() / "blurRange.exr" ) )
 
 		for g in Gaffer.GraphComponent.RecursiveRange( c ) :
@@ -861,7 +863,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 	def testImageName( self ) :
 
-		catalogue = GafferImage.Catalogue()
+		catalogue = GafferScene.Catalogue()
 		self.assertEqual( len( catalogue["images"] ), 0 )
 
 		constant = GafferImage.Constant()
@@ -906,7 +908,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["variables"].addChild( Gaffer.NameValuePlug( "CV", Gaffer.StringPlug( "value", defaultValue = "foo" ) ) )
-		catalogue = GafferImage.Catalogue()
+		catalogue = GafferScene.Catalogue()
 		catalogue["directory"].setValue( "${CV}/dir/" )
 		s.addChild( catalogue )
 		constant1 = GafferImage.Constant()
@@ -959,11 +961,11 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		images = []
 		readers = []
 		for i, fileName in enumerate( [ "checker.exr", "blurRange.exr", "noisyRamp.exr", "resamplePatterns.exr" ] ) :
-			images.append( GafferImage.Catalogue.Image.load( self.imagesPath() / fileName ) )
+			images.append( GafferScene.Catalogue.Image.load( self.imagesPath() / fileName ) )
 			readers.append( GafferImage.ImageReader() )
 			readers[-1]["fileName"].setValue( images[-1]["fileName"].getValue() )
 
-		catalogue = GafferImage.Catalogue()
+		catalogue = GafferScene.Catalogue()
 
 		for image in images :
 			catalogue["images"].addChild( image )
@@ -1026,7 +1028,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		script = Gaffer.ScriptNode()
 
-		script["catalogue"] = GafferImage.Catalogue()
+		script["catalogue"] = GafferScene.Catalogue()
 		script["catalogue"]["directory"].setValue( self.temporaryDirectory() / "catalogue" )
 
 		script["constant"] = GafferImage.Constant()
@@ -1083,7 +1085,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 				# Send 3 images to a Catalogue : red, green, blue
 
 				script = Gaffer.ScriptNode()
-				script["catalogue"] = GafferImage.Catalogue()
+				script["catalogue"] = GafferScene.Catalogue()
 				script["catalogue"]["directory"].setValue( self.temporaryDirectory() / "catalogue" )
 
 				script["red"] = GafferImage.Constant()
@@ -1172,7 +1174,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 				IECore.StringVectorData( catalogue["images"].keys() )
 			)
 
-		catalogue = GafferImage.Catalogue()
+		catalogue = GafferScene.Catalogue()
 		plugDirtiedSlot = GafferTest.CapturingSlot( catalogue.plugDirtiedSignal() )
 		assertImageNames( catalogue )
 

@@ -41,7 +41,9 @@ import GafferImage
 import GafferUI
 import GafferUITest
 
-from GafferImageUI import CatalogueUI
+import GafferScene
+
+from GafferSceneUI import CatalogueUI
 
 import IECore
 
@@ -63,7 +65,7 @@ class CatalogueUITest( GafferUITest.TestCase ) :
 		self.assertTrue( "Name" in CatalogueUI.registeredColumns() )
 		self.assertTrue( "Output Index" in CatalogueUI.registeredColumns() )
 
-		c = GafferImage.Catalogue()
+		c = GafferScene.Catalogue()
 		self.assertEqual(
 			Gaffer.Metadata.value( c["imageIndex"], "catalogue:columns" ),
 			IECore.StringVectorData( [ "Status", "Output Index", "Name" ] )
@@ -73,7 +75,7 @@ class CatalogueUITest( GafferUITest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
-		s["b"]["c"] = GafferImage.Catalogue()
+		s["b"]["c"] = GafferScene.Catalogue()
 
 		# 'images' is required to for serialisation if the
 		# catalogue is inside a reference/extension.
@@ -92,7 +94,7 @@ class CatalogueUITest( GafferUITest.TestCase ) :
 		# from config but still be referenced by plug metadata.
 
 		s = Gaffer.ScriptNode()
-		s["c"] = GafferImage.Catalogue()
+		s["c"] = GafferScene.Catalogue()
 
 		Gaffer.Metadata.registerValue(
 			s["c"]["imageIndex"], "catalogue:columns",
@@ -126,10 +128,10 @@ class CatalogueUITest( GafferUITest.TestCase ) :
 		script["imageWriter"]["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
 		script["imageWriter"]["task"].execute()
 
-		script["catalogue"] = GafferImage.Catalogue()
-		script["catalogue"]["images"].addChild( GafferImage.Catalogue.Image.load( script["imageWriter"]["fileName"].getValue() ) )
+		script["catalogue"] = GafferScene.Catalogue()
+		script["catalogue"]["images"].addChild( GafferScene.Catalogue.Image.load( script["imageWriter"]["fileName"].getValue() ) )
 
-		from GafferImageUI.CatalogueUI import _ImagesPath
+		from GafferSceneUI.CatalogueUI import _ImagesPath
 		path = _ImagesPath( script["catalogue"]["images"], "/test" )
 
 		# Header value provider

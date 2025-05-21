@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -33,46 +33,29 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 ##########################################################################
-
-import threading
+import IECore
 
 import Gaffer
-import GafferUI
-
 import GafferImage
 
-__all__ = []
 
-Gaffer.Metadata.registerNode(
+class CatalogueSelect( GafferImage.ImageProcessor ) :
 
-	GafferImage.Display,
+	def __init__(self, name = 'CatalogueSelect' ) :
 
-	"description",
-	"""
-	Interactively displays images as they are rendered.
+		GafferImage.ImageProcessor.__init__( self, name )
 
-	This node runs a server on a background thread,
-	allowing it to receive images from both local and
-	remote render processes. To set up a render to
-	output to the Display node, use an Outputs node with
-	an Interactive output configured to render to the
-	same port as is specified on the Display node.
-	""",
+		self["imageName"] = Gaffer.StringPlug()
 
-	plugs = {
+		self["__context"] = Gaffer.ContextVariables()
+		self["__context"].setup( self["in"] )
+		self["__context"]["variables"].addChild( Gaffer.NameValuePlug( "catalogue:imageName", "", "imageNameMember" ) )
+		self["__context"]["variables"]["imageNameMember"]["value"].setInput( self["imageName"] )
 
-		"port" : [
+		self["__context"]["in"].setInput( self["in"] )
+		self["out"].setInput( self["__context"]["out"] )
 
-			"description",
-			"""
-			The port number on which to run the display server.
-			Outputs which specify this port number will appear
-			in this node - use multiple nodes with different
-			port numbers to receive multiple images at once.
-			""",
+		self['out'].setFlags(Gaffer.Plug.Flags.Serialisable, False)
 
-		],
 
-	}
-
-)
+IECore.registerRunTimeTyped( CatalogueSelect, typeName = "GafferScene::CatalogueSelect" )

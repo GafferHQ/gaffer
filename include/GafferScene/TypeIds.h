@@ -189,6 +189,10 @@ enum TypeId
 	MergeCurvesTypeId = 120144,
 	ShuffleRenderPassesTypeId = 120145,
 	ShuffleOptionsTypeId = 120146,
+	CatalogueTypeId = 120147,
+	CatalogueImageTypeId = 120148,
+	DisplayTypeId = 120149,
+	GafferDisplayDriverTypeId = 120150,
 
 	LastTypeId = 120999
 };
