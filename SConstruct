@@ -857,30 +857,51 @@ if ( int( baseLibEnv["BOOST_MAJOR_VERSION"] ), int( baseLibEnv["BOOST_MINOR_VERS
 # The basic environment for building python modules
 ###############################################################################################
 
-basePythonEnv = baseLibEnv.Clone()
+# Version configuration and search paths go in `baseLibEnv` so they are accessible
+# to GafferUSD, since USD itself depends on Python.
 
 pythonExecutable = shutil.which( "python", path = commandEnv["ENV"]["PATH"] )
-basePythonEnv["PYTHON_VERSION"] = subprocess.check_output(
+baseLibEnv["PYTHON_VERSION"] = subprocess.check_output(
 	[ pythonExecutable, "-c", "import sys; print( '{}.{}'.format( *sys.version_info[:2] ) )" ],
 	env=commandEnv["ENV"], universal_newlines=True
 ).strip()
 
-if basePythonEnv["PLATFORM"] == "win32" :
-	basePythonEnv["PYTHON_VERSION"] = basePythonEnv["PYTHON_VERSION"].replace( ".", "" )
+if baseLibEnv["PLATFORM"] == "win32" :
+	baseLibEnv["PYTHON_VERSION"] = baseLibEnv["PYTHON_VERSION"].replace( ".", "" )
 
-basePythonEnv["PYTHON_ABI_VERSION"] = basePythonEnv["PYTHON_VERSION"]
-basePythonEnv["PYTHON_ABI_VERSION"] += subprocess.check_output(
+baseLibEnv["PYTHON_ABI_VERSION"] = baseLibEnv["PYTHON_VERSION"]
+baseLibEnv["PYTHON_ABI_VERSION"] += subprocess.check_output(
 	[ pythonExecutable, "-c", "import sysconfig; print( sysconfig.get_config_var( 'abiflags' ) or '' )" ],
 	env=commandEnv["ENV"], universal_newlines=True
 ).strip()
 
 # if BOOST_PYTHON_LIB_SUFFIX is provided, use it
-boostPythonLibSuffix = basePythonEnv.get( "BOOST_PYTHON_LIB_SUFFIX", None )
+boostPythonLibSuffix = baseLibEnv.get( "BOOST_PYTHON_LIB_SUFFIX", None )
 if boostPythonLibSuffix is None :
-	basePythonEnv["BOOST_PYTHON_LIB_SUFFIX"] = basePythonEnv["BOOST_LIB_SUFFIX"]
-	if ( int( basePythonEnv["BOOST_MAJOR_VERSION"] ), int( basePythonEnv["BOOST_MINOR_VERSION"] ) ) >= ( 1, 67 ) :
-		basePythonEnv["BOOST_PYTHON_LIB_SUFFIX"] = basePythonEnv["PYTHON_VERSION"].replace( ".", "" ) + basePythonEnv["BOOST_PYTHON_LIB_SUFFIX"]
+	baseLibEnv["BOOST_PYTHON_LIB_SUFFIX"] = baseLibEnv["BOOST_LIB_SUFFIX"]
+	if ( int( baseLibEnv["BOOST_MAJOR_VERSION"] ), int( baseLibEnv["BOOST_MINOR_VERSION"] ) ) >= ( 1, 67 ) :
+		baseLibEnv["BOOST_PYTHON_LIB_SUFFIX"] = baseLibEnv["PYTHON_VERSION"].replace( ".", "" ) + baseLibEnv["BOOST_PYTHON_LIB_SUFFIX"]
 
+if baseLibEnv["PLATFORM"]=="darwin" :
+
+	baseLibEnv.Append(
+		CPPPATH = [ "$BUILD_DIR/lib/Python.framework/Versions/$PYTHON_VERSION/include/python$PYTHON_VERSION" ],
+		LIBPATH = [ "$BUILD_DIR/lib/Python.framework/Versions/$PYTHON_VERSION/lib" ]
+	)
+
+else :
+
+	baseLibEnv.Append(
+		CPPPATH = [ "$BUILD_DIR/include/python$PYTHON_ABI_VERSION" ]
+	)
+
+	if baseLibEnv["PLATFORM"] == "win32" :
+		baseLibEnv.Append( LIBPATH = "$BUILD_DIR/libs" )
+
+# Libraries and preprocessor defines only go in `basePythonEnv` so that only
+# modules and bindings use them.
+
+basePythonEnv = baseLibEnv.Clone()
 basePythonEnv.Append(
 
 	CPPDEFINES = [
@@ -895,23 +916,6 @@ basePythonEnv.Append(
 	],
 
 )
-
-if basePythonEnv["PLATFORM"]=="darwin" :
-
-	basePythonEnv.Append(
-		CPPPATH = [ "$BUILD_DIR/lib/Python.framework/Versions/$PYTHON_VERSION/include/python$PYTHON_VERSION" ],
-		LIBPATH = [ "$BUILD_DIR/lib/Python.framework/Versions/$PYTHON_VERSION/lib" ]
-	)
-
-else :
-
-	basePythonEnv.Append(
-		CPPPATH = [ "$BUILD_DIR/include/python$PYTHON_ABI_VERSION" ]
-	)
-
-	if basePythonEnv["PLATFORM"] == "win32" :
-
-		basePythonEnv.Append( LIBPATH = "$BUILD_DIR/libs" )
 
 ###############################################################################################
 # Arnold configuration
@@ -1012,6 +1016,28 @@ cyclesDefines = [
 	( "WITH_CUDA_DYNLOAD" ),
 	( "WITH_OPTIX" ),
 ]
+
+
+###############################################################################################
+# USD configuration
+###############################################################################################
+
+usdPythonLib = basePythonEnv.subst( "boost_python$BOOST_PYTHON_LIB_SUFFIX" )
+if env["GAFFERUSD"] :
+
+	pxrVersionHeader = baseLibEnv.FindFile(
+		"pxr/pxr.h",
+		[ "$BUILD_DIR/include" ] +
+		baseLibEnv["LOCATE_DEPENDENCY_SYSTEMPATH"] +
+		baseLibEnv["LOCATE_DEPENDENCY_CPPPATH"]
+	)
+
+	if not pxrVersionHeader :
+		sys.stderr.write( "ERROR : unable to find \"pxr/pxr.h\".\n" )
+		Exit( 1 )
+
+	if "#define PXR_USE_INTERNAL_BOOST_PYTHON\n" in open( str( pxrVersionHeader ) ) :
+		usdPythonLib = "${USD_LIB_PREFIX}python"
 
 ###############################################################################################
 # Definitions for the libraries we wish to build
@@ -1475,7 +1501,9 @@ libraries = {
 
 	"GafferUSD" : {
 		"envAppends" : {
-			"LIBS" : [ "GafferDispatch", "GafferScene", "GafferImage", "IECoreScene$CORTEX_LIB_SUFFIX" ] + [ "${USD_LIB_PREFIX}" + x for x in ( [ "sdf", "arch", "tf", "vt", "ndr", "sdr", "usd", "usdLux" ] if not env["USD_MONOLITHIC"] else [ "usd_ms" ] ) ],
+			"LIBS" :
+				[ "Gaffer", "GafferDispatch", "GafferScene", "GafferImage", "IECoreScene$CORTEX_LIB_SUFFIX", usdPythonLib, "python$PYTHON_ABI_VERSION" ] +
+				[ "${USD_LIB_PREFIX}" + x for x in ( [ "sdf", "arch", "tf", "vt", "ndr", "sdr", "usd", "usdLux" ] if not env["USD_MONOLITHIC"] else [ "usd_ms" ] ) ],
 			# USD includes "at least one deprecated or antiquated header", so we
 			# have to drop our usual strict warning levels.
 			"CXXFLAGS" : [ "-Wno-deprecated" if env["PLATFORM"] != "win32" else "/wd4996" ],
@@ -1483,8 +1511,6 @@ libraries = {
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferUSD", "GafferScene", "GafferDispatch", "GafferBindings" ],
 		},
-		# USD's Python bindings are intrusive to the main library.
-		"libraryDependsOnPython" : True,
 		"requiredOptions" : [ "GAFFERUSD" ],
 	},
 
@@ -1701,9 +1727,6 @@ for libraryName, libraryDef in libraries.items() :
 	# environment
 
 	libEnv = baseLibEnv.Clone()
-	if libraryDef.get( "libraryDependsOnPython" ) :
-		libEnv = basePythonEnv.Clone()
-
 	libEnv.Append( CXXFLAGS = "-D{0}_EXPORTS".format( libraryName ) )
 	libEnv.Append( **(libraryDef.get( "envAppends", {} )) )
 	libEnv.Replace( **(libraryDef.get( "envReplacements", {} )) )
