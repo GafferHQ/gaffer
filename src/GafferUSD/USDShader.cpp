@@ -301,7 +301,11 @@ Plug *loadParameter( InternedString name, const SdfValueTypeName &type, Plug::Di
 
 Plug *loadShaderProperty( const SdrShaderProperty &property, Plug *parent )
 {
+#if PXR_VERSION >= 2411
+	SdfValueTypeName sdfType = property.GetTypeAsSdfType().GetSdfType();
+#else
 	SdfValueTypeName sdfType = property.GetTypeAsSdfType().first;
+#endif
 	if(
 		property.GetType() == SdrPropertyTypes->Terminal ||
 		property.GetType() == SdrPropertyTypes->Vstruct
