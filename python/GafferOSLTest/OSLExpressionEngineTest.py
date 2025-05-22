@@ -888,5 +888,18 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 		with self.assertRaisesRegex( RuntimeError, "expression:1: error: 'undefinedVariable' was not declared in this scope" ) :
 			s["expression"].setExpression( "parent.node.op1 = undefinedVariable;", "OSL" )
 
+	def testColonInPlugNames( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["test:i"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["test:o"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( "parent.n.user.test:o = parent.n.user.test:i + 1;", "OSL" )
+
+		s["n"]["user"]["test:i"].setValue( 1 )
+		self.assertEqual( s["n"]["user"]["test:o"].getValue(), 2 )
+
 if __name__ == "__main__":
 	unittest.main()
