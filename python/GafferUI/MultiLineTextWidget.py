@@ -358,7 +358,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 		assert( widget is self )
 
-		if event.key=="Enter" or ( event.key=="Return" and event.modifiers==event.Modifiers.Control ) :
+		if event.key=="Enter" or ( event.key=="Return" and event.modifiers & event.Modifiers.Control ) :
 			self.__activatedSignal( self )
 			self._emitEditingFinished()
 			return True
