@@ -41,16 +41,16 @@ namespace GafferML
 
 enum TypeId
 {
-	TensorTypeId = 110451,
-	TensorPlugTypeId = 110452,
-	ImageToTensorTypeId = 110453,
-	TensorToImageTypeId = 110454,
-	InferenceTypeId = 110455,
-	TensorReaderTypeId = 110456,
-	DataToTensorTypeId = 110457,
-	TensorToMeshTypeId = 110458,
+	TensorTypeId = 123400,
+	TensorPlugTypeId = 123401,
+	ImageToTensorTypeId = 123402,
+	TensorToImageTypeId = 123403,
+	InferenceTypeId = 123404,
+	TensorReaderTypeId = 123405,
+	DataToTensorTypeId = 123406,
+	TensorToMeshTypeId = 123407,
 
-	LastTypeId = 110500
+	LastTypeId = 123599
 };
 
 } // namespace GafferML

@@ -41,15 +41,15 @@ namespace GafferImageUI
 
 enum TypeId
 {
-	ImageViewTypeId = 110850,
-	ImageGadgetTypeId = 110851,
-	V2fContextVariableTypeId = 110852,
-	Box2iContextVariableTypeId = 110853,
-	ColorInspectorPlugTypeId = 110854,
-	Box2iGadgetTypeId = 110855,
-	V2iGadgetTypeId = 110856,
+	ImageViewTypeId = 122000,
+	ImageGadgetTypeId = 122001,
+	V2fContextVariableTypeId = 122002,
+	Box2iContextVariableTypeId = 122003,
+	ColorInspectorPlugTypeId = 122004,
+	Box2iGadgetTypeId = 122005,
+	V2iGadgetTypeId = 122006,
 
-	LastTypeId = 110899
+	LastTypeId = 122099
 };
 
 } // namespace GafferImageUI

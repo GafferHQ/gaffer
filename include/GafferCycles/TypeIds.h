@@ -41,16 +41,16 @@ namespace GafferCycles
 
 enum TypeId
 {
-	CyclesAttributesTypeId = 400000,
-	CyclesOptionsTypeId = 400001,
-	CyclesRenderTypeId = 400002, // Available for reuse
-	InteractiveCyclesRenderTypeId = 400003, // Available for reuse
-	CyclesShaderTypeId = 400004,
-	CyclesLightTypeId = 400005,
-	CyclesBackgroundTypeId = 400006,
-	CyclesMeshLightTypeId = 400007,
+	CyclesAttributesTypeId = 122500,
+	CyclesOptionsTypeId = 122501,
+	CyclesRenderTypeId = 122502, // Available for reuse
+	InteractiveCyclesRenderTypeId = 122503, // Available for reuse
+	CyclesShaderTypeId = 122504,
+	CyclesLightTypeId = 122505,
+	CyclesBackgroundTypeId = 122506,
+	CyclesMeshLightTypeId = 122507,
 
-	LastTypeId = 400049
+	LastTypeId = 122799
 };
 
 } // namespace GafferCycles

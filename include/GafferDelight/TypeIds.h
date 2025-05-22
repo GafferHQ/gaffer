@@ -42,12 +42,12 @@ namespace GafferDelight
 
 enum TypeId
 {
-	DelightAttributesTypeId = 110925,
-	DelightOptionsTypeId = 110926,
-	DelightRenderTypeId = 110927, // Available for reuse
-	InteractiveDelightRenderTypeId = 110928, // Available for reuse
+	DelightAttributesTypeId = 122800,
+	DelightOptionsTypeId = 122801,
+	DelightRenderTypeId = 122802, // Available for reuse
+	InteractiveDelightRenderTypeId = 122803, // Available for reuse
 
-	LastTypeId = 110949
+	LastTypeId = 122999
 };
 
 } // namespace GafferDelight

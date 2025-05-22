@@ -41,15 +41,15 @@ namespace GafferOSL
 
 enum TypeId
 {
-	OSLShaderTypeId = 110975,
-	OSLRendererTypeId = 110976,
-	OSLImageTypeId = 110977,
-	OSLObjectTypeId = 110978,
-	OSLCodeTypeId = 110979,
-	ClosurePlugTypeId = 110980,
-	OSLLightTypeId = 110981,
+	OSLShaderTypeId = 122100,
+	OSLRendererTypeId = 122101,
+	OSLImageTypeId = 122102,
+	OSLObjectTypeId = 122103,
+	OSLCodeTypeId = 122104,
+	ClosurePlugTypeId = 122105,
+	OSLLightTypeId = 122106,
 
-	LastTypeId = 110999
+	LastTypeId = 122299
 };
 
 } // namespace GafferOSL
