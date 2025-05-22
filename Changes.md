@@ -6,6 +6,11 @@ Features
 
 - ShuffleOptions : Added a new node for shuffling options in the scene globals (#6412).
 
+Improvements
+------------
+
+- Attribute Editor, Light Editor, Render Pass Editor, Spreadsheet : Added <kbd>Shift</kbd> + <kbd>Enter</kbd> and <kbd>Shift</kbd> + <kbd>Ctrl</kbd> + <kbd>Enter</kbd> shortcuts to commit an edit without closing the popup editor window.
+
 Fixes
 -----
 

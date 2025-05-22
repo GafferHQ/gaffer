@@ -119,6 +119,11 @@ class PlugPopup( GafferUI.PopupWindow ) :
 
 		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
 		self.focusChangedSignal().connect( Gaffer.WeakMethod( self.__focusChanged ) )
+		# Connect at front so we can handle keyPresses before PopupWindow does.
+		self.keyPressSignal().connectFront( Gaffer.WeakMethod( self.__keyPress ) )
+		self.keyReleaseSignal().connect( Gaffer.WeakMethod( self.__keyRelease ) )
+
+		self.__shiftHeld = False
 
 	def popup( self, center = None, parent = None ) :
 
@@ -190,9 +195,32 @@ class PlugPopup( GafferUI.PopupWindow ) :
 		else :
 			self.__widgetActivatedConnection = None
 
+	def __keyPress( self, widget, event ) :
+
+		if event.key == "Return" and event.modifiers & event.modifiers.Shift :
+			# Mask Return when Shift is held so the Return keypress doesn't
+			# fall through to PopupWindow, where it would close the window.
+			return True
+		elif event.key == "Shift" :
+			self.__shiftHeld = True
+			return False
+
+		return False
+
+	def __keyRelease( self, widget, event ) :
+
+		if event.key == "Shift" :
+			self.__shiftHeld = False
+			return False
+
+		return False
+
 	def __activated( self, unused ) :
 
-		self.close()
+		if not self.__shiftHeld :
+			# Do not close while Shift is held, so Shift+Return can
+			# be used to commit an edit without closing the popup.
+			self.close()
 
 	@classmethod
 	def __firstTextWidget( cls, plugValueWidget ) :
