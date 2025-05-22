@@ -41,18 +41,18 @@ namespace GafferRenderMan
 
 enum TypeId
 {
-	RenderManAttributesTypeId = 110400,
-	RenderManOptionsTypeId = 110401,
-	RenderManShaderTypeId = 110402,
-	RenderManLightTypeId = 110403,
-	RenderManMeshLightTypeId = 110404,
-	RenderManIntegratorTypeId = 110405,
-	RenderManOutputFilterTypeId = 110406,
-	RenderManDisplayFilterTypeId = 110407,
-	RenderManSampleFilterTypeId = 110408,
-	BXDFPlugTypeId = 110409,
-	RenderManLightFilterTypeId = 110410,
-	LastTypeId = 110450
+	RenderManAttributesTypeId = 123000,
+	RenderManOptionsTypeId = 123001,
+	RenderManShaderTypeId = 123002,
+	RenderManLightTypeId = 123003,
+	RenderManMeshLightTypeId = 123004,
+	RenderManIntegratorTypeId = 123005,
+	RenderManOutputFilterTypeId = 123006,
+	RenderManDisplayFilterTypeId = 123007,
+	RenderManSampleFilterTypeId = 123008,
+	BXDFPlugTypeId = 123009,
+	RenderManLightFilterTypeId = 123010,
+	LastTypeId = 123199
 };
 
 } // namespace GafferRenderMan
