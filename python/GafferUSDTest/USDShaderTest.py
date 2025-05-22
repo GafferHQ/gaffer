@@ -38,6 +38,8 @@ import unittest
 
 import imath
 
+import pxr
+
 import IECore
 import IECoreScene
 
@@ -80,6 +82,12 @@ class USDShaderTest( GafferSceneTest.SceneTestCase ) :
 
 	def testLoadUsdPreviewSurface( self ) :
 
+		versionedParameters = []
+		if pxr.Usd.GetVersion() >= ( 0, 25, 2 ) :
+			versionedParameters.append(
+				( "opacityMode", Gaffer.StringPlug, "transparent" ),
+			)
+
 		self.__assertShaderLoads(
 			"UsdPreviewSurface",
 			[
@@ -97,7 +105,7 @@ class USDShaderTest( GafferSceneTest.SceneTestCase ) :
 				( "normal", Gaffer.V3fPlug, imath.V3f( 0, 0, 1 ) ),
 				( "displacement", Gaffer.FloatPlug, 0 ),
 				( "occlusion", Gaffer.FloatPlug, 1 ),
-			],
+			] + versionedParameters,
 			[
 				( "surface", Gaffer.Plug, None ),
 				( "displacement", Gaffer.Plug, None ),
