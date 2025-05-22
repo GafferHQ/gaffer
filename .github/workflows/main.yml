@@ -68,6 +68,7 @@ jobs:
             testArguments: -excludedCategories performance
             sconsCacheMegabytes: 800
             jobs: 4
+            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.5.14.1/cortex-10.5.14.1-windows.zip
 
     runs-on: ${{ matrix.os }}
 
