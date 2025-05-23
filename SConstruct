@@ -2220,7 +2220,7 @@ def buildQtResourceFile( source, target, env ) :
 if haveInkscape :
 
 	for source in ( "resources/graphics.svg", "resources/GafferLogo.svg", "resources/GafferLogoMini.svg" ) :
-		env.Alias( "build", graphicsCommands( env, source, "$BUILD_DIR/graphics" ) )
+		env.Alias( [ "build", "buildGraphics" ], graphicsCommands( env, source, "$BUILD_DIR/graphics" ) )
 
 	resourceGraphics = set()
 	with open( "python/GafferUI/_StyleSheet.py" ) as styleSheet :
