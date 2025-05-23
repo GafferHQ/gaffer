@@ -59,6 +59,7 @@
 
 #include "fmt/format.h"
 
+#include <array>
 #include <unordered_map>
 
 #include <nsi.h>
