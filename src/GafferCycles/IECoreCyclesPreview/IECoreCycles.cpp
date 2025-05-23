@@ -101,7 +101,6 @@ IECore::CompoundDataPtr getSockets( const ccl::NodeType *nodeType, const bool ou
 				}
 				s["enum_values"] = std::move( enumData );
 			}
-			s["is_array"] = new IECore::BoolData( socketType.is_array() );
 			s["flags"] = new IECore::IntData( socketType.flags );
 
 			// Some of the texture mapping nodes have a dot in them, replace here with 2 underscores
@@ -117,7 +116,6 @@ IECore::CompoundDataPtr getSockets( const ccl::NodeType *nodeType, const bool ou
 			IECore::CompoundDataMap &s = socket->writable();
 			s["ui_name"] = new IECore::StringData( socketType.ui_name.c_str() );
 			s["type"] = new IECore::StringData( ccl::SocketType::type_name( socketType.type ).c_str() );
-			s["is_array"] = new IECore::BoolData( socketType.is_array() );
 			s["flags"] = new IECore::IntData( socketType.flags );
 			sockets[socketType.name.c_str()] = std::move( socket );
 		}
