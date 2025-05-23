@@ -37,6 +37,7 @@
 #include "GafferSceneUI/ShaderView.h"
 
 #include "GafferScene/DeleteOutputs.h"
+#include "GafferScene/Display.h"
 #include "GafferScene/InteractiveRender.h"
 #include "GafferScene/Outputs.h"
 #include "GafferScene/Shader.h"
@@ -44,7 +45,6 @@
 
 #include "GafferImageUI/ImageGadget.h"
 
-#include "GafferImage/Display.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/PlugAlgo.h"
@@ -62,7 +62,6 @@
 
 using namespace boost::placeholders;
 using namespace Gaffer;
-using namespace GafferImage;
 using namespace GafferScene;
 using namespace GafferSceneUI;
 
@@ -155,12 +154,12 @@ ShaderView::ShaderView( Gaffer::ScriptNodePtr scriptNode )
 	output->parameters()["driverType"] = new IECore::StringData( "ClientDisplayDriver" );
 	output->parameters()["displayHost"] = new IECore::StringData( "localhost" );
 	output->parameters()["displayPort"] = new IECore::StringData( boost::lexical_cast<std::string>( displayDriverServer()->portNumber() ) );
-	output->parameters()["remoteDisplayType"] = new IECore::StringData( "GafferImage::GafferDisplayDriver" );
+	output->parameters()["remoteDisplayType"] = new IECore::StringData( "GafferScene::GafferDisplayDriver" );
 	output->parameters()["shaderView:id"] = new IECore::StringData( boost::lexical_cast<std::string>( this ) );
 
 	outputs->addOutput( "Beauty", output.get() );
 
-	DisplayPtr display = new Display;
+	GafferScene::DisplayPtr display = new GafferScene::Display;
 	m_imageConverter->addChild( display );
 	PlugAlgo::promote( display->outPlug() );
 
@@ -179,7 +178,7 @@ ShaderView::ShaderView( Gaffer::ScriptNodePtr scriptNode )
 	plugDirtiedSignal().connect( boost::bind( &ShaderView::plugDirtied, this, ::_1 ) );
 	sceneRegistrationChangedSignal().connect( boost::bind( &ShaderView::sceneRegistrationChanged, this, ::_1 ) );
 	rendererRegistrationChangedSignal().connect( boost::bind( &ShaderView::rendererRegistrationChanged, this ) );
-	Display::driverCreatedSignal().connect( boost::bind( &ShaderView::driverCreated, this, ::_1, ::_2 ) );
+	GafferScene::Display::driverCreatedSignal().connect( boost::bind( &ShaderView::driverCreated, this, ::_1, ::_2 ) );
 	imageGadget()->stateChangedSignal().connect( boost::bind( &ShaderView::imageGadgetStateChanged, this ) );
 }
 
@@ -197,14 +196,14 @@ const Gaffer::StringPlug *ShaderView::scenePlug() const
 	return getChild<StringPlug>( "scene" );
 }
 
-GafferImage::Display *ShaderView::display()
+GafferScene::Display *ShaderView::display()
 {
-	return m_imageConverter->getChild<Display>( "Display" );
+	return m_imageConverter->getChild<GafferScene::Display>( "Display" );
 }
 
-const GafferImage::Display *ShaderView::display() const
+const GafferScene::Display *ShaderView::display() const
 {
-	return m_imageConverter->getChild<Display>( "Display" );
+	return m_imageConverter->getChild<GafferScene::Display>( "Display" );
 }
 
 std::string ShaderView::shaderPrefix() const

@@ -37,6 +37,9 @@
 
 #pragma once
 
+#include "GafferScene/Export.h"
+#include "GafferScene/TypeIds.h"
+
 #include "GafferImage/ImageNode.h"
 
 #include "Gaffer/NumericPlug.h"
@@ -45,17 +48,17 @@
 
 #include <functional>
 
-namespace GafferImage
+namespace GafferScene
 {
 
 IE_CORE_FORWARDDECLARE( GafferDisplayDriver )
 
-class GAFFERIMAGE_API Display : public ImageNode
+class GAFFERSCENE_API Display : public GafferImage::ImageNode
 {
 
 	public :
 
-		GAFFER_NODE_DECLARE_TYPE( GafferImage::Display, DisplayTypeId, ImageNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::Display, DisplayTypeId, GafferImage::ImageNode );
 
 		explicit Display( const std::string &name = defaultName<Display>() );
 		~Display() override;
@@ -86,28 +89,28 @@ class GAFFERIMAGE_API Display : public ImageNode
 	protected :
 
 		void hashViewNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstStringVectorDataPtr computeViewNames( const Gaffer::Context *context, const ImagePlug *parent ) const override;
+		IECore::ConstStringVectorDataPtr computeViewNames( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const override;
 
 		void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const override;
+		GafferImage::Format computeFormat( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const override;
 
 		void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const override;
+		IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const override;
 
 		void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const override;
+		Imath::Box2i computeDataWindow( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const override;
 
 		void hashMetadata( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstCompoundDataPtr computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const override;
+		IECore::ConstCompoundDataPtr computeMetadata( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const override;
 
 		void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const override;
+		IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const override;
 
 		void hashDeep( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		bool computeDeep( const Gaffer::Context *context, const ImagePlug *parent ) const override;
+		bool computeDeep( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const override;
 
 		void hashSampleOffsets( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstIntVectorDataPtr computeSampleOffsets( const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const override;
+		IECore::ConstIntVectorDataPtr computeSampleOffsets( const Imath::V2i &tileOrigin, const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const override;
 
 	private :
 

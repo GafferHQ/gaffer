@@ -39,7 +39,6 @@ __import__( "Gaffer" )
 __import__( "IECoreImage" )
 
 from ._GafferImage import *
-from .CatalogueSelect import CatalogueSelect
 from .BleedFill import BleedFill
 from .DeepTidy import DeepTidy
 from .Anaglyph import Anaglyph

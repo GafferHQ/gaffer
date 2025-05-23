@@ -41,17 +41,14 @@ namespace GafferVDB
 
 enum TypeId
 {
-	VDBGridTypeId = 110950, // Obsolete - available for reuse
-	VDBObjectTypeId = 110951, // Obsolete - available for reuse
-	VDBSceneTypeId = 110952, // Obsolete - available for reuse
-	MeshToLevelSetTypeId = 110953,
-	LevelSetToMeshTypeId = 110954,
-	LevelSetOffsetTypeId = 110955,
-	PointsGridToPointsTypeId = 110956,
-	SphereLevelSetTypeId = 110957,
-	PointsToLevelSetTypeId = 110958,
-	VolumeScatterTypeId = 110959,
-	LastTypeId = 110974
+	MeshToLevelSetTypeId = 123200,
+	LevelSetToMeshTypeId = 123201,
+	LevelSetOffsetTypeId = 123202,
+	PointsGridToPointsTypeId = 123203,
+	SphereLevelSetTypeId = 123204,
+	PointsToLevelSetTypeId = 123205,
+	VolumeScatterTypeId = 123206,
+	LastTypeId = 123399
 };
 
 } // namespace GafferVDB

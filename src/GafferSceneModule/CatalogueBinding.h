@@ -36,9 +36,9 @@
 
 #pragma once
 
-namespace GafferImageModule
+namespace GafferSceneModule
 {
 
 void bindCatalogue();
 
-}; // namespace GafferImageModule
+}; // namespace GafferSceneModule

@@ -45,6 +45,7 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferImage
+import GafferScene
 import GafferImageUI
 
 ## \todo
@@ -65,7 +66,7 @@ import GafferImageUI
 # Default columns are stored via a class registration, ie:
 #
 #   Gaffer.Metadata.registerValue(
-#       GafferImage.Catalogue, "imageIndex",
+#       GafferScene.Catalogue, "imageIndex",
 #       "catalogue:columns", [ ... ]
 #   )
 #
@@ -134,9 +135,9 @@ class Column( GafferUI.PathColumn ) :
 	# `PathColumn.CellData`.
 	# Arguments :
 	#
-	# - `image` : The `GafferImage.Catalogue.Image` plug for the cell
+	# - `image` : The `GafferScene.Catalogue.Image` plug for the cell
 	#   (not to be confused with a standard ImagePlug).
-	# - `catalogue` : The `GafferImage.Catalogue` being displayed.
+	# - `catalogue` : The `GafferScene.Catalogue` being displayed.
 	#
 	# Called in a context where `catalogue["out"]` provides the
 	# correct image for the cell.
@@ -374,7 +375,7 @@ registerColumn( "Output Index", __OutputIndexColumn( "Output Index" ) )
 # Default visible column set
 
 Gaffer.Metadata.registerValue(
-	GafferImage.Catalogue, "imageIndex", _columnsMetadataKey,
+	GafferScene.Catalogue, "imageIndex", _columnsMetadataKey,
 	IECore.StringVectorData( [ "Status", "Output Index", "Name" ] )
 )
 
@@ -384,7 +385,7 @@ Gaffer.Metadata.registerValue(
 
 Gaffer.Metadata.registerNode(
 
-	GafferImage.Catalogue,
+	GafferScene.Catalogue,
 
 	"description",
 	"""
@@ -396,8 +397,8 @@ Gaffer.Metadata.registerNode(
 
 	- driverType : "ClientDisplayDriver"
 	- displayHost : host name ("localhost" is sufficient for local renders)
-	- displayPort : `GafferImage.Catalogue.displayDriverServer().portNumber()`
-	- remoteDisplayType : "GafferImage::GafferDisplayDriver"
+	- displayPort : `GafferScene.Catalogue.displayDriverServer().portNumber()`
+	- remoteDisplayType : "GafferScene::GafferDisplayDriver"
 	- catalogue:name : The name of the catalogue to render to (optional)
 	""",
 
@@ -429,7 +430,7 @@ Gaffer.Metadata.registerNode(
 			from the catalogue node.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.CatalogueUI.ImageListing",
+			"plugValueWidget:type", "GafferSceneUI.CatalogueUI.ImageListing",
 			"label", "",
 			"layout:section", "Images",
 
@@ -481,7 +482,7 @@ Gaffer.Metadata.registerNode(
 
 )
 
-Gaffer.Metadata.registerValue( GafferImage.Catalogue.Image, "renameable", True )
+Gaffer.Metadata.registerValue( GafferScene.Catalogue.Image, "renameable", True )
 
 ##########################################################################
 # Viewer hot-keys
@@ -507,7 +508,7 @@ def __viewerKeyPress( viewer, event ) :
 
 	catalogue = Gaffer.NodeAlgo.findUpstream(
 		viewer.view(),
-		lambda node : isinstance( node, GafferImage.Catalogue ),
+		lambda node : isinstance( node, GafferScene.Catalogue ),
 		order = Gaffer.NodeAlgo.VisitOrder.DepthFirst
 	)
 
@@ -588,7 +589,7 @@ def _duplicateImages( catalogue, plugIndices ) :
 		image = sourceImages[ index ]
 		suffix = "Copy" if image["fileName"].getValue() else "Snapshot1"
 		uiInsertionIndex = orderedImages.index( image )
-		imageCopy = GafferImage.Catalogue.Image( image.getName() + suffix, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		imageCopy = GafferScene.Catalogue.Image( image.getName() + suffix, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		images.addChild( imageCopy )
 		imageCopy.copyFrom( image )
 		orderedImages.insert( uiInsertionIndex, imageCopy )
@@ -612,7 +613,7 @@ class _ImagesPath( Gaffer.Path ) :
 
 		self.__images = images
 		self.__catalogue = Gaffer.PlugAlgo.findDestination(
-			images, lambda plug : plug.parent() if isinstance( plug.parent(), GafferImage.Catalogue ) else None
+			images, lambda plug : plug.parent() if isinstance( plug.parent(), GafferScene.Catalogue ) else None
 		)
 
 	def copy( self ) :
@@ -710,7 +711,7 @@ class _ImagesPath( Gaffer.Path ) :
 
 	def __cataloguePlugDirtied( self, plug ):
 
-		if plug.ancestor( GafferImage.Catalogue.Image ) :
+		if plug.ancestor( GafferScene.Catalogue.Image ) :
 			self._emitPathChanged()
 
 ##########################################################################
@@ -895,7 +896,7 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 			else :
 				IECore.msg(
 					IECore.Msg.Level.Error,
-					"GafferImageUI.CatalogueUI", "No column registered with name '%s'" % name
+					"GafferSceneUI.CatalogueUI", "No column registered with name '%s'" % name
 				)
 
 		return columns
@@ -903,7 +904,7 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 	def __catalogue( self ) :
 
 		return Gaffer.PlugAlgo.findDestination(
-			self.getPlug(), lambda plug : plug.parent() if isinstance( plug.parent(), GafferImage.Catalogue ) else None
+			self.getPlug(), lambda plug : plug.parent() if isinstance( plug.parent(), GafferScene.Catalogue ) else None
 		)
 
 	def __images( self ) :
@@ -970,7 +971,7 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 			return
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.__images().addChild( GafferImage.Catalogue.Image.load( str( path ) ) )
+			self.__images().addChild( GafferScene.Catalogue.Image.load( str( path ) ) )
 			self.getPlug().setValue( len( self.__images() ) - 1 )
 
 	def __uiIndexToIndex( self, index ) :
@@ -1019,7 +1020,7 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 		for index in self.__indicesFromSelection() :
 			image = self.__images()[index]
 
-			extractNode = GafferImage.CatalogueSelect()
+			extractNode = GafferScene.CatalogueSelect()
 			extractNode["in"].setInput( outPlug )
 			extractNode["imageName"].setValue( image.getName() )
 
@@ -1170,7 +1171,7 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 				imageWriter["task"].execute()
 
 			with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-				loadedImage = GafferImage.Catalogue.Image.load( fileName )
+				loadedImage = GafferScene.Catalogue.Image.load( fileName )
 				loadedImage.setName( image.node().getName() )
 				self.__images().addChild( loadedImage )
 				self.getPlug().setValue( len( self.__images() ) - 1 )

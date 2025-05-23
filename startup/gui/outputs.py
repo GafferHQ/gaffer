@@ -42,7 +42,6 @@ import IECoreScene
 
 import Gaffer
 import GafferScene
-import GafferImage
 
 # Add standard beauty and ID outputs that should be supported by all renderers.
 
@@ -57,7 +56,7 @@ GafferScene.Outputs.registerOutput(
 			"driverType" : "ClientDisplayDriver",
 			"displayHost" : "localhost",
 			"displayPort" : "${image:catalogue:port}",
-			"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+			"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
 			"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
 		}
 	)
@@ -86,7 +85,7 @@ GafferScene.Outputs.registerOutput(
 			"driverType" : "ClientDisplayDriver",
 			"displayHost" : "localhost",
 			"displayPort" : "${image:catalogue:port}",
-			"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+			"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
 			"filter" : "closest",
 			"layerName" : "id",
 		}
@@ -181,7 +180,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 				"driverType" : "ClientDisplayDriver",
 				"displayHost" : "localhost",
 				"displayPort" : "${image:catalogue:port}",
-				"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+				"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
 			}
 		)
 
@@ -277,7 +276,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 					"driverType" : "ClientDisplayDriver",
 					"displayHost" : "localhost",
 					"displayPort" : "${image:catalogue:port}",
-					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
 					"scalarformat" : "half",
 					"colorprofile" : "linear",
 					"filter" : "blackman-harris",
@@ -372,7 +371,7 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 					"driverType" : "ClientDisplayDriver",
 					"displayHost" : "localhost",
 					"displayPort" : "${image:catalogue:port}",
-					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
 					"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
 				}
 				batchOutput = {
@@ -449,7 +448,7 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 								"driverType" : "ClientDisplayDriver",
 								"displayHost" : "localhost",
 								"displayPort" : "${image:catalogue:port}",
-								"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+								"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
 								"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
 								"denoise" : True
 							}
@@ -531,7 +530,7 @@ if os.environ.get( "GAFFERRENDERMAN_HIDE_UI", "" ) != "1" :
 					"driverType" : "ClientDisplayDriver",
 					"displayHost" : "localhost",
 					"displayPort" : "${image:catalogue:port}",
-					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
 			} )
 
 			GafferScene.Outputs.registerOutput(
@@ -574,7 +573,7 @@ def __scriptAdded( parent, script ) :
 	else :
 		portNumberPlug = script["variables"]["imageCataloguePort"]
 
-	portNumberPlug["value"].setValue( GafferImage.Catalogue.displayDriverServer().portNumber() )
+	portNumberPlug["value"].setValue( GafferScene.Catalogue.displayDriverServer().portNumber() )
 
 application.root()["scripts"].childAddedSignal().connect( __scriptAdded )
 
@@ -582,4 +581,4 @@ Gaffer.Metadata.registerValue( Gaffer.ScriptNode, "variables.imageCataloguePort"
 
 # Store render catalogues in the project.
 
-Gaffer.Metadata.registerValue( GafferImage.Catalogue, "directory", "userDefault", "${project:rootDirectory}/catalogues/${script:name}" )
+Gaffer.Metadata.registerValue( GafferScene.Catalogue, "directory", "userDefault", "${project:rootDirectory}/catalogues/${script:name}" )

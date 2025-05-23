@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2023, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -33,7 +33,59 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 ##########################################################################
+import IECore
+import Gaffer
+import GafferScene
 
-import GafferImageUI
+def __imageNames( plug ) :
+	node = plug.node()
+	imagePlug = node["in"]
 
-GafferImageUI.CatalogueUI._ImageListing = GafferImageUI.CatalogueUI.ImageListing
+	while imagePlug is not None and not isinstance( imagePlug.node(), GafferScene.Catalogue ) :
+		imagePlug = imagePlug.getInput()
+
+	if imagePlug is None :
+		return []
+
+	return imagePlug.node()["images"].keys()
+
+def __imagePresetNames( plug ) :
+
+	return IECore.StringVectorData(
+		[ "Selected", "Output/1", "Output/2", "Output/3", "Output/4" ] +
+		[ "Image/" + i for i in __imageNames( plug ) ]
+	)
+
+def __imagePresetValues( plug ) :
+
+	return IECore.StringVectorData(
+		[ "", "output:1", "output:2", "output:3", "output:4" ] +
+		__imageNames( plug )
+	)
+
+Gaffer.Metadata.registerNode(
+
+	GafferScene.CatalogueSelect,
+
+	"description",
+	"Finds an image in a directly connected Catalogue by name.",
+
+	plugs = {
+
+		"imageName" : [
+
+			"description",
+			"The name of the image to extract.",
+
+			"presetNames", __imagePresetNames,
+			"presetValues", __imagePresetValues,
+			# Don't promote presets so they are still computed dynamically for
+			# the promoted plug rather than being baked.
+			"presetNames:promotable", False,
+			"presetValues:promotable", False,
+			"presetsPlugValueWidget:allowCustom", True,
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		]
+	}
+)

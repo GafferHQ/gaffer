@@ -131,7 +131,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		script["attributes"]["in"].setInput( script["meshType"]["out"] )
 		script["attributes"]["attributes"]["subdivIterations"]["enabled"].setValue( True )
 
-		script["catalogue"] = GafferImage.Catalogue()
+		script["catalogue"] = GafferScene.Catalogue()
 
 		script["outputs"] = GafferScene.Outputs()
 		script["outputs"].addOutput(
@@ -144,7 +144,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 					"driverType" : "ClientDisplayDriver",
 					"displayHost" : "localhost",
 					"displayPort" : str( script['catalogue'].displayDriverServer().portNumber() ),
-					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
 				}
 			)
 		)
@@ -185,7 +185,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 	def testLightLinkingAfterParameterUpdates( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["catalogue"] = GafferImage.Catalogue()
+		s["catalogue"] = GafferScene.Catalogue()
 
 
 		s["s"] = GafferScene.Sphere()
@@ -228,7 +228,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 					"driverType" : "ClientDisplayDriver",
 					"displayHost" : "localhost",
 					"displayPort" : str( s['catalogue'].displayDriverServer().portNumber() ),
-					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
 				}
 			)
 		)
@@ -274,7 +274,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		# Check that our workaround is working
 
 		s = Gaffer.ScriptNode()
-		s["catalogue"] = GafferImage.Catalogue()
+		s["catalogue"] = GafferScene.Catalogue()
 
 
 		s["s"] = GafferScene.Sphere()
@@ -320,7 +320,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 					"driverType" : "ClientDisplayDriver",
 					"displayHost" : "localhost",
 					"displayPort" : str( s['catalogue'].displayDriverServer().portNumber() ),
-					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
 				}
 			)
 		)
@@ -368,7 +368,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		shutil.copyfile( redTextureFile, tmpTextureFile )
 
 		s = Gaffer.ScriptNode()
-		s["catalogue"] = GafferImage.Catalogue()
+		s["catalogue"] = GafferScene.Catalogue()
 
 		s["s"] = GafferScene.Sphere()
 
@@ -407,7 +407,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 					"driverType" : "ClientDisplayDriver",
 					"displayHost" : "localhost",
 					"displayPort" : str( s['catalogue'].displayDriverServer().portNumber() ),
-					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
 				}
 			)
 		)
@@ -491,7 +491,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["catalogue"] = GafferImage.Catalogue()
+		s["catalogue"] = GafferScene.Catalogue()
 
 		s["sphere"] = GafferScene.Sphere()
 		s["cube"] = GafferScene.Cube()
@@ -519,7 +519,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 					"driverType" : "ClientDisplayDriver",
 					"displayHost" : "localhost",
 					"displayPort" : str( s['catalogue'].displayDriverServer().portNumber() ),
-					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
 				}
 			)
 		)
@@ -546,7 +546,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["catalogue"] = GafferImage.Catalogue()
+		s["catalogue"] = GafferScene.Catalogue()
 
 		s["sphere1"] = GafferScene.Sphere()
 		s["sphere1"]["name"].setValue( "sphere1" )
@@ -596,7 +596,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 					"driverType" : "ClientDisplayDriver",
 					"displayHost" : "localhost",
 					"displayPort" : str( s['catalogue'].displayDriverServer().portNumber() ),
-					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
 				}
 			)
 		)
@@ -627,7 +627,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 			with self.subTest( withOtherOutput = withOtherOutput ) :
 
 				script = Gaffer.ScriptNode()
-				script["catalogue"] = GafferImage.Catalogue()
+				script["catalogue"] = GafferScene.Catalogue()
 
 				script["sphere"] = GafferScene.Sphere()
 
@@ -656,7 +656,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 								"driverType" : "ClientDisplayDriver",
 								"displayHost" : "localhost",
 								"displayPort" : str( script["catalogue"].displayDriverServer().portNumber() ),
-								"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+								"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
 							}
 						)
 					)
@@ -674,7 +674,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 							"driverType" : "ClientDisplayDriver",
 							"displayHost" : "localhost",
 							"displayPort" : str( script["catalogue"].displayDriverServer().portNumber() ),
-							"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+							"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
 							"layerPerLightGroup" : True,
 						}
 					)
@@ -756,7 +756,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 	def testEditOutputMetadata( self ) :
 
 		script = Gaffer.ScriptNode()
-		script["catalogue"] = GafferImage.Catalogue()
+		script["catalogue"] = GafferScene.Catalogue()
 
 		script["sphere"] = GafferScene.Sphere()
 
@@ -773,7 +773,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 					"driverType" : "ClientDisplayDriver",
 					"displayHost" : "localhost",
 					"displayPort" : str( script["catalogue"].displayDriverServer().portNumber() ),
-					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
 					"header:test1" : "hello",
 					"header:test2" : "world",
 				}
@@ -811,7 +811,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 	def testEditOutputType( self ) :
 
 		script = Gaffer.ScriptNode()
-		script["catalogue"] = GafferImage.Catalogue()
+		script["catalogue"] = GafferScene.Catalogue()
 
 		script["sphere"] = GafferScene.Sphere()
 
@@ -828,7 +828,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 					"driverType" : "ClientDisplayDriver",
 					"displayHost" : "localhost",
 					"displayPort" : str( script["catalogue"].displayDriverServer().portNumber() ),
-					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
 				}
 			)
 		)
@@ -862,7 +862,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 	def testEditOutputFilterType( self ) :
 
 		script = Gaffer.ScriptNode()
-		script["catalogue"] = GafferImage.Catalogue()
+		script["catalogue"] = GafferScene.Catalogue()
 
 		script["sphere"] = GafferScene.Sphere()
 
@@ -879,7 +879,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 					"driverType" : "ClientDisplayDriver",
 					"displayHost" : "localhost",
 					"displayPort" : str( script["catalogue"].displayDriverServer().portNumber() ),
-					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
 					"filter" : "gaussian"
 				}
 			)

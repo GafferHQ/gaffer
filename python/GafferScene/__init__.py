@@ -42,8 +42,22 @@ __import__( "GafferImage" )
 
 from ._GafferScene import *
 
+from .CatalogueSelect import CatalogueSelect
 from .ShaderBall import ShaderBall
 from .RenderPassWedge import RenderPassWedge
 from .RenderPassTypeAdaptor import RenderPassTypeAdaptor
+
+"""
+import sys
+class ThisMod(sys.modules[__name__].__class__):
+	#y = property(lambda self: "Hi this is module %s." % __name__)
+	#const = property(lambda self: _const) # block setting
+	def __getCatalogue():
+		# Don't import GafferScene from GafferImage unless we actually need to use the Catalogue
+		import GafferScene
+		return GafferScene.Catalogue
+	Catalogue = property( __getCatalogue )
+sys.modules[__name__].__class__ = ThisMod
+"""
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferScene" )
