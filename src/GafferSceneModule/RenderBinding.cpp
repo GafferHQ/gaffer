@@ -50,6 +50,8 @@
 
 #include "IECorePython/ExceptionAlgo.h"
 
+#include "boost/python/suite/indexing/container_utils.hpp"
+
 using namespace boost::python;
 
 using namespace Imath;
@@ -79,8 +81,11 @@ IECore::DataPtr interactiveRenderCommandWrapper( InteractiveRender &r, const IEC
 	return r.command( name, parameters );
 }
 
-object objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, const std::vector<float> &sampleTimes, IECore::MurmurHash *hash, bool copy )
+object objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, object pythonSampleTimes, IECore::MurmurHash *hash, bool copy )
 {
+	std::vector<float> sampleTimes;
+	boost::python::container_utils::extend_container( sampleTimes, pythonSampleTimes );
+
 	bool result;
 	std::vector<IECore::ConstObjectPtr> samples;
 	{
@@ -109,8 +114,11 @@ object objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, const std::ve
 	return pythonSamples;
 }
 
-object transformSamplesWrapper( const Gaffer::M44fPlug &transformPlug, const std::vector<float> &sampleTimes, IECore::MurmurHash *hash )
+object transformSamplesWrapper( const Gaffer::M44fPlug &transformPlug, object pythonSampleTimes, IECore::MurmurHash *hash )
 {
+	std::vector<float> sampleTimes;
+	boost::python::container_utils::extend_container( sampleTimes, pythonSampleTimes );
+
 	bool result;
 	std::vector<M44f> samples;
 	{

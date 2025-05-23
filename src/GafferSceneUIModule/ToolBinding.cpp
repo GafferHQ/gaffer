@@ -215,6 +215,16 @@ void registerSelectMode( const std::string &modifierName, object modifier )
 	);
 }
 
+boost::python::list registeredSelectModesWrapper()
+{
+	boost::python::list result;
+	for( auto &m : SelectionTool::registeredSelectModes() )
+	{
+		result.append( m );
+	}
+	return result;
+}
+
 } // namespace
 
 void GafferSceneUIModule::bindTools()
@@ -223,7 +233,7 @@ void GafferSceneUIModule::bindTools()
 	GafferBindings::NodeClass<SelectionTool>( nullptr, no_init )
 		.def( "registerSelectMode", &registerSelectMode, ( boost::python::arg( "modifierName" ), boost::python::arg( "modifier" ) ) )
 		.staticmethod( "registerSelectMode" )
-		.def( "registeredSelectModes", &SelectionTool::registeredSelectModes )
+		.def( "registeredSelectModes", &registeredSelectModesWrapper )
 		.staticmethod( "registeredSelectModes" )
 		.def( "deregisterSelectMode", &SelectionTool::deregisterSelectMode )
 		.staticmethod( "deregisterSelectMode" )
