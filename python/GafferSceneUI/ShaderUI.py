@@ -84,6 +84,12 @@ def __parameterMetadata( plug, key, shaderFallbackKey = None ) :
 
 	return __shaderMetadata( shader, shaderFallbackKey ) if shaderFallbackKey is not None else None
 
+def __parameterComponentNoduleLabel( plug ) :
+
+	parameterPlug = plug.parent()
+	label = Gaffer.Metadata.value( parameterPlug, "label" ) or parameterPlug.getName()
+	return label + "." + plug.getName()
+
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Shader,
@@ -157,6 +163,12 @@ Gaffer.Metadata.registerNode(
 			"presetValues", functools.partial( __parameterMetadata, key = "presetValues" ),
 			"nodule:type", functools.partial( __parameterMetadata, key = "nodule:type" ),
 			"noduleLayout:visible", functools.partial( __parameterMetadata, key = "noduleLayout:visible", shaderFallbackKey = "noduleLayout:defaultVisibility" ),
+
+		],
+
+		"parameters.*.[rgbxyz]" : [
+
+			"noduleLayout:label", __parameterComponentNoduleLabel,
 
 		],
 
