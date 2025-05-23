@@ -132,20 +132,6 @@ void updateMatchingPaths( RenderController &r, const IECore::PathMatcher &pathsT
 	}
 }
 
-object pathForID( RenderController &r, uint32_t id )
-{
-	if( auto path = r.pathForID( id ) )
-	{
-		return object( ScenePlug::pathToString( *path ) );
-	}
-	return object();
-}
-
-IECore::UIntVectorDataPtr idsForPaths( RenderController &r, const IECore::PathMatcher &paths, bool createIfNecessary )
-{
-	return new IECore::UIntVectorData( r.idsForPaths( paths, createIfNecessary ) );
-}
-
 } // namespace
 
 void GafferSceneModule::bindRenderController()
@@ -167,10 +153,7 @@ void GafferSceneModule::bindRenderController()
 		.def( "update", &update, ( arg( "callback" ) = object() ) )
 		.def( "updateMatchingPaths", &updateMatchingPaths, ( arg( "pathsToUpdate" ), arg( "callback" ) = object() ) )
 		.def( "updateInBackground", &updateInBackground, ( arg( "callback" ) = object(), arg( "priorityPaths" ) = IECore::PathMatcher() ) )
-		.def( "pathForID", &pathForID )
-		.def( "pathsForIDs", &RenderController::pathsForIDs )
-		.def( "idForPath", &RenderController::idForPath, ( arg( "path" ), arg( "createIfNecessary" ) = false ) )
-		.def( "idsForPaths", &idsForPaths, ( arg( "paths" ), arg( "createIfNecessary" ) = false ) )
+		.def( "renderManifest", (std::shared_ptr<RenderManifest>( RenderController::*)())&RenderController::renderManifest )
 	;
 
 	SignalClass<RenderController::UpdateRequiredSignal>( "UpdateRequiredSignal" );

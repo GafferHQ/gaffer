@@ -949,38 +949,38 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		paths = [ "/group/cube", "/group/sphere", "/group/plane" ]
 		for path in paths :
 			self.assertEqual(
-				controller.idForPath( path, createIfNecessary = False ), 0
+				controller.renderManifest().idForPath( path ), 0
 			)
 
 		controller.update()
 		for path in paths :
 			self.assertNotEqual(
-				controller.idForPath( path, createIfNecessary = False ), 0
+				controller.renderManifest().idForPath( path ), 0
 			)
 			self.assertEqual(
-				controller.pathForID( renderer.capturedObject( path ).id() ),
+				controller.renderManifest().pathForID( renderer.capturedObject( path ).id() ),
 				path
 			)
 			self.assertEqual(
-				controller.idForPath( path ),
+				controller.renderManifest().idForPath( path ),
 				renderer.capturedObject( path ).id()
 			)
 
-		self.assertIsNone( controller.pathForID( 0 ) )
-		self.assertIsNone( controller.pathForID( 4 ) )
-		self.assertEqual( 0, controller.idForPath( "/no/object/here" ) )
-		self.assertEqual( 0, controller.idForPath( "/no/object/here", createIfNecessary = False ) )
-		self.assertNotEqual( 0, controller.idForPath( "/might/exist/later/and/want/id/now", createIfNecessary = True ) )
+		self.assertIsNone( controller.renderManifest().pathForID( 0 ) )
+		self.assertIsNone( controller.renderManifest().pathForID( 4 ) )
+		self.assertEqual( 0, controller.renderManifest().idForPath( "/no/object/here" ) )
+		self.assertEqual( 0, controller.renderManifest().idForPath( "/no/object/here" ) )
+		self.assertNotEqual( 0, controller.renderManifest().acquireID( "/might/exist/later/and/want/id/now" ) )
 
 		self.assertEqual(
-			controller.pathsForIDs( [
+			controller.renderManifest().pathsForIDs( [
 				renderer.capturedObject( p ).id() for p in paths
 			] ),
 			IECore.PathMatcher( paths )
 		)
 
 		self.assertEqual(
-			set( controller.idsForPaths( IECore.PathMatcher( paths ) ) ),
+			set( controller.renderManifest().idsForPaths( IECore.PathMatcher( paths ) ) ),
 			{ renderer.capturedObject( p ).id() for p in paths }
 		)
 

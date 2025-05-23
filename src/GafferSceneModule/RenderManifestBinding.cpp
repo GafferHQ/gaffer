@@ -40,6 +40,8 @@
 
 #include "GafferScene/RenderManifest.h"
 
+#include "boost/python/suite/indexing/container_utils.hpp"
+
 using namespace boost::python;
 using namespace Gaffer;
 using namespace GafferScene;
@@ -47,18 +49,40 @@ using namespace GafferScene;
 namespace
 {
 
-// Convert return path to string for Python
-std::optional< std::string > pathForIDWrapper( RenderManifest *renderManifest, uint32_t id )
+object pathForIDWrapper( const RenderManifest &renderManifest, uint32_t id )
 {
-	// Return a InternedStringVectorDataPtr or None, since our Python bindings don't know how to
-	// deal with an optional<ScenePlug::ScenePath>
-	auto result = renderManifest->pathForID( id );
-	if( !result )
+	if( auto result = renderManifest.pathForID( id ) )
 	{
-		return std::nullopt;
+		return object( ScenePlug::pathToString( *result ) );
 	}
+	return object();
+}
 
-	return ScenePlug::pathToString( *result );
+list idList( const std::vector<uint32_t> &ids )
+{
+	list result;
+	for( auto id : ids )
+	{
+		result.append( id );
+	}
+	return result;
+}
+
+list acquireIDsWrapper( RenderManifest &manifest, const IECore::PathMatcher &paths )
+{
+	return idList( manifest.acquireIDs( paths ) );
+}
+
+list idsForPathsWrapper( const RenderManifest &manifest, const IECore::PathMatcher &paths )
+{
+	return idList( manifest.idsForPaths( paths ) );
+}
+
+IECore::PathMatcher pathsForIDsWrapper( const RenderManifest &manifest, object &pythonIds )
+{
+	std::vector<uint32_t> ids;
+	boost::python::container_utils::extend_container( ids, pythonIds );
+	return manifest.pathsForIDs( ids );
 }
 
 std::shared_ptr<RenderManifest> loadFromImageMetadataWrapper( const IECore::CompoundData *metadata, const std::string &cryptomatteLayerName )
@@ -75,8 +99,9 @@ void GafferSceneModule::bindRenderManifest()
 		.def( "acquireID", &RenderManifest::acquireID )
 		.def( "idForPath", &RenderManifest::idForPath )
 		.def( "pathForID", &pathForIDWrapper )
-		.def( "acquireIDs", &RenderManifest::acquireIDs )
-		.def( "pathsForIDs", &RenderManifest::pathsForIDs )
+		.def( "acquireIDs", &acquireIDsWrapper )
+		.def( "idsForPaths", &idsForPathsWrapper )
+		.def( "pathsForIDs", &pathsForIDsWrapper )
 		.def( "clear", &RenderManifest::clear )
 		.def( "size", &RenderManifest::size )
 		.def( "loadFromImageMetadata", &loadFromImageMetadataWrapper )

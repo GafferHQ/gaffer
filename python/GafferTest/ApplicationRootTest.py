@@ -45,9 +45,9 @@ import GafferTest
 
 class ApplicationRootTest( GafferTest.TestCase ) :
 
-	__defaultPreferencesFile = pathlib.Path( "~/gaffer/startup/testApp/preferences.py" ).expanduser()
+	__defaultPreferencesFile = pathlib.Path( "~/gaffer/startup/TestApp/preferences.py" ).expanduser()
 
-	class testApp( Gaffer.Application ) :
+	class TestApp( Gaffer.Application ) :
 
 		def __init__( self ) :
 
@@ -55,7 +55,7 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 
 	def testPreferences( self ) :
 
-		application = ApplicationRootTest.testApp()
+		application = ApplicationRootTest.TestApp()
 		applicationRoot = application.root()
 
 		p = applicationRoot["preferences"]
@@ -98,7 +98,7 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 
 	def testPreferencesPermissionsErrors( self ) :
 
-		a = Gaffer.ApplicationRoot( "testApp" )
+		a = Gaffer.ApplicationRoot( "TestApp" )
 
 		preferencesFile = self.temporaryDirectory() / "testPreferences.gfr"
 		a.savePreferences( preferencesFile )
@@ -107,7 +107,7 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 
 	def testPreferencesLocation( self ) :
 
-		a = Gaffer.ApplicationRoot( "testApp" )
+		a = Gaffer.ApplicationRoot( "TestApp" )
 
 		self.assertEqual( a.preferencesLocation(), self.__defaultPreferencesFile.parent )
 		self.assertTrue( pathlib.Path( a.preferencesLocation() ).is_dir() )
