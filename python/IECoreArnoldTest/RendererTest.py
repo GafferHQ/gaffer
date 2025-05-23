@@ -970,14 +970,22 @@ class RendererTest( GafferTest.TestCase ) :
 		if hasattr( IECoreImage, "OpenImageIOAlgo" ) and IECoreImage.OpenImageIOAlgo.version() >= 20206 :
 			worldToCameraKey = "worldToCamera"
 
-		for i in range( 3 ):
-			image = IECoreImage.ImageReader( str( self.temporaryDirectory() / f"beauty{i}.exr" ) ).read()
-			self.assertEqual( image.blindData()[worldToCameraKey].value,
-				imath.M44f( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, -i, 0, 0, 1 ) )
+		for i in range( 3 ) :
+			imageInput = OpenImageIO.ImageInput.open( str( self.temporaryDirectory() / f"beauty{i}.exr" ) )
+			imageSpec = imageInput.spec()
+			imageInput.close()
+			self.assertEqual(
+				imageSpec[worldToCameraKey],
+				( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, -i, 0, 0, 1 )
+			)
 
-		image = IECoreImage.ImageReader( str( self.temporaryDirectory() / "diffuse2.exr" ) ).read()
-		self.assertEqual( image.blindData()[worldToCameraKey].value,
-			imath.M44f( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, -2, 0, 0, 1 ) )
+		imageInput = OpenImageIO.ImageInput.open( str( self.temporaryDirectory() / "diffuse2.exr" ) )
+		imageSpec = imageInput.spec()
+		imageInput.close()
+		self.assertEqual(
+			imageSpec[worldToCameraKey],
+			( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, -2, 0, 0, 1 )
+		)
 
 	def testCameraMesh( self ) :
 
