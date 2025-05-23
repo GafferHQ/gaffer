@@ -68,60 +68,47 @@ IECore::CompoundDataPtr g_shaderData;
 IECore::CompoundDataPtr g_lightData;
 IECore::CompoundDataPtr g_passData;
 
+IECore::CompoundDataPtr socket( const ccl::SocketType &socketType )
+{
+	IECore::CompoundDataPtr resultData = new IECore::CompoundData();
+	IECore::CompoundDataMap &result = resultData->writable();
+
+	result["ui_name"] = new IECore::StringData( socketType.ui_name.c_str() );
+	result["type"] = new IECore::StringData( ccl::SocketType::type_name( socketType.type ).c_str() );
+	result["flags"] = new IECore::IntData( socketType.flags );
+
+	if( socketType.type == ccl::SocketType::ENUM )
+	{
+		const ccl::NodeEnum *enums = socketType.enum_values;
+		IECore::CompoundDataPtr enumData = new IECore::CompoundData();
+		IECore::CompoundDataMap &e = enumData->writable();
+		for( auto it = enums->begin(), eIt = enums->end(); it != eIt; ++it )
+		{
+			std::string uiEnumName( it->first.c_str() );
+			uiEnumName[0] = toupper( uiEnumName[0] );
+			boost::replace_all( uiEnumName, "_", " " );
+			e[uiEnumName.c_str()] = new IECore::StringData( it->first.c_str() );
+		}
+		result["enum_values"] = std::move( enumData );
+	}
+
+	return resultData;
+}
+
 // Get sockets data
 IECore::CompoundDataPtr getSockets( const ccl::NodeType *nodeType, const bool output )
 {
-	IECore::CompoundDataPtr result = new IECore::CompoundData();
-	IECore::CompoundDataMap &sockets = result->writable();
+	IECore::CompoundDataPtr resultData = new IECore::CompoundData();
+	IECore::CompoundDataMap &result = resultData->writable();
 
-	if( !output )
+	for( const ccl::SocketType &socketType : ( output ? nodeType->outputs : nodeType->inputs ) )
 	{
-		for( const ccl::SocketType &socketType : nodeType->inputs )
-		{
-			IECore::CompoundDataPtr socket = new IECore::CompoundData();
-			IECore::CompoundDataMap &s = socket->writable();
-			std::string name( socketType.name.c_str() );
-			std::string uiName( socketType.ui_name.c_str() );
-
-			s["ui_name"] = new IECore::StringData( uiName );
-
-			s["type"] = new IECore::StringData( ccl::SocketType::type_name( socketType.type ).c_str() );
-			if( socketType.type == ccl::SocketType::ENUM )
-			{
-				const ccl::NodeEnum *enums = socketType.enum_values;
-				IECore::CompoundDataPtr enumData = new IECore::CompoundData();
-				IECore::CompoundDataMap &e = enumData->writable();
-				for( auto it = enums->begin(), eIt = enums->end(); it != eIt; ++it )
-				{
-					std::string uiEnumName( it->first.c_str() );
-					uiEnumName[0] = toupper( uiEnumName[0] );
-					boost::replace_all( uiEnumName, "_", " " );
-
-					e[uiEnumName.c_str()] = new IECore::StringData( it->first.c_str() );
-				}
-				s["enum_values"] = std::move( enumData );
-			}
-			s["flags"] = new IECore::IntData( socketType.flags );
-
-			// Some of the texture mapping nodes have a dot in them, replace here with 2 underscores
-			std::string actualName = boost::replace_first_copy( name, ".", "__" );
-			sockets[actualName] = std::move( socket );
-		}
-	}
-	else
-	{
-		for( const ccl::SocketType &socketType : nodeType->outputs )
-		{
-			IECore::CompoundDataPtr socket = new IECore::CompoundData();
-			IECore::CompoundDataMap &s = socket->writable();
-			s["ui_name"] = new IECore::StringData( socketType.ui_name.c_str() );
-			s["type"] = new IECore::StringData( ccl::SocketType::type_name( socketType.type ).c_str() );
-			s["flags"] = new IECore::IntData( socketType.flags );
-			sockets[socketType.name.c_str()] = std::move( socket );
-		}
+		// Some of the texture mapping nodes have a dot in them, replace here with 2 underscores
+		const std::string name = boost::replace_first_copy( socketType.name.string(), ".", "__" );
+		result[name] = socket( socketType );
 	}
 
-	return IECore::CompoundDataPtr( result );
+	return resultData;
 }
 
 IECore::CompoundDataPtr deviceData()
