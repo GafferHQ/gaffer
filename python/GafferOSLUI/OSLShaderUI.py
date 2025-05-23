@@ -175,15 +175,6 @@ def __plugNoduleLabel( plug ) :
 
 	return label
 
-def __plugComponentNoduleLabel( plug ) :
-
-	parameterPlug = plug.parent()
-	label = __plugNoduleLabel( parameterPlug )
-	if label is None :
-		label = parameterPlug.getName()
-
-	return label + "." + plug.getName()
-
 Gaffer.Metadata.registerNode(
 
 	GafferOSL.OSLShader,
@@ -207,12 +198,6 @@ Gaffer.Metadata.registerNode(
 			"nodule:type", __plugNoduleType,
 			"noduleLayout:visible", __plugNoduleVisibility,
 			"noduleLayout:label", __plugNoduleLabel,
-
-		],
-
-		"parameters.*.[rgbxyz]" : [
-
-			"noduleLayout:label", __plugComponentNoduleLabel,
 
 		],
 

@@ -378,16 +378,6 @@ def __translateNodeMetadata( nodeEntry ) :
 				f"{page} {label}" if page is not None and label is not None else paramName
 			)
 
-		childComponents = {
-			arnold.AI_TYPE_VECTOR2 : "xy",
-			arnold.AI_TYPE_VECTOR : "xyz",
-			arnold.AI_TYPE_RGB : "rgb",
-			arnold.AI_TYPE_RGBA : "rgba",
-		}.get( paramType )
-		if childComponents is not None :
-			for c in childComponents :
-				__metadata["{}.{}".format( paramPath, c )]["noduleLayout:label"] = "{}.{}".format( label, c )
-
 		# NodeEditor layout from other Gaffer-specific metadata
 
 		divider = __aiMetadataGetBool( nodeEntry, paramName, "gaffer.layout.divider" )
