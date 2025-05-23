@@ -101,6 +101,10 @@ using namespace GafferOSL;
 namespace
 {
 
+// Initialised by first call to `shadingSystem()`. Declared here because
+// it affects the conversion routines.
+static int g_shadingSystemBatchSize = 0;
+
 template<typename T>
 struct TypeDescFromType
 {
@@ -291,6 +295,36 @@ bool convertValue( void *dst, TypeDesc dstType, const void *src, TypeDesc srcTyp
 	return false;
 }
 
+bool convertValueToOSL( void *dst, TypeDesc dstType, const void *src, TypeDesc srcType )
+{
+	if( srcType.basetype == TypeDesc::STRING && dstType.basetype == TypeDesc::STRING )
+	{
+		// OSL says it's dealing with `TypeDesc::STRING` but actually it isn't.
+		// For batched shading it is `ustring` and for non-batched it is
+		// `ustringhash`. OSL's `convert_value()` doesn't know anything about
+		// that though, and will botch the conversion, so we do it ourselves.
+		if( !dst || !src )
+		{
+			return true;
+		}
+#if OSL_LIBRARY_VERSION_CODE >= 11400
+		if( g_shadingSystemBatchSize > 1 )
+		{
+			*(ustring *)dst = *(const char**)src;
+		}
+		else
+		{
+			*(ustringhash *)dst = ustringhash( *(const char**)src );
+		}
+#else
+		*(ustring *)dst = *(const char**)src;
+#endif
+		return true;
+	}
+
+	return convertValue( dst, dstType, src, srcType );
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -339,14 +373,14 @@ class RenderState
 			)
 			{
 				UserData userData;
-				userData.dataView = IECoreImage::OpenImageIOAlgo::DataView( it->second.get(), /* createUStrings = */ true );
+				userData.dataView = IECoreImage::OpenImageIOAlgo::DataView( it->second.get() );
 				if( userData.dataView.data )
 				{
 					userData.numValues = std::max( userData.dataView.type.arraylen, 1 );
 					if( userData.dataView.type.arraylen )
 					{
 						// we unarray the TypeDesc so we can use it directly with
-						// convertValue() in get_userdata().
+						// convertValueToOSL() in get_userdata().
 						userData.dataView.type.unarray();
 					}
 					m_userData.insert( make_pair( ustringhash( it->first.c_str() ), userData ) );
@@ -365,7 +399,7 @@ class RenderState
 					make_pair(
 						ustring( name.c_str() ),
 						ContextData{
-							IECoreImage::OpenImageIOAlgo::DataView( contextEntryData.get(), /* createUStrings = */ true ),
+							IECoreImage::OpenImageIOAlgo::DataView( contextEntryData.get() ),
 							contextEntryData
 						}
 					)
@@ -381,7 +415,7 @@ class RenderState
 				return false;
 			}
 
-			return ShadingSystem::convert_value( value, type, it->second.dataView.data, it->second.dataView.type );
+			return convertValueToOSL( value, type, it->second.dataView.data, it->second.dataView.type );
 		}
 
 		bool userData( size_t pointIndex, ustringhash name, TypeDesc type, void *value ) const
@@ -411,7 +445,7 @@ class RenderState
 			const char *src = static_cast<const char *>( it->second.dataView.data );
 			src += std::min( pointIndex, it->second.numValues - 1 ) * it->second.dataView.type.elementsize();
 
-			return convertValue( value, type, src,  it->second.dataView.type );
+			return convertValueToOSL( value, type, src, it->second.dataView.type );
 		}
 
 #if OSL_USE_BATCHED
@@ -454,7 +488,7 @@ class RenderState
 			const TypeDesc &sourceType = it->second.dataView.type;
 			size_t elementSize = sourceType.elementsize();
 			size_t maxElement = it->second.numValues - 1;
-			if( it->second.dataView.type == wval.type() )
+			if( it->second.dataView.type == wval.type() && wval.type().basetype != TypeDesc::STRING )
 			{
 				maskedDataInitWithZeroDerivs( wval );
 				wval.mask().foreach ([&wval, pointIndex, src, elementSize, maxElement ](ActiveLane lane) -> void {
@@ -465,7 +499,7 @@ class RenderState
 			else
 			{
 				// Start by checking if this is a valid conversion
-				if( !convertValue( nullptr, wval.type(), nullptr, sourceType ) )
+				if( !convertValueToOSL( nullptr, wval.type(), nullptr, sourceType ) )
 				{
 					return Mask<WidthT>( false );
 				}
@@ -485,7 +519,7 @@ class RenderState
 					(ActiveLane lane) -> void
 					{
 						int i = std::min( pointIndex + lane, maxElement );
-						convertValue( tempBuffer, wval.type(), src + i * elementSize, sourceType );
+						convertValueToOSL( tempBuffer, wval.type(), src + i * elementSize, sourceType );
 						wval.assign_val_lane_from_scalar( lane, tempBuffer );
 					}
 				);
@@ -835,14 +869,35 @@ struct EmissionParameters
 {
 };
 
+// Depending on whether or not we use batched shading, OSL will
+// want to store string parameters as either `ustring` or `ustringhash`.
+// We use this union for storage so we can deal with both cases.
+union StringParameter
+{
+	static_assert( sizeof( ustring ) == sizeof( ustringhash ) );
+
+	ustring asUString() const
+	{
+#if OSL_LIBRARY_VERSION_CODE >= 11400
+		return g_shadingSystemBatchSize == 1 ? ustring( hash ) : string;
+#else
+		return string;
+#endif
+	}
+
+	ustringhash hash;
+	ustring string;
+
+};
+
 struct DebugParameters
 {
 
-	ustring name;
-	ustring type;
+	StringParameter name;
+	StringParameter type;
 	Color3f value;
 	M44f matrixValue;
-	ustring stringValue;
+	StringParameter stringValue;
 
 };
 
@@ -861,7 +916,6 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 	static OSL::TextureSystem *g_textureSystem = nullptr;
 #endif
 	static OSL::ShadingSystem *g_shadingSystem = nullptr;
-	static int g_shadingSystemBatchSize = 0;
 
 	if( g_shadingSystem )
 	{
@@ -1094,7 +1148,8 @@ class ShadingResults
 		DebugResult acquireDebugResult( const DebugParameters *parameters, DebugResultsMap &threadCache )
 		{
 			// Try the per-thread cache first.
-			auto it = threadCache.find( parameters->name );
+			const ustring name = parameters->name.asUString();
+			auto it = threadCache.find( name );
 			if( it != threadCache.end() )
 			{
 				return it->second;
@@ -1104,19 +1159,19 @@ class ShadingResults
 			// which requires locking. Start optimistically with a read lock.
 			tbb::spin_rw_mutex::scoped_lock rwScopedLock( m_resultsMutex, /* write = */ false  );
 
-			it = m_debugResults.find( parameters->name );
+			it = m_debugResults.find( name );
 			if( it == m_debugResults.end() )
 			{
 				// Need to insert the result, so need a write lock.
 				rwScopedLock.upgrade_to_writer();
 				// But another thread may have got the write lock before us
 				// and done the work itself, so check again just in case.
-				it = m_debugResults.find( parameters->name );
+				it = m_debugResults.find( name );
 				if( it == m_debugResults.end() )
 				{
 					// Create the result.
 					DebugResult result;
-					result.type = typeDescFromTypeName( parameters->type );
+					result.type = typeDescFromTypeName( parameters->type.asUString() );
 					result.type.arraylen = m_ci->size();
 
 					DataPtr data = dataFromTypeDesc( result.type, result.basePointer );
@@ -1124,15 +1179,15 @@ class ShadingResults
 					{
 						throw IECore::Exception( "Unsupported type specified in debug() closure." );
 					}
-					if( parameters->type == g_uvType )
+					if( parameters->type.asUString() == g_uvType )
 					{
 						static_cast<V2fVectorData *>( data.get() )->setInterpretation( GeometricData::UV );
 					}
 
 					result.type.unarray(); // so we can use convert_value
 
-					m_results->writable()[parameters->name.c_str()] = data;
-					it = m_debugResults.insert( make_pair( parameters->name, result ) ).first;
+					m_results->writable()[name.c_str()] = data;
+					it = m_debugResults.insert( make_pair( name, result ) ).first;
 				}
 			}
 
@@ -1144,7 +1199,8 @@ class ShadingResults
 		{
 			DebugResult debugResult = acquireDebugResult( parameters, threadCache );
 
-			if( parameters->type == g_matrixType )
+			const ustring type = parameters->type.asUString();
+			if( type == g_matrixType )
 			{
 				M44f value = parameters->matrixValue;
 
@@ -1154,11 +1210,11 @@ class ShadingResults
 					dst, debugResult.type, &value, OIIO::TypeMatrix44
 				);
 			}
-			else if( parameters->type == g_stringType )
+			else if( type == g_stringType )
 			{
 				std::string *dst = static_cast<std::string*>( debugResult.basePointer );
 				dst += pointIndex;
-				*dst = parameters->stringValue.string();
+				*dst = parameters->stringValue.asUString().string();
 			}
 			else
 			{
@@ -1189,7 +1245,8 @@ class ShadingResults
 			{
 				return TypeDesc( TypeDesc::FLOAT, TypeDesc::VEC2, TypeDesc::NORMAL );
 			}
-			return type != ustring() ? TypeDesc( type.c_str() ) : OIIO::TypeColor;
+
+			return type.size() ? TypeDesc( type.c_str() ) : OIIO::TypeColor;
 		}
 
 		CompoundDataPtr m_results;
