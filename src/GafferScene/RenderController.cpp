@@ -1756,41 +1756,12 @@ void RenderController::cancelBackgroundTask()
 	}
 }
 
-std::shared_ptr<const RenderManifest> RenderController::renderManifest() const
+std::shared_ptr<RenderManifest> RenderController::renderManifest()
 {
 	return m_renderManifest;
 }
 
-std::optional<ScenePlug::ScenePath> RenderController::pathForID( uint32_t id ) const
+std::shared_ptr<const RenderManifest> RenderController::renderManifest() const
 {
-	return m_renderManifest->pathForID( id );
-}
-
-IECore::PathMatcher RenderController::pathsForIDs( const std::vector<uint32_t> &ids ) const
-{
-	return m_renderManifest->pathsForIDs( ids );
-}
-
-uint32_t RenderController::idForPath( const ScenePlug::ScenePath &path, bool createIfNecessary ) const
-{
-	if( createIfNecessary )
-	{
-		return m_renderManifest->acquireID( path );
-	}
-	else
-	{
-		return m_renderManifest->idForPath( path );
-	}
-}
-
-std::vector<uint32_t> RenderController::idsForPaths( const IECore::PathMatcher &paths, bool createIfNecessary ) const
-{
-	if( createIfNecessary )
-	{
-		return m_renderManifest->acquireIDs( paths );
-	}
-	else
-	{
-		return m_renderManifest->idsForPaths( paths );
-	}
+	return m_renderManifest;
 }
