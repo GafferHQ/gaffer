@@ -869,24 +869,43 @@ struct EmissionParameters
 {
 };
 
-// Depending on whether or not we use batched shading, OSL will
-// want to store string parameters as either `ustring` or `ustringhash`.
-// We use this union for storage so we can deal with both cases.
-union StringParameter
+struct StringParameter
 {
+
+#if OSL_LIBRARY_VERSION_CODE >= 11400
+
 	static_assert( sizeof( ustring ) == sizeof( ustringhash ) );
+	static_assert( is_trivially_copyable_v<ustring> );
+	static_assert( is_trivially_copyable_v<ustringhash> );
 
 	ustring asUString() const
 	{
-#if OSL_LIBRARY_VERSION_CODE >= 11400
-		return g_shadingSystemBatchSize == 1 ? ustring( hash ) : string;
-#else
-		return string;
-#endif
+		if( g_shadingSystemBatchSize == 1 )
+		{
+			ustringhash h;
+			memcpy( &h, storage, sizeof( ustringhash ) );
+			return ustring( h );
+		}
+		else
+		{
+			ustring s;
+			memcpy( &s, storage, sizeof( ustring ) );
+			return s;
+		}
 	}
 
-	ustringhash hash;
+	// Depending on whether or not we use batched shading, OSL will
+	// want to store string parameters as either `ustring` or `ustringhash`.
+	// We just use bytes for storage so we can deal with both cases.
+	std::byte storage[sizeof(ustring)];
+
+#else
+
+	ustring asUString() const { return string; }
 	ustring string;
+
+#endif
+
 
 };
 
