@@ -634,15 +634,18 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		w["task"].execute()
 
 		self.assertTrue( testFile.exists() )
-		i = IECore.Reader.create( str( testFile ) ).read()
+		roi = OpenImageIO.ImageInput.open( str( testFile ) ).spec().roi
+		oiioDisplayWindow = imath.Box2i(
+			imath.V2i( roi.xbegin, roi.ybegin ), imath.V2i( roi.xend - 1, roi.yend - 1 )
+		)
 
-		# Cortex uses the EXR convention, which differs
+		# OIIO uses the EXR convention, which differs
 		# from Gaffer's, so we use the conversion methods to
 		# check that the image windows are as expected.
 
 		self.assertEqual(
 			format.toEXRSpace( format.getDisplayWindow() ),
-			i.displayWindow
+			oiioDisplayWindow
 		)
 
 	def testHash( self ) :
