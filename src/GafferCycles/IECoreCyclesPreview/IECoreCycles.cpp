@@ -82,15 +82,7 @@ IECore::CompoundDataPtr getSockets( const ccl::NodeType *nodeType, const bool ou
 			IECore::CompoundDataMap &s = socket->writable();
 			std::string name( socketType.name.c_str() );
 			std::string uiName( socketType.ui_name.c_str() );
-			if( boost::contains( name, "." ) )
-			{
-				std::vector<std::string> split;
-				boost::split( split, name, boost::is_any_of( "." ) );
-				if( split[0] == "tex_mapping" )
-				{
-					s["category"] = new IECore::StringData( "Texture Mapping" );
-				}
-			}
+
 			s["ui_name"] = new IECore::StringData( uiName );
 
 			s["type"] = new IECore::StringData( ccl::SocketType::type_name( socketType.type ).c_str() );
