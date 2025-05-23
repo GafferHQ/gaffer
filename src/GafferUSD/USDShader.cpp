@@ -62,7 +62,6 @@
 
 #include "fmt/format.h"
 
-using namespace std;
 using namespace pxr;
 using namespace boost;
 using namespace Imath;
@@ -172,7 +171,7 @@ PlugPtr acquireCompoundNumericPlug( InternedString name, const SdfValueTypeName 
 
 PlugPtr acquireAssetPlug( InternedString name, Plug::Direction direction, VtValue defaultVtValue, Plug *candidate )
 {
-	string defaultValue;
+	std::string defaultValue;
 	if( !defaultVtValue.IsEmpty() )
 	{
 		defaultValue = defaultVtValue.Get<SdfAssetPath>().GetAssetPath();
@@ -354,8 +353,8 @@ void USDShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	const TfToken shaderNameToken( shaderName );
 
 	UsdSchemaRegistry &schemaRegistry = UsdSchemaRegistry::GetInstance();
-	vector<const UsdPrimDefinition *> primDefinitions;
-	vector<TfToken> autoAppliedPropertyNames;
+	std::vector<const UsdPrimDefinition *> primDefinitions;
+	std::vector<TfToken> autoAppliedPropertyNames;
 	if( auto primDefinition = schemaRegistry.FindConcretePrimDefinition( shaderNameToken ) )
 	{
 		primDefinitions.push_back( primDefinition );
