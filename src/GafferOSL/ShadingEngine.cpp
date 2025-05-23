@@ -855,7 +855,11 @@ ShadingSystemWriteMutex g_shadingSystemWriteMutex;
 OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 {
 	ShadingSystemWriteMutex::scoped_lock shadingSystemWriteLock( g_shadingSystemWriteMutex );
+#if OIIO_VERSION >= 30000
+	static std::shared_ptr<OSL::TextureSystem> g_textureSystem = nullptr;
+#else
 	static OSL::TextureSystem *g_textureSystem = nullptr;
+#endif
 	static OSL::ShadingSystem *g_shadingSystem = nullptr;
 	static int g_shadingSystemBatchSize = 0;
 
@@ -875,8 +879,13 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 	g_textureSystem->attribute( "flip_t", 1 );
 
 	g_shadingSystem = new ShadingSystem(
+#if OIIO_VERSION >= 30000
+		new RendererServices( g_textureSystem.get() ),
+		g_textureSystem.get()
+#else
 		new RendererServices( g_textureSystem ),
 		g_textureSystem
+#endif
 	);
 
 	ClosureParam emissionParams[] = {
