@@ -97,21 +97,13 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 
 		void updateMatchingPaths( const IECore::PathMatcher &pathsToUpdate, const ProgressCallback &callback = ProgressCallback() );
 
-		// ID queries
-		// ==========
+		// Manifest
+		// ========
 		//
-		// Allow IDs acquired from a standard `uint id` AOV to be mapped
+		// Allows IDs acquired from a standard `id` AOV to be mapped
 		// back to the scene paths they came from.
-		std::shared_ptr< const RenderManifest> renderManifest() const;
-
-		// \todo : These functions are all deprecated. Use the functions on renderManifest() instead.
-		std::optional<ScenePlug::ScenePath> pathForID( uint32_t id ) const;
-		IECore::PathMatcher pathsForIDs( const std::vector<uint32_t> &ids ) const;
-
-		// Returns the ID associated with the specified path, or `0` if that
-		// path has not been rendered and `createIfNecessary` is `false`.
-		uint32_t idForPath( const ScenePlug::ScenePath &path, bool createIfNecessary = false ) const;
-		std::vector<uint32_t> idsForPaths( const IECore::PathMatcher &paths, bool createIfNecessary = false ) const;
+		std::shared_ptr<RenderManifest> renderManifest();
+		std::shared_ptr<const RenderManifest> renderManifest() const;
 
 	private :
 

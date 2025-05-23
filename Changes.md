@@ -30,6 +30,7 @@ API
 - GafferScene::RenderManifest : Added class for representing mapping of ids to paths in renders. Supports reading EXR and cryptomatte manifests, and writing EXR manifests.
 - Metadata : Added `registerValues()` function that registers multiple metadata entries from a dictionary of string targets.
 - MetadataAlgo : Added `createPlugFromMetadata()` function.
+- RenderController : Added `renderManifest()` method.
 
 Breaking Changes
 ----------------
@@ -45,6 +46,7 @@ Breaking Changes
   - Attribute plugs have been renamed to match the name of their attribute (e.g. `attributes.primitiveWireframeColor` is now `attributes.gl:primitive:wireframeColor`). A compatibility config has been provided to allow OpenGLAttributes nodes to be loaded from scripts saved in earlier Gaffer versions.
   - The default values of the attribute plugs authoring the `gl:primitive:bound`, `gl:primitive:outline`, `gl:primitive:points`, `gl:primitive:pointColor`, `gl:primitive:wireframe`, and `gl:primitive:wireframeColor` attributes have changed to match the default behaviour of the OpenGL renderer. Scripts loaded from previous Gaffer versions with these plugs enabled and set to the default value will see a difference in OpenGL renders.
 - SceneTestCase : Removed `assertBoxesEqual()` and `assertBoxesAlmostEqual()` methods.
+- RenderController : Removed `pathForID()`, `pathsForIDs()`, `idForPath()` and `idsForPaths()`. Use `renderManifest()` instead.
 
 1.5.x.x (relative to 1.5.14.0)
 =======
