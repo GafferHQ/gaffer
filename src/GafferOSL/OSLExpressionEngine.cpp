@@ -81,6 +81,15 @@ using namespace Gaffer;
 namespace
 {
 
+// When OSL uses a TypeDesc to say it is holding an `OIIO::TypeString`,
+// that is not actually true. Instead, it will either be referring to
+// a `ustringhash` or a `ustring`, depending on library version.
+#if OSL_LIBRARY_VERSION_CODE >= 11400
+using OSLStringType = ustringhash;
+#else
+using OSLStringType = ustring;
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // RenderState. OSL would think of this as representing the object
 // currently being shaded, encoding information about primitive variables
@@ -126,7 +135,7 @@ bool getAttributeInternal( OSL::ShaderGlobals *sg, bool derivatives, ustringhash
 		memset( (char*)value + type.size(), 0, 2 * type.size() );
 	}
 
-	IECoreImage::OpenImageIOAlgo::DataView dataView( data.get(), /* createUStrings = */ true );
+	IECoreImage::OpenImageIOAlgo::DataView dataView( data.get() );
 	if( !dataView.data )
 	{
 		if( auto b = runTimeCast<BoolData>( data.get() ) )
@@ -154,10 +163,21 @@ bool getAttributeInternal( OSL::ShaderGlobals *sg, bool derivatives, ustringhash
 		dataView.type.arraylen = 0;
 	}
 
+	const char *sourceData = (char *)dataView.data + dataView.type.size() * effectiveIndex;
+
+	if( type == OIIO::TypeString && dataView.type == OIIO::TypeString )
+	{
+		// Although `type` claims it to be a string, in OSL 1.14 `value` will actually
+		// point to a `ustringhash`. `convert_value()` doesn't know that, and would clobber
+		// it with an invalid value, so we do our own conversion.
+		*(OSLStringType *)value = OSLStringType( *(const char **)sourceData );
+		return true;
+	}
+
 	return ShadingSystem::convert_value(
 		value,
 		type,
-		(char *)dataView.data + dataView.type.size() * effectiveIndex,
+		sourceData,
 		dataView.type
 	);
 }
@@ -252,8 +272,7 @@ class RendererServices : public OSL::RendererServices
 							return true;
 						case StringPlugTypeId :
 						{
-							ustring s( static_cast<const StringPlug *>( plug )->getValue() );
-							*(const char **)value = s.c_str();
+							*(OSLStringType *)value = OSLStringType( static_cast<const StringPlug *>( plug )->getValue() );
 							return true;
 						}
 						default :
@@ -483,7 +502,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 				}
 				else if( type == OIIO::TypeString )
 				{
-					result->members().push_back( new StringData( *(const char **)storage ) );
+					result->members().push_back( new StringData( ((const OSLStringType *)storage)->c_str() ) );
 				}
 			}
 
