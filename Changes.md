@@ -6,6 +6,11 @@ Features
 
 - ShuffleOptions : Added a new node for shuffling options in the scene globals (#6412).
 
+Improvements
+------------
+
+- Added `buildGraphics` option to SConstruct to enable building the Gaffer logo and icons separately.
+
 Fixes
 -----
 
