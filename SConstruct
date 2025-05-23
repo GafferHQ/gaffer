@@ -1305,7 +1305,7 @@ libraries = {
 	"GafferOSL" : {
 		"envAppends" : {
 			"CPPPATH" : [ "$OSLHOME/include/OSL" ],
-			"LIBS" : [ "Gaffer", "GafferScene", "GafferImage", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX", "oslexec$OSL_LIB_SUFFIX", "Iex$IMATH_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "GafferImage", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX", "oslexec$OSL_LIB_SUFFIX", "oslcomp$OSL_LIB_SUFFIX", "Iex$IMATH_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"CPPPATH" : [ "$OSLHOME/include/OSL" ],
