@@ -82,15 +82,15 @@ class RenderManifestTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( r.pathForID( 42 ), None )
 
 		# There are also batch forms that operate on id lists and path matchers
-		self.assertEqual( r.acquireIDs( IECore.PathMatcher( [ "x", "y", "z" ] ) ), [ 5, 6, 7] )
-
-		self.assertEqual( r.pathsForIDs( [ 5, 6, 7] ), IECore.PathMatcher( [ "x", "y", "z" ] ) )
-
+		self.assertEqual( r.idsForPaths( IECore.PathMatcher( [ "/x", "/y", "/z" ] ) ), [] )
+		self.assertEqual( r.pathsForIDs( [ 5, 6, 7 ] ), IECore.PathMatcher() )
+		self.assertEqual( r.acquireIDs( IECore.PathMatcher( [ "x", "y", "z" ] ) ), [ 5, 6, 7 ] )
+		self.assertEqual( r.pathsForIDs( [ 5, 6, 7 ] ), IECore.PathMatcher( [ "x", "y", "z" ] ) )
+		self.assertEqual( r.idsForPaths( IECore.PathMatcher( [ "/x", "/y", "/z" ] ) ), [ 5, 6, 7 ] )
 
 		self.assertEqual( r.size(), 7 )
 		r.clear()
 		self.assertEqual( r.size(), 0 )
-
 
 	def testReadCryptomatte( self ):
 
