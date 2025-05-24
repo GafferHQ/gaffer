@@ -98,18 +98,15 @@ def _qtObjectIsValid( o ) :
 def __shiboken() :
 
 	import Qt
-	assert( "PyQt" not in Qt.__binding__ )
+	assert( Qt.__binding__ in ( "PySide2", "PySide6" ) )
 
-	if Qt.__binding__ == "PySide2" :
+	if Qt.__binding__ == "PySide6" :
+		import shiboken6 as shiboken
+	else :
 		try :
 			import PySide2.shiboken2 as shiboken
 		except ImportError :
 			import shiboken2 as shiboken
-	else :
-		try :
-			import PySide.shiboken
-		except ImportError :
-			import shiboken
 
 	return shiboken
 
