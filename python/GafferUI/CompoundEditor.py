@@ -1040,15 +1040,15 @@ class _TabDragBehaviour( QtCore.QObject ) :
 		if qEventType not in self.__eventMask :
 			return False
 
-		if qEventType == qEvent.MouseButtonPress :
+		if qEventType == QtCore.QEvent.MouseButtonPress :
 
 			return self.__mousePress( qObject, qEvent )
 
-		elif qEventType == qEvent.MouseMove :
+		elif qEventType == QtCore.QEvent.MouseMove :
 
 			return self.__mouseMove( qObject, qEvent )
 
-		elif qEventType == qEvent.MouseButtonRelease :
+		elif qEventType == QtCore.QEvent.MouseButtonRelease :
 
 			return self.__mouseRelease( qObject, qEvent )
 
