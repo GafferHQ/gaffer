@@ -86,7 +86,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
-		self._qtWidget().setTabStopWidth( 20 ) # pixels
+		self._qtWidget().setTabStopDistance( 20 ) # pixels
 
 		self.__editingFinishedSignal = GafferUI.WidgetSignal()
 		self.__activatedSignal = GafferUI.WidgetSignal()
