@@ -35,24 +35,14 @@
 #include "GafferCycles/IECoreCyclesPreview/CameraAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
-#include "IECoreScene/Camera.h"
-
 #include "IECore/SimpleTypedData.h"
-
-// Cycles
-#include "scene/camera.h"
-#include "kernel/types.h"
 
 using namespace std;
 using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;
-using namespace IECoreCycles;
 
-namespace
-{
-
-ccl::Camera *convertCommon( const IECoreScene::Camera *camera, const std::string &nodeName )
+ccl::Camera *IECoreCycles::CameraAlgo::convert( const IECoreScene::Camera *camera, const std::string &nodeName, ccl::Scene *scene )
 {
 	assert( camera->typeId() == IECoreScene::Camera::staticTypeId() );
 	ccl::Camera *ccam = new ccl::Camera();
@@ -162,26 +152,3 @@ ccl::Camera *convertCommon( const IECoreScene::Camera *camera, const std::string
 
 	return ccam;
 }
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
-// Implementation of public API
-//////////////////////////////////////////////////////////////////////////
-
-namespace IECoreCycles
-
-{
-
-namespace CameraAlgo
-
-{
-
-ccl::Camera *convert( const IECoreScene::Camera *camera, const std::string &nodeName, ccl::Scene *scene )
-{
-	return convertCommon( camera, nodeName );
-}
-
-} // namespace CameraAlgo
-
-} // namespace IECoreCycles
