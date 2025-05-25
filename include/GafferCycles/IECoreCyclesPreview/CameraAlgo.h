@@ -38,8 +38,6 @@
 
 #include "IECoreScene/Camera.h"
 
-#include <vector>
-
 // Cycles
 IECORE_PUSH_DEFAULT_VISIBILITY
 #include "scene/camera.h"
