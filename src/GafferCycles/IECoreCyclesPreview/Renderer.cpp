@@ -126,12 +126,10 @@ using namespace IECoreCycles;
 namespace
 {
 
-//typedef std::unique_ptr<ccl::Camera> CCameraPtr;
 using CIntegratorPtr = std::unique_ptr<ccl::Integrator>;
 using CBackgroundPtr = std::unique_ptr<ccl::Background>;
 using CFilmPtr = std::unique_ptr<ccl::Film>;
 using CLightPtr = std::unique_ptr<ccl::Light>;
-using SharedCCameraPtr = std::shared_ptr<ccl::Camera>;
 using SharedCObjectPtr = std::shared_ptr<ccl::Object>;
 using SharedCLightPtr = std::shared_ptr<ccl::Light>;
 using SharedCGeometryPtr = std::shared_ptr<ccl::Geometry>;
@@ -1925,69 +1923,6 @@ IE_CORE_DECLAREPTR( LightCache )
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
-// CameraCache
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-class CameraCache : public IECore::RefCounted
-{
-
-	public :
-
-		CameraCache()
-		{
-		}
-
-		// Can be called concurrently with other get() calls.
-		SharedCCameraPtr get( const IECoreScene::Camera *camera, const std::string &name )
-		{
-			const IECore::MurmurHash hash = camera->Object::hash();
-
-			Cache::accessor a;
-			m_cache.insert( a, hash );
-
-			if( !a->second )
-			{
-				a->second = SharedCCameraPtr( CameraAlgo::convert( camera, name ) );
-			}
-
-			return a->second;
-		}
-
-		// Must not be called concurrently with anything.
-		void clearUnused()
-		{
-			vector<IECore::MurmurHash> toErase;
-			for( Cache::iterator it = m_cache.begin(), eIt = m_cache.end(); it != eIt; ++it )
-			{
-				if( it->second.use_count() == 1 )
-				{
-					// Only one reference - this is ours, so
-					// nothing outside of the cache is using the
-					// camera.
-					toErase.push_back( it->first );
-				}
-			}
-			for( vector<IECore::MurmurHash>::const_iterator it = toErase.begin(), eIt = toErase.end(); it != eIt; ++it )
-			{
-				m_cache.erase( *it );
-			}
-		}
-
-	private :
-
-		using Cache = tbb::concurrent_hash_map<IECore::MurmurHash, SharedCCameraPtr>;
-		Cache m_cache;
-
-};
-
-IE_CORE_DECLAREPTR( CameraCache )
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
 // LightLinker definition
 //////////////////////////////////////////////////////////////////////////
 
@@ -2528,8 +2463,13 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 
 	public :
 
-		CyclesCamera( SharedCCameraPtr camera )
-			: m_camera( camera )
+		IE_CORE_DECLAREMEMBERPTR( CyclesCamera );
+
+		CyclesCamera( const IECoreScene::ConstCameraPtr &camera )
+			:	m_camera( camera ),
+				/// \todo Transform should be identity. It is scaled to match a historical
+				/// bug in IECoreCycles.
+				m_transformSamples( { M44f().scale( V3f( 1, -1, -1 ) ) } )
 		{
 		}
 
@@ -2543,87 +2483,12 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 
 		void transform( const Imath::M44f &transform ) override
 		{
-			ccl::Camera *camera = m_camera.get();
-			if( !camera )
-				return;
-			Imath::M44f ctransform = transform;
-			ctransform.scale( Imath::V3f( 1.0f, -1.0f, -1.0f ) );
-			camera->set_matrix( SocketAlgo::setTransform( ctransform ) );
-			camera->tag_modified();
+			m_transformSamples = { transform };
 		}
 
 		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
 		{
-			ccl::Camera *camera = m_camera.get();
-			if( !camera )
-				return;
-			const size_t numSamples = samples.size();
-
-			ccl::array<ccl::Transform> motion;
-
-			const Imath::V3f scale = Imath::V3f( 1.0f, -1.0f, -1.0f );
-			Imath::M44f matrix;
-
-			if( m_camera->get_motion_position() == ccl::MOTION_POSITION_START )
-			{
-				matrix = samples.front();
-				matrix.scale( scale );
-				camera->set_matrix( SocketAlgo::setTransform( matrix ) );
-				if( numSamples != 1 )
-				{
-					motion = ccl::array<ccl::Transform>( 3 );
-					motion[0] = camera->get_matrix();
-					IECore::LinearInterpolator<Imath::M44f>()( samples.front(), samples.back(), 0.5f, matrix );
-					matrix.scale( scale );
-					motion[1] = SocketAlgo::setTransform( matrix );
-					matrix = samples.back();
-					matrix.scale( scale );
-					motion[2] = SocketAlgo::setTransform( matrix );
-				}
-			}
-			else if( m_camera->get_motion_position() == ccl::MOTION_POSITION_END )
-			{
-				matrix = samples.back();
-				matrix.scale( scale );
-				camera->set_matrix( SocketAlgo::setTransform( matrix ) );
-				if( numSamples != 1 )
-				{
-					motion = ccl::array<ccl::Transform>( 3 );
-					motion[0] = camera->get_matrix();
-					IECore::LinearInterpolator<Imath::M44f>()( samples.back(), samples.front(), 0.5f, matrix );
-					matrix.scale( scale );
-					motion[1] = SocketAlgo::setTransform( matrix );
-					matrix = samples.front();
-					matrix.scale( scale );
-					motion[2] = SocketAlgo::setTransform( matrix );
-				}
-			}
-			else // ccl::Camera::MOTION_POSITION_CENTER
-			{
-				if( numSamples == 1 ) // One sample
-				{
-					matrix = samples.front();
-					matrix.scale( scale );
-					camera->set_matrix( SocketAlgo::setTransform( matrix ) );
-				}
-				else
-				{
-					IECore::LinearInterpolator<Imath::M44f>()( samples.front(), samples.back(), 0.5f, matrix );
-					matrix.scale( scale );
-					camera->set_matrix( SocketAlgo::setTransform( matrix ) );
-
-					motion = ccl::array<ccl::Transform>( 3 );
-					matrix = samples.front();
-					matrix.scale( scale );
-					motion[0] = SocketAlgo::setTransform( matrix );
-					motion[1] = camera->get_matrix();
-					matrix = samples.back();
-					matrix.scale( scale );
-					motion[2] = SocketAlgo::setTransform( matrix );
-				}
-			}
-			camera->set_motion( motion );
-			camera->tag_modified();
+			m_transformSamples = samples;
 		}
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
@@ -2634,12 +2499,84 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 
 		void assignID( uint32_t id ) override
 		{
-			/// \todo Implement me
+		}
+
+		void apply( ccl::Camera *destination ) const
+		{
+			CameraAlgo::convert( m_camera.get(), destination );
+
+			const size_t numSamples = m_transformSamples.size();
+
+			ccl::array<ccl::Transform> motion;
+
+			const Imath::V3f scale = Imath::V3f( 1.0f, -1.0f, -1.0f );
+			Imath::M44f matrix;
+
+			if( destination->get_motion_position() == ccl::MOTION_POSITION_START )
+			{
+				matrix = m_transformSamples.front();
+				matrix.scale( scale );
+				destination->set_matrix( SocketAlgo::setTransform( matrix ) );
+				if( numSamples != 1 )
+				{
+					motion = ccl::array<ccl::Transform>( 3 );
+					motion[0] = destination->get_matrix();
+					IECore::LinearInterpolator<Imath::M44f>()( m_transformSamples.front(), m_transformSamples.back(), 0.5f, matrix );
+					matrix.scale( scale );
+					motion[1] = SocketAlgo::setTransform( matrix );
+					matrix = m_transformSamples.back();
+					matrix.scale( scale );
+					motion[2] = SocketAlgo::setTransform( matrix );
+				}
+			}
+			else if( destination->get_motion_position() == ccl::MOTION_POSITION_END )
+			{
+				matrix = m_transformSamples.back();
+				matrix.scale( scale );
+				destination->set_matrix( SocketAlgo::setTransform( matrix ) );
+				if( numSamples != 1 )
+				{
+					motion = ccl::array<ccl::Transform>( 3 );
+					motion[0] = destination->get_matrix();
+					IECore::LinearInterpolator<Imath::M44f>()( m_transformSamples.back(), m_transformSamples.front(), 0.5f, matrix );
+					matrix.scale( scale );
+					motion[1] = SocketAlgo::setTransform( matrix );
+					matrix = m_transformSamples.front();
+					matrix.scale( scale );
+					motion[2] = SocketAlgo::setTransform( matrix );
+				}
+			}
+			else // ccl::Camera::MOTION_POSITION_CENTER
+			{
+				if( numSamples == 1 ) // One sample
+				{
+					matrix = m_transformSamples.front();
+					matrix.scale( scale );
+					destination->set_matrix( SocketAlgo::setTransform( matrix ) );
+				}
+				else
+				{
+					IECore::LinearInterpolator<Imath::M44f>()( m_transformSamples.front(), m_transformSamples.back(), 0.5f, matrix );
+					matrix.scale( scale );
+					destination->set_matrix( SocketAlgo::setTransform( matrix ) );
+
+					motion = ccl::array<ccl::Transform>( 3 );
+					matrix = m_transformSamples.front();
+					matrix.scale( scale );
+					motion[0] = SocketAlgo::setTransform( matrix );
+					motion[1] = destination->get_matrix();
+					matrix = m_transformSamples.back();
+					matrix.scale( scale );
+					motion[2] = SocketAlgo::setTransform( matrix );
+				}
+			}
+			destination->set_motion( motion );
 		}
 
 	private :
 
-		SharedCCameraPtr m_camera;
+		IECoreScene::ConstCameraPtr m_camera;
+		std::vector<Imath::M44f> m_transformSamples;
 
 };
 
@@ -2891,10 +2828,17 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_rendering( false ),
 				m_outputsChanged( true ),
 				m_messageHandler( messageHandler ),
-				m_cameraCache( new CameraCache() ),
 				m_lightLinker( renderType )
 
 		{
+			IECoreScene::CameraPtr camera = new IECoreScene::Camera();
+			/// \todo Remove, and use default parameter values. The
+			/// values here are to match a historical bug in Cycles.
+			camera->setResolution( V2i( 1024, 512 ) );
+			camera->setProjection( "perspective" );
+			camera->setFocalLengthFromFieldOfView( 80.0f );
+			CyclesCameraPtr defaultCamera = new CyclesCamera( camera );
+			m_cameras["ieCoreCycles:defaultCamera"] = defaultCamera;
 		}
 
 		~CyclesRenderer() override
@@ -2968,17 +2912,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// No need to acquire session because we don't need it to make a camera.
 			// This is important for certain clients (SceneGadget and RenderController)
 			// because they make a camera before calling `option()` to set the device.
-
-			SharedCCameraPtr ccamera = m_cameraCache->get( camera, name );
-			if( !ccamera )
-			{
-				return nullptr;
-			}
-
-			// Store the camera for later use in updateCamera().
-			m_cameras[name] = camera;
-
-			ObjectInterfacePtr result = new CyclesCamera( ccamera );
+			CyclesCameraPtr result = new CyclesCamera( camera );
+			m_cameras[name] = result;
 			if( attributes )
 			{
 				result->attributes( attributes );
@@ -3090,7 +3025,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				updateOptions();
 				updateSceneObjects();
 				updateBackground();
-				updateCamera();
+				const std::string cameraName = optionValue<string>( g_cameraOptionName, "" );
+				updateCamera( cameraName, m_scene->camera );
+				updateCamera( optionValue<string>( g_dicingCameraOptionName, cameraName ), m_scene->dicing_camera );
 				updateOutputs();
 				warnForUnusedOptions();
 
@@ -3272,7 +3209,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void clearUnused()
 		{
-			m_cameraCache->clearUnused();
 			m_instanceCache->clearUnused();
 			m_lightCache->clearUnused();
 			m_attributesCache->clearUnused();
@@ -3688,74 +3624,22 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_outputsChanged = false;
 		}
 
-		void updateCamera()
+		void updateCamera( const std::string &sourceName, ccl::Camera *destination )
 		{
-			// Check that the camera we want to use exists,
-			// and if not, create a default one.
+			auto cameraIt = m_cameras.find( sourceName );
+			if( cameraIt == m_cameras.end() )
 			{
-				const string cameraName = optionValue<string>( g_cameraOptionName, "" );
-				const auto cameraIt = m_cameras.find( cameraName );
-				if( cameraIt == m_cameras.end() )
+				if( !sourceName.empty() )
 				{
-					if( !cameraName.empty() )
-					{
-						IECore::msg(
-							IECore::Msg::Warning, "CyclesRenderer",
-							fmt::format( "Camera \"{}\" does not exist", cameraName )
-						);
-					}
-
-					if( m_scene->camera->name != cameraName || m_cameraDefault.is_modified() )
-					{
-						ccl::Camera prevcam = *m_scene->camera;
-						*m_scene->camera = m_cameraDefault;
-						m_scene->camera->shutter_table_offset = prevcam.shutter_table_offset;
-						m_scene->camera->need_flags_update = prevcam.need_flags_update;
-						m_scene->camera->update( m_scene );
-						m_cameraDefault = *m_scene->camera;
-					}
+					IECore::msg(
+						IECore::Msg::Warning, "CyclesRenderer",
+						fmt::format( "Camera \"{}\" does not exist", sourceName )
+					);
 				}
-				else
-				{
-					ccl::Camera *ccamera = m_cameraCache->get( cameraIt->second.get(), cameraIt->first ).get();
-					if( m_scene->camera->name != cameraName || ccamera->is_modified() )
-					{
-						ccl::Camera prevcam = *m_scene->camera;
-						*m_scene->camera = *ccamera;
-						m_scene->camera->shutter_table_offset = prevcam.shutter_table_offset;
-						m_scene->camera->need_flags_update = prevcam.need_flags_update;
-						m_scene->camera->update( m_scene );
-						*ccamera = *m_scene->camera;
-					}
-				}
+				cameraIt = m_cameras.find( "ieCoreCycles:defaultCamera" );
 			}
 
-			// Dicing camera update
-			{
-				const string dicingCameraName = optionValue<string>( g_dicingCameraOptionName, "" );
-				const auto cameraIt = m_cameras.find( dicingCameraName );
-				if( cameraIt == m_cameras.end() )
-				{
-					if( !dicingCameraName.empty() )
-					{
-						IECore::msg(
-							IECore::Msg::Warning, "CyclesRenderer",
-							fmt::format( "Dicing camera \"{}\" does not exist", dicingCameraName )
-						);
-					}
-					*m_scene->dicing_camera = *m_scene->camera;
-				}
-				else
-				{
-					ccl::Camera *ccamera = m_cameraCache->get( cameraIt->second.get(), cameraIt->first ).get();
-					if( m_scene->dicing_camera->name != dicingCameraName || ccamera->is_modified() )
-					{
-						*m_scene->dicing_camera = *ccamera;
-						m_scene->dicing_camera->update( m_scene );
-						*ccamera = *m_scene->camera;
-					}
-				}
-			}
+			cameraIt->second->apply( destination );
 		}
 
 		void progress()
@@ -3803,7 +3687,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void resetCaches()
 		{
-			m_cameraCache.reset();
 			m_instanceCache.reset();
 			m_lightCache.reset();
 			m_shaderCache.reset();
@@ -3844,9 +3727,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		// Background shader
 		CyclesShaderPtr m_backgroundShader;
 
-		// Defaults
-		ccl::Camera m_cameraDefault;
-
 		// IECoreScene::Renderer
 		RenderType m_renderType;
 		bool m_rendering;
@@ -3859,7 +3739,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		double m_lastStatusTime;
 
 		// Caches
-		CameraCachePtr m_cameraCache;
 		ShaderCachePtr m_shaderCache;
 		LightCachePtr m_lightCache;
 		InstanceCachePtr m_instanceCache;
@@ -3879,8 +3758,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		// Outputs
 		OutputMap m_outputs;
 
-		// Cameras (Cycles can only know of one camera at a time)
-		using CameraMap = tbb::concurrent_unordered_map<std::string, IECoreScene::ConstCameraPtr>;
+		// Cameras. We store these in Cortex form, and apply them to the scene's
+		// camera in `updateCamera()`.
+		using CameraMap = tbb::concurrent_unordered_map<std::string, ConstCyclesCameraPtr>;
 		CameraMap m_cameras;
 
 		// Registration with factory

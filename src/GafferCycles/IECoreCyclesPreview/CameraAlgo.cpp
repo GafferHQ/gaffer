@@ -42,113 +42,111 @@ using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;
 
-ccl::Camera *IECoreCycles::CameraAlgo::convert( const IECoreScene::Camera *camera, const std::string &nodeName, ccl::Scene *scene )
+void IECoreCycles::CameraAlgo::convert( const IECoreScene::Camera *source, ccl::Camera *destination )
 {
-	assert( camera->typeId() == IECoreScene::Camera::staticTypeId() );
-	ccl::Camera *ccam = new ccl::Camera();
-	ccam->name = ccl::ustring(nodeName.c_str());
-
 	// Projection type
-	const string &projection = camera->getProjection();
+	const string &projection = source->getProjection();
 	if( projection == "perspective" )
 	{
-		ccam->set_camera_type( ccl::CameraType::CAMERA_PERSPECTIVE );
-		ccam->set_fov( M_PI_2 );
-		if( camera->getFStop() > 0.0f )
+		destination->set_camera_type( ccl::CameraType::CAMERA_PERSPECTIVE );
+		destination->set_fov( M_PI_2 );
+		if( source->getFStop() > 0.0f )
 		{
-			ccam->set_aperturesize( 0.5f * camera->getFocalLength() * camera->getFocalLengthWorldScale() / camera->getFStop() );
-			ccam->set_focaldistance( camera->getFocusDistance() );
+			destination->set_aperturesize( 0.5f * source->getFocalLength() * source->getFocalLengthWorldScale() / source->getFStop() );
+			destination->set_focaldistance( source->getFocusDistance() );
 		}
 	}
 	else if( projection == "orthographic" )
 	{
-		ccam->set_camera_type( ccl::CameraType::CAMERA_ORTHOGRAPHIC );
+		destination->set_camera_type( ccl::CameraType::CAMERA_ORTHOGRAPHIC );
 	}
 	else
 	{
-		ccam->set_camera_type( ccl::CameraType::CAMERA_PERSPECTIVE );
-		ccam->set_fov( M_PI_2 );
+		destination->set_camera_type( ccl::CameraType::CAMERA_PERSPECTIVE );
+		destination->set_fov( M_PI_2 );
 	}
 
 	// Screen window/resolution TODO: full_ might be something to do with cropping?
-	const Imath::Box2f &frustum = camera->frustum();
-	const Imath::V2i &resolution = camera->renderResolution();
-	const float pixelAspectRatio = camera->getPixelAspectRatio();
-	ccam->set_full_width( resolution[0] );
-	ccam->set_full_height( resolution[1] );
-	ccam->set_viewplane_left( frustum.min.x );
-	ccam->set_viewplane_right( frustum.max.x );
+	const Imath::Box2f &frustum = source->frustum();
+	const Imath::V2i &resolution = source->renderResolution();
+	const float pixelAspectRatio = source->getPixelAspectRatio();
+	destination->set_full_width( resolution[0] );
+	destination->set_full_height( resolution[1] );
+	destination->set_viewplane_left( frustum.min.x );
+	destination->set_viewplane_right( frustum.max.x );
 	// Invert the viewplane in Y so Gaffer's aperture offsets and overscan are applied in the correct direction
-	ccam->set_viewplane_bottom( -frustum.max.y );
-	ccam->set_viewplane_top( -frustum.min.y );
-	ccam->set_aperture_ratio( pixelAspectRatio ); // This is more for the bokeh, maybe it should be a separate parameter?
+	destination->set_viewplane_bottom( -frustum.max.y );
+	destination->set_viewplane_top( -frustum.min.y );
+	destination->set_aperture_ratio( pixelAspectRatio ); // This is more for the bokeh, maybe it should be a separate parameter?
 
 	// Clipping planes
-	const Imath::V2f &clippingPlanes = camera->getClippingPlanes();
-	ccam->set_nearclip( clippingPlanes.x );
-	ccam->set_farclip( clippingPlanes.y );
+	const Imath::V2f &clippingPlanes = source->getClippingPlanes();
+	destination->set_nearclip( clippingPlanes.x );
+	destination->set_farclip( clippingPlanes.y );
 
 	// Crop window
-	if ( camera->hasCropWindow() )
+	if( source->hasCropWindow() )
 	{
-		const Imath::Box2f &cropWindow = camera->getCropWindow();
-		ccam->set_border_left( cropWindow.min.x );
-		ccam->set_border_right( cropWindow.max.x );
-		ccam->set_border_top( cropWindow.max.y );
-		ccam->set_border_bottom( cropWindow.min.y );
+		const Imath::Box2f &cropWindow = source->getCropWindow();
+		destination->set_border_left( cropWindow.min.x );
+		destination->set_border_right( cropWindow.max.x );
+		destination->set_border_top( cropWindow.max.y );
+		destination->set_border_bottom( cropWindow.min.y );
 	}
 
 	// Shutter TODO: Need to see if this is correct or not, cycles also has a shutter curve...
-	const Imath::V2f &shutter = camera->getShutter();
-	ccam->set_shuttertime( abs(shutter.x) + abs(shutter.y) );
+	const Imath::V2f &shutter = source->getShutter();
+	destination->set_shuttertime( abs(shutter.x) + abs(shutter.y) );
 	if( (shutter.x == 0.0) && (shutter.y > shutter.x) )
 	{
-		ccam->set_motion_position( ccl::MOTION_POSITION_START );
+		destination->set_motion_position( ccl::MOTION_POSITION_START );
 	}
 	else if( (shutter.x < shutter.y) && (shutter.y == 0.0) )
 	{
-		ccam->set_motion_position( ccl::MOTION_POSITION_END );
+		destination->set_motion_position( ccl::MOTION_POSITION_END );
 	}
 	else
 	{
-		ccam->set_motion_position( ccl::MOTION_POSITION_CENTER );
+		destination->set_motion_position( ccl::MOTION_POSITION_CENTER );
 	}
 
-	for( CompoundDataMap::const_iterator it = camera->parameters().begin(), eIt = camera->parameters().end(); it != eIt; ++it )
+	for( CompoundDataMap::const_iterator it = source->parameters().begin(), eIt = source->parameters().end(); it != eIt; ++it )
 	{
 		if( it->first == "panoramaType" )
 		{
 			if( const StringData *data = static_cast<const StringData *>( it->second.get() ) )
 			{
+				/// \todo We have set camera type already in the projection section, so
+				/// setting it here will result in `destination->is_modified()` even when
+				/// nothing actually changed. Fix it. Perhaps these should all be special
+				/// `ccl:*` values for "projection" anyway, rather than a parameter?
 				std::string panoType = data->readable();
 
 				if( panoType == "equirectangular" )
 				{
-					ccam->set_camera_type( ccl::CAMERA_PANORAMA );
-					ccam->set_panorama_type( ccl::PANORAMA_EQUIRECTANGULAR );
+					destination->set_camera_type( ccl::CAMERA_PANORAMA );
+					destination->set_panorama_type( ccl::PANORAMA_EQUIRECTANGULAR );
 				}
 				else if( panoType == "mirrorball" )
 				{
-					ccam->set_camera_type( ccl::CAMERA_PANORAMA );
-					ccam->set_panorama_type( ccl::PANORAMA_MIRRORBALL );
+					destination->set_camera_type( ccl::CAMERA_PANORAMA );
+					destination->set_panorama_type( ccl::PANORAMA_MIRRORBALL );
 				}
 				else if( panoType == "fisheyeEquidistant" )
 				{
-					ccam->set_camera_type( ccl::CAMERA_PANORAMA );
-					ccam->set_panorama_type( ccl::PANORAMA_FISHEYE_EQUIDISTANT );
+					destination->set_camera_type( ccl::CAMERA_PANORAMA );
+					destination->set_panorama_type( ccl::PANORAMA_FISHEYE_EQUIDISTANT );
 				}
 				else if( panoType == "fisheyeEquisolid" )
 				{
-					ccam->set_camera_type( ccl::CAMERA_PANORAMA );
-					ccam->set_panorama_type( ccl::PANORAMA_FISHEYE_EQUISOLID );
+					destination->set_camera_type( ccl::CAMERA_PANORAMA );
+					destination->set_panorama_type( ccl::PANORAMA_FISHEYE_EQUISOLID );
 				}
 			}
 		}
-		else if( auto socket = ccam->type->find_input( ccl::ustring( it->first.c_str() ) ) )
+		else if( auto socket = destination->type->find_input( ccl::ustring( it->first.c_str() ) ) )
 		{
-			SocketAlgo::setSocket( ccam, socket, it->second.get() );
+			SocketAlgo::setSocket( destination, socket, it->second.get() );
 		}
 	}
-
-	return ccam;
 }
