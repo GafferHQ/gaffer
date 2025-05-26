@@ -43,6 +43,7 @@ import GafferUI
 from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
+import Qt
 
 import weakref
 
@@ -207,7 +208,10 @@ class _ShortcutEventFilter( QtCore.QObject ) :
 
 	def __keySequence( self, keyEvent ) :
 
-		return QtGui.QKeySequence( keyEvent.key() | int( keyEvent.modifiers() ) )
+		if Qt.__binding__ == "PySide6" :
+			return QtGui.QKeySequence( keyEvent.keyCombination() )
+		else :
+			return QtGui.QKeySequence( keyEvent.key() | int( keyEvent.modifiers() ) )
 
 	def __matchingAction( self, keySequence, menu ) :
 
