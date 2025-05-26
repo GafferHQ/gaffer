@@ -63,13 +63,12 @@ class WidgetAlgoTest( GafferUITest.TestCase ) :
 		# physical pixel size like this? Or should `grab()` downsize
 		# to return an image with the logical pixel size?
 		expectedSize = imath.V2f( b.size() )
-		if Qt.__binding__ in ( "PySide2", "PyQt5" ) :
-			screen= QtWidgets.QApplication.primaryScreen()
-			windowHandle = b._qtWidget().windowHandle()
-			if windowHandle :
-				screen = windowHandle.screen()
-			expectedSize *= screen.devicePixelRatio()
-			expectedSize = imath.V2f( math.ceil( expectedSize.x ), math.ceil( expectedSize.y ) )
+		screen = QtWidgets.QApplication.primaryScreen()
+		windowHandle = b._qtWidget().windowHandle()
+		if windowHandle :
+			screen = windowHandle.screen()
+		expectedSize *= screen.devicePixelRatio()
+		expectedSize = imath.V2f( math.ceil( expectedSize.x ), math.ceil( expectedSize.y ) )
 
 		imageInput = OpenImageIO.ImageInput.open( str( self.temporaryDirectory() / "grab.png" ) )
 		imageSpec = imageInput.spec()
