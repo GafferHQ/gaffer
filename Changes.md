@@ -22,6 +22,7 @@ Fixes
 
 - LocalDispatcher, SystemCommand, `gaffer env` : Fixed unwanted upper-casing of environment variable names on Windows (#6371).
 - OpenGLAttributes : The default values of attribute plugs now correctly reflect the default behaviour of the OpenGL renderer.
+- Arnold : Fixed default behaviour of `ai:abort_on_license_fail` option with Arnold 7.3 and above.
 
 API
 ---
