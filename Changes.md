@@ -38,7 +38,9 @@ Breaking Changes
 - Arnold :
   - Removed support for Arnold 7.2.
   - Removed `GafferArnoldUI.GPUCache.populateGPUCache()` function.
-- ArnoldOptions : Option plugs have been renamed to match the name of their option (e.g. `options.aaSamples` is now `options.ai:AA_samples`). A compatibility config has been provided to allow ArnoldOptions nodes to be loaded from scripts saved in earlier Gaffer versions.
+- ArnoldOptions :
+  - Option plugs have been renamed to match the name of their option (e.g. `options.aaSamples` is now `options.ai:AA_samples`). A compatibility config has been provided to allow ArnoldOptions nodes to be loaded from scripts saved in earlier Gaffer versions.
+  - Changed the default value of the `ai:texture_max_memory_MB` plug to 4096 to match Arnold's default.
 - StandardNodule : Removed deprecated `setCompatibleLabelsVisible()`.
 - DeleteAttributes : Changed base class and marked as `final`.
 - Wrapper : The `gaffer` wrapper on Linux no longer allows a custom Python build to be used. If you wish to use a custom Python, call `python _gaffer.py` instead.

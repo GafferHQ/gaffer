@@ -557,7 +557,7 @@ Gaffer.Metadata.registerValues( {
 
 	"option:ai:texture_max_memory_MB" : [
 
-		"defaultValue", 2048.0,
+		"defaultValue", 4096.0,
 		"description",
 		"""
 		The maximum amount of memory to use for caching
