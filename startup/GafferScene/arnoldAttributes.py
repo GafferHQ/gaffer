@@ -91,7 +91,7 @@ Gaffer.Metadata.registerValues( {
 		"description",
 		"""
 		Whether or not the object is visible in
-		reflected diffuse ( ie. if it casts bounce light )
+		reflected diffuse (ie. if it casts bounce light).
 		""",
 		"label", "Diffuse Reflection",
 		"layout:section", "Visibility",
@@ -104,7 +104,7 @@ Gaffer.Metadata.registerValues( {
 		"description",
 		"""
 		Whether or not the object is visible in
-		reflected specular ( ie. if it is visible in mirrors ).
+		reflected specular (ie. if it is visible in mirrors).
 		""",
 		"label", "Specular Reflection",
 		"layout:section", "Visibility",
@@ -117,7 +117,7 @@ Gaffer.Metadata.registerValues( {
 		"description",
 		"""
 		Whether or not the object is visible in
-		transmitted diffuse ( ie. if it casts light through leaves ).
+		transmitted diffuse (ie. if it casts light through leaves).
 		""",
 		"label", "Diffuse Transmission",
 		"layout:section", "Visibility",
@@ -130,7 +130,7 @@ Gaffer.Metadata.registerValues( {
 		"description",
 		"""
 		Whether or not the object is visible in
-		refracted specular ( ie. if it can be seen through glass ).
+		refracted specular (ie. if it can be seen through glass).
 		""",
 		"label", "Specular Transmission",
 		"layout:section", "Visibility",
@@ -209,7 +209,7 @@ Gaffer.Metadata.registerValues( {
 		"description",
 		"""
 		Whether or not the autobump is visible in
-		reflected diffuse ( ie. if it casts bounce light )
+		reflected diffuse (ie. if it casts bounce light).
 		""",
 		"label", "Diffuse Reflection",
 		"layout:section", "Displacement.Auto Bump Visibility",
@@ -222,7 +222,7 @@ Gaffer.Metadata.registerValues( {
 		"description",
 		"""
 		Whether or not the autobump is visible in
-		reflected specular ( ie. if it is visible in mirrors ).
+		reflected specular (ie. if it is visible in mirrors).
 		""",
 		"label", "Specular Reflection",
 		"layout:section", "Displacement.Auto Bump Visibility",
@@ -235,7 +235,7 @@ Gaffer.Metadata.registerValues( {
 		"description",
 		"""
 		Whether or not the autobump is visible in
-		transmitted diffuse ( ie. if it casts light through leaves ).
+		transmitted diffuse (ie. if it casts light through leaves).
 		""",
 		"label", "Diffuse Transmission",
 		"layout:section", "Displacement.Auto Bump Visibility",
@@ -248,7 +248,7 @@ Gaffer.Metadata.registerValues( {
 		"description",
 		"""
 		Whether or not the autobump is visible in
-		refracted specular ( ie. if it can be seen through glass ).
+		refracted specular (ie. if it can be seen through glass).
 		""",
 		"label", "Specular Transmission",
 		"layout:section", "Displacement.Auto Bump Visibility",
