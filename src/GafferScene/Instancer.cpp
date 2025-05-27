@@ -3198,7 +3198,7 @@ struct Prototype : public IECore::RefCounted
 	std::vector<M44f> m_transforms;
 };
 
-typedef boost::intrusive_ptr< const Prototype > ConstPrototypePtr;
+using ConstPrototypePtr = boost::intrusive_ptr<const Prototype>;
 
 struct PrototypeCacheGetterKey
 {

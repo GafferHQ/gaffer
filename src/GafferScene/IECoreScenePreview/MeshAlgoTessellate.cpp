@@ -558,8 +558,8 @@ struct MutexWriteGuard
 	tbb::spin_rw_mutex::scoped_lock m_guard;
 };
 
-typedef OSDB::SurfaceFactoryCacheThreaded< tbb::spin_rw_mutex, MutexReadGuard, MutexWriteGuard > SurfaceFactoryCache;
-typedef OSDB::RefinerSurfaceFactory< SurfaceFactoryCache > SurfaceFactory;
+using SurfaceFactoryCache = OSDB::SurfaceFactoryCacheThreaded<tbb::spin_rw_mutex, MutexReadGuard, MutexWriteGuard>;
+using SurfaceFactory = OSDB::RefinerSurfaceFactory<SurfaceFactoryCache>;
 
 
 // In order to output a watertight mesh, we need to share output vertices and edges where the input vertices
@@ -1325,7 +1325,7 @@ MeshPrimitivePtr MeshAlgo::tessellateMesh(
 
 	// The TopologyDescriptor is how we pass all our mesh topology to OpenSubdiv
 
-	typedef OSDF::TopologyDescriptor Descriptor;
+	using Descriptor = OSDF::TopologyDescriptor;
 	Descriptor desc;
 
 	std::vector<int> creaseIdsBuffer;

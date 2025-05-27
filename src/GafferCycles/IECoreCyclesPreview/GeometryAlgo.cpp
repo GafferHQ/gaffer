@@ -88,7 +88,7 @@ struct Converters
 
 };
 
-typedef std::unordered_map<IECore::TypeId, Converters> Registry;
+using Registry = std::unordered_map<IECore::TypeId, Converters>;
 
 Registry &registry()
 {
