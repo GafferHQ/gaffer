@@ -643,8 +643,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 					c.setFrame( frame )
 
-					options["options"]["aaSeed"]["enabled"].setValue( seed is not None )
-					options["options"]["aaSeed"]["value"].setValue( seed or 1 )
+					options["options"]["ai:AA_seed"]["enabled"].setValue( seed is not None )
+					options["options"]["ai:AA_seed"]["value"].setValue( seed or 1 )
 
 					render["task"].execute()
 
@@ -1305,8 +1305,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		s["arnoldOptions"] = GafferArnold.ArnoldOptions()
 		s["arnoldOptions"]["in"].setInput( s["options"]["out"] )
-		s["arnoldOptions"]["options"]["aaSamples"]["enabled"].setValue( True )
-		s["arnoldOptions"]["options"]["aaSamples"]["value"].setValue( 6 )
+		s["arnoldOptions"]["options"]["ai:AA_samples"]["enabled"].setValue( True )
+		s["arnoldOptions"]["options"]["ai:AA_samples"]["value"].setValue( 6 )
 
 		s["render"] = GafferScene.Render()
 		s["render"]["in"].setInput( s["arnoldOptions"]["out"] )

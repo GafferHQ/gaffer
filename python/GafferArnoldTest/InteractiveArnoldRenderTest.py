@@ -603,8 +603,8 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		s["options"] = GafferArnold.ArnoldOptions()
 		s["options"]["in"].setInput( s["outputs"]["out"] )
-		s["options"]["options"]["aaSamples"]["enabled"].setValue( True )
-		s["options"]["options"]["aaSamples"]["value"].setValue( 5 )
+		s["options"]["options"]["ai:AA_samples"]["enabled"].setValue( True )
+		s["options"]["options"]["ai:AA_samples"]["value"].setValue( 5 )
 
 		s["render"] = self._createInteractiveRender()
 		s["render"]["in"].setInput( s["options"]["out"] )

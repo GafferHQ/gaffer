@@ -95,8 +95,8 @@ class InteractiveArnoldRenderPerformanceTest( GafferUITest.TestCase ) :
 		script["ArnoldOptions"] = GafferArnold.ArnoldOptions( "ArnoldOptions" )
 		script["ArnoldOptions"]["in"].setInput( script["StandardOptions"]["out"] )
 		# Make sure we leave some CPU available for Gaffer
-		script["ArnoldOptions"]["options"]["threads"]["value"].setValue( -1 )
-		script["ArnoldOptions"]["options"]["threads"]["enabled"].setValue( True )
+		script["ArnoldOptions"]["options"]["ai:threads"]["value"].setValue( -1 )
+		script["ArnoldOptions"]["options"]["ai:threads"]["enabled"].setValue( True )
 
 		script["Outputs"] = GafferScene.Outputs()
 		script["Outputs"].addOutput(

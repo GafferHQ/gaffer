@@ -72,7 +72,6 @@ for optionPrefix in ( "log", "console" ) :
 
 		]
 
-## \todo Migrate ArnoldOptions to use this metadata so we have one source of truth.
 Gaffer.Metadata.registerValues( {
 
 	# Rendering

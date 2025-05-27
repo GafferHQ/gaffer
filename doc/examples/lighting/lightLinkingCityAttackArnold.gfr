@@ -901,7 +901,7 @@ __children["StandardOptions"]["options"]["renderCamera"]["enabled"].setValue( Tr
 __children["StandardOptions"]["options"]["renderResolution"]["value"].setValue( imath.V2i( 690, 480 ) )
 __children["StandardOptions"]["__uiPosition"].setValue( imath.V2f( -30.1780033, -14.351244 ) )
 __children["ArnoldOptions"]["in"].setInput( __children["StandardOptions"]["out"] )
-__children["ArnoldOptions"]["options"]["aaSamples"]["value"].setValue( 8 )
+__children["ArnoldOptions"]["options"]["ai:AA_samples"]["value"].setValue( 8 )
 __children["ArnoldOptions"]["__uiPosition"].setValue( imath.V2f( -30.1780033, -20.0153065 ) )
 __children["Outputs"]["in"].setInput( __children["ArnoldOptions"]["out"] )
 __children["Outputs"]["outputs"]["output1"]["name"].setValue( 'Interactive/Beauty' )

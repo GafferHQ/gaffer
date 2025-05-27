@@ -149,10 +149,10 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 
 		arnoldOptions = GafferArnold.ArnoldOptions()
 		arnoldOptions["in"].setInput( combineGroup["out"] )
-		arnoldOptions["options"]["giDiffuseDepth"]["enabled"].setValue( True )
-		arnoldOptions["options"]["giDiffuseDepth"]["value"].setValue( 0 )
-		arnoldOptions["options"]["giSpecularDepth"]["enabled"].setValue( True )
-		arnoldOptions["options"]["giSpecularDepth"]["value"].setValue( 0 )
+		arnoldOptions["options"]["ai:GI_diffuse_depth"]["enabled"].setValue( True )
+		arnoldOptions["options"]["ai:GI_diffuse_depth"]["value"].setValue( 0 )
+		arnoldOptions["options"]["ai:GI_specular_depth"]["enabled"].setValue( True )
+		arnoldOptions["options"]["ai:GI_specular_depth"]["value"].setValue( 0 )
 
 		arnoldTextureBake = GafferArnold.ArnoldTextureBake()
 		arnoldTextureBake["in"].setInput( arnoldOptions["out"] )
