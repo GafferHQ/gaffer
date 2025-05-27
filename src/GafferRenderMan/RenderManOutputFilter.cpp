@@ -46,6 +46,7 @@
 #include "IECoreScene/ShaderNetworkAlgo.h"
 
 #include <regex>
+#include <array>
 
 using namespace IECore;
 using namespace IECoreScene;

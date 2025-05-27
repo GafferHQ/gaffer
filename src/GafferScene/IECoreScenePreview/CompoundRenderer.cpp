@@ -43,6 +43,7 @@
 #include "boost/container/static_vector.hpp"
 
 #include <mutex>
+#include <array>
 
 using namespace std;
 using namespace IECoreScenePreview;

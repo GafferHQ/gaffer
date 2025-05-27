@@ -30,6 +30,7 @@ jobs:
         name: [
           linux-gcc11,
           linux-debug-gcc11,
+          linux-gcc11-platform23,
           windows,
         ]
 
@@ -59,6 +60,20 @@ jobs:
             # limit. In practice this compresses down to 4-500Mb.
             sconsCacheMegabytes: 2500
             jobs: 4
+
+          - name: linux-gcc11-platform23
+            os: ubuntu-24.04
+            buildType: RELEASE
+            publish: false
+            containerImage: ghcr.io/gafferhq/build/build:3.2.0
+            # GitHub container builds run as root. This causes failures for tests that
+            # assert that filesystem permissions are respected, because root doesn't
+            # respect permissions. So we run the final test suite as a dedicated
+            # test user rather than as root.
+            testRunner: sudo -E -u testUser
+            sconsCacheMegabytes: 400
+            jobs: 4
+            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.5.14.1/cortex-10.5.14.1-linux-gcc11.tar.gz
 
           - name: windows
             os: windows-2022
@@ -93,7 +108,7 @@ jobs:
 
     - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
       with:
-        sdk: 10.0.19041.0
+        sdk: 10.0.20348.0
 
     - name: Install toolchain (Windows)
       run: |

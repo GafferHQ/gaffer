@@ -360,6 +360,7 @@ if sys.platform == "linux" :
 
 if sys.platform == "win32" :
 	os.environ["OIIO_LOAD_DLLS_FROM_PATH"] = "0"
+	os.environ["OCIO_PYTHON_LOAD_DLLS_FROM_PATH"] = "0"
 elif sys.platform == "darwin" :
 	# Not strictly OIIO-related, but works around clashes between our image
 	# libraries and the system ones.

@@ -509,13 +509,14 @@ bool SceneGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace, Gaff
 	auto viewportGadget = ancestor<ViewportGadget>();
 	if( m_outputBuffer )
 	{
+		std::shared_ptr<const RenderManifest> manifest = m_controller->renderManifest();
 		const V2f rasterPosition = viewportGadget->gadgetToRasterSpace( lineInGadgetSpace.p1, this );
 		float bufferDepth;
 		if( uint32_t id = m_outputBuffer->idAt( rasterPosition / viewportGadget->getViewport(), bufferDepth ) )
 		{
 			if( bufferDepth < depth )
 			{
-				if( auto bufferPath = m_controller->pathForID( id ) )
+				if( auto bufferPath = manifest->pathForID( id ) )
 				{
 					if( m_selectionMask )
 					{
@@ -630,7 +631,7 @@ size_t SceneGadget::objectsAt(
 		Box2f ndcBox;
 		ndcBox.extendBy( viewportGadget->gadgetToRasterSpace( corner0InGadgetSpace, this ) / viewportGadget->getViewport() );
 		ndcBox.extendBy( viewportGadget->gadgetToRasterSpace( corner1InGadgetSpace, this ) / viewportGadget->getViewport() );
-		PathMatcher bufferPaths = m_controller->pathsForIDs( m_outputBuffer->idsAt( ndcBox ) );
+		PathMatcher bufferPaths = m_controller->renderManifest()->pathsForIDs( m_outputBuffer->idsAt( ndcBox ) );
 		if( m_selectionMask )
 		{
 			Context::Scope scope( getContext() );
@@ -766,7 +767,7 @@ void SceneGadget::setSelection( const IECore::PathMatcher &selection )
 	m_renderer->option( "gl:selection", d.get() );
 	if( m_outputBuffer )
 	{
-		m_outputBuffer->setSelection( m_controller->idsForPaths( selection, /* createIfMissing = */ true ) );
+		m_outputBuffer->setSelection( m_controller->renderManifest()->acquireIDs( selection ) );
 	}
 	dirty( DirtyType::Render );
 }
