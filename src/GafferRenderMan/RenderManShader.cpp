@@ -95,7 +95,7 @@ namespace
 {
 
 using ParameterSet = unordered_set<string>;
-static const unordered_map<string, ParameterSet> g_omittedParameters = {
+const unordered_map<string, ParameterSet> g_omittedParameters = {
 	{
 		"PxrPortalLight",
 		{

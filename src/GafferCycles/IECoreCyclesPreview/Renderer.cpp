@@ -151,7 +151,7 @@ bool nullNodeDeleter( ccl::Node *node )
 
 // Helper to swap the node to delete to the front of the vector, then pop off
 template<typename T, typename U>
-static void removeNodesInSet( const ccl::set<T *> &nodesSet, tbb::concurrent_vector<U> &nodesArray )
+void removeNodesInSet( const ccl::set<T *> &nodesSet, tbb::concurrent_vector<U> &nodesArray )
 {
 	size_t newSize = nodesArray.size();
 

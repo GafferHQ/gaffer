@@ -103,7 +103,7 @@ namespace
 
 // Initialised by first call to `shadingSystem()`. Declared here because
 // it affects the conversion routines.
-static int g_shadingSystemBatchSize = 0;
+int g_shadingSystemBatchSize = 0;
 
 template<typename T>
 struct TypeDescFromType
@@ -1332,7 +1332,7 @@ void declareParameters( const CompoundDataMap &parameters, ShadingSystem *shadin
 }
 
 template <typename T>
-static T uniformValue( const IECore::CompoundData *points, const char *name )
+T uniformValue( const IECore::CompoundData *points, const char *name )
 {
 	using DataType = TypedData<T>;
 	const DataType *d = points->member<DataType>( name );
@@ -1347,7 +1347,7 @@ static T uniformValue( const IECore::CompoundData *points, const char *name )
 }
 
 template<typename T>
-static const T *varyingValue( const IECore::CompoundData *points, const char *name )
+const T *varyingValue( const IECore::CompoundData *points, const char *name )
 {
 	using DataType = TypedData<vector<T> >;
 	const DataType *d = points->member<DataType>( name );

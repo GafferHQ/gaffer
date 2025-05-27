@@ -309,7 +309,7 @@ T parameterValue( const IECore::CompoundDataMap &parameters, const IECore::Inter
 	return defaultValue;
 }
 
-static const bool g_useLegacyLights = []() -> bool {
+const bool g_useLegacyLights = []() -> bool {
 	const char *c = getenv( "GAFFERCYCLES_USE_LEGACY_LIGHTS" );
 	if( !c )
 	{

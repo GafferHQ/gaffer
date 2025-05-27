@@ -134,7 +134,7 @@ void AllocateTexture2D(
 	}
 }
 
-static const std::string g_vertexSource = R"(
+const std::string g_vertexSource = R"(
 #version 120
 
 #if __VERSION__ <= 120
@@ -154,7 +154,7 @@ void main()
 
 )";
 
-static const std::string g_fragmentSource = R"(
+const std::string g_fragmentSource = R"(
 #version 120
 
 <OCIODisplay>
