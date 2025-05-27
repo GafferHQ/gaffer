@@ -162,53 +162,6 @@ Gaffer.Metadata.registerValues( {
 
 	],
 
-	"option:ai:enable_adaptive_sampling" : [
-
-		"defaultValue", False,
-		"description",
-		"""
-		If adaptive sampling is enabled, Arnold will
-		take a minimum of (AA Samples * AA Samples)
-		samples per pixel, and will then take up to
-		(AA Samples Max * AA Samples Max) samples per
-		pixel, or until the remaining estimated noise
-		gets lower than the `ai:AA_adaptive_threshold` option.
-		""",
-		"label", "Enable Adaptive Sampling",
-		"layout:section", "Adaptive Sampling",
-
-	],
-
-	"option:ai:AA_samples_max" : [
-
-		"defaultValue", 0,
-		"description",
-		"""
-		The maximum sampling rate during adaptive
-		sampling. Like `ai:AA_samples`, this value is
-		squared. So `ai:AA_samples_max` == `6` means up to
-		36 samples per pixel.
-		""",
-		"label", "AA Samples Max",
-		"layout:section", "Adaptive Sampling",
-
-	],
-
-	"option:ai:AA_adaptive_threshold" : [
-
-		"defaultValue", 0.05,
-		"description",
-		"""
-		How much leftover noise is acceptable when
-		terminating adaptive sampling. Higher values
-		accept more noise, lower values keep rendering
-		longer to achieve smaller amounts of noise.
-		""",
-		"label", "AA Adaptive Threshold",
-		"layout:section", "Adaptive Sampling",
-
-	],
-
 	"option:ai:GI_diffuse_samples" : [
 
 		"defaultValue", 2,
@@ -375,6 +328,55 @@ Gaffer.Metadata.registerValues( {
 		""",
 		"label", "Low Light Threshold",
 		"layout:section", "Sampling",
+
+	],
+
+	# Adaptive Sampling
+
+	"option:ai:enable_adaptive_sampling" : [
+
+		"defaultValue", False,
+		"description",
+		"""
+		If adaptive sampling is enabled, Arnold will
+		take a minimum of (AA Samples * AA Samples)
+		samples per pixel, and will then take up to
+		(AA Samples Max * AA Samples Max) samples per
+		pixel, or until the remaining estimated noise
+		gets lower than the `ai:AA_adaptive_threshold` option.
+		""",
+		"label", "Enable Adaptive Sampling",
+		"layout:section", "Adaptive Sampling",
+
+	],
+
+	"option:ai:AA_samples_max" : [
+
+		"defaultValue", 0,
+		"description",
+		"""
+		The maximum sampling rate during adaptive
+		sampling. Like `ai:AA_samples`, this value is
+		squared. So `ai:AA_samples_max` == `6` means up to
+		36 samples per pixel.
+		""",
+		"label", "AA Samples Max",
+		"layout:section", "Adaptive Sampling",
+
+	],
+
+	"option:ai:AA_adaptive_threshold" : [
+
+		"defaultValue", 0.05,
+		"description",
+		"""
+		How much leftover noise is acceptable when
+		terminating adaptive sampling. Higher values
+		accept more noise, lower values keep rendering
+		longer to achieve smaller amounts of noise.
+		""",
+		"label", "AA Adaptive Threshold",
+		"layout:section", "Adaptive Sampling",
 
 	],
 
