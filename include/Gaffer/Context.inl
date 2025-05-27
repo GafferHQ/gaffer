@@ -226,17 +226,22 @@ inline const Context::Value &Context::internalGet( const IECore::InternedString 
 		throw IECore::Exception( fmt::format( "Context has no variable named \"{}\"", name.value() ) );
 	}
 
-#ifndef NDEBUG
-	result->validate( name );
-#endif
-
 	return *result;
 }
 
 inline const Context::Value *Context::internalGetIfExists( const IECore::InternedString &name ) const
 {
 	Map::const_iterator it = m_map.find( name );
-	return it != m_map.end() ? &it->second : nullptr;
+	if( it == m_map.end() )
+	{
+		return nullptr;
+	}
+
+#ifndef NDEBUG
+	it->second.validate( name );
+#endif
+
+	return &it->second;
 }
 
 template<typename T>
@@ -250,7 +255,7 @@ const T &Context::get( const IECore::InternedString &name, const T &defaultValue
 {
 	if( const Value *value = internalGetIfExists( name ) )
 	{
-		return internalGet( name ).value<T>();
+		return value->value<T>();
 	}
 	return defaultValue;
 }
