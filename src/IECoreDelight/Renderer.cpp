@@ -1269,7 +1269,7 @@ class DelightLight : public DelightObject
 						m_transformHandle.context(),
 						m_lightGeometry->name(), "",
 						m_transformHandle.name(), "objects",
-						0, 0
+						0, nullptr
 					);
 
 					m_lightGeometryType = geometryType;

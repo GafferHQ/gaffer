@@ -730,7 +730,7 @@ class VisualiserGadget : public Gadget
 				GLuint buffer = 0u;
 				glGenBuffers( 1, &buffer );
 				glBindBuffer( GL_UNIFORM_BUFFER, buffer );
-				glBufferData( GL_UNIFORM_BUFFER, sizeof( UniformBlockColorShader ), 0, GL_DYNAMIC_DRAW );
+				glBufferData( GL_UNIFORM_BUFFER, sizeof( UniformBlockColorShader ), nullptr, GL_DYNAMIC_DRAW );
 				m_colorUniformBuffer.reset( new IECoreGL::Buffer( buffer ) );
 			}
 
@@ -1132,7 +1132,7 @@ class VisualiserGadget : public Gadget
 				GLuint buffer = 0u;
 				glGenBuffers( 1, &buffer );
 				glBindBuffer( GL_UNIFORM_BUFFER, buffer );
-				glBufferData( GL_UNIFORM_BUFFER, sizeof( UniformBlockVertexLabelShader ), 0, GL_DYNAMIC_DRAW );
+				glBufferData( GL_UNIFORM_BUFFER, sizeof( UniformBlockVertexLabelShader ), nullptr, GL_DYNAMIC_DRAW );
 				glBindBuffer( GL_UNIFORM_BUFFER, uniformBinding );
 				m_vertexLabelUniformBuffer.reset( new IECoreGL::Buffer( buffer ) );
 			}
@@ -1375,7 +1375,7 @@ class VisualiserGadget : public Gadget
 
 				if( m_vertexLabelStorageCapacity < storageCapacity )
 				{
-					glBufferData( GL_SHADER_STORAGE_BUFFER, storageSize, 0, GL_DYNAMIC_DRAW );
+					glBufferData( GL_SHADER_STORAGE_BUFFER, storageSize, nullptr, GL_DYNAMIC_DRAW );
 					m_vertexLabelStorageCapacity = storageCapacity;
 				}
 
@@ -1653,7 +1653,7 @@ class VisualiserGadget : public Gadget
 				GLuint buffer = 0u;
 				glGenBuffers( 1, &buffer );
 				glBindBuffer( GL_UNIFORM_BUFFER, buffer );
-				glBufferData( GL_UNIFORM_BUFFER, sizeof( UniformBlockVectorShader ), 0, GL_DYNAMIC_DRAW );
+				glBufferData( GL_UNIFORM_BUFFER, sizeof( UniformBlockVectorShader ), nullptr, GL_DYNAMIC_DRAW );
 				m_vectorUniformBuffer.reset( new IECoreGL::Buffer( buffer ) );
 			}
 
@@ -1913,7 +1913,7 @@ class VisualiserGadget : public Gadget
 				GLuint buffer = 0u;
 				glGenBuffers( 1, &buffer );
 				glBindBuffer( GL_UNIFORM_BUFFER, buffer );
-				glBufferData( GL_UNIFORM_BUFFER, sizeof( UniformBlockOrientationShader ), 0, GL_DYNAMIC_DRAW );
+				glBufferData( GL_UNIFORM_BUFFER, sizeof( UniformBlockOrientationShader ), nullptr, GL_DYNAMIC_DRAW );
 				m_orientationUniformBuffer.reset( new IECoreGL::Buffer( buffer ) );
 			}
 

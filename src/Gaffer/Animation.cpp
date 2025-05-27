@@ -3056,7 +3056,7 @@ const char* Animation::toString( const Animation::Extrapolation extrapolation )
 			return "CycleFlip";
 		default:
 			assert( 0 );
-			return 0;
+			return nullptr;
 	}
 }
 
