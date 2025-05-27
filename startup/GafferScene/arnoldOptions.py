@@ -990,7 +990,11 @@ Gaffer.Metadata.registerValues( {
 		"defaultValue", "CPU",
 		"description",
 		"""
-		Can be used to put Arnold in GPU rendering mode, using your graphics card instead of CPU.  This is currently a beta with limited stability, and missing support for OSL and volumes.
+		Can be used to put Arnold in GPU rendering mode, using your graphics card instead of CPU.
+
+		> Note : GPU rendering supports a limited subset of Arnold features, see
+		> https://help.autodesk.com/view/ARNOL/ENU/?guid=arnold_user_guide_ac_arnold_gpu_ac_features_limitations_html
+		> for more details.
 		""",
 		"label", "Render Device",
 		"layout:section", "GPU",
