@@ -54,7 +54,7 @@ class GAFFERVDB_API VolumeScatter : public GafferScene::BranchCreator
 	public :
 
 		VolumeScatter(const std::string &name = defaultName<VolumeScatter>() );
-		~VolumeScatter();
+		~VolumeScatter() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferVDB::VolumeScatter, VolumeScatterTypeId, GafferScene::BranchCreator );
 

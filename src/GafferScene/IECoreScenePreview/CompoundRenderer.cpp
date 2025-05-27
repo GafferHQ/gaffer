@@ -122,7 +122,7 @@ struct CompoundAttributesInterface : public IECoreScenePreview::Renderer::Attrib
 struct CompoundObjectInterface : public IECoreScenePreview::Renderer::ObjectInterface
 {
 
-	~CompoundObjectInterface()
+	~CompoundObjectInterface() override
 	{
 		if( m_links.empty() )
 		{

@@ -52,7 +52,7 @@ class Object : public IECoreScenePreview::Renderer::ObjectInterface
 	public :
 
 		Object( const std::string &name, const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, LightLinker *lightLinker, const Session *session );
-		~Object();
+		~Object() override;
 
 		/// \todo RenderMan volumes seem to reject attempts to transform them
 		/// after creation, althought we get lucky and the first one works

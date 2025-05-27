@@ -49,7 +49,7 @@ class Camera :  public IECoreScenePreview::Renderer::ObjectInterface
 	public :
 
 		Camera( const std::string &name, const IECoreScene::Camera *camera, Session *session );
-		~Camera();
+		~Camera() override;
 
 		void transform( const Imath::M44f &transform ) override;
 		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override;

@@ -55,7 +55,7 @@ class Light : public IECoreScenePreview::Renderer::ObjectInterface
 	public :
 
 		Light( const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, MaterialCache *materialCache, LightLinker *lightLinker, Session *session );
-		~Light();
+		~Light() override;
 
 		// ObjectInterface overrides
 		// =========================

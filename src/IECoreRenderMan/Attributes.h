@@ -49,7 +49,7 @@ class Attributes : public IECoreScenePreview::Renderer::AttributesInterface
 	public :
 
 		Attributes( const IECore::CompoundObject *attributes, MaterialCache *materialCache );
-		~Attributes();
+		~Attributes() override;
 
 		/// Returns a hash of everything in `prototypeParamList()`, to be
 		/// used by GeometryPrototypeCache when automaticaly deduplicating
