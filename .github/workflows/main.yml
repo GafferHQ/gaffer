@@ -108,7 +108,7 @@ jobs:
 
     - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
       with:
-        sdk: 10.0.19041.0
+        sdk: 10.0.20348.0
 
     - name: Install toolchain (Windows)
       run: |
