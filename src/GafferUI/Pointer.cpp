@@ -36,8 +36,6 @@
 
 #include "GafferUI/Pointer.h"
 
-#include "IECore/CachedReader.h"
-
 #include "fmt/format.h"
 
 using namespace GafferUI;
