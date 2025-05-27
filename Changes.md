@@ -39,6 +39,7 @@ Breaking Changes
 - Arnold :
   - Removed support for Arnold 7.2.
   - Removed `GafferArnoldUI.GPUCache.populateGPUCache()` function.
+- ArnoldAttributes : Attributes plugs have been renamed to match the name of their attribute (e.g. `attributes.cameraVisibility` is now `attributes.ai:visibility:camera`). A compatibility config has been provided to allow ArnoldAttributes nodes to be loaded from scripts saved in earlier Gaffer versions.
 - ArnoldOptions :
   - Option plugs have been renamed to match the name of their option (e.g. `options.aaSamples` is now `options.ai:AA_samples`). A compatibility config has been provided to allow ArnoldOptions nodes to be loaded from scripts saved in earlier Gaffer versions.
   - Changed the default value of the `ai:texture_max_memory_MB` plug to 4096 to match Arnold's default.

@@ -50,6 +50,7 @@ Gaffer.Metadata.registerValues( {
 		`scene:visible` attribute instead.
 		""",
 		"label", "Camera",
+		"layout:section", "Visibility",
 
 	],
 
@@ -62,6 +63,7 @@ Gaffer.Metadata.registerValues( {
 		rays (whether or not it casts shadows).
 		""",
 		"label", "Shadow",
+		"layout:section", "Visibility",
 
 	],
 
@@ -76,7 +78,10 @@ Gaffer.Metadata.registerValues( {
 		> the standard `shadowedLights` attribute instead.
 		""",
 		"label", "Shadow Group",
+		"layout:section", "Visibility",
 		"ui:scene:acceptsSetExpression", True,
+
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
 
 	],
 
@@ -89,6 +94,7 @@ Gaffer.Metadata.registerValues( {
 		reflected diffuse ( ie. if it casts bounce light )
 		""",
 		"label", "Diffuse Reflection",
+		"layout:section", "Visibility",
 
 	],
 
@@ -101,6 +107,7 @@ Gaffer.Metadata.registerValues( {
 		reflected specular ( ie. if it is visible in mirrors ).
 		""",
 		"label", "Specular Reflection",
+		"layout:section", "Visibility",
 
 	],
 
@@ -113,6 +120,7 @@ Gaffer.Metadata.registerValues( {
 		transmitted diffuse ( ie. if it casts light through leaves ).
 		""",
 		"label", "Diffuse Transmission",
+		"layout:section", "Visibility",
 
 	],
 
@@ -125,6 +133,7 @@ Gaffer.Metadata.registerValues( {
 		refracted specular ( ie. if it can be seen through glass ).
 		""",
 		"label", "Specular Transmission",
+		"layout:section", "Visibility",
 
 	],
 
@@ -137,6 +146,7 @@ Gaffer.Metadata.registerValues( {
 		volume scattering.
 		""",
 		"label", "Volume",
+		"layout:section", "Visibility",
 
 	],
 
@@ -149,6 +159,7 @@ Gaffer.Metadata.registerValues( {
 		rays.
 		""",
 		"label", "Subsurface",
+		"layout:section", "Visibility",
 
 	],
 
@@ -162,6 +173,7 @@ Gaffer.Metadata.registerValues( {
 		to properly capture them.
 		""",
 		"label", "Autobump",
+		"layout:section", "Displacement",
 
 	],
 
@@ -174,6 +186,7 @@ Gaffer.Metadata.registerValues( {
 		rays.
 		""",
 		"label", "Camera",
+		"layout:section", "Displacement.Auto Bump Visibility",
 
 	],
 
@@ -186,6 +199,7 @@ Gaffer.Metadata.registerValues( {
 		rays.
 		""",
 		"label", "Shadow",
+		"layout:section", "Displacement.Auto Bump Visibility",
 
 	],
 
@@ -198,6 +212,7 @@ Gaffer.Metadata.registerValues( {
 		reflected diffuse ( ie. if it casts bounce light )
 		""",
 		"label", "Diffuse Reflection",
+		"layout:section", "Displacement.Auto Bump Visibility",
 
 	],
 
@@ -210,6 +225,7 @@ Gaffer.Metadata.registerValues( {
 		reflected specular ( ie. if it is visible in mirrors ).
 		""",
 		"label", "Specular Reflection",
+		"layout:section", "Displacement.Auto Bump Visibility",
 
 	],
 
@@ -222,6 +238,7 @@ Gaffer.Metadata.registerValues( {
 		transmitted diffuse ( ie. if it casts light through leaves ).
 		""",
 		"label", "Diffuse Transmission",
+		"layout:section", "Displacement.Auto Bump Visibility",
 
 	],
 
@@ -234,6 +251,7 @@ Gaffer.Metadata.registerValues( {
 		refracted specular ( ie. if it can be seen through glass ).
 		""",
 		"label", "Specular Transmission",
+		"layout:section", "Displacement.Auto Bump Visibility",
 
 	],
 
@@ -246,6 +264,7 @@ Gaffer.Metadata.registerValues( {
 		volume scattering.
 		""",
 		"label", "Volume",
+		"layout:section", "Displacement.Auto Bump Visibility",
 
 	],
 
@@ -258,6 +277,7 @@ Gaffer.Metadata.registerValues( {
 		rays.
 		""",
 		"label", "Subsurface",
+		"layout:section", "Displacement.Auto Bump Visibility",
 
 	],
 
@@ -273,6 +293,8 @@ Gaffer.Metadata.registerValues( {
 		centred on the object's bounding box middle.
 		""",
 		"label", "Transform Type",
+		"layout:section", "Transform",
+
 		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 		"presetNames", IECore.StringVectorData( [ "Linear", "RotateAboutOrigin", "RotateAboutCenter" ] ),
 		"presetValues", IECore.StringVectorData( [ "linear", "rotate_about_origin", "rotate_about_center" ] ),
@@ -288,6 +310,7 @@ Gaffer.Metadata.registerValues( {
 		This only affects primary (camera) rays.
 		""",
 		"label", "Matte",
+		"layout:section", "Shading",
 
 	],
 
@@ -299,6 +322,7 @@ Gaffer.Metadata.registerValues( {
 		Flags the object as being opaque.
 		""",
 		"label", "Opaque",
+		"layout:section", "Shading",
 
 	],
 
@@ -310,6 +334,7 @@ Gaffer.Metadata.registerValues( {
 		Whether or not the object receives shadows.
 		""",
 		"label", "Receive Shadows",
+		"layout:section", "Shading",
 
 	],
 
@@ -321,6 +346,7 @@ Gaffer.Metadata.registerValues( {
 		Whether or not the object casts shadows onto itself.
 		""",
 		"label", "Self Shadows",
+		"layout:section", "Shading",
 
 	],
 
@@ -332,12 +358,14 @@ Gaffer.Metadata.registerValues( {
 		If given, subsurface will be blended across any other objects which share the same sss set name.
 		""",
 		"label", "SSS Set Name",
+		"layout:section", "Shading",
 
 	],
 
 	"attribute:ai:polymesh:subdiv_iterations" : [
 
 		"defaultValue", 1,
+		"minValue", 0,
 		"description",
 		"""
 		The maximum number of subdivision
@@ -352,12 +380,14 @@ Gaffer.Metadata.registerValues( {
 		in the first place.
 		""",
 		"label", "Iterations",
+		"layout:section", "Subdivision",
 
 	],
 
 	"attribute:ai:polymesh:subdiv_adaptive_error" : [
 
 		"defaultValue", 0.0,
+		"minValue", 0.0,
 		"description",
 		"""
 		The maximum allowable deviation from the true
@@ -370,10 +400,11 @@ Gaffer.Metadata.registerValues( {
 		you may need to raise the maximum.
 
 		> Note : Objects with a non-zero value will not take part in
-		> Gaffer's automatic instancing unless subdivAdaptiveSpace is
-		> set to "object".
+		> Gaffer's automatic instancing unless `ai:polymesh:subdiv_adaptive_space`
+		> is set to "object".
 		""",
 		"label", "Adaptive Error",
+		"layout:section", "Subdivision",
 
 	],
 
@@ -398,6 +429,8 @@ Gaffer.Metadata.registerValues( {
 		a displacement shader is applied.
 		""",
 		"label", "Adaptive Metric",
+		"layout:section", "Subdivision",
+
 		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 		"presetNames", IECore.StringVectorData( [ "Auto", "Edge Length", "Flatness" ] ),
 		"presetValues", IECore.StringVectorData( [ "auto", "edge_length", "flatness" ] ),
@@ -412,12 +445,15 @@ Gaffer.Metadata.registerValues( {
 		The space in which the error is measured when
 		performing adaptive subdivision. Raster space means
 		that the subdivision adapts to size on screen,
-		with subdivAdaptiveError being specified in pixels.
+		with `ai:polymesh:subdiv_adaptive_error` being
+		specified in pixels.
 		Object space means that the error is measured in
 		object space units and will not be sensitive to
 		size on screen.
 		""",
 		"label", "Adaptive Space",
+		"layout:section", "Subdivision",
+
 		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 		"presetNames", IECore.StringVectorData( [ "Raster", "Object" ] ),
 		"presetValues", IECore.StringVectorData( [ "raster", "object" ] ),
@@ -432,6 +468,8 @@ Gaffer.Metadata.registerValues( {
 		Determines how UVs are subdivided.
 		""",
 		"label", "UV Smoothing",
+		"layout:section", "Subdivision",
+
 		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 		"presetNames", IECore.StringVectorData( [ "Pin Corners", "Pin Borders", "Linear", "Smooth" ] ),
 		"presetValues", IECore.StringVectorData( [ "pin_corners", "pin_borders", "linear", "smooth" ] ),
@@ -449,6 +487,7 @@ Gaffer.Metadata.registerValues( {
 		that use the derivatives.
 		""",
 		"label", "Smooth Derivatives",
+		"layout:section", "Subdivision",
 
 	],
 
@@ -458,10 +497,11 @@ Gaffer.Metadata.registerValues( {
 		"description",
 		"""
 		Turns off subdivision culling on a per-object basis. This provides
-		finer control on top of the global `subdivFrustumCulling` setting
+		finer control on top of the global `ai:subdiv_frustum_culling` option
 		provided by the ArnoldOptions node.
 		""",
 		"label", "Ignore Frustum",
+		"layout:section", "Subdivision",
 
 	],
 
@@ -482,6 +522,7 @@ Gaffer.Metadata.registerValues( {
 		> node to convert polygon meshes into subdivision surfaces.
 		""",
 		"label", "Subdivide Polygons (Linear)",
+		"layout:section", "Subdivision",
 
 	],
 
@@ -502,6 +543,8 @@ Gaffer.Metadata.registerValues( {
 		> curves as a primitive variable named "N".
 		""",
 		"label", "Mode",
+		"layout:section", "Curves",
+
 		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 		"presetNames", IECore.StringVectorData( [ "Ribbon", "Thick" ] ),
 		"presetValues", IECore.StringVectorData( [ "ribbon", "thick" ] ),
@@ -511,6 +554,7 @@ Gaffer.Metadata.registerValues( {
 	"attribute:ai:curves:min_pixel_width" : [
 
 		"defaultValue", 0.0,
+		"minValue", 0.0,
 		"description",
 		"""
 		The minimum thickness of the curves, measured
@@ -523,12 +567,14 @@ Gaffer.Metadata.registerValues( {
 		of the curves.
 		""",
 		"label", "Min Pixel Width",
+		"layout:section", "Curves",
 
 	],
 
 	"attribute:ai:points:min_pixel_width" : [
 
 		"defaultValue", 0.0,
+		"minValue", 0.0,
 		"description",
 		"""
 		The minimum width of rendered points primitives, measured in pixels on the screen.
@@ -538,36 +584,42 @@ Gaffer.Metadata.registerValues( {
 		compensated for automatically by lowering the opacity of the points.
 		""",
 		"label", "Min Pixel Width",
+		"layout:section", "Points",
 
 	],
 
 	"attribute:ai:volume:step_size" : [
 
 		"defaultValue", 0.0,
+		"minValue", 0.0,
 		"description",
 		"""
 		Override the step size taken when raymarching volumes.
 		If this value is disabled or zero then value is calculated from the voxel size.
 		""",
-		"label", "Step Size",
+		"label", "Volume Step Size",
+		"layout:section", "Volume",
 
 	],
 
 	"attribute:ai:volume:step_scale" : [
 
 		"defaultValue", 1.0,
+		"minValue", 0.0,
 		"description",
 		"""
 		Raymarching step size is calculated using this value
 		multiplied by the volume voxel size or `ai:volume:step_size` if set.
 		""",
-		"label", "Step Scale",
+		"label", "Volume Step Scale",
+		"layout:section", "Volume",
 
 	],
 
 	"attribute:ai:shape:step_size" : [
 
 		"defaultValue", 0.0,
+		"minValue", 0.0,
 		"description",
 		"""
 		A non-zero value causes an object to be treated
@@ -575,58 +627,68 @@ Gaffer.Metadata.registerValues( {
 		an object to be treated as regular geometry.
 		""",
 		"label", "Shape Step Size",
+		"layout:section", "Volume",
 
 	],
 
 	"attribute:ai:shape:step_scale" : [
 
 		"defaultValue", 1.0,
+		"minValue", 0.0,
 		"description",
 		"""
 		Raymarching step size is calculated using this value
 		multiplied by `ai:shape:step_size`.
 		""",
 		"label", "Shape Step Scale",
+		"layout:section", "Volume",
 
 	],
 
 	"attribute:ai:shape:volume_padding" : [
 
 		"defaultValue", 0.0,
+		"minValue", 0.0,
 		"description",
 		"""
 		Allows a volume to be displaced outside its bounds. When
 		rendering a mesh as a volume, this enables displacement.
 		""",
 		"label", "Padding",
+		"layout:section", "Volume",
 
 	],
 
 	"attribute:ai:volume:velocity_scale" : [
 
 		"defaultValue", 1.0,
+		"minValue", 0.0,
 		"description",
 		"""
 		Scales the vector used in VDB motion blur computation.
 		""",
 		"label", "Velocity Scale",
+		"layout:section", "Volume",
 
 	],
 
 	"attribute:ai:volume:velocity_fps" : [
 
 		"defaultValue", 24.0,
+		"minValue", 0.0,
 		"description",
 		"""
 		Sets the frame rate used in VDB motion blur computation.
 		""",
 		"label", "Velocity FPS",
+		"layout:section", "Volume",
 
 	],
 
 	"attribute:ai:volume:velocity_outlier_threshold" : [
 
 		"defaultValue", 0.001,
+		"minValue", 0.0,
 		"description",
 		"""
 		Sets the outlier threshold used in VDB motion blur computation.
@@ -635,6 +697,7 @@ Gaffer.Metadata.registerValues( {
 		potentially noisy and require some filtering for faster rendering.
 		""",
 		"label", "Velocity Outlier Threshold",
+		"layout:section", "Volume",
 
 	],
 
@@ -646,6 +709,7 @@ Gaffer.Metadata.registerValues( {
 		You can select in the toon shader to skip outlines between objects with the same toon id set.
 		""",
 		"label", "Toon ID",
+		"layout:section", "Toon",
 
 	],
 

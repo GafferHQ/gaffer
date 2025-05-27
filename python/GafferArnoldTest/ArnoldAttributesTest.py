@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import pathlib
+
 import IECore
 
 import Gaffer
@@ -54,8 +56,8 @@ class ArnoldAttributesTest( GafferSceneTest.SceneTestCase ) :
 		aa = a["out"].attributes( "/plane" )
 		self.assertEqual( len( aa ), 0 )
 
-		a["attributes"]["cameraVisibility"]["enabled"].setValue( True )
-		a["attributes"]["cameraVisibility"]["value"].setValue( False )
+		a["attributes"]["ai:visibility:camera"]["enabled"].setValue( True )
+		a["attributes"]["ai:visibility:camera"]["value"].setValue( False )
 
 		aa = a["out"].attributes( "/plane" )
 		self.assertEqual( aa, IECore.CompoundObject( { "ai:visibility:camera" : IECore.BoolData( False ) } ) )
@@ -64,7 +66,7 @@ class ArnoldAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["a"] = GafferArnold.ArnoldAttributes()
-		s["a"]["attributes"]["cameraVisibility"]["value"].setValue( False )
+		s["a"]["attributes"]["ai:visibility:camera"]["value"].setValue( False )
 		names = s["a"]["attributes"].keys()
 
 		s2 = Gaffer.ScriptNode()
@@ -72,7 +74,17 @@ class ArnoldAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( s2["a"]["attributes"].keys(), names )
 		self.assertTrue( "attributes1" not in s2["a"] )
-		self.assertEqual( s2["a"]["attributes"]["cameraVisibility"]["value"].getValue(), False )
+		self.assertEqual( s2["a"]["attributes"]["ai:visibility:camera"]["value"].getValue(), False )
+
+	def testLoadFrom1_5( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "arnoldAttributes-1.5.13.0.gfr" )
+		script.load()
+
+		self.assertIn( "ai:visibility:camera", script["ArnoldAttributes"]["attributes"] )
+		self.assertNotIn( "cameraVisibility", script["ArnoldAttributes"]["attributes"] )
+		self.assertEqual( script["ArnoldAttributes"]["attributes"]["ai:visibility:camera"]["value"].getValue(), False )
 
 if __name__ == "__main__":
 	unittest.main()
