@@ -34,7 +34,11 @@
 #
 ##########################################################################
 
+import os
 import pathlib
+import subprocess
+import unittest
+
 import imath
 
 import IECore
@@ -84,6 +88,19 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 			"colorUserData" : colorUserData,
 			"doubleUserData" : doubleUserData
 		} )
+
+	@unittest.skipIf( os.environ.get( "GAFFEROSL_USE_BATCHED" ) == "0", "Not batched" )
+	def testUnBatched( self ) :
+
+		env = os.environ.copy()
+		env["GAFFEROSL_USE_BATCHED"] = "0"
+		try :
+			subprocess.check_output(
+				[ str( Gaffer.executablePath() ), "test", "GafferOSLTest.ShadingEngineTest" ],
+				env = env, stderr = subprocess.STDOUT
+			)
+		except subprocess.CalledProcessError as e :
+			self.fail( e.output )
 
 	def test( self ) :
 
