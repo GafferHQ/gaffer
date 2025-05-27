@@ -168,9 +168,9 @@ Gaffer.Metadata.registerValues( {
 		"description",
 		"""
 		If adaptive sampling is enabled, Arnold will
-		take a minimum of ( AA Samples * AA Samples )
+		take a minimum of (AA Samples * AA Samples)
 		samples per pixel, and will then take up to
-		( AA Samples Max * AA Samples Max ) samples per
+		(AA Samples Max * AA Samples Max) samples per
 		pixel, or until the remaining estimated noise
 		gets lower than the `ai:AA_adaptive_threshold` option.
 		""",
