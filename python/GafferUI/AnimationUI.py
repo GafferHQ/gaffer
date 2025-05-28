@@ -175,7 +175,6 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 				)
 
 		spanKey = curve.getKey( context.getTime() ) or previousKey
-		spanKeyOnThisFrame = spanKey is not None
 		for mode in reversed( sorted( Gaffer.Animation.Interpolation.values.values() ) ) :
 			menuDefinition.prepend(
 				"/Interpolation/%s" % ( mode.name ),
@@ -186,8 +185,8 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 						spanKey,
 						mode
 					),
-					"active" : spanKeyOnThisFrame and plugValueWidget._editable( canEditAnimation = True ),
-					"checkBox" : spanKeyOnThisFrame and ( spanKey.getInterpolation() == mode ),
+					"active" : spanKey is not None and plugValueWidget._editable( canEditAnimation = True ),
+					"checkBox" : spanKey is not None and ( spanKey.getInterpolation() == mode ),
 					"description" : Gaffer.Metadata.value( "Animation.Interpolation.%s" % mode.name, "description" ),
 				}
 			)
