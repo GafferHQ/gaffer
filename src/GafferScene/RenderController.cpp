@@ -1306,15 +1306,16 @@ RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer
 
 RenderController::~RenderController()
 {
-	if( m_renderOptions.renderManifestFilePath().size() && m_renderManifest )
-	{
-		// Make sure the directory exists to write the exr manifest to.
-		std::filesystem::create_directories(
-			std::filesystem::path( m_renderOptions.renderManifestFilePath() ).parent_path()
-		);
-
-		renderManifest()->writeEXRManifest( m_renderOptions.renderManifestFilePath() );
-	}
+	// NOTE : We could check m_renderOptions for whether there is a manifest file path set, and
+	// if so, make a call to renderManifest()->writeEXRManifest(). This would match the behaviour
+	// of GafferScene::Render ... however it would not currently be used, because the interactive
+	// renders that RenderController is used for use the in-memory manifest. When an interactive
+	// render is saved, the Catalogue takes care of saving out the manifest. The only scenario
+	// where saving the manifest here would be useful would be if someone is using a different
+	// interactive viewer, such as Renderman's `it`, and then after the render finishes, saving
+	// out EXRs, and wanting to have a manifest corresponding to those EXRs. We don't yet know
+	// if this will happen, and saving a large manifest could cost a little bit of time, so for
+	// now we won't do the save here.
 
 	// Cancel background task before the things it relies
 	// on are destroyed.
