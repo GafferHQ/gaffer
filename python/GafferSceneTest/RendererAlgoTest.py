@@ -930,5 +930,49 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 					else :
 						self.assertIsNone( capsuleRenderer.capturedObject( f"/{purpose}/cube" ) )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testManifestPerformance( self ) :
+
+		# Test the performance of the manifest in a somewhat realistic worst case context - a renderer
+		# trying to output a large number of simple objects in parallel, and they all need ids assigned.
+
+		sphere = GafferScene.Sphere()
+
+		rootFilter = GafferScene.PathFilter()
+		rootFilter["paths"].setValue( IECore.StringVectorData( [ '/*' ] ) )
+
+		duplicate = GafferScene.Duplicate()
+		duplicate["in"].setInput( sphere["out"] )
+		duplicate["filter"].setInput( rootFilter["out"] )
+
+
+		group1 = GafferScene.Group()
+		group1["in"][0].setInput( duplicate["out"] )
+
+		duplicate2 = GafferScene.Duplicate()
+		duplicate2["in"].setInput( group1["out"] )
+		duplicate2["filter"].setInput( rootFilter["out"] )
+
+		group2 = GafferScene.Group()
+		group2["in"][0].setInput( duplicate2["out"] )
+
+		duplicate3 = GafferScene.Duplicate()
+		duplicate3["in"].setInput( group2["out"] )
+		duplicate3["filter"].setInput( rootFilter["out"] )
+
+		duplicate["copies"].setValue( 40 )
+		duplicate2["copies"].setValue( 40 )
+		duplicate3["copies"].setValue( 40 )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+		)
+		renderOptions = GafferScene.Private.RendererAlgo.RenderOptions( duplicate3["out"] )
+		renderSets = GafferScene.Private.RendererAlgo.RenderSets( duplicate3["out"] )
+
+		GafferSceneTest.traverseScene( duplicate3["out"] )
+		with GafferTest.TestRunner.PerformanceScope():
+			GafferScene.Private.RendererAlgo.outputObjects( duplicate3["out"], renderOptions, renderSets, GafferScene.Private.RendererAlgo.LightLinks( renderer ), renderer, "/", GafferScene.RenderManifest() )
+
 if __name__ == "__main__":
 	unittest.main()
