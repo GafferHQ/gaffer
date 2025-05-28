@@ -924,7 +924,7 @@ void convertUSDShaders( ShaderNetwork *shaderNetwork )
 			newShader->parameters()[g_typeParameter] = new StringData( typeName );
 			transferUSDParameter( shaderNetwork, handle, shader.get(), g_varnameParameter, newShader.get(), g_varnameParameter, string() );
 			std::visit(
-				[&shaderNetwork, &handle, &shader, &newShader, &defaultParameter]( auto &&v )
+				[&shaderNetwork, &handle=handle, &shader=shader, &newShader, &defaultParameter=defaultParameter]( auto &&v )
 				{
 					transferUSDParameter( shaderNetwork, handle, shader.get(), g_fallbackParameter, newShader.get(), defaultParameter, v );
 				},

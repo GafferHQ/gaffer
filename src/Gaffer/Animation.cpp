@@ -123,7 +123,7 @@ private:
 	/// Implement to extend curve to specified key
 	virtual void extend( CurvePlug& curve, Animation::Direction direction, KeyPtr key ) const;
 
-	typedef std::vector< ConstExtrapolatorPtr > Container;
+	using Container = std::vector<ConstExtrapolatorPtr>;
 	static const Container& get();
 
 	Animation::Extrapolation m_extrapolation;
@@ -3056,7 +3056,7 @@ const char* Animation::toString( const Animation::Extrapolation extrapolation )
 			return "CycleFlip";
 		default:
 			assert( 0 );
-			return 0;
+			return nullptr;
 	}
 }
 

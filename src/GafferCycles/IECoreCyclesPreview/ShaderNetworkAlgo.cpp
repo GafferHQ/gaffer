@@ -92,7 +92,7 @@ std::string shaderCacheGetter( const std::string &shaderName, size_t &cost )
 	}
 }
 
-typedef IECore::LRUCache<std::string, std::string> ShaderSearchPathCache;
+using ShaderSearchPathCache = IECore::LRUCache<std::string, std::string>;
 ShaderSearchPathCache g_shaderSearchPathCache( shaderCacheGetter, 10000 );
 
 ccl::SocketType::Type getSocketType( const std::string &name )
@@ -108,7 +108,7 @@ ccl::SocketType::Type getSocketType( const std::string &name )
 	return ccl::SocketType::Type::UNDEFINED;
 }
 
-typedef boost::unordered_map<ShaderNetwork::Parameter, ccl::ShaderNode *> ShaderMap;
+using ShaderMap = boost::unordered_map<ShaderNetwork::Parameter, ccl::ShaderNode *>;
 
 ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, ccl::ShaderManager *shaderManager, ccl::ShaderGraph *shaderGraph, ShaderMap &converted )
 {
@@ -309,7 +309,7 @@ T parameterValue( const IECore::CompoundDataMap &parameters, const IECore::Inter
 	return defaultValue;
 }
 
-static const bool g_useLegacyLights = []() -> bool {
+const bool g_useLegacyLights = []() -> bool {
 	const char *c = getenv( "GAFFERCYCLES_USE_LEGACY_LIGHTS" );
 	if( !c )
 	{

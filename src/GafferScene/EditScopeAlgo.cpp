@@ -861,8 +861,8 @@ const Gaffer::GraphComponent *GafferScene::EditScopeAlgo::attributeEditReadOnlyR
 namespace
 {
 
-static int g_addSetColumnIndex = 0;
-static int g_removeSetColumnIndex = 1;
+int g_addSetColumnIndex = 0;
+int g_removeSetColumnIndex = 1;
 
 SceneProcessorPtr setMembershipProcessor()
 {

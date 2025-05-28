@@ -136,11 +136,11 @@ using SharedCObjectPtr = std::shared_ptr<ccl::Object>;
 using SharedCLightPtr = std::shared_ptr<ccl::Light>;
 using SharedCGeometryPtr = std::shared_ptr<ccl::Geometry>;
 // Need to defer shader assignments to the scene lock
-typedef std::pair<ccl::Node*, ccl::array<ccl::Node*>> ShaderAssignPair;
+using ShaderAssignPair = std::pair<ccl::Node *, ccl::array<ccl::Node *>>;
 // Defer adding the created nodes to the scene lock
 using NodesCreated = tbb::concurrent_vector<ccl::Node *>;
 // Defer creation of volumes to the scene lock
-typedef std::tuple<const IECoreVDB::VDBObject*, ccl::Volume*, int> VolumeToConvert;
+using VolumeToConvert = std::tuple<const IECoreVDB::VDBObject *, ccl::Volume *, int>;
 
 // The shared pointer never deletes, we leave that up to Cycles to do the final delete
 using NodeDeleter = bool (*)( ccl::Node * );
@@ -151,7 +151,7 @@ bool nullNodeDeleter( ccl::Node *node )
 
 // Helper to swap the node to delete to the front of the vector, then pop off
 template<typename T, typename U>
-static void removeNodesInSet( const ccl::set<T *> &nodesSet, tbb::concurrent_vector<U> &nodesArray )
+void removeNodesInSet( const ccl::set<T *> &nodesSet, tbb::concurrent_vector<U> &nodesArray )
 {
 	size_t newSize = nodesArray.size();
 
@@ -373,7 +373,7 @@ class CyclesOutput : public IECore::RefCounted
 
 IE_CORE_DECLAREPTR( CyclesOutput )
 
-typedef std::map<IECore::InternedString, CyclesOutputPtr> OutputMap;
+using OutputMap = std::map<IECore::InternedString, CyclesOutputPtr>;
 
 } // namespace
 
@@ -802,7 +802,7 @@ class ShaderCache : public IECore::RefCounted
 
 		ccl::Scene *m_scene;
 		int m_numDefaultShaders;
-		typedef tbb::concurrent_hash_map<IECore::MurmurHash, CyclesShaderPtr> Cache;
+		using Cache = tbb::concurrent_hash_map<IECore::MurmurHash, CyclesShaderPtr>;
 		Cache m_cache;
 		CyclesShaderPtr m_defaultSurface;
 		// Need to assign shaders in a deferred manner
@@ -1450,7 +1450,7 @@ class AttributesCache : public IECore::RefCounted
 
 		ShaderCachePtr m_shaderCache;
 
-		typedef tbb::concurrent_hash_map<IECore::MurmurHash, CyclesAttributesPtr> Cache;
+		using Cache = tbb::concurrent_hash_map<IECore::MurmurHash, CyclesAttributesPtr>;
 		Cache m_cache;
 
 };
@@ -1811,7 +1811,7 @@ class InstanceCache : public IECore::RefCounted
 		ccl::Scene *m_scene;
 		using Objects = tbb::concurrent_vector<SharedCObjectPtr>;
 		Objects m_objects;
-		typedef tbb::concurrent_hash_map<IECore::MurmurHash, SharedCGeometryPtr> Geometry;
+		using Geometry = tbb::concurrent_hash_map<IECore::MurmurHash, SharedCGeometryPtr>;
 		Geometry m_geometry;
 		using UniqueGeometry = tbb::concurrent_vector<SharedCGeometryPtr>;
 		UniqueGeometry m_uniqueGeometry;
@@ -1978,7 +1978,7 @@ class CameraCache : public IECore::RefCounted
 
 	private :
 
-		typedef tbb::concurrent_hash_map<IECore::MurmurHash, SharedCCameraPtr> Cache;
+		using Cache = tbb::concurrent_hash_map<IECore::MurmurHash, SharedCCameraPtr>;
 		Cache m_cache;
 
 };
@@ -3880,7 +3880,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		OutputMap m_outputs;
 
 		// Cameras (Cycles can only know of one camera at a time)
-		typedef tbb::concurrent_unordered_map<std::string, IECoreScene::ConstCameraPtr> CameraMap;
+		using CameraMap = tbb::concurrent_unordered_map<std::string, IECoreScene::ConstCameraPtr>;
 		CameraMap m_cameras;
 
 		// Registration with factory

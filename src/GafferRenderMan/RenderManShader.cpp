@@ -95,7 +95,7 @@ namespace
 {
 
 using ParameterSet = unordered_set<string>;
-static const unordered_map<string, ParameterSet> g_omittedParameters = {
+const unordered_map<string, ParameterSet> g_omittedParameters = {
 	{
 		"PxrPortalLight",
 		{
@@ -146,7 +146,7 @@ bool isVStruct( const boost::property_tree::ptree &parameter )
 template<typename PlugType>
 PlugPtr acquireNumericParameter( const boost::property_tree::ptree &parameter, IECore::InternedString name, Plug::Direction direction, Plug *candidatePlug )
 {
-	typedef typename PlugType::ValueType ValueType;
+	using ValueType = typename PlugType::ValueType;
 
 	const ValueType defaultValue = parameter.get( "<xmlattr>.default", ValueType( 0 ) );
 	const ValueType minValue = parameter.get( "<xmlattr>.min", numeric_limits<ValueType>::lowest() );
@@ -169,8 +169,8 @@ PlugPtr acquireNumericParameter( const boost::property_tree::ptree &parameter, I
 template<typename T>
 T parseCompoundNumericValue( const string &s )
 {
-	typedef typename T::BaseType BaseType;
-	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
+	using BaseType = typename T::BaseType;
+	using Tokenizer = boost::tokenizer<boost::char_separator<char>>;
 
 	T result( 0 );
 	unsigned int i = 0;
@@ -189,8 +189,8 @@ T parseCompoundNumericValue( const string &s )
 template<typename PlugType>
 PlugPtr acquireCompoundNumericParameter( const boost::property_tree::ptree &parameter, IECore::InternedString name, Plug::Direction direction, IECore::GeometricData::Interpretation interpretation, Plug *candidatePlug )
 {
-	typedef typename PlugType::ValueType ValueType;
-	typedef typename ValueType::BaseType BaseType;
+	using ValueType = typename PlugType::ValueType;
+	using BaseType = typename ValueType::BaseType;
 
 	const ValueType defaultValue = parseCompoundNumericValue<ValueType>( parameter.get( "<xmlattr>.default", "0 0 0" ) );
 

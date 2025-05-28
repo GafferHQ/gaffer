@@ -200,10 +200,10 @@ IECoreScene::ConstShaderNetworkPtr g_facingRatio = []() {
 IECoreScene::ConstShaderNetworkPtr g_black = []() {
 
 	ShaderNetworkPtr result = new ShaderNetwork;
-	const InternedString facingRatioHandle = result->addShader(
+	const InternedString blackHandle = result->addShader(
 		"black", new Shader( "PxrBlack" )
 	);
-	result->setOutput( { "black", "out" } );
+	result->setOutput( { blackHandle, "out" } );
 
 	return result;
 

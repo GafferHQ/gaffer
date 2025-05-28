@@ -48,7 +48,7 @@
 
 #include "tbb/enumerable_thread_specific.h"
 
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 using namespace boost::placeholders;

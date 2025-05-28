@@ -84,7 +84,7 @@ std::string splineDefinitionRepr( object x )
 }
 
 template<typename T>
-static T *splineDefinitionConstruct( object o, const SplineDefinitionInterpolation &interpolation )
+T *splineDefinitionConstruct( object o, const SplineDefinitionInterpolation &interpolation )
 {
 	typename T::PointContainer points;
 	int s = extract<int>( o.attr( "__len__" )() );
@@ -106,7 +106,7 @@ static T *splineDefinitionConstruct( object o, const SplineDefinitionInterpolati
 }
 
 template<typename T>
-static boost::python::tuple splineDefinitionPoints( const T &s )
+boost::python::tuple splineDefinitionPoints( const T &s )
 {
 	boost::python::list p;
 	typename T::PointContainer::const_iterator it;

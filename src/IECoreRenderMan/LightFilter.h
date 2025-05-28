@@ -53,7 +53,7 @@ class LightFilter : public IECoreScenePreview::Renderer::ObjectInterface
 	public :
 
 		LightFilter( const std::string &name, const Attributes *attributes, Session *session, LightLinker *lightLinker );
-		~LightFilter();
+		~LightFilter() override;
 
 		// ObjectInterface overrides
 		// =========================

@@ -249,8 +249,8 @@ InternedString g_transformBlurSegmentsAttributeName( "gaffer:transformBlurSegmen
 InternedString g_deformationBlurAttributeName( "gaffer:deformationBlur" );
 InternedString g_deformationBlurSegmentsAttributeName( "gaffer:deformationBlurSegments" );
 
-static BoolDataPtr g_true = new BoolData( true );
-static BoolDataPtr g_false = new BoolData( false );
+BoolDataPtr g_true = new BoolData( true );
+BoolDataPtr g_false = new BoolData( false );
 
 } // namespace
 
