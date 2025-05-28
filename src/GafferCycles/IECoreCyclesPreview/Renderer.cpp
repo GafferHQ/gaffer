@@ -2467,9 +2467,7 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 
 		CyclesCamera( const IECoreScene::ConstCameraPtr &camera )
 			:	m_camera( camera ),
-				/// \todo Transform should be identity. It is scaled to match a historical
-				/// bug in IECoreCycles.
-				m_transformSamples( { M44f().scale( V3f( 1, -1, -1 ) ) } )
+				m_transformSamples( { M44f() } )
 		{
 		}
 

@@ -89,9 +89,7 @@ class RendererTest( GafferTest.TestCase ) :
 				)
 			} ) )
 		)
-		## \todo Default camera is facing down +ve Z but should be facing
-		# down -ve Z.
-		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		renderer.render()
 
@@ -137,9 +135,7 @@ class RendererTest( GafferTest.TestCase ) :
 				)
 			} ) )
 		)
-		## \todo Default camera is facing down +ve Z but should be facing
-		# down -ve Z.
-		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		# Pure red light, with the colour being provided by an input shader, _not_
 		# a direct parameter value. This requires some translation in the renderer backend.
@@ -160,7 +156,6 @@ class RendererTest( GafferTest.TestCase ) :
 				),
 			} ) )
 		)
-		light.transform( imath.M44f().rotate( imath.V3f( 0, math.pi, 0 ) ) )
 
 		renderer.render()
 
@@ -211,9 +206,7 @@ class RendererTest( GafferTest.TestCase ) :
 				)
 			} ) )
 		)
-		## \todo Default camera is facing down +ve Z but should be facing
-		# down -ve Z.
-		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		# Cycles only has 64 distinct light groups, so if more than 64 unique
 		# sets of light links are used, we can't translate the scene accurately.
@@ -236,7 +229,6 @@ class RendererTest( GafferTest.TestCase ) :
 					),
 				} ) )
 			)
-			redLight.transform( imath.M44f().rotate( imath.V3f( 0, math.pi, 0 ) ) )
 
 			greenLight = renderer.light(
 				"/redLight",
@@ -250,7 +242,6 @@ class RendererTest( GafferTest.TestCase ) :
 					),
 				} ) )
 			)
-			greenLight.transform( imath.M44f().rotate( imath.V3f( 0, math.pi, 0 ) ) )
 
 			plane.link( "lights", { redLight } )
 
@@ -324,9 +315,7 @@ class RendererTest( GafferTest.TestCase ) :
 				)
 			} ) )
 		)
-		## \todo Default camera is facing down +ve Z but should be facing
-		# down -ve Z.
-		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		# Pure red light, with the colour being provided by a parameter value,
 		# not an input connection. This requires workarounds for the fact that
@@ -414,9 +403,7 @@ class RendererTest( GafferTest.TestCase ) :
 				)
 			} ) )
 		)
-		## \todo Default camera is facing down +ve Z but should be facing
-		# down -ve Z.
-		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		light = renderer.light(
 			"/light",
@@ -479,9 +466,7 @@ class RendererTest( GafferTest.TestCase ) :
 				)
 			} ) )
 		)
-		## \todo Default camera is facing down +ve Z but should be facing
-		# down -ve Z.
-		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		def lightAttributes( color ) :
 
@@ -589,9 +574,7 @@ class RendererTest( GafferTest.TestCase ) :
 				)
 			} ) )
 		)
-		## \todo Default camera is facing down +ve Z but should be facing
-		# down -ve Z.
-		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		def backgroundShader( color ) :
 
@@ -914,10 +897,7 @@ class RendererTest( GafferTest.TestCase ) :
 				)
 			} ) )
 		)
-
-		## \todo Default camera is facing down +ve Z but should be facing
-		# down -ve Z.
-		pointsObject.transform( imath.M44f().translate( imath.V3f( 0, 0, 2 ) ) )
+		pointsObject.transform( imath.M44f().translate( imath.V3f( 0, 0, -2 ) ) )
 
 		renderer.render()
 
@@ -955,7 +935,7 @@ class RendererTest( GafferTest.TestCase ) :
 		# standard facing-ratio shader.
 
 		cubeObject = renderer.object( "/cube", cube, renderer.attributes( IECore.CompoundObject() ) )
-		cubeObject.transform( imath.M44f().translate( imath.V3f( 0, 0, 2 ) ).rotate( imath.V3f( 0, math.pi / 4.0, 0 ) ) )
+		cubeObject.transform( imath.M44f().translate( imath.V3f( 0, 0, -2 ) ).rotate( imath.V3f( 0, math.pi / 4.0, 0 ) ) )
 
 		renderer.render()
 
@@ -1084,7 +1064,7 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		primitiveHandle = renderer.object( "primitive", primitive, renderer.attributes( IECore.CompoundObject( { "cycles:surface" : shader } ) ) )
-		primitiveHandle.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+		primitiveHandle.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		renderer.render()
 
@@ -1195,10 +1175,10 @@ class RendererTest( GafferTest.TestCase ) :
 				self.__testPrimitiveVariableInterpolation(
 					testPlane, "uniformColor",
 					{
-						topLeft : imath.Color4f( 0, 0, 0, 1 ),
-						topCenter : imath.Color4f( 1, 1, 1, 1 ),
+						topLeft : imath.Color4f( 6, 6, 6, 1 ),
+						topCenter : imath.Color4f( 7, 7, 7, 1 ),
 						center : imath.Color4f( 4, 4, 4, 1 ),
-						bottomRight : imath.Color4f( 8, 8, 8, 1 ),
+						bottomRight : imath.Color4f( 2, 2, 2, 1 ),
 					}
 				)
 
@@ -1215,10 +1195,10 @@ class RendererTest( GafferTest.TestCase ) :
 				self.__testPrimitiveVariableInterpolation(
 					testPlane, "vertexColor",
 					{
-						topLeft : imath.Color4f( topLeft.x, topLeft.y, 0, 1 ),
-						topCenter : imath.Color4f( topCenter.x, topCenter.y, 0, 1 ),
-						center : imath.Color4f( center.x, center.y, 0, 1 ),
-						bottomRight : imath.Color4f( bottomRight.x, bottomRight.y, 0, 1 ),
+						topLeft : imath.Color4f( topLeft.x, 1.0 - topLeft.y, 0, 1 ),
+						topCenter : imath.Color4f( topCenter.x, 1.0 - topCenter.y, 0, 1 ),
+						center : imath.Color4f( center.x, 1.0 - center.y, 0, 1 ),
+						bottomRight : imath.Color4f( bottomRight.x, 1.0 - bottomRight.y, 0, 1 ),
 					},
 					maxDifference = 0.01
 				)
@@ -1226,10 +1206,10 @@ class RendererTest( GafferTest.TestCase ) :
 				self.__testPrimitiveVariableInterpolation(
 					testPlane, "varyingColor",
 					{
-						topLeft : imath.Color4f( topLeft.x, topLeft.y, 0, 1 ),
-						topCenter : imath.Color4f( topCenter.x, topCenter.y, 0, 1 ),
-						center : imath.Color4f( center.x, center.y, 0, 1 ),
-						bottomRight : imath.Color4f( bottomRight.x, bottomRight.y, 0, 1 ),
+						topLeft : imath.Color4f( topLeft.x, 1.0 - topLeft.y, 0, 1 ),
+						topCenter : imath.Color4f( topCenter.x, 1.0 - topCenter.y, 0, 1 ),
+						center : imath.Color4f( center.x, 1.0 - center.y, 0, 1 ),
+						bottomRight : imath.Color4f( bottomRight.x, 1.0 - bottomRight.y, 0, 1 ),
 					},
 					maxDifference = 0.01
 				)
@@ -1283,9 +1263,9 @@ class RendererTest( GafferTest.TestCase ) :
 
 		# Image UV coordinates of each point
 
-		bottomLeft = imath.V2f( 0, 1 )
+		topLeft = imath.V2f( 0, 0 )
 		center = imath.V2f( 0.5 )
-		topRight = imath.V2f( 1, 0 )
+		bottomRight = imath.V2f( 1, 1 )
 
 		# Tests for each of the primitive variables.
 
@@ -1295,27 +1275,27 @@ class RendererTest( GafferTest.TestCase ) :
 			self.__testPrimitiveVariableInterpolation(
 				points, "uniformColor",
 				{
-					bottomLeft : points["uniformColor"].data[0],
+					topLeft : points["uniformColor"].data[0],
 					center : points["uniformColor"].data[0],
-					topRight : points["uniformColor"].data[0],
+					bottomRight : points["uniformColor"].data[0],
 				}
 			)
 
 		self.__testPrimitiveVariableInterpolation(
 			points, "vertexColor",
 			{
-				bottomLeft : imath.Color4f( 0, 1, 0, 1 ),
+				topLeft : imath.Color4f( 0, 1, 0, 1 ),
 				center : imath.Color4f( 0.5, 0.5, 0, 1 ),
-				topRight : imath.Color4f( 1, 0, 0, 1 ),
+				bottomRight : imath.Color4f( 1, 0, 0, 1 ),
 			}
 		)
 
 		self.__testPrimitiveVariableInterpolation(
 			points, "varyingColor",
 			{
-				bottomLeft : imath.Color4f( 0, 1, 0, 1 ),
+				topLeft : imath.Color4f( 0, 1, 0, 1 ),
 				center : imath.Color4f( 0.5, 0.5, 0, 1 ),
-				topRight : imath.Color4f( 1, 0, 0, 1 ),
+				bottomRight : imath.Color4f( 1, 0, 0, 1 ),
 			}
 		)
 
@@ -1425,16 +1405,12 @@ class RendererTest( GafferTest.TestCase ) :
 		self.__testPrimitiveVariableInterpolation(
 			curves, "vertexColor",
 			{
-				## \todo I would expect the top of each curve to
-				# have the highest Y value (and therefore a
-				# green value of 1). But it's the other way around.
-				# Investigate possible camera inversion bug.
-				leftTop : imath.Color4f( 0, 0, 0, 1 ),
-				leftBottom : imath.Color4f( 0, 1, 0, 1 ),
-				centerTop : imath.Color4f( 0.5, 0, 0, 1 ),
-				centerBottom : imath.Color4f( 0.5, 1, 0, 1 ),
-				rightTop : imath.Color4f( 1, 0, 0, 1 ),
-				rightBottom : imath.Color4f( 1, 1, 0, 1 ),
+				leftTop : imath.Color4f( 0, 1, 0, 1 ),
+				leftBottom : imath.Color4f( 0, 0, 0, 1 ),
+				centerTop : imath.Color4f( 0.5, 1, 0, 1 ),
+				centerBottom : imath.Color4f( 0.5, 0, 0, 1 ),
+				rightTop : imath.Color4f( 1, 1, 0, 1 ),
+				rightBottom : imath.Color4f( 1, 0, 0, 1 ),
 			},
 			maxDifference = 0.01
 		)
@@ -1465,10 +1441,10 @@ class RendererTest( GafferTest.TestCase ) :
 			self.__testPrimitiveVariableInterpolation(
 				plane, "uv",
 				{
-					topLeft : imath.Color4f( topLeft.x, topLeft.y, 0, 1 ),
-					topCenter : imath.Color4f( topCenter.x, topCenter.y, 0, 1 ),
-					center : imath.Color4f( center.x, center.y, 0, 1 ),
-					bottomRight : imath.Color4f( bottomRight.x, bottomRight.y, 0, 1 ),
+					topLeft : imath.Color4f( topLeft.x, 1.0 - topLeft.y, 0, 1 ),
+					topCenter : imath.Color4f( topCenter.x, 1.0 - topCenter.y, 0, 1 ),
+					center : imath.Color4f( center.x, 1.0 - center.y, 0, 1 ),
+					bottomRight : imath.Color4f( bottomRight.x, 1.0 - bottomRight.y, 0, 1 ),
 				},
 				maxDifference = 0.01
 			)
@@ -1491,10 +1467,10 @@ class RendererTest( GafferTest.TestCase ) :
 			self.__testPrimitiveVariableInterpolation(
 				plane, "uv",
 				{
-					topLeft : imath.Color4f( topLeft.x, topLeft.y, 0, 1 ),
-					topCenter : imath.Color4f( topCenter.x, topCenter.y, 0, 1 ),
-					center : imath.Color4f( center.x, center.y, 0, 1 ),
-					bottomRight : imath.Color4f( bottomRight.x, bottomRight.y, 0, 1 ),
+					topLeft : imath.Color4f( topLeft.x, 1.0 - topLeft.y, 0, 1 ),
+					topCenter : imath.Color4f( topCenter.x, 1.0 - topCenter.y, 0, 1 ),
+					center : imath.Color4f( center.x, 1.0 - center.y, 0, 1 ),
+					bottomRight : imath.Color4f( bottomRight.x, 1.0 - bottomRight.y, 0, 1 ),
 				},
 				maxDifference = 0.01
 			)
@@ -1554,7 +1530,7 @@ class RendererTest( GafferTest.TestCase ) :
 					"textureFileName" : IECore.StringData( textureFileName.as_posix() ),
 				} ) )
 			)
-			cyclesPlane.transform( imath.M44f().translate( imath.V3f( translateX, 0, 1 ) ) )
+			cyclesPlane.transform( imath.M44f().translate( imath.V3f( translateX, 0, -1 ) ) )
 
 		renderer.render()
 		image = IECore.Reader.create( str( fileName ) ).read()
@@ -1624,7 +1600,7 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		primitiveHandle = renderer.object( "/primitive", primitive, renderer.attributes( IECore.CompoundObject( { prefix + customAttribute : data, "cycles:surface" : shader } ) ) )
-		primitiveHandle.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+		primitiveHandle.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		renderer.render()
 		image = IECore.Reader.create( str( fileName ) ).read()
@@ -1692,7 +1668,7 @@ class RendererTest( GafferTest.TestCase ) :
 			} ) )
 		)
 
-		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		renderer.render()
 
@@ -1804,7 +1780,7 @@ class RendererTest( GafferTest.TestCase ) :
 			} ) )
 		)
 
-		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		renderer.render()
 
@@ -1848,9 +1824,7 @@ class RendererTest( GafferTest.TestCase ) :
 				)
 			} ) )
 		)
-		## \todo Default camera is facing down +ve Z but should be facing
-		# down -ve Z.
-		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		renderer.render()
 
@@ -1944,9 +1918,7 @@ class RendererTest( GafferTest.TestCase ) :
 				)
 			} ) )
 		)
-		## \todo Default camera is facing down +ve Z but should be facing
-		# down -ve Z.
-		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		renderer.render()
 
@@ -2004,7 +1976,7 @@ class RendererTest( GafferTest.TestCase ) :
 			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) ) ),
 			renderer.attributes( IECore.CompoundObject( { "cycles:surface" : shader } ) )
 		)
-		primitiveHandle.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+		primitiveHandle.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		renderer.render()
 		image = IECore.Reader.create( str( fileName ) ).read()
@@ -2275,9 +2247,7 @@ class RendererTest( GafferTest.TestCase ) :
 				)
 			} ) )
 		)
-		## \todo Default camera is facing down +ve Z but should be facing
-		# down -ve Z.
-		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		# Pure red light, with the colour being provided by an input shader, _not_
 		# a direct parameter value. This requires some translation in the renderer backend.
@@ -2354,9 +2324,7 @@ class RendererTest( GafferTest.TestCase ) :
 			),
 			attributes
 		)
-		## \todo Default camera is facing down +ve Z but should be facing
-		# down -ve Z.
-		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		renderer.render()
 
@@ -2555,9 +2523,7 @@ class RendererTest( GafferTest.TestCase ) :
 				)
 			} ) )
 		)
-		## \todo Default camera is facing down +ve Z but should be facing
-		# down -ve Z.
-		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		renderer.render()
 		time.sleep( 1 )
@@ -2749,9 +2715,7 @@ class RendererTest( GafferTest.TestCase ) :
 				)
 			} ) )
 		)
-		## \todo Default camera is facing down +ve Z but should be facing
-		# down -ve Z.
-		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		def lightAttributes( lightgroup ) :
 
