@@ -139,7 +139,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 		menuDefinition.prepend(
 			"/Jump To/Next Key",
 			{
-				"command" : functools.partial( context.setTime, nextKey.getTime() if nextKey is not None else 0 ),
+				"command" : functools.partial( plugValueWidget.scriptNode().context().setTime, nextKey.getTime() if nextKey is not None else 0 ),
 				"active" : nextKey is not None,
 			}
 		)
@@ -148,7 +148,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 		menuDefinition.prepend(
 			"/Jump To/Previous Key",
 			{
-				"command" : functools.partial( context.setTime, previousKey.getTime() if previousKey is not None else 0 ),
+				"command" : functools.partial( plugValueWidget.scriptNode().context().setTime, previousKey.getTime() if previousKey is not None else 0 ),
 				"active" : previousKey is not None,
 			}
 		)
