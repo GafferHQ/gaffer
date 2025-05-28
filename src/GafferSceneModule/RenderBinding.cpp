@@ -157,10 +157,10 @@ void outputLightsWrapper( const ScenePlug &scene, const GafferScene::Private::Re
 	GafferScene::Private::RendererAlgo::outputLights( &scene, renderOptions, renderSets, &lightLinks, &renderer );
 }
 
-void outputObjectsWrapper( const ScenePlug &scene, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, GafferScene::Private::RendererAlgo::LightLinks &lightLinks, IECoreScenePreview::Renderer &renderer, const ScenePlug::ScenePath &root )
+void outputObjectsWrapper( const ScenePlug &scene, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, GafferScene::Private::RendererAlgo::LightLinks &lightLinks, IECoreScenePreview::Renderer &renderer, const ScenePlug::ScenePath &root, GafferScene::RenderManifest *renderManifest )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	GafferScene::Private::RendererAlgo::outputObjects( &scene, renderOptions, renderSets, &lightLinks, &renderer, root );
+	GafferScene::Private::RendererAlgo::outputObjects( &scene, renderOptions, renderSets, &lightLinks, &renderer, root, renderManifest );
 }
 
 struct RenderSlotCaller
@@ -247,7 +247,7 @@ void GafferSceneModule::bindRender()
 
 			def( "outputCameras", &outputCamerasWrapper );
 			def( "outputLights", &outputLightsWrapper );
-			def( "outputObjects", &outputObjectsWrapper, ( arg( "scene" ), arg( "globals" ), arg( "renderSets" ), arg( "lightLinks" ), arg( "renderer" ), arg( "root" ) = "/" ) );
+			def( "outputObjects", &outputObjectsWrapper, ( arg( "scene" ), arg( "globals" ), arg( "renderSets" ), arg( "lightLinks" ), arg( "renderer" ), arg( "root" ) = "/", arg( "renderManifest" ) = object() ) );
 		}
 	}
 
