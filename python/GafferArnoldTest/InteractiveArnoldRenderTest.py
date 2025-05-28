@@ -129,7 +129,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		script["attributes"] = GafferArnold.ArnoldAttributes()
 		script["attributes"]["in"].setInput( script["meshType"]["out"] )
-		script["attributes"]["attributes"]["subdivIterations"]["enabled"].setValue( True )
+		script["attributes"]["attributes"]["ai:polymesh:subdiv_iterations"]["enabled"].setValue( True )
 
 		script["catalogue"] = GafferScene.Catalogue()
 
@@ -175,7 +175,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		# Now up the number of subdivision levels. The alpha coverage should
 		# increase as the shape tends towards the limit surface.
 
-		script["attributes"]["attributes"]["subdivIterations"]["value"].setValue( 4 )
+		script["attributes"]["attributes"]["ai:polymesh:subdiv_iterations"]["value"].setValue( 4 )
 		self.uiThreadCallHandler.waitFor( 1 )
 
 		self.assertAlmostEqual( script["imageStats"]["average"][3].getValue(), 0.424, delta = 0.001 )
@@ -603,8 +603,8 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		s["options"] = GafferArnold.ArnoldOptions()
 		s["options"]["in"].setInput( s["outputs"]["out"] )
-		s["options"]["options"]["aaSamples"]["enabled"].setValue( True )
-		s["options"]["options"]["aaSamples"]["value"].setValue( 5 )
+		s["options"]["options"]["ai:AA_samples"]["enabled"].setValue( True )
+		s["options"]["options"]["ai:AA_samples"]["value"].setValue( 5 )
 
 		s["render"] = self._createInteractiveRender()
 		s["render"]["in"].setInput( s["options"]["out"] )

@@ -65,13 +65,13 @@ class ArnoldShaderBall( GafferScene.ShaderBall ) :
 
 		self["__arnoldOptions"] = GafferArnold.ArnoldOptions()
 		self["__arnoldOptions"]["in"].setInput( self["__parentLights"]["out"] )
-		self["__arnoldOptions"]["options"]["aaSamples"]["enabled"].setValue( True )
-		self["__arnoldOptions"]["options"]["aaSamples"]["value"].setValue( 3 )
+		self["__arnoldOptions"]["options"]["ai:AA_samples"]["enabled"].setValue( True )
+		self["__arnoldOptions"]["options"]["ai:AA_samples"]["value"].setValue( 3 )
 
 		self.addChild(
-			self["__arnoldOptions"]["options"]["threads"].createCounterpart( "threads", Gaffer.Plug.Direction.In )
+			self["__arnoldOptions"]["options"]["ai:threads"].createCounterpart( "threads", Gaffer.Plug.Direction.In )
 		)
-		self["__arnoldOptions"]["options"]["threads"].setInput( self["threads"] )
+		self["__arnoldOptions"]["options"]["ai:threads"].setInput( self["threads"] )
 
 		self._outPlug().setInput( self["__arnoldOptions"]["out"] )
 

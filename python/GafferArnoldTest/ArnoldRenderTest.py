@@ -643,8 +643,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 					c.setFrame( frame )
 
-					options["options"]["aaSeed"]["enabled"].setValue( seed is not None )
-					options["options"]["aaSeed"]["value"].setValue( seed or 1 )
+					options["options"]["ai:AA_seed"]["enabled"].setValue( seed is not None )
+					options["options"]["ai:AA_seed"]["value"].setValue( seed or 1 )
 
 					render["task"].execute()
 
@@ -682,8 +682,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		def a() :
 
 			result = GafferArnold.ArnoldAttributes()
-			result["attributes"]["matte"]["enabled"].setValue( True )
-			result["attributes"]["matte"]["value"].setValue( True )
+			result["attributes"]["ai:matte"]["enabled"].setValue( True )
+			result["attributes"]["ai:matte"]["value"].setValue( True )
 
 			return result
 
@@ -739,8 +739,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		attributes["attributes"]["linkedLights"]["value"].setValue( "/group/light" )
 
 		# Shadows
-		arnoldAttributes["attributes"]["shadowGroup"]["enabled"].setValue( True )
-		arnoldAttributes["attributes"]["shadowGroup"]["value"].setValue( "/group/light1" )
+		arnoldAttributes["attributes"]["ai:visibility:shadow_group"]["enabled"].setValue( True )
+		arnoldAttributes["attributes"]["ai:visibility:shadow_group"]["value"].setValue( "/group/light1" )
 
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
 		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
@@ -1305,8 +1305,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		s["arnoldOptions"] = GafferArnold.ArnoldOptions()
 		s["arnoldOptions"]["in"].setInput( s["options"]["out"] )
-		s["arnoldOptions"]["options"]["aaSamples"]["enabled"].setValue( True )
-		s["arnoldOptions"]["options"]["aaSamples"]["value"].setValue( 6 )
+		s["arnoldOptions"]["options"]["ai:AA_samples"]["enabled"].setValue( True )
+		s["arnoldOptions"]["options"]["ai:AA_samples"]["value"].setValue( 6 )
 
 		s["render"] = GafferScene.Render()
 		s["render"]["in"].setInput( s["arnoldOptions"]["out"] )
@@ -1656,8 +1656,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		options = GafferArnold.ArnoldOptions()
 
-		options["options"]["giTotalDepth"]["enabled"].setValue( True )
-		options["options"]["giTotalDepth"]["value"].setValue( 0 )
+		options["options"]["ai:GI_total_depth"]["enabled"].setValue( True )
+		options["options"]["ai:GI_total_depth"]["value"].setValue( 0 )
 
 		return options
 

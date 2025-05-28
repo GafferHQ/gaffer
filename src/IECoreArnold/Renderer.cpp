@@ -3390,7 +3390,10 @@ const boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr> g
 	// This defaults to `true` in Arnold, which isn't suitable for use on
 	// a render farm, because it can lead to multiple machines all fighting
 	// to generate the same `.tx` files.
-	{ "ai:texture_auto_generate_tx", new IECore::BoolData( false ) }
+	{ "ai:texture_auto_generate_tx", new IECore::BoolData( false ) },
+	// Arnold 7.3 changed the default of `ai:abort_on_license_fail` to `true`.
+	// Our plug defaults to `false` so we override to preserve its behaviour.
+	{ "ai:abort_on_license_fail", new IECore::BoolData( false ) },
 };
 
 class ArnoldGlobals

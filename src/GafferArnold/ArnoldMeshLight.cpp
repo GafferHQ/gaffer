@@ -70,9 +70,9 @@ ArnoldMeshLight::ArnoldMeshLight( const std::string &name )
 	for( NameValuePlug::Iterator it( attributes->attributesPlug() ); !it.done(); ++it )
 	{
 		if(
-			boost::ends_with( (*it)->getName().string(), "Visibility" ) &&
-			(*it)->getName().string().find( "AutoBump" ) == std::string::npos &&
-			(*it)->getName() != "cameraVisibility"
+			boost::starts_with( (*it)->getName().string(), "ai:visibility:" ) &&
+			(*it)->getName() != "ai:visibility:shadow_group" &&
+			(*it)->getName() != "ai:visibility:camera"
 		)
 		{
 			(*it)->enabledPlug()->setValue( true );
@@ -82,7 +82,7 @@ ArnoldMeshLight::ArnoldMeshLight( const std::string &name )
 
 	addChild( attributes );
 
-	Plug *internalCameraVisibilityPlug = attributes->attributesPlug()->getChild<Plug>( "cameraVisibility" );
+	Plug *internalCameraVisibilityPlug = attributes->attributesPlug()->getChild<Plug>( "ai:visibility:camera" );
 	PlugPtr cameraVisibilityPlug = internalCameraVisibilityPlug->createCounterpart( "cameraVisibility", Plug::In );
 	addChild( cameraVisibilityPlug );
 	internalCameraVisibilityPlug->setInput( cameraVisibilityPlug );

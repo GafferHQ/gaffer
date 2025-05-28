@@ -35,6 +35,10 @@
 #
 ##########################################################################
 
+import pathlib
+
+import imath
+
 import IECore
 
 import Gaffer
@@ -55,7 +59,7 @@ class ArnoldOptionsTest( GafferSceneTest.SceneTestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["o"] = GafferArnold.ArnoldOptions()
-		s["o"]["options"]["aaSamples"]["value"].setValue( 1 )
+		s["o"]["options"]["ai:AA_samples"]["value"].setValue( 1 )
 		names = s["o"]["options"].keys()
 
 		s2 = Gaffer.ScriptNode()
@@ -63,7 +67,17 @@ class ArnoldOptionsTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( s2["o"]["options"].keys(), names )
 		self.assertTrue( "options1" not in s2["o"] )
-		self.assertEqual( s2["o"]["options"]["aaSamples"]["value"].getValue(), 1 )
+		self.assertEqual( s2["o"]["options"]["ai:AA_samples"]["value"].getValue(), 1 )
+
+	def testLoadFrom1_5( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "arnoldOptions-1.5.13.0.gfr" )
+		script.load()
+
+		self.assertIn( "ai:error_color_bad_pixel", script["ArnoldOptions"]["options"] )
+		self.assertNotIn( "errorColorBadPixel", script["ArnoldOptions"]["options"] )
+		self.assertEqual( script["ArnoldOptions"]["options"]["ai:error_color_bad_pixel"]["value"].getValue(), imath.Color3f( 0, 1, 1 ) )
 
 if __name__ == "__main__":
 	unittest.main()
