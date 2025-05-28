@@ -9,7 +9,9 @@ Features
 Improvements
 ------------
 
-- Animation : Plug context menu actions are now available on widgets that edit multiple plugs. This enables the animation of multiple cells at once in the LightEditor, RenderPassEditor, AttributeEditor and Spreadsheet UI.
+- Animation :
+  - Added plug context menu actions for color, vector and box plugs.
+  - Plug context menu actions are now available on widgets that edit multiple plugs. This enables the animation of multiple cells at once in the LightEditor, RenderPassEditor, AttributeEditor and Spreadsheet UI.
 - Added `buildGraphics` option to SConstruct to enable building the Gaffer logo and icons separately.
 
 Fixes

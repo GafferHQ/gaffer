@@ -126,9 +126,25 @@ def __setCurveExtrapolation( scriptNode, curves, direction, mode, unused ) :
 
 def __popupMenu( menuDefinition, plugValueWidget ) :
 
-	plugs = plugValueWidget.getPlugs()
+	# We operate on all leaf plugs that `plugValueWidget` is editing.
+	plugs = []
+	for plug in plugValueWidget.getPlugs() :
+		if not len( plug ) :
+			plugs.append( plug )
+		else :
+			plugs += [
+				p for p in Gaffer.Plug.RecursiveRange( plug )
+				if not len( p )
+			]
+
 	if any( not isinstance( plug, Gaffer.ValuePlug ) or not Gaffer.Animation.canAnimate( plug ) for plug in plugs ) :
 		return
+
+	editable = all(
+		( p.settable() or Gaffer.Animation.isAnimated( p ) )
+		and not Gaffer.MetadataAlgo.readOnly( p )
+		for p in plugs
+	)
 
 	context = plugValueWidget.context()
 
@@ -182,7 +198,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 							direction,
 							mode
 						),
-						"active" : plugValueWidget._editable( canEditAnimation = True ),
+						"active" : editable,
 						"checkBox" : all( curve.getExtrapolation( direction ) == mode for curve in curves ),
 						"description" : Gaffer.Metadata.value( "Animation.Extrapolation.%s" % mode.name, "description" ),
 					}
@@ -204,7 +220,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 						spanKeys,
 						mode
 					),
-					"active" : spanKeys and plugValueWidget._editable( canEditAnimation = True ),
+					"active" : spanKeys and editable,
 					"checkBox" : spanKeys and all( k.getInterpolation() == mode for k in spanKeys ),
 					"description" : Gaffer.Metadata.value( "Animation.Interpolation.%s" % mode.name, "description" ),
 				}
@@ -223,7 +239,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 					plugValueWidget.scriptNode(),
 					keysOnThisFrame
 				),
-				"active" : bool( keysOnThisFrame ) and plugValueWidget._editable( canEditAnimation = True ),
+				"active" : bool( keysOnThisFrame ) and editable,
 			}
 		)
 
@@ -236,7 +252,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 				plugs,
 				context
 			),
-			"active" : plugValueWidget._editable( canEditAnimation = True ),
+			"active" : editable,
 		}
 	)
 
