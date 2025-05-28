@@ -39,6 +39,7 @@ import unittest
 import imath
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -942,17 +943,29 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		group["in"][1].setInput( sphere["out"] )
 		group["in"][2].setInput( plane["out"] )
 
+		outputs = GafferScene.Outputs()
+		outputs["in"].setInput( group["out"] )
+
 		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
-		controller = GafferScene.RenderController( group["out"], Gaffer.Context(), renderer )
+		controller = GafferScene.RenderController( outputs["out"], Gaffer.Context(), renderer )
 		controller.setMinimumExpansionDepth( 2 )
 
+		controller.update()
+		self.assertIsNone( controller.renderManifest() )
+
+		controller.setManifestRequired( True )
+
 		paths = [ "/group/cube", "/group/sphere", "/group/plane" ]
+
+		# The manifest is immediately available, but it won't be populated until the controller updates
+		self.assertEqual( controller.renderManifest().size(), 0 )
 		for path in paths :
 			self.assertEqual(
 				controller.renderManifest().idForPath( path ), 0
 			)
 
 		controller.update()
+		self.assertEqual( controller.renderManifest().size(), 3 )
 		for path in paths :
 			self.assertNotEqual(
 				controller.renderManifest().idForPath( path ), 0
@@ -983,6 +996,29 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 			set( controller.renderManifest().idsForPaths( IECore.PathMatcher( paths ) ) ),
 			{ renderer.capturedObject( p ).id() for p in paths }
 		)
+
+		plane["enabled"].setValue( False )
+
+		controller.update()
+
+		# We've now removed an object, but we don't bother removing entries from the existing manifest
+		self.assertEqual( controller.renderManifest().size(), 4 )
+
+		# If we don't require the manifest, it will be deleted
+		controller.setManifestRequired( False )
+		controller.update()
+		self.assertIsNone( controller.renderManifest() )
+
+
+		# Rather than explicitly calling setManifestRequired, the other way of requiring a manifest is by
+		# adding an id output.
+		outputs.addOutput( "id", IECoreScene.Output( "test", "ieDisplay", "float id", {} ) )
+
+		controller.update()
+
+		# Now that the manifest has been regenerated, we only have the 2 objects that actually exist in the scene currently.
+		self.assertEqual( controller.renderManifest().size(), 2 )
+
 
 	def testProgressCallback( self ) :
 
