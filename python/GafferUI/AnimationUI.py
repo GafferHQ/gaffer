@@ -140,7 +140,10 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 			"/Jump To/Next Key",
 			{
 				"command" : functools.partial( plugValueWidget.scriptNode().context().setTime, nextKey.getTime() if nextKey is not None else 0 ),
-				"active" : nextKey is not None,
+				# Disabled if the PlugValueWidget's context isn't the same as the main UI context
+				# due to being viewed through a TimeWarp. In this case we don't know what main UI
+				# time corresponds to the local time in `nextKey`.
+				"active" : nextKey is not None and plugValueWidget.scriptNode().context().getTime() == context.getTime(),
 			}
 		)
 
@@ -149,7 +152,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 			"/Jump To/Previous Key",
 			{
 				"command" : functools.partial( plugValueWidget.scriptNode().context().setTime, previousKey.getTime() if previousKey is not None else 0 ),
-				"active" : previousKey is not None,
+				"active" : previousKey is not None and plugValueWidget.scriptNode().context().getTime() == context.getTime(),
 			}
 		)
 
