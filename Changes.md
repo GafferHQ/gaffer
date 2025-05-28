@@ -47,6 +47,7 @@ Breaking Changes
   - The default values of the attribute plugs authoring the `gl:primitive:bound`, `gl:primitive:outline`, `gl:primitive:points`, `gl:primitive:pointColor`, `gl:primitive:wireframe`, and `gl:primitive:wireframeColor` attributes have changed to match the default behaviour of the OpenGL renderer. Scripts loaded from previous Gaffer versions with these plugs enabled and set to the default value will see a difference in OpenGL renders.
 - SceneTestCase : Removed `assertBoxesEqual()` and `assertBoxesAlmostEqual()` methods.
 - RenderController : Removed `pathForID()`, `pathsForIDs()`, `idForPath()` and `idsForPaths()`. Use `renderManifest()` instead.
+- Catalogue, CatalogueSelect, Display : Moved from GafferImage module to GafferScene.
 
 1.5.x.x (relative to 1.5.14.0)
 =======

@@ -42,6 +42,7 @@ __import__( "GafferImage" )
 
 from ._GafferScene import *
 
+from .CatalogueSelect import CatalogueSelect
 from .ShaderBall import ShaderBall
 from .RenderPassWedge import RenderPassWedge
 from .RenderPassTypeAdaptor import RenderPassTypeAdaptor

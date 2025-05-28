@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2023, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,6 +34,45 @@
 #
 ##########################################################################
 
-import GafferImageUI
+import threading
 
-GafferImageUI.CatalogueUI._ImageListing = GafferImageUI.CatalogueUI.ImageListing
+import Gaffer
+import GafferUI
+
+import GafferScene
+
+__all__ = []
+
+Gaffer.Metadata.registerNode(
+
+	GafferScene.Display,
+
+	"description",
+	"""
+	Interactively displays images as they are rendered.
+
+	This node runs a server on a background thread,
+	allowing it to receive images from both local and
+	remote render processes. To set up a render to
+	output to the Display node, use an Outputs node with
+	an Interactive output configured to render to the
+	same port as is specified on the Display node.
+	""",
+
+	plugs = {
+
+		"port" : [
+
+			"description",
+			"""
+			The port number on which to run the display server.
+			Outputs which specify this port number will appear
+			in this node - use multiple nodes with different
+			port numbers to receive multiple images at once.
+			""",
+
+		],
+
+	}
+
+)

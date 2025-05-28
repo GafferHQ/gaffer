@@ -2103,8 +2103,8 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					break;
 				default :
 					if(
-						objectType == (IECore::TypeId)GafferScene::PreviewProceduralTypeId ||
-						IECore::RunTimeTyped::inheritsFrom( objectType, (IECore::TypeId)GafferScene::PreviewProceduralTypeId )
+						objectType == (IECore::TypeId)IECoreScenePreview::PreviewProceduralTypeId ||
+						IECore::RunTimeTyped::inheritsFrom( objectType, (IECore::TypeId)IECoreScenePreview::PreviewProceduralTypeId )
 					)
 					{
 						hashProceduralGeometry( h );

@@ -109,8 +109,8 @@ class InteractiveArnoldRenderPerformanceTest( GafferUITest.TestCase ) :
 					"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
 					"driverType" : 'ClientDisplayDriver',
 					"displayHost" : 'localhost',
-					"displayPort" : str( GafferImage.Catalogue.displayDriverServer().portNumber() ),
-					"remoteDisplayType" : 'GafferImage::GafferDisplayDriver',
+					"displayPort" : str( GafferScene.Catalogue.displayDriverServer().portNumber() ),
+					"remoteDisplayType" : 'GafferScene::GafferDisplayDriver',
 					"filter" : 'box',
 				}
 			)
@@ -121,7 +121,7 @@ class InteractiveArnoldRenderPerformanceTest( GafferUITest.TestCase ) :
 		script["InteractiveArnoldRender"]["renderer"].setValue( "Arnold" )
 		script["InteractiveArnoldRender"]["in"].setInput( script["Outputs"]["out"] )
 
-		script["Catalogue"] = GafferImage.Catalogue( "Catalogue" )
+		script["Catalogue"] = GafferScene.Catalogue( "Catalogue" )
 		script["Catalogue"]["directory"].setValue( self.temporaryDirectory() / "catalogues" / "test" )
 
 		script["Blur"] = GafferImage.Blur( "Blur" )

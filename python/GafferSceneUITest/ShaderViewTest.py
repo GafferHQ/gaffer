@@ -204,7 +204,7 @@ class ShaderViewTest( GafferUITest.TestCase ) :
 	def testCannotViewCatalogue( self ) :
 
 		script = Gaffer.ScriptNode()
-		script["catalogue"] = GafferImage.Catalogue()
+		script["catalogue"] = GafferScene.Catalogue()
 
 		view = GafferSceneUI.ShaderView( script )
 		self.assertFalse( view["in"].acceptsInput( script["catalogue"]["out"] ) )

@@ -38,7 +38,7 @@
 
 #include "GafferScene/Export.h"
 
-#include "GafferScene/TypeIds.h"
+#include "GafferScene/Private/IECoreScenePreview/TypeIds.h"
 
 #include "IECoreScene/VisibleRenderable.h"
 
@@ -61,7 +61,7 @@ class GAFFERSCENE_API Placeholder : public IECoreScene::VisibleRenderable
 
 		Placeholder( const Imath::Box3f &bound = Imath::Box3f(), const Placeholder::Mode mode = Placeholder::Mode::Default );
 
-		IE_CORE_DECLAREEXTENSIONOBJECT( IECoreScenePreview::Placeholder, GafferScene::PreviewPlaceholderTypeId, IECoreScene::VisibleRenderable );
+		IE_CORE_DECLAREEXTENSIONOBJECT( IECoreScenePreview::Placeholder, IECoreScenePreview::PreviewPlaceholderTypeId, IECoreScene::VisibleRenderable );
 
 		void setMode( Mode mode );
 		Mode getMode() const;

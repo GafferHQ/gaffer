@@ -36,8 +36,8 @@
 
 #include "CatalogueBinding.h"
 
-#include "GafferImage/Catalogue.h"
-#include "GafferImage/Display.h"
+#include "GafferScene/Catalogue.h"
+#include "GafferScene/Display.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/PlugBinding.h"
@@ -50,7 +50,7 @@ using namespace boost::python;
 using namespace IECorePython;
 using namespace Gaffer;
 using namespace GafferBindings;
-using namespace GafferImage;
+using namespace GafferScene;
 
 namespace
 {
@@ -112,7 +112,7 @@ std::filesystem::path generateFileName1( Catalogue &catalogue, const Catalogue::
 	return catalogue.generateFileName( image );
 }
 
-std::filesystem::path generateFileName2( Catalogue &catalogue, const ImagePlug *image )
+std::filesystem::path generateFileName2( Catalogue &catalogue, const GafferImage::ImagePlug *image )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	return catalogue.generateFileName( image );
@@ -120,7 +120,7 @@ std::filesystem::path generateFileName2( Catalogue &catalogue, const ImagePlug *
 
 } // namespace
 
-void GafferImageModule::bindCatalogue()
+void GafferSceneModule::bindCatalogue()
 {
 
 	{
@@ -172,7 +172,7 @@ void GafferImageModule::bindCatalogue()
 	// http://lists.boost.org/Archives/boost/2005/09/93017.php for more details.
 
 	boost::python::objects::copy_class_object(
-		type_id<ImageNode>(), Catalogue::internalImageTypeInfo()
+		type_id<GafferImage::ImageNode>(), Catalogue::internalImageTypeInfo()
 	);
 
 }

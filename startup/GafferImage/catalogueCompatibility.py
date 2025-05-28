@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2025, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,22 +34,23 @@
 #
 ##########################################################################
 
-import IECore
-import Gaffer
 import GafferImage
+import sys
 
-def __catalogueGetItem( originalGetItem ) :
 
-	def getItem( self, key ) :
+# Due to some sort of Python magic, if we subclass the module type, then we can use property() to
+# redirect accesses to things under deprecated names.
 
-		if key == "__mapping" :
-			# `__mapping` was a private plug that should never have been serialisable.
-			# It no longer exists, so we must make a throwaway one to keep old serialisations
-			# happy.
-			return Gaffer.AtomicCompoundDataPlug( key, Gaffer.Plug.Direction.In, IECore.CompoundData() )
+class PatchedGafferImage( sys.modules["GafferImage"].__class__ ):
 
-		return originalGetItem( self, key )
+	@staticmethod
+	def _gafferSceneRedirect( name ):
+		# Don't import GafferScene from GafferImage unless we actually need to use one of these classes
+		import GafferScene
+		return GafferScene.__dict__[ name ]
 
-	return getItem
+	Catalogue = property( lambda self : PatchedGafferImage._gafferSceneRedirect( "Catalogue" ) )
+	CatalogueSelect = property( lambda self : PatchedGafferImage._gafferSceneRedirect( "CatalogueSelect" ) )
+	Display = property( lambda self : PatchedGafferImage._gafferSceneRedirect( "Display" ) )
 
-GafferImage.Catalogue.__getitem__ = __catalogueGetItem( GafferImage.Catalogue.__getitem__ )
+sys.modules["GafferImage"].__class__ = PatchedGafferImage

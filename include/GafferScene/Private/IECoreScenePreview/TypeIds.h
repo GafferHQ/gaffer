@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2025, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,20 +36,16 @@
 
 #pragma once
 
-namespace GafferDispatch
+namespace IECoreScenePreview
 {
 
 enum TypeId
 {
+	PreviewPlaceholderTypeId = 123600,
+	PreviewGeometryTypeId = 123601,
+	PreviewProceduralTypeId = 123602,
 
-	TaskNodeTypeId = 118800,
-	TaskNodeTaskPlugTypeId = 118801,
-	DispatcherTypeId = 118802,
-	TaskListTypeId = 118803,
-	FrameMaskTypeId = 118804,
-
-	LastTypeId = 118999
-
+	LastTypeId = 123699
 };
 
-} // namespace GafferDispatch
+} // namespace IECoreScenePreview

@@ -41,27 +41,27 @@ namespace GafferSceneUI
 
 enum TypeId
 {
-	SceneViewTypeId = 110651,
-	SceneGadgetTypeId = 110652,
-	SelectionToolTypeId = 110653,
-	CropWindowToolTypeId = 110654,
-	ShaderViewTypeId = 110655,
-	ShaderNodeGadgetTypeId = 110656,
-	TransformToolTypeId = 110657,
-	TranslateToolTypeId = 110658,
-	ScaleToolTypeId = 110659,
-	RotateToolTypeId = 110660,
-	CameraToolTypeId = 110661,
-	UVViewTypeId = 110662,
-	UVSceneTypeId = 110663,
-	HistoryPathTypeId = 110664,
-	SetPathTypeId = 110665,
-	LightToolTypeId = 110666,
-	LightPositionToolTypeId = 110667,
-	RenderPassPathTypeId = 110668,
-	VisualiserToolTypeId = 110669,
+	SceneViewTypeId = 121000,
+	SceneGadgetTypeId = 121001,
+	SelectionToolTypeId = 121002,
+	CropWindowToolTypeId = 121003,
+	ShaderViewTypeId = 121004,
+	ShaderNodeGadgetTypeId = 121005,
+	TransformToolTypeId = 121006,
+	TranslateToolTypeId = 121007,
+	ScaleToolTypeId = 121008,
+	RotateToolTypeId = 121009,
+	CameraToolTypeId = 121010,
+	UVViewTypeId = 121011,
+	UVSceneTypeId = 121012,
+	HistoryPathTypeId = 121013,
+	SetPathTypeId = 121014,
+	LightToolTypeId = 121015,
+	LightPositionToolTypeId = 121016,
+	RenderPassPathTypeId = 121017,
+	VisualiserToolTypeId = 121018,
 
-	LastTypeId = 110700
+	LastTypeId = 121199
 };
 
 } // namespace GafferSceneUI

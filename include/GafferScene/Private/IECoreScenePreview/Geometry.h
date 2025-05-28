@@ -36,7 +36,7 @@
 
 #include "GafferScene/Export.h"
 
-#include "GafferScene/TypeIds.h"
+#include "GafferScene/Private/IECoreScenePreview/TypeIds.h"
 
 #include "IECoreScene/VisibleRenderable.h"
 
@@ -52,7 +52,7 @@ class GAFFERSCENE_API Geometry : public IECoreScene::VisibleRenderable
 
 		Geometry( const std::string &type = "", const Imath::Box3f &bound = Imath::Box3f(), const IECore::CompoundDataPtr &parameters = nullptr );
 
-		IE_CORE_DECLAREEXTENSIONOBJECT( IECoreScenePreview::Geometry, GafferScene::PreviewGeometryTypeId, IECoreScene::VisibleRenderable );
+		IE_CORE_DECLAREEXTENSIONOBJECT( IECoreScenePreview::Geometry, IECoreScenePreview::PreviewGeometryTypeId, IECoreScene::VisibleRenderable );
 
 		void setType( const std::string &type );
 		const std::string &getType() const;

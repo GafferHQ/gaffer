@@ -34,12 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferImage/Catalogue.h"
+#include "GafferScene/Catalogue.h"
+#include "GafferScene/Display.h"
 
 #include "GafferImage/Constant.h"
 #include "GafferImage/CopyChannels.h"
 #include "GafferImage/DeleteImageMetadata.h"
-#include "GafferImage/Display.h"
 #include "GafferImage/FormatQuery.h"
 #include "GafferImage/ImageAlgo.h"
 #include "GafferImage/ImageMetadata.h"
@@ -69,7 +69,7 @@ using namespace std;
 using namespace boost::placeholders;
 using namespace IECore;
 using namespace Gaffer;
-using namespace GafferImage;
+using namespace GafferScene;
 
 //////////////////////////////////////////////////////////////////////////
 // Allow Imath::V2i to be used in boost::unordered_map
@@ -124,23 +124,23 @@ class Catalogue::InternalImage : public ImageNode
 
 			// Used to load an image from disk, according to
 			// the fileName plug.
-			addChild( new ImageReader() );
+			addChild( new GafferImage::ImageReader() );
 			imageReader()->fileNamePlug()->setInput( fileNamePlug() );
 
 			// Used to merge all channels from multiple
 			// incoming Display nodes.
-			addChild( new CopyChannels() );
+			addChild( new GafferImage::CopyChannels() );
 			copyChannels()->channelsPlug()->setValue( "*" );
 
 			// Used to overlay a "Saving..." message
 			// while displays are being saved to disk in
 			// the background.
-			addChild( new Text() );
+			addChild( new GafferImage::Text() );
 			text()->inPlug()->setInput( copyChannels()->outPlug() );
 			text()->colorPlug()->setValue( Imath::Color4f( 1, 1, 1, 0.75 ) );
 			text()->textPlug()->setValue( "Saving..." );
-			text()->horizontalAlignmentPlug()->setValue( Text::HorizontalCenter );
-			text()->verticalAlignmentPlug()->setValue( Text::VerticalCenter );
+			text()->horizontalAlignmentPlug()->setValue( GafferImage::Text::HorizontalCenter );
+			text()->verticalAlignmentPlug()->setValue( GafferImage::Text::VerticalCenter );
 			text()->shadowPlug()->setValue( true );
 			text()->shadowColorPlug()->setValue( Imath::Color4f( 0, 0, 0, 0.75 ) );
 			text()->shadowOffsetPlug()->setValue( Imath::V2f( 3.5, -3.5 ) );
@@ -151,11 +151,11 @@ class Catalogue::InternalImage : public ImageNode
 			// live Displays.
 			addChild( new Switch() );
 			imageSwitch()->setup( outPlug() );
-			imageSwitch()->inPlugs()->getChild<ImagePlug>( 0 )->setInput( imageReader()->outPlug() );
-			imageSwitch()->inPlugs()->getChild<ImagePlug>( 1 )->setInput( text()->outPlug() );
+			imageSwitch()->inPlugs()->getChild<GafferImage::ImagePlug>( 0 )->setInput( imageReader()->outPlug() );
+			imageSwitch()->inPlugs()->getChild<GafferImage::ImagePlug>( 1 )->setInput( text()->outPlug() );
 
 			// Adds on a description to the output
-			addChild( new ImageMetadata() );
+			addChild( new GafferImage::ImageMetadata() );
 			imageMetadata()->inPlug()->setInput( imageSwitch()->outPlug() );
 
 			NameValuePlugPtr descriptionMeta = new NameValuePlug( "ImageDescription", new StringData(), true, "imageDescription" );
@@ -235,10 +235,10 @@ class Catalogue::InternalImage : public ImageNode
 
 		void save( const std::filesystem::path &fileName ) const
 		{
-			DeleteImageMetadataPtr deleteMetadata = new DeleteImageMetadata();
-			deleteMetadata->inPlug()->setInput( const_cast<ImagePlug *>( outPlug() ) );
+			GafferImage::DeleteImageMetadataPtr deleteMetadata = new GafferImage::DeleteImageMetadata();
+			deleteMetadata->inPlug()->setInput( const_cast<GafferImage::ImagePlug *>( outPlug() ) );
 			deleteMetadata->namesPlug()->setValue( g_isRenderingMetadataName );
-			ImageWriterPtr imageWriter = new ImageWriter;
+			GafferImage::ImageWriterPtr imageWriter = new GafferImage::ImageWriter;
 			imageWriter->inPlug()->setInput( deleteMetadata->outPlug() );
 			imageWriter->fileNamePlug()->setValue( fileName );
 			imageWriter->taskPlug()->execute();
@@ -305,13 +305,13 @@ class Catalogue::InternalImage : public ImageNode
 				addChild( display );
 				ArrayPlug *a = copyChannels()->inPlugs();
 				size_t nextIndex = a->children().size() - 1;
-				if( nextIndex == 1 && !a->getChild<ImagePlug>( 0 )->getInput() )
+				if( nextIndex == 1 && !a->getChild<GafferImage::ImagePlug>( 0 )->getInput() )
 				{
 					// CopyChannels starts with two input plugs, and we must use
 					// the first one to make sure the format etc is passed through.
 					nextIndex = 0;
 				}
-				a->getChild<ImagePlug>( nextIndex )->setInput( display->outPlug() );
+				a->getChild<GafferImage::ImagePlug>( nextIndex )->setInput( display->outPlug() );
 				imageSwitch()->indexPlug()->setValue( 1 );
 			}
 			display->setDriver( driver );
@@ -374,8 +374,8 @@ class Catalogue::InternalImage : public ImageNode
 			assert( m_saver );
 			AsynchronousSaver::ChannelDataHashes::const_iterator it = m_saver->channelDataHashes.find(
 				AsynchronousSaver::TileIndex(
-					context->get<string>( ImagePlug::channelNameContextName ),
-					context->get<Imath::V2i>( ImagePlug::tileOriginContextName )
+					context->get<string>( GafferImage::ImagePlug::channelNameContextName ),
+					context->get<Imath::V2i>( GafferImage::ImagePlug::tileOriginContextName )
 				)
 			);
 			if( it != m_saver->channelDataHashes.end() )
@@ -388,7 +388,7 @@ class Catalogue::InternalImage : public ImageNode
 			}
 		}
 
-		IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const override
+		IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const override
 		{
 			return imageReader()->outPlug()->channelDataPlug()->getValue();
 		}
@@ -423,34 +423,34 @@ class Catalogue::InternalImage : public ImageNode
 			m_displays.clear();
 		}
 
-		ImageReader *imageReader()
+		GafferImage::ImageReader *imageReader()
 		{
-			return getChild<ImageReader>( g_firstChildIndex + 2 );
+			return getChild<GafferImage::ImageReader>( g_firstChildIndex + 2 );
 		}
 
-		const ImageReader *imageReader() const
+		const GafferImage::ImageReader *imageReader() const
 		{
-			return getChild<ImageReader>( g_firstChildIndex + 2 );
+			return getChild<GafferImage::ImageReader>( g_firstChildIndex + 2 );
 		}
 
-		CopyChannels *copyChannels()
+		GafferImage::CopyChannels *copyChannels()
 		{
-			return getChild<CopyChannels>( g_firstChildIndex + 3 );
+			return getChild<GafferImage::CopyChannels>( g_firstChildIndex + 3 );
 		}
 
-		const CopyChannels *copyChannels() const
+		const GafferImage::CopyChannels *copyChannels() const
 		{
-			return getChild<CopyChannels>( g_firstChildIndex + 3 );
+			return getChild<GafferImage::CopyChannels>( g_firstChildIndex + 3 );
 		}
 
-		Text *text()
+		GafferImage::Text *text()
 		{
-			return getChild<Text>( g_firstChildIndex + 4 );
+			return getChild<GafferImage::Text>( g_firstChildIndex + 4 );
 		}
 
-		const Text *text() const
+		const GafferImage::Text *text() const
 		{
-			return getChild<Text>( g_firstChildIndex + 4 );
+			return getChild<GafferImage::Text>( g_firstChildIndex + 4 );
 		}
 
 		Switch *imageSwitch()
@@ -463,14 +463,14 @@ class Catalogue::InternalImage : public ImageNode
 			return getChild<Switch>( g_firstChildIndex + 5 );
 		}
 
-		ImageMetadata *imageMetadata()
+		GafferImage::ImageMetadata *imageMetadata()
 		{
-			return getChild<ImageMetadata>( g_firstChildIndex + 6 );
+			return getChild<GafferImage::ImageMetadata>( g_firstChildIndex + 6 );
 		}
 
-		const ImageMetadata *imageMetadata() const
+		const GafferImage::ImageMetadata *imageMetadata() const
 		{
-			return getChild<ImageMetadata>( g_firstChildIndex + 6 );
+			return getChild<GafferImage::ImageMetadata>( g_firstChildIndex + 6 );
 		}
 
 		struct AsynchronousSaver
@@ -566,23 +566,23 @@ class Catalogue::InternalImage : public ImageNode
 					// Set up an ImageWriter to do the actual saving.
 					// We do all graph construction here in the main thread
 					// so that the background thread only does execution.
-					m_writer = new ImageWriter;
+					m_writer = new GafferImage::ImageWriter;
 					m_writer->inPlug()->setInput( m_imageCopy->outPlug() );
 					m_writer->fileNamePlug()->setValue( fileName );
 				}
 
 				void save( WeakPtr forWrapUp )
 				{
-					ImageAlgo::parallelGatherTiles(
+					GafferImage::ImageAlgo::parallelGatherTiles(
 						m_imageCopy->copyChannels()->outPlug(),
 						m_imageCopy->copyChannels()->outPlug()->channelNamesPlug()->getValue()->readable(),
 						// Tile
-						[] ( const ImagePlug *imagePlug, const string &channelName, const Imath::V2i &tileOrigin )
+						[] ( const GafferImage::ImagePlug *imagePlug, const string &channelName, const Imath::V2i &tileOrigin )
 						{
 							return imagePlug->channelDataPlug()->hash();
 						},
 						// Gather
-						[ this ] ( const ImagePlug *imagePlug, const string &channelName, const Imath::V2i &tileOrigin, const IECore::MurmurHash &tileHash )
+						[ this ] ( const GafferImage::ImagePlug *imagePlug, const string &channelName, const Imath::V2i &tileOrigin, const IECore::MurmurHash &tileHash )
 						{
 							channelDataHashes[TileIndex(channelName, tileOrigin)] = tileHash;
 						}
@@ -642,7 +642,7 @@ class Catalogue::InternalImage : public ImageNode
 				}
 
 				InternalImagePtr m_imageCopy;
-				ImageWriterPtr m_writer;
+				GafferImage::ImageWriterPtr m_writer;
 
 				std::thread m_thread;
 				set<InternalImage *> m_clients;
@@ -850,15 +850,15 @@ Catalogue::Catalogue( const std::string &name )
 
 
 	// Switch and constant used to implement disabled output
-	ConstantPtr disabled = new Constant( "__disabled" );
+	GafferImage::ConstantPtr disabled = new GafferImage::Constant( "__disabled" );
 	addChild( disabled );
 	disabled->enabledPlug()->setValue( false );
 
 	SwitchPtr enabler = new Switch( "__enabler" );
 	enabler->setup( outPlug() );
 	addChild( enabler );
-	enabler->inPlugs()->getChild<ImagePlug>( 0 )->setInput( disabled->outPlug() );
-	enabler->inPlugs()->getChild<ImagePlug>( 1 )->setInput( imageSwitch()->outPlug() );
+	enabler->inPlugs()->getChild<GafferImage::ImagePlug>( 0 )->setInput( disabled->outPlug() );
+	enabler->inPlugs()->getChild<GafferImage::ImagePlug>( 1 )->setInput( imageSwitch()->outPlug() );
 	enabler->enabledPlug()->setInput( enabledPlug() );
 	enabler->indexPlug()->setValue( 1 );
 
@@ -1020,7 +1020,7 @@ std::filesystem::path Catalogue::generateFileName( const Image *image ) const
 	return generateFileName( imageNode( image )->outPlug() );
 }
 
-std::filesystem::path Catalogue::generateFileName( const ImagePlug *image ) const
+std::filesystem::path Catalogue::generateFileName( const GafferImage::ImagePlug *image ) const
 {
 	string directory = directoryPlug()->getValue();
 	if( const ScriptNode *script = ancestor<ScriptNode>() )
@@ -1049,7 +1049,7 @@ std::filesystem::path Catalogue::generateFileName( const ImagePlug *image ) cons
 	IECore::MurmurHash h;
 	for( const std::string &v : image->viewNames()->readable() )
 	{
-		h.append( ImageAlgo::imageHash( image, &v ) );
+		h.append( GafferImage::ImageAlgo::imageHash( image, &v ) );
 	}
 	result /= h.toString();
 	result.replace_extension( "exr" );
@@ -1076,7 +1076,7 @@ void Catalogue::imageAdded( GraphComponent *graphComponent )
 	internalImage->fileNamePlug()->setInput( image->fileNamePlug() );
 	internalImage->descriptionPlug()->setInput( image->descriptionPlug() );
 
-	ImagePlug *nextSwitchInput = static_cast<ImagePlug *>( imageSwitch()->inPlugs()->children().back().get() );
+	GafferImage::ImagePlug *nextSwitchInput = static_cast<GafferImage::ImagePlug *>( imageSwitch()->inPlugs()->children().back().get() );
 	nextSwitchInput->setInput( internalImage->outPlug() );
 }
 

@@ -37,6 +37,7 @@ import IECore
 
 import GafferImage
 import GafferImageTest
+import GafferScene
 
 import imath
 
@@ -52,20 +53,20 @@ class CatalogueSelectTest( GafferImageTest.ImageTestCase ) :
 
 		outputIndex = 0
 		for fileName in fileNames :
-			images.append( GafferImage.Catalogue.Image.load( self.imagesPath() / fileName ) )
+			images.append( GafferScene.Catalogue.Image.load( self.imagesPath() / fileName ) )
 			outputIndex += 1
 			images[-1]["outputIndex"].setValue( outputIndex )
 			readers.append( GafferImage.ImageReader() )
 			readers[-1]["fileName"].setValue( images[-1]["fileName"].getValue() )
 
-		c = GafferImage.Catalogue()
+		c = GafferScene.Catalogue()
 
 		for image in images :
 			c["images"].addChild( image )
 
 		# Pulling out images by name
 
-		catalogueSelect = GafferImage.CatalogueSelect()
+		catalogueSelect = GafferScene.CatalogueSelect()
 		catalogueSelect["in"].setInput( c["out"] )
 
 		for i, fileName in enumerate( fileNames ) :

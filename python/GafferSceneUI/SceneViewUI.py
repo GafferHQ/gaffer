@@ -1197,7 +1197,7 @@ def __snapshotToCatalogue( catalogue, view ) :
 	sceneGadget = view.viewportGadget().getPrimaryChild()
 	sceneGadget.snapshotToFile( fileName, resolutionGate, metadata )
 
-	image = GafferImage.Catalogue.Image( "Snapshot1", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+	image = GafferScene.Catalogue.Image( "Snapshot1", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 	image["fileName"].setValue( fileName )
 
 	image["description"].setValue(
@@ -1214,7 +1214,7 @@ def __snapshotCataloguesSubMenu( view, scriptNode ) :
 
 	menuDefinition = IECore.MenuDefinition()
 
-	catalogueList = list( GafferImage.Catalogue.RecursiveRange( scriptNode ) )
+	catalogueList = list( GafferScene.Catalogue.RecursiveRange( scriptNode ) )
 
 	if len( catalogueList ) == 0 :
 		menuDefinition.append(

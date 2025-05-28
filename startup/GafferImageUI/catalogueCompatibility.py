@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2025, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -33,59 +33,22 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 ##########################################################################
-import IECore
-import Gaffer
-import GafferImage
 
-def __imageNames( plug ) :
-	node = plug.node()
-	imagePlug = node["in"]
+import GafferImageUI
+import sys
 
-	while imagePlug is not None and not isinstance( imagePlug.node(), GafferImage.Catalogue ) :
-		imagePlug = imagePlug.getInput()
 
-	if imagePlug is None :
-		return []
+# Due to some sort of Python magic, if we subclass the module type, then we can use property() to
+# redirect accesses to things under deprecated names.
 
-	return imagePlug.node()["images"].keys()
+class PatchedGafferImageUI( sys.modules["GafferImageUI"].__class__ ):
 
-def __imagePresetNames( plug ) :
+	@staticmethod
+	def _gafferSceneRedirect( name ):
+		# Don't import GafferSceneUI from GafferImageUI unless we actually need to use one of these classes
+		import GafferSceneUI
+		return GafferSceneUI.__dict__[ name ]
 
-	return IECore.StringVectorData(
-		[ "Selected", "Output/1", "Output/2", "Output/3", "Output/4" ] +
-		[ "Image/" + i for i in __imageNames( plug ) ]
-	)
+	CatalogueUI = property( lambda self : PatchedGafferImageUI._gafferSceneRedirect( "CatalogueUI" ) )
 
-def __imagePresetValues( plug ) :
-
-	return IECore.StringVectorData(
-		[ "", "output:1", "output:2", "output:3", "output:4" ] +
-		__imageNames( plug )
-	)
-
-Gaffer.Metadata.registerNode(
-
-	GafferImage.CatalogueSelect,
-
-	"description",
-	"Finds an image in a directly connected Catalogue by name.",
-
-	plugs = {
-
-		"imageName" : [
-
-			"description",
-			"The name of the image to extract.",
-
-			"presetNames", __imagePresetNames,
-			"presetValues", __imagePresetValues,
-			# Don't promote presets so they are still computed dynamically for
-			# the promoted plug rather than being baked.
-			"presetNames:promotable", False,
-			"presetValues:promotable", False,
-			"presetsPlugValueWidget:allowCustom", True,
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		]
-	}
-)
+sys.modules["GafferImageUI"].__class__ = PatchedGafferImageUI
