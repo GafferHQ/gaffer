@@ -37,8 +37,6 @@
 import math
 import functools
 
-import imath
-
 import Gaffer
 import GafferUI
 
@@ -189,7 +187,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 		for direction in reversed( sorted( Gaffer.Animation.Direction.values.values() ) ) :
 			for mode in reversed( sorted( Gaffer.Animation.Extrapolation.values.values() ) ) :
 				menuDefinition.prepend(
-					"/Extrapolation/%s/%s" % ( direction.name, mode.name ),
+					f"/Extrapolation/{direction.name}/{mode.name}",
 					{
 						"command" : functools.partial(
 							__setCurveExtrapolation,
@@ -200,7 +198,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 						),
 						"active" : editable,
 						"checkBox" : all( curve.getExtrapolation( direction ) == mode for curve in curves ),
-						"description" : Gaffer.Metadata.value( "Animation.Extrapolation.%s" % mode.name, "description" ),
+						"description" : Gaffer.Metadata.value( f"Animation.Extrapolation.{mode.name}", "description" ),
 					}
 				)
 
@@ -212,7 +210,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 
 		for mode in reversed( sorted( Gaffer.Animation.Interpolation.values.values() ) ) :
 			menuDefinition.prepend(
-				"/Interpolation/%s" % ( mode.name ),
+				f"/Interpolation/{mode.name}",
 				{
 					"command" : functools.partial(
 						__setKeyInterpolation,
@@ -222,7 +220,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 					),
 					"active" : spanKeys and editable,
 					"checkBox" : spanKeys and all( k.getInterpolation() == mode for k in spanKeys ),
-					"description" : Gaffer.Metadata.value( "Animation.Interpolation.%s" % mode.name, "description" ),
+					"description" : Gaffer.Metadata.value( f"Animation.Interpolation.{mode.name}", "description" ),
 				}
 			)
 
