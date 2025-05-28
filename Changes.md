@@ -17,6 +17,7 @@ Improvements
 - RenderManShader : Improved GraphEditor labels for parameter RGB and XYZ components.
 - Cycles : Added support for `layerName` parameter in outputs, to control the naming of channels in EXR outputs.
 - StandardOptions : Added render manifest option.
+- SelectionTool : Changed behaviour when dragging over an object while holding <kbd>Shift</kbd> or <kbd>Control</kbd> - this is now intepreted as a region select rather than dragging the value of the current selection.
 
 Fixes
 -----

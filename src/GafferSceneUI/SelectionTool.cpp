@@ -407,7 +407,12 @@ IECore::RunTimeTypedPtr SelectionTool::dragBegin( GafferUI::Gadget *gadget, cons
 	SceneGadget *sg = sceneGadget();
 	ScenePlug::ScenePath objectUnderMouse;
 
-	if( !sg->objectAt( event.line, objectUnderMouse ) )
+	// We treat drags as region selects ( instead of dragging the value of current selection ) if
+	// shift or control is held or the drag starts over the background.
+	if(
+		( event.modifiers & DragDropEvent::Shift ) || ( event.modifiers & DragDropEvent::Control ) ||
+		!sg->objectAt( event.line, objectUnderMouse )
+	)
 	{
 		// drag to select
 		dragOverlay()->setStartPosition( event.line.p1 );
