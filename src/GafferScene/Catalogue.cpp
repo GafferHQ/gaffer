@@ -561,7 +561,7 @@ class Catalogue::InternalImage : public ImageNode
 
 			private :
 
-				AsynchronousSaver( InternalImagePtr imageCopy, const std::filesystem::path &fileName )
+				AsynchronousSaver( InternalImagePtr imageCopy, const std::filesystem::path &filePath )
 					:	m_imageCopy( imageCopy )
 				{
 					// Set up an ImageWriter to do the actual saving.
@@ -573,7 +573,7 @@ class Catalogue::InternalImage : public ImageNode
 
 					m_writer = new GafferImage::ImageWriter;
 					m_writer->inPlug()->setInput( m_modifyMetadata->outPlug() );
-					m_writer->fileNamePlug()->setValue( fileName );
+					m_writer->fileNamePlug()->setValue( filePath );
 
 					// Set up a spreadsheet that will set the data type to full 32 bit floats when storing the
 					// "id" channel. We are currently using integers bitcast to floats for ids ... converting
@@ -595,15 +595,10 @@ class Catalogue::InternalImage : public ImageNode
 					{
 						m_manifestSource = manifestPath->readable();
 
-						std::string manifestFilename = fileName.filename().generic_string();
-
-						// Remove ".exr"
-						manifestFilename.resize( manifestFilename.size() - 4);
-
 						// Add manifest suffix
-						manifestFilename = manifestFilename + "_manifest.exr";
+						std::string manifestFilename = filePath.stem().generic_string() + "_manifest.exr";
 
-						m_manifestDest = fileName;
+						m_manifestDest = filePath;
 						m_manifestDest.replace_filename( manifestFilename );
 
 						m_modifyMetadata->metadataPlug()->addChild(
