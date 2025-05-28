@@ -254,8 +254,6 @@ class RendererTest( GafferTest.TestCase ) :
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testRecycleLightGroups" )
 		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
 
-		IECoreImage.ImageWriter( image, "/tmp/test.exr" ).write()
-
 		# Slightly off-centre, to avoid triangle edge artifact in centre of image.
 		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
 		self.assertGreater( testPixel.r, 0 )
@@ -2271,7 +2269,6 @@ class RendererTest( GafferTest.TestCase ) :
 		# Check that the color temperature has tinted the image red.
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testUsdLightColorTemperature" )
-		IECoreImage.ImageWriter( image, "/tmp/test.exr" ).write()
 		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
 
 		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
