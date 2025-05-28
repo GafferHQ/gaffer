@@ -38,7 +38,7 @@
 
 #include "GafferScene/Export.h"
 
-#include "GafferScene/TypeIds.h"
+#include "GafferScene/Private/IECoreScenePreview/TypeIds.h"
 
 #include "IECoreScene/VisibleRenderable.h"
 
@@ -57,7 +57,7 @@ class GAFFERSCENE_API Procedural : public IECoreScene::VisibleRenderable
 		Procedural();
 		~Procedural() override;
 
-		IE_CORE_DECLAREEXTENSIONOBJECT( Procedural, GafferScene::PreviewProceduralTypeId, IECoreScene::VisibleRenderable );
+		IE_CORE_DECLAREEXTENSIONOBJECT( Procedural, IECoreScenePreview::PreviewProceduralTypeId, IECoreScene::VisibleRenderable );
 
 		/// Legacy inherited from IECore::VisibleRenderable.
 		/// Should not be implemented by derived classes.

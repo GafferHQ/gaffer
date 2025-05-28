@@ -42,14 +42,14 @@ namespace GafferCortex
 enum TypeId
 {
 
-	ParameterisedHolderNodeTypeId = 123600,
-	OpHolderTypeId = 123601,
-	ParameterisedHolderDependencyNodeTypeId = 123602,
-	ExecutableOpHolderTypeId = 123603,
-	ParameterisedHolderComputeNodeTypeId = 123604,
-	ParameterisedHolderTaskNodeTypeId = 123605,
+	ParameterisedHolderNodeTypeId = 123700,
+	OpHolderTypeId = 123701,
+	ParameterisedHolderDependencyNodeTypeId = 123702,
+	ExecutableOpHolderTypeId = 123703,
+	ParameterisedHolderComputeNodeTypeId = 123704,
+	ParameterisedHolderTaskNodeTypeId = 123705,
 
-	LastTypeId = 123700
+	LastTypeId = 123799
 
 };
 

@@ -188,12 +188,7 @@ enum TypeId
 	MergePointsTypeId = 120143,
 	MergeCurvesTypeId = 120144,
 	ShuffleRenderPassesTypeId = 120145,
-
-	PreviewPlaceholderTypeId = 120146,
-	PreviewGeometryTypeId = 120147,
-	PreviewProceduralTypeId = 120148,
-
-	ShuffleOptionsTypeId = 120149,
+	ShuffleOptionsTypeId = 120146,
 
 	LastTypeId = 120999
 };

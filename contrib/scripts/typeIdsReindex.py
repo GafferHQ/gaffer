@@ -25,6 +25,7 @@ typeIdFiles = [
 'include/GafferRenderMan/TypeIds.h',
 'include/GafferVDB/TypeIds.h',
 'include/GafferML/TypeIds.h',
+'include/GafferScene/Private/IECoreScenePreview/TypeIds.h',
 'include/GafferCortex/TypeIds.h'
 ]
 

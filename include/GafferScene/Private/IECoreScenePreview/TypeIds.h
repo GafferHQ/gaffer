@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
+//  Copyright (c) 2025, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,50 +36,16 @@
 
 #pragma once
 
-#include "GafferScene/Export.h"
-
-#include "GafferScene/Private/IECoreScenePreview/TypeIds.h"
-
-#include "IECoreScene/VisibleRenderable.h"
-
 namespace IECoreScenePreview
 {
 
-/// A renderable placeholder for geometry that hasn't been expanded yet.
-class GAFFERSCENE_API Placeholder : public IECoreScene::VisibleRenderable
+enum TypeId
 {
+	PreviewPlaceholderTypeId = 123600,
+	PreviewGeometryTypeId = 123601,
+	PreviewProceduralTypeId = 123602,
 
-	public :
-
-		enum Mode
-		{
-			/// A standard collapsed location
-			Default = 0,
-			/// A location that has been excluded from the VisibleSet
-			Excluded = 1,
-		};
-
-		Placeholder( const Imath::Box3f &bound = Imath::Box3f(), const Placeholder::Mode mode = Placeholder::Mode::Default );
-
-		IE_CORE_DECLAREEXTENSIONOBJECT( IECoreScenePreview::Placeholder, IECoreScenePreview::PreviewPlaceholderTypeId, IECoreScene::VisibleRenderable );
-
-		void setMode( Mode mode );
-		Mode getMode() const;
-
-		void setBound( const Imath::Box3f &bound );
-		const Imath::Box3f &getBound() const;
-
-		Imath::Box3f bound() const override;
-		void render( IECoreScene::Renderer *renderer ) const override;
-
-	private :
-
-		static const unsigned int m_ioVersion;
-		Mode m_mode;
-		Imath::Box3f m_bound;
-
+	LastTypeId = 123699
 };
-
-IE_CORE_DECLAREPTR( Placeholder );
 
 } // namespace IECoreScenePreview
