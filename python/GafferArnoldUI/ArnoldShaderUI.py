@@ -38,6 +38,7 @@
 import ctypes
 import functools
 import collections
+import sys
 
 import arnold
 
@@ -357,27 +358,6 @@ def __translateNodeMetadata( nodeEntry ) :
 		# use the default label for the GraphEditor.
 		__metadata[paramPath]["noduleLayout:label"] = defaultLabel
 
-		if (
-			arnold.AiNodeEntryGetType( nodeEntry ) == arnold.AI_NODE_LIGHT and
-			__aiMetadataGetStr( nodeEntry, paramName, "gaffer.plugType" ) != ""
-		) :
-			GafferSceneUI.LightEditor.registerParameter(
-				"ai:light", paramName, page
-			)
-
-		if (
-			nodeName in lightEditorShaders and
-			__aiMetadataGetStr( nodeEntry, paramName, "gaffer.plugType" ) != ""
-		) :
-			attributeName, sectionName = lightEditorShaders[nodeName]
-			GafferSceneUI.LightEditor.registerShaderParameter(
-				"ai:light",
-				paramName,
-				attributeName,
-				sectionName,
-				f"{page} {label}" if page is not None and label is not None else paramName
-			)
-
 		childComponents = {
 			arnold.AI_TYPE_VECTOR2 : "xy",
 			arnold.AI_TYPE_VECTOR : "xyz",
@@ -461,17 +441,109 @@ def __translateNodeMetadata( nodeEntry ) :
 			if value is not None :
 				__metadata[paramPath][gafferKey] = value
 
-if [ int( x ) for x in arnold.AiGetVersion()[:3] ] < [ 7, 3, 1 ] :
-	__AI_NODE_IMAGER = arnold.AI_NODE_DRIVER
-else :
-	__AI_NODE_IMAGER = arnold.AI_NODE_IMAGER
+# Returns column information as a dict of the form
+# `{ "paramName" : { "attributeName", "sectionName", "page", "label", "layoutIndex" } }`
+def __lightEditorParameters( nodeEntry ) :
 
-with IECoreArnold.UniverseBlock( writable = False ) :
+	result = {}
+	paramIt = arnold.AiNodeEntryGetParamIterator( nodeEntry )
+	while not arnold.AiParamIteratorFinished( paramIt ) :
+		param = arnold.AiParamIteratorGetNext( paramIt )
+		paramName = arnold.AiParamGetName( param )
+		if paramName == "name" :
+			# Arnold node name, never represented as a plug in Gaffer
+			continue
 
-	nodeIt = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER | arnold.AI_NODE_LIGHT | arnold.AI_NODE_COLOR_MANAGER | __AI_NODE_IMAGER )
-	while not arnold.AiNodeEntryIteratorFinished( nodeIt ) :
+		page = __aiMetadataGetStr( nodeEntry, paramName, "page" )
+		layoutIndex = __aiMetadataGetInt( nodeEntry, paramName, "gaffer.layout.index" )
 
-		__translateNodeMetadata( arnold.AiNodeEntryIteratorGetNext( nodeIt ) )
+		if (
+				arnold.AiNodeEntryGetType( nodeEntry ) == arnold.AI_NODE_LIGHT and
+				__aiMetadataGetStr( nodeEntry, paramName, "gaffer.plugType" ) != ""
+			) :
+				result[paramName] = {
+					"attributeName" : None,
+					"sectionName" : page,
+					"page" : None,
+					"label" : None,
+					"layoutIndex" : layoutIndex
+				}
+				continue
+
+		nodeName = arnold.AiNodeEntryGetName( nodeEntry )
+		label = __aiMetadataGetStr( nodeEntry, paramName, "label" )
+		if label is None :
+			label = " ".join( [ i.capitalize() for i in paramName.split( "_" ) ] )
+
+		if (
+			nodeName in lightEditorShaders and
+			__aiMetadataGetStr( nodeEntry, paramName, "gaffer.plugType" ) != ""
+		) :
+			attributeName, sectionName = lightEditorShaders[nodeName]
+			result[paramName] = {
+				"attributeName" : attributeName,
+				"sectionName" : sectionName,
+				"page" : page,
+				"label" : label,
+				"layoutIndex" : layoutIndex
+			}
+
+	return result
+
+def __compareColumns ( a, b ) :
+
+	# Sort by section index, then by layout index
+	sectionOrder = { x[1] : x[0] for x in enumerate( [ None, "Shape", "Blocker", "Barndoor", "Gobo", "Decay", "Sampling" ] ) }
+	sectionA = sectionOrder.get( a["sectionName"], sys.maxsize )
+	sectionB = sectionOrder.get( b["sectionName"], sys.maxsize )
+
+	if sectionA < sectionB :
+		return -1
+	elif sectionA > sectionB :
+		return 1
+
+	aIndex = sys.maxsize if a["layoutIndex"] is None else a["layoutIndex"]
+	bIndex = sys.maxsize if a["layoutIndex"] is None else b["layoutIndex"]
+	if aIndex < bIndex :
+		return -1
+	elif aIndex > bIndex :
+		return 1
+	return 0
+
+def translateNodes() :
+
+	if [ int( x ) for x in arnold.AiGetVersion()[:3] ] < [ 7, 3, 1 ] :
+		__AI_NODE_IMAGER = arnold.AI_NODE_DRIVER
+	else :
+		__AI_NODE_IMAGER = arnold.AI_NODE_IMAGER
+
+	with IECoreArnold.UniverseBlock( writable = False ) :
+
+		lightEditorParameters = {}
+
+		nodeIt = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER | arnold.AI_NODE_LIGHT | arnold.AI_NODE_COLOR_MANAGER | __AI_NODE_IMAGER )
+		while not arnold.AiNodeEntryIteratorFinished( nodeIt ) :
+
+			node = arnold.AiNodeEntryIteratorGetNext( nodeIt )
+			__translateNodeMetadata( node )
+			lightEditorParameters.update( __lightEditorParameters( node ) )
+
+		lightEditorParameters = [ { "paramName" : k } | v for k, v in lightEditorParameters.items() ]
+		lightEditorParameters.sort( key = functools.cmp_to_key( __compareColumns ) )
+
+		for p in lightEditorParameters :
+			if p["attributeName"] is None :
+				GafferSceneUI.LightEditor.registerParameter( "ai:light", p["paramName"], p["sectionName"] )
+			else :
+				GafferSceneUI.LightEditor.registerShaderParameter(
+					"ai:light",
+					p["paramName"],
+					p["attributeName"],
+					p["sectionName"],
+					"{} {}".format( p["page"], p["label"] ) if p["page"] is not None and p["label"] is not None else p["paramName"]
+				)
+
+translateNodes()
 
 # Manually add width and height for `quad_light`
 __metadata["quad_light.parameters.width"]["nodule:type"] = ""

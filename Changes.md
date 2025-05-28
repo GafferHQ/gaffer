@@ -10,6 +10,9 @@ Improvements
 ------------
 
 - Added `buildGraphics` option to SConstruct to enable building the Gaffer logo and icons separately.
+- Light Editor :
+  - Moved the Arnold `Blocker`, `Barndoor`, `Gobo` and `Decay` tabs to the left for easier access.
+  - Changed order of columns to match the order of plugs in the Node Editor.
 
 Fixes
 -----
