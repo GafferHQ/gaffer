@@ -93,49 +93,59 @@ Gaffer.Metadata.registerValue( "Animation.TieMode.Scale", "description", "Tangen
 # PlugValueWidget popup menu for setting keys
 ##########################################################################
 
-def __setKey( plug, context ) :
+def __setKey( scriptNode, plugs, context ) :
 
 	with context :
-		value = plug.getValue()
+		values = [ plug.getValue() for plug in plugs ]
 
-	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		curve = Gaffer.Animation.acquire( plug )
-		if isinstance( plug, Gaffer.BoolPlug ) :
-			curve.addKey( Gaffer.Animation.Key( context.getTime(), value, Gaffer.Animation.Interpolation.Constant ) )
-		else :
-			curve.insertKey( context.getTime(), value )
+	with Gaffer.UndoScope( scriptNode ) :
+		for plug, value in zip( plugs, values ) :
+			curve = Gaffer.Animation.acquire( plug )
+			if isinstance( plug, Gaffer.BoolPlug ) :
+				curve.addKey( Gaffer.Animation.Key( context.getTime(), value, Gaffer.Animation.Interpolation.Constant ) )
+			else :
+				curve.insertKey( context.getTime(), value )
 
-def __removeKey( plug, key ) :
+def __removeKey( scriptNode, keys ) :
 
-	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		curve = Gaffer.Animation.acquire( plug )
-		curve.removeKey( key )
+	with Gaffer.UndoScope( scriptNode ) :
+		for key in keys :
+			key.parent().removeKey( key )
 
-def __setKeyInterpolation( plug, key, mode, unused ) :
+def __setKeyInterpolation( scriptNode, keys, mode, unused ) :
 
-	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		key.setInterpolation( mode )
+	with Gaffer.UndoScope( scriptNode ) :
+		for key in keys :
+			key.setInterpolation( mode )
 
-def __setCurveExtrapolation( plug, curve, direction, mode, unused ) :
+def __setCurveExtrapolation( scriptNode, curves, direction, mode, unused ) :
 
-	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		curve.setExtrapolation( direction, mode )
+	with Gaffer.UndoScope( scriptNode ) :
+		for curve in curves :
+			curve.setExtrapolation( direction, mode )
 
 def __popupMenu( menuDefinition, plugValueWidget ) :
 
-	plug = plugValueWidget.getPlug()
-	if not isinstance( plug, Gaffer.ValuePlug ) or not Gaffer.Animation.canAnimate( plug ) :
+	plugs = plugValueWidget.getPlugs()
+	if any( not isinstance( plug, Gaffer.ValuePlug ) or not Gaffer.Animation.canAnimate( plug ) for plug in plugs ) :
 		return
 
 	context = plugValueWidget.context()
 
 	menuDefinition.prepend( "/AnimationDivider", { "divider" : True } )
 
-	if Gaffer.Animation.isAnimated( plug ) :
+	curves = [
+		Gaffer.Animation.acquire( plug ) for plug in plugs
+		if Gaffer.Animation.isAnimated( plug )
+	]
 
-		curve = Gaffer.Animation.acquire( plug )
+	if curves :
 
-		nextKey = curve.nextKey( context.getTime() )
+		nextKey = min(
+			[ curve.nextKey( context.getTime() ) for curve in curves ],
+			key = lambda k : k.getTime() if k is not None else float( "inf" )
+		)
+
 		menuDefinition.prepend(
 			"/Jump To/Next Key",
 			{
@@ -147,7 +157,11 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 			}
 		)
 
-		previousKey = curve.previousKey( context.getTime() )
+		previousKey = max(
+			[ curve.previousKey( context.getTime() ) for curve in curves ],
+			key = lambda k : k.getTime() if k is not None else float( "-inf" )
+		)
+
 		menuDefinition.prepend(
 			"/Jump To/Previous Key",
 			{
@@ -163,45 +177,53 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 					{
 						"command" : functools.partial(
 							__setCurveExtrapolation,
-							plug,
-							curve,
+							plugValueWidget.scriptNode(),
+							curves,
 							direction,
 							mode
 						),
 						"active" : plugValueWidget._editable( canEditAnimation = True ),
-						"checkBox" : curve.getExtrapolation( direction ) == mode,
+						"checkBox" : all( curve.getExtrapolation( direction ) == mode for curve in curves ),
 						"description" : Gaffer.Metadata.value( "Animation.Extrapolation.%s" % mode.name, "description" ),
 					}
 				)
 
-		spanKey = curve.getKey( context.getTime() ) or previousKey
+		spanKeys = [
+			curve.getKey( context.getTime() ) or curve.previousKey( context.getTime() )
+			for curve in curves
+		]
+		spanKeys = [ k for k in spanKeys if k is not None ]
+
 		for mode in reversed( sorted( Gaffer.Animation.Interpolation.values.values() ) ) :
 			menuDefinition.prepend(
 				"/Interpolation/%s" % ( mode.name ),
 				{
 					"command" : functools.partial(
 						__setKeyInterpolation,
-						plug,
-						spanKey,
+						plugValueWidget.scriptNode(),
+						spanKeys,
 						mode
 					),
-					"active" : spanKey is not None and plugValueWidget._editable( canEditAnimation = True ),
-					"checkBox" : spanKey is not None and ( spanKey.getInterpolation() == mode ),
+					"active" : spanKeys and plugValueWidget._editable( canEditAnimation = True ),
+					"checkBox" : spanKeys and all( k.getInterpolation() == mode for k in spanKeys ),
 					"description" : Gaffer.Metadata.value( "Animation.Interpolation.%s" % mode.name, "description" ),
 				}
 			)
 
-		closestKey = curve.closestKey( context.getTime() )
-		closestKeyOnThisFrame = closestKey is not None and math.fabs( context.getTime() - closestKey.getTime() ) * context.getFramesPerSecond() < 0.5
+		closestKeys = [ curve.closestKey( context.getTime() ) for curve in curves ]
+		keysOnThisFrame = [
+			k for k in closestKeys
+			if k is not None and math.fabs( context.getTime() - k.getTime() ) * context.getFramesPerSecond() < 0.5
+		]
 		menuDefinition.prepend(
 			"/Remove Key",
 			{
 				"command" : functools.partial(
 					__removeKey,
-					plug,
-					closestKey
+					plugValueWidget.scriptNode(),
+					keysOnThisFrame
 				),
-				"active" : bool( closestKeyOnThisFrame ) and plugValueWidget._editable( canEditAnimation = True ),
+				"active" : bool( keysOnThisFrame ) and plugValueWidget._editable( canEditAnimation = True ),
 			}
 		)
 
@@ -210,7 +232,8 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 		{
 			"command" : functools.partial(
 				__setKey,
-				plug,
+				plugValueWidget.scriptNode(),
+				plugs,
 				context
 			),
 			"active" : plugValueWidget._editable( canEditAnimation = True ),
