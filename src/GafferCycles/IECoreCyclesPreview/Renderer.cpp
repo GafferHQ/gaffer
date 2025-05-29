@@ -1792,9 +1792,9 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 	public :
 
-		CyclesObject( ccl::Session *session, const SharedGeometryPtr &geometry, const std::string &name, const float frame, LightLinker *lightLinker, NodeDeleter *nodeDeleter )
-			:	m_session( session ),
-				m_object( SceneAlgo::createNodeWithLock<ccl::Object>( m_session->scene ), NodeDeleter::ObjectDeleter( nodeDeleter ) ),
+		CyclesObject( ccl::Scene *scene, const SharedGeometryPtr &geometry, const std::string &name, const float frame, LightLinker *lightLinker, NodeDeleter *nodeDeleter )
+			:	m_scene( scene ),
+				m_object( SceneAlgo::createNodeWithLock<ccl::Object>( scene ), NodeDeleter::ObjectDeleter( nodeDeleter ) ),
 				m_geometry( geometry ), m_frame( frame ), m_attributes( nullptr ), m_lightLinker( lightLinker )
 		{
 			m_object->name = ccl::ustring( name.c_str() );
@@ -1879,7 +1879,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 			m_object->set_motion( motion );
 
-			m_object->tag_update( m_session->scene );
+			m_object->tag_update( m_scene );
 		}
 
 		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
@@ -1899,7 +1899,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 					motion[i] = m_object->get_tfm();
 					m_object->set_motion( motion );
 				}
-				m_object->tag_update( m_session->scene );
+				m_object->tag_update( m_scene );
 				return;
 			}
 
@@ -1908,7 +1908,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			if( numSamples == 1 )
 			{
 				m_object->set_tfm( SocketAlgo::setTransform( samples.front() ) );
-				m_object->tag_update( m_session->scene );
+				m_object->tag_update( m_scene );
 				return;
 			}
 
@@ -1998,7 +1998,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 				}
 			}
 
-			m_object->tag_update( m_session->scene );
+			m_object->tag_update( m_scene );
 		}
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
@@ -2007,7 +2007,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			if( cyclesAttributes->applyObject( m_object.get(), m_attributes.get() ) )
 			{
 				m_attributes = cyclesAttributes;
-				m_object->tag_update( m_session->scene );
+				m_object->tag_update( m_scene );
 				return true;
 			}
 
@@ -2021,7 +2021,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 	private :
 
-		ccl::Session *m_session;
+		ccl::Scene *m_scene;
 		using UniqueObjectPtr = std::unique_ptr<ccl::Object, NodeDeleter::ObjectDeleter>;
 		UniqueObjectPtr m_object;
 		SharedGeometryPtr m_geometry;
@@ -2734,7 +2734,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				return nullptr;
 			}
 
-			ObjectInterfacePtr result = new CyclesObject( m_session.get(), geometry, name, frame(), &m_lightLinker, m_nodeDeleter.get() );
+			ObjectInterfacePtr result = new CyclesObject( m_scene, geometry, name, frame(), &m_lightLinker, m_nodeDeleter.get() );
 			result->attributes( attributes );
 			return result;
 		}
@@ -2759,7 +2759,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				return nullptr;
 			}
 
-			ObjectInterfacePtr result = new CyclesObject( m_session.get(), geometry, name, frame(), &m_lightLinker, m_nodeDeleter.get() );
+			ObjectInterfacePtr result = new CyclesObject( m_scene, geometry, name, frame(), &m_lightLinker, m_nodeDeleter.get() );
 			result->attributes( attributes );
 			return result;
 		}
