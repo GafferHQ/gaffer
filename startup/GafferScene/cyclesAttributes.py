@@ -241,7 +241,7 @@ Gaffer.Metadata.registerValues( {
 
 	"attribute:cycles:volume_object_space" : [
 
-		"defaultValue", True,
+		"defaultValue", False,
 		"description",
 		"""
 		Specify volume density and step size in object or world space.
