@@ -534,7 +534,7 @@ void ImageGadget::setWipeAngle( float angle )
 	m_wipeAngle = angle;
 }
 
-float  ImageGadget::getWipeAngle() const
+float ImageGadget::getWipeAngle() const
 {
 	return m_wipeAngle;
 }
@@ -1012,20 +1012,20 @@ void ImageGadget::renderTiles() const
 
 			glBegin( GL_QUADS );
 
-				glTexCoord2f( uvBound.min.x, uvBound.min.y  );
-				glMultiTexCoord2f( GL_TEXTURE1, validBound.min.x, validBound.min.y  );
+				glTexCoord2f( uvBound.min.x, uvBound.min.y );
+				glMultiTexCoord2f( GL_TEXTURE1, validBound.min.x, validBound.min.y );
 				glVertex2f( validBound.min.x * pixelAspect, validBound.min.y );
 
-				glTexCoord2f( uvBound.min.x, uvBound.max.y  );
-				glMultiTexCoord2f( GL_TEXTURE1, validBound.min.x, validBound.max.y  );
+				glTexCoord2f( uvBound.min.x, uvBound.max.y );
+				glMultiTexCoord2f( GL_TEXTURE1, validBound.min.x, validBound.max.y );
 				glVertex2f( validBound.min.x * pixelAspect, validBound.max.y );
 
-				glTexCoord2f( uvBound.max.x, uvBound.max.y  );
-				glMultiTexCoord2f( GL_TEXTURE1, validBound.max.x, validBound.max.y  );
+				glTexCoord2f( uvBound.max.x, uvBound.max.y );
+				glMultiTexCoord2f( GL_TEXTURE1, validBound.max.x, validBound.max.y );
 				glVertex2f( validBound.max.x * pixelAspect, validBound.max.y );
 
-				glTexCoord2f( uvBound.max.x, uvBound.min.y  );
-				glMultiTexCoord2f( GL_TEXTURE1, validBound.max.x, validBound.min.y  );
+				glTexCoord2f( uvBound.max.x, uvBound.min.y );
+				glMultiTexCoord2f( GL_TEXTURE1, validBound.max.x, validBound.min.y );
 				glVertex2f( validBound.max.x * pixelAspect, validBound.min.y );
 
 			glEnd();
@@ -1053,7 +1053,7 @@ void ImageGadget::renderText( const std::string &text, const Imath::V2f &positio
 
 void ImageGadget::renderLayer( Layer layer, const GafferUI::Style *style, RenderReason reason ) const
 {
-	if( !( layer == Layer::Back || layer == Layer::Main || layer == Layer::Front )  )
+	if( !( layer == Layer::Back || layer == Layer::Main || layer == Layer::Front ) )
 	{
 		return;
 	}
@@ -1142,7 +1142,7 @@ void ImageGadget::renderLayer( Layer layer, const GafferUI::Style *style, Render
 	if( m_labelsVisible )
 	{
 		string formatText = Format::name( format );
-		const string dimensionsText = lexical_cast<string>( displayWindow.size().x ) + " x " +  lexical_cast<string>( displayWindow.size().y );
+		const string dimensionsText = lexical_cast<string>( displayWindow.size().x ) + " x " + lexical_cast<string>( displayWindow.size().y );
 		if( formatText.empty() )
 		{
 			formatText = dimensionsText;
