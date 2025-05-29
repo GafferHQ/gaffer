@@ -1748,12 +1748,6 @@ class InstanceCache : public IECore::RefCounted
 			m_scene->delete_nodes( toEraseGeos, m_scene );
 		}
 
-		void nodesCreated( NodesCreated &objects, NodesCreated &geometry )
-		{
-			objectsCreated( objects );
-			geometryCreated( geometry );
-		}
-
 	private :
 
 		SharedCGeometryPtr convert( const IECore::Object *object, const CyclesAttributes *attributes, const std::string &nodeName )
@@ -1848,35 +1842,6 @@ class InstanceCache : public IECore::RefCounted
 				}
 				m_scene->object_manager->tag_update( m_scene, ccl::GeometryManager::GEOMETRY_ADDED );
 				nodes.clear();
-			}
-		}
-
-		void objectsCreated( NodesCreated &nodes ) const
-		{
-			for( Objects::const_iterator it = m_objects.begin(), eIt = m_objects.end(); it != eIt; ++it )
-			{
-				if( it->get() )
-				{
-					nodes.push_back( it->get() );
-				}
-			}
-		}
-
-		void geometryCreated( NodesCreated &nodes ) const
-		{
-			for( UniqueGeometry::const_iterator it = m_uniqueGeometry.begin(), eIt = m_uniqueGeometry.end(); it != eIt; ++it )
-			{
-				if( it->get() )
-				{
-					nodes.push_back( it->get() );
-				}
-			}
-			for( Geometry::const_iterator it = m_geometry.begin(), eIt = m_geometry.end(); it != eIt; ++it )
-			{
-				if( it->second )
-				{
-					nodes.push_back( it->second.get() );
-				}
 			}
 		}
 
