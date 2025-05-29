@@ -58,6 +58,7 @@ Breaking Changes
 - SceneTestCase : Removed `assertBoxesEqual()` and `assertBoxesAlmostEqual()` methods.
 - RenderController : Removed `pathForID()`, `pathsForIDs()`, `idForPath()` and `idsForPaths()`. Use `renderManifest()` instead.
 - Catalogue, CatalogueSelect, Display : Moved from GafferImage module to GafferScene.
+- CyclesOptions : Option plugs have been renamed to match the name of their option (e.g. `options.samples` is now `options.cycles:session:samples`). A compatibility config has been provided to allow CyclesOptions nodes to be loaded from scripts saved in earlier Gaffer versions.
 
 1.5.x.x (relative to 1.5.14.0)
 =======

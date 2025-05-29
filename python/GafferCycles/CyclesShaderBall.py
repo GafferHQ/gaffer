@@ -75,21 +75,21 @@ class CyclesShaderBall( GafferScene.ShaderBall ) :
 		self["__cyclesOptions"]["in"].setInput( self["__parentLights"]["out"] )
 
 		self.addChild(
-			self["__cyclesOptions"]["options"]["device"].createCounterpart( "device", Gaffer.Plug.Direction.In )
+			self["__cyclesOptions"]["options"]["cycles:device"].createCounterpart( "device", Gaffer.Plug.Direction.In )
 		)
-		Gaffer.MetadataAlgo.copy( self["__cyclesOptions"]["options"]["device"], self["device"], exclude="layout:*" )
-		self["__cyclesOptions"]["options"]["device"].setInput( self["device"] )
+		Gaffer.MetadataAlgo.copy( self["__cyclesOptions"]["options"]["cycles:device"], self["device"], exclude="layout:*" )
+		self["__cyclesOptions"]["options"]["cycles:device"].setInput( self["device"] )
 
 		self.addChild(
-			self["__cyclesOptions"]["options"]["numThreads"].createCounterpart( "threads", Gaffer.Plug.Direction.In )
+			self["__cyclesOptions"]["options"]["cycles:session:threads"].createCounterpart( "threads", Gaffer.Plug.Direction.In )
 		)
-		self["__cyclesOptions"]["options"]["numThreads"].setInput( self["threads"] )
+		self["__cyclesOptions"]["options"]["cycles:session:threads"].setInput( self["threads"] )
 
 		self.addChild(
-			self["__cyclesOptions"]["options"]["shadingSystem"].createCounterpart( "shadingSystem", Gaffer.Plug.Direction.In )
+			self["__cyclesOptions"]["options"]["cycles:shadingsystem"].createCounterpart( "shadingSystem", Gaffer.Plug.Direction.In )
 		)
-		Gaffer.MetadataAlgo.copy( self["__cyclesOptions"]["options"]["shadingSystem"], self["shadingSystem"], exclude="layout:*" )
-		self["__cyclesOptions"]["options"]["shadingSystem"].setInput( self["shadingSystem"] )
+		Gaffer.MetadataAlgo.copy( self["__cyclesOptions"]["options"]["cycles:shadingsystem"], self["shadingSystem"], exclude="layout:*" )
+		self["__cyclesOptions"]["options"]["cycles:shadingsystem"].setInput( self["shadingSystem"] )
 
 		self._outPlug().setInput( self["__cyclesOptions"]["out"] )
 
