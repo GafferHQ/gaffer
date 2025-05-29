@@ -597,7 +597,7 @@ IE_CORE_DECLAREPTR( CyclesShader )
 // ShaderCache
 //////////////////////////////////////////////////////////////////////////
 
-class ShaderCache : public IECore::RefCounted
+class ShaderCache
 {
 
 	public :
@@ -607,10 +607,6 @@ class ShaderCache : public IECore::RefCounted
 		{
 			m_numDefaultShaders = m_scene->shaders.size();
 			m_defaultSurface = new CyclesShader( m_scene );
-		}
-
-		~ShaderCache() override
-		{
 		}
 
 		void update( NodesCreated &shaders )
@@ -904,8 +900,6 @@ class ShaderCache : public IECore::RefCounted
 		ShaderAssignVector m_shaderAssignPairs;
 
 };
-
-IE_CORE_DECLAREPTR( ShaderCache )
 
 } // namespace
 
@@ -1496,13 +1490,13 @@ IE_CORE_DECLAREPTR( CyclesAttributes )
 namespace
 {
 
-class AttributesCache : public IECore::RefCounted
+class AttributesCache
 {
 
 	public :
 
-		AttributesCache( ShaderCachePtr shaderCache )
-			: m_shaderCache( shaderCache )
+		AttributesCache( ShaderCache *shaderCache )
+			:	m_shaderCache( shaderCache )
 		{
 		}
 
@@ -1513,7 +1507,7 @@ class AttributesCache : public IECore::RefCounted
 			m_cache.insert( a, attributes->Object::hash() );
 			if( !a->second )
 			{
-				a->second = new CyclesAttributes( attributes, m_shaderCache.get() );
+				a->second = new CyclesAttributes( attributes, m_shaderCache );
 			}
 			return a->second;
 		}
@@ -1542,14 +1536,12 @@ class AttributesCache : public IECore::RefCounted
 
 	private :
 
-		ShaderCachePtr m_shaderCache;
+		ShaderCache *m_shaderCache;
 
 		using Cache = tbb::concurrent_hash_map<IECore::MurmurHash, CyclesAttributesPtr>;
 		Cache m_cache;
 
 };
-
-IE_CORE_DECLAREPTR( AttributesCache )
 
 } // namespace
 
@@ -1564,7 +1556,7 @@ namespace
 /// geometry should be immutable.
 using SharedGeometryPtr = std::shared_ptr<ccl::Geometry>;
 
-class GeometryCache : public IECore::RefCounted
+class GeometryCache
 {
 
 	public :
@@ -1720,8 +1712,6 @@ class GeometryCache : public IECore::RefCounted
 		VolumesToConvert m_volumesToConvert;
 
 };
-
-IE_CORE_DECLAREPTR( GeometryCache )
 
 } // namespace
 
@@ -2965,9 +2955,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_nodeDeleter = std::make_unique<NodeDeleter>( m_scene );
 			}
 
-			m_shaderCache = new ShaderCache( m_scene );
-			m_geometryCache = new GeometryCache( m_scene, m_nodeDeleter.get() );
-			m_attributesCache = new AttributesCache( m_shaderCache );
+			m_shaderCache = std::make_unique<ShaderCache>( m_scene );
+			m_geometryCache = std::make_unique<GeometryCache>( m_scene, m_nodeDeleter.get() );
+			m_attributesCache = std::make_unique<AttributesCache>( m_shaderCache.get() );
 		}
 
 		void clearUnused()
@@ -3499,9 +3489,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		double m_lastStatusTime;
 
 		// Caches
-		ShaderCachePtr m_shaderCache;
-		GeometryCachePtr m_geometryCache;
-		AttributesCachePtr m_attributesCache;
+		std::unique_ptr<ShaderCache> m_shaderCache;
+		std::unique_ptr<GeometryCache> m_geometryCache;
+		std::unique_ptr<AttributesCache> m_attributesCache;
 		LightLinker m_lightLinker;
 
 		// Nodes created to update to Cycles
