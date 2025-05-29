@@ -127,8 +127,6 @@ using namespace IECoreCycles;
 namespace
 {
 
-using CFilmPtr = std::unique_ptr<ccl::Film>;
-using SharedCGeometryPtr = std::shared_ptr<ccl::Geometry>;
 // Need to defer shader assignments to the scene lock
 using ShaderAssignPair = std::pair<ccl::Node *, ccl::array<ccl::Node *>>;
 // Defer adding the created nodes to the scene lock
@@ -1562,6 +1560,10 @@ IE_CORE_DECLAREPTR( AttributesCache )
 namespace
 {
 
+/// \todo Make this point to `const ccl::Geometry`, since shared
+/// geometry should be immutable.
+using SharedGeometryPtr = std::shared_ptr<ccl::Geometry>;
+
 class GeometryCache : public IECore::RefCounted
 {
 
@@ -1578,7 +1580,7 @@ class GeometryCache : public IECore::RefCounted
 		}
 
 		// Can be called concurrently with other get() calls.
-		SharedCGeometryPtr get( const IECore::Object *object, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const std::string &nodeName )
+		SharedGeometryPtr get( const IECore::Object *object, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const std::string &nodeName )
 		{
 			const CyclesAttributes *cyclesAttributes = static_cast<const CyclesAttributes *>( attributes );
 
@@ -1607,7 +1609,7 @@ class GeometryCache : public IECore::RefCounted
 		}
 
 		// Can be called concurrently with other get() calls.
-		SharedCGeometryPtr get(
+		SharedGeometryPtr get(
 			const std::vector<const IECore::Object *> &samples,
 			const std::vector<float> &times,
 			const int frameIdx,
@@ -1671,9 +1673,9 @@ class GeometryCache : public IECore::RefCounted
 
 	private :
 
-		SharedCGeometryPtr convert( const IECore::Object *object, const CyclesAttributes *attributes, const std::string &nodeName )
+		SharedGeometryPtr convert( const IECore::Object *object, const CyclesAttributes *attributes, const std::string &nodeName )
 		{
-			auto geometry = SharedCGeometryPtr( GeometryAlgo::convert( object, nodeName, m_scene ), NodeDeleter::GeometryDeleter( m_nodeDeleter ) );
+			auto geometry = SharedGeometryPtr( GeometryAlgo::convert( object, nodeName, m_scene ), NodeDeleter::GeometryDeleter( m_nodeDeleter ) );
 
 			if( object->typeId() == IECoreVDB::VDBObject::staticTypeId() )
 			{
@@ -1683,7 +1685,7 @@ class GeometryCache : public IECore::RefCounted
 			return geometry;
 		}
 
-		SharedCGeometryPtr convert(
+		SharedGeometryPtr convert(
 			const std::vector<const IECore::Object *> &samples,
 			const std::vector<float> &times,
 			const int frame,
@@ -1691,7 +1693,7 @@ class GeometryCache : public IECore::RefCounted
 			const std::string &nodeName
 		)
 		{
-			auto geometry = SharedCGeometryPtr( GeometryAlgo::convert( samples, times, frame, nodeName, m_scene ), NodeDeleter::GeometryDeleter( m_nodeDeleter ) );
+			auto geometry = SharedGeometryPtr( GeometryAlgo::convert( samples, times, frame, nodeName, m_scene ), NodeDeleter::GeometryDeleter( m_nodeDeleter ) );
 
 			if( samples.front()->typeId() == IECoreVDB::VDBObject::staticTypeId() )
 			{
@@ -1712,7 +1714,7 @@ class GeometryCache : public IECore::RefCounted
 
 		ccl::Scene *m_scene;
 		NodeDeleter *m_nodeDeleter;
-		using Geometry = tbb::concurrent_hash_map<IECore::MurmurHash, SharedCGeometryPtr>;
+		using Geometry = tbb::concurrent_hash_map<IECore::MurmurHash, SharedGeometryPtr>;
 		Geometry m_geometry;
 		using VolumesToConvert = tbb::concurrent_vector<VolumeToConvert>;
 		VolumesToConvert m_volumesToConvert;
@@ -1790,7 +1792,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 	public :
 
-		CyclesObject( ccl::Session *session, const SharedCGeometryPtr &geometry, const std::string &name, const float frame, LightLinker *lightLinker, NodeDeleter *nodeDeleter )
+		CyclesObject( ccl::Session *session, const SharedGeometryPtr &geometry, const std::string &name, const float frame, LightLinker *lightLinker, NodeDeleter *nodeDeleter )
 			:	m_session( session ),
 				m_object( SceneAlgo::createNodeWithLock<ccl::Object>( m_session->scene ), NodeDeleter::ObjectDeleter( nodeDeleter ) ),
 				m_geometry( geometry ), m_frame( frame ), m_attributes( nullptr ), m_lightLinker( lightLinker )
@@ -2022,7 +2024,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 		ccl::Session *m_session;
 		using UniqueObjectPtr = std::unique_ptr<ccl::Object, NodeDeleter::ObjectDeleter>;
 		UniqueObjectPtr m_object;
-		SharedCGeometryPtr m_geometry;
+		SharedGeometryPtr m_geometry;
 		const float m_frame;
 		ConstCyclesAttributesPtr m_attributes;
 		LightLinker *m_lightLinker;
@@ -2726,7 +2728,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 			acquireSession();
 
-			SharedCGeometryPtr geometry = m_geometryCache->get( object, attributes, name );
+			SharedGeometryPtr geometry = m_geometryCache->get( object, attributes, name );
 			if( !geometry )
 			{
 				return nullptr;
@@ -2751,7 +2753,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				frameIdx = times.size()-1;
 			}
-			SharedCGeometryPtr geometry = m_geometryCache->get( samples, times, frameIdx, attributes, name );
+			SharedGeometryPtr geometry = m_geometryCache->get( samples, times, frameIdx, attributes, name );
 			if( !geometry )
 			{
 				return nullptr;
