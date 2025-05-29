@@ -82,8 +82,8 @@ class InteractiveCyclesRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		script["options"] = GafferCycles.CyclesOptions()
 		script["options"]["in"].setInput( script["outputs"]["out"] )
-		script["options"]["options"]["shadingSystem"]["enabled"].setValue( True )
-		script["options"]["options"]["shadingSystem"]["value"].setValue( "SVM" )
+		script["options"]["options"]["cycles:shadingsystem"]["enabled"].setValue( True )
+		script["options"]["options"]["cycles:shadingsystem"]["value"].setValue( "SVM" )
 
 		script["renderer"] = self._createInteractiveRender()
 		script["renderer"]["in"].setInput( script["options"]["out"] )
@@ -153,8 +153,8 @@ class InteractiveCyclesRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		# We get much better convergence in `testAddLight()` if we disable
 		# adaptive sampling.
-		options["options"]["useAdaptiveSampling"]["enabled"].setValue( True )
-		options["options"]["useAdaptiveSampling"]["value"].setValue( False )
+		options["options"]["cycles:integrator:use_adaptive_sampling"]["enabled"].setValue( True )
+		options["options"]["cycles:integrator:use_adaptive_sampling"]["value"].setValue( False )
 
 		return options
 

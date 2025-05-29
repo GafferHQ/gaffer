@@ -84,6 +84,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", lambda plug : __optionMetadata( plug, "plugValueWidget:type" ),
 			"presetNames", lambda plug : __optionMetadata( plug, "presetNames" ),
 			"presetValues", lambda plug : __optionMetadata( plug, "presetValues" ),
+			"presetsPlugValueWidget:allowCustom", lambda plug : __optionMetadata( plug, "presetsPlugValueWidget:allowCustom" ),
 			"path:leaf", lambda plug : __optionMetadata( plug, "path:leaf" ),
 			"path:valid", lambda plug : __optionMetadata( plug, "path:valid" ),
 			"fileSystemPath:extensions", lambda plug : __optionMetadata( plug, "fileSystemPath:extensions" ),
