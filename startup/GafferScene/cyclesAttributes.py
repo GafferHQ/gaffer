@@ -159,17 +159,6 @@ Gaffer.Metadata.registerValues( {
 
 	],
 
-	"attribute:cycles:lightgroup" : [
-
-		"defaultValue", "",
-		"description",
-		"""
-		Set the lightgroup of an object with emission.
-		""",
-		"label", "Lightgroup",
-
-	],
-
 	"attribute:cycles:is_caustics_caster" : [
 
 		"defaultValue", False,
@@ -212,6 +201,17 @@ Gaffer.Metadata.registerValues( {
 		Multiplier for scene dicing rate.
 		""",
 		"label", "Dicing Scale",
+
+	],
+
+	"attribute:cycles:lightgroup" : [
+
+		"defaultValue", "",
+		"description",
+		"""
+		Set the lightgroup of an object with emission.
+		""",
+		"label", "Lightgroup",
 
 	],
 
