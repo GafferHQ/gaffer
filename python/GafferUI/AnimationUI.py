@@ -37,8 +37,6 @@
 import math
 import functools
 
-import imath
-
 import Gaffer
 import GafferUI
 
@@ -93,113 +91,153 @@ Gaffer.Metadata.registerValue( "Animation.TieMode.Scale", "description", "Tangen
 # PlugValueWidget popup menu for setting keys
 ##########################################################################
 
-def __setKey( plug, context ) :
+def __setKey( scriptNode, plugs, context ) :
 
 	with context :
-		value = plug.getValue()
+		values = [ plug.getValue() for plug in plugs ]
 
-	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		curve = Gaffer.Animation.acquire( plug )
-		if isinstance( plug, Gaffer.BoolPlug ) :
-			curve.addKey( Gaffer.Animation.Key( context.getTime(), value, Gaffer.Animation.Interpolation.Constant ) )
-		else :
-			curve.insertKey( context.getTime(), value )
+	with Gaffer.UndoScope( scriptNode ) :
+		for plug, value in zip( plugs, values ) :
+			curve = Gaffer.Animation.acquire( plug )
+			if isinstance( plug, Gaffer.BoolPlug ) :
+				curve.addKey( Gaffer.Animation.Key( context.getTime(), value, Gaffer.Animation.Interpolation.Constant ) )
+			else :
+				curve.insertKey( context.getTime(), value )
 
-def __removeKey( plug, key ) :
+def __removeKey( scriptNode, keys ) :
 
-	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		curve = Gaffer.Animation.acquire( plug )
-		curve.removeKey( key )
+	with Gaffer.UndoScope( scriptNode ) :
+		for key in keys :
+			key.parent().removeKey( key )
 
-def __setKeyInterpolation( plug, key, mode, unused ) :
+def __setKeyInterpolation( scriptNode, keys, mode, unused ) :
 
-	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		key.setInterpolation( mode )
+	with Gaffer.UndoScope( scriptNode ) :
+		for key in keys :
+			key.setInterpolation( mode )
 
-def __setCurveExtrapolation( plug, curve, direction, mode, unused ) :
+def __setCurveExtrapolation( scriptNode, curves, direction, mode, unused ) :
 
-	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		curve.setExtrapolation( direction, mode )
+	with Gaffer.UndoScope( scriptNode ) :
+		for curve in curves :
+			curve.setExtrapolation( direction, mode )
 
 def __popupMenu( menuDefinition, plugValueWidget ) :
 
-	plug = plugValueWidget.getPlug()
-	if not isinstance( plug, Gaffer.ValuePlug ) or not Gaffer.Animation.canAnimate( plug ) :
+	# We operate on all leaf plugs that `plugValueWidget` is editing.
+	plugs = []
+	for plug in plugValueWidget.getPlugs() :
+		if not len( plug ) :
+			plugs.append( plug )
+		else :
+			plugs += [
+				p for p in Gaffer.Plug.RecursiveRange( plug )
+				if not len( p )
+			]
+
+	if any( not isinstance( plug, Gaffer.ValuePlug ) or not Gaffer.Animation.canAnimate( plug ) for plug in plugs ) :
 		return
+
+	editable = all(
+		( p.settable() or Gaffer.Animation.isAnimated( p ) )
+		and not Gaffer.MetadataAlgo.readOnly( p )
+		for p in plugs
+	)
 
 	context = plugValueWidget.context()
 
 	menuDefinition.prepend( "/AnimationDivider", { "divider" : True } )
 
-	if Gaffer.Animation.isAnimated( plug ) :
+	curves = [
+		Gaffer.Animation.acquire( plug ) for plug in plugs
+		if Gaffer.Animation.isAnimated( plug )
+	]
 
-		curve = Gaffer.Animation.acquire( plug )
+	if curves :
 
-		nextKey = curve.nextKey( context.getTime() )
+		nextKey = min(
+			[ curve.nextKey( context.getTime() ) for curve in curves ],
+			key = lambda k : k.getTime() if k is not None else float( "inf" )
+		)
+
 		menuDefinition.prepend(
 			"/Jump To/Next Key",
 			{
-				"command" : functools.partial( context.setTime, nextKey.getTime() if nextKey is not None else 0 ),
-				"active" : nextKey is not None,
+				"command" : functools.partial( plugValueWidget.scriptNode().context().setTime, nextKey.getTime() if nextKey is not None else 0 ),
+				# Disabled if the PlugValueWidget's context isn't the same as the main UI context
+				# due to being viewed through a TimeWarp. In this case we don't know what main UI
+				# time corresponds to the local time in `nextKey`.
+				"active" : nextKey is not None and plugValueWidget.scriptNode().context().getTime() == context.getTime(),
 			}
 		)
 
-		previousKey = curve.previousKey( context.getTime() )
+		previousKey = max(
+			[ curve.previousKey( context.getTime() ) for curve in curves ],
+			key = lambda k : k.getTime() if k is not None else float( "-inf" )
+		)
+
 		menuDefinition.prepend(
 			"/Jump To/Previous Key",
 			{
-				"command" : functools.partial( context.setTime, previousKey.getTime() if previousKey is not None else 0 ),
-				"active" : previousKey is not None,
+				"command" : functools.partial( plugValueWidget.scriptNode().context().setTime, previousKey.getTime() if previousKey is not None else 0 ),
+				"active" : previousKey is not None and plugValueWidget.scriptNode().context().getTime() == context.getTime(),
 			}
 		)
 
 		for direction in reversed( sorted( Gaffer.Animation.Direction.values.values() ) ) :
 			for mode in reversed( sorted( Gaffer.Animation.Extrapolation.values.values() ) ) :
 				menuDefinition.prepend(
-					"/Extrapolation/%s/%s" % ( direction.name, mode.name ),
+					f"/Extrapolation/{direction.name}/{mode.name}",
 					{
 						"command" : functools.partial(
 							__setCurveExtrapolation,
-							plug,
-							curve,
+							plugValueWidget.scriptNode(),
+							curves,
 							direction,
 							mode
 						),
-						"active" : plugValueWidget._editable( canEditAnimation = True ),
-						"checkBox" : curve.getExtrapolation( direction ) == mode,
-						"description" : Gaffer.Metadata.value( "Animation.Extrapolation.%s" % mode.name, "description" ),
+						"active" : editable,
+						"checkBox" : all( curve.getExtrapolation( direction ) == mode for curve in curves ),
+						"description" : Gaffer.Metadata.value( f"Animation.Extrapolation.{mode.name}", "description" ),
 					}
 				)
 
-		spanKey = curve.getKey( context.getTime() ) or previousKey
-		spanKeyOnThisFrame = spanKey is not None
+		spanKeys = [
+			curve.getKey( context.getTime() ) or curve.previousKey( context.getTime() )
+			for curve in curves
+		]
+		spanKeys = [ k for k in spanKeys if k is not None ]
+
 		for mode in reversed( sorted( Gaffer.Animation.Interpolation.values.values() ) ) :
 			menuDefinition.prepend(
-				"/Interpolation/%s" % ( mode.name ),
+				f"/Interpolation/{mode.name}",
 				{
 					"command" : functools.partial(
 						__setKeyInterpolation,
-						plug,
-						spanKey,
+						plugValueWidget.scriptNode(),
+						spanKeys,
 						mode
 					),
-					"active" : spanKeyOnThisFrame and plugValueWidget._editable( canEditAnimation = True ),
-					"checkBox" : spanKeyOnThisFrame and ( spanKey.getInterpolation() == mode ),
-					"description" : Gaffer.Metadata.value( "Animation.Interpolation.%s" % mode.name, "description" ),
+					"active" : spanKeys and editable,
+					"checkBox" : spanKeys and all( k.getInterpolation() == mode for k in spanKeys ),
+					"description" : Gaffer.Metadata.value( f"Animation.Interpolation.{mode.name}", "description" ),
 				}
 			)
 
-		closestKey = curve.closestKey( context.getTime() )
-		closestKeyOnThisFrame = closestKey is not None and math.fabs( context.getTime() - closestKey.getTime() ) * context.getFramesPerSecond() < 0.5
+		closestKeys = [ curve.closestKey( context.getTime() ) for curve in curves ]
+		keysOnThisFrame = [
+			k for k in closestKeys
+			if k is not None and math.fabs( context.getTime() - k.getTime() ) * context.getFramesPerSecond() < 0.5
+		]
 		menuDefinition.prepend(
 			"/Remove Key",
 			{
 				"command" : functools.partial(
 					__removeKey,
-					plug,
-					closestKey
+					plugValueWidget.scriptNode(),
+					keysOnThisFrame
 				),
-				"active" : bool( closestKeyOnThisFrame ) and plugValueWidget._editable( canEditAnimation = True ),
+				"active" : bool( keysOnThisFrame ) and editable,
 			}
 		)
 
@@ -208,10 +246,11 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 		{
 			"command" : functools.partial(
 				__setKey,
-				plug,
+				plugValueWidget.scriptNode(),
+				plugs,
 				context
 			),
-			"active" : plugValueWidget._editable( canEditAnimation = True ),
+			"active" : editable,
 		}
 	)
 
