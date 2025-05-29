@@ -250,6 +250,33 @@ Gaffer.Metadata.registerValues( {
 		""",
 		"label", "Object Space",
 
+	"attribute:cycles:volume_velocity_scale" : [
+
+		"defaultValue", 1.0,
+		"description",
+		"""
+		Scales velocity vectors used in motion blur computation.
+		""",
+		"label", "Velocity Scale",
+		"layout:section", "Volume",
+
+	],
+
+	"attribute:cycles:volume_precision" : [
+
+		"defaultValue", "full",
+		"description",
+		"""
+		Specifies volume data precision, lower values reduce
+		memory consumption at the cost of detail.
+		""",
+		"label", "Precision",
+		"layout:section", "Volume",
+
+		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+		"presetNames", IECore.StringVectorData( [ "Full", "Half" ] ),
+		"presetValues", IECore.StringVectorData( [ "full", "half" ] ),
+
 	],
 
 	"attribute:cycles:asset_name" : [
