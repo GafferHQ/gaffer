@@ -16,6 +16,7 @@ Improvements
 - RenderManShader : Improved GraphEditor labels for parameter RGB and XYZ components.
 - Cycles : Added support for `layerName` parameter in outputs, to control the naming of channels in EXR outputs.
 - StandardOptions : Added render manifest option.
+- CyclesMeshLight : Improved presentation of `cameraVisibility` and `lightGroup` plugs in the Node Editor.
 
 Fixes
 -----
