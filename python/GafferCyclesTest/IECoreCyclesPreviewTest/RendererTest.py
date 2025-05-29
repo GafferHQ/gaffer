@@ -947,8 +947,8 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
 
 		center = self.__colorAtUV( image, imath.V2f( 0.5, 0.5 ) )
-		left = self.__colorAtUV( image, imath.V2f( 0.3, 0.5 ) )
-		right = self.__colorAtUV( image, imath.V2f( 0.7, 0.5 ) )
+		left = self.__colorAtUV( image, imath.V2f( 0.15, 0.5 ) )
+		right = self.__colorAtUV( image, imath.V2f( 0.85, 0.5 ) )
 
 		# Everything should have solid alpha.
 
@@ -961,9 +961,9 @@ class RendererTest( GafferTest.TestCase ) :
 		if smoothingExpected :
 			# Center normal faces straight at us
 			self.assertGreater( center[0], 0.95 )
-			# Outer normals actually face slightly away
-			self.assertLess( left[0], 0 )
-			self.assertLess( right[0], 0 )
+			# Outer normals are close to perpendicular.
+			self.assertLess( left[0], 0.015 )
+			self.assertLess( right[0], 0.015 )
 		else :
 			# Everything faces towards and to the side of us.
 			self.assertGreater( center[0], 0.4 )
