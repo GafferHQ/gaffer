@@ -291,6 +291,7 @@ struct NodeDeleter
 	};
 
 	using LightDeleter = Deleter<ccl::Light>;
+	using GeometryDeleter = Deleter<ccl::Geometry>;
 
 	// Must not be called concurrently, either with `scheduleDeletion()` or other
 	// code affecting the scene.
@@ -300,6 +301,11 @@ struct NodeDeleter
 		{
 			m_scene->delete_nodes( m_pendingLightDeletions );
 			m_pendingLightDeletions.clear();
+		}
+		if( m_pendingGeometryDeletions.size() )
+		{
+			m_scene->delete_nodes( m_pendingGeometryDeletions );
+			m_pendingGeometryDeletions.clear();
 		}
 	}
 
@@ -311,10 +317,17 @@ struct NodeDeleter
 			m_pendingLightDeletions.insert( light );
 		}
 
+		void scheduleDeletion( ccl::Geometry *geometry )
+		{
+			std::lock_guard lock( m_mutex );
+			m_pendingGeometryDeletions.insert( geometry );
+		}
+
 		ccl::Scene *m_scene;
 
 		std::mutex m_mutex;
 		std::set<ccl::Light *> m_pendingLightDeletions;
+		std::set<ccl::Geometry *> m_pendingGeometryDeletions;
 
 };
 
@@ -1579,8 +1592,8 @@ class InstanceCache : public IECore::RefCounted
 
 	public :
 
-		InstanceCache( ccl::Scene *scene )
-			: m_scene( scene )
+		InstanceCache( ccl::Scene *scene, NodeDeleter *nodeDeleter )
+			: m_scene( scene ), m_nodeDeleter( nodeDeleter )
 		{
 		}
 
@@ -1598,7 +1611,6 @@ class InstanceCache : public IECore::RefCounted
 			if( !cyclesAttributes->canInstanceGeometry( object ) )
 			{
 				SharedCGeometryPtr geometry = convert( object, cyclesAttributes, nodeName );
-				m_uniqueGeometry.push_back( geometry );
 				return makeInstance( geometry, nodeName );
 			}
 
@@ -1639,7 +1651,6 @@ class InstanceCache : public IECore::RefCounted
 			if( !cyclesAttributes->canInstanceGeometry( samples.front() ) )
 			{
 				SharedCGeometryPtr geometry = convert( samples, times, frameIdx, cyclesAttributes, nodeName );
-				m_uniqueGeometry.push_back( geometry );
 				return makeInstance( geometry, nodeName );
 			}
 
@@ -1694,24 +1705,7 @@ class InstanceCache : public IECore::RefCounted
 			removeNodesInSet( toEraseObjs, m_objects );
 			m_scene->delete_nodes( toEraseObjs, m_scene );
 
-			ccl::set<ccl::Geometry*> toEraseGeos;
-
-			for( UniqueGeometry::iterator it = m_uniqueGeometry.begin(), eIt = m_uniqueGeometry.end(); it != eIt; ++it )
-			{
-				if( it->use_count() == 1 )
-				{
-					// Only one reference - this is ours, so
-					// nothing outside of the cache is using the
-					// node.
-					//toErase.push_back( it->first );
-					toEraseGeos.insert( it->get() );
-				}
-			}
-
-			removeNodesInSet( toEraseGeos, m_uniqueGeometry );
-
 			vector<IECore::MurmurHash> toErase;
-
 			for( Geometry::iterator it = m_geometry.begin(), eIt = m_geometry.end(); it != eIt; ++it )
 			{
 				if( it->second.use_count() == 1 )
@@ -1720,30 +1714,26 @@ class InstanceCache : public IECore::RefCounted
 					// nothing outside of the cache is using the
 					// node.
 					toErase.push_back( it->first );
-					toEraseGeos.insert( it->second.get() );
 				}
 			}
-
 			for( vector<IECore::MurmurHash>::const_iterator it = toErase.begin(), eIt = toErase.end(); it != eIt; ++it )
 			{
 				m_geometry.erase( *it );
 			}
-
-			m_scene->delete_nodes( toEraseGeos, m_scene );
 		}
 
 	private :
 
 		SharedCGeometryPtr convert( const IECore::Object *object, const CyclesAttributes *attributes, const std::string &nodeName )
 		{
-			ccl::Geometry *geometry = GeometryAlgo::convert( object, nodeName, m_scene );
+			auto geometry = SharedCGeometryPtr( GeometryAlgo::convert( object, nodeName, m_scene ), NodeDeleter::GeometryDeleter( m_nodeDeleter ) );
 
 			if( object->typeId() == IECoreVDB::VDBObject::staticTypeId() )
 			{
-				m_volumesToConvert.push_back( VolumeToConvert( IECore::runTimeCast<const IECoreVDB::VDBObject>( object ), static_cast<ccl::Volume*>( geometry ), attributes->getVolumePrecision() ) );
+				m_volumesToConvert.push_back( VolumeToConvert( IECore::runTimeCast<const IECoreVDB::VDBObject>( object ), static_cast<ccl::Volume*>( geometry.get() ), attributes->getVolumePrecision() ) );
 			}
 
-			return SharedCGeometryPtr( geometry, nullNodeDeleter );
+			return geometry;
 		}
 
 		SharedCGeometryPtr convert(
@@ -1754,14 +1744,14 @@ class InstanceCache : public IECore::RefCounted
 			const std::string &nodeName
 		)
 		{
-			ccl::Geometry *geometry = GeometryAlgo::convert( samples, times, frame, nodeName, m_scene );
+			auto geometry = SharedCGeometryPtr( GeometryAlgo::convert( samples, times, frame, nodeName, m_scene ), NodeDeleter::GeometryDeleter( m_nodeDeleter ) );
 
 			if( samples.front()->typeId() == IECoreVDB::VDBObject::staticTypeId() )
 			{
-				m_volumesToConvert.push_back( VolumeToConvert( IECore::runTimeCast<const IECoreVDB::VDBObject>( samples.front() ), static_cast<ccl::Volume*>( geometry ), attributes->getVolumePrecision() ) );
+				m_volumesToConvert.push_back( VolumeToConvert( IECore::runTimeCast<const IECoreVDB::VDBObject>( samples.front() ), static_cast<ccl::Volume*>( geometry.get() ), attributes->getVolumePrecision() ) );
 			}
 
-			return SharedCGeometryPtr( geometry, nullNodeDeleter );
+			return geometry;
 		}
 
 		Instance makeInstance( const SharedCGeometryPtr &geometry, const std::string &name )
@@ -1806,12 +1796,11 @@ class InstanceCache : public IECore::RefCounted
 		}
 
 		ccl::Scene *m_scene;
+		NodeDeleter *m_nodeDeleter;
 		using Objects = tbb::concurrent_vector<SharedCObjectPtr>;
 		Objects m_objects;
 		using Geometry = tbb::concurrent_hash_map<IECore::MurmurHash, SharedCGeometryPtr>;
 		Geometry m_geometry;
-		using UniqueGeometry = tbb::concurrent_vector<SharedCGeometryPtr>;
-		UniqueGeometry m_uniqueGeometry;
 		using VolumesToConvert = tbb::concurrent_vector<VolumeToConvert>;
 		VolumesToConvert m_volumesToConvert;
 
@@ -3092,7 +3081,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 
 			m_shaderCache = new ShaderCache( m_scene );
-			m_instanceCache = new InstanceCache( m_scene );
+			m_instanceCache = new InstanceCache( m_scene, m_nodeDeleter.get() );
 			m_attributesCache = new AttributesCache( m_shaderCache );
 		}
 
