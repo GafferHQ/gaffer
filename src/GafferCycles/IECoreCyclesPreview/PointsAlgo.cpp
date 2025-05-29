@@ -35,6 +35,8 @@
 #include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
+#include "SceneAlgo.h"
+
 #include "IECoreScene/PointsPrimitive.h"
 
 #include "IECore/Interpolator.h"
@@ -56,10 +58,10 @@ using namespace IECoreCycles;
 namespace
 {
 
-ccl::PointCloud *convertCommon( const IECoreScene::PointsPrimitive *points )
+ccl::PointCloud *convertCommon( const IECoreScene::PointsPrimitive *points, ccl::Scene *scene )
 {
 	assert( points->typeId() == IECoreScene::PointsPrimitive::staticTypeId() );
-	ccl::PointCloud *pointcloud = new ccl::PointCloud();
+	ccl::PointCloud *pointcloud = SceneAlgo::createNodeWithLock<ccl::PointCloud>( scene );
 
 	PrimitiveVariableMap variablesToConvert = points->variables;
 
@@ -137,7 +139,7 @@ ccl::PointCloud *convertCommon( const IECoreScene::PointsPrimitive *points )
 
 ccl::Geometry *convert( const IECoreScene::PointsPrimitive *points, const std::string &nodeName, ccl::Scene *scene )
 {
-	ccl::PointCloud *pointCloud = convertCommon( points );
+	ccl::PointCloud *pointCloud = convertCommon( points, scene );
 	pointCloud->name = ccl::ustring( nodeName.c_str() );
 	return pointCloud;
 }
@@ -152,7 +154,7 @@ ccl::Geometry *convert( const vector<const IECoreScene::PointsPrimitive *> &poin
 
 	if( frameIdx != -1 ) // Start/End frames
 	{
-		pointcloud = convertCommon(points[frameIdx]);
+		pointcloud = convertCommon( points[frameIdx], scene );
 
 		if( numSamples == 2 ) // Make sure we have 3 samples
 		{
@@ -178,7 +180,7 @@ ccl::Geometry *convert( const vector<const IECoreScene::PointsPrimitive *> &poin
 	else if( numSamples % 2 ) // Odd numSamples
 	{
 		int _frameIdx = ( numSamples+1 ) / 2;
-		pointcloud = convertCommon( points[_frameIdx] );
+		pointcloud = convertCommon( points[_frameIdx], scene );
 
 		for( int i = 0; i < numSamples; ++i )
 		{
@@ -197,7 +199,7 @@ ccl::Geometry *convert( const vector<const IECoreScene::PointsPrimitive *> &poin
 			midMesh = points[_frameIdx]->copy();
 			V3fVectorData *midP = midMesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 			IECore::LinearInterpolator<std::vector<V3f>>()( p1->readable(), p2->readable(), 0.5f, midP->writable() );
-			pointcloud = convertCommon( midMesh.get() );
+			pointcloud = convertCommon( midMesh.get(), scene );
 		}
 
 		for( int i = 0; i < numSamples; ++i )

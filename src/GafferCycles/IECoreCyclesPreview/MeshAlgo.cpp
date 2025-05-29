@@ -34,6 +34,8 @@
 
 #include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
 
+#include "SceneAlgo.h"
+
 #include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/MeshAlgo.h"
 
@@ -99,7 +101,7 @@ bool hasSmoothNormals( const IECoreScene::MeshPrimitive *mesh )
 	}
 }
 
-ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
+ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh, ccl::Scene *scene )
 {
 	assert( mesh->typeId() == IECoreScene::MeshPrimitive::staticTypeId() );
 
@@ -115,7 +117,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 
 	// Convert topology and points
 
-	ccl::Mesh *cmesh = new ccl::Mesh();
+	ccl::Mesh *cmesh = SceneAlgo::createNodeWithLock<ccl::Mesh>( scene );
 
 	if( mesh->interpolation() == "catmullClark" )
 	{
@@ -240,7 +242,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 
 ccl::Geometry *convert( const IECoreScene::MeshPrimitive *mesh, const std::string &nodeName, ccl::Scene *scene )
 {
-	ccl::Mesh *cmesh = convertCommon( mesh );
+	ccl::Mesh *cmesh = convertCommon( mesh, scene );
 	cmesh->name = ccl::ustring( nodeName.c_str() );
 	return cmesh;
 }
@@ -255,7 +257,7 @@ ccl::Geometry *convert( const std::vector<const IECoreScene::MeshPrimitive *> &m
 
 	if( frameIdx != -1 ) // Start/End frames
 	{
-		cmesh = convertCommon(meshes[frameIdx]);
+		cmesh = convertCommon( meshes[frameIdx], scene );
 
 		if( numSamples == 2 ) // Make sure we have 3 samples
 		{
@@ -280,7 +282,7 @@ ccl::Geometry *convert( const std::vector<const IECoreScene::MeshPrimitive *> &m
 	else if( numSamples % 2 ) // Odd numSamples
 	{
 		int _frameIdx = numSamples / 2;
-		cmesh = convertCommon(meshes[_frameIdx]);
+		cmesh = convertCommon( meshes[_frameIdx], scene );
 
 		for( int i = 0; i < numSamples; ++i )
 		{
@@ -299,7 +301,7 @@ ccl::Geometry *convert( const std::vector<const IECoreScene::MeshPrimitive *> &m
 			midMesh = meshes[_frameIdx]->copy();
 			V3fVectorData *midP = midMesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 			IECore::LinearInterpolator<std::vector<V3f>>()( p1->readable(), p2->readable(), 0.5f, midP->writable() );
-			cmesh = convertCommon( midMesh.get() );
+			cmesh = convertCommon( midMesh.get(), scene );
 		}
 
 		for( int i = 0; i < numSamples; ++i )

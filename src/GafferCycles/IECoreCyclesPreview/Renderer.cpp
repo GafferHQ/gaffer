@@ -1558,28 +1558,19 @@ class Instance
 			nodes.push_back( m_object.get() );
 		}
 
-		void geometryCreated( NodesCreated &nodes ) const
-		{
-			if( m_prototype )
-			{
-				nodes.push_back( m_geometry.get() );
-			}
-		}
-
 	private :
 
 		// Constructors are private as they are only intended for use in
 		// `InstanceCache::get()`. See comment in `nodesCreated()`.
 		friend class InstanceCache;
 
-		Instance( const SharedCObjectPtr &object, const SharedCGeometryPtr &geometry, const bool prototype )
-			:	m_object( object ), m_geometry( geometry ), m_prototype( prototype )
+		Instance( const SharedCObjectPtr &object, const SharedCGeometryPtr &geometry )
+			:	m_object( object ), m_geometry( geometry )
 		{
 		}
 
 		SharedCObjectPtr m_object;
 		SharedCGeometryPtr m_geometry;
-		bool m_prototype;
 
 };
 
@@ -1593,11 +1584,10 @@ class InstanceCache : public IECore::RefCounted
 		{
 		}
 
-		void update( NodesCreated &object, NodesCreated &geometry )
+		void update( NodesCreated &object )
 		{
 			updateVolumes();
 			updateObjects( object );
-			updateGeometry( geometry );
 		}
 
 		// Can be called concurrently with other get() calls.
@@ -1609,10 +1599,8 @@ class InstanceCache : public IECore::RefCounted
 			{
 				SharedCGeometryPtr geometry = convert( object, cyclesAttributes, nodeName );
 				m_uniqueGeometry.push_back( geometry );
-				return makeInstance( geometry, nodeName, /* prototype = */ true );
+				return makeInstance( geometry, nodeName );
 			}
-
-			bool isPrototype = false;
 
 			IECore::MurmurHash h = object->hash();
 			cyclesAttributes->hashGeometry( object, h );
@@ -1629,13 +1617,12 @@ class InstanceCache : public IECore::RefCounted
 				Geometry::accessor writeAccessor;
 				if( m_geometry.insert( writeAccessor, h ) )
 				{
-					isPrototype = true;
 					writeAccessor->second = convert( object, cyclesAttributes, nodeName );
 				}
 				cgeo = writeAccessor->second;
 			}
 
-			return makeInstance( cgeo, nodeName, isPrototype );
+			return makeInstance( cgeo, nodeName );
 		}
 
 		// Can be called concurrently with other get() calls.
@@ -1653,10 +1640,8 @@ class InstanceCache : public IECore::RefCounted
 			{
 				SharedCGeometryPtr geometry = convert( samples, times, frameIdx, cyclesAttributes, nodeName );
 				m_uniqueGeometry.push_back( geometry );
-				return makeInstance( geometry, nodeName, true );
+				return makeInstance( geometry, nodeName );
 			}
-
-			bool isPrototype = false;
 
 			IECore::MurmurHash h;
 			for( std::vector<const IECore::Object *>::const_iterator it = samples.begin(), eIt = samples.end(); it != eIt; ++it )
@@ -1681,13 +1666,12 @@ class InstanceCache : public IECore::RefCounted
 				Geometry::accessor writeAccessor;
 				if( m_geometry.insert( writeAccessor, h ) )
 				{
-					isPrototype = true;
 					writeAccessor->second = convert( samples, times, frameIdx, cyclesAttributes, nodeName );
 				}
 				cgeo = writeAccessor->second;
 			}
 
-			return makeInstance( cgeo, nodeName, isPrototype );
+			return makeInstance( cgeo, nodeName );
 		}
 
 		// Must not be called concurrently with anything.
@@ -1753,10 +1737,6 @@ class InstanceCache : public IECore::RefCounted
 		SharedCGeometryPtr convert( const IECore::Object *object, const CyclesAttributes *attributes, const std::string &nodeName )
 		{
 			ccl::Geometry *geometry = GeometryAlgo::convert( object, nodeName, m_scene );
-			if( geometry )
-			{
-				geometry->set_owner( m_scene );
-			}
 
 			if( object->typeId() == IECoreVDB::VDBObject::staticTypeId() )
 			{
@@ -1775,10 +1755,6 @@ class InstanceCache : public IECore::RefCounted
 		)
 		{
 			ccl::Geometry *geometry = GeometryAlgo::convert( samples, times, frame, nodeName, m_scene );
-			if( geometry )
-			{
-				geometry->set_owner( m_scene );
-			}
 
 			if( samples.front()->typeId() == IECoreVDB::VDBObject::staticTypeId() )
 			{
@@ -1788,7 +1764,7 @@ class InstanceCache : public IECore::RefCounted
 			return SharedCGeometryPtr( geometry, nullNodeDeleter );
 		}
 
-		Instance makeInstance( const SharedCGeometryPtr &geometry, const std::string &name, bool prototype )
+		Instance makeInstance( const SharedCGeometryPtr &geometry, const std::string &name )
 		{
 			SharedCObjectPtr object;
 			if( geometry )
@@ -1801,7 +1777,7 @@ class InstanceCache : public IECore::RefCounted
 				m_objects.push_back( object );
 			}
 
-			return Instance( object, geometry, prototype );
+			return Instance( object, geometry );
 		}
 
 		void updateVolumes()
@@ -1825,22 +1801,6 @@ class InstanceCache : public IECore::RefCounted
 					obj->tag_update( m_scene );
 				}
 				m_scene->object_manager->tag_update( m_scene, ccl::ObjectManager::OBJECT_ADDED );
-				nodes.clear();
-			}
-		}
-
-		void updateGeometry( NodesCreated &nodes )
-		{
-			if( nodes.size() )
-			{
-				ccl::vector<ccl::Geometry *> &geometry = m_scene->geometry;
-				for( ccl::Node *node : nodes )
-				{
-					ccl::Geometry *geo = static_cast<ccl::Geometry *>( node );
-					geometry.push_back( geo );
-					geo->tag_update( m_scene, true );
-				}
-				m_scene->object_manager->tag_update( m_scene, ccl::GeometryManager::GEOMETRY_ADDED );
 				nodes.clear();
 			}
 		}
@@ -2893,8 +2853,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			result->attributes( attributes );
 
 			instance.objectsCreated( m_objectsCreated );
-			// These will only accumulate if it's the prototype
-			instance.geometryCreated( m_geometryCreated );
 
 			return result;
 		}
@@ -2928,8 +2886,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			result->attributes( attributes );
 
 			instance.objectsCreated( m_objectsCreated );
-			// These will only accumulate if it's the prototype
-			instance.geometryCreated( m_geometryCreated );
 
 			return result;
 		}
@@ -3151,7 +3107,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// Add every shader each time, less issues
 			m_shaderCache->nodesCreated( m_shadersCreated );
 
-			m_instanceCache->update( m_objectsCreated, m_geometryCreated );
+			m_instanceCache->update( m_objectsCreated );
 			m_shaderCache->update( m_shadersCreated );
 		}
 
@@ -3681,7 +3637,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		/// etc, or we could just stop deferring the addition of objects to
 		/// the `ccl::Scene`.
 		NodesCreated m_objectsCreated;
-		NodesCreated m_geometryCreated;
 		NodesCreated m_shadersCreated;
 
 		// Outputs

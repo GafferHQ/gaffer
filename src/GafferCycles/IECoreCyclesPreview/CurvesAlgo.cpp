@@ -34,6 +34,8 @@
 
 #include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
 
+#include "SceneAlgo.h"
+
 #include "IECoreScene/CurvesPrimitive.h"
 
 #include "IECore/Interpolator.h"
@@ -55,10 +57,10 @@ using namespace IECoreCycles;
 namespace
 {
 
-ccl::Hair *convertCommon( const IECoreScene::CurvesPrimitive *curve )
+ccl::Hair *convertCommon( const IECoreScene::CurvesPrimitive *curve, ccl::Scene *scene )
 {
 	assert( curve->typeId() == IECoreScene::CurvesPrimitive::staticTypeId() );
-	ccl::Hair *hair = new ccl::Hair();
+	ccl::Hair *hair = SceneAlgo::createNodeWithLock<ccl::Hair>( scene );
 
 	size_t numCurves = curve->numCurves();
 	size_t numKeys = 0;
@@ -135,7 +137,7 @@ ccl::Hair *convertCommon( const IECoreScene::CurvesPrimitive *curve )
 
 ccl::Geometry *convert( const IECoreScene::CurvesPrimitive *curve, const std::string &nodeName, ccl::Scene *scene )
 {
-	ccl::Hair *hair = convertCommon( curve );
+	ccl::Hair *hair = convertCommon( curve, scene );
 	hair->name = ccl::ustring( nodeName.c_str() );
 	return hair;
 }
@@ -150,7 +152,7 @@ ccl::Geometry *convert( const vector<const IECoreScene::CurvesPrimitive *> &curv
 
 	if( frameIdx != -1 ) // Start/End frames
 	{
-		hair = convertCommon(curves[frameIdx]);
+		hair = convertCommon( curves[frameIdx], scene );
 
 		if( numSamples == 2 ) // Make sure we have 3 samples
 		{
@@ -176,7 +178,7 @@ ccl::Geometry *convert( const vector<const IECoreScene::CurvesPrimitive *> &curv
 	else if( numSamples % 2 ) // Odd numSamples
 	{
 		int _frameIdx = ( numSamples+1 ) / 2;
-		hair = convertCommon(curves[_frameIdx]);
+		hair = convertCommon( curves[_frameIdx], scene );
 
 		for( int i = 0; i < numSamples; ++i )
 		{
@@ -195,7 +197,7 @@ ccl::Geometry *convert( const vector<const IECoreScene::CurvesPrimitive *> &curv
 			midMesh = curves[_frameIdx]->copy();
 			V3fVectorData *midP = midMesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 			IECore::LinearInterpolator<std::vector<V3f>>()( p1->readable(), p2->readable(), 0.5f, midP->writable() );
-			hair = convertCommon( midMesh.get() );
+			hair = convertCommon( midMesh.get(), scene );
 		}
 
 		for( int i = 0; i < numSamples; ++i )

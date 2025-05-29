@@ -35,6 +35,8 @@
 #include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
+#include "SceneAlgo.h"
+
 IECORE_PUSH_DEFAULT_VISIBILITY
 #include "openvdb/openvdb.h"
 IECORE_POP_DEFAULT_VISIBILITY
@@ -60,7 +62,7 @@ namespace
 
 ccl::Geometry *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &nodeName, ccl::Scene *scene )
 {
-	ccl::Volume *volume = new ccl::Volume();
+	ccl::Volume *volume = SceneAlgo::createNodeWithLock<ccl::Volume>( scene );
 	volume->name = ccl::ustring( nodeName.c_str() );
 	return volume;
 }
