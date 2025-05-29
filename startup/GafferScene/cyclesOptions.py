@@ -269,7 +269,7 @@ Gaffer.Metadata.registerValues( {
 		"defaultValue", "ribbon",
 		"description",
 		"""
-		Rounded Ribbons -Render hair as flat ribbon with rounded normals, for fast rendering.
+		Round Ribbons - Render hair as flat ribbon with rounded normals, for fast rendering.
 		3D Curves - Render hair as 3D curve, for accurate results when viewing hair close up.
 		""",
 		"label", "Hair Shape",
@@ -376,7 +376,7 @@ Gaffer.Metadata.registerValues( {
 		"description",
 		"""
 		Minimum number of transparent bounces. Setting this higher reduces noise in the first bounces,
-		but can also be less efficient for more complex geometry like hair and volumes."
+		but can also be less efficient for more complex geometry like hair and volumes.
 		""",
 		"label", "Min Transparency",
 		"layout:section", "Ray Depth",
@@ -400,7 +400,7 @@ Gaffer.Metadata.registerValues( {
 		"defaultValue", 0,
 		"description",
 		"""
-		Maximum number of Ambient Occlusion bounces.
+		Maximum number of ambient occlusion bounces.
 		""",
 		"label", "Ambient Occlusion",
 		"layout:section", "Ray Depth",
@@ -412,7 +412,7 @@ Gaffer.Metadata.registerValues( {
 		"defaultValue", 0.0,
 		"description",
 		"""
-		Ambient Occlusion factor.
+		Ambient occlusion factor.
 		""",
 		"label", "Ambient Occlusion Factor",
 		"layout:section", "Background",
@@ -424,7 +424,7 @@ Gaffer.Metadata.registerValues( {
 		"defaultValue", 3.4028234663852886e+38,
 		"description",
 		"""
-		Ambient Occlusion Distance.
+		Ambient occlusion distance.
 		""",
 		"label", "Ambient Occlusion Distance",
 		"layout:section", "Background",
@@ -450,8 +450,8 @@ Gaffer.Metadata.registerValues( {
 		"defaultValue", 0.1,
 		"description",
 		"""
-		"Globally adjust detail for volume rendering, on top of automatically estimated step size."
-		"Higher values reduce render time, lower values render with more detail."
+		Globally adjust detail for volume rendering, on top of automatically estimated step size.
+		Higher values reduce render time, lower values render with more detail.
 		""",
 		"label", "Volume Step Rate",
 		"layout:section", "Volumes",
@@ -565,7 +565,7 @@ Gaffer.Metadata.registerValues( {
 		Probabilistically terminate light samples when the light
 		contribution is below this threshold (more noise but faster
 		rendering).
-		Zero disables the test and never ignores lights.
+		`0` disables the test and never ignores lights.
 		""",
 		"label", "Light Sampling Threshold",
 		"layout:section", "Sampling",
@@ -604,7 +604,7 @@ Gaffer.Metadata.registerValues( {
 		"description",
 		"""
 		Minimum AA samples for adaptive sampling, to discover noisy features before stopping sampling.
-		Zero for automatic setting based on number of AA samples.
+		`0` for automatic setting based on number of AA samples.
 		""",
 		"label", "Adaptive Min Samples",
 		"layout:section", "Sampling",
@@ -749,8 +749,8 @@ Gaffer.Metadata.registerValues( {
 		"description",
 		"""
 		The maximum number of samples used for training path guiding.
-		Higher samples lead to more accurate guiding, however may also unnecessarily slow
-		down rendering once guiding is accurate enough.
+		Higher samples lead to more accurate guiding, however may also
+		unnecessarily slow down rendering once guiding is accurate enough.
 		A value of 0 will continue training until the last sample.
 		""",
 		"label", "Guiding Training Samples",
