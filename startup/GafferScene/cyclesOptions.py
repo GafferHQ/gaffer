@@ -1037,6 +1037,11 @@ Gaffer.Metadata.registerValues( {
 		"label", "Dicing Camera",
 		"layout:section", "Subdivision",
 
+		"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+		"path:valid", True,
+		"scenePathPlugValueWidget:setNames", IECore.StringVectorData( [ "__cameras" ] ),
+		"scenePathPlugValueWidget:setsLabel", "Show only cameras",
+
 	],
 
 } )
