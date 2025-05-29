@@ -127,8 +127,6 @@ using namespace IECoreCycles;
 namespace
 {
 
-using CIntegratorPtr = std::unique_ptr<ccl::Integrator>;
-using CBackgroundPtr = std::unique_ptr<ccl::Background>;
 using CFilmPtr = std::unique_ptr<ccl::Film>;
 using SharedCObjectPtr = std::shared_ptr<ccl::Object>;
 using SharedCGeometryPtr = std::shared_ptr<ccl::Geometry>;
