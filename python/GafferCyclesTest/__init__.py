@@ -42,6 +42,7 @@ from .CyclesShaderTest import CyclesShaderTest
 from .CyclesRenderTest import CyclesRenderTest
 from .RenderPassAdaptorTest import RenderPassAdaptorTest
 from .CyclesOptionsTest import CyclesOptionsTest
+from .CyclesAttributesTest import CyclesAttributesTest
 
 from .IECoreCyclesPreviewTest import *
 
