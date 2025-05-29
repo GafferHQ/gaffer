@@ -34,63 +34,85 @@
 #
 ##########################################################################
 
-import IECore
-
 import Gaffer
 import GafferCycles
 
-def __visibilitySummary( plug ) :
+def __attributeSummary( plug, attributes ) :
 
 	info = []
-	for childName in ( "camera", "diffuse", "glossy", "transmission", "shadow", "scatter" ) :
-		if plug[childName + "Visibility"]["enabled"].getValue() :
-			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName + "Visibility"]["value"].getValue() else " Off" ) )
 
-	return ", ".join( info )
+	for attribute in attributes :
+		if plug[f"cycles:{attribute}"]["enabled"].getValue() :
+			if Gaffer.Metadata.value( f"attribute:cycles:{attribute}", "plugValueWidget:type" ) == "GafferUI.PresetsPlugValueWidget" :
+				value = Gaffer.NodeAlgo.currentPreset( plug[f"cycles:{attribute}"]["value"] )
+			else :
+				value = plug[f"cycles:{attribute}"]["value"].getValue()
+				if isinstance( value, bool ) :
+					value = "On" if value else "Off"
+
+			info.append( "{} {}".format( Gaffer.Metadata.value( f"attribute:cycles:{attribute}", "label" ), value ) )
+
+	return info
+
+def __visibilitySummary( plug ) :
+
+	attributes = [
+		"visibility:camera",
+		"visibility:diffuse",
+		"visibility:glossy",
+		"visibility:transmission",
+		"visibility:shadow",
+		"visibility:scatter",
+	]
+
+	return ", ".join( __attributeSummary( plug, attributes ) )
 
 def __renderingSummary( plug ) :
 
 	info = []
-	for childName in ( "useHoldout", "isShadowCatcher", "isCausticsCaster", "isCausticsReceiver", "lightGroup" ) :
-		if plug[childName]["enabled"].getValue() :
-			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
+	attributes = [
+		"use_holdout",
+		"is_shadow_catcher",
+		"is_caustics_caster",
+		"is_caustics_receiver",
+		"lightgroup",
+	]
 
-	return ", ".join( info )
+	return ", ".join( __attributeSummary( plug, attributes ) )
 
 def __subdivisionSummary( plug ) :
 
-	info = []
-	for childName in ( "maxLevel", "dicingScale" ) :
-		if plug[childName]["enabled"].getValue() :
-			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
-
-	return ", ".join( info )
+	return ", ".join( __attributeSummary( plug, [ "max_level", "dicing_rate" ] ) )
 
 def __volumeSummary( plug ) :
 
-	info = []
-	for childName in ( "volumeClipping", "volumeStepSize", "volumeObjectSpace", "volumeVelocityScale", "volumePrecision" ) :
-		if plug[childName]["enabled"].getValue() :
-			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
+	attributes = [
+		"volume_clipping",
+		"volume_step_size",
+		"volume_object_space",
+		"volume_velocity_scale",
+		"volume_precision",
+	]
 
-	return ", ".join( info )
+	return ", ".join( __attributeSummary( plug, attributes ) )
 
 def __objectSummary( plug ) :
 
-	info = []
-	if plug["assetName"]["enabled"].getValue() :
-		info.append( IECore.CamelCase.toSpaced( "assetName" ) + ( " On" if plug["assetName"]["value"].getValue() else " Off" ) )
-
-	return ", ".join( info )
+	return ", ".join( __attributeSummary( plug, [ "asset_name" ] ) )
 
 def __shaderSummary( plug ) :
 
-	info = []
-	for childName in ( "emissionSamplingMethod", "useTransparentShadow", "heterogeneousVolume", "volumeSamplingMethod", "volumeInterpolationMethod", "volumeStepRate", "displacementMethod" ) :
-		if plug[childName]["enabled"].getValue() :
-			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
+	attributes = [
+		"shader:emission_sampling_method",
+		"shader:use_transparent_shadow",
+		"shader:heterogeneous_volume",
+		"shader:volume_sampling_method",
+		"shader:volume_interpolation_method",
+		"shader:volume_step_rate",
+		"shader:displacement_method",
+	]
 
-	return ", ".join( info )
+	return ", ".join( __attributeSummary( plug, attributes ) )
 
 Gaffer.Metadata.registerNode(
 
@@ -113,400 +135,6 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Volume:summary", __volumeSummary,
 			"layout:section:Object:summary", __objectSummary,
 			"layout:section:Shader:summary", __shaderSummary,
-
-		],
-
-		# Visibility
-
-		"attributes.cameraVisibility" : [
-
-			"description",
-			"""
-			Whether or not the object is visible to camera
-			rays. To hide an object completely, use the
-			visibility settings on the StandardAttributes
-			node instead.
-			""",
-
-			"layout:section", "Visibility",
-			"label", "Camera",
-
-		],
-
-		"attributes.diffuseVisibility" : [
-
-			"description",
-			"""
-			Whether or not the object is visible to diffuse
-			rays.
-			""",
-
-			"layout:section", "Visibility",
-			"label", "Diffuse",
-
-		],
-
-		"attributes.glossyVisibility" : [
-
-			"description",
-			"""
-			Whether or not the object is visible in
-			glossy rays.
-			""",
-
-			"layout:section", "Visibility",
-			"label", "Glossy",
-
-		],
-
-		"attributes.transmissionVisibility" : [
-
-			"description",
-			"""
-			Whether or not the object is visible in
-			transmission.
-			""",
-
-			"layout:section", "Visibility",
-			"label", "Transmission",
-
-		],
-
-		"attributes.shadowVisibility" : [
-
-			"description",
-			"""
-			Whether or not the object is visible to shadow
-			rays - whether it casts shadows or not.
-			""",
-
-			"layout:section", "Visibility",
-			"label", "Shadow",
-
-		],
-
-		"attributes.scatterVisibility" : [
-
-			"description",
-			"""
-			Whether or not the object is visible to
-			scatter rays.
-			""",
-
-			"layout:section", "Visibility",
-			"label", "Scatter",
-
-		],
-
-		# Rendering
-
-		"attributes.useHoldout" : [
-
-			"description",
-			"""
-			Turns the object into a holdout matte.
-			This only affects primary (camera) rays.
-			""",
-
-			"layout:section", "Rendering",
-
-		],
-
-		"attributes.isShadowCatcher" : [
-
-			"description",
-			"""
-			Turns the object into a shadow catcher.
-			""",
-
-			"layout:section", "Rendering",
-
-		],
-
-		"attributes.shadowTerminatorShadingOffset" : [
-
-			"description",
-			"""
-			Push the shadow terminator towards the light to hide artifacts on low poly geometry.
-			""",
-
-			"layout:section", "Rendering",
-
-		],
-
-		"attributes.shadowTerminatorGeometryOffset" : [
-
-			"description",
-			"""
-			Offset rays from the surface to reduce shadow terminator artifact on low poly geometry. Only affects triangles at grazing angles to light.
-			""",
-
-			"layout:section", "Rendering",
-
-		],
-
-		"attributes.lightGroup" : [
-
-			"description",
-			"""
-			Set the lightgroup of an object with emission.
-			""",
-
-			"layout:section", "Rendering",
-		],
-
-		"attributes.isCausticsCaster" : [
-
-			"description",
-			"""
-			Cast Shadow Caustics.
-			""",
-
-			"layout:section", "Rendering",
-
-		],
-
-		"attributes.isCausticsReceiver" : [
-
-			"description",
-			"""
-			Receive Shadow Caustics.
-			""",
-
-			"layout:section", "Rendering",
-
-		],
-
-		# Subdivision
-
-		"attributes.maxLevel" : [
-
-			"description",
-			"""
-			The max level of subdivision that can be
-			applied.
-			""",
-
-			"layout:section", "Subdivision",
-
-		],
-
-		"attributes.dicingScale" : [
-
-			"description",
-			"""
-			Multiplier for scene dicing rate.
-			""",
-
-			"layout:section", "Subdivision",
-
-		],
-
-		# Volume
-
-		"attributes.volumeClipping" : [
-
-			"description",
-			"""
-			Value under which voxels are considered empty space to
-			optimize rendering.
-			""",
-
-			"layout:section", "Volume",
-
-		],
-
-		"attributes.volumeStepSize" : [
-
-			"description",
-			"""
-			Distance between volume samples. When zero it is automatically
-			estimated based on the voxel size.
-			""",
-
-			"layout:section", "Volume",
-
-		],
-
-		"attributes.volumeObjectSpace" : [
-
-			"description",
-			"""
-			Specify volume density and step size in object or world space.
-			By default world space is used, enable object space to ensure
-			that the volume opacity and detail remains the same regardless
-			of object scale.
-			""",
-
-			"layout:section", "Volume",
-
-		],
-
-		"attributes.volumeVelocityScale" : [
-
-			"description",
-			"""
-			Scales velocity vectors used in motion blur computation.
-			""",
-
-			"layout:section", "Volume",
-
-		],
-
-		"attributes.volumePrecision" : [
-
-			"description",
-			"""
-			Specifies volume data precision, lower values reduce
-			memory consumption at the cost of detail.
-			""",
-
-			"layout:section", "Volume",
-
-		],
-
-		"attributes.volumePrecision.value" : [
-
-			"preset:Full", "full",
-			"preset:Half", "half",
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
-		# Object
-
-		"attributes.assetName" : [
-
-			"description",
-			"""
-			Asset name for cryptomatte.
-			""",
-
-			"layout:section", "Object",
-
-		],
-
-		# Shader
-
-		"attributes.emissionSamplingMethod" : [
-
-			"description",
-			"""
-			Sampling strategy for emissive surfaces.
-			""",
-
-			"layout:section", "Shader",
-
-		],
-
-		"attributes.emissionSamplingMethod.value" : [
-
-			"preset:None", "none",
-			"preset:Auto", "auto",
-			"preset:Front", "front",
-			"preset:Back", "back",
-			"preset:Front-Back", "front_back",
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
-		"attributes.useTransparentShadow" : [
-
-			"description",
-			"""
-			Use transparent shadows for this material if it contains a Transparent BSDF,
-			disabling will render faster but not give accurate shadows.
-			""",
-
-			"layout:section", "Shader",
-
-		],
-
-		"attributes.heterogeneousVolume" : [
-
-			"description",
-			"""
-			Disabling this when using volume rendering, assume volume has the same density
-			everywhere (not using any textures), for faster rendering.
-			""",
-
-			"layout:section", "Shader",
-
-		],
-
-		"attributes.volumeSamplingMethod" : [
-
-			"description",
-			"""
-			Sampling method to use for volumes.
-			""",
-
-			"layout:section", "Shader",
-
-		],
-
-		"attributes.volumeSamplingMethod.value" : [
-
-			"preset:Distance", "distance",
-			"preset:Equiangular", "equiangular",
-			"preset:Multiple-Importance", "multiple_importance",
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
-		"attributes.volumeInterpolationMethod" : [
-
-			"description",
-			"""
-			Interpolation method to use for volumes.
-			""",
-
-			"layout:section", "Shader",
-
-		],
-
-		"attributes.volumeInterpolationMethod.value" : [
-
-			"preset:Linear", "linear",
-			"preset:Cubic", "cubic",
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
-		"attributes.volumeStepRate" : [
-
-			"description",
-			"""
-			Scale the distance between volume shader samples when rendering the volume
-			(lower values give more accurate and detailed results, but also increased render time).
-			""",
-
-			"layout:section", "Shader",
-
-		],
-
-		"attributes.displacementMethod" : [
-
-			"description",
-			"""
-			Method to use for the displacement.
-			""",
-
-			"layout:section", "Shader",
-
-		],
-
-		"attributes.displacementMethod.value" : [
-
-			"preset:Bump", "bump",
-			"preset:True", "true",
-			"preset:Both", "both",
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 

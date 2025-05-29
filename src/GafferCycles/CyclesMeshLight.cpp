@@ -69,7 +69,7 @@ CyclesMeshLight::CyclesMeshLight( const std::string &name )
 	attributes->filterPlug()->setInput( filterPlug() );
 	for( NameValuePlug::Iterator it( attributes->attributesPlug() ); !it.done(); ++it )
 	{
-		if( boost::ends_with( (*it)->getName().string(), "Visibility" ) && (*it)->getName() != "cameraVisibility" )
+		if( boost::starts_with( (*it)->getName().string(), "cycles:visibility:" ) && (*it)->getName() != "cycles:visibility:camera" )
 		{
 			(*it)->enabledPlug()->setValue( true );
 			(*it)->valuePlug<BoolPlug>()->setValue( false );
@@ -78,14 +78,14 @@ CyclesMeshLight::CyclesMeshLight( const std::string &name )
 
 	addChild( attributes );
 
-	Plug *internalCameraVisibilityPlug = attributes->attributesPlug()->getChild<Plug>( "cameraVisibility" );
+	Plug *internalCameraVisibilityPlug = attributes->attributesPlug()->getChild<Plug>( "cycles:visibility:camera" );
 	PlugPtr cameraVisibilityPlug = internalCameraVisibilityPlug->createCounterpart( "cameraVisibility", Plug::In );
 	addChild( cameraVisibilityPlug );
 	internalCameraVisibilityPlug->setInput( cameraVisibilityPlug );
 
 	// Light-Group
 
-	Plug *internalLightGroupPlug = attributes->attributesPlug()->getChild<Plug>( "lightGroup" );
+	Plug *internalLightGroupPlug = attributes->attributesPlug()->getChild<Plug>( "cycles:lightgroup" );
 	PlugPtr lightGroupPlug = internalLightGroupPlug->createCounterpart( "lightGroup", Plug::In );
 	addChild( lightGroupPlug );
 	internalLightGroupPlug->setInput( lightGroupPlug );
