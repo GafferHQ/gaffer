@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -36,44 +36,15 @@
 
 import unittest
 
-import imath
-
 import GafferSceneTest
 import GafferCycles
 
-class RenderPassAdaptorTest( GafferSceneTest.RenderPassAdaptorTest ) :
+class CyclesShaderBallTest( GafferSceneTest.SceneTestCase ) :
 
-	renderer = "Cycles"
+	def test( self ) :
 
-	# Cycles outputs black shadows on a white background.
-	shadowColor = imath.Color4f( 0 )
-	litColor = imath.Color4f( 1, 1, 1, 0 )
-
-	def _createDistantLight( self ) :
-
-		light = GafferCycles.CyclesLight()
-		light.loadShader( "distant_light" )
-		return light, light["parameters"]["color"]
-
-	def _createStandardShader( self ) :
-
-		shader = GafferCycles.CyclesShader()
-		shader.loadShader( "principled_bsdf" )
-		return shader, shader["parameters"]["base_color"]
-
-	def _createFlatShader( self ) :
-
-		shader = GafferCycles.CyclesShader()
-		shader.loadShader( "emission" )
-		shader["parameters"]["strength"].setValue( 1 )
-		return shader, shader["parameters"]["color"]
-
-	def _createOptions( self ) :
-
-		options = GafferCycles.CyclesOptions()
-		options["options"]["cycles:session:samples"]["enabled"].setValue( True )
-		options["options"]["cycles:session:samples"]["value"].setValue( 16 )
-		return options
+		n = GafferCycles.CyclesShaderBall()
+		self.assertSceneValid( n["out"] )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -64,6 +64,8 @@ Gaffer.Metadata.registerNode(
 			rays.
 			""",
 
+			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+
 		],
 
 		"lightGroup" : [
@@ -72,6 +74,8 @@ Gaffer.Metadata.registerNode(
 			"""
 			The light group that the mesh light will contribute to.
 			""",
+
+			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
 
 		],
 

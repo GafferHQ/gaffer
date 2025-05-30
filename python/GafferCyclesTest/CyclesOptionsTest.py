@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,46 +34,62 @@
 #
 ##########################################################################
 
-import unittest
+import pathlib
 
 import imath
 
+import IECore
+
+import Gaffer
+import GafferScene
 import GafferSceneTest
 import GafferCycles
 
-class RenderPassAdaptorTest( GafferSceneTest.RenderPassAdaptorTest ) :
+class CyclesOptionsTest( GafferSceneTest.SceneTestCase ) :
 
-	renderer = "Cycles"
+	def testValidity( self ) :
 
-	# Cycles outputs black shadows on a white background.
-	shadowColor = imath.Color4f( 0 )
-	litColor = imath.Color4f( 1, 1, 1, 0 )
+		o = GafferCycles.CyclesOptions()
 
-	def _createDistantLight( self ) :
+		o["out"].transform( "/" )
+		self.assertIsInstance( o["out"].childNames( "/" ), IECore.InternedStringVectorData )
 
-		light = GafferCycles.CyclesLight()
-		light.loadShader( "distant_light" )
-		return light, light["parameters"]["color"]
+	def testSerialisation( self ) :
 
-	def _createStandardShader( self ) :
+		s = Gaffer.ScriptNode()
+		s["o"] = GafferCycles.CyclesOptions()
+		s["o"]["options"]["cycles:session:samples"]["value"].setValue( 1 )
+		names = s["o"]["options"].keys()
 
-		shader = GafferCycles.CyclesShader()
-		shader.loadShader( "principled_bsdf" )
-		return shader, shader["parameters"]["base_color"]
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
 
-	def _createFlatShader( self ) :
+		self.assertEqual( s2["o"]["options"].keys(), names )
+		self.assertTrue( "options1" not in s2["o"] )
+		self.assertEqual( s2["o"]["options"]["cycles:session:samples"]["value"].getValue(), 1 )
 
-		shader = GafferCycles.CyclesShader()
-		shader.loadShader( "emission" )
-		shader["parameters"]["strength"].setValue( 1 )
-		return shader, shader["parameters"]["color"]
+	def testNodeConstructsWithAllOptions( self ) :
 
-	def _createOptions( self ) :
+		node = GafferCycles.CyclesOptions()
+		for option in Gaffer.Metadata.targetsWithMetadata( "option:cycles:*", "defaultValue" ) :
+			option = option[7:]
+			with self.subTest( option = option ) :
+				self.assertIn( option, node["options"] )
+				self.assertEqual( node["options"][option]["name"].getValue(), option )
+				self.assertEqual(
+					node["options"][option]["value"].defaultValue(),
+					Gaffer.Metadata.value( f"option:{option}", "defaultValue" )
+				)
 
-		options = GafferCycles.CyclesOptions()
-		options["options"]["cycles:session:samples"]["enabled"].setValue( True )
-		options["options"]["cycles:session:samples"]["value"].setValue( 16 )
-		return options
+	def testLoadFrom1_5( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "cyclesOptions-1.5.14.0.gfr" )
+		script.load()
+
+		self.assertIn( "cycles:session:samples", script["CyclesOptions"]["options"] )
+		self.assertNotIn( "samples", script["CyclesOptions"]["options"] )
+		self.assertEqual( script["CyclesOptions"]["options"]["cycles:session:samples"]["value"].getValue(), 1 )
 
 if __name__ == "__main__":
 	unittest.main()
