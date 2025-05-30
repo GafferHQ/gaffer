@@ -305,7 +305,7 @@ def __registerPassPresets() :
 	presetNames = []
 	presetValues = []
 
-	for _pass in GafferCycles.passes.keys() :
+	for _pass in sorted( GafferCycles.passes.keys() ) :
 		presetNames.append( _pass.replace( "_", " " ).title() )
 		presetValues.append( _pass )
 
