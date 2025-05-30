@@ -62,6 +62,7 @@ Breaking Changes
 - Catalogue, CatalogueSelect, Display : Moved from GafferImage module to GafferScene.
 - CyclesAttributes : Attribute plugs have been renamed to match the name of their attribute (e.g. `attributes.cameraVisibility` is now `attributes.cycles:visibility:camera`). A compatibility config has been provided to allow CyclesAttributes nodes to be loaded from scripts saved in earlier Gaffer versions.
 - CyclesOptions : Option plugs have been renamed to match the name of their option (e.g. `options.samples` is now `options.cycles:session:samples`). A compatibility config has been provided to allow CyclesOptions nodes to be loaded from scripts saved in earlier Gaffer versions.
+- DelightOptions : Option plugs have been renamed to match the name of their option with `.` characters replaced with `_` (e.g. `options.shadingSamples` is now `options.dl:quality_shadingsamples`). A compatibility config has been provided to allow DelightOptions nodes to be loaded from scripts saved in earlier Gaffer versions.
 
 1.5.x.x (relative to 1.5.14.0)
 =======
