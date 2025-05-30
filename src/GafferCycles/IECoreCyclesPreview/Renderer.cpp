@@ -2829,14 +2829,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_lightLinker( renderType )
 
 		{
-			IECoreScene::CameraPtr camera = new IECoreScene::Camera();
-			/// \todo Remove, and use default parameter values. The
-			/// values here are to match a historical bug in Cycles.
-			camera->setResolution( V2i( 1024, 512 ) );
-			camera->setProjection( "perspective" );
-			camera->setFocalLengthFromFieldOfView( 80.0f );
-			CyclesCameraPtr defaultCamera = new CyclesCamera( camera );
-			m_cameras["ieCoreCycles:defaultCamera"] = defaultCamera;
+			m_cameras["ieCoreCycles:defaultCamera"] =  new CyclesCamera( new IECoreScene::Camera() );
 		}
 
 		~CyclesRenderer() override
