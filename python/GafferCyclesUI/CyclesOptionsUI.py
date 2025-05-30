@@ -222,6 +222,8 @@ def __logSummary( plug ) :
 
 	return ", ".join( __optionSummary( plug, [ "log_level" ] ) )
 
+## \todo The following metadata registrations may be better moved to `cyclesOptions.py`
+# as function-based metadata that only imports IECoreCycles the first time they are called.
 def __registerDevicePresets() :
 
 	presetNames = [ "CPU" ]
