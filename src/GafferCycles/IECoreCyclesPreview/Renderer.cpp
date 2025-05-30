@@ -134,27 +134,6 @@ using NodesCreated = tbb::concurrent_vector<ccl::Node *>;
 // Defer creation of volumes to the scene lock
 using VolumeToConvert = std::tuple<const IECoreVDB::VDBObject *, ccl::Volume *, int>;
 
-// Helper to swap the node to delete to the front of the vector, then pop off
-template<typename T, typename U>
-void removeNodesInSet( const ccl::set<T *> &nodesSet, tbb::concurrent_vector<U> &nodesArray )
-{
-	size_t newSize = nodesArray.size();
-
-	for (size_t i = 0; i < newSize; ++i)
-	{
-		U node = nodesArray[i];
-
-		if( nodesSet.find( node.get() ) != nodesSet.end() )
-		{
-			std::swap(nodesArray[i], nodesArray[newSize - 1]);
-			i -= 1;
-			newSize -= 1;
-		}
-	}
-
-	nodesArray.resize(newSize);
-}
-
 template<typename T>
 T *reportedCast( const IECore::RunTimeTyped *v, const char *type, const IECore::InternedString &name )
 {
