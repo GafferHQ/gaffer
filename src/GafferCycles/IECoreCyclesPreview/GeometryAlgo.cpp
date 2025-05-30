@@ -392,7 +392,7 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 	}
 }
 
-void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *volume, ccl::Scene *scene, const int precision )
+void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *volume, ccl::Scene *scene, int precision )
 {
 	ccl::TypeDesc ctype;// = ccl::TypeDesc::TypeUnknown;
 

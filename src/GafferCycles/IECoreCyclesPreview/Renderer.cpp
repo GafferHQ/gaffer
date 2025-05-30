@@ -1678,7 +1678,7 @@ class GeometryCache
 		{
 			for( VolumeToConvert volume : m_volumesToConvert )
 			{
-				GeometryAlgo::convertVoxelGrids( std::get<0>( volume ), std::get<1>( volume ), m_scene );
+				GeometryAlgo::convertVoxelGrids( std::get<0>( volume ), std::get<1>( volume ), m_scene, std::get<2>( volume ) );
 			}
 			m_volumesToConvert.clear();
 		}
