@@ -230,7 +230,7 @@ def __registerDevicePresets() :
 	typeIndices = {}
 	for device in GafferCycles.devices.values() :
 
-		if device["type"] == "CPU" :
+		if device["type"].value == "CPU" :
 			continue
 
 		typeIndex = typeIndices.setdefault( device["type"], 0 )
@@ -238,6 +238,9 @@ def __registerDevicePresets() :
 
 		presetNames.append( "{}/{}".format( device["type"], device["description"] ) )
 		presetValues.append( "{}:{:02}".format( device["type"], typeIndex ) )
+
+		presetNames.append( "{}/{} + CPU".format( device["type"], device["description"] ) )
+		presetValues.append( "CPU {}:{:02}".format( device["type"], typeIndex ) )
 
 	for deviceType, count in typeIndices.items() :
 
@@ -262,7 +265,7 @@ def __registerDenoiseDevicePresets() :
 		if device["denoisers"].value == 0 :
 			continue
 
-		if device["type"] == "CPU" and "CPU" not in presetNames :
+		if device["type"].value == "CPU" and "CPU" not in presetNames :
 			presetNames.append( "CPU" )
 			presetValues.append( "CPU" )
 			continue
