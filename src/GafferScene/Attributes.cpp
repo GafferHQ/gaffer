@@ -41,6 +41,7 @@
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/PlugAlgo.h"
 
+#include <boost/algorithm/string/replace.hpp>
 #include "boost/bind/bind.hpp"
 #include "boost/logic/tribool.hpp"
 
@@ -85,7 +86,7 @@ Attributes::Attributes( const std::string &name, const std::string &rendererPref
 		if( auto valuePlug = MetadataAlgo::createPlugFromMetadata( "value", Plug::Direction::In, Plug::Flags::Default, target ) )
 		{
 			const std::string attributeName = target.string().substr( 10 );
-			NameValuePlugPtr attributePlug = new NameValuePlug( attributeName, valuePlug, false, attributeName );
+			NameValuePlugPtr attributePlug = new NameValuePlug( attributeName, valuePlug, false, boost::replace_all_copy( attributeName, ".", "_" ) );
 			attributesPlug()->addChild( attributePlug );
 		}
 	}
