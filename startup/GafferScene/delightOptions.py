@@ -40,7 +40,7 @@ Gaffer.Metadata.registerValues( {
 
 	"option:dl:oversampling" : [
 
-		"defaultValue", 9,
+		"defaultValue", 4,
 		"description",
 		"""
 		The number of camera rays to fire for each pixel of
@@ -54,7 +54,7 @@ Gaffer.Metadata.registerValues( {
 
 	"option:dl:quality.shadingsamples" : [
 
-		"defaultValue", 64,
+		"defaultValue", 1,
 		"description",
 		"""
 		The number of samples to take when evaluating shading.
