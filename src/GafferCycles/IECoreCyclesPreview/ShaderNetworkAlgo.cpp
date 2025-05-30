@@ -528,29 +528,6 @@ void setSingleSided( ccl::ShaderGraph *graph )
 	}
 }
 
-ccl::Shader *createDefaultShader()
-{
-	// This creates a camera dot-product shader/facing ratio.
-	ccl::Shader *cshader = new ccl::Shader();
-	ccl::ShaderGraph *cgraph = new ccl::ShaderGraph();
-	cshader->name = ccl::ustring( "defaultSurfaceShader" );
-	ccl::ShaderNode *outputNode = (ccl::ShaderNode*)cgraph->output();
-	ccl::VectorMathNode *vecMath = cgraph->create_node<ccl::VectorMathNode>();
-	vecMath->set_math_type( ccl::NODE_VECTOR_MATH_DOT_PRODUCT );
-	ccl::GeometryNode *geo = cgraph->create_node<ccl::GeometryNode>();
-	ccl::ShaderNode *vecMathNode = cgraph->add( (ccl::ShaderNode*)vecMath );
-	ccl::ShaderNode *geoNode = cgraph->add( (ccl::ShaderNode*)geo );
-	cgraph->connect( ShaderNetworkAlgo::output( geoNode, "normal" ),
-						ShaderNetworkAlgo::input( vecMathNode, "vector1" ) );
-	cgraph->connect( ShaderNetworkAlgo::output( geoNode, "incoming" ),
-						ShaderNetworkAlgo::input( vecMathNode, "vector2" ) );
-	cgraph->connect( ShaderNetworkAlgo::output( vecMathNode, "value" ),
-						ShaderNetworkAlgo::input( outputNode, "surface" ) );
-	cshader->set_graph( cgraph );
-
-	return cshader;
-}
-
 bool hasOSL( const ccl::Shader *cshader )
 {
 	for( ccl::ShaderNode *snode : cshader->graph->nodes )

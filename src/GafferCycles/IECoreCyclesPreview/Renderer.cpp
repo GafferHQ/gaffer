@@ -488,14 +488,6 @@ class CyclesShader : public IECore::RefCounted
 
 	public :
 
-		// Default shader
-		CyclesShader( ccl::Scene *scene )
-			:	m_shader( ShaderNetworkAlgo::createDefaultShader() ),
-				m_hash( IECore::MurmurHash() )
-		{
-			m_shader->set_owner( scene );
-		}
-
 		CyclesShader(
 			const IECoreScene::ShaderNetwork *surfaceShader,
 			const IECoreScene::ShaderNetwork *displacementShader,
@@ -583,7 +575,6 @@ class ShaderCache
 			: m_scene( scene )
 		{
 			m_numDefaultShaders = m_scene->shaders.size();
-			m_defaultSurface = new CyclesShader( m_scene );
 		}
 
 		void update( NodesCreated &shaders )
@@ -737,11 +728,6 @@ class ShaderCache
 			return writeAccessor->second;
 		}
 
-		CyclesShaderPtr defaultSurface()
-		{
-			return m_defaultSurface;
-		}
-
 		// Must not be called concurrently with anything.
 		void clearUnused()
 		{
@@ -754,7 +740,6 @@ class ShaderCache
 		// Must not be called concurrently with anything.
 		void nodesCreated( NodesCreated &nodes )
 		{
-			nodes.push_back( m_defaultSurface->shader() );
 			for( Cache::const_iterator it = m_cache.begin(), eIt = m_cache.end(); it != eIt; ++it )
 			{
 				if( it->second->shader() )
@@ -856,7 +841,6 @@ class ShaderCache
 		int m_numDefaultShaders;
 		using Cache = tbb::concurrent_hash_map<IECore::MurmurHash, CyclesShaderPtr>;
 		Cache m_cache;
-		CyclesShaderPtr m_defaultSurface;
 		// Need to assign shaders in a deferred manner
 		using ShaderAssignVector = tbb::concurrent_vector<ShaderAssignPair>;
 		ShaderAssignVector m_shaderAssignPairs;
@@ -953,6 +937,30 @@ const char *customAttributeName( const std::string &attributeName, bool &hasPrec
 	return nullptr;
 }
 
+IECoreScene::ConstShaderNetworkPtr g_facingRatio = []() {
+
+	ShaderNetworkPtr result = new ShaderNetwork;
+
+	const InternedString geometryHandle = result->addShader(
+		"geometry", new Shader( "geometry" )
+	);
+	const InternedString vectorMathHandle = result->addShader(
+		"vectorMath", new Shader(
+			"vector_math", "shader",
+			{
+				{ "math_type", new StringData( "dot_product" ) }
+			}
+		)
+	);
+
+	result->addConnection( { { geometryHandle, "normal" }, { vectorMathHandle, "vector1" } } );
+	result->addConnection( { { geometryHandle, "incoming" }, { vectorMathHandle, "vector2" } } );
+	result->setOutput( { vectorMathHandle, "value" } );
+
+	return result;
+
+} ();
+
 class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterface
 {
 
@@ -996,26 +1004,24 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_isCausticsReceiver = attributeValue<bool>( g_isCausticsReceiverAttributeName, attributes, m_isCausticsReceiver );
 
 			// Surface shader
+			const IECoreScene::ShaderNetwork *volumeShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesVolumeShaderAttributeName, attributes );
 			const IECoreScene::ShaderNetwork *surfaceShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesSurfaceShaderAttributeName, attributes );
 			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_oslSurfaceShaderAttributeName, attributes );
 			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_oslShaderAttributeName, attributes );
 			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_surfaceShaderAttributeName, attributes );
+			if( !surfaceShaderAttribute && !volumeShaderAttribute )
+			{
+				surfaceShaderAttribute = g_facingRatio.get();
+			}
 			const IECoreScene::ShaderNetwork *displacementShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesDisplacementShaderAttributeName, attributes );
-			const IECoreScene::ShaderNetwork *volumeShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesVolumeShaderAttributeName, attributes );
-			if( surfaceShaderAttribute || volumeShaderAttribute )
-			{
-				// Hash shader attributes first
-				m_shaderAttributes.hash( m_shaderHash, attributes );
-				// Create the shader
-				m_shader = m_shaderCache->get( surfaceShaderAttribute, displacementShaderAttribute, volumeShaderAttribute, attributes, m_shaderHash );
-				// Then apply the shader attributes
-				m_shaderAttributes.apply( m_shader->shader() );
-			}
-			else
-			{
-				// Revert back to the default surface
-				m_shader = m_shaderCache->defaultSurface();
-			}
+
+			// Hash shader attributes first
+			m_shaderAttributes.hash( m_shaderHash, attributes );
+			// Create the shader
+			m_shader = m_shaderCache->get( surfaceShaderAttribute, displacementShaderAttribute, volumeShaderAttribute, attributes, m_shaderHash );
+			// Then apply the shader attributes
+			/// \todo Why not let ShaderCache handle this for us?
+			m_shaderAttributes.apply( m_shader->shader() );
 
 			// Light shader
 
