@@ -146,7 +146,7 @@ Gaffer.Metadata.registerValues( {
 			while otherwise letting the renderer choose the
 			optimal number of threads.
 		""",
-		"label", "Numthreads",
+		"label", "Threads",
 		"layout:section", "Session",
 
 	],
