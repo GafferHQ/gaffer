@@ -5,6 +5,7 @@ Features
 --------
 
 - Arnold : Added multi-layer EXR support. All outputs with the same filename are now written to the same file via a single output driver.
+- Image Selection Tool : Added new tool that allows selecting scene paths based on an image. Works with both Catalogue images and images on disk. Has two requirements: an `id` AOV ( may be added using the `ID` preset on an `Outputs` ), and a render manifest ( can be added to a render using StandardOptions > Render Manifest > File Path ).
 
 Improvements
 ------------
@@ -16,6 +17,7 @@ Improvements
 - RenderManShader : Improved GraphEditor labels for parameter RGB and XYZ components.
 - Cycles : Added support for `layerName` parameter in outputs, to control the naming of channels in EXR outputs.
 - StandardOptions : Added render manifest option.
+- SelectionTool : Changed behaviour when dragging over an object while holding <kbd>Shift</kbd> or <kbd>Control</kbd> - this is now intepreted as a region select rather than dragging the value of the current selection.
 
 Fixes
 -----
@@ -54,6 +56,7 @@ Breaking Changes
 - SceneTestCase : Removed `assertBoxesEqual()` and `assertBoxesAlmostEqual()` methods.
 - RenderController : Removed `pathForID()`, `pathsForIDs()`, `idForPath()` and `idsForPaths()`. Use `renderManifest()` instead.
 - Catalogue, CatalogueSelect, Display : Moved from GafferImage module to GafferScene.
+- ImageView : Changed image comparison hotkey from <kbd>Q</kbd> to <kbd>K</kbd> ( <kbd>Q</kbd> now selects the selection tool in the image view, same as in the scene view ).
 
 1.5.x.x (relative to 1.5.14.0)
 =======

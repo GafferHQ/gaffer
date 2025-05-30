@@ -210,6 +210,7 @@ from . import ShuffleOptionsUI
 from . import DisplayUI
 from . import CatalogueUI
 from . import CatalogueSelectUI
+from . import ImageSelectionToolUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
