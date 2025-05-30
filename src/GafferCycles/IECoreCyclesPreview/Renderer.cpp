@@ -1643,6 +1643,9 @@ class GeometryCache
 
 			if( auto vdb = IECore::runTimeCast<const IECoreVDB::VDBObject>( object ) )
 			{
+				// It's a pity we can't do this in VolumeAlgo in the first place. It is here instead because
+				// the precision is provided by the attributes, and we don't want to pass attributes
+				// to `GeometryAlgo`.
 				assert( geometry->is_volume() );
 				GeometryAlgo::convertVoxelGrids( vdb, static_cast<ccl::Volume*>( geometry.get() ), m_scene, attributes->getVolumePrecision() );
 			}
