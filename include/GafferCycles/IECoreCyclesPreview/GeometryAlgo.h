@@ -48,7 +48,6 @@
 IECORE_PUSH_DEFAULT_VISIBILITY
 #include "scene/geometry.h"
 #include "scene/volume.h"
-// Currently only VDBs need scene to get to the image manager
 #include "scene/scene.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
@@ -59,10 +58,10 @@ namespace GeometryAlgo
 {
 
 /// Converts the specified `IECore::Object` into `ccl::Geometry`.
-IECORECYCLES_API ccl::Geometry *convert( const IECore::Object *object, const std::string &nodeName, ccl::Scene *scene = nullptr );
+IECORECYCLES_API ccl::Geometry *convert( const IECore::Object *object, const std::string &nodeName, ccl::Scene *scene );
 /// As above, but converting a moving object. If no motion converter
 /// is available, the first sample is converted instead.
-IECORECYCLES_API ccl::Geometry *convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const int frame, const std::string &nodeName, ccl::Scene *scene = nullptr );
+IECORECYCLES_API ccl::Geometry *convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const int frame, const std::string &nodeName, ccl::Scene *scene );
 
 /// Converts a primitive variable to a `ccl::Attribute` inside of a `ccl::AttributeSet`.
 IECORECYCLES_API void convertPrimitiveVariable( const std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes, ccl::AttributeElement attributeElement );

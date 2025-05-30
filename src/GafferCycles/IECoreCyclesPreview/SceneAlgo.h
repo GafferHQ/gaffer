@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2019, Alex Fuller. All rights reserved.
+//  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -32,46 +32,22 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
-#include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
-
-#include "SceneAlgo.h"
+#pragma once
 
 IECORE_PUSH_DEFAULT_VISIBILITY
-#include "openvdb/openvdb.h"
+#include "scene/scene.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
-// This also includes "openvdb.h", so it must come after our
-// `#include "openvdb.h"` so that `IECORE_PUSH_DEFAULT_VISIBILITY`
-// can do its thing.
-#include "IECoreVDB/VDBObject.h"
-
-// Cycles
-IECORE_PUSH_DEFAULT_VISIBILITY
-#include "scene/volume.h"
-IECORE_POP_DEFAULT_VISIBILITY
-
-using namespace std;
-using namespace Imath;
-
-using namespace IECore;
-using namespace IECoreCycles;
-
-namespace
+namespace IECoreCycles::SceneAlgo
 {
 
-ccl::Geometry *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &nodeName, ccl::Scene *scene )
+template<typename T, typename... Args> T *createNodeWithLock( ccl::Scene *scene, Args &&...args )
 {
-	ccl::Volume *volume = SceneAlgo::createNodeWithLock<ccl::Volume>( scene );
-	volume->name = ccl::ustring( nodeName.c_str() );
-	return volume;
+	// `Scene::create_node()` adds the new node to the relevant list
+	// (`lights`, `geometry` etc) in the Scene, so we need the lock
+	// to make that addition thread-safe.
+	std::scoped_lock lock( scene->mutex );
+	return scene->create_node<T>( std::forward<Args>( args )... );
 }
 
-ccl::Geometry *convert( const std::vector<const IECoreVDB::VDBObject *> &samples, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
-{
-	return convert( samples.front(), nodeName, scene );
-}
-
-GeometryAlgo::ConverterDescription<IECoreVDB::VDBObject> g_description( convert, convert );
-
-} // namespace
+} // IECoreCycles::SceneAlgo
