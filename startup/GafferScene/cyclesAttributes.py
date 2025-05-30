@@ -289,7 +289,7 @@ Gaffer.Metadata.registerValues( {
 		Specifies volume data precision, lower values reduce
 		memory consumption at the cost of detail.
 		""",
-		"label", "Velocity Scale",
+		"label", "Precision",
 		"layout:section", "Volume",
 
 		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
