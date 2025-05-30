@@ -27,6 +27,7 @@ Fixes
   - Fixed bugs handling identical cameras with different transforms.
   - Fixed handling of `cycles:volume_precision` attribute, which was previously being ignored.
   - Fixed bugs handling unknown VDB grid types.
+  - Fixed potential crash rendering VDB objects.
 
 API
 ---
