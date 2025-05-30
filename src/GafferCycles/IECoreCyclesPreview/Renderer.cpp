@@ -131,29 +131,6 @@ namespace
 using ShaderAssignPair = std::pair<ccl::Node *, ccl::array<ccl::Node *>>;
 // Defer adding the created nodes to the scene lock
 using NodesCreated = tbb::concurrent_vector<ccl::Node *>;
-// Defer creation of volumes to the scene lock
-using VolumeToConvert = std::tuple<const IECoreVDB::VDBObject *, ccl::Volume *, int>;
-
-// Helper to swap the node to delete to the front of the vector, then pop off
-template<typename T, typename U>
-void removeNodesInSet( const ccl::set<T *> &nodesSet, tbb::concurrent_vector<U> &nodesArray )
-{
-	size_t newSize = nodesArray.size();
-
-	for (size_t i = 0; i < newSize; ++i)
-	{
-		U node = nodesArray[i];
-
-		if( nodesSet.find( node.get() ) != nodesSet.end() )
-		{
-			std::swap(nodesArray[i], nodesArray[newSize - 1]);
-			i -= 1;
-			newSize -= 1;
-		}
-	}
-
-	nodesArray.resize(newSize);
-}
 
 template<typename T>
 T *reportedCast( const IECore::RunTimeTyped *v, const char *type, const IECore::InternedString &name )
@@ -1566,11 +1543,6 @@ class GeometryCache
 		{
 		}
 
-		void update()
-		{
-			updateVolumes();
-		}
-
 		// Can be called concurrently with other get() calls.
 		SharedGeometryPtr get( const IECore::Object *object, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const std::string &nodeName )
 		{
@@ -1669,9 +1641,13 @@ class GeometryCache
 		{
 			auto geometry = SharedGeometryPtr( GeometryAlgo::convert( object, nodeName, m_scene ), NodeDeleter::GeometryDeleter( m_nodeDeleter ) );
 
-			if( object->typeId() == IECoreVDB::VDBObject::staticTypeId() )
+			if( auto vdb = IECore::runTimeCast<const IECoreVDB::VDBObject>( object ) )
 			{
-				m_volumesToConvert.push_back( VolumeToConvert( IECore::runTimeCast<const IECoreVDB::VDBObject>( object ), static_cast<ccl::Volume*>( geometry.get() ), attributes->getVolumePrecision() ) );
+				// It's a pity we can't do this in VolumeAlgo in the first place. It is here instead because
+				// the precision is provided by the attributes, and we don't want to pass attributes
+				// to `GeometryAlgo`.
+				assert( geometry->is_volume() );
+				GeometryAlgo::convertVoxelGrids( vdb, static_cast<ccl::Volume*>( geometry.get() ), m_scene, attributes->getVolumePrecision() );
 			}
 
 			return geometry;
@@ -1687,29 +1663,19 @@ class GeometryCache
 		{
 			auto geometry = SharedGeometryPtr( GeometryAlgo::convert( samples, times, frame, nodeName, m_scene ), NodeDeleter::GeometryDeleter( m_nodeDeleter ) );
 
-			if( samples.front()->typeId() == IECoreVDB::VDBObject::staticTypeId() )
+			if( auto vdb = IECore::runTimeCast<const IECoreVDB::VDBObject>( samples.front() ) )
 			{
-				m_volumesToConvert.push_back( VolumeToConvert( IECore::runTimeCast<const IECoreVDB::VDBObject>( samples.front() ), static_cast<ccl::Volume*>( geometry.get() ), attributes->getVolumePrecision() ) );
+				assert( geometry->is_volume() );
+				GeometryAlgo::convertVoxelGrids( vdb, static_cast<ccl::Volume*>( geometry.get() ), m_scene, attributes->getVolumePrecision() );
 			}
 
 			return geometry;
-		}
-
-		void updateVolumes()
-		{
-			for( VolumeToConvert volume : m_volumesToConvert )
-			{
-				GeometryAlgo::convertVoxelGrids( std::get<0>( volume ), std::get<1>( volume ), m_scene );
-			}
-			m_volumesToConvert.clear();
 		}
 
 		ccl::Scene *m_scene;
 		NodeDeleter *m_nodeDeleter;
 		using Geometry = tbb::concurrent_hash_map<IECore::MurmurHash, SharedGeometryPtr>;
 		Geometry m_geometry;
-		using VolumesToConvert = tbb::concurrent_vector<VolumeToConvert>;
-		VolumesToConvert m_volumesToConvert;
 
 };
 
@@ -2963,7 +2929,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		{
 			// Add every shader each time, less issues
 			m_shaderCache->nodesCreated( m_shadersCreated );
-			m_geometryCache->update();
 			m_shaderCache->update( m_shadersCreated );
 		}
 

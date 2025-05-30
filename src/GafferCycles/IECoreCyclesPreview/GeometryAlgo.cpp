@@ -190,17 +190,18 @@ ccl::Attribute *convertTypedPrimitiveVariable( const std::string &name, const Pr
 	return attribute;
 }
 
-class IEVolumeLoader : public ccl::VDBImageLoader
+// The only reason this class exists is to allow us to initialise the
+// otherwise-protected `precision` member.
+class VolumeLoader : public ccl::VDBImageLoader
 {
-	public:
-		IEVolumeLoader( const IECoreVDB::VDBObject *ieVolume, const string &gridName, const int precision_ )
-		: VDBImageLoader( gridName ), m_ieVolume( ieVolume )
+	public :
+
+		VolumeLoader( openvdb::GridBase::ConstPtr grid, const string &gridName, int precision_ )
+			:	VDBImageLoader( grid, gridName )
 		{
-			grid = m_ieVolume->findGrid( gridName );
 			precision = precision_;
 		}
 
-		const IECoreVDB::VDBObject *m_ieVolume;
 };
 
 } // namespace
@@ -392,16 +393,16 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 	}
 }
 
-void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *volume, ccl::Scene *scene, const int precision )
+void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *volume, ccl::Scene *scene, int precision )
 {
-	ccl::TypeDesc ctype;// = ccl::TypeDesc::TypeUnknown;
-
-	std::vector<std::string> gridNames = vdbObject->gridNames();
-
-	for( const std::string& gridName : gridNames )
+	for( const std::string& gridName : vdbObject->gridNames() )
 	{
+		openvdb::GridBase::ConstPtr grid = vdbObject->findGrid( gridName );
 		ccl::AttributeStandard std = ccl::ATTR_STD_NONE;
+		ccl::TypeDesc ctype = ccl::TypeUnknown;
 
+		/// \todo Should we also be checking that grids have an appropriate type before
+		/// labelling them with one of the standards?
 		if( ccl::ustring( gridName.c_str() ) == ccl::Attribute::standard_name( ccl::ATTR_STD_VOLUME_DENSITY ) )
 		{
 			std = ccl::ATTR_STD_VOLUME_DENSITY;
@@ -440,7 +441,6 @@ void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *volu
 		}
 		else
 		{
-			openvdb::GridBase::ConstPtr grid = vdbObject->findGrid( gridName );
 			if( grid->isType<openvdb::BoolGrid>() )
 			{
 				ctype = ccl::TypeInt;
@@ -473,16 +473,29 @@ void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *volu
 			{
 				ctype = ccl::TypeVector;
 			}
+			else
+			{
+				IECore::msg(
+					IECore::Msg::Warning, "VolumeAlgo",
+					fmt::format(
+						"Ignoring grid \"{}\" with unsupported type \"{}\"",
+						gridName, grid->type()
+					)
+				);
+				continue;
+			}
 		}
 
 		ccl::Attribute *attr = ( std != ccl::ATTR_STD_NONE ) ?
 			volume->attributes.add( std ) :
-			volume->attributes.add( ccl::ustring( gridName.c_str() ), ctype, ccl::ATTR_ELEMENT_VOXEL );
+			volume->attributes.add( ccl::ustring( gridName.c_str() ), ctype, ccl::ATTR_ELEMENT_VOXEL )
+		;
 
-		ccl::ImageLoader *loader = new IEVolumeLoader( vdbObject, gridName, precision );
+		ccl::ImageLoader *loader = new VolumeLoader( grid, gridName, precision );
 		ccl::ImageParams params;
 		params.frame = 0.0f;
 
+		std::scoped_lock lock( scene->mutex );
 		attr->data_voxel() = scene->image_manager->add_image( loader, params, false );
 	}
 }
