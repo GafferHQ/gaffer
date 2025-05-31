@@ -48,6 +48,7 @@ Gaffer.Metadata.registerValues( {
 		`scene:visible` attribute instead.
 		""",
 		"label", "Camera",
+		"layout:section", "Visibility",
 
 	],
 
@@ -60,6 +61,7 @@ Gaffer.Metadata.registerValues( {
 		rays.
 		""",
 		"label", "Diffuse",
+		"layout:section", "Visibility",
 
 	],
 
@@ -72,6 +74,7 @@ Gaffer.Metadata.registerValues( {
 		hair rays.
 		""",
 		"label", "Hair",
+		"layout:section", "Visibility",
 
 	],
 
@@ -84,6 +87,7 @@ Gaffer.Metadata.registerValues( {
 		reflections.
 		""",
 		"label", "Reflection",
+		"layout:section", "Visibility",
 
 	],
 
@@ -96,6 +100,7 @@ Gaffer.Metadata.registerValues( {
 		refractions.
 		""",
 		"label", "Refraction",
+		"layout:section", "Visibility",
 
 	],
 
@@ -108,6 +113,7 @@ Gaffer.Metadata.registerValues( {
 		rays - whether it casts shadows or not.
 		""",
 		"label", "Shadow",
+		"layout:section", "Visibility",
 
 	],
 
@@ -120,6 +126,7 @@ Gaffer.Metadata.registerValues( {
 		specular rays.
 		""",
 		"label", "Specular",
+		"layout:section", "Visibility",
 
 	],
 
@@ -132,6 +139,7 @@ Gaffer.Metadata.registerValues( {
 		This only affects primary (camera) rays.
 		""",
 		"label", "Matte",
+		"layout:section", "Shading",
 
 	],
 

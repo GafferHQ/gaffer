@@ -28,6 +28,7 @@ Fixes
   - Fixed handling of `cycles:volume_precision` attribute, which was previously being ignored.
   - Fixed bugs handling unknown VDB grid types.
   - Fixed potential crash rendering VDB objects.
+- RenderPassEditor : Fixed default values displayed for `dl:oversampling` and `dl:quality.shadingsamples` options.
 
 API
 ---
@@ -58,6 +59,8 @@ Breaking Changes
 - SceneTestCase : Removed `assertBoxesEqual()` and `assertBoxesAlmostEqual()` methods.
 - RenderController : Removed `pathForID()`, `pathsForIDs()`, `idForPath()` and `idsForPaths()`. Use `renderManifest()` instead.
 - Catalogue, CatalogueSelect, Display : Moved from GafferImage module to GafferScene.
+- DelightAttributes : Attribute plugs have been renamed to match the name of their attribute with `.` characters replaced with `_` (e.g. `attributes.cameraVisibility` is now `attributes.dl:visibility_camera`). A compatibility config has been provided to allow DelightAttributes nodes to be loaded from scripts saved in earlier Gaffer versions.
+- DelightOptions : Option plugs have been renamed to match the name of their option with `.` characters replaced with `_` (e.g. `options.shadingSamples` is now `options.dl:quality_shadingsamples`). A compatibility config has been provided to allow DelightOptions nodes to be loaded from scripts saved in earlier Gaffer versions.
 
 1.5.x.x (relative to 1.5.14.0)
 =======

@@ -1366,7 +1366,9 @@ libraries = {
 		"requiredOptions" : [ "DELIGHT_ROOT" ],
 	},
 
-	"GafferDelightTest" : {},
+	"GafferDelightTest" : {
+		"additionalFiles" : glob.glob( "python/GafferDelightTest/scripts/*" )
+	},
 
 	"GafferDelightUI" : {},
 

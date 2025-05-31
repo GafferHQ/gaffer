@@ -1,0 +1,50 @@
+import Gaffer
+import GafferDelight
+import GafferImage
+import GafferScene
+import imath
+
+Gaffer.Metadata.registerValue( parent, "serialiser:milestoneVersion", 1, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:majorVersion", 5, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:minorVersion", 14, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:patchVersion", 0, persistent=False )
+
+__children = {}
+
+parent["variables"].addChild( Gaffer.NameValuePlug( "image:catalogue:port", Gaffer.IntPlug( "value", defaultValue = 0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), "imageCataloguePort", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+parent["variables"].addChild( Gaffer.NameValuePlug( "project:name", Gaffer.StringPlug( "value", defaultValue = 'default', flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), "projectName", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+parent["variables"].addChild( Gaffer.NameValuePlug( "project:rootDirectory", Gaffer.StringPlug( "value", defaultValue = '$HOME/gaffer/projects/${project:name}', flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), "projectRootDirectory", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+parent["variables"].addChild( Gaffer.NameValuePlug( "renderPass", Gaffer.StringPlug( "value", defaultValue = '', ), "renderPass", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+__children["openColorIO"] = GafferImage.OpenColorIOConfigPlug( "openColorIO", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, )
+parent.addChild( __children["openColorIO"] )
+__children["defaultFormat"] = GafferImage.FormatPlug( "defaultFormat", defaultValue = GafferImage.Format( 1920, 1080, 1.000 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, )
+parent.addChild( __children["defaultFormat"] )
+__children["DelightAttributes"] = GafferDelight.DelightAttributes( "DelightAttributes" )
+parent.addChild( __children["DelightAttributes"] )
+__children["DelightAttributes"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+parent["variables"]["imageCataloguePort"]["value"].setValue( 35567 )
+Gaffer.Metadata.registerValue( parent["variables"]["imageCataloguePort"], 'readOnly', True )
+Gaffer.Metadata.registerValue( parent["variables"]["projectName"]["name"], 'readOnly', True )
+Gaffer.Metadata.registerValue( parent["variables"]["projectRootDirectory"]["name"], 'readOnly', True )
+Gaffer.Metadata.registerValue( parent["variables"]["renderPass"]["name"], 'readOnly', True )
+Gaffer.Metadata.registerValue( parent["variables"]["renderPass"]["value"], 'plugValueWidget:type', 'GafferSceneUI.RenderPassEditor._RenderPassPlugValueWidget' )
+__children["DelightAttributes"]["attributes"]["cameraVisibility"]["value"].setValue( False )
+__children["DelightAttributes"]["attributes"]["cameraVisibility"]["enabled"].setValue( True )
+__children["DelightAttributes"]["attributes"]["diffuseVisibility"]["value"].setValue( False )
+__children["DelightAttributes"]["attributes"]["diffuseVisibility"]["enabled"].setValue( True )
+__children["DelightAttributes"]["attributes"]["hairVisibility"]["value"].setValue( False )
+__children["DelightAttributes"]["attributes"]["hairVisibility"]["enabled"].setValue( True )
+__children["DelightAttributes"]["attributes"]["reflectionVisibility"]["value"].setValue( False )
+__children["DelightAttributes"]["attributes"]["reflectionVisibility"]["enabled"].setValue( True )
+__children["DelightAttributes"]["attributes"]["refractionVisibility"]["value"].setValue( False )
+__children["DelightAttributes"]["attributes"]["refractionVisibility"]["enabled"].setValue( True )
+__children["DelightAttributes"]["attributes"]["shadowVisibility"]["value"].setValue( False )
+__children["DelightAttributes"]["attributes"]["shadowVisibility"]["enabled"].setValue( True )
+__children["DelightAttributes"]["attributes"]["specularVisibility"]["value"].setValue( False )
+__children["DelightAttributes"]["attributes"]["specularVisibility"]["enabled"].setValue( True )
+__children["DelightAttributes"]["attributes"]["matte"]["value"].setValue( True )
+__children["DelightAttributes"]["attributes"]["matte"]["enabled"].setValue( True )
+__children["DelightAttributes"]["__uiPosition"].setValue( imath.V2f( 4.10000038, -0.0999995768 ) )
+
+
+del __children

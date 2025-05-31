@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2017, John Haddon. All rights reserved.
+#  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,59 +34,42 @@
 #
 ##########################################################################
 
-import IECore
-
 import Gaffer
 import GafferDelight
 
-def __visibilitySummary( plug ) :
+class __AttributesPlugProxy( object ) :
 
-	info = []
-	for childName, label in (
-
-		( "camera", "Camera" ),
-		( "diffuse", "Diff" ),
-		( "hair", "Hair" ),
-		( "reflection", "Refl" ),
-		( "refraction", "Refr" ),
-		( "shadow", "Shad" ),
-		( "specular", "Spec" ),
-
-	)	:
-		if plug["dl:visibility_" + childName]["enabled"].getValue() :
-			info.append( label + ( " On" if plug["dl:visibility_" + childName]["value"].getValue() else " Off" ) )
-
-	return ", ".join( info )
-
-def __shadingSummary( plug ) :
-
-	info = []
-	for childName, label in ( ( "dl:matte", "Matte" ), ) :
-		if plug[childName]["enabled"].getValue() :
-			info.append( label + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
-
-	return ", ".join( info )
-
-Gaffer.Metadata.registerNode(
-
-	GafferDelight.DelightAttributes,
-
-	"description",
-	"""
-	Applies 3Delight attributes to objects in the scene.
-	""",
-
-	plugs = {
-
-		# Sections
-
-		"attributes" : [
-
-			"layout:section:Visibility:summary", __visibilitySummary,
-			"layout:section:Shading:summary", __shadingSummary,
-
-		],
-
+	__renames = {
+		"cameraVisibility" : "dl:visibility_camera",
+		"diffuseVisibility" : "dl:visibility_diffuse",
+		"hairVisibility" : "dl:visibility_hair",
+		"reflectionVisibility" : "dl:visibility_reflection",
+		"refractionVisibility" : "dl:visibility_refraction",
+		"shadowVisibility" : "dl:visibility_shadow",
+		"specularVisibility" : "dl:visibility_specular",
+		"matte" : "dl:matte",
 	}
 
-)
+	def __init__( self, attributesPlug ) :
+
+		self.__attributesPlug = attributesPlug
+
+	def __getitem__( self, key ) :
+
+		return self.__attributesPlug[self.__renames.get( key, key )]
+
+def __attributesGetItem( originalGetItem ) :
+
+	def getItem( self, key ) :
+
+		result = originalGetItem( self, key )
+		if key == "attributes" :
+			scriptNode = self.ancestor( Gaffer.ScriptNode )
+			if scriptNode is not None and scriptNode.isExecuting() :
+				return __AttributesPlugProxy( result )
+
+		return result
+
+	return getItem
+
+GafferDelight.DelightAttributes.__getitem__ = __attributesGetItem( GafferDelight.DelightAttributes.__getitem__ )
