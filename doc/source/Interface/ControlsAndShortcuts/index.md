@@ -430,6 +430,7 @@ Move cell selection                                  | {kbd}`↑`, {kbd}`↓`, {
 Extend cell selection                                | {kbd}`Shift` + {{leftClick}}<br>or<br>{kbd}`Shift` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
 Toggle cell selection                                | {kbd}`Ctrl` + {{leftClick}}<br>or<br>{kbd}`Ctrl` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
 Edit selected cells                                  | {kbd}`Return`<br>or<br>{kbd}`Enter`
+Commit edit without closing popup                    | {kbd}`Shift` + {kbd}`Return`<br>or<br>{kbd}`Ctrl` + {kbd}`Shift` + {kbd}`Return`
 Disable Edit                                         | {kbd}`D`
 Remove Attribute                                     | {kbd}`Delete`
 Copy/Paste selected cells                            | {kbd}`Ctrl` + {kbd}`C`/{kbd}`V`
@@ -449,6 +450,7 @@ Move cell selection                                  | {kbd}`↑`, {kbd}`↓`, {
 Extend cell selection                                | {kbd}`Shift` + {{leftClick}}<br>or<br>{kbd}`Shift` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
 Toggle cell selection                                | {kbd}`Ctrl` + {{leftClick}}<br>or<br>{kbd}`Ctrl` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
 Edit selected cells                                  | {kbd}`Return`<br>or<br>{kbd}`Enter`
+Commit edit without closing popup                    | {kbd}`Shift` + {kbd}`Return`<br>or<br>{kbd}`Ctrl` + {kbd}`Shift` + {kbd}`Return`
 Disable edit                                         | {kbd}`D`
 Toggle a render pass as active                       | {kbd}`Return` or {{leftClick}} {{leftClick}} a cell within the {{activeRenderPass}} column
 Rename a render pass                                 | {kbd}`Return` or {{leftClick}} {{leftClick}} a cell within the "Name" column
