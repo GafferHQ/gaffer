@@ -263,10 +263,11 @@ struct NodeDeleter
 	using GeometryDeleter = Deleter<ccl::Geometry>;
 	using ObjectDeleter = Deleter<ccl::Object>;
 
-	// Must not be called concurrently, either with `scheduleDeletion()` or other
-	// code affecting the scene.
 	void doPendingDeletions()
 	{
+		std::lock_guard lock( m_mutex );
+		std::lock_guard sceneLock( m_scene->mutex );
+
 		if( m_pendingLightDeletions.size() )
 		{
 			m_scene->delete_nodes( m_pendingLightDeletions );
@@ -763,6 +764,8 @@ class ShaderCache
 
 		void updateShaders( NodesCreated &nodes )
 		{
+			std::lock_guard sceneLock( m_scene->mutex );
+
 			// We need to update all of these, it seems as though being fine-grained causes
 			// graphical glitches unfortunately.
 			if( m_shaderAssignPairs.size() )
@@ -2714,33 +2717,36 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 			acquireSession();
 
+			if( m_rendering && m_renderType == Interactive )
 			{
-				std::scoped_lock sceneLock( m_scene->mutex );
-				if( m_rendering && m_renderType == Interactive )
-				{
-					clearUnused();
-				}
+				clearUnused();
+			}
 
-				if( m_nodeDeleter )
-				{
-					m_nodeDeleter->doPendingDeletions();
-				}
+			if( m_nodeDeleter )
+			{
+				m_nodeDeleter->doPendingDeletions();
+			}
 
-				updateOptions();
-				updateSceneObjects();
-				updateBackground();
+			updateOptions();
+			updateSceneObjects();
+			updateBackground();
+
+			{
+				std::lock_guard sceneLock( m_scene->mutex );
 				const std::string cameraName = optionValue<string>( g_cameraOptionName, "" );
 				updateCamera( cameraName, m_scene->camera );
 				updateCamera( optionValue<string>( g_dicingCameraOptionName, cameraName ), m_scene->dicing_camera );
-				updateOutputs();
-				warnForUnusedOptions();
+			}
 
-				if( m_rendering )
+			updateOutputs();
+			warnForUnusedOptions();
+
+			if( m_rendering )
+			{
+				std::lock_guard sceneLock( m_scene->mutex );
+				if( m_scene->need_reset() )
 				{
-					if( m_scene->need_reset() )
-					{
-						m_session->reset( m_session->params, m_bufferParams );
-					}
+					m_session->reset( m_session->params, m_bufferParams );
 				}
 			}
 
@@ -2935,6 +2941,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				return;
 			}
 
+			std::lock_guard sceneLock( m_scene->mutex );
+
 			// Options that map directly to sockets.
 
 			for( auto &[name, option] : m_options )
@@ -3065,6 +3073,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// This function is separate because background lights can be
 			// modified without setting `m_optionsChanged`.
 
+			std::lock_guard sceneLock( m_scene->mutex );
+
 			if( !m_backgroundShader )
 			{
 				/// \todo Figure out how we can avoid repeating this check for
@@ -3094,6 +3104,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void updateOutputs()
 		{
+			std::lock_guard sceneLock( m_scene->mutex );
+
 			ccl::Camera *camera = m_scene->camera;
 			int width = camera->get_full_width();
 			int height = camera->get_full_height();
