@@ -129,8 +129,6 @@ namespace
 
 // Need to defer shader assignments to the scene lock
 using ShaderAssignPair = std::pair<ccl::Node *, ccl::array<ccl::Node *>>;
-// Defer adding the created nodes to the scene lock
-using NodesCreated = tbb::concurrent_vector<ccl::Node *>;
 
 template<typename T>
 T *reportedCast( const IECore::RunTimeTyped *v, const char *type, const IECore::InternedString &name )
@@ -513,7 +511,7 @@ class CyclesShader : public IECore::RefCounted
 				ShaderNetworkAlgo::convertAOV( aovShader, graph, scene->shader_manager, name );
 			}
 
-			m_shader = new ccl::Shader();
+			m_shader = SceneAlgo::createNodeWithLock<ccl::Shader>( scene );
 			if( surfaceShader )
 			{
 				string shaderName( name + surfaceShader->getOutput().shader.string() );
@@ -525,7 +523,6 @@ class CyclesShader : public IECore::RefCounted
 				m_shader->name = ccl::ustring( shaderName.c_str() );
 			}
 			m_shader->set_displacement_method( displacementMethod );
-			m_shader->set_owner( scene );
 			m_shader->set_graph( graph );
 			m_shader->tag_update( scene );
 		}
@@ -545,17 +542,11 @@ class CyclesShader : public IECore::RefCounted
 			return m_shader;
 		}
 
-		void nodesCreated( NodesCreated &nodes )
-		{
-			// Only get the first instance
-			if( this->refCount() == 2 )
-			{
-				nodes.push_back( m_shader );
-			}
-		}
-
 	private :
 
+		/// Note : `ccl::Scene::delete_nodes()` doesn't actually delete shader
+		/// nodes, and `ShaderCache::clearUnused()` is a no-op, so we don't
+		/// bother managing them via a NodeDeleter.
 		ccl::Shader *m_shader;
 		const IECore::MurmurHash m_hash;
 
@@ -575,12 +566,11 @@ class ShaderCache
 		ShaderCache( ccl::Scene *scene )
 			: m_scene( scene )
 		{
-			m_numDefaultShaders = m_scene->shaders.size();
 		}
 
-		void update( NodesCreated &shaders )
+		void update()
 		{
-			updateShaders( shaders );
+			updateShaders();
 		}
 
 		CyclesShaderPtr get( const IECoreScene::ShaderNetwork *surfaceShader )
@@ -738,31 +728,14 @@ class ShaderCache
 			return;
 		}
 
-		// Must not be called concurrently with anything.
-		void nodesCreated( NodesCreated &nodes )
-		{
-			for( Cache::const_iterator it = m_cache.begin(), eIt = m_cache.end(); it != eIt; ++it )
-			{
-				if( it->second->shader() )
-				{
-					nodes.push_back( it->second->shader() );
-				}
-			}
-		}
-
 		void addShaderAssignment( ShaderAssignPair shaderAssign )
 		{
 			m_shaderAssignPairs.push_back( shaderAssign );
 		}
 
-		uint32_t numDefaultShaders()
-		{
-			return m_numDefaultShaders;
-		}
-
 	private :
 
-		void updateShaders( NodesCreated &nodes )
+		void updateShaders()
 		{
 			std::lock_guard sceneLock( m_scene->mutex );
 
@@ -825,23 +798,9 @@ class ShaderCache
 					}
 				}
 			}
-
-			ccl::vector<ccl::Shader *> &shaders = m_scene->shaders;
-			if( nodes.size() + m_numDefaultShaders > shaders.size() )
-			{
-				shaders.resize( m_numDefaultShaders );
-				for( ccl::Node *node : nodes )
-				{
-					ccl::Shader *shader = static_cast<ccl::Shader *>( node );
-					shaders.push_back( shader );
-				}
-				m_scene->shader_manager->tag_update( m_scene, ccl::ShaderManager::SHADER_ADDED );
-			}
-			nodes.clear();
 		}
 
 		ccl::Scene *m_scene;
-		int m_numDefaultShaders;
 		using Cache = tbb::concurrent_hash_map<IECore::MurmurHash, CyclesShaderPtr>;
 		Cache m_cache;
 		// Need to assign shaders in a deferred manner
@@ -1275,11 +1234,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			}
 
 			return true;
-		}
-
-		void nodesCreated( NodesCreated &nodes )
-		{
-			m_shader->nodesCreated( nodes );
 		}
 
 		int getVolumePrecision() const
@@ -2929,9 +2883,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void updateSceneObjects()
 		{
-			// Add every shader each time, less issues
-			m_shaderCache->nodesCreated( m_shadersCreated );
-			m_shaderCache->update( m_shadersCreated );
+			m_shaderCache->update();
 		}
 
 		void updateOptions()
@@ -2941,7 +2893,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				return;
 			}
 
-			std::lock_guard sceneLock( m_scene->mutex );
+			std::unique_lock sceneLock( m_scene->mutex );
 
 			// Options that map directly to sockets.
 
@@ -3004,7 +2956,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				{
 					if( const IECoreScene::ShaderNetwork *d = reportedCast<const IECoreScene::ShaderNetwork>( it->second.value.get(), "option", g_backgroundShaderOptionName ) )
 					{
+						// Need to release scene mutex temporarily, so that
+						// `ShaderCache::get()` can acquire it.
+						sceneLock.unlock();
 						m_backgroundShader = m_shaderCache->get( d );
+						sceneLock.lock();
 					}
 				}
 
@@ -3459,13 +3415,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		std::unique_ptr<GeometryCache> m_geometryCache;
 		std::unique_ptr<AttributesCache> m_attributesCache;
 		LightLinker m_lightLinker;
-
-		// Nodes created to update to Cycles
-		/// \todo I don't see why these need to be state on the Renderer.
-		/// I think they could either be private data within `ShaderCache`
-		/// etc, or we could just stop deferring the addition of objects to
-		/// the `ccl::Scene`.
-		NodesCreated m_shadersCreated;
 
 		// Outputs
 		OutputMap m_outputs;
