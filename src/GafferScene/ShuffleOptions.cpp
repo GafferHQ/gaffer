@@ -38,6 +38,8 @@
 
 #include "boost/algorithm/string/predicate.hpp"
 
+#include <unordered_map>
+
 using namespace Gaffer;
 using namespace GafferScene;
 
