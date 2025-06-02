@@ -127,9 +127,6 @@ using namespace IECoreCycles;
 namespace
 {
 
-// Need to defer shader assignments to the scene lock
-using ShaderAssignPair = std::pair<ccl::Node *, ccl::array<ccl::Node *>>;
-
 template<typename T>
 T *reportedCast( const IECore::RunTimeTyped *v, const char *type, const IECore::InternedString &name )
 {
@@ -728,47 +725,11 @@ class ShaderCache
 			return;
 		}
 
-		void addShaderAssignment( ShaderAssignPair shaderAssign )
-		{
-			m_shaderAssignPairs.push_back( shaderAssign );
-		}
-
 	private :
 
 		void updateShaders()
 		{
 			std::lock_guard sceneLock( m_scene->mutex );
-
-			// We need to update all of these, it seems as though being fine-grained causes
-			// graphical glitches unfortunately.
-			if( m_shaderAssignPairs.size() )
-			{
-				m_scene->geometry_manager->tag_update( m_scene, ccl::GeometryManager::UPDATE_ALL );
-			}
-			// Do the shader assignment here
-			for( ShaderAssignPair shaderAssignPair : m_shaderAssignPairs )
-			{
-				if( shaderAssignPair.first->is_a( ccl::Geometry::get_node_base_type() ) )
-				{
-					for( ccl::Node *node : shaderAssignPair.second )
-					{
-						ccl::Shader *shader = static_cast<ccl::Shader *>( node );
-						shader->tag_used( m_scene );
-					}
-					ccl::Geometry *geo = static_cast<ccl::Geometry*>( shaderAssignPair.first );
-					geo->set_used_shaders( shaderAssignPair.second );
-					if( geo->is_volume() && geo->is_modified() && static_cast<ccl::Volume*>( geo )->get_triangles().size() )
-					{
-						// We're replacing an existing shader on a volume
-						// from which Cycles has already built a mesh, so
-						// we cheekily clear the modified tag to prevent
-						// the volume from disappearing.
-						geo->clear_modified();
-					}
-				}
-			}
-			m_shaderAssignPairs.clear();
-
 			/// \todo There are several problems here :
 			///
 			/// - We're clobbering the `tex_mapping.rotation` parameter, which is exposed to users
@@ -803,9 +764,6 @@ class ShaderCache
 		ccl::Scene *m_scene;
 		using Cache = tbb::concurrent_hash_map<IECore::MurmurHash, CyclesShaderPtr>;
 		Cache m_cache;
-		// Need to assign shaders in a deferred manner
-		using ShaderAssignVector = tbb::concurrent_vector<ShaderAssignPair>;
-		ShaderAssignVector m_shaderAssignPairs;
 
 };
 
@@ -943,8 +901,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				m_assetName( "" ),
 				m_lightGroup( "" ),
 				m_isCausticsCaster( false ),
-				m_isCausticsReceiver( false ),
-				m_shaderCache( shaderCache )
+				m_isCausticsReceiver( false )
 		{
 			updateVisibility( g_cameraVisibilityAttributeName,       (int)ccl::PATH_RAY_CAMERA,         attributes );
 			updateVisibility( g_diffuseVisibilityAttributeName,      (int)ccl::PATH_RAY_DIFFUSE,        attributes );
@@ -980,7 +937,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			// Hash shader attributes first
 			m_shaderAttributes.hash( m_shaderHash, attributes );
 			// Create the shader
-			m_shader = m_shaderCache->get( surfaceShaderAttribute, displacementShaderAttribute, volumeShaderAttribute, attributes, m_shaderHash );
+			m_shader = shaderCache->get( surfaceShaderAttribute, displacementShaderAttribute, volumeShaderAttribute, attributes, m_shaderHash );
 			// Then apply the shader attributes
 			/// \todo Why not let ShaderCache handle this for us?
 			m_shaderAttributes.apply( m_shader->shader() );
@@ -998,7 +955,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 				ShaderNetworkPtr lightShader = ShaderNetworkAlgo::convertLightShader( m_lightAttribute.get() );
 				IECore::MurmurHash h;
-				m_lightShader = m_shaderCache->get( lightShader.get(), nullptr, nullptr, attributes, h );
+				m_lightShader = shaderCache->get( lightShader.get(), nullptr, nullptr, attributes, h );
 			}
 
 			// Custom attributes
@@ -1042,7 +999,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			}
 		}
 
-		bool applyObject( ccl::Object *object, const CyclesAttributes *previousAttributes ) const
+		bool applyObject( ccl::Object *object, const CyclesAttributes *previousAttributes, ccl::Scene *scene ) const
 		{
 			// Re-issue a new object if displacement or subdivision has changed
 			if( previousAttributes )
@@ -1125,11 +1082,31 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				}
 			}
 
-			if( m_shader->shader() )
+			ccl::array<ccl::Node *> shaders;
+			shaders.push_back_slow( m_shader->shader() );
 			{
-				ShaderAssignPair pair = ShaderAssignPair( object->get_geometry(), ccl::array<ccl::Node*>() );
-				pair.second.push_back_slow( m_shader->shader() );
-				m_shaderCache->addShaderAssignment( pair );
+				// We need the scene lock because `tag_used()` will modify the
+				// scene.
+				std::scoped_lock sceneLock( scene->mutex );
+				m_shader->shader()->tag_used( scene );
+				// But we also use the lock for `set_used_shaders()`, to protect the
+				// non-atomic increment made in `ccl::Node::reference()`.
+				object->get_geometry()->set_used_shaders( shaders );
+			}
+
+			if(
+				object->get_geometry()->is_volume() &&
+				object->get_geometry()->is_modified() &&
+				static_cast<ccl::Volume*>( object->get_geometry() )->get_triangles().size()
+			)
+			{
+				// We've replaced an existing shader on a volume
+				// from which Cycles has already built a mesh, so
+				// we cheekily clear the modified tag to prevent
+				// the volume from disappearing.
+				/// \todo I suspect we need something similar for meshes,
+				/// to prevent unnecessary BVH rebuilds.
+				object->get_geometry()->clear_modified();
 			}
 
 			m_volume.apply( object );
@@ -1392,8 +1369,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		InternedString m_lightGroup;
 		bool m_isCausticsCaster;
 		bool m_isCausticsReceiver;
-		// Need to assign shaders in a deferred manner
-		ShaderCache *m_shaderCache;
 		bool m_muteLight;
 
 		using CustomAttributes = ccl::vector<ccl::ParamValue>;
@@ -1906,7 +1881,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
 			const CyclesAttributes *cyclesAttributes = static_cast<const CyclesAttributes *>( attributes );
-			if( cyclesAttributes->applyObject( m_object.get(), m_attributes.get() ) )
+			if( cyclesAttributes->applyObject( m_object.get(), m_attributes.get(), m_scene ) )
 			{
 				m_attributes = cyclesAttributes;
 				m_object->tag_update( m_scene );
