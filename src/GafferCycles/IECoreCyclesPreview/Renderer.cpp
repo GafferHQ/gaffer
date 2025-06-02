@@ -782,7 +782,6 @@ class ShaderCache
 			// graphical glitches unfortunately.
 			if( m_shaderAssignPairs.size() )
 			{
-				m_scene->light_manager->tag_update( m_scene, ccl::LightManager::UPDATE_ALL );
 				m_scene->geometry_manager->tag_update( m_scene, ccl::GeometryManager::UPDATE_ALL );
 			}
 			// Do the shader assignment here
@@ -804,20 +803,6 @@ class ShaderCache
 						// we cheekily clear the modified tag to prevent
 						// the volume from disappearing.
 						geo->clear_modified();
-					}
-				}
-				else if( shaderAssignPair.first->is_a( ccl::Light::get_node_type() ) )
-				{
-					ccl::Light *light = static_cast<ccl::Light*>( shaderAssignPair.first );
-					if( shaderAssignPair.second[0] )
-					{
-						ccl::Shader *shader = static_cast<ccl::Shader *>( shaderAssignPair.second[0] );
-						shader->tag_used( m_scene );
-						light->set_shader( shader );
-					}
-					else
-					{
-						light->set_shader( m_scene->default_light );
 					}
 				}
 			}
@@ -1197,15 +1182,20 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return true;
 		}
 
-		bool applyLight( ccl::Light *light, const CyclesAttributes *previousAttributes ) const
+		bool applyLight( ccl::Light *light, const CyclesAttributes *previousAttributes, ccl::Scene *scene ) const
 		{
 			if( m_lightAttribute )
 			{
 				ShaderNetworkAlgo::convertLight( m_lightAttribute.get(), light );
-				ShaderAssignPair pair = ShaderAssignPair( light, ccl::array<ccl::Node*>() );
-				pair.second.push_back_slow( m_lightShader->shader() );
-				m_shaderCache->addShaderAssignment( pair );
-
+				{
+					// We need the scene lock because `tag_used()` will modify the
+					// scene.
+					std::scoped_lock sceneLock( scene->mutex );
+					m_lightShader->shader()->tag_used( scene );
+					// But we also use the lock for `set_shader()`, to protect the
+					// non-atomic increment made in `ccl::Node::reference()`.
+					light->set_shader( m_lightShader->shader() );
+				}
 				light->set_is_enabled( !m_muteLight );
 			}
 			else
@@ -2038,7 +2028,7 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
 			const CyclesAttributes *cyclesAttributes = static_cast<const CyclesAttributes *>( attributes );
-			if( cyclesAttributes->applyLight( m_light.get(), m_attributes.get() ) )
+			if( cyclesAttributes->applyLight( m_light.get(), m_attributes.get(), m_scene ) )
 			{
 				m_attributes = cyclesAttributes;
 				m_light->tag_update( m_scene );
