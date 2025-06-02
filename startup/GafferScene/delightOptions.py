@@ -34,13 +34,69 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 
 Gaffer.Metadata.registerValues( {
 
+	# Rendering
+
+	"option:dl:bucketorder" : [
+
+		"defaultValue", "horizontal",
+		"description",
+		"""
+		The order that the buckets (image tiles) are rendered in.
+		""",
+		"label", "Bucket Order",
+		"layout:section", "Rendering",
+
+		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+		"presetNames", IECore.StringVectorData( [ "Horizontal", "Vertical", "ZigZag", "Spiral", "Circle" ] ),
+		"presetValues", IECore.StringVectorData( [ "horizontal", "vertical", "zigzag", "spiral", "circle" ] ),
+
+	],
+
+	"option:dl:numberofthreads" : [
+
+		"defaultValue", 0,
+		"description",
+		"""
+		The number of threads used for rendering.
+
+		- The default value of 0 lets the renderer choose
+		an optimal number of threads based on the available
+		hardware.
+		- Positive values directly set the number of threads.
+		- Negative values can be used to reserve some cores
+		while otherwise letting the renderer choose the
+		optimal number of threads.
+		""",
+		"label", "Number Of Threads",
+		"layout:section", "Rendering",
+
+	],
+
+	"option:dl:renderatlowpriority" : [
+
+		"defaultValue", False,
+		"description",
+		"""
+		Causes 3Delight to render at a lower thread priority. This
+		can make other applications running at the same time more
+		responsive.
+		""",
+		"label", "Render At Low Priority",
+		"layout:section", "Rendering",
+
+	],
+
+	# Quality
+
 	"option:dl:oversampling" : [
 
-		"defaultValue", 9,
+		"defaultValue", 4,
 		"description",
 		"""
 		The number of camera rays to fire for each pixel of
@@ -49,12 +105,13 @@ Gaffer.Metadata.registerValues( {
 		heavily motion blurred renders.
 		""",
 		"label", "Oversampling",
+		"layout:section", "Quality",
 
 	],
 
 	"option:dl:quality.shadingsamples" : [
 
-		"defaultValue", 64,
+		"defaultValue", 1,
 		"description",
 		"""
 		The number of samples to take when evaluating shading.
@@ -62,6 +119,7 @@ Gaffer.Metadata.registerValues( {
 		reducing shading noise.
 		""",
 		"label", "Shading Samples",
+		"layout:section", "Quality",
 
 	],
 
@@ -73,8 +131,118 @@ Gaffer.Metadata.registerValues( {
 		The number of samples to take when evaluating volumes.
 		""",
 		"label", "Volume Samples",
+		"layout:section", "Quality",
 
 	],
+
+	"option:dl:clampindirect" : [
+
+		"defaultValue", 2.0,
+		"description",
+		"""
+		The maximum value to clamp indirect light rays to.
+		""",
+		"label", "Clamp Indirect",
+		"layout:section", "Quality",
+
+	],
+
+	"option:dl:importancesamplefilter" : [
+
+		"defaultValue", False,
+		"description",
+		"""
+		Use filter importance sampling (on) or splatting (off)
+		for sample filtering.
+		""",
+		"label", "Importance Sample Filter",
+		"layout:section", "Quality",
+
+	],
+
+	# Features
+
+	"option:dl:show.displacement" : [
+
+		"defaultValue", True,
+		"description",
+		"""
+		Enables or disables displacement in the entire scene.
+		""",
+		"label", "Show Displacement",
+		"layout:section", "Features",
+
+	],
+
+	"option:dl:show.osl.subsurface" : [
+
+		"defaultValue", True,
+		"description",
+		"""
+		Enables or disables subsurface shading in the entire scene.
+		""",
+		"label", "Show Subsurface",
+		"layout:section", "Features",
+
+	],
+
+	"option:dl:show.atmosphere" : [
+
+		"defaultValue", True,
+		"description",
+		"""
+		Enables or disables atmosphere shading in the entire scene.
+		""",
+		"label", "Show Atmosphere",
+		"layout:section", "Features",
+
+	],
+
+	"option:dl:show.multiplescattering" : [
+
+		"defaultValue", True,
+		"description",
+		"""
+		Enables or disables multiple scattering shading in the entire scene.
+		""",
+		"label", "Show Multiple Scattering",
+		"layout:section", "Features",
+
+	],
+
+	# Statistics
+
+	"option:dl:statistics.progress" : [
+
+		"defaultValue", False,
+		"description",
+		"""
+		Causes the percentage of pixels rendered to be output
+		during rendering.
+		""",
+		"label", "Show Progress",
+		"layout:section", "Statistics",
+
+	],
+
+	"option:dl:statistics.filename" : [
+
+		"defaultValue", "",
+		"description",
+		"""
+		The path to the file where render statistics will be written.
+		Using an empty value will output statistics to the terminal.
+		A value of \"null\" will disable statistics output.
+		""",
+		"label", "Statistics File Name",
+		"layout:section", "Statistics",
+
+		"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+		"path:leaf", True,
+
+	],
+
+	# Ray Depth
 
 	"option:dl:maximumraydepth.diffuse" : [
 
@@ -86,6 +254,7 @@ Gaffer.Metadata.registerValues( {
 		local illumination.
 		""",
 		"label", "Diffuse",
+		"layout:section", "Ray Depth",
 
 	],
 
@@ -99,6 +268,7 @@ Gaffer.Metadata.registerValues( {
 		depth to properly capture the illumination.
 		""",
 		"label", "Hair",
+		"layout:section", "Ray Depth",
 
 	],
 
@@ -112,6 +282,7 @@ Gaffer.Metadata.registerValues( {
 		meaning that only emissive surfaces will appear in the reflections.
 		""",
 		"label", "Reflection",
+		"layout:section", "Ray Depth",
 
 	],
 
@@ -125,6 +296,7 @@ Gaffer.Metadata.registerValues( {
 		glass.
 		""",
 		"label", "Refraction",
+		"layout:section", "Ray Depth",
 
 	],
 
@@ -136,6 +308,162 @@ Gaffer.Metadata.registerValues( {
 		The maximum bounce depth a volume ray can reach.
 		""",
 		"label", "Volume",
+		"layout:section", "Ray Depth",
+
+	],
+
+	# Ray Length
+
+	"option:dl:maximumraylength.diffuse" : [
+
+		"defaultValue", -1.0,
+		"description",
+		"""
+		The maximum distance a ray emitted from a diffuse material
+		can travel. Using a relatively low value may improve performance
+		without significant image effects by limiting the effect of global
+		illumination. Setting it to a negative value disables the limit.
+		""",
+		"label", "Diffuse",
+		"layout:section", "Ray Length",
+
+	],
+
+	"option:dl:maximumraylength.hair" : [
+
+		"defaultValue", -1.0,
+		"description",
+		"""
+		The maximum distance a ray emitted from a hair shader can travel.
+		Setting it to a negative value disables the limit.
+		""",
+		"label", "Hair",
+		"layout:section", "Ray Length",
+
+	],
+
+	"option:dl:maximumraylength.reflection" : [
+
+		"defaultValue", -1.0,
+		"description",
+		"""
+		The maximum distance a reflection ray can travel.
+		Setting it to a negative value disables the limit.
+		""",
+		"label", "Reflection",
+		"layout:section", "Ray Length",
+
+	],
+
+	"option:dl:maximumraylength.refraction" : [
+
+		"defaultValue", -1.0,
+		"description",
+		"""
+		The maximum distance a refraction ray can travel.
+		Setting it to a negative value disables the limit.
+		""",
+		"label", "Refraction",
+		"layout:section", "Ray Length",
+
+	],
+
+	"option:dl:maximumraylength.specular" : [
+
+		"defaultValue", -1.0,
+		"description",
+		"""
+		The maximum distance a specular ray can travel.
+		Setting it to a negative value disables the limit.
+		""",
+		"label", "Specular",
+		"layout:section", "Ray Length",
+
+	],
+
+	"option:dl:maximumraylength.volume" : [
+
+		"defaultValue", -1.0,
+		"description",
+		"""
+		The maximum distance a volume ray can travel.
+		Setting it to a negative value disables the limit.
+		""",
+		"label", "Volume",
+		"layout:section", "Ray Length",
+
+	],
+
+	# Texturing
+
+	"option:dl:texturememory" : [
+
+		"defaultValue", 250,
+		"description",
+		"""
+		The amount of RAM allocated to caching textures. Specified
+		in megabytes.
+		""",
+		"label", "Memory",
+		"layout:section", "Texturing",
+
+	],
+
+	# Network cache
+
+	"option:dl:networkcache.size" : [
+
+		"defaultValue", 15,
+		"description",
+		"""
+		The amount of disk spaced used to cache network files on
+		local storage. Specified in gigabytes.
+		""",
+		"label", "Size",
+		"layout:section", "Network Cache",
+
+	],
+
+	"option:dl:networkcache.directory" : [
+
+		"defaultValue", "",
+		"description",
+		"""
+		The local directory used for caching network files.
+		""",
+		"label", "Directory",
+		"layout:section", "Network Cache",
+
+		"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+		"path:leaf", False,
+
+	],
+
+	# Licensing
+
+	"option:dl:license.server" : [
+
+		"defaultValue", "",
+		"description",
+		"""
+		The hostname or IP address of the 3Delight license server.
+		""",
+		"label", "Server",
+		"layout:section", "Licensing",
+
+	],
+
+	"option:dl:license.wait" : [
+
+		"defaultValue", True,
+		"description",
+		"""
+		Causes 3Delight to wait for a license to become available.
+		When off, 3Delight will exit immediately if no license is
+		available.
+		""",
+		"label", "Wait",
+		"layout:section", "Licensing",
 
 	],
 

@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import IECore
-
 import Gaffer
 import GafferDelight
 
@@ -43,16 +41,16 @@ def __renderingSummary( plug ) :
 
 	info = []
 
-	if plug["numberOfThreads"]["enabled"].getValue() :
-		info.append( "Threads {}".format( plug["numberOfThreads"]["value"].getValue() ) )
+	if plug["dl:numberofthreads"]["enabled"].getValue() :
+		info.append( "Threads {}".format( plug["dl:numberofthreads"]["value"].getValue() ) )
 
-	if plug["bucketOrder"]["enabled"].getValue() :
+	if plug["dl:bucketorder"]["enabled"].getValue() :
 		info.append(
-			"Order {}".format( Gaffer.NodeAlgo.currentPreset( plug["bucketOrder"]["value"] ) )
+			"Order {}".format( Gaffer.NodeAlgo.currentPreset( plug["dl:bucketorder"]["value"] ) )
 		)
 
-	if plug["renderAtLowPriority"]["enabled"].getValue() :
-		info.append( "Low Priority {}".format( "On" if plug["renderAtLowPriority"]["value"].getValue() else "Off" ) )
+	if plug["dl:renderatlowpriority"]["enabled"].getValue() :
+		info.append( "Low Priority {}".format( "On" if plug["dl:renderatlowpriority"]["value"].getValue() else "Off" ) )
 
 	return ", ".join( info )
 
@@ -60,19 +58,19 @@ def __qualitySummary( plug ) :
 
 	info = []
 
-	if plug["oversampling"]["enabled"].getValue() :
-		info.append( "Oversampling {}".format( plug["oversampling"]["value"].getValue() ) )
+	if plug["dl:oversampling"]["enabled"].getValue() :
+		info.append( "Oversampling {}".format( plug["dl:oversampling"]["value"].getValue() ) )
 
 	for samples in ( "shading", "volume" ) :
-		childName = samples + "Samples"
+		childName = "dl:quality_" + samples + "samples"
 		if plug[childName]["enabled"].getValue() :
 			info.append( "{} Samples {}".format( samples.capitalize(), plug[childName]["value"].getValue() ) )
 
-	if plug["clampIndirect"]["enabled"].getValue() :
-		info.append( "Clamp Indirect {}".format( plug["clampIndirect"]["value"].getValue() ) )
+	if plug["dl:clampindirect"]["enabled"].getValue() :
+		info.append( "Clamp Indirect {}".format( plug["dl:clampindirect"]["value"].getValue() ) )
 
-	if plug["importanceSampleFilter"]["enabled"].getValue() :
-		info.append( "Importance Sample Filter {}".format( "On" if plug["importanceSampleFilter"]["value"].getValue() else "Off" ) )
+	if plug["dl:importancesamplefilter"]["enabled"].getValue() :
+		info.append( "Importance Sample Filter {}".format( "On" if plug["dl:importancesamplefilter"]["value"].getValue() else "Off" ) )
 
 	return ", ".join( info )
 
@@ -80,10 +78,10 @@ def __featuresSummary( plug ) :
 
 	info = []
 
-	for show in ( "Displacement", "Subsurface" ) :
-		childName = "show" + show
+	for label, name in ( ( "Displacement", "displacement" ), ( "Subsurface", "osl_subsurface" ) ) :
+		childName = "dl:show_" + name
 		if plug[childName]["enabled"].getValue() :
-			info.append( "Show {} {}".format( show, "On" if plug[childName]["value"].getValue() else "Off" ) )
+			info.append( "Show {} {}".format( label, "On" if plug[childName]["value"].getValue() else "Off" ) )
 
 	return ", ".join( info )
 
@@ -91,11 +89,11 @@ def __statisticsSummary( plug ) :
 
 	info = []
 
-	if plug["showProgress"]["enabled"].getValue() :
-		info.append( "Progress {}".format( "On" if plug["showProgress"]["value"].getValue() else "Off" ) )
+	if plug["dl:statistics_progress"]["enabled"].getValue() :
+		info.append( "Progress {}".format( "On" if plug["dl:statistics_progress"]["value"].getValue() else "Off" ) )
 
-	if plug["statisticsFileName"]["enabled"].getValue() :
-		info.append( "Stats File: {}".format( plug["statisticsFileName"]["value"].getValue() ) )
+	if plug["dl:statistics_filename"]["enabled"].getValue() :
+		info.append( "Stats File: {}".format( plug["dl:statistics_filename"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -103,11 +101,11 @@ def __rayDepthSummary( plug ) :
 
 	info = []
 
-	for rayType in ( "Diffuse", "Hair", "Reflection", "Refraction", "Volume" ) :
-		childName = "maximumRayDepth" + rayType
+	for rayType in ( "diffuse", "hair", "reflection", "refraction", "volume" ) :
+		childName = "dl:maximumraydepth_" + rayType
 		if plug[childName]["enabled"].getValue() :
 			info.append(
-				"{} {}".format( rayType, plug[childName]["value"].getValue() )
+				"{} {}".format( rayType.capitalize(), plug[childName]["value"].getValue() )
 			)
 
 	return ", ".join( info )
@@ -116,11 +114,11 @@ def __rayLengthSummary( plug ) :
 
 	info = []
 
-	for rayLength in ( "Diffuse", "Hair", "Reflection", "Refraction", "Specular", "Volume" ) :
-		childName = "maximumRayLength" + rayLength
+	for rayLength in ( "diffuse", "hair", "reflection", "refraction", "specular", "volume" ) :
+		childName = "dl:maximumraylength_" + rayLength
 		if plug[childName]["enabled"].getValue() :
 			info.append(
-				"{} {}".format( rayLength, plug[childName]["value"].getValue() )
+				"{} {}".format( rayLength.capitalize(), plug[childName]["value"].getValue() )
 			)
 
 	return ", ".join( info )
@@ -129,8 +127,8 @@ def __texturingSummary( plug ) :
 
 	info = []
 
-	if plug["textureMemory"]["enabled"].getValue() :
-		info.append( "Memory {} Mb".format( plug["textureMemory"]["value"].getValue() ) )
+	if plug["dl:texturememory"]["enabled"].getValue() :
+		info.append( "Memory {} Mb".format( plug["dl:texturememory"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -138,8 +136,8 @@ def __networkCacheSummary( plug ) :
 
 	info = []
 
-	if plug["networkCacheSize"]["enabled"].getValue() :
-		info.append( "Size {} gb".format( plug["networkCacheSize"]["value"].getValue() ) )
+	if plug["dl:networkcache_size"]["enabled"].getValue() :
+		info.append( "Size {} gb".format( plug["dl:networkcache_size"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -147,10 +145,10 @@ def __licensingSummary( plug ) :
 
 	info = []
 
-	if plug["licenseServer"]["enabled"].getValue() :
-		info.append( "Server {}".format( plug["licenseServer"]["value"].getValue() ) )
-	if plug["licenseWait"]["enabled"].getValue() :
-		info.append( "Wait {}".format( "On" if plug["licenseWait"]["value"].getValue() else "Off" ) )
+	if plug["dl:license_server"]["enabled"].getValue() :
+		info.append( "Server {}".format( plug["dl:license_server"]["value"].getValue() ) )
+	if plug["dl:license_wait"]["enabled"].getValue() :
+		info.append( "Wait {}".format( "On" if plug["dl:license_wait"]["value"].getValue() else "Off" ) )
 
 	return ", ".join( info )
 
@@ -182,436 +180,6 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Licensing:summary", __licensingSummary,
 
 		],
-
-		# Rendering
-
-		"options.bucketOrder" : [
-
-			"description",
-			"""
-			The order that the buckets (image tiles) are rendered in.
-			""",
-
-			"layout:section", "Rendering",
-
-		],
-
-		"options.bucketOrder.value" : [
-
-			"preset:Horizontal", "horizontal",
-			"preset:Vertical", "vertical",
-			"preset:ZigZag", "zigzag",
-			"preset:Spiral", "spiral",
-			"preset:Circle", "circle",
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
-		"options.numberOfThreads" : [
-
-			"description",
-			"""
-			The number of threads used for rendering.
-
-			- The default value of 0 lets the renderer choose
-			  an optimal number of threads based on the available
-			  hardware.
-			- Positive values directly set the number of threads.
-			- Negative values can be used to reserve some cores
-			  while otherwise letting the renderer choose the
-			  optimal number of threads.
-			""",
-
-			"layout:section", "Rendering",
-
-		],
-
-		"options.renderAtLowPriority" : [
-
-			"description",
-			"""
-			Causes 3Delight to render at a lower thread priority. This
-			can make other applications running at the same time more
-			responsive.
-			""",
-
-			"layout:section", "Rendering",
-
-		],
-
-		# Quality
-
-		"options.oversampling" : [
-
-			"description",
-			"""
-			The number of camera rays to fire for each pixel of
-			the image. Higher values may be needed to resolve fine
-			geometric detail such as hair, or to reduce noise in
-			heavily motion blurred renders.
-			""",
-
-			"layout:section", "Quality",
-
-		],
-
-		"options.shadingSamples" : [
-
-			"description",
-			"""
-			The number of samples to take when evaluating shading.
-			This is the primary means of improving image quality and
-			reducing shading noise.
-			""",
-
-			"layout:section", "Quality",
-
-		],
-
-		"options.volumeSamples" : [
-
-			"description",
-			"""
-			The number of samples to take when evaluating volumes.
-			""",
-
-			"layout:section", "Quality",
-
-		],
-
-		"options.clampIndirect" : [
-
-			"description",
-			"""
-			The maximum value to clamp indirect light rays to.
-			""",
-
-			"layout:section", "Quality",
-
-		],
-
-		"options.importanceSampleFilter" : [
-
-			"description",
-			"""
-			Use filter importance sampling (on) or splatting (off)
-			for sample filtering.
-			""",
-
-			"layout:section", "Quality",
-
-		],
-
-		# Features
-
-		"options.showDisplacement" : [
-
-			"description",
-			"""
-			Enables or disables displacement in the entire scene.
-			""",
-
-			"layout:section", "Features",
-
-		],
-
-		"options.showSubsurface" : [
-
-			"description",
-			"""
-			Enables or disables subsurface shading in the entire scene.
-			""",
-
-			"layout:section", "Features",
-
-		],
-
-		"options.showAtmosphere" : [
-
-			"description",
-			"""
-			Enables or disables atmosphere shading in the entire scene.
-			""",
-
-			"layout:section", "Features",
-
-		],
-
-		"options.showMultipleScattering" : [
-
-			"description",
-			"""
-			Enables or disables multiple scattering shading in the entire scene.
-			""",
-
-			"layout:section", "Features",
-
-		],
-
-		# Statistics
-
-		"options.showProgress" : [
-
-			"description",
-			"""
-			Causes the percentage of pixels rendered to be output
-			during rendering.
-			""",
-
-			"layout:section", "Statistics",
-
-		],
-
-		"options.statisticsFileName" : [
-
-			"description",
-			"""
-			The path to the file where render statistics will be written.
-			Using an empty value will output statistics to the terminal.
-			A value of \"null\" will disable statistics output.
-			""",
-
-			"layout:section", "Statistics",
-
-		],
-
-		"options.statisticsFileName.value" : [
-
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", True,
-
-		],
-
-		# Ray Depth
-
-		"options.maximumRayDepthDiffuse" : [
-
-			"description",
-			"""
-			The maximum bounce depth a diffuse ray can reach. A depth
-			of 1 specifies one additional bounce compared to purely
-			local illumination.
-			""",
-
-			"layout:section", "Ray Depth",
-			"label", "Diffuse",
-
-		],
-
-		"options.maximumRayDepthHair" : [
-
-			"description",
-			"""
-			The maximum bounce depth a hair ray can reach. Note that hair
-			is akin to volumetric primitives and might need elevated ray
-			depth to properly capture the illumination.
-			""",
-
-			"layout:section", "Ray Depth",
-			"label", "Hair",
-
-		],
-
-		"options.maximumRayDepthReflection" : [
-
-			"description",
-			"""
-			The maximum bounce depth a reflection ray can reach. Setting
-			the reflection depth to 0 will only compute local illumination
-			meaning that only emissive surfaces will appear in the reflections.
-			""",
-
-			"layout:section", "Ray Depth",
-			"label", "Reflection",
-
-		],
-
-		"options.maximumRayDepthRefraction" : [
-
-			"description",
-			"""
-			The maximum bounce depth a refraction ray can reach. A value of 4
-			allows light to shine through a properly modeled object such as a
-			glass.
-			""",
-
-			"layout:section", "Ray Depth",
-			"label", "Refraction",
-
-		],
-
-		"options.maximumRayDepthVolume" : [
-
-			"description",
-			"""
-			The maximum bounce depth a volume ray can reach.
-			""",
-
-			"layout:section", "Ray Depth",
-			"label", "Volume",
-
-		],
-
-		# Ray Length
-
-		"options.maximumRayLengthDiffuse" : [
-
-			"description",
-			"""
-			The maximum distance a ray emitted from a diffuse material
-			can travel. Using a relatively low value may improve performance
-			without significant image effects by limiting the effect of global
-			illumination. Setting it to a negative value disables the limit.
-			""",
-
-			"layout:section", "Ray Length",
-			"label", "Diffuse",
-
-		],
-
-		"options.maximumRayLengthHair" : [
-
-			"description",
-			"""
-			The maximum distance a ray emitted from a hair shader can travel.
-			Setting it to a negative value disables the limit.
-			""",
-
-			"layout:section", "Ray Length",
-			"label", "Hair",
-
-		],
-
-		"options.maximumRayLengthReflection" : [
-
-			"description",
-			"""
-			The maximum distance a reflection ray can travel.
-			Setting it to a negative value disables the limit.
-			""",
-
-			"layout:section", "Ray Length",
-			"label", "Reflection",
-
-		],
-
-		"options.maximumRayLengthRefraction" : [
-
-			"description",
-			"""
-			The maximum distance a refraction ray can travel.
-			Setting it to a negative value disables the limit.
-			""",
-
-			"layout:section", "Ray Length",
-			"label", "Refraction",
-
-		],
-
-		"options.maximumRayLengthSpecular" : [
-
-			"description",
-			"""
-			The maximum distance a specular ray can travel.
-			Setting it to a negative value disables the limit.
-			""",
-
-			"layout:section", "Ray Length",
-			"label", "Specular",
-
-		],
-
-		"options.maximumRayLengthVolume" : [
-
-			"description",
-			"""
-			The maximum distance a volume ray can travel.
-			Setting it to a negative value disables the limit.
-			""",
-
-			"layout:section", "Ray Length",
-			"label", "Volume",
-
-		],
-
-		# Texturing
-
-		"options.textureMemory" : [
-
-			"description",
-			"""
-			The amount of RAM allocated to caching textures. Specified
-			in megabytes.
-			""",
-
-			"layout:section", "Texturing",
-			"label", "Memory",
-
-		],
-
-		# Network cache
-
-		"options.networkCacheSize" : [
-
-			"description",
-			"""
-			The amount of disk spaced used to cache network files on
-			local storage. Specified in gigabytes.
-			""",
-
-			"layout:section", "Network Cache",
-			"label", "Size",
-
-		],
-
-		"options.networkCacheDirectory" : [
-
-			"description",
-			"""
-			The local directory used for caching network files.
-			""",
-
-			"layout:section", "Network Cache",
-			"label", "Directory",
-
-		],
-
-		"options.networkCacheDirectory.value" : [
-
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", False,
-
-		],
-
-		# Licensing
-
-		"options.licenseServer" : [
-
-			"description",
-			"""
-			The hostname or IP address of the 3Delight license server.
-			""",
-
-			"layout:section", "Licensing",
-			"label", "Server",
-
-		],
-
-		"options.licenseWait" : [
-
-			"description",
-			"""
-			Causes 3Delight to wait for a license to become available.
-			When off, 3Delight will exit immediately if no license is
-			available.
-			""",
-
-			"layout:section", "Licensing",
-			"label", "Wait",
-
-		],
-
 
 	}
 

@@ -41,6 +41,8 @@
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/PlugAlgo.h"
 
+#include <boost/algorithm/string/replace.hpp>
+
 using namespace std;
 using namespace IECore;
 using namespace Gaffer;
@@ -74,7 +76,7 @@ Options::Options( const std::string &name, const std::string &rendererPrefix )
 		if( auto valuePlug = MetadataAlgo::createPlugFromMetadata( "value", Plug::Direction::In, Plug::Flags::Default, target ) )
 		{
 			const std::string optionName = target.string().substr( 7 );
-			NameValuePlugPtr optionPlug = new NameValuePlug( optionName, valuePlug, false, optionName );
+			NameValuePlugPtr optionPlug = new NameValuePlug( optionName, valuePlug, false, boost::replace_all_copy( optionName, ".", "_" ) );
 			optionsPlug()->addChild( optionPlug );
 		}
 	}
