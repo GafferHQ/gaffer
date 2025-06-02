@@ -114,9 +114,8 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 {
 	// Reuse previously created node if we can.
 	const IECoreScene::Shader *shader = shaderNetwork->getShader( outputParameter.shader );
-	auto inserted = converted.insert( { outputParameter.shader, nullptr } );
-	ccl::ShaderNode *&node = inserted.first->second;
-	if( !inserted.second )
+	ccl::ShaderNode *&node = converted[outputParameter.shader];
+	if( node )
 	{
 		return node;
 	}
@@ -152,8 +151,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		boost::split( split, shader->getName(), boost::is_any_of( "_" ) );
 		if( split.size() >= 4 ) // should be 4 eg. "convert, X, to, Y"
 		{
-			ccl::ConvertNode *convertNode = shaderGraph->create_node<ccl::ConvertNode>( getSocketType( split[1] ), getSocketType( split[3] ), true );
-			node = (ccl::ShaderNode*)convertNode;
+			node = shaderGraph->create_node<ccl::ConvertNode>( getSocketType( split[1] ), getSocketType( split[3] ), true );
 		}
 	}
 	else if( const ccl::NodeType *nodeType = ccl::NodeType::find( ccl::ustring( shader->getName() ) ) )
@@ -174,12 +172,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	// Add node to graph
 
 	node = shaderGraph->add( node );
-
-	string nodeName(
-		namePrefix +
-		outputParameter.shader.string()
-	);
-	node->name = ccl::ustring( nodeName.c_str() );
+	node->name = ccl::ustring( namePrefix + outputParameter.shader.string() );
 
 	// Set the shader parameters
 
