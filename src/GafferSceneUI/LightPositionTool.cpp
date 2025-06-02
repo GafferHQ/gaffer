@@ -752,7 +752,10 @@ void LightPositionTool::updateHandles( float rasterScale )
 		!m_drag &&
 		(
 			!direction.normalized().equalWithAbsError( handleDir, 1e-4 ) ||
-			handleLine.distanceTo( p ) > distanceHandle->getPivotDistance().value() * 1e-4
+			(
+				distanceHandle->getPivotDistance() &&
+				handleLine.distanceTo( p ) > distanceHandle->getPivotDistance().value() * 1e-4
+			)
 		)
 	)
 	{
