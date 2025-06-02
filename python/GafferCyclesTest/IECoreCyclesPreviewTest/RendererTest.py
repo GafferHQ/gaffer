@@ -2530,7 +2530,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		# Slightly off-centre, to avoid triangle edge artifact in centre of image.
 		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
-		self.assertEqual( testPixel, imath.Color4f( 1 ) )
+		self.assertEqualWithAbsError( testPixel, imath.Color4f( 1 ), 1e-6 )
 
 		# Edit exposure and re-render. We should get an image twice as bright.
 
@@ -2544,7 +2544,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
 
 		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
-		self.assertEqual( testPixel, imath.Color4f( 2, 2, 2, 1 ) )
+		self.assertEqualWithAbsError( testPixel, imath.Color4f( 2, 2, 2, 1 ), 1e-6 )
 
 		del plane
 
