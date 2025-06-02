@@ -141,7 +141,7 @@ GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = "images/tutoria
 sheet["selector"].setValue( "" )
 Gaffer.Metadata.deregisterValue( sheet, "nodeGadget:type" )
 script.selection().add( Gaffer.StandardSet( [ script["CyclesOptions"] ] ) )
-GafferUI.PlugValueWidget.acquire( script["CyclesOptions"]["options"]["samples"] )
+GafferUI.PlugValueWidget.acquire( script["CyclesOptions"]["options"]["cycles:session:samples"] )
 pos = nodeEditorWindow.parent()._qtWidget().pos()
 pos.setX( pos.x() - 150 )
 nodeEditorWindow.parent()._qtWidget().move( pos )

@@ -38,7 +38,6 @@ import IECore
 
 import Gaffer
 
-
 Gaffer.Metadata.registerValues( {
 
 	"attribute:cycles:visibility:camera" : [
@@ -51,6 +50,7 @@ Gaffer.Metadata.registerValues( {
 		`scene:visible` attribute instead.
 		""",
 		"label", "Camera",
+		"layout:section", "Visibility",
 
 	],
 
@@ -63,6 +63,7 @@ Gaffer.Metadata.registerValues( {
 		rays.
 		""",
 		"label", "Diffuse",
+		"layout:section", "Visibility",
 
 	],
 
@@ -75,6 +76,7 @@ Gaffer.Metadata.registerValues( {
 		glossy rays.
 		""",
 		"label", "Glossy",
+		"layout:section", "Visibility",
 
 	],
 
@@ -87,6 +89,7 @@ Gaffer.Metadata.registerValues( {
 		transmission.
 		""",
 		"label", "Transmission",
+		"layout:section", "Visibility",
 
 	],
 
@@ -99,6 +102,7 @@ Gaffer.Metadata.registerValues( {
 		rays - whether it casts shadows or not.
 		""",
 		"label", "Shadow",
+		"layout:section", "Visibility",
 
 	],
 
@@ -111,6 +115,7 @@ Gaffer.Metadata.registerValues( {
 		scatter rays.
 		""",
 		"label", "Scatter",
+		"layout:section", "Visibility",
 
 	],
 
@@ -123,6 +128,7 @@ Gaffer.Metadata.registerValues( {
 		This only affects primary (camera) rays.
 		""",
 		"label", "Use Holdout",
+		"layout:section", "Rendering",
 
 	],
 
@@ -134,6 +140,7 @@ Gaffer.Metadata.registerValues( {
 		Turns the object into a shadow catcher.
 		""",
 		"label", "Is Shadow Catcher",
+		"layout:section", "Rendering",
 
 	],
 
@@ -145,6 +152,7 @@ Gaffer.Metadata.registerValues( {
 		Push the shadow terminator towards the light to hide artifacts on low poly geometry.
 		""",
 		"label", "Terminator Shading Offset",
+		"layout:section", "Rendering",
 
 	],
 
@@ -156,17 +164,7 @@ Gaffer.Metadata.registerValues( {
 		Offset rays from the surface to reduce shadow terminator artifact on low poly geometry. Only affects triangles at grazing angles to light.
 		""",
 		"label", "Terminator Geometry Offset",
-
-	],
-
-	"attribute:cycles:lightgroup" : [
-
-		"defaultValue", "",
-		"description",
-		"""
-		Set the lightgroup of an object with emission.
-		""",
-		"label", "Lightgroup",
+		"layout:section", "Rendering",
 
 	],
 
@@ -178,6 +176,7 @@ Gaffer.Metadata.registerValues( {
 		Cast Shadow Caustics.
 		""",
 		"label", "Is Caustics Caster",
+		"layout:section", "Rendering",
 
 	],
 
@@ -189,6 +188,7 @@ Gaffer.Metadata.registerValues( {
 		Receive Shadow Caustics.
 		""",
 		"label", "Is Caustics Receiver",
+		"layout:section", "Rendering",
 
 	],
 
@@ -201,6 +201,7 @@ Gaffer.Metadata.registerValues( {
 		applied.
 		""",
 		"label", "Max Level",
+		"layout:section", "Subdivision",
 
 	],
 
@@ -212,6 +213,19 @@ Gaffer.Metadata.registerValues( {
 		Multiplier for scene dicing rate.
 		""",
 		"label", "Dicing Scale",
+		"layout:section", "Subdivision",
+
+	],
+
+	"attribute:cycles:lightgroup" : [
+
+		"defaultValue", "",
+		"description",
+		"""
+		Set the lightgroup of an object with emission.
+		""",
+		"label", "Lightgroup",
+		"layout:section", "Rendering",
 
 	],
 
@@ -224,6 +238,7 @@ Gaffer.Metadata.registerValues( {
 		optimize rendering.
 		""",
 		"label", "Clipping",
+		"layout:section", "Volume",
 
 	],
 
@@ -236,12 +251,13 @@ Gaffer.Metadata.registerValues( {
 		estimated based on the voxel size.
 		""",
 		"label", "Step Size",
+		"layout:section", "Volume",
 
 	],
 
 	"attribute:cycles:volume_object_space" : [
 
-		"defaultValue", True,
+		"defaultValue", False,
 		"description",
 		"""
 		Specify volume density and step size in object or world space.
@@ -249,6 +265,36 @@ Gaffer.Metadata.registerValues( {
 		detail remains the same regardless of object scale.
 		""",
 		"label", "Object Space",
+		"layout:section", "Volume",
+
+	],
+
+	"attribute:cycles:volume_velocity_scale" : [
+
+		"defaultValue", 1.0,
+		"description",
+		"""
+		Scales velocity vectors used in motion blur computation.
+		""",
+		"label", "Velocity Scale",
+		"layout:section", "Volume",
+
+	],
+
+	"attribute:cycles:volume_precision" : [
+
+		"defaultValue", "full",
+		"description",
+		"""
+		Specifies volume data precision, lower values reduce
+		memory consumption at the cost of detail.
+		""",
+		"label", "Precision",
+		"layout:section", "Volume",
+
+		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+		"presetNames", IECore.StringVectorData( [ "Full", "Half" ] ),
+		"presetValues", IECore.StringVectorData( [ "full", "half" ] ),
 
 	],
 
@@ -260,6 +306,7 @@ Gaffer.Metadata.registerValues( {
 		Asset name for cryptomatte.
 		""",
 		"label", "Asset Name",
+		"layout:section", "Object",
 
 	],
 
@@ -271,6 +318,8 @@ Gaffer.Metadata.registerValues( {
 		Sampling strategy for emissive surfaces.
 		""",
 		"label", "Emission Sampling Method",
+		"layout:section", "Shader",
+
 		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 		"presetNames", IECore.StringVectorData( [ "None", "Auto", "Front", "Back", "Front-Back" ] ),
 		"presetValues", IECore.StringVectorData( [ "none", "auto", "front", "back", "front_back" ] ),
@@ -286,6 +335,7 @@ Gaffer.Metadata.registerValues( {
 		disabling will render faster but not give accurate shadows.
 		""",
 		"label", "Transparent Shadow",
+		"layout:section", "Shader",
 
 	],
 
@@ -298,6 +348,7 @@ Gaffer.Metadata.registerValues( {
 		everywhere (not using any textures), for faster rendering.
 		""",
 		"label", "Heterogeneous Volume",
+		"layout:section", "Shader",
 
 	],
 
@@ -309,6 +360,8 @@ Gaffer.Metadata.registerValues( {
 		Sampling method to use for volumes.
 		""",
 		"label", "Volume Sampling",
+		"layout:section", "Shader",
+
 		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 		"presetNames", IECore.StringVectorData( [ "Distance", "Equiangular", "Multiple-Importance" ] ),
 		"presetValues", IECore.StringVectorData( [ "distance", "equiangular", "multiple_importance" ] ),
@@ -323,6 +376,8 @@ Gaffer.Metadata.registerValues( {
 		Interpolation method to use for volumes.
 		""",
 		"label", "Volume Interpolation",
+		"layout:section", "Shader",
+
 		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 		"presetNames", IECore.StringVectorData( [ "Linear", "Cubic" ] ),
 		"presetValues", IECore.StringVectorData( [ "linear", "cubic" ] ),
@@ -338,6 +393,7 @@ Gaffer.Metadata.registerValues( {
 		(lower values give more accurate and detailed results, but also increased render time).
 		""",
 		"label", "Volume Step Rate",
+		"layout:section", "Shader",
 
 	],
 
@@ -349,6 +405,8 @@ Gaffer.Metadata.registerValues( {
 		Method to use for the displacement.
 		""",
 		"label", "Displacement Method",
+		"layout:section", "Shader",
+
 		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 		"presetNames", IECore.StringVectorData( [ "Bump", "True", "Both" ] ),
 		"presetValues", IECore.StringVectorData( [ "bump", "true", "both" ] ),

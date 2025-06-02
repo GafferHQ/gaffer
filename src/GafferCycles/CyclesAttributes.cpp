@@ -36,59 +36,13 @@
 
 #include "GafferCycles/CyclesAttributes.h"
 
-#include "Gaffer/StringPlug.h"
-
-using namespace Gaffer;
 using namespace GafferCycles;
 
 IE_CORE_DEFINERUNTIMETYPED( CyclesAttributes );
 
 CyclesAttributes::CyclesAttributes( const std::string &name )
-	:	GafferScene::Attributes( name )
+	:	GafferScene::Attributes( name, "cycles" )
 {
-	Gaffer::CompoundDataPlug *attributes = attributesPlug();
-
-	// Visibility parameters
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:visibility:camera", new IECore::BoolData( true ), false, "cameraVisibility" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:visibility:diffuse", new IECore::BoolData( true ), false, "diffuseVisibility" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:visibility:glossy", new IECore::BoolData( true ), false, "glossyVisibility" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:visibility:transmission", new IECore::BoolData( true ), false, "transmissionVisibility" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:visibility:shadow", new IECore::BoolData( true ), false, "shadowVisibility" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:visibility:scatter", new IECore::BoolData( true ), false, "scatterVisibility" ) );
-
-	// Shading parameters
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:use_holdout", new IECore::BoolData( false ), false, "useHoldout" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:is_shadow_catcher", new IECore::BoolData( false ), false, "isShadowCatcher" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:shadow_terminator_shading_offset", new IECore::FloatData( 0.0f ), false, "shadowTerminatorShadingOffset" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:shadow_terminator_geometry_offset", new IECore::FloatData( 0.0f ), false, "shadowTerminatorGeometryOffset" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:is_caustics_caster", new IECore::BoolData( false ), false, "isCausticsCaster" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:is_caustics_receiver", new IECore::BoolData( false ), false, "isCausticsReceiver" ) );
-
-	// Subdivision parameters
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:max_level", new IECore::IntData( 1 ), false, "maxLevel" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:dicing_rate", new IECore::FloatData( 1.0f ), false, "dicingScale" ) );
-
-	// Light-Group
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:lightgroup", new IECore::StringData( "" ), false, "lightGroup" ) );
-
-	// Volume
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:volume_clipping", new IECore::FloatData( 0.001f ), false, "volumeClipping" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:volume_step_size", new IECore::FloatData( 0.0f ), false, "volumeStepSize" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:volume_object_space", new IECore::BoolData( false ), false, "volumeObjectSpace" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:volume_velocity_scale", new IECore::FloatData( 1.0f ), false, "volumeVelocityScale" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:volume_precision", new IECore::StringData( "full" ), false, "volumePrecision" ) );
-
-	// Asset name for cryptomatte
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:asset_name", new IECore::StringData( "" ), false, "assetName" ) );
-
-	// Shader-specific
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:shader:emission_sampling_method", new IECore::StringData( "auto" ), false, "emissionSamplingMethod" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:shader:use_transparent_shadow", new IECore::BoolData( true ), false, "useTransparentShadow" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:shader:heterogeneous_volume", new IECore::BoolData( true ), false, "heterogeneousVolume" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:shader:volume_sampling_method", new IECore::StringData( "multiple_importance" ), false, "volumeSamplingMethod" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:shader:volume_interpolation_method", new IECore::StringData( "linear" ), false, "volumeInterpolationMethod" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:shader:volume_step_rate", new IECore::FloatData( 1.0f ), false, "volumeStepRate" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:shader:displacement_method", new IECore::StringData( "bump" ), false, "displacementMethod" ) );
 }
 
 CyclesAttributes::~CyclesAttributes()

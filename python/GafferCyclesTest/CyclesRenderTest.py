@@ -72,11 +72,11 @@ class CyclesRenderTest( GafferSceneTest.RenderTest ) :
 
 		options = GafferCycles.CyclesOptions()
 
-		options["options"]["maxBounce"]["enabled"].setValue( True )
-		options["options"]["maxBounce"]["value"].setValue( 0 )
+		options["options"]["cycles:integrator:max_bounce"]["enabled"].setValue( True )
+		options["options"]["cycles:integrator:max_bounce"]["value"].setValue( 0 )
 
-		options["options"]["samples"]["enabled"].setValue( True )
-		options["options"]["samples"]["value"].setValue( 8 )
+		options["options"]["cycles:session:samples"]["enabled"].setValue( True )
+		options["options"]["cycles:session:samples"]["value"].setValue( 8 )
 
 		return options
 
