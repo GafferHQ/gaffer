@@ -1079,21 +1079,19 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					}
 				}
 
-				if( object->get_geometry() && object->get_geometry()->is_mesh() )
+				if( object->get_geometry()->is_mesh() )
 				{
-					if( ccl::Mesh *mesh = (ccl::Mesh*)object->get_geometry() )
+					auto mesh = static_cast<ccl::Mesh *>( object->get_geometry() );
+					if( mesh->get_subd_params() )
 					{
-						if( mesh->get_subd_params() )
+						if( ( previousAttributes->m_maxLevel != m_maxLevel ) || ( previousAttributes->m_dicingRate != m_dicingRate ) )
 						{
-							if( ( previousAttributes->m_maxLevel != m_maxLevel ) || ( previousAttributes->m_dicingRate != m_dicingRate ) )
-							{
-								// Get a new mesh
-								return false;
-							}
+							// Get a new mesh
+							return false;
 						}
 					}
 				}
-				else if( object->get_geometry() && object->get_geometry()->is_volume() )
+				else if( object->get_geometry()->is_volume() )
 				{
 					IECore::MurmurHash previousVolumeHash;
 					previousAttributes->m_volume.hash( previousVolumeHash );
@@ -1117,27 +1115,21 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			object->set_is_caustics_caster( m_isCausticsCaster );
 			object->set_is_caustics_receiver( m_isCausticsReceiver );
 
-			if( object->get_geometry() )
+			if( object->get_geometry()->is_mesh() )
 			{
-				ccl::Mesh *mesh = nullptr;
-				if( object->get_geometry()->geometry_type == ccl::Geometry::MESH )
-					mesh = (ccl::Mesh*)object->get_geometry();
-
-				if( mesh )
+				auto mesh = static_cast<ccl::Mesh *>( object->get_geometry() );
+				if( mesh->get_subd_params() )
 				{
-					if( mesh->get_subd_params() )
-					{
-						mesh->set_subd_dicing_rate( m_dicingRate );
-						mesh->set_subd_max_level( m_maxLevel );
-					}
+					mesh->set_subd_dicing_rate( m_dicingRate );
+					mesh->set_subd_max_level( m_maxLevel );
 				}
+			}
 
-				if( m_shader->shader() )
-				{
-					ShaderAssignPair pair = ShaderAssignPair( object->get_geometry(), ccl::array<ccl::Node*>() );
-					pair.second.push_back_slow( m_shader->shader() );
-					m_shaderCache->addShaderAssignment( pair );
-				}
+			if( m_shader->shader() )
+			{
+				ShaderAssignPair pair = ShaderAssignPair( object->get_geometry(), ccl::array<ccl::Node*>() );
+				pair.second.push_back_slow( m_shader->shader() );
+				m_shaderCache->addShaderAssignment( pair );
 			}
 
 			m_volume.apply( object );
@@ -1301,27 +1293,27 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			void apply( ccl::Object *object ) const
 			{
-				if( object->get_geometry() && object->get_geometry()->is_volume() )
+				if( !object->get_geometry()->is_volume() )
 				{
-					if( ccl::Volume *volume = (ccl::Volume*)object->get_geometry() )
-					{
-						if( clipping )
-						{
-							volume->set_clipping( clipping.value() );
-						}
-						if( stepSize )
-						{
-							volume->set_step_size( stepSize.value() );
-						}
-						if( objectSpace )
-						{
-							volume->set_object_space( objectSpace.value() );
-						}
-						if( velocityScale )
-						{
-							volume->set_velocity_scale( velocityScale.value() );
-						}
-					}
+					return;
+				}
+
+				auto volume = static_cast<ccl::Volume *>( object->get_geometry() );
+				if( clipping )
+				{
+					volume->set_clipping( clipping.value() );
+				}
+				if( stepSize )
+				{
+					volume->set_step_size( stepSize.value() );
+				}
+				if( objectSpace )
+				{
+					volume->set_object_space( objectSpace.value() );
+				}
+				if( velocityScale )
+				{
+					volume->set_velocity_scale( velocityScale.value() );
 				}
 			}
 
@@ -1706,6 +1698,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 				m_object( SceneAlgo::createNodeWithLock<ccl::Object>( scene ), NodeDeleter::ObjectDeleter( nodeDeleter ) ),
 				m_geometry( geometry ), m_frame( frame ), m_attributes( nullptr ), m_lightLinker( lightLinker )
 		{
+			assert( m_geometry );
 			m_object->name = ccl::ustring( name.c_str() );
 			m_object->set_random_id( std::hash<string>()( name ) );
 			m_object->set_geometry( geometry.get() );
@@ -1767,12 +1760,12 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 		void transform( const Imath::M44f &transform ) override
 		{
 			m_object->set_tfm( SocketAlgo::setTransform( transform ) );
-			if( ccl::Mesh *mesh = (ccl::Mesh*)m_object->get_geometry() )
+			if( m_object->get_geometry()->is_mesh() )
 			{
-				if( mesh->geometry_type == ccl::Geometry::MESH )
+				auto mesh = static_cast<ccl::Mesh *>( m_object->get_geometry() );
+				if( mesh->get_subd_params() )
 				{
-					if( mesh->get_subd_params() )
-						mesh->set_subd_objecttoworld( m_object->get_tfm() );
+					mesh->set_subd_objecttoworld( m_object->get_tfm() );
 				}
 			}
 
@@ -1795,7 +1788,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 		{
 			ccl::array<ccl::Transform> motion;
 			ccl::Geometry *geo = m_object->get_geometry();
-			if( geo && geo->get_use_motion_blur() && geo->get_motion_steps() != samples.size() )
+			if( geo->get_use_motion_blur() && geo->get_motion_steps() != samples.size() )
 			{
 				IECore::msg(
 					IECore::Msg::Error, "IECoreCycles::Renderer",
@@ -1898,12 +1891,12 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 				geo->set_motion_steps( motion.size() );
 			}
 
-			if( ccl::Mesh *mesh = (ccl::Mesh*)m_object->get_geometry() )
+			if( geo->is_mesh() )
 			{
-				if( mesh->geometry_type == ccl::Geometry::MESH )
+				auto mesh = static_cast<ccl::Mesh *>( geo );
+				if( mesh->get_subd_params() )
 				{
-					if( mesh->get_subd_params() )
-						mesh->set_subd_objecttoworld( m_object->get_tfm() );
+					mesh->set_subd_objecttoworld( m_object->get_tfm() );
 				}
 			}
 
