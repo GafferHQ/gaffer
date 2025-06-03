@@ -131,7 +131,13 @@ options.Add(
 )
 
 options.Add(
-	BoolVariable( "ASAN", "Enable ASan when compiling with clang++", False)
+	BoolVariable( "ASAN", "Enable ASan when compiling", False )
+)
+
+options.Add(
+	"ASAN_LIB",
+	"The location of `libasan`. Needed when compiling with ASan.",
+	"/usr/lib64/libasan.so.6",
 )
 
 options.Add(
@@ -781,6 +787,14 @@ else:
 	commandEnv["ENV"]["LD_LIBRARY_PATH"] = commandEnv.subst( ":".join( [ "$BUILD_DIR/lib" ] + split( commandEnv["LOCATE_DEPENDENCY_LIBPATH"] ) ) )
 
 commandEnv["ENV"]["PYTHONPATH"] = commandEnv.subst( os.path.pathsep.join( [ "$BUILD_DIR/python" ] + split( commandEnv["LOCATE_DEPENDENCY_PYTHONPATH"] ) ) )
+
+if commandEnv["ASAN"] :
+	# Our `buildExtensions` target runs Gaffer, and when we've build that
+	# with ASan we need to load the ASan library in order to be able to
+	# run it.
+	commandEnv["ENV"]["LD_PRELOAD"] = commandEnv["ASAN_LIB"]
+	# ASan detects loads of memory leaks in Python, so turn leak detection off.
+	commandEnv["ENV"]["ASAN_OPTIONS"] = "detect_leaks=0"
 
 # Set up the environment variables that the Gaffer wrapper will use to
 # populate paths used to support third-party software.
