@@ -126,11 +126,10 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 
 	if( isOSLShader )
 	{
-		if( shaderManager && shaderManager->use_osl() )
+		if( shaderManager->use_osl() )
 		{
-			ccl::OSLShaderManager *manager = (ccl::OSLShaderManager*)shaderManager;
 			std::string shaderFileName = g_shaderSearchPathCache.get( shader->getName() );
-			node = manager->osl_node( shaderGraph, shaderManager, shaderFileName.c_str() );
+			node = ccl::OSLShaderManager::osl_node( shaderGraph, shaderManager, shaderFileName.c_str() );
 		}
 		else
 		{
