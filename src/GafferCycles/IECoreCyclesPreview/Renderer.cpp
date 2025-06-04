@@ -47,14 +47,9 @@
 #include "SceneAlgo.h"
 
 #include "IECoreScene/Camera.h"
-#include "IECoreScene/CurvesPrimitive.h"
 #include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/Shader.h"
-#include "IECoreScene/SpherePrimitive.h"
 
-#include "IECore/CompoundParameter.h"
-#include "IECore/LRUCache.h"
-#include "IECore/FileNameParameter.h"
 #include "IECore/Interpolator.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/ObjectVector.h"
@@ -103,7 +98,6 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 #include "scene/volume.h"
 #include "subd/dice.h"
 #include "util/array.h"
-#include "util/function.h"
 #include "util/log.h"
 #include "util/murmurhash.h"
 #include "util/path.h"
