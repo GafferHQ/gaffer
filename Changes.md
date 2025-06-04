@@ -20,6 +20,10 @@ Fixes
 - Expression : Fixed error when creating OSL expressions for plugs with `:` characters in their name.
 - PythonEditor : Fixed completions menu not appearing after typing `:` in a partial plug or node name or a dictionary key.
 - Animation : Fixed "Jump To" actions in plug context menu.
+- LightPositionTool :
+  - Fixed bug where a light would rotate around its local Z-axis during placement.
+  - Fixed intermittent bug causing `ERROR : Emitting signal : Bad optional access` when using the undo / redo commands.
+- RotateTool : Fixed bug where objects would rotate around their local Z-axis when in look-at mode.
 
 Build
 -----
