@@ -409,10 +409,28 @@ Imath::V3f RotateTool::Rotation::updatedRotateValue( const Gaffer::V3fPlug *rota
 	float d = Imath::sign( m_gadgetToTransform.determinant() );
 	q.setAxisAngle( transformSpaceAxis, q.angle() * d );
 
-	// Compose it with the original.
+	// Compose it with the original, using alignZAxisWithTargetDir so we omit any Z roll.
 
 	M44f m = q.toMatrix44();
 	m.rotate( *m_originalRotation );
+
+	M44f mWithoutZRot;
+	alignZAxisWithTargetDir( mWithoutZRot, V3f( 0.0f, 0.0f, 1.0f ) * m, V3f( 0.0f, 1.0f, 0.0f ) );
+
+	// Figure out the amount of roll along the local Z axis, relative to Y-up, in the original rotation
+	M44f originalMatrix;
+	originalMatrix.rotate( *m_originalRotation );
+	V3f originalAxis = V3f( 0.0f, 0.0f, 1.0f ) * originalMatrix;
+	V3f originalUp = V3f( 0.0f, 1.0f, 0.0f ) * originalMatrix;
+	V3f yUpPerpendicular = ( V3f( 0.0f, 1.0f, 0.0f ) - originalAxis * originalAxis.y ).normalized();
+
+	float axisRollAngle = -asin( std::min( 1.0f, std::max( -1.0f, originalAxis.dot( originalUp.cross( yUpPerpendicular ) ) ) ) );
+
+	// Apply the roll angle back to
+	M44f axisRoll;
+	axisRoll.rotate( V3f( 0.0f, 0.0f, axisRollAngle ) );
+
+	M44f mFinal = axisRoll * mWithoutZRot;
 
 	// Convert to the euler angles closest to
 	// those we currently have.
@@ -423,7 +441,7 @@ Imath::V3f RotateTool::Rotation::updatedRotateValue( const Gaffer::V3fPlug *rota
 		*currentValue = current;
 	}
 
-	Eulerf e; e.extract( m );
+	Eulerf e; e.extract( mFinal );
 	e.makeNear( degreesToRadians( current ) );
 
 	return radiansToDegrees( V3f( e ) );
