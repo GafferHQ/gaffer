@@ -29,6 +29,7 @@ Fixes
   - Fixed handling of `cycles:volume_precision` attribute, which was previously being ignored.
   - Fixed bugs handling unknown VDB grid types.
   - Fixed potential crash rendering VDB objects.
+  - Fixed potential threading-related crashes.
 - RenderPassEditor : Fixed default values displayed for `dl:oversampling` and `dl:quality.shadingsamples` options.
 
 API

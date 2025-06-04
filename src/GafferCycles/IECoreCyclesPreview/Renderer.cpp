@@ -515,7 +515,8 @@ class CyclesShader : public IECore::RefCounted
 			}
 			m_shader->set_displacement_method( displacementMethod );
 			m_shader->set_graph( graph );
-			m_shader->tag_update( scene );
+
+			SceneAlgo::tagUpdateWithLock( m_shader, scene );
 		}
 
 		~CyclesShader() override
@@ -1083,8 +1084,12 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				// scene.
 				std::scoped_lock sceneLock( scene->mutex );
 				m_shader->shader()->tag_used( scene );
-				// But we also use the lock for `set_used_shaders()`, to protect the
-				// non-atomic increment made in `ccl::Node::reference()`.
+				// But we also use the lock for `set_used_shaders()`, to protect
+				// the non-atomic increment made in `ccl::Node::reference()`.
+				// > Note : because we instance geometry, two objects
+				// > might be fighting over what shader the geometry should have.
+				// > This needs fixing in its own right, but until then, the lock
+				// > at least prevents concurrent access.
 				object->get_geometry()->set_used_shaders( shaders );
 			}
 
@@ -1670,7 +1675,16 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			assert( m_geometry );
 			m_object->name = ccl::ustring( name.c_str() );
 			m_object->set_random_id( std::hash<string>()( name ) );
-			m_object->set_geometry( geometry.get() );
+			{
+				// We're not accessing the scene here, but we use the lock to
+				// protect against concurrent calls with the same `geometry` on
+				// other objects, because `set_geometry()` manipulates the
+				// reference count on `geometry` in a non-threadsafe way.
+				/// \todo Would the Cycles project accept a patch to make the
+				/// reference count atomic?
+				std::scoped_lock sceneLock( scene->mutex );
+				m_object->set_geometry( geometry.get() );
+			}
 		}
 
 		~CyclesObject() override
@@ -1750,7 +1764,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 			m_object->set_motion( motion );
 
-			m_object->tag_update( m_scene );
+			SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
 		}
 
 		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
@@ -1770,7 +1784,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 					motion[i] = m_object->get_tfm();
 					m_object->set_motion( motion );
 				}
-				m_object->tag_update( m_scene );
+				SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
 				return;
 			}
 
@@ -1779,7 +1793,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			if( numSamples == 1 )
 			{
 				m_object->set_tfm( SocketAlgo::setTransform( samples.front() ) );
-				m_object->tag_update( m_scene );
+				SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
 				return;
 			}
 
@@ -1857,6 +1871,8 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			m_object->set_motion( motion );
 			if( !geo->get_use_motion_blur() )
 			{
+				/// \todo This is not thread-safe, nor is it compatible
+				/// with instancing.
 				geo->set_motion_steps( motion.size() );
 			}
 
@@ -1869,7 +1885,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 				}
 			}
 
-			m_object->tag_update( m_scene );
+			SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
 		}
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
@@ -1878,7 +1894,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			if( cyclesAttributes->applyObject( m_object.get(), m_attributes.get(), m_scene ) )
 			{
 				m_attributes = cyclesAttributes;
-				m_object->tag_update( m_scene );
+				SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
 				return true;
 			}
 
@@ -1941,7 +1957,7 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 		void transform( const Imath::M44f &transform ) override
 		{
 			m_light->set_tfm( SocketAlgo::setTransform( transform ) );
-			m_light->tag_update( m_scene );
+			SceneAlgo::tagUpdateWithLock( m_light.get(), m_scene );
 		}
 
 		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
@@ -1956,7 +1972,7 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 			if( cyclesAttributes->applyLight( m_light.get(), m_attributes.get(), m_scene ) )
 			{
 				m_attributes = cyclesAttributes;
-				m_light->tag_update( m_scene );
+				SceneAlgo::tagUpdateWithLock( m_light.get(), m_scene );
 				return true;
 			}
 
