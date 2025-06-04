@@ -627,12 +627,12 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqualWithAbsError( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 1, 0, 1 ), error = 0.01 )
 
-		# Make it blue
+		# Make it red again
 
-		colorPlug.setValue( imath.Color3f( 0, 0, 1 ) )
+		colorPlug.setValue( imath.Color3f( 1, 0, 0 ) )
 		self.uiThreadCallHandler.waitFor( 2.0 )
 
-		self.assertEqualWithAbsError( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 1, 1 ), error = 0.01 )
+		self.assertEqualWithAbsError( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ), error = 0.01 )
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
