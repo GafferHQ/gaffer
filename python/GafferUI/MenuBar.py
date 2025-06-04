@@ -191,6 +191,13 @@ class _ShortcutEventFilter( QtCore.QObject ) :
 		elif qEvent.type() == qEvent.KeyPress :
 
 			if self.__shortcutAction is not None and self.__keySequence( qEvent ) in self.__shortcutAction.shortcuts() :
+				# In Qt 6 actions will not trigger if disabled.
+				# As the action's enabled state is from the time
+				# the menu was built it may not be current, so
+				# we enable the action knowing that when triggered
+				# it will check its active status and early-out if
+				# inactive. See `Menu.__actionTriggered()`.
+				self.__shortcutAction.setEnabled( True )
 				self.__shortcutAction.trigger()
 				self.__shortcutAction = None
 				qEvent.accept()
