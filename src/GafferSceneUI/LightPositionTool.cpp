@@ -691,11 +691,11 @@ void LightPositionTool::updateHandles( float rasterScale )
 		m_distanceHandle->setEnabled(
 			singleSelection &&
 			trDistanceHandle.canApplyTranslation() &&
-			trDistanceHandle.canApplyRotation( V3i( 1, 1, 1 ) )
+			trDistanceHandle.canApplyRotation( V3i( 1, 1, 1 ), /* maintainRoll = */ false )
 		);
 
 		TranslationRotation trRotateHandle( s, Orientation::Local );
-		m_rotateHandle->setEnabled( singleSelection && trRotateHandle.canApplyRotation( V3i( 0, 0, 1 ) ) );
+		m_rotateHandle->setEnabled( singleSelection && trRotateHandle.canApplyRotation( V3i( 0, 0, 1 ), /* maintainRoll = */ false ) );
 
 		m_distanceHandle->setRasterScale( 0 );
 		m_rotateHandle->setRasterScale( rasterScale );
@@ -801,7 +801,7 @@ bool LightPositionTool::handleDragMove( Gadget *gadget, const DragDropEvent &eve
 	else if( gadget == m_rotateHandle.get() )
 	{
 		const V3f rotation = m_rotateHandle->rotation( event );
-		m_drag.value().applyRotation( rotation );
+		m_drag.value().applyRotation( rotation, /* maintainRoll = */ false );
 	}
 
 	return true;
@@ -1110,7 +1110,7 @@ void LightPositionTool::translateAndOrient( const Selection &s, const M44f &loca
 	TranslationRotation trTranslate( s, Orientation::World );
 	trTranslate.applyTranslation( offset );
 	TranslationRotation trRotate( s, Orientation::Parent );
-	trRotate.applyRotation( relativeRotation );
+	trRotate.applyRotation( relativeRotation, /* maintainRoll = */ true );
 }
 
 void LightPositionTool::setTargetMode( TargetMode targeted )
@@ -1266,7 +1266,7 @@ bool LightPositionTool::TranslationRotation::canApplyTranslation() const
 	return true;
 }
 
-bool LightPositionTool::TranslationRotation::canApplyRotation( const V3i &axisMask ) const
+bool LightPositionTool::TranslationRotation::canApplyRotation( const V3i &axisMask, const bool maintainRoll ) const
 {
 	auto edit = m_selection.acquireTransformEdit( /* createIfNecessary = */ false );
 	if( !edit )
@@ -1276,7 +1276,7 @@ bool LightPositionTool::TranslationRotation::canApplyRotation( const V3i &axisMa
 	}
 
 	Imath::V3f current;
-	const Imath::V3f updated = updatedRotateValue( edit->rotate.get(), V3f( axisMask ), &current );
+	const Imath::V3f updated = updatedRotateValue( edit->rotate.get(), V3f( axisMask ), maintainRoll, &current );
 	for( int i = 0; i < 3; ++i )
 	{
 		if( updated[i] == current[i] )
@@ -1315,10 +1315,10 @@ void LightPositionTool::TranslationRotation::applyTranslation( const V3f &transl
 	}
 }
 
-void LightPositionTool::TranslationRotation::applyRotation( const Eulerf &rotation )
+void LightPositionTool::TranslationRotation::applyRotation( const Eulerf &rotation, const bool maintainRoll )
 {
 	V3fPlug *rotatePlug = m_selection.acquireTransformEdit()->rotate.get();
-	const Imath::V3f e = updatedRotateValue( rotatePlug, rotation );
+	const Imath::V3f e = updatedRotateValue( rotatePlug, rotation, maintainRoll );
 	for( int i = 0; i < 3; ++i )
 	{
 		FloatPlug *pRotate = rotatePlug->getChild( i );
@@ -1329,7 +1329,7 @@ void LightPositionTool::TranslationRotation::applyRotation( const Eulerf &rotati
 	}
 }
 
-V3f LightPositionTool::TranslationRotation::updatedRotateValue( const V3fPlug *rotatePlug, const Eulerf &rotation, V3f *currentValue ) const
+V3f LightPositionTool::TranslationRotation::updatedRotateValue( const V3fPlug *rotatePlug, const Eulerf &rotation, const bool maintainRoll, V3f *currentValue ) const
 {
 	if( !m_originalRotation )
 	{
@@ -1345,28 +1345,34 @@ V3f LightPositionTool::TranslationRotation::updatedRotateValue( const V3fPlug *r
 	float d = Imath::sign( m_gadgetToRotationXform.determinant() );
 	q.setAxisAngle( transformSpaceAxis, q.angle() * d );
 
-	// Compose it with the original, using alignZAxisWithTargetDir so we omit any Z roll.
-
+	// Compose it with the original.
 	M44f m = q.toMatrix44();
 	m.rotate( *m_originalRotation );
 
-	M44f mWithoutZRot;
-	alignZAxisWithTargetDir( mWithoutZRot, V3f( 0.0f, 0.0f, 1.0f ) * m, V3f( 0.0f, 1.0f, 0.0f ) );
+	M44f mFinal = m;
 
-	// Figure out the amount of roll along the local Z axis, relative to Y-up, in the original rotation
-	M44f originalMatrix;
-	originalMatrix.rotate( *m_originalRotation );
-	V3f originalAxis = V3f( 0.0f, 0.0f, 1.0f ) * originalMatrix;
-	V3f originalUp = V3f( 0.0f, 1.0f, 0.0f ) * originalMatrix;
-	V3f yUpPerpendicular = ( V3f( 0.0f, 1.0f, 0.0f ) - originalAxis * originalAxis.y ).normalized();
+	if( maintainRoll )
+	{
+		// Use alignZAxisWithTargetDir so we omit any Z roll.
 
-	float axisRollAngle = -asin( std::min( 1.0f, std::max( -1.0f, originalAxis.dot( originalUp.cross( yUpPerpendicular ) ) ) ) );
+		M44f mWithoutZRot;
+		alignZAxisWithTargetDir( mWithoutZRot, V3f( 0.0f, 0.0f, 1.0f ) * m, V3f( 0.0f, 1.0f, 0.0f ) );
 
-	// Apply the roll angle back to
-	M44f axisRoll;
-	axisRoll.rotate( V3f( 0.0f, 0.0f, axisRollAngle ) );
+		// Figure out the amount of roll along the local Z axis, relative to Y-up, in the original rotation
+		M44f originalMatrix;
+		originalMatrix.rotate( *m_originalRotation );
+		V3f originalAxis = V3f( 0.0f, 0.0f, 1.0f ) * originalMatrix;
+		V3f originalUp = V3f( 0.0f, 1.0f, 0.0f ) * originalMatrix;
+		V3f yUpPerpendicular = ( V3f( 0.0f, 1.0f, 0.0f ) - originalAxis * originalAxis.y ).normalized();
 
-	M44f mFinal = axisRoll * mWithoutZRot;
+		float axisRollAngle = -asin( std::min( 1.0f, std::max( -1.0f, originalAxis.dot( originalUp.cross( yUpPerpendicular ) ) ) ) );
+
+		// Apply the roll angle back to
+		M44f axisRoll;
+		axisRoll.rotate( V3f( 0.0f, 0.0f, axisRollAngle ) );
+
+		mFinal = axisRoll * mWithoutZRot;
+	}
 
 	// Convert to the euler angles closest to
 	// those we currently have.

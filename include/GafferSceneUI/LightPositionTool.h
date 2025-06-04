@@ -105,13 +105,13 @@ class GAFFERSCENEUI_API LightPositionTool : public GafferSceneUI::TransformTool
 			TranslationRotation( const Selection &selection, Orientation orientation );
 
 			bool canApplyTranslation() const;
-			bool canApplyRotation( const Imath::V3i &axisMask ) const;
+			bool canApplyRotation( const Imath::V3i &axisMask, const bool maintainRoll ) const;
 			void applyTranslation( const Imath::V3f &translation );
-			void applyRotation( const Imath::Eulerf &rotation );
+			void applyRotation( const Imath::Eulerf &rotation, const bool maintainRoll );
 
 			private :
 
-				Imath::V3f updatedRotateValue( const Gaffer::V3fPlug *rotatePlug, const Imath::Eulerf &rotation, Imath::V3f *currentValue = nullptr ) const;
+				Imath::V3f updatedRotateValue( const Gaffer::V3fPlug *rotatePlug, const Imath::Eulerf &rotation, const bool maintainRoll, Imath::V3f *currentValue = nullptr ) const;
 
 				const Selection &m_selection;
 				Imath::M44f m_gadgetToTranslationXform;
