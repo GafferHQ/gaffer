@@ -2934,11 +2934,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 				if( m_backgroundShader )
 				{
+					m_backgroundShader->shader()->tag_used( m_scene );
 					background->set_shader( m_backgroundShader->shader() );
-					// Workaround for apparent Cycles bug when applying a shader
-					// which has been used before and which we have just
-					// re-retrieved from the ShaderCache.
-					m_scene->shader_manager->tag_update( m_scene, ccl::ShaderManager::SHADER_MODIFIED );
 				}
 
 				it->second.modified = false;
