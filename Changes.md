@@ -1,7 +1,10 @@
 1.5.x.x (relative to 1.5.15.0)
 =======
 
+Fixes
+-----
 
+- LightPositionTool : Fixed bug where a light would rotate around its local Z-axis during placement.
 
 1.5.15.0 (relative to 1.5.14.0)
 ========
