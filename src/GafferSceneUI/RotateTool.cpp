@@ -124,7 +124,7 @@ void RotateTool::rotate( const Imath::Eulerf &degrees )
 	const Orientation orientation = static_cast<Orientation>( orientationPlug()->getValue() );
 	for( const auto &s : selection() )
 	{
-		Rotation( s, orientation ).apply( degreesToRadians( V3f( degrees ) ) );
+		Rotation( s, orientation ).apply( degreesToRadians( V3f( degrees ) ), /* maintainRoll = */ false );
 	}
 }
 
@@ -152,7 +152,7 @@ void RotateTool::updateHandles( float rasterScale )
 		bool enabled = true;
 		for( const auto &s : selection() )
 		{
-			if( !Rotation( s, orientation ).canApply( (*it)->axisMask() ) )
+			if( !Rotation( s, orientation ).canApply( (*it)->axisMask(), /* maintainRoll = */ false ) )
 			{
 				enabled = false;
 				break;
@@ -251,7 +251,7 @@ bool RotateTool::handleDragMove( GafferUI::Gadget *gadget, const GafferUI::DragD
 	const V3f rotation = static_cast<RotateHandle *>( gadget )->rotation( event );
 	for( auto &r : m_drag )
 	{
-		r.apply( rotation );
+		r.apply( rotation, /* maintainRoll = */ false );
 	}
 	return true;
 }
@@ -336,7 +336,7 @@ bool RotateTool::buttonPress( const GafferUI::ButtonEvent &event )
 
 		V3f relativeRotation;
 		extractEulerXYZ( relativeMatrix, relativeRotation );
-		Rotation( s, Parent ).apply( relativeRotation );
+		Rotation( s, Parent ).apply( relativeRotation, /* maintainRoll = */ true );
 	}
 
 	return true;
@@ -353,7 +353,7 @@ RotateTool::Rotation::Rotation( const Selection &selection, Orientation orientat
 	m_gadgetToTransform = handlesTransform * selection.sceneToTransformSpace();
 }
 
-bool RotateTool::Rotation::canApply( const Imath::V3i &axisMask ) const
+bool RotateTool::Rotation::canApply( const Imath::V3i &axisMask, const bool maintainRoll ) const
 {
 	auto edit = m_selection.acquireTransformEdit( /* createIfNecessary = */ false );
 	if( !edit )
@@ -363,7 +363,7 @@ bool RotateTool::Rotation::canApply( const Imath::V3i &axisMask ) const
 	}
 
 	Imath::V3f current;
-	const Imath::V3f updated = updatedRotateValue( edit->rotate.get(), V3f( axisMask ), &current );
+	const Imath::V3f updated = updatedRotateValue( edit->rotate.get(), V3f( axisMask ), maintainRoll, &current );
 	for( int i = 0; i < 3; ++i )
 	{
 		if( updated[i] == current[i] )
@@ -379,10 +379,10 @@ bool RotateTool::Rotation::canApply( const Imath::V3i &axisMask ) const
 	return true;
 }
 
-void RotateTool::Rotation::apply( const Imath::Eulerf &rotation )
+void RotateTool::Rotation::apply( const Imath::Eulerf &rotation, const bool maintainRoll )
 {
 	V3fPlug *rotatePlug = m_selection.acquireTransformEdit()->rotate.get();
-	const Imath::V3f e = updatedRotateValue( rotatePlug, rotation );
+	const Imath::V3f e = updatedRotateValue( rotatePlug, rotation, maintainRoll );
 	for( int i = 0; i < 3; ++i )
 	{
 		FloatPlug *p = rotatePlug->getChild( i );
@@ -393,7 +393,7 @@ void RotateTool::Rotation::apply( const Imath::Eulerf &rotation )
 	}
 }
 
-Imath::V3f RotateTool::Rotation::updatedRotateValue( const Gaffer::V3fPlug *rotatePlug, const Imath::Eulerf &rotation, Imath::V3f *currentValue ) const
+Imath::V3f RotateTool::Rotation::updatedRotateValue( const Gaffer::V3fPlug *rotatePlug, const Imath::Eulerf &rotation, const bool maintainRoll, Imath::V3f *currentValue ) const
 {
 	if( !m_originalRotation )
 	{
@@ -409,28 +409,34 @@ Imath::V3f RotateTool::Rotation::updatedRotateValue( const Gaffer::V3fPlug *rota
 	float d = Imath::sign( m_gadgetToTransform.determinant() );
 	q.setAxisAngle( transformSpaceAxis, q.angle() * d );
 
-	// Compose it with the original, using alignZAxisWithTargetDir so we omit any Z roll.
-
+	// Compose it with the original.
 	M44f m = q.toMatrix44();
 	m.rotate( *m_originalRotation );
 
-	M44f mWithoutZRot;
-	alignZAxisWithTargetDir( mWithoutZRot, V3f( 0.0f, 0.0f, 1.0f ) * m, V3f( 0.0f, 1.0f, 0.0f ) );
+	M44f mFinal = m;
 
-	// Figure out the amount of roll along the local Z axis, relative to Y-up, in the original rotation
-	M44f originalMatrix;
-	originalMatrix.rotate( *m_originalRotation );
-	V3f originalAxis = V3f( 0.0f, 0.0f, 1.0f ) * originalMatrix;
-	V3f originalUp = V3f( 0.0f, 1.0f, 0.0f ) * originalMatrix;
-	V3f yUpPerpendicular = ( V3f( 0.0f, 1.0f, 0.0f ) - originalAxis * originalAxis.y ).normalized();
+	if( maintainRoll )
+	{
+		// Use alignZAxisWithTargetDir so we omit any Z roll.
 
-	float axisRollAngle = -asin( std::min( 1.0f, std::max( -1.0f, originalAxis.dot( originalUp.cross( yUpPerpendicular ) ) ) ) );
+		M44f mWithoutZRot;
+		alignZAxisWithTargetDir( mWithoutZRot, V3f( 0.0f, 0.0f, 1.0f ) * m, V3f( 0.0f, 1.0f, 0.0f ) );
 
-	// Apply the roll angle back to
-	M44f axisRoll;
-	axisRoll.rotate( V3f( 0.0f, 0.0f, axisRollAngle ) );
+		// Figure out the amount of roll along the local Z axis, relative to Y-up, in the original rotation
+		M44f originalMatrix;
+		originalMatrix.rotate( *m_originalRotation );
+		V3f originalAxis = V3f( 0.0f, 0.0f, 1.0f ) * originalMatrix;
+		V3f originalUp = V3f( 0.0f, 1.0f, 0.0f ) * originalMatrix;
+		V3f yUpPerpendicular = ( V3f( 0.0f, 1.0f, 0.0f ) - originalAxis * originalAxis.y ).normalized();
 
-	M44f mFinal = axisRoll * mWithoutZRot;
+		float axisRollAngle = -asin( std::min( 1.0f, std::max( -1.0f, originalAxis.dot( originalUp.cross( yUpPerpendicular ) ) ) ) );
+
+		// Apply the roll angle back to
+		M44f axisRoll;
+		axisRoll.rotate( V3f( 0.0f, 0.0f, axisRollAngle ) );
+
+		mFinal = axisRoll * mWithoutZRot;
+	}
 
 	// Convert to the euler angles closest to
 	// those we currently have.
