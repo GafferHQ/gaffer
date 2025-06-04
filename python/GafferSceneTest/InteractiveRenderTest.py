@@ -104,8 +104,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		)
 		s["o"]["in"].setInput( s["s"]["out"] )
 
+		s["options"] = self._createOptions()
+		s["options"]["in"].setInput( s["o"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["o"]["out"] )
+		s["r"]["in"].setInput( s["options"]["out"] )
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
@@ -137,8 +140,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		)
 		s["o"]["in"].setInput( s["s"]["out"] )
 
+		s["options"] = self._createOptions()
+		s["options"]["in"].setInput( s["o"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["o"]["out"] )
+		s["r"]["in"].setInput( s["options"]["out"] )
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
@@ -172,8 +178,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		)
 		s["o"]["in"].setInput( s["s"]["out"] )
 
+		s["options"] = self._createOptions()
+		s["options"]["in"].setInput( s["o"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["o"]["out"] )
+		s["r"]["in"].setInput( s["options"]["out"] )
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
@@ -258,8 +267,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		)
 		s["o"]["in"].setInput( s["s"]["out"] )
 
+		s["options"] = self._createOptions()
+		s["options"]["in"].setInput( s["o"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["o"]["out"] )
+		s["r"]["in"].setInput( s["options"]["out"] )
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
@@ -316,8 +328,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		)
 		s["o"]["in"].setInput( s["switch"]["out"] )
 
+		s["options"] = self._createOptions()
+		s["options"]["in"].setInput( s["o"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["o"]["out"] )
+		s["r"]["in"].setInput( s["options"]["out"] )
 
 		# Render the sphere.
 
@@ -375,8 +390,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		)
 		s["o"]["in"].setInput( s["a"]["out"] )
 
+		s["options"] = self._createOptions()
+		s["options"]["in"].setInput( s["o"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["o"]["out"] )
+		s["r"]["in"].setInput( s["options"]["out"] )
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
@@ -459,8 +477,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		)
 		s["o"]["in"].setInput( s["a"]["out"] )
 
+		s["options"] = self._createOptions()
+		s["options"]["in"].setInput( s["o"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["o"]["out"] )
+		s["r"]["in"].setInput( s["options"]["out"] )
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
@@ -525,8 +546,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		)
 		s["o"]["in"].setInput( s["s"]["out"] )
 
+		s["options"] = self._createOptions()
+		s["options"]["in"].setInput( s["o"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["o"]["out"] )
+		s["r"]["in"].setInput( s["options"]["out"] )
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
@@ -582,8 +606,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		)
 		s["o"]["in"].setInput( s["a"]["out"] )
 
+		s["options"] = self._createOptions()
+		s["options"]["in"].setInput( s["o"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["o"]["out"] )
+		s["r"]["in"].setInput( s["options"]["out"] )
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
@@ -643,8 +670,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["options"]["options"]["renderCamera"]["enabled"].setValue( True )
 		s["options"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
 
+		s["rendererOptions"] = self._createOptions()
+		s["rendererOptions"]["in"].setInput( s["options"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["options"]["out"] )
+		s["r"]["in"].setInput( s["rendererOptions"]["out"] )
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
@@ -699,8 +729,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["options"]["in"].setInput( s["outputs"]["out"] )
 		s["options"]["options"]["renderCamera"]["enabled"].setValue( True )
 
+		s["rendererOptions"] = self._createOptions()
+		s["rendererOptions"]["in"].setInput( s["options"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["options"]["out"] )
+		s["r"]["in"].setInput( s["rendererOptions"]["out"] )
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
@@ -787,8 +820,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["o"]["options"]["renderCamera"]["enabled"].setValue( True )
 		s["o"]["in"].setInput( s["d"]["out"] )
 
+		s["rendererOptions"] = self._createOptions()
+		s["rendererOptions"]["in"].setInput( s["o"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["o"]["out"] )
+		s["r"]["in"].setInput( s["rendererOptions"]["out"] )
 
 		# Start a render, give it time to get going, then pause it.
 		s["r"]["state"].setValue( s["r"].State.Running )
@@ -832,8 +868,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["o"]["options"]["renderCamera"]["enabled"].setValue( True )
 		s["o"]["in"].setInput( s["d"]["out"] )
 
+		s["rendererOptions"] = self._createOptions()
+		s["rendererOptions"]["in"].setInput( s["o"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["o"]["out"] )
+		s["r"]["in"].setInput( s["rendererOptions"]["out"] )
 
 		# Start a render, give it time to get going, then pause it.
 
@@ -844,7 +883,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Change the input to the render node, and check that we don't hang.
 
 		s["o2"] = GafferScene.StandardOptions()
-		s["o2"]["in"].setInput( s["o"]["out"] )
+		s["o2"]["in"].setInput( s["rendererOptions"]["out"] )
 
 		s["r"]["in"].setInput( s["o2"]["out"] )
 
@@ -879,8 +918,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		)
 		s["o"]["in"].setInput( s["s"]["out"] )
 
+		s["rendererOptions"] = self._createOptions()
+		s["rendererOptions"]["in"].setInput( s["o"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["o"]["out"] )
+		s["r"]["in"].setInput( s["rendererOptions"]["out"] )
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
@@ -967,8 +1009,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["o"]["options"]["renderCamera"]["enabled"].setValue( True )
 		s["o"]["in"].setInput( s["d"]["out"] )
 
+		s["rendererOptions"] = self._createOptions()
+		s["rendererOptions"]["in"].setInput( s["o"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["o"]["out"] )
+		s["r"]["in"].setInput( s["rendererOptions"]["out"] )
 
 		# Start a render, give it time to finish, and check the output.
 
@@ -1136,8 +1181,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["o"]["options"]["renderCamera"]["enabled"].setValue( True )
 		s["o"]["in"].setInput( s["d"]["out"] )
 
+		s["rendererOptions"] = self._createOptions()
+		s["rendererOptions"]["in"].setInput( s["o"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["o"]["out"] )
+		s["r"]["in"].setInput( s["rendererOptions"]["out"] )
 
 		# Start a render, give it time to finish, and check the output.
 
@@ -1216,8 +1264,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["o"]["options"]["renderCamera"]["enabled"].setValue( True )
 		s["o"]["in"].setInput( s["d"]["out"] )
 
+		s["rendererOptions"] = self._createOptions()
+		s["rendererOptions"]["in"].setInput( s["o"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["o"]["out"] )
+		s["r"]["in"].setInput( s["rendererOptions"]["out"] )
 
 		# Start a render, give it time to finish, and check the output.
 
@@ -1293,8 +1344,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["o"]["options"]["renderCamera"]["enabled"].setValue( True )
 		s["o"]["in"].setInput( s["d"]["out"] )
 
+		s["rendererOptions"] = self._createOptions()
+		s["rendererOptions"]["in"].setInput( s["o"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["o"]["out"] )
+		s["r"]["in"].setInput( s["rendererOptions"]["out"] )
 
 		# Start a render, give it time to finish, and check the output.
 
@@ -1374,8 +1428,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["options"]["options"]["renderCamera"]["enabled"].setValue( True )
 		s["options"]["in"].setInput( s["outputs"]["out"] )
 
+		s["rendererOptions"] = self._createOptions()
+		s["rendererOptions"]["in"].setInput( s["options"]["out"] )
+
 		s["renderer"] = self._createInteractiveRender()
-		s["renderer"]["in"].setInput( s["options"]["out"] )
+		s["renderer"]["in"].setInput( s["rendererOptions"]["out"] )
 
 		# Start a render, give it time to finish, and check the output.
 
@@ -1439,8 +1496,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		)
 		s["o"]["in"].setInput( s["a"]["out"] )
 
+		s["rendererOptions"] = self._createOptions()
+		s["rendererOptions"]["in"].setInput( s["o"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["o"]["out"] )
+		s["r"]["in"].setInput( s["rendererOptions"]["out"] )
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
@@ -1498,8 +1558,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		)
 		s["o"]["in"].setInput( s["a"]["out"] )
 
+		s["rendererOptions"] = self._createOptions()
+		s["rendererOptions"]["in"].setInput( s["o"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["o"]["out"] )
+		s["r"]["in"].setInput( s["rendererOptions"]["out"] )
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
@@ -1555,8 +1618,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		)
 		s["o"]["in"].setInput( s["s"]["out"] )
 
+		s["rendererOptions"] = self._createOptions()
+		s["rendererOptions"]["in"].setInput( s["o"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["o"]["out"] )
+		s["r"]["in"].setInput( s["rendererOptions"]["out"] )
 
 		# No override context.
 		self.assertEqual( s["r"].getContext(), None )
@@ -1583,7 +1649,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["b"] = box
 		self.assertEqual( box["r"].getContext(), None )
 		p = Gaffer.PlugAlgo.promote( box["r"]["in"] )
-		p.setInput( s["o"]["out"] )
+		p.setInput( s["rendererOptions"]["out"] )
 
 		errors = GafferTest.CapturingSlot( box["r"].errorSignal() )
 
@@ -1668,8 +1734,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		)
 		s["outputs"]["in"].setInput( s["options"]["out"] )
 
+		s["rendererOptions"] = self._createOptions()
+		s["rendererOptions"]["in"].setInput( s["o"]["out"] )
+
 		s["render"] = self._createInteractiveRender()
-		s["render"]["in"].setInput( s["outputs"]["out"] )
+		s["render"]["in"].setInput( s["rendererOptions"]["out"] )
 		s["render"]["state"].setValue( s["render"].State.Running )
 
 		self.uiThreadCallHandler.waitFor( 1.0 )
@@ -1744,8 +1813,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		)
 		s["o"]["in"].setInput( s["s"]["out"] )
 
+		s["rendererOptions"] = self._createOptions()
+		s["rendererOptions"]["in"].setInput( s["o"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["o"]["out"] )
+		s["r"]["in"].setInput( s["rendererOptions"]["out"] )
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
@@ -1813,8 +1885,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["options"]["options"]["renderCamera"]["enabled"].setValue( True )
 		script["options"]["in"].setInput( script["outputs"]["out"] )
 
+		script["rendererOptions"] = self._createOptions()
+		script["rendererOptions"]["in"].setInput( script["options"]["out"] )
+
 		script["render"] = self._createInteractiveRender()
-		script["render"]["in"].setInput( script["options"]["out"] )
+		script["render"]["in"].setInput( script["rendererOptions"]["out"] )
 
 		# Render and give it some time to finish.
 
@@ -1976,8 +2051,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["options"]["options"]["renderCamera"]["enabled"].setValue( True )
 		script["options"]["in"].setInput( script["outputs"]["out"] )
 
+		script["rendererOptions"] = self._createOptions()
+		script["rendererOptions"]["in"].setInput( script["options"]["out"] )
+
 		script["render"] = self._createInteractiveRender()
-		script["render"]["in"].setInput( script["options"]["out"] )
+		script["render"]["in"].setInput( script["rendererOptions"]["out"] )
 
 		# Render and give it some time to finish.
 
@@ -2135,8 +2213,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["options"]["options"]["renderCamera"]["enabled"].setValue( True )
 		script["options"]["in"].setInput( script["outputs"]["out"] )
 
+		script["rendererOptions"] = self._createOptions()
+		script["rendererOptions"]["in"].setInput( script["options"]["out"] )
+
 		script["render"] = self._createInteractiveRender()
-		script["render"]["in"].setInput( script["options"]["out"] )
+		script["render"]["in"].setInput( script["rendererOptions"]["out"] )
 
 		# Render and give it some time to finish. Should be unfiltered, because
 		# by default, filters aren't linked.
@@ -2210,8 +2291,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		)
 		s["o"]["in"].setInput( s["s"]["out"] )
 
+		s["rendererOptions"] = self._createOptions()
+		s["rendererOptions"]["in"].setInput( s["o"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["o"]["out"] )
+		s["r"]["in"].setInput( s["rendererOptions"]["out"] )
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
@@ -2269,8 +2353,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["o"]["options"]["renderCamera"]["enabled"].setValue( True )
 		s["o"]["in"].setInput( s["d"]["out"] )
 
+		s["rendererOptions"] = self._createOptions()
+		s["rendererOptions"]["in"].setInput( s["o"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["o"]["out"] )
+		s["r"]["in"].setInput( s["rendererOptions"]["out"] )
 
 		# Start a render, give it time to finish, and check the output.
 
@@ -2384,8 +2471,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["options"]["options"]["renderCamera"]["enabled"].setValue( True )
 		script["options"]["in"].setInput( script["outputs"]["out"] )
 
+		script["rendererOptions"] = self._createOptions()
+		script["rendererOptions"]["in"].setInput( script["options"]["out"] )
+
 		script["render"] = self._createInteractiveRender()
-		script["render"]["in"].setInput( script["options"]["out"] )
+		script["render"]["in"].setInput( script["rendererOptions"]["out"] )
 
 		# Start a render, give it time to finish, and check the output.
 
@@ -2482,8 +2572,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["options"]["options"]["renderCamera"]["enabled"].setValue( True )
 		s["options"]["in"].setInput( s["outputs"]["out"] )
 
+		s["rendererOptions"] = self._createOptions()
+		s["rendererOptions"]["in"].setInput( s["options"]["out"] )
+
 		s["renderer"] = self._createInteractiveRender()
-		s["renderer"]["in"].setInput( s["options"]["out"] )
+		s["renderer"]["in"].setInput( s["rendererOptions"]["out"] )
 
 		# Start a render, give it time to finish, and check the output.
 		# We should get light only from the default light, and not the
@@ -2555,8 +2648,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["options"] = GafferScene.StandardOptions()
 		script["options"]["in"].setInput( script["outputs"]["out"] )
 
+		script["rendererOptions"] = self._createOptions()
+		script["rendererOptions"]["in"].setInput( script["options"]["out"] )
+
 		script["renderer"] = self._createInteractiveRender()
-		script["renderer"]["in"].setInput( script["options"]["out"] )
+		script["renderer"]["in"].setInput( script["rendererOptions"]["out"] )
 
 		# Start a render, give it time to finish, and check the output.
 
@@ -2606,9 +2702,12 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["customOptions"] = GafferScene.CustomOptions()
 		script["customOptions"]["in"].setInput( script["outputs"]["out"] )
 
+		script["rendererOptions"] = self._createOptions()
+		script["rendererOptions"]["in"].setInput( script["customOptions"]["out"] )
+
 		script["renderer"] = self._createInteractiveRender()
 		script["renderer"]["renderer"].setValue( "" )
-		script["renderer"]["in"].setInput( script["customOptions"]["out"] )
+		script["renderer"]["in"].setInput( script["rendererOptions"]["out"] )
 
 		# No renderer specified yet, so if we start the render we don't
 		# get an image.
@@ -2654,9 +2753,12 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["standardOptions"]["options"]["defaultRenderer"]["enabled"].setValue( True )
 		script["standardOptions"]["options"]["defaultRenderer"]["value"].setValue( "${defaultRendererVariable}" )
 
+		script["rendererOptions"] = self._createOptions()
+		script["rendererOptions"]["in"].setInput( script["standardOptions"]["out"] )
+
 		script["renderer"] = self._createInteractiveRender()
 		script["renderer"]["renderer"].setValue( "" )
-		script["renderer"]["in"].setInput( script["standardOptions"]["out"] )
+		script["renderer"]["in"].setInput( script["rendererOptions"]["out"] )
 
 		# Check that the globals are evaluated in the right context to provide
 		# the `defaultRendererVariable` and enable the render.
