@@ -1735,7 +1735,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"]["in"].setInput( s["options"]["out"] )
 
 		s["rendererOptions"] = self._createOptions()
-		s["rendererOptions"]["in"].setInput( s["o"]["out"] )
+		s["rendererOptions"]["in"].setInput( s["outputs"]["out"] )
 
 		s["render"] = self._createInteractiveRender()
 		s["render"]["in"].setInput( s["rendererOptions"]["out"] )
