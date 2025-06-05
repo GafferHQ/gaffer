@@ -162,7 +162,15 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			{ 'value': 100, "maxError" : 0.05 },
 		]
 
-		self.__testExtension( "jpg", "jpeg", options = options, metadataToIgnore = [ "DocumentName", "HostComputer" ] )
+		metadataToIgnore = [ "DocumentName", "HostComputer" ]
+		if OpenImageIO.VERSION >= 30002 :
+			# OIIO stopped automatically writing these in version 3.0.2.0, but our
+			# reference image was written from an earlier version.
+			#
+			#  See https://github.com/AcademySoftwareFoundation/OpenImageIO/commit/bff3377d362ef8286abb8137cdb25dba1de60efc,
+			metadataToIgnore += [ "IPTC:OriginatingProgram", "IPTC:Creator" ]
+
+		self.__testExtension( "jpg", "jpeg", options = options, metadataToIgnore = metadataToIgnore )
 
 	def testTgaWrite( self ) :
 
