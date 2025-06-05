@@ -756,10 +756,15 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
 	@GafferTest.TestRunner.PerformanceTestMethod()
-	def testImageOpenPerformance( self ):
+	def testImageOpenPerformance( self ) :
+
 		# Test the overhead of opening images by opening lots of images, but only reading the view count
 		files = self.imagesPath().glob( "*.exr" )
-		files = filter( lambda f : not ( "ChannelsOverlap" in f.stem or "NukeSinglePart" in f.stem ), files )
+		filesToSkip = {
+			"invalidMultiViewAttribute.exr", "channelTestMultiViewNukeSinglePart.exr",
+			"channelTestNukeSinglePart.exr", "multipartDefaultChannelsOverlap.exr"
+		}
+		files = [ f for f in files if f.name not in filesToSkip ]
 		files = sorted( files )
 		filesWithResult = [ (i, 2 if "channelTestMultiView" in i.stem else 1 ) for i in files ]
 		reader = GafferImage.ImageReader()
