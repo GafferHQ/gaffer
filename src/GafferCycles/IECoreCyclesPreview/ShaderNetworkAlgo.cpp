@@ -114,9 +114,8 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 {
 	// Reuse previously created node if we can.
 	const IECoreScene::Shader *shader = shaderNetwork->getShader( outputParameter.shader );
-	auto inserted = converted.insert( { outputParameter.shader, nullptr } );
-	ccl::ShaderNode *&node = inserted.first->second;
-	if( !inserted.second )
+	ccl::ShaderNode *&node = converted[outputParameter.shader];
+	if( node )
 	{
 		return node;
 	}
@@ -127,11 +126,10 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 
 	if( isOSLShader )
 	{
-		if( shaderManager && shaderManager->use_osl() )
+		if( shaderManager->use_osl() )
 		{
-			ccl::OSLShaderManager *manager = (ccl::OSLShaderManager*)shaderManager;
 			std::string shaderFileName = g_shaderSearchPathCache.get( shader->getName() );
-			node = manager->osl_node( shaderGraph, shaderManager, shaderFileName.c_str() );
+			node = ccl::OSLShaderManager::osl_node( shaderGraph, shaderManager, shaderFileName.c_str() );
 		}
 		else
 		{
@@ -152,8 +150,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		boost::split( split, shader->getName(), boost::is_any_of( "_" ) );
 		if( split.size() >= 4 ) // should be 4 eg. "convert, X, to, Y"
 		{
-			ccl::ConvertNode *convertNode = shaderGraph->create_node<ccl::ConvertNode>( getSocketType( split[1] ), getSocketType( split[3] ), true );
-			node = (ccl::ShaderNode*)convertNode;
+			node = shaderGraph->create_node<ccl::ConvertNode>( getSocketType( split[1] ), getSocketType( split[3] ), true );
 		}
 	}
 	else if( const ccl::NodeType *nodeType = ccl::NodeType::find( ccl::ustring( shader->getName() ) ) )
@@ -174,12 +171,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	// Add node to graph
 
 	node = shaderGraph->add( node );
-
-	string nodeName(
-		namePrefix +
-		outputParameter.shader.string()
-	);
-	node->name = ccl::ustring( nodeName.c_str() );
+	node->name = ccl::ustring( namePrefix + outputParameter.shader.string() );
 
 	// Set the shader parameters
 
@@ -526,29 +518,6 @@ void setSingleSided( ccl::ShaderGraph *graph )
 				graph->connect( shaderOutput2, shaderInput );
 		}
 	}
-}
-
-ccl::Shader *createDefaultShader()
-{
-	// This creates a camera dot-product shader/facing ratio.
-	ccl::Shader *cshader = new ccl::Shader();
-	ccl::ShaderGraph *cgraph = new ccl::ShaderGraph();
-	cshader->name = ccl::ustring( "defaultSurfaceShader" );
-	ccl::ShaderNode *outputNode = (ccl::ShaderNode*)cgraph->output();
-	ccl::VectorMathNode *vecMath = cgraph->create_node<ccl::VectorMathNode>();
-	vecMath->set_math_type( ccl::NODE_VECTOR_MATH_DOT_PRODUCT );
-	ccl::GeometryNode *geo = cgraph->create_node<ccl::GeometryNode>();
-	ccl::ShaderNode *vecMathNode = cgraph->add( (ccl::ShaderNode*)vecMath );
-	ccl::ShaderNode *geoNode = cgraph->add( (ccl::ShaderNode*)geo );
-	cgraph->connect( ShaderNetworkAlgo::output( geoNode, "normal" ),
-						ShaderNetworkAlgo::input( vecMathNode, "vector1" ) );
-	cgraph->connect( ShaderNetworkAlgo::output( geoNode, "incoming" ),
-						ShaderNetworkAlgo::input( vecMathNode, "vector2" ) );
-	cgraph->connect( ShaderNetworkAlgo::output( vecMathNode, "value" ),
-						ShaderNetworkAlgo::input( outputNode, "surface" ) );
-	cshader->set_graph( cgraph );
-
-	return cshader;
 }
 
 bool hasOSL( const ccl::Shader *cshader )

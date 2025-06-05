@@ -127,11 +127,6 @@ using namespace IECoreCycles;
 namespace
 {
 
-// Need to defer shader assignments to the scene lock
-using ShaderAssignPair = std::pair<ccl::Node *, ccl::array<ccl::Node *>>;
-// Defer adding the created nodes to the scene lock
-using NodesCreated = tbb::concurrent_vector<ccl::Node *>;
-
 template<typename T>
 T *reportedCast( const IECore::RunTimeTyped *v, const char *type, const IECore::InternedString &name )
 {
@@ -263,10 +258,11 @@ struct NodeDeleter
 	using GeometryDeleter = Deleter<ccl::Geometry>;
 	using ObjectDeleter = Deleter<ccl::Object>;
 
-	// Must not be called concurrently, either with `scheduleDeletion()` or other
-	// code affecting the scene.
 	void doPendingDeletions()
 	{
+		std::lock_guard lock( m_mutex );
+		std::lock_guard sceneLock( m_scene->mutex );
+
 		if( m_pendingLightDeletions.size() )
 		{
 			m_scene->delete_nodes( m_pendingLightDeletions );
@@ -488,14 +484,6 @@ class CyclesShader : public IECore::RefCounted
 
 	public :
 
-		// Default shader
-		CyclesShader( ccl::Scene *scene )
-			:	m_shader( ShaderNetworkAlgo::createDefaultShader() ),
-				m_hash( IECore::MurmurHash() )
-		{
-			m_shader->set_owner( scene );
-		}
-
 		CyclesShader(
 			const IECoreScene::ShaderNetwork *surfaceShader,
 			const IECoreScene::ShaderNetwork *displacementShader,
@@ -520,7 +508,7 @@ class CyclesShader : public IECore::RefCounted
 				ShaderNetworkAlgo::convertAOV( aovShader, graph, scene->shader_manager, name );
 			}
 
-			m_shader = new ccl::Shader();
+			m_shader = SceneAlgo::createNodeWithLock<ccl::Shader>( scene );
 			if( surfaceShader )
 			{
 				string shaderName( name + surfaceShader->getOutput().shader.string() );
@@ -532,7 +520,6 @@ class CyclesShader : public IECore::RefCounted
 				m_shader->name = ccl::ustring( shaderName.c_str() );
 			}
 			m_shader->set_displacement_method( displacementMethod );
-			m_shader->set_owner( scene );
 			m_shader->set_graph( graph );
 			m_shader->tag_update( scene );
 		}
@@ -552,17 +539,11 @@ class CyclesShader : public IECore::RefCounted
 			return m_shader;
 		}
 
-		void nodesCreated( NodesCreated &nodes )
-		{
-			// Only get the first instance
-			if( this->refCount() == 2 )
-			{
-				nodes.push_back( m_shader );
-			}
-		}
-
 	private :
 
+		/// Note : `ccl::Scene::delete_nodes()` doesn't actually delete shader
+		/// nodes, and `ShaderCache::clearUnused()` is a no-op, so we don't
+		/// bother managing them via a NodeDeleter.
 		ccl::Shader *m_shader;
 		const IECore::MurmurHash m_hash;
 
@@ -582,13 +563,11 @@ class ShaderCache
 		ShaderCache( ccl::Scene *scene )
 			: m_scene( scene )
 		{
-			m_numDefaultShaders = m_scene->shaders.size();
-			m_defaultSurface = new CyclesShader( m_scene );
 		}
 
-		void update( NodesCreated &shaders )
+		void update()
 		{
-			updateShaders( shaders );
+			updateShaders();
 		}
 
 		CyclesShaderPtr get( const IECoreScene::ShaderNetwork *surfaceShader )
@@ -737,11 +716,6 @@ class ShaderCache
 			return writeAccessor->second;
 		}
 
-		CyclesShaderPtr defaultSurface()
-		{
-			return m_defaultSurface;
-		}
-
 		// Must not be called concurrently with anything.
 		void clearUnused()
 		{
@@ -751,78 +725,11 @@ class ShaderCache
 			return;
 		}
 
-		// Must not be called concurrently with anything.
-		void nodesCreated( NodesCreated &nodes )
-		{
-			nodes.push_back( m_defaultSurface->shader() );
-			for( Cache::const_iterator it = m_cache.begin(), eIt = m_cache.end(); it != eIt; ++it )
-			{
-				if( it->second->shader() )
-				{
-					nodes.push_back( it->second->shader() );
-				}
-			}
-		}
-
-		void addShaderAssignment( ShaderAssignPair shaderAssign )
-		{
-			m_shaderAssignPairs.push_back( shaderAssign );
-		}
-
-		uint32_t numDefaultShaders()
-		{
-			return m_numDefaultShaders;
-		}
-
 	private :
 
-		void updateShaders( NodesCreated &nodes )
+		void updateShaders()
 		{
-			// We need to update all of these, it seems as though being fine-grained causes
-			// graphical glitches unfortunately.
-			if( m_shaderAssignPairs.size() )
-			{
-				m_scene->light_manager->tag_update( m_scene, ccl::LightManager::UPDATE_ALL );
-				m_scene->geometry_manager->tag_update( m_scene, ccl::GeometryManager::UPDATE_ALL );
-			}
-			// Do the shader assignment here
-			for( ShaderAssignPair shaderAssignPair : m_shaderAssignPairs )
-			{
-				if( shaderAssignPair.first->is_a( ccl::Geometry::get_node_base_type() ) )
-				{
-					for( ccl::Node *node : shaderAssignPair.second )
-					{
-						ccl::Shader *shader = static_cast<ccl::Shader *>( node );
-						shader->tag_used( m_scene );
-					}
-					ccl::Geometry *geo = static_cast<ccl::Geometry*>( shaderAssignPair.first );
-					geo->set_used_shaders( shaderAssignPair.second );
-					if( geo->is_volume() && geo->is_modified() && static_cast<ccl::Volume*>( geo )->get_triangles().size() )
-					{
-						// We're replacing an existing shader on a volume
-						// from which Cycles has already built a mesh, so
-						// we cheekily clear the modified tag to prevent
-						// the volume from disappearing.
-						geo->clear_modified();
-					}
-				}
-				else if( shaderAssignPair.first->is_a( ccl::Light::get_node_type() ) )
-				{
-					ccl::Light *light = static_cast<ccl::Light*>( shaderAssignPair.first );
-					if( shaderAssignPair.second[0] )
-					{
-						ccl::Shader *shader = static_cast<ccl::Shader *>( shaderAssignPair.second[0] );
-						shader->tag_used( m_scene );
-						light->set_shader( shader );
-					}
-					else
-					{
-						light->set_shader( m_scene->default_light );
-					}
-				}
-			}
-			m_shaderAssignPairs.clear();
-
+			std::lock_guard sceneLock( m_scene->mutex );
 			/// \todo There are several problems here :
 			///
 			/// - We're clobbering the `tex_mapping.rotation` parameter, which is exposed to users
@@ -852,29 +759,11 @@ class ShaderCache
 					}
 				}
 			}
-
-			ccl::vector<ccl::Shader *> &shaders = m_scene->shaders;
-			if( nodes.size() + m_numDefaultShaders > shaders.size() )
-			{
-				shaders.resize( m_numDefaultShaders );
-				for( ccl::Node *node : nodes )
-				{
-					ccl::Shader *shader = static_cast<ccl::Shader *>( node );
-					shaders.push_back( shader );
-				}
-				m_scene->shader_manager->tag_update( m_scene, ccl::ShaderManager::SHADER_ADDED );
-			}
-			nodes.clear();
 		}
 
 		ccl::Scene *m_scene;
-		int m_numDefaultShaders;
 		using Cache = tbb::concurrent_hash_map<IECore::MurmurHash, CyclesShaderPtr>;
 		Cache m_cache;
-		CyclesShaderPtr m_defaultSurface;
-		// Need to assign shaders in a deferred manner
-		using ShaderAssignVector = tbb::concurrent_vector<ShaderAssignPair>;
-		ShaderAssignVector m_shaderAssignPairs;
 
 };
 
@@ -968,6 +857,30 @@ const char *customAttributeName( const std::string &attributeName, bool &hasPrec
 	return nullptr;
 }
 
+IECoreScene::ConstShaderNetworkPtr g_facingRatio = []() {
+
+	ShaderNetworkPtr result = new ShaderNetwork;
+
+	const InternedString geometryHandle = result->addShader(
+		"geometry", new Shader( "geometry" )
+	);
+	const InternedString vectorMathHandle = result->addShader(
+		"vectorMath", new Shader(
+			"vector_math", "shader",
+			{
+				{ "math_type", new StringData( "dot_product" ) }
+			}
+		)
+	);
+
+	result->addConnection( { { geometryHandle, "normal" }, { vectorMathHandle, "vector1" } } );
+	result->addConnection( { { geometryHandle, "incoming" }, { vectorMathHandle, "vector2" } } );
+	result->setOutput( { vectorMathHandle, "value" } );
+
+	return result;
+
+} ();
+
 class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterface
 {
 
@@ -988,8 +901,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				m_assetName( "" ),
 				m_lightGroup( "" ),
 				m_isCausticsCaster( false ),
-				m_isCausticsReceiver( false ),
-				m_shaderCache( shaderCache )
+				m_isCausticsReceiver( false )
 		{
 			updateVisibility( g_cameraVisibilityAttributeName,       (int)ccl::PATH_RAY_CAMERA,         attributes );
 			updateVisibility( g_diffuseVisibilityAttributeName,      (int)ccl::PATH_RAY_DIFFUSE,        attributes );
@@ -1011,26 +923,24 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_isCausticsReceiver = attributeValue<bool>( g_isCausticsReceiverAttributeName, attributes, m_isCausticsReceiver );
 
 			// Surface shader
+			const IECoreScene::ShaderNetwork *volumeShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesVolumeShaderAttributeName, attributes );
 			const IECoreScene::ShaderNetwork *surfaceShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesSurfaceShaderAttributeName, attributes );
 			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_oslSurfaceShaderAttributeName, attributes );
 			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_oslShaderAttributeName, attributes );
 			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_surfaceShaderAttributeName, attributes );
+			if( !surfaceShaderAttribute && !volumeShaderAttribute )
+			{
+				surfaceShaderAttribute = g_facingRatio.get();
+			}
 			const IECoreScene::ShaderNetwork *displacementShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesDisplacementShaderAttributeName, attributes );
-			const IECoreScene::ShaderNetwork *volumeShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesVolumeShaderAttributeName, attributes );
-			if( surfaceShaderAttribute || volumeShaderAttribute )
-			{
-				// Hash shader attributes first
-				m_shaderAttributes.hash( m_shaderHash, attributes );
-				// Create the shader
-				m_shader = m_shaderCache->get( surfaceShaderAttribute, displacementShaderAttribute, volumeShaderAttribute, attributes, m_shaderHash );
-				// Then apply the shader attributes
-				m_shaderAttributes.apply( m_shader->shader() );
-			}
-			else
-			{
-				// Revert back to the default surface
-				m_shader = m_shaderCache->defaultSurface();
-			}
+
+			// Hash shader attributes first
+			m_shaderAttributes.hash( m_shaderHash, attributes );
+			// Create the shader
+			m_shader = shaderCache->get( surfaceShaderAttribute, displacementShaderAttribute, volumeShaderAttribute, attributes, m_shaderHash );
+			// Then apply the shader attributes
+			/// \todo Why not let ShaderCache handle this for us?
+			m_shaderAttributes.apply( m_shader->shader() );
 
 			// Light shader
 
@@ -1045,7 +955,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 				ShaderNetworkPtr lightShader = ShaderNetworkAlgo::convertLightShader( m_lightAttribute.get() );
 				IECore::MurmurHash h;
-				m_lightShader = m_shaderCache->get( lightShader.get(), nullptr, nullptr, attributes, h );
+				m_lightShader = shaderCache->get( lightShader.get(), nullptr, nullptr, attributes, h );
 			}
 
 			// Custom attributes
@@ -1089,7 +999,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			}
 		}
 
-		bool applyObject( ccl::Object *object, const CyclesAttributes *previousAttributes ) const
+		bool applyObject( ccl::Object *object, const CyclesAttributes *previousAttributes, ccl::Scene *scene ) const
 		{
 			// Re-issue a new object if displacement or subdivision has changed
 			if( previousAttributes )
@@ -1126,21 +1036,19 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					}
 				}
 
-				if( object->get_geometry() && object->get_geometry()->is_mesh() )
+				if( object->get_geometry()->is_mesh() )
 				{
-					if( ccl::Mesh *mesh = (ccl::Mesh*)object->get_geometry() )
+					auto mesh = static_cast<ccl::Mesh *>( object->get_geometry() );
+					if( mesh->get_subd_params() )
 					{
-						if( mesh->get_subd_params() )
+						if( ( previousAttributes->m_maxLevel != m_maxLevel ) || ( previousAttributes->m_dicingRate != m_dicingRate ) )
 						{
-							if( ( previousAttributes->m_maxLevel != m_maxLevel ) || ( previousAttributes->m_dicingRate != m_dicingRate ) )
-							{
-								// Get a new mesh
-								return false;
-							}
+							// Get a new mesh
+							return false;
 						}
 					}
 				}
-				else if( object->get_geometry() && object->get_geometry()->is_volume() )
+				else if( object->get_geometry()->is_volume() )
 				{
 					IECore::MurmurHash previousVolumeHash;
 					previousAttributes->m_volume.hash( previousVolumeHash );
@@ -1164,27 +1072,41 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			object->set_is_caustics_caster( m_isCausticsCaster );
 			object->set_is_caustics_receiver( m_isCausticsReceiver );
 
-			if( object->get_geometry() )
+			if( object->get_geometry()->is_mesh() )
 			{
-				ccl::Mesh *mesh = nullptr;
-				if( object->get_geometry()->geometry_type == ccl::Geometry::MESH )
-					mesh = (ccl::Mesh*)object->get_geometry();
-
-				if( mesh )
+				auto mesh = static_cast<ccl::Mesh *>( object->get_geometry() );
+				if( mesh->get_subd_params() )
 				{
-					if( mesh->get_subd_params() )
-					{
-						mesh->set_subd_dicing_rate( m_dicingRate );
-						mesh->set_subd_max_level( m_maxLevel );
-					}
+					mesh->set_subd_dicing_rate( m_dicingRate );
+					mesh->set_subd_max_level( m_maxLevel );
 				}
+			}
 
-				if( m_shader->shader() )
-				{
-					ShaderAssignPair pair = ShaderAssignPair( object->get_geometry(), ccl::array<ccl::Node*>() );
-					pair.second.push_back_slow( m_shader->shader() );
-					m_shaderCache->addShaderAssignment( pair );
-				}
+			ccl::array<ccl::Node *> shaders;
+			shaders.push_back_slow( m_shader->shader() );
+			{
+				// We need the scene lock because `tag_used()` will modify the
+				// scene.
+				std::scoped_lock sceneLock( scene->mutex );
+				m_shader->shader()->tag_used( scene );
+				// But we also use the lock for `set_used_shaders()`, to protect the
+				// non-atomic increment made in `ccl::Node::reference()`.
+				object->get_geometry()->set_used_shaders( shaders );
+			}
+
+			if(
+				object->get_geometry()->is_volume() &&
+				object->get_geometry()->is_modified() &&
+				static_cast<ccl::Volume*>( object->get_geometry() )->get_triangles().size()
+			)
+			{
+				// We've replaced an existing shader on a volume
+				// from which Cycles has already built a mesh, so
+				// we cheekily clear the modified tag to prevent
+				// the volume from disappearing.
+				/// \todo I suspect we need something similar for meshes,
+				/// to prevent unnecessary BVH rebuilds.
+				object->get_geometry()->clear_modified();
 			}
 
 			m_volume.apply( object );
@@ -1197,15 +1119,20 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return true;
 		}
 
-		bool applyLight( ccl::Light *light, const CyclesAttributes *previousAttributes ) const
+		bool applyLight( ccl::Light *light, const CyclesAttributes *previousAttributes, ccl::Scene *scene ) const
 		{
 			if( m_lightAttribute )
 			{
 				ShaderNetworkAlgo::convertLight( m_lightAttribute.get(), light );
-				ShaderAssignPair pair = ShaderAssignPair( light, ccl::array<ccl::Node*>() );
-				pair.second.push_back_slow( m_lightShader->shader() );
-				m_shaderCache->addShaderAssignment( pair );
-
+				{
+					// We need the scene lock because `tag_used()` will modify the
+					// scene.
+					std::scoped_lock sceneLock( scene->mutex );
+					m_lightShader->shader()->tag_used( scene );
+					// But we also use the lock for `set_shader()`, to protect the
+					// non-atomic increment made in `ccl::Node::reference()`.
+					light->set_shader( m_lightShader->shader() );
+				}
 				light->set_is_enabled( !m_muteLight );
 			}
 			else
@@ -1278,11 +1205,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return true;
 		}
 
-		void nodesCreated( NodesCreated &nodes )
-		{
-			m_shader->nodesCreated( nodes );
-		}
-
 		int getVolumePrecision() const
 		{
 			return m_volume.precision ? nameToVolumePrecisionEnum( m_volume.precision.value() ) : 0;
@@ -1348,27 +1270,27 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			void apply( ccl::Object *object ) const
 			{
-				if( object->get_geometry() && object->get_geometry()->is_volume() )
+				if( !object->get_geometry()->is_volume() )
 				{
-					if( ccl::Volume *volume = (ccl::Volume*)object->get_geometry() )
-					{
-						if( clipping )
-						{
-							volume->set_clipping( clipping.value() );
-						}
-						if( stepSize )
-						{
-							volume->set_step_size( stepSize.value() );
-						}
-						if( objectSpace )
-						{
-							volume->set_object_space( objectSpace.value() );
-						}
-						if( velocityScale )
-						{
-							volume->set_velocity_scale( velocityScale.value() );
-						}
-					}
+					return;
+				}
+
+				auto volume = static_cast<ccl::Volume *>( object->get_geometry() );
+				if( clipping )
+				{
+					volume->set_clipping( clipping.value() );
+				}
+				if( stepSize )
+				{
+					volume->set_step_size( stepSize.value() );
+				}
+				if( objectSpace )
+				{
+					volume->set_object_space( objectSpace.value() );
+				}
+				if( velocityScale )
+				{
+					volume->set_velocity_scale( velocityScale.value() );
 				}
 			}
 
@@ -1447,8 +1369,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		InternedString m_lightGroup;
 		bool m_isCausticsCaster;
 		bool m_isCausticsReceiver;
-		// Need to assign shaders in a deferred manner
-		ShaderCache *m_shaderCache;
 		bool m_muteLight;
 
 		using CustomAttributes = ccl::vector<ccl::ParamValue>;
@@ -1753,6 +1673,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 				m_object( SceneAlgo::createNodeWithLock<ccl::Object>( scene ), NodeDeleter::ObjectDeleter( nodeDeleter ) ),
 				m_geometry( geometry ), m_frame( frame ), m_attributes( nullptr ), m_lightLinker( lightLinker )
 		{
+			assert( m_geometry );
 			m_object->name = ccl::ustring( name.c_str() );
 			m_object->set_random_id( std::hash<string>()( name ) );
 			m_object->set_geometry( geometry.get() );
@@ -1814,12 +1735,12 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 		void transform( const Imath::M44f &transform ) override
 		{
 			m_object->set_tfm( SocketAlgo::setTransform( transform ) );
-			if( ccl::Mesh *mesh = (ccl::Mesh*)m_object->get_geometry() )
+			if( m_object->get_geometry()->is_mesh() )
 			{
-				if( mesh->geometry_type == ccl::Geometry::MESH )
+				auto mesh = static_cast<ccl::Mesh *>( m_object->get_geometry() );
+				if( mesh->get_subd_params() )
 				{
-					if( mesh->get_subd_params() )
-						mesh->set_subd_objecttoworld( m_object->get_tfm() );
+					mesh->set_subd_objecttoworld( m_object->get_tfm() );
 				}
 			}
 
@@ -1842,7 +1763,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 		{
 			ccl::array<ccl::Transform> motion;
 			ccl::Geometry *geo = m_object->get_geometry();
-			if( geo && geo->get_use_motion_blur() && geo->get_motion_steps() != samples.size() )
+			if( geo->get_use_motion_blur() && geo->get_motion_steps() != samples.size() )
 			{
 				IECore::msg(
 					IECore::Msg::Error, "IECoreCycles::Renderer",
@@ -1945,12 +1866,12 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 				geo->set_motion_steps( motion.size() );
 			}
 
-			if( ccl::Mesh *mesh = (ccl::Mesh*)m_object->get_geometry() )
+			if( geo->is_mesh() )
 			{
-				if( mesh->geometry_type == ccl::Geometry::MESH )
+				auto mesh = static_cast<ccl::Mesh *>( geo );
+				if( mesh->get_subd_params() )
 				{
-					if( mesh->get_subd_params() )
-						mesh->set_subd_objecttoworld( m_object->get_tfm() );
+					mesh->set_subd_objecttoworld( m_object->get_tfm() );
 				}
 			}
 
@@ -1960,7 +1881,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
 			const CyclesAttributes *cyclesAttributes = static_cast<const CyclesAttributes *>( attributes );
-			if( cyclesAttributes->applyObject( m_object.get(), m_attributes.get() ) )
+			if( cyclesAttributes->applyObject( m_object.get(), m_attributes.get(), m_scene ) )
 			{
 				m_attributes = cyclesAttributes;
 				m_object->tag_update( m_scene );
@@ -2038,7 +1959,7 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
 			const CyclesAttributes *cyclesAttributes = static_cast<const CyclesAttributes *>( attributes );
-			if( cyclesAttributes->applyLight( m_light.get(), m_attributes.get() ) )
+			if( cyclesAttributes->applyLight( m_light.get(), m_attributes.get(), m_scene ) )
 			{
 				m_attributes = cyclesAttributes;
 				m_light->tag_update( m_scene );
@@ -2718,33 +2639,36 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 			acquireSession();
 
+			if( m_rendering && m_renderType == Interactive )
 			{
-				std::scoped_lock sceneLock( m_scene->mutex );
-				if( m_rendering && m_renderType == Interactive )
-				{
-					clearUnused();
-				}
+				clearUnused();
+			}
 
-				if( m_nodeDeleter )
-				{
-					m_nodeDeleter->doPendingDeletions();
-				}
+			if( m_nodeDeleter )
+			{
+				m_nodeDeleter->doPendingDeletions();
+			}
 
-				updateOptions();
-				updateSceneObjects();
-				updateBackground();
+			updateOptions();
+			updateSceneObjects();
+			updateBackground();
+
+			{
+				std::lock_guard sceneLock( m_scene->mutex );
 				const std::string cameraName = optionValue<string>( g_cameraOptionName, "" );
 				updateCamera( cameraName, m_scene->camera );
 				updateCamera( optionValue<string>( g_dicingCameraOptionName, cameraName ), m_scene->dicing_camera );
-				updateOutputs();
-				warnForUnusedOptions();
+			}
 
-				if( m_rendering )
+			updateOutputs();
+			warnForUnusedOptions();
+
+			if( m_rendering )
+			{
+				std::lock_guard sceneLock( m_scene->mutex );
+				if( m_scene->need_reset() )
 				{
-					if( m_scene->need_reset() )
-					{
-						m_session->reset( m_session->params, m_bufferParams );
-					}
+					m_session->reset( m_session->params, m_bufferParams );
 				}
 			}
 
@@ -2927,9 +2851,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void updateSceneObjects()
 		{
-			// Add every shader each time, less issues
-			m_shaderCache->nodesCreated( m_shadersCreated );
-			m_shaderCache->update( m_shadersCreated );
+			m_shaderCache->update();
 		}
 
 		void updateOptions()
@@ -2938,6 +2860,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				return;
 			}
+
+			std::unique_lock sceneLock( m_scene->mutex );
 
 			// Options that map directly to sockets.
 
@@ -3000,17 +2924,18 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				{
 					if( const IECoreScene::ShaderNetwork *d = reportedCast<const IECoreScene::ShaderNetwork>( it->second.value.get(), "option", g_backgroundShaderOptionName ) )
 					{
+						// Need to release scene mutex temporarily, so that
+						// `ShaderCache::get()` can acquire it.
+						sceneLock.unlock();
 						m_backgroundShader = m_shaderCache->get( d );
+						sceneLock.lock();
 					}
 				}
 
 				if( m_backgroundShader )
 				{
+					m_backgroundShader->shader()->tag_used( m_scene );
 					background->set_shader( m_backgroundShader->shader() );
-					// Workaround for apparent Cycles bug when applying a shader
-					// which has been used before and which we have just
-					// re-retrieved from the ShaderCache.
-					m_scene->shader_manager->tag_update( m_scene, ccl::ShaderManager::SHADER_MODIFIED );
 				}
 
 				it->second.modified = false;
@@ -3069,6 +2994,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// This function is separate because background lights can be
 			// modified without setting `m_optionsChanged`.
 
+			std::lock_guard sceneLock( m_scene->mutex );
+
 			if( !m_backgroundShader )
 			{
 				/// \todo Figure out how we can avoid repeating this check for
@@ -3098,6 +3025,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void updateOutputs()
 		{
+			std::lock_guard sceneLock( m_scene->mutex );
+
 			ccl::Camera *camera = m_scene->camera;
 			int width = camera->get_full_width();
 			int height = camera->get_full_height();
@@ -3451,13 +3380,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		std::unique_ptr<GeometryCache> m_geometryCache;
 		std::unique_ptr<AttributesCache> m_attributesCache;
 		LightLinker m_lightLinker;
-
-		// Nodes created to update to Cycles
-		/// \todo I don't see why these need to be state on the Renderer.
-		/// I think they could either be private data within `ShaderCache`
-		/// etc, or we could just stop deferring the addition of objects to
-		/// the `ccl::Scene`.
-		NodesCreated m_shadersCreated;
 
 		// Outputs
 		OutputMap m_outputs;

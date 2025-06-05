@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import functools
 import unittest
 
 import imath
@@ -48,53 +49,22 @@ import GafferCycles
 class InteractiveCyclesRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 	renderer = "Cycles"
+	__extraOptions = {}
 
-	def testSVMRenderWithCPU( self ) :
+	def testShaderEditsWithSVM( self ) :
 
-		# This used to crash due to some unknown problem that looked a lot like
-		# memory corruption, and which I assumed was due to the way we swapped
-		# between `ccl::Sessions` internally. At one point it crashed 100% reliably
-		# but now it doesn't, and I don't know why. Seems like a useful canary to
-		# keep around.
+		self.__extraOptions = { "cycles:shadingsystem" : "SVM" }
+		GafferSceneTest.InteractiveRenderTest.testShaderEdits( self )
 
-		script = Gaffer.ScriptNode()
-		script["catalogue"] = GafferScene.Catalogue()
-		script["catalogue"]["directory"].setValue( self.temporaryDirectory() )
+	def testLightsWithSVM( self ) :
 
-		script["sphere"] = GafferScene.Sphere()
+		self.__extraOptions = { "cycles:shadingsystem" : "SVM" }
+		GafferSceneTest.InteractiveRenderTest.testLights( self )
 
-		script["outputs"] = GafferScene.Outputs()
-		script["outputs"].addOutput(
-			"beauty",
-			IECoreScene.Output(
-				"test",
-				"ieDisplay",
-				"rgba",
-				{
-					"driverType" : "ClientDisplayDriver",
-					"displayHost" : "localhost",
-					"displayPort" : str( script["catalogue"].displayDriverServer().portNumber() ),
-					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
-				}
-			)
-		)
-		script["outputs"]["in"].setInput( script["sphere"]["out"] )
+	def testBasicLightLinkingWithSVM( self ) :
 
-		script["options"] = GafferCycles.CyclesOptions()
-		script["options"]["in"].setInput( script["outputs"]["out"] )
-		script["options"]["options"]["cycles:shadingsystem"]["enabled"].setValue( True )
-		script["options"]["options"]["cycles:shadingsystem"]["value"].setValue( "SVM" )
-
-		script["renderer"] = self._createInteractiveRender()
-		script["renderer"]["in"].setInput( script["options"]["out"] )
-
-		script["renderer"]["state"].setValue( script["renderer"].State.Running )
-
-		self.uiThreadCallHandler.waitFor( 1.0 )
-
-		script["renderer"]["state"].setValue( script["renderer"].State.Stopped )
-
-		self.uiThreadCallHandler.waitFor( 1.0 )
+		self.__extraOptions = { "cycles:shadingsystem" : "SVM" }
+		GafferSceneTest.InteractiveRenderTest.testBasicLightLinking( self )
 
 	@unittest.skip( "Resolution edits not supported yet" )
 	def testEditResolution( self ) :
@@ -155,6 +125,10 @@ class InteractiveCyclesRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		# adaptive sampling.
 		options["options"]["cycles:integrator:use_adaptive_sampling"]["enabled"].setValue( True )
 		options["options"]["cycles:integrator:use_adaptive_sampling"]["value"].setValue( False )
+
+		for name, value in self.__extraOptions.items() :
+			options["options"][name]["enabled"].setValue( True )
+			options["options"][name]["value"].setValue( value )
 
 		return options
 

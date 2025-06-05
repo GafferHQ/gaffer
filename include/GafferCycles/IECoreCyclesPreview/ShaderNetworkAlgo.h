@@ -68,7 +68,6 @@ IECORECYCLES_API ccl::ShaderGraph *convertGraph(
 
 IECORECYCLES_API void convertAOV( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::ShaderGraph *graph, ccl::ShaderManager *shaderManager, const std::string &namePrefix = "" );
 IECORECYCLES_API void setSingleSided( ccl::ShaderGraph *graph );
-IECORECYCLES_API ccl::Shader *createDefaultShader();
 IECORECYCLES_API bool hasOSL( const ccl::Shader *cshader );
 
 // Light conversion
