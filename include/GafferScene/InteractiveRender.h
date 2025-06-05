@@ -136,6 +136,8 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::ComputeNode
 		std::unique_ptr<RenderController> m_controller;
 		State m_state;
 
+		std::shared_ptr<const RenderManifest> m_lastRenderManifest;
+
 		Gaffer::ContextPtr m_context;
 
 		IE_CORE_FORWARDDECLARE( RenderMessageHandler )
