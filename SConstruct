@@ -1630,6 +1630,11 @@ if env["PLATFORM"] == "win32" :
 		libraries[library].setdefault( "pythonEnvAppends", {} )
 		libraries[library]["pythonEnvAppends"].setdefault( "LIBS", [] ).extend( [ "Advapi32" ] )
 
+	for library in ( "GafferImage", ) :
+
+		libraries[library].setdefault( "envAppends", {} )
+		libraries[library]["envAppends"].setdefault( "LIBS", [] ).extend( [ "zlib" ] )
+
 else :
 
 	libraries["GafferCycles"]["envAppends"]["LIBS"].extend( [ "dl" ] )
