@@ -370,6 +370,9 @@ void InteractiveRender::update()
 		m_controller->updateRequiredSignal().connect(
 			boost::bind( &InteractiveRender::update, this )
 		);
+
+		// We can now use a live render manifest from the controller, so get rid of the saved manifest
+		m_lastRenderManifest.reset();
 	}
 
 	// We need to pause to make edits, even if we want to
@@ -412,9 +415,20 @@ Gaffer::ConstContextPtr InteractiveRender::effectiveContext()
 
 void InteractiveRender::stop()
 {
+	// A Catalogue may need to access the render manifest as part of saving out the images from this
+	// render when it stops. To allow for this, we hold onto the manifest when we release the
+	// controller ( which is what triggers the render to stop and the catalogue to save the images to
+	// disk ). In theory, we could try to track when the render has finished signalling all catalogues
+	// and then release this, but it's much simpler to hold onto it until the next render starts.
+	if( m_controller )
+	{
+		m_lastRenderManifest = m_controller->renderManifest();
+	}
+
 	m_controller.reset();
 	m_renderer.reset();
 	m_state = Stopped;
+
 }
 
 // Called on a background thread when data is received on the driver.
@@ -494,12 +508,12 @@ void InteractiveRender::affects( const Plug *input, AffectedPlugsContainer &outp
 
 std::shared_ptr<const RenderManifest> InteractiveRender::renderManifest() const
 {
-	if( !m_controller )
+	if( m_controller )
 	{
-		return nullptr;
+		return m_controller->renderManifest();
 	}
 
-	return m_controller->renderManifest();
+	return m_lastRenderManifest;
 }
 
 void InteractiveRender::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
