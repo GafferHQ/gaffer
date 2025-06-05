@@ -1409,6 +1409,9 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.targetsWithMetadata( "target[1-3]", "k2" ), [ "target1", "target2" ] )
 		self.assertEqual( Gaffer.Metadata.targetsWithMetadata( "target*", "k1" ), [ "target1", "targetA" ] )
 		self.assertEqual( Gaffer.Metadata.targetsWithMetadata( "*", "k3" ), [ "target2" ] )
+		self.assertEqual( Gaffer.Metadata.targetsWithMetadata( "target1 target2", "k1" ), [ "target1" ] )
+		self.assertEqual( Gaffer.Metadata.targetsWithMetadata( "target1 target2", "k2" ), [ "target1", "target2" ] )
+		self.assertEqual( Gaffer.Metadata.targetsWithMetadata( "target[1-3] targetA", "k1" ), [ "target1", "targetA" ] )
 
 	def testRegisterValues( self ) :
 

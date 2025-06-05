@@ -575,7 +575,7 @@ std::vector<IECore::InternedString> Metadata::targetsWithMetadata( const IECore:
 	const auto &orderedIndex = metadataMap().get<1>();
 	for( const auto &[target, values] : orderedIndex )
 	{
-		if( !StringAlgo::match( target.c_str(), targetPattern ) )
+		if( !StringAlgo::matchMultiple( target.c_str(), targetPattern ) )
 		{
 			continue;
 		}
