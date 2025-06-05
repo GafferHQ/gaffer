@@ -36,12 +36,22 @@
 
 #include "GafferScene/StandardAttributes.h"
 
-#include "Gaffer/StringPlug.h"
+#include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
 
-#include "boost/bind/bind.hpp"
-
-using namespace boost::placeholders;
+using namespace Gaffer;
 using namespace GafferScene;
+
+namespace
+{
+
+const IECore::InternedString g_defaultValue( "defaultValue" );
+const std::string g_metadataTargets(
+	"attribute:scene:visible attribute:doubleSided attribute:render:* attribute:gaffer:* " \
+	"attribute:linkedLights attribute:shadowedLights attribute:filteredLights"
+);
+
+} // namespace
 
 GAFFER_NODE_DEFINE_TYPE( StandardAttributes );
 
@@ -49,33 +59,16 @@ StandardAttributes::StandardAttributes( const std::string &name )
 	:	Attributes( name )
 {
 
-	Gaffer::CompoundDataPlug *attributes = attributesPlug();
+	for( const auto &target : Metadata::targetsWithMetadata( g_metadataTargets, g_defaultValue ) )
+	{
+		if( auto valuePlug = MetadataAlgo::createPlugFromMetadata( "value", Plug::Direction::In, Plug::Flags::Default, target ) )
+		{
+			const std::string attributeName = target.string().substr( 10 );
+			NameValuePlugPtr attributePlug = new NameValuePlug( attributeName, valuePlug, false, attributeName );
+			attributesPlug()->addChild( attributePlug );
+		}
+	}
 
-	attributes->addChild( new Gaffer::NameValuePlug( "scene:visible", new IECore::BoolData( true ), false, "visibility" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "doubleSided", new IECore::BoolData( true ), false, "doubleSided" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "render:displayColor", new IECore::Color3fData( Imath::Color3f( 1 ) ), false, "displayColor" ) );
-
-	// motion blur
-
-	attributes->addChild( new Gaffer::NameValuePlug( "gaffer:transformBlur", new IECore::BoolData( true ), false, "transformBlur" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "gaffer:transformBlurSegments", new Gaffer::IntPlug( "value", Gaffer::Plug::In, 1, 1 ), false, "transformBlurSegments" ) );
-
-	attributes->addChild( new Gaffer::NameValuePlug( "gaffer:deformationBlur", new IECore::BoolData( true ), false, "deformationBlur" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "gaffer:deformationBlurSegments", new Gaffer::IntPlug( "value", Gaffer::Plug::In, 1, 1 ), false, "deformationBlurSegments" ) );
-
-	// light linking
-
-	/// \todo The default value is wrong - it should be "defaultLights".
-	attributes->addChild( new Gaffer::NameValuePlug( "linkedLights", new IECore::StringData( "" ), false, "linkedLights" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "shadowedLights", new IECore::StringData( "__lights" ), false, "shadowedLights" ) );
-
-	// light filter linking
-
-	attributes->addChild( new Gaffer::NameValuePlug( "filteredLights", new IECore::StringData( "" ), false, "filteredLights" ) );
-
-	// instancing
-
-	attributes->addChild( new Gaffer::NameValuePlug( "gaffer:automaticInstancing", new IECore::BoolData( true ), false, "automaticInstancing" ) );
 }
 
 StandardAttributes::~StandardAttributes()

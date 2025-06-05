@@ -71,6 +71,9 @@ Breaking Changes
 - CyclesOptions : Option plugs have been renamed to match the name of their option (e.g. `options.samples` is now `options.cycles:session:samples`). A compatibility config has been provided to allow CyclesOptions nodes to be loaded from scripts saved in earlier Gaffer versions.
 - DelightAttributes : Attribute plugs have been renamed to match the name of their attribute with `.` characters replaced with `_` (e.g. `attributes.cameraVisibility` is now `attributes.dl:visibility_camera`). A compatibility config has been provided to allow DelightAttributes nodes to be loaded from scripts saved in earlier Gaffer versions.
 - DelightOptions : Option plugs have been renamed to match the name of their option with `.` characters replaced with `_` (e.g. `options.shadingSamples` is now `options.dl:quality_shadingsamples`). A compatibility config has been provided to allow DelightOptions nodes to be loaded from scripts saved in earlier Gaffer versions.
+- StandardAttributes :
+  - Attribute plugs have been renamed to match the name of their attribute (e.g. `attributes.visibility` is now `attributes.scene:visible`). A compatibility config has been provided to allow StandardAttributes nodes to be loaded from scripts saved in earlier Gaffer versions.
+  - Changed the default value of the `linkedLights` plug to "defaultLights". Scripts loaded from earlier Gaffer versions containing `linkedLights` plugs set to the previous default of "" will need to be updated as those plugs will now default to "defaultLights".
 - StandardOptions : Option plugs have been renamed to match the name of their option (e.g. `options.renderCamera` is now `options.render:camera`). A compatibility config has been provided to allow StandardOptions nodes to be loaded from scripts saved in earlier Gaffer versions.
 
 Build

@@ -175,14 +175,14 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 		self.assertObjectAt( sg, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
 
-		s["a"]["attributes"]["visibility"]["enabled"].setValue( True )
-		s["a"]["attributes"]["visibility"]["value"].setValue( False )
+		s["a"]["attributes"]["scene:visible"]["enabled"].setValue( True )
+		s["a"]["attributes"]["scene:visible"]["value"].setValue( False )
 
 		self.waitForRender( sg )
 		self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
 
-		s["a"]["attributes"]["visibility"]["enabled"].setValue( True )
-		s["a"]["attributes"]["visibility"]["value"].setValue( True )
+		s["a"]["attributes"]["scene:visible"]["enabled"].setValue( True )
+		s["a"]["attributes"]["scene:visible"]["value"].setValue( True )
 
 		self.waitForRender( sg )
 		self.assertObjectAt( sg, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )

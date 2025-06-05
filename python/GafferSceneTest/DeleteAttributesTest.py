@@ -50,7 +50,7 @@ class DeleteAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 		a = GafferScene.StandardAttributes()
 		a["attributes"]["doubleSided"]["enabled"].setValue( True )
-		a["attributes"]["visibility"]["enabled"].setValue( True )
+		a["attributes"]["scene:visible"]["enabled"].setValue( True )
 		a["in"].setInput( p["out"] )
 
 		d = GafferScene.DeleteAttributes()

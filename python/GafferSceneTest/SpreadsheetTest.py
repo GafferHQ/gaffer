@@ -59,12 +59,12 @@ class SpreadsheetTest( GafferSceneTest.SceneTestCase ) :
 		attributes = GafferScene.StandardAttributes()
 		attributes["in"].setInput( group["out"] )
 		attributes["filter"].setInput( pathFilter["out"] )
-		attributes["attributes"]["deformationBlur"]["enabled"].setValue( True )
+		attributes["attributes"]["gaffer:deformationBlur"]["enabled"].setValue( True )
 
 		spreadsheet = Gaffer.Spreadsheet()
 		spreadsheet["selector"].setValue( "${scene:path}" )
-		spreadsheet["rows"].addColumn( attributes["attributes"]["deformationBlur"]["value"] )
-		attributes["attributes"]["deformationBlur"]["value"].setInput( spreadsheet["out"][0] )
+		spreadsheet["rows"].addColumn( attributes["attributes"]["gaffer:deformationBlur"]["value"] )
+		attributes["attributes"]["gaffer:deformationBlur"]["value"].setInput( spreadsheet["out"][0] )
 
 		row = spreadsheet["rows"].addRow()
 		row["name"].setValue( "/group/cube" )

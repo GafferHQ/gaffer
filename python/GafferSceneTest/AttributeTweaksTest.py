@@ -143,8 +143,8 @@ class AttributeTweaksTest( GafferSceneTest.SceneTestCase ) :
 		group["in"][0].setInput( plane["out"] )
 
 		attributes = GafferScene.StandardAttributes()
-		attributes["attributes"]["transformBlurSegments"]["enabled"].setValue( True )
-		attributes["attributes"]["transformBlurSegments"]["value"].setValue( 5 )
+		attributes["attributes"]["gaffer:transformBlurSegments"]["enabled"].setValue( True )
+		attributes["attributes"]["gaffer:transformBlurSegments"]["value"].setValue( 5 )
 
 		groupFilter = GafferScene.PathFilter()
 		groupFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )

@@ -371,7 +371,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["a"] = GafferScene.StandardAttributes()
 		s["a"]["in"].setInput( s["g"]["out"] )
 		s["a"]["filter"].setInput( s["f"]["out"] )
-		s["a"]["attributes"]["visibility"]["enabled"].setValue( True )
+		s["a"]["attributes"]["scene:visible"]["enabled"].setValue( True )
 
 		s["o"] = GafferScene.Outputs()
 		s["o"].addOutput(
@@ -407,7 +407,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Hide /group/sphere
 
 		s["f"]["paths"].setValue( IECore.StringVectorData( [ "/group/sphere" ] ) )
-		s["a"]["attributes"]["visibility"]["value"].setValue( False )
+		s["a"]["attributes"]["scene:visible"]["value"].setValue( False )
 		self.uiThreadCallHandler.waitFor( 1.0 )
 
 		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
@@ -421,7 +421,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		# Show it again
 
-		s["a"]["attributes"]["visibility"]["value"].setValue( True )
+		s["a"]["attributes"]["scene:visible"]["value"].setValue( True )
 		self.uiThreadCallHandler.waitFor( 1.0 )
 
 		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
@@ -429,14 +429,14 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Hide /group
 
 		s["f"]["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
-		s["a"]["attributes"]["visibility"]["value"].setValue( False )
+		s["a"]["attributes"]["scene:visible"]["value"].setValue( False )
 		self.uiThreadCallHandler.waitFor( 1.0 )
 
 		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
 
 		# Show it again
 
-		s["a"]["attributes"]["visibility"]["value"].setValue( True )
+		s["a"]["attributes"]["scene:visible"]["value"].setValue( True )
 		self.uiThreadCallHandler.waitFor( 1.0 )
 
 		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
@@ -1223,7 +1223,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["l"]["transform"]["translate"]["z"].setValue( 1 )
 
 		s["v"] = GafferScene.StandardAttributes()
-		s["v"]["attributes"]["visibility"]["enabled"].setValue( True )
+		s["v"]["attributes"]["scene:visible"]["enabled"].setValue( True )
 		s["v"]["in"].setInput( s["l"]["out"] )
 
 		s["p"] = GafferScene.Plane()
@@ -1281,7 +1281,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		# Remove the light by hiding it.
 
-		s["v"]["attributes"]["visibility"]["value"].setValue( False )
+		s["v"]["attributes"]["scene:visible"]["value"].setValue( False )
 		self.uiThreadCallHandler.waitFor( 2 )
 
 		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
@@ -1289,7 +1289,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		# Put the light back by showing it.
 
-		s["v"]["attributes"]["visibility"]["value"].setValue( True )
+		s["v"]["attributes"]["scene:visible"]["value"].setValue( True )
 		self.uiThreadCallHandler.waitFor( 2 )
 
 		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
@@ -1477,7 +1477,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["a"] = GafferScene.StandardAttributes()
 		s["a"]["in"].setInput( s["g"]["out"] )
 		s["a"]["global"].setValue( True )
-		s["a"]["attributes"]["visibility"]["enabled"].setValue( True )
+		s["a"]["attributes"]["scene:visible"]["enabled"].setValue( True )
 
 		s["o"] = GafferScene.Outputs()
 		s["o"].addOutput(
@@ -1512,14 +1512,14 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		# Hide
 
-		s["a"]["attributes"]["visibility"]["value"].setValue( False )
+		s["a"]["attributes"]["scene:visible"]["value"].setValue( False )
 		self.uiThreadCallHandler.waitFor( 1.0 )
 
 		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
 
 		# Show again
 
-		s["a"]["attributes"]["visibility"]["value"].setValue( True )
+		s["a"]["attributes"]["scene:visible"]["value"].setValue( True )
 		self.uiThreadCallHandler.waitFor( 1.0 )
 
 		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
@@ -2592,8 +2592,8 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		# Hide the default light. We should get a black render.
 
-		s["defaultLightAttributes"]["attributes"]["visibility"]["enabled"].setValue( True )
-		s["defaultLightAttributes"]["attributes"]["visibility"]["value"].setValue( False )
+		s["defaultLightAttributes"]["attributes"]["scene:visible"]["enabled"].setValue( True )
+		s["defaultLightAttributes"]["attributes"]["scene:visible"]["value"].setValue( False )
 
 		self.uiThreadCallHandler.waitFor( 1 )
 

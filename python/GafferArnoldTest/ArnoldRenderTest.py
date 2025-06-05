@@ -102,8 +102,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		s["filter"]["setExpression"].setValue( "hidden" )
 
 		s["attributes"] = GafferScene.StandardAttributes()
-		s["attributes"]["attributes"]["visibility"]["enabled"].setValue( True )
-		s["attributes"]["attributes"]["visibility"]["value"].setValue( False )
+		s["attributes"]["attributes"]["scene:visible"]["enabled"].setValue( True )
+		s["attributes"]["attributes"]["scene:visible"]["value"].setValue( False )
 		s["attributes"]["filter"].setInput( s["filter"]["out"] )
 		s["attributes"]["in"].setInput( s["sphere"]["out"] )
 
@@ -190,8 +190,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		s["attributes"] = GafferScene.StandardAttributes()
 		s["attributes"]["in"].setInput( s["group"]["out"] )
 		s["attributes"]["filter"].setInput( s["planeFilter"]["out"] )
-		s["attributes"]["attributes"]["transformBlur"]["enabled"].setValue( True )
-		s["attributes"]["attributes"]["transformBlur"]["value"].setValue( False )
+		s["attributes"]["attributes"]["gaffer:transformBlur"]["enabled"].setValue( True )
+		s["attributes"]["attributes"]["gaffer:transformBlur"]["value"].setValue( False )
 
 		s["options"] = GafferScene.StandardOptions()
 		s["options"]["in"].setInput( s["attributes"]["out"] )

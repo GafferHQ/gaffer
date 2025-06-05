@@ -130,8 +130,8 @@ class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 		attributes["in"].setInput( shaderAssignment["out"] )
 		attributes["filter"].setInput( planeFilter["out"] )
 
-		attributes["attributes"]["visibility"]["enabled"].setValue( True )
-		attributes["attributes"]["visibility"]["value"].setValue( False )
+		attributes["attributes"]["scene:visible"]["enabled"].setValue( True )
+		attributes["attributes"]["scene:visible"]["value"].setValue( False )
 
 		groupFilter = GafferScene.PathFilter()
 		groupFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
@@ -198,7 +198,7 @@ class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 		attributes = GafferScene.StandardAttributes()
 		attributes["in"].setInput( sphere["out"] )
 		attributes["filter"].setInput( sphereFilter["out"] )
-		attributes["attributes"]["visibility"]["enabled"].setValue( True )
+		attributes["attributes"]["scene:visible"]["enabled"].setValue( True )
 
 		layer, composition = self.__writeLayerAndComposition( base = attributes["out"], layer = sphere["out"] )
 

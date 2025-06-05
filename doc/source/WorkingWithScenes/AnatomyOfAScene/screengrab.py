@@ -35,7 +35,7 @@ script["Set"]["in"].setInput( script["StandardAttributes"]["out"] )
 
 # Set node plug values
 script["SceneReader"]["fileName"].setValue( "${GAFFER_ROOT}/resources/gafferBot/caches/gafferBot.scc" )
-script["StandardAttributes"]["attributes"]["visibility"]["enabled"].setValue( True )
+script["StandardAttributes"]["attributes"]["scene:visible"]["enabled"].setValue( True )
 script["Set"]["name"].setValue( "hands" )
 script["Set"]["paths"].setValue( IECore.StringVectorData( [ '/GAFFERBOT' ] ) )
 script.setFocus( script["Set"] )

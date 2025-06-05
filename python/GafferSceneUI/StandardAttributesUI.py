@@ -41,11 +41,11 @@ import GafferScene
 def __attributesSummary( plug ) :
 
 	info = []
-	if plug["visibility"]["enabled"].getValue() :
-		info.append( "Visible" if plug["visibility"]["value"].getValue() else "Invisible" )
+	if plug["scene:visible"]["enabled"].getValue() :
+		info.append( "Visible" if plug["scene:visible"]["value"].getValue() else "Invisible" )
 	if plug["doubleSided"]["enabled"].getValue() :
 		info.append( "Double Sided" if plug["doubleSided"]["value"].getValue() else "Single Sided" )
-	if plug["displayColor"]["enabled"].getValue() :
+	if plug["render:displayColor"]["enabled"].getValue() :
 		info.append( "Display Color" )
 
 	return ", ".join( info )
@@ -53,8 +53,8 @@ def __attributesSummary( plug ) :
 def __instancingSummary( plug ) :
 
 	info = []
-	if plug["automaticInstancing"]["enabled"].getValue() :
-		info.append( "Automatic Instancing " + ( "On" if plug["automaticInstancing"]["value"].getValue() else "Off" ) )
+	if plug["gaffer:automaticInstancing"]["enabled"].getValue() :
+		info.append( "Automatic Instancing " + ( "On" if plug["gaffer:automaticInstancing"]["value"].getValue() else "Off" ) )
 
 	return ", ".join( info )
 
@@ -62,14 +62,14 @@ def __motionBlurSummary( plug ) :
 
 	info = []
 	for motionType in "transform", "deformation" :
-		onOffEnabled = plug[motionType+"Blur"]["enabled"].getValue()
-		segmentsEnabled = plug[motionType+"BlurSegments"]["enabled"].getValue()
+		onOffEnabled = plug["gaffer:"+motionType+"Blur"]["enabled"].getValue()
+		segmentsEnabled = plug["gaffer:"+motionType+"BlurSegments"]["enabled"].getValue()
 		if onOffEnabled or segmentsEnabled :
 			items = []
 			if onOffEnabled :
-				items.append( "On" if plug[motionType+"Blur"]["value"].getValue() else "Off" )
+				items.append( "On" if plug["gaffer:"+motionType+"Blur"]["value"].getValue() else "Off" )
 			if segmentsEnabled :
-				items.append( "%d Segments" % plug[motionType+"BlurSegments"]["value"].getValue() )
+				items.append( "%d Segments" % plug["gaffer:"+motionType+"BlurSegments"]["value"].getValue() )
 			info.append( motionType.capitalize() + " : " + "/".join( items ) )
 
 	return ", ".join( info )
@@ -93,209 +93,6 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Attributes:summary", __attributesSummary,
 			"layout:section:Instancing:summary", __instancingSummary,
 			"layout:section:Motion Blur:summary", __motionBlurSummary,
-
-		],
-
-		# visibility plugs
-
-		"attributes.visibility" : [
-
-			"description",
-			"""
-			Whether or not the object can be seen - invisible objects are
-			not sent to the renderer at all. Typically more fine
-			grained (camera, reflection etc) visibility can be
-			specified using a renderer specific attributes node.
-			Note that making a parent location invisible will
-			always make all the children invisible too, regardless
-			of their visibility settings.
-			""",
-
-			"layout:section", "Attributes",
-
-		],
-
-		"attributes.doubleSided" : [
-
-			"description",
-			"""
-			Whether or not the object can be seen from both sides.
-			Single sided objects appear invisible when seen from
-			the back.
-			""",
-
-			"layout:section", "Attributes",
-
-		],
-
-		"attributes.displayColor" : [
-
-			"description",
-			"""
-			The default colour used to display the object in the absence
-			of a specific shader assignment. Commonly used to control
-			basic object appearance in the Viewer.
-
-			> Tip : For more detailed control of object appearance in the
-			> Viewer, use the OpenGLAttributes node.
-			""",
-
-			"layout:section", "Attributes",
-
-		],
-
-		# motion blur plugs
-
-		"attributes.transformBlur" : [
-
-			"description",
-			"""
-			Whether or not transformation animation on the
-			object is taken into account in the rendered image.
-			Use the transformBlurSegments plug to specify the number
-			of segments used to represent the motion.
-			""",
-
-			"layout:section", "Motion Blur",
-			"label", "Transform",
-
-		],
-
-		"attributes.transformBlurSegments" : [
-
-			"description",
-			"""
-			The number of segments of transform animation to
-			pass to the renderer when transformBlur is on.
-			""",
-
-			"layout:section", "Motion Blur",
-			"label", "Transform Segments",
-
-		],
-
-		"attributes.deformationBlur" : [
-
-			"description",
-			"""
-			Whether or not deformation animation on the
-			object is taken into account in the rendered image.
-			Use the deformationBlurSegments plug to specify the
-			number of segments used to represent the motion.
-			""",
-
-			"layout:section", "Motion Blur",
-			"label", "Deformation",
-
-		],
-
-		"attributes.deformationBlurSegments" : [
-
-			"description",
-			"""
-			The number of segments of deformation animation to
-			pass to the renderer when deformationBlur is on.
-			""",
-
-			"layout:section", "Motion Blur",
-			"label", "Deformation Segments",
-
-		],
-
-		"attributes.linkedLights" : [
-
-			"description",
-			"""
-			The lights to be linked to this object. Accepts a set expression or
-			a space separated list of lights. Use \"defaultLights\" to refer to
-			all lights that contribute to illumination by default.
-
-			Examples
-			--------
-
-			All the default lights plus the lights in the `characterLights` set
-			:
-
-			`defaultLights | characterLights`
-
-			All the default lights, but without the lights in the `interiorLights`
-			set :
-
-			`defaultLights - interiorLights`
-
-			> Info : Lights can be added to sets either by using the `sets` plug
-			> on the light node itself, or by using a separate Set node.
-			""",
-
-			"layout:section", "Light Linking",
-			"label", "Linked Lights",
-
-		],
-
-		"attributes.linkedLights.value" : [
-
-			"ui:scene:acceptsSetExpression", True,
-			"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
-
-		],
-
-		"attributes.shadowedLights" : [
-
-			"description",
-			"""
-			The lights that cast shadows from this object. Accepts a set
-			expression or a space separated list of lights.
-			""",
-
-			"layout:section", "Light Linking",
-			"label", "Shadowed Lights",
-
-		],
-
-		"attributes.shadowedLights.value" : [
-
-			"ui:scene:acceptsSetExpression", True,
-			"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
-
-		],
-
-		"attributes.filteredLights" : [
-
-			"description",
-			"""
-			The lights to be filtered by this light filter. Accepts a
-			set expression or a space separated list of lights.
-			Use \"defaultLights\" to refer to all lights that
-			contribute to illumination by default.
-			""",
-
-			"layout:section", "Light Linking",
-			"label", "Filtered Lights",
-
-		],
-
-		"attributes.filteredLights.value" : [
-
-			"ui:scene:acceptsSetExpression", True,
-			"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
-
-		],
-
-		# Instancing
-
-		"attributes.automaticInstancing" : [
-
-			"description",
-			"""
-			By default, if Gaffer sees two objects are identical, it will pass them
-			to the renderer only once, saving a lot of memory. You can set this to
-			false to disable that, losing the memory savings. This can be useful
-			in certain cases like using world space displacement and wanting multiple
-			copies to displace differently. Disabling is currently only supported by
-			the Arnold and RenderMan renderer backends.
-			""",
-
-			"layout:section", "Instancing",
 
 		],
 

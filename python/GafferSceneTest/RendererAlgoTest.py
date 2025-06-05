@@ -144,8 +144,8 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		standardAttributes = GafferScene.StandardAttributes()
 		standardAttributes["in"].setInput( camera["out"] )
-		standardAttributes["attributes"]["visibility"]["enabled"].setValue( True )
-		standardAttributes["attributes"]["visibility"]["value"].setValue( False )
+		standardAttributes["attributes"]["scene:visible"]["enabled"].setValue( True )
+		standardAttributes["attributes"]["scene:visible"]["value"].setValue( False )
 
 		standardOptions = GafferScene.StandardOptions()
 		standardOptions["in"].setInput( standardAttributes["out"] )

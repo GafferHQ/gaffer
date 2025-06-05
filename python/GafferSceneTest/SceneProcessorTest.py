@@ -131,8 +131,8 @@ class SceneProcessorTest( GafferSceneTest.SceneTestCase ) :
 		s["processor"]["a"] = GafferScene.StandardAttributes()
 		s["processor"]["a"]["in"].setInput( s["processor"]["in"] )
 		s["processor"]["a"]["enabled"].setInput( s["processor"]["enabled"] )
-		s["processor"]["a"]["attributes"]["visibility"]["enabled"].setValue( True )
-		Gaffer.PlugAlgo.promoteWithName( s["processor"]["a"]["attributes"]["visibility"]["value"], name = "visibility" )
+		s["processor"]["a"]["attributes"]["scene:visible"]["enabled"].setValue( True )
+		Gaffer.PlugAlgo.promoteWithName( s["processor"]["a"]["attributes"]["scene:visible"]["value"], name = "visibility" )
 		s["processor"]["out"].setInput( s["processor"]["a"]["out"] )
 		s["processor"]["in"].setInput( s["plane"]["out"] )
 

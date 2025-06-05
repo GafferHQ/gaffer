@@ -72,7 +72,7 @@ class FilterSwitchTest( GafferSceneTest.SceneTestCase ) :
 		script["planeSet"]["in"].setInput( script["group"]["out"] )
 
 		script["attributes"] = GafferScene.StandardAttributes()
-		script["attributes"]["attributes"]["visibility"]["enabled"].setValue( True )
+		script["attributes"]["attributes"]["scene:visible"]["enabled"].setValue( True )
 		script["attributes"]["in"].setInput( script["planeSet"]["out"] )
 
 		script["setFilter"] = GafferScene.SetFilter()

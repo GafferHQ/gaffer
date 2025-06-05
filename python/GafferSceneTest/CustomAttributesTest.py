@@ -209,22 +209,22 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["a"] = GafferScene.StandardAttributes()
-		s["a"]["attributes"]["deformationBlur"]["enabled"].setValue( True )
-		s["a"]["attributes"]["deformationBlur"]["value"].setValue( False )
+		s["a"]["attributes"]["gaffer:deformationBlur"]["enabled"].setValue( True )
+		s["a"]["attributes"]["gaffer:deformationBlur"]["value"].setValue( False )
 
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["a"] ] ) )
 
-		self.assertTrue( Gaffer.PlugAlgo.canPromote( b["a"]["attributes"]["deformationBlur"] ) )
-		self.assertFalse( Gaffer.PlugAlgo.isPromoted( b["a"]["attributes"]["deformationBlur"] ) )
+		self.assertTrue( Gaffer.PlugAlgo.canPromote( b["a"]["attributes"]["gaffer:deformationBlur"] ) )
+		self.assertFalse( Gaffer.PlugAlgo.isPromoted( b["a"]["attributes"]["gaffer:deformationBlur"] ) )
 
-		p = Gaffer.PlugAlgo.promote( b["a"]["attributes"]["deformationBlur"] )
+		p = Gaffer.PlugAlgo.promote( b["a"]["attributes"]["gaffer:deformationBlur"] )
 
-		self.assertTrue( Gaffer.PlugAlgo.isPromoted( b["a"]["attributes"]["deformationBlur"] ) )
+		self.assertTrue( Gaffer.PlugAlgo.isPromoted( b["a"]["attributes"]["gaffer:deformationBlur"] ) )
 
-		self.assertTrue( b["a"]["attributes"]["deformationBlur"].getInput().isSame( p ) )
-		self.assertTrue( b["a"]["attributes"]["deformationBlur"]["name"].getInput().isSame( p["name"] ) )
-		self.assertTrue( b["a"]["attributes"]["deformationBlur"]["enabled"].getInput().isSame( p["enabled"] ) )
-		self.assertTrue( b["a"]["attributes"]["deformationBlur"]["value"].getInput().isSame( p["value"] ) )
+		self.assertTrue( b["a"]["attributes"]["gaffer:deformationBlur"].getInput().isSame( p ) )
+		self.assertTrue( b["a"]["attributes"]["gaffer:deformationBlur"]["name"].getInput().isSame( p["name"] ) )
+		self.assertTrue( b["a"]["attributes"]["gaffer:deformationBlur"]["enabled"].getInput().isSame( p["enabled"] ) )
+		self.assertTrue( b["a"]["attributes"]["gaffer:deformationBlur"]["value"].getInput().isSame( p["value"] ) )
 		self.assertEqual( p["enabled"].getValue(), True )
 		self.assertEqual( p["value"].getValue(), False )
 

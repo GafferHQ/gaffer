@@ -109,16 +109,16 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		visibleFilter = GafferScene.PathFilter()
 
 		attributes1 = GafferScene.StandardAttributes()
-		attributes1["attributes"]["visibility"]["enabled"].setValue( True )
-		attributes1["attributes"]["visibility"]["value"].setValue( True )
+		attributes1["attributes"]["scene:visible"]["enabled"].setValue( True )
+		attributes1["attributes"]["scene:visible"]["value"].setValue( True )
 		attributes1["in"].setInput( group2["out"] )
 		attributes1["filter"].setInput( visibleFilter["out"] )
 
 		invisibleFilter = GafferScene.PathFilter()
 
 		attributes2 = GafferScene.StandardAttributes()
-		attributes2["attributes"]["visibility"]["enabled"].setValue( True )
-		attributes2["attributes"]["visibility"]["value"].setValue( False )
+		attributes2["attributes"]["scene:visible"]["enabled"].setValue( True )
+		attributes2["attributes"]["scene:visible"]["value"].setValue( False )
 		attributes2["in"].setInput( attributes1["out"] )
 		attributes2["filter"].setInput( invisibleFilter["out"] )
 
