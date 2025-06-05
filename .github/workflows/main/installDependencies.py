@@ -49,7 +49,7 @@ else :
 
 # Determine default archive URL.
 
-defaultURL = "https://github.com/GafferHQ/dependencies/releases/download/10.0.0a1/gafferDependencies-10.0.0a1-{platform}{buildEnvironment}.{extension}"
+defaultURL = "https://github.com/GafferHQ/dependencies/releases/download/10.0.0a2/gafferDependencies-10.0.0a2-{platform}{buildEnvironment}.{extension}"
 
 # Parse command line arguments.
 
