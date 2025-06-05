@@ -81,6 +81,11 @@ IECore::DataPtr interactiveRenderCommandWrapper( InteractiveRender &r, const IEC
 	return r.command( name, parameters );
 }
 
+std::shared_ptr<RenderManifest> interactiveRenderRenderManifestWrapper( InteractiveRender &r )
+{
+	return std::const_pointer_cast<RenderManifest>( r.renderManifest() );
+}
+
 object objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, object pythonSampleTimes, IECore::MurmurHash *hash, bool copy )
 {
 	std::vector<float> sampleTimes;
@@ -185,6 +190,7 @@ void GafferSceneModule::bindRender()
 			.def( "getContext", &interactiveRenderGetContext )
 			.def( "setContext", &interactiveRenderSetContext )
 			.def( "command", &interactiveRenderCommandWrapper, ( arg( "name" ), arg( "parameters" ) = dict() ) )
+			.def( "renderManifest", &interactiveRenderRenderManifestWrapper )
 		;
 
 		enum_<InteractiveRender::State>( "State" )
