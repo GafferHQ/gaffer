@@ -431,7 +431,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( attributes["out"].globals(), IECore.CompoundObject() )
 
 		cs = GafferTest.CapturingSlot( attributes.plugDirtiedSignal() )
-		options["options"]["renderCamera"]["enabled"].setValue( True )
+		options["options"]["render:camera"]["enabled"].setValue( True )
 
 		self.assertIn( attributes["out"]["globals"], { x[0] for x in cs } )
 		self.assertEqual( attributes["out"].globals(), IECore.CompoundObject( { "option:render:camera" : IECore.StringData( "" ) } ) )

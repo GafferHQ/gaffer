@@ -125,8 +125,8 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		# Animated case
 
-		options["options"]["deformationBlur"]["enabled"].setValue( True )
-		options["options"]["deformationBlur"]["value"].setValue( True )
+		options["options"]["render:deformationBlur"]["enabled"].setValue( True )
+		options["options"]["render:deformationBlur"]["value"].setValue( True )
 
 		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
@@ -149,8 +149,8 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		standardOptions = GafferScene.StandardOptions()
 		standardOptions["in"].setInput( standardAttributes["out"] )
-		standardOptions["options"]["renderCamera"]["enabled"].setValue( True )
-		standardOptions["options"]["renderCamera"]["value"].setValue( "/camera" )
+		standardOptions["options"]["render:camera"]["enabled"].setValue( True )
+		standardOptions["options"]["render:camera"]["value"].setValue( "/camera" )
 
 		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
@@ -784,11 +784,11 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		standardOptions = GafferScene.StandardOptions()
 		standardOptions["in"].setInput( parent["out"] )
-		standardOptions["options"]["transformBlur"]["enabled"].setValue( True )
-		standardOptions["options"]["deformationBlur"]["enabled"].setValue( True )
-		standardOptions["options"]["shutter"]["enabled"].setValue( True )
-		standardOptions["options"]["renderCamera"]["enabled"].setValue( True )
-		standardOptions["options"]["renderCamera"]["value"].setValue( "/camera" )
+		standardOptions["options"]["render:transformBlur"]["enabled"].setValue( True )
+		standardOptions["options"]["render:deformationBlur"]["enabled"].setValue( True )
+		standardOptions["options"]["render:shutter"]["enabled"].setValue( True )
+		standardOptions["options"]["render:camera"]["enabled"].setValue( True )
+		standardOptions["options"]["render:camera"]["value"].setValue( "/camera" )
 
 		def assertExpectedMotion( scene ) :
 
@@ -854,9 +854,9 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 					for shutter in ( imath.V2f( -0.25, 0.25 ), imath.V2f( 0, 0.5 ) ) :
 						for overrideShutter in ( False, True ) :
 							with self.subTest( frame = frame, deformation = deformation, transform = transform, shutter = shutter, overrideShutter = overrideShutter ) :
-								standardOptions["options"]["transformBlur"]["value"].setValue( transform )
-								standardOptions["options"]["deformationBlur"]["value"].setValue( deformation )
-								standardOptions["options"]["shutter"]["value"].setValue( shutter )
+								standardOptions["options"]["render:transformBlur"]["value"].setValue( transform )
+								standardOptions["options"]["render:deformationBlur"]["value"].setValue( deformation )
+								standardOptions["options"]["render:shutter"]["value"].setValue( shutter )
 								camera["renderSettingOverrides"]["shutter"]["enabled"].setValue( overrideShutter )
 								with Gaffer.Context() as context :
 									context.setFrame( frame )
@@ -887,7 +887,7 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		standardOptions = GafferScene.StandardOptions()
 		standardOptions["in"].setInput( encapsulate["out"] )
-		standardOptions["options"]["includedPurposes"]["enabled"].setValue( True )
+		standardOptions["options"]["render:includedPurposes"]["enabled"].setValue( True )
 
 		for includedPurposes in [
 			[ "default", "render" ],
@@ -897,7 +897,7 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 		] :
 			with self.subTest( includedPurposes = includedPurposes ) :
 
-				standardOptions["options"]["includedPurposes"]["value"].setValue( IECore.StringVectorData( includedPurposes ) )
+				standardOptions["options"]["render:includedPurposes"]["value"].setValue( IECore.StringVectorData( includedPurposes ) )
 
 				# Render to capture Capsule.
 

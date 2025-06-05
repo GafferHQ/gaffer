@@ -35,62 +35,36 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECoreScene/Camera.h"
-
 #include "GafferScene/StandardOptions.h"
+
+#include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
 
 using namespace Gaffer;
 using namespace GafferScene;
+
+namespace
+{
+
+const IECore::InternedString g_defaultValue( "defaultValue" );
+
+} // namespace
 
 GAFFER_NODE_DEFINE_TYPE( StandardOptions );
 
 StandardOptions::StandardOptions( const std::string &name )
 	:	Options( name )
 {
-	CompoundDataPlug *options = optionsPlug();
 
-	// Camera
-
-	options->addChild( new Gaffer::NameValuePlug( "render:camera", new IECore::StringData(), false, "renderCamera" ) );
-	options->addChild( new Gaffer::NameValuePlug( "render:filmFit", new IECore::IntData( IECoreScene::Camera::Horizontal ), false, "filmFit" ) );
-	options->addChild( new Gaffer::NameValuePlug( "render:resolution", new IECore::V2iData( Imath::V2i( 1024, 778 ) ), false, "renderResolution" ) );
-	options->addChild( new Gaffer::NameValuePlug( "render:pixelAspectRatio", new IECore::FloatData( 1.0f ), false, "pixelAspectRatio" ) );
-	options->addChild( new Gaffer::NameValuePlug( "render:resolutionMultiplier", new IECore::FloatData( 1.0f ), false, "resolutionMultiplier" ) );
-	options->addChild( new Gaffer::NameValuePlug( "render:cropWindow", new Box2fPlug( "value", Plug::In, Imath::Box2f( Imath::V2f( 0 ), Imath::V2f( 1 ) ), Imath::V2f( 0 ), Imath::V2f( 1 ) ), false, "renderCropWindow" ) );
-
-	options->addChild( new Gaffer::NameValuePlug( "render:overscan", new IECore::BoolData( false ), false, "overscan" ) );
-	options->addChild( new Gaffer::NameValuePlug( "render:overscanTop", new FloatPlug( "value", Plug::In, 0.1f, 0.0f, 1.0f ), false, "overscanTop" ) );
-	options->addChild( new Gaffer::NameValuePlug( "render:overscanBottom", new FloatPlug( "value", Plug::In, 0.1f, 0.0f, 1.0f ), false, "overscanBottom" ) );
-	options->addChild( new Gaffer::NameValuePlug( "render:overscanLeft", new FloatPlug( "value", Plug::In, 0.1f, 0.0f, 1.0f ), false, "overscanLeft" ) );
-	options->addChild( new Gaffer::NameValuePlug( "render:overscanRight", new FloatPlug( "value", Plug::In, 0.1f, 0.0f, 1.0f ), false, "overscanRight" ) );
-	options->addChild( new Gaffer::NameValuePlug( "render:depthOfField", new IECore::BoolData( false ), false, "depthOfField" ) );
-
-	// Renderer
-
-	options->addChild( new Gaffer::NameValuePlug( "render:defaultRenderer", new IECore::StringData(), false, "defaultRenderer" ) );
-
-	// Render set
-
-	options->addChild( new Gaffer::NameValuePlug( "render:includedPurposes", new IECore::StringVectorData( { "default", "render" } ), false, "includedPurposes" ) );
-	options->addChild( new Gaffer::NameValuePlug( "render:inclusions", new IECore::StringData( "/" ), false, "inclusions" ) );
-	options->addChild( new Gaffer::NameValuePlug( "render:exclusions", new IECore::StringData( "" ), false, "exclusions" ) );
-	options->addChild( new Gaffer::NameValuePlug( "render:additionalLights", new IECore::StringData( "" ), false, "additionalLights" ) );
-
-	// Motion blur
-
-	options->addChild( new Gaffer::NameValuePlug( "render:transformBlur", new IECore::BoolData( false ), false, "transformBlur" ) );
-	options->addChild( new Gaffer::NameValuePlug( "render:deformationBlur", new IECore::BoolData( false ), false, "deformationBlur" ) );
-	options->addChild( new Gaffer::NameValuePlug( "render:shutter", new IECore::V2fData( Imath::V2f( -0.25, 0.25 ) ), false, "shutter" ) );
-	options->addChild( new Gaffer::NameValuePlug( "sampleMotion", new IECore::BoolData( true ), false, "sampleMotion" ) );
-
-	// ID Manifest
-
-	options->addChild( new Gaffer::NameValuePlug( "render:renderManifestFilePath", new IECore::StringData( "" ), false, "renderManifestFilePath" ) );
-
-
-	// Statistics
-
-	options->addChild( new Gaffer::NameValuePlug( "render:performanceMonitor", new IECore::BoolData( false ), false, "performanceMonitor" ) );
+	for( const auto &target : Metadata::targetsWithMetadata( "option:render:* option:sampleMotion", g_defaultValue ) )
+	{
+		if( auto valuePlug = MetadataAlgo::createPlugFromMetadata( "value", Plug::Direction::In, Plug::Flags::Default, target ) )
+		{
+			const std::string optionName = target.string().substr( 7 );
+			NameValuePlugPtr optionPlug = new NameValuePlug( optionName, valuePlug, false, optionName );
+			optionsPlug()->addChild( optionPlug );
+		}
+	}
 
 }
 

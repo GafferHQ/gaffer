@@ -196,8 +196,8 @@ class _Camera( Gaffer.Node ) :
 		self["cameraTranslate"]["filter"].setInput( self["cameraFilter"]["out"] )
 
 		self["options"] = GafferScene.StandardOptions()
-		self["options"]["options"]["renderCamera"]["enabled"].setValue( True )
-		self["options"]["options"]["renderCamera"]["value"].setValue( "/previewCamera" )
+		self["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		self["options"]["options"]["render:camera"]["value"].setValue( "/previewCamera" )
 		self["options"]["in"].setInput( self["cameraTranslate"]["out"] )
 
 		self["switch"] = Gaffer.Switch()

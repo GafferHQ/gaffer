@@ -296,8 +296,8 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( render["renderer"].getValue(), "" )
 		self.assertEqual( render["resolvedRenderer"].getValue(), "" )
 
-		standardOptions["options"]["defaultRenderer"]["enabled"].setValue( True )
-		standardOptions["options"]["defaultRenderer"]["value"].setValue( self.renderer )
+		standardOptions["options"]["render:defaultRenderer"]["enabled"].setValue( True )
+		standardOptions["options"]["render:defaultRenderer"]["value"].setValue( self.renderer )
 		self.assertEqual( render["resolvedRenderer"].getValue(), self.renderer )
 
 		render["renderer"].setValue( "Other" )
@@ -401,8 +401,8 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		script["outputs"]["in"].setInput( script["parent"]["out"] )
 
 		script["options"] = GafferScene.StandardOptions()
-		script["options"]["options"]["renderCamera"]["enabled"].setValue( True )
-		script["options"]["options"]["renderCamera"]["value"].setValue( "/camera" )
+		script["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		script["options"]["options"]["render:camera"]["value"].setValue( "/camera" )
 		script["options"]["in"].setInput( script["outputs"]["out"] )
 
 		script["render"] = GafferScene.Render()
@@ -497,8 +497,8 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 
 		script["options"] = GafferScene.StandardOptions()
 		script["options"]["in"].setInput( script["outputs"]["out"] )
-		script["options"]["options"]["renderCamera"]["enabled"].setValue( True )
-		script["options"]["options"]["renderCamera"]["value"].setValue( "/camera" )
+		script["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		script["options"]["options"]["render:camera"]["value"].setValue( "/camera" )
 
 		script["rendererOptions"] = self._createOptions()
 		script["rendererOptions"]["in"].setInput( script["options"]["out"] )
@@ -607,12 +607,12 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 
 		script["options"] = GafferScene.StandardOptions()
 		script["options"]["in"].setInput( script["outputs"]["out"] )
-		script["options"]["options"]["renderCamera"]["enabled"].setValue( True )
-		script["options"]["options"]["renderCamera"]["value"].setValue( "/camera" )
+		script["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		script["options"]["options"]["render:camera"]["value"].setValue( "/camera" )
 
 		manifestPath = self.temporaryDirectory() / "manifest.exr"
-		script["options"]["options"]["renderManifestFilePath"]["enabled"].setValue( True )
-		script["options"]["options"]["renderManifestFilePath"]["value"].setValue( manifestPath )
+		script["options"]["options"]["render:renderManifestFilePath"]["enabled"].setValue( True )
+		script["options"]["options"]["render:renderManifestFilePath"]["value"].setValue( manifestPath )
 
 		script["rendererOptions"] = self._createOptions()
 		script["rendererOptions"]["in"].setInput( script["options"]["out"] )

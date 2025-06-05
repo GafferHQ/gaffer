@@ -843,10 +843,10 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		pointsOptions = GafferScene.StandardOptions()
 		pointsOptions["in"].setInput( pointsAttributes["out"] )
-		pointsOptions["options"]["transformBlur"]["value"].setValue( True )
-		pointsOptions["options"]["transformBlur"]["enabled"].setValue( True )
-		pointsOptions["options"]["deformationBlur"]["value"].setValue( True )
-		pointsOptions["options"]["deformationBlur"]["enabled"].setValue( True )
+		pointsOptions["options"]["render:transformBlur"]["value"].setValue( True )
+		pointsOptions["options"]["render:transformBlur"]["enabled"].setValue( True )
+		pointsOptions["options"]["render:deformationBlur"]["value"].setValue( True )
+		pointsOptions["options"]["render:deformationBlur"]["enabled"].setValue( True )
 
 		sphere = GafferScene.Sphere()
 		sphere["type"].setValue( GafferScene.Sphere.Type.Primitive )
@@ -2807,8 +2807,8 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 
 		purposeOption = GafferScene.StandardOptions()
 		purposeOption["in"].setInput( pointsSource["out"] )
-		purposeOption['options']['includedPurposes']["value"].setValue( IECore.StringVectorData( [ "default" ] ) )
-		purposeOption['options']['includedPurposes']["enabled"].setValue( True )
+		purposeOption["options"]["render:includedPurposes"]["value"].setValue( IECore.StringVectorData( [ "default" ] ) )
+		purposeOption["options"]["render:includedPurposes"]["enabled"].setValue( True )
 
 		sphere = GafferScene.Sphere()
 

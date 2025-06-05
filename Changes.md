@@ -17,7 +17,9 @@ Improvements
 - Cycles :
   - Improved responsiveness for Viewer camera updates when using Cycles as the viewport renderer. One benchmark shows around a 10x improvement in frame rate.
   - Added support for `layerName` parameter in outputs, to control the naming of channels in EXR outputs.
-- StandardOptions : Added render manifest option.
+- StandardOptions :
+  - Added render manifest option.
+  - Added `render:cameraInclusions`, `render:cameraExclusions`, `render:matteInclusions`, and `render:matteExclusions` options.
 - CyclesMeshLight : Improved presentation of `cameraVisibility` and `lightGroup` plugs in the Node Editor.
 
 Fixes
@@ -69,6 +71,7 @@ Breaking Changes
 - CyclesOptions : Option plugs have been renamed to match the name of their option (e.g. `options.samples` is now `options.cycles:session:samples`). A compatibility config has been provided to allow CyclesOptions nodes to be loaded from scripts saved in earlier Gaffer versions.
 - DelightAttributes : Attribute plugs have been renamed to match the name of their attribute with `.` characters replaced with `_` (e.g. `attributes.cameraVisibility` is now `attributes.dl:visibility_camera`). A compatibility config has been provided to allow DelightAttributes nodes to be loaded from scripts saved in earlier Gaffer versions.
 - DelightOptions : Option plugs have been renamed to match the name of their option with `.` characters replaced with `_` (e.g. `options.shadingSamples` is now `options.dl:quality_shadingsamples`). A compatibility config has been provided to allow DelightOptions nodes to be loaded from scripts saved in earlier Gaffer versions.
+- StandardOptions : Option plugs have been renamed to match the name of their option (e.g. `options.renderCamera` is now `options.render:camera`). A compatibility config has been provided to allow StandardOptions nodes to be loaded from scripts saved in earlier Gaffer versions.
 
 Build
 -----

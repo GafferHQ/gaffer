@@ -105,8 +105,8 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 	def testValue( self ) :
 
 		options = GafferScene.StandardOptions()
-		options["options"]["renderCamera"]["enabled"].setValue( True )
-		options["options"]["renderCamera"]["value"].setValue( "/customCamera" )
+		options["options"]["render:camera"]["enabled"].setValue( True )
+		options["options"]["render:camera"]["value"].setValue( "/customCamera" )
 
 		self.assertEqual(
 			self.__inspect( options["out"], "render:camera" ).value().value,
@@ -118,8 +118,8 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["standardOptions"] = GafferScene.StandardOptions()
-		s["standardOptions"]["options"]["renderCamera"]["enabled"].setValue( True )
-		s["standardOptions"]["options"]["renderCamera"]["value"].setValue( "/defaultCamera" )
+		s["standardOptions"]["options"]["render:camera"]["enabled"].setValue( True )
+		s["standardOptions"]["options"]["render:camera"]["value"].setValue( "/defaultCamera" )
 
 		s["group"] = GafferScene.Group()
 		s["editScope1"] = Gaffer.EditScope()
@@ -139,27 +139,27 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["group"]["out"], "render:camera" ),
-			source = s["standardOptions"]["options"]["renderCamera"],
+			source = s["standardOptions"]["options"]["render:camera"],
 			sourceType = SourceType.Other,
 			editable = True,
-			edit = s["standardOptions"]["options"]["renderCamera"]
+			edit = s["standardOptions"]["options"]["render:camera"]
 		)
 
 		# Even if there is an edit scope in the way
 
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope1"]["out"], "render:camera" ),
-			source = s["standardOptions"]["options"]["renderCamera"],
+			source = s["standardOptions"]["options"]["render:camera"],
 			sourceType = SourceType.Other,
 			editable = True,
-			edit = s["standardOptions"]["options"]["renderCamera"]
+			edit = s["standardOptions"]["options"]["render:camera"]
 		)
 
 		# We shouldn't be able to edit it if we've been told to use an EditScope and it isn't in the history
 
 		self.__assertExpectedResult(
 			self.__inspect( s["group"]["out"], "render:camera", s["editScope1"] ),
-			source = s["standardOptions"]["options"]["renderCamera"],
+			source = s["standardOptions"]["options"]["render:camera"],
 			sourceType = SourceType.Other,
 			editable = False,
 			nonEditableReason = "The target edit scope editScope1 is not in the scene history."
@@ -176,7 +176,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			inspection,
-			source = s["standardOptions"]["options"]["renderCamera"],
+			source = s["standardOptions"]["options"]["render:camera"],
 			sourceType = SourceType.Upstream,
 			editable = True
 		)
@@ -207,17 +207,17 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		# If there is a source node inside an edit scope, make sure we use that
 
 		s["editScope1"]["standardOptions2"] = GafferScene.StandardOptions()
-		s["editScope1"]["standardOptions2"]["options"]["resolutionMultiplier"]["enabled"].setValue( True )
-		s["editScope1"]["standardOptions2"]["options"]["resolutionMultiplier"]["value"].setValue( 4.0 )
+		s["editScope1"]["standardOptions2"]["options"]["render:resolutionMultiplier"]["enabled"].setValue( True )
+		s["editScope1"]["standardOptions2"]["options"]["render:resolutionMultiplier"]["value"].setValue( 4.0 )
 		s["editScope1"]["standardOptions2"]["in"].setInput( s["editScope1"]["BoxIn"]["out"] )
 		s["editScope1"]["OptionEdits"]["in"].setInput( s["editScope1"]["standardOptions2"]["out"] )
 
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope2"]["out"], "render:resolutionMultiplier", s["editScope1"] ),
-			source = s["editScope1"]["standardOptions2"]["options"]["resolutionMultiplier"],
+			source = s["editScope1"]["standardOptions2"]["options"]["render:resolutionMultiplier"],
 			sourceType = SourceType.EditScope,
 			editable = True,
-			edit = s["editScope1"]["standardOptions2"]["options"]["resolutionMultiplier"]
+			edit = s["editScope1"]["standardOptions2"]["options"]["render:resolutionMultiplier"]
 		)
 
 		# If there is a OptionTweaks node in the scope's processor, make sure we use that
@@ -239,39 +239,39 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		# If there is a StandardOptions node downstream of the scope's scene processor, make sure we use that
 
 		s["editScope1"]["standardOptions3"] = GafferScene.StandardOptions()
-		s["editScope1"]["standardOptions3"]["options"]["renderCamera"]["enabled"].setValue( True )
-		s["editScope1"]["standardOptions3"]["options"]["renderCamera"]["value"].setValue( "/baz" )
+		s["editScope1"]["standardOptions3"]["options"]["render:camera"]["enabled"].setValue( True )
+		s["editScope1"]["standardOptions3"]["options"]["render:camera"]["value"].setValue( "/baz" )
 		s["editScope1"]["standardOptions3"]["in"].setInput( s["editScope1"]["OptionEdits"]["out"] )
 		s["editScope1"]["BoxOut"]["in"].setInput( s["editScope1"]["standardOptions3"]["out"] )
 
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope2"]["out"], "render:camera", s["editScope1"] ),
-			source = s["editScope1"]["standardOptions3"]["options"]["renderCamera"],
+			source = s["editScope1"]["standardOptions3"]["options"]["render:camera"],
 			sourceType = SourceType.EditScope,
 			editable = True,
-			edit = s["editScope1"]["standardOptions3"]["options"]["renderCamera"]
+			edit = s["editScope1"]["standardOptions3"]["options"]["render:camera"]
 		)
 
 		# If there is a StandardOptions node outside of an edit scope, make sure we use that with no scope
 
 		s["independentOptions"] = GafferScene.StandardOptions()
-		s["independentOptions"]["options"]["renderCamera"]["enabled"].setValue( True )
-		s["independentOptions"]["options"]["renderCamera"]["value"].setValue( "/camera" )
+		s["independentOptions"]["options"]["render:camera"]["enabled"].setValue( True )
+		s["independentOptions"]["options"]["render:camera"]["value"].setValue( "/camera" )
 		s["independentOptions"]["in"].setInput( s["editScope2"]["out"] )
 
 		self.__assertExpectedResult(
 			self.__inspect( s["independentOptions"]["out"], "render:camera", None ),
-			source = s["independentOptions"]["options"]["renderCamera"],
+			source = s["independentOptions"]["options"]["render:camera"],
 			sourceType = SourceType.Other,
 			editable = True,
-			edit = s["independentOptions"]["options"]["renderCamera"]
+			edit = s["independentOptions"]["options"]["render:camera"]
 		)
 
 		# Check editWarnings and nonEditableReasons
 
 		self.__assertExpectedResult(
 			self.__inspect( s["independentOptions"]["out"], "render:camera", s["editScope2"] ),
-			source = s["independentOptions"]["options"]["renderCamera"],
+			source = s["independentOptions"]["options"]["render:camera"],
 			sourceType = SourceType.Downstream,
 			editable = True,
 			edit = optionEditScope2Edit,
@@ -282,7 +282,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["independentOptions"]["out"], "render:camera", s["editScope2"] ),
-			source = s["independentOptions"]["options"]["renderCamera"],
+			source = s["independentOptions"]["options"]["render:camera"],
 			sourceType = SourceType.Downstream,
 			editable = False,
 			nonEditableReason = "The target edit scope editScope2 is disabled."
@@ -293,7 +293,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope2"]["out"], "render:camera", s["editScope2"] ),
-			source = s["editScope1"]["standardOptions3"]["options"]["renderCamera"],
+			source = s["editScope1"]["standardOptions3"]["options"]["render:camera"],
 			sourceType = SourceType.Upstream,
 			editable = False,
 			nonEditableReason = "editScope2 is locked."
@@ -304,7 +304,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope2"]["out"], "render:camera", s["editScope2"] ),
-			source = s["editScope1"]["standardOptions3"]["options"]["renderCamera"],
+			source = s["editScope1"]["standardOptions3"]["options"]["render:camera"],
 			sourceType = SourceType.Upstream,
 			editable = False,
 			nonEditableReason = "editScope2.OptionEdits.edits is locked."
@@ -313,7 +313,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		Gaffer.MetadataAlgo.setReadOnly( s["editScope2"]["OptionEdits"], True )
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope2"]["out"], "render:camera", s["editScope2"] ),
-			source = s["editScope1"]["standardOptions3"]["options"]["renderCamera"],
+			source = s["editScope1"]["standardOptions3"]["options"]["render:camera"],
 			sourceType = SourceType.Upstream,
 			editable = False,
 			nonEditableReason = "editScope2.OptionEdits is locked."
@@ -322,8 +322,8 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 	def testDisabledTweaks( self ) :
 
 		options = GafferScene.StandardOptions()
-		options["options"]["renderCamera"]["enabled"].setValue( True )
-		options["options"]["renderCamera"]["value"].setValue( "/defaultCamera" )
+		options["options"]["render:camera"]["enabled"].setValue( True )
+		options["options"]["render:camera"]["value"].setValue( "/defaultCamera" )
 
 		optionTweaks = GafferScene.OptionTweaks()
 		optionTweaks["in"].setInput( options["out"] )
@@ -344,10 +344,10 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( optionTweaks["out"], "render:camera" ),
-			source = options["options"]["renderCamera"],
+			source = options["options"]["render:camera"],
 			sourceType = SourceType.Other,
 			editable = True,
-			edit = options["options"]["renderCamera"]
+			edit = options["options"]["render:camera"]
 		)
 
 	def testNonExistentOption( self ) :
@@ -361,8 +361,8 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 
 		options = GafferScene.StandardOptions()
 		options["in"].setInput( camera["out"] )
-		options["options"]["renderCamera"]["enabled"].setValue( True )
-		options["options"]["renderCamera"]["value"].setValue( "/defaultCamera" )
+		options["options"]["render:camera"]["enabled"].setValue( True )
+		options["options"]["render:camera"]["value"].setValue( "/defaultCamera" )
 
 		editScope1 = Gaffer.EditScope()
 		editScope1.setup( options["out"] )
@@ -382,7 +382,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		cs = GafferTest.CapturingSlot( inspector.dirtiedSignal() )
 
 		# Changing the option should dirty the inspector
-		options["options"]["renderCamera"]["value"].setValue( "/newCamera" )
+		options["options"]["render:camera"]["value"].setValue( "/newCamera" )
 		self.assertEqual( len( cs ), 1 )
 
 		# Changing sets should not
@@ -400,8 +400,8 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 	def testReadOnlyMetadataSignalling( self ) :
 
 		options = GafferScene.StandardOptions()
-		options["options"]["renderCamera"]["enabled"].setValue( True )
-		options["options"]["renderCamera"]["value"].setValue( "/defaultCamera" )
+		options["options"]["render:camera"]["enabled"].setValue( True )
+		options["options"]["render:camera"]["value"].setValue( "/defaultCamera" )
 
 		editScope = Gaffer.EditScope()
 		editScope.setup( options["out"] )
@@ -468,13 +468,13 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 	def testRenderPassValues( self ) :
 
 		options = GafferScene.StandardOptions()
-		options["options"]["renderCamera"]["enabled"].setValue( True )
-		options["options"]["renderCamera"]["value"].setValue( "/defaultCamera" )
+		options["options"]["render:camera"]["enabled"].setValue( True )
+		options["options"]["render:camera"]["value"].setValue( "/defaultCamera" )
 
 		spreadsheet = Gaffer.Spreadsheet()
 		spreadsheet["selector"].setValue( "${renderPass}" )
-		spreadsheet["rows"].addColumn( options["options"]["renderCamera"]["value"] )
-		options["options"]["renderCamera"]["value"].setInput( spreadsheet["out"][0] )
+		spreadsheet["rows"].addColumn( options["options"]["render:camera"]["value"] )
+		options["options"]["render:camera"]["value"].setInput( spreadsheet["out"][0] )
 
 		rowA = spreadsheet["rows"].addRow()
 		rowA["name"].setValue( "renderPassA" )
@@ -514,8 +514,8 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["standardOptions"] = GafferScene.StandardOptions()
-		s["standardOptions"]["options"]["renderCamera"]["enabled"].setValue( True )
-		s["standardOptions"]["options"]["renderCamera"]["value"].setValue( "/defaultCamera" )
+		s["standardOptions"]["options"]["render:camera"]["enabled"].setValue( True )
+		s["standardOptions"]["options"]["render:camera"]["value"].setValue( "/defaultCamera" )
 
 		s["group"] = GafferScene.Group()
 		s["editScope1"] = Gaffer.EditScope()
@@ -539,26 +539,26 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 
 			self.__assertExpectedResult(
 				self.__inspect( s["group"]["out"], "render:camera", context = context ),
-				source = s["standardOptions"]["options"]["renderCamera"],
+				source = s["standardOptions"]["options"]["render:camera"],
 				sourceType = SourceType.Other,
 				editable = True,
-				edit = s["standardOptions"]["options"]["renderCamera"]
+				edit = s["standardOptions"]["options"]["render:camera"]
 			)
 
 			# Even if there is an edit scope in the way
 
 			self.__assertExpectedResult(
 				self.__inspect( s["editScope1"]["out"], "render:camera", context = context ),
-				source = s["standardOptions"]["options"]["renderCamera"],
+				source = s["standardOptions"]["options"]["render:camera"],
 				sourceType = SourceType.Other,
 				editable = True,
-				edit = s["standardOptions"]["options"]["renderCamera"]
+				edit = s["standardOptions"]["options"]["render:camera"]
 			)
 
 			# We shouldn't be able to edit it if we've been told to use an EditScope and it isn't in the history
 			self.__assertExpectedResult(
 				self.__inspect( s["group"]["out"], "render:camera", s["editScope1"], context ),
-				source = s["standardOptions"]["options"]["renderCamera"],
+				source = s["standardOptions"]["options"]["render:camera"],
 				sourceType = SourceType.Other,
 				editable = False,
 				nonEditableReason = "The target edit scope editScope1 is not in the scene history."
@@ -575,7 +575,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 
 			self.__assertExpectedResult(
 				inspection,
-				source = s["standardOptions"]["options"]["renderCamera"],
+				source = s["standardOptions"]["options"]["render:camera"],
 				sourceType = SourceType.Upstream,
 				editable = True
 			)
@@ -606,17 +606,17 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 			# If there is a source node inside an edit scope, make sure we use that
 
 			s["editScope1"]["standardOptions2"] = GafferScene.StandardOptions()
-			s["editScope1"]["standardOptions2"]["options"]["resolutionMultiplier"]["enabled"].setValue( True )
-			s["editScope1"]["standardOptions2"]["options"]["resolutionMultiplier"]["value"].setValue( 4.0 )
+			s["editScope1"]["standardOptions2"]["options"]["render:resolutionMultiplier"]["enabled"].setValue( True )
+			s["editScope1"]["standardOptions2"]["options"]["render:resolutionMultiplier"]["value"].setValue( 4.0 )
 			s["editScope1"]["standardOptions2"]["in"].setInput( s["editScope1"]["BoxIn"]["out"] )
 			s["editScope1"]["RenderPassOptionEdits"]["in"].setInput( s["editScope1"]["standardOptions2"]["out"] )
 
 			self.__assertExpectedResult(
 				self.__inspect( s["editScope2"]["out"], "render:resolutionMultiplier", s["editScope1"], context ),
-				source = s["editScope1"]["standardOptions2"]["options"]["resolutionMultiplier"],
+				source = s["editScope1"]["standardOptions2"]["options"]["render:resolutionMultiplier"],
 				sourceType = SourceType.EditScope,
 				editable = True,
-				edit = s["editScope1"]["standardOptions2"]["options"]["resolutionMultiplier"]
+				edit = s["editScope1"]["standardOptions2"]["options"]["render:resolutionMultiplier"]
 			)
 
 			# If there is a OptionTweaks node in the scope's processor, make sure we use that
@@ -638,17 +638,17 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 			# If there is a StandardOptions node downstream of the scope's scene processor, make sure we use that
 
 			s["editScope1"]["standardOptions3"] = GafferScene.StandardOptions()
-			s["editScope1"]["standardOptions3"]["options"]["renderCamera"]["enabled"].setValue( True )
-			s["editScope1"]["standardOptions3"]["options"]["renderCamera"]["value"].setValue( "/baz" )
+			s["editScope1"]["standardOptions3"]["options"]["render:camera"]["enabled"].setValue( True )
+			s["editScope1"]["standardOptions3"]["options"]["render:camera"]["value"].setValue( "/baz" )
 			s["editScope1"]["standardOptions3"]["in"].setInput( s["editScope1"]["RenderPassOptionEdits"]["out"] )
 			s["editScope1"]["BoxOut"]["in"].setInput( s["editScope1"]["standardOptions3"]["out"] )
 
 			self.__assertExpectedResult(
 				self.__inspect( s["editScope2"]["out"], "render:camera", s["editScope1"], context ),
-				source = s["editScope1"]["standardOptions3"]["options"]["renderCamera"],
+				source = s["editScope1"]["standardOptions3"]["options"]["render:camera"],
 				sourceType = SourceType.EditScope,
 				editable = True,
-				edit = s["editScope1"]["standardOptions3"]["options"]["renderCamera"]
+				edit = s["editScope1"]["standardOptions3"]["options"]["render:camera"]
 			)
 
 			# When using no scope, make sure that we don't inadvertently edit the contents of an EditScope.
@@ -657,7 +657,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 
 			self.__assertExpectedResult(
 				self.__inspect( s["editScope2"]["out"], "render:camera", None, context ),
-				source = s["editScope1"]["standardOptions3"]["options"]["renderCamera"],
+				source = s["editScope1"]["standardOptions3"]["options"]["render:camera"],
 				sourceType = SourceType.Downstream,
 				editable = True,
 				editWarning = "Option has edits downstream in editScope1."
@@ -666,23 +666,23 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 			# If there is a StandardOptions node outside of an edit scope, make sure we use that with no scope
 
 			s["independentOptions"] = GafferScene.StandardOptions()
-			s["independentOptions"]["options"]["renderCamera"]["enabled"].setValue( True )
-			s["independentOptions"]["options"]["renderCamera"]["value"].setValue( "/camera" )
+			s["independentOptions"]["options"]["render:camera"]["enabled"].setValue( True )
+			s["independentOptions"]["options"]["render:camera"]["value"].setValue( "/camera" )
 			s["independentOptions"]["in"].setInput( s["editScope2"]["out"] )
 
 			self.__assertExpectedResult(
 				self.__inspect( s["independentOptions"]["out"], "render:camera", None, context ),
-				source = s["independentOptions"]["options"]["renderCamera"],
+				source = s["independentOptions"]["options"]["render:camera"],
 				sourceType = SourceType.Other,
 				editable = True,
-				edit = s["independentOptions"]["options"]["renderCamera"]
+				edit = s["independentOptions"]["options"]["render:camera"]
 			)
 
 			# Check editWarnings and nonEditableReasons
 
 			self.__assertExpectedResult(
 				self.__inspect( s["independentOptions"]["out"], "render:camera", s["editScope2"], context ),
-				source = s["independentOptions"]["options"]["renderCamera"],
+				source = s["independentOptions"]["options"]["render:camera"],
 				sourceType = SourceType.Downstream,
 				editable = True,
 				edit = optionEditScope2Edit,
@@ -693,7 +693,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 
 			self.__assertExpectedResult(
 				self.__inspect( s["independentOptions"]["out"], "render:camera", s["editScope2"], context ),
-				source = s["independentOptions"]["options"]["renderCamera"],
+				source = s["independentOptions"]["options"]["render:camera"],
 				sourceType = SourceType.Downstream,
 				editable = False,
 				nonEditableReason = "The target edit scope editScope2 is disabled."
@@ -704,7 +704,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 
 			self.__assertExpectedResult(
 				self.__inspect( s["editScope2"]["out"], "render:camera", s["editScope2"], context ),
-				source = s["editScope1"]["standardOptions3"]["options"]["renderCamera"],
+				source = s["editScope1"]["standardOptions3"]["options"]["render:camera"],
 				sourceType = SourceType.Upstream,
 				editable = False,
 				nonEditableReason = "editScope2 is locked."
@@ -715,7 +715,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 
 			self.__assertExpectedResult(
 				self.__inspect( s["editScope2"]["out"], "render:camera", s["editScope2"], context ),
-				source = s["editScope1"]["standardOptions3"]["options"]["renderCamera"],
+				source = s["editScope1"]["standardOptions3"]["options"]["render:camera"],
 				sourceType = SourceType.Upstream,
 				editable = False,
 				nonEditableReason = "editScope2.RenderPassOptionEdits.edits is locked."
@@ -724,7 +724,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 			Gaffer.MetadataAlgo.setReadOnly( s["editScope2"]["RenderPassOptionEdits"], True )
 			self.__assertExpectedResult(
 				self.__inspect( s["editScope2"]["out"], "render:camera", s["editScope2"], context ),
-				source = s["editScope1"]["standardOptions3"]["options"]["renderCamera"],
+				source = s["editScope1"]["standardOptions3"]["options"]["render:camera"],
 				sourceType = SourceType.Upstream,
 				editable = False,
 				nonEditableReason = "editScope2.RenderPassOptionEdits is locked."
@@ -735,8 +735,8 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["standardOptions"] = GafferScene.StandardOptions()
-		s["standardOptions"]["options"]["renderCamera"]["enabled"].setValue( True )
-		s["standardOptions"]["options"]["renderCamera"]["value"].setValue( "/defaultCamera" )
+		s["standardOptions"]["options"]["render:camera"]["enabled"].setValue( True )
+		s["standardOptions"]["options"]["render:camera"]["value"].setValue( "/defaultCamera" )
 
 		s["customOptions"] = GafferScene.CustomOptions()
 		s["customOptions"]["in"].setInput( s["standardOptions"]["out"] )
@@ -909,8 +909,8 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["standardOptions"] = GafferScene.StandardOptions()
-		s["standardOptions"]["options"]["renderCamera"]["enabled"].setValue( True )
-		s["standardOptions"]["options"]["renderCamera"]["value"].setValue( "/defaultCamera" )
+		s["standardOptions"]["options"]["render:camera"]["enabled"].setValue( True )
+		s["standardOptions"]["options"]["render:camera"]["value"].setValue( "/defaultCamera" )
 
 		s["group"] = GafferScene.Group()
 		s["editScope"] = Gaffer.EditScope()
@@ -921,7 +921,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		s["editScope"]["in"].setInput( s["group"]["out"] )
 
 		inspection = self.__inspect( s["group"]["out"], "render:camera", None )
-		self.assertEqual( inspection.acquireEdit( createIfNecessary = False ), s["standardOptions"]["options"]["renderCamera"] )
+		self.assertEqual( inspection.acquireEdit( createIfNecessary = False ), s["standardOptions"]["options"]["render:camera"] )
 
 		inspection = self.__inspect( s["editScope"]["out"], "render:camera", s["editScope"] )
 		self.assertIsNone( inspection.acquireEdit( createIfNecessary = False ) )
@@ -935,8 +935,8 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["standardOptions"] = GafferScene.StandardOptions()
-		s["standardOptions"]["options"]["renderCamera"]["enabled"].setValue( True )
-		s["standardOptions"]["options"]["renderCamera"]["value"].setValue( "/defaultCamera" )
+		s["standardOptions"]["options"]["render:camera"]["enabled"].setValue( True )
+		s["standardOptions"]["options"]["render:camera"]["value"].setValue( "/defaultCamera" )
 
 		s["group"] = GafferScene.Group()
 		s["editScope1"] = Gaffer.EditScope()
@@ -965,7 +965,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		self.assertTrue( inspection.canDisableEdit() )
 		self.assertEqual( inspection.nonDisableableReason(), "" )
 		inspection.disableEdit()
-		self.assertFalse( s["standardOptions"]["options"]["renderCamera"]["enabled"].getValue() )
+		self.assertFalse( s["standardOptions"]["options"]["render:camera"]["enabled"].getValue() )
 
 		inspection = self.__inspect( s["editScope2"]["out"], "render:camera", None )
 		self.assertFalse( inspection.canDisableEdit() )
@@ -1009,9 +1009,9 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["standardOptions"] = GafferScene.StandardOptions()
-		s["standardOptions"]["options"]["renderCamera"]["enabled"].setValue( True )
-		s["standardOptions"]["options"]["renderCamera"]["value"].setValue( "/defaultCamera" )
-		s["standardOptions"]["options"]["resolutionMultiplier"]["enabled"].setValue( True )
+		s["standardOptions"]["options"]["render:camera"]["enabled"].setValue( True )
+		s["standardOptions"]["options"]["render:camera"]["value"].setValue( "/defaultCamera" )
+		s["standardOptions"]["options"]["render:resolutionMultiplier"]["enabled"].setValue( True )
 
 		s["editScope1"] = Gaffer.EditScope()
 		s["editScope1"].setup( s["standardOptions"]["out"] )
@@ -1042,8 +1042,8 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["standardOptions"] = GafferScene.StandardOptions()
-		s["standardOptions"]["options"]["renderCamera"]["enabled"].setValue( True )
-		s["standardOptions"]["options"]["renderCamera"]["value"].setValue( "/defaultCamera" )
+		s["standardOptions"]["options"]["render:camera"]["enabled"].setValue( True )
+		s["standardOptions"]["options"]["render:camera"]["value"].setValue( "/defaultCamera" )
 
 		s["editScope1"] = Gaffer.EditScope()
 		s["editScope1"].setup( s["standardOptions"]["out"] )
@@ -1058,10 +1058,10 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 			else :
 				self.assertRaisesRegex( IECore.Exception, "Not editable : " + nonEditableReason, inspection.edit, data )
 
-		Gaffer.MetadataAlgo.setReadOnly( s["standardOptions"]["options"]["renderCamera"]["value"], True )
+		Gaffer.MetadataAlgo.setReadOnly( s["standardOptions"]["options"]["render:camera"]["value"], True )
 		inspection = self.__inspect( s["standardOptions"]["out"], "render:camera", None )
-		assertEdit( inspection, IECore.StringData( "/otherCamera" ), "standardOptions.options.renderCamera.value is locked." )
-		Gaffer.MetadataAlgo.setReadOnly( s["standardOptions"]["options"]["renderCamera"]["value"], False )
+		assertEdit( inspection, IECore.StringData( "/otherCamera" ), "standardOptions.options.render:camera.value is locked." )
+		Gaffer.MetadataAlgo.setReadOnly( s["standardOptions"]["options"]["render:camera"]["value"], False )
 
 		Gaffer.MetadataAlgo.setReadOnly( s["standardOptions"], True )
 		inspection = self.__inspect( s["standardOptions"]["out"], "render:camera", None )
@@ -1072,10 +1072,10 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		self.assertTrue( inspection.canEdit( IECore.StringData( "/otherCamera" ) ) )
 		assertEdit( inspection, IECore.StringData( "/otherCamera" ), "" )
 
-		self.assertEqual( s["standardOptions"]["options"]["renderCamera"]["value"].getValue(), "/otherCamera" )
+		self.assertEqual( s["standardOptions"]["options"]["render:camera"]["value"].getValue(), "/otherCamera" )
 
 		assertEdit( inspection, IECore.IntData( 123 ), "Data of type \"IntData\" is not compatible." )
-		self.assertEqual( s["standardOptions"]["options"]["renderCamera"]["value"].getValue(), "/otherCamera" )
+		self.assertEqual( s["standardOptions"]["options"]["render:camera"]["value"].getValue(), "/otherCamera" )
 
 		inspection = self.__inspect( s["editScope1"]["out"], "render:camera", s["editScope1"] )
 		assertEdit( inspection, IECore.IntData( 123 ), "Data of type \"IntData\" is not compatible." )

@@ -505,8 +505,8 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		# and has no documented purpose. Perhaps used at Image Engine?
 
 		options = GafferScene.StandardOptions()
-		options["options"]["renderCamera"]["enabled"].setValue( True )
-		options["options"]["renderCamera"]["value"].setValue( "/camera" )
+		options["options"]["render:camera"]["enabled"].setValue( True )
+		options["options"]["render:camera"]["value"].setValue( "/camera" )
 
 		writer = GafferScene.SceneWriter()
 		writer["in"].setInput( options["out"] )

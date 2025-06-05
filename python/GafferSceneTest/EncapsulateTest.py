@@ -303,8 +303,8 @@ class EncapsulateTest( GafferSceneTest.SceneTestCase ) :
 
 		standardOptions = GafferScene.StandardOptions()
 		standardOptions["in"].setInput( standardAttributes["out"] )
-		standardOptions["options"]["transformBlur"]["value"].setValue( True )
-		standardOptions["options"]["transformBlur"]["enabled"].setValue( True )
+		standardOptions["options"]["render:transformBlur"]["value"].setValue( True )
+		standardOptions["options"]["render:transformBlur"]["enabled"].setValue( True )
 
 		encapsulate = GafferScene.Encapsulate()
 		encapsulate["in"].setInput( standardOptions["out"] )

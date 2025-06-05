@@ -107,16 +107,16 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		def assertIncludedObjects( scene, paths, inclusions = None, exclusions = None, additionalLights = None ) :
 
 			if inclusions is not None :
-				standardOptions["options"]["inclusions"]["value"].setValue( inclusions )
-			standardOptions["options"]["inclusions"]["enabled"].setValue( inclusions is not None )
+				standardOptions["options"]["render:inclusions"]["value"].setValue( inclusions )
+			standardOptions["options"]["render:inclusions"]["enabled"].setValue( inclusions is not None )
 
 			if exclusions is not None :
-				standardOptions["options"]["exclusions"]["value"].setValue( exclusions )
-			standardOptions["options"]["exclusions"]["enabled"].setValue( exclusions is not None )
+				standardOptions["options"]["render:exclusions"]["value"].setValue( exclusions )
+			standardOptions["options"]["render:exclusions"]["enabled"].setValue( exclusions is not None )
 
 			if additionalLights is not None :
-				standardOptions["options"]["additionalLights"]["value"].setValue( additionalLights )
-			standardOptions["options"]["additionalLights"]["enabled"].setValue( additionalLights is not None )
+				standardOptions["options"]["render:additionalLights"]["value"].setValue( additionalLights )
+			standardOptions["options"]["render:additionalLights"]["enabled"].setValue( additionalLights is not None )
 
 			allPaths = {
 				"/group/groupA/cube",
