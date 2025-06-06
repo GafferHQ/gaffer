@@ -14,7 +14,9 @@ Improvements
 - 3Delight, Cycles, OpenGL : Added support for custom EXR metadata, using `header:*` parameters on the output definition.
 - RenderManAttributes, RenderManOptions : Plugs now respect minimum and maximum values specified by RenderMan.
 - RenderManShader : Improved GraphEditor labels for parameter RGB and XYZ components.
-- Cycles : Added support for `layerName` parameter in outputs, to control the naming of channels in EXR outputs.
+- Cycles :
+  - Improved responsiveness for Viewer camera updates when using Cycles as the viewport renderer. One benchmark shows around a 10x improvement in frame rate.
+  - Added support for `layerName` parameter in outputs, to control the naming of channels in EXR outputs.
 - StandardOptions : Added render manifest option.
 - CyclesMeshLight : Improved presentation of `cameraVisibility` and `lightGroup` plugs in the Node Editor.
 
