@@ -161,9 +161,10 @@ with IECore.IgnoredExceptions( ImportError ) :
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "portal_mode" )
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "aov_indirect" )
 
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "width", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "height", "Shape" )
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "radius", "Shape" )
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "angle", "Shape" )
-	GafferSceneUI.LightEditor.registerParameter( "ai:light", "resolution", "Shape" )
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "roundness", "Shape" )
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "soft_edge", "Shape" )
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "spread", "Shape" )
@@ -173,8 +174,6 @@ with IECore.IgnoredExceptions( ImportError ) :
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "cosine_power", "Shape" )
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "aspect_ratio", "Shape" )
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "filename", "Shape" )
-	GafferSceneUI.LightEditor.registerParameter( "ai:light", "width", "Shape" )
-	GafferSceneUI.LightEditor.registerParameter( "ai:light", "height", "Shape" )
 
 	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "slidemap", "ai:lightFilter:gobo", "Gobo" )
 	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "rotate", "ai:lightFilter:gobo", "Gobo", "Transform Rotate" )
@@ -230,8 +229,8 @@ with IECore.IgnoredExceptions( ImportError ) :
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "specular", "Contribution" )
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "sss", "Contribution" )
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "indirect", "Contribution" )
-	GafferSceneUI.LightEditor.registerParameter( "ai:light", "max_bounces", "Contribution" )
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "volume", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "max_bounces", "Contribution" )
 
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "shader", "Map" )
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "resolution", "Map" )
