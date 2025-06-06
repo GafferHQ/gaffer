@@ -85,8 +85,9 @@ Build
 - OpenSubdiv : Updated to version 3.6.0.
 - OpenVDB : Updated to version 11.0.0.
 - Python : Updated to version 3.11.12.
-- PySide : Updated to version 5.15.16.
-- Qt : Updated to version 5.15.16.
+- PySide : Updated to version 6.5.6.
+- Qt : Updated to version 6.5.6.
+- Qt.py : Updated to version 1.4.6.
 - USD : Updated to version 25.05.01.
 
 1.5.x.x (relative to 1.5.14.0)
