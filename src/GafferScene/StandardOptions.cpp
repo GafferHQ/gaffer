@@ -39,6 +39,9 @@
 
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/PlugAlgo.h"
+
+#include "boost/container/flat_map.hpp"
 
 using namespace Gaffer;
 using namespace GafferScene;
@@ -47,6 +50,16 @@ namespace
 {
 
 const IECore::InternedString g_defaultValue( "defaultValue" );
+
+const boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr> g_optionDefaultOverrides = {
+	// Override defaults of overscan plugs. Our metadata registered default matches
+	// the true default value of the option, but for legacy reasons these plugs
+	// default to 0.1.
+	{ "render:overscanTop", new IECore::FloatData( 0.1 ) },
+	{ "render:overscanBottom", new IECore::FloatData( 0.1 ) },
+	{ "render:overscanLeft", new IECore::FloatData( 0.1 ) },
+	{ "render:overscanRight", new IECore::FloatData( 0.1 ) },
+};
 
 } // namespace
 
@@ -63,6 +76,16 @@ StandardOptions::StandardOptions( const std::string &name )
 			const std::string optionName = target.string().substr( 7 );
 			NameValuePlugPtr optionPlug = new NameValuePlug( optionName, valuePlug, false, optionName );
 			optionsPlug()->addChild( optionPlug );
+		}
+	}
+
+	for( auto &p : NameValuePlug::Range( *optionsPlug() ) )
+	{
+		auto it = g_optionDefaultOverrides.find( p->getName() );
+		if( it != g_optionDefaultOverrides.end() )
+		{
+			Gaffer::PlugAlgo::setValueFromData( p->valuePlug<ValuePlug>(), it->second.get() );
+			p->valuePlug<ValuePlug>()->resetDefault();
 		}
 	}
 

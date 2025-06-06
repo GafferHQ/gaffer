@@ -116,15 +116,22 @@ class StandardOptionsTest( GafferSceneTest.SceneTestCase ) :
 
 	def testNodeConstructsWithAllOptions( self ) :
 
+		defaultOverrides = {
+			"render:overscanTop" : 0.1,
+			"render:overscanBottom" : 0.1,
+			"render:overscanLeft" : 0.1,
+			"render:overscanRight" : 0.1,
+		}
+
 		node = GafferScene.StandardOptions()
 		for option in Gaffer.Metadata.targetsWithMetadata( "option:render:* option:sampleMotion", "defaultValue" ) :
 			option = option[7:]
 			with self.subTest( option = option ) :
 				self.assertIn( option, node["options"] )
 				self.assertEqual( node["options"][option]["name"].getValue(), option )
-				self.assertEqual(
+				self.assertAlmostEqual(
 					node["options"][option]["value"].defaultValue(),
-					Gaffer.Metadata.value( f"option:{option}", "defaultValue" )
+					defaultOverrides.get( option, Gaffer.Metadata.value( f"option:{option}", "defaultValue" ) )
 				)
 
 	def testLoadFrom1_5( self ) :
