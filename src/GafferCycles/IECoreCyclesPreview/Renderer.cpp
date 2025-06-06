@@ -263,11 +263,7 @@ struct NodeDeleter
 			m_scene->delete_nodes( m_pendingLightDeletions );
 			m_pendingLightDeletions.clear();
 		}
-		/// \todo We should only be calling `delete_nodes()` here when we
-		/// actually have objects to delete. We currently need it because the
-		/// updates it triggers in Cyles are necessary to work around other
-		/// historical update bugs in IECoreCycles.
-		if( true || m_pendingObjectDeletions.size() )
+		if( m_pendingObjectDeletions.size() )
 		{
 			m_scene->delete_nodes( m_pendingObjectDeletions );
 			m_pendingObjectDeletions.clear();
@@ -1112,6 +1108,14 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				// > This needs fixing in its own right, but until then, the lock
 				// > at least prevents concurrent access.
 				object->get_geometry()->set_used_shaders( shaders );
+
+				if( object->get_geometry()->is_mesh() )
+				{
+					auto mesh = static_cast<ccl::Mesh *>( object->get_geometry() );
+					/// \todo I don't know why this is necessary, but without it the new
+					/// assignment doesn't seem to be transferred to the render device.
+					mesh->tag_shader_modified();
+				}
 			}
 
 			if(
@@ -1135,6 +1139,8 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			// Custom attributes.
 			object->attributes = m_custom;
+
+			SceneAlgo::tagUpdateWithLock( object, scene );
 
 			return true;
 		}
@@ -1759,6 +1765,8 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			{
 				m_object->set_blocker_shadow_set( lightSet );
 			}
+
+			SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
 		}
 
 		void transform( const Imath::M44f &transform ) override
@@ -2023,6 +2031,8 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 			{
 				m_light->set_shadow_set_membership( membership );
 			}
+
+			SceneAlgo::tagUpdateWithLock( m_light.get(), m_scene );
 		}
 
 	private :
