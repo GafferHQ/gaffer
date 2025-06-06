@@ -1017,6 +1017,8 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 
 	g_shadingSystem->attribute( "commonspace", "object" );
 
+	g_shadingSystemBatchSize = 1;
+
 #if OSL_USE_BATCHED
 	bool requestBatch = true;
 	if( const char *requestBatchVar = getenv( "GAFFEROSL_USE_BATCHED" ) )
@@ -1034,7 +1036,6 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 	// farm ... getting a subtle flicker because frames that hit out of date farm blades
 	// render ever-so-slightly darker is not much fun.
 
-	g_shadingSystemBatchSize = 1;
 	if( requestBatch && g_shadingSystem->configure_batch_execution_at( 16 ) )
 	{
 		g_shadingSystemBatchSize = 16;

@@ -60,6 +60,7 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 #include "scene/shader_nodes.h"
 #include "scene/osl.h"
 #include "util/path.h"
+#include "util/version.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
 #include "fmt/format.h"
@@ -157,8 +158,12 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	{
 		if( nodeType->type == ccl::NodeType::SHADER && nodeType->create )
 		{
+#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) >= 404
+			node = shaderGraph->create_node( nodeType );
+#else
 			node = static_cast<ccl::ShaderNode *>( nodeType->create( nodeType ) );
 			node->set_owner( shaderGraph );
+#endif
 		}
 	}
 
@@ -168,10 +173,11 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		return node;
 	}
 
-	// Add node to graph
-
-	node = shaderGraph->add( node );
 	node->name = ccl::ustring( namePrefix + outputParameter.shader.string() );
+
+#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) < 404
+	shaderGraph->add( node );
+#endif
 
 	// Set the shader parameters
 
@@ -422,7 +428,7 @@ ccl::ShaderOutput *output( ccl::ShaderNode *node, IECore::InternedString name )
 	{
 		if( node->outputs.size() )
 		{
-			return node->outputs.front();
+			return node->outputs[0];
 		}
 	}
 
@@ -433,13 +439,13 @@ ccl::ShaderOutput *output( ccl::ShaderNode *node, IECore::InternedString name )
 	return nullptr;
 }
 
-ccl::ShaderGraph *convertGraph( const IECoreScene::ShaderNetwork *surfaceShader,
+std::unique_ptr<ccl::ShaderGraph> convertGraph( const IECoreScene::ShaderNetwork *surfaceShader,
 								const IECoreScene::ShaderNetwork *displacementShader,
 								const IECoreScene::ShaderNetwork *volumeShader,
 								ccl::ShaderManager *shaderManager,
 								const std::string &namePrefix )
 {
-	ccl::ShaderGraph *graph = new ccl::ShaderGraph();
+	std::unique_ptr<ccl::ShaderGraph> graph = std::make_unique<ccl::ShaderGraph>();
 
 	using NamedNetwork = std::pair<std::string, const IECoreScene::ShaderNetwork *>;
 	for( const auto &[name, network] : { NamedNetwork( "surface", surfaceShader ), NamedNetwork( "displacement", displacementShader ), NamedNetwork( "volume", volumeShader ) } )
@@ -464,7 +470,7 @@ ccl::ShaderGraph *convertGraph( const IECoreScene::ShaderNetwork *surfaceShader,
 		IECoreScene::ShaderNetworkAlgo::addComponentConnectionAdapters( toConvert.get() );
 		IECoreCycles::ShaderNetworkAlgo::convertUSDShaders( toConvert.get() );
 		ShaderMap converted;
-		ccl::ShaderNode *node = convertWalk( toConvert->getOutput(), toConvert.get(), namePrefix, shaderManager, graph, converted );
+		ccl::ShaderNode *node = convertWalk( toConvert->getOutput(), toConvert.get(), namePrefix, shaderManager, graph.get(), converted );
 
 		if( node )
 		{
@@ -491,9 +497,15 @@ void setSingleSided( ccl::ShaderGraph *graph )
 	// Cycles doesn't natively support setting single-sided on objects, however we can build
 	// a shader which does it for us by checking for backfaces and using a transparentBSDF
 	// to emulate the effect.
-	ccl::ShaderNode *mixClosure = graph->add( (ccl::ShaderNode*)graph->create_node<ccl::MixClosureNode>() );
-	ccl::ShaderNode *transparentBSDF = graph->add( (ccl::ShaderNode*)graph->create_node<ccl::TransparentBsdfNode>() );
-	ccl::ShaderNode *geometry = graph->add( (ccl::ShaderNode*)graph->create_node<ccl::GeometryNode>() );
+	ccl::ShaderNode *mixClosure = graph->create_node<ccl::MixClosureNode>();
+	ccl::ShaderNode *transparentBSDF = graph->create_node<ccl::TransparentBsdfNode>();
+	ccl::ShaderNode *geometry = graph->create_node<ccl::GeometryNode>();
+
+#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) < 404
+	graph->add( mixClosure );
+	graph->add( transparentBSDF );
+	graph->add( geometry );
+#endif
 
 	if( ccl::ShaderOutput *shaderOutput = ShaderNetworkAlgo::output( geometry, "backfacing" ) )
 		if( ccl::ShaderInput *shaderInput = ShaderNetworkAlgo::input( mixClosure, "fac" ) )

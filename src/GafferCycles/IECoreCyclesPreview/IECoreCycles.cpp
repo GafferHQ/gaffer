@@ -52,6 +52,7 @@
 IECORE_PUSH_DEFAULT_VISIBILITY
 #include "device/device.h"
 #include "graph/node.h"
+#include "scene/pass.h"
 #include "util/openimagedenoise.h"
 IECORE_POP_DEFAULT_VISIBILITY
 

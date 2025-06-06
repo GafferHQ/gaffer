@@ -58,7 +58,7 @@ IECORECYCLES_API ccl::ShaderInput  *input( ccl::ShaderNode *node, IECore::Intern
 IECORECYCLES_API ccl::ShaderOutput *output( ccl::ShaderNode *node, IECore::InternedString name );
 
 
-IECORECYCLES_API ccl::ShaderGraph *convertGraph(
+IECORECYCLES_API std::unique_ptr<ccl::ShaderGraph> convertGraph(
 	const IECoreScene::ShaderNetwork *surfaceShader,
 	const IECoreScene::ShaderNetwork *displacementShader,
 	const IECoreScene::ShaderNetwork *volumeShader,

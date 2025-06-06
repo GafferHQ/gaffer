@@ -42,6 +42,8 @@ import unittest
 import imath
 import random
 
+import OpenImageIO
+
 import IECore
 import IECoreImage
 
@@ -97,7 +99,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( n["out"]["format"].getValue().getDisplayWindow(), imath.Box2i( imath.V2i( 0 ), imath.V2i( 200, 150 ) ) )
 
 		expectedMetadata = IECore.CompoundData( {
-			"oiio:ColorSpace" : IECore.StringData( 'Linear' ),
+			"oiio:ColorSpace" : IECore.StringData( "Linear" if OpenImageIO.VERSION_MAJOR < 3 else "lin_rec709" ),
 			"compression" : IECore.StringData( 'zips' ),
 			"PixelAspectRatio" : IECore.FloatData( 1 ),
 			"screenWindowCenter" : IECore.V2fData( imath.V2f( 0, 0 ) ),
@@ -106,6 +108,9 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 			"dataType" : IECore.StringData( "float" ),
 			"filePath" : IECore.StringData( self.fileName.resolve().as_posix() ),
 		} )
+
+		if OpenImageIO.VERSION >= 30004 :
+			expectedMetadata["openexr:lineOrder"] = IECore.StringData( "increasingY" )
 
 		self.assertEqual( n["out"]["metadata"].getValue(), expectedMetadata )
 
@@ -751,10 +756,15 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
 	@GafferTest.TestRunner.PerformanceTestMethod()
-	def testImageOpenPerformance( self ):
+	def testImageOpenPerformance( self ) :
+
 		# Test the overhead of opening images by opening lots of images, but only reading the view count
 		files = self.imagesPath().glob( "*.exr" )
-		files = filter( lambda f : not ( "ChannelsOverlap" in f.stem or "NukeSinglePart" in f.stem ), files )
+		filesToSkip = {
+			"invalidMultiViewAttribute.exr", "channelTestMultiViewNukeSinglePart.exr",
+			"channelTestNukeSinglePart.exr", "multipartDefaultChannelsOverlap.exr"
+		}
+		files = [ f for f in files if f.name not in filesToSkip ]
 		files = sorted( files )
 		filesWithResult = [ (i, 2 if "channelTestMultiView" in i.stem else 1 ) for i in files ]
 		reader = GafferImage.ImageReader()

@@ -29,6 +29,7 @@ Fixes
   - Fixed handling of `cycles:volume_precision` attribute, which was previously being ignored.
   - Fixed bugs handling unknown VDB grid types.
   - Fixed potential crash rendering VDB objects.
+  - Fixed potential threading-related crashes.
 - RenderPassEditor : Fixed default values displayed for `dl:oversampling` and `dl:quality.shadingsamples` options.
 
 API
@@ -64,6 +65,27 @@ Breaking Changes
 - CyclesOptions : Option plugs have been renamed to match the name of their option (e.g. `options.samples` is now `options.cycles:session:samples`). A compatibility config has been provided to allow CyclesOptions nodes to be loaded from scripts saved in earlier Gaffer versions.
 - DelightAttributes : Attribute plugs have been renamed to match the name of their attribute with `.` characters replaced with `_` (e.g. `attributes.cameraVisibility` is now `attributes.dl:visibility_camera`). A compatibility config has been provided to allow DelightAttributes nodes to be loaded from scripts saved in earlier Gaffer versions.
 - DelightOptions : Option plugs have been renamed to match the name of their option with `.` characters replaced with `_` (e.g. `options.shadingSamples` is now `options.dl:quality_shadingsamples`). A compatibility config has been provided to allow DelightOptions nodes to be loaded from scripts saved in earlier Gaffer versions.
+
+Build
+-----
+
+- Boost : Updated to version 1.82.0.
+- Cortex : Updated to version 10.5.14.1.
+- Cycles : Updated to version 4.4.0.
+- FreeType : Updated to version 2.13.3.
+- LibRaw : Updated to version 0.21.4.
+- MaterialX : Updated to version 1.39.3.
+- Minizip : Updated to version 3.0.10.
+- OpenColorIO : Updated to version 2.3.2.
+- OpenEXR : Updated to version 3.2.4.
+- OpenImageIO : Updated to version 3.0.6.1.
+- OpenShadingLanguage : Updated to version 1.14.5.1.
+- OpenSubdiv : Updated to version 3.6.0.
+- OpenVDB : Updated to version 11.0.0.
+- Python : Updated to version 3.11.12.
+- PySide : Updated to version 5.15.16.
+- Qt : Updated to version 5.15.16.
+- USD : Updated to version 25.05.01.
 
 1.5.x.x (relative to 1.5.14.0)
 =======

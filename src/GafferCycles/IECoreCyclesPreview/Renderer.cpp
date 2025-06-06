@@ -47,14 +47,9 @@
 #include "SceneAlgo.h"
 
 #include "IECoreScene/Camera.h"
-#include "IECoreScene/CurvesPrimitive.h"
 #include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/Shader.h"
-#include "IECoreScene/SpherePrimitive.h"
 
-#include "IECore/CompoundParameter.h"
-#include "IECore/LRUCache.h"
-#include "IECore/FileNameParameter.h"
 #include "IECore/Interpolator.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/ObjectVector.h"
@@ -103,13 +98,13 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 #include "scene/volume.h"
 #include "subd/dice.h"
 #include "util/array.h"
-#include "util/function.h"
 #include "util/log.h"
 #include "util/murmurhash.h"
 #include "util/path.h"
 #include "util/time.h"
 #include "util/types.h"
 #include "util/vector.h"
+#include "util/version.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
 using namespace std;
@@ -497,15 +492,31 @@ class CyclesShader : public IECore::RefCounted
 		)
 			:	m_hash( h )
 		{
-			ccl::ShaderGraph *graph = ShaderNetworkAlgo::convertGraph( surfaceShader, displacementShader, volumeShader, scene->shader_manager, name );
+			std::unique_ptr<ccl::ShaderGraph> graph = ShaderNetworkAlgo::convertGraph(
+				surfaceShader, displacementShader, volumeShader,
+#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) >= 404
+				scene->shader_manager.get(),
+#else
+				scene->shader_manager,
+#endif
+				name
+			);
 			if( surfaceShader && singleSided )
 			{
-				ShaderNetworkAlgo::setSingleSided( graph );
+				ShaderNetworkAlgo::setSingleSided( graph.get() );
 			}
 
 			for( const IECoreScene::ShaderNetwork *aovShader : aovShaders )
 			{
-				ShaderNetworkAlgo::convertAOV( aovShader, graph, scene->shader_manager, name );
+				ShaderNetworkAlgo::convertAOV(
+					aovShader, graph.get(),
+#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) >= 404
+					scene->shader_manager.get(),
+#else
+					scene->shader_manager,
+#endif
+					name
+				);
 			}
 
 			m_shader = SceneAlgo::createNodeWithLock<ccl::Shader>( scene );
@@ -520,8 +531,13 @@ class CyclesShader : public IECore::RefCounted
 				m_shader->name = ccl::ustring( shaderName.c_str() );
 			}
 			m_shader->set_displacement_method( displacementMethod );
-			m_shader->set_graph( graph );
-			m_shader->tag_update( scene );
+#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) >= 404
+			m_shader->set_graph( std::move( graph ) );
+#else
+			m_shader->set_graph( graph.release() );
+#endif
+
+			SceneAlgo::tagUpdateWithLock( m_shader, scene );
 		}
 
 		~CyclesShader() override
@@ -1089,8 +1105,12 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				// scene.
 				std::scoped_lock sceneLock( scene->mutex );
 				m_shader->shader()->tag_used( scene );
-				// But we also use the lock for `set_used_shaders()`, to protect the
-				// non-atomic increment made in `ccl::Node::reference()`.
+				// But we also use the lock for `set_used_shaders()`, to protect
+				// the non-atomic increment made in `ccl::Node::reference()`.
+				// > Note : because we instance geometry, two objects
+				// > might be fighting over what shader the geometry should have.
+				// > This needs fixing in its own right, but until then, the lock
+				// > at least prevents concurrent access.
 				object->get_geometry()->set_used_shaders( shaders );
 			}
 
@@ -1676,7 +1696,16 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			assert( m_geometry );
 			m_object->name = ccl::ustring( name.c_str() );
 			m_object->set_random_id( std::hash<string>()( name ) );
-			m_object->set_geometry( geometry.get() );
+			{
+				// We're not accessing the scene here, but we use the lock to
+				// protect against concurrent calls with the same `geometry` on
+				// other objects, because `set_geometry()` manipulates the
+				// reference count on `geometry` in a non-threadsafe way.
+				/// \todo Would the Cycles project accept a patch to make the
+				/// reference count atomic?
+				std::scoped_lock sceneLock( scene->mutex );
+				m_object->set_geometry( geometry.get() );
+			}
 		}
 
 		~CyclesObject() override
@@ -1756,7 +1785,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 			m_object->set_motion( motion );
 
-			m_object->tag_update( m_scene );
+			SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
 		}
 
 		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
@@ -1776,7 +1805,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 					motion[i] = m_object->get_tfm();
 					m_object->set_motion( motion );
 				}
-				m_object->tag_update( m_scene );
+				SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
 				return;
 			}
 
@@ -1785,7 +1814,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			if( numSamples == 1 )
 			{
 				m_object->set_tfm( SocketAlgo::setTransform( samples.front() ) );
-				m_object->tag_update( m_scene );
+				SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
 				return;
 			}
 
@@ -1863,6 +1892,8 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			m_object->set_motion( motion );
 			if( !geo->get_use_motion_blur() )
 			{
+				/// \todo This is not thread-safe, nor is it compatible
+				/// with instancing.
 				geo->set_motion_steps( motion.size() );
 			}
 
@@ -1875,7 +1906,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 				}
 			}
 
-			m_object->tag_update( m_scene );
+			SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
 		}
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
@@ -1884,7 +1915,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			if( cyclesAttributes->applyObject( m_object.get(), m_attributes.get(), m_scene ) )
 			{
 				m_attributes = cyclesAttributes;
-				m_object->tag_update( m_scene );
+				SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
 				return true;
 			}
 
@@ -1947,7 +1978,7 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 		void transform( const Imath::M44f &transform ) override
 		{
 			m_light->set_tfm( SocketAlgo::setTransform( transform ) );
-			m_light->tag_update( m_scene );
+			SceneAlgo::tagUpdateWithLock( m_light.get(), m_scene );
 		}
 
 		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
@@ -1962,7 +1993,7 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 			if( cyclesAttributes->applyLight( m_light.get(), m_attributes.get(), m_scene ) )
 			{
 				m_attributes = cyclesAttributes;
-				m_light->tag_update( m_scene );
+				SceneAlgo::tagUpdateWithLock( m_light.get(), m_scene );
 				return true;
 			}
 
@@ -2579,7 +2610,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 			acquireSession();
 
-			CyclesLightPtr result = new CyclesLight( m_session->scene, ccl::ustring( name.c_str() ), m_nodeDeleter.get() );
+			CyclesLightPtr result = new CyclesLight( m_scene, ccl::ustring( name.c_str() ), m_nodeDeleter.get() );
 			result->attributes( attributes );
 			return result;
 		}
@@ -2825,7 +2856,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			m_session = std::make_unique<ccl::Session>( sessionParams, sceneParams );
 			m_session->progress.set_update_callback( std::bind( &CyclesRenderer::progress, this ) );
+#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) >= 404
+			m_scene = m_session->scene.get();
+#else
 			m_scene = m_session->scene;
+#endif
 
 			/// \todo Determine why this is here, or remove it.
 			m_scene->camera->need_flags_update = true;
@@ -3066,8 +3101,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				)
 			);
 
-			ccl::set<ccl::Pass *> clearPasses( m_scene->passes.begin(), m_scene->passes.end() );
-			m_scene->delete_nodes( clearPasses );
+			ccl::set<ccl::Pass *> passesToDelete;
+			for( const auto &p : m_scene->passes )
+			{
+				passesToDelete.insert( p );
+			}
+			m_scene->delete_nodes( passesToDelete );
 
 			ccl::CryptomatteType crypto = ccl::CRYPT_NONE;
 
