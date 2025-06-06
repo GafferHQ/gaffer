@@ -50,6 +50,7 @@ import GafferUI
 from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
+import Qt
 
 class CompoundEditor( GafferUI.Editor ) :
 
@@ -1076,7 +1077,7 @@ class _TabDragBehaviour( QtCore.QObject ) :
 		# Ensure we can leave the UI in a predictable state for the user
 		# post-drag.
 
-		self.__draggedTabOriginalIndex = qTabBar.tabAt( event.pos() )
+		self.__draggedTabOriginalIndex = qTabBar.tabAt( event.position().toPoint() if Qt.__binding__ == "PySide6" else event.pos() )
 		if self.__draggedTabOriginalIndex == -1 :
 			return False
 
@@ -1271,7 +1272,7 @@ class _TabDragBehaviour( QtCore.QObject ) :
 	def __shouldAbortInitialRearrange( self, qTabBar, event ) :
 
 		# We don't reliably know where this event comes from
-		pos = qTabBar.mapFromGlobal( event.globalPos() )
+		pos = qTabBar.mapFromGlobal( event.globalPosition().toPoint() if Qt.__binding__ == "PySide6" else event.globalPos() )
 
 		if qTabBar.geometry().contains( pos ) :
 			return False
@@ -1290,7 +1291,7 @@ class _TabDragBehaviour( QtCore.QObject ) :
 
 		fakeReleaseEvent = QtGui.QMouseEvent(
 			QtCore.QEvent.MouseButtonRelease,
-			self.__constrainGlobalPosTo( moveEvent.globalPos(), self.__qTabBar ),
+			self.__constrainGlobalPosTo( moveEvent.globalPosition().toPoint() if Qt.__binding__ == "PySide6" else moveEvent.globalPos(), self.__qTabBar ),
 			QtCore.Qt.LeftButton, QtCore.Qt.LeftButton,
 			QtCore.Qt.NoModifier
 		)
@@ -1301,7 +1302,7 @@ class _TabDragBehaviour( QtCore.QObject ) :
 		modifiedEvent = QtGui.QMouseEvent(
 			event.type(),
 			# Keep the mouse in sensible bounds to prevent tab clipping
-			self.__constrainGlobalPosTo( event.globalPos(), self.__qTabBar ),
+			self.__constrainGlobalPosTo( event.globalPosition().toPoint() if Qt.__binding__ == "PySide6" else event.globalPos(), self.__qTabBar ),
 			event.button(), event.buttons(),
 			event.modifiers()
 		)
@@ -1313,8 +1314,9 @@ class _TabDragBehaviour( QtCore.QObject ) :
 		# space) such that when the user drags left/right the left/right edges
 		# of the tab never leave the TabBar.
 		barRect = qTabBar.rect()
-		tabRect = qTabBar.tabRect( qTabBar.tabAt( event.pos() ) )
-		mouseX = event.pos().x()
+		position = event.position().toPoint() if Qt.__binding__ == "PySide6" else event.pos()
+		tabRect = qTabBar.tabRect( qTabBar.tabAt( position ) )
+		mouseX = position.x()
 
 		self.__dragMinX = mouseX - tabRect.x() # cursorToTabLeftEdge
 
@@ -1328,7 +1330,8 @@ class _TabDragBehaviour( QtCore.QObject ) :
 
 	def __targetUnderMouse( self, event ) :
 
-		mousePos = imath.V2i( event.globalPos().x(), event.globalPos().y() )
+		globalPosition = event.globalPosition().toPoint() if Qt.__binding__ == "PySide6" else event.globalPos()
+		mousePos = imath.V2i( globalPosition.x(), globalPosition.y() )
 		target = GafferUI.Widget.widgetAt( mousePos, _TabbedContainer )
 
 		if target is not None :

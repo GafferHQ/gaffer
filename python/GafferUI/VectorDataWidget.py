@@ -1583,7 +1583,8 @@ class _BoolDelegate( _Delegate ) :
 			# eat event so row isn't selected
 			widget = QtCore.QObject.parent( self.parent() )
 			rect = self.__checkBoxRect( widget, option.rect )
-			if event.button() == QtCore.Qt.LeftButton and rect.contains( event.pos() ) :
+			position = event.position().toPoint() if Qt.__binding__ == "PySide6" else event.pos()
+			if event.button() == QtCore.Qt.LeftButton and rect.contains( position ) :
 				checked = self.__toBool( index )
 				model.setData( index, not checked, QtCore.Qt.EditRole )
 				return True
