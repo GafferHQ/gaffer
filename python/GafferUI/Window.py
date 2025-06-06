@@ -198,6 +198,8 @@ class Window( GafferUI.ContainerWidget ) :
 		# things, but on the whole the Dialog type seems best for X11.
 		childWindowType = QtCore.Qt.Tool if sys.platform == "darwin" else QtCore.Qt.Dialog
 		childWindowFlags = ( childWindow._qtWidget().windowFlags() & ~QtCore.Qt.WindowType_Mask ) | childWindowType
+		if sys.platform == "win32" :
+			childWindowFlags |= QtCore.Qt.WindowCloseButtonHint
 
 		if sys.platform == "darwin" and Qt.__binding__ in ( "PySide2", "PyQt5" ) :
 			# Alternative order of operations to work around crashes
