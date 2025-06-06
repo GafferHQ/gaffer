@@ -815,7 +815,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 		result = GafferUI.ButtonEvent.Buttons.None_
 		if qtButtons & QtCore.Qt.LeftButton :
 			result |= GafferUI.ButtonEvent.Buttons.Left
-		if qtButtons & QtCore.Qt.MidButton :
+		if qtButtons & QtCore.Qt.MiddleButton :
 			result |= GafferUI.ButtonEvent.Buttons.Middle
 		if qtButtons & QtCore.Qt.RightButton :
 			result |= GafferUI.ButtonEvent.Buttons.Right
@@ -1274,7 +1274,7 @@ class _EventFilter( QtCore.QObject ) :
 				GafferUI.ButtonEvent.Buttons.None_,
 				self.__virtualButtons( qEvent.buttons() ),
 				self.__widgetSpaceLine( qEvent, widget ),
-				qEvent.delta() / 8.0,
+				qEvent.angleDelta().y() / 8.0,
 				Widget._modifiers( qEvent.modifiers() ),
 			)
 
@@ -1569,13 +1569,13 @@ class _EventFilter( QtCore.QObject ) :
 
 		cursorPos = imath.V2i( qEvent.pos().x(), qEvent.pos().y() )
 		dragDropEvent = GafferUI.DragDropEvent(
-			Widget._buttons( qEvent.mouseButtons() ),
-			Widget._buttons( qEvent.mouseButtons() ),
+			Widget._buttons( qEvent.buttons() if Qt.__binding__ == "PySide6" else qEvent.mouseButtons() ),
+			Widget._buttons( qEvent.buttons() if Qt.__binding__ == "PySide6" else qEvent.mouseButtons() ),
 			IECore.LineSegment3f(
 				imath.V3f( cursorPos.x, cursorPos.y, 1 ),
 				imath.V3f( cursorPos.x, cursorPos.y, 0 )
 			),
-			Widget._modifiers( qEvent.keyboardModifiers() ),
+			Widget._modifiers( qEvent.modifiers() if Qt.__binding__ == "PySide6" else qEvent.keyboardModifiers() ),
 		)
 		dragDropEvent.data = data
 		dragDropEvent.destinationWidget = None
