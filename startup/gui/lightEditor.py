@@ -147,12 +147,94 @@ with IECore.IgnoredExceptions( ImportError ) :
 with IECore.IgnoredExceptions( ImportError ) :
 
 	import GafferArnold
-	# Register Light Editor sections for Arnold before the generic "Visualisation" section
-	import GafferArnoldUI
 
 	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "preset:Arnold", "ai:light" )
 	# If Arnold is available, then assume it is the renderer of choice.
 	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "userDefault", "ai:light" )
+
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "color" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "intensity" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "exposure" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "normalize" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "aov" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "portal" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "portal_mode" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "aov_indirect" )
+
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "width", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "height", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "radius", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "angle", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "roundness", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "soft_edge", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "spread", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "lens_radius", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "cone_angle", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "penumbra_angle", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "cosine_power", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "aspect_ratio", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "filename", "Shape" )
+
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "slidemap", "ai:lightFilter:gobo", "Gobo" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "rotate", "ai:lightFilter:gobo", "Gobo", "Transform Rotate" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "offset", "ai:lightFilter:gobo", "Gobo", "Transform Offset" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "density", "ai:lightFilter:gobo", "Gobo" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "filter_mode", "ai:lightFilter:gobo", "Gobo" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "swrap", "ai:lightFilter:gobo", "Gobo", "UV Coordinates Wrap U" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "twrap", "ai:lightFilter:gobo", "Gobo", "UV Coordinates Wrap V" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "sscale", "ai:lightFilter:gobo", "Gobo", "UV Coordinates Scale U" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "tscale", "ai:lightFilter:gobo", "Gobo", "UV Coordinates Scale V" )
+
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "barndoor_top_left", "ai:lightFilter:barndoor", "Barndoor", "Top Left" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "barndoor_top_right", "ai:lightFilter:barndoor", "Barndoor", "Top Right" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "barndoor_top_edge", "ai:lightFilter:barndoor", "Barndoor", "Top Edge" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "barndoor_right_top", "ai:lightFilter:barndoor", "Barndoor", "Right Top" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "barndoor_right_bottom", "ai:lightFilter:barndoor", "Barndoor", "Right Bottom" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "barndoor_right_edge", "ai:lightFilter:barndoor", "Barndoor", "Right Edge" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "barndoor_bottom_left", "ai:lightFilter:barndoor", "Barndoor", "Bottom Left" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "barndoor_bottom_right", "ai:lightFilter:barndoor", "Barndoor", "Bottom Right" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "barndoor_bottom_edge", "ai:lightFilter:barndoor", "Barndoor", "Bottom Edge" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "barndoor_left_top", "ai:lightFilter:barndoor", "Barndoor", "Left Top" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "barndoor_left_bottom", "ai:lightFilter:barndoor", "Barndoor", "Left Bottom" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "barndoor_left_edge", "ai:lightFilter:barndoor", "Barndoor", "Left Edge" )
+
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "geometry_type", "ai:lightFilter:filter", "Blocker" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "density", "ai:lightFilter:filter", "Blocker" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "roundness", "ai:lightFilter:filter", "Blocker" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "width_edge", "ai:lightFilter:filter", "Blocker", "Falloff Width Edge" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "height_edge", "ai:lightFilter:filter", "Blocker", "Falloff Height Edge" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "ramp", "ai:lightFilter:filter", "Blocker", "Falloff Ramp" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "axis", "ai:lightFilter:filter", "Blocker", "Falloff Axis" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "shader", "ai:lightFilter:filter", "Blocker" )
+	GafferSceneUI.LightEditor.registerAttribute( "ai:light", "filteredLights", "Blocker" )
+
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "use_near_atten", "ai:lightFilter:light_decay", "Decay", "Near Enable" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "use_far_atten", "ai:lightFilter:light_decay", "Decay", "Far Enable" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "near_start", "ai:lightFilter:light_decay", "Decay" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "near_end", "ai:lightFilter:light_decay", "Decay" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "far_start", "ai:lightFilter:light_decay", "Decay", "Far Start" )
+	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "far_end", "ai:lightFilter:light_decay", "Decay", "Far End" )
+
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "samples", "Sampling" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "volume_samples", "Sampling" )
+
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "cast_shadows", "Shadows" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "cast_volumetric_shadows", "Shadows" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "shadow_density", "Shadows" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "shadow_color", "Shadows" )
+
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "camera", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "transmission", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "diffuse", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "specular", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "sss", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "indirect", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "volume", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "max_bounces", "Contribution" )
+
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "shader", "Map" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "resolution", "Map" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "format", "Map" )
 
 	# Register Arnold-specific parameters for USD lights.
 	for parameter in [
