@@ -1292,6 +1292,7 @@ class _TabDragBehaviour( QtCore.QObject ) :
 		fakeReleaseEvent = QtGui.QMouseEvent(
 			QtCore.QEvent.MouseButtonRelease,
 			self.__constrainGlobalPosTo( moveEvent.globalPosition().toPoint() if Qt.__binding__ == "PySide6" else moveEvent.globalPos(), self.__qTabBar ),
+			moveEvent.globalPosition() if Qt.__binding__ == "PySide6" else moveEvent.screenPos(),
 			QtCore.Qt.LeftButton, QtCore.Qt.LeftButton,
 			QtCore.Qt.NoModifier
 		)
@@ -1303,6 +1304,7 @@ class _TabDragBehaviour( QtCore.QObject ) :
 			event.type(),
 			# Keep the mouse in sensible bounds to prevent tab clipping
 			self.__constrainGlobalPosTo( event.globalPosition().toPoint() if Qt.__binding__ == "PySide6" else event.globalPos(), self.__qTabBar ),
+			event.globalPosition() if Qt.__binding__ == "PySide6" else event.screenPos(),
 			event.button(), event.buttons(),
 			event.modifiers()
 		)
