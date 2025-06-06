@@ -161,23 +161,6 @@ with IECore.IgnoredExceptions( ImportError ) :
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "portal_mode" )
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "aov_indirect" )
 
-	GafferSceneUI.LightEditor.registerParameter( "ai:light", "cast_shadows", "Shadows" )
-	GafferSceneUI.LightEditor.registerParameter( "ai:light", "cast_volumetric_shadows", "Shadows" )
-	GafferSceneUI.LightEditor.registerParameter( "ai:light", "shadow_density", "Shadows" )
-	GafferSceneUI.LightEditor.registerParameter( "ai:light", "shadow_color", "Shadows" )
-
-	GafferSceneUI.LightEditor.registerParameter( "ai:light", "samples", "Sampling" )
-	GafferSceneUI.LightEditor.registerParameter( "ai:light", "volume_samples", "Sampling" )
-
-	GafferSceneUI.LightEditor.registerParameter( "ai:light", "camera", "Contribution" )
-	GafferSceneUI.LightEditor.registerParameter( "ai:light", "transmission", "Contribution" )
-	GafferSceneUI.LightEditor.registerParameter( "ai:light", "diffuse", "Contribution" )
-	GafferSceneUI.LightEditor.registerParameter( "ai:light", "specular", "Contribution" )
-	GafferSceneUI.LightEditor.registerParameter( "ai:light", "sss", "Contribution" )
-	GafferSceneUI.LightEditor.registerParameter( "ai:light", "indirect", "Contribution" )
-	GafferSceneUI.LightEditor.registerParameter( "ai:light", "max_bounces", "Contribution" )
-	GafferSceneUI.LightEditor.registerParameter( "ai:light", "volume", "Contribution" )
-
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "radius", "Shape" )
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "angle", "Shape" )
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "resolution", "Shape" )
@@ -192,10 +175,6 @@ with IECore.IgnoredExceptions( ImportError ) :
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "filename", "Shape" )
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "width", "Shape" )
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "height", "Shape" )
-
-	GafferSceneUI.LightEditor.registerParameter( "ai:light", "shader", "Map" )
-	GafferSceneUI.LightEditor.registerParameter( "ai:light", "resolution", "Map" )
-	GafferSceneUI.LightEditor.registerParameter( "ai:light", "format", "Map" )
 
 	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "slidemap", "ai:lightFilter:gobo", "Gobo" )
 	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "rotate", "ai:lightFilter:gobo", "Gobo", "Transform Rotate" )
@@ -236,6 +215,27 @@ with IECore.IgnoredExceptions( ImportError ) :
 	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "near_end", "ai:lightFilter:light_decay", "Decay" )
 	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "far_start", "ai:lightFilter:light_decay", "Decay", "Far Start" )
 	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "far_end", "ai:lightFilter:light_decay", "Decay", "Far End" )
+
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "samples", "Sampling" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "volume_samples", "Sampling" )
+
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "cast_shadows", "Shadows" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "cast_volumetric_shadows", "Shadows" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "shadow_density", "Shadows" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "shadow_color", "Shadows" )
+
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "camera", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "transmission", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "diffuse", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "specular", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "sss", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "indirect", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "max_bounces", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "volume", "Contribution" )
+
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "shader", "Map" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "resolution", "Map" )
+	GafferSceneUI.LightEditor.registerParameter( "ai:light", "format", "Map" )
 
 	# Register Arnold-specific parameters for USD lights.
 	for parameter in [
