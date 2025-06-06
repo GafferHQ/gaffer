@@ -568,6 +568,7 @@ else:
 			"/experimental:external",  # Allow use of /external:I
 			"/external:W0",  # Suppress warnings for headers included with /external:I
 			"/Zc:inline", # Remove unreferenced function or data if it is COMDAT or has internal linkage only
+			"/Zc:__cplusplus", # Define __cplusplus from CXXSTD rather than defaulting to 199711L (C++98)
 			"/GR", # Enable RTTI
 			"/TP", # Treat all files as c++ (vs C)
 			"/FC", # Display full paths in diagnostics
