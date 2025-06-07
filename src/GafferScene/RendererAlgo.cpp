@@ -224,17 +224,6 @@ void RenderOptions::outputOptions( IECoreScenePreview::Renderer *renderer, const
 	}
 }
 
-std::string RenderOptions::renderManifestFilePath() const
-{
-	const StringData *renderManifestFilePathData = globals->member<StringData>( g_renderManifestFilePathOptionName );
-	if( !renderManifestFilePathData )
-	{
-		return "";
-	}
-
-	return renderManifestFilePathData->readable();
-}
-
 } // namespace GafferScene::Private::RendererAlgo
 
 //////////////////////////////////////////////////////////////////////////
@@ -277,6 +266,41 @@ void createOutputDirectories( const IECore::CompoundObject *globals )
 			}
 		}
 	}
+}
+
+
+bool hasIDOutput( const IECore::CompoundObject *globals )
+{
+	static const std::string outputPrefix( "output:" );
+	static const std::string idData( "float id" );
+	CompoundObject::ObjectMap::const_iterator it, eIt;
+	for( it = globals->members().begin(), eIt = globals->members().end(); it != eIt; ++it )
+	{
+		if( !boost::starts_with( it->first.string(), outputPrefix ) )
+		{
+			continue;
+		}
+		if( const Output *output = runTimeCast<Output>( it->second.get() ) )
+		{
+			if( output->getData() == idData )
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+std::string renderManifestFilePath( const IECore::CompoundObject *globals )
+{
+	const StringData *renderManifestFilePathData = globals->member<StringData>( g_renderManifestFilePathOptionName );
+	if( !renderManifestFilePathData )
+	{
+		return "";
+	}
+
+	return renderManifestFilePathData->readable();
 }
 
 bool motionTimes( bool motionBlur, const V2f &shutter, const CompoundObject *attributes, const InternedString &attributeName, const InternedString &segmentsAttributeName, std::vector<float> &times )
@@ -1691,16 +1715,19 @@ ConstOutputPtr addGafferOutputParameters( const Output *output, const ScenePlug 
 	// Include the path to the render node to allow tools to back-track from the image
 	param->writable()["header:gaffer:sourceScene"] = new StringData( scene->relativeName( script ) );
 
-	if( renderOptions.renderManifestFilePath() != "" )
+	std::string manifestFilePathOption = GafferScene::Private::RendererAlgo::renderManifestFilePath(
+		renderOptions.globals.get()
+	);
+	if( manifestFilePathOption != "" )
 	{
 		std::string manifestPath = std::filesystem::relative(
-			std::filesystem::path( renderOptions.renderManifestFilePath() ),
+			std::filesystem::path( manifestFilePathOption ),
 			std::filesystem::path( output->getName() ).parent_path()
 		).generic_string();
 		if( !manifestPath.size() )
 		{
 			// If we can't find a relative path, use an absolute path
-			manifestPath = renderOptions.renderManifestFilePath();
+			manifestPath = manifestFilePathOption;
 		}
 		param->writable()["header:gaffer:renderManifestFilePath"] = new StringData( manifestPath );
 	}
