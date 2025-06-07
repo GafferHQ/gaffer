@@ -386,21 +386,41 @@ void Render::executeInternal( bool flushCaches ) const
 		GafferScene::Private::RendererAlgo::outputLightFilters( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
 		lightLinks.outputLightFilterLinks( adaptedInPlug() );
 
-		if( renderOptions.renderManifestFilePath() != "" )
+
+		if( GafferScene::Private::RendererAlgo::hasIDOutput( renderOptions.globals.get() ) )
 		{
 			GafferScene::RenderManifest renderManifest;
 			GafferScene::Private::RendererAlgo::outputObjects( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get(), ScenePlug::ScenePath(), &renderManifest );
 
-			// Make sure the directory exists to write the exr manifest to.
-			std::filesystem::create_directories(
-				std::filesystem::path( renderOptions.renderManifestFilePath() ).parent_path()
+			const std::string renderManifestFilePath = GafferScene::Private::RendererAlgo::renderManifestFilePath(
+				renderOptions.globals.get()
 			);
+			if( renderManifestFilePath.size() )
+			{
+				// Make sure the directory exists to write the exr manifest to.
+				std::filesystem::create_directories(
+					std::filesystem::path( renderManifestFilePath ).parent_path()
+				);
 
-			renderManifest.writeEXRManifest( renderOptions.renderManifestFilePath() );
+				renderManifest.writeEXRManifest( renderManifestFilePath );
+			}
 		}
 		else
 		{
 			GafferScene::Private::RendererAlgo::outputObjects( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
+
+			const std::string renderManifestFilePath = GafferScene::Private::RendererAlgo::renderManifestFilePath(
+				renderOptions.globals.get()
+			);
+			if( renderManifestFilePath.size() )
+			{
+				IECore::msg(
+					IECore::Msg::Warning,
+					"Render::execute",
+					"Found render:renderManifestFilePath option, but the render manifest is not enabled "
+					"because there is no ID output"
+				);
+			}
 		}
 	}
 
