@@ -50,6 +50,7 @@ import GafferUI
 from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
+import Qt
 
 class Menu( GafferUI.Widget ) :
 
@@ -121,7 +122,10 @@ class Menu( GafferUI.Widget ) :
 		self._qtWidget().keyboardMode = _Menu.KeyboardMode.Grab if grabFocus else _Menu.KeyboardMode.Close
 
 		if modal :
-			self._qtWidget().exec_( position )
+			if Qt.__binding__ == "PySide6" :
+				self._qtWidget().exec( position )
+			else :
+				self._qtWidget().exec_( position )
 		else :
 			self._qtWidget().popup( position )
 
