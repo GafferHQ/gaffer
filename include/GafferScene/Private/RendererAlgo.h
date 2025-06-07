@@ -79,6 +79,7 @@ struct GAFFERSCENE_API RenderOptions
 	bool deformationBlur;
 	Imath::V2f shutter;
 	IECore::ConstStringVectorDataPtr includedPurposes;
+	bool hasIDOutput;
 
 	/// Returns true if `includedPurposes` includes the purpose defined by
 	/// `attributes`.
