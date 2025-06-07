@@ -140,6 +140,30 @@ RenderOptions::RenderOptions( const ScenePlug *scene )
 
 	const StringVectorData *includedPurposesData = globals->member<StringVectorData>( g_includedPurposesOptionName );
 	includedPurposes = includedPurposesData ? includedPurposesData : g_defaultIncludedPurposes;
+
+	hasIDOutput = false;
+	static const std::string outputPrefix( "output:" );
+	static const std::string idDataName( "id" );
+	CompoundObject::ObjectMap::const_iterator it, eIt;
+	for( it = globals->members().begin(), eIt = globals->members().end(); it != eIt; ++it )
+	{
+		if( !boost::starts_with( it->first.string(), outputPrefix ) )
+		{
+			continue;
+		}
+		if( const Output *output = runTimeCast<Output>( it->second.get() ) )
+		{
+			vector<std::string> tokens;
+			IECore::StringAlgo::tokenize( output->getData(), ' ', tokens );
+			for( std::string &i : tokens )
+			{
+				if( i == idDataName )
+				{
+					hasIDOutput = true;
+				}
+			}
+		}
+	}
 }
 
 bool RenderOptions::operator==( const RenderOptions &other ) const

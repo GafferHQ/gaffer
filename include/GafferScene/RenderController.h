@@ -118,8 +118,9 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 			DeformationBlurGlobalComponent = 32,
 			CameraShutterGlobalComponent = 64,
 			IncludedPurposesGlobalComponent = 128,
-			CapsuleAffectingGlobalComponents = TransformBlurGlobalComponent | DeformationBlurGlobalComponent | IncludedPurposesGlobalComponent,
-			AllGlobalComponents = GlobalsGlobalComponent | SetsGlobalComponent | RenderSetsGlobalComponent | CameraOptionsGlobalComponent | TransformBlurGlobalComponent | DeformationBlurGlobalComponent | IncludedPurposesGlobalComponent
+			IDGlobalComponent = 256,
+			CapsuleAffectingGlobalComponents = TransformBlurGlobalComponent | DeformationBlurGlobalComponent | IncludedPurposesGlobalComponent | IDGlobalComponent,
+			AllGlobalComponents = GlobalsGlobalComponent | SetsGlobalComponent | RenderSetsGlobalComponent | CameraOptionsGlobalComponent | TransformBlurGlobalComponent | DeformationBlurGlobalComponent | IncludedPurposesGlobalComponent | IDGlobalComponent
 		};
 
 		void plugDirtied( const Gaffer::Plug *plug );

@@ -522,9 +522,9 @@ plugsMetadata = {
 
 		"description",
 		"""
-		Specifies a file to write a manifest to. If a render outputs both a
-		manifest and an ID AOV, the Image Selection Tool may be used to select
-		objects in the rendered image.
+		Specifies a file to write a matching ID manifest to, when rendering an ID aov in a batch render.
+		This is needed to use the Image Selection Tool with batch renders ( interactive renders just
+		need an ID aov ).
 		""",
 
 		"layout:section", "Render Manifest",

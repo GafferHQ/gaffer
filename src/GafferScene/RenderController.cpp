@@ -272,7 +272,8 @@ class RenderController::SceneGraph
 			ObjectComponent = 8,
 			ChildNamesComponent = 16,
 			VisibleSetComponent = 32,
-			AllComponents = BoundComponent | TransformComponent | AttributesComponent | ObjectComponent | ChildNamesComponent | VisibleSetComponent,
+			IDComponent = 64,
+			AllComponents = BoundComponent | TransformComponent | AttributesComponent | ObjectComponent | ChildNamesComponent | VisibleSetComponent | IDComponent,
 		};
 
 		// Constructs the root of the scene graph.
@@ -352,6 +353,11 @@ class RenderController::SceneGraph
 					{
 						m_dirtyComponents |= ObjectComponent;
 					}
+				}
+
+				if( changedGlobals & IDGlobalComponent )
+				{
+					m_dirtyComponents |= IDComponent;
 				}
 			}
 
@@ -478,12 +484,9 @@ class RenderController::SceneGraph
 				}
 
 				// Assign an ID
-				if( m_changedComponents & ObjectComponent )
+				if( ( m_changedComponents & ObjectComponent ) || ( m_dirtyComponents & IDComponent )  )
 				{
-					// We don't assign IDs for OpenGL renders, because the OpenGL renderer
-					// assigns its own lightweight IDs.
-					/// \todo Measure overhead and consider using same IDs everywhere.
-					if( controller->m_renderer->name() != g_openGLRendererName )
+					if( controller->m_renderManifest )
 					{
 						m_objectInterface->assignID( controller->m_renderManifest->acquireID( path ) );
 					}
@@ -500,6 +503,7 @@ class RenderController::SceneGraph
 			}
 
 			clean( ObjectComponent );
+			clean( IDComponent );
 
 			// Children
 
@@ -1280,7 +1284,6 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 
 RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer::ConstContextPtr &context, const IECoreScenePreview::RendererPtr &renderer )
 	:	m_renderer( renderer ),
-		m_renderManifest( std::make_shared<RenderManifest>() ),
 		m_minimumExpansionDepth( 0 ),
 		m_updateRequired( false ),
 		m_updateRequested( false ),
@@ -1306,14 +1309,18 @@ RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer
 
 RenderController::~RenderController()
 {
-	if( m_renderOptions.renderManifestFilePath().size() && m_renderManifest )
-	{
-		// Make sure the directory exists to write the exr manifest to.
-		std::filesystem::create_directories(
-			std::filesystem::path( m_renderOptions.renderManifestFilePath() ).parent_path()
-		);
+	// It's not useful to write the manifest to a fixed path during an interactive render, since the
+	// Catalogue saves the manifest itself to a location matching where it saves the image data.
+	// Warn if this option is set.
 
-		renderManifest()->writeEXRManifest( m_renderOptions.renderManifestFilePath() );
+	const StringData *manifestPath = m_renderOptions.globals->member<StringData>( "gaffer:renderManifestFilePath" );
+	if( manifestPath && manifestPath->readable().size() )
+	{
+		IECore::msg( IECore::Msg::Warning,
+			"RenderController",
+			"Ignoring \"gaffer:renderManifestFilePath\" during interactive render. The "
+			"catalogue generates its own manifest files, this option is not needed."
+		);
 	}
 
 	// Cancel background task before the things it relies
@@ -1599,6 +1606,28 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 			{
 				m_changedGlobalComponents |= CameraOptionsGlobalComponent;
 			}
+
+			// We don't use render manifests for OpenGL renders, because the OpenGL renderer
+			// assigns its own lightweight IDs.
+			/// \todo Measure overhead and consider using same IDs everywhere.
+			if( m_renderer->name() != g_openGLRendererName )
+			{
+				if( renderOptions.hasIDOutput && !m_renderOptions.hasIDOutput )
+				{
+					m_renderManifest = std::make_shared<RenderManifest>();
+
+					// We're enabling id output - so all our objects need to have ids, which
+					// requires regenerating all objects.
+					m_changedGlobalComponents |= IDGlobalComponent;
+				}
+
+				if( !renderOptions.hasIDOutput )
+				{
+					// We no longer have id outputs, so stop tracking ids.
+					m_renderManifest.reset();
+				}
+			}
+
 			m_renderOptions = renderOptions;
 		}
 
