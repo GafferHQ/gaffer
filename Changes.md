@@ -24,6 +24,7 @@ Fixes
 - PythonEditor : Fixed completions menu not appearing after typing `:` in a partial plug or node name or a dictionary key.
 - Animation : Fixed "Jump To" actions in plug context menu.
 - Edit Menu : Disabled "Rename" menu item when the selection is read-only.
+- Catalogue : Added forwards compatibility for Catalogues saved from Gaffer 1.6.
 
 Build
 -----
