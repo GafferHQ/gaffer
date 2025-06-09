@@ -942,7 +942,7 @@ class _Model( QtCore.QAbstractTableModel ) :
 	def data( self, index, role ) :
 
 		column = self.__columns[index.column()]
-		if role == QtCore.Qt.BackgroundColorRole :
+		if role == QtCore.Qt.BackgroundRole :
 
 			if self.columnToDataIndex( index.column() )[0] % 2 == 0:
 				return  GafferUI._Variant.toVariant( GafferUI._StyleSheet.styleColor("background")  )
