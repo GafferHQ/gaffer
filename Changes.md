@@ -17,6 +17,7 @@ Fixes
 -----
 
 - RenderMan : Added missing attribute handlers for float, string, InternedString, Color3f and V3f array attributes. In particular, this fixes the export of `render:displayColor` attributes loaded from USD.
+- RenderManShader : Fixed failure to load connections made via Dots and other intermediate nodes.
 - Expression : Fixed error when creating OSL expressions for plugs with `:` characters in their name.
 - PythonEditor : Fixed completions menu not appearing after typing `:` in a partial plug or node name or a dictionary key.
 - Animation : Fixed "Jump To" actions in plug context menu.
