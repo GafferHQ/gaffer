@@ -1393,7 +1393,7 @@ def _getWindowState( gafferWindow ) :
 		return {}
 
 	widgetScreen = window.screen()
-	widgetScreenNumber = QtWidgets.QApplication.desktop().screenNumber( qWidget )
+	widgetScreenNumber = QtWidgets.QApplication.screens().index( widgetScreen )
 
 	if widgetScreen == QtWidgets.QApplication.primaryScreen():
 		widgetScreenNumber = -1
