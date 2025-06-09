@@ -192,6 +192,11 @@ class PlugPopup( GafferUI.PopupWindow ) :
 
 	def __activated( self, unused ) :
 
+		if GafferUI.Widget.currentModifiers() & GafferUI.ModifiableEvent.Modifiers.Shift :
+			# Do not close while Shift is held, so Shift+Return can
+			# be used to commit an edit without closing the popup.
+			return
+
 		self.close()
 
 	@classmethod
