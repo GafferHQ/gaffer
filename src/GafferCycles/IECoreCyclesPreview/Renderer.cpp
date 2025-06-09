@@ -263,11 +263,7 @@ struct NodeDeleter
 			m_scene->delete_nodes( m_pendingLightDeletions );
 			m_pendingLightDeletions.clear();
 		}
-		/// \todo We should only be calling `delete_nodes()` here when we
-		/// actually have objects to delete. We currently need it because the
-		/// updates it triggers in Cyles are necessary to work around other
-		/// historical update bugs in IECoreCycles.
-		if( true || m_pendingObjectDeletions.size() )
+		if( m_pendingObjectDeletions.size() )
 		{
 			m_scene->delete_nodes( m_pendingObjectDeletions );
 			m_pendingObjectDeletions.clear();
@@ -1098,35 +1094,45 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				}
 			}
 
-			ccl::array<ccl::Node *> shaders;
-			shaders.push_back_slow( m_shader->shader() );
+			if( !previousAttributes || m_shader != previousAttributes->m_shader )
 			{
-				// We need the scene lock because `tag_used()` will modify the
-				// scene.
-				std::scoped_lock sceneLock( scene->mutex );
-				m_shader->shader()->tag_used( scene );
-				// But we also use the lock for `set_used_shaders()`, to protect
-				// the non-atomic increment made in `ccl::Node::reference()`.
-				// > Note : because we instance geometry, two objects
-				// > might be fighting over what shader the geometry should have.
-				// > This needs fixing in its own right, but until then, the lock
-				// > at least prevents concurrent access.
-				object->get_geometry()->set_used_shaders( shaders );
-			}
+				ccl::array<ccl::Node *> shaders;
+				shaders.push_back_slow( m_shader->shader() );
+				{
+					// We need the scene lock because `tag_used()` will modify the
+					// scene.
+					std::scoped_lock sceneLock( scene->mutex );
+					m_shader->shader()->tag_used( scene );
+					// But we also use the lock for `set_used_shaders()`, to protect
+					// the non-atomic increment made in `ccl::Node::reference()`.
+					// > Note : because we instance geometry, two objects
+					// > might be fighting over what shader the geometry should have.
+					// > This needs fixing in its own right, but until then, the lock
+					// > at least prevents concurrent access.
+					object->get_geometry()->set_used_shaders( shaders );
 
-			if(
-				object->get_geometry()->is_volume() &&
-				object->get_geometry()->is_modified() &&
-				static_cast<ccl::Volume*>( object->get_geometry() )->get_triangles().size()
-			)
-			{
-				// We've replaced an existing shader on a volume
-				// from which Cycles has already built a mesh, so
-				// we cheekily clear the modified tag to prevent
-				// the volume from disappearing.
-				/// \todo I suspect we need something similar for meshes,
-				/// to prevent unnecessary BVH rebuilds.
-				object->get_geometry()->clear_modified();
+					if( object->get_geometry()->is_mesh() )
+					{
+						auto mesh = static_cast<ccl::Mesh *>( object->get_geometry() );
+						/// \todo I don't know why this is necessary, but without it the new
+						/// assignment doesn't seem to be transferred to the render device.
+						mesh->tag_shader_modified();
+					}
+					else if(
+						object->get_geometry()->is_volume() &&
+						object->get_geometry()->is_modified() &&
+						static_cast<ccl::Volume*>( object->get_geometry() )->get_triangles().size()
+					)
+					{
+						// We've replaced an existing shader on a volume
+						// from which Cycles has already built a mesh, so
+						// we cheekily clear the modified tag to prevent
+						// the volume from disappearing.
+						/// \todo I suspect we need something similar for meshes,
+						/// to prevent unnecessary BVH rebuilds.
+						object->get_geometry()->clear_modified();
+					}
+				}
 			}
 
 			m_volume.apply( object );
@@ -1135,6 +1141,8 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			// Custom attributes.
 			object->attributes = m_custom;
+
+			SceneAlgo::tagUpdateWithLock( object, scene );
 
 			return true;
 		}
@@ -1759,6 +1767,8 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			{
 				m_object->set_blocker_shadow_set( lightSet );
 			}
+
+			SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
 		}
 
 		void transform( const Imath::M44f &transform ) override
@@ -2023,6 +2033,8 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 			{
 				m_light->set_shadow_set_membership( membership );
 			}
+
+			SceneAlgo::tagUpdateWithLock( m_light.get(), m_scene );
 		}
 
 	private :
