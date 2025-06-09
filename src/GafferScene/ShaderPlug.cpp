@@ -99,10 +99,14 @@ bool isParameterType( const Plug *plug )
 		case BoolPlugTypeId :
 			return true;
 		default :
-			// Use typeName query to avoid hard dependency on
-			// GafferOSL. It may be that we should move ClosurePlug
-			// to GafferScene anyway.
-			return plug->isInstanceOf( "GafferOSL::ClosurePlug" );
+			// Use `typeName()` query to avoid hard dependency on GafferOSL and
+			// GafferRenderMan. It may be that we should move ClosurePlug to
+			// GafferScene anyway, and give it an additional property to say what
+			// type of closure it is.
+			return
+				plug->isInstanceOf( "GafferOSL::ClosurePlug" ) ||
+				plug->isInstanceOf( "GafferRenderMan::BXDFPlug" )
+			;
 	}
 }
 

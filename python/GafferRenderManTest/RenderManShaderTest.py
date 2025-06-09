@@ -269,5 +269,25 @@ class RenderManShaderTest( GafferSceneTest.SceneTestCase ) :
 		proxy.loadShader( "ri:PxrConstant" )
 		self.assertIn( "bxdf_out", proxy["out"] )
 
+	def testDot( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["shaderAssignment"] = GafferScene.ShaderAssignment()
+
+		script["shader"] = GafferRenderMan.RenderManShader()
+		script["shader"].loadShader( "PxrSurface" )
+
+		script["dot"] = Gaffer.Dot()
+		script["dot"].setup( script["shader"]["out"]["bxdf_out"] )
+		script["dot"]["in"].setInput( script["shader"]["out"]["bxdf_out"] )
+
+		script["shaderAssignment"]["shader"].setInput( script["dot"]["out"] )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+		self.assertTrue( script["shaderAssignment"]["shader"].getInput().isSame( script["dot"]["out"] ) )
+		self.assertTrue( script["shaderAssignment"]["shader"].source().isSame( script["shader"]["out"]["bxdf_out"] ) )
+
 if __name__ == "__main__":
 	unittest.main()
