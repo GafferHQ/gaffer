@@ -55,7 +55,7 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 	menuDefinition.append( prefix + "/Paste", { "command" : paste, "shortCut" : "Ctrl+V", "active" : __pasteAvailable } )
 	menuDefinition.append( prefix + "/Duplicate with Inputs", { "command" : duplicateWithInputs, "shortCut" : "Ctrl+D", "active" : selectionAvailable } )
 	menuDefinition.append( prefix + "/Delete", { "command" : delete, "shortCut" : "Backspace, Delete", "active" : __mutableSelectionAvailable } )
-	menuDefinition.append( prefix + "/Rename", { "command" : rename, "shortCut" : "F2", "active" : selectionAvailable } )
+	menuDefinition.append( prefix + "/Rename", { "command" : rename, "shortCut" : "F2", "active" : __renameAvailable } )
 	menuDefinition.append( prefix + "/CutCopyPasteDeleteDivider", { "divider" : True } )
 
 	menuDefinition.append( prefix + "/Find...", { "command" : find, "shortCut" : "Ctrl+F" } )
@@ -432,6 +432,14 @@ def __pasteAvailable( menu ) :
 
 	root = s.script.ancestor( Gaffer.ApplicationRoot )
 	return isinstance( root.getClipboardContents(), IECore.StringData )
+
+def __renameAvailable( menu ) :
+
+	selection = scope( menu ).script.selection()
+	if not selection.size() :
+		return False
+
+	return not any( Gaffer.MetadataAlgo.readOnly( n ) for n in selection )
 
 def __arrangeAvailable( menu ) :
 
