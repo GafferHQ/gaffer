@@ -42,6 +42,7 @@
 #include "GafferScene/AttributeQuery.h"
 #include "GafferScene/CustomAttributes.h"
 #include "GafferScene/DeleteObject.h"
+#include "GafferScene/DeleteOptions.h"
 #include "GafferScene/DeleteOutputs.h"
 #include "GafferScene/Grid.h"
 #include "GafferScene/LightToCamera.h"
@@ -147,7 +148,12 @@ class SceneView::Renderer : public Gaffer::Signals::Trackable
 			deleteOutputs->namesPlug()->setValue( "*" );
 			m_sceneProcessor->addChild( deleteOutputs );
 
-			m_sceneProcessor->outPlug()->setInput( deleteOutputs->outPlug() );
+			DeleteOptionsPtr deleteOptions = new DeleteOptions;
+			deleteOptions->inPlug()->setInput( deleteOutputs->outPlug() );
+			deleteOptions->namesPlug()->setValue( "render:renderManifestFilePath" );
+			m_sceneProcessor->addChild( deleteOptions );
+
+			m_sceneProcessor->outPlug()->setInput( deleteOptions->outPlug() );
 
 			m_view->plugSetSignal().connect( boost::bind( &Renderer::plugSet, this, ::_1 ) );
 		}
