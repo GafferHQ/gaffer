@@ -48,6 +48,7 @@ enum TypeId
 	OSLCodeTypeId = 122104,
 	ClosurePlugTypeId = 122105,
 	OSLLightTypeId = 122106,
+	OSLObjectSourceLocationPlugTypeId = 122107,
 
 	LastTypeId = 122299
 };

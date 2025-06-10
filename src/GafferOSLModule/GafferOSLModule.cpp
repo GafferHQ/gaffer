@@ -200,7 +200,11 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 	;
 
 	GafferBindings::DependencyNodeClass<OSLImage>();
-	GafferBindings::DependencyNodeClass<OSLObject>();
+
+	{
+		scope s = GafferBindings::DependencyNodeClass<OSLObject>();
+		GafferBindings::PlugClass<OSLObject::SourceLocationPlug>();
+	}
 
 	PlugClass<ClosurePlug>()
 		.def( init<const std::string &, Gaffer::Plug::Direction, unsigned>(

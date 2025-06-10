@@ -5,6 +5,7 @@ Features
 --------
 
 - Arnold : Added multi-layer EXR support. All outputs with the same filename are now written to the same file via a single output driver.
+- OSLObject : Added the ability to use `pointcloud_search()` and `pointcloud_get()` to query geometry from arbitrary scene locations.
 
 Improvements
 ------------
