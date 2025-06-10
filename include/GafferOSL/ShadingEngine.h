@@ -37,6 +37,7 @@
 #include "GafferOSL/Export.h"
 #include "GafferOSL/TypeIds.h"
 
+#include "IECoreScene/Primitive.h"
 #include "IECoreScene/ShaderNetwork.h"
 
 #include "IECore/CompoundData.h"
@@ -83,10 +84,12 @@ class GAFFEROSL_API ShadingEngine : public IECore::RefCounted
 		};
 
 		using Transforms = std::map<IECore::InternedString, Transform>;
+		using PointClouds = std::map<IECore::InternedString, IECoreScene::ConstPrimitivePtr>;
 
 		/// Append a unique hash representing this shading engine to `h`.
 		void hash( IECore::MurmurHash &h ) const;
 		IECore::CompoundDataPtr shade( const IECore::CompoundData *points, const Transforms &transforms = Transforms() ) const;
+		IECore::CompoundDataPtr shade( const IECore::CompoundData *points, const Transforms &transforms, const PointClouds &pointClouds ) const;
 
 		bool needsAttribute( const std::string &name ) const;
 		bool hasDeformation() const;

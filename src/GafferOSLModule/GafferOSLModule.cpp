@@ -117,7 +117,7 @@ std::string repr( ShadingEngine::Transform &s )
 	);
 }
 
-IECore::CompoundDataPtr shadeWrapper( ShadingEngine &shadingEngine, const IECore::CompoundData *points, boost::python::dict pythonTransforms )
+IECore::CompoundDataPtr shadeWrapper( ShadingEngine &shadingEngine, const IECore::CompoundData *points, boost::python::dict pythonTransforms, boost::python::dict pythonPointClouds )
 {
 	ShadingEngine::Transforms transforms;
 
@@ -146,7 +146,34 @@ IECore::CompoundDataPtr shadeWrapper( ShadingEngine &shadingEngine, const IECore
 		transforms[ keyElem() ] = valueElem();
 	}
 
-	return shadingEngine.shade( points, transforms );
+	ShadingEngine::PointClouds pointClouds;
+
+	values = pythonPointClouds.values();
+	keys = pythonPointClouds.keys();
+
+	for( int i = 0; i < boost::python::len( keys ); i++ )
+	{
+		object key( keys[i] );
+		object value( values[i] );
+
+		extract<const char *> keyElem( key );
+		if( !keyElem.check() )
+		{
+			PyErr_SetString( PyExc_TypeError, "Expected string" );
+			throw_error_already_set();
+		}
+
+		extract<IECoreScene::ConstPrimitivePtr> valueElem( value );
+		if( !valueElem.check() )
+		{
+			PyErr_SetString( PyExc_TypeError, "Expected IECoreScene.Primitive." );
+			throw_error_already_set();
+		}
+
+		pointClouds[keyElem()] = valueElem();
+	}
+
+	return shadingEngine.shade( points, transforms, pointClouds );
 }
 
 IECore::CompoundDataPtr shadeUVTextureWrapper( const IECoreScene::ShaderNetwork &shaderNetwork, const Imath::V2i &resolution, const IECoreScene::ShaderNetwork::Parameter &output )
@@ -200,7 +227,8 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 			.def( "shade", &shadeWrapper,
 				(
 					boost::python::arg( "points" ),
-					boost::python::arg( "transforms" ) = boost::python::dict()
+					boost::python::arg( "transforms" ) = boost::python::dict(),
+					boost::python::arg( "pointClouds" ) = boost::python::dict()
 				)
 			)
 			.def( "needsAttribute", &ShadingEngine::needsAttribute )
