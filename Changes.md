@@ -103,14 +103,17 @@ Improvements
 - Animation :
   - Added plug context menu actions for color, vector and box plugs.
   - Plug context menu actions are now available on widgets that edit multiple plugs. This enables the animation of multiple cells at once in the LightEditor, RenderPassEditor, AttributeEditor and Spreadsheet UI.
+- Attribute Editor, Light Editor, Render Pass Editor, Spreadsheet : Added <kbd>Shift</kbd> + <kbd>Enter</kbd> and <kbd>Shift</kbd> + <kbd>Ctrl</kbd> + <kbd>Enter</kbd> shortcuts to commit an edit without closing the popup editor window.
 
 Fixes
 -----
 
 - RenderMan : Added missing attribute handlers for float, string, InternedString, Color3f and V3f array attributes. In particular, this fixes the export of `render:displayColor` attributes loaded from USD.
+- RenderManShader : Fixed failure to load connections made via Dots and other intermediate nodes.
 - Expression : Fixed error when creating OSL expressions for plugs with `:` characters in their name.
 - PythonEditor : Fixed completions menu not appearing after typing `:` in a partial plug or node name or a dictionary key.
 - Animation : Fixed "Jump To" actions in plug context menu.
+- Edit Menu : Disabled "Rename" menu item when the selection is read-only.
 
 Build
 -----
