@@ -13,6 +13,7 @@ Improvements
   - Added plug context menu actions for color, vector and box plugs.
   - Plug context menu actions are now available on widgets that edit multiple plugs. This enables the animation of multiple cells at once in the LightEditor, RenderPassEditor, AttributeEditor and Spreadsheet UI.
 - Attribute Editor, Light Editor, Render Pass Editor, Spreadsheet : Added <kbd>Shift</kbd> + <kbd>Enter</kbd> and <kbd>Shift</kbd> + <kbd>Ctrl</kbd> + <kbd>Enter</kbd> shortcuts to commit an edit without closing the popup editor window.
+- LightEditor : Improved the order of sections and some columns within sections for Arnold lights.
 
 Fixes
 -----
