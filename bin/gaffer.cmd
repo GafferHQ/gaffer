@@ -98,6 +98,7 @@ if "%ARNOLD_ROOT%" NEQ "" (
 			call :prependToPath "%GAFFER_ROOT%\arnold\!ARNOLD_VERSION!" GAFFER_EXTENSION_PATHS
 			call :prependToPath "%GAFFER_ROOT%\arnold\!ARNOLD_VERSION!\arnoldPlugins" ARNOLD_PLUGIN_PATH
 			call :prependToPath "%ARNOLD_ROOT%\plugins" ARNOLD_PLUGIN_PATH
+			call :prependToPath "%ARNOLD_ROOT%\plugins\usd\usdArnold\resources" PXR_PLUGINPATH_NAME
 		) else (
 			echo WARNING : GafferArnold extension not available for Arnold %ARNOLD_VERSION%
 		)
