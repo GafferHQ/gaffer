@@ -125,7 +125,7 @@ IECoreGL::BufferPtr rectPBuffer()
 	return g_rectPBuffer;
 }
 
-float rectUvBufferData[12] = { 0, 0,  0, 1,  1, 0,  1, 1 };
+float rectUvBufferData[8] = { 0, 0,  0, 1,  1, 0,  1, 1 };
 IECoreGL::BufferPtr rectUvBuffer()
 {
 	static IECoreGL::BufferPtr g_rectUvBuffer = new IECoreGL::Buffer( rectUvBufferData, sizeof( float ) * 8 );
