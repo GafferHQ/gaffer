@@ -377,6 +377,7 @@ __children["StandardAttributes3"]["attributes"]["linkedLights"]["enabled"].setVa
 __children["StandardAttributes3"]["__uiPosition"].setValue( imath.V2f( -21.2784233, 40.2536888 ) )
 __children["StandardAttributes6"]["in"].setInput( __children["Group_LinkToBlank"]["out"] )
 __children["StandardAttributes6"]["filter"].setInput( __children["PathFilter6"]["out"] )
+__children["StandardAttributes6"]["attributes"]["linkedLights"]["value"].setValue( '' )
 __children["StandardAttributes6"]["attributes"]["linkedLights"]["enabled"].setValue( True )
 __children["StandardAttributes6"]["__uiPosition"].setValue( imath.V2f( 114.281174, 40.6125526 ) )
 __children["Group_Lights"]["in"][0].setInput( __children["spot_light1"]["out"] )
