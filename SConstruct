@@ -1277,7 +1277,7 @@ libraries = {
 	},
 
 	"GafferArnoldTest" : {
-		"additionalFiles" : glob.glob( "python/GafferArnoldTest/volumes/*" ) + glob.glob( "python/GafferArnoldTest/metadata/*" ) + glob.glob( "python/GafferArnoldTest/images/*" ) + glob.glob( "python/GafferArnoldTest/scripts/*" ),
+		"additionalFiles" : glob.glob( "python/GafferArnoldTest/volumes/*" ) + glob.glob( "python/GafferArnoldTest/metadata/*" ) + glob.glob( "python/GafferArnoldTest/images/*" ) + glob.glob( "python/GafferArnoldTest/scripts/*" ) + glob.glob( "python/GafferArnoldTest/usdFiles/*" ),
 		"requiredOptions" : [ "ARNOLD_ROOT" ],
 		"installRoot" : arnoldInstallRoot,
 	},

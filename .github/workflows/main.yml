@@ -73,7 +73,7 @@ jobs:
             testRunner: sudo -E -u testUser
             sconsCacheMegabytes: 400
             jobs: 4
-            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.5.14.1/cortex-10.5.14.1-linux-gcc11.tar.gz
+            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.5.15.0/cortex-10.5.15.0-linux-gcc11.tar.gz
 
           - name: windows
             os: windows-2022

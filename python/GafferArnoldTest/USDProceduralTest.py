@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of John Haddon nor the names of
+#      * Neither the name of Image Engine Design Inc nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,30 +34,40 @@
 #
 ##########################################################################
 
-from .ArnoldShaderTest import ArnoldShaderTest
-from .ArnoldRenderTest import ArnoldRenderTest
-from .ArnoldOptionsTest import ArnoldOptionsTest
-from .ArnoldAttributesTest import ArnoldAttributesTest
-from .ArnoldVDBTest import ArnoldVDBTest
-from .ArnoldLightTest import ArnoldLightTest
-from .ArnoldMeshLightTest import ArnoldMeshLightTest
-from .InteractiveArnoldRenderTest import InteractiveArnoldRenderTest
-from .ArnoldDisplacementTest import ArnoldDisplacementTest
-from .LightToCameraTest import LightToCameraTest
-from .ArnoldAOVShaderTest import ArnoldAOVShaderTest
-from .ArnoldAtmosphereTest import ArnoldAtmosphereTest
-from .ArnoldBackgroundTest import ArnoldBackgroundTest
-from .ArnoldTextureBakeTest import ArnoldTextureBakeTest
-from .ModuleTest import ModuleTest
-from .ArnoldShaderBallTest import ArnoldShaderBallTest
-from .ArnoldCameraShadersTest import ArnoldCameraShadersTest
-from .ArnoldLightFilterTest import ArnoldLightFilterTest
-from .ArnoldColorManagerTest import ArnoldColorManagerTest
-from .ArnoldImagerTest import ArnoldImagerTest
-from .USDLightTest import USDLightTest
-from .RenderPassAdaptorTest import RenderPassAdaptorTest
-from .USDProceduralTest import USDProceduralTest
+import unittest
+
+import arnold
+
+import os
+import pathlib
+
+import IECoreScene
+
+import GafferScene
+import GafferSceneTest
+
+class USDProceduralTest( GafferSceneTest.SceneTestCase ) :
+
+	def testEnvironment( self ) :
+
+		self.assertIn(
+			str( pathlib.Path( os.path.expandvars( "$ARNOLD_ROOT" ) ) / "plugins" / "usd" / "usdArnold" / "resources" ),
+			os.environ["PXR_PLUGINPATH_NAME"].split( os.pathsep )
+		)
+
+	@unittest.skipIf( [ int( x ) for x in arnold.AiGetVersion()[:2] ] < [ 7, 4 ], "Not fully supported by earlier Arnold versions" )
+	def testLoad( self ) :
+
+		s = GafferScene.SceneReader()
+		s["fileName"].setValue( pathlib.Path( __file__ ).parent / "usdFiles" / "arnoldProcedural.usda" )
+
+		self.assertSceneValid( s["out"] )
+
+		for name in [ "ArnoldAlembic", "ArnoldProceduralCustom", "ArnoldUsd" ] :
+			with self.subTest( name = name ) :
+				self.assertTrue( name in s["out"].childNames( "/" ) )
+				self.assertIsInstance( s["out"].object( f"/{name}" ), IECoreScene.ExternalProcedural )
+				self.assertIn( "filename", s["out"].object( f"/{name}" ).parameters() )
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()

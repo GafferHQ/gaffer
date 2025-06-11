@@ -218,6 +218,7 @@ def setUpArnold() :
 	appendToPath( arnoldRoot / "bin", "PATH" )
 	appendToPath( arnoldRoot / "python", "PYTHONPATH" )
 	prependToPath( arnoldRoot / "plugins", "ARNOLD_PLUGIN_PATH" )
+	prependToPath( arnoldRoot / "plugins" / "usd" / "usdArnold" / "resources", "PXR_PLUGINPATH_NAME" )
 
 	# Disable Autodesk Analytics, unless it is being explicitly managed already
 	# by setting `ARNOLD_ADP_OPTIN` or `ARNOLD_ADP_DISABLE`.
