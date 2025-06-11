@@ -65,9 +65,17 @@ from Qt import QtCore
 ## \todo Now that Qt 4 is long gone, and PySide is an official
 # Qt project, Qt.py isn't much help. Remove across the board, or see
 # if we can coax the project into bridging Qt 5/6 instead of 4/5?
-from PySide2 import QtGui
-from PySide2 import QtWidgets
-from Qt import QtOpenGL
+if Qt.__binding__ == "PySide2" :
+	from PySide2 import QtGui
+	from PySide2 import QtWidgets
+	from PySide2.QtWidgets import QOpenGLWidget
+	from PySide2 import QtOpenGL
+elif Qt.__binding__ == "PySide6" :
+	from PySide6 import QtGui
+	from PySide6 import QtWidgets
+	from PySide6.QtOpenGLWidgets import QOpenGLWidget
+else :
+	raise Exception( "GLWidget : No compatible Qt Python binding found" )
 
 ## The GLWidget is a base class for all widgets which wish to draw using OpenGL.
 # Derived classes override the _draw() method to achieve this.
@@ -262,7 +270,7 @@ class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 		if result is not None :
 			return result
 
-		glWidget = QtWidgets.QOpenGLWidget()
+		glWidget = QOpenGLWidget()
 		# Avoid `QOpenGLFramebufferObject: Framebuffer incomplete attachment`
 		# errors caused by Qt trying to make a framebuffer with zero size.
 		glWidget.setMinimumSize( 1, 1 )

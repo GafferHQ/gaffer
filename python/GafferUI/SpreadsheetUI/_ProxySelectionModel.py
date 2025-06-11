@@ -122,17 +122,17 @@ class _ProxySelectionModel( QtCore.QItemSelectionModel ) :
 
 		# Build a chain of models from this views model to the target
 
-		assert( self.model() )
 		assert( self.__sourceSelectionModel )
 
-		model = self.model()
-		targetModel = self.__sourceSelectionModel.model()
-
 		models = []
-		while model != targetModel :
-			assert( hasattr( model, 'sourceModel' ) )
-			models.append( model )
-			model = model.sourceModel()
+		model = self.model()
+		if model is not None :
+			targetModel = self.__sourceSelectionModel.model()
+
+			while model != targetModel :
+				assert( hasattr( model, 'sourceModel' ) )
+				models.append( model )
+				model = model.sourceModel()
 
 		self.__modelChain = models
 

@@ -130,7 +130,7 @@ class GadgetTest( GafferUITest.TestCase ) :
 		s = GafferUI.StandardStyle()
 		c.setStyle( s )
 
-		self.waitForIdle( 1000 )
+		self.waitForIdle( 5000 )
 
 		self.assertEqual( mg.layersRendered, set( (i,s, GafferUI.Gadget.RenderReason.Draw) for i in layers ) )
 

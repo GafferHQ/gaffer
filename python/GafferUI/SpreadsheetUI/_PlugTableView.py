@@ -250,7 +250,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		GafferUI.Widget._displayTransformChanged( self )
 		# Account for _PlugTableModel's dependency on display transform.
-		self._qtWidget().update()
+		self._qtWidget().viewport().update()
 
 	def __applyRowFilter( self ) :
 

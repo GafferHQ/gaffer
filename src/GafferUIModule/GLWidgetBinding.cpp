@@ -41,7 +41,10 @@
 #include "IECore/Exception.h"
 #include "IECore/MessageHandler.h"
 
+#include "QtCore/qconfig.h"
+#if QT_VERSION_MAJOR < 6
 #include "QtOpenGL/QGLWidget"
+#endif
 
 #if defined( __linux__ )
 #include "GL/glx.h" // Must come after Qt!
@@ -52,7 +55,7 @@ using namespace boost::python;
 namespace
 {
 
-#if defined( __linux__ )
+#if defined( __linux__ ) && QT_VERSION_MAJOR < 6
 
 class HostedGLContext : public QGLContext
 {
@@ -103,9 +106,7 @@ class HostedGLContext : public QGLContext
 
 		void makeCurrent() override
 		{
-#if QT_VERSION >= 0x050000
 			QGLContext::makeCurrent();
-#endif
 			glXMakeCurrent( m_display, static_cast<QWidget *>( device() )->effectiveWinId(), m_context );
 		}
 
@@ -116,7 +117,7 @@ class HostedGLContext : public QGLContext
 
 };
 
-#else
+#elif QT_VERSION_MAJOR < 6
 
 class HostedGLContext : public QGLContext
 {
@@ -135,9 +136,13 @@ class HostedGLContext : public QGLContext
 
 void setHostedContext( uint64_t glWidgetAddress, uint64_t glFormatAddress )
 {
+#if QT_VERSION_MAJOR >= 6
+	IECore::msg( IECore::Msg::Warning, "HostedGLContext", "Not implemented for Qt 6." );
+#else
 	QGLWidget *glWidget = reinterpret_cast<QGLWidget *>( glWidgetAddress );
 	QGLFormat *glFormat = reinterpret_cast<QGLFormat *>( glFormatAddress );
 	glWidget->setContext( new HostedGLContext( *glFormat, glWidget ) );
+#endif
 }
 
 } // namespace

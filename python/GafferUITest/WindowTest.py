@@ -295,9 +295,7 @@ class WindowTest( GafferUITest.TestCase ) :
 		w.setPosition( imath.V2i( 100, 30 ) )
 		self.assertEqual( w.getPosition(), imath.V2i( 100, 30 ) )
 
-		desktop = QtWidgets.QApplication.desktop()
-
-		screenRect = desktop.availableGeometry( w._qtWidget() )
+		screenRect = w._qtWidget().screen().availableGeometry()
 		windowRect = w._qtWidget().frameGeometry()
 
 		# Smaller, off-screen bottom right

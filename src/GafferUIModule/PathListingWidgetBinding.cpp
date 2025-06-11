@@ -111,28 +111,28 @@ bool variantLess( const QVariant &left, const QVariant &right )
 
 	switch( left.userType() )
 	{
-		case QVariant::Invalid :
+		case QMetaType::UnknownType :
 			// Both values are invalid, making them equal.
 			return false;
-		case QVariant::Int :
+		case QMetaType::Int :
 			return left.toInt() < right.toInt();
-		case QVariant::UInt :
+		case QMetaType::UInt :
 			return left.toUInt() < right.toUInt();
-		case QVariant::LongLong:
+		case QMetaType::LongLong :
 			return left.toLongLong() < right.toLongLong();
-		case QVariant::ULongLong:
+		case QMetaType::ULongLong :
 			return left.toULongLong() < right.toULongLong();
-		case QMetaType::Float:
+		case QMetaType::Float :
 			return left.toFloat() < right.toFloat();
-		case QVariant::Double:
+		case QMetaType::Double :
 			return left.toDouble() < right.toDouble();
-		case QVariant::Char:
+		case QMetaType::Char :
 			return left.toChar() < right.toChar();
-		case QVariant::Date:
+		case QMetaType::QDate :
 			return left.toDate() < right.toDate();
-		case QVariant::Time:
+		case QMetaType::QTime :
 			return left.toTime() < right.toTime();
-		case QVariant::DateTime:
+		case QMetaType::QDateTime :
 			return left.toDateTime() < right.toDateTime();
 		default :
 			return left.toString() < right.toString();
@@ -341,7 +341,7 @@ QVariant dataToVariant( const IECore::Data *value, int role )
 		{
 			const IECore::DateTimeData *d = static_cast<const IECore::DateTimeData *>( value );
 			time_t t = ( d->readable() - from_time_t( 0 ) ).total_seconds();
-			return QVariant( QDateTime::fromTime_t( t ) );
+			return QVariant( QDateTime::fromSecsSinceEpoch( t ) );
 		}
 		default :
 		{

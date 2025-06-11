@@ -543,7 +543,7 @@ class PathListingWidget( GafferUI.Widget ) :
 
 	def __selectionChanged( self ) :
 
-		self._qtWidget().update()
+		self._qtWidget().viewport().update()
 		self.selectionChangedSignal()( self )
 
 	def __pathChanged( self, path ) :

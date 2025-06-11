@@ -942,7 +942,7 @@ class _Model( QtCore.QAbstractTableModel ) :
 	def data( self, index, role ) :
 
 		column = self.__columns[index.column()]
-		if role == QtCore.Qt.BackgroundColorRole :
+		if role == QtCore.Qt.BackgroundRole :
 
 			if self.columnToDataIndex( index.column() )[0] % 2 == 0:
 				return  GafferUI._Variant.toVariant( GafferUI._StyleSheet.styleColor("background")  )
@@ -963,11 +963,7 @@ class _Model( QtCore.QAbstractTableModel ) :
 		if role == QtCore.Qt.EditRole :
 			column = self.__columns[index.column()]
 			column.accessor.setElement( index.row(), column.relativeColumnIndex, value )
-
-			if Qt.__binding__ in ( "PySide2", "PyQt5" ) :
-				self.dataChanged.emit( index, index, [ QtCore.Qt.DisplayRole, QtCore.Qt.EditRole ] )
-			else:
-				self.dataChanged.emit( index, index )
+			self.dataChanged.emit( index, index, [ QtCore.Qt.DisplayRole, QtCore.Qt.EditRole ] )
 
 		return True
 
@@ -1583,7 +1579,8 @@ class _BoolDelegate( _Delegate ) :
 			# eat event so row isn't selected
 			widget = QtCore.QObject.parent( self.parent() )
 			rect = self.__checkBoxRect( widget, option.rect )
-			if event.button() == QtCore.Qt.LeftButton and rect.contains( event.pos() ) :
+			position = event.position().toPoint() if Qt.__binding__ == "PySide6" else event.pos()
+			if event.button() == QtCore.Qt.LeftButton and rect.contains( position ) :
 				checked = self.__toBool( index )
 				model.setData( index, not checked, QtCore.Qt.EditRole )
 				return True

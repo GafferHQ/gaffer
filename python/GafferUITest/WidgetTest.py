@@ -183,7 +183,7 @@ class WidgetTest( GafferUITest.TestCase ) :
 
 		WidgetTest.signalsEmitted = 0
 
-		event = QtGui.QMouseEvent( QtCore.QEvent.MouseButtonPress, QtCore.QPoint( 0, 0 ), QtCore.Qt.LeftButton, QtCore.Qt.LeftButton, QtCore.Qt.NoModifier )
+		event = QtGui.QMouseEvent( QtCore.QEvent.MouseButtonPress, QtCore.QPoint( 0, 0 ), QtCore.QPoint( 0, 0 ), QtCore.Qt.LeftButton, QtCore.Qt.LeftButton, QtCore.Qt.NoModifier )
 
 		QtWidgets.QApplication.instance().sendEvent( w._qtWidget(), event )
 		self.assertEqual( WidgetTest.signalsEmitted, 1 )
@@ -417,7 +417,7 @@ class WidgetTest( GafferUITest.TestCase ) :
 		w1.setPosition( imath.V2i( 100 ) )
 		w2.setPosition( imath.V2i( 300 ) )
 
-		self.waitForIdle( 10000 )
+		self.waitForIdle( 15000 )
 
 		self.assertTrue( GafferUI.Widget.widgetAt( w1.bound().center() ) is t1 )
 		self.assertTrue( GafferUI.Widget.widgetAt( w2.bound().center() ) is t2 )
@@ -617,7 +617,7 @@ class WidgetTest( GafferUITest.TestCase ) :
 
 		w.buttonPressSignal().connect( f )
 
-		event = QtGui.QMouseEvent( QtCore.QEvent.MouseButtonPress, QtCore.QPoint( 10, 10 ), QtCore.Qt.LeftButton, QtCore.Qt.LeftButton, QtCore.Qt.NoModifier )
+		event = QtGui.QMouseEvent( QtCore.QEvent.MouseButtonPress, QtCore.QPoint( 10, 10 ), QtCore.QPoint( 10, 10 ), QtCore.Qt.LeftButton, QtCore.Qt.LeftButton, QtCore.Qt.NoModifier )
 
 		QtWidgets.QApplication.instance().sendEvent( w._qtWidget(), event )
 

@@ -341,6 +341,9 @@ setUp3rdPartyExtensions()
 # Qt Setup
 # ========
 
+# Enable scoped enum shortcuts to preserve compatibility with PySide2.
+os.environ["PYSIDE63_OPTION_PYTHON_ENUM"] = "0x08" # ENOPT_SCOPED_SHORTCUT
+
 os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = str( gafferRoot / "qt" / "plugins" )
 
 # Work around issue with Qt 5.12+ when using a wacom tablet on linux.
