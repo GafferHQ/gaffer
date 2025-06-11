@@ -1236,7 +1236,7 @@ libraries = {
 	},
 
 	"GafferArnoldTest" : {
-		"additionalFiles" : glob.glob( "python/GafferArnoldTest/volumes/*" ) + glob.glob( "python/GafferArnoldTest/metadata/*" ) + glob.glob( "python/GafferArnoldTest/images/*" ),
+		"additionalFiles" : glob.glob( "python/GafferArnoldTest/volumes/*" ) + glob.glob( "python/GafferArnoldTest/metadata/*" ) + glob.glob( "python/GafferArnoldTest/images/*" ) + glob.glob( "python/GafferArnoldTest/usdFiles/*" ),
 		"requiredOptions" : [ "ARNOLD_ROOT" ],
 		"installRoot" : arnoldInstallRoot,
 	},

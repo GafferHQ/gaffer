@@ -14,6 +14,8 @@ Improvements
   - Plug context menu actions are now available on widgets that edit multiple plugs. This enables the animation of multiple cells at once in the LightEditor, RenderPassEditor, AttributeEditor and Spreadsheet UI.
 - Attribute Editor, Light Editor, Render Pass Editor, Spreadsheet : Added <kbd>Shift</kbd> + <kbd>Enter</kbd> and <kbd>Shift</kbd> + <kbd>Ctrl</kbd> + <kbd>Enter</kbd> shortcuts to commit an edit without closing the popup editor window.
 - LightEditor : Improved the order of sections and some columns within sections for Arnold lights.
+- Wrapper : Added `$ARNOLD_ROOT/plugins/usd/usdArnold/resources` to `PXR_PLUGINPATH_NAME` when `ARNOLD_ROOT` is specified.
+- SceneReader : Added loading of ArnoldAlembic, ArnoldUsd and ArnoldProceduralCustom USD prims as ExternalProcedural objects.
 
 Fixes
 -----
@@ -25,11 +27,13 @@ Fixes
 - Animation : Fixed "Jump To" actions in plug context menu.
 - Edit Menu : Disabled "Rename" menu item when the selection is read-only.
 - Catalogue : Added forwards compatibility for Catalogues saved from Gaffer 1.6.
+- SceneReader : Fixed loading of instanced UsdSkel geometry with unique animation applied.
 
 Build
 -----
 
 - Added `buildGraphics` option to SConstruct to enable building the Gaffer logo and icons separately.
+- Cortex : Updated to version 10.5.15.0.
 
 1.5.14.0 (relative to 1.5.13.0)
 ========
