@@ -40,6 +40,17 @@ import IECore
 import IECoreScene
 
 import Gaffer
+import GafferScene
+
+def __rendererPresetNames( additionalNames ) :
+
+	blacklist = { "Capturing" }
+	return IECore.StringVectorData(
+		additionalNames + sorted(
+			t for t in GafferScene.Private.IECoreScenePreview.Renderer.types()
+			if t not in blacklist
+		)
+	)
 
 Gaffer.Metadata.registerValues( {
 
@@ -271,6 +282,10 @@ Gaffer.Metadata.registerValues( {
 		"label", "Default Renderer",
 		"layout:section", "Renderer",
 
+		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+		"presetNames", __rendererPresetNames( [ "None" ] ),
+		"presetValues", __rendererPresetNames( [ "" ] ),
+
 	],
 
 	"option:render:includedPurposes" : [
@@ -305,6 +320,9 @@ Gaffer.Metadata.registerValues( {
 		"label", "Inclusions",
 		"layout:section", "Render Set",
 
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
+
 	],
 
 	"option:render:exclusions" : [
@@ -319,6 +337,9 @@ Gaffer.Metadata.registerValues( {
 		"label", "Exclusions",
 		"layout:section", "Render Set",
 
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
+
 	],
 
 	"option:render:additionalLights" : [
@@ -332,6 +353,9 @@ Gaffer.Metadata.registerValues( {
 		""",
 		"label", "Additional Lights",
 		"layout:section", "Render Set",
+
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
 
 	],
 
@@ -355,6 +379,9 @@ Gaffer.Metadata.registerValues( {
 		"label", "Camera Inclusions",
 		"layout:section", "Visibility Set",
 
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
+
 	],
 
 	"option:render:cameraExclusions" : [
@@ -377,6 +404,9 @@ Gaffer.Metadata.registerValues( {
 		"label", "Camera Exclusions",
 		"layout:section", "Visibility Set",
 
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
+
 	],
 
 	"option:render:matteInclusions" : [
@@ -390,6 +420,9 @@ Gaffer.Metadata.registerValues( {
 		""",
 		"label", "Matte Inclusions",
 		"layout:section", "Visibility Set",
+
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
 
 	],
 
@@ -408,6 +441,9 @@ Gaffer.Metadata.registerValues( {
 		""",
 		"label", "Matte Exclusions",
 		"layout:section", "Visibility Set",
+
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
 
 	],
 
