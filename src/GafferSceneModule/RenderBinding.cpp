@@ -81,6 +81,11 @@ IECore::DataPtr interactiveRenderCommandWrapper( InteractiveRender &r, const IEC
 	return r.command( name, parameters );
 }
 
+std::shared_ptr<RenderManifest> interactiveRenderRenderManifestWrapper( InteractiveRender &r )
+{
+	return std::const_pointer_cast<RenderManifest>( r.renderManifest() );
+}
+
 object objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, object pythonSampleTimes, IECore::MurmurHash *hash, bool copy )
 {
 	std::vector<float> sampleTimes;
@@ -152,10 +157,10 @@ void outputLightsWrapper( const ScenePlug &scene, const GafferScene::Private::Re
 	GafferScene::Private::RendererAlgo::outputLights( &scene, renderOptions, renderSets, &lightLinks, &renderer );
 }
 
-void outputObjectsWrapper( const ScenePlug &scene, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, GafferScene::Private::RendererAlgo::LightLinks &lightLinks, IECoreScenePreview::Renderer &renderer, const ScenePlug::ScenePath &root )
+void outputObjectsWrapper( const ScenePlug &scene, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, GafferScene::Private::RendererAlgo::LightLinks &lightLinks, IECoreScenePreview::Renderer &renderer, const ScenePlug::ScenePath &root, GafferScene::RenderManifest *renderManifest )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	GafferScene::Private::RendererAlgo::outputObjects( &scene, renderOptions, renderSets, &lightLinks, &renderer, root );
+	GafferScene::Private::RendererAlgo::outputObjects( &scene, renderOptions, renderSets, &lightLinks, &renderer, root, renderManifest );
 }
 
 struct RenderSlotCaller
@@ -185,6 +190,7 @@ void GafferSceneModule::bindRender()
 			.def( "getContext", &interactiveRenderGetContext )
 			.def( "setContext", &interactiveRenderSetContext )
 			.def( "command", &interactiveRenderCommandWrapper, ( arg( "name" ), arg( "parameters" ) = dict() ) )
+			.def( "renderManifest", &interactiveRenderRenderManifestWrapper )
 		;
 
 		enum_<InteractiveRender::State>( "State" )
@@ -241,7 +247,7 @@ void GafferSceneModule::bindRender()
 
 			def( "outputCameras", &outputCamerasWrapper );
 			def( "outputLights", &outputLightsWrapper );
-			def( "outputObjects", &outputObjectsWrapper, ( arg( "scene" ), arg( "globals" ), arg( "renderSets" ), arg( "lightLinks" ), arg( "renderer" ), arg( "root" ) = "/" ) );
+			def( "outputObjects", &outputObjectsWrapper, ( arg( "scene" ), arg( "globals" ), arg( "renderSets" ), arg( "lightLinks" ), arg( "renderer" ), arg( "root" ) = "/", arg( "renderManifest" ) = object() ) );
 		}
 	}
 

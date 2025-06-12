@@ -2944,6 +2944,125 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		self.uiThreadCallHandler.waitFor( 1 )
 		self.assertEqual( script["sampler"]["color"].getValue(), imath.Color4f( 0, 0, 0, 1 ) )
 
+	def testManifest( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["catalogue"] = GafferScene.Catalogue()
+		s["catalogue"]["directory"].setValue( self.temporaryDirectory() / "catalogue" )
+
+
+		s["s1"] = GafferScene.Sphere()
+		s["s1"]["name"].setValue( "sphereA" )
+		s["s2"] = GafferScene.Sphere()
+		s["s2"]["name"].setValue( "sphereB" )
+		s["s3"] = GafferScene.Sphere()
+		s["s3"]["name"].setValue( "sphereC" )
+
+		s["parent"] = GafferScene.Parent()
+		s["parent"]["parent"].setValue( "/" )
+		s["parent"]["in"].setInput( s["s1"]["out"] )
+		s["parent"]["children"][0].setInput( s["s2"]["out"] )
+		s["parent"]["children"][1].setInput( s["s3"]["out"] )
+
+
+		s["options"] = GafferScene.StandardOptions()
+		s["options"]["in"].setInput( s["parent"]["out"] )
+		s["options"]["options"]["renderManifestFilePath"]["enabled"].setValue( True )
+
+		s["outputs"] = GafferScene.Outputs()
+		s["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( s['catalogue'].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
+				}
+			)
+		)
+		s["outputs"]["in"].setInput( s["options"]["out"] )
+
+		s["r"] = self._createInteractiveRender()
+		s["r"]["in"].setInput( s["outputs"]["out"] )
+
+		s["r"]["state"].setValue( s["r"].State.Running )
+
+		self.uiThreadCallHandler.waitFor( 1.0 )
+		# Without an ID output, we don't create a manifest
+		self.assertIsNone( GafferScene.SceneAlgo.sourceScene( s['catalogue']['out'] ).node().renderManifest() )
+
+		s["outputs"].addOutput(
+			"id",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"float id",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( s['catalogue'].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
+				}
+			)
+		)
+
+		self.uiThreadCallHandler.waitFor( 1.0 )
+
+		# Check accessing the live manifest through the catalogue's output
+		liveManifest = GafferScene.SceneAlgo.sourceScene( s['catalogue']['out'] ).node().renderManifest()
+
+		self.assertEqual( liveManifest.size(), 3 )
+
+		locationNames = [ "sphereA", "sphereB", "sphereC" ]
+		manifestValues = { n : liveManifest.idForPath( n ) for n in locationNames }
+
+		# The order of id assignment isn't fixed, but our three objects should get the first 3 ids
+		self.assertEqual( set( manifestValues.values() ), { 1, 2, 3 } )
+
+		# Test snapshotting an image
+
+		s["catalogue"]["images"].addChild( GafferScene.Catalogue.Image( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["catalogue"]["images"][1].copyFrom( s["catalogue"]["images"][0] )
+
+		self.uiThreadCallHandler.waitFor( 1.0 )
+
+		s["catalogue"]["imageIndex"].setValue( 1 )
+
+		self.assertIn( 'gaffer:renderManifestFilePath', s['catalogue']['out'].metadata() )
+		snapshotManifest = GafferScene.RenderManifest.loadFromImageMetadata( s['catalogue']['out'].metadata(), "" )
+		self.assertEqual( snapshotManifest.size(), 3 )
+		self.assertEqual( { n : snapshotManifest.idForPath( n ) for n in locationNames }, manifestValues )
+
+		# Switch back to live render
+		s["catalogue"]["imageIndex"].setValue( 0 )
+		# No manifest written out yet for live render
+		self.assertNotIn( 'gaffer:renderManifestFilePath', s['catalogue']['out'].metadata() )
+
+		s["r"]["state"].setValue( s["r"].State.Stopped )
+		self.uiThreadCallHandler.waitFor( 1.0 )
+
+		self.assertIn( 'gaffer:renderManifestFilePath', s['catalogue']['out'].metadata() )
+		finalManifest = GafferScene.RenderManifest.loadFromImageMetadata( s['catalogue']['out'].metadata(), "" )
+		self.assertEqual( finalManifest.size(), 3 )
+		self.assertEqual( { n : finalManifest.idForPath( n ) for n in locationNames }, manifestValues )
+
+
+		# Setting this option during an interactive render only triggers a warning
+		s["options"]["options"]["renderManifestFilePath"]["value"].setValue( "/some/path" )
+		s["r"]["state"].setValue( s["r"].State.Running )
+		self.uiThreadCallHandler.waitFor( 1.0 )
+
+		with IECore.CapturingMessageHandler() as mh :
+			s["r"]["state"].setValue( s["r"].State.Stopped )
+			self.uiThreadCallHandler.waitFor( 1.0 )
+
+			self.assertEqual( len( mh.messages ), 1 )
+			self.assertEqual( mh.messages[0].message, 'Ignoring "render:renderManifestFilePath" during interactive render. The catalogue generates its own manifest files, this option is not needed.' )
+
 	def tearDown( self ) :
 
 		GafferSceneTest.SceneTestCase.tearDown( self )

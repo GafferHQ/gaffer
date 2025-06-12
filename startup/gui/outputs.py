@@ -88,6 +88,7 @@ GafferScene.Outputs.registerOutput(
 			"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
 			"filter" : "closest",
 			"layerName" : "id",
+			"updateInteractively" : True,
 		}
 	)
 )

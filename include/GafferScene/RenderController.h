@@ -105,6 +105,12 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 		std::shared_ptr<RenderManifest> renderManifest();
 		std::shared_ptr<const RenderManifest> renderManifest() const;
 
+		// Controls if a manifest is needed even without any id Outputs.
+		// ( Needed by SceneView which creates Outputs itself without the controller knowing )
+		void setManifestRequired( bool manifestRequired );
+		bool getManifestRequired();
+
+
 	private :
 
 		enum GlobalComponents
@@ -118,8 +124,9 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 			DeformationBlurGlobalComponent = 32,
 			CameraShutterGlobalComponent = 64,
 			IncludedPurposesGlobalComponent = 128,
+			IDGlobalComponent = 256,
 			CapsuleAffectingGlobalComponents = TransformBlurGlobalComponent | DeformationBlurGlobalComponent | IncludedPurposesGlobalComponent,
-			AllGlobalComponents = GlobalsGlobalComponent | SetsGlobalComponent | RenderSetsGlobalComponent | CameraOptionsGlobalComponent | TransformBlurGlobalComponent | DeformationBlurGlobalComponent | IncludedPurposesGlobalComponent
+			AllGlobalComponents = GlobalsGlobalComponent | SetsGlobalComponent | RenderSetsGlobalComponent | CameraOptionsGlobalComponent | TransformBlurGlobalComponent | DeformationBlurGlobalComponent | IncludedPurposesGlobalComponent | IDGlobalComponent
 		};
 
 		void plugDirtied( const Gaffer::Plug *plug );
@@ -138,7 +145,7 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 		ConstScenePlugPtr m_scene;
 		Gaffer::ConstContextPtr m_context;
 		IECoreScenePreview::RendererPtr m_renderer;
-		std::shared_ptr<RenderManifest> m_renderManifest;
+
 
 		GafferScene::VisibleSet m_visibleSet;
 		size_t m_minimumExpansionDepth;
@@ -161,6 +168,9 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 		IECoreScenePreview::Renderer::AttributesInterfacePtr m_defaultAttributes;
 
 		std::shared_ptr<Gaffer::BackgroundTask> m_backgroundTask;
+
+		bool m_manifestRequired;
+		std::shared_ptr<RenderManifest> m_renderManifest;
 
 };
 

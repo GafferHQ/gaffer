@@ -91,6 +91,12 @@ void setMinimumExpansionDepth( RenderController &r, size_t depth )
 	r.setMinimumExpansionDepth( depth );
 }
 
+void setManifestRequired( RenderController &r, bool manifestRequired )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	r.setManifestRequired( manifestRequired );
+}
+
 RenderController::ProgressCallback progressCallbackFromPython( object &callback )
 {
 	if( callback.is_none() )
@@ -148,6 +154,8 @@ void GafferSceneModule::bindRenderController()
 		.def( "getVisibleSet", &RenderController::getVisibleSet, return_value_policy<copy_const_reference>() )
 		.def( "setMinimumExpansionDepth", &setMinimumExpansionDepth )
 		.def( "getMinimumExpansionDepth", &RenderController::getMinimumExpansionDepth )
+		.def( "setManifestRequired", &setManifestRequired )
+		.def( "getManifestRequired", &RenderController::getManifestRequired )
 		.def( "updateRequiredSignal", &RenderController::updateRequiredSignal, return_internal_reference<1>() )
 		.def( "updateRequired", &RenderController::updateRequired )
 		.def( "update", &update, ( arg( "callback" ) = object() ) )

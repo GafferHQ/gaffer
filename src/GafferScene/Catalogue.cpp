@@ -36,6 +36,9 @@
 
 #include "GafferScene/Catalogue.h"
 #include "GafferScene/Display.h"
+#include "GafferScene/InteractiveRender.h"
+#include "GafferScene/RenderManifest.h"
+#include "GafferScene/SceneAlgo.h"
 
 #include "GafferImage/Constant.h"
 #include "GafferImage/CopyChannels.h"
@@ -43,6 +46,7 @@
 #include "GafferImage/FormatQuery.h"
 #include "GafferImage/ImageAlgo.h"
 #include "GafferImage/ImageMetadata.h"
+#include "GafferImage/ImagePlug.h"
 #include "GafferImage/ImageReader.h"
 #include "GafferImage/ImageWriter.h"
 #include "GafferImage/Text.h"
@@ -53,6 +57,7 @@
 #include "Gaffer/ParallelAlgo.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/Spreadsheet.h"
 
 #include "IECore/NullObject.h"
 
@@ -97,10 +102,63 @@ namespace
 	};
 	IE_CORE_DECLAREPTR( ImageIndexMapData )
 
-	std::string g_isRenderingMetadataName = "gaffer:isRendering";
+	IECore::InternedString g_isRenderingMetadataName = "gaffer:isRendering";
 	std::string g_emptyString( "" );
 	std::string g_outputPrefix( "output:" );
 	IECore::InternedString g_imageNameContextName( "catalogue:imageName" );
+
+
+	std::shared_ptr<const GafferScene::RenderManifest> findRenderManifest( const GafferImage::ImagePlug* imagePlug, bool onlyIfCurrentlyRendering )
+	{
+		const ScriptNode *scriptNode = imagePlug->node()->scriptNode();
+		if( !scriptNode )
+		{
+			return nullptr;
+		}
+
+		ConstContextPtr context = scriptNode->context();
+
+		const GafferScene::ScenePlug *scenePlug = nullptr;
+		try
+		{
+			Context::Scope scopedContext( context.get() );
+			if( onlyIfCurrentlyRendering )
+			{
+				// When doing a copyFrom, we don't need to do the copy unless we're currently rendering
+				// ( if the image has already been saved, we'll just point to the same manifest it's already
+				// written ). But during driverClosed(), we always want to find the manifest, since we know
+				// we were just rendering and the manifest hasn't been saved yet, so we skip this check.
+				ConstBoolDataPtr isRenderingData = imagePlug->metadata()->member<BoolData>( g_isRenderingMetadataName );
+				if( !( isRenderingData && isRenderingData->readable() ) )
+				{
+					return nullptr;
+				}
+			}
+
+			// Const cast is safe here since source scene only needs a non-const input in order to:
+			// return a non-const result, and we treat the result as const.
+			scenePlug = GafferScene::SceneAlgo::sourceScene( const_cast<GafferImage::ImagePlug*>( imagePlug ) );
+		}
+		catch( const std::exception & )
+		{
+			// If we can't even evaluate the metadata of the image plug without erroring, then it's not
+			// an image coming from a valid render, and it's reasonable to just leave the source scene null.
+			// I don't think it's necessary to warn in this case, there should be other indications that the
+			// current catalogue image is invalid.
+		}
+
+		const GafferScene::InteractiveRender *interactiveRenderNode = nullptr;
+		if( scenePlug )
+		{
+			interactiveRenderNode = IECore::runTimeCast<const GafferScene::InteractiveRender>( scenePlug->node() );
+			if( interactiveRenderNode )
+			{
+				return interactiveRenderNode->renderManifest();
+			}
+		}
+
+		return nullptr;
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -227,7 +285,8 @@ class Catalogue::InternalImage : public ImageNode
 			}
 			else if( numDisplays )
 			{
-				m_saver = AsynchronousSaver::create( this );
+				m_saver = AsynchronousSaver::create( this, findRenderManifest( other->outPlug(), true ) );
+
 			}
 
 			m_renderID = "invalid"; // Make sure `insertDriver()` will reject new drivers
@@ -364,7 +423,7 @@ class Catalogue::InternalImage : public ImageNode
 
 			m_renderID = "invalid";
 			isRendering( false );
-			m_saver = AsynchronousSaver::create( this );
+			m_saver = AsynchronousSaver::create( this, findRenderManifest( outPlug(), false ) );
 		}
 
 	protected :
@@ -479,7 +538,7 @@ class Catalogue::InternalImage : public ImageNode
 			using Ptr = std::shared_ptr<AsynchronousSaver>;
 			using WeakPtr = std::weak_ptr<AsynchronousSaver>;
 
-			static Ptr create( InternalImage *client )
+			static Ptr create( InternalImage *client, const std::shared_ptr<const GafferScene::RenderManifest> &renderManifest )
 			{
 				// We use a copy of the image to do the saving, because the original
 				// might be modified on the main thread while we save in the background.
@@ -505,7 +564,7 @@ class Catalogue::InternalImage : public ImageNode
 				}
 
 				// Otherwise, make a saver and schedule its background execution.
-				Ptr saver = Ptr( new AsynchronousSaver( imageCopy, fileName ) );
+				Ptr saver = Ptr( new AsynchronousSaver( imageCopy, fileName, renderManifest ) );
 				saver->registerClient( client );
 
 				// Note that the background thread doesn't own a reference to the saver -
@@ -560,19 +619,70 @@ class Catalogue::InternalImage : public ImageNode
 
 			private :
 
-				AsynchronousSaver( InternalImagePtr imageCopy, const std::filesystem::path &fileName )
+				AsynchronousSaver( InternalImagePtr imageCopy, const std::filesystem::path &filePath, const std::shared_ptr<const GafferScene::RenderManifest> &renderManifest )
 					:	m_imageCopy( imageCopy )
 				{
 					// Set up an ImageWriter to do the actual saving.
 					// We do all graph construction here in the main thread
 					// so that the background thread only does execution.
+
+					m_modifyMetadata = new GafferImage::ImageMetadata;
+					m_modifyMetadata->inPlug()->setInput( m_imageCopy->outPlug() );
+
 					m_writer = new GafferImage::ImageWriter;
-					m_writer->inPlug()->setInput( m_imageCopy->outPlug() );
-					m_writer->fileNamePlug()->setValue( fileName );
+					m_writer->inPlug()->setInput( m_modifyMetadata->outPlug() );
+					m_writer->fileNamePlug()->setValue( filePath );
+
+					// Set up a spreadsheet that will set the data type to full 32 bit floats when storing the
+					// "id" channel. We are currently using integers bitcast to floats for ids ... converting
+					// these to 16 bit floats completely destroys the data.
+					StringPlug *dataTypePlug = m_writer->fileFormatSettingsPlug( "openexr" )->getChild<StringPlug>( "dataType" );
+
+					Gaffer::SpreadsheetPtr spreadsheet = new Gaffer::Spreadsheet();
+					m_writer->addChild( spreadsheet );
+					spreadsheet->selectorPlug()->setValue( "${imageWriter:channelName}" );
+					spreadsheet->rowsPlug()->addColumn( new Gaffer::StringPlug( "dataType", Gaffer::Plug::Direction::In, "half" ) );
+					Spreadsheet::RowPlug *row = spreadsheet->rowsPlug()->addRow();
+					row->namePlug()->setValue( "id" );
+					row->cellsPlug()->getChild<Spreadsheet::CellPlug>(0)->valuePlug<StringPlug>()->setValue( "float" );
+					dataTypePlug->setInput( spreadsheet->outPlug()->getChild<Plug>( 0 ) );
+
+					if( renderManifest )
+					{
+						// Add manifest suffix
+						std::string manifestFilename = filePath.stem().generic_string() + "_manifest.exr";
+
+						m_manifestDest = filePath;
+						m_manifestDest.replace_filename( manifestFilename );
+
+						m_modifyMetadata->metadataPlug()->addChild(
+							new NameValuePlug(
+								"gaffer:renderManifestFilePath", new StringData( manifestFilename )
+							)
+						);
+
+						// We don't make a copy of this in the foreground thread to avoid the delay.
+						// RenderManifest is thread-safe in the sense that it uses a mutex to prevent
+						// simultaneous read/writes - so the manifest will be valid. There is a risk
+						// that the manifest may not correspond exactly to the manifest when the image
+						// was snapshotted, but it would likely just contain some extra ids if new
+						// objects are being added to the scene while the write occurs - this shouldn't
+						// cause any actual problems, and the slight weirdness is probably acceptable in
+						// exchange for performance?
+						m_renderManifest = renderManifest;
+					}
 				}
 
 				void save( WeakPtr forWrapUp )
 				{
+					if( m_renderManifest )
+					{
+						// Make sure the directory exists to write the exr manifest to.
+						std::filesystem::create_directories( std::filesystem::path( m_manifestDest ).parent_path() );
+
+						m_renderManifest->writeEXRManifest( m_manifestDest );
+					}
+
 					GafferImage::ImageAlgo::parallelGatherTiles(
 						m_imageCopy->copyChannels()->outPlug(),
 						m_imageCopy->copyChannels()->outPlug()->channelNamesPlug()->getValue()->readable(),
@@ -642,7 +752,12 @@ class Catalogue::InternalImage : public ImageNode
 				}
 
 				InternalImagePtr m_imageCopy;
+				GafferImage::ImageMetadataPtr m_modifyMetadata;
 				GafferImage::ImageWriterPtr m_writer;
+
+
+				std::shared_ptr<const GafferScene::RenderManifest> m_renderManifest;
+				std::filesystem::path m_manifestDest;
 
 				std::thread m_thread;
 				set<InternalImage *> m_clients;

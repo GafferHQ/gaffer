@@ -378,6 +378,13 @@ void SceneGadget::setRenderer( IECore::InternedString name )
 		newRenderer
 	);
 
+	if( newOutputBuffer )
+	{
+		// OutputBuffer will set up outputs directly in the renderer - the controller won't know about these
+		// outputs, so we must manually enable the manifest so that we get ids.
+		newController->setManifestRequired( true );
+	}
+
 	if( m_controller )
 	{
 		newController->setVisibleSet( m_controller->getVisibleSet() );

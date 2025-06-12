@@ -593,15 +593,16 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		script["outputs"].addOutput(
 			"beauty",
 			IECoreScene.Output(
-				imagePath.as_posix(),
+				( self.temporaryDirectory() / "beauty.exr" ).as_posix(),
 				"exr",
-				"float id",
+				"rgba",
 				{
 					"layerName" : "id",
 					"filter" : "closest",
 				},
 			)
 		)
+
 		script["outputs"]["in"].setInput( script["parent"]["out"] )
 
 		script["options"] = GafferScene.StandardOptions()
@@ -619,6 +620,25 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		script["render"] = GafferScene.Render()
 		script["render"]["in"].setInput( script["rendererOptions"]["out"] )
 		script["render"]["renderer"].setValue( self.renderer )
+
+		with IECore.CapturingMessageHandler() as mh :
+			script["render"]["task"].execute()
+			self.assertEqual( len( mh.messages ), 1 )
+			self.assertEqual( mh.messages[0].message, 'Found render:renderManifestFilePath option, but the render manifest is not enabled because there is no ID output' )
+
+		script["outputs"].addOutput(
+			"id",
+			IECoreScene.Output(
+				imagePath.as_posix(),
+				"exr",
+				"float id",
+				{
+					"layerName" : "id",
+					"filter" : "closest",
+				},
+			)
+		)
+
 		script["render"]["task"].execute()
 
 		reader = GafferImage.ImageReader()
