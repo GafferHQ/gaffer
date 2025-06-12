@@ -520,6 +520,10 @@ Gaffer.Metadata.registerValues( {
 		"label", "File Path",
 		"layout:section", "Render Manifest",
 
+		"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+		"path:leaf", True,
+		"fileSystemPath:extensions", "exr",
+
 	],
 
 	"option:render:performanceMonitor" : [
