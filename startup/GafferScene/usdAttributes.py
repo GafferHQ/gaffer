@@ -50,6 +50,17 @@ Gaffer.Metadata.registerValues( {
 		Specifies the purpose of a location to be
 		`default`, `render`, `proxy` or `guide`. See
 		the USD documentation for more details.
+
+		> Note : The `usd:purpose` attribute can be used with the
+		> `render:includedPurposes` option to limit the objects included
+		> in a render, and with the Viewer "Purposes" drawing mode to
+		> limit the objects visible in a Viewer.
+		>
+		> Also note that native proxy workflows can be built using
+		> Gaffer's contexts, such that proxy or render geometry can appear
+		> at the _same_ location in the scene hierarchy, depending on the
+		> value of a context variable. This has benefits when selecting
+		> and filtering objects.
 		""",
 		"label", "Purpose",
 		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
