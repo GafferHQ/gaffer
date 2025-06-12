@@ -42,6 +42,22 @@ import pxr.Kind
 
 Gaffer.Metadata.registerValues( {
 
+	"attribute:usd:purpose" : [
+
+		"defaultValue", "default",
+		"description",
+		"""
+		Specifies the purpose of a location to be
+		`default`, `render`, `proxy` or `guide`. See
+		the USD documentation for more details.
+		""",
+		"label", "Purpose",
+		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+		"presetNames", IECore.StringVectorData( [ "Default", "Render", "Proxy", "Guide" ] ),
+		"presetValues", IECore.StringVectorData( [ "default", "render", "proxy", "guide" ] ),
+
+	],
+
 	"attribute:usd:kind" : [
 
 		"defaultValue", "",
@@ -58,22 +74,6 @@ Gaffer.Metadata.registerValues( {
 		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 		"presetNames", IECore.StringVectorData( [ IECore.CamelCase.toSpaced( k ) for k in pxr.Kind.Registry().GetAllKinds() if k != "model" ] ),
 		"presetValues", IECore.StringVectorData( k for k in pxr.Kind.Registry().GetAllKinds() if k != "model" ),
-
-	],
-
-	"attribute:usd:purpose" : [
-
-		"defaultValue", "default",
-		"description",
-		"""
-		Specifies the purpose of a location to be
-		`default`, `render`, `proxy` or `guide`. See
-		the USD documentation for more details.
-		""",
-		"label", "Purpose",
-		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-		"presetNames", IECore.StringVectorData( [ "Default", "Render", "Proxy", "Guide" ] ),
-		"presetValues", IECore.StringVectorData( [ "default", "render", "proxy", "guide" ] ),
 
 	],
 
