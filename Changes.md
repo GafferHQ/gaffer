@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.15.0)
 =======
 
+Improvements
+------------
+
+- RenderPassEditor, AttributeEditor, LightEditor : Added menu item and <kbd>I</kbd> shortcut for inspecting the full text of a value, and its source plug.
+
 Fixes
 -----
 
