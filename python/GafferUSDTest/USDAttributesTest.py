@@ -36,10 +36,12 @@
 
 import os
 import collections
+import pathlib
 import unittest
 
 import IECore
 
+import Gaffer
 import GafferUSD
 import GafferScene
 import GafferSceneTest
@@ -59,19 +61,29 @@ class USDAttributesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( attributes["out"].attributes( "/plane" ), IECore.CompoundObject() )
 
 		expected = collections.OrderedDict( [
-			( "purpose", IECore.StringData( "default" ) ),
-			( "kind", IECore.StringData( "assembly" ) ),
+			( "usd:purpose", IECore.StringData( "default" ) ),
+			( "usd:kind", IECore.StringData( "assembly" ) ),
 		] )
 
 		self.assertEqual( attributes["attributes"].keys(), list( expected.keys() ) )
 
 		for name, value in expected.items() :
-			self.assertEqual( attributes["attributes"][name]["name"].getValue(), "usd:" + name )
+			self.assertEqual( attributes["attributes"][name]["name"].getValue(), name )
 			self.assertEqual( attributes["attributes"][name]["enabled"].getValue(), False )
 			self.assertEqual( attributes["attributes"][name]["value"].getValue(), value.value )
 			attributes["attributes"][name]["enabled"].setValue( True )
 
-		self.assertEqual( attributes["out"].attributes( "/plane" ), IECore.CompoundObject( { "usd:" + k : v for k, v in expected.items() } ) )
+		self.assertEqual( attributes["out"].attributes( "/plane" ), IECore.CompoundObject( expected ) )
+
+	def testLoadFrom1_5( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "usdAttributes-1.5.15.0.gfr" )
+		script.load()
+
+		self.assertIn( "usd:kind", script["USDAttributes"]["attributes"] )
+		self.assertNotIn( "kind", script["USDAttributes"]["attributes"] )
+		self.assertEqual( script["USDAttributes"]["attributes"]["usd:kind"]["value"].getValue(), "group" )
 
 if __name__ == "__main__":
 	unittest.main()

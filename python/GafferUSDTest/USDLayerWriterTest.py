@@ -218,7 +218,7 @@ class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 		attributes = GafferUSD.USDAttributes()
 		attributes["in"].setInput( sphere["out"] )
 		attributes["filter"].setInput( sphereFilter["out"] )
-		attributes["attributes"]["kind"]["enabled"].setValue( True )
+		attributes["attributes"]["usd:kind"]["enabled"].setValue( True )
 
 		layerFileName, compositionFileName = self.__writeLayerAndComposition( sphere["out"], attributes["out"] )
 
