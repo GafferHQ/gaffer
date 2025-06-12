@@ -36,6 +36,7 @@
 
 #include "Gaffer/MetadataAlgo.h"
 
+#include "Gaffer/BoxPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/GraphComponent.h"
 #include "Gaffer/Metadata.h"
@@ -198,6 +199,26 @@ Gaffer::ValuePlugPtr compoundNumericValuePlug( const std::string &name, Gaffer::
 	);
 
 	return result;
+}
+
+template<typename T>
+Gaffer::ValuePlugPtr boxValuePlug( const std::string &name, Gaffer::Plug::Direction direction, unsigned flags, const T *value, const Data *minValue, const Data *maxValue )
+{
+	using ValueType = typename T::ValueType;
+	using PointType = typename Gaffer::BoxPlug<ValueType>::PointType;
+	using PointBaseType = typename PointType::BaseType;
+
+	const TypedData<PointType> *min = runTimeCast<const TypedData<PointType>>( minValue );
+	const TypedData<PointType> *max = runTimeCast<const TypedData<PointType>>( maxValue );
+
+	return new Gaffer::BoxPlug<ValueType>(
+		name,
+		direction,
+		value->readable(),
+		min ? min->readable() : PointType( std::numeric_limits<PointBaseType>::lowest() ),
+		max ? max->readable() : PointType( std::numeric_limits<PointBaseType>::max() ),
+		flags
+	);
 }
 
 } // namespace
@@ -899,6 +920,14 @@ ValuePlugPtr createPlugFromMetadata( const std::string &name, Plug::Direction di
 			return compoundNumericValuePlug( name, direction, flags, static_cast<const Color3fData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
 		case Color4fDataTypeId :
 			return compoundNumericValuePlug( name, direction, flags, static_cast<const Color4fData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
+		case Box2iDataTypeId :
+			return boxValuePlug( name, direction, flags, static_cast<const Box2iData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
+		case Box2fDataTypeId :
+			return boxValuePlug( name, direction, flags, static_cast<const Box2fData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
+		case Box3iDataTypeId :
+			return boxValuePlug( name, direction, flags, static_cast<const Box3iData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
+		case Box3fDataTypeId :
+			return boxValuePlug( name, direction, flags, static_cast<const Box3fData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
 		default :
 			if( minValue )
 			{

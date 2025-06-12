@@ -846,6 +846,10 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 			( imath.Color4f( 1.0 ), Gaffer.Color4fPlug ),
 			( imath.V2f( 1.0 ), Gaffer.V2fPlug ),
 			( imath.V3f( 1.0 ), Gaffer.V3fPlug ),
+			( imath.Box2f( imath.V2f( 1.0 ) ), Gaffer.Box2fPlug ),
+			( imath.Box3f( imath.V3f( 1.0 ) ), Gaffer.Box3fPlug ),
+			( imath.Box2i( imath.V2i( 1 ) ), Gaffer.Box2iPlug ),
+			( imath.Box3i( imath.V3i( 1 ) ), Gaffer.Box3iPlug ),
 		] :
 			with self.subTest( value = value, plugType = plugType ) :
 				Gaffer.Metadata.registerValue( "test:testTarget", "defaultValue", value )
@@ -863,6 +867,10 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 			( 5.0, -1.0, 10.0 ),
 			( imath.Color3f( 5.0 ), imath.Color3f( -1.0 ), imath.Color3f( 10.0 ) ),
 			( imath.Color4f( 5.0 ), imath.Color4f( -1.0 ), imath.Color4f( 10.0 ) ),
+			( imath.Box2f( imath.V2f( 5.0 ) ), imath.V2f( -1.0 ), imath.V2f( 10.0 ) ),
+			( imath.Box3f( imath.V3f( 5.0 ) ), imath.V3f( -1.0 ), imath.V3f( 10.0 ) ),
+			( imath.Box2i( imath.V2i( 5 ) ), imath.V2i( -1 ), imath.V2i( 10 ) ),
+			( imath.Box3i( imath.V3i( 5 ) ), imath.V3i( -1 ), imath.V3i( 10 ) ),
 		] :
 			with self.subTest( value = value, minValue = minValue, maxValue = maxValue ) :
 				Gaffer.Metadata.registerValue( "test:testTarget", "defaultValue", value )
