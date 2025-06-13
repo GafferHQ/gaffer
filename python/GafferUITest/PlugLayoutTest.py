@@ -82,6 +82,27 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 			[ n["user"]["c"], n["user"]["b"], n["user"]["a"] ],
 		)
 
+	def testExplicitIndexWins( self ) :
+
+		n = Gaffer.Node()
+		n["user"]["a"] = Gaffer.IntPlug()
+		n["user"]["b"] = Gaffer.IntPlug()
+		n["user"]["c"] = Gaffer.IntPlug()
+
+		Gaffer.Metadata.registerValue( n["user"]["b"], "layout:index", 0 )
+
+		self.assertEqual(
+			GafferUI.PlugLayout.layoutOrder( n["user"] ),
+			[ n["user"]["b"], n["user"]["a"], n["user"]["c"] ],
+		)
+
+		Gaffer.Metadata.registerValue( n["user"]["a"], "layout:index", -1 )
+
+		self.assertEqual(
+			GafferUI.PlugLayout.layoutOrder( n["user"] ),
+			[ n["user"]["b"], n["user"]["c"], n["user"]["a"] ],
+		)
+
 	class CustomWidget( GafferUI.Widget ) :
 
 		def __init__( self, node ) :

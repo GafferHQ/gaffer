@@ -199,24 +199,30 @@ class PlugLayout( GafferUI.Widget ) :
 				if m and cls.__metadataValue( parent, name ) :
 					items.append( m.group( 1 ) )
 
-		itemsAndIndices = [ list( x ) for x in enumerate( items ) ]
-		for itemAndIndex in itemsAndIndices :
-			index = cls.__staticItemMetadataValue( itemAndIndex[1], "index", parent, layoutName )
+		itemsAndIndices = []
+		for item in items :
+			index = cls.__staticItemMetadataValue( item, "index", parent, layoutName )
 			if index is not None :
-				index = index if index >= 0 else sys.maxsize + index
-				itemAndIndex[0] = index
+				if index < 0 :
+					index = len( items ) + index
+			itemsAndIndices.append( ( item, index ) )
 
-		itemsAndIndices.sort( key = lambda x : x[0] )
+		availableIndices = iter( sorted( set( range( 0, len( items ) ) ) - { x[1] for x in itemsAndIndices } ) )
+		itemsAndIndices = [
+			( item, index if index is not None else next( availableIndices ) ) for item, index in itemsAndIndices
+		]
+
+		items = [ x[0] for x in sorted( itemsAndIndices, key = lambda x : x[1] ) ]
 
 		if section is not None :
 			sectionPath = section.split( "." ) if section else []
-			itemsAndIndices = [ x for x in itemsAndIndices if cls.__staticSectionPath( x[1], parent, layoutName ) == sectionPath ]
+			items = [ item for item in items if cls.__staticSectionPath( item, parent, layoutName ) == sectionPath ]
 
 		if rootSection :
 			rootSectionPath = rootSection.split( "." if rootSection else [] )
-			itemsAndIndices = [ x for x in itemsAndIndices if cls.__staticSectionPath( x[1], parent, layoutName )[:len(rootSectionPath)] == rootSectionPath ]
+			items = [ item for item in items if cls.__staticSectionPath( item, parent, layoutName )[:len(rootSectionPath)] == rootSectionPath ]
 
-		return [ x[1] for x in itemsAndIndices ]
+		return items
 
 	@GafferUI.LazyMethod()
 	def __updateLazily( self ) :
