@@ -50,5 +50,4 @@ for type in [ "PxrSphereLight" ] :
 	Gaffer.Metadata.registerValue( "ri:light:" + type, "exposureParameter", "exposure" )
 	Gaffer.Metadata.registerValue( "ri:light:" + type, "colorParameter", "lightColor" )
 
-Gaffer.Metadata.registerValue( "ri:light:PxrPortalLight", "type", "portal" )
 Gaffer.Metadata.registerValue( "ri:light:PxrSphereLight", "type", "point" )
