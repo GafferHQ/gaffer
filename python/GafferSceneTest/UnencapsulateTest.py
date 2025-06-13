@@ -300,7 +300,7 @@ class UnencapsulateTest( GafferSceneTest.SceneTestCase ) :
 			while True :
 				IECore.Canceller.check( context.canceller() )
 
-			parent["standardAttributes"]["attributes"]["displayColor"] = imath.Color3f( 1, 2, 3)
+			parent["standardAttributes"]["attributes"]["render:displayColor"] = imath.Color3f( 1, 2, 3)
 			"""
 		) )
 

@@ -330,7 +330,7 @@ class SceneView::DrawingMode : public Signals::Trackable
 
 			// Included purposes
 
-			auto *includedPurposesPlug = standardOptions->optionsPlug()->getChild<NameValuePlug>( "includedPurposes" );
+			auto *includedPurposesPlug = standardOptions->optionsPlug()->getChild<NameValuePlug>( "render:includedPurposes" );
 			auto viewIncludedPurposesPlug = boost::static_pointer_cast<NameValuePlug>(
 				includedPurposesPlug->createCounterpart( "includedPurposes", Plug::In )
 			);
@@ -2028,10 +2028,10 @@ SceneView::SceneView( ScriptNodePtr scriptNode )
 	// remove motion blur, because the opengl renderer doesn't support it.
 
 	StandardOptionsPtr standardOptions = new StandardOptions( "disableBlur" );
-	standardOptions->optionsPlug()->getChild<NameValuePlug>( "transformBlur" )->enabledPlug()->setValue( true );
-	standardOptions->optionsPlug()->getChild<NameValuePlug>( "transformBlur" )->valuePlug<BoolPlug>()->setValue( false );
-	standardOptions->optionsPlug()->getChild<NameValuePlug>( "deformationBlur" )->enabledPlug()->setValue( true );
-	standardOptions->optionsPlug()->getChild<NameValuePlug>( "deformationBlur" )->valuePlug<BoolPlug>()->setValue( false );
+	standardOptions->optionsPlug()->getChild<NameValuePlug>( "render:transformBlur" )->enabledPlug()->setValue( true );
+	standardOptions->optionsPlug()->getChild<NameValuePlug>( "render:transformBlur" )->valuePlug<BoolPlug>()->setValue( false );
+	standardOptions->optionsPlug()->getChild<NameValuePlug>( "render:deformationBlur" )->enabledPlug()->setValue( true );
+	standardOptions->optionsPlug()->getChild<NameValuePlug>( "render:deformationBlur" )->valuePlug<BoolPlug>()->setValue( false );
 
 	preprocessor->addChild( standardOptions );
 	standardOptions->inPlug()->setInput( m_renderer->preprocessor()->outPlug() );

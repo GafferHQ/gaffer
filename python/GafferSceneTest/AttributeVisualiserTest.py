@@ -58,8 +58,8 @@ class AttributeVisualiserTest( GafferSceneTest.SceneTestCase ) :
 
 		attributes1 = GafferScene.StandardAttributes()
 		attributes1["in"].setInput( group["out"] )
-		attributes1["attributes"]["transformBlurSegments"]["enabled"].setValue( 1 )
-		attributes1["attributes"]["transformBlurSegments"]["value"].setValue( 4 )
+		attributes1["attributes"]["gaffer:transformBlurSegments"]["enabled"].setValue( 1 )
+		attributes1["attributes"]["gaffer:transformBlurSegments"]["value"].setValue( 4 )
 		attributes1["filter"].setInput( filter1["out"] )
 
 		filter2 = GafferScene.PathFilter()
@@ -67,8 +67,8 @@ class AttributeVisualiserTest( GafferSceneTest.SceneTestCase ) :
 
 		attributes2 = GafferScene.StandardAttributes()
 		attributes2["in"].setInput( attributes1["out"] )
-		attributes2["attributes"]["transformBlurSegments"]["enabled"].setValue( 1 )
-		attributes2["attributes"]["transformBlurSegments"]["value"].setValue( 2 )
+		attributes2["attributes"]["gaffer:transformBlurSegments"]["enabled"].setValue( 1 )
+		attributes2["attributes"]["gaffer:transformBlurSegments"]["value"].setValue( 2 )
 		attributes2["filter"].setInput( filter2["out"] )
 
 		self.assertTrue( "gl:surface" not in attributes2["out"].attributes( "/group/sphere" ) )

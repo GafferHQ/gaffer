@@ -109,16 +109,16 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		visibleFilter = GafferScene.PathFilter()
 
 		attributes1 = GafferScene.StandardAttributes()
-		attributes1["attributes"]["visibility"]["enabled"].setValue( True )
-		attributes1["attributes"]["visibility"]["value"].setValue( True )
+		attributes1["attributes"]["scene:visible"]["enabled"].setValue( True )
+		attributes1["attributes"]["scene:visible"]["value"].setValue( True )
 		attributes1["in"].setInput( group2["out"] )
 		attributes1["filter"].setInput( visibleFilter["out"] )
 
 		invisibleFilter = GafferScene.PathFilter()
 
 		attributes2 = GafferScene.StandardAttributes()
-		attributes2["attributes"]["visibility"]["enabled"].setValue( True )
-		attributes2["attributes"]["visibility"]["value"].setValue( False )
+		attributes2["attributes"]["scene:visible"]["enabled"].setValue( True )
+		attributes2["attributes"]["scene:visible"]["value"].setValue( False )
 		attributes2["in"].setInput( attributes1["out"] )
 		attributes2["filter"].setInput( invisibleFilter["out"] )
 
@@ -1592,10 +1592,10 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		#      copyOptions
 
 		options = GafferScene.StandardOptions()
-		options["options"]["renderCamera"]["enabled"].setValue( True )
-		options["options"]["renderCamera"]["value"].setValue( "/renderCamera" )
-		options["options"]["resolutionMultiplier"]["enabled"].setValue( True )
-		options["options"]["resolutionMultiplier"]["value"].setValue( 2.0 )
+		options["options"]["render:camera"]["enabled"].setValue( True )
+		options["options"]["render:camera"]["value"].setValue( "/renderCamera" )
+		options["options"]["render:resolutionMultiplier"]["enabled"].setValue( True )
+		options["options"]["render:resolutionMultiplier"]["value"].setValue( 2.0 )
 
 		tweaks = GafferScene.OptionTweaks()
 		tweaks["in"].setInput( options["out"] )
@@ -1694,10 +1694,10 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		#         mergeScenes
 
 		options = GafferScene.StandardOptions()
-		options["options"]["renderCamera"]["enabled"].setValue( True )
-		options["options"]["renderCamera"]["value"].setValue( "/renderCamera" )
-		options["options"]["resolutionMultiplier"]["enabled"].setValue( True )
-		options["options"]["resolutionMultiplier"]["value"].setValue( 2.0 )
+		options["options"]["render:camera"]["enabled"].setValue( True )
+		options["options"]["render:camera"]["value"].setValue( "/renderCamera" )
+		options["options"]["render:resolutionMultiplier"]["enabled"].setValue( True )
+		options["options"]["render:resolutionMultiplier"]["value"].setValue( 2.0 )
 
 		customOptions = GafferScene.CustomOptions()
 		customOptions["options"].addChild( Gaffer.NameValuePlug( "render:camera", "/altCamera" ) )
@@ -1764,12 +1764,12 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		#            nameSwitch
 
 		options = GafferScene.StandardOptions()
-		options["options"]["renderCamera"]["enabled"].setValue( True )
-		options["options"]["renderCamera"]["value"].setValue( "/010" )
+		options["options"]["render:camera"]["enabled"].setValue( True )
+		options["options"]["render:camera"]["value"].setValue( "/010" )
 
 		options2 = GafferScene.StandardOptions()
-		options2["options"]["renderCamera"]["enabled"].setValue( True )
-		options2["options"]["renderCamera"]["value"].setValue( "/020" )
+		options2["options"]["render:camera"]["enabled"].setValue( True )
+		options2["options"]["render:camera"]["value"].setValue( "/020" )
 
 		nameSwitch = Gaffer.NameSwitch()
 		nameSwitch.setup( GafferScene.ScenePlug() )
@@ -1809,8 +1809,8 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["options"] = GafferScene.StandardOptions()
-		script["options"]["options"]["renderCamera"]["enabled"].setValue( True )
-		script["options"]["options"]["renderCamera"]["value"].setValue( "test" )
+		script["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		script["options"]["options"]["render:camera"]["value"].setValue( "test" )
 
 		script["dot"] = Gaffer.Dot()
 		script["dot"].setup( script["options"]["out"] )
@@ -1837,8 +1837,8 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["options"] = GafferScene.StandardOptions()
-		script["options"]["options"]["renderCamera"]["enabled"].setValue( True )
-		script["options"]["options"]["renderCamera"]["value"].setValue( "test" )
+		script["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		script["options"]["options"]["render:camera"]["value"].setValue( "test" )
 
 		script["dot"] = Gaffer.Dot()
 		script["dot"].setup( script["options"]["out"] )
@@ -1887,8 +1887,8 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		# Test branching history with an expression using two input globals
 		# to produce our output
 		script["options2"] = GafferScene.StandardOptions()
-		script["options2"]["options"]["renderCamera"]["enabled"].setValue( True )
-		script["options2"]["options"]["renderCamera"]["value"].setValue( "other" )
+		script["options2"]["options"]["render:camera"]["enabled"].setValue( True )
+		script["options2"]["options"]["render:camera"]["value"].setValue( "other" )
 
 		script["expression"].setExpression( inspect.cleandoc(
 		"""

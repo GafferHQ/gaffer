@@ -102,8 +102,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		s["filter"]["setExpression"].setValue( "hidden" )
 
 		s["attributes"] = GafferScene.StandardAttributes()
-		s["attributes"]["attributes"]["visibility"]["enabled"].setValue( True )
-		s["attributes"]["attributes"]["visibility"]["value"].setValue( False )
+		s["attributes"]["attributes"]["scene:visible"]["enabled"].setValue( True )
+		s["attributes"]["attributes"]["scene:visible"]["value"].setValue( False )
 		s["attributes"]["filter"].setInput( s["filter"]["out"] )
 		s["attributes"]["in"].setInput( s["sphere"]["out"] )
 
@@ -190,13 +190,13 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		s["attributes"] = GafferScene.StandardAttributes()
 		s["attributes"]["in"].setInput( s["group"]["out"] )
 		s["attributes"]["filter"].setInput( s["planeFilter"]["out"] )
-		s["attributes"]["attributes"]["transformBlur"]["enabled"].setValue( True )
-		s["attributes"]["attributes"]["transformBlur"]["value"].setValue( False )
+		s["attributes"]["attributes"]["gaffer:transformBlur"]["enabled"].setValue( True )
+		s["attributes"]["attributes"]["gaffer:transformBlur"]["value"].setValue( False )
 
 		s["options"] = GafferScene.StandardOptions()
 		s["options"]["in"].setInput( s["attributes"]["out"] )
-		s["options"]["options"]["shutter"]["enabled"].setValue( True )
-		s["options"]["options"]["transformBlur"]["enabled"].setValue( True )
+		s["options"]["options"]["render:shutter"]["enabled"].setValue( True )
+		s["options"]["options"]["render:transformBlur"]["enabled"].setValue( True )
 
 		s["render"] = GafferScene.Render()
 		s["render"]["in"].setInput( s["options"]["out"] )
@@ -206,7 +206,7 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		# No motion blur
 
-		s["options"]["options"]["transformBlur"]["value"].setValue( False )
+		s["options"]["options"]["render:transformBlur"]["value"].setValue( False )
 		s["render"]["task"].execute()
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
@@ -244,7 +244,7 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		# Motion blur
 
-		s["options"]["options"]["transformBlur"]["value"].setValue( True )
+		s["options"]["options"]["render:transformBlur"]["value"].setValue( True )
 		s["render"]["task"].execute()
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
@@ -350,10 +350,10 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		s["options"] = GafferScene.StandardOptions()
 		s["options"]["in"].setInput( s["camera"]["out"] )
-		s["options"]["options"]["renderResolution"]["enabled"].setValue( True )
-		s["options"]["options"]["renderResolution"]["value"].setValue( imath.V2i( 200, 100 ) )
-		s["options"]["options"]["resolutionMultiplier"]["enabled"].setValue( True )
-		s["options"]["options"]["resolutionMultiplier"]["value"].setValue( 2 )
+		s["options"]["options"]["render:resolution"]["enabled"].setValue( True )
+		s["options"]["options"]["render:resolution"]["value"].setValue( imath.V2i( 200, 100 ) )
+		s["options"]["options"]["render:resolutionMultiplier"]["enabled"].setValue( True )
+		s["options"]["options"]["render:resolutionMultiplier"]["value"].setValue( 2 )
 
 		s["render"] = GafferScene.Render()
 		s["render"]["in"].setInput( s["options"]["out"] )
@@ -374,8 +374,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		# As should a camera picked from the scene.
 
-		s["options"]["options"]["renderCamera"]["enabled"].setValue( True )
-		s["options"]["options"]["renderCamera"]["value"].setValue( "/camera" )
+		s["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		s["options"]["options"]["render:camera"]["value"].setValue( "/camera" )
 		s["render"]["task"].execute()
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
@@ -393,8 +393,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		s["options"] = GafferScene.StandardOptions()
 		s["options"]["in"].setInput( s["camera"]["out"] )
-		s["options"]["options"]["renderCamera"]["enabled"].setValue( True )
-		s["options"]["options"]["renderCamera"]["value"].setValue( "/camera" )
+		s["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		s["options"]["options"]["render:camera"]["value"].setValue( "/camera" )
 
 		s["render"] = GafferScene.Render()
 		s["render"]["in"].setInput( s["options"]["out"] )
@@ -417,8 +417,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_y" ), 479 )
 
 		# Apply Crop Window
-		s["options"]["options"]["renderCropWindow"]["enabled"].setValue( True )
-		s["options"]["options"]["renderCropWindow"]["value"].setValue( imath.Box2f( imath.V2f( 0.25, 0.5 ), imath.V2f( 0.75, 1.0 ) ) )
+		s["options"]["options"]["render:cropWindow"]["enabled"].setValue( True )
+		s["options"]["options"]["render:cropWindow"]["value"].setValue( imath.Box2f( imath.V2f( 0.25, 0.5 ), imath.V2f( 0.75, 1.0 ) ) )
 
 		s["render"]["task"].execute()
 
@@ -434,7 +434,7 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_y" ), 479 )
 
 		# Test Empty Crop Window
-		s["options"]["options"]["renderCropWindow"]["value"].setValue( imath.Box2f() )
+		s["options"]["options"]["render:cropWindow"]["value"].setValue( imath.Box2f() )
 
 		s["render"]["task"].execute()
 
@@ -452,17 +452,17 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_y" ), 479 )
 
 		# Apply Overscan
-		s["options"]["options"]["renderCropWindow"]["enabled"].setValue( False )
-		s["options"]["options"]["overscan"]["enabled"].setValue( True )
-		s["options"]["options"]["overscan"]["value"].setValue( True )
-		s["options"]["options"]["overscanTop"]["enabled"].setValue( True )
-		s["options"]["options"]["overscanTop"]["value"].setValue( 0.1 )
-		s["options"]["options"]["overscanBottom"]["enabled"].setValue( True )
-		s["options"]["options"]["overscanBottom"]["value"].setValue( 0.2 )
-		s["options"]["options"]["overscanLeft"]["enabled"].setValue( True )
-		s["options"]["options"]["overscanLeft"]["value"].setValue( 0.3 )
-		s["options"]["options"]["overscanRight"]["enabled"].setValue( True )
-		s["options"]["options"]["overscanRight"]["value"].setValue( 0.4 )
+		s["options"]["options"]["render:cropWindow"]["enabled"].setValue( False )
+		s["options"]["options"]["render:overscan"]["enabled"].setValue( True )
+		s["options"]["options"]["render:overscan"]["value"].setValue( True )
+		s["options"]["options"]["render:overscanTop"]["enabled"].setValue( True )
+		s["options"]["options"]["render:overscanTop"]["value"].setValue( 0.1 )
+		s["options"]["options"]["render:overscanBottom"]["enabled"].setValue( True )
+		s["options"]["options"]["render:overscanBottom"]["value"].setValue( 0.2 )
+		s["options"]["options"]["render:overscanLeft"]["enabled"].setValue( True )
+		s["options"]["options"]["render:overscanLeft"]["value"].setValue( 0.3 )
+		s["options"]["options"]["render:overscanRight"]["enabled"].setValue( True )
+		s["options"]["options"]["render:overscanRight"]["value"].setValue( 0.4 )
 
 		s["render"]["task"].execute()
 
@@ -482,8 +482,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		s = Gaffer.ScriptNode()
 
 		s["options"] = GafferScene.StandardOptions()
-		s["options"]["options"]["renderCamera"]["enabled"].setValue( True )
-		s["options"]["options"]["renderCamera"]["value"].setValue( "/i/dont/exist" )
+		s["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		s["options"]["options"]["render:camera"]["value"].setValue( "/i/dont/exist" )
 
 		s["render"] = GafferScene.Render()
 		s["render"]["in"].setInput( s["options"]["out"] )
@@ -1139,8 +1139,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		options = GafferScene.StandardOptions()
 
-		options["options"]["performanceMonitor"]["value"].setValue( True )
-		options["options"]["performanceMonitor"]["enabled"].setValue( True )
+		options["options"]["render:performanceMonitor"]["value"].setValue( True )
+		options["options"]["render:performanceMonitor"]["enabled"].setValue( True )
 
 		render = GafferScene.Render()
 		render["in"].setInput( options["out"] )
@@ -1315,10 +1315,10 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		# Do another render at frame 1, but with deformation blur on.
 
-		s["options"]["options"]["deformationBlur"]["enabled"].setValue( True )
-		s["options"]["options"]["deformationBlur"]["value"].setValue( True )
-		s["options"]["options"]["shutter"]["enabled"].setValue( True )
-		s["options"]["options"]["shutter"]["value"].setValue( imath.V2f( -0.5, 0.5 ) )
+		s["options"]["options"]["render:deformationBlur"]["enabled"].setValue( True )
+		s["options"]["options"]["render:deformationBlur"]["value"].setValue( True )
+		s["options"]["options"]["render:shutter"]["enabled"].setValue( True )
+		s["options"]["options"]["render:shutter"]["value"].setValue( imath.V2f( -0.5, 0.5 ) )
 		s["outputs"]["outputs"][0]["fileName"].setValue( self.temporaryDirectory() / "deformationBlurOn.exr" )
 		s["render"]["task"].execute()
 

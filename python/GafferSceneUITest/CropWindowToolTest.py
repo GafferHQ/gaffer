@@ -82,23 +82,23 @@ class CropWindowToolTest( GafferUITest.TestCase ) :
 		view["in"].setInput( script["options"]["out"] )
 
 		self.waitForIdle( 1000 )
-		self.assertEqual( tool.status(), "Info: Editing <b>options.options.renderCropWindow.value</b>" )
+		self.assertEqual( tool.status(), "Info: Editing <b>options.options.render:cropWindow.value</b>" )
 
 		# Locked value plug
 
-		Gaffer.MetadataAlgo.setReadOnly( script["options"]["options"]["renderCropWindow"]["value"], True )
+		Gaffer.MetadataAlgo.setReadOnly( script["options"]["options"]["render:cropWindow"]["value"], True )
 
 		self.waitForIdle( 1000 )
-		self.assertEqual( tool.status(), "Warning: <b>options.options.renderCropWindow.value</b> is locked" )
+		self.assertEqual( tool.status(), "Warning: <b>options.options.render:cropWindow.value</b> is locked" )
 
 		# Locked/off enabled plug
 
-		Gaffer.MetadataAlgo.setReadOnly( script["options"]["options"]["renderCropWindow"]["value"], False )
-		script["options"]["options"]["renderCropWindow"]["enabled"].setValue( False )
-		Gaffer.MetadataAlgo.setReadOnly( script["options"]["options"]["renderCropWindow"]["enabled"], True )
+		Gaffer.MetadataAlgo.setReadOnly( script["options"]["options"]["render:cropWindow"]["value"], False )
+		script["options"]["options"]["render:cropWindow"]["enabled"].setValue( False )
+		Gaffer.MetadataAlgo.setReadOnly( script["options"]["options"]["render:cropWindow"]["enabled"], True )
 
 		self.waitForIdle( 1000 )
-		self.assertEqual( tool.status(), "Warning: <b>options.options.renderCropWindow.value</b> isn't editable" )
+		self.assertEqual( tool.status(), "Warning: <b>options.options.render:cropWindow.value</b> isn't editable" )
 
 		# Check status across visible/invisible overlay transitions (this is
 		# really testing one of the gnarly parts of the status implementation
@@ -112,7 +112,7 @@ class CropWindowToolTest( GafferUITest.TestCase ) :
 		view["camera"]["lookThroughEnabled"].setValue( True )
 
 		self.waitForIdle( 1000 )
-		self.assertEqual( tool.status(), "Warning: <b>options.options.renderCropWindow.value</b> isn't editable" )
+		self.assertEqual( tool.status(), "Warning: <b>options.options.render:cropWindow.value</b> isn't editable" )
 
 	def testImageViewStatus( self ) :
 
@@ -159,7 +159,7 @@ class CropWindowToolTest( GafferUITest.TestCase ) :
 		self.waitForIdle( 1000 )
 
 
-		self.assertEqual( tool.status(), "Info: Editing <b>options.options.renderCropWindow.value</b>" )
+		self.assertEqual( tool.status(), "Info: Editing <b>options.options.render:cropWindow.value</b>" )
 
 if __name__ == "__main__":
 	unittest.main()

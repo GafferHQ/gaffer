@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,57 +37,52 @@
 import Gaffer
 import GafferScene
 
-Gaffer.Metadata.registerNode(
+class __OptionsPlugProxy( object ) :
 
-	GafferScene.LightToCamera,
-
-	"description",
-	"""
-	Converts lights into cameras. Spotlights are converted to a perspective
-	camera with the field of view matching the cone angle, and distant lights are
-	converted to an orthographic camera.
-	""",
-
-	plugs = {
-
-		"filmFit" : [
-
-			"description", Gaffer.Metadata.value( "option:render:filmFit", "description" ),
-			"plugValueWidget:type", Gaffer.Metadata.value( "option:render:filmFit", "plugValueWidget:type" ),
-			"presetNames", Gaffer.Metadata.value( "option:render:filmFit", "presetNames" ),
-			"presetValues", Gaffer.Metadata.value( "option:render:filmFit", "presetValues" ),
-
-		],
-
-		"distantAperture" : [
-
-			"description",
-			"""
-			The orthographic aperture used when converting distant lights
-			( which are theoretically infinite in extent )
-			""",
-
-		],
-
-		"clippingPlanes" : [
-
-			"description",
-			"""
-			Clipping planes for the created cameras.  When creating a perspective camera, a near clip
-			<= 0 is invalid, and will be replaced with 0.01.  Also, certain lights only start casting
-			light at some distance - if near clip is less than this, it will be increased.
-			""",
-
-		],
-
-		"filter" : [
-
-			"description",
-			"""
-			Specifies which lights to convert.
-			""",
-
-		],
+	__renames = {
+		"renderCamera" : "render:camera",
+		"filmFit" : "render:filmFit",
+		"renderResolution" : "render:resolution",
+		"pixelAspectRatio" : "render:pixelAspectRatio",
+		"resolutionMultiplier" : "render:resolutionMultiplier",
+		"renderCropWindow" : "render:cropWindow",
+		"overscan" : "render:overscan",
+		"overscanTop" : "render:overscanTop",
+		"overscanBottom" : "render:overscanBottom",
+		"overscanLeft" : "render:overscanLeft",
+		"overscanRight" : "render:overscanRight",
+		"depthOfField" : "render:depthOfField",
+		"defaultRenderer" : "render:defaultRenderer",
+		"includedPurposes" : "render:includedPurposes",
+		"inclusions" : "render:inclusions",
+		"exclusions" : "render:exclusions",
+		"additionalLights" : "render:additionalLights",
+		"transformBlur" : "render:transformBlur",
+		"deformationBlur" : "render:deformationBlur",
+		"shutter" : "render:shutter",
+		"performanceMonitor" : "render:performanceMonitor",
 	}
 
-)
+	def __init__( self, optionsPlug ) :
+
+		self.__optionsPlug = optionsPlug
+
+	def __getitem__( self, key ) :
+
+		return self.__optionsPlug[self.__renames.get( key, key )]
+
+def __optionsGetItem( originalGetItem ) :
+
+	def getItem( self, key ) :
+
+		result = originalGetItem( self, key )
+		if key == "options" :
+			scriptNode = self.ancestor( Gaffer.ScriptNode )
+			if scriptNode is not None and scriptNode.isExecuting() :
+				return __OptionsPlugProxy( result )
+
+		return result
+
+	return getItem
+
+GafferScene.StandardOptions.__getitem__ = __optionsGetItem( GafferScene.StandardOptions.__getitem__ )

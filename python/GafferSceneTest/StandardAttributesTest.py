@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import imath
 import pathlib
 
 import IECore
@@ -48,33 +49,33 @@ class StandardAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 		s = GafferScene.StandardAttributes()
 
-		self.assertEqual( s["attributes"]["visibility"]["value"].getValue(), True )
+		self.assertEqual( s["attributes"]["scene:visible"]["value"].getValue(), True )
 		self.assertEqual( s["attributes"]["doubleSided"]["value"].getValue(), True )
-		self.assertEqual( s["attributes"]["transformBlur"]["value"].getValue(), True )
-		self.assertEqual( s["attributes"]["transformBlurSegments"]["value"].getValue(), 1 )
-		self.assertEqual( s["attributes"]["deformationBlur"]["value"].getValue(), True )
-		self.assertEqual( s["attributes"]["deformationBlurSegments"]["value"].getValue(), 1 )
-		self.assertEqual( s["attributes"]["linkedLights"]["value"].getValue(), "" )
+		self.assertEqual( s["attributes"]["gaffer:transformBlur"]["value"].getValue(), True )
+		self.assertEqual( s["attributes"]["gaffer:transformBlurSegments"]["value"].getValue(), 1 )
+		self.assertEqual( s["attributes"]["gaffer:deformationBlur"]["value"].getValue(), True )
+		self.assertEqual( s["attributes"]["gaffer:deformationBlurSegments"]["value"].getValue(), 1 )
+		self.assertEqual( s["attributes"]["linkedLights"]["value"].getValue(), "defaultLights" )
 
-		self.assertEqual( s["attributes"]["visibility"]["value"].defaultValue(), True )
+		self.assertEqual( s["attributes"]["scene:visible"]["value"].defaultValue(), True )
 		self.assertEqual( s["attributes"]["doubleSided"]["value"].defaultValue(), True )
-		self.assertEqual( s["attributes"]["transformBlur"]["value"].defaultValue(), True )
-		self.assertEqual( s["attributes"]["transformBlurSegments"]["value"].defaultValue(), 1 )
-		self.assertEqual( s["attributes"]["deformationBlur"]["value"].defaultValue(), True )
-		self.assertEqual( s["attributes"]["deformationBlurSegments"]["value"].defaultValue(), 1 )
-		self.assertEqual( s["attributes"]["linkedLights"]["value"].defaultValue(), "" )
+		self.assertEqual( s["attributes"]["gaffer:transformBlur"]["value"].defaultValue(), True )
+		self.assertEqual( s["attributes"]["gaffer:transformBlurSegments"]["value"].defaultValue(), 1 )
+		self.assertEqual( s["attributes"]["gaffer:deformationBlur"]["value"].defaultValue(), True )
+		self.assertEqual( s["attributes"]["gaffer:deformationBlurSegments"]["value"].defaultValue(), 1 )
+		self.assertEqual( s["attributes"]["linkedLights"]["value"].defaultValue(), "defaultLights" )
 
 	def testSerialisationWithInvisibility( self ) :
 
 		s = Gaffer.ScriptNode()
 		s["a"] = GafferScene.StandardAttributes()
-		s["a"]["attributes"]["visibility"]["value"].setValue( False )
+		s["a"]["attributes"]["scene:visible"]["value"].setValue( False )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 
-		self.assertEqual( s2["a"]["attributes"]["visibility"]["value"].getValue(), False )
-		self.assertEqual( s2["a"]["attributes"]["visibility"]["value"].defaultValue(), True )
+		self.assertEqual( s2["a"]["attributes"]["scene:visible"]["value"].getValue(), False )
+		self.assertEqual( s2["a"]["attributes"]["scene:visible"]["value"].defaultValue(), True )
 
 	def testGlobal( self ) :
 
@@ -85,8 +86,8 @@ class StandardAttributesTest( GafferSceneTest.SceneTestCase ) :
 		a = GafferScene.StandardAttributes()
 		a["in"].setInput( p["out"] )
 		a["filter"].setInput( f["out"] )
-		a["attributes"]["transformBlurSegments"]["enabled"].setValue( True )
-		a["attributes"]["transformBlurSegments"]["value"].setValue( 2 )
+		a["attributes"]["gaffer:transformBlurSegments"]["enabled"].setValue( True )
+		a["attributes"]["gaffer:transformBlurSegments"]["value"].setValue( 2 )
 
 		self.assertEqual( a["out"].attributes( "/plane" )["gaffer:transformBlurSegments"], IECore.IntData( 2 ) )
 		self.assertEqual( a["out"]["globals"].hash(), a["in"]["globals"].hash() )
@@ -111,58 +112,84 @@ class StandardAttributesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( a["out"].setHash( "flatThings" ), p["out"].setHash( "flatThings" ) )
 		self.assertTrue( a["out"].set( "flatThings", _copy=False ).isSame( p["out"].set( "flatThings", _copy=False ) ) )
 
-	def assertPromotedAttribute( self, script ) :
+	def assertPromotedAttribute( self, script, plugName ) :
 
-		self.assertIn( "attributes_visibility", script["Box"] )
-		self.assertIsInstance( script["Box"]["attributes_visibility"], Gaffer.NameValuePlug )
+		self.assertIn( plugName, script["Box"] )
+		self.assertIsInstance( script["Box"][plugName], Gaffer.NameValuePlug )
 
-		self.assertIn( "name", script["Box"]["attributes_visibility"] )
-		self.assertIsInstance( script["Box"]["attributes_visibility"]["name"], Gaffer.StringPlug )
+		self.assertIn( "name", script["Box"][plugName] )
+		self.assertIsInstance( script["Box"][plugName]["name"], Gaffer.StringPlug )
 
-		self.assertIn( "value", script["Box"]["attributes_visibility"] )
-		self.assertIsInstance( script["Box"]["attributes_visibility"]["value"], Gaffer.BoolPlug )
+		self.assertIn( "value", script["Box"][plugName] )
+		self.assertIsInstance( script["Box"][plugName]["value"], Gaffer.BoolPlug )
 
-		self.assertIn( "enabled", script["Box"]["attributes_visibility"] )
-		self.assertIsInstance( script["Box"]["attributes_visibility"]["enabled"], Gaffer.BoolPlug )
+		self.assertIn( "enabled", script["Box"][plugName] )
+		self.assertIsInstance( script["Box"][plugName]["enabled"], Gaffer.BoolPlug )
 
-		self.assertTrue( Gaffer.PlugAlgo.isPromoted( script["Box"]["StandardAttributes"]["attributes"]["visibility"] ) )
+		self.assertTrue( Gaffer.PlugAlgo.isPromoted( script["Box"]["StandardAttributes"]["attributes"]["scene:visible"] ) )
 		self.assertEqual(
-			script["Box"]["StandardAttributes"]["attributes"]["visibility"].getInput(),
-			script["Box"]["attributes_visibility"]
+			script["Box"]["StandardAttributes"]["attributes"]["scene:visible"].getInput(),
+			script["Box"][plugName]
 		)
 
-		self.assertTrue( script["Box"]["attributes_visibility"].getFlags( Gaffer.Plug.Flags.Dynamic ) )
+		self.assertTrue( script["Box"][plugName].getFlags( Gaffer.Plug.Flags.Dynamic ) )
 
 	def testLoadPromotedAttributeFrom0_53( self ) :
 
 		s = Gaffer.ScriptNode()
 		s["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "promotedCompoundDataMemberPlug-0.53.4.0.gfr" )
 		s.load()
-		self.assertPromotedAttribute( s )
+		self.assertPromotedAttribute( s, "attributes_visibility" )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
-		self.assertPromotedAttribute( s2 )
+		self.assertPromotedAttribute( s2, "attributes_visibility" )
 
 		s3 = Gaffer.ScriptNode()
 		s3.execute( s2.serialise() )
-		self.assertPromotedAttribute( s3 )
+		self.assertPromotedAttribute( s3, "attributes_visibility" )
 
 	def testPromoteAndSerialiseAttribute( self ) :
 
 		s = Gaffer.ScriptNode()
 		s["Box"] = Gaffer.Box()
 		s["Box"]["StandardAttributes"] = GafferScene.StandardAttributes()
-		Gaffer.PlugAlgo.promote( s["Box"]["StandardAttributes"]["attributes"]["visibility"] )
-		self.assertPromotedAttribute( s )
+		Gaffer.PlugAlgo.promote( s["Box"]["StandardAttributes"]["attributes"]["scene:visible"] )
+		self.assertPromotedAttribute( s, "attributes_scene:visible" )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
-		self.assertPromotedAttribute( s2 )
+		self.assertPromotedAttribute( s2, "attributes_scene:visible" )
 
 		s3 = Gaffer.ScriptNode()
 		s3.execute( s2.serialise() )
-		self.assertPromotedAttribute( s3 )
+		self.assertPromotedAttribute( s3, "attributes_scene:visible" )
+
+	def testNodeConstructsWithAllAttributes( self ) :
+
+		targets = "attribute:scene:visible attribute:doubleSided attribute:render:* attribute:gaffer:* " \
+			+ "attribute:linkedLights attribute:shadowedLights attribute:filteredLights"
+
+		node = GafferScene.StandardAttributes()
+		for attribute in Gaffer.Metadata.targetsWithMetadata( targets, "defaultValue" ) :
+			attribute = attribute[10:]
+			with self.subTest( attribute = attribute ) :
+				self.assertIn( attribute, node["attributes"] )
+				self.assertEqual( node["attributes"][attribute]["name"].getValue(), attribute )
+				self.assertEqual(
+					node["attributes"][attribute]["value"].defaultValue(),
+					Gaffer.Metadata.value( f"attribute:{attribute}", "defaultValue" )
+				)
+
+	def testLoadFrom1_5( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "standardAttributes-1.5.14.0.gfr" )
+		script.load()
+
+		self.assertIn( "render:displayColor", script["StandardAttributes"]["attributes"] )
+		self.assertNotIn( "displayColor", script["StandardAttributes"]["attributes"] )
+		self.assertEqual( script["StandardAttributes"]["attributes"]["render:displayColor"]["value"].getValue(), imath.Color3f( 0.1, 0.2, 0.3 ) )
 
 if __name__ == "__main__":
 	unittest.main()

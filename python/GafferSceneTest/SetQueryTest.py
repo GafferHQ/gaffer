@@ -324,7 +324,7 @@ class SetQueryTest( GafferSceneTest.SceneTestCase ) :
 		attributes = GafferScene.StandardAttributes()
 		attributes["in"].setInput( group["out"] )
 		attributes["filter"].setInput( childrenFilter["out"] )
-		attributes["attributes"]["displayColor"]["enabled"].setValue( True )
+		attributes["attributes"]["render:displayColor"]["enabled"].setValue( True )
 
 		setQuery = GafferScene.SetQuery()
 		setQuery["scene"].setInput( group["out"] )
@@ -332,8 +332,8 @@ class SetQueryTest( GafferSceneTest.SceneTestCase ) :
 
 		spreadsheet = Gaffer.Spreadsheet()
 		spreadsheet["selector"].setInput( setQuery["firstMatch"] )
-		spreadsheet["rows"].addColumn( attributes["attributes"]["displayColor"]["value"], name = "displayColor" )
-		attributes["attributes"]["displayColor"]["value"].setInput( spreadsheet["out"]["displayColor"] )
+		spreadsheet["rows"].addColumn( attributes["attributes"]["render:displayColor"]["value"], name = "displayColor" )
+		attributes["attributes"]["render:displayColor"]["value"].setInput( spreadsheet["out"]["displayColor"] )
 
 		rowA = spreadsheet["rows"].addRow()
 		rowB = spreadsheet["rows"].addRow()

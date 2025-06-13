@@ -151,7 +151,7 @@ class LocaliseAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 		cs = GafferTest.CapturingSlot( localiseAttributes.plugDirtiedSignal() )
 
-		standardAttributes["attributes"]["visibility"]["enabled"].setValue( True )
+		standardAttributes["attributes"]["scene:visible"]["enabled"].setValue( True )
 		self.assertIn( localiseAttributes["out"]["attributes"], { x[0] for x in cs } )
 
 		del cs[:]

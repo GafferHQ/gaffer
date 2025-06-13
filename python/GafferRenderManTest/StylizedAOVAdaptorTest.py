@@ -45,7 +45,7 @@ class StylizedAOVAdaptorTest( GafferSceneTest.SceneTestCase ) :
 	def testNoOp( self ) :
 
 		scene = GafferScene.StandardOptions()
-		scene["options"]["renderCamera"]["enabled"].setValue( True )
+		scene["options"]["render:camera"]["enabled"].setValue( True )
 
 		adaptor = GafferRenderMan._StylizedAOVAdaptor()
 		adaptor["in"].setInput( scene["out"] )

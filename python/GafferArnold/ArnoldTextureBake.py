@@ -361,12 +361,12 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		# First get rid of options from the upstream scene that could mess up the bake
 		self["__OptionOverrides"] = GafferScene.StandardOptions()
 		self["__OptionOverrides"]["in"].setInput( self["in"] )
-		self["__OptionOverrides"]["options"]["pixelAspectRatio"]["enabled"].setValue( True )
-		self["__OptionOverrides"]["options"]["resolutionMultiplier"]["enabled"].setValue( True )
-		self["__OptionOverrides"]["options"]["overscan"]["enabled"].setValue( True )
-		self["__OptionOverrides"]["options"]["renderCropWindow"]["enabled"].setValue( True )
-		self["__OptionOverrides"]["options"]["transformBlur"]["enabled"].setValue( True )
-		self["__OptionOverrides"]["options"]["deformationBlur"]["enabled"].setValue( True )
+		self["__OptionOverrides"]["options"]["render:pixelAspectRatio"]["enabled"].setValue( True )
+		self["__OptionOverrides"]["options"]["render:resolutionMultiplier"]["enabled"].setValue( True )
+		self["__OptionOverrides"]["options"]["render:overscan"]["enabled"].setValue( True )
+		self["__OptionOverrides"]["options"]["render:cropWindow"]["enabled"].setValue( True )
+		self["__OptionOverrides"]["options"]["render:transformBlur"]["enabled"].setValue( True )
+		self["__OptionOverrides"]["options"]["render:deformationBlur"]["enabled"].setValue( True )
 
 		self["__CameraSetup"] = self.__CameraSetup()
 		self["__CameraSetup"]["in"].setInput( self["__OptionOverrides"]["out"] )

@@ -91,8 +91,8 @@ class _PointInstancerAdaptor( GafferScene.SceneProcessor ) :
 		self["invisAttribute"] = GafferScene.StandardAttributes()
 		self["invisAttribute"]["in"].setInput( self["in"] )
 		self["invisAttribute"]["filter"].setInput( self["instancerDescendants"]["out"] )
-		self["invisAttribute"]["attributes"]["visibility"]["value"].setValue( False )
-		self["invisAttribute"]["attributes"]["visibility"]["enabled"].setValue( True )
+		self["invisAttribute"]["attributes"]["scene:visible"]["value"].setValue( False )
+		self["invisAttribute"]["attributes"]["scene:visible"]["enabled"].setValue( True )
 
 		self["attrOptionQuery"] = GafferScene.OptionQuery()
 		self["attrOptionQuery"]["scene"].setInput( self["in"] )

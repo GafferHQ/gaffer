@@ -363,8 +363,8 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 
 		standardOptions = GafferScene.StandardOptions()
 		standardOptions["in"].setInput( group["out"] )
-		standardOptions["options"]["deformationBlur"]["value"].setValue( True )
-		standardOptions["options"]["deformationBlur"]["enabled"].setValue( True )
+		standardOptions["options"]["render:deformationBlur"]["value"].setValue( True )
+		standardOptions["options"]["render:deformationBlur"]["enabled"].setValue( True )
 
 		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
 		controller = GafferScene.RenderController( standardOptions["out"], Gaffer.Context(), renderer )
@@ -399,8 +399,8 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 
 		standardOptions = GafferScene.StandardOptions()
 		standardOptions["in"].setInput( group["out"] )
-		standardOptions["options"]["deformationBlur"]["value"].setValue( True )
-		standardOptions["options"]["deformationBlur"]["enabled"].setValue( True )
+		standardOptions["options"]["render:deformationBlur"]["value"].setValue( True )
+		standardOptions["options"]["render:deformationBlur"]["enabled"].setValue( True )
 
 		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
 		controller = GafferScene.RenderController( standardOptions["out"], Gaffer.Context(), renderer )
@@ -453,8 +453,8 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 
 		standardOptions = GafferScene.StandardOptions()
 		standardOptions["in"].setInput( switch["out"] )
-		standardOptions["options"]["deformationBlur"]["value"].setValue( True )
-		standardOptions["options"]["deformationBlur"]["enabled"].setValue( True )
+		standardOptions["options"]["render:deformationBlur"]["value"].setValue( True )
+		standardOptions["options"]["render:deformationBlur"]["enabled"].setValue( True )
 
 		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
 		controller = GafferScene.RenderController( standardOptions["out"], Gaffer.Context(), renderer )
@@ -508,8 +508,8 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		# Hide the default light. It should be removed from the render,
 		# and the plane should be linked to an empty light set.
 
-		defaultLightAttributes["attributes"]["visibility"]["enabled"].setValue( True )
-		defaultLightAttributes["attributes"]["visibility"]["value"].setValue( False )
+		defaultLightAttributes["attributes"]["scene:visible"]["enabled"].setValue( True )
+		defaultLightAttributes["attributes"]["scene:visible"]["value"].setValue( False )
 		controller.update()
 
 		self.assertIsNone( renderer.capturedObject( "/group/defaultLight" ) )
@@ -628,12 +628,12 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 			} )
 		)
 
-		options["options"]["renderCamera"]["enabled"].setValue( True )
+		options["options"]["render:camera"]["enabled"].setValue( True )
 		controller.update()
 
 		self.assertEqual( capturedSphere.numAttributeEdits(), 5 )
 
-		options["options"]["renderCamera"]["value"].setValue( "/camera" )
+		options["options"]["render:camera"]["value"].setValue( "/camera" )
 		controller.update()
 
 		self.assertEqual( capturedSphere.numAttributeEdits(), 5 )
@@ -741,8 +741,8 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		assertMotionSamples( [ 1 ], False )
 
 		# Test blur.
-		options['options']['transformBlur']["enabled"].setValue( True )
-		options['options']['transformBlur']["value"].setValue( True )
+		options["options"]["render:transformBlur"]["enabled"].setValue( True )
+		options["options"]["render:transformBlur"]["value"].setValue( True )
 		controller.update()
 		assertMotionSamples( [ 0.75, 1.25 ], False )
 
@@ -770,8 +770,8 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		assertMotionSamples( [ 1 ], True )
 
 		# Test deformation blur.
-		options['options']['deformationBlur']["enabled"].setValue( True )
-		options['options']['deformationBlur']["value"].setValue( True )
+		options["options"]["render:deformationBlur"]["enabled"].setValue( True )
+		options["options"]["render:deformationBlur"]["value"].setValue( True )
 		controller.update()
 		assertMotionSamples( [ 0.75, 1.25 ], True )
 
@@ -784,8 +784,8 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		# Test shutter
 		sphere["transform"]["translate"]["x"].setInput( frame["output"] )
 		sphere["radius"].setInput( frame["output"] )
-		options['options']['shutter']["enabled"].setValue( True )
-		options['options']['shutter']["value"].setValue( imath.V2f( -0.7, 0.4 ) )
+		options["options"]["render:shutter"]["enabled"].setValue( True )
+		options["options"]["render:shutter"]["value"].setValue( imath.V2f( -0.7, 0.4 ) )
 		controller.update()
 		assertMotionSamples( [ 0.3, 1.4 ], False )
 		assertMotionSamples( [ 0.3, 1.4 ], True )
@@ -796,8 +796,8 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		controller.update()
 		self.assertEqual( renderer.capturedObject( "/group/camera" ).capturedSamples()[0].getShutter(), imath.V2f( 0.3, 1.4 ) )
 
-		options['options']['renderCamera']["enabled"].setValue( True )
-		options['options']['renderCamera']["value"].setValue( "/group/camera" )
+		options["options"]["render:camera"]["enabled"].setValue( True )
+		options["options"]["render:camera"]["value"].setValue( "/group/camera" )
 		controller.update()
 		assertMotionSamples( [ 0.3, 1.4 ], False )
 		assertMotionSamples( [ 0.3, 1.4 ], True )
@@ -810,47 +810,47 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 
 		# Test attribute controls
 		camera['renderSettingOverrides']['shutter']["enabled"].setValue( False )
-		options['options']['shutter']["value"].setValue( imath.V2f( -0.4, 0.4 ) )
+		options["options"]["render:shutter"]["value"].setValue( imath.V2f( -0.4, 0.4 ) )
 		controller.update()
 		assertMotionSamples( [ 0.6, 1.4 ], False )
 		assertMotionSamples( [ 0.6, 1.4 ], True )
 
-		groupAttributes['attributes']['transformBlur']["enabled"].setValue( True )
-		groupAttributes['attributes']['transformBlur']["value"].setValue( False )
+		groupAttributes["attributes"]["gaffer:transformBlur"]["enabled"].setValue( True )
+		groupAttributes["attributes"]["gaffer:transformBlur"]["value"].setValue( False )
 		controller.update()
 		assertMotionSamples( [ 1 ], False )
-		sphereAttributes['attributes']['transformBlur']["enabled"].setValue( True )
+		sphereAttributes["attributes"]["gaffer:transformBlur"]["enabled"].setValue( True )
 		controller.update()
 		assertMotionSamples( [ 0.6, 1.4 ], False )
 
-		groupAttributes['attributes']['deformationBlur']["enabled"].setValue( True )
-		groupAttributes['attributes']['deformationBlur']["value"].setValue( False )
+		groupAttributes["attributes"]["gaffer:deformationBlur"]["enabled"].setValue( True )
+		groupAttributes["attributes"]["gaffer:deformationBlur"]["value"].setValue( False )
 		controller.update()
 		assertMotionSamples( [ 1 ], True )
-		sphereAttributes['attributes']['deformationBlur']["enabled"].setValue( True )
+		sphereAttributes["attributes"]["gaffer:deformationBlur"]["enabled"].setValue( True )
 		controller.update()
 		assertMotionSamples( [ 0.6, 1.4 ], True )
 
-		groupAttributes['attributes']['transformBlurSegments']["enabled"].setValue( True )
-		groupAttributes['attributes']['transformBlurSegments']["value"].setValue( 4 )
-		groupAttributes['attributes']['deformationBlurSegments']["enabled"].setValue( True )
-		groupAttributes['attributes']['deformationBlurSegments']["value"].setValue( 2 )
+		groupAttributes["attributes"]["gaffer:transformBlurSegments"]["enabled"].setValue( True )
+		groupAttributes["attributes"]["gaffer:transformBlurSegments"]["value"].setValue( 4 )
+		groupAttributes["attributes"]["gaffer:deformationBlurSegments"]["enabled"].setValue( True )
+		groupAttributes["attributes"]["gaffer:deformationBlurSegments"]["value"].setValue( 2 )
 		controller.update()
 		assertMotionSamples( [ 0.6, 0.8, 1.0, 1.2, 1.4 ], False )
 		assertMotionSamples( [ 0.6, 1.0, 1.4 ], True )
 
-		sphereAttributes['attributes']['transformBlurSegments']["enabled"].setValue( True )
-		sphereAttributes['attributes']['transformBlurSegments']["value"].setValue( 2 )
-		sphereAttributes['attributes']['deformationBlurSegments']["enabled"].setValue( True )
-		sphereAttributes['attributes']['deformationBlurSegments']["value"].setValue( 4 )
+		sphereAttributes["attributes"]["gaffer:transformBlurSegments"]["enabled"].setValue( True )
+		sphereAttributes["attributes"]["gaffer:transformBlurSegments"]["value"].setValue( 2 )
+		sphereAttributes["attributes"]["gaffer:deformationBlurSegments"]["enabled"].setValue( True )
+		sphereAttributes["attributes"]["gaffer:deformationBlurSegments"]["value"].setValue( 4 )
 		controller.update()
 		assertMotionSamples( [ 0.6, 1.0, 1.4 ], False )
 		assertMotionSamples( [ 0.6, 0.8, 1.0, 1.2, 1.4 ], True )
 
-		groupAttributes['attributes']['transformBlur']["value"].setValue( True )
-		groupAttributes['attributes']['deformationBlur']["value"].setValue( True )
-		sphereAttributes['attributes']['transformBlur']["value"].setValue( False )
-		sphereAttributes['attributes']['deformationBlur']["value"].setValue( False )
+		groupAttributes["attributes"]["gaffer:transformBlur"]["value"].setValue( True )
+		groupAttributes["attributes"]["gaffer:deformationBlur"]["value"].setValue( True )
+		sphereAttributes["attributes"]["gaffer:transformBlur"]["value"].setValue( False )
+		sphereAttributes["attributes"]["gaffer:deformationBlur"]["value"].setValue( False )
 		controller.update()
 		assertMotionSamples( [ 1.0 ], False )
 		assertMotionSamples( [ 1.0 ], True )
@@ -860,16 +860,16 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		sphere["transform"]["translate"]["x"].setValue( 0 )
 		group["transform"]["translate"]["x"].setInput( frame["output"] )
 
-		groupAttributes['attributes']['transformBlur']["value"].setValue( True )
-		sphereAttributes['attributes']['transformBlur']["value"].setValue( False )
-		sphereAttributes['attributes']['transformBlurSegments']["enabled"].setValue( False )
+		groupAttributes["attributes"]["gaffer:transformBlur"]["value"].setValue( True )
+		sphereAttributes["attributes"]["gaffer:transformBlur"]["value"].setValue( False )
+		sphereAttributes["attributes"]["gaffer:transformBlurSegments"]["enabled"].setValue( False )
 		controller.update()
 		assertMotionSamples( [ 0.6, 0.8, 1.0, 1.2, 1.4 ], False )
 
 		# Override transform segments on sphere
-		sphereAttributes['attributes']['transformBlur']["value"].setValue( True )
-		sphereAttributes['attributes']['transformBlurSegments']["enabled"].setValue( True )
-		sphereAttributes['attributes']['transformBlurSegments']["value"].setValue( 1 )
+		sphereAttributes["attributes"]["gaffer:transformBlur"]["value"].setValue( True )
+		sphereAttributes["attributes"]["gaffer:transformBlurSegments"]["enabled"].setValue( True )
+		sphereAttributes["attributes"]["gaffer:transformBlurSegments"]["value"].setValue( 1 )
 		controller.update()
 		# Very counter-intuitively, this does nothing, because the sphere is not moving
 		assertMotionSamples( [ 0.6, 0.8, 1.0, 1.2, 1.4 ], False )
@@ -1723,10 +1723,10 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 
 		# But should be hidden when we add `render:includedPurposes` to exclude it.
 
-		standardOptions["options"]["includedPurposes"]["enabled"].setValue( True )
-		standardOptions["options"]["includedPurposes"]["value"].setValue( IECore.StringVectorData( [ "default", "proxy" ] ) )
+		standardOptions["options"]["render:includedPurposes"]["enabled"].setValue( True )
+		standardOptions["options"]["render:includedPurposes"]["value"].setValue( IECore.StringVectorData( [ "default", "proxy" ] ) )
 		self.assertEqual(
-			standardOptions["options"]["includedPurposes"]["value"].getValue(),
+			standardOptions["options"]["render:includedPurposes"]["value"].getValue(),
 			IECore.StringVectorData( [ "default", "proxy" ] ),
 		)
 		self.assertTrue( controller.updateRequired() )
@@ -1759,7 +1759,7 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		# Reverting to no `includedPurposes` option should revert to showing
 		# just `default` and `render`.
 
-		standardOptions["options"]["includedPurposes"]["enabled"].setValue( False )
+		standardOptions["options"]["render:includedPurposes"]["enabled"].setValue( False )
 		self.assertTrue( controller.updateRequired() )
 		controller.update()
 		self.assertIsNotNone( renderer.capturedObject( "/group/sphere" ) )
@@ -1777,7 +1777,7 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 
 		standardOptions = GafferScene.StandardOptions()
 		standardOptions["in"].setInput( encapsulate["out"] )
-		standardOptions["options"]["includedPurposes"]["enabled"].setValue( True )
+		standardOptions["options"]["render:includedPurposes"]["enabled"].setValue( True )
 
 		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
 		controller = GafferScene.RenderController( standardOptions["out"], Gaffer.Context(), renderer )
@@ -1802,7 +1802,7 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 
 		# Check that the capsule is updated when the RenderOptions change.
 
-		standardOptions["options"]["includedPurposes"]["value"].setValue( IECore.StringVectorData( [ "default", "proxy" ] ) )
+		standardOptions["options"]["render:includedPurposes"]["value"].setValue( IECore.StringVectorData( [ "default", "proxy" ] ) )
 		self.assertTrue( controller.updateRequired() )
 		controller.update()
 		assertExpectedRenderOptions()
@@ -1811,7 +1811,7 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		# but the RenderOptions that the capsule uses aren't affected.
 
 		capture = renderer.capturedObject( "/cube" )
-		standardOptions["options"]["performanceMonitor"]["enabled"].setValue( True )
+		standardOptions["options"]["render:performanceMonitor"]["enabled"].setValue( True )
 		self.assertTrue( controller.updateRequired() )
 		controller.update()
 		self.assertTrue( renderer.capturedObject( "/cube" ).isSame( capture ) )
@@ -1820,7 +1820,7 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		# get another update.
 
 		del capture
-		standardOptions["options"]["includedPurposes"]["value"].setToDefault()
+		standardOptions["options"]["render:includedPurposes"]["value"].setToDefault()
 		self.assertTrue( controller.updateRequired() )
 		controller.update()
 		assertExpectedRenderOptions()
@@ -1830,7 +1830,7 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		# update.
 
 		capture = renderer.capturedObject( "/cube" )
-		standardOptions["options"]["includedPurposes"]["enabled"].setValue( False )
+		standardOptions["options"]["render:includedPurposes"]["enabled"].setValue( False )
 		self.assertTrue( controller.updateRequired() )
 		controller.update()
 		self.assertTrue( renderer.capturedObject( "/cube" ).isSame( capture ) )
@@ -1857,8 +1857,8 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		# the object. It was included before and it is still included, so we
 		# want to reuse the old object.
 
-		standardOptions["options"]["includedPurposes"]["enabled"].setValue( True )
-		standardOptions["options"]["includedPurposes"]["value"].setValue( IECore.StringVectorData( [ "default", "proxy" ] ) )
+		standardOptions["options"]["render:includedPurposes"]["enabled"].setValue( True )
+		standardOptions["options"]["render:includedPurposes"]["value"].setValue( IECore.StringVectorData( [ "default", "proxy" ] ) )
 		self.assertTrue( controller.updateRequired() )
 		controller.update()
 		self.assertTrue( capture.isSame( renderer.capturedObject( "/cube" ) ) )

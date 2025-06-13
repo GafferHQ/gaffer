@@ -36,7 +36,21 @@
 
 import imath
 
+import IECore
+import IECoreScene
+
 import Gaffer
+import GafferScene
+
+def __rendererPresetNames( additionalNames ) :
+
+	blacklist = { "Capturing" }
+	return IECore.StringVectorData(
+		additionalNames + sorted(
+			t for t in GafferScene.Private.IECoreScenePreview.Renderer.types()
+			if t not in blacklist
+		)
+	)
 
 Gaffer.Metadata.registerValues( {
 
@@ -50,6 +64,61 @@ Gaffer.Metadata.registerValues( {
 		positioned at the origin is used.
 		""",
 		"label", "Camera",
+		"layout:section", "Camera",
+
+		"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+		"path:valid", True,
+		"scenePathPlugValueWidget:setNames", IECore.StringVectorData( [ "__cameras" ] ),
+		"scenePathPlugValueWidget:setsLabel", "Show only cameras",
+
+	],
+
+	"option:render:filmFit" : [
+
+		"defaultValue", 0,
+		"description",
+		"""
+		How the aperture gate (the frame defined by the aperture) will
+		fit into the resolution gate (the framed defined by the data
+		window). Fitting is applied only if the respective aspect
+		ratios of the aperture and the resolution are different. The
+		following fitting modes are available:
+
+		- _Horizontal:_ The aperture gate will fit horizontally between
+		the left/right edges of the resolution gate, while preserving
+		its aspect ratio. If the aperture's aspect ratio is larger than
+		the resolution's, the top/bottom edges of the aperture will be
+		cropped. If it's smaller, then the top/bottom edges will
+		capture extra vertical scene content.
+		- _Vertical:_ The aperture gate will fit vertically between the
+		top/bottom edges of the resolution gate, while preserving its
+		aspect ratio. If the aperture's aspect ratio is larger than the
+		resolution's, the left/right edges of the aperture will be
+		cropped. If it's smaller, then the left/right edges will
+		capture more horizontal scene content.
+		- _Fit_: The aperture gate will fit horizontally (like
+		_Horizontal_ mode) or vertically (like _Vertical_ mode) inside
+		the resolution gate to avoid cropping the aperture, while
+		preserving its aspect ratio. If the two gates' aspect ratios
+		differ, the aperture will capture extra horizontal or vertical
+		scene content.
+		- _Fill:_ The aperture gate will fill the resolution gate such
+		that none of the aperture captures extra scene content, while
+		preserving its aspect ratio. In other words, it will make the
+		opposite choice of the _Fit_ mode. If the two gates' aspect
+		ratios differ, the aperture will be horizontally or vertically
+		cropped.
+		- _Distort:_ The aperture gate will match the size of the
+		resolution gate. If their aspect ratios differ, the resulting
+		image will appear vertically or horizontally stretched or
+		squeezed.
+		""",
+		"label", "Film Fit",
+		"layout:section", "Camera",
+
+		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+		"presetNames", IECore.StringVectorData( [ "Horizontal", "Vertical", "Fit", "Fill", "Distort" ] ),
+		"presetValues", IECore.IntVectorData( [ IECoreScene.Camera.FilmFit.Horizontal, IECoreScene.Camera.FilmFit.Vertical, IECoreScene.Camera.FilmFit.Fit, IECoreScene.Camera.FilmFit.Fill, IECoreScene.Camera.FilmFit.Distort ] ),
 
 	],
 
@@ -61,6 +130,20 @@ Gaffer.Metadata.registerValues( {
 		The resolution of the image to be rendered.
 		""",
 		"label", "Resolution",
+		"layout:section", "Camera",
+
+	],
+
+	"option:render:pixelAspectRatio" : [
+
+		"defaultValue", 1.0,
+		"description",
+		"""
+		The `width / height` aspect ratio of the individual pixels in
+		the rendered image.
+		""",
+		"label", "Pixel Aspect Ratio",
+		"layout:section", "Camera",
 
 	],
 
@@ -72,48 +155,119 @@ Gaffer.Metadata.registerValues( {
 		Multiplies the resolution of the render by this amount.
 		""",
 		"label", "Resolution Multiplier",
+		"layout:section", "Camera",
 
 	],
 
-	"option:render:deformationBlur" : [
+	"option:render:cropWindow" : [
+
+		"defaultValue", imath.Box2f( imath.V2f( 0, 0 ), imath.V2f( 1, 1 ) ),
+		"minValue", imath.V2f( 0, 0 ),
+		"maxValue", imath.V2f( 1, 1 ),
+		"description",
+		"""
+		Limits the render to a region of the image. The rendered image
+		will have the same resolution as usual, but areas outside the
+		crop will be rendered black. Coordinates range from (0,0) at
+		the top-left of the image to (1,1) at the bottom-right. The
+		crop window tool in the viewer may be used to set this
+		interactively.
+		""",
+		"label", "Crop Window",
+		"layout:section", "Camera",
+
+	],
+
+	"option:render:overscan" : [
 
 		"defaultValue", False,
 		"description",
 		"""
-		Whether or not deformation motion is taken into
-		account in the rendered image. To specify the
-		number of deformation segments to use for each
-		object in the scene, use a StandardAttributes
-		node with appropriate filters.
+		Whether to enable overscan, which adds extra pixels to the
+		sides of the rendered image.
+
+		Overscan can be useful when camera shake or blur will be added
+		as a post-process. This plug just enables overscan as a whole –
+		use the `render:overscanTop`, `render:overscanBottom`, `render:overscanLeft` and
+		`render:overscanRight` options to specify the amount of overscan on
+		each side of the image.
 		""",
-		"label", "Deformation Blur",
+		"label", "Overscan",
+		"layout:section", "Camera",
 
 	],
 
-	"option:render:transformBlur" : [
+	"option:render:overscanTop" : [
+
+		"defaultValue", 0.0,
+		"minValue", 0.0,
+		"maxValue", 1.0,
+		"description",
+		"""
+		The amount of overscan at the top of the image. Specified as a
+		0-1 proportion of the original image height.
+		""",
+		"label", "Overscan Top",
+		"layout:section", "Camera",
+
+	],
+
+	"option:render:overscanBottom" : [
+
+		"defaultValue", 0.0,
+		"minValue", 0.0,
+		"maxValue", 1.0,
+		"description",
+		"""
+		The amount of overscan at the bottom of the image. Specified as
+		a 0-1 proportion of the original image height.
+		""",
+		"label", "Overscan Bottom",
+		"layout:section", "Camera",
+
+	],
+
+	"option:render:overscanLeft" : [
+
+		"defaultValue", 0.0,
+		"minValue", 0.0,
+		"maxValue", 1.0,
+		"description",
+		"""
+		The amount of overscan at the left of the image. Specified as a
+		0-1 proportion of the original image width.
+		""",
+		"label", "Overscan Left",
+		"layout:section", "Camera",
+
+	],
+
+	"option:render:overscanRight" : [
+
+		"defaultValue", 0.0,
+		"minValue", 0.0,
+		"maxValue", 1.0,
+		"description",
+		"""
+		The amount of overscan at the right of the image. Specified as
+		a 0-1 proportion of the original image width.
+		""",
+		"label", "Overscan Right",
+		"layout:section", "Camera",
+
+	],
+
+	"option:render:depthOfField" : [
 
 		"defaultValue", False,
 		"description",
 		"""
-		Whether or not transform motion is taken into
-		account in the rendered image. To specify the
-		number of transform segments to use for each
-		object in the scene, use a StandardAttributes
-		node with appropriate filters.
+		Whether to render with depth of field. To ensure the effect is
+		visible, you must also set an f-stop value greater than 0 on
+		this camera.
 		""",
-		"label", "Transform Blur",
-
-	],
-
-	"option:render:shutter" : [
-
-		"defaultValue", imath.V2f( -0.25, 0.25 ),
-		"description",
-		"""
-		The interval over which the camera shutter is open. Measured
-		in frames, and specified relative to the frame being rendered.
-		""",
-		"label", "Shutter",
+		"label", "Depth Of Field",
+		"layout:section", "Camera",
 
 	],
 
@@ -125,7 +279,30 @@ Gaffer.Metadata.registerValues( {
 		Specifies the default renderer to be used by the Render and
 		InteractiveRender nodes.
 		""",
-		"label", "Renderer",
+		"label", "Default Renderer",
+		"layout:section", "Renderer",
+
+		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+		"presetNames", __rendererPresetNames( [ "None" ] ),
+		"presetValues", __rendererPresetNames( [ "" ] ),
+
+	],
+
+	"option:render:includedPurposes" : [
+
+		"defaultValue", IECore.StringVectorData( [ "default", "render" ] ),
+		"description",
+		"""
+		Limits the objects included in the render according to the values of their `usd:purpose`
+		attribute. The "Default" purpose includes all objects which have no `usd:purpose` attribute;
+		other than for debugging, there is probably no good reason to omit it.
+
+		> Tip : Use the USDAttributes node to assign the `usd:purpose` attribute.
+		""",
+		"label", "Included Purposes",
+		"layout:section", "Render Set",
+
+		"plugValueWidget:type", "GafferSceneUI.StandardOptionsUI._IncludedPurposesPlugValueWidget",
 
 	],
 
@@ -136,9 +313,15 @@ Gaffer.Metadata.registerValues( {
 		"""
 		A set expression that limits the objects included in the render to only those matched
 		and their descendants. Objects not matched by the set expression will be pruned from
-		the scene. Cameras are included by default and do not need to be specified here.
+		the scene.
+
+		> Tip : Cameras are included by default and do not need to be specified here.
 		""",
 		"label", "Inclusions",
+		"layout:section", "Render Set",
+
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
 
 	],
 
@@ -152,6 +335,10 @@ Gaffer.Metadata.registerValues( {
 		their descendants to be pruned from the scene.
 		""",
 		"label", "Exclusions",
+		"layout:section", "Render Set",
+
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
 
 	],
 
@@ -161,10 +348,14 @@ Gaffer.Metadata.registerValues( {
 		"description",
 		"""
 		A set expression that specifies additional lights to be included in the render.
-		This differs from `inclusions` as only lights and light filters will be matched
-		by this set expression.
+		This differs from `inclusions` in that only lights and light filters will be
+		matched by this set expression.
 		""",
 		"label", "Additional Lights",
+		"layout:section", "Render Set",
+
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
 
 	],
 
@@ -180,7 +371,16 @@ Gaffer.Metadata.registerValues( {
 		For shadow, reflection and reflectionAlpha pass types, this specifies objects that
 		catch shadows or reflections.
 		""",
-		"label", "Camera Inclusions / Catchers",
+		## \todo: The full version of this label would be "Camera Inclusions / Catchers" but it
+		# is slightly too long for the standard Node Editor label width on some combinations of
+		# OS & desktop environment, such that some users see the whole label, while it is truncated
+		# for others. We should look into whether shipping a standard font with Gaffer would reduce
+		# this ambiguity.
+		"label", "Camera Inclusions",
+		"layout:section", "Visibility Set",
+
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
 
 	],
 
@@ -201,7 +401,11 @@ Gaffer.Metadata.registerValues( {
 		cast shadows or reflections. Shadow or reflection visibility attributes authored
 		in the scene take precedence over this option.
 		""",
-		"label", "Camera Exclusions / Casters",
+		"label", "Camera Exclusions",
+		"layout:section", "Visibility Set",
+
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
 
 	],
 
@@ -215,6 +419,10 @@ Gaffer.Metadata.registerValues( {
 		precedence over this option.
 		""",
 		"label", "Matte Inclusions",
+		"layout:section", "Visibility Set",
+
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
 
 	],
 
@@ -232,6 +440,102 @@ Gaffer.Metadata.registerValues( {
 		treated as matte objects.
 		""",
 		"label", "Matte Exclusions",
+		"layout:section", "Visibility Set",
+
+		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression", True,
+
+	],
+
+	"option:render:transformBlur" : [
+
+		"defaultValue", False,
+		"description",
+		"""
+		Whether or not transform motion is taken into
+		account in the rendered image. To specify the
+		number of transform segments to use for each
+		object in the scene, use a StandardAttributes
+		node with appropriate filters.
+		""",
+		"label", "Transform",
+		"layout:section", "Motion Blur",
+
+	],
+
+	"option:render:deformationBlur" : [
+
+		"defaultValue", False,
+		"description",
+		"""
+		Whether or not deformation motion is taken into
+		account in the rendered image. To specify the
+		number of deformation segments to use for each
+		object in the scene, use a StandardAttributes
+		node with appropriate filters.
+		""",
+		"label", "Deformation",
+		"layout:section", "Motion Blur",
+
+	],
+
+	"option:render:shutter" : [
+
+		"defaultValue", imath.V2f( -0.25, 0.25 ),
+		"description",
+		"""
+		The interval over which the camera shutter is open. Measured
+		in frames, and specified relative to the frame being rendered.
+		""",
+		"label", "Shutter",
+		"layout:section", "Motion Blur",
+
+	],
+
+	"option:sampleMotion" : [
+
+		"defaultValue", True,
+		"description",
+		"""
+		Whether to actually render motion blur. Disabling this
+		setting while motion blur is set up produces a render where
+		there is no blur, but there is accurate motion information.
+		Useful for rendering motion vector passes.
+		""",
+		"label", "Sample Motion",
+		"layout:section", "Motion Blur",
+
+	],
+
+	"option:render:renderManifestFilePath" : [
+
+		"defaultValue", "",
+		"description",
+		"""
+		Specifies a file to write a matching ID manifest to, when
+		rendering an ID aov in a batch render. This is needed to use
+		the Image Selection Tool with batch renders (interactive
+		renders just need an ID aov).
+		""",
+		"label", "File Path",
+		"layout:section", "Render Manifest",
+
+		"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+		"path:leaf", True,
+		"fileSystemPath:extensions", "exr",
+
+	],
+
+	"option:render:performanceMonitor" : [
+
+		"defaultValue", False,
+		"description",
+		"""
+		Enables a performance monitor and uses it to output
+		statistics about scene generation performance.
+		""",
+		"label", "Performance Monitor",
+		"layout:section", "Statistics",
 
 	],
 

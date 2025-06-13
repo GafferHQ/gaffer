@@ -54,6 +54,7 @@ Gaffer.Metadata.registerValues( {
 		of their visibility settings.
 		""",
 		"label", "Visible",
+		"layout:section", "Attributes",
 
 	],
 
@@ -67,6 +68,7 @@ Gaffer.Metadata.registerValues( {
 		the back.
 		""",
 		"label", "Double Sided",
+		"layout:section", "Attributes",
 
 	],
 
@@ -83,6 +85,7 @@ Gaffer.Metadata.registerValues( {
 		> Viewer, use OpenGL attributes.
 		""",
 		"label", "Display Color",
+		"layout:section", "Attributes",
 
 	],
 
@@ -97,18 +100,21 @@ Gaffer.Metadata.registerValues( {
 		the number of segments used to represent the motion.
 		""",
 		"label", "Transform Blur",
+		"layout:section", "Motion Blur",
 
 	],
 
 	"attribute:gaffer:transformBlurSegments" : [
 
 		"defaultValue", 1,
+		"minValue", 1,
 		"description",
 		"""
 		The number of segments of transform animation to
 		pass to the renderer when Transform Blur is on.
 		""",
 		"label", "Transform Segments",
+		"layout:section", "Motion Blur",
 
 	],
 
@@ -123,18 +129,21 @@ Gaffer.Metadata.registerValues( {
 		the number of segments used to represent the motion.
 		""",
 		"label", "Deformation Blur",
+		"layout:section", "Motion Blur",
 
 	],
 
 	"attribute:gaffer:deformationBlurSegments" : [
 
 		"defaultValue", 1,
+		"minValue", 1,
 		"description",
 		"""
 		The number of segments of deformation animation to
 		pass to the renderer when Deformation Blur is on.
 		""",
 		"label", "Deformation Segments",
+		"layout:section", "Motion Blur",
 
 	],
 
@@ -157,8 +166,26 @@ Gaffer.Metadata.registerValues( {
 		The lights to be linked to this object. Accepts a set expression or
 		a space separated list of lights. Use \"defaultLights\" to refer to
 		all lights that contribute to illumination by default.
+
+		Examples
+		--------
+
+		All the default lights plus the lights in the `characterLights` set
+		:
+
+		`defaultLights | characterLights`
+
+		All the default lights, but without the lights in the `interiorLights`
+		set :
+
+		`defaultLights - interiorLights`
+
+		> Info : Lights can be added to sets either by using the `sets` plug
+		> on the light node itself, or by using a separate Set node.
 		""",
 		"label", "Linked Lights",
+		"layout:section", "Light Linking",
+
 		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
 		"ui:scene:acceptsSetExpression", True
 
@@ -173,6 +200,8 @@ Gaffer.Metadata.registerValues( {
 		expression or a space separated list of lights.
 		""",
 		"label", "Shadowed Lights",
+		"layout:section", "Light Linking",
+
 		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
 		"ui:scene:acceptsSetExpression", True,
 
@@ -189,6 +218,8 @@ Gaffer.Metadata.registerValues( {
 		contribute to illumination by default.
 		""",
 		"label", "Filtered Lights",
+		"layout:section", "Light Linking",
+
 		"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
 		"ui:scene:acceptsSetExpression", True,
 
@@ -204,9 +235,10 @@ Gaffer.Metadata.registerValues( {
 		false to disable that, losing the memory savings. This can be useful
 		in certain cases like using world space displacement and wanting multiple
 		copies to displace differently. Disabling is currently only supported by
-		the Arnold render backend.
+		the Arnold and RenderMan renderer backends.
 		""",
 		"label", "Automatic Instancing",
+		"layout:section", "Instancing",
 
 	],
 

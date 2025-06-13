@@ -192,14 +192,14 @@ GafferUI.WidgetAlgo.grab( widget = __nodeEditorWindow, imagePath = "images/taskC
 __imageName = "taskStandardOptionsDepthOfFieldPlug"
 __tempImagePath = __getTempFilePath( "{}.png".format( __imageName ) )
 script["StandardOptions"] = GafferScene.StandardOptions()
-script["StandardOptions"]["options"]["renderCamera"]["value"].setValue( "/camera" )
-script["StandardOptions"]["options"]["renderCamera"]["enabled"].setValue( True )
-script["StandardOptions"]["options"]["depthOfField"]["value"].setValue( True )
-script["StandardOptions"]["options"]["depthOfField"]["enabled"].setValue( True )
+script["StandardOptions"]["options"]["render:camera"]["value"].setValue( "/camera" )
+script["StandardOptions"]["options"]["render:camera"]["enabled"].setValue( True )
+script["StandardOptions"]["options"]["render:depthOfField"]["value"].setValue( True )
+script["StandardOptions"]["options"]["render:depthOfField"]["enabled"].setValue( True )
 __nodeEditorWindow = GafferUI.NodeEditor.acquire( script["StandardOptions"], floating=True )
 __nodeEditorWindow._qtWidget().setFocus()
 __nodeEditorWindow.parent()._qtWidget().resize( 384, 484 )
-GafferUI.PlugValueWidget.acquire( script["StandardOptions"]["options"]["depthOfField"] )
+GafferUI.PlugValueWidget.acquire( script["StandardOptions"]["options"]["render:depthOfField"] )
 GafferUI.WidgetAlgo.grab( widget = __nodeEditorWindow, imagePath = __tempImagePath )
 __dispatchScript(
 	script = "scripts/{}_edit.gfr".format( __imageName ),
@@ -243,8 +243,8 @@ __dispatchScript(
 	script = pathlib.Path( "../../../examples/rendering/anamorphicCameraSetup.gfr" ).absolute().as_posix(),
 	tasks = [ "Render" ],
 	settings = [
-		"-StandardOptions.options.renderResolution.value.x 240",
-		"-StandardOptions.options.renderResolution.value.y 270",
+		"-StandardOptions.options.render:resolution.value.x 240",
+		"-StandardOptions.options.render:resolution.value.y 270",
 		"-Outputs.outputs.output1.fileName '\"{}\"'".format( __outputImagePath( "exampleAnamorphicCameraSetup" ) ),
 		"-Outputs.outputs.output1.type '\"png\"'"
 	]
@@ -255,8 +255,8 @@ __dispatchScript(
 #	script = "../../../examples/rendering/sphericalCameraSetupArnold.gfr",
 #	tasks = [ "Render" ],
 #	settings = [
-#		"-StandardOptions.options.renderResolution.value.x '480'",
-#		"-StandardOptions.options.renderResolution.value.y '270'",
+#		"-StandardOptions.options.render:resolution.value.x '480'",
+#		"-StandardOptions.options.render:resolution.value.y '270'",
 #		"-Outputs.outputs.output1.fileName '\"{}\"'".format( os.path.abspath( "images/exampleSphericalCameraSetupArnold.png" ) ),
 #		"-Outputs.outputs.output1.type '\"png\"'"
 #		]

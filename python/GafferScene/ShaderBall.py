@@ -74,12 +74,12 @@ class ShaderBall( GafferScene.SceneNode ) :
 		self["__options"] = GafferScene.StandardOptions()
 		self["__options"]["in"].setInput( self["__shaderAssignment"]["out"] )
 
-		self["__options"]["options"]["renderCamera"]["enabled"].setValue( True )
-		self["__options"]["options"]["renderCamera"]["value"].setValue( "/camera" )
+		self["__options"]["options"]["render:camera"]["enabled"].setValue( True )
+		self["__options"]["options"]["render:camera"]["value"].setValue( "/camera" )
 
-		self["__options"]["options"]["renderResolution"]["enabled"].setValue( True )
-		self["__options"]["options"]["renderResolution"]["value"][0].setInput( self["resolution"] )
-		self["__options"]["options"]["renderResolution"]["value"][1].setInput( self["resolution"] )
+		self["__options"]["options"]["render:resolution"]["enabled"].setValue( True )
+		self["__options"]["options"]["render:resolution"]["value"][0].setInput( self["resolution"] )
+		self["__options"]["options"]["render:resolution"]["value"][1].setInput( self["resolution"] )
 
 		self["__emptyScene"] = GafferScene.ScenePlug()
 		self["__enabler"] = Gaffer.Switch()

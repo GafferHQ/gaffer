@@ -391,45 +391,49 @@ plugsMetadata = {
 
 }
 
-__sourceMetadata = GafferSceneUI.StandardOptionsUI.plugsMetadata
-
 ## Start with a special entry: the filmFit option presets are reused
 # without modification
 __overrideMetadata = {
-	"renderSettingOverrides.filmFit.value": __sourceMetadata["options.filmFit.value"]
+
+	"renderSettingOverrides.filmFit.value" : [
+
+		"plugValueWidget:type", Gaffer.Metadata.value( "option:render:filmFit", "plugValueWidget:type" ),
+		"presetNames", Gaffer.Metadata.value( "option:render:filmFit", "presetNames" ),
+		"presetValues", Gaffer.Metadata.value( "option:render:filmFit", "presetValues" ),
+
+	]
+
 }
 
-## The plug names from StandardOptionsUI that the Camera node actually
-# overrides; not all of their names match, so we need to provide
-# the replacement names too
-__plugsToOverride = {
-	"options.filmFit": "renderSettingOverrides.filmFit",
-	"options.shutter": "renderSettingOverrides.shutter",
-	"options.renderResolution": "renderSettingOverrides.resolution",
-	"options.pixelAspectRatio": "renderSettingOverrides.pixelAspectRatio",
-	"options.resolutionMultiplier": "renderSettingOverrides.resolutionMultiplier",
-	"options.overscan": "renderSettingOverrides.overscan",
-	"options.overscanLeft": "renderSettingOverrides.overscanLeft",
-	"options.overscanRight": "renderSettingOverrides.overscanRight",
-	"options.overscanTop": "renderSettingOverrides.overscanTop",
-	"options.overscanBottom": "renderSettingOverrides.overscanBottom",
-	"options.renderCropWindow": "renderSettingOverrides.cropWindow",
-	"options.depthOfField": "renderSettingOverrides.depthOfField",
+## The standard options that the Camera node actually
+# overrides and the plugs that author each override.
+__optionsToOverride = {
+	"render:filmFit": "renderSettingOverrides.filmFit",
+	"render:shutter": "renderSettingOverrides.shutter",
+	"render:renderResolution": "renderSettingOverrides.resolution",
+	"render:pixelAspectRatio": "renderSettingOverrides.pixelAspectRatio",
+	"render:resolutionMultiplier": "renderSettingOverrides.resolutionMultiplier",
+	"render:overscan": "renderSettingOverrides.overscan",
+	"render:overscanLeft": "renderSettingOverrides.overscanLeft",
+	"render:overscanRight": "renderSettingOverrides.overscanRight",
+	"render:overscanTop": "renderSettingOverrides.overscanTop",
+	"render:overscanBottom": "renderSettingOverrides.overscanBottom",
+	"render:renderCropWindow": "renderSettingOverrides.cropWindow",
+	"render:depthOfField": "renderSettingOverrides.depthOfField",
 }
 
 ## Use the key names from the override dict, but reuse the plug
 # description text from the source dict
-for sourcePlug, overridePlug in __plugsToOverride.items() :
-
-	plugMetadata = __sourceMetadata[ sourcePlug ]
+for option, overridePlug in __optionsToOverride.items() :
 
 	__overrideMetadata[ overridePlug ] = [
-		plugMetadata[0],
-		"Overrides the `{option}` render option:\n\n{description}".format(
-			option = sourcePlug.replace( "options.", ""),
-			# We assume the second element is the plug description
-			description = plugMetadata[1]
+
+		"description",
+		"Overrides the `{option}` option:\n\n{description}".format(
+			option = option,
+			description = Gaffer.Metadata.value( "option:" + option, "description" )
 		)
+
 	]
 
 plugsMetadata.update( __overrideMetadata )

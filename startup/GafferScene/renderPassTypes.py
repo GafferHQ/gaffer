@@ -459,11 +459,13 @@ def __reflectionCatcherProcessor() :
 	processor["__standardAttributes"] = GafferScene.StandardAttributes()
 	processor["__standardAttributes"]["in"].setInput( processor["__deleteAttributes"]["out"] )
 	processor["__standardAttributes"]["attributes"]["linkedLights"]["enabled"].setValue( True )
+	processor["__standardAttributes"]["attributes"]["linkedLights"]["value"].setValue( "" )
 	processor["__standardAttributes"]["filter"].setInput( processor["__catcherAndCasterFilter"]["catchers"] )
 
 	processor["__globalAttributes"] = GafferScene.StandardAttributes()
 	processor["__globalAttributes"]["in"].setInput( processor["__standardAttributes"]["out"] )
 	processor["__globalAttributes"]["attributes"]["linkedLights"]["enabled"].setValue( True )
+	processor["__globalAttributes"]["attributes"]["linkedLights"]["value"].setValue( "" )
 	processor["__globalAttributes"]["global"].setValue( True )
 	processor["__globalAttributes"]["enabled"].setInput( processor["__catcherAndCasterFilter"]["globalCatchers"] )
 

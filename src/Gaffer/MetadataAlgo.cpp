@@ -36,6 +36,7 @@
 
 #include "Gaffer/MetadataAlgo.h"
 
+#include "Gaffer/BoxPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/GraphComponent.h"
 #include "Gaffer/Metadata.h"
@@ -157,14 +158,37 @@ bool ancestorChildNodesAreReadOnly( const Gaffer::GraphComponent *graphComponent
 	return false;
 }
 
+const std::string g_incorrectMetadataWarning( "Ignoring \"{}\" metadata for target \"{}\" as it has incorrect type \"{}\" (expected {})" );
+
 template<typename T>
-Gaffer::ValuePlugPtr numericValuePlug( const std::string &name, Gaffer::Plug::Direction direction, unsigned flags, const T *value, const Data *minValue, const Data *maxValue )
+Gaffer::ValuePlugPtr numericValuePlug( const std::string &target, const std::string &name, Gaffer::Plug::Direction direction, unsigned flags, const T *value, const Data *minValue, const Data *maxValue )
 {
 	using ValueType = typename T::ValueType;
 	using PlugType = Gaffer::NumericPlug<ValueType>;
 
 	const T *min = runTimeCast<const T>( minValue );
+	if( minValue && !min )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "MetadataAlgo::createPlugFromMetadata",
+			fmt::format(
+				g_incorrectMetadataWarning,
+				"minValue", target, minValue->typeName(), value->typeName()
+			)
+		);
+	}
+
 	const T *max = runTimeCast<const T>( maxValue );
+	if( maxValue && !max )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "MetadataAlgo::createPlugFromMetadata",
+			fmt::format(
+				g_incorrectMetadataWarning,
+				"maxValue", target, maxValue->typeName(), value->typeName()
+			)
+		);
+	}
 
 	typename PlugType::Ptr result = new PlugType(
 		name,
@@ -179,14 +203,35 @@ Gaffer::ValuePlugPtr numericValuePlug( const std::string &name, Gaffer::Plug::Di
 }
 
 template<typename T>
-Gaffer::ValuePlugPtr compoundNumericValuePlug( const std::string &name, Gaffer::Plug::Direction direction, unsigned flags, const T *value, const Data *minValue, const Data *maxValue )
+Gaffer::ValuePlugPtr compoundNumericValuePlug( const std::string &target, const std::string &name, Gaffer::Plug::Direction direction, unsigned flags, const T *value, const Data *minValue, const Data *maxValue )
 {
 	using ValueType = typename T::ValueType;
 	using BaseType = typename ValueType::BaseType;
 	using PlugType = Gaffer::CompoundNumericPlug<ValueType>;
 
 	const T *min = runTimeCast<const T>( minValue );
+	if( minValue && !min )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "MetadataAlgo::createPlugFromMetadata",
+			fmt::format(
+				g_incorrectMetadataWarning,
+				"minValue", target, minValue->typeName(), value->typeName()
+			)
+		);
+	}
+
 	const T *max = runTimeCast<const T>( maxValue );
+	if( maxValue && !max )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "MetadataAlgo::createPlugFromMetadata",
+			fmt::format(
+				g_incorrectMetadataWarning,
+				"maxValue", target, minValue->typeName(), value->typeName()
+			)
+		);
+	}
 
 	typename PlugType::Ptr result = new PlugType(
 		name,
@@ -198,6 +243,47 @@ Gaffer::ValuePlugPtr compoundNumericValuePlug( const std::string &name, Gaffer::
 	);
 
 	return result;
+}
+
+template<typename T>
+Gaffer::ValuePlugPtr boxValuePlug( const std::string &target, const std::string &name, Gaffer::Plug::Direction direction, unsigned flags, const T *value, const Data *minValue, const Data *maxValue )
+{
+	using ValueType = typename T::ValueType;
+	using PointType = typename Gaffer::BoxPlug<ValueType>::PointType;
+	using PointBaseType = typename PointType::BaseType;
+
+	const TypedData<PointType> *min = runTimeCast<const TypedData<PointType>>( minValue );
+	if( minValue && !min )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "MetadataAlgo::createPlugFromMetadata",
+			fmt::format(
+				g_incorrectMetadataWarning,
+				"minValue", target, minValue->typeName(), TypedData<PointType>::staticTypeName()
+			)
+		);
+	}
+
+	const TypedData<PointType> *max = runTimeCast<const TypedData<PointType>>( maxValue );
+	if( maxValue && !max )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "MetadataAlgo::createPlugFromMetadata",
+			fmt::format(
+				g_incorrectMetadataWarning,
+				"maxValue", target, maxValue->typeName(), TypedData<PointType>::staticTypeName()
+			)
+		);
+	}
+
+	return new Gaffer::BoxPlug<ValueType>(
+		name,
+		direction,
+		value->readable(),
+		min ? min->readable() : PointType( std::numeric_limits<PointBaseType>::lowest() ),
+		max ? max->readable() : PointType( std::numeric_limits<PointBaseType>::max() ),
+		flags
+	);
 }
 
 } // namespace
@@ -866,39 +952,26 @@ ValuePlugPtr createPlugFromMetadata( const std::string &name, Plug::Direction di
 	}
 
 	ConstDataPtr minValue = Metadata::value( target, g_minValue );
-	if( minValue && minValue->typeId() != defaultValue->typeId() )
-	{
-		IECore::msg(
-			IECore::Msg::Warning, "MetadataAlgo::createPlugFromMetadata",
-			fmt::format(
-				"Ignoring \"minValue\" metadata for target \"{}\" as it has incorrect type \"{}\" (expected {})",
-				target, minValue->typeName(), defaultValue->typeName()
-			)
-		);
-	}
-
 	ConstDataPtr maxValue = Metadata::value( target, g_maxValue );
-	if( maxValue && maxValue->typeId() != defaultValue->typeId() )
-	{
-		IECore::msg(
-			IECore::Msg::Warning, "MetadataAlgo::createPlugFromMetadata",
-			fmt::format(
-				"Ignoring \"maxValue\" metadata for target \"{}\" as it has incorrect type \"{}\" (expected {})",
-				target, maxValue->typeName(), defaultValue->typeName()
-			)
-		);
-	}
 
 	switch( defaultValue->typeId() )
 	{
 		case IntDataTypeId :
-			return numericValuePlug( name, direction, flags, static_cast<const IntData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
+			return numericValuePlug( target, name, direction, flags, static_cast<const IntData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
 		case FloatDataTypeId :
-			return numericValuePlug( name, direction, flags, static_cast<const FloatData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
+			return numericValuePlug( target, name, direction, flags, static_cast<const FloatData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
 		case Color3fDataTypeId :
-			return compoundNumericValuePlug( name, direction, flags, static_cast<const Color3fData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
+			return compoundNumericValuePlug( target, name, direction, flags, static_cast<const Color3fData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
 		case Color4fDataTypeId :
-			return compoundNumericValuePlug( name, direction, flags, static_cast<const Color4fData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
+			return compoundNumericValuePlug( target, name, direction, flags, static_cast<const Color4fData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
+		case Box2iDataTypeId :
+			return boxValuePlug( target, name, direction, flags, static_cast<const Box2iData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
+		case Box2fDataTypeId :
+			return boxValuePlug( target, name, direction, flags, static_cast<const Box2fData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
+		case Box3iDataTypeId :
+			return boxValuePlug( target, name, direction, flags, static_cast<const Box3iData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
+		case Box3fDataTypeId :
+			return boxValuePlug( target, name, direction, flags, static_cast<const Box3fData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
 		default :
 			if( minValue )
 			{

@@ -835,18 +835,18 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		pointsAttributes = GafferScene.StandardAttributes()
 		pointsAttributes["in"].setInput( switch["out"] )
-		pointsAttributes["attributes"]["transformBlurSegments"]["value"].setValue( 4 )
-		pointsAttributes["attributes"]["transformBlurSegments"]["enabled"].setValue( True )
-		pointsAttributes["attributes"]["deformationBlurSegments"]["value"].setValue( 3 )
-		pointsAttributes["attributes"]["deformationBlurSegments"]["enabled"].setValue( True )
+		pointsAttributes["attributes"]["gaffer:transformBlurSegments"]["value"].setValue( 4 )
+		pointsAttributes["attributes"]["gaffer:transformBlurSegments"]["enabled"].setValue( True )
+		pointsAttributes["attributes"]["gaffer:deformationBlurSegments"]["value"].setValue( 3 )
+		pointsAttributes["attributes"]["gaffer:deformationBlurSegments"]["enabled"].setValue( True )
 		pointsAttributes["filter"].setInput( allFilter["out"] )
 
 		pointsOptions = GafferScene.StandardOptions()
 		pointsOptions["in"].setInput( pointsAttributes["out"] )
-		pointsOptions["options"]["transformBlur"]["value"].setValue( True )
-		pointsOptions["options"]["transformBlur"]["enabled"].setValue( True )
-		pointsOptions["options"]["deformationBlur"]["value"].setValue( True )
-		pointsOptions["options"]["deformationBlur"]["enabled"].setValue( True )
+		pointsOptions["options"]["render:transformBlur"]["value"].setValue( True )
+		pointsOptions["options"]["render:transformBlur"]["enabled"].setValue( True )
+		pointsOptions["options"]["render:deformationBlur"]["value"].setValue( True )
+		pointsOptions["options"]["render:deformationBlur"]["enabled"].setValue( True )
 
 		sphere = GafferScene.Sphere()
 		sphere["type"].setValue( GafferScene.Sphere.Type.Primitive )
@@ -863,10 +863,10 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 
 		prototypeAttributes = GafferScene.StandardAttributes()
 		prototypeAttributes["in"].setInput( group["out"] )
-		prototypeAttributes["attributes"]["transformBlurSegments"]["value"].setValue( 4 )
-		prototypeAttributes["attributes"]["transformBlurSegments"]["enabled"].setValue( True )
-		prototypeAttributes["attributes"]["deformationBlurSegments"]["value"].setValue( 3 )
-		prototypeAttributes["attributes"]["deformationBlurSegments"]["enabled"].setValue( True )
+		prototypeAttributes["attributes"]["gaffer:transformBlurSegments"]["value"].setValue( 4 )
+		prototypeAttributes["attributes"]["gaffer:transformBlurSegments"]["enabled"].setValue( True )
+		prototypeAttributes["attributes"]["gaffer:deformationBlurSegments"]["value"].setValue( 3 )
+		prototypeAttributes["attributes"]["gaffer:deformationBlurSegments"]["enabled"].setValue( True )
 		prototypeAttributes["filter"].setInput( allFilter["out"] )
 
 		instancer = GafferScene.Instancer()
@@ -2058,11 +2058,11 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		script["attributes"] = GafferScene.StandardAttributes()
 		script["attributes"]["in"].setInput( script["instancer"]["prototypes"].getInput() )
 		script["attributes"]["filter"].setInput( script["attrFilter"]["out"] )
-		script["attributes"]["attributes"]["deformationBlur"]["enabled"].setValue( True )
+		script["attributes"]["attributes"]["gaffer:deformationBlur"]["enabled"].setValue( True )
 		script["attrSpreadsheet"] = Gaffer.Spreadsheet()
 		script["attrSpreadsheet"]["selector"].setValue( "${scene:path}" )
-		script["attrSpreadsheet"]["rows"].addColumn( script["attributes"]["attributes"]["deformationBlur"]["value"] )
-		script["attributes"]["attributes"]["deformationBlur"]["value"].setInput( script["attrSpreadsheet"]["out"][0] )
+		script["attrSpreadsheet"]["rows"].addColumn( script["attributes"]["attributes"]["gaffer:deformationBlur"]["value"] )
+		script["attributes"]["attributes"]["gaffer:deformationBlur"]["value"].setInput( script["attrSpreadsheet"]["out"][0] )
 		for location, value in ( ( "/foo", False ), ( "/foo/bar", True ), ( "/bar", True ), ( "/bar/baz/cube", False ) ) :
 			row = script["attrSpreadsheet"]["rows"].addRow()
 			row["name"].setValue( location )
@@ -2807,8 +2807,8 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 
 		purposeOption = GafferScene.StandardOptions()
 		purposeOption["in"].setInput( pointsSource["out"] )
-		purposeOption['options']['includedPurposes']["value"].setValue( IECore.StringVectorData( [ "default" ] ) )
-		purposeOption['options']['includedPurposes']["enabled"].setValue( True )
+		purposeOption["options"]["render:includedPurposes"]["value"].setValue( IECore.StringVectorData( [ "default" ] ) )
+		purposeOption["options"]["render:includedPurposes"]["enabled"].setValue( True )
 
 		sphere = GafferScene.Sphere()
 

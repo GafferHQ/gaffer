@@ -35,6 +35,7 @@
 ##########################################################################
 
 import imath
+import pathlib
 
 import IECore
 
@@ -48,7 +49,7 @@ class StandardOptionsTest( GafferSceneTest.SceneTestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["r"] = GafferScene.StandardOptions()
-		s["r"]["options"]["renderCamera"]["value"].setValue( "/path/to/a/camera" )
+		s["r"]["options"]["render:camera"]["value"].setValue( "/path/to/a/camera" )
 		names = s["r"]["options"].keys()
 
 		s2 = Gaffer.ScriptNode()
@@ -56,17 +57,17 @@ class StandardOptionsTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( s2["r"]["options"].keys(), names )
 		self.assertTrue( "options1" not in s2["r"] )
-		self.assertEqual( s2["r"]["options"]["renderCamera"]["value"].getValue(), "/path/to/a/camera" )
+		self.assertEqual( s2["r"]["options"]["render:camera"]["value"].getValue(), "/path/to/a/camera" )
 
 	def testResolution( self ) :
 
 		o = GafferScene.StandardOptions()
 
-		o["options"]["renderResolution"]["value"].setValue( imath.V2i( 10 ) )
-		o["options"]["renderResolution"]["enabled"].setValue( True )
+		o["options"]["render:resolution"]["value"].setValue( imath.V2i( 10 ) )
+		o["options"]["render:resolution"]["enabled"].setValue( True )
 		self.assertEqual( o["out"]["globals"].getValue()["option:render:resolution"].value, imath.V2i( 10 ) )
 
-		o["options"]["renderResolution"]["value"].setValue( imath.V2i( 20 ) )
+		o["options"]["render:resolution"]["value"].setValue( imath.V2i( 20 ) )
 		self.assertEqual( o["out"]["globals"].getValue()["option:render:resolution"].value, imath.V2i( 20 ) )
 
 	def testHashIncludesInputHash( self ) :
@@ -77,8 +78,8 @@ class StandardOptionsTest( GafferSceneTest.SceneTestCase ) :
 
 		h = o2["out"]["globals"].hash()
 
-		o1["options"]["renderResolution"]["enabled"].setValue( True )
-		o1["options"]["renderResolution"]["value"].setValue( imath.V2i( 10 ) )
+		o1["options"]["render:resolution"]["enabled"].setValue( True )
+		o1["options"]["render:resolution"]["value"].setValue( imath.V2i( 10 ) )
 
 		self.assertNotEqual( o2["out"]["globals"].hash(), h )
 
@@ -86,16 +87,16 @@ class StandardOptionsTest( GafferSceneTest.SceneTestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferScene.StandardOptions()
-		s["n"]["options"]["renderCamera"]["enabled"].setValue( True )
-		s["n"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
+		s["n"]["options"]["render:camera"]["enabled"].setValue( True )
+		s["n"]["options"]["render:camera"]["value"].setValue( "/group/camera" )
 
-		memberDataAndName = s["n"]["options"].memberDataAndName( s["n"]["options"]["renderCamera"] )
+		memberDataAndName = s["n"]["options"].memberDataAndName( s["n"]["options"]["render:camera"] )
 
 		Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
-		Gaffer.PlugAlgo.promote( s["Box"]["n"]["options"]["renderCamera"] )
+		Gaffer.PlugAlgo.promote( s["Box"]["n"]["options"]["render:camera"] )
 
 		self.assertEqual(
-			s["Box"]["n"]["options"].memberDataAndName( s["Box"]["n"]["options"]["renderCamera"] ),
+			s["Box"]["n"]["options"].memberDataAndName( s["Box"]["n"]["options"]["render:camera"] ),
 			memberDataAndName,
 		)
 
@@ -103,7 +104,7 @@ class StandardOptionsTest( GafferSceneTest.SceneTestCase ) :
 		s2.execute( s.serialise() )
 
 		self.assertEqual(
-			s2["Box"]["n"]["options"].memberDataAndName( s2["Box"]["n"]["options"]["renderCamera"] ),
+			s2["Box"]["n"]["options"].memberDataAndName( s2["Box"]["n"]["options"]["render:camera"] ),
 			memberDataAndName
 		)
 
@@ -112,6 +113,36 @@ class StandardOptionsTest( GafferSceneTest.SceneTestCase ) :
 		n = GafferScene.StandardOptions()
 		for p in n["options"].children() :
 			self.assertEqual( p["enabled"].getValue(), False )
+
+	def testNodeConstructsWithAllOptions( self ) :
+
+		defaultOverrides = {
+			"render:overscanTop" : 0.1,
+			"render:overscanBottom" : 0.1,
+			"render:overscanLeft" : 0.1,
+			"render:overscanRight" : 0.1,
+		}
+
+		node = GafferScene.StandardOptions()
+		for option in Gaffer.Metadata.targetsWithMetadata( "option:render:* option:sampleMotion", "defaultValue" ) :
+			option = option[7:]
+			with self.subTest( option = option ) :
+				self.assertIn( option, node["options"] )
+				self.assertEqual( node["options"][option]["name"].getValue(), option )
+				self.assertAlmostEqual(
+					node["options"][option]["value"].defaultValue(),
+					defaultOverrides.get( option, Gaffer.Metadata.value( f"option:{option}", "defaultValue" ) )
+				)
+
+	def testLoadFrom1_5( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "standardOptions-1.5.14.0.gfr" )
+		script.load()
+
+		self.assertIn( "render:camera", script["StandardOptions"]["options"] )
+		self.assertNotIn( "renderCamera", script["StandardOptions"]["options"] )
+		self.assertEqual( script["StandardOptions"]["options"]["render:camera"]["value"].getValue(), "test" )
 
 if __name__ == "__main__":
 	unittest.main()

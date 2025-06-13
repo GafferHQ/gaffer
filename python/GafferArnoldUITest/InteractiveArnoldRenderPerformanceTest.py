@@ -87,10 +87,10 @@ class InteractiveArnoldRenderPerformanceTest( GafferUITest.TestCase ) :
 
 		script["StandardOptions"] = GafferScene.StandardOptions()
 		script["StandardOptions"]["in"].setInput( script["Group"]["out"] )
-		script["StandardOptions"]["options"]["renderCamera"]["value"].setValue( '/group/camera' )
-		script["StandardOptions"]["options"]["renderCamera"]["enabled"].setValue( True )
-		script["StandardOptions"]["options"]["renderResolution"]["value"].setValue( imath.V2i( resolution, resolution ) )
-		script["StandardOptions"]["options"]["renderResolution"]["enabled"].setValue( True )
+		script["StandardOptions"]["options"]["render:camera"]["value"].setValue( '/group/camera' )
+		script["StandardOptions"]["options"]["render:camera"]["enabled"].setValue( True )
+		script["StandardOptions"]["options"]["render:resolution"]["value"].setValue( imath.V2i( resolution, resolution ) )
+		script["StandardOptions"]["options"]["render:resolution"]["enabled"].setValue( True )
 
 		script["ArnoldOptions"] = GafferArnold.ArnoldOptions( "ArnoldOptions" )
 		script["ArnoldOptions"]["in"].setInput( script["StandardOptions"]["out"] )

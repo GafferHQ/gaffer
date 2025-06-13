@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,57 +37,38 @@
 import Gaffer
 import GafferScene
 
-Gaffer.Metadata.registerNode(
+class __AttributesPlugProxy( object ) :
 
-	GafferScene.LightToCamera,
-
-	"description",
-	"""
-	Converts lights into cameras. Spotlights are converted to a perspective
-	camera with the field of view matching the cone angle, and distant lights are
-	converted to an orthographic camera.
-	""",
-
-	plugs = {
-
-		"filmFit" : [
-
-			"description", Gaffer.Metadata.value( "option:render:filmFit", "description" ),
-			"plugValueWidget:type", Gaffer.Metadata.value( "option:render:filmFit", "plugValueWidget:type" ),
-			"presetNames", Gaffer.Metadata.value( "option:render:filmFit", "presetNames" ),
-			"presetValues", Gaffer.Metadata.value( "option:render:filmFit", "presetValues" ),
-
-		],
-
-		"distantAperture" : [
-
-			"description",
-			"""
-			The orthographic aperture used when converting distant lights
-			( which are theoretically infinite in extent )
-			""",
-
-		],
-
-		"clippingPlanes" : [
-
-			"description",
-			"""
-			Clipping planes for the created cameras.  When creating a perspective camera, a near clip
-			<= 0 is invalid, and will be replaced with 0.01.  Also, certain lights only start casting
-			light at some distance - if near clip is less than this, it will be increased.
-			""",
-
-		],
-
-		"filter" : [
-
-			"description",
-			"""
-			Specifies which lights to convert.
-			""",
-
-		],
+	__renames = {
+		"visibility" : "scene:visible",
+		"displayColor" : "render:displayColor",
+		"transformBlur" : "gaffer:transformBlur",
+		"transformBlurSegments" : "gaffer:transformBlurSegments",
+		"deformationBlur" : "gaffer:deformationBlur",
+		"deformationBlurSegments" : "gaffer:deformationBlurSegments",
+		"automaticInstancing" : "gaffer:automaticInstancing",
 	}
 
-)
+	def __init__( self, attributesPlug ) :
+
+		self.__attributesPlug = attributesPlug
+
+	def __getitem__( self, key ) :
+
+		return self.__attributesPlug[self.__renames.get( key, key )]
+
+def __attributesGetItem( originalGetItem ) :
+
+	def getItem( self, key ) :
+
+		result = originalGetItem( self, key )
+		if key == "attributes" :
+			scriptNode = self.ancestor( Gaffer.ScriptNode )
+			if scriptNode is not None and scriptNode.isExecuting() :
+				return __AttributesPlugProxy( result )
+
+		return result
+
+	return getItem
+
+GafferScene.StandardAttributes.__getitem__ = __attributesGetItem( GafferScene.StandardAttributes.__getitem__ )

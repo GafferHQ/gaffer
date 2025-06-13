@@ -157,8 +157,8 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		script["options"] = GafferScene.StandardOptions()
 		script["options"]["in"].setInput( script["outputs"]["out"] )
-		script["options"]["options"]["filmFit"]["enabled"].setValue( True )
-		script["options"]["options"]["filmFit"]["value"].setValue( IECoreScene.Camera.FilmFit.Fit )
+		script["options"]["options"]["render:filmFit"]["enabled"].setValue( True )
+		script["options"]["options"]["render:filmFit"]["value"].setValue( IECoreScene.Camera.FilmFit.Fit )
 
 		script["render"] = self._createInteractiveRender()
 		script["render"]["in"].setInput( script["options"]["out"] )
@@ -235,8 +235,8 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		s["o"]["in"].setInput( s["group"]["out"] )
 
 		s["so"] = GafferScene.StandardOptions()
-		s["so"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
-		s["so"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["so"]["options"]["render:camera"]["value"].setValue( "/group/camera" )
+		s["so"]["options"]["render:camera"]["enabled"].setValue( True )
 		s["so"]["in"].setInput( s["o"]["out"] )
 
 		s["r"] = self._createInteractiveRender()
@@ -327,8 +327,8 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		s["o"]["in"].setInput( s["group"]["out"] )
 
 		s["so"] = GafferScene.StandardOptions()
-		s["so"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
-		s["so"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["so"]["options"]["render:camera"]["value"].setValue( "/group/camera" )
+		s["so"]["options"]["render:camera"]["enabled"].setValue( True )
 		s["so"]["in"].setInput( s["o"]["out"] )
 
 		s["r"] = self._createInteractiveRender()
@@ -414,8 +414,8 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		s["o"]["in"].setInput( s["group"]["out"] )
 
 		s["so"] = GafferScene.StandardOptions()
-		s["so"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
-		s["so"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["so"]["options"]["render:camera"]["value"].setValue( "/group/camera" )
+		s["so"]["options"]["render:camera"]["enabled"].setValue( True )
 		s["so"]["in"].setInput( s["o"]["out"] )
 
 		s["r"] = self._createInteractiveRender()

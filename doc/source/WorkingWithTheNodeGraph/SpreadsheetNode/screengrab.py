@@ -460,7 +460,7 @@ del nodeEditorWindow
 # Screengrab the Node Editor (StandardOptions node)
 nodeEditorWindow = GafferUI.NodeEditor.acquire( script["StandardOptions"], floating = True )
 nodeEditorWindow._qtWidget().setFocus()
-GafferUI.PlugValueWidget.acquire( script["StandardOptions"]["options"]["renderCamera"] )
+GafferUI.PlugValueWidget.acquire( script["StandardOptions"]["options"]["render:camera"] )
 __delay( 0.1 )
 GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = tempImagePathOptions )
 nodeEditorWindow.parent().close()

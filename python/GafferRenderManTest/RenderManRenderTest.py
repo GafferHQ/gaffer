@@ -70,8 +70,8 @@ class RenderManRenderTest( GafferSceneTest.RenderTest ) :
 
 		s["options"] = GafferScene.StandardOptions()
 		s["options"]["in"].setInput( s["parent"]["out"] )
-		s["options"]["options"]["renderCamera"]["enabled"].setValue( True )
-		s["options"]["options"]["renderCamera"]["value"].setValue( "/camera" )
+		s["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		s["options"]["options"]["render:camera"]["value"].setValue( "/camera" )
 
 		s["outputs"] = GafferScene.Outputs()
 		s["outputs"].addOutput(
