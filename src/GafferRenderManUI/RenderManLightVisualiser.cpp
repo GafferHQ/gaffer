@@ -542,6 +542,12 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 		state = meshState;
 	}
 
+	else if( lightShader->getName() == "PxrPortalLight" )
+	{
+		result.push_back( Visualisation::createGeometry( LightVisualiserAlgo::quadPortal( V2f( 1.f ), /* hatchingScale = */ 1.f, muted ) ) );
+		LightVisualiserAlgo::addRay( V3f( 0.f ), V3f( 0.f, 0.f, -1.f ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
+	}
+
 	else if( lightShader->getName() == "PxrRectLight" )
 	{
 		if( drawShaded )
