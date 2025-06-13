@@ -1533,6 +1533,7 @@ libraries = {
 
 	"GafferUSDTest" : {
 		"requiredOptions" : [ "GAFFERUSD" ],
+		"additionalFiles" : glob.glob( "python/GafferUSDTest/scripts/*" ),
 	},
 
 	"GafferUSDUI" : {

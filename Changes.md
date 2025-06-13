@@ -75,6 +75,7 @@ Breaking Changes
   - Attribute plugs have been renamed to match the name of their attribute (e.g. `attributes.visibility` is now `attributes.scene:visible`). A compatibility config has been provided to allow StandardAttributes nodes to be loaded from scripts saved in earlier Gaffer versions.
   - Changed the default value of the `linkedLights` plug to "defaultLights". Scripts loaded from earlier Gaffer versions containing `linkedLights` plugs set to the previous default of "" will need to be updated as those plugs will now default to "defaultLights".
 - StandardOptions : Option plugs have been renamed to match the name of their option (e.g. `options.renderCamera` is now `options.render:camera`). A compatibility config has been provided to allow StandardOptions nodes to be loaded from scripts saved in earlier Gaffer versions.
+- USDAttributes : Attribute plugs have been renamed to match the name of their attribute (e.g. `attributes.kind` is now `attributes.usd:kind`). A compatibility config has been provided to allow USDAttributes nodes to be loaded from scripts saved in earlier Gaffer versions.
 
 Build
 -----
