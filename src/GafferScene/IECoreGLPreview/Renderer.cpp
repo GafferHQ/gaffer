@@ -259,6 +259,8 @@ const IECoreGL::State &selectedPointsSceneState()
 	return *s;
 }
 
+const Color4f selectedColor( 0.466f, 0.612f, 0.741f, 1.0f );
+
 const IECoreGL::State &selectedDisplayState()
 {
 	static IECoreGL::StatePtr s;
@@ -268,7 +270,22 @@ const IECoreGL::State &selectedDisplayState()
 		s->add( new IECoreGL::Primitive::DrawPoints( false ), /* override = */ true );
 		s->add( new IECoreGL::Primitive::DrawSolid( false ), /* override = */ true );
 		s->add( new IECoreGL::Primitive::DrawWireframe( true ), /* override = */ true );
-		s->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.466f, 0.612f, 0.741f, 1.0f ) ), /* override = */ true );
+		s->add( new IECoreGL::WireframeColorStateComponent( selectedColor ), /* override = */ true );
+	}
+	return *s;
+}
+
+const IECoreGL::State &selectedVisualiserDisplayState()
+{
+	static IECoreGL::StatePtr s;
+	if( !s )
+	{
+		s = new IECoreGL::State( false );
+		s->add( new IECoreGL::Primitive::DrawPoints( false ), /* override = */ true );
+		s->add( new IECoreGL::Primitive::DrawSolid( true ), /* override = */ true );
+		s->add( new IECoreGL::Primitive::DrawWireframe( true ), /* override = */ true );
+		s->add( new IECoreGL::WireframeColorStateComponent( selectedColor ), /* override = */ true );
+		s->add( new IECoreGL::Color( selectedColor ), /* override = */ true );
 	}
 	return *s;
 }
@@ -610,7 +627,7 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			if( haveVisualisations )
 			{
 				IECoreGL::State::ScopedBinding selectionScope(
-					selectedDisplayState(), *currentState, isSelected && colorSpace == Visualisation::ColorSpace::Display
+					selectedVisualiserDisplayState(), *currentState, isSelected && colorSpace == Visualisation::ColorSpace::Display
 				);
 
 				Visualisation::Category categories = Visualisation::Category::Generic;
