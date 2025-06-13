@@ -54,29 +54,18 @@ Breaking Changes
 - Arnold :
   - Removed support for Arnold 7.2.
   - Removed `GafferArnoldUI.GPUCache.populateGPUCache()` function.
-- ArnoldAttributes : Attributes plugs have been renamed to match the name of their attribute (e.g. `attributes.cameraVisibility` is now `attributes.ai:visibility:camera`). A compatibility config has been provided to allow ArnoldAttributes nodes to be loaded from scripts saved in earlier Gaffer versions.
-- ArnoldOptions :
-  - Option plugs have been renamed to match the name of their option (e.g. `options.aaSamples` is now `options.ai:AA_samples`). A compatibility config has been provided to allow ArnoldOptions nodes to be loaded from scripts saved in earlier Gaffer versions.
-  - Changed the default value of the `ai:texture_max_memory_MB` plug to 4096 to match Arnold's default.
+- ArnoldAttributes, CyclesAttributes, DelightAttributes, OpenGLAttributes, StandardAttributes, USDAttributes : Attributes plugs have been renamed to match the name of their attribute (e.g. `attributes.visibility` is now `attributes.scene:visible`). Compatibility configs have been provided to allow these nodes to be loaded from scripts saved in earlier Gaffer versions.
+- ArnoldOptions, CyclesOptions, DelightOptions, StandardOptions : Option plugs have been renamed to match the name of their option (e.g. `options.renderCamera` is now `options.render:camera`). Compatibility configs have been provided to allow these nodes to be loaded from scripts saved in earlier Gaffer versions.
+- ArnoldOptions : Changed the default value of the `ai:texture_max_memory_MB` plug to 4096 to match Arnold's default.
 - StandardNodule : Removed deprecated `setCompatibleLabelsVisible()`.
 - DeleteAttributes : Changed base class and marked as `final`.
 - Wrapper : The `gaffer` wrapper on Linux no longer allows a custom Python build to be used. If you wish to use a custom Python, call `python _gaffer.py` instead.
 - RenderPasses, DeleteRenderPasses : Renamed TypeId enum values to `RenderPassesTypeId` and `DeleteRenderPassesTypeId`.
-- OpenGLAttributes :
-  - Attribute plugs have been renamed to match the name of their attribute (e.g. `attributes.primitiveWireframeColor` is now `attributes.gl:primitive:wireframeColor`). A compatibility config has been provided to allow OpenGLAttributes nodes to be loaded from scripts saved in earlier Gaffer versions.
-  - The default values of the attribute plugs authoring the `gl:primitive:bound`, `gl:primitive:outline`, `gl:primitive:points`, `gl:primitive:pointColor`, `gl:primitive:wireframe`, and `gl:primitive:wireframeColor` attributes have changed to match the default behaviour of the OpenGL renderer. Scripts loaded from previous Gaffer versions with these plugs enabled and set to the default value will see a difference in OpenGL renders.
+- OpenGLAttributes : The default values of the attribute plugs authoring the `gl:primitive:bound`, `gl:primitive:outline`, `gl:primitive:points`, `gl:primitive:pointColor`, `gl:primitive:wireframe`, and `gl:primitive:wireframeColor` attributes have changed to match the default behaviour of the OpenGL renderer. Scripts loaded from previous Gaffer versions with these plugs enabled and set to the default value will see a difference in OpenGL renders.
 - SceneTestCase : Removed `assertBoxesEqual()` and `assertBoxesAlmostEqual()` methods.
 - RenderController : Removed `pathForID()`, `pathsForIDs()`, `idForPath()` and `idsForPaths()`. Use `renderManifest()` instead.
 - Catalogue, CatalogueSelect, Display : Moved from GafferImage module to GafferScene.
-- CyclesAttributes : Attribute plugs have been renamed to match the name of their attribute (e.g. `attributes.cameraVisibility` is now `attributes.cycles:visibility:camera`). A compatibility config has been provided to allow CyclesAttributes nodes to be loaded from scripts saved in earlier Gaffer versions.
-- CyclesOptions : Option plugs have been renamed to match the name of their option (e.g. `options.samples` is now `options.cycles:session:samples`). A compatibility config has been provided to allow CyclesOptions nodes to be loaded from scripts saved in earlier Gaffer versions.
-- DelightAttributes : Attribute plugs have been renamed to match the name of their attribute with `.` characters replaced with `_` (e.g. `attributes.cameraVisibility` is now `attributes.dl:visibility_camera`). A compatibility config has been provided to allow DelightAttributes nodes to be loaded from scripts saved in earlier Gaffer versions.
-- DelightOptions : Option plugs have been renamed to match the name of their option with `.` characters replaced with `_` (e.g. `options.shadingSamples` is now `options.dl:quality_shadingsamples`). A compatibility config has been provided to allow DelightOptions nodes to be loaded from scripts saved in earlier Gaffer versions.
-- StandardAttributes :
-  - Attribute plugs have been renamed to match the name of their attribute (e.g. `attributes.visibility` is now `attributes.scene:visible`). A compatibility config has been provided to allow StandardAttributes nodes to be loaded from scripts saved in earlier Gaffer versions.
-  - Changed the default value of the `linkedLights` plug to "defaultLights". Scripts loaded from earlier Gaffer versions containing `linkedLights` plugs set to the previous default of "" will need to be updated as those plugs will now default to "defaultLights".
-- StandardOptions : Option plugs have been renamed to match the name of their option (e.g. `options.renderCamera` is now `options.render:camera`). A compatibility config has been provided to allow StandardOptions nodes to be loaded from scripts saved in earlier Gaffer versions.
-- USDAttributes : Attribute plugs have been renamed to match the name of their attribute (e.g. `attributes.kind` is now `attributes.usd:kind`). A compatibility config has been provided to allow USDAttributes nodes to be loaded from scripts saved in earlier Gaffer versions.
+- StandardAttributes : Changed the default value of the `linkedLights` plug to "defaultLights". Scripts loaded from earlier Gaffer versions containing `linkedLights` plugs set to the previous default of "" will need to be updated as those plugs will now default to "defaultLights".
 
 Build
 -----
