@@ -49,7 +49,7 @@ Gaffer.Metadata.registerValues( {
 		"""
 		Specifies the purpose of a location to be
 		`default`, `render`, `proxy` or `guide`. See
-		the USD documentation for more details.
+		the [USD documentation](https://graphics.pixar.com/usd/release/glossary.html#usdglossary-purpose) for more details.
 
 		> Note : The `usd:purpose` attribute can be used with the
 		> `render:includedPurposes` option to limit the objects included
@@ -76,7 +76,7 @@ Gaffer.Metadata.registerValues( {
 		"""
 		Specifies the kind of a location to be any
 		of the values from USD's kind registry. See
-		the USD documentation for more details.
+		the [USD documentation](https://graphics.pixar.com/usd/release/glossary.html#usdglossary-kind) for more details.
 
 		> Note : Gaffer doesn't assign any intrinsic
 		> meaning to USD's kind.
