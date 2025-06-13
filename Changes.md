@@ -35,6 +35,7 @@ Fixes
   - Fixed potential crash rendering VDB objects.
   - Fixed potential threading-related crashes.
 - RenderPassEditor : Fixed default values displayed for `dl:oversampling` and `dl:quality.shadingsamples` options.
+- PlugLayout : Fixed bug resolving `layout:index` metadata.
 
 API
 ---
