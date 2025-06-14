@@ -353,7 +353,7 @@ void Globals::output( const IECore::InternedString &name, const Output *output )
 		if( copy->getData() == "float id" && parameter<string>( copy->parameters(), "filter", "" ) == "closest" )
 		{
 			copy->setData( "int id" );
-			copy->parameters()["accumulationRule"] = new StringData( "zmin" );
+			copy->parameters()["ri:accumulationRule"] = new StringData( "zmin" );
 			copy->parameters().erase( "filter" );
 		}
 
