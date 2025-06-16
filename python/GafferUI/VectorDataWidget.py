@@ -784,6 +784,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		qEvent = QtGui.QMouseEvent(
 			QtCore.QEvent.MouseButtonPress,
 			point,
+			self.__tableView.viewport().mapToGlobal( point ),
 			QtCore.Qt.LeftButton,
 			QtCore.Qt.LeftButton,
 			QtCore.Qt.NoModifier
