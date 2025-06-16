@@ -456,13 +456,13 @@ void OSLObject::hashProcessedObject( const ScenePath &path, const Gaffer::Contex
 			continue;
 		}
 
-		const std::string pathString = p->locationPlug()->getValue();
-		if( pathString.empty() )
+		const std::string sourcePathString = p->locationPlug()->getValue();
+		if( sourcePathString.empty() )
 		{
 			continue;
 		}
-		ScenePlug::ScenePath path = ScenePlug::stringToPath( pathString );
-		if( !sourcePlug()->exists( path ) )
+		ScenePlug::ScenePath sourcePath = ScenePlug::stringToPath( sourcePathString );
+		if( !sourcePlug()->exists( sourcePath ) )
 		{
 			continue;
 		}
@@ -470,12 +470,12 @@ void OSLObject::hashProcessedObject( const ScenePath &path, const Gaffer::Contex
 		h.append( name );
 		if( p->pointCloudPlug()->getValue() )
 		{
-			h.append( sourcePlug()->objectHash( path ) );
+			h.append( sourcePlug()->objectHash( sourcePath ) );
 		}
 
 		if( p->transformPlug()->getValue() )
 		{
-			h.append( sourcePlug()->fullTransformHash( path ) );
+			h.append( sourcePlug()->fullTransformHash( sourcePath ) );
 		}
 	}
 }
@@ -534,34 +534,34 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 			continue;
 		}
 
-		const std::string pathString = p->locationPlug()->getValue();
-		if( pathString.empty() )
+		const std::string sourcePathString = p->locationPlug()->getValue();
+		if( sourcePathString.empty() )
 		{
 			continue;
 		}
-		ScenePlug::ScenePath path = ScenePlug::stringToPath( pathString );
-		if( !sourcePlug()->exists( path ) )
+		ScenePlug::ScenePath sourcePath = ScenePlug::stringToPath( sourcePathString );
+		if( !sourcePlug()->exists( sourcePath ) )
 		{
 			continue;
 		}
 
 		if( p->pointCloudPlug()->getValue() )
 		{
-			ConstObjectPtr object = sourcePlug()->object( path );
+			ConstObjectPtr object = sourcePlug()->object( sourcePath );
 			if( ConstPrimitivePtr primitive = runTimeCast<const Primitive>( object ) )
 			{
 				pointClouds[name] = primitive;
 			}
 			else
 			{
-				IECore::msg( IECore::Msg::Warning, "OSLObject", fmt::format( "No primitive at \"{}\"", pathString ) );
+				IECore::msg( IECore::Msg::Warning, "OSLObject", fmt::format( "No primitive at \"{}\"", sourcePathString ) );
 			}
 		}
 
 		if( p->transformPlug()->getValue() )
 		{
 			transforms[name] = ShadingEngine::Transform(
-				transforms[g_world].fromObjectSpace * sourcePlug()->fullTransform( path ).inverse()
+				transforms[g_world].fromObjectSpace * sourcePlug()->fullTransform( sourcePath ).inverse()
 			);
 		}
 	}
