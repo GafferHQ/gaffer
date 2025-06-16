@@ -74,7 +74,7 @@ class GAFFEROSL_API OSLObject : public GafferScene::Deformer
 		GafferScene::ScenePlug *sourcePlug();
 		const GafferScene::ScenePlug *sourcePlug() const;
 
-		class SourceLocationPlug : public Gaffer::ValuePlug
+		class GAFFEROSL_API SourceLocationPlug : public Gaffer::ValuePlug
 		{
 
 			public :
