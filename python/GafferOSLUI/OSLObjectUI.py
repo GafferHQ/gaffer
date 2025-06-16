@@ -279,6 +279,16 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"source" : [
+
+			"description",
+			"""
+			The input scene which provides the locations to be referenced by the `sourceLocations`
+			plugs.
+			"""
+
+		],
+
 		"sourceLocations" : [
 
 			"description",
