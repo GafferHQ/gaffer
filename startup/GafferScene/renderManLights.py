@@ -46,7 +46,7 @@ import Gaffer
 
 for type in [
 	"PxrCylinderLight", "PxrDomeLight", "PxrDiskLight", "PxrDistantLight",
-	"PxrEnvDayLight", "PxrMeshLight",  "PxrRectLight", "PxrSphereLight",
+	"PxrEnvDayLight", "PxrMeshLight", "PxrSphereLight",
 ] :
 
 	Gaffer.Metadata.registerValue( "ri:light:" + type, "intensityParameter", "intensity" )
@@ -60,11 +60,9 @@ Gaffer.Metadata.registerValue( "ri:light:PxrEnvDayLight", "type", "environment" 
 Gaffer.Metadata.registerValue( "ri:light:PxrDistantLight", "type", "distant" )
 Gaffer.Metadata.registerValue( "ri:light:PxrMeshLight", "type", "mesh" )
 Gaffer.Metadata.registerValue( "ri:light:PxrPortalLight", "type", "portal" )
-Gaffer.Metadata.registerValue( "ri:light:PxrRectLight", "type", "quad" )
 Gaffer.Metadata.registerValue( "ri:light:PxrSphereLight", "type", "point" )
 
 Gaffer.Metadata.registerValue( "ri:light:PxrDomeLight", "textureNameParameter", "lightColorMap" )
 
 Gaffer.Metadata.registerValue( "ri:light:PxrCylinderLight", "visualiserOrientation", imath.M44f().rotate( imath.V3f( 0, 0.5 * math.pi, 0 ) ).scale( 0.5 ) )
 Gaffer.Metadata.registerValue( "ri:light:PxrDiskLight", "visualiserOrientation", imath.M44f().scale( 0.5 ) )
-Gaffer.Metadata.registerValue( "ri:light:PxrRectLight", "visualiserOrientation", imath.M44f().scale( 0.5 ) )
