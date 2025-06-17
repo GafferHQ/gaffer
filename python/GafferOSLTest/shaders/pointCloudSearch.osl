@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2024, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,23 +34,19 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#pragma once
-
-namespace GafferOSL
+shader pointCloudSearch
+(
+	string name = "",
+	float radius = 1,
+)
 {
+	int indices[2];
 
-enum TypeId
-{
-	OSLShaderTypeId = 122100,
-	OSLRendererTypeId = 122101,
-	OSLImageTypeId = 122102,
-	OSLObjectTypeId = 122103,
-	OSLCodeTypeId = 122104,
-	ClosurePlugTypeId = 122105,
-	OSLLightTypeId = 122106,
-	OSLObjectSourceLocationPlugTypeId = 122107,
+	// Workaround for presumed OSL batch shading bug. It seems
+	// like OSL thinks the output `indices` will be uniform if
+	// we don't make it clear that they are varying.
+	indices[0] = (int)P[0];
 
-	LastTypeId = 122299
-};
-
-} // namespace GafferOSL
+	int numFound = pointcloud_search( name, P, radius, /* maxpoints = */ 2, "index", indices );
+	Ci = color( numFound, indices[0], indices[1] ) * emission();
+}

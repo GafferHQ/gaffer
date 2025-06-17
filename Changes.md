@@ -5,6 +5,7 @@ Features
 --------
 
 - Arnold : Added multi-layer EXR support. All outputs with the same filename are now written to the same file via a single output driver.
+- OSLObject : Added the ability to use `pointcloud_search()` and `pointcloud_get()` to query geometry from arbitrary scene locations.
 
 Improvements
 ------------
@@ -48,6 +49,11 @@ API
 - MetadataAlgo : Added `createPlugFromMetadata()` function.
 - RenderController : Added `renderManifest()` method.
 
+API
+---
+
+- ShadingEngine : Added support for passing custom pointclouds to the `shade()` call.
+
 Breaking Changes
 ----------------
 
@@ -66,6 +72,7 @@ Breaking Changes
 - RenderController : Removed `pathForID()`, `pathsForIDs()`, `idForPath()` and `idsForPaths()`. Use `renderManifest()` instead.
 - Catalogue, CatalogueSelect, Display : Moved from GafferImage module to GafferScene.
 - StandardAttributes : Changed the default value of the `linkedLights` plug to "defaultLights". Scripts loaded from earlier Gaffer versions containing `linkedLights` plugs set to the previous default of "" will need to be updated as those plugs will now default to "defaultLights".
+- OSLObject, OSLImage, Expression : Removed support for file-based pointclouds.
 
 Build
 -----
