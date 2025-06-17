@@ -62,12 +62,18 @@ GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr pointShape( float radius, bool mu
 GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr quadWireframe( const Imath::V2f &size, bool muted = false );
 
 /// Returns an OpenGL renderable solid rectangle with optional texture map. If `textureData` is `nullptr`,
-/// a solid color of `fallbackColor` will be used. `tint`, `saturation` and `gamma` are only applied to
-/// the texture map, if present. The texture coordinates of the quad are transformed by `uvOrientation`.
+/// a solid color of `fallbackColor` will be used. `tint`, is applied to both the texture map and fallback
+/// color. `saturation` and `gamma` are only applied to the texture map, if present. The texture
+/// coordinates of the quad are transformed by `uvOrientation`.
 /// `textureData` should be as per return type of `StandardLightVisualiser::surfaceTexture()`.
+
+/// \todo Remove shading related parameters like `tint` and `saturation` and return only a solid renderable
+/// primitive. Display of texture maps, especially modifications such as color adjustments, could easily be
+/// renderer-specific, so it should be the job of the visualiser implementations to decide how to shade lights.
+/// This applies to the other `*Surface` methods as well.
 GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr quadSurface(
-	const Imath::V2f &size, IECore::ConstDataPtr textureData, const Imath::Color3f &tint,
-	int textureMaxResolution, const Imath::Color3f &fallbackColor, const Imath::M33f &uvOrientation
+	const Imath::V2f &size, IECore::ConstDataPtr textureData, const Imath::Color3f &tint, const float saturation,
+	const Imath::Color3f &gamma, int textureMaxResolution, const Imath::Color3f &fallbackColor, const Imath::M33f &uvOrientation
 );
 
 /// Returns an OpenGL renderable wireframe rectangle with outer hatching.
@@ -83,23 +89,24 @@ GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr colorIndicator( const Imath::Colo
 
 /// Returns an OpenGL renderable single-sided solid sphere with normals pointing inward so the far
 /// side of the sphere is visible. If `textureData` is `nullptr`, a solid color of `fallbackColor`
-/// will be used. `tint`, `saturation` and `gamma` are only applied to the texture map, if present.
+/// will be used. `tint`, is applied to both the texture map and fallback color. `saturation` and
+/// `gamma` are only applied to the texture map, if present.
 /// `textureData` should be as per return type of `StandardLightVisualiser::surfaceTexture()`.
 GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr environmentSphereSurface(
-	IECore::ConstDataPtr textureData, const Imath::Color3f &tint,
-	const int maxTextureResolution, const Imath::Color3f &fallbackColor
+	IECore::ConstDataPtr textureData, const Imath::Color3f &tint, const float saturation,
+	const Imath::Color3f &gamma, const int maxTextureResolution, const Imath::Color3f &fallbackColor
 );
 
 /// Returns an OpenGL renderable circle wireframe.
 GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr diskWireframe( float radius, bool muted );
 
 /// Returns an OpenGL renderable solid circle. If `textureData` is `nullptr`, a solid
-/// color of `fallbackColor` will be used. `tint`, `saturation` and `gamma` are only
-/// applied to the texture map, if present. `textureData` should be as per return type
-/// of `StandardLightVisualiser::surfaceTexture()`.
+/// color of `fallbackColor` will be used. `tint`, is applied to both the texture map and fallback
+/// color. `saturation` and `gamma` are only applied to the texture map, if present.
+/// `textureData` should be as per return type of `StandardLightVisualiser::surfaceTexture()`.
 GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr diskSurface(
-	float radius, IECore::ConstDataPtr textureData, const Imath::Color3f &tint,
-	int maxTextureResolution, const Imath::Color3f &fallbackColor
+	float radius, IECore::ConstDataPtr textureData, const Imath::Color3f &tint, const float saturation,
+	const Imath::Color3f &gamma, int maxTextureResolution, const Imath::Color3f &fallbackColor
 );
 
 /// Returns an OpenGL renderable set of wireframe arrows pointing away from the center
