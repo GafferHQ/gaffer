@@ -251,6 +251,7 @@ const InternedString g_emissionFocusParameter( "emissionFocus" );
 const InternedString g_enableTemperatureParameter( "enableTemperature" );
 const InternedString g_glLightDrawingModeString( "gl:light:drawingMode" );
 const InternedString g_glVisualiserMaxTextureResolutionString( "gl:visualiser:maxTextureResolution" );
+const InternedString g_glVisualiserScale( "gl:visualiser:scale" );
 const InternedString g_hourParameter( "hour" );
 const InternedString g_latitudeParameter( "latitude" );
 const InternedString g_lightColorParameter( "lightColor" );
@@ -626,6 +627,33 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 			ornamentWireframeVertsPerCurve->writable(),
 			ornamentWireframePoints->writable()
 		);
+	}
+
+	else if( lightShader->getName() == "PxrSphereLight" )
+	{
+		if( drawShaded )
+		{
+			result.push_back(
+				Visualisation::createGeometry(
+					LightVisualiserAlgo::pointSurface( 0.5f, color ),
+					Visualisation::ColorSpace::Scene
+				)
+			);
+		}
+		else
+		{
+			result.push_back(
+				Visualisation::createOrnament(
+					LightVisualiserAlgo::colorIndicator( color ),
+					false,  // affectsFramingBounds
+					Visualisation::ColorSpace::Scene
+				)
+			);
+		}
+
+		result.push_back( Visualisation::createGeometry( LightVisualiserAlgo::pointShape( 0.5f, muted ) ) );
+
+		result.push_back( Visualisation::createGeometry( LightVisualiserAlgo::pointRays( 0.5f, muted ) ) );
 	}
 
 	if( ornamentWireframePoints->readable().size() > 0 )
