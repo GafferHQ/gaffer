@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.15.0)
 =======
 
+Improvements
+------------
+
+- RenderMan : Added viewport visualisers for RenderMan lights.
+
 Fixes
 -----
 
