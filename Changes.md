@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.0.0a2)
 =======
 
+Improvements
+------------
+
+- RenderMan : Added dedicated viewport visualisers for RenderMan lights.
+
 Breaking Changes
 ----------------
 

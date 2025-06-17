@@ -636,6 +636,23 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 		addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 	}
 
+	else if( lightShader->getName() == "PxrSphereLight" )
+	{
+		if( drawShaded )
+		{
+			result.push_back( Visualisation::createGeometry( pointSurface( 0.5f, color ), Visualisation::ColorSpace::Scene ) );
+		}
+		else
+		{
+			result.push_back(
+				Visualisation::createOrnament( colorIndicator( color ), /* affectsFramingBounds = */ false, Visualisation::ColorSpace::Scene ) );
+		}
+
+		result.push_back( Visualisation::createGeometry( pointShape( 0.5f, muted ) ) );
+
+		result.push_back( Visualisation::createGeometry( pointRays( 0.5f, muted ) ) );
+	}
+
 	if( ornamentWireframePoints->readable().size() > 0 )
 	{
 		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive(
