@@ -607,8 +607,8 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		script["options"]["options"]["render:camera"]["value"].setValue( "/camera" )
 
 		manifestPath = self.temporaryDirectory() / "manifest.exr"
-		script["options"]["options"]["render:renderManifestFilePath"]["enabled"].setValue( True )
-		script["options"]["options"]["render:renderManifestFilePath"]["value"].setValue( manifestPath )
+		script["options"]["options"]["render:manifestFilePath"]["enabled"].setValue( True )
+		script["options"]["options"]["render:manifestFilePath"]["value"].setValue( manifestPath )
 
 		script["rendererOptions"] = self._createOptions()
 		script["rendererOptions"]["in"].setInput( script["options"]["out"] )
@@ -620,7 +620,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		with IECore.CapturingMessageHandler() as mh :
 			script["render"]["task"].execute()
 			self.assertEqual( len( mh.messages ), 1 )
-			self.assertEqual( mh.messages[0].message, 'Found render:renderManifestFilePath option, but the render manifest is not enabled because there is no ID output' )
+			self.assertEqual( mh.messages[0].message, 'Found render:manifestFilePath option, but the render manifest is not enabled because there is no ID output' )
 
 		script["outputs"].addOutput(
 			"id",
