@@ -1526,6 +1526,7 @@ _styleSheet = string.Template(
 	}
 
 	#gafferColorInspector,
+	#gafferImageSelectionStatus,
 	*[gafferClass="GafferSceneUI.TransformToolUI._SelectionWidget"],
 	*[gafferClass="GafferSceneUI.CropWindowToolUI._StatusWidget"],
 	*[gafferClass="GafferSceneUI.TransformToolUI._TargetTipWidget"] > QFrame,
@@ -1576,7 +1577,8 @@ _styleSheet = string.Template(
 		margin-right: auto;
 	}
 
-	#gafferColorInspector
+	#gafferColorInspector,
+	#gafferImageSelectionStatus
 	{
 		margin-left: $toolOverlayInset;
 		margin-right: $toolOverlayInset;

@@ -53,6 +53,7 @@
 
 #include "IECoreGL/GL.h"
 #include "IECoreGL/IECoreGL.h"
+#include "IECoreGL/Buffer.h"
 #include "IECoreGL/LuminanceTexture.h"
 #include "IECoreGL/Selector.h"
 #include "IECoreGL/Shader.h"
@@ -64,6 +65,8 @@
 #include "boost/bind/bind.hpp"
 #include "boost/lexical_cast.hpp"
 
+#include <regex>
+
 using namespace std;
 using namespace boost::placeholders;
 using namespace boost;
@@ -74,6 +77,401 @@ using namespace Gaffer;
 using namespace GafferUI;
 using namespace GafferImage;
 using namespace GafferImageUI;
+
+namespace
+{
+
+// These supporting functions, along with RenderTexture itself, contain code copied from ViewportGadget and
+// rearranged. It's expressed in such a way that we could use it as a drop-in replacement for the code in
+// ViewportGadget if we wanted to avoid the duplication - but this would require exposing it more than we
+// are currently comfortable with.
+void renderUnitSquare( const IECoreGL::Shader::Parameter *pParameter, const IECoreGL::Shader::Parameter *uvParameter = nullptr )
+{
+	static float rectPBufferData[12] = { -1, -1, 0,  -1, 1, 0,  1, -1, 0,  1, 1, 0 };
+	static float rectUvBufferData[8] = { 0, 0,  0, 1,  1, 0,  1, 1 };
+	static IECoreGL::BufferPtr g_rectPBuffer = new IECoreGL::Buffer( rectPBufferData, sizeof( float ) * 12 );
+	static IECoreGL::BufferPtr g_rectUvBuffer = new IECoreGL::Buffer( rectUvBufferData, sizeof( float ) * 8 );
+
+	glEnableVertexAttribArrayARB( pParameter->location );
+	{
+		IECoreGL::Buffer::ScopedBinding bufferBinding( *g_rectPBuffer );
+		glVertexAttribPointerARB( pParameter->location, 3, GL_FLOAT, false, 0, nullptr );
+	}
+
+	if( uvParameter )
+	{
+		glEnableVertexAttribArrayARB( uvParameter->location );
+		{
+			IECoreGL::Buffer::ScopedBinding bufferBinding( *g_rectUvBuffer );
+			glVertexAttribPointerARB( uvParameter->location, 2, GL_FLOAT, false, 0, nullptr );
+		}
+	}
+
+	glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
+
+	glDisableVertexAttribArrayARB( pParameter->location );
+	if( uvParameter )
+	{
+		glDisableVertexAttribArrayARB( uvParameter->location );
+	}
+}
+
+bool checkGLArbTextureFloat()
+{
+	bool supported = std::regex_match( std::string( (const char*)glGetString( GL_EXTENSIONS ) ), std::regex( R"(.*GL_ARB_texture_float( |\n).*)" ) );
+	if( !supported )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "RenderTexture",
+			"Could not find supported floating point texture format in OpenGL. Viewport "
+			"display is likely to show banding - please resolve graphics driver issue."
+		);
+	}
+	return supported;
+}
+
+GLsizei numSamples()
+{
+	GLint maxSamples = 0;
+	glGetIntegerv( GL_MAX_SAMPLES, &maxSamples );
+	return std::min( maxSamples, 8 );
+}
+
+V2i glViewportSize()
+{
+	// This is _not_ the same as `RenderTexture::getViewport()` on high DPI displays.
+	// In that case, `getViewport()` returns the GadgetWidget's "virtual" size, which
+	// is a factor of the GL viewport's size, which is measured in true pixels.
+	int currentViewport[4];
+	glGetIntegerv( GL_VIEWPORT, currentViewport );
+	return V2i( currentViewport[2] - currentViewport[0], currentViewport[3] - currentViewport[1] );
+}
+
+} // namespace
+
+class GafferImageUI::ImageGadget::RenderTexture
+{
+
+	public :
+		RenderTexture()
+			:	m_framebuffer( 0 ),
+				m_framebufferSize( -1 ),
+				m_colorBuffer( 0 ),
+				m_depthBuffer( 0 ),
+				m_downsampledFramebuffer( 0 ),
+				m_downsampledFramebufferTexture( 0 )
+		{
+		}
+
+		~RenderTexture()
+		{
+			// We should technically ensure that the right GL context is current when
+			// making these calls, but this seems to work without, because all our GL
+			// contexts are sharing the same resources.
+			if( m_framebuffer )
+			{
+				glDeleteFramebuffers( 1, &m_framebuffer );
+				glDeleteRenderbuffers( 1, &m_colorBuffer );
+				glDeleteRenderbuffers( 1, &m_depthBuffer );
+				glDeleteFramebuffers( 1, &m_downsampledFramebuffer );
+				glDeleteTextures( 1, &m_downsampledFramebufferTexture );
+			}
+		}
+
+		// Access the texture that contains everything that has been rendered to this.
+		// Note : If we were going to make this a public API, maybe we would want to make this
+		// return an IECoreGL::Texture?
+		GLint texture()
+		{
+			return m_downsampledFramebufferTexture;
+		}
+
+		/// The RenderScope binds a RenderTexture so that rendering goes to it.
+		class GAFFERIMAGEUI_API RenderScope : boost::noncopyable
+		{
+
+			public :
+
+				RenderScope( const RenderTexture *framebuffer, bool clearDepth )
+					: m_framebuffer( framebuffer )
+				{
+					glGetIntegerv( GL_DRAW_FRAMEBUFFER_BINDING, &m_defaultFramebuffer );
+
+					// Render to intermediate framebuffer.
+
+					glEnable( GL_BLEND );
+					glBindFramebuffer( GL_DRAW_FRAMEBUFFER, m_framebuffer->acquireFramebuffer() );
+					glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
+					glClear( GL_COLOR_BUFFER_BIT );
+					glEnable( GL_MULTISAMPLE );
+
+					if( clearDepth )
+					{
+						glClearDepth( 1.0f );
+						glClear( GL_DEPTH_BUFFER_BIT );
+					}
+				}
+				~RenderScope()
+				{
+					// Blit to downsampled framebuffer, to get the image into a texture
+					// format we can read from a shader.
+
+					glBindFramebuffer( GL_READ_FRAMEBUFFER, m_framebuffer->m_framebuffer );
+					glBindFramebuffer( GL_DRAW_FRAMEBUFFER, m_framebuffer->m_downsampledFramebuffer );
+					const V2i size = glViewportSize();
+					glBlitFramebuffer( 0, 0, size.x, size.y, 0, 0, size.x, size.y, GL_COLOR_BUFFER_BIT, GL_NEAREST );
+
+					glBindFramebuffer( GL_FRAMEBUFFER, m_defaultFramebuffer );
+				}
+
+			private :
+
+				const RenderTexture* m_framebuffer;
+				GLint m_defaultFramebuffer;
+		};
+
+	private :
+
+		GLuint acquireFramebuffer() const
+		{
+			const V2i size = glViewportSize();
+			if( m_framebuffer && m_framebufferSize == size )
+			{
+				// Reuse existing buffer.
+				return m_framebuffer;
+			}
+
+			if( !m_colorBuffer )
+			{
+				glGenRenderbuffers( 1, &m_colorBuffer );
+				glGenRenderbuffers( 1, &m_depthBuffer );
+
+				glGenTextures( 1, &m_downsampledFramebufferTexture );
+				glBindTexture( GL_TEXTURE_2D, m_downsampledFramebufferTexture );
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+			}
+
+			if( m_framebuffer )
+			{
+				// There is contradictory information out there about whether a
+				// framebuffer can handle the attached textures and render buffers being
+				// resized - sounds like it depends on the driver. Safer to just
+				// recreate it.
+				glDeleteFramebuffers( 1, &m_framebuffer );
+				glDeleteFramebuffers( 1, &m_downsampledFramebuffer );
+			}
+
+			// Create framebuffer
+			glGenFramebuffers( 1, &m_framebuffer );
+			glBindFramebuffer( GL_DRAW_FRAMEBUFFER, m_framebuffer );
+
+			// Resize color buffer and attach to framebuffer
+			static const GLint colorFormat = checkGLArbTextureFloat() ? GL_RGBA16F : GL_RGBA8;
+			static const GLsizei samples = numSamples();
+
+			glBindRenderbuffer( GL_RENDERBUFFER, m_colorBuffer );
+			glRenderbufferStorageMultisample( GL_RENDERBUFFER, samples, colorFormat, size.x, size.y );
+			glFramebufferRenderbuffer( GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, m_colorBuffer );
+
+			// Resize depth buffer and attach to framebuffer
+			glBindRenderbuffer( GL_RENDERBUFFER, m_depthBuffer );
+			glRenderbufferStorageMultisample( GL_RENDERBUFFER, samples, GL_DEPTH_COMPONENT32F, size.x, size.y );
+			glFramebufferRenderbuffer( GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthBuffer );
+
+			// Validate framebuffer
+			GLenum framebufferStatus = glCheckFramebufferStatus( GL_DRAW_FRAMEBUFFER );
+			if( framebufferStatus != GL_FRAMEBUFFER_COMPLETE )
+			{
+				IECore::msg( IECore::Msg::Warning, "GafferUI::RenderTexture", "Multisampled framebuffer error : " + std::to_string( framebufferStatus ) );
+			}
+
+			// Create downsampled framebuffer
+			glGenFramebuffers( 1, &m_downsampledFramebuffer );
+			glBindFramebuffer( GL_DRAW_FRAMEBUFFER, m_downsampledFramebuffer );
+
+			// Resize color texture and attach to downsampled framebuffer
+			glBindTexture( GL_TEXTURE_2D, m_downsampledFramebufferTexture );
+			glTexImage2D( GL_TEXTURE_2D, 0, colorFormat, size.x, size.y, 0, GL_RGBA, GL_FLOAT, nullptr );
+			glFramebufferTexture2D( GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_downsampledFramebufferTexture, 0 );
+			// Validate downsampled framebuffer
+			framebufferStatus = glCheckFramebufferStatus( GL_DRAW_FRAMEBUFFER );
+			if( framebufferStatus != GL_FRAMEBUFFER_COMPLETE )
+			{
+				IECore::msg( IECore::Msg::Warning, "GafferUI::RenderTexture", "Downsampled framebuffer error : " + std::to_string( framebufferStatus ) );
+			}
+
+			m_framebufferSize = size;
+			return m_framebuffer;
+		}
+
+		// Framebuffer used for intermediate renders before
+		// transferring to the output framebuffer using the
+		// post-process shaders.
+		mutable GLuint m_framebuffer;
+		mutable Imath::V2i m_framebufferSize;
+		mutable GLuint m_colorBuffer;
+		mutable GLuint m_depthBuffer;
+		mutable GLuint m_downsampledFramebuffer;
+		mutable GLuint m_downsampledFramebufferTexture;
+};
+
+
+namespace
+{
+
+struct SelectionPostProcessShader
+{
+	SelectionPostProcessShader()
+		: m_setup( new IECoreGL::Shader::Setup(
+			IECoreGL::ShaderLoader::defaultShaderLoader()->create(
+				vertexSource(), "", fragmentSource()
+			)
+		) )
+	{
+		m_textureParameter = m_setup->shader()->uniformParameter( "framebufferTexture" );
+		if( !m_textureParameter || m_textureParameter->type != GL_SAMPLER_2D )
+		{
+			throw Exception( "Post process shader must have parameter `uniform sampler2D framebufferTexture`" );
+		}
+
+		m_pParameter = m_setup->shader()->vertexAttribute( "vertexP" );
+		if( !m_pParameter )
+		{
+			throw Exception( "Post process shader must have parameter `in vec3 vertexP`" );
+		}
+
+		m_uvParameter = m_setup->shader()->vertexAttribute( "vertexuv" );
+		if( !m_uvParameter )
+		{
+			throw Exception( "Post process shader must have parameter `in vec2 vertexuv`" );
+		}
+	}
+
+	static const char *vertexSource()
+	{
+		static const char *g_vertexSource = R"(
+#version 330 compatibility
+
+in vec3 vertexP;
+in vec2 vertexuv;
+out vec2 fragmentuv;
+
+void main()
+{
+gl_Position = vec4( vertexP, 1.0 );
+fragmentuv = vertexuv;
+}
+)";
+		return g_vertexSource;
+	}
+
+	static const std::string &fragmentSource()
+	{
+		static std::string g_fragmentSource = R"(
+#version 330 compatibility
+
+uniform sampler2D framebufferTexture;
+in vec2 fragmentuv;
+
+layout( location=0 ) out vec4 outColor;
+
+void main()
+{
+vec2 pixelWidth = vec2( dFdx( fragmentuv.x ), dFdy( fragmentuv.y ) );
+
+vec2 query = vec2( 0.0 );
+ivec2 iP = ivec2( fragmentuv / pixelWidth );
+
+// Minimum number of texel fetches to give us a reasonable looking 2 pixel border.
+// In a 5x5 neighbourhood, we sample the following texels for the neighourhood query
+// and the centre value:
+//
+//  QQQ
+// QQQQQ
+// QQCQQ
+// QQQQQ
+//  QQQ
+
+for( int iX = -1; iX <= 1; iX++ )
+{
+	query = max( query, texelFetch( framebufferTexture, iP + ivec2( iX, -2 ), 0 ).rg );
+	query = max( query, texelFetch( framebufferTexture, iP + ivec2( iX, 2 ), 0 ).rg );
+}
+for( int iX = -2; iX <= 2; iX++ )
+{
+	query = max( query, texelFetch( framebufferTexture, iP + ivec2( iX, -1 ), 0 ).rg );
+	query = max( query, texelFetch( framebufferTexture, iP + ivec2( iX, 1 ), 0 ).rg );
+}
+for( int iX = 1; iX <= 2; iX++ )
+{
+	query = max( query, texelFetch( framebufferTexture, iP + ivec2( iX, 0 ), 0 ).rg );
+	query = max( query, texelFetch( framebufferTexture, iP + ivec2( -iX, 0 ), 0 ).rg );
+}
+vec4 center = texelFetch( framebufferTexture, ivec2( fragmentuv / pixelWidth ), 0 );
+
+outColor = center.g == 0 && query.g != 0 ? vec4( 0.8, 0.9, 1.0, 1.0 ) : ( center.r != 0 ? 0.25 : query.r ) * vec4( 0.54, 0.72, 0.87, 1.0 );
+
+}
+)";
+		return g_fragmentSource;
+	}
+
+
+	IECoreGL::Shader::ConstSetupPtr m_setup;
+	const IECoreGL::Shader::Parameter *m_textureParameter = nullptr;
+	const IECoreGL::Shader::Parameter *m_pParameter = nullptr;
+	const IECoreGL::Shader::Parameter *m_uvParameter = nullptr;
+};
+
+const SelectionPostProcessShader *selectionPostProcessShader()
+{
+	static const SelectionPostProcessShader *g_selectionPostProcessShader = new SelectionPostProcessShader();
+	return g_selectionPostProcessShader;
+}
+
+} // namespace
+
+// NOTE : Copied from GafferSceneUI::OutputBuffer, would be nice if it was somewhere central.
+class GafferImageUI::ImageGadget::BufferTexture
+{
+	public :
+
+		BufferTexture()
+		{
+			glGenTextures( 1, &m_texture );
+			glGenBuffers( 1, &m_buffer );
+		}
+
+		~BufferTexture()
+		{
+			glDeleteBuffers( 1, &m_buffer );
+			glDeleteTextures( 1, &m_texture );
+		}
+
+		GLuint texture() const
+		{
+			return m_texture;
+		}
+
+		void updateBuffer( const vector<uint32_t> &data )
+		{
+			glBindBuffer( GL_TEXTURE_BUFFER, m_buffer );
+			glBufferData( GL_TEXTURE_BUFFER, sizeof( uint32_t ) * data.size(), data.data(), GL_STREAM_DRAW );
+
+			glBindTexture( GL_TEXTURE_BUFFER, m_texture );
+			glTexBuffer( GL_TEXTURE_BUFFER, GL_R32UI, m_buffer );
+		}
+
+	private :
+
+		GLuint m_texture;
+		GLuint m_buffer;
+
+};
+
 
 namespace {
 void findUsableTextureFormats( GLenum &monochromeFormat, GLenum &colorFormat )
@@ -293,8 +691,154 @@ const TileShader *tileShader()
 	return g_tileShader;
 }
 
-} // namespace
+class TileShaderSelectedIDs
+{
 
+	public :
+
+		TileShaderSelectedIDs()
+		{
+			m_shader = ShaderLoader::defaultShaderLoader()->create( vertexSource(), "", fragmentSource() );
+
+			// Query shader parameters
+
+			m_idTextureUnit = m_shader->uniformParameter( "idTexture" )->textureUnit;
+			m_selectionTextureUnit = m_shader->uniformParameter( "selectionTexture" )->textureUnit;
+		}
+
+		~TileShaderSelectedIDs()
+		{
+		}
+
+		// Binds shader and provides `loadTile()` method to update
+		// parameters for a specific tile.
+		struct ScopedBinding : PushAttrib
+		{
+
+			ScopedBinding( const TileShaderSelectedIDs &tileShader, GLuint idsTexture, uint32_t highlightID, V2f wipePos, V2f wipeDir )
+				:	PushAttrib( GL_COLOR_BUFFER_BIT ), m_tileShader( tileShader )
+			{
+				glGetIntegerv( GL_CURRENT_PROGRAM, &m_previousProgram );
+				glUseProgram( m_tileShader.m_shader->program() );
+
+				glEnable( GL_TEXTURE_2D );
+
+				glGetIntegerv( GL_BLEND_SRC, &m_prevBlendSrc );
+				glGetIntegerv( GL_BLEND_DST, &m_prevBlendDst );
+
+				glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
+
+				glActiveTexture( GL_TEXTURE0 + tileShader.m_selectionTextureUnit );
+				glBindTexture( GL_TEXTURE_BUFFER, idsTexture );
+				glUniform1i( tileShader.m_shader->uniformParameter( "selectionTexture" )->location, tileShader.m_selectionTextureUnit );
+
+				glUniform1ui( tileShader.m_shader->uniformParameter( "highlightID" )->location, highlightID );
+
+				glUniform1i( tileShader.m_shader->uniformParameter( "idTexture" )->location, tileShader.m_idTextureUnit );
+
+				glUniform2f( tileShader.m_shader->uniformParameter( "wipePos" )->location, wipePos.x, wipePos.y );
+				glUniform2f( tileShader.m_shader->uniformParameter( "wipeDir" )->location, wipeDir.x, wipeDir.y );
+			}
+
+			~ScopedBinding()
+			{
+				glUseProgram( m_previousProgram );
+				glBlendFunc( m_prevBlendSrc, m_prevBlendDst );
+			}
+
+			void loadTile( IECoreGL::ConstTexturePtr idTexture )
+			{
+				glActiveTexture( GL_TEXTURE0 + m_tileShader.m_idTextureUnit );
+				idTexture->bind();
+			}
+
+			private :
+
+				const TileShaderSelectedIDs &m_tileShader;
+				GLint m_previousProgram;
+				GLint m_prevBlendSrc, m_prevBlendDst;
+		};
+
+	private :
+
+		IECoreGL::ShaderPtr m_shader;
+
+		GLuint m_idTextureUnit;
+		GLuint m_selectionTextureUnit;
+
+		static const char *vertexSource()
+		{
+			static const char *g_vertexSource = R"(
+void main()
+{
+	gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * gl_Vertex;
+	gl_TexCoord[0] = gl_MultiTexCoord0;
+	gl_TexCoord[1] = gl_MultiTexCoord1;
+}
+			)";
+
+			return g_vertexSource;
+		}
+
+		static const std::string &fragmentSource()
+		{
+			static std::string g_fragmentSource = R"(
+#version 330 compatibility
+
+// Assumes texture contains sorted values.
+bool contains( usamplerBuffer array, uint value )
+{
+	int high = textureSize( array ) - 1;
+	int low = 0;
+	while( low != high )
+	{
+		int mid = (low + high + 1) / 2;
+		if( texelFetch( array, mid ).r > value )
+		{
+			high = mid - 1;
+		}
+		else
+		{
+			low = mid;
+		}
+	}
+	return texelFetch( array, low ).r == value;
+}
+
+uniform usamplerBuffer selectionTexture;
+uniform usampler2D idTexture;
+uniform uint highlightID;
+uniform vec2 wipePos;
+uniform vec2 wipeDir;
+
+layout( location=0 ) out vec4 outColor;
+
+void main()
+{
+	if( dot( gl_TexCoord[1].xy - wipePos, wipeDir ) > 0.0 )
+	{
+		discard;
+	}
+	uint id = texture( idTexture, gl_TexCoord[0].xy ).r;
+	bool selected = contains( selectionTexture, id );
+	bool highlighted = highlightID != 0u && id == highlightID;
+	outColor = vec4( float( selected ), float( highlighted ), 0.0, 0.0 );
+}
+)";
+			return g_fragmentSource;
+		}
+
+};
+
+const TileShaderSelectedIDs *tileShaderSelectedIDs()
+{
+	static const TileShaderSelectedIDs *g_tileShaderSelectedIDs = new TileShaderSelectedIDs();
+	return g_tileShaderSelectedIDs;
+}
+
+const std::string g_idChannelInternalName( "__internal_ID_channel__" );
+
+} // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // ImageGadget implementation
@@ -309,7 +853,9 @@ ImageGadget::ImageGadget()
 		m_wipeEnabled( false ),
 		m_dirtyFlags( AllDirty ),
 		m_renderRequestPending( false ),
-		m_blendMode( BlendMode::Over )
+		m_blendMode( BlendMode::Over ),
+		m_highlightID( 0 ),
+		m_selectionRenderTexture( std::make_unique<RenderTexture>() )
 {
 	m_rgbaChannels[0] = "R";
 	m_rgbaChannels[1] = "G";
@@ -389,6 +935,24 @@ void ImageGadget::setChannels( const Channels &channels )
 const ImageGadget::Channels &ImageGadget::getChannels() const
 {
 	return m_rgbaChannels;
+}
+
+void ImageGadget::setIDChannel( const IECore::InternedString & idChannel )
+{
+	if( idChannel == m_idChannel )
+	{
+		return;
+	}
+
+	m_idChannel = idChannel;
+
+	channelsChangedSignal()( this );
+	dirty( TilesDirty );
+}
+
+const IECore::InternedString ImageGadget::getIDChannel()
+{
+	return m_idChannel;
 }
 
 ImageGadget::ImageGadgetSignal &ImageGadget::channelsChangedSignal()
@@ -534,9 +1098,30 @@ void ImageGadget::setWipeAngle( float angle )
 	m_wipeAngle = angle;
 }
 
-float  ImageGadget::getWipeAngle() const
+float ImageGadget::getWipeAngle() const
 {
 	return m_wipeAngle;
+}
+
+void ImageGadget::setSelectedIDs( const std::vector<uint32_t> &ids )
+{
+	m_selectedIDs = ids;
+	std::sort( m_selectedIDs.begin(), m_selectedIDs.end() );
+}
+
+const std::vector<uint32_t> &ImageGadget::getSelectedIDs()
+{
+	return m_selectedIDs;
+}
+
+void ImageGadget::setHighlightID( uint32_t id )
+{
+	m_highlightID = id;
+}
+
+uint32_t ImageGadget::getHighlightID()
+{
+	return m_highlightID;
 }
 
 Imath::Box3f ImageGadget::bound() const
@@ -693,6 +1278,26 @@ IECoreGL::Texture *blackTexture()
 	return g_texture.get();
 }
 
+IECoreGL::Texture *blackIntTexture()
+{
+	static IECoreGL::TexturePtr g_texture;
+	if( !g_texture )
+	{
+		GLuint texture;
+		glGenTextures( 1, &texture );
+		g_texture = new Texture( texture );
+		Texture::ScopedBinding binding( *g_texture );
+
+		const unsigned int black = 0;
+		glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+		glTexImage2D(
+			GL_TEXTURE_2D, 0, GL_R32UI, /* width = */ 1, /* height = */ 1, 0, GL_RED_INTEGER,
+			GL_UNSIGNED_INT, &black
+		);
+	}
+	return g_texture.get();
+}
+
 } // namespace
 
 ImageGadget::Tile::Tile( const Tile &other )
@@ -703,8 +1308,19 @@ ImageGadget::Tile::Tile( const Tile &other )
 {
 }
 
-ImageGadget::Tile::Update ImageGadget::Tile::computeUpdate( const GafferImage::ImagePlug *image )
+ImageGadget::Tile::Update ImageGadget::Tile::computeUpdate( const GafferImage::ImagePlug *image, bool loadAsID )
 {
+	if( !m_texture )
+	{
+		m_loadAsID = loadAsID;
+	}
+	else
+	{
+		if( loadAsID != m_loadAsID )
+		{
+			throw Exception( "Cannot switch loadAsID once an ImageGadget tile is initialized." );
+		}
+	}
 	const IECore::MurmurHash h = image->channelDataPlug()->hash();
 	Mutex::scoped_lock lock( m_mutex );
 	if( m_channelDataHash != MurmurHash() && m_channelDataHash == h )
@@ -774,23 +1390,45 @@ const IECoreGL::Texture *ImageGadget::Tile::texture( bool &active )
 			m_texture = new Texture( texture ); // Lock not needed, because this is only touched on the UI thread.
 			Texture::ScopedBinding binding( *m_texture );
 
-			glTexImage2D(
-				GL_TEXTURE_2D, 0, monochromeTextureFormat, ImagePlug::tileSize(), ImagePlug::tileSize(), 0, GL_RED,
-				GL_FLOAT, nullptr
-			);
+			if( m_loadAsID )
+			{
+				glTexImage2D(
+					GL_TEXTURE_2D, 0, GL_R32UI, ImagePlug::tileSize(), ImagePlug::tileSize(), 0, GL_RED_INTEGER,
+					GL_UNSIGNED_INT, nullptr
+				);
+			}
+			else
+			{
+				glTexImage2D(
+					GL_TEXTURE_2D, 0, monochromeTextureFormat, ImagePlug::tileSize(), ImagePlug::tileSize(), 0, GL_RED,
+					GL_FLOAT, nullptr
+				);
+			}
 
 			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
 			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+
 		}
 
 		Texture::ScopedBinding binding( *m_texture );
 		glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
-		glTexSubImage2D(
-			GL_TEXTURE_2D, 0, 0, 0, ImagePlug::tileSize(), ImagePlug::tileSize(), GL_RED,
-			GL_FLOAT, channelDataToConvert->readable().data()
-		);
+
+		if( m_loadAsID )
+		{
+			glTexSubImage2D(
+				GL_TEXTURE_2D, 0, 0, 0, ImagePlug::tileSize(), ImagePlug::tileSize(), GL_RED_INTEGER,
+				GL_UNSIGNED_INT, channelDataToConvert->readable().data()
+			);
+		}
+		else
+		{
+			glTexSubImage2D(
+				GL_TEXTURE_2D, 0, 0, 0, ImagePlug::tileSize(), ImagePlug::tileSize(), GL_RED,
+				GL_FLOAT, channelDataToConvert->readable().data()
+			);
+		}
 
 		g_tileUpdateCount++;
 	}
@@ -836,6 +1474,11 @@ void ImageGadget::updateTiles()
 				channelsToCompute.push_back( *it );
 			}
 		}
+
+		if( *it == m_idChannel.string() )
+		{
+			channelsToCompute.push_back( g_idChannelInternalName );
+		}
 	}
 
 	const Box2i dataWindow = this->dataWindow();
@@ -851,9 +1494,17 @@ void ImageGadget::updateTiles()
 			ImagePlug::ChannelDataScope channelScope( Context::current() );
 			for( auto &channelName : channelsToCompute )
 			{
-				channelScope.setChannelName( &channelName );
 				Tile &tile = m_tiles[TileIndex(tileOrigin, channelName)];
-				updates.push_back( tile.computeUpdate( image ) );
+				if( channelName == g_idChannelInternalName )
+				{
+					channelScope.setChannelName( &m_idChannel.string() );
+					updates.push_back( tile.computeUpdate( image, true ) );
+				}
+				else
+				{
+					channelScope.setChannelName( &channelName );
+					updates.push_back( tile.computeUpdate( image ) );
+				}
 			}
 
 			Tile::applyUpdates( updates );
@@ -938,7 +1589,9 @@ void ImageGadget::removeOutOfBoundsTiles() const
 	for( Tiles::iterator it = m_tiles.begin(); it != m_tiles.end(); )
 	{
 		const Box2i tileBound( it->first.tileOrigin, it->first.tileOrigin + V2i( ImagePlug::tileSize() ) );
-		if( !BufferAlgo::intersects( dw, tileBound ) || find( ch.begin(), ch.end(), it->first.channelName.string() ) == ch.end() )
+
+		const std::string &effectiveChannelName = it->first.channelName.string() == g_idChannelInternalName ? m_idChannel.string() : it->first.channelName.string();
+		if( !BufferAlgo::intersects( dw, tileBound ) || find( ch.begin(), ch.end(), effectiveChannelName ) == ch.end() )
 		{
 			it = m_tiles.unsafe_erase( it );
 		}
@@ -961,17 +1614,52 @@ void ImageGadget::visibilityChanged()
 	}
 }
 
-void ImageGadget::renderTiles() const
+void ImageGadget::renderTiles( bool ids ) const
 {
 	float radians = m_wipeAngle * M_PI / 180.0f;
 	const Box2i dataWindow = this->dataWindow();
 
-	TileShader::ScopedBinding shaderBinding(
-		*tileShader(),
-		m_wipeEnabled ? m_wipePos : V2f( dataWindow.min.x, dataWindow.min.y ),
-		m_wipeEnabled ? V2f( cosf( radians ), sinf( radians ) ) : V2f( -1, 0 ),
-		m_blendMode
-	);
+	std::variant< int, TileShader::ScopedBinding, TileShaderSelectedIDs::ScopedBinding > shaderBinding;
+
+	V2f effectiveWipePos = m_wipeEnabled ? m_wipePos : V2f( dataWindow.min.x, dataWindow.min.y );
+	V2f effectiveWipeDir = m_wipeEnabled ? V2f( cosf( radians ), sinf( radians ) ) : V2f( -1, 0 );
+
+	if( !ids )
+	{
+		shaderBinding.emplace<TileShader::ScopedBinding>(
+			*tileShader(),
+			effectiveWipePos,
+			effectiveWipeDir,
+			m_blendMode
+		);
+	}
+	else
+	{
+		if( !m_selectedIDsBuffer )
+		{
+			m_selectedIDsBuffer = std::make_unique<BufferTexture>();
+		}
+
+		if( m_selectedIDs.size() )
+		{
+			m_selectedIDsBuffer->updateBuffer( m_selectedIDs );
+		}
+		else
+		{
+			// OpenGL doesn't allow bufferData to actually be zero length
+			static std::vector<uint32_t> g_emptyBuffer = { std::numeric_limits< uint32_t>::max() };
+			m_selectedIDsBuffer->updateBuffer( g_emptyBuffer );
+		}
+
+		shaderBinding.emplace<TileShaderSelectedIDs::ScopedBinding>(
+			*tileShaderSelectedIDs(),
+			m_selectedIDsBuffer->texture(),
+			m_highlightID,
+			effectiveWipePos,
+			effectiveWipeDir
+		);
+
+	}
 
 	const float pixelAspect = this->format().getPixelAspect();
 
@@ -980,22 +1668,42 @@ void ImageGadget::renderTiles() const
 	{
 		for( tileOrigin.x = ImagePlug::tileOrigin( dataWindow.min ).x; tileOrigin.x < dataWindow.max.x; tileOrigin.x += ImagePlug::tileSize() )
 		{
-			bool active = false;
-			IECoreGL::ConstTexturePtr channelTextures[4];
-			for( int i = 0; i < 4; ++i )
+
+			if( std::holds_alternative<TileShader::ScopedBinding>( shaderBinding ) )
 			{
-				const InternedString channelName = ( m_soloChannel < 0 || i == 3 ) ? m_rgbaChannels[i] : m_rgbaChannels[m_soloChannel];
-				Tiles::const_iterator it = m_tiles.find( TileIndex( tileOrigin, channelName ) );
+				bool active = false;
+				IECoreGL::ConstTexturePtr channelTextures[4];
+				for( int i = 0; i < 4; ++i )
+				{
+					const InternedString channelName = ( m_soloChannel < 0 || i == 3 ) ? m_rgbaChannels[i] : m_rgbaChannels[m_soloChannel];
+					Tiles::const_iterator it = m_tiles.find( TileIndex( tileOrigin, channelName ) );
+					if( it != m_tiles.end() )
+					{
+						channelTextures[i] = it->second.texture( active );
+					}
+					else
+					{
+						channelTextures[i] = blackTexture();
+					}
+				}
+				std::get<TileShader::ScopedBinding>( shaderBinding ).loadTile( channelTextures, active );
+			}
+			else
+			{
+				IECoreGL::ConstTexturePtr idTexture;
+				Tiles::const_iterator it = m_tiles.find( TileIndex( tileOrigin, g_idChannelInternalName ) );
 				if( it != m_tiles.end() )
 				{
-					channelTextures[i] = it->second.texture( active );
+					bool unusedActive = false; // We don't have activity indicators for the id AOV
+					// \todo : Should we validate that this tile has been loaded as an integer texture?
+					idTexture = it->second.texture( unusedActive );
 				}
 				else
 				{
-					channelTextures[i] = blackTexture();
+					idTexture = blackIntTexture();
 				}
+				std::get<TileShaderSelectedIDs::ScopedBinding>( shaderBinding ).loadTile( idTexture );
 			}
-			shaderBinding.loadTile( channelTextures, active );
 
 			const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 			const Box2i validBound = BufferAlgo::intersection( tileBound, dataWindow );
@@ -1012,20 +1720,20 @@ void ImageGadget::renderTiles() const
 
 			glBegin( GL_QUADS );
 
-				glTexCoord2f( uvBound.min.x, uvBound.min.y  );
-				glMultiTexCoord2f( GL_TEXTURE1, validBound.min.x, validBound.min.y  );
+				glTexCoord2f( uvBound.min.x, uvBound.min.y );
+				glMultiTexCoord2f( GL_TEXTURE1, validBound.min.x, validBound.min.y );
 				glVertex2f( validBound.min.x * pixelAspect, validBound.min.y );
 
-				glTexCoord2f( uvBound.min.x, uvBound.max.y  );
-				glMultiTexCoord2f( GL_TEXTURE1, validBound.min.x, validBound.max.y  );
+				glTexCoord2f( uvBound.min.x, uvBound.max.y );
+				glMultiTexCoord2f( GL_TEXTURE1, validBound.min.x, validBound.max.y );
 				glVertex2f( validBound.min.x * pixelAspect, validBound.max.y );
 
-				glTexCoord2f( uvBound.max.x, uvBound.max.y  );
-				glMultiTexCoord2f( GL_TEXTURE1, validBound.max.x, validBound.max.y  );
+				glTexCoord2f( uvBound.max.x, uvBound.max.y );
+				glMultiTexCoord2f( GL_TEXTURE1, validBound.max.x, validBound.max.y );
 				glVertex2f( validBound.max.x * pixelAspect, validBound.max.y );
 
-				glTexCoord2f( uvBound.max.x, uvBound.min.y  );
-				glMultiTexCoord2f( GL_TEXTURE1, validBound.max.x, validBound.min.y  );
+				glTexCoord2f( uvBound.max.x, uvBound.min.y );
+				glMultiTexCoord2f( GL_TEXTURE1, validBound.max.x, validBound.min.y );
 				glVertex2f( validBound.max.x * pixelAspect, validBound.min.y );
 
 			glEnd();
@@ -1053,7 +1761,7 @@ void ImageGadget::renderText( const std::string &text, const Imath::V2f &positio
 
 void ImageGadget::renderLayer( Layer layer, const GafferUI::Style *style, RenderReason reason ) const
 {
-	if( !( layer == Layer::Back || layer == Layer::Main || layer == Layer::Front )  )
+	if( !( layer == Layer::Back || layer == Layer::Main || layer == Layer::Front ) )
 	{
 		return;
 	}
@@ -1137,12 +1845,41 @@ void ImageGadget::renderLayer( Layer layer, const GafferUI::Style *style, Render
 		style->renderRectangle( dataWindowF );
 	}
 
+	// If we have an id channel, and there is selection or highlight to render, then we have to do an id
+	// pass. This is rendered to a framebuffer, and then rendered from the framebuffer using a post process
+	// shader that converts regions to outlines.
+	if( m_idChannel != "" && ( m_selectedIDs.size() || m_highlightID != 0 ) )
+	{
+		{
+			RenderTexture::RenderScope bindScope( m_selectionRenderTexture.get(), true );
+			renderTiles( true );
+		}
+
+		const SelectionPostProcessShader *shader = selectionPostProcessShader();
+
+		IECoreGL::Shader::Setup::ScopedBinding shaderBinding( *shader->m_setup );
+		glActiveTexture( GL_TEXTURE0 + shader->m_textureParameter->textureUnit );
+		glBindTexture( GL_TEXTURE_2D, m_selectionRenderTexture->texture() );
+		glUniform1i( shader->m_textureParameter->location, shader->m_textureParameter->textureUnit );
+
+		GLint prevBlendSrc, prevBlendDst;
+		glGetIntegerv( GL_BLEND_SRC, &prevBlendSrc );
+		glGetIntegerv( GL_BLEND_DST, &prevBlendDst );
+
+		// The intermediate framebuffer is already premultipled.
+		glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
+
+		renderUnitSquare( shader->m_pParameter, shader->m_uvParameter );
+
+		glBlendFunc( prevBlendSrc, prevBlendDst );
+	}
+
 	// Render labels for resolution and suchlike.
 
 	if( m_labelsVisible )
 	{
 		string formatText = Format::name( format );
-		const string dimensionsText = lexical_cast<string>( displayWindow.size().x ) + " x " +  lexical_cast<string>( displayWindow.size().y );
+		const string dimensionsText = lexical_cast<string>( displayWindow.size().x ) + " x " + lexical_cast<string>( displayWindow.size().y );
 		if( formatText.empty() )
 		{
 			formatText = dimensionsText;

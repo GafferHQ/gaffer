@@ -116,6 +116,9 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		void setChannels( const Channels &channels );
 		const Channels &getChannels() const;
 
+		void setIDChannel( const IECore::InternedString &idChannel );
+		const IECore::InternedString getIDChannel();
+
 		using ImageGadgetSignal = Gaffer::Signals::Signal<void (ImageGadget *)>;
 		ImageGadgetSignal &channelsChangedSignal();
 
@@ -167,6 +170,12 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		void setWipeAngle( float angle );
 		float getWipeAngle() const;
 
+		void setSelectedIDs( const std::vector<uint32_t> &ids );
+		const std::vector<uint32_t> &getSelectedIDs();
+
+		void setHighlightID( uint32_t id );
+		uint32_t getHighlightID();
+
 	protected :
 
 		void renderLayer( Layer layer, const GafferUI::Style *style, RenderReason reason ) const override;
@@ -195,6 +204,8 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		Channels m_rgbaChannels;
 		int m_soloChannel;
 		ImageGadgetSignal m_channelsChangedSignal;
+
+		IECore::InternedString m_idChannel;
 
 		bool m_labelsVisible;
 		bool m_paused;
@@ -287,7 +298,7 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 
 			// Called from a background thread with the context
 			// already set up appropriately for the tile.
-			Update computeUpdate( const GafferImage::ImagePlug *image );
+			Update computeUpdate( const GafferImage::ImagePlug *image, bool loadAsID = false );
 			// Applies previously computed updates for several tiles
 			// such that they become visible to the UI thread together.
 			static void applyUpdates( const std::vector<Update> &updates );
@@ -302,6 +313,7 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 				IECore::ConstFloatVectorDataPtr m_channelDataToConvert;
 				IECoreGL::TexturePtr m_texture;
 				bool m_active;
+				bool m_loadAsID;
 				std::chrono::steady_clock::time_point m_activeStartTime;
 				using Mutex = tbb::spin_mutex;
 				Mutex m_mutex;
@@ -323,10 +335,20 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		// Rendering.
 
 		void visibilityChanged();
-		void renderTiles() const;
+		void renderTiles( bool ids = false ) const;
 		void renderText( const std::string &text, const Imath::V2f &position, const Imath::V2f &alignment, const GafferUI::Style *style ) const;
 
 		BlendMode m_blendMode;
+
+		std::vector<uint32_t> m_selectedIDs;
+
+		class BufferTexture;
+
+		mutable std::unique_ptr<BufferTexture> m_selectedIDsBuffer;
+		uint32_t m_highlightID;
+
+		class RenderTexture;
+		std::unique_ptr<RenderTexture> m_selectionRenderTexture;
 };
 
 IE_CORE_DECLAREPTR( ImageGadget )
