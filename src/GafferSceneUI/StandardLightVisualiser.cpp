@@ -202,7 +202,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		{
 			ConstDataPtr textureData = drawTextured ? surfaceTexture( attributeName, shaderNetwork, attributes, maxTextureResolution ) : nullptr;
 			result.push_back( Visualisation::createOrnament(
-				environmentSphereSurface( textureData, tint, maxTextureResolution, color ),
+				environmentSphereSurface( textureData, tint, /* saturation = */ 1.f, /* gamma = */ Color3f( 1.f ), maxTextureResolution, color ),
 				/* affectsFramingBound = */ true, Visualisation::ColorSpace::Scene
 			) );
 		}
@@ -239,7 +239,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		{
 			ConstDataPtr textureData = drawTextured ? surfaceTexture( attributeName, shaderNetwork, attributes, maxTextureResolution ) : nullptr;
 			result.push_back( Visualisation::createGeometry(
-				quadSurface( size, textureData, tint, maxTextureResolution, color, uvOrientation ? uvOrientation->readable() : M33f() ),
+				quadSurface( size, textureData, tint, /* saturation = */ 1.f, /* gamma = */ Color3f( 1.f ), maxTextureResolution, color, uvOrientation ? uvOrientation->readable() : M33f() ),
 				Visualisation::ColorSpace::Scene
 			) );
 		}
@@ -274,7 +274,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		{
 			ConstDataPtr textureData = drawTextured ? surfaceTexture( attributeName, shaderNetwork, attributes, maxTextureResolution ) : nullptr;
 			result.push_back( Visualisation::createGeometry(
-				diskSurface( radius, textureData, tint, maxTextureResolution, color ),
+				diskSurface( radius, textureData, tint, /* saturation = */ 1.f, /* gamma = */ Color3f( 1.f ), maxTextureResolution, color ),
 				Visualisation::ColorSpace::Scene
 			) );
 		}
