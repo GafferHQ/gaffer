@@ -78,7 +78,10 @@ M44f correctiveTransform( const IECoreScene::Shader *lightShader )
 		{
 			return M44f().rotate( V3f( -M_PI_2, M_PI_2, 0.0f ) ) * M44f().scale( V3f( -1.f, 1.f, 1.f ) );
 		}
-		return M44f().rotate( V3f( -M_PI_2, 0.f, 0.f ) );  // Transform from Z-up to Y-up
+		// The correction we do in `ShaderNetworkAlgo::correctParameters()` transforms the object-space
+		// coordinates from our Y-up orientation to RenderMan's Z-up. That corrects the look of the sun / sky
+		// and this correction ensures the sun is in the right place.
+		return M44f().rotate( V3f( -M_PI_2, 0.f, 0.f ) );
 	}
 	else if( lightShader->getName() == "PxrMeshLight" )
 	{
