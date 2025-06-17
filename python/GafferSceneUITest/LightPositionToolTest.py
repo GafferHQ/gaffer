@@ -50,34 +50,6 @@ import GafferSceneTest
 
 class LightPositionToolTest( GafferUITest.TestCase ) :
 
-	@staticmethod
-	def assertAnglesAlmostEqual( a, b, places = 7 ) :
-		# Check for equivalent euler orientations. `a` and `b` in degrees.
-		a[0] = a[0] % 360
-		a[1] = a[1] % 360
-		a[2] = a[2] % 360
-		b[0] = b[0] % 360
-		b[1] = b[1] % 360
-		b[2] = b[2] % 360
-
-		if (
-			round( abs( a[0] - b[0] ), places ) == 0 and
-			round( abs( a[1] - b[1] ), places ) == 0 and
-			round( abs( a[2] - b[2] ), places ) == 0
-		) :
-			return
-		if (
-			round( abs( ( 180.0 + a[0] ) % 360 - b[0] ), places ) == 0 and
-			round( abs( ( 180.0 - a[1] ) % 360 - b[1] ), places ) == 0 and
-			round( abs( ( 180.0 + a[2] ) % 360 - b[2] ), places ) == 0
-		) :
-			return
-		diff = a - b
-		diff[0] = abs( diff[0] )
-		diff[1] = abs( diff[1] )
-		diff[2] = abs( diff[2] )
-		raise AssertionError( f"{a} != {b} within {places} places ({diff} difference)" )
-
 	def __shadowSource( self, lightP, shadowPivot, shadowPoint ) :
 		return ( shadowPivot - shadowPoint ).normalize() * ( lightP - shadowPivot ).length() + shadowPivot
 
@@ -103,7 +75,6 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 			script["light"]["transform"]["translate"].setValue( lightP )
 
 			d0 = ( lightP - shadowPivot ).length()
-			upDir = script["light"]["transform"].matrix().multDirMatrix( imath.V3f( 0, 1, 0 ) )
 
 			with Gaffer.Context() :
 				tool.positionShadow( shadowPivot, shadowPoint, d0 )
@@ -117,18 +88,15 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 
 			self.assertEqualWithAbsError( p, desiredP, error = 0.0001 )
 
-			desiredO = imath.M44f()
-			imath.M44f.rotationMatrixWithUpDir( desiredO, imath.V3f( 0, 0, -1 ), shadowPoint - shadowPivot, upDir )
-			rotationO = imath.V3f()
-			desiredO.extractEulerXYZ( rotationO )
+			desiredM = imath.M44f()
+			imath.M44f.rotationMatrixWithUpDir( desiredM, imath.V3f( 0, 0, -1 ), shadowPoint - shadowPivot, imath.V3f( 0, 1, 0 ) )
+			rotationO = imath.Eulerf()
+			desiredM.extractEulerXYZ( rotationO )
 
-			o = script["light"]["transform"]["rotate"].getValue()
+			o = imath.Eulerf( IECore.degreesToRadians( script["light"]["transform"]["rotate"].getValue() ) )
+			o.makeNear( rotationO )
 
-			self.assertAnglesAlmostEqual(
-					o,
-					IECore.radiansToDegrees( imath.V3f( rotationO ) ),
-					places = 4
-				)
+			self.assertEqualWithAbsError( o, rotationO, 1e-4 )
 
 	def testPositionShadowWithParentTransform( self ) :
 
@@ -151,16 +119,14 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 		for i in range( 0, 10 ) :
 			with self.subTest( i = i ) :
 				script["light"]["transform"]["translate"].setValue( imath.V3f( random.random() * 10 - 5, random.random() * 10 - 5, random.random() * 10 - 5 ) )
-				script["light"]["transform"]["rotate"].setValue( imath.V3f( random.random() * 10 - 5, random.random() * 10 - 5, random.random() * 10 - 5 ) )
 
 				script["group"]["transform"]["translate"].setValue( imath.V3f( random.random() * 10 - 5, random.random() * 10 - 5, random.random() * 10 - 5 ) )
-				script["group"]["transform"]["rotate"].setValue( imath.V3f( random.random() * 10 - 5, random.random() * 10 - 5, random.random() * 10 - 5 ) )
 
 				shadowPivot = imath.V3f( random.random() * 10 - 5, random.random() * 10 - 5, random.random() * 10 - 5 )
 				shadowPoint = imath.V3f( random.random() * 10 - 5, random.random() * 10 - 5, random.random() * 10 - 5 )
 
-				worldTransform = script["group"]["out"].fullTransform( "/group/light" )
-				worldP = imath.V3f( 0 ) * worldTransform
+				worldM = script["group"]["out"].fullTransform( "/group/light" )
+				worldP = imath.V3f( 0 ) * worldM
 
 				d = ( worldP - shadowPivot ).length()
 
@@ -174,34 +140,16 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 				t = script["light"]["transform"]["translate"].getValue()
 				self.assertEqualWithAbsError( t, desiredLocalP, error = 0.0001 )
 
-				upDir = worldTransform.multDirMatrix( imath.V3f( 0, 1, 0 ) )
+				desiredM = imath.M44f()
+				imath.M44f.rotationMatrixWithUpDir( desiredM, imath.V3f( 0, 0, -1 ), shadowPoint - shadowPivot, imath.V3f( 0, 1, 0 ) )
+				desiredLocalM = desiredM * parentInverseTransform
+				desiredO = imath.Eulerf()
+				desiredLocalM.extractEulerXYZ( desiredO )
 
-				desiredWorldO = imath.M44f()
-				imath.M44f.rotationMatrixWithUpDir( desiredWorldO, imath.V3f( 0, 0, -1 ), shadowPoint - shadowPivot, upDir )
+				o = imath.Eulerf( IECore.degreesToRadians( script["light"]["transform"]["rotate"].getValue() ) )
+				o.makeNear( desiredO )
 
-				worldTransform = script["group"]["out"].fullTransform( "/group/light" )
-				worldO = worldTransform
-				worldO[3][0] = worldO[3][1] = worldO[3][2] = 0.0
-				self.assertEqualWithAbsError( worldO, desiredWorldO, 0.0001 )
-
-				parentInverseO = parentInverseTransform
-				parentInverseO[3][0] = parentInverseO[3][1] = parentInverseO[3][2] = 0.0
-				desiredLocalO = desiredWorldO * parentInverseO
-				localTransform = script["group"]["out"].transform( "/group/light" )
-				localO = localTransform
-				localO[3][0] = localO[3][1] = localO[3][2] = 0.0
-				self.assertEqualWithAbsError( localO, desiredLocalO, 0.0001 )
-
-				r = script["light"]["transform"]["rotate"].getValue()
-
-				desiredLocalR = imath.Eulerf()
-				desiredLocalO.extractEulerXYZ( desiredLocalR )
-
-				self.assertAnglesAlmostEqual(
-					r,
-					IECore.radiansToDegrees( imath.V3f( desiredLocalR ) ),
-					places = 4
-				)
+				self.assertEqualWithAbsError( o, desiredO, 1e-4 )
 
 	def __highlightSource( self, lightP, highlightP, viewP, normal ) :
 		d = ( lightP - highlightP ).length()
@@ -231,7 +179,6 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 			script["light"]["transform"]["translate"].setValue( lightP )
 
 			d0 = ( lightP - highlightP ).length()
-			upDir = script["light"]["transform"].matrix().multDirMatrix( imath.V3f( 0, 1, 0 ) )
 
 			with Gaffer.Context() :
 				tool.positionHighlight( highlightP, viewP, normal, d0 )
@@ -244,19 +191,16 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 			desiredP = self.__highlightSource( lightP, highlightP, viewP, normal )
 			self.assertEqualWithAbsError( p, desiredP, 0.0001 )
 
-			desiredO = imath.M44f()
-			imath.M44f.rotationMatrixWithUpDir( desiredO, imath.V3f( 0, 0, -1 ), highlightP - p, upDir )
-			rotationO = imath.V3f()
-			desiredO.extractEulerXYZ( rotationO )
+			desiredM = imath.M44f()
+			imath.M44f.rotationMatrixWithUpDir( desiredM, imath.V3f( 0, 0, -1 ), highlightP - p, imath.V3f( 0, 1, 0 ) )
+			rotationO = imath.Eulerf()
+			desiredM.extractEulerXYZ( rotationO )
 
-			o = script["light"]["transform"]["rotate"].getValue()
+			o = imath.Eulerf( IECore.degreesToRadians( script["light"]["transform"]["rotate"].getValue() ) )
+			o.makeNear( rotationO )
 
 			with self.subTest( f"Iteration {i}" ) :
-				self.assertAnglesAlmostEqual(
-						o,
-						IECore.radiansToDegrees( imath.V3f( rotationO ) ),
-						places = 3
-					)
+				self.assertEqualWithAbsError( o, rotationO, 1e-4 )
 
 	def __diffuseSource( self, lightP, diffuseP, normal ) :
 		d = ( lightP - diffuseP ).length()
@@ -284,7 +228,6 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 			script["light"]["transform"]["translate"].setValue( lightP )
 
 			d0 = ( lightP - diffuseP ).length()
-			upDir = script["light"]["transform"].matrix().multDirMatrix( imath.V3f( 0, 1, 0 ) )
 
 			with Gaffer.Context() :
 				tool.positionAlongNormal( diffuseP, normal, d0 )
@@ -297,19 +240,16 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 			desiredP = self.__diffuseSource( lightP, diffuseP, normal )
 			self.assertEqualWithAbsError( p, desiredP, 0.0001 )
 
-			desiredO = imath.M44f()
-			imath.M44f.rotationMatrixWithUpDir( desiredO, imath.V3f( 0, 0, -1 ), diffuseP - p, upDir )
-			rotationO = imath.V3f()
-			desiredO.extractEulerXYZ( rotationO )
+			desiredM = imath.M44f()
+			imath.M44f.rotationMatrixWithUpDir( desiredM, imath.V3f( 0, 0, -1 ), diffuseP - p, imath.V3f( 0, 1, 0 ) )
+			rotationO = imath.Eulerf()
+			desiredM.extractEulerXYZ( rotationO )
 
-			o = script["light"]["transform"]["rotate"].getValue()
+			o = imath.Eulerf( IECore.degreesToRadians( script["light"]["transform"]["rotate"].getValue() ) )
+			o.makeNear( imath.Eulerf( rotationO ) )
 
 			with self.subTest( f"Iteration {i}" ) :
-				self.assertAnglesAlmostEqual(
-					o,
-					IECore.radiansToDegrees( imath.V3f( rotationO ) ),
-					places = 3
-				)
+				self.assertEqualWithAbsError( o, rotationO, 1e-4 )
 
 	def testEmptySelectionModeChange( self ) :
 

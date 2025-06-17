@@ -82,12 +82,12 @@ class GAFFERSCENEUI_API RotateTool : public TransformTool
 
 			Rotation( const Selection &selection, Orientation orientation );
 
-			bool canApply( const Imath::V3i &axisMask ) const;
-			void apply( const Imath::Eulerf &rotation );
+			bool canApply( const Imath::V3i &axisMask, const bool maintainRoll ) const;
+			void apply( const Imath::Eulerf &rotation, const bool maintainRoll );
 
 			private :
 
-				Imath::V3f updatedRotateValue( const Gaffer::V3fPlug *rotatePlug, const Imath::Eulerf &rotation, Imath::V3f *currentValue = nullptr ) const;
+				Imath::V3f updatedRotateValue( const Gaffer::V3fPlug *rotatePlug, const Imath::Eulerf &rotation, const bool maintainRoll, Imath::V3f *currentValue = nullptr ) const;
 
 				// For the validity of this reference, we rely
 				// on `TransformTool::selection()` not changing
