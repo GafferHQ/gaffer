@@ -536,11 +536,7 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 		}
 		else
 		{
-			sunPosition = parameterOrDefault(
-				lightParameters,
-				g_sunDirectionParameter,
-				V3f( 0.f, 1.f, 0.f )
-			).normalized() * M44f().rotate( V3f( -M_PI_2, 0.f, 0.f ) );
+			sunPosition = parameterOrDefault( lightParameters, g_sunDirectionParameter, V3f( 0.f, 1.f, 0.f ) ).normalized();
 		}
 
 		IECoreGL::GroupPtr raysGroup = new IECoreGL::Group();
