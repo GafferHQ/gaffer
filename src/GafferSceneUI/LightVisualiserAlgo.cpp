@@ -456,6 +456,27 @@ IECoreGL::ConstRenderablePtr pointShape( float radius, bool muted )
 	return group;
 }
 
+IECoreGL::ConstRenderablePtr pointSurface( float radius, const Color3f &color )
+{
+	IECoreGL::GroupPtr group = new IECoreGL::Group();
+
+	::addConstantShader( group.get(), 1 );
+
+	IntVectorDataPtr vertsPerPoly = new IntVectorData;
+	IntVectorDataPtr vertIds = new IntVectorData;
+	V3fVectorDataPtr p = new V3fVectorData;
+
+	addSolidArc( Axis::X, V3f( 0 ), 0, radius, 0, 1, vertsPerPoly->writable(), vertIds->writable(), p->writable() );
+
+	MeshPrimitivePtr mesh = new MeshPrimitive( vertsPerPoly, vertIds, "linear", p );
+	mesh->variables["N"] = PrimitiveVariable( PrimitiveVariable::Constant, new V3fData( V3f( 0 ) ) );
+	mesh->variables["Cs"] = PrimitiveVariable( PrimitiveVariable::Constant, new Color3fData( color ) );
+	IECoreGL::ToGLMeshConverterPtr meshConverter = new IECoreGL::ToGLMeshConverter( mesh );
+	group->addChild( runTimeCast<IECoreGL::Renderable>( meshConverter->convert() ) );
+
+	return group;
+}
+
 IECoreGL::ConstRenderablePtr quadWireframe( const V2f &size, const bool muted )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
@@ -645,28 +666,7 @@ IECoreGL::ConstRenderablePtr sphereWireframe( float radius, const Vec3<bool> &ax
 
 IECoreGL::ConstRenderablePtr colorIndicator( const Color3f &color )
 {
-
-	IECoreGL::GroupPtr group = new IECoreGL::Group();
-
-	::addConstantShader( group.get(), 1 );
-
-	const float indicatorRad = 0.1f;
-
-	{
-		IntVectorDataPtr vertsPerPoly = new IntVectorData;
-		IntVectorDataPtr vertIds = new IntVectorData;
-		V3fVectorDataPtr p = new V3fVectorData;
-
-		addSolidArc( Axis::X, V3f( 0 ), 0, indicatorRad, 0, 1, vertsPerPoly->writable(), vertIds->writable(), p->writable() );
-
-		MeshPrimitivePtr mesh = new MeshPrimitive( vertsPerPoly, vertIds, "linear", p );
-		mesh->variables["N"] = PrimitiveVariable( PrimitiveVariable::Constant, new V3fData( V3f( 0 ) ) );
-		mesh->variables["Cs"] = PrimitiveVariable( PrimitiveVariable::Constant, new Color3fData( color ) );
-		IECoreGL::ToGLMeshConverterPtr meshConverter = new IECoreGL::ToGLMeshConverter( mesh );
-		group->addChild( runTimeCast<IECoreGL::Renderable>( meshConverter->convert() ) );
-	}
-
-	return group;
+	return pointSurface( 0.1f, color );
 }
 
 IECoreGL::ConstRenderablePtr environmentSphereSurface(
