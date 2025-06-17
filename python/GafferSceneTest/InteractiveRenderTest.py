@@ -2995,10 +2995,14 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Without an ID output, we don't create a manifest
 		self.assertIsNone( GafferScene.SceneAlgo.sourceScene( s['catalogue']['out'] ).node().renderManifest() )
 
+
+		s["r"]["state"].setValue( s["r"].State.Stopped )
+		self.uiThreadCallHandler.waitFor( 1.0 )
+
 		s["outputs"].addOutput(
 			"id",
 			IECoreScene.Output(
-				"test",
+				"testId",
 				"ieDisplay",
 				"float id",
 				{
@@ -3006,9 +3010,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 					"displayHost" : "localhost",
 					"displayPort" : str( s['catalogue'].displayDriverServer().portNumber() ),
 					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
+					"filter" : "closest"
 				}
 			)
 		)
+		s["r"]["state"].setValue( s["r"].State.Running )
 
 		self.uiThreadCallHandler.waitFor( 1.0 )
 
@@ -3026,11 +3032,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Test snapshotting an image
 
 		s["catalogue"]["images"].addChild( GafferScene.Catalogue.Image( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
-		s["catalogue"]["images"][1].copyFrom( s["catalogue"]["images"][0] )
+		s["catalogue"]["images"][2].copyFrom( s["catalogue"]["images"][1] )
 
 		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		s["catalogue"]["imageIndex"].setValue( 1 )
+		s["catalogue"]["imageIndex"].setValue( 2 )
 
 		self.assertIn( 'gaffer:renderManifestFilePath', s['catalogue']['out'].metadata() )
 		snapshotManifest = GafferScene.RenderManifest.loadFromImageMetadata( s['catalogue']['out'].metadata(), "" )
@@ -3038,7 +3044,8 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( { n : snapshotManifest.idForPath( n ) for n in locationNames }, manifestValues )
 
 		# Switch back to live render
-		s["catalogue"]["imageIndex"].setValue( 0 )
+		s["catalogue"]["imageIndex"].setValue( 1 )
+
 		# No manifest written out yet for live render
 		self.assertNotIn( 'gaffer:renderManifestFilePath', s['catalogue']['out'].metadata() )
 

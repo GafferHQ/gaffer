@@ -595,11 +595,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 			IECoreScene.Output(
 				( self.temporaryDirectory() / "beauty.exr" ).as_posix(),
 				"exr",
-				"rgba",
-				{
-					"layerName" : "id",
-					"filter" : "closest",
-				},
+				"rgba"
 			)
 		)
 
