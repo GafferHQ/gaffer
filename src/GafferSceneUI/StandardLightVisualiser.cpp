@@ -204,6 +204,8 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 				LightVisualiserAlgo::environmentSphereSurface(
 					textureData,
 					tint,
+					1.f,  // saturation
+					Color3f( 1.f ),  // gamma
 					maxTextureResolution,
 					color
 				),
@@ -247,6 +249,8 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 					size,
 					textureData,
 					tint,
+					1.f,  // saturation
+					Color3f( 1.f ),  // gamma
 					maxTextureResolution,
 					color,
 					uvOrientation ? uvOrientation->readable() : M33f()
@@ -289,6 +293,8 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 					radius,
 					textureData,
 					tint,
+					1.f,  // saturation
+					Color3f( 1.f ),  // gamma
 					maxTextureResolution,
 					color
 				),
