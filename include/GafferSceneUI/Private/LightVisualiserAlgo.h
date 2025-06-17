@@ -58,6 +58,9 @@ GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr spotlightCone( float innerAngle, 
 /// Returns an OpenGL renderable wireframe point.
 GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr pointShape( float radius, bool muted = false );
 
+/// Returns an OpenGL renderable solid point
+GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr pointSurface( float radius, const Imath::Color3f &color );
+
 /// Returns an OpenGL renderable wireframe rectangle with color according to the `mute` state.
 GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr quadWireframe( const Imath::V2f &size, bool muted = false );
 
