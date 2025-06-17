@@ -69,6 +69,8 @@ GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr quadSurface(
 	const Imath::V2f &size,
 	IECore::ConstDataPtr textureData,
 	const Imath::Color3f &tint,
+	const float saturation,
+	const Imath::Color3f &gamma,
 	int textureMaxResolution,
 	const Imath::Color3f &fallbackColor,
 	const Imath::M33f &uvOrientation
@@ -96,6 +98,8 @@ GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr colorIndicator( const Imath::Colo
 GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr environmentSphereSurface(
 	IECore::ConstDataPtr textureData,
 	const Imath::Color3f &tint,
+	const float saturation,
+	const Imath::Color3f &gamma,
 	const int maxTextureResolution,
 	const Imath::Color3f &fallbackColor
 );
@@ -111,6 +115,8 @@ GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr diskSurface(
 	float radius,
 	IECore::ConstDataPtr textureData,
 	const Imath::Color3f &tint,
+	const float saturation,
+	const Imath::Color3f &gamma,
 	int maxTextureResolution,
 	const Imath::Color3f &fallbackColor
 );
