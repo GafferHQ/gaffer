@@ -374,6 +374,14 @@ options.Add(
 	"",
 )
 
+options.Add(
+	"GAFFER_INSTALL_COMMAND_OVERRIDE",
+	"Override for the gaffer command to be called during install to process "
+	"gaffer files like generating extensions and documentation. "
+	"If not set, the gaffer installed binary during build will be used.",
+	[],
+)
+
 options.Add( "GAFFER_MILESTONE_VERSION", "Milestone version", str( gafferMilestoneVersion ) )
 options.Add( "GAFFER_MAJOR_VERSION", "Major version", str( gafferMajorVersion ) )
 options.Add( "GAFFER_MINOR_VERSION", "Minor version", str( gafferMinorVersion ) )
@@ -2000,11 +2008,18 @@ def exportExtensions( target, source, env ) :
 
 		exportScript.close()
 
+		if env["GAFFER_INSTALL_COMMAND_OVERRIDE"] :
+			gafferCmdArgs = env["GAFFER_INSTALL_COMMAND_OVERRIDE"]
+			if isinstance( gafferCmdArgs, str ) :
+				gafferCmdArgs = [ gafferCmdArgs ]
+
+		else :
+			gafferCmdArgs = [
+				shutil.which( "gaffer.cmd" if sys.platform == "win32" else "gaffer", path = env["ENV"]["PATH"] )
+			]
+
 		subprocess.check_call(
-			[
-				shutil.which( "gaffer.cmd" if sys.platform == "win32" else "gaffer", path = env["ENV"]["PATH"] ),
-				"env", "python", exportScript.name
-			],
+			gafferCmdArgs + [ "env", "python", exportScript.name ],
 			env = env["ENV"]
 		)
 
@@ -2269,17 +2284,26 @@ def generateDocs( target, source, env ) :
 	localFile = os.path.basename( str(source[0]) )
 
 	ext = os.path.splitext( localFile )[1]
-	gafferCmd = shutil.which( "gaffer.cmd" if sys.platform == "win32" else "gaffer", path = env["ENV"]["PATH"] )
+	if env["GAFFER_INSTALL_COMMAND_OVERRIDE"] :
+		gafferCmdArgs = env["GAFFER_INSTALL_COMMAND_OVERRIDE"]
+		if isinstance( gafferCmdArgs, str ) :
+			gafferCmdArgs = [ gafferCmdArgs ]
+
+	else :
+		gafferCmdArgs = [
+			shutil.which( "gaffer.cmd" if sys.platform == "win32" else "gaffer", path = env["ENV"]["PATH"] )
+		]
+
 	command = []
 	if localFile == "screengrab.py" :
-		command = [ gafferCmd, "screengrab", "-commandFile", localFile ]
+		command = gafferCmdArgs + [ "screengrab", "-commandFile", localFile ]
 	elif ext == ".py" :
-		command = [ gafferCmd, "env", "python", localFile ]
+		command = gafferCmdArgs + [ "env", "python", localFile ]
 	elif ext == ".sh" :
 		if sys.platform == "win32" :
-			command = [ gafferCmd, "env", "sh", "./" + localFile ]
+			command = gafferCmdArgs + [ "env", "sh", "./" + localFile ]
 		else :
-			command = [ gafferCmd, "env", "./" + localFile ]
+			command = gafferCmdArgs + [ "env", "./" + localFile ]
 	if command :
 		sys.stdout.write( "Running {0}\n".format( os.path.join( root, localFile ) ) )
 		subprocess.check_call( command, cwd = root, env = env["ENV"] )
