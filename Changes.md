@@ -7,6 +7,7 @@ Improvements
 - RenderPassEditor, AttributeEditor, LightEditor :
   - Added menu item and <kbd>I</kbd> shortcut for inspecting the full text of a value, and its source plug.
   - Added <kbd>H</kbd> shortcut for "History..." menu item.
+  - Exposed existing keyboard shortcuts in menu items.
 
 Fixes
 -----

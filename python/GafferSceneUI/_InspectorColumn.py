@@ -384,7 +384,8 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 		f"Copy Value{pluralSuffix}",
 		{
 			"command" : functools.partial( _copySelectedValues, pathListing ),
-			"active" : functools.partial( _canCopySelectedValues, pathListing )
+			"active" : functools.partial( _canCopySelectedValues, pathListing ),
+			"shortCut" : "Ctrl+C",
 		}
 	)
 
@@ -392,7 +393,8 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 		f"Paste Value{pluralSuffix}",
 		{
 			"command" : functools.partial( _pasteValues, pathListing ),
-			"active" : functools.partial( _canPasteValues, pathListing )
+			"active" : functools.partial( _canPasteValues, pathListing ),
+			"shortCut" : "Ctrl+V",
 		}
 	)
 
@@ -423,6 +425,7 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 		"Toggle" if toggleOnly else "Edit...",
 		{
 			"command" : functools.partial( __editSelectedCells, pathListing, toggleOnly ),
+			"shortCut" : "Return, Enter",
 		}
 	)
 	inspections, nonEditableReason, disable = __toggleableInspections( pathListing )
