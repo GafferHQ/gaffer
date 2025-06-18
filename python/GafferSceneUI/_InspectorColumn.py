@@ -413,7 +413,8 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 	menuDefinition.append(
 		"Show History...",
 		{
-			"command" : functools.partial( __showHistory, pathListing )
+			"command" : functools.partial( __showHistory, pathListing ),
+			"shortCut" : "H",
 		}
 	)
 
@@ -472,6 +473,10 @@ def __keyPress( column, pathListing, event ) :
 
 	if event.key == "V" and event.modifiers == event.Modifiers.Control :
 		_pasteValues( pathListing )
+		return True
+
+	if event.key == "H" and event.modifiers == event.Modifiers.None_ :
+		__showHistory( pathListing )
 		return True
 
 	if event.key == "I" and event.modifiers == event.Modifiers.None_ :

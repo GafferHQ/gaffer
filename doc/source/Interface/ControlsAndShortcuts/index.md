@@ -450,6 +450,7 @@ Move cell selection                                  | {kbd}`↑`, {kbd}`↓`, {
 Extend cell selection                                | {kbd}`Shift` + {{leftClick}}<br>or<br>{kbd}`Shift` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
 Toggle cell selection                                | {kbd}`Ctrl` + {{leftClick}}<br>or<br>{kbd}`Ctrl` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
 Inspect current selection                            | {kbd}`I`<br>or<br>{kbd}`Alt` + {{middleClick}}
+Show history for selected cells                      | {kbd}`H`
 Edit selected cells                                  | {kbd}`Return`<br>or<br>{kbd}`Enter`
 Commit edit without closing popup                    | {kbd}`Shift` + {kbd}`Return`<br>or<br>{kbd}`Ctrl` + {kbd}`Shift` + {kbd}`Return`
 Disable edit                                         | {kbd}`D`
