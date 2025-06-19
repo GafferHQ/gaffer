@@ -226,7 +226,7 @@ def __removeAttributes( pathListing ) :
 def __selectedSetExpressions( pathListing ) :
 
 	# A dictionary of the form :
-	# { path1 : set( setExpression1, setExpression2 ), path2 : set( setExpression1 ), ... }
+	# { path1 : set( column1, column2 ), path2 : set( column1 ), ... }
 	result = {}
 
 	path = pathListing.getPath().copy()
@@ -243,7 +243,7 @@ def __selectedSetExpressions( pathListing ) :
 				return {}
 			cellValue = column.cellData( path ).value
 			if cellValue is not None :
-				result.setdefault( pathString, set() ).add( cellValue )
+				result.setdefault( pathString, set() ).add( column )
 			else :
 				# We only return set expressions if all selected paths have values.
 				return {}
@@ -257,12 +257,13 @@ def __selectAffected( pathListing ) :
 	editor = pathListing.ancestor( GafferUI.Editor )
 	path = pathListing.getPath().copy()
 
-	for pathString, setExpressions in __selectedSetExpressions( pathListing ).items() :
-		# Evaluate set expressions within their path's inspection context
-		# as set membership could vary based on the context.
+	for pathString, columns in __selectedSetExpressions( pathListing ).items() :
 		path.setFromString( pathString )
-		with path.inspectionContext() :
-			for setExpression in setExpressions :
+		for column in columns :
+			# Evaluate set expressions within their path's inspection context
+			# as set membership could vary based on the context.
+			with column.inspectorContext( path ) :
+				setExpression = column.inspector( path ).inspect().value().value
 				result.addPaths( GafferScene.SetAlgo.evaluateSetExpression( setExpression, editor.settings()["in"] ) )
 
 	GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( editor.scriptNode(), result )
@@ -303,10 +304,7 @@ def __showHistory( pathListing ) :
 		for pathString in selection[i].paths() :
 			path = pathListing.getPath().copy()
 			path.setFromString( pathString )
-			if path.inspectionContext() is None :
-				continue
-			inspector = column.inspector( path )
-			if inspector is None :
+			if column.inspectorContext( path ) is None or column.inspector( path ) is None :
 				continue
 			window = _HistoryWindow(
 				column,

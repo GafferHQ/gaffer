@@ -57,6 +57,13 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
+namespace
+{
+
+const IECore::InternedString g_inspectorContextPropertyName( "inspector:context" );
+
+} // namespace
+
 IE_CORE_DEFINERUNTIMETYPED( ScenePath );
 
 ScenePath::ScenePath( ScenePlugPtr scene, Gaffer::ContextPtr context, Gaffer::PathFilterPtr filter )
@@ -134,17 +141,6 @@ const Gaffer::Context *ScenePath::getContext() const
 	return m_context.get();
 }
 
-Gaffer::ContextPtr ScenePath::inspectionContext( const IECore::Canceller *canceller ) const
-{
-	ScenePlug::PathScope scope( getContext(), &( names() ) );
-	if( canceller )
-	{
-		scope.setCanceller( canceller );
-	}
-
-	return new Context( *scope.context() );
-}
-
 bool ScenePath::isValid( const IECore::Canceller *canceller ) const
 {
 	if( !Path::isValid() )
@@ -164,6 +160,23 @@ bool ScenePath::isLeaf( const IECore::Canceller *canceller ) const
 {
 	// Any part of the scene could get children at any time
 	return false;
+}
+
+void ScenePath::propertyNames( std::vector<IECore::InternedString> &names, const IECore::Canceller *canceller ) const
+{
+	Path::propertyNames( names );
+	names.push_back( g_inspectorContextPropertyName );
+}
+
+Gaffer::ConstContextPtr ScenePath::contextProperty( const IECore::InternedString &name, const IECore::Canceller *canceller ) const
+{
+	if( name == g_inspectorContextPropertyName )
+	{
+		ContextPtr result = new Context( *getContext() );
+		result->set( ScenePlug::scenePathContextName, names() );
+		return result;
+	}
+	return Path::contextProperty( name, canceller );
 }
 
 PathPtr ScenePath::copy() const

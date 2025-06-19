@@ -71,6 +71,12 @@ Gaffer::PathPtr inspectorColumnHistoryPathBinding( const InspectorColumn &column
 	return column.historyPath( path, canceller );
 }
 
+Gaffer::ContextPtr inspectorColumnInspectorContextBinding( const InspectorColumn &column, const Gaffer::Path &path, const IECore::Canceller *canceller )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return boost::const_pointer_cast<Gaffer::Context>( column.inspectorContext( path, canceller ) );
+}
+
 } // namespace
 
 void GafferSceneUIModule::bindInspectorColumn()
@@ -96,16 +102,18 @@ void GafferSceneUIModule::bindInspectorColumn()
 				arg_( "sizeMode" ) = PathColumn::Default
 			)
 		) )
-		.def( init<IECore::InternedString, const PathColumn::CellData &, PathColumn::SizeMode>(
+		.def( init<IECore::InternedString, const PathColumn::CellData &, IECore::InternedString, PathColumn::SizeMode>(
 			(
 				arg_( "inspectorProperty" ),
 				arg_( "headerData" ),
+				arg_( "contextProperty") = "inspector:context",
 				arg_( "sizeMode" ) = PathColumn::Default
 			)
 		) )
 		.def( "inspector", &inspectorColumnInspectorBinding, ( arg( "path" ), arg( "canceller" ) = object() ) )
 		.def( "inspect", &inspectorColumnInspectBinding, ( arg( "path" ), arg( "canceller" ) = object() ) )
 		.def( "historyPath", &inspectorColumnHistoryPathBinding, ( arg( "path" ), arg( "canceller" ) = object() ) )
+		.def( "inspectorContext", &inspectorColumnInspectorContextBinding, ( arg( "path" ), arg( "canceller" ) = object() ) )
 	;
 
 }

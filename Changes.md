@@ -17,10 +17,16 @@ Fixes
   - Fixed unwanted vertical scrolling when switching tabs.
   - Fixed flickering when switching tabs.
 
+API
+---
+
+- Path : Added `contextProperty()` method.
+
 Breaking Changes
 ----------------
 
 - Arnold : Changed the naming of shader nodes in the generated Arnold scene.
+- Path : Removed `inspectionContext()` method. Use `contextProperty( "inspector:context" )` instead.
 
 [^1]: To be omitted from the notes for the final 1.6.0.0 release.
 
