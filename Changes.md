@@ -8,6 +8,7 @@ Fixes
   - Fixed bug where a light would rotate around its local Z-axis during placement.
   - Fixed intermittent bug causing `ERROR : Emitting signal : Bad optional access` when using the undo / redo commands.
 - RotateTool : Fixed bug where objects would rotate around their local Z-axis when using aim at target mode.
+- Annotations : Fixed word-wrapping in annotation dialogue.
 
 1.5.15.0 (relative to 1.5.14.0)
 ========
