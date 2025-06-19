@@ -96,6 +96,29 @@ struct PlugMenuSlotCaller
 
 };
 
+struct MenuSlotCaller
+{
+
+	std::string operator()( boost::python::object slot, const std::string &title, const std::vector<std::string> &items )
+	{
+		try
+		{
+			boost::python::list pythonItems;
+			for( auto &item : items )
+			{
+				pythonItems.append( item );
+			}
+			object r = slot( title, pythonItems );
+			return extract<string>( r );
+		}
+		catch( const error_already_set & )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
+	}
+
+};
+
 } // namespace
 
 void GafferUIModule::bindPlugAdder()
@@ -109,5 +132,5 @@ void GafferUIModule::bindPlugAdder()
 	;
 
 	SignalClass<PlugAdder::PlugMenuSignal, PlugMenuSignalCaller, PlugMenuSlotCaller>( "PlugMenuSignal" );
-	SignalClass<PlugAdder::MenuSignal>( "MenuSignal" );
+	SignalClass<PlugAdder::MenuSignal, DefaultSignalCaller<PlugAdder::MenuSignal>, MenuSlotCaller>( "MenuSignal" );
 }
