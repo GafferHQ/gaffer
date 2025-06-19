@@ -59,6 +59,8 @@ using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferSceneUI::Private;
 
+IE_CORE_DEFINERUNTIMETYPED( ParameterInspector )
+
 ParameterInspector::ParameterInspector(
 	const GafferScene::ScenePlugPtr &scene, const Gaffer::PlugPtr &editScope,
 	IECore::InternedString attribute, const IECoreScene::ShaderNetwork::Parameter &parameter

@@ -183,6 +183,8 @@ OptionHistoryCache g_optionHistoryCache(
 
 }  // namespace
 
+IE_CORE_DEFINERUNTIMETYPED( OptionInspector )
+
 OptionInspector::OptionInspector(
 	const GafferScene::ScenePlugPtr &scene,
 	const Gaffer::PlugPtr &editScope,

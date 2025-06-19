@@ -57,7 +57,7 @@ class GAFFERSCENEUI_API OptionInspector : public Inspector
 			IECore::InternedString option
 		);
 
-		IE_CORE_DECLAREMEMBERPTR( OptionInspector );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::Private::OptionInspector, OptionInspectorTypeId, Inspector );
 
 	protected :
 

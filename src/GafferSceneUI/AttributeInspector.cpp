@@ -209,6 +209,8 @@ Gaffer::ValuePlugPtr attributePlug( const Gaffer::CompoundDataPlug *parentPlug, 
 static InternedString g_lightMuteAttributeName( "light:mute" );
 static InternedString g_filteredLightsAttributeName( "filteredLights");
 
+IE_CORE_DEFINERUNTIMETYPED( AttributeInspector )
+
 AttributeInspector::AttributeInspector(
 	const GafferScene::ScenePlugPtr &scene,
 	const Gaffer::PlugPtr &editScope,

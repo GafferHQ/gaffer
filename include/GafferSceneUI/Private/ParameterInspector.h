@@ -58,7 +58,7 @@ class GAFFERSCENEUI_API ParameterInspector : public AttributeInspector
 			IECore::InternedString attribute, const IECoreScene::ShaderNetwork::Parameter &parameter
 		);
 
-		IE_CORE_DECLAREMEMBERPTR( ParameterInspector );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::Private::ParameterInspector, ParameterInspectorTypeId, AttributeInspector );
 
 	protected :
 

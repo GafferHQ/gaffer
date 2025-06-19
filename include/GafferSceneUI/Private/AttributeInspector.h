@@ -59,7 +59,7 @@ class GAFFERSCENEUI_API AttributeInspector : public Inspector
 			const std::string &type = "attribute"
 		);
 
-		IE_CORE_DECLAREMEMBERPTR( AttributeInspector );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::Private::AttributeInspector, AttributeInspectorTypeId, Inspector );
 
 	protected :
 
