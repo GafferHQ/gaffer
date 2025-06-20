@@ -1301,20 +1301,13 @@ _styleSheet = string.Template(
 		padding-left: 2px;
 	}
 
-	*[gafferClass="GafferSceneUI.HierarchyView"], *[gafferClass="GafferSceneUI.LightEditor"] QTreeView::item {
-		height: 18px;
-		padding-top: 0px;
-		padding-bottom: 0px;
-	}
-
-	*[gafferClass="GafferSceneUI.RenderPassEditor"] QTreeView::item {
-		min-height: 22px;
-		padding-top: 0px;
-		padding-bottom: 0px;
-	}
-
-	*[gafferClass="GafferSceneUI._HistoryWindow"] QTreeView::item {
-		height: 18px;
+	*[gafferClass="GafferSceneUI.HierarchyView"] QTreeView::item,
+	*[gafferClass="GafferSceneUI.LightEditor"] QTreeView::item,
+	*[gafferClass="GafferSceneUI.RenderPassEditor"] QTreeView::item,
+	*[gafferClass="GafferSceneUI.AttributeEditor"] QTreeView::item,
+	*[gafferClass="GafferSceneUI._HistoryWindow"] QTreeView::item,
+	*[gafferClass="GafferSceneUI.SetEditor"] QTreeView::item {
+		height: 20px;
 		padding-top: 0px;
 		padding-bottom: 0px;
 	}

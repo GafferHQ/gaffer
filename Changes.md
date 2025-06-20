@@ -102,6 +102,9 @@ Fixes
   - Fixed bug where a light would rotate around its local Z-axis during placement.
   - Fixed intermittent bug causing `ERROR : Emitting signal : Bad optional access` when using the undo / redo commands.
 - RotateTool : Fixed bug where objects would rotate around their local Z-axis when using aim at target mode.
+- Annotations : Fixed word-wrapping in annotation dialogue.
+- HierarchyView, AttributeEditor, SetEditor : Fixed judder caused by row heights changing during update.
+- RenderPassEditor : Fixed excessive row heights caused by multi-line values in the first row. All rows are now a single line high.
 
 1.5.15.0 (relative to 1.5.14.0)
 ========

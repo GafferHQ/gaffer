@@ -278,6 +278,7 @@ class __AnnotationsDialogue( GafferUI.Dialogue ) :
 			)
 			self.__textWidget.setHighlighter( _AnnotationsHighlighter( node ) )
 			self.__textWidget.setCompleter( _AnnotationsCompleter( node ) )
+			self.__textWidget.setWrapMode( self.__textWidget.WrapMode.WordOrCharacter )
 			self.__textWidget.textChangedSignal().connect(
 				Gaffer.WeakMethod( self.__updateButtonStatus )
 			)
