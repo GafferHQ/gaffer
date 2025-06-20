@@ -1619,7 +1619,7 @@ void ImageGadget::renderTiles( bool ids ) const
 	float radians = m_wipeAngle * M_PI / 180.0f;
 	const Box2i dataWindow = this->dataWindow();
 
-	std::variant< int, TileShader::ScopedBinding, TileShaderSelectedIDs::ScopedBinding > shaderBinding;
+	std::variant<std::monostate, TileShader::ScopedBinding, TileShaderSelectedIDs::ScopedBinding> shaderBinding;
 
 	V2f effectiveWipePos = m_wipeEnabled ? m_wipePos : V2f( dataWindow.min.x, dataWindow.min.y );
 	V2f effectiveWipeDir = m_wipeEnabled ? V2f( cosf( radians ), sinf( radians ) ) : V2f( -1, 0 );
