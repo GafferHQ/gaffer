@@ -106,7 +106,7 @@ GafferScene.Outputs.registerOutput(
 	)
 )
 
-Gaffer.Metadata.registerValue( GafferScene.StandardOptions, "options.renderManifestFilePath.value", "userDefault", "${project:rootDirectory}/renders/${script:name}/${renderPass}/renderManifest/renderManifest.####.exr" )
+Gaffer.Metadata.registerValue( GafferScene.StandardOptions, "options.render:manifestFilePath.value", "userDefault", "${project:rootDirectory}/renders/${script:name}/${renderPass}/renderManifest/renderManifest.####.exr" )
 
 # Add standard AOVs as they are defined in the aiStandard and alSurface shaders
 

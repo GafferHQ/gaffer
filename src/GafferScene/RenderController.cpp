@@ -1314,12 +1314,12 @@ RenderController::~RenderController()
 	// Catalogue saves the manifest itself to a location matching where it saves the image data.
 	// Warn if this option is set.
 
-	const StringData *manifestPath = m_renderOptions.globals->member<StringData>( "option:render:renderManifestFilePath" );
+	const StringData *manifestPath = m_renderOptions.globals->member<StringData>( "option:render:manifestFilePath" );
 	if( manifestPath && manifestPath->readable().size() )
 	{
 		IECore::msg( IECore::Msg::Warning,
 			"RenderController",
-			"Ignoring \"render:renderManifestFilePath\" during interactive render. The "
+			"Ignoring \"render:manifestFilePath\" during interactive render. The "
 			"catalogue generates its own manifest files, this option is not needed."
 		);
 	}

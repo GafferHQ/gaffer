@@ -94,7 +94,7 @@ const InternedString g_purposeAttributeName( "usd:purpose" );
 const InternedString g_frameOptionName( "frame" );
 const InternedString g_cameraOptionLegacyName( "option:render:camera" );
 const InternedString g_renderManShutterOptionName( "ri:Ri:Shutter" );
-const InternedString g_renderManifestFilePathOptionName( "option:render:renderManifestFilePath" );
+const InternedString g_renderManifestFilePathOptionName( "option:render:manifestFilePath" );
 
 const ConstStringVectorDataPtr g_defaultIncludedPurposes( new StringVectorData( { "default", "render" } ) );
 const std::string g_defaultPurpose( "default" );

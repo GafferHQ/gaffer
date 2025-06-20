@@ -150,7 +150,7 @@ class SceneView::Renderer : public Gaffer::Signals::Trackable
 
 			DeleteOptionsPtr deleteOptions = new DeleteOptions;
 			deleteOptions->inPlug()->setInput( deleteOutputs->outPlug() );
-			deleteOptions->namesPlug()->setValue( "render:renderManifestFilePath" );
+			deleteOptions->namesPlug()->setValue( "render:manifestFilePath" );
 			m_sceneProcessor->addChild( deleteOptions );
 
 			m_sceneProcessor->outPlug()->setInput( deleteOptions->outPlug() );

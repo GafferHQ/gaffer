@@ -417,7 +417,7 @@ void Render::executeInternal( bool flushCaches ) const
 				IECore::msg(
 					IECore::Msg::Warning,
 					"Render::execute",
-					"Found render:renderManifestFilePath option, but the render manifest is not enabled "
+					"Found render:manifestFilePath option, but the render manifest is not enabled "
 					"because there is no ID output"
 				);
 			}
