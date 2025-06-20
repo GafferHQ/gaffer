@@ -37,6 +37,7 @@
 import enum
 import functools
 
+import GafferUI.PopupWindow
 import IECore
 
 import Gaffer
@@ -285,6 +286,35 @@ def __selectAffected( pathListing ) :
 
 	GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( editor.scriptNode(), result )
 
+def __inspectionSelection( pathListing ) :
+
+	result = None
+	for column, selection in zip( pathListing.getColumns(), pathListing.getSelection() ) :
+		if selection.isEmpty() :
+			continue
+		# We can only inspect a single cell.
+		if selection.size() > 1 :
+			return None, None
+		if result is not None :
+			return None, None
+
+		path = pathListing.getPath().copy()
+		path.setFromString( selection.paths()[0] )
+		result = column, path
+
+	return result
+
+def __inspect( pathListing, column, path ) :
+
+	with path.inspectionContext() :
+		inspection = column.inspector().inspect()
+
+	if inspection is None :
+		return
+
+	pathListing.__inspectionPopupWindow = __InspectionPopupWindow( inspection )
+	pathListing.__inspectionPopupWindow.popup( parent = pathListing )
+
 def __showHistory( pathListing ) :
 
 	columns = pathListing.getColumns()
@@ -321,6 +351,14 @@ def __validateSelection( pathListing ) :
 
 	return True
 
+def __buttonPress( column, path, pathListing, event ) :
+
+	if event.buttons == event.Buttons.Middle and event.modifiers == event.Modifiers.Alt :
+		__inspect( pathListing, column, path )
+		return True
+
+	return False
+
 def __buttonDoubleClick( path, pathListing, event ) :
 
 	# We only support doubleClick events when all of the selected
@@ -346,7 +384,8 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 		f"Copy Value{pluralSuffix}",
 		{
 			"command" : functools.partial( _copySelectedValues, pathListing ),
-			"active" : functools.partial( _canCopySelectedValues, pathListing )
+			"active" : functools.partial( _canCopySelectedValues, pathListing ),
+			"shortCut" : "Ctrl+C",
 		}
 	)
 
@@ -354,7 +393,8 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 		f"Paste Value{pluralSuffix}",
 		{
 			"command" : functools.partial( _pasteValues, pathListing ),
-			"active" : functools.partial( _canPasteValues, pathListing )
+			"active" : functools.partial( _canPasteValues, pathListing ),
+			"shortCut" : "Ctrl+V",
 		}
 	)
 
@@ -362,10 +402,21 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 		"CopyPasteDivider", { "divider" : True }
 	)
 
+	inspectionSelection = __inspectionSelection( pathListing )
+	menuDefinition.append(
+		"Inspect...",
+		{
+			"command" : functools.partial( __inspect, pathListing, *inspectionSelection ),
+			"active" : inspectionSelection[0] is not None,
+			"shortCut" : "I",
+		}
+	)
+
 	menuDefinition.append(
 		"Show History...",
 		{
-			"command" : functools.partial( __showHistory, pathListing )
+			"command" : functools.partial( __showHistory, pathListing ),
+			"shortCut" : "H",
 		}
 	)
 
@@ -374,6 +425,7 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 		"Toggle" if toggleOnly else "Edit...",
 		{
 			"command" : functools.partial( __editSelectedCells, pathListing, toggleOnly ),
+			"shortCut" : "Return, Enter",
 		}
 	)
 	inspections, nonEditableReason, disable = __toggleableInspections( pathListing )
@@ -424,6 +476,16 @@ def __keyPress( column, pathListing, event ) :
 
 	if event.key == "V" and event.modifiers == event.Modifiers.Control :
 		_pasteValues( pathListing )
+		return True
+
+	if event.key == "H" and event.modifiers == event.Modifiers.None_ :
+		__showHistory( pathListing )
+		return True
+
+	if event.key == "I" and event.modifiers == event.Modifiers.None_ :
+		selection = __inspectionSelection( pathListing )
+		if selection[0] is not None :
+			__inspect( pathListing, *selection )
 		return True
 
 	if event.modifiers == event.Modifiers.None_ :
@@ -624,6 +686,71 @@ def __columnMetadata( column, metadataKey ) :
 	return Gaffer.Metadata.value( prefixMap.get( type( column.inspector() ) ) + column.inspector().name(), metadataKey )
 
 ##########################################################################
+# __InspectionPopupWindow
+##########################################################################
+
+class __InspectionPopupWindow( GafferUI.PopupWindow ) :
+
+	def __init__( self, inspection, **kw ) :
+
+		GafferUI.PopupWindow.__init__( self, **kw )
+
+		self.__inspection = inspection
+
+		with self :
+
+			with GafferUI.GridContainer( spacing = 6 ) :
+
+				GafferUI.Label( "<b>Source</b>", parenting = { "index" : ( 0, 0 ), "alignment" : (  GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Top ) } )
+
+				if inspection.source() is not None :
+					node = inspection.source().node()
+					nameLabel = GafferUI.NameLabel(
+						node,
+						numComponents = node.relativeName( node.scriptNode() ).count( "." ) + 1,
+						parenting = { "index" : ( 1, 0 ) }
+					)
+					nameLabel.setFormatter( lambda l : ".".join( x.getName() for x in l ) )
+					nameLabel.dragEndSignal().connectFront( Gaffer.WeakMethod( self.__nameLabelDragEnd ) )
+				elif inspection.sourceType() == inspection.SourceType.Fallback :
+					GafferUI.Label( inspection.fallbackDescription(), parenting = { "index" : ( 1, 0 ) } )
+
+				GafferUI.Label( "<b>Value</b>", parenting = { "index" : ( 0, 1 ), "alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Top ) } )
+
+				valueLabel = GafferUI.Label(
+					f"{inspection.value()}",
+					parenting = { "index" : ( 1, 1 ), "alignment" : ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.Top ) }
+				)
+
+				valueLabel.buttonPressSignal().connect( lambda widget, event : True )
+				valueLabel.dragBeginSignal().connect( Gaffer.WeakMethod( self.__valueDragBegin ) )
+				valueLabel.dragEndSignal().connect( Gaffer.WeakMethod( self.__valueDragEnd  ))
+				button = GafferUI.Button( image = "duplicate.png", hasFrame = False, toolTip = "Copy Value", parenting = { "index" : ( 2, 1 ), "alignment" : ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.Top ) } )
+				button.clickedSignal().connect( Gaffer.WeakMethod( self.__valueCopyClicked ) )
+
+	def __nameLabelDragEnd( self, widget, event ) :
+
+		self.close()
+		return False
+
+	def __valueDragBegin( self, widget, event ) :
+
+		GafferUI.Pointer.setCurrent( "values" )
+		return self.__inspection.value()
+
+	def __valueDragEnd( self, widget, event ) :
+
+		GafferUI.Pointer.setCurrent( None )
+		return True
+
+	def __valueCopyClicked( self, widget ) :
+
+		application = self.ancestor( GafferUI.Editor ).scriptNode().ancestor( Gaffer.ApplicationRoot )
+		application.setClipboardContents( self.__inspection.value() )
+		self.close()
+		return True
+
+##########################################################################
 # Copy and paste
 ##########################################################################
 
@@ -816,6 +943,8 @@ def __orderedSelection( pathListing ) :
 def __inspectorColumnCreated( column ) :
 
 	if isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+		## \todo `buttonPressSignal` should provide the column for us.
+		column.buttonPressSignal().connectFront( functools.partial( __buttonPress, column ) )
 		column.buttonDoubleClickSignal().connectFront( __buttonDoubleClick )
 		column.contextMenuSignal().connectFront( __contextMenu )
 		column.keyPressSignal().connectFront( __keyPress )
