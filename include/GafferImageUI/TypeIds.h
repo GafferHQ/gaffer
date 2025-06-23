@@ -48,6 +48,7 @@ enum TypeId
 	ColorInspectorPlugTypeId = 122004,
 	Box2iGadgetTypeId = 122005,
 	V2iGadgetTypeId = 122006,
+	ColorInspectorToolTypeId = 122007,
 
 	LastTypeId = 122099
 };
