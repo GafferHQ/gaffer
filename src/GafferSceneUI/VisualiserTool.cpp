@@ -128,6 +128,7 @@ const int g_primitiveVariablePrefixSize = g_primitiveVariablePrefix.size();
 // VertexLabel constants
 const float g_cursorRadius2 = 25.f * 25.f;
 const std::string g_vertexIndexDataName = "vertex:index";
+const std::string g_faceIndexDataName = "face:index";
 
 //-----------------------------------------------------------------------------
 // Color shader
@@ -1243,27 +1244,51 @@ class VisualiserGadget : public Gadget
 					continue;
 				}
 
-				ConstDataPtr vData = nullptr;
+				ConstDataPtr labelData = nullptr;
+				PrimitiveVariable::Interpolation labelDataInterpolation = PrimitiveVariable::Interpolation::Invalid;
 
-				if( dataName != g_vertexIndexDataName )
+				if( dataName != g_vertexIndexDataName && dataName != g_faceIndexDataName )
 				{
-					vData = primitive->expandedVariableData<Data>(
+					labelData = primitive->expandedVariableData<Data>(
 						primitiveVariableName,
 						IECoreScene::PrimitiveVariable::Vertex,
 						false /* throwIfInvalid */
 					);
 
-					if( !vData )
+					if( labelData )
 					{
-						continue;
+						labelDataInterpolation = PrimitiveVariable::Interpolation::Vertex;
+					}
+
+					else
+					{
+						if( primitive->typeId() != MeshPrimitive::staticTypeId() )
+						{
+							continue;
+						}
+						/// \todo support curves
+
+						labelData = primitive->expandedVariableData<Data>(
+							primitiveVariableName,
+							PrimitiveVariable::Uniform,
+							false /* throwIfInvalid */
+						);
+
+						if( !labelData )
+						{
+							continue;
+						}
+
+						labelDataInterpolation = PrimitiveVariable::Interpolation::Uniform;
+
 					}
 
 					if(
 						mode == VisualiserTool::Mode::Auto &&
 						primitive->typeId() == MeshPrimitive::staticTypeId() &&
-						vData->typeId() != IntVectorDataTypeId &&
-						vData->typeId() != V3fVectorDataTypeId &&
-						vData->typeId() != QuatfVectorDataTypeId
+						labelData->typeId() != IntVectorDataTypeId &&
+						labelData->typeId() != V3fVectorDataTypeId &&
+						labelData->typeId() != QuatfVectorDataTypeId
 					)
 					{
 						// Will be handled by `renderColorVisualiser()` instead.
@@ -1274,22 +1299,39 @@ class VisualiserGadget : public Gadget
 					}
 
 					if(
-						vData->typeId() != IntVectorDataTypeId &&
-						vData->typeId() != FloatVectorDataTypeId &&
-						vData->typeId() != V2fVectorDataTypeId &&
-						vData->typeId() != V3fVectorDataTypeId &&
-						vData->typeId() != Color3fVectorDataTypeId &&
-						vData->typeId() != QuatfVectorDataTypeId
+						labelData->typeId() != IntVectorDataTypeId &&
+						labelData->typeId() != FloatVectorDataTypeId &&
+						labelData->typeId() != V2fVectorDataTypeId &&
+						labelData->typeId() != V3fVectorDataTypeId &&
+						labelData->typeId() != Color3fVectorDataTypeId &&
+						labelData->typeId() != QuatfVectorDataTypeId
 					)
 					{
 						continue;
 					}
 				}
 
+				if( dataName == g_faceIndexDataName || labelDataInterpolation == PrimitiveVariable::Interpolation::Uniform )
+				{
+					try
+					{
+						primitive = runTimeCast<const Primitive>( location.uniformPScene().objectPlug()->getValue() );
+
+						if( !primitive )
+						{
+							continue;
+						}
+					}
+					catch( const std::exception & )
+					{
+						continue;
+					}
+				}
+
 				if(
-					mode == VisualiserTool::Mode::Auto && vData && (
-						vData->typeId() == V3fVectorDataTypeId ||
-						vData->typeId() == QuatfVectorDataTypeId
+					mode == VisualiserTool::Mode::Auto && labelData && (
+						labelData->typeId() == V3fVectorDataTypeId ||
+						labelData->typeId() == QuatfVectorDataTypeId
 					)
 				)
 				{
@@ -1330,7 +1372,7 @@ class VisualiserGadget : public Gadget
 
 				ConstV3fVectorDataPtr pData = primitive->expandedVariableData<IECore::V3fVectorData>(
 					g_pName,
-					IECoreScene::PrimitiveVariable::Vertex,
+					labelDataInterpolation,
 					false /* throwIfInvalid */
 				);
 
@@ -1503,33 +1545,33 @@ class VisualiserGadget : public Gadget
 							std::optional<V2f> rasterPos = viewportGadget->worldToRasterSpace( worldPos );
 							if( rasterBounds.intersects( rasterPos.value() ) )
 							{
-								if( !vData )
+								if( !labelData )
 								{
 									vertexValue = (int)i;
 								}
 								else
 								{
-									if( auto iData = runTimeCast<const IntVectorData>( vData.get() ) )
+									if( auto iData = runTimeCast<const IntVectorData>( labelData.get() ) )
 									{
 										vertexValue = iData->readable()[i];
 									}
-									if( auto fData = runTimeCast<const FloatVectorData>( vData.get() ) )
+									if( auto fData = runTimeCast<const FloatVectorData>( labelData.get() ) )
 									{
 										vertexValue = fData->readable()[i];
 									}
-									if( auto v2fData = runTimeCast<const V2fVectorData>( vData.get() ) )
+									if( auto v2fData = runTimeCast<const V2fVectorData>( labelData.get() ) )
 									{
 										vertexValue = v2fData->readable()[i];
 									}
-									if( auto v3fData = runTimeCast<const V3fVectorData>( vData.get() ) )
+									if( auto v3fData = runTimeCast<const V3fVectorData>( labelData.get() ) )
 									{
 										vertexValue = v3fData->readable()[i];
 									}
-									if( auto c3fData = runTimeCast<const Color3fVectorData>( vData.get() ) )
+									if( auto c3fData = runTimeCast<const Color3fVectorData>( labelData.get() ) )
 									{
 										vertexValue = c3fData->readable()[i];
 									}
-									if( auto qData = runTimeCast<const QuatfVectorData>( vData.get() ) )
+									if( auto qData = runTimeCast<const QuatfVectorData>( labelData.get() ) )
 									{
 										vertexValue = qData->readable()[i];
 									}
@@ -1552,9 +1594,9 @@ class VisualiserGadget : public Gadget
 								}
 
 								if(
-									mode == VisualiserTool::Mode::Auto && vData && (
-										vData->typeId() == V3fVectorDataTypeId ||
-										vData->typeId() == QuatfVectorDataTypeId
+									mode == VisualiserTool::Mode::Auto && labelData && (
+										labelData->typeId() == V3fVectorDataTypeId ||
+										labelData->typeId() == QuatfVectorDataTypeId
 									)
 								)
 								{
