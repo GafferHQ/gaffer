@@ -1057,7 +1057,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 	def setHighlightedIndex( self, index ) :
 
 		self.__highlightedIndex = QtCore.QPersistentModelIndex( index ) if index is not None else None
-		self.update()
+		self.viewport().update()
 
 	def setModel( self, model ) :
 
