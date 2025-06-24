@@ -106,6 +106,9 @@ class GAFFEROSL_API OSLObject : public GafferScene::Deformer
 		Gaffer::ArrayPlug *sourceLocationsPlug();
 		const Gaffer::ArrayPlug *sourceLocationsPlug() const;
 
+		Gaffer::BoolPlug *ignoreMissingSourceLocationsPlug();
+		const Gaffer::BoolPlug *ignoreMissingSourceLocationsPlug() const;
+
 		Gaffer::Plug *primitiveVariablesPlug();
 		const Gaffer::Plug *primitiveVariablesPlug() const;
 

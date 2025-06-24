@@ -385,6 +385,20 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"ignoreMissingSourceLocations" : [
+
+			"description",
+			"""
+			Determines whether a missing source location will trigger an error
+			(the default) or be ignored. When a missing source is ignored, the
+			`pointcloud_search()` and `pointcloud_get()` OSL functions will
+			return `0`, allowing the shader to handle the problem itself.
+			""",
+
+			"label", "Ignore Missing Source",
+
+		],
+
 	}
 
 )

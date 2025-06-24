@@ -231,6 +231,7 @@ OSLObject::OSLObject( const std::string &name )
 			/* resizeWhenInputsChange = */ false
 		)
 	);
+	addChild( new BoolPlug( "ignoreMissingSourceLocations" ) );
 	addChild( new ScenePlug( "__resampledIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new StringPlug( "__resampleNames", Plug::Out ) );
 	addChild( new Plug( "primitiveVariables", Plug::In, Plug::Default & ~Plug::AcceptsInputs ) );
@@ -315,44 +316,54 @@ const Gaffer::ArrayPlug *OSLObject::sourceLocationsPlug() const
 	return getChild<ArrayPlug>( g_firstPlugIndex + 5 );
 }
 
+Gaffer::BoolPlug *OSLObject::ignoreMissingSourceLocationsPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 6 );
+}
+
+const Gaffer::BoolPlug *OSLObject::ignoreMissingSourceLocationsPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 6 );
+}
+
 ScenePlug *OSLObject::resampledInPlug()
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 6 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 7 );
 }
 
 const ScenePlug *OSLObject::resampledInPlug() const
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 6 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 7 );
 }
 
 StringPlug *OSLObject::resampledNamesPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 7 );
+	return getChild<StringPlug>( g_firstPlugIndex + 8 );
 }
 
 const StringPlug *OSLObject::resampledNamesPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 7 );
+	return getChild<StringPlug>( g_firstPlugIndex + 8 );
 }
 
 Gaffer::Plug *OSLObject::primitiveVariablesPlug()
 {
-	return getChild<Gaffer::Plug>( g_firstPlugIndex + 8 );
+	return getChild<Gaffer::Plug>( g_firstPlugIndex + 9 );
 }
 
 const Gaffer::Plug *OSLObject::primitiveVariablesPlug() const
 {
-	return getChild<Gaffer::Plug>( g_firstPlugIndex + 8 );
+	return getChild<Gaffer::Plug>( g_firstPlugIndex + 9 );
 }
 
 GafferOSL::OSLCode *OSLObject::oslCode()
 {
-	return getChild<GafferOSL::OSLCode>( g_firstPlugIndex + 9 );
+	return getChild<GafferOSL::OSLCode>( g_firstPlugIndex + 10 );
 }
 
 const GafferOSL::OSLCode *OSLObject::oslCode() const
 {
-	return getChild<GafferOSL::OSLCode>( g_firstPlugIndex + 9 );
+	return getChild<GafferOSL::OSLCode>( g_firstPlugIndex + 10 );
 }
 
 void OSLObject::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -400,6 +411,7 @@ bool OSLObject::affectsProcessedObject( const Gaffer::Plug *input ) const
 		( input == inPlug()->attributesPlug() && !useAttributesPlug()->isSetToDefault() ) ||
 		input == resampledInPlug()->objectPlug() ||
 		sourceLocationsPlug()->isAncestorOf( input ) ||
+		input == ignoreMissingSourceLocationsPlug() ||
 		( sourceLocationsUseTransform && input == sourcePlug()->transformPlug() ) ||
 		( sourceLocationsUseObject && input == sourcePlug()->objectPlug() ) ||
 		( haveSourceLocations && input == sourcePlug()->existsPlug() )
@@ -443,6 +455,8 @@ void OSLObject::hashProcessedObject( const ScenePath &path, const Gaffer::Contex
 			}
 		}
 	}
+
+	ignoreMissingSourceLocationsPlug()->hash( h );
 
 	for( const auto &p : SourceLocationPlug::Range( *sourceLocationsPlug() ) )
 	{
@@ -521,6 +535,8 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 		transforms[ g_world ] = ShadingEngine::Transform( Imath::M44f(), Imath::M44f() );
 	}
 
+	const bool ignoreMissingSourceLocations = ignoreMissingSourceLocationsPlug()->getValue();
+
 	ShadingEngine::PointClouds pointClouds;
 	for( const auto &p : SourceLocationPlug::Range( *sourceLocationsPlug() ) )
 	{
@@ -540,9 +556,16 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 			continue;
 		}
 		ScenePlug::ScenePath sourcePath = ScenePlug::stringToPath( sourcePathString );
-		if( !sourcePlug()->exists( sourcePath ) )
+		if( !sourcePlug()->getInput() || !sourcePlug()->exists( sourcePath ) )
 		{
-			continue;
+			if( ignoreMissingSourceLocations )
+			{
+				continue;
+			}
+			else
+			{
+				throw IECore::Exception( fmt::format( "Location \"{}\" does not exist in source scene", sourcePathString ) );
+			}
 		}
 
 		if( p->pointCloudPlug()->getValue() )
@@ -554,7 +577,10 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 			}
 			else
 			{
-				IECore::msg( IECore::Msg::Warning, "OSLObject", fmt::format( "No primitive at \"{}\"", sourcePathString ) );
+				if( !ignoreMissingSourceLocations )
+				{
+					throw IECore::Exception( fmt::format( "Source location \"{}\" does not contain a Primitive", sourcePathString ) );
+				}
 			}
 		}
 

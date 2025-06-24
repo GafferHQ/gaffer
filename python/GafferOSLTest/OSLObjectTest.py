@@ -1375,5 +1375,54 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 				sphere["radius"].setValue( sphere["radius"].getValue() + 1 )
 				self.assertNotIn( oslObject["out"]["object"], { x[0] for x in cs } )
 
+	def testMissingSourceLocation( self ) :
+
+		plane = GafferScene.Plane()
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		group = GafferScene.Group()
+
+		oslCode = GafferOSL.OSLCode()
+		oslCode["out"].addChild( Gaffer.IntPlug( "pointCloudExists", direction = Gaffer.Plug.Direction.Out ) )
+
+		oslCode["code"].setValue( inspect.cleandoc(
+			"""
+			pointCloudExists = pointcloud_search( "points", P, 100000, 1 );
+			"""
+		) )
+
+		oslObject = GafferOSL.OSLObject()
+		oslObject["in"].setInput( plane["out"] )
+		oslObject["source"].setInput( group["out"] )
+		oslObject["filter"].setInput( planeFilter["out"] )
+		oslObject["primitiveVariables"].addChild( Gaffer.NameValuePlug( "pointCloudExists", IECore.IntData() ) )
+		oslObject["primitiveVariables"][0]["value"].setInput( oslCode["out"]["pointCloudExists"] )
+		oslObject["sourceLocations"].resize( 1 )
+		oslObject["sourceLocations"][0]["name"].setValue( "points" )
+		oslObject["sourceLocations"][0]["enabled"].setValue( True )
+		oslObject["sourceLocations"][0]["location"].setValue( "/thisLocationIsMissing" )
+		oslObject["sourceLocations"][0]["pointCloud"].setValue( True )
+
+		with self.assertRaisesRegex( Gaffer.ProcessException, 'OSLObject.__processedObject : Location "/thisLocationIsMissing" does not exist in source scene' ) :
+			oslObject["out"].object( "/plane" )
+
+		oslObject["ignoreMissingSourceLocations"].setValue( True )
+		self.assertEqual( oslObject["out"].object( "/plane" )["pointCloudExists"].data[0], 0 )
+
+		oslObject["sourceLocations"][0]["location"].setValue( "/group" )
+		self.assertEqual( oslObject["out"].object( "/plane" )["pointCloudExists"].data[0], 0 )
+
+		oslObject["ignoreMissingSourceLocations"].setValue( False )
+		with self.assertRaisesRegex( Gaffer.ProcessException, 'OSLObject.__processedObject : Source location "/group" does not contain a Primitive' ) :
+			oslObject["out"].object( "/plane" )
+
+		oslObject["source"].setInput( None )
+		with self.assertRaisesRegex( Gaffer.ProcessException, 'OSLObject.__processedObject : Location "/group" does not exist in source scene' ) :
+			oslObject["out"].object( "/plane" )
+
+		oslObject["ignoreMissingSourceLocations"].setValue( True )
+		self.assertEqual( oslObject["out"].object( "/plane" )["pointCloudExists"].data[0], 0 )
+
 if __name__ == "__main__":
 	unittest.main()
