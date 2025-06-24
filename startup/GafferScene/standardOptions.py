@@ -507,7 +507,7 @@ Gaffer.Metadata.registerValues( {
 
 	],
 
-	"option:render:renderManifestFilePath" : [
+	"option:render:manifestFilePath" : [
 
 		"defaultValue", "",
 		"description",

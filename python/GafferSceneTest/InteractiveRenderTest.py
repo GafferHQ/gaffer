@@ -2967,7 +2967,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["options"] = GafferScene.StandardOptions()
 		s["options"]["in"].setInput( s["parent"]["out"] )
-		s["options"]["options"]["render:renderManifestFilePath"]["enabled"].setValue( True )
+		s["options"]["options"]["render:manifestFilePath"]["enabled"].setValue( True )
 
 		s["outputs"] = GafferScene.Outputs()
 		s["outputs"].addOutput(
@@ -3059,7 +3059,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 
 		# Setting this option during an interactive render only triggers a warning
-		s["options"]["options"]["render:renderManifestFilePath"]["value"].setValue( "/some/path" )
+		s["options"]["options"]["render:manifestFilePath"]["value"].setValue( "/some/path" )
 		s["r"]["state"].setValue( s["r"].State.Running )
 		self.uiThreadCallHandler.waitFor( 1.0 )
 
@@ -3068,7 +3068,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 			self.uiThreadCallHandler.waitFor( 1.0 )
 
 			self.assertEqual( len( mh.messages ), 1 )
-			self.assertEqual( mh.messages[0].message, 'Ignoring "render:renderManifestFilePath" during interactive render. The catalogue generates its own manifest files, this option is not needed.' )
+			self.assertEqual( mh.messages[0].message, 'Ignoring "render:manifestFilePath" during interactive render. The catalogue generates its own manifest files, this option is not needed.' )
 
 	def tearDown( self ) :
 
