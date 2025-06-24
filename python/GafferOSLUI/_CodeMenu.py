@@ -110,6 +110,9 @@ def commonFunctionMenu( command, activator ) :
 		( "/Texture/Texture", "texture( filename, s, t )" ),
 		( "/Texture/Environment", "environment( filename, R )" ),
 
+		( "/Point Cloud/Search", "pointcloud_search( name, pos, radius, maxPoints /*, [sort,] attr, data, ..., attrN, dataN */ )" ),
+		( "/Point Cloud/Get", "pointcloud_get( name, indices, count, attr, data )" ),
+
 		( "/Parameter/Is Connected", "isconnected( parameter )" ),
 		( "/Parameter/Is Constant", "isconstant( parameter )" ),
 
