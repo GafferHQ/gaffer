@@ -604,10 +604,7 @@ class VisualiserGadget : public Gadget
 		explicit VisualiserGadget( const VisualiserTool &tool, const std::string &name = defaultName<VisualiserGadget>() ) :
 			Gadget( name ),
 			m_tool( &tool ),
-			m_colorShader(),
-			m_colorUniformBuffer(),
-			m_vertexLabelShader(),
-			m_vertexLabelUniformBuffer(),
+			m_vertexLabelStorageCapacity( 0 ),
 			m_cursorVertexValue()
 		{
 		}
