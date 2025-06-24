@@ -95,6 +95,14 @@ Build
 1.5.x.x (relative to 1.5.15.0)
 =======
 
+Improvements
+------------
+
+- RenderPassEditor, AttributeEditor, LightEditor :
+  - Added menu item and <kbd>I</kbd> shortcut for inspecting the full text of a value, and its source plug.
+  - Added <kbd>H</kbd> shortcut for "History..." menu item.
+  - Exposed existing keyboard shortcuts in menu items.
+
 Fixes
 -----
 
