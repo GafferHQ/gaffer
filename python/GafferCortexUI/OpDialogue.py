@@ -41,6 +41,8 @@ import threading
 import traceback
 import imath
 
+from Qt import QtCore
+
 import IECore
 
 import Gaffer
@@ -119,6 +121,8 @@ class OpDialogue( GafferUI.Dialogue ) :
 			title = IECore.CamelCase.toSpaced( opInstance.typeName() )
 
 		GafferUI.Dialogue.__init__( self, title, sizeMode=sizeMode, **kw )
+
+		self._qtWidget().installEventFilter( _opDialogueEventFilter )
 
 		# decide what we'll do after execution.
 
@@ -500,3 +504,22 @@ class OpDialogue( GafferUI.Dialogue ) :
 
 		for child in graphComponent.children() :
 			self.__setUserDefaults( child )
+
+class _OpDialogueEventFilter( QtCore.QObject ) :
+
+	def __init__( self ) :
+
+		QtCore.QObject.__init__( self )
+
+	def eventFilter( self, qObject, qEvent ) :
+		type = qEvent.type()
+
+		if type == QtCore.QEvent.Show :
+			widget = GafferUI.Widget._owner( qObject )
+			widget.resizeToFitChild()
+			return True
+
+		return False
+
+# this single instance is used by all op dialogue widgets
+_opDialogueEventFilter = _OpDialogueEventFilter()
