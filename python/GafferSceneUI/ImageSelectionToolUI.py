@@ -46,6 +46,18 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
+	Tool for selecting objects based on image data. Requires an `id` image layer
+	from a Gaffer render, with gaffer:renderManifestFilePath metadata, or an
+	ObjectID cryptomatte, or an `instanceID` image layer for selecting numerical
+	ids of instances within an encapsulated instancer.
+
+	Supports the same interactions as the 3D scene selection tool:
+
+	- Click or drag to set selection
+	- Shift-click or shift-drag to add to selection
+	- Drag and drop selected objects
+		- Drag to Python Editor to get their names
+		- Drag to PathFilter or Set node to add/remove their paths
 	""",
 
 	"viewer:shortCut", "Q",
