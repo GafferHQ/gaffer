@@ -48,6 +48,8 @@ import GafferSceneUI
 from GafferUI.PlugValueWidget import sole
 from GafferSceneUI._HistoryWindow import _HistoryWindow
 
+from . import _GafferSceneUI
+
 # This file extends the C++ functionality of InspectorColumn with functionality
 # that is easier to implement in Python. This should all be considered as one
 # component.
@@ -191,10 +193,10 @@ def __removableAttributeInspections( pathListing ) :
 
 	path = pathListing.getPath().copy()
 	for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
-		if not columnSelection.isEmpty() and type( column.inspector() ) != GafferSceneUI.Private.AttributeInspector :
-			return []
 		for pathString in columnSelection.paths() :
 			path.setFromString( pathString )
+			if not isinstance( column.inspector( path ), GafferSceneUI.Private.AttributeInspector ) :
+				return []
 			inspection = column.inspect( path )
 			if inspection is not None and inspection.editable() :
 				source = inspection.source()
@@ -229,21 +231,16 @@ def __selectedSetExpressions( pathListing ) :
 
 	path = pathListing.getPath().copy()
 	for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
-		if (
-			not columnSelection.isEmpty() and (
-				not (
-					__columnMetadata( column, "ui:scene:acceptsSetName" ) or
-					__columnMetadata( column, "ui:scene:acceptsSetNames" ) or
-					__columnMetadata( column, "ui:scene:acceptsSetExpression" )
-				)
-			)
-		) :
-			# We only return set expressions if all selected paths are in
-			# columns that accept set names or set expressions.
-			return {}
-
 		for pathString in columnSelection.paths() :
 			path.setFromString( pathString )
+			if not (
+				__cellMetadata( column, path, "ui:scene:acceptsSetName" ) or
+				__cellMetadata( column, path, "ui:scene:acceptsSetName" ) or
+				__cellMetadata( column, path, "ui:scene:acceptsSetName" )
+			) :
+				# We only return set expressions if all selected paths are in
+				# columns that accept set names or set expressions.
+				return {}
 			cellValue = column.cellData( path ).value
 			if cellValue is not None :
 				result.setdefault( pathString, set() ).add( cellValue )
@@ -308,8 +305,11 @@ def __showHistory( pathListing ) :
 			path.setFromString( pathString )
 			if path.inspectionContext() is None :
 				continue
+			inspector = column.inspector( path )
+			if inspector is None :
+				continue
 			window = _HistoryWindow(
-				column.inspector(),
+				inspector,
 				path,
 				"History : {} : {}".format( pathString, column.headerData().value )
 			)
@@ -402,7 +402,7 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 		}
 	)
 
-	toggleOnly = isinstance( column.inspector(), GafferSceneUI.Private.SetMembershipInspector )
+	toggleOnly = isinstance( column, _GafferSceneUI._LightEditorSetMembershipColumn )
 	menuDefinition.append(
 		"Toggle" if toggleOnly else "Edit...",
 		{
@@ -503,7 +503,7 @@ def __dragEnter( column, path, pathListing, event ) :
 	if inspection is None :
 		return False
 
-	__updatePointer( column, inspection, event )
+	__updatePointer( column, path, inspection, event )
 	return True
 
 def __dragLeave( column, path, pathListing, event ) :
@@ -526,12 +526,12 @@ def __dragMove( column, path, pathListing, event ) :
 	if inspection is None :
 		return False
 
-	__updatePointer( column, inspection, event )
+	__updatePointer( column, path, inspection, event )
 	return True
 
-def __updatePointer( column, inspection, event ) :
+def __updatePointer( column, path, inspection, event ) :
 
-	dropMode = __dropMode( column, inspection, event )
+	dropMode = __dropMode( column, path, inspection, event )
 	if dropMode == __DropMode.Add :
 		GafferUI.Pointer.setCurrent( "add" )
 	elif dropMode == __DropMode.Remove :
@@ -541,10 +541,10 @@ def __updatePointer( column, inspection, event ) :
 	else :
 		GafferUI.Pointer.setCurrent( __originalDragPointer )
 
-def __dropMode( column, inspection, event ) :
+def __dropMode( column, path, inspection, event ) :
 
 	if isinstance( inspection.value(), IECore.StringData ) and (
-		__columnMetadata( column, "ui:scene:acceptsSetNames" ) or __columnMetadata( column, "ui:scene:acceptsSetExpression" )
+		__cellMetadata( column, path, "ui:scene:acceptsSetNames" ) or __cellMetadata( column, path, "ui:scene:acceptsSetExpression" )
 	)  :
 		if event.modifiers == event.Modifiers.Shift :
 			return __DropMode.Add if __updatable( inspection ) else __DropMode.NotEditable
@@ -584,11 +584,11 @@ def __drop( column, path, pathListing, event ) :
 	if inspection is None :
 		return True
 
-	if __dropMode( column, inspection, event ) == __DropMode.NotEditable :
+	if __dropMode( column, path, inspection, event ) == __DropMode.NotEditable :
 		__warningPopup( pathListing, "Cannot modify set expressions containing operators with drag and drop." )
 		return True
 
-	data = __dropData( column, inspection, event )
+	data = __dropData( column, path, inspection, event )
 	if not inspection.canEdit( data ) :
 		__warningPopup( pathListing, inspection.nonEditableReason( data ) or "Unable to edit." )
 		return True
@@ -598,7 +598,7 @@ def __drop( column, path, pathListing, event ) :
 
 	return True
 
-def __dropData( column, inspection, event ) :
+def __dropData( column, path, inspection, event ) :
 
 	if isinstance( event.data, IECore.StringVectorData ) and isinstance( inspection.value(), IECore.StringData ) :
 		data = IECore.StringData( " ".join( event.data ) )
@@ -607,7 +607,7 @@ def __dropData( column, inspection, event ) :
 	else :
 		data = event.data
 
-	mode = __dropMode( column, inspection, event )
+	mode = __dropMode( column, path, inspection, event )
 	if mode == __DropMode.Replace or not isinstance( inspection.value(), ( IECore.StringData, IECore.StringVectorData ) ) :
 		return data
 
@@ -637,7 +637,7 @@ def __warningPopup( parent, message ) :
 
 	__inspectorColumnPopup.popup( parent = parent )
 
-def __columnMetadata( column, metadataKey ) :
+def __cellMetadata( column, path, metadataKey ) :
 
 	# Map of Inspectors to metadata prefixes.
 	prefixMap = {
@@ -645,10 +645,11 @@ def __columnMetadata( column, metadataKey ) :
 		GafferSceneUI.Private.AttributeInspector : "attribute:"
 	}
 
-	if type( column.inspector() ) not in prefixMap.keys() :
+	inspector = column.inspector( path )
+	if type( inspector ) not in prefixMap.keys() :
 		return None
 
-	return Gaffer.Metadata.value( prefixMap.get( type( column.inspector() ) ) + column.inspector().name(), metadataKey )
+	return Gaffer.Metadata.value( prefixMap.get( type( inspector ) ) + inspector.name(), metadataKey )
 
 ##########################################################################
 # __InspectionPopupWindow

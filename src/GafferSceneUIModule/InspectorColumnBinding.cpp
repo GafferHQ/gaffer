@@ -53,6 +53,12 @@ using namespace GafferSceneUI::Private;
 namespace
 {
 
+InspectorPtr inspectorColumnInspectorBinding( const InspectorColumn &column, const Gaffer::Path &path, const IECore::Canceller *canceller )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return boost::const_pointer_cast<Inspector>( column.inspector( path, canceller ) );
+}
+
 Inspector::ResultPtr inspectorColumnInspectBinding( const InspectorColumn &column, const Gaffer::Path &path, const IECore::Canceller *canceller )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -84,7 +90,14 @@ void GafferSceneUIModule::bindInspectorColumn()
 				arg_( "sizeMode" ) = PathColumn::Default
 			)
 		) )
-		.def( "inspector", &InspectorColumn::inspector, return_value_policy<CastToIntrusivePtr>() )
+		.def( init<IECore::InternedString, const PathColumn::CellData &, PathColumn::SizeMode>(
+			(
+				arg_( "inspectorProperty" ),
+				arg_( "headerData" ),
+				arg_( "sizeMode" ) = PathColumn::Default
+			)
+		) )
+		.def( "inspector", &inspectorColumnInspectorBinding, ( arg( "path" ), arg( "canceller" ) = object() ) )
 		.def( "inspect", &inspectorColumnInspectBinding, ( arg( "path" ), arg( "canceller" ) = object() ) )
 	;
 

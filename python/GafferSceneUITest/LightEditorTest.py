@@ -764,9 +764,9 @@ class LightEditorTest( GafferUITest.TestCase ) :
 			if not isinstance( c, GafferSceneUI.Private.InspectorColumn ) :
 				continue
 			if c.headerData().value == "A" :
-				addAInspector = c.inspector()
+				addAInspector = c.inspector( widget.getPath() )
 			elif c.headerData().value == "Exposure" :
-				exposureInspector = c.inspector()
+				exposureInspector = c.inspector( widget.getPath() )
 
 		self.assertIsNotNone( addAInspector )
 		self.assertIsNotNone( exposureInspector )

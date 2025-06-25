@@ -56,7 +56,7 @@ class AttributeEditorTest( GafferUITest.TestCase ) :
 		GafferSceneUI.AttributeEditor._AttributeEditor__updateColumns.flush( editor )
 
 		columnAttributes = [
-			c.inspector().name() for c in editor.sceneListing().getColumns()
+			c.inspector( editor.sceneListing().getPath() ).name() for c in editor.sceneListing().getColumns()
 			if isinstance( c, GafferSceneUI.Private.InspectorColumn )
 		]
 
@@ -69,7 +69,7 @@ class AttributeEditorTest( GafferUITest.TestCase ) :
 		GafferSceneUI.AttributeEditor._AttributeEditor__updateColumns.flush( editor )
 
 		columnAttributes = [
-			c.inspector().name() for c in editor.sceneListing().getColumns()
+			c.inspector( editor.sceneListing().getPath() ).name() for c in editor.sceneListing().getColumns()
 			if isinstance( c, GafferSceneUI.Private.InspectorColumn )
 		]
 

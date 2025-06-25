@@ -74,16 +74,32 @@ InspectorColumn::InspectorColumn( GafferSceneUI::Private::InspectorPtr inspector
 InspectorColumn::InspectorColumn( GafferSceneUI::Private::InspectorPtr inspector, const CellData &headerData, PathColumn::SizeMode sizeMode )
 	:	PathColumn( sizeMode ), m_inspector( inspector ), m_headerData( headerData )
 {
-	m_inspector->dirtiedSignal().connect( boost::bind( &InspectorColumn::inspectorDirtied, this ) );
+	inspector->dirtiedSignal().connect( boost::bind( &InspectorColumn::inspectorDirtied, this ) );
 }
 
-GafferSceneUI::Private::Inspector *InspectorColumn::inspector() const
+InspectorColumn::InspectorColumn( IECore::InternedString inspectorProperty, const CellData &headerData, PathColumn::SizeMode sizeMode )
+	:	PathColumn( sizeMode ), m_inspector( inspectorProperty ), m_headerData( headerData )
 {
-	return m_inspector.get();
+}
+
+GafferSceneUI::Private::ConstInspectorPtr InspectorColumn::inspector( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
+{
+	if( auto i = std::get_if<InspectorPtr>( &m_inspector ) )
+	{
+		return *i;
+	}
+
+	return IECore::runTimeCast<const Inspector>( path.property( std::get<InternedString>( m_inspector ), canceller ) );
 }
 
 GafferSceneUI::Private::Inspector::ResultPtr InspectorColumn::inspect( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
 {
+	ConstInspectorPtr i = inspector( path, canceller );
+	if( !i )
+	{
+		return nullptr;
+	}
+
 	const ContextPtr inspectionContext = path.inspectionContext( canceller );
 	if( !inspectionContext )
 	{
@@ -91,7 +107,7 @@ GafferSceneUI::Private::Inspector::ResultPtr InspectorColumn::inspect( const Gaf
 	}
 
 	Context::Scope scope( inspectionContext.get() );
-	return m_inspector->inspect();
+	return i->inspect();
 }
 
 PathColumn::CellData InspectorColumn::cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
