@@ -248,6 +248,8 @@ void edit( Gaffer::ValuePlug *plug, const IECore::Object *value )
 // Inspector
 //////////////////////////////////////////////////////////////////////////
 
+IE_CORE_DEFINERUNTIMETYPED( Inspector )
+
 Inspector::Inspector( const std::string &type, const std::string &name, const Gaffer::PlugPtr &editScope )
 	:	m_type( type ), m_name( name ), m_editScope( editScope )
 {

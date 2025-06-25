@@ -126,23 +126,24 @@ class InspectorColumnTest( GafferUITest.TestCase ) :
 	def testInspectorColumnConstructors( self ) :
 
 		light = GafferSceneTest.TestLight()
+		path = GafferScene.ScenePath( light["out"], Gaffer.Context() )
 
 		inspector = GafferSceneUI.Private.AttributeInspector( light["out"], None, "gl:visualiser:scale" )
 
 		c = GafferSceneUI.Private.InspectorColumn( inspector, "label", "help!" )
-		self.assertEqual( c.inspector(), inspector )
+		self.assertEqual( c.inspector( path ), inspector )
 		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Default )
 		self.assertEqual( c.headerData().value, "Label" )
 		self.assertEqual( c.headerData().toolTip, "help!" )
 
 		c = GafferSceneUI.Private.InspectorColumn( inspector, "Fancy ( Label )", "" )
-		self.assertEqual( c.inspector(), inspector )
+		self.assertEqual( c.inspector( path ), inspector )
 		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Default )
 		self.assertEqual( c.headerData().value, "Fancy ( Label )" )
 		self.assertEqual( c.headerData().toolTip, "" )
 
 		c = GafferSceneUI.Private.InspectorColumn( inspector )
-		self.assertEqual( c.inspector(), inspector )
+		self.assertEqual( c.inspector( path ), inspector )
 		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Default )
 		self.assertEqual( c.headerData().value, "Gl:visualiser:scale" )
 		self.assertEqual( c.headerData().toolTip, "" )
@@ -152,7 +153,7 @@ class InspectorColumnTest( GafferUITest.TestCase ) :
 			GafferUI.PathColumn.CellData( value = "Fancy ( Label )", toolTip = "help!" ),
 			GafferUI.PathColumn.SizeMode.Stretch
 		)
-		self.assertEqual( c.inspector(), inspector )
+		self.assertEqual( c.inspector( path ), inspector )
 		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Stretch )
 		self.assertEqual( c.headerData().value, "Fancy ( Label )" )
 		self.assertEqual( c.headerData().toolTip, "help!" )
@@ -701,6 +702,34 @@ class InspectorColumnTest( GafferUITest.TestCase ) :
 				[ IECore.StringData( "s4" ), IECore.IntData( 4 ), IECore.FloatData( 400 ) ]
 			] )
 		)
+
+	def testInspect( self ) :
+
+		plane = GafferScene.Plane()
+		customAttributes = GafferScene.CustomAttributes()
+		customAttributes["in"].setInput( plane["out"] )
+		customAttributes["attributes"].addChild( Gaffer.NameValuePlug( "user:test", 10 ) )
+
+		inspector = GafferSceneUI.Private.AttributeInspector( customAttributes["out"], None, "user:test" )
+		column = GafferSceneUI.Private.InspectorColumn( inspector, "label", "help!" )
+
+		path = GafferScene.ScenePath( customAttributes["out"], Gaffer.Context(), "/plane" )
+		inspection = column.inspect( path )
+		self.assertIsInstance( inspection, GafferSceneUI.Private.Inspector.Result )
+		self.assertEqual( inspection.source(), customAttributes["attributes"][0] )
+		self.assertEqual( inspection.value(), IECore.IntData( 10 ) )
+
+	def testInspectorFromPath( self ) :
+
+		plane = GafferScene.Plane()
+		inspector1 = GafferSceneUI.Private.AttributeInspector( plane["out"], None, "user:test1" )
+		inspector2 = GafferSceneUI.Private.AttributeInspector( plane["out"], None, "user:test2" )
+		path = Gaffer.DictPath( { "inspector1" : inspector1, "inspector2" : inspector2 }, "/inspector1" )
+		column = GafferSceneUI.Private.InspectorColumn( "dict:value", GafferSceneUI.Private.InspectorColumn.CellData() )
+		self.assertTrue( column.inspector( path ).isSame( inspector1 ) )
+
+		path.setFromString( "/inspector2" )
+		self.assertTrue( column.inspector( path ).isSame( inspector2 ) )
 
 if __name__ == "__main__":
 	unittest.main()

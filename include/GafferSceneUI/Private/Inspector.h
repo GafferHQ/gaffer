@@ -45,7 +45,7 @@
 #include "Gaffer/EditScope.h"
 #include "Gaffer/Path.h"
 
-#include "IECore/RefCounted.h"
+#include "IECore/RunTimeTyped.h"
 
 #include "boost/multi_index/hashed_index.hpp"
 #include "boost/multi_index/member.hpp"
@@ -100,12 +100,12 @@ IE_CORE_FORWARDDECLARE( Inspector );
 ///   works in. We think this information can be stored in a dedicated TransformHistory
 ///   class provided by SceneAlgo, avoiding any need to specialise Inspector::Result.
 
-class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Signals::Trackable
+class GAFFERSCENEUI_API Inspector : public IECore::RunTimeTyped, public Gaffer::Signals::Trackable
 {
 
 	public :
 
-		IE_CORE_DECLAREMEMBERPTR( Inspector );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::Private::Inspector, InspectorTypeId, IECore::RunTimeTyped );
 		IE_CORE_FORWARDDECLARE( Result );
 
 		/// The type of property being inspected (for instance "attribute" or "parameter").

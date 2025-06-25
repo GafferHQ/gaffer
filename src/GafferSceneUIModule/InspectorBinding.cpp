@@ -121,7 +121,7 @@ void GafferSceneUIModule::bindInspector()
 	scope privateScope( privateModule );
 
 	{
-		scope inspectorScope = RefCountedClass<Inspector, IECore::RefCounted>( "Inspector" )
+		scope inspectorScope = RunTimeTypedClass<Inspector>( "Inspector" )
 			.def( "name", &Inspector::name, return_value_policy<copy_const_reference>() )
 			.def( "inspect", &inspectWrapper )
 			.def( "dirtiedSignal", &Inspector::dirtiedSignal, return_internal_reference<1>() )
@@ -158,15 +158,7 @@ void GafferSceneUIModule::bindInspector()
 		;
 	}
 
-	RefCountedClass<ParameterInspector, Inspector>( "ParameterInspector" )
-		.def(
-			init<const ScenePlugPtr &, const PlugPtr &, IECore::InternedString, const ShaderNetwork::Parameter &>(
-				( arg( "scene" ), arg( "attribute" ), arg( "parameter" ) )
-			)
-		)
-	;
-
-	RefCountedClass<AttributeInspector, Inspector>( "AttributeInspector" )
+	RunTimeTypedClass<AttributeInspector>( "AttributeInspector" )
 		.def(
 			init<const ScenePlugPtr &, const PlugPtr &, IECore::InternedString, const std::string &>(
 				( arg( "scene" ), arg( "editScope" ), arg( "attribute" ), arg( "name" ) = "" )
@@ -174,7 +166,15 @@ void GafferSceneUIModule::bindInspector()
 		)
 	;
 
-	RefCountedClass<SetMembershipInspector, Inspector>( "SetMembershipInspector" )
+	RunTimeTypedClass<ParameterInspector>( "ParameterInspector" )
+		.def(
+			init<const ScenePlugPtr &, const PlugPtr &, IECore::InternedString, const ShaderNetwork::Parameter &>(
+				( arg( "scene" ), arg( "attribute" ), arg( "parameter" ) )
+			)
+		)
+	;
+
+	RunTimeTypedClass<SetMembershipInspector>( "SetMembershipInspector" )
 		.def(
 			init<const ScenePlugPtr &, const PlugPtr &, IECore::InternedString>(
 				( arg( "scene" ), arg( "editScope" ), arg( "setName" ) )
@@ -182,7 +182,7 @@ void GafferSceneUIModule::bindInspector()
 		)
 	;
 
-	RefCountedClass<OptionInspector, Inspector>( "OptionInspector" )
+	RunTimeTypedClass<OptionInspector>( "OptionInspector" )
 		.def(
 			init<const ScenePlugPtr &, const PlugPtr &, IECore::InternedString>(
 				( arg( "scene" ), arg( "editScope" ), arg( "option" ) )

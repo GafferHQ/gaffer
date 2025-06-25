@@ -60,7 +60,7 @@ class GAFFERSCENEUI_API SetMembershipInspector : public Inspector
 			IECore::InternedString setName
 		);
 
-		IE_CORE_DECLAREMEMBERPTR( SetMembershipInspector );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::Private::SetMembershipInspector, SetMembershipInspectorTypeId, Inspector );
 
 	protected :
 

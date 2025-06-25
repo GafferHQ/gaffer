@@ -61,6 +61,11 @@ enum TypeId
 	RenderPassPathTypeId = 121017,
 	VisualiserToolTypeId = 121018,
 	ImageSelectionToolTypeId = 121019,
+	InspectorTypeId = 121020,
+	OptionInspectorTypeId = 121021,
+	AttributeInspectorTypeId = 121022,
+	ParameterInspectorTypeId = 121023,
+	SetMembershipInspectorTypeId = 121024,
 
 	LastTypeId = 121199
 };
