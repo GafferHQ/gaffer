@@ -702,5 +702,21 @@ class InspectorColumnTest( GafferUITest.TestCase ) :
 			] )
 		)
 
+	def testInspect( self ) :
+
+		plane = GafferScene.Plane()
+		customAttributes = GafferScene.CustomAttributes()
+		customAttributes["in"].setInput( plane["out"] )
+		customAttributes["attributes"].addChild( Gaffer.NameValuePlug( "user:test", 10 ) )
+
+		inspector = GafferSceneUI.Private.AttributeInspector( customAttributes["out"], None, "user:test" )
+		column = GafferSceneUI.Private.InspectorColumn( inspector, "label", "help!" )
+
+		path = GafferScene.ScenePath( customAttributes["out"], Gaffer.Context(), "/plane" )
+		inspection = column.inspect( path )
+		self.assertIsInstance( inspection, GafferSceneUI.Private.Inspector.Result )
+		self.assertEqual( inspection.source(), customAttributes["attributes"][0] )
+		self.assertEqual( inspection.value(), IECore.IntData( 10 ) )
+
 if __name__ == "__main__":
 	unittest.main()

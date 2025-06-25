@@ -195,10 +195,7 @@ class MuteColumn : public InspectorColumn
 
 			if( auto value = runTimeCast<const BoolData>( result.value ) )
 			{
-				ScenePlug::PathScope pathScope( scenePath->getContext(), &scenePath->names() );
-				pathScope.setCanceller( canceller );
-
-				Inspector::ConstResultPtr inspectorResult = inspector()->inspect();
+				Inspector::ConstResultPtr inspectorResult = inspect( path, canceller );
 				if( inspectorResult->sourceType() != Inspector::Result::SourceType::Fallback )
 				{
 					result.icon = value->readable() ? m_muteIconData : m_unMuteIconData;
@@ -297,10 +294,7 @@ class SetMembershipColumn : public InspectorColumn
 			{
 				if( value->readable() )
 				{
-					ScenePlug::PathScope pathScope( scenePath->getContext(), &scenePath->names() );
-					pathScope.setCanceller( canceller );
-
-					Inspector::ConstResultPtr inspectorResult = inspector()->inspect();
+					Inspector::ConstResultPtr inspectorResult = inspect( path, canceller );
 					if( inspectorResult->sourceType() != Inspector::Result::SourceType::Fallback )
 					{
 						result.icon = m_setMemberIconData;

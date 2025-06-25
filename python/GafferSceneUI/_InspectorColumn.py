@@ -80,15 +80,9 @@ def __editSelectedCells( pathListing, quickBoolean = True, ensureEnabled = False
 	for selection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
 		for pathString in selection.paths() :
 			path.setFromString( pathString )
-			inspectionContext = path.inspectionContext()
-			if inspectionContext is None :
-				continue
-
-			with inspectionContext :
-				inspection = column.inspector().inspect()
-
-				if inspection is not None :
-					inspections.append( inspection )
+			inspection = column.inspect( path )
+			if inspection is not None :
+				inspections.append( inspection )
 
 	if len( inspections ) == 0 :
 		with GafferUI.PopupWindow() as __inspectorColumnPopup :
@@ -140,28 +134,23 @@ def __toggleableInspections( pathListing ) :
 	for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
 		for pathString in columnSelection.paths() :
 			path.setFromString( pathString )
-			inspectionContext = path.inspectionContext()
-			if inspectionContext is None :
+			inspection = column.inspect( path )
+			if inspection is None :
 				continue
 
-			with inspectionContext :
-				inspection = column.inspector().inspect()
-				if inspection is None :
-					continue
+			canReenableEdit = False
+			if not inspection.canDisableEdit() and inspection.editable() :
+				edit = inspection.acquireEdit( createIfNecessary = False )
+				canReenableEdit = isinstance( edit, ( Gaffer.NameValuePlug, Gaffer.OptionalValuePlug, Gaffer.TweakPlug ) ) and Gaffer.Metadata.value( edit, "inspector:disabledEdit" )
+				if canReenableEdit :
+					toggleShouldDisable = False
 
-				canReenableEdit = False
-				if not inspection.canDisableEdit() and inspection.editable() :
-					edit = inspection.acquireEdit( createIfNecessary = False )
-					canReenableEdit = isinstance( edit, ( Gaffer.NameValuePlug, Gaffer.OptionalValuePlug, Gaffer.TweakPlug ) ) and Gaffer.Metadata.value( edit, "inspector:disabledEdit" )
-					if canReenableEdit :
-						toggleShouldDisable = False
-
-				if canReenableEdit or inspection.canDisableEdit() :
-					inspections.append( inspection )
-				elif nonEditableReason == "" :
-					# Prefix reason with the column header to disambiguate when more than one column has selection
-					nonEditableReason = "{} : ".format( column.headerData().value ) if len( [ x for x in pathListing.getSelection() if not x.isEmpty() ] ) > 1 else ""
-					nonEditableReason += inspection.nonDisableableReason() if toggleShouldDisable else inspection.nonEditableReason()
+			if canReenableEdit or inspection.canDisableEdit() :
+				inspections.append( inspection )
+			elif nonEditableReason == "" :
+				# Prefix reason with the column header to disambiguate when more than one column has selection
+				nonEditableReason = "{} : ".format( column.headerData().value ) if len( [ x for x in pathListing.getSelection() if not x.isEmpty() ] ) > 1 else ""
+				nonEditableReason += inspection.nonDisableableReason() if toggleShouldDisable else inspection.nonEditableReason()
 
 	return inspections, nonEditableReason, toggleShouldDisable
 
@@ -206,24 +195,19 @@ def __removableAttributeInspections( pathListing ) :
 			return []
 		for pathString in columnSelection.paths() :
 			path.setFromString( pathString )
-			inspectionContext = path.inspectionContext()
-			if inspectionContext is None :
-				continue
-
-			with inspectionContext :
-				inspection = column.inspector().inspect()
-				if inspection is not None and inspection.editable() :
-					source = inspection.source()
-					if (
-						( isinstance( source, Gaffer.TweakPlug ) and source["mode"].getValue() != Gaffer.TweakPlug.Mode.Remove ) or
-						( isinstance( source, Gaffer.ValuePlug ) and len( source.children() ) == 2 and "Added" in source and "Removed" in source ) or
-						inspection.editScope() is not None
-					) :
-						inspections.append( inspection )
-					else :
-						return []
+			inspection = column.inspect( path )
+			if inspection is not None and inspection.editable() :
+				source = inspection.source()
+				if (
+					( isinstance( source, Gaffer.TweakPlug ) and source["mode"].getValue() != Gaffer.TweakPlug.Mode.Remove ) or
+					( isinstance( source, Gaffer.ValuePlug ) and len( source.children() ) == 2 and "Added" in source and "Removed" in source ) or
+					inspection.editScope() is not None
+				) :
+					inspections.append( inspection )
 				else :
 					return []
+			else :
+				return []
 
 	return inspections
 
@@ -306,9 +290,7 @@ def __inspectionSelection( pathListing ) :
 
 def __inspect( pathListing, column, path ) :
 
-	with path.inspectionContext() :
-		inspection = column.inspector().inspect()
-
+	inspection = column.inspect( path )
 	if inspection is None :
 		return
 
@@ -517,17 +499,11 @@ def __dragEnter( column, path, pathListing, event ) :
 	if path is None :
 		return False
 
-	inspectionContext = path.inspectionContext()
-	if inspectionContext is None :
+	inspection = column.inspect( path )
+	if inspection is None :
 		return False
 
-	with inspectionContext :
-		inspection = column.inspector().inspect()
-		if inspection is None :
-			return False
-
-		__updatePointer( column, inspection, event )
-
+	__updatePointer( column, inspection, event )
 	return True
 
 def __dragLeave( column, path, pathListing, event ) :
@@ -546,17 +522,11 @@ def __dragMove( column, path, pathListing, event ) :
 	if path is None :
 		return False
 
-	inspectionContext = path.inspectionContext()
-	if inspectionContext is None :
+	inspection = column.inspect( path )
+	if inspection is None :
 		return False
 
-	with inspectionContext :
-		inspection = column.inspector().inspect()
-		if inspection is None :
-			return False
-
-		__updatePointer( column, inspection, event )
-
+	__updatePointer( column, inspection, event )
 	return True
 
 def __updatePointer( column, inspection, event ) :
@@ -605,31 +575,26 @@ def __drop( column, path, pathListing, event ) :
 	if path is None :
 		return False
 
-	inspectionContext = path.inspectionContext()
-	if inspectionContext is None :
-		return False
-
 	global __originalDragPointer
 	if __originalDragPointer is not None :
 		GafferUI.Pointer.setCurrent( __originalDragPointer )
 		__originalDragPointer = None
 
-	with inspectionContext :
-		inspection = column.inspector().inspect()
-		if inspection is None :
-			return True
+	inspection = column.inspect( path )
+	if inspection is None :
+		return True
 
-		if __dropMode( column, inspection, event ) == __DropMode.NotEditable :
-			__warningPopup( pathListing, "Cannot modify set expressions containing operators with drag and drop." )
-			return True
+	if __dropMode( column, inspection, event ) == __DropMode.NotEditable :
+		__warningPopup( pathListing, "Cannot modify set expressions containing operators with drag and drop." )
+		return True
 
-		data = __dropData( column, inspection, event )
-		if not inspection.canEdit( data ) :
-			__warningPopup( pathListing, inspection.nonEditableReason( data ) or "Unable to edit." )
-			return True
+	data = __dropData( column, inspection, event )
+	if not inspection.canEdit( data ) :
+		__warningPopup( pathListing, inspection.nonEditableReason( data ) or "Unable to edit." )
+		return True
 
-		with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
-			inspection.edit( data )
+	with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
+		inspection.edit( data )
 
 	return True
 
@@ -899,27 +864,22 @@ def __pasteFunctionsOrNonPasteableReason( pathListing, objectMatrix ) :
 	for rowIndex, (pathString, columns) in enumerate( selection ) :
 		sourceIndex = 0
 		path.setFromString( pathString )
-		inspectionContext = path.inspectionContext()
-		if inspectionContext is None :
-			return "\"{}\" is not editable.".format( pathString )
+		for column in columns :
+			inspection = column.inspect( path )
+			if inspection is None :
+				return "\"{}\" is not editable.".format( pathString )
 
-		with inspectionContext :
-			for column in columns :
-				inspection = column.inspector().inspect()
-				if inspection is None :
-					return "\"{}\" is not editable.".format( pathString )
+			value = __matrixValue( objectMatrix, rowIndex, sourceIndex )
+			sourceIndex += 1
+			if value is None :
+				continue
 
-				value = __matrixValue( objectMatrix, rowIndex, sourceIndex )
-				sourceIndex += 1
-				if value is None :
-					continue
-
-				if inspection.canEdit( value ) :
-					pasteFunctions.append( functools.partial( inspection.edit, value ) )
-				elif len( columns ) > 1 :
-					return "{} : {}".format( column.headerData().value, inspection.nonEditableReason( value ) )
-				else :
-					return inspection.nonEditableReason( value )
+			if inspection.canEdit( value ) :
+				pasteFunctions.append( functools.partial( inspection.edit, value ) )
+			elif len( columns ) > 1 :
+				return "{} : {}".format( column.headerData().value, inspection.nonEditableReason( value ) )
+			else :
+				return inspection.nonEditableReason( value )
 
 	return pasteFunctions
 

@@ -82,18 +82,22 @@ GafferSceneUI::Private::Inspector *InspectorColumn::inspector() const
 	return m_inspector.get();
 }
 
-PathColumn::CellData InspectorColumn::cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
+GafferSceneUI::Private::Inspector::ResultPtr InspectorColumn::inspect( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
 {
-	CellData result;
-
 	const ContextPtr inspectionContext = path.inspectionContext( canceller );
 	if( !inspectionContext )
 	{
-		return result;
+		return nullptr;
 	}
 
 	Context::Scope scope( inspectionContext.get() );
-	Inspector::ConstResultPtr inspectorResult = m_inspector->inspect();
+	return m_inspector->inspect();
+}
+
+PathColumn::CellData InspectorColumn::cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
+{
+	CellData result;
+	Inspector::ConstResultPtr inspectorResult = inspect( path, canceller );
 	if( !inspectorResult )
 	{
 		return result;

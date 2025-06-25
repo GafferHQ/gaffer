@@ -64,6 +64,7 @@ class GAFFERSCENEUI_API InspectorColumn : public GafferUI::PathColumn
 
 		/// Returns the inspector used by this column.
 		GafferSceneUI::Private::Inspector *inspector() const;
+		GafferSceneUI::Private::Inspector::ResultPtr inspect( const Gaffer::Path &path, const IECore::Canceller *canceller = nullptr ) const;
 
 		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override;
 		CellData headerData( const IECore::Canceller *canceller ) const override;
