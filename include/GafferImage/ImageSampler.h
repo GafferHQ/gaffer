@@ -105,4 +105,6 @@ class GAFFERIMAGE_API ImageSampler : public Gaffer::ComputeNode
 
 };
 
+IE_CORE_DECLAREPTR( ImageSampler )
+
 } // namespace GafferImage
