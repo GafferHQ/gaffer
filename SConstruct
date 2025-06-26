@@ -374,6 +374,13 @@ options.Add(
 	"",
 )
 
+options.Add(
+	"GAFFER_COMMAND",
+	"Gaffer command to be called during install to process gaffer files "
+	"like generating extensions and documentation.",
+	[ "$BUILD_DIR/bin/{}".format( "gaffer.cmd" if sys.platform == "win32" else "gaffer" ) ],
+)
+
 options.Add( "GAFFER_MILESTONE_VERSION", "Milestone version", str( gafferMilestoneVersion ) )
 options.Add( "GAFFER_MAJOR_VERSION", "Major version", str( gafferMajorVersion ) )
 options.Add( "GAFFER_MINOR_VERSION", "Minor version", str( gafferMinorVersion ) )
@@ -2000,11 +2007,9 @@ def exportExtensions( target, source, env ) :
 
 		exportScript.close()
 
+		gafferCmdArgs = [ env.subst( x ) for x in env["GAFFER_COMMAND"] ]
 		subprocess.check_call(
-			[
-				shutil.which( "gaffer.cmd" if sys.platform == "win32" else "gaffer", path = env["ENV"]["PATH"] ),
-				"env", "python", exportScript.name
-			],
+			gafferCmdArgs + [ "env", "python", exportScript.name ],
 			env = env["ENV"]
 		)
 
@@ -2269,17 +2274,19 @@ def generateDocs( target, source, env ) :
 	localFile = os.path.basename( str(source[0]) )
 
 	ext = os.path.splitext( localFile )[1]
-	gafferCmd = shutil.which( "gaffer.cmd" if sys.platform == "win32" else "gaffer", path = env["ENV"]["PATH"] )
+
+	gafferCmdArgs = [ env.subst( x ) for x in env["GAFFER_COMMAND"] ]
+
 	command = []
 	if localFile == "screengrab.py" :
-		command = [ gafferCmd, "screengrab", "-commandFile", localFile ]
+		command = gafferCmdArgs + [ "screengrab", "-commandFile", localFile ]
 	elif ext == ".py" :
-		command = [ gafferCmd, "env", "python", localFile ]
+		command = gafferCmdArgs + [ "env", "python", localFile ]
 	elif ext == ".sh" :
 		if sys.platform == "win32" :
-			command = [ gafferCmd, "env", "sh", "./" + localFile ]
+			command = gafferCmdArgs + [ "env", "sh", "./" + localFile ]
 		else :
-			command = [ gafferCmd, "env", "./" + localFile ]
+			command = gafferCmdArgs + [ "env", "./" + localFile ]
 	if command :
 		sys.stdout.write( "Running {0}\n".format( os.path.join( root, localFile ) ) )
 		subprocess.check_call( command, cwd = root, env = env["ENV"] )
