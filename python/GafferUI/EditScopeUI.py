@@ -203,7 +203,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __plugInputChanged( self, plug ) :
 
-		if plug.getName() == "in" and plug.parent() == self.getPlug().node() :
+		if plug == self.__inPlug() :
 			# The result of `__inputNode()` will have changed.
 			self.__acquireContextTracker()
 		elif plug == self.getPlug() :
@@ -213,7 +213,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __acquireContextTracker( self ) :
 
-		if "in" in self.getPlug().node() :
+		if self.__inPlug() is not None :
 			self.__contextTracker = GafferUI.ContextTracker.acquire( self.__inputNode() )
 		else :
 			self.__contextTracker = GafferUI.ContextTracker.acquireForFocus( self.getPlug() )
@@ -318,19 +318,23 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.getPlug().setInput( plug )
 
+	def __inPlug( self ) :
+
+		p = self.getPlug().node().getChild( "in" )
+		return p[0] if isinstance( p, Gaffer.ArrayPlug ) else p
+
 	def __inputNode( self ) :
 
-		node = self.getPlug().node()
 		# We assume that our plug is on a node dedicated to holding settings for the
 		# UI, and if the node has an `in` plug, it is connected to the node in the graph
 		# that is being viewed. We start our node graph traversal at the viewed node
 		# (we can't start at _this_ node, as then we will visit our own input connection
 		# which may no longer be upstream of the viewed node).
-		if "in" in node :
-			if node["in"].getInput() is None :
+		inPlug = self.__inPlug()
+		if inPlug is not None :
+			if inPlug.getInput() is None :
 				return None
-
-			inputNode = node["in"].getInput().node()
+			inputNode = inPlug.getInput().node()
 		else :
 			# Our node doesn't have an `in` plug so fall back to using the focus node
 			# as the starting point for node graph traversal.
