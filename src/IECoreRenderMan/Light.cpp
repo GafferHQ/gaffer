@@ -305,6 +305,10 @@ void Light::assignID( uint32_t id )
 {
 }
 
+void Light::assignInstanceID( uint32_t id )
+{
+}
+
 void Light::updateLightFilterShader( const IECoreScene::ConstShaderNetworkPtr &lightFilterShader )
 {
 	if( m_lightInstance == riley::LightInstanceId::InvalidId() )

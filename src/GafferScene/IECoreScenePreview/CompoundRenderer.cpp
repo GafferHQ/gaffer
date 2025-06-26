@@ -216,6 +216,17 @@ struct CompoundObjectInterface : public IECoreScenePreview::Renderer::ObjectInte
 		}
 	}
 
+	void assignInstanceID( uint32_t instanceID ) override
+	{
+		for( auto &o : objects )
+		{
+			if( o )
+			{
+				o->assignInstanceID( instanceID );
+			}
+		}
+	}
+
 	/// See comment for CompoundAttributesInterface::attributes.
 	std::array<IECoreScenePreview::Renderer::ObjectInterfacePtr, 2> objects;
 
