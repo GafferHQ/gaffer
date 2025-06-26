@@ -427,6 +427,7 @@ void GafferSceneModule::bindIECoreScenePreview()
 			.def( "attributes", &Renderer::ObjectInterface::attributes )
 			.def( "link", &objectInterfaceLink )
 			.def( "assignID", &Renderer::ObjectInterface::assignID )
+			.def( "assignInstanceID", &Renderer::ObjectInterface::assignInstanceID )
 		;
 	}
 
@@ -547,6 +548,7 @@ void GafferSceneModule::bindIECoreScenePreview()
 		.def( "numAttributeEdits", &CapturingRenderer::CapturedObject::numAttributeEdits )
 		.def( "numLinkEdits", &CapturingRenderer::CapturedObject::numLinkEdits )
 		.def( "id", &CapturingRenderer::CapturedObject::id )
+		.def( "instanceID", &CapturingRenderer::CapturedObject::instanceID )
 	;
 
 	{

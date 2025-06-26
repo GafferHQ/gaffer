@@ -288,6 +288,7 @@ const AtString g_cameraArnoldString( "camera" );
 const AtString g_catclarkArnoldString("catclark");
 const AtString g_colorManagerArnoldString( "color_manager" );
 const AtString g_cortexIDArnoldString( "cortex:id" );
+const AtString g_cortexInstanceIDArnoldString( "cortex:instanceID" );
 const AtString g_customAttributesArnoldString( "custom_attributes" );
 const AtString g_curvesArnoldString("curves");
 const AtString g_dispMapArnoldString( "disp_map" );
@@ -841,9 +842,9 @@ class ArnoldOutput : public IECore::RefCounted
 			return m_updateInteractively;
 		}
 
-		bool requiresIDAOV() const
+		bool requiresIDAOV( const std::string name ) const
 		{
-			return m_data == "id";
+			return m_data == name;
 		}
 
 		const IECore::InternedString &driverName()
@@ -2584,6 +2585,22 @@ class ArnoldObjectBase : public IECoreScenePreview::Renderer::ObjectInterface
 			}
 		}
 
+		void assignInstanceID( uint32_t instanceID ) override
+		{
+			if( AtNode *node = m_instance.node() )
+			{
+				if(
+					AiNodeLookUpUserParameter( node, g_cortexInstanceIDArnoldString ) ||
+					AiNodeDeclare( node, g_cortexInstanceIDArnoldString, "constant FLOAT" )
+				)
+				{
+					float bitcastID;
+					memcpy( &bitcastID, &instanceID, 4 );
+					AiNodeSetFlt( node, g_cortexInstanceIDArnoldString, bitcastID );
+				}
+			}
+		}
+
 		const Instance &instance() const
 		{
 			return m_instance;
@@ -3340,6 +3357,7 @@ const IECore::InternedString g_colorManagerOptionName( "ai:color_manager" );
 const IECore::InternedString g_enableProgressiveRenderOptionName( "ai:enable_progressive_render" );
 const IECore::InternedString g_idAOVShaderOptionName( "ai:aov_shader:__cortexID" );
 const IECore::InternedString g_imagerOptionName( "ai:imager" );
+const IECore::InternedString g_instanceIDAOVShaderOptionName( "ai:aov_shader:__cortexInstanceID" );
 const IECore::InternedString g_logFileNameOptionName( "ai:log:filename" );
 const IECore::InternedString g_logMaxWarningsOptionName( "ai:log:max_warnings" );
 const IECore::InternedString g_pluginSearchPathOptionName( "ai:plugin_searchpath" );
@@ -3915,7 +3933,8 @@ class ArnoldGlobals
 
 		void render()
 		{
-			updateIDAOV();
+			updateIDAOV( "id", g_cortexIDArnoldString.c_str(), g_idAOVShaderOptionName );
+			updateIDAOV( "instanceID", g_cortexInstanceIDArnoldString.c_str(), g_instanceIDAOVShaderOptionName );
 			updateCameraMeshes();
 			updateDrivers();
 
@@ -4279,7 +4298,7 @@ class ArnoldGlobals
 			}
 		}
 
-		void updateIDAOV()
+		void updateIDAOV( const std::string &name, const std::string &attributeName, const IECore::InternedString &shaderOptionName )
 		{
 			// Arnold actually declares a built in `ID` AOV, but it doesn't seem to
 			// do anything. So we have to emulate one using an AOV shader of our own.
@@ -4288,33 +4307,33 @@ class ArnoldGlobals
 			bool needAOV = false;
 			for( const auto &output : m_outputs )
 			{
-				if( output.second->requiresIDAOV() )
+				if( output.second->requiresIDAOV( name ) )
 				{
 					needAOV = true;
 					break;
 				}
 			}
 
-			const bool haveAOV = m_aovShaders.find( g_idAOVShaderOptionName ) != m_aovShaders.end();
+			const bool haveAOV = m_aovShaders.find( shaderOptionName ) != m_aovShaders.end();
 			if( needAOV && !haveAOV )
 			{
 				IECoreScene::ShaderNetworkPtr network = new IECoreScene::ShaderNetwork;
 				network->addShader(
 					"userData",
-					new IECoreScene::Shader( "user_data_float", "ai:shader", { { "attribute", new IECore::StringData( "cortex:id" ) } } )
+					new IECoreScene::Shader( "user_data_float", "ai:shader", { { "attribute", new IECore::StringData( attributeName ) } } )
 				);
 				network->addShader(
 					"aovWrite",
-					new IECoreScene::Shader( "aov_write_float", "ai:shader", { { "aov_name", new IECore::StringData( "id" ) } })
+					new IECoreScene::Shader( "aov_write_float", "ai:shader", { { "aov_name", new IECore::StringData( name ) } })
 				);
 				network->addConnection( { { "userData", "" }, { "aovWrite", "aov_input" } } );
 				network->setOutput( { "aovWrite", "" } );
 
-				option( g_idAOVShaderOptionName, network.get() );
+				option( shaderOptionName, network.get() );
 			}
 			else if( !needAOV && haveAOV )
 			{
-				option( g_idAOVShaderOptionName, nullptr );
+				option( shaderOptionName, nullptr );
 			}
 		}
 

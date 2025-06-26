@@ -238,7 +238,7 @@ bool CapturingRenderer::CapturedAttributes::unrenderableAttributeValue( const Ca
 //////////////////////////////////////////////////////////////////////////
 
 CapturingRenderer::CapturedObject::CapturedObject( CapturingRenderer *renderer, const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times )
-	:	m_renderer( renderer ), m_name( name ), m_capturedSamples( samples.begin(), samples.end() ), m_capturedSampleTimes( times ), m_numAttributeEdits( 0 ), m_id( 0 )
+	:	m_renderer( renderer ), m_name( name ), m_capturedSamples( samples.begin(), samples.end() ), m_capturedSampleTimes( times ), m_numAttributeEdits( 0 ), m_id( 0 ), m_instanceID( 0 )
 {
 }
 
@@ -324,6 +324,11 @@ uint32_t CapturingRenderer::CapturedObject::id() const
 	return m_id;
 }
 
+uint32_t CapturingRenderer::CapturedObject::instanceID() const
+{
+	return m_instanceID;
+}
+
 void CapturingRenderer::CapturedObject::transform( const Imath::M44f &transform )
 {
 	m_renderer->checkPaused();
@@ -371,4 +376,10 @@ void CapturingRenderer::CapturedObject::assignID( uint32_t id )
 {
 	m_renderer->checkPaused();
 	m_id = id;
+}
+
+void CapturingRenderer::CapturedObject::assignInstanceID( uint32_t instanceID )
+{
+	m_renderer->checkPaused();
+	m_instanceID = instanceID;
 }

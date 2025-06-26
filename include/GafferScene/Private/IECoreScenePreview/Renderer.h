@@ -214,6 +214,8 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 				/// AOV that can be referenced via `output()`.
 				virtual void assignID( uint32_t id ) = 0;
 
+				virtual void assignInstanceID( uint32_t id ) = 0;
+
 			protected :
 
 				~ObjectInterface() override;

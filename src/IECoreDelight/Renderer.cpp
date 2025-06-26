@@ -368,10 +368,18 @@ class DelightOutput : public IECore::RefCounted
 				variableName = "z";
 				variableSource = "builtin";
 			}
-
-			if( variableName == "id" )
+			else if( variableName == "id" )
 			{
 				variableName = "cortexId";
+				variableSource = "attribute";
+			}
+			else if( variableName == "instanceID" )
+			{
+				// \todo : It feels messy to use upper case ID here, but "Id" for the actual channel
+				// name in the image. But it would perhaps be even weirder to correct this for
+				// cortexInstanceId and not cortexId and fixing cortexId could break compability with
+				// existing image files ... so maybe we're stuck with this?
+				variableName = "cortexInstanceId";
 				variableSource = "attribute";
 			}
 
@@ -1176,6 +1184,37 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 			NSISetAttribute( m_idAttributesHandle.context(), m_idAttributesHandle.name(), 1, &param );
 		}
 
+		void assignInstanceID( uint32_t instanceID ) override
+		{
+			// \todo - I think this should work, but it hasn't been tested yet because our 3delight
+			// backend doesn't yet support encapsulated instancers - worth keeping this code around?
+			if( !m_instanceIDAttributesHandle )
+			{
+				m_instanceIDAttributesHandle = DelightHandle(
+					m_transformHandle.context(), string( m_transformHandle.name() ) + ":__instanceIDAttributes", m_transformHandle.ownership(), "attributes"
+				);
+				NSIConnect(
+					m_transformHandle.context(),
+					m_instanceIDAttributesHandle.name(), "",
+					m_transformHandle.name(), "shaderattributes",
+					0, nullptr
+				);
+			}
+			NSIParam_t param = {
+				"cortexInstanceID",
+				&instanceID,
+				// Deliberately declaring as `float` even though it is an
+				// integer. This lets us render the full range of integer values
+				// out of a float AOV through type-punning. 3Delight does have
+				// integer AOVs, but they are broken, and don't preserve integer
+				// input values.
+				NSITypeFloat,
+				0, 1, // array length, count
+				0 // flags
+			};
+			NSISetAttribute( m_instanceIDAttributesHandle.context(), m_instanceIDAttributesHandle.name(), 1, &param );
+		}
+
 	protected :
 
 		const DelightHandle m_transformHandle;
@@ -1187,6 +1226,7 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 
 		DelightHandleSharedPtr m_instance;
 		DelightHandle m_idAttributesHandle;
+		DelightHandle m_instanceIDAttributesHandle;
 
 		bool m_haveTransform;
 

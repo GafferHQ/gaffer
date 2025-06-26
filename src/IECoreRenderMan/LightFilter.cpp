@@ -151,3 +151,7 @@ void LightFilter::link( const IECore::InternedString &type, const IECoreScenePre
 void LightFilter::assignID( uint32_t id )
 {
 }
+
+void LightFilter::assignInstanceID( uint32_t id )
+{
+}

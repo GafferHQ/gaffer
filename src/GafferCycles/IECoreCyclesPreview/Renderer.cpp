@@ -1937,6 +1937,11 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			m_object->set_pass_id( id );
 		}
 
+		void assignInstanceID( uint32_t id ) override
+		{
+			// Instance IDs not needed in Cycles, because encapsulated instancers aren't supported.
+		}
+
 	private :
 
 		ccl::Scene *m_scene;
@@ -2013,6 +2018,10 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 		void assignID( uint32_t id ) override
 		{
 			/// \todo Implement me
+		}
+
+		void assignInstanceID( uint32_t instanceID ) override
+		{
 		}
 
 		// Used by LightLinker
@@ -2201,6 +2210,10 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 		}
 
 		void assignID( uint32_t id ) override
+		{
+		}
+
+		void assignInstanceID( uint32_t instanceID ) override
 		{
 		}
 

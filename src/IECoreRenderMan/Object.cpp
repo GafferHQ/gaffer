@@ -201,3 +201,8 @@ void Object::assignID( uint32_t id )
 	m_extraAttributes.SetInteger( Rix::k_identifier_id, id );
 	attributes( m_attributes.get() );
 }
+
+void Object::assignInstanceID( uint32_t id )
+{
+	// \todo : This will be needed once our RenderMan backend supports encapsulated instancers
+}

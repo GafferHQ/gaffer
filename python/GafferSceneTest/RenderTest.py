@@ -665,6 +665,96 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 
 			self.assertEqual( manifest.pathForID( id ), expectedObject )
 
+	def testInstanceIDOutput( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["camera"] = GafferScene.Camera()
+		script["camera"]["transform"]["translate"]["z"].setValue( 5 )
+
+		script["plane"] = GafferScene.Plane()
+
+		script["filter"] = GafferScene.PathFilter()
+		script["filter"]["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+
+		script["instancer"] = GafferScene.Instancer()
+		script["instancer"]["in"].setInput( script["plane"]["out"] )
+		script["instancer"]["prototypes"].setInput( script["plane"]["out"] )
+		script["instancer"]["filter"].setInput( script["filter"]["out"] )
+		script["instancer"]["encapsulate"].setValue( True )
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["in"].setInput( script["camera"]["out"] )
+		script["parent"]["parent"].setValue( "/" )
+
+		script["parent"]["children"][0].setInput( script["instancer"]["out"] )
+
+		imagePath = self.temporaryDirectory() / "test.exr"
+		beautyPath = self.temporaryDirectory() / "beauty.exr"
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				beautyPath.as_posix(),
+				"exr",
+				"rgba"
+			)
+		)
+
+		script["outputs"]["in"].setInput( script["parent"]["out"] )
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["in"].setInput( script["outputs"]["out"] )
+		script["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		script["options"]["options"]["render:camera"]["value"].setValue( "/camera" )
+
+		script["rendererOptions"] = self._createOptions()
+		script["rendererOptions"]["in"].setInput( script["options"]["out"] )
+
+		script["render"] = GafferScene.Render()
+		script["render"]["in"].setInput( script["rendererOptions"]["out"] )
+		script["render"]["renderer"].setValue( self.renderer )
+
+		script["outputs"].addOutput(
+			"instanceID",
+			IECoreScene.Output(
+				imagePath.as_posix(),
+				"exr",
+				"float instanceID",
+				{
+					"layerName" : "instanceID",
+					"filter" : "closest",
+				},
+			)
+		)
+
+		script["render"]["task"].execute()
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( imagePath )
+
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( reader["out"] )
+		sampler["channels"].setValue( IECore.StringVectorData( [ "instanceID" ] * 4 ) )
+		sampler["interpolate"].setValue( False )
+
+		for pixel, expectedID in {
+			imath.V2f( 260, 360 ) : 2,
+			imath.V2f( 400, 360 ) : 3,
+			imath.V2f( 260, 160 ) : 0,
+			imath.V2f( 400, 160 ) : 1,
+		}.items() :
+
+			sampler["pixel"].setValue( pixel )
+			id = sampler["color"]["r"].getValue()
+
+			# Reinterpret float as int.
+			id = struct.pack( "f", id )
+			id = struct.unpack( "I", id )[0]
+
+			self.assertEqual( id, expectedID )
+
 	## Should be implemented by derived classes to return
 	# an appropriate Shader node with a diffuse surface shader loaded, along
 	# with the plug for the colour parameter and the output plug to be connected
