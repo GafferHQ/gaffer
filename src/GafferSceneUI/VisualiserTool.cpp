@@ -589,6 +589,79 @@ auto stringFromValue = []( auto &&value ) -> std::string
 	return "";
 };
 
+/// Returns a new primitive with a `P` variable suitable for representing the uniform variables.
+PrimitivePtr uniformPPrimitive( const Primitive *primitive )
+{
+	if( primitive->typeId() != MeshPrimitive::staticTypeId() )
+	{
+		return nullptr;
+	}
+
+	const V3fVectorData *pData = primitive->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+	if( !pData )
+	{
+		return nullptr;
+	}
+	const std::vector<V3f> &p = pData->readable();
+
+	PrimitivePtr result = primitive->copy();
+
+	std::vector<V3f> centerP;
+
+	MeshPrimitive *meshPrimitive = runTimeCast<MeshPrimitive>( result.get() );
+
+	/// For triangles, we take the average of the vertex positions. For polygons with more than three vertices
+	/// `IECoreScene::MeshAlgo::triangulate()` uses fan triangulation with the first vertex as the common point.
+	/// To get a point close to the center of the face and on the triangulated surface, we take the center point
+	/// of one of two lines. For faces with an even number of points, we use the midpoint of the edge from
+	/// p(0) to p(n/2). For faces with an odd number of points, we use the midpoint of the center-line of the center
+	/// triangle, which is the midpoint of the line from p(0) to midpoint( p(n/2), p(n/2 + 1)).
+
+	centerP.reserve( meshPrimitive->numFaces() );
+
+	const std::vector<int> &vertsPerFace = meshPrimitive->verticesPerFace()->readable();
+	const std::vector<int> &verts = meshPrimitive->vertexIds()->readable();
+
+	int pI = 0;
+	for( int faceI = 0, eFaceI = meshPrimitive->numFaces(); faceI < eFaceI; ++faceI )
+	{
+		const int numFaceVerts = vertsPerFace[faceI];
+
+		if( numFaceVerts == 3 )
+		{
+			centerP.push_back(
+				(
+					p[verts[pI]] +
+					p[verts[pI + 1]] +
+					p[verts[pI + 2]]
+				) * ( 1.f / 3.f )
+			);
+		}
+		else
+		{
+			const V3f p0 = p[verts[pI]];
+			V3f p1;
+
+			const int halfI = numFaceVerts / 2;
+			if( numFaceVerts % 2 == 0 )
+			{
+				p1 = p[verts[pI + halfI]];
+			}
+			else
+			{
+				p1 = ( p[verts[pI + halfI]] + p[verts[pI + halfI + 1]] ) * 0.5f;
+			}
+			centerP.push_back( ( p0 + p1 ) * 0.5f );
+		}
+
+		pI += numFaceVerts;
+	}
+
+	result->variables["P"] = PrimitiveVariable( PrimitiveVariable::Interpolation::Uniform, new V3fVectorData( centerP ) );
+
+	return result;
+}
+
 //-----------------------------------------------------------------------------
 // VisualiserGadget
 //-----------------------------------------------------------------------------
@@ -1316,16 +1389,8 @@ class VisualiserGadget : public Gadget
 
 				if( dataName == g_faceIndexDataName || labelDataInterpolation == PrimitiveVariable::Interpolation::Uniform )
 				{
-					try
-					{
-						primitive = runTimeCast<const Primitive>( location.uniformPScene().objectPlug()->getValue() );
-
-						if( !primitive )
-						{
-							continue;
-						}
-					}
-					catch( const std::exception & )
+					primitive = uniformPPrimitive( primitive.get() );
+					if( !primitive )
 					{
 						continue;
 					}
