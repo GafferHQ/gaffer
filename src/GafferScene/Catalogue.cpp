@@ -634,8 +634,8 @@ class Catalogue::InternalImage : public ImageNode
 					m_writer->fileNamePlug()->setValue( filePath );
 
 					// Set up a spreadsheet that will set the data type to full 32 bit floats when storing the
-					// "id" channel. We are currently using integers bitcast to floats for ids ... converting
-					// these to 16 bit floats completely destroys the data.
+					// "id" or "instanceID" channel. We are currently using integers bitcast to floats for ids
+					// ... converting these to 16 bit floats completely destroys the data.
 					StringPlug *dataTypePlug = m_writer->fileFormatSettingsPlug( "openexr" )->getChild<StringPlug>( "dataType" );
 
 					Gaffer::SpreadsheetPtr spreadsheet = new Gaffer::Spreadsheet();
@@ -643,8 +643,9 @@ class Catalogue::InternalImage : public ImageNode
 					spreadsheet->selectorPlug()->setValue( "${imageWriter:channelName}" );
 					spreadsheet->rowsPlug()->addColumn( new Gaffer::StringPlug( "dataType", Gaffer::Plug::Direction::In, "half" ) );
 					Spreadsheet::RowPlug *row = spreadsheet->rowsPlug()->addRow();
-					row->namePlug()->setValue( "id" );
+					row->namePlug()->setValue( "id instanceID" );
 					row->cellsPlug()->getChild<Spreadsheet::CellPlug>(0)->valuePlug<StringPlug>()->setValue( "float" );
+
 					dataTypePlug->setInput( spreadsheet->outPlug()->getChild<Plug>( 0 ) );
 
 					if( renderManifest )
