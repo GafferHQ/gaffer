@@ -1519,11 +1519,11 @@ _styleSheet = string.Template(
 	}
 
 	#gafferColorInspector,
-	#gafferImageSelectionStatus,
 	*[gafferClass="GafferSceneUI.TransformToolUI._SelectionWidget"],
 	*[gafferClass="GafferSceneUI.CropWindowToolUI._StatusWidget"],
 	*[gafferClass="GafferSceneUI.TransformToolUI._TargetTipWidget"] > QFrame,
 	*[gafferClass="GafferSceneUI.InteractiveRenderUI._ViewRenderControlUI"] > QFrame,
+	*[gafferClass="GafferSceneUI.ImageSelectionToolUI._StatusWidget"],
 	*[gafferClass="GafferSceneUI._SceneViewInspector"] > QFrame
 	{
 		background: rgba( 42, 42, 42, 240 );
@@ -1570,8 +1570,7 @@ _styleSheet = string.Template(
 		margin-right: auto;
 	}
 
-	#gafferColorInspector,
-	#gafferImageSelectionStatus
+	#gafferColorInspector
 	{
 		margin-left: $toolOverlayInset;
 		margin-right: $toolOverlayInset;

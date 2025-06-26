@@ -70,6 +70,9 @@ class GAFFERSCENEUI_API ImageSelectionTool : public GafferUI::Tool
 
 		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::ImageSelectionTool, ImageSelectionToolTypeId, GafferUI::Tool );
 
+		Gaffer::StringPlug *selectModePlug();
+		const Gaffer::StringPlug *selectModePlug() const;
+
 	private :
 
 		IE_CORE_FORWARDDECLARE( Rectangle );
@@ -82,13 +85,15 @@ class GAFFERSCENEUI_API ImageSelectionTool : public GafferUI::Tool
 
 		GafferImageUI::ImageGadget *imageGadget();
 
+		void updateRenderManifest();
+
 		void plugDirtied( const Gaffer::Plug *plug );
 
 		IECore::PathMatcher pathsForIDs( const std::vector<uint32_t> &ids );
 		void idsForPaths( const IECore::PathMatcher &paths, std::vector<uint32_t> &result );
 
-		uint32_t pixelID( const Imath::V2i &pixel );
-		std::unordered_set<uint32_t> rectIDs( const Imath::Box2i &rect );
+		std::optional<uint32_t> pixelID( const Imath::V2i &pixel, bool instance );
+		std::unordered_set<uint32_t> rectIDs( const Imath::Box2i &rect, bool instance );
 
 		void selectedPathsChanged();
 
