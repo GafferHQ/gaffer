@@ -69,10 +69,9 @@ Gaffer.Metadata.registerNode(
 	"toolbarLayout:customWidget:SelectionWidget:widgetType", "GafferSceneUI.ImageSelectionToolUI._StatusWidget",
 	"toolbarLayout:customWidget:SelectionWidget:section", "Bottom",
 
-	# So our widget doesn't center, add a stretchy spacer to the right
-	"toolbarLayout:customWidget:RightSpacer:widgetType", "GafferSceneUI.ImageSelectionToolUI._RightSpacer",
-	"toolbarLayout:customWidget:RightSpacer:section", "Bottom",
-	"toolbarLayout:customWidget:RightSpacer:index", -1,
+	"toolbarLayout:customWidget:LeftSpacer:widgetType", "GafferSceneUI.ImageSelectionToolUI._LeftSpacer",
+	"toolbarLayout:customWidget:LeftSpacer:section", "Bottom",
+	"toolbarLayout:customWidget:LeftSpacer:index", 0,
 
 	plugs = {
 
@@ -82,26 +81,47 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"selectMode" : [
+
+			"description",
+			"""
+			Determines the scene location that is ultimately selected or deselected,
+			which may differ from what is originally selected.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:Standard", "",
+			"preset:Instance", "instance",
+
+			"label", "Select",
+
+			"toolbarLayout:section", "Bottom",
+			"toolbarLayout:width", 150,
+
+		],
+
 	}
 
 )
 
-class _RightSpacer( GafferUI.Spacer ) :
+class _LeftSpacer( GafferUI.Spacer ) :
 
 	def __init__( self, imageView, **kw ) :
 
-		GafferUI.Spacer.__init__( self, size = imath.V2i( 0, 0 ) )
+		GafferUI.Spacer.__init__( self, size = imath.V2i( 20, 0 ), maximumSize = imath.V2i( 20, 0 ) )
 
-class _StatusWidget( GafferUI.ListContainer ) :
+class _StatusWidget( GafferUI.Frame ) :
 
 	def __init__( self, tool, **kw ) :
 
-		GafferUI.ListContainer.__init__( self, **kw )
+		GafferUI.Frame.__init__( self, borderWidth = 4, **kw )
+		try:
+			#GafferUI.ListContainer.__init__( self, **kw )
 
-		self.__tool = tool
+			self.__tool = tool
 
-		with self :
-			with GafferUI.Frame( borderWidth = 4 ) as self.__frame:
+			with self :
+				#with GafferUI.Frame( borderWidth = 4 ) as self.__frame:
 				with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) :
 
 					self.__infoIcon = GafferUI.Image( "infoSmall.png" )
@@ -110,12 +130,15 @@ class _StatusWidget( GafferUI.ListContainer ) :
 					GafferUI.Spacer( size = imath.V2i( 4 ), maximumSize = imath.V2i( 4 ) )
 					self.__label = GafferUI.Label( "" )
 					self.__label.setTextSelectable( True )
+					GafferUI.Spacer( size = imath.V2i( 0 ) )
 
-		self.__frame._qtWidget().setObjectName( "gafferImageSelectionStatus" )
+			self._qtWidget().setObjectName( "gafferImageSelectionStatus" )
 
-		self.__tool.statusChangedSignal().connect( Gaffer.WeakMethod( self.__update, fallbackResult = None ) )
+			self.__tool.statusChangedSignal().connect( Gaffer.WeakMethod( self.__update, fallbackResult = None ) )
 
-		self.__update()
+			self.__update()
+		except Exception as e:
+			print( e )
 
 	def scriptNode( self ) : # For LazyMethod's `deferUntilPlaybackStops`
 
@@ -130,18 +153,18 @@ class _StatusWidget( GafferUI.ListContainer ) :
 			return
 
 		status = self.__tool.status()
-		self.__frame.setVisible( bool(status) )
+		#self.__frame.setVisible( bool(status) )
 
 		state, _, message = status.partition( ":" )
 
 		self.__label.setText( message )
 
 		info = warn = error = False
-		if state == "error" :
+		if state == "error":
 			error = True
-		elif state == "warning" :
+		elif state == "warning":
 			warn = True
-		else :
+		else:
 			info = True
 
 		self.__infoIcon.setVisible( info )

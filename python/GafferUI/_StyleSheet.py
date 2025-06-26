@@ -1570,10 +1570,14 @@ _styleSheet = string.Template(
 		margin-right: auto;
 	}
 
-	#gafferColorInspector,
-	#gafferImageSelectionStatus
+	#gafferColorInspector
 	{
 		margin-left: $toolOverlayInset;
+		margin-right: $toolOverlayInset;
+	}
+
+	#gafferImageSelectionStatus
+	{
 		margin-right: $toolOverlayInset;
 	}
 
