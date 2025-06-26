@@ -46,6 +46,7 @@
 #include "GafferUI/Style.h"
 #include "GafferUI/ViewportGadget.h"
 
+#include "IECoreScene/CurvesPrimitive.h"
 #include "IECoreScene/MeshAlgo.h"
 #include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/MeshPrimitiveEvaluator.h"
@@ -128,7 +129,7 @@ const int g_primitiveVariablePrefixSize = g_primitiveVariablePrefix.size();
 // VertexLabel constants
 const float g_cursorRadius2 = 25.f * 25.f;
 const std::string g_vertexIndexDataName = "vertex:index";
-const std::string g_faceIndexDataName = "face:index";
+const std::string g_uniformIndexDataName = "uniform:index";
 
 //-----------------------------------------------------------------------------
 // Color shader
@@ -592,7 +593,7 @@ auto stringFromValue = []( auto &&value ) -> std::string
 /// Returns a new primitive with a `P` variable suitable for representing the uniform variables.
 PrimitivePtr uniformPPrimitive( const Primitive *primitive )
 {
-	if( primitive->typeId() != MeshPrimitive::staticTypeId() )
+	if( primitive->typeId() != MeshPrimitive::staticTypeId() && primitive->typeId() != CurvesPrimitive::staticTypeId() )
 	{
 		return nullptr;
 	}
@@ -608,53 +609,71 @@ PrimitivePtr uniformPPrimitive( const Primitive *primitive )
 
 	std::vector<V3f> centerP;
 
-	MeshPrimitive *meshPrimitive = runTimeCast<MeshPrimitive>( result.get() );
-
-	/// For triangles, we take the average of the vertex positions. For polygons with more than three vertices
-	/// `IECoreScene::MeshAlgo::triangulate()` uses fan triangulation with the first vertex as the common point.
-	/// To get a point close to the center of the face and on the triangulated surface, we take the center point
-	/// of one of two lines. For faces with an even number of points, we use the midpoint of the edge from
-	/// p(0) to p(n/2). For faces with an odd number of points, we use the midpoint of the center-line of the center
-	/// triangle, which is the midpoint of the line from p(0) to midpoint( p(n/2), p(n/2 + 1)).
-
-	centerP.reserve( meshPrimitive->numFaces() );
-
-	const std::vector<int> &vertsPerFace = meshPrimitive->verticesPerFace()->readable();
-	const std::vector<int> &verts = meshPrimitive->vertexIds()->readable();
-
-	int pI = 0;
-	for( int faceI = 0, eFaceI = meshPrimitive->numFaces(); faceI < eFaceI; ++faceI )
+	if( MeshPrimitive *meshPrimitive = runTimeCast<MeshPrimitive>( result.get() ) )
 	{
-		const int numFaceVerts = vertsPerFace[faceI];
+		/// For triangles, we take the average of the vertex positions. For polygons with more than three vertices
+		/// `IECoreScene::MeshAlgo::triangulate()` uses fan triangulation with the first vertex as the common point.
+		/// To get a point close to the center of the face and on the triangulated surface, we take the center point
+		/// of one of two lines. For faces with an even number of points, we use the midpoint of the edge from
+		/// p(0) to p(n/2). For faces with an odd number of points, we use the midpoint of the center-line of the center
+		/// triangle, which is the midpoint of the line from p(0) to midpoint( p(n/2), p(n/2 + 1)).
 
-		if( numFaceVerts == 3 )
-		{
-			centerP.push_back(
-				(
-					p[verts[pI]] +
-					p[verts[pI + 1]] +
-					p[verts[pI + 2]]
-				) * ( 1.f / 3.f )
-			);
-		}
-		else
-		{
-			const V3f p0 = p[verts[pI]];
-			V3f p1;
+		centerP.reserve( meshPrimitive->numFaces() );
 
-			const int halfI = numFaceVerts / 2;
-			if( numFaceVerts % 2 == 0 )
+		const std::vector<int> &vertsPerFace = meshPrimitive->verticesPerFace()->readable();
+		const std::vector<int> &verts = meshPrimitive->vertexIds()->readable();
+
+		int pI = 0;
+		for( int faceI = 0, eFaceI = meshPrimitive->numFaces(); faceI < eFaceI; ++faceI )
+		{
+			const int numFaceVerts = vertsPerFace[faceI];
+
+			if( numFaceVerts == 3 )
 			{
-				p1 = p[verts[pI + halfI]];
+				centerP.push_back(
+					(
+						p[verts[pI]] +
+						p[verts[pI + 1]] +
+						p[verts[pI + 2]]
+					) * ( 1.f / 3.f )
+				);
 			}
 			else
 			{
-				p1 = ( p[verts[pI + halfI]] + p[verts[pI + halfI + 1]] ) * 0.5f;
-			}
-			centerP.push_back( ( p0 + p1 ) * 0.5f );
-		}
+				const V3f p0 = p[verts[pI]];
+				V3f p1;
 
-		pI += numFaceVerts;
+				const int halfI = numFaceVerts / 2;
+				if( numFaceVerts % 2 == 0 )
+				{
+					p1 = p[verts[pI + halfI]];
+				}
+				else
+				{
+					p1 = ( p[verts[pI + halfI]] + p[verts[pI + halfI + 1]] ) * 0.5f;
+				}
+				centerP.push_back( ( p0 + p1 ) * 0.5f );
+			}
+
+			pI += numFaceVerts;
+		}
+	}
+	else
+	{
+		/// For curves, just put the label on the first vertex of each curve.
+
+		CurvesPrimitive *curvesPrimitive = runTimeCast<CurvesPrimitive>( result.get() );
+		centerP.reserve( curvesPrimitive->numCurves() );
+
+		const std::vector<int> &vertsPerCurve = curvesPrimitive->verticesPerCurve()->readable();
+
+		int pI = 0;
+		for( int curveI = 0, eCurveI = curvesPrimitive->numCurves(); curveI < eCurveI; ++curveI )
+		{
+			centerP.push_back( p[pI] );
+
+			pI += vertsPerCurve[curveI];
+		}
 	}
 
 	result->variables["P"] = PrimitiveVariable( PrimitiveVariable::Interpolation::Uniform, new V3fVectorData( centerP ) );
@@ -1323,7 +1342,7 @@ class VisualiserGadget : public Gadget
 				ConstDataPtr labelData = nullptr;
 				PrimitiveVariable::Interpolation labelDataInterpolation = PrimitiveVariable::Interpolation::Invalid;
 
-				if( dataName != g_vertexIndexDataName && dataName != g_faceIndexDataName )
+				if( dataName != g_vertexIndexDataName && dataName != g_uniformIndexDataName )
 				{
 					labelData = primitive->expandedVariableData<Data>(
 						primitiveVariableName,
@@ -1338,11 +1357,13 @@ class VisualiserGadget : public Gadget
 
 					else
 					{
-						if( primitive->typeId() != MeshPrimitive::staticTypeId() )
+						if(
+							primitive->typeId() != MeshPrimitive::staticTypeId() &&
+							primitive->typeId() != CurvesPrimitive::staticTypeId()
+						)
 						{
 							continue;
 						}
-						/// \todo support curves
 
 						labelData = primitive->expandedVariableData<Data>(
 							primitiveVariableName,
@@ -1387,7 +1408,7 @@ class VisualiserGadget : public Gadget
 					}
 				}
 
-				if( dataName == g_faceIndexDataName || labelDataInterpolation == PrimitiveVariable::Interpolation::Uniform )
+				if( dataName == g_uniformIndexDataName || labelDataInterpolation == PrimitiveVariable::Interpolation::Uniform )
 				{
 					primitive = uniformPPrimitive( primitive.get() );
 					if( !primitive )
