@@ -43,6 +43,7 @@
 
 #include "GafferScene/AttributeQuery.h"
 #include "GafferScene/BoundQuery.h"
+#include "GafferScene/CameraQuery.h"
 #include "GafferScene/ExistenceQuery.h"
 #include "GafferScene/FilterQuery.h"
 #include "GafferScene/OptionQuery.h"
@@ -113,8 +114,23 @@ NameValuePlugPtr addQuery( T &query, const ValuePlug &plug, const std::string &p
 	return result;
 }
 
+StringPlugPtr addQuery2( GafferScene::CameraQuery &query, const ValuePlug &plug, const std::string &parameter )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+
+	StringPlug *result = query.addQuery( &plug, parameter );
+
+	return result;
+}
+
 template<typename T>
 void removeQuery( T &query, NameValuePlug &plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	query.removeQuery( &plug );
+}
+
+void removeQuery2( GafferScene::CameraQuery &query, StringPlug &plug )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	query.removeQuery( &plug );
@@ -126,8 +142,18 @@ const BoolPlugPtr existsPlugFromQuery( const T &q, const NameValuePlug &p )
 	return const_cast<BoolPlug *>( q.existsPlugFromQuery( &p ) );
 }
 
+const StringPlugPtr sourcePlugFromQuery( const GafferScene::CameraQuery &q, const StringPlug &p )
+{
+	return const_cast<StringPlug *>( q.sourcePlugFromQuery( &p ) );
+}
+
 template<typename T>
 const ValuePlugPtr valuePlugFromQuery( const T &q, const NameValuePlug &p )
+{
+	return const_cast<ValuePlug *>( q.valuePlugFromQuery( &p ) );
+}
+
+const ValuePlugPtr valuePlugFromQuery2( const GafferScene::CameraQuery &q, const StringPlug &p )
 {
 	return const_cast<ValuePlug *>( q.valuePlugFromQuery( &p ) );
 }
@@ -138,10 +164,20 @@ const ValuePlugPtr outPlugFromQuery( const T &q, const NameValuePlug &p )
 	return const_cast<ValuePlug *>( q.outPlugFromQuery( &p ) );
 }
 
+const ValuePlugPtr outPlugFromQuery2( const GafferScene::CameraQuery &q, const StringPlug &p )
+{
+	return const_cast<ValuePlug *>( q.outPlugFromQuery( &p ) );
+}
+
 template<typename T>
 const NameValuePlugPtr queryPlug( const T &q, const ValuePlug &p )
 {
 	return const_cast<NameValuePlug *>( q.queryPlug( &p ) );
+}
+
+const StringPlugPtr queryPlug2( const GafferScene::CameraQuery &q, const ValuePlug &p )
+{
+	return const_cast<StringPlug *>( q.queryPlug( &p ) );
 }
 
 template<typename T>
@@ -161,6 +197,24 @@ class MultiQuerySerialiser : public NodeSerialiser
 				serialiser->constructor( queryPlug->valuePlug(), serialisation ) +
 				" )\n"
 			;
+		}
+
+		return result;
+	}
+};
+
+class CameraQuerySerialiser : public NodeSerialiser
+{
+	std::string postConstructor( const GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const override
+	{
+		std::string result = NodeSerialiser::postConstructor( graphComponent, identifier, serialisation );
+
+		const GafferScene::CameraQuery *node = static_cast<const GafferScene::CameraQuery *>( graphComponent );
+		for( const auto &queryPlug : StringPlug::Range( *node->queriesPlug() ) )
+		{
+			const auto plug = node->valuePlugFromQuery( queryPlug.get() );
+			const Serialisation::Serialiser *serialiser = Serialisation::acquireSerialiser( plug );
+			result += identifier + ".addQuery( " + serialiser->constructor( plug, serialisation ) + " )\n";
 		}
 
 		return result;
@@ -219,6 +273,23 @@ void GafferSceneModule::bindQueries()
 			.value( "Local", GafferScene::BoundQuery::Space::Local )
 			.value( "World", GafferScene::BoundQuery::Space::World )
 			.value( "Relative", GafferScene::BoundQuery::Space::Relative )
+		;
+	}
+
+	{
+		boost::python::scope s = GafferBindings::DependencyNodeClass<GafferScene::CameraQuery>()
+			.def( "addQuery", &addQuery2, ( arg( "plug" ), arg( "parameter" ) = "" ) )
+			.def( "removeQuery", &removeQuery2 )
+			.def( "sourcePlugFromQuery", &sourcePlugFromQuery )
+			.def( "valuePlugFromQuery", &valuePlugFromQuery2 )
+			.def( "outPlugFromQuery", &outPlugFromQuery2 )
+			.def( "queryPlug", &queryPlug2 )
+		;
+		GafferBindings::Serialisation::registerSerialiser( GafferScene::CameraQuery::staticTypeId(), new CameraQuerySerialiser() );
+
+		boost::python::enum_<GafferScene::CameraQuery::CameraMode>( "CameraMode" )
+			.value( "RenderCamera", GafferScene::CameraQuery::CameraMode::RenderCamera )
+			.value( "Location", GafferScene::CameraQuery::CameraMode::Location )
 		;
 	}
 
