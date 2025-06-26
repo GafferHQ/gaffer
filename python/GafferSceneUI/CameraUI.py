@@ -410,7 +410,7 @@ __overrideMetadata = {
 __optionsToOverride = {
 	"render:filmFit": "renderSettingOverrides.filmFit",
 	"render:shutter": "renderSettingOverrides.shutter",
-	"render:renderResolution": "renderSettingOverrides.resolution",
+	"render:resolution": "renderSettingOverrides.resolution",
 	"render:pixelAspectRatio": "renderSettingOverrides.pixelAspectRatio",
 	"render:resolutionMultiplier": "renderSettingOverrides.resolutionMultiplier",
 	"render:overscan": "renderSettingOverrides.overscan",
@@ -418,7 +418,7 @@ __optionsToOverride = {
 	"render:overscanRight": "renderSettingOverrides.overscanRight",
 	"render:overscanTop": "renderSettingOverrides.overscanTop",
 	"render:overscanBottom": "renderSettingOverrides.overscanBottom",
-	"render:renderCropWindow": "renderSettingOverrides.cropWindow",
+	"render:cropWindow": "renderSettingOverrides.cropWindow",
 	"render:depthOfField": "renderSettingOverrides.depthOfField",
 }
 
