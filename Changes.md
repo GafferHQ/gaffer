@@ -8,6 +8,7 @@ Features
 - ImageSelectionTool : Added new tool that allows selecting scene paths based on an image. Works with both Catalogue images and images on disk. Has two requirements : an `id` AOV (added using the `ID` preset on an `Outputs` node), and a render manifest (added using StandardOptions > Render Manifest > File Path ).
 - ColorInspectorTool : Moved the Viewer's colour inspectors into a dedicated tool, selected from the toolbar on the left.
 - OSLObject : Added the ability to use `pointcloud_search()` and `pointcloud_get()` to query geometry from arbitrary scene locations.
+- CameraQuery : Added a new node to query camera parameters (#6431).
 - Cycles : Updated to version 4.4.0.
 
 Improvements
