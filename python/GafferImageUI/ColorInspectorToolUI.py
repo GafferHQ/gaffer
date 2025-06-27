@@ -53,11 +53,14 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	The default tool for an image view - shows the color values for what is under the cursor, and allows
-	Ctrl-clicking or Ctrl-dragging to create persistent pixel or region inspectors.
+	Tool for showing color values.
+	- Mouse over a pixel to show the color value.
+	- Supports dragging color values from a pixel.
+	- <kbd>Ctrl</kbd> + click to create a persistent pixel inspector.
+	- <kbd>Ctrl</kbd> + drag to create a persistent region inspector.
 	""",
 
-	#"viewer:shortCut", "Q", #TODO - choose shortuct
+	"viewer:shortCut", "I",
 	"order", 0,
 
 	"nodeToolbar:bottom:type", "GafferUI.StandardNodeToolbar.bottom",
@@ -71,7 +74,7 @@ Gaffer.Metadata.registerNode(
 
 		"active" : [
 
-			"boolPlugValueWidget:image", "rgba.png"
+			"boolPlugValueWidget:image", "gafferImageUIColorInspectorTool.png"
 
 		],
 
@@ -83,10 +86,13 @@ Gaffer.Metadata.registerNode(
 		],
 
 		"inspectors.*" : [
-			"description",
-			"""
-			Display the value of the pixel under the cursor. Ctrl-click to add an inspector to a pixel, or
-			Ctrl-drag to create an area inspector. Display shows value of each channel, hue/saturation/value, and Exposure Value which is measured in stops relative to 18% grey.
+			"description", lambda plug :
+			{
+				GafferImageUI.ColorInspectorTool.ColorInspectorPlug.Mode.Cursor : "Displays the color values of the pixel under the cursor.",
+				GafferImageUI.ColorInspectorTool.ColorInspectorPlug.Mode.Pixel : "Displays the color values of pixel inspector %s." % plug.getName()[9:],
+				GafferImageUI.ColorInspectorTool.ColorInspectorPlug.Mode.Area : "Displays the average color values of region inspector %s." % plug.getName()[9:],
+			}[ plug["mode"].getValue() ] + """
+			Display shows value of each channel, hue/saturation/value, and Exposure Value which is measured in stops relative to 18% grey.
 			""",
 			"label", "",
 			"plugValueWidget:type", "GafferImageUI.ColorInspectorToolUI._ColorInspectorPlugValueWidget",
@@ -274,7 +280,11 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__pixel = imath.V2f( 0 )
 		self.__createInspectorStartPosition = None
 
-		if plug.getName() == "ColorInspectorPlug":
+		if plug.getName() == "defaultInspector":
+			# \todo - it's kind of weird having these global functions implemented on whichever child plug
+			# has a default name. I think it would probably make a lot more sense to put these callbacks on
+			# _ColorInspectorsPlugValueWidget, but I don't want to do that refactor while I'm in the middle
+			# of changing other stuff.
 			viewportGadget = plug.node().view().viewportGadget()
 
 			viewportGadget.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ) )
@@ -303,10 +313,10 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __addInspector( self ):
 		parent = self.getPlug().parent()
 		suffix = 1
-		while "c" + str( suffix ) in parent:
+		while "inspector" + str( suffix ) in parent:
 			suffix += 1
 
-		parent.addChild( GafferImageUI.ColorInspectorTool.ColorInspectorPlug( "c" + str( suffix ) ) )
+		parent.addChild( GafferImageUI.ColorInspectorTool.ColorInspectorPlug( "inspector" + str( suffix ) ) )
 
 	def __addClick( self, mode ):
 		self.__addInspector()
@@ -548,7 +558,7 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 				prefix = '<font color="#779cbd">'
 				postfix = '</font>'
 
-			self.__indexLabel.setText( prefix + ( "" if mode == GafferImageUI.ColorInspectorTool.ColorInspectorPlug.Mode.Cursor else "<b>" + self.getPlug().getName()[1:] + "</b>" ) + postfix )
+			self.__indexLabel.setText( prefix + ( "" if mode == GafferImageUI.ColorInspectorTool.ColorInspectorPlug.Mode.Cursor else "<b>" + self.getPlug().getName()[9:] + "</b>" ) + postfix )
 			if type( sources[i] ) == imath.Box2i:
 				r = sources[i]
 				self.__positionLabels[i].setText( prefix + "<b>%i %i -> %i %i</b>" % ( r.min().x, r.min().y, r.max().x, r.max().y ) + postfix )
@@ -575,6 +585,10 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 			return imath.V2f( pixel.x, pixel.y )
 
 	def __mouseMove( self, viewportGadget, event ) :
+
+		if not self.getPlug().node()["active"].getValue():
+			return False
+
 		pixel = self.__eventPosition( viewportGadget, event, floor = False )
 
 		if pixel == self.__pixel :
@@ -587,6 +601,9 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		return True
 
 	def __buttonPress( self, viewportGadget, event ) :
+		if not self.getPlug().node()["active"].getValue():
+			return False
+
 		if event.buttons == event.Buttons.Left and not event.modifiers :
 			self.__createInspectorStartPosition = None
 			return True # accept press so we get dragBegin() for dragging color
@@ -640,6 +657,9 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		return compositedColor
 
 	def __dragEnter( self, viewportGadget, event ) :
+		if not self.getPlug().node()["active"].getValue():
+			return False
+
 		if not event.data.isSame( self.__nullObjectForViewportEvents ):
 			return False
 

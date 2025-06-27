@@ -41,14 +41,10 @@
 #include "GafferUI/Pointer.h"
 #include "GafferUI/Style.h"
 
-#include "GafferImage/DeepState.h"
-#include "GafferImage/ImageAlgo.h"
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/Sampler.h"
 
 #include "Gaffer/Metadata.h"
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/StringPlug.h"
 
 #include "IECore/NullObject.h"
 
@@ -866,7 +862,7 @@ ColorInspectorTool::ColorInspectorTool( View *view, const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new ArrayPlug( "inspectors", Plug::In, new ColorInspectorPlug(), 1, 1024, Plug::Default & ~Plug::AcceptsInputs ) );
+	addChild( new ArrayPlug( "inspectors", Plug::In, new ColorInspectorPlug( "defaultInspector" ), 1, 1024, Plug::Default & ~Plug::AcceptsInputs ) );
 
 	inspectorsPlug()->getChild<ColorInspectorPlug>( 0 )->modePlug()->setValue( (int)ColorInspectorPlug::Mode::Cursor );
 
@@ -875,12 +871,12 @@ ColorInspectorTool::ColorInspectorTool( View *view, const std::string &name )
 	evaluatorPlug->addChild( new Color4fPlug( "pixelColor" ) );
 	evaluatorPlug->addChild( new Color4fPlug( "areaColor" ) );
 
-	// We use `m_pixel` to fetch a context variable to transfer
+	// We use `m_contextQuery` to fetch a context variable to transfer
 	// the mouse position into `m_sampler`. We could use `mouseMoveSignal()`
 	// to instead call `m_sampler->pixelPlug()->setValue()`, but that
 	// would cause cancellation of the ImageView background compute every
 	// time the mouse was moved. The "colorInspector:source" variable is
-	// created in ImageViewUI's `_ColorInspectorPlugValueWidget`.
+	// created in `_ColorInspectorPlugValueWidget`.
 	V2fPlugPtr v2fTemplate = new Gaffer::V2fPlug( "v2fTemplate" );
 	m_contextQuery->addQuery( v2fTemplate.get(), "colorInspector:source" );
 
@@ -897,12 +893,14 @@ ColorInspectorTool::ColorInspectorTool( View *view, const std::string &name )
 	m_deleteContextVariables->setup( dummyImage.get() );
 	m_deleteContextVariables->variablesPlug()->setValue( "colorInspector:source" );
 
-	// We want to sample the image before the display transforms
-	// are applied. We can't simply get this image from inPlug()
-	// because derived classes may have called insertConverter(),
-	// so we take it from the input to the display transform chain.
+	ImageGadget *imageGadget = static_cast<ImageGadget *>( view->viewportGadget()->getPrimaryChild() );
 
-	ImagePlug *image = view->getPreprocessor()->getChild<DeepState>( "__flattenedImage" )->getChild<ImagePlug>( "out" );
+	// We want to inspect the same image we are displaying in the ImageGadget ( this includes some preprocessing
+	// by ImageView such as selecting the correct view ), so we take the plug from the ImageGadget as our input.
+
+	// TODO - is this const_cast safe? I guess technically not ... but when would we ever have the ImageGadget
+	// connected to something that it wasn't safe to pass to setInput?
+	ImagePlug *image = const_cast< ImagePlug* >( imageGadget->getImage() );
 	m_deleteContextVariables->inPlug()->setInput( image );
 	m_sampler->imagePlug()->setInput( m_deleteContextVariables->outPlug() );
 
@@ -917,7 +915,9 @@ ColorInspectorTool::ColorInspectorTool( View *view, const std::string &name )
 	m_areaSampler->areaPlug()->setInput( box2iValuePlug );
 	evaluatorPlug->getChild<Color4fPlug>( "areaColor" )->setInput( m_areaSampler->averagePlug() );
 
-	ImageGadget *imageGadget = static_cast<ImageGadget *>( view->viewportGadget()->getPrimaryChild() );
+	m_gadgets = new ContainerGadget();
+	view->viewportGadget()->addChild( m_gadgets );
+
 	imageGadget->channelsChangedSignal().connect( boost::bind( &ColorInspectorTool::channelsChanged, this ) );
 
 	inspectorsPlug()->childAddedSignal().connect( boost::bind( &ColorInspectorTool::colorInspectorAdded, this, ::_2 ) );
@@ -944,10 +944,16 @@ const Gaffer::ArrayPlug *ColorInspectorTool::inspectorsPlug() const
 
 void ColorInspectorTool::plugSet( Gaffer::Plug *plug )
 {
-	// Triggered from Python when a drag move happens on a Ctrl click, and we need to convert a
-	// pixel inspector to an area inspector.
-	if( plug->parent()->parent() == inspectorsPlug() )
+	if( plug == activePlug() )
 	{
+		bool active = activePlug()->getValue();
+		m_gadgets->setVisible( active );
+	}
+	else if( plug->parent()->parent() == inspectorsPlug() )
+	{
+		// Triggered from Python when a drag move happens on a Ctrl click, and we need to convert a
+		// pixel inspector to an area inspector.
+
 		ColorInspectorPlug *colorInspector = static_cast<ColorInspectorPlug*>( plug->parent() );
 		if( plug == colorInspector->modePlug() )
 		{
@@ -962,28 +968,28 @@ void ColorInspectorTool::colorInspectorAdded( GraphComponent *colorInspector )
 	ColorInspectorPlug *colorInspectorTyped = static_cast<ColorInspectorPlug*>( colorInspector );
 	if( colorInspectorTyped->modePlug()->getValue() == (int)ColorInspectorPlug::Mode::Pixel )
 	{
-		V2iGadget::Ptr r = new V2iGadget( colorInspectorTyped->pixelPlug(), colorInspector->getName().value().substr( 1 ) );
+		V2iGadget::Ptr r = new V2iGadget( colorInspectorTyped->pixelPlug(), colorInspector->getName().value().substr( 9 ) );
 		r->deleteClickedSignal().connect( boost::bind( &ColorInspectorTool::deleteClicked, this, ::_1 ) );
-		view()->viewportGadget()->addChild( r );
+		m_gadgets->addChild( r );
 	}
 	else
 	{
-		Box2iGadget::Ptr r = new Box2iGadget( colorInspectorTyped->areaPlug(), colorInspector->getName().value().substr( 1 ) );
+		Box2iGadget::Ptr r = new Box2iGadget( colorInspectorTyped->areaPlug(), colorInspector->getName().value().substr( 9 ) );
 		r->deleteClickedSignal().connect( boost::bind( &ColorInspectorTool::deleteClicked, this, ::_1 ) );
-		view()->viewportGadget()->addChild( r );
+		m_gadgets->addChild( r );
 	}
 }
 
 void ColorInspectorTool::colorInspectorRemoved( GraphComponent *colorInspector )
 {
 	ColorInspectorPlug *colorInspectorTyped = static_cast<ColorInspectorPlug*>( colorInspector );
-	for( auto &i : view()->viewportGadget()->children() )
+	for( auto &i : m_gadgets->children() )
 	{
 		if( Box2iGadget *boxGadget = runTimeCast<Box2iGadget>( i.get() ) )
 		{
 			if( boxGadget->getPlug() == colorInspectorTyped->areaPlug() )
 			{
-				view()->viewportGadget()->removeChild( i );
+				m_gadgets->removeChild( i );
 				return;
 			}
 		}
@@ -991,7 +997,7 @@ void ColorInspectorTool::colorInspectorRemoved( GraphComponent *colorInspector )
 		{
 			if( v2iGadget->getPlug() == colorInspectorTyped->pixelPlug() )
 			{
-				view()->viewportGadget()->removeChild( i );
+				m_gadgets->removeChild( i );
 				return;
 			}
 		}

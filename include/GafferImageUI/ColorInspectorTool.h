@@ -36,20 +36,20 @@
 
 #pragma once
 
+#include "GafferImageUI/Export.h"
 #include "GafferImageUI/ImageView.h"
 #include "GafferImageUI/ImageGadget.h"
-
-#include "GafferImageUI/Export.h"
 #include "GafferImageUI/TypeIds.h"
 
 #include "GafferImage/ImageSampler.h"
 #include "GafferImage/ImageStats.h"
 
+#include "GafferUI/DragDropEvent.h"
+#include "GafferUI/Tool.h"
+
 #include "Gaffer/ContextQuery.h"
 #include "Gaffer/DeleteContextVariables.h"
 
-#include "GafferUI/DragDropEvent.h"
-#include "GafferUI/Tool.h"
 
 namespace GafferImageUI
 {
@@ -110,6 +110,7 @@ class GAFFERIMAGEUI_API ColorInspectorTool : public GafferUI::Tool
 		GafferImage::ImageSamplerPtr m_sampler;
 		GafferImage::ImageStatsPtr m_areaSampler;
 
+		GafferUI::ContainerGadgetPtr m_gadgets;
 };
 
 IE_CORE_DECLAREPTR( ColorInspectorTool )

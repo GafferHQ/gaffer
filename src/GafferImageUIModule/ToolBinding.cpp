@@ -38,15 +38,8 @@
 
 #include "GafferImageUI/ColorInspectorTool.h"
 
-#include "GafferUI/Gadget.h"
-
 #include "GafferBindings/NodeBinding.h"
 #include "GafferBindings/PlugBinding.h"
-#include "GafferBindings/SignalBinding.h"
-
-#include "Gaffer/Context.h"
-
-//#include "IECorePython/ExceptionAlgo.h"
 
 using namespace std;
 using namespace boost::python;
