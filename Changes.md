@@ -39,7 +39,7 @@ Fixes
   - Fixed potential threading-related crashes.
 - RenderPassEditor : Fixed default values displayed for `dl:oversampling` and `dl:quality.shadingsamples` options.
 - PlugLayout : Fixed bug resolving `layout:index` metadata.
-- ScriptNodeAlgo : Stopped polluting the ScriptNode context with `ui:*` variables.
+- ScriptNodeAlgo : Stopped polluting the ScriptNode context with `ui:*` variables. Warnings are now emitted by the UI if anything else causes similar pollution.
 
 API
 ---

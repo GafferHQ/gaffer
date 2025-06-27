@@ -561,6 +561,10 @@ void ContextTracker::contextChanged( IECore::InternedString variable )
 	{
 		scheduleUpdate();
 	}
+	else
+	{
+		IECore::msg( IECore::Msg::Warning, "ContextTracker", fmt::format( "Unexpected context variable \"{}\". Should you be using ScriptNodeAlgo or Metadata instead?", variable.string() ) );
+	}
 }
 
 void ContextTracker::visit( std::deque<std::pair<const Plug *, ConstContextPtr>> &toVisit, NodeContexts &nodeContexts, PlugContexts &plugContexts, const IECore::Canceller *canceller )
