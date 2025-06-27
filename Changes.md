@@ -38,6 +38,7 @@ Fixes
   - Fixed potential threading-related crashes.
 - RenderPassEditor : Fixed default values displayed for `dl:oversampling` and `dl:quality.shadingsamples` options.
 - PlugLayout : Fixed bug resolving `layout:index` metadata.
+- ScriptNodeAlgo : Stopped polluting the ScriptNode context with `ui:*` variables.
 
 API
 ---
@@ -71,6 +72,7 @@ Breaking Changes
 - StandardAttributes : Changed the default value of the `linkedLights` plug to "defaultLights". Scripts loaded from earlier Gaffer versions containing `linkedLights` plugs set to the previous default of "" will need to be updated as those plugs will now default to "defaultLights".
 - ImageView : Changed image comparison hotkey from <kbd>Q</kbd> to <kbd>K</kbd> ( <kbd>Q</kbd> now selects the selection tool in the image view, same as in the scene view ).
 - ContextAlgo : Removed deprecated API. Use ScriptNodeAlgo instead, which has been available from Gaffer 1.4.13.0 onwards.
+- ScriptNodeAlgo : Reimplemented using Metadata rather than Context variables for storage. Use the ScriptNodeAlgo API instead of attempting direct access to `ui:*` context variables.
 
 Build
 -----
