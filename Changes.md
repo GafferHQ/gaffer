@@ -28,6 +28,11 @@ Build
 - SConstruct : Added `GAFFER_COMMAND` option to control the command to be called during install.
 - Cortex : Updated to version 10.5.15.1.
 
+API
+---
+
+- GraphComponent : Added support for `compatibility:childAlias:{aliasName}` metadata, which specifies the name of a child to be accessed via the alias `{aliasName}`. The Python methods `getChild()`, `__getitem__`, `__delitem__`, and `__contains__` now fall back to using aliases when a direct match is not found. This metadata can be registered to maintain compatibility when renaming plugs.
+
 1.5.15.0 (relative to 1.5.14.0)
 ========
 
