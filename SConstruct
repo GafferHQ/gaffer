@@ -330,15 +330,6 @@ options.Add(
 
 options.Add(
 	BoolVariable(
-		"GAFFERCORTEX",
-		"Builds and installs the GafferCortex modules. These are deprecated and will "
-		"be removed completely in a future version.",
-		False
-	)
-)
-
-options.Add(
-	BoolVariable(
 		"GAFFERUSD",
 		"Builds and installs the GafferUSD modules.",
 		True
@@ -1114,30 +1105,6 @@ libraries = {
 	},
 
 	"GafferDispatchUITest" : {},
-
-	"GafferCortex" : {
-		"envAppends" : {
-			"LIBS" : [ "Gaffer", "GafferDispatch" ],
-		},
-		"pythonEnvAppends" : {
-			"LIBS" : [ "GafferBindings", "GafferCortex", "GafferDispatch" ],
-		},
-		"requiredOptions" : [ "GAFFERCORTEX" ],
-	},
-
-	"GafferCortexTest" : {
-		"additionalFiles" : glob.glob( "python/GafferCortexTest/*/*" ) + glob.glob( "python/GafferCortexTest/*/*/*" ) + glob.glob( "python/GafferCortexTest/images/*" ),
-		"requiredOptions" : [ "GAFFERCORTEX" ],
-	},
-
-	"GafferCortexUI" : {
-		"apps" : [ "op" ],
-		"requiredOptions" : [ "GAFFERCORTEX" ],
-	},
-
-	"GafferCortexUITest" : {
-		"requiredOptions" : [ "GAFFERCORTEX" ],
-	},
 
 	"GafferScene" : {
 		"envAppends" : {
