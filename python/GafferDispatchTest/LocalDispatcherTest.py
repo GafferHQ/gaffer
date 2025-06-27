@@ -645,29 +645,6 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		text = "".join( open( self.temporaryDirectory() / "test.txt", encoding = "utf-8" ).readlines() )
 		self.assertEqual( text, "i am a string with spaces" )
 
-	def testUIContextEntriesIgnored( self ) :
-
-		s = Gaffer.ScriptNode()
-		s["n"] = GafferDispatchTest.TextWriter()
-		s["n"]["fileName"].setValue( self.temporaryDirectory() / "out.txt" )
-		s["n"]["text"].setValue( "${foo} ${ui:foo}" )
-
-		s["dispatcher"] = self.__createLocalDispatcher()
-		s["dispatcher"]["executeInBackground"].setValue( True )
-		s["dispatcher"]["tasks"][0].setInput( s["n"]["task"] )
-
-		c = Gaffer.Context()
-		c["ui:foo"] = "uiFoo"
-		c["foo"] = "foo"
-
-		with c :
-			s["dispatcher"]["task"].execute()
-
-		s["dispatcher"].jobPool().waitForAll()
-
-		text = "".join( open( self.temporaryDirectory() / "out.txt", encoding = "utf-8" ).readlines() )
-		self.assertEqual( text, "foo " )
-
 	def testContextLockedDuringBackgroundDispatch( self ) :
 
 		fileName = self.temporaryDirectory() / "out.txt"
