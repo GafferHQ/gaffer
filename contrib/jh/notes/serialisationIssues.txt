@@ -1,7 +1,0 @@
-* want to share preferences plug code with scriptnode plug code
-* need group nodes with children
-* need embedded scriptnodes
-* need to tidy everything
-* need to have dynamic children on non-dynamic compound plugs
-* need to serialise circular connections
-* need to be able to create macros
