@@ -168,7 +168,24 @@ GraphComponentPtr getChild( GraphComponent &g, const IECore::InternedString &n )
 
 GraphComponentPtr descendant( GraphComponent &g, const std::string &n )
 {
-	return g.descendant( n );
+	if( !n.size() )
+	{
+		return nullptr;
+	}
+
+	using Tokenizer = boost::tokenizer<boost::char_separator<char> >;
+	Tokenizer tokens( n, boost::char_separator<char>( "." ) );
+	GraphComponentPtr result = &g;
+	for( const auto &token : tokens )
+	{
+		result = getChild( *result, token );
+		if( !result )
+		{
+			return nullptr;
+		}
+	}
+
+	return result;
 }
 
 void throwKeyError( const GraphComponent &g, const IECore::InternedString &n )

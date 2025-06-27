@@ -1236,6 +1236,7 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		self.assertTrue( g.getChild( "c2alias" ).isSame( c2 ) )
 		self.assertTrue( g["c2alias"].isSame( c2 ) )
 		self.assertTrue( g["c2alias"]["gc1"].isSame( gc1 ) )
+		self.assertTrue( g.descendant( "c2alias.gc1" ).isSame( gc1 ) )
 
 		self.assertIn( "c1alias", g )
 		self.assertIn( "c2alias", g )
@@ -1243,10 +1244,14 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		self.assertNotIn( "c2alias", g.children() )
 
 		self.assertIsNone( g["c2"].getChild( "gc1alias") )
+		self.assertIsNone( g.descendant( "c2.gc1alias" ) )
 		Gaffer.Metadata.registerValue( g["c2"], "compatibility:childAlias:gc1alias", "gc1" )
 		self.assertTrue( g["c2"].getChild( "gc1alias" ).isSame( gc1 ) )
 		self.assertTrue( g["c2alias"]["gc1alias"].isSame( gc1 ) )
 		self.assertTrue( g["c2alias"].getChild( "gc1alias" ).isSame( gc1 ) )
+		self.assertTrue( g.descendant( "c2.gc1alias" ).isSame( gc1 ) )
+		self.assertTrue( g.descendant( "c2alias.gc1" ).isSame( gc1 ) )
+		self.assertTrue( g.descendant( "c2alias.gc1alias" ).isSame( gc1 ) )
 
 		self.assertIn( "gc1alias", g["c2"] )
 		self.assertIn( "gc1alias", g["c2alias"] )
