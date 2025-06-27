@@ -127,6 +127,9 @@ class ScriptNodeAlgoTest( GafferUITest.TestCase ) :
 		visibleSetCs1 = GafferTest.CapturingSlot( GafferSceneUI.ScriptNodeAlgo.visibleSetChangedSignal( script1 ) )
 		visibleSetCs2 = GafferTest.CapturingSlot( GafferSceneUI.ScriptNodeAlgo.visibleSetChangedSignal( script2 ) )
 
+		selectedPathsCs1 = GafferTest.CapturingSlot( GafferSceneUI.ScriptNodeAlgo.selectedPathsChangedSignal( script1 ) )
+		selectedPathsCs2 = GafferTest.CapturingSlot( GafferSceneUI.ScriptNodeAlgo.selectedPathsChangedSignal( script2 ) )
+
 		# Modifying one thing should signal for only that thing.
 
 		visibleSet = GafferScene.VisibleSet( inclusions = IECore.PathMatcher( [ "/A" ] ) )
@@ -134,11 +137,20 @@ class ScriptNodeAlgoTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( visibleSetCs1 ), 1 )
 		self.assertEqual( len( visibleSetCs2 ), 0 )
 
+		selectedPaths = IECore.PathMatcher( "/A" )
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script1, selectedPaths )
+		self.assertEqual( len( selectedPathsCs1 ), 1 )
+		self.assertEqual( len( selectedPathsCs2 ), 0 )
+
 		# A no-op shouldn't signal.
 
 		GafferSceneUI.ScriptNodeAlgo.setVisibleSet( script1, visibleSet )
 		self.assertEqual( len( visibleSetCs1 ), 1 )
 		self.assertEqual( len( visibleSetCs2 ), 0 )
+
+		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script1, selectedPaths )
+		self.assertEqual( len( selectedPathsCs1 ), 1 )
+		self.assertEqual( len( selectedPathsCs2 ), 0 )
 
 	def testVisibleSetExpansionUtilities( self ) :
 

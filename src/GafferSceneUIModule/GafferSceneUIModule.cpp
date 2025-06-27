@@ -36,7 +36,6 @@
 
 #include "boost/python.hpp"
 
-#include "ContextAlgoBinding.h"
 #include "HierarchyViewBinding.h"
 #include "InspectorBinding.h"
 #include "SceneGadgetBinding.h"
@@ -60,7 +59,6 @@ BOOST_PYTHON_MODULE( _GafferSceneUI )
 	bindVisualisers();
 	bindHierarchyView();
 	bindSceneGadget();
-	bindContextAlgo();
 	bindQueries();
 	bindInspector();
 	bindInspectorColumn();
