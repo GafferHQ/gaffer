@@ -37,33 +37,10 @@
 import Gaffer
 import GafferUSD
 
-class __AttributesPlugProxy( object ) :
+__aliases = {
+	"purpose" : "usd:purpose",
+	"kind" : "usd:kind",
+}
 
-	__renames = {
-		"purpose" : "usd:purpose",
-		"kind" : "usd:kind",
-	}
-
-	def __init__( self, attributesPlug ) :
-
-		self.__attributesPlug = attributesPlug
-
-	def __getitem__( self, key ) :
-
-		return self.__attributesPlug[self.__renames.get( key, key )]
-
-def __attributesGetItem( originalGetItem ) :
-
-	def getItem( self, key ) :
-
-		result = originalGetItem( self, key )
-		if key == "attributes" :
-			scriptNode = self.ancestor( Gaffer.ScriptNode )
-			if scriptNode is not None and scriptNode.isExecuting() :
-				return __AttributesPlugProxy( result )
-
-		return result
-
-	return getItem
-
-GafferUSD.USDAttributes.__getitem__ = __attributesGetItem( GafferUSD.USDAttributes.__getitem__ )
+for k, v in __aliases.items() :
+	Gaffer.Metadata.registerValue( GafferUSD.USDAttributes, "attributes", f"compatibility:childAlias:{k}", v )

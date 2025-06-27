@@ -34,17 +34,7 @@
 #
 ##########################################################################
 
+import Gaffer
 import GafferDispatch
 
-def __getItemWrapper( originalGetItem ):
-
-	def getItem( self, key ):
-
-		if key == "sequence":
-			key = "framesMode"
-
-		return originalGetItem( self, key )
-
-	return getItem
-
-GafferDispatch.PythonCommand.__getitem__ = __getItemWrapper( GafferDispatch.PythonCommand.__getitem__ )
+Gaffer.Metadata.registerValue( GafferDispatch.PythonCommand, "compatibility:childAlias:sequence", "framesMode" )

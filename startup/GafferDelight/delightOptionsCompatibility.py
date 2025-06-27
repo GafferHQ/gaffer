@@ -37,61 +37,38 @@
 import Gaffer
 import GafferDelight
 
-class __OptionsPlugProxy( object ) :
+__aliases = {
+	"bucketOrder" : "dl:bucketorder",
+	"numberOfThreads" : "dl:numberofthreads",
+	"renderAtLowPriority" : "dl:renderatlowpriority",
+	"oversampling" : "dl:oversampling",
+	"shadingSamples" : "dl:quality_shadingsamples",
+	"volumeSamples" : "dl:quality_volumesamples",
+	"clampIndirect" : "dl:clampindirect",
+	"importanceSampleFilter" : "dl:importancesamplefilter",
+	"showDisplacement" : "dl:show_displacement",
+	"showSubsurface" : "dl:show_osl_subsurface",
+	"showAtmosphere" : "dl:show_atmosphere",
+	"showMultipleScattering" : "dl:show_multiplescattering",
+	"showProgress" : "dl:statistics_progress",
+	"statisticsFileName" : "dl:statistics_filename",
+	"maximumRayDepthDiffuse" : "dl:maximumraydepth_diffuse",
+	"maximumRayDepthHair" : "dl:maximumraydepth_hair",
+	"maximumRayDepthReflection" : "dl:maximumraydepth_reflection",
+	"maximumRayDepthRefraction" : "dl:maximumraydepth_refraction",
+	"maximumRayDepthVolume" : "dl:maximumraydepth_volume",
+	"maximumRayLengthDiffuse" : "dl:maximumraylength_diffuse",
+	"maximumRayLengthHair" : "dl:maximumraylength_hair",
+	"maximumRayLengthReflection" : "dl:maximumraylength_reflection",
+	"maximumRayLengthRefraction" : "dl:maximumraylength_refraction",
+	"maximumRayLengthSpecular" : "dl:maximumraylength_specular",
+	"maximumRayLengthVolume" : "dl:maximumraylength_volume",
+	"textureMemory" : "dl:texturememory",
+	"networkCacheSize" : "dl:networkcache_size",
+	"networkCacheDirectory" : "dl:networkcache_directory",
+	"licenseServer" : "dl:license_server",
+	"licenseWait" : "dl:license_wait",
+}
 
-	__renames = {
-		"bucketOrder" : "dl:bucketorder",
-		"numberOfThreads" : "dl:numberofthreads",
-		"renderAtLowPriority" : "dl:renderatlowpriority",
-		"oversampling" : "dl:oversampling",
-		"shadingSamples" : "dl:quality_shadingsamples",
-		"volumeSamples" : "dl:quality_volumesamples",
-		"clampIndirect" : "dl:clampindirect",
-		"importanceSampleFilter" : "dl:importancesamplefilter",
-		"showDisplacement" : "dl:show_displacement",
-		"showSubsurface" : "dl:show_osl_subsurface",
-		"showAtmosphere" : "dl:show_atmosphere",
-		"showMultipleScattering" : "dl:show_multiplescattering",
-		"showProgress" : "dl:statistics_progress",
-		"statisticsFileName" : "dl:statistics_filename",
-		"maximumRayDepthDiffuse" : "dl:maximumraydepth_diffuse",
-		"maximumRayDepthHair" : "dl:maximumraydepth_hair",
-		"maximumRayDepthReflection" : "dl:maximumraydepth_reflection",
-		"maximumRayDepthRefraction" : "dl:maximumraydepth_refraction",
-		"maximumRayDepthVolume" : "dl:maximumraydepth_volume",
-		"maximumRayLengthDiffuse" : "dl:maximumraylength_diffuse",
-		"maximumRayLengthHair" : "dl:maximumraylength_hair",
-		"maximumRayLengthReflection" : "dl:maximumraylength_reflection",
-		"maximumRayLengthRefraction" : "dl:maximumraylength_refraction",
-		"maximumRayLengthSpecular" : "dl:maximumraylength_specular",
-		"maximumRayLengthVolume" : "dl:maximumraylength_volume",
-		"textureMemory" : "dl:texturememory",
-		"networkCacheSize" : "dl:networkcache_size",
-		"networkCacheDirectory" : "dl:networkcache_directory",
-		"licenseServer" : "dl:license_server",
-		"licenseWait" : "dl:license_wait",
-	}
-
-	def __init__( self, optionsPlug ) :
-
-		self.__optionsPlug = optionsPlug
-
-	def __getitem__( self, key ) :
-
-		return self.__optionsPlug[self.__renames.get( key, key )]
-
-def __optionsGetItem( originalGetItem ) :
-
-	def getItem( self, key ) :
-
-		result = originalGetItem( self, key )
-		if key == "options" :
-			scriptNode = self.ancestor( Gaffer.ScriptNode )
-			if scriptNode is not None and scriptNode.isExecuting() :
-				return __OptionsPlugProxy( result )
-
-		return result
-
-	return getItem
-
-GafferDelight.DelightOptions.__getitem__ = __optionsGetItem( GafferDelight.DelightOptions.__getitem__ )
+for k, v in __aliases.items() :
+	Gaffer.Metadata.registerValue( GafferDelight.DelightOptions, "options", f"compatibility:childAlias:{k}", v )

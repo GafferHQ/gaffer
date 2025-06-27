@@ -52,30 +52,8 @@ class __ChannelPlug( Gaffer.ShufflePlug ) :
 
 GafferImage.Shuffle.ChannelPlug = __ChannelPlug
 
-def __shufflePlugGetItem( originalGetItem ) :
+Gaffer.Metadata.registerValue( Gaffer.ShufflePlug, "compatibility:childAlias:in", "source" )
+Gaffer.Metadata.registerValue( Gaffer.ShufflePlug, "compatibility:childAlias:out", "destination" )
 
-	def getItem( self, key ) :
+Gaffer.Metadata.registerValue( GafferImage.Shuffle, "compatibility:childAlias:channels", "shuffles" )
 
-		if key == "in" :
-			key = "source"
-		elif key == "out" :
-			key = "destination"
-
-		return originalGetItem( self, key )
-
-	return getItem
-
-Gaffer.ShufflePlug.__getitem__ = __shufflePlugGetItem( Gaffer.ShufflePlug.__getitem__ )
-
-def __shuffleGetItem( originalGetItem ) :
-
-	def getItem( self, key ) :
-
-		if key == "channels" :
-			key = "shuffles"
-
-		return originalGetItem( self, key )
-
-	return getItem
-
-GafferImage.Shuffle.__getitem__ = __shuffleGetItem( GafferImage.Shuffle.__getitem__ )

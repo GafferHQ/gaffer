@@ -81,8 +81,8 @@ class USDAttributesTest( GafferSceneTest.SceneTestCase ) :
 		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "usdAttributes-1.5.15.0.gfr" )
 		script.load()
 
-		self.assertIn( "usd:kind", script["USDAttributes"]["attributes"] )
-		self.assertNotIn( "kind", script["USDAttributes"]["attributes"] )
+		self.assertIn( "usd:kind", script["USDAttributes"]["attributes"].keys() )
+		self.assertNotIn( "kind", script["USDAttributes"]["attributes"].keys() )
 		self.assertEqual( script["USDAttributes"]["attributes"]["usd:kind"]["value"].getValue(), "group" )
 
 if __name__ == "__main__":

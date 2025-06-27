@@ -75,8 +75,8 @@ class ArnoldOptionsTest( GafferSceneTest.SceneTestCase ) :
 		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "arnoldOptions-1.5.13.0.gfr" )
 		script.load()
 
-		self.assertIn( "ai:error_color_bad_pixel", script["ArnoldOptions"]["options"] )
-		self.assertNotIn( "errorColorBadPixel", script["ArnoldOptions"]["options"] )
+		self.assertIn( "ai:error_color_bad_pixel", script["ArnoldOptions"]["options"].keys() )
+		self.assertNotIn( "errorColorBadPixel", script["ArnoldOptions"]["options"].keys() )
 		self.assertEqual( script["ArnoldOptions"]["options"]["ai:error_color_bad_pixel"]["value"].getValue(), imath.Color3f( 0, 1, 1 ) )
 
 if __name__ == "__main__":

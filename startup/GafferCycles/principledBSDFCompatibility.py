@@ -34,46 +34,25 @@
 #
 ##########################################################################
 
+import functools
+
 import Gaffer
 import GafferCycles
 
-class __ParametersPlugProxy( object ) :
-
-	__renames = {
-		"principled_bsdf" : {
-			"emission" : "emission_color",
-			"specular" : "specular_ior_level",
-			"subsurface" : "subsurface_weight",
-			"transmission" : "transmission_weight",
-			"clearcoat" : "coat_weight",
-			"sheen" : "sheen_weight",
-		}
+__parameterAliases = {
+	"principled_bsdf" : {
+		"emission" : "emission_color",
+		"specular" : "specular_ior_level",
+		"subsurface" : "subsurface_weight",
+		"transmission" : "transmission_weight",
+		"clearcoat" : "coat_weight",
+		"sheen" : "sheen_weight",
 	}
+}
 
-	def __init__( self, parametersPlug ) :
+def __getParameterAlias( key, plug ) :
 
-		self.__parametersPlug = parametersPlug
+	return __parameterAliases.get( plug.node()["name"].getValue(), {} ).get( key, key )
 
-	def __getitem__( self, key ) :
-
-		renames = self.__renames.get(
-			self.__parametersPlug.parent()["name"].getValue()
-		)
-		key = renames.get( key, key ) if renames is not None else key
-		return self.__parametersPlug[key]
-
-def __cyclesShaderGetItem( originalGetItem ) :
-
-	def getItem( self, key ) :
-
-		result = originalGetItem( self, key )
-		if key == "parameters" :
-			scriptNode = self.ancestor( Gaffer.ScriptNode )
-			if scriptNode is not None and scriptNode.isExecuting() :
-				return __ParametersPlugProxy( result )
-
-		return result
-
-	return getItem
-
-GafferCycles.CyclesShader.__getitem__ = __cyclesShaderGetItem( GafferCycles.CyclesShader.__getitem__ )
+for parameter in list( { key for d in __parameterAliases.values() for key in d.keys() } ) :
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "parameters", f"compatibility:childAlias:{parameter}", functools.partial( __getParameterAlias, parameter ) )
