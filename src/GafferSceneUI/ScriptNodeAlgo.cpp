@@ -36,8 +36,7 @@
 
 #include "GafferSceneUI/ScriptNodeAlgo.h"
 
-#include "GafferSceneUI/ContextAlgo.h"
-
+#include "GafferScene/ScenePlug.h"
 #include "GafferScene/VisibleSetData.h"
 
 #include "Gaffer/Context.h"
@@ -54,11 +53,15 @@
 
 using namespace boost::placeholders;
 using namespace Gaffer;
+using namespace GafferScene;
 using namespace GafferSceneUI;
 
 namespace
 {
 
+const InternedString g_selectedPathsName( "ui:scene:selectedPaths" );
+const InternedString g_lastSelectedPathName( "ui:scene:lastSelectedPath" );
+const InternedString g_visibleSetName( "ui:scene:visibleSet" );
 const std::string g_visibleSetBookmarkPrefix( "visibleSet:bookmark:" );
 
 struct ChangedSignals
@@ -70,12 +73,11 @@ struct ChangedSignals
 
 void contextChanged( IECore::InternedString variable, ScriptNode *script, ChangedSignals *signals )
 {
-	if( ContextAlgo::affectsVisibleSet( variable ) )
+	if( variable == g_visibleSetName )
 	{
 		signals->visibleSetChangedSignal( script );
 	}
-
-	if( ContextAlgo::affectsSelectedPaths( variable ) || ContextAlgo::affectsLastSelectedPath( variable ) )
+	else if( variable == g_selectedPathsName || variable == g_lastSelectedPathName )
 	{
 		signals->selectedPathsChangedSignal( script );
 	}
@@ -99,6 +101,43 @@ ChangedSignals &changedSignals( ScriptNode *script )
 	return result;
 }
 
+bool expandWalk( const ScenePlug::ScenePath &path, const ScenePlug *scene, size_t depth, PathMatcher &expanded, PathMatcher &leafPaths )
+{
+	bool result = false;
+
+	ConstInternedStringVectorDataPtr childNamesData = scene->childNames( path );
+	const std::vector<InternedString> &childNames = childNamesData->readable();
+
+	if( childNames.size() )
+	{
+		result |= expanded.addPath( path );
+
+		ScenePlug::ScenePath childPath = path;
+		childPath.push_back( InternedString() ); // room for the child name
+		for( std::vector<InternedString>::const_iterator cIt = childNames.begin(), ceIt = childNames.end(); cIt != ceIt; cIt++ )
+		{
+			childPath.back() = *cIt;
+			if( depth == 1 )
+			{
+				// at the bottom of the expansion - consider the child a leaf
+				result |= leafPaths.addPath( childPath );
+			}
+			else
+			{
+				// continue the expansion
+				result |= expandWalk( childPath, scene, depth - 1, expanded, leafPaths );
+			}
+		}
+	}
+	else
+	{
+		// we have no children, just mark the leaf of the expansion.
+		result |= leafPaths.addPath( path );
+	}
+
+	return result;
+}
+
 } // namespace
 
 /// Everything here is implemented as a shim on top of ContextAlgo. Our intention is to move everyone
@@ -112,12 +151,12 @@ ChangedSignals &changedSignals( ScriptNode *script )
 
 void ScriptNodeAlgo::setVisibleSet( Gaffer::ScriptNode *script, const GafferScene::VisibleSet &visibleSet )
 {
-	ContextAlgo::setVisibleSet( script->context(), visibleSet );
+	script->context()->set( g_visibleSetName, visibleSet );
 }
 
 GafferScene::VisibleSet ScriptNodeAlgo::getVisibleSet( const Gaffer::ScriptNode *script )
 {
-	return ContextAlgo::getVisibleSet( script->context() );
+	return script->context()->get<VisibleSet>( g_visibleSetName, VisibleSet() );
 }
 
 ScriptNodeAlgo::ChangedSignal &ScriptNodeAlgo::visibleSetChangedSignal( Gaffer::ScriptNode *script )
@@ -127,32 +166,104 @@ ScriptNodeAlgo::ChangedSignal &ScriptNodeAlgo::visibleSetChangedSignal( Gaffer::
 
 void ScriptNodeAlgo::expandInVisibleSet( Gaffer::ScriptNode *script, const IECore::PathMatcher &paths, bool expandAncestors )
 {
-	ContextAlgo::expand( script->context(), paths, expandAncestors );
+	const auto *visibleSet = script->context()->getIfExists<VisibleSet>( g_visibleSetName );
+	if( !visibleSet )
+	{
+		setVisibleSet( script, VisibleSet() );
+		visibleSet = script->context()->getIfExists<VisibleSet>( g_visibleSetName );
+	}
+	VisibleSet &visible = *const_cast<VisibleSet*>(visibleSet);
+
+	bool needUpdate = false;
+	if( expandAncestors )
+	{
+		for( IECore::PathMatcher::RawIterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+		{
+			needUpdate |= visible.expansions.addPath( *it );
+		}
+	}
+	else
+	{
+		for( IECore::PathMatcher::Iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+		{
+			needUpdate |= visible.expansions.addPath( *it );
+		}
+	}
+
+	if( needUpdate )
+	{
+		// We modified the expanded paths in place with const_cast to avoid unecessary copying,
+		// so the context doesn't know they've changed. So we must let it know
+		// about the change.
+		setVisibleSet( script, *visibleSet );
+	}
 }
 
 IECore::PathMatcher ScriptNodeAlgo::expandDescendantsInVisibleSet( Gaffer::ScriptNode *script, const IECore::PathMatcher &paths, const GafferScene::ScenePlug *scene, int depth )
 {
-	return ContextAlgo::expandDescendants( script->context(), paths, scene, depth );
+	auto visibleSet = getVisibleSet( script );
+
+	bool needUpdate = false;
+	IECore::PathMatcher leafPaths;
+
+	// \todo: parallelize the walk
+	for( IECore::PathMatcher::Iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+	{
+		needUpdate |= expandWalk( *it, scene, depth + 1, visibleSet.expansions, leafPaths );
+	}
+
+	if( needUpdate )
+	{
+		// If we modified the expanded paths, we need to set the value back on the context
+		setVisibleSet( script, visibleSet );
+	}
+
+	return leafPaths;
 }
 
 void ScriptNodeAlgo::setSelectedPaths( Gaffer::ScriptNode *script, const IECore::PathMatcher &paths )
 {
-	ContextAlgo::setSelectedPaths( script->context(), paths );
-}
+	script->context()->set( g_selectedPathsName, paths );
+
+	if( paths.isEmpty() )
+	{
+		script->context()->remove( g_lastSelectedPathName );
+	}
+	else
+	{
+		std::vector<IECore::InternedString> lastSelectedPath = getLastSelectedPath( script );
+		if( !(paths.match( lastSelectedPath ) & PathMatcher::ExactMatch) )
+		{
+			const PathMatcher::Iterator it = paths.begin();
+			script->context()->set( g_lastSelectedPathName, *it );
+		}
+	}}
 
 IECore::PathMatcher ScriptNodeAlgo::getSelectedPaths( const Gaffer::ScriptNode *script )
 {
-	return ContextAlgo::getSelectedPaths( script->context() );
+	return script->context()->get<PathMatcher>( g_selectedPathsName, IECore::PathMatcher() );
 }
 
 void ScriptNodeAlgo::setLastSelectedPath( Gaffer::ScriptNode *script, const std::vector<IECore::InternedString> &path )
 {
-	ContextAlgo::setLastSelectedPath( script->context(), path );
+	if( path.empty() )
+	{
+		script->context()->remove( g_lastSelectedPathName );
+	}
+	else
+	{
+		PathMatcher selectedPaths = getSelectedPaths( script );
+		if( selectedPaths.addPath( path ) )
+		{
+			script->context()->set( g_selectedPathsName, selectedPaths );
+		}
+		script->context()->set( g_lastSelectedPathName, path );
+	}
 }
 
 std::vector<IECore::InternedString> ScriptNodeAlgo::getLastSelectedPath( const Gaffer::ScriptNode *script )
 {
-	return ContextAlgo::getLastSelectedPath( script->context() );
+	return script->context()->get<std::vector<IECore::InternedString>>( g_lastSelectedPathName, {} );
 }
 
 ScriptNodeAlgo::ChangedSignal &ScriptNodeAlgo::selectedPathsChangedSignal( Gaffer::ScriptNode *script )
