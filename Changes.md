@@ -20,6 +20,7 @@ Fixes
 - HierarchyView, AttributeEditor, SetEditor : Fixed judder caused by row heights changing during update.
 - RenderPassEditor : Fixed excessive row heights caused by multi-line values in the first row. All rows are now a single line high.
 - AttributeEditor, LightEditor, RenderPassEditor : Fixed bug causing cells to incorrectly appear to accept drags containing a node or plug.
+- ArnoldAttributes, ArnoldOptions, CyclesAttributes, CyclesOptions, DelightAttributes, DelightOptions, OpenGLAttributes, StandardAttributes, StandardOptions, USDAttributes : Fixed loading of nodes saved from Gaffer 1.6.
 
 Build
 -----
