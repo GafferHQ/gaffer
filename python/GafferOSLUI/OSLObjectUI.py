@@ -42,6 +42,8 @@ import GafferUI
 
 import GafferOSL
 
+from Qt import QtWidgets
+
 import imath
 import functools
 
@@ -277,6 +279,173 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"source" : [
+
+			"description",
+			"""
+			The input scene which provides the locations to be referenced by the `sourceLocations`
+			plugs.
+			"""
+
+		],
+
+		"sourceLocations" : [
+
+			"description",
+			"""
+			Defines additional scene locations to be made accessible via the `pointcloud_search()`,
+			`pointcloud_get()` and `transform()` OSL functions.
+			""",
+
+			"layout:section", "Source Locations",
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+
+			"layout:customWidget:header:widgetType", "GafferOSLUI.OSLObjectUI._SourceLocationsHeader",
+			"layout:customWidget:header:index", 0,
+
+			"layout:customWidget:footer:widgetType", "GafferOSLUI.OSLObjectUI._SourceLocationsFooter",
+			"layout:customWidget:footer:index", -1,
+
+		],
+
+		"sourceLocations.*" : [
+
+			"deletable", True,
+			"label", "",
+
+			"layout:activator:isEnabled", lambda plug : plug["enabled"].getValue(),
+
+		],
+
+		"sourceLocations.*.name" : [
+
+			"description",
+			"""
+			The name to give to the location. This is how it will be referred to from OSL
+			in the `pointcloud_search()`, `pointcloud_get()` and `transform()` functions.
+			""",
+
+			"label", "",
+			"layout:activator", "isEnabled",
+			"layout:width", GafferUI.PlugWidget.labelWidth(),
+
+		],
+
+		"sourceLocations.*.enabled" : [
+
+			"description",
+			"""
+			Enables the location for access in OSL.
+			""",
+
+			"label", "",
+			"boolPlugValueWidget:displayMode", "switch",
+
+		],
+
+		"sourceLocations.*.location" : [
+
+			"description",
+			"""
+			The location to be made accessible from OSL. This must exist in the
+			`source` scene.
+			""",
+
+			"label", "",
+			"layout:activator", "isEnabled",
+			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+			"scenePathPlugValueWidget:scene", "source",
+
+		],
+
+		"sourceLocations.*.pointCloud" : [
+
+			"description",
+			"""
+			Makes the location accessible via the `pointcloud_search()` and
+			`pointcloud_get()` OSL functions. The location should contain a primitive
+			with at least a position ('P') primitive variable.
+			""",
+
+			"label", "",
+			"layout:activator", "isEnabled",
+
+		],
+
+		"sourceLocations.*.transform" : [
+
+			"description",
+			"""
+			Makes the location's transform accessible via the `transform()` OSL functions.
+			""",
+
+			"label", "",
+			"layout:activator", "isEnabled",
+			"layout:width", 175,
+
+		],
+
+		"ignoreMissingSourceLocations" : [
+
+			"description",
+			"""
+			Determines whether a missing source location will trigger an error
+			(the default) or be ignored. When a missing source is ignored, the
+			`pointcloud_search()` and `pointcloud_get()` OSL functions will
+			return `0`, allowing the shader to handle the problem itself.
+			""",
+
+			"label", "Ignore Missing Source",
+
+		],
+
 	}
 
 )
+
+##########################################################################
+# Source locations widgets
+##########################################################################
+
+class _SourceLocationsHeader( GafferUI.ListContainer ) :
+
+	def __init__( self, plug ) :
+
+		GafferUI.ListContainer.__init__( self, GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+
+		with self :
+			GafferUI.Label( "<h4><b>Name</b></h4>" )._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
+			GafferUI.Spacer( imath.V2i( 25, 2 ), maximumSize = imath.V2i( 25, 2 ) )
+			GafferUI.Label( "<h4><b>Location</b></h4>" )
+			GafferUI.Spacer( imath.V2i( 0 ) )
+			GafferUI.Label( "<h4><b>Pointcloud</b></h4>" )._qtWidget().setFixedWidth( 100 )
+			GafferUI.Label( "<h4><b>Transform</b></h4>" )._qtWidget().setFixedWidth( 100 )
+
+class _SourceLocationsFooter( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth = 4 )
+		GafferUI.PlugValueWidget.__init__( self, self.__row, plug, **kw )
+
+		with self.__row :
+
+			self.__addButton = GafferUI.Button( image = "plus.png", hasFrame = False, parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top } )
+			spacer = GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
+			# Make Expanding in Y, to absorb space that would otherwise be given to the rows above.
+			spacer._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding )
+
+		self.__addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addButtonClicked ) )
+
+	def _updateFromEditable( self ) :
+
+		self.__addButton.setEnabled( self._editable() )
+
+	def __addButtonClicked( self, button ) :
+
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			self.getPlug().resize( len( self.getPlug() ) + 1 )
+			self.getPlug()[-1]["enabled"].setValue( True )
+
+Gaffer.Metadata.registerValue( GafferOSL.OSLObject.SourceLocationPlug, "plugValueWidget:type", "GafferUI.LayoutPlugValueWidget" )
+Gaffer.Metadata.registerValue( GafferOSL.OSLObject.SourceLocationPlug, "layoutPlugValueWidget:orientation", "horizontal" )

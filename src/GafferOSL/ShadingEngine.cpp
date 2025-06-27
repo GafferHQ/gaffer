@@ -44,6 +44,7 @@
 
 #include "IECoreImage/OpenImageIOAlgo.h"
 
+#include "IECore/KDTree.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/VectorTypedData.h"
@@ -355,6 +356,152 @@ void maskedDataInitWithZeroDerivs( MaskedData<WidthT> &wval )
 }
 #endif
 
+struct PointCloud
+{
+	PointCloud( const IECoreScene::Primitive *primitive, const std::string &name )
+	{
+		const V3fVectorData *pData = primitive->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+		if( !pData )
+		{
+			throw std::runtime_error( fmt::format( "Point cloud \"{}\" has no \"P\" primitive variable", name ) );
+		}
+
+		m_kdTree.init( pData->readable().begin(), pData->readable().end() );
+		m_firstPoint = pData->readable().begin();
+		m_size = primitive->variableSize( PrimitiveVariable::Vertex );
+
+		for( auto &[primVarName, primVar] : primitive->variables )
+		{
+			if(
+				primVar.interpolation != IECoreScene::PrimitiveVariable::Vertex &&
+				!(
+					primVar.interpolation == IECoreScene::PrimitiveVariable::Varying &&
+					primitive->variableSize( PrimitiveVariable::Vertex ) == primitive->variableSize( PrimitiveVariable::Varying )
+				)
+			)
+			{
+				continue;
+			}
+
+			if( !primitive->isPrimitiveVariableValid( primVar ) )
+			{
+				IECore::msg(
+					IECore::Msg::Warning, "ShadingEngine",
+					fmt::format( "Ignoring invalid primitive variable \"{}\" on point cloud \"{}\"", primVarName, name )
+				);
+				continue;
+			}
+
+			IECoreImage::OpenImageIOAlgo::DataView dataView( primVar.data.get() );
+			if( !dataView.data )
+			{
+				continue;
+			}
+
+			if( dataView.type.arraylen )
+			{
+				// We unarray the TypeDesc so we can use it directly with
+				// `convertValue()` in `get()`.
+				dataView.type.unarray();
+			}
+
+			m_attributes[ustringhash(primVarName.c_str())] = {
+				dataView,
+				primVar.indices ? &primVar.indices->readable() : nullptr
+			};
+		}
+
+	}
+
+#if OSL_LIBRARY_VERSION_CODE >= 11400
+		using PointIndex = int;
+#else
+		using PointIndex = size_t;
+#endif
+
+	int search( const OSL::Vec3 &center, float radius, int maxPoints, PointIndex *outIndices, float *outDistances ) const
+	{
+		vector<IECore::V3fTree::Neighbour> neighbours;
+		neighbours.reserve( maxPoints );
+		m_kdTree.nearestNNeighbours(
+			V3f( center.x, center.y, center.z ),
+			maxPoints, neighbours
+		);
+
+		const float radiusSquared = radius * radius;
+		int pointsWithinRadius = 0;
+		for( const auto &neighbour : neighbours )
+		{
+			if( neighbour.distSquared > radiusSquared )
+			{
+				// `neighbours` is sorted by distance, so everything after
+				// this will be too far away too.
+				break;
+			}
+			if( outIndices )
+			{
+				*outIndices++ = neighbour.point - m_firstPoint;
+			}
+			if( outDistances )
+			{
+				*outDistances++ = std::sqrt( neighbour.distSquared );
+			}
+			pointsWithinRadius += 1;
+		}
+
+		return pointsWithinRadius;
+	}
+
+	struct Attribute
+	{
+		IECoreImage::OpenImageIOAlgo::DataView dataView;
+		const std::vector<int> *indices;
+	};
+
+	const Attribute *attribute( ustringhash name ) const
+	{
+		auto it = m_attributes.find( name );
+		return it != m_attributes.end() ? &it->second : nullptr;
+	}
+
+	int get( const Attribute &attribute, PointIndex index, TypeDesc outType, void *outData ) const
+	{
+#if OSL_LIBRARY_VERSION_CODE >= 11400
+		if( index < 0 )
+		{
+			return 0;
+		}
+#endif
+		if( (size_t)index >= m_size )
+		{
+			return 0;
+		}
+		if( attribute.indices )
+		{
+			index = (*attribute.indices)[index];
+		}
+
+		const char *src = static_cast<const char *>( attribute.dataView.data );
+		src += index * attribute.dataView.type.elementsize();
+
+		char *dst = static_cast<char *>( outData );
+		if( !convertValueToOSL( dst, outType.elementtype(), src, attribute.dataView.type ) )
+		{
+			return 0;
+		}
+
+		return 1;
+	}
+
+	private :
+
+		IECore::V3fTree m_kdTree;
+		IECore::V3fTree::Iterator m_firstPoint;
+		size_t m_size;
+		container::flat_map<ustringhash, Attribute> m_attributes;
+
+};
+
 class RenderState
 {
 
@@ -363,6 +510,7 @@ class RenderState
 		RenderState(
 			const IECore::CompoundData *shadingPoints,
 			const ShadingEngine::Transforms &transforms,
+			const ShadingEngine::PointClouds &pointClouds,
 			const std::vector<InternedString> &contextVariablesNeeded,
 			const Gaffer::Context *context
 		)
@@ -404,6 +552,18 @@ class RenderState
 						}
 					)
 				);
+			}
+
+			for( const auto &[name, primitive] : pointClouds )
+			{
+				try
+				{
+					m_pointClouds[ustringhash(name.c_str())] = std::make_unique<PointCloud>( primitive.get(), name.string() );
+				}
+				catch( const std::exception &e )
+				{
+					IECore::msg( IECore::Msg::Warning, fmt::format( "Point cloud \"{}\"", name.c_str() ), e.what() );
+				}
 			}
 		}
 
@@ -551,6 +711,12 @@ class RenderState
 			return false;
 		}
 
+		const PointCloud *pointCloud( OIIO::ustringhash filename ) const
+		{
+			auto it = m_pointClouds.find( filename );
+			return it != m_pointClouds.end() ? it->second.get() : nullptr;
+		}
+
 	private :
 
 		using RenderStateTransforms = boost::unordered_map< OIIO::ustringhash, ShadingEngine::Transform, std::hash<ustringhash> >;
@@ -570,6 +736,7 @@ class RenderState
 
 		container::flat_map<ustringhash, UserData> m_userData;
 		container::flat_map<ustringhash, ContextData> m_contextVariables;
+		container::flat_map<ustringhash, std::unique_ptr<PointCloud>> m_pointClouds;
 
 };
 
@@ -642,14 +809,142 @@ class GafferBatchedRendererServices : public OSL::BatchedRendererServices<WidthT
 			return false;
 		}
 
+		void pointcloud_search( BatchedShaderGlobals *sg, ustringhash filename, const void *wideCenterVoid, Wide<const float> wideRadius, int maxPoints, bool sort, typename OSL::BatchedRendererServices<WidthT>::PointCloudSearchResults &results ) override
+		{
+			const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->uniform.renderstate ) : nullptr;
+			if( !threadRenderState )
+			{
+				// See comments in the non-batched `RendererServices::pointcloud_search()`.
+				IECore::msg( IECore::Msg::Warning, "ShadingEngine", "Calls to `pointcloud_search()` can not be constant folded." );
+				return;
+			}
+
+			const PointCloud *pointCloud = threadRenderState->renderState.pointCloud( filename );
+			if( !pointCloud || maxPoints <= 0 )
+			{
+				assign_all( results.wnum_points(), 0 );
+				return;
+			}
+
+			vector<PointCloud::PointIndex> tmpIndices( maxPoints ); tmpIndices.resize( maxPoints );
+			vector<float> tmpDistances( maxPoints ); tmpDistances.resize( maxPoints );
+
+			auto wideIndices = results.windices();
+			auto wideNumPoints = results.wnum_points();
+
+			Wide<const OSL::Vec3> wideCenter( wideCenterVoid );
+			results.mask().foreach(
+
+				[&] ( ActiveLane lane ) {
+
+					const OSL::Vec3 center = wideCenter[lane];
+					int numPoints = pointCloud->search(
+						center, wideRadius[lane], maxPoints, tmpIndices.data(), tmpDistances.data()
+					);
+
+					auto indices = wideIndices[lane];
+					for( int i = 0; i < numPoints; ++i )
+					{
+						indices[i] = tmpIndices[i];
+					}
+
+					if( results.has_distances() )
+					{
+						auto wideDistances = results.wdistances();
+						auto distances = wideDistances[lane];
+						for( int i = 0; i < numPoints; ++i )
+						{
+							distances[i] = tmpDistances[i];
+						}
+					}
+
+					if( results.has_distances() && results.distances_have_derivs() )
+					{
+						// We don't support outputting derivatives yet, but we at least
+						// zero them so that junk values don't get into the shader.
+						auto wideDistancesDx = results.wdistancesDx();
+						auto wideDistancesDy = results.wdistancesDy();
+						auto laneDistancesDx = wideDistancesDx[lane];
+						auto laneDistancesDy = wideDistancesDy[lane];
+						for( int i = 0; i < numPoints; ++i )
+						{
+							laneDistancesDx[i] = 0.0f;
+							laneDistancesDy[i] = 0.0f;
+						}
+					}
+
+					wideNumPoints[lane] = numPoints;
+				}
+
+			);
+
+		}
+
 		bool is_overridden_pointcloud_search() const override
 		{
-			return false;
+			return true;
+		}
+
+		Mask pointcloud_get( BatchedShaderGlobals * sg, ustringhash filename, Wide<const int[]> wideIndices, Wide<const int> wideNumPoints, ustringhash attrName, MaskedData wideOutData ) override
+		{
+			Mask result( false );
+			const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->uniform.renderstate ) : nullptr;
+			if( !threadRenderState )
+			{
+				// See comments in the non-batched `RendererServices::pointcloud_search()`.
+				IECore::msg( IECore::Msg::Warning, "ShadingEngine", "Calls to `pointcloud_get()` can not be constant folded." );
+				return result;
+			}
+
+			const PointCloud *pointCloud = threadRenderState->renderState.pointCloud( filename );
+			if( !pointCloud )
+			{
+				return result;
+			}
+
+			const PointCloud::Attribute *attribute = pointCloud->attribute( attrName );
+			if( !attribute )
+			{
+				return result;
+			}
+
+			const TypeDesc attrType = wideOutData.type();
+			vector<char> tmpData( wideOutData.type().size() );
+
+			wideOutData.mask().foreach(
+
+				[&] ( ActiveLane lane ) {
+
+					const int numPoints = wideNumPoints[lane];
+					auto indices = wideIndices[lane];
+					char *outData = tmpData.data();
+					bool success = true;
+
+					for( int i = 0; i < numPoints; ++i )
+					{
+						if( !pointCloud->get( *attribute, indices[i], attrType, outData ) )
+						{
+							success = false;
+							break;
+						}
+						outData += attrType.elementsize();
+					}
+
+					wideOutData.assign_val_lane_from_scalar( lane, tmpData.data() );
+					if( success )
+					{
+						result.set_on( lane );
+					}
+				}
+
+			);
+
+			return result;
 		}
 
 		bool is_overridden_pointcloud_get() const override
 		{
-			return false;
+			return true;
 		}
 
 		bool is_overridden_pointcloud_write() const override
@@ -830,6 +1125,92 @@ class RendererServices : public OSL::RendererServices
 			}
 
 			return threadRenderState->renderState.userData( threadRenderState->pointIndex,  name, type, value );
+		}
+
+		int pointcloud_search(
+			ShaderGlobals *sg, ustringhash filename, const OSL::Vec3 &center, float radius, int maxPoints,
+			bool sort, PointCloud::PointIndex *outIndices, float *outDistances,
+			int derivsOffset
+		) override
+		{
+			const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->renderstate ) : nullptr;
+			if( !threadRenderState )
+			{
+				// OSL has detected that all the inputs to the `pointcloud_search()` call are constant,
+				// and is trying to constant-fold the result now, rather than perform call the function
+				// at runtime. We don't have the pointcloud now, and it might be different between different
+				// calls to `ShadingEngine::shade()`, so this whole enterprise is doomed. There is nothing
+				// in the OSL API to let us communicate this, so all we can do is emit a warning.
+				IECore::msg( IECore::Msg::Warning, "ShadingEngine", "Calls to `pointcloud_search()` can not be constant folded." );
+				return 0;
+			}
+
+			const PointCloud *pointCloud = threadRenderState->renderState.pointCloud( filename );
+			if( !pointCloud || maxPoints <= 0 )
+			{
+				return 0;
+			}
+
+			const int numPoints = pointCloud->search( center, radius, maxPoints, outIndices, outDistances );
+
+			if( derivsOffset && outDistances )
+			{
+				// We don't support outputting derivatives yet, but we at least
+				// zero them so that junk values don't get into the shader.
+				float *outDistancesDx = outDistances + derivsOffset;
+				float *outDistancesDy = outDistances + derivsOffset * 2;
+				for( int i = 0; i < numPoints; ++i )
+				{
+					outDistancesDx[i] = 0;
+					outDistancesDy[i] = 0;
+				}
+			}
+
+			return numPoints;
+		}
+
+#if OSL_LIBRARY_VERSION_CODE >= 11400
+		using ConstPointIndex = const PointCloud::PointIndex;
+#else
+		using ConstPointIndex = PointCloud::PointIndex;
+#endif
+
+		int pointcloud_get(
+			ShaderGlobals *sg, ustringhash filename, ConstPointIndex *indices, int count,
+			ustringhash attrName, TypeDesc attrType,
+			void *outData
+		) override
+		{
+			const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->renderstate ) : nullptr;
+			if( !threadRenderState )
+			{
+				// See comment in `pointcloud_search()`.
+				IECore::msg( IECore::Msg::Warning, "ShadingEngine", "Calls to `pointcloud_get()` can not be constant folded." );
+				return 0;
+			}
+
+			const PointCloud *pointCloud = threadRenderState->renderState.pointCloud( filename );
+			if( !pointCloud )
+			{
+				return 0;
+			}
+
+			const PointCloud::Attribute *attribute = pointCloud->attribute( attrName );
+			if( !attribute )
+			{
+				return 0;
+			}
+
+			for( int i = 0; i < count; ++i )
+			{
+				if( !pointCloud->get( *attribute, indices[i], attrType, outData ) )
+				{
+					return 0;
+				}
+				outData = static_cast<char *>( outData ) + attrType.elementsize();
+			}
+
+			return 1;
 		}
 
 #if OSL_USE_BATCHED
@@ -1727,6 +2108,11 @@ IECore::CompoundDataPtr executeShadeBatched( const ExecuteShadeParameters &param
 
 IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points, const ShadingEngine::Transforms &transforms ) const
 {
+	return shade( points, transforms, PointClouds() );
+}
+
+IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points, const Transforms &transforms, const PointClouds &pointClouds ) const
+{
 	ShaderGroup &shaderGroup = **static_cast<ShaderGroupRef *>( m_shaderGroupRef );
 
 	ExecuteShadeParameters shadeParameters;
@@ -1792,7 +2178,7 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 	// Add a RenderState to the ShaderGlobals. This will
 	// get passed to our RendererServices queries.
 
-	RenderState renderState( points, transforms, m_contextVariablesNeeded, context );
+	RenderState renderState( points, transforms, pointClouds, m_contextVariablesNeeded, context );
 
 #if OSL_USE_BATCHED
 	if( batchSize == 1 )

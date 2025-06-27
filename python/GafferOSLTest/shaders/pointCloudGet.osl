@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2024, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,23 +34,50 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#pragma once
-
-namespace GafferOSL
+shader pointCloudGet
+(
+	string name = "",
+	string colorAttr = "",
+	string floatAttr = "",
+	string intAttr = "",
+	string stringAttr = "",
+	// `lockgeom` needed to prevent doomed constant-folding
+	// of the `pointcloud_get()` call.
+	int index = 0 [[int lockgeom=0]],
+)
 {
+	int indices[1] = { index };
 
-enum TypeId
-{
-	OSLShaderTypeId = 122100,
-	OSLRendererTypeId = 122101,
-	OSLImageTypeId = 122102,
-	OSLObjectTypeId = 122103,
-	OSLCodeTypeId = 122104,
-	ClosurePlugTypeId = 122105,
-	OSLLightTypeId = 122106,
-	OSLObjectSourceLocationPlugTypeId = 122107,
-
-	LastTypeId = 122299
-};
-
-} // namespace GafferOSL
+	if( colorAttr != "" )
+	{
+		color c[1] = { color( -1 ) };
+		if( pointcloud_get( name, indices, 1, colorAttr, c ) )
+		{
+			Ci = c[0] * emission();
+		}
+	}
+	else if( floatAttr != "" )
+	{
+		float f[1] = { -1 };
+		if( pointcloud_get( name, indices, 1, floatAttr, f ) )
+		{
+			Ci = color( f[0], 0, 0 ) * emission();
+		}
+	}
+	else if( intAttr != "" )
+	{
+		int i[1] = { -1 };
+		if( pointcloud_get( name, indices, 1, intAttr, i ) )
+		{
+			Ci = color( i[0], 0, 0 ) * emission();
+		}
+	}
+	else if( stringAttr != "" )
+	{
+		string s[1] = { "" };
+		if( pointcloud_get( name, indices, 1, stringAttr, s ) )
+		{
+			Ci = debug( "pointValue", "type", "string", "stringValue", s[0] );
+		}
+	}
+}

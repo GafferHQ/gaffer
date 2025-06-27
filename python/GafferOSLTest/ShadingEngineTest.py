@@ -1036,5 +1036,201 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 			for y in range( 0, 10 ) :
 				self.assertEqual( r["Ci"][y*10+x].r, 1 if x == y else 0 )
 
+	def testPointCloudSearch( self ) :
+
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "pointCloudSearch.osl" )
+		engine = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( shader, "osl:surface", { "name" : "test", "radius" : 1.5 } )
+			},
+			output = "output"
+		) )
+
+		points = IECore.V3fVectorData( [ imath.V3f( i, 0, 0 ) for i in range( 0, 10 ) ] )
+
+		results = engine.shade(
+			IECore.CompoundData( { "P" : IECore.V3fVectorData( [ p + imath.V3f( 0.1, 0, 0 ) for p in points ] ) } ),
+			{}, { "test" : IECoreScene.PointsPrimitive( points ) }
+		)
+
+		for i, c in enumerate( results["Ci"] ) :
+			self.assertEqual( c[0], 2 )
+			self.assertEqual( c[1], i )
+			self.assertEqual( c[2], i + 1 if i < 9 else i - 1 )
+
+	def testPointCloudSearchRadius( self ) :
+
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "pointCloudSearch.osl" )
+		engine = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( shader, "osl:surface", { "name" : "test", "radius" : 2.0 } )
+			},
+			output = "output"
+		) )
+
+
+		pointCloud = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( 0, 0, 0 ) ] ) )
+
+		for pointDistance, numPointsInRadius in {
+			1.99 : 1,
+			2.01 : 0,
+		}.items() :
+
+			results = engine.shade(
+				IECore.CompoundData( { "P" : IECore.V3fVectorData( [ imath.V3f( pointDistance, 0, 0 ) ] ) } ),
+				{}, { "test" : pointCloud }
+			)
+			self.assertEqual( results["Ci"][0].r, numPointsInRadius )
+
+	def testPointCloudSearchWithMissingCloud( self ) :
+
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "pointCloudSearch.osl" )
+		engine = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( shader, "osl:surface", { "name" : "test", "radius" : 1.5 } )
+			},
+			output = "output"
+		) )
+
+		points = IECore.V3fVectorData( [ imath.V3f( i, 0, 0 ) for i in range( 0, 10 ) ] )
+
+		results = engine.shade(
+			IECore.CompoundData( { "P" : IECore.V3fVectorData( [ p + imath.V3f( 0.1, 0, 0 ) for p in points ] ) } )
+		)
+
+		for c in results["Ci"] :
+			self.assertEqual( c[0], 0 )
+
+	def testPointCloudSearchDerivatives( self ) :
+
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "pointCloudDerivatives.osl" )
+		engine = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( shader, "osl:surface", { "name" : "test" } )
+			},
+			output = "output"
+		) )
+
+		pointCloud = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( 1, 0, 0 ) ] ) )
+
+		results = engine.shade(
+			IECore.CompoundData( { "P" : IECore.V3fVectorData( [ imath.V3f( 0 ) ] * 1000 ) } ),
+			{}, { "test" : pointCloud }
+		)
+		self.assertEqual( results["Ci"], IECore.Color3fVectorData( [ imath.Color3f( 1, 0, 0 ) ] * 1000 ) )
+
+	def testPointCloudGet( self ) :
+
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "pointCloudGet.osl" )
+
+		pointCloud = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( i ) for i in range( 0, 10 ) ] ) )
+		pointCloud["c"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.Color3fVectorData( [ imath.Color3f( i ) for i in range( 0, 10 ) ] )
+		)
+		pointCloud["f"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.FloatVectorData( range( 0, 10 ) )
+		)
+		pointCloud["i"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.IntVectorData( range( 0, 10 ) )
+		)
+		pointCloud["v2"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.V2fVectorData( [ imath.V2f( i ) for i in range( 0, 10 ) ] )
+		)
+
+		for sourceAttr, queryType, numSourceComponents in [
+			( "c", "colorAttr", 3 ),
+			( "v2", "colorAttr", 2 ),
+			( "f", "floatAttr", 1 ),
+			( "i", "intAttr", 1 ),
+		] :
+			with self.subTest( sourceAttr = sourceAttr, queryType = queryType ) :
+				for index in range( 0, 10 ) :
+					outputShader = IECoreScene.Shader(
+						shader, "osl:surface",
+						{
+							"name" : "test", "index" : index, queryType : sourceAttr
+						}
+					)
+
+					engine = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+						shaders = { "output" : outputShader },
+						output = "output"
+					) )
+
+					results = engine.shade(
+						IECore.CompoundData( { "P" : IECore.V3fVectorData( [ imath.V3f( 0 ) ] ) } ),
+						{}, { "test" : pointCloud }
+					)
+
+					self.assertEqual( len( results["Ci"] ), 1 )
+					self.assertEqual( results["Ci"][0], imath.Color3f( *[ index if i < numSourceComponents else 0 for i in range( 0, 3 ) ] ) )
+
+	def testPointCloudGetIndexedString( self ) :
+
+		pointCloud = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( i ) for i in range( 0, 10 ) ] ) )
+		pointCloud["s"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.StringVectorData( [ "a", "b" ] ),
+			IECore.IntVectorData( [ 0, 1 ] * 5 )
+		)
+
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "pointCloudGet.osl" )
+
+		for index in range( 0, 10 ) :
+
+			engine = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+				shaders = { "output" : IECoreScene.Shader( shader, "osl:surface", { "name" : "test", "stringAttr" : "s", "index" : index } ) },
+				output = "output"
+			) )
+
+			results = engine.shade(
+				IECore.CompoundData( { "P" : IECore.V3fVectorData( [ imath.V3f( 0 ) ] ) } ),
+				{}, { "test" : pointCloud }
+			)
+
+			self.assertEqual( len( results["pointValue"] ), 1 )
+			self.assertEqual( results["pointValue"][0], pointCloud["s"].data[pointCloud["s"].indices[index]] )
+
+	def testPointCloudGetWithMissingAttribute( self ) :
+
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "pointCloudGet.osl" )
+
+		pointCloud = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( i ) for i in range( 0, 10 ) ] ) )
+		engine = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = { "output" : IECoreScene.Shader( shader, "osl:surface", { "name" : "test", "colorAttr" : "missing", "index" : 0 } ) },
+			output = "output"
+		) )
+
+		results = engine.shade(
+			IECore.CompoundData( { "P" : IECore.V3fVectorData( [ imath.V3f( 0 ) ] ) } ),
+			{}, { "test" : pointCloud }
+		)
+
+		self.assertEqual( len( results["Ci"] ), 1 )
+		self.assertEqual( results["Ci"][0][0], 0 )
+
+	def testPointCloudGetWithMissingCloud( self ) :
+
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "pointCloudGet.osl" )
+
+		for index in range( 0, 10 ) :
+
+			outputShader = IECoreScene.Shader( shader, "osl:surface", { "name" : "test", "index" : index } )
+			engine = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+				shaders = { "output" : outputShader },
+				output = "output"
+			) )
+
+			results = engine.shade(
+				IECore.CompoundData( { "P" : IECore.V3fVectorData( [ imath.V3f( 0 ) ] ) } ),
+			)
+
+			self.assertEqual( len( results["Ci"] ), 1 )
+			self.assertEqual( results["Ci"][0][0], 0 )
+
 if __name__ == "__main__":
 	unittest.main()
