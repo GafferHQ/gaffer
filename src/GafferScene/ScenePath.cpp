@@ -213,10 +213,7 @@ void ScenePath::pathChangedSignalCreated()
 
 void ScenePath::contextChanged( const IECore::InternedString &key )
 {
-	if( !boost::starts_with( key.c_str(), "ui:" ) )
-	{
-		emitPathChanged();
-	}
+	emitPathChanged();
 }
 
 void ScenePath::plugDirtied( Gaffer::Plug *plug )

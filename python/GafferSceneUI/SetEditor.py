@@ -103,8 +103,7 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 
 	def _updateFromContext( self, modifiedItems ) :
 
-		if any( not i.startswith( "ui:" ) for i in modifiedItems ) :
-			self.__updatePathListingPath()
+		self.__updatePathListingPath()
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __updatePathListingPath( self ) :

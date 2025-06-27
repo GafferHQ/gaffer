@@ -1171,10 +1171,7 @@ void ImageGadget::plugDirtied( const Gaffer::Plug *plug )
 
 void ImageGadget::contextChanged( const IECore::InternedString &name )
 {
-	if( !boost::starts_with( name.string(), "ui:" ) )
-	{
-		dirty( AllDirty );
-	}
+	dirty( AllDirty );
 }
 
 //////////////////////////////////////////////////////////////////////////
