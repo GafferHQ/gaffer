@@ -1515,11 +1515,6 @@ void RenderController::plugDirtied( const Gaffer::Plug *plug )
 
 void RenderController::contextChanged( const IECore::InternedString &name )
 {
-	if( boost::starts_with( name.string(), "ui:" ) )
-	{
-		return;
-	}
-
 	cancelBackgroundTask();
 
 	dirtyGlobals( AllGlobalComponents );

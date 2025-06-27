@@ -274,11 +274,8 @@ class HierarchyViewSetFilter : public HierarchyViewFilter
 
 		void contextChanged( const IECore::InternedString &variableName ) override
 		{
-			if( !boost::starts_with( variableName.c_str(), "ui:" ) )
-			{
-				m_setsDirty = true;
-				changedSignal()( this );
-			}
+			m_setsDirty = true;
+			changedSignal()( this );
 		}
 
 		void doFilter( vector<Gaffer::PathPtr> &paths, const IECore::Canceller *canceller ) const override
@@ -417,11 +414,8 @@ class HierarchyViewSearchFilter : public HierarchyViewFilter
 
 		void contextChanged( const IECore::InternedString &variableName ) override
 		{
-			if( !boost::starts_with( variableName.c_str(), "ui:" ) )
-			{
-				m_pathMatcherDirty = true;
-				changedSignal()( this );
-			}
+			m_pathMatcherDirty = true;
+			changedSignal()( this );
 		}
 
 		void doFilter( vector<Gaffer::PathPtr> &paths, const IECore::Canceller *canceller ) const override

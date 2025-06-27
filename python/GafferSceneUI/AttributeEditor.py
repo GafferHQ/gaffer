@@ -187,12 +187,9 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 
 	def _updateFromContext( self, modifiedItems ) :
 
-		for item in modifiedItems :
-			if not item.startswith( "ui:" ) :
-				# When the context has changed, the hierarchy of the scene may
-				# have too so we should update our PathListingWidget.
-				self.__setPathListingPath()
-				break
+		# When the context has changed, the hierarchy of the scene may
+		# have too so we should update our PathListingWidget.
+		self.__setPathListingPath()
 
 	def _updateFromSettings( self, plug ) :
 
