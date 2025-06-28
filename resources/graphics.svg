@@ -6,7 +6,7 @@
    height="1000"
    id="svg2"
    version="1.1"
-   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
    sodipodi:docname="graphics.svg"
    enable-background="new"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -350,17 +350,7 @@
      inkscape:bbox-nodes="true"
      inkscape:showpageshadow="2"
      inkscape:pagecheckerboard="0"
-     inkscape:deskcolor="#4c4c4c"
-     showgrid="false"
-     inkscape:zoom="5.656854"
-     inkscape:cx="100.23239"
-     inkscape:cy="2564.6764"
-     inkscape:window-width="2700"
-     inkscape:window-height="1247"
-     inkscape:window-x="1343"
-     inkscape:window-y="51"
-     inkscape:window-maximized="0"
-     inkscape:current-layer="layer1">
+     inkscape:deskcolor="#4c4c4c">
     <inkscape:grid
        type="xygrid"
        id="grid3598"
@@ -2636,6 +2626,15 @@
          x="286"
          y="1774"
          inkscape:label="gafferSceneUIVisualiserTool" />
+      <rect
+         style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.917663;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
+         id="gafferImageUIColorInspectorTool"
+         width="25"
+         height="25"
+         x="319"
+         y="1774"
+         inkscape:label="gafferImageUIColorInspectorTool"
+         sodipodi:insensitive="true" />
     </g>
     <g
        id="g3414"
@@ -5552,6 +5551,61 @@
            d="m 141.65639,226.0474 8.39242,3.31798 8.67829,-3.29262 -8.52267,-2.56187 z"
            id="path5773"
            sodipodi:nodetypes="ccccc" />
+      </g>
+      <g
+         id="colorInspectorTool"
+         transform="rotate(180,331.75,1838.8622)">
+        <rect
+           style="display:inline;opacity:1;fill:#9c1d17;fill-opacity:1;stroke:#3c3c3c;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           id="rect4443-3"
+           width="10"
+           height="10"
+           x="322"
+           y="1828.8622" />
+        <rect
+           y="1828.8622"
+           x="332"
+           height="10"
+           width="10"
+           id="rect4445-6"
+           style="display:inline;opacity:1;fill:#42ae45;fill-opacity:1;stroke:#3c3c3c;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+        <rect
+           style="display:inline;opacity:1;fill:#5066c5;fill-opacity:1;stroke:#3c3c3c;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           id="rect4447-7"
+           width="10"
+           height="10"
+           x="322"
+           y="1838.8622" />
+        <rect
+           y="1838.8622"
+           x="332"
+           height="10"
+           id="rect5011-5"
+           style="display:inline;opacity:1;fill:#b3b3b3;fill-opacity:1;stroke:#3c3c3c;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           width="10" />
+        <circle
+           style="fill:none;stroke:url(#foreground);stroke-linecap:round;stroke-opacity:1"
+           id="path3217"
+           transform="scale(-1)"
+           cy="-1833.8622"
+           cx="-327"
+           r="1.5" />
+        <path
+           style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:round;stroke-linejoin:miter;stroke-opacity:1"
+           d="M 324.5,1833.8622 H 321"
+           id="path3321" />
+        <path
+           style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:round;stroke-linejoin:miter;stroke-opacity:1"
+           d="m 333,1833.8622 h -3.5"
+           id="path3436" />
+        <path
+           style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:round;stroke-linejoin:miter;stroke-opacity:1"
+           d="m 327,1839.8622 v -3.5"
+           id="path3438" />
+        <path
+           style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:round;stroke-linejoin:miter;stroke-opacity:1"
+           d="m 327,1831.3622 v -3.5"
+           id="path3440" />
       </g>
     </g>
     <g
@@ -10297,7 +10351,7 @@
       <g
          style="fill:url(#backgroundLight);fill-opacity:1"
          inkscape:label="adaptorDisabledRenderPass"
-         id="g3"
+         id="g1615"
          transform="translate(79.963757,0.12970317)">
         <rect
            style="display:inline;fill:url(#backgroundLight);stroke:#3d3d3d;stroke-width:1;stroke-linejoin:miter;stroke-dasharray:none"
@@ -10315,7 +10369,7 @@
            y="2779.0571" />
         <circle
            style="display:inline;fill:#d66800;fill-opacity:1;stroke:none;stroke-width:8.001;stroke-dasharray:none;stroke-opacity:1"
-           id="path3"
+           id="circle1613"
            cx="53.036243"
            cy="2779.0007"
            r="2" />
