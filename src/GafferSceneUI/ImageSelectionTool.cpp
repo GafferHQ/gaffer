@@ -341,7 +341,15 @@ uint32_t ImageSelectionTool::pixelID( const Imath::V2i &pixel )
 	}
 
 	Context::Scope scopedContext( view()->context() );
-	GafferImage::Sampler sampler( imagePlug(), idChannelName( imagePlug()->channelNames()->readable() ), Box2i( pixel, pixel + V2i( 1 ) ) );
+
+	std::string chanName = idChannelName( imagePlug()->channelNames()->readable() );
+
+	if( !chanName.size() )
+	{
+		return 0;
+	}
+
+	GafferImage::Sampler sampler( imagePlug(), chanName, Box2i( pixel, pixel + V2i( 1 ) ) );
 	float floatID = sampler.sample( pixel.x, pixel.y );
 	uint32_t id;
 	memcpy( &id, &floatID, 4 );
@@ -361,8 +369,14 @@ std::unordered_set<uint32_t> ImageSelectionTool::rectIDs( const Imath::Box2i &re
 
 	const auto [ wipeEnabled, wipePosition, wipeDirection ] = effectiveWipePlane( imageGadget() );
 
+	std::string chanName = idChannelName( imagePlug()->channelNames()->readable() );
 
-	GafferImage::Sampler sampler( imagePlug(), idChannelName( imagePlug()->channelNames()->readable() ), validRect );
+	if( !chanName.size() )
+	{
+		return result;
+	}
+
+	GafferImage::Sampler sampler( imagePlug(), chanName, validRect );
 
 	float prevValue = sampler.sample( validRect.min.x, validRect.min.y );
 	uint32_t prevID;
