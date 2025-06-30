@@ -223,10 +223,7 @@ class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 
 	def _updateFromContext( self, modifiedItems ) :
 
-		for item in modifiedItems :
-			if not item.startswith( "ui:" ) :
-				self.__updateLazily()
-				break
+		self.__updateLazily()
 
 	def _updateFromSettings( self, plug ) :
 

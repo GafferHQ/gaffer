@@ -265,8 +265,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 	def _updateFromContext( self, modifiedItems ) :
 
-		if any( not i.startswith( "ui:" ) for i in modifiedItems ) :
-			self.__setPathListingPath()
+		self.__setPathListingPath()
 
 	def _updateFromSettings( self, plug ) :
 

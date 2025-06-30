@@ -64,13 +64,6 @@ namespace Gaffer
 /// It is common for Nodes to need to evaluate their upstream inputs in a modified context.
 /// The EditableScope class should be used for this purpose since it is more efficient than
 /// copy constructing a new Context.
-///
-/// \note The various UI components currently use "ui:" prefixed context variables for their
-/// own purposes. These variables are expected to never affect computation, and are therefore
-/// excluded from hash(). Other code may find that it too needs to ignore them in order to
-/// avoid unnecessary recomputation. In the future we may explore having the UI use a separate
-/// container for such variables, or a more general mechanism for variables guaranteed to be
-/// unrelated to computation.
 class GAFFER_API Context : public IECore::RefCounted
 {
 
