@@ -1388,7 +1388,8 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		oslCode["code"].setValue( inspect.cleandoc(
 			"""
-			pointCloudExists = pointcloud_search( "points", P, 100000, 1 );
+			int index[1];
+			pointCloudExists = pointcloud_search( "points", P, 100000, 1, "index", index );
 			"""
 		) )
 
