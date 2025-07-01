@@ -66,6 +66,7 @@ enum TypeId
 	AttributeInspectorTypeId = 121022,
 	ParameterInspectorTypeId = 121023,
 	SetMembershipInspectorTypeId = 121024,
+	UniformPLocatorTypeId = 121025,  // Private to `VisualiserTool`
 
 	LastTypeId = 121199
 };
