@@ -1195,5 +1195,235 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertNotIn( "__contextCompatibility", script["OSLObject"] )
 
+	def testTransformFromSourceLocation( self ) :
+
+		plane = GafferScene.Plane()
+		group = GafferScene.Group()
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( plane["out"] )
+		parent["children"][0].setInput( group["out"] )
+		parent["parent"].setValue( "/" )
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		oslCode = GafferOSL.OSLCode()
+		oslCode["out"].addChild( Gaffer.V3fPlug( "groupCenter", direction = Gaffer.Plug.Direction.Out ) )
+
+		oslCode["code"].setValue( 'groupCenter = transform( "group", "object", point( 0 ) );' )
+
+		oslObject = GafferOSL.OSLObject()
+		oslObject["in"].setInput( parent["out"] )
+		oslObject["source"].setInput( parent["out"] )
+		oslObject["filter"].setInput( planeFilter["out"] )
+		oslObject["primitiveVariables"].addChild(
+			Gaffer.NameValuePlug(
+				"groupCenter", IECore.V3fData( imath.V3f( 0 ) )
+			)
+		)
+		oslObject["primitiveVariables"][0]["value"].setInput( oslCode["out"]["groupCenter"] )
+		oslObject["sourceLocations"].resize( 1 )
+		oslObject["sourceLocations"][0]["name"].setValue( "group" )
+		oslObject["sourceLocations"][0]["enabled"].setValue( True )
+		oslObject["sourceLocations"][0]["location"].setValue( "/group" )
+		oslObject["sourceLocations"][0]["transform"].setValue( True )
+
+		for groupTranslate in [
+			imath.V3f( 0 ),
+			imath.V3f( 1 ),
+		] :
+
+			group["transform"]["translate"].setValue( groupTranslate )
+
+			self.assertEqual(
+				oslObject["out"].object( "/plane" )["groupCenter"].data,
+				IECore.V3fVectorData( [ groupTranslate ] * 4, IECore.GeometricData.Interpretation.Vector )
+			)
+
+		otherGroup = GafferScene.Group()
+		otherGroup["name"].setValue( "otherGroup" )
+		oslObject["sourceLocations"][0]["location"].setValue( "/otherGroup" )
+		oslObject["source"].setInput( otherGroup["out"] )
+
+		for groupTranslate in [
+			imath.V3f( 2 ),
+			imath.V3f( 3 ),
+		] :
+
+			otherGroup["transform"]["translate"].setValue( groupTranslate )
+
+			self.assertEqual(
+				oslObject["out"].object( "/plane" )["groupCenter"].data,
+				IECore.V3fVectorData( [ groupTranslate ] * 4, IECore.GeometricData.Interpretation.Vector )
+			)
+
+	def testSourceTransformDirtyPropagation( self ) :
+
+		plane = GafferScene.Plane()
+		sphere = GafferScene.Sphere()
+
+		oslObject = GafferOSL.OSLObject()
+		oslObject["in"].setInput( plane["out"] )
+		oslObject["source"].setInput( sphere["out"] )
+		oslObject["sourceLocations"].resize( 1 )
+
+		for plug in [ "name", "enabled", "location", "transform" ] :
+
+			with self.subTest( plug = plug ) :
+
+				# If everything necessary is specified for the SourceLocationPlug,
+				# then modifying the transform of the sphere will affect the output.
+
+				oslObject["sourceLocations"][0]["name"].setValue( "myName" )
+				oslObject["sourceLocations"][0]["enabled"].setValue( True )
+				oslObject["sourceLocations"][0]["location"].setValue( "/sphere" )
+				oslObject["sourceLocations"][0]["transform"].setValue( True )
+
+				cs = GafferTest.CapturingSlot( oslObject.plugDirtiedSignal() )
+				sphere["transform"]["translate"]["x"].setValue( sphere["transform"]["translate"]["x"].getValue() + 1 )
+				self.assertIn( oslObject["out"]["object"], { x[0] for x in cs } )
+
+				# But if any one plug is at the default value, then modifying the
+				# transform does not affect the output.
+
+				oslObject["sourceLocations"][0].setToDefault()
+				cs = GafferTest.CapturingSlot( oslObject.plugDirtiedSignal() )
+				sphere["transform"]["translate"]["x"].setValue( sphere["transform"]["translate"]["x"].getValue() + 1 )
+				self.assertNotIn( oslObject["out"]["object"], { x[0] for x in cs } )
+
+	def testPointCloudFromSourceLocation( self ) :
+
+		plane = GafferScene.Plane()
+
+		sourcePlane = GafferScene.Plane()
+		sourcePlane["name"].setValue( "sourcePlane" )
+		sourcePlane["dimensions"].setValue( imath.V2f( 10, 20 ) )
+
+		self.assertNotEqual( plane["out"].object( "/plane" ), sourcePlane["out"].object( "/sourcePlane" ) )
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		oslCode = GafferOSL.OSLCode()
+		oslCode["out"].addChild( Gaffer.V3fPlug( "pOut", direction = Gaffer.Plug.Direction.Out ) )
+
+		oslCode["code"].setValue( inspect.cleandoc(
+			"""
+			// Get the position of the corresponding point on the source plane.
+			int index = 0;
+			getattribute( "shading:index", index );
+			point sourceP[1] = { 10 };
+			int indices[1] = { index };
+			pointcloud_get( "sourcePlane", indices, 1, "P", sourceP );
+			pOut = sourceP[0];
+			"""
+		) )
+
+		oslObject = GafferOSL.OSLObject()
+		oslObject["in"].setInput( plane["out"] )
+		oslObject["source"].setInput( sourcePlane["out"] )
+		oslObject["filter"].setInput( planeFilter["out"] )
+		oslObject["primitiveVariables"].addChild(
+			Gaffer.NameValuePlug(
+				"P", IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Point )
+			)
+		)
+		oslObject["primitiveVariables"][0]["value"].setInput( oslCode["out"]["pOut"] )
+		oslObject["sourceLocations"].resize( 1 )
+		oslObject["sourceLocations"][0]["name"].setValue( "sourcePlane" )
+		oslObject["sourceLocations"][0]["enabled"].setValue( True )
+		oslObject["sourceLocations"][0]["location"].setValue( "/sourcePlane" )
+		oslObject["sourceLocations"][0]["pointCloud"].setValue( True )
+
+		self.assertEqual( oslObject["out"].object( "/plane" ), oslObject["source"].object( "/sourcePlane" ) )
+
+		sourcePlane["dimensions"].setValue( imath.V2f( 20, 40 ) )
+		self.assertEqual( oslObject["out"].object( "/plane" ), oslObject["source"].object( "/sourcePlane" ) )
+
+	def testSourceObjectDirtyPropagation( self ) :
+
+		plane = GafferScene.Plane()
+		sphere = GafferScene.Sphere()
+
+		oslObject = GafferOSL.OSLObject()
+		oslObject["in"].setInput( plane["out"] )
+		oslObject["source"].setInput( sphere["out"] )
+		oslObject["sourceLocations"].resize( 1 )
+
+		for plug in [ "name", "enabled", "location", "pointCloud" ] :
+
+			with self.subTest( plug = plug ) :
+
+				# If everything necessary is specified for the SourceLocationPlug,
+				# then modifying the geometry of the sphere will affect the output.
+
+				oslObject["sourceLocations"][0]["name"].setValue( "myName" )
+				oslObject["sourceLocations"][0]["enabled"].setValue( True )
+				oslObject["sourceLocations"][0]["location"].setValue( "/sphere" )
+				oslObject["sourceLocations"][0]["pointCloud"].setValue( True )
+
+				cs = GafferTest.CapturingSlot( oslObject.plugDirtiedSignal() )
+				sphere["radius"].setValue( sphere["radius"].getValue() + 1 )
+				self.assertIn( oslObject["out"]["object"], { x[0] for x in cs } )
+
+				# But if any one plug is at the default value, then modifying the
+				# transform does not affect the output.
+
+				oslObject["sourceLocations"][0].setToDefault()
+				cs = GafferTest.CapturingSlot( oslObject.plugDirtiedSignal() )
+				sphere["radius"].setValue( sphere["radius"].getValue() + 1 )
+				self.assertNotIn( oslObject["out"]["object"], { x[0] for x in cs } )
+
+	def testMissingSourceLocation( self ) :
+
+		plane = GafferScene.Plane()
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		group = GafferScene.Group()
+
+		oslCode = GafferOSL.OSLCode()
+		oslCode["out"].addChild( Gaffer.IntPlug( "pointCloudExists", direction = Gaffer.Plug.Direction.Out ) )
+
+		oslCode["code"].setValue( inspect.cleandoc(
+			"""
+			int index[1];
+			pointCloudExists = pointcloud_search( "points", P, 100000, 1, "index", index );
+			"""
+		) )
+
+		oslObject = GafferOSL.OSLObject()
+		oslObject["in"].setInput( plane["out"] )
+		oslObject["source"].setInput( group["out"] )
+		oslObject["filter"].setInput( planeFilter["out"] )
+		oslObject["primitiveVariables"].addChild( Gaffer.NameValuePlug( "pointCloudExists", IECore.IntData() ) )
+		oslObject["primitiveVariables"][0]["value"].setInput( oslCode["out"]["pointCloudExists"] )
+		oslObject["sourceLocations"].resize( 1 )
+		oslObject["sourceLocations"][0]["name"].setValue( "points" )
+		oslObject["sourceLocations"][0]["enabled"].setValue( True )
+		oslObject["sourceLocations"][0]["location"].setValue( "/thisLocationIsMissing" )
+		oslObject["sourceLocations"][0]["pointCloud"].setValue( True )
+
+		with self.assertRaisesRegex( Gaffer.ProcessException, 'OSLObject.__processedObject : Location "/thisLocationIsMissing" does not exist in source scene' ) :
+			oslObject["out"].object( "/plane" )
+
+		oslObject["ignoreMissingSourceLocations"].setValue( True )
+		self.assertEqual( oslObject["out"].object( "/plane" )["pointCloudExists"].data[0], 0 )
+
+		oslObject["sourceLocations"][0]["location"].setValue( "/group" )
+		self.assertEqual( oslObject["out"].object( "/plane" )["pointCloudExists"].data[0], 0 )
+
+		oslObject["ignoreMissingSourceLocations"].setValue( False )
+		with self.assertRaisesRegex( Gaffer.ProcessException, 'OSLObject.__processedObject : Source location "/group" does not contain a Primitive' ) :
+			oslObject["out"].object( "/plane" )
+
+		oslObject["source"].setInput( None )
+		with self.assertRaisesRegex( Gaffer.ProcessException, 'OSLObject.__processedObject : Location "/group" does not exist in source scene' ) :
+			oslObject["out"].object( "/plane" )
+
+		oslObject["ignoreMissingSourceLocations"].setValue( True )
+		self.assertEqual( oslObject["out"].object( "/plane" )["pointCloudExists"].data[0], 0 )
+
 if __name__ == "__main__":
 	unittest.main()
