@@ -644,24 +644,39 @@ struct Inspector::HistoryPath::HistoryProvider
 
 			std::string editWarning;
 
-			while( true )
+			ConstObjectPtr successorValue;
+			const SceneAlgo::History *successor = nullptr;
+			const SceneAlgo::History *current = history.get();
+			while( current )
 			{
-				Context::EditableScope scope( history->context.get() );
+				Context::EditableScope scope( current->context.get() );
 				if( canceller )
 				{
 					scope.setCanceller( canceller );
 				}
 
-				if( inspector->source( history.get(), editWarning ) )
+				ConstObjectPtr currentValue = inspector->value( current );
+				if( successor && !endsWith( m_historyVector, successor ) )
 				{
-					m_historyVector.push_back( history );
+					// The result of `inspector->source()` was null on the
+					// previous (`successor`) iteration. But there may still
+					// have been a value change at that point, in which case the
+					// `successor` belongs in our history.
+					if(
+						(bool)currentValue != (bool)successorValue ||
+						( currentValue && currentValue->isNotEqualTo( successorValue.get() ) )
+					)
+					{
+						m_historyVector.push_back( successor );
+					}
 				}
 
-				if( history->predecessors.size() == 0 )
+				if( inspector->source( current, editWarning ) )
 				{
-					break;
+					m_historyVector.push_back( current );
 				}
-				else if( history->predecessors.size() > 1 )
+
+				if( current->predecessors.size() > 1 )
 				{
 					IECore::msg(
 						IECore::Msg::Warning,
@@ -670,10 +685,24 @@ struct Inspector::HistoryPath::HistoryProvider
 					);
 				}
 
-				history = history->predecessors[0];
+				successor = current;
+				successorValue = currentValue;
+				current = current->predecessors.size() ? current->predecessors[0].get() : nullptr;
+				if( !current && !endsWith( m_historyVector, successor ) )
+				{
+					// Make sure we include the tip of the history whether or not
+					// there is an edit there. Among other things this allows us to
+					// show where a value is loaded from a SceneReader.
+					m_historyVector.push_back( successor );
+				}
 			}
 
 			std::reverse( m_historyVector.begin(), m_historyVector.end() );
+		}
+
+		static bool endsWith( const std::vector<SceneAlgo::History::ConstPtr> historyVector, const SceneAlgo::History *history )
+		{
+			return historyVector.size() && historyVector.back() == history;
 		}
 
 		std::once_flag m_initFlag;

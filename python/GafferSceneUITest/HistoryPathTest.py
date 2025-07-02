@@ -605,5 +605,20 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		backgroundTask.wait()
 		self.assertEqual( backgroundTask.status(), backgroundTask.Status.Cancelled )
 
+	def testSceneReader( self ) :
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( "${GAFFER_ROOT}/python/GafferSceneTest/usdFiles/sphereLight.usda" )
+
+		inspector = self.__inspector( reader["out"], "exposure" )
+		with Gaffer.Context() as context :
+			context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/SpotLight23" )
+			historyPath = inspector.historyPath()
+
+		self.assertEqual(
+			[ c.property( "history:node" ) for c in historyPath.children() ],
+			[ reader ]
+		)
+
 if __name__ == "__main__":
 	unittest.main()

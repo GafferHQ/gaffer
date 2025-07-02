@@ -69,7 +69,7 @@ class _OperationIconColumn( GafferUI.PathColumn ) :
 			Gaffer.TweakPlug.Mode.ListAppend : "listAppendSmall.png",
 			Gaffer.TweakPlug.Mode.ListPrepend : "listPrependSmall.png",
 			Gaffer.TweakPlug.Mode.ListRemove : "listRemoveSmall.png",
-		}.get( cellValue, "errorSmall.png" )
+		}.get( cellValue )
 
 		return data
 
@@ -225,13 +225,14 @@ class _HistoryWindow( GafferUI.Window ) :
 			not isinstance( self.__inspector, GafferSceneUI.Private.SetMembershipInspector )
 		) :
 			editPlug = selectedPath.property( "history:source" )
-			self.__popup = GafferUI.PlugPopup(
-				[ editPlug ], warning = selectedPath.property( "history:editWarning" )
-			)
-			if isinstance( self.__popup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
-				self.__popup.plugValueWidget().setNameVisible( False )
+			if editPlug is not None :
+				self.__popup = GafferUI.PlugPopup(
+					[ editPlug ], warning = selectedPath.property( "history:editWarning" )
+				)
+				if isinstance( self.__popup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
+					self.__popup.plugValueWidget().setNameVisible( False )
 
-			self.__popup.popup( parent = self )
+				self.__popup.popup( parent = self )
 
 	def __dragBegin( self, pathListing, event ) :
 
@@ -241,13 +242,13 @@ class _HistoryWindow( GafferUI.Window ) :
 
 		if selectedColumn == self.__nameColumnIndex :
 			GafferUI.Pointer.setCurrent( "nodes" )
-
 			return selectedPath.property( "history:node" )
 
 		elif selectedColumn == self.__operationColumnIndex :
-			GafferUI.Pointer.setCurrent( "values" )
-
-			return selectedPath.property( "history:operation" )
+			operation = selectedPath.property( "history:operation" )
+			if operation is not None :
+				GafferUI.Pointer.setCurrent( "values" )
+				return operation
 
 		# Value column works by default
 
