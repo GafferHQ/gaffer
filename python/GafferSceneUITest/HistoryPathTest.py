@@ -340,6 +340,45 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( historyPath.children()[i].property( "history:node" ), s["tweaks"] )
 			self.assertEqual( historyPath.children()[i].property( "history:value" ), i )
 
+	def testTwoTweaksWithIdenticalSource( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["light"] = GafferSceneTest.TestLight()
+
+		script["lightFilter"] = GafferScene.PathFilter()
+		script["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+
+		script["tweaks1"] = GafferScene.ShaderTweaks()
+		script["tweaks1"]["in"].setInput( script["light"]["out"] )
+		script["tweaks1"]["filter"].setInput( script["lightFilter"]["out"] )
+		script["tweaks1"]["shader"].setValue( "light" )
+		script["tweaks1"]["tweaks"].addChild( Gaffer.TweakPlug( "exposure", 2.0 ) )
+
+		script["tweaks2"] = GafferScene.ShaderTweaks()
+		script["tweaks2"]["in"].setInput( script["tweaks1"]["out"] )
+		script["tweaks2"]["filter"].setInput( script["lightFilter"]["out"] )
+		script["tweaks2"]["shader"].setValue( "light" )
+		script["tweaks2"]["tweaks"].addChild( Gaffer.TweakPlug( "exposure", 2.0 ) )
+		script["tweaks2"]["tweaks"][0].setInput( script["tweaks1"]["tweaks"][0] )
+
+		inspector = self.__inspector( script["tweaks2"]["out"], "exposure" )
+		with Gaffer.Context() as context :
+			context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/light" )
+			historyPath = inspector.historyPath()
+
+		self.assertFalse( historyPath.isLeaf() )
+		self.assertTrue( historyPath.isValid() )
+		self.assertEqual( len( historyPath ), 0 )
+
+		children = historyPath.children()
+		self.assertEqual( len( children ), 3 )
+
+		self.assertEqual(
+			[ c.property( "history:node" ) for c in children ],
+			[ script["light"], script["tweaks1"], script["tweaks2"] ]
+		)
+
 	def testEmptyHistory( self ) :
 
 		s = Gaffer.ScriptNode()

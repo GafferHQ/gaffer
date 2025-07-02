@@ -781,11 +781,10 @@ void Inspector::HistoryPath::updatePlugMap() const
 	{
 		Context::Scope currentScope( history->context.get() );
 
-		if( ValuePlugPtr immediateSource = m_inspector->source( history.get(), editWarning ) )
+		if( m_inspector->source( history.get(), editWarning ) )
 		{
-			ValuePlugPtr source = runTimeCast<ValuePlug>( spreadsheetAwareSource( immediateSource.get() ) );
 			MurmurHash h;
-			h.append( (uintptr_t)source.get() );
+			h.append( (uintptr_t)history->scene.get() );
 			h.append( history->context->hash() );
 			m_plugMap.insert( { h.toString(), history } );
 		}

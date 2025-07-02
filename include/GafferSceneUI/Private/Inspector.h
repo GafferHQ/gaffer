@@ -244,9 +244,8 @@ class GAFFERSCENEUI_API Inspector : public IECore::RunTimeTyped, public Gaffer::
 			private :
 
 				// Index history entries using :
-				// 1. The hash of the source plug pointer and the context. A plug could have
-				// multiple values affecting the history in different contexts, making the
-				// plug alone insufficient for uniqueness.
+				// 1. The hash of the ScenePlug address and the context. This uniquely
+				//    identifies the history item.
 				// 2. Random access for maintaining the order of the history.
 				struct PlugHistoryEntry
 				{
