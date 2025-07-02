@@ -184,25 +184,33 @@ IECorePreview::LRUCache<std::string, QPixmap> g_pixmapCache(
 	/* maxCost = */ 10000
 );
 
-// Equivalent to `GafferUI.NumericWidget.formatValue()`.
-QString doubleToString( double v )
+// Equivalent to `GafferUI.NumericWidget.valueToString()`.
+template<typename T>
+QString numberToString( T v )
 {
-	QString result = QString::number( v, 'f', 4 );
-	for( int i = result.size() - 1; i; --i )
+	if constexpr( std::is_floating_point_v<T> )
 	{
-		const QChar c = result.at( i );
-		if( c == '.' )
+		QString result = QString::number( v, 'f', 4 );
+		for( int i = result.size() - 1; i; --i )
 		{
-			result.truncate( i );
-			return result;
+			const QChar c = result.at( i );
+			if( c == '.' )
+			{
+				result.truncate( i );
+				return result;
+			}
+			else if ( c != '0' )
+			{
+				result.truncate( i + 1 );
+				return result;
+			}
 		}
-		else if ( c != '0' )
-		{
-			result.truncate( i + 1 );
-			return result;
-		}
+		return result;
 	}
-	return result;
+	else
+	{
+		return QString::number( v );
+	}
 }
 
 template<typename T>
@@ -215,7 +223,7 @@ QString vectorToString( const T &v )
 		{
 			result += " ";
 		}
-		result += doubleToString( v[i] );
+		result += numberToString( v[i] );
 	}
 	return result;
 }
@@ -243,7 +251,7 @@ QString matrixToString( const T &v )
 		result += "[";
 		for( size_t j = 0; j < T::dimensions(); ++j )
 		{
-			result += " " + doubleToString( v[i][j] );
+			result += " " + numberToString( v[i][j] );
 		}
 		result += " ]";
 	}
@@ -356,9 +364,9 @@ QVariant dataToVariant( const IECore::Data *value, int role )
 		case IECore::UInt64DataTypeId :
 			return (quint64)static_cast<const IECore::UInt64Data *>( value )->readable();
 		case IECore::FloatDataTypeId :
-			return doubleToString( static_cast<const IECore::FloatData *>( value )->readable() );
+			return numberToString( static_cast<const IECore::FloatData *>( value )->readable() );
 		case IECore::DoubleDataTypeId :
-			return doubleToString( static_cast<const IECore::DoubleData *>( value )->readable() );
+			return numberToString( static_cast<const IECore::DoubleData *>( value )->readable() );
 		case IECore::V2fDataTypeId :
 			return vectorToString( static_cast<const IECore::V2fData *>( value )->readable() );
 		case IECore::V3fDataTypeId :
@@ -371,6 +379,10 @@ QVariant dataToVariant( const IECore::Data *value, int role )
 			return boxToString( static_cast<const IECore::Box2fData *>( value )->readable() );
 		case IECore::Box3fDataTypeId :
 			return boxToString( static_cast<const IECore::Box3fData *>( value )->readable() );
+		case IECore::Box2iDataTypeId :
+			return boxToString( static_cast<const IECore::Box2iData *>( value )->readable() );
+		case IECore::Box3iDataTypeId :
+			return boxToString( static_cast<const IECore::Box3iData *>( value )->readable() );
 		case IECore::M33fDataTypeId :
 			return matrixToString( static_cast<const IECore::M33fData *>( value )->readable() );
 		case IECore::M44fDataTypeId :
