@@ -601,8 +601,7 @@ Inspector::HistoryPath::HistoryPath(
 ) :
 	Path( path, filter ),
 	m_inspector( inspector ),
-	m_context( context ),
-	m_plugMap()
+	m_context( context )
 {
 	assert( m_inspector );
 	assert( m_context );
@@ -613,13 +612,13 @@ Inspector::HistoryPath::HistoryPath(
 Inspector::HistoryPath::HistoryPath(
 	const InspectorPtr inspector,
 	ConstContextPtr context,
-	PlugMap plugMap,
+	const HistoryVectorConstPtr &historyVector,
 	const std::string &path,
 	PathFilterPtr filter
 ) : Path( path, filter ),
 	m_inspector( inspector ),
 	m_context( context ),
-	m_plugMap( plugMap )
+	m_historyVector( historyVector )
 {
 	assert( m_inspector );
 	assert( m_context );
@@ -634,7 +633,7 @@ void Inspector::HistoryPath::propertyNames( std::vector<InternedString> &names, 
 {
 	Path::propertyNames( names );
 
-	if( isLeaf() )
+	if( history() )
 	{
 		names.push_back( g_valuePropertyName );
 		names.push_back( g_fallbackValuePropertyName );
@@ -656,41 +655,31 @@ ConstRunTimeTypedPtr Inspector::HistoryPath::property( const InternedString &nam
 		name == g_editWarningPropertyName
 	)
 	{
-		if( names().size() != 1 )
-		{
-			return nullptr;
-		}
-
-		if( m_plugMap.size() == 0 )
-		{
-			updatePlugMap();
-		}
-
-		PlugMap::iterator it = m_plugMap.find( names()[0].string() );
-		if( it == m_plugMap.end() )
+		SceneAlgo::History::ConstPtr h = history();
+		if( !h )
 		{
 			return nullptr;
 		}
 
 		if( name == g_nodePropertyName )
 		{
-			return it->history->scene->node();
+			return h->scene->node();
 		}
 
-		Context::Scope currentScope( it->history->context.get() );
+		Context::Scope currentScope( h->context.get() );
 
 		if( name == g_valuePropertyName )
 		{
-			return m_inspector->value( it->history.get() );
+			return m_inspector->value( h.get() );
 		}
 		else if( name == g_fallbackValuePropertyName )
 		{
 			std::string fallbackDescription;
-			return m_inspector->fallbackValue( it->history.get(), fallbackDescription );
+			return m_inspector->fallbackValue( h.get(), fallbackDescription );
 		}
 
 		std::string editWarning;
-		ValuePlugPtr immediateSource = m_inspector->source( it->history.get(), editWarning );
+		ValuePlugPtr immediateSource = m_inspector->source( h.get(), editWarning );
 		if( !immediateSource )
 		{
 			return nullptr;
@@ -720,67 +709,89 @@ ConstRunTimeTypedPtr Inspector::HistoryPath::property( const InternedString &nam
 
 bool Inspector::HistoryPath::isValid( const Canceller *canceller ) const
 {
-	if( names().size() == 0 )
-	{
-		return true;
-	}
-	return names().size() == 1 && m_plugMap.count( names()[0].string() );
+	return names().size() == 0 || history();
 }
 
 bool Inspector::HistoryPath::isLeaf( const Canceller *canceller ) const
 {
-	return isValid() && names().size() == 1;
+	return names().size() == 1 && history();
 }
 
 PathPtr Inspector::HistoryPath::copy() const
 {
-	return new Inspector::HistoryPath( m_inspector, m_context, m_plugMap, string(), const_cast<PathFilter *>( getFilter() ) );
+	return new Inspector::HistoryPath( m_inspector, m_context, m_historyVector, string(), const_cast<PathFilter *>( getFilter() ) );
 }
 
 void Inspector::HistoryPath::pathChanged( Path *path )
 {
-	updatePlugMap();
+	updateHistoryVector();
 }
 
 void Inspector::HistoryPath::doChildren( std::vector<PathPtr> &children, const Canceller *canceller) const
 {
-	if( m_plugMap.size() == 0 )
-	{
-		updatePlugMap();
-	}
-
-	if( isLeaf() || m_plugMap.size() == 0 )
+	if( names().size() != 0 )
 	{
 		return;
 	}
 
+	updateHistoryVector();
+
 	std::string editWarning;
-	const auto &rand_index = m_plugMap.get<1>();
-	for( size_t i = 0; i < rand_index.size(); ++i )
+	for( size_t i = 0; i < m_historyVector->size(); ++i )
 	{
 		children.push_back(
 			new Inspector::HistoryPath(
 				m_inspector,
 				m_context,
-				m_plugMap,
-				std::string( "/" ) + rand_index[i].hashString
+				m_historyVector,
+				fmt::format( "/{}", i )
 			)
 		);
 	}
 }
 
-void Inspector::HistoryPath::updatePlugMap() const
+GafferScene::SceneAlgo::History::ConstPtr Inspector::HistoryPath::history() const
 {
-	m_plugMap.clear();
+	if( names().size() != 1 )
+	{
+		return nullptr;
+	}
 
-	Context::Scope currentScope( m_context.get() );
-	SceneAlgo::History::ConstPtr history = m_inspector->history();
+	const std::string &s = names()[0].string();
+	if( !s.size() )
+	{
+		return nullptr;
+	}
+	size_t index;
+	if( std::from_chars( s.data(), s.data() + s.size(), index ).ptr != s.data() + s.size() )
+	{
+		return nullptr;
+	}
 
-	if( !history )
+	updateHistoryVector();
+	if( index >= m_historyVector->size() )
+	{
+		return nullptr;
+	}
+	return (*m_historyVector)[index];
+}
+
+void Inspector::HistoryPath::updateHistoryVector() const
+{
+	if( m_historyVector )
 	{
 		return;
 	}
-	assert( history->scene );
+
+	auto newHistoryVector = std::make_shared<HistoryVector>();
+
+	Context::Scope currentScope( m_context.get() );
+	SceneAlgo::History::ConstPtr history = m_inspector->history();
+	if( !history )
+	{
+		m_historyVector = newHistoryVector;
+		return;
+	}
 
 	std::string editWarning;
 
@@ -790,10 +801,7 @@ void Inspector::HistoryPath::updatePlugMap() const
 
 		if( m_inspector->source( history.get(), editWarning ) )
 		{
-			MurmurHash h;
-			h.append( (uintptr_t)history->scene.get() );
-			h.append( history->context->hash() );
-			m_plugMap.insert( { h.toString(), history } );
+			newHistoryVector->push_back( history );
 		}
 
 		if( history->predecessors.size() == 0 )
@@ -813,7 +821,8 @@ void Inspector::HistoryPath::updatePlugMap() const
 		history = history->predecessors[0];
 	}
 
-	m_plugMap.get<1>().reverse();
+	std::reverse( newHistoryVector->begin(), newHistoryVector->end() );
+	m_historyVector = newHistoryVector;
 }
 
 //////////////////////////////////////////////////////////////////////////

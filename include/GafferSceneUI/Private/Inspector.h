@@ -243,41 +243,26 @@ class GAFFERSCENEUI_API Inspector : public IECore::RunTimeTyped, public Gaffer::
 
 			private :
 
-				// Index history entries using :
-				// 1. The hash of the ScenePlug address and the context. This uniquely
-				//    identifies the history item.
-				// 2. Random access for maintaining the order of the history.
-				struct PlugHistoryEntry
-				{
-					std::string hashString;
-					GafferScene::SceneAlgo::History::ConstPtr history;
-				};
-				using PlugMap = boost::multi_index::multi_index_container<
-					PlugHistoryEntry,
-					boost::multi_index::indexed_by<
-						boost::multi_index::hashed_unique<
-							boost::multi_index::member<PlugHistoryEntry, std::string, &PlugHistoryEntry::hashString>
-						>,
-						boost::multi_index::random_access<>
-					>
-				>;
+				using HistoryVector = std::vector<GafferScene::SceneAlgo::History::ConstPtr>;
+				using HistoryVectorConstPtr = std::shared_ptr<const HistoryVector>;
 
 				// Private constructor for creating children and copies. We reuse the
-				// acceleration structure `plugMap` to avoid computing history more than once.
+				// history vector to avoid computing history more than once.
 				HistoryPath(
 					const InspectorPtr inspector,
 					Gaffer::ConstContextPtr context,
-					PlugMap plugMap,
+					const HistoryVectorConstPtr &historyVector,
 					const std::string &path = "/",
 					Gaffer::PathFilterPtr filter = nullptr
 				);
 
-				void updatePlugMap() const;
+				GafferScene::SceneAlgo::History::ConstPtr history() const;
+				void updateHistoryVector() const;
 
 				const InspectorPtr m_inspector;
 				Gaffer::ConstContextPtr m_context;
 
-				mutable PlugMap m_plugMap;
+				mutable HistoryVectorConstPtr m_historyVector;
 
 		};
 
