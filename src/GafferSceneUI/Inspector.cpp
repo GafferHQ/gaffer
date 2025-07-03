@@ -717,12 +717,12 @@ bool Inspector::HistoryPath::isValid( const Canceller *canceller ) const
 	{
 		return true;
 	}
-	return m_plugMap.find( names()[0].string() ) != m_plugMap.end();
+	return names().size() == 1 && m_plugMap.count( names()[0].string() );
 }
 
 bool Inspector::HistoryPath::isLeaf( const Canceller *canceller ) const
 {
-	return isValid() && names().size() > 0;
+	return isValid() && names().size() == 1;
 }
 
 PathPtr Inspector::HistoryPath::copy() const

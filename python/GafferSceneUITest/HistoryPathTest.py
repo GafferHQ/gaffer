@@ -468,5 +468,30 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( c[1].property( "history:source" ), s["openGLAttributes"]["attributes"]["gl:visualiser:maxTextureResolution"] )
 		self.assertEqual( c[1].property( "history:editWarning" ), "Edits to \"gl:visualiser:maxTextureResolution\" may affect other locations in the scene." )
 
+	def testIsLeafAndIsValid( self ) :
+
+		light = GafferSceneTest.TestLight()
+		inspector = self.__inspector( light["out"], "exposure" )
+		with Gaffer.Context() as context :
+			context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/light" )
+			historyPath = inspector.historyPath()
+
+		self.assertTrue( historyPath.isValid() )
+		self.assertFalse( historyPath.isLeaf() )
+
+		historyPath = historyPath.children()[0]
+		self.assertTrue( historyPath.isValid() )
+		self.assertTrue( historyPath.isLeaf() )
+
+		historyPathDeeper = historyPath.copy()
+		historyPathDeeper.append( "foo" )
+		self.assertFalse( historyPathDeeper.isValid() )
+		self.assertFalse( historyPathDeeper.isLeaf() )
+
+		historyPathEdited = historyPath.copy()
+		historyPathEdited[0] += "foo"
+		self.assertFalse( historyPathEdited.isValid() )
+		self.assertFalse( historyPathEdited.isLeaf() )
+
 if __name__ == "__main__":
 	unittest.main()
