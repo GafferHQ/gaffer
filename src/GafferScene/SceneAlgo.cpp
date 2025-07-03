@@ -1565,34 +1565,29 @@ void GafferScene::SceneAlgo::applyCameraGlobals( IECoreScene::Camera *camera, co
 	}
 
 	const BoolData *overscanData = globals->member<BoolData>( "option:render:overscan" );
-	bool overscan = overscanData && overscanData->readable();
-	if( camera->hasOverscan() ) overscan = camera->getOverscan();
-	if( overscan )
+	if( !camera->hasOverscan() && overscanData )
 	{
-		if( !camera->hasOverscan() )
-		{
-			camera->setOverscan( true );
-		}
-		const FloatData *overscanLeftData = globals->member<FloatData>( "option:render:overscanLeft" );
-		if( !camera->hasOverscanLeft() && overscanLeftData )
-		{
-			camera->setOverscanLeft( overscanLeftData->readable() );
-		}
-		const FloatData *overscanRightData = globals->member<FloatData>( "option:render:overscanRight" );
-		if( !camera->hasOverscanRight() && overscanRightData )
-		{
-			camera->setOverscanRight( overscanRightData->readable() );
-		}
-		const FloatData *overscanTopData = globals->member<FloatData>( "option:render:overscanTop" );
-		if( !camera->hasOverscanTop() && overscanTopData )
-		{
-			camera->setOverscanTop( overscanTopData->readable() );
-		}
-		const FloatData *overscanBottomData = globals->member<FloatData>( "option:render:overscanBottom" );
-		if( !camera->hasOverscanBottom() && overscanBottomData )
-		{
-			camera->setOverscanBottom( overscanBottomData->readable() );
-		}
+		camera->setOverscan( overscanData->readable() );
+	}
+	const FloatData *overscanLeftData = globals->member<FloatData>( "option:render:overscanLeft" );
+	if( !camera->hasOverscanLeft() && overscanLeftData )
+	{
+		camera->setOverscanLeft( overscanLeftData->readable() );
+	}
+	const FloatData *overscanRightData = globals->member<FloatData>( "option:render:overscanRight" );
+	if( !camera->hasOverscanRight() && overscanRightData )
+	{
+		camera->setOverscanRight( overscanRightData->readable() );
+	}
+	const FloatData *overscanTopData = globals->member<FloatData>( "option:render:overscanTop" );
+	if( !camera->hasOverscanTop() && overscanTopData )
+	{
+		camera->setOverscanTop( overscanTopData->readable() );
+	}
+	const FloatData *overscanBottomData = globals->member<FloatData>( "option:render:overscanBottom" );
+	if( !camera->hasOverscanBottom() && overscanBottomData )
+	{
+		camera->setOverscanBottom( overscanBottomData->readable() );
 	}
 
 	const Box2fData *cropWindowData = globals->member<Box2fData>( "option:render:cropWindow" );
