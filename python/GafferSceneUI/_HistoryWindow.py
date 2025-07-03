@@ -279,24 +279,24 @@ class _HistoryWindow( GafferUI.Window ) :
 
 	def __updateFinished( self, pathListing ) :
 
-		self.__nodeNameChangedSignals = []
+		self.__nodeNameChangedSignals = {}
 
 		for path in self.__path.children() :
-			node = path.property( "history:node" )
 
 			# The node and all of its parents up to the script node
 			# contribute to the path name.
 
+			node = path.property( "history:node" )
 			while node is not None and not isinstance( node, Gaffer.ScriptNode ) :
-				self.__nodeNameChangedSignals.append(
-					node.nameChangedSignal().connect(
+				if node not in self.__nodeNameChangedSignals :
+					self.__nodeNameChangedSignals[node] = node.nameChangedSignal().connect(
 						Gaffer.WeakMethod( self.__nodeNameChanged ),
 						scoped = True
 					)
-				)
 
 				node = node.parent()
 
 	def __nodeNameChanged( self, node, oldName ) :
 
-		self.__path._emitPathChanged()
+		nameColumn = self.__pathListingWidget.getColumns()[0]
+		nameColumn.changedSignal()( nameColumn )
