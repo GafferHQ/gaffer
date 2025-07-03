@@ -40,6 +40,7 @@
 
 #include "GafferSceneUI/Private/Inspector.h"
 #include "GafferSceneUI/Private/AttributeInspector.h"
+#include "GafferSceneUI/Private/BasicInspector.h"
 #include "GafferSceneUI/Private/ParameterInspector.h"
 #include "GafferSceneUI/Private/SetMembershipInspector.h"
 #include "GafferSceneUI/Private/OptionInspector.h"
@@ -110,6 +111,39 @@ struct DirtiedSlotCaller
 		}
 	}
 };
+
+BasicInspectorPtr constructBasicInspector( const Gaffer::ValuePlugPtr &plug, const Gaffer::PlugPtr &editScope, object valueFunction, const std::string &type, const std::string &name )
+{
+	auto valueFunctionPtr = std::shared_ptr<boost::python::object>(
+		new boost::python::object( valueFunction ),
+		[]( boost::python::object *o ) {
+			// Custom deleter. We must hold the GIL when deleting Python
+			// objects.
+			IECorePython::ScopedGILLock gilLock;
+			delete o;
+		}
+	);
+
+	return new BasicInspector(
+		plug.get(), editScope,
+		[valueFunctionPtr] ( const ValuePlug *plug )
+		{
+			IECorePython::ScopedGILLock giLock;
+			try
+			{
+				IECore::ConstObjectPtr result = extract<IECore::ConstObjectPtr>(
+					(*valueFunctionPtr)( ValuePlugPtr( const_cast<ValuePlug *>( plug ) ) )
+				);
+				return result;
+			}
+			catch( const error_already_set & )
+			{
+				IECorePython::ExceptionAlgo::translatePythonException();
+			}
+		},
+		type, name
+	);
+}
 
 } // namespace
 
@@ -188,5 +222,12 @@ void GafferSceneUIModule::bindInspector()
 				( arg( "scene" ), arg( "editScope" ), arg( "option" ) )
 			)
 		)
+	;
+
+	RunTimeTypedClass<BasicInspector>( "BasicInspector" )
+		.def( "__init__", make_constructor(
+			constructBasicInspector, default_call_policies(),
+			( arg( "plug" ), arg( "editScope" ), arg( "valueFunction" ), arg( "type" ) = "", arg( "name" ) = "" )
+		) )
 	;
 }

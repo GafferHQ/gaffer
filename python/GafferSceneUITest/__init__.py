@@ -67,6 +67,7 @@ from .InspectorColumnTest import InspectorColumnTest
 from .ScriptNodeAlgoTest import ScriptNodeAlgoTest
 from .AttributeEditorTest import AttributeEditorTest
 from .CatalogueUITest import CatalogueUITest
+from .BasicInspectorTest import BasicInspectorTest
 
 if __name__ == "__main__":
 	unittest.main()

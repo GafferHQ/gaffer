@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,39 +36,58 @@
 
 #pragma once
 
-namespace GafferSceneUI
+#include "GafferSceneUI/Export.h"
+#include "GafferSceneUI/Private/Inspector.h"
+#include "GafferSceneUI/TypeIds.h"
+
+#include <functional>
+
+namespace GafferSceneUI::Private
 {
 
-enum TypeId
+/// A basic inspector subclass which defers to lambda functions for getting
+/// values from the history. Doesn't support editing, but does make it very
+/// simple to create a simple read-only inspector.
+class GAFFERSCENEUI_API BasicInspector : public Inspector
 {
-	SceneViewTypeId = 121000,
-	SceneGadgetTypeId = 121001,
-	SelectionToolTypeId = 121002,
-	CropWindowToolTypeId = 121003,
-	ShaderViewTypeId = 121004,
-	ShaderNodeGadgetTypeId = 121005,
-	TransformToolTypeId = 121006,
-	TranslateToolTypeId = 121007,
-	ScaleToolTypeId = 121008,
-	RotateToolTypeId = 121009,
-	CameraToolTypeId = 121010,
-	UVViewTypeId = 121011,
-	UVSceneTypeId = 121012,
-	HistoryPathTypeId = 121013,
-	SetPathTypeId = 121014,
-	LightToolTypeId = 121015,
-	LightPositionToolTypeId = 121016,
-	RenderPassPathTypeId = 121017,
-	VisualiserToolTypeId = 121018,
-	ImageSelectionToolTypeId = 121019,
-	InspectorTypeId = 121020,
-	OptionInspectorTypeId = 121021,
-	AttributeInspectorTypeId = 121022,
-	ParameterInspectorTypeId = 121023,
-	SetMembershipInspectorTypeId = 121024,
-	BasicInspectorTypeId = 121025,
 
-	LastTypeId = 121199
+	public :
+
+		/// Constructs an inspector to inspect `plug` and its history by calling
+		/// `valueFunction`.
+		template<typename PlugType, typename ValueFunctionType>
+		BasicInspector(
+			PlugType *plug, const Gaffer::PlugPtr &editScope,
+			/// The function used to inspect the value. Signature must be
+			/// `ConstObjectPtr ( const PlugType * )`.
+			const ValueFunctionType &&valueFunction,
+			const std::string &type = "", const std::string &name = ""
+		);
+
+		~BasicInspector() override;
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( BasicInspector, BasicInspectorTypeId, Inspector );
+
+	protected :
+
+		GafferScene::SceneAlgo::History::ConstPtr history() const override;
+		IECore::ConstObjectPtr value( const GafferScene::SceneAlgo::History *history ) const override;
+
+	private :
+
+		// Logically part of constructor, but in a separate function to avoid
+		// bloating the template.
+		void init();
+		void plugDirtied( Gaffer::Plug *plug );
+
+		const Gaffer::ValuePlugPtr m_plug;
+		using ValueFunction = std::function<IECore::ConstObjectPtr( const Gaffer::Plug * )>;
+		ValueFunction m_valueFunction;
+
 };
 
-} // namespace GafferSceneUI
+IE_CORE_DECLAREPTR( BasicInspector )
+
+} // namespace GafferSceneUI::Private
+
+#include "GafferSceneUI/Private/BasicInspector.inl"

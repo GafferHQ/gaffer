@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,39 +36,24 @@
 
 #pragma once
 
-namespace GafferSceneUI
+namespace GafferSceneUI::Private
 {
 
-enum TypeId
+template<typename PlugType, typename ValueFunctionType>
+BasicInspector::BasicInspector(
+	PlugType *plug, const Gaffer::PlugPtr &editScope,
+	const ValueFunctionType &&valueFunction,
+	const std::string &type, const std::string &name
+)
+	: 	Inspector( type, name, editScope ), m_plug( plug )
 {
-	SceneViewTypeId = 121000,
-	SceneGadgetTypeId = 121001,
-	SelectionToolTypeId = 121002,
-	CropWindowToolTypeId = 121003,
-	ShaderViewTypeId = 121004,
-	ShaderNodeGadgetTypeId = 121005,
-	TransformToolTypeId = 121006,
-	TranslateToolTypeId = 121007,
-	ScaleToolTypeId = 121008,
-	RotateToolTypeId = 121009,
-	CameraToolTypeId = 121010,
-	UVViewTypeId = 121011,
-	UVSceneTypeId = 121012,
-	HistoryPathTypeId = 121013,
-	SetPathTypeId = 121014,
-	LightToolTypeId = 121015,
-	LightPositionToolTypeId = 121016,
-	RenderPassPathTypeId = 121017,
-	VisualiserToolTypeId = 121018,
-	ImageSelectionToolTypeId = 121019,
-	InspectorTypeId = 121020,
-	OptionInspectorTypeId = 121021,
-	AttributeInspectorTypeId = 121022,
-	ParameterInspectorTypeId = 121023,
-	SetMembershipInspectorTypeId = 121024,
-	BasicInspectorTypeId = 121025,
+	// Wrapper downcasts the plug to the correct type, removing the
+	// need to do that manually in the supplied lambda.
+	m_valueFunction = [f = valueFunction] ( const Gaffer::Plug *p ) {
+		// Cast is safe because `m_plug` was initialised with `PlugType`.
+		return f( static_cast<const PlugType *>( p ) );
+	};
+	init();
+}
 
-	LastTypeId = 121199
-};
-
-} // namespace GafferSceneUI
+} // namespace GafferSceneUI::Private
