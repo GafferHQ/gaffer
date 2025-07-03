@@ -647,64 +647,71 @@ void Inspector::HistoryPath::propertyNames( std::vector<InternedString> &names, 
 
 ConstRunTimeTypedPtr Inspector::HistoryPath::property( const InternedString &name, const Canceller *canceller) const
 {
-	if( m_plugMap.size() == 0 )
-	{
-		updatePlugMap();
-	}
-
-	if( isLeaf() && name == g_nodePropertyName )
-	{
-		// Remove the plug name from the end.
-		PlugMap::iterator it = m_plugMap.find( names()[0].string() );
-
-		return it->history->scene->node();
-	}
-
 	if(
-		isLeaf() && (
-			name == g_valuePropertyName ||
-			name == g_fallbackValuePropertyName ||
-			name == g_operationPropertyName ||
-			name == g_sourcePropertyName ||
-			name == g_editWarningPropertyName
-		)
+		name == g_nodePropertyName ||
+		name == g_valuePropertyName ||
+		name == g_fallbackValuePropertyName ||
+		name == g_operationPropertyName ||
+		name == g_sourcePropertyName ||
+		name == g_editWarningPropertyName
 	)
 	{
-		PlugMap::iterator it = m_plugMap.find( names()[0].string() );
+		if( names().size() != 1 )
+		{
+			return nullptr;
+		}
 
-		std::string editWarning;
-		std::string fallbackDescription;
+		if( m_plugMap.size() == 0 )
+		{
+			updatePlugMap();
+		}
+
+		PlugMap::iterator it = m_plugMap.find( names()[0].string() );
+		if( it == m_plugMap.end() )
+		{
+			return nullptr;
+		}
+
+		if( name == g_nodePropertyName )
+		{
+			return it->history->scene->node();
+		}
 
 		Context::Scope currentScope( it->history->context.get() );
 
-		if( ValuePlugPtr immediateSource = m_inspector->source( it->history.get(), editWarning ) )
+		if( name == g_valuePropertyName )
 		{
-			ValuePlug *source = static_cast<ValuePlug *>( spreadsheetAwareSource( immediateSource.get() ) );
+			return m_inspector->value( it->history.get() );
+		}
+		else if( name == g_fallbackValuePropertyName )
+		{
+			std::string fallbackDescription;
+			return m_inspector->fallbackValue( it->history.get(), fallbackDescription );
+		}
 
-			if( name == g_valuePropertyName )
+		std::string editWarning;
+		ValuePlugPtr immediateSource = m_inspector->source( it->history.get(), editWarning );
+		if( !immediateSource )
+		{
+			return nullptr;
+		}
+
+		ValuePlug *source = static_cast<ValuePlug *>( spreadsheetAwareSource( immediateSource.get() ) );
+		if( name == g_sourcePropertyName )
+		{
+			return source;
+		}
+		else if( name == g_editWarningPropertyName )
+		{
+			return new StringData( editWarning );
+		}
+		else if( name == g_operationPropertyName )
+		{
+			if( auto tweakPlug = runTimeCast<const TweakPlug>( source ) )
 			{
-				return runTimeCast<const IECore::Data>( m_inspector->value( it->history.get() ) );
+				return new IntData( tweakPlug->modePlug()->getValue() );
 			}
-			else if( name == g_fallbackValuePropertyName )
-			{
-				return runTimeCast<const IECore::Data>( m_inspector->fallbackValue( it->history.get(), fallbackDescription ) );
-			}
-			else if( name == g_operationPropertyName )
-			{
-				if( auto tweakPlug = runTimeCast<const TweakPlug>( source ) )
-				{
-					return new IntData( tweakPlug->modePlug()->getValue() );
-				}
-				return new IntData( TweakPlug::Mode::Create );
-			}
-			else if( name == g_sourcePropertyName )
-			{
-				return source;
-			}
-			else if( name == g_editWarningPropertyName )
-			{
-				return new StringData( editWarning );
-			}
+			return new IntData( TweakPlug::Mode::Create );
 		}
 	}
 

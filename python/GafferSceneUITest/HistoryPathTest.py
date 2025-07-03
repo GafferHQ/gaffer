@@ -493,5 +493,26 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		self.assertFalse( historyPathEdited.isValid() )
 		self.assertFalse( historyPathEdited.isLeaf() )
 
+	def testNoPropertiesOnNonLeafPaths( self ) :
+
+		light = GafferSceneTest.TestLight()
+		inspector = self.__inspector( light["out"], "exposure" )
+		with Gaffer.Context() as context :
+			context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/light" )
+			historyPath = inspector.historyPath()
+
+		self.assertIsNone( historyPath.property( "history:node" ) )
+
+		historyPath = historyPath.children()[0]
+		self.assertIsNotNone( historyPath.property( "history:node" ) )
+
+		historyPathDeeper = historyPath.copy()
+		historyPathDeeper.append( "foo" )
+		self.assertIsNone( historyPathDeeper.property( "history:node" ) )
+
+		historyPathEdited = historyPath.copy()
+		historyPathEdited[0] += "foo"
+		self.assertIsNone( historyPathEdited.property( "history:node" ) )
+
 if __name__ == "__main__":
 	unittest.main()
