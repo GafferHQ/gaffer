@@ -269,6 +269,10 @@ void Checkerboard::hashChannelData( const GafferImage::ImagePlug *output, const 
 	h.append( channelName );
 
 	const int channelIndex = ImageAlgo::colorIndex( channelName );
+	if( channelIndex == -1 )
+	{
+		throw IECore::Exception( "Evaluated with invalid channel name: \"" + channelName + "\". This indicates a bug in a downstream node." );
+	}
 	colorAPlug()->getChild( channelIndex )->hash( h );
 	colorBPlug()->getChild( channelIndex )->hash( h );
 
@@ -279,6 +283,10 @@ void Checkerboard::hashChannelData( const GafferImage::ImagePlug *output, const 
 IECore::ConstFloatVectorDataPtr Checkerboard::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	const int channelIndex = ImageAlgo::colorIndex( context->get<std::string>( ImagePlug::channelNameContextName ) );
+	if( channelIndex == -1 )
+	{
+		throw IECore::Exception( "Evaluated with invalid channel name: \"" + channelName + "\". This indicates a bug in a downstream node." );
+	}
 
 	const float valueA = colorAPlug()->getChild( channelIndex )->getValue();
 	const float valueB = colorBPlug()->getChild( channelIndex )->getValue();
