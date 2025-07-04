@@ -180,13 +180,7 @@ class _HistoryWindow( GafferUI.Window ) :
 		with self.__inspectionPath.inspectionContext() :
 			self.__path = self.__inspector.historyPath()
 
-		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ), scoped = True )
 		self.__pathListingWidget.setPath( self.__path )
-
-	def __pathChanged( self, path ) :
-
-		if len( path.children() ) == 0 :
-			self.close()
 
 	def __buttonDoubleClick( self, pathListing, event ) :
 
@@ -279,8 +273,14 @@ class _HistoryWindow( GafferUI.Window ) :
 
 	def __updateFinished( self, pathListing ) :
 
-		self.__nodeNameChangedSignals = {}
+		# Note : Now the update is finished, we know our HistoryPath has
+		# computed and cached everything internally. So we can call `children()`
+		# without fear of blocking the UI waiting for it to compute.
 
+		# Arrange to signal changes for the node name
+		# column if any nodes are renamed.
+
+		self.__nodeNameChangedSignals = {}
 		for path in self.__path.children() :
 
 			# The node and all of its parents up to the script node
@@ -295,6 +295,13 @@ class _HistoryWindow( GafferUI.Window ) :
 					)
 
 				node = node.parent()
+
+		# Close window if there's no longer anything to show.
+
+		if len( self.__path.children() ) == 0 :
+			# History is empty, for example because the scene location no
+			# longer exists.
+			self.close()
 
 	def __nodeNameChanged( self, node, oldName ) :
 
