@@ -50,7 +50,10 @@ void IECoreCycles::CameraAlgo::convert( const IECoreScene::Camera *source, ccl::
 	{
 		destination->set_camera_type( ccl::CameraType::CAMERA_PERSPECTIVE );
 		destination->set_fov( M_PI_2 );
-		if( source->getFStop() > 0.0f )
+		/// \todo Switch to `source->getDepthOfField()` once we have added the
+		/// depthOfField parameter to Cortex.
+		const BoolData *d = source->parametersData()->member<BoolData>( "depthOfField" );
+		if( d && d->readable() && source->getFStop() > 0.0f )
 		{
 			destination->set_aperturesize( 0.5f * source->getFocalLength() * source->getFocalLengthWorldScale() / source->getFStop() );
 			destination->set_focaldistance( source->getFocusDistance() );

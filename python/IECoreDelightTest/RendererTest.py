@@ -611,6 +611,51 @@ class RendererTest( GafferTest.TestCase ) :
 		self.__assertInNSI( '"clippingrange" "double" 2 [ 0.25 10 ]', nsi )
 		self.__assertInNSI( '"shutterrange" "double" 2 [ 0 1 ]', nsi )
 
+	def testCameraDepthOfField( self ) :
+
+		for depthOfField in [ True, False, None ] :
+			for fStop in [ 0.0, 2.5 ] :
+				with self.subTest( depthOfField = depthOfField, fStop = fStop ) :
+					r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+						"3Delight",
+						GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+						str( self.temporaryDirectory() / "test.nsia" ),
+					)
+
+					r.camera(
+						"testCamera",
+						IECoreScene.Camera(
+							parameters = {
+								"resolution" : imath.V2i( 2000, 1000 ),
+								"projection" : "perspective",
+								"aperture" : imath.V2f( 6, 6 ),
+								"focalLength" : 5.0,
+								"focusDistance" : 10.0,
+								"fStop" : fStop,
+							} | ( { "depthOfField" : depthOfField } if depthOfField is not None else {} )
+						)
+					)
+
+					r.option( "camera", IECore.StringData( "testCamera" ) )
+
+					r.render()
+					del r
+
+					nsi = self.__parse( self.temporaryDirectory() / "test.nsia" )
+
+					self.__assertInNSI( '"fov" "float" 1 90', nsi )
+					self.__assertInNSI( '"resolution" "int[2]" 1 [ 2000 1000 ]', nsi )
+					if depthOfField and fStop > 0 :
+						self.__assertInNSI( '"depthoffield.enable" "int" 1 1', nsi )
+						self.__assertInNSI( f'"depthoffield.fstop" "double" 1 {fStop}', nsi )
+						self.__assertInNSI( '"depthoffield.focallength" "double" 1 0.5', nsi )
+						self.__assertInNSI( '"depthoffield.focaldistance" "double" 1 10', nsi )
+					else :
+						self.__assertNotInNSI( '"depthoffield.enable" "int" 1 1', nsi )
+						self.__assertNotInNSI( f'"depthoffield.fstop" "double" 1 {fStop}', nsi )
+						self.__assertNotInNSI( '"depthoffield.focallength" "double" 1 0.5', nsi )
+						self.__assertNotInNSI( '"depthoffield.focaldistance" "double" 1 10', nsi )
+
 	def testObjectInstancing( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(

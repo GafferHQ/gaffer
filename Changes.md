@@ -57,7 +57,9 @@ API
 - RenderController : Added `renderManifest()` method.
 - ImageGadget : Added support for showing selected and highlighted ids. Controlled using `setIDChannel`, `setSelectedIDs`, and `setHighlightID`.
 - ShadingEngine : Added support for passing custom pointclouds to the `shade()` call.
-- SceneAlgo : `applyCameraGlobals()` now always applies the `render:overscan[Top/Bottom/Left/Right]` options to the camera if they exist in the scene globals.
+- SceneAlgo :
+  - `applyCameraGlobals()` now always applies the `render:overscan[Top/Bottom/Left/Right]` options to the camera if they exist in the scene globals.
+  - `applyCameraGlobals()` now applies the `render:depthOfField` option to the `depthOfField` camera parameter. The `fStop` camera parameter is no longer overridden to `0.0` when the `render:depthOfField` option is `False` or not specified.
 
 Breaking Changes
 ----------------

@@ -1603,22 +1603,10 @@ void GafferScene::SceneAlgo::applyCameraGlobals( IECoreScene::Camera *camera, co
 	}*/
 	// \todo - switch to the form above once we have officially added the depthOfField parameter to Cortex.
 	// The plan then would be that the renderer backends should respect camera->getDepthOfField.
-	// For the moment we bake into fStop instead
-	bool depthOfField = false;
-	if( depthOfFieldData )
+	const BoolData *cameraDepthOfFieldData = camera->parametersData()->member<BoolData>( "depthOfField" );
+	if( !cameraDepthOfFieldData && depthOfFieldData )
 	{
-		// First set from render globals
-		depthOfField = depthOfFieldData->readable();
-	}
-	if( const BoolData *d = camera->parametersData()->member<BoolData>( "depthOfField" ) )
-	{
-		// Override based on camera setting
-		depthOfField = d->readable();
-	}
-	if( !depthOfField )
-	{
-		// If there is no depth of field, bake that into the fStop
-		camera->setFStop( 0.0f );
+		camera->parametersData()->writable()["depthOfField"] = new BoolData( depthOfFieldData->readable() );
 	}
 
 	// Bake the shutter from the globals into the camera before passing it to the renderer backend
