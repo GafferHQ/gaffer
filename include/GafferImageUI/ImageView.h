@@ -63,11 +63,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferImage
 {
 
-IE_CORE_FORWARDDECLARE( ImageProcessor )
-IE_CORE_FORWARDDECLARE( ImageStats )
-IE_CORE_FORWARDDECLARE( DeepState )
 IE_CORE_FORWARDDECLARE( ImagePlug )
-IE_CORE_FORWARDDECLARE( ImageSampler )
 
 } // namespace GafferImage
 
@@ -109,33 +105,6 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		ImageGadget *imageGadget();
 		const ImageGadget *imageGadget() const;
 
-		class GAFFERIMAGEUI_API ColorInspectorPlug : public Gaffer::ValuePlug
-		{
-			public :
-				enum class GAFFERIMAGEUI_API Mode
-				{
-					Cursor,
-					Pixel,
-					Area
-				};
-
-				GAFFER_PLUG_DECLARE_TYPE( ColorInspectorPlug, ColorInspectorPlugTypeId, Gaffer::ValuePlug );
-
-				ColorInspectorPlug( const std::string &name = defaultName<ColorInspectorPlug>(), Direction direction=In, unsigned flags=Default );
-
-				Gaffer::IntPlug *modePlug();
-				const Gaffer::IntPlug *modePlug() const;
-
-				Gaffer::V2iPlug *pixelPlug();
-				const Gaffer::V2iPlug *pixelPlug() const;
-
-				Gaffer::Box2iPlug *areaPlug();
-				const Gaffer::Box2iPlug *areaPlug() const;
-
-				bool acceptsChild( const GraphComponent *potentialChild ) const override;
-				Gaffer::PlugPtr createCounterpart( const std::string &name, Plug::Direction direction ) const override;
-		};
-
 	protected :
 
 		/// May be called from a subclass constructor to add a converter
@@ -162,9 +131,6 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 
 		IE_CORE_FORWARDDECLARE( WipeHandle );
 		WipeHandlePtr m_wipeHandle;
-
-		class ColorInspector;
-		std::unique_ptr<ColorInspector> m_colorInspector;
 
 		Gaffer::ContextVariablesPtr m_comparisonSelect;
 		static ViewDescription<ImageView> g_viewDescription;
