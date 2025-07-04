@@ -48,6 +48,8 @@
 
 #include "fmt/format.h"
 
+#include <mutex>
+
 using namespace boost::placeholders;
 using namespace IECore;
 using namespace Gaffer;
@@ -590,6 +592,87 @@ PathPtr Inspector::historyPath()
 }
 
 //////////////////////////////////////////////////////////////////////////
+// HistoryPath::HistoryProvider
+//////////////////////////////////////////////////////////////////////////
+
+// Generates the history for a HistoryPath. The same provider is shared
+// between all children and copies of a path initially created by
+// `Inspector::historyPath()`. The history is initialised when it is first
+// required, allowing us to defer computation to the background task in
+// PathListingWidget.
+struct Inspector::HistoryPath::HistoryProvider
+{
+
+	HistoryProvider( const InspectorPtr &inspector, const ConstContextPtr &context )
+		:	inspector( inspector ), m_context( context )
+	{
+	}
+
+	const InspectorPtr inspector;
+
+	size_t historySize()
+	{
+		std::call_once( m_initFlag, &HistoryProvider::initHistory, this );
+		return m_historyVector.size();
+	}
+
+	const SceneAlgo::History *historyItem( size_t index )
+	{
+		std::call_once( m_initFlag, &HistoryProvider::initHistory, this );
+		return m_historyVector[index].get();
+	}
+
+	private :
+
+		const ConstContextPtr m_context;
+
+		void initHistory()
+		{
+			assert( m_historyVector.empty() );
+
+			Context::Scope currentScope( m_context.get() );
+			SceneAlgo::History::ConstPtr history = inspector->history();
+			if( !history )
+			{
+				return;
+			}
+
+			std::string editWarning;
+
+			while( true )
+			{
+				Context::Scope currentScope( history->context.get() );
+
+				if( inspector->source( history.get(), editWarning ) )
+				{
+					m_historyVector.push_back( history );
+				}
+
+				if( history->predecessors.size() == 0 )
+				{
+					break;
+				}
+				else if( history->predecessors.size() > 1 )
+				{
+					IECore::msg(
+						IECore::Msg::Warning,
+						"Inspector::HistoryPath",
+						"Branching histories are not supported, using first predecessor history only."
+					);
+				}
+
+				history = history->predecessors[0];
+			}
+
+			std::reverse( m_historyVector.begin(), m_historyVector.end() );
+		}
+
+		std::once_flag m_initFlag;
+		std::vector<SceneAlgo::History::ConstPtr> m_historyVector;
+
+};
+
+//////////////////////////////////////////////////////////////////////////
 // HistoryPath
 //////////////////////////////////////////////////////////////////////////
 
@@ -598,30 +681,18 @@ Inspector::HistoryPath::HistoryPath(
 	ConstContextPtr context,
 	const std::string &path,
 	PathFilterPtr filter
-) :
-	Path( path, filter ),
-	m_inspector( inspector ),
-	m_context( context )
+)
+	:	Path( path, filter ), m_historyProvider( std::make_shared<HistoryProvider>( inspector, context ) )
 {
-	assert( m_inspector );
-	assert( m_context );
-
-	pathChangedSignal().connectFront( boost::bind( &Inspector::HistoryPath::pathChanged, this, ::_1 ) );
 }
 
 Inspector::HistoryPath::HistoryPath(
-	const InspectorPtr inspector,
-	ConstContextPtr context,
-	const HistoryVectorConstPtr &historyVector,
+	const HistoryProviderPtr &historyProvider,
 	const std::string &path,
 	PathFilterPtr filter
-) : Path( path, filter ),
-	m_inspector( inspector ),
-	m_context( context ),
-	m_historyVector( historyVector )
+)
+	:	Path( path, filter ), m_historyProvider( historyProvider )
 {
-	assert( m_inspector );
-	assert( m_context );
 }
 
 Inspector::HistoryPath::~HistoryPath()
@@ -670,16 +741,16 @@ ConstRunTimeTypedPtr Inspector::HistoryPath::property( const InternedString &nam
 
 		if( name == g_valuePropertyName )
 		{
-			return m_inspector->value( h.get() );
+			return m_historyProvider->inspector->value( h.get() );
 		}
 		else if( name == g_fallbackValuePropertyName )
 		{
 			std::string fallbackDescription;
-			return m_inspector->fallbackValue( h.get(), fallbackDescription );
+			return m_historyProvider->inspector->fallbackValue( h.get(), fallbackDescription );
 		}
 
 		std::string editWarning;
-		ValuePlugPtr immediateSource = m_inspector->source( h.get(), editWarning );
+		ValuePlugPtr immediateSource = m_historyProvider->inspector->source( h.get(), editWarning );
 		if( !immediateSource )
 		{
 			return nullptr;
@@ -719,12 +790,7 @@ bool Inspector::HistoryPath::isLeaf( const Canceller *canceller ) const
 
 PathPtr Inspector::HistoryPath::copy() const
 {
-	return new Inspector::HistoryPath( m_inspector, m_context, m_historyVector, string(), const_cast<PathFilter *>( getFilter() ) );
-}
-
-void Inspector::HistoryPath::pathChanged( Path *path )
-{
-	updateHistoryVector();
+	return new Inspector::HistoryPath( m_historyProvider, string(), const_cast<PathFilter *>( getFilter() ) );
 }
 
 void Inspector::HistoryPath::doChildren( std::vector<PathPtr> &children, const Canceller *canceller) const
@@ -734,23 +800,16 @@ void Inspector::HistoryPath::doChildren( std::vector<PathPtr> &children, const C
 		return;
 	}
 
-	updateHistoryVector();
-
-	std::string editWarning;
-	for( size_t i = 0; i < m_historyVector->size(); ++i )
+	const size_t numChildren = m_historyProvider->historySize();
+	for( size_t i = 0; i < numChildren; ++i )
 	{
 		children.push_back(
-			new Inspector::HistoryPath(
-				m_inspector,
-				m_context,
-				m_historyVector,
-				fmt::format( "/{}", i )
-			)
+			new Inspector::HistoryPath( m_historyProvider, fmt::format( "/{}", i ) )
 		);
 	}
 }
 
-GafferScene::SceneAlgo::History::ConstPtr Inspector::HistoryPath::history() const
+const GafferScene::SceneAlgo::History *Inspector::HistoryPath::history() const
 {
 	if( names().size() != 1 )
 	{
@@ -768,61 +827,11 @@ GafferScene::SceneAlgo::History::ConstPtr Inspector::HistoryPath::history() cons
 		return nullptr;
 	}
 
-	updateHistoryVector();
-	if( index >= m_historyVector->size() )
+	if( index >= m_historyProvider->historySize() )
 	{
 		return nullptr;
 	}
-	return (*m_historyVector)[index];
-}
-
-void Inspector::HistoryPath::updateHistoryVector() const
-{
-	if( m_historyVector )
-	{
-		return;
-	}
-
-	auto newHistoryVector = std::make_shared<HistoryVector>();
-
-	Context::Scope currentScope( m_context.get() );
-	SceneAlgo::History::ConstPtr history = m_inspector->history();
-	if( !history )
-	{
-		m_historyVector = newHistoryVector;
-		return;
-	}
-
-	std::string editWarning;
-
-	while( true )
-	{
-		Context::Scope currentScope( history->context.get() );
-
-		if( m_inspector->source( history.get(), editWarning ) )
-		{
-			newHistoryVector->push_back( history );
-		}
-
-		if( history->predecessors.size() == 0 )
-		{
-			break;
-		}
-
-		else if( history->predecessors.size() > 1 )
-		{
-			IECore::msg(
-				IECore::Msg::Warning,
-				"Inspector::HistoryPath",
-				"Branching histories are not supported, using first predecessor history only."
-			);
-		}
-
-		history = history->predecessors[0];
-	}
-
-	std::reverse( newHistoryVector->begin(), newHistoryVector->end() );
-	m_historyVector = newHistoryVector;
+	return m_historyProvider->historyItem( index );
 }
 
 //////////////////////////////////////////////////////////////////////////

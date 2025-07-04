@@ -127,6 +127,12 @@ class GAFFERSCENEUI_API Inspector : public IECore::RunTimeTyped, public Gaffer::
 		/// in the current context. The path has a child for each predecessor in
 		/// the history, and properties `history:value`, `history:fallbackValue`,
 		/// `history:operation`, `history:source`, `history:editWarning` and `history:node`.
+		///
+		/// Like `inspect()`, this is a one-shot operation : if the inspector is
+		/// dirtied then a new call to `historyPath()` will be required. But the
+		/// path does defer inspection until its children or properties are
+		/// queried, allowing it to be used with PathListingWidget to perform
+		/// the queries without blocking the UI.
 		Gaffer::PathPtr historyPath();
 
 	protected :
@@ -235,34 +241,25 @@ class GAFFERSCENEUI_API Inspector : public IECore::RunTimeTyped, public Gaffer::
 				bool isLeaf( const IECore::Canceller *canceller = nullptr ) const override;
 				Gaffer::PathPtr copy() const override;
 
-				void pathChanged( Path *path );
-
 			protected :
 
 				void doChildren( std::vector<Gaffer::PathPtr> &children, const IECore::Canceller *canceller = nullptr ) const override;
 
 			private :
 
-				using HistoryVector = std::vector<GafferScene::SceneAlgo::History::ConstPtr>;
-				using HistoryVectorConstPtr = std::shared_ptr<const HistoryVector>;
+				struct HistoryProvider;
+				using HistoryProviderPtr = std::shared_ptr<HistoryProvider>;
 
-				// Private constructor for creating children and copies. We reuse the
-				// history vector to avoid computing history more than once.
+				// Private constructor for creating children and copies sharing
+				// the same history provider.
 				HistoryPath(
-					const InspectorPtr inspector,
-					Gaffer::ConstContextPtr context,
-					const HistoryVectorConstPtr &historyVector,
+					const HistoryProviderPtr &historyProvider,
 					const std::string &path = "/",
 					Gaffer::PathFilterPtr filter = nullptr
 				);
 
-				GafferScene::SceneAlgo::History::ConstPtr history() const;
-				void updateHistoryVector() const;
-
-				const InspectorPtr m_inspector;
-				Gaffer::ConstContextPtr m_context;
-
-				mutable HistoryVectorConstPtr m_historyVector;
+				const GafferScene::SceneAlgo::History *history() const;
+				HistoryProviderPtr m_historyProvider;
 
 		};
 

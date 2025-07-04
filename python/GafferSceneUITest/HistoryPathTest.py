@@ -514,5 +514,23 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		historyPathEdited[0] += "foo"
 		self.assertIsNone( historyPathEdited.property( "history:node" ) )
 
+	def testInspectionIsDeferred( self ) :
+
+		monitor = Gaffer.PerformanceMonitor()
+
+		light = GafferSceneTest.TestLight()
+		inspector = self.__inspector( light["out"], "exposure" )
+		with Gaffer.Context() as context :
+			context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/light" )
+			with monitor :
+				historyPath = inspector.historyPath()
+
+		self.assertEqual( len( monitor.allStatistics() ), 0 )
+
+		with monitor :
+			historyPath.children()
+
+		self.assertGreaterEqual( len( monitor.allStatistics() ), 1 )
+
 if __name__ == "__main__":
 	unittest.main()
