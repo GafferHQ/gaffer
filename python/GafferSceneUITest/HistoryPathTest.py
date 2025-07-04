@@ -35,13 +35,10 @@
 ##########################################################################
 
 import unittest
-import threading
-import imath
 
 import IECore
 
 import Gaffer
-import GafferTest
 import GafferScene
 import GafferSceneUI
 import GafferSceneTest
