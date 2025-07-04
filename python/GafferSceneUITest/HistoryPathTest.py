@@ -532,5 +532,28 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertGreaterEqual( len( monitor.allStatistics() ), 1 )
 
+	def testCancellation( self ) :
+
+		light = GafferSceneTest.TestLight()
+		inspector = self.__inspector( light["out"], "exposure" )
+		with Gaffer.Context() as context :
+			context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/light" )
+			historyPath = inspector.historyPath()
+
+		canceller = IECore.Canceller()
+		canceller.cancel()
+
+		with self.assertRaises( IECore.Cancelled ) :
+			historyPath.children( canceller )
+
+		historyPath.append( "0" )
+
+		light["parameters"]["exposure"].setValue( 1 )
+		with self.assertRaises( IECore.Cancelled ) :
+			historyPath.propertyNames( canceller )
+
+		with self.assertRaises( IECore.Cancelled ) :
+			historyPath.property( "history:source", canceller )
+
 if __name__ == "__main__":
 	unittest.main()

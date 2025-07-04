@@ -48,6 +48,7 @@ Fixes
 - LightEditor, RenderPassEditor, AttributeEditor :
   - Fixed missing history entries when two edits have the same source plug.
   - Fixed potential crashes in `Show History...`.
+  - Fixed potential UI lag in `Show History...`.
 
 API
 ---

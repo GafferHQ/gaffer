@@ -258,7 +258,7 @@ class GAFFERSCENEUI_API Inspector : public IECore::RunTimeTyped, public Gaffer::
 					Gaffer::PathFilterPtr filter = nullptr
 				);
 
-				const GafferScene::SceneAlgo::History *history() const;
+				const GafferScene::SceneAlgo::History *history( const IECore::Canceller *canceller ) const;
 				HistoryProviderPtr m_historyProvider;
 
 		};

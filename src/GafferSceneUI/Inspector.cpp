@@ -610,15 +610,15 @@ struct Inspector::HistoryPath::HistoryProvider
 
 	const InspectorPtr inspector;
 
-	size_t historySize()
+	size_t historySize( const IECore::Canceller *canceller )
 	{
-		std::call_once( m_initFlag, &HistoryProvider::initHistory, this );
+		std::call_once( m_initFlag, &HistoryProvider::initHistory, this, canceller );
 		return m_historyVector.size();
 	}
 
-	const SceneAlgo::History *historyItem( size_t index )
+	const SceneAlgo::History *historyItem( size_t index, const IECore::Canceller *canceller  )
 	{
-		std::call_once( m_initFlag, &HistoryProvider::initHistory, this );
+		std::call_once( m_initFlag, &HistoryProvider::initHistory, this, canceller );
 		return m_historyVector[index].get();
 	}
 
@@ -626,11 +626,16 @@ struct Inspector::HistoryPath::HistoryProvider
 
 		const ConstContextPtr m_context;
 
-		void initHistory()
+		void initHistory( const IECore::Canceller *canceller )
 		{
 			assert( m_historyVector.empty() );
 
-			Context::Scope currentScope( m_context.get() );
+			Context::EditableScope scope( m_context.get() );
+			if( canceller )
+			{
+				scope.setCanceller( canceller );
+			}
+
 			SceneAlgo::History::ConstPtr history = inspector->history();
 			if( !history )
 			{
@@ -641,7 +646,11 @@ struct Inspector::HistoryPath::HistoryProvider
 
 			while( true )
 			{
-				Context::Scope currentScope( history->context.get() );
+				Context::EditableScope scope( history->context.get() );
+				if( canceller )
+				{
+					scope.setCanceller( canceller );
+				}
 
 				if( inspector->source( history.get(), editWarning ) )
 				{
@@ -700,11 +709,11 @@ Inspector::HistoryPath::~HistoryPath()
 
 }
 
-void Inspector::HistoryPath::propertyNames( std::vector<InternedString> &names, const Canceller *canceller) const
+void Inspector::HistoryPath::propertyNames( std::vector<InternedString> &names, const Canceller *canceller ) const
 {
 	Path::propertyNames( names );
 
-	if( history() )
+	if( history( canceller ) )
 	{
 		names.push_back( g_valuePropertyName );
 		names.push_back( g_fallbackValuePropertyName );
@@ -715,7 +724,7 @@ void Inspector::HistoryPath::propertyNames( std::vector<InternedString> &names, 
 	}
 }
 
-ConstRunTimeTypedPtr Inspector::HistoryPath::property( const InternedString &name, const Canceller *canceller) const
+ConstRunTimeTypedPtr Inspector::HistoryPath::property( const InternedString &name, const Canceller *canceller ) const
 {
 	if(
 		name == g_nodePropertyName ||
@@ -726,7 +735,7 @@ ConstRunTimeTypedPtr Inspector::HistoryPath::property( const InternedString &nam
 		name == g_editWarningPropertyName
 	)
 	{
-		SceneAlgo::History::ConstPtr h = history();
+		SceneAlgo::History::ConstPtr h = history( canceller );
 		if( !h )
 		{
 			return nullptr;
@@ -737,7 +746,11 @@ ConstRunTimeTypedPtr Inspector::HistoryPath::property( const InternedString &nam
 			return h->scene->node();
 		}
 
-		Context::Scope currentScope( h->context.get() );
+		Context::EditableScope scope( h->context.get() );
+		if( canceller )
+		{
+			scope.setCanceller( canceller );
+		}
 
 		if( name == g_valuePropertyName )
 		{
@@ -780,12 +793,12 @@ ConstRunTimeTypedPtr Inspector::HistoryPath::property( const InternedString &nam
 
 bool Inspector::HistoryPath::isValid( const Canceller *canceller ) const
 {
-	return names().size() == 0 || history();
+	return names().size() == 0 || history( canceller );
 }
 
 bool Inspector::HistoryPath::isLeaf( const Canceller *canceller ) const
 {
-	return names().size() == 1 && history();
+	return names().size() == 1 && history( canceller );
 }
 
 PathPtr Inspector::HistoryPath::copy() const
@@ -800,7 +813,7 @@ void Inspector::HistoryPath::doChildren( std::vector<PathPtr> &children, const C
 		return;
 	}
 
-	const size_t numChildren = m_historyProvider->historySize();
+	const size_t numChildren = m_historyProvider->historySize( canceller );
 	for( size_t i = 0; i < numChildren; ++i )
 	{
 		children.push_back(
@@ -809,7 +822,7 @@ void Inspector::HistoryPath::doChildren( std::vector<PathPtr> &children, const C
 	}
 }
 
-const GafferScene::SceneAlgo::History *Inspector::HistoryPath::history() const
+const GafferScene::SceneAlgo::History *Inspector::HistoryPath::history( const IECore::Canceller *canceller ) const
 {
 	if( names().size() != 1 )
 	{
@@ -827,11 +840,11 @@ const GafferScene::SceneAlgo::History *Inspector::HistoryPath::history() const
 		return nullptr;
 	}
 
-	if( index >= m_historyProvider->historySize() )
+	if( index >= m_historyProvider->historySize( canceller ) )
 	{
 		return nullptr;
 	}
-	return m_historyProvider->historyItem( index );
+	return m_historyProvider->historyItem( index, canceller );
 }
 
 //////////////////////////////////////////////////////////////////////////
