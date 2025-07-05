@@ -1715,21 +1715,27 @@ ConstOutputPtr addGafferOutputParameters( const Output *output, const ScenePlug 
 	// Include the path to the render node to allow tools to back-track from the image
 	param->writable()["header:gaffer:sourceScene"] = new StringData( scene->relativeName( script ) );
 
-	std::string manifestFilePathOption = GafferScene::Private::RendererAlgo::renderManifestFilePath(
-		renderOptions.globals.get()
-	);
-	if( manifestFilePathOption != "" )
+	// It's a warning to specify a renderManifestFilePath without an ID output - the manifest won't be
+	// written, so don't stamp it into the outputs. We silently skip it here, because the warning will
+	// be output by Render::executeInternal
+	if( GafferScene::Private::RendererAlgo::hasIDOutput( renderOptions.globals.get() ) )
 	{
-		std::string manifestPath = std::filesystem::relative(
-			std::filesystem::path( manifestFilePathOption ),
-			std::filesystem::path( output->getName() ).parent_path()
-		).generic_string();
-		if( !manifestPath.size() )
+		std::string manifestFilePathOption = GafferScene::Private::RendererAlgo::renderManifestFilePath(
+			renderOptions.globals.get()
+		);
+		if( manifestFilePathOption != "" )
 		{
-			// If we can't find a relative path, use an absolute path
-			manifestPath = manifestFilePathOption;
+			std::string manifestPath = std::filesystem::relative(
+				std::filesystem::path( manifestFilePathOption ),
+				std::filesystem::path( output->getName() ).parent_path()
+			).generic_string();
+			if( !manifestPath.size() )
+			{
+				// If we can't find a relative path, use an absolute path
+				manifestPath = manifestFilePathOption;
+			}
+			param->writable()["header:gaffer:renderManifestFilePath"] = new StringData( manifestPath );
 		}
-		param->writable()["header:gaffer:renderManifestFilePath"] = new StringData( manifestPath );
 	}
 
 	// Include the current context
