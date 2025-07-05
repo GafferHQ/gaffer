@@ -232,7 +232,10 @@ ImageSelectionTool::ImageSelectionTool( View *view, const std::string &name )
 
 	m_selectedPathsChangedConnection = ScriptNodeAlgo::selectedPathsChangedSignal( view->scriptNode() ).connect( boost::bind( &ImageSelectionTool::selectedPathsChanged, this ) );
 
-	setStatus( "", false );
+	m_manifestError = "";
+	m_infoStatus = "";
+	statusChangedSignal()( *this );
+	plugDirtied( imagePlug()->metadataPlug() );
 }
 
 ImageSelectionTool::~ImageSelectionTool()
@@ -241,22 +244,25 @@ ImageSelectionTool::~ImageSelectionTool()
 
 std::string ImageSelectionTool::status() const
 {
-	return m_status;
-}
+	Context::Scope scopedContext( view()->context() );
+	std::string channelName = idChannelName( imagePlug()->channelNames()->readable() );
 
-void ImageSelectionTool::setStatus( const std::string &message, bool error )
-{
-	m_status = "";
-
-	if( error )
+	if( m_manifestError.size() )
 	{
-		m_status = "error:" + message;
+		return "error:" + m_manifestError;
 	}
-	else if( message.size() )
+	else if( channelName == "" )
 	{
-		m_status = "info:" + message;
+		return "error:No id channel";
 	}
-	statusChangedSignal()( *this );
+	else if( m_infoStatus.size() )
+	{
+		return "info:" + m_infoStatus;
+	}
+	else
+	{
+		return "info:Hover object to show path";
+	}
 }
 
 ImageSelectionTool::StatusChangedSignal &ImageSelectionTool::statusChangedSignal()
@@ -288,22 +294,74 @@ void ImageSelectionTool::plugDirtied( const Gaffer::Plug *plug )
 		// the metadata has changed, but we assume that if the input image is modified, it will trigger this
 		// signal. That gives us a cue that we need to recheck the manifest - even if none of the metadata
 		// has changed, if the image was rewritten, the manifest might have been rewritten as well.
-		m_manifestDirty = true;
+
+		// We want to reset the render manifest now, so we don't keep using a stale manifest if this function fails.
+		// But it's important we don't release the existing manifest until this function exits ( otherwise we could
+		// drop the current manifest from the cache, while it's still valid based on the filepath and mod time ).
+		std::shared_ptr<const RenderManifest> renderManifestKeepAlive = m_renderManifest;
+		m_renderManifest.reset();
+		m_manifestError.clear();
+
+		Context::Scope scopedContext( view()->context() );
+		const ImagePlug *image = imagePlug();
+
+		ConstCompoundDataPtr metadata = image->metadata();
+		ConstBoolDataPtr isRenderingData = metadata->member<BoolData>( g_isRenderingMetadataName );
+		if( isRenderingData && isRenderingData->readable() )
+		{
+			// Const cast is safe here since source scene only needs a non-const input in order to return a non-const
+			// result, and we treat the result as const.
+			const ScenePlug *scenePlug = SceneAlgo::sourceScene( const_cast<ImagePlug*>( image ) );
+
+			if( scenePlug )
+			{
+				const InteractiveRender *interactiveRenderNode = IECore::runTimeCast<const InteractiveRender>( scenePlug->node() );
+				if( interactiveRenderNode )
+				{
+					m_renderManifest = interactiveRenderNode->renderManifest();
+				}
+			}
+
+			return;
+		}
+
+		static const std::string g_cryptoLayerName( "crypto_object" );
+
+		try
+		{
+			// \todo : This should be done on a background thread.
+			// There should be a status message and spinner on the status bar while the compute is happening
+			// ( though it should probably only show up if the compute is slow to avoid flicker ). While the
+			// compute is happening, no interaction with the image selection tool should be allowed, and
+			// selection from ScriptNodeAlgo::getSelectedPaths should be synced to the selected ids when
+			// the background compute finishes.
+			//
+			// This would be very valuable, to avoid UI freezes if the manifest is large ... but also sounds
+			// a bit complicated, so we're not addressing it yet.
+			m_renderManifest = RenderManifest::loadFromImageMetadata( metadata.get(), g_cryptoLayerName );
+		}
+		catch( std::exception &e )
+		{
+			m_manifestError = e.what();
+		}
 
 		selectedPathsChanged();
-		setStatus( "", false );
+		statusChangedSignal()( *this );
 	}
+	else if( plug == imagePlug()->channelNamesPlug() )
+	{
+		statusChangedSignal()( *this );
+	}
+
 }
 
-IECore::PathMatcher ImageSelectionTool::pathsForIDs( const std::vector<uint32_t> &ids, std::string &message )
+IECore::PathMatcher ImageSelectionTool::pathsForIDs( const std::vector<uint32_t> &ids )
 {
 	if( !ids.size() )
 	{
 		return IECore::PathMatcher();
 	}
-
-	updateRenderManifest( message );
-	if( !m_renderManifest )
+	else if( !m_renderManifest )
 	{
 		return PathMatcher();
 	}
@@ -311,23 +369,20 @@ IECore::PathMatcher ImageSelectionTool::pathsForIDs( const std::vector<uint32_t>
 	return m_renderManifest->pathsForIDs( ids );
 }
 
-void ImageSelectionTool::idsForPaths( const IECore::PathMatcher &paths, std::vector<uint32_t> &result, std::string &message )
+void ImageSelectionTool::idsForPaths( const IECore::PathMatcher &paths, std::vector<uint32_t> &result )
 {
 	if( !paths.size() )
 	{
 		result.clear();
 		return;
 	}
-
-	updateRenderManifest( message );
-
-	if( !m_renderManifest )
+	else if( !m_renderManifest )
 	{
 		result.clear();
 		return;
 	}
 
-	// TODO - would it be worth saving an allocation by passing in `result` here?
+	// \todo - would it be worth saving an allocation by passing in `result` here?
 	result = m_renderManifest->idsForPaths( paths );
 }
 
@@ -419,13 +474,7 @@ std::unordered_set<uint32_t> ImageSelectionTool::rectIDs( const Imath::Box2i &re
 
 void ImageSelectionTool::selectedPathsChanged()
 {
-	std::string message;
-	idsForPaths( ScriptNodeAlgo::getSelectedPaths( view()->scriptNode() ), m_selectedIDs, message );
-
-	if( message.size() )
-	{
-		setStatus( message, true );
-	}
+	idsForPaths( ScriptNodeAlgo::getSelectedPaths( view()->scriptNode() ), m_selectedIDs );
 
 	std::sort( m_selectedIDs.begin(), m_selectedIDs.end() );
 
@@ -448,78 +497,17 @@ void ImageSelectionTool::updateSelectedIDs()
 	// call to pathsForIDs asynchronous ( setSelectedPaths would still need to be called on the UI thread ). Doesn't
 	// seem like it's too likely to be a big problem in practice.
 	Signals::BlockedConnection selectedPathsBlocker( m_selectedPathsChangedConnection );
-	std::string message;
-	ScriptNodeAlgo::setSelectedPaths( view()->scriptNode(), pathsForIDs( m_selectedIDs, message ) );
-	if( message.size() )
-	{
-		setStatus( message, true );
-	}
-}
-
-void ImageSelectionTool::updateRenderManifest( std::string &message )
-{
-	if( !m_manifestDirty )
-	{
-		return;
-	}
-
-	// We want to reset the render manifest now, so we don't keep using a stale manifest if this function fails.
-	// But it's important we don't release the existing manifest until this function exits ( otherwise we could
-	// drop the current manifest from the cache, while it's still valid based on the filepath and mod time ).
-	std::shared_ptr<const RenderManifest> renderManifestKeepAlive = m_renderManifest;
-	m_renderManifest.reset();
-
-	Context::Scope scopedContext( view()->context() );
-	const ImagePlug *image = imagePlug();
-
-	ConstCompoundDataPtr metadata = image->metadata();
-	ConstBoolDataPtr isRenderingData = metadata->member<BoolData>( g_isRenderingMetadataName );
-	if( isRenderingData && isRenderingData->readable() )
-	{
-		// Const cast is safe here since source scene only needs a non-const input in order to return a non-const
-		// result, and we treat the result as const.
-		const ScenePlug *scenePlug = SceneAlgo::sourceScene( const_cast<ImagePlug*>( image ) );
-
-		if( scenePlug )
-		{
-			const InteractiveRender *interactiveRenderNode = IECore::runTimeCast<const InteractiveRender>( scenePlug->node() );
-			if( interactiveRenderNode )
-			{
-				m_renderManifest = interactiveRenderNode->renderManifest();
-			}
-		}
-
-		return;
-	}
-
-
-	static const std::string g_cryptoLayerName( "crypto_object" );
-
-	try
-	{
-		m_renderManifest = RenderManifest::loadFromImageMetadata( metadata.get(), g_cryptoLayerName );
-		m_manifestDirty = false;
-	}
-	catch( std::exception &e )
-	{
-		message = std::string( "Selection not supported without manifest. No source InteractiveRender node, and loading manifest from image metadata failed with: " ) + e.what();
-	}
+	ScriptNodeAlgo::setSelectedPaths( view()->scriptNode(), pathsForIDs( m_selectedIDs ) );
 }
 
 void ImageSelectionTool::preRender()
 {
-	bool active = activePlug()->getValue();
 	Context::Scope scopedContext( view()->context() );
-	imageGadget()->setIDChannel( active ? idChannelName( imagePlug()->channelNames()->readable() ): "" );
-
-	if( !active )
-	{
-		setStatus( "", false );
-		return;
-	}
+	bool active = activePlug()->getValue();
+	imageGadget()->setIDChannel( active ? idChannelName( imagePlug()->channelNames()->readable() ) : "" );
 }
 
-// TODO - share somehow with SelectionTool?
+// \todo - share somehow with SelectionTool?
 ImageSelectionTool::DragOverlay *ImageSelectionTool::dragOverlay()
 {
 	// All instances of SelectionTool share a single drag overlay - this
@@ -651,15 +639,11 @@ IECore::RunTimeTypedPtr ImageSelectionTool::dragBegin( GafferUI::Gadget *gadget,
 	{
 		if( std::binary_search( m_selectedIDs.begin(), m_selectedIDs.end(), curID ) )
 		{
-			std::string message;
-			PathMatcher selectedPaths = pathsForIDs( m_selectedIDs, message );
-			if( message.size() )
-			{
-				setStatus( message, true );
-			}
+			PathMatcher selectedPaths = pathsForIDs( m_selectedIDs );
 
 			IECore::StringVectorDataPtr dragData = new IECore::StringVectorData();
 			selectedPaths.paths( dragData->writable() );
+
 			Pointer::setCurrent( "objects" );
 			m_initiatedDrag = true;
 			return dragData;
@@ -762,26 +746,24 @@ bool ImageSelectionTool::mouseMove( const GafferUI::ButtonEvent &event )
 
 	imageGadget()->setHighlightID( id );
 
+	m_infoStatus = "";
+
 	if( id == 0 )
 	{
-		setStatus( "", false );
+		statusChangedSignal()( *this );
 		view()->viewportGadget()->renderRequestSignal()( view()->viewportGadget() );
 		return false;
 	}
 
 	std::vector<uint32_t> ids = { id };
-	std::string message;
-	PathMatcher paths = pathsForIDs( ids, message );
+	PathMatcher paths = pathsForIDs( ids );
 
 	if( paths.size() )
 	{
-		setStatus( GafferScene::ScenePlug::pathToString( *PathMatcher::Iterator( paths.begin() ) ), false );
-	}
-	else if( message.size() )
-	{
-		setStatus( message, true );
+		m_infoStatus = GafferScene::ScenePlug::pathToString( *PathMatcher::Iterator( paths.begin() ) );
 	}
 
+	statusChangedSignal()( *this );
 	view()->viewportGadget()->renderRequestSignal()( view()->viewportGadget() );
 
 	return false;
@@ -790,7 +772,8 @@ bool ImageSelectionTool::mouseMove( const GafferUI::ButtonEvent &event )
 bool ImageSelectionTool::leave( const GafferUI::ButtonEvent &event )
 {
 	imageGadget()->setHighlightID( 0 );
-	setStatus( "", false );
+	m_infoStatus = "";
+	statusChangedSignal()( *this );
 	view()->viewportGadget()->renderRequestSignal()( view()->viewportGadget() );
 	return false;
 }

@@ -299,7 +299,7 @@ std::shared_ptr<const RenderManifest> RenderManifest::loadFromImageMetadata( con
 	}
 	catch( std::exception &e )
 	{
-		throw IECore::Exception( std::string( "Could not find manifest file : " ) + sideCarManifestPath + " : " + e.what() );
+		throw IECore::Exception( std::string( "Could not open manifest file : " ) + sideCarManifestPath );
 	}
 
 	FileCacheKey cacheKey( sideCarManifestPath, currentModTime );
