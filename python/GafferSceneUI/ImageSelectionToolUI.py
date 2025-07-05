@@ -97,6 +97,7 @@ class _StatusWidget( GafferUI.ListContainer ) :
 					self.__warningIcon = GafferUI.Image( "warningSmall.png" )
 					GafferUI.Spacer( size = imath.V2i( 4 ), maximumSize = imath.V2i( 4 ) )
 					self.__label = GafferUI.Label( "" )
+					self.__label.setTextSelectable( True )
 
 		self.__frame._qtWidget().setObjectName( "gafferImageSelectionStatus" )
 
