@@ -84,22 +84,4 @@ void GafferImageUIModule::bindImageView()
 		.def( "imageGadget", (ImageGadget *(ImageView::*)())&ImageView::imageGadget, return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "_insertConverter", &ImageViewWrapper::insertConverter )
 	;
-
-	scope ci = GafferBindings::PlugClass<ImageView::ColorInspectorPlug>()
-		.def( init<const char *, Plug::Direction, unsigned>(
-				(
-					boost::python::arg_( "name" )=GraphComponent::defaultName<ImageView::ColorInspectorPlug>(),
-					boost::python::arg_( "direction" )=Plug::In,
-					boost::python::arg_( "flags" )=Plug::Default
-				)
-			)
-		)
-	;
-
-	enum_<ImageView::ColorInspectorPlug::Mode>( "Mode" )
-		.value( "Cursor", ImageView::ColorInspectorPlug::Mode::Cursor )
-		.value( "Pixel", ImageView::ColorInspectorPlug::Mode::Pixel )
-		.value( "Area", ImageView::ColorInspectorPlug::Mode::Area )
-	;
-
 }

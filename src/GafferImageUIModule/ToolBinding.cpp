@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2025, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,23 +34,39 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-
-#include "ImageGadgetBinding.h"
-#include "ImageViewBinding.h"
-#include "OpenColorIOAlgoBinding.h"
 #include "ToolBinding.h"
 
+#include "GafferImageUI/ColorInspectorTool.h"
+
+#include "GafferBindings/NodeBinding.h"
+#include "GafferBindings/PlugBinding.h"
+
+using namespace std;
 using namespace boost::python;
+using namespace IECorePython;
+using namespace Gaffer;
 
-using namespace GafferImageUIModule;
-
-BOOST_PYTHON_MODULE( _GafferImageUI )
+void GafferImageUIModule::bindTools()
 {
 
-	bindImageView();
-	bindImageGadget();
-	bindOpenColorIOAlgo();
-	bindTools();
+	{
+		scope s = GafferBindings::NodeClass<GafferImageUI::ColorInspectorTool>( nullptr, no_init ) ;
 
+		scope ci = GafferBindings::PlugClass<GafferImageUI::ColorInspectorTool::ColorInspectorPlug>()
+			.def( init<const char *, Plug::Direction, unsigned>(
+					(
+						boost::python::arg_( "name" )=GraphComponent::defaultName<GafferImageUI::ColorInspectorTool::ColorInspectorPlug>(),
+						boost::python::arg_( "direction" )=Plug::In,
+						boost::python::arg_( "flags" )=Plug::Default
+					)
+				)
+			)
+		;
+
+		enum_<GafferImageUI::ColorInspectorTool::ColorInspectorPlug::Mode>( "Mode" )
+			.value( "Cursor", GafferImageUI::ColorInspectorTool::ColorInspectorPlug::Mode::Cursor )
+			.value( "Pixel", GafferImageUI::ColorInspectorTool::ColorInspectorPlug::Mode::Pixel )
+			.value( "Area", GafferImageUI::ColorInspectorTool::ColorInspectorPlug::Mode::Area )
+		;
+	}
 }
