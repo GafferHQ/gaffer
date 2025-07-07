@@ -269,7 +269,7 @@ std::string const g_vertexLabelShaderVertSource
 	"void main()\n"
 	"{\n"
 	"   vec4 p = vec4( ps, 1.0 ) * uniforms.o2c;\n"
-	"   p.z -= 0.001;\n"
+	"   p.z -= " BOOST_PP_STRINGIZE( FLT_EPSILON * 10.f ) ";\n"
 
 	"   gl_Position = p;\n"
 	"   outputs.vertexId = uint( gl_VertexID );\n"
