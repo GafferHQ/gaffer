@@ -49,6 +49,7 @@
 #include "fmt/format.h"
 
 #include <mutex>
+#include <thread>
 
 using namespace boost::placeholders;
 using namespace IECore;
@@ -604,7 +605,7 @@ struct Inspector::HistoryPath::HistoryProvider
 {
 
 	HistoryProvider( const InspectorPtr &inspector, const ConstContextPtr &context )
-		:	inspector( inspector ), m_context( context )
+		:	inspector( inspector ), m_context( context ), m_constructorThreadId( std::this_thread::get_id() )
 	{
 	}
 
@@ -625,10 +626,20 @@ struct Inspector::HistoryPath::HistoryProvider
 	private :
 
 		const ConstContextPtr m_context;
+		std::thread::id m_constructorThreadId;
 
 		void initHistory( const IECore::Canceller *canceller )
 		{
 			assert( m_historyVector.empty() );
+
+			if( std::this_thread::get_id() == m_constructorThreadId )
+			{
+				// Our intention is that HistoryPath is constructed on the main
+				// thread and then only ever evaluated in BackgroundTasks by a
+				// PathListingWidget, to avoid blocking the UI. Warn if we fail
+				// in this regard.
+				IECore::msg( IECore::Msg::Warning, "HistoryPath", "Path evaluated on unexpected thread" );
+			}
 
 			Context::EditableScope scope( m_context.get() );
 			if( canceller )

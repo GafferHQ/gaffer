@@ -58,6 +58,13 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 
 		return inspector
 
+	def setUp( self ) :
+
+		GafferSceneTest.SceneTestCase.setUp( self )
+		# Ignore messages intended to catch bad usage by the UI. It's fine
+		# to be testing on the main thread.
+		self.ignoreMessage( IECore.Msg.Level.Warning, "HistoryPath", "Path evaluated on unexpected thread" )
+
 	def test( self ) :
 
 		s = Gaffer.ScriptNode()
