@@ -44,9 +44,12 @@
 #include "GafferBindings/Serialisation.h"
 
 #include "Gaffer/GraphComponent.h"
+#include "Gaffer/Metadata.h"
 
 #include "IECorePython/ExceptionAlgo.h"
 #include "IECorePython/ScopedGILRelease.h"
+
+#include "IECore/SimpleTypedData.h"
 
 #include "boost/python/suite/indexing/container_utils.hpp"
 
@@ -151,12 +154,38 @@ void reorderChildren( GraphComponent &g, object pythonNewOrder )
 
 GraphComponentPtr getChild( GraphComponent &g, const IECore::InternedString &n )
 {
-	return g.getChild( n );
+	if( const auto child = g.getChild( n ) )
+	{
+		return child;
+	}
+	else if( const auto childAlias = Gaffer::Metadata::value<IECore::StringData>( &g, fmt::format( "compatibility:childAlias:{}", n.string() ) ) )
+	{
+		return g.getChild( childAlias->readable() );
+	}
+
+	return nullptr;
 }
 
 GraphComponentPtr descendant( GraphComponent &g, const std::string &n )
 {
-	return g.descendant( n );
+	if( !n.size() )
+	{
+		return nullptr;
+	}
+
+	using Tokenizer = boost::tokenizer<boost::char_separator<char> >;
+	Tokenizer tokens( n, boost::char_separator<char>( "." ) );
+	GraphComponentPtr result = &g;
+	for( const auto &token : tokens )
+	{
+		result = getChild( *result, token );
+		if( !result )
+		{
+			return nullptr;
+		}
+	}
+
+	return result;
 }
 
 void throwKeyError( const GraphComponent &g, const IECore::InternedString &n )
@@ -168,7 +197,7 @@ void throwKeyError( const GraphComponent &g, const IECore::InternedString &n )
 
 GraphComponentPtr getItem( GraphComponent &g, const IECore::InternedString &n )
 {
-	GraphComponentPtr c = g.getChild( n );
+	GraphComponentPtr c = getChild( g, n );
 	if( c )
 	{
 		return c;
@@ -200,7 +229,7 @@ void delItem( GraphComponent &g, const IECore::InternedString &n )
 {
 	{
 		IECorePython::ScopedGILRelease gilRelease;
-		if( GraphComponentPtr c = g.getChild( n ) )
+		if( GraphComponentPtr c = getChild( g, n ) )
 		{
 			g.removeChild( c );
 			return;
@@ -229,7 +258,7 @@ bool toBool( GraphComponent &g )
 
 bool contains( GraphComponent &g, const IECore::InternedString &n )
 {
-	return g.getChild( n );
+	return (bool)getChild( g, n );
 }
 
 GraphComponentPtr parent( GraphComponent &g )
