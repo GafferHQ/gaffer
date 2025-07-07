@@ -44,6 +44,7 @@ Fixes
 - PlugLayout : Fixed bug resolving `layout:index` metadata.
 - ScriptNodeAlgo : Stopped polluting the ScriptNode context with `ui:*` variables. Warnings are now emitted by the UI if anything else causes similar pollution.
 - Checkerboard : Fixed crash when evaluated for non-existent channel name.
+- PathListingWidget : Prevented emission of `updateFinishedSignal()` when a new update is pending anyway.
 
 API
 ---

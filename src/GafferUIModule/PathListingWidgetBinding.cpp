@@ -500,7 +500,8 @@ class PathModel : public QAbstractItemModel
 				m_sortColumn( -1 ),
 				m_sortOrder( Qt::AscendingOrder ),
 				m_modifyingTreeViewExpansion( false ),
-				m_updateScheduled( false )
+				m_updateScheduled( false ),
+				m_blockUpdateFinished( false )
 		{
 			connect( parent, &QTreeView::expanded, this, &PathModel::treeViewExpanded );
 			connect( parent, &QTreeView::collapsed, this, &PathModel::treeViewCollapsed );
@@ -1036,7 +1037,10 @@ class PathModel : public QAbstractItemModel
 						queueEdit(
 							[this] () {
 								finaliseRecursiveExpansion();
-								updateFinished();
+								if( !m_blockUpdateFinished )
+								{
+									updateFinished();
+								}
 							}
 						);
 					}
@@ -1092,6 +1096,7 @@ class PathModel : public QAbstractItemModel
 
 			if( flushPendingEdits )
 			{
+				Private::ScopedAssignment blockUpdateFinished( m_blockUpdateFinished, true );
 				QCoreApplication::sendPostedEvents( this, EditEvent::staticType() );
 			}
 		}
@@ -1934,6 +1939,7 @@ class PathModel : public QAbstractItemModel
 
 		std::unique_ptr<Gaffer::BackgroundTask> m_updateTask;
 		bool m_updateScheduled;
+		bool m_blockUpdateFinished;
 
 };
 

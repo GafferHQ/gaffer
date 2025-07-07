@@ -38,6 +38,7 @@
 import unittest
 import functools
 import time
+import threading
 import math
 
 import imath
@@ -1679,6 +1680,81 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
 		self.assertEqual( changes, [] )
 		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title 2" )
+
+	def testUpdateFinished( self ) :
+
+		widget = GafferUI.PathListingWidget( Gaffer.DictPath( {}, "/" ) )
+
+		cs = GafferTest.CapturingSlot( widget.updateFinishedSignal() )
+		self.assertEqual( len( cs ), 0 )
+
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+		self.assertEqual( len( cs ), 1 )
+
+		widget.getPath().pathChangedSignal()( widget.getPath() )
+		self.assertEqual( len( cs ), 1 )
+
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+		self.assertEqual( len( cs ), 2 )
+
+	def testUpdateFinishedNotSignalledForStaleUpdate( self ) :
+
+		childrenCalledCondition = threading.Condition()
+
+		class ConditionPath( Gaffer.Path ) :
+
+			def __init__( self, path, root="/", filter=None ) :
+
+				Gaffer.Path.__init__( self, path, root, filter=filter )
+
+			def isValid( self, canceller = None ) :
+
+				return len( self ) == 0
+
+			def isLeaf( self, canceller = None ) :
+
+				return False
+
+			def copy( self ) :
+
+				return ConditionPath(
+					self[:], self.root(), self.getFilter()
+				)
+
+			def _children( self, canceller = None ) :
+
+				with childrenCalledCondition :
+					childrenCalledCondition.notify()
+
+				return []
+
+		with GafferUI.Window() as window :
+			widget = GafferUI.PathListingWidget( ConditionPath( {}, "/" ) )
+
+		cs = GafferTest.CapturingSlot( widget.updateFinishedSignal() )
+		self.assertEqual( len( cs ), 0 )
+
+		with childrenCalledCondition :
+			# Make window visible and give it time to start an update.
+			window.setVisible( True )
+			self.waitForIdle( 20000 )
+			# Wait for the update to get as far as invoking
+			# `ConditionPath._children()`. No cancellation will occur after this
+			# point.
+			childrenCalledCondition.wait()
+			# Fake a change to the path. This will schedule a new update. Because
+			# we haven't allowed idle events to run yet, this will be scheduled
+			# _before_ the widget has had a chance to emit `updateFinished` for
+			# the first update.
+			widget.getPath().pathChangedSignal()( widget.getPath() )
+			self.assertEqual( len( cs ), 0 )
+
+		# Allow the new update to run to completion.
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+		# We only want `updateFinished` to have been emitted once. We don't want it to
+		# have been emitted for the first update, because the results were stale at that
+		# point.
+		self.assertEqual( len( cs ), 1 )
 
 	@staticmethod
 	def __emitPathChanged( widget ) :
