@@ -99,7 +99,6 @@ IE_CORE_FORWARDDECLARE( Inspector );
 ///   This has additional requirements such as knowing the `transformSpace` that a node
 ///   works in. We think this information can be stored in a dedicated TransformHistory
 ///   class provided by SceneAlgo, avoiding any need to specialise Inspector::Result.
-
 class GAFFERSCENEUI_API Inspector : public IECore::RunTimeTyped, public Gaffer::Signals::Trackable
 {
 
@@ -202,8 +201,6 @@ class GAFFERSCENEUI_API Inspector : public IECore::RunTimeTyped, public Gaffer::
 		/// edit `plug` to set `value`. Called with `history->context` as the
 		/// current context.
 		virtual EditFunction editFunction( const GafferScene::SceneAlgo::History *history ) const;
-
-	protected :
 
 		Gaffer::EditScope *targetEditScope() const;
 
