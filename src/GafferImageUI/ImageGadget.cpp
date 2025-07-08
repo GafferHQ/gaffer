@@ -1070,7 +1070,20 @@ Imath::V2f ImageGadget::pixelAt( const IECore::LineSegment3f &lineInGadgetSpace 
 		return V2f( 0 );
 	}
 
-	return V2f( i.x / format().getPixelAspect(), i.y );
+	Format f;
+	try
+	{
+		f = format();
+	}
+	catch( ... )
+	{
+		// Clients wouldn't necessarily expect pixelAt to throw - if the input image is invalid, there
+		// should be other indications in the UI, so it's probably safe to silently return a default pixel
+		// here.
+		return V2f( 0 );
+	}
+
+	return V2f( i.x / f.getPixelAspect(), i.y );
 }
 
 void ImageGadget::setWipeEnabled( bool enabled )
