@@ -305,7 +305,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 				args.append( "-ignoreScriptLoadErrors" )
 
 			contextArgs = []
-			for entry in [ k for k in taskContext.keys() if k != "frame" and not k.startswith( "ui:" ) ] :
+			for entry in [ k for k in taskContext.keys() if k != "frame" ] :
 				if entry not in self.__context.keys() or taskContext[entry] != self.__context[entry] :
 					contextArgs.extend( [ "-" + entry, IECore.repr( taskContext[entry] ) ] )
 

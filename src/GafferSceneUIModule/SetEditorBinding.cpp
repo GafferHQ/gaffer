@@ -356,10 +356,7 @@ class SetPath : public Gaffer::Path
 
 		void contextChanged( const IECore::InternedString &key )
 		{
-			if( !boost::starts_with( key.c_str(), "ui:" ) )
-			{
-				emitPathChanged();
-			}
+			emitPathChanged();
 		}
 
 		void plugDirtied( Gaffer::Plug *plug )

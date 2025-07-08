@@ -36,8 +36,7 @@
 
 #include "GafferSceneUI/ScriptNodeAlgo.h"
 
-#include "GafferSceneUI/ContextAlgo.h"
-
+#include "GafferScene/ScenePlug.h"
 #include "GafferScene/VisibleSetData.h"
 
 #include "Gaffer/Context.h"
@@ -54,11 +53,15 @@
 
 using namespace boost::placeholders;
 using namespace Gaffer;
+using namespace GafferScene;
 using namespace GafferSceneUI;
 
 namespace
 {
 
+const InternedString g_selectedPathsName( "ui:scene:selectedPaths" );
+const InternedString g_lastSelectedPathName( "ui:scene:lastSelectedPath" );
+const InternedString g_visibleSetName( "ui:scene:visibleSet" );
 const std::string g_visibleSetBookmarkPrefix( "visibleSet:bookmark:" );
 
 struct ChangedSignals
@@ -68,14 +71,13 @@ struct ChangedSignals
 	Gaffer::Signals::ScopedConnection connection;
 };
 
-void contextChanged( IECore::InternedString variable, ScriptNode *script, ChangedSignals *signals )
+void metadataChanged( IECore::InternedString key, ScriptNode *script, ChangedSignals *signals )
 {
-	if( ContextAlgo::affectsVisibleSet( variable ) )
+	if( key == g_visibleSetName )
 	{
 		signals->visibleSetChangedSignal( script );
 	}
-
-	if( ContextAlgo::affectsSelectedPaths( variable ) || ContextAlgo::affectsLastSelectedPath( variable ) )
+	else if( key == g_selectedPathsName || key == g_lastSelectedPathName )
 	{
 		signals->selectedPathsChangedSignal( script );
 	}
@@ -92,32 +94,61 @@ ChangedSignals &changedSignals( ScriptNode *script )
 	{
 		// Either we just made the signals, or an old ScriptNode
 		// was destroyed and a new one made in its place.
-		result.connection = const_cast<Context *>( script->context() )->changedSignal().connect(
-			boost::bind( &contextChanged, ::_2, script, &result )
+		result.connection = Metadata::nodeValueChangedSignal( script ).connect(
+			boost::bind( &metadataChanged, ::_2, script, &result )
 		);
 	}
 	return result;
 }
 
-} // namespace
+bool expandWalk( const ScenePlug::ScenePath &path, const ScenePlug *scene, size_t depth, PathMatcher &expanded, PathMatcher &leafPaths )
+{
+	bool result = false;
 
-/// Everything here is implemented as a shim on top of ContextAlgo. Our intention is to move everyone
-/// over to using ScriptNodeAlgo, then to remove ContextAlgo and reimplement ScriptNodeAlgo using the
-/// metadata API to store the state as metadata on the ScriptNode. This will bring several benefits :
-///
-/// - We can drop all the special cases for ignoring `ui:` metadata in Contexts. Using the context
-///   for UI state was a terrible idea in the first place.
-/// - Copying contexts during compute will be cheaper, since there will be fewer variables.
-/// - We'll be able to serialise the UI state with the script if we want to.
+	ConstInternedStringVectorDataPtr childNamesData = scene->childNames( path );
+	const std::vector<InternedString> &childNames = childNamesData->readable();
+
+	if( childNames.size() )
+	{
+		result |= expanded.addPath( path );
+
+		ScenePlug::ScenePath childPath = path;
+		childPath.push_back( InternedString() ); // room for the child name
+		for( std::vector<InternedString>::const_iterator cIt = childNames.begin(), ceIt = childNames.end(); cIt != ceIt; cIt++ )
+		{
+			childPath.back() = *cIt;
+			if( depth == 1 )
+			{
+				// at the bottom of the expansion - consider the child a leaf
+				result |= leafPaths.addPath( childPath );
+			}
+			else
+			{
+				// continue the expansion
+				result |= expandWalk( childPath, scene, depth - 1, expanded, leafPaths );
+			}
+		}
+	}
+	else
+	{
+		// we have no children, just mark the leaf of the expansion.
+		result |= leafPaths.addPath( path );
+	}
+
+	return result;
+}
+
+} // namespace
 
 void ScriptNodeAlgo::setVisibleSet( Gaffer::ScriptNode *script, const GafferScene::VisibleSet &visibleSet )
 {
-	ContextAlgo::setVisibleSet( script->context(), visibleSet );
+	Metadata::registerValue( script, g_visibleSetName, new VisibleSetData( visibleSet ), /* persistent = */ false );
 }
 
 GafferScene::VisibleSet ScriptNodeAlgo::getVisibleSet( const Gaffer::ScriptNode *script )
 {
-	return ContextAlgo::getVisibleSet( script->context() );
+	auto d = Metadata::value<VisibleSetData>( script, g_visibleSetName );
+	return d ? d->readable() : VisibleSet();
 }
 
 ScriptNodeAlgo::ChangedSignal &ScriptNodeAlgo::visibleSetChangedSignal( Gaffer::ScriptNode *script )
@@ -127,32 +158,97 @@ ScriptNodeAlgo::ChangedSignal &ScriptNodeAlgo::visibleSetChangedSignal( Gaffer::
 
 void ScriptNodeAlgo::expandInVisibleSet( Gaffer::ScriptNode *script, const IECore::PathMatcher &paths, bool expandAncestors )
 {
-	ContextAlgo::expand( script->context(), paths, expandAncestors );
+	VisibleSet visible = getVisibleSet( script );
+
+	bool needUpdate = false;
+	if( expandAncestors )
+	{
+		for( IECore::PathMatcher::RawIterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+		{
+			needUpdate |= visible.expansions.addPath( *it );
+		}
+	}
+	else
+	{
+		for( IECore::PathMatcher::Iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+		{
+			needUpdate |= visible.expansions.addPath( *it );
+		}
+	}
+
+	if( needUpdate )
+	{
+		setVisibleSet( script, visible );
+	}
 }
 
 IECore::PathMatcher ScriptNodeAlgo::expandDescendantsInVisibleSet( Gaffer::ScriptNode *script, const IECore::PathMatcher &paths, const GafferScene::ScenePlug *scene, int depth )
 {
-	return ContextAlgo::expandDescendants( script->context(), paths, scene, depth );
+	auto visibleSet = getVisibleSet( script );
+
+	bool needUpdate = false;
+	IECore::PathMatcher leafPaths;
+
+	// \todo: parallelize the walk
+	for( IECore::PathMatcher::Iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+	{
+		needUpdate |= expandWalk( *it, scene, depth + 1, visibleSet.expansions, leafPaths );
+	}
+
+	if( needUpdate )
+	{
+		// If we modified the expanded paths, we need to set the value back on the context
+		setVisibleSet( script, visibleSet );
+	}
+
+	return leafPaths;
 }
 
 void ScriptNodeAlgo::setSelectedPaths( Gaffer::ScriptNode *script, const IECore::PathMatcher &paths )
 {
-	ContextAlgo::setSelectedPaths( script->context(), paths );
-}
+	Metadata::registerValue( script, g_selectedPathsName, new PathMatcherData( paths ), /* persistent = */ false );
+
+	if( paths.isEmpty() )
+	{
+		Metadata::deregisterValue( script, g_lastSelectedPathName );
+	}
+	else
+	{
+		std::vector<IECore::InternedString> lastSelectedPath = getLastSelectedPath( script );
+		if( !(paths.match( lastSelectedPath ) & PathMatcher::ExactMatch) )
+		{
+			const PathMatcher::Iterator it = paths.begin();
+			Metadata::registerValue( script, g_lastSelectedPathName, new InternedStringVectorData( *it ), /* persistent = */ false );
+		}
+	}}
 
 IECore::PathMatcher ScriptNodeAlgo::getSelectedPaths( const Gaffer::ScriptNode *script )
 {
-	return ContextAlgo::getSelectedPaths( script->context() );
+	auto d = Metadata::value<PathMatcherData>( script, g_selectedPathsName );
+	return d ? d->readable() : PathMatcher();
 }
 
 void ScriptNodeAlgo::setLastSelectedPath( Gaffer::ScriptNode *script, const std::vector<IECore::InternedString> &path )
 {
-	ContextAlgo::setLastSelectedPath( script->context(), path );
+	if( path.empty() )
+	{
+		Metadata::deregisterValue( script, g_lastSelectedPathName );
+	}
+	else
+	{
+		PathMatcher selectedPaths = getSelectedPaths( script );
+		if( selectedPaths.addPath( path ) )
+		{
+			setSelectedPaths( script, selectedPaths );
+		}
+		Metadata::registerValue( script, g_lastSelectedPathName, new InternedStringVectorData( path ), /* persistent = */ false );
+	}
 }
 
 std::vector<IECore::InternedString> ScriptNodeAlgo::getLastSelectedPath( const Gaffer::ScriptNode *script )
 {
-	return ContextAlgo::getLastSelectedPath( script->context() );
+	auto d = Metadata::value<InternedStringVectorData>( script, g_lastSelectedPathName );
+	return d ? d->readable() : std::vector<InternedString>();
 }
 
 ScriptNodeAlgo::ChangedSignal &ScriptNodeAlgo::selectedPathsChangedSignal( Gaffer::ScriptNode *script )

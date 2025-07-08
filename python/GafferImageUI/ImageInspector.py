@@ -188,10 +188,7 @@ class ImageInspector( GafferUI.NodeSetEditor ) :
 
 	def _updateFromContext( self, modifiedItems ) :
 
-		for item in modifiedItems :
-			if not item.startswith( "ui:" ) :
-				self.__setPathListingPaths()
-				break
+		self.__setPathListingPaths()
 
 	def _titleFormat( self ) :
 
