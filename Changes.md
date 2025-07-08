@@ -26,8 +26,10 @@ Improvements
   - Added render manifest option.
   - Added `render:cameraInclusions`, `render:cameraExclusions`, `render:matteInclusions`, and `render:matteExclusions` options.
 - CyclesMeshLight : Improved presentation of `cameraVisibility` and `lightGroup` plugs in the Node Editor.
-- PathListingWidget : Improved formatting of Box and Matrix values.
 - VisualiserTool : Added visualisation of labels for uniform primitive variables, face indices and curve indices.
+- PathListingWidget :
+  - Improved formatting of Box and Matrix values.
+  - Improved performance when showing colour values.
 
 Fixes
 -----

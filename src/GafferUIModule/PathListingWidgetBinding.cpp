@@ -1959,6 +1959,54 @@ class PathModel : public QAbstractItemModel
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
+// DisplayTransform utilities
+//////////////////////////////////////////////////////////////////////////
+
+size_t hash_value( const QColor &v )
+{
+	size_t s = 0;
+	boost::hash_combine( s, v.redF() );
+	boost::hash_combine( s, v.greenF() );
+	boost::hash_combine( s, v.blueF() );
+	boost::hash_combine( s, v.alphaF() );
+	return s;
+}
+
+namespace
+{
+
+using DisplayTransform = std::function<Imath::Color3f ( const Imath::Color3f & )>;
+
+struct DisplayColorCache : public IECorePreview::LRUCache<QColor, QIcon, IECorePreview::LRUCachePolicy::Serial>
+{
+	DisplayColorCache( const DisplayTransform &displayTransform, size_t maxIcons = 1000 )
+		:	IECorePreview::LRUCache<QColor, QIcon, IECorePreview::LRUCachePolicy::Serial>(
+				[displayTransform] ( const QColor &color, size_t &cost, const IECore::Canceller *canceller ) {
+					cost = 1;
+					return convert( color, displayTransform );
+				},
+				maxIcons
+			)
+	{
+	}
+
+	private :
+
+		static QIcon convert( const QColor &qColor, const DisplayTransform &displayTransform )
+		{
+			const Imath::Color3f c = displayTransform(
+				Imath::Color3f( qColor.redF(), qColor.greenF(), qColor.blueF() )
+			);
+			QPixmap pixmap( QSize( 16, 16 ) );
+			pixmap.fill( QColor::fromRgbF( c[0], c[1], c[2] ) );
+			return QIcon( pixmap );
+		}
+
+};
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
 // PathListingWidgetItemDelegate
 //////////////////////////////////////////////////////////////////////////
 
@@ -1975,8 +2023,17 @@ class PathListingWidgetItemDelegate : public QStyledItemDelegate
 		{
 		}
 
-		using DisplayTransform = std::function<Imath::Color3f ( const Imath::Color3f & )>;
-		DisplayTransform displayTransform;
+		void updateDisplayTransform( const DisplayTransform &displayTransform )
+		{
+			if( displayTransform )
+			{
+				m_displayColorCache = std::make_unique<DisplayColorCache>( displayTransform );
+			}
+			else
+			{
+				m_displayColorCache.reset();
+			}
+		}
 
 	protected :
 
@@ -1984,21 +2041,16 @@ class PathListingWidgetItemDelegate : public QStyledItemDelegate
 		{
 			QStyledItemDelegate::initStyleOption( option, index );
 
-			if( displayTransform )
+			if( m_displayColorCache )
 			{
 				const QVariant decoration = index.data( Qt::DecorationRole );
 				if( decoration.userType() == QMetaType::QColor )
 				{
-					// Apply display transform to the colour.
+					// Update `option` to apply a display transform. Making a
+					// QPixmap for this seems wasteful, but that's what the
+					// QStyledItemDelegate does.
 					const QColor qc = qvariant_cast<QColor>( decoration );
-					const Imath::Color3f c = displayTransform(
-						Imath::Color3f( qc.redF(), qc.greenF(), qc. blueF() )
-					);
-					// Update `option`. Making a QPixmap for this seems wasteful,
-					// but that's what the QStyledItemDelegate does.
-					QPixmap pixmap( option->decorationSize );
-					pixmap.fill( QColor::fromRgbF( c[0], c[1], c[2] ) );
-					option->icon = QIcon( pixmap );
+					option->icon = m_displayColorCache->get( qc );
 				}
 			}
 
@@ -2012,6 +2064,10 @@ class PathListingWidgetItemDelegate : public QStyledItemDelegate
 				option->icon = QIcon( option->icon.pixmap( option->decorationSize, QIcon::Active ) );
 			}
 		}
+
+	private :
+
+		std::unique_ptr<DisplayColorCache> m_displayColorCache;
 
 };
 
@@ -2068,7 +2124,7 @@ void updateDelegate( uint64_t treeViewAddress, boost::python::object pythonDispl
 		treeView->setItemDelegate( delegate );
 	}
 
-	PathListingWidgetItemDelegate::DisplayTransform displayTransform;
+	DisplayTransform displayTransform;
 	if( pythonDisplayTransform )
 	{
 		// The lambda below needs to own a reference to `pythonDisplayTransform`,
@@ -2083,21 +2139,23 @@ void updateDelegate( uint64_t treeViewAddress, boost::python::object pythonDispl
 			}
 		);
 
-		delegate->displayTransform = [pythonDisplayTransformPtr] ( const Imath::Color3f &color ) -> Imath::Color3f {
-			IECorePython::ScopedGILLock gilLock;
-			try
-			{
-				return extract<Imath::Color3f>( (*pythonDisplayTransformPtr)( color ) );
+		delegate->updateDisplayTransform(
+			[pythonDisplayTransformPtr] ( const Imath::Color3f &color ) -> Imath::Color3f {
+				IECorePython::ScopedGILLock gilLock;
+				try
+				{
+					return extract<Imath::Color3f>( (*pythonDisplayTransformPtr)( color ) );
+				}
+				catch( const boost::python::error_already_set & )
+				{
+					return color;
+				}
 			}
-			catch( const boost::python::error_already_set & )
-			{
-				return color;
-			}
-		};
+		);
 	}
 	else
 	{
-		delegate->displayTransform = nullptr;
+		delegate->updateDisplayTransform( nullptr );
 	}
 
 	treeView->update();
