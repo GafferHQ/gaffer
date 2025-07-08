@@ -103,7 +103,8 @@ bool AttributeTweaks::affectsProcessedAttributes( const Gaffer::Plug *input) con
 		AttributeProcessor::affectsProcessedAttributes( input ) ||
 		tweaksPlug()->isAncestorOf( input ) ||
 		input == localisePlug() ||
-		input == ignoreMissingPlug()
+		input == ignoreMissingPlug() ||
+		( input == inPlug()->globalsPlug() && !localisePlug()->isSetToDefault() )
 	;
 }
 
@@ -120,7 +121,7 @@ void AttributeTweaks::hashProcessedAttributes( const ScenePath &path, const Gaff
 
 		if( localisePlug()->getValue() )
 		{
-			h.append( inPlug()->fullAttributesHash( path ) );
+			h.append( inPlug()->fullAttributesHash( path, /* withGlobalAttributes = */ true ) );
 		}
 
 		ignoreMissingPlug()->hash( h );
@@ -149,7 +150,7 @@ IECore::ConstCompoundObjectPtr AttributeTweaks::computeProcessedAttributes( cons
 	ConstCompoundObjectPtr fullAttributes;
 	if( localisePlug()->getValue() )
 	{
-		fullAttributes = inPlug()->fullAttributes( path );
+		fullAttributes = inPlug()->fullAttributes( path, /* withGlobalAttributes = */ true );
 		source = fullAttributes.get();
 	}
 

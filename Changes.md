@@ -28,6 +28,7 @@ Improvements
 - CyclesMeshLight : Improved presentation of `cameraVisibility` and `lightGroup` plugs in the Node Editor.
 - PathListingWidget : Improved formatting of Box and Matrix values.
 - LocaliseAttributes : Added support for localising global attributes, controlled by the new `includeGlobalAttributes` plug.
+- AttributeTweaks : Added support for localising global attributes when `localise` is enabled.
 
 Fixes
 -----
@@ -91,6 +92,7 @@ Breaking Changes
 - OSLObject, OSLImage, Expression : Removed support for file-based pointclouds.
 - ContextAlgo : Removed deprecated API. Use ScriptNodeAlgo instead, which has been available from Gaffer 1.4.13.0 onwards.
 - ScriptNodeAlgo : Reimplemented using Metadata rather than Context variables for storage. Use the ScriptNodeAlgo API instead of attempting direct access to `ui:*` context variables.
+- AttributeTweaks : Tweaks with `localise` enabled and a mode of `CreateIfMissing` will now not create an attribute if it is missing from the scene hierarchy, but exists in the globals.
 
 Build
 -----
