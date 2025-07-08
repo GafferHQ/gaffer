@@ -11,6 +11,7 @@ Improvements
   - The current expansion is now preserved when enabling or disabling comparison mode [^1].
 - Viewer : Added `Add` image comparison mode.
 - LocaliseAttributes : Added support for localising global attributes, controlled by the new `includeGlobalAttributes` plug.
+- AttributeTweaks : Added support for localising global attributes when `localise` is enabled.
 
 Fixes
 -----
@@ -31,6 +32,7 @@ Breaking Changes
 ----------------
 
 - StandardLightVisualiser : Removed protected methods for drawing visualiser elements. These are now part of `GafferSceneUI::Private::LightVisualiserAlgo`. This namespace can be used by light visualisers, but is currently `Private` while the API details are being resolved.
+- AttributeTweaks : Tweaks with `localise` enabled and a mode of `CreateIfMissing` will now not create an attribute if it is missing from the scene hierarchy, but exists in the globals.
 
 [^1]: To be omitted from the notes for the final 1.6.0.0 release.
 

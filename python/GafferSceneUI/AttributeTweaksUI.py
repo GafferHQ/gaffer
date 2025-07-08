@@ -97,10 +97,10 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Turn on to allow location-specific tweaks to be made to inherited
-			attributes. Attributes will be localised to locations matching the
-			node's filter prior to tweaking. The original inherited attributes
-			will remain untouched.
+			Turn on to allow location-specific tweaks to be made to attributes
+			inherited from ancestors or the scene globals. Attributes will be
+			localised to locations matching the node's filter prior to tweaking.
+			The original inherited attributes will remain untouched.
 			"""
 
 		],
@@ -262,7 +262,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 		with self.context() :
 			useFullAttr = node["localise"].getValue()
 			for path in paths :
-				attr = node["in"].fullAttributes( path ) if useFullAttr else node["in"].attributes( path )
+				attr = node["in"].fullAttributes( path, withGlobalAttributes = True ) if useFullAttr else node["in"].attributes( path )
 				attributes.update( attr )
 			existingTweaks = { tweak["name"].getValue() for tweak in node["tweaks"] }
 
