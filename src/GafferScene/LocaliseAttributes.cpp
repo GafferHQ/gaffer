@@ -70,14 +70,15 @@ bool LocaliseAttributes::affectsProcessedAttributes( const Gaffer::Plug *input )
 {
 	return
 		AttributeProcessor::affectsProcessedAttributes( input ) ||
-		input == attributesPlug()
+		input == attributesPlug() ||
+		input == inPlug()->globalsPlug()
 	;
 }
 
 void LocaliseAttributes::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	AttributeProcessor::hashProcessedAttributes( path, context, h );
-	h.append( inPlug()->fullAttributesHash( path ) );
+	h.append( inPlug()->fullAttributesHash( path, /* withGlobalAttributes = */ true ) );
 	attributesPlug()->hash( h );
 }
 
@@ -92,7 +93,7 @@ IECore::ConstCompoundObjectPtr LocaliseAttributes::computeProcessedAttributes( c
 	CompoundObjectPtr result = new CompoundObject;
 	result->members() = inputAttributes->members();
 
-	ConstCompoundObjectPtr fullAttributes = inPlug()->fullAttributes( path );
+	ConstCompoundObjectPtr fullAttributes = inPlug()->fullAttributes( path, /* withGlobalAttributes = */ true );
 	for( const auto &attribute : fullAttributes->members() )
 	{
 		if( StringAlgo::matchMultiple( attribute.first, attributes ) )
