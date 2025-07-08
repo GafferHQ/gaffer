@@ -66,6 +66,7 @@ API
 - SceneAlgo :
   - `applyCameraGlobals()` now always applies the `render:overscan[Top/Bottom/Left/Right]` options to the camera if they exist in the scene globals.
   - `applyCameraGlobals()` now applies the `render:depthOfField` option to the `depthOfField` camera parameter. The `fStop` camera parameter is no longer overridden to `0.0` when the `render:depthOfField` option is `False` or not specified.
+- ScenePlug : Added optional `withGlobalAttributes` arguments to `fullAttributes()` and `fullAttributesHash()`.
 
 Breaking Changes
 ----------------
