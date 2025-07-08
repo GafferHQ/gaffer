@@ -12,6 +12,7 @@ Improvements
 - Viewer : Added `Add` image comparison mode.
 - LocaliseAttributes : Added support for localising global attributes, controlled by the new `includeGlobalAttributes` plug.
 - AttributeTweaks : Added support for localising global attributes when `localise` is enabled.
+- AttributeQuery, ShaderQuery : Global attributes are now queried when `inherit` is enabled and no matching attribute is found at the target location or any of its ancestors.
 
 Fixes
 -----
@@ -33,6 +34,7 @@ Breaking Changes
 
 - StandardLightVisualiser : Removed protected methods for drawing visualiser elements. These are now part of `GafferSceneUI::Private::LightVisualiserAlgo`. This namespace can be used by light visualisers, but is currently `Private` while the API details are being resolved.
 - AttributeTweaks : Tweaks with `localise` enabled and a mode of `CreateIfMissing` will now not create an attribute if it is missing from the scene hierarchy, but exists in the globals.
+- AttributeQuery : Queries with `inherit` enabled will now return a result when querying an attribute that does not exist in the scene hierarchy, but does exist in the globals.
 
 [^1]: To be omitted from the notes for the final 1.6.0.0 release.
 

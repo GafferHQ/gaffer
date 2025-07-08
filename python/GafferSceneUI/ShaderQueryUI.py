@@ -402,7 +402,7 @@ def _shaderAttributes( plugValueWidget, paths, affectedOnly ) :
 		attributeNamePatterns = node["shader"].getValue() if affectedOnly else "*"
 
 		for path in paths :
-			attributes = node["scene"].fullAttributes( path ) if useFullAttr else node["scene"].attributes( path )
+			attributes = node["scene"].fullAttributes( path, withGlobalAttributes = True ) if useFullAttr else node["scene"].attributes( path )
 			for name, attribute in attributes.items() :
 				if not IECore.StringAlgo.matchMultiple( name, attributeNamePatterns ) :
 					continue

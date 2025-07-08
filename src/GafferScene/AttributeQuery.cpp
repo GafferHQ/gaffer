@@ -259,7 +259,8 @@ void AttributeQuery::affects( const Gaffer::Plug* const input, AffectedPlugsCont
 		( input == locationPlug() ) ||
 		( input == attributePlug() ) ||
 		( input == scenePlug()->existsPlug() ) ||
-		( input == scenePlug()->attributesPlug() ) )
+		( input == scenePlug()->attributesPlug() ) ||
+		( input == scenePlug()->globalsPlug() && !inheritPlug()->isSetToDefault() ) )
 	{
 		outputs.push_back( internalObjectPlug() );
 	}
@@ -300,7 +301,7 @@ void AttributeQuery::hash( const Gaffer::ValuePlug* const output, const Gaffer::
 			if( splug->exists( path ) )
 			{
 				h.append( ( inheritPlug()->getValue() )
-					? splug->fullAttributesHash( path )
+					? splug->fullAttributesHash( path, /* withGlobalAttributes = */ true )
 					: splug->attributesHash( path ) );
 				attributePlug()->hash( h );
 			}
@@ -347,7 +348,7 @@ void AttributeQuery::compute( Gaffer::ValuePlug* const output, const Gaffer::Con
 				if( ! name.empty() )
 				{
 					const IECore::ConstCompoundObjectPtr cobj = ( inheritPlug()->getValue() )
-						? boost::static_pointer_cast< const IECore::CompoundObject >( splug->fullAttributes( path ) )
+						? boost::static_pointer_cast< const IECore::CompoundObject >( splug->fullAttributes( path, /* withGlobalAttributes = */ true ) )
 						: ( splug->attributes( path ) );
 					assert( cobj );
 
