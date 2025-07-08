@@ -34,7 +34,9 @@
 #
 ##########################################################################
 
+import inspect
 import unittest
+import threading
 
 import IECore
 
@@ -554,6 +556,54 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 
 		with self.assertRaises( IECore.Cancelled ) :
 			historyPath.property( "history:source", canceller )
+
+	def testCancellationForEdit( self ) :
+
+		# Make light with expression which loops infinitely unless cancelled.
+
+		script = Gaffer.ScriptNode()
+		script["light"] = GafferSceneTest.TestLight()
+
+		HistoryPathTest.expressionStartedCondition = threading.Condition()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			import time
+			import GafferSceneUITest.HistoryPathTest
+
+			with GafferSceneUITest.HistoryPathTest.expressionStartedCondition :
+				GafferSceneUITest.HistoryPathTest.expressionStartedCondition.notify()
+
+			while True :
+				time.sleep( 0.01 )
+				IECore.Canceller.check( context.canceller() )
+
+			parent["light"]["parameters"]["exposure"] = parent["light"]["parameters"]["intensity"]["r"] + 1
+			"""
+		) )
+
+		inspector = self.__inspector( script["light"]["out"], "exposure" )
+		with Gaffer.Context() as context :
+			context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/light" )
+			historyPath = inspector.historyPath()
+
+		# Start background task to evaluate `historyPath` and
+		# wait till the expression starts.
+
+		with self.expressionStartedCondition :
+			backgroundTask = Gaffer.BackgroundTask(
+				historyPath.cancellationSubject(),
+				lambda canceller : historyPath.children( canceller )
+			)
+			self.expressionStartedCondition.wait()
+
+		# Make an edit to the script. This must cancel the background task
+		# before it can go ahead.
+
+		script["light"]["parameters"]["intensity"]["r"].setValue( 2 )
+		backgroundTask.wait()
+		self.assertEqual( backgroundTask.status(), backgroundTask.Status.Cancelled )
 
 if __name__ == "__main__":
 	unittest.main()

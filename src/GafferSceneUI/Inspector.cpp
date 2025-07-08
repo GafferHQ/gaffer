@@ -252,8 +252,8 @@ void edit( Gaffer::ValuePlug *plug, const IECore::Object *value )
 
 IE_CORE_DEFINERUNTIMETYPED( Inspector )
 
-Inspector::Inspector( const std::string &type, const std::string &name, const Gaffer::PlugPtr &editScope )
-	:	m_type( type ), m_name( name ), m_editScope( editScope )
+Inspector::Inspector( const Gaffer::ConstPlugPtr &target, const std::string &type, const std::string &name, const Gaffer::PlugPtr &editScope )
+	:	m_target( target ), m_type( type ), m_name( name ), m_editScope( editScope )
 {
 	if( editScope && editScope->node() )
 	{
@@ -804,6 +804,11 @@ bool Inspector::HistoryPath::isLeaf( const Canceller *canceller ) const
 PathPtr Inspector::HistoryPath::copy() const
 {
 	return new Inspector::HistoryPath( m_historyProvider, string(), const_cast<PathFilter *>( getFilter() ) );
+}
+
+const Gaffer::Plug *Inspector::HistoryPath::cancellationSubject() const
+{
+	return m_historyProvider->inspector->m_target.get();
 }
 
 void Inspector::HistoryPath::doChildren( std::vector<PathPtr> &children, const Canceller *canceller) const

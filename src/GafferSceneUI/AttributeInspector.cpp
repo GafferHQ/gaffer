@@ -218,7 +218,7 @@ AttributeInspector::AttributeInspector(
 	const std::string &name,
 	const std::string &type
 ) :
-Inspector( type, name == "" ? attribute.string() : name, editScope ),
+Inspector( scene, type, name == "" ? attribute.string() : name, editScope ),
 m_scene( scene ),
 m_attribute( attribute )
 {

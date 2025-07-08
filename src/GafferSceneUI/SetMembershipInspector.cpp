@@ -234,7 +234,7 @@ SetMembershipInspector::SetMembershipInspector(
 	const Gaffer::PlugPtr &editScope,
 	IECore::InternedString setName
 ) :
-Inspector( "setMembership", setName.string(), editScope ),
+Inspector( scene, "setMembership", setName.string(), editScope ),
 m_scene( scene ),
 m_setName( setName )
 {
