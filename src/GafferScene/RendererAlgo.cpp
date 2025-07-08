@@ -52,7 +52,6 @@
 #include "IECoreScene/ClippingPlane.h"
 #include "IECoreScene/CoordinateSystem.h"
 #include "IECoreScene/Output.h"
-#include "IECoreScene/PreWorldRenderable.h"
 #include "IECoreScene/Primitive.h"
 #include "IECoreScene/Shader.h"
 #include "IECoreScene/VisibleRenderable.h"

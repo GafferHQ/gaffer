@@ -76,11 +76,6 @@ Imath::Box3f Placeholder::bound() const
 	return m_bound;
 }
 
-void Placeholder::render( Renderer *renderer ) const
-{
-	msg( Msg::Warning, "Placeholder::render", "Legacy renderers not supported" );
-}
-
 bool Placeholder::isEqualTo( const IECore::Object *other ) const
 {
 	if( !VisibleRenderable::isEqualTo( other ) )
