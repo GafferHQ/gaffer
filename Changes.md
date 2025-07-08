@@ -21,6 +21,11 @@ Fixes
 
 - CyclesShader : Moved the `principled_bsdf.diffuse_roughness` parameter to a new "Diffuse" section in the Node Editor [^1].
 
+API
+---
+
+- ScenePlug : Added optional `withGlobalAttributes` arguments to `fullAttributes()` and `fullAttributesHash()`.
+
 Breaking Changes
 ----------------
 

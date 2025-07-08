@@ -225,7 +225,8 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		/// Returns just the attributes set at the specific scene path.
 		IECore::ConstCompoundObjectPtr attributes( const ScenePath &scenePath ) const;
 		/// Returns the full set of inherited attributes at the specified scene path.
-		IECore::CompoundObjectPtr fullAttributes( const ScenePath &scenePath ) const;
+		/// Attributes are also inherited from the globals when `withGlobalAttributes` is true.
+		IECore::CompoundObjectPtr fullAttributes( const ScenePath &scenePath, bool withGlobalAttributes = false ) const;
 		IECore::ConstObjectPtr object( const ScenePath &scenePath ) const;
 		IECore::ConstInternedStringVectorDataPtr childNames( const ScenePath &scenePath ) const;
 		/// Returns true if the specified location exists.
@@ -249,7 +250,7 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		IECore::MurmurHash transformHash( const ScenePath &scenePath ) const;
 		IECore::MurmurHash fullTransformHash( const ScenePath &scenePath ) const;
 		IECore::MurmurHash attributesHash( const ScenePath &scenePath ) const;
-		IECore::MurmurHash fullAttributesHash( const ScenePath &scenePath ) const;
+		IECore::MurmurHash fullAttributesHash( const ScenePath &scenePath, bool withGlobalAttributes = false ) const;
 		IECore::MurmurHash objectHash( const ScenePath &scenePath ) const;
 		IECore::MurmurHash childNamesHash( const ScenePath &scenePath ) const;
 		IECore::MurmurHash childBoundsHash( const ScenePath &scenePath ) const;
