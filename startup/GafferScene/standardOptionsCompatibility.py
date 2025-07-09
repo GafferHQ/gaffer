@@ -37,52 +37,29 @@
 import Gaffer
 import GafferScene
 
-class __OptionsPlugProxy( object ) :
+__aliases = {
+	"renderCamera" : "render:camera",
+	"filmFit" : "render:filmFit",
+	"renderResolution" : "render:resolution",
+	"pixelAspectRatio" : "render:pixelAspectRatio",
+	"resolutionMultiplier" : "render:resolutionMultiplier",
+	"renderCropWindow" : "render:cropWindow",
+	"overscan" : "render:overscan",
+	"overscanTop" : "render:overscanTop",
+	"overscanBottom" : "render:overscanBottom",
+	"overscanLeft" : "render:overscanLeft",
+	"overscanRight" : "render:overscanRight",
+	"depthOfField" : "render:depthOfField",
+	"defaultRenderer" : "render:defaultRenderer",
+	"includedPurposes" : "render:includedPurposes",
+	"inclusions" : "render:inclusions",
+	"exclusions" : "render:exclusions",
+	"additionalLights" : "render:additionalLights",
+	"transformBlur" : "render:transformBlur",
+	"deformationBlur" : "render:deformationBlur",
+	"shutter" : "render:shutter",
+	"performanceMonitor" : "render:performanceMonitor",
+}
 
-	__renames = {
-		"renderCamera" : "render:camera",
-		"filmFit" : "render:filmFit",
-		"renderResolution" : "render:resolution",
-		"pixelAspectRatio" : "render:pixelAspectRatio",
-		"resolutionMultiplier" : "render:resolutionMultiplier",
-		"renderCropWindow" : "render:cropWindow",
-		"overscan" : "render:overscan",
-		"overscanTop" : "render:overscanTop",
-		"overscanBottom" : "render:overscanBottom",
-		"overscanLeft" : "render:overscanLeft",
-		"overscanRight" : "render:overscanRight",
-		"depthOfField" : "render:depthOfField",
-		"defaultRenderer" : "render:defaultRenderer",
-		"includedPurposes" : "render:includedPurposes",
-		"inclusions" : "render:inclusions",
-		"exclusions" : "render:exclusions",
-		"additionalLights" : "render:additionalLights",
-		"transformBlur" : "render:transformBlur",
-		"deformationBlur" : "render:deformationBlur",
-		"shutter" : "render:shutter",
-		"performanceMonitor" : "render:performanceMonitor",
-	}
-
-	def __init__( self, optionsPlug ) :
-
-		self.__optionsPlug = optionsPlug
-
-	def __getitem__( self, key ) :
-
-		return self.__optionsPlug[self.__renames.get( key, key )]
-
-def __optionsGetItem( originalGetItem ) :
-
-	def getItem( self, key ) :
-
-		result = originalGetItem( self, key )
-		if key == "options" :
-			scriptNode = self.ancestor( Gaffer.ScriptNode )
-			if scriptNode is not None and scriptNode.isExecuting() :
-				return __OptionsPlugProxy( result )
-
-		return result
-
-	return getItem
-
-GafferScene.StandardOptions.__getitem__ = __optionsGetItem( GafferScene.StandardOptions.__getitem__ )
+for k, v in __aliases.items() :
+	Gaffer.Metadata.registerValue( GafferScene.StandardOptions, "options", f"compatibility:childAlias:{k}", v )

@@ -82,8 +82,8 @@ class OpenGLAttributesTest( GafferSceneTest.SceneTestCase ) :
 		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "openGLAttributes-1.5.13.0.gfr" )
 		script.load()
 
-		self.assertIn( "gl:primitive:wireframeColor", script["OpenGLAttributes"]["attributes"] )
-		self.assertNotIn( "primitiveWireframeColor", script["OpenGLAttributes"]["attributes"] )
+		self.assertIn( "gl:primitive:wireframeColor", script["OpenGLAttributes"]["attributes"].keys() )
+		self.assertNotIn( "primitiveWireframeColor", script["OpenGLAttributes"]["attributes"].keys() )
 		self.assertEqual( script["OpenGLAttributes"]["attributes"]["gl:primitive:wireframeColor"]["value"].getValue(), imath.Color4f( 0.5, 0.6, 0.7, 1.0 ) )
 
 if __name__ == "__main__":

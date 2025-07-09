@@ -82,8 +82,8 @@ class ArnoldAttributesTest( GafferSceneTest.SceneTestCase ) :
 		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "arnoldAttributes-1.5.13.0.gfr" )
 		script.load()
 
-		self.assertIn( "ai:visibility:camera", script["ArnoldAttributes"]["attributes"] )
-		self.assertNotIn( "cameraVisibility", script["ArnoldAttributes"]["attributes"] )
+		self.assertIn( "ai:visibility:camera", script["ArnoldAttributes"]["attributes"].keys() )
+		self.assertNotIn( "cameraVisibility", script["ArnoldAttributes"]["attributes"].keys() )
 		self.assertEqual( script["ArnoldAttributes"]["attributes"]["ai:visibility:camera"]["value"].getValue(), False )
 
 if __name__ == "__main__":

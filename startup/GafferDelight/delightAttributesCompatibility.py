@@ -37,39 +37,16 @@
 import Gaffer
 import GafferDelight
 
-class __AttributesPlugProxy( object ) :
+__aliases = {
+	"cameraVisibility" : "dl:visibility_camera",
+	"diffuseVisibility" : "dl:visibility_diffuse",
+	"hairVisibility" : "dl:visibility_hair",
+	"reflectionVisibility" : "dl:visibility_reflection",
+	"refractionVisibility" : "dl:visibility_refraction",
+	"shadowVisibility" : "dl:visibility_shadow",
+	"specularVisibility" : "dl:visibility_specular",
+	"matte" : "dl:matte",
+}
 
-	__renames = {
-		"cameraVisibility" : "dl:visibility_camera",
-		"diffuseVisibility" : "dl:visibility_diffuse",
-		"hairVisibility" : "dl:visibility_hair",
-		"reflectionVisibility" : "dl:visibility_reflection",
-		"refractionVisibility" : "dl:visibility_refraction",
-		"shadowVisibility" : "dl:visibility_shadow",
-		"specularVisibility" : "dl:visibility_specular",
-		"matte" : "dl:matte",
-	}
-
-	def __init__( self, attributesPlug ) :
-
-		self.__attributesPlug = attributesPlug
-
-	def __getitem__( self, key ) :
-
-		return self.__attributesPlug[self.__renames.get( key, key )]
-
-def __attributesGetItem( originalGetItem ) :
-
-	def getItem( self, key ) :
-
-		result = originalGetItem( self, key )
-		if key == "attributes" :
-			scriptNode = self.ancestor( Gaffer.ScriptNode )
-			if scriptNode is not None and scriptNode.isExecuting() :
-				return __AttributesPlugProxy( result )
-
-		return result
-
-	return getItem
-
-GafferDelight.DelightAttributes.__getitem__ = __attributesGetItem( GafferDelight.DelightAttributes.__getitem__ )
+for k, v in __aliases.items() :
+	Gaffer.Metadata.registerValue( GafferDelight.DelightAttributes, "attributes", f"compatibility:childAlias:{k}", v )

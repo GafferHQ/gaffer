@@ -37,75 +37,52 @@
 import Gaffer
 import GafferArnold
 
-class __AttributesPlugProxy( object ) :
+__aliases = {
+	"cameraVisibility" : "ai:visibility:camera",
+	"shadowVisibility" : "ai:visibility:shadow",
+	"shadowGroup" : "ai:visibility:shadow_group",
+	"diffuseReflectionVisibility" : "ai:visibility:diffuse_reflect",
+	"specularReflectionVisibility" : "ai:visibility:specular_reflect",
+	"diffuseTransmissionVisibility" : "ai:visibility:diffuse_transmit",
+	"specularTransmissionVisibility" : "ai:visibility:specular_transmit",
+	"volumeVisibility" : "ai:visibility:volume",
+	"subsurfaceVisibility" : "ai:visibility:subsurface",
+	"autoBump" : "ai:disp_autobump",
+	"cameraAutoBumpVisibility" : "ai:autobump_visibility:camera",
+	"shadowAutoBumpVisibility" : "ai:autobump_visibility:shadow",
+	"diffuseReflectionAutoBumpVisibility" : "ai:autobump_visibility:diffuse_reflect",
+	"specularReflectionAutoBumpVisibility" : "ai:autobump_visibility:specular_reflect",
+	"diffuseTransmissionAutoBumpVisibility" : "ai:autobump_visibility:diffuse_transmit",
+	"specularTransmissionAutoBumpVisibility" : "ai:autobump_visibility:specular_transmit",
+	"volumeAutoBumpVisibility" : "ai:autobump_visibility:volume",
+	"subsurfaceAutoBumpVisibility" : "ai:autobump_visibility:subsurface",
+	"transformType" : "ai:transform_type",
+	"matte" : "ai:matte",
+	"opaque" : "ai:opaque",
+	"receiveShadows" : "ai:receive_shadows",
+	"selfShadows" : "ai:self_shadows",
+	"sssSetName" : "ai:sss_setname",
+	"subdivIterations" : "ai:polymesh:subdiv_iterations",
+	"subdivAdaptiveError" : "ai:polymesh:subdiv_adaptive_error",
+	"subdivAdaptiveMetric" : "ai:polymesh:subdiv_adaptive_metric",
+	"subdivAdaptiveSpace" : "ai:polymesh:subdiv_adaptive_space",
+	"subdivUVSmoothing" : "ai:polymesh:subdiv_uv_smoothing",
+	"subdivSmoothDerivs" : "ai:polymesh:subdiv_smooth_derivs",
+	"subdivFrustumIgnore" : "ai:polymesh:subdiv_frustum_ignore",
+	"subdividePolygons" : "ai:polymesh:subdivide_polygons",
+	"curvesMode" : "ai:curves:mode",
+	"curvesMinPixelWidth" : "ai:curves:min_pixel_width",
+	"pointsMinPixelWidth" : "ai:points:min_pixel_width",
+	"volumeStepSize" : "ai:volume:step_size",
+	"volumeStepScale" : "ai:volume:step_scale",
+	"shapeStepSize" : "ai:shape:step_size",
+	"shapeStepScale" : "ai:shape:step_scale",
+	"volumePadding" : "ai:shape:volume_padding",
+	"velocityScale" : "ai:volume:velocity_scale",
+	"velocityFPS" : "ai:volume:velocity_fps",
+	"velocityOutlierThreshold" : "ai:volume:velocity_outlier_threshold",
+	"toonId" : "ai:toon_id",
+}
 
-	__renames = {
-		"cameraVisibility" : "ai:visibility:camera",
-		"shadowVisibility" : "ai:visibility:shadow",
-		"shadowGroup" : "ai:visibility:shadow_group",
-		"diffuseReflectionVisibility" : "ai:visibility:diffuse_reflect",
-		"specularReflectionVisibility" : "ai:visibility:specular_reflect",
-		"diffuseTransmissionVisibility" : "ai:visibility:diffuse_transmit",
-		"specularTransmissionVisibility" : "ai:visibility:specular_transmit",
-		"volumeVisibility" : "ai:visibility:volume",
-		"subsurfaceVisibility" : "ai:visibility:subsurface",
-		"autoBump" : "ai:disp_autobump",
-		"cameraAutoBumpVisibility" : "ai:autobump_visibility:camera",
-		"shadowAutoBumpVisibility" : "ai:autobump_visibility:shadow",
-		"diffuseReflectionAutoBumpVisibility" : "ai:autobump_visibility:diffuse_reflect",
-		"specularReflectionAutoBumpVisibility" : "ai:autobump_visibility:specular_reflect",
-		"diffuseTransmissionAutoBumpVisibility" : "ai:autobump_visibility:diffuse_transmit",
-		"specularTransmissionAutoBumpVisibility" : "ai:autobump_visibility:specular_transmit",
-		"volumeAutoBumpVisibility" : "ai:autobump_visibility:volume",
-		"subsurfaceAutoBumpVisibility" : "ai:autobump_visibility:subsurface",
-		"transformType" : "ai:transform_type",
-		"matte" : "ai:matte",
-		"opaque" : "ai:opaque",
-		"receiveShadows" : "ai:receive_shadows",
-		"selfShadows" : "ai:self_shadows",
-		"sssSetName" : "ai:sss_setname",
-		"subdivIterations" : "ai:polymesh:subdiv_iterations",
-		"subdivAdaptiveError" : "ai:polymesh:subdiv_adaptive_error",
-		"subdivAdaptiveMetric" : "ai:polymesh:subdiv_adaptive_metric",
-		"subdivAdaptiveSpace" : "ai:polymesh:subdiv_adaptive_space",
-		"subdivUVSmoothing" : "ai:polymesh:subdiv_uv_smoothing",
-		"subdivSmoothDerivs" : "ai:polymesh:subdiv_smooth_derivs",
-		"subdivFrustumIgnore" : "ai:polymesh:subdiv_frustum_ignore",
-		"subdividePolygons" : "ai:polymesh:subdivide_polygons",
-		"curvesMode" : "ai:curves:mode",
-		"curvesMinPixelWidth" : "ai:curves:min_pixel_width",
-		"pointsMinPixelWidth" : "ai:points:min_pixel_width",
-		"volumeStepSize" : "ai:volume:step_size",
-		"volumeStepScale" : "ai:volume:step_scale",
-		"shapeStepSize" : "ai:shape:step_size",
-		"shapeStepScale" : "ai:shape:step_scale",
-		"volumePadding" : "ai:shape:volume_padding",
-		"velocityScale" : "ai:volume:velocity_scale",
-		"velocityFPS" : "ai:volume:velocity_fps",
-		"velocityOutlierThreshold" : "ai:volume:velocity_outlier_threshold",
-		"toonId" : "ai:toon_id",
-	}
-
-	def __init__( self, attributesPlug ) :
-
-		self.__attributesPlug = attributesPlug
-
-	def __getitem__( self, key ) :
-
-		return self.__attributesPlug[self.__renames.get( key, key )]
-
-def __attributesGetItem( originalGetItem ) :
-
-	def getItem( self, key ) :
-
-		result = originalGetItem( self, key )
-		if key == "attributes" :
-			scriptNode = self.ancestor( Gaffer.ScriptNode )
-			if scriptNode is not None and scriptNode.isExecuting() :
-				return __AttributesPlugProxy( result )
-
-		return result
-
-	return getItem
-
-GafferArnold.ArnoldAttributes.__getitem__ = __attributesGetItem( GafferArnold.ArnoldAttributes.__getitem__ )
+for k, v in __aliases.items() :
+	Gaffer.Metadata.registerValue( GafferArnold.ArnoldAttributes, "attributes", f"compatibility:childAlias:{k}", v )

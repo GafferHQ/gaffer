@@ -36,15 +36,4 @@
 
 import Gaffer
 
-def __getItemWrapper( originalGetItem ):
-
-	def getItem( self, key ):
-
-		if key == "activeRowNames":
-			key = "enabledRowNames"
-
-		return originalGetItem( self, key )
-
-	return getItem
-
-Gaffer.Spreadsheet.__getitem__ = __getItemWrapper( Gaffer.Spreadsheet.__getitem__ )
+Gaffer.Metadata.registerValue( Gaffer.Spreadsheet, "compatibility:childAlias:activeRowNames", "enabledRowNames" )

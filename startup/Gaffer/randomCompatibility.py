@@ -36,15 +36,4 @@
 
 import Gaffer
 
-def __getItemWrapper( originalGetItem ):
-
-	def getItem( self, key ):
-
-		if key == "contextEntry":
-			key = "seedVariable"
-
-		return originalGetItem( self, key )
-
-	return getItem
-
-Gaffer.Random.__getitem__ = __getItemWrapper( Gaffer.Random.__getitem__ )
+Gaffer.Metadata.registerValue( Gaffer.Random, "compatibility:childAlias:contextEntry", "seedVariable" )

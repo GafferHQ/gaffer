@@ -86,8 +86,8 @@ class DelightOptionsTest( GafferSceneTest.SceneTestCase ) :
 		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "delightOptions-1.5.14.0.gfr" )
 		script.load()
 
-		self.assertIn( "dl:oversampling", script["DelightOptions"]["options"] )
-		self.assertNotIn( "oversampling", script["DelightOptions"]["options"] )
+		self.assertIn( "dl:oversampling", script["DelightOptions"]["options"].keys() )
+		self.assertNotIn( "oversampling", script["DelightOptions"]["options"].keys() )
 		self.assertEqual( script["DelightOptions"]["options"]["dl:oversampling"]["value"].getValue(), 1 )
 
 if __name__ == "__main__":

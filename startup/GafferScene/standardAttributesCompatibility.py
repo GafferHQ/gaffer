@@ -37,38 +37,15 @@
 import Gaffer
 import GafferScene
 
-class __AttributesPlugProxy( object ) :
+__aliases = {
+	"visibility" : "scene:visible",
+	"displayColor" : "render:displayColor",
+	"transformBlur" : "gaffer:transformBlur",
+	"transformBlurSegments" : "gaffer:transformBlurSegments",
+	"deformationBlur" : "gaffer:deformationBlur",
+	"deformationBlurSegments" : "gaffer:deformationBlurSegments",
+	"automaticInstancing" : "gaffer:automaticInstancing",
+}
 
-	__renames = {
-		"visibility" : "scene:visible",
-		"displayColor" : "render:displayColor",
-		"transformBlur" : "gaffer:transformBlur",
-		"transformBlurSegments" : "gaffer:transformBlurSegments",
-		"deformationBlur" : "gaffer:deformationBlur",
-		"deformationBlurSegments" : "gaffer:deformationBlurSegments",
-		"automaticInstancing" : "gaffer:automaticInstancing",
-	}
-
-	def __init__( self, attributesPlug ) :
-
-		self.__attributesPlug = attributesPlug
-
-	def __getitem__( self, key ) :
-
-		return self.__attributesPlug[self.__renames.get( key, key )]
-
-def __attributesGetItem( originalGetItem ) :
-
-	def getItem( self, key ) :
-
-		result = originalGetItem( self, key )
-		if key == "attributes" :
-			scriptNode = self.ancestor( Gaffer.ScriptNode )
-			if scriptNode is not None and scriptNode.isExecuting() :
-				return __AttributesPlugProxy( result )
-
-		return result
-
-	return getItem
-
-GafferScene.StandardAttributes.__getitem__ = __attributesGetItem( GafferScene.StandardAttributes.__getitem__ )
+for k, v in __aliases.items() :
+	Gaffer.Metadata.registerValue( GafferScene.StandardAttributes, "attributes", f"compatibility:childAlias:{k}", v )

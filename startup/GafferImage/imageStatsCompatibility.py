@@ -34,17 +34,7 @@
 #
 ##########################################################################
 
+import Gaffer
 import GafferImage
 
-def __imageStatsGetItem( originalGetItem ) :
-
-	def getItem( self, key ) :
-
-		if key == "regionOfInterest" :
-			key = "area"
-
-		return originalGetItem( self, key )
-
-	return getItem
-
-GafferImage.ImageStats.__getitem__ = __imageStatsGetItem( GafferImage.ImageStats.__getitem__ )
+Gaffer.Metadata.registerValue( GafferImage.ImageStats, "compatibility:childAlias:regionOfInterest", "area" )
