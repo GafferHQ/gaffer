@@ -34,14 +34,10 @@
 #
 ##########################################################################
 
+import Gaffer
 import GafferImage
 
+GafferImage.UVWarp = GafferImage.VectorWarp
 # Provides backwards compatibility by allowing access to "vector" plug
 # using its old name of "uv".
-def __uvWarpGetItem( self, key ) :
-
-        key = "vector" if key == "uv" else key
-        return GafferImage.Warp.__getitem__( self, key )
-
-GafferImage.UVWarp = GafferImage.VectorWarp
-GafferImage.UVWarp.__getitem__ = __uvWarpGetItem
+Gaffer.Metadata.registerValue( GafferImage.UVWarp, "compatibility:childAlias:uv", "vector" )
