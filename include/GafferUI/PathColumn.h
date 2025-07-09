@@ -109,6 +109,7 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 			/// - FloatData, DoubleData
 			/// - DateTimeData
 			/// - V2fData, V3fData, Color3fData, Color4fData
+			/// - SplineffData, SplinefColor3fData
 			IECore::ConstDataPtr value;
 			/// An additional icon to be displayed next to the primary
 			/// value. Supported types :

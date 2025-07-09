@@ -57,6 +57,7 @@
 #include "IECore/PathMatcher.h"
 #include "IECore/SearchPath.h"
 #include "IECore/SimpleTypedData.h"
+#include "IECore/SplineData.h"
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/date_time/posix_time/conversion.hpp"
@@ -73,6 +74,7 @@
 #include "QtCore/QVariant"
 
 #include "QtGui/QGuiApplication"
+#include "QtGui/QPainter"
 
 #include "QtWidgets/QFileIconProvider"
 #include "QtWidgets/QTreeView"
@@ -91,6 +93,9 @@ using namespace Gaffer;
 //////////////////////////////////////////////////////////////////////////
 // General utilities
 //////////////////////////////////////////////////////////////////////////
+
+// Allows us to store ConstDataPtr in a QVariant.
+Q_DECLARE_METATYPE( IECore::ConstDataPtr )
 
 namespace
 {
@@ -396,6 +401,14 @@ QVariant dataToVariant( const IECore::Data *value, int role )
 			const IECore::DateTimeData *d = static_cast<const IECore::DateTimeData *>( value );
 			time_t t = ( d->readable() - from_time_t( 0 ) ).total_seconds();
 			return QVariant( QDateTime::fromSecsSinceEpoch( t ) );
+		}
+		case IECore::SplineffDataTypeId :
+		case IECore::SplinefColor3fDataTypeId :
+		{
+			// Pass through directly for use in PathListingWidgetItemDelegate.
+			QVariant v;
+			v.setValue( IECore::ConstDataPtr( value ) );
+			return v;
 		}
 		default :
 		{
@@ -2004,6 +2017,76 @@ struct DisplayColorCache : public IECorePreview::LRUCache<QColor, QIcon, IECoreP
 
 };
 
+struct DisplayGradientCacheGetterKey
+{
+
+	DisplayGradientCacheGetterKey( const IECore::Data *splineData = nullptr )
+		:	splineData( splineData ), hash( splineData ?  splineData->Object::hash() : IECore::MurmurHash() )
+	{
+	}
+
+	operator const IECore::MurmurHash &() const
+	{
+		return hash;
+	}
+
+	const IECore::Data *splineData;
+	const IECore::MurmurHash hash;
+
+};
+
+struct DisplayGradientCache : public IECorePreview::LRUCache<IECore::MurmurHash, QBrush, IECorePreview::LRUCachePolicy::Serial, DisplayGradientCacheGetterKey>
+{
+
+	DisplayGradientCache( const DisplayTransform &displayTransform, size_t maxGradients = 1000 )
+		:	IECorePreview::LRUCache<IECore::MurmurHash, QBrush, IECorePreview::LRUCachePolicy::Serial, DisplayGradientCacheGetterKey>(
+				[displayTransform] ( const DisplayGradientCacheGetterKey &key, size_t &cost, const IECore::Canceller *canceller ) {
+					cost = 1;
+					return convert( key.splineData, displayTransform );
+				},
+				maxGradients
+			)
+	{
+	}
+
+	private :
+
+		static QBrush convert( const IECore::Data *data, const DisplayTransform &displayTransform )
+		{
+			switch( data->typeId() )
+			{
+				case IECore::SplineffDataTypeId :
+					return convertTyped( static_cast<const IECore::SplineffData *>( data )->readable(), displayTransform );
+				case IECore::SplinefColor3fDataTypeId :
+					return convertTyped( static_cast<const IECore::SplinefColor3fData *>( data )->readable(), displayTransform );
+				default :
+					return QBrush();
+			}
+		}
+
+		template<typename SplineType>
+		static QBrush convertTyped( const SplineType &spline, const DisplayTransform &displayTransform )
+		{
+			QLinearGradient gradient( QPoint( 0, 0 ), QPoint( 1, 0 ) );
+			gradient.setCoordinateMode( QGradient::ObjectMode );
+
+			const int numStops = 100;
+			for( int i = 0; i < numStops; ++i )
+			{
+				float x = (float)i / (float)(numStops - 1);
+				Imath::Color3f c( spline( x ) );
+				if( displayTransform )
+				{
+					c = displayTransform( c );
+				}
+				gradient.setColorAt( x, QColor::fromRgbF( c[0], c[1], c[2] ) );
+			}
+
+			return QBrush( gradient );
+		}
+
+};
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -2023,6 +2106,26 @@ class PathListingWidgetItemDelegate : public QStyledItemDelegate
 		{
 		}
 
+		void paint( QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index ) const override
+		{
+			QStyledItemDelegate::paint( painter, option, index );
+
+			const QVariant displayData = index.data( Qt::DisplayRole );
+			if( auto data = displayData.value<IECore::ConstDataPtr>() )
+			{
+				// When we want to render splines, we just pass the data
+				// through directly and convert it here.
+				QBrush brush = m_displayGradientCache->get( data.get() );
+				if( brush.style() != Qt::NoBrush )
+				{
+					QRect rect = option.rect;
+					rect.setTopLeft( rect.topLeft() + QPoint( 2, 2 ) );
+					rect.setBottomRight( rect.bottomRight() - QPoint( 2, 2 ) );
+					painter->fillRect( rect, brush );
+				}
+			}
+		}
+
 		void updateDisplayTransform( const DisplayTransform &displayTransform )
 		{
 			if( displayTransform )
@@ -2033,6 +2136,8 @@ class PathListingWidgetItemDelegate : public QStyledItemDelegate
 			{
 				m_displayColorCache.reset();
 			}
+
+			m_displayGradientCache = std::make_unique<DisplayGradientCache>( displayTransform );
 		}
 
 	protected :
@@ -2068,6 +2173,7 @@ class PathListingWidgetItemDelegate : public QStyledItemDelegate
 	private :
 
 		std::unique_ptr<DisplayColorCache> m_displayColorCache;
+		std::unique_ptr<DisplayGradientCache> m_displayGradientCache;
 
 };
 
