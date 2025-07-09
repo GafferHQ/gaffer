@@ -297,9 +297,9 @@ std::shared_ptr<const RenderManifest> RenderManifest::loadFromImageMetadata( con
 	{
 		currentModTime = std::filesystem::last_write_time( sideCarManifestPath );
 	}
-	catch( std::exception &e )
+	catch( ... )
 	{
-		throw IECore::Exception( std::string( "Could not find manifest file : " ) + sideCarManifestPath + " : " + e.what() );
+		throw IECore::Exception( std::string( "Could not open manifest file : " ) + sideCarManifestPath );
 	}
 
 	FileCacheKey cacheKey( sideCarManifestPath, currentModTime );

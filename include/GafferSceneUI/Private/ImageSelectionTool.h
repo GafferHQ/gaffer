@@ -82,13 +82,10 @@ class GAFFERSCENEUI_API ImageSelectionTool : public GafferUI::Tool
 
 		GafferImageUI::ImageGadget *imageGadget();
 
-		void setStatus( const std::string &message, bool error );
-		void setErrorMessage( const std::string &message );
-
 		void plugDirtied( const Gaffer::Plug *plug );
 
-		IECore::PathMatcher pathsForIDs( const std::vector<uint32_t> &ids, std::string &message );
-		void idsForPaths( const IECore::PathMatcher &paths, std::vector<uint32_t> &result, std::string &message );
+		IECore::PathMatcher pathsForIDs( const std::vector<uint32_t> &ids );
+		void idsForPaths( const IECore::PathMatcher &paths, std::vector<uint32_t> &result );
 
 		uint32_t pixelID( const Imath::V2i &pixel );
 		std::unordered_set<uint32_t> rectIDs( const Imath::Box2i &rect );
@@ -96,8 +93,6 @@ class GAFFERSCENEUI_API ImageSelectionTool : public GafferUI::Tool
 		void selectedPathsChanged();
 
 		void updateSelectedIDs();
-
-		void updateRenderManifest( std::string &message );
 
 		void preRender();
 
@@ -120,7 +115,8 @@ class GAFFERSCENEUI_API ImageSelectionTool : public GafferUI::Tool
 		std::shared_ptr<const GafferScene::RenderManifest> m_renderManifest;
 		bool m_manifestDirty;
 
-		std::string m_status;
+		std::string m_manifestError;
+		std::string m_infoStatus;
 		StatusChangedSignal m_statusChangedSignal;
 
 		std::vector<uint32_t> m_selectedIDs;
