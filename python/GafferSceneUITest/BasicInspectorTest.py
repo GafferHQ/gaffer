@@ -130,5 +130,39 @@ class BasicInspectorTest( GafferUITest.TestCase ) :
 		self.assertFalse( inspection.canEdit( inspection.value() ) )
 		self.assertRaises( RuntimeError, inspection.edit, inspection.value() )
 
+	def testHistory( self ) :
+
+		cube = GafferScene.Cube()
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter["paths"].setValue( IECore.StringVectorData( [ "/cube" ] ) )
+
+		primitiveVariables = GafferScene.PrimitiveVariables()
+		primitiveVariables["in"].setInput( cube["out"] )
+		primitiveVariables["filter"].setInput( cubeFilter["out"] )
+		primitiveVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "test", 10 ) )
+
+		meshTangents = GafferScene.MeshTangents()
+		meshTangents["in"].setInput( primitiveVariables["out"] )
+		meshTangents["filter"].setInput( cubeFilter["out"] )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( meshTangents["out"] )
+
+		self.assertEqual( set( group["out"].object( "/group/cube" ).keys() ), { "N", "P", "test", "uTangent", "uv", "vTangent" } )
+
+		inspector = GafferSceneUI.Private.BasicInspector( group["out"]["object"], None, lambda objectPlug : objectPlug.getValue() )
+		with Gaffer.Context() as context :
+			context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/group/cube" )
+			historyPath = inspector.historyPath()
+
+		self.ignoreMessage( IECore.Msg.Level.Warning, "HistoryPath", "Path evaluated on unexpected thread" )
+
+		children = historyPath.children()
+		self.assertEqual(
+			[ c.property( "history:node" ) for c in children ],
+			[ cube, primitiveVariables, meshTangents ]
+		)
+
 if __name__ == "__main__":
 	unittest.main()

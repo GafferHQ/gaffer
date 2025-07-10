@@ -99,7 +99,6 @@ IE_CORE_FORWARDDECLARE( Inspector );
 ///   This has additional requirements such as knowing the `transformSpace` that a node
 ///   works in. We think this information can be stored in a dedicated TransformHistory
 ///   class provided by SceneAlgo, avoiding any need to specialise Inspector::Result.
-
 class GAFFERSCENEUI_API Inspector : public IECore::RunTimeTyped, public Gaffer::Signals::Trackable
 {
 
@@ -128,13 +127,19 @@ class GAFFERSCENEUI_API Inspector : public IECore::RunTimeTyped, public Gaffer::
 		/// in the current context. The path has a child for each predecessor in
 		/// the history, and properties `history:value`, `history:fallbackValue`,
 		/// `history:operation`, `history:source`, `history:editWarning` and `history:node`.
+		///
+		/// Like `inspect()`, this is a one-shot operation : if the inspector is
+		/// dirtied then a new call to `historyPath()` will be required. But the
+		/// path does defer inspection until its children or properties are
+		/// queried, allowing it to be used with PathListingWidget to perform
+		/// the queries without blocking the UI.
 		Gaffer::PathPtr historyPath();
 
 	protected :
 
 		/// Protected constructor for use by derived classes. The `name` argument
 		/// will be returned verbatim by the `name()` method.
-		Inspector( const std::string &type, const std::string &name, const Gaffer::PlugPtr &editScope );
+		Inspector( const Gaffer::ConstPlugPtr &target, const std::string &type, const std::string &name, const Gaffer::PlugPtr &editScope );
 
 		/// Methods to be implemented in derived classes
 		/// ============================================
@@ -203,8 +208,6 @@ class GAFFERSCENEUI_API Inspector : public IECore::RunTimeTyped, public Gaffer::
 		/// current context.
 		virtual EditFunction editFunction( const GafferScene::SceneAlgo::History *history ) const;
 
-	protected :
-
 		Gaffer::EditScope *targetEditScope() const;
 
 	private :
@@ -238,7 +241,7 @@ class GAFFERSCENEUI_API Inspector : public IECore::RunTimeTyped, public Gaffer::
 				bool isLeaf( const IECore::Canceller *canceller = nullptr ) const override;
 				Gaffer::PathPtr copy() const override;
 
-				void pathChanged( Path *path );
+				const Gaffer::Plug *cancellationSubject() const override;
 
 			protected :
 
@@ -246,45 +249,23 @@ class GAFFERSCENEUI_API Inspector : public IECore::RunTimeTyped, public Gaffer::
 
 			private :
 
-				// Index history entries using :
-				// 1. The hash of the source plug pointer and the context. A plug could have
-				// multiple values affecting the history in different contexts, making the
-				// plug alone insufficient for uniqueness.
-				// 2. Random access for maintaining the order of the history.
-				struct PlugHistoryEntry
-				{
-					std::string hashString;
-					GafferScene::SceneAlgo::History::ConstPtr history;
-				};
-				using PlugMap = boost::multi_index::multi_index_container<
-					PlugHistoryEntry,
-					boost::multi_index::indexed_by<
-						boost::multi_index::hashed_unique<
-							boost::multi_index::member<PlugHistoryEntry, std::string, &PlugHistoryEntry::hashString>
-						>,
-						boost::multi_index::random_access<>
-					>
-				>;
+				struct HistoryProvider;
+				using HistoryProviderPtr = std::shared_ptr<HistoryProvider>;
 
-				// Private constructor for creating children and copies. We reuse the
-				// acceleration structure `plugMap` to avoid computing history more than once.
+				// Private constructor for creating children and copies sharing
+				// the same history provider.
 				HistoryPath(
-					const InspectorPtr inspector,
-					Gaffer::ConstContextPtr context,
-					PlugMap plugMap,
+					const HistoryProviderPtr &historyProvider,
 					const std::string &path = "/",
 					Gaffer::PathFilterPtr filter = nullptr
 				);
 
-				void updatePlugMap() const;
-
-				const InspectorPtr m_inspector;
-				Gaffer::ConstContextPtr m_context;
-
-				mutable PlugMap m_plugMap;
+				const GafferScene::SceneAlgo::History *history( const IECore::Canceller *canceller ) const;
+				HistoryProviderPtr m_historyProvider;
 
 		};
 
+		const Gaffer::ConstPlugPtr m_target;
 		const std::string m_type;
 		const std::string m_name;
 		const Gaffer::PlugPtr m_editScope;

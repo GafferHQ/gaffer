@@ -190,7 +190,7 @@ OptionInspector::OptionInspector(
 	const Gaffer::PlugPtr &editScope,
 	IECore::InternedString option
 ) :
-Inspector( "option", option.string(), editScope ),
+Inspector( scene, "option", option.string(), editScope ),
 m_scene( scene ),
 m_option( option )
 {

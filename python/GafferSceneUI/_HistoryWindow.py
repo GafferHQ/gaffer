@@ -69,7 +69,7 @@ class _OperationIconColumn( GafferUI.PathColumn ) :
 			Gaffer.TweakPlug.Mode.ListAppend : "listAppendSmall.png",
 			Gaffer.TweakPlug.Mode.ListPrepend : "listPrependSmall.png",
 			Gaffer.TweakPlug.Mode.ListRemove : "listRemoveSmall.png",
-		}.get( cellValue, "errorSmall.png" )
+		}.get( cellValue )
 
 		return data
 
@@ -180,13 +180,7 @@ class _HistoryWindow( GafferUI.Window ) :
 		with self.__inspectionPath.inspectionContext() :
 			self.__path = self.__inspector.historyPath()
 
-		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ), scoped = True )
 		self.__pathListingWidget.setPath( self.__path )
-
-	def __pathChanged( self, path ) :
-
-		if len( path.children() ) == 0 :
-			self.close()
 
 	def __buttonDoubleClick( self, pathListing, event ) :
 
@@ -225,13 +219,14 @@ class _HistoryWindow( GafferUI.Window ) :
 			not isinstance( self.__inspector, GafferSceneUI.Private.SetMembershipInspector )
 		) :
 			editPlug = selectedPath.property( "history:source" )
-			self.__popup = GafferUI.PlugPopup(
-				[ editPlug ], warning = selectedPath.property( "history:editWarning" )
-			)
-			if isinstance( self.__popup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
-				self.__popup.plugValueWidget().setNameVisible( False )
+			if editPlug is not None :
+				self.__popup = GafferUI.PlugPopup(
+					[ editPlug ], warning = selectedPath.property( "history:editWarning" )
+				)
+				if isinstance( self.__popup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
+					self.__popup.plugValueWidget().setNameVisible( False )
 
-			self.__popup.popup( parent = self )
+				self.__popup.popup( parent = self )
 
 	def __dragBegin( self, pathListing, event ) :
 
@@ -241,13 +236,13 @@ class _HistoryWindow( GafferUI.Window ) :
 
 		if selectedColumn == self.__nameColumnIndex :
 			GafferUI.Pointer.setCurrent( "nodes" )
-
 			return selectedPath.property( "history:node" )
 
 		elif selectedColumn == self.__operationColumnIndex :
-			GafferUI.Pointer.setCurrent( "values" )
-
-			return selectedPath.property( "history:operation" )
+			operation = selectedPath.property( "history:operation" )
+			if operation is not None :
+				GafferUI.Pointer.setCurrent( "values" )
+				return operation
 
 		# Value column works by default
 
@@ -270,7 +265,7 @@ class _HistoryWindow( GafferUI.Window ) :
 
 	def __inspectorDirtied( self, inspector ) :
 
-		self.__path._emitPathChanged()
+		self.__updatePath()
 
 	def __contextChanged( self, contextTracker ) :
 
@@ -278,24 +273,37 @@ class _HistoryWindow( GafferUI.Window ) :
 
 	def __updateFinished( self, pathListing ) :
 
-		self.__nodeNameChangedSignals = []
+		# Note : Now the update is finished, we know our HistoryPath has
+		# computed and cached everything internally. So we can call `children()`
+		# without fear of blocking the UI waiting for it to compute.
 
+		# Arrange to signal changes for the node name
+		# column if any nodes are renamed.
+
+		self.__nodeNameChangedSignals = {}
 		for path in self.__path.children() :
-			node = path.property( "history:node" )
 
 			# The node and all of its parents up to the script node
 			# contribute to the path name.
 
+			node = path.property( "history:node" )
 			while node is not None and not isinstance( node, Gaffer.ScriptNode ) :
-				self.__nodeNameChangedSignals.append(
-					node.nameChangedSignal().connect(
+				if node not in self.__nodeNameChangedSignals :
+					self.__nodeNameChangedSignals[node] = node.nameChangedSignal().connect(
 						Gaffer.WeakMethod( self.__nodeNameChanged ),
 						scoped = True
 					)
-				)
 
 				node = node.parent()
 
+		# Close window if there's no longer anything to show.
+
+		if len( self.__path.children() ) == 0 :
+			# History is empty, for example because the scene location no
+			# longer exists.
+			self.close()
+
 	def __nodeNameChanged( self, node, oldName ) :
 
-		self.__path._emitPathChanged()
+		nameColumn = self.__pathListingWidget.getColumns()[0]
+		nameColumn.changedSignal()( nameColumn )
