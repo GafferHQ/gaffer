@@ -49,6 +49,7 @@ Fixes
   - Fixed missing history entries when two edits have the same source plug.
   - Fixed potential crashes in `Show History...`.
   - Fixed potential UI lag in `Show History...`.
+  - Fixed flickering in history window when scrubbing the timeline.
 
 API
 ---
