@@ -219,7 +219,10 @@ float fieldOfView( const IECoreScene::Camera *camera )
 
 float apertureSize( const IECoreScene::Camera *camera )
 {
-	if( camera->getFStop() <= 0.0f )
+	/// \todo Switch to `camera->getDepthOfField()` once we have added the
+	/// depthOfField parameter to Cortex.
+	const BoolData *d = camera->parametersData()->member<BoolData>( "depthOfField" );
+	if( !d || !d->readable() || camera->getFStop() <= 0.0f )
 	{
 		return 0.0f;
 	}

@@ -43,6 +43,7 @@
 
 #include "GafferScene/AttributeQuery.h"
 #include "GafferScene/BoundQuery.h"
+#include "GafferScene/CameraQuery.h"
 #include "GafferScene/ExistenceQuery.h"
 #include "GafferScene/FilterQuery.h"
 #include "GafferScene/OptionQuery.h"
@@ -104,44 +105,47 @@ class AttributeQuerySerialiser : public GafferBindings::NodeSerialiser
 };
 
 template<typename T>
-NameValuePlugPtr addQuery( T &query, const ValuePlug &plug, const std::string &parameter )
+ValuePlugPtr addQuery( T &query, const ValuePlug &plug, const std::string &parameter )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-
-	NameValuePlug *result = query.addQuery( &plug, parameter );
-
-	return result;
+	return query.addQuery( &plug, parameter );
 }
 
-template<typename T>
-void removeQuery( T &query, NameValuePlug &plug )
+template<typename T, typename PlugType>
+void removeQuery( T &query, PlugType &plug )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	query.removeQuery( &plug );
 }
 
-template<typename T>
-const BoolPlugPtr existsPlugFromQuery( const T &q, const NameValuePlug &p )
+template<typename T, typename PlugType>
+const BoolPlugPtr existsPlugFromQuery( const T &q, const PlugType &p )
 {
 	return const_cast<BoolPlug *>( q.existsPlugFromQuery( &p ) );
 }
 
-template<typename T>
-const ValuePlugPtr valuePlugFromQuery( const T &q, const NameValuePlug &p )
+template<typename T, typename PlugType>
+const IntPlugPtr sourcePlugFromQuery( const T &q, const PlugType &p )
+{
+	return const_cast<IntPlug *>( q.sourcePlugFromQuery( &p ) );
+}
+
+template<typename T, typename PlugType>
+const ValuePlugPtr valuePlugFromQuery( const T &q, const PlugType &p )
 {
 	return const_cast<ValuePlug *>( q.valuePlugFromQuery( &p ) );
 }
 
-template<typename T>
-const ValuePlugPtr outPlugFromQuery( const T &q, const NameValuePlug &p )
+template<typename T, typename PlugType>
+const ValuePlugPtr outPlugFromQuery( const T &q, const PlugType &p )
 {
 	return const_cast<ValuePlug *>( q.outPlugFromQuery( &p ) );
 }
 
-template<typename T>
-const NameValuePlugPtr queryPlug( const T &q, const ValuePlug &p )
+template<typename T, typename PlugType>
+const ValuePlugPtr queryPlug( const T &q, const ValuePlug &p )
 {
-	return const_cast<NameValuePlug *>( q.queryPlug( &p ) );
+	return const_cast<PlugType *>( q.queryPlug( &p ) );
 }
 
 template<typename T>
@@ -167,17 +171,35 @@ class MultiQuerySerialiser : public NodeSerialiser
 	}
 };
 
+class CameraQuerySerialiser : public NodeSerialiser
+{
+	std::string postConstructor( const GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const override
+	{
+		std::string result = NodeSerialiser::postConstructor( graphComponent, identifier, serialisation );
+
+		const GafferScene::CameraQuery *node = static_cast<const GafferScene::CameraQuery *>( graphComponent );
+		for( const auto &queryPlug : StringPlug::Range( *node->queriesPlug() ) )
+		{
+			const auto plug = node->valuePlugFromQuery( queryPlug.get() );
+			const Serialisation::Serialiser *serialiser = Serialisation::acquireSerialiser( plug );
+			result += identifier + ".addQuery( " + serialiser->constructor( plug, serialisation ) + " )\n";
+		}
+
+		return result;
+	}
+};
+
 template<typename T>
 GafferBindings::DependencyNodeClass<T> bindMultiQuery()
 {
 	GafferBindings::DependencyNodeClass<T> cls = GafferBindings::DependencyNodeClass<T>();
 	cls
 		.def( "addQuery", &addQuery<T>, ( arg( "plug" ), arg( "parameter" ) = "" ) )
-		.def( "removeQuery", &removeQuery<T> )
-		.def( "existsPlugFromQuery", &existsPlugFromQuery<T> )
-		.def( "valuePlugFromQuery", &valuePlugFromQuery<T> )
-		.def( "outPlugFromQuery", &outPlugFromQuery<T> )
-		.def( "queryPlug", &queryPlug<T> )
+		.def( "removeQuery", &removeQuery<T, NameValuePlug> )
+		.def( "existsPlugFromQuery", &existsPlugFromQuery<T, NameValuePlug> )
+		.def( "valuePlugFromQuery", &valuePlugFromQuery<T, NameValuePlug> )
+		.def( "outPlugFromQuery", &outPlugFromQuery<T, NameValuePlug> )
+		.def( "queryPlug", &queryPlug<T, NameValuePlug> )
 	;
 	Serialisation::registerSerialiser( T::staticTypeId(), new MultiQuerySerialiser<T>() );
 	return cls;
@@ -219,6 +241,30 @@ void GafferSceneModule::bindQueries()
 			.value( "Local", GafferScene::BoundQuery::Space::Local )
 			.value( "World", GafferScene::BoundQuery::Space::World )
 			.value( "Relative", GafferScene::BoundQuery::Space::Relative )
+		;
+	}
+
+	{
+		boost::python::scope s = GafferBindings::DependencyNodeClass<GafferScene::CameraQuery>()
+			.def( "addQuery", &addQuery<GafferScene::CameraQuery>, ( arg( "plug" ), arg( "parameter" ) = "" ) )
+			.def( "removeQuery", &removeQuery<GafferScene::CameraQuery, StringPlug> )
+			.def( "sourcePlugFromQuery", &sourcePlugFromQuery<GafferScene::CameraQuery, StringPlug> )
+			.def( "valuePlugFromQuery", &valuePlugFromQuery<GafferScene::CameraQuery, StringPlug> )
+			.def( "outPlugFromQuery", &outPlugFromQuery<GafferScene::CameraQuery, StringPlug> )
+			.def( "queryPlug", &queryPlug<GafferScene::CameraQuery, StringPlug> )
+		;
+		GafferBindings::Serialisation::registerSerialiser( GafferScene::CameraQuery::staticTypeId(), new CameraQuerySerialiser() );
+
+		boost::python::enum_<GafferScene::CameraQuery::CameraMode>( "CameraMode" )
+			.value( "RenderCamera", GafferScene::CameraQuery::CameraMode::RenderCamera )
+			.value( "Location", GafferScene::CameraQuery::CameraMode::Location )
+		;
+
+		boost::python::enum_<GafferScene::CameraQuery::Source>( "Source" )
+			.value( "None_", GafferScene::CameraQuery::Source::None )
+			.value( "Camera", GafferScene::CameraQuery::Source::Camera )
+			.value( "Globals", GafferScene::CameraQuery::Source::Globals )
+			.value( "Fallback", GafferScene::CameraQuery::Source::Fallback )
 		;
 	}
 

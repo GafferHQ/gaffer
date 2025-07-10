@@ -193,6 +193,7 @@ enum TypeId
 	CatalogueImageTypeId = 120148,
 	DisplayTypeId = 120149,
 	GafferDisplayDriverTypeId = 120150,
+	CameraQueryTypeId = 120151,
 
 	LastTypeId = 120999
 };

@@ -184,6 +184,8 @@ class CameraAlgoTest( unittest.TestCase ) :
 				camera.setFocalLengthFromFieldOfView( 45 * ( i + 1 ) )
 				camera.setAperture( imath.V2f( 10, 10 + i ) )
 				camera.setFStop( i + 1 )
+				## \todo Replace with camera.setDepthOfField( True ) once Cortex supports it
+				camera.parameters()["depthOfField"] = True
 				camera.setFocusDistance( i + 100 )
 				samples.append( camera )
 
@@ -323,6 +325,30 @@ class CameraAlgoTest( unittest.TestCase ) :
 					point.y,
 					delta = 0.0001
 				)
+
+	def testDepthOfField( self ) :
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			for depthOfField in [ True, False, None ] :
+				for fStop in [ 0.0, 2.5 ] :
+					with self.subTest( depthOfField = depthOfField, fStop = fStop ) :
+
+						c = IECoreScene.Camera(
+							parameters = {
+								"projection" : "perspective",
+								"focalLength" : 1 / ( 2.0 * math.tan( 0.5 * math.radians( 45 ) ) ),
+								"aperture" : imath.V2f( 2, 1 ),
+								"fStop" : fStop,
+							} | ( { "depthOfField" : depthOfField } if depthOfField is not None else {} )
+						)
+
+						n = IECoreArnold.NodeAlgo.convert( c, universe, "testCamera" )
+
+						if depthOfField and fStop > 0 :
+							self.assertGreater( arnold.AiNodeGetFlt( n, "aperture_size" ), 0.01 )
+						else :
+							self.assertEqual( arnold.AiNodeGetFlt( n, "aperture_size" ), 0.0 )
 
 if __name__ == "__main__":
 	unittest.main()

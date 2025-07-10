@@ -1565,34 +1565,29 @@ void GafferScene::SceneAlgo::applyCameraGlobals( IECoreScene::Camera *camera, co
 	}
 
 	const BoolData *overscanData = globals->member<BoolData>( "option:render:overscan" );
-	bool overscan = overscanData && overscanData->readable();
-	if( camera->hasOverscan() ) overscan = camera->getOverscan();
-	if( overscan )
+	if( !camera->hasOverscan() && overscanData )
 	{
-		if( !camera->hasOverscan() )
-		{
-			camera->setOverscan( true );
-		}
-		const FloatData *overscanLeftData = globals->member<FloatData>( "option:render:overscanLeft" );
-		if( !camera->hasOverscanLeft() && overscanLeftData )
-		{
-			camera->setOverscanLeft( overscanLeftData->readable() );
-		}
-		const FloatData *overscanRightData = globals->member<FloatData>( "option:render:overscanRight" );
-		if( !camera->hasOverscanRight() && overscanRightData )
-		{
-			camera->setOverscanRight( overscanRightData->readable() );
-		}
-		const FloatData *overscanTopData = globals->member<FloatData>( "option:render:overscanTop" );
-		if( !camera->hasOverscanTop() && overscanTopData )
-		{
-			camera->setOverscanTop( overscanTopData->readable() );
-		}
-		const FloatData *overscanBottomData = globals->member<FloatData>( "option:render:overscanBottom" );
-		if( !camera->hasOverscanBottom() && overscanBottomData )
-		{
-			camera->setOverscanBottom( overscanBottomData->readable() );
-		}
+		camera->setOverscan( overscanData->readable() );
+	}
+	const FloatData *overscanLeftData = globals->member<FloatData>( "option:render:overscanLeft" );
+	if( !camera->hasOverscanLeft() && overscanLeftData )
+	{
+		camera->setOverscanLeft( overscanLeftData->readable() );
+	}
+	const FloatData *overscanRightData = globals->member<FloatData>( "option:render:overscanRight" );
+	if( !camera->hasOverscanRight() && overscanRightData )
+	{
+		camera->setOverscanRight( overscanRightData->readable() );
+	}
+	const FloatData *overscanTopData = globals->member<FloatData>( "option:render:overscanTop" );
+	if( !camera->hasOverscanTop() && overscanTopData )
+	{
+		camera->setOverscanTop( overscanTopData->readable() );
+	}
+	const FloatData *overscanBottomData = globals->member<FloatData>( "option:render:overscanBottom" );
+	if( !camera->hasOverscanBottom() && overscanBottomData )
+	{
+		camera->setOverscanBottom( overscanBottomData->readable() );
 	}
 
 	const Box2fData *cropWindowData = globals->member<Box2fData>( "option:render:cropWindow" );
@@ -1608,22 +1603,10 @@ void GafferScene::SceneAlgo::applyCameraGlobals( IECoreScene::Camera *camera, co
 	}*/
 	// \todo - switch to the form above once we have officially added the depthOfField parameter to Cortex.
 	// The plan then would be that the renderer backends should respect camera->getDepthOfField.
-	// For the moment we bake into fStop instead
-	bool depthOfField = false;
-	if( depthOfFieldData )
+	const BoolData *cameraDepthOfFieldData = camera->parametersData()->member<BoolData>( "depthOfField" );
+	if( !cameraDepthOfFieldData && depthOfFieldData )
 	{
-		// First set from render globals
-		depthOfField = depthOfFieldData->readable();
-	}
-	if( const BoolData *d = camera->parametersData()->member<BoolData>( "depthOfField" ) )
-	{
-		// Override based on camera setting
-		depthOfField = d->readable();
-	}
-	if( !depthOfField )
-	{
-		// If there is no depth of field, bake that into the fStop
-		camera->setFStop( 0.0f );
+		camera->parametersData()->writable()["depthOfField"] = new BoolData( depthOfFieldData->readable() );
 	}
 
 	// Bake the shutter from the globals into the camera before passing it to the renderer backend
