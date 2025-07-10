@@ -477,10 +477,10 @@ IECoreGL::ConstRenderablePtr pointSurface( float radius, const Color3f &color )
 	return group;
 }
 
-IECoreGL::ConstRenderablePtr quadWireframe( const V2f &size, const bool muted )
+IECoreGL::ConstRenderablePtr quadWireframe( const V2f &size, const float lineWidthScale, const bool muted )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
-	addWireframeCurveState( group.get() );
+	addWireframeCurveState( group.get(), lineWidthScale );
 	::addConstantShader( group.get() );
 
 	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
@@ -698,10 +698,10 @@ IECoreGL::ConstRenderablePtr environmentSphereSurface(
 	return sphereGroup;
 }
 
-IECoreGL::ConstRenderablePtr diskWireframe( float radius, bool muted )
+IECoreGL::ConstRenderablePtr diskWireframe( float radius, float lineWidthScale, bool muted )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
-	addWireframeCurveState( group.get() );
+	addWireframeCurveState( group.get(), lineWidthScale );
 	::addConstantShader( group.get() );
 
 	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
@@ -774,10 +774,10 @@ IECoreGL::ConstRenderablePtr cylinderRays( float radius, bool muted )
 	return group;
 }
 
-IECoreGL::ConstRenderablePtr cylinderWireframe( float radius, float length, bool muted )
+IECoreGL::ConstRenderablePtr cylinderWireframe( float radius, float length, float lineWidthScale, bool muted )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
-	addWireframeCurveState( group.get() );
+	addWireframeCurveState( group.get(), lineWidthScale );
 	::addConstantShader( group.get(), 0 );
 
 	const float halfLength = length / 2.0f;
