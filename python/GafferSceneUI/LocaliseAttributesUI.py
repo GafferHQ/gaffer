@@ -59,6 +59,17 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"includeGlobalAttributes" : [
+
+			"description",
+			"""
+			When enabled, global attributes matching the names in
+			`attributes` will be localised if an equivalent local
+			or inherited attribute is not found.
+			""",
+
+		],
+
 	}
 
 )

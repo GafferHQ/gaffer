@@ -10,7 +10,7 @@ Improvements
   - Nodes can be pinned for comparison by dropping them onto the green "B" side of the "Scene" comparison header [^1].
   - The current expansion is now preserved when enabling or disabling comparison mode [^1].
 - Viewer : Added `Add` image comparison mode.
-- LocaliseAttributes : Added support for localising global attributes.
+- LocaliseAttributes : Added support for localising global attributes, controlled by the new `includeGlobalAttributes` plug.
 
 Fixes
 -----
