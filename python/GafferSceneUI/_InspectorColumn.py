@@ -309,8 +309,9 @@ def __showHistory( pathListing ) :
 			if inspector is None :
 				continue
 			window = _HistoryWindow(
-				inspector,
-				path,
+				column,
+				pathListing.getPath(),
+				pathString,
 				"History : {} : {}".format( pathString, column.headerData().value )
 			)
 			pathListing.ancestor( GafferUI.Window ).addChildWindow( window, removeOnClose = True )

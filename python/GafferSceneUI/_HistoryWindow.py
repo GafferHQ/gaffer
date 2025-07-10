@@ -132,15 +132,16 @@ class _ValueColumn( GafferUI.PathColumn ) :
 
 class _HistoryWindow( GafferUI.Window ) :
 
-	def __init__( self, inspector, inspectionPath, title=None, **kw ) :
+	def __init__( self, inspectorColumn, inspectionRootPath, inspectionPathString, title=None, **kw ) :
 
 		if title is None :
 			title = "History"
 
 		GafferUI.Window.__init__( self, title, **kw )
 
-		self.__inspector = inspector
-		self.__inspectionPath = inspectionPath
+		self.__inspectorColumn = inspectorColumn
+		self.__inspectionRootPath = inspectionRootPath
+		self.__inspectionPathString = inspectionPathString
 
 		with self :
 			self.__pathListingWidget = GafferUI.PathListingWidget(
@@ -166,20 +167,16 @@ class _HistoryWindow( GafferUI.Window ) :
 		self.__pathListingWidget.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ) )
 		self.__pathListingWidget.updateFinishedSignal().connectFront( Gaffer.WeakMethod( self.__updateFinished ) )
 
-		inspector.dirtiedSignal().connect( Gaffer.WeakMethod( self.__inspectorDirtied ) )
+		self.__inspectorColumn.changedSignal().connect( Gaffer.WeakMethod( self.__inspectorColumnChanged ) )
+		self.__inspectionRootPath.pathChangedSignal().connect( Gaffer.WeakMethod( self.__inspectionRootPathChanged ) )
 
-		## \todo We want to make the inspection framework scene-agnostic. We could add an `Inspector::plug()` method
-		# to provide a scene-agnostic way of querying what is being inspected, and use it here.
-		self.__contextTracker = GafferUI.ContextTracker.acquireForFocus( self.__inspectionPath.getScene() )
-		self.__contextTracker.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
 		self.__updatePath()
 
 	def __updatePath( self ) :
 
-		self.__inspectionPath.setContext( self.__contextTracker.context( self.__inspectionPath.getScene() ) )
-		with self.__inspectionPath.inspectionContext() :
-			self.__path = self.__inspector.historyPath()
-
+		inspectionPath = self.__inspectionRootPath.copy()
+		inspectionPath.setFromString( self.__inspectionPathString )
+		self.__path = self.__inspectorColumn.historyPath( inspectionPath )
 		self.__pathListingWidget.setPath( self.__path )
 
 	def __buttonDoubleClick( self, pathListing, event ) :
@@ -263,11 +260,11 @@ class _HistoryWindow( GafferUI.Window ) :
 
 		return None
 
-	def __inspectorDirtied( self, inspector ) :
+	def __inspectorColumnChanged( self, inspectorColumn ) :
 
 		self.__updatePath()
 
-	def __contextChanged( self, contextTracker ) :
+	def __inspectionRootPathChanged( self, contextTracker ) :
 
 		self.__updatePath()
 

@@ -277,7 +277,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		elif plug in ( self.settings()["in"], self.settings()["editScope"] ) :
 			self.__updateButtonStatus()
 
-	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
+	@GafferUI.LazyMethod( deferUntilVisible = False, deferUntilPlaybackStops = True )
 	def __lazyUpdateFromContext( self ) :
 
 		self.__pathListing.getPath().setContext( self.context() )

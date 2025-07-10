@@ -194,7 +194,7 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 		if plug in ( self.settings()["section"], self.settings()["tabGroup"] ) :
 			self.__updateColumns()
 
-	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
+	@GafferUI.LazyMethod( deferUntilVisible = False, deferUntilPlaybackStops = True )
 	def __lazyUpdateFromContext( self ) :
 
 		self.__pathListing.getPath().setContext( self.context() )
