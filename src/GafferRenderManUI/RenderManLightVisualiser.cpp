@@ -391,7 +391,7 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 
 		IECoreGL::GroupPtr wireframeGroup = new IECoreGL::Group;
 		wireframeGroup->setTransform( orientation );
-		wireframeGroup->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( cylinderWireframe( 0.5f, 1.f, muted ) ) );
+		wireframeGroup->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( cylinderWireframe( 0.5f, 1.f, 1.f, muted ) ) );
 		result.push_back( Visualisation::createGeometry( wireframeGroup ) );
 
 		IECoreGL::GroupPtr surfaceGroup = new IECoreGL::Group;
@@ -436,7 +436,7 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 		}
 
 		result.push_back(
-			Visualisation::createGeometry( diskWireframe( 0.5f, muted ) )
+			Visualisation::createGeometry( diskWireframe( 0.5f, 1.f, muted ) )
 		);
 
 		const float focus = parameterOrDefault( lightParameters, g_emissionFocusParameter, 0.f );
@@ -624,7 +624,7 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 				Visualisation::createOrnament( colorIndicator( color ), /* affectsFramingBound */ true, Visualisation::ColorSpace::Scene )
 			);
 		}
-		result.push_back( Visualisation::createGeometry( quadWireframe( V2f( 1.f ), muted ) ) );
+		result.push_back( Visualisation::createGeometry( quadWireframe( V2f( 1.f ), 1.f, muted ) ) );
 
 		const float focus = parameterOrDefault( lightParameters, g_emissionFocusParameter, 0.f );
 		addAreaSpread( pow( 0.707f, focus ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );

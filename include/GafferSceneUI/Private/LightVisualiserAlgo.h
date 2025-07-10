@@ -62,7 +62,7 @@ GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr pointShape( float radius, bool mu
 GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr pointSurface( float radius, const Imath::Color3f &color );
 
 /// Returns an OpenGL renderable wireframe rectangle with color according to the `mute` state.
-GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr quadWireframe( const Imath::V2f &size, bool muted = false );
+GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr quadWireframe( const Imath::V2f &size, float lineWidthScale, bool muted = false );
 
 /// Returns an OpenGL renderable solid rectangle with optional texture map. If `textureData` is `nullptr`,
 /// a solid color of `fallbackColor` will be used. `tint`, is applied to both the texture map and fallback
@@ -101,7 +101,7 @@ GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr environmentSphereSurface(
 );
 
 /// Returns an OpenGL renderable circle wireframe.
-GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr diskWireframe( float radius, bool muted );
+GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr diskWireframe( float radius, float lineWidthScale, bool muted );
 
 /// Returns an OpenGL renderable solid circle. If `textureData` is `nullptr`, a solid
 /// color of `fallbackColor` will be used. `tint`, is applied to both the texture map and fallback
@@ -117,7 +117,7 @@ GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr diskSurface(
 GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr cylinderRays( float radius, bool muted );
 
 /// Returns an OpenGL renderable wireframe cylinder.
-GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr cylinderWireframe( float radius, float length, bool muted );
+GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr cylinderWireframe( float radius, float length, float lineWidthScale, bool muted );
 
 /// Returns an OpenGL renderable solid cylinder, with end caps.
 GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr cylinderSurface( float radius, float length, const Imath::Color3f &color );

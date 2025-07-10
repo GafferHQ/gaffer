@@ -247,7 +247,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		{
 			result.push_back( Visualisation::createOrnament( colorIndicator( color * tint ), /* affectsFramingBound = */ true, Visualisation::ColorSpace::Scene ) );
 		}
-		result.push_back( Visualisation::createGeometry( quadWireframe( size, muted ) ) );
+		result.push_back( Visualisation::createGeometry( quadWireframe( size, 1.f, muted ) ) );
 
 		const float spread = parameter<float>( metadataTarget, shaderParameters, g_spreadParameterString, -1 );
 		if( spread >= 0.0f )
@@ -283,7 +283,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 			result.push_back( Visualisation::createOrnament( colorIndicator( color * tint ), /* affectsFramingBound = */ false, Visualisation::ColorSpace::Scene ) );
 		}
 
-		result.push_back( Visualisation::createGeometry( diskWireframe( radius, muted ) ) );
+		result.push_back( Visualisation::createGeometry( diskWireframe( radius, 1.f, muted ) ) );
 		addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 
 		const float spread = parameter<float>( metadataTarget, shaderParameters, g_spreadParameterString, -1 );
@@ -297,7 +297,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		const float radius = parameter<float>( metadataTarget, shaderParameters, g_radiusParameterString, 1 );
 		const float length = parameter<float>( metadataTarget, shaderParameters, g_lengthParameterString, 2 );
 		result.push_back( Visualisation::createOrnament( cylinderRays( radius, muted ), /* affectsFramingBound = */ false ) );
-		result.push_back( Visualisation::createGeometry( cylinderWireframe( radius, length, muted ) ) );
+		result.push_back( Visualisation::createGeometry( cylinderWireframe( radius, length, 1.f, muted ) ) );
 		if( drawShaded )
 		{
 			result.push_back( Visualisation::createGeometry( cylinderSurface( radius, length, color * tint ), Visualisation::ColorSpace::Scene ) );
