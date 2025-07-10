@@ -1054,12 +1054,17 @@ class PathModel : public QAbstractItemModel
 			// And then we can reschedule our update task.
 			m_updateTask = ParallelAlgo::callOnBackgroundThread(
 				getRoot()->cancellationSubject(),
-				[this] {
+				// We take a copy of `expandedPaths` because it may be modified
+				// on the UI thread by `treeViewExpanded()` while we run in the
+				// background. Likewise, we take a copy of the Path to work
+				// with, because anyone could modify that on the UI thread as it
+				// is a public member of PathListingWidget.
+				[this, workingPath = m_rootPath->copy(), expandedPaths = IECore::PathMatcher( m_expandedPaths )] {
 					try
 					{
 						const IECore::Canceller *canceller = Context::current()->canceller();
 						updateHeaderData( canceller );
-						m_rootItem->update( this, canceller );
+						m_rootItem->updateWalk( this, workingPath.get(), expandedPaths, canceller );
 						queueEdit(
 							[this] () {
 								finaliseRecursiveExpansion();
@@ -1297,13 +1302,31 @@ class PathModel : public QAbstractItemModel
 				m_expandedInTreeView = expanded;
 			}
 
-			void update( PathModel *model, const IECore::Canceller *canceller )
+			void updateWalk( PathModel *model, Path *path, const IECore::PathMatcher &expandedPaths, const IECore::Canceller *canceller )
 			{
-				// We take a copy of `expandedPaths` because it may be modified
-				// on the UI thread by `treeViewExpanded()` while we run in the
-				// background.
-				PathPtr workingPath = model->m_rootPath->copy();
-				updateWalk( model, workingPath.get(), IECore::PathMatcher( model->m_expandedPaths ), canceller );
+				IECore::Canceller::check( canceller );
+				updateData( model, path, canceller );
+				updateExpansion( model, path, expandedPaths );
+				std::shared_ptr<ChildContainer> updatedChildItems = updateChildItems( model, path, canceller );
+
+				const size_t pathSize = path->names().size();
+				Path::Names childName( 1 );
+
+				/// \todo We could consider using `parallel_for()` here for improved
+				/// performance. But given all the other modules vying for processor time
+				/// (the Viewer and Renderer in particular), perhaps limiting ourselves to
+				/// a single core is reasonable. If we do use `parallel_for` we need to
+				/// consider the interaction with `m_scrollToCandidates` because the order
+				/// we visit children in would no longer be deterministic.
+				for( const auto &child : *updatedChildItems )
+				{
+					// Append child name to path, bearing in mind that recursion
+					// in `updateWalk()` may have left us with a longer path than
+					// we had before.
+					childName.back() = child->name();
+					path->set( pathSize, path->names().size(), childName );
+					child->updateWalk( model, path, expandedPaths, canceller );
+				}
 			}
 
 			Item *parent()
@@ -1376,33 +1399,6 @@ class PathModel : public QAbstractItemModel
 					for( const auto &child : *m_childItems )
 					{
 						child->dirtyWalk( dirtyChildItems, dirtyData );
-					}
-				}
-
-				void updateWalk( PathModel *model, Path *path, const IECore::PathMatcher &expandedPaths, const IECore::Canceller *canceller )
-				{
-					IECore::Canceller::check( canceller );
-					updateData( model, path, canceller );
-					updateExpansion( model, path, expandedPaths );
-					std::shared_ptr<ChildContainer> updatedChildItems = updateChildItems( model, path, canceller );
-
-					const size_t pathSize = path->names().size();
-					Path::Names childName( 1 );
-
-					/// \todo We could consider using `parallel_for()` here for improved
-					/// performance. But given all the other modules vying for processor time
-					/// (the Viewer and Renderer in particular), perhaps limiting ourselves to
-					/// a single core is reasonable. If we do use `parallel_for` we need to
-					/// consider the interaction with `m_scrollToCandidates` because the order
-					/// we visit children in would no longer be deterministic.
-					for( const auto &child : *updatedChildItems )
-					{
-						// Append child name to path, bearing in mind that recursion
-						// in `updateWalk()` may have left us with a longer path than
-						// we had before.
-						childName.back() = child->name();
-						path->set( pathSize, path->names().size(), childName );
-						child->updateWalk( model, path, expandedPaths, canceller );
 					}
 				}
 
