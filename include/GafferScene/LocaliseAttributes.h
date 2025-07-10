@@ -56,6 +56,9 @@ class GAFFERSCENE_API LocaliseAttributes : public AttributeProcessor
 		Gaffer::StringPlug *attributesPlug();
 		const Gaffer::StringPlug *attributesPlug() const;
 
+		Gaffer::BoolPlug *includeGlobalAttributesPlug();
+		const Gaffer::BoolPlug *includeGlobalAttributesPlug() const;
+
 	protected :
 
 		bool affectsProcessedAttributes( const Gaffer::Plug *input ) const override;

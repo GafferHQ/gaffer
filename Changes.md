@@ -27,7 +27,7 @@ Improvements
   - Added `render:cameraInclusions`, `render:cameraExclusions`, `render:matteInclusions`, and `render:matteExclusions` options.
 - CyclesMeshLight : Improved presentation of `cameraVisibility` and `lightGroup` plugs in the Node Editor.
 - PathListingWidget : Improved formatting of Box and Matrix values.
-- LocaliseAttributes : Added support for localising global attributes.
+- LocaliseAttributes : Added support for localising global attributes, controlled by the new `includeGlobalAttributes` plug.
 
 Fixes
 -----
