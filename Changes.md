@@ -5,8 +5,10 @@ Features
 --------
 
 - Arnold : Added multi-layer EXR support. All outputs with the same filename are now written to the same file via a single output driver.
-- Image Selection Tool : Added new tool that allows selecting scene paths based on an image. Works with both Catalogue images and images on disk. Has two requirements: an `id` AOV ( may be added using the `ID` preset on an `Outputs` ), and a render manifest ( can be added to a render using StandardOptions > Render Manifest > File Path ).
+- ImageSelectionTool : Added new tool that allows selecting scene paths based on an image. Works with both Catalogue images and images on disk. Has two requirements : an `id` AOV (added using the `ID` preset on an `Outputs` node), and a render manifest (added using StandardOptions > Render Manifest > File Path ).
+- ColorInspectorTool : Moved the Viewer's colour inspectors into a dedicated tool, selected from the toolbar on the left.
 - OSLObject : Added the ability to use `pointcloud_search()` and `pointcloud_get()` to query geometry from arbitrary scene locations.
+- Cycles : Updated to version 4.4.0.
 
 Improvements
 ------------
@@ -40,6 +42,7 @@ Fixes
 - RenderPassEditor : Fixed default values displayed for `dl:oversampling` and `dl:quality.shadingsamples` options.
 - PlugLayout : Fixed bug resolving `layout:index` metadata.
 - ScriptNodeAlgo : Stopped polluting the ScriptNode context with `ui:*` variables. Warnings are now emitted by the UI if anything else causes similar pollution.
+- Checkerboard : Fixed crash when evaluated for non-existent channel name.
 
 API
 ---
@@ -52,10 +55,6 @@ API
 - MetadataAlgo : Added `createPlugFromMetadata()` function.
 - RenderController : Added `renderManifest()` method.
 - ImageGadget : Added support for showing selected and highlighted ids. Controlled using `setIDChannel`, `setSelectedIDs`, and `setHighlightID`.
-
-API
----
-
 - ShadingEngine : Added support for passing custom pointclouds to the `shade()` call.
 
 Breaking Changes
