@@ -587,7 +587,7 @@ void Inspector::editScopeInputChanged( const Gaffer::Plug *plug )
 	}
 }
 
-PathPtr Inspector::historyPath()
+PathPtr Inspector::historyPath() const
 {
 	return new Inspector::HistoryPath( this, new Context( *Context::current() ) );
 }
@@ -604,12 +604,12 @@ PathPtr Inspector::historyPath()
 struct Inspector::HistoryPath::HistoryProvider
 {
 
-	HistoryProvider( const InspectorPtr &inspector, const ConstContextPtr &context )
+	HistoryProvider( const ConstInspectorPtr &inspector, const ConstContextPtr &context )
 		:	inspector( inspector ), m_context( context ), m_constructorThreadId( std::this_thread::get_id() )
 	{
 	}
 
-	const InspectorPtr inspector;
+	const ConstInspectorPtr inspector;
 
 	size_t historySize( const IECore::Canceller *canceller )
 	{
@@ -726,7 +726,7 @@ struct Inspector::HistoryPath::HistoryProvider
 //////////////////////////////////////////////////////////////////////////
 
 Inspector::HistoryPath::HistoryPath(
-	const InspectorPtr inspector,
+	const ConstInspectorPtr &inspector,
 	ConstContextPtr context,
 	const std::string &path,
 	PathFilterPtr filter

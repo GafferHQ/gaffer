@@ -133,7 +133,7 @@ class GAFFERSCENEUI_API Inspector : public IECore::RunTimeTyped, public Gaffer::
 		/// path does defer inspection until its children or properties are
 		/// queried, allowing it to be used with PathListingWidget to perform
 		/// the queries without blocking the UI.
-		Gaffer::PathPtr historyPath();
+		Gaffer::PathPtr historyPath() const;
 
 	protected :
 
@@ -224,7 +224,7 @@ class GAFFERSCENEUI_API Inspector : public IECore::RunTimeTyped, public Gaffer::
 			public :
 
 				HistoryPath(
-					const InspectorPtr inspector,
+					const ConstInspectorPtr &inspector,
 					Gaffer::ConstContextPtr context,
 					const std::string &path = "/",
 					Gaffer::PathFilterPtr filter = nullptr
