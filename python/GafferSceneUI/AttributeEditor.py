@@ -71,6 +71,7 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 
 		searchFilter = _GafferSceneUI._HierarchyViewSearchFilter()
 		searchFilter.setScene( self.settings()["in"] )
+		searchFilter.setContext( self.context() )
 		self.__filter = searchFilter
 
 		with column :
@@ -85,7 +86,7 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 
 			self.__locationNameColumn = GafferUI.PathListingWidget.defaultNameColumn
 			self.__pathListing = GafferUI.PathListingWidget(
-				Gaffer.DictPath( {}, "/" ), # Temp till we make a ScenePath
+				GafferScene.ScenePath( self.settings()["in"], self.context(), "/", filter = self.__filter ),
 				columns = [
 					self.__locationNameColumn,
 				],
@@ -107,7 +108,6 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 		)
 
 		self._updateFromSet()
-		self.__setPathListingPath()
 		self.__transferSelectionFromScriptNode()
 		self.__updateColumns()
 
@@ -187,14 +187,21 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 
 	def _updateFromContext( self, modifiedItems ) :
 
-		# When the context has changed, the hierarchy of the scene may
-		# have too so we should update our PathListingWidget.
-		self.__setPathListingPath()
+		self.__lazyUpdateFromContext()
 
 	def _updateFromSettings( self, plug ) :
 
 		if plug in ( self.settings()["section"], self.settings()["tabGroup"] ) :
 			self.__updateColumns()
+
+	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
+	def __lazyUpdateFromContext( self ) :
+
+		self.__pathListing.getPath().setContext( self.context() )
+		# Note : editing the filter in-place is not thread-safe with respect to
+		# background updates in the PathListingWidget. But we're getting away
+		# with it because the line above will cancel any current update.
+		self.__filter.setContext( self.context() )
 
 	@GafferUI.LazyMethod()
 	def __updateColumns( self ) :
@@ -214,19 +221,6 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 					sectionColumns += [ c( self.settings()["in"], self.settings()["editScope"] ) for c in section.values() ]
 
 		self.__pathListing.setColumns( [ self.__locationNameColumn ] + sectionColumns )
-
-	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
-	def __setPathListingPath( self ) :
-
-		# We take a static copy of our current context for use in the ScenePath - this prevents the
-		# PathListing from updating automatically when the original context changes, and allows us to take
-		# control of updates ourselves in _updateFromContext(), using LazyMethod to defer the calls to this
-		# function until we are visible and playback has stopped.
-		## \todo With the ContextTracker now providing a new and immutable context for each update, we
-		# should be safe to remove this copy, and those from other Editors using PathListingWidgets.
-		contextCopy = Gaffer.Context( self.context() )
-		self.__filter.setContext( contextCopy )
-		self.__pathListing.setPath( GafferScene.ScenePath( self.settings()["in"], contextCopy, "/", filter = self.__filter ) )
 
 	def __selectedPathsChanged( self, scriptNode ) :
 
