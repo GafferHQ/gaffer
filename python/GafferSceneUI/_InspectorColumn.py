@@ -235,8 +235,8 @@ def __selectedSetExpressions( pathListing ) :
 			path.setFromString( pathString )
 			if not (
 				__cellMetadata( column, path, "ui:scene:acceptsSetName" ) or
-				__cellMetadata( column, path, "ui:scene:acceptsSetName" ) or
-				__cellMetadata( column, path, "ui:scene:acceptsSetName" )
+				__cellMetadata( column, path, "ui:scene:acceptsSetNames" ) or
+				__cellMetadata( column, path, "ui:scene:acceptsSetExpression" )
 			) :
 				# We only return set expressions if all selected paths are in
 				# columns that accept set names or set expressions.
