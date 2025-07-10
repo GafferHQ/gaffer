@@ -403,6 +403,10 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 		}
 	)
 
+	menuDefinition.append(
+		"EditDivider", { "divider" : True }
+	)
+
 	toggleOnly = isinstance( column, _GafferSceneUI._LightEditorSetMembershipColumn )
 	menuDefinition.append(
 		"Toggle" if toggleOnly else "Edit...",
