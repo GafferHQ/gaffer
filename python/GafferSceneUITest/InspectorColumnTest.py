@@ -731,5 +731,18 @@ class InspectorColumnTest( GafferUITest.TestCase ) :
 		path.setFromString( "/inspector2" )
 		self.assertTrue( column.inspector( path ).isSame( inspector2 ) )
 
+	def testHistoryFromPath( self ) :
+
+		self.ignoreMessage( IECore.Msg.Level.Warning, "HistoryPath", "Path evaluated on unexpected thread" )
+
+		plane = GafferScene.Plane()
+		inspector = GafferSceneUI.Private.BasicInspector( plane["out"]["object"], None, lambda objectPlug : objectPlug.getValue().interpolation )
+		column = GafferSceneUI.Private.InspectorColumn( inspector, "label", "help!" )
+		path = GafferScene.ScenePath( plane["out"], Gaffer.Context(), "/plane" )
+
+		historyPath = column.historyPath( path )
+		self.assertEqual( len( historyPath.children() ), 1 )
+		self.assertEqual( historyPath.children()[0].property( "history:node" ), plane )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -110,6 +110,24 @@ GafferSceneUI::Private::Inspector::ResultPtr InspectorColumn::inspect( const Gaf
 	return i->inspect();
 }
 
+Gaffer::PathPtr InspectorColumn::historyPath( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
+{
+	ConstInspectorPtr i = inspector( path, canceller );
+	if( !i )
+	{
+		return nullptr;
+	}
+
+	const ContextPtr inspectionContext = path.inspectionContext( canceller );
+	if( !inspectionContext )
+	{
+		return nullptr;
+	}
+
+	Context::Scope scope( inspectionContext.get() );
+	return i->historyPath();
+}
+
 PathColumn::CellData InspectorColumn::cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
 {
 	CellData result;

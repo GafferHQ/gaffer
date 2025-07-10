@@ -66,6 +66,7 @@ class GAFFERSCENEUI_API InspectorColumn : public GafferUI::PathColumn
 
 		GafferSceneUI::Private::ConstInspectorPtr inspector( const Gaffer::Path &path, const IECore::Canceller *canceller = nullptr ) const;
 		GafferSceneUI::Private::Inspector::ResultPtr inspect( const Gaffer::Path &path, const IECore::Canceller *canceller = nullptr ) const;
+		Gaffer::PathPtr historyPath( const Gaffer::Path &path, const IECore::Canceller *canceller = nullptr ) const;
 
 		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override;
 		CellData headerData( const IECore::Canceller *canceller ) const override;
