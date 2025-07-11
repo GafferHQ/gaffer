@@ -32,13 +32,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#pragma once
+
 #include "GafferSceneUI/Export.h"
 
 #include "IECoreGL/Group.h"
 
 #include "IECore/SimpleTypedData.h"
 
-namespace GafferSceneUI::LightVisualiserAlgo
+namespace GafferSceneUI::Private::LightVisualiserAlgo
 {
 
 /// Returns an OpenGL renderable wireframe ray of unit length.
@@ -133,4 +135,4 @@ GAFFERSCENEUI_API void addAreaSpread( float spread, std::vector<int> &vertsPerCu
 GAFFERSCENEUI_API Imath::Color3f lightWireframeColor( const bool muted );
 GAFFERSCENEUI_API Imath::Color4f lightWireframeColor4( const bool muted );
 
-}  // namespace GafferSceneUI::LightVisualiserAlgo
+}  // namespace GafferSceneUI::Private::LightVisualiserAlgo

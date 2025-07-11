@@ -36,7 +36,7 @@
 
 #include "GafferSceneUI/StandardLightVisualiser.h"
 
-#include "GafferSceneUI/LightVisualiserAlgo.h"
+#include "GafferSceneUI/Private/LightVisualiserAlgo.h"
 
 #include "Gaffer/Metadata.h"
 
@@ -61,6 +61,7 @@ using namespace IECoreScene;
 using namespace IECoreGL;
 using namespace Gaffer;
 using namespace GafferSceneUI;
+using namespace GafferSceneUI::Private::LightVisualiserAlgo;
 using namespace IECoreGLPreview;
 
 //////////////////////////////////////////////////////////////////////////
@@ -184,11 +185,11 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		float innerAngle, outerAngle, radius, lensRadius;
 		spotlightParameters( attributeName, shaderNetwork, innerAngle, outerAngle, radius, lensRadius );
 		result.push_back( Visualisation::createOrnament(
-			LightVisualiserAlgo::spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 1.0f, 1.0f, muted ),
+			spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 1.0f, 1.0f, muted ),
 			/* affectsFramingBound = */ true
 		) );
 		result.push_back( Visualisation::createFrustum(
-			LightVisualiserAlgo::spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 10.0f * frustumScale, 0.5f, muted ),
+			spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 10.0f * frustumScale, 0.5f, muted ),
 			Visualisation::Scale::Visualiser
 		) );
 	}
@@ -201,17 +202,12 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		{
 			ConstDataPtr textureData = drawTextured ? surfaceTexture( attributeName, shaderNetwork, attributes, maxTextureResolution ) : nullptr;
 			result.push_back( Visualisation::createOrnament(
-				LightVisualiserAlgo::environmentSphereSurface(
-					textureData,
-					tint,
-					maxTextureResolution,
-					color
-				),
+				environmentSphereSurface( textureData, tint, maxTextureResolution, color ),
 				/* affectsFramingBound = */ true, Visualisation::ColorSpace::Scene
 			) );
 		}
 		result.push_back( Visualisation::createOrnament(
-			LightVisualiserAlgo::sphereWireframe( 1.05f, Vec3<bool>( true ), 1.0f, V3f( 0.0f ), muted ),
+			sphereWireframe( 1.05f, Vec3<bool>( true ), 1.0f, V3f( 0.0f ), muted ),
 			/* affectsFramingBound = */ true
 		) );
 	}
@@ -219,16 +215,16 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	{
 		const float radius = parameter<float>( metadataTarget, shaderParameters, g_radiusParameterString, 0.0f );
 		result.push_back( Visualisation(
-			LightVisualiserAlgo::sphereWireframe( radius, Vec3<bool>( false, false, true ), 0.5f, V3f( 0.0f, 0.0f, 0.1f * visualiserScale ), muted ),
+			sphereWireframe( radius, Vec3<bool>( false, false, true ), 0.5f, V3f( 0.0f, 0.0f, 0.1f * visualiserScale ), muted ),
 			Visualisation::Scale::None
 		) );
-		LightVisualiserAlgo::addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
-		result.push_back( Visualisation::createOrnament( LightVisualiserAlgo::colorIndicator( color ), /* affectsFramingBound = */ false, Visualisation::ColorSpace::Scene ) );
+		addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
+		result.push_back( Visualisation::createOrnament( colorIndicator( color ), /* affectsFramingBound = */ false, Visualisation::ColorSpace::Scene ) );
 	}
 	else if( type == "distant" )
 	{
-		result.push_back( Visualisation::createOrnament( LightVisualiserAlgo::distantRays( muted ), /* affectsFramingBound = */ true ) );
-		result.push_back( Visualisation::createOrnament( LightVisualiserAlgo::colorIndicator( color ), /* affectsFramingBound = */ false, Visualisation::ColorSpace::Scene ) );
+		result.push_back( Visualisation::createOrnament( distantRays( muted ), /* affectsFramingBound = */ true ) );
+		result.push_back( Visualisation::createOrnament( colorIndicator( color ), /* affectsFramingBound = */ false, Visualisation::ColorSpace::Scene ) );
 	}
 	else if( type == "quad" )
 	{
@@ -243,29 +239,22 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		{
 			ConstDataPtr textureData = drawTextured ? surfaceTexture( attributeName, shaderNetwork, attributes, maxTextureResolution ) : nullptr;
 			result.push_back( Visualisation::createGeometry(
-				LightVisualiserAlgo::quadSurface(
-					size,
-					textureData,
-					tint,
-					maxTextureResolution,
-					color,
-					uvOrientation ? uvOrientation->readable() : M33f()
-				),
+				quadSurface( size, textureData, tint, maxTextureResolution, color, uvOrientation ? uvOrientation->readable() : M33f() ),
 				Visualisation::ColorSpace::Scene
 			) );
 		}
 		else
 		{
-			result.push_back( Visualisation::createOrnament( LightVisualiserAlgo::colorIndicator( color * tint ), /* affectsFramingBound = */ true, Visualisation::ColorSpace::Scene ) );
+			result.push_back( Visualisation::createOrnament( colorIndicator( color * tint ), /* affectsFramingBound = */ true, Visualisation::ColorSpace::Scene ) );
 		}
-		result.push_back( Visualisation::createGeometry( LightVisualiserAlgo::quadWireframe( size, muted ) ) );
+		result.push_back( Visualisation::createGeometry( quadWireframe( size, muted ) ) );
 
 		const float spread = parameter<float>( metadataTarget, shaderParameters, g_spreadParameterString, -1 );
 		if( spread >= 0.0f )
 		{
-			LightVisualiserAlgo::addAreaSpread( spread, ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
+			addAreaSpread( spread, ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 		}
-		LightVisualiserAlgo::addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
+		addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 	}
 	else if( type == "portal" )
 	{
@@ -273,8 +262,8 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 			parameter<float>( metadataTarget, shaderParameters, g_widthParameterString, 1.0f ),
 			parameter<float>( metadataTarget, shaderParameters, g_heightParameterString, 1.0f )
 		);
-		result.push_back( Visualisation::createGeometry( LightVisualiserAlgo::quadPortal( size, /* hatchingScale = */ 1.0f, muted ) ) );
-		LightVisualiserAlgo::addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
+		result.push_back( Visualisation::createGeometry( quadPortal( size, /* hatchingScale = */ 1.0f, muted ) ) );
+		addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 	}
 	else if( type == "disk" )
 	{
@@ -285,43 +274,37 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		{
 			ConstDataPtr textureData = drawTextured ? surfaceTexture( attributeName, shaderNetwork, attributes, maxTextureResolution ) : nullptr;
 			result.push_back( Visualisation::createGeometry(
-				LightVisualiserAlgo::diskSurface(
-					radius,
-					textureData,
-					tint,
-					maxTextureResolution,
-					color
-				),
+				diskSurface( radius, textureData, tint, maxTextureResolution, color ),
 				Visualisation::ColorSpace::Scene
 			) );
 		}
 		else
 		{
-			result.push_back( Visualisation::createOrnament( LightVisualiserAlgo::colorIndicator( color * tint ), /* affectsFramingBound = */ false, Visualisation::ColorSpace::Scene ) );
+			result.push_back( Visualisation::createOrnament( colorIndicator( color * tint ), /* affectsFramingBound = */ false, Visualisation::ColorSpace::Scene ) );
 		}
 
-		result.push_back( Visualisation::createGeometry( LightVisualiserAlgo::diskWireframe( radius, muted ) ) );
-		LightVisualiserAlgo::addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
+		result.push_back( Visualisation::createGeometry( diskWireframe( radius, muted ) ) );
+		addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 
 		const float spread = parameter<float>( metadataTarget, shaderParameters, g_spreadParameterString, -1 );
 		if( spread >= 0.0f )
 		{
-			LightVisualiserAlgo::addAreaSpread( spread, ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
+			addAreaSpread( spread, ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 		}
 	}
 	else if( type == "cylinder" )
 	{
 		const float radius = parameter<float>( metadataTarget, shaderParameters, g_radiusParameterString, 1 );
 		const float length = parameter<float>( metadataTarget, shaderParameters, g_lengthParameterString, 2 );
-		result.push_back( Visualisation::createOrnament( LightVisualiserAlgo::cylinderRays( radius, muted ), /* affectsFramingBound = */ false ) );
-		result.push_back( Visualisation::createGeometry( LightVisualiserAlgo::cylinderWireframe( radius, length, muted ) ) );
+		result.push_back( Visualisation::createOrnament( cylinderRays( radius, muted ), /* affectsFramingBound = */ false ) );
+		result.push_back( Visualisation::createGeometry( cylinderWireframe( radius, length, muted ) ) );
 		if( drawShaded )
 		{
-			result.push_back( Visualisation::createGeometry( LightVisualiserAlgo::cylinderSurface( radius, length, color * tint ), Visualisation::ColorSpace::Scene ) );
+			result.push_back( Visualisation::createGeometry( cylinderSurface( radius, length, color * tint ), Visualisation::ColorSpace::Scene ) );
 		}
 		else
 		{
-			result.push_back( Visualisation::createOrnament( LightVisualiserAlgo::colorIndicator( color * tint ), /* affectsFramingBound = */ false, Visualisation::ColorSpace::Scene ) );
+			result.push_back( Visualisation::createOrnament( colorIndicator( color * tint ), /* affectsFramingBound = */ false, Visualisation::ColorSpace::Scene ) );
 		}
 	}
 	else if( type == "mesh" )
@@ -332,7 +315,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		meshState->add( new IECoreGL::Primitive::DrawSolid( false ) );
 		meshState->add( new IECoreGL::Primitive::DrawOutline( true ) );
 		meshState->add( new IECoreGL::Primitive::OutlineWidth( 2.0f ) );
-		meshState->add( new IECoreGL::OutlineColorStateComponent( LightVisualiserAlgo::lightWireframeColor4( muted ) ) );
+		meshState->add( new IECoreGL::OutlineColorStateComponent( lightWireframeColor4( muted ) ) );
 		state = meshState;
 	}
 	else if( type == "photometric" )
@@ -341,12 +324,12 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		if( radius > 0 )
 		{
 			result.push_back( Visualisation(
-				LightVisualiserAlgo::sphereWireframe( radius, Vec3<bool>( true, false, true ), 0.5f, V3f( 0.0f ), muted ),
+				sphereWireframe( radius, Vec3<bool>( true, false, true ), 0.5f, V3f( 0.0f ), muted ),
 				Visualisation::Scale::None
 			) );
 		}
-		result.push_back( Visualisation::createOrnament( LightVisualiserAlgo::colorIndicator( color ), /* affectsFramingBound = */ false, Visualisation::ColorSpace::Scene ) );
-		LightVisualiserAlgo::addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
+		result.push_back( Visualisation::createOrnament( colorIndicator( color ), /* affectsFramingBound = */ false, Visualisation::ColorSpace::Scene ) );
+		addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 	}
 	else
 	{
@@ -354,21 +337,21 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		const float radius = parameter<float>( metadataTarget, shaderParameters, g_radiusParameterString, 0 );
 		if( radius > 0 )
 		{
-			result.push_back( Visualisation( LightVisualiserAlgo::pointShape( radius, muted ), Visualisation::Scale::None ) );
+			result.push_back( Visualisation( pointShape( radius, muted ), Visualisation::Scale::None ) );
 		}
 
 		if( !haveCone )
 		{
-			result.push_back( Visualisation::createOrnament( LightVisualiserAlgo::pointRays( radius / visualiserScale, muted ), /* affectsFramingBound = */ true ) );
+			result.push_back( Visualisation::createOrnament( pointRays( radius / visualiserScale, muted ), /* affectsFramingBound = */ true ) );
 		}
-		result.push_back( Visualisation::createOrnament( LightVisualiserAlgo::colorIndicator( color ), /* affectsFramingBound = */ false, Visualisation::ColorSpace::Scene ) );
+		result.push_back( Visualisation::createOrnament( colorIndicator( color ), /* affectsFramingBound = */ false, Visualisation::ColorSpace::Scene ) );
 	}
 
 	if( ornamentWireframePoints->readable().size() > 0 )
 	{
 		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, ornamentWireframeVertsPerCurve );
 		curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, ornamentWireframePoints ) );
-		curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( LightVisualiserAlgo::lightWireframeColor( muted ) ) ) );
+		curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( lightWireframeColor( muted ) ) ) );
 		result.push_back( Visualisation::createOrnament( curves, /* affectsFramingBound = */ false ) );
 	}
 
