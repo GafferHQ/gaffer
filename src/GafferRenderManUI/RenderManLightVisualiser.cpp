@@ -181,14 +181,14 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 
 			result.push_back(
 				Visualisation::createOrnament(
-					LightVisualiserAlgo::environmentSphereSurface( textureData, color, saturation, gamma, maxTextureResolution, color ),
+					environmentSphereSurface( textureData, color, saturation, gamma, maxTextureResolution, color ),
 					true,  // affectsFramingBound
 					Visualisation::ColorSpace::Scene
 				)
 			);
 		}
 		result.push_back( Visualisation::createOrnament(
-			LightVisualiserAlgo::sphereWireframe( 1.05f, Vec3<bool>( true ), 1.0f, V3f( 0.0f ), muted ),
+			sphereWireframe( 1.05f, Vec3<bool>( true ), 1.0f, V3f( 0.0f ), muted ),
 			true  // affectsFramingBound
 		) );
 	}
