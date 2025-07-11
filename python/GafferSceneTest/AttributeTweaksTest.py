@@ -142,6 +142,12 @@ class AttributeTweaksTest( GafferSceneTest.SceneTestCase ) :
 		group = GafferScene.Group()
 		group["in"][0].setInput( plane["out"] )
 
+		globalAttributes = GafferScene.StandardAttributes()
+		globalAttributes["global"].setValue( True )
+		globalAttributes["attributes"]["gaffer:transformBlurSegments"]["enabled"].setValue( True )
+		globalAttributes["attributes"]["gaffer:transformBlurSegments"]["value"].setValue( 4 )
+		globalAttributes["in"].setInput( group["out"] )
+
 		attributes = GafferScene.StandardAttributes()
 		attributes["attributes"]["gaffer:transformBlurSegments"]["enabled"].setValue( True )
 		attributes["attributes"]["gaffer:transformBlurSegments"]["value"].setValue( 5 )
@@ -149,7 +155,7 @@ class AttributeTweaksTest( GafferSceneTest.SceneTestCase ) :
 		groupFilter = GafferScene.PathFilter()
 		groupFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
 
-		attributes["in"].setInput( group["out"] )
+		attributes["in"].setInput( globalAttributes["out"] )
 		attributes["filter"].setInput( groupFilter["out"] )
 
 		self.assertIn( "gaffer:transformBlurSegments", attributes["out"].attributes( "/group" ) )
@@ -162,11 +168,11 @@ class AttributeTweaksTest( GafferSceneTest.SceneTestCase ) :
 		tweaks["in"].setInput( attributes["out"] )
 		tweaks["filter"].setInput( planeFilter["out"] )
 
-		segmentsTweak = Gaffer.TweakPlug( "gaffer:transformBlurSegments", 2 )
+		segmentsTweak = Gaffer.TweakPlug( "gaffer:transformBlurSegments", 2, Gaffer.TweakPlug.Mode.Multiply )
 		tweaks["tweaks"].addChild( segmentsTweak )
 
 		self.assertEqual( tweaks["localise"].getValue(), False )
-		with self.assertRaisesRegex( RuntimeError, "Cannot apply tweak with mode Replace to \"gaffer:transformBlurSegments\" : This parameter does not exist" ) :
+		with self.assertRaisesRegex( RuntimeError, "Cannot apply tweak with mode Multiply to \"gaffer:transformBlurSegments\" : This parameter does not exist" ) :
 			tweaks["out"].attributes( "/group/plane" )
 
 		tweaks["localise"].setValue( True )
@@ -176,7 +182,19 @@ class AttributeTweaksTest( GafferSceneTest.SceneTestCase ) :
 
 		planeAttr = tweaks["out"].attributes( "/group/plane" )
 		self.assertIn( "gaffer:transformBlurSegments", planeAttr )
-		self.assertEqual( planeAttr["gaffer:transformBlurSegments"], IECore.IntData( 2 ) )
+		self.assertEqual( planeAttr["gaffer:transformBlurSegments"], IECore.IntData( 10 ) )
+
+		attributes["enabled"].setValue( False )
+		groupAttr = tweaks["out"].fullAttributes( "/group", withGlobalAttributes = True )
+		self.assertEqual( groupAttr["gaffer:transformBlurSegments"], IECore.IntData( 4 ) )
+
+		planeAttr = tweaks["out"].attributes( "/group/plane" )
+		self.assertIn( "gaffer:transformBlurSegments", planeAttr )
+		self.assertEqual( planeAttr["gaffer:transformBlurSegments"], IECore.IntData( 8 ) )
+
+		globalAttributes["attributes"]["gaffer:transformBlurSegments"]["value"].setValue( 6 )
+		planeAttr = tweaks["out"].attributes( "/group/plane" )
+		self.assertEqual( planeAttr["gaffer:transformBlurSegments"], IECore.IntData( 12 ) )
 
 		# Test disabling tweak results in no localisation
 

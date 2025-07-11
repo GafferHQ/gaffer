@@ -132,7 +132,8 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Should inherited attributes or be considered or not.
+			Should inherited attributes or be considered or not. Attributes are
+			inherited from ancestors or from the scene globals.
 			""",
 
 			"nodule:type", ""

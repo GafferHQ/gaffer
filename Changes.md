@@ -27,6 +27,9 @@ Improvements
   - Added `render:cameraInclusions`, `render:cameraExclusions`, `render:matteInclusions`, and `render:matteExclusions` options.
 - CyclesMeshLight : Improved presentation of `cameraVisibility` and `lightGroup` plugs in the Node Editor.
 - PathListingWidget : Improved formatting of Box and Matrix values.
+- LocaliseAttributes : Added support for localising global attributes, controlled by the new `includeGlobalAttributes` plug.
+- AttributeTweaks : Added support for localising global attributes when `localise` is enabled.
+- AttributeQuery : Added support for querying global attributes when `inherit` is enabled.
 
 Fixes
 -----
@@ -66,6 +69,7 @@ API
 - SceneAlgo :
   - `applyCameraGlobals()` now always applies the `render:overscan[Top/Bottom/Left/Right]` options to the camera if they exist in the scene globals.
   - `applyCameraGlobals()` now applies the `render:depthOfField` option to the `depthOfField` camera parameter. The `fStop` camera parameter is no longer overridden to `0.0` when the `render:depthOfField` option is `False` or not specified.
+- ScenePlug : Added optional `withGlobalAttributes` arguments to `fullAttributes()` and `fullAttributesHash()`.
 
 Breaking Changes
 ----------------
@@ -89,6 +93,8 @@ Breaking Changes
 - OSLObject, OSLImage, Expression : Removed support for file-based pointclouds.
 - ContextAlgo : Removed deprecated API. Use ScriptNodeAlgo instead, which has been available from Gaffer 1.4.13.0 onwards.
 - ScriptNodeAlgo : Reimplemented using Metadata rather than Context variables for storage. Use the ScriptNodeAlgo API instead of attempting direct access to `ui:*` context variables.
+- AttributeTweaks : Tweaks with `localise` enabled and a mode of `CreateIfMissing` will now not create an attribute if it is missing from the scene hierarchy, but exists in the globals.
+- AttributeQuery : Queries with `inherit` enabled will now return a result when querying an attribute that does not exist in the scene hierarchy, but does exist in the globals.
 
 Build
 -----

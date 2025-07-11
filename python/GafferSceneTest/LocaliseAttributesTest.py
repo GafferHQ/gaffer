@@ -74,8 +74,14 @@ class LocaliseAttributesTest( GafferSceneTest.SceneTestCase ) :
 		outerGroupFilter = GafferScene.PathFilter()
 		outerGroupFilter["paths"].setValue( IECore.StringVectorData( [ "/outerGroup" ] ) )
 
+		globalAttributes = GafferScene.CustomAttributes()
+		globalAttributes["in"].setInput( outerGroup["out"] )
+		globalAttributes["global"].setValue( True )
+		globalAttributes["attributes"].addChild( Gaffer.NameValuePlug( "a", "globalA" ) )
+		globalAttributes["attributes"].addChild( Gaffer.NameValuePlug( "d", "globalD" ) )
+
 		planeAttributes = GafferScene.CustomAttributes()
-		planeAttributes["in"].setInput( outerGroup["out"] )
+		planeAttributes["in"].setInput( globalAttributes["out"] )
 		planeAttributes["filter"].setInput( planeFilter["out"] )
 		planeAttributes["attributes"].addChild( Gaffer.NameValuePlug( "a", "planeA" ) )
 
@@ -120,6 +126,11 @@ class LocaliseAttributesTest( GafferSceneTest.SceneTestCase ) :
 			localiseAttributes["out"].attributes( "/outerGroup/innerGroup/plane" ),
 			localiseAttributes["in"].fullAttributes( "/outerGroup/innerGroup/plane" )
 		)
+		localiseAttributes["includeGlobalAttributes"].setValue( True )
+		self.assertEqual(
+			localiseAttributes["out"].attributes( "/outerGroup/innerGroup/plane" ),
+			localiseAttributes["in"].fullAttributes( "/outerGroup/innerGroup/plane", withGlobalAttributes = True )
+		)
 
 		# Localise a subset of the attributes.
 
@@ -143,14 +154,58 @@ class LocaliseAttributesTest( GafferSceneTest.SceneTestCase ) :
 			} )
 		)
 
+		localiseAttributes["attributes"].setValue( "c d" )
+		self.assertEqual(
+			localiseAttributes["out"].attributes( "/outerGroup/innerGroup/plane" ),
+			IECore.CompoundObject( {
+				"a" : IECore.StringData( "planeA" ),
+				"c" : IECore.StringData( "outerGroupC" ),
+				"d" : IECore.StringData( "globalD" ),
+			} )
+		)
+
+		globalAttributes["attributes"]["NameValuePlug1"]["value"].setValue( "anotherGlobalD" )
+		self.assertEqual(
+			localiseAttributes["out"].attributes( "/outerGroup/innerGroup/plane" ),
+			IECore.CompoundObject( {
+				"a" : IECore.StringData( "planeA" ),
+				"c" : IECore.StringData( "outerGroupC" ),
+				"d" : IECore.StringData( "anotherGlobalD" ),
+			} )
+		)
+
+		localiseAttributes["includeGlobalAttributes"].setValue( False )
+		self.assertEqual(
+			localiseAttributes["out"].attributes( "/outerGroup/innerGroup/plane" ),
+			IECore.CompoundObject( {
+				"a" : IECore.StringData( "planeA" ),
+				"c" : IECore.StringData( "outerGroupC" ),
+			} )
+		)
+
 	def testDirtyPropagation( self ) :
 
+		globalAttributes = GafferScene.StandardAttributes()
+		globalAttributes["global"].setValue( True )
 		standardAttributes = GafferScene.StandardAttributes()
+		standardAttributes["in"].setInput( globalAttributes["out"] )
 		localiseAttributes = GafferScene.LocaliseAttributes()
 		localiseAttributes["in"].setInput( standardAttributes["out"] )
 
 		cs = GafferTest.CapturingSlot( localiseAttributes.plugDirtiedSignal() )
 
+		globalAttributes["attributes"]["doubleSided"]["enabled"].setValue( True )
+		self.assertNotIn( localiseAttributes["out"]["attributes"], { x[0] for x in cs } )
+
+		localiseAttributes["includeGlobalAttributes"].setValue( True )
+		self.assertIn( localiseAttributes["out"]["attributes"], { x[0] for x in cs } )
+
+		globalAttributes["attributes"]["doubleSided"]["enabled"].setValue( False )
+		del cs[:]
+		globalAttributes["attributes"]["doubleSided"]["enabled"].setValue( True )
+		self.assertIn( localiseAttributes["out"]["attributes"], { x[0] for x in cs } )
+
+		del cs[:]
 		standardAttributes["attributes"]["scene:visible"]["enabled"].setValue( True )
 		self.assertIn( localiseAttributes["out"]["attributes"], { x[0] for x in cs } )
 
