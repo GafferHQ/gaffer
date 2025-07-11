@@ -32,7 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferSceneUI/LightVisualiserAlgo.h"
+#include "GafferSceneUI/Private/LightVisualiserAlgo.h"
 #include "GafferSceneUI/StandardLightVisualiser.h"
 
 #include "IECoreGL/CurvesPrimitive.h"
@@ -45,6 +45,7 @@ using namespace IECore;
 using namespace IECoreGLPreview;
 using namespace IECoreScene;
 using namespace GafferSceneUI;
+using namespace GafferSceneUI::Private::LightVisualiserAlgo;
 
 namespace
 {
@@ -180,7 +181,7 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 
 			result.push_back(
 				Visualisation::createGeometry(
-					LightVisualiserAlgo::quadSurface( V2f( 1.f ), textureData, color, saturation, gamma, maxTextureResolution, color, M33f().scale( V2f( -1.f, -1.f ) ) ),
+					quadSurface( V2f( 1.f ), textureData, color, saturation, gamma, maxTextureResolution, color, M33f().scale( V2f( -1.f, -1.f ) ) ),
 					Visualisation::ColorSpace::Scene
 				)
 			);
@@ -188,28 +189,15 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 		else
 		{
 			result.push_back(
-				Visualisation::createOrnament(
-					LightVisualiserAlgo::colorIndicator( color ),
-					true,  // affectsFramingBound
-					Visualisation::ColorSpace::Scene
-				)
+				Visualisation::createOrnament( colorIndicator( color ), /* affectsFramingBound */ true, Visualisation::ColorSpace::Scene )
 			);
 		}
-		result.push_back( Visualisation::createGeometry( LightVisualiserAlgo::quadWireframe( V2f( 1.f ), muted ) ) );
+		result.push_back( Visualisation::createGeometry( quadWireframe( V2f( 1.f ), muted ) ) );
 
 		const float focus = parameterOrDefault( lightParameters, g_emissionFocusParameter, 0.f );
-		LightVisualiserAlgo::addAreaSpread(
-			pow( 0.707f, focus ),
-			ornamentWireframeVertsPerCurve->writable(),
-			ornamentWireframePoints->writable()
-		);
+		addAreaSpread( pow( 0.707f, focus ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 
-		LightVisualiserAlgo::addRay(
-			V3f( 0 ),
-			V3f( 0, 0, -1 ),
-			ornamentWireframeVertsPerCurve->writable(),
-			ornamentWireframePoints->writable()
-		);
+		addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 	}
 
 	if( ornamentWireframePoints->readable().size() > 0 )
@@ -222,7 +210,7 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 			"Cs",
 			PrimitiveVariable(
 				PrimitiveVariable::Constant,
-				new Color3fData( LightVisualiserAlgo::lightWireframeColor( muted ) )
+				new Color3fData( lightWireframeColor( muted ) )
 			)
 		);
 		result.push_back( Visualisation::createOrnament( curves, /* affectsFramingBound = */ false ) );
