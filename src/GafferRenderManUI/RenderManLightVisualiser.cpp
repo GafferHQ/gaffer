@@ -181,7 +181,7 @@ IECoreGL::ConstRenderablePtr triangle( const V3f &p0, const V3f &p1, const V3f &
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	if( wireFrame )
 	{
-		LightVisualiserAlgo::addWireframeCurveState( group.get() );
+		addWireframeCurveState( group.get() );
 	}
 
 	V3fVectorDataPtr pData = new V3fVectorData( { p0, p1, p2 } );
@@ -433,8 +433,8 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 			// The `LightVisualiserAlgo::constantShader()` applies a tint to the color, which makes
 			// for a muddled color when selected if the tint is set to the light color. Instead we
 			// set the tint to `1.0` and set the color on the group.
-			LightVisualiserAlgo::addConstantShader( compassGroup.get(), Color3f( 1.f ) );
-			compassGroup->getState()->add( new IECoreGL::Color( LightVisualiserAlgo::lightWireframeColor4( muted ) ), /* override = */ true );
+			addConstantShader( compassGroup.get(), Color3f( 1.f ) );
+			compassGroup->getState()->add( new IECoreGL::Color( lightWireframeColor4( muted ) ), /* override = */ true );
 
 			static IECoreGL::FontPtr compassFont = IECoreGL::FontLoader::defaultFontLoader()->load( "VeraBd.ttf" );
 			IECoreGL::GroupPtr compassLabelGroup = new IECoreGL::Group();
@@ -469,13 +469,7 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 				)
 			);
 
-			result.push_back(
-				Visualisation::createOrnament(
-					compassGroup,
-					true,  // affectsFramingBound
-					Visualisation::ColorSpace::Display
-				)
-			);
+			result.push_back( Visualisation::createOrnament( compassGroup, /* affectsFramingBounds = */ true, Visualisation::ColorSpace::Display ) );
 
 			sunPosition = ::sunPosition(
 				parameterOrDefault( lightParameters, g_hourParameter, 14.633333f ),
@@ -497,23 +491,17 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 		}
 
 		IECoreGL::GroupPtr raysGroup = new IECoreGL::Group();
-		raysGroup->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( LightVisualiserAlgo::distantRays( muted ) ) );
+		raysGroup->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( distantRays( muted ) ) );
 		M44f rayTransform;
 		alignZAxisWithTargetDir( rayTransform, sunPosition, V3f( 0.f, 1.f, 0.f ) );
 		rayTransform.translate( V3f( 0.f, 0.f, compassScale - 1.f ) );
 		raysGroup->setTransform( rayTransform );
-		result.push_back(
-			Visualisation::createOrnament(
-				raysGroup,
-				true,  // affectsFramingBounds
-				Visualisation::ColorSpace::Display
-			)
-		);
+		result.push_back( Visualisation::createOrnament( raysGroup, /* affectsFramingBounds = */ true, Visualisation::ColorSpace::Display ) );
 
 		IECoreGL::GroupPtr tintIndicatorGroup = new IECoreGL::Group();
 		tintIndicatorGroup->addChild(
 			boost::const_pointer_cast<IECoreGL::Renderable>(
-				LightVisualiserAlgo::colorIndicator( parameterOrDefault( lightParameters, g_sunTintParameter, Color3f( 1.f ) ) )
+				colorIndicator( parameterOrDefault( lightParameters, g_sunTintParameter, Color3f( 1.f ) ) )
 			)
 		);
 		tintIndicatorGroup->setTransform( M44f().translate( sunPosition ) * M44f().scale( V3f( compassScale ) ) );
@@ -529,9 +517,9 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 		// The `LightVisualiserAlgo::constantShader()` applies a tint to the color, which makes
 		// for a muddled color when selected if the tint is set to the light color. Instead we
 		// set the tint to `1.0` and set the color on the group.
-		LightVisualiserAlgo::addConstantShader( sunIndicatorGroup.get(), Color3f( 1.f ), 1 );
-		sunIndicatorGroup->getState()->add( new IECoreGL::Color( LightVisualiserAlgo::lightWireframeColor4( muted ) ), /* override = */ true );
-		sunIndicatorGroup->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( sunIndicator( LightVisualiserAlgo::lightWireframeColor( muted ) ) ) );
+		addConstantShader( sunIndicatorGroup.get(), Color3f( 1.f ), 1 );
+		sunIndicatorGroup->getState()->add( new IECoreGL::Color( lightWireframeColor4( muted ) ), /* override = */ true );
+		sunIndicatorGroup->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( sunIndicator( lightWireframeColor( muted ) ) ) );
 		sunIndicatorGroup->setTransform( M44f().translate( sunPosition ) * M44f().scale( V3f( compassScale ) ) );
 		result.push_back(
 			Visualisation::createOrnament(
