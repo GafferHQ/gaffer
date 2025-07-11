@@ -32,7 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferSceneUI/LightVisualiserAlgo.h"
+#include "GafferSceneUI/Private/LightVisualiserAlgo.h"
 
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/QuadPrimitive.h"
@@ -50,7 +50,7 @@
 using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;
-using namespace GafferSceneUI::LightVisualiserAlgo;
+using namespace GafferSceneUI::Private::LightVisualiserAlgo;
 
 namespace
 {
@@ -356,7 +356,7 @@ IE_CORE_DECLAREPTR( UVOrientedQuadPrimitive );
 
 }  // namespace
 
-namespace GafferSceneUI::LightVisualiserAlgo
+namespace GafferSceneUI::Private::LightVisualiserAlgo
 {
 
 IECoreGL::ConstRenderablePtr ray( bool muted )
@@ -906,4 +906,4 @@ Color4f lightWireframeColor4( const bool muted )
 	return muted ? g_mutedLightWireframeColor4 : g_lightWireframeColor4;
 }
 
-}  // namespace GafferSceneUI::LightVisualiserAlgo
+}  // namespace GafferSceneUI::Private::LightVisualiserAlgo
