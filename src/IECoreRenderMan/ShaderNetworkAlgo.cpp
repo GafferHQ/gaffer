@@ -748,6 +748,8 @@ void correctParameters( ShaderNetwork *network )
 			newShader->parameters()[g_sunDirectionParameter] = new V3fData( V3f( direction.x, -direction.z, direction.y ) );
 
 			network->setShader( handle, std::move( newShader ) );
+
+			return;
 		}
 	}
 }
