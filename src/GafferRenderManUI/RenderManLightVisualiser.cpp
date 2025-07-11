@@ -211,15 +211,7 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 		{
 			result.push_back(
 				Visualisation::createGeometry(
-					LightVisualiserAlgo::diskSurface(
-						0.5f,
-						nullptr,  // textureData
-						color,
-						1.f,  // saturation
-						Color3f( 1.f ),  // gamma
-						maxTextureResolution,
-						color
-					),
+					diskSurface( 0.5f, /* textureData = */ nullptr, color, /* saturation = */ 1.f, /* gamma = */ Color3f( 1.f ), maxTextureResolution, color ),
 					Visualisation::ColorSpace::Scene
 				)
 			);
@@ -228,7 +220,7 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 		{
 			result.push_back(
 				Visualisation::createOrnament(
-					LightVisualiserAlgo::colorIndicator( color ),
+					colorIndicator( color ),
 					false,  // affectsFramingBounds
 					Visualisation::ColorSpace::Scene
 				)
@@ -236,22 +228,13 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 		}
 
 		result.push_back(
-			Visualisation::createGeometry( LightVisualiserAlgo::diskWireframe( 0.5f, muted ) )
+			Visualisation::createGeometry( diskWireframe( 0.5f, muted ) )
 		);
 
 		const float focus = parameterOrDefault( lightParameters, g_emissionFocusParameter, 0.f );
-		LightVisualiserAlgo::addAreaSpread(
-			pow( 0.707f, focus ),
-			ornamentWireframeVertsPerCurve->writable(),
-			ornamentWireframePoints->writable()
-		);
+		addAreaSpread( pow( 0.707f, focus ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 
-		LightVisualiserAlgo::addRay(
-			V3f( 0.f ),
-			V3f( 0.f, 0.f, -1.f ),
-			ornamentWireframeVertsPerCurve->writable(),
-			ornamentWireframePoints->writable()
-		);
+		addRay( V3f( 0.f ), V3f( 0.f, 0.f, -1.f ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 	}
 
 	else if( lightShader->getName() == "PxrDomeLight" )
