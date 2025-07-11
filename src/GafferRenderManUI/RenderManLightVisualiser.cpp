@@ -580,27 +580,17 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 	{
 		if( drawShaded )
 		{
-			result.push_back(
-				Visualisation::createGeometry(
-					LightVisualiserAlgo::pointSurface( 0.5f, color ),
-					Visualisation::ColorSpace::Scene
-				)
-			);
+			result.push_back( Visualisation::createGeometry( pointSurface( 0.5f, color ), Visualisation::ColorSpace::Scene ) );
 		}
 		else
 		{
 			result.push_back(
-				Visualisation::createOrnament(
-					LightVisualiserAlgo::colorIndicator( color ),
-					false,  // affectsFramingBounds
-					Visualisation::ColorSpace::Scene
-				)
-			);
+				Visualisation::createOrnament( colorIndicator( color ), /* affectsFramingBounds = */ false, Visualisation::ColorSpace::Scene ) );
 		}
 
-		result.push_back( Visualisation::createGeometry( LightVisualiserAlgo::pointShape( 0.5f, muted ) ) );
+		result.push_back( Visualisation::createGeometry( pointShape( 0.5f, muted ) ) );
 
-		result.push_back( Visualisation::createGeometry( LightVisualiserAlgo::pointRays( 0.5f, muted ) ) );
+		result.push_back( Visualisation::createGeometry( pointRays( 0.5f, muted ) ) );
 	}
 
 	if( ornamentWireframePoints->readable().size() > 0 )
