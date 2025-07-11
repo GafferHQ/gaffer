@@ -272,7 +272,7 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 		meshState->add( new IECoreGL::Primitive::DrawSolid( false ) );
 		meshState->add( new IECoreGL::Primitive::DrawOutline( true ) );
 		meshState->add( new IECoreGL::Primitive::OutlineWidth( 2.0f ) );
-		meshState->add( new IECoreGL::OutlineColorStateComponent( LightVisualiserAlgo::lightWireframeColor4( muted ) ) );
+		meshState->add( new IECoreGL::OutlineColorStateComponent( lightWireframeColor4( muted ) ) );
 		state = meshState;
 	}
 
