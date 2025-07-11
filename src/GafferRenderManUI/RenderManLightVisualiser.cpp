@@ -178,24 +178,24 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 
 		IECoreGL::GroupPtr rayGroup = new IECoreGL::Group;
 		rayGroup->setTransform( orientation );
-		rayGroup->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( LightVisualiserAlgo::cylinderRays( 0.5f, muted ) ) );
+		rayGroup->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( cylinderRays( 0.5f, muted ) ) );
 		result.push_back( Visualisation::createOrnament( rayGroup, true ) );
 
 		IECoreGL::GroupPtr wireframeGroup = new IECoreGL::Group;
 		wireframeGroup->setTransform( orientation );
-		wireframeGroup->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( LightVisualiserAlgo::cylinderWireframe( 0.5f, 1.f, muted ) ) );
+		wireframeGroup->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( cylinderWireframe( 0.5f, 1.f, muted ) ) );
 		result.push_back( Visualisation::createGeometry( wireframeGroup ) );
 
 		IECoreGL::GroupPtr surfaceGroup = new IECoreGL::Group;
 		surfaceGroup->setTransform( orientation );
 		if( drawShaded )
 		{
-			surfaceGroup->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( LightVisualiserAlgo::cylinderSurface( 0.5f, 1.f, color ) ) );
+			surfaceGroup->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( cylinderSurface( 0.5f, 1.f, color ) ) );
 			result.push_back( Visualisation::createGeometry( surfaceGroup, Visualisation::ColorSpace::Scene ) );
 		}
 		else
 		{
-			surfaceGroup->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( LightVisualiserAlgo::colorIndicator( color ) ) );
+			surfaceGroup->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
 			result.push_back( Visualisation::createOrnament(
 					surfaceGroup,
 					false,  // affectsFramingBound
