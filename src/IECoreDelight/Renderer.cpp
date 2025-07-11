@@ -1200,9 +1200,10 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 					0, nullptr
 				);
 			}
+			uint32_t instanceIDPlusOne = instanceID + 1;
 			NSIParam_t param = {
 				"cortexInstanceID",
-				&instanceID,
+				&instanceIDPlusOne,
 				// Deliberately declaring as `float` even though it is an
 				// integer. This lets us render the full range of integer values
 				// out of a float AOV through type-punning. 3Delight does have

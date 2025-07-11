@@ -2594,8 +2594,9 @@ class ArnoldObjectBase : public IECoreScenePreview::Renderer::ObjectInterface
 					AiNodeDeclare( node, g_cortexInstanceIDArnoldString, "constant FLOAT" )
 				)
 				{
+					uint32_t instanceIDPlusOne = instanceID + 1;
 					float bitcastID;
-					memcpy( &bitcastID, &instanceID, 4 );
+					memcpy( &bitcastID, &instanceIDPlusOne, 4 );
 					AiNodeSetFlt( node, g_cortexInstanceIDArnoldString, bitcastID );
 				}
 			}

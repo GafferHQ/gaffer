@@ -753,6 +753,9 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 			id = struct.pack( "f", id )
 			id = struct.unpack( "I", id )[0]
 
+			# We store ids offset by one so we can differentiate the id "0" from the background
+			id -= 1
+
 			self.assertEqual( id, expectedID )
 
 	## Should be implemented by derived classes to return
