@@ -298,8 +298,87 @@ IECoreGL::ConstRenderablePtr sunSurface( const float radius )
 	return result;
 }
 
+IECoreGL::ConstRenderablePtr spotLightRound( const float angle, const float height = 1.f, const float lineWidthScale = 1.f, const bool muted = false )
+{
+	IECoreGL::GroupPtr result = new IECoreGL::Group();
+	addWireframeCurveState( result.get(), lineWidthScale );
+	addConstantShader( result.get(), Color3f( 1.f ) );
+
+	const float angleRadians = degreesToRadians( angle );
+	const float baseRadius = height * sin( angleRadians );
+	const float baseDistance = height * cos( angleRadians );
+
+	IECoreGL::GroupPtr frustumBaseGroup = new IECoreGL::Group();
+	frustumBaseGroup->addChild(
+		boost::const_pointer_cast<IECoreGL::Renderable>( diskWireframe( baseRadius, lineWidthScale, muted ) )
+	);
+	frustumBaseGroup->setTransform( M44f().translate( V3f( 0.f, 0.f, -baseDistance ) ) );
+
+	result->addChild( frustumBaseGroup );
+
+	IntVectorDataPtr vertsPerCurve = new IntVectorData( { 2, 2, 2, 2 } );
+	V3fVectorDataPtr p = new V3fVectorData(
+		{
+			V3f( 0, 0.f, 0.f ), V3f( baseRadius, 0.f, -baseDistance ),
+			V3f( 0.f, 0, 0.f ), V3f( 0.f, baseRadius, -baseDistance ),
+			V3f( -0, 0.f, 0.f ), V3f( -baseRadius, 0.f, -baseDistance ),
+			V3f( 0.f, -0, 0.f ), V3f( 0.f, -baseRadius, -baseDistance )
+		}
+	);
+
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
+	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
+
+	const Color3fDataPtr color = new Color3fData( lineWidthScale < 1.0f ? Color3f( 0.627f, 0.580f, 0.352f ) : lightWireframeColor( muted ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, color ) );
+
+	result->addChild( curves );
+
+	return result;
+}
+
+IECoreGL::ConstRenderablePtr spotLightSquare( const float angle, const float height = 1.f, const float lineWidthScale = 1.f, const bool muted = false )
+{
+	IECoreGL::GroupPtr result = new IECoreGL::Group();
+	addWireframeCurveState( result.get(), lineWidthScale );
+	addConstantShader( result.get(), Color3f( 1.f ) );
+
+	const float angleRadians = degreesToRadians( angle );
+	const float halfWidth = height * sin( angleRadians );
+	const float baseDistance = height * cos( angleRadians );
+
+	IECoreGL::GroupPtr frustumBaseGroup = new IECoreGL::Group();
+	frustumBaseGroup->addChild(
+		boost::const_pointer_cast<IECoreGL::Renderable>( quadWireframe( V2f( halfWidth * 2.f ), lineWidthScale, muted ) )
+	);
+	frustumBaseGroup->setTransform( M44f().translate( V3f( 0.f, 0.f, -baseDistance ) ) );
+
+	result->addChild( frustumBaseGroup );
+
+	IntVectorDataPtr vertsPerCurve = new IntVectorData( { 2, 2, 2, 2 } );
+	V3fVectorDataPtr p = new V3fVectorData(
+		{
+			V3f( 0, 0.f, 0.f ), V3f( halfWidth, halfWidth, -baseDistance ),
+			V3f( 0.f, 0, 0.f ), V3f( -halfWidth, halfWidth, -baseDistance ),
+			V3f( -0, 0.f, 0.f ), V3f( -halfWidth, -halfWidth, -baseDistance ),
+			V3f( 0.f, -0, 0.f ), V3f( halfWidth, -halfWidth, -baseDistance )
+		}
+	);
+
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
+	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
+
+	const Color3fDataPtr color = new Color3fData( lineWidthScale < 1.0f ? Color3f( 0.627f, 0.580f, 0.352f ) : lightWireframeColor( muted ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, color ) );
+
+	result->addChild( curves );
+
+	return result;
+}
+
 const InternedString g_colorMapGammaParameter( "colorMapGamma" );
 const InternedString g_colorMapSaturationParameter( "colorMapSaturation" );
+const InternedString g_coneAngleParameter( "coneAngle" );
 const InternedString g_dayParameter( "day" );
 const InternedString g_emissionFocusParameter( "emissionFocus" );
 const InternedString g_enableTemperatureParameter( "enableTemperature" );
@@ -373,6 +452,8 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 	const int maxTextureResolution = parameterOrDefault( attributes, g_glVisualiserMaxTextureResolutionString, std::numeric_limits<int>::max() );
 	const bool muted = parameterOrDefault( attributes, g_lightMuteString, false );
 
+	const float coneAngle = parameterOrDefault( lightParameters, g_coneAngleParameter, 90.f );
+
 	// A shared curves primitive for ornament wireframes
 
 	V3fVectorDataPtr ornamentWireframePoints = new V3fVectorData();
@@ -411,6 +492,22 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 				)
 			);
 		}
+
+		if( coneAngle < 90.f )
+		{
+			result.push_back(
+				Visualisation::createOrnament(
+					spotLightSquare( coneAngle, 1.f, 1.f, muted ),
+					true  // affectsFramingBound
+				)
+			);
+			result.push_back(
+				Visualisation::createFrustum(
+					spotLightSquare( coneAngle, 10.f, 0.5f, muted ),
+					Visualisation::Scale::Visualiser
+				)
+			);
+		}
 	}
 
 	else if( lightShader->getName() == "PxrDiskLight" )
@@ -443,6 +540,22 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 		addAreaSpread( pow( 0.707f, focus ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 
 		addRay( V3f( 0.f ), V3f( 0.f, 0.f, -1.f ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
+
+		if( coneAngle < 90.f )
+		{
+			result.push_back(
+				Visualisation::createOrnament(
+					spotLightRound( coneAngle, 1.f, 1.f, muted ),
+					true  // affectsFramingBounds
+				)
+			);
+			result.push_back(
+				Visualisation::createFrustum(
+					spotLightRound( coneAngle, 10.f, 0.5f, muted ),
+					Visualisation::Scale::Visualiser
+				)
+			);
+		}
 	}
 
 	else if( lightShader->getName() == "PxrDistantLight" )
@@ -630,6 +743,22 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 		addAreaSpread( pow( 0.707f, focus ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 
 		addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
+
+		if( coneAngle < 90.f )
+		{
+			result.push_back(
+				Visualisation::createOrnament(
+					spotLightSquare( coneAngle, 1.f, 1.f, muted ),
+					true  // affectsFramingBound
+				)
+			);
+			result.push_back(
+				Visualisation::createFrustum(
+					spotLightSquare( coneAngle, 10.f, 0.5f, muted ),
+					Visualisation::Scale::Visualiser
+				)
+			);
+		}
 	}
 
 	else if( lightShader->getName() == "PxrSphereLight" )
@@ -647,6 +776,22 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 		result.push_back( Visualisation::createGeometry( pointShape( 0.5f, muted ) ) );
 
 		result.push_back( Visualisation::createGeometry( pointRays( 0.5f, muted ) ) );
+
+		if( coneAngle < 90.f )
+		{
+			result.push_back(
+				Visualisation::createOrnament(
+					spotLightRound( coneAngle, 1.f, 1.f, muted ),
+					true  // affectsFramingBound
+				)
+			);
+			result.push_back(
+				Visualisation::createFrustum(
+					spotLightRound( coneAngle, 10.f, 0.5f, muted ),
+					Visualisation::Scale::Visualiser
+				)
+			);
+		}
 	}
 
 	if( ornamentWireframePoints->readable().size() > 0 )
