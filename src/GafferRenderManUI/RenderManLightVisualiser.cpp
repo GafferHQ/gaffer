@@ -99,7 +99,7 @@ Color3f blackbody( float kelvins )
 template<typename T, typename P>
 T parameterOrDefault( const P *parameters, const InternedString &name, const T &defaultValue )
 {
-	if( const auto d = parameters->member<TypedData<T>>( name ) )
+	if( const auto d = parameters->template member<TypedData<T>>( name ) )
 	{
 		return d->readable();
 	}
