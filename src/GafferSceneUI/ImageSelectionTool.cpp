@@ -123,6 +123,19 @@ std::tuple< bool, Imath::V2f, Imath::V2f > effectiveWipePlane( const ImageGadget
 	return std::make_tuple( true, imageGadget->getWipePosition(), V2f( cosf( radians ), sinf( radians ) ) );
 }
 
+uint32_t backgroundIDValue( bool instanceSelection )
+{
+	// When doing object selection, the background value is 0. When doing instance ID selection, 0
+	// is a valid ID, so we shift by one how we store the ids, and the background value is the max
+	// uint32.
+
+	if( instanceSelection )
+	{
+		return std::numeric_limits<uint32_t>::max();
+	}
+	return 0;
+}
+
 } // namespace
 
 class ImageSelectionTool::DragOverlay : public GafferUI::Gadget
@@ -513,6 +526,12 @@ uint32_t ImageSelectionTool::pixelID( const Imath::V2i &pixel, bool instance )
 		float floatID = sampler.sample( pixel.x, pixel.y );
 		uint32_t id;
 		memcpy( &id, &floatID, 4 );
+
+		if( instance )
+		{
+			id--;
+		}
+
 		return id;
 	}
 	catch( ... )
@@ -552,14 +571,14 @@ std::unordered_set<uint32_t> ImageSelectionTool::rectIDs( const Imath::Box2i &re
 		memcpy( &prevID, &prevValue, 4 );
 		if( prevID != 0 )
 		{
-			result.insert( prevID );
+			result.insert( prevID - ( instance ? 1 : 0 ) );
 		}
 
 		// Note the weird workaround here of doing init-capture of the wipe parameters, since we can't lambda capture
 		// structured bindings until C++20
 		sampler.visitPixels(
 			validRect,
-			[&result, &prevValue, &wipeEnabled = wipeEnabled, &wipePosition = wipePosition, &wipeDirection = wipeDirection] ( float value, int x, int y )
+			[&result, &prevValue, &wipeEnabled = wipeEnabled, &wipePosition = wipePosition, &wipeDirection = wipeDirection, &instance] ( float value, int x, int y )
 			{
 				if( wipeEnabled && ( Imath::V2f( x, y ) + Imath::V2f( 0.5f ) - wipePosition ).dot( wipeDirection ) > 0 )
 				{
@@ -578,7 +597,7 @@ std::unordered_set<uint32_t> ImageSelectionTool::rectIDs( const Imath::Box2i &re
 
 				if( id != 0 )
 				{
-					result.insert( id );
+					result.insert( id - ( instance ? 1 : 0 ) );
 				}
 			}
 		);
@@ -612,12 +631,26 @@ void ImageSelectionTool::selectedPathsChanged()
 
 void ImageSelectionTool::updateSelectedIDs()
 {
-	imageGadget()->setSelectedIDs( m_selectedIDs );
+	bool instanceSelection = selectModePlug()->getValue() == "instance";
+
+	if( instanceSelection )
+	{
+		std::vector<uint32_t> selectedIDsPluseOne = m_selectedIDs;
+		for( uint32_t &i : selectedIDsPluseOne )
+		{
+			i++;
+		}
+		imageGadget()->setSelectedIDs( selectedIDsPluseOne );
+	}
+	else
+	{
+		imageGadget()->setSelectedIDs( m_selectedIDs );
+	}
+
 	view()->viewportGadget()->renderRequestSignal()(
 		view()->viewportGadget()
 	);
 
-	bool instanceSelection = selectModePlug()->getValue() == "instance";
 
 	if( instanceSelection )
 	{
@@ -707,7 +740,7 @@ bool ImageSelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 
 	const bool shiftHeld = event.modifiers & ButtonEvent::Shift;
 	const bool controlHeld = event.modifiers & ButtonEvent::Control;
-	if( id == 0 )
+	if( id == backgroundIDValue( instanceSelection ) )
 	{
 		// background click - clear the selection unless a modifier is held, in
 		// which case we might be starting a drag to add more or remove some.
@@ -776,7 +809,7 @@ IECore::RunTimeTypedPtr ImageSelectionTool::dragBegin( GafferUI::Gadget *gadget,
 
 	bool instanceSelection = selectModePlug()->getValue() == "instance";
 	uint32_t curID = pixelID( V2i( floor( event.line.p1.x ), floor( event.line.p1.y ) ), instanceSelection );
-	if( curID == 0 )
+	if( curID == backgroundIDValue( instanceSelection ) )
 	{
 		// drag to select
 		dragOverlay()->setStartPosition( event.line.p1 );
@@ -913,11 +946,20 @@ bool ImageSelectionTool::mouseMove( const GafferUI::ButtonEvent &event )
 	bool instanceSelection = selectModePlug()->getValue() == "instance";
 	uint32_t id = pixelID( pixel, instanceSelection );
 
-	imageGadget()->setHighlightID( id );
+	if( instanceSelection )
+	{
+		// The image gadget doesn't know that we store instance ids offset by one,
+		// because 0 is a valid instance id.
+		imageGadget()->setHighlightID( id + 1 );
+	}
+	else
+	{
+		imageGadget()->setHighlightID( id );
+	}
 
 	m_infoStatus = "";
 
-	if( id == 0 )
+	if( id == backgroundIDValue( instanceSelection ) )
 	{
 		statusChangedSignal()( *this );
 		view()->viewportGadget()->renderRequestSignal()( view()->viewportGadget() );
