@@ -248,8 +248,8 @@ IECoreGL::ConstRenderablePtr sunIndicator( const Color3f &color )
 IECoreGL::ConstRenderablePtr spotLightRound( const float angle, const float height = 1.f, const float lineWidthScale = 1.f, const bool muted = false )
 {
 	IECoreGL::GroupPtr result = new IECoreGL::Group();
-	LightVisualiserAlgo::addWireframeCurveState( result.get(), lineWidthScale );
-	LightVisualiserAlgo::addConstantShader( result.get(), Color3f( 1.f ) );
+	addWireframeCurveState( result.get(), lineWidthScale );
+	addConstantShader( result.get(), Color3f( 1.f ) );
 
 	const float angleRadians = degreesToRadians( angle );
 	const float baseRadius = height * sin( angleRadians );
@@ -257,7 +257,7 @@ IECoreGL::ConstRenderablePtr spotLightRound( const float angle, const float heig
 
 	IECoreGL::GroupPtr frustumBaseGroup = new IECoreGL::Group();
 	frustumBaseGroup->addChild(
-		boost::const_pointer_cast<IECoreGL::Renderable>( LightVisualiserAlgo::diskWireframe( baseRadius, lineWidthScale, muted ) )
+		boost::const_pointer_cast<IECoreGL::Renderable>( diskWireframe( baseRadius, lineWidthScale, muted ) )
 	);
 	frustumBaseGroup->setTransform( M44f().translate( V3f( 0.f, 0.f, -baseDistance ) ) );
 
@@ -276,7 +276,7 @@ IECoreGL::ConstRenderablePtr spotLightRound( const float angle, const float heig
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
 
-	const Color3fDataPtr color = new Color3fData( lineWidthScale < 1.0f ? Color3f( 0.627f, 0.580f, 0.352f ) : LightVisualiserAlgo::lightWireframeColor( muted ) );
+	const Color3fDataPtr color = new Color3fData( lineWidthScale < 1.0f ? Color3f( 0.627f, 0.580f, 0.352f ) : lightWireframeColor( muted ) );
 	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, color ) );
 
 	result->addChild( curves );
@@ -287,8 +287,8 @@ IECoreGL::ConstRenderablePtr spotLightRound( const float angle, const float heig
 IECoreGL::ConstRenderablePtr spotLightSquare( const float angle, const float height = 1.f, const float lineWidthScale = 1.f, const bool muted = false )
 {
 	IECoreGL::GroupPtr result = new IECoreGL::Group();
-	LightVisualiserAlgo::addWireframeCurveState( result.get(), lineWidthScale );
-	LightVisualiserAlgo::addConstantShader( result.get(), Color3f( 1.f ) );
+	addWireframeCurveState( result.get(), lineWidthScale );
+	addConstantShader( result.get(), Color3f( 1.f ) );
 
 	const float angleRadians = degreesToRadians( angle );
 	const float halfWidth = height * sin( angleRadians );
@@ -296,7 +296,7 @@ IECoreGL::ConstRenderablePtr spotLightSquare( const float angle, const float hei
 
 	IECoreGL::GroupPtr frustumBaseGroup = new IECoreGL::Group();
 	frustumBaseGroup->addChild(
-		boost::const_pointer_cast<IECoreGL::Renderable>( LightVisualiserAlgo::quadWireframe( V2f( halfWidth * 2.f ), lineWidthScale, muted ) )
+		boost::const_pointer_cast<IECoreGL::Renderable>( quadWireframe( V2f( halfWidth * 2.f ), lineWidthScale, muted ) )
 	);
 	frustumBaseGroup->setTransform( M44f().translate( V3f( 0.f, 0.f, -baseDistance ) ) );
 
@@ -315,7 +315,7 @@ IECoreGL::ConstRenderablePtr spotLightSquare( const float angle, const float hei
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
 
-	const Color3fDataPtr color = new Color3fData( lineWidthScale < 1.0f ? Color3f( 0.627f, 0.580f, 0.352f ) : LightVisualiserAlgo::lightWireframeColor( muted ) );
+	const Color3fDataPtr color = new Color3fData( lineWidthScale < 1.0f ? Color3f( 0.627f, 0.580f, 0.352f ) : lightWireframeColor( muted ) );
 	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, color ) );
 
 	result->addChild( curves );
