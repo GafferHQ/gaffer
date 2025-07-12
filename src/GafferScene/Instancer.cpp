@@ -3240,6 +3240,8 @@ void Instancer::InstancerCapsule::render( IECoreScenePreview::Renderer *renderer
 
 	const GafferScene::Private::RendererAlgo::RenderOptions renderOpts = renderOptions();
 
+	bool needsInstanceIDs = GafferScene::Private::RendererAlgo::hasInstanceIDOutput( renderOpts.globals.get() );
+
 	// This is a bit of a weird convention for using a const variable with an initialization that doesn't
 	// fit in one line ... not sure how I feel about it. In this case, it's crucial that sampleTimes is
 	// const, because it is used from multiple threads simultaneously.
@@ -3476,6 +3478,11 @@ void Instancer::InstancerCapsule::render( IECoreScenePreview::Renderer *renderer
 					}
 
 					objectInterface->transform( pointTransforms, sampleTimes );
+				}
+
+				if( needsInstanceIDs )
+				{
+					objectInterface->assignInstanceID( pointIndex );
 				}
 
 			}

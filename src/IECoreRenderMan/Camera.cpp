@@ -177,6 +177,10 @@ void Camera::assignID( uint32_t id )
 {
 }
 
+void Camera::assignInstanceID( uint32_t id )
+{
+}
+
 void Camera::transformInternal( std::vector<Imath::M44f> samples, const std::vector<float> &times )
 {
 	for( auto &m : samples )

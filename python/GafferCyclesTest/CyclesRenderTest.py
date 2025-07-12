@@ -80,5 +80,10 @@ class CyclesRenderTest( GafferSceneTest.RenderTest ) :
 
 		return options
 
+	@unittest.skip( "Instance IDs only work with encapsulated instancers. We don't have encapsulation support yet in our Cycles backend" )
+	def testInstanceIDOutput( self ) :
+
+		pass
+
 if __name__ == "__main__":
 	unittest.main()

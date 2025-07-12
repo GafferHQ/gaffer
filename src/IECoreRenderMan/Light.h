@@ -65,6 +65,7 @@ class Light : public IECoreScenePreview::Renderer::ObjectInterface
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override;
 		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override;
 		void assignID( uint32_t id ) override;
+		void assignInstanceID( uint32_t id ) override;
 
 		// Interface used by LightLinker
 		// =============================

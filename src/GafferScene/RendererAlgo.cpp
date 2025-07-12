@@ -292,6 +292,29 @@ bool hasIDOutput( const IECore::CompoundObject *globals )
 	return false;
 }
 
+bool hasInstanceIDOutput( const IECore::CompoundObject *globals )
+{
+	static const std::string outputPrefix( "output:" );
+	static const std::string instanceIDData( "float instanceID" );
+	CompoundObject::ObjectMap::const_iterator it, eIt;
+	for( it = globals->members().begin(), eIt = globals->members().end(); it != eIt; ++it )
+	{
+		if( !boost::starts_with( it->first.string(), outputPrefix ) )
+		{
+			continue;
+		}
+		if( const Output *output = runTimeCast<Output>( it->second.get() ) )
+		{
+			if( output->getData() == instanceIDData )
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 std::string renderManifestFilePath( const IECore::CompoundObject *globals )
 {
 	const StringData *renderManifestFilePathData = globals->member<StringData>( g_renderManifestFilePathOptionName );

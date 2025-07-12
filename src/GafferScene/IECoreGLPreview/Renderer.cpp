@@ -545,6 +545,12 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			/// consider dropping the custom OpenGL one.
 		}
 
+		void assignInstanceID( uint32_t instanceID ) override
+		{
+			// The GL renderer doesn't support encapsulated instancers, so we have no
+			// need for instance ids.
+		}
+
 		Box3f transformedBound() const
 		{
 			Box3f b;
