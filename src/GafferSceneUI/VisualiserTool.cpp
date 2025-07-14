@@ -39,13 +39,14 @@
 #include "GafferSceneUI/SceneView.h"
 #include "GafferSceneUI/ScriptNodeAlgo.h"
 
-#include "GafferScene/ResamplePrimitiveVariables.h"
+#include "GafferScene/PrimitiveVariableProcessor.h"
 
 #include "GafferUI/Gadget.h"
 #include "GafferUI/Pointer.h"
 #include "GafferUI/Style.h"
 #include "GafferUI/ViewportGadget.h"
 
+#include "IECoreScene/CurvesPrimitive.h"
 #include "IECoreScene/MeshAlgo.h"
 #include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/MeshPrimitiveEvaluator.h"
@@ -128,6 +129,7 @@ const int g_primitiveVariablePrefixSize = g_primitiveVariablePrefix.size();
 // VertexLabel constants
 const float g_cursorRadius2 = 25.f * 25.f;
 const std::string g_vertexIndexDataName = "vertex:index";
+const std::string g_uniformIndexDataName = "uniform:index";
 
 //-----------------------------------------------------------------------------
 // Color shader
@@ -266,7 +268,10 @@ std::string const g_vertexLabelShaderVertSource
 
 	"void main()\n"
 	"{\n"
-	"   gl_Position = vec4( ps, 1.0 ) * uniforms.o2c;\n"
+	"   vec4 p = vec4( ps, 1.0 ) * uniforms.o2c;\n"
+	"   p.z -= " BOOST_PP_STRINGIZE( FLT_EPSILON * 10.f ) ";\n"
+
+	"   gl_Position = p;\n"
 	"   outputs.vertexId = uint( gl_VertexID );\n"
 	"}\n"
 );
@@ -585,6 +590,121 @@ auto stringFromValue = []( auto &&value ) -> std::string
 	return "";
 };
 
+class UniformPLocator : public PrimitiveVariableProcessor
+{
+	/// A node hardcoded for resampling the `P` variable to a location suitable for representing the center of a face.
+	/// Peforming this operation as a node allows us to use Gaffer's usual plug caching to store the result
+	/// of the computation, rather than using a separate cache just for this.
+	public :
+		UniformPLocator( const std::string &name = defaultName<UniformPLocator>() ) : PrimitiveVariableProcessor( name, IECore::PathMatcher::NoMatch )
+		{
+			namesPlug()->setValue( "P" );
+		}
+
+		~UniformPLocator() override
+		{
+		}
+
+		GAFFER_NODE_DECLARE_TYPE( UniformPLocator, UniformPLocatorTypeId, PrimitiveVariableProcessor );
+
+	protected :
+
+		void processPrimitiveVariable( const ScenePath &path, const Context *context, ConstPrimitivePtr inputGeometry, PrimitiveVariable &inputVariable ) const override
+		{
+			if( inputGeometry->typeId() != MeshPrimitive::staticTypeId() && inputGeometry->typeId() != CurvesPrimitive::staticTypeId() )
+			{
+				return;
+			}
+
+			if( inputVariable.interpolation != PrimitiveVariable::Interpolation::Vertex )
+			{
+				return;
+			}
+
+			V3fVectorDataPtr pData = runTimeCast<V3fVectorData>( inputVariable.data );
+			if( !pData )
+			{
+				return;
+			}
+			const std::vector<V3f> &p = pData->readable();
+
+			std::vector<V3f> resultP;
+
+			if( const MeshPrimitive *meshPrimitive = runTimeCast<const MeshPrimitive>( inputGeometry.get() ) )
+			{
+				/// For triangles, we take the average of the vertex positions. For polygons with more than three vertices
+				/// `IECoreScene::MeshAlgo::triangulate()` uses fan triangulation with the first vertex as the common point.
+				/// To get a point close to the center of the face and on the triangulated surface, we take the center point
+				/// of one of two lines. For faces with an even number of points, we use the midpoint of the edge from
+				/// p(0) to p(n/2). For faces with an odd number of points, we use the midpoint of the center-line of the center
+				/// triangle, which is the midpoint of the line from p(0) to midpoint( p(n/2), p(n/2 + 1)).
+
+				resultP.reserve( meshPrimitive->numFaces() );
+
+				const std::vector<int> &vertsPerFace = meshPrimitive->verticesPerFace()->readable();
+				const std::vector<int> &verts = meshPrimitive->vertexIds()->readable();
+
+				int pI = 0;
+				for( int faceI = 0, eFaceI = meshPrimitive->numFaces(); faceI < eFaceI; ++faceI )
+				{
+					const int numFaceVerts = vertsPerFace[faceI];
+
+					if( numFaceVerts == 3 )
+					{
+						resultP.push_back(
+							(
+								p[verts[pI]] +
+								p[verts[pI + 1]] +
+								p[verts[pI + 2]]
+							) * ( 1.f / 3.f )
+						);
+					}
+					else
+					{
+						const V3f p0 = p[verts[pI]];
+						V3f p1;
+
+						const int halfI = numFaceVerts / 2;
+						if( numFaceVerts % 2 == 0 )
+						{
+							p1 = p[verts[pI + halfI]];
+						}
+						else
+						{
+							p1 = ( p[verts[pI + halfI]] + p[verts[pI + halfI + 1]] ) * 0.5f;
+						}
+						resultP.push_back( ( p0 + p1 ) * 0.5f );
+					}
+
+					pI += numFaceVerts;
+				}
+			}
+			else
+			{
+				/// For curves, put the label on the first vertex of each curve.
+
+				const CurvesPrimitive *curvesPrimitive = runTimeCast<const CurvesPrimitive>( inputGeometry.get() );
+				resultP.reserve( curvesPrimitive->numCurves() );
+
+				const std::vector<int> &vertsPerCurve = curvesPrimitive->verticesPerCurve()->readable();
+
+				int pI = 0;
+				for( int curveI = 0, eCurveI = curvesPrimitive->numCurves(); curveI < eCurveI; ++curveI )
+				{
+					resultP.push_back( p[pI] );
+
+					pI += vertsPerCurve[curveI];
+				}
+			}
+
+			inputVariable.data = new V3fVectorData( resultP );
+			inputVariable.interpolation = PrimitiveVariable::Interpolation::Uniform;
+		}
+};
+
+IE_CORE_DECLAREPTR( UniformPLocator )
+GAFFER_NODE_DEFINE_TYPE( UniformPLocator );
+
 //-----------------------------------------------------------------------------
 // VisualiserGadget
 //-----------------------------------------------------------------------------
@@ -604,10 +724,7 @@ class VisualiserGadget : public Gadget
 		explicit VisualiserGadget( const VisualiserTool &tool, const std::string &name = defaultName<VisualiserGadget>() ) :
 			Gadget( name ),
 			m_tool( &tool ),
-			m_colorShader(),
-			m_colorUniformBuffer(),
-			m_vertexLabelShader(),
-			m_vertexLabelUniformBuffer(),
+			m_vertexLabelStorageCapacity( 0 ),
 			m_cursorVertexValue()
 		{
 		}
@@ -1246,27 +1363,53 @@ class VisualiserGadget : public Gadget
 					continue;
 				}
 
-				ConstDataPtr vData = nullptr;
+				ConstDataPtr labelData = nullptr;
+				PrimitiveVariable::Interpolation labelDataInterpolation = PrimitiveVariable::Interpolation::Invalid;
 
-				if( dataName != g_vertexIndexDataName )
+				if( dataName != g_vertexIndexDataName && dataName != g_uniformIndexDataName )
 				{
-					vData = primitive->expandedVariableData<Data>(
+					labelData = primitive->expandedVariableData<Data>(
 						primitiveVariableName,
 						IECoreScene::PrimitiveVariable::Vertex,
 						false /* throwIfInvalid */
 					);
 
-					if( !vData )
+					if( labelData )
 					{
-						continue;
+						labelDataInterpolation = PrimitiveVariable::Interpolation::Vertex;
+					}
+
+					else
+					{
+						if(
+							primitive->typeId() != MeshPrimitive::staticTypeId() &&
+							primitive->typeId() != CurvesPrimitive::staticTypeId()
+						)
+						{
+							continue;
+						}
+
+						labelData = primitive->expandedVariableData<Data>(
+							primitiveVariableName,
+							PrimitiveVariable::Uniform,
+							false /* throwIfInvalid */
+						);
+
+						if( !labelData )
+						{
+							continue;
+						}
+
+						labelDataInterpolation = PrimitiveVariable::Interpolation::Uniform;
+
 					}
 
 					if(
 						mode == VisualiserTool::Mode::Auto &&
 						primitive->typeId() == MeshPrimitive::staticTypeId() &&
-						vData->typeId() != IntVectorDataTypeId &&
-						vData->typeId() != V3fVectorDataTypeId &&
-						vData->typeId() != QuatfVectorDataTypeId
+						labelData->typeId() != IntVectorDataTypeId &&
+						labelData->typeId() != V3fVectorDataTypeId &&
+						labelData->typeId() != QuatfVectorDataTypeId
 					)
 					{
 						// Will be handled by `renderColorVisualiser()` instead.
@@ -1277,22 +1420,39 @@ class VisualiserGadget : public Gadget
 					}
 
 					if(
-						vData->typeId() != IntVectorDataTypeId &&
-						vData->typeId() != FloatVectorDataTypeId &&
-						vData->typeId() != V2fVectorDataTypeId &&
-						vData->typeId() != V3fVectorDataTypeId &&
-						vData->typeId() != Color3fVectorDataTypeId &&
-						vData->typeId() != QuatfVectorDataTypeId
+						labelData->typeId() != IntVectorDataTypeId &&
+						labelData->typeId() != FloatVectorDataTypeId &&
+						labelData->typeId() != V2fVectorDataTypeId &&
+						labelData->typeId() != V3fVectorDataTypeId &&
+						labelData->typeId() != Color3fVectorDataTypeId &&
+						labelData->typeId() != QuatfVectorDataTypeId
 					)
 					{
 						continue;
 					}
 				}
 
+				if( dataName == g_uniformIndexDataName || labelDataInterpolation == PrimitiveVariable::Interpolation::Uniform )
+				{
+					try
+					{
+						primitive = runTimeCast<const Primitive>( location.uniformPScene().objectPlug()->getValue() );
+					}
+					catch( const std::exception & )
+					{
+						continue;
+					}
+
+					if( !primitive )
+					{
+						continue;
+					}
+				}
+
 				if(
-					mode == VisualiserTool::Mode::Auto && vData && (
-						vData->typeId() == V3fVectorDataTypeId ||
-						vData->typeId() == QuatfVectorDataTypeId
+					mode == VisualiserTool::Mode::Auto && labelData && (
+						labelData->typeId() == V3fVectorDataTypeId ||
+						labelData->typeId() == QuatfVectorDataTypeId
 					)
 				)
 				{
@@ -1333,7 +1493,7 @@ class VisualiserGadget : public Gadget
 
 				ConstV3fVectorDataPtr pData = primitive->expandedVariableData<IECore::V3fVectorData>(
 					g_pName,
-					IECoreScene::PrimitiveVariable::Vertex,
+					labelDataInterpolation,
 					false /* throwIfInvalid */
 				);
 
@@ -1506,33 +1666,33 @@ class VisualiserGadget : public Gadget
 							std::optional<V2f> rasterPos = viewportGadget->worldToRasterSpace( worldPos );
 							if( rasterBounds.intersects( rasterPos.value() ) )
 							{
-								if( !vData )
+								if( !labelData )
 								{
 									vertexValue = (int)i;
 								}
 								else
 								{
-									if( auto iData = runTimeCast<const IntVectorData>( vData.get() ) )
+									if( auto iData = runTimeCast<const IntVectorData>( labelData.get() ) )
 									{
 										vertexValue = iData->readable()[i];
 									}
-									if( auto fData = runTimeCast<const FloatVectorData>( vData.get() ) )
+									if( auto fData = runTimeCast<const FloatVectorData>( labelData.get() ) )
 									{
 										vertexValue = fData->readable()[i];
 									}
-									if( auto v2fData = runTimeCast<const V2fVectorData>( vData.get() ) )
+									if( auto v2fData = runTimeCast<const V2fVectorData>( labelData.get() ) )
 									{
 										vertexValue = v2fData->readable()[i];
 									}
-									if( auto v3fData = runTimeCast<const V3fVectorData>( vData.get() ) )
+									if( auto v3fData = runTimeCast<const V3fVectorData>( labelData.get() ) )
 									{
 										vertexValue = v3fData->readable()[i];
 									}
-									if( auto c3fData = runTimeCast<const Color3fVectorData>( vData.get() ) )
+									if( auto c3fData = runTimeCast<const Color3fVectorData>( labelData.get() ) )
 									{
 										vertexValue = c3fData->readable()[i];
 									}
-									if( auto qData = runTimeCast<const QuatfVectorData>( vData.get() ) )
+									if( auto qData = runTimeCast<const QuatfVectorData>( labelData.get() ) )
 									{
 										vertexValue = qData->readable()[i];
 									}
@@ -1555,9 +1715,9 @@ class VisualiserGadget : public Gadget
 								}
 
 								if(
-									mode == VisualiserTool::Mode::Auto && vData && (
-										vData->typeId() == V3fVectorDataTypeId ||
-										vData->typeId() == QuatfVectorDataTypeId
+									mode == VisualiserTool::Mode::Auto && labelData && (
+										labelData->typeId() == V3fVectorDataTypeId ||
+										labelData->typeId() == QuatfVectorDataTypeId
 									)
 								)
 								{
@@ -2217,15 +2377,13 @@ VisualiserTool::VisualiserTool( SceneView *view, const std::string &name ) : Sel
 	filter->pathsPlug()->setValue( new StringVectorData( { "/..." } ) );
 	addChild( filter );
 
-	ResamplePrimitiveVariablesPtr resamplePrimVars = new ResamplePrimitiveVariables( "__resamplePrimVars" );
-	addChild( resamplePrimVars );
-	resamplePrimVars->inPlug()->setInput( inScene );
-	resamplePrimVars->namesPlug()->setValue( "P" );
-	resamplePrimVars->interpolationPlug()->setValue( IECoreScene::PrimitiveVariable::Interpolation::Uniform );
-	resamplePrimVars->filterPlug()->setInput( filter->outPlug() );
+	UniformPLocatorPtr uniformPLocatorNode = new UniformPLocator( "__uniformPLocator" );
+	addChild( uniformPLocatorNode );
+	uniformPLocatorNode->inPlug()->setInput( inScene );
+	uniformPLocatorNode->filterPlug()->setInput( filter->outPlug() );
 
 	internalScenePlug()->setInput( inScene);
-	internalSceneUniformPPlug()->setInput( resamplePrimVars->outPlug() );
+	internalSceneUniformPPlug()->setInput( uniformPLocatorNode->outPlug() );
 
 	// Connect signal handlers
 	//

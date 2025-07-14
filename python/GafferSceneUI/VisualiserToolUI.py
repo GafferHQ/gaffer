@@ -206,6 +206,7 @@ class _DataNameChooser( GafferUI.PlugValueWidget ) :
 	__primitiveVariablePrefix = "primitiveVariable:"
 	__primitiveVariablePrefixSize = len( __primitiveVariablePrefix )
 	__vertexIndexDataName = "vertex:index"
+	__uniformIndexDataName = "uniform:index"
 
 	def __init__( self, plug, **kw ) :
 
@@ -220,7 +221,12 @@ class _DataNameChooser( GafferUI.PlugValueWidget ) :
 		singleValue = sole( values )
 		text = "None"
 		if singleValue is not None :
-			text = "Vertex Index" if singleValue == self.__vertexIndexDataName else self.__primitiveVariableFromDataName( singleValue )
+			if singleValue == self.__vertexIndexDataName :
+				text = "Vertex Index"
+			elif singleValue == self.__uniformIndexDataName :
+				text = "Face Index"
+			else :
+				text = self.__primitiveVariableFromDataName( singleValue )
 
 		self.__menuButton.setText( text )
 
@@ -293,6 +299,13 @@ class _DataNameChooser( GafferUI.PlugValueWidget ) :
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setDataName ), self.__vertexIndexDataName ),
 				"checkBox" : self.getPlug().getValue() == self.__vertexIndexDataName,
+			}
+		)
+		menuDefinition.append(
+			"/Face or Curve Index",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setDataName), self.__uniformIndexDataName ),
+				"checkBox" : self.getPlug().getValue() == self.__uniformIndexDataName,
 			}
 		)
 
