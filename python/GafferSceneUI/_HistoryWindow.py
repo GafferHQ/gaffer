@@ -43,16 +43,13 @@ import GafferSceneUI
 
 class _OperationIconColumn( GafferUI.PathColumn ) :
 
-	def __init__( self, title, property ) :
+	def __init__( self ) :
 
 		GafferUI.PathColumn.__init__( self )
 
-		self.__title = title
-		self.__property = property
-
 	def cellData( self, path, canceller = None ) :
 
-		cellValue = path.property( self.__property, canceller )
+		cellValue = path.property( "history:operation", canceller )
 
 		data = self.CellData()
 
@@ -75,43 +72,36 @@ class _OperationIconColumn( GafferUI.PathColumn ) :
 
 	def headerData( self, canceller = None ) :
 
-		return self.CellData( self.__title )
+		return self.CellData( "Operation" )
 
 class _NodeNameColumn( GafferUI.PathColumn ) :
 
-	def __init__( self, title, property ) :
+	def __init__( self ) :
 
 		GafferUI.PathColumn.__init__( self )
 
-		self.__title = title
-		self.__property = property
-
 	def cellData( self, path, canceller = None ) :
 
-		node = path.property( self.__property, canceller )
+		node = path.property( "history:node", canceller )
 		return self.CellData( node.relativeName( node.scriptNode() ) )
 
 	def headerData( self, canceller = None ) :
 
-		return self.CellData( self.__title )
+		return self.CellData( "Node" )
 
 # \todo This duplicates logic from (in this case) `_GafferSceneUI._LightEditorInspectorColumn`.
 # Refactor to allow calling `_GafferSceneUI.InspectorColumn.cellData()` from `_HistoryWindow` to
 # remove this duplication for columns that customize their value presentation.
 class _ValueColumn( GafferUI.PathColumn ) :
 
-	def __init__( self, title, property, fallbackProperty ) :
+	def __init__( self ) :
 
 		GafferUI.PathColumn.__init__( self )
 
-		self.__title = title
-		self.__property = property
-		self.__fallbackProperty = fallbackProperty
-
 	def cellData( self, path, canceller = None ) :
 
-		cellValue = path.property( self.__property, canceller )
-		fallbackValue = path.property( self.__fallbackProperty, canceller )
+		cellValue = path.property( "history:value", canceller )
+		fallbackValue = path.property( "history:fallbackValue", canceller )
 
 		data = self.CellData()
 
@@ -128,7 +118,7 @@ class _ValueColumn( GafferUI.PathColumn ) :
 
 	def headerData( self, canceller = None ) :
 
-		return self.CellData( self.__title )
+		return self.CellData( "Value" )
 
 class _HistoryWindow( GafferUI.Window ) :
 
@@ -147,9 +137,9 @@ class _HistoryWindow( GafferUI.Window ) :
 			self.__pathListingWidget = GafferUI.PathListingWidget(
 				Gaffer.DictPath( {}, "/" ),
 				columns = (
-					_NodeNameColumn( "Node", "history:node" ),
-					_ValueColumn( "Value", "history:value", "history:fallbackValue" ),
-					_OperationIconColumn( "Operation", "history:operation" ),
+					_NodeNameColumn(),
+					_ValueColumn(),
+					_OperationIconColumn(),
 				),
 				sortable = False,
 				horizontalScrollMode = GafferUI.ScrollMode.Automatic,
