@@ -161,7 +161,7 @@ class BasicInspectorTest( GafferUITest.TestCase ) :
 		children = historyPath.children()
 		self.assertEqual(
 			[ c.property( "history:node" ) for c in children ],
-			[ cube, primitiveVariables, meshTangents ]
+			[ cube, primitiveVariables, meshTangents, group ]
 		)
 
 if __name__ == "__main__":
