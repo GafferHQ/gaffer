@@ -68,15 +68,14 @@ GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr quadWireframe( const Imath::V2f &
 /// a solid color of `fallbackColor` will be used. `tint`, `saturation` and `gamma` are only applied to
 /// the texture map, if present. The texture coordinates of the quad are transformed by `uvOrientation`.
 /// `textureData` should be as per return type of `StandardLightVisualiser::surfaceTexture()`.
+
+/// \todo Remove shading related parameters like `tint` and `saturation` and return only a solid renderable
+/// primitive. Display of texture maps, especially modifications such as color adjustments, could easily be
+/// renderer-specific, so it should be the job of the visualiser implementations to decide how to shade lights.
+/// This applies to the other `*Surface` methods as well.
 GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr quadSurface(
-	const Imath::V2f &size,
-	IECore::ConstDataPtr textureData,
-	const Imath::Color3f &tint,
-	const float saturation,
-	const Imath::Color3f &gamma,
-	int textureMaxResolution,
-	const Imath::Color3f &fallbackColor,
-	const Imath::M33f &uvOrientation
+	const Imath::V2f &size, IECore::ConstDataPtr textureData, const Imath::Color3f &tint, const float saturation,
+	const Imath::Color3f &gamma, int textureMaxResolution, const Imath::Color3f &fallbackColor, const Imath::M33f &uvOrientation
 );
 
 /// Returns an OpenGL renderable wireframe rectangle with outer hatching.
@@ -84,11 +83,7 @@ GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr quadPortal( const Imath::V2f &siz
 
 /// Returns an OpenGL renderable set of wireframe circles, one per axis for `true` values of `axisRings`.
 GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr sphereWireframe(
-	float radius,
-	const Imath::Vec3<bool> &axisRings,
-	float lineWidthScale,
-	const Imath::V3f &center,
-	bool muted
+	float radius, const Imath::Vec3<bool> &axisRings, float lineWidthScale, const Imath::V3f &center, bool muted
 );
 
 /// Returns an OpenGL renderable simple solid color visualisation.
@@ -99,12 +94,8 @@ GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr colorIndicator( const Imath::Colo
 /// will be used. `tint`, `saturation` and `gamma` are only applied to the texture map, if present.
 /// `textureData` should be as per return type of `StandardLightVisualiser::surfaceTexture()`.
 GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr environmentSphereSurface(
-	IECore::ConstDataPtr textureData,
-	const Imath::Color3f &tint,
-	const float saturation,
-	const Imath::Color3f &gamma,
-	const int maxTextureResolution,
-	const Imath::Color3f &fallbackColor
+	IECore::ConstDataPtr textureData, const Imath::Color3f &tint, const float saturation,
+	const Imath::Color3f &gamma, const int maxTextureResolution, const Imath::Color3f &fallbackColor
 );
 
 /// Returns an OpenGL renderable circle wireframe.
@@ -115,13 +106,8 @@ GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr diskWireframe( float radius, floa
 /// applied to the texture map, if present. `textureData` should be as per return type
 /// of `StandardLightVisualiser::surfaceTexture()`.
 GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr diskSurface(
-	float radius,
-	IECore::ConstDataPtr textureData,
-	const Imath::Color3f &tint,
-	const float saturation,
-	const Imath::Color3f &gamma,
-	int maxTextureResolution,
-	const Imath::Color3f &fallbackColor
+	float radius, IECore::ConstDataPtr textureData, const Imath::Color3f &tint, const float saturation,
+	const Imath::Color3f &gamma, int maxTextureResolution, const Imath::Color3f &fallbackColor
 );
 
 /// Returns an OpenGL renderable set of wireframe arrows pointing away from the center
@@ -152,6 +138,10 @@ GAFFERSCENEUI_API void addWireframeCurveState( IECoreGL::Group *group, const flo
 /// 0 : A vertex shader is bound to align points such that the object-space Z
 /// coordinates are not changed and the X an Y axes are facing the camera.
 /// 1 : A vertex shader is bound to align the points in camera-space.
+
+/// \todo Should this be up to the individual implementations to manage, as we want to do with the
+/// `*Surface` methods? The `aimType` functionality is nice to have shared, but could possibly be
+/// made into a function that can be called by implementation shaders.
 GAFFERSCENEUI_API void addConstantShader( IECoreGL::Group *group, const Imath::Color3f &tint, int aimType = -1 );
 
 }  // namespace GafferSceneUI::Private::LightVisualiserAlgo

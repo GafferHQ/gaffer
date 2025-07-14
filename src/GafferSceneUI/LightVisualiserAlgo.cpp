@@ -282,12 +282,8 @@ void addConstantShader( IECoreGL::Group *group, int aimType = -1 )
 }
 
 void addTexturedConstantShader(
-	IECoreGL::Group *group,
-	ConstDataPtr textureData,
-	const Color3f &tint,
-	const float saturation,
-	const Color3f &gamma,
-	int maxTextureResolution
+	IECoreGL::Group *group, ConstDataPtr textureData, const Color3f &tint,
+	const float saturation, const Color3f &gamma, int maxTextureResolution
 )
 {
 	CompoundObjectPtr shaderParameters = new CompoundObject;
@@ -509,14 +505,8 @@ IECoreGL::ConstRenderablePtr quadWireframe( const V2f &size, const float lineWid
 }
 
 IECoreGL::ConstRenderablePtr quadSurface(
-	const V2f &size,
-	ConstDataPtr textureData,
-	const Color3f &tint,
-	const float saturation,
-	const Color3f &gamma,
-	int maxTextureResolution,
-	const Color3f &fallbackColor,
-	const M33f &uvOrientation
+	const V2f &size, ConstDataPtr textureData, const Color3f &tint, const float saturation,
+	const Color3f &gamma, int maxTextureResolution, const Color3f &fallbackColor, const M33f &uvOrientation
 )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
@@ -680,12 +670,8 @@ IECoreGL::ConstRenderablePtr colorIndicator( const Color3f &color )
 }
 
 IECoreGL::ConstRenderablePtr environmentSphereSurface(
-	ConstDataPtr textureData,
-	const Color3f &tint,
-	const float saturation,
-	const Color3f &gamma,
-	const int maxTextureResolution,
-	const Color3f &fallbackColor
+	ConstDataPtr textureData, const Color3f &tint, const float saturation,
+	const Color3f &gamma, const int maxTextureResolution, const Color3f &fallbackColor
 )
 {
 	IECoreGL::GroupPtr sphereGroup = new IECoreGL::Group();
@@ -733,26 +719,14 @@ IECoreGL::ConstRenderablePtr diskWireframe( float radius, float lineWidthScale, 
 }
 
 IECoreGL::ConstRenderablePtr diskSurface(
-	float radius,
-	ConstDataPtr textureData,
-	const Color3f &tint,
-	const float saturation,
-	const Color3f &gamma,
-	int maxTextureResolution,
-	const Color3f &fallbackColor
+	float radius, ConstDataPtr textureData, const Color3f &tint, const float saturation,
+	const Color3f &gamma, int maxTextureResolution, const Color3f &fallbackColor
 )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	if( textureData )
 	{
-		addTexturedConstantShader(
-			group.get(),
-			textureData,
-			tint,
-			saturation,
-			gamma,
-			maxTextureResolution
-		);
+		addTexturedConstantShader( group.get(), textureData, tint, saturation, gamma, maxTextureResolution );
 	}
 	else
 	{
