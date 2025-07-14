@@ -52,7 +52,7 @@ class _OperationIconColumn( GafferUI.PathColumn ) :
 
 	def cellData( self, path, canceller = None ) :
 
-		cellValue = path.property( self.__property )
+		cellValue = path.property( self.__property, canceller )
 
 		data = self.CellData()
 
@@ -88,7 +88,7 @@ class _NodeNameColumn( GafferUI.PathColumn ) :
 
 	def cellData( self, path, canceller = None ) :
 
-		node = path.property( self.__property )
+		node = path.property( self.__property, canceller )
 		return self.CellData( node.relativeName( node.scriptNode() ) )
 
 	def headerData( self, canceller = None ) :
@@ -110,8 +110,8 @@ class _ValueColumn( GafferUI.PathColumn ) :
 
 	def cellData( self, path, canceller = None ) :
 
-		cellValue = path.property( self.__property )
-		fallbackValue = path.property( self.__fallbackProperty )
+		cellValue = path.property( self.__property, canceller )
+		fallbackValue = path.property( self.__fallbackProperty, canceller )
 
 		data = self.CellData()
 
