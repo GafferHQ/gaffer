@@ -264,6 +264,14 @@ class _HistoryWindow( GafferUI.Window ) :
 		# computed and cached everything internally. So we can call `children()`
 		# without fear of blocking the UI waiting for it to compute.
 
+		# Close window if there's no longer anything to show.
+
+		if len( self.__path.children() ) == 0 :
+			# History is empty, for example because the scene location no
+			# longer exists.
+			self.close()
+			return
+
 		# Arrange to signal changes for the node name
 		# column if any nodes are renamed.
 
@@ -282,13 +290,6 @@ class _HistoryWindow( GafferUI.Window ) :
 					)
 
 				node = node.parent()
-
-		# Close window if there's no longer anything to show.
-
-		if len( self.__path.children() ) == 0 :
-			# History is empty, for example because the scene location no
-			# longer exists.
-			self.close()
 
 	def __nodeNameChanged( self, node, oldName ) :
 
