@@ -666,7 +666,7 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 
 			result.push_back(
 				Visualisation::createGeometry(
-					quadSurface( V2f( 1.f ), textureData, color, saturation, gamma, maxTextureResolution, color, M33f().scale( V2f( -1.f, -1.f ) ) ),
+					quadSurface( V2f( 1.f ), textureData, color, saturation, gamma, maxTextureResolution, Color3f( 1.f ), M33f().scale( V2f( -1.f, -1.f ) ) ),
 					Visualisation::ColorSpace::Scene
 				)
 			);
