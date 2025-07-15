@@ -463,7 +463,7 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 		{
 			result.push_back(
 				Visualisation::createGeometry(
-					diskSurface( 0.5f, /* textureData = */ nullptr, color, /* saturation = */ 1.f, /* gamma = */ Color3f( 1.f ), maxTextureResolution, color ),
+					diskSurface( 0.5f, /* textureData = */ nullptr, color, /* saturation = */ 1.f, /* gamma = */ Color3f( 1.f ), maxTextureResolution, Color3f( 1.f ) ),
 					Visualisation::ColorSpace::Scene
 				)
 			);
