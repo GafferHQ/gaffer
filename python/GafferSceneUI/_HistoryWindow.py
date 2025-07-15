@@ -167,6 +167,10 @@ class _HistoryWindow( GafferUI.Window ) :
 		inspectionPath = self.__inspectionRootPath.copy()
 		inspectionPath.setFromString( self.__inspectionPathString )
 		self.__path = self.__inspectorColumn.historyPath( inspectionPath )
+		if self.__path is None :
+			self.close()
+			return
+
 		self.__pathListingWidget.setPath( self.__path )
 
 	def __buttonDoubleClick( self, pathListing, event ) :

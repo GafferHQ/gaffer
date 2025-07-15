@@ -56,6 +56,7 @@ Fixes
   - Fixed potential crashes in `Show History...`.
   - Fixed potential UI lag in `Show History...`.
   - Fixed flickering in history window when scrubbing the timeline.
+- RenderPassEditor : Fixed error when deleting a pass while a history window was open for it.
 
 API
 ---
