@@ -65,8 +65,9 @@ GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr pointSurface( float radius, const
 GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr quadWireframe( const Imath::V2f &size, float lineWidthScale, bool muted = false );
 
 /// Returns an OpenGL renderable solid rectangle with optional texture map. If `textureData` is `nullptr`,
-/// a solid color of `fallbackColor` will be used. `tint`, `saturation` and `gamma` are only applied to
-/// the texture map, if present. The texture coordinates of the quad are transformed by `uvOrientation`.
+/// a solid color of `fallbackColor` will be used. `tint`, is applied to both the texture map and fallback
+/// color. `saturation` and `gamma` are only applied to the texture map, if present. The texture
+/// coordinates of the quad are transformed by `uvOrientation`.
 /// `textureData` should be as per return type of `StandardLightVisualiser::surfaceTexture()`.
 
 /// \todo Remove shading related parameters like `tint` and `saturation` and return only a solid renderable
@@ -91,7 +92,8 @@ GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr colorIndicator( const Imath::Colo
 
 /// Returns an OpenGL renderable single-sided solid sphere with normals pointing inward so the far
 /// side of the sphere is visible. If `textureData` is `nullptr`, a solid color of `fallbackColor`
-/// will be used. `tint`, `saturation` and `gamma` are only applied to the texture map, if present.
+/// will be used. `tint`, is applied to both the texture map and fallback color. `saturation` and
+/// `gamma` are only applied to the texture map, if present.
 /// `textureData` should be as per return type of `StandardLightVisualiser::surfaceTexture()`.
 GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr environmentSphereSurface(
 	IECore::ConstDataPtr textureData, const Imath::Color3f &tint, const float saturation,
@@ -102,9 +104,9 @@ GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr environmentSphereSurface(
 GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr diskWireframe( float radius, float lineWidthScale, bool muted );
 
 /// Returns an OpenGL renderable solid circle. If `textureData` is `nullptr`, a solid
-/// color of `fallbackColor` will be used. `tint`, `saturation` and `gamma` are only
-/// applied to the texture map, if present. `textureData` should be as per return type
-/// of `StandardLightVisualiser::surfaceTexture()`.
+/// color of `fallbackColor` will be used. `tint`, is applied to both the texture map and fallback
+/// color. `saturation` and `gamma` are only applied to the texture map, if present.
+/// `textureData` should be as per return type of `StandardLightVisualiser::surfaceTexture()`.
 GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr diskSurface(
 	float radius, IECore::ConstDataPtr textureData, const Imath::Color3f &tint, const float saturation,
 	const Imath::Color3f &gamma, int maxTextureResolution, const Imath::Color3f &fallbackColor
