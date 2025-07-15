@@ -654,8 +654,7 @@ class LightEditorTest( GafferUITest.TestCase ) :
 			GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
 
 			editor.setNodeSet( Gaffer.StandardSet( [ script["editScope"] ] ) )
-			editor._LightEditor__setPathListingPath()
-			GafferSceneUI.LightEditor._LightEditor__setPathListingPath.flush( editor )
+			GafferSceneUI.LightEditor._LightEditor__lazyUpdateFromContext.flush( editor )
 
 			widget = editor._LightEditor__pathListing
 			self.setLightEditorMuteSelection( widget, togglePaths )
@@ -709,8 +708,7 @@ class LightEditorTest( GafferUITest.TestCase ) :
 
 		widget = editor._LightEditor__pathListing
 		editor.setNodeSet( Gaffer.StandardSet( [ script["custAttr"] ] ) )
-		editor._LightEditor__setPathListingPath()
-		GafferSceneUI.LightEditor._LightEditor__setPathListingPath.flush( editor )
+		GafferSceneUI.LightEditor._LightEditor__lazyUpdateFromContext.flush( editor )
 
 		self.setLightEditorMuteSelection( widget, ["/group/light"] )
 

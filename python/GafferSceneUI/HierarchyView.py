@@ -61,8 +61,10 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 
 		searchFilter = _GafferSceneUI._HierarchyViewSearchFilter()
 		searchFilter.setScene( self.settings()["in"] )
+		searchFilter.setContext( self.context() )
 		setFilter = _GafferSceneUI._HierarchyViewSetFilter()
 		setFilter.setScene( self.settings()["in"] )
+		setFilter.setContext( self.context() )
 		setFilter.setEnabled( False )
 
 		self.__filter = Gaffer.CompoundPathFilter( [ searchFilter, setFilter ] )
@@ -78,7 +80,7 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 				_SetFilterWidget( setFilter )
 
 			self.__pathListing = GafferUI.PathListingWidget(
-				Gaffer.DictPath( {}, "/" ), # temp till we make a ScenePath
+				GafferScene.ScenePath( self.settings()["in"], self.context(), "/", filter = self.__filter ),
 				columns = [
 					GafferUI.PathListingWidget.defaultNameColumn,
 					_GafferSceneUI._HierarchyViewInclusionsColumn( scriptNode ),
@@ -104,7 +106,6 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 		)
 
 		self._updateFromSet()
-		self.__setPathListingPath()
 		self.__transferExpansionFromScriptNode()
 		self.__transferSelectionFromScriptNode()
 
@@ -129,27 +130,17 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 
 	def _updateFromContext( self, modifiedItems ) :
 
-		# When the context has changed, the hierarchy of the scene may
-		# have too so we should update our PathListingWidget.
-		self.__setPathListingPath()
+		self.__lazyUpdateFromContext()
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
-	def __setPathListingPath( self ) :
+	def __lazyUpdateFromContext( self ) :
 
-		# We take a static copy of our current context for use in the ScenePath for two reasons :
-		#
-		# 1. To prevent the PathListing from updating automatically when the original context
-		#    changes, which allows us to take control of updates ourselves in `_updateFromContext()`,
-		#    using LazyMethod to defer the calls to this function until we are visible and
-		#    playback has stopped.
-		# 2. Because the PathListingWidget uses a BackgroundTask to evaluate the Path, and it
-		#    would not be thread-safe to directly reference a context that could be modified by
-		#    the UI thread at any time.
-		contextCopy = Gaffer.Context( self.context() )
+		self.__pathListing.getPath().setContext( self.context() )
+		# Note : editing the filters in-place is not thread-safe with respect to
+		# background updates in the PathListingWidget. But we're getting away
+		# with it because the line above will cancel any current update.
 		for f in self.__filter.getFilters() :
-			f.setContext( contextCopy )
-		with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
-			self.__pathListing.setPath( GafferScene.ScenePath( self.settings()["in"], contextCopy, "/", filter = self.__filter ) )
+			f.setContext( self.context() )
 
 	def __visibleSetChanged( self, scriptNode ) :
 

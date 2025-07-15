@@ -111,7 +111,9 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			self.__renderPassNameColumn = _GafferSceneUI._RenderPassEditor.RenderPassNameColumn()
 			self.__renderPassActiveColumn = _GafferSceneUI._RenderPassEditor.RenderPassActiveColumn()
 			self.__pathListing = GafferUI.PathListingWidget(
-				Gaffer.DictPath( {}, "/" ), # temp till we make an RenderPassPath
+				_GafferSceneUI._RenderPassEditor.RenderPassPath(
+					self.settings()["__adaptedIn"], self.context(), "/", filter = self.__filter, grouped = self.settings()["displayGrouped"].getValue()
+				),
 				columns = [
 					self.__renderPassNameColumn,
 					self.__renderPassActiveColumn,
@@ -146,7 +148,6 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			self.__pathListing.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ) )
 
 		self._updateFromSet()
-		self.__setPathListingPath()
 		self.__updateColumns()
 		self.__updateButtonStatus()
 
@@ -265,7 +266,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 	def _updateFromContext( self, modifiedItems ) :
 
-		self.__setPathListingPath()
+		self.__lazyUpdateFromContext()
 
 	def _updateFromSettings( self, plug ) :
 
@@ -275,6 +276,11 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			self.__displayGroupedChanged()
 		elif plug in ( self.settings()["in"], self.settings()["editScope"] ) :
 			self.__updateButtonStatus()
+
+	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
+	def __lazyUpdateFromContext( self ) :
+
+		self.__pathListing.getPath().setContext( self.context() )
 
 	@GafferUI.LazyMethod()
 	def __updateColumns( self ) :
@@ -308,16 +314,6 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		return [ x[0] for x in orderedColumns ]
 
-	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
-	def __setPathListingPath( self ) :
-
-		# We take a static copy of our current context for use in the RenderPassPath - this prevents the
-		# PathListing from updating automatically when the original context changes, and allows us to take
-		# control of updates ourselves in _updateFromContext(), using LazyMethod to defer the calls to this
-		# function until we are visible and playback has stopped.
-		contextCopy = Gaffer.Context( self.context() )
-		self.__pathListing.setPath( _GafferSceneUI._RenderPassEditor.RenderPassPath( self.settings()["__adaptedIn"], contextCopy, "/", filter = self.__filter, grouped = self.settings()["displayGrouped"].getValue() ) )
-
 	def __displayGroupedChanged( self ) :
 
 		selection = self.__pathListing.getSelection()
@@ -343,7 +339,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 			selection[i] = remappedPaths
 
-		self.__setPathListingPath()
+		self.__pathListing.getPath().setGrouped( grouped )
 		self.__pathListing.setSelection( selection )
 
 	def __buttonDoubleClick( self, pathListing, event ) :

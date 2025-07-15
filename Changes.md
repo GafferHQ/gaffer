@@ -26,8 +26,11 @@ Improvements
   - Added render manifest option.
   - Added `render:cameraInclusions`, `render:cameraExclusions`, `render:matteInclusions`, and `render:matteExclusions` options.
 - CyclesMeshLight : Improved presentation of `cameraVisibility` and `lightGroup` plugs in the Node Editor.
-- PathListingWidget : Improved formatting of Box and Matrix values.
 - VisualiserTool : Added visualisation of labels for uniform primitive variables, face indices and curve indices.
+- PathListingWidget :
+  - Improved formatting of Box and Matrix values.
+  - Improved performance when showing colour values.
+  - Added support for showing spline values.
 
 Fixes
 -----
@@ -45,7 +48,9 @@ Fixes
 - PlugLayout : Fixed bug resolving `layout:index` metadata.
 - ScriptNodeAlgo : Stopped polluting the ScriptNode context with `ui:*` variables. Warnings are now emitted by the UI if anything else causes similar pollution.
 - Checkerboard : Fixed crash when evaluated for non-existent channel name.
-- PathListingWidget : Prevented emission of `updateFinishedSignal()` when a new update is pending anyway.
+- PathListingWidget :
+  - Prevented emission of `updateFinishedSignal()` when a new update is pending anyway.
+  - Fixed potential threading-related crash.
 - LightEditor, RenderPassEditor, AttributeEditor :
   - Fixed missing history entries when two edits have the same source plug.
   - Fixed potential crashes in `Show History...`.

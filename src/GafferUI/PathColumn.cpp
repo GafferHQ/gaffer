@@ -39,7 +39,6 @@
 #include "Gaffer/FileSystemPath.h"
 
 #include "IECore/MessageHandler.h"
-#include "IECore/SplineData.h"
 
 #include "QtWidgets/QFileIconProvider"
 
@@ -50,26 +49,6 @@
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferUI;
-
-namespace
-{
-
-const std::string basisName( StandardCubicBasis basis )
-{
-	switch( basis )
-	{
-		case StandardCubicBasis::Bezier : return "Bezier"; break;
-		case StandardCubicBasis::BSpline : return "BSpline"; break;
-		case StandardCubicBasis::CatmullRom : return "CatmullRom"; break;
-		case StandardCubicBasis::Linear : return "Linear"; break;
-		case StandardCubicBasis::Constant : return "Constant"; break;
-		default: break;
-	}
-
-	return "Unknown";
-}
-
-}  // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // PathColumn
@@ -182,22 +161,6 @@ PathColumn::CellData StandardPathColumn::cellData( const Gaffer::Path &path, con
 	else if( auto color = runTimeCast<const Color4fData>( data.get() ) )
 	{
 		cellData.icon = color;
-	}
-	else if( auto spline = runTimeCast<const SplineffData>( data.get() ) )
-	{
-		cellData.value = new StringData( basisName( spline->readable().basis.standardBasis() ) );
-	}
-	else if( auto spline = runTimeCast<const SplineddData>( data.get() ) )
-	{
-		cellData.value = new StringData( basisName( spline->readable().basis.standardBasis() ) );
-	}
-	else if( auto spline = runTimeCast<const SplinefColor3fData>( data.get() ) )
-	{
-		cellData.value = new StringData( basisName( spline->readable().basis.standardBasis() ) );
-	}
-	else if( auto spline = runTimeCast<const SplinefColor4fData>( data.get() ) )
-	{
-		cellData.value = new StringData( basisName( spline->readable().basis.standardBasis() ) );
 	}
 
 	return CellData( cellData );

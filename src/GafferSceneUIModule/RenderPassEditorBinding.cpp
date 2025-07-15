@@ -271,6 +271,21 @@ class RenderPassPath : public Gaffer::Path
 			return m_context.get();
 		}
 
+		void setGrouped( bool grouped )
+		{
+			if( grouped == m_grouped )
+			{
+				return;
+			}
+			m_grouped = grouped;
+			emitPathChanged();
+		}
+
+		bool getGrouped() const
+		{
+			return m_grouped;
+		}
+
 		const Gaffer::Context *getContext() const
 		{
 			return m_context.get();
@@ -444,6 +459,24 @@ RenderPassPath::Ptr constructor1( ScenePlug &scene, Context &context, PathFilter
 RenderPassPath::Ptr constructor2( ScenePlug &scene, Context &context, const std::vector<IECore::InternedString> &names, const IECore::InternedString &root, PathFilterPtr filter, const bool grouped )
 {
 	return new RenderPassPath( &scene, &context, names, root, filter, grouped );
+}
+
+void renderPassPathSetSceneWrapper( RenderPassPath &path, const ScenePlugPtr &scene )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	path.setScene( scene );
+}
+
+void renderPassPathSetContextWrapper( RenderPassPath &path, const ContextPtr &context )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	path.setContext( context );
+}
+
+void renderPassPathSetGroupedWrapper( RenderPassPath &path, bool grouped )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	path.setGrouped( grouped );
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -789,10 +822,12 @@ void GafferSceneUIModule::bindRenderPassEditor()
 				)
 			)
 		)
-		.def( "setScene", &RenderPassPath::setScene )
+		.def( "setScene", &renderPassPathSetSceneWrapper )
 		.def( "getScene", (ScenePlug *(RenderPassPath::*)())&RenderPassPath::getScene, return_value_policy<CastToIntrusivePtr>() )
-		.def( "setContext", &RenderPassPath::setContext )
+		.def( "setContext", &renderPassPathSetContextWrapper )
 		.def( "getContext", (Context *(RenderPassPath::*)())&RenderPassPath::getContext, return_value_policy<CastToIntrusivePtr>() )
+		.def( "setGrouped", &renderPassPathSetGroupedWrapper )
+		.def( "getGrouped", &RenderPassPath::getGrouped )
 		.def( "registerPathGroupingFunction", &registerPathGroupingFunctionWrapper )
 		.staticmethod( "registerPathGroupingFunction" )
 		.def( "pathGroupingFunction", &pathGroupingFunctionWrapper )

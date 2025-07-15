@@ -57,6 +57,7 @@
 #include "IECore/PathMatcher.h"
 #include "IECore/SearchPath.h"
 #include "IECore/SimpleTypedData.h"
+#include "IECore/SplineData.h"
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/date_time/posix_time/conversion.hpp"
@@ -73,6 +74,7 @@
 #include "QtCore/QVariant"
 
 #include "QtGui/QGuiApplication"
+#include "QtGui/QPainter"
 
 #include "QtWidgets/QFileIconProvider"
 #include "QtWidgets/QTreeView"
@@ -87,6 +89,13 @@ using namespace std::chrono_literals;
 using namespace boost::python;
 using namespace boost::posix_time;
 using namespace Gaffer;
+
+//////////////////////////////////////////////////////////////////////////
+// General utilities
+//////////////////////////////////////////////////////////////////////////
+
+// Allows us to store ConstDataPtr in a QVariant.
+Q_DECLARE_METATYPE( IECore::ConstDataPtr )
 
 namespace
 {
@@ -393,6 +402,14 @@ QVariant dataToVariant( const IECore::Data *value, int role )
 			time_t t = ( d->readable() - from_time_t( 0 ) ).total_seconds();
 			return QVariant( QDateTime::fromSecsSinceEpoch( t ) );
 		}
+		case IECore::SplineffDataTypeId :
+		case IECore::SplinefColor3fDataTypeId :
+		{
+			// Pass through directly for use in PathListingWidgetItemDelegate.
+			QVariant v;
+			v.setValue( IECore::ConstDataPtr( value ) );
+			return v;
+		}
 		default :
 		{
 			// Fall back to using `str()` in python, to emulate old behaviour. If we find commonly
@@ -405,6 +422,15 @@ QVariant dataToVariant( const IECore::Data *value, int role )
 		}
 	}
 }
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// PathModel
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
 
 /// Equivalent to PathModel::CellData, but converted into the form needed by Qt.
 struct CellVariants
@@ -1028,12 +1054,17 @@ class PathModel : public QAbstractItemModel
 			// And then we can reschedule our update task.
 			m_updateTask = ParallelAlgo::callOnBackgroundThread(
 				getRoot()->cancellationSubject(),
-				[this] {
+				// We take a copy of `expandedPaths` because it may be modified
+				// on the UI thread by `treeViewExpanded()` while we run in the
+				// background. Likewise, we take a copy of the Path to work
+				// with, because anyone could modify that on the UI thread as it
+				// is a public member of PathListingWidget.
+				[this, workingPath = m_rootPath->copy(), expandedPaths = IECore::PathMatcher( m_expandedPaths )] {
 					try
 					{
 						const IECore::Canceller *canceller = Context::current()->canceller();
 						updateHeaderData( canceller );
-						m_rootItem->update( this, canceller );
+						m_rootItem->updateWalk( this, workingPath.get(), expandedPaths, canceller );
 						queueEdit(
 							[this] () {
 								finaliseRecursiveExpansion();
@@ -1271,13 +1302,31 @@ class PathModel : public QAbstractItemModel
 				m_expandedInTreeView = expanded;
 			}
 
-			void update( PathModel *model, const IECore::Canceller *canceller )
+			void updateWalk( PathModel *model, Path *path, const IECore::PathMatcher &expandedPaths, const IECore::Canceller *canceller )
 			{
-				// We take a copy of `expandedPaths` because it may be modified
-				// on the UI thread by `treeViewExpanded()` while we run in the
-				// background.
-				PathPtr workingPath = model->m_rootPath->copy();
-				updateWalk( model, workingPath.get(), IECore::PathMatcher( model->m_expandedPaths ), canceller );
+				IECore::Canceller::check( canceller );
+				updateData( model, path, canceller );
+				updateExpansion( model, path, expandedPaths );
+				std::shared_ptr<ChildContainer> updatedChildItems = updateChildItems( model, path, canceller );
+
+				const size_t pathSize = path->names().size();
+				Path::Names childName( 1 );
+
+				/// \todo We could consider using `parallel_for()` here for improved
+				/// performance. But given all the other modules vying for processor time
+				/// (the Viewer and Renderer in particular), perhaps limiting ourselves to
+				/// a single core is reasonable. If we do use `parallel_for` we need to
+				/// consider the interaction with `m_scrollToCandidates` because the order
+				/// we visit children in would no longer be deterministic.
+				for( const auto &child : *updatedChildItems )
+				{
+					// Append child name to path, bearing in mind that recursion
+					// in `updateWalk()` may have left us with a longer path than
+					// we had before.
+					childName.back() = child->name();
+					path->set( pathSize, path->names().size(), childName );
+					child->updateWalk( model, path, expandedPaths, canceller );
+				}
 			}
 
 			Item *parent()
@@ -1350,33 +1399,6 @@ class PathModel : public QAbstractItemModel
 					for( const auto &child : *m_childItems )
 					{
 						child->dirtyWalk( dirtyChildItems, dirtyData );
-					}
-				}
-
-				void updateWalk( PathModel *model, Path *path, const IECore::PathMatcher &expandedPaths, const IECore::Canceller *canceller )
-				{
-					IECore::Canceller::check( canceller );
-					updateData( model, path, canceller );
-					updateExpansion( model, path, expandedPaths );
-					std::shared_ptr<ChildContainer> updatedChildItems = updateChildItems( model, path, canceller );
-
-					const size_t pathSize = path->names().size();
-					Path::Names childName( 1 );
-
-					/// \todo We could consider using `parallel_for()` here for improved
-					/// performance. But given all the other modules vying for processor time
-					/// (the Viewer and Renderer in particular), perhaps limiting ourselves to
-					/// a single core is reasonable. If we do use `parallel_for` we need to
-					/// consider the interaction with `m_scrollToCandidates` because the order
-					/// we visit children in would no longer be deterministic.
-					for( const auto &child : *updatedChildItems )
-					{
-						// Append child name to path, bearing in mind that recursion
-						// in `updateWalk()` may have left us with a longer path than
-						// we had before.
-						childName.back() = child->name();
-						path->set( pathSize, path->names().size(), childName );
-						child->updateWalk( model, path, expandedPaths, canceller );
 					}
 				}
 
@@ -1943,6 +1965,133 @@ class PathModel : public QAbstractItemModel
 
 };
 
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// DisplayTransform utilities
+//////////////////////////////////////////////////////////////////////////
+
+size_t hash_value( const QColor &v )
+{
+	size_t s = 0;
+	boost::hash_combine( s, v.redF() );
+	boost::hash_combine( s, v.greenF() );
+	boost::hash_combine( s, v.blueF() );
+	boost::hash_combine( s, v.alphaF() );
+	return s;
+}
+
+namespace
+{
+
+using DisplayTransform = std::function<Imath::Color3f ( const Imath::Color3f & )>;
+
+struct DisplayColorCache : public IECorePreview::LRUCache<QColor, QIcon, IECorePreview::LRUCachePolicy::Serial>
+{
+	DisplayColorCache( const DisplayTransform &displayTransform, size_t maxIcons = 1000 )
+		:	IECorePreview::LRUCache<QColor, QIcon, IECorePreview::LRUCachePolicy::Serial>(
+				[displayTransform] ( const QColor &color, size_t &cost, const IECore::Canceller *canceller ) {
+					cost = 1;
+					return convert( color, displayTransform );
+				},
+				maxIcons
+			)
+	{
+	}
+
+	private :
+
+		static QIcon convert( const QColor &qColor, const DisplayTransform &displayTransform )
+		{
+			const Imath::Color3f c = displayTransform(
+				Imath::Color3f( qColor.redF(), qColor.greenF(), qColor.blueF() )
+			);
+			QPixmap pixmap( QSize( 16, 16 ) );
+			pixmap.fill( QColor::fromRgbF( c[0], c[1], c[2] ) );
+			return QIcon( pixmap );
+		}
+
+};
+
+struct DisplayGradientCacheGetterKey
+{
+
+	DisplayGradientCacheGetterKey( const IECore::Data *splineData = nullptr )
+		:	splineData( splineData ), hash( splineData ?  splineData->Object::hash() : IECore::MurmurHash() )
+	{
+	}
+
+	operator const IECore::MurmurHash &() const
+	{
+		return hash;
+	}
+
+	const IECore::Data *splineData;
+	const IECore::MurmurHash hash;
+
+};
+
+struct DisplayGradientCache : public IECorePreview::LRUCache<IECore::MurmurHash, QBrush, IECorePreview::LRUCachePolicy::Serial, DisplayGradientCacheGetterKey>
+{
+
+	DisplayGradientCache( const DisplayTransform &displayTransform, size_t maxGradients = 1000 )
+		:	IECorePreview::LRUCache<IECore::MurmurHash, QBrush, IECorePreview::LRUCachePolicy::Serial, DisplayGradientCacheGetterKey>(
+				[displayTransform] ( const DisplayGradientCacheGetterKey &key, size_t &cost, const IECore::Canceller *canceller ) {
+					cost = 1;
+					return convert( key.splineData, displayTransform );
+				},
+				maxGradients
+			)
+	{
+	}
+
+	private :
+
+		static QBrush convert( const IECore::Data *data, const DisplayTransform &displayTransform )
+		{
+			switch( data->typeId() )
+			{
+				case IECore::SplineffDataTypeId :
+					return convertTyped( static_cast<const IECore::SplineffData *>( data )->readable(), displayTransform );
+				case IECore::SplinefColor3fDataTypeId :
+					return convertTyped( static_cast<const IECore::SplinefColor3fData *>( data )->readable(), displayTransform );
+				default :
+					return QBrush();
+			}
+		}
+
+		template<typename SplineType>
+		static QBrush convertTyped( const SplineType &spline, const DisplayTransform &displayTransform )
+		{
+			QLinearGradient gradient( QPoint( 0, 0 ), QPoint( 1, 0 ) );
+			gradient.setCoordinateMode( QGradient::ObjectMode );
+
+			const int numStops = 100;
+			for( int i = 0; i < numStops; ++i )
+			{
+				float x = (float)i / (float)(numStops - 1);
+				Imath::Color3f c( spline( x ) );
+				if( displayTransform )
+				{
+					c = displayTransform( c );
+				}
+				gradient.setColorAt( x, QColor::fromRgbF( c[0], c[1], c[2] ) );
+			}
+
+			return QBrush( gradient );
+		}
+
+};
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// PathListingWidgetItemDelegate
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
 class PathListingWidgetItemDelegate : public QStyledItemDelegate
 {
 
@@ -1953,8 +2102,39 @@ class PathListingWidgetItemDelegate : public QStyledItemDelegate
 		{
 		}
 
-		using DisplayTransform = std::function<Imath::Color3f ( const Imath::Color3f & )>;
-		DisplayTransform displayTransform;
+		void paint( QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index ) const override
+		{
+			QStyledItemDelegate::paint( painter, option, index );
+
+			const QVariant displayData = index.data( Qt::DisplayRole );
+			if( auto data = displayData.value<IECore::ConstDataPtr>() )
+			{
+				// When we want to render splines, we just pass the data
+				// through directly and convert it here.
+				QBrush brush = m_displayGradientCache->get( data.get() );
+				if( brush.style() != Qt::NoBrush )
+				{
+					QRect rect = option.rect;
+					rect.setTopLeft( rect.topLeft() + QPoint( 2, 2 ) );
+					rect.setBottomRight( rect.bottomRight() - QPoint( 2, 2 ) );
+					painter->fillRect( rect, brush );
+				}
+			}
+		}
+
+		void updateDisplayTransform( const DisplayTransform &displayTransform )
+		{
+			if( displayTransform )
+			{
+				m_displayColorCache = std::make_unique<DisplayColorCache>( displayTransform );
+			}
+			else
+			{
+				m_displayColorCache.reset();
+			}
+
+			m_displayGradientCache = std::make_unique<DisplayGradientCache>( displayTransform );
+		}
 
 	protected :
 
@@ -1962,21 +2142,16 @@ class PathListingWidgetItemDelegate : public QStyledItemDelegate
 		{
 			QStyledItemDelegate::initStyleOption( option, index );
 
-			if( displayTransform )
+			if( m_displayColorCache )
 			{
 				const QVariant decoration = index.data( Qt::DecorationRole );
 				if( decoration.userType() == QMetaType::QColor )
 				{
-					// Apply display transform to the colour.
+					// Update `option` to apply a display transform. Making a
+					// QPixmap for this seems wasteful, but that's what the
+					// QStyledItemDelegate does.
 					const QColor qc = qvariant_cast<QColor>( decoration );
-					const Imath::Color3f c = displayTransform(
-						Imath::Color3f( qc.redF(), qc.greenF(), qc. blueF() )
-					);
-					// Update `option`. Making a QPixmap for this seems wasteful,
-					// but that's what the QStyledItemDelegate does.
-					QPixmap pixmap( option->decorationSize );
-					pixmap.fill( QColor::fromRgbF( c[0], c[1], c[2] ) );
-					option->icon = QIcon( pixmap );
+					option->icon = m_displayColorCache->get( qc );
 				}
 			}
 
@@ -1991,7 +2166,21 @@ class PathListingWidgetItemDelegate : public QStyledItemDelegate
 			}
 		}
 
+	private :
+
+		std::unique_ptr<DisplayColorCache> m_displayColorCache;
+		std::unique_ptr<DisplayGradientCache> m_displayGradientCache;
+
 };
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// Python bindings
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
 
 void setColumns( uint64_t treeViewAddress, object pythonColumns )
 {
@@ -2037,7 +2226,7 @@ void updateDelegate( uint64_t treeViewAddress, boost::python::object pythonDispl
 		treeView->setItemDelegate( delegate );
 	}
 
-	PathListingWidgetItemDelegate::DisplayTransform displayTransform;
+	DisplayTransform displayTransform;
 	if( pythonDisplayTransform )
 	{
 		// The lambda below needs to own a reference to `pythonDisplayTransform`,
@@ -2052,21 +2241,23 @@ void updateDelegate( uint64_t treeViewAddress, boost::python::object pythonDispl
 			}
 		);
 
-		delegate->displayTransform = [pythonDisplayTransformPtr] ( const Imath::Color3f &color ) -> Imath::Color3f {
-			IECorePython::ScopedGILLock gilLock;
-			try
-			{
-				return extract<Imath::Color3f>( (*pythonDisplayTransformPtr)( color ) );
+		delegate->updateDisplayTransform(
+			[pythonDisplayTransformPtr] ( const Imath::Color3f &color ) -> Imath::Color3f {
+				IECorePython::ScopedGILLock gilLock;
+				try
+				{
+					return extract<Imath::Color3f>( (*pythonDisplayTransformPtr)( color ) );
+				}
+				catch( const boost::python::error_already_set & )
+				{
+					return color;
+				}
 			}
-			catch( const boost::python::error_already_set & )
-			{
-				return color;
-			}
-		};
+		);
 	}
 	else
 	{
-		delegate->displayTransform = nullptr;
+		delegate->updateDisplayTransform( nullptr );
 	}
 
 	treeView->update();

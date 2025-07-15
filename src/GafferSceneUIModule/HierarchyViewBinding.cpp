@@ -76,9 +76,8 @@ namespace
 // HierarchyViewFilter - base class for PathFilters which need a scene
 // and a context. Designed for internal use in the HierarchyView.
 //
-// \todo The "track dirtiness from a context and plug" behaviour implemented
-// here is common across many UI elements - perhaps it could be encapsulated
-// in a utility class at some point?
+// \todo It seems bogus that the filters would have their own scene and
+// context, when the ScenePaths they operate on already provide both.
 // \todo Consider making these filters part of the public API at some point,
 // and also allowing the HierarchyView widget to be customised with
 // custom filters.
