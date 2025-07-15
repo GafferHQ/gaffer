@@ -520,7 +520,7 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 
 			result.push_back(
 				Visualisation::createOrnament(
-					environmentSphereSurface( textureData, color, saturation, gamma, maxTextureResolution, color ),
+					environmentSphereSurface( textureData, color, saturation, gamma, maxTextureResolution, Color3f( 1.f ) ),
 					true,  // affectsFramingBound
 					Visualisation::ColorSpace::Scene
 				)
