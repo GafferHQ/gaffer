@@ -33,6 +33,7 @@ Improvements
   - Improved formatting of Box and Matrix values.
   - Improved performance when showing colour values.
   - Added support for showing spline values.
+- GafferUI : Added support for drag and dropping numeric vector data onto numeric vector plugs of compatible types ( For example, dropping a list of ints onto a FloatVectorDataPlug ).
 
 Fixes
 -----
