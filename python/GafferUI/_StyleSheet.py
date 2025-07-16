@@ -1737,7 +1737,8 @@ _styleSheet = string.Template(
 
 	/* PinningWidget */
 
-	QFrame[gafferClass="GafferUI.CompoundEditor._PinningWidget"] #menuDownArrow {
+	QFrame[gafferClass="GafferUI.CompoundEditor._PinningWidget"] #menuDownArrow,
+	QFrame[gafferClass="GafferImageUI.ImageViewUI._CompareImageWidget"] #menuDownArrow {
 		margin-top: 1px;
 		margin-left: 2px;
 		margin-right: 1px;
@@ -1749,12 +1750,6 @@ _styleSheet = string.Template(
 		border-radius: 2px;
 		border: none;
 		background: $background;
-	}
-
-	QFrame[gafferClass="GafferImageUI.ImageViewUI._CompareImageWidget"] #menuDownArrow {
-		margin-top: 1px;
-		margin-left: 2px;
-		margin-right: 1px;
 	}
 
 	QFrame[gafferClass="GafferImageUI.ImageViewUI._CompareImageWidget"] {
@@ -1769,10 +1764,6 @@ _styleSheet = string.Template(
 		border-left-color: $backgroundLightHighlightAdjoined;
 		border-top-right-radius: 4px;
 		border-bottom-right-radius: 4px;
-	}
-
-	QFrame[gafferClass="GafferImageUI.ImageViewUI._CompareImageWidget"]:disabled {
-		background-color: $backgroundHighlight;
 	}
 
 	QFrame[gafferClass="GafferImageUI.ImageViewUI._CompareImageWidget"]:disabled {
