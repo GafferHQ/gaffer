@@ -1543,15 +1543,6 @@ class _PinningWidget( _Frame ) :
 
 		self._repolish()
 
-	# Disclaimer:
-	# In order to defer the highlighting of related editors, avoiding brief
-	# flashes whilst general mousing around, we abuse the tooltip mechanism.
-	# Otherwise, we'd have to reimplement the entire set-timeout/cancel/etc...
-	# behaviour or figure some way to hook up to Qt's tooltip event directly.
-	# As this is technically a private implementation class, no one should be
-	# calling getToolTip themselves anyway so were going to try and get away
-	# with it.  We'll have to fix this up should we need to call this in other
-	# presentation scenarios.
 	def getToolTip( self ) :
 
 		editor = self.__getNodeSetEditor()
