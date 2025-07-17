@@ -1,7 +1,10 @@
 1.5.x.x (relative to 1.5.16.0)
 =======
 
+Improvements
+------------
 
+- RenderPassEditor, AttributeEditor, LightEditor : The vertical scroll position is now maintained when changing sections.
 
 1.5.16.0 (relative to 1.5.15.0)
 ========
