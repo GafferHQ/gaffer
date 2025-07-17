@@ -167,6 +167,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.__dragBeginIndex = None
 		self.__currentDragIndex = None
 		self.__path = None
+		self.__verticalScrollPosition = None
 
 		self.setDisplayMode( displayMode )
 		self.setPath( path )
@@ -327,6 +328,10 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		if columns == self.getColumns() :
 			return
+
+		vScrollBar = self._qtWidget().verticalScrollBar()
+		if vScrollBar is not None :
+			self.__verticalScrollPosition = vScrollBar.value()
 
 		_GafferUI._pathListingWidgetSetColumns( GafferUI._qtAddress( self._qtWidget() ), columns )
 		self._qtWidget().updateColumnWidths()
@@ -586,6 +591,11 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.__expansionChangedSignal( self )
 
 	def __updateFinished( self ) :
+
+		vScrollBar = self._qtWidget().verticalScrollBar()
+		if vScrollBar is not None and self.__verticalScrollPosition is not None :
+			vScrollBar.setValue( self.__verticalScrollPosition )
+		self.__verticalScrollPosition = None
 
 		self.__updateFinishedSignal( self )
 
