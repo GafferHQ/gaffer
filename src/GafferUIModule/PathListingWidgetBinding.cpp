@@ -563,9 +563,7 @@ class PathModel : public QAbstractItemModel
 
 			beginResetModel();
 
-			m_columnChangedConnections.clear();
-
-			// Keep track of selections that are common between the current and incoming columns
+			// Remap selections from old columns to new columns.
 			Selection newSelection( columns.size(), IECore::PathMatcher() );
 			for( size_t i = 0; i < columns.size(); ++i )
 			{
@@ -575,9 +573,10 @@ class PathModel : public QAbstractItemModel
 					newSelection[i] = m_selection[ it - m_columns.begin() ];
 				}
 			}
-			setSelection( newSelection );
 
+			// Update columns and our connections to them.
 			m_columns = columns;
+			m_columnChangedConnections.clear();
 			for( const auto &c : m_columns )
 			{
 				m_columnChangedConnections.push_back(
@@ -590,6 +589,10 @@ class PathModel : public QAbstractItemModel
 			m_headerDataState = State::Unrequested;
 
 			endResetModel();
+
+			// Update selection. We do this last so observers see our
+			// final state in `selectionChangedSignal()`.
+			setSelection( newSelection, /* scrollToFirst = */ false );
 		}
 
 		const std::vector<GafferUI::PathColumnPtr> &getColumns() const

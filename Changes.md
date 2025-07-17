@@ -10,6 +10,7 @@ Fixes
 -----
 
 - Arnold : Fixed crashes caused by conflicts with Arnold's internal memory allocator [^1].
+- PathListingWidget : Fixed ordering of `selectionChangedSignal()` emission from `setColumns()` call. It is now emitted when `getColumns()` returns the new columns, not the old ones.
 
 Breaking Changes
 ----------------

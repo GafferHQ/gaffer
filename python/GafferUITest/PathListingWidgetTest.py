@@ -712,6 +712,29 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
 		self.assertEqual( len( updates ), 0 )
 
+	def testSetColumnsSignalsSelectionChangeInValidState( self ) :
+
+		widget = GafferUI.PathListingWidget(
+			Gaffer.DictPath( { "1" : 1 }, "/" ),
+			columns = [ GafferUI.PathListingWidget.defaultNameColumn ],
+			selectionMode = GafferUI.PathListingWidget.SelectionMode.Cell
+		)
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+		widget.setSelection( [ IECore.PathMatcher( [ "/1" ] ) ] )
+
+		columnsWhenSelectionChanged = None
+		def selectionChanged( widget ) :
+
+			nonlocal columnsWhenSelectionChanged
+			columnsWhenSelectionChanged = widget.getColumns()
+
+		widget.selectionChangedSignal().connect( selectionChanged )
+		widget.setColumns( [ widget.StandardColumn( "Value", "dict:value" ), widget.defaultNameColumn ] )
+
+		self.assertEqual( widget.getSelection(), [ IECore.PathMatcher(), IECore.PathMatcher( [ "/1" ] ) ] )
+		self.assertEqual( columnsWhenSelectionChanged, widget.getColumns() )
+
 	def testSortable( self ) :
 
 		w = GafferUI.PathListingWidget( Gaffer.DictPath( {}, "/" ) )
