@@ -735,6 +735,24 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( widget.getSelection(), [ IECore.PathMatcher(), IECore.PathMatcher( [ "/1" ] ) ] )
 		self.assertEqual( columnsWhenSelectionChanged, widget.getColumns() )
 
+	def testSetColumnsMaintainsVerticalScroll( self ) :
+
+		path = Gaffer.DictPath(
+			{ str( x ) : x  for x in range( 0, 1000 ) },
+			"/"
+		)
+
+		widget = GafferUI.PathListingWidget( path )
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+
+		widget.scrollToPath( path.children()[-1] )
+		scroll = widget._qtWidget().verticalScrollBar().value()
+		self.assertNotEqual( scroll, 0 )
+
+		widget.setColumns( [ widget.defaultNameColumn, widget.StandardColumn( "Value", "dict:value" ) ] )
+		self.assertEqual( widget._qtWidget().verticalScrollBar().value(), scroll )
+
 	def testSortable( self ) :
 
 		w = GafferUI.PathListingWidget( Gaffer.DictPath( {}, "/" ) )

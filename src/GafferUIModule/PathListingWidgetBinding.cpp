@@ -554,14 +554,28 @@ class PathModel : public QAbstractItemModel
 
 		void setColumns( const std::vector<GafferUI::PathColumnPtr> columns )
 		{
-			/// \todo Maintain persistent indices etc
-			/// using `m_rootItem->update()`.
-
 			// Cancel update and flush edit queue before we destroy
 			// the items they reference.
 			cancelUpdate();
 
-			beginResetModel();
+			// Connect to signals on new columns so we can update when they are
+			// changed.
+			m_columnChangedConnections.clear();
+			for( const auto &c : columns )
+			{
+				m_columnChangedConnections.push_back(
+					c->changedSignal().connect( boost::bind( &PathModel::columnChanged, this ) )
+				);
+			}
+
+			// Deal with the simple case where we are being initialised for the
+			// first time.
+			if( !m_columns.size() && !m_rootPath && !m_selection.size() )
+			{
+				m_columns = columns;
+				m_selection.resize( m_columns.size() );
+				return;
+			}
 
 			// Remap selections from old columns to new columns.
 			Selection newSelection( columns.size(), IECore::PathMatcher() );
@@ -574,21 +588,34 @@ class PathModel : public QAbstractItemModel
 				}
 			}
 
-			// Update columns and our connections to them.
-			m_columns = columns;
-			m_columnChangedConnections.clear();
-			for( const auto &c : m_columns )
+			// Dirty state and assign `m_columns`. We need to do this inside an
+			// `insert/removeColumn()` block so Qt knows what is going on.
+
+			auto rootIndex = indexForPath( m_rootPath->names() );
+			decltype( &PathModel::endInsertColumns ) endFunction = nullptr;
+			if( columns.size() > m_columns.size() )
 			{
-				m_columnChangedConnections.push_back(
-					c->changedSignal().connect( boost::bind( &PathModel::columnChanged, this ) )
-				);
+				beginInsertColumns( rootIndex, m_columns.size(), columns.size() - 1 );
+				endFunction = &PathModel::endInsertColumns;
+			}
+			else if( columns.size() < m_columns.size() )
+			{
+				beginRemoveColumns( rootIndex, columns.size(), m_columns.size() - 1 );
+				endFunction = &PathModel::endRemoveColumns;
 			}
 
-			m_rootItem = new Item( IECore::InternedString(), nullptr );
+			m_rootItem->dirty( /* dirtyChildItems = */ false, /* dirtyData = */ true );
 			m_headerData.clear();
-			m_headerDataState = State::Unrequested;
+			m_headerDataState = State::Dirty;
+			m_columns = columns;
 
-			endResetModel();
+			if( endFunction )
+			{
+				std::invoke( endFunction, this );
+			}
+
+			// Schedule update to process the dirtied items.
+			scheduleUpdate();
 
 			// Update selection. We do this last so observers see our
 			// final state in `selectionChangedSignal()`.
