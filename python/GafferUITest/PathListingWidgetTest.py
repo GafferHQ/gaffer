@@ -753,6 +753,43 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		widget.setColumns( [ widget.defaultNameColumn, widget.StandardColumn( "Value", "dict:value" ) ] )
 		self.assertEqual( widget._qtWidget().verticalScrollBar().value(), scroll )
 
+	def testSetColumnsRetainsValidData( self ) :
+
+		widget = GafferUI.PathListingWidget(
+			Gaffer.DictPath( { "child1" : 1 }, "/" ),
+			columns = [ GafferUI.PathListingWidget.defaultNameColumn, GafferUI.PathListingWidget.StandardColumn( "Value", "dict:value" ) ],
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+		)
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+
+		# Trigger initial update, and check we get the expected data.
+		model = widget._qtWidget().model()
+		model.rowCount()
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Name" )
+		self.assertEqual( model.headerData( 1, QtCore.Qt.Horizontal ), "Value" )
+		index0 = model.index( 0, 0 )
+		self.assertEqual( model.data( index0 ), "child1" )
+		index1 = model.index( 0, 1 )
+		self.assertEqual( model.data( index1 ), 1 )
+
+		# Reorder the columns, and add a new one. Without waiting for an
+		# update, we should be able to get the values from the columns.
+		widget.setColumns( list( reversed( widget.getColumns() ) ) + [ GafferUI.PathListingWidget.StandardColumn( "Value 2", "dict:value" ) ] )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Value" )
+		self.assertEqual( model.headerData( 1, QtCore.Qt.Horizontal ), "Name" )
+		self.assertEqual( model.data( index0 ), 1 )
+		self.assertEqual( model.data( index1 ), "child1" )
+		# But we need to wait for an update to get the value for the
+		# new column.
+		self.assertIsNone( model.headerData( 2, QtCore.Qt.Horizontal ) )
+		index2 = model.index( 0, 2 )
+		self.assertIsNone( model.data( index2 ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+		self.assertEqual( model.headerData( 2, QtCore.Qt.Horizontal ), "Value 2" )
+		self.assertEqual( model.data( index2 ), 1 )
+
 	def testSortable( self ) :
 
 		w = GafferUI.PathListingWidget( Gaffer.DictPath( {}, "/" ) )
