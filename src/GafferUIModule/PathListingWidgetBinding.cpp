@@ -931,6 +931,7 @@ class PathModel : public QAbstractItemModel
 
 		void expansionChanged();
 		void selectionChanged();
+		void headerUpdateFinished();
 		void updateFinished();
 
 		///////////////////////////////////////////////////////////////////
@@ -1137,6 +1138,14 @@ class PathModel : public QAbstractItemModel
 					{
 						const IECore::Canceller *canceller = Context::current()->canceller();
 						updateHeaderData( canceller );
+						queueEdit(
+							[this] () {
+								if( !m_blockUpdateFinished )
+								{
+									headerUpdateFinished();
+								}
+							}
+						);
 						m_rootItem->updateWalk( this, workingPath.get(), expandedPaths, canceller );
 						queueEdit(
 							[this] () {

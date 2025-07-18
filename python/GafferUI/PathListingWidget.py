@@ -329,7 +329,10 @@ class PathListingWidget( GafferUI.Widget ) :
 			return
 
 		_GafferUI._pathListingWidgetSetColumns( GafferUI._qtAddress( self._qtWidget() ), columns )
-		self._qtWidget().updateColumnWidths()
+		# Do an initial resize of column widths, to make sure we're at least
+		# fitting the available space. This will be refined once we get results
+		# from the asynchronous updates.
+		self._qtWidget().updateColumnWidths( columnsChanged = True )
 
 	def getColumns( self ) :
 
@@ -1059,8 +1062,22 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 	def setModel( self, model ) :
 
+		# We expect to use one model for our entire lifetime. If we didn't
+		# we'd need to disconnect from the old model below.
+		assert( self.model() is None )
+
 		QtWidgets.QTreeView.setModel( self, model )
 
+		# Arrange to update column widths automatically based on the model
+		# contents. This isn't straightforward, because the contents are
+		# computed asynchronously - even the header text.
+		#
+		# To start, we adjust the widths to accommodate the header contents
+		# as soon as they are available. Typically this update is very
+		# quick, and gives us a reasonable layout almost immediately.
+		model.headerUpdateFinished.connect( self.updateColumnWidths )
+		# Next, we adjust again to accommodate the cell contents when
+		# we've finished a full update.
 		## \todo We may want more granular behaviour on model update.
 		# Currently column widths are updated when a location is
 		# expanded for the first time and requires a model update.
@@ -1121,7 +1138,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 		else :
 			return parentIndex
 
-	def updateColumnWidths( self ) :
+	def updateColumnWidths( self, columnsChanged = False ) :
 
 		self.__recalculatingColumnWidths = True
 
@@ -1147,9 +1164,9 @@ class _TreeView( QtWidgets.QTreeView ) :
 					header.resizeSection( i, adjustedWidth )
 					columnWidthsChanged = True
 
-		if columnWidthsChanged :
-			# an update to column widths can require resizing columns configured to stretch
-			# to make use of any change in available space
+		if columnWidthsChanged or columnsChanged :
+			# The space available for stretch columns may have changed, so
+			# adjust them to fit.
 			self.__resizeStretchColumns()
 
 		if stretchLastColumn :
@@ -1324,6 +1341,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 		columns = self.__getColumns()
 		stretchLastColumn = self._shouldStretchLastColumn()
+
 		for i in range( 0, header.count() ) :
 			if (
 				columns[i].getSizeMode() == GafferUI.PathColumn.SizeMode.Stretch or

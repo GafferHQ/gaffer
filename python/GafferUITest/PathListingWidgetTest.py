@@ -1592,6 +1592,38 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 			self.assertEqual( widget._qtWidget().header().sectionSize( 1 ), columnWidth )
 			self.assertEqual( widget._qtWidget().header().sectionSize( 2 ), widget._qtWidget().viewport().width() - ( columnWidth * 2 ) )
 
+	def testColumnWidthsWhenRemovingLastColumn( self ) :
+
+		for sizeMode in ( GafferUI.PathColumn.SizeMode.Stretch, GafferUI.PathColumn.SizeMode.Interactive ) :
+
+			with self.subTest( sizeMode = sizeMode ) :
+
+				with GafferUI.Window() as window :
+					widget = GafferUI.PathListingWidget(
+						path = Gaffer.DictPath( {}, "/" ),
+						displayMode = GafferUI.PathListingWidget.DisplayMode.List,
+						columns = [
+							GafferUI.PathListingWidget.StandardColumn( "Test", "test" ),
+							GafferUI.PathListingWidget.StandardColumn( "Test", "test", sizeMode = sizeMode ),
+							GafferUI.PathListingWidget.StandardColumn( "Test", "test", sizeMode = sizeMode )
+						]
+					)
+
+				window._qtWidget().resize( 512, 384 )
+				window.setVisible( True )
+
+				self.waitForIdle( 1000 )
+				self.assertAlmostEqual(
+					widget._qtWidget().header().length(),
+					widget._qtWidget().viewport().width(),
+					## \todo We should not need this delta. Fix `_TreeView.__resizeStretchColumns` to
+					# remove numerical imprecision.
+					delta = 1
+				)
+
+				widget.setColumns( widget.getColumns()[:-1] )
+				self.assertEqual( widget._qtWidget().header().length(), widget._qtWidget().viewport().width() )
+
 	def testColumnSizeSurvivesStylesheetUpdate( self ) :
 
 		for visible in ( False, True ) :
