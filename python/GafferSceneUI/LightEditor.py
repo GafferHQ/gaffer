@@ -234,7 +234,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		if plug in ( self.settings()["section"], self.settings()["attribute"] ) :
 			self.__updateColumns()
 
-	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
+	@GafferUI.LazyMethod( deferUntilVisible = False, deferUntilPlaybackStops = True )
 	def __lazyUpdateFromContext( self ) :
 
 		self.__pathListing.getPath().setContext( self.context() )

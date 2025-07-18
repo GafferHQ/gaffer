@@ -65,6 +65,12 @@ Inspector::ResultPtr inspectorColumnInspectBinding( const InspectorColumn &colum
 	return column.inspect( path, canceller );
 }
 
+Gaffer::PathPtr inspectorColumnHistoryPathBinding( const InspectorColumn &column, const Gaffer::Path &path, const IECore::Canceller *canceller )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return column.historyPath( path, canceller );
+}
+
 } // namespace
 
 void GafferSceneUIModule::bindInspectorColumn()
@@ -99,6 +105,7 @@ void GafferSceneUIModule::bindInspectorColumn()
 		) )
 		.def( "inspector", &inspectorColumnInspectorBinding, ( arg( "path" ), arg( "canceller" ) = object() ) )
 		.def( "inspect", &inspectorColumnInspectBinding, ( arg( "path" ), arg( "canceller" ) = object() ) )
+		.def( "historyPath", &inspectorColumnHistoryPathBinding, ( arg( "path" ), arg( "canceller" ) = object() ) )
 	;
 
 }
