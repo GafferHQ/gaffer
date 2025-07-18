@@ -1109,8 +1109,6 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ),
 				highlightOnOver = False
 			)
-			# Ignore the width in X so MenuButton width is limited by the overall width of the widget
-			self.__menuButton._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
 
 		self.__currentRenderPass = ""
 		self.__renderPasses = {}
