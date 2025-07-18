@@ -1050,8 +1050,6 @@ class _TreeView( QtWidgets.QTreeView ) :
 		# offsets to the ideal sizes made by the user
 		self.__columnWidthAdjustments = collections.defaultdict( int )
 
-		self.__currentEventModifiers = QtCore.Qt.NoModifier
-
 		self.__highlightedIndex = None
 
 	def setHighlightedIndex( self, index ) :
