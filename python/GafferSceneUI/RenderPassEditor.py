@@ -1066,6 +1066,9 @@ RenderPassEditor.RenderPassChooserWidget = RenderPassChooserWidget
 # - `renderPassPlugValueWidget:scene` : The name of a plug on the same node,
 #   used to provide the list of passes to choose from. If not specified, the
 #   focus node is used instead.
+#
+## \todo We should probably move this to its own file and expose it
+# publicly as `GafferSceneUI.RenderPassPlugValueWidget`.
 class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	## \todo We're cheekily reusing the Editor.Settings node here
