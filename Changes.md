@@ -61,6 +61,9 @@ Fixes
   - Fixed flickering in history window when scrubbing the timeline.
 - RenderPassEditor : Fixed error when deleting a pass while a history window was open for it.
 - OptionalValuePlugValueWidget : Fixed handling of keyword constructor arguments. In particular this meant that `parenting` arguments did not work.
+- ScenePathPlugValueWidget :
+  - Fixed context used to evaluate the scene. This is now focus-aware, so the scene browser only shows locations that are available with respect to the current focus.
+  - Fixed bugs that prevented usage in `Editor.Settings` nodes.
 
 API
 ---
