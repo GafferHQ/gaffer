@@ -141,5 +141,10 @@ class RenderManRenderTest( GafferSceneTest.RenderTest ) :
 
 		return imath.Color4f( image["R"][i], image["G"][i], image["B"][i], image["A"][i] if "A" in image.keys() else 0.0 )
 
+	@unittest.skip( "Instance IDs only work with encapsulated instancers. We don't have encapsulation support yet in our RenderMan backend" )
+	def testInstanceIDOutput( self ) :
+
+		pass
+
 if __name__ == "__main__":
 	unittest.main()

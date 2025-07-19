@@ -94,6 +94,9 @@ GAFFERSCENE_API void createOutputDirectories( const IECore::CompoundObject *glob
 // Returns whether the globals contain an Output that references the data `float id`
 GAFFERSCENE_API bool hasIDOutput( const IECore::CompoundObject *globals );
 
+// Returns whether the globals contain an Output that references the data `float instanceID`
+GAFFERSCENE_API bool hasInstanceIDOutput( const IECore::CompoundObject *globals );
+
 // Returns a manifest file path if it's set in the globals, otherwise empty string
 GAFFERSCENE_API std::string renderManifestFilePath( const IECore::CompoundObject *globals );
 

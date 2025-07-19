@@ -368,10 +368,14 @@ class DelightOutput : public IECore::RefCounted
 				variableName = "z";
 				variableSource = "builtin";
 			}
-
-			if( variableName == "id" )
+			else if( variableName == "id" )
 			{
-				variableName = "cortexId";
+				variableName = "cortexID";
+				variableSource = "attribute";
+			}
+			else if( variableName == "instanceID" )
+			{
+				variableName = "cortexInstanceID";
 				variableSource = "attribute";
 			}
 
@@ -1149,6 +1153,27 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 
 		void assignID( uint32_t id ) override
 		{
+			assignIDInternal( id, "cortexID" );
+		}
+
+		void assignInstanceID( uint32_t instanceID ) override
+		{
+			// This isn't actually used yet, but it will be ready to go if we add support for encapsulation
+			// to our 3delight backend so we need to deal with encapsulated instancers.
+			assignIDInternal( instanceID, "cortexInstanceID" );
+		}
+
+	protected :
+
+		const DelightHandle m_transformHandle;
+		// We keep a reference to the instance and attributes so that they
+		// remain alive for at least as long as the object does.
+		ConstDelightAttributesPtr m_attributes;
+
+	private :
+
+		void assignIDInternal( uint32_t id, const char *attrName )
+		{
 			if( !m_idAttributesHandle )
 			{
 				m_idAttributesHandle = DelightHandle(
@@ -1162,7 +1187,7 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 				);
 			}
 			NSIParam_t param = {
-				"cortexId",
+				attrName,
 				&id,
 				// Deliberately declaring as `float` even though it is an
 				// integer. This lets us render the full range of integer values
@@ -1175,15 +1200,6 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 			};
 			NSISetAttribute( m_idAttributesHandle.context(), m_idAttributesHandle.name(), 1, &param );
 		}
-
-	protected :
-
-		const DelightHandle m_transformHandle;
-		// We keep a reference to the instance and attributes so that they
-		// remain alive for at least as long as the object does.
-		ConstDelightAttributesPtr m_attributes;
-
-	private :
 
 		DelightHandleSharedPtr m_instance;
 		DelightHandle m_idAttributesHandle;

@@ -75,11 +75,24 @@ namespace
 {
 
 const InternedString g_idChannelName( "id" );
+const InternedString g_instanceIDChannelName( "instanceID" );
 const InternedString g_cryptoIDChannelName( "crypto_object00.R" );
 const InternedString g_noChannelName( "" );
 
-const InternedString &idChannelName( const std::vector<std::string> &channelNames )
+const InternedString idChannelName( const std::vector<std::string> &channelNames, bool instance )
 {
+	if( instance  )
+	{
+		if( ImageAlgo::channelExists( channelNames, g_instanceIDChannelName ) )
+		{
+			return g_instanceIDChannelName;
+		}
+		else
+		{
+			return g_noChannelName;
+		}
+	}
+
 	if( ImageAlgo::channelExists( channelNames, g_idChannelName ) )
 	{
 		return g_idChannelName;
@@ -212,6 +225,7 @@ ImageSelectionTool::ImageSelectionTool( View *view, const std::string &name )
 	:	Tool( view, name ), m_manifestDirty( true )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new StringPlug( "selectMode", Plug::In, "standard" ) );
 	addChild( new ImagePlug( "__image", Plug::In ) );
 	imagePlug()->setInput( view->inPlug<ImagePlug>() );
 
@@ -244,23 +258,32 @@ ImageSelectionTool::~ImageSelectionTool()
 std::string ImageSelectionTool::status() const
 {
 	Context::Scope scopedContext( view()->context() );
+	const bool instanceSelection = selectModePlug()->getValue() == "instance";
+
 	std::string channelName;
 	try
 	{
-		channelName = idChannelName( imagePlug()->channelNames()->readable() );
+		channelName = idChannelName( imagePlug()->channelNames()->readable(), instanceSelection );
 	}
 	catch( ... )
 	{
 		return "error:No valid image";
 	}
 
-	if( m_manifestError.size() )
+	if( channelName == "" )
+	{
+		if( instanceSelection )
+		{
+			return "error:No instanceID channel";
+		}
+		else
+		{
+			return "error:No id channel";
+		}
+	}
+	else if( m_manifestError.size() && !instanceSelection )
 	{
 		return "error:" + m_manifestError;
-	}
-	else if( channelName == "" )
-	{
-		return "error:No id channel";
 	}
 	else if( m_infoStatus.size() )
 	{
@@ -268,7 +291,14 @@ std::string ImageSelectionTool::status() const
 	}
 	else
 	{
-		return "info:Hover object to show path";
+		if( instanceSelection )
+		{
+			return "info:Hover instance to show id";
+		}
+		else
+		{
+			return "info:Hover object to show path";
+		}
 	}
 }
 
@@ -277,14 +307,24 @@ ImageSelectionTool::StatusChangedSignal &ImageSelectionTool::statusChangedSignal
 	return m_statusChangedSignal;
 }
 
+Gaffer::StringPlug *ImageSelectionTool::selectModePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::StringPlug *ImageSelectionTool::selectModePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
 GafferImage::ImagePlug *ImageSelectionTool::imagePlug()
 {
-	return getChild<ImagePlug>( g_firstPlugIndex );
+	return getChild<ImagePlug>( g_firstPlugIndex + 1 );
 }
 
 const GafferImage::ImagePlug *ImageSelectionTool::imagePlug() const
 {
-	return getChild<ImagePlug>( g_firstPlugIndex );
+	return getChild<ImagePlug>( g_firstPlugIndex + 1 );
 }
 
 ImageGadget *ImageSelectionTool::imageGadget()
@@ -292,93 +332,118 @@ ImageGadget *ImageSelectionTool::imageGadget()
 	return runTimeCast<ImageGadget>( view()->viewportGadget()->getPrimaryChild() );
 }
 
+void ImageSelectionTool::updateRenderManifest()
+{
+	if( selectModePlug()->getValue() == "instance" )
+	{
+		// We could clear m_renderManifest here ... we won't need it while we're doing instance picking.
+		// But maybe it's better to leave it in memory, in case the user is about to switch back to it?
+		// ( Unless the manifest is excessively large, it won't matter either way ... if it is
+		// excessively large, it will take some memory, but also it could take a while to reload ).
+
+		statusChangedSignal()( *this );
+		return;
+	}
+
+	// We want to reset the render manifest now, so we don't keep using a stale manifest if this function fails.
+	// But it's important we don't release the existing manifest until this function exits ( otherwise we could
+	// drop the current manifest from the cache, while it's still valid based on the filepath and mod time ).
+	std::shared_ptr<const RenderManifest> renderManifestKeepAlive = m_renderManifest;
+	m_renderManifest.reset();
+	m_manifestError.clear();
+
+	if( !activePlug()->getValue() )
+	{
+		// Don't need to track the current manifest while we aren't active.
+		return;
+	}
+
+	Context::Scope scopedContext( view()->context() );
+	const ImagePlug *image = imagePlug();
+
+	ConstCompoundDataPtr metadata;
+
+	try
+	{
+		metadata = image->metadata();
+	}
+	catch( ... )
+	{
+		m_manifestError = "No valid image";
+		return;
+	}
+
+	ConstBoolDataPtr isRenderingData = metadata->member<BoolData>( g_isRenderingMetadataName );
+	if( isRenderingData && isRenderingData->readable() )
+	{
+		// Const cast is safe here since source scene only needs a non-const input in order to return a non-const
+		// result, and we treat the result as const.
+		const ScenePlug *scenePlug = SceneAlgo::sourceScene( const_cast<ImagePlug*>( image ) );
+
+		if( scenePlug )
+		{
+			const InteractiveRender *interactiveRenderNode = IECore::runTimeCast<const InteractiveRender>( scenePlug->node() );
+			if( interactiveRenderNode )
+			{
+				m_renderManifest = interactiveRenderNode->renderManifest();
+			}
+		}
+
+		return;
+	}
+
+	static const std::string g_cryptoLayerName( "crypto_object" );
+
+	try
+	{
+		// \todo : This should be done on a background thread.
+		// There should be a status message and spinner on the status bar while the compute is happening
+		// ( though it should probably only show up if the compute is slow to avoid flicker ). While the
+		// compute is happening, no interaction with the image selection tool should be allowed, and
+		// selection from ScriptNodeAlgo::getSelectedPaths should be synced to the selected ids when
+		// the background compute finishes.
+		//
+		// This would be very valuable, to avoid UI freezes if the manifest is large ... but also sounds
+		// a bit complicated, so we're not addressing it yet.
+		m_renderManifest = RenderManifest::loadFromImageMetadata( metadata.get(), g_cryptoLayerName );
+	}
+	catch( std::exception &e )
+	{
+		m_manifestError = e.what();
+	}
+
+	selectedPathsChanged();
+	statusChangedSignal()( *this );
+}
 
 void ImageSelectionTool::plugDirtied( const Gaffer::Plug *plug )
 {
 	if( plug == activePlug() )
 	{
-		if( activePlug()->getValue() )
-		{
-			// Trigger a manifest refresh when we become active
-			plugDirtied( imagePlug()->metadataPlug() );
-		}
+		updateRenderManifest();
 	}
 	else if( plug == imagePlug()->metadataPlug() )
 	{
-		// We use this dirty signal in a somewhat unconventional way : we don't actually care about whether
-		// the metadata has changed, but we assume that if the input image is modified, it will trigger this
-		// signal. That gives us a cue that we need to recheck the manifest - even if none of the metadata
-		// has changed, if the image was rewritten, the manifest might have been rewritten as well.
-
-		// We want to reset the render manifest now, so we don't keep using a stale manifest if this function fails.
-		// But it's important we don't release the existing manifest until this function exits ( otherwise we could
-		// drop the current manifest from the cache, while it's still valid based on the filepath and mod time ).
-		std::shared_ptr<const RenderManifest> renderManifestKeepAlive = m_renderManifest;
-		m_renderManifest.reset();
-		m_manifestError.clear();
-
-		if( !activePlug()->getValue() )
+		// Note that we intentionally don't check whether the file paths we're using from the metadata
+		// plug have actually changed ... even if the paths haven't changed, getting a metadata update
+		// could indicate that the file on disk has been updated. loadFromImageMetadata will check the
+		// mod time of the file on disk, and reuse it from a cache if it hasn't changed ( as long as
+		// we hold a pointer to it so it doesn't get evicted ).
+		updateRenderManifest();
+	}
+	else if( plug == selectModePlug() )
+	{
+		if( selectModePlug()->getValue() == "instance" )
 		{
-			// Don't need to track the current manifest while we aren't active.
-			return;
+			// When selecting objects, when the manifest changes, we synchronize the current set of
+			// selected objects from ScriptNodeAlgo::getSelectedPaths in selectedPathsChanged. But
+			// there's no storage of selected ids instance ids outside this tool, so when switching
+			// modes to instance selection, we just clear the selection.
+			m_selectedIDs.clear();
+			imageGadget()->setSelectedIDs( m_selectedIDs );
 		}
 
-		Context::Scope scopedContext( view()->context() );
-		const ImagePlug *image = imagePlug();
-
-		ConstCompoundDataPtr metadata;
-
-		try
-		{
-			metadata = image->metadata();
-		}
-		catch( ... )
-		{
-			m_manifestError = "No valid image";
-			return;
-		}
-
-		ConstBoolDataPtr isRenderingData = metadata->member<BoolData>( g_isRenderingMetadataName );
-		if( isRenderingData && isRenderingData->readable() )
-		{
-			// Const cast is safe here since source scene only needs a non-const input in order to return a non-const
-			// result, and we treat the result as const.
-			const ScenePlug *scenePlug = SceneAlgo::sourceScene( const_cast<ImagePlug*>( image ) );
-
-			if( scenePlug )
-			{
-				const InteractiveRender *interactiveRenderNode = IECore::runTimeCast<const InteractiveRender>( scenePlug->node() );
-				if( interactiveRenderNode )
-				{
-					m_renderManifest = interactiveRenderNode->renderManifest();
-				}
-			}
-
-			return;
-		}
-
-		static const std::string g_cryptoLayerName( "crypto_object" );
-
-		try
-		{
-			// \todo : This should be done on a background thread.
-			// There should be a status message and spinner on the status bar while the compute is happening
-			// ( though it should probably only show up if the compute is slow to avoid flicker ). While the
-			// compute is happening, no interaction with the image selection tool should be allowed, and
-			// selection from ScriptNodeAlgo::getSelectedPaths should be synced to the selected ids when
-			// the background compute finishes.
-			//
-			// This would be very valuable, to avoid UI freezes if the manifest is large ... but also sounds
-			// a bit complicated, so we're not addressing it yet.
-			m_renderManifest = RenderManifest::loadFromImageMetadata( metadata.get(), g_cryptoLayerName );
-		}
-		catch( std::exception &e )
-		{
-			m_manifestError = e.what();
-		}
-
-		selectedPathsChanged();
-		statusChangedSignal()( *this );
+		updateRenderManifest();
 	}
 	else if( plug == imagePlug()->channelNamesPlug() )
 	{
@@ -418,41 +483,55 @@ void ImageSelectionTool::idsForPaths( const IECore::PathMatcher &paths, std::vec
 	result = m_renderManifest->idsForPaths( paths );
 }
 
-uint32_t ImageSelectionTool::pixelID( const Imath::V2i &pixel )
+std::optional<uint32_t> ImageSelectionTool::pixelID( const Imath::V2i &pixel, bool instance )
 {
 	const auto [ wipeEnabled, wipePosition, wipeDirection ] = effectiveWipePlane( imageGadget() );
 
 	if( wipeEnabled && ( Imath::V2f( pixel ) + Imath::V2f( 0.5f ) - wipePosition ).dot( wipeDirection ) > 0 )
 	{
-		return 0;
+		return std::nullopt;
 	}
 
 	Context::Scope scopedContext( view()->context() );
 
 	try
 	{
-		std::string chanName = idChannelName( imagePlug()->channelNames()->readable() );
+		std::string chanName = idChannelName( imagePlug()->channelNames()->readable(), instance );
 
 		if( !chanName.size() )
 		{
-			return 0;
+			return std::nullopt;
 		}
 
 		GafferImage::Sampler sampler( imagePlug(), chanName, Box2i( pixel, pixel + V2i( 1 ) ) );
 		float floatID = sampler.sample( pixel.x, pixel.y );
 		uint32_t id;
 		memcpy( &id, &floatID, 4 );
+
+		if( id == 0 )
+		{
+			return std::nullopt;
+		}
+
+		// If there is a valid value here, and we're dealing with instance IDs, we offset it here.
+		// We apply this offsetting when writing and reading instance IDs so we can store 0 ( which
+		// is a valid instance ID ).
+		if( instance )
+		{
+			id--;
+		}
+
 		return id;
 	}
 	catch( ... )
 	{
 		// If the input image is invalid, there should be other warnings on screen, so it's OK to silently
 		// return nothing here.
-		return 0;
+		return std::nullopt;
 	}
 }
 
-std::unordered_set<uint32_t> ImageSelectionTool::rectIDs( const Imath::Box2i &rect )
+std::unordered_set<uint32_t> ImageSelectionTool::rectIDs( const Imath::Box2i &rect, bool instance )
 {
 	Context::Scope scopedContext( view()->context() );
 	const Imath::Box2i validRect = BufferAlgo::intersection( rect, imagePlug()->dataWindow() );
@@ -465,10 +544,9 @@ std::unordered_set<uint32_t> ImageSelectionTool::rectIDs( const Imath::Box2i &re
 
 	const auto [ wipeEnabled, wipePosition, wipeDirection ] = effectiveWipePlane( imageGadget() );
 
-
 	try
 	{
-		std::string chanName = idChannelName( imagePlug()->channelNames()->readable() );
+		std::string chanName = idChannelName( imagePlug()->channelNames()->readable(), instance );
 
 		if( !chanName.size() )
 		{
@@ -477,39 +555,30 @@ std::unordered_set<uint32_t> ImageSelectionTool::rectIDs( const Imath::Box2i &re
 
 		GafferImage::Sampler sampler( imagePlug(), chanName, validRect );
 
-		float prevValue = sampler.sample( validRect.min.x, validRect.min.y );
-		uint32_t prevID;
-		memcpy( &prevID, &prevValue, 4 );
-		if( prevID != 0 )
-		{
-			result.insert( prevID );
-		}
+		uint32_t prevIntValue = 0;
 
 		// Note the weird workaround here of doing init-capture of the wipe parameters, since we can't lambda capture
 		// structured bindings until C++20
 		sampler.visitPixels(
 			validRect,
-			[&result, &prevValue, &wipeEnabled = wipeEnabled, &wipePosition = wipePosition, &wipeDirection = wipeDirection] ( float value, int x, int y )
+			[&result, &prevIntValue, &wipeEnabled = wipeEnabled, &wipePosition = wipePosition, &wipeDirection = wipeDirection, &instance] ( float value, int x, int y )
 			{
 				if( wipeEnabled && ( Imath::V2f( x, y ) + Imath::V2f( 0.5f ) - wipePosition ).dot( wipeDirection ) > 0 )
 				{
 					return;
 				}
 
-				if( value == prevValue )
+				uint32_t intValue;
+				memcpy( &intValue, &value, 4 );
+
+				if( intValue == 0 || intValue == prevIntValue )
 				{
 					return;
 				}
 
-				prevValue = value;
+				prevIntValue = intValue;
 
-				uint32_t id;
-				memcpy( &id, &value, 4 );
-
-				if( id != 0 )
-				{
-					result.insert( id );
-				}
+				result.insert( intValue - ( instance ? 1 : 0 ) );
 			}
 		);
 	}
@@ -524,6 +593,11 @@ std::unordered_set<uint32_t> ImageSelectionTool::rectIDs( const Imath::Box2i &re
 
 void ImageSelectionTool::selectedPathsChanged()
 {
+	if( selectModePlug()->getValue() == "instance" )
+	{
+		return;
+	}
+
 	idsForPaths( ScriptNodeAlgo::getSelectedPaths( view()->scriptNode() ), m_selectedIDs );
 
 	std::sort( m_selectedIDs.begin(), m_selectedIDs.end() );
@@ -537,10 +611,31 @@ void ImageSelectionTool::selectedPathsChanged()
 
 void ImageSelectionTool::updateSelectedIDs()
 {
-	imageGadget()->setSelectedIDs( m_selectedIDs );
+	bool instanceSelection = selectModePlug()->getValue() == "instance";
+
+	if( instanceSelection )
+	{
+		std::vector<uint32_t> selectedIDsPluseOne = m_selectedIDs;
+		for( uint32_t &i : selectedIDsPluseOne )
+		{
+			i++;
+		}
+		imageGadget()->setSelectedIDs( selectedIDsPluseOne );
+	}
+	else
+	{
+		imageGadget()->setSelectedIDs( m_selectedIDs );
+	}
+
 	view()->viewportGadget()->renderRequestSignal()(
 		view()->viewportGadget()
 	);
+
+
+	if( instanceSelection )
+	{
+		return;
+	}
 
 	// \todo - in a worst case scenario, where every pixel has a separate id, and you've dragged a rect around all
 	// of them, converting millions of ids to paths could take a couple of seconds, and it could be worth making the
@@ -560,7 +655,8 @@ void ImageSelectionTool::preRender()
 	{
 		try
 		{
-			idChan = idChannelName( imagePlug()->channelNames()->readable() );
+			bool instanceSelection = selectModePlug()->getValue() == "instance";
+			idChan = idChannelName( imagePlug()->channelNames()->readable(), instanceSelection );
 		}
 		catch( ... )
 		{
@@ -619,11 +715,12 @@ bool ImageSelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 	ImageGadget *ig = imageGadget();
 
 	Imath::V2f pixel = ig->pixelAt( event.line );
-	uint32_t id = pixelID( pixel );
+	bool instanceSelection = selectModePlug()->getValue() == "instance";
+	std::optional<uint32_t> id = pixelID( pixel, instanceSelection );
 
 	const bool shiftHeld = event.modifiers & ButtonEvent::Shift;
 	const bool controlHeld = event.modifiers & ButtonEvent::Control;
-	if( id == 0 )
+	if( !id.has_value() )
 	{
 		// background click - clear the selection unless a modifier is held, in
 		// which case we might be starting a drag to add more or remove some.
@@ -635,9 +732,9 @@ bool ImageSelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 	}
 	else
 	{
-		auto searchIt = std::lower_bound( m_selectedIDs.begin(), m_selectedIDs.end(), id );
+		auto searchIt = std::lower_bound( m_selectedIDs.begin(), m_selectedIDs.end(), id.value() );
 
-		if( searchIt != m_selectedIDs.end() && *searchIt == id )
+		if( searchIt != m_selectedIDs.end() && *searchIt == id.value() )
 		{
 			if( controlHeld )
 			{
@@ -650,11 +747,11 @@ bool ImageSelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 			if( !controlHeld && !shiftHeld )
 			{
 				m_selectedIDs.clear();
-				m_selectedIDs.push_back( id );
+				m_selectedIDs.push_back( id.value() );
 			}
 			else
 			{
-				m_selectedIDs.insert( searchIt, id );
+				m_selectedIDs.insert( searchIt, id.value() );
 			}
 			updateSelectedIDs();
 		}
@@ -690,8 +787,9 @@ IECore::RunTimeTypedPtr ImageSelectionTool::dragBegin( GafferUI::Gadget *gadget,
 	}
 	m_acceptedButtonPress = false;
 
-	uint32_t curID = pixelID( V2i( floor( event.line.p1.x ), floor( event.line.p1.y ) ) );
-	if( curID == 0 )
+	bool instanceSelection = selectModePlug()->getValue() == "instance";
+	std::optional<uint32_t> curID = pixelID( V2i( floor( event.line.p1.x ), floor( event.line.p1.y ) ), instanceSelection );
+	if( !curID.has_value() )
 	{
 		// drag to select
 		dragOverlay()->setStartPosition( event.line.p1 );
@@ -702,16 +800,28 @@ IECore::RunTimeTypedPtr ImageSelectionTool::dragBegin( GafferUI::Gadget *gadget,
 	}
 	else
 	{
-		if( std::binary_search( m_selectedIDs.begin(), m_selectedIDs.end(), curID ) )
+		if( std::binary_search( m_selectedIDs.begin(), m_selectedIDs.end(), curID.value() ) )
 		{
-			PathMatcher selectedPaths = pathsForIDs( m_selectedIDs );
+			if( !instanceSelection )
+			{
+				PathMatcher selectedPaths = pathsForIDs( m_selectedIDs );
 
-			IECore::StringVectorDataPtr dragData = new IECore::StringVectorData();
-			selectedPaths.paths( dragData->writable() );
+				IECore::StringVectorDataPtr dragData = new IECore::StringVectorData();
+				selectedPaths.paths( dragData->writable() );
 
-			Pointer::setCurrent( "objects" );
-			m_initiatedDrag = true;
-			return dragData;
+				Pointer::setCurrent( "objects" );
+				m_initiatedDrag = true;
+				return dragData;
+			}
+			else
+			{
+				IECore::UIntVectorDataPtr dragData = new IECore::UIntVectorData();
+				dragData->writable() = m_selectedIDs;
+
+				Pointer::setCurrent( "objects" );
+				m_initiatedDrag = true;
+				return dragData;
+			}
 		}
 	}
 
@@ -747,6 +857,8 @@ bool ImageSelectionTool::dragEnd( const GafferUI::DragDropEvent &event )
 		return false;
 	}
 
+	bool instanceSelection = selectModePlug()->getValue() == "instance";
+
 	dragOverlay()->setVisible( false );
 
 	ImageGadget *ig = imageGadget();
@@ -759,7 +871,7 @@ bool ImageSelectionTool::dragEnd( const GafferUI::DragDropEvent &event )
 	region.extendBy( startPixel );
 	region.extendBy( endPixel );
 
-	std::unordered_set<uint32_t> idsSet = rectIDs( region );
+	std::unordered_set<uint32_t> idsSet = rectIDs( region, instanceSelection );
 
 	if( idsSet.size() )
 	{
@@ -807,25 +919,46 @@ bool ImageSelectionTool::mouseMove( const GafferUI::ButtonEvent &event )
 
 	Imath::V2f pixel = ig->pixelAt( event.line );
 
-	uint32_t id = pixelID( pixel );
+	bool instanceSelection = selectModePlug()->getValue() == "instance";
+	std::optional<uint32_t> id = pixelID( pixel, instanceSelection );
 
-	imageGadget()->setHighlightID( id );
+	if( !id.has_value() )
+	{
+		imageGadget()->setHighlightID( 0 );
+	}
+	else if( instanceSelection )
+	{
+		// The image gadget doesn't know that we store instance ids offset by one,
+		// because 0 is a valid instance id.
+		imageGadget()->setHighlightID( id.value() + 1 );
+	}
+	else
+	{
+		imageGadget()->setHighlightID( id.value() );
+	}
 
 	m_infoStatus = "";
 
-	if( id == 0 )
+	if( !id.has_value() )
 	{
 		statusChangedSignal()( *this );
 		view()->viewportGadget()->renderRequestSignal()( view()->viewportGadget() );
 		return false;
 	}
 
-	std::vector<uint32_t> ids = { id };
-	PathMatcher paths = pathsForIDs( ids );
-
-	if( paths.size() )
+	if( instanceSelection )
 	{
-		m_infoStatus = GafferScene::ScenePlug::pathToString( *PathMatcher::Iterator( paths.begin() ) );
+		m_infoStatus = fmt::format( "{}", id.value() );
+	}
+	else
+	{
+		std::vector<uint32_t> ids = { id.value() };
+		PathMatcher paths = pathsForIDs( ids );
+
+		if( paths.size() )
+		{
+			m_infoStatus = GafferScene::ScenePlug::pathToString( *PathMatcher::Iterator( paths.begin() ) );
+		}
 	}
 
 	statusChangedSignal()( *this );

@@ -629,16 +629,30 @@ class VectorDataWidget( GafferUI.Widget ) :
 			return False
 
 		data = self.getData()
-		if (
-			len( data ) == 1 and (
-				event.data.isInstanceOf( data[0].typeId() ) or (
-					hasattr( event.data, "value" ) and isinstance(
-						event.data.value,
-						IECore.DataTraits.valueTypeFromSequenceType( type( data[0] ) )
-					)
-				)
-			)
-		) :
+
+		hasMatchingData = False
+		if len( data ) == 1:
+			if event.data.isInstanceOf( data[0].typeId() ):
+				hasMatchingData = True
+			elif IECore.DataTraits.isSequenceDataType( data[0] ) and IECore.DataTraits.isSequenceDataType( event.data ):
+				numericTypes = [ int, float ]
+				if (
+					IECore.DataTraits.valueTypeFromSequenceType( type( data[0] ) ) in numericTypes and
+					IECore.DataTraits.valueTypeFromSequenceType( type( event.data ) ) in numericTypes
+				):
+					hasMatchingData = True
+
+			elif hasattr( event.data, "value" ):
+				if isinstance(
+					event.data.value,
+					IECore.DataTraits.valueTypeFromSequenceType( type( data[0] ) )
+				):
+					hasMatchingData = True
+
+				# \todo : We could also add a case here for dropping a single element onto a vector
+				# when the single vector is of a compatible but not identical numeric type
+
+		if hasMatchingData:
 			# The remove button will be disabled if there's no selection -
 			# we reenable it so it can receive the drag. We'll update it again
 			# in __dragLeave() and __drop().
@@ -665,13 +679,15 @@ class VectorDataWidget( GafferUI.Widget ) :
 		# dragEnter also checked that if the drop value is not a vector, then
 		# the type matches what is contained by the widget's vector.
 
+		elementType = IECore.DataTraits.valueTypeFromSequenceType( type( data ) )
+
 		if widget is self.__buttonRow[1] :
 			# remove
-			s = set( event.data ) if IECore.DataTraits.isSequenceDataType( event.data ) else [event.data.value]
+			s = set( [ elementType( i ) for i in event.data ] ) if IECore.DataTraits.isSequenceDataType( event.data ) else [ elementType( event.data.value ) ]
 			newData = data.__class__()
 			for d in data :
 				if d not in s :
-					newData.append( d )
+					newData.append( elementType( d ) )
 			data = newData
 		else :
 			# add, but avoid creating duplicates
@@ -679,8 +695,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 			eventList = event.data if IECore.DataTraits.isSequenceDataType( event.data ) else [event.data.value]
 			for d in eventList :
 				if d not in s :
-					data.append( d )
-					s.add( d )
+					data.append( elementType( d ) )
+					s.add( elementType( d ) )
 
 		self.setData( [ data ] )
 		self.dataChangedSignal()( self )

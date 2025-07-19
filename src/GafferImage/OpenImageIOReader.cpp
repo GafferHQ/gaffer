@@ -187,12 +187,16 @@ std::string channelNameFromEXR( std::string view, std::string part, std::string 
 	// But if useHeuristics is on, try to figure out which of the dozen incorrect interpretations of the EXR spec
 	// this might adhere to.
 
-	if( channel == "cortexId.v" )
+	// Specific workaround for ID outputs from 3Delight. 3Delight doesn't
+	// support a custom `layerName`, despite it being part of the NSI spec,
+	// so we need to apply the desired name here.
+	if( channel == "cortexID.v" )
 	{
-		// Specific workaround for ID outputs from 3Delight. 3Delight doesn't
-		// support a custom `layerName`, despite it being part of the NSI spec,
-		// so we need to apply the desired name here.
 		return "id";
+	}
+	else if( channel == "cortexInstanceID.v" )
+	{
+		return "instanceID";
 	}
 
 	std::vector< std::string > layerTokens;

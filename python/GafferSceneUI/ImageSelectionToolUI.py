@@ -46,6 +46,19 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
+	Tool for selecting objects based on image data.  Requires one of the following :
+
+	- An `id` image layer with associated render manifest (enabled using the StandardOptions node).
+	- An ObjectID Cryptomatte image.
+	- An `instanceID` image layer.
+
+	Supports the same interactions as the 3D scene selection tool:
+
+	- Click or drag to set selection
+	- Shift-click or shift-drag to add to selection
+	- Drag and drop selected objects
+		- Drag to Python Editor to get their names
+		- Drag to PathFilter or Set node to add/remove their paths
 	""",
 
 	"viewer:shortCut", "Q",
@@ -57,8 +70,11 @@ Gaffer.Metadata.registerNode(
 	"toolbarLayout:customWidget:SelectionWidget:widgetType", "GafferSceneUI.ImageSelectionToolUI._StatusWidget",
 	"toolbarLayout:customWidget:SelectionWidget:section", "Bottom",
 
-	# So our widget doesn't center, add a stretchy spacer to the right
-	"toolbarLayout:customWidget:RightSpacer:widgetType", "GafferSceneUI.ImageSelectionToolUI._RightSpacer",
+	"toolbarLayout:customWidget:LeftSpacer:widgetType", "GafferSceneUI.ImageSelectionToolUI._ToolOverlayInsetSpacer",
+	"toolbarLayout:customWidget:LeftSpacer:section", "Bottom",
+	"toolbarLayout:customWidget:LeftSpacer:index", 0,
+
+	"toolbarLayout:customWidget:RightSpacer:widgetType", "GafferSceneUI.ImageSelectionToolUI._ToolOverlayInsetSpacer",
 	"toolbarLayout:customWidget:RightSpacer:section", "Bottom",
 	"toolbarLayout:customWidget:RightSpacer:index", -1,
 
@@ -70,36 +86,55 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"selectMode" : [
+
+			"description",
+			"""
+			The standard mode selects locations based on an `id` layer with a corresponding manifest.
+			`Instance` mode instead picks instance ids based on an `instanceID` layer ( this will only
+			contain information for encapsulated instancers, which don't pass multiple locations to the
+			renderer, but do set up special instance id information ).
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:Standard", "standard",
+			"preset:Instance", "instance",
+
+			"label", "Select",
+
+			"toolbarLayout:section", "Bottom",
+			"toolbarLayout:width", 80,
+
+		],
+
 	}
 
 )
 
-class _RightSpacer( GafferUI.Spacer ) :
+class _ToolOverlayInsetSpacer( GafferUI.Spacer ) :
 
 	def __init__( self, imageView, **kw ) :
 
-		GafferUI.Spacer.__init__( self, size = imath.V2i( 0, 0 ) )
+		GafferUI.Spacer.__init__( self, size = imath.V2i( 40, 0 ), maximumSize = imath.V2i( 40, 0 ) )
 
-class _StatusWidget( GafferUI.ListContainer ) :
+class _StatusWidget( GafferUI.Frame ) :
 
 	def __init__( self, tool, **kw ) :
 
-		GafferUI.ListContainer.__init__( self, **kw )
+		GafferUI.Frame.__init__( self, borderWidth = 0, **kw )
 
 		self.__tool = tool
 
 		with self :
-			with GafferUI.Frame( borderWidth = 4 ) as self.__frame:
-				with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) :
+			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, borderWidth = 0 ) :
 
-					self.__infoIcon = GafferUI.Image( "infoSmall.png" )
-					self.__errorIcon = GafferUI.Image( "errorSmall.png" )
-					self.__warningIcon = GafferUI.Image( "warningSmall.png" )
-					GafferUI.Spacer( size = imath.V2i( 4 ), maximumSize = imath.V2i( 4 ) )
-					self.__label = GafferUI.Label( "" )
-					self.__label.setTextSelectable( True )
-
-		self.__frame._qtWidget().setObjectName( "gafferImageSelectionStatus" )
+				self.__infoIcon = GafferUI.Image( "infoSmall.png" )
+				self.__errorIcon = GafferUI.Image( "errorSmall.png" )
+				self.__warningIcon = GafferUI.Image( "warningSmall.png" )
+				GafferUI.Spacer( size = imath.V2i( 4 ), maximumSize = imath.V2i( 4 ) )
+				self.__label = GafferUI.Label( "" )
+				self.__label.setTextSelectable( True )
+				GafferUI.Spacer( size = imath.V2i( 0 ) )
 
 		self.__tool.statusChangedSignal().connect( Gaffer.WeakMethod( self.__update, fallbackResult = None ) )
 
@@ -118,18 +153,17 @@ class _StatusWidget( GafferUI.ListContainer ) :
 			return
 
 		status = self.__tool.status()
-		self.__frame.setVisible( bool(status) )
 
 		state, _, message = status.partition( ":" )
 
 		self.__label.setText( message )
 
 		info = warn = error = False
-		if state == "error" :
+		if state == "error":
 			error = True
-		elif state == "warning" :
+		elif state == "warning":
 			warn = True
-		else :
+		else:
 			info = True
 
 		self.__infoIcon.setVisible( info )
