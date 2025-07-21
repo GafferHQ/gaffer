@@ -41,6 +41,7 @@ from collections import deque
 import shlex
 import pathlib
 import os
+import struct
 import subprocess
 import math
 
@@ -53,8 +54,9 @@ import IECoreScene
 import IECoreDelight
 import IECoreVDB
 
-import GafferTest
+import GafferImage
 import GafferScene
+import GafferTest
 
 class RendererTest( GafferTest.TestCase ) :
 
@@ -1643,6 +1645,93 @@ class RendererTest( GafferTest.TestCase ) :
 			for k, v in expected.items() :
 				self.assertIn( k, nsi["outputLayer:test"] )
 				self.assertEqual( nsi["outputLayer:test"][k], v )
+
+	def testIDAdaptors( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+		)
+
+		r.output(
+			"id",
+			IECoreScene.Output(
+				( self.temporaryDirectory() / "id.exr" ).as_posix(),
+				"exr",
+				"float id"
+			)
+		)
+
+		r.output(
+			"instanceID",
+			IECoreScene.Output(
+				( self.temporaryDirectory() / "instanceID.exr" ).as_posix(),
+				"exr",
+				"float instanceID"
+			)
+		)
+
+		r.camera(
+			"testCamera",
+			IECoreScene.Camera(
+				parameters = {
+					"resolution" : imath.V2i( 100, 100 ),
+					"projection" : "orthographic",
+					"aperture" : imath.V2f( 3, 3 ),
+				}
+			)
+		)
+
+		r.option( "camera", IECore.StringData( "testCamera" ) )
+
+		m = IECoreScene.MeshPrimitive.createBox( imath.Box3f( imath.V3f( -0.5 ), imath.V3f( 0.5 ) ) )
+
+		cubeParams = [
+			( 7, 3, -1, -1 ),
+			( 8, 6, 1, -1 ),
+			( 9, 15, -1, 1 ),
+			( 10, 42, 1, 1 ),
+		]
+
+		for ident, instanceIdent, x, y in cubeParams:
+			handle = r.object( "object" + str( ident ), m, r.attributes( IECore.CompoundObject() ) )
+			handle.assignID( ident )
+			handle.assignInstanceID( instanceIdent )
+			handle.transform( imath.M44f().translate( imath.V3f( x * 0.5, y * 0.5, 0 ) ) )
+
+		r.render()
+		del r
+
+		read = GafferImage.ImageReader()
+		read["fileName"].setValue( ( self.temporaryDirectory() / "id.exr" ).as_posix() )
+
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( read["out"] )
+		sampler["channels"].setValue( IECore.StringVectorData( [ "id" ] * 4 ) )
+		sampler["interpolate"].setValue( False )
+
+		for ident, instanceIdent, x, y in cubeParams:
+			sampler["pixel"].setValue( imath.V2f( 50 + x * 10, 50 + y * 10 ) )
+			raw = sampler["color"]["r"].getValue()
+
+			# Reinterpret float as int.
+			readID = struct.pack( "f", raw )
+			readID = struct.unpack( "I", readID )[0]
+
+			self.assertEqual( readID, ident )
+
+		read["fileName"].setValue( ( self.temporaryDirectory() / "instanceID.exr" ).as_posix() )
+		sampler["channels"].setValue( IECore.StringVectorData( [ "instanceID" ] * 4 ) )
+
+		for ident, instanceIdent, x, y in cubeParams:
+			sampler["pixel"].setValue( imath.V2f( 50 + x * 10, 50 + y * 10 ) )
+			raw = sampler["color"]["r"].getValue()
+
+			# Reinterpret float as int.
+			readID = struct.pack( "f", raw )
+			readID = struct.unpack( "I", readID )[0]
+
+			self.assertEqual( readID, instanceIdent )
 
 	# Helper methods used to check that NSI files we write contain what we
 	# expect. The 3delight API only allows values to be set, not queried,

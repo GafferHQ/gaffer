@@ -71,11 +71,14 @@ class CompoundRendererTest( GafferTest.TestCase ) :
 			self.assertEqual( o.capturedSampleTimes(), [] )
 			self.assertEqual( o.capturedAttributes().attributes(), coreAttributes1 )
 			self.assertEqual( o.id(), 0 )
+			self.assertEqual( o.instanceID(), 0 )
 
 		compoundObject.assignID( 1 )
+		compoundObject.assignInstanceID( 7 )
 		for r in renderers :
 			o = r.capturedObject( "o" )
 			self.assertEqual( o.id(), 1 )
+			self.assertEqual( o.instanceID(), 7 )
 
 		# Attribute edits
 

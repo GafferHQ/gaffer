@@ -106,6 +106,38 @@ GafferScene.Outputs.registerOutput(
 	)
 )
 
+GafferScene.Outputs.registerOutput(
+	"Interactive/InstanceID",
+	IECoreScene.Output(
+		"instanceID",
+		"ieDisplay",
+		"float instanceID",
+		{
+			"catalogue:imageName" : "Image",
+			"driverType" : "ClientDisplayDriver",
+			"displayHost" : "localhost",
+			"displayPort" : "${image:catalogue:port}",
+			"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
+			"filter" : "closest",
+			"layerName" : "instanceID",
+			"updateInteractively" : True,
+		}
+	)
+)
+
+GafferScene.Outputs.registerOutput(
+	"Batch/InstanceID",
+	IECoreScene.Output(
+		"${project:rootDirectory}/renders/${script:name}/${renderPass}/instanceID/instanceID.####.exr",
+		"exr",
+		"float instanceID",
+		{
+			"filter" : "closest",
+			"layerName" : "instanceID",
+		}
+	)
+)
+
 Gaffer.Metadata.registerValue( GafferScene.StandardOptions, "options.render:manifestFilePath.value", "userDefault", "${project:rootDirectory}/renders/${script:name}/${renderPass}/renderManifest/renderManifest.####.exr" )
 
 # Add standard AOVs as they are defined in the aiStandard and alSurface shaders

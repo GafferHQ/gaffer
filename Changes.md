@@ -5,7 +5,9 @@ Features
 --------
 
 - Arnold : Added multi-layer EXR support. All outputs with the same filename are now written to the same file via a single output driver.
-- ImageSelectionTool : Added new tool that allows selecting scene paths based on an image. Works with both Catalogue images and images on disk. Has two requirements : an `id` AOV (added using the `ID` preset on an `Outputs` node), and a render manifest (added using StandardOptions > Render Manifest > File Path ).
+- ImageSelectionTool :
+  - Added new tool that allows selecting scene paths based on an image. Works with both Catalogue images and images on disk. Has two requirements : an `id` AOV (added using the `ID` preset on an `Outputs` node), and a render manifest (added using StandardOptions > Render Manifest > File Path ).
+  - Also supports picking instance IDs, using an `instanceID` aov. Supported when rendering an instancer that is encapsulated ( USD instancers rendered to Arnold are encapsulated by default ).
 - ColorInspectorTool : Moved the Viewer's colour inspectors into a dedicated tool, selected from the toolbar on the left.
 - OSLObject : Added the ability to use `pointcloud_search()` and `pointcloud_get()` to query geometry from arbitrary scene locations.
 - CameraQuery : Added a new node to query camera parameters (#6431).
@@ -31,6 +33,7 @@ Improvements
   - Improved formatting of Box and Matrix values.
   - Improved performance when showing colour values.
   - Added support for showing spline values.
+- GafferUI : Added support for drag and dropping numeric vector data onto numeric vector plugs of compatible types ( For example, dropping a list of ints onto a FloatVectorDataPlug ).
 
 Fixes
 -----
