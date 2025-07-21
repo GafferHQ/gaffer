@@ -735,22 +735,18 @@ void replaceUSDShader( ShaderNetwork *network, InternedString handle, ShaderPtr 
 
 void correctParameters( ShaderNetwork *network )
 {
-	for( const auto &[handle, shader] : network->shaders() )
+	const Shader *shader = network->outputShader();
+	if( shader && shader->getName() == "PxrEnvDayLight" )
 	{
-		if( shader->getName() == "PxrEnvDayLight" )
-		{
-			ShaderPtr newShader = shader->copy();
+		ShaderPtr newShader = shader->copy();
 
-			// The incoming object-space coordinates of `sunDirection` is in our Y-up coordinate system.
-			// But RenderMan's orientation is Z-up, so we transform from our coordinate system to RenderMan's
-			// so the parameter is intuitive to work with and the appearance of the shader matches expectations.
-			const V3f direction = parameterValue( newShader.get(), g_sunDirectionParameter, V3f( 0.f, 1.f, 0.f ) );
-			newShader->parameters()[g_sunDirectionParameter] = new V3fData( V3f( direction.x, -direction.z, direction.y ) );
+		// The incoming object-space coordinates of `sunDirection` is in our Y-up coordinate system.
+		// But RenderMan's orientation is Z-up, so we transform from our coordinate system to RenderMan's
+		// so the parameter is intuitive to work with and the appearance of the shader matches expectations.
+		const V3f direction = parameterValue( newShader.get(), g_sunDirectionParameter, V3f( 0.f, 1.f, 0.f ) );
+		newShader->parameters()[g_sunDirectionParameter] = new V3fData( V3f( direction.x, -direction.z, direction.y ) );
 
-			network->setShader( handle, std::move( newShader ) );
-
-			return;
-		}
+		network->setShader( network->getOutput().shader, std::move( newShader ) );
 	}
 }
 
