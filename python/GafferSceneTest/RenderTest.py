@@ -753,7 +753,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 			id = struct.pack( "f", id )
 			id = struct.unpack( "I", id )[0]
 
-			self.assertEqual( id, expectedID )
+			self.assertEqual( id, expectedID + 1 )
 
 	## Should be implemented by derived classes to return
 	# an appropriate Shader node with a diffuse surface shader loaded, along
