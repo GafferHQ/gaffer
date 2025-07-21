@@ -53,8 +53,8 @@ using namespace IECoreRenderMan;
 namespace
 {
 
-template<typename T, typename P>
-T parameterOrDefault( const P *parameters, const InternedString &name, const T &defaultValue )
+template<typename T>
+T parameterOrDefault( const CompoundData *parameters, const InternedString &name, const T &defaultValue )
 {
 	if( const auto d = parameters->member<TypedData<T>>( name ) )
 	{
