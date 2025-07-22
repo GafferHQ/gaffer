@@ -209,13 +209,53 @@ IECoreGL::ConstRenderablePtr triangle( const V3f &p0, const V3f &p1, const V3f &
 	return group;
 }
 
-IECoreGL::ConstRenderablePtr sunIndicator( const Color3f &color )
+IECoreGL::ConstRenderablePtr sunWireframe( const float radius )
+{
+	const int numSpikes = 12;
+	const int pointsPerSpike = 7;
+	const float innerRadius = 0.1f * radius;
+	const float outerRadius = 0.15f * radius;
+
+	std::vector<V3f> p;
+	p.reserve( numSpikes * ( pointsPerSpike + 1 ) );
+
+	for( int i = 0; i < numSpikes; ++i )
+	{
+		const float startAngle = 2 * M_PI * ( (float)i / (float)numSpikes );
+		const float segmentInterval = 2 * M_PI / ( (float)numSpikes * (float)( pointsPerSpike - 1 ) );
+
+		const float peakAngle = startAngle + segmentInterval * ( (float)( pointsPerSpike - 1 ) * 0.5f );
+		p.push_back( V3f( 0, cos( peakAngle ), sin( peakAngle ) ) * outerRadius );
+
+		for( int j = 0; j < pointsPerSpike; ++j )
+		{
+			const float angle = startAngle + segmentInterval * (float)j;
+			p.push_back( V3f( 0, cos( angle ), sin( angle ) ) * innerRadius );
+		}
+	}
+
+	IntVectorDataPtr vertsPerCurveData = new IntVectorData( std::vector<int>( numSpikes, pointsPerSpike + 1 ) );
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive(
+		CubicBasisf::linear(), /* periodic = */ true, vertsPerCurveData
+	);
+
+	V3fVectorDataPtr pData = new V3fVectorData( p );
+	curves->addPrimitiveVariable( "P", PrimitiveVariable( PrimitiveVariable::FaceVarying, pData ) );
+
+	IECoreGL::GroupPtr result = new IECoreGL::Group();
+	addWireframeCurveState( result.get() );
+	result->addChild( curves );
+
+	return result;
+}
+
+IECoreGL::ConstRenderablePtr sunSurface( const float radius )
 {
 	const int numSpikes = 12;
 	const int segmentsPerSpike = 6;
 	const int numSegments = numSpikes * segmentsPerSpike;
-	const float innerRadius = 0.1f;
-	const float outerRadius = 0.15f;
+	const float innerRadius = 0.1f * radius;
+	const float outerRadius = 0.15f * radius;
 
 	std::vector<V3f> p;
 	p.reserve( numSegments * 3 );
@@ -613,7 +653,7 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 				colorIndicator( parameterOrDefault( lightParameters, g_sunTintParameter, Color3f( 1.f ) ) )
 			)
 		);
-		tintIndicatorGroup->setTransform( M44f().translate( sunPosition ) * M44f().scale( V3f( compassScale ) ) );
+		tintIndicatorGroup->setTransform( M44f().scale( V3f( drawShaded ? compassScale : 1.f ) ) * M44f().translate( sunPosition * compassScale ) );
 		result.push_back(
 			Visualisation::createOrnament(
 				tintIndicatorGroup,
@@ -628,8 +668,15 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 		// set the tint to `1.0` and set the color on the group.
 		addConstantShader( sunIndicatorGroup.get(), Color3f( 1.f ), 1 );
 		sunIndicatorGroup->getState()->add( new IECoreGL::Color( lightWireframeColor4( muted ) ), /* override = */ true );
-		sunIndicatorGroup->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( sunIndicator( lightWireframeColor( muted ) ) ) );
-		sunIndicatorGroup->setTransform( M44f().translate( sunPosition ) * M44f().scale( V3f( compassScale ) ) );
+		if( drawShaded )
+		{
+			sunIndicatorGroup->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( sunSurface( compassScale ) ) );
+		}
+		else
+		{
+			sunIndicatorGroup->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( sunWireframe( compassScale ) ) );
+		}
+		sunIndicatorGroup->setTransform( M44f().translate( sunPosition * compassScale ) );
 		result.push_back(
 			Visualisation::createOrnament(
 				sunIndicatorGroup,
