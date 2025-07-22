@@ -252,32 +252,39 @@ IECoreGL::ConstRenderablePtr sunWireframe( const float radius )
 IECoreGL::ConstRenderablePtr sunSurface( const float radius )
 {
 	const int numSpikes = 12;
-	const int segmentsPerSpike = 6;
-	const int numSegments = numSpikes * segmentsPerSpike;
+	const int pointsPerSpike = 7;
+	const float numTriangles = numSpikes * ( pointsPerSpike - 1 );
 	const float innerRadius = 0.1f * radius;
 	const float outerRadius = 0.15f * radius;
 
 	std::vector<V3f> p;
-	p.reserve( numSegments * 3 );
+	p.reserve( numTriangles * 3 );
 
-	for( int i = 0; i < numSegments; ++i )
+	for( int i = 0; i < numSpikes; ++i )
 	{
-		const float angle0 = 2 * M_PI * ( (float)i / (float)numSegments );
-		const float angle1 = 2 * M_PI * ( (float)( i + 1 ) / (float)numSegments );
-		const float angle2 = 2 * M_PI * ( (float)( ( segmentsPerSpike * ( i / segmentsPerSpike ) ) + ( segmentsPerSpike / 2 ) ) / (float)numSegments );
-		p.push_back( V3f( 0, cos( angle0 ), sin( angle0 ) ) * innerRadius );
-		p.push_back( V3f( 0, cos( angle1 ), sin( angle1 ) ) * innerRadius );
-		p.push_back( V3f( 0, cos( angle2 ), sin( angle2 ) ) * outerRadius );
+		const float startAngle = 2 * M_PI * ( (float)i / (float)numSpikes );
+		const float segmentInterval = 2 * M_PI / ( (float)numSpikes * (float)( pointsPerSpike - 1 ) );
+
+		const float peakAngle = startAngle + segmentInterval * ( (float)( pointsPerSpike - 1 ) * 0.5f );
+
+		for( int j = 0, eJ = pointsPerSpike - 1; j < eJ; ++j )
+		{
+			const float angle0 = startAngle + segmentInterval * (float)j;
+			const float angle1 = startAngle + segmentInterval * (float)( j + 1 );
+			p.push_back( V3f( 0, cos( peakAngle ), sin( peakAngle ) ) * outerRadius );
+			p.push_back( V3f( 0, cos( angle0 ), sin( angle0 ) ) * innerRadius );
+			p.push_back( V3f( 0, cos( angle1 ), sin( angle1 ) ) * innerRadius );
+		}
 	}
 
-	IECoreGL::MeshPrimitivePtr mesh = new IECoreGL::MeshPrimitive( numSegments );
-
-	V3fVectorDataPtr nData = new V3fVectorData( std::vector<V3f>( numSegments * 3, V3f( 1.f, 0.f, 0.f ) ) );
-	nData->setInterpretation( GeometricData::Interpretation::Normal );
-	mesh->addPrimitiveVariable( "N", PrimitiveVariable( PrimitiveVariable::FaceVarying, nData ) );
+	IECoreGL::MeshPrimitivePtr mesh = new IECoreGL::MeshPrimitive( numTriangles );
 
 	V3fVectorDataPtr pData = new V3fVectorData( p );
 	mesh->addPrimitiveVariable( "P", PrimitiveVariable( PrimitiveVariable::FaceVarying, pData ) );
+
+	V3fVectorDataPtr nData = new V3fVectorData( std::vector<V3f>( numTriangles * 3, V3f( 1.f, 0.f, 0.f ) ) );
+	nData->setInterpretation( GeometricData::Interpretation::Normal );
+	mesh->addPrimitiveVariable( "N", PrimitiveVariable( PrimitiveVariable::FaceVarying, nData ) );
 
 	IECoreGL::GroupPtr result = new IECoreGL::Group();
 	result->addChild( mesh );
