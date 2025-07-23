@@ -1358,6 +1358,126 @@ InspectorTree::Inspections optionsInspectionProvider( ScenePlug *scene, const Ga
 
 const InspectorTree::Registration g_optionsInspectionRegistration( { "Globals", "Options" }, optionsInspectionProvider );
 
+// Global Attribute Inspectors
+// ============================
+
+InspectorTree::Inspections globalAttributesInspectionProvider( ScenePlug *scene, const Gaffer::PlugPtr &editScope )
+{
+	InspectorTree::Inspections result;
+	ConstCompoundObjectPtr globals = scene->globalsPlug()->getValue();
+	for( const auto &[name, value] : globals->members() )
+	{
+		if( !boost::starts_with( name.string(), g_attributePrefix ) )
+		{
+			continue;
+		}
+
+		string optionName = name.string().substr( g_attributePrefix.size() );
+		InternedString category = g_other;
+		for( const auto &[pattern, matchingCategory] : g_attributeCategories )
+		{
+			if( StringAlgo::matchMultiple( optionName, pattern ) )
+			{
+				category = matchingCategory;
+				break;
+			}
+		}
+		result.push_back( {
+			{ category, optionName },
+			new GafferSceneUI::Private::BasicInspector(
+				scene->globalsPlug(), editScope,
+				[ name = name ] ( const CompoundObjectPlug *globalsPlug ) {
+					ConstCompoundObjectPtr globals = globalsPlug->getValue();
+					return globals->member( name );
+				}
+			)
+		} );
+	}
+	return result;
+}
+
+const InspectorTree::Registration g_globalAttributesInspectionRegistration( { "Globals", "Attributes" }, globalAttributesInspectionProvider );
+
+// Output Inspectors
+// =================
+
+const std::string g_outputPrefix( "output:" );
+
+InspectorTree::Inspections outputsInspectionProvider( ScenePlug *scene, const Gaffer::PlugPtr &editScope )
+{
+	InspectorTree::Inspections result;
+	ConstCompoundObjectPtr globals = scene->globalsPlug()->getValue();
+	for( const auto name : alphabeticallySortedKeys( globals->members() ) )
+	{
+		if( !boost::starts_with( name.string(), g_outputPrefix ) )
+		{
+			continue;
+		}
+
+		auto output = globals->member<Output>( name );
+		if( !output )
+		{
+			continue;
+		}
+
+		vector<InternedString> path = ScenePlug::stringToPath( name.string().substr( g_outputPrefix.size( ) ) );
+		path.push_back( "File Name" );
+		result.push_back( {
+			path,
+			new GafferSceneUI::Private::BasicInspector(
+				scene->globalsPlug(), editScope,
+				[ name = name ] ( const CompoundObjectPlug *globalsPlug ) {
+					ConstOutputPtr output = globalsPlug->getValue()->member<Output>( name );
+					return output ? new StringData( output->getName() ) : nullptr;
+				}
+			)
+		} );
+
+		path.back() = "Type";
+		result.push_back( {
+			path,
+			new GafferSceneUI::Private::BasicInspector(
+				scene->globalsPlug(), editScope,
+				[ name = name ] ( const CompoundObjectPlug *globalsPlug ) {
+					ConstOutputPtr output = globalsPlug->getValue()->member<Output>( name );
+					return output ? new StringData( output->getType() ) : nullptr;
+				}
+			)
+		} );
+
+		path.back() = "Data";
+		result.push_back( {
+			path,
+			new GafferSceneUI::Private::BasicInspector(
+				scene->globalsPlug(), editScope,
+				[ name = name ] ( const CompoundObjectPlug *globalsPlug ) {
+					ConstOutputPtr output = globalsPlug->getValue()->member<Output>( name );
+					return output ? new StringData( output->getData() ) : nullptr;
+				}
+			)
+		} );
+
+		path.back() = "Parameters"; path.resize( path.size() + 1 );
+		for( const auto parameterName : alphabeticallySortedKeys( output->parameters() ) )
+		{
+			path.back() = parameterName;
+			result.push_back( {
+				path,
+				new GafferSceneUI::Private::BasicInspector(
+					scene->globalsPlug(), editScope,
+					[ name = name, parameterName = parameterName ] ( const CompoundObjectPlug *globalsPlug ) {
+						ConstOutputPtr output = globalsPlug->getValue()->member<Output>( name );
+						return output ? output->parametersData()->member( parameterName ) : nullptr;
+					}
+				)
+			} );
+		}
+	}
+	return result;
+}
+
+const InspectorTree::Registration g_outputsInspectionRegistration( { "Globals", "Outputs" }, outputsInspectionProvider );
+
 // InspectorDiffColumn
 // ===================
 
