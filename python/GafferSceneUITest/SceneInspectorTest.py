@@ -34,44 +34,229 @@
 #
 ##########################################################################
 
+import string
+
 import Gaffer
+import GafferTest
 import GafferUITest
 import GafferScene
 import GafferSceneUI
+import GafferSceneTest
+
+from GafferSceneUI import _GafferSceneUI
 
 class SceneInspectorTest( GafferUITest.TestCase ) :
 
-	def testTarget( self ) :
+	def testInspectorPathContextProperties( self ) :
 
-		g = GafferScene.Grid()
-		t = GafferSceneUI.SceneInspector.Target( g["out"], "/grid" )
+		options = GafferScene.StandardOptions()
 
-		self.assertTrue( t.scene.isSame( g["out"] ) )
-		self.assertEqual( t.path, "/grid" )
+		contextA = Gaffer.Context()
+		contextB = Gaffer.Context()
 
-		p = GafferScene.Plane()
+		tree = _GafferSceneUI._SceneInspector.InspectorTree( options["out"], [ contextA, contextB ], None )
+		path = _GafferSceneUI._SceneInspector.InspectorPath( tree )
 
-		# Targets are read only
-		self.assertRaises( AttributeError, setattr, t, "scene", p["out"] )
-		self.assertRaises( AttributeError, setattr, t, "path", "/plane" )
+		self.assertIn( "inspector:contextA", path.propertyNames() )
+		self.assertIn( "inspector:contextB", path.propertyNames() )
+		self.assertTrue( path.contextProperty( "inspector:contextA" ).isSame( contextA ) )
+		self.assertTrue( path.contextProperty( "inspector:contextB" ).isSame( contextB ) )
 
-		# Targets cache their lookups
-		self.assertTrue( t.attributes().isSame( t.attributes() ) )
-		self.assertTrue( t.fullAttributes().isSame( t.fullAttributes() ) )
-		self.assertTrue( t.object().isSame( t.object() ) )
-		self.assertTrue( t.globals().isSame( t.globals() ) )
+		tree.setContexts( [ contextB, contextA ] )
+		self.assertTrue( path.contextProperty( "inspector:contextA" ).isSame( contextB ) )
+		self.assertTrue( path.contextProperty( "inspector:contextB" ).isSame( contextA ) )
 
-	def testTargetPathsAccessors( self ) :
+	def testInspectorPathOptions( self ) :
 
-		script = Gaffer.ScriptNode()
+		options = GafferScene.StandardOptions()
 
-		inspector = GafferSceneUI.SceneInspector( script )
-		self.assertEqual( inspector.getTargetPaths(), None )
+		tree = _GafferSceneUI._SceneInspector.InspectorTree( options["out"], [ Gaffer.Context(), Gaffer.Context() ], None )
+		optionsPath = _GafferSceneUI._SceneInspector.InspectorPath( tree, "/Globals/Options" )
 
-		inspector.setTargetPaths( [ "/plane" ] )
-		self.assertEqual( inspector.getTargetPaths(), [ "/plane" ] )
+		# Not valid yet, because there aren't any options in the scene.
+		self.assertFalse( optionsPath.isValid() )
 
-		self.assertRaises( Exception, inspector.setTargetPaths, [ "/too", "/many", "/paths" ] )
+		options["options"]["render:camera"]["enabled"].setValue( True )
+		self.assertTrue( optionsPath.isValid() )
+		self.assertEqual( { str( p ) for p in optionsPath.children() }, { "/Globals/Options/Standard" } )
+
+		optionsPath.setFromString( "/Globals/Options/Standard" )
+		self.assertTrue( optionsPath.isValid() )
+		self.assertEqual( { str( p ) for p in optionsPath.children() }, { "/Globals/Options/Standard/render:camera" } )
+
+		optionsPath.setFromString( "/Globals/Options/Standard/render:camera" )
+		self.assertTrue( optionsPath.isValid() )
+
+		inspector = optionsPath.property( "inspector:inspector" )
+		self.assertIsInstance( inspector, GafferSceneUI.Private.OptionInspector )
+		self.assertEqual( inspector.name(), "render:camera" )
+
+	def testInspectorPathChangedSignal( self ) :
+
+		options = GafferScene.StandardOptions()
+		options["user"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		context = Gaffer.Context()
+		tree = _GafferSceneUI._SceneInspector.InspectorTree( options["out"], [ context, context ], None )
+		path = _GafferSceneUI._SceneInspector.InspectorPath( tree )
+
+		cs = GafferTest.CapturingSlot( path.pathChangedSignal() )
+		self.assertEqual( len( cs ), 0 )
+
+		options["options"]["render:camera"]["enabled"].setValue( True )
+		self.assertEqual( len( cs ), 1 )
+
+		context2 = Gaffer.Context()
+		context2["test"] = 10
+		tree.setContexts( [ context2, context2 ] )
+		self.assertEqual( len( cs ), 2 )
+
+		options["user"]["p"].setValue( 10 )
+		self.assertEqual( len( cs ), 2 ) # Not dirtied again, since user plug doesn't affect scene
+
+	def testInspectorTreeSetContexts( self ) :
+
+		plane = GafferScene.Plane()
+
+		context1A = Gaffer.Context()
+		context1B = Gaffer.Context()
+
+		context2A = Gaffer.Context()
+		context2A["foo"] = 1
+		context2B = Gaffer.Context( context2A )
+
+		tree = _GafferSceneUI._SceneInspector.InspectorTree( plane["out"], [ context1A, context1A ], None )
+		dirtyings = GafferTest.CapturingSlot( tree.dirtiedSignal() )
+
+		# Not dirtied, because they're the exact same contexts.
+		tree.setContexts( [ context1A, context1A ] )
+		self.assertEqual( len( dirtyings ), 0 )
+		# Not dirtied, because they're contexts with the same values.
+		tree.setContexts( [ context1B, context1B ] )
+		tree.setContexts( [ context1A, context1B ] )
+		tree.setContexts( [ context1B, context1A ] )
+		self.assertEqual( len( dirtyings ), 0 )
+		# Dirted, because they're contexts with different values.
+		tree.setContexts( [ context2B, context1B ] )
+		self.assertEqual( len( dirtyings ), 1 )
+		tree.setContexts( [ context2A, context2B ] )
+		self.assertEqual( len( dirtyings ), 2 )
+
+	def testInspectorTreeRejectsNullContexts( self ) :
+
+		plane = GafferScene.Plane()
+
+		with self.assertRaisesRegex( RuntimeError, "Context must not be null" ) :
+			tree = _GafferSceneUI._SceneInspector.InspectorTree( plane["out"], [ None, None ], None )
+
+		tree = _GafferSceneUI._SceneInspector.InspectorTree( plane["out"], [ Gaffer.Context(), Gaffer.Context() ], None )
+		with self.assertRaisesRegex( RuntimeError, "Context must not be null" ) :
+			tree.setContexts( [ None, None ] )
+
+	def testInspectorPathWithNonExistentLocation( self ) :
+
+		plane = GafferScene.Plane()
+		context = Gaffer.Context()
+		context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/i/don't/exist" )
+
+		tree = _GafferSceneUI._SceneInspector.InspectorTree( plane["out"], [ context, context ], None )
+		path = _GafferSceneUI._SceneInspector.InspectorPath( tree, "/Location" )
+
+		self.assertEqual( path.children(), [] )
+
+	def testAttributesAreSortedAlphabetically( self ) :
+
+		plane = GafferScene.Plane()
+
+		attributes = GafferScene.CustomAttributes()
+		attributes["in"].setInput( plane["out"] )
+		for s in string.ascii_lowercase :
+			attributes["attributes"].addChild( Gaffer.NameValuePlug( s, s ) )
+
+		context = Gaffer.Context()
+		context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/plane" )
+
+		tree = _GafferSceneUI._SceneInspector.InspectorTree( attributes["out"], [ context, context ], None )
+		path = _GafferSceneUI._SceneInspector.InspectorPath( tree, "/Location/Attributes/Other" )
+		self.assertEqual(
+			"".join( [ c[-1] for c in path.children() ] ),
+			string.ascii_lowercase
+		)
+
+	def testInspectorPathWithoutScenePath( self ) :
+
+		plane = GafferScene.Plane()
+		context = Gaffer.Context()
+
+		tree = _GafferSceneUI._SceneInspector.InspectorTree( plane["out"], [ context, context ], None )
+		path = _GafferSceneUI._SceneInspector.InspectorPath( tree, "/Location" )
+
+		self.assertEqual( path.children(), [] )
+
+	def testDiffColumnCellData( self ) :
+
+		contextQuery = Gaffer.ContextQuery()
+		contextQuery.addQuery( Gaffer.StringPlug(), "camera" )
+
+		options = GafferScene.StandardOptions()
+		options["options"]["render:camera"]["enabled"].setValue( True )
+		options["options"]["render:camera"]["value"].setInput( contextQuery["out"][0]["value"] )
+
+		context1 = Gaffer.Context()
+		context1["camera"] = "camera1"
+
+		tree = _GafferSceneUI._SceneInspector.InspectorTree( options["out"], [ context1, context1 ], None )
+		path = _GafferSceneUI._SceneInspector.InspectorPath( tree, "/Globals/Options/Standard/render:camera" )
+
+		# A/B contexts are identical, so columns show identical values.
+
+		aColumn = _GafferSceneUI._SceneInspector.InspectorDiffColumn( _GafferSceneUI._SceneInspector.InspectorDiffColumn.DiffContext.A )
+		aCell = aColumn.cellData( path )
+		self.assertEqual( aCell.value, "camera1" )
+		self.assertIsNone( aCell.background )
+
+		bColumn = _GafferSceneUI._SceneInspector.InspectorDiffColumn( _GafferSceneUI._SceneInspector.InspectorDiffColumn.DiffContext.B )
+		bCell = bColumn.cellData( path )
+		self.assertEqual( bCell.value, aCell.value )
+		self.assertEqual( bCell.background, aCell.background )
+
+		# Change contexts
+
+		context2 = Gaffer.Context()
+		context2["camera"] = "camera2"
+		tree.setContexts( [ context1, context2 ] )
+
+		# Columns now show different values, and have background colours to
+		# highlight the difference.
+
+		aCell = aColumn.cellData( path )
+		self.assertEqual( aCell.value, "camera1" )
+		self.assertIsNotNone( aCell.background )
+
+		bCell = bColumn.cellData( path )
+		self.assertEqual( bCell.value, "camera2" )
+		self.assertIsNotNone( bCell.background )
+		self.assertNotEqual( bCell.background, aCell.background )
+
+	def testDiffColumnWithMixedScenePath( self ) :
+
+		plane = GafferScene.Plane()
+		scenePathContext = Gaffer.Context()
+		scenePathContext["scene:path"] = GafferScene.ScenePlug.stringToPath( "/plane" )
+
+		tree = _GafferSceneUI._SceneInspector.InspectorTree( plane["out"], [ Gaffer.Context(), scenePathContext ], None )
+		path = _GafferSceneUI._SceneInspector.InspectorPath( tree, "/Location/Bound/Local" )
+		self.assertTrue( path.isValid() )
+
+		aColumn = _GafferSceneUI._SceneInspector.InspectorDiffColumn( _GafferSceneUI._SceneInspector.InspectorDiffColumn.DiffContext.A )
+		self.assertIsNone( aColumn.cellData( path ).value )
+
+		bColumn = _GafferSceneUI._SceneInspector.InspectorDiffColumn( _GafferSceneUI._SceneInspector.InspectorDiffColumn.DiffContext.B )
+		self.assertIsNotNone( bColumn.cellData( path ).value )
+
+		tree.setContexts( list( reversed( tree.getContexts() ) ) )
+		self.assertIsNotNone( aColumn.cellData( path ).value )
+		self.assertIsNone( bColumn.cellData( path ).value )
 
 if __name__ == "__main__":
 	unittest.main()
