@@ -41,6 +41,8 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
+from . import _GafferSceneUI
+
 class _OperationIconColumn( GafferUI.PathColumn ) :
 
 	def __init__( self ) :
@@ -207,10 +209,15 @@ class _HistoryWindow( GafferUI.Window ) :
 			)
 		elif (
 			( selectedColumn == self.__valueColumnIndex or selectedColumn == self.__operationColumnIndex ) and
-			not isinstance( self.__inspector, GafferSceneUI.Private.SetMembershipInspector )
+			## \todo This is the same method _InspectorColumn.py uses to identify columns that shouldn't
+			# have popup editors shown for them, but we should be able to come up with a better way.
+			# Maybe SetMembershipInspector shouldn't even implement `source()`, since it doesn't meet the
+			# expectation that the plug could sensibly be shown to the user?
+			not isinstance( self.__inspectorColumn, _GafferSceneUI._LightEditorSetMembershipColumn )
 		) :
 			editPlug = selectedPath.property( "history:source" )
 			if editPlug is not None :
+				## \todo It would be nice to implement direct toggling for boolean values here.
 				self.__popup = GafferUI.PlugPopup(
 					[ editPlug ], warning = selectedPath.property( "history:editWarning" )
 				)
