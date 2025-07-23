@@ -504,7 +504,7 @@ def __dragEnter( column, path, pathListing, event ) :
 	if path is None :
 		return False
 
-	if not isinstance( event.data, IECore.Object ) :
+	if not isinstance( event.data, IECore.Object ) or isinstance( event.data, IECore.NullObject ) :
 		return False
 
 	inspection = column.inspect( path )

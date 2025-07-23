@@ -2341,7 +2341,8 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 				taskGroupContext
 			);
 
-			const auto &prototypeSetNames = prototypesPlug()->setNames()->readable();
+			ConstInternedStringVectorDataPtr prototypeSetNamesData = prototypesPlug()->setNames();
+			const auto &prototypeSetNames = prototypeSetNamesData->readable();
 			const IECore::MurmurHash prototypeSetsHash = tbb::parallel_reduce(
 				tbb::blocked_range<size_t>( 0, prototypeSetNames.size() ),
 				IECore::MurmurHash( 0, 0 ),
