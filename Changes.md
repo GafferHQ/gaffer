@@ -11,6 +11,8 @@ Features
   - Added subsections for options and attributes, splitting them by category.
   - Added column resizing, including automatic resizing to show long attribute names.
   - Added inspection of all shaders and parameters in shader networks.
+  - Added more detailed inspection of meshes and curves.
+  - Added more detailed inspection of primitive variables.
 
 Improvements
 ------------
