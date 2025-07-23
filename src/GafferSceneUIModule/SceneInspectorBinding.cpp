@@ -639,6 +639,64 @@ const boost::container::flat_map<string, InternedString> g_attributeCategories =
 
 const InternedString g_other( "Other" );
 
+void addShaderInspections( InspectorTree::Inspections &inspections, const vector<InternedString> &path, ScenePlug *scene, const Gaffer::PlugPtr &editScope, InternedString attributeName, const IECoreScene::ShaderNetwork *shaderNetwork )
+{
+	// Sort the shaders in the order you'd encounter them if you started
+	// at the final output and worked backwards up the connections.
+	vector<InternedString> orderedShaderHandles;
+	IECoreScene::ShaderNetworkAlgo::depthFirstTraverse(
+		shaderNetwork,
+		[&] ( const ShaderNetwork *network, InternedString shaderHandle ) {
+			orderedShaderHandles.push_back( shaderHandle );
+		}
+	);
+	std::reverse( orderedShaderHandles.begin(), orderedShaderHandles.end() );
+
+	// Add inspections for each shader and all of its parameters.
+
+	vector<InternedString> shaderPath = path;
+	shaderPath.push_back( InternedString() );
+
+	for( const auto shaderHandle : orderedShaderHandles )
+	{
+		const Shader *shader = shaderNetwork->getShader( shaderHandle );
+		shaderPath.back() = shaderHandle;
+
+		inspections.push_back( {
+
+			shaderPath,
+			new GafferSceneUI::Private::BasicInspector(
+				scene->attributesPlug(), editScope,
+				[attributeName, shaderHandle] ( const CompoundObjectPlug *attributesPlug ) -> ConstShaderPtr {
+					ConstCompoundObjectPtr attributes = attributesPlug->parent<ScenePlug>()->fullAttributes(
+						Context::current()->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName )
+					);
+					auto shaderNetwork = attributes->member<ShaderNetwork>( attributeName );
+					if( !shaderNetwork )
+					{
+						return nullptr;
+					}
+					return shaderNetwork->getShader( shaderHandle );
+				}
+			)
+
+		} );
+
+		vector<InternedString> parameterPath = shaderPath;
+		parameterPath.push_back( InternedString() );
+		for( const auto parameterName : alphabeticallySortedKeys( shader->parameters() ) )
+		{
+			parameterPath.back() = parameterName;
+			inspections.push_back( {
+				parameterPath,
+				new GafferSceneUI::Private::ParameterInspector(
+					scene, editScope, attributeName, { shaderHandle, parameterName }
+				)
+			} );
+		}
+	}
+}
+
 InspectorTree::Inspections attributeInspectionProvider( ScenePlug *scene, const Gaffer::PlugPtr &editScope )
 {
 	ConstCompoundObjectPtr attributes = scene->fullAttributes( Context::current()->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) );
@@ -657,6 +715,10 @@ InspectorTree::Inspections attributeInspectionProvider( ScenePlug *scene, const 
 			}
 		}
 		result.push_back( { { category, name }, new GafferSceneUI::Private::AttributeInspector( scene, editScope, name ) } );
+		if( auto shaderNetwork = attributes->member<const ShaderNetwork>( name ) )
+		{
+			addShaderInspections( result, { category, name }, scene, editScope, name, shaderNetwork );
+		}
 	}
 	return result;
 }

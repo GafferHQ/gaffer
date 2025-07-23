@@ -309,5 +309,72 @@ class SceneInspectorTest( GafferUITest.TestCase ) :
 		self.assertIsNotNone( aColumn.cellData( path ).value )
 		self.assertIsNone( bColumn.cellData( path ).value )
 
+	def testShaderInspections( self ) :
+
+		textureA = GafferSceneTest.TestShader( "TextureA" )
+		textureA.loadShader( "mix" )
+
+		textureB = GafferSceneTest.TestShader( "TextureB" )
+		textureB.loadShader( "mix" )
+
+		mix = GafferSceneTest.TestShader( "Mix" )
+		mix.loadShader( "mix" )
+		mix["parameters"]["a"].setInput( textureA["out"] )
+		mix["parameters"]["b"].setInput( textureB["out"] )
+
+		surface = GafferSceneTest.TestShader( "Surface" )
+		surface.loadShader( "simpleShader" )
+		surface["parameters"]["c"].setInput( mix["out"] )
+		surface["type"].setValue( "surface" )
+
+		plane = GafferScene.Plane()
+		shaderAssignment = GafferScene.ShaderAssignment()
+		shaderAssignment["in"].setInput( plane["out"] )
+		shaderAssignment["shader"].setInput( surface["out"] )
+
+		context = Gaffer.Context()
+		context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/plane" )
+
+		tree = _GafferSceneUI._SceneInspector.InspectorTree( shaderAssignment["out"], [ context, context ], None )
+		path = _GafferSceneUI._SceneInspector.InspectorPath( tree, "/Location/Attributes/Standard/surface" )
+
+		# The value should contain the entire shader network. This can't be shown in a single
+		# cell, but allows the diff column to show gross differences using the background
+		# colour.
+
+		with context :
+			shaderNetwork = shaderAssignment["out"]["attributes"].getValue()["surface"]
+
+		def inspectPath( path ) :
+
+			inspector = path.property( "inspector:inspector" )
+			context = path.contextProperty( "inspector:context" )
+			with context :
+				return inspector.inspect().value()
+
+		self.assertEqual( inspectPath( path ), shaderNetwork )
+
+		# We want the children ordered according to the network topology,
+		# closest to the output first.
+		childNames = [ c[-1] for c in path.children() ]
+		self.assertEqual( childNames[:2], [ "Surface", "Mix" ] )
+		self.assertEqual( set( childNames[2:] ), { "TextureA", "TextureB" } )
+		self.assertEqual( set( childNames ), set( shaderNetwork.shaders().keys() ) )
+
+		# And each child should have a value containing the shader, and then
+		# children for the shader parameters, ordered alphabetically.
+
+		for shaderPath in path.children() :
+			self.assertEqual( inspectPath( shaderPath ), shaderNetwork.getShader( shaderPath[-1] ) )
+			parameterPaths = shaderPath.children()
+			parameterNames = [ c[-1] for c in parameterPaths ]
+			self.assertEqual( set( parameterNames ), set( shaderNetwork.getShader( shaderPath[-1] ).parameters.keys() ) )
+			self.assertEqual( parameterNames, sorted( parameterNames ) )
+			for parameterPath in parameterPaths :
+				self.assertEqual(
+					inspectPath( parameterPath ),
+					shaderNetwork.getShader( shaderPath[-1] ).parameters[parameterPath[-1]]
+				)
+
 if __name__ == "__main__":
 	unittest.main()
