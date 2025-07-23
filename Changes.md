@@ -1,7 +1,10 @@
 1.5.x.x (relative to 1.5.16.0)
 =======
 
+Fixes
+-----
 
+- Instancer : Fixed potential crash with encapsulated instancers.
 
 1.5.16.0 (relative to 1.5.15.0)
 ========
