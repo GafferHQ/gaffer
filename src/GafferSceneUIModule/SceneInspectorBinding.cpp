@@ -565,6 +565,60 @@ class InspectorPath : public Gaffer::Path
 
 IE_CORE_DEFINERUNTIMETYPED( InspectorPath );
 
+// Transform inspectors
+// ====================
+
+InspectorTree::Inspections transformInspectionProvider( ScenePlug *scene, const Gaffer::PlugPtr &editScope )
+{
+	InspectorTree::Inspections result;
+	for( auto full : { false, true } )
+	{
+		vector<InternedString> path = { full ? "World" : "Local", "" };
+		for( auto component : { 'm', 't', 'r', 's', 'h' } )
+		{
+			switch( component )
+			{
+				case 'm' : path[1] = "Matrix"; break;
+				case 't' : path[1] = "Translate"; break;
+				case 'r' : path[1] = "Rotate"; break;
+				case 's' : path[1] = "Scale"; break;
+				case 'h' : path[1] = "Shear"; break;
+			}
+			result.push_back( {
+				path,
+				new GafferSceneUI::Private::BasicInspector(
+					scene->transformPlug(), editScope,
+					[full, component] ( const M44fPlug *transformPlug ) -> ConstDataPtr {
+						const M44f matrix =
+							full ?
+								transformPlug->parent<ScenePlug>()->fullTransform( Context::current()->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) )
+							:
+								transformPlug->getValue()
+						;
+						if( component == 'm' )
+						{
+							return new M44fData( matrix );
+						}
+
+						V3f s, h, r, t;
+						extractSHRT( matrix, s, h, r, t );
+						switch( component )
+						{
+							case 't' : return new V3fData( t );
+							case 'r' : return new V3fData( r );
+							case 's' : return new V3fData( s );
+							default : return new V3fData( h );
+						}
+					}
+				)
+			} );
+		}
+	}
+	return result;
+}
+
+const InspectorTree::Registration g_transformInspectionRegistration( { "Location", "Transform" }, transformInspectionProvider );
+
 // Bound inspectors
 // ================
 
