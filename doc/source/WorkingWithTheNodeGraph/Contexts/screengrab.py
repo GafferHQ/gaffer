@@ -139,9 +139,10 @@ __delay( 0.1 )
 # Concept: Querying results (Scene Inspector)
 with GafferUI.Window() as tempWindow :
 	tempSceneInspector = GafferSceneUI.SceneInspector( script )
-tempSceneInspector._SceneInspector__sections[2]._Section__collapsible.setCollapsed( False )
+tempSceneInspector._SceneInspector__locationPathListing.setExpansion( IECore.PathMatcher( [ "/Location/Transform", "/Location/Transform/Local" ] ) )
 tempWindow._qtWidget().resize( 512, 400 )
 tempWindow.setVisible( True )
+__delay( 0.1 )
 GafferUI.WidgetAlgo.grab( widget = tempSceneInspector, imagePath = "images/conceptContextsQueryingResultsSceneInspector.png" )
 tempWindow.close()
 del tempWindow

@@ -37,6 +37,7 @@
 import string
 
 import Gaffer
+import GafferUI
 import GafferTest
 import GafferUITest
 import GafferScene
@@ -237,6 +238,56 @@ class SceneInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( bCell.value, "camera2" )
 		self.assertIsNotNone( bCell.background )
 		self.assertNotEqual( bCell.background, aCell.background )
+
+	def testPathDirtying( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["plane"] = GafferScene.Plane()
+		script["sphere"] = GafferScene.Sphere()
+		script.setFocus( script["plane"] )
+
+		sceneInspector = GafferSceneUI.SceneInspector( script )
+		sceneInspector.setNodeSet( script.focusSet() )
+		sceneInspector.settings()["compare"]["scene"]["value"].setInput( script["sphere"]["out"] )
+
+		path = sceneInspector._SceneInspector__locationPathListing.getPath()
+		pathChanges = GafferTest.CapturingSlot( path.pathChangedSignal() )
+
+		# Changes to main input should always dirty the path.
+		script["plane"]["transform"]["translate"]["x"].setValue( 1 )
+		self.assertEqual( len( pathChanges ), 1 )
+
+		# Changes to the comparison scene should only dirty the
+		# path when comparison is enabled.
+
+		del pathChanges[:]
+		script["sphere"]["transform"]["translate"]["x"].setValue( 1 )
+		self.assertEqual( len( pathChanges ), 0 )
+
+		with Gaffer.DirtyPropagationScope() :
+			sceneInspector.settings()["compare"]["scene"]["enabled"].setValue( True )
+		self.assertEqual( len( pathChanges ), 1 )
+		script["sphere"]["transform"]["translate"]["x"].setValue( 2 )
+		self.assertEqual( len( pathChanges ), 2 )
+
+	def testNoComputationOnUIThread( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["plane"] = GafferScene.Plane()
+		script.setFocus( script["plane"] )
+
+		with Gaffer.ThreadMonitor() as monitor :
+
+			with GafferUI.Window() as window :
+
+				sceneInspector = GafferSceneUI.SceneInspector( script )
+				sceneInspector.setNodeSet( script.focusSet() )
+				sceneInspector.settings()["location"].setValue( "/plane" )
+
+			window.setVisible( True )
+			self.waitForIdle( 1000 )
+
+		self.assertNotIn( monitor.thisThreadId(), monitor.combinedStatistics() )
 
 	def testDiffColumnWithMixedScenePath( self ) :
 

@@ -104,9 +104,7 @@ Within the [scene paradigm](../../../AnatomyOfAScene/index.html#scene-hierarchy)
 - **Object:** A special camera object at the location. Instead of geometry, the object stores camera data, called parameters.
     - **Parameters:** The crucial values that define a camera, such as the perspective type, field of view/aperture, and depth of field settings. If defined, a special kind of optional parameter, called a **render override**, will supercede one of the scene's **[render options](../../../AnatomyOfAScene/index.html#options)** during computation and rendering.<br>
     ![](images/interfaceCameraParameters.png "Camera parameters in the Scene Inspector")
-- **Sets:** A list of sets the location belongs to. By default, every camera is assigned to an automatic "Cameras" set, accessible in the API by the `__cameras` variable.<br>
-    ![](images/interfaceCameraSets.png "Camera sets in the Scene Inspector")
-
+- **Sets:** A list of sets the location belongs to. By default, every camera is assigned to an automatic `__cameras` set, which contains all cameras.
 
 ### Data flow ###
 

@@ -1,6 +1,16 @@
 1.6.x.x (relative to 1.6.0.0a1)
 =======
 
+Features
+--------
+
+- SceneInspector :
+  - Rewrote using the same framework as LightEditor, AttributeEditor and RenderPassEditor.
+  - Added EditScope support, with in-place editing of attributes, options and shader parameters. Editing for other properties is planned for future versions.
+  - Improved comparison abilities, including the added ability to compare two render passes.
+  - Added subsections for options and attributes, splitting them by category.
+  - Added column resizing, including automatic resizing to show long attribute names.
+
 Improvements
 ------------
 
@@ -27,6 +37,10 @@ Breaking Changes
 
 - Arnold : Changed the naming of shader nodes in the generated Arnold scene.
 - Path : Removed `inspectionContext()` method. Use `contextProperty( "inspector:context" )` instead.
+- SceneInspector :
+  - Removed `setTargetPaths()` and `getTargetPaths()` methods. Use the `location` and `compare.location` settings plugs instead.
+  - Removed `registerSection()` method.
+  - Removed `Diff`, `SideBySideDiff`, `TextDiff`, `Row`, `Inspector`, `DiffRow`, `DiffColumn`, `Section`, `LocationSection`, `HistorySection` and `SetsSection` classes.
 
 [^1]: To be omitted from the notes for the final 1.6.0.0 release.
 

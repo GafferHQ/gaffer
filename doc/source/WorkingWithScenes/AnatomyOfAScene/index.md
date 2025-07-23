@@ -16,9 +16,9 @@ In common with most DCCs, Gaffer represents a 3D scene as a hierarchy or tree st
 
 ![](images/hierarchyView.png "The Hierarchy View with a location selected")
 
-Each location has a number of properties that describe the content of the scene at that point in the hierarchy. They can be inspected in the _Selection_ tab of the Scene Inspector. Each property of each location is computed independently, allowing Gaffer to generate the scene lazily on demand.
+Each location has a number of properties that describe the content of the scene at that point in the hierarchy. They can be inspected in the _Location_ tab of the Scene Inspector. Each property of each location is computed independently, allowing Gaffer to generate the scene lazily on demand.
 
-![](images/sceneInspector.png "All of a location's property sections in the Selection tab Scene Inspector")
+![](images/sceneInspector.png "All of a location's property sections in the Location tab of the Scene Inspector")
 
 > Important :
 > In this article, "property" only refers generically to a piece of data that describes a scene. It does not carry the more specific meanings from other DCCs.
