@@ -37,8 +37,6 @@
 #include "IECoreArnold/NodeAlgo.h"
 #include "IECoreArnold/ParameterAlgo.h"
 
-#include "IECoreScene/Renderer.h"
-
 #include "IECore/CompoundData.h"
 #include "IECore/Exception.h"
 #include "IECore/MessageHandler.h"

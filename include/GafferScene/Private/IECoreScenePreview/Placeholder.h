@@ -42,6 +42,8 @@
 
 #include "IECoreScene/VisibleRenderable.h"
 
+#include "IECore/Version.h"
+
 namespace IECoreScenePreview
 {
 
@@ -70,7 +72,9 @@ class GAFFERSCENE_API Placeholder : public IECoreScene::VisibleRenderable
 		const Imath::Box3f &getBound() const;
 
 		Imath::Box3f bound() const override;
-		void render( IECoreScene::Renderer *renderer ) const override;
+#if CORTEX_COMPATIBILITY_VERSION < MAKE_CORTEX_COMPATIBILITY_VERSION( 10, 6 )
+		void render( IECoreScene::Renderer *renderer ) const override {};
+#endif
 
 	private :
 
