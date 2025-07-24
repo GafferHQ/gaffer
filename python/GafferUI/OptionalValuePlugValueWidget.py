@@ -43,7 +43,7 @@ class OptionalValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 
-		GafferUI.PlugValueWidget.__init__( self, self.__row, plugs )
+		GafferUI.PlugValueWidget.__init__( self, self.__row, plugs, **kw )
 
 		self.__row.append(
 			GafferUI.BoolPlugValueWidget(

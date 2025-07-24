@@ -1061,6 +1061,14 @@ class RenderPassChooserWidget( GafferUI.Widget ) :
 
 RenderPassEditor.RenderPassChooserWidget = RenderPassChooserWidget
 
+# Supported metadata :
+#
+# - `renderPassPlugValueWidget:scene` : The name of a plug on the same node,
+#   used to provide the list of passes to choose from. If not specified, the
+#   focus node is used instead.
+#
+## \todo We should probably move this to its own file and expose it
+# publicly as `GafferSceneUI.RenderPassPlugValueWidget`.
 class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	## \todo We're cheekily reusing the Editor.Settings node here
@@ -1084,11 +1092,12 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__settings = self.Settings()
 		self.__settings.setName( "RenderPassPlugValueWidgetSettings" )
-		self.__settings["__scriptNode"].setInput( plug.node().scriptNode()["fileName"] )
 
 		self.__listContainer = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 
 		GafferUI.PlugValueWidget.__init__( self, self.__listContainer, plug, **kw )
+
+		self.__settings["__scriptNode"].setInput( self.scriptNode()["fileName"] )
 
 		with self.__listContainer :
 			if showLabel :
@@ -1100,18 +1109,12 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ),
 				highlightOnOver = False
 			)
-			# Ignore the width in X so MenuButton width is limited by the overall width of the widget
-			self.__menuButton._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
 
 		self.__currentRenderPass = ""
 		self.__renderPasses = {}
 
 		self.__displayGrouped = Gaffer.Metadata.value( plug, "renderPassPlugValueWidget:displayGrouped" ) or False
 		self.__hideDisabled = Gaffer.Metadata.value( plug, "renderPassPlugValueWidget:hideDisabled" ) or False
-
-		self.__focusChangedConnection = plug.node().scriptNode().focusChangedSignal().connect(
-			Gaffer.WeakMethod( self.__focusChanged ), scoped = True
-		)
 
 		self.__updateSettingsInput()
 		self.__updateMenuButton()
@@ -1180,6 +1183,10 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__busyWidget.setVisible( False )
 			self.__updateMenuButton()
 
+	def _updateFromMetadata( self ) :
+
+		self.__updateSettingsInput()
+
 	def _updateFromEditable( self ) :
 
 		self.__menuButton.setEnabled( self._editable() )
@@ -1235,7 +1242,7 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 			"/None",
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setCurrentRenderPass ), "" ),
-				"icon" : "activeRenderPass.png" if self.__currentRenderPass == "" else None,
+				"icon" : self.__activeRenderPassIcon() if self.__currentRenderPass == "" else None,
 			}
 		)
 
@@ -1283,13 +1290,24 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return ""
 
+	def __activeRenderPassIcon( self ) :
+
+		renderPassPlug = GafferSceneUI.ScriptNodeAlgo.acquireRenderPassPlug( self.scriptNode(), createIfMissing = False )
+		if renderPassPlug is not None and renderPassPlug["value"] in self.getPlugs() :
+			# The plug is driving the main ScriptNode context, so use a nice
+			# "context yellow" icon to signify this.
+			return "activeRenderPass.png"
+		else :
+			# The plug is just any old plug, so use regular menu styling.
+			return "menuChecked.png"
+
 	def __renderPassIcon( self, renderPass, activeIndicator = False ) :
 
 		if renderPass == "" :
 			return None
 
 		if activeIndicator and renderPass == self.__currentRenderPass :
-			return "activeRenderPass.png"
+			return self.__activeRenderPassIcon()
 		elif renderPass not in self.__renderPasses.get( "all", [] ) :
 			return "warningSmall.png"
 		elif renderPass in self.__renderPasses.get( "enabled", [] ) :
@@ -1304,17 +1322,30 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__menuButton.setText( self.__currentRenderPass or "None" )
 		self.__menuButton.setImage( self.__renderPassIcon( self.__currentRenderPass ) )
 
+	def __updateSettingsInput( self ) :
+
+		sceneMetadata = sole( Gaffer.Metadata.value( p, "renderPassPlugValueWidget:scene" ) for p in self.getPlugs() )
+		if sceneMetadata :
+			self.__focusChangedConnection = None
+			scenePlugs = [ p.node().descendant( sceneMetadata ) for p in self.getPlugs() ]
+			self.__settings["in"].setInput( next( p for p in scenePlugs if p is not None ) )
+		else :
+			self.__focusChangedConnection = self.scriptNode().focusChangedSignal().connect(
+				Gaffer.WeakMethod( self.__focusChanged ), scoped = True
+			)
+			self.__updateSettingsInputFromFocus()
+
 	def __focusChanged( self, scriptNode, node ) :
 
-		self.__updateSettingsInput()
+		self.__updateSettingsInputFromFocus()
 
-	def __updateSettingsInput( self ) :
+	def __updateSettingsInputFromFocus( self ) :
 
 		self.__settings["in"].setInput( self.__scenePlugFromFocus() )
 
 	def __scenePlugFromFocus( self ) :
 
-		focusNode = self.getPlug().node().scriptNode().getFocus()
+		focusNode = self.scriptNode().getFocus()
 
 		if focusNode is not None :
 			outputScene = next(
