@@ -238,14 +238,14 @@ class SwitchTest( GafferTest.TestCase ) :
 		script["s"]["in"][1].setInput( script["a2"]["sum"] )
 
 		# Should be using an internal connection for speed
-		self.assertTrue( script["s"]["out"].getInput() is not None )
+		self.assertIsNotNone( script["s"]["out"].getInput() )
 
 		script["expression"] = Gaffer.Expression()
 		script["expression"].setExpression( 'parent["s"]["index"] = int( context.getFrame() )' )
 
 		# Should not be using an internal connection, because the result
 		# varies with context.
-		self.assertTrue( script["s"]["out"].getInput() is None )
+		self.assertIsNone( script["s"]["out"].getInput() )
 
 		with script.context() :
 			script.context().setFrame( 0 )
@@ -257,7 +257,7 @@ class SwitchTest( GafferTest.TestCase ) :
 
 		# Should be using an internal connection for speed now the expression has
 		# been removed.
-		self.assertTrue( script["s"]["out"].getInput() is not None )
+		self.assertIsNotNone( script["s"]["out"].getInput() )
 
 	def testPassThroughWhenIndexConstant( self ) :
 
