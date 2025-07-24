@@ -64,6 +64,8 @@ Fixes
 - ScenePathPlugValueWidget :
   - Fixed context used to evaluate the scene. This is now focus-aware, so the scene browser only shows locations that are available with respect to the current focus.
   - Fixed bugs that prevented usage in `Editor.Settings` nodes.
+- SceneReader : Fixed bug reading USD cameras without authored shutter attributes. Previously, the loaded camera would have an unwanted shutter parameter, but now the shutter parameter is correctly omitted.
+- SceneWriter : Fixed bug writing cameras without a shutter parameter to USD. Previously shutter attributes were authored with default values, but now the shutter attributes are not authored at all.
 
 API
 ---
@@ -103,12 +105,13 @@ Breaking Changes
 - OSLObject, OSLImage, Expression : Removed support for file-based pointclouds.
 - ContextAlgo : Removed deprecated API. Use ScriptNodeAlgo instead, which has been available from Gaffer 1.4.13.0 onwards.
 - ScriptNodeAlgo : Reimplemented using Metadata rather than Context variables for storage. Use the ScriptNodeAlgo API instead of attempting direct access to `ui:*` context variables.
+- SceneReader, SceneWriter : Changed handling of missing shutter parameters. See Fixes section for more detail.
 
 Build
 -----
 
 - Boost : Updated to version 1.82.0.
-- Cortex : Updated to version 10.5.14.1.
+- Cortex : Updated to version 10.6.0.0a1.
 - Cycles : Updated to version 4.4.0.
 - FreeType : Updated to version 2.13.3.
 - LibRaw : Updated to version 0.21.4.
