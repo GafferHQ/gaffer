@@ -238,14 +238,14 @@ class SwitchTest( GafferTest.TestCase ) :
 		script["s"]["in"][1].setInput( script["a2"]["sum"] )
 
 		# Should be using an internal connection for speed
-		self.assertTrue( script["s"]["out"].getInput() is not None )
+		self.assertIsNotNone( script["s"]["out"].getInput() )
 
 		script["expression"] = Gaffer.Expression()
 		script["expression"].setExpression( 'parent["s"]["index"] = int( context.getFrame() )' )
 
 		# Should not be using an internal connection, because the result
 		# varies with context.
-		self.assertTrue( script["s"]["out"].getInput() is None )
+		self.assertIsNone( script["s"]["out"].getInput() )
 
 		with script.context() :
 			script.context().setFrame( 0 )
@@ -253,11 +253,23 @@ class SwitchTest( GafferTest.TestCase ) :
 			script.context().setFrame( 1 )
 			self.assertEqual( script["s"]["out"].getValue(), 2 )
 
+		# If we disable the node, then it doesn't matter what the index is,
+		# and the expression is irrelevant. So we should be using an
+		# internal connection again.
+
+		script["s"]["enabled"].setValue( False )
+		self.assertIsNotNone( script["s"]["out"].getInput() )
+
+		# Enable it again, and we should be back to computing.
+
+		script["s"]["enabled"].setValue( True )
+		self.assertIsNone( script["s"]["out"].getInput() )
+
 		del script["expression"]
 
 		# Should be using an internal connection for speed now the expression has
 		# been removed.
-		self.assertTrue( script["s"]["out"].getInput() is not None )
+		self.assertIsNotNone( script["s"]["out"].getInput() )
 
 	def testPassThroughWhenIndexConstant( self ) :
 

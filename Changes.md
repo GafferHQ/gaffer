@@ -34,6 +34,7 @@ Improvements
   - Improved performance when showing colour values.
   - Added support for showing spline values.
 - GafferUI : Added support for drag and dropping numeric vector data onto numeric vector plugs of compatible types ( For example, dropping a list of ints onto a FloatVectorDataPlug ).
+- Switch : Optimised disabled switches using a direct internal connection, even when the `index` is not constant.
 
 Fixes
 -----
