@@ -62,32 +62,38 @@ namespace
 
 Color3f blackbody( float kelvins )
 {
-	// Table borrowed from `UsdLuxBlackbodyTemperatureAsRgb()`, which in
+	// Ideally we'd use RenderMan's `RixColorTemperature` functions to get
+	// RGB from Kelvin, but that is only available for shader plugins.
+	// Since we can't use that, we use the table we've used elsewhere,
+	// borrowed from `UsdLuxBlackbodyTemperatureAsRgb()`, which in
 	// turn is borrowed from Colour Rendering of Spectra by John Walker.
+	// Color values have been converted from sRGB to ACEScg and normalized
+	// on the greatest channel value.
+
 	static SplinefColor3f g_spline(
 		CubicBasisf::catmullRom(),
 		{
-			{  1000.0f, Color3f( 1.000000f, 0.027490f, 0.000000f ) },
-			{  1000.0f, Color3f( 1.000000f, 0.027490f, 0.000000f ) },
-			{  1500.0f, Color3f( 1.000000f, 0.149664f, 0.000000f ) },
-			{  2000.0f, Color3f( 1.000000f, 0.256644f, 0.008095f ) },
-			{  2500.0f, Color3f( 1.000000f, 0.372033f, 0.067450f ) },
-			{  3000.0f, Color3f( 1.000000f, 0.476725f, 0.153601f ) },
-			{  3500.0f, Color3f( 1.000000f, 0.570376f, 0.259196f ) },
-			{  4000.0f, Color3f( 1.000000f, 0.653480f, 0.377155f ) },
-			{  4500.0f, Color3f( 1.000000f, 0.726878f, 0.501606f ) },
-			{  5000.0f, Color3f( 1.000000f, 0.791543f, 0.628050f ) },
-			{  5500.0f, Color3f( 1.000000f, 0.848462f, 0.753228f ) },
-			{  6000.0f, Color3f( 1.000000f, 0.898581f, 0.874905f ) },
-			{  6500.0f, Color3f( 1.000000f, 0.942771f, 0.991642f ) },
-			{  7000.0f, Color3f( 0.906947f, 0.890456f, 1.000000f ) },
-			{  7500.0f, Color3f( 0.828247f, 0.841838f, 1.000000f ) },
-			{  8000.0f, Color3f( 0.765791f, 0.801896f, 1.000000f ) },
-			{  8500.0f, Color3f( 0.715255f, 0.768579f, 1.000000f ) },
-			{  9000.0f, Color3f( 0.673683f, 0.740423f, 1.000000f ) },
-			{  9500.0f, Color3f( 0.638992f, 0.716359f, 1.000000f ) },
-			{ 10000.0f, Color3f( 0.609681f, 0.695588f, 1.000000f ) },
-			{ 10000.0f, Color3f( 0.609681f, 0.695588f, 1.000000f ) },
+			{  1000.0f, Color3f( 1.000000f, 0.117531f, 0.033965f ) },
+			{  1000.0f, Color3f( 1.000000f, 0.117531f, 0.033965f ) },
+			{  1500.0f, Color3f( 1.000000f, 0.142142f, 0.036718f ) },
+			{  2000.0f, Color3f( 1.000000f, 0.188965f, 0.042816f ) },
+			{  2500.0f, Color3f( 1.000000f, 0.268097f, 0.058378f ) },
+			{  3000.0f, Color3f( 1.000000f, 0.364075f, 0.087632f ) },
+			{  3500.0f, Color3f( 1.000000f, 0.466183f, 0.139475f ) },
+			{  4000.0f, Color3f( 1.000000f, 0.566143f, 0.220068f ) },
+			{  4500.0f, Color3f( 1.000000f, 0.658711f, 0.331499f ) },
+			{  5000.0f, Color3f( 1.000000f, 0.741232f, 0.471858f ) },
+			{  5500.0f, Color3f( 1.000000f, 0.812843f, 0.636389f ) },
+			{  6000.0f, Color3f( 1.000000f, 0.873825f, 0.819128f ) },
+			{  6500.0f, Color3f( 0.986339f, 0.912465f, 1.000000f ) },
+			{  7000.0f, Color3f( 0.823835f, 0.797532f, 1.000000f ) },
+			{  7500.0f, Color3f( 0.707631f, 0.710010f, 1.000000f ) },
+			{  8000.0f, Color3f( 0.621684f, 0.641759f, 1.000000f ) },
+			{  8500.0f, Color3f( 0.556315f, 0.587453f, 1.000000f ) },
+			{  9000.0f, Color3f( 0.505383f, 0.543478f, 1.000000f ) },
+			{  9500.0f, Color3f( 0.464866f, 0.507313f, 1.000000f ) },
+			{ 10000.0f, Color3f( 0.432048f, 0.477160f, 1.000000f ) },
+			{ 10000.0f, Color3f( 0.432048f, 0.477160f, 1.000000f ) },
 		}
 	);
 
