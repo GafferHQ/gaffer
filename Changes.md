@@ -1,5 +1,18 @@
-1.x.x.x (relative to 1.5.x.x)
+1.6.x.x (relative to 1.6.0.0a1)
 =======
+
+
+
+1.6.0.0a1 (relative to 1.5.16.1)
+=========
+
+> Caution : This release is not recommended for user testing. It is being provided primarily to allow early pipeline integration, such as adjusting to API changes and dependency updates. See Known Issues below.
+
+Known Issues
+------------
+
+- Node menu : Laggy search behaviour caused by the latest Qt update.
+- Arnold : Crashes related to recent dependency updates.
 
 Features
 --------
