@@ -71,6 +71,9 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 			self["compare"]["scene"] = Gaffer.OptionalValuePlug( valuePlug = GafferScene.ScenePlug() )
 			self["compare"]["renderPass"] = Gaffer.OptionalValuePlug( valuePlug = Gaffer.StringPlug() )
 
+			self["locationFilter"] = Gaffer.OptionalValuePlug( valuePlug = Gaffer.StringPlug() )
+			self["globalsFilter"] = Gaffer.OptionalValuePlug( valuePlug = Gaffer.StringPlug() )
+
 			# Stop the input scenes claiming that all locations exist when
 			# they don't have an input.
 			self["in"]["exists"].setValue( False )
@@ -157,6 +160,8 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 
 				with GafferUI.ListContainer( spacing = 4, borderWidth = 4, parenting = { "label" : "Location" } ) :
 
+					GafferUI.OptionalValuePlugValueWidget( self.settings()["locationFilter"] )
+
 					self.__locationPathListing = GafferUI.PathListingWidget(
 						_GafferSceneUI._SceneInspector.InspectorPath(
 							_GafferSceneUI._SceneInspector.InspectorTree(
@@ -173,6 +178,8 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 					)
 
 				with GafferUI.ListContainer( spacing = 4, borderWidth = 4, parenting = { "label" : "Globals" } ) :
+
+					GafferUI.OptionalValuePlugValueWidget( self.settings()["globalsFilter"] )
 
 					self.__globalsPathListing = GafferUI.PathListingWidget(
 						_GafferSceneUI._SceneInspector.InspectorPath(
@@ -218,6 +225,11 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 		) :
 			self.__lazyUpdateFromContexts()
 
+		if plug.isSame( self.settings()["locationFilter"] ) :
+			self.__updateFilter( self.__locationPathListing.getPath().tree(), plug )
+		elif plug.isSame( self.settings()["globalsFilter"] ) :
+			self.__updateFilter( self.__globalsPathListing.getPath().tree(), plug )
+
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __lazyUpdateFromContexts( self ) :
 
@@ -261,6 +273,17 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 			result[1]["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
 
 		return result
+
+	def __updateFilter( self, tree, plug ) :
+
+		if not plug["enabled"].getValue() or not plug["value"].getValue() :
+			pattern = "*"
+		else :
+			pattern = plug["value"].getValue()
+			if not IECore.StringAlgo.hasWildcards( pattern ) :
+				pattern = f"*{pattern}*"
+
+		tree.setFilter( pattern )
 
 GafferUI.Editor.registerType( "SceneInspector", SceneInspector )
 
@@ -329,6 +352,30 @@ Gaffer.Metadata.registerNode(
 			"layout:section", "TopRow",
 			"layout:width", 130,
 			"layout:index", -1,
+
+		],
+
+		"locationFilter.enabled" : [
+
+			"plugValueWidget:type", "GafferSceneUI.SceneInspector._FilterEnabledPlugValueWidget",
+
+		],
+
+		"locationFilter.value" : [
+
+			"stringPlugValueWidget:placeholderText", "Filter...",
+
+		],
+
+		"globalsFilter.enabled" : [
+
+			"plugValueWidget:type", "GafferSceneUI.SceneInspector._FilterEnabledPlugValueWidget",
+
+		],
+
+		"globalsFilter.value" : [
+
+			"stringPlugValueWidget:placeholderText", "Filter...",
 
 		],
 
@@ -805,3 +852,28 @@ class _ComparePlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__inputLabelWidget.connectToNodeSetWidget( self.ancestor( GafferUI.NodeSetEditor ) )
 
 SceneInspector._ComparePlugValueWidget = _ComparePlugValueWidget
+
+class _FilterEnabledPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plugs, **kw ) :
+
+		self.__button = GafferUI.Button( image = "search.png", hasFrame = False )
+		GafferUI.PlugValueWidget.__init__( self, self.__button, plugs, **kw )
+
+		self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
+
+	def _updateFromValues( self, values, exception ) :
+
+		on = bool( sole( values ) )
+		self.__button.setImage(
+			"searchOn.png" if on else "search.png"
+		)
+
+		self.setToolTip( "Click to {} filtering.".format( "disable" if on else "enable" ) )
+
+	def __buttonClicked( self, button ) :
+
+		for plug in self.getPlugs() :
+			plug.setValue( not plug.getValue() )
+
+SceneInspector._FilterEnabledPlugValueWidget = _FilterEnabledPlugValueWidget

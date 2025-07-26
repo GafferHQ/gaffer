@@ -127,7 +127,7 @@ class InspectorTree : public IECore::RefCounted
 		using Contexts = std::array<Gaffer::ConstContextPtr, 2>;
 
 		InspectorTree( const ScenePlugPtr &scene, const Contexts &contexts, const Gaffer::PlugPtr &editScope )
-			:	m_scene( scene ), m_editScope( editScope )
+			:	m_scene( scene ), m_editScope( editScope ), m_filter( "*" )
 		{
 			setContexts( contexts );
 			scene->node()->plugDirtiedSignal().connect( boost::bind( &InspectorTree::plugDirtied, this, ::_1 ) );
@@ -167,6 +167,31 @@ class InspectorTree : public IECore::RefCounted
 		const Contexts &getContexts() const
 		{
 			return m_contexts;
+		}
+
+		// It's easier for InspectorTree to do its own filter than it
+		// is to use a PathFilter, so that's what we do.
+		void setFilter( const IECore::StringAlgo::MatchPattern &filter )
+		{
+			bool dirty = false;
+			{
+				std::scoped_lock lock( m_mutex );
+				if( filter != m_filter )
+				{
+					m_filter = filter;
+					dirty = true;
+					m_rootItem.reset();
+				}
+			}
+			if( dirty )
+			{
+				m_dirtiedSignal();
+			}
+		}
+
+		const IECore::StringAlgo::MatchPattern &getFilter() const
+		{
+			return m_filter;
 		}
 
 		using DirtiedSignal = Gaffer::Signals::Signal<void ()>;
@@ -432,9 +457,18 @@ class InspectorTree : public IECore::RefCounted
 						continue;
 					}
 
-					TreeItem *inspectorRootItem = m_rootItem->insertDescendant( root );
+					TreeItem *inspectorRootItem = nullptr;
 					for( const auto &[subPath, inspector] : inspections )
 					{
+						if( !IECore::StringAlgo::matchMultiple( subPath.size() ? subPath.back() : root.back(), m_filter ) )
+						{
+							continue;
+						}
+
+						if( !inspectorRootItem )
+						{
+							inspectorRootItem = m_rootItem->insertDescendant( root );
+						}
 						TreeItem *inspectorItem = inspectorRootItem->insertDescendant( subPath );
 						inspectorItem->inspector = inspector;
 					}
@@ -463,6 +497,7 @@ class InspectorTree : public IECore::RefCounted
 		mutable std::mutex m_mutex;
 		mutable std::shared_ptr<TreeItem> m_rootItem;
 		Contexts m_contexts;
+		IECore::StringAlgo::MatchPattern m_filter;
 
 };
 
@@ -1578,6 +1613,12 @@ boost::python::tuple inspectorTreeGetContextsWrapper( InspectorTree &tree )
 	return boost::python::make_tuple( boost::const_pointer_cast<Context>( c[0] ), boost::const_pointer_cast<Context>( c[1] ) );
 }
 
+void inspectorTreeSetFilterWrapper( InspectorTree &tree, const IECore::StringAlgo::MatchPattern &filter )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	tree.setFilter( filter );
+}
+
 void inspectorTreeRegisterInspectorsWrapper( const vector<InternedString> &path, object pythonInspectionProvider )
 {
 	InspectorTree::InspectionProvider inspectionProvider = [pythonInspectionProvider] ( ScenePlug *scene, const Gaffer::PlugPtr &editScope ) {
@@ -1628,6 +1669,8 @@ void GafferSceneUIModule::bindSceneInspector()
 		)
 		.def( "setContexts", &inspectorTreeSetContextsWrapper )
 		.def( "getContexts", &inspectorTreeGetContextsWrapper )
+		.def( "setFilter", &inspectorTreeSetFilterWrapper )
+		.def( "getFilter", &InspectorTree::getFilter, return_value_policy<copy_const_reference>() )
 		.def( "dirtiedSignal", &InspectorTree::dirtiedSignal, return_internal_reference<1>() )
 		.def( "registerInspectors", &inspectorTreeRegisterInspectorsWrapper ).staticmethod( "registerInspectors" )
 	;
