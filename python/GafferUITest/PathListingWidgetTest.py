@@ -1622,6 +1622,57 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 				QtWidgets.QApplication.instance().setStyleSheet( oldStyle )
 				self.assertEqual( widget._qtWidget().header().sectionSize( 0 ) + 2, c.getSizes()[0] )
 
+	def testSetColumnsUpdatesPersistentIndices( self ) :
+
+		# Make a model with two columns, and expand it fully.
+
+		widget = GafferUI.PathListingWidget(
+			path = Gaffer.DictPath( { "child1" : 10 }, "/" ),
+			columns = [
+				GafferUI.PathListingWidget.StandardColumn( "Test", "test" ),
+				GafferUI.PathListingWidget.StandardColumn( "Test", "test" )
+			],
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+		)
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
+
+		model = widget._qtWidget().model()
+		self.__expandModel( model )
+
+		# Get persistent indices to items in each column.
+
+		indices = [
+			QtCore.QPersistentModelIndex( model.index( 0, c ) )
+			for c in range( 0, len( widget.getColumns() ) )
+		]
+
+		# Change the columns - adding two, moving one, and removing one.
+
+		widget.setColumns( [
+			GafferUI.PathListingWidget.StandardColumn( "Test", "test" ),
+			GafferUI.PathListingWidget.StandardColumn( "Test", "test" ),
+			widget.getColumns()[0]
+		] )
+
+		# Check that the persistent indices have been updated as expected.
+
+		self.assertTrue( indices[0].isValid() )
+		self.assertEqual( QtCore.QModelIndex( indices[0] ), model.index( 0, 2 ) )
+		self.assertFalse( indices[1].isValid() )
+
+		# Do the same, but this time reducing the number of columns and
+		# not keeping any of the originals.
+
+		indices = [
+			QtCore.QPersistentModelIndex( model.index( 0, c ) )
+			for c in range( 0, len( widget.getColumns() ) )
+		]
+
+		widget.setColumns( [ widget.defaultNameColumn ] )
+
+		for index in indices :
+			self.assertFalse( index.isValid() )
+
 	def testModelNameSortingDoesntEmitDataChanged( self ) :
 
 		path = self.InfinitePath( "/" )

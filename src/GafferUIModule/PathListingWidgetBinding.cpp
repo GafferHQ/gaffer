@@ -599,12 +599,15 @@ class PathModel : public QAbstractItemModel
 
 			// Build mapping from old columns to new columns.
 			std::vector<int> columnMapping( columns.size(), -1 );
-			for( size_t i = 0; i < columns.size(); ++i )
+			std::vector<int> columnForwardMapping( m_columns.size(), -1 );
+			for( size_t newColumnIndex = 0; newColumnIndex < columns.size(); ++newColumnIndex )
 			{
-				auto it = std::find( m_columns.begin(), m_columns.end(), columns[i] );
+				auto it = std::find( m_columns.begin(), m_columns.end(), columns[newColumnIndex] );
 				if( it != m_columns.end() )
 				{
-					columnMapping[i] = it - m_columns.begin();
+					const size_t oldColumnIndex = it - m_columns.begin();
+					columnForwardMapping[oldColumnIndex] = newColumnIndex;
+					columnMapping[newColumnIndex] = oldColumnIndex;
 				}
 			}
 
@@ -626,6 +629,24 @@ class PathModel : public QAbstractItemModel
 
 			m_rootItem->dirty( /* dirtyChildItems = */ false, /* dirtyData = */ true, &columnMapping );
 			shuffle( m_headerData, columnMapping );
+
+			QModelIndexList changedPersistentIndexesFrom = persistentIndexList();
+			QModelIndexList	changedPersistentIndexesTo; changedPersistentIndexesTo.reserve( changedPersistentIndexesFrom.size() );
+			for( const auto &index : changedPersistentIndexesFrom )
+			{
+				if( columnForwardMapping[index.column()] != -1 )
+				{
+					changedPersistentIndexesTo.push_back(
+						createIndex( index.row(), columnForwardMapping[index.column()], index.internalPointer() )
+					);
+				}
+				else
+				{
+					changedPersistentIndexesTo.push_back( QModelIndex() );
+				}
+			}
+			changePersistentIndexList( changedPersistentIndexesFrom, changedPersistentIndexesTo );
+
 			m_headerDataState = State::Dirty;
 			m_columns = columns;
 
