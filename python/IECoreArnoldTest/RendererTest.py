@@ -265,7 +265,13 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( len( shaders ), 4 )
 			shaderNames = [ arnold.AiNodeGetName( s ) for s in shaders ]
 			self.assertEqual( len( shaderNames ), 4 )
-			self.assertEqual( len( [ i for i in shaderNames if i.split(":")[-1] == "myHandle" ] ), 2 )
+			self.assertEqual( len( [ i for i in shaderNames if i.split(":")[1] == "myHandle" ] ), 2 )
+			for shaderName in shaderNames :
+				parts = shaderName.split( ":" )
+				self.assertEqual( len( parts ), 3 )
+				self.assertEqual( parts[0], "shader" )
+				self.assertTrue( parts[1] in shader1.shaders() or parts[1] in shader2.shaders() )
+				self.assertRegex( parts[2], "[a-f0-9]{32}" )
 
 	def testShaderConnections( self ) :
 
