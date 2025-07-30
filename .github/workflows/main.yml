@@ -60,7 +60,7 @@ jobs:
     env:
       ARNOLD_LICENSE_ORDER: none # Don't waste time looking for a license that doesn't exist
       ARNOLD_FORCE_ABORT_ON_LICENSE_FAIL: 0 # And don't abort because the license isn't found
-      GAFFERRENDERMAN_FEATURE_PREVIEW: 1
+      # GAFFERRENDERMAN_FEATURE_PREVIEW: 1
       GAFFER_BUILD_DIR: "./build"
       GAFFER_CACHE_DIR: "./sconsCache"
 
@@ -125,14 +125,14 @@ jobs:
         echo ONNX_ROOT=$GITHUB_WORKSPACE/onnxruntime >> $GITHUB_ENV
       shell: bash
 
-    - name: Install RenderMan
-      run: ./.github/workflows/main/installRenderMan.py --outputFormat "RMANTREE={rmanTree}" >> $GITHUB_ENV
-      shell: bash
-      env:
-        RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}
-        RENDERMAN_DOWNLOAD_PASSWORD: ${{ secrets.RENDERMAN_DOWNLOAD_PASSWORD }}
-        RENDERMAN_LICENSE_PASSPHRASE: ${{ secrets.RENDERMAN_LICENSE_PASSPHRASE }}
-      if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' }}
+    # - name: Install RenderMan
+    #   run: ./.github/workflows/main/installRenderMan.py --outputFormat "RMANTREE={rmanTree}" >> $GITHUB_ENV
+    #   shell: bash
+    #   env:
+    #     RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}
+    #     RENDERMAN_DOWNLOAD_PASSWORD: ${{ secrets.RENDERMAN_DOWNLOAD_PASSWORD }}
+    #     RENDERMAN_LICENSE_PASSPHRASE: ${{ secrets.RENDERMAN_LICENSE_PASSPHRASE }}
+    #   if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' }}
 
     - name: Install Mesa (Windows)
       # Installed after dependencies to avoid errors from python related to existing directory `bin`.
