@@ -3566,7 +3566,9 @@ class ArnoldGlobals
 			}
 			else if( name == g_statisticsFileNameOptionName )
 			{
+#if ARNOLD_VERSION_NUM < 70403
 				AiStatsSetMode( AI_STATS_MODE_OVERWRITE );
+#endif
 
 				if( value == nullptr )
 				{
