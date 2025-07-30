@@ -205,7 +205,7 @@ jobs:
             print( "Setting $ARNOLD_ROOT to '%s'" % arnoldRoot )
             f.write( 'ARNOLD_ROOT=%s\n' % arnoldRoot )
       env:
-        LD_DEBUG: bindings
+        # LD_DEBUG: bindings
         PYTHONUTF8: 1
         ARNOLD_DOWNLOAD_USER: ${{ secrets.ARNOLD_DOWNLOAD_USER }}
         ARNOLD_DOWNLOAD_PASSWORD: ${{ secrets.ARNOLD_DOWNLOAD_PASSWORD }}
