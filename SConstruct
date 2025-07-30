@@ -1629,6 +1629,15 @@ else :
 
 	libraries["GafferCycles"]["envAppends"]["LIBS"].extend( [ "dl" ] )
 
+	if env["PLATFORM"] == "posix" :
+		# Make sure our Arnold plugin links to `libstdc++` _before_ linking to
+		# `libai`. Otherwise we pick up symbols for `operator delete` and
+		# `operator new` from `libai`, which has its own internal allocator and
+		# exports the symbols from it. If we pick up the Arnold ones then we get
+		# mismatches where we allocate something with the standard allocator and
+		# then try to delete it with the Arnold one.
+		libraries["GafferArnoldPlugin"]["envAppends"]["LIBS"].insert( 0, "stdc++" )
+
 # Optionally add vTune requirements
 
 if os.path.exists( env.subst("$VTUNE_ROOT") ):
