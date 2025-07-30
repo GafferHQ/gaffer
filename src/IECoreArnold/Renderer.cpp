@@ -977,16 +977,16 @@ class ShaderCache : public IECore::RefCounted
 			Cache::accessor writeAccessor;
 			if( m_cache.insert( writeAccessor, h ) )
 			{
-				const std::string namePrefix = "shader:" + writeAccessor->first.toString();
+				const std::string nameFormat = "shader:{shaderHandle}:" + writeAccessor->first.toString();
 				if( hSubst != IECore::MurmurHash() )
 				{
 					IECoreScene::ShaderNetworkPtr substitutedShader = shader->copy();
 					ShaderNetworkAlgo::applySubstitutions( substitutedShader.get(), attributeName, attributes );
-					writeAccessor->second = new ArnoldShader( substitutedShader.get(), m_nodeDeleter, m_universe, namePrefix, m_parentNode );
+					writeAccessor->second = new ArnoldShader( substitutedShader.get(), m_nodeDeleter, m_universe, nameFormat, m_parentNode );
 				}
 				else
 				{
-					writeAccessor->second = new ArnoldShader( shader, m_nodeDeleter, m_universe, namePrefix, m_parentNode );
+					writeAccessor->second = new ArnoldShader( shader, m_nodeDeleter, m_universe, nameFormat, m_parentNode );
 				}
 			}
 			return writeAccessor->second;

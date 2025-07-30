@@ -50,6 +50,7 @@
 #include "IECore/VectorTypedData.h"
 
 #include "boost/algorithm/string/predicate.hpp"
+#include "boost/algorithm/string/replace.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/unordered_map.hpp"
 
@@ -94,8 +95,8 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 
 	// Create the AtNode for this shader output
 
-	string nodeName = name;
-	if( outputParameter != shaderNetwork->getOutput() )
+	string nodeName = boost::algorithm::replace_all_copy( name, "{shaderHandle}", outputParameter.shader.string() );
+	if( outputParameter != shaderNetwork->getOutput() && nodeName == name )
 	{
 		nodeName += ":" + outputParameter.shader.string();
 	}
