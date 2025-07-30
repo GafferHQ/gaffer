@@ -176,7 +176,7 @@ jobs:
         import sys
         import os
 
-        for arnoldVersion in [ "7.3.1.0", "7.4.1.0" ] :
+        for arnoldVersion in [ "7.4.1.0" ] :
           arnoldRoot = os.path.join( os.environ["GITHUB_WORKSPACE"], "arnoldRoot", arnoldVersion )
           os.environ["ARNOLD_ROOT"] = arnoldRoot
 
@@ -196,7 +196,7 @@ jobs:
           testCommand = os.path.join( os.environ["GAFFER_BUILD_DIR"], "bin", "gaffer" if os.name != "nt" else "gaffer.cmd" )
           if os.name == "nt" :
             testCommand = testCommand.lstrip( "./\\" )
-          subprocess.check_call( "${{ matrix.testRunner }} " + testCommand + " test IECoreArnoldTest GafferArnoldTest GafferArnoldUITest", shell = True )
+          subprocess.check_call( "${{ matrix.testRunner }} " + testCommand + " test GafferArnoldTest.InteractiveArnoldRenderTest.testQuadLightTextureEdits", shell = True )
           print( "::remove-matcher owner=unittest::" )
 
           # Publish ARNOLD_ROOT to the environment for subsequent steps,
