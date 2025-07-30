@@ -14,6 +14,7 @@ Improvements
 - AttributeTweaks, ShaderTweaks : Global attributes are now localised when `localise` is enabled and no matching attribute is found at the target location or any of its ancestors.
 - AttributeQuery, ShaderQuery : Global attributes are now queried when `inherit` is enabled and no matching attribute is found at the target location or any of its ancestors.
 - SphereLevelSet : Improved performance when evaluating the bounding box.
+- RenderPassMenu : Added a search menu which displays only the render passes matching the search text. The search menu can be disabled by registering the following metadata in a startup file. `Gaffer.Metadata.registerValue( Gaffer.ScriptNode, "variables.renderPass.value", "renderPassPlugValueWidget:searchable", False )`.
 
 Fixes
 -----

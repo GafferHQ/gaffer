@@ -1104,9 +1104,10 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 				GafferUI.Label( "Render Pass" )
 			self.__busyWidget = GafferUI.BusyWidget( size = 18 )
 			self.__busyWidget.setVisible( False )
+			searchable = Gaffer.Metadata.value( plug, "renderPassPlugValueWidget:searchable" )
 			self.__menuButton = GafferUI.MenuButton(
 				"",
-				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ),
+				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), searchable = searchable if searchable is not None else True ),
 				highlightOnOver = False
 			)
 
@@ -1208,9 +1209,9 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 		renderPasses = self.__renderPasses.get( "enabled", [] ) if self.__hideDisabled else self.__renderPasses.get( "all", [] )
 
 		if self.__renderPasses is None :
-			result.append( "/Refresh", { "command" : Gaffer.WeakMethod( self.__refreshMenu ) } )
+			result.append( "/Refresh", { "command" : Gaffer.WeakMethod( self.__refreshMenu ), "searchable" : False } )
 		elif len( renderPasses ) == 0 :
-			result.append( "/No Render Passes Available", { "active" : False } )
+			result.append( "/No Render Passes Available", { "active" : False, "searchable" : False } )
 		else :
 			groupingFn = GafferSceneUI.RenderPassEditor.pathGroupingFunction()
 			prefixes = IECore.PathMatcher()
@@ -1253,7 +1254,8 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 			{
 				"checkBox" : self.__displayGrouped,
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setDisplayGrouped ) ),
-				"description" : "Toggle grouped display of render passes."
+				"description" : "Toggle grouped display of render passes.",
+				"searchable" : False
 			}
 		)
 
@@ -1262,7 +1264,8 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 			{
 				"checkBox" : self.__hideDisabled,
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setHideDisabled ) ),
-				"description" : "Hide render passes disabled for rendering."
+				"description" : "Hide render passes disabled for rendering.",
+				"searchable" : False
 			}
 		)
 
