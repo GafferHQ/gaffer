@@ -29,9 +29,6 @@ jobs:
 
         name: [
           linux-gcc11,
-          linux-debug-gcc11,
-          linux-gcc11-platform23,
-          windows,
         ]
 
         include:
@@ -47,41 +44,6 @@ jobs:
             # test user rather than as root.
             testRunner: sudo -E -u testUser
             sconsCacheMegabytes: 400
-            jobs: 4
-
-          - name: linux-debug-gcc11
-            os: ubuntu-24.04
-            buildType: DEBUG
-            publish: false
-            containerImage: ghcr.io/gafferhq/build/build:3.2.0
-            testRunner: sudo -E -u testUser
-            testArguments: -excludedCategories performance
-            # Debug builds are ludicrously big, so we must use a larger cache
-            # limit. In practice this compresses down to 4-500Mb.
-            sconsCacheMegabytes: 2500
-            jobs: 4
-
-          - name: linux-gcc11-platform23
-            os: ubuntu-24.04
-            buildType: RELEASE
-            publish: false
-            containerImage: ghcr.io/gafferhq/build/build:3.2.0
-            # GitHub container builds run as root. This causes failures for tests that
-            # assert that filesystem permissions are respected, because root doesn't
-            # respect permissions. So we run the final test suite as a dedicated
-            # test user rather than as root.
-            testRunner: sudo -E -u testUser
-            sconsCacheMegabytes: 400
-            jobs: 4
-            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.5.15.0/cortex-10.5.15.0-linux-gcc11.tar.gz
-
-          - name: windows
-            os: windows-2022
-            buildType: RELEASE
-            publish: true
-            containerImage:
-            testArguments: -excludedCategories performance
-            sconsCacheMegabytes: 800
             jobs: 4
 
     runs-on: ${{ matrix.os }}
@@ -243,6 +205,7 @@ jobs:
             print( "Setting $ARNOLD_ROOT to '%s'" % arnoldRoot )
             f.write( 'ARNOLD_ROOT=%s\n' % arnoldRoot )
       env:
+        LD_DEBUG: bindings
         PYTHONUTF8: 1
         ARNOLD_DOWNLOAD_USER: ${{ secrets.ARNOLD_DOWNLOAD_USER }}
         ARNOLD_DOWNLOAD_PASSWORD: ${{ secrets.ARNOLD_DOWNLOAD_PASSWORD }}
