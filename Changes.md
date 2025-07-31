@@ -20,6 +20,7 @@ Improvements
 - Arnold : Improved readability of shader node names as they appear in statistics and `.ass` files. They are now formatted as `shader:{handle}:{uniqueId}` where `{handle}` is the Gaffer node name of the assigned shader, or if loaded from USD, the prim name.
 - PrimitiveInspector : Added `location` widget for selecting the location to be inspected.
 - OptionalValuePlugValueWidget : The widget for the `enabled` plug can now be customised using `plugValueWidget:type` metadata.
+- PathListingWidget : Improved formatting of TypedVectorData.
 
 Fixes
 -----
