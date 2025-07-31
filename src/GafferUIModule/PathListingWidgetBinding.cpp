@@ -507,6 +507,26 @@ struct CellVariants
 IECore::InternedString g_nameProperty( "name" );
 IECore::InternedString g_childPlaceholder( "childPlaceholder" );
 
+template<typename T>
+void shuffle( std::vector<T> &values, const std::vector<int> &mapping )
+{
+	std::vector<T> shuffledValues;
+	shuffledValues.reserve( mapping.size() );
+	for( auto i : mapping )
+	{
+		if( i >= 0 && i < (int)values.size() )
+		{
+			shuffledValues.push_back( std::move( values[i] ) );
+		}
+		else
+		{
+			shuffledValues.push_back( T() );
+		}
+	}
+
+	values.swap( shuffledValues );
+}
+
 // A QAbstractItemModel for the navigation of Gaffer::Paths.
 // This allows us to view Paths in QTreeViews. This forms part
 // of the internal implementation of PathListingWidget, the rest
@@ -554,42 +574,95 @@ class PathModel : public QAbstractItemModel
 
 		void setColumns( const std::vector<GafferUI::PathColumnPtr> columns )
 		{
-			/// \todo Maintain persistent indices etc
-			/// using `m_rootItem->update()`.
-
 			// Cancel update and flush edit queue before we destroy
 			// the items they reference.
 			cancelUpdate();
 
-			beginResetModel();
-
+			// Connect to signals on new columns so we can update when they are
+			// changed.
 			m_columnChangedConnections.clear();
-
-			// Keep track of selections that are common between the current and incoming columns
-			Selection newSelection( columns.size(), IECore::PathMatcher() );
-			for( size_t i = 0; i < columns.size(); ++i )
-			{
-				auto it = std::find( m_columns.begin(), m_columns.end(), columns[i] );
-				if( it != m_columns.end() )
-				{
-					newSelection[i] = m_selection[ it - m_columns.begin() ];
-				}
-			}
-			setSelection( newSelection );
-
-			m_columns = columns;
-			for( const auto &c : m_columns )
+			for( const auto &c : columns )
 			{
 				m_columnChangedConnections.push_back(
 					c->changedSignal().connect( boost::bind( &PathModel::columnChanged, this ) )
 				);
 			}
 
-			m_rootItem = new Item( IECore::InternedString(), nullptr );
-			m_headerData.clear();
-			m_headerDataState = State::Unrequested;
+			// Deal with the simple case where we are being initialised for the
+			// first time.
+			if( !m_columns.size() && !m_rootPath && !m_selection.size() )
+			{
+				m_columns = columns;
+				m_selection.resize( m_columns.size() );
+				return;
+			}
 
-			endResetModel();
+			// Build mapping from old columns to new columns.
+			std::vector<int> columnMapping( columns.size(), -1 );
+			std::vector<int> columnForwardMapping( m_columns.size(), -1 );
+			for( size_t newColumnIndex = 0; newColumnIndex < columns.size(); ++newColumnIndex )
+			{
+				auto it = std::find( m_columns.begin(), m_columns.end(), columns[newColumnIndex] );
+				if( it != m_columns.end() )
+				{
+					const size_t oldColumnIndex = it - m_columns.begin();
+					columnForwardMapping[oldColumnIndex] = newColumnIndex;
+					columnMapping[newColumnIndex] = oldColumnIndex;
+				}
+			}
+
+			// Dirty state and assign `m_columns`. We need to do this inside an
+			// `insert/removeColumn()` block so Qt knows what is going on.
+
+			auto rootIndex = indexForPath( m_rootPath->names() );
+			decltype( &PathModel::endInsertColumns ) endFunction = nullptr;
+			if( columns.size() > m_columns.size() )
+			{
+				beginInsertColumns( rootIndex, m_columns.size(), columns.size() - 1 );
+				endFunction = &PathModel::endInsertColumns;
+			}
+			else if( columns.size() < m_columns.size() )
+			{
+				beginRemoveColumns( rootIndex, columns.size(), m_columns.size() - 1 );
+				endFunction = &PathModel::endRemoveColumns;
+			}
+
+			m_rootItem->dirty( /* dirtyChildItems = */ false, /* dirtyData = */ true, &columnMapping );
+			shuffle( m_headerData, columnMapping );
+
+			QModelIndexList changedPersistentIndexesFrom = persistentIndexList();
+			QModelIndexList	changedPersistentIndexesTo; changedPersistentIndexesTo.reserve( changedPersistentIndexesFrom.size() );
+			for( const auto &index : changedPersistentIndexesFrom )
+			{
+				if( columnForwardMapping[index.column()] != -1 )
+				{
+					changedPersistentIndexesTo.push_back(
+						createIndex( index.row(), columnForwardMapping[index.column()], index.internalPointer() )
+					);
+				}
+				else
+				{
+					changedPersistentIndexesTo.push_back( QModelIndex() );
+				}
+			}
+			changePersistentIndexList( changedPersistentIndexesFrom, changedPersistentIndexesTo );
+
+			m_headerDataState = State::Dirty;
+			m_columns = columns;
+
+			if( endFunction )
+			{
+				std::invoke( endFunction, this );
+			}
+
+			// Schedule update to process the dirtied items.
+			scheduleUpdate();
+
+			// Update selection. We do this last so observers see our
+			// final state in `selectionChangedSignal()`.
+			Selection newSelection = m_selection;
+			shuffle( newSelection, columnMapping );
+			setSelection( newSelection, /* scrollToFirst = */ false );
 		}
 
 		const std::vector<GafferUI::PathColumnPtr> &getColumns() const
@@ -858,6 +931,7 @@ class PathModel : public QAbstractItemModel
 
 		void expansionChanged();
 		void selectionChanged();
+		void headerUpdateFinished();
 		void updateFinished();
 
 		///////////////////////////////////////////////////////////////////
@@ -1064,6 +1138,14 @@ class PathModel : public QAbstractItemModel
 					{
 						const IECore::Canceller *canceller = Context::current()->canceller();
 						updateHeaderData( canceller );
+						queueEdit(
+							[this] () {
+								if( !m_blockUpdateFinished )
+								{
+									headerUpdateFinished();
+								}
+							}
+						);
 						m_rootItem->updateWalk( this, workingPath.get(), expandedPaths, canceller );
 						queueEdit(
 							[this] () {
@@ -1280,12 +1362,12 @@ class PathModel : public QAbstractItemModel
 				return m_name;
 			}
 
-			void dirty( bool dirtyChildItems = true, bool dirtyData = true )
+			void dirty( bool dirtyChildItems = true, bool dirtyData = true, const std::vector<int> *dataMapping = nullptr )
 			{
 				// This is just intended to be called on the root item by the
 				// PathModel when the path changes.
 				assert( !m_parent );
-				dirtyWalk( dirtyChildItems, dirtyData );
+				dirtyWalk( dirtyChildItems, dirtyData, dataMapping );
 			}
 
 			void dirtyExpansion()
@@ -1386,11 +1468,15 @@ class PathModel : public QAbstractItemModel
 
 			private :
 
-				void dirtyWalk( bool dirtyChildItems, bool dirtyData )
+				void dirtyWalk( bool dirtyChildItems, bool dirtyData, const std::vector<int> *dataMapping )
 				{
 					if( dirtyData && ( m_dataState == State::Clean ) )
 					{
 						m_dataState = State::Dirty;
+					}
+					if( dataMapping )
+					{
+						shuffle( m_data, *dataMapping );
 					}
 					if( dirtyChildItems && ( m_childItemsState == State::Clean ) )
 					{
@@ -1398,7 +1484,7 @@ class PathModel : public QAbstractItemModel
 					}
 					for( const auto &child : *m_childItems )
 					{
-						child->dirtyWalk( dirtyChildItems, dirtyData );
+						child->dirtyWalk( dirtyChildItems, dirtyData, dataMapping );
 					}
 				}
 
