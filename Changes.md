@@ -6,10 +6,17 @@ Improvements
 
 - Arnold : Improved readability of shader node names as they appear in statistics and `.ass` files. They are now formatted as `shader:{handle}:{uniqueId}` where `{handle}` is the Gaffer node name of the assigned shader, or if loaded from USD, the prim name.
 
+Fixes
+-----
+
+- Arnold : Fixed crashes caused by conflicts with Arnold's internal memory allocator [^1].
+
 Breaking Changes
 ----------------
 
 - Arnold : Changed the naming of shader nodes in the generated Arnold scene.
+
+[^1]: To be omitted from the notes for the final 1.6.0.0 release.
 
 1.6.0.0a1 (relative to 1.5.16.1)
 =========
