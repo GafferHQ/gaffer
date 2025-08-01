@@ -79,11 +79,11 @@ class GAFFERSCENE_API ScenePath : public Gaffer::Path
 
 		bool isValid( const IECore::Canceller *canceller = nullptr ) const override;
 		bool isLeaf( const IECore::Canceller *canceller = nullptr ) const override;
+		void propertyNames( std::vector<IECore::InternedString> &names, const IECore::Canceller *canceller = nullptr ) const override;
+		Gaffer::ConstContextPtr contextProperty( const IECore::InternedString &name, const IECore::Canceller *canceller = nullptr ) const override;
 		Gaffer::PathPtr copy() const override;
 
 		const Gaffer::Plug *cancellationSubject() const override;
-
-		Gaffer::ContextPtr inspectionContext( const IECore::Canceller *canceller = nullptr ) const override;
 
 		static Gaffer::PathFilterPtr createStandardFilter( const std::vector<std::string> &setNames = std::vector<std::string>(), const std::string &setsLabel = "" );
 

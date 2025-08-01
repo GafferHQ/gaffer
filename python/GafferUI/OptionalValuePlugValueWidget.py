@@ -46,10 +46,7 @@ class OptionalValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.__init__( self, self.__row, plugs, **kw )
 
 		self.__row.append(
-			GafferUI.BoolPlugValueWidget(
-				{ plug["enabled"] for plug in self.getPlugs() },
-				displayMode = GafferUI.BoolWidget.DisplayMode.Switch,
-			),
+			GafferUI.PlugValueWidget.create( { plug["enabled"] for plug in self.getPlugs() } ),
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top
 		)
 
@@ -83,3 +80,5 @@ class OptionalValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__row[1].setEnabled( all( values ) )
 
 GafferUI.PlugValueWidget.registerType( Gaffer.OptionalValuePlug, OptionalValuePlugValueWidget )
+
+Gaffer.Metadata.registerValue( Gaffer.OptionalValuePlug, "enabled", "boolPlugValueWidget:displayMode", "switch" )

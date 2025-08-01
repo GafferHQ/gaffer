@@ -744,5 +744,16 @@ class InspectorColumnTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( historyPath.children() ), 1 )
 		self.assertEqual( historyPath.children()[0].property( "history:node" ), plane )
 
+	def testInspectorContextFromPath( self ) :
+
+		plane = GafferScene.Plane()
+		inspector = GafferSceneUI.Private.BasicInspector( plane["out"]["object"], None, lambda objectPlug : objectPlug.getValue() )
+		column = GafferSceneUI.Private.InspectorColumn( inspector, "label", "help!" )
+		path = GafferScene.ScenePath( plane["out"], Gaffer.Context(), "/plane" )
+		self.assertEqual(
+			column.inspectorContext( path )["scene:path"],
+			IECore.InternedStringVectorData( [ "plane" ] )
+		)
+
 if __name__ == "__main__":
 	unittest.main()

@@ -92,6 +92,13 @@ boost::python::object property( const T &p, const IECore::InternedString &name, 
 }
 
 template<typename T>
+Gaffer::ContextPtr contextProperty( const T &p, const IECore::InternedString &name, const IECore::Canceller *canceller )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return boost::const_pointer_cast<Gaffer::Context>( p.T::contextProperty( name, canceller ) );
+}
+
+template<typename T>
 boost::python::object info( boost::python::object o )
 {
 	const T &p = boost::python::extract<const T &>( o );
@@ -179,6 +186,7 @@ PathClass<T, TWrapper>::PathClass( const char *docString )
 	this->def( "isLeaf", &Detail::isLeaf<T>, boost::python::arg( "canceller" ) = boost::python::object() );
 	this->def( "propertyNames", &Detail::propertyNames<T>, boost::python::arg( "canceller" ) = boost::python::object() );
 	this->def( "property", &Detail::property<T>, ( boost::python::arg( "name" ), boost::python::arg( "canceller" ) = boost::python::object() ) );
+	this->def( "contextProperty", &Detail::contextProperty<T>, ( boost::python::arg( "name" ), boost::python::arg( "canceller" ) = boost::python::object() ) );
 	this->def( "cancellationSubject", &Detail::cancellationSubject<T> );
 	// Backwards compatibility with deprecated Path.info()
 	// method from original python implementation.

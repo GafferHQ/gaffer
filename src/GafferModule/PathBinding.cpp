@@ -223,6 +223,27 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 			return WrappedType::property( name, canceller );
 		}
 
+		Gaffer::ConstContextPtr contextProperty( const IECore::InternedString &name, const IECore::Canceller *canceller = nullptr ) const override
+		{
+			if( this->isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				try
+				{
+					boost::python::object f = this->methodOverride( "contextProperty" );
+					if( f )
+					{
+						return extract<Gaffer::ConstContextPtr>( f( name.c_str(), boost::python::ptr( canceller ) ) );
+					}
+				}
+				catch( const error_already_set & )
+				{
+					ExceptionAlgo::translatePythonException();
+				}
+			}
+			return WrappedType::contextProperty( name, canceller );
+		}
+
 		PathPtr copy() const override
 		{
 			if( this->isSubclassed() )
@@ -267,27 +288,6 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 				}
 			}
 			return WrappedType::cancellationSubject();
-		}
-
-		ContextPtr inspectionContext( const IECore::Canceller *canceller = nullptr ) const override
-		{
-			if( this->isSubclassed() )
-			{
-				IECorePython::ScopedGILLock gilLock;
-				try
-				{
-					boost::python::object f = this->methodOverride( "inspectionContext" );
-					if( f )
-					{
-						return extract<ContextPtr>( f( boost::python::ptr( canceller ) ) );
-					}
-				}
-				catch( const error_already_set & )
-				{
-					ExceptionAlgo::translatePythonException();
-				}
-			}
-			return WrappedType::inspectionContext();
 		}
 
 		void doChildren( std::vector<PathPtr> &children, const IECore::Canceller *canceller = nullptr ) const override
@@ -575,7 +575,6 @@ void GafferModule::bindPath()
 			.def( "setFromString", &Path::setFromString, return_self<>() )
 			.def( "append", &Path::append, return_self<>() )
 			.def( "truncateUntilValid", &Path::truncateUntilValid, return_self<>() )
-			.def( "inspectionContext", &Path::inspectionContext, ( arg_( "path" ), arg_( "canceller" ) = object() ) )
 			.def( "__str__", &Path::string )
 			.def( "__repr__", &pathRepr )
 			.def( "__len__", &pathLength )

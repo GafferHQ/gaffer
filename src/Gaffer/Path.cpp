@@ -127,6 +127,11 @@ IECore::ConstRunTimeTypedPtr Path::property( const IECore::InternedString &name,
 	return nullptr;
 }
 
+ConstContextPtr Path::contextProperty( const IECore::InternedString &name, const IECore::Canceller *canceller ) const
+{
+	return nullptr;
+}
+
 PathPtr Path::parent() const
 {
 	if( m_names.empty() )
@@ -375,11 +380,6 @@ bool Path::operator != ( const Path &other ) const
 }
 
 const Plug *Path::cancellationSubject() const
-{
-	return nullptr;
-}
-
-ContextPtr Path::inspectionContext( const IECore::Canceller *canceller ) const
 {
 	return nullptr;
 }

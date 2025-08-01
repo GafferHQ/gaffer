@@ -47,6 +47,7 @@
 #include "SetEditorBinding.h"
 #include "RenderPassEditorBinding.h"
 #include "InspectorColumnBinding.h"
+#include "SceneInspectorBinding.h"
 #include "ScriptNodeAlgoBinding.h"
 
 using namespace GafferSceneUIModule;
@@ -66,5 +67,6 @@ BOOST_PYTHON_MODULE( _GafferSceneUI )
 	bindSetEditor();
 	bindRenderPassEditor();
 	bindScriptNodeAlgo();
+	bindSceneInspector();
 
 }

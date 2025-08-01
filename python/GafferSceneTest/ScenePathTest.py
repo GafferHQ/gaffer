@@ -297,7 +297,7 @@ class ScenePathTest( GafferSceneTest.SceneTestCase ) :
 		plane = GafferScene.Plane()
 		path = GafferScene.ScenePath( plane["out"], Gaffer.Context(), "/plane" )
 
-		inspectionContext = path.inspectionContext()
+		inspectionContext = path.contextProperty( "inspector:context" )
 		self.assertIsNotNone( inspectionContext )
 		self.assertIn( "scene:path", inspectionContext )
 		self.assertEqual( inspectionContext["scene:path"], GafferScene.ScenePlug.stringToPath( "/plane" ) )
@@ -306,7 +306,7 @@ class ScenePathTest( GafferSceneTest.SceneTestCase ) :
 		context["foo"] = 123
 		path = GafferScene.ScenePath( plane["out"], context, "/plane/bogus" )
 
-		inspectionContext = path.inspectionContext()
+		inspectionContext = path.contextProperty( "inspector:context" )
 		self.assertIsNotNone( inspectionContext )
 		self.assertIn( "scene:path", inspectionContext )
 		self.assertEqual( inspectionContext["scene:path"], GafferScene.ScenePlug.stringToPath( "/plane/bogus" ) )

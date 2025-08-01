@@ -52,12 +52,14 @@
 #include "IECorePython/ScopedGILLock.h"
 #include "IECorePython/ScopedGILRelease.h"
 
+#include "IECore/DataAlgo.h"
 #include "IECore/DateTimeData.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/PathMatcher.h"
 #include "IECore/SearchPath.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/SplineData.h"
+#include "IECore/TypeTraits.h"
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/date_time/posix_time/conversion.hpp"
@@ -195,35 +197,39 @@ IECorePreview::LRUCache<std::string, QPixmap> g_pixmapCache(
 
 // Equivalent to `GafferUI.NumericWidget.valueToString()`.
 template<typename T>
-QString numberToString( T v )
+QString toString( T v, typename std::enable_if<std::is_floating_point_v<T> || std::is_same_v<T, Imath::half>>::type *enabler = nullptr )
 {
-	if constexpr( std::is_floating_point_v<T> )
+	QString result = QString::number( v, 'f', 4 );
+	for( int i = result.size() - 1; i; --i )
 	{
-		QString result = QString::number( v, 'f', 4 );
-		for( int i = result.size() - 1; i; --i )
+		const QChar c = result.at( i );
+		if( c == '.' )
 		{
-			const QChar c = result.at( i );
-			if( c == '.' )
-			{
-				result.truncate( i );
-				return result;
-			}
-			else if ( c != '0' )
-			{
-				result.truncate( i + 1 );
-				return result;
-			}
+			result.truncate( i );
+			return result;
 		}
-		return result;
+		else if ( c != '0' )
+		{
+			result.truncate( i + 1 );
+			return result;
+		}
 	}
-	else
-	{
-		return QString::number( v );
-	}
+	return result;
 }
 
 template<typename T>
-QString vectorToString( const T &v )
+QString toString( T v, typename std::enable_if<std::is_integral_v<T>>::type *enabler = nullptr )
+{
+	return QString::number( v );
+}
+
+QString toString( IECore::InternedString v )
+{
+	return v.c_str();
+}
+
+template<typename T>
+QString toString( const T &v, typename std::enable_if<IECore::TypeTraits::IsVec<T>::value || IECore::TypeTraits::IsColor<T>::value>::type *enabler = nullptr )
 {
 	QString result;
 	for( unsigned i = 0; i < T::dimensions(); ++i )
@@ -232,39 +238,83 @@ QString vectorToString( const T &v )
 		{
 			result += " ";
 		}
-		result += numberToString( v[i] );
+		result += toString( v[i] );
 	}
 	return result;
 }
 
 template<typename T>
-QString boxToString( const T &v )
+QString toString( const Imath::Box<T> &v )
 {
 	if( v.isEmpty() )
 	{
 		return "Empty";
 	}
-	return "[ " + vectorToString( v.min ) + " ], [ " + vectorToString( v.max ) + " ]";
+	return "[ " + toString( v.min ) + " ] [ " + toString( v.max ) + " ]";
 }
 
 template<typename T>
-QString matrixToString( const T &v )
+QString toString( const Imath::Quat<T> &v )
+{
+	return toString( v.r ) + " " + toString( v.v );
+}
+
+template<typename T>
+QString toString( const T &v, typename std::enable_if<IECore::TypeTraits::IsMatrix<T>::value>::type *enabler = nullptr )
 {
 	QString result;
 	for( size_t i = 0; i < T::dimensions(); ++i )
 	{
 		if( result.size() )
 		{
-			result += ", ";
+			result += " ";
 		}
 		result += "[";
 		for( size_t j = 0; j < T::dimensions(); ++j )
 		{
-			result += " " + numberToString( v[i][j] );
+			result += " " + toString( v[i][j] );
 		}
 		result += " ]";
 	}
 	return result;
+}
+
+std::optional<QString> vectorDataToString( const IECore::Data *data )
+{
+	return IECore::dispatch(
+
+		data, [] ( const auto *typedData ) -> std::optional<QString> {
+
+			using DataType = typename std::remove_pointer_t<decltype( typedData )>;
+
+			if constexpr ( IECore::TypeTraits::IsVectorTypedData<DataType>::value )
+			{
+				QString result;
+				for( const auto &v : typedData->readable() )
+				{
+					if( result.size() > 1000 )
+					{
+						// Avoid performance problems formatting and displaying
+						// strings that are too large to read in-place anyway.
+						// People can drag the full value to the PythonEditor if
+						// they want to interact with it further.
+						result += "...";
+						break;
+					}
+					else if( result.size() )
+					{
+						result += " ";
+					}
+					result += toString( v );
+				}
+				return result;
+			}
+
+			return std::nullopt;
+
+		}
+
+	);
 }
 
 QVariant dataToVariant( const IECore::Data *value, int role )
@@ -373,29 +423,29 @@ QVariant dataToVariant( const IECore::Data *value, int role )
 		case IECore::UInt64DataTypeId :
 			return (quint64)static_cast<const IECore::UInt64Data *>( value )->readable();
 		case IECore::FloatDataTypeId :
-			return numberToString( static_cast<const IECore::FloatData *>( value )->readable() );
+			return toString( static_cast<const IECore::FloatData *>( value )->readable() );
 		case IECore::DoubleDataTypeId :
-			return numberToString( static_cast<const IECore::DoubleData *>( value )->readable() );
+			return toString( static_cast<const IECore::DoubleData *>( value )->readable() );
 		case IECore::V2fDataTypeId :
-			return vectorToString( static_cast<const IECore::V2fData *>( value )->readable() );
+			return toString( static_cast<const IECore::V2fData *>( value )->readable() );
 		case IECore::V3fDataTypeId :
-			return vectorToString( static_cast<const IECore::V3fData *>( value )->readable() );
+			return toString( static_cast<const IECore::V3fData *>( value )->readable() );
 		case IECore::Color3fDataTypeId :
-			return vectorToString( static_cast<const IECore::Color3fData *>( value )->readable() );
+			return toString( static_cast<const IECore::Color3fData *>( value )->readable() );
 		case IECore::Color4fDataTypeId :
-			return vectorToString( static_cast<const IECore::Color4fData *>( value )->readable() );
+			return toString( static_cast<const IECore::Color4fData *>( value )->readable() );
 		case IECore::Box2fDataTypeId :
-			return boxToString( static_cast<const IECore::Box2fData *>( value )->readable() );
+			return toString( static_cast<const IECore::Box2fData *>( value )->readable() );
 		case IECore::Box3fDataTypeId :
-			return boxToString( static_cast<const IECore::Box3fData *>( value )->readable() );
+			return toString( static_cast<const IECore::Box3fData *>( value )->readable() );
 		case IECore::Box2iDataTypeId :
-			return boxToString( static_cast<const IECore::Box2iData *>( value )->readable() );
+			return toString( static_cast<const IECore::Box2iData *>( value )->readable() );
 		case IECore::Box3iDataTypeId :
-			return boxToString( static_cast<const IECore::Box3iData *>( value )->readable() );
+			return toString( static_cast<const IECore::Box3iData *>( value )->readable() );
 		case IECore::M33fDataTypeId :
-			return matrixToString( static_cast<const IECore::M33fData *>( value )->readable() );
+			return toString( static_cast<const IECore::M33fData *>( value )->readable() );
 		case IECore::M44fDataTypeId :
-			return matrixToString( static_cast<const IECore::M44fData *>( value )->readable() );
+			return toString( static_cast<const IECore::M44fData *>( value )->readable() );
 		case IECore::DateTimeDataTypeId :
 		{
 			const IECore::DateTimeData *d = static_cast<const IECore::DateTimeData *>( value );
@@ -412,6 +462,10 @@ QVariant dataToVariant( const IECore::Data *value, int role )
 		}
 		default :
 		{
+			if( auto s = vectorDataToString( value ) )
+			{
+				return *s;
+			}
 			// Fall back to using `str()` in python, to emulate old behaviour. If we find commonly
 			// used types within large hierarchies falling through to here, we will need to give
 			// them their own special case above, for improved performance.

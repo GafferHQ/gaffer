@@ -480,6 +480,20 @@
 			]
 		},
 
+		"sceneInspector" : {
+
+			"options" : {
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				"locationPinnedOn",
+				"locationPinnedOff",
+				"sceneInspectorCompareOn",
+				"sceneInspectorCompareOff",
+			]
+		},
+
 		"colorChooser" : {
 
 			"options" : {

@@ -40,6 +40,8 @@
 
 #include "Gaffer/ScriptNode.h"
 
+#include "IECoreScene/ShaderNetwork.h"
+
 #include "IECore/CamelCase.h"
 #include "IECore/SimpleTypedData.h"
 
@@ -59,6 +61,7 @@ const boost::container::flat_map<int, ConstColor4fDataPtr> g_sourceTypeColors = 
 { (int)Inspector::Result::SourceType::Fallback, nullptr },
 };
 const Color4fDataPtr g_fallbackValueForegroundColor = new Color4fData( Imath::Color4f( 163, 163, 163, 255 ) / 255.0f );
+const ConstStringDataPtr g_missingOutputShader = new StringData( "Missing output shader" );
 
 }  // namespace
 
@@ -72,13 +75,13 @@ InspectorColumn::InspectorColumn( GafferSceneUI::Private::InspectorPtr inspector
 }
 
 InspectorColumn::InspectorColumn( GafferSceneUI::Private::InspectorPtr inspector, const CellData &headerData, PathColumn::SizeMode sizeMode )
-	:	PathColumn( sizeMode ), m_inspector( inspector ), m_headerData( headerData )
+	:	PathColumn( sizeMode ), m_inspector( inspector ), m_headerData( headerData ), m_contextProperty( "inspector:context" )
 {
 	inspector->dirtiedSignal().connect( boost::bind( &InspectorColumn::inspectorDirtied, this ) );
 }
 
-InspectorColumn::InspectorColumn( IECore::InternedString inspectorProperty, const CellData &headerData, PathColumn::SizeMode sizeMode )
-	:	PathColumn( sizeMode ), m_inspector( inspectorProperty ), m_headerData( headerData )
+InspectorColumn::InspectorColumn( IECore::InternedString inspectorProperty, const CellData &headerData, IECore::InternedString contextProperty, PathColumn::SizeMode sizeMode )
+	:	PathColumn( sizeMode ), m_inspector( inspectorProperty ), m_headerData( headerData ), m_contextProperty( contextProperty )
 {
 }
 
@@ -100,13 +103,22 @@ GafferSceneUI::Private::Inspector::ResultPtr InspectorColumn::inspect( const Gaf
 		return nullptr;
 	}
 
-	const ContextPtr inspectionContext = path.inspectionContext( canceller );
-	if( !inspectionContext )
+	ConstContextPtr context = inspectorContext( path, canceller );
+	if( !context )
 	{
 		return nullptr;
 	}
 
-	Context::Scope scope( inspectionContext.get() );
+	std::variant<std::monostate, Context::Scope, Context::EditableScope> scopedContext;
+	if( canceller )
+	{
+		scopedContext.emplace<Context::EditableScope>( context.get() ).setCanceller( canceller );
+	}
+	else
+	{
+		scopedContext.emplace<Context::Scope>( context.get() );
+	}
+
 	return i->inspect();
 }
 
@@ -118,14 +130,28 @@ Gaffer::PathPtr InspectorColumn::historyPath( const Gaffer::Path &path, const IE
 		return nullptr;
 	}
 
-	const ContextPtr inspectionContext = path.inspectionContext( canceller );
-	if( !inspectionContext )
+	ConstContextPtr context = inspectorContext( path, canceller );
+	if( !context )
 	{
 		return nullptr;
 	}
 
-	Context::Scope scope( inspectionContext.get() );
+	std::variant<std::monostate, Context::Scope, Context::EditableScope> scopedContext;
+	if( canceller )
+	{
+		scopedContext.emplace<Context::EditableScope>( context.get() ).setCanceller( canceller );
+	}
+	else
+	{
+		scopedContext.emplace<Context::Scope>( context.get() );
+	}
+
 	return i->historyPath();
+}
+
+Gaffer::ConstContextPtr InspectorColumn::inspectorContext( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
+{
+	return path.contextProperty( m_contextProperty, canceller );
 }
 
 PathColumn::CellData InspectorColumn::cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
@@ -137,14 +163,30 @@ PathColumn::CellData InspectorColumn::cellData( const Gaffer::Path &path, const 
 		return result;
 	}
 
-	result.value = runTimeCast<const IECore::Data>( inspectorResult->value() );
-	/// \todo Should PathModel create a decoration automatically when we
-	/// return a colour for `Role::Value`?
-	result.icon = runTimeCast<const Color3fData>( inspectorResult->value() );
-	if( !result.icon )
+	if( const auto shaderNetwork = runTimeCast<const IECoreScene::ShaderNetwork>( inspectorResult->value() ) )
 	{
-		result.icon = runTimeCast<const Color4fData>( inspectorResult->value() );
+		/// \todo We don't really want InspectorColumn to know about scene types.
+		/// If this comes up again, consider adding a registry of converters instead
+		/// of hardcoding here.
+		const IECoreScene::Shader *shader = shaderNetwork->outputShader();
+		result.value = shader ? new StringData( shader->getName() ) : g_missingOutputShader;
 	}
+	else if( const auto shader = runTimeCast<const IECoreScene::Shader>( inspectorResult->value() ) )
+	{
+		result.value = new StringData( shader->getName() );
+	}
+	else
+	{
+		result.value = runTimeCast<const IECore::Data>( inspectorResult->value() );
+		/// \todo Should PathModel create a decoration automatically when we
+		/// return a colour for `Role::Value`?
+		result.icon = runTimeCast<const Color3fData>( inspectorResult->value() );
+		if( !result.icon )
+		{
+			result.icon = runTimeCast<const Color4fData>( inspectorResult->value() );
+		}
+	}
+
 	result.background = g_sourceTypeColors.at( (int)inspectorResult->sourceType() );
 	std::string toolTip;
 	if( inspectorResult->sourceType() == Inspector::Result::SourceType::Fallback )

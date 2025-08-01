@@ -160,7 +160,7 @@ class RenderPassEditorTest( GafferUITest.TestCase ) :
 		) :
 
 			path = _GafferSceneUI._RenderPassEditor.RenderPassPath( renderPasses["out"], Gaffer.Context(), path, grouped = grouped )
-			inspectionContext = path.inspectionContext()
+			inspectionContext = path.contextProperty( "inspector:context" )
 			if renderPass is not None :
 				self.assertIn( "renderPass", inspectionContext )
 				self.assertEqual( inspectionContext["renderPass"], renderPass )

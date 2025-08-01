@@ -128,48 +128,26 @@ def conditionPrimvar( primvar ) :
 
 class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 
+	class Settings( GafferSceneUI.SceneEditor.Settings ) :
+
+		def __init__( self ) :
+
+			GafferSceneUI.SceneEditor.Settings.__init__( self )
+			self["location"] = Gaffer.StringPlug()
+
+	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::PrimitiveInspector::Settings" )
+
 	def __init__( self, scriptNode, **kw ) :
 
-		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 8, spacing = 8 )
+		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4, spacing = 4 )
+		GafferSceneUI.SceneEditor.__init__( self, column, scriptNode, **kw )
+
+		with column :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+				GafferUI.PlugLayout( self.settings(), rootSection = "Settings" )
+				self.__busyWidget = GafferUI.BusyWidget( size = 20 )
 
 		self.__tabbedContainer = GafferUI.TabbedContainer()
-
-		nodeAndLocationContainer = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth = 8, spacing = 8 )
-		nodeAndLocationContainer.append( GafferUI.Label( "Node" ) )
-
-		self.__nodeLabel = GafferUI.NameLabel( None )
-		self.__nodeLabel.setFormatter( _nodeLabelFormatter )
-
-		self.__nodeFrame = GafferUI.Frame(
-			borderWidth = 4,
-			borderStyle = GafferUI.Frame.BorderStyle.None_,
-			child = self.__nodeLabel
-		)
-
-		self.__nodeFrame._qtWidget().setObjectName( "gafferNodeFrame" )
-		self.__nodeFrame._qtWidget().setProperty( "gafferDiff", "Other" )
-
-		nodeAndLocationContainer.append( self.__nodeFrame )
-
-		nodeAndLocationContainer.append( GafferUI.Label( "Location" ) )
-		self.__locationLabel = GafferUI.Label( "Select a location to inspect" )
-
-		self.__locationFrame = GafferUI.Frame(
-			borderWidth = 4,
-			borderStyle = GafferUI.Frame.BorderStyle.None_,
-			child = self.__locationLabel
-		)
-
-		self.__locationFrame._qtWidget().setObjectName( "gafferLocationFrame" )
-		self.__locationFrame._qtWidget().setProperty( "gafferDiff", "Other" )
-
-		nodeAndLocationContainer.append( self.__locationFrame )
-
-		self.__busyWidget = GafferUI.BusyWidget( size = 20 )
-		nodeAndLocationContainer.append( self.__busyWidget )
-
-		column.append( nodeAndLocationContainer )
-
 		column.append( self.__tabbedContainer )
 
 		self.__dataWidgets = { }
@@ -209,9 +187,7 @@ class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 		self.__tabbedContainer.append( self.__tabbedChildWidgets[IECoreScene.PrimitiveVariable.Interpolation.Varying], "Varying" )
 		self.__tabbedContainer.append( self.__tabbedChildWidgets[IECoreScene.PrimitiveVariable.Interpolation.FaceVarying], "FaceVarying" )
 
-		GafferSceneUI.SceneEditor.__init__( self, column, scriptNode, **kw )
-
-		GafferSceneUI.ScriptNodeAlgo.selectedPathsChangedSignal( scriptNode ).connect(
+		self.__selectedPathsChangedConnection = GafferSceneUI.ScriptNodeAlgo.selectedPathsChangedSignal( scriptNode ).connect(
 			Gaffer.WeakMethod( self.__selectedPathsChanged )
 		)
 
@@ -227,7 +203,16 @@ class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 
 	def _updateFromSettings( self, plug ) :
 
-		if plug.isSame( self.settings()["in"]["object"] ) or plug.isSame( self.settings()["in"]["exists"] ) :
+		if plug.isSame( self.settings()["location"] ) :
+			# Avoid unnecessary updates when the location is pinned.
+			self.__selectedPathsChangedConnection.setBlocked(
+				bool( plug.getValue() )
+			)
+
+		if plug in (
+			self.settings()["in"]["object"], self.settings()["in"]["exists"],
+			self.settings()["location"]
+		) :
 			self.__updateLazily()
 
 	def __selectedPathsChanged( self, scriptNode ) :
@@ -238,7 +223,9 @@ class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 	def __updateLazily( self ) :
 
 		with self.context() :
-			self.__backgroundUpdate( GafferSceneUI.ScriptNodeAlgo.getLastSelectedPath( self.scriptNode() ) )
+			path = self.settings()["location"].getValue()
+			path = path if path else GafferSceneUI.ScriptNodeAlgo.getLastSelectedPath( self.scriptNode() )
+			self.__backgroundUpdate( path )
 
 	@GafferUI.BackgroundMethod()
 	def __backgroundUpdate( self, targetPath ) :
@@ -263,28 +250,6 @@ class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 		for (k,widget) in self.__dataWidgets.items():
 			widget.setEnabled( False )
 
-		if self.settings()["in"].getInput() is not None :
-			self.__nodeLabel.setFormatter( _nodeLabelFormatter )
-			self.__nodeLabel.setGraphComponent( self.settings()["in"].getInput().node() )
-			self.__nodeFrame._qtWidget().setProperty( "gafferDiff", "AB" )
-		else:
-			self.__nodeLabel.setFormatter( lambda x : "Select a node to inspect" )
-			self.__nodeFrame._qtWidget().setProperty( "gafferDiff", "Other" )
-		self.__nodeFrame._repolish()
-
-		if self.settings()["in"].getInput() is None :
-			self.__locationLabel.setText( "" )
-			self.__locationFrame._qtWidget().setProperty( "gafferDiff", "Other" )
-		else:
-			targetPath = GafferSceneUI.ScriptNodeAlgo.getLastSelectedPath( self.scriptNode() )
-			if targetPath :
-				self.__locationLabel.setText( targetPath )
-				self.__locationFrame._qtWidget().setProperty( "gafferDiff", "AB" )
-			else:
-				self.__locationLabel.setText( "Select a location to inspect" )
-				self.__locationFrame._qtWidget().setProperty( "gafferDiff", "Other" )
-		self.__locationFrame._repolish()
-
 	@__backgroundUpdate.postCall
 	def __backgroundUpdatePostCall( self, backgroundResult ) :
 
@@ -292,16 +257,6 @@ class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 			widget.setEnabled( True )
 
 		self.__busyWidget.setBusy( False )
-
-		if self.settings()["in"].getInput() is not None :
-			targetPath = GafferSceneUI.ScriptNodeAlgo.getLastSelectedPath( self.scriptNode() )
-			if targetPath:
-				if backgroundResult is not None :
-					self.__locationLabel.setText( targetPath )
-				else:
-					self.__locationFrame._qtWidget().setProperty( "gafferDiff", "Other" )
-					self.__locationFrame._repolish()
-					self.__locationLabel.setText( "Location %s does not exist" % targetPath )
 
 		if isinstance( backgroundResult, IECoreScene.Primitive ) :
 			headers = collections.OrderedDict()
@@ -341,3 +296,28 @@ class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 				self.__tabbedContainer.setLabel( self.__tabbedChildWidgets[interpolation], str( interpolation ) )
 
 GafferUI.Editor.registerType( "PrimitiveInspector", PrimitiveInspector )
+
+# Settings metadata
+# =================
+
+Gaffer.Metadata.registerNode(
+
+	PrimitiveInspector.Settings,
+
+	plugs = {
+
+		"location" : [
+
+			"description",
+			"""
+			The scene location to inspect. Defaults to the currently selected location. Use
+			the HierarchyView or Viewer to select a location.
+			""",
+
+			"plugValueWidget:type", "GafferSceneUI.SceneInspector._LocationPlugValueWidget",
+
+		],
+
+	}
+
+)

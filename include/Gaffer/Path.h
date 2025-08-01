@@ -107,6 +107,12 @@ class GAFFER_API Path : public IECore::RunTimeTyped
 		/// Derived class implementations should fall back to the base class implementation for
 		/// any unrecognised names. Returns null for unknown properties. May return null for invalid paths.
 		virtual IECore::ConstRunTimeTypedPtr property( const IECore::InternedString &name, const IECore::Canceller *canceller = nullptr ) const;
+		/// As above but for properties of type Context, since Context does not yet derive from
+		/// RunTimeTyped.
+		/// \todo Refactor Context so that EditableScope doesn't use a full reference-counted Context internally, and
+		/// then make long-lived contexts derive from RunTimeTyped. We don't want to derive from RunTimeTyped
+		/// now due to concerns about potential overhead in EditableScopes.
+		virtual ConstContextPtr contextProperty( const IECore::InternedString &name, const IECore::Canceller *canceller = nullptr ) const;
 
 		/// Returns the parent of this path, or None if the path
 		/// has no parent (is the root).
@@ -190,10 +196,6 @@ class GAFFER_API Path : public IECore::RunTimeTyped
 		/// processing to be cancelled before node graph edits that affect the Path are
 		/// made.
 		virtual const Plug *cancellationSubject() const;
-
-		/// May be implemented by Paths to provide a Context useful for inspecting
-		/// data represented by the Path.
-		virtual ContextPtr inspectionContext( const IECore::Canceller *canceller = nullptr ) const;
 
 	protected :
 

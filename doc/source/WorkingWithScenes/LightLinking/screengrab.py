@@ -55,28 +55,18 @@ __path = "/group/sphere"
 __paths = IECore.PathMatcher( [ __path ] )
 GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, __paths )
 
-from GafferSceneUI.SceneInspector import __AttributesSection
+with GafferUI.Window( "Property" ) as window :
 
-for imageName, sectionClass in [
-	( "LinkedLightsAttribute.png", __AttributesSection )
-] :
+	sceneInspector = GafferSceneUI.SceneInspector( script )
+	sceneInspector.setNodeSet( Gaffer.StandardSet( [ script["StandardAttributes"] ] ) )
+	sceneInspector._SceneInspector__locationPathListing.setExpansion( IECore.PathMatcher( [ "/Location", "/Location/Attributes/..." ] ) )
 
-	section = sectionClass()
-	section._Section__collapsible.setCollapsed( False )
+window._qtWidget().resize( 400, 300 )
+window.setVisible( True )
 
-	with GafferUI.Window( "Property" ) as window :
+GafferUI.WidgetAlgo.grab( widget = sceneInspector, imagePath = "images/interfaceLinkedLightsAttribute.png" )
 
-		sceneInspector = GafferSceneUI.SceneInspector( script, sections = [ section ] )
-		sceneInspector.setNodeSet( Gaffer.StandardSet( [ script["StandardAttributes"] ] ) )
-		sceneInspector.setTargetPaths( [ __path ] )
-
-	window.resizeToFitChild()
-	window.setVisible( True )
-
-	GafferUI.WidgetAlgo.grab( widget = sceneInspector, imagePath = "images/interface" + imageName )
-
-	window.close()
-	del window
+window.close()
 
 # Interface: a StandardAttributes node downstream of an object node
 script.selection().clear()
