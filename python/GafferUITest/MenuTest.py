@@ -45,6 +45,8 @@ import Gaffer
 import GafferUI
 import GafferUITest
 
+from Qt import QtWidgets
+
 class MenuTest( GafferUITest.TestCase ) :
 
 	def test( self ) :
@@ -94,6 +96,73 @@ class MenuTest( GafferUITest.TestCase ) :
 		self.assertEqual( w(), None )
 		self.assertEqual( wd(), None )
 		self.assertEqual( wf(), None )
+
+	def testRebuildDoesntLeak( self ) :
+
+		def __childCount( child ) :
+
+			children = set()
+			for widget in QtWidgets.QApplication.topLevelWidgets() :
+				children.update( widget.findChildren( child ) )
+
+			return len( list( children ) )
+
+		def f() :
+
+			pass
+
+		self.assertEqual( 0, __childCount( QtWidgets.QAction ) )
+		self.assertEqual( 0, __childCount( QtWidgets.QMenu ) )
+
+		definition = IECore.MenuDefinition(
+
+			[
+				( "/apple/pear/banana", { } ),
+				( "/apple/pear/divider", { "divider" : True } ),
+				( "/apple/pear/submarine", { "command" : f } ),
+				( "/dog/inactive", { "active" : False } ),
+			]
+
+		)
+
+		menu = GafferUI.Menu( definition )
+		menu._buildFully()
+		self.waitForIdle( 10 )
+
+		actionCount = __childCount( QtWidgets.QAction )
+		self.assertEqual( len( menu._qtWidget().findChildren( QtWidgets.QAction ) ), actionCount )
+
+		menuCount = __childCount( QtWidgets.QMenu )
+		self.assertEqual( len( menu._qtWidget().findChildren( QtWidgets.QMenu ) ), menuCount )
+
+		# Rebuild the menu with an unchanged definition, we should not see an increase in the
+		# overall number of QMenus or QActions.
+		menu._buildFully()
+		self.waitForIdle( 10 )
+
+		self.assertEqual( actionCount, __childCount( QtWidgets.QAction ) )
+		self.assertEqual( menuCount, __childCount( QtWidgets.QMenu ) )
+
+		# Update the definition, adding a new item to an existing menu.
+		definition.append( "/apple/pear/new", { } )
+		menu._buildFully()
+		self.waitForIdle( 10 )
+
+		self.assertEqual( actionCount + 1, __childCount( QtWidgets.QAction ) )
+		self.assertEqual( menuCount, __childCount( QtWidgets.QMenu ) )
+
+		# Add a new menu and item, which should result in two additional actions and a menu.
+		definition.append( "/cat/submenu", { } )
+		menu._buildFully()
+		self.waitForIdle( 10 )
+
+		self.assertEqual( actionCount + 3, __childCount( QtWidgets.QAction ) )
+		self.assertEqual( menuCount + 1, __childCount( QtWidgets.QMenu ) )
+
+		del menu
+
+		self.assertEqual( 0, __childCount( QtWidgets.QAction ) )
+		self.assertEqual( 0, __childCount( QtWidgets.QMenu ) )
 
 	def testAutomaticParenting( self ) :
 

@@ -220,6 +220,9 @@ class Menu( GafferUI.Widget ) :
 			# expanding each submenu. The definition is fully expanded, so dynamic submenus that
 			# exist will be expanded and searched.
 			self.__searchStructure = {}
+			# We maintain a cache of actions created for items that appear in the search menu so they
+			# can be reused when the search menu is updated.
+			self.__cachedSearchActions = {}
 			self.__initSearch( self._qtWidget().__definition )
 
 			# Searchable menus require an extra submenu to display the search results.
@@ -276,6 +279,12 @@ class Menu( GafferUI.Widget ) :
 				definition = definition( self )
 			else :
 				definition = definition()
+
+		# We'll be replacing all existing submenus so flag to Qt that they're
+		# available for deletion. Otherwise they and their children are kept
+		# alive until their parent Menu is deleted.
+		for menu in qtMenu.findChildren( QtWidgets.QMenu ) :
+			menu.deleteLater()
 
 		qtMenu.clear()
 
@@ -485,7 +494,10 @@ class Menu( GafferUI.Widget ) :
 
 		self.__searchMenu.setUpdatesEnabled( False )
 		self.__searchMenu.hide()
-		self.__searchMenu.clear()
+		# Remove any existing actions from the search menu. We don't call `self.__searchMenu.clear()`
+		# here as we cache actions for reuse by subsequent updates and `clear()` may delete them.
+		for action in self.__searchMenu.actions() :
+			self.__searchMenu.removeAction( action )
 		self.__searchMenu.setDefaultAction( None )
 
 		if not text :
@@ -609,7 +621,11 @@ class Menu( GafferUI.Widget ) :
 
 				for item, path in self.__searchStructure[name] :
 
-					action = self.__buildAction( item, name, self.__searchMenu )
+					action = self.__cachedSearchActions.get( path )
+					if action is None :
+						action = self.__buildAction( item, name, self.__searchMenu )
+						self.__cachedSearchActions[path] = action
+
 					if name not in results :
 						results[name] = { "pos" : pos, "weight" : weight, "actions" : [], 'grp' : match.groups() }
 
@@ -639,9 +655,13 @@ class Menu( GafferUI.Widget ) :
 
 	def __menuActionTriggered( self, action, checked ) :
 
-		self.__lastAction = action if action.objectName() != "GafferUI.Menu.__searchWidget" else None
 		if self.__lastAction is not None :
-			self.__searchMenu.addAction( self.__lastAction )
+			self.__lastAction.deleteLater()
+
+		# Store the last triggered action as a new action built from the original.
+		# We do this as the triggered action will often be parented to a submenu
+		# that will be deleted the next time we build the menu.
+		self.__lastAction = self.__buildAction( action.item, action.text(), self._qtWidget() ) if action.objectName() != "GafferUI.Menu.__searchWidget" else None
 
 		self._qtWidget().hide()
 
