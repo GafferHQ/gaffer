@@ -59,13 +59,36 @@ using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferSceneUI::Private;
 
+namespace
+{
+
+IECore::ConstObjectPtr parameterData( const Object *attribute, const ShaderNetwork::Parameter &parameter )
+{
+	auto shaderNetwork = runTimeCast<const ShaderNetwork>( attribute );
+	if( !shaderNetwork )
+	{
+		return nullptr;
+	}
+
+	const IECoreScene::Shader *shader = parameter.shader.string().empty() ? shaderNetwork->outputShader() : shaderNetwork->getShader( parameter.shader );
+	if( !shader )
+	{
+		return nullptr;
+	}
+
+	return shader->parametersData()->member( parameter.name );
+}
+
+}  // namespace
+
 IE_CORE_DEFINERUNTIMETYPED( ParameterInspector )
 
 ParameterInspector::ParameterInspector(
 	const GafferScene::ScenePlugPtr &scene, const Gaffer::PlugPtr &editScope,
-	IECore::InternedString attribute, const IECoreScene::ShaderNetwork::Parameter &parameter
+	IECore::InternedString attribute, const IECoreScene::ShaderNetwork::Parameter &parameter,
+	const bool inheritAttributes
 )
-	: AttributeInspector( scene, editScope, attribute, parameter.name.string(), "parameter" ), m_parameter( parameter )
+	: AttributeInspector( scene, editScope, attribute, parameter.name.string(), "parameter" ), m_parameter( parameter ), m_inheritAttributes( inheritAttributes )
 {
 
 }
@@ -74,7 +97,7 @@ GafferScene::SceneAlgo::History::ConstPtr ParameterInspector::history() const
 {
 	// Computing histories is expensive, and there's no point doing it
 	// if the specific attribute we want doesn't exist.
-	if( !attributeExists() )
+	if( !attributeExists( m_inheritAttributes ) )
 	{
 		return nullptr;
 	}
@@ -85,24 +108,16 @@ GafferScene::SceneAlgo::History::ConstPtr ParameterInspector::history() const
 IECore::ConstObjectPtr ParameterInspector::value( const GafferScene::SceneAlgo::History *history ) const
 {
 	auto attribute = AttributeInspector::value( history );
-	auto shaderNetwork = runTimeCast<const ShaderNetwork>( attribute.get() );
-	if( !shaderNetwork )
-	{
-		return nullptr;
-	}
-
-	const IECoreScene::Shader *shader = m_parameter.shader.string().empty() ? shaderNetwork->outputShader() : shaderNetwork->getShader( m_parameter.shader );
-	if( !shader )
-	{
-		return nullptr;
-	}
-
-	return shader->parametersData()->member( m_parameter.name );
+	return parameterData( attribute.get(), m_parameter );
 }
 
 IECore::ConstObjectPtr ParameterInspector::fallbackValue( const GafferScene::SceneAlgo::History *history, std::string &description ) const
 {
-	// No fallback values are provided for parameters. Implemented to override AttributeInspector::fallbackValue().
+	if( auto fallbackAttribute = AttributeInspector::fallbackValue( history, description ) )
+	{
+		return parameterData( fallbackAttribute.get(), m_parameter );
+	}
+
 	return nullptr;
 }
 

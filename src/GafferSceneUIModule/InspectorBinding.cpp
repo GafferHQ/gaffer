@@ -202,8 +202,8 @@ void GafferSceneUIModule::bindInspector()
 
 	RunTimeTypedClass<ParameterInspector>( "ParameterInspector" )
 		.def(
-			init<const ScenePlugPtr &, const PlugPtr &, IECore::InternedString, const ShaderNetwork::Parameter &>(
-				( arg( "scene" ), arg( "attribute" ), arg( "parameter" ) )
+			init<const ScenePlugPtr &, const PlugPtr &, IECore::InternedString, const ShaderNetwork::Parameter &, const bool>(
+				( arg( "scene" ), arg( "attribute" ), arg( "parameter" ), arg( "inheritAttributes" ) = false )
 			)
 		)
 	;
