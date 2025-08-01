@@ -277,6 +277,12 @@ class Menu( GafferUI.Widget ) :
 			else :
 				definition = definition()
 
+		# We'll be replacing all existing submenus so flag to Qt that they're
+		# available for deletion. Otherwise they and their children are kept
+		# alive until their parent Menu is deleted.
+		for menu in qtMenu.findChildren( QtWidgets.QMenu ) :
+			menu.deleteLater()
+
 		qtMenu.clear()
 
 		needsBottomSpacer = False
@@ -639,9 +645,13 @@ class Menu( GafferUI.Widget ) :
 
 	def __menuActionTriggered( self, action, checked ) :
 
-		self.__lastAction = action if action.objectName() != "GafferUI.Menu.__searchWidget" else None
 		if self.__lastAction is not None :
-			self.__searchMenu.addAction( self.__lastAction )
+			self.__lastAction.deleteLater()
+
+		# Store the last triggered action as a new action built from the original.
+		# We do this as the triggered action will often be parented to a submenu
+		# that will be deleted the next time we build the menu.
+		self.__lastAction = self.__buildAction( action.item, action.text(), self._qtWidget() ) if action.objectName() != "GafferUI.Menu.__searchWidget" else None
 
 		self._qtWidget().hide()
 
