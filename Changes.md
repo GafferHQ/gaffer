@@ -32,6 +32,7 @@ Fixes
 - LightEditor, RenderPassEditor, AttributeEditor :
   - Fixed unwanted vertical scrolling when switching tabs.
   - Fixed flickering when switching tabs.
+- Node menu : Fixed laggy search behaviour [^1].
 
 API
 ---
