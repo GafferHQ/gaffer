@@ -76,6 +76,15 @@ IECore::ConstObjectPtr parameterData( const Object *attribute, const ShaderNetwo
 		return nullptr;
 	}
 
+	const ShaderNetwork::Parameter input = parameter.shader.string().empty() ? shaderNetwork->input( { shaderNetwork->getOutput().shader, parameter.name } ) : shaderNetwork->input( parameter );
+	if( input )
+	{
+		return new CompoundData( {
+			{ InternedString( "shaderConnection:shader" ), new InternedStringData( input.shader ) },
+			{ InternedString( "shaderConnection:parameter" ), new InternedStringData( input.name ) }
+		} );
+	}
+
 	return shader->parametersData()->member( parameter.name );
 }
 
