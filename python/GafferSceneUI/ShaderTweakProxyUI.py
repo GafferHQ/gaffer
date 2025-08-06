@@ -199,7 +199,7 @@ def _shaderAttributes( context, nodes, paths, affectedOnly ) :
 				if not node["in"].exists( path ):
 					continue
 
-				attributes = node["in"].fullAttributes( path ) if useFullAttr else node["in"].attributes( path )
+				attributes = node["in"].fullAttributes( path, withGlobalAttributes = True ) if useFullAttr else node["in"].attributes( path )
 				for name, attribute in attributes.items() :
 					if not IECore.StringAlgo.matchMultiple( name, attributeNamePatterns ) :
 						continue

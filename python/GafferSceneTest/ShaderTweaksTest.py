@@ -393,15 +393,26 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		group = GafferScene.Group()
 		group["in"][0].setInput( plane["out"] )
 
+		globalSurface = GafferSceneTest.TestShader( "surface" )
+		globalSurface["type"].setValue( "surface" )
+		globalSurface["parameters"]["c"].setValue( imath.Color3f( 4, 5, 6 ) )
+		globalSurface["parameters"]["i"].setValue( 3 )
+
+		globalAttributes = GafferScene.CustomAttributes()
+		globalAttributes["in"].setInput( group["out"] )
+		globalAttributes["global"].setValue( True )
+		globalAttributes["extraAttributes"].setValue( IECore.CompoundObject( { "surface" : globalSurface.attributes()["surface"] } ) )
+
 		shader = GafferSceneTest.TestShader( "surface" )
 		shader["type"].setValue( "surface" )
 		shader["parameters"]["c"].setValue( imath.Color3f( 1, 2, 3 ) )
+		shader["parameters"]["i"].setValue( 2 )
 
 		groupFilter = GafferScene.PathFilter()
 		groupFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
 
 		assignment = GafferScene.ShaderAssignment()
-		assignment["in"].setInput( group["out"] )
+		assignment["in"].setInput( globalAttributes["out"] )
 		assignment["filter"].setInput( groupFilter["out"] )
 		assignment["shader"].setInput( shader["out"] )
 
@@ -438,10 +449,21 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 
 		planeAttr = tweaks["out"].attributes( "/group/plane" )
 		self.assertTrue( "surface" in planeAttr )
-		self.assertEqual(
-			planeAttr["surface"].getShader( "surface" ).parameters["c"].value,
-			imath.Color3f( 3, 2, 1 )
-		)
+		shaderParameters = planeAttr["surface"].getShader( "surface" ).parameters
+		self.assertEqual( shaderParameters["c"].value, imath.Color3f( 3, 2, 1 ) )
+		self.assertEqual( shaderParameters["i"].value, 2 )
+
+		# Disable the shader assignment on "/group", our tweak should now localise
+		# the global shader.
+		assignment["enabled"].setValue( False )
+
+		self.assertFalse( "surface" in tweaks["out"].attributes( "/group" ) )
+
+		planeAttr = tweaks["out"].attributes( "/group/plane" )
+		self.assertTrue( "surface" in planeAttr )
+		shaderParameters = planeAttr["surface"].getShader( "surface" ).parameters
+		self.assertEqual( shaderParameters["c"].value, imath.Color3f( 3, 2, 1 ) )
+		self.assertEqual( shaderParameters["i"].value, 3 )
 
 		# Test disabling tweak results in no localisation
 

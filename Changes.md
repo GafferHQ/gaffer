@@ -11,7 +11,7 @@ Improvements
   - The current expansion is now preserved when enabling or disabling comparison mode [^1].
 - Viewer : Added `Add` image comparison mode.
 - LocaliseAttributes : Added support for localising global attributes, controlled by the new `includeGlobalAttributes` plug.
-- AttributeTweaks : Added support for localising global attributes when `localise` is enabled.
+- AttributeTweaks, ShaderTweaks : Global attributes are now localised when `localise` is enabled and no matching attribute is found at the target location or any of its ancestors.
 - AttributeQuery, ShaderQuery : Global attributes are now queried when `inherit` is enabled and no matching attribute is found at the target location or any of its ancestors.
 
 Fixes

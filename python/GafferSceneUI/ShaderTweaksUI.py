@@ -191,7 +191,7 @@ def _shaderAttributes( plugValueWidget, paths, affectedOnly ) :
 		useFullAttr = node["localise"].getValue()
 		attributeNamePatterns = node["shader"].getValue() if affectedOnly else "*"
 		for path in paths :
-			attributes = node["in"].fullAttributes( path ) if useFullAttr else node["in"].attributes( path )
+			attributes = node["in"].fullAttributes( path, withGlobalAttributes = True ) if useFullAttr else node["in"].attributes( path )
 			for name, attribute in attributes.items() :
 				if not IECore.StringAlgo.matchMultiple( name, attributeNamePatterns ) :
 					continue
