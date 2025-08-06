@@ -1,5 +1,12 @@
-1.6.x.x (relative to 1.6.0.0a1)
+1.6.x.x (relative to 1.6.0.0a2)
 =======
+
+
+
+1.6.0.0a2 (relative to 1.6.0.0a1)
+=========
+
+> Note : This release addresses the known issues from `1.6.0.0a1` and is recommended for user testing.
 
 Features
 --------
