@@ -455,15 +455,47 @@ void AttributeInspector::nodeMetadataChanged( IECore::InternedString key, const 
 	}
 }
 
-bool AttributeInspector::attributeExists() const
+bool AttributeInspector::attributeExists( const bool inheritAttributes ) const
 {
-
 	if( !m_scene->existsPlug()->getValue() )
 	{
 		return false;
 	}
 
 	ConstCompoundObjectPtr attributes = m_scene->attributesPlug()->getValue();
-	return attributes->member<Object>( m_attribute );
+	const Object *attr = attributes->member<Object>( m_attribute );
 
+	if( !inheritAttributes )
+	{
+		return attr;
+	}
+
+	if( attr )
+	{
+		return true;
+	}
+
+	const Context *c = Context::current();
+	ScenePlug::PathScope pathScope( c );
+
+	ScenePlug::ScenePath currentPath( c->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) );
+
+	// No need to check inheritance for immediate children of `/` as we
+	// don't allow attributes to be created at the root of the scene.
+	if( currentPath.size() > 1 )
+	{
+		currentPath.pop_back();  // We tested the original path above, start at the parent.
+		while( currentPath.size() )
+		{
+			pathScope.setPath( &currentPath );
+			IECore::ConstCompoundObjectPtr a = m_scene->attributesPlug()->getValue();
+			if( a->member<Object>( m_attribute ) )
+			{
+				return true;
+			}
+			currentPath.pop_back();
+		}
+	}
+
+	return false;
 }

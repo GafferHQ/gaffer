@@ -55,7 +55,8 @@ class GAFFERSCENEUI_API ParameterInspector : public AttributeInspector
 
 		ParameterInspector(
 			const GafferScene::ScenePlugPtr &scene, const Gaffer::PlugPtr &editScope,
-			IECore::InternedString attribute, const IECoreScene::ShaderNetwork::Parameter &parameter
+			IECore::InternedString attribute, const IECoreScene::ShaderNetwork::Parameter &parameter,
+			const bool inheritAttributes = false
 		);
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::Private::ParameterInspector, ParameterInspectorTypeId, AttributeInspector );
@@ -72,6 +73,7 @@ class GAFFERSCENEUI_API ParameterInspector : public AttributeInspector
 		AcquireEditFunctionOrFailure acquireEditFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const override;
 
 		const IECoreScene::ShaderNetwork::Parameter m_parameter;
+		const bool m_inheritAttributes;
 
 };
 

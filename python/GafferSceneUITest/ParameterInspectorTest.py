@@ -59,7 +59,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( inspector.name(), "penumbraAngle" )
 
 	@staticmethod
-	def __inspect( scene, path, parameter, editScope=None, attribute="light" ) :
+	def __inspect( scene, path, parameter, editScope=None, attribute="light", inheritAttributes = False ) :
 
 		if isinstance( parameter, str ) :
 			parameter = ( "", parameter )
@@ -67,7 +67,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		editScopePlug = Gaffer.Plug()
 		editScopePlug.setInput( editScope["enabled"] if editScope is not None else None )
 		inspector = GafferSceneUI.Private.ParameterInspector(
-			scene, editScopePlug, attribute, parameter
+			scene, editScopePlug, attribute, parameter, inheritAttributes
 		)
 		with Gaffer.Context() as context :
 			context["scene:path"] = IECore.InternedStringVectorData( path.split( "/" )[1:] )
@@ -1274,6 +1274,70 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		assertEdit( inspection, IECore.FloatData( 123.0 ), "" )
 		self.assertEqual( acquiredEdit["mode"].getValue(), Gaffer.TweakPlug.Mode.Create )
 		self.assertEqual( acquiredEdit["value"].getValue(), 123.0 )
+
+	def testInheritAttributes( self ) :
+
+		plane = GafferScene.Plane()
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane["out"] )
+
+		groupShader = GafferSceneTest.TestShader()
+		groupShader["type"].setValue( "test:surface" )
+		groupShader.loadShader( "simpleShader" )
+		groupShader["parameters"]["c"].setValue( imath.Color3f( 1, 2, 3 ) )
+
+		groupFilter = GafferScene.PathFilter()
+		groupFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+
+		groupShaderAssignment = GafferScene.ShaderAssignment()
+		groupShaderAssignment["in"].setInput( group["out"] )
+		groupShaderAssignment["shader"].setInput( groupShader["out"] )
+		groupShaderAssignment["filter"].setInput( groupFilter["out"] )
+
+		inspection = self.__inspect( groupShaderAssignment["out"], "/group/plane", "c", None, attribute="test:surface", inheritAttributes=False )
+		self.assertIsNone( inspection )
+
+		inspection = self.__inspect( groupShaderAssignment["out"], "/group/plane", "c", None, attribute="test:surface", inheritAttributes=True )
+		self.assertEqual( inspection.value().value, imath.Color3f( 1, 2, 3 ) )
+
+		SourceType = GafferSceneUI.Private.Inspector.Result.SourceType
+
+		self.__assertExpectedResult(
+			inspection,
+			source = None,
+			sourceType = SourceType.Fallback,
+			editable = False,
+			nonEditableReason = "No editable source found in history."
+		)
+		self.assertEqual( inspection.fallbackDescription(), "Inherited from /group" )
+
+		planeShader = GafferSceneTest.TestShader()
+		planeShader["type"].setValue( "test:surface" )
+		planeShader.loadShader( "simpleShader" )
+		planeShader["parameters"]["c"].setValue( imath.Color3f( 4, 5, 6 ) )
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )
+
+		planeShaderAssignment = GafferScene.ShaderAssignment()
+		planeShaderAssignment["in"].setInput( groupShaderAssignment["out"] )
+		planeShaderAssignment["shader"].setInput( planeShader["out"] )
+		planeShaderAssignment["filter"].setInput( planeFilter["out"] )
+
+		for inherit in [ True, False ] :
+			with self.subTest( inherit = inherit ) :
+				inspection = self.__inspect( planeShaderAssignment["out"], "/group/plane", "c", None, attribute="test:surface", inheritAttributes=inherit )
+				self.assertEqual( inspection.value().value, imath.Color3f( 4, 5, 6 ) )
+				self.__assertExpectedResult(
+					inspection,
+					source = planeShader["parameters"]["c"],
+					sourceType = SourceType.Other,
+					editable = True,
+					edit = planeShader["parameters"]["c"],
+					editWarning = "Edits to TestShader may affect other locations in the scene."
+				)
+
 
 if __name__ == "__main__":
 	unittest.main()

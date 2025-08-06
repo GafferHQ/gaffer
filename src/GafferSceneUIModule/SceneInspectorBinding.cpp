@@ -779,7 +779,7 @@ void addShaderInspections( InspectorTree::Inspections &inspections, const vector
 			inspections.push_back( {
 				parameterPath,
 				new GafferSceneUI::Private::ParameterInspector(
-					scene, editScope, attributeName, { shaderHandle, parameterName }
+					scene, editScope, attributeName, { shaderHandle, parameterName }, /* inheritAttributes = */ true
 				)
 			} );
 		}
