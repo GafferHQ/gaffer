@@ -453,10 +453,7 @@ IECore::CompoundObjectPtr ScenePlug::fullAttributes( const ScenePath &scenePath,
 		const IECore::CompoundObject::ObjectMap &aMembers = a->members();
 		for( IECore::CompoundObject::ObjectMap::const_iterator it = aMembers.begin(), eIt = aMembers.end(); it != eIt; it++ )
 		{
-			if( resultMembers.find( it->first ) == resultMembers.end() )
-			{
-				resultMembers.insert( *it );
-			}
+			resultMembers.insert( *it );
 		}
 		path.pop_back();
 	}
@@ -469,10 +466,7 @@ IECore::CompoundObjectPtr ScenePlug::fullAttributes( const ScenePath &scenePath,
 			if( boost::starts_with( m.first.string(), g_attributePrefix ) )
 			{
 				const std::string attributeName = m.first.string().substr( g_attributePrefix.size() );
-				if( resultMembers.find( attributeName ) == resultMembers.end() )
-				{
-					resultMembers.insert( { attributeName, m.second } );
-				}
+				resultMembers.insert( { attributeName, m.second } );
 			}
 		}
 	}
