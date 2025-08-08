@@ -1,7 +1,15 @@
 1.6.x.x (relative to 1.6.0.0a2)
 =======
 
+Improvements
+------------
 
+- RenderMan : Added dedicated viewport visualisers for RenderMan lights.
+
+Breaking Changes
+----------------
+
+- StandardLightVisualiser : Removed protected methods for drawing visualiser elements. These are now part of `GafferSceneUI::Private::LightVisualiserAlgo`. This namespace can be used by light visualisers, but is currently `Private` while the API details are being resolved.
 
 1.6.0.0a2 (relative to 1.6.0.0a1)
 =========

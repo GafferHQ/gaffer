@@ -595,6 +595,7 @@ const InternedString g_specularFaceColorParameter( "specularFaceColor" );
 const InternedString g_specularIorParameter( "specularIor" );
 const InternedString g_specularModelTypeParameter( "specularModelType" );
 const InternedString g_specularRoughnessParameter( "specularRoughness" );
+const InternedString g_sunDirectionParameter( "sunDirection" );
 const InternedString g_temperatureParameter( "temperature" );
 const InternedString g_textureFileParameter( "texture:file" );
 const InternedString g_textureFormatParameter( "texture:format" );
@@ -732,9 +733,28 @@ void replaceUSDShader( ShaderNetwork *network, InternedString handle, ShaderPtr 
 	}
 }
 
+void correctParameters( ShaderNetwork *network )
+{
+	const Shader *shader = network->outputShader();
+	if( shader && shader->getName() == "PxrEnvDayLight" )
+	{
+		ShaderPtr newShader = shader->copy();
+
+		// The incoming object-space coordinates of `sunDirection` is in our Y-up coordinate system.
+		// But RenderMan's orientation is Z-up, so we transform from our coordinate system to RenderMan's
+		// so the parameter is intuitive to work with and the appearance of the shader matches expectations.
+		const V3f direction = parameterValue( newShader.get(), g_sunDirectionParameter, V3f( 0.f, 1.f, 0.f ) );
+		newShader->parameters()[g_sunDirectionParameter] = new V3fData( V3f( direction.x, -direction.z, direction.y ) );
+
+		network->setShader( network->getOutput().shader, std::move( newShader ) );
+	}
+}
+
 ShaderNetworkPtr preprocessedNetwork( const IECoreScene::ShaderNetwork *shaderNetwork )
 {
 	ShaderNetworkPtr result = shaderNetwork->copy();
+
+	correctParameters( result.get() );
 
 	IECoreRenderMan::ShaderNetworkAlgo::convertUSDShaders( result.get() );
 
