@@ -38,6 +38,7 @@
 
 #include "GafferImage/Blur.h"
 #include "GafferImage/Dilate.h"
+#include "GafferImage/DiskBlur.h"
 #include "GafferImage/Erode.h"
 #include "GafferImage/Median.h"
 #include "GafferImage/RankFilter.h"
@@ -55,4 +56,6 @@ void GafferImageModule::bindFilters()
 	DependencyNodeClass<Median>();
 	DependencyNodeClass<Dilate>();
 	DependencyNodeClass<Erode>();
+
+	DependencyNodeClass<DiskBlur>();
 }

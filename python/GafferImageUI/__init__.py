@@ -125,5 +125,6 @@ from . import ContactSheetUI
 from . import MetadataOverlayUI
 from . import ShuffleImageMetadataUI
 from . import ColorInspectorToolUI
+from . import DiskBlurUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImageUI" )
