@@ -176,6 +176,7 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 						displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 						sortable = False,
 					)
+					self.__locationPathListing.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ) )
 
 				with GafferUI.ListContainer( spacing = 4, borderWidth = 4, parenting = { "label" : "Globals" } ) :
 
@@ -195,6 +196,7 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 						displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 						sortable = False,
 					)
+					self.__globalsPathListing.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ) )
 
 		GafferSceneUI.ScriptNodeAlgo.selectedPathsChangedSignal( scriptNode ).connect(
 			Gaffer.WeakMethod( self.__selectedPathsChanged )
@@ -284,6 +286,16 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 				pattern = f"*{pattern}*"
 
 		tree.setFilter( pattern )
+
+	def __dragBegin( self, widget, event ) :
+
+		assert( widget in ( self.__locationPathListing, self.__globalsPathListing ) )
+		# Return leaf names rather than full paths when dragging from the Name column.
+		## \todo Support creation of columns in other editors by dragging attributes/options/etc
+		# from the Scene Inspector.
+		selection = widget.getSelection()[0]
+		if not selection.isEmpty() :
+			return IECore.StringVectorData( [ path.split( "/" )[-1] for path in selection.paths() ] )
 
 GafferUI.Editor.registerType( "SceneInspector", SceneInspector )
 

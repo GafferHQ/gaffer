@@ -5,11 +5,14 @@ Improvements
 ------------
 
 - RenderMan : Added dedicated viewport visualisers for RenderMan lights.
+- SceneInspector : Cells dragged from the "Name" column now return their name, rather than their full path [^1].
 
 Breaking Changes
 ----------------
 
 - StandardLightVisualiser : Removed protected methods for drawing visualiser elements. These are now part of `GafferSceneUI::Private::LightVisualiserAlgo`. This namespace can be used by light visualisers, but is currently `Private` while the API details are being resolved.
+
+[^1]: To be omitted from the notes for the final 1.6.0.0 release.
 
 1.6.0.0a2 (relative to 1.6.0.0a1)
 =========
