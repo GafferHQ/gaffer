@@ -131,13 +131,14 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 
 		self.settings()["compare"]["scene"]["value"].setInput( self.settings()["in"] )
 
+		nameColumn = GafferUI.StandardPathColumn( "Name", "name" )
 		self.__standardColumns = [
-			GafferUI.StandardPathColumn( "Name", "name" ),
+			nameColumn,
 			GafferSceneUI.Private.InspectorColumn( "inspector:inspector", headerData = GafferUI.PathColumn.CellData( value = "Value" ) ),
 		]
 
 		self.__diffColumns = [
-			GafferUI.StandardPathColumn( "Name", "name" ),
+			nameColumn,
 			_GafferSceneUI._SceneInspector.InspectorDiffColumn( _GafferSceneUI._SceneInspector.InspectorDiffColumn.DiffContext.A ),
 			_GafferSceneUI._SceneInspector.InspectorDiffColumn( _GafferSceneUI._SceneInspector.InspectorDiffColumn.DiffContext.B ),
 		]
