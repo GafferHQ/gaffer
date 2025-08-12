@@ -1167,7 +1167,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 		if columnWidthsChanged or columnsChanged :
 			# The space available for stretch columns may have changed, so
 			# adjust them to fit.
-			self.__resizeStretchColumns()
+			self.__resizeStretchColumns( columnsChanged )
 
 		if stretchLastColumn :
 			# finally, resize the last column to make use of any remaining available width
@@ -1332,7 +1332,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 		header.resizeSection( lastColumn, adjustedWidth )
 		self.__recalculatingColumnWidths = False
 
-	def __resizeStretchColumns( self ) :
+	def __resizeStretchColumns( self, columnsChanged = False ) :
 
 		header = self.header()
 		availableWidth = self.viewport().width()
@@ -1359,8 +1359,12 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 		weight = 1.0 / len( columnsToStretch )
 		for c in columnsToStretch :
-			if stretchColumnWidth > 0 :
-				# preserve any existing column proportions
+			if stretchColumnWidth > 0 and not columnsChanged :
+				# preserve any existing column proportions when resizing
+				# existing columns if the columns haven't changed. If
+				# the columns have changed then we're better off equally
+				# assigning the available space rather than preserving any
+				# existing header widths.
 				weight = header.sectionSize( c ) / stretchColumnWidth
 
 			## \todo A very small resize with multiple stretch columns can result in the

@@ -1624,6 +1624,43 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 				widget.setColumns( widget.getColumns()[:-1] )
 				self.assertEqual( widget._qtWidget().header().length(), widget._qtWidget().viewport().width() )
 
+	def testStretchColumnWidthsWhenUpdatingColumns( self ) :
+
+		with GafferUI.Window() as window :
+			widget = GafferUI.PathListingWidget(
+				path = Gaffer.DictPath( {}, "/" ),
+				displayMode = GafferUI.PathListingWidget.DisplayMode.List,
+				columns = [
+					GafferUI.PathListingWidget.StandardColumn( "Test", "test" ),
+					GafferUI.PathListingWidget.StandardColumn( "Test", "test", sizeMode = GafferUI.PathColumn.SizeMode.Stretch )
+				]
+			)
+
+		window._qtWidget().resize( 512, 384 )
+		window.setVisible( True )
+
+		self.waitForIdle( 1000 )
+
+		widget.setColumns( [
+			GafferUI.PathListingWidget.StandardColumn( "Test", "test" ),
+			GafferUI.PathListingWidget.StandardColumn( "Test", "test", sizeMode = GafferUI.PathColumn.SizeMode.Stretch ),
+			GafferUI.PathListingWidget.StandardColumn( "Test", "test", sizeMode = GafferUI.PathColumn.SizeMode.Stretch )
+		] )
+
+		self.waitForIdle( 1000 )
+
+		# Our two Stretch columns should equally share the available space
+		self.assertEqual( widget._qtWidget().header().sectionSize( 1 ), widget._qtWidget().header().sectionSize( 2 ) )
+		self.assertAlmostEqual(
+			widget._qtWidget().header().sectionSize( 1 ) + widget._qtWidget().header().sectionSize( 2 ),
+			widget._qtWidget().viewport().width() - widget._qtWidget().header().sectionSize( 0 ),
+			## \todo If the available space is an odd number of pixels, we require this delta as `_TreeView.__resizeStretchColumns`
+			# will resize both stretch columns to the same width and leave the remaining pixel. We should update `_TreeView.__resizeStretchColumns`
+			# to use _all_ available space, though this will require moving this delta to the previous assertion as the resulting column
+			# widths could then differ by 1...
+			delta = 1
+		)
+
 	def testColumnSizeSurvivesStylesheetUpdate( self ) :
 
 		for visible in ( False, True ) :
