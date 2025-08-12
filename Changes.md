@@ -5,7 +5,9 @@ Improvements
 ------------
 
 - RenderMan : Added dedicated viewport visualisers for RenderMan lights.
-- SceneInspector : Cells dragged from the "Name" column now return their name, rather than their full path [^1].
+- SceneInspector :
+  - Cells dragged from the "Name" column now return their name, rather than their full path [^1].
+  - Nodes can be pinned for comparison by dropping them onto the green "B" side of the "Scene" comparison header [^1].
 
 Breaking Changes
 ----------------

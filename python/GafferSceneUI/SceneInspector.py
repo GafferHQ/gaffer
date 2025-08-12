@@ -567,9 +567,9 @@ class _FocusPlugValueWidget( GafferUI.PlugValueWidget ) :
 				self.__icon._qtWidget().setFixedWidth( 13 )
 				self.__icon.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showFocusMenu ) )
 
-				menuButton = GafferUI.Button( image="menuIndicator.png", hasFrame=False, highlightOnOver=False )
-				menuButton._qtWidget().setObjectName( "menuDownArrow" )
-				menuButton.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showFocusMenu ) )
+				self.__menuButton = GafferUI.Button( image="menuIndicator.png", hasFrame=False, highlightOnOver=False )
+				self.__menuButton._qtWidget().setObjectName( "menuDownArrow" )
+				self.__menuButton.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showFocusMenu ) )
 
 		self.__nodeSetChangedSignal = GafferUI.WidgetSignal()
 
@@ -615,6 +615,11 @@ class _FocusPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def nodeSetChangedSignal( self ) :
 
 		return self.__nodeSetChangedSignal
+
+	def setHighlighted( self, highlighted ) :
+
+		self.__icon.setHighlighted( highlighted )
+		self.__menuButton.setHighlighted( highlighted )
 
 	def __updateInput( self, *unused ) :
 
@@ -757,8 +762,50 @@ class _CompareScenePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		with row :
 			labelWidget = _InputLabelWidget()
-			focusWidget = _FocusPlugValueWidget( plug )
-			labelWidget.connectToNodeSetWidget( focusWidget )
+			self.__focusWidget = _FocusPlugValueWidget( plug )
+			labelWidget.connectToNodeSetWidget( self.__focusWidget )
+
+		self.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.dragLeaveSignal().connectFront( Gaffer.WeakMethod( self.__dragLeave ) )
+		self.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ) )
+
+	def __dropNode( self,  event ) :
+
+		if isinstance( event.data, Gaffer.Node ) :
+			return event.data
+		elif isinstance( event.data, Gaffer.Set ) :
+			for node in reversed( event.data ):
+				if isinstance( node, Gaffer.Node ) :
+					return node
+		else:
+			return None
+
+	def __dragEnter( self, widget, event ) :
+
+		if self.isAncestorOf( event.sourceWidget ) :
+			return False
+
+		if self.__dropNode( event ) :
+			self.__focusWidget.setHighlighted( True )
+
+		return True
+
+	def __dragLeave( self, widget, event ) :
+
+		self.__focusWidget.setHighlighted( False )
+
+		return True
+
+	def __drop( self, widget, event ) :
+
+		node = self.__dropNode( event )
+
+		if node :
+			self.__focusWidget.setNodeSet( nodeSet = Gaffer.StandardSet( [ node ] ) )
+
+		self.__focusWidget.setHighlighted( False )
+
+		return True
 
 # Simple widget that just displays the `renderPass` variable from
 # the current context.
