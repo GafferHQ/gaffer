@@ -710,21 +710,7 @@ vector<InternedString> alphabeticallySortedKeys( const T &container )
 	return result;
 }
 
-boost::container::flat_map<string, InternedString> g_attributeCategories = {
-	{ "ai:*", "Arnold" },
-	{ "dl:*", "3Delight" },
-	{ "cycles:*", "Cycles" },
-	{ "ri:*", "RenderMan" },
-	{ "gl:*", "OpenGL" },
-	{ "usd:*", "USD" },
-	{ "user:*", "User" },
-	{
-		"scene:visible doubleSided render:* gaffer:* "
-		"linkedLights shadowedLights filteredLights "
-		"surface displacement volume light",
-		"Standard"
-	}
-};
+boost::container::flat_map<string, InternedString> g_attributeCategories;
 
 void registerAttributeCategory( InternedString category, const IECore::StringAlgo::MatchPattern &pattern )
 {
@@ -1368,16 +1354,7 @@ const InspectorTree::Registration g_subdivisionInspectionRegistration( { "Locati
 // Option Inspectors
 // =================
 
-boost::container::flat_map<string, InternedString> g_optionCategories = {
-	{ "ai:*", "Arnold" },
-	{ "dl:*", "3Delight" },
-	{ "cycles:*", "Cycles" },
-	{ "ri:*", "RenderMan" },
-	{ "gl:*", "OpenGL" },
-	{ "usd:*", "USD" },
-	{ "user:*", "User" },
-	{ "render:* sampleMotion", "Standard" },
-};
+boost::container::flat_map<string, InternedString> g_optionCategories;
 
 void registerOptionCategory( InternedString category, const IECore::StringAlgo::MatchPattern &pattern )
 {
