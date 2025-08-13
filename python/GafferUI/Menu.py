@@ -400,7 +400,7 @@ class Menu( GafferUI.Widget ) :
 			else :
 				signal = qtAction.triggered[bool]
 
-			if self.__searchable :
+			if self.__searchable and getattr( item, "searchable", True ) :
 				signal.connect( IECore.curry( Gaffer.WeakMethod( self.__menuActionTriggered ), qtAction ) )
 
 			signal.connect( IECore.curry( Gaffer.WeakMethod( self.__actionTriggered ), weakref.ref( qtAction ) ) )
