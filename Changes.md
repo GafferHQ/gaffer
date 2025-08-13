@@ -6,6 +6,11 @@ Improvements
 
 - RenderMan : Added dedicated viewport visualisers for RenderMan lights.
 
+Fixes
+-----
+
+- ContextQuery : Removed `Create Context Query...` menu item from plugs where it was not relevant.
+
 Breaking Changes
 ----------------
 

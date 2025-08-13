@@ -419,7 +419,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
 	# For ValuePlug in general, we offer the option to drive them with ContextQuery
 	plug = plugValueWidget.getPlug()
-	if not isinstance( plug, Gaffer.ValuePlug ) :
+	if not isinstance( plug, Gaffer.ValuePlug ) or not Gaffer.PlugAlgo.canSetValueFromData( plug ) :
 		return
 
 	node = plug.node()
