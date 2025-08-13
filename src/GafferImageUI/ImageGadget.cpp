@@ -566,6 +566,10 @@ class TileShader
 					negative = true;
 					glBlendFunc( GL_ONE, GL_ONE );
 				}
+				else if( blendMode == ImageGadget::BlendMode::Add )
+				{
+					glBlendFunc( GL_ONE, GL_ONE );
+				}
 				else
 				{
 					glBlendFunc( GL_ONE, GL_ZERO );
