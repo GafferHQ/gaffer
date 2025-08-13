@@ -290,6 +290,11 @@ GafferUI.Editor.registerType( "SceneInspector", SceneInspector )
 # InspectorTree isn't public API. Expose the `registerInspectors()` function on SceneInspector
 # itself to make it available to extension authors.
 SceneInspector.registerInspectors = _GafferSceneUI._SceneInspector.InspectorTree.registerInspectors
+# Likewise expose functions for registering custom categories.
+SceneInspector.registerAttributeCategory = _GafferSceneUI._SceneInspector.registerAttributeCategory
+SceneInspector.deregisterAttributeCategory = _GafferSceneUI._SceneInspector.deregisterAttributeCategory
+SceneInspector.registerOptionCategory = _GafferSceneUI._SceneInspector.registerOptionCategory
+SceneInspector.deregisterOptionCategory = _GafferSceneUI._SceneInspector.deregisterOptionCategory
 
 ##########################################################################
 # Settings metadata

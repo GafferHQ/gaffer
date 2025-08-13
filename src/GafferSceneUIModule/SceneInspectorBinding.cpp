@@ -710,7 +710,7 @@ vector<InternedString> alphabeticallySortedKeys( const T &container )
 	return result;
 }
 
-const boost::container::flat_map<string, InternedString> g_attributeCategories = {
+boost::container::flat_map<string, InternedString> g_attributeCategories = {
 	{ "ai:*", "Arnold" },
 	{ "dl:*", "3Delight" },
 	{ "cycles:*", "Cycles" },
@@ -725,6 +725,26 @@ const boost::container::flat_map<string, InternedString> g_attributeCategories =
 		"Standard"
 	}
 };
+
+void registerAttributeCategory( InternedString category, const IECore::StringAlgo::MatchPattern &pattern )
+{
+	g_attributeCategories.insert( { pattern, category } );
+}
+
+void deregisterAttributeCategory( InternedString category )
+{
+	for( auto it = g_attributeCategories.begin(); it != g_attributeCategories.end(); )
+	{
+		if( it->second == category )
+		{
+			it = g_attributeCategories.erase( it );
+		}
+		else
+		{
+			it++;
+		}
+	}
+}
 
 const InternedString g_other( "Other" );
 
@@ -1348,7 +1368,7 @@ const InspectorTree::Registration g_subdivisionInspectionRegistration( { "Locati
 // Option Inspectors
 // =================
 
-const boost::container::flat_map<string, InternedString> g_optionCategories = {
+boost::container::flat_map<string, InternedString> g_optionCategories = {
 	{ "ai:*", "Arnold" },
 	{ "dl:*", "3Delight" },
 	{ "cycles:*", "Cycles" },
@@ -1358,6 +1378,26 @@ const boost::container::flat_map<string, InternedString> g_optionCategories = {
 	{ "user:*", "User" },
 	{ "render:* sampleMotion", "Standard" },
 };
+
+void registerOptionCategory( InternedString category, const IECore::StringAlgo::MatchPattern &pattern )
+{
+	g_optionCategories.insert( { pattern, category } );
+}
+
+void deregisterOptionCategory( InternedString category )
+{
+	for( auto it = g_optionCategories.begin(); it != g_optionCategories.end(); )
+	{
+		if( it->second == category )
+		{
+			it = g_optionCategories.erase( it );
+		}
+		else
+		{
+			it++;
+		}
+	}
+}
 
 const std::string g_optionPrefix( "option:" );
 const std::string g_attributePrefix( "attribute:" );
@@ -1700,5 +1740,11 @@ void GafferSceneUIModule::bindSceneInspector()
 			.value( "B", InspectorDiffColumn::DiffContext::B )
 		;
 	}
+
+	def( "registerAttributeCategory", &registerAttributeCategory, ( boost::python::arg( "category" ), boost::python::arg( "pattern" ) ) );
+	def( "deregisterAttributeCategory", &deregisterAttributeCategory, ( boost::python::arg( "category" ) ) );
+
+	def( "registerOptionCategory", &registerOptionCategory, ( boost::python::arg( "category" ), boost::python::arg( "category" ) ) );
+	def( "deregisterOptionCategory", &deregisterOptionCategory, ( boost::python::arg( "category" ) ) );
 
 }

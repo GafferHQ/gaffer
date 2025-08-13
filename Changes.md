@@ -11,6 +11,13 @@ Fixes
 
 - CyclesShader : Moved the `principled_bsdf.diffuse_roughness` parameter to a new "Diffuse" section in the Node Editor [^1].
 
+API
+---
+
+- SceneInspector :
+  - Added `registerAttributeCategory()` and `deregisterAttributeCategory()` methods.
+  - Added `registerOptionCategory()` and `deregisterOptionCategory()` methods.
+
 Breaking Changes
 ----------------
 
