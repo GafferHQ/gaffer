@@ -163,7 +163,7 @@ V2i coordinateDivide( V2i a, V2i b )
 	return V2i( coordinateDivide( a.x, b.x ), coordinateDivide( a.y, b.y ) );
 }
 
-std::string channelNameFromEXR( std::string view, std::string part, std::string channel, bool useHeuristics, bool singlePartMultiView )
+std::string channelNameFromEXR( std::string view, std::string part, std::string channel, bool useHeuristics, bool singlePartMultiView, bool isMultiPartExr )
 {
 	if( !useHeuristics )
 	{
@@ -197,6 +197,17 @@ std::string channelNameFromEXR( std::string view, std::string part, std::string 
 	else if( channel == "cortexInstanceID.v" )
 	{
 		return "instanceID";
+	}
+
+	if( !isMultiPartExr )
+	{
+		// The weird Nuke behaviour we're trying to emulate includes that Nuke doesn't use the
+		// part name in a single part file. It also doesn't write the part name in a single part
+		// file, so this shouldn't really matter either way ... but also doesn't clear the part
+		// name metadata, and it makes it easy to accidentally write a single part exr with a
+		// bogus part name, and not realize you've done this. By ignoring the part name here,
+		// we match Nuke's behaviour, which is the main purpose of all this hackery.
+		part = "";
 	}
 
 	std::vector< std::string > layerTokens;
@@ -736,6 +747,7 @@ class File
 
 			bool singlePartMultiView = false;
 			ImageSpec currentSpec;
+
 			for( int subImageIndex = 0; ; subImageIndex++ )
 			{
 				currentSpec = m_imageInput->spec( subImageIndex, 0 );
@@ -744,6 +756,8 @@ class File
 					// Gone past last subimage
 					break;
 				}
+
+				bool isMultiPartExr = currentSpec.get_int_attribute( "oiio:subimages", 0 ) > 1;
 
 				if( currentSpec.depth != 1 )
 				{
@@ -912,7 +926,7 @@ class File
 						channelName = channelNameFromEXR(
 							channelViewName, subImageName.str(), n,
 							channelNaming != ImageReader::ChannelInterpretation::Specification,
-							singlePartMultiView
+							singlePartMultiView, isMultiPartExr
 						);
 					}
 

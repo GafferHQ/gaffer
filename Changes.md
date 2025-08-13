@@ -24,6 +24,7 @@ API
 Breaking Changes
 ----------------
 
+- ImageReader : Changed the behaviour of `channelInterpretation` = `Default` so that part names are now ignored in single part exrs. The most common cause of part names in single part exrs is user errors when setting up Nuke scripts, in which case it's desirable to ignore the unnecessary part name, matching the behaviour of Nuke. We are not currently aware of any software which writes meaningful part names in single part exrs. We have not changed the behaviour of `channelInterpretation` = `EXR Specification` - in exrs that are compliant with the spec, part names never have any effect on the channel names.
 - SceneInspector : Custom inspectors implemented in Python must now return a list of Inspector objects rather than a dictionary [^1].
 
 [^1]: To be omitted from the notes for the final 1.6.0.0 release.
