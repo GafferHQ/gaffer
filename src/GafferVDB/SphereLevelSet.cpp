@@ -38,6 +38,7 @@
 #include "GafferVDB/Interrupter.h"
 
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/TransformPlug.h"
 
 #include "IECoreVDB/VDBObject.h"
 
@@ -134,6 +135,35 @@ void SphereLevelSet::affects( const Plug *input, AffectedPlugsContainer &outputs
 	{
 		outputs.push_back( sourcePlug() );
 	}
+}
+
+void SphereLevelSet::hashBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneNode::hashBound( path, context, parent, h );
+
+	radiusPlug()->hash( h );
+	centerPlug()->hash( h );
+	voxelSizePlug()->hash( h );
+	halfWidthPlug()->hash( h );
+
+	if( path.size() == 0 )
+	{
+		transformPlug()->hash( h );
+	}
+}
+
+Imath::Box3f SphereLevelSet::computeBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
+{
+	const float radius = radiusPlug()->getValue() + ( halfWidthPlug()->getValue() - 0.5 ) * voxelSizePlug()->getValue();
+	const V3f center = centerPlug()->getValue();
+
+	Box3f result( center - V3f( radius ), center + V3f( radius ) );
+
+	if( path.size() == 0 )
+	{
+		result = Imath::transform( result, transformPlug()->matrix() );
+	}
+	return result;
 }
 
 void SphereLevelSet::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const
