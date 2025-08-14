@@ -714,3 +714,5 @@ Gaffer.Metadata.registerValues( {
 	],
 
 } )
+
+Gaffer.Metadata.registerValue( "attribute:ai:*", "category", "Arnold" )

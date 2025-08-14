@@ -89,3 +89,5 @@ Gaffer.Metadata.registerValues( {
 	],
 
 } )
+
+Gaffer.Metadata.registerValue( "attribute:usd:*", "category", "USD" )

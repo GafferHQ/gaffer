@@ -161,3 +161,5 @@ with IECore.IgnoredExceptions( ImportError ) :
 		"displacementbound:offscreen",
 	] :
 		Gaffer.Metadata.registerValue( f"attribute:ri:{attribute}", "plugValueWidget:type", "GafferUI.BoolPlugValueWidget" )
+
+Gaffer.Metadata.registerValue( "attribute:ri:*", "category", "RenderMan" )
