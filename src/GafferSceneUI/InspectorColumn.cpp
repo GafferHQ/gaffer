@@ -63,6 +63,7 @@ const boost::container::flat_map<int, ConstColor4fDataPtr> g_sourceTypeColors = 
 };
 const Color4fDataPtr g_fallbackValueForegroundColor = new Color4fData( Imath::Color4f( 163, 163, 163, 255 ) / 255.0f );
 const ConstStringDataPtr g_missingOutputShader = new StringData( "Missing output shader" );
+const StringDataPtr g_shaderConnectionIcon = new StringData( "sceneInspectorShaderConnection.png" );
 
 }  // namespace
 
@@ -168,6 +169,7 @@ PathColumn::CellData InspectorColumn::cellData( const Gaffer::Path &path, const 
 	if( connectionSource )
 	{
 		result.value = new StringData( connectionSource.shader.string() + "." + connectionSource.name.string() );
+		result.icon = g_shaderConnectionIcon;
 	}
 	else if( const auto shaderNetwork = runTimeCast<const IECoreScene::ShaderNetwork>( inspectorResult->value() ) )
 	{
