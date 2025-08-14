@@ -25,6 +25,9 @@ Fixes
 - CyclesShader : Moved the `principled_bsdf.diffuse_roughness` parameter to a new "Diffuse" section in the Node Editor [^1].
 - ContextQuery : Removed `Create Context Query...` menu item from plugs where it was not relevant.
 - Menu : Executing a non-searchable menu item from a searchable menu no longer causes it to appear as the last used action in the menu's search field.
+- AttributeEditor :
+  - Added missing Cycles volume attributes.
+  - Renamed OpenGL "Shading" section to "Drawing", to match the NodeEditor.
 
 API
 ---
