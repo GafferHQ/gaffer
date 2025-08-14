@@ -380,6 +380,8 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 						self._qtWidget().addTab( section or "Main" )
 					if "All" not in sections.keys() and len( sections.keys() ) > 1 :
 						self._qtWidget().addTab( "All" )
+
+			self._qtWidget().setVisible( self._qtWidget().count() > 1 )
 		finally :
 			self.__ignoreCurrentChanged = False
 
