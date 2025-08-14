@@ -53,6 +53,7 @@ Gaffer.Metadata.registerValues( {
 		always make all the children invisible too, regardless
 		of their visibility settings.
 		""",
+		"category", "Standard",
 		"label", "Visible",
 		"layout:section", "Attributes",
 
@@ -67,6 +68,7 @@ Gaffer.Metadata.registerValues( {
 		Single sided objects appear invisible when seen from
 		the back.
 		""",
+		"category", "Standard",
 		"label", "Double Sided",
 		"layout:section", "Attributes",
 
@@ -84,6 +86,7 @@ Gaffer.Metadata.registerValues( {
 		> Tip : For more detailed control of object appearance in the
 		> Viewer, use OpenGL attributes.
 		""",
+		"category", "Standard",
 		"label", "Display Color",
 		"layout:section", "Attributes",
 
@@ -99,6 +102,7 @@ Gaffer.Metadata.registerValues( {
 		`gaffer:transformBlurSegments` attribute to specify
 		the number of segments used to represent the motion.
 		""",
+		"category", "Standard",
 		"label", "Transform Blur",
 		"layout:section", "Motion Blur",
 
@@ -113,6 +117,7 @@ Gaffer.Metadata.registerValues( {
 		The number of segments of transform animation to
 		pass to the renderer when Transform Blur is on.
 		""",
+		"category", "Standard",
 		"label", "Transform Segments",
 		"layout:section", "Motion Blur",
 
@@ -128,6 +133,7 @@ Gaffer.Metadata.registerValues( {
 		`gaffer:deformationBlurSegments` attribute to specify
 		the number of segments used to represent the motion.
 		""",
+		"category", "Standard",
 		"label", "Deformation Blur",
 		"layout:section", "Motion Blur",
 
@@ -142,6 +148,7 @@ Gaffer.Metadata.registerValues( {
 		The number of segments of deformation animation to
 		pass to the renderer when Deformation Blur is on.
 		""",
+		"category", "Standard",
 		"label", "Deformation Segments",
 		"layout:section", "Motion Blur",
 
@@ -154,6 +161,7 @@ Gaffer.Metadata.registerValues( {
 		"""
 		Whether this light is muted.
 		""",
+		"category", "Standard",
 		"label", "Mute",
 
 	],
@@ -183,6 +191,7 @@ Gaffer.Metadata.registerValues( {
 		> Info : Lights can be added to sets either by using the `sets` plug
 		> on the light node itself, or by using a separate Set node.
 		""",
+		"category", "Standard",
 		"label", "Linked Lights",
 		"layout:section", "Light Linking",
 
@@ -199,6 +208,7 @@ Gaffer.Metadata.registerValues( {
 		The lights that cast shadows from this object. Accepts a set
 		expression or a space separated list of lights.
 		""",
+		"category", "Standard",
 		"label", "Shadowed Lights",
 		"layout:section", "Light Linking",
 
@@ -217,6 +227,7 @@ Gaffer.Metadata.registerValues( {
 		Use \"defaultLights\" to refer to all lights that
 		contribute to illumination by default.
 		""",
+		"category", "Standard",
 		"label", "Filtered Lights",
 		"layout:section", "Light Linking",
 
@@ -237,9 +248,36 @@ Gaffer.Metadata.registerValues( {
 		copies to displace differently. Disabling is currently only supported by
 		the Arnold and RenderMan renderer backends.
 		""",
+		"category", "Standard",
 		"label", "Automatic Instancing",
 		"layout:section", "Instancing",
 
 	],
 
+	"attribute:surface" : [
+
+		"category", "Standard",
+
+	],
+
+	"attribute:displacement" : [
+
+		"category", "Standard",
+
+	],
+
+	"attribute:volume" : [
+
+		"category", "Standard",
+
+	],
+
+	"attribute:light" : [
+
+		"category", "Standard",
+
+	],
+
 } )
+
+Gaffer.Metadata.registerValue( "attribute:user:*", "category", "User" )

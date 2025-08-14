@@ -1020,3 +1020,5 @@ Gaffer.Metadata.registerValues( {
 	],
 
 } )
+
+Gaffer.Metadata.registerValue( "option:ai:*", "category", "Arnold" )

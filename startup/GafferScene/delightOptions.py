@@ -468,3 +468,5 @@ Gaffer.Metadata.registerValues( {
 	],
 
 } )
+
+Gaffer.Metadata.registerValue( "option:dl:*", "category", "3Delight" )

@@ -540,3 +540,6 @@ Gaffer.Metadata.registerValues( {
 	],
 
 } )
+
+Gaffer.Metadata.registerValue( "option:render:* option:sampleMotion option:renderPass:*", "category", "Standard" )
+Gaffer.Metadata.registerValue( "option:user:*", "category", "User" )
