@@ -401,6 +401,8 @@ class Menu( GafferUI.Widget ) :
 				signal = qtAction.triggered[bool]
 
 			if self.__searchable and getattr( item, "searchable", True ) :
+				## \todo Investigate why we don't use `weakref.ref( qtAction )` like in the connection below,
+				# and standardise on one approach or the other.
 				signal.connect( functools.partial( Gaffer.WeakMethod( self.__searchableActionTriggered ), qtAction ) )
 
 			signal.connect( functools.partial( Gaffer.WeakMethod( self.__actionTriggered ), weakref.ref( qtAction ) ) )
