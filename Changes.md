@@ -13,6 +13,7 @@ Improvements
 - LocaliseAttributes : Added support for localising global attributes, controlled by the new `includeGlobalAttributes` plug.
 - AttributeTweaks, ShaderTweaks : Global attributes are now localised when `localise` is enabled and no matching attribute is found at the target location or any of its ancestors.
 - AttributeQuery, ShaderQuery : Global attributes are now queried when `inherit` is enabled and no matching attribute is found at the target location or any of its ancestors.
+- SphereLevelSet : Improved performance when evaluating the bounding box.
 
 Fixes
 -----
