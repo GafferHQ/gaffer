@@ -19,21 +19,13 @@ Fixes
 -----
 
 - PathListingWidget : Columns set to automatically stretch now equally share available space when a PathListingWidget's columns are updated via `setColumns()`.
-
-Fixes
------
-
 - CyclesShader : Moved the `principled_bsdf.diffuse_roughness` parameter to a new "Diffuse" section in the Node Editor [^1].
+- ContextQuery : Removed `Create Context Query...` menu item from plugs where it was not relevant.
 
 API
 ---
 
 - ScenePlug : Added optional `withGlobalAttributes` arguments to `fullAttributes()` and `fullAttributesHash()`.
-
-Fixes
------
-
-- ContextQuery : Removed `Create Context Query...` menu item from plugs where it was not relevant.
 
 Breaking Changes
 ----------------
