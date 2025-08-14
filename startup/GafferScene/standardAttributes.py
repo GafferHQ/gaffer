@@ -163,6 +163,7 @@ Gaffer.Metadata.registerValues( {
 		""",
 		"category", "Standard",
 		"label", "Mute",
+		"layout:section", "Light",
 
 	],
 
