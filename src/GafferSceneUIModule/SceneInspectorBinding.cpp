@@ -48,6 +48,7 @@
 #include "GafferBindings/PathBinding.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/Metadata.h"
 #include "Gaffer/Path.h"
 #include "Gaffer/PathFilter.h"
 
@@ -710,23 +711,8 @@ vector<InternedString> alphabeticallySortedKeys( const T &container )
 	return result;
 }
 
-const boost::container::flat_map<string, InternedString> g_attributeCategories = {
-	{ "ai:*", "Arnold" },
-	{ "dl:*", "3Delight" },
-	{ "cycles:*", "Cycles" },
-	{ "ri:*", "RenderMan" },
-	{ "gl:*", "OpenGL" },
-	{ "usd:*", "USD" },
-	{ "user:*", "User" },
-	{
-		"scene:visible doubleSided render:* gaffer:* "
-		"linkedLights shadowedLights filteredLights "
-		"surface displacement volume light",
-		"Standard"
-	}
-};
-
 const InternedString g_other( "Other" );
+const InternedString g_category( "category" );
 
 void addShaderInspections( InspectorTree::Inspections &inspections, const vector<InternedString> &path, ScenePlug *scene, const Gaffer::PlugPtr &editScope, InternedString attributeName, const IECoreScene::ShaderNetwork *shaderNetwork )
 {
@@ -795,13 +781,9 @@ InspectorTree::Inspections attributeInspectionProvider( ScenePlug *scene, const 
 	for( auto name : sortedAttributeNames )
 	{
 		InternedString category = g_other;
-		for( const auto &[pattern, matchingCategory] : g_attributeCategories )
+		if( auto categoryMetadata = Metadata::value<StringData>( fmt::format( "attribute:{}", name.c_str() ), g_category ) )
 		{
-			if( StringAlgo::matchMultiple( name, pattern ) )
-			{
-				category = matchingCategory;
-				break;
-			}
+			category = categoryMetadata->readable();
 		}
 		result.push_back( { { category, name }, new GafferSceneUI::Private::AttributeInspector( scene, editScope, name ) } );
 		if( auto shaderNetwork = attributes->member<const ShaderNetwork>( name ) )
@@ -1348,17 +1330,6 @@ const InspectorTree::Registration g_subdivisionInspectionRegistration( { "Locati
 // Option Inspectors
 // =================
 
-const boost::container::flat_map<string, InternedString> g_optionCategories = {
-	{ "ai:*", "Arnold" },
-	{ "dl:*", "3Delight" },
-	{ "cycles:*", "Cycles" },
-	{ "ri:*", "RenderMan" },
-	{ "gl:*", "OpenGL" },
-	{ "usd:*", "USD" },
-	{ "user:*", "User" },
-	{ "render:* sampleMotion", "Standard" },
-};
-
 const std::string g_optionPrefix( "option:" );
 const std::string g_attributePrefix( "attribute:" );
 
@@ -1375,14 +1346,11 @@ InspectorTree::Inspections optionsInspectionProvider( ScenePlug *scene, const Ga
 
 		string optionName = name.string().substr( g_optionPrefix.size() );
 		InternedString category = g_other;
-		for( const auto &[pattern, matchingCategory] : g_optionCategories )
+		if( auto categoryMetadata = Metadata::value<StringData>( name, g_category ) )
 		{
-			if( StringAlgo::matchMultiple( optionName, pattern ) )
-			{
-				category = matchingCategory;
-				break;
-			}
+			category = categoryMetadata->readable();
 		}
+
 		result.push_back( {
 			{ category, optionName },
 			new GafferSceneUI::Private::OptionInspector( scene, editScope, optionName )
@@ -1409,14 +1377,11 @@ InspectorTree::Inspections globalAttributesInspectionProvider( ScenePlug *scene,
 
 		string attributeName = name.string().substr( g_attributePrefix.size() );
 		InternedString category = g_other;
-		for( const auto &[pattern, matchingCategory] : g_attributeCategories )
+		if( auto categoryMetadata = Metadata::value<StringData>( name, g_category ) )
 		{
-			if( StringAlgo::matchMultiple( optionName, pattern ) )
-			{
-				category = matchingCategory;
-				break;
-			}
+			category = categoryMetadata->readable();
 		}
+
 		result.push_back( {
 			{ category, attributeName },
 			new GafferSceneUI::Private::BasicInspector(
