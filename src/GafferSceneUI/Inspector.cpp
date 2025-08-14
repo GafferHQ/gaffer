@@ -828,7 +828,7 @@ ConstRunTimeTypedPtr Inspector::HistoryPath::property( const InternedString &nam
 		}
 	}
 
-	return Path::property( name );
+	return Path::property( name, canceller );
 }
 
 bool Inspector::HistoryPath::isValid( const Canceller *canceller ) const
