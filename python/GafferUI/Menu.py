@@ -307,7 +307,7 @@ class Menu( GafferUI.Widget ) :
 					qtMenu.addMenu( subMenu )
 
 					subMenu.__definition = definition.reRooted( "/" + name + "/" )
-					subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__build ), weakref.ref( subMenu ) ) )
+					subMenu.aboutToShow.connect( functools.partial( Gaffer.WeakMethod( self.__build ), weakref.ref( subMenu ) ) )
 					if recurse :
 						self.__build( subMenu, recurse, forShortCuts=forShortCuts )
 
@@ -337,7 +337,7 @@ class Menu( GafferUI.Widget ) :
 						qtMenu.addMenu( subMenu )
 
 						subMenu.__definition = item.subMenu
-						subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__build ), weakref.ref( subMenu ) ) )
+						subMenu.aboutToShow.connect( functools.partial( Gaffer.WeakMethod( self.__build ), weakref.ref( subMenu ) ) )
 						if recurse :
 							self.__build( subMenu, recurse, forShortCuts=forShortCuts )
 
@@ -401,9 +401,9 @@ class Menu( GafferUI.Widget ) :
 				signal = qtAction.triggered[bool]
 
 			if self.__searchable and getattr( item, "searchable", True ) :
-				signal.connect( IECore.curry( Gaffer.WeakMethod( self.__menuActionTriggered ), qtAction ) )
+				signal.connect( functools.partial( Gaffer.WeakMethod( self.__menuActionTriggered ), qtAction ) )
 
-			signal.connect( IECore.curry( Gaffer.WeakMethod( self.__actionTriggered ), weakref.ref( qtAction ) ) )
+			signal.connect( functools.partial( Gaffer.WeakMethod( self.__actionTriggered ), weakref.ref( qtAction ) ) )
 
 		active = self.__evaluateItemValue( item.active )
 		qtAction.setEnabled( active )
