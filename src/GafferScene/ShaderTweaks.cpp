@@ -422,7 +422,8 @@ bool ShaderTweaks::affectsProcessedAttributes( const Gaffer::Plug *input ) const
 		tweaksPlug()->isAncestorOf( input ) ||
 		input == shaderPlug() ||
 		input == ignoreMissingPlug() ||
-		input == localisePlug()
+		input == localisePlug() ||
+		( input == inPlug()->globalsPlug() && !localisePlug()->isSetToDefault() )
 	;
 }
 
@@ -451,7 +452,7 @@ void ShaderTweaks::hashProcessedAttributes( const ScenePath &path, const Gaffer:
 
 		if( localisePlug()->getValue() )
 		{
-			h.append( inPlug()->fullAttributesHash( path ) );
+			h.append( inPlug()->fullAttributesHash( path, /* withGlobalAttributes = */ true ) );
 		}
 	}
 }
@@ -485,7 +486,7 @@ IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const S
 	ConstCompoundObjectPtr fullAttributes;
 	if( localisePlug()->getValue() )
 	{
-		fullAttributes = inPlug()->fullAttributes( path );
+		fullAttributes = inPlug()->fullAttributes( path, /* withGlobalAttributes = */ true );
 		source = &fullAttributes->members();
 	}
 

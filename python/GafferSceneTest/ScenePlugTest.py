@@ -105,6 +105,11 @@ class ScenePlugTest( GafferSceneTest.SceneTestCase ) :
 		n = GafferSceneTest.CompoundObjectSource()
 		n["in"].setValue(
 			IECore.CompoundObject( {
+				"globals" : {
+					"attribute:a" : IECore.StringData( "aGlobal" ),
+					"attribute:d" : IECore.StringData( "dGlobal" ),
+					"attribute:e" : IECore.StringData( "eGlobal" ),
+				},
 				"children" : {
 					"group" : {
 						"attributes" : {
@@ -116,6 +121,7 @@ class ScenePlugTest( GafferSceneTest.SceneTestCase ) :
 								"attributes" : {
 									"b" : IECore.StringData( "bOverride" ),
 									"c" : IECore.StringData( "c" ),
+									"d" : IECore.StringData( "d" ),
 								 },
 							}
 						}
@@ -133,12 +139,44 @@ class ScenePlugTest( GafferSceneTest.SceneTestCase ) :
 		)
 
 		self.assertEqual(
+			n["out"].fullAttributes( "/group", withGlobalAttributes = True ),
+			IECore.CompoundObject( {
+				"a" : IECore.StringData( "a" ),
+				"b" : IECore.StringData( "b" ),
+				"d" : IECore.StringData( "dGlobal" ),
+				"e" : IECore.StringData( "eGlobal" ),
+			} )
+		)
+
+		self.assertNotEqual(
+			n["out"].fullAttributesHash( "/group" ),
+			n["out"].fullAttributesHash( "/group", withGlobalAttributes = True )
+		)
+
+		self.assertEqual(
 			n["out"].fullAttributes( "/group/ball" ),
 			IECore.CompoundObject( {
 				"a" : IECore.StringData( "a" ),
 				"b" : IECore.StringData( "bOverride" ),
 				"c" : IECore.StringData( "c" ),
+				"d" : IECore.StringData( "d" ),
 			} )
+		)
+
+		self.assertEqual(
+			n["out"].fullAttributes( "/group/ball", withGlobalAttributes = True ),
+			IECore.CompoundObject( {
+				"a" : IECore.StringData( "a" ),
+				"b" : IECore.StringData( "bOverride" ),
+				"c" : IECore.StringData( "c" ),
+				"d" : IECore.StringData( "d" ),
+				"e" : IECore.StringData( "eGlobal" ),
+			} )
+		)
+
+		self.assertNotEqual(
+			n["out"].fullAttributesHash( "/group/ball" ),
+			n["out"].fullAttributesHash( "/group/ball", withGlobalAttributes = True )
 		)
 
 	def testCreateCounterpart( self ) :

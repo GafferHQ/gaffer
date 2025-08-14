@@ -132,7 +132,8 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Should inherited attributes or be considered or not.
+			When on, the query includes attributes inherited from ancestor locations
+			and the scene globals if a local attribute is not found.
 			""",
 
 			"nodule:type", ""

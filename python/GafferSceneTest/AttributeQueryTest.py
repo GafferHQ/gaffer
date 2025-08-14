@@ -40,6 +40,7 @@ import imath
 
 import IECore
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -1336,6 +1337,93 @@ class AttributeQueryTest( GafferSceneTest.SceneTestCase ):
 
 		self.assertTrue( query["exists"].getValue() )
 		self.assertEqual( query["value"].getValue(), 2.5 )
+
+	def testInheritedGlobalAttribute( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		globalAttributes = GafferScene.CustomAttributes()
+		globalAttributes["in"].setInput( sphere["out"] )
+		globalAttributes["global"].setValue( True )
+		globalAttributes["extraAttributes"].setValue( IECore.CompoundObject( { "test" : IECore.DoubleData( 5.0 ) } ) )
+
+		attributes = GafferScene.CustomAttributes()
+		attributes["in"].setInput( globalAttributes["out"] )
+		attributes["extraAttributes"].setValue( IECore.CompoundObject( { "test" : IECore.DoubleData( 2.5 ) } ) )
+		attributes["enabled"].setValue( False )
+
+		query = GafferScene.AttributeQuery()
+		query.setup( Gaffer.FloatPlug() )
+		query["scene"].setInput( attributes["out"] )
+		query["location"].setValue( "/sphere" )
+		query["attribute"].setValue( "test" )
+
+		self.assertFalse( query["exists"].getValue() )
+		self.assertEqual( query["value"].getValue(), 0.0 )
+
+		query["inherit"].setValue( True )
+
+		self.assertTrue( query["exists"].getValue() )
+		self.assertEqual( query["value"].getValue(), 5.0 )
+
+		globalAttributes["extraAttributes"].setValue( IECore.CompoundObject( { "test" : IECore.DoubleData( 10.0 ) } ) )
+
+		self.assertTrue( query["exists"].getValue() )
+		self.assertEqual( query["value"].getValue(), 10.0 )
+
+		attributes["enabled"].setValue( True )
+
+		self.assertTrue( query["exists"].getValue() )
+		self.assertEqual( query["value"].getValue(), 2.5 )
+
+		query["inherit"].setValue( False )
+
+		self.assertTrue( query["exists"].getValue() )
+		self.assertEqual( query["value"].getValue(), 2.5 )
+
+	def testDirtyPropagation( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		globalAttributes = GafferScene.StandardAttributes()
+		globalAttributes["in"].setInput( sphere["out"] )
+		globalAttributes["global"].setValue( True )
+
+		standardAttributes = GafferScene.StandardAttributes()
+		standardAttributes["in"].setInput( globalAttributes["out"] )
+
+		query = GafferScene.AttributeQuery()
+		query.setup( Gaffer.BoolPlug() )
+		query["scene"].setInput( standardAttributes["out"] )
+		query["location"].setValue( "/sphere" )
+
+		cs = GafferTest.CapturingSlot( query.plugDirtiedSignal() )
+
+		standardAttributes["attributes"]["scene:visible"]["enabled"].setValue( True )
+		self.assertIn( query["value"], { x[0] for x in cs } )
+
+		standardAttributes["attributes"]["scene:visible"]["enabled"].setValue( False )
+		del cs[:]
+		query["default"].setValue( True )
+		self.assertIn( query["value"], { x[0] for x in cs } )
+
+		# modifying the globals with the `inherit` plug disabled
+		# should not dirty query["value"]
+		del cs[:]
+		globalAttributes["attributes"]["scene:visible"]["enabled"].setValue( True )
+		self.assertNotIn( query["value"], { x[0] for x in cs } )
+
+		query["inherit"].setValue( True )
+		self.assertIn( query["value"], { x[0] for x in cs } )
+
+		globalAttributes["attributes"]["scene:visible"]["enabled"].setValue( False )
+		del cs[:]
+		globalAttributes["attributes"]["scene:visible"]["enabled"].setValue( True )
+		self.assertIn( query["value"], { x[0] for x in cs } )
+
+		del cs[:]
+		standardAttributes["attributes"]["scene:visible"]["enabled"].setValue( True )
+		self.assertIn( query["value"], { x[0] for x in cs } )
 
 if __name__ == "__main__":
 	unittest.main()

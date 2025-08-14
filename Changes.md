@@ -10,6 +10,9 @@ Improvements
   - Nodes can be pinned for comparison by dropping them onto the green "B" side of the "Scene" comparison header [^1].
   - The current expansion is now preserved when enabling or disabling comparison mode [^1].
 - Viewer : Added `Add` image comparison mode.
+- LocaliseAttributes : Added support for localising global attributes, controlled by the new `includeGlobalAttributes` plug.
+- AttributeTweaks, ShaderTweaks : Global attributes are now localised when `localise` is enabled and no matching attribute is found at the target location or any of its ancestors.
+- AttributeQuery, ShaderQuery : Global attributes are now queried when `inherit` is enabled and no matching attribute is found at the target location or any of its ancestors.
 
 Fixes
 -----
@@ -21,10 +24,17 @@ Fixes
 
 - CyclesShader : Moved the `principled_bsdf.diffuse_roughness` parameter to a new "Diffuse" section in the Node Editor [^1].
 
+API
+---
+
+- ScenePlug : Added optional `withGlobalAttributes` arguments to `fullAttributes()` and `fullAttributesHash()`.
+
 Breaking Changes
 ----------------
 
 - StandardLightVisualiser : Removed protected methods for drawing visualiser elements. These are now part of `GafferSceneUI::Private::LightVisualiserAlgo`. This namespace can be used by light visualisers, but is currently `Private` while the API details are being resolved.
+- AttributeTweaks : Tweaks with `localise` enabled and a mode of `CreateIfMissing` will now not create an attribute if it is missing from the scene hierarchy, but exists in the globals.
+- AttributeQuery : Queries with `inherit` enabled will now return a result when querying an attribute that does not exist in the scene hierarchy, but does exist in the globals.
 
 [^1]: To be omitted from the notes for the final 1.6.0.0 release.
 
