@@ -1447,6 +1447,43 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( "testTarget2", "description" ), "multi line\ndescription" )
 		self.assertEqual( Gaffer.Metadata.value( "testTarget2", "otherValue" ), IECore.StringVectorData( [ "A", "B", "C" ] ) )
 
+	def testWildcardTargets( self ) :
+
+		self.addCleanup( Gaffer.Metadata.deregisterValue, "target*", "key1" )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, "target1", "key1" )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, "target1", "key2" )
+
+		self.assertIsNone( Gaffer.Metadata.value( "target1", "key1" ) )
+
+		Gaffer.Metadata.registerValue( "target*", "key1", "value1" )
+		self.assertEqual( Gaffer.Metadata.value( "target1", "key1" ), "value1" )
+
+		# Because the registration is against wildcards, it doesn't create a
+		# concrete target that can be queried by `targetsWithMetadata`.
+		self.assertEqual( Gaffer.Metadata.targetsWithMetadata( "*", "key1" ), [] )
+		# But as soon as a concrete target exists (for any key), then the
+		# wildcard registrations will be considered for it.
+		Gaffer.Metadata.registerValue( "target1", "key2", "value2" )
+		self.assertEqual( Gaffer.Metadata.targetsWithMetadata( "*", "key1" ), [ "target1" ] )
+		# And if the concrete target is removed, then the `targetsWithMetadata()`
+		# will once again be empty.
+		Gaffer.Metadata.deregisterValue( "target1", "key2" )
+		self.assertEqual( Gaffer.Metadata.targetsWithMetadata( "*", "key1" ), [] )
+
+		# A concrete registration takes precedence over a wildcard
+		# registration.
+		Gaffer.Metadata.registerValue( "target1", "key1", "value2" )
+		self.assertEqual( Gaffer.Metadata.value( "target1", "key1" ), "value2" )
+
+		# Removing the concrete registration reverts back to using
+		# the wildcard registration.
+		Gaffer.Metadata.deregisterValue( "target1", "key1" )
+		self.assertEqual( Gaffer.Metadata.value( "target1", "key1" ), "value1" )
+
+		# And removing the wildcard registration gets us back to square one.
+		Gaffer.Metadata.deregisterValue( "target*", "key1" )
+		self.assertIsNone( Gaffer.Metadata.value( "target1", "key1" ) )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )
