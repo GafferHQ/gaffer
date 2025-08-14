@@ -29,6 +29,7 @@ API
 ---
 
 - ScenePlug : Added optional `withGlobalAttributes` arguments to `fullAttributes()` and `fullAttributesHash()`.
+- VectorDataWidget : Added optional `maximumVisibleRows` argument.
 
 Breaking Changes
 ----------------
