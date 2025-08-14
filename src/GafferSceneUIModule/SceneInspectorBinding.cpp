@@ -1407,7 +1407,7 @@ InspectorTree::Inspections globalAttributesInspectionProvider( ScenePlug *scene,
 			continue;
 		}
 
-		string optionName = name.string().substr( g_attributePrefix.size() );
+		string attributeName = name.string().substr( g_attributePrefix.size() );
 		InternedString category = g_other;
 		for( const auto &[pattern, matchingCategory] : g_attributeCategories )
 		{
@@ -1418,7 +1418,7 @@ InspectorTree::Inspections globalAttributesInspectionProvider( ScenePlug *scene,
 			}
 		}
 		result.push_back( {
-			{ category, optionName },
+			{ category, attributeName },
 			new GafferSceneUI::Private::BasicInspector(
 				scene->globalsPlug(), editScope,
 				[ name = name ] ( const CompoundObjectPlug *globalsPlug ) {
