@@ -10,6 +10,9 @@ Fixes
 -----
 
 - VisualiserTool : Fixed "undefined variable FLT_EPSILON" errors [^1].
+- AttributeEditor :
+  - Added missing Cycles volume attributes.
+  - Renamed OpenGL "Shading" section to "Drawing", to match the NodeEditor.
 
 API
 ---
