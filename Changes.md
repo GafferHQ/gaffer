@@ -29,6 +29,11 @@ API
 
 - ScenePlug : Added optional `withGlobalAttributes` arguments to `fullAttributes()` and `fullAttributesHash()`.
 
+Fixes
+-----
+
+- ContextQuery : Removed `Create Context Query...` menu item from plugs where it was not relevant.
+
 Breaking Changes
 ----------------
 
