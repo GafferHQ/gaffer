@@ -401,7 +401,7 @@ class Menu( GafferUI.Widget ) :
 				signal = qtAction.triggered[bool]
 
 			if self.__searchable and getattr( item, "searchable", True ) :
-				signal.connect( functools.partial( Gaffer.WeakMethod( self.__menuActionTriggered ), qtAction ) )
+				signal.connect( functools.partial( Gaffer.WeakMethod( self.__searchableActionTriggered ), qtAction ) )
 
 			signal.connect( functools.partial( Gaffer.WeakMethod( self.__actionTriggered ), weakref.ref( qtAction ) ) )
 
@@ -653,7 +653,7 @@ class Menu( GafferUI.Widget ) :
 		if self.__searchMenu and self.__searchMenu.defaultAction() :
 			self.__searchMenu.defaultAction().trigger()
 
-	def __menuActionTriggered( self, action, checked ) :
+	def __searchableActionTriggered( self, action, checked ) :
 
 		if self.__lastAction is not None :
 			self.__lastAction.deleteLater()
