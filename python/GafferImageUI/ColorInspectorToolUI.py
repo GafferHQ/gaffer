@@ -333,6 +333,8 @@ class _ColorInspectorsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			elif compareMode == "difference":
 				diff = colors[1] - colors[0]
 				compositedColor = imath.Color4f( abs( diff.r ), abs( diff.g ), abs( diff.b ), abs( diff.a ) )
+			elif compareMode == "add" :
+				compositedColor = colors[0] + colors[1]
 
 		GafferUI.Pointer.setCurrent( "rgba" )
 		return compositedColor

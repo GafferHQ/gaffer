@@ -9,6 +9,7 @@ Improvements
   - Cells dragged from the "Name" column now return their name, rather than their full path [^1].
   - Nodes can be pinned for comparison by dropping them onto the green "B" side of the "Scene" comparison header [^1].
   - The current expansion is now preserved when enabling or disabling comparison mode [^1].
+- Viewer : Added `Add` image comparison mode.
 
 Fixes
 -----

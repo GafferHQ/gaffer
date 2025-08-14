@@ -150,7 +150,8 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 			Replace,
 			Over,
 			Under,
-			Difference
+			Difference,
+			Add
 		};
 
 		void setBlendMode( BlendMode blendMode );

@@ -740,6 +740,10 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 		{
 			m = ImageGadget::BlendMode::Replace;
 		}
+		else if( compareMode == "add" )
+		{
+			m = ImageGadget::BlendMode::Add;
+		}
 
 		m_imageGadgets[1]->setVisible( compareEnabled );
 

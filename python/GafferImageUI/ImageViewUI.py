@@ -547,6 +547,7 @@ class _CompareModePlugValueWidget( GafferUI.PlugValueWidget ) :
 			"" : "compareModeNone.png",
 			"over" : "compareModeOver.png",
 			"under" : "compareModeUnder.png",
+			"add" : "compareModeAdd.png",
 			"difference" : "compareModeDifference.png",
 			"sideBySide" : "compareModeSideBySide.png",
 			"replace" : "compareModeReplace.png",
@@ -594,6 +595,7 @@ class _CompareModePlugValueWidget( GafferUI.PlugValueWidget ) :
 			( "None", "" ),
 			( "Over", "over" ),
 			( "Under", "under" ),
+			( "Add", "add" ),
 			( "Difference", "difference" ),
 			( "Replace", "replace" ),
 		] :

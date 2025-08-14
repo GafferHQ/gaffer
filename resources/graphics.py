@@ -182,6 +182,7 @@
 				'compareModeUnder',
 				'compareModeDifference',
 				'compareModeSideBySide',
+				'compareModeAdd',
 				'wipeDisabled',
 				'wipeEnabled',
 			]
