@@ -14,7 +14,9 @@ Fixes
 API
 ---
 
-- Metadata : Added the ability to register metadata against multiple string targets, by including wildcards in the target name.
+- Metadata :
+  - Added the ability to register metadata against multiple string targets, by including wildcards in the target name.
+  - Added per-target signals for string targets, available via the `valueChangedSignal( target )` method. The old all-target `valueChangedSignal()` method is now deprecated.
 
 [^1]: To be omitted from the notes for the final 1.6.0.0 release.
 

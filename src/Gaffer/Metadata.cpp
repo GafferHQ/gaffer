@@ -68,8 +68,41 @@ using namespace Gaffer;
 namespace
 {
 
-// Signals
-// =======
+// Signals for string targets
+// ==========================
+
+using StringSignalsMap = std::unordered_map<InternedString, Metadata::ValueChangedSignal>;
+StringSignalsMap &stringSignalsMap()
+{
+	static StringSignalsMap *g_stringSignalsMap = new StringSignalsMap;
+	return *g_stringSignalsMap;
+}
+
+void emitValueChangedSignals( InternedString target, InternedString key, Metadata::ValueChangedReason reason )
+{
+	StringSignalsMap &m = stringSignalsMap();
+	if( StringAlgo::hasWildcards( target.c_str() ) )
+	{
+		for( auto &[t, signal] : m )
+		{
+			if( StringAlgo::matchMultiple( t.string(), target.string() ) )
+			{
+				signal( t, key, reason );
+			}
+		}
+	}
+	else
+	{
+		auto it = m.find( target );
+		if( it != m.end() )
+		{
+			it->second( target, key, reason );
+		}
+	}
+}
+
+// Signals for Node/Plug targets
+// =============================
 //
 // We store all our signals in a map indexed by `Node *`. Although we do not
 // allow concurrent edits to a node graph, we do allow different node graphs to
@@ -526,9 +559,8 @@ void Metadata::registerValue( IECore::InternedString target, IECore::InternedStr
 		values->replace( keyIt.first, namedValue );
 	}
 
-	/// \todo This doesn't make much sense when the target is wildcarded. Would
-	/// we be better off matching the node/plug signals and providing a signal
-	/// per target?
+	emitValueChangedSignals( target, key, ValueChangedReason::StaticRegistration );
+	// Legacy signal receives target directly, even if it contains wildcards.
 	valueChangedSignal()( target, key );
 }
 
@@ -575,6 +607,8 @@ void Metadata::deregisterValue( IECore::InternedString target, IECore::InternedS
 		return;
 	}
 
+	emitValueChangedSignals( target, key, ValueChangedReason::StaticDeregistration );
+	// Legacy signal receives target directly, even if it contains wildcards.
 	valueChangedSignal()( target, key );
 }
 
@@ -1020,10 +1054,9 @@ IECore::ConstDataPtr Metadata::valueInternal( const GraphComponent *target, IECo
 	return Metadata::valueInternal( target, key, registrationTypes( instanceOnly ) );
 }
 
-Metadata::ValueChangedSignal &Metadata::valueChangedSignal()
+Metadata::ValueChangedSignal &Metadata::valueChangedSignal( InternedString target )
 {
-	static ValueChangedSignal *s = new ValueChangedSignal;
-	return *s;
+	return stringSignalsMap()[target];
 }
 
 Metadata::NodeValueChangedSignal &Metadata::nodeValueChangedSignal( Node *node )
@@ -1034,6 +1067,12 @@ Metadata::NodeValueChangedSignal &Metadata::nodeValueChangedSignal( Node *node )
 Metadata::PlugValueChangedSignal &Metadata::plugValueChangedSignal( Node *node )
 {
 	return nodeSignals( node, /* createIfMissing = */ true )->plugSignal;
+}
+
+Metadata::LegacyValueChangedSignal &Metadata::valueChangedSignal()
+{
+	static LegacyValueChangedSignal *s = new LegacyValueChangedSignal;
+	return *s;
 }
 
 Metadata::LegacyNodeValueChangedSignal &Metadata::nodeValueChangedSignal()

@@ -1059,14 +1059,19 @@ class MetadataTest( GafferTest.TestCase ) :
 
 	def testOverwriteNonNodeMetadata( self ) :
 
-		cs = GafferTest.CapturingSlot( Gaffer.Metadata.valueChangedSignal() )
+		legacyCS = GafferTest.CapturingSlot( Gaffer.Metadata.valueChangedSignal() )
+		cs = GafferTest.CapturingSlot( Gaffer.Metadata.valueChangedSignal( "testTarget" ) )
 
 		Gaffer.Metadata.registerValue( "testTarget", "testInt", 1 )
+		self.assertEqual( len( legacyCS ), 1 )
 		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( cs[0], ( "testTarget", "testInt", Gaffer.Metadata.ValueChangedReason.StaticRegistration ) )
 		self.assertEqual( Gaffer.Metadata.value( "testTarget", "testInt" ), 1 )
 
 		Gaffer.Metadata.registerValue( "testTarget", "testInt", 2 )
+		self.assertEqual( len( legacyCS ), 2 )
 		self.assertEqual( len( cs ), 2 )
+		self.assertEqual( cs[1], ( "testTarget", "testInt", Gaffer.Metadata.ValueChangedReason.StaticRegistration ) )
 		self.assertEqual( Gaffer.Metadata.value( "testTarget", "testInt" ), 2 )
 
 	def testDeregisterNonNodeMetadata( self ) :
@@ -1074,16 +1079,22 @@ class MetadataTest( GafferTest.TestCase ) :
 		Gaffer.Metadata.registerValue( "testTarget", "testInt", 1 )
 		self.assertEqual( Gaffer.Metadata.value( "testTarget", "testInt" ), 1 )
 
-		cs = GafferTest.CapturingSlot( Gaffer.Metadata.valueChangedSignal() )
+		legacyCS = GafferTest.CapturingSlot( Gaffer.Metadata.valueChangedSignal() )
+		cs = GafferTest.CapturingSlot( Gaffer.Metadata.valueChangedSignal( "testTarget" ) )
+
 		Gaffer.Metadata.deregisterValue( "testTarget", "testInt" )
+		self.assertEqual( len( legacyCS ), 1 )
 		self.assertEqual( len( cs ), 1 )
-		self.assertEqual( cs[0], ( "testTarget", "testInt" ) )
+		self.assertEqual( legacyCS[0], ( "testTarget", "testInt" ) )
+		self.assertEqual( cs[0], ( "testTarget", "testInt", Gaffer.Metadata.ValueChangedReason.StaticDeregistration ) )
 		self.assertEqual( Gaffer.Metadata.value( "testTarget", "testInt" ), None )
 
 		Gaffer.Metadata.deregisterValue( "testTarget", "nonExistentKey" )
+		self.assertEqual( len( legacyCS ), 1 )
 		self.assertEqual( len( cs ), 1 )
 
 		Gaffer.Metadata.deregisterValue( "nonExistentTarget", "testInt" )
+		self.assertEqual( len( legacyCS ), 1 )
 		self.assertEqual( len( cs ), 1 )
 
 	def testSerialisationQuoting( self ) :
@@ -1483,6 +1494,50 @@ class MetadataTest( GafferTest.TestCase ) :
 		# And removing the wildcard registration gets us back to square one.
 		Gaffer.Metadata.deregisterValue( "target*", "key1" )
 		self.assertIsNone( Gaffer.Metadata.value( "target1", "key1" ) )
+
+	def testPerTargetSignals( self ) :
+
+		self.addCleanup( Gaffer.Metadata.deregisterValue, "target1", "key1" )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, "target2", "key1" )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, "target3", "key1" )
+
+		cs1 = GafferTest.CapturingSlot( Gaffer.Metadata.valueChangedSignal( "target1" ) )
+		cs2 = GafferTest.CapturingSlot( Gaffer.Metadata.valueChangedSignal( "target2" ) )
+
+		Gaffer.Metadata.registerValue( "target1", "key1", "value1" )
+		self.assertEqual( len( cs1 ), 1 )
+		self.assertEqual( cs1[0], ( "target1", "key1", Gaffer.Metadata.ValueChangedReason.StaticRegistration ) )
+		self.assertEqual( len( cs2 ), 0 )
+
+		Gaffer.Metadata.registerValue( "target2", "key1", "value1" )
+		self.assertEqual( len( cs1 ), 1 )
+		self.assertEqual( len( cs2 ), 1 )
+		self.assertEqual( cs2[0], ( "target2", "key1", Gaffer.Metadata.ValueChangedReason.StaticRegistration ) )
+
+		Gaffer.Metadata.registerValue( "target3", "key1", "value1" )
+		self.assertEqual( len( cs1 ), 1 )
+		self.assertEqual( len( cs2 ), 1 )
+
+	def testWildcardTargetChangeSignalling( self ) :
+
+		self.addCleanup( Gaffer.Metadata.deregisterValue, "foo*", "key" )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, "bar*", "key" )
+
+		cs1 = GafferTest.CapturingSlot( Gaffer.Metadata.valueChangedSignal( "foo1" ) )
+		cs2 = GafferTest.CapturingSlot( Gaffer.Metadata.valueChangedSignal( "foo2" ) )
+		cs3 = GafferTest.CapturingSlot( Gaffer.Metadata.valueChangedSignal( "bar3" ) )
+
+		Gaffer.Metadata.registerValue( "foo*", "key", "value" )
+
+		self.assertEqual( len( cs1 ), 1 )
+		self.assertEqual( len( cs2 ), 1 )
+		self.assertEqual( len( cs3 ), 0 )
+
+		Gaffer.Metadata.registerValue( "bar*", "key", "value" )
+
+		self.assertEqual( len( cs1 ), 1 )
+		self.assertEqual( len( cs2 ), 1 )
+		self.assertEqual( len( cs3 ), 1 )
 
 	def tearDown( self ) :
 
