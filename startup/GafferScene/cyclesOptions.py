@@ -1045,3 +1045,5 @@ Gaffer.Metadata.registerValues( {
 	],
 
 } )
+
+Gaffer.Metadata.registerValue( "option:cycles:*", "category", "Cycles" )

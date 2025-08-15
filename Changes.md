@@ -25,12 +25,16 @@ Fixes
 - CyclesShader : Moved the `principled_bsdf.diffuse_roughness` parameter to a new "Diffuse" section in the Node Editor [^1].
 - ContextQuery : Removed `Create Context Query...` menu item from plugs where it was not relevant.
 - Menu : Executing a non-searchable menu item from a searchable menu no longer causes it to appear as the last used action in the menu's search field.
+- AttributeEditor :
+  - Added missing Cycles volume attributes.
+  - Renamed OpenGL "Shading" section to "Drawing", to match the NodeEditor.
 
 API
 ---
 
 - ScenePlug : Added optional `withGlobalAttributes` arguments to `fullAttributes()` and `fullAttributesHash()`.
 - VectorDataWidget : Added optional `maximumVisibleRows` argument.
+- Metadata : Added per-target signals for string targets, available via the `valueChangedSignal( target )` method. The old all-target `valueChangedSignal()` method is now deprecated.
 
 Breaking Changes
 ----------------
