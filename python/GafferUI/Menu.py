@@ -307,7 +307,7 @@ class Menu( GafferUI.Widget ) :
 					qtMenu.addMenu( subMenu )
 
 					subMenu.__definition = definition.reRooted( "/" + name + "/" )
-					subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__build ), weakref.ref( subMenu ) ) )
+					subMenu.aboutToShow.connect( functools.partial( Gaffer.WeakMethod( self.__build ), weakref.ref( subMenu ) ) )
 					if recurse :
 						self.__build( subMenu, recurse, forShortCuts=forShortCuts )
 
@@ -337,7 +337,7 @@ class Menu( GafferUI.Widget ) :
 						qtMenu.addMenu( subMenu )
 
 						subMenu.__definition = item.subMenu
-						subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__build ), weakref.ref( subMenu ) ) )
+						subMenu.aboutToShow.connect( functools.partial( Gaffer.WeakMethod( self.__build ), weakref.ref( subMenu ) ) )
 						if recurse :
 							self.__build( subMenu, recurse, forShortCuts=forShortCuts )
 
@@ -400,10 +400,12 @@ class Menu( GafferUI.Widget ) :
 			else :
 				signal = qtAction.triggered[bool]
 
-			if self.__searchable :
-				signal.connect( IECore.curry( Gaffer.WeakMethod( self.__menuActionTriggered ), qtAction ) )
+			if self.__searchable and getattr( item, "searchable", True ) :
+				## \todo Investigate why we don't use `weakref.ref( qtAction )` like in the connection below,
+				# and standardise on one approach or the other.
+				signal.connect( functools.partial( Gaffer.WeakMethod( self.__searchableActionTriggered ), qtAction ) )
 
-			signal.connect( IECore.curry( Gaffer.WeakMethod( self.__actionTriggered ), weakref.ref( qtAction ) ) )
+			signal.connect( functools.partial( Gaffer.WeakMethod( self.__actionTriggered ), weakref.ref( qtAction ) ) )
 
 		active = self.__evaluateItemValue( item.active )
 		qtAction.setEnabled( active )
@@ -653,7 +655,7 @@ class Menu( GafferUI.Widget ) :
 		if self.__searchMenu and self.__searchMenu.defaultAction() :
 			self.__searchMenu.defaultAction().trigger()
 
-	def __menuActionTriggered( self, action, checked ) :
+	def __searchableActionTriggered( self, action, checked ) :
 
 		if self.__lastAction is not None :
 			self.__lastAction.deleteLater()

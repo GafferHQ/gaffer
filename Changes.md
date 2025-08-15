@@ -14,6 +14,7 @@ Improvements
 - AttributeTweaks, ShaderTweaks : Global attributes are now localised when `localise` is enabled and no matching attribute is found at the target location or any of its ancestors.
 - AttributeQuery, ShaderQuery : Global attributes are now queried when `inherit` is enabled and no matching attribute is found at the target location or any of its ancestors.
 - SphereLevelSet : Improved performance when evaluating the bounding box.
+- RenderPassMenu : Added a search menu which displays only the render passes matching the search text. The search menu can be disabled by registering the following metadata in a startup file. `Gaffer.Metadata.registerValue( Gaffer.ScriptNode, "variables.renderPass.value", "renderPassPlugValueWidget:searchable", False )`.
 
 Fixes
 -----
@@ -22,6 +23,7 @@ Fixes
 - PathListingWidget : Columns set to automatically stretch now equally share available space when a PathListingWidget's columns are updated via `setColumns()`.
 - CyclesShader : Moved the `principled_bsdf.diffuse_roughness` parameter to a new "Diffuse" section in the Node Editor [^1].
 - ContextQuery : Removed `Create Context Query...` menu item from plugs where it was not relevant.
+- Menu : Executing a non-searchable menu item from a searchable menu no longer causes it to appear as the last used action in the menu's search field.
 
 API
 ---
