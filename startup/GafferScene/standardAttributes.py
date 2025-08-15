@@ -255,6 +255,30 @@ Gaffer.Metadata.registerValues( {
 
 	],
 
+	"attribute:surface" : [
+
+		"category", "Standard",
+
+	],
+
+	"attribute:displacement" : [
+
+		"category", "Standard",
+
+	],
+
+	"attribute:volume" : [
+
+		"category", "Standard",
+
+	],
+
+	"attribute:light" : [
+
+		"category", "Standard",
+
+	],
+
 } )
 
 Gaffer.Metadata.registerValue( "attribute:user:*", "category", "User" )
