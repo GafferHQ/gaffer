@@ -21,6 +21,7 @@ Fixes
 - PathListingWidget : Columns set to automatically stretch now equally share available space when a PathListingWidget's columns are updated via `setColumns()`.
 - CyclesShader : Moved the `principled_bsdf.diffuse_roughness` parameter to a new "Diffuse" section in the Node Editor [^1].
 - ContextQuery : Removed `Create Context Query...` menu item from plugs where it was not relevant.
+- ImageReader : If you specify a color space, it now affects all RGB layers ( previously it affected RGB, but not someLayerName.RGB )
 
 API
 ---
