@@ -163,7 +163,7 @@ V2i coordinateDivide( V2i a, V2i b )
 	return V2i( coordinateDivide( a.x, b.x ), coordinateDivide( a.y, b.y ) );
 }
 
-std::string channelNameFromEXR( std::string view, std::string part, std::string channel, bool useHeuristics, bool singlePartMultiView )
+std::string channelNameFromEXR( std::string view, std::string part, std::string channel, bool useHeuristics, bool singlePartMultiView, int numParts )
 {
 	if( !useHeuristics )
 	{
@@ -197,6 +197,11 @@ std::string channelNameFromEXR( std::string view, std::string part, std::string 
 	else if( channel == "cortexInstanceID.v" )
 	{
 		return "instanceID";
+	}
+
+	if( numParts == 1 )
+	{
+		part = "";
 	}
 
 	std::vector< std::string > layerTokens;
@@ -736,6 +741,19 @@ class File
 
 			bool singlePartMultiView = false;
 			ImageSpec currentSpec;
+
+			int numParts = 0;
+			for( int subImageIndex = 0; ; subImageIndex++ )
+			{
+				currentSpec = m_imageInput->spec( subImageIndex, 0 );
+				if( currentSpec.format == TypeUnknown )
+				{
+					// Gone past last subimage
+					break;
+				}
+				numParts++;
+			}
+
 			for( int subImageIndex = 0; ; subImageIndex++ )
 			{
 				currentSpec = m_imageInput->spec( subImageIndex, 0 );
@@ -912,7 +930,7 @@ class File
 						channelName = channelNameFromEXR(
 							channelViewName, subImageName.str(), n,
 							channelNaming != ImageReader::ChannelInterpretation::Specification,
-							singlePartMultiView
+							singlePartMultiView, numParts
 						);
 					}
 
