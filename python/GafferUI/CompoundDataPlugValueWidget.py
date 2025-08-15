@@ -148,7 +148,7 @@ class CompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 			( "String", Gaffer.StringVectorDataPlug ),
 		] :
 			if plugType is not None :
-				result.append( "/Add/Array/" + label, {"command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", plugType.ValueType() ) } )
+				result.append( "/Add/Array/" + label, { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", plugType.ValueType() ) } )
 			else :
 				result.append( "/Add/Array/" + label, { "divider" : True } )
 
