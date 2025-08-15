@@ -31,6 +31,7 @@ API
 
 - ScenePlug : Added optional `withGlobalAttributes` arguments to `fullAttributes()` and `fullAttributesHash()`.
 - VectorDataWidget : Added optional `maximumVisibleRows` argument.
+- Metadata : Added per-target signals for string targets, available via the `valueChangedSignal( target )` method. The old all-target `valueChangedSignal()` method is now deprecated.
 
 Breaking Changes
 ----------------
