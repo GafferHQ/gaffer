@@ -32,6 +32,13 @@ API
 - ScenePlug : Added optional `withGlobalAttributes` arguments to `fullAttributes()` and `fullAttributesHash()`.
 - VectorDataWidget : Added optional `maximumVisibleRows` argument.
 
+API
+---
+
+- SceneInspector :
+  - Added `registerAttributeCategory()` and `deregisterAttributeCategory()` methods.
+  - Added `registerOptionCategory()` and `deregisterOptionCategory()` methods.
+
 Breaking Changes
 ----------------
 

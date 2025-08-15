@@ -376,5 +376,59 @@ class SceneInspectorTest( GafferUITest.TestCase ) :
 					shaderNetwork.getShader( shaderPath[-1] ).parameters[parameterPath[-1]]
 				)
 
+	def __testCustomCategories( self, pathString ) :
+
+		context = Gaffer.Context()
+
+		if pathString == "/Location/Attributes" :
+			plane = GafferScene.Plane()
+			scene = GafferScene.CustomAttributes()
+			scene["in"].setInput( plane["out"] )
+			plug = scene["attributes"]
+			registerCategory = GafferSceneUI.SceneInspector.registerAttributeCategory
+			deregisterCategory = GafferSceneUI.SceneInspector.deregisterAttributeCategory
+			context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/plane" )
+		else :
+			self.assertEqual( pathString, "/Globals/Options" )
+			scene = GafferScene.CustomOptions()
+			registerCategory = GafferSceneUI.SceneInspector.registerOptionCategory
+			deregisterCategory = GafferSceneUI.SceneInspector.deregisterOptionCategory
+			plug = scene["options"]
+
+		for name, value in {
+			"a" : 1,
+			"b" : 2,
+			"c" : 3,
+			"d" : 4,
+		}.items() :
+			plug.addChild( Gaffer.NameValuePlug( name, value ) )
+
+		def assertChildNamesEqual( pathString, childNames ) :
+
+			tree = _GafferSceneUI._SceneInspector.InspectorTree( scene["out"], [ context, context ], None )
+			path = _GafferSceneUI._SceneInspector.InspectorPath( tree, pathString )
+			self.assertEqual( [ c[-1] for c in path.children() ], childNames )
+
+		assertChildNamesEqual( pathString, [ "Other" ] )
+
+		registerCategory( "AC", "a c" )
+		self.addCleanup( deregisterCategory, "AC" )
+
+		assertChildNamesEqual( pathString, [ "AC", "Other" ] )
+		assertChildNamesEqual( f"{pathString}/AC", [ "a", "c" ] )
+		assertChildNamesEqual( f"{pathString}/Other", [ "b", "d" ] )
+
+		deregisterCategory( "AC" )
+		assertChildNamesEqual( pathString, [ "Other" ] )
+		assertChildNamesEqual( f"{pathString}/Other", [ "a", "b", "c", "d" ] )
+
+	def testCustomAttributeCategories( self ) :
+
+		self.__testCustomCategories( "/Location/Attributes" )
+
+	def testCustomOptionCategories( self ) :
+
+		self.__testCustomCategories( "/Globals/Options" )
+
 if __name__ == "__main__":
 	unittest.main()
