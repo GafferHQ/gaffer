@@ -127,6 +127,33 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertImagesEqual( colorSpace["out"], exrReader["out"], ignoreMetadata = True, maxDifference = 0.000001 )
 
+	def testColorSpaceOverrideOnLayers( self ) :
+
+		layersFileName = GafferImageTest.ImageTestCase.imagesPath() / "channelTestSinglePart.exr"
+
+		# Default reader assumes that image is already in `scene_linear`
+		# space, so no transform is applied during loading.
+		exrReader = GafferImage.ImageReader()
+		exrReader["fileName"].setValue( layersFileName )
+
+		# Override reader requires a transform from sRGB primaries to
+		# ACEScg primaries (the primaries for `scene_linear`).
+		overrideReader = GafferImage.ImageReader()
+		overrideReader["fileName"].setValue( layersFileName )
+		overrideReader["colorSpace"].setValue( "Linear Rec.709 (sRGB)" )
+
+		# Transform back manually and we should end up with the default
+		# image.
+		colorSpace = GafferImage.ColorSpace()
+		colorSpace["in"].setInput( overrideReader["out"] )
+		colorSpace["inputSpace"].setValue( "scene_linear" )
+		colorSpace["outputSpace"].setValue( "Linear Rec.709 (sRGB)" )
+
+		# We expect the reader to apply the transform to all layers
+		colorSpace["channels"].setValue( "*" )
+
+		self.assertImagesEqual( colorSpace["out"], exrReader["out"], ignoreMetadata = True, maxDifference = 0.000001 )
+
 	def testJpgRead( self ) :
 
 		exrReader = GafferImage.ImageReader()
