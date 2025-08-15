@@ -16,6 +16,7 @@ Improvements
 - SphereLevelSet : Improved performance when evaluating the bounding box.
 - RenderPassMenu : Added a search menu which displays only the render passes matching the search text. The search menu can be disabled by registering the following metadata in a startup file. `Gaffer.Metadata.registerValue( Gaffer.ScriptNode, "variables.renderPass.value", "renderPassPlugValueWidget:searchable", False )`.
 - RenderPassEditor, AttributeEditor, LightEditor, SceneInspector : Improved presentation of VectorData types in the Inspect popup.
+- CompoundDataPlugValueWidget : Removed unnecessary nesting from the menu for adding plugs.
 
 Fixes
 -----
