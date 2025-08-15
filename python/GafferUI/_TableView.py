@@ -41,15 +41,16 @@ from Qt import QtWidgets
 # A QTableView derived class with custom size behaviours we want for
 # GafferUI. This is not part of the public API.
 #
-# - Always requests enough space to show all cells if possible.
-# - Optionally refuses to shrink below a certain number of visible rows.
+# - Defaults to requesting enough space to show all cells if possible.
+# - Optionally refuses to shrink or grow beyond a certain number of visible rows.
 class _TableView( QtWidgets.QTableView ) :
 
-	def __init__( self, minimumVisibleRows = 0 ) :
+	def __init__( self, minimumVisibleRows = 0, maximumVisibleRows = None ) :
 
 		QtWidgets.QTableView.__init__( self )
 
 		self.__minimumVisibleRows = minimumVisibleRows
+		self.__maximumVisibleRows = maximumVisibleRows
 		self.horizontalHeader().sectionResized.connect( self.__sizeShouldChange )
 
 	def setModel( self, model ) :
@@ -125,7 +126,12 @@ class _TableView( QtWidgets.QTableView ) :
 		if self.horizontalScrollBarPolicy() != QtCore.Qt.ScrollBarAlwaysOff :
 			w += self.verticalScrollBar().sizeHint().width()
 
-		h = self.verticalHeader().length() + margins.top() + margins.bottom()
+		h = margins.top() + margins.bottom()
+		if self.__maximumVisibleRows is not None and self.__maximumVisibleRows < self.verticalHeader().count() :
+			h += self.verticalHeader().sectionSize( 0 ) * self.__maximumVisibleRows
+		else :
+			h += self.verticalHeader().length()
+
 		if not self.horizontalHeader().isHidden() :
 			h += self.horizontalHeader().sizeHint().height()
 		# allow room for a visible horizontal scrollbar to prevent it overlapping

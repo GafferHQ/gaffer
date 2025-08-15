@@ -65,6 +65,9 @@ class VectorDataWidget( GafferUI.Widget ) :
 	# may become visible - before this all rows should be directly visible with no need
 	# for scrolling.
 	#
+	# maximumVisibleRows specifies the maximum number of rows displayed before a vertical
+	# scroll bar becomes visible.
+	#
 	# columnToolTips may be specified as a list of strings to provide a tooltip for
 	# each data. Note that the `column` part of the name is misleading.
 	#
@@ -80,6 +83,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		header=False,
 		showIndices=True,
 		minimumVisibleRows=8,
+		maximumVisibleRows = None,
 		columnToolTips=None,
 		sizeEditable=True,
 		columnEditability=None,
@@ -94,7 +98,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		# table view
 
-		self.__tableView = _TableView( minimumVisibleRows = minimumVisibleRows )
+		self.__tableView = _TableView( minimumVisibleRows = minimumVisibleRows, maximumVisibleRows = maximumVisibleRows )
 
 		self.__tableView.horizontalHeader().setMinimumSectionSize( 70 )
 

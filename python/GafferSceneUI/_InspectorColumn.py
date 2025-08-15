@@ -689,14 +689,24 @@ class __InspectionPopupWindow( GafferUI.PopupWindow ) :
 
 				GafferUI.Label( "<b>Value</b>", parenting = { "index" : ( 0, 1 ), "alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Top ) } )
 
-				valueLabel = GafferUI.Label(
-					f"{inspection.value()}",
-					parenting = { "index" : ( 1, 1 ), "alignment" : ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.Top ) }
-				)
+				value = inspection.value()
+				## \todo It would be nice to support more widget types here, maybe we could create a common
+				# ValueWidget base class with a `create()` method similar to `PlugValueWidget.create()`?
+				if IECore.DataTraits.isSequenceDataType( value ) :
+					GafferUI.VectorDataWidget(
+						value, editable = False, maximumVisibleRows = 10,
+						parenting = { "index" : ( 1, 1 ), "alignment" : ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.Top ) }
+					)
+				else :
+					valueLabel = GafferUI.Label(
+						f"{value}",
+						parenting = { "index" : ( 1, 1 ), "alignment" : ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.Top ) }
+					)
 
-				valueLabel.buttonPressSignal().connect( lambda widget, event : True )
-				valueLabel.dragBeginSignal().connect( Gaffer.WeakMethod( self.__valueDragBegin ) )
-				valueLabel.dragEndSignal().connect( Gaffer.WeakMethod( self.__valueDragEnd  ))
+					valueLabel.buttonPressSignal().connect( lambda widget, event : True )
+					valueLabel.dragBeginSignal().connect( Gaffer.WeakMethod( self.__valueDragBegin ) )
+					valueLabel.dragEndSignal().connect( Gaffer.WeakMethod( self.__valueDragEnd ) )
+
 				button = GafferUI.Button( image = "duplicate.png", hasFrame = False, toolTip = "Copy Value", parenting = { "index" : ( 2, 1 ), "alignment" : ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.Top ) } )
 				button.clickedSignal().connect( Gaffer.WeakMethod( self.__valueCopyClicked ) )
 

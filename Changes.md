@@ -15,6 +15,7 @@ Improvements
 - AttributeQuery, ShaderQuery : Global attributes are now queried when `inherit` is enabled and no matching attribute is found at the target location or any of its ancestors.
 - SphereLevelSet : Improved performance when evaluating the bounding box.
 - RenderPassMenu : Added a search menu which displays only the render passes matching the search text. The search menu can be disabled by registering the following metadata in a startup file. `Gaffer.Metadata.registerValue( Gaffer.ScriptNode, "variables.renderPass.value", "renderPassPlugValueWidget:searchable", False )`.
+- RenderPassEditor, AttributeEditor, LightEditor, SceneInspector : Improved presentation of VectorData types in the Inspect popup.
 
 Fixes
 -----
@@ -29,6 +30,7 @@ API
 ---
 
 - ScenePlug : Added optional `withGlobalAttributes` arguments to `fullAttributes()` and `fullAttributesHash()`.
+- VectorDataWidget : Added optional `maximumVisibleRows` argument.
 
 Breaking Changes
 ----------------
