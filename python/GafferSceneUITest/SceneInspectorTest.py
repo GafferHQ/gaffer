@@ -371,10 +371,14 @@ class SceneInspectorTest( GafferUITest.TestCase ) :
 			self.assertEqual( set( parameterNames ), set( shaderNetwork.getShader( shaderPath[-1] ).parameters.keys() ) )
 			self.assertEqual( parameterNames, sorted( parameterNames ) )
 			for parameterPath in parameterPaths :
-				self.assertEqual(
-					inspectPath( parameterPath ),
-					shaderNetwork.getShader( shaderPath[-1] ).parameters[parameterPath[-1]]
-				)
+				shaderName = shaderPath[-1]
+				parameterName = parameterPath[-1]
+				parameterInput = shaderNetwork.input( ( shaderName, parameterName ) )
+				inspectedValue = inspectPath( parameterPath )
+
+				self.assertEqual( parameterInput, GafferSceneUI.Private.ParameterInspector.connectionSource( inspectedValue ) )
+				if not parameterInput :
+					self.assertEqual( inspectedValue, shaderNetwork.getShader( shaderName ).parameters[parameterName] )
 
 if __name__ == "__main__":
 	unittest.main()

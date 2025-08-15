@@ -62,6 +62,9 @@ using namespace GafferSceneUI::Private;
 namespace
 {
 
+static InternedString g_shaderConnectionShader( "shaderConnection:shader" );
+static  InternedString g_shaderConnectionParameter( "shaderConnection:parameter" );
+
 IECore::ConstObjectPtr parameterData( const Object *attribute, const ShaderNetwork::Parameter &parameter )
 {
 	auto shaderNetwork = runTimeCast<const ShaderNetwork>( attribute );
@@ -80,8 +83,8 @@ IECore::ConstObjectPtr parameterData( const Object *attribute, const ShaderNetwo
 	if( input )
 	{
 		return new CompoundData( {
-			{ InternedString( "shaderConnection:shader" ), new InternedStringData( input.shader ) },
-			{ InternedString( "shaderConnection:parameter" ), new InternedStringData( input.name ) }
+			{ g_shaderConnectionShader, new InternedStringData( input.shader ) },
+			{ g_shaderConnectionParameter, new InternedStringData( input.name ) }
 		} );
 	}
 
@@ -100,6 +103,24 @@ ParameterInspector::ParameterInspector(
 	: AttributeInspector( scene, editScope, attribute, parameter.name.string(), "parameter" ), m_parameter( parameter ), m_inheritAttributes( inheritAttributes )
 {
 
+}
+
+ShaderNetwork::Parameter ParameterInspector::connectionSource( const Object *object )
+{
+	if( auto data = runTimeCast<const CompoundData>( object ) )
+	{
+		if( data->readable().size() == 2 )
+		{
+			const auto shaderName = data->member<InternedStringData>( "shaderConnection:shader" );
+			const auto parameterName = data->member<InternedStringData>( "shaderConnection:parameter" );
+
+			if( shaderName && parameterName )
+			{
+				return ShaderNetwork::Parameter( shaderName->readable(), parameterName->readable() );
+			}
+		}
+	}
+	return ShaderNetwork::Parameter();
 }
 
 GafferScene::SceneAlgo::History::ConstPtr ParameterInspector::history() const
