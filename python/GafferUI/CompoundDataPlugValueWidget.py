@@ -103,43 +103,43 @@ class CompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __addMenuDefinition( self ) :
 
 		result = IECore.MenuDefinition()
-		result.append( "/Add/Bool", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.BoolData( False ) ) } )
-		result.append( "/Add/Float", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.FloatData( 0 ) ) } )
-		result.append( "/Add/Int", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.IntData( 0 ) ) } )
-		result.append( "/Add/NumericDivider", { "divider" : True } )
+		result.append( "/Bool", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.BoolData( False ) ) } )
+		result.append( "/Float", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.FloatData( 0 ) ) } )
+		result.append( "/Int", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.IntData( 0 ) ) } )
+		result.append( "/NumericDivider", { "divider" : True } )
 
-		result.append( "/Add/String", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.StringData( "" ) ) } )
-		result.append( "/Add/StringDivider", { "divider" : True } )
+		result.append( "/String", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.StringData( "" ) ) } )
+		result.append( "/StringDivider", { "divider" : True } )
 
-		result.append( "/Add/V2i/Vector", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2iData( imath.V2i( 0 ), IECore.GeometricData.Interpretation.Vector ) ) } )
-		result.append( "/Add/V2i/Normal", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2iData( imath.V2i( 0 ), IECore.GeometricData.Interpretation.Normal ) ) } )
-		result.append( "/Add/V2i/Point", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2iData( imath.V2i( 0 ), IECore.GeometricData.Interpretation.Point ) ) } )
+		result.append( "/V2i/Vector", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2iData( imath.V2i( 0 ), IECore.GeometricData.Interpretation.Vector ) ) } )
+		result.append( "/V2i/Normal", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2iData( imath.V2i( 0 ), IECore.GeometricData.Interpretation.Normal ) ) } )
+		result.append( "/V2i/Point", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2iData( imath.V2i( 0 ), IECore.GeometricData.Interpretation.Point ) ) } )
 
-		result.append( "/Add/V3i/Vector", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3iData( imath.V3i( 0 ), IECore.GeometricData.Interpretation.Vector ) ) } )
-		result.append( "/Add/V3i/Normal", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3iData( imath.V3i( 0 ), IECore.GeometricData.Interpretation.Normal ) ) } )
-		result.append( "/Add/V3i/Point", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3iData( imath.V3i( 0 ), IECore.GeometricData.Interpretation.Point ) ) } )
+		result.append( "/V3i/Vector", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3iData( imath.V3i( 0 ), IECore.GeometricData.Interpretation.Vector ) ) } )
+		result.append( "/V3i/Normal", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3iData( imath.V3i( 0 ), IECore.GeometricData.Interpretation.Normal ) ) } )
+		result.append( "/V3i/Point", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3iData( imath.V3i( 0 ), IECore.GeometricData.Interpretation.Point ) ) } )
 
-		result.append( "/Add/V2f/Vector", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2fData( imath.V2f( 0 ), IECore.GeometricData.Interpretation.Vector ) ) } )
-		result.append( "/Add/V2f/Normal", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2fData( imath.V2f( 0 ), IECore.GeometricData.Interpretation.Normal ) ) } )
-		result.append( "/Add/V2f/Point", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2fData( imath.V2f( 0 ), IECore.GeometricData.Interpretation.Point ) ) } )
+		result.append( "/V2f/Vector", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2fData( imath.V2f( 0 ), IECore.GeometricData.Interpretation.Vector ) ) } )
+		result.append( "/V2f/Normal", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2fData( imath.V2f( 0 ), IECore.GeometricData.Interpretation.Normal ) ) } )
+		result.append( "/V2f/Point", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2fData( imath.V2f( 0 ), IECore.GeometricData.Interpretation.Point ) ) } )
 
-		result.append( "/Add/V3f/Vector", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Vector ) ) } )
-		result.append( "/Add/V3f/Normal", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Normal ) ) } )
-		result.append( "/Add/V3f/Point", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Point ) ) } )
+		result.append( "/V3f/Vector", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Vector ) ) } )
+		result.append( "/V3f/Normal", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Normal ) ) } )
+		result.append( "/V3f/Point", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Point ) ) } )
 
-		result.append( "/Add/VectorDivider", { "divider" : True } )
+		result.append( "/VectorDivider", { "divider" : True } )
 
-		result.append( "/Add/Color3f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.Color3fData( imath.Color3f( 0 ) ) ) } )
-		result.append( "/Add/Color4f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.Color4fData( imath.Color4f( 0, 0, 0, 1 ) ) ) } )
+		result.append( "/Color3f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.Color3fData( imath.Color3f( 0 ) ) ) } )
+		result.append( "/Color4f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.Color4fData( imath.Color4f( 0, 0, 0, 1 ) ) ) } )
 
-		result.append( "/Add/BoxDivider", { "divider" : True } )
+		result.append( "/BoxDivider", { "divider" : True } )
 
-		result.append( "/Add/Box2i", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.Box2iData( imath.Box2i( imath.V2i( 0 ), imath.V2i( 1 ) ) ) ) } )
-		result.append( "/Add/Box2f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.Box2fData( imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ) ) ) } )
-		result.append( "/Add/Box3i", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.Box3iData( imath.Box3i( imath.V3i( 0 ), imath.V3i( 1 ) ) ) ) } )
-		result.append( "/Add/Box3f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.Box3fData( imath.Box3f( imath.V3f( 0 ), imath.V3f( 1 ) ) ) ) } )
+		result.append( "/Box2i", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.Box2iData( imath.Box2i( imath.V2i( 0 ), imath.V2i( 1 ) ) ) ) } )
+		result.append( "/Box2f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.Box2fData( imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ) ) ) } )
+		result.append( "/Box3i", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.Box3iData( imath.Box3i( imath.V3i( 0 ), imath.V3i( 1 ) ) ) ) } )
+		result.append( "/Box3f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.Box3fData( imath.Box3f( imath.V3f( 0 ), imath.V3f( 1 ) ) ) ) } )
 
-		result.append( "/Add/ArrayDivider", { "divider" : True } )
+		result.append( "/ArrayDivider", { "divider" : True } )
 
 		for label, plugType in [
 			( "Float", Gaffer.FloatVectorDataPlug ),
@@ -148,9 +148,9 @@ class CompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 			( "String", Gaffer.StringVectorDataPlug ),
 		] :
 			if plugType is not None :
-				result.append( "/Add/Array/" + label, {"command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", plugType.ValueType() ) } )
+				result.append( "/Array/" + label, { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", plugType.ValueType() ) } )
 			else :
-				result.append( "/Add/Array/" + label, { "divider" : True } )
+				result.append( "/Array/" + label, { "divider" : True } )
 
 		return result
 
