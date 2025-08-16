@@ -405,6 +405,7 @@ nodeMenu.append( "/Image/Filter/Median", GafferImageUI.MedianUI.nodeMenuCreateCo
 nodeMenu.append( "/Image/Filter/Erode", GafferImageUI.ErodeUI.nodeMenuCreateCommand )
 nodeMenu.append( "/Image/Filter/Dilate", GafferImageUI.DilateUI.nodeMenuCreateCommand )
 nodeMenu.append( "/Image/Filter/BleedFill", GafferImage.BleedFill )
+nodeMenu.append( "/Image/Filter/DiskBlur", GafferImage.DiskBlur )
 nodeMenu.append( "/Image/Matte/Cryptomatte", GafferScene.Cryptomatte, searchText = "Cryptomatte" )
 nodeMenu.append( "/Image/Merge/Contact Sheet", __contactSheetCreateCommand, searchText = "ContactSheet" )
 nodeMenu.append( "/Image/Merge/Merge", GafferImage.Merge )
