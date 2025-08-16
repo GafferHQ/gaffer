@@ -1,7 +1,12 @@
 1.6.x.x (relative to 1.6.0.0a3)
 =======
 
+Fixes
+-----
 
+- VisualiserTool : Fixed "undefined variable FLT_EPSILON" errors [^1].
+
+[^1]: To be omitted from the notes for the final 1.6.0.0 release.
 
 1.6.0.0a3 (relative to 1.6.0.0a2)
 =========
