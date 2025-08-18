@@ -79,9 +79,9 @@ class TweakPlugSerialiser : public ValuePlugSerialiser
 
 	std::string constructor( const Gaffer::GraphComponent *graphComponent, Serialisation &serialisation ) const override
 	{
-		auto tweaksPlug = static_cast<const TweakPlug *>( graphComponent );
+		auto tweakPlug = static_cast<const TweakPlug *>( graphComponent );
 
-		const Serialiser *valuePlugSerialiser = Serialisation::acquireSerialiser( tweaksPlug->valuePlug() );
+		const Serialiser *valuePlugSerialiser = Serialisation::acquireSerialiser( tweakPlug->valuePlug() );
 		std::string result = ValuePlugSerialiser::constructor( graphComponent, serialisation );
 
 		// Pass the value plug into the constructor directly so that there's
@@ -89,7 +89,7 @@ class TweakPlugSerialiser : public ValuePlugSerialiser
 		result = boost::algorithm::replace_first_copy(
 			result,
 			"TweakPlug(",
-			"TweakPlug( " + valuePlugSerialiser->constructor( tweaksPlug->valuePlug(), serialisation ) + ","
+			"TweakPlug( " + valuePlugSerialiser->constructor( tweakPlug->valuePlug(), serialisation ) + ","
 		);
 
 		return result;
