@@ -698,6 +698,9 @@ class __InspectionPopupWindow( GafferUI.PopupWindow ) :
 						parenting = { "index" : ( 1, 1 ), "alignment" : ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.Top ) }
 					)
 				else :
+					connectionSource = GafferSceneUI.Private.ParameterInspector.connectionSource( value )
+					if connectionSource :
+						value = connectionSource.shader + "." + connectionSource.name
 					valueLabel = GafferUI.Label(
 						f"{value}",
 						parenting = { "index" : ( 1, 1 ), "alignment" : ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.Top ) }
