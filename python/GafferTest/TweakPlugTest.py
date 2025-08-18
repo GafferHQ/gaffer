@@ -640,5 +640,35 @@ class TweakPlugTest( GafferTest.TestCase ) :
 		with GafferTest.TestRunner.PerformanceScope() :
 			tweaks.applyTweaks( parameters )
 
+	def testFullConstructor( self ) :
+
+		valuePlug = Gaffer.IntPlug()
+
+		plug = Gaffer.TweakPlug( "name", "tweakName", False, Gaffer.TweakPlug.Mode.Add, valuePlug, Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		self.assertEqual( plug.getName(), "name" )
+		self.assertTrue( plug.isSetToDefault() )
+		self.assertEqual( plug["name"].getValue(), "tweakName" )
+		self.assertEqual( plug["enabled"].getValue(), False )
+		self.assertEqual( plug["mode"].getValue(), Gaffer.TweakPlug.Mode.Add )
+		self.assertEqual( plug["mode"].getValue(), Gaffer.TweakPlug.Mode.Add )
+		self.assertTrue( plug["value"].isSame( valuePlug ) )
+
+		# As above, but using keyword arguments.
+		plug = Gaffer.TweakPlug(
+			nameDefault = "tweakName",
+			name = "name",
+			enabledDefault = False,
+			modeDefault = Gaffer.TweakPlug.Mode.Add,
+			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic,
+			valuePlug = valuePlug
+		)
+		self.assertEqual( plug.getName(), "name" )
+		self.assertTrue( plug.isSetToDefault() )
+		self.assertEqual( plug["name"].getValue(), "tweakName" )
+		self.assertEqual( plug["enabled"].getValue(), False )
+		self.assertEqual( plug["mode"].getValue(), Gaffer.TweakPlug.Mode.Add )
+		self.assertEqual( plug["mode"].getValue(), Gaffer.TweakPlug.Mode.Add )
+		self.assertTrue( plug["value"].isSame( valuePlug ) )
+
 if __name__ == "__main__":
 	unittest.main()

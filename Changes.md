@@ -1,7 +1,10 @@
 1.5.x.x (relative to 1.5.16.1)
 =======
 
+API
+---
 
+- TweakPlug : Added extended constructor allowing default values for `name`, `enabled` and `mode` plug to be specified.
 
 1.5.16.1 (relative to 1.5.16.0)
 ========

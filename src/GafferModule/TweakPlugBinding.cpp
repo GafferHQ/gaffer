@@ -128,6 +128,18 @@ void GafferModule::bindTweakPlugs()
 
 	tweakPlugClass
 		.def(
+			init<const std::string &, const std::string &, bool, TweakPlug::Mode, ValuePlugPtr, unsigned>(
+				(
+					boost::python::arg( "name" ) = GraphComponent::defaultName<TweakPlug>(),
+					boost::python::arg( "nameDefault" ) = "",
+					boost::python::arg( "enabledDefault" ) = true,
+					boost::python::arg( "modeDefault" ) = TweakPlug::Mode::Replace,
+					boost::python::arg( "valuePlug" ),
+					boost::python::arg( "flags" ) = Plug::Default
+				)
+			)
+		)
+		.def(
 			init<ValuePlug *, const char *, Plug::Direction, unsigned>(
 				(
 					boost::python::arg_( "valuePlug" ),

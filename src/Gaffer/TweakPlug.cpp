@@ -422,8 +422,18 @@ typename DestDataType::Ptr convertData( const SrcDataType *srcData )
 
 GAFFER_PLUG_DEFINE_TYPE( TweakPlug );
 
+TweakPlug::TweakPlug( const std::string &name, const std::string &nameDefault, bool enabledDefault, Mode modeDefault, Gaffer::ValuePlugPtr valuePlug, unsigned flags )
+	:	ValuePlug( name, valuePlug->direction(), flags )
+{
+	addChild( new StringPlug( "name", valuePlug->direction(), nameDefault ) );
+	addChild( new BoolPlug( "enabled", valuePlug->direction(), enabledDefault ) );
+	addChild( new IntPlug( "mode", valuePlug->direction(), modeDefault, First, Last ) );
+	valuePlug->setName( "value" );
+	addChild( valuePlug );
+}
+
 TweakPlug::TweakPlug( const std::string &tweakName, Gaffer::ValuePlugPtr valuePlug, Mode mode, bool enabled )
-	:	TweakPlug( valuePlug, "tweak", In, Default | Dynamic )
+	:	TweakPlug( "tweak", "", true, Replace, valuePlug, Default | Dynamic )
 {
 	namePlug()->setValue( tweakName );
 	modePlug()->setValue( mode );
