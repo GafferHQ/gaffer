@@ -83,6 +83,7 @@ IECORE_POP_DEFAULT_VISIBILITY
 
 #include <algorithm>
 #include <cassert>
+#include <cfloat>
 #include <limits>
 #include <string>
 
