@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferSceneUI/Private/InspectorColumn.h"
+#include "GafferSceneUI/Private/ParameterInspector.h"
 
 #include "GafferUI/PathColumn.h"
 
@@ -163,7 +164,12 @@ PathColumn::CellData InspectorColumn::cellData( const Gaffer::Path &path, const 
 		return result;
 	}
 
-	if( const auto shaderNetwork = runTimeCast<const IECoreScene::ShaderNetwork>( inspectorResult->value() ) )
+	IECoreScene::ShaderNetwork::Parameter connectionSource = ParameterInspector::connectionSource( inspectorResult->value() );
+	if( connectionSource )
+	{
+		result.value = new StringData( connectionSource.shader.string() + "." + connectionSource.name.string() );
+	}
+	else if( const auto shaderNetwork = runTimeCast<const IECoreScene::ShaderNetwork>( inspectorResult->value() ) )
 	{
 		/// \todo We don't really want InspectorColumn to know about scene types.
 		/// If this comes up again, consider adding a registry of converters instead
