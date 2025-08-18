@@ -133,10 +133,55 @@ class TweakPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( p2.direction(), Gaffer.Plug.Direction.In )
 		self.assertEqual( p2.keys(), p.keys() )
 
-	def testOldSerialisation( self ) :
+	def testLoadFrom0_53( self ) :
 
-		# Old scripts call a constructor with an outdated signature as below.
+		# The ancient constructor as used by serialisations in Gaffer 0.53 and earlier.
 		plug = Gaffer.TweakPlug( "exposure", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		# This left the plug in a bogus half-initialised state that needed to be
+		# finalised by a subsequent `addChild()` call that provided the `value`
+		# plug.
+		self.assertEqual( plug.getName(), "exposure" )
+		self.assertIsInstance( plug["name"], Gaffer.StringPlug )
+		self.assertEqual( plug["name"].defaultValue(), "" )
+		self.assertEqual( plug["name"].getValue(), "" )
+		self.assertIsInstance( plug["enabled"], Gaffer.BoolPlug )
+		self.assertEqual( plug["enabled"].defaultValue(), True )
+		self.assertEqual( plug["enabled"].getValue(), True )
+		self.assertIsInstance( plug["mode"], Gaffer.IntPlug )
+		self.assertEqual( plug["mode"].defaultValue(), plug.Mode.Replace )
+		self.assertEqual( plug["mode"].getValue(), plug.Mode.Replace )
+		self.assertNotIn( "value", plug )
+		self.assertEqual( plug.getFlags(), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+	def testLoadFrom1_5_16_1( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( Gaffer.rootPath() / "python" / "GafferTest" / "scripts" / "tweakPlug-1.5.16.1.gfr" )
+		script.load()
+
+		def assertExpected( script ) :
+
+			plug = script["Node"]["user"]["tweak"]
+			self.assertIsInstance( plug, Gaffer.TweakPlug )
+			self.assertIsInstance( plug["name"], Gaffer.StringPlug )
+			self.assertEqual( plug["name"].defaultValue(), "" )
+			self.assertEqual( plug["name"].getValue(), "tweakName" )
+			self.assertIsInstance( plug["enabled"], Gaffer.BoolPlug )
+			self.assertEqual( plug["enabled"].defaultValue(), True )
+			self.assertEqual( plug["enabled"].getValue(), True )
+			self.assertIsInstance( plug["mode"], Gaffer.IntPlug )
+			self.assertEqual( plug["mode"].defaultValue(), plug.Mode.Replace )
+			self.assertEqual( plug["mode"].getValue(), plug.Mode.Add )
+			self.assertIsInstance( plug["value"], Gaffer.IntPlug )
+			self.assertEqual( plug["value"].defaultValue(), 1 )
+			self.assertEqual( plug["value"].getValue(), 2 )
+			self.assertEqual( plug.getFlags(), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		assertExpected( script )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+		assertExpected( script )
 
 	def testApplyReturnValues( self ) :
 
