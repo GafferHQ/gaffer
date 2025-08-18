@@ -81,17 +81,36 @@ class TweakPlugSerialiser : public ValuePlugSerialiser
 	{
 		auto tweakPlug = static_cast<const TweakPlug *>( graphComponent );
 
+		std::string result = "Gaffer.TweakPlug( ";
+
+		result += "name = \"" + tweakPlug->getName().string() + "\"";
+
+		if( tweakPlug->namePlug()->defaultValue() != "" )
+		{
+			result += ", nameDefault = \"" + tweakPlug->namePlug()->defaultValue() + "\"";
+		}
+
+		if( tweakPlug->enabledPlug()->defaultValue() != true )
+		{
+			result += ", enabledDefault = False";
+		}
+
+		if( tweakPlug->modePlug()->defaultValue() != TweakPlug::Replace )
+		{
+			object mode = object( (TweakPlug::Mode)tweakPlug->modePlug()->defaultValue() ).attr( "name" );
+			std::string modeString = extract<std::string>( mode );
+			result += ", modeDefault = Gaffer.TweakPlug.Mode." + modeString;
+		}
+
 		const Serialiser *valuePlugSerialiser = Serialisation::acquireSerialiser( tweakPlug->valuePlug() );
-		std::string result = ValuePlugSerialiser::constructor( graphComponent, serialisation );
+		result += ", valuePlug = " + valuePlugSerialiser->constructor( tweakPlug->valuePlug(), serialisation );
 
-		// Pass the value plug into the constructor directly so that there's
-		// never a moment in which the TweakPlug is in an invalid state.
-		result = boost::algorithm::replace_first_copy(
-			result,
-			"TweakPlug(",
-			"TweakPlug( " + valuePlugSerialiser->constructor( tweakPlug->valuePlug(), serialisation ) + ","
-		);
+		if( tweakPlug->getFlags() != Plug::Flags::Default )
+		{
+			result += ", flags = " + flagsRepr( tweakPlug->getFlags() );
+		}
 
+		result += " )";
 		return result;
 	}
 };

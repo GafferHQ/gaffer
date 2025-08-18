@@ -1,6 +1,11 @@
 1.5.x.x (relative to 1.5.16.1)
 =======
 
+Fixes
+-----
+
+- TweakPlug : Fixed serialisation of default values for `name`, `enabled` and `mode` child plugs (#6544).
+
 API
 ---
 

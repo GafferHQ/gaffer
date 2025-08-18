@@ -670,5 +670,25 @@ class TweakPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( plug["mode"].getValue(), Gaffer.TweakPlug.Mode.Add )
 		self.assertTrue( plug["value"].isSame( valuePlug ) )
 
+	def testSerialiseChildDefaultValues( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["node"] = Gaffer.Node()
+		script["node"]["user"]["tweak"] = Gaffer.TweakPlug(
+			nameDefault = "tweakName",
+			valuePlug = Gaffer.IntPlug( defaultValue = 10 ),
+			enabledDefault = False,
+			modeDefault = Gaffer.TweakPlug.Mode.Subtract,
+			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
+		)
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+
+		self.assertEqual( script2["node"]["user"]["tweak"]["name"].defaultValue(), "tweakName" )
+		self.assertEqual( script2["node"]["user"]["tweak"]["enabled"].defaultValue(), False )
+		self.assertEqual( script2["node"]["user"]["tweak"]["mode"].defaultValue(), Gaffer.TweakPlug.Mode.Subtract )
+		self.assertEqual( script2["node"]["user"]["tweak"]["value"].defaultValue(), 10 )
+
 if __name__ == "__main__":
 	unittest.main()
