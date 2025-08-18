@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.0.0a3)
 =======
 
+Improvements
+------------
+
+- RenderMan : Removed the `GAFFERRENDERMAN_FEATURE_PREVIEW` environment variable. The RenderMan extension is now automatically enabled any time the `RMANTREE` environment variable is present. While the RenderMan extension is not yet feature complete, it is considered to be mature enough for general use.
+
 Fixes
 -----
 
