@@ -690,6 +690,7 @@ class __InspectionPopupWindow( GafferUI.PopupWindow ) :
 				GafferUI.Label( "<b>Value</b>", parenting = { "index" : ( 0, 1 ), "alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Top ) } )
 
 				value = inspection.value()
+				valueLabel = None
 				## \todo It would be nice to support more widget types here, maybe we could create a common
 				# ValueWidget base class with a `create()` method similar to `PlugValueWidget.create()`?
 				if IECore.DataTraits.isSequenceDataType( value ) :
@@ -697,15 +698,22 @@ class __InspectionPopupWindow( GafferUI.PopupWindow ) :
 						value, editable = False, maximumVisibleRows = 10,
 						parenting = { "index" : ( 1, 1 ), "alignment" : ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.Top ) }
 					)
+				elif ( connectionSource := GafferSceneUI.Private.ParameterInspector.connectionSource( value ) ) :
+					value = connectionSource.shader + "." + connectionSource.name
+					with GafferUI.ListContainer(
+						GafferUI.ListContainer.Orientation.Horizontal,
+						spacing = 4,
+						parenting = { "index" : ( 1, 1 ), "alignment" : ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.Top ) }
+					) :
+						GafferUI.Image( "sceneInspectorShaderConnection.png" )
+						valueLabel = GafferUI.Label( f"{value}" )
 				else :
-					connectionSource = GafferSceneUI.Private.ParameterInspector.connectionSource( value )
-					if connectionSource :
-						value = connectionSource.shader + "." + connectionSource.name
 					valueLabel = GafferUI.Label(
 						f"{value}",
 						parenting = { "index" : ( 1, 1 ), "alignment" : ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.Top ) }
 					)
 
+				if valueLabel is not None :
 					valueLabel.buttonPressSignal().connect( lambda widget, event : True )
 					valueLabel.dragBeginSignal().connect( Gaffer.WeakMethod( self.__valueDragBegin ) )
 					valueLabel.dragEndSignal().connect( Gaffer.WeakMethod( self.__valueDragEnd ) )
