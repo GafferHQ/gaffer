@@ -19,7 +19,7 @@ Gaffer comes with Cycles, so it will require no additional configuration. For th
 
 ## Configuring Gaffer for Arnold ##
 
-For Gaffer to load the GafferArnold module, an `ARNOLD_ROOT` environment variable must point to the Arnold installation directory. Before you begin, make sure that Arnold is correctly installed and configured, and close any open instances of Gaffer.
+For Gaffer to load the GafferArnold module, the `ARNOLD_ROOT` environment variable must point to the Arnold installation directory. Before you begin, make sure that Arnold is correctly installed and configured.
 
 
 ### Arnold in Linux ###
@@ -90,7 +90,7 @@ The next time you start Gaffer, the Arnold nodes will be available from the node
 
 ## Configuring Gaffer for 3Delight ##
 
-For Gaffer to load the GafferDelight module, a `DELIGHT` environment variable must point to the 3Delight installation directory. Before you begin, make sure that 3Delight is correctly installed and configured, and close any open instances of Gaffer.
+For Gaffer to load the GafferDelight module, the `DELIGHT` environment variable must point to the 3Delight installation directory. Before you begin, make sure that 3Delight is correctly installed and configured.
 
 
 ### 3Delight in Linux ###
@@ -217,7 +217,7 @@ The next time you start Gaffer, the RenderMan nodes will be available from the n
 
 ## Configuring Gaffer for Tractor ##
 
-For Gaffer to interface with Tractor, the `PYTHONPATH` environment variable must contain the path to the Tractor python module. Before you begin, make sure that Tractor is correctly installed and configured, and close any open instances of Gaffer.
+For Gaffer to interface with Tractor, the `PYTHONPATH` environment variable must contain the path to the Tractor python module. Before you begin, make sure that Tractor is correctly installed and configured.
 
 
 ### Tractor in Linux ###
