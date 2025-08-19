@@ -311,6 +311,10 @@ delight_path_linux = '/opt/3delight-{0}'.format( delight_version )
 delight_path_osx = '/opt/3delight-{0}'.format( delight_version )
 delight_path_windows = 'C:\\software\\3delight-{0}'.format( delight_version )
 
+renderman_version = '26.3'
+renderman_path_linux = '/opt/pixar/RenderManProServer-{0}'.format( renderman_version )
+renderman_path_windows = 'C:\\software\\RenderManProServer-{0}'.format( renderman_version )
+
 tractor_version = '2.2'
 tractor_path_linux = '/opt/pixar/Tractor-{0}'.format( tractor_version )
 tractor_path_osx = '/Applications/pixar/Tractor-{0}'.format( tractor_version )
@@ -373,6 +377,9 @@ def thirdPartySourceSubtitutions( app, docName, source) :
 	source[0] = source[0].replace( "!DELIGHT_PATH_LINUX!", delight_path_linux )
 	source[0] = source[0].replace( "!DELIGHT_PATH_OSX!", delight_path_osx )
 	source[0] = source[0].replace( "!DELIGHT_PATH_WINDOWS!", delight_path_windows )
+	source[0] = source[0].replace( "!RENDERMAN_VERSION!", renderman_version )
+	source[0] = source[0].replace( "!RENDERMAN_PATH_LINUX!", renderman_path_linux )
+	source[0] = source[0].replace( "!RENDERMAN_PATH_WINDOWS!", renderman_path_windows )
 	source[0] = source[0].replace( "!TRACTOR_VERSION!", tractor_version )
 	source[0] = source[0].replace( "!TRACTOR_PATH_LINUX!", tractor_path_linux )
 	source[0] = source[0].replace( "!TRACTOR_PATH_OSX!", tractor_path_osx )
