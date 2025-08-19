@@ -4,7 +4,7 @@ Gaffer is compatible with the following commercial and open-source third-party t
 
 - [Arnold](https://www.arnoldrenderer.com/)
 - [Cycles](https://www.cycles-renderer.org/)
-- [3Delight](http://www.3delight.com/)
+- [3Delight](https://www.3delight.com/)
 - [Tractor](https://renderman.pixar.com/tractor)
 
 Gaffer comes with Cycles, so it will require no additional configuration. For the rest of the tools in this list, you will need to set some additional environment variables.
