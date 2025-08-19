@@ -65,7 +65,7 @@ Four parameters determine depth of field blur:
 - **focalDistance**
 - **fStop**
 - **focalLengthWorldScale**
-- focalLength
+- **focalLength**
 
 In order to simulate depth of field blur, the camera needs a virtual opening: a circle in 3D space on a plane perpendicular to the camera's direction. In effect, this is a **lens aperture**. From this circle, Gaffer calculates the angle of incidence of light coming from objects at a distance greater or less than the focalDistance. The larger the circle, the stronger the depth of field blur. The smaller the circle, the weaker.
 
