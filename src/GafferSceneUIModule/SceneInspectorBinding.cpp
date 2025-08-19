@@ -67,6 +67,7 @@
 #include "boost/multi_index/ordered_index.hpp"
 #include "boost/multi_index/sequenced_index.hpp"
 #include "boost/multi_index_container.hpp"
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 #include <mutex>
 
@@ -211,6 +212,11 @@ class InspectorTree : public IECore::RefCounted
 		// An inspector, and its position within the tree.
 		struct Inspection
 		{
+			Inspection() = default;
+			Inspection( const vector<InternedString> &path, const GafferSceneUI::Private::ConstInspectorPtr inspector )
+				:	path( path ), inspector( inspector )
+			{
+			}
 			vector<InternedString> path;
 			GafferSceneUI::Private::ConstInspectorPtr inspector;
 		};
@@ -1627,14 +1633,7 @@ void inspectorTreeRegisterInspectorsWrapper( const vector<InternedString> &path,
 		try
 		{
 			object pythonInspections = pythonInspectionProvider( ScenePlugPtr( scene ), editScope );
-			dict inspectionsDict = extract<dict>( pythonInspections );
-			boost::python::list items = inspectionsDict.items();
-			for( size_t i = 0, e = len( items ); i < e; ++i )
-			{
-				vector<InternedString> path = extract<vector<InternedString>>( items[i][0] );
-				Private::InspectorPtr inspector = extract<Private::InspectorPtr>( items[i][1] );
-				result.push_back( { path, inspector } );
-			}
+			boost::python::container_utils::extend_container( result, pythonInspections );
 		}
 		catch( const error_already_set & )
 		{
@@ -1654,26 +1653,34 @@ void GafferSceneUIModule::bindSceneInspector()
 	scope().attr( "_SceneInspector" ) = module;
 	scope moduleScope( module );
 
-	IECorePython::RefCountedClass<InspectorTree, RefCounted>( "InspectorTree" )
-		.def(
-			"__init__",
-			make_constructor(
-				inspectorTreeConstructor,
-				default_call_policies(),
-				(
-					boost::python::arg( "scene" ),
-					boost::python::arg( "contexts" ),
-					boost::python::arg( "editScope" )
+	{
+		scope s = IECorePython::RefCountedClass<InspectorTree, RefCounted>( "InspectorTree" )
+			.def(
+				"__init__",
+				make_constructor(
+					inspectorTreeConstructor,
+					default_call_policies(),
+					(
+						boost::python::arg( "scene" ),
+						boost::python::arg( "contexts" ),
+						boost::python::arg( "editScope" )
+					)
 				)
 			)
-		)
-		.def( "setContexts", &inspectorTreeSetContextsWrapper )
-		.def( "getContexts", &inspectorTreeGetContextsWrapper )
-		.def( "setFilter", &inspectorTreeSetFilterWrapper )
-		.def( "getFilter", &InspectorTree::getFilter, return_value_policy<copy_const_reference>() )
-		.def( "dirtiedSignal", &InspectorTree::dirtiedSignal, return_internal_reference<1>() )
-		.def( "registerInspectors", &inspectorTreeRegisterInspectorsWrapper ).staticmethod( "registerInspectors" )
-	;
+			.def( "setContexts", &inspectorTreeSetContextsWrapper )
+			.def( "getContexts", &inspectorTreeGetContextsWrapper )
+			.def( "setFilter", &inspectorTreeSetFilterWrapper )
+			.def( "getFilter", &InspectorTree::getFilter, return_value_policy<copy_const_reference>() )
+			.def( "dirtiedSignal", &InspectorTree::dirtiedSignal, return_internal_reference<1>() )
+			.def( "registerInspectors", &inspectorTreeRegisterInspectorsWrapper ).staticmethod( "registerInspectors" )
+		;
+
+		class_<InspectorTree::Inspection>( "Inspection" )
+			.def( init<const vector<InternedString> &, GafferSceneUI::Private::ConstInspectorPtr>() )
+			.def_readwrite( "path", &InspectorTree::Inspection::path )
+			.def_readwrite( "inspector", &InspectorTree::Inspection::inspector )
+		;
+	}
 
 	PathClass<InspectorPath>()
 

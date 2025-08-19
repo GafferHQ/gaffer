@@ -11,6 +11,11 @@ Fixes
 
 - VisualiserTool : Fixed "undefined variable FLT_EPSILON" errors [^1].
 
+Breaking Changes
+----------------
+
+- SceneInspector : Custom inspectors implemented in Python must now return a list of Inspector objects rather than a dictionary [^1].
+
 [^1]: To be omitted from the notes for the final 1.6.0.0 release.
 
 1.6.0.0a3 (relative to 1.6.0.0a2)

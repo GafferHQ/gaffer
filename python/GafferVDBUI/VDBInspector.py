@@ -51,7 +51,7 @@ def __gridMaxValue( objectPlug, gridName ) :
 
 def __vdbInspectors( scene, editScope ) :
 
-	result = {}
+	result = []
 
 	vdb = scene["object"].getValue()
 	if not isinstance( vdb, IECoreVDB.VDBObject ) :
@@ -67,15 +67,40 @@ def __vdbInspectors( scene, editScope ) :
 		# We can't register the inspectors from C++, because no C++ API for doing that has
 		# been exposed yet.
 
-		result[f"Grids/{gridName}/Value Type"] = GafferSceneUI.Private.BasicInspector( scene["object"], editScope, functools.partial( _GafferVDBUI._gridValueType, gridName = gridName ) )
-		result[f"Grids/{gridName}/Min Value"] = GafferSceneUI.Private.BasicInspector( scene["object"], editScope, functools.partial( __gridMinValue, gridName = gridName ) )
-		result[f"Grids/{gridName}/Max Value"] = GafferSceneUI.Private.BasicInspector( scene["object"], editScope, functools.partial( __gridMaxValue, gridName = gridName ) )
-		result[f"Grids/{gridName}/Active Voxels"] = GafferSceneUI.Private.BasicInspector( scene["object"], editScope, functools.partial( _GafferVDBUI._gridActiveVoxels, gridName = gridName ) )
-		result[f"Grids/{gridName}/Voxel Bound"] = GafferSceneUI.Private.BasicInspector( scene["object"], editScope, functools.partial( _GafferVDBUI._gridVoxelBound, gridName = gridName ) )
-		result[f"Grids/{gridName}/Memory Usage"] = GafferSceneUI.Private.BasicInspector( scene["object"], editScope, functools.partial( _GafferVDBUI._gridMemoryUsage, gridName = gridName ) )
+		result.extend( [
+			GafferSceneUI.SceneInspector.Inspection(
+				f"Grids/{gridName}/Value Type",
+				GafferSceneUI.Private.BasicInspector( scene["object"], editScope, functools.partial( _GafferVDBUI._gridValueType, gridName = gridName ) )
+			),
+			GafferSceneUI.SceneInspector.Inspection(
+				f"Grids/{gridName}/Min Value",
+				GafferSceneUI.Private.BasicInspector( scene["object"], editScope, functools.partial( __gridMinValue, gridName = gridName ) )
+			),
+			GafferSceneUI.SceneInspector.Inspection(
+				f"Grids/{gridName}/Max Value",
+				GafferSceneUI.Private.BasicInspector( scene["object"], editScope, functools.partial( __gridMaxValue, gridName = gridName ) )
+			),
+			GafferSceneUI.SceneInspector.Inspection(
+				f"Grids/{gridName}/Active Voxels",
+				GafferSceneUI.Private.BasicInspector( scene["object"], editScope, functools.partial( _GafferVDBUI._gridActiveVoxels, gridName = gridName ) )
+			),
+			GafferSceneUI.SceneInspector.Inspection(
+				f"Grids/{gridName}/Voxel Bound",
+				GafferSceneUI.Private.BasicInspector( scene["object"], editScope, functools.partial( _GafferVDBUI._gridVoxelBound, gridName = gridName ) )
+			),
+			GafferSceneUI.SceneInspector.Inspection(
+				f"Grids/{gridName}/Memory Usage",
+				GafferSceneUI.Private.BasicInspector( scene["object"], editScope, functools.partial( _GafferVDBUI._gridMemoryUsage, gridName = gridName ) )
+			),
+		] )
 
 		for key in sorted( _GafferVDBUI._gridMetadataNames( scene["object"], gridName ) ) :
-			result[f"Grids/{gridName}/Metadata/{key}"] = GafferSceneUI.Private.BasicInspector( scene["object"], editScope, functools.partial( _GafferVDBUI._gridMetadata, gridName = gridName, metadataName = key ) )
+			result.append(
+				GafferSceneUI.SceneInspector.Inspection(
+					f"Grids/{gridName}/Metadata/{key}",
+					GafferSceneUI.Private.BasicInspector( scene["object"], editScope, functools.partial( _GafferVDBUI._gridMetadata, gridName = gridName, metadataName = key ) )
+				)
+			)
 
 	return result
 
