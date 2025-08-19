@@ -4,7 +4,7 @@
 Fixes
 -----
 
-- TweakPlug : Fixed serialisation of default values for `name`, `enabled` and `mode` child plugs (#6544).
+- TweakPlug : Fixed handling of default values for `name`, `enabled` and `mode` child plugs during serialisation and in `createCounterPart()` (#6544).
 
 API
 ---

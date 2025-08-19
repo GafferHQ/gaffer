@@ -64,7 +64,10 @@ class TweakPlugTest( GafferTest.TestCase ) :
 
 	def testCreateCounterpart( self ) :
 
-		p = Gaffer.TweakPlug( "test", 10.0, Gaffer.TweakPlug.Mode.Multiply )
+		p = Gaffer.TweakPlug(
+			name = "p", nameDefault = "test", enabledDefault = False, modeDefault = Gaffer.TweakPlug.Mode.Multiply,
+			valuePlug = Gaffer.IntPlug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
+		)
 		p2 = p.createCounterpart( "p2", Gaffer.Plug.Direction.In )
 
 		self.assertIsInstance( p2, Gaffer.TweakPlug )
@@ -73,6 +76,7 @@ class TweakPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( p2.keys(), p.keys() )
 		for n in p2.keys() :
 			self.assertIsInstance( p2[n], p[n].__class__ )
+			self.assertEqual( p2[n].defaultValue(), p[n].defaultValue() )
 
 	def testTweakParameters( self ) :
 

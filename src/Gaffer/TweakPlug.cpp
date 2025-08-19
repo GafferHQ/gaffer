@@ -554,10 +554,10 @@ bool TweakPlug::acceptsChild( const Gaffer::GraphComponent *potentialChild ) con
 
 Gaffer::PlugPtr TweakPlug::createCounterpart( const std::string &name, Direction direction ) const
 {
-	const Plug *p = valuePlug();
-	PlugPtr plugCounterpart = p->createCounterpart( p->getName(), direction );
-
-	return new TweakPlug( runTimeCast<ValuePlug>( plugCounterpart.get() ), name, direction, getFlags() );
+	ValuePlugPtr valueCounterpart = boost::static_pointer_cast<ValuePlug>( valuePlug()->createCounterpart( "value", direction ) );
+	return new TweakPlug(
+		name, namePlug()->defaultValue(), enabledPlug()->defaultValue(), (Mode)modePlug()->defaultValue(), valueCounterpart, getFlags()
+	);
 }
 
 bool TweakPlug::applyTweak( IECore::CompoundData *parameters, MissingMode missingMode ) const
