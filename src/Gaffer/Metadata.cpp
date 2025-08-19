@@ -68,8 +68,41 @@ using namespace Gaffer;
 namespace
 {
 
-// Signals
-// =======
+// Signals for string targets
+// ==========================
+
+using StringSignalsMap = std::unordered_map<InternedString, Metadata::ValueChangedSignal>;
+StringSignalsMap &stringSignalsMap()
+{
+	static StringSignalsMap *g_stringSignalsMap = new StringSignalsMap;
+	return *g_stringSignalsMap;
+}
+
+void emitValueChangedSignals( InternedString target, InternedString key, Metadata::ValueChangedReason reason )
+{
+	StringSignalsMap &m = stringSignalsMap();
+	if( StringAlgo::hasWildcards( target.c_str() ) )
+	{
+		for( auto &[t, signal] : m )
+		{
+			if( StringAlgo::matchMultiple( t.string(), target.string() ) )
+			{
+				signal( t, key, reason );
+			}
+		}
+	}
+	else
+	{
+		auto it = m.find( target );
+		if( it != m.end() )
+		{
+			it->second( target, key, reason );
+		}
+	}
+}
+
+// Signals for Node/Plug targets
+// =============================
 //
 // We store all our signals in a map indexed by `Node *`. Although we do not
 // allow concurrent edits to a node graph, we do allow different node graphs to
@@ -232,6 +265,14 @@ using MetadataMap = multi_index::multi_index_container<
 MetadataMap &metadataMap()
 {
 	static auto g_m = new MetadataMap;
+	return *g_m;
+}
+
+using WildcardMetadataMap = std::unordered_map<InternedString, Values>;
+
+WildcardMetadataMap &wildcardMetadataMap()
+{
+	static auto g_m = new WildcardMetadataMap;
 	return *g_m;
 }
 
@@ -491,48 +532,83 @@ void Metadata::registerValue( IECore::InternedString target, IECore::InternedStr
 
 void Metadata::registerValue( IECore::InternedString target, IECore::InternedString key, ValueFunction value )
 {
-	auto &targetMap = metadataMap();
-
-	auto targetIt = targetMap.find( target );
-	if( targetIt == targetMap.end() )
+	Values *values = nullptr;
+	if( StringAlgo::hasWildcards( target.c_str() ) )
 	{
-		targetIt = targetMap.insert( NamedValues( target, Values() ) ).first;
+		values = &wildcardMetadataMap()[target];
 	}
+	else
+	{
+		auto &targetMap = metadataMap();
 
-	// Cast is safe because we don't use `second` as a key in the `multi_index_container`,
-	// so we can modify it without affecting indexing.
-	Values &values = const_cast<Values &>( targetIt->second );
+		auto targetIt = targetMap.find( target );
+		if( targetIt == targetMap.end() )
+		{
+			targetIt = targetMap.insert( NamedValues( target, Values() ) ).first;
+		}
+
+		// Cast is safe because we don't use `second` as a key in the `multi_index_container`,
+		// so we can modify it without affecting indexing.
+		values = const_cast<Values *>( &targetIt->second );
+	}
 
 	const NamedValue namedValue( key, value );
-	auto keyIt = values.insert( namedValue );
+	auto keyIt = values->insert( namedValue );
 	if( !keyIt.second )
 	{
-		values.replace( keyIt.first, namedValue );
+		values->replace( keyIt.first, namedValue );
 	}
 
+	emitValueChangedSignals( target, key, ValueChangedReason::StaticRegistration );
+	// Legacy signal receives target directly, even if it contains wildcards.
 	valueChangedSignal()( target, key );
 }
 
 void Metadata::deregisterValue( IECore::InternedString target, IECore::InternedString key )
 {
-	auto &m = metadataMap();
-	auto mIt = m.find( target );
-	if( mIt == m.end() )
+	auto erase = [] ( InternedString target, InternedString key, auto &map ) -> bool {
+
+		auto targetIt = map.find( target );
+		if( targetIt == map.end() )
+		{
+			return false;
+		}
+
+		// Cast is safe because we don't use `second` as a key in the `multi_index_container`,
+		// so we can modify it without affecting indexing.
+		Values &values = const_cast<Values &>( targetIt->second );
+		auto keyIt = values.find( key );
+		if( keyIt == values.end() )
+		{
+			return false;
+		}
+
+		values.erase( keyIt );
+		if( values.empty() )
+		{
+			map.erase( targetIt );
+		}
+
+		return true;
+	};
+
+	bool erased;
+	if( StringAlgo::hasWildcards( target.c_str() ) )
+	{
+		erased = erase( target, key, wildcardMetadataMap() );
+	}
+	else
+	{
+		erased = erase( target, key, metadataMap() );
+	}
+
+	if( !erased )
 	{
 		return;
 	}
 
-	// Cast is safe because we don't use `second` as a key in the `multi_index_container`,
-	// so we can modify it without affecting indexing.
-	Values &values = const_cast<Values &>( mIt->second );
-
-	auto vIt = values.find( key );
-	if( vIt == values.end() )
-	{
-		return;
-	}
-
-	values.erase( vIt );
+	emitValueChangedSignals( target, key, ValueChangedReason::StaticDeregistration );
+	// Legacy signal receives target directly, even if it contains wildcards.
 	valueChangedSignal()( target, key );
 }
 
@@ -556,16 +632,29 @@ IECore::ConstDataPtr Metadata::valueInternal( IECore::InternedString target, IEC
 {
 	const MetadataMap &m = metadataMap();
 	MetadataMap::const_iterator it = m.find( target );
-	if( it == m.end() )
+	if( it != m.end() )
 	{
-		return nullptr;
+		Values::const_iterator vIt = it->second.find( key );
+		if( vIt != it->second.end() )
+		{
+			return vIt->second();
+		}
 	}
 
-	Values::const_iterator vIt = it->second.find( key );
-	if( vIt != it->second.end() )
+	for( const auto &[pattern, values] : wildcardMetadataMap() )
 	{
-		return vIt->second();
+		if( !IECore::StringAlgo::matchMultiple( target.string(), pattern ) )
+		{
+			continue;
+		}
+
+		Values::const_iterator vIt = values.find( key );
+		if( vIt != values.end() )
+		{
+			return vIt->second();
+		}
 	}
+
 	return nullptr;
 }
 
@@ -573,13 +662,33 @@ std::vector<IECore::InternedString> Metadata::targetsWithMetadata( const IECore:
 {
 	vector<InternedString> result;
 	const auto &orderedIndex = metadataMap().get<1>();
+	const auto &wildcardMap = wildcardMetadataMap();
+
 	for( const auto &[target, values] : orderedIndex )
 	{
 		if( !StringAlgo::matchMultiple( target.c_str(), targetPattern ) )
 		{
 			continue;
 		}
-		if( values.find( key ) != values.end() )
+
+		bool hasMetadata = values.find( key ) != values.end();
+		if( !hasMetadata )
+		{
+			for( const auto &[pattern, wildcardValues] : wildcardMap )
+			{
+				if(
+					StringAlgo::matchMultiple( target.string(), pattern ) &&
+					wildcardValues.find( key ) != wildcardValues.end()
+
+				)
+				{
+					hasMetadata = true;
+					break;
+				}
+			}
+		}
+
+		if( hasMetadata )
 		{
 			result.push_back( target );
 		}
@@ -945,10 +1054,9 @@ IECore::ConstDataPtr Metadata::valueInternal( const GraphComponent *target, IECo
 	return Metadata::valueInternal( target, key, registrationTypes( instanceOnly ) );
 }
 
-Metadata::ValueChangedSignal &Metadata::valueChangedSignal()
+Metadata::ValueChangedSignal &Metadata::valueChangedSignal( InternedString target )
 {
-	static ValueChangedSignal *s = new ValueChangedSignal;
-	return *s;
+	return stringSignalsMap()[target];
 }
 
 Metadata::NodeValueChangedSignal &Metadata::nodeValueChangedSignal( Node *node )
@@ -959,6 +1067,12 @@ Metadata::NodeValueChangedSignal &Metadata::nodeValueChangedSignal( Node *node )
 Metadata::PlugValueChangedSignal &Metadata::plugValueChangedSignal( Node *node )
 {
 	return nodeSignals( node, /* createIfMissing = */ true )->plugSignal;
+}
+
+Metadata::LegacyValueChangedSignal &Metadata::valueChangedSignal()
+{
+	static LegacyValueChangedSignal *s = new LegacyValueChangedSignal;
+	return *s;
 }
 
 Metadata::LegacyNodeValueChangedSignal &Metadata::nodeValueChangedSignal()

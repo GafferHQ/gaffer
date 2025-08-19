@@ -218,7 +218,7 @@ QString toString( T v, typename std::enable_if<std::is_floating_point_v<T> || st
 }
 
 template<typename T>
-QString toString( T v, typename std::enable_if<std::is_integral_v<T>>::type *enabler = nullptr )
+QString toString( T v, typename std::enable_if<std::is_integral_v<T> || std::is_same_v<T, std::vector<bool>::const_reference>>::type *enabler = nullptr )
 {
 	return QString::number( v );
 }

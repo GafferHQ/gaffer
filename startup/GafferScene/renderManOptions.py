@@ -273,3 +273,5 @@ with IECore.IgnoredExceptions( ImportError ) :
 		],
 
 	} )
+
+Gaffer.Metadata.registerValue( "option:ri:*", "category", "RenderMan" )

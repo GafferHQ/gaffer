@@ -268,9 +268,9 @@ void registerPlugValue( IECore::TypeId nodeTypeId, const char *plugPath, IECore:
 struct ValueChangedSlotCaller
 {
 
-	void operator()( boost::python::object slot, IECore::InternedString target, IECore::InternedString key )
+	void operator()( boost::python::object slot, IECore::InternedString target, IECore::InternedString key, Metadata::ValueChangedReason reason )
 	{
-		slot( target.c_str(), key.c_str() );
+		slot( target.c_str(), key.c_str(), reason );
 	}
 
 	void operator()( boost::python::object slot, Node *node, IECore::InternedString key, Metadata::ValueChangedReason reason )
@@ -281,6 +281,11 @@ struct ValueChangedSlotCaller
 	void operator()( boost::python::object slot, Plug *plug, IECore::InternedString key, Metadata::ValueChangedReason reason )
 	{
 		slot( PlugPtr( plug ), key.c_str(), reason );
+	}
+
+	void operator()( boost::python::object slot, IECore::InternedString target, IECore::InternedString key )
+	{
+		slot( target.c_str(), key.c_str() );
 	}
 
 	void operator()( boost::python::object slot, IECore::TypeId nodeTypeId, IECore::InternedString key, Node *node )
@@ -400,6 +405,7 @@ void GafferModule::bindMetadata()
 		SignalClass<Metadata::ValueChangedSignal, DefaultSignalCaller<Metadata::ValueChangedSignal>, ValueChangedSlotCaller>( "ValueChangedSignal" );
 		SignalClass<Metadata::NodeValueChangedSignal, DefaultSignalCaller<Metadata::NodeValueChangedSignal>, ValueChangedSlotCaller>( "NodeValueChangedSignal" );
 		SignalClass<Metadata::PlugValueChangedSignal, DefaultSignalCaller<Metadata::PlugValueChangedSignal>, ValueChangedSlotCaller>( "PlugValueChangedSignal" );
+		SignalClass<Metadata::LegacyValueChangedSignal, DefaultSignalCaller<Metadata::LegacyValueChangedSignal>, ValueChangedSlotCaller>( "LegacyValueChangedSignal" );
 		SignalClass<Metadata::LegacyNodeValueChangedSignal, DefaultSignalCaller<Metadata::LegacyNodeValueChangedSignal>, ValueChangedSlotCaller>( "LegacyNodeValueChangedSignal" );
 		SignalClass<Metadata::LegacyPlugValueChangedSignal, DefaultSignalCaller<Metadata::LegacyPlugValueChangedSignal>, ValueChangedSlotCaller>( "LegacyPlugValueChangedSignal" );
 	}
@@ -469,7 +475,8 @@ void GafferModule::bindMetadata()
 		.def( "registerNode", boost::python::raw_function( &registerNode, 1 ) )
 		.staticmethod( "registerNode" )
 
-		.def( "valueChangedSignal", &Metadata::valueChangedSignal, return_value_policy<reference_existing_object>() )
+		.def( "valueChangedSignal", (Metadata::LegacyValueChangedSignal &(*)() )&Metadata::valueChangedSignal, return_value_policy<reference_existing_object>() )
+		.def( "valueChangedSignal", (Metadata::ValueChangedSignal &(*)( InternedString ) )&Metadata::valueChangedSignal, return_value_policy<reference_existing_object>() )
 		.staticmethod( "valueChangedSignal" )
 
 		.def( "nodeValueChangedSignal", (Metadata::LegacyNodeValueChangedSignal &(*)() )&Metadata::nodeValueChangedSignal, return_value_policy<reference_existing_object>() )

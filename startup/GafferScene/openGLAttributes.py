@@ -363,3 +363,5 @@ Gaffer.Metadata.registerValues( {
 	],
 
 } )
+
+Gaffer.Metadata.registerValue( "attribute:gl:*", "category", "OpenGL" )
