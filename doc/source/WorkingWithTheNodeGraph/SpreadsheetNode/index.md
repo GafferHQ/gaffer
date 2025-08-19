@@ -16,7 +16,7 @@ Unlike spreadsheet tools found in other applications, the Gaffer spreadsheet isn
     **Figure 1.** The Node Editor acts as the Spreadsheet node's editable interface.
 ```
 
-A spreadsheet is most useful when you need to map different plug values to [Context Variable](../Contexts/index.md#context-variables) values. It can save you from having to fork a network multiple times with the same type of node with varying values, or from scripting large numbers of Context-conditional statements in one or more Expression nodes.
+A spreadsheet is most useful when you need to map different plug values to [Context Variable](../Contexts/index.html#context-variables) values. It can save you from having to fork a network multiple times with the same type of node with varying values, or from scripting large numbers of Context-conditional statements in one or more Expression nodes.
 
 In production environments, spreadsheets are particularly effective at managing multi-render and multi-shot graphs while keeping them simple and easy to maintain. In a multi-shot rendering graph, a common temptation is to branch the graph, with separate render options nodes for each shot. But to save space and complexity, you could instead use a single branch and vary the node with a Spreadsheet node.
 
