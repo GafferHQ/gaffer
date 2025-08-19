@@ -233,7 +233,7 @@ To drive a PathFilter node's paths with a Spreadsheet node:
 
 1. Select the PathFilter node.
 2. In the Node Editor, click ![](images/gear.png "the gear button"), then select _Create Spreadsheet…_ or select an existing Spreadsheet from the _Connect to Spreadsheet_  sub-menu. The spreadsheet's Selector plug will be filled with `${scene:path}`.
-3. In the spreadsheet interface, click ![](images/plus.png "the plus button") to add a row, then insert the location's path into the pattern. This also adds thethis pattern to the PathFilter’s paths list, since as they are connected.
+3. In the spreadsheet interface, click ![](images/plus.png "the plus button") to add a row, then insert the location's path into the pattern. This also adds the pattern to the PathFilter’s paths list, as they are connected.
 4. Repeat step 3 for each location you wish to affect.
 
 From here on, you will only be able to add paths to the filter by adding rows to the spreadsheet. If necessary, you can edit the patterns to include wildcards to match against multiple similar paths or children of this location.
