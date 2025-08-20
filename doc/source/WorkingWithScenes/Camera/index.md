@@ -52,7 +52,7 @@ To select a look-through camera for a Viewer:
 
 #### Translating and rotating the look-through camera ####
 
-With the Camera Tool ![](images/gafferSceneUICameraTool.png "Camera Tool") toggled on, you can translate and rotate the look-through camera with the [camera controls](../../../../Interface/ControlsAndShortcuts/index.html#d-scenes).
+With the Camera Tool ![](images/gafferSceneUICameraTool.png "Camera Tool") toggled on, you can translate and rotate the look-through camera with the [camera controls](../../Interface/ControlsAndShortcuts/index.html#d-scenes).
 
 ![](images/taskCameraToolLookThroughCamera.gif "Manipulating the camera with the Camera Tool and camera controls")
 
@@ -71,7 +71,7 @@ To orbit with the look-through camera:
 1. Make sure the Camera Tool ![](images/gafferSceneUICameraTool.png "Camera Tool") (<kbd>T</kbd>) is activated.
 2. Select an object in the scene.
 3. Hit <kbd>F</kbd>. The camera will aim at the object and adjust position.
-4. Use the [camera controls](../../../../Interface/ControlsAndShortcuts/index.html#d-scenes) to orbit around the object.
+4. Use the [camera controls](../../Interface/ControlsAndShortcuts/index.html#d-scenes) to orbit around the object.
 
 
 ### Constructing a perspective camera ###
@@ -152,7 +152,7 @@ To add depth of field blur:
 
 Depending on your workflow and pipeline process, and how upstream data is inherited by your graph (such as from Reference nodes), you may find yourself in situations where you need to:
 
-- Introduce a camera that, to work correctly, must override one or more of the scene's [render options](../../../AnatomyOfAScene/index.html#options) (such as the film fit), preempting the downstream StandardOptions node.
+- Introduce a camera that, to work correctly, must override one or more of the scene's [render options](../AnatomyOfAScene/index.html#options) (such as the film fit), preempting the downstream StandardOptions node.
 - Override an upstream camera's parameters, or preempt the downstream render options, without modifying the associated nodes.
 - Completely override a camera to create a custom camera type.
 
