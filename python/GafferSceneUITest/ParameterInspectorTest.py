@@ -1338,6 +1338,163 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 					editWarning = "Edits to TestShader may affect other locations in the scene."
 				)
 
+	def testShaderNetworkParameterInput( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["add"] = GafferScene.Shader()
+		s["add"]["out"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out )
+
+		s["multiOut"] = GafferScene.Shader()
+		s["multiOut"]["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
+		s["multiOut"]["out"]["a"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out )
+		s["multiOut"]["out"]["b"] = Gaffer.FloatPlug( direction = Gaffer.Plug.Direction.Out )
+
+		s["srf"] = GafferScene.Shader()
+		s["srf"]["type"].setValue( "test:surface" )
+		s["srf"]["parameters"]["a"] = Gaffer.Color3fPlug()
+		s["srf"]["parameters"]["a"].setInput( s["add"]["out"] )
+		s["srf"]["parameters"]["b"] = Gaffer.Color3fPlug()
+		s["srf"]["parameters"]["b"].setInput( s["multiOut"]["out"]["a"] )
+		s["srf"]["parameters"]["c"] = Gaffer.FloatPlug()
+		s["srf"]["parameters"]["c"].setInput( s["multiOut"]["out"]["b"] )
+		s["srf"]["out"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out )
+
+		s["cube"] = GafferScene.Cube()
+
+		s["assign"] = GafferScene.ShaderAssignment()
+		s["assign"]["in"].setInput( s["cube"]["out"] )
+		s["assign"]["shader"].setInput( s["srf"]["out"] )
+
+		inspection = self.__inspect( s["assign"]["out"], "/cube", ( "srf", "a" ), attribute = "test:surface" )
+		self.assertEqual( inspection.value(), IECore.CompoundData( { "shaderConnection:shader" : IECore.InternedStringData( "add" ), "shaderConnection:parameter" : IECore.InternedStringData( "out" ) } ) )
+		self.__assertExpectedResult(
+			inspection,
+			source = s["srf"]["parameters"]["a"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = False,
+			nonEditableReason = "srf.parameters.a has a non-settable input."
+		)
+
+		inspection = self.__inspect( s["assign"]["out"], "/cube", ( "srf", "b" ), attribute = "test:surface" )
+		self.assertEqual( inspection.value(), IECore.CompoundData( { "shaderConnection:shader" : IECore.InternedStringData( "multiOut" ), "shaderConnection:parameter" : IECore.InternedStringData( "a" ) } ) )
+		self.__assertExpectedResult(
+			inspection,
+			source = s["srf"]["parameters"]["b"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = False,
+			nonEditableReason = "srf.parameters.b has a non-settable input."
+		)
+
+		inspection = self.__inspect( s["assign"]["out"], "/cube", "c", attribute = "test:surface" )
+		self.assertEqual( inspection.value(), IECore.CompoundData( { "shaderConnection:shader" : IECore.InternedStringData( "multiOut" ), "shaderConnection:parameter" : IECore.InternedStringData( "b" ) } ) )
+		self.__assertExpectedResult(
+			inspection,
+			source = s["srf"]["parameters"]["c"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = False,
+			nonEditableReason = "srf.parameters.c has a non-settable input."
+		)
+
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["assign"]["out"] )
+		s["editScope"]["in"].setInput( s["assign"]["out"] )
+
+		inspection = self.__inspect( s["editScope"]["out"], "/cube", ( "srf", "a" ), s["editScope"], "test:surface" )
+		self.assertEqual( inspection.value(), IECore.CompoundData( { "shaderConnection:shader" : IECore.InternedStringData( "add" ), "shaderConnection:parameter" : IECore.InternedStringData( "out" ) } ) )
+		self.__assertExpectedResult(
+			inspection,
+			source = s["srf"]["parameters"]["a"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Upstream,
+			editable = True,
+		)
+
+		edit = inspection.acquireEdit()
+		edit["enabled"].setValue( True )
+		edit["value"].setValue( imath.Color3f( 1, 2, 3 ) )
+
+		inspection = self.__inspect( s["editScope"]["out"], "/cube", ( "srf", "a" ), s["editScope"], "test:surface" )
+		self.assertEqual( inspection.value().value, imath.Color3f( 1, 2, 3 ) )
+		self.__assertExpectedResult(
+			inspection,
+			source = edit,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.EditScope,
+			editable = True,
+			edit = edit
+		)
+
+		inspection = self.__inspect( s["editScope"]["out"], "/cube", ( "srf", "b" ), s["editScope"], "test:surface" )
+		self.assertEqual( inspection.value(), IECore.CompoundData( { "shaderConnection:shader" : IECore.InternedStringData( "multiOut" ), "shaderConnection:parameter" : IECore.InternedStringData( "a" ) } ) )
+		self.__assertExpectedResult(
+			inspection,
+			source = s["srf"]["parameters"]["b"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Upstream,
+			editable = True,
+		)
+
+		edit = inspection.acquireEdit()
+		edit["enabled"].setValue( True )
+		edit["value"].setValue( imath.Color3f( 4, 5, 6 ) )
+
+		inspection = self.__inspect( s["editScope"]["out"], "/cube", ( "srf", "b" ), s["editScope"], "test:surface" )
+		self.assertEqual( inspection.value().value, imath.Color3f( 4, 5, 6 ) )
+		self.__assertExpectedResult(
+			inspection,
+			source = edit,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.EditScope,
+			editable = True,
+			edit = edit
+		)
+
+		inspection = self.__inspect( s["editScope"]["out"], "/cube", "c", s["editScope"], "test:surface" )
+		self.assertEqual( inspection.value(), IECore.CompoundData( { "shaderConnection:shader" : IECore.InternedStringData( "multiOut" ), "shaderConnection:parameter" : IECore.InternedStringData( "b" ) } ) )
+		self.__assertExpectedResult(
+			inspection,
+			source = s["srf"]["parameters"]["c"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Upstream,
+			editable = True,
+		)
+
+		edit = inspection.acquireEdit()
+		edit["enabled"].setValue( True )
+		edit["value"].setValue( 2.0 )
+
+		inspection = self.__inspect( s["editScope"]["out"], "/cube", "c", s["editScope"], "test:surface" )
+		self.assertEqual( inspection.value().value, 2.0 )
+		self.__assertExpectedResult(
+			inspection,
+			source = edit,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.EditScope,
+			editable = True,
+			edit = edit
+		)
+
+	def testParameter( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["add"] = GafferScene.Shader()
+		s["add"]["out"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out )
+
+		s["srf"] = GafferScene.Shader()
+		s["srf"]["type"].setValue( "test:surface" )
+		s["srf"]["parameters"]["a"] = Gaffer.Color3fPlug()
+		s["srf"]["parameters"]["a"].setInput( s["add"]["out"] )
+		s["srf"]["parameters"]["b"] = Gaffer.Color3fPlug()
+		s["srf"]["out"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out )
+
+		s["cube"] = GafferScene.Cube()
+
+		s["assign"] = GafferScene.ShaderAssignment()
+		s["assign"]["in"].setInput( s["cube"]["out"] )
+		s["assign"]["shader"].setInput( s["srf"]["out"] )
+
+		inspection = self.__inspect( s["assign"]["out"], "/cube", ( "srf", "a" ), attribute = "test:surface" )
+		self.assertEqual( GafferSceneUI.Private.ParameterInspector.connectionSource( inspection.value() ), ( "add", "out" ) )
+
+		inspection = self.__inspect( s["assign"]["out"], "/cube", ( "srf", "b" ), attribute = "test:surface" )
+		self.assertEqual( GafferSceneUI.Private.ParameterInspector.connectionSource( inspection.value() ), ( "", "" ) )
+
 
 if __name__ == "__main__":
 	unittest.main()

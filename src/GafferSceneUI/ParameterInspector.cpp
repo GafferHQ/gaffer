@@ -70,6 +70,15 @@ IECore::ConstObjectPtr parameterData( const Object *attribute, const ShaderNetwo
 		return nullptr;
 	}
 
+	const ShaderNetwork::Parameter input = parameter.shader.string().empty() ? shaderNetwork->input( { shaderNetwork->getOutput().shader, parameter.name } ) : shaderNetwork->input( parameter );
+	if( input )
+	{
+		return new CompoundData( {
+			{ InternedString( "shaderConnection:shader" ), new InternedStringData( input.shader ) },
+			{ InternedString( "shaderConnection:parameter" ), new InternedStringData( input.name ) }
+		} );
+	}
+
 	const IECoreScene::Shader *shader = parameter.shader.string().empty() ? shaderNetwork->outputShader() : shaderNetwork->getShader( parameter.shader );
 	if( !shader )
 	{
@@ -91,6 +100,24 @@ ParameterInspector::ParameterInspector(
 	: AttributeInspector( scene, editScope, attribute, parameter.name.string(), "parameter" ), m_parameter( parameter ), m_inheritAttributes( inheritAttributes )
 {
 
+}
+
+ShaderNetwork::Parameter ParameterInspector::connectionSource( const Object *object )
+{
+	if( auto data = runTimeCast<const CompoundData>( object ) )
+	{
+		if( data->readable().size() == 2 )
+		{
+			const auto shaderName = data->member<InternedStringData>( "shaderConnection:shader" );
+			const auto parameterName = data->member<InternedStringData>( "shaderConnection:parameter" );
+
+			if( shaderName && parameterName )
+			{
+				return ShaderNetwork::Parameter( shaderName->readable(), parameterName->readable() );
+			}
+		}
+	}
+	return ShaderNetwork::Parameter();
 }
 
 GafferScene::SceneAlgo::History::ConstPtr ParameterInspector::history() const

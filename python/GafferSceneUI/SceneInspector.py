@@ -40,6 +40,7 @@ import functools
 import imath
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferScene
@@ -132,16 +133,15 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 		self.settings()["compare"]["scene"]["value"].setInput( self.settings()["in"] )
 
 		nameColumn = GafferUI.StandardPathColumn( "Name", "name" )
-		self.__standardColumns = [
-			nameColumn,
-			GafferSceneUI.Private.InspectorColumn( "inspector:inspector", headerData = GafferUI.PathColumn.CellData( value = "Value" ) ),
-		]
+		valueColumn = GafferSceneUI.Private.InspectorColumn( "inspector:inspector", headerData = GafferUI.PathColumn.CellData( value = "Value" ) )
+		valueColumn.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) )
+		self.__standardColumns = [ nameColumn, valueColumn ]
 
-		self.__diffColumns = [
-			nameColumn,
-			_GafferSceneUI._SceneInspector.InspectorDiffColumn( _GafferSceneUI._SceneInspector.InspectorDiffColumn.DiffContext.A ),
-			_GafferSceneUI._SceneInspector.InspectorDiffColumn( _GafferSceneUI._SceneInspector.InspectorDiffColumn.DiffContext.B ),
-		]
+		diffColumnA = _GafferSceneUI._SceneInspector.InspectorDiffColumn( _GafferSceneUI._SceneInspector.InspectorDiffColumn.DiffContext.A )
+		diffColumnA.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) )
+		diffColumnB = _GafferSceneUI._SceneInspector.InspectorDiffColumn( _GafferSceneUI._SceneInspector.InspectorDiffColumn.DiffContext.B )
+		diffColumnB.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) )
+		self.__diffColumns = [ nameColumn, diffColumnA, diffColumnB ]
 
 		with mainColumn :
 
@@ -238,6 +238,63 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 
 		self.__locationPathListing.getPath().tree().setContexts( self.__selectionContexts() )
 		self.__globalsPathListing.getPath().tree().setContexts( self.__globalsContexts() )
+
+	def __frameShader( self, shaderPath, pathListing ) :
+
+		newSelection = []
+
+		selectedPath = IECore.PathMatcher()
+		selectedPath.addPath( str( shaderPath ) )
+
+		currentSelection = pathListing.getSelection()
+		for i in range( 0, len( currentSelection ) ) :
+			newSelection.append( selectedPath if not currentSelection[i].isEmpty() else IECore.PathMatcher() )
+		pathListing.setSelection( newSelection )
+
+	def __contextMenu( self, column, pathListing, menuDefinition ) :
+
+		selection = pathListing.getSelection()
+
+		if not isinstance( selection, list ) :
+			return
+
+		if all( [ x.isEmpty() for x in selection ] ) :
+			return
+
+		path = pathListing.getPath().copy()
+		inspectionColumns = []
+		for columnSelection, column in zip( selection, pathListing.getColumns() ) :
+			if not columnSelection.isEmpty() :
+				if not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+					return
+				for selection in columnSelection.paths() :
+					path.setFromString( selection )
+					if not isinstance( column.inspector( path ), GafferSceneUI.Private.ParameterInspector ) :
+						return
+					inspectionColumns.append( ( column, selection ) )
+
+		active = False
+		shaderName = ""
+
+		if len( inspectionColumns ) == 1 :
+			column, selection = inspectionColumns[0]
+			path.setFromString( selection )
+			result = column.inspect( path )
+			if result is not None and result.value() is not None and ( connectionSource := GafferSceneUI.Private.ParameterInspector.connectionSource( result.value() ) ) :
+				active = True
+				shaderName = connectionSource.shader
+
+		path.setFromString( "/".join( path[:-2] + [str( shaderName )] ) )
+
+		menuDefinition.append( "FocusInputShaderDivider", { "divider" : True } )
+
+		menuDefinition.append(
+			"Frame Input Shader",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__frameShader ), path, pathListing ),
+				"active" : active,
+			}
+		)
 
 	def __selectedPathsChanged( self, scriptNode ) :
 

@@ -698,11 +698,18 @@ class __InspectionPopupWindow( GafferUI.PopupWindow ) :
 						parenting = { "index" : ( 1, 1 ), "alignment" : ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.Top ) }
 					)
 				else :
-					valueLabel = GafferUI.Label(
-						f"{value}",
+					connectionSource = GafferSceneUI.Private.ParameterInspector.connectionSource( value )
+					if connectionSource :
+						value = connectionSource.shader + "." + connectionSource.name
+					with GafferUI.ListContainer(
+						GafferUI.ListContainer.Orientation.Horizontal,
+						spacing = 4,
 						parenting = { "index" : ( 1, 1 ), "alignment" : ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.Top ) }
-					)
+					) :
+						connectionIcon = GafferUI.Image( "SceneInspectorShaderConnection.png" )
+						valueLabel = GafferUI.Label( f"{value}" )
 
+					connectionIcon.setVisible( connectionSource )
 					valueLabel.buttonPressSignal().connect( lambda widget, event : True )
 					valueLabel.dragBeginSignal().connect( Gaffer.WeakMethod( self.__valueDragBegin ) )
 					valueLabel.dragEndSignal().connect( Gaffer.WeakMethod( self.__valueDragEnd ) )

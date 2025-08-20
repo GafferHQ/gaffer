@@ -524,6 +524,8 @@ class _ValueWidget( GafferUI.Widget ) :
 			)
 		elif isinstance( value, ( imath.V3f, imath.V2f, imath.V3i, imath.V2i ) ) :
 			return " ".join( GafferUI.NumericWidget.valueToString( x ) for x in value )
+		elif isinstance( value, IECore.Object ) and ( source := GafferSceneUI.Private.ParameterInspector.connectionSource( value ) ) :
+			return source.shader + "." + source.name
 		elif value is None :
 			return ""
 		else :

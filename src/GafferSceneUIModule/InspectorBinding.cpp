@@ -206,6 +206,8 @@ void GafferSceneUIModule::bindInspector()
 				( arg( "scene" ), arg( "attribute" ), arg( "parameter" ), arg( "inheritAttributes" ) = false )
 			)
 		)
+		.def( "connectionSource", &ParameterInspector::connectionSource )
+		.staticmethod( "connectionSource" )
 	;
 
 	RunTimeTypedClass<SetMembershipInspector>( "SetMembershipInspector" )

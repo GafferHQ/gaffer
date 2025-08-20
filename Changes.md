@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - RenderMan : Removed the `GAFFERRENDERMAN_FEATURE_PREVIEW` environment variable. The RenderMan extension is now automatically enabled any time the `RMANTREE` environment variable is present. While the RenderMan extension is not yet feature complete, it is considered to be mature enough for general use.
+- SceneInspector, LightEditor, SceneViewInspector, HistoryWindow and InspectionPopup : Shader parameters with input connections now show the connection source name instead of the plug value. Parameters in the SceneInspector allow framing the input shader via the context menu.
 
 Fixes
 -----
