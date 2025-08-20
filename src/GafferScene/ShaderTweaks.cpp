@@ -306,14 +306,14 @@ bool applyTweakInternal( ShaderNetwork *shaderNetwork, unordered_map<InternedStr
 							}
 
 							// Regular tweak
-							auto modifiedShader = modifiedShaders.insert( { c.destination.shader, nullptr } );
-							if( modifiedShader.second )
+							IECoreScene::ShaderPtr &modifiedShader = modifiedShaders[c.destination.shader];
+							if( !modifiedShader )
 							{
-								modifiedShader.first->second = proxyConnectedShader->copy();
+								modifiedShader = proxyConnectedShader->copy();
 							}
 
-							const IECore::Data *origDestParameter = modifiedShader.first->second->parametersData()->member(c.destination.name, /* throwExceptions = */ true );
-							modifiedShader.first->second->parameters()[c.destination.name] = castDataToType( shader->parametersData()->member( parameter.name, /* throwExceptions = */ true ), origDestParameter );
+							const IECore::Data *origDestParameter = modifiedShader->parametersData()->member(c.destination.name, /* throwExceptions = */ true );
+							modifiedShader->parameters()[c.destination.name] = castDataToType( shader->parametersData()->member( parameter.name, /* throwExceptions = */ true ), origDestParameter );
 						}
 					}
 					else
@@ -354,28 +354,28 @@ bool applyTweakInternal( ShaderNetwork *shaderNetwork, unordered_map<InternedStr
 			}
 		}
 
-		auto modifiedShader = modifiedShaders.insert( { parameter.shader, nullptr } );
-		if( modifiedShader.second )
+		IECoreScene::ShaderPtr &modifiedShader = modifiedShaders[parameter.shader];
+		if( !modifiedShader )
 		{
-			modifiedShader.first->second = shader->copy();
+			modifiedShader = shader->copy();
 		}
 
 		return tweakPlug->applyTweak(
 			[&parameter, &modifiedShader]( const std::string &valueName, const bool withFallback )
 			{
-				return modifiedShader.first->second->parametersData()->member( parameter.name );
+				return modifiedShader->parametersData()->member( parameter.name );
 			},
 			[&parameter, &modifiedShader]( const std::string &valueName, DataPtr newData )
 			{
 				if( newData )
 				{
-					modifiedShader.first->second->parameters()[parameter.name] = newData;
+					modifiedShader->parameters()[parameter.name] = newData;
 					return true;
 				}
 				else
 				{
 					return static_cast<bool>(
-						modifiedShader.first->second->parameters().erase( parameter.name )
+						modifiedShader->parameters().erase( parameter.name )
 					);
 				}
 			},
