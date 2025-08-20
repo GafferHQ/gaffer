@@ -14,6 +14,7 @@ Fixes
   - Added missing Cycles volume attributes.
   - Renamed OpenGL "Shading" section to "Drawing", to match the NodeEditor.
 - ImageReader : Adjusted default `channelInterpretation` heuristics to better match Nuke's behaviour for single-part EXR files with bogus part name metadata (#6527). In this case, the part name is no longer used as the layer name.
+- TweakPlug : Fixed handling of default values for `name`, `enabled` and `mode` child plugs during serialisation and in `createCounterPart()` (#6544) [^1].
 
 API
 ---
@@ -21,6 +22,7 @@ API
 - Metadata :
   - Added the ability to register metadata against multiple string targets, by including wildcards in the target name.
   - Added per-target signals for string targets, available via the `valueChangedSignal( target )` method. The old all-target `valueChangedSignal()` method is now deprecated.
+- TweakPlug : Added extended constructor allowing default values for `name`, `enabled` and `mode` plug to be specified [^1].
 
 Breaking Changes
 ----------------
@@ -282,7 +284,15 @@ Build
 1.5.x.x (relative to 1.5.16.1)
 =======
 
+Fixes
+-----
 
+- TweakPlug : Fixed handling of default values for `name`, `enabled` and `mode` child plugs during serialisation and in `createCounterPart()` (#6544).
+
+API
+---
+
+- TweakPlug : Added extended constructor allowing default values for `name`, `enabled` and `mode` plug to be specified.
 
 1.5.16.1 (relative to 1.5.16.0)
 ========

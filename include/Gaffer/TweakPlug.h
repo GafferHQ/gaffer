@@ -80,9 +80,22 @@ class GAFFER_API TweakPlug : public Gaffer::ValuePlug
 			Last = CreateIfMissing,
 		};
 
+		/// Complete constructor, able to specify all relevant properties of the child plugs.
+		/// The `Direction` is taken from `valuePlug`.
+		TweakPlug( const std::string &name, const std::string &nameDefault, bool enabledDefault, Mode modeDefault, Gaffer::ValuePlugPtr valuePlug, unsigned flags );
+		/// Convenience constructors. These don't specify the default values for the
+		/// child plugs - they set their values instead.
+		///
+		/// > Caution : These are unsuitable for use in node constructors, because
+		/// > a node's plugs must be constructed with their values set to default.
+		///
+		/// \todo Perhaps the API would be clearer if these weren't constructors, but
+		/// instead were convenience functions. `TweaksPlug::addTweak()` perhaps?
+		/// Or `TweakPlug::createWithValues()`? Note that a worse situation exists for
+		/// NameValuePlug, which has no less than seven overloaded constructors.
 		TweakPlug( const std::string &tweakName, Gaffer::ValuePlugPtr valuePlug, Mode mode = Replace, bool enabled = true );
 		TweakPlug( const std::string &tweakName, const IECore::Data *value, Mode mode = Replace, bool enabled = true );
-		/// Primarily used for serialisation.
+		/// Legacy constructor used for compatibility with old serialisations. Do not use.
 		explicit TweakPlug( Gaffer::ValuePlugPtr valuePlug, const std::string &name=defaultName<TweakPlug>(), Direction direction=In, unsigned flags=Default );
 
 		Gaffer::StringPlug *namePlug();
