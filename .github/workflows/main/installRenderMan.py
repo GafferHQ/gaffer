@@ -58,16 +58,14 @@ args = parser.parse_args()
 # cookies we can use to authenticate our further requests.
 
 cookies = requests.post(
-	"https://renderman.pixar.com/forum/member.php",
+	"https://renderman.pixar.com/forum/auth/ajax-login",
 	{
 		"username" : os.environ["RENDERMAN_DOWNLOAD_USER"],
 		"password" : os.environ["RENDERMAN_DOWNLOAD_PASSWORD"],
-		"url" :  "/forum/",
-		"action" : "login"
 	}
 ).cookies
 
-if not { "bbpassword", "bbuserid" }.issubset( cookies.keys() ) :
+if "rmanprofile" not in cookies :
 	sys.stderr.write( "Error : Login failed\n" )
 	sys.exit( 1 )
 
@@ -83,7 +81,7 @@ fileName = "RenderMan.msi" if os.name == "nt" else "RenderMan.rpm"
 # Now we can download our file.
 
 download = requests.get(
-	"https://renderman.pixar.com/forum/download.php",
+	"https://renderman.pixar.com/forum/download/release",
 	{
 		"fileid" : fileId,
 		"distid" : "4483",
