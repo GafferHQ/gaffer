@@ -21,6 +21,11 @@ API
   - Added the ability to register metadata against multiple string targets, by including wildcards in the target name.
   - Added per-target signals for string targets, available via the `valueChangedSignal( target )` method. The old all-target `valueChangedSignal()` method is now deprecated.
 
+Breaking Changes
+----------------
+
+- SceneInspector : Custom inspectors implemented in Python must now return a list of Inspector objects rather than a dictionary [^1].
+
 [^1]: To be omitted from the notes for the final 1.6.0.0 release.
 
 1.6.0.0a3 (relative to 1.6.0.0a2)
