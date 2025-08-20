@@ -754,6 +754,16 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		self.assertNotIn( "oiio:subimagename", metadata )
 		self.assertNotIn( "oiio:subimages", metadata )
 
+	def testDefaultChannelInterpretationIgnoreBogusPartName( self ) :
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( self.imagesPath() / "singlePartBogusName.exr" )
+
+		refReader = GafferImage.ImageReader()
+		refReader["fileName"].setValue( self.imagesPath() / "circles.exr" )
+
+		self.assertImagesEqual( reader["out"], refReader["out"], ignoreMetadata = True )
+
 	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testImageOpenPerformance( self ) :
