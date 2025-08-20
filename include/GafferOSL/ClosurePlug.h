@@ -41,8 +41,6 @@
 
 #include "Gaffer/Plug.h"
 
-#include "IECore/CompoundObject.h"
-
 namespace GafferOSL
 {
 
@@ -63,8 +61,6 @@ class GAFFEROSL_API ClosurePlug : public Gaffer::Plug
 		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
 		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 		bool acceptsInput( const Gaffer::Plug *input ) const override;
-
-	private:
 
 };
 
