@@ -1,7 +1,15 @@
 1.5.x.x (relative to 1.5.16.1)
 =======
 
+Fixes
+-----
 
+- TweakPlug : Fixed handling of default values for `name`, `enabled` and `mode` child plugs during serialisation and in `createCounterPart()` (#6544).
+
+API
+---
+
+- TweakPlug : Added extended constructor allowing default values for `name`, `enabled` and `mode` plug to be specified.
 
 1.5.16.1 (relative to 1.5.16.0)
 ========

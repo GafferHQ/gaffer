@@ -79,19 +79,38 @@ class TweakPlugSerialiser : public ValuePlugSerialiser
 
 	std::string constructor( const Gaffer::GraphComponent *graphComponent, Serialisation &serialisation ) const override
 	{
-		auto tweaksPlug = static_cast<const TweakPlug *>( graphComponent );
+		auto tweakPlug = static_cast<const TweakPlug *>( graphComponent );
 
-		const Serialiser *valuePlugSerialiser = Serialisation::acquireSerialiser( tweaksPlug->valuePlug() );
-		std::string result = ValuePlugSerialiser::constructor( graphComponent, serialisation );
+		std::string result = "Gaffer.TweakPlug( ";
 
-		// Pass the value plug into the constructor directly so that there's
-		// never a moment in which the TweakPlug is in an invalid state.
-		result = boost::algorithm::replace_first_copy(
-			result,
-			"TweakPlug(",
-			"TweakPlug( " + valuePlugSerialiser->constructor( tweaksPlug->valuePlug(), serialisation ) + ","
-		);
+		result += "name = \"" + tweakPlug->getName().string() + "\"";
 
+		if( tweakPlug->namePlug()->defaultValue() != "" )
+		{
+			result += ", nameDefault = \"" + tweakPlug->namePlug()->defaultValue() + "\"";
+		}
+
+		if( tweakPlug->enabledPlug()->defaultValue() != true )
+		{
+			result += ", enabledDefault = False";
+		}
+
+		if( tweakPlug->modePlug()->defaultValue() != TweakPlug::Replace )
+		{
+			object mode = object( (TweakPlug::Mode)tweakPlug->modePlug()->defaultValue() ).attr( "name" );
+			std::string modeString = extract<std::string>( mode );
+			result += ", modeDefault = Gaffer.TweakPlug.Mode." + modeString;
+		}
+
+		const Serialiser *valuePlugSerialiser = Serialisation::acquireSerialiser( tweakPlug->valuePlug() );
+		result += ", valuePlug = " + valuePlugSerialiser->constructor( tweakPlug->valuePlug(), serialisation );
+
+		if( tweakPlug->getFlags() != Plug::Flags::Default )
+		{
+			result += ", flags = " + flagsRepr( tweakPlug->getFlags() );
+		}
+
+		result += " )";
 		return result;
 	}
 };
@@ -127,6 +146,18 @@ void GafferModule::bindTweakPlugs()
 	}
 
 	tweakPlugClass
+		.def(
+			init<const std::string &, const std::string &, bool, TweakPlug::Mode, ValuePlugPtr, unsigned>(
+				(
+					boost::python::arg( "name" ) = GraphComponent::defaultName<TweakPlug>(),
+					boost::python::arg( "nameDefault" ) = "",
+					boost::python::arg( "enabledDefault" ) = true,
+					boost::python::arg( "modeDefault" ) = TweakPlug::Mode::Replace,
+					boost::python::arg( "valuePlug" ),
+					boost::python::arg( "flags" ) = Plug::Default
+				)
+			)
+		)
 		.def(
 			init<ValuePlug *, const char *, Plug::Direction, unsigned>(
 				(
