@@ -180,11 +180,11 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		tweaks["shader"].setValue( "surface" )
 
 		tweaks["tweaks"].addChild( Gaffer.TweakPlug( "c", Gaffer.Color3fPlug() ) )
-		tweaks["tweaks"][0]["value"].setInput( textureShader["out"] )
+		tweaks["tweaks"][0]["value"].setInput( textureShader["out"]["c"] )
 
 		tweakedNetwork = tweaks["out"].attributes( "/plane" )["surface"]
 		self.assertEqual( len( tweakedNetwork ), 2 )
-		self.assertEqual( tweakedNetwork.input( ( "surface", "c" ) ), ( "texture", "out" ) )
+		self.assertEqual( tweakedNetwork.input( ( "surface", "c" ) ), ( "texture", "c" ) )
 
 		tweakedNetwork.removeShader( "texture" )
 		self.assertEqual( tweakedNetwork, originalNetwork )
@@ -245,7 +245,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		shader["type"].setValue( "surface" )
 
 		textureShader1 = GafferSceneTest.TestShader( "texture1" )
-		shader["parameters"]["c"].setInput( textureShader1["out"] )
+		shader["parameters"]["c"].setInput( textureShader1["out"]["c"] )
 
 		planeFilter = GafferScene.PathFilter()
 		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
@@ -257,7 +257,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 
 		originalNetwork = assignment["out"].attributes( "/plane" )["surface"]
 		self.assertEqual( len( originalNetwork ), 2 )
-		self.assertEqual( originalNetwork.input( ( "surface", "c" ) ), ( "texture1", "out" ) )
+		self.assertEqual( originalNetwork.input( ( "surface", "c" ) ), ( "texture1", "c" ) )
 
 		textureShader2 = GafferSceneTest.TestShader( "texture2" )
 
@@ -267,11 +267,11 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		tweaks["shader"].setValue( "surface" )
 
 		tweaks["tweaks"].addChild( Gaffer.TweakPlug( "c", Gaffer.Color3fPlug() ) )
-		tweaks["tweaks"][0]["value"].setInput( textureShader2["out"] )
+		tweaks["tweaks"][0]["value"].setInput( textureShader2["out"]["c"] )
 
 		tweakedNetwork = tweaks["out"].attributes( "/plane" )["surface"]
 		self.assertEqual( len( tweakedNetwork ), 2 )
-		self.assertEqual( tweakedNetwork.input( ( "surface", "c" ) ), ( "texture2", "out" ) )
+		self.assertEqual( tweakedNetwork.input( ( "surface", "c" ) ), ( "texture2", "c" ) )
 
 		textureShader2["enabled"].setValue( False )
 		tweakedNetwork = tweaks["out"].attributes( "/plane" )["surface"]
@@ -289,7 +289,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		shader["type"].setValue( "surface" )
 
 		textureShader = GafferSceneTest.TestShader( "texture1" )
-		shader["parameters"]["c"].setInput( textureShader["out"] )
+		shader["parameters"]["c"].setInput( textureShader["out"]["c"] )
 
 		planeFilter = GafferScene.PathFilter()
 		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
@@ -362,7 +362,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 			t["out"].attributes( "/light" )
 
 		inputShader = GafferSceneTest.TestShader()
-		badTweak["value"].setInput( inputShader["out"]["r"] )
+		badTweak["value"].setInput( inputShader["out"]["c"]["r"] )
 
 		with self.assertRaisesRegex( RuntimeError, "Cannot apply tweak \"badParameter\" because shader \"__shader\" does not have parameter \"badParameter\"" ) :
 			t["out"].attributes( "/light" )
@@ -375,7 +375,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		badTweak["name"].setValue( "badShader.p" )
 		self.assertEqual( t["out"].attributes( "/light" ), t["in"].attributes( "/light" ) )
 
-		badTweak["value"].setInput( inputShader["out"]["r"] )
+		badTweak["value"].setInput( inputShader["out"]["c"]["r"] )
 		badTweak["name"].setValue( "badParameter" )
 		self.assertEqual( t["out"].attributes( "/light" ), t["in"].attributes( "/light" ) )
 		self.assertEqual( t["out"].attributes( "/light" ), t["in"].attributes( "/light" ) )
@@ -492,12 +492,12 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 
 		shaderA_A = GafferSceneTest.TestShader( "A_A" )
 		shaderA_B = GafferSceneTest.TestShader( "A_B" )
-		shaderA_B["parameters"]["c"].setInput( shaderA_A["out"] )
+		shaderA_B["parameters"]["c"].setInput( shaderA_A["out"]["c"] )
 		shaderB_A = GafferSceneTest.TestShader( "B_A" )
-		shaderB_A["parameters"]["c"].setInput( shaderA_B["out"] )
+		shaderB_A["parameters"]["c"].setInput( shaderA_B["out"]["c"] )
 
 		light = GafferSceneTest.TestLight()
-		light["parameters"]["intensity"].setInput( shaderB_A["out"] )
+		light["parameters"]["intensity"].setInput( shaderB_A["out"]["c"] )
 
 		pathFilter = GafferScene.PathFilter()
 		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
@@ -537,7 +537,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( tweaked.shaders()["B_A"].parameters["i"].value, 42 )
 
 		extraShader = GafferSceneTest.TestShader( "extra" )
-		tweaks["tweaks"][0]["value"].setInput( extraShader["out"]["r"] )
+		tweaks["tweaks"][0]["value"].setInput( extraShader["out"]["c"]["r"] )
 
 		with self.assertRaisesRegex( RuntimeError, r'Cannot apply tweak "\*_A.i" to "A_A.i" : Mode must be "Replace" when inserting a connection' ) :
 			tweaks["out"].attributes( "/light" )
@@ -550,9 +550,8 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		# create two copies of the input network. Maybe in an ideal world, two separate tweaks using the same
 		# input network would also be shared?
 		self.assertEqual( len( tweaked ), 6 )
-		self.assertEqual( tweaked.inputConnections("A_A")[-1].source, IECoreScene.ShaderNetwork.Parameter( "extra", "out.r" ) )
-		self.assertEqual( tweaked.inputConnections("B_A")[-1].source, IECoreScene.ShaderNetwork.Parameter( "extra1", "out.r" ) )
-
+		self.assertEqual( tweaked.inputConnections("A_A")[-1].source, IECoreScene.ShaderNetwork.Parameter( "extra", "c.r" ) )
+		self.assertEqual( tweaked.inputConnections("B_A")[-1].source, IECoreScene.ShaderNetwork.Parameter( "extra1", "c.r" ) )
 
 		del tweaks["tweaks"][0]
 

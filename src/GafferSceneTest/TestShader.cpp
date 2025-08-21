@@ -56,7 +56,7 @@ namespace
 template<typename PlugType>
 Plug *setupTypedPlug(
 	const InternedString &parameterName,
-	GraphComponent *plugParent,
+	Plug *plugParent,
 	const typename PlugType::ValueType &defaultValue
 )
 {
@@ -66,7 +66,7 @@ Plug *setupTypedPlug(
 		return existingPlug;
 	}
 
-	typename PlugType::Ptr plug = new PlugType( parameterName, Plug::Direction::In, defaultValue );
+	typename PlugType::Ptr plug = new PlugType( parameterName, plugParent->direction(), defaultValue );
 	PlugAlgo::replacePlug( plugParent, plug );
 
 	return plug.get();
@@ -91,7 +91,7 @@ Plug *setupOptionalValuePlug(
 		}
 	}
 
-	OptionalValuePlugPtr plug = new OptionalValuePlug( parameterName, valuePlug );
+	OptionalValuePlugPtr plug = new OptionalValuePlug( parameterName, valuePlug, false, valuePlug->direction() );
 	PlugAlgo::replacePlug( plugParent, plug );
 
 	return plug.get();
@@ -110,7 +110,7 @@ TestShader::TestShader( const std::string &name )
 	// Turn serialisation back on to preserve the user-specified type.
 	typePlug()->setFlags( Plug::Serialisable, true );
 
-	addChild( new Color3fPlug( "out", Plug::Out ) );
+	addChild( new Plug( "out", Plug::Out ) );
 
 	loadShader( "simpleShader" );
 }
@@ -122,10 +122,12 @@ TestShader::~TestShader()
 void TestShader::loadShader( const std::string &shaderName, bool keepExistingValues )
 {
 	Plug *parametersPlug = this->parametersPlug()->source<Plug>();
+	Plug *outPlug = this->outPlug()->source<Plug>();
 
 	if( !keepExistingValues )
 	{
 		parametersPlug->clearChildren();
+		outPlug->clearChildren();
 	}
 
 	namePlug()->source<StringPlug>()->setValue( shaderName );
@@ -142,11 +144,13 @@ void TestShader::loadShader( const std::string &shaderName, bool keepExistingVal
 		setupTypedPlug<Color3fPlug>( "c", parametersPlug, Imath::Color3f( 0.f ) );
 		setupTypedPlug<SplinefColor3fPlug>( "spline", parametersPlug, SplineDefinitionfColor3f() );
 		setupOptionalValuePlug<StringPlug>( "optionalString", parametersPlug, new StringPlug() );
+		setupTypedPlug<Color3fPlug>( "c", outPlug, Imath::Color3f( 0.0f ) );
 	}
 	else if( shaderName == "mix" )
 	{
 		setupTypedPlug<Color3fPlug>( "a", parametersPlug, Imath::Color3f( 0.f ) );
 		setupTypedPlug<Color3fPlug>( "b", parametersPlug, Imath::Color3f( 0.f ) );
 		setupTypedPlug<FloatPlug>( "mix", parametersPlug, 0.5 );
+		setupTypedPlug<Color3fPlug>( "c", outPlug, Imath::Color3f( 0.0f ) );
 	}
 }

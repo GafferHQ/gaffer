@@ -31,6 +31,7 @@ Breaking Changes
 
 - ImageReader : Changed the behaviour of `channelInterpretation = "Default"` so that part names are ignored in single-part EXR files. The behaviour of `channelInterpretation = "EXR Specification"` remains unchanged.
 - SceneInspector : Custom inspectors implemented in Python must now return a list of Inspector objects rather than a dictionary [^1].
+- TestShader : Moved outputs to be children of the `out` plug, instead of it being a fixed `Color3fPlug`.
 
 Documentation
 -------------

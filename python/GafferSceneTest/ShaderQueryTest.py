@@ -168,11 +168,11 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		tex = GafferSceneTest.TestShader( "texture" )
 		tex["type"].setValue( "test:surface" )
 
-		srf["parameters"]["t"].setInput( tex["out"] )
+		srf["parameters"]["t"].setInput( tex["out"]["c"] )
 
 		a = GafferScene.ShaderAssignment()
 		a["in"].setInput( s["out"] )
-		a["shader"].setInput( srf["out"] )
+		a["shader"].setInput( srf["out"]["c"] )
 
 		q = GafferScene.ShaderQuery()
 		q["scene"].setInput( a["out"] )
@@ -240,7 +240,7 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		tex["parameters"]["c"].setValue( imath.Color3f( 0.7, 0.8, 0.9 ) )
 		tex["parameters"]["i"].setValue( 3 )
 
-		srf["parameters"]["t"].setInput( tex["out"] )
+		srf["parameters"]["t"].setInput( tex["out"]["c"] )
 
 		a = GafferScene.ShaderAssignment()
 		a["in"].setInput( s["out"] )
@@ -306,7 +306,7 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		tex["parameters"]["c"].setValue( imath.Color3f( 0.7, 0.8, 0.9 ) )
 		tex["parameters"]["i"].setValue( 3 )
 
-		srf["parameters"]["t"].setInput( tex["out"] )
+		srf["parameters"]["t"].setInput( tex["out"]["c"] )
 
 		a = GafferScene.ShaderAssignment()
 		a["in"].setInput( s["out"] )
@@ -355,7 +355,7 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		tex["parameters"]["c"].setValue( imath.Color3f( 0.7, 0.8, 0.9 ) )
 		tex["parameters"]["i"].setValue( 3 )
 
-		srf["parameters"]["t"].setInput( tex["out"] )
+		srf["parameters"]["t"].setInput( tex["out"]["c"] )
 
 		a = GafferScene.ShaderAssignment()
 		a["in"].setInput( s["out"] )
