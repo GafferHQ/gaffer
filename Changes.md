@@ -35,10 +35,6 @@ Documentation
 -------------
 
 - Added RenderMan configuration instructions to the "Getting Started" guide.
-
-Documentation
--------------
-
 - Fixed invalid link to OIIO metadata documentation in "Anatomy Of An Image".
 - Fixed invalid internal links within "Camera", "Anatomy Of A Camera", "Light Linking" and "Spreadsheet Node" sections.
 - Fixed invalid link anchor targets in "Contexts" and "Node Graph Editing In Python" sections.
