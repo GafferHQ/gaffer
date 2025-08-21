@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,36 +34,46 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#pragma once
-
-#include "GafferOSL/Export.h"
-#include "GafferOSL/TypeIds.h"
-
 #include "GafferScene/ClosurePlug.h"
 
-namespace GafferOSL
+#include "Gaffer/Dot.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/SubGraph.h"
+#include "Gaffer/Switch.h"
+
+#include "IECore/MurmurHash.h"
+
+using namespace IECore;
+using namespace Gaffer;
+using namespace GafferScene;
+
+GAFFER_PLUG_DEFINE_TYPE( ClosurePlug );
+
+ClosurePlug::ClosurePlug( const std::string &name, Direction direction, unsigned flags )
+	:	Plug( name, direction, flags )
 {
+}
 
-/// Plug that provides a proxy for representing closure types when
-/// loader a shader from OSL or a renderer.  We probably won't be able
-/// to set or get closure plugs, but we need to be able to connect
-/// them, and they should only connect to other closure plugs.
-class GAFFEROSL_API ClosurePlug : public GafferScene::ClosurePlug
+ClosurePlug::~ClosurePlug()
 {
+}
 
-	public :
+bool ClosurePlug::acceptsChild( const GraphComponent *potentialChild ) const
+{
+	return false;
+}
 
-		explicit ClosurePlug( const std::string &name=defaultName<ClosurePlug>(), Direction direction=In, unsigned flags=Default );
-		~ClosurePlug() override;
+Gaffer::PlugPtr ClosurePlug::createCounterpart( const std::string &name, Direction direction ) const
+{
+	return new ClosurePlug( name, direction, getFlags() );
+}
 
-		GAFFER_PLUG_DECLARE_TYPE( GafferOSL::ClosurePlug, ClosurePlugTypeId, GafferScene::ClosurePlug );
+bool ClosurePlug::acceptsInput( const Gaffer::Plug *input ) const
+{
+	if( !Plug::acceptsInput( input ) )
+	{
+		return false;
+	}
 
-		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
-		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
-		bool acceptsInput( const Gaffer::Plug *input ) const override;
-
-};
-
-IE_CORE_DECLAREPTR( ClosurePlug );
-
-} // namespace GafferOSL
+	return !input || runTimeCast<const ClosurePlug>( input );
+}

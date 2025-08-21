@@ -39,13 +39,13 @@
 #include "GafferRenderMan/Export.h"
 #include "GafferRenderMan/TypeIds.h"
 
-#include "Gaffer/Plug.h"
+#include "GafferScene/ClosurePlug.h"
 
 namespace GafferRenderMan
 {
 
 /// Plug used to represent BXDF outputs and inputs for RenderManShader.
-class GAFFERRENDERMAN_API BXDFPlug : public Gaffer::Plug
+class GAFFERRENDERMAN_API BXDFPlug : public GafferScene::ClosurePlug
 {
 
 	public :
@@ -53,7 +53,7 @@ class GAFFERRENDERMAN_API BXDFPlug : public Gaffer::Plug
 		explicit BXDFPlug( const std::string &name=defaultName<BXDFPlug>(), Direction direction=In, unsigned flags=Default );
 		~BXDFPlug() override;
 
-		GAFFER_PLUG_DECLARE_TYPE( GafferRenderMan::BXDFPlug, BXDFPlugTypeId, Plug );
+		GAFFER_PLUG_DECLARE_TYPE( GafferRenderMan::BXDFPlug, BXDFPlugTypeId, GafferScene::ClosurePlug );
 
 		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
 		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;

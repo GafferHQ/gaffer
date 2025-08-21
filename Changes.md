@@ -24,6 +24,7 @@ API
   - Added the ability to register metadata against multiple string targets, by including wildcards in the target name.
   - Added per-target signals for string targets, available via the `valueChangedSignal( target )` method. The old all-target `valueChangedSignal()` method is now deprecated.
 - TweakPlug : Added extended constructor allowing default values for `name`, `enabled` and `mode` plug to be specified [^1].
+- ClosurePlug : Added new plug type to GafferScene, providing a common base class for `GafferOSL::ClosurePlug` and `GafferRenderMan::BXDFPlug`.
 
 Breaking Changes
 ----------------
