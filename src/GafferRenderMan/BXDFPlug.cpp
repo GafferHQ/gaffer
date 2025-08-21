@@ -43,7 +43,7 @@ using namespace GafferRenderMan;
 GAFFER_PLUG_DEFINE_TYPE( BXDFPlug );
 
 BXDFPlug::BXDFPlug( const std::string &name, Direction direction, unsigned flags )
-	:	Plug( name, direction, flags )
+	:	GafferScene::ClosurePlug( name, direction, flags )
 {
 }
 
@@ -63,7 +63,7 @@ Gaffer::PlugPtr BXDFPlug::createCounterpart( const std::string &name, Direction 
 
 bool BXDFPlug::acceptsInput( const Gaffer::Plug *input ) const
 {
-	if( !Plug::acceptsInput( input ) )
+	if( !GafferScene::ClosurePlug::acceptsInput( input ) )
 	{
 		return false;
 	}

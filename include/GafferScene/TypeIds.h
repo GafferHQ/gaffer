@@ -194,6 +194,7 @@ enum TypeId
 	DisplayTypeId = 120149,
 	GafferDisplayDriverTypeId = 120150,
 	CameraQueryTypeId = 120151,
+	ClosurePlugTypeId = 120152,
 
 	LastTypeId = 120999
 };

@@ -58,9 +58,10 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		d = set( [ a[0].fullName() for a in cs ] )
 
 		self.assertTrue( "s.out" in d )
-		self.assertTrue( "s.out.r" in d )
-		self.assertTrue( "s.out.g" in d )
-		self.assertTrue( "s.out.b" in d )
+		self.assertTrue( "s.out.c" in d )
+		self.assertTrue( "s.out.c.r" in d )
+		self.assertTrue( "s.out.c.g" in d )
+		self.assertTrue( "s.out.c.b" in d )
 
 	def testDisabling( self ) :
 
@@ -131,7 +132,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		texture["name"].setValue( "testTexture" )
 		texture["type"].setValue( "test:shader" )
 
-		surface["parameters"]["t"].setInput( texture["out"] )
+		surface["parameters"]["t"].setInput( texture["out"]["c"] )
 
 		network = surface.attributes()["test:surface"]
 		self.assertEqual( network.getShader( "texture" ).type, "test:shader" )
@@ -169,16 +170,16 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		n3 = GafferSceneTest.TestShader( "n3" )
 		n3["type"].setValue( "test:surface" )
 
-		n3["parameters"]["i"].setInput( n1["out"]["r"] )
+		n3["parameters"]["i"].setInput( n1["out"]["c"]["r"] )
 		n3["parameters"]["c"].setValue( imath.Color3f( 2, 3, 4 ) )
-		n3["parameters"]["c"].setInput( n2["out"] )
+		n3["parameters"]["c"].setInput( n2["out"]["c"] )
 
 		network = n3.attributes()["test:surface"]
 		self.assertEqual( len( network ), 3 )
 		self.assertEqual(
 			network.inputConnections( "n3" ), [
-				network.Connection( network.Parameter( "n2", "out", ), network.Parameter( "n3", "c" ) ),
-				network.Connection( network.Parameter( "n1", "out.r", ), network.Parameter( "n3", "i" ) )
+				network.Connection( network.Parameter( "n2", "c", ), network.Parameter( "n3", "c" ) ),
+				network.Connection( network.Parameter( "n1", "c.r", ), network.Parameter( "n3", "i" ) )
 			]
 		)
 
@@ -195,11 +196,11 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		n2 = GafferSceneTest.TestShader()
 		n3 = GafferSceneTest.TestShader()
 
-		n2["parameters"]["i"].setInput( n1["out"]["r"] )
-		n3["parameters"]["i"].setInput( n2["out"]["g"] )
+		n2["parameters"]["i"].setInput( n1["out"]["c"]["r"] )
+		n3["parameters"]["i"].setInput( n2["out"]["c"]["g"] )
 
 		with IECore.CapturingMessageHandler() as mh :
-			n1["parameters"]["i"].setInput( n3["out"]["b"] )
+			n1["parameters"]["i"].setInput( n3["out"]["c"]["b"] )
 
 		# We expect a message warning of the cycle when the
 		# connection is made.
@@ -222,8 +223,8 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		switch = Gaffer.Switch()
 		switch.setup( n3["parameters"]["c"] )
 
-		switch["in"][0].setInput( n1["out"] )
-		switch["in"][1].setInput( n2["out"] )
+		switch["in"][0].setInput( n1["out"]["c"] )
+		switch["in"][1].setInput( n2["out"]["c"] )
 
 		n3["parameters"]["c"].setInput( switch["out"] )
 
@@ -236,7 +237,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( len( network ), 2 )
 			self.assertEqual(
 				network.inputConnections( "n3" ),
-				[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "out", ), network.Parameter( "n3", "c" ) ) ]
+				[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "c", ), network.Parameter( "n3", "c" ) ) ]
 			)
 
 	def testSwitchWithContextSensitiveIndex( self ) :
@@ -251,8 +252,8 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		s["switch"] = Gaffer.Switch()
 		s["switch"].setup( s["n3"]["parameters"]["c"] )
 
-		s["switch"]["in"][0].setInput( s["n1"]["out"] )
-		s["switch"]["in"][1].setInput( s["n2"]["out"] )
+		s["switch"]["in"][0].setInput( s["n1"]["out"]["c"] )
+		s["switch"]["in"][1].setInput( s["n2"]["out"]["c"] )
 
 		s["n3"]["parameters"]["c"].setInput( s["switch"]["out"] )
 
@@ -260,7 +261,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( network ), 2 )
 		self.assertEqual(
 			network.inputConnections( "n3" ),
-			[ network.Connection( network.Parameter( "n1", "out", ), network.Parameter( "n3", "c" ) ) ]
+			[ network.Connection( network.Parameter( "n1", "c", ), network.Parameter( "n3", "c" ) ) ]
 		)
 
 		s["expression"] = Gaffer.Expression()
@@ -277,7 +278,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 				self.assertEqual( len( network ), 2 )
 				self.assertEqual(
 					network.inputConnections( "n3" ),
-					[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "out", ), network.Parameter( "n3", "c" ) ) ]
+					[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "c", ), network.Parameter( "n3", "c" ) ) ]
 				)
 
 	def testSecondSwitchWithContextSensitiveIndex( self ) :
@@ -296,11 +297,11 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		switch2.setup( n3["parameters"]["c"] )
 
 		switch1["index"].setInput( contextQuery["out"][0]["value"] )
-		switch1["in"][0].setInput( n1["out"] )
-		switch1["in"][1].setInput( n2["out"] )
+		switch1["in"][0].setInput( n1["out"]["c"] )
+		switch1["in"][1].setInput( n2["out"]["c"] )
 
 		switch2["index"].setInput( contextQuery["out"][0]["value"] )
-		switch2["in"][0].setInput( n1["out"] )
+		switch2["in"][0].setInput( n1["out"]["c"] )
 		switch2["in"][1].setInput( switch1["out"] )
 
 		n3["parameters"]["c"].setInput( switch2["out"] )
@@ -313,7 +314,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( len( network ), 2 )
 			self.assertEqual(
 				network.inputConnections( "n3" ),
-				[ network.Connection( network.Parameter( "n2", "out", ), network.Parameter( "n3", "c" ) ) ]
+				[ network.Connection( network.Parameter( "n2", "c", ), network.Parameter( "n3", "c" ) ) ]
 			)
 
 	def testSwitchWithComponentConnections( self ) :
@@ -328,8 +329,8 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		s["switch"] = Gaffer.Switch()
 		s["switch"].setup( s["n3"]["parameters"]["c"] )
 
-		s["switch"]["in"][0].setInput( s["n1"]["out"] )
-		s["switch"]["in"][1].setInput( s["n2"]["out"] )
+		s["switch"]["in"][0].setInput( s["n1"]["out"]["c"] )
+		s["switch"]["in"][1].setInput( s["n2"]["out"]["c"] )
 
 		s["n3"]["parameters"]["c"]["r"].setInput( s["switch"]["out"]["r"] )
 
@@ -347,7 +348,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 				self.assertEqual( len( network ), 2 )
 				self.assertEqual(
 					network.inputConnections( "n3" ),
-					[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "out.r", ), network.Parameter( "n3", "c.r" ) ) ]
+					[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "c.r", ), network.Parameter( "n3", "c.r" ) ) ]
 				)
 
 	def testComponentToComponentConnections( self ) :
@@ -356,17 +357,17 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		n2 = GafferSceneTest.TestShader( "n2" )
 		n2["type"].setValue( "test:surface" )
 
-		n2["parameters"]["c"]["r"].setInput( n1["out"]["g"] )
-		n2["parameters"]["c"]["g"].setInput( n1["out"]["b"] )
-		n2["parameters"]["c"]["b"].setInput( n1["out"]["r"] )
+		n2["parameters"]["c"]["r"].setInput( n1["out"]["c"]["g"] )
+		n2["parameters"]["c"]["g"].setInput( n1["out"]["c"]["b"] )
+		n2["parameters"]["c"]["b"].setInput( n1["out"]["c"]["r"] )
 
 		network = n2.attributes()["test:surface"]
 		self.assertEqual(
 			network.inputConnections( "n2" ),
 			[
-				( ( "n1", "out.r" ), ( "n2", "c.b" ) ),
-				( ( "n1", "out.b" ), ( "n2", "c.g" ) ),
-				( ( "n1", "out.g" ), ( "n2", "c.r" ) ),
+				( ( "n1", "c.r" ), ( "n2", "c.b" ) ),
+				( ( "n1", "c.b" ), ( "n2", "c.g" ) ),
+				( ( "n1", "c.g" ), ( "n2", "c.r" ) ),
 			]
 		)
 
@@ -381,8 +382,8 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		switch.setup( n3["parameters"]["c"] )
 
 		switch["in"].resize( 2 )
-		switch["in"][0]["value"].setInput( n1["out"] )
-		switch["in"][1]["value"].setInput( n2["out"] )
+		switch["in"][0]["value"].setInput( n1["out"]["c"] )
+		switch["in"][1]["value"].setInput( n2["out"]["c"] )
 		switch["in"][1]["name"].setValue( "n2" )
 
 		n3["parameters"]["c"].setInput( switch["out"]["value"] )
@@ -395,7 +396,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( len( network ), 2 )
 			self.assertEqual(
 				network.inputConnections( "n3" ),
-				[ network.Connection( network.Parameter( n, "out", ), network.Parameter( "n3", "c" ) ) ]
+				[ network.Connection( network.Parameter( n, "c", ), network.Parameter( "n3", "c" ) ) ]
 			)
 
 	def testConnectionFromSwitchIndex( self ) :
@@ -417,14 +418,14 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		texture["parameters"]["c"].setInput( contextQuery["out"][0]["value"] )
 
 		redContext = Gaffer.ContextVariables()
-		redContext.setup( texture["out"] )
+		redContext.setup( texture["out"]["c"] )
 		redContext["variables"].addChild( Gaffer.NameValuePlug( "c", imath.Color3f( 1, 0, 0 ) ) )
-		redContext["in"].setInput( texture["out"] )
+		redContext["in"].setInput( texture["out"]["c"] )
 
 		greenContext = Gaffer.ContextVariables()
-		greenContext.setup( texture["out"] )
+		greenContext.setup( texture["out"]["c"] )
 		greenContext["variables"].addChild( Gaffer.NameValuePlug( "c", imath.Color3f( 0, 1, 0 ) ) )
-		greenContext["in"].setInput( texture["out"] )
+		greenContext["in"].setInput( texture["out"]["c"] )
 
 		mix = GafferSceneTest.TestShader( "mix" )
 		mix.loadShader( "mix" )
@@ -463,14 +464,14 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		texture["parameters"]["c"].setInput( spreadsheet["out"]["c"] )
 
 		redContext = Gaffer.ContextVariables()
-		redContext.setup( texture["out"] )
+		redContext.setup( texture["out"]["c"] )
 		redContext["variables"].addChild( Gaffer.NameValuePlug( "color", "red" ) )
-		redContext["in"].setInput( texture["out"] )
+		redContext["in"].setInput( texture["out"]["c"] )
 
 		greenContext = Gaffer.ContextVariables()
-		greenContext.setup( texture["out"] )
+		greenContext.setup( texture["out"]["c"] )
 		greenContext["variables"].addChild( Gaffer.NameValuePlug( "color", "green" ) )
-		greenContext["in"].setInput( texture["out"] )
+		greenContext["in"].setInput( texture["out"]["c"] )
 
 		mix = GafferSceneTest.TestShader( "mix" )
 		mix.loadShader( "mix" )
@@ -503,9 +504,9 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		spreadsheet["rows"].addColumn( Gaffer.Color3fPlug( "texture" ) )
 		spreadsheet["rows"].addRows( 2 )
 		spreadsheet["rows"][1]["name"].setValue( "red" )
-		spreadsheet["rows"][1]["cells"]["texture"]["value"].setInput( redTexture["out"] )
+		spreadsheet["rows"][1]["cells"]["texture"]["value"].setInput( redTexture["out"]["c"] )
 		spreadsheet["rows"][2]["name"].setValue( "green" )
-		spreadsheet["rows"][2]["cells"]["texture"]["value"].setInput( greenTexture["out"] )
+		spreadsheet["rows"][2]["cells"]["texture"]["value"].setInput( greenTexture["out"]["c"] )
 
 		redContext = Gaffer.ContextVariables()
 		redContext.setup( spreadsheet["out"]["texture"] )
@@ -551,13 +552,13 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		mix["type"].setValue( "test:surface" )
 
 		loop = Gaffer.Loop()
-		loop.setup( mix["out"] )
-		loop["in"].setInput( baseTexture["out"] )
+		loop.setup( mix["out"]["c"] )
+		loop["in"].setInput( baseTexture["out"]["c"] )
 
 		mix["parameters"]["a"].setInput( loop["previous"] )
-		mix["parameters"]["b"].setInput( overlayTexture["out"] )
+		mix["parameters"]["b"].setInput( overlayTexture["out"]["c"] )
 
-		loop["next"].setInput( mix["out"] )
+		loop["next"].setInput( mix["out"]["c"] )
 		loop["iterations"].setValue( 3 )
 
 		output = GafferSceneTest.TestShader( "output" )
@@ -565,28 +566,28 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		output["parameters"]["c"].setInput( loop["out"] )
 
 		shaderPlug = GafferScene.ShaderPlug()
-		shaderPlug.setInput( output["out"] )
+		shaderPlug.setInput( output["out"]["c"] )
 
 		network = shaderPlug.attributes()["test:surface"]
 		self.assertEqual( len( network.shaders() ), 8 )
-		self.assertEqual( network.getOutput(), ( "output", "out" ) )
+		self.assertEqual( network.getOutput(), ( "output", "c" ) )
 
 		input = network.input( ( "output", "c" ) )
 		for i in range( 2, -1, -1 ) :
 
 			self.assertEqual(
-				input, IECoreScene.ShaderNetwork.Parameter( "mix{}".format( i if i else "" ), "out" )
+				input, IECoreScene.ShaderNetwork.Parameter( "mix{}".format( i if i else "" ), "c" )
 			)
 
 			overlay = network.input( ( input.shader, "b" ) )
 			self.assertEqual(
-				overlay, IECoreScene.ShaderNetwork.Parameter( "overlayTexture{}".format( i if i else "" ), "out" )
+				overlay, IECoreScene.ShaderNetwork.Parameter( "overlayTexture{}".format( i if i else "" ), "c" )
 			)
 			self.assertEqual( network.getShader( overlay.shader ).parameters["i"].value, i )
 
 			input = network.input( ( input.shader, "a" ) )
 
-		self.assertEqual( input, IECoreScene.ShaderNetwork.Parameter( "baseTexture", "out" ) )
+		self.assertEqual( input, IECoreScene.ShaderNetwork.Parameter( "baseTexture", "c" ) )
 
 	def testContextProcessorsWithoutContextSensitiveShaders( self ) :
 
@@ -608,8 +609,8 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		mix = GafferSceneTest.TestShader( "mix" )
 		mix.loadShader( "mix" )
 		mix["type"].setValue( "test:surface" )
-		mix["parameters"]["a"].setInput( contextA["out"] )
-		mix["parameters"]["b"].setInput( contextB["out"] )
+		mix["parameters"]["a"].setInput( contextA["out"]["c"] )
+		mix["parameters"]["b"].setInput( contextB["out"]["c"] )
 
 		# The `texture` shader is the same in both contexts, so there should only
 		# be a single instance of it in the result.
@@ -660,22 +661,22 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		inN1 = GafferSceneTest.TestShader( "inN1" )
 
-		n1["parameters"]["spline"]["p0"]["y"].setInput( inN1["out"] )
-		n1["parameters"]["spline"]["p1"]["y"]["b"].setInput( inN1["out"]["g"] )
+		n1["parameters"]["spline"]["p0"]["y"].setInput( inN1["out"]["c"] )
+		n1["parameters"]["spline"]["p1"]["y"]["b"].setInput( inN1["out"]["c"]["g"] )
 
 		network = n1.attributes()["test:surface"]
 
 		self.assertEqual( len( network ), 2 )
 		self.assertEqual(
 			network.inputConnections( "n1" ), [
-				network.Connection( network.Parameter( "inN1", "out", ), network.Parameter( "n1", "spline[0].y" ) ),
-				network.Connection( network.Parameter( "inN1", "out", ), network.Parameter( "n1", "spline[1].y" ) ),
-				network.Connection( network.Parameter( "inN1", "out.g", ), network.Parameter( "n1", "spline[3].y.b" ) ),
-				network.Connection( network.Parameter( "inN1", "out.g", ), network.Parameter( "n1", "spline[4].y.b" ) )
+				network.Connection( network.Parameter( "inN1", "c", ), network.Parameter( "n1", "spline[0].y" ) ),
+				network.Connection( network.Parameter( "inN1", "c", ), network.Parameter( "n1", "spline[1].y" ) ),
+				network.Connection( network.Parameter( "inN1", "c.g", ), network.Parameter( "n1", "spline[3].y.b" ) ),
+				network.Connection( network.Parameter( "inN1", "c.g", ), network.Parameter( "n1", "spline[4].y.b" ) )
 			]
 		)
 
-		n1["parameters"]["spline"]["p1"]["x"].setInput( inN1["out"]["g"] )
+		n1["parameters"]["spline"]["p1"]["x"].setInput( inN1["out"]["c"]["g"] )
 
 		with self.assertRaisesRegex( RuntimeError, "n1.__outAttributes : Shader connections to n1.parameters.spline.p1.x are not supported." ) :
 			network = n1.attributes()["test:surface"]
@@ -687,8 +688,8 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		network = n1.attributes()["test:surface"]
 		self.assertEqual(
 			network.inputConnections( "n1" ), [
-				network.Connection( network.Parameter( "inN1", "out", ), network.Parameter( "n1", "spline[0].y" ) ),
-				network.Connection( network.Parameter( "inN1", "out.g", ), network.Parameter( "n1", "spline[2].y.b" ) )
+				network.Connection( network.Parameter( "inN1", "c", ), network.Parameter( "n1", "spline[0].y" ) ),
+				network.Connection( network.Parameter( "inN1", "c.g", ), network.Parameter( "n1", "spline[2].y.b" ) )
 			]
 		)
 
@@ -735,7 +736,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 			script.addChild( shader )
 
 			if output is not None :
-				output.setInput( shader["out"] )
+				output.setInput( shader["out"]["c"] )
 
 			build( shader["parameters"]["a"], depth + 1 )
 			build( shader["parameters"]["b"], depth + 1 )
@@ -752,7 +753,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		shader["parameters"]["i"].setInput( frame["output"] )
 
 		shaderPlug = GafferScene.ShaderPlug()
-		shaderPlug.setInput( shader["out"]["r"] )
+		shaderPlug.setInput( shader["out"]["c"]["r"] )
 
 		with Gaffer.ContextMonitor( frame ) as monitor :
 			shaderPlug.attributes()

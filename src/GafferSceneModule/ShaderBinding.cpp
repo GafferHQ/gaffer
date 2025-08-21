@@ -38,6 +38,7 @@
 
 #include "ShaderBinding.h"
 
+#include "GafferScene/ClosurePlug.h"
 #include "GafferScene/OpenGLShader.h"
 #include "GafferScene/Shader.h"
 #include "GafferScene/ShaderPlug.h"
@@ -177,5 +178,16 @@ void GafferSceneModule::bindShader()
 	;
 
 	GafferBindings::NodeClass<OpenGLShader>();
+
+	PlugClass<ClosurePlug>()
+		.def( init<const std::string &, Gaffer::Plug::Direction, unsigned>(
+				(
+					arg( "name" ) = Gaffer::GraphComponent::defaultName<ClosurePlug>(),
+					arg( "direction" ) = Gaffer::Plug::In,
+					arg( "flags" ) = Gaffer::Plug::Default
+				)
+			)
+		)
+	;
 
 }

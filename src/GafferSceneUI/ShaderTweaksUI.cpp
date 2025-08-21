@@ -151,9 +151,10 @@ class TweakPlugAdder : public PlugAdder
 					continue;
 				}
 
-				if( !tweakPlug->modePlug()->getInput() )
+				if( !PlugAlgo::dependsOnCompute( tweakPlug->modePlug() ) )
 				{
-					if( tweakPlug->modePlug()->getValue() != TweakPlug::Replace )
+					const auto mode = static_cast<TweakPlug::Mode>( tweakPlug->modePlug()->getValue() );
+					if( mode != TweakPlug::Mode::Replace && mode != TweakPlug::Mode::Create )
 					{
 						continue;
 					}

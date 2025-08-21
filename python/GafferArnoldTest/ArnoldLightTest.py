@@ -120,13 +120,13 @@ class ArnoldLightTest( GafferSceneTest.SceneTestCase ) :
 		c = GafferSceneTest.TestShader( "mockOSL" )
 		c["type"].setValue( "osl:shader" )
 
-		l["parameters"]["color"].setInput( c["out"] )
+		l["parameters"]["color"].setInput( c["out"]["c"] )
 
 		network = l["out"].attributes( "/light" )["ai:light"]
 		self.assertEqual(
 			network.inputConnections( network.getOutput().shader ),
 			[
-				network.Connection( ( "mockOSL", "out" ), ( network.getOutput().shader, "color" ) )
+				network.Connection( ( "mockOSL", "c" ), ( network.getOutput().shader, "color" ) )
 			]
 		)
 

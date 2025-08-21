@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,19 +36,27 @@
 
 #pragma once
 
-#include "GafferOSL/Export.h"
-#include "GafferOSL/TypeIds.h"
+#include "GafferScene/Export.h"
+#include "GafferScene/TypeIds.h"
 
-#include "GafferScene/ClosurePlug.h"
+#include "Gaffer/ValuePlug.h"
 
-namespace GafferOSL
+namespace GafferScene
 {
 
-/// Plug that provides a proxy for representing closure types when
-/// loader a shader from OSL or a renderer.  We probably won't be able
-/// to set or get closure plugs, but we need to be able to connect
-/// them, and they should only connect to other closure plugs.
-class GAFFEROSL_API ClosurePlug : public GafferScene::ClosurePlug
+/// Used to represent "closure" or "bxdf" parameters on Shader nodes. May be
+/// used directly, or subclassed to add stricter typing for connections via
+/// `acceptsInput()`.
+///
+/// > Note : Derived from ValuePlug purely to allow usage with TweakPlug
+/// > and ShaderTweaks. ClosurePlugs do not actually carry values, hence
+/// > they have no `getValue()` or `setValue()` methods, and hashing them
+/// > makes no sense.
+///
+/// \todo It may make sense to add customisable type categories to this base
+/// class, and remove the `GafferOSL::ClosurePlug` and `GafferRenderMan::BXDFPlug`
+/// subclasses at some point.
+class GAFFERSCENE_API ClosurePlug : public Gaffer::ValuePlug
 {
 
 	public :
@@ -56,7 +64,7 @@ class GAFFEROSL_API ClosurePlug : public GafferScene::ClosurePlug
 		explicit ClosurePlug( const std::string &name=defaultName<ClosurePlug>(), Direction direction=In, unsigned flags=Default );
 		~ClosurePlug() override;
 
-		GAFFER_PLUG_DECLARE_TYPE( GafferOSL::ClosurePlug, ClosurePlugTypeId, GafferScene::ClosurePlug );
+		GAFFER_PLUG_DECLARE_TYPE( GafferScene::ClosurePlug, ClosurePlugTypeId, ValuePlug );
 
 		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
 		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
@@ -66,4 +74,4 @@ class GAFFEROSL_API ClosurePlug : public GafferScene::ClosurePlug
 
 IE_CORE_DECLAREPTR( ClosurePlug );
 
-} // namespace GafferOSL
+} // namespace GafferScene

@@ -72,7 +72,6 @@ using namespace IECore;
 using namespace IECoreScene;
 using namespace OSL;
 using namespace Gaffer;
-using namespace GafferScene;
 using namespace GafferOSL;
 
 //////////////////////////////////////////////////////////////////////////
@@ -169,8 +168,7 @@ ShaderTypeSet &compatibleShaders()
 // the graph.
 const bool g_oslShaderTweakAutoProxyRegistration = OSLShader::registerCompatibleShader( "autoProxy" );
 
-ShaderTweakProxy::ShaderLoaderDescription<OSLShader> g_oslShaderTweakProxyLoaderRegistration( "osl" );
-
+GafferScene::ShaderTweakProxy::ShaderLoaderDescription<OSLShader> g_oslShaderTweakProxyLoaderRegistration( "osl" );
 
 } // namespace
 
@@ -291,7 +289,7 @@ bool OSLShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 			}
 
 			std::string sourceShaderType;
-			if( const ShaderTweakProxy *shaderTweakProxy = IECore::runTimeCast< const ShaderTweakProxy >( sourceShader ) )
+			if( auto shaderTweakProxy = IECore::runTimeCast<const GafferScene::ShaderTweakProxy>( sourceShader ) )
 			{
 				std::string unusedSourceShaderName;
 				shaderTweakProxy->typePrefixAndSourceShaderName( sourceShaderType, unusedSourceShaderName );

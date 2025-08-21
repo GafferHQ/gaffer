@@ -277,7 +277,7 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 
 		script["s"] = GafferSceneTest.TestShader()
 		script["d"] = Gaffer.Dot()
-		script["d"].setup( script["s"]["out"] )
+		script["d"].setup( script["s"]["out"]["c"] )
 
 		# The Dot doesn't know about Shaders, and just has a Color3fPlug
 		# input, so it should accept input from any old Color3fPlug, not
@@ -301,7 +301,7 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 
 		# And only accept inputs from a Shader.
 
-		self.assertTrue( script["d"]["in"].acceptsInput( script["s"]["out"] ) )
+		self.assertTrue( script["d"]["in"].acceptsInput( script["s"]["out"]["c"] ) )
 
 	def testFilterInputAcceptanceFromReferences( self ) :
 
@@ -368,9 +368,9 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 
 		s["s"] = GafferSceneTest.TestShader()
 		s["a"] = GafferScene.ShaderAssignment()
-		s["a"]["shader"].setInput( s["s"]["out"] )
+		s["a"]["shader"].setInput( s["s"]["out"]["c"] )
 
-		Gaffer.Metadata.registerValue( s["s"]["out"], "nodule:type", "GafferUI::StandardNodule" )
+		Gaffer.Metadata.registerValue( s["s"]["out"]["c"], "nodule:type", "GafferUI::StandardNodule" )
 		Gaffer.Metadata.registerValue( s["a"]["shader"], "nodule:type", "GafferUI::StandardNodule" )
 
 		box = Gaffer.Box.create( s, Gaffer.StandardSet( { s["s"] } ) )
@@ -379,7 +379,7 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 
-		self.assertTrue( s2["a"]["shader"].source().isSame( s2["Box"]["s"]["out"] ) )
+		self.assertTrue( s2["a"]["shader"].source().isSame( s2["Box"]["s"]["out"]["c"] ) )
 
 	def testInsertBoxIO( self ) :
 

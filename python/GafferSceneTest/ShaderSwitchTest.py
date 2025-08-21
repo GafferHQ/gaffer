@@ -117,8 +117,8 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 		switch = Gaffer.Switch()
 		switch.setup( shader1["parameters"]["c"] )
 
-		switch["in"][0].setInput( shader1["out"] )
-		switch["in"][1].setInput( shader2["out"] )
+		switch["in"][0].setInput( shader1["out"]["c"] )
+		switch["in"][1].setInput( shader2["out"]["c"] )
 
 		shader3 = GafferSceneTest.TestShader( "s3" )
 		shader3["type"].setValue( "test:surface" )
@@ -152,8 +152,8 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 		s["switch"] = Gaffer.Switch()
 		s["switch"].setup( s["n3"]["parameters"]["c"] )
 
-		s["switch"]["in"][0].setInput( s["n1"]["out"] )
-		s["switch"]["in"][1].setInput( s["n2"]["out"] )
+		s["switch"]["in"][0].setInput( s["n1"]["out"]["c"] )
+		s["switch"]["in"][1].setInput( s["n2"]["out"]["c"] )
 
 		s["n3"]["parameters"]["c"].setInput( s["switch"]["out"] )
 
@@ -175,7 +175,7 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 				)
 				self.assertEqual(
 					network.inputConnections( "n3" ),
-					[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "out" ), network.Parameter( "n3", "c" ) ) ]
+					[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "c" ), network.Parameter( "n3", "c" ) ) ]
 				)
 
 if __name__ == "__main__":

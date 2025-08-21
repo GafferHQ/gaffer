@@ -319,12 +319,12 @@ class SceneInspectorTest( GafferUITest.TestCase ) :
 
 		mix = GafferSceneTest.TestShader( "Mix" )
 		mix.loadShader( "mix" )
-		mix["parameters"]["a"].setInput( textureA["out"] )
-		mix["parameters"]["b"].setInput( textureB["out"] )
+		mix["parameters"]["a"].setInput( textureA["out"]["c"] )
+		mix["parameters"]["b"].setInput( textureB["out"]["c"] )
 
 		surface = GafferSceneTest.TestShader( "Surface" )
 		surface.loadShader( "simpleShader" )
-		surface["parameters"]["c"].setInput( mix["out"] )
+		surface["parameters"]["c"].setInput( mix["out"]["c"] )
 		surface["type"].setValue( "surface" )
 
 		plane = GafferScene.Plane()
