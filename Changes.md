@@ -35,13 +35,15 @@ Documentation
 -------------
 
 - Added RenderMan configuration instructions to the "Getting Started" guide.
-
-Documentation
--------------
-
 - Fixed invalid link to OIIO metadata documentation in "Anatomy Of An Image".
 - Fixed invalid internal links within "Camera", "Anatomy Of A Camera", "Light Linking" and "Spreadsheet Node" sections.
 - Fixed invalid link anchor targets in "Contexts" and "Node Graph Editing In Python" sections.
+
+Build
+-----
+
+- Cortex : Updated to version 10.6.0.0.
+- OpenShadingLanguage : Removed `osl.imageio` OpenImageIO format plugin.
 
 [^1]: To be omitted from the notes for the final 1.6.0.0 release.
 
