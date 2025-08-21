@@ -9,6 +9,7 @@ Improvements
 - ShaderTweaks :
   - Added support for inserting new connections in `Create` mode.
   - Added initial support for inserting connections to closure parameters (#6522).
+  - Added dragging of plugs onto the `+` button in the NodeEditor, to create a tweak for values of that type. Particularly useful for making tweaks for closure parameters.
 
 Fixes
 -----

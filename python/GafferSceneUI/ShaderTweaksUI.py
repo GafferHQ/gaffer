@@ -128,7 +128,9 @@ Gaffer.Metadata.registerNode(
 
 		"tweaks.*" : [
 
-			"noduleLayout:visible", False, # Can be shown individually using PlugAdder above
+			# ClosurePlugs are visible by default, because the only thing you can do with them is make
+			# connections. Other plugs can be shown individually using PlugAdder above.
+			"noduleLayout:visible", lambda plug : isinstance( plug["value"], GafferScene.ClosurePlug ),
 			"tweakPlugValueWidget:propertyType", "parameter",
 			"plugValueWidget:type", "GafferSceneUI.ShaderTweaksUI._ShaderTweakPlugValueWidget",
 
@@ -224,6 +226,11 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 				)
 
 				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
+
+		## \todo We need to make this more discoverable.
+		self.__button.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.__button.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
+		self.__button.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 
 	def _updateFromEditable( self ) :
 
@@ -328,6 +335,61 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().addChild( plug )
+
+	def __plugToDrop( self, event ) :
+
+		if not isinstance( event.data, Gaffer.ValuePlug ) :
+			return None
+
+		if (
+			Gaffer.PlugAlgo.canSetValueFromData( event.data ) or
+			isinstance( event.data, GafferScene.ClosurePlug )
+		) :
+			return event.data
+
+		return None
+
+	def __dragEnter( self, widget, event ) :
+
+		if self.__plugToDrop( event ) is not None :
+			self.__button.setHighlighted( True )
+			return True
+		else :
+			return False
+
+	def __dragLeave( self, widget, event ) :
+
+		self.__button.setHighlighted( False )
+
+	def __drop( self, widget, event ) :
+
+		# Make a tweak of the type specified by the dropped plug.
+
+		self.__button.setHighlighted( False )
+
+		sourcePlug = self.__plugToDrop( event )
+		assert( sourcePlug is not None )
+
+		tweakPlug = Gaffer.TweakPlug(
+			# If source is an input plug, assume it is a shader parameter and
+			# take its name. Otherwise let the user fill in the name later.
+			sourcePlug.getName() if sourcePlug.direction() == Gaffer.Plug.Direction.In else "",
+			sourcePlug.createCounterpart( "value", Gaffer.Plug.Direction.In ),
+		)
+
+		if isinstance( tweakPlug["value"], GafferScene.ClosurePlug ) :
+			# `Replace` is not a good default for closure parameters - they
+			# don't have values in the shader parameter list, so ShaderTweaks
+			# doesn't thinks they don't exist and errors. Until this is resolved,
+			# default to `Create` mode.
+			tweakPlug["mode"].setValue( tweakPlug.Mode.Create )
+
+		with Gaffer.UndoScope( self.scriptNode() ) :
+			self.getPlug().addChild( tweakPlug )
+			if sourcePlug.direction() == Gaffer.Plug.Direction.Out :
+				tweakPlug["value"].setInput( sourcePlug )
+				if not isinstance( tweakPlug["value"], GafferScene.ClosurePlug ) :
+					Gaffer.Metadata.registerValue( tweakPlug, "noduleLayout:visible", True )
 
 class _ShaderTweakPlugValueWidget( GafferUI.TweakPlugValueWidget ) :
 
