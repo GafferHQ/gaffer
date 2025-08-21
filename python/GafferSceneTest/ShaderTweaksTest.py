@@ -179,6 +179,9 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		tweaks["filter"].setInput( planeFilter["out"] )
 		tweaks["shader"].setValue( "surface" )
 
+		# Insert a connection from the new `textureShader`, and
+		# check it worked.
+
 		tweaks["tweaks"].addChild( Gaffer.TweakPlug( "c", Gaffer.Color3fPlug() ) )
 		tweaks["tweaks"][0]["value"].setInput( textureShader["out"]["c"] )
 
@@ -193,9 +196,36 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		tweakedNetwork = tweaks["out"].attributes( "/plane" )["surface"]
 		self.assertEqual( tweakedNetwork.getShader( "texture" ).parameters["c"].value, imath.Color3f( 1, 2, 3 ) )
 
+		# We can't use numeric tweaks modes when inserting a connection, so
+		# check that trying causes an error.
+
 		tweaks["tweaks"][0]["mode"].setValue( Gaffer.TweakPlug.Mode.Multiply )
-		with self.assertRaisesRegex( RuntimeError, "Mode must be \"Replace\" when inserting a connection" ) :
+		with self.assertRaisesRegex( RuntimeError, 'Mode must be "Replace" or "Create" when inserting a connection' ) :
 			tweaks["out"].attributes( "/plane" )
+
+		# Try to make a connection to a parameter that doesn't exist. In Replace
+		# mode this should error.
+
+		tweaks["tweaks"][0]["mode"].setValue( Gaffer.TweakPlug.Mode.Replace )
+		tweaks["tweaks"][0]["name"].setValue( "newParameter" )
+
+		with self.assertRaisesRegex( RuntimeError, 'ShaderTweaks.out.attributes : Cannot apply tweak "newParameter" because shader "surface" does not have parameter "newParameter"' ) :
+			tweaks["out"].attributes( "/plane" )
+
+		# But it should be allowed in Create mode.
+
+		tweaks["tweaks"][0]["mode"].setValue( Gaffer.TweakPlug.Mode.Create )
+		tweakedNetwork = tweaks["out"].attributes( "/plane" )["surface"]
+		self.assertEqual( len( tweakedNetwork ), 2 )
+		self.assertEqual( tweakedNetwork.input( ( "surface", "newParameter" ) ), ( "texture", "c" ) )
+
+		# And Create mode should also be allowed to overwrite an existing
+		# connection, just as it would overwrite an existing value.
+
+		upstreamTextureShader = GafferSceneTest.TestShader( "upstreamTexture" )
+		shader["parameters"]["c"].setInput( upstreamTextureShader["out"]["c"] )
+		tweaks["tweaks"][0]["name"].setValue( "c" )
+		tweakedNetwork = tweaks["out"].attributes( "/plane" )["surface"]
 
 	def testConnectSpecificOutputParameter( self ) :
 
@@ -539,7 +569,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		extraShader = GafferSceneTest.TestShader( "extra" )
 		tweaks["tweaks"][0]["value"].setInput( extraShader["out"]["c"]["r"] )
 
-		with self.assertRaisesRegex( RuntimeError, r'Cannot apply tweak "\*_A.i" to "A_A.i" : Mode must be "Replace" when inserting a connection' ) :
+		with self.assertRaisesRegex( RuntimeError, r'Cannot apply tweak "\*_A.i" to "A_A.i" : Mode must be "Replace" or "Create" when inserting a connection' ) :
 			tweaks["out"].attributes( "/light" )
 
 		tweaks["tweaks"][0]["mode"].setValue( Gaffer.TweakPlug.Mode.Replace )

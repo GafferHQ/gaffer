@@ -6,6 +6,7 @@ Improvements
 
 - RenderMan : Removed the `GAFFERRENDERMAN_FEATURE_PREVIEW` environment variable. The RenderMan extension is now automatically enabled any time the `RMANTREE` environment variable is present. While the RenderMan extension is not yet feature complete, it is considered to be mature enough for general use.
 - GafferML : Added experimental support for performing inference on CUDA devices. This can be enabled by setting the `GAFFERML_USE_CUDA` environment variable with a value of `1`. This requires an ONNX runtime containing the CUDA execution provider, with compatible versions of the CUDA toolkit and cuDNN installed.
+- ShaderTweaks : Added support for inserting new connections in `Create` mode.
 
 Fixes
 -----
