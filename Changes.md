@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.0.0a3)
 =======
 
+Features
+--------
+
+- FocalBlur : Added node for approximating depth of field effects based on an image with a depth channel.
+
 Improvements
 ------------
 
