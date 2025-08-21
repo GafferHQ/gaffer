@@ -50,7 +50,7 @@ using namespace GafferScene;
 GAFFER_PLUG_DEFINE_TYPE( ClosurePlug );
 
 ClosurePlug::ClosurePlug( const std::string &name, Direction direction, unsigned flags )
-	:	Plug( name, direction, flags )
+	:	ValuePlug( name, direction, flags )
 {
 }
 
@@ -70,7 +70,7 @@ Gaffer::PlugPtr ClosurePlug::createCounterpart( const std::string &name, Directi
 
 bool ClosurePlug::acceptsInput( const Gaffer::Plug *input ) const
 {
-	if( !Plug::acceptsInput( input ) )
+	if( !ValuePlug::acceptsInput( input ) )
 	{
 		return false;
 	}

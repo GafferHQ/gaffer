@@ -600,5 +600,37 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( tweaked ), 1 )
 		self.assertEqual( tweaked.shaders()["__shader"].parameters["intensity"].value, imath.Color3f( 1, 2, 3 ) )
 
+	def testClosureTweaks( self ) :
+
+		plane = GafferScene.Plane()
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		surface = GafferSceneTest.TestShader( "surface" )
+		surface["type"].setValue( "test:surface" )
+		surface.loadShader( "mixClosures" )
+
+		shaderAssignment = GafferScene.ShaderAssignment()
+		shaderAssignment["in"].setInput( plane["out"] )
+		shaderAssignment["filter"].setInput( planeFilter["out"] )
+		shaderAssignment["shader"].setInput( surface["out"]["c"] )
+
+		shaderTweaks = GafferScene.ShaderTweaks()
+		shaderTweaks["in"].setInput( shaderAssignment["out"] )
+		shaderTweaks["filter"].setInput( planeFilter["out"] )
+		shaderTweaks["shader"].setValue( "test:surface" )
+
+		input = GafferSceneTest.TestShader( "input" )
+		input.loadShader( "mixClosures" )
+
+		shaderTweaks["tweaks"].addChild( Gaffer.TweakPlug( "a", GafferScene.ClosurePlug() ) )
+		shaderTweaks["tweaks"][0]["value"].setInput( input["out"]["c"] )
+		shaderTweaks["tweaks"][0]["mode"].setValue( Gaffer.TweakPlug.Mode.Create )
+
+		network = shaderTweaks["out"].attributes( "/plane" )["test:surface"]
+		self.assertEqual( set( network.shaders().keys() ), { "surface", "input" } )
+		self.assertEqual( network.input( ( "surface", "a" ) ), ( "input", "c" ) )
+
 if __name__ == "__main__":
 	unittest.main()

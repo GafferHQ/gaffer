@@ -37,6 +37,7 @@
 
 #include "GafferScene/Shader.h"
 
+#include "GafferScene/ClosurePlug.h"
 #include "GafferScene/ShaderTweakProxy.h"
 
 #include "Gaffer/Metadata.h"
@@ -1138,18 +1139,20 @@ void Shader::parameterHash( const Gaffer::Plug *parameterPlug, IECore::MurmurHas
 
 IECore::DataPtr Shader::parameterValue( const Gaffer::Plug *parameterPlug ) const
 {
+	const ValuePlug *valuePlug = nullptr;
 	if( auto optionalValuePlug = IECore::runTimeCast<const OptionalValuePlug>( parameterPlug ) )
 	{
 		if( optionalValuePlug->enabledPlug()->getValue() )
 		{
-			return Gaffer::PlugAlgo::getValueAsData( optionalValuePlug->valuePlug() );
-		}
-		else
-		{
-			return nullptr;
+			valuePlug = optionalValuePlug->valuePlug();
 		}
 	}
-	else if( auto valuePlug = IECore::runTimeCast<const Gaffer::ValuePlug>( parameterPlug ) )
+	else
+	{
+		valuePlug = IECore::runTimeCast<const Gaffer::ValuePlug>( parameterPlug );
+	}
+
+	if( valuePlug && !IECore::runTimeCast<const ClosurePlug>( valuePlug ) )
 	{
 		return Gaffer::PlugAlgo::getValueAsData( valuePlug );
 	}

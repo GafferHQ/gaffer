@@ -39,7 +39,7 @@
 #include "GafferScene/Export.h"
 #include "GafferScene/TypeIds.h"
 
-#include "Gaffer/Plug.h"
+#include "Gaffer/ValuePlug.h"
 
 namespace GafferScene
 {
@@ -48,10 +48,15 @@ namespace GafferScene
 /// used directly, or subclassed to add stricter typing for connections via
 /// `acceptsInput()`.
 ///
+/// > Note : Derived from ValuePlug purely to allow usage with TweakPlug
+/// > and ShaderTweaks. ClosurePlugs do not actually carry values, hence
+/// > they have no `getValue()` or `setValue()` methods, and hashing them
+/// > makes no sense.
+///
 /// \todo It may make sense to add customisable type categories to this base
 /// class, and remove the `GafferOSL::ClosurePlug` and `GafferRenderMan::BXDFPlug`
 /// subclasses at some point.
-class GAFFERSCENE_API ClosurePlug : public Gaffer::Plug
+class GAFFERSCENE_API ClosurePlug : public Gaffer::ValuePlug
 {
 
 	public :
@@ -59,7 +64,7 @@ class GAFFERSCENE_API ClosurePlug : public Gaffer::Plug
 		explicit ClosurePlug( const std::string &name=defaultName<ClosurePlug>(), Direction direction=In, unsigned flags=Default );
 		~ClosurePlug() override;
 
-		GAFFER_PLUG_DECLARE_TYPE( GafferScene::ClosurePlug, ClosurePlugTypeId, Plug );
+		GAFFER_PLUG_DECLARE_TYPE( GafferScene::ClosurePlug, ClosurePlugTypeId, ValuePlug );
 
 		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
 		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;

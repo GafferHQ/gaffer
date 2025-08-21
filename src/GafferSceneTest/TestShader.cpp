@@ -36,6 +36,7 @@
 
 #include "GafferSceneTest/TestShader.h"
 
+#include "GafferScene/ClosurePlug.h"
 #include "GafferScene/ShaderTweakProxy.h"
 
 #include "Gaffer/CompoundNumericPlug.h"
@@ -48,10 +49,29 @@
 
 using namespace IECore;
 using namespace Gaffer;
+using namespace GafferScene;
 using namespace GafferSceneTest;
 
 namespace
 {
+
+template<typename PlugType>
+Plug *setupPlug(
+	const InternedString &parameterName,
+	Plug *plugParent
+)
+{
+	PlugType *existingPlug = plugParent->getChild<PlugType>( parameterName );
+	if( existingPlug )
+	{
+		return existingPlug;
+	}
+
+	typename PlugType::Ptr plug = new PlugType( parameterName, plugParent->direction() );
+	PlugAlgo::replacePlug( plugParent, plug );
+
+	return plug.get();
+}
 
 template<typename PlugType>
 Plug *setupTypedPlug(
@@ -152,5 +172,12 @@ void TestShader::loadShader( const std::string &shaderName, bool keepExistingVal
 		setupTypedPlug<Color3fPlug>( "b", parametersPlug, Imath::Color3f( 0.f ) );
 		setupTypedPlug<FloatPlug>( "mix", parametersPlug, 0.5 );
 		setupTypedPlug<Color3fPlug>( "c", outPlug, Imath::Color3f( 0.0f ) );
+	}
+	else if( shaderName == "mixClosures" )
+	{
+		setupPlug<ClosurePlug>( "a", parametersPlug );
+		setupPlug<ClosurePlug>( "b", parametersPlug );
+		setupTypedPlug<FloatPlug>( "mix", parametersPlug, 0.5 );
+		setupPlug<ClosurePlug>( "c", outPlug );
 	}
 }
