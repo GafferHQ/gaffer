@@ -53,5 +53,6 @@ from . import OSLCodeUI
 from . import OSLExpressionEngineUI
 from . import OSLLightUI
 from . import _CodeWidget
+from . import FocalBlurUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferOSLUI" )

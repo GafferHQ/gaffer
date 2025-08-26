@@ -500,6 +500,8 @@ if moduleSearchPath.find( "GafferOSL" ) :
 		}
 	)
 
+	nodeMenu.append( "/Image/Filter/FocalBlur", GafferOSL.FocalBlur, searchText = "FocalBlur" )
+
 # VDB nodes
 
 import GafferVDB
