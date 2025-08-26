@@ -338,11 +338,11 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 
 		for mode in Gaffer.TweakPlug.Mode.values :
 
-			if mode == Gaffer.TweakPlug.Mode.Replace :
+			if mode in ( Gaffer.TweakPlug.Mode.Replace, Gaffer.TweakPlug.Mode.Create, Gaffer.TweakPlug.Mode.Remove ) :
 				continue
 
 			tweaks["tweaks"][0]["mode"].setValue( mode )
-			with self.assertRaisesRegex( RuntimeError, "Mode must be \"Replace\" when a previous connection exists" ) :
+			with self.assertRaisesRegex( RuntimeError, "mode is not compatible with an existing input connection" ) :
 				tweaks["out"].attributes( "/plane" )
 
 	def testPromoteTweaksPlug( self ) :
@@ -518,6 +518,45 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		)
 		self.assertNotIn( "intensity", tweaks["out"].attributes( "/light" )["light"].outputShader().parameters )
 
+	def testRemoveExistingConnection( self ) :
+
+		# Build a network with a texture connected into the surface.
+
+		plane = GafferScene.Plane()
+
+		texture = GafferSceneTest.TestShader( "texture" )
+
+		surface = GafferSceneTest.TestShader( "surface" )
+		surface["parameters"]["c"].setInput( texture["out"]["c"] )
+		surface["type"].setValue( "test:surface" )
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		assignment = GafferScene.ShaderAssignment()
+		assignment["in"].setInput( plane["out"] )
+		assignment["filter"].setInput( planeFilter["out"] )
+		assignment["shader"].setInput( surface["out"] )
+
+		originalNetwork = assignment["out"].attributes( "/plane" )["test:surface"]
+		self.assertEqual( len( originalNetwork ), 2 )
+		self.assertEqual( originalNetwork.input( ( "surface", "c" ) ), ( "texture", "c" ) )
+
+		# Use a tweak to remove the connection and the value.
+
+		tweaks = GafferScene.ShaderTweaks()
+		tweaks["in"].setInput( assignment["out"] )
+		tweaks["filter"].setInput( planeFilter["out"] )
+		tweaks["shader"].setValue( "test:surface" )
+
+		tweaks["tweaks"].addChild( Gaffer.TweakPlug( "c", Gaffer.Color3fPlug() ) )
+		tweaks["tweaks"][0]["mode"].setValue( Gaffer.TweakPlug.Mode.Remove )
+
+		tweakedNetwork = tweaks["out"].attributes( "/plane" )["test:surface"]
+		self.assertEqual( len( tweakedNetwork ), 1 )
+		self.assertFalse( tweakedNetwork.input( ( "surface", "c" ) ) )
+		self.assertNotIn( "c", tweakedNetwork.getShader( "surface" ).parameters )
+
 	def testWildcards( self ) :
 
 		shaderA_A = GafferSceneTest.TestShader( "A_A" )
@@ -589,7 +628,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 			Gaffer.TweakPlug( "*.c", imath.Color3f( 1, 2, 3), mode = Gaffer.TweakPlug.Mode.Add )
 		)
 
-		with self.assertRaisesRegex( RuntimeError, r'ShaderTweaks.out.attributes : Cannot apply tweak "\*.c" to "A_B.c" : Mode must be "Replace" when a previous connection exists' ) :
+		with self.assertRaisesRegex( RuntimeError, "mode is not compatible with an existing input connection" ) :
 			tweaks["out"].attributes( "/light" )
 
 		tweaks["tweaks"][0]["name"].setValue( "*.intensity" )
@@ -621,6 +660,8 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		shaderTweaks["filter"].setInput( planeFilter["out"] )
 		shaderTweaks["shader"].setValue( "test:surface" )
 
+		# Check we can create a new connection.
+
 		input = GafferSceneTest.TestShader( "input" )
 		input.loadShader( "mixClosures" )
 
@@ -631,6 +672,41 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		network = shaderTweaks["out"].attributes( "/plane" )["test:surface"]
 		self.assertEqual( set( network.shaders().keys() ), { "surface", "input" } )
 		self.assertEqual( network.input( ( "surface", "a" ) ), ( "input", "c" ) )
+
+		# And that we can override an upstream connection.
+
+		upstreamInput = GafferSceneTest.TestShader( "upstreamInput" )
+		upstreamInput.loadShader( "mixClosures" )
+		surface["parameters"]["a"].setInput( upstreamInput["out"]["c"] )
+
+		network = shaderTweaks["out"].attributes( "/plane" )["test:surface"]
+		self.assertEqual( set( network.shaders().keys() ), { "surface", "input" } )
+		self.assertEqual( network.input( ( "surface", "a" ) ), ( "input", "c" ) )
+
+		# And that if we have no input, the upstream connection
+		# is allowed to pass through.
+
+		shaderTweaks["tweaks"][0]["value"].setInput( None )
+
+		network = shaderTweaks["out"].attributes( "/plane" )["test:surface"]
+		self.assertEqual( set( network.shaders().keys() ), { "surface", "upstreamInput" } )
+		self.assertEqual( network.input( ( "surface", "a" ) ), ( "upstreamInput", "c" ) )
+
+		# And that we can remove the upstream connection.
+
+		shaderTweaks["tweaks"][0]["mode"].setValue( Gaffer.TweakPlug.Mode.Remove )
+
+		network = shaderTweaks["out"].attributes( "/plane" )["test:surface"]
+		self.assertEqual( set( network.shaders().keys() ), { "surface" } )
+		self.assertFalse( network.input( ( "surface", "a" ) ) )
+
+		# And that an input is ignored in remove mode, so we
+		# can still remove the upstream connection.
+
+		shaderTweaks["tweaks"][0]["value"].setInput( input["out"]["c"] )
+		network = shaderTweaks["out"].attributes( "/plane" )["test:surface"]
+		self.assertEqual( set( network.shaders().keys() ), { "surface" } )
+		self.assertFalse( network.input( ( "surface", "a" ) ) )
 
 if __name__ == "__main__":
 	unittest.main()

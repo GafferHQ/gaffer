@@ -36,6 +36,7 @@
 
 #include "GafferScene/ShaderTweaks.h"
 
+#include "GafferScene/ClosurePlug.h"
 #include "GafferScene/Shader.h"
 #include "GafferScene/ShaderTweakProxy.h"
 
@@ -201,16 +202,16 @@ bool applyTweakInternal( ShaderNetwork *shaderNetwork, unordered_map<InternedStr
 	}
 
 	const TweakPlug::Mode mode = static_cast<TweakPlug::Mode>( tweakPlug->modePlug()->getValue() );
-
 	const ShaderNetwork::Parameter originalInput = shaderNetwork->input( parameter );
-	if( originalInput )
-	{
-		shaderNetwork->removeConnection( { originalInput, parameter } );
-		removedConnections = true;
-	}
 
 	if( inputNetwork )
 	{
+		if( originalInput )
+		{
+			shaderNetwork->removeConnection( { originalInput, parameter } );
+			removedConnections = true;
+		}
+
 		if( !inputNetwork->getOutput() )
 		{
 			// Nothing to connect
@@ -233,6 +234,10 @@ bool applyTweakInternal( ShaderNetwork *shaderNetwork, unordered_map<InternedStr
 					return false;
 				}
 			}
+		}
+		else if( mode == TweakPlug::Mode::Remove )
+		{
+			return false;
 		}
 		else if( mode != TweakPlug::Mode::Create )
 		{
@@ -326,9 +331,27 @@ bool applyTweakInternal( ShaderNetwork *shaderNetwork, unordered_map<InternedStr
 	{
 		// Regular tweak
 
-		if( originalInput && mode != TweakPlug::Mode::Replace )
+		if( originalInput )
 		{
-			throw IECore::Exception( fmt::format( "Cannot apply tweak \"{}\" to \"{}.{}\" : Mode must be \"Replace\" when a previous connection exists", tweakLabel, parameter.shader.string(), parameter.name.string() ) );
+			if( mode != TweakPlug::Mode::Replace && mode != TweakPlug::Mode::Create && mode != TweakPlug::Mode::Remove )
+			{
+				throw IECore::Exception( fmt::format(
+					"Cannot apply tweak \"{}\" to \"{}.{}\" : \"{}\" mode is not compatible with an existing input connection.",
+					tweakLabel, parameter.shader.string(), parameter.name.string(),
+					TweakPlug::modeToString( mode )
+				) );
+			}
+			else if( tweakPlug->valuePlug<ClosurePlug>() && mode != TweakPlug::Mode::Remove )
+			{
+				// ClosurePlug without an input. Leave the original connection alone.
+				return false;
+			}
+			else
+			{
+				// Remove connection in preparation for tweaking the value.
+				shaderNetwork->removeConnection( { originalInput, parameter } );
+				removedConnections = true;
+			}
 		}
 
 		auto modifiedShader = modifiedShaders.insert( { parameter.shader, nullptr } );
