@@ -36,6 +36,7 @@
 
 #include "GafferScene/ShaderTweaks.h"
 
+#include "GafferScene/ClosurePlug.h"
 #include "GafferScene/Shader.h"
 #include "GafferScene/ShaderTweakProxy.h"
 
@@ -201,44 +202,48 @@ bool applyTweakInternal( ShaderNetwork *shaderNetwork, unordered_map<InternedStr
 	}
 
 	const TweakPlug::Mode mode = static_cast<TweakPlug::Mode>( tweakPlug->modePlug()->getValue() );
-
-	ShaderNetwork::Parameter originalInput = shaderNetwork->input( parameter );
-	if( originalInput )
-	{
-		if( mode != TweakPlug::Mode::Replace )
-		{
-			throw IECore::Exception( fmt::format( "Cannot apply tweak \"{}\" to \"{}.{}\" : Mode must be \"Replace\" when a previous connection exists", tweakLabel, parameter.shader.string(), parameter.name.string() ) );
-		}
-		shaderNetwork->removeConnection( { originalInput, parameter } );
-		removedConnections = true;
-	}
+	const ShaderNetwork::Parameter originalInput = shaderNetwork->input( parameter );
 
 	if( inputNetwork )
 	{
+		if( originalInput )
+		{
+			shaderNetwork->removeConnection( { originalInput, parameter } );
+			removedConnections = true;
+		}
+
 		if( !inputNetwork->getOutput() )
 		{
 			// Nothing to connect
 			return false;
 		}
 
-		if( !shader->parametersData()->member<Data>( parameter.name ) )
+		if( mode == TweakPlug::Mode::Replace )
 		{
-			if( missingMode != TweakPlug::MissingMode::Ignore )
+			if( !shader->parametersData()->member<Data>( parameter.name ) )
 			{
-				throw IECore::Exception( fmt::format(
-					"Cannot apply tweak \"{}\" because shader \"{}\" does not have parameter \"{}\"",
-					tweakLabel, parameter.shader.string(), parameter.name.string()
-				) );
-			}
-			else
-			{
-				return false;
+				if( missingMode != TweakPlug::MissingMode::Ignore )
+				{
+					throw IECore::Exception( fmt::format(
+						"Cannot apply tweak \"{}\" because shader \"{}\" does not have parameter \"{}\"",
+						tweakLabel, parameter.shader.string(), parameter.name.string()
+					) );
+				}
+				else
+				{
+					return false;
+				}
 			}
 		}
-
-		if( mode != TweakPlug::Mode::Replace )
+		else if( mode == TweakPlug::Mode::Remove )
 		{
-			throw IECore::Exception( fmt::format( "Cannot apply tweak \"{}\" to \"{}.{}\" : Mode must be \"Replace\" when inserting a connection", tweakLabel, parameter.shader.string(), parameter.name.string() ) );
+			return false;
+		}
+		else if( mode != TweakPlug::Mode::Create )
+		{
+			/// \todo Might be nice to support CreateIfMissing too, but does "missing" refer to
+			/// the existence of the value or the connection in this case?
+			throw IECore::Exception( fmt::format( "Cannot apply tweak \"{}\" to \"{}.{}\" : Mode must be \"Replace\" or \"Create\" when inserting a connection", tweakLabel, parameter.shader.string(), parameter.name.string() ) );
 		}
 
 		const auto inputParameter = ShaderNetworkAlgo::addShaders( shaderNetwork, inputNetwork );
@@ -325,6 +330,30 @@ bool applyTweakInternal( ShaderNetwork *shaderNetwork, unordered_map<InternedStr
 	else
 	{
 		// Regular tweak
+
+		if( originalInput )
+		{
+			if( mode != TweakPlug::Mode::Replace && mode != TweakPlug::Mode::Create && mode != TweakPlug::Mode::Remove )
+			{
+				throw IECore::Exception( fmt::format(
+					"Cannot apply tweak \"{}\" to \"{}.{}\" : \"{}\" mode is not compatible with an existing input connection.",
+					tweakLabel, parameter.shader.string(), parameter.name.string(),
+					TweakPlug::modeToString( mode )
+				) );
+			}
+			else if( tweakPlug->valuePlug<ClosurePlug>() && mode != TweakPlug::Mode::Remove )
+			{
+				// ClosurePlug without an input. Leave the original connection alone.
+				return false;
+			}
+			else
+			{
+				// Remove connection in preparation for tweaking the value.
+				shaderNetwork->removeConnection( { originalInput, parameter } );
+				removedConnections = true;
+			}
+		}
+
 		auto modifiedShader = modifiedShaders.insert( { parameter.shader, nullptr } );
 		if( modifiedShader.second )
 		{

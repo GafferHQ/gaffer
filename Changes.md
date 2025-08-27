@@ -11,6 +11,10 @@ Improvements
 
 - RenderMan : Removed the `GAFFERRENDERMAN_FEATURE_PREVIEW` environment variable. The RenderMan extension is now automatically enabled any time the `RMANTREE` environment variable is present. While the RenderMan extension is not yet feature complete, it is considered to be mature enough for general use.
 - GafferML : Added experimental support for performing inference on CUDA devices. This can be enabled by setting the `GAFFERML_USE_CUDA` environment variable with a value of `1`. This requires an ONNX runtime containing the CUDA execution provider, with compatible versions of the CUDA toolkit and cuDNN installed.
+- ShaderTweaks :
+  - Added support for inserting new connections in `Create` mode.
+  - Added initial support for inserting connections to closure parameters (#6522).
+  - Added dragging of plugs onto the `+` button in the NodeEditor, to create a tweak for values of that type. Particularly useful for making tweaks for closure parameters.
 
 Fixes
 -----
@@ -21,6 +25,7 @@ Fixes
   - Renamed OpenGL "Shading" section to "Drawing", to match the NodeEditor.
 - ImageReader : Adjusted default `channelInterpretation` heuristics to better match Nuke's behaviour for single-part EXR files with bogus part name metadata (#6527). In this case, the part name is no longer used as the layer name.
 - TweakPlug : Fixed handling of default values for `name`, `enabled` and `mode` child plugs during serialisation and in `createCounterPart()` (#6544) [^1].
+- ShaderTweaks : Fixed errors when `Remove` or `Create` modes are used to tweak a parameter with an input connection. The input connection is now removed.
 
 API
 ---
@@ -29,12 +34,14 @@ API
   - Added the ability to register metadata against multiple string targets, by including wildcards in the target name.
   - Added per-target signals for string targets, available via the `valueChangedSignal( target )` method. The old all-target `valueChangedSignal()` method is now deprecated.
 - TweakPlug : Added extended constructor allowing default values for `name`, `enabled` and `mode` plug to be specified [^1].
+- ClosurePlug : Added new plug type to GafferScene, providing a common base class for `GafferOSL::ClosurePlug` and `GafferRenderMan::BXDFPlug`.
 
 Breaking Changes
 ----------------
 
 - ImageReader : Changed the behaviour of `channelInterpretation = "Default"` so that part names are ignored in single-part EXR files. The behaviour of `channelInterpretation = "EXR Specification"` remains unchanged.
 - SceneInspector : Custom inspectors implemented in Python must now return a list of Inspector objects rather than a dictionary [^1].
+- TestShader : Moved outputs to be children of the `out` plug, instead of it being a fixed `Color3fPlug`.
 
 Documentation
 -------------
