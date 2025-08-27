@@ -147,9 +147,8 @@ void ShaderTweakProxy::loadShader( const std::string &shaderName, bool keepExist
 	else
 	{
 		// Not a value plug, which means it should have children
-		for( const auto &untypedChild : loaderNode->outPlug()->children() )
+		for( const auto &child : Plug::Range( *loaderNode->outPlug() ) )
 		{
-			Plug *child = IECore::runTimeCast< Plug >( untypedChild.get() );
 			outPlug()->addChild( child->createCounterpart( child->getName(), Plug::Direction::Out ) );
 		}
 	}
