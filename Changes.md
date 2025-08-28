@@ -5,6 +5,7 @@ Fixes
 -----
 
 - TweakPlug : Fixed handling of default values for `name`, `enabled` and `mode` child plugs during serialisation and in `createCounterPart()` (#6544).
+- Viewer : Fixed hangs when using the raytraced viewport.
 
 API
 ---
