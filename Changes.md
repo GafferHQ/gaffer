@@ -6,11 +6,17 @@ Fixes
 
 - TweakPlug : Fixed handling of default values for `name`, `enabled` and `mode` child plugs during serialisation and in `createCounterPart()` (#6544).
 - Viewer : Fixed hangs when using the raytraced viewport.
+- SceneReader : Fixed numerical imprecision in conversion of frame to UsdTimeCode. This could cause the wrong time sample or value clip to be selected.
 
 API
 ---
 
 - TweakPlug : Added extended constructor allowing default values for `name`, `enabled` and `mode` plug to be specified.
+
+Build
+-----
+
+- Cortex : Updated to 10.5.15.3.
 
 1.5.16.1 (relative to 1.5.16.0)
 ========
