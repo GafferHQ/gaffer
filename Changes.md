@@ -1,120 +1,19 @@
-1.6.x.x (relative to 1.6.0.0a3)
+1.6.0.0 (relative to 1.5.16.2)
 =======
 
 Features
 --------
 
-- FocalBlur : Added node for approximating depth of field effects based on an image with a depth channel.
-
-Improvements
-------------
-
-- RenderMan : Removed the `GAFFERRENDERMAN_FEATURE_PREVIEW` environment variable. The RenderMan extension is now automatically enabled any time the `RMANTREE` environment variable is present. While the RenderMan extension is not yet feature complete, it is considered to be mature enough for general use.
-- GafferML : Added experimental support for performing inference on CUDA devices. This can be enabled by setting the `GAFFERML_USE_CUDA` environment variable with a value of `1`. This requires an ONNX runtime containing the CUDA execution provider, with compatible versions of the CUDA toolkit and cuDNN installed.
-- ShaderTweaks :
-  - Added support for inserting new connections in `Create` mode.
-  - Added initial support for inserting connections to closure parameters (#6522).
-  - Added dragging of plugs onto the `+` button in the NodeEditor, to create a tweak for values of that type. Particularly useful for making tweaks for closure parameters.
-
-Fixes
------
-
-- VisualiserTool : Fixed "undefined variable FLT_EPSILON" errors [^1].
-- AttributeEditor :
-  - Added missing Cycles volume attributes.
-  - Renamed OpenGL "Shading" section to "Drawing", to match the NodeEditor.
-- ImageReader : Adjusted default `channelInterpretation` heuristics to better match Nuke's behaviour for single-part EXR files with bogus part name metadata (#6527). In this case, the part name is no longer used as the layer name.
-- TweakPlug : Fixed handling of default values for `name`, `enabled` and `mode` child plugs during serialisation and in `createCounterPart()` (#6544) [^1].
-- ShaderTweaks : Fixed errors when `Remove` or `Create` modes are used to tweak a parameter with an input connection. The input connection is now removed.
-- Arnold : Fixed plugin crashes caused by conflicts with Arnold's internal memory allocator [^1].
-
-API
----
-
-- Metadata :
-  - Added the ability to register metadata against multiple string targets, by including wildcards in the target name.
-  - Added per-target signals for string targets, available via the `valueChangedSignal( target )` method. The old all-target `valueChangedSignal()` method is now deprecated.
-- TweakPlug : Added extended constructor allowing default values for `name`, `enabled` and `mode` plug to be specified [^1].
-- ClosurePlug : Added new plug type to GafferScene, providing a common base class for `GafferOSL::ClosurePlug` and `GafferRenderMan::BXDFPlug`.
-
-Breaking Changes
-----------------
-
-- ImageReader : Changed the behaviour of `channelInterpretation = "Default"` so that part names are ignored in single-part EXR files. The behaviour of `channelInterpretation = "EXR Specification"` remains unchanged.
-- SceneInspector : Custom inspectors implemented in Python must now return a list of Inspector objects rather than a dictionary [^1].
-- TestShader : Moved outputs to be children of the `out` plug, instead of it being a fixed `Color3fPlug`.
-
-Documentation
--------------
-
-- Added RenderMan configuration instructions to the "Getting Started" guide.
-
-Documentation
--------------
-
-- Fixed invalid link to OIIO metadata documentation in "Anatomy Of An Image".
-- Fixed invalid internal links within "Camera", "Anatomy Of A Camera", "Light Linking" and "Spreadsheet Node" sections.
-- Fixed invalid link anchor targets in "Contexts" and "Node Graph Editing In Python" sections.
-
-[^1]: To be omitted from the notes for the final 1.6.0.0 release.
-
-1.6.0.0a3 (relative to 1.6.0.0a2)
-=========
-
-Features
---------
-
-- DiskBlur : Added image node for doing fast variable-radius blur. Will be used as core of upcoming focal blur node.
-
-Improvements
-------------
-
-- RenderMan : Added dedicated viewport visualisers for RenderMan lights.
-- SceneInspector :
-  - Cells dragged from the "Name" column now return their name, rather than their full path [^1].
-  - Nodes can be pinned for comparison by dropping them onto the green "B" side of the "Scene" comparison header [^1].
-  - The current expansion is now preserved when enabling or disabling comparison mode [^1].
-- Viewer : Added `Add` image comparison mode.
-- LocaliseAttributes : Added support for localising global attributes, controlled by the new `includeGlobalAttributes` plug.
-- AttributeTweaks, ShaderTweaks : Global attributes are now localised when `localise` is enabled and no matching attribute is found at the target location or any of its ancestors.
-- AttributeQuery, ShaderQuery : Global attributes are now queried when `inherit` is enabled and no matching attribute is found at the target location or any of its ancestors.
-- SphereLevelSet : Improved performance when evaluating the bounding box.
-- RenderPassMenu : Added a search menu which displays only the render passes matching the search text. The search menu can be disabled by registering the following metadata in a startup file. `Gaffer.Metadata.registerValue( Gaffer.ScriptNode, "variables.renderPass.value", "renderPassPlugValueWidget:searchable", False )`.
-- RenderPassEditor, AttributeEditor, LightEditor, SceneInspector : Improved presentation of VectorData types in the Inspect popup.
-- CompoundDataPlugValueWidget : Removed unnecessary nesting from the menu for adding plugs.
-
-Fixes
------
-
-- ImageReader : Fixed color-space handling for secondary RGB layers. Previously color transformations were only being applied to the main `RGB` channels and not to `someLayer.RGB` (#6524).
-- PathListingWidget : Columns set to automatically stretch now equally share available space when a PathListingWidget's columns are updated via `setColumns()`.
-- CyclesShader : Moved the `principled_bsdf.diffuse_roughness` parameter to a new "Diffuse" section in the Node Editor [^1].
-- ContextQuery : Removed `Create Context Query...` menu item from plugs where it was not relevant.
-- Menu : Executing a non-searchable menu item from a searchable menu no longer causes it to appear as the last used action in the menu's search field.
-
-API
----
-
-- ScenePlug : Added optional `withGlobalAttributes` arguments to `fullAttributes()` and `fullAttributesHash()`.
-- VectorDataWidget : Added optional `maximumVisibleRows` argument.
-
-Breaking Changes
-----------------
-
-- StandardLightVisualiser : Removed protected methods for drawing visualiser elements. These are now part of `GafferSceneUI::Private::LightVisualiserAlgo`. This namespace can be used by light visualisers, but is currently `Private` while the API details are being resolved.
-- AttributeTweaks : Tweaks with `localise` enabled and a mode of `CreateIfMissing` will now not create an attribute if it is missing from the scene hierarchy, but exists in the globals.
-- AttributeQuery : Queries with `inherit` enabled will now return a result when querying an attribute that does not exist in the scene hierarchy, but does exist in the globals.
-
-[^1]: To be omitted from the notes for the final 1.6.0.0 release.
-
-1.6.0.0a2 (relative to 1.6.0.0a1)
-=========
-
-> Note : This release addresses the known issues from `1.6.0.0a1` and is recommended for user testing.
-
-Features
---------
-
+- DiskBlur : Added image node for doing fast variable-radius blur.
+- FocalBlur : Added image node for approximating depth of field effects based on an image with a depth channel.
+- Arnold : Added multi-layer EXR support. All outputs with the same filename are now written to the same file via a single output driver.
+- ImageSelectionTool :
+  - Added new tool that allows selecting scene paths based on an image. Works with both Catalogue images and images on disk. Has two requirements : an `id` AOV (added using the `ID` preset on an `Outputs` node), and a render manifest (added using StandardOptions > Render Manifest > File Path ).
+  - Also supports picking instance IDs, using an `instanceID` aov. Supported when rendering an instancer that is encapsulated ( USD instancers rendered to Arnold are encapsulated by default ).
+- ColorInspectorTool : Moved the Viewer's colour inspectors into a dedicated tool, selected from the toolbar on the left.
+- OSLObject : Added the ability to use `pointcloud_search()` and `pointcloud_get()` to query geometry from arbitrary scene locations.
+- CameraQuery : Added a new node to query camera parameters (#6431).
+- Cycles : Updated to version 4.4.0.
 - SceneInspector :
   - Rewrote using the same framework as LightEditor, AttributeEditor and RenderPassEditor.
   - Added EditScope support, with in-place editing of attributes, options and shader parameters. Editing for other properties is planned for future versions.
@@ -124,70 +23,16 @@ Features
   - Added inspection of all shaders and parameters in shader networks.
   - Added more detailed inspection of meshes and curves.
   - Added more detailed inspection of primitive variables.
+  - Added more detailed inspection of OpenVDB grids.
 
 Improvements
 ------------
 
+- Viewer : Added `Add` image comparison mode.
+- RenderMan :
+  - Added dedicated viewport visualisers for RenderMan lights.
+  - Removed the `GAFFERRENDERMAN_FEATURE_PREVIEW` environment variable. The RenderMan extension is now automatically enabled any time the `RMANTREE` environment variable is present. While the RenderMan extension is not yet feature complete, it is considered to be mature enough for general use.
 - Arnold : Improved readability of shader node names as they appear in statistics and `.ass` files. They are now formatted as `shader:{handle}:{uniqueId}` where `{handle}` is the Gaffer node name of the assigned shader, or if loaded from USD, the prim name.
-- PrimitiveInspector : Added `location` widget for selecting the location to be inspected.
-- OptionalValuePlugValueWidget : The widget for the `enabled` plug can now be customised using `plugValueWidget:type` metadata.
-- PathListingWidget : Improved formatting of TypedVectorData.
-
-Fixes
------
-
-- Arnold : Fixed crashes caused by conflicts with Arnold's internal memory allocator [^1].
-- PathListingWidget :
-  - Fixed ordering of `selectionChangedSignal()` emission from `setColumns()` call. It is now emitted when `getColumns()` returns the new columns, not the old ones.
-  - Fixed unwanted vertical scrolling caused by `setColumns()`.
-- LightEditor, RenderPassEditor, AttributeEditor :
-  - Fixed unwanted vertical scrolling when switching tabs.
-  - Fixed flickering when switching tabs.
-- Node menu : Fixed laggy search behaviour [^1].
-
-API
----
-
-- Path : Added `contextProperty()` method.
-
-Breaking Changes
-----------------
-
-- Arnold : Changed the naming of shader nodes in the generated Arnold scene.
-- Path : Removed `inspectionContext()` method. Use `contextProperty( "inspector:context" )` instead.
-- SceneInspector :
-  - Removed `setTargetPaths()` and `getTargetPaths()` methods. Use the `location` and `compare.location` settings plugs instead.
-  - Removed `registerSection()` method.
-  - Removed `Diff`, `SideBySideDiff`, `TextDiff`, `Row`, `Inspector`, `DiffRow`, `DiffColumn`, `Section`, `LocationSection`, `HistorySection` and `SetsSection` classes.
-
-[^1]: To be omitted from the notes for the final 1.6.0.0 release.
-
-1.6.0.0a1 (relative to 1.5.16.1)
-=========
-
-> Caution : This release is not recommended for user testing. It is being provided primarily to allow early pipeline integration, such as adjusting to API changes and dependency updates. See Known Issues below.
-
-Known Issues
-------------
-
-- Node menu : Laggy search behaviour caused by the latest Qt update.
-- Arnold : Crashes related to recent dependency updates.
-
-Features
---------
-
-- Arnold : Added multi-layer EXR support. All outputs with the same filename are now written to the same file via a single output driver.
-- ImageSelectionTool :
-  - Added new tool that allows selecting scene paths based on an image. Works with both Catalogue images and images on disk. Has two requirements : an `id` AOV (added using the `ID` preset on an `Outputs` node), and a render manifest (added using StandardOptions > Render Manifest > File Path ).
-  - Also supports picking instance IDs, using an `instanceID` aov. Supported when rendering an instancer that is encapsulated ( USD instancers rendered to Arnold are encapsulated by default ).
-- ColorInspectorTool : Moved the Viewer's colour inspectors into a dedicated tool, selected from the toolbar on the left.
-- OSLObject : Added the ability to use `pointcloud_search()` and `pointcloud_get()` to query geometry from arbitrary scene locations.
-- CameraQuery : Added a new node to query camera parameters (#6431).
-- Cycles : Updated to version 4.4.0.
-
-Improvements
-------------
-
 - DeleteAttributes : Optimised case where all attributes are deleted. The input attributes are no longer accessed at all in this case.
 - ShaderAssignment : The `scene:path` context variable is now available in Switches connected directly to the `ShaderAssignment.shader` input. This allows different shaders to be assigned to different locations using a single ShaderAssignment node. Please note that the `scene:path` context variable remains unavailable to the individual shader nodes themselves for performance reasons.
 - 3Delight, Cycles, OpenGL : Added support for custom EXR metadata, using `header:*` parameters on the output definition.
@@ -205,12 +50,30 @@ Improvements
   - Improved formatting of Box and Matrix values.
   - Improved performance when showing colour values.
   - Added support for showing spline values.
-- GafferUI : Added support for drag and dropping numeric vector data onto numeric vector plugs of compatible types ( For example, dropping a list of ints onto a FloatVectorDataPlug ).
+  - Improved formatting of TypedVectorData.
+- GafferUI : Added support for drag and dropping numeric vector data onto numeric vector plugs of compatible types (for example, dropping a list of integers onto a FloatVectorDataPlug).
 - Switch : Optimised disabled switches using a direct internal connection, even when the `index` is not constant.
+- PrimitiveInspector : Added `location` widget for selecting the location to be inspected.
+- OptionalValuePlugValueWidget : The widget for the `enabled` plug can now be customised using `plugValueWidget:type` metadata.
+- GafferML : Added experimental support for performing inference on CUDA devices. This can be enabled by setting the `GAFFERML_USE_CUDA` environment variable with a value of `1`. This requires an ONNX runtime containing the CUDA execution provider, with compatible versions of the CUDA toolkit and cuDNN installed.
+- ShaderTweaks :
+  - Added support for inserting new connections in `Create` mode.
+  - Added initial support for inserting connections to closure parameters (#6522).
+  - Added dragging of plugs onto the `+` button in the NodeEditor, to create a tweak for values of that type. Particularly useful for making tweaks for closure parameters.
+- LocaliseAttributes : Added support for localising global attributes, controlled by the new `includeGlobalAttributes` plug.
+- AttributeTweaks, ShaderTweaks : Global attributes are now localised when `localise` is enabled and no matching attribute is found at the target location or any of its ancestors.
+- AttributeQuery, ShaderQuery : Global attributes are now queried when `inherit` is enabled and no matching attribute is found at the target location or any of its ancestors.
+- SphereLevelSet : Improved performance when evaluating the bounding box.
+- RenderPassMenu : Added a search menu which displays only the render passes matching the search text. The search menu can be disabled by registering the following metadata in a startup file. `Gaffer.Metadata.registerValue( Gaffer.ScriptNode, "variables.renderPass.value", "renderPassPlugValueWidget:searchable", False )`.
+- RenderPassEditor, AttributeEditor, LightEditor, SceneInspector : Improved presentation of VectorData types in the Inspect popup.
+- CompoundDataPlugValueWidget : Removed unnecessary nesting from the menu for adding plugs.
 
 Fixes
 -----
 
+- ImageReader :
+  - Fixed color-space handling for secondary RGB layers. Previously color transformations were only being applied to the main `RGB` channels and not to `someLayer.RGB` (#6524).
+  - Adjusted default `channelInterpretation` heuristics to better match Nuke's behaviour for single-part EXR files with bogus part name metadata (#6527). In this case, the part name is no longer used as the layer name.
 - LocalDispatcher, SystemCommand, `gaffer env` : Fixed unwanted upper-casing of environment variable names on Windows (#6371).
 - OpenGLAttributes : The default values of attribute plugs now correctly reflect the default behaviour of the OpenGL renderer.
 - Arnold : Fixed default behaviour of `ai:abort_on_license_fail` option with Arnold 7.3 and above.
@@ -227,18 +90,29 @@ Fixes
 - PathListingWidget :
   - Prevented emission of `updateFinishedSignal()` when a new update is pending anyway.
   - Fixed potential threading-related crash.
+  - Fixed ordering of `selectionChangedSignal()` emission from `setColumns()` call. It is now emitted when `getColumns()` returns the new columns, not the old ones.
+  - Fixed unwanted vertical scrolling caused by `setColumns()`.
+  - Columns set to automatically stretch now equally share available space when a PathListingWidget's columns are updated via `setColumns()`.
 - LightEditor, RenderPassEditor, AttributeEditor :
   - Fixed missing history entries when two edits have the same source plug.
   - Fixed potential crashes in `Show History...`.
   - Fixed potential UI lag in `Show History...`.
   - Fixed flickering in history window when scrubbing the timeline.
+  - Fixed unwanted vertical scrolling when switching tabs.
+  - Fixed flickering when switching tabs.
 - RenderPassEditor : Fixed error when deleting a pass while a history window was open for it.
+- AttributeEditor :
+  - Added missing Cycles volume attributes.
+  - Renamed OpenGL "Shading" section to "Drawing", to match the NodeEditor.
 - OptionalValuePlugValueWidget : Fixed handling of keyword constructor arguments. In particular this meant that `parenting` arguments did not work.
 - ScenePathPlugValueWidget :
   - Fixed context used to evaluate the scene. This is now focus-aware, so the scene browser only shows locations that are available with respect to the current focus.
   - Fixed bugs that prevented usage in `Editor.Settings` nodes.
 - SceneReader : Fixed bug reading USD cameras without authored shutter attributes. Previously, the loaded camera would have an unwanted shutter parameter, but now the shutter parameter is correctly omitted.
 - SceneWriter : Fixed bug writing cameras without a shutter parameter to USD. Previously shutter attributes were authored with default values, but now the shutter attributes are not authored at all.
+- ContextQuery : Removed `Create Context Query...` menu item from plugs where it was not relevant.
+- Menu : Executing a non-searchable menu item from a searchable menu no longer causes it to appear as the last used action in the menu's search field.
+- ShaderTweaks : Fixed errors when `Remove` or `Create` modes are used to tweak a parameter with an input connection. The input connection is now removed.
 
 API
 ---
@@ -248,6 +122,8 @@ API
 - Metadata :
   - Added `registerValues()` function that registers multiple metadata entries from a dictionary of string targets.
   - Updated `targetsWithMetadata()` function to support matching multiple targets.
+  - Added the ability to register metadata against multiple string targets, by including wildcards in the target name.
+  - Added per-target signals for string targets, available via the `valueChangedSignal( target )` method. The old all-target `valueChangedSignal()` method is now deprecated.
 - MetadataAlgo : Added `createPlugFromMetadata()` function.
 - RenderController : Added `renderManifest()` method.
 - ImageGadget : Added support for showing selected and highlighted ids. Controlled using `setIDChannel`, `setSelectedIDs`, and `setHighlightID`.
@@ -255,13 +131,21 @@ API
 - SceneAlgo :
   - `applyCameraGlobals()` now always applies the `render:overscan[Top/Bottom/Left/Right]` options to the camera if they exist in the scene globals.
   - `applyCameraGlobals()` now applies the `render:depthOfField` option to the `depthOfField` camera parameter. The `fStop` camera parameter is no longer overridden to `0.0` when the `render:depthOfField` option is `False` or not specified.
+- Path : Added `contextProperty()` method.
+- ScenePlug : Added optional `withGlobalAttributes` arguments to `fullAttributes()` and `fullAttributesHash()`.
+- VectorDataWidget : Added optional `maximumVisibleRows` argument.
+- ClosurePlug : Added new plug type to GafferScene, providing a common base class for `GafferOSL::ClosurePlug` and `GafferRenderMan::BXDFPlug`.
 
 Breaking Changes
 ----------------
 
+- ImageReader :
+  - Changed color-space handling for secondary RGB channels.
+  - Changed the behaviour of `channelInterpretation = "Default"` so that part names are ignored in single-part EXR files. The behaviour of `channelInterpretation = "EXR Specification"` remains unchanged.
 - Arnold :
   - Removed support for Arnold 7.2.
   - Removed `GafferArnoldUI.GPUCache.populateGPUCache()` function.
+  - Changed the naming of shader nodes in the generated Arnold scene.
 - ArnoldAttributes, CyclesAttributes, DelightAttributes, OpenGLAttributes, StandardAttributes, USDAttributes : Attributes plugs have been renamed to match the name of their attribute (e.g. `attributes.visibility` is now `attributes.scene:visible`). Compatibility configs have been provided to allow these nodes to be loaded from scripts saved in earlier Gaffer versions.
 - ArnoldOptions, CyclesOptions, DelightOptions, StandardOptions : Option plugs have been renamed to match the name of their option (e.g. `options.renderCamera` is now `options.render:camera`). Compatibility configs have been provided to allow these nodes to be loaded from scripts saved in earlier Gaffer versions.
 - ArnoldOptions : Changed the default value of the `ai:texture_max_memory_MB` plug to 4096 to match Arnold's default.
@@ -279,12 +163,29 @@ Breaking Changes
 - ContextAlgo : Removed deprecated API. Use ScriptNodeAlgo instead, which has been available from Gaffer 1.4.13.0 onwards.
 - ScriptNodeAlgo : Reimplemented using Metadata rather than Context variables for storage. Use the ScriptNodeAlgo API instead of attempting direct access to `ui:*` context variables.
 - SceneReader, SceneWriter : Changed handling of missing shutter parameters. See Fixes section for more detail.
+- Path : Removed `inspectionContext()` method. Use `contextProperty( "inspector:context" )` instead.
+- SceneInspector :
+  - Removed `setTargetPaths()` and `getTargetPaths()` methods. Use the `location` and `compare.location` settings plugs instead.
+  - Removed `registerSection()` method.
+  - Removed `Diff`, `SideBySideDiff`, `TextDiff`, `Row`, `Inspector`, `DiffRow`, `DiffColumn`, `Section`, `LocationSection`, `HistorySection` and `SetsSection` classes.
+- TestShader : Moved outputs to be children of the `out` plug, instead of it being a fixed `Color3fPlug`.
+- StandardLightVisualiser : Removed protected methods for drawing visualiser elements. These are now part of `GafferSceneUI::Private::LightVisualiserAlgo`. This namespace can be used by light visualisers, but is currently `Private` while the API details are being resolved.
+- AttributeTweaks : Tweaks with `localise` enabled and a mode of `CreateIfMissing` will now not create an attribute if it is missing from the scene hierarchy, but exists in the globals.
+- AttributeQuery : Queries with `inherit` enabled will now return a result when querying an attribute that does not exist in the scene hierarchy, but does exist in the globals.
+
+Documentation
+-------------
+
+- Added RenderMan configuration instructions to the "Getting Started" guide.
+- Fixed invalid link to OIIO metadata documentation in "Anatomy Of An Image".
+- Fixed invalid internal links within "Camera", "Anatomy Of A Camera", "Light Linking" and "Spreadsheet Node" sections.
+- Fixed invalid link anchor targets in "Contexts" and "Node Graph Editing In Python" sections.
 
 Build
 -----
 
 - Boost : Updated to version 1.82.0.
-- Cortex : Updated to version 10.6.0.0a1.
+- Cortex : Updated to version 10.6.0.1.
 - Cycles : Updated to version 4.4.0.
 - FreeType : Updated to version 2.13.3.
 - LibRaw : Updated to version 0.21.4.
