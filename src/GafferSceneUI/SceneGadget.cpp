@@ -98,14 +98,18 @@ Box3f sceneBound( const ScenePlug *scene, const PathMatcher *include, const Path
 		}
 	};
 
-	if( include )
-	{
-		SceneAlgo::filteredParallelTraverse( scene, *include, f );
-	}
-	else
-	{
-		SceneAlgo::parallelTraverse( scene, f );
-	}
+	tbb::this_task_arena::isolate(
+		[&] () {
+			if( include )
+			{
+				SceneAlgo::filteredParallelTraverse( scene, *include, f );
+			}
+			else
+			{
+				SceneAlgo::parallelTraverse( scene, f );
+			}
+		}
+	);
 
 	return threadBounds.combine(
 		[] ( const Box3f b1, const Box3f b2 ) {
