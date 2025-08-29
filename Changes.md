@@ -7,6 +7,7 @@ Improvements
 - LightEditor, RenderPassEditor, AttributeEditor, SceneInspector :
   - Added context variable columns to the `Show History...` window. These show the values for any context variables which change during the history.
   - Improved default size of `Show History...` window.
+- SceneInspector : Added summaries to Attributes sections. These show the number of attributes within, and in diff views are highlighted if there are any diffs within.
 
 Fixes
 -----

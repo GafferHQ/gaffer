@@ -778,25 +778,94 @@ void addShaderInspections( InspectorTree::Inspections &inspections, const vector
 	}
 }
 
+InternedString attributeCategory( InternedString attributeName )
+{
+	if( auto categoryMetadata = Metadata::value<StringData>( fmt::format( "attribute:{}", attributeName.c_str() ), g_category ) )
+	{
+		return categoryMetadata->readable();
+	}
+	return g_other;
+}
+
 InspectorTree::Inspections attributeInspectionProvider( ScenePlug *scene, const Gaffer::PlugPtr &editScope )
 {
-	ConstCompoundObjectPtr attributes = scene->fullAttributes( Context::current()->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) );
-	const vector<InternedString> sortedAttributeNames = alphabeticallySortedKeys( attributes->members() );
-
 	InspectorTree::Inspections result;
+	ConstCompoundObjectPtr attributes = scene->fullAttributes( Context::current()->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) );
+	if( !attributes->members().size() )
+	{
+		return result;
+	}
+
+	// Add an aggregate inspector that inspects the entire attributes object.
+	// This is the parent of the individual attribute inspectors. Although we
+	// can't show the value for the parent (it would be too big to format),
+	// we can use diff background colours to hint to the user that there is
+	// a diff on one or more children.
+
+	result.push_back( {
+		{}, new GafferSceneUI::Private::BasicInspector(
+			scene->attributesPlug(), editScope,
+			[] ( const CompoundObjectPlug *attributesPlug ) {
+				return attributesPlug->parent<ScenePlug>()->fullAttributes(
+					Context::current()->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName )
+				);
+			}
+		)
+	} );
+
+	// Create an inspector per attribute, organised into subfolders by category.
+	// And make an aggregate inspector per category.
+
+	const vector<InternedString> sortedAttributeNames = alphabeticallySortedKeys( attributes->members() );
+	InspectorTree::Inspections individualInspections;
+	boost::container::flat_map<string, InspectorTree::Inspection> categoryInspections;
+
 	for( auto name : sortedAttributeNames )
 	{
-		InternedString category = g_other;
-		if( auto categoryMetadata = Metadata::value<StringData>( fmt::format( "attribute:{}", name.c_str() ), g_category ) )
+		// Make sure we have an aggregrate inspector for this category, for the same reason we
+		// have an aggregate inspector for all the attributes.
+
+		const InternedString category = attributeCategory( name );
+		InspectorTree::Inspection &categoryInspection = categoryInspections[category.string()];
+		if( !categoryInspection.inspector )
 		{
-			category = categoryMetadata->readable();
+			categoryInspection.path = { category };
+			categoryInspection.inspector = new GafferSceneUI::Private::BasicInspector(
+				scene->attributesPlug(), editScope,
+				[category] ( const CompoundObjectPlug *attributesPlug ) {
+					ConstCompoundObjectPtr fullAttributes = attributesPlug->parent<ScenePlug>()->fullAttributes(
+						Context::current()->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName )
+					);
+					CompoundObjectPtr categoryAttributes = new CompoundObject;
+					for( const auto &[name, value] : fullAttributes->members() )
+					{
+						if( attributeCategory( name ) == category )
+						{
+							categoryAttributes->members()[name] = value;
+						}
+					}
+					return categoryAttributes;
+				}
+			);
 		}
-		result.push_back( { { category, name }, new GafferSceneUI::Private::AttributeInspector( scene, editScope, name ) } );
+
+		// Add an inspector for the individual attribute.
+		individualInspections.push_back( { { category, name }, new GafferSceneUI::Private::AttributeInspector( scene, editScope, name ) } );
 		if( auto shaderNetwork = attributes->member<const ShaderNetwork>( name ) )
 		{
-			addShaderInspections( result, { category, name }, scene, editScope, name, shaderNetwork );
+			addShaderInspections( individualInspections, { category, name }, scene, editScope, name, shaderNetwork );
 		}
 	}
+
+	// Merge all inspectors into the result. Putting category inspections first
+	// means that everything is sorted by category.
+
+	for( const auto &[name, value] : categoryInspections )
+	{
+		result.push_back( value );
+	}
+	result.insert( result.end(), individualInspections.begin(), individualInspections.end() );
+
 	return result;
 }
 
