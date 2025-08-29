@@ -43,6 +43,25 @@ import GafferSceneUI
 
 from . import _GafferSceneUI
 
+# Hides internal nodes created by the UI (for example, inside
+# `Editor.Settings`).
+class _NodeFilter( Gaffer.PathFilter ) :
+
+	def __init__( self, userData = {} ) :
+
+		Gaffer.PathFilter.__init__( self, userData )
+
+	def _filter( self, paths, canceller ) :
+
+		result = []
+		for path in paths :
+			node = path.property( "history:node", canceller )
+			if node is not None and node.scriptNode() is None :
+				continue
+			result.append( path )
+
+		return result
+
 class _OperationIconColumn( GafferUI.PathColumn ) :
 
 	def __init__( self ) :
@@ -122,6 +141,31 @@ class _ValueColumn( GafferUI.PathColumn ) :
 
 		return self.CellData( "Value" )
 
+class _ContextVariableColumn( GafferUI.PathColumn ) :
+
+	def __init__( self, variable ) :
+
+		GafferUI.PathColumn.__init__( self )
+
+		self.__variable = variable
+
+	def variable( self ) :
+
+		return self.__variable
+
+	def cellData( self, path, canceller = None ) :
+
+		context = path.contextProperty( "history:context", canceller )
+		value = context.get( self.__variable )
+		if value is not None and self.__variable == "scene:path" :
+			value = GafferScene.ScenePlug.pathToString( value )
+
+		return self.CellData( value )
+
+	def headerData( self, canceller = None ) :
+
+		return self.CellData( "${{{}}}".format( self.__variable ) )
+
 class _HistoryWindow( GafferUI.Window ) :
 
 	def __init__( self, inspectorColumn, inspectionRootPath, inspectionPathString, title=None, **kw ) :
@@ -129,8 +173,9 @@ class _HistoryWindow( GafferUI.Window ) :
 		if title is None :
 			title = "History"
 
-		GafferUI.Window.__init__( self, title, **kw )
+		GafferUI.Window.__init__( self, title, borderWidth = 4, **kw )
 
+		self.__nodeFilter = _NodeFilter()
 		self.__inspectorColumn = inspectorColumn
 		self.__inspectionRootPath = inspectionRootPath
 		self.__inspectionPathString = inspectionPathString
@@ -162,6 +207,7 @@ class _HistoryWindow( GafferUI.Window ) :
 		self.__inspectorColumn.changedSignal().connect( Gaffer.WeakMethod( self.__inspectorColumnChanged ) )
 		self.__inspectionRootPath.pathChangedSignal().connect( Gaffer.WeakMethod( self.__inspectionRootPathChanged ) )
 
+		self.__resizeInUpdateFinished = True
 		self.__updatePath()
 
 	def __updatePath( self ) :
@@ -173,6 +219,7 @@ class _HistoryWindow( GafferUI.Window ) :
 			self.close()
 			return
 
+		self.__path.setFilter( self.__nodeFilter )
 		self.__pathListingWidget.setPath( self.__path )
 
 	def __buttonDoubleClick( self, pathListing, event ) :
@@ -272,8 +319,8 @@ class _HistoryWindow( GafferUI.Window ) :
 	def __updateFinished( self, pathListing ) :
 
 		# Note : Now the update is finished, we know our HistoryPath has
-		# computed and cached everything internally. So we can call `children()`
-		# without fear of blocking the UI waiting for it to compute.
+		# computed and cached everything internally. So we can call methods on
+		# it without fear of blocking the UI waiting for it to compute.
 
 		# Close window if there's no longer anything to show.
 
@@ -301,6 +348,35 @@ class _HistoryWindow( GafferUI.Window ) :
 					)
 
 				node = node.parent()
+
+		# Add columns to show any context variables which vary through the
+		# course of the history. Reuse columns where possible because
+		# PathListingWidget is smart enough to reuse cell values in that case.
+
+		currentContextVariableColumns = {
+			c.variable() : c
+			for c in pathListing.getColumns()
+			if isinstance( c, _ContextVariableColumn )
+		}
+
+		columns = [ c for c in pathListing.getColumns() if not isinstance( c, _ContextVariableColumn ) ]
+		for variable in pathListing.getPath().property( "history:varyingContextVariables" ) :
+			if variable.startswith( "__" ) :
+				# Avoid showing private variables like `__sceneInspector:inputIndex`.
+				continue
+			column = currentContextVariableColumns.get( variable )
+			if column is None :
+				column = _ContextVariableColumn( variable )
+			columns.append( column )
+
+		if columns != pathListing.getColumns() :
+			pathListing.setColumns( columns )
+		elif self.__resizeInUpdateFinished :
+			# Once we've completed the first update for all the columns we want,
+			# size the window to fit. We only do this once - after that the user
+			# is in control of the size.
+			self.resizeToFitChild()
+			self.__resizeInUpdateFinished = False
 
 	def __nodeNameChanged( self, node, oldName ) :
 

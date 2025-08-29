@@ -192,12 +192,12 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual(
 			sorted( historyPath.propertyNames() ),
-			sorted(
-				[
-					"fullName",
-					"name",
-				]
-			)
+			sorted( [
+				"history:contextVariables",
+				"history:varyingContextVariables",
+				"fullName",
+				"name",
+			] )
 		)
 
 		self.assertEqual(
@@ -211,7 +211,8 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 					"history:operation",
 					"history:source",
 					"history:editWarning",
-					"history:node"
+					"history:node",
+					"history:context",
 				]
 			)
 		)
@@ -312,7 +313,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		historyPath.setFromString( "/missingNode" )
 		self.assertFalse( historyPath.isValid() )
 
-	def testPlugClashing( self ) :
+	def testLoop( self ) :
 
 		s = Gaffer.ScriptNode()
 
@@ -342,12 +343,12 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 			context["scene:path"] = IECore.InternedStringVectorData( ["light"] )
 			historyPath = inspector.historyPath()
 
-		self.assertEqual( len( historyPath.children() ), s["loop"]["iterations"].getValue() + 1 )
+		self.assertEqual( len( historyPath.children() ), 2 * ( s["loop"]["iterations"].getValue() + 1 ) )
 		self.assertEqual( historyPath.children()[0].property( "history:node" ), s["testLight"] )
 		self.assertEqual( historyPath.children()[0].property( "history:value" ), 0 )
 		for i in range( 1, s["loop"]["iterations"].getValue() + 1 ) :
-			self.assertEqual( historyPath.children()[i].property( "history:node" ), s["tweaks"] )
-			self.assertEqual( historyPath.children()[i].property( "history:value" ), i )
+			self.assertEqual( historyPath.children()[i*2].property( "history:node" ), s["tweaks"] )
+			self.assertEqual( historyPath.children()[i*2].property( "history:value" ), i )
 
 	def testTwoTweaksWithIdenticalSource( self ) :
 
@@ -469,13 +470,13 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		# Disabling the openGLAttributes node results in its `visualiserMaxTextureResolution` plug remaining
 		# in the history but providing no value. We'll be able to see the value set on /group as the fallback
 		# value.
-		self.assertEqual( c[1].property( "name" ), str( c[1][-1] ) )
-		self.assertEqual( c[1].property( "history:node" ), s["openGLAttributes"] )
-		self.assertEqual( c[1].property( "history:value" ), None )
-		self.assertEqual( c[1].property( "history:fallbackValue" ), 1024 )
-		self.assertEqual( c[1].property( "history:operation" ), Gaffer.TweakPlug.Mode.Create )
-		self.assertEqual( c[1].property( "history:source" ), s["openGLAttributes"]["attributes"]["gl:visualiser:maxTextureResolution"] )
-		self.assertEqual( c[1].property( "history:editWarning" ), "Edits to \"gl:visualiser:maxTextureResolution\" may affect other locations in the scene." )
+		self.assertEqual( c[2].property( "name" ), str( c[2][-1] ) )
+		self.assertEqual( c[2].property( "history:node" ), s["openGLAttributes"] )
+		self.assertEqual( c[2].property( "history:value" ), None )
+		self.assertEqual( c[2].property( "history:fallbackValue" ), 1024 )
+		self.assertEqual( c[2].property( "history:operation" ), Gaffer.TweakPlug.Mode.Create )
+		self.assertEqual( c[2].property( "history:source" ), s["openGLAttributes"]["attributes"]["gl:visualiser:maxTextureResolution"] )
+		self.assertEqual( c[2].property( "history:editWarning" ), "Edits to \"gl:visualiser:maxTextureResolution\" may affect other locations in the scene." )
 
 	def testIsLeafAndIsValid( self ) :
 
@@ -626,6 +627,41 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 			[ c.property( "history:node" ) for c in historyPath.children() ],
 			[ reader ]
 		)
+
+	def testContextVariables( self ) :
+
+		light = GafferSceneTest.TestLight()
+		group = GafferScene.Group()
+		group["in"][0].setInput( light["out"] )
+
+		customAttributes = GafferScene.CustomAttributes()
+		customAttributes["in"].setInput( group["out"] )
+
+		inspector = self.__inspector( customAttributes["out"], "exposure" )
+		with Gaffer.Context() as context :
+			context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/group/light" )
+			historyPath = inspector.historyPath()
+
+		self.assertNotIn( "history:context", historyPath.propertyNames() )
+		self.assertIsNone( historyPath.property( "history:context" ), None )
+		self.assertIn( "history:contextVariables", historyPath.propertyNames() )
+		self.assertIsInstance( historyPath.property( "history:contextVariables" ), IECore.StringVectorData )
+		self.assertEqual( set( historyPath.property( "history:contextVariables" ) ), { "frame", "framesPerSecond", "scene:path" } )
+		self.assertIn( "history:varyingContextVariables", historyPath.propertyNames() )
+		self.assertEqual( historyPath.property( "history:varyingContextVariables" ), IECore.StringVectorData( [ "scene:path" ] ) )
+
+		children = historyPath.children()
+		self.assertEqual( len( children ), 2 )
+
+		self.assertEqual( children[0].property( "history:node" ), light )
+		self.assertIn( "history:context", children[0].propertyNames() )
+		self.assertIsInstance( children[0].contextProperty( "history:context" ), Gaffer.Context )
+		self.assertEqual( children[0].contextProperty( "history:context" )["scene:path"], IECore.InternedStringVectorData( [ "light" ] ) )
+
+		self.assertEqual( children[1].property( "history:node" ), group )
+		self.assertIn( "history:context", children[1].propertyNames() )
+		self.assertIsInstance( children[1].contextProperty( "history:context" ), Gaffer.Context )
+		self.assertEqual( children[1].contextProperty( "history:context" )["scene:path"], IECore.InternedStringVectorData( [ "group", "light" ] ) )
 
 if __name__ == "__main__":
 	unittest.main()
