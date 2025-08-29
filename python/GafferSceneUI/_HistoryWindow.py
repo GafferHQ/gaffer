@@ -207,6 +207,7 @@ class _HistoryWindow( GafferUI.Window ) :
 		self.__inspectorColumn.changedSignal().connect( Gaffer.WeakMethod( self.__inspectorColumnChanged ) )
 		self.__inspectionRootPath.pathChangedSignal().connect( Gaffer.WeakMethod( self.__inspectionRootPathChanged ) )
 
+		self.__resizeInUpdateFinished = True
 		self.__updatePath()
 
 	def __updatePath( self ) :
@@ -368,7 +369,14 @@ class _HistoryWindow( GafferUI.Window ) :
 				column = _ContextVariableColumn( variable )
 			columns.append( column )
 
-		pathListing.setColumns( columns )
+		if columns != pathListing.getColumns() :
+			pathListing.setColumns( columns )
+		elif self.__resizeInUpdateFinished :
+			# Once we've completed the first update for all the columns we want,
+			# size the window to fit. We only do this once - after that the user
+			# is in control of the size.
+			self.resizeToFitChild()
+			self.__resizeInUpdateFinished = False
 
 	def __nodeNameChanged( self, node, oldName ) :
 
