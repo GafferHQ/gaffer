@@ -6,6 +6,11 @@ Improvements
 
 - LightEditor, RenderPassEditor, AttributeEditor, SceneInspector : Added context variable columns to the `Show History...` window. These show the values for any context variables which change during the history.
 
+Fixes
+-----
+
+- PathListingWidget : Fixed parent layout update when column sizes change.
+
 1.6.0.0 (relative to 1.5.16.2)
 =======
 
