@@ -11,6 +11,7 @@ Improvements
 - Layout menu : Sorted the editor creation items alphabetically.
 - ShaderTweaks, ShaderQuery : Added `Arnold Volume` preset for the `shader` plug.
 - Cycles : Added support for transform shader parameters, such as `texture_coordinate.ob_tfm`.
+- SceneInspector : Improved search filter widget.
 
 Fixes
 -----
