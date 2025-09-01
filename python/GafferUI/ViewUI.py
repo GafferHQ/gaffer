@@ -248,6 +248,7 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.getPlug().setValue( value )
 
 # Toggles between default value and the last non-default value
+## \todo Consider making this part of the public API.
 class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
@@ -262,9 +263,12 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__button = GafferUI.Button( "", self.__imagePrefix + "Off.png", hasFrame=False )
 			self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
 
+			self.__plugValueWidget = None
 			if not isinstance( plug, Gaffer.BoolPlug ) :
-				plugValueWidget = GafferUI.PlugValueWidget.create( plug, typeMetadata = None )
-				plugValueWidget.numericWidget().setFixedCharacterWidth( 5 )
+				self.__plugValueWidget = GafferUI.PlugValueWidget.create( plug, typeMetadata = "togglePlugValueWidget:customWidgetType" )
+
+			if isinstance( self.__plugValueWidget, GafferUI.NumericPlugValueWidget ) :
+				self.__plugValueWidget.numericWidget().setFixedCharacterWidth( 5 )
 
 		self.__toggleValue = Gaffer.Metadata.value( plug, "togglePlugValueWidget:defaultToggleValue" )
 
@@ -301,7 +305,15 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 		with self.context() :
 			value = self.getPlug().getValue()
 
-		if value == self.getPlug().defaultValue() and self.__toggleValue is not None :
-			self.getPlug().setValue( self.__toggleValue )
+		if value == self.getPlug().defaultValue() :
+			if self.__toggleValue is not None :
+				self.getPlug().setValue( self.__toggleValue )
+			if isinstance( self.__plugValueWidget, GafferUI.StringPlugValueWidget ) :
+				# Hack to update TextWidget now, otherwise StringPlugValueWidget won't update
+				# it until the next idle event. This allows us to select the incoming text for
+				# easy editing.
+				self.__plugValueWidget.textWidget().setText( self.__toggleValue )
+				self.__plugValueWidget.textWidget().setSelection( 0, None ) # All
+				self.__plugValueWidget.textWidget().grabFocus()
 		else :
 			self.getPlug().setToDefault()
