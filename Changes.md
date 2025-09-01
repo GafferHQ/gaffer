@@ -7,6 +7,7 @@ Improvements
 - LightEditor, RenderPassEditor, AttributeEditor, SceneInspector :
   - Added context variable columns to the `Show History...` window. These show the values for any context variables which change during the history.
   - Improved default size of `Show History...` window.
+- SceneInspector : Improved search filter widget.
 
 Fixes
 -----
