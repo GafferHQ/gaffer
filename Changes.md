@@ -14,6 +14,11 @@ Fixes
 
 - PathListingWidget : Fixed parent layout update when column sizes change.
 
+API
+---
+
+- SceneEditor : Added `withHierarchyFilter` argument to Settings node. This provides a standard way of filtering the input scene before display, with the filtered scene being provided on the `editor.settings()["__filteredIn"]` plug.
+
 1.6.0.0 (relative to 1.5.16.2)
 =======
 
