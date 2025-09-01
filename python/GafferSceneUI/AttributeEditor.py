@@ -55,7 +55,7 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 
 		def __init__( self ) :
 
-			GafferSceneUI.SceneEditor.Settings.__init__( self )
+			GafferSceneUI.SceneEditor.Settings.__init__( self, withHierarchyFilter = True )
 
 			self["tabGroup"] = Gaffer.StringPlug( defaultValue = "Standard" )
 			self["section"] = Gaffer.StringPlug( defaultValue = "Attributes" )
@@ -69,11 +69,6 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 
 		GafferSceneUI.SceneEditor.__init__( self, column, scriptNode, **kw )
 
-		searchFilter = _GafferSceneUI._HierarchyViewSearchFilter()
-		searchFilter.setScene( self.settings()["in"] )
-		searchFilter.setContext( self.context() )
-		self.__filter = searchFilter
-
 		with column :
 
 			GafferUI.PlugLayout(
@@ -82,11 +77,15 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 				rootSection = "Settings"
 			)
 
-			_SearchFilterWidget( searchFilter )
+			GafferUI.PlugLayout(
+				self.settings(),
+				orientation = GafferUI.ListContainer.Orientation.Horizontal,
+				rootSection = "Filter"
+			)
 
 			self.__locationNameColumn = GafferUI.PathListingWidget.defaultNameColumn
 			self.__pathListing = GafferUI.PathListingWidget(
-				GafferScene.ScenePath( self.settings()["in"], self.context(), "/", filter = self.__filter ),
+				GafferScene.ScenePath( self.settings()["__filteredIn"], self.context(), "/" ),
 				columns = [
 					self.__locationNameColumn,
 				],
@@ -198,10 +197,6 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 	def __lazyUpdateFromContext( self ) :
 
 		self.__pathListing.getPath().setContext( self.context() )
-		# Note : editing the filter in-place is not thread-safe with respect to
-		# background updates in the PathListingWidget. But we're getting away
-		# with it because the line above will cancel any current update.
-		self.__filter.setContext( self.context() )
 
 	@GafferUI.LazyMethod()
 	def __updateColumns( self ) :
@@ -287,7 +282,7 @@ Gaffer.Metadata.registerNode(
 	# want to add space around, in the same way we use `divider` to add a divider?
 	"layout:customWidget:spacer:widgetType", "GafferSceneUI.AttributeEditor._Spacer",
 	"layout:customWidget:spacer:section", "Settings",
-	"layout:customWidget:spacer:index", 3,
+	"layout:customWidget:spacer:index", 5,
 
 	plugs = {
 
@@ -403,29 +398,3 @@ class _Spacer( GafferUI.Spacer ) :
 		GafferUI.Spacer.__init__( self, imath.V2i( 0 ) )
 
 AttributeEditor._Spacer = _Spacer
-
-##########################################################################
-# _SearchFilterWidget
-##########################################################################
-
-## \todo Perhaps the search text should live on a Settings plug, with
-# _updateFromSettings() syncing it to the filter?
-class _SearchFilterWidget( GafferUI.PathFilterWidget ) :
-
-	def __init__( self, pathFilter ) :
-
-		self.__patternWidget = GafferUI.TextWidget()
-		GafferUI.PathFilterWidget.__init__( self, self.__patternWidget, pathFilter )
-
-		self.__patternWidget.setPlaceholderText( "Filter..." )
-		self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ) )
-
-		self._updateFromPathFilter()
-
-	def _updateFromPathFilter( self ) :
-
-		self.__patternWidget.setText( self.pathFilter().getMatchPattern() )
-
-	def __patternEditingFinished( self, widget ) :
-
-		self.pathFilter().setMatchPattern( self.__patternWidget.getText() )
