@@ -508,6 +508,20 @@
 				"colorFieldSpacerIcon",
 				"colorFieldEmptyIcon",
 			]
+		},
+
+		"miscellaneous" : {
+
+			"options" : {
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				"searchFieldBackground",
+				"searchOff",
+				"searchOn",
+			],
+
 		}
 
 	},
@@ -567,7 +581,6 @@
 		'sceneInspectorHistory',
 		'sceneInspectorInheritance',
 		'search',
-		'searchOn',
 		'setMembershipDot',
 		'shuffleArrow',
 		'subMenuArrow',
