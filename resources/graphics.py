@@ -445,6 +445,8 @@
 				"locationIncludedHighlighted",
 				"locationIncludedHighlightedTransparent",
 				"locationIncludedTransparent",
+				"setFilterOff",
+				"setFilterOn",
 			]
 		},
 

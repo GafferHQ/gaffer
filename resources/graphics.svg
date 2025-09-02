@@ -101,7 +101,7 @@
     </linearGradient>
     <linearGradient
        id="boundsTemplate"
-       gradientTransform="matrix(1.4488738,0,0,1.25,1205.8825,5385.4915)"
+       gradientTransform="matrix(1.4488738,0,0,1.25,1465.8825,5125.4915)"
        inkscape:swatch="solid">
       <stop
          style="stop-color:#ff0101;stop-opacity:0.0787037;"
@@ -361,9 +361,9 @@
      inkscape:deskcolor="#4c4c4c"
      showgrid="true"
      inkscape:snap-bbox="true"
-     inkscape:zoom="22.627417"
-     inkscape:cx="51.795572"
-     inkscape:cy="3061.1536"
+     inkscape:zoom="1"
+     inkscape:cx="313"
+     inkscape:cy="2728"
      inkscape:window-width="3033"
      inkscape:window-height="1263"
      inkscape:window-x="1216"
@@ -3813,14 +3813,6 @@
        style="fill:#3c3c3c;fill-opacity:1;stroke:#3c3c3c;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="m 70.5,3112.8622 4,4"
        id="path34891" />
-    <rect
-       id="rect4174"
-       y="3102.3621"
-       x="10"
-       height="16"
-       width="16"
-       style="display:inline;fill:url(#boundsTemplate);fill-opacity:1;stroke:none;stroke-width:0.597614;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
-       inkscape:label="sizeGuide" />
     <g
        aria-label="A"
        transform="matrix(0.99204715,0,0,1.0932357,-22.461978,-170.82757)"
@@ -11224,5 +11216,87 @@
        width="16"
        style="display:inline;fill:none;fill-opacity:1;stroke:none;stroke-width:0.597614;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
        inkscape:label="" />
+    <rect
+       inkscape:label=""
+       style="display:inline;fill:none;fill-opacity:1;stroke:none;stroke-width:0.597614;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
+       width="16"
+       height="16"
+       x="290"
+       y="2776.3623"
+       id="setFilterOff" />
+    <g
+       id="g4675"
+       transform="matrix(0.65449547,0,0,0.65628528,96.442858,955.75895)"
+       style="stroke-width:1.52581;fill:#9e9e9e;fill-opacity:1">
+      <ellipse
+         cy="2786.293"
+         cx="307.95831"
+         id="ellipse54044-3"
+         style="display:inline;fill:#9e9e9e;fill-opacity:1;fill-rule:nonzero;stroke:#3c3c3c;stroke-width:1.52049;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+         rx="11.461593"
+         ry="11.430895" />
+      <ellipse
+         cy="2789.0112"
+         cx="303.99084"
+         id="circle54046-6"
+         style="display:inline;fill:#3c3c3c;fill-opacity:1;stroke:#3c3c3c;stroke-width:3.04099;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         rx="0.99340981"
+         ry="0.99962699" />
+      <ellipse
+         cy="2789.0112"
+         cx="311.7153"
+         id="circle54048-7"
+         style="display:inline;fill:#3c3c3c;fill-opacity:1;stroke:#3c3c3c;stroke-width:3.04099;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         rx="0.99340981"
+         ry="0.99962699" />
+      <ellipse
+         cy="2782.6072"
+         cx="307.86899"
+         id="circle54050-5"
+         style="display:inline;fill:#3c3c3c;fill-opacity:1;stroke:#3c3c3c;stroke-width:3.04099;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         rx="0.99340981"
+         ry="0.99962699" />
+    </g>
+    <rect
+       inkscape:label=""
+       style="display:inline;fill:none;fill-opacity:1;stroke:none;stroke-width:0.597614;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
+       width="16"
+       height="16"
+       x="310"
+       y="2776.3623"
+       id="setFilterOn" />
+    <g
+       id="g12368"
+       transform="matrix(0.65449547,0,0,0.65628528,116.44286,955.75895)"
+       style="stroke-width:1.52581;fill:#e0e0e0;fill-opacity:1">
+      <ellipse
+         cy="2786.293"
+         cx="307.95831"
+         id="ellipse12360"
+         style="display:inline;fill:#e0e0e0;fill-opacity:1;fill-rule:nonzero;stroke:#3c3c3c;stroke-width:1.52049;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+         rx="11.461593"
+         ry="11.430895" />
+      <ellipse
+         cy="2789.0112"
+         cx="303.99084"
+         id="ellipse12362"
+         style="display:inline;fill:#3c3c3c;fill-opacity:1;stroke:#3c3c3c;stroke-width:3.04099;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         rx="0.99340981"
+         ry="0.99962699" />
+      <ellipse
+         cy="2789.0112"
+         cx="311.7153"
+         id="ellipse12364"
+         style="display:inline;fill:#3c3c3c;fill-opacity:1;stroke:#3c3c3c;stroke-width:3.04099;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         rx="0.99340981"
+         ry="0.99962699" />
+      <ellipse
+         cy="2782.6072"
+         cx="307.86899"
+         id="ellipse12366"
+         style="display:inline;fill:#3c3c3c;fill-opacity:1;stroke:#3c3c3c;stroke-width:3.04099;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         rx="0.99340981"
+         ry="0.99962699" />
+    </g>
   </g>
 </svg>
