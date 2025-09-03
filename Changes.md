@@ -19,6 +19,7 @@ Fixes
 API
 ---
 
+- BoolPlug : Added `boolPlugValueWidget:labelVisible` metadata, which can be used to show the plug's name to the right of the icon.
 - SceneEditor : Added `withHierarchyFilter` argument to Settings node. This provides a standard way of filtering the input scene before display, with the filtered scene being provided on the `editor.settings()["__filteredIn"]` plug.
 - AttributeEditor, HierarchyView : Added `filter` and `setFilter` plugs to the `settings()` node.
 
