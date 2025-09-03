@@ -88,6 +88,10 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 				GafferScene.ScenePath( self.settings()["in"], self.context(), "/", filter = self.__setFilter ),
 				columns = [
 					_GafferSceneUI._LightEditorLocationNameColumn(),
+					GafferSceneUI.Private.VisibilityColumn(
+						self.settings()["in"],
+						self.settings()["editScope"]
+					),
 					_GafferSceneUI._LightEditorMuteColumn(
 						self.settings()["in"],
 						self.settings()["editScope"]
@@ -268,9 +272,10 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 				sectionColumns += [ c( self.settings()["in"], self.settings()["editScope"] ) for c in section.values() ]
 
 		nameColumn = self.__pathListing.getColumns()[0]
-		muteColumn = self.__pathListing.getColumns()[1]
-		soloColumn = self.__pathListing.getColumns()[2]
-		self.__pathListing.setColumns( [ nameColumn, muteColumn, soloColumn ] + sectionColumns )
+		visibilityColumn = self.__pathListing.getColumns()[1]
+		muteColumn = self.__pathListing.getColumns()[2]
+		soloColumn = self.__pathListing.getColumns()[3]
+		self.__pathListing.setColumns( [ nameColumn, visibilityColumn, muteColumn, soloColumn ] + sectionColumns )
 
 	def __selectedPathsChanged( self, scriptNode ) :
 

@@ -46,6 +46,11 @@ import GafferSceneUI
 
 for target in Gaffer.Metadata.targetsWithMetadata( "attribute:*", "defaultValue" ) :
 
+	if target == "attribute:scene:visible" :
+		# This attribute is represented by a dedicated VisibilityColumn
+		# so doesn't require registration.
+		continue
+
 	category = Gaffer.Metadata.value( target, "category" )
 	if not category :
 		continue
