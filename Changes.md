@@ -37,6 +37,7 @@ Fixes
 - Path : Fixed GIL management bug in `children()` binding.
 - RenderMan : Worked around RenderMan bug that prevented edits to the `render:camera` option from working during an interactive render.
 - Menu : Fixed bug causing keys pressed on the number pad to not activate keyboard shortcuts, such as the <kbd>Alt</kbd>+<kbd>[1-9]</kbd> shortcuts for assigning focus to a numeric bookmark.
+- EditScopeUI : Fixed bug causing the <kbd>H</kbd> shortcut to hide the selected locations, use <kbd>Ctrl</kbd>+<kbd>H</kbd> instead.
 
 API
 ---
