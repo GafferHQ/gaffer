@@ -46,6 +46,7 @@ from GafferUI.PlugValueWidget import sole
 #
 # - "boolPlugValueWidget:displayMode", with a value of "checkBox", "switch" or "tool"
 # - "boolPlugValueWidget:image", with the name of an image to display when displayMode is "tool"
+# - "boolPlugValueWidget:labelVisible" : determines if plug name is shown as a label
 class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plugs, displayMode=GafferUI.BoolWidget.DisplayMode.CheckBox, **kw ) :
@@ -56,6 +57,10 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self._addPopupMenu( self.__boolWidget )
 
 		self.__stateChangedConnection = self.__boolWidget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ) )
+
+	def hasLabel( self ) :
+
+		return bool( self.__boolWidget.getText() )
 
 	def boolWidget( self ) :
 
@@ -99,6 +104,15 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 				"tool" : self.__boolWidget.DisplayMode.Tool,
 			}.get( displayMode, self.__boolWidget.DisplayMode.CheckBox )
 			self.__boolWidget.setDisplayMode( displayMode )
+
+		labelVisible = sole( Gaffer.Metadata.value( p, "boolPlugValueWidget:labelVisible" ) for p in self.getPlugs() )
+		if labelVisible :
+			firstPlug = next( iter( self.getPlugs() ) )
+			label = Gaffer.Metadata.value( firstPlug, "label" )
+			label = label if label else IECore.CamelCase.toSpaced( firstPlug.getName() )
+			self.__boolWidget.setText( label )
+		else :
+			self.__boolWidget.setText( "" )
 
 	def _updateFromEditable( self ) :
 
