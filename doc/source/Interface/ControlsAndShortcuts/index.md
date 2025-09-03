@@ -252,7 +252,8 @@ Frame view, and fit clipping planes                              | {kbd}`Ctrl` +
 Reset clipping planes                                            | {{rightClick}} > *Clipping Planes* > *Default*
 Toggle Inspector                                                 | {kbd}`I`
 Prune selected objects from current EditScope                    | {kbd}`Ctrl` + {kbd}`Delete`<br>or<br>{kbd}`Ctrl` + {kbd}`Backspace`
-Turn off visibility for selected objects from current EditScope  | {kbd}`Ctrl` + {kbd}`H`
+Hide selected objects from current EditScope                     | {kbd}`Ctrl` + {kbd}`H`
+Unhide selected objects from current EditScope                   | {kbd}`Ctrl` + {kbd}`Shift` + {kbd}`H`
 
 ### Transform tools ###
 
@@ -436,6 +437,7 @@ Remove Attribute                                     | {kbd}`Delete`
 Copy/Paste selected cells                            | {kbd}`Ctrl` + {kbd}`C`/{kbd}`V`
 Prune selected objects from current EditScope        | {kbd}`Ctrl` + {kbd}`Delete`<br>or<br>{kbd}`Ctrl` + {kbd}`Backspace`
 Hide selected objects from current EditScope         | {kbd}`Ctrl` + {kbd}`H`
+Unhide selected objects from current EditScope       | {kbd}`Ctrl` + {kbd}`Shift` + {kbd}`H`
 
 ## Set Editor ##
 

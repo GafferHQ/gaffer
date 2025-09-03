@@ -615,6 +615,7 @@
 		'focusOnHover',
 		'focusOffHover',
 		'shaderTweakProxy',
-		'shaderTweakProxyIcon'
+		'shaderTweakProxyIcon',
+		'selectInvisibleAncestors',
 	]
 }
