@@ -99,12 +99,12 @@ def __appendContextMenuItems( editor, scriptNode, editScope, menuDefinition, pre
 
 def addPruningActions( editor ) :
 
-	if isinstance( editor, ( GafferUI.Viewer, GafferSceneUI.AttributeEditor, GafferSceneUI.LightEditor ) ) :
+	if isinstance( editor, ( GafferUI.Viewer, GafferSceneUI.AttributeEditor, GafferSceneUI.LightEditor, GafferSceneUI.HierarchyView ) ) :
 		editor.keyPressSignal().connect( __pruningKeyPress )
 
 def addVisibilityActions( editor ) :
 
-	if isinstance( editor, ( GafferUI.Viewer, GafferSceneUI.AttributeEditor, GafferSceneUI.LightEditor ) ) :
+	if isinstance( editor, ( GafferUI.Viewer, GafferSceneUI.AttributeEditor, GafferSceneUI.LightEditor, GafferSceneUI.HierarchyView ) ) :
 		editor.keyPressSignal().connect( __visibilityKeyPress )
 
 def connectToEditor( editor ) :
@@ -112,7 +112,7 @@ def connectToEditor( editor ) :
 	addVisibilityActions( editor )
 	addPruningActions( editor )
 
-	if isinstance( editor, ( GafferSceneUI.AttributeEditor, GafferSceneUI.LightEditor ) ) :
+	if isinstance( editor, ( GafferSceneUI.AttributeEditor, GafferSceneUI.LightEditor, GafferSceneUI.HierarchyView ) ) :
 		editor.sceneListing().columnContextMenuSignal().connect( appendColumnContextMenuItems )
 
 def _hiddenAncestors( scene, paths ) :
