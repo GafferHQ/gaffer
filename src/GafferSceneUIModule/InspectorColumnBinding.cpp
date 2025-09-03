@@ -40,6 +40,7 @@
 
 #include "GafferSceneUI/Private/Inspector.h"
 #include "GafferSceneUI/Private/InspectorColumn.h"
+#include "GafferSceneUI/Private/VisibilityColumn.h"
 
 #include "GafferUI/PathColumn.h"
 
@@ -114,6 +115,15 @@ void GafferSceneUIModule::bindInspectorColumn()
 		.def( "inspect", &inspectorColumnInspectBinding, ( arg( "path" ), arg( "canceller" ) = object() ) )
 		.def( "historyPath", &inspectorColumnHistoryPathBinding, ( arg( "path" ), arg( "canceller" ) = object() ) )
 		.def( "inspectorContext", &inspectorColumnInspectorContextBinding, ( arg( "path" ), arg( "canceller" ) = object() ) )
+	;
+
+	RefCountedClass<GafferSceneUI::Private::VisibilityColumn, GafferSceneUI::Private::InspectorColumn>( "VisibilityColumn" )
+		.def( init<const GafferScene::ScenePlugPtr &, const Gaffer::PlugPtr &>(
+			(
+				arg_( "scene" ),
+				arg_( "editScope" )
+			)
+		) )
 	;
 
 }

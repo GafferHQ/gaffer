@@ -445,6 +445,11 @@
 				"locationIncludedHighlighted",
 				"locationIncludedHighlightedTransparent",
 				"locationIncludedTransparent",
+				"locationVisible",
+				"locationVisibleTransparent",
+				"locationInvisible",
+				"locationInvisibleTransparent",
+				"locationInvisibleConflict",
 			]
 		},
 
