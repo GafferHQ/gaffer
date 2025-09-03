@@ -8,7 +8,7 @@ Improvements
   - Added context variable columns to the `Show History...` window. These show the values for any context variables which change during the history.
   - Improved default size of `Show History...` window.
 - SceneInspector : Improved search filter widget.
-- AttributeEditor, HierarchyView, RenderPassEditor, SceneInspector  : Improved search filter widgets.
+- AttributeEditor, HierarchyView, RenderPassEditor, SceneInspector, SetEditor : Improved search filter widgets.
 
 Fixes
 -----
@@ -23,6 +23,7 @@ API
 - SceneEditor : Added `withHierarchyFilter` argument to Settings node. This provides a standard way of filtering the input scene before display, with the filtered scene being provided on the `editor.settings()["__filteredIn"]` plug.
 - AttributeEditor, HierarchyView : Added `filter` and `setFilter` plugs to the `settings()` node.
 - RenderPassEditor : Added `filter` and `hideDisabled` plugs to the `settings()` node.
+- SetEditor : Added `filter`, `hideEmptySets` and `hideEmptySelection` plugs to the `settings()` node.
 
 1.6.0.0 (relative to 1.5.16.2)
 =======
