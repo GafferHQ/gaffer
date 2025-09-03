@@ -12,6 +12,7 @@ Fixes
 -----
 
 - PathListingWidget : Fixed parent layout update when column sizes change.
+- EditScopeUI : Fixed bug causing the <kbd>H</kbd> shortcut to hide the selected locations, use <kbd>Ctrl</kbd>+<kbd>H</kbd> instead.
 
 1.6.0.0 (relative to 1.5.16.2)
 =======

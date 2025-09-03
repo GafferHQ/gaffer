@@ -114,7 +114,7 @@ def __pruningKeyPress( viewer, event ) :
 
 def __visibilityKeyPress( viewer, event ) :
 
-	if not ( event.key == "H" and event.Modifiers.Control ) :
+	if not ( event.key == "H" and event.modifiers == event.Modifiers.Control ) :
 		return False
 
 	if not isinstance( viewer.view(), GafferSceneUI.SceneView ) :
