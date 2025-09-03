@@ -131,6 +131,17 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 		return self.settings()["in"].getInput()
 
+	## Returns the widget used for showing the main scene listing, with the
+	# intention that clients can add custom context menu items via
+	# `sceneListing.columnContextMenuSignal()`.
+	#
+	# > Caution : This currently returns a PathListingWidget, but in future
+	# > will probably return a more specialised widget with fewer privileges.
+	# > Please limit usage to `columnContextMenuSignal()`.
+	def sceneListing( self ) :
+
+		return self.__pathListing
+
 	@classmethod
 	def __parseParameter( cls, parameter ) :
 
