@@ -824,8 +824,13 @@ class _Filter( GafferScene.SceneProcessor ) :
 			"parent['__keepFilteredPasses']['names'] = pattern;"
 		)
 
+		self["__adaptorEnabler"] = Gaffer.ContextVariables()
+		self["__adaptorEnabler"].setup( self["__keepFilteredPasses"]["out"] )
+		self["__adaptorEnabler"]["in"].setInput( self["__keepFilteredPasses"]["out"] )
+		self["__adaptorEnabler"]["variables"].addChild( Gaffer.NameValuePlug( "renderPassEditor:enableAdaptors", True ) )
+
 		self["__optionQuery"] = GafferScene.OptionQuery()
-		self["__optionQuery"]["scene"].setInput( self["__keepFilteredPasses"]["out"] )
+		self["__optionQuery"]["scene"].setInput( self["__adaptorEnabler"]["out"] )
 		self["__optionQuery"].addQuery( Gaffer.StringVectorDataPlug( defaultValue = IECore.StringVectorData() ) )
 		self["__optionQuery"].addQuery( Gaffer.BoolPlug( defaultValue = True ) )
 		self["__optionQuery"]["queries"][0]["name"].setValue( "renderPass:names" )
