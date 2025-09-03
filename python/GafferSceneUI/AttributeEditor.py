@@ -84,10 +84,12 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 			)
 
 			self.__locationNameColumn = GafferUI.PathListingWidget.StandardColumn( "Name", "name", GafferUI.PathColumn.SizeMode.Stretch )
+			self.__visibilityColumn = GafferSceneUI.Private.VisibilityColumn( self.settings()["in"], self.settings()["editScope"] )
 			self.__pathListing = GafferUI.PathListingWidget(
 				GafferScene.ScenePath( self.settings()["__filteredIn"], self.context(), "/" ),
 				columns = [
 					self.__locationNameColumn,
+					self.__visibilityColumn,
 				],
 				selectionMode = GafferUI.PathListingWidget.SelectionMode.Cells,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
@@ -216,7 +218,7 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 					section = sections.get( currentSection or None, {} )
 					sectionColumns += [ c( self.settings()["in"], self.settings()["editScope"] ) for c in section.values() ]
 
-		self.__pathListing.setColumns( [ self.__locationNameColumn ] + sectionColumns )
+		self.__pathListing.setColumns( [ self.__locationNameColumn, self.__visibilityColumn ] + sectionColumns )
 
 	def __selectedPathsChanged( self, scriptNode ) :
 

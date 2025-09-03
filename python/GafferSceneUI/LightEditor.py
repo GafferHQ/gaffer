@@ -81,6 +81,24 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 		GafferSceneUI.SceneEditor.__init__( self, column, scriptNode, **kw )
 
+		self.__commonColumns = [
+			_GafferSceneUI._LightEditorLocationNameColumn(),
+			GafferSceneUI.Private.VisibilityColumn(
+				self.settings()["in"],
+				self.settings()["editScope"]
+			),
+			_GafferSceneUI._LightEditorMuteColumn(
+				self.settings()["in"],
+				self.settings()["editScope"]
+			),
+			_GafferSceneUI._LightEditorSetMembershipColumn(
+				self.settings()["in"],
+				self.settings()["editScope"],
+				"soloLights",
+				"Solo"
+			),
+		]
+
 		with column :
 
 			GafferUI.PlugLayout(
@@ -91,19 +109,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 			self.__pathListing = GafferUI.PathListingWidget(
 				GafferScene.ScenePath( self.settings()["__filteredIn"], self.context(), "/" ),
-				columns = [
-					_GafferSceneUI._LightEditorLocationNameColumn(),
-					_GafferSceneUI._LightEditorMuteColumn(
-						self.settings()["in"],
-						self.settings()["editScope"]
-					),
-					_GafferSceneUI._LightEditorSetMembershipColumn(
-						self.settings()["in"],
-						self.settings()["editScope"],
-						"soloLights",
-						"Solo"
-					),
-				],
+				columns = self.__commonColumns,
 				selectionMode = GafferUI.PathListingWidget.SelectionMode.Cells,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 				horizontalScrollMode = GafferUI.ScrollMode.Automatic
@@ -269,10 +275,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 				section = sections.get( currentSection or None, {} )
 				sectionColumns += [ c( self.settings()["in"], self.settings()["editScope"] ) for c in section.values() ]
 
-		nameColumn = self.__pathListing.getColumns()[0]
-		muteColumn = self.__pathListing.getColumns()[1]
-		soloColumn = self.__pathListing.getColumns()[2]
-		self.__pathListing.setColumns( [ nameColumn, muteColumn, soloColumn ] + sectionColumns )
+		self.__pathListing.setColumns( self.__commonColumns + sectionColumns )
 
 	def __selectedPathsChanged( self, scriptNode ) :
 
