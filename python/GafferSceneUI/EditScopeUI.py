@@ -70,9 +70,17 @@ def __appendContextMenuItems( editor, scriptNode, editScope, menuDefinition, pre
 	menuDefinition.append(
 		prefix + "/Hide",
 		{
-			"command" : functools.partial( __hideSelection, weakref.ref( editor ) ),
+			"command" : functools.partial( __editSelectionVisibility, weakref.ref( editor ) ),
 			"active" : not selection.isEmpty() and editScope is not None,
 			"shortCut" : "Ctrl+H"
+		}
+	)
+	menuDefinition.append(
+		prefix + "/Unhide",
+		{
+			"command" : functools.partial( __editSelectionVisibility, weakref.ref( editor ), True ),
+			"active" : not selection.isEmpty() and editScope is not None,
+			"shortCut" : "Ctrl+Shift+H"
 		}
 	)
 
@@ -189,12 +197,12 @@ def __pruneSelection( editor ) :
 
 def __visibilityKeyPress( editor, event ) :
 
-	if not ( event.key == "H" and event.modifiers == event.Modifiers.Control ) :
+	if not ( event.key == "H" and event.modifiers & event.Modifiers.Control ) :
 		return False
 
-	return __hideSelection( editor )
+	return __editSelectionVisibility( editor, event.modifiers & event.Modifiers.Shift )
 
-def __hideSelection( editor ) :
+def __editSelectionVisibility( editor, makeVisible = False ) :
 
 	if isinstance( editor, weakref.ref ) :
 		editor = editor()
@@ -217,7 +225,7 @@ def __hideSelection( editor ) :
 		return False
 
 	if editScope is None :
-		__warningPopup( editor, "To hide locations, first choose an edit scope." )
+		__warningPopup( editor, "To hide or unhide locations, first choose an edit scope." )
 		return True
 	if Gaffer.MetadataAlgo.readOnly( editScope ) :
 		__warningPopup( editor, "The target edit scope {} is read-only.".format( editScope.getName() ) )
@@ -232,6 +240,8 @@ def __hideSelection( editor ) :
 		editScopePlug,
 		"scene:visible"
 	)
+
+	allHiddenAncestors = IECore.PathMatcher()
 
 	with editor.context() as context :
 		if not editScope["enabled"].getValue() :
@@ -253,10 +263,28 @@ def __hideSelection( editor ) :
 				if inspection is None or not inspection.editable() :
 					continue
 
-				tweakPlug = inspection.acquireEdit()
-				tweakPlug["enabled"].setValue( True )
-				tweakPlug["value"].setValue( False )
+				allHiddenAncestors.addPaths( GafferScene.EditScopeAlgo.setVisibility( inspection.editScope(), path, makeVisible ) )
 
+	if not allHiddenAncestors.isEmpty() :
+		__selectInvisibleAncestorsPopup( editor, allHiddenAncestors )
+
+	return True
+
+def __selectInvisibleAncestorsPopup( editor, ancestors ) :
+
+	with GafferUI.PopupWindow() as editor.__selectInvisibleAncestorsPopup :
+		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+			GafferUI.Image( "warningSmall.png" )
+			GafferUI.Label( "<h4>Cannot unhide locations with invisible ancestors.</h4>" )
+			button = GafferUI.Button( image = "selectInvisibleAncestors.png", hasFrame = False, toolTip = "Select invisible ancestors" )
+			button.clickedSignal().connect( functools.partial( __selectAncestorsClicked, scriptNode = editor.scriptNode(), ancestors = ancestors ) )
+
+	editor.__selectInvisibleAncestorsPopup.popup( parent = editor )
+
+def __selectAncestorsClicked( widget, scriptNode, ancestors ) :
+
+	GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( scriptNode, ancestors )
+	widget.ancestor( GafferUI.Window ).close()
 	return True
 
 def __warningPopup( parent, message ) :

@@ -7,8 +7,8 @@ Improvements
 - LightEditor, RenderPassEditor, AttributeEditor, SceneInspector :
   - Added context variable columns to the `Show History...` window. These show the values for any context variables which change during the history.
   - Improved default size of `Show History...` window.
-- Viewer : Added `Hide` and `Prune` menu items to the right-click menu of the 3D view.
-- LightEditor, AttributeEditor : Added `Hide` and `Prune` menu items.
+- Viewer : Added `Hide`, `Unhide`, and `Prune` menu items to the right-click menu of the 3D view.
+- LightEditor, AttributeEditor : Added `Hide`, `Unhide`, and `Prune` menu items.
 - LightEditor : Removed `Delete` menu item, use `Prune` instead.
 
 Fixes
