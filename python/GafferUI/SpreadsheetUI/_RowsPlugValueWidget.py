@@ -90,7 +90,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				}
 			) :
 
-				self.__toggleFilterButton = GafferUI.Button( image = "search.png", hasFrame = False )
+				self.__toggleFilterButton = GafferUI.Button( image = "searchOff.png", hasFrame = False )
 				self.__toggleFilterButton.clickedSignal().connect( Gaffer.WeakMethod( self.__toggleFilterButtonClicked ) )
 
 				self.__patternWidget = GafferUI.TextWidget( toolTip = "Row filter pattern" )
@@ -455,7 +455,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__patternWidget.setVisible( self.__rowFilterEnabled )
 		self.__refreshFilterButton.setVisible( self.__rowFilterEnabled )
-		self.__toggleFilterButton.setImage( "searchOn.png" if self.__rowFilterEnabled else "search.png" )
+		self.__toggleFilterButton.setImage( "searchOn.png" if self.__rowFilterEnabled else "searchOff.png" )
 		self.__toggleFilterButton.setToolTip( "Click to disable row filter" if self.__rowFilterEnabled else "Click to enable row filter" )
 
 	def __toggleFilterButtonClicked( self, *unused ) :

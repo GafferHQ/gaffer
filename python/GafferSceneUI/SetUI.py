@@ -51,6 +51,9 @@ import GafferSceneUI
 # allows the name of a set to be amended or turned into a hierarchical menu
 # path (ie, by returning a string containing '/'s) - creating sub-menus
 # wherever Gaffer displays a list of sets.
+#
+# \todo Consider removing this API and using the same fixed grouping method
+# used by the SetEditor.
 
 __menuPathFunction = lambda n : n
 

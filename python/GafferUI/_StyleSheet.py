@@ -433,7 +433,7 @@ _styleSheet = string.Template(
 	}
 
 	#gafferSearchField {
-		background-image: url(:/search.png);
+		background-image: url(:/searchFieldBackground.png);
 		background-repeat:no-repeat;
 		background-position: left center;
 		padding-left: 20px;

@@ -53,34 +53,33 @@ from . import SetUI
 
 class HierarchyView( GafferSceneUI.SceneEditor ) :
 
+	class Settings( GafferSceneUI.SceneEditor.Settings ) :
+
+		def __init__( self ) :
+
+			GafferSceneUI.SceneEditor.Settings.__init__( self, withHierarchyFilter = True )
+
 	def __init__( self, scriptNode, **kw ) :
 
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4, spacing = 4 )
 
 		GafferSceneUI.SceneEditor.__init__( self, column, scriptNode, **kw )
 
-		searchFilter = _GafferSceneUI._HierarchyViewSearchFilter()
-		searchFilter.setScene( self.settings()["in"] )
-		searchFilter.setContext( self.context() )
-		setFilter = _GafferSceneUI._HierarchyViewSetFilter()
-		setFilter.setScene( self.settings()["in"] )
-		setFilter.setContext( self.context() )
-		setFilter.setEnabled( False )
-
-		self.__filter = Gaffer.CompoundPathFilter( [ searchFilter, setFilter ] )
-
 		with column :
 
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
-				_VisibleSetBookmarkWidget()
+				_VisibleSetBookmarkWidget() ## \todo Could be a custom widget in the plug layout
 				GafferUI.Divider( GafferUI.Divider.Orientation.Vertical )
 
-				_SearchFilterWidget( searchFilter )
-				_SetFilterWidget( setFilter )
+				GafferUI.PlugLayout(
+					self.settings(),
+					orientation = GafferUI.ListContainer.Orientation.Horizontal,
+					rootSection = "Filter",
+				)
 
 			self.__pathListing = GafferUI.PathListingWidget(
-				GafferScene.ScenePath( self.settings()["in"], self.context(), "/", filter = self.__filter ),
+				GafferScene.ScenePath( self.settings()["__filteredIn"], self.context(), "/" ),
 				columns = [
 					GafferUI.PathListingWidget.defaultNameColumn,
 					_GafferSceneUI._HierarchyViewInclusionsColumn( scriptNode ),
@@ -136,11 +135,6 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 	def __lazyUpdateFromContext( self ) :
 
 		self.__pathListing.getPath().setContext( self.context() )
-		# Note : editing the filters in-place is not thread-safe with respect to
-		# background updates in the PathListingWidget. But we're getting away
-		# with it because the line above will cancel any current update.
-		for f in self.__filter.getFilters() :
-			f.setContext( self.context() )
 
 	def __visibleSetChanged( self, scriptNode ) :
 
@@ -230,123 +224,6 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 			self.__pathListing.setSelection( selection, scrollToFirst=False )
 
 GafferUI.Editor.registerType( "HierarchyView", HierarchyView )
-
-##########################################################################
-# _SetFilterWidget
-##########################################################################
-
-class _SetFilterWidget( GafferUI.PathFilterWidget ) :
-
-	def __init__( self, pathFilter ) :
-
-		button = GafferUI.MenuButton(
-			"Sets",
-			menu = GafferUI.Menu(
-				Gaffer.WeakMethod( self.__setsMenuDefinition ),
-				title = "Set Filter"
-			)
-		)
-
-		GafferUI.PathFilterWidget.__init__( self, button, pathFilter )
-
-	def _updateFromPathFilter( self ) :
-
-		pass
-
-	def __setsMenuDefinition( self ) :
-
-		m = IECore.MenuDefinition()
-
-		availableSets = set()
-		if self.pathFilter().getScene() is not None :
-			with self.pathFilter().getContext() :
-				availableSets.update( str( s ) for s in self.pathFilter().getScene()["setNames"].getValue() )
-
-		builtInSets = { "__lights", "__cameras", "__coordinateSystems" }
-		selectedSets = set( self.pathFilter().getSetNames() )
-
-		m.append( "/Enabled", { "checkBox" : self.pathFilter().getEnabled(), "command" : Gaffer.WeakMethod( self.__toggleEnabled ) } )
-		m.append( "/EnabledDivider", { "divider" : True } )
-
-		m.append(
-			"/All", {
-				"active" : self.pathFilter().getEnabled() and selectedSets.issuperset( availableSets ),
-				"checkBox" : selectedSets.issuperset( availableSets ),
-				"command" : functools.partial( Gaffer.WeakMethod( self.__setSets ), builtInSets | availableSets | selectedSets )
-			}
-		)
-		m.append(
-			"/None", {
-				"active" : self.pathFilter().getEnabled() and len( selectedSets ),
-				"checkBox" : not len( selectedSets ),
-				"command" : functools.partial( Gaffer.WeakMethod( self.__setSets ), set() )
-			}
-		)
-		m.append( "/AllDivider", { "divider" : True } )
-
-		def item( setName ) :
-
-			updatedSets = set( selectedSets )
-			if setName in updatedSets :
-				updatedSets.remove( setName )
-			else :
-				updatedSets.add( setName )
-
-			return {
-				"active" : self.pathFilter().getEnabled() and s in availableSets,
-				"checkBox" : s in selectedSets,
-				"command" : functools.partial( Gaffer.WeakMethod( self.__setSets ), updatedSets )
-			}
-
-		for s in sorted( builtInSets ) :
-			m.append(
-				"/%s" % IECore.CamelCase.toSpaced( s[2:] ),
-				item( s )
-			)
-
-		if len( availableSets - builtInSets ) :
-			m.append( "/BuiltInDivider", { "divider" : True } )
-
-		pathFn = SetUI.getMenuPathFunction()
-
-		for s in sorted( availableSets | selectedSets ) :
-			if s in builtInSets :
-				continue
-			m.append( "/" + pathFn( s ), item( s ) )
-
-		return m
-
-	def __toggleEnabled( self, *unused ) :
-
-		self.pathFilter().setEnabled( not self.pathFilter().getEnabled() )
-
-	def __setSets( self, sets, *unused ) :
-
-		self.pathFilter().setSetNames( sets )
-
-##########################################################################
-# _SearchFilterWidget
-##########################################################################
-
-class _SearchFilterWidget( GafferUI.PathFilterWidget ) :
-
-	def __init__( self, pathFilter ) :
-
-		self.__patternWidget = GafferUI.TextWidget()
-		GafferUI.PathFilterWidget.__init__( self, self.__patternWidget, pathFilter )
-
-		self.__patternWidget.setPlaceholderText( "Filter..." )
-		self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ) )
-
-		self._updateFromPathFilter()
-
-	def _updateFromPathFilter( self ) :
-
-		self.__patternWidget.setText( self.pathFilter().getMatchPattern() )
-
-	def __patternEditingFinished( self, widget ) :
-
-		self.pathFilter().setMatchPattern( self.__patternWidget.getText() )
 
 ##########################################################################
 # _VisibleSetBookmarkWidget

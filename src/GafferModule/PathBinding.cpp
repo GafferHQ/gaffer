@@ -352,7 +352,10 @@ const char *rootWrapper( Path &p )
 list childrenWrapper( Path &p, const IECore::Canceller *canceller )
 {
 	std::vector<PathPtr> c;
-	p.children( c, canceller );
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		p.children( c, canceller );
+	}
 	list result;
 	for( std::vector<PathPtr>::const_iterator it = c.begin(), eIt = c.end(); it != eIt; ++it )
 	{
