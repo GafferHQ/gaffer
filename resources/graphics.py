@@ -447,6 +447,11 @@
 				"locationIncludedTransparent",
 				"setFilterOff",
 				"setFilterOn",
+				"locationVisible",
+				"locationVisibleTransparent",
+				"locationInvisible",
+				"locationInvisibleTransparent",
+				"locationInvisibleConflict",
 			]
 		},
 
