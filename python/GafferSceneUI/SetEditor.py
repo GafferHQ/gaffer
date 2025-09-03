@@ -72,8 +72,6 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 		self.__emptySelectionFilter = _GafferSceneUI._SetEditor.EmptySetFilter( scriptNode, useSelection = True )
 		self.__emptySelectionFilter.setEnabled( False )
 
-		self.__filter = Gaffer.CompoundPathFilter( [ self.__searchFilter, self.__emptySetFilter, self.__emptySelectionFilter ] )
-
 		with mainColumn :
 
 			GafferUI.PlugLayout( self.settings(), orientation = GafferUI.ListContainer.Orientation.Horizontal, rootSection = "Filter" )
@@ -83,7 +81,10 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 			self.__includedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetInclusionsColumn( scriptNode )
 			self.__excludedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetExclusionsColumn( scriptNode )
 			self.__pathListing = GafferUI.PathListingWidget(
-				Gaffer.DictPath( {}, "/" ), # temp till we make a SetPath
+				_GafferSceneUI._SetEditor.SetPath(
+					self.settings()["in"], self.context(), "/",
+					filter = Gaffer.CompoundPathFilter( [ self.__searchFilter, self.__emptySetFilter, self.__emptySelectionFilter ] ),
+				),
 				columns = [
 					_GafferSceneUI._SetEditor.SetNameColumn(),
 					self.__setMembersColumn,
@@ -100,15 +101,10 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 			self.__pathListing.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPressSignal ) )
 
 		self._updateFromSet()
-		self.__updatePathListingPath()
 
 	def __repr__( self ) :
 
 		return "GafferSceneUI.SetEditor( scriptNode )"
-
-	def _updateFromContext( self, modifiedItems ) :
-
-		self.__updatePathListingPath()
 
 	def _updateFromSettings( self, plug ) :
 
@@ -121,18 +117,14 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 		elif plug == self.settings()["hideEmptySelection"] :
 			self.__emptySelectionFilter.setEnabled( plug.getValue() )
 
-	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
-	def __updatePathListingPath( self ) :
+	def _updateFromContext( self, modifiedItems ) :
 
-		# We take a static copy of our current context for use in the SetPath for two reasons :
-		#
-		# 1. To prevent the PathListing from updating automatically when the original context
-		#    changes, allowing us to use LazyMethod to defer updates until playback stops.
-		# 2. Because the PathListingWidget uses a BackgroundTask to evaluate the Path, and it
-		#    would not be thread-safe to directly reference a context that could be modified by
-		#    the UI thread at any time.
-		contextCopy = Gaffer.Context( self.context() )
-		self.__pathListing.setPath( _GafferSceneUI._SetEditor.SetPath( self.settings()["in"], contextCopy, "/", filter = self.__filter ) )
+		self.__lazyUpdateFromContext()
+
+	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
+	def __lazyUpdateFromContext( self ) :
+
+		self.__pathListing.getPath().setContext( self.context() )
 
 	def __selectedSetNames( self ) :
 
