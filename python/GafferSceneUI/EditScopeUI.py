@@ -34,12 +34,41 @@
 #
 ##########################################################################
 
+import functools
+import weakref
+
 import IECore
 
 import Gaffer
 import GafferUI
 import GafferScene
 import GafferSceneUI
+
+def appendViewContextMenuItems( viewer, view, menuDefinition ) :
+
+	if not isinstance( view, GafferSceneUI.SceneView ) :
+		return None
+
+	selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( view["in"].getInput().ancestor( Gaffer.ScriptNode ) )
+
+	menuDefinition.append(
+		"/Visibility and Pruning/Hide",
+		{
+			"command" : functools.partial( __hideSelection, weakref.ref( viewer ) ),
+			"active" : not selection.isEmpty() and view.editScope() is not None,
+			"shortCut" : "Ctrl+H"
+		}
+	)
+
+	menuDefinition.append( "/Visibility and Pruning/PruningDivider", { "divider" : True } )
+	menuDefinition.append(
+		"/Visibility and Pruning/Prune",
+		{
+			"command" : functools.partial( __pruneSelection, weakref.ref( viewer ) ),
+			"active" : not selection.isEmpty() and view.editScope() is not None,
+			"shortCut" : "Ctrl+Backspace, Ctrl+Delete"
+		}
+	)
 
 # Pruning/Visibility hotkeys
 # ==========================
@@ -68,6 +97,13 @@ def __pruningKeyPress( viewer, event ) :
 		# a Gaffer viewer with rich interaction might not be so
 		# unexpected.
 		return True
+
+	return __pruneSelection( viewer )
+
+def __pruneSelection( viewer ) :
+
+	if isinstance( viewer, weakref.ref ) :
+		viewer = viewer()
 
 	if not isinstance( viewer.view(), GafferSceneUI.SceneView ) :
 		return False
@@ -116,6 +152,13 @@ def __visibilityKeyPress( viewer, event ) :
 
 	if not ( event.key == "H" and event.modifiers == event.Modifiers.Control ) :
 		return False
+
+	return __hideSelection( viewer )
+
+def __hideSelection( viewer ) :
+
+	if isinstance( viewer, weakref.ref ) :
+		viewer = viewer()
 
 	if not isinstance( viewer.view(), GafferSceneUI.SceneView ) :
 		return False
