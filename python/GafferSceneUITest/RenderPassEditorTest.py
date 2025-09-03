@@ -251,43 +251,46 @@ class RenderPassEditorTest( GafferUITest.TestCase ) :
 
 	def testSearchFilter( self ) :
 
-		renderPasses = GafferScene.RenderPasses()
-		renderPasses["names"].setValue( IECore.StringVectorData( ["A", "B", "C", "D"] ) )
+		script = Gaffer.ScriptNode()
+		script["renderPasses"] = GafferScene.RenderPasses()
+		script["renderPasses"]["names"].setValue( IECore.StringVectorData( ["A", "B", "C", "D"] ) )
+		script.setFocus( script["renderPasses"] )
 
-		context = Gaffer.Context()
-		path = _GafferSceneUI._RenderPassEditor.RenderPassPath( renderPasses["out"], context, "/" )
+		editor = GafferSceneUI.RenderPassEditor( script )
+		path = editor._RenderPassEditor__pathListing.getPath()
 
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B", "/C", "/D" ] )
 
-		searchFilter = _GafferSceneUI._RenderPassEditor.SearchFilter()
-		searchFilter.setMatchPattern( "A" )
-		path.setFilter( searchFilter )
+		editor.settings()["filter"].setValue( "A" )
 
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A" ] )
 
-		searchFilter.setMatchPattern( "A D" )
+		editor.settings()["filter"].setValue( "A D" )
 
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/D" ] )
 
 	def testDisabledRenderPassFilter( self ) :
 
-		renderPasses = GafferScene.RenderPasses()
-		renderPasses["names"].setValue( IECore.StringVectorData( ["A", "B", "C", "D"] ) )
+		script = Gaffer.ScriptNode()
 
-		disablePass = GafferScene.CustomOptions( "disablePass" )
-		disablePass["in"].setInput( renderPasses["out"] )
-		disablePass["options"].addChild( Gaffer.NameValuePlug( "renderPass:enabled", Gaffer.BoolPlug( "value", defaultValue = False ), True, "member1" ) )
+		script["renderPasses"] = GafferScene.RenderPasses()
+		script["renderPasses"]["names"].setValue( IECore.StringVectorData( ["A", "B", "C", "D"] ) )
+
+		script["disablePass"] = GafferScene.CustomOptions( "disablePass" )
+		script["disablePass"]["in"].setInput( script["renderPasses"]["out"] )
+		script["disablePass"]["options"].addChild( Gaffer.NameValuePlug( "renderPass:enabled", Gaffer.BoolPlug( "value", defaultValue = False ), True, "member1" ) )
 
 		# disable A & D
-		switch = Gaffer.NameSwitch()
-		switch.setup( renderPasses["out"] )
-		switch["selector"].setValue( "${renderPass}" )
-		switch["in"]["in0"]["value"].setInput( renderPasses["out"] )
-		switch["in"]["in1"]["value"].setInput( disablePass["out"] )
-		switch["in"]["in1"]["name"].setValue( "A D" )
+		script["switch"] = Gaffer.NameSwitch()
+		script["switch"].setup( script["renderPasses"]["out"] )
+		script["switch"]["selector"].setValue( "${renderPass}" )
+		script["switch"]["in"]["in0"]["value"].setInput( script["renderPasses"]["out"] )
+		script["switch"]["in"]["in1"]["value"].setInput( script["disablePass"]["out"] )
+		script["switch"]["in"]["in1"]["name"].setValue( "A D" )
+		script.setFocus( script["switch"] )
 
-		context = Gaffer.Context()
-		path = _GafferSceneUI._RenderPassEditor.RenderPassPath( switch["out"]["value"], context, "/" )
+		editor = GafferSceneUI.RenderPassEditor( script )
+		path = editor._RenderPassEditor__pathListing.getPath()
 
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B", "/C", "/D" ] )
 
@@ -297,12 +300,10 @@ class RenderPassEditorTest( GafferUITest.TestCase ) :
 			pathCopy.setFromString( p )
 			self.assertEqual( pathCopy.property( "renderPassPath:enabled" ), p in ( "/B", "/C" ) )
 
-		disabledRenderPassFilter = _GafferSceneUI._RenderPassEditor.DisabledRenderPassFilter()
-		path.setFilter( disabledRenderPassFilter )
-
+		editor.settings()["hideDisabled"].setValue( True )
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/B", "/C" ] )
 
-		disabledRenderPassFilter.setEnabled( False )
+		editor.settings()["hideDisabled"].setValue( False )
 
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B", "/C", "/D" ] )
 
@@ -333,23 +334,19 @@ class RenderPassEditorTest( GafferUITest.TestCase ) :
 		GafferScene.SceneAlgo.registerRenderAdaptor( "RenderPassEditorTest", createAdaptor, client = "RenderPassWedge" )
 		self.addCleanup( GafferScene.SceneAlgo.deregisterRenderAdaptor, "RenderPassEditorTest" )
 
-		renderPasses = GafferScene.RenderPasses()
-		renderPasses["names"].setValue( IECore.StringVectorData( ["A", "B", "C", "D"] ) )
+		script = Gaffer.ScriptNode()
+		script["renderPasses"] = GafferScene.RenderPasses()
+		script["renderPasses"]["names"].setValue( IECore.StringVectorData( ["A", "B", "C", "D"] ) )
+		script.setFocus( script["renderPasses"] )
 
-		adaptors = GafferSceneUI.RenderPassEditor._createRenderAdaptors()
-		adaptors["in"].setInput( renderPasses["out"] )
-
-		context = Gaffer.Context()
-		path = _GafferSceneUI._RenderPassEditor.RenderPassPath( adaptors["out"], context, "/" )
+		editor = GafferSceneUI.RenderPassEditor( script )
+		path = editor._RenderPassEditor__pathListing.getPath()
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B", "/C", "/D" ] )
 
-		disabledRenderPassFilter = _GafferSceneUI._RenderPassEditor.DisabledRenderPassFilter()
-		path.setFilter( disabledRenderPassFilter )
-
+		editor.settings()["hideDisabled"].setValue( True )
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/D" ] )
 
-		disabledRenderPassFilter.setEnabled( False )
-
+		editor.settings()["hideDisabled"].setValue( False )
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B", "/C", "/D" ] )
 
 	def testPathGroupingFunction( self ) :
@@ -390,27 +387,32 @@ class RenderPassEditorTest( GafferUITest.TestCase ) :
 
 	def testDisabledRenderPassFilterWithPathGroupingFunction( self ) :
 
-		renderPasses = GafferScene.RenderPasses()
-		renderPasses["names"].setValue( IECore.StringVectorData( ["A_A", "A_B", "B_C", "B_D"] ) )
+		script = Gaffer.ScriptNode()
 
-		disablePass = GafferScene.CustomOptions( "disablePass" )
-		disablePass["in"].setInput( renderPasses["out"] )
-		disablePass["options"].addChild( Gaffer.NameValuePlug( "renderPass:enabled", Gaffer.BoolPlug( "value", defaultValue = False ), True, "member1" ) )
+		script["renderPasses"] = GafferScene.RenderPasses()
+		script["renderPasses"]["names"].setValue( IECore.StringVectorData( ["A_A", "A_B", "B_C", "B_D"] ) )
+
+		script["disablePass"] = GafferScene.CustomOptions( "disablePass" )
+		script["disablePass"]["in"].setInput( script["renderPasses"]["out"] )
+		script["disablePass"]["options"].addChild( Gaffer.NameValuePlug( "renderPass:enabled", Gaffer.BoolPlug( "value", defaultValue = False ), True, "member1" ) )
 
 		# disable A_B, B_C, B_D
-		switch = Gaffer.NameSwitch()
-		switch.setup( renderPasses["out"] )
-		switch["selector"].setValue( "${renderPass}" )
-		switch["in"]["in0"]["value"].setInput( renderPasses["out"] )
-		switch["in"]["in1"]["value"].setInput( disablePass["out"] )
-		switch["in"]["in1"]["name"].setValue( "A_B B_C B_D" )
+		script["switch"] = Gaffer.NameSwitch()
+		script["switch"].setup( script["renderPasses"]["out"] )
+		script["switch"]["selector"].setValue( "${renderPass}" )
+		script["switch"]["in"]["in0"]["value"].setInput( script["renderPasses"]["out"] )
+		script["switch"]["in"]["in1"]["value"].setInput( script["disablePass"]["out"] )
+		script["switch"]["in"]["in1"]["name"].setValue( "A_B B_C B_D" )
 
 		def testFn( name ) :
 			return name.split( "_" )[:-1]
 
 		GafferSceneUI.RenderPassEditor.registerPathGroupingFunction( testFn )
-		context = Gaffer.Context()
-		path = _GafferSceneUI._RenderPassEditor.RenderPassPath( switch["out"]["value"], context, "/", grouped = True )
+
+		script.setFocus( script["switch"] )
+		editor = GafferSceneUI.RenderPassEditor( script )
+		editor.settings()["displayGrouped"].setValue( True )
+		path = editor._RenderPassEditor__pathListing.getPath()
 
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B" ] )
 
@@ -419,15 +421,14 @@ class RenderPassEditorTest( GafferUITest.TestCase ) :
 			pathCopy.setFromString( p )
 			self.assertEqual( pathCopy.property( "renderPassPath:enabled" ), p == "/A/A_A" )
 
-		disabledRenderPassFilter = _GafferSceneUI._RenderPassEditor.DisabledRenderPassFilter()
-		path.setFilter( disabledRenderPassFilter )
+		editor.settings()["hideDisabled"].setValue( True )
 		# We should only see /A, as both of /B's children are disabled
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A" ] )
 		path.setFromString( "/A" )
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A/A_A" ] )
 
 		# Disabling the filter should restore all paths
-		disabledRenderPassFilter.setEnabled( False )
+		editor.settings()["hideDisabled"].setValue( False )
 		path.setFromString( "/" )
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B" ] )
 		path.setFromString( "/A" )

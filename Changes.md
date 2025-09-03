@@ -12,7 +12,7 @@ Improvements
 - ShaderTweaks, ShaderQuery : Added `Arnold Volume` preset for the `shader` plug.
 - Cycles : Added support for transform shader parameters, such as `texture_coordinate.ob_tfm`.
 - SceneInspector : Improved search filter widget.
-- AttributeEditor, HierarchyView, SceneInspector  : Improved search filter widgets.
+- AttributeEditor, HierarchyView, RenderPassEditor, SceneInspector  : Improved search filter widgets.
 
 Fixes
 -----
@@ -27,6 +27,7 @@ API
 - BoolPlugValueWidget : Added `boolPlugValueWidget:labelVisible` metadata, which can be used to show the plug's name to the right of the icon.
 - SceneEditor : Added `withHierarchyFilter` argument to Settings node. This provides a standard way of filtering the input scene before display, with the filtered scene being provided on the `editor.settings()["__filteredIn"]` plug.
 - AttributeEditor, HierarchyView : Added `filter` and `setFilter` plugs to the `settings()` node.
+- RenderPassEditor : Added `filter` and `hideDisabled` plugs to the `settings()` node.
 
 1.6.0.0 (relative to 1.5.16.2)
 =======
