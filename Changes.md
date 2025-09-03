@@ -8,7 +8,7 @@ Improvements
   - Added context variable columns to the `Show History...` window. These show the values for any context variables which change during the history.
   - Improved default size of `Show History...` window.
 - Viewer : Added `Hide`, `Unhide`, and `Prune` menu items to the right-click menu of the 3D view.
-- LightEditor, AttributeEditor :
+- HierarchyView, LightEditor, AttributeEditor :
   - Added `Hide`, `Unhide`, and `Prune` menu items.
   - Added column for displaying and editing scene visibility.
 - LightEditor : Removed `Delete` menu item, use `Prune` instead.

@@ -331,16 +331,19 @@ Draw new region anywhere             | {kbd}`Shift` + click and drag
 
 ## Hierarchy View ##
 
-Action                              | Control or shortcut
-------------------------------------|-------------------
-Expand selected location            | {kbd}`→`
-Fully expand selected location      | {kbd}`Shift` + {kbd}`→`
-Collapse selected location          | {kbd}`←`
-Fully collapse selected location    | {kbd}`Shift` + {kbd}`←`
-Copy selected paths                 | {kbd}`Ctrl` + {kbd}`C`
-Edit source node of selection       | {kbd}`Alt` + {kbd}`E`
-Edit tweaks node for selection      | {kbd}`Alt` + {kbd}`Shift` + {kbd}`E`
-Frame selection                     | {kbd}`F`
+Action                                               | Control or shortcut
+-----------------------------------------------------|-------------------
+Expand selected location                             | {kbd}`→`
+Fully expand selected location                       | {kbd}`Shift` + {kbd}`→`
+Collapse selected location                           | {kbd}`←`
+Fully collapse selected location                     | {kbd}`Shift` + {kbd}`←`
+Copy selected paths                                  | {kbd}`Ctrl` + {kbd}`C`
+Edit source node of selection                        | {kbd}`Alt` + {kbd}`E`
+Edit tweaks node for selection                       | {kbd}`Alt` + {kbd}`Shift` + {kbd}`E`
+Frame selection                                      | {kbd}`F`
+Prune selected objects from current EditScope        | {kbd}`Ctrl` + {kbd}`Delete`<br>or<br>{kbd}`Ctrl` + {kbd}`Backspace`
+Hide selected objects from current EditScope         | {kbd}`Ctrl` + {kbd}`H`
+Unhide selected objects from current EditScope       | {kbd}`Ctrl` + {kbd}`Shift` + {kbd}`H`
 
 ## Python Editor ##
 
