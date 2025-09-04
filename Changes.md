@@ -16,6 +16,7 @@ Improvements
 - SceneInspector : Improved `Copy` menu item when copying complex values such as Shaders and ShaderNetworks. The full value is now copied, instead of just the shader name.
 - AttributeEditor, HierarchyView, RenderPassEditor, SceneInspector, SetEditor : Improved search filter widgets.
 - Spreadsheet : Clicking on the search icon now moves the keyboard focus to the search field ready for editing.
+- PythonEditor : Added support for dropping `IECore.CompoundObject` and `IECore.ObjectMatrix` values into the code editor.
 
 Fixes
 -----
