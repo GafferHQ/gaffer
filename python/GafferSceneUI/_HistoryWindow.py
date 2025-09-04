@@ -113,9 +113,6 @@ class _NodeNameColumn( GafferUI.PathColumn ) :
 
 		return self.CellData( "Node" )
 
-# \todo This duplicates logic from (in this case) `_GafferSceneUI._LightEditorInspectorColumn`.
-# Refactor to allow calling `_GafferSceneUI.InspectorColumn.cellData()` from `_HistoryWindow` to
-# remove this duplication for columns that customize their value presentation.
 class _ValueColumn( GafferUI.PathColumn ) :
 
 	def __init__( self ) :
@@ -124,26 +121,15 @@ class _ValueColumn( GafferUI.PathColumn ) :
 
 	def cellData( self, path, canceller = None ) :
 
-		cellValue = path.property( "history:value", canceller )
-		fallbackValue = path.property( "history:fallbackValue", canceller )
+		isFallback = False
+		value = path.property( "history:value", canceller )
+		if value is None :
+			value = path.property( "history:fallbackValue", canceller )
+			isFallback = True
 
-		data = self.CellData()
-
-		connectionSource = IECoreScene.ShaderNetwork.Parameter()
-		if cellValue is not None :
-			connectionSource = GafferSceneUI.Private.ParameterInspector.connectionSource( cellValue ) if (
-				isinstance( cellValue, IECore.Object ) ) else IECoreScene.ShaderNetwork.Parameter()
-			data.value = cellValue if not connectionSource else IECore.StringData( connectionSource.shader + "." + connectionSource.name )
-		elif fallbackValue is not None :
-			connectionSource = GafferSceneUI.Private.ParameterInspector.connectionSource( fallbackValue ) if (
-				isinstance( fallbackValue, IECore.Object ) ) else IECoreScene.ShaderNetwork.Parameter()
-			data.value = fallbackValue if not connectionSource else IECore.StringData( connectionSource.shader + "." + connectionSource.name )
+		data = GafferSceneUI.Private.InspectorColumn.cellDataFromValue( value )
+		if isFallback :
 			data.foreground = imath.Color4f( 0.64, 0.64, 0.64, 1.0 )
-
-		if isinstance( data.value, ( imath.Color3f, imath.Color4f ) ) :
-			data.icon = data.value
-		elif connectionSource :
-			data.icon = IECore.StringData( "sceneInspectorShaderConnection.png" )
 
 		return data
 
