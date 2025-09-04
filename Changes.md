@@ -9,6 +9,7 @@ Improvements
   - Improved default size of `Show History...` window.
 - Viewer : Added `Hide` and `Prune` menu items to the right-click menu of the 3D view.
 - LightEditor, AttributeEditor : Added `Hide` and `Prune` menu items.
+- LightEditor : Removed `Delete` menu item, use `Prune` instead.
 
 Fixes
 -----
