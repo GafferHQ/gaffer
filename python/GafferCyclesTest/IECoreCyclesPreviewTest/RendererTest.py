@@ -2093,6 +2093,30 @@ class RendererTest( GafferTest.TestCase ) :
 			]
 		)
 
+	def testTransformParameters( self ) :
+
+		shader = IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( "emission", "cycles:surface", { "strength" : 1.0 } ),
+				"coordinates" : IECoreScene.Shader(
+					"texture_coordinate", "cycles:shader",
+					{ "use_transform" : True, "ob_tfm" : imath.M44f().translate( imath.V3f( 1, 2, 3 ) ) }
+				),
+			},
+			connections = [
+				( ( "coordinates", "object" ), ( "output", "color" ) )
+			],
+			output = "output"
+		)
+
+		self.__testShaderResults(
+			shader,
+			[
+				( imath.V2f( 0.5, 0.5 ), imath.Color4f( -1, -2, -4, 1 ) ),
+			],
+			maxDifference = 0.01
+		)
+
 	def testComponentConnections( self ) :
 
 		shader = IECoreScene.ShaderNetwork(
@@ -2184,35 +2208,6 @@ class RendererTest( GafferTest.TestCase ) :
 				mh.messages[0].message,
 				"Invalid enum value \"missing\" for socket `subsurface_method` on node .*"
 			)
-
-	def testUnsupportedShaderParameters( self ) :
-
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "Cycles" )
-
-		with IECore.CapturingMessageHandler() as mh :
-
-			attributes = renderer.attributes(
-				IECore.CompoundObject( {
-					"cycles:surface" : IECoreScene.ShaderNetwork(
-						shaders = {
-							"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface" ),
-							"coordinates" : IECoreScene.Shader( "texture_coordinate", "cycles:shader", { "ob_tfm" : imath.M44f() } ),
-						},
-						connections = [
-							( ( "coordinates", "normal" ), ( "output", "normal" ) )
-						],
-						output = "output"
-					)
-				} )
-			)
-
-		self.assertEqual( len( mh.messages ), 1 )
-		self.assertEqual( mh.messages[0].context, "Cycles::SocketAlgo" )
-		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
-		self.assertRegex(
-			mh.messages[0].message,
-			"Unsupported socket type `transform` for socket `ob_tfm` on node .*"
-		)
 
 	def testUSDLightColorTemperature( self ) :
 
