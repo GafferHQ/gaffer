@@ -175,6 +175,12 @@ PathColumn::CellData InspectorColumn::cellData( const Gaffer::Path &path, const 
 	{
 		result.value = new StringData( shader->getName() );
 	}
+	else if( const auto compoundObject = runTimeCast<const IECore::CompoundObject>( inspectorResult->value() ) )
+	{
+		// Can't format all that data into a single cell, but it's still useful to
+		// give a summary of how many values there are.
+		result.value = new IntData( compoundObject->members().size() );
+	}
 	else
 	{
 		result.value = runTimeCast<const IECore::Data>( inspectorResult->value() );
