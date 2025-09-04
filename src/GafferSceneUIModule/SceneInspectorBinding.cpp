@@ -881,16 +881,12 @@ InspectorTree::Inspections objectTypeInspectionProvider( ScenePlug *scene, const
 	if( object->typeId() != NullObjectTypeId )
 	{
 		result.push_back( {
-			{ "Type" },
+			{},
 			new GafferSceneUI::Private::BasicInspector(
 				scene->objectPlug(), editScope,
-				[] ( const ObjectPlug *objectPlug ) -> ConstStringDataPtr {
+				[] ( const ObjectPlug *objectPlug ) {
 					ConstObjectPtr object = objectPlug->getValue();
-					if( object->typeId() == NullObjectTypeId )
-					{
-						return nullptr;
-					}
-					return new StringData( object->typeName() );
+					return object->typeId() != NullObjectTypeId ? object : nullptr;
 				}
 			)
 		} );
