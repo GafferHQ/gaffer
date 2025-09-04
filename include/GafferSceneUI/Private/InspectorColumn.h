@@ -72,6 +72,10 @@ class GAFFERSCENEUI_API InspectorColumn : public GafferUI::PathColumn
 		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override;
 		CellData headerData( const IECore::Canceller *canceller ) const override;
 
+		/// Exposes the value-formatting part of `cellData()` so that it may
+		/// be reused by `_HistoryWindow`.
+		static CellData cellDataFromValue( const IECore::Object *value );
+
 	private :
 
 		void inspectorDirtied();

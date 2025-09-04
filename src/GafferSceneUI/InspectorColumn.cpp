@@ -163,39 +163,7 @@ PathColumn::CellData InspectorColumn::cellData( const Gaffer::Path &path, const 
 		return result;
 	}
 
-	if( const auto shaderNetwork = runTimeCast<const IECoreScene::ShaderNetwork>( inspectorResult->value() ) )
-	{
-		/// \todo We don't really want InspectorColumn to know about scene types.
-		/// If this comes up again, consider adding a registry of converters instead
-		/// of hardcoding here.
-		const IECoreScene::Shader *shader = shaderNetwork->outputShader();
-		result.value = shader ? new StringData( shader->getName() ) : g_missingOutputShader;
-	}
-	else if( const auto shader = runTimeCast<const IECoreScene::Shader>( inspectorResult->value() ) )
-	{
-		result.value = new StringData( shader->getName() );
-	}
-	else if( const auto compoundObject = runTimeCast<const IECore::CompoundObject>( inspectorResult->value() ) )
-	{
-		// Can't format all that data into a single cell, but it's still useful to
-		// give a summary of how many values there are.
-		result.value = new IntData( compoundObject->members().size() );
-	}
-	else if( const auto data = runTimeCast<const IECore::Data>( inspectorResult->value() ) )
-	{
-		result.value = data;
-		/// \todo Should PathModel create a decoration automatically when we
-		/// return a colour for `Role::Value`?
-		result.icon = runTimeCast<const Color3fData>( data );
-		if( !result.icon )
-		{
-			result.icon = runTimeCast<const Color4fData>( data );
-		}
-	}
-	else if( inspectorResult->value() )
-	{
-		result.value = new StringData( inspectorResult->value()->typeName() );
-	}
+	result = cellDataFromValue( inspectorResult->value() );
 
 	result.background = g_sourceTypeColors.at( (int)inspectorResult->sourceType() );
 	std::string toolTip;
@@ -258,4 +226,45 @@ IECore::ConstStringDataPtr InspectorColumn::headerValue( const std::string &colu
 		name = CamelCase::fromSpaced( name );
 	}
 	return new StringData( CamelCase::toSpaced( name ) );
+}
+
+PathColumn::CellData InspectorColumn::cellDataFromValue( const IECore::Object *value )
+{
+	if( const auto shaderNetwork = runTimeCast<const IECoreScene::ShaderNetwork>( value ) )
+	{
+		/// \todo We don't really want InspectorColumn to know about scene
+		/// types. At some point we should probably add a registry of converters
+		/// somewhere. Or perhaps if InspectorColumn moves to GafferUI, we would
+		/// just derive a specialisation from it in GafferSceneUI.
+		const IECoreScene::Shader *shader = shaderNetwork->outputShader();
+		return CellData( shader ? new StringData( shader->getName() ) : g_missingOutputShader );
+	}
+	else if( const auto shader = runTimeCast<const IECoreScene::Shader>( value ) )
+	{
+		return CellData( new StringData( shader->getName() ) );
+	}
+	else if( const auto compoundObject = runTimeCast<const IECore::CompoundObject>( value ) )
+	{
+		// Can't format all that data into a single cell, but it's still useful to
+		// give a summary of how many values there are.
+		return CellData( new IntData( compoundObject->members().size() ) );
+	}
+	else if( const auto data = runTimeCast<const IECore::Data>( value ) )
+	{
+		CellData result( data );
+		/// \todo Should PathModel create a decoration automatically when we
+		/// return a colour for `Role::Value`?
+		result.icon = runTimeCast<const Color3fData>( data );
+		if( !result.icon )
+		{
+			result.icon = runTimeCast<const Color4fData>( data );
+		}
+		return result;
+	}
+	else if( value )
+	{
+		return CellData( new StringData( value->typeName() ) );
+	}
+
+	return CellData();
 }
