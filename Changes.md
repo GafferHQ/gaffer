@@ -17,6 +17,7 @@ Improvements
 - AttributeEditor, HierarchyView, RenderPassEditor, SceneInspector, SetEditor : Improved search filter widgets.
 - Spreadsheet : Clicking on the search icon now moves the keyboard focus to the search field ready for editing.
 - PythonEditor : Added support for dropping `IECore.CompoundObject` and `IECore.ObjectMatrix` values into the code editor.
+- ShaderTweaks : Added support for creating tweaks via drag & drop from the SceneInspector to the `+` button. Dragging a single value creates an unnamed tweak of the right type. Drag a multiple selection containing the name and the value to set the value too.
 
 Fixes
 -----

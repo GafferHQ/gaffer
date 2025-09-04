@@ -336,22 +336,33 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().addChild( plug )
 
-	def __plugToDrop( self, event ) :
+	def __dropData( self, event ) :
 
-		if not isinstance( event.data, Gaffer.ValuePlug ) :
-			return None
+		if isinstance( event.data, Gaffer.ValuePlug ) :
+			plug = event.data
+			if (
+				Gaffer.PlugAlgo.canSetValueFromData( plug ) or
+				isinstance( plug, GafferScene.ClosurePlug )
+			) :
+				# If source is an input plug, assume it is a shader parameter and
+				# take its name. Otherwise let the user fill in the name later.
+				name = plug.getName() if plug.direction() == Gaffer.Plug.Direction.In else ""
+				return name, plug
+		elif isinstance( event.data, IECore.Data ) :
+				return "", event.data
+		elif isinstance( event.data, IECore.ObjectMatrix ) :
+			matrix = event.data
+			if (
+				matrix.numRows() == 1 and matrix.numColumns() == 2 and
+				isinstance( matrix[0,0], IECore.StringData ) and isinstance( matrix[0,1], IECore.Data )
+			) :
+				return matrix[0,0].value, matrix[0,1]
 
-		if (
-			Gaffer.PlugAlgo.canSetValueFromData( event.data ) or
-			isinstance( event.data, GafferScene.ClosurePlug )
-		) :
-			return event.data
-
-		return None
+		return None, None
 
 	def __dragEnter( self, widget, event ) :
 
-		if self.__plugToDrop( event ) is not None :
+		if self.__dropData( event )[1] is not None :
 			self.__button.setHighlighted( True )
 			return True
 		else :
@@ -367,14 +378,27 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 		self.__button.setHighlighted( False )
 
-		sourcePlug = self.__plugToDrop( event )
-		assert( sourcePlug is not None )
+		name, plugOrData = self.__dropData( event )
+		assert( plugOrData is not None )
+
+		inputPlug = None
+		if isinstance( plugOrData, Gaffer.Plug ) :
+			valuePlug = plugOrData.createCounterpart( "value", Gaffer.Plug.Direction.In )
+			if plugOrData.direction() == Gaffer.Plug.Direction.Out :
+				inputPlug = plugOrData
+		else :
+			try :
+				valuePlug = Gaffer.PlugAlgo.createPlugFromData( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, plugOrData )
+			except :
+				with GafferUI.PopupWindow() as self.__popupWindow :
+					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+						GafferUI.Image( "warningSmall.png" )
+						GafferUI.Label( "<h4>Unsupported data type</h4>" )
+				self.__popupWindow.popup( parent = self )
+				return True
 
 		tweakPlug = Gaffer.TweakPlug(
-			# If source is an input plug, assume it is a shader parameter and
-			# take its name. Otherwise let the user fill in the name later.
-			sourcePlug.getName() if sourcePlug.direction() == Gaffer.Plug.Direction.In else "",
-			sourcePlug.createCounterpart( "value", Gaffer.Plug.Direction.In ),
+			name, valuePlug.createCounterpart( "value", Gaffer.Plug.Direction.In ),
 		)
 
 		if isinstance( tweakPlug["value"], GafferScene.ClosurePlug ) :
@@ -386,10 +410,12 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 		with Gaffer.UndoScope( self.scriptNode() ) :
 			self.getPlug().addChild( tweakPlug )
-			if sourcePlug.direction() == Gaffer.Plug.Direction.Out :
-				tweakPlug["value"].setInput( sourcePlug )
+			if inputPlug is not None :
+				tweakPlug["value"].setInput( inputPlug )
 				if not isinstance( tweakPlug["value"], GafferScene.ClosurePlug ) :
 					Gaffer.Metadata.registerValue( tweakPlug, "noduleLayout:visible", True )
+
+		return True
 
 class _ShaderTweakPlugValueWidget( GafferUI.TweakPlugValueWidget ) :
 
