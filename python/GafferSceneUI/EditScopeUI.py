@@ -49,23 +49,39 @@ def appendViewContextMenuItems( viewer, view, menuDefinition ) :
 	if not isinstance( view, GafferSceneUI.SceneView ) :
 		return None
 
-	selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( view["in"].getInput().ancestor( Gaffer.ScriptNode ) )
+	scriptNode = view["in"].getInput().ancestor( Gaffer.ScriptNode )
+	__appendContextMenuItems( viewer, scriptNode, view.editScope(), menuDefinition, "/Visibility and Pruning" )
+
+def appendColumnContextMenuItems( column, pathListing, menuDefinition ) :
+
+	if pathListing.getColumns().index( column ) != 0 :
+		return None
+
+	editor = pathListing.ancestor( GafferUI.Editor )
+	__appendContextMenuItems( editor, editor.scriptNode(), editor.editScope(), menuDefinition, "" )
+
+def __appendContextMenuItems( editor, scriptNode, editScope, menuDefinition, prefix ) :
+
+	selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( scriptNode )
+
+	if prefix == "" :
+		menuDefinition.append( "/VisibilityDivider", { "divider" : True } )
 
 	menuDefinition.append(
-		"/Visibility and Pruning/Hide",
+		prefix + "/Hide",
 		{
-			"command" : functools.partial( __hideSelection, weakref.ref( viewer ) ),
-			"active" : not selection.isEmpty() and view.editScope() is not None,
+			"command" : functools.partial( __hideSelection, weakref.ref( editor ) ),
+			"active" : not selection.isEmpty() and editScope is not None,
 			"shortCut" : "Ctrl+H"
 		}
 	)
 
-	menuDefinition.append( "/Visibility and Pruning/PruningDivider", { "divider" : True } )
+	menuDefinition.append( prefix + "/PruningDivider", { "divider" : True } )
 	menuDefinition.append(
-		"/Visibility and Pruning/Prune",
+		prefix + "/Prune",
 		{
-			"command" : functools.partial( __pruneSelection, weakref.ref( viewer ) ),
-			"active" : not selection.isEmpty() and view.editScope() is not None,
+			"command" : functools.partial( __pruneSelection, weakref.ref( editor ) ),
+			"active" : not selection.isEmpty() and editScope is not None,
 			"shortCut" : "Ctrl+Backspace, Ctrl+Delete"
 		}
 	)
@@ -75,15 +91,23 @@ def appendViewContextMenuItems( viewer, view, menuDefinition ) :
 
 def addPruningActions( editor ) :
 
-	if isinstance( editor, GafferUI.Viewer ) :
+	if isinstance( editor, ( GafferUI.Viewer, GafferSceneUI.AttributeEditor, GafferSceneUI.LightEditor ) ) :
 		editor.keyPressSignal().connect( __pruningKeyPress )
 
 def addVisibilityActions( editor ) :
 
-	if isinstance( editor, GafferUI.Viewer ) :
+	if isinstance( editor, ( GafferUI.Viewer, GafferSceneUI.AttributeEditor, GafferSceneUI.LightEditor ) ) :
 		editor.keyPressSignal().connect( __visibilityKeyPress )
 
-def __pruningKeyPress( viewer, event ) :
+def connectToEditor( editor ) :
+
+	addVisibilityActions( editor )
+	addPruningActions( editor )
+
+	if isinstance( editor, ( GafferSceneUI.AttributeEditor, GafferSceneUI.LightEditor ) ) :
+		editor.sceneListing().columnContextMenuSignal().connect( appendColumnContextMenuItems )
+
+def __pruningKeyPress( editor, event ) :
 
 	if event.key not in ( "Backspace", "Delete" ) :
 		return False
@@ -98,17 +122,26 @@ def __pruningKeyPress( viewer, event ) :
 		# unexpected.
 		return True
 
-	return __pruneSelection( viewer )
+	return __pruneSelection( editor )
 
-def __pruneSelection( viewer ) :
+def __pruneSelection( editor ) :
 
-	if isinstance( viewer, weakref.ref ) :
-		viewer = viewer()
+	if isinstance( editor, weakref.ref ) :
+		editor = editor()
 
-	if not isinstance( viewer.view(), GafferSceneUI.SceneView ) :
-		return False
+	if isinstance( editor, GafferUI.Viewer ) :
+		if not isinstance( editor.view(), GafferSceneUI.SceneView ) :
+			return False
 
-	editScope = viewer.view().editScope()
+		editScope = editor.view().editScope()
+		inPlug = editor.view()["in"]
+	elif isinstance( editor, GafferSceneUI.SceneEditor ) :
+		if "editScope" not in editor.settings() :
+			return False
+
+		editScope = editor.editScope()
+		inPlug = editor.settings()["in"]
+
 	if editScope is None or Gaffer.MetadataAlgo.readOnly( editScope ) :
 		# We return True even when we don't do anything, so the keypress doesn't
 		# leak out and get used to delete nodes in the node graph.
@@ -118,7 +151,7 @@ def __pruneSelection( viewer ) :
 		# that all its descendants are selected?
 		return True
 
-	viewedNode = viewer.view()["in"].getInput().node()
+	viewedNode = inPlug.getInput().node()
 	if editScope != viewedNode and editScope not in Gaffer.NodeAlgo.upstreamNodes( viewedNode ) :
 		# Spare folks from deleting things in a downstream EditScope.
 		## \todo When we have a nice Viewer notification system we
@@ -130,7 +163,7 @@ def __pruneSelection( viewer ) :
 
 	# \todo This needs encapsulating in EditScopeAlgo some how so we don't need
 	# to interact with processors directly.
-	with viewer.context() :
+	with editor.context() :
 		if not editScope["enabled"].getValue() :
 			# Spare folks from deleting something when it won't be
 			# apparent what they've done until they reenable the
@@ -140,46 +173,58 @@ def __pruneSelection( viewer ) :
 		if pruningProcessor is not None and not pruningProcessor["enabled"].getValue() :
 			return True
 
-	sceneGadget = viewer.view().viewportGadget().getPrimaryChild()
-	selection = sceneGadget.getSelection()
+	selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( editor.scriptNode() )
 	if not selection.isEmpty() :
 		with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
 			GafferScene.EditScopeAlgo.setPruned( editScope, selection, True )
 
 	return True
 
-def __visibilityKeyPress( viewer, event ) :
+def __visibilityKeyPress( editor, event ) :
 
 	if not ( event.key == "H" and event.modifiers == event.Modifiers.Control ) :
 		return False
 
-	return __hideSelection( viewer )
+	return __hideSelection( editor )
 
-def __hideSelection( viewer ) :
+def __hideSelection( editor ) :
 
-	if isinstance( viewer, weakref.ref ) :
-		viewer = viewer()
+	if isinstance( editor, weakref.ref ) :
+		editor = editor()
 
-	if not isinstance( viewer.view(), GafferSceneUI.SceneView ) :
+	if isinstance( editor, GafferUI.Viewer ) :
+		if not isinstance( editor.view(), GafferSceneUI.SceneView ) :
+			return False
+
+		editScope = editor.view().editScope()
+		inPlug = editor.view()["in"]
+		editScopePlug = editor.view()["editScope"]
+	elif isinstance( editor, GafferSceneUI.SceneEditor ) :
+		if "editScope" not in editor.settings() :
+			return False
+
+		editScope = editor.editScope()
+		inPlug = editor.settings()["in"]
+		editScopePlug = editor.settings()["editScope"]
+	else :
 		return False
 
-	editScope = viewer.view().editScope()
-	if editScope is None or Gaffer.MetadataAlgo.readOnly( editScope ) :
+	if editScope is None :
+		return True
+	if Gaffer.MetadataAlgo.readOnly( editScope ) :
 		return True
 
-	sceneGadget = viewer.view().viewportGadget().getPrimaryChild()
-	selection = sceneGadget.getSelection()
-
+	selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( editor.scriptNode() )
 	if selection.isEmpty() :
 		return True
 
 	inspector = GafferSceneUI.Private.AttributeInspector(
-		viewer.view()["in"].getInput(),
-		viewer.view()["editScope"],
+		inPlug.getInput(),
+		editScopePlug,
 		"scene:visible"
 	)
 
-	with viewer.context() as context :
+	with editor.context() as context :
 		attributeEdits = editScope.acquireProcessor( "AttributeEdits", createIfNecessary = False )
 		if not editScope["enabled"].getValue() or ( attributeEdits is not None and not attributeEdits["enabled"].getValue() ) :
 			# Spare folks from hiding something when it won't be

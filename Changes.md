@@ -29,6 +29,7 @@ Improvements
   - Reworked output filter handling. Now outputs with different filters can write to the same file (#6574). Also improves tidiness of resulting Arnold scene description.
   - Allow outputs with layer names and outputs without layer names to be merged to the same file.
 - Viewer : Added `Hide` and `Prune` menu items to the right-click menu of the 3D view.
+- LightEditor, AttributeEditor : Added `Hide` and `Prune` menu items.
 
 Fixes
 -----
