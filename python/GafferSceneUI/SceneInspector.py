@@ -291,12 +291,43 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 	def __dragBegin( self, widget, event ) :
 
 		assert( widget in ( self.__locationPathListing, self.__globalsPathListing ) )
-		# Return leaf names rather than full paths when dragging from the Name column.
-		## \todo Support creation of columns in other editors by dragging attributes/options/etc
-		# from the Scene Inspector.
-		selection = widget.getSelection()[0]
-		if not selection.isEmpty() :
-			return IECore.StringVectorData( [ path.split( "/" )[-1] for path in selection.paths() ] )
+
+		objectMatrix = IECore.ObjectMatrix()
+
+		## \todo This bears similarities to `_dataFromPathListingOrReason()` in
+		# `InspectorColumn.py`. Could the two be consolidated into one?
+		path = widget.getPath().copy()
+		for column, selection in zip( widget.getColumns(), widget.getSelection() ) :
+
+			if selection.isEmpty() :
+				continue
+
+			if not objectMatrix.numColumns() :
+				objectMatrix.resize( selection.size(), 1 )
+			elif objectMatrix.numRows() != selection.size() :
+				# Mismatched sizes.
+				return None
+			else :
+				objectMatrix.resize( objectMatrix.numRows(), objectMatrix.numColumns() + 1 )
+
+			for row, pathString in enumerate( widget.visualOrder( selection ) ) :
+
+				if isinstance( column, _GafferSceneUI.Private.InspectorColumn ) :
+					path.setFromString( pathString )
+					inspection = column.inspect( path )
+					if inspection is not None :
+						objectMatrix[row,objectMatrix.numColumns()-1] = inspection.value()
+				else :
+					# Drag leaf names rather than full paths when dragging from the Name column.
+					# This is more useful when dropping into things like ShaderTweaks/CustomAttributes.
+					objectMatrix[row,objectMatrix.numColumns()-1] = pathString.split( "/" )[-1]
+
+		if objectMatrix.numRows() == 1 and objectMatrix.numColumns() == 1 :
+			return objectMatrix[0,0]
+		elif objectMatrix.numColumns() :
+			return objectMatrix
+		else :
+			return None
 
 GafferUI.Editor.registerType( "SceneInspector", SceneInspector )
 
