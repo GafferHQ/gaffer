@@ -304,6 +304,28 @@ void setStringSocket( ccl::Node *node, const ccl::SocketType &socket, const IECo
 	}
 }
 
+void setTransformSocket( ccl::Node *node, const ccl::SocketType &socket, const IECore::Data *value )
+{
+	if( auto m44fData = runTimeCast<const M44fData>( value ) )
+	{
+		node->set( socket, SocketAlgo::setTransform( m44fData->readable() ) );
+	}
+	else if( auto m44dData = runTimeCast<const M44dData>( value ) )
+	{
+		node->set( socket, SocketAlgo::setTransform( m44dData->readable() ) );
+	}
+	else
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "Cycles::SocketAlgo",
+			fmt::format(
+				"Unsupported data type `{}` for socket `{}` on node `{}` (expected M44fData or M44dData).",
+				value->typeName(), socket.name, node->name
+			)
+		);
+	}
+}
+
 } // namespace
 
 namespace IECoreCycles
@@ -447,6 +469,9 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 			break;
 		case ccl::SocketType::ENUM:
 			setEnumSocket( node, *socket, value );
+			break;
+		case ccl::SocketType::TRANSFORM:
+			setTransformSocket( node, *socket, value );
 			break;
 		case ccl::SocketType::BOOLEAN_ARRAY:
 			setArraySocket<bool>( node, *socket, value );
