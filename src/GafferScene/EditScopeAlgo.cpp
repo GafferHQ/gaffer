@@ -40,6 +40,7 @@
 #include "GafferScene/OptionTweaks.h"
 #include "GafferScene/Prune.h"
 #include "GafferScene/PathFilter.h"
+#include "GafferScene/SceneAlgo.h"
 #include "GafferScene/SceneProcessor.h"
 #include "GafferScene/Set.h"
 #include "GafferScene/ShaderTweaks.h"
@@ -154,6 +155,92 @@ const GraphComponent *GafferScene::EditScopeAlgo::prunedReadOnlyReason( const Ed
 	}
 
 	return MetadataAlgo::readOnlyReason( scope );
+}
+
+// Visibility
+// ==========
+
+namespace
+{
+
+const InternedString g_visibilityAttribute( "scene:visible" );
+
+PathMatcher hiddenAncestors( const ScenePlug *scene, const ScenePlug::ScenePath &path )
+{
+	ScenePlug::PathScope pathScope( Context::current() );
+
+	PathMatcher result;
+
+	ScenePlug::ScenePath parentPath = path; parentPath.pop_back();
+	while( !parentPath.empty() )
+	{
+		pathScope.setPath( &parentPath );
+
+		ConstCompoundObjectPtr attributes = scene->attributesPlug()->getValue();
+		const BoolData *visibilityData = attributes->member<BoolData>( "scene:visible" );
+		if( visibilityData && !visibilityData->readable() )
+		{
+			result.addPath( parentPath );
+		}
+
+		parentPath.pop_back();
+	}
+
+	return result;
+}
+
+} // namespace
+
+void GafferScene::EditScopeAlgo::setVisibility( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, bool visible )
+{
+	auto unused = IECore::PathMatcher();
+	setVisibility( scope, path, visible, unused );
+}
+
+void GafferScene::EditScopeAlgo::setVisibility( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, bool visible, IECore::PathMatcher &hiddenAncestors )
+{
+	if( !visible )
+	{
+		// We always create an edit when hiding something.
+		TweakPlug *edit = acquireAttributeEdit( scope, path, g_visibilityAttribute, /* createIfNecessary = */ true );
+		edit->enabledPlug()->setValue( true );
+		edit->valuePlug<BoolPlug>()->setValue( false );
+	}
+	else
+	{
+		TweakPlug *edit = acquireAttributeEdit( scope, path, g_visibilityAttribute, /* createIfNecessary = */ false );
+		if( edit )
+		{
+			// Rather than litter the scene with edits we prefer inheriting visibility so
+			// disable any existing visibility edit as it may be making the location invisible.
+			edit->enabledPlug()->setValue( false );
+		}
+
+		if( SceneAlgo::visible( scope->outPlug<ScenePlug>(), path ) )
+		{
+			// Return early to avoid creating an unnecessary edit.
+			return;
+		}
+
+		hiddenAncestors = ::hiddenAncestors( scope->outPlug<ScenePlug>(), path );
+		if( !hiddenAncestors.isEmpty() )
+		{
+			// `path` can not be made visible due to having one or more hidden ancestors.
+			return;
+		}
+
+		if( !edit )
+		{
+			edit = acquireAttributeEdit( scope, path, g_visibilityAttribute, /* createIfNecessary = */ true );
+		}
+		edit->enabledPlug()->setValue( true );
+		edit->valuePlug<BoolPlug>()->setValue( true );
+	}
+}
+
+const GraphComponent *GafferScene::EditScopeAlgo::visibilityReadOnlyReason( const EditScope *scope, const ScenePlug::ScenePath &path )
+{
+	return attributeEditReadOnlyReason( scope, path, g_visibilityAttribute );
 }
 
 // Transforms

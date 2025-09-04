@@ -74,6 +74,19 @@ GraphComponentPtr prunedReadOnlyReasonWrapper( Gaffer::EditScope &scope )
 	return const_cast<GraphComponent *>( EditScopeAlgo::prunedReadOnlyReason( &scope ) );
 }
 
+IECore::PathMatcher setVisibilityWrapper( Gaffer::EditScope &scope, const ScenePlug::ScenePath &path, bool visibility )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	IECore::PathMatcher hiddenAncestors;
+	EditScopeAlgo::setVisibility( &scope, path, visibility, hiddenAncestors );
+	return hiddenAncestors;
+}
+
+GraphComponentPtr visibilityReadOnlyReasonWrapper( Gaffer::EditScope &scope, const ScenePlug::ScenePath &path )
+{
+	return const_cast<GraphComponent *>( EditScopeAlgo::visibilityReadOnlyReason( &scope, path ) );
+}
+
 bool hasTransformEditWrapper( const Gaffer::EditScope &scope, const ScenePlug::ScenePath &path )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -291,6 +304,9 @@ void bindEditScopeAlgo()
 	def( "setPruned", &setPrunedWrapper2 );
 	def( "getPruned", &getPrunedWrapper );
 	def( "prunedReadOnlyReason", &prunedReadOnlyReasonWrapper );
+
+	def( "setVisibility", &setVisibilityWrapper );
+	def( "visibilityReadOnlyReason", &visibilityReadOnlyReasonWrapper );
 
 	class_<EditScopeAlgo::TransformEdit>( "TransformEdit", no_init )
 		.def( init<const V3fPlugPtr &, const V3fPlugPtr &, const V3fPlugPtr &, const V3fPlugPtr &>() )

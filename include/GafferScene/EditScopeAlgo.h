@@ -67,6 +67,16 @@ GAFFERSCENE_API void setPruned( Gaffer::EditScope *scope, const IECore::PathMatc
 GAFFERSCENE_API bool getPruned( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path );
 GAFFERSCENE_API const Gaffer::GraphComponent *prunedReadOnlyReason( const Gaffer::EditScope *scope );
 
+// Visibility
+// ==========
+
+/// Edits the visibility of `path`. When `visible` is true, we favour inherited visibility over authoring redundant attributes.
+GAFFERSCENE_API void setVisibility( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, bool visible );
+/// If `path` could not be made visible, `hiddenAncestors` will match all ancestors that would need to be made visible in order
+/// for `path` to be visible.
+GAFFERSCENE_API void setVisibility( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, bool visible, IECore::PathMatcher &hiddenAncestors );
+GAFFERSCENE_API const Gaffer::GraphComponent *visibilityReadOnlyReason( const Gaffer::EditScope *scope, const ScenePlug::ScenePath &path );
+
 // Transforms
 // ==========
 //
