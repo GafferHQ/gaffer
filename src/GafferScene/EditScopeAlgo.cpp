@@ -40,6 +40,7 @@
 #include "GafferScene/OptionTweaks.h"
 #include "GafferScene/Prune.h"
 #include "GafferScene/PathFilter.h"
+#include "GafferScene/SceneAlgo.h"
 #include "GafferScene/SceneProcessor.h"
 #include "GafferScene/Set.h"
 #include "GafferScene/ShaderTweaks.h"
@@ -154,6 +155,37 @@ const GraphComponent *GafferScene::EditScopeAlgo::prunedReadOnlyReason( const Ed
 	}
 
 	return MetadataAlgo::readOnlyReason( scope );
+}
+
+// Visibility
+// ==========
+
+namespace
+{
+
+const InternedString g_visibilityAttribute( "scene:visible" );
+
+} // namespace
+
+void GafferScene::EditScopeAlgo::setVisibility( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, bool visible )
+{
+	TweakPlug *edit = acquireAttributeEdit( scope, path, g_visibilityAttribute, /* createIfNecessary = */ true );
+	edit->enabledPlug()->setValue( true );
+	if( visible )
+	{
+		// Prefer inherited visibility
+		edit->modePlug()->setValue( TweakPlug::Mode::Remove );
+	}
+	else
+	{
+		edit->modePlug()->setValue( TweakPlug::Mode::Create );
+		edit->valuePlug<BoolPlug>()->setValue( false );
+	}
+}
+
+const GraphComponent *GafferScene::EditScopeAlgo::visibilityReadOnlyReason( const EditScope *scope, const ScenePlug::ScenePath &path )
+{
+	return attributeEditReadOnlyReason( scope, path, g_visibilityAttribute );
 }
 
 // Transforms

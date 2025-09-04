@@ -52,6 +52,7 @@ API
 - RenderPassEditor : Added `filter` and `hideDisabled` plugs to the `settings()` node.
 - SetEditor : Added `filter`, `hideEmptySets` and `hideEmptySelection` plugs to the `settings()` node.
 - LightEditor : Added `sceneListing()` method, to allow the context menu to be customised.
+- EditScopeAlgo : Added `setVisibility()` and `visibilityNonEditableReason()` functions.
 
 1.6.0.0 (relative to 1.5.16.2)
 =======
