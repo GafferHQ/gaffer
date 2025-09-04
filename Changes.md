@@ -7,6 +7,9 @@ Improvements
 - LightEditor, RenderPassEditor, AttributeEditor, SceneInspector :
   - Added context variable columns to the `Show History...` window. These show the values for any context variables which change during the history.
   - Improved default size of `Show History...` window.
+- SceneInspector : Added summaries to Attributes sections. These show the number of attributes within, and in diff views are highlighted if there are any diffs within.
+- PythonEditor : Added support for dropping `IECore.CompoundObject` and `IECore.ObjectMatrix` values into the code editor.
+- ShaderTweaks : Added support for creating tweaks via drag & drop from the SceneInspector to the `+` button. Dragging a single value creates an unnamed tweak of the right type. Drag a multiple selection containing the name and the value to set the value too.
 
 Fixes
 -----

@@ -336,22 +336,38 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().addChild( plug )
 
-	def __plugToDrop( self, event ) :
+	def __dropData( self, event ) :
 
-		if not isinstance( event.data, Gaffer.ValuePlug ) :
-			return None
+		if isinstance( event.data, Gaffer.ValuePlug ) :
+			plug = event.data
+			if (
+				Gaffer.PlugAlgo.canSetValueFromData( plug ) or
+				isinstance( plug, GafferScene.ClosurePlug )
+			) :
+				# If source is an input plug, assume it is a shader parameter and
+				# take its name. Otherwise let the user fill in the name later.
+				name = plug.getName() if plug.direction() == Gaffer.Plug.Direction.In else ""
+				return name, plug
+		elif isinstance( event.data, IECore.Data ) :
+			plug = Gaffer.PlugAlgo.createPlugFromData( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, event.data )
+			if plug is not None :
+				return "", plug
+		elif isinstance( event.data, IECore.ObjectMatrix ) :
+			matrix = event.data
+			if (
+				matrix.numRows() == 1 and matrix.numColumns() == 2 and
+				isinstance( matrix[0,0], IECore.StringData ) and isinstance( matrix[0,1], IECore.Data )
+			) :
+				plug = Gaffer.PlugAlgo.createPlugFromData( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, matrix[0,1] )
+				if plug is not None :
+					return matrix[0,0].value, plug
 
-		if (
-			Gaffer.PlugAlgo.canSetValueFromData( event.data ) or
-			isinstance( event.data, GafferScene.ClosurePlug )
-		) :
-			return event.data
-
-		return None
+		return None, None
 
 	def __dragEnter( self, widget, event ) :
 
-		if self.__plugToDrop( event ) is not None :
+		name, plug = self.__dropData( event )
+		if plug is not None :
 			self.__button.setHighlighted( True )
 			return True
 		else :
@@ -367,14 +383,11 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 		self.__button.setHighlighted( False )
 
-		sourcePlug = self.__plugToDrop( event )
-		assert( sourcePlug is not None )
+		name, plug = self.__dropData( event )
+		assert( plug is not None )
 
 		tweakPlug = Gaffer.TweakPlug(
-			# If source is an input plug, assume it is a shader parameter and
-			# take its name. Otherwise let the user fill in the name later.
-			sourcePlug.getName() if sourcePlug.direction() == Gaffer.Plug.Direction.In else "",
-			sourcePlug.createCounterpart( "value", Gaffer.Plug.Direction.In ),
+			name, plug.createCounterpart( "value", Gaffer.Plug.Direction.In ),
 		)
 
 		if isinstance( tweakPlug["value"], GafferScene.ClosurePlug ) :
@@ -386,8 +399,8 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 		with Gaffer.UndoScope( self.scriptNode() ) :
 			self.getPlug().addChild( tweakPlug )
-			if sourcePlug.direction() == Gaffer.Plug.Direction.Out :
-				tweakPlug["value"].setInput( sourcePlug )
+			if plug.direction() == Gaffer.Plug.Direction.Out :
+				tweakPlug["value"].setInput( plug )
 				if not isinstance( tweakPlug["value"], GafferScene.ClosurePlug ) :
 					Gaffer.Metadata.registerValue( tweakPlug, "noduleLayout:visible", True )
 

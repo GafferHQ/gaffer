@@ -169,7 +169,7 @@ class PythonEditor( GafferUI.Editor ) :
 				return self.__dropText( widget, dragData[0] )
 			else :
 				return "[ " + ", ".join( [ self.__dropText( widget, d ) for d in dragData ] ) + " ]"
-		elif isinstance( dragData, IECore.CompoundData ) :
+		elif isinstance( dragData, ( IECore.CompoundData, IECore.CompoundObject, IECore.ObjectMatrix ) ) :
 			return repr( dragData )
 		elif isinstance( dragData, IECore.Data ) and hasattr( dragData, "value" ) :
 			return repr( dragData.value )

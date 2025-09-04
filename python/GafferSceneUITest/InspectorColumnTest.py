@@ -755,5 +755,11 @@ class InspectorColumnTest( GafferUITest.TestCase ) :
 			IECore.InternedStringVectorData( [ "plane" ] )
 		)
 
+	def testCellDataFromValue( self ) :
+
+		self.assertEqual( GafferSceneUI.Private.InspectorColumn.cellDataFromValue( 1 ).value, 1 )
+		self.assertEqual( GafferSceneUI.Private.InspectorColumn.cellDataFromValue( IECore.IntData( 1 ) ).value, 1 )
+		self.assertEqual( GafferSceneUI.Private.InspectorColumn.cellDataFromValue( IECore.CompoundObject( { "a" : IECore.IntData( 10 ) } ) ).value, 1 )
+
 if __name__ == "__main__":
 	unittest.main()
