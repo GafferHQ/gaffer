@@ -181,16 +181,20 @@ PathColumn::CellData InspectorColumn::cellData( const Gaffer::Path &path, const 
 		// give a summary of how many values there are.
 		result.value = new IntData( compoundObject->members().size() );
 	}
-	else
+	else if( const auto data = runTimeCast<const IECore::Data>( inspectorResult->value() ) )
 	{
-		result.value = runTimeCast<const IECore::Data>( inspectorResult->value() );
+		result.value = data;
 		/// \todo Should PathModel create a decoration automatically when we
 		/// return a colour for `Role::Value`?
-		result.icon = runTimeCast<const Color3fData>( inspectorResult->value() );
+		result.icon = runTimeCast<const Color3fData>( data );
 		if( !result.icon )
 		{
-			result.icon = runTimeCast<const Color4fData>( inspectorResult->value() );
+			result.icon = runTimeCast<const Color4fData>( data );
 		}
+	}
+	else if( inspectorResult->value() )
+	{
+		result.value = new StringData( inspectorResult->value()->typeName() );
 	}
 
 	result.background = g_sourceTypeColors.at( (int)inspectorResult->sourceType() );
