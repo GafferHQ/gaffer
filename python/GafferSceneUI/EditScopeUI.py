@@ -142,13 +142,15 @@ def __pruneSelection( editor ) :
 		editScope = editor.editScope()
 		inPlug = editor.settings()["in"]
 
-	if editScope is None or Gaffer.MetadataAlgo.readOnly( editScope ) :
-		# We return True even when we don't do anything, so the keypress doesn't
-		# leak out and get used to delete nodes in the node graph.
-		## \todo Add a discreet notification system to the Viewer so we can
-		# prompt the user to select a scope etc when necessary. Maybe we might
-		# also want to ask them if we can prune a common ancestor in the case
-		# that all its descendants are selected?
+	# We return True even when we don't do anything, so the keypress doesn't
+	# leak out and get used to delete nodes in the node graph.
+	## \todo Maybe we might want to ask if we can prune a common ancestor
+	# in the case that all its descendants are selected?
+	if editScope is None :
+		__warningPopup( editor, "To prune locations, first choose an edit scope." )
+		return True
+	if Gaffer.MetadataAlgo.readOnly( editScope ) :
+		__warningPopup( editor, "The target edit scope {} is read-only.".format( editScope.getName() ) )
 		return True
 
 	viewedNode = inPlug.getInput().node()
@@ -156,9 +158,12 @@ def __pruneSelection( editor ) :
 		# Spare folks from deleting things in a downstream EditScope.
 		## \todo When we have a nice Viewer notification system we
 		# should emit a warning here.
+		__warningPopup( editor, "The target edit scope {} is downstream of the viewed node.".format( editScope.getName() ) )
 		return True
 
-	if GafferScene.EditScopeAlgo.prunedReadOnlyReason( editScope ) is not None :
+	readOnlyReason = GafferScene.EditScopeAlgo.prunedReadOnlyReason( editScope )
+	if readOnlyReason is not None :
+		__warningPopup( editor, "{} is read-only.".format( readOnlyReason ) )
 		return True
 
 	# \todo This needs encapsulating in EditScopeAlgo some how so we don't need
@@ -168,9 +173,11 @@ def __pruneSelection( editor ) :
 			# Spare folks from deleting something when it won't be
 			# apparent what they've done until they reenable the
 			# EditScope.
+			__warningPopup( editor, "The target edit scope {} is disabled.".format( editScope.getName() ) )
 			return True
 		pruningProcessor = editScope.acquireProcessor( "PruningEdits", createIfNecessary = False )
 		if pruningProcessor is not None and not pruningProcessor["enabled"].getValue() :
+			__warningPopup( editor, "{} is disabled.".format( pruningProcessor.relativeName( editScope.parent() ) ) )
 			return True
 
 	selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( editor.scriptNode() )
@@ -210,8 +217,10 @@ def __hideSelection( editor ) :
 		return False
 
 	if editScope is None :
+		__warningPopup( editor, "To hide locations, first choose an edit scope." )
 		return True
 	if Gaffer.MetadataAlgo.readOnly( editScope ) :
+		__warningPopup( editor, "The target edit scope {} is read-only.".format( editScope.getName() ) )
 		return True
 
 	selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( editor.scriptNode() )
@@ -225,11 +234,15 @@ def __hideSelection( editor ) :
 	)
 
 	with editor.context() as context :
-		attributeEdits = editScope.acquireProcessor( "AttributeEdits", createIfNecessary = False )
-		if not editScope["enabled"].getValue() or ( attributeEdits is not None and not attributeEdits["enabled"].getValue() ) :
+		if not editScope["enabled"].getValue() :
 			# Spare folks from hiding something when it won't be
 			# apparent what they've done until they reenable the
 			# EditScope or processor.
+			__warningPopup( editor, "The target edit scope {} is disabled.".format( editScope.getName() ) )
+			return True
+		attributeEdits = editScope.acquireProcessor( "AttributeEdits", createIfNecessary = False )
+		if attributeEdits is not None and not attributeEdits["enabled"].getValue() :
+			__warningPopup( editor, "{} is disabled.".format( attributeEdits.relativeName( editScope.parent() ) ) )
 			return True
 
 		with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
@@ -246,6 +259,14 @@ def __hideSelection( editor ) :
 
 	return True
 
+def __warningPopup( parent, message ) :
+
+	with GafferUI.PopupWindow() as parent.__editScopeWarningPopup :
+		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+			GafferUI.Image( "warningSmall.png" )
+			GafferUI.Label( "<h4>{}</h4>".format( message ) )
+
+	parent.__editScopeWarningPopup.popup( parent = parent )
 
 # Processor Widgets
 # =================
