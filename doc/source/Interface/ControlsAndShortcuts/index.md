@@ -434,6 +434,8 @@ Commit edit without closing popup                    | {kbd}`Shift` + {kbd}`Retu
 Disable Edit                                         | {kbd}`D`
 Remove Attribute                                     | {kbd}`Delete`
 Copy/Paste selected cells                            | {kbd}`Ctrl` + {kbd}`C`/{kbd}`V`
+Prune selected objects from current EditScope        | {kbd}`Ctrl` + {kbd}`Delete`<br>or<br>{kbd}`Ctrl` + {kbd}`Backspace`
+Hide selected objects from current EditScope         | {kbd}`Ctrl` + {kbd}`H`
 
 ## Set Editor ##
 
