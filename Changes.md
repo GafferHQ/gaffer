@@ -9,6 +9,7 @@ Improvements
   - Improved default size of `Show History...` window.
   - Added `Copy` item to `Name` column context menu.
   - Data dragged from the editor now matches the format used by the `Copy` menu item.
+  - Reduced the time taken to update the visible items when edits are made to the scene.
 - SceneInspector, LightEditor, Viewer : Shader parameters with input connections now show the connection source name instead of the plug value. The input shader can be selected via the context menu.
 - Layout menu : Sorted the editor creation items alphabetically.
 - ShaderTweaks, ShaderQuery : Added `Arnold Volume` preset for the `shader` plug.
@@ -18,6 +19,7 @@ Improvements
 - Spreadsheet : Clicking on the search icon now moves the keyboard focus to the search field ready for editing.
 - PythonEditor : Added support for dropping `IECore.CompoundObject` and `IECore.ObjectMatrix` values into the code editor.
 - ShaderTweaks : Added support for creating tweaks via drag & drop from the SceneInspector to the `+` button. Dragging a single value creates an unnamed tweak of the right type. Drag a multiple selection containing the name and the value to set the value too.
+- PathListingWidget : Improved update responsiveness by updating visible items before items which are collapsed or scrolled out of view.
 
 Fixes
 -----
