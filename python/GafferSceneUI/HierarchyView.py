@@ -53,6 +53,16 @@ from . import SetUI
 
 class HierarchyView( GafferSceneUI.SceneEditor ) :
 
+	class Settings( GafferSceneUI.SceneEditor.Settings ) :
+
+		def __init__( self ) :
+
+			GafferSceneUI.SceneEditor.Settings.__init__( self )
+
+			self["editScope"] = Gaffer.Plug()
+
+	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::HierarchyView::Settings" )
+
 	def __init__( self, scriptNode, **kw ) :
 
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4, spacing = 4 )
@@ -79,14 +89,21 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 				_SearchFilterWidget( searchFilter )
 				_SetFilterWidget( setFilter )
 
+				GafferUI.PlugLayout(
+					self.settings(),
+					orientation = GafferUI.ListContainer.Orientation.Horizontal,
+					rootSection = "Settings",
+				)
+
 			self.__pathListing = GafferUI.PathListingWidget(
 				GafferScene.ScenePath( self.settings()["in"], self.context(), "/", filter = self.__filter ),
 				columns = [
 					GafferUI.PathListingWidget.defaultNameColumn,
+					GafferSceneUI.Private.VisibilityColumn( self.settings()["in"], self.settings()["editScope"] ),
 					_GafferSceneUI._HierarchyViewInclusionsColumn( scriptNode ),
 					_GafferSceneUI._HierarchyViewExclusionsColumn( scriptNode )
 				],
-				selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
+				selectionMode = GafferUI.PathListingWidget.SelectionMode.Cells,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 			)
 			self.__pathListing.setDragPointer( "objects" )
@@ -164,7 +181,7 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 		assert( pathListing is self.__pathListing )
 
 		with Gaffer.Signals.BlockedConnection( self.__selectedPathsChangedConnection ) :
-			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( self.scriptNode(), pathListing.getSelection() )
+			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( self.scriptNode(), pathListing.getSelection()[0] )
 
 	def __keyPressSignal( self, widget, event ) :
 
@@ -180,7 +197,11 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 
 	def __columnContextMenuSignal( self, column, pathListing, menuDefinition ) :
 
-		selection = pathListing.getSelection()
+		columns = pathListing.getColumns()
+		if columns.index( column ) != 0 :
+			return False
+
+		selection = pathListing.getSelection()[0]
 		menuDefinition.append(
 			"Copy Path%s" % ( "" if selection.size() == 1 else "s" ),
 			{
@@ -203,16 +224,16 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 		if self.scene() is None :
 			return
 
-		selection = self.__pathListing.getSelection()
+		selection = self.__pathListing.getSelection()[0]
 		if not selection.isEmpty() :
 			data = IECore.StringVectorData( selection.paths() )
 			self.scriptNode().ancestor( Gaffer.ApplicationRoot ).setClipboardContents( data )
 
 	def __frameSelectedPaths( self ) :
 
-		selection = self.__pathListing.getSelection()
+		selection = self.__pathListing.getSelection()[0]
 		if not selection.isEmpty() :
-			self.__pathListing.expandToSelection()
+			self.__pathListing.expandTo( selection )
 			self.__pathListing.scrollToFirst( selection )
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
@@ -227,9 +248,30 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 
 		selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( self.scriptNode() )
 		with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
-			self.__pathListing.setSelection( selection, scrollToFirst=False )
+			self.__pathListing.setSelection( [ selection if i == 0 else IECore.PathMatcher() for i in range( 0, len( self.__pathListing.getColumns() ) ) ], scrollToFirst = False )
 
 GafferUI.Editor.registerType( "HierarchyView", HierarchyView )
+
+##########################################################################
+# Settings metadata
+##########################################################################
+
+Gaffer.Metadata.registerNode(
+
+	HierarchyView.Settings,
+
+	plugs = {
+
+		"editScope" : [
+
+			"plugValueWidget:type", "GafferUI.EditScopeUI.EditScopePlugValueWidget",
+			"layout:width", 130,
+
+		],
+
+	}
+
+)
 
 ##########################################################################
 # _SetFilterWidget

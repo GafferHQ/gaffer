@@ -7,11 +7,23 @@ Improvements
 - LightEditor, RenderPassEditor, AttributeEditor, SceneInspector :
   - Added context variable columns to the `Show History...` window. These show the values for any context variables which change during the history.
   - Improved default size of `Show History...` window.
+- Viewer : Added `Hide`, `Unhide`, and `Prune` menu items to the right-click menu of the 3D view.
+- HierarchyView, LightEditor, AttributeEditor :
+  - Added `Hide`, `Unhide`, and `Prune` menu items.
+  - Added column for displaying and editing scene visibility.
+- LightEditor : Removed `Delete` menu item, use `Prune` instead.
 
 Fixes
 -----
 
 - PathListingWidget : Fixed parent layout update when column sizes change.
+- EditScopeUI : Fixed bug causing the <kbd>H</kbd> shortcut to hide the selected locations, use <kbd>Ctrl</kbd>+<kbd>H</kbd> instead.
+
+API
+---
+
+- LightEditor : Added `sceneListing()` method, to allow the context menu to be customised.
+- EditScopeAlgo : Added `setVisibility()` and `visibilityNonEditableReason()` functions.
 
 1.6.0.0 (relative to 1.5.16.2)
 =======

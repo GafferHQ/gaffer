@@ -75,6 +75,7 @@ def __viewContextMenu( viewer, view, menuDefinition ) :
 
 	GafferSceneUI.LightUI.appendViewContextMenuItems( viewer, view, menuDefinition )
 	GafferSceneUI.SceneHistoryUI.appendViewContextMenuItems( viewer, view, menuDefinition )
+	GafferSceneUI.EditScopeUI.appendViewContextMenuItems( viewer, view, menuDefinition )
 
 GafferUI.Viewer.viewContextMenuSignal().connect( __viewContextMenu )
 
@@ -279,5 +280,3 @@ if os.environ.get( "GAFFERRENDERMAN_HIDE_UI", "" ) != "1" :
 
 # Add catalogue hotkeys to viewers, eg: up/down navigation
 GafferUI.Editor.instanceCreatedSignal().connect( GafferSceneUI.CatalogueUI.addCatalogueHotkeys )
-GafferUI.Editor.instanceCreatedSignal().connect( GafferSceneUI.EditScopeUI.addPruningActions )
-GafferUI.Editor.instanceCreatedSignal().connect( GafferSceneUI.EditScopeUI.addVisibilityActions )
