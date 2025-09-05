@@ -1141,6 +1141,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 	def updateColumnWidths( self, columnsChanged = False ) :
 
 		self.__recalculatingColumnWidths = True
+		originalHeaderLength = self.header().length()
 
 		header = self.header()
 		numColumnsToResize = header.count()
@@ -1174,6 +1175,13 @@ class _TreeView( QtWidgets.QTreeView ) :
 			self.__resizeLastColumnToAvailableWidth()
 
 		self.__recalculatingColumnWidths = False
+
+		if self.header().length() != originalHeaderLength :
+			# You might think that `header.geometriesChanged()` would be emitted
+			# for this change in size, but it isn't. So we call `updateGeometry()`
+			# directly ourselves. That triggers a layout update to account for the
+			# fact that our `sizeHint()` will have changed.
+			self.updateGeometry()
 
 	def keyPressEvent( self, event ) :
 

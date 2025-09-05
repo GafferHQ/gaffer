@@ -59,12 +59,15 @@ using namespace GafferSceneUI::Private;
 
 using ConstPredecessors = std::vector<const SceneAlgo::History *>;
 
+static InternedString g_contextVariablesPropertyName( "history:contextVariables" );
+static InternedString g_varyingContextVariablesPropertyName( "history:varyingContextVariables" );
 static InternedString g_valuePropertyName( "history:value" );
 static InternedString g_fallbackValuePropertyName( "history:fallbackValue" );
 static InternedString g_operationPropertyName( "history:operation" );
 static InternedString g_sourcePropertyName( "history:source" );
 static InternedString g_editWarningPropertyName( "history:editWarning" );
 static InternedString g_nodePropertyName( "history:node" );
+static InternedString g_contextPropertyName( "history:context" );
 
 //////////////////////////////////////////////////////////////////////////
 // Internal utilities
@@ -617,10 +620,22 @@ struct Inspector::HistoryPath::HistoryProvider
 		return m_historyVector.size();
 	}
 
-	const SceneAlgo::History *historyItem( size_t index, const IECore::Canceller *canceller  )
+	const SceneAlgo::History *historyItem( size_t index, const IECore::Canceller *canceller )
 	{
 		std::call_once( m_initFlag, &HistoryProvider::initHistory, this, canceller );
 		return m_historyVector[index].get();
+	}
+
+	const StringVectorData *contextVariables( const IECore::Canceller *canceller )
+	{
+		std::call_once( m_initFlag, &HistoryProvider::initHistory, this, canceller );
+		return m_contextVariables.get();
+	}
+
+	const StringVectorData *varyingContextVariables( const IECore::Canceller *canceller )
+	{
+		std::call_once( m_initFlag, &HistoryProvider::initHistory, this, canceller );
+		return m_varyingContextVariables.get();
 	}
 
 	private :
@@ -655,6 +670,9 @@ struct Inspector::HistoryPath::HistoryProvider
 
 			std::string editWarning;
 
+			std::unordered_set<InternedString> contextVariables;
+			std::unordered_set<InternedString> varyingContextVariables;
+
 			ConstObjectPtr successorValue;
 			const SceneAlgo::History *successor = nullptr;
 			const SceneAlgo::History *current = history.get();
@@ -665,6 +683,10 @@ struct Inspector::HistoryPath::HistoryProvider
 				{
 					scope.setCanceller( canceller );
 				}
+
+				std::vector<InternedString> currentContextVariables;
+				current->context->names( currentContextVariables );
+				contextVariables.insert( currentContextVariables.begin(), currentContextVariables.end() );
 
 				ConstObjectPtr currentValue = inspector->value( current );
 				if( successor && !endsWith( m_historyVector, successor ) )
@@ -677,6 +699,15 @@ struct Inspector::HistoryPath::HistoryProvider
 						(bool)currentValue != (bool)successorValue ||
 						( currentValue && currentValue->isNotEqualTo( successorValue.get() ) )
 					)
+					{
+						m_historyVector.push_back( successor );
+					}
+				}
+
+				if( successor && *successor->context != *current->context )
+				{
+					addVaryingContextVariables( successor->context.get(), current->context.get(), varyingContextVariables );
+					if( !endsWith( m_historyVector, successor ) )
 					{
 						m_historyVector.push_back( successor );
 					}
@@ -709,6 +740,12 @@ struct Inspector::HistoryPath::HistoryProvider
 			}
 
 			std::reverse( m_historyVector.begin(), m_historyVector.end() );
+			m_contextVariables = new StringVectorData(
+				std::vector<std::string>( contextVariables.begin(), contextVariables.end() )
+			);
+			m_varyingContextVariables = new StringVectorData(
+				std::vector<std::string>( varyingContextVariables.begin(), varyingContextVariables.end() )
+			);
 		}
 
 		static bool endsWith( const std::vector<SceneAlgo::History::ConstPtr> historyVector, const SceneAlgo::History *history )
@@ -716,8 +753,24 @@ struct Inspector::HistoryPath::HistoryProvider
 			return historyVector.size() && historyVector.back() == history;
 		}
 
+		static void addVaryingContextVariables( const Context *context0, const Context *context1, std::unordered_set<InternedString> &variables )
+		{
+			std::vector<InternedString> variableNames;
+			context0->names( variableNames );
+			context1->names( variableNames );
+			for( auto variable : variableNames )
+			{
+				if( context0->variableHash( variable ) != context1->variableHash( variable ) )
+				{
+					variables.insert( variable );
+				}
+			}
+		}
+
 		std::once_flag m_initFlag;
 		std::vector<SceneAlgo::History::ConstPtr> m_historyVector;
+		ConstStringVectorDataPtr m_contextVariables;
+		ConstStringVectorDataPtr m_varyingContextVariables;
 
 };
 
@@ -753,6 +806,13 @@ void Inspector::HistoryPath::propertyNames( std::vector<InternedString> &names, 
 {
 	Path::propertyNames( names );
 
+	if( this->names().empty() )
+	{
+		// Root
+		names.push_back( g_contextVariablesPropertyName );
+		names.push_back( g_varyingContextVariablesPropertyName );
+	}
+
 	if( history( canceller ) )
 	{
 		names.push_back( g_valuePropertyName );
@@ -761,12 +821,21 @@ void Inspector::HistoryPath::propertyNames( std::vector<InternedString> &names, 
 		names.push_back( g_sourcePropertyName );
 		names.push_back( g_editWarningPropertyName );
 		names.push_back( g_nodePropertyName );
+		names.push_back( g_contextPropertyName );
 	}
 }
 
 ConstRunTimeTypedPtr Inspector::HistoryPath::property( const InternedString &name, const Canceller *canceller ) const
 {
-	if(
+	if( name == g_contextVariablesPropertyName )
+	{
+		return names().empty() ? m_historyProvider->contextVariables( canceller ) : nullptr;
+	}
+	else if( name == g_varyingContextVariablesPropertyName )
+	{
+		return names().empty() ? m_historyProvider->varyingContextVariables( canceller ) : nullptr;
+	}
+	else if(
 		name == g_nodePropertyName ||
 		name == g_valuePropertyName ||
 		name == g_fallbackValuePropertyName ||
@@ -828,7 +897,18 @@ ConstRunTimeTypedPtr Inspector::HistoryPath::property( const InternedString &nam
 		}
 	}
 
-	return Path::property( name );
+	return Path::property( name, canceller );
+}
+
+Gaffer::ConstContextPtr Inspector::HistoryPath::contextProperty( const InternedString &name, const Canceller *canceller ) const
+{
+	if( name == g_contextPropertyName )
+	{
+		SceneAlgo::History::ConstPtr h = history( canceller );
+		return h ? h->context : nullptr;
+	}
+
+	return Path::contextProperty( name, canceller );
 }
 
 bool Inspector::HistoryPath::isValid( const Canceller *canceller ) const

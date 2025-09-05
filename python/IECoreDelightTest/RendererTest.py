@@ -54,7 +54,6 @@ import IECoreScene
 import IECoreDelight
 import IECoreVDB
 
-import GafferImage
 import GafferScene
 import GafferTest
 
@@ -1702,17 +1701,13 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		read = GafferImage.ImageReader()
-		read["fileName"].setValue( ( self.temporaryDirectory() / "id.exr" ).as_posix() )
-
-		sampler = GafferImage.ImageSampler()
-		sampler["image"].setInput( read["out"] )
-		sampler["channels"].setValue( IECore.StringVectorData( [ "id" ] * 4 ) )
-		sampler["interpolate"].setValue( False )
+		image = OpenImageIO.ImageBuf( str( self.temporaryDirectory() / "id.exr" ) )
+		self.assertEqual( len( image.spec().channelnames ), 1 )
 
 		for ident, instanceIdent, x, y in cubeParams:
-			sampler["pixel"].setValue( imath.V2f( 50 + x * 10, 50 + y * 10 ) )
-			raw = sampler["color"]["r"].getValue()
+			# `ImageBuf.getchannel()` seems to have an incorrect Python binding
+			# so we use `getpixel()`.
+			raw = image.getpixel( 50 + x * 10, 50 - y * 10 )[0]
 
 			# Reinterpret float as int.
 			readID = struct.pack( "f", raw )
@@ -1720,12 +1715,11 @@ class RendererTest( GafferTest.TestCase ) :
 
 			self.assertEqual( readID, ident )
 
-		read["fileName"].setValue( ( self.temporaryDirectory() / "instanceID.exr" ).as_posix() )
-		sampler["channels"].setValue( IECore.StringVectorData( [ "instanceID" ] * 4 ) )
+		image = OpenImageIO.ImageBuf( str( self.temporaryDirectory() / "instanceID.exr" ) )
+		self.assertEqual( len( image.spec().channelnames ), 1 )
 
 		for ident, instanceIdent, x, y in cubeParams:
-			sampler["pixel"].setValue( imath.V2f( 50 + x * 10, 50 + y * 10 ) )
-			raw = sampler["color"]["r"].getValue()
+			raw = image.getpixel( 50 + x * 10, 50 - y * 10 )[0]
 
 			# Reinterpret float as int.
 			readID = struct.pack( "f", raw )

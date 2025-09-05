@@ -236,6 +236,7 @@ class GAFFERSCENEUI_API Inspector : public IECore::RunTimeTyped, public Gaffer::
 
 				void propertyNames( std::vector<IECore::InternedString> &names, const IECore::Canceller *canceller = nullptr) const override;
 				IECore::ConstRunTimeTypedPtr property( const IECore::InternedString &name, const IECore::Canceller *canceller = nullptr ) const override;
+				Gaffer::ConstContextPtr contextProperty( const IECore::InternedString &name, const IECore::Canceller *canceller = nullptr ) const override;
 
 				bool isValid( const IECore::Canceller *canceller = nullptr ) const override;
 				bool isLeaf( const IECore::Canceller *canceller = nullptr ) const override;
