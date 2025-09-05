@@ -492,6 +492,7 @@
 				"locationPinnedOff",
 				"sceneInspectorCompareOn",
 				"sceneInspectorCompareOff",
+				"sceneInspectorShaderConnection",
 			]
 		},
 
