@@ -844,7 +844,7 @@ class PathModel : public QAbstractItemModel
 			return m_selection;
 		}
 
-		std::vector<std::string> visualOrder( const IECore::PathMatcher &paths )
+		std::vector<std::string> visualOrder( const IECore::PathMatcher &paths ) const
 		{
 			std::vector<std::string> result;
 			const auto indices = indicesForPaths( paths );
@@ -891,7 +891,7 @@ class PathModel : public QAbstractItemModel
 			return result;
 		}
 
-		PathPtr pathForIndex( const QModelIndex &index )
+		PathPtr pathForIndex( const QModelIndex &index ) const
 		{
 			if( !index.isValid() || !m_rootPath )
 			{
@@ -912,7 +912,7 @@ class PathModel : public QAbstractItemModel
 			return result;
 		}
 
-		QModelIndex indexForPath( const std::vector<IECore::InternedString> &path )
+		QModelIndex indexForPath( const std::vector<IECore::InternedString> &path ) const
 		{
 			if( !m_rootPath )
 			{
@@ -954,12 +954,12 @@ class PathModel : public QAbstractItemModel
 			return result;
 		}
 
-		QModelIndex indexForPath( const Path *path )
+		QModelIndex indexForPath( const Path *path ) const
 		{
 			return indexForPath( path->names() );
 		}
 
-		std::vector<QModelIndex> indicesForPaths( const IECore::PathMatcher &paths )
+		std::vector<QModelIndex> indicesForPaths( const IECore::PathMatcher &paths ) const
 		{
 			std::vector<QModelIndex> result;
 			if( !m_rootPath )
@@ -1918,7 +1918,7 @@ class PathModel : public QAbstractItemModel
 
 		};
 
-		void indicesForPathsWalk( Item *item, const Path::Names &itemPath, const QModelIndex &itemIndex, const IECore::PathMatcher &paths, std::vector<QModelIndex> &indices )
+		void indicesForPathsWalk( Item *item, const Path::Names &itemPath, const QModelIndex &itemIndex, const IECore::PathMatcher &paths, std::vector<QModelIndex> &indices ) const
 		{
 			/// \todo Using `match()` here isn't right, because we want to
 			/// treat wildcards in the selection verbatim rather than perform
