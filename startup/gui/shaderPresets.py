@@ -54,6 +54,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 		( "Arnold Surface", "ai:surface" ),
 		( "Arnold Displacement", "ai:disp_map" ),
+		( "Arnold Volume", "ai:volume" ),
 		( "Arnold Light", "ai:light" ),
 		( "Arnold Gobo", "ai:lightFilter:gobo" ),
 		( "Arnold Decay", "ai:lightFilter:light_decay" ),
