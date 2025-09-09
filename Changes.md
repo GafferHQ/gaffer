@@ -13,6 +13,7 @@ Improvements
 - Cycles : Added support for transform shader parameters, such as `texture_coordinate.ob_tfm`.
 - SceneInspector : Improved search filter widget.
 - AttributeEditor, HierarchyView, RenderPassEditor, SceneInspector, SetEditor : Improved search filter widgets.
+- Spreadsheet : Clicking on the search icon now moves the keyboard focus to the search field ready for editing.
 
 Fixes
 -----

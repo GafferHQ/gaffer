@@ -467,6 +467,10 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__updateRowFilterWidgets()
 		self.__applyRowFilter()
 
+		if self.__rowFilterEnabled :
+			self.__patternWidget.setSelection( 0, None ) # All
+			self.__patternWidget.grabFocus()
+
 	def __refreshFilterButtonClicked( self, *unused ) :
 
 		self.__applyRowFilter()
