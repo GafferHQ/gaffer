@@ -678,7 +678,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		m = IECore.MenuDefinition()
 
 		layouts = GafferUI.Layouts.acquire( self.ancestor( CompoundEditor ).scriptNode().applicationRoot() )
-		for c in layouts.registeredEditors() :
+		for c in sorted( layouts.registeredEditors() ) :
 			m.append( "/" + IECore.CamelCase.toSpaced( c ), { "command" : functools.partial( Gaffer.WeakMethod( self.addEditor ), c ) } )
 
 		m.append( "/divider", { "divider" : True } )

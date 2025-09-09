@@ -8,6 +8,7 @@ Improvements
   - Added context variable columns to the `Show History...` window. These show the values for any context variables which change during the history.
   - Improved default size of `Show History...` window.
 - SceneInspector, LightEditor, Viewer : Shader parameters with input connections now show the connection source name instead of the plug value. The input shader can be selected via the context menu.
+- Layout menu : Sorted the editor creation items alphabetically.
 
 Fixes
 -----
