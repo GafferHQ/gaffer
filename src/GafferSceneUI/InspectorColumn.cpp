@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferSceneUI/Private/InspectorColumn.h"
+#include "GafferSceneUI/Private/ParameterInspector.h"
 
 #include "GafferUI/PathColumn.h"
 
@@ -62,6 +63,7 @@ const boost::container::flat_map<int, ConstColor4fDataPtr> g_sourceTypeColors = 
 };
 const Color4fDataPtr g_fallbackValueForegroundColor = new Color4fData( Imath::Color4f( 163, 163, 163, 255 ) / 255.0f );
 const ConstStringDataPtr g_missingOutputShader = new StringData( "Missing output shader" );
+const StringDataPtr g_shaderConnectionIcon = new StringData( "sceneInspectorShaderConnection.png" );
 
 }  // namespace
 
@@ -163,7 +165,13 @@ PathColumn::CellData InspectorColumn::cellData( const Gaffer::Path &path, const 
 		return result;
 	}
 
-	if( const auto shaderNetwork = runTimeCast<const IECoreScene::ShaderNetwork>( inspectorResult->value() ) )
+	IECoreScene::ShaderNetwork::Parameter connectionSource = ParameterInspector::connectionSource( inspectorResult->value() );
+	if( connectionSource )
+	{
+		result.value = new StringData( connectionSource.shader.string() + "." + connectionSource.name.string() );
+		result.icon = g_shaderConnectionIcon;
+	}
+	else if( const auto shaderNetwork = runTimeCast<const IECoreScene::ShaderNetwork>( inspectorResult->value() ) )
 	{
 		/// \todo We don't really want InspectorColumn to know about scene types.
 		/// If this comes up again, consider adding a registry of converters instead

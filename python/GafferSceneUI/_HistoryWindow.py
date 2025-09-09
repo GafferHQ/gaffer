@@ -36,6 +36,9 @@
 
 import imath
 
+import IECore
+import IECoreScene
+
 import Gaffer
 import GafferUI
 import GafferScene
@@ -126,14 +129,21 @@ class _ValueColumn( GafferUI.PathColumn ) :
 
 		data = self.CellData()
 
+		connectionSource = IECoreScene.ShaderNetwork.Parameter()
 		if cellValue is not None :
-			data.value = cellValue
+			connectionSource = GafferSceneUI.Private.ParameterInspector.connectionSource( cellValue ) if (
+				isinstance( cellValue, IECore.Object ) ) else IECoreScene.ShaderNetwork.Parameter()
+			data.value = cellValue if not connectionSource else IECore.StringData( connectionSource.shader + "." + connectionSource.name )
 		elif fallbackValue is not None :
-			data.value = fallbackValue
+			connectionSource = GafferSceneUI.Private.ParameterInspector.connectionSource( fallbackValue ) if (
+				isinstance( fallbackValue, IECore.Object ) ) else IECoreScene.ShaderNetwork.Parameter()
+			data.value = fallbackValue if not connectionSource else IECore.StringData( connectionSource.shader + "." + connectionSource.name )
 			data.foreground = imath.Color4f( 0.64, 0.64, 0.64, 1.0 )
 
 		if isinstance( data.value, ( imath.Color3f, imath.Color4f ) ) :
 			data.icon = data.value
+		elif connectionSource :
+			data.icon = IECore.StringData( "sceneInspectorShaderConnection.png" )
 
 		return data
 

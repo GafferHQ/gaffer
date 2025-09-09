@@ -938,3 +938,52 @@ class _FilterEnabledPlugValueWidget( GafferUI.PlugValueWidget ) :
 			plug.setValue( not plug.getValue() )
 
 SceneInspector._FilterEnabledPlugValueWidget = _FilterEnabledPlugValueWidget
+
+def __contextMenu( column, pathListing, menuDefinition ) :
+
+	if pathListing.ancestor( GafferSceneUI.SceneInspector ) is None :
+		return
+
+	selection = pathListing.getSelection()
+
+	if all( [ x.isEmpty() for x in selection ] ) :
+		return
+
+	path = pathListing.getPath().copy()
+	newSelection = []
+	selectionCount = 0
+	newSelectionCount = 0
+	for columnSelection, column in zip( selection, pathListing.getColumns() ) :
+		newColumnSelection = IECore.PathMatcher()
+		if not columnSelection.isEmpty() :
+			selectionCount += columnSelection.size()
+			if not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+				return
+			for selection in columnSelection.paths() :
+				path.setFromString( selection )
+				if not isinstance( column.inspector( path ), GafferSceneUI.Private.ParameterInspector ) :
+					return
+
+				result = column.inspect( path )
+				if result is not None and result.value() is not None and ( connectionSource := GafferSceneUI.Private.ParameterInspector.connectionSource( result.value() ) ) :
+					newColumnSelection.addPath( "/".join( path[:-2] + [connectionSource.shader] ) )
+					newSelectionCount += 1
+
+		newSelection.append( newColumnSelection )
+
+	menuDefinition.append( "SelectInputShaderDivider", { "divider" : True } )
+
+	menuDefinition.append(
+		"Select Input Shader" + ( "s" if newSelectionCount > 1 else "" ),
+		{
+			"command" : functools.partial( Gaffer.WeakMethod( pathListing.setSelection ), newSelection ),
+			"active" : newSelectionCount == selectionCount,
+		}
+	)
+
+def __inspectorColumnCreated( column ) :
+
+	if isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+		column.contextMenuSignal().connect( __contextMenu )
+
+GafferSceneUI.Private.InspectorColumn.instanceCreatedSignal().connect( __inspectorColumnCreated )
