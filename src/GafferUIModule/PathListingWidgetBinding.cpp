@@ -102,6 +102,28 @@ Q_DECLARE_METATYPE( IECore::ConstDataPtr )
 namespace
 {
 
+// Trick to call `QAbstractItemView::scheduleDelayedItemsLayout()`,
+// which is protected. We actually do derive from QTreeView so technically have
+// access via more legitimate means, except that we derive from it in Python
+// (see `_TreeView` in PathListingWidget.py). We don't want to have to call into
+// Python to access the protected method for performance reeasons, so for now we
+// cheat.
+/// \todo Perhaps we should reimplement `_TreeView` in C++ anyway, then we wouldn't
+/// need this trick.
+void scheduleDelayedItemsLayout( QTreeView *treeView )
+{
+	struct TreeViewAccessor : public QTreeView
+	{
+		void callScheduleDelayedItemsLayout()
+		{
+			scheduleDelayedItemsLayout();
+		}
+	};
+
+	// Yes, this cast is completely bogus, but it does the job.
+	static_cast<TreeViewAccessor *>( treeView )->callScheduleDelayedItemsLayout();
+}
+
 // QVariant does have `operator <`, but it's deprecated as it doesn't define a
 // total ordering, making it unsuitable for our purposes.
 // See https://doc.qt.io/qt-5/qvariant-obsolete.html#operator-lt.
@@ -1728,6 +1750,11 @@ class PathModel : public QAbstractItemModel
 							[this, model, expanded] {
 								QTreeView *treeView = dynamic_cast<QTreeView *>( model->QObject::parent() );
 								Private::ScopedAssignment<bool> assignment( model->m_modifyingTreeViewExpansion, true );
+								// Call `scheduleDelayedItemsLayout()` so that QTreeView doesn't rebuild
+								// its internal layout for every call to `setExpanded()`. When we are delivering
+								// a sequence of calls (as we do for recursive expansion) this provides a major
+								// performance improvement.
+								scheduleDelayedItemsLayout( treeView );
 								treeView->setExpanded( model->createIndex( m_row, 0, this ), expanded );
 							}
 						);
