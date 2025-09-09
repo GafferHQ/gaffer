@@ -9,6 +9,7 @@ Improvements
   - Improved default size of `Show History...` window.
 - SceneInspector, LightEditor, Viewer : Shader parameters with input connections now show the connection source name instead of the plug value. The input shader can be selected via the context menu.
 - Layout menu : Sorted the editor creation items alphabetically.
+- RenderManAttributes : Re-labelled displacement `Trace` checkbox as `Enabled`, to better match other DCCs.
 
 Fixes
 -----

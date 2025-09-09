@@ -128,10 +128,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 	] :
 		target = f"attribute:ri:{attribute}"
 		Gaffer.Metadata.registerValue( target, "layout:section", "Displacement" )
-		if attribute == "trace:displacements" :
-			label = "Trace"
-		else :
-			label = re.sub( r"[dD]isplacement ?", "", Gaffer.Metadata.value( target, "label" ) )
+		label = re.sub( r" ?[dD]isplacement ?", "", Gaffer.Metadata.value( target, "label" ) )
 		Gaffer.Metadata.registerValue( target, "label", label )
 
 	Gaffer.Metadata.registerValues( {
