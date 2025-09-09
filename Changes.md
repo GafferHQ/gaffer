@@ -25,6 +25,7 @@ Improvements
   - Added Arnold `lens_radius` and `aspect_ratio` parameters to the "Shaping" section.
   - Added Arnold `shadow_density` parameter to the "Shadows" section.
   - Renamed DiskLight `arnold:spread` plug label from "Spread" to "Spread (Arnold)".
+- Arnold : Reworked output filter handling. Now outputs with different filters can write to the same file (#6574). Also improves tidiness of resulting Arnold scene description.
 
 Fixes
 -----

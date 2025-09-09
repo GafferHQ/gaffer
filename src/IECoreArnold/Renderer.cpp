@@ -450,7 +450,6 @@ const IECore::InternedString g_filterwidthInternedString( "filterwidth" );
 const IECore::InternedString g_gafferOutputIDInternedString( "gaffer:outputID" );
 const IECore::InternedString g_updateInteractivelyInternedString( "updateInteractively" );
 
-
 class ArnoldDriver : public IECore::RefCounted
 {
 	public :
@@ -504,7 +503,6 @@ class ArnoldDriver : public IECore::RefCounted
 				ParameterAlgo::setParameter( m_driver.get(), g_customAttributesArnoldString, customAttributes, /* messageContext = */ m_name.string() );
 			}
 
-			std::string filterPrefix( "filter" );
 			for( const auto &it : parameters->readable() )
 			{
 				const IECore::InternedString &name = it.first;
@@ -512,7 +510,6 @@ class ArnoldDriver : public IECore::RefCounted
 					name == g_fileNameInternedString ||
 					name == g_driverNodeTypeInternedString ||
 					name == g_customAttributesInternedString ||
-					boost::starts_with( it.first.string(), filterPrefix ) ||
 					name == g_cameraOverrideInternedString
 				)
 				{
@@ -521,7 +518,6 @@ class ArnoldDriver : public IECore::RefCounted
 					// - fileName / customAttributes - we skip outputting these if the parameter doesn't exist on
 					//     the driver
 					// - driverNodeType - this determines the type of the node, not a parameter on the node
-					// - filter:* - these parameters go on the filter, not the driver
 					// - cameraOverride - this parameter isn't intended for us to do anything with, it just gets
 					//     put in driverParameters because we want to flag the issue that would occur if we tried
 					//     to merge outputs with different cameras
@@ -529,61 +525,6 @@ class ArnoldDriver : public IECore::RefCounted
 				}
 
 				ParameterAlgo::setParameter( m_driver.get(), name.c_str(), it.second.get(), /* messageContext = */ m_name.string() );
-			}
-
-			// Create a filter node, or reuse an existing one if we can.
-
-			std::string filterNodeType = parameter<std::string>( parameters->readable(), "filter", "gaussian" );
-			if( AiNodeEntryGetType( AiNodeEntryLookUp( AtString( filterNodeType.c_str() ) ) ) != AI_NODE_FILTER )
-			{
-				filterNodeType = filterNodeType + "_filter";
-			}
-
-			if( m_filter && AiNodeEntryGetName( AiNodeGetNodeEntry( m_filter.get() ) ) == filterNodeType )
-			{
-				// Reuse
-				AiNodeReset( m_filter.get() );
-			}
-			else
-			{
-				// Create
-				m_filter = nullptr; // Delete old filter so name doesn't clash with new filter
-				const std::string filterNodeName = fmt::format( "ieCoreArnold:filter:{}", m_name.string() );
-				m_filter.reset(
-					AiNode( m_universe, AtString( filterNodeType.c_str() ), AtString( filterNodeName.c_str() ) ),
-					m_nodeDeleter
-				);
-				if( AiNodeEntryGetType( AiNodeGetNodeEntry( m_filter.get() ) ) != AI_NODE_FILTER )
-				{
-					throw IECore::Exception( fmt::format( "Unable to create filter of type \"{}\"", filterNodeType ) );
-				}
-			}
-
-			// Set filter parameters.
-
-			for( auto &it : parameters->readable() )
-			{
-				if( !boost::starts_with( it.first.string(), filterPrefix ) || it.first == g_filterInternedString )
-				{
-					continue;
-				}
-
-				if( it.first == g_filterwidthInternedString )
-				{
-					// Special case to convert RenderMan style `float filterwidth[2]` into
-					// Arnold style `float width`.
-					if( const IECore::V2fData *v = IECore::runTimeCast<const IECore::V2fData>( it.second.get() ) )
-					{
-						if( v->readable().x != v->readable().y )
-						{
-							IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer", "Non-square filterwidth not supported" );
-						}
-						AiNodeSetFlt( m_filter.get(), g_widthArnoldString, v->readable().x );
-						continue;
-					}
-				}
-
-				ParameterAlgo::setParameter( m_filter.get(), it.first.c_str() + filterPrefix.size(), it.second.get(), /* messageContext = */ m_name.string() );
 			}
 		}
 
@@ -597,30 +538,129 @@ class ArnoldDriver : public IECore::RefCounted
 			return AiNodeGetName( m_driver.get() );
 		}
 
-		std::string filterNodeName() const
-		{
-			return AiNodeGetName( m_filter.get() );
-		}
-
 	private :
 
 		AtUniverse *m_universe;
 		const IECore::InternedString m_name;
 		NodeDeleter m_nodeDeleter;
 		SharedAtNodePtr m_driver;
-		SharedAtNodePtr m_filter;
 };
 
 IE_CORE_DECLAREPTR( ArnoldDriver )
 using DriverMap = std::map<std::string, ArnoldDriverPtr>;
+
+const std::string g_filterPrefix( "filter" );
+
+class FilterCache
+{
+
+	public :
+
+		FilterCache( NodeDeleter nodeDeleter, AtUniverse *universe )
+			: m_nodeDeleter( nodeDeleter ), m_universe( universe )
+		{
+		}
+
+		SharedAtNodePtr acquireFilter( const IECore::CompoundDataMap &outputParameters )
+		{
+			// The key for looking up filters depends on all parameters that are filter related
+			IECore::MurmurHash filterKey;
+			for( auto &parm : outputParameters )
+			{
+				if( !boost::starts_with( parm.first.string(), g_filterPrefix ) )
+				{
+					continue;
+				}
+
+				filterKey.append( parm.first );
+				parm.second->hash( filterKey );
+			}
+
+			SharedAtNodePtr &filterPtr = m_filters[ filterKey ];
+
+			if( filterPtr )
+			{
+				return filterPtr;
+			}
+
+			// No existing filter with these parameters, need to create a new filter
+
+			std::string filterNodeType = parameter<std::string>( outputParameters, "filter", "gaussian" );
+
+			if( AiNodeEntryGetType( AiNodeEntryLookUp( AtString( filterNodeType.c_str() ) ) ) != AI_NODE_FILTER )
+			{
+				filterNodeType = filterNodeType + "_filter";
+			}
+
+			int nameIndex = ++m_filterNameIndices[ filterNodeType ];
+
+			// Create the Arnold node
+			const std::string filterNodeName = fmt::format( "ieCoreArnold:filter:{}{}", filterNodeType, nameIndex );
+			filterPtr.reset(
+				AiNode( m_universe, AtString( filterNodeType.c_str() ), AtString( filterNodeName.c_str() ) ),
+				m_nodeDeleter
+			);
+			if( AiNodeEntryGetType( AiNodeGetNodeEntry( filterPtr.get() ) ) != AI_NODE_FILTER )
+			{
+				throw IECore::Exception( fmt::format( "Unable to create filter of type \"{}\"", filterNodeType ) );
+			}
+
+			// Set filter parameters.
+
+			for( auto &parm : outputParameters )
+			{
+				if( !boost::starts_with( parm.first.string(), g_filterPrefix ) )
+				{
+					continue;
+				}
+
+				if( parm.first == g_filterInternedString )
+				{
+					continue;
+				}
+
+				if( parm.first == g_filterwidthInternedString )
+				{
+					// Special case to convert RenderMan style `float filterwidth[2]` into
+					// Arnold style `float width`.
+					if( const IECore::V2fData *v = IECore::runTimeCast<const IECore::V2fData>( parm.second.get() ) )
+					{
+						if( v->readable().x != v->readable().y )
+						{
+							IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer", "Non-square filterwidth not supported" );
+						}
+						AiNodeSetFlt( filterPtr.get(), g_widthArnoldString, v->readable().x );
+						continue;
+					}
+				}
+
+				ParameterAlgo::setParameter( filterPtr.get(), parm.first.c_str() + g_filterPrefix.size(), parm.second.get(), /* messageContext = */ filterNodeName );
+			}
+
+			return filterPtr;
+		}
+
+		void clear()
+		{
+			m_filters.clear();
+		}
+
+	private :
+
+		NodeDeleter m_nodeDeleter;
+		AtUniverse *m_universe;
+		std::unordered_map< IECore::MurmurHash, SharedAtNodePtr > m_filters;
+		std::map< std::string, int > m_filterNameIndices;
+
+};
 
 class ArnoldOutput : public IECore::RefCounted
 {
 
 	public :
 
-		ArnoldOutput( const IECore::InternedString &name, const IECoreScene::Output *output )
-			:	m_name( name )
+		ArnoldOutput( const IECore::InternedString &name, const IECoreScene::Output *output, FilterCache &filterCache )
+			:	m_name( name ), m_filterCache( filterCache )
 		{
 			if( m_name.string().find( " " ) != std::string::npos )
 			{
@@ -651,6 +691,7 @@ class ArnoldOutput : public IECore::RefCounted
 			m_driverParameters = new IECore::CompoundData();
 			m_driverParameters->writable()[g_driverNodeTypeInternedString] = new IECore::StringData( driverNodeType );
 			m_driverParameters->writable()[g_fileNameInternedString] = new IECore::StringData( output->getName() );
+
 
 			IECore::StringVectorDataPtr customAttributesData;
 			if( const IECore::StringVectorData *d = output->parametersData()->member<IECore::StringVectorData>( g_customAttributesInternedString ) )
@@ -696,6 +737,12 @@ class ArnoldOutput : public IECore::RefCounted
 				)
 				{
 					// Layer names, light groups and updateInteractively are handled by the output, not the driver
+					continue;
+				}
+
+
+				if( boost::starts_with( it->first.string(), g_filterPrefix ) )
+				{
 					continue;
 				}
 
@@ -817,6 +864,8 @@ class ArnoldOutput : public IECore::RefCounted
 				output->parameters(), g_updateInteractivelyInternedString,
 				m_data == "RGBA" || m_data == "RGB"
 			);
+
+			m_filterNode = m_filterCache.acquireFilter( output->parameters() );
 		}
 
 		void append( std::vector<std::string> &outputs, std::vector<std::string> &lightPathExpressions, const DriverMap &drivers ) const
@@ -824,7 +873,8 @@ class ArnoldOutput : public IECore::RefCounted
 			const string layerNameSuffix = m_layerName.size() ? " " + m_layerName : "";
 
 			const ArnoldDriver &driver = *drivers.at( m_driverName );
-			outputs.push_back( fmt::format( "{} {} {} {}{}", m_data, m_type, driver.filterNodeName(), driver.nodeName(), layerNameSuffix ) );
+
+			outputs.push_back( fmt::format( "{} {} {} {}{}", m_data, m_type, AiNodeGetName( m_filterNode.get() ), driver.nodeName(), layerNameSuffix ) );
 
 			if( m_lpeValue.size() )
 			{
@@ -863,6 +913,9 @@ class ArnoldOutput : public IECore::RefCounted
 
 		IECore::InternedString m_driverName;
 		IECore::CompoundDataPtr m_driverParameters;
+
+		FilterCache &m_filterCache;
+		SharedAtNodePtr m_filterNode;
 
 		std::string m_data;
 		std::string m_type;
@@ -3434,6 +3487,7 @@ class ArnoldGlobals
 				m_consoleFlags( g_consoleFlagsDefault ),
 				m_enableProgressiveRender( true ),
 				m_shaderCache( new ShaderCache( nodeDeleter( renderType ), m_universeBlock->universe(), /* parentNode = */ nullptr ) ),
+				m_filterCache(  nodeDeleter( renderType ), m_universeBlock->universe() ),
 				m_renderBegun( false ),
 				m_fileName( fileName )
 		{
@@ -3473,6 +3527,7 @@ class ArnoldGlobals
 
 			// Delete nodes we own before universe is destroyed.
 			m_shaderCache.reset();
+			m_filterCache.clear();
 			m_outputs.clear();
 			m_drivers.clear();
 			m_aovShaders.clear();
@@ -3915,7 +3970,7 @@ class ArnoldGlobals
 				}
 				else
 				{
-					arnoldOutput = new ArnoldOutput( name, output );
+					arnoldOutput = new ArnoldOutput( name, output, m_filterCache );
 				}
 			}
 			catch( const std::exception &e )
@@ -4383,6 +4438,8 @@ class ArnoldGlobals
 				auto existingDriver = requiredDrivers.find( output->driverName() );
 				if( existingDriver != requiredDrivers.end() )
 				{
+					// Check that parameters match with the existing driver, so we can use the same
+					// driver for both ouptuts
 					const IECore::CompoundDataMap &existingParameters = existingDriver->second->readable();
 					if( currentParameters != existingParameters )
 					{
@@ -4524,6 +4581,7 @@ class ArnoldGlobals
 		bool m_enableProgressiveRender;
 		std::optional<int> m_progressiveMinAASamples;
 		ShaderCachePtr m_shaderCache;
+		FilterCache m_filterCache;
 
 		bool m_renderBegun;
 
