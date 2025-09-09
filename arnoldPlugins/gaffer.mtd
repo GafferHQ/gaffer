@@ -2875,6 +2875,8 @@
 
 [node standard_volume]
 
+	shaderType STRING "volume"
+
 	gaffer.nodeMenu.category STRING "Volume"
 	gaffer.graphEditorLayout.defaultVisibility BOOL false
 

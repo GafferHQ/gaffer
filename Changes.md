@@ -1,10 +1,16 @@
 1.x.x.x (relative to 1.6.x.x)
 =======
 
+Improvements
+------------
+
+- ArnoldShader : The `standard_volume` shader is now assigned via an `ai:volume` attribute instead of `ai:surface`. This matches volume assignments imported from USD, and means that Gaffer now exports materials to USD using the same convention.
+
 Breaking Changes
 ----------------
 
 - ValuePlug : Disconnection no longer emits `plugSetSignal()`.
+- ArnoldShader : The `standard_volume` shader is now assigned via an `ai:volume` attribute instead of `ai:surface`.
 
 1.6.x.x (relative to 1.6.0.0)
 =======
