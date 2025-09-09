@@ -711,12 +711,12 @@ class RendererTest( GafferTest.TestCase ) :
 			outputs = arnold.AiNodeGetArray( options, "outputs" )
 			outputSet = set( arnold.AiArrayGetStr( outputs, i ) for i in range( 0, arnold.AiArrayGetNumElements( outputs ) ) )
 			self.assertEqual( outputSet, set( [
-				"A RGB ieCoreArnold:filter:testA ieCoreArnold:display:testA",
-				"B RGBA ieCoreArnold:filter:testB ieCoreArnold:display:testB",
-				"C FLOAT ieCoreArnold:filter:testC ieCoreArnold:display:testC",
-				"D INT ieCoreArnold:filter:testD ieCoreArnold:display:testD",
-				"E UINT ieCoreArnold:filter:testE ieCoreArnold:display:testE",
-				"F VECTOR ieCoreArnold:filter:testF ieCoreArnold:display:testF",
+				"A RGB ieCoreArnold:filter:gaussian_filter1 ieCoreArnold:display:testA",
+				"B RGBA ieCoreArnold:filter:gaussian_filter1 ieCoreArnold:display:testB",
+				"C FLOAT ieCoreArnold:filter:gaussian_filter1 ieCoreArnold:display:testC",
+				"D INT ieCoreArnold:filter:gaussian_filter1 ieCoreArnold:display:testD",
+				"E UINT ieCoreArnold:filter:gaussian_filter1 ieCoreArnold:display:testE",
+				"F VECTOR ieCoreArnold:filter:gaussian_filter1 ieCoreArnold:display:testF",
 			] ) )
 
 	def testOutputFilters( self ) :
@@ -753,8 +753,108 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( len( filters ), 1 )
 			f = filters[0]
 
+			self.assertEqual( arnold.AiNodeGetName( f ), 'ieCoreArnold:filter:gaussian_filter1' )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( f ) ), "gaussian_filter" )
 			self.assertEqual( arnold.AiNodeGetFlt( f, "width" ), 3.5 )
+
+		# With matching parameters, we still just get one filter
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.ass" )
+		)
+
+		r.output(
+			"test",
+			IECoreScene.Output(
+				"beauty.exr",
+				"exr",
+				"rgba",
+				{
+					"filter" : "gaussian",
+					"filterwidth" : imath.V2f( 3.5 ),
+				}
+			)
+		)
+
+		r.output(
+			"test2",
+			IECoreScene.Output(
+				"beauty2.exr",
+				"exr",
+				"rgba",
+				{
+					"filter" : "gaussian",
+					"filterwidth" : imath.V2f( 3.5 ),
+				}
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
+			filters = self.__allNodes( universe, type = arnold.AI_NODE_FILTER )
+			# Ignore node created automatically by Arnold itself.
+			filters = [ f for f in filters if arnold.AiNodeGetName( f ) != "_forced_box_filter" ]
+
+			self.assertEqual( len( filters ), 1 )
+			f = filters[0]
+
+			self.assertEqual( arnold.AiNodeGetName( f ), 'ieCoreArnold:filter:gaussian_filter1' )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( f ) ), "gaussian_filter" )
+			self.assertEqual( arnold.AiNodeGetFlt( f, "width" ), 3.5 )
+
+		# With mismatched parameters, we get two filters
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.ass" )
+		)
+
+		r.output(
+			"test",
+			IECoreScene.Output(
+				"beauty.exr",
+				"exr",
+				"rgba",
+				{
+					"filter" : "gaussian",
+					"filterwidth" : imath.V2f( 3.5 ),
+				}
+			)
+		)
+
+		r.output(
+			"test2",
+			IECoreScene.Output(
+				"beauty2.exr",
+				"exr",
+				"rgba",
+				{
+					"filter" : "gaussian",
+					"filterwidth" : imath.V2f( 1.5 ),
+				}
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
+			filters = self.__allNodes( universe, type = arnold.AI_NODE_FILTER )
+			# Ignore node created automatically by Arnold itself.
+			filters = [ f for f in filters if arnold.AiNodeGetName( f ) != "_forced_box_filter" ]
+
+			self.assertEqual( len( filters ), 2 )
+
+			self.assertEqual( [ arnold.AiNodeGetName( f ) for f in filters ], [ 'ieCoreArnold:filter:gaussian_filter1',  'ieCoreArnold:filter:gaussian_filter2' ] )
+			self.assertEqual( [ arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( f ) ) for f in filters ], [ "gaussian_filter" ] * 2 )
+			self.assertEqual( set( [ arnold.AiNodeGetFlt( f, "width" ) for f in filters ] ), set( [ 3.5, 1.5 ] ) )
 
 	def testOutputLPEs( self ) :
 
@@ -798,8 +898,8 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiArrayGetNumElements( outputs ), 2 )
 			outputSet = set( [ arnold.AiArrayGetStr( outputs, 0 ), arnold.AiArrayGetStr( outputs, 1 ) ] )
 			self.assertEqual( outputSet, set( [
-				"ieCoreArnold:lpe:test RGB ieCoreArnold:filter:test ieCoreArnold:display:test",
-				"ieCoreArnold:lpe:testWithAlpha RGBA ieCoreArnold:filter:testWithAlpha ieCoreArnold:display:testWithAlpha"
+				"ieCoreArnold:lpe:test RGB ieCoreArnold:filter:gaussian_filter1 ieCoreArnold:display:test",
+				"ieCoreArnold:lpe:testWithAlpha RGBA ieCoreArnold:filter:gaussian_filter1 ieCoreArnold:display:testWithAlpha"
 			] ) )
 
 			lpes = arnold.AiNodeGetArray( options, "light_path_expressions" )
@@ -867,7 +967,7 @@ class RendererTest( GafferTest.TestCase ) :
 				"combined2.exr",
 				"exr",
 				"color D",
-				{ "filter" : "catrom" }
+				{ "testParm" : 4, "filter" : "catrom", "filterwidth" : 4 }
 			)
 		)
 
@@ -877,7 +977,7 @@ class RendererTest( GafferTest.TestCase ) :
 				"combined2.exr",
 				"exr",
 				"color E",
-				{ "filter" : "catrom" }
+				{ "testParm" : 4, "filter" : "box" }
 			)
 		)
 
@@ -887,7 +987,7 @@ class RendererTest( GafferTest.TestCase ) :
 				"combined2.exr",
 				"exr",
 				"color F",
-				{ "filter" : "catrom" }
+				{ "testParm" : 4, "filter" : "catrom" }
 			)
 		)
 
@@ -902,30 +1002,31 @@ class RendererTest( GafferTest.TestCase ) :
 			outputs = arnold.AiNodeGetArray( options, "outputs" )
 			outputSet = set( arnold.AiArrayGetStr( outputs, i ) for i in range( 0, arnold.AiArrayGetNumElements( outputs ) ) )
 			self.assertEqual( outputSet, set( [
-				"A RGB ieCoreArnold:filter:testA,testB ieCoreArnold:display:testA,testB",
-				"E RGB ieCoreArnold:filter:testD,testE,testF ieCoreArnold:display:testD,testE,testF",
-				"B RGB ieCoreArnold:filter:testA,testB ieCoreArnold:display:testA,testB",
-				"C RGB ieCoreArnold:filter:testC ieCoreArnold:display:testC",
-				"D RGB ieCoreArnold:filter:testD,testE,testF ieCoreArnold:display:testD,testE,testF",
-				"F RGB ieCoreArnold:filter:testD,testE,testF ieCoreArnold:display:testD,testE,testF"
+				"A RGB ieCoreArnold:filter:gaussian_filter1 ieCoreArnold:display:testA,testB",
+				"B RGB ieCoreArnold:filter:gaussian_filter1 ieCoreArnold:display:testA,testB",
+				"C RGB ieCoreArnold:filter:gaussian_filter1 ieCoreArnold:display:testC",
+				"D RGB ieCoreArnold:filter:catrom_filter2 ieCoreArnold:display:testD,testE,testF",
+				"E RGB ieCoreArnold:filter:box_filter1 ieCoreArnold:display:testD,testE,testF",
+				"F RGB ieCoreArnold:filter:catrom_filter1 ieCoreArnold:display:testD,testE,testF"
 			] ) )
+
 
 			driver1 = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:display:testA,testB" )
 			self.assertEqual( arnold.AiNodeGetStr( driver1, "filename" ), "combined.exr" )
 			self.assertEqual( arnold.AiNodeGetInt( driver1, "testParm" ), 2 )
-			filter1 = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:filter:testA,testB" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( filter1 ) ), "gaussian_filter" )
 
 			driver2 = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:display:testC" )
 			self.assertEqual( arnold.AiNodeGetStr( driver2, "filename" ), "single.exr" )
 			self.assertEqual( arnold.AiNodeGetInt( driver2, "whatever" ), 3 )
-			filter2 = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:filter:testC" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( filter2 ) ), "gaussian_filter" )
 
 			driver3 = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:display:testD,testE,testF" )
 			self.assertEqual( arnold.AiNodeGetStr( driver3, "filename" ), "combined2.exr" )
-			filter3 = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:filter:testD,testE,testF" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( filter3 ) ), "catrom_filter" )
+
+			filter1 = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:filter:gaussian_filter1" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( filter1 ) ), "gaussian_filter" )
+
+			filter2 = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:filter:catrom_filter1" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( filter2 ) ), "catrom_filter" )
 
 	def testMultipleCameras( self ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
