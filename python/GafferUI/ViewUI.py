@@ -132,7 +132,6 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
 			"togglePlugValueWidget:image:on", "clippingOn.png",
 			"togglePlugValueWidget:image:off", "clippingOff.png",
-			"togglePlugValueWidget:defaultToggleValue", True,
 
 		],
 

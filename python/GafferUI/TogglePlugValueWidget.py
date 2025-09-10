@@ -74,6 +74,8 @@ class TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 				self.__plugValueWidget = GafferUI.PlugValueWidget.create( plug, typeMetadata = "togglePlugValueWidget:customWidgetType" )
 
 		self.__toggleValue = Gaffer.Metadata.value( plug, "togglePlugValueWidget:defaultToggleValue" )
+		if self.__toggleValue is None and isinstance( plug, Gaffer.BoolPlug ) :
+			self.__toggleValue = not plug.defaultValue()
 
 	def hasLabel( self ) :
 
