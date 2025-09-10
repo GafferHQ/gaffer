@@ -147,6 +147,7 @@ Gaffer.Metadata.registerNode(
 			"togglePlugValueWidget:image:on", "exposureOn.png",
 			"togglePlugValueWidget:image:off", "exposureOff.png",
 			"togglePlugValueWidget:defaultToggleValue", 1,
+			"numericPlugValueWidget:fixedCharacterWidth", 5,
 
 		],
 
@@ -161,6 +162,7 @@ Gaffer.Metadata.registerNode(
 			"togglePlugValueWidget:image:on", "gammaOn.png",
 			"togglePlugValueWidget:image:off", "gammaOff.png",
 			"togglePlugValueWidget:defaultToggleValue", 2,
+			"numericPlugValueWidget:fixedCharacterWidth", 5,
 
 		],
 
@@ -270,9 +272,6 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__plugValueWidget = None
 			if not isinstance( plug, Gaffer.BoolPlug ) :
 				self.__plugValueWidget = GafferUI.PlugValueWidget.create( plug, typeMetadata = "togglePlugValueWidget:customWidgetType" )
-
-			if isinstance( self.__plugValueWidget, GafferUI.NumericPlugValueWidget ) :
-				self.__plugValueWidget.numericWidget().setFixedCharacterWidth( 5 )
 
 		self.__toggleValue = Gaffer.Metadata.value( plug, "togglePlugValueWidget:defaultToggleValue" )
 
