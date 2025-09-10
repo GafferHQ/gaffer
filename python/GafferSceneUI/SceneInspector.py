@@ -71,8 +71,8 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 			self["compare"]["scene"] = Gaffer.OptionalValuePlug( valuePlug = GafferScene.ScenePlug() )
 			self["compare"]["renderPass"] = Gaffer.OptionalValuePlug( valuePlug = Gaffer.StringPlug() )
 
-			self["locationFilter"] = Gaffer.OptionalValuePlug( valuePlug = Gaffer.StringPlug() )
-			self["globalsFilter"] = Gaffer.OptionalValuePlug( valuePlug = Gaffer.StringPlug() )
+			self["locationFilter"] = Gaffer.StringPlug()
+			self["globalsFilter"] = Gaffer.StringPlug()
 
 			# Stop the input scenes claiming that all locations exist when
 			# they don't have an input.
@@ -161,7 +161,7 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 
 				with GafferUI.ListContainer( spacing = 4, borderWidth = 4, parenting = { "label" : "Location" } ) :
 
-					GafferUI.OptionalValuePlugValueWidget( self.settings()["locationFilter"] )
+					GafferUI.PlugValueWidget.create( self.settings()["locationFilter"] )
 
 					self.__locationPathListing = GafferUI.PathListingWidget(
 						_GafferSceneUI._SceneInspector.InspectorPath(
@@ -181,7 +181,7 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 
 				with GafferUI.ListContainer( spacing = 4, borderWidth = 4, parenting = { "label" : "Globals" } ) :
 
-					GafferUI.OptionalValuePlugValueWidget( self.settings()["globalsFilter"] )
+					GafferUI.PlugValueWidget.create( self.settings()["globalsFilter"] )
 
 					self.__globalsPathListing = GafferUI.PathListingWidget(
 						_GafferSceneUI._SceneInspector.InspectorPath(
@@ -279,11 +279,10 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 
 	def __updateFilter( self, tree, plug ) :
 
-		if not plug["enabled"].getValue() or not plug["value"].getValue() :
+		pattern = plug.getValue()
+		if not pattern :
 			pattern = "*"
-		else :
-			pattern = plug["value"].getValue()
-			if not IECore.StringAlgo.hasWildcards( pattern ) :
+		elif not IECore.StringAlgo.hasWildcards( pattern ) :
 				pattern = f"*{pattern}*"
 
 		tree.setFilter( pattern )
@@ -369,26 +368,36 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"locationFilter.enabled" : [
+		"locationFilter" : [
 
-			"plugValueWidget:type", "GafferSceneUI.SceneInspector._FilterEnabledPlugValueWidget",
+			"description",
+			"""
+			Filters the displayed properties. Accepts standard wildcards such as `*` and `?`.
+			""",
 
-		],
-
-		"locationFilter.value" : [
-
+			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on", "searchOn.png",
+			"togglePlugValueWidget:image:off", "search.png",
+			# We need a non-default value to toggle to, so that the first
+			# toggling can highlight the icon. `*` seems like a reasonable value
+			# since it has no effect on the filtering, and hints that wildcards
+			# are available.
+			"togglePlugValueWidget:defaultToggleValue", "*",
 			"stringPlugValueWidget:placeholderText", "Filter...",
 
 		],
 
-		"globalsFilter.enabled" : [
+		"globalsFilter" : [
 
-			"plugValueWidget:type", "GafferSceneUI.SceneInspector._FilterEnabledPlugValueWidget",
+			"description",
+			"""
+			Filters the displayed properties. Accepts standard wildcards such as `*` and `?`.
+			""",
 
-		],
-
-		"globalsFilter.value" : [
-
+			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on", "searchOn.png",
+			"togglePlugValueWidget:image:off", "search.png",
+			"togglePlugValueWidget:defaultToggleValue", "*",
 			"stringPlugValueWidget:placeholderText", "Filter...",
 
 		],
@@ -913,31 +922,6 @@ class _ComparePlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__inputLabelWidget.connectToNodeSetWidget( self.ancestor( GafferUI.NodeSetEditor ) )
 
 SceneInspector._ComparePlugValueWidget = _ComparePlugValueWidget
-
-class _FilterEnabledPlugValueWidget( GafferUI.PlugValueWidget ) :
-
-	def __init__( self, plugs, **kw ) :
-
-		self.__button = GafferUI.Button( image = "search.png", hasFrame = False )
-		GafferUI.PlugValueWidget.__init__( self, self.__button, plugs, **kw )
-
-		self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
-
-	def _updateFromValues( self, values, exception ) :
-
-		on = bool( sole( values ) )
-		self.__button.setImage(
-			"searchOn.png" if on else "search.png"
-		)
-
-		self.setToolTip( "Click to {} filtering.".format( "disable" if on else "enable" ) )
-
-	def __buttonClicked( self, button ) :
-
-		for plug in self.getPlugs() :
-			plug.setValue( not plug.getValue() )
-
-SceneInspector._FilterEnabledPlugValueWidget = _FilterEnabledPlugValueWidget
 
 def __contextMenu( column, pathListing, menuDefinition ) :
 

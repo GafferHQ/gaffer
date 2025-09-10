@@ -445,6 +445,8 @@
 				"locationIncludedHighlighted",
 				"locationIncludedHighlightedTransparent",
 				"locationIncludedTransparent",
+				"setFilterOff",
+				"setFilterOn",
 			]
 		},
 
@@ -509,6 +511,20 @@
 				"colorFieldSpacerIcon",
 				"colorFieldEmptyIcon",
 			]
+		},
+
+		"miscellaneous" : {
+
+			"options" : {
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				"searchFieldBackground",
+				"search",
+				"searchOn",
+			],
+
 		}
 
 	},
@@ -567,8 +583,6 @@
 		'scene',
 		'sceneInspectorHistory',
 		'sceneInspectorInheritance',
-		'search',
-		'searchOn',
 		'setMembershipDot',
 		'shuffleArrow',
 		'subMenuArrow',

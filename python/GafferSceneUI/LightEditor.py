@@ -63,6 +63,16 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 			self["section"] = Gaffer.StringPlug( defaultValue = "" )
 			self["editScope"] = Gaffer.Plug()
 
+			self["__setFilter"] = GafferScene.SetFilter()
+			self["__setFilter"]["setExpression"].setValue( "__lights __lightFilters" )
+
+			self["__isolate"] = GafferScene.Isolate()
+			self["__isolate"]["in"].setInput( self["in"] )
+			self["__isolate"]["filter"].setInput( self["__setFilter"]["out"] )
+
+			self["__filteredIn"] = GafferScene.ScenePlug()
+			self["__filteredIn"].setInput( self["__isolate"]["out"] )
+
 	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::LightEditor::Settings" )
 
 	def __init__( self, scriptNode, **kw ) :
@@ -70,11 +80,6 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4, spacing = 4 )
 
 		GafferSceneUI.SceneEditor.__init__( self, column, scriptNode, **kw )
-
-		self.__setFilter = _GafferSceneUI._HierarchyViewSetFilter()
-		self.__setFilter.setScene( self.settings()["in"] )
-		self.__setFilter.setContext( self.context() )
-		self.__setFilter.setSetNames( [ "__lights", "__lightFilters" ] )
 
 		with column :
 
@@ -85,7 +90,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 			)
 
 			self.__pathListing = GafferUI.PathListingWidget(
-				GafferScene.ScenePath( self.settings()["in"], self.context(), "/", filter = self.__setFilter ),
+				GafferScene.ScenePath( self.settings()["__filteredIn"], self.context(), "/" ),
 				columns = [
 					_GafferSceneUI._LightEditorLocationNameColumn(),
 					_GafferSceneUI._LightEditorMuteColumn(
@@ -238,10 +243,6 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 	def __lazyUpdateFromContext( self ) :
 
 		self.__pathListing.getPath().setContext( self.context() )
-		# Note : editing the filter in-place is not thread-safe with respect to
-		# background updates in the PathListingWidget. But we're getting away
-		# with it because the line above will cancel any current update.
-		self.__setFilter.setContext( self.context() )
 
 	@GafferUI.LazyMethod()
 	def __updateColumns( self ) :

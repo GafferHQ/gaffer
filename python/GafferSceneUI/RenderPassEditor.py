@@ -70,8 +70,13 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			self["__adaptors"] = GafferSceneUI.RenderPassEditor._createRenderAdaptors()
 			self["__adaptors"]["in"].setInput( self["in"] )
 
-			self["__adaptedIn"] = GafferScene.ScenePlug()
-			self["__adaptedIn"].setInput( self["__adaptors"]["out"] )
+			self["__filter"] = _Filter()
+			self["__filter"]["in"].setInput( self["__adaptors"]["out"] )
+			Gaffer.PlugAlgo.promote( self["__filter"]["filter"] )
+			Gaffer.PlugAlgo.promote( self["__filter"]["hideDisabled"] )
+
+			self["__filteredIn"] = GafferScene.ScenePlug()
+			self["__filteredIn"].setInput( self["__filter"]["out"] )
 
 	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::RenderPassEditor::Settings" )
 
@@ -80,13 +85,6 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		mainColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4, spacing = 4 )
 
 		GafferSceneUI.SceneEditor.__init__( self, mainColumn, scriptNode, **kw )
-
-		searchFilter = _GafferSceneUI._RenderPassEditor.SearchFilter()
-		disabledRenderPassFilter = _GafferSceneUI._RenderPassEditor.DisabledRenderPassFilter()
-		disabledRenderPassFilter.userData()["UI"] = { "label" : "Hide Disabled", "toolTip" : "Hide render passes that are disabled for rendering" }
-		disabledRenderPassFilter.setEnabled( False )
-
-		self.__filter = Gaffer.CompoundPathFilter( [ searchFilter, disabledRenderPassFilter ] )
 
 		with mainColumn :
 
@@ -101,18 +99,14 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 				GafferUI.PlugLayout(
 					self.settings(),
 					orientation = GafferUI.ListContainer.Orientation.Horizontal,
-					rootSection = "Grouping"
+					rootSection = "Filter"
 				)
-				GafferUI.Divider( orientation = GafferUI.Divider.Orientation.Vertical )
-
-				_SearchFilterWidget( searchFilter )
-				GafferUI.BasicPathFilterWidget( disabledRenderPassFilter )
 
 			self.__renderPassNameColumn = _GafferSceneUI._RenderPassEditor.RenderPassNameColumn()
 			self.__renderPassActiveColumn = _GafferSceneUI._RenderPassEditor.RenderPassActiveColumn()
 			self.__pathListing = GafferUI.PathListingWidget(
 				_GafferSceneUI._RenderPassEditor.RenderPassPath(
-					self.settings()["__adaptedIn"], self.context(), "/", filter = self.__filter, grouped = self.settings()["displayGrouped"].getValue()
+					self.settings()["__filteredIn"], self.context(), "/", grouped = self.settings()["displayGrouped"].getValue()
 				),
 				columns = [
 					self.__renderPassNameColumn,
@@ -768,14 +762,101 @@ Gaffer.Metadata.registerNode(
 			Click to toggle between list and grouped display of render passes.
 			""",
 
-			"layout:section", "Grouping",
-			"plugValueWidget:type", "GafferSceneUI.RenderPassEditor._ToggleGroupingPlugValueWidget",
+			"layout:section", "Filter",
+			"layout:divider", True,
+			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on", "pathListingTree.png",
+			"togglePlugValueWidget:image:off", "pathListingList.png",
+
+		],
+
+		"filter" : [
+
+			"description",
+			"""
+			Filters the displayed render passes. Accepts standard wildcards such as `*` and `?`.
+			""",
+
+			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:imagePrefix", "search",
+			"togglePlugValueWidget:defaultToggleValue", "*",
+			"stringPlugValueWidget:placeholderText", "Filter...",
+			"layout:section", "Filter",
+
+		],
+
+		"hideDisabled" : [
+
+			"description",
+			"""
+			Hides render passes that are disabled for rendering.
+			""",
+
+			"boolPlugValueWidget:labelVisible", True,
+			"layout:section", "Filter",
 
 		],
 
 	}
 
 )
+
+##########################################################################
+# _Filter node
+##########################################################################
+
+class _Filter( GafferScene.SceneProcessor ) :
+
+	def __init__( self, name = "_Filter" ) :
+
+		GafferScene.SceneProcessor.__init__( self, name )
+
+		self["filter"] = Gaffer.StringPlug()
+		self["hideDisabled"] = Gaffer.BoolPlug()
+
+		self["__keepFilteredPasses"] = GafferScene.DeleteRenderPasses()
+		self["__keepFilteredPasses"]["in"].setInput( self["in"] )
+		self["__keepFilteredPasses"]["enabled"].setInput( self["filter"] )
+		self["__keepFilteredPasses"]["mode"].setValue( GafferScene.DeleteRenderPasses.Mode.Keep )
+
+		self["__filterExpression"] = Gaffer.Expression()
+		self["__filterExpression"].setExpression(
+			"pattern = parent['filter'];"
+			"pattern = f'*{pattern}*' if not IECore.StringAlgo.hasWildcards( pattern ) else pattern;"
+			"parent['__keepFilteredPasses']['names'] = pattern;"
+		)
+
+		self["__adaptorEnabler"] = Gaffer.ContextVariables()
+		self["__adaptorEnabler"].setup( self["__keepFilteredPasses"]["out"] )
+		self["__adaptorEnabler"]["in"].setInput( self["__keepFilteredPasses"]["out"] )
+		self["__adaptorEnabler"]["variables"].addChild( Gaffer.NameValuePlug( "renderPassEditor:enableAdaptors", True ) )
+
+		self["__optionQuery"] = GafferScene.OptionQuery()
+		self["__optionQuery"]["scene"].setInput( self["__adaptorEnabler"]["out"] )
+		self["__optionQuery"].addQuery( Gaffer.StringVectorDataPlug( defaultValue = IECore.StringVectorData() ) )
+		self["__optionQuery"].addQuery( Gaffer.BoolPlug( defaultValue = True ) )
+		self["__optionQuery"]["queries"][0]["name"].setValue( "renderPass:names" )
+		self["__optionQuery"]["queries"][1]["name"].setValue( "renderPass:enabled" )
+
+		self["__collectEnabledPasses"] = Gaffer.Collect()
+		self["__collectEnabledPasses"]["contextVariable"].setValue( "renderPass" )
+		self["__collectEnabledPasses"]["contextValues"].setInput( self["__optionQuery"]["out"][0]["value"] )
+		self["__collectEnabledPasses"]["enabled"].setInput( self["__optionQuery"]["out"][1]["value"] )
+		self["__collectEnabledPasses"].addInput( Gaffer.StringPlug( "names", defaultValue = "${renderPass}" ) )
+
+		self["__keepEnabledPasses"] = GafferScene.DeleteRenderPasses()
+		self["__keepEnabledPasses"]["in"].setInput( self["__keepFilteredPasses"]["out"] )
+		self["__keepEnabledPasses"]["names"].setInput( self["__collectEnabledPasses"]["out"]["names"] )
+		self["__keepEnabledPasses"]["enabled"].setInput( self["hideDisabled"] )
+		self["__keepEnabledPasses"]["mode"].setValue( GafferScene.DeleteRenderPasses.Mode.Keep )
+
+		self["out"].setInput( self["__keepEnabledPasses"]["out"] )
+
+IECore.registerRunTimeTyped( _Filter, typeName = "GafferSceneUI::RenderPassEditor::_Filter" )
+
+##########################################################################
+# Widgets
+##########################################################################
 
 class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
@@ -852,86 +933,6 @@ class _Spacer( GafferUI.Spacer ) :
 		GafferUI.Spacer.__init__( self, imath.V2i( 0 ) )
 
 RenderPassEditor._Spacer = _Spacer
-
-## \todo Should this be a new displayMode of BoolPlugValueWidget?
-class _ToggleGroupingPlugValueWidget( GafferUI.PlugValueWidget ) :
-
-	def __init__( self, plugs, **kw ) :
-
-		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
-
-		GafferUI.PlugValueWidget.__init__( self, self.__row, plugs )
-
-		self.__groupingModeButton = GafferUI.Button( image = "pathListingList.png", hasFrame=False )
-		self.__groupingModeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__groupingModeButtonClicked ) )
-		self.__row.append(
-			self.__groupingModeButton
-		)
-
-	def __groupingModeButtonClicked( self, button ) :
-
-		[ plug.setValue( not plug.getValue() ) for plug in self.getPlugs() ]
-
-	def _updateFromValues( self, values, exception ) :
-
-		self.__groupingModeButton.setImage( "pathListingTree.png" if all( values ) else "pathListingList.png" )
-
-RenderPassEditor._ToggleGroupingPlugValueWidget = _ToggleGroupingPlugValueWidget
-
-##########################################################################
-# _SearchFilterWidget
-##########################################################################
-
-class _SearchFilterWidget( GafferUI.PathFilterWidget ) :
-
-	def __init__( self, pathFilter ) :
-
-		self.__patternWidget = GafferUI.TextWidget()
-		GafferUI.PathFilterWidget.__init__( self, self.__patternWidget, pathFilter )
-
-		self.__patternWidget.setPlaceholderText( "Filter..." )
-
-		self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ) )
-		self.__patternWidget.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__dragEnter ) )
-		self.__patternWidget.dragLeaveSignal().connectFront( Gaffer.WeakMethod( self.__dragLeave ) )
-		self.__patternWidget.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ) )
-
-		self._updateFromPathFilter()
-
-	def _updateFromPathFilter( self ) :
-
-		self.__patternWidget.setText( self.pathFilter().getMatchPattern() )
-
-	def __patternEditingFinished( self, widget ) :
-
-		self.pathFilter().setMatchPattern( self.__patternWidget.getText() )
-
-	def __dragEnter( self, widget, event ) :
-
-		if not isinstance( event.data, IECore.StringVectorData ) :
-			return False
-
-		if not len( event.data ) :
-			return False
-
-		self.__patternWidget.setHighlighted( True )
-
-		return True
-
-	def __dragLeave( self, widget, event ) :
-
-		self.__patternWidget.setHighlighted( False )
-
-		return True
-
-	def __drop( self, widget, event ) :
-
-		if isinstance( event.data, IECore.StringVectorData ) and len( event.data ) > 0 :
-			self.pathFilter().setMatchPattern( " ".join( sorted( event.data ) ) )
-
-		self.__patternWidget.setHighlighted( False )
-
-		return True
 
 class _RenderPassCreationDialogue( GafferUI.Dialogue ) :
 

@@ -11,11 +11,26 @@ Improvements
 - Layout menu : Sorted the editor creation items alphabetically.
 - ShaderTweaks, ShaderQuery : Added `Arnold Volume` preset for the `shader` plug.
 - Cycles : Added support for transform shader parameters, such as `texture_coordinate.ob_tfm`.
+- SceneInspector : Improved search filter widget.
+- AttributeEditor, HierarchyView, RenderPassEditor, SceneInspector, SetEditor : Improved search filter widgets.
+- Spreadsheet : Clicking on the search icon now moves the keyboard focus to the search field ready for editing.
 
 Fixes
 -----
 
+- HierarchyView : Fixed filtering bug. This could cause the filter to fail to match anything due to being evaluated with the wrong context.
 - PathListingWidget : Fixed parent layout update when column sizes change.
+- Path : Fixed GIL management bug in `children()` binding.
+
+API
+---
+
+- TogglePlugValueWidget : Added new widget type for toggling between default and non-default values.
+- BoolPlugValueWidget : Added `boolPlugValueWidget:labelVisible` metadata, which can be used to show the plug's name to the right of the icon.
+- SceneEditor : Added `withHierarchyFilter` argument to Settings node. This provides a standard way of filtering the input scene before display, with the filtered scene being provided on the `editor.settings()["__filteredIn"]` plug.
+- AttributeEditor, HierarchyView : Added `filter` and `setFilter` plugs to the `settings()` node.
+- RenderPassEditor : Added `filter` and `hideDisabled` plugs to the `settings()` node.
+- SetEditor : Added `filter`, `hideEmptySets` and `hideEmptySelection` plugs to the `settings()` node.
 
 1.6.0.0 (relative to 1.5.16.2)
 =======
