@@ -129,7 +129,7 @@ Gaffer.Metadata.registerNode(
 			Highlights the regions in which the colour values go above 1 or below 0.
 			""",
 
-			"plugValueWidget:type", "GafferUI.ViewUI._TogglePlugValueWidget",
+			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
 			"togglePlugValueWidget:image:on", "clippingOn.png",
 			"togglePlugValueWidget:image:off", "clippingOff.png",
 			"togglePlugValueWidget:defaultToggleValue", True,
@@ -143,7 +143,7 @@ Gaffer.Metadata.registerNode(
 			Applies an exposure adjustment to the image.
 			""",
 
-			"plugValueWidget:type", "GafferUI.ViewUI._TogglePlugValueWidget",
+			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
 			"togglePlugValueWidget:image:on", "exposureOn.png",
 			"togglePlugValueWidget:image:off", "exposureOff.png",
 			"togglePlugValueWidget:defaultToggleValue", 1,
@@ -158,7 +158,7 @@ Gaffer.Metadata.registerNode(
 			Applies a gamma correction to the image.
 			""",
 
-			"plugValueWidget:type", "GafferUI.ViewUI._TogglePlugValueWidget",
+			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
 			"togglePlugValueWidget:image:on", "gammaOn.png",
 			"togglePlugValueWidget:image:off", "gammaOff.png",
 			"togglePlugValueWidget:defaultToggleValue", 2,
@@ -251,72 +251,3 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __setValue( self, value, *unused ) :
 
 		self.getPlug().setValue( value )
-
-# Toggles between default value and the last non-default value
-## \todo Consider making this part of the public API.
-class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
-
-	def __init__( self, plug, **kw ) :
-
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 2 )
-
-		GafferUI.PlugValueWidget.__init__( self, row, plug, **kw )
-
-		self.__onImage = Gaffer.Metadata.value( plug, "togglePlugValueWidget:image:on" ) or "warningSmall.png"
-		self.__offImage = Gaffer.Metadata.value( plug, "togglePlugValueWidget:image:off" ) or "warningSmall.png"
-		with row :
-
-			self.__button = GafferUI.Button( "", self.__offImage, hasFrame=False )
-			self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
-
-			self.__plugValueWidget = None
-			if not isinstance( plug, Gaffer.BoolPlug ) :
-				self.__plugValueWidget = GafferUI.PlugValueWidget.create( plug, typeMetadata = "togglePlugValueWidget:customWidgetType" )
-
-		self.__toggleValue = Gaffer.Metadata.value( plug, "togglePlugValueWidget:defaultToggleValue" )
-
-	def hasLabel( self ) :
-
-		return True
-
-	def getToolTip( self ) :
-
-		result = GafferUI.PlugValueWidget.getToolTip( self )
-
-		if result :
-			result += "\n\n"
-		result += "## Actions\n\n"
-		result += "- Click to toggle to/from default value\n"
-
-		return result
-
-	def _updateFromValues( self, values, exception ) :
-
-		value = sole( values )
-		if value != self.getPlug().defaultValue() :
-			self.__toggleValue = value
-			self.__button.setImage( self.__onImage )
-		else :
-			self.__button.setImage( self.__offImage )
-
-	def _updateFromEditable( self ) :
-
-		self.__button.setEnabled( self._editable() )
-
-	def __clicked( self, button ) :
-
-		with self.context() :
-			value = self.getPlug().getValue()
-
-		if value == self.getPlug().defaultValue() :
-			if self.__toggleValue is not None :
-				self.getPlug().setValue( self.__toggleValue )
-			if isinstance( self.__plugValueWidget, GafferUI.StringPlugValueWidget ) :
-				# Hack to update TextWidget now, otherwise StringPlugValueWidget won't update
-				# it until the next idle event. This allows us to select the incoming text for
-				# easy editing.
-				self.__plugValueWidget.textWidget().setText( self.__toggleValue )
-				self.__plugValueWidget.textWidget().setSelection( 0, None ) # All
-				self.__plugValueWidget.textWidget().grabFocus()
-		else :
-			self.getPlug().setToDefault()
