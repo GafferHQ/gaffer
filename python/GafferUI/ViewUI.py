@@ -130,7 +130,8 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.ViewUI._TogglePlugValueWidget",
-			"togglePlugValueWidget:imagePrefix", "clipping",
+			"togglePlugValueWidget:image:on", "clippingOn.png",
+			"togglePlugValueWidget:image:off", "clippingOff.png",
 			"togglePlugValueWidget:defaultToggleValue", True,
 
 		],
@@ -143,7 +144,8 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.ViewUI._TogglePlugValueWidget",
-			"togglePlugValueWidget:imagePrefix", "exposure",
+			"togglePlugValueWidget:image:on", "exposureOn.png",
+			"togglePlugValueWidget:image:off", "exposureOff.png",
 			"togglePlugValueWidget:defaultToggleValue", 1,
 
 		],
@@ -156,7 +158,8 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.ViewUI._TogglePlugValueWidget",
-			"togglePlugValueWidget:imagePrefix", "gamma",
+			"togglePlugValueWidget:image:on", "gammaOn.png",
+			"togglePlugValueWidget:image:off", "gammaOff.png",
 			"togglePlugValueWidget:defaultToggleValue", 2,
 
 		],
@@ -257,10 +260,11 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.PlugValueWidget.__init__( self, row, plug, **kw )
 
-		self.__imagePrefix = Gaffer.Metadata.value( plug, "togglePlugValueWidget:imagePrefix" )
+		self.__onImage = Gaffer.Metadata.value( plug, "togglePlugValueWidget:image:on" ) or "warningSmall.png"
+		self.__offImage = Gaffer.Metadata.value( plug, "togglePlugValueWidget:image:off" ) or "warningSmall.png"
 		with row :
 
-			self.__button = GafferUI.Button( "", self.__imagePrefix + "Off.png", hasFrame=False )
+			self.__button = GafferUI.Button( "", self.__offImage, hasFrame=False )
 			self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
 
 			self.__plugValueWidget = None
@@ -292,9 +296,9 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 		value = sole( values )
 		if value != self.getPlug().defaultValue() :
 			self.__toggleValue = value
-			self.__button.setImage( self.__imagePrefix + "On.png" )
+			self.__button.setImage( self.__onImage )
 		else :
-			self.__button.setImage( self.__imagePrefix + "Off.png" )
+			self.__button.setImage( self.__offImage )
 
 	def _updateFromEditable( self ) :
 
