@@ -445,6 +445,17 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"useVisibleSet" : [
+
+			"description",
+			"""
+			When on, the Visible Set will control which locations are rendered.
+
+			> Tip : Use the HierarchyView and/or SetEditor to control the Visible Set.
+			""",
+
+		],
+
 		"resolvedRenderer" : [
 
 			"description",
