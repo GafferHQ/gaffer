@@ -764,7 +764,9 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Filter",
 			"layout:divider", True,
-			"plugValueWidget:type", "GafferSceneUI.RenderPassEditor._ToggleGroupingPlugValueWidget",
+			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on", "pathListingTree.png",
+			"togglePlugValueWidget:image:off", "pathListingList.png",
 
 		],
 
@@ -931,32 +933,6 @@ class _Spacer( GafferUI.Spacer ) :
 		GafferUI.Spacer.__init__( self, imath.V2i( 0 ) )
 
 RenderPassEditor._Spacer = _Spacer
-
-## \todo Should this be a new displayMode of BoolPlugValueWidget? Or could
-# we use _TogglePlugValueWidget?
-class _ToggleGroupingPlugValueWidget( GafferUI.PlugValueWidget ) :
-
-	def __init__( self, plugs, **kw ) :
-
-		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
-
-		GafferUI.PlugValueWidget.__init__( self, self.__row, plugs )
-
-		self.__groupingModeButton = GafferUI.Button( image = "pathListingList.png", hasFrame=False )
-		self.__groupingModeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__groupingModeButtonClicked ) )
-		self.__row.append(
-			self.__groupingModeButton
-		)
-
-	def __groupingModeButtonClicked( self, button ) :
-
-		[ plug.setValue( not plug.getValue() ) for plug in self.getPlugs() ]
-
-	def _updateFromValues( self, values, exception ) :
-
-		self.__groupingModeButton.setImage( "pathListingTree.png" if all( values ) else "pathListingList.png" )
-
-RenderPassEditor._ToggleGroupingPlugValueWidget = _ToggleGroupingPlugValueWidget
 
 class _RenderPassCreationDialogue( GafferUI.Dialogue ) :
 
