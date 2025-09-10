@@ -10,6 +10,7 @@ Improvements
 - SceneInspector, LightEditor, Viewer : Shader parameters with input connections now show the connection source name instead of the plug value. The input shader can be selected via the context menu.
 - Layout menu : Sorted the editor creation items alphabetically.
 - ShaderTweaks, ShaderQuery : Added `Arnold Volume` preset for the `shader` plug.
+- Cycles : Added support for transform shader parameters, such as `texture_coordinate.ob_tfm`.
 
 Fixes
 -----
