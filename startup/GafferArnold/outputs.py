@@ -1,7 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2025, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -43,24 +43,94 @@ import IECoreScene
 import Gaffer
 import GafferScene
 
-# Publish the Catalogue port number as a context variable, so we can refer
-# to it easily in output definitions.
+import GafferArnold
 
-def __scriptAdded( parent, script ) :
+for aov in [
+	"beauty",
+	"direct",
+	"indirect",
+	"emission",
+	"background",
+	"diffuse",
+	"specular",
+	"coat",
+	"transmission",
+	"sss",
+	"volume",
+	"albedo",
+	"diffuse_direct",
+	"diffuse_indirect",
+	"diffuse_albedo",
+	"specular_direct",
+	"specular_indirect",
+	"specular_albedo",
+	"coat_direct",
+	"coat_indirect",
+	"coat_albedo",
+	"transmission_direct",
+	"transmission_indirect",
+	"transmission_albedo",
+	"sss_direct",
+	"sss_indirect",
+	"sss_albedo",
+	"volume_direct",
+	"volume_indirect",
+	"volume_albedo",
+	"motionvector",
+	"normal",
+	"depth",
+] :
 
-	if "imageCataloguePort" not in script["variables"] :
-		portNumberPlug = Gaffer.NameValuePlug( "image:catalogue:port", 0, "imageCataloguePort", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		script["variables"].addChild( portNumberPlug )
-		Gaffer.MetadataAlgo.setReadOnly( portNumberPlug, True )
+	label = aov.replace( "_", " " ).title().replace( " ", "_" )
+	if aov == "beauty":
+		data = "rgba"
+	elif aov == "depth":
+		data = "float Z"
+	elif aov == "normal":
+		data = "color N"
+	else:
+		data = "color " + aov
+
+	if aov == "motionvector" :
+		parameters = {
+			"filter" : "closest"
+		}
 	else :
-		portNumberPlug = script["variables"]["imageCataloguePort"]
+		parameters = {}
 
-	portNumberPlug["value"].setValue( GafferScene.Catalogue.displayDriverServer().portNumber() )
+	if aov == "depth":
+		parameters["layerName"] = "Z"
 
-application.root()["scripts"].childAddedSignal().connect( __scriptAdded )
+	if aov not in { "motionvector", "emission", "background" } :
+		parameters["layerPerLightGroup"] = False
 
-Gaffer.Metadata.registerValue( Gaffer.ScriptNode, "variables.imageCataloguePort", "plugValueWidget:type", "" )
+	interactiveParameters = parameters.copy()
+	interactiveParameters.update(
+		{
+			"driverType" : "ClientDisplayDriver",
+			"displayHost" : "localhost",
+			"displayPort" : "${image:catalogue:port}",
+			"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
+		}
+	)
 
-# Store render catalogues in the project.
+	GafferScene.Outputs.registerOutput(
+		"Interactive/Arnold/" + label,
+		IECoreScene.Output(
+			aov,
+			"ieDisplay",
+			data,
+			interactiveParameters
+		)
+	)
 
-Gaffer.Metadata.registerValue( GafferScene.Catalogue, "directory", "userDefault", "${project:rootDirectory}/catalogues/${script:name}" )
+	GafferScene.Outputs.registerOutput(
+		"Batch/Arnold/" + label,
+		IECoreScene.Output(
+			"${project:rootDirectory}/renders/${script:name}/${renderPass}/%s/%s.####.exr" % ( aov, aov ),
+			"exr",
+			data,
+			parameters,
+		)
+	)
+
