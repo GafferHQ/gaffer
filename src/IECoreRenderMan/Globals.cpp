@@ -253,7 +253,19 @@ void Globals::option( const IECore::InternedString &name, const IECore::Object *
 	{
 		if( auto *d = optionCast<const StringData>( value, name ) )
 		{
-			m_cameraOption = d->readable();
+			if( d->readable() != m_cameraOption )
+			{
+				m_cameraOption = d->readable();
+				// Work around Riley bug. We should just be able to change the
+				// camera in our existing render view, which we try to do by
+				// calling `ModifyRenderView()` in `updateRenderView()`. But that
+				// doesn't work, so for now we delete the render view so that it'll
+				// get recreated from scratch instead. The downside of this is
+				// that display drivers are re-opened, which when rendering to a
+				// Catalogue creates a new image. But that's better than not
+				// changing camera at all.
+				deleteRenderView();
+			}
 		}
 	}
 	else if( name == g_frameOption )
