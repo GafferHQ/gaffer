@@ -699,6 +699,73 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
+	def testSwitchRenderCamera( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["catalogue"] = GafferScene.Catalogue()
+
+		script["sphere"] = GafferScene.Sphere()
+		script["sphere"]["transform"]["translate"].setValue( imath.V3f( 0, 0, -20 ) )
+
+		script["camera1"] = GafferScene.Camera()
+		script["camera1"]["name"].setValue( "camera1" )
+
+		script["camera2"] = GafferScene.Camera()
+		script["camera2"]["name"].setValue( "camera2" )
+		script["camera2"]["transform"]["translate"].setValue( imath.V3f( -9, 0, 0 ) )
+
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["sphere"]["out"] )
+		script["group"]["in"][1].setInput( script["camera1"]["out"] )
+		script["group"]["in"][2].setInput( script["camera2"]["out"] )
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( script["catalogue"].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
+				}
+			)
+		)
+		script["outputs"]["in"].setInput( script["group"]["out"] )
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["in"].setInput( script["outputs"]["out"] )
+		script["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		script["options"]["options"]["render:camera"]["value"].setValue( "/group/camera1" )
+
+		script["rendererOptions"] = self._createOptions()
+		script["rendererOptions"]["in"].setInput( script["options"]["out"] )
+
+		script["render"] = self._createInteractiveRender()
+		script["render"]["in"].setInput( script["rendererOptions"]["out"] )
+
+		script["render"]["state"].setValue( script["render"].State.Running )
+
+		self.uiThreadCallHandler.waitFor( 1.0 )
+
+		# `camera1` places the sphere in the centre of the image.
+
+		self.assertAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ).a, 1, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.99, 0.5 ) ).a, 0, delta = 0.01 )
+
+		# Switch to `camera2`, which should place the sphere at the edge of the image.
+
+		script["options"]["options"]["render:camera"]["value"].setValue( "/group/camera2" )
+		self.uiThreadCallHandler.waitFor( 1.0 )
+
+		self.assertAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.99, 0.5 ) ).a, 1, delta = 0.01 )
+		self.assertAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ).a, 0, delta = 0.01 )
+
+		script["render"]["state"].setValue( script["render"].State.Stopped )
+
 	def testEditResolution( self ) :
 
 		s = Gaffer.ScriptNode()

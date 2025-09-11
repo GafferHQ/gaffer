@@ -35,6 +35,7 @@ Fixes
 - HierarchyView : Fixed filtering bug. This could cause the filter to fail to match anything due to being evaluated with the wrong context.
 - PathListingWidget : Fixed parent layout update when column sizes change.
 - Path : Fixed GIL management bug in `children()` binding.
+- RenderMan : Worked around RenderMan bug that prevented edits to the `render:camera` option from working during an interactive render.
 
 API
 ---
