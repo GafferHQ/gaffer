@@ -48,37 +48,43 @@ from . import _GafferSceneUI
 
 class SetEditor( GafferSceneUI.SceneEditor ) :
 
+	class Settings( GafferSceneUI.SceneEditor.Settings ) :
+
+		def __init__( self ) :
+
+			GafferSceneUI.SceneEditor.Settings.__init__( self )
+
+			self["filter"] = Gaffer.StringPlug()
+			self["hideEmptySets"] = Gaffer.BoolPlug()
+			self["hideEmptySelection"] = Gaffer.BoolPlug()
+
 	def __init__( self, scriptNode, **kw ) :
 
 		mainColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4, spacing = 4 )
 
 		GafferSceneUI.SceneEditor.__init__( self, mainColumn, scriptNode, **kw )
 
-		searchFilter = _GafferSceneUI._SetEditor.SearchFilter()
-		emptySetFilter = _GafferSceneUI._SetEditor.EmptySetFilter( scriptNode )
-		emptySetFilter.userData()["UI"] = { "label" : "Hide Empty Members", "toolTip" : "Hide sets with no members" }
-		emptySetFilter.setEnabled( False )
+		## \todo Consider replacing these with internal node networks in the Settings node.
+		self.__searchFilter = _GafferSceneUI._SetEditor.SearchFilter()
+		self.__emptySetFilter = _GafferSceneUI._SetEditor.EmptySetFilter( scriptNode )
+		self.__emptySetFilter.setEnabled( False )
 
-		emptySelectionFilter = _GafferSceneUI._SetEditor.EmptySetFilter( scriptNode, useSelection = True )
-		emptySelectionFilter.userData()["UI"] = { "label" : "Hide Empty Selection", "toolTip" : "Hide sets with no selected members or descendants" }
-		emptySelectionFilter.setEnabled( False )
-
-		self.__filter = Gaffer.CompoundPathFilter( [ searchFilter, emptySetFilter, emptySelectionFilter ] )
+		self.__emptySelectionFilter = _GafferSceneUI._SetEditor.EmptySetFilter( scriptNode, useSelection = True )
+		self.__emptySelectionFilter.setEnabled( False )
 
 		with mainColumn :
 
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-
-				self.__searchFilterWidget = _SearchFilterWidget( searchFilter )
-				GafferUI.BasicPathFilterWidget( emptySetFilter )
-				GafferUI.BasicPathFilterWidget( emptySelectionFilter )
+			GafferUI.PlugLayout( self.settings(), orientation = GafferUI.ListContainer.Orientation.Horizontal, rootSection = "Filter" )
 
 			self.__setMembersColumn = _GafferSceneUI._SetEditor.SetMembersColumn()
 			self.__selectedSetMembersColumn = _GafferSceneUI._SetEditor.SetSelectionColumn( scriptNode )
 			self.__includedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetInclusionsColumn( scriptNode )
 			self.__excludedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetExclusionsColumn( scriptNode )
 			self.__pathListing = GafferUI.PathListingWidget(
-				Gaffer.DictPath( {}, "/" ), # temp till we make a SetPath
+				_GafferSceneUI._SetEditor.SetPath(
+					self.settings()["in"], self.context(), "/",
+					filter = Gaffer.CompoundPathFilter( [ self.__searchFilter, self.__emptySetFilter, self.__emptySelectionFilter ] ),
+				),
 				columns = [
 					_GafferSceneUI._SetEditor.SetNameColumn(),
 					self.__setMembersColumn,
@@ -95,30 +101,30 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 			self.__pathListing.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPressSignal ) )
 
 		self._updateFromSet()
-		self.__updatePathListingPath()
 
 	def __repr__( self ) :
 
 		return "GafferSceneUI.SetEditor( scriptNode )"
 
+	def _updateFromSettings( self, plug ) :
+
+		GafferSceneUI.SceneEditor._updateFromSettings( self, plug )
+
+		if plug == self.settings()["filter"] :
+			self.__searchFilter.setMatchPattern( plug.getValue() )
+		elif plug == self.settings()["hideEmptySets"] :
+			self.__emptySetFilter.setEnabled( plug.getValue() )
+		elif plug == self.settings()["hideEmptySelection"] :
+			self.__emptySelectionFilter.setEnabled( plug.getValue() )
+
 	def _updateFromContext( self, modifiedItems ) :
 
-		self.__updatePathListingPath()
+		self.__lazyUpdateFromContext()
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
-	def __updatePathListingPath( self ) :
+	def __lazyUpdateFromContext( self ) :
 
-		# We take a static copy of our current context for use in the SetPath for two reasons :
-		#
-		# 1. To prevent the PathListing from updating automatically when the original context
-		#    changes, allowing us to use LazyMethod to defer updates until playback stops.
-		# 2. Because the PathListingWidget uses a BackgroundTask to evaluate the Path, and it
-		#    would not be thread-safe to directly reference a context that could be modified by
-		#    the UI thread at any time.
-		contextCopy = Gaffer.Context( self.context() )
-		self.__searchFilterWidget.setScene( self.settings()["in"] )
-		self.__searchFilterWidget.setContext( contextCopy )
-		self.__pathListing.setPath( _GafferSceneUI._SetEditor.SetPath( self.settings()["in"], contextCopy, "/", filter = self.__filter ) )
+		self.__pathListing.getPath().setContext( self.context() )
 
 	def __selectedSetNames( self ) :
 
@@ -251,97 +257,97 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 GafferUI.Editor.registerType( "SetEditor", SetEditor )
 
 ##########################################################################
-# _SearchFilterWidget
+# Settings UI
 ##########################################################################
 
-class _SearchFilterWidget( GafferUI.PathFilterWidget ) :
+Gaffer.Metadata.registerNode(
 
-	def __init__( self, pathFilter ) :
+	SetEditor.Settings,
 
-		self.__patternWidget = GafferUI.TextWidget()
-		GafferUI.PathFilterWidget.__init__( self, self.__patternWidget, pathFilter )
+	plugs = {
 
-		self.__patternWidget.setPlaceholderText( "Filter..." )
+		"filter" : [
 
-		self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ) )
-		self.__patternWidget.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__dragEnter ) )
-		self.__patternWidget.dragLeaveSignal().connectFront( Gaffer.WeakMethod( self.__dragLeave ) )
-		self.__patternWidget.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ) )
+			"description",
+			"""
+			Filters the displayed sets by name. Accepts standard wildcards such as `*` and `?`.
+			""",
 
-		self.__context = None
-		self.__scene = None
+			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on", "searchOn.png",
+			"togglePlugValueWidget:image:off", "search.png",
+			"togglePlugValueWidget:defaultToggleValue", "*",
+			"togglePlugValueWidget:customWidgetType", "GafferSceneUI.SetEditor._FilterPlugValueWidget",
+			"stringPlugValueWidget:placeholderText", "Filter...",
 
-		self._updateFromPathFilter()
+		],
 
-	def setContext( self, context ) :
+		"hideEmptySets" : [
 
-		self.__context = context
+			"description",
+			"Hides sets with no members.",
+			"boolPlugValueWidget:labelVisible", True,
+			"layout:section", "Filter",
 
-	def setScene( self, scene ) :
+		],
 
-		self.__scene = scene
+		"hideEmptySelection" : [
 
-	def _updateFromPathFilter( self ) :
+			"description",
+			"Hides sets with no selected members or descendants.",
+			"boolPlugValueWidget:labelVisible", True,
+			"layout:section", "Filter",
 
-		self.__patternWidget.setText( self.pathFilter().getMatchPattern() )
+		],
 
-	def __patternEditingFinished( self, widget ) :
+	},
 
-		self.pathFilter().setMatchPattern( self.__patternWidget.getText() )
+)
 
-	def __dragEnter( self, widget, event ) :
+class _FilterPlugValueWidget( GafferUI.StringPlugValueWidget ) :
 
-		if not isinstance( event.data, IECore.StringVectorData ) :
-			return False
+	def __init__( self, plug, **kw ) :
 
-		if not len( event.data ) :
-			return False
+		GafferUI.StringPlugValueWidget.__init__( self, plug, **kw )
 
-		self.__patternWidget.setHighlighted( True )
-
-		return True
-
-	def __dragLeave( self, widget, event ) :
-
-		self.__patternWidget.setHighlighted( False )
-
-		return True
+		self.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ) )
 
 	def __drop( self, widget, event ) :
 
-		if isinstance( event.data, IECore.StringVectorData ) and len( event.data ) > 0 :
-			if event.data[0].startswith( "/" ) :
-				# treat as paths, return all sets those paths are members of
-				setNames = self.__getSetNamesFromPaths( event.data )
-			else :
-				# treat as set names
-				setNames = event.data
+		if not (
+			isinstance( event.data, IECore.StringVectorData ) and
+			len( event.data ) > 0 and
+			event.data[0].startswith( "/" )
+		) :
+			# Not dropping paths - fall back to the default handler.
+			return False
 
-			self.pathFilter().setMatchPattern( " ".join( sorted( setNames ) ) )
-
-		self.__patternWidget.setHighlighted( False )
+		# Dropping paths - convert to sets those paths are members of.
+		setNames = self.__getSetNamesFromPaths( event.data )
+		self.getPlug().setValue( " ".join( sorted( setNames ) ) )
 
 		return True
+
+	def __scene( self ) :
+
+		return self.getPlug().node()["in"]
 
 	def __setLookup( self, paths ) :
 
 		matchingSets = []
 		pathMatcher = IECore.PathMatcher( paths )
 
-		for s in self.__scene["setNames"].getValue() :
-				if not self.__scene.set( s ).value.intersection( pathMatcher ).isEmpty() :
-					matchingSets.append( str( s ) )
+		for s in self.__scene().setNames() :
+			if not self.__scene().set( s ).value.intersection( pathMatcher ).isEmpty() :
+				matchingSets.append( str( s ) )
 
 		return matchingSets
 
 	def __getSetNamesFromPaths( self, paths ) :
 
-		if self.__scene is None or self.__context is None :
-			return []
-
 		dialogue = GafferUI.BackgroundTaskDialogue( "Querying Set Names" )
 
-		with self.__context :
+		with self.context() :
 			result = dialogue.waitForBackgroundTask(
 				functools.partial(
 					self.__setLookup,
@@ -354,3 +360,5 @@ class _SearchFilterWidget( GafferUI.PathFilterWidget ) :
 			return result
 
 		return []
+
+SetEditor._FilterPlugValueWidget = _FilterPlugValueWidget

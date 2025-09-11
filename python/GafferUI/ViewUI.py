@@ -129,9 +129,9 @@ Gaffer.Metadata.registerNode(
 			Highlights the regions in which the colour values go above 1 or below 0.
 			""",
 
-			"plugValueWidget:type", "GafferUI.ViewUI._TogglePlugValueWidget",
-			"togglePlugValueWidget:imagePrefix", "clipping",
-			"togglePlugValueWidget:defaultToggleValue", True,
+			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on", "clippingOn.png",
+			"togglePlugValueWidget:image:off", "clippingOff.png",
 
 		],
 
@@ -142,9 +142,11 @@ Gaffer.Metadata.registerNode(
 			Applies an exposure adjustment to the image.
 			""",
 
-			"plugValueWidget:type", "GafferUI.ViewUI._TogglePlugValueWidget",
-			"togglePlugValueWidget:imagePrefix", "exposure",
+			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on", "exposureOn.png",
+			"togglePlugValueWidget:image:off", "exposureOff.png",
 			"togglePlugValueWidget:defaultToggleValue", 1,
+			"numericPlugValueWidget:fixedCharacterWidth", 5,
 
 		],
 
@@ -155,9 +157,11 @@ Gaffer.Metadata.registerNode(
 			Applies a gamma correction to the image.
 			""",
 
-			"plugValueWidget:type", "GafferUI.ViewUI._TogglePlugValueWidget",
-			"togglePlugValueWidget:imagePrefix", "gamma",
+			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on", "gammaOn.png",
+			"togglePlugValueWidget:image:off", "gammaOff.png",
 			"togglePlugValueWidget:defaultToggleValue", 2,
+			"numericPlugValueWidget:fixedCharacterWidth", 5,
 
 		],
 
@@ -246,62 +250,3 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __setValue( self, value, *unused ) :
 
 		self.getPlug().setValue( value )
-
-# Toggles between default value and the last non-default value
-class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
-
-	def __init__( self, plug, **kw ) :
-
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 2 )
-
-		GafferUI.PlugValueWidget.__init__( self, row, plug, **kw )
-
-		self.__imagePrefix = Gaffer.Metadata.value( plug, "togglePlugValueWidget:imagePrefix" )
-		with row :
-
-			self.__button = GafferUI.Button( "", self.__imagePrefix + "Off.png", hasFrame=False )
-			self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
-
-			if not isinstance( plug, Gaffer.BoolPlug ) :
-				plugValueWidget = GafferUI.PlugValueWidget.create( plug, typeMetadata = None )
-				plugValueWidget.numericWidget().setFixedCharacterWidth( 5 )
-
-		self.__toggleValue = Gaffer.Metadata.value( plug, "togglePlugValueWidget:defaultToggleValue" )
-
-	def hasLabel( self ) :
-
-		return True
-
-	def getToolTip( self ) :
-
-		result = GafferUI.PlugValueWidget.getToolTip( self )
-
-		if result :
-			result += "\n\n"
-		result += "## Actions\n\n"
-		result += "- Click to toggle to/from default value\n"
-
-		return result
-
-	def _updateFromValues( self, values, exception ) :
-
-		value = sole( values )
-		if value != self.getPlug().defaultValue() :
-			self.__toggleValue = value
-			self.__button.setImage( self.__imagePrefix + "On.png" )
-		else :
-			self.__button.setImage( self.__imagePrefix + "Off.png" )
-
-	def _updateFromEditable( self ) :
-
-		self.__button.setEnabled( self._editable() )
-
-	def __clicked( self, button ) :
-
-		with self.context() :
-			value = self.getPlug().getValue()
-
-		if value == self.getPlug().defaultValue() and self.__toggleValue is not None :
-			self.getPlug().setValue( self.__toggleValue )
-		else :
-			self.getPlug().setToDefault()
