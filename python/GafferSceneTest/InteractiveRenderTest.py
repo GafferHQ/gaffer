@@ -3137,6 +3137,209 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( len( mh.messages ), 1 )
 			self.assertEqual( mh.messages[0].message, 'Ignoring "render:manifestFilePath" during interactive render. The catalogue generates its own manifest files, this option is not needed.' )
 
+	def testVisibleSet( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["catalogue"] = GafferScene.Catalogue()
+
+		s["sphereA"] = GafferScene.Sphere()
+		s["sphereA"]["name"].setValue( "sphereA" )
+		s["sphereA"]["transform"]["translate"].setValue( imath.V3f( -1, 10, -10 ) )
+
+		s["sphereB"] = GafferScene.Sphere()
+		s["sphereB"]["name"].setValue( "sphereB" )
+		s["sphereB"]["transform"]["translate"].setValue( imath.V3f( 1, 10, -10 ) )
+
+		s["camera"] = GafferScene.Camera()
+		s["camera"]["transform"]["translate"].setValue( imath.V3f( 0, 10, -8 ) )
+
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["sphereA"]["out"] )
+		s["group"]["in"][1].setInput( s["sphereB"]["out"] )
+		s["group"]["in"][2].setInput( s["camera"]["out"] )
+
+		s["outputs"] = GafferScene.Outputs()
+		s["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( s['catalogue'].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
+				}
+			)
+		)
+		s["outputs"]["in"].setInput( s["group"]["out"] )
+
+		s["options"] = GafferScene.StandardOptions()
+		s["options"]["in"].setInput( s["outputs"]["out"] )
+		s["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		s["options"]["options"]["render:camera"]["value"].setValue( "/group/camera" )
+
+		s["rendererOptions"] = self._createOptions()
+		s["rendererOptions"]["in"].setInput( s["options"]["out"] )
+
+		s["render"] = self._createInteractiveRender()
+		s["render"]["in"].setInput( s["rendererOptions"]["out"] )
+		s["render"]["state"].setValue( s["render"].State.Running )
+
+		self.uiThreadCallHandler.waitFor( 0.5 )
+
+		def assertVisible( sphereA, sphereB ) :
+
+			if sphereA :
+				self.assertGreater( self._color4fAtUV( s["catalogue"], imath.V2f( 0.25, 0.5 ) ).a, 0.9 )
+			else :
+				self.assertLess( self._color4fAtUV( s["catalogue"], imath.V2f( 0.25, 0.5 ) ).a, 0.1 )
+
+			if sphereB :
+				self.assertGreater( self._color4fAtUV( s["catalogue"], imath.V2f( 0.75, 0.5 ) ).a, 0.9 )
+			else :
+				self.assertLess( self._color4fAtUV( s["catalogue"], imath.V2f( 0.75, 0.5 ) ).a, 0.1 )
+
+		# We haven't enabled use of the VisibleSet, so we should see both spheres.
+
+		assertVisible( True, True )
+
+		# Enable use of the VisibleSet, both spheres should be invisible.
+
+		s["render"]["useVisibleSet"].setValue( True )
+
+		self.uiThreadCallHandler.waitFor( 0.5 )
+		assertVisible( False, False )
+
+		def setVisibleSet( scriptNode, visibleSet ) :
+
+			Gaffer.Metadata.registerValue( scriptNode, "ui:scene:visibleSet", GafferScene.VisibleSetData( visibleSet ) )
+
+		# Now expand /group, both spheres should be visible.
+
+		setVisibleSet( s, GafferScene.VisibleSet( expansions = IECore.PathMatcher( [ "/group" ] ) ) )
+
+		self.uiThreadCallHandler.waitFor( 0.5 )
+		assertVisible( True, True )
+
+		# Exclude SphereA from the VisibleSet.
+
+		setVisibleSet( s, GafferScene.VisibleSet( expansions = IECore.PathMatcher( [ "/group" ] ), exclusions = IECore.PathMatcher( [ "/group/sphereA" ] ) ) )
+		self.uiThreadCallHandler.waitFor( 0.5 )
+		assertVisible( False, True )
+
+		# Include only SphereA
+
+		setVisibleSet( s, GafferScene.VisibleSet( inclusions = IECore.PathMatcher( [ "/group/sphereA" ] ) ) )
+		self.uiThreadCallHandler.waitFor( 0.5 )
+		assertVisible( True, False )
+
+		# Disable use of the VisibleSet. Both spheres should be visible again.
+
+		s["render"]["useVisibleSet"].setValue( False )
+		self.uiThreadCallHandler.waitFor( 0.5 )
+		assertVisible( True, True )
+
+		s["render"]["state"].setValue( s["render"].State.Stopped )
+
+		# Include only SphereB and start a render with useVisibleSet already enabled.
+
+		setVisibleSet( s, GafferScene.VisibleSet( inclusions = IECore.PathMatcher( [ "/group/sphereB" ] ) ) )
+		s["render"]["useVisibleSet"].setValue( True )
+		s["render"]["state"].setValue( s["render"].State.Running )
+		self.uiThreadCallHandler.waitFor( 0.5 )
+		assertVisible( False, True )
+
+		s["render"]["state"].setValue( s["render"].State.Stopped )
+
+	def testVisibleSetRenderCameraUpdate( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["catalogue"] = GafferScene.Catalogue()
+
+		s["sphereA"] = GafferScene.Sphere()
+		s["sphereA"]["name"].setValue( "sphereA" )
+		s["sphereA"]["transform"]["translate"].setValue( imath.V3f( -1, 10, -10 ) )
+
+		s["sphereB"] = GafferScene.Sphere()
+		s["sphereB"]["name"].setValue( "sphereB" )
+		s["sphereB"]["transform"]["translate"].setValue( imath.V3f( 1, 10, -10 ) )
+
+		s["camera"] = GafferScene.Camera()
+		s["camera"]["transform"]["translate"].setValue( imath.V3f( 0, 10, -8 ) )
+
+		s["reverseCamera"] = GafferScene.Camera()
+		s["reverseCamera"]["name"].setValue( "reverseCamera" )
+		s["reverseCamera"]["transform"]["translate"].setValue( imath.V3f( 0, 10, -12 ) )
+		s["reverseCamera"]["transform"]["rotate"]["y"].setValue( 180 )
+
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["sphereA"]["out"] )
+		s["group"]["in"][1].setInput( s["sphereB"]["out"] )
+		s["group"]["in"][2].setInput( s["camera"]["out"] )
+		s["group"]["in"][3].setInput( s["reverseCamera"]["out"] )
+
+		s["outputs"] = GafferScene.Outputs()
+		s["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( s['catalogue'].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
+				}
+			)
+		)
+		s["outputs"]["in"].setInput( s["group"]["out"] )
+
+		s["options"] = GafferScene.StandardOptions()
+		s["options"]["in"].setInput( s["outputs"]["out"] )
+		s["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		s["options"]["options"]["render:camera"]["value"].setValue( "/group/camera" )
+
+		s["rendererOptions"] = self._createOptions()
+		s["rendererOptions"]["in"].setInput( s["options"]["out"] )
+
+		s["render"] = self._createInteractiveRender()
+		s["render"]["in"].setInput( s["rendererOptions"]["out"] )
+		s["render"]["useVisibleSet"].setValue( True )
+		s["render"]["state"].setValue( s["render"].State.Running )
+
+		Gaffer.Metadata.registerValue( s, "ui:scene:visibleSet", GafferScene.VisibleSetData( GafferScene.VisibleSet( inclusions = IECore.PathMatcher( [ "/group/sphereB" ] ) ) ) )
+		self.uiThreadCallHandler.waitFor( 0.5 )
+
+		def assertVisible( sphereA, sphereB ) :
+
+			if sphereA :
+				self.assertGreater( self._color4fAtUV( s["catalogue"], imath.V2f( 0.25, 0.5 ) ).a, 0.9 )
+			else :
+				self.assertLess( self._color4fAtUV( s["catalogue"], imath.V2f( 0.25, 0.5 ) ).a, 0.1 )
+
+			if sphereB :
+				self.assertGreater( self._color4fAtUV( s["catalogue"], imath.V2f( 0.75, 0.5 ) ).a, 0.9 )
+			else :
+				self.assertLess( self._color4fAtUV( s["catalogue"], imath.V2f( 0.75, 0.5 ) ).a, 0.1 )
+
+		# Only SphereB should be visible.
+
+		assertVisible( False, True )
+
+		# Switch to the reverse camera. We should be able to render through
+		# it even though it isn't explicitly included in the VisibleSet.
+
+		s["options"]["options"]["render:camera"]["value"].setValue( "/group/reverseCamera" )
+		self.uiThreadCallHandler.waitFor( 0.5 )
+
+		# Our visible spheres should swap as they're now viewed from behind.
+		assertVisible( True, False )
+
+		s["render"]["state"].setValue( s["render"].State.Stopped )
+
 	def tearDown( self ) :
 
 		GafferSceneTest.SceneTestCase.tearDown( self )

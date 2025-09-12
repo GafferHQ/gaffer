@@ -1396,6 +1396,11 @@ const Gaffer::Context *RenderController::getContext() const
 
 void RenderController::setVisibleSet( const GafferScene::VisibleSet &visibleSet )
 {
+	if( visibleSet == m_visibleSet )
+	{
+		return;
+	}
+
 	cancelBackgroundTask();
 
 	m_visibleSet = visibleSet;

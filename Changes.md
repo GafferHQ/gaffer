@@ -5,6 +5,12 @@ Improvements
 ------------
 
 - ArnoldShader : The `standard_volume` shader is now assigned via an `ai:volume` attribute instead of `ai:surface`. This matches volume assignments imported from USD, and means that Gaffer now exports materials to USD using the same convention.
+- InteractiveRender : Added `useVisibleSet` plug. When on, only the scene locations contained in the Visible Set will be rendered.
+
+Fixes
+-----
+
+- RenderController : Fixed bug where repeatedly setting the same VisibleSet could cause unnecessary updates.
 
 Breaking Changes
 ----------------
