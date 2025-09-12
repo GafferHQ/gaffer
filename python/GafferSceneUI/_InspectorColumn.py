@@ -992,6 +992,10 @@ def __orderedSelection( pathListing ) :
 
 	return matrix
 
+##########################################################################
+# Signal connections
+##########################################################################
+
 def __inspectorColumnCreated( column ) :
 
 	if isinstance( column, ( GafferUI.StandardPathColumn, GafferSceneUI.Private.InspectorColumn ) ) :
@@ -1008,3 +1012,32 @@ def __inspectorColumnCreated( column ) :
 		column.dropSignal().connectFront( __drop )
 
 GafferUI.PathColumn.instanceCreatedSignal().connect( __inspectorColumnCreated )
+
+# There's no `PathColumn.dragBeginSignal()`, so we can't automatically add a drag handler
+# via `instanceCreatedSignal()`. So for now we expose a `connectToDragBeginSignal()` method
+# that clients must call explicitly.
+
+def __dragBegin( pathListing, event ) :
+
+	data = _dataFromPathListingOrReason( pathListing )
+
+	if isinstance( data, str ) :
+		# We couldn't get data from the selection, but we don't want to allow a
+		# fallthrough to the default PathListingWidget drag implementation, because
+		# it only really makes sense for `SelectionMode.Rows`. Compromise, by using
+		# the pointer to indicate "this isn't working" and putting the reason in the
+		# drag data.
+		GafferUI.Pointer.setCurrent( "notEditable" )
+		return data
+	else :
+		if __onlyNamesSelected( pathListing ) and isinstance( pathListing.getPath(), GafferScene.ScenePath ) :
+			GafferUI.Pointer.setCurrent( "objects" )
+		else :
+			GafferUI.Pointer.setCurrent( "values" )
+		return data
+
+def __connectToDragBeginSignal( pathListingWidget ) :
+
+	pathListingWidget.dragBeginSignal().connectFront( __dragBegin )
+
+GafferSceneUI.Private.InspectorColumn.connectToDragBeginSignal = __connectToDragBeginSignal
