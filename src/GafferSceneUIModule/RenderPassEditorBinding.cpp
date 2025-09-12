@@ -677,7 +677,7 @@ void GafferSceneUIModule::bindRenderPassEditor()
 		.staticmethod( "pathGroupingFunction" )
 	;
 
-	RefCountedClass<RenderPassNameColumn, GafferUI::PathColumn>( "RenderPassNameColumn" )
+	RefCountedClass<RenderPassNameColumn, GafferUI::StandardPathColumn>( "RenderPassNameColumn" )
 		.def( init<>() )
 	;
 

@@ -115,6 +115,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 				Gaffer.WeakMethod( self.__selectionChanged )
 			)
 			self.__pathListing.columnContextMenuSignal().connect( Gaffer.WeakMethod( self.__columnContextMenuSignal ) )
+			GafferSceneUI.Private.InspectorColumn.connectToDragBeginSignal( self.__pathListing )
 
 		self.__selectedPathsChangedConnection = GafferSceneUI.ScriptNodeAlgo.selectedPathsChangedSignal( scriptNode ).connect(
 			Gaffer.WeakMethod( self.__selectedPathsChanged )
@@ -291,6 +292,9 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 		if columnIndex == 0 :
 			# Whole light operations
+
+			if menuDefinition.size() :
+				menuDefinition.append( "/__lightEditorSelectDivider", { "divider" : True } )
 
 			menuDefinition.append(
 				"Select Linked Objects",

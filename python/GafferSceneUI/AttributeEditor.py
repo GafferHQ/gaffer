@@ -83,7 +83,7 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 				rootSection = "Filter"
 			)
 
-			self.__locationNameColumn = GafferUI.PathListingWidget.defaultNameColumn
+			self.__locationNameColumn = GafferUI.PathListingWidget.StandardColumn( "Name", "name", GafferUI.PathColumn.SizeMode.Stretch )
 			self.__pathListing = GafferUI.PathListingWidget(
 				GafferScene.ScenePath( self.settings()["__filteredIn"], self.context(), "/" ),
 				columns = [
@@ -100,6 +100,7 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 				Gaffer.WeakMethod( self.__selectionChanged )
 			)
 			self.__pathListing.columnContextMenuSignal().connect( Gaffer.WeakMethod( self.__columnContextMenuSignal ) )
+			GafferSceneUI.Private.InspectorColumn.connectToDragBeginSignal( self.__pathListing )
 			self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPressSignal ) )
 
 		self.__selectedPathsChangedConnection = GafferSceneUI.ScriptNodeAlgo.selectedPathsChangedSignal( scriptNode ).connect(
