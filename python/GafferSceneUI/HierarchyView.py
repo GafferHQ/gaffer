@@ -81,7 +81,7 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 			self.__pathListing = GafferUI.PathListingWidget(
 				GafferScene.ScenePath( self.settings()["__filteredIn"], self.context(), "/" ),
 				columns = [
-					GafferUI.PathListingWidget.defaultNameColumn,
+					GafferUI.PathListingWidget.StandardColumn( "Name", "name", GafferUI.PathColumn.SizeMode.Stretch ),
 					_GafferSceneUI._HierarchyViewInclusionsColumn( scriptNode ),
 					_GafferSceneUI._HierarchyViewExclusionsColumn( scriptNode )
 				],

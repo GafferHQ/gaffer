@@ -83,7 +83,7 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 				rootSection = "Filter"
 			)
 
-			self.__locationNameColumn = GafferUI.PathListingWidget.defaultNameColumn
+			self.__locationNameColumn = GafferUI.PathListingWidget.StandardColumn( "Name", "name", GafferUI.PathColumn.SizeMode.Stretch )
 			self.__pathListing = GafferUI.PathListingWidget(
 				GafferScene.ScenePath( self.settings()["__filteredIn"], self.context(), "/" ),
 				columns = [
