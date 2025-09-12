@@ -355,20 +355,26 @@ def __buttonDoubleClick( path, pathListing, event ) :
 
 def __contextMenu( column, pathListing, menuDefinition ) :
 
-	# We only add context menu items when all of the selected
-	# cells are in InspectorColumns.
-	if not __validateSelection( pathListing ) :
+	if not any( isinstance( c, GafferSceneUI.Private.InspectorColumn ) for c in pathListing.getColumns() ) :
 		return
 
 	pluralSuffix = "" if sum( [ x.size() for x in pathListing.getSelection() ] ) == 1 else "s"
+	valueLabel = "Value"
+	if __onlyNamesSelected( pathListing ) :
+		valueLabel = "Path" if isinstance( pathListing.getPath(), GafferScene.ScenePath ) else "Name"
 	menuDefinition.append(
-		f"Copy Value{pluralSuffix}",
+		f"Copy {valueLabel}{pluralSuffix}",
 		{
 			"command" : functools.partial( _copySelectedValues, pathListing ),
 			"active" : functools.partial( _canCopySelectedValues, pathListing ),
 			"shortCut" : "Ctrl+C",
 		}
 	)
+
+	# Our other context menu items only make sense when all of the selected
+	# cells are in InspectorColumns.
+	if not __validateSelection( pathListing ) :
+		return
 
 	menuDefinition.append(
 		f"Paste Value{pluralSuffix}",
@@ -446,17 +452,20 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 
 def __keyPress( column, pathListing, event ) :
 
-	# We only support keyPress events when all of the selected
-	# cells are in InspectorColumns.
+	if not any( isinstance( c, GafferSceneUI.Private.InspectorColumn ) for c in pathListing.getColumns() ) :
+		return
+
+	if event.key == "C" and event.modifiers == event.Modifiers.Control :
+		_copySelectedValues( pathListing )
+		return True
+
+	# We only support the other keyPress events when all of the selected cells
+	# are in InspectorColumns.
 	if not __validateSelection( pathListing ) :
 		return
 
 	if event.key in ( "Return", "Enter" ) and event.modifiers in ( event.Modifiers.None_, event.modifiers.Control ):
 		__editSelectedCells( pathListing, ensureEnabled = event.modifiers == event.modifiers.Control )
-		return True
-
-	if event.key == "C" and event.modifiers == event.Modifiers.Control :
-		_copySelectedValues( pathListing )
 		return True
 
 	if event.key == "V" and event.modifiers == event.Modifiers.Control :
@@ -747,6 +756,41 @@ class __InspectionPopupWindow( GafferUI.PopupWindow ) :
 # Copy and paste
 ##########################################################################
 
+def __vectorDataFromObjectMatrix( objectMatrix ) :
+
+	if objectMatrix.numRows() != 1 and objectMatrix.numColumns() != 1 :
+		return None
+
+	values = []
+	for row in range( 0, objectMatrix.numRows() ) :
+		for column in range( 0, objectMatrix.numColumns() ) :
+			v = objectMatrix[row,column]
+			if hasattr( v, "value" ) :
+				v = v.value
+			values.append( v )
+
+	valueType = sole( type( v ) for v in values )
+	if not valueType :
+		return None
+
+	with IECore.IgnoredExceptions( TypeError ) :
+		return IECore.DataTraits.dataTypeFromElement( values )( values )
+
+	return None
+
+def __isNameColumn( column ) :
+
+	return isinstance( column, GafferUI.StandardPathColumn ) and column.property() == "name"
+
+def __onlyNamesSelected( pathListing ) :
+
+	columnsWithSelection = [
+		x[1] for x in zip( pathListing.getSelection(), pathListing.getColumns() )
+		if not x[0].isEmpty()
+	]
+
+	return len( columnsWithSelection ) == 1 and __isNameColumn( columnsWithSelection[0] )
+
 ## Returns True if the pathListing selection can be copied to the clipboard.
 def _canCopySelectedValues( pathListing ) :
 
@@ -784,6 +828,9 @@ def _dataFromPathListingOrReason( pathListing ) :
 	path = pathListing.getPath().copy()
 	selection = __orderedSelection( pathListing )
 
+	if not selection :
+		return "No selection"
+
 	numColumns = max( [ len( x[1] ) for x in selection ] )
 	if not all( [ len( x[1] ) == numColumns for x in selection ] ) :
 		# Only return data if all rows have the same number of columns
@@ -796,7 +843,18 @@ def _dataFromPathListingOrReason( pathListing ) :
 		path.setFromString( pathString )
 
 		for columnIndex, column in enumerate( columns ) :
-			value = column.cellData( path ).value
+
+			if isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+				# Prefer the raw `Inspector.Result.value` over the potentially
+				# reformatted `column.cellData()`.
+				value = column.inspect( path )
+				value = value.value() if value is not None else None
+			elif __isNameColumn( column ) and isinstance( path, GafferScene.ScenePath ) :
+				# Prefer full paths suitable for pasting into PathFilters etc.
+				value = pathString
+			else :
+				value = column.cellData( path ).value
+
 			if value is None :
 				reason = "No value to copy."
 				if len( columns ) > 1 :
@@ -809,12 +867,18 @@ def _dataFromPathListingOrReason( pathListing ) :
 
 		rowIndex += 1
 
+	if __onlyNamesSelected( pathListing ) :
+		# Convert to form suitable for pasting into PathFilters,
+		# DeleteRenderPasses etc.
+		## \todo Do this conversion for all results where possible, and
+		# update `__getObjectMatrixFromClipboard()` to handle it.
+		return __vectorDataFromObjectMatrix( objectMatrix )
+
 	if objectMatrix.numRows() == 1 and objectMatrix.numColumns() == 1 :
 		# If a single cell is selected, return its data directly.
 		# This allows easy pasting of a single value to PlugValueWidgets.
 		return objectMatrix[0, 0]
 
-	## \todo Return ObjectVector or VectorData for selections of a single row or column.
 	return objectMatrix
 
 ## Returns True if the current clipboard contents can be pasted to the pathListing selection.
@@ -930,15 +994,17 @@ def __orderedSelection( pathListing ) :
 
 def __inspectorColumnCreated( column ) :
 
+	if isinstance( column, ( GafferUI.StandardPathColumn, GafferSceneUI.Private.InspectorColumn ) ) :
+		column.contextMenuSignal().connectFront( __contextMenu )
+		column.keyPressSignal().connectFront( __keyPress )
+
 	if isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
 		## \todo `buttonPressSignal` should provide the column for us.
 		column.buttonPressSignal().connectFront( functools.partial( __buttonPress, column ) )
 		column.buttonDoubleClickSignal().connectFront( __buttonDoubleClick )
-		column.contextMenuSignal().connectFront( __contextMenu )
-		column.keyPressSignal().connectFront( __keyPress )
 		column.dragEnterSignal().connectFront( __dragEnter )
 		column.dragMoveSignal().connectFront( __dragMove )
 		column.dragLeaveSignal().connectFront( __dragLeave )
 		column.dropSignal().connectFront( __drop )
 
-GafferSceneUI.Private.InspectorColumn.instanceCreatedSignal().connect( __inspectorColumnCreated )
+GafferUI.PathColumn.instanceCreatedSignal().connect( __inspectorColumnCreated )

@@ -203,15 +203,12 @@ class InspectorColumnTest( GafferUITest.TestCase ) :
 
 		w.setSelection( s2 )
 		self.assertEqual( w.getSelection(), s2 )
-		expected = IECore.ObjectMatrix( 2, 1 )
-		for i, x in enumerate( [ "b", "c" ] ) :
-			expected[i, 0] = IECore.StringData( x )
 
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
 		self.assertTrue( GafferSceneUI._InspectorColumn._canCopySelectedValues( w ) )
 		self.assertEqual(
 			GafferSceneUI._InspectorColumn._dataFromPathListingOrReason( w ),
-			expected
+			IECore.StringVectorData( [ "b", "c" ] )
 		)
 
 		# Select the same row across both columns
@@ -275,6 +272,25 @@ class InspectorColumnTest( GafferUITest.TestCase ) :
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
 		self.assertFalse( GafferSceneUI._InspectorColumn._canCopySelectedValues( w ) )
 		self.assertEqual( GafferSceneUI._InspectorColumn._nonCopyableReason( w ), "Each row in the selection must contain the same number of cells." )
+
+	def testDataFromScenePathSelection( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["plane"] = GafferScene.Plane()
+
+		widget = GafferUI.PathListingWidget(
+			GafferScene.ScenePath( script["plane"]["out"], Gaffer.Context(), "/" ),
+			columns = [ GafferUI.PathListingWidget.defaultNameColumn ],
+			selectionMode = GafferUI.PathListingWidget.SelectionMode.Cells,
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+		)
+		widget.setSelection( [ IECore.PathMatcher( [ "/plane" ] ) ] )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+
+		self.assertEqual(
+			GafferSceneUI._InspectorColumn._dataFromPathListingOrReason( widget ),
+			IECore.StringVectorData( [ "/plane" ] )
+		)
 
 	def testClipboardPaste( self ) :
 
