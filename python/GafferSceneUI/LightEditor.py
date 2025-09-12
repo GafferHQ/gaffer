@@ -292,6 +292,9 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		if columnIndex == 0 :
 			# Whole light operations
 
+			if menuDefinition.size() :
+				menuDefinition.append( "/__lightEditorSelectDivider", { "divider" : True } )
+
 			menuDefinition.append(
 				"Select Linked Objects",
 				{

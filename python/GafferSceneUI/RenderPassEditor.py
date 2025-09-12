@@ -433,6 +433,9 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		if columnIndex == 0 :
 			# Render pass operations
 
+			if menuDefinition.size() :
+				menuDefinition.append( "/__renderPassEditorRenameDivider", { "divider" : True } )
+
 			menuDefinition.append(
 				"Rename Selected Render Pass...",
 				{
