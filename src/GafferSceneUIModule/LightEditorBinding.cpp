@@ -377,7 +377,7 @@ StringDataPtr SetMembershipColumn::m_setEmpty = new StringData( "muteLightUndefi
 void GafferSceneUIModule::bindLightEditor()
 {
 
-	IECorePython::RefCountedClass<LocationNameColumn, GafferUI::PathColumn>( "_LightEditorLocationNameColumn" )
+	IECorePython::RefCountedClass<LocationNameColumn, GafferUI::StandardPathColumn>( "_LightEditorLocationNameColumn" )
 		.def( init<>() )
 	;
 
