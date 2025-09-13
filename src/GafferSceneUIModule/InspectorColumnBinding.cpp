@@ -77,6 +77,11 @@ Gaffer::ContextPtr inspectorColumnInspectorContextBinding( const InspectorColumn
 	return boost::const_pointer_cast<Gaffer::Context>( column.inspectorContext( path, canceller ) );
 }
 
+PathColumn::CellData inspectorColumnCellDataFromDataValue( const IECore::DataPtr &data )
+{
+	return InspectorColumn::cellDataFromValue( data.get() );
+}
+
 } // namespace
 
 void GafferSceneUIModule::bindInspectorColumn()
@@ -114,6 +119,12 @@ void GafferSceneUIModule::bindInspectorColumn()
 		.def( "inspect", &inspectorColumnInspectBinding, ( arg( "path" ), arg( "canceller" ) = object() ) )
 		.def( "historyPath", &inspectorColumnHistoryPathBinding, ( arg( "path" ), arg( "canceller" ) = object() ) )
 		.def( "inspectorContext", &inspectorColumnInspectorContextBinding, ( arg( "path" ), arg( "canceller" ) = object() ) )
+		.def( "cellDataFromValue", &InspectorColumn::cellDataFromValue )
+		// Overload accepting DataPtr is needed to allow automatic type
+		// conversion from simple types - string, int etc. Those exist for
+		// DataPtr but not ObjectPtr.
+		.def( "cellDataFromValue", &inspectorColumnCellDataFromDataValue )
+		.staticmethod( "cellDataFromValue" )
 	;
 
 }

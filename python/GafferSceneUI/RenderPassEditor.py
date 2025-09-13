@@ -139,7 +139,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			self.__pathListing.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 			self.__pathListing.columnContextMenuSignal().connect( Gaffer.WeakMethod( self.__columnContextMenuSignal ) )
 			self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
-			self.__pathListing.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ) )
+			GafferSceneUI.Private.InspectorColumn.connectToDragBeginSignal( self.__pathListing )
 
 		self._updateFromSet()
 		self.__updateColumns()
@@ -392,13 +392,6 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		return list( result )
 
-	def __dragBegin( self, widget, event ) :
-
-		# Return render pass names rather than the path when dragging the Name column.
-		selection = self.__pathListing.getSelection()[0]
-		if not selection.isEmpty() :
-			return IECore.StringVectorData( self.__selectedRenderPasses() )
-
 	def __setActiveRenderPass( self, pathListing ) :
 
 		selectedPassNames = self.__selectedRenderPasses( columns = [ 1 ] )
@@ -432,6 +425,9 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		if columnIndex == 0 :
 			# Render pass operations
+
+			if menuDefinition.size() :
+				menuDefinition.append( "/__renderPassEditorRenameDivider", { "divider" : True } )
 
 			menuDefinition.append(
 				"Rename Selected Render Pass...",
