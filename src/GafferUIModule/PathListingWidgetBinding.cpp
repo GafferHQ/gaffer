@@ -102,6 +102,28 @@ Q_DECLARE_METATYPE( IECore::ConstDataPtr )
 namespace
 {
 
+// Trick to call `QAbstractItemView::scheduleDelayedItemsLayout()`,
+// which is protected. We actually do derive from QTreeView so technically have
+// access via more legitimate means, except that we derive from it in Python
+// (see `_TreeView` in PathListingWidget.py). We don't want to have to call into
+// Python to access the protected method for performance reeasons, so for now we
+// cheat.
+/// \todo Perhaps we should reimplement `_TreeView` in C++ anyway, then we wouldn't
+/// need this trick.
+void scheduleDelayedItemsLayout( QTreeView *treeView )
+{
+	struct TreeViewAccessor : public QTreeView
+	{
+		void callScheduleDelayedItemsLayout()
+		{
+			scheduleDelayedItemsLayout();
+		}
+	};
+
+	// Yes, this cast is completely bogus, but it does the job.
+	static_cast<TreeViewAccessor *>( treeView )->callScheduleDelayedItemsLayout();
+}
+
 // QVariant does have `operator <`, but it's deprecated as it doesn't define a
 // total ordering, making it unsuitable for our purposes.
 // See https://doc.qt.io/qt-5/qvariant-obsolete.html#operator-lt.
@@ -844,7 +866,7 @@ class PathModel : public QAbstractItemModel
 			return m_selection;
 		}
 
-		std::vector<std::string> visualOrder( const IECore::PathMatcher &paths )
+		std::vector<std::string> visualOrder( const IECore::PathMatcher &paths ) const
 		{
 			std::vector<std::string> result;
 			const auto indices = indicesForPaths( paths );
@@ -891,7 +913,7 @@ class PathModel : public QAbstractItemModel
 			return result;
 		}
 
-		PathPtr pathForIndex( const QModelIndex &index )
+		PathPtr pathForIndex( const QModelIndex &index ) const
 		{
 			if( !index.isValid() || !m_rootPath )
 			{
@@ -912,7 +934,7 @@ class PathModel : public QAbstractItemModel
 			return result;
 		}
 
-		QModelIndex indexForPath( const std::vector<IECore::InternedString> &path )
+		QModelIndex indexForPath( const std::vector<IECore::InternedString> &path ) const
 		{
 			if( !m_rootPath )
 			{
@@ -954,12 +976,12 @@ class PathModel : public QAbstractItemModel
 			return result;
 		}
 
-		QModelIndex indexForPath( const Path *path )
+		QModelIndex indexForPath( const Path *path ) const
 		{
 			return indexForPath( path->names() );
 		}
 
-		std::vector<QModelIndex> indicesForPaths( const IECore::PathMatcher &paths )
+		std::vector<QModelIndex> indicesForPaths( const IECore::PathMatcher &paths ) const
 		{
 			std::vector<QModelIndex> result;
 			if( !m_rootPath )
@@ -1187,7 +1209,7 @@ class PathModel : public QAbstractItemModel
 				// background. Likewise, we take a copy of the Path to work
 				// with, because anyone could modify that on the UI thread as it
 				// is a public member of PathListingWidget.
-				[this, workingPath = m_rootPath->copy(), expandedPaths = IECore::PathMatcher( m_expandedPaths )] {
+				[this, workingPath = m_rootPath->copy(), expandedPaths = IECore::PathMatcher( m_expandedPaths ), priorityPaths = visiblePaths() ] {
 					try
 					{
 						const IECore::Canceller *canceller = Context::current()->canceller();
@@ -1200,7 +1222,7 @@ class PathModel : public QAbstractItemModel
 								}
 							}
 						);
-						m_rootItem->updateWalk( this, workingPath.get(), expandedPaths, canceller );
+						m_rootItem->update( this, workingPath.get(), expandedPaths, priorityPaths, canceller );
 						queueEdit(
 							[this] () {
 								finaliseRecursiveExpansion();
@@ -1438,30 +1460,81 @@ class PathModel : public QAbstractItemModel
 				m_expandedInTreeView = expanded;
 			}
 
-			void updateWalk( PathModel *model, Path *path, const IECore::PathMatcher &expandedPaths, const IECore::Canceller *canceller )
+			void update( PathModel *model, Path *path, const IECore::PathMatcher &expandedPaths, const IECore::PathMatcher &priorityPaths, const IECore::Canceller *canceller )
 			{
-				IECore::Canceller::check( canceller );
-				updateData( model, path, canceller );
-				updateExpansion( model, path, expandedPaths );
-				std::shared_ptr<ChildContainer> updatedChildItems = updateChildItems( model, path, canceller );
+				// Do a queue-based recursion through the hierarchy, updating
+				// each item as we visit it.
+				/// \todo We could consider using a `concurrent_priority_queue()`
+				/// and multiple threads here for improved performance. But
+				/// given all the other modules vying for processor time (the
+				/// Viewer and Renderer in particular), perhaps limiting
+				/// ourselves to a single core is reasonable. If we do use
+				/// multiple threads we need to consider the interaction with
+				/// `m_scrollToCandidates` because the order we visit children
+				/// in would no longer be deterministic.
 
-				const size_t pathSize = path->names().size();
-				Path::Names childName( 1 );
-
-				/// \todo We could consider using `parallel_for()` here for improved
-				/// performance. But given all the other modules vying for processor time
-				/// (the Viewer and Renderer in particular), perhaps limiting ourselves to
-				/// a single core is reasonable. If we do use `parallel_for` we need to
-				/// consider the interaction with `m_scrollToCandidates` because the order
-				/// we visit children in would no longer be deterministic.
-				for( const auto &child : *updatedChildItems )
+				std::deque<std::pair<Path::Names, Ptr>> queue( { { path->names(), this } } );
+				while( !queue.empty() )
 				{
-					// Append child name to path, bearing in mind that recursion
-					// in `updateWalk()` may have left us with a longer path than
-					// we had before.
-					childName.back() = child->name();
-					path->set( pathSize, path->names().size(), childName );
-					child->updateWalk( model, path, expandedPaths, canceller );
+					IECore::Canceller::check( canceller );
+
+					// Update the item from the front of the queue.
+
+					const auto [names, item] = std::move( queue.front() );
+					queue.pop_front();
+
+					path->set( 0, path->names().size(), names );
+					item->updateData( model, path, canceller );
+					item->updateExpansion( model, path, expandedPaths );
+					std::shared_ptr<ChildContainer> updatedChildItems = item->updateChildItems( model, path, canceller );
+
+					// Traverse to children by pushing them in to the queue.
+					// High priority items are pushed to the front of the queue
+					// for immediate processing, and low priority items are
+					// pushed to the back of the queue to be processed last.
+
+					Path::Names childNames = names; childNames.push_back( IECore::InternedString() );
+					size_t newFrontItems = 0;
+					for( const auto &child : *updatedChildItems )
+					{
+						childNames.back() = child->name();
+						// If we're scrolling to something and we haven't found it yet,
+						// then we're processing items above it visually. These have to
+						// be high priority so that we don't end up expanding them _after_
+						// scrolling, which would push the target out of frame.
+						bool highPriority = (bool)model->m_scrollToCandidates;
+						// If we've been told explicitly that something is a priority
+						// (because it is visible in the viewport) then it is.
+						if( !highPriority )
+						{
+							if( priorityPaths.match( childNames ) & ( IECore::PathMatcher::ExactMatch | IECore::PathMatcher::DescendantMatch ) )
+							{
+								highPriority = true;
+							}
+						}
+						// Lastly, if the child is subject to recursive expansion then it is
+						// a priority, because the user has explicitly asked to see it.
+						if( !highPriority && model->m_recursiveExpansionPath )
+						{
+							if( boost::starts_with( childNames, *model->m_recursiveExpansionPath ) )
+							{
+								highPriority = true;
+							}
+						}
+
+						if( !highPriority )
+						{
+							queue.emplace_back( childNames, child );
+						}
+						else
+						{
+							queue.emplace_front( childNames, child );
+							newFrontItems++;
+						}
+					}
+					// Reverse the items we added at the front, so we'll pop them
+					// in the order we pushed them.
+					std::reverse( queue.begin(), queue.begin() + newFrontItems );
 				}
 			}
 
@@ -1677,6 +1750,11 @@ class PathModel : public QAbstractItemModel
 							[this, model, expanded] {
 								QTreeView *treeView = dynamic_cast<QTreeView *>( model->QObject::parent() );
 								Private::ScopedAssignment<bool> assignment( model->m_modifyingTreeViewExpansion, true );
+								// Call `scheduleDelayedItemsLayout()` so that QTreeView doesn't rebuild
+								// its internal layout for every call to `setExpanded()`. When we are delivering
+								// a sequence of calls (as we do for recursive expansion) this provides a major
+								// performance improvement.
+								scheduleDelayedItemsLayout( treeView );
 								treeView->setExpanded( model->createIndex( m_row, 0, this ), expanded );
 							}
 						);
@@ -1918,7 +1996,7 @@ class PathModel : public QAbstractItemModel
 
 		};
 
-		void indicesForPathsWalk( Item *item, const Path::Names &itemPath, const QModelIndex &itemIndex, const IECore::PathMatcher &paths, std::vector<QModelIndex> &indices )
+		void indicesForPathsWalk( Item *item, const Path::Names &itemPath, const QModelIndex &itemIndex, const IECore::PathMatcher &paths, std::vector<QModelIndex> &indices ) const
 		{
 			/// \todo Using `match()` here isn't right, because we want to
 			/// treat wildcards in the selection verbatim rather than perform
@@ -2057,6 +2135,23 @@ class PathModel : public QAbstractItemModel
 				treeView->setExpanded( childIndex, false );
 				collapseDescendants( treeView, childIndex );
 			}
+		}
+
+		IECore::PathMatcher visiblePaths() const
+		{
+			QTreeView *treeView = static_cast<QTreeView *>( QObject::parent() );
+			const int height = treeView->height();
+
+			IECore::PathMatcher result;
+
+			QModelIndex index = treeView->indexAt( QPoint( 0, 0 ) );
+			while( index.isValid() && treeView->visualRect( index ).top() < height )
+			{
+				result.addPath( namesForIndex( index ) );
+				index = treeView->indexBelow( index );
+			}
+
+			return result;
 		}
 
 		// Column change handling
