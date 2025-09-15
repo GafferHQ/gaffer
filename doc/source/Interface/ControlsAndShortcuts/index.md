@@ -424,7 +424,7 @@ Extend cell selection                              | {kbd}`Shift` + {kbd}`↑`, 
 Move keyboard focus                                | {kbd}`Ctrl` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
 Toggle selection state of cell with keyboard focus | {kbd}`Space`
 
-## Light Editor ##
+## Light Editor and Attribute Editor ##
 
 Action                                               | Control or shortcut
 -----------------------------------------------------|---------------------
