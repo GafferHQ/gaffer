@@ -151,41 +151,47 @@ def __pruningKeyPress( editor, event ) :
 
 	return __pruneSelection( editor )
 
+def __editScopeOrReason( editor ) :
+
+	if isinstance( editor, GafferUI.Viewer ) :
+		if not isinstance( editor.view(), GafferSceneUI.SceneView ) :
+			return "Viewer does not support edit scopes."
+
+		editScope = editor.view().editScope()
+		inputPlug = editor.view()["in"].getInput()
+
+	elif isinstance( editor, GafferSceneUI.SceneEditor ) :
+		if "editScope" not in editor.settings() :
+			return "Editor does not support edit scopes."
+
+		editScope = editor.editScope()
+		inputPlug = editor.settings()["in"].getInput()
+
+	if inputPlug is None :
+		return "Shortcut cannot be used while nothing is viewed."
+	if editScope is None :
+		return "To edit locations, first choose an edit scope."
+	if Gaffer.MetadataAlgo.readOnly( editScope ) :
+		return "The target edit scope {} is read-only.".format( editScope.getName() )
+	if editScope != inputPlug.node() and editScope not in Gaffer.NodeAlgo.upstreamNodes( inputPlug.node() ) :
+		return "The target edit scope {} is downstream of the viewed node.".format( editScope.getName() )
+
+	with editor.context() :
+		if not editScope["enabled"].getValue() :
+			return "The target edit scope {} is disabled.".format( editScope.getName() )
+
+	return editScope
+
 def __pruneSelection( editor ) :
 
 	if isinstance( editor, weakref.ref ) :
 		editor = editor()
 
-	if isinstance( editor, GafferUI.Viewer ) :
-		if not isinstance( editor.view(), GafferSceneUI.SceneView ) :
-			return False
-
-		editScope = editor.view().editScope()
-		inPlug = editor.view()["in"]
-	elif isinstance( editor, GafferSceneUI.SceneEditor ) :
-		if "editScope" not in editor.settings() :
-			return False
-
-		editScope = editor.editScope()
-		inPlug = editor.settings()["in"]
-
 	# We return True even when we don't do anything, so the keypress doesn't
 	# leak out and get used to delete nodes in the node graph.
-	## \todo Maybe we might want to ask if we can prune a common ancestor
-	# in the case that all its descendants are selected?
-	if editScope is None :
-		__warningPopup( editor, "To prune locations, first choose an edit scope." )
-		return True
-	if Gaffer.MetadataAlgo.readOnly( editScope ) :
-		__warningPopup( editor, "The target edit scope {} is read-only.".format( editScope.getName() ) )
-		return True
-
-	viewedNode = inPlug.getInput().node()
-	if editScope != viewedNode and editScope not in Gaffer.NodeAlgo.upstreamNodes( viewedNode ) :
-		# Spare folks from deleting things in a downstream EditScope.
-		## \todo When we have a nice Viewer notification system we
-		# should emit a warning here.
-		__warningPopup( editor, "The target edit scope {} is downstream of the viewed node.".format( editScope.getName() ) )
+	editScope = __editScopeOrReason( editor )
+	if isinstance( editScope, str ) :
+		__warningPopup( editor, editScope )
 		return True
 
 	readOnlyReason = GafferScene.EditScopeAlgo.prunedReadOnlyReason( editScope )
@@ -193,20 +199,16 @@ def __pruneSelection( editor ) :
 		__warningPopup( editor, "{} is read-only.".format( readOnlyReason ) )
 		return True
 
-	# \todo This needs encapsulating in EditScopeAlgo some how so we don't need
-	# to interact with processors directly.
 	with editor.context() :
-		if not editScope["enabled"].getValue() :
-			# Spare folks from deleting something when it won't be
-			# apparent what they've done until they reenable the
-			# EditScope.
-			__warningPopup( editor, "The target edit scope {} is disabled.".format( editScope.getName() ) )
-			return True
+		# \todo This needs encapsulating in EditScopeAlgo some how so we don't need
+		# to interact with processors directly.
 		pruningProcessor = editScope.acquireProcessor( "PruningEdits", createIfNecessary = False )
 		if pruningProcessor is not None and not pruningProcessor["enabled"].getValue() :
 			__warningPopup( editor, "{} is disabled.".format( pruningProcessor.relativeName( editScope.parent() ) ) )
 			return True
 
+	## \todo Maybe we might want to ask if we can prune a common ancestor
+	# in the case that all its descendants are selected?
 	selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( editor.scriptNode() )
 	if not selection.isEmpty() :
 		with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
@@ -226,28 +228,20 @@ def __editSelectionVisibility( editor, makeVisible = False ) :
 	if isinstance( editor, weakref.ref ) :
 		editor = editor()
 
-	if isinstance( editor, GafferUI.Viewer ) :
-		if not isinstance( editor.view(), GafferSceneUI.SceneView ) :
-			return False
+	# We return True even when we don't do anything, so the keypress doesn't
+	# leak out and get used to delete nodes in the node graph.
+	editScope = __editScopeOrReason( editor )
+	if isinstance( editScope, str ) :
+		__warningPopup( editor, editScope )
+		return True
 
-		editScope = editor.view().editScope()
+	if isinstance( editor, GafferUI.Viewer ) :
 		inPlug = editor.view()["in"]
 		editScopePlug = editor.view()["editScope"]
 	elif isinstance( editor, GafferSceneUI.SceneEditor ) :
-		if "editScope" not in editor.settings() :
-			return False
-
-		editScope = editor.editScope()
 		inPlug = editor.settings()["in"]
 		editScopePlug = editor.settings()["editScope"]
 	else :
-		return False
-
-	if editScope is None :
-		__warningPopup( editor, "To hide or unhide locations, first choose an edit scope." )
-		return True
-	if Gaffer.MetadataAlgo.readOnly( editScope ) :
-		__warningPopup( editor, "The target edit scope {} is read-only.".format( editScope.getName() ) )
 		return True
 
 	selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( editor.scriptNode() )
@@ -261,12 +255,8 @@ def __editSelectionVisibility( editor, makeVisible = False ) :
 	)
 
 	with editor.context() as context :
-		if not editScope["enabled"].getValue() :
-			# Spare folks from hiding something when it won't be
-			# apparent what they've done until they reenable the
-			# EditScope or processor.
-			__warningPopup( editor, "The target edit scope {} is disabled.".format( editScope.getName() ) )
-			return True
+		# \todo This needs encapsulating in EditScopeAlgo some how so we don't need
+		# to interact with processors directly.
 		attributeEdits = editScope.acquireProcessor( "AttributeEdits", createIfNecessary = False )
 		if attributeEdits is not None and not attributeEdits["enabled"].getValue() :
 			__warningPopup( editor, "{} is disabled.".format( attributeEdits.relativeName( editScope.parent() ) ) )
