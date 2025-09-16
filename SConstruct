@@ -1425,8 +1425,12 @@ libraries = {
 
 	"IECoreRenderManDisplay" : {
 		"envAppends" : {
-			"LIBS" : [ "IECoreImage$CORTEX_LIB_SUFFIX" ],
+			"LIBS" : [
+				"IECoreImage$CORTEX_LIB_SUFFIX",
+				"pxrcore" if env["PLATFORM"] != "win32" else "libpxrcore",
+			],
 			"CPPPATH" : [ "$RENDERMAN_ROOT/include" ],
+			"LIBPATH" : [ "$RENDERMAN_ROOT/lib" ],
 		},
 		"envReplacements" : {
 			"SHLIBPREFIX" : "",

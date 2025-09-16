@@ -40,6 +40,8 @@
 #include "IECore/StringAlgo.h"
 #include "IECore/VectorTypedData.h"
 
+#include "display/display.h"
+#include "display/renderoutput.h"
 #include "ndspy.h"
 
 #include "fmt/format.h"
@@ -50,16 +52,16 @@ using namespace std;
 using namespace Imath;
 using namespace IECore;
 
+// Implementation of original RenderMan driver API, as used by RIS
+// ===============================================================
+
 /// \todo This code originated from `src/IECoreDelight/Display.cpp`, with modifications
-/// to deal with RenderMan-specific issues. It's probably possible to refactor them both
-/// into a single class, although it's not clear where we'd host that. Consider if this
-/// is worthwhile or if we should just let them diverge further.
+/// to deal with RenderMan-specific issues. There's not much point in trying to recombine
+/// them into a single driver, since RenderMan will be dropping this API when XPU
+/// becomes the new RenderMan.
 
 extern "C"
 {
-
-// Implementation
-// ==============
 
 PtDspyError DspyImageOpen( PtDspyImageHandle *image, const char *driverName, const char *fileName, int width, int height, int paramcount, const UserParameter *parameters, int formatCount, PtDspyDevFormat *format, PtFlagStuff *flags )
 {
@@ -396,3 +398,264 @@ PtDspyError DspyImageClose( PtDspyImageHandle image )
 }
 
 } // extern "C"
+
+// Implementation of new driver API, as used by XPU
+// ================================================
+
+#if DISPLAY_INTERFACE_VERSION >= 2
+
+namespace
+{
+
+template<typename T>
+DataPtr typedParameterData( const pxrcore::ParamList &paramList, const pxrcore::ParamList::ParamInfo &paramInfo )
+{
+	unsigned paramId;
+	paramList.GetParamId( paramInfo.name, paramId );
+	const T *value = static_cast<const T *>( paramList.GetParam( paramId ) );
+	if( !paramInfo.array )
+	{
+		return new TypedData<T>( *value );
+	}
+	else
+	{
+		return new TypedData<vector<T>>( vector<T>( value, value + paramInfo.length ) );
+	}
+}
+
+template<>
+DataPtr typedParameterData<string>( const pxrcore::ParamList &paramList, const pxrcore::ParamList::ParamInfo &paramInfo )
+{
+	unsigned paramId;
+	paramList.GetParamId( paramInfo.name, paramId );
+	const RtUString *value = static_cast<const RtUString *>( paramList.GetParam( paramId ) );
+	if( !paramInfo.array )
+	{
+		return new StringData( value->CStr() );
+	}
+	else
+	{
+		StringVectorDataPtr result = new StringVectorData();
+		result->writable().reserve( paramInfo.length );
+		for( size_t i = 0; i < paramInfo.length; ++i )
+		{
+			result->writable().push_back( value[i].CStr() );
+		}
+		return result;
+	}
+}
+
+struct IEDisplay : public display::Display
+{
+
+	IEDisplay( const pxrcore::ParamList &paramList, const pxrcore::ParamList &metadata )
+		:	m_parameters( new CompoundData() )
+	{
+		// Convert parameter list into the form needed by `IECoreImage::DisplayDriver::create()`.
+		pxrcore::ParamList::ParamInfo paramInfo;
+		for( unsigned i = 0, n = paramList.GetNumParams(); i < n; ++i )
+		{
+			if( !paramList.GetParamInfo( i, paramInfo ) )
+			{
+				continue;
+			}
+
+			switch( paramInfo.type )
+			{
+				case pxrcore::DataType::k_string : {
+					m_parameters->writable()[paramInfo.name.CStr()] = typedParameterData<string>( paramList, paramInfo );
+					break;
+				}
+				case pxrcore::DataType::k_float :
+					m_parameters->writable()[paramInfo.name.CStr()] = typedParameterData<float>( paramList, paramInfo );
+					break;
+				case pxrcore::DataType::k_integer :
+					m_parameters->writable()[paramInfo.name.CStr()] = typedParameterData<int>( paramList, paramInfo );
+					break;
+				case pxrcore::DataType::k_color :
+					m_parameters->writable()[paramInfo.name.CStr()] = typedParameterData<Imath::Color3f>( paramList, paramInfo );
+					break;
+				default :
+					msg( Msg::Warning, "IEDisplay", fmt::format( "Ignoring parameter \"{}\" because it has an unsupported type ({})", paramInfo.name.CStr(), (int)paramInfo.type ) );
+					break;
+			}
+		}
+	}
+
+	uint64_t GetRequirements() const override
+	{
+		return k_reqFrameBuffer;
+	}
+
+	bool Rebind(
+		const uint32_t width, const uint32_t height, const char *srfaddrhandle,
+		const void *srfaddr, const size_t srfsizebytes,
+		const size_t *offsets,
+		const size_t *sampleoffsets,
+		const display::RenderOutput *outputs, const size_t noutputs
+	) override
+	{
+		// Create an `IECoreImage::DisplayDriver` with the appropriate number of channels,
+		// and fill `m_channelPointers` with the source data to copy each channel from in
+		// `Notify()`.
+		try
+		{
+			m_channelPointers.clear();
+
+			if( m_driver )
+			{
+				m_driver->imageClose();
+			}
+
+			std::vector<std::string> channelNames;
+			for( size_t outputIndex = 0; outputIndex < noutputs; ++outputIndex )
+			{
+				const display::RenderOutput &output = outputs[outputIndex];
+				if( output.nelems == 1 )
+				{
+					std::string baseName = output.displayName.CStr();
+					if( baseName == "a" ) baseName = "A";
+					else if( baseName == "z" ) baseName = "Z";
+					channelNames.push_back( baseName );
+				}
+				else
+				{
+					string layerName = output.displayName.CStr();
+					if( layerName == "Ci" )
+					{
+						layerName = "";
+					}
+					for( uint8_t elementIndex = 0; elementIndex < output.nelems; elementIndex++ )
+					{
+						std::string baseName = output.displaySuffix[elementIndex].CStr();
+						if( baseName == "r" ) baseName = "R";
+						else if( baseName == "g" ) baseName = "G";
+						else if( baseName == "b" ) baseName = "B";
+
+						if( layerName.empty() )
+						{
+							channelNames.push_back( baseName );
+						}
+						else
+						{
+							channelNames.push_back( layerName + "." + baseName );
+						}
+					}
+				}
+
+				const float *channelPointer = reinterpret_cast<const float *>( static_cast<const std::byte *>( srfaddr ) + offsets[outputIndex] );
+				for( size_t element = 0; element < output.nelems; ++element )
+				{
+					m_channelPointers.push_back( channelPointer );
+					channelPointer += width * height;
+				}
+			}
+
+			m_displayWindow = Box2i( V2i( 0 ), V2i( width - 1, height - 1 ) );
+			m_dataWindow = m_displayWindow;
+			if( const auto cropWindow = m_parameters->member<IntVectorData>( "CropWindow" ) )
+			{
+				m_dataWindow.min = V2i( cropWindow->readable()[0], cropWindow->readable()[1] );
+				m_dataWindow.max = V2i( cropWindow->readable()[2], cropWindow->readable()[3] );
+			}
+
+			const StringData *driverType = m_parameters->member<StringData>( "driverType", /* throwIfMissing = */ true );
+			m_driver = IECoreImage::DisplayDriver::create( driverType->readable(), m_displayWindow, m_dataWindow, channelNames, m_parameters );
+		}
+		catch( const std::exception &e )
+		{
+			IECore::msg( IECore::Msg::Error, "IEDisplay", e.what() );
+			return false;
+		}
+		return true;
+	}
+
+	void Notify(
+		const uint32_t iteration, const uint32_t totaliterations,
+		const NotifyFlags flags, const pxrcore::ParamList &metadata
+	) override
+	{
+		try
+		{
+			if( flags != k_notifyIteration && flags != k_notifyRender )
+			{
+				return;
+			}
+
+			const size_t width = m_dataWindow.size().x + 1;
+			const size_t height = m_dataWindow.size().y + 1 ;
+			const size_t numChannels = m_channelPointers.size();
+			const size_t bufferSize = width * height *numChannels;
+			const size_t offset = m_dataWindow.min.y * ( m_displayWindow.size().x + 1 ) + m_dataWindow.min.x;
+			const size_t stride = m_displayWindow.size().x - m_dataWindow.size().x;
+
+			std::unique_ptr<float[]> buffer( new float[bufferSize] );
+
+			for( size_t channelIndex = 0; channelIndex < m_channelPointers.size(); ++channelIndex )
+			{
+				float *out = buffer.get() + channelIndex;
+				const float *in = m_channelPointers[channelIndex] + offset;
+				for( size_t y = 0; y < height; ++y )
+				{
+					for( size_t x = 0; x < width; ++x )
+					{
+						*out = *in++;
+						out += numChannels;
+					}
+					in += stride;
+				}
+			}
+
+			m_driver->imageData( m_dataWindow, buffer.get(), bufferSize );
+		}
+		catch( const std::exception &e )
+		{
+			IECore::msg( IECore::Msg::Error, "IEDisplay", e.what() );
+		}
+	}
+
+	void Close() override
+	{
+		try
+		{
+			m_driver->imageClose();
+			m_driver = nullptr;
+		}
+		catch( const std::exception &e )
+		{
+			IECore::msg( IECore::Msg::Error, "IEDisplay", e.what() );
+		}
+	}
+
+	private :
+
+		CompoundDataPtr m_parameters;
+		Box2i m_displayWindow;
+		Box2i m_dataWindow;
+		IECoreImage::DisplayDriverPtr m_driver;
+		vector<const float *> m_channelPointers;
+
+};
+
+} // namespace
+
+// Factory
+
+extern "C"
+{
+
+DISPLAYEXPORTVERSION
+
+DISPLAYEXPORT display::Display *CreateDisplay( const pxrcore::UString &name, const pxrcore::ParamList &paramList, const pxrcore::ParamList &metadata )
+{
+	return new IEDisplay( paramList, metadata );
+}
+
+DISPLAYEXPORT void DestroyDisplay( const display::Display *d )
+{
+	delete d;
+}
+
+} // extern "C"
+
+#endif // DISPLAY_INTERFACE_VERSION >= 2
