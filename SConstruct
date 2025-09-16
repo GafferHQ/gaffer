@@ -1451,8 +1451,6 @@ libraries = {
 			"CPPDEFINES" : [ "RMAN_RIX_NO_WARN_DEPRECATED" ],
 			"LIBS" : [
 				"Iex$OPENEXR_LIB_SUFFIX", "Gaffer", "GafferDispatch", "GafferScene", "IECoreScene$CORTEX_LIB_SUFFIX",
-				"prman" if env["PLATFORM"] != "win32" else "libprman",
-				"pxrcore" if env["PLATFORM"] != "win32" else "libpxrcore",
 			],
 			"LIBPATH" : [ "$RENDERMAN_ROOT/lib" ],
 		},
