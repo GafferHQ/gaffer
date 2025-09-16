@@ -21,6 +21,7 @@ Improvements
 - ShaderTweaks : Added support for creating tweaks via drag & drop from the SceneInspector to the `+` button. Dragging a single value creates an unnamed tweak of the right type. Drag a multiple selection containing the name and the value to set the value too.
 - PathListingWidget : Improved update responsiveness by updating visible items before items which are collapsed or scrolled out of view.
 - RenderManAttributes : Re-labelled displacement `Trace` checkbox as `Enabled`, to better match other DCCs.
+- USDLight : Added Arnold `lens_radius` and `aspect_ratio` parameters to the "Shaping" section.
 
 Fixes
 -----

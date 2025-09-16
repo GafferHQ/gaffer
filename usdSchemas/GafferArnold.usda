@@ -237,3 +237,25 @@ class "GafferArnoldSkydomeLightAPI" (
 	)
 
 }
+
+class "GafferArnoldSpotLightAPI" (
+	customData = {
+		token[] apiSchemaAutoApplyTo = [ "CylinderLight", "DistantLight", "DiskLight", "SphereLight" ]
+		string apiSchemaType = "singleApply"
+		string className = "GafferArnoldSpotLightAPI"
+	}
+	inherits = </APISchemaBase>
+)
+{
+
+	float inputs:arnold:lens_radius = 0.0 (
+		displayGroup = "Shaping"
+		displayName = "Lens Radius (Arnold)"
+	)
+
+	float inputs:arnold:aspect_ratio = 1.0 (
+		displayGroup = "Shaping"
+		displayName = "Aspect Ratio (Arnold)"
+	)
+
+}
