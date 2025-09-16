@@ -24,6 +24,7 @@ Improvements
 - USDLight :
   - Added Arnold `lens_radius` and `aspect_ratio` parameters to the "Shaping" section.
   - Added Arnold `shadow_density` parameter to the "Shadows" section.
+  - Renamed DiskLight `arnold:spread` plug label from "Spread" to "Spread (Arnold)".
 
 Fixes
 -----

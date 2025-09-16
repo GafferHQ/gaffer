@@ -126,7 +126,7 @@ class "GafferArnoldDiskLightAPI" (
 
 	float inputs:arnold:spread = 1.0 (
 		displayGroup = "Geometry"
-		displayName = "Spread"
+		displayName = "Spread (Arnold)"
 	)
 
 	float inputs:arnold:camera = 0.0 (
