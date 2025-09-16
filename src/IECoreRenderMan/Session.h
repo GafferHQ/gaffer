@@ -62,7 +62,7 @@ struct Session
 	/// Options must be provided at construction time, as Riley requires them to
 	/// be set before any other operations can take place (and indeed, will crash
 	/// if the Riley instance is destroyed without `SetOptions()` being called).
-	Session( IECoreScenePreview::Renderer::RenderType renderType, const RtParamList &options, const IECore::MessageHandlerPtr &messageHandler );
+	Session( RtUString rileyVariant, IECoreScenePreview::Renderer::RenderType renderType, const RtParamList &options, const IECore::MessageHandlerPtr &messageHandler );
 	~Session();
 
 	riley::Riley *riley;

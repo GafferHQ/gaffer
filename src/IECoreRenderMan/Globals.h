@@ -59,7 +59,7 @@ class Globals : public boost::noncopyable
 
 	public :
 
-		Globals( IECoreScenePreview::Renderer::RenderType renderType, const IECore::MessageHandlerPtr &messageHandler );
+		Globals( RtUString rileyVariant, IECoreScenePreview::Renderer::RenderType renderType, const IECore::MessageHandlerPtr &messageHandler );
 		~Globals();
 
 		void option( const IECore::InternedString &name, const IECore::Object *value );
@@ -82,6 +82,7 @@ class Globals : public boost::noncopyable
 		void updateRenderView();
 		void deleteRenderView();
 
+		const RtUString m_rileyVariant;
 		const IECoreScenePreview::Renderer::RenderType m_renderType;
 		const IECore::MessageHandlerPtr m_messageHandler;
 

@@ -136,7 +136,7 @@ struct Session::ExceptionHandler : public RixXcpt::XcptHandler
 
 };
 
-Session::Session( IECoreScenePreview::Renderer::RenderType renderType, const RtParamList &options, const IECore::MessageHandlerPtr &messageHandler )
+Session::Session( RtUString rileyVariant, IECoreScenePreview::Renderer::RenderType renderType, const RtParamList &options, const IECore::MessageHandlerPtr &messageHandler )
 	:	riley( nullptr ), renderType( renderType ),
 		m_riCtl( (RixRiCtl *)Loader::context()->GetRixInterface( k_RixRiCtl ) ),
 		m_portalsDirty( false )
@@ -169,8 +169,8 @@ Session::Session( IECoreScenePreview::Renderer::RenderType renderType, const RtP
 	}
 
 	auto rileyManager = (RixRileyManager *)Loader::context()->GetRixInterface( k_RixRileyManager );
-	/// \todo What is the `rileyVariant` argument for? XPU?
-	riley = rileyManager->CreateRiley( RtUString(), RtParamList() );
+	/// \todo Pass "xpu:cpuconfig" and "xpu:gpuconfig" parameters to specify render devices.
+	riley = rileyManager->CreateRiley( rileyVariant, RtParamList() );
 
 	riley->SetOptions( options );
 }
