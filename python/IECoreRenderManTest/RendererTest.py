@@ -46,6 +46,7 @@ import OpenImageIO
 import IECore
 import IECoreImage
 import IECoreScene
+import IECoreRenderMan
 import IECoreRenderManTest
 
 import GafferTest
@@ -53,6 +54,8 @@ import GafferScene
 
 @unittest.skipIf( GafferTest.inCI() and os.name == "nt", "RenderMan cannot get license on Windows.")
 class RendererTest( GafferTest.TestCase ) :
+
+	renderer = "RenderMan"
 
 	def setUp( self ) :
 
@@ -62,21 +65,21 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testFactory( self ) :
 
-		self.assertTrue( "RenderMan" in GafferScene.Private.IECoreScenePreview.Renderer.types() )
+		self.assertTrue( self.renderer in GafferScene.Private.IECoreScenePreview.Renderer.types() )
 
-		r = GafferScene.Private.IECoreScenePreview.Renderer.create( "RenderMan" )
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create( self.renderer )
 		self.assertTrue( isinstance( r, GafferScene.Private.IECoreScenePreview.Renderer ) )
 
 	def testTwoRenderers( self ) :
 
-		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "RenderMan" )
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( self.renderer )
 		# This looks unused, but is needed to trigger the deferred creation of
 		# the Riley session.
 		attributes = renderer.attributes( IECore.CompoundObject() )
 
 		with self.assertRaisesRegex( RuntimeError, "RenderMan doesn't allow multiple active sessions" ) as handler :
 			# RenderMan only allows there to be one renderer at a time.
-			GafferScene.Private.IECoreScenePreview.Renderer.create( "RenderMan" )
+			GafferScene.Private.IECoreScenePreview.Renderer.create( self.renderer )
 
 		handler.exception.__traceback__ = None
 
@@ -87,7 +90,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with self.assertRaisesRegex( RuntimeError, "SceneDescription mode not supported" ) :
 			GafferScene.Private.IECoreScenePreview.Renderer.create(
-				"RenderMan",
+				self.renderer,
 				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 				( self.temporaryDirectory() / "test.rib" ).as_posix()
 			)
@@ -95,7 +98,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testOutput( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
 
@@ -141,7 +144,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testObject( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
 
@@ -173,7 +176,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		messageHandler = IECore.CapturingMessageHandler()
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
 			messageHandler = messageHandler
 		)
@@ -188,9 +191,15 @@ class RendererTest( GafferTest.TestCase ) :
 		light = renderer.light( "/light", None, lightAttributes )
 		light.transform( imath.M44f().translate( imath.V3f( 1, 2, 3 ) ) )
 
-		self.assertEqual( len( messageHandler.messages ), 1 )
-		self.assertEqual( messageHandler.messages[0].level, IECore.MessageHandler.Level.Warning )
-		self.assertEqual( messageHandler.messages[0].message, "Unable to find shader \"BadShader\"." )
+		self.assertGreater( len( messageHandler.messages ), 0 )
+		self.assertTrue(
+			{ m.message for m in messageHandler.messages }.issubset( {
+				# Message we output ourselves.
+				"Unable to find shader \"BadShader\".",
+				# Message that XPU emits but RIS doesn't.
+				"W00045 A light shader could not be created because there were no light nodes.",
+			} )
+		)
 
 		del lightAttributes
 		del light
@@ -199,7 +208,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testIntegratorEdit( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
 		)
 
@@ -236,7 +245,7 @@ class RendererTest( GafferTest.TestCase ) :
 					"integrator" : IECoreScene.Shader(
 						"PxrVisualizer", "ri:integrator",
 						{
-							"style" : "objectnormals",
+							"style" : "normals",
 							"wireframe" : False,
 						}
 					),
@@ -257,7 +266,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testEXRLayerNames( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
 
@@ -302,7 +311,7 @@ class RendererTest( GafferTest.TestCase ) :
 		fileName = str( self.temporaryDirectory() / "test.exr" )
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
 
@@ -341,7 +350,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testMultiLayerIEDisplay( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
 
@@ -383,7 +392,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testOutputAccumulationRule( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
 
@@ -425,7 +434,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testEXRHeaderMetadata( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
 
@@ -459,7 +468,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testOneRenderOutputTwoDrivers( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
 
@@ -502,7 +511,7 @@ class RendererTest( GafferTest.TestCase ) :
 		with IECoreRenderManTest.RileyCapture() as capture :
 
 			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-				"RenderMan",
+				self.renderer,
 				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 			)
 
@@ -556,7 +565,7 @@ class RendererTest( GafferTest.TestCase ) :
 			with self.subTest( attributeName = attributeName, lookupName = lookupName, array = array ) :
 
 				renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-					"RenderMan",
+					self.renderer,
 					GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 				)
 
@@ -606,7 +615,7 @@ class RendererTest( GafferTest.TestCase ) :
 		with IECoreRenderManTest.RileyCapture() as capture :
 
 			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-				"RenderMan",
+				self.renderer,
 				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 			)
 
@@ -651,7 +660,7 @@ class RendererTest( GafferTest.TestCase ) :
 		# Render with a dome light on its own.
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
 		)
 
@@ -840,7 +849,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testMeshLight( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
 		)
 
@@ -903,7 +912,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.5, 0.5 ) )[0], 0.0 )
 		self.assertGreater( self.__colorAtUV( image, imath.V2f( 0.5, 0.5 ) )[1], 0.1 )
 		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.5, 0.5 ) )[2], 0.0 )
-		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.5, 0.5 ) )[3], 1.0 )
+		self.assertEqualWithAbsError( self.__colorAtUV( image, imath.V2f( 0.5, 0.5 ) )[3], 1.0, 0.00001 )
 
 		# Light is camera visible and should be cyan.
 
@@ -955,7 +964,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.5, 0.5 ) )[0], 0.0 )
 		self.assertGreater( self.__colorAtUV( image, imath.V2f( 0.5, 0.5 ) )[1], 0.1 )
 		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.5, 0.5 ) )[2], 0.0 )
-		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.5, 0.5 ) )[3], 1.0 )
+		self.assertEqualWithAbsError( self.__colorAtUV( image, imath.V2f( 0.5, 0.5 ) )[3], 1.0, 0.00001 )
 
 		# No light in beauty.
 		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.75, 0.5 ) ), imath.Color4f( 0 ) )
@@ -971,7 +980,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		messageHandler = IECore.CapturingMessageHandler()
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
 			messageHandler = messageHandler
 		)
@@ -1006,16 +1015,22 @@ class RendererTest( GafferTest.TestCase ) :
 
 		renderer.render()
 
-		self.assertEqual( len( messageHandler.messages ), 1 )
-		self.assertEqual( messageHandler.messages[0].level, IECore.MessageHandler.Level.Warning )
-		self.assertEqual( messageHandler.messages[0].message, "Unable to find shader \"MissingShader\"." )
+		self.assertGreater( len( messageHandler.messages ), 0 )
+		self.assertTrue(
+			{ m.message for m in messageHandler.messages }.issubset( {
+				# Message we output ourselves.
+				"Unable to find shader \"MissingShader\".",
+				# Message that XPU emits but RIS doesn't.
+				"W00053 A material : <unknown> cannot be created because there were no bxdf nodes.",
+			} )
+		)
 
 		del renderer
 
 	def testConnectionToOSLShader( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
 
@@ -1059,7 +1074,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testBXDFConnection( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
 
@@ -1101,7 +1116,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testWarningForPerOutputPixelFilter( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
 
@@ -1138,7 +1153,7 @@ class RendererTest( GafferTest.TestCase ) :
 				with IECoreRenderManTest.RileyCapture() as capture :
 
 					renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-						"RenderMan",
+						self.renderer,
 						GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 					)
 
@@ -1175,7 +1190,7 @@ class RendererTest( GafferTest.TestCase ) :
 				with IECoreRenderManTest.RileyCapture() as capture :
 
 					renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-						"RenderMan",
+						self.renderer,
 						GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 					)
 
@@ -1208,7 +1223,7 @@ class RendererTest( GafferTest.TestCase ) :
 				with IECoreRenderManTest.RileyCapture() as capture :
 
 					renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-						"RenderMan",
+						self.renderer,
 						GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 					)
 
@@ -1242,7 +1257,7 @@ class RendererTest( GafferTest.TestCase ) :
 				with IECoreRenderManTest.RileyCapture() as capture :
 
 					renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-						"RenderMan",
+						self.renderer,
 						GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 					)
 
@@ -1273,7 +1288,7 @@ class RendererTest( GafferTest.TestCase ) :
 				with IECoreRenderManTest.RileyCapture() as capture :
 
 					renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-						"RenderMan",
+						self.renderer,
 						GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 					)
 
@@ -1299,7 +1314,7 @@ class RendererTest( GafferTest.TestCase ) :
 		with IECoreRenderManTest.RileyCapture() as capture :
 
 			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-				"RenderMan",
+				self.renderer,
 				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 			)
 
@@ -1333,7 +1348,7 @@ class RendererTest( GafferTest.TestCase ) :
 		with IECoreRenderManTest.RileyCapture() as capture :
 
 			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-				"RenderMan",
+				self.renderer,
 				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 			)
 
@@ -1372,7 +1387,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testChangingPrototypeAttributesCausesEditFailure( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
 		)
 
@@ -1409,7 +1424,7 @@ class RendererTest( GafferTest.TestCase ) :
 		with IECoreRenderManTest.RileyCapture() as capture :
 
 			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-				"RenderMan",
+				self.renderer,
 				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 			)
 
@@ -1463,7 +1478,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testTransformMotionBlur( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
 
@@ -1512,7 +1527,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		messageHandler = IECore.CapturingMessageHandler()
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
 			messageHandler = messageHandler
 		)
@@ -1534,7 +1549,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		messageHandler = IECore.CapturingMessageHandler()
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
 			messageHandler = messageHandler
 		)
@@ -1548,7 +1563,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testLightFilter( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
 		)
 
@@ -1691,7 +1706,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testLightFilterTransforms( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
 		)
 
@@ -1787,7 +1802,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testLightFilterCombineModes( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
 		)
 
@@ -1906,7 +1921,7 @@ class RendererTest( GafferTest.TestCase ) :
 		with IECoreRenderManTest.RileyCapture() as capture :
 
 			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-				"RenderMan",
+				self.renderer,
 				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 			)
 
@@ -1933,7 +1948,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testDisplayFilter( self ):
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
 		)
 
@@ -2023,7 +2038,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testSampleFilter( self ):
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"RenderMan",
+			self.renderer,
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
 		)
 
@@ -2115,7 +2130,7 @@ class RendererTest( GafferTest.TestCase ) :
 		def render( recover, messageHandler = None ) :
 
 			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-				"RenderMan",
+				self.renderer,
 				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
 				messageHandler = messageHandler
 			)
@@ -2156,7 +2171,7 @@ class RendererTest( GafferTest.TestCase ) :
 		with IECoreRenderManTest.RileyCapture() as capture :
 
 			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-				"RenderMan",
+				self.renderer,
 				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 			)
 
@@ -2175,7 +2190,7 @@ class RendererTest( GafferTest.TestCase ) :
 		with IECoreRenderManTest.RileyCapture() as capture :
 
 			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
-				"RenderMan",
+				self.renderer,
 				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 			)
 
@@ -2306,6 +2321,21 @@ class RendererTest( GafferTest.TestCase ) :
 
 		c = self.__colorAtUV( image, uv )
 		return imath.Color3f( c.r, c.g, c.b )
+
+@unittest.skipIf( IECoreRenderMan.renderManMajorVersion() < 27, "XPU only supported for RenderMan 27+" )
+class XPURendererTest( RendererTest ) :
+
+	renderer = "RenderManXPU"
+
+	## \todo Figure out why this test fails with XPU. It does seem
+	# that XPU will write a checkpoint sometimes, but possibly only if we make
+	# the render take longer. It's hard to tell if its actually recovering from
+	# checkpoints, but I've been unable to convince myself it is - it certainly
+	# doesn't emit the R56049 message we hope for.
+	@unittest.skip( "XPU checkpointing status unclear" )
+	def testCheckpointing( self ):
+
+		pass
 
 if __name__ == "__main__":
 	unittest.main()

@@ -43,8 +43,8 @@ from .RenderManMeshLightTest import RenderManMeshLightTest
 from .RenderManIntegratorTest import RenderManIntegratorTest
 from .RenderManDisplayFilterTest import RenderManDisplayFilterTest
 from .RenderManSampleFilterTest import RenderManSampleFilterTest
-from .RenderManRenderTest import RenderManRenderTest
-from .InteractiveRenderManRenderTest import InteractiveRenderManRenderTest
+from .RenderManRenderTest import RenderManRenderTest, RenderManXPURenderTest
+from .InteractiveRenderManRenderTest import InteractiveRenderManRenderTest, InteractiveRenderManXPURenderTest
 from .RenderPassAdaptorTest import RenderPassAdaptorTest
 from .RenderManLightFilterTest import RenderManLightFilterTest
 from .StylizedAOVAdaptorTest import StylizedAOVAdaptorTest
