@@ -36,15 +36,18 @@
 
 #include "GafferDispatch/Dispatcher.h"
 
+#include "Gaffer/Box.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/ContextProcessor.h"
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/StandardSet.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/SubGraph.h"
 #include "Gaffer/Switch.h"
 
+#include "IECore/FileSequenceFunctions.h"
 #include "IECore/FrameRange.h"
 #include "IECore/MessageHandler.h"
 
@@ -67,6 +70,9 @@ namespace
 {
 
 const InternedString g_frame( "frame" );
+const InternedString g_isolatedBlindDataKey( "isolated" );
+const InternedString g_isolatedAnimationNodeName( "isolatedAnimation" );
+const BoolDataPtr g_trueData = new BoolData( true );
 
 // TaskBatch contexts are identical to the contexts of their corresponding
 // Tasks, except that they omit the `frame` variable. We need to construct a
@@ -114,6 +120,43 @@ struct BatchContextPool
 
 };
 
+void bakePlugValue( ValuePlug *destinationPlug, const ValuePlug *sourcePlug )
+{
+	if( !sourcePlug->getInput() )
+	{
+		return;
+	}
+
+	const DataPtr value = PlugAlgo::getValueAsData( sourcePlug );
+	if( !value || !PlugAlgo::canSetValueFromData( destinationPlug, value.get() ) )
+	{
+		return;
+	}
+
+	PlugAlgo::setValueFromData( destinationPlug, value.get() );
+}
+
+void isolateScriptPlugs( ScriptNode *destinationScript, const ScriptNode *sourceScript )
+{
+	StandardSetPtr plugsToSerialise = new StandardSet();
+
+	for( const auto &sourcePlug : Gaffer::ValuePlug::RecursiveInputRange( *sourceScript ) )
+	{
+		plugsToSerialise->add( const_cast<ValuePlug *>( sourcePlug.get() ) );
+	}
+
+	const std::string scriptVariablesSerialisation = sourceScript->serialise( sourceScript, plugsToSerialise.get() );
+	destinationScript->execute( scriptVariablesSerialisation );
+
+	for( const auto &sourcePlug : Gaffer::ValuePlug::RecursiveInputRange( *sourceScript ) )
+	{
+		auto destinationPlug = destinationScript->descendant<ValuePlug>( sourcePlug->relativeName( sourceScript ) );
+		assert( destinationPlug );
+
+		bakePlugValue( destinationPlug, sourcePlug.get() );
+	}
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -124,6 +167,7 @@ namespace
 {
 
 const InternedString g_batchSize( "batchSize" );
+const InternedString g_isolatedPlugName( "isolated" );
 const InternedString g_immediatePlugName( "immediate" );
 const InternedString g_jobDirectoryContextEntry( "dispatcher:jobDirectory" );
 const InternedString g_scriptFileNameContextEntry( "dispatcher:scriptFileName" );
@@ -308,6 +352,7 @@ void Dispatcher::setupPlugs( Plug *parentPlug )
 {
 	parentPlug->addChild( new IntPlug( g_batchSize, Plug::In, 1 ) );
 	parentPlug->addChild( new BoolPlug( g_immediatePlugName, Plug::In, false ) );
+	parentPlug->addChild( new BoolPlug( g_isolatedPlugName, Plug::In, false ) );
 
 	const CreatorMap &m = creators();
 	for( const auto &[name, creator] : m )
@@ -625,6 +670,12 @@ class Dispatcher::Batcher
 				batch->m_immediate = true;
 			}
 
+			const BoolPlug *isolatePlug = dispatcherPlug( task )->getChild<const BoolPlug>( g_isolatedPlugName );
+			if( isolatePlug && isolatePlug->getValue() )
+			{
+				batch->blindData()->writable()[g_isolatedBlindDataKey] = g_trueData;
+			}
+
 			// Remember which batch we stored this task in, for
 			// the next time someone asks for it.
 			batchForTask = batch;
@@ -891,7 +942,7 @@ void Dispatcher::execute() const
 		}
 	}
 
-	executeAndPruneImmediateBatches( batcher.rootBatch() );
+	preprocessBatches( batcher.rootBatch() );
 
 	// Save the script. If we're in a nested dispatch, this may have been done already by
 	// the outer dispatch, hence the call to `exists()`. Performing the saving here is
@@ -924,7 +975,7 @@ void Dispatcher::execute() const
 	}
 }
 
-void Dispatcher::executeAndPruneImmediateBatches( TaskBatch *batch, bool immediate ) const
+void Dispatcher::preprocessBatches( TaskBatch *batch, bool immediate ) const
 {
 	if( batch->m_visited )
 	{
@@ -936,7 +987,7 @@ void Dispatcher::executeAndPruneImmediateBatches( TaskBatch *batch, bool immedia
 	TaskBatches &preTasks = batch->m_preTasks;
 	for( TaskBatches::iterator it = preTasks.begin(); it != preTasks.end(); )
 	{
-		executeAndPruneImmediateBatches( it->get(), immediate );
+		preprocessBatches( it->get(), immediate );
 		if( (*it)->m_executed )
 		{
 			batch->m_preTasksSet.erase( it->get() );
@@ -953,8 +1004,95 @@ void Dispatcher::executeAndPruneImmediateBatches( TaskBatch *batch, bool immedia
 		batch->execute();
 		batch->m_executed = true;
 	}
+	else if( batch->blindData()->member( g_isolatedBlindDataKey ) && !batch->frames().empty() )
+	{
+		isolateBatch( batch );
+	}
 
 	batch->m_visited = true;
+
+}
+
+void Dispatcher::isolateBatch( TaskBatch *batch ) const
+{
+	auto sourceNode = runTimeCast<const TaskNode>( batch->plug()->node() );
+	const ScriptNode *sourceScript = sourceNode->scriptNode();  // `execute()` has already checked that this will be valid
+
+	std::filesystem::path scriptPath( batch->context()->get<std::string>( g_scriptFileNameContextEntry ) );
+	const std::string sourceNodeRelativeName = sourceNode->relativeName( sourceScript );
+	const std::vector<FrameList::Frame> intFrames( batch->frames().begin(), batch->frames().end() );
+	FrameListPtr batchFrames = frameListFromList( intFrames );
+
+	std::filesystem::path isolatedPath =
+		scriptPath.parent_path() /
+		"isolated" /
+		sourceNodeRelativeName /
+		batch->context()->hash().toString() /
+		batchFrames->asString() /
+		( scriptPath.stem().string() + ".gfr" )
+	;
+
+	ContextPtr isolatedContext = new Context( *batch->context() );
+	isolatedContext->set( g_scriptFileNameContextEntry, isolatedPath.generic_string() );
+	batch->m_context = isolatedContext;
+
+	ScriptNodePtr destinationScript = new ScriptNode();
+
+	Context::Scope batchScope( batch->context() );
+
+	isolateScriptPlugs( destinationScript.get(), sourceScript );
+
+	NodePtr topBox = nullptr;
+	Node *lowestContainer = destinationScript.get();
+	const GraphComponent *node = sourceNode->parent();
+	while( node != sourceScript )
+	{
+		BoxPtr newChild = new Box( node->getName() );
+		if( topBox )
+		{
+			newChild->addChild( topBox );
+		}
+		else
+		{
+			// The `TaskNode` will be in a `Box`, rather than a child of the script,
+			// and this is the first iteration of this loop. This will be the `Box`
+			// to add the `TaskNode` to.
+			lowestContainer = newChild.get();
+		}
+		topBox = newChild;
+		node = node->parent();
+	}
+
+	if( topBox )
+	{
+		destinationScript->addChild( topBox );
+	}
+
+	auto parentNode = sourceNode->parent<Node>();
+	StandardSetPtr sourceSet = new StandardSet();
+	sourceSet->add( const_cast<TaskNode*>( sourceNode ) );
+	const std::string serialisation = sourceScript->serialise( parentNode, sourceSet.get() );
+	destinationScript->execute( serialisation, lowestContainer );
+
+	TaskNode *destinationNode = lowestContainer->getChild<TaskNode>( sourceNode->getName() );
+	assert( destinationNode );
+
+	for( ValuePlug::RecursiveInputIterator it( sourceNode ); !it.done(); ++it )
+	{
+		auto destinationPlug = destinationNode->descendant<ValuePlug>( (*it)->relativeName( sourceNode ) );
+		assert( destinationPlug != nullptr );
+
+		bakePlugValue( destinationPlug, (*it).get() );
+		if( (*it)->getInput() )
+		{
+			it.prune();
+		}
+	}
+
+	destinationScript->fileNamePlug()->setValue( isolatedPath.generic_string() );
+	std::filesystem::create_directories( isolatedPath.parent_path() );
+	destinationScript->serialiseToFile( isolatedPath );
+
 }
 
 //////////////////////////////////////////////////////////////////////////

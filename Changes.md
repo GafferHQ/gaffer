@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.2.1)
 =======
 
+Features
+--------
+
+- SystemCommand, PythonCommand : Added `isolated` plug. An isolated task is executed from a script containing only that node. This is a useful optimisation when the load time for the full script is high compared to the time taken to execute the task (#6541)
+
 Improvements
 ------------
 
