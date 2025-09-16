@@ -52,6 +52,7 @@
 #include "IECore/MessageHandler.h"
 
 #include "boost/algorithm/string/predicate.hpp"
+#include "boost/algorithm/string/replace.hpp"
 
 #include "fmt/format.h"
 
@@ -120,23 +121,92 @@ struct BatchContextPool
 
 };
 
-void bakePlugValue( ValuePlug *destinationPlug, const ValuePlug *sourcePlug )
+ValuePlug *acquireCellValuePlug( Spreadsheet *spreadsheet, const InternedString columnName, const float frame )
 {
-	if( !sourcePlug->getInput() )
+	const std::string rowName = fmt::format( "{}", frame );
+	if( auto row = spreadsheet->rowsPlug()->row( rowName ) )
 	{
-		return;
+		assert( row->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName ) );
+		return row->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName )->valuePlug();
 	}
 
-	const DataPtr value = PlugAlgo::getValueAsData( sourcePlug );
-	if( !value || !PlugAlgo::canSetValueFromData( destinationPlug, value.get() ) )
-	{
-		return;
-	}
+	Spreadsheet::RowPlug *newRow = spreadsheet->rowsPlug()->addRow();
+	newRow->namePlug()->setValue( rowName );
+	newRow->enabledPlug()->setValue( true );
 
-	PlugAlgo::setValueFromData( destinationPlug, value.get() );
+	assert( newRow->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName ) );
+	return newRow->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName )->valuePlug();
 }
 
-void isolateScriptPlugs( ScriptNode *destinationScript, const ScriptNode *sourceScript )
+void bakePlugValue( ValuePlug *destinationPlug, const ValuePlug *sourcePlug, const std::vector<float> &frames )
+{
+	if( !sourcePlug->getInput() || !PlugAlgo::canSetValueFromData( destinationPlug ) )
+	{
+		return;
+	}
+
+	ScriptNode *destinationScript = destinationPlug->node()->scriptNode();
+	Spreadsheet *animationSpreadsheet = destinationScript->getChild<Spreadsheet>( g_isolatedAnimationNodeName );
+
+	Context::EditableScope frameContext( Context::current() );
+	frameContext.setFrame( frames.front() );
+
+	const DataPtr originalValue = PlugAlgo::getValueAsData( sourcePlug );
+	PlugAlgo::setValueFromData( destinationPlug, originalValue.get() );
+
+	const MurmurHash originalHash = sourcePlug->hash();
+
+	InternedString columnName( "" );
+	bool animating = false;
+
+	for( std::vector<float>::const_iterator it = frames.begin() + 1, eIt = frames.end(); it != eIt; ++it )
+	{
+		frameContext.setFrame( *it );
+
+		const MurmurHash frameValueHash = sourcePlug->hash();
+
+		if( !animating && frameValueHash != originalHash )
+		{
+			animating = true;
+			if( !animationSpreadsheet )
+			{
+				Node *parentNode = destinationPlug->node()->parent<Node>();
+				parentNode->addChild( new Spreadsheet( g_isolatedAnimationNodeName ) );
+				animationSpreadsheet = parentNode->getChild<Spreadsheet>( parentNode->children().size() - 1 );
+				animationSpreadsheet->selectorPlug()->setValue( "${frame}" );
+			}
+
+			if( columnName.string().empty() )
+			{
+				columnName = boost::replace_all_copy( destinationPlug->relativeName( destinationPlug->node() ), ".", "_" );
+				animationSpreadsheet->rowsPlug()->addColumn( destinationPlug, columnName );
+
+				destinationPlug->setInput( animationSpreadsheet->outPlug()->getChild<Plug>( columnName ) );
+
+				// We set the plug values for all frames if any are animated. Go back and set
+				// the previous frame cell values.
+				for( std::vector<float>::const_iterator pIt = frames.begin(); pIt != it; ++pIt )
+				{
+					frameContext.setFrame( *pIt );
+					const DataPtr previousValue = PlugAlgo::getValueAsData( sourcePlug );
+					ValuePlug *cellValuePlug = acquireCellValuePlug( animationSpreadsheet, columnName, *pIt );
+					PlugAlgo::setValueFromData( cellValuePlug, previousValue.get() );
+				}
+
+				frameContext.setFrame( *it );
+			}
+		}
+
+		if( animating )
+		{
+			ValuePlug *cellValuePlug = acquireCellValuePlug( animationSpreadsheet, columnName, *it );
+			const DataPtr frameValue = PlugAlgo::getValueAsData( sourcePlug );
+			PlugAlgo::setValueFromData( cellValuePlug, frameValue.get() );
+		}
+	}
+}
+
+void isolateScriptPlugs( ScriptNode *destinationScript, const ScriptNode *sourceScript, const std::vector<float> &frames )
 {
 	StandardSetPtr plugsToSerialise = new StandardSet();
 
@@ -153,7 +223,7 @@ void isolateScriptPlugs( ScriptNode *destinationScript, const ScriptNode *source
 		auto destinationPlug = destinationScript->descendant<ValuePlug>( sourcePlug->relativeName( sourceScript ) );
 		assert( destinationPlug );
 
-		bakePlugValue( destinationPlug, sourcePlug.get() );
+		bakePlugValue( destinationPlug, sourcePlug.get(), frames );
 	}
 }
 
@@ -1040,7 +1110,7 @@ void Dispatcher::isolateBatch( TaskBatch *batch ) const
 
 	Context::Scope batchScope( batch->context() );
 
-	isolateScriptPlugs( destinationScript.get(), sourceScript );
+	isolateScriptPlugs( destinationScript.get(), sourceScript, batch->frames() );
 
 	NodePtr topBox = nullptr;
 	Node *lowestContainer = destinationScript.get();
@@ -1082,7 +1152,7 @@ void Dispatcher::isolateBatch( TaskBatch *batch ) const
 		auto destinationPlug = destinationNode->descendant<ValuePlug>( (*it)->relativeName( sourceNode ) );
 		assert( destinationPlug != nullptr );
 
-		bakePlugValue( destinationPlug, (*it).get() );
+		bakePlugValue( destinationPlug, (*it).get(), batch->frames() );
 		if( (*it)->getInput() )
 		{
 			it.prune();
