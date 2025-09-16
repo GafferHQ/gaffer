@@ -4,7 +4,9 @@
 Features
 --------
 
-- RenderMan : Added support for RenderMan 27.0, in addition to the existing support for RenderMan 26.3.
+- RenderMan :
+  - Added support for RenderMan 27.0, in addition to the existing support for RenderMan 26.3.
+  - Added support for RenderMan XPU (27.0 only).
 
 Improvements
 ------------
