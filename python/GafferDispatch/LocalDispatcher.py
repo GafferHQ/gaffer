@@ -86,12 +86,17 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			# the main thread).
 			self.__name = dispatcher["jobName"].getValue()
 			self.__directory = Gaffer.Context.current()["dispatcher:jobDirectory"]
-			self.__scriptFile = Gaffer.Context.current()["dispatcher:scriptFileName"]
 			self.__frameRange = dispatcher.frameRange()
 			self.__id = os.path.basename( self.__directory )
 			self.__ignoreScriptLoadErrors = dispatcher["ignoreScriptLoadErrors"].getValue()
 			self.__environmentCommand = dispatcher["environmentCommand"].getValue()
 			self.__executeInBackground = dispatcher["executeInBackground"].getValue()
+
+			# We want to warn if a Task is executing in the foreground and the `isolate` plug
+			# is enabled, which are mutually exclusive. We want to warn once per dispatch per
+			# Task. The unit of work a dispatcher gets is a batch, so we track whether we can
+			# actually isolate the Task using the batch's node.
+			self.__effectiveIsolate = {}
 
 			if self.__executeInBackground :
 				application = script.ancestor( Gaffer.ApplicationRoot )
@@ -296,7 +301,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			args = shlex.split( self.__environmentCommand ) + [
 				str( Gaffer.executablePath() ),
 				"execute",
-				"-script", str( self.__scriptFile ),
+				"-script", batch.blindData()["dispatcher:scriptFileName"].value,
 				"-nodes", batch.blindData()["nodeName"].value,
 				"-frames", frames,
 			]
@@ -392,6 +397,21 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			nodeName = ""
 			if batch.plug() is not None :
 				nodeName = batch.plug().node().relativeName( batch.plug().node().scriptNode() )
+
+				if batch.plug().node() not in self.__effectiveIsolate :
+					isolateRequested = "dispatcher:scriptFileName" in batch.blindData()
+					isolate = self.__executeInBackground if isolateRequested else False
+					if isolateRequested and not isolate :
+						IECore.msg(
+							IECore.MessageHandler.Level.Warning,
+							"LocalDispatcher",
+							"Isolated execution is ignored for foreground dispatches."
+						)
+					self.__effectiveIsolate[batch.plug().node()] = isolate
+
+				if not self.__effectiveIsolate[batch.plug().node()] :
+					batch.blindData()["dispatcher:scriptFileName"] = Gaffer.Context.current()["dispatcher:scriptFileName"]
+
 			batch.blindData()["nodeName"] = nodeName
 
 			for upstreamBatch in batch.preTasks() :
