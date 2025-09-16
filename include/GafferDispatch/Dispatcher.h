@@ -283,6 +283,7 @@ class GAFFERDISPATCH_API Dispatcher : public TaskNode
 		mutable std::filesystem::path m_jobDirectory;
 
 		void executeAndPruneImmediateBatches( TaskBatch *batch, bool immediate = false ) const;
+		void isolateBatches( TaskBatch *batch ) const;
 
 		using CreatorMap = std::map<std::string, std::pair<Creator, SetupPlugsFn>>;
 		static CreatorMap &creators();

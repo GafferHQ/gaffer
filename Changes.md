@@ -6,6 +6,11 @@
 1.6.2.0 (relative to 1.6.1.0)
 =======
 
+Features
+--------
+
+- TaskNode : Added `isolate` plug. When an isolated task is dispatched, a script containing only the task node will be saved for each dispatched batch and all plug inputs will be computed at dispatch time.
+
 Improvements
 ------------
 
