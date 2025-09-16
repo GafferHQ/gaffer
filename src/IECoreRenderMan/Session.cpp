@@ -139,7 +139,7 @@ struct Session::ExceptionHandler : public RixXcpt::XcptHandler
 };
 
 Session::Session( RtUString rileyVariant, const RtParamList &rileyParameters, IECoreScenePreview::Renderer::RenderType renderType, const RtParamList &options, const IECore::MessageHandlerPtr &messageHandler )
-	:	riley( nullptr ), renderType( renderType ),
+	:	riley( nullptr ), rileyVariant( rileyVariant ), renderType( renderType ),
 		m_riCtl( (RixRiCtl *)Loader::context()->GetRixInterface( k_RixRiCtl ) ),
 		m_portalsDirty( false )
 {

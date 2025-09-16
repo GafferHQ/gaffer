@@ -69,6 +69,7 @@ struct Session
 	~Session();
 
 	riley::Riley *riley;
+	const RtUString rileyVariant;
 	const IECoreScenePreview::Renderer::RenderType renderType;
 
 	/// RenderMan only supports one renderer instance at a time, so there
