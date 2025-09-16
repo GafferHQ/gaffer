@@ -1407,7 +1407,6 @@ libraries = {
 			"LIBS" : [
 				"GafferScene", "IECoreScene$CORTEX_LIB_SUFFIX",
 				"IECoreVDB$CORTEX_LIB_SUFFIX",
-				"prman" if env["PLATFORM"] != "win32" else "libprman",
 				"pxrcore" if env["PLATFORM"] != "win32" else "libpxrcore",
 				"oslquery$OSL_LIB_SUFFIX",
 				"OpenImageIO_Util$OIIO_LIB_SUFFIX",
@@ -1625,6 +1624,7 @@ if env["PLATFORM"] == "win32" :
 
 else :
 
+	libraries["IECoreRenderMan"]["envAppends"]["LIBS"].extend( [ "dl" ] )
 	libraries["GafferCycles"]["envAppends"]["LIBS"].extend( [ "dl" ] )
 
 # Optionally add vTune requirements
