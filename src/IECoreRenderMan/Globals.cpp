@@ -36,14 +36,13 @@
 
 #include "Globals.h"
 #include "ParamListAlgo.h"
+#include "Loader.h"
 #include "Transform.h"
 
 #include "IECoreRenderMan/ShaderNetworkAlgo.h"
 
 #include "IECore/SimpleTypedData.h"
 #include "IECore/StringAlgo.h"
-
-#include "RixPredefinedStrings.hpp"
 
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/predicate.hpp"
@@ -70,7 +69,7 @@ const IECore::InternedString g_pixelFilterNameOption( "ri:Ri:PixelFilterName" );
 const IECore::InternedString g_pixelFilterWidthOption( "ri:Ri:PixelFilterWidth" );
 const IECore::InternedString g_pixelVarianceOption( "ri:Ri:PixelVariance" );
 
-const RtUString g_defaultPixelFilter = Rix::k_gaussian;
+const RtUString g_defaultPixelFilter = Loader::strings().k_gaussian;
 riley::FilterSize g_defaultPixelFilterSize = { 2, 2 };
 float g_defaultPixelVariance = 0.015;
 
@@ -168,7 +167,7 @@ Globals::Globals( IECoreScenePreview::Renderer::RenderType renderType, const IEC
 	if( char *p = getenv( "RMAN_DISPLAYS_PATH" ) )
 	{
 		string searchPath = string( p ) + ":@";
-		m_options.SetString( Rix::k_searchpath_display, RtUString( searchPath.c_str() ) );
+		m_options.SetString( Loader::strings().k_searchpath_display, RtUString( searchPath.c_str() ) );
 	}
 
 	if( char *p = getenv( "OSL_SHADER_PATHS" ) )
@@ -177,13 +176,13 @@ Globals::Globals( IECoreScenePreview::Renderer::RenderType renderType, const IEC
 		// Convert Windows ';' path entry separator to ':' as `RMAN_SHADERPATH` expects
 		std::replace( searchPath.begin(), searchPath.end(), ';', ':' );
 		searchPath += ":@";
-		m_options.SetString( Rix::k_searchpath_shader, RtUString( searchPath.c_str() ) );
+		m_options.SetString( Loader::strings().k_searchpath_shader, RtUString( searchPath.c_str() ) );
 	}
 
 	if( renderType == IECoreScenePreview::Renderer::Interactive )
 	{
-		m_options.SetInteger( Rix::k_hider_incremental, 1 );
-		m_options.SetString( Rix::k_bucket_order, RtUString( "circle" ) );
+		m_options.SetInteger( Loader::strings().k_hider_incremental, 1 );
+		m_options.SetString( Loader::strings().k_bucket_order, RtUString( "circle" ) );
 	}
 
 	for( const auto &[name, value] : g_lpeLobeDefaults )
@@ -561,7 +560,7 @@ void Globals::updateRenderView()
 	}
 
 	riley::Extent extent = { 640, 480, 0 };
-	if( auto *resolution = camera.options.GetIntegerArray( Rix::k_Ri_FormatResolution, 2 ) )
+	if( auto *resolution = camera.options.GetIntegerArray( Loader::strings().k_Ri_FormatResolution, 2 ) )
 	{
 		extent.x = resolution[0];
 		extent.y = resolution[1];
@@ -846,7 +845,7 @@ const std::vector<riley::RenderOutputId> &Globals::acquireRenderOutputs( const I
 		result.push_back(
 			m_session->riley->CreateRenderOutput(
 				riley::UserId(),
-				RtUString( "a" ), riley::RenderOutputType::k_Float, Rix::k_a,
+				RtUString( "a" ), riley::RenderOutputType::k_Float, Loader::strings().k_a,
 				accumulationRule, m_pixelFilter, m_pixelFilterSize, relativePixelVariance,
 				RtParamList()
 			)

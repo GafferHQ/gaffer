@@ -37,12 +37,11 @@
 #include "Attributes.h"
 
 #include "ParamListAlgo.h"
+#include "Loader.h"
 
 #include "IECoreScene/ShaderNetwork.h"
 
 #include "IECore/SimpleTypedData.h"
-
-#include "RixPredefinedStrings.hpp"
 
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/predicate.hpp"
@@ -270,12 +269,12 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, MaterialCache 
 
 		if( name == g_lightMuteAttributeName )
 		{
-			ParamListAlgo::convertParameter( Rix::k_lighting_mute, data, m_instanceAttributes );
+			ParamListAlgo::convertParameter( Loader::strings().k_lighting_mute, data, m_instanceAttributes );
 		}
 		else if( name == g_doubleSidedAttributeName )
 		{
 			int sides = attributeCast<bool>( value.get(), name, true ) ? 2 : 1;
-			m_instanceAttributes.SetInteger( Rix::k_Ri_Sides, sides );
+			m_instanceAttributes.SetInteger( Loader::strings().k_Ri_Sides, sides );
 		}
 		else if( boost::starts_with( name.string(), g_userAttributePrefix ) )
 		{

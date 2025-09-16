@@ -34,42 +34,21 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GeometryAlgo.h"
-
 #include "Loader.h"
 
-#include "IECoreScene/SpherePrimitive.h"
-
-using namespace IECoreScene;
-using namespace IECoreRenderMan;
-
-namespace
+RixContext *IECoreRenderMan::Loader::context()
 {
-
-RtUString convertStaticSphere( const IECoreScene::SpherePrimitive *sphere, RtPrimVarList &primVars, const std::string &messageContext )
-{
-	primVars.SetDetail(
-		sphere->variableSize( PrimitiveVariable::Uniform ),
-		sphere->variableSize( PrimitiveVariable::Vertex ),
-		sphere->variableSize( PrimitiveVariable::Varying ),
-		sphere->variableSize( PrimitiveVariable::FaceVarying )
-	);
-
-	GeometryAlgo::convertPrimitiveVariables( sphere, primVars );
-
-	const float radius = sphere->radius();
-	const float zMin = sphere->zMin();
-	const float zMax = sphere->zMax();
-	const float thetaMax = sphere->thetaMax();
-
-	primVars.SetFloatDetail( Loader::strings().k_Ri_radius, &radius, RtDetailType::k_constant );
-	primVars.SetFloatDetail( Loader::strings().k_Ri_zmin, &zMin, RtDetailType::k_constant );
-	primVars.SetFloatDetail( Loader::strings().k_Ri_zmax, &zMax, RtDetailType::k_constant );
-	primVars.SetFloatDetail( Loader::strings().k_Ri_thetamax, &thetaMax, RtDetailType::k_constant );
-
-	return Loader::strings().k_Ri_Sphere;
+	static RixContext *g_context = RixGetContextViaRMANTREE();
+	return g_context;
 }
 
-GeometryAlgo::ConverterDescription<SpherePrimitive> g_sphereConverterDescription( convertStaticSphere );
-
-} // namespace
+const RiPredefinedStrings &IECoreRenderMan::Loader::strings()
+{
+	static RiPredefinedStrings g_strings = [] {
+		auto resolver = (RixSymbolResolver *)context()->GetRixInterface( k_RixSymbolResolver );
+		RiPredefinedStrings s;
+		resolver->ResolvePredefinedStrings( s );
+		return s;
+	}();
+	return g_strings;
+}

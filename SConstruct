@@ -1407,7 +1407,7 @@ libraries = {
 			"LIBS" : [
 				"GafferScene", "IECoreScene$CORTEX_LIB_SUFFIX",
 				"IECoreVDB$CORTEX_LIB_SUFFIX",
-				"prman" if env["PLATFORM"] != "win32" else "libprman",
+				"loadprman",
 				"pxrcore" if env["PLATFORM"] != "win32" else "libpxrcore",
 				"oslquery$OSL_LIB_SUFFIX",
 				"OpenImageIO_Util$OIIO_LIB_SUFFIX",

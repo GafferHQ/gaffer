@@ -41,9 +41,8 @@
 #include "IECoreRenderMan/ShaderNetworkAlgo.h"
 
 #include "LightFilter.h"
+#include "Loader.h"
 #include "Transform.h"
-
-#include "RixPredefinedStrings.hpp"
 
 using namespace std;
 using namespace Imath;
@@ -355,7 +354,7 @@ void Light::updateLightFilterShader( const IECoreScene::ConstShaderNetworkPtr &l
 
 void Light::updateLinking( RtUString memberships, RtUString shadowSubset )
 {
-	m_extraAttributes.SetString( Rix::k_grouping_membership, memberships );
+	m_extraAttributes.SetString( Loader::strings().k_grouping_membership, memberships );
 
 	if( m_lightInstance == riley::LightInstanceId::InvalidId() )
 	{
