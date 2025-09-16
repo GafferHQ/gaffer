@@ -80,6 +80,11 @@ class "GafferArnoldLightAPI" (
 		displayName = "Cast Volumetric (Arnold)"
 	)
 
+	float inputs:arnold:shadow_density = 1.0 (
+		displayGroup = "Shadows"
+		displayName = "Shadow Density (Arnold)"
+	)
+
 	int inputs:arnold:max_bounces = 999 (
 		displayGroup = "Refine"
 		displayName = "Max Bounces (Arnold)"

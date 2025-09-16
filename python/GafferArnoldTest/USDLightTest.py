@@ -60,6 +60,7 @@ class USDLightTest( GafferSceneTest.SceneTestCase ) :
 			( "arnold:indirect", Gaffer.FloatPlug, 1.0 ),
 			( "arnold:volume", Gaffer.FloatPlug, 1.0 ),
 			( "arnold:cast_volumetric_shadows", Gaffer.BoolPlug, True ),
+			( "arnold:shadow_density", Gaffer.FloatPlug, 1.0 ),
 			( "arnold:max_bounces", Gaffer.IntPlug, 999 ),
 		]
 
