@@ -33,6 +33,7 @@ Improvements
   - Added `Hide`, `Unhide`, and `Prune` menu items.
   - Added column for displaying and editing scene visibility.
 - LightEditor : Removed `Delete` menu item, use `Prune` instead.
+- LightEditor, RenderPassEditor, AttributeEditor : Column width adjustments are now preserved when switching tabs.
 
 Fixes
 -----
