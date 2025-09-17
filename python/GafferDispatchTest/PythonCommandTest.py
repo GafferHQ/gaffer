@@ -471,5 +471,35 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		self.assertEqual( command.variablesStr, str( { "testKey" : "testValue" } ) )
 		self.assertEqual( command.variablesRepr, repr( { "testKey" : "testValue" } ) )
 
+	def testIsolated( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferDispatch.PythonCommand()
+		s["n"]["dispatcher"]["isolated"].setValue( True )
+		s["n"]["command"].setValue( inspect.cleandoc(
+			"""
+			with open( variables["fileName"], "w" ) as outFile :
+				outFile.write( str( variables["sum"] ) )
+			"""
+		) )
+		s["n"]["variables"].addChild( Gaffer.NameValuePlug( "fileName", ( self.temporaryDirectory() / "pythonCommand.txt" ).as_posix(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["n"]["variables"].addChild( Gaffer.NameValuePlug( "sum", 2, "sum", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( 'parent["n"]["variables"]["sum"]["value"] = 2 + 2' )
+
+		s["d"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["d"]["executeInBackground"].setValue( True )
+		s["d"]["framesMode"].setValue( s["d"].FramesMode.CurrentFrame )
+		s["d"]["tasks"][0].setInput( s["n"]["task"] )
+
+		s["d"]["task"].execute()
+		s["d"].jobPool().waitForAll()
+
+		with open( self.temporaryDirectory() / "pythonCommand.txt" ) as inFile :
+			self.assertEqual( inFile.readlines()[0].strip(), "4" )
+
 if __name__ == "__main__":
 	unittest.main()
