@@ -412,7 +412,33 @@ class Menu( GafferUI.Widget ) :
 
 		shortCut = getattr( item, "shortCut", None )
 		if shortCut is not None :
-			qtAction.setShortcuts( [ QtGui.QKeySequence( s.strip() ) for s in shortCut.split( "," ) ] )
+			keySequences = [ QtGui.QKeySequence( s.strip() ) for s in shortCut.split( "," ) ]
+			for s in keySequences :
+
+				if s.count() != 1 :
+					continue
+
+				if Qt.__binding__ != "PySide6" :
+					key = s[0] & ~QtCore.Qt.KeyboardModifierMask
+					modifiers = s[0] & QtCore.Qt.KeyboardModifierMask
+				else :
+					key = s[0].key()
+					modifiers = s[0].keyboardModifiers()
+
+				# Qt differentiates keys on the keypad by adding the KeypadModifier to
+				# their keypresses. This means that shortcuts that don't specifically
+				# include the KeypadModifier, such as "Alt+1", would not be triggered
+				# by `Alt`+`keypad 1`. We want keypad keys to be treated the same, and
+				# not require creators of menu items to remember to create two separate
+				# shortcuts, so when we find a shortcut matching a key with an equivalent
+				# key on the keypad we automatically create an additional shortcut that
+				# includes the KeypadModifier.
+				if ( QtCore.Qt.Key_Asterisk <= key <= QtCore.Qt.Key_9 or key == QtCore.Qt.Key_Enter ) and not modifiers & QtCore.Qt.KeypadModifier :
+					keypadSequence = QtGui.QKeySequence( modifiers | QtCore.Qt.KeypadModifier | key )
+					if keypadSequence not in keySequences :
+						keySequences.append( keypadSequence )
+
+			qtAction.setShortcuts( keySequences )
 			# If we allow shortcuts to be created at the window level (the default),
 			# then we can easily get into a situation where our shortcuts conflict
 			# with those of the host when embedding our MenuBars in an application like Maya.
