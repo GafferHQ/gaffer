@@ -67,6 +67,13 @@ GAFFERSCENE_API void setPruned( Gaffer::EditScope *scope, const IECore::PathMatc
 GAFFERSCENE_API bool getPruned( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path );
 GAFFERSCENE_API const Gaffer::GraphComponent *prunedReadOnlyReason( const Gaffer::EditScope *scope );
 
+// Visibility
+// ==========
+
+/// Edits the visibility of `path`. When `visible` is true, this prefers inheriting visibility by removing the `scene:visible` attribute.
+GAFFERSCENE_API void setVisibility( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, bool visible );
+GAFFERSCENE_API const Gaffer::GraphComponent *visibilityReadOnlyReason( const Gaffer::EditScope *scope, const ScenePlug::ScenePath &path );
+
 // Transforms
 // ==========
 //

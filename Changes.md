@@ -28,6 +28,11 @@ Improvements
 - Arnold :
   - Reworked output filter handling. Now outputs with different filters can write to the same file (#6574). Also improves tidiness of resulting Arnold scene description.
   - Allow outputs with layer names and outputs without layer names to be merged to the same file.
+- Viewer : Added `Hide`, `Unhide`, and `Prune` menu items to the right-click menu of the 3D view.
+- HierarchyView, LightEditor, AttributeEditor :
+  - Added `Hide`, `Unhide`, and `Prune` menu items.
+  - Added column for displaying and editing scene visibility.
+- LightEditor : Removed `Delete` menu item, use `Prune` instead.
 
 Fixes
 -----
@@ -37,6 +42,7 @@ Fixes
 - Path : Fixed GIL management bug in `children()` binding.
 - RenderMan : Worked around RenderMan bug that prevented edits to the `render:camera` option from working during an interactive render.
 - Menu : Fixed bug causing keys pressed on the number pad to not activate keyboard shortcuts, such as the <kbd>Alt</kbd>+<kbd>[1-9]</kbd> shortcuts for assigning focus to a numeric bookmark.
+- EditScopeUI : Fixed bug causing the <kbd>H</kbd> shortcut to hide the selected locations, use <kbd>Ctrl</kbd>+<kbd>H</kbd> instead.
 
 API
 ---
@@ -47,6 +53,8 @@ API
 - AttributeEditor, HierarchyView : Added `filter` and `setFilter` plugs to the `settings()` node.
 - RenderPassEditor : Added `filter` and `hideDisabled` plugs to the `settings()` node.
 - SetEditor : Added `filter`, `hideEmptySets` and `hideEmptySelection` plugs to the `settings()` node.
+- LightEditor : Added `sceneListing()` method, to allow the context menu to be customised.
+- EditScopeAlgo : Added `setVisibility()` and `visibilityNonEditableReason()` functions.
 
 1.6.0.0 (relative to 1.5.16.2)
 =======

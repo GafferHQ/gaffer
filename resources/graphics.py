@@ -447,6 +447,11 @@
 				"locationIncludedTransparent",
 				"setFilterOff",
 				"setFilterOn",
+				"locationVisible",
+				"locationVisibleTransparent",
+				"locationInvisible",
+				"locationInvisibleTransparent",
+				"locationInvisibleConflict",
 			]
 		},
 
@@ -615,6 +620,7 @@
 		'focusOnHover',
 		'focusOffHover',
 		'shaderTweakProxy',
-		'shaderTweakProxyIcon'
+		'shaderTweakProxyIcon',
+		'selectInvisibleAncestors',
 	]
 }

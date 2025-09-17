@@ -59,6 +59,10 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 
 			GafferSceneUI.SceneEditor.Settings.__init__( self, withHierarchyFilter = True )
 
+			self["editScope"] = Gaffer.Plug()
+
+	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::HierarchyView::Settings" )
+
 	def __init__( self, scriptNode, **kw ) :
 
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4, spacing = 4 )
@@ -83,9 +87,10 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 				columns = [
 					GafferUI.PathListingWidget.StandardColumn( "Name", "name", GafferUI.PathColumn.SizeMode.Stretch ),
 					_GafferSceneUI._HierarchyViewInclusionsColumn( scriptNode ),
-					_GafferSceneUI._HierarchyViewExclusionsColumn( scriptNode )
+					_GafferSceneUI._HierarchyViewExclusionsColumn( scriptNode ),
+					GafferSceneUI.Private.VisibilityColumn( self.settings()["in"], self.settings()["editScope"] ),
 				],
-				selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
+				selectionMode = GafferUI.PathListingWidget.SelectionMode.Cells,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 			)
 			self.__pathListing.setDragPointer( "objects" )
@@ -157,8 +162,17 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 
 		assert( pathListing is self.__pathListing )
 
+		selection = pathListing.getSelection()
 		with Gaffer.Signals.BlockedConnection( self.__selectedPathsChangedConnection ) :
-			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( self.scriptNode(), pathListing.getSelection() )
+			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( self.scriptNode(), selection[0] )
+
+		# Sync selection from name column to inclusions and exclusions columns.
+		for i, c in enumerate( pathListing.getColumns() ) :
+			if isinstance( c, ( _GafferSceneUI._HierarchyViewInclusionsColumn, _GafferSceneUI._HierarchyViewExclusionsColumn ) ) :
+				selection[i] = selection[0]
+
+		with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
+			pathListing.setSelection( selection )
 
 	def __keyPressSignal( self, widget, event ) :
 
@@ -174,7 +188,11 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 
 	def __columnContextMenuSignal( self, column, pathListing, menuDefinition ) :
 
-		selection = pathListing.getSelection()
+		columns = pathListing.getColumns()
+		if columns.index( column ) != 0 :
+			return False
+
+		selection = pathListing.getSelection()[0]
 		menuDefinition.append(
 			"Copy Path%s" % ( "" if selection.size() == 1 else "s" ),
 			{
@@ -197,16 +215,16 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 		if self.scene() is None :
 			return
 
-		selection = self.__pathListing.getSelection()
+		selection = self.__pathListing.getSelection()[0]
 		if not selection.isEmpty() :
 			data = IECore.StringVectorData( selection.paths() )
 			self.scriptNode().ancestor( Gaffer.ApplicationRoot ).setClipboardContents( data )
 
 	def __frameSelectedPaths( self ) :
 
-		selection = self.__pathListing.getSelection()
+		selection = self.__pathListing.getSelection()[0]
 		if not selection.isEmpty() :
-			self.__pathListing.expandToSelection()
+			self.__pathListing.expandTo( selection )
 			self.__pathListing.scrollToFirst( selection )
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
@@ -221,9 +239,31 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 
 		selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( self.scriptNode() )
 		with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
-			self.__pathListing.setSelection( selection, scrollToFirst=False )
+			self.__pathListing.setSelection( [ selection if i == 0 else IECore.PathMatcher() for i in range( 0, len( self.__pathListing.getColumns() ) ) ], scrollToFirst = False )
 
 GafferUI.Editor.registerType( "HierarchyView", HierarchyView )
+
+##########################################################################
+# Settings metadata
+##########################################################################
+
+Gaffer.Metadata.registerNode(
+
+	HierarchyView.Settings,
+
+	plugs = {
+
+		"editScope" : [
+
+			"plugValueWidget:type", "GafferUI.EditScopeUI.EditScopePlugValueWidget",
+			"layout:width", 130,
+			"layout:section", "Filter",
+
+		],
+
+	}
+
+)
 
 ##########################################################################
 # _VisibleSetBookmarkWidget

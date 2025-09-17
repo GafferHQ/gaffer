@@ -40,6 +40,7 @@
 
 #include "GafferSceneUI/Private/Inspector.h"
 #include "GafferSceneUI/Private/InspectorColumn.h"
+#include "GafferSceneUI/Private/VisibilityColumn.h"
 
 #include "GafferUI/PathColumn.h"
 
@@ -125,6 +126,15 @@ void GafferSceneUIModule::bindInspectorColumn()
 		// DataPtr but not ObjectPtr.
 		.def( "cellDataFromValue", &inspectorColumnCellDataFromDataValue )
 		.staticmethod( "cellDataFromValue" )
+	;
+
+	RefCountedClass<GafferSceneUI::Private::VisibilityColumn, GafferSceneUI::Private::InspectorColumn>( "VisibilityColumn" )
+		.def( init<const GafferScene::ScenePlugPtr &, const Gaffer::PlugPtr &>(
+			(
+				arg_( "scene" ),
+				arg_( "editScope" )
+			)
+		) )
 	;
 
 }
