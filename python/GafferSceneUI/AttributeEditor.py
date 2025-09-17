@@ -109,6 +109,8 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 			Gaffer.WeakMethod( self.__selectedPathsChanged )
 		)
 
+		self.__columnCache = {}
+
 		self._updateFromSet()
 		self.__transferSelectionFromScriptNode()
 		self.__updateColumns()
@@ -213,10 +215,10 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 			if IECore.StringAlgo.match( tabGroup, groupKey ) :
 				if currentSection == "All" and not sections.get( "All" ) :
 					for section in sections.values() :
-						sectionColumns += [ c( self.settings()["in"], self.settings()["editScope"] ) for c in section.values() ]
+						sectionColumns += [ self.__columnCache.setdefault( ( c, "All" ), c( self.settings()["in"], self.settings()["editScope"] ) ) for c in section.values() ]
 				else :
 					section = sections.get( currentSection or None, {} )
-					sectionColumns += [ c( self.settings()["in"], self.settings()["editScope"] ) for c in section.values() ]
+					sectionColumns += [ self.__columnCache.setdefault( ( c, currentSection ), c( self.settings()["in"], self.settings()["editScope"] ) ) for c in section.values() ]
 
 		self.__pathListing.setColumns( [ self.__locationNameColumn, self.__visibilityColumn ] + sectionColumns )
 

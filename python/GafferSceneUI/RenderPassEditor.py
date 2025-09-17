@@ -141,6 +141,8 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
 			GafferSceneUI.Private.InspectorColumn.connectToDragBeginSignal( self.__pathListing )
 
+		self.__columnCache = {}
+
 		self._updateFromSet()
 		self.__updateColumns()
 		self.__updateButtonStatus()
@@ -287,7 +289,10 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		for groupKey, sections in self.__columnRegistry.items() :
 			if IECore.StringAlgo.match( tabGroup, groupKey ) :
 				section = sections.get( currentSection or None, {} )
-				sectionColumns += [ ( c( self.settings()["in"], self.settings()["editScope"] ), index ) for ( c, index ) in section.values() ]
+				sectionColumns += [
+					( self.__columnCache.setdefault( ( c, currentSection ), c( self.settings()["in"], self.settings()["editScope"] ) ), index )
+					for ( c, index ) in section.values()
+				]
 
 		self.__pathListing.setColumns( [ self.__renderPassNameColumn, self.__renderPassActiveColumn ] + self.__orderedColumns( sectionColumns ) )
 
