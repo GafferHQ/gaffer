@@ -471,5 +471,42 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		self.assertEqual( command.variablesStr, str( { "testKey" : "testValue" } ) )
 		self.assertEqual( command.variablesRepr, repr( { "testKey" : "testValue" } ) )
 
+	def testIsolate( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferDispatch.PythonCommand()
+		s["n"]["dispatcher"]["isolate"].setValue( True )
+		s["n"]["command"].setValue( inspect.cleandoc(
+			"""
+			with open( variables["fileName"], "w" ) as outFile :
+				outFile.write( str( variables["sum"] ) )
+			"""
+		) )
+		s["n"]["variables"].addMembers(
+			IECore.CompoundData(
+				{
+					"fileName" : ( self.temporaryDirectory() / "pythonCommand.txt" ).as_posix(),
+					"sum" : IECore.IntData( 2 ),
+				}
+			)
+		)
+		memberName = next( Gaffer.IntPlug.RecursiveRange( s["n"]["variables"] ) ).parent().getName()
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( 'parent["n"]["variables"]["{}"]["value"] = 2 + 2'.format( memberName ) )
+
+		s["d"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["d"]["executeInBackground"].setValue( True )
+		s["d"]["framesMode"].setValue( s["d"].FramesMode.CurrentFrame )
+		s["d"]["tasks"][0].setInput( s["n"]["task"] )
+
+		s["d"]["task"].execute()
+		s["d"].jobPool().waitForAll()
+
+		with open( self.temporaryDirectory() / "pythonCommand.txt" ) as inFile :
+			self.assertEqual( inFile.readlines()[0].strip(), "4" )
+
 if __name__ == "__main__":
 	unittest.main()
