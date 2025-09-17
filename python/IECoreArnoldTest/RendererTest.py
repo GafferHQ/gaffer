@@ -4298,6 +4298,39 @@ class RendererTest( GafferTest.TestCase ) :
 			{ "diffuse.{}".format( c ) for c in "RGB" }
 		)
 
+	def testOutputMergeMixedLayerNames( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		fileName = str( self.temporaryDirectory() / "combined.exr" )
+		r.output(
+			"whatABeauty", IECoreScene.Output(
+				fileName, "exr", "rgba",
+				{
+				}
+			)
+		)
+
+		r.output(
+			"diffuseLPE", IECoreScene.Output(
+				fileName, "exr", "lpe C<RD>.*",
+				{
+					"layerName" : "diffuse",
+				}
+			)
+		)
+
+		r.render()
+
+		image = OpenImageIO.ImageBuf( fileName )
+		self.assertEqual(
+			set( image.spec().channelnames ),
+			set( [ "diffuse.{}".format( c ) for c in "RGB" ] + list( "RGBA" ) )
+		)
+
 	def testLightGroupOutputs( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(

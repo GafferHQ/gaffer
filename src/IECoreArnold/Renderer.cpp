@@ -4426,7 +4426,7 @@ class ArnoldGlobals
 				shared.outputIdsString = new IECore::StringData( boost::algorithm::join( shared.outputIds, " " ) );
 			}
 
-			std::map< std::string, IECore::ConstCompoundDataPtr > requiredDrivers;
+			std::map< std::string, IECore::CompoundDataPtr > requiredDrivers;
 
 			for( const auto& [ outputName, output ] : m_outputs )
 			{
@@ -4438,13 +4438,30 @@ class ArnoldGlobals
 				auto existingDriver = requiredDrivers.find( output->driverName() );
 				if( existingDriver != requiredDrivers.end() )
 				{
+
 					// Check that parameters match with the existing driver, so we can use the same
 					// driver for both ouptuts
-					const IECore::CompoundDataMap &existingParameters = existingDriver->second->readable();
+					IECore::CompoundDataMap &existingParameters = existingDriver->second->writable();
+
+					// We never conflict on "preserve_layer_names" - we just turn it on if any output
+					// has it on
+					if(
+						parameter<bool>( currentParameters, "preserve_layer_name", false ) ||
+						parameter<bool>( existingParameters, "preserve_layer_name", false )
+					)
+					{
+						existingParameters[ "preserve_layer_name" ] = new IECore::BoolData( true );
+					}
+
 					if( currentParameters != existingParameters )
 					{
 						for( const auto &i : currentParameters )
 						{
+							if( i.first == "preserve_layer_name" )
+							{
+								continue;
+							}
+
 							if( !existingParameters.count( i.first ) )
 							{
 								throw IECore::Exception( fmt::format( "Mismatch in combined output driver for file name \"{}\" : missing parameter \"{}\"", output->driverName().string(), i.first.string() ) );
@@ -4453,6 +4470,11 @@ class ArnoldGlobals
 
 						for( const auto &i : existingParameters )
 						{
+							if( i.first == "preserve_layer_name" )
+							{
+								continue;
+							}
+
 							if( !currentParameters.count( i.first ) )
 							{
 								throw IECore::Exception( fmt::format( "Mismatch in combined output driver for file name \"{}\" : missing parameter \"{}\"", output->driverName().string(), i.first.string() ) );
