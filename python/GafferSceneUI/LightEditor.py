@@ -127,6 +127,8 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 			Gaffer.WeakMethod( self.__selectedPathsChanged )
 		)
 
+		self.__columnCache = {}
+
 		self._updateFromSet()
 		self.__transferSelectionFromScriptNode()
 		self.__updateColumns()
@@ -273,9 +275,18 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		for rendererKey, sections in self.__columnRegistry.items() :
 			if IECore.StringAlgo.match( attribute, rendererKey ) :
 				section = sections.get( currentSection or None, {} )
-				sectionColumns += [ c( self.settings()["in"], self.settings()["editScope"] ) for c in section.values() ]
+				sectionColumns += [ self.__acquireColumn( c, currentSection ) for c in section.values() ]
 
 		self.__pathListing.setColumns( self.__commonColumns + sectionColumns )
+
+	def __acquireColumn( self, columnCreator, section ) :
+
+		column = self.__columnCache.get( ( columnCreator, section ) )
+		if column is None :
+			column = columnCreator( self.settings()["in"], self.settings()["editScope"] )
+			self.__columnCache[ ( columnCreator, section ) ] = column
+
+		return column
 
 	def __selectedPathsChanged( self, scriptNode ) :
 
