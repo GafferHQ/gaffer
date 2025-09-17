@@ -34,6 +34,9 @@
 #
 ##########################################################################
 
+import functools
+import weakref
+
 import IECore
 
 import Gaffer
@@ -41,20 +44,97 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
+def appendViewContextMenuItems( viewer, view, menuDefinition ) :
+
+	if not isinstance( view, GafferSceneUI.SceneView ) :
+		return None
+
+	scriptNode = view["in"].getInput().ancestor( Gaffer.ScriptNode )
+	__appendContextMenuItems( viewer, scriptNode, view.editScope(), menuDefinition, "/Visibility and Pruning" )
+
+def appendColumnContextMenuItems( column, pathListing, menuDefinition ) :
+
+	if pathListing.getColumns().index( column ) != 0 :
+		return None
+
+	editor = pathListing.ancestor( GafferUI.Editor )
+	__appendContextMenuItems( editor, editor.scriptNode(), editor.editScope(), menuDefinition, "" )
+
+def __appendContextMenuItems( editor, scriptNode, editScope, menuDefinition, prefix ) :
+
+	selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( scriptNode )
+
+	if prefix == "" :
+		menuDefinition.append( "/VisibilityDivider", { "divider" : True } )
+
+	menuDefinition.append(
+		prefix + "/Hide",
+		{
+			"command" : functools.partial( __editSelectionVisibility, weakref.ref( editor ) ),
+			"active" : not selection.isEmpty() and editScope is not None,
+			"shortCut" : "Ctrl+H"
+		}
+	)
+	menuDefinition.append(
+		prefix + "/Unhide",
+		{
+			"command" : functools.partial( __editSelectionVisibility, weakref.ref( editor ), True ),
+			"active" : not selection.isEmpty() and editScope is not None,
+			"shortCut" : "Ctrl+Shift+H"
+		}
+	)
+
+	menuDefinition.append( prefix + "/PruningDivider", { "divider" : True } )
+	menuDefinition.append(
+		prefix + "/Prune",
+		{
+			"command" : functools.partial( __pruneSelection, weakref.ref( editor ) ),
+			"active" : not selection.isEmpty() and editScope is not None,
+			"shortCut" : "Ctrl+Backspace, Ctrl+Delete"
+		}
+	)
+
 # Pruning/Visibility hotkeys
 # ==========================
 
 def addPruningActions( editor ) :
 
-	if isinstance( editor, GafferUI.Viewer ) :
+	if isinstance( editor, ( GafferUI.Viewer, GafferSceneUI.AttributeEditor, GafferSceneUI.LightEditor, GafferSceneUI.HierarchyView ) ) :
 		editor.keyPressSignal().connect( __pruningKeyPress )
 
 def addVisibilityActions( editor ) :
 
-	if isinstance( editor, GafferUI.Viewer ) :
+	if isinstance( editor, ( GafferUI.Viewer, GafferSceneUI.AttributeEditor, GafferSceneUI.LightEditor, GafferSceneUI.HierarchyView ) ) :
 		editor.keyPressSignal().connect( __visibilityKeyPress )
 
-def __pruningKeyPress( viewer, event ) :
+def connectToEditor( editor ) :
+
+	addVisibilityActions( editor )
+	addPruningActions( editor )
+
+	if isinstance( editor, ( GafferSceneUI.AttributeEditor, GafferSceneUI.LightEditor, GafferSceneUI.HierarchyView ) ) :
+		editor.sceneListing().columnContextMenuSignal().connect( appendColumnContextMenuItems )
+
+def _hiddenAncestors( scene, paths ) :
+
+	result = IECore.PathMatcher()
+
+	ancestorPaths = IECore.PathMatcher()
+	for path in paths.paths() :
+		parentPath = path.split( "/" )[1:]
+		parentPath.pop()
+		while len( parentPath ) > 0 :
+			ancestorPaths.addPath( parentPath )
+			parentPath.pop()
+
+	for ancestor in ancestorPaths.paths() :
+		# Return ancestor locations with a "scene:visible" attribute set to `False`
+		if not scene.attributes( ancestor ).get( "scene:visible", IECore.BoolData( True ) ).value :
+			result.addPath( ancestor )
+
+	return result
+
+def __pruningKeyPress( editor, event ) :
 
 	if event.key not in ( "Backspace", "Delete" ) :
 		return False
@@ -69,79 +149,117 @@ def __pruningKeyPress( viewer, event ) :
 		# unexpected.
 		return True
 
-	if not isinstance( viewer.view(), GafferSceneUI.SceneView ) :
-		return False
+	return __pruneSelection( editor )
 
-	editScope = viewer.view().editScope()
-	if editScope is None or Gaffer.MetadataAlgo.readOnly( editScope ) :
-		# We return True even when we don't do anything, so the keypress doesn't
-		# leak out and get used to delete nodes in the node graph.
-		## \todo Add a discreet notification system to the Viewer so we can
-		# prompt the user to select a scope etc when necessary. Maybe we might
-		# also want to ask them if we can prune a common ancestor in the case
-		# that all its descendants are selected?
-		return True
+def __editScopeOrReason( editor ) :
 
-	viewedNode = viewer.view()["in"].getInput().node()
-	if editScope != viewedNode and editScope not in Gaffer.NodeAlgo.upstreamNodes( viewedNode ) :
-		# Spare folks from deleting things in a downstream EditScope.
-		## \todo When we have a nice Viewer notification system we
-		# should emit a warning here.
-		return True
+	if isinstance( editor, GafferUI.Viewer ) :
+		if not isinstance( editor.view(), GafferSceneUI.SceneView ) :
+			return "Viewer does not support edit scopes."
 
-	if GafferScene.EditScopeAlgo.prunedReadOnlyReason( editScope ) is not None :
-		return True
+		editScope = editor.view().editScope()
+		inputPlug = editor.view()["in"].getInput()
 
-	# \todo This needs encapsulating in EditScopeAlgo some how so we don't need
-	# to interact with processors directly.
-	with viewer.context() :
+	elif isinstance( editor, GafferSceneUI.SceneEditor ) :
+		if "editScope" not in editor.settings() :
+			return "Editor does not support edit scopes."
+
+		editScope = editor.editScope()
+		inputPlug = editor.settings()["in"].getInput()
+
+	if inputPlug is None :
+		return "Shortcut cannot be used while nothing is viewed."
+	if editScope is None :
+		return "To edit locations, first choose an edit scope."
+	if Gaffer.MetadataAlgo.readOnly( editScope ) :
+		return "The target edit scope {} is read-only.".format( editScope.getName() )
+	if editScope != inputPlug.node() and editScope not in Gaffer.NodeAlgo.upstreamNodes( inputPlug.node() ) :
+		return "The target edit scope {} is downstream of the viewed node.".format( editScope.getName() )
+
+	with editor.context() :
 		if not editScope["enabled"].getValue() :
-			# Spare folks from deleting something when it won't be
-			# apparent what they've done until they reenable the
-			# EditScope.
-			return True
+			return "The target edit scope {} is disabled.".format( editScope.getName() )
+
+	return editScope
+
+def __pruneSelection( editor ) :
+
+	if isinstance( editor, weakref.ref ) :
+		editor = editor()
+
+	# We return True even when we don't do anything, so the keypress doesn't
+	# leak out and get used to delete nodes in the node graph.
+	editScope = __editScopeOrReason( editor )
+	if isinstance( editScope, str ) :
+		__warningPopup( editor, editScope )
+		return True
+
+	readOnlyReason = GafferScene.EditScopeAlgo.prunedReadOnlyReason( editScope )
+	if readOnlyReason is not None :
+		__warningPopup( editor, "{} is read-only.".format( readOnlyReason ) )
+		return True
+
+	with editor.context() :
+		# \todo This needs encapsulating in EditScopeAlgo some how so we don't need
+		# to interact with processors directly.
 		pruningProcessor = editScope.acquireProcessor( "PruningEdits", createIfNecessary = False )
 		if pruningProcessor is not None and not pruningProcessor["enabled"].getValue() :
+			__warningPopup( editor, "{} is disabled.".format( pruningProcessor.relativeName( editScope.parent() ) ) )
 			return True
 
-	sceneGadget = viewer.view().viewportGadget().getPrimaryChild()
-	selection = sceneGadget.getSelection()
+	## \todo Maybe we might want to ask if we can prune a common ancestor
+	# in the case that all its descendants are selected?
+	selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( editor.scriptNode() )
 	if not selection.isEmpty() :
 		with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
 			GafferScene.EditScopeAlgo.setPruned( editScope, selection, True )
 
 	return True
 
-def __visibilityKeyPress( viewer, event ) :
+def __visibilityKeyPress( editor, event ) :
 
-	if not ( event.key == "H" and event.Modifiers.Control ) :
+	if not ( event.key == "H" and event.modifiers & event.Modifiers.Control ) :
 		return False
 
-	if not isinstance( viewer.view(), GafferSceneUI.SceneView ) :
-		return False
+	return __editSelectionVisibility( editor, event.modifiers & event.Modifiers.Shift )
 
-	editScope = viewer.view().editScope()
-	if editScope is None or Gaffer.MetadataAlgo.readOnly( editScope ) :
+def __editSelectionVisibility( editor, makeVisible = False ) :
+
+	if isinstance( editor, weakref.ref ) :
+		editor = editor()
+
+	# We return True even when we don't do anything, so the keypress doesn't
+	# leak out and get used to delete nodes in the node graph.
+	editScope = __editScopeOrReason( editor )
+	if isinstance( editScope, str ) :
+		__warningPopup( editor, editScope )
 		return True
 
-	sceneGadget = viewer.view().viewportGadget().getPrimaryChild()
-	selection = sceneGadget.getSelection()
+	if isinstance( editor, GafferUI.Viewer ) :
+		inPlug = editor.view()["in"]
+		editScopePlug = editor.view()["editScope"]
+	elif isinstance( editor, GafferSceneUI.SceneEditor ) :
+		inPlug = editor.settings()["in"]
+		editScopePlug = editor.settings()["editScope"]
+	else :
+		return True
 
+	selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( editor.scriptNode() )
 	if selection.isEmpty() :
 		return True
 
 	inspector = GafferSceneUI.Private.AttributeInspector(
-		viewer.view()["in"].getInput(),
-		viewer.view()["editScope"],
+		inPlug.getInput(),
+		editScopePlug,
 		"scene:visible"
 	)
 
-	with viewer.context() as context :
+	with editor.context() as context :
+		# \todo This needs encapsulating in EditScopeAlgo some how so we don't need
+		# to interact with processors directly.
 		attributeEdits = editScope.acquireProcessor( "AttributeEdits", createIfNecessary = False )
-		if not editScope["enabled"].getValue() or ( attributeEdits is not None and not attributeEdits["enabled"].getValue() ) :
-			# Spare folks from hiding something when it won't be
-			# apparent what they've done until they reenable the
-			# EditScope or processor.
+		if attributeEdits is not None and not attributeEdits["enabled"].getValue() :
+			__warningPopup( editor, "{} is disabled.".format( attributeEdits.relativeName( editScope.parent() ) ) )
 			return True
 
 		with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
@@ -152,12 +270,40 @@ def __visibilityKeyPress( viewer, event ) :
 				if inspection is None or not inspection.editable() :
 					continue
 
-				tweakPlug = inspection.acquireEdit()
-				tweakPlug["enabled"].setValue( True )
-				tweakPlug["value"].setValue( False )
+				GafferScene.EditScopeAlgo.setVisibility( inspection.editScope(), path, makeVisible )
+
+		if makeVisible :
+			hiddenAncestors = _hiddenAncestors( editScope["out"], selection )
+			if not hiddenAncestors.isEmpty() :
+				__selectInvisibleAncestorsPopup( editor, hiddenAncestors )
 
 	return True
 
+def __selectInvisibleAncestorsPopup( editor, ancestors ) :
+
+	with GafferUI.PopupWindow() as editor.__selectInvisibleAncestorsPopup :
+		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+			GafferUI.Image( "warningSmall.png" )
+			GafferUI.Label( "<h4>Location(s) have been unhidden, but are still not visible because they have invisible ancestors.</h4>" )
+			button = GafferUI.Button( image = "selectInvisibleAncestors.png", hasFrame = False, toolTip = "Select invisible ancestors" )
+			button.clickedSignal().connect( functools.partial( __selectAncestorsClicked, scriptNode = editor.scriptNode(), ancestors = ancestors ) )
+
+	editor.__selectInvisibleAncestorsPopup.popup( parent = editor )
+
+def __selectAncestorsClicked( widget, scriptNode, ancestors ) :
+
+	GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( scriptNode, ancestors )
+	widget.ancestor( GafferUI.Window ).close()
+	return True
+
+def __warningPopup( parent, message ) :
+
+	with GafferUI.PopupWindow() as parent.__editScopeWarningPopup :
+		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+			GafferUI.Image( "warningSmall.png" )
+			GafferUI.Label( "<h4>{}</h4>".format( message ) )
+
+	parent.__editScopeWarningPopup.popup( parent = parent )
 
 # Processor Widgets
 # =================

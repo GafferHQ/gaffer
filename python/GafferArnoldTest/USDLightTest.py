@@ -60,6 +60,7 @@ class USDLightTest( GafferSceneTest.SceneTestCase ) :
 			( "arnold:indirect", Gaffer.FloatPlug, 1.0 ),
 			( "arnold:volume", Gaffer.FloatPlug, 1.0 ),
 			( "arnold:cast_volumetric_shadows", Gaffer.BoolPlug, True ),
+			( "arnold:shadow_density", Gaffer.FloatPlug, 1.0 ),
 			( "arnold:max_bounces", Gaffer.IntPlug, 999 ),
 		]
 
@@ -102,6 +103,8 @@ class USDLightTest( GafferSceneTest.SceneTestCase ) :
 			[
 				( "arnold:camera", Gaffer.FloatPlug, 0.0 ),
 				( "arnold:transmission", Gaffer.FloatPlug, 0.0 ),
+				( "arnold:lens_radius", Gaffer.FloatPlug, 0.0 ),
+				( "arnold:aspect_ratio", Gaffer.FloatPlug, 1.0 ),
 			]
 		)
 
@@ -123,6 +126,11 @@ class USDLightTest( GafferSceneTest.SceneTestCase ) :
 
 		light = GafferUSD.USDLight()
 
+		spotLightParameters = [
+			"lens_radius",
+			"aspect_ratio"
+		]
+
 		for usdLight, arnoldLight in [
 			( "SphereLight", "point_light" ),
 			( "RectLight", "quad_light" ),
@@ -139,13 +147,15 @@ class USDLightTest( GafferSceneTest.SceneTestCase ) :
 				with IECoreArnold.UniverseBlock( writable = False ) :
 
 					arnoldNode = arnold.AiNodeEntryLookUp( arnoldLight )
+					spotLightNode = arnold.AiNodeEntryLookUp( "spot_light" )
 
 					for plug in light["parameters"].values() :
 
 						if not plug.getName().startswith( "arnold:" ) :
 							continue
 
-						param = arnold.AiNodeEntryLookUpParameter( arnoldNode, plug.getName().replace( "arnold:", "" ) )
+						parameterName = plug.getName().replace( "arnold:", "" )
+						param = arnold.AiNodeEntryLookUpParameter( spotLightNode if parameterName in spotLightParameters else arnoldNode, parameterName )
 						self.assertIsNotNone( param )
 
 						match arnold.AiParamGetType( param ) :

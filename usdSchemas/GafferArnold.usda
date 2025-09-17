@@ -80,6 +80,11 @@ class "GafferArnoldLightAPI" (
 		displayName = "Cast Volumetric (Arnold)"
 	)
 
+	float inputs:arnold:shadow_density = 1.0 (
+		displayGroup = "Shadows"
+		displayName = "Shadow Density (Arnold)"
+	)
+
 	int inputs:arnold:max_bounces = 999 (
 		displayGroup = "Refine"
 		displayName = "Max Bounces (Arnold)"
@@ -121,7 +126,7 @@ class "GafferArnoldDiskLightAPI" (
 
 	float inputs:arnold:spread = 1.0 (
 		displayGroup = "Geometry"
-		displayName = "Spread"
+		displayName = "Spread (Arnold)"
 	)
 
 	float inputs:arnold:camera = 0.0 (
@@ -234,6 +239,28 @@ class "GafferArnoldSkydomeLightAPI" (
 	float inputs:arnold:transmission = 1.0 (
 		displayGroup = "Refine"
 		displayName = "Transmission (Arnold)"
+	)
+
+}
+
+class "GafferArnoldSpotLightAPI" (
+	customData = {
+		token[] apiSchemaAutoApplyTo = [ "CylinderLight", "DistantLight", "DiskLight", "SphereLight" ]
+		string apiSchemaType = "singleApply"
+		string className = "GafferArnoldSpotLightAPI"
+	}
+	inherits = </APISchemaBase>
+)
+{
+
+	float inputs:arnold:lens_radius = 0.0 (
+		displayGroup = "Shaping"
+		displayName = "Lens Radius (Arnold)"
+	)
+
+	float inputs:arnold:aspect_ratio = 1.0 (
+		displayGroup = "Shaping"
+		displayName = "Aspect Ratio (Arnold)"
 	)
 
 }

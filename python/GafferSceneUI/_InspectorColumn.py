@@ -326,8 +326,18 @@ def __validateSelection( pathListing ) :
 	if all( [ x.isEmpty() for x in selection ] ) :
 		return False
 
+	firstSelectedColumn = None
 	for columnSelection, column in zip( selection, pathListing.getColumns() ) :
-		if not columnSelection.isEmpty() and not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+		if columnSelection.isEmpty() :
+			continue
+
+		if not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+			return False
+
+		if firstSelectedColumn is None :
+			firstSelectedColumn = column
+		elif type( column ) != type( firstSelectedColumn ) :
+			__warningPopup( pathListing, "Cannot edit columns with mixed types" )
 			return False
 
 	return True
@@ -1041,3 +1051,94 @@ def __connectToDragBeginSignal( pathListingWidget ) :
 	pathListingWidget.dragBeginSignal().connectFront( __dragBegin )
 
 GafferSceneUI.Private.InspectorColumn.connectToDragBeginSignal = __connectToDragBeginSignal
+
+##########################################################################
+# VisibilityColumn
+##########################################################################
+
+def __selectInvisibleAncestorsPopup( pathListing, ancestors ) :
+
+	with GafferUI.PopupWindow() as pathListing.__inspectorColumnPopup :
+		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+			GafferUI.Image( "warningSmall.png" )
+			GafferUI.Label( "<h4>Location(s) have been unhidden, but are still not visible because they have invisible ancestors.</h4>" )
+			button = GafferUI.Button( image = "selectInvisibleAncestors.png", hasFrame = False, toolTip = "Select invisible ancestors" )
+			button.clickedSignal().connect( functools.partial( __selectAncestorsClicked, pathListing = pathListing, ancestors = ancestors ) )
+
+	pathListing.__inspectorColumnPopup.popup( parent = pathListing )
+
+def __selectAncestorsClicked( widget, pathListing, ancestors ) :
+
+	selection = [ ancestors if isinstance( x, GafferSceneUI.Private.VisibilityColumn ) else IECore.PathMatcher() for x in pathListing.getColumns() ]
+	pathListing.setSelection( selection, True )
+	widget.ancestor( GafferUI.Window ).close()
+	return True
+
+def __toggleVisibility( pathListing ) :
+
+	inspections = []
+
+	path = pathListing.getPath().copy()
+	for selection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
+		for pathString in selection.paths() :
+			path.setFromString( pathString )
+			inspection = column.inspect( path )
+			if inspection is None :
+				continue
+
+			if not inspection.editable() :
+				__warningPopup( pathListing, inspection.nonEditableReason() )
+				return
+
+			inspections.append( ( inspection, pathString ) )
+
+	if len( inspections ) == 0 :
+		__warningPopup( pathListing, "The selected cells cannot be edited in the current Edit Scope" )
+		return
+
+	editor = pathListing.ancestor( GafferUI.Editor )
+	# Default to attempting to make the selection visible if visibility differs.
+	makeVisible = not sole( [ i.value().value for i, _ in inspections ] )
+	with editor.context() :
+		with Gaffer.UndoScope( editor.scriptNode() ) :
+			for inspection, pathString in inspections :
+				GafferScene.EditScopeAlgo.setVisibility( inspection.editScope(), pathString, makeVisible )
+
+		if makeVisible :
+			hiddenAncestors = GafferSceneUI.EditScopeUI._hiddenAncestors( editor.editScope()["out"], IECore.PathMatcher( [ i[1] for i in inspections ] ) )
+			if not hiddenAncestors.isEmpty() :
+				__selectInvisibleAncestorsPopup( pathListing, hiddenAncestors )
+
+	return
+
+def __visibilityKeyPress( column, pathListing, event ) :
+
+	if not __validateSelection( pathListing ) :
+		return True
+
+	if event.key in ( "Return", "Enter" ) :
+		__toggleVisibility( pathListing )
+		return True
+
+	return False
+
+def __visibilityButtonDoubleClick( path, pathListing, event ) :
+
+	# We only support doubleClick events when all of the selected
+	# cells are in VisibilityColumns.
+	if not __validateSelection( pathListing ) :
+		return False
+
+	if event.button == event.Buttons.Left :
+		__toggleVisibility( pathListing )
+		return True
+
+	return False
+
+def __visibilityColumnCreated( column ) :
+
+	if isinstance( column, GafferSceneUI.Private.VisibilityColumn ) :
+		column.buttonDoubleClickSignal().connectFront( __visibilityButtonDoubleClick )
+		column.keyPressSignal().connectFront( __visibilityKeyPress )
+
+GafferSceneUI.Private.VisibilityColumn.instanceCreatedSignal().connect( __visibilityColumnCreated )

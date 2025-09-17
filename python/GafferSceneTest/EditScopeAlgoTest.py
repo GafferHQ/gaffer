@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import math
 import unittest
 
 import imath
@@ -1928,6 +1927,177 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( s["editScope"], "renderPassB" ), "A render pass named \"renderPassB\" already exists in editScope.RenderPasses" )
 		self.assertEqual( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( s["editScope"], "renderPassC" ), "A render pass named \"renderPassC\" already exists in editScope.RenderPasses" )
 		self.assertIsNone( GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( s["editScope"], "renderPassD" ) )
+
+	def testVisibility( self ) :
+
+		plane = GafferScene.Plane()
+		cube = GafferScene.Cube()
+		group = GafferScene.Group()
+
+		group["in"][0].setInput( plane["out"] )
+		group["in"][1].setInput( cube["out"] )
+
+		scope = Gaffer.EditScope()
+		scope.setup( group["out"] )
+		scope["in"].setInput( group["out"] )
+
+		scope2 = Gaffer.EditScope()
+		scope2.setup( scope["out"] )
+		scope2["in"].setInput( scope["out"] )
+
+		self.assertTrue( GafferScene.SceneAlgo.visible( scope2["out"], "/group/plane" ) )
+		self.assertTrue( GafferScene.SceneAlgo.visible( scope2["out"], "/group/cube" ) )
+
+		# Hide the plane, ensure the cube is still visible.
+		GafferScene.EditScopeAlgo.setVisibility( scope, "/group/plane", False )
+		self.assertFalse( GafferScene.SceneAlgo.visible( scope2["out"], "/group/plane" ) )
+		self.assertTrue( GafferScene.SceneAlgo.visible( scope2["out"], "/group/cube" ) )
+		self.assertEqual( scope2["out"].attributes( "/group/plane" )["scene:visible"].value, False )
+		self.assertNotIn( "scene:visible", scope2["out"].attributes( "/group/cube" ) )
+
+		# Hide the cube, ensure both are hidden.
+		GafferScene.EditScopeAlgo.setVisibility( scope, "/group/cube", False )
+		self.assertFalse( GafferScene.SceneAlgo.visible( scope2["out"], "/group/plane" ) )
+		self.assertFalse( GafferScene.SceneAlgo.visible( scope2["out"], "/group/cube" ) )
+		self.assertEqual( scope2["out"].attributes( "/group/plane" )["scene:visible"].value, False )
+		self.assertEqual( scope2["out"].attributes( "/group/cube" )["scene:visible"].value, False )
+
+		# Unhide the cube, ensure the plane is hidden and the "scene:visible"
+		# attribute is removed from the cube.
+		GafferScene.EditScopeAlgo.setVisibility( scope, "/group/cube", True )
+		self.assertFalse( GafferScene.SceneAlgo.visible( scope2["out"], "/group/plane" ) )
+		self.assertTrue( GafferScene.SceneAlgo.visible( scope2["out"], "/group/cube" ) )
+		self.assertEqual( scope2["out"].attributes( "/group/plane" )["scene:visible"].value, False )
+		self.assertNotIn( "scene:visible", scope2["out"].attributes( "/group/cube" ) )
+
+		# Unhide the plane, ensure nothing is hidden and the "scene:visible"
+		# attribute has been removed.
+		GafferScene.EditScopeAlgo.setVisibility( scope, "/group/plane", True )
+		self.assertTrue( GafferScene.SceneAlgo.visible( scope2["out"], "/group/plane" ) )
+		self.assertTrue( GafferScene.SceneAlgo.visible( scope2["out"], "/group/cube" ) )
+		self.assertNotIn( "scene:visible", scope2["out"].attributes( "/group/plane" ) )
+		self.assertNotIn( "scene:visible", scope2["out"].attributes( "/group/cube" ) )
+
+		# Hide the group, ensure everything is hidden and we only have a
+		# "scene:visible" attribute on the group itself.
+		GafferScene.EditScopeAlgo.setVisibility( scope, "/group", False )
+		self.assertFalse( GafferScene.SceneAlgo.visible( scope2["out"], "/group" ) )
+		self.assertFalse( GafferScene.SceneAlgo.visible( scope2["out"], "/group/plane" ) )
+		self.assertFalse( GafferScene.SceneAlgo.visible( scope2["out"], "/group/cube" ) )
+		self.assertNotIn( "scene:visible", scope2["out"].attributes( "/group/plane" ) )
+		self.assertNotIn( "scene:visible", scope2["out"].attributes( "/group/cube" ) )
+
+		# Attempt to unhide the cube. It can't be visible as /group is hidden.
+		# Ensure we don't have an unnecessary "scene:visible" attribute on cube.
+		GafferScene.EditScopeAlgo.setVisibility( scope, "/group/cube", True )
+		self.assertFalse( GafferScene.SceneAlgo.visible( scope2["out"], "/group" ) )
+		self.assertFalse( GafferScene.SceneAlgo.visible( scope2["out"], "/group/plane" ) )
+		self.assertFalse( GafferScene.SceneAlgo.visible( scope2["out"], "/group/cube" ) )
+		self.assertNotIn( "scene:visible", scope2["out"].attributes( "/group/plane" ) )
+		self.assertNotIn( "scene:visible", scope2["out"].attributes( "/group/cube" ) )
+
+		# Hide the cube. Even though its parent is hidden, we should still be able
+		# to create a "scene:visible" attribute hiding /group/cube.
+		GafferScene.EditScopeAlgo.setVisibility( scope, "/group/cube", False )
+		self.assertFalse( GafferScene.SceneAlgo.visible( scope2["out"], "/group" ) )
+		self.assertFalse( GafferScene.SceneAlgo.visible( scope2["out"], "/group/plane" ) )
+		self.assertFalse( GafferScene.SceneAlgo.visible( scope2["out"], "/group/cube" ) )
+		self.assertNotIn( "scene:visible", scope2["out"].attributes( "/group/plane" ) )
+		self.assertEqual( scope2["out"].attributes( "/group/cube" )["scene:visible"].value, False )
+
+		# Unhide the cube. It can't be made visible as /group is hidden. But we should
+		# still be able to remove its "scene:visible" attribute.
+		GafferScene.EditScopeAlgo.setVisibility( scope, "/group/cube", True )
+		self.assertFalse( GafferScene.SceneAlgo.visible( scope2["out"], "/group" ) )
+		self.assertFalse( GafferScene.SceneAlgo.visible( scope2["out"], "/group/plane" ) )
+		self.assertFalse( GafferScene.SceneAlgo.visible( scope2["out"], "/group/cube" ) )
+		self.assertNotIn( "scene:visible", scope2["out"].attributes( "/group/plane" ) )
+		self.assertNotIn( "scene:visible", scope2["out"].attributes( "/group/cube" ) )
+
+		# Set the group visible downstream.
+		GafferScene.EditScopeAlgo.setVisibility( scope2, "/group", True )
+		self.assertFalse( GafferScene.SceneAlgo.visible( scope["out"], "/group" ) )
+		self.assertTrue( GafferScene.SceneAlgo.visible( scope2["out"], "/group" ) )
+		self.assertTrue( GafferScene.SceneAlgo.visible( scope2["out"], "/group/plane" ) )
+		self.assertTrue( GafferScene.SceneAlgo.visible( scope2["out"], "/group/cube" ) )
+		self.assertNotIn( "scene:visible", scope2["out"].attributes( "/group/plane" ) )
+		self.assertNotIn( "scene:visible", scope2["out"].attributes( "/group/cube" ) )
+
+		# Hide the cube upstream.
+		GafferScene.EditScopeAlgo.setVisibility( scope, "/group/cube", False )
+		self.assertTrue( GafferScene.SceneAlgo.visible( scope2["out"], "/group" ) )
+		self.assertTrue( GafferScene.SceneAlgo.visible( scope2["out"], "/group/plane" ) )
+		self.assertFalse( GafferScene.SceneAlgo.visible( scope2["out"], "/group/cube" ) )
+		self.assertNotIn( "scene:visible", scope2["out"].attributes( "/group/plane" ) )
+		self.assertEqual( scope2["out"].attributes( "/group/cube" )["scene:visible"].value, False )
+
+		# Set the cube visible downstream, removing its "scene:visible" attribute.
+		GafferScene.EditScopeAlgo.setVisibility( scope2, "/group/cube", True )
+		self.assertTrue( GafferScene.SceneAlgo.visible( scope2["out"], "/group" ) )
+		self.assertTrue( GafferScene.SceneAlgo.visible( scope2["out"], "/group/plane" ) )
+		self.assertTrue( GafferScene.SceneAlgo.visible( scope2["out"], "/group/cube" ) )
+		self.assertNotIn( "scene:visible", scope2["out"].attributes( "/group/plane" ) )
+		self.assertNotIn( "scene:visible", scope2["out"].attributes( "/group/cube" ) )
+
+	def testVisibilityReadOnlyReason( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["cube"] = GafferScene.Cube()
+
+		s["scope"] = Gaffer.EditScope()
+		s["scope"].setup( s["cube"]["out"] )
+		s["scope"]["in"].setInput( s["cube"]["out"] )
+
+		s["box"] = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["cube"], s["scope"] ] ) )
+
+		self.assertIsNone( GafferScene.EditScopeAlgo.visibilityReadOnlyReason( s["box"]["scope"], "/cube" ) )
+
+		for component in ( s["box"], s["box"]["scope"] ):
+			Gaffer.MetadataAlgo.setReadOnly( component, True )
+			self.assertEqual( GafferScene.EditScopeAlgo.visibilityReadOnlyReason( s["box"]["scope"], "/cube" ), s["box"] )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["box"], False )
+		self.assertEqual( GafferScene.EditScopeAlgo.visibilityReadOnlyReason( s["box"]["scope"], "/cube" ), s["box"]["scope"] )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["box"]["scope"], False )
+		GafferScene.EditScopeAlgo.setVisibility( s["box"]["scope"], "/cube", False )
+
+		self.assertIsNone( GafferScene.EditScopeAlgo.visibilityReadOnlyReason( s["box"]["scope"], "/cube" ) )
+
+		for component in (
+			s["box"]["scope"]["AttributeEdits"]["edits"][1]["cells"]["scene_visible"]["value"]["value"],
+			s["box"]["scope"]["AttributeEdits"]["edits"][1]["cells"]["scene_visible"]["value"]["mode"],
+			s["box"]["scope"]["AttributeEdits"]["edits"][1]["cells"]["scene_visible"]["value"]["enabled"],
+			s["box"]["scope"]["AttributeEdits"]["edits"][1]["cells"]["scene_visible"]["value"]["name"],
+			s["box"]["scope"]["AttributeEdits"]["edits"][1]["cells"]["scene_visible"]["value"],
+			s["box"]["scope"]["AttributeEdits"]["edits"][1]["cells"]["scene_visible"],
+			s["box"]["scope"]["AttributeEdits"]["edits"][1]["cells"],
+			s["box"]["scope"]["AttributeEdits"]["edits"][1],
+			s["box"]["scope"]["AttributeEdits"]["edits"],
+			s["box"]["scope"]["AttributeEdits"],
+			s["box"]["scope"],
+			s["box"]
+		) :
+			Gaffer.MetadataAlgo.setReadOnly( component, True )
+			self.assertEqual( GafferScene.EditScopeAlgo.visibilityReadOnlyReason( s["box"]["scope"], "/cube" ), component )
+
+	def testVisibilitySerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["plane"]["out"] )
+
+		GafferScene.EditScopeAlgo.setVisibility( s["editScope"], "/plane", False )
+		self.assertFalse( GafferScene.SceneAlgo.visible( s["editScope"]["out"], "/plane" ) )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertFalse( GafferScene.SceneAlgo.visible( s2["editScope"]["out"], "/plane" ) )
 
 if __name__ == "__main__":
 	unittest.main()

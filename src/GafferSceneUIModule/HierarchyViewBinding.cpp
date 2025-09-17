@@ -196,13 +196,13 @@ class InclusionsColumn : public PathColumn
 			auto paths = IECore::PathMatcher();
 			paths.addPath( scenePath->names() );
 			const auto selection = widget.getSelection();
-			if( std::holds_alternative<IECore::PathMatcher>( selection ) )
+			if( std::holds_alternative<std::vector<IECore::PathMatcher>>( selection ) )
 			{
 				// Permit bulk editing of a selection of paths when clicking on one of the selected paths
-				const auto selectedPaths = std::get<IECore::PathMatcher>( selection );
-				if( selectedPaths.match( scenePath->names() ) & IECore::PathMatcher::Result::ExactMatch )
+				const auto selectedPaths = std::get<std::vector<IECore::PathMatcher>>( selection );
+				if( selectedPaths.size() && selectedPaths[0].match( scenePath->names() ) & IECore::PathMatcher::Result::ExactMatch )
 				{
-					paths = selectedPaths;
+					paths = selectedPaths[0];
 				}
 			}
 
@@ -399,13 +399,13 @@ class ExclusionsColumn : public PathColumn
 			auto paths = IECore::PathMatcher();
 			paths.addPath( scenePath->names() );
 			const auto selection = widget.getSelection();
-			if( std::holds_alternative<IECore::PathMatcher>( selection ) )
+			if( std::holds_alternative<std::vector<IECore::PathMatcher>>( selection ) )
 			{
 				// Permit bulk editing of a selection of paths when clicking on one of the selected paths
-				const auto selectedPaths = std::get<IECore::PathMatcher>( selection );
-				if( selectedPaths.match( scenePath->names() ) & IECore::PathMatcher::Result::ExactMatch )
+				const auto selectedPaths = std::get<std::vector<IECore::PathMatcher>>( selection );
+				if( selectedPaths.size() && selectedPaths[0].match( scenePath->names() ) & IECore::PathMatcher::Result::ExactMatch )
 				{
-					paths = selectedPaths;
+					paths = selectedPaths[0];
 				}
 			}
 
